@@ -1,0 +1,42 @@
+[
+  {
+    "id": "sitelink",
+    "type": "inputstring",
+    "name": "Site Link",
+    "value": "https://www.frozen-layer.com/"
+  },
+  {
+    "id": "cookieheader",
+    "type": "hiddendata",
+    "name": "CookieHeader",
+    "value": null
+  },
+  {
+    "id": "lasterror",
+    "type": "hiddendata",
+    "name": "LastError",
+    "value": null
+  },
+  {
+    "id": "category",
+    "type": "inputselect",
+    "name": "Category",
+    "value": "todos",
+    "options": {
+      "todos": "todos",
+      "anime": "anime",
+      "manga": "manga",
+      "dorama": "dorama",
+      "videojuego": "videojuego",
+      "BSO": "BSO",
+      "PV": "PV",
+      "otros": "otros"
+    }
+  },
+  {
+    "id": "tags",
+    "type": "inputtags",
+    "name": "Tags",
+    "value": ""
+  }
+]

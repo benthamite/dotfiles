@@ -1,0 +1,1 @@
+{"Name":"desktop-linux","Metadata":{},"Endpoints":{"docker":{"Host":"unix:///Users/pablostafforini/.docker/run/docker.sock","SkipTLSVerify":false}}}

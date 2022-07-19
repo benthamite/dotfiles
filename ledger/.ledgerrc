@@ -1,0 +1,5 @@
+--file ~/Dropbox/ledger/journal.ledger
+--price-db ~/Dropbox/ledger/.pricedb
+--input-date-format %Y-%m-%d
+--date-format %Y-%m-%d
+--start-of-week=mon

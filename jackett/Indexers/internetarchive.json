@@ -1,0 +1,59 @@
+[
+  {
+    "id": "sitelink",
+    "type": "inputstring",
+    "name": "Site Link",
+    "value": "https://archive.org/"
+  },
+  {
+    "id": "cookieheader",
+    "type": "hiddendata",
+    "name": "CookieHeader",
+    "value": ""
+  },
+  {
+    "id": "lasterror",
+    "type": "hiddendata",
+    "name": "LastError",
+    "value": null
+  },
+  {
+    "id": "searchonlyintitle",
+    "type": "inputbool",
+    "name": "Search only in title",
+    "value": true
+  },
+  {
+    "id": "downloadusing.torrentonly.nomagnets.",
+    "type": "inputbool",
+    "name": "Download using .torrent only. No Magnets.",
+    "value": false
+  },
+  {
+    "id": "sortrequestedfromsite",
+    "type": "inputselect",
+    "name": "Sort requested from site",
+    "value": "publicdate",
+    "options": {
+      "publicdate": "created",
+      "downloads": "downloads",
+      "item_size": "size"
+    }
+  },
+  {
+    "id": "orderrequestedfromsite",
+    "type": "inputselect",
+    "name": "Order requested from site",
+    "value": "-",
+    "options": {
+      "-": "desc",
+      "_": "asc"
+    }
+  },
+  {
+    "id": "tags",
+    "type": "inputtags",
+    "name": "Tags",
+    "value": ""
+  }
+]

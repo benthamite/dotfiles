@@ -1,0 +1,21 @@
+{
+  "add a plugin dialog": "/Users/pablostafforini/Downloads/DeDRM_tools_10.0.3",
+  "choose library location": "/Users/pablostafforini/Downloads",
+  "notified-version-updates": {
+    "__class__": "set",
+    "__value__": [
+      "6.1"
+    ]
+  },
+  "sort_history": [
+    [
+      "timestamp",
+      false
+    ],
+    [
+      "timestamp",
+      false
+    ]
+  ],
+  "welcome_wizard_was_run": true
+}

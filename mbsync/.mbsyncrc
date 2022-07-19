@@ -1,0 +1,93 @@
+IMAPAccount gmail
+Host imap.gmail.com
+UserCmd "pass auth-sources/mbsync/user"
+PassCmd "pass auth-sources/mbsync/password"
+SSLType IMAPS
+SSLVersions TLSv1.3
+AuthMechs LOGIN
+CertificateFile /opt/homebrew/etc/openssl@1.1/cert.pem
+# PipelineDepth 50 ; only for initial full download, not sure if needed even then
+
+MaildirStore gmail-local
+Subfolders Verbatim
+Path ~/Mail/
+Inbox ~/Mail/Inbox
+
+IMAPStore gmail-remote
+Account gmail
+
+# https://github.com/danielfleischer/mu4easy
+Channel gmail-inbox
+Far :gmail-remote:"INBOX"
+Near :gmail-local:"INBOX"
+CopyArrivalDate yes
+Create Both
+Expunge Both
+SyncState *
+
+Channel gmail-daily
+Far :gmail-remote:"Daily"
+Near :gmail-local:"Daily"
+CopyArrivalDate yes
+Create Both
+Expunge Both
+SyncState *
+
+Channel gmail-starred
+Far :gmail-remote:"[Gmail]/Starred"
+Near :gmail-local:"[Gmail]/Starred"
+CopyArrivalDate yes
+Create Both
+Expunge Both
+SyncState *
+
+# Disabled because otherwise auto-saved drafts accumulate
+# Channel gmail-drafts
+# Far :gmail-remote:"[Gmail]/Drafts"
+# Near :gmail-local:"[Gmail]/Drafts"
+# CopyArrivalDate yes
+# Create Both
+# Expunge Both
+# SyncState *
+
+Channel gmail-sent
+Far :gmail-remote:"[Gmail]/Sent Mail"
+Near :gmail-local:"[Gmail]/Sent Mail"
+CopyArrivalDate yes
+Create Both
+Expunge Both
+SyncState *
+
+Channel gmail-trash
+Far :gmail-remote:"[Gmail]/Trash"
+Near :gmail-local:"[Gmail]/Trash"
+CopyArrivalDate yes
+Create Both
+Expunge Both
+SyncState *
+
+# Not sure why this isn't working
+# Channel gmail-spam
+# Far :gmail-remote:"[Gmail]/Spam"
+# Near :gmail-local:"[Gmail]/Spam"
+# CopyArrivalDate yes
+# Create Both
+# Expunge Both
+# SyncState *
+    
+Channel gmail-all
+Far :gmail-remote:"[Gmail]/All Mail"
+Near :gmail-local:"[Gmail]/All Mail"
+CopyArrivalDate yes
+Create Both
+Expunge Both
+SyncState *
+
+Group gmail
+Channel gmail-inbox
+Channel gmail-daily
+Channel gmail-trash
+Channel gmail-all
+Channel gmail-starred
+# Channel gmail-drafts
+# Channel gmail-spam

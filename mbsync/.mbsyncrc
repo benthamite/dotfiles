@@ -41,15 +41,6 @@ Create Both
 Expunge Both
 SyncState *
 
-# Disabled because otherwise auto-saved drafts accumulate
-# Channel gmail-drafts
-# Far :gmail-remote:"[Gmail]/Drafts"
-# Near :gmail-local:"[Gmail]/Drafts"
-# CopyArrivalDate yes
-# Create Both
-# Expunge Both
-# SyncState *
-
 Channel gmail-sent
 Far :gmail-remote:"[Gmail]/Sent Mail"
 Near :gmail-local:"[Gmail]/Sent Mail"
@@ -66,15 +57,6 @@ Create Both
 Expunge Both
 SyncState *
 
-# Not sure why this isn't working
-# Channel gmail-spam
-# Far :gmail-remote:"[Gmail]/Spam"
-# Near :gmail-local:"[Gmail]/Spam"
-# CopyArrivalDate yes
-# Create Both
-# Expunge Both
-# SyncState *
-    
 Channel gmail-all
 Far :gmail-remote:"[Gmail]/All Mail"
 Near :gmail-local:"[Gmail]/All Mail"
@@ -89,5 +71,3 @@ Channel gmail-daily
 Channel gmail-trash
 Channel gmail-all
 Channel gmail-starred
-# Channel gmail-drafts
-# Channel gmail-spam

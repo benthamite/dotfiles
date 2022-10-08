@@ -3228,11 +3228,50 @@ with the specified date."
 (use-package org-gcal
   :if (equal (system-name) ps/computer-hostname-pablo)
   :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
-  :defer 30
+  ;; :defer 30
   :init
   (setq org-gcal-up-days 0)
   (setq org-gcal-down-days 3)
   (setq org-gcal-file-alist `((,ps/personal-gmail . ,ps/file-calendar)))
+
+  (defun org-gcal-sync (&optional skip-export silent)
+  "Import events from calendars.
+Export the ones to the calendar if unless
+SKIP-EXPORT.  Set SILENT to non-nil to inhibit notifications."
+  (interactive)
+  (when org-gcal--sync-lock
+    (user-error "org-gcal sync locked. If a previous sync has failed, call ‘org-gcal--sync-unlock’ to reset the lock and try again."))
+  (org-gcal--sync-lock)
+  (org-generic-id-update-id-locations org-gcal-entry-id-property)
+  (org-gcal--ensure-token)
+  (when org-gcal-auto-archive
+    (dolist (i org-gcal-fetch-file-alist)
+      (with-current-buffer
+          (find-file-noselect (cdr i))
+        (org-gcal--archive-old-event))))
+  (let ((up-time (org-gcal--up-time))
+        (down-time (org-gcal--down-time)))
+    (deferred:try
+      (deferred:$
+        (deferred:loop org-gcal-fetch-file-alist
+          (lambda (calendar-id-file)
+            (deferred:$
+              (org-gcal--sync-calendar calendar-id-file skip-export silent
+                                       up-time down-time)
+              (deferred:succeed nil)
+              (deferred:nextc it
+                (lambda (_)
+                  (org-gcal--notify "Completed event fetching ."
+                                    (concat "Events fetched into\n"
+                                            (cdr calendar-id-file))
+                                    silent)
+                  (deferred:succeed nil))))))
+        ;; After syncing new events to Org, sync existing events in Org.
+        )
+      :finally
+      (lambda ()
+        (org-gcal--sync-unlock)))))
+        
   (defun ps/org-gcal--get-time-and-desc ()
     "Get the timestamp and description of the event at point.
 
@@ -3240,66 +3279,66 @@ with the specified date."
   not present."
     (let (start end desc tobj elem)
       (save-excursion
-        (org-gcal--back-to-heading)
-        (setq elem (org-element-at-point))
-        ;; Parse :org-gcal: drawer for event time and description.
-        (when
-            (re-search-forward
-             (format "^[ \t]*:%s:[ \t]*$" org-gcal-drawer-name)
-             (save-excursion (outline-next-heading) (point))
-             'noerror)
-          ;; First read any event time from the drawer if present. It's located
-          ;; at the beginning of the drawer.
-          (save-excursion
-            (when
-                (re-search-forward "<[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]"
-                                   (save-excursion (outline-next-heading) (point))
-                                   'noerror)
-              (goto-char (match-beginning 0))
-              (setq tobj (org-element-timestamp-parser))))
-          ;; Lines after the timestamp contain the description. Skip leading
-          ;; blank lines.
-          (forward-line)
-          (beginning-of-line)
-          (re-search-forward
-           "\\(?:^[ \t]*$\\)*\\([^z-a]*?\\)\n?[ \t]*:END:"
-           (save-excursion (outline-next-heading) (point)))
-          (setq desc (match-string-no-properties 1))
-          (setq desc
-                (if (string-match-p "\\‘\n*\\’" desc)
-                    nil
-                  (replace-regexp-in-string
-                   "^✱" "*"
-                   (replace-regexp-in-string
-                    "\\`\\(?: *<[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].*?>$\\)\n?\n?"
-                    ""
-                    (replace-regexp-in-string
-                     " *:PROPERTIES:\n *\\(.*\\(?:\n.*\\)*?\\) *:END:\n+"
-                     ""
-                     desc)))))))
+	(org-gcal--back-to-heading)
+	(setq elem (org-element-at-point))
+	;; Parse :org-gcal: drawer for event time and description.
+	(when
+	    (re-search-forward
+	     (format "^[ \t]*:%s:[ \t]*$" org-gcal-drawer-name)
+	     (save-excursion (outline-next-heading) (point))
+	     'noerror)
+	  ;; First read any event time from the drawer if present. It's located
+	  ;; at the beginning of the drawer.
+	  (save-excursion
+	    (when
+		(re-search-forward "<[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]"
+				   (save-excursion (outline-next-heading) (point))
+				   'noerror)
+	      (goto-char (match-beginning 0))
+	      (setq tobj (org-element-timestamp-parser))))
+	  ;; Lines after the timestamp contain the description. Skip leading
+	  ;; blank lines.
+	  (forward-line)
+	  (beginning-of-line)
+	  (re-search-forward
+	   "\\(?:^[ \t]*$\\)*\\([^z-a]*?\\)\n?[ \t]*:END:"
+	   (save-excursion (outline-next-heading) (point)))
+	  (setq desc (match-string-no-properties 1))
+	  (setq desc
+		(if (string-match-p "\\‘\n*\\’" desc)
+		    nil
+		  (replace-regexp-in-string
+		   "^✱" "*"
+		   (replace-regexp-in-string
+		    "\\`\\(?: *<[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].*?>$\\)\n?\n?"
+		    ""
+		    (replace-regexp-in-string
+		     " *:PROPERTIES:\n *\\(.*\\(?:\n.*\\)*?\\) *:END:\n+"
+		     ""
+		     desc)))))))
       ;; Prefer to read event time from the SCHEDULE property if present.
       (setq tobj (or (org-element-property :deadline elem) tobj))
       (when tobj
-        (when (plist-get (cadr tobj) :year-start)
-          (setq
-           start
-           (org-gcal--format-org2iso
-            (plist-get (cadr tobj) :year-start)
-            (plist-get (cadr tobj) :month-start)
-            (plist-get (cadr tobj) :day-start)
-            (plist-get (cadr tobj) :hour-start)
-            (plist-get (cadr tobj) :minute-start)
-            (when (plist-get (cadr tobj) :hour-start) t))))
-        (when (plist-get (cadr tobj) :year-end)
-          (setq
-           end
-           (org-gcal--format-org2iso
-            (plist-get (cadr tobj) :year-end)
-            (plist-get (cadr tobj) :month-end)
-            (plist-get (cadr tobj) :day-end)
-            (plist-get (cadr tobj) :hour-end)
-            (plist-get (cadr tobj) :minute-end)
-            (when (plist-get (cadr tobj) :hour-end) t)))))
+	(when (plist-get (cadr tobj) :year-start)
+	  (setq
+	   start
+	   (org-gcal--format-org2iso
+	    (plist-get (cadr tobj) :year-start)
+	    (plist-get (cadr tobj) :month-start)
+	    (plist-get (cadr tobj) :day-start)
+	    (plist-get (cadr tobj) :hour-start)
+	    (plist-get (cadr tobj) :minute-start)
+	    (when (plist-get (cadr tobj) :hour-start) t))))
+	(when (plist-get (cadr tobj) :year-end)
+	  (setq
+	   end
+	   (org-gcal--format-org2iso
+	    (plist-get (cadr tobj) :year-end)
+	    (plist-get (cadr tobj) :month-end)
+	    (plist-get (cadr tobj) :day-end)
+	    (plist-get (cadr tobj) :hour-end)
+	    (plist-get (cadr tobj) :minute-end)
+	    (when (plist-get (cadr tobj) :hour-end) t)))))
       (list :start start :end end :desc desc)))
 
   (defun ps/org-gcal--update-entry (calendar-id event &optional update-mode)
@@ -3316,40 +3355,40 @@ heading."
     (unless (org-at-heading-p)
       (user-error "Must be on Org-mode heading."))
     (let* ((smry  (or (plist-get event :summary)
-                      "busy"))
-           (desc  (plist-get event :description))
-           (loc   (plist-get event :location))
-           (_link  (plist-get event :htmlLink))
-           (meet  (plist-get event :hangoutLink))
-           (etag (plist-get event :etag))
-           (event-id    (plist-get event :id))
-           (stime (plist-get (plist-get event :start)
-                             :dateTime))
-           (etime (plist-get (plist-get event :end)
-                             :dateTime))
-           (sday  (plist-get (plist-get event :start)
-                             :date))
-           (eday  (plist-get (plist-get event :end)
-                             :date))
-           (start (if stime (org-gcal--convert-time-to-local-timezone stime org-gcal-local-timezone) sday))
-           (end   (if etime (org-gcal--convert-time-to-local-timezone etime org-gcal-local-timezone) eday))
-           (old-time-desc (org-gcal--get-time-and-desc))
-           (old-start (plist-get old-time-desc :start))
-           (old-end (plist-get old-time-desc :start))
-           (recurrence (plist-get event :recurrence))
-           (elem))
+		      "busy"))
+	   (desc  (plist-get event :description))
+	   (loc   (plist-get event :location))
+	   (_link  (plist-get event :htmlLink))
+	   (meet  (plist-get event :hangoutLink))
+	   (etag (plist-get event :etag))
+	   (event-id    (plist-get event :id))
+	   (stime (plist-get (plist-get event :start)
+			     :dateTime))
+	   (etime (plist-get (plist-get event :end)
+			     :dateTime))
+	   (sday  (plist-get (plist-get event :start)
+			     :date))
+	   (eday  (plist-get (plist-get event :end)
+			     :date))
+	   (start (if stime (org-gcal--convert-time-to-local-timezone stime org-gcal-local-timezone) sday))
+	   (end   (if etime (org-gcal--convert-time-to-local-timezone etime org-gcal-local-timezone) eday))
+	   (old-time-desc (org-gcal--get-time-and-desc))
+	   (old-start (plist-get old-time-desc :start))
+	   (old-end (plist-get old-time-desc :start))
+	   (recurrence (plist-get event :recurrence))
+	   (elem))
       (when loc (replace-regexp-in-string "\n" ", " loc))
       (org-edit-headline smry)
       (org-entry-put (point) org-gcal-etag-property etag)
       (when recurrence (org-entry-put (point) "recurrence" (format "%s" recurrence)))
       (when loc (org-entry-put (point) "LOCATION" loc))
       (when meet
-        (org-entry-put
-         (point)
-         "HANGOUTS"
-         (format "[[%s][%s]]"
-                 meet
-                 "Join Hangouts Meet")))
+	(org-entry-put
+	 (point)
+	 "HANGOUTS"
+	 (format "[[%s][%s]]"
+		 meet
+		 "Join Hangouts Meet")))
       (org-entry-put (point) org-gcal-calendar-id-property calendar-id)
       (org-gcal--put-id (point) calendar-id event-id)
       ;; Insert event time and description in :ORG-GCAL: drawer, erasing the
@@ -3357,65 +3396,65 @@ heading."
       (org-gcal--back-to-heading)
       (setq elem (org-element-at-point))
       (save-excursion
-        (when (re-search-forward
-               (format
-                "^[ \t]*:%s:[^z-a]*?\n[ \t]*:END:[ \t]*\n?"
-                (regexp-quote org-gcal-drawer-name))
-               (save-excursion (outline-next-heading) (point))
-               'noerror)
-          (replace-match "" 'fixedcase)))
+	(when (re-search-forward
+	       (format
+		"^[ \t]*:%s:[^z-a]*?\n[ \t]*:END:[ \t]*\n?"
+		(regexp-quote org-gcal-drawer-name))
+	       (save-excursion (outline-next-heading) (point))
+	       'noerror)
+	  (replace-match "" 'fixedcase)))
       (unless (re-search-forward ":PROPERTIES:[^z-a]*?:END:"
-                                 (save-excursion (outline-next-heading) (point))
-                                 'noerror)
-        (message "PROPERTIES not found: %s (%s) %d"
-                 (buffer-name) (buffer-file-name) (point)))
+				 (save-excursion (outline-next-heading) (point))
+				 'noerror)
+	(message "PROPERTIES not found: %s (%s) %d"
+		 (buffer-name) (buffer-file-name) (point)))
       (end-of-line)
       ;; (newline)
       ;; (insert (format ":%s:" org-gcal-drawer-name))
       ;; (newline)
       ;; Keep existing timestamps for parent recurring events.
       (when (and recurrence old-start old-end)
-        (setq start old-start
-              end old-end))
+	(setq start old-start
+	      end old-end))
       (let*
-          ((timestamp
-            (if (or (string= start end) (org-gcal--alldayp start end))
-                (org-gcal--format-iso2org start)
-              (if (and
-                   (= (plist-get (org-gcal--parse-date start) :year)
-                      (plist-get (org-gcal--parse-date end)   :year))
-                   (= (plist-get (org-gcal--parse-date start) :mon)
-                      (plist-get (org-gcal--parse-date end)   :mon))
-                   (= (plist-get (org-gcal--parse-date start) :day)
-                      (plist-get (org-gcal--parse-date end)   :day)))
-                  (format "<%s-%s>"
-                          (org-gcal--format-date start "%Y-%m-%d %a %H:%M")
-                          (org-gcal--format-date end "%H:%M"))
-                (format "%s--%s"
-                        (org-gcal--format-iso2org start)
-                        (org-gcal--format-iso2org
-                         (if (< 11 (length end))
-                             end
-                           (org-gcal--iso-previous-day end))))))))
-        (if (org-element-property :deadline elem)
-            (unless (and recurrence old-start) (org-deadline nil timestamp))
-          (org-deadline nil timestamp)
-          (newline)
-          (when desc (newline))))
+	  ((timestamp
+	    (if (or (string= start end) (org-gcal--alldayp start end))
+		(org-gcal--format-iso2org start)
+	      (if (and
+		   (= (plist-get (org-gcal--parse-date start) :year)
+		      (plist-get (org-gcal--parse-date end)   :year))
+		   (= (plist-get (org-gcal--parse-date start) :mon)
+		      (plist-get (org-gcal--parse-date end)   :mon))
+		   (= (plist-get (org-gcal--parse-date start) :day)
+		      (plist-get (org-gcal--parse-date end)   :day)))
+		  (format "<%s-%s>"
+			  (org-gcal--format-date start "%Y-%m-%d %a %H:%M")
+			  (org-gcal--format-date end "%H:%M"))
+		(format "%s--%s"
+			(org-gcal--format-iso2org start)
+			(org-gcal--format-iso2org
+			 (if (< 11 (length end))
+			     end
+			   (org-gcal--iso-previous-day end))))))))
+	(if (org-element-property :deadline elem)
+	    (unless (and recurrence old-start) (org-deadline nil timestamp))
+	  (org-deadline nil timestamp)
+	  (newline)
+	  (when desc (newline))))
       ;; Insert event description if present.
       (when desc
-        (insert (replace-regexp-in-string "^\*" "✱" desc))
-        (insert (if (string= "\n" (org-gcal--safe-substring desc -1)) "" "\n")))
+	(insert (replace-regexp-in-string "^\*" "✱" desc))
+	(insert (if (string= "\n" (org-gcal--safe-substring desc -1)) "" "\n")))
       ;; (insert ":END:")
       (when (org-gcal--event-cancelled-p event)
-        (save-excursion
-          (org-back-to-heading t)
-          (org-gcal--handle-cancelled-entry)))
+	(save-excursion
+	  (org-back-to-heading t)
+	  (org-gcal--handle-cancelled-entry)))
       (when update-mode
-        (cl-dolist (f org-gcal-after-update-entry-functions)
-          (save-excursion
-            (org-back-to-heading t)
-            (funcall f calendar-id event update-mode))))))
+	(cl-dolist (f org-gcal-after-update-entry-functions)
+	  (save-excursion
+	    (org-back-to-heading t)
+	    (funcall f calendar-id event update-mode))))))
 
   ;; I replace the two native functions with the slightly tweaked
   ;; versions under `:init' so that `org-gcal' uses the `DEADLINE'
@@ -3437,21 +3476,22 @@ heading."
 the corresponding Google Calendar event in a browser."
     (interactive)
     (if (org-entry-get nil "entry-id")
-        (let ((id (s-replace
-                   "\n"
-                   ""
-                   (base64-encode-string
-                    (s-replace
-                     "/"
-                     " "
-                     (org-entry-get nil "entry-id"))))))
-          (browse-url
-           (concat
-            "https://calendar.google.com/calendar/u/0/r/eventedit/"
-            id)))
+	(let ((id (s-replace
+		   "\n"
+		   ""
+		   (base64-encode-string
+		    (s-replace
+		     "/"
+		     " "
+		     (org-entry-get nil "entry-id"))))))
+	  (browse-url
+	   (concat
+	    "https://calendar.google.com/calendar/u/0/r/eventedit/"
+	    id)))
       (error "No id found.")))
 
   (advice-add 'org-gcal-sync :before (lambda () (setq message-log-max 10000)))
+  (advice-add 'org-gcal-sync-buffer :before (lambda () (setq message-log-max 10000)))
 
   (defhydra hydra-org-gcal (:exit t :hint nil)
     "
@@ -4155,7 +4195,7 @@ buffer displays and push it to the kill ring."
   ;; :demand t
   :custom
   (ispell-silently-savep t)
-  (ispell-program-name "/opt/homebrew/bin/enchant-2")
+  (ispell-program-name "/opt/homebrew/bin/aspell")
 
   :config/el-patch
   ;; Make it less verbose
@@ -4278,13 +4318,13 @@ buffer displays and push it to the kill ring."
           (set-process-query-on-exit-flag ispell-process nil)))))
 
   :config
-  (defvar ps/ispell-toggle-language "english")
+  (defvar ps/ispell-toggle-language "en")
   (defun ps/ispell-toggle-language ()
     "Toggle ispell dictionaries between English and Spanish."
     (interactive)
-    (if (string= ps/ispell-toggle-language "english")
+    (if (string= ps/ispell-toggle-language "en")
         (setq ps/ispell-toggle-language "es")
-      (setq ps/ispell-toggle-language "english"))
+      (setq ps/ispell-toggle-language "en"))
     (ispell-change-dictionary ps/ispell-toggle-language)
     (flyspell-buffer))
 
@@ -9389,7 +9429,7 @@ is connected."
   (midnight-hook . ps/midnight-hook-magit-wiki)
   (midnight-hook . ps/ledger-update-coin-prices)
   (midnight-hook . ps/ledger-update-commodities)
-  (midnight-hook . org-gcal-sync)
+  ;; (midnight-hook . org-gcal-sync)
   (midnight-hook . ps/org-id-update-id-locations)
   (midnight-hook . org-roam-db-sync)
   (midnight-hook . ps/pass-git-sync)

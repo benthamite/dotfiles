@@ -1838,7 +1838,7 @@ macosx-continue-playback=1
 [auhal] # HAL AudioUnit output
 
 # Audio volume (integer)
-#auhal-volume=256
+auhal-volume=282
 
 # Last audio device (string)
 auhal-audio-device=0
@@ -4311,7 +4311,7 @@ key-audiodelay-down=
 #global-key-audio-track=
 
 # Cycle audio track (string)
-#key-audio-track=l
+key-audio-track=
 
 # Cycle through audio devices (string)
 #global-key-audiodevice-cycle=
@@ -4497,7 +4497,7 @@ key-audiodelay-down=
 #global-key-loop=
 
 # Normal/Loop/Repeat (string)
-#key-loop=Shift+l
+key-loop=b
 
 # Shrink the viewpoint field of view (360°) (string)
 #global-key-viewpoint-fov-in=

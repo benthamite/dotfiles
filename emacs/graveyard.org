@@ -1,0 +1,2066 @@
+#+filetags: :project:
+* graveyard
+:PROPERTIES:
+:ID:       AACAE0F4-0B25-475B-831B-3F1E91E6349D
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
+:END:
+This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
+
+** org-auto-tangle
+:PROPERTIES:
+:ID:       8EBF95D8-2E58-4EE6-90EA-644295B1B908
+:END:
+[2022-06-15 Wed 18:41]  I want to be able to selectively tangle parts of my config file with ~ps/org-tangle-config-file~, so auto-tangling isn't an option.
+
+/[[https://github.com/yilkalargaw/org-auto-tangle][org-auto-tangle]] lets you tangle an org file whenever it is saved./
+
+
+#+begin_src emacs-lisp :tangle no
+(use-package org-auto-tangle
+  :defer 30
+  :after org
+  :hook
+  (org-mode-hook . org-auto-tangle-mode))
+#+end_src
+
+** isearch+
+:PROPERTIES:
+:ID:       03CE22AA-6580-4755-9BB6-DE7DB8302E53
+:END:
+[2021-11-19 Fri 19:49] Disabling because it's generating an error.
+
+[2022-06-20 Mon 22:48] Not using it.
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package isearch+
+  :general
+  (isearch-mode-map
+   "A-C-a" 'isearchp-toggle-regexp-quote-yank))
+#+end_src
+
+*** Archive                                                       :ARCHIVE:
+:PROPERTIES:
+:ID:       86320489-02F3-4DC8-A5F7-E43464D133A5
+:END:
+**** CANCELLED [#6] Diagnose and repair isearch+ ~C-SPC C-SPC~ error
+CLOSED: [2022-06-20 Mon 22:47]
+:PROPERTIES:
+:Effort:   0:20
+:ID:       A81336F8-303E-4888-AA14-9BCF5D1DD089
+:ARCHIVE_TIME: 2022-06-20 Mon 22:47
+:END:
+
+** company-emoji
+:PROPERTIES:
+:ID:       EC423720-7E64-4D8B-B947-35AFC297836D
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-06 Fri 13:06]--[2022-05-06 Fri 13:16] =>  0:10
+CLOCK: [2021-11-26 Fri 09:50]--[2021-11-26 Fri 10:23] =>  0:33
+:END:
+
+I'm no longer using company.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package company-emoji
+  :after company
+  :demand t
+  :config
+  (defun --set-emoji-font (frame)
+    "Adjust the font settings of FRAME so Emacs can display emoji properly."
+    (if (eq system-type 'darwin)
+        ;; For NS/Cocoa
+        (set-fontset-font t 'symbol (font-spec :family "Apple Color Emoji") frame 'prepend)))
+
+  ;; For when Emacs is started in GUI mode
+  (--set-emoji-font nil)
+
+  ;; Hook for when a frame is created with emacsclient
+  ;; gnu.org/software/emacs/manual/html_node/elisp/Creating-Frames.html
+  (add-hook 'after-make-frame-functions '--set-emoji-font))
+#+end_src
+
+** company-statistics
+:PROPERTIES:
+:ID:       A393DCFE-4237-414E-AED6-D73D5B8F5EAF
+:END:
+
+[2022-10-04 Tue 00:53] I'm no longer using company.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package company-statistics
+  :after company
+  :demand t
+  :hook
+  (company-mode-hook . company-statistics-mode))
+#+end_src
+
+** company-flx
+:PROPERTIES:
+:ID:       A51FCCC5-7594-47F2-B4C4-13BF0726DCA1
+:END:
+/[[https://github.com/PythonNut/company-flx][company-flx]] provides flx fuzzy matching for [[id:012FDA89-1C00-410B-8A01-92F85B10C59C][company]]./
+
+[2022-10-04 Tue 00:43] Replaced by [[id:35370B0F-9EBD-433F-B59C-576EE8A69772][corfu]].
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package company-flx
+  :after company
+  :demand t
+  :hook
+  (company-mode-hook . company-flx-mode))
+#+end_src
+
+** company-quickhelp
+:PROPERTIES:
+:ID:       C9D64E35-ACDE-4931-94AD-4C9381B15299
+:END:
+/[[https://github.com/company-mode/company-quickhelp][company-quickhelp]] provides documentation popups for [[id:012FDA89-1C00-410B-8A01-92F85B10C59C][company]]./
+
+[2022-10-04 Tue 00:42] Replaced by [[id:07DC5DEC-40BB-43CD-B679-9481C3691905][corfu-doc]].
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package company-quickhelp
+  :after company
+  :demand t
+  :custom
+  (company-quickhelp-delay 0)
+  :hook
+  (company-mode-hook . company-quickhelp-mode))
+#+end_src
+
+** company
+:PROPERTIES:
+:ID:       012FDA89-1C00-410B-8A01-92F85B10C59C
+:END:
+:LOGBOOK:
+CLOCK: [2021-11-23 Tue 21:50]--[2021-11-23 Tue 22:04] =>  0:14
+CLOCK: [2021-11-23 Tue 20:29]--[2021-11-23 Tue 21:46] =>  1:17
+CLOCK: [2021-07-29 Thu 19:29]--[2021-07-29 Thu 19:59] =>  0:30
+CLOCK: [2021-07-17 Sat 12:32]--[2021-07-17 Sat 12:42] =>  0:10
+CLOCK: [2021-07-16 Fri 22:04]--[2021-07-16 Fri 22:10] =>  0:06
+CLOCK: [2021-07-16 Fri 19:08]--[2021-07-16 Fri 19:11] =>  0:03
+CLOCK: [2021-06-21 Mon 17:04]--[2021-06-21 Mon 17:24] =>  0:20
+CLOCK: [2021-06-21 Mon 10:30]--[2021-06-21 Mon 10:57] =>  0:27
+CLOCK: [2021-06-08 Tue 18:15]--[2021-06-08 Tue 18:49] =>  0:34
+CLOCK: [2021-05-20 Thu 21:51]--[2021-05-20 Thu 22:09] =>  0:18
+CLOCK: [2021-04-27 Tue 11:13]--[2021-04-27 Tue 11:27] =>  0:14
+:END:
+[2022-10-04 Tue 00:41] Replaced by [[id:35370B0F-9EBD-433F-B59C-576EE8A69772][corfu]].
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package company
+  :defer 25
+  ;; :demand t
+  :init
+  ;; add yasnippet to all backends
+  (defun ps/company-backend-with-yas (backends)
+    "Add `:with' company-yasnippet to company BACKENDS."
+    (if (and (listp backends) (memq 'company-yasnippet backends))
+        backends
+      (append (if (consp backends)
+                  backends
+                (list backends))
+              '(:with company-yasnippet))))
+
+  :custom
+  (company-selection-wrap-around t)
+  (company-dabbrev-downcase nil)
+  (company-show-numbers t)
+  (company-tooltip-limit 10)
+  (company-minimum-prefix-length 2)
+  (company-idle-delay 0)
+  (company-echo-delay 0)
+  (company-async-timeout 20)
+  (company-global-modes '(not comint-mode
+                              ;; eshell-mode
+                              dired-mode
+                              pdf-view-mode
+                              ;; org-journal-mode
+                              ;; org-mode
+                              ;; org-msg-mode
+                              ;; org-msg-edit-mode
+                              ;; text-mode
+                              ;; telega-chat-mode
+                              ;; message-mode
+                              help-mode))
+
+  :config
+  (setq company-backends '(company-capf
+                           ;; company-pcomplete
+                           ))
+  (setq company-backends (mapcar #'ps/company-backend-with-yas company-backends))
+
+  ;; Use the numbers 0-9 to select company completion candidates
+  ;; reddit.com/r/emacs/comments/5jvawj/select_the_company_completion_candidate_by/
+  (let ((map company-active-map))
+    (mapc (lambda (x) (define-key map (format "%d" x)
+                        `(lambda () (interactive) (company-complete-number ,x))))
+          (number-sequence 0 9)))
+
+
+  (defun ps/company-prog-mode ()
+    "Setup `company-mode' for `prog-mode'."
+    (add-to-list (make-local-variable 'company-backends)
+                 '(company-keywords
+                   company-files
+                   ))
+    (setq company-backends (mapcar #'ps/company-backend-with-yas company-backends)))
+
+  (defun ps/company-messaging-mode ()
+    "Setup `company-mode' for messaging (mail, chat, etc.)."
+    (add-to-list (make-local-variable 'company-backends)
+                 'company-emoji)
+    (setq company-backends (mapcar #'ps/company-backend-with-yas company-backends)))
+
+  :hook
+  (after-init-hook . global-company-mode)
+  (prog-mode-hook . ps/company-prog-mode)
+  (message-mode-hook . ps/company-messaging-mode)
+  (telega-chat-mode-hook . ps/company-messaging-mode)
+  (slack-mode-hook . ps/company-messaging-mode)
+  (slack-buffer-mode-hook . ps/company-messaging-mode)
+  (slack-thread-message-buffer-mode-hook . ps/company-messaging-mode)
+  (telega-root-mode-hook . ps/company-messaging-mode)
+  (org-msg-edit-mode-hook . ps/company-messaging-mode))
+#+end_src
+
+- [[https://github.com/hlissner/doom-emacs/blob/develop/modules/completion/company/config.el][Doom Emacs Company module]]. Might be useful for ideas.
+
+*** TODO [#6] See if ~company-mode~ can be configured to change face when there's only one completion candidate when writing prose
+:PROPERTIES:
+:Effort:   1:00
+:ID:       696A4EF9-EFF1-4C12-B90A-0BFCE7434A4B
+:END:
+Maybe post question on Reddit or SE.
+*** Archive                                                                                                           :ARCHIVE:
+:PROPERTIES:
+:ID:       9BBD3FE1-8AAC-4C24-9BA0-7C4E1988134E
+:END:
+**** CANCELLED Report bug with org mode
+CLOSED: [2021-07-06 Tue 23:27]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-07-06 Tue 23:27
+:ID:       90EBCB82-5E7B-4623-BF1B-03D1CD5D0BBD
+:END:
+:STATES:
+- Rescheduled from "[2021-06-25 Fri 16:00-16:30]" on [2021-06-25 Fri 16:40]
+- Rescheduled from "[2021-06-22 Tue]" on [2021-06-21 Mon 22:47]
+:END:
+https://github.com/company-mode/company-mode/issues/1123m
+
+This may have been solved in the current org version. Wait until I re-experience it to report.
+
+I've decided it's not worth it.
+
+**** DONE [#5] Diagnose why number selection isn't working
+CLOSED: [2021-08-03 Tue 22:56]
+:PROPERTIES:
+:Effort:   0:20
+:ARCHIVE_TIME: 2021-08-03 Tue 22:56
+:ID:       F6977A8F-6101-43DA-9514-44AF49625E7A
+:END:
+:LOGBOOK:
+CLOCK: [2021-08-03 Tue 22:53]--[2021-08-03 Tue 22:56] =>  0:03
+:END:
+It was because I was using the ~lambda!~ macro, which apparently doesn't work if preceded by ~`~.
+**** DONE [#6] Fix Tony Aldon's code for having different minimum prefix length depending on whether it's code or prose
+CLOSED: [2021-11-23 Tue 22:32]
+:PROPERTIES:
+:Effort:   0:45
+:ARCHIVE_TIME: 2021-11-23 Tue 22:32
+:ID:       86AED371-65A1-4738-9792-2CDF7E7489F2
+:END:
+** remember
+:PROPERTIES:
+:ID:       F828B700-4144-48F8-838C-A9744D315175
+:END:
+[2022-10-02 Sun 14:12] I installed this package only because I wanted to have a persistent ~*scratch*~ buffer. But I am now accomplishing this with [[id:B6CB6A6C-0BCC-4A07-9608-BDCA6184C63A][persistent scratch]].
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-feature remember
+  :custom
+  (remember-data-file "~/Google Drive/Apps/Emacs/notes")
+  (remember-notes-buffer-name "\*scratch\*"))
+#+end_src
+
+** org-sidebar
+:PROPERTIES:
+:ID:       58CDC6FC-F1DE-48D2-B93E-110189DB5ECB
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-30 Fri 23:48]--[2021-07-31 Sat 00:14] =>  0:26
+CLOCK: [2021-06-25 Fri 21:05]--[2021-06-25 Fri 21:14] =>  0:09
+CLOCK: [2021-04-06 Tue 21:35]--[2021-04-06 Tue 21:54] =>  0:19
+:END:
+[2022-09-08 Thu 09:31] No longer using.
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package org-sidebar
+  :custom
+  (org-sidebar-default-fns '(org-sidebar--todo-items))
+  :config
+  (defun ps/org-sidebar-toggle (&optional arg)
+    "Toggle default sidebar window. If called with prefix argument, include
+also upcoming items."
+    (interactive "P")
+    (if arg
+        (progn
+          (let ((org-sidebar-default-fns '(org-sidebar--upcoming-items org-sidebar--todo-items)))
+            (org-sidebar-toggle)))
+      (org-sidebar-toggle)))
+  :general (org-mode-map
+            "s-H-s" 'ps/org-sidebar-toggle
+            "s-H-t" 'org-sidebar-tree-toggle))
+#+end_src
+
+** wiki-notes.org
+:PROPERTIES:
+:ID:       B7B8956F-08D9-49E0-873C-4513F6FD44B8
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(normal)) (print ps/file-init))
+(defhydra hydra-org-wiki-notes
+  (:exit t
+         :idle 0.5)
+  "Org headings: wiki-notes.org"
+  ("a" (ps/org-id-goto "D5418404-8C64-45FB-9A8F-389EFC5863D7") "Aaron")
+  ("b" (ps/org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EA Blogs")
+  ("c" (ps/org-id-goto "DE373CAE-7E80-4BC0-AD13-803A468369BC") "Emacs")
+  ("d" (ps/org-id-goto "AE09BAB8-5EA0-4CB0-AC5A-FF876CB9ABC5") "Entries for discussion")
+  ("e" (ps/org-id-goto "91F8B865-BB88-4607-8E6B-FB00F6902DF6") "Email")
+  ("f" (ps/org-id-goto "3A4E5FF6-8ACC-49AE-AE7C-F34E7A8E8853") "Feeds")
+  ("h" (ps/org-id-goto "5ACC92AA-3962-43ED-BB1E-09EAA32D4F71") "changedetection")
+  ("o" (ps/org-id-goto "75E10530-0363-4B2F-B2E6-F926630AD09D") "EA Forum")
+  ("g" (ps/org-id-goto "4E6596D1-B924-4350-A0F7-2046BFAF5678") "Tags to process")
+  ("i" (ps/org-id-goto "0E592BDD-2AA9-4079-B8BC-9FB046EEEE81") "Wikipedia watchlist")
+  ("l" (ps/org-id-goto "A721B1D6-4DD7-4C91-8B6D-A707A3A0D436") "Leo")
+  ("n" (ps/org-id-goto "8C50C11F-A1F3-46B4-B637-FBEA330DC5BA") "Mendeley")
+  ("p" (ps/org-id-goto "8B4804E2-B1B1-41BB-B85D-769945AD57B2") "Posts and comment activity")
+  ("s" (ps/org-id-goto "D9C17F29-497A-4F13-92E4-101C2F1730FB") "Slack")
+  ("t" (ps/org-id-goto "207342A0-F493-4EBF-AECE-7300AD99B2A9") "Tag new entries")
+  ("w" (ps/org-id-goto "5437B089-FEE2-46A7-9520-BE8E44C1FED4") "Wiki activity")
+  ("x" (ps/org-id-goto "F8143BA4-2D5F-4F76-8DCC-CCE753459203") "Documents")
+  ("z" (ps/org-id-goto "1F315DEA-00AF-445F-A187-ED125F9809E1") "Zotero")
+  ("'" (ps/org-id-goto "6E725763-8B53-43EC-9197-C0FE7468328D") "wiki-entries.org")
+  ("," (ps/org-id-goto "D134FD46-8600-4A9D-8EDA-1650364893BB") "Morning Wiki routine")
+  ("." (ps/org-id-goto "DD2A4DF5-865C-439A-BEF9-48830772DF2B") "Evening Wiki routine")
+  ("H-a" (ps/org-id-wiki-with-clock "a"))
+  ("H-b" (ps/org-id-wiki-with-clock "b"))
+  ("H-c" (ps/org-id-wiki-with-clock "c"))
+  ("H-d" (ps/org-id-wiki-with-clock "d"))
+  ("H-e" (ps/org-id-wiki-with-clock "e"))
+  ("H-f" (ps/org-id-wiki-with-clock "f"))
+  ("H-g" (ps/org-id-wiki-with-clock "g"))
+  ("H-h" (ps/org-id-wiki-with-clock "h"))
+  ("H-i" (ps/org-id-wiki-with-clock "i"))
+  ("H-j" (ps/org-id-wiki-with-clock "j"))
+  ("H-k" (ps/org-id-wiki-with-clock "k"))
+  ("H-l" (ps/org-id-wiki-with-clock "l"))
+  ("H-m" (ps/org-id-wiki-with-clock "m"))
+  ("H-n" (ps/org-id-wiki-with-clock "n"))
+  ("H-o" (ps/org-id-wiki-with-clock "o"))
+  ("H-p" (ps/org-id-wiki-with-clock "p"))
+  ("H-q" (ps/org-id-wiki-with-clock "q"))
+  ("H-r" (ps/org-id-wiki-with-clock "r"))
+  ("H-s" (ps/org-id-wiki-with-clock "s"))
+  ("H-t" (ps/org-id-wiki-with-clock "t"))
+  ("H-u" (ps/org-id-wiki-with-clock "u"))
+  ("H-v" (ps/org-id-wiki-with-clock "v"))
+  ("H-w" (ps/org-id-wiki-with-clock "w"))
+  ("H-x" (ps/org-id-wiki-with-clock "x"))
+  ("H-y" (ps/org-id-wiki-with-clock "y"))
+  ("H-z" (ps/org-id-wiki-with-clock "z"))
+  ("H-," (ps/org-id-wiki-with-clock ","))
+  ("H-." (ps/org-id-wiki-with-clock "."))
+  ("H-/" (ps/org-id-wiki-with-clock "/"))
+  ("H-=" (ps/org-id-wiki-with-clock "="))
+  ("H--" (ps/org-id-wiki-with-clock "-"))
+  ("H-(" (ps/org-id-wiki-with-clock "("))
+  ("H-'" (ps/org-id-wiki-with-clock "'"))
+  ("H-SPC" (ps/org-id-wiki-with-clock "SPC"))
+  ("H-RET" (ps/org-id-wiki-with-clock "RET"))
+  ("H-TAB" (ps/org-id-wiki-with-clock "TAB"))
+  )
+#+end_src
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(normal)) (print ps/file-init))
+(defun ps/org-id-wiki-with-clock (key)
+  (funcall (intern (concat "hydra-org-wiki-notes/lambda-" key "-and-exit")))
+  (org-clock-in))
+#+end_src
+
+** smtpmail
+:PROPERTIES:
+:ID:       5C4E266E-0A98-4B4E-939C-A8268FE9795B
+:END:
+[2022-07-21 Thu 16:59] replaced by [[id:DDFE6DC9-A986-4E79-BF5B-A99124B65BA2][smtpmail-multi]].
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-feature smtpmail
+  :custom
+  (smtpmail-smtp-server "smtp.gmail.com")
+  (smtpmail-stream-type 'starttls)
+  (smtpmail-smtp-service 587)
+  (smtpmail-debug-info t)
+  (smtpmail-debug-verbose t))
+#+end_src
+
+** org-wild-notifier
+:PROPERTIES:
+:ID:       672A178C-D2C3-4A2A-9B6F-19A6E2E4FF4F
+:END:
+I rely on phone notifications for events in my calendar, so I don't need this.
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package org-wild-notifier
+  :defer 10
+  :config
+  (org-wild-notifier-mode))
+#+end_src
+
+** buffer-move
+:PROPERTIES:
+:ID:       30B8A985-16FE-4D69-B53B-B3B1F8D2A19C
+:END:
+:LOGBOOK:
+CLOCK: [2021-12-05 Sun 11:08]--[2021-12-05 Sun 11:22] =>  0:14
+CLOCK: [2021-05-11 Tue 10:40]--[2021-05-11 Tue 10:44] =>  0:04
+CLOCK: [2021-05-11 Tue 10:35]--[2021-05-11 Tue 10:37] =>  0:02
+CLOCK: [2021-04-04 Sun 23:28]--[2021-04-04 Sun 23:33] =>  0:05
+CLOCK: [2021-04-25 Sun 12:43]--[2021-04-25 Sun 13:27] =>  0:44
+CLOCK: [2021-04-21 Wed 14:33]--[2021-04-21 Wed 14:38] =>  0:05
+:END:
+[2022-07-21 Thu 22:05] Replaced with version that requires no external dependencies.
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package buffer-move
+  :demand t
+  :after winum
+  :config
+  (defun ps/buffer-move-to-other-window ()
+    "Move the current buffer to the other window. If there is no
+horizontal split, signal an error."
+    (interactive)
+    (let ((buffer-move-behavior 'move))
+      (if (eq (winum-get-number) 1)
+          (buf-move-right)
+        (buf-move-left))))
+
+  (defun ps/buffer-swap-with-other-buffer ()
+    "Swap the current buffer and the buffer on the left of the split.
+If there is no horizontal split, signal an error."
+    (interactive)
+    (if (eq (winum-get-number) 1)
+        (buf-move-right)
+      (buf-move-left)))
+
+  :general
+  ("A-M--" 'ps/buffer-move-to-other-window
+   "M--" 'ps/buffer-swap-with-other-buffer))
+#+end_src
+
+** google-contacts
+:PROPERTIES:
+:ID:       8B9B8201-7052-4406-8187-D5F476859F6A
+:END:
+
+[2022-07-17 Sun 10:25] No longer using.
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package google-contacts)
+#+end_src
+
+** Movement: 16 lines
+:PROPERTIES:
+:ID:       79482536-3B17-49A5-8E49-FB1D8072F1E6
+:END:
+
+[2022-07-17 Sun 09:34] For this type of movement, [[id:D83A1681-A3F0-4C70-9986-F01275320585][avy]] is much more efficient.
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(general-define-key
+ "A-C-s-M-," "C-u C-u <up>"
+ "A-C-s-M-." "C-u C-u <down>")
+#+end_src
+
+** Movement: four lines
+:PROPERTIES:
+:ID:       9D064B92-5C9A-4426-9A54-1ECDCCF44802
+:END:
+[2022-07-17 Sun 09:34] For this type of movement, [[id:D83A1681-A3F0-4C70-9986-F01275320585][avy]] is much more efficient.
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(general-define-key
+ "A-C-s-M-k" "C-u <up>"
+ "A-C-s-M-l" "C-u <down>")
+#+end_src
+
+** Movement: four words (disabled)
+:PROPERTIES:
+:ID:       85671D9D-F8EE-4811-8E18-4BB098520D68
+:END:
+[2022-07-17 Sun 09:34] For this type of movement, [[id:D83A1681-A3F0-4C70-9986-F01275320585][avy]] is much more efficient.
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(general-define-key
+ "A-C-s-M-u" "C-u A-C-s-u"
+ "A-C-s-M-p" "C-u A-C-s-p")
+#+end_src
+
+** zotxt-emacs
+:PROPERTIES:
+:ID:       342E0030-A125-46FA-97A6-0540EC915546
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-06 Tue 12:45]--[2021-07-06 Tue 13:03] =>  0:18
+:END:
+[2021-07-06 Tue 12:53] I'm not sure this adds anything to ~helm-bibtex~ and ~org-ref~. I guess what I ideally want is the functionality provided by the latter packages, but with the ability to open the Zotero reference.
+
+[2022-07-11 Mon 15:23] Moving to graveyard; not used.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package zotxt)
+#+end_src
+
+https://gist.github.com/andersjohansson/324a01364eb5a5435c65
+
+** org-capture-ref
+:PROPERTIES:
+:ID:       1A90A85F-C707-4B2F-A104-505C5D5229C0
+:END:
+[[https://github.com/yantar92/org-capture-ref][org-capture-ref]] extracts metadata/bibtex info from websites for [[id:14F93A83-0BE7-42E3-891E-F6806192296B][org-capture]].
+
+[2022-06-23 Thu 19:00] I use Zotero for generating the bibtex file, so this doesn't suit my workflow.
+
+** centaur-tabs
+:PROPERTIES:
+:ID:       7364D4F3-5470-401C-AD8C-2C51FE6BD2C0
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-09 Wed 14:38]--[2021-06-09 Wed 14:46] =>  0:08
+CLOCK: [2021-05-31 Mon 11:41]--[2021-05-31 Mon 11:45] =>  0:04
+CLOCK: [2021-05-18 Tue 11:35]--[2021-05-18 Tue 11:56] =>  0:21
+CLOCK: [2021-05-14 Fri 11:01]--[2021-05-14 Fri 11:08] =>  0:07
+CLOCK: [2021-05-12 Wed 19:21]--[2021-05-12 Wed 19:39] =>  0:18
+CLOCK: [2021-05-10 Mon 18:44]--[2021-05-10 Mon 19:31] =>  0:47
+CLOCK: [2021-04-03 Sat 17:28]--[2021-04-03 Sat 17:35] =>  0:07
+CLOCK: [2021-04-02 Fri 19:06]--[2021-04-02 Fri 19:25] =>  0:19
+:END:
+
+[2021-07-03 Sat 21:15] I eventually came to see that, although I liked the aesthetics of having a tab bar at the top, the tabs were actually not providing any useful functionality. Moreover, by arranging the tabs into distinct groups, and ordering the tabs within each group, ~centaur-tabs~ changes which buffers are shown when other buffers are killed. I spent some time customizing how tabs were grouped and sorted, but I never attained the behavior I desired. Perhaps I would have succeeded if I had spent more time, but since, as noted, I wasn't really deriving any benefit from this package, it made no sense to keep trying.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package centaur-tabs
+  :demand t
+  :custom
+  (centaur-tabs-set-icons t)
+  (centaur-tabs-height 18)
+  (centaur-tabs-label-fixed-length 0)
+  (centaur-tabs-set-modified-marker t)
+  (centaur-tabs-adjust-buffer-order t)
+  :config
+  (centaur-tabs-mode t)
+  (centaur-tabs-enable-buffer-alphabetical-reordering)
+  (defun centaur-tabs-buffer-groups ()
+    "`centaur-tabs-buffer-groups' control buffers' group rules.
+
+    Group centaur-tabs with mode if buffer is derived from `eshell-mode' `emacs-lisp-mode' `dired-mode' `org-mode' `magit-mode'.
+    All buffer name start with * will group to \"Emacs\".
+    Other buffer group by `centaur-tabs-get-group-name' with project name."
+    (list
+     (cond
+      ((or
+        ;; (string-equal "*" (substring (buffer-name) 0 1))
+        (memq major-mode '(magit-process-mode
+                           magit-status-mode
+                           magit-diff-mode
+                           magit-log-mode
+                           magit-file-mode
+                           magit-blob-mode
+                           magit-blame-mode
+                           )))
+       "Emacs")
+      ((derived-mode-p 'prog-mode)
+       "Editing")
+      ((derived-mode-p 'dired-mode)
+       "Dired")
+      ((memq major-mode '(helpful-mode
+                          help-mode))
+       "Help")
+      ((memq major-mode '(org-mode
+                          org-src-mode
+                          org-beamer-mode
+                          org-indent-mode
+                          org-bullets-mode
+                          org-cdlatex-mode
+                          diary-mode))
+       "Org Mode")
+      ((memq major-mode '(org-agenda-mode
+                          org-agenda-clockreport-mode
+                          org-agenda-log-mode))
+       "Org Agenda Mode")
+      ((derived-mode-p 'smudge-track-search-mode 'smudge-playlist-search-mode 'global-smudge-remote-mode 'smudge-device-select-mode)
+       "Smudge")
+      ((memq major-mode '(eww-mode))
+       "Eww")
+      ((memq major-mode '(elfeed-show-mode
+                          elfeed-search-mode))
+       "Elfeed")
+      (t
+       (centaur-tabs-get-group-name (current-buffer))))))
+  (defun centaur-tabs-hide-tab (x)
+    "Do no to show buffer X in tabs."
+    (let ((name (format "%s" x)))
+      (or
+       ;; Current window is not dedicated window.
+       (window-dedicated-p (selected-window))
+       ;; Buffer name not match below blacklist.
+       (string-prefix-p "*epc" name)
+       (string-prefix-p "*helm" name)
+       (string-prefix-p "*Helm" name)
+       (string-prefix-p "*Compile-Log*" name)
+       (string-prefix-p "*lsp" name)
+       (string-prefix-p "*company" name)
+       (string-prefix-p "*Flycheck" name)
+       (string-prefix-p "*tramp" name)
+       (string-prefix-p " *Mini" name)
+       (string-prefix-p "*help" name)
+       (string-prefix-p "*straight" name)
+       (string-prefix-p " *temp" name)
+       (string-prefix-p "*Help" name)
+       (string-prefix-p "*mybuf" name)
+       (string-prefix-p "*Devices" name)
+       (string-prefix-p "*elfeed-log*" name)
+       ;; Is not magit buffer.
+       (and (string-prefix-p "magit" name)
+            (not (file-name-extension name)))
+       )))
+  (defun ps/centaur-tabs-reload ()
+    "Reload centaur-tabs so that icons are displayed with the correct background color after theme change."
+    (centaur-tabs-mode 0)
+    (centaur-tabs-mode 1))
+  :hook
+  (calc-mode-hook . centaur-tabs-local-mode)
+  (calc-trail-mode-hook . centaur-tabs-local-mode)
+  :general
+  ("M-," 'centaur-tabs-backward
+   "M-." 'centaur-tabs-forward))
+#+end_src
+*** Archive                                                                                                           :ARCHIVE:
+:PROPERTIES:
+:ID:       1C15D463-9CF9-4174-9A38-A40956A9B9C0
+:END:
+**** DONE [#5] Reorganize Centaur Tab groups
+CLOSED: [2021-06-07 Mon 19:21]
+:PROPERTIES:
+:Effort:   0:20
+:ARCHIVE_TIME: 2021-06-07 Mon 19:21
+:ID:       DA482CE9-A944-44FA-9CBE-EA4A755DD893
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-07 Mon 19:20]--[2021-06-07 Mon 19:21] =>  0:01
+CLOCK: [2021-06-01 Tue 20:33]--[2021-06-01 Tue 20:33] =>  0:00
+:END:
+- One for tabs I never want to see:
+  - Shell Command Output
+- Org agenda together with other org buffers
+  -
+**** CANCELLED [#6] Group wiki buffers in separate group
+CLOSED: [2021-07-24 Sat 21:33]
+:PROPERTIES:
+:Effort:   0:30
+:ARCHIVE_TIME: 2021-07-24 Sat 21:33
+:ID:       61E1516A-F102-41D9-B1FD-D7798ECC39C0
+:END:
+I think this can be done by using Projectile, which I'm not familiar with but should probably learn how to use anyway. [[https://github.com/ema2159/centaur-tabs/issues/30][This]] may be relevant.
+
+** citeproc-org
+:PROPERTIES:
+:ID:       FDEAA0BD-9977-457A-A059-557341BD6670
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-19 Mon 11:13]--[2021-07-19 Mon 11:21] =>  0:08
+:END:
+This allows me to define custom citation formats using [[https://en.wikipedia.org/wiki/Citation_Style_Language][citation style language]].
+
+[2021-07-19 Mon 11:33] Disabling since the maintainer says things will switch to the natively-supported citation system in org.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package citeproc-org
+  :demand t)
+#+end_src
+*** Archive                                                                                                           :ARCHIVE:
+:PROPERTIES:
+:ID:       DC6ED493-F8E3-4080-A6AB-2FF9790D06A7
+:END:
+** command-log-mode
+:PROPERTIES:
+:ID:       6740F5E0-B50D-400E-9801-341E4EE2BC90
+:END:
+:LOGBOOK:
+CLOCK: [2021-03-27 Sat 21:17]--[2021-03-27 Sat 21:30] =>  0:13
+:END:
+[2021-03-29 Mon 21:14] Disabling since I get the impression it is slowing down Emacs.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(require 'command-log-mode)
+(global-command-log-mode 1)
+(setq clm/logging-dir "~/Google Drive/Apps/Emacs/.log/")
+#+end_src
+
+** company-box
+:PROPERTIES:
+:ID:       CF053552-725B-4B67-ACFF-26342B642D08
+:END:
+:LOGBOOK:
+CLOCK: [2021-11-24 Wed 11:17]--[2021-11-24 Wed 11:37] =>  0:20
+CLOCK: [2021-06-29 Tue 14:33]--[2021-06-29 Tue 14:50] =>  0:17
+CLOCK: [2021-05-21 Fri 07:35]--[2021-05-21 Fri 07:53] =>  0:18
+:END:
+
+[2021-07-30 Fri 23:20] Disabling since this causes weird "dead" frame to appear.
+
+[2021-11-23 Tue 20:16] Reenabling. Trying again.
+
+[2021-11-24 Wed 11:34] Confirmed that the "dead frame" issue persists. Replacing with ~company-quickhelp~.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package company-box
+  ;; :defer 25
+  :after company
+  :custom
+  (company
+   (company-box-doc-delay 0)
+   (company-box-show-single-candidate t)
+   (company-tooltip-align-annotations t))
+#+end_src
+
+** company-jedi
+:PROPERTIES:
+:ID:       2CA18214-6CC6-40C6-A857-991B259ADD11
+:END:
+I think ~elpy~ renders this unnecessary.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package company-jedi
+  ;; :defer 25
+  :commands (company-jedi)
+  :after (company python-mode))
+#+end_src
+
+** desktop
+:PROPERTIES:
+:ID:       6B6A970D-D6C5-455B-8233-2DF558163820
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-05 Mon 11:27]--[2021-07-05 Mon 12:03] =>  0:36
+CLOCK: [2021-06-14 Mon 20:32]--[2021-06-14 Mon 20:47] =>  0:15
+CLOCK: [2021-06-13 Sun 18:36]--[2021-06-13 Sun 18:45] =>  0:09
+:END:
+Mostly copied from [[https://protesilaos.com/dotemacs/#h:68d57dd2-4df1-4b7a-8766-231216e6cd9c][Prot]].
+
+[2021-07-24 Sat 21:21] Removing. Too slow.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-feature desktop
+  :custom
+  (desktop-dirname "~/.emacs.d/")
+  (desktop-base-file-name "desktop")
+  (desktop-save t)
+  (desktop-missing-file-warning t)
+  (desktop-files-not-to-save nil)
+  (desktop-globals-to-clear nil)
+  (desktop-load-locked-desktop t)
+  (desktop-restore-eager 3)
+  (desktop-restore-frames t)
+  :config
+  (desktop-save-mode 1))
+#+end_src
+
+** dired-plus
+:PROPERTIES:
+:ID:       A52EADEC-BB65-42B2-A727-4C9060B029ED
+:END:
+:LOGBOOK:
+CLOCK: [2021-04-23 Fri 08:11]--[2021-04-23 Fri 09:14] =>  1:03
+:END:
+[[https://www.emacswiki.org/emacs/DiredPlus][Dired Plus]] enhances and extends Dired's native functionality. Not working. And probably not needed. To prevent Dired from opening a new buffer every time you navigate to a new folder, use ~a~ or ~i~ rather than ~RET~.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package dired+
+  :straight (dired+ :type git :host github :repo "emacsmirror/dired-plus")
+  :demand t
+  :config
+  (diredp-toggle-find-file-reuse-dir 1) ; reuses the same buffer for navigating directories
+  (setq diredp-wrap-around-flag nil))
+#+end_src
+** dired-sidebar
+:PROPERTIES:
+:ID:       0F688463-263F-44BB-BDDD-A6719B674C09
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package dired-sidebar
+  ;; :commands
+  ;; (dired-sidebar-toggle-sidebar) ; I think this is unnecessary
+  :general
+  ("C-A-d" 'dired-sidebar-toggle-sidebar))
+#+end_src
+
+** elmacro
+:PROPERTIES:
+:ID:       03C96CC7-B209-4BCB-AC8F-E7F1EC9969B0
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-25 Fri 21:35]--[2021-06-25 Fri 21:36] =>  0:01
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package elmacro
+  :general
+  ("M-A-h" 'elmacro-show-last-macro))
+#+end_src
+
+** emojify
+:PROPERTIES:
+:ID:       E2190322-2E1A-4DED-BB19-B2EBF119C6FF
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-09 Sat 09:37]--[2022-07-09 Sat 09:56] =>  0:19
+:END:
+I don't think I needed, given that I use ~company-emoji~.
+
+[2022-07-09 Sat 08:55] Enabling it to use with [[id:94F76C3D-9547-431D-93AB-8814F4218AFF][slack]].
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package emojify
+  :hook
+  (slack-mode-hook . emojify-mode))
+#+end_src
+
+** git-auto-commit-mode
+:PROPERTIES:
+:ID:       2350BB11-7490-45CF-A31C-06FE66E0FD94
+:END:
+:LOGBOOK:
+CLOCK: [2021-02-05 Fri 16:14]--[2021-02-05 Fri 16:21] =>  0:07
+:END:
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package git-auto-commit-mode
+  :demand t)
+#+end_src
+
+*** Archive                                                                                                           :ARCHIVE:
+:PROPERTIES:
+:ID:       2FF609DA-08E9-4962-83D1-6A790A642338
+:END:
+**** CANCELLED [#5] Figure out why some files are not auto-pushed
+CLOSED: [2021-02-05 Fri 16:14]
+:PROPERTIES:
+:Effort:   1:30
+:ARCHIVE_TIME: 2021-02-05 Fri 22:31
+:ID:       7E2CD218-EF16-4341-AFDE-C6C6B1B1ACAE
+:END:
+:LOGBOOK:
+CLOCK: [2021-02-05 Fri 16:07]--[2021-02-05 Fri 16:14] =>  0:07
+CLOCK: [2021-01-31 Sun 09:06]--[2021-01-31 Sun 09:11] =>  0:05
+:END:
+E.g. metaculus.org, ea.org.
+
+[2021-01-31 Sun 09:07] It could be a time out issue, caused by a high number of commits. When this threshold is exceeded, no further pushes will be made. I recently manually pushed metaculus.org, then made a trivial change and saved the file. Then went to Gihub and could confirm that a new commit had been made with this trivial change, confirming my hypothesis. Will be observing the behavior in the coming days and then update this.
+
+[2021-02-05 Fri 16:14] I have now decided not to use auto-push, so canceling.
+
+**** DONE [#4] Fix git-auto-commit-mode issue where only some files are auto-committed on save
+CLOSED: [2021-02-23 Tue 18:53]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-02-23 Tue 22:12
+:ID:       F16EA59A-93DF-4D46-B335-6671114016B6
+:END:
+:LOGBOOK:
+CLOCK: [2021-02-23 Tue 17:55]--[2021-02-23 Tue 18:20] =>  0:25
+CLOCK: [2021-02-11 Thu 16:56]--[2021-02-11 Thu 17:07] =>  0:11
+:END:
+[2021-02-11 Thu 16:58] I think this is because I'm saving buffers using ~save-all-buffers~ (~H-S~) rather than ~save-buffer~ (~C-s~). Whenever I use ~save-buffer~, I see a commit message in the mini-buffer, whereas this isn't always the case with ~save-all-buffers~. Make sure this is true and then post an issue on the developer's Github page.
+
+[2021-02-12 Fri 22:47] The above is wrong. The reason some pages are not being committed is that they were auto-saved before I tried to save them manually, so the manual save does not trigger a commit event, and neither does the auto save. So I should remove git-auto-commit and instead create a key binding or, if necessary, a macro or function to quickly save all agenda files and trigger that command when I currently use ~save-all-buffers~.
+
+[2021-02-23 Tue 18:47] I tried to disable ~git-auto-commit-mode~ but wasn't able to make [[https://emacs.stackexchange.com/a/20160][this]] function work, so the alternative was to commit manually without relying on a single key press. I find this even worse, so I'm re-enabling that package. My solution is to set ~dotspacemacs-auto-save-file-location~ to ~cache~ (rather than ~original~) so that auto-saving doesn't interfere with what files get auto-committed (otherwise if a file's most recent changes had been saved when I try to save it manually, ~git-auto-commit-mode~ will not be triggered, and hence no commits will be made).
+
+**** CANCELLED [#3] Figure out why config file isn't auto-committing!
+CLOSED: [2021-06-16 Wed 18:09]
+:PROPERTIES:
+:Effort:   0:45
+:ARCHIVE_TIME: 2021-06-16 Wed 18:09
+:ID:       8AE22A38-2014-463A-BD5F-40103DB2469E
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-16 Wed 18:07]--[2021-06-16 Wed 18:09] =>  0:02
+:END:
+:STATES:
+- Not scheduled, was "[2021-06-16 Wed 18:00-18:30]" on [2021-06-16 Wed 18:07]
+- Rescheduled from "[2021-06-16 Wed]" on [2021-06-15 Tue 22:52]
+:END:
+I now no longer think this should be fixed: on the contrary, it seems desirable to exclude config.org from the files that are auto-committing, since this is the one file where I would like to attach edit summaries to the commits, which I cannot do if the commits are created automatically.** org-weather
+:LOGBOOK:
+CLOCK: [2021-06-29 Tue 15:42]--[2021-06-29 Tue 16:17] =>  0:35
+:END:
+https://github.com/kautsig/org-weather
+
+I could never make this work.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package org-weather
+  :demand t
+  :straight (org-weather :host github :repo "kautsig/org-weather")
+  :custom
+  (org-weather-location "London, UK")
+  :config
+  (org-weather-refresh))
+#+end_src
+
+** gnus
+:PROPERTIES:
+:ID:       E484FDAF-0504-4AA8-B296-01B4440FF625
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-29 Sat 14:40]--[2021-05-29 Sat 15:10] =>  0:30
+CLOCK: [2021-04-23 Fri 20:57]--[2021-04-23 Fri 21:48] =>  0:51
+CLOCK: [2021-04-20 Tue 20:53]--[2021-04-20 Tue 20:55] =>  0:02
+CLOCK: [2021-04-14 Wed 09:43]--[2021-04-14 Wed 09:52] =>  0:09
+CLOCK: [2021-03-30 Tue 20:45]--[2021-03-30 Tue 21:45] =>  1:00
+CLOCK: [2021-03-29 Mon 20:45]--[2021-03-29 Mon 20:57] =>  0:12
+CLOCK: [2021-03-29 Mon 19:30]--[2021-03-29 Mon 20:02] =>  0:32
+CLOCK: [2021-03-29 Mon 10:15]--[2021-03-29 Mon 10:48] =>  0:33
+CLOCK: [2021-03-29 Mon 09:35]--[2021-03-29 Mon 09:51] =>  0:16
+CLOCK: [2021-03-28 Sun 21:29]--[2021-03-28 Sun 22:06] =>  0:37
+CLOCK: [2021-03-28 Sun 21:21]--[2021-03-28 Sun 21:26] =>  0:05
+CLOCK: [2021-03-21 Sun 11:17]--[2021-03-21 Sun 11:46] =>  0:29
+CLOCK: [2021-03-18 Thu 19:49]--[2021-03-18 Thu 20:02] =>  0:13
+CLOCK: [2021-03-18 Thu 16:56]--[2021-03-18 Thu 17:00] =>  0:04
+:END:
+
+** goldendict
+:PROPERTIES:
+:ID:       3CE5ECC7-54EF-4000-8CAA-80DB6F703B5C
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-28 Sat 15:02]--[2022-05-28 Sat 15:10] =>  0:08
+:END:
+Crashes goldendict.
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package goldendict)
+#+end_src
+** guess-language
+:PROPERTIES:
+:ID:       7280EF5E-6372-4AD7-8DAD-033A5C379CB7
+:END:
+Automatically detect language for Flyspell.
+
+[2021-07-16 Fri 19:02] I think this is slowing things down. Also, it causes weird behavior in org-babel code blocks.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package guess-language
+  :custom
+  (guess-language-langcodes '((en . ("en" "English"))
+                              (es . ("es" "Spanish"))))
+  (guess-language-languages '(en es))
+  (guess-language-min-paragraph-length 45)
+  :hook
+  (text-mode-hook . guess-language-mode))
+#+end_src
+
+** helm
+:PROPERTIES:
+:ID:       CA0C139F-5649-4328-B1B8-A4D3E2055E56
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-21 Tue 16:19]--[2022-06-21 Tue 16:20] =>  0:01
+CLOCK: [2022-06-19 Sun 06:44]--[2022-06-19 Sun 07:00] =>  0:16
+CLOCK: [2022-06-07 Tue 19:53]--[2022-06-07 Tue 20:30] =>  0:37
+CLOCK: [2022-05-29 Sun 11:46]--[2022-05-29 Sun 12:13] =>  0:27
+CLOCK: [2022-05-01 Sun 19:00]--[2022-05-01 Sun 19:34] =>  0:34
+CLOCK: [2021-11-11 Thu 13:00]--[2021-11-11 Thu 13:08] =>  0:08
+CLOCK: [2021-07-31 Sat 15:13]--[2021-07-31 Sat 15:31] =>  0:18
+CLOCK: [2021-07-31 Sat 15:00]--[2021-07-31 Sat 15:05] =>  0:05
+CLOCK: [2021-06-11 Fri 07:50]--[2021-06-11 Fri 08:06] =>  0:16
+CLOCK: [2021-06-10 Thu 20:49]--[2021-06-10 Thu 21:20] =>  0:31
+CLOCK: [2021-06-10 Thu 13:53]--[2021-06-10 Thu 14:01] =>  0:08
+CLOCK: [2021-04-05 Mon 18:37]--[2021-04-05 Mon 18:53] =>  0:16
+CLOCK: [2021-04-05 Mon 15:56]--[2021-04-05 Mon 16:17] =>  0:21
+CLOCK: [2021-04-04 Sun 22:00]--[2021-04-04 Sun 22:14] =>  0:14
+CLOCK: [2021-04-02 Fri 16:59]--[2021-04-02 Fri 17:11] =>  0:12
+:END:
+[[https://rnchzn.github.io/helm/doc/helm.html][manual]]
+[[https://tuhdo.github.io/helm-intro.html][A Package in a league of its own]]
+
+I've considered migrating to ivy, but unfortunately Helm offers better support for org-related commands. Examples include ~helm-org-in-buffer-headings~, ~org-helm-ql~, ~org-rifle~, and others.
+
+[2022-06-21 Tue 20:51] No longer using ~helm~.
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package helm
+  :demand t
+  :custom
+  (helm-M-x-show-short-doc t)
+  (helm-truncate-lines t)
+  (helm-split-window-inside-p t) ; show results at the bottom
+  (helm-mode-fuzzy-match t) ; activate fuzzy matching globally (https://github.com/emacs-helm/helm/wiki/Fuzzy-matching)
+  (helm-ff-file-name-history-use-recentf t)
+  (helm-ff-newfile-prompt-p nil)
+  (helm-ff-skip-boring-files t)
+  (helm-ff-ido-style-backspace 'always)
+  (helm-ff--auto-update-state t)
+  (helm-M-x-fuzzy-match nil)
+  ;; (helm-bookmark-show-location t)
+  ;; (helm-buffers-fuzzy-matching t)
+  ;; (helm-file-cache-fuzzy-match t)
+  ;; (helm-imenu-fuzzy-match t)
+  ;; (helm-recentf-fuzzy-match t)
+  (helm-locate-command "mdfind -name %s %s") ; replace locate with spotlight on Mac
+  :config
+  (require 'helm-config)
+  (require 'helm-for-files)
+  (helm-mode 1)
+  (cl-loop for ext in '("\\.elc$" "\\.py[cod]$")
+           do (add-to-list 'helm-boring-file-regexp-list ext))
+  (add-to-list 'helm-find-files-actions
+               '("Attach files for mu4e" . ps/helm-mu4e-attach) t)
+
+  ;; reddit.com/r/emacs/comments/3l3ukg/mu4e_and_helm_attachments/cv33w9b
+  (defun ps/helm-mu4e-attach (_file)
+    (gnus-dired-attach (helm-marked-candidates)))
+
+  (defun ps/helm-ff-run-open-file-externally ()
+    "Custom version of `helm-ff-run-open-file-externally'."
+    (interactive)
+    (with-helm-alive-p
+     (helm-exit-and-execute-action 'helm-open-file-externally)))
+
+  ;; I'm having trouble passing to `helm-exit-and-execute-action' in
+  ;; the command above a custom function that is not a native Helm
+  ;; action. So for the time being I'm just replacing the Helm
+  ;; function itself.
+  (defun helm-open-file-externally (file)
+    (browse-url-of-file file))
+
+  (advice-add 'helm-org-in-buffer-headings :before 'ps/org-widen-and-reveal)
+  (advice-add 'helm-org-in-buffer-headings :after 'ps/org-narrow-to-entry-and-children)
+  :general
+  ("H-f" 'helm-for-files
+   "H-F" 'helm-find-files
+   "H-g" 'helm-google-suggest
+   "H-A-b" 'helm-filtered-bookmarks
+   ;; "" 'helm-all-mark-rings
+   "H-A-r" 'helm-register
+   "H-u" 'helm-apropos
+   "M-x" 'helm-M-x
+   "H-s-h" 'helm-org-in-buffer-headings)
+  ((helm-read-file-map helm-find-files-map)
+   "<backspace>" nil) ; disable maddening backspace behavior (absurd default!)
+  (helm-map
+   "s-e" 'ps/helm-ff-run-open-file-externally
+   "TAB" 'helm-execute-persistent-action
+   ;; Bizarrely, the two commands below scroll up/down the helm
+   ;; window, i.e. the selected window, not the other window
+   "A-C-s-y" 'scroll-other-window-down
+   "A-C-s-h" 'scroll-other-window
+   "A-C-s-t" 'helm-scroll-other-window-down
+   "A-C-s-g" 'helm-scroll-other-window
+   "C-k" nil
+   "C-z" 'helm-select-action
+   "C-v" 'helm-next-page
+   "s-m" (lambda! (helm-select-nth-action 0))
+   "s-," (lambda! (helm-select-nth-action 1))
+   "s-." (lambda! (helm-select-nth-action 2))
+   "s-j" (lambda! (helm-select-nth-action 3))
+   "s-k" (lambda! (helm-select-nth-action 4))
+   "s-l" (lambda! (helm-select-nth-action 5))
+   "s-u" (lambda! (helm-select-nth-action 6))
+   "s-i" (lambda! (helm-select-nth-action 7))
+   "s-o" (lambda! (helm-select-nth-action 8))
+   "s-SPC" (lambda! (helm-select-nth-action 9)))
+  (helm-buffer-map
+   "M-k" 'helm-buffer-run-kill-persistent))
+#+end_src
+
+- [[https://github.com/iqbalansari/dotEmacs/blob/master/config/helm.org][dotEmacs/helm.org at master · iqbalansari/dotEmacs · GitHub]]
+*** Archive                                                                                                           :ARCHIVE:
+:PROPERTIES:
+:ID:       9455F2C4-CABA-411B-880D-482A09F20E7E
+:END:
+**** DONE Rebind Helm function keys
+CLOSED: [2021-06-10 Thu 14:02]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-06-10 Thu 14:02
+:ID:       2F27ADEC-EF38-4D93-B065-4E6122DC3EC3
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-10 Thu 12:49]--[2021-06-10 Thu 13:15] =>  0:26
+:END:
+
+**** DONE [#4] Make Helm sort results by frequency
+CLOSED: [2021-11-21 Sun 18:41]
+:PROPERTIES:
+:Effort:   0:30
+:ARCHIVE_TIME: 2021-11-21 Sun 18:41
+:ID:       06897B94-76FE-46F8-96B2-D3F6B9051ACF
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-31 Sat 14:51]--[2021-07-31 Sat 15:00] =>  0:09
+:END:
+See [[https://www.reddit.com/r/emacs/comments/kitzsc/give_emacs_psychic_completion_powers_with/ggtlxce/?utm_source=reddit&utm_medium=web2x&context=3][this comment]].
+**** CANCELLED Diagnose why ~mdfind~ isn't working properly when called from Emacs
+CLOSED: [2022-06-21 Tue 20:52]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-06-21 Tue 20:52
+:ID:       B1678C17-5687-429C-9D40-AC12F20C3A0C
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-21 Tue 16:20]--[2022-06-21 Tue 17:00] =>  0:40
+:END:
+I give up. Switched to vertico+consult+embark+marginalia.
+**** CANCELLED [#6] Create custom version of ~helm-for-files~ that works with narrowed buffers
+CLOSED: [2022-06-21 Tue 20:52]
+:PROPERTIES:
+:Effort:   1:00
+:ARCHIVE_TIME: 2022-06-21 Tue 20:52
+:ID:       6B53BBEB-327E-4123-A512-04EB5D911BAF
+:END:
+I think the desired behavior is that point goes to the top-level heading, with all subheadings visible but not expanded.
+** helm-ag
+:PROPERTIES:
+:ID:       D5E94E77-936F-4B85-85FC-62AE2E508CA4
+:END:
+[2022-06-21 Tue 20:49] Replaced by ~consult-ag~.
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print ps/file-init))
+(use-package helm-ag
+  :general
+  ("A-C-a" 'helm-ag))
+#+end_src
+
+** helm-bibtex
+:PROPERTIES:
+:ID:       54D9A0B5-3018-4F5D-B9A7-677E5CECA004
+:END:
+[2022-06-22 Wed 19:20] No longer using ~helm~.
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package helm-bibtex
+  :demand t
+  :after bibtex-completion)
+#+end_src
+
+*** Archive                                                                                                           :ARCHIVE:
+:PROPERTIES:
+:ID:       86815C02-16CC-406A-A005-427AFD02BC9A
+:END:
+**** DONE [#4] Modify 'library' capture template
+CLOSED: [2021-07-31 Sat 12:51]
+:PROPERTIES:
+:Effort:   1:00
+:ARCHIVE_TIME: 2021-07-31 Sat 12:51
+:ID:       644CFF13-C079-4752-AA11-94D126480FC4
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-31 Sat 12:49]--[2021-07-31 Sat 12:51] =>  0:02
+:END:
+- [ ] Title should be a citation formatted according to ~bibtex-completion~
+- [ ] Body should be an ~org-ref~ citation key.
+
+**** DONE [#5] Tweak ~ps/bibtex-completion-export-zotero-database~ command to export old.bib
+CLOSED: [2021-10-02 Sat 21:21]
+:PROPERTIES:
+:Effort:   0:25
+:ARCHIVE_TIME: 2021-10-02 Sat 21:21
+:ID:       947CB665-EE77-413D-A58A-EC96AB54B8C2
+:END:
+:LOGBOOK:
+CLOCK: [2021-10-02 Sat 20:53]--[2021-10-02 Sat 21:22] =>  0:29
+:END:
+
+**** CANCELLED [#5] Diagnose cause of erratic duplicate 'notes' template
+CLOSED: [2022-06-22 Wed 19:21]
+:PROPERTIES:
+:Effort:   0:25
+:ID:       7B3454D7-8C2F-4F6C-81D9-E2E1E914D8F4
+:ARCHIVE_TIME: 2022-06-22 Wed 19:21
+:END:
+:LOGBOOK:
+CLOCK: [2022-02-15 Tue 13:48]--[2022-02-15 Tue 13:49] =>  0:01
+:END:
+I.e. if I select 'notes' on a reference that already contains notes, sometimes a duplicate template will be added.
+**** CANCELLED [#4] Diagnose why loading of bibliography takes such a long time
+CLOSED: [2022-06-22 Wed 19:21]
+:PROPERTIES:
+:Effort:   0:25
+:ID:       77231999-EF60-47AE-9B3E-3CEF37EB348E
+:ARCHIVE_TIME: 2022-06-22 Wed 19:21
+:END:
+** helm-mu
+:PROPERTIES:
+:ID:       580AD60B-FFEA-4DEA-8E41-B0CDB2514158
+:END:
+Stopped working.
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package helm-mu
+  :demand t
+  :general
+  ("A-M-m" 'helm-mu))
+#+end_src
+
+** helm-org-ql
+:PROPERTIES:
+:ID:       B0D9D5A9-D7E1-4950-9716-1B660D343C45
+:END:
+Replacing with ~org-ql-find~.
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package helm-org-ql
+  :after helm
+  :config
+  ;; Tweaked function so that it excludes archived headings.
+  (cl-defun helm-org-ql-source (buffers-files &key (name "helm-org-ql"))
+    "Return Helm source named NAME that searches BUFFERS-FILES with `helm-org-ql'."
+    ;; Expansion of `helm-build-sync-source' macro.
+    (helm-make-source name 'helm-source-sync
+                      :candidates (lambda ()
+                                    (let* ((query (org-ql--query-string-to-sexp (concat "tags: !ARCHIVE " helm-pattern)))
+                                           (window-width (window-width (helm-window))))
+                                      (when query
+                                        (with-current-buffer (helm-buffer-get)
+                                          (setq helm-org-ql-buffers-files buffers-files))
+                                        (ignore-errors
+                                          ;; Ignore errors that might be caused by partially typed queries.
+                                          (org-ql-select buffers-files query
+                                            :action `(helm-org-ql--heading ,window-width))))))
+                      :match #'identity
+                      :fuzzy-match nil
+                      :multimatch nil
+                      :nohighlight t
+                      :volatile t
+                      :keymap helm-org-ql-map
+                      :action helm-org-ql-actions))
+
+  (advice-add 'helm-org-ql-agenda-files :before #'ps/org-widen-and-reveal)
+  (advice-add 'helm-org-ql-agenda-files :after #'ps/org-narrow-to-entry-and-children)
+
+  :general
+  (
+   "H-j" 'helm-org-ql-agenda-files
+   "A-H-j" 'helm-org-ql-org-directory
+   )
+  )
+#+end_src
+
+*** Archive                                                                                                           :ARCHIVE:
+:PROPERTIES:
+:ID:       83F5DEAA-7151-4D5F-A40F-D4694A80A39A
+:END:
+**** DONE Check out Selectrum
+CLOSED: [2021-06-13 Sun 18:23]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-06-13 Sun 18:23
+:ID:       04639A24-3279-4F68-825B-26BFBA9EC65E
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-10 Thu 12:04]--[2021-06-10 Thu 12:08] =>  0:04
+:END:
+https://github.com/tpeacock19/org-ql-config
+
+I don't see a reason to leave Helm.
+**** DONE Post question about helm-org-ql recipe
+CLOSED: [2021-07-18 Sun 18:35]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-07-18 Sun 18:35
+:ID:       1A28BA6D-20CD-4EB8-81DA-CCCFD70DA0C8
+:END:
+https://github.com/raxod502/straight.el/issues
+
+
+I'm trying to install the [org-ql](https://github.com/alphapapa/org-ql) package with a version of `helm-org-ql` from a fork by [yantar92](https://github.com/yantar92/org-ql). Here's the recipe I'm using:
+
+```
+(use-package org-ql
+:straight
+(org-ql
+:type git
+:flavor melpa
+:host github
+:repo "alphapapa/org-ql"
+:files (:defaults (:exclude "helm-org-ql.el"))))
+
+(use-package helm-org-ql
+:straight
+(helm-org-ql
+:type git
+:host github
+:repo "alphapapa/org-ql"
+:fork (:host github
+:repo "yantar92/org-ql")
+:files ("helm-org-ql.el")))
+```
+
+Evaluating that code block returns the following error:
+
+```
+Warning (straight): Packages "org-ql" and "helm-org-ql" have incompatible recipes (:fork cannot be both nil and (:host github :repo "yantar92/org-ql")) Disable showing Disable logging
+Warning (straight): Packages "helm-org-ql" and "org-ql" have incompatible recipes (:fork cannot be both (:host github :repo "yantar92/org-ql") and nil) Disable showing Disable logging
+```
+
+I'm not sure I understand what to do in response to this. I tried various changes that seemed sensible but none worked.
+
+To make it work, I had to clone yantar92's repository and then use the recipe
+
+```
+(use-package helm-org-ql
+:straight
+(helm-org-ql
+:local-repo "~/.emacs.d/local/org-ql"
+:files ("helm-org-ql.el"))
+```
+
+This is okay, except that I'd like to be able to
+**** DONE [#5] Restrict matching candidates to heading names
+CLOSED: [2021-07-18 Sun 22:15]
+:PROPERTIES:
+:Effort:   0:16
+:ARCHIVE_TIME: 2021-07-18 Sun 22:15
+:ID:       952858A3-79A4-4396-ABD6-CC1EA205A637
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-18 Sun 18:35]--[2021-07-18 Sun 19:42] =>  1:07
+:END:
+I accomplished this using ~helm-imenu~.
+**** DONE [#4] Sort helm org ql results by frequency
+CLOSED: [2021-11-22 Mon 10:09]
+:PROPERTIES:
+:Effort:   0:45
+:org-gcal-managed: org
+:ARCHIVE_TIME: 2021-11-22 Mon 10:09
+:ID:       363ED5A6-A42A-4BBC-ACD1-55AC14FEBB36
+:END:
+**** CANCELLED [#4] Disable fuzzy search
+CLOSED: [2022-02-20 Sun 11:24]
+:PROPERTIES:
+:Effort:   0:30
+:ID:       A5E92F57-0C75-45C3-BB4D-B7EC28D03414
+:ARCHIVE_TIME: 2022-02-20 Sun 11:25
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-01 Tue 20:35]--[2021-06-01 Tue 20:40] =>  0:05
+CLOCK: [2021-05-28 Fri 14:56]--[2021-05-28 Fri 15:00] =>  0:04
+:END:
+Enable both fuzzy search and archives with a prefix argument.
+
+**** DONE [#4] Create custom helm-org-ql source
+CLOSED: [2022-04-27 Wed 18:18]
+:PROPERTIES:
+:Effort:   0:50
+:ID:       FF011A4C-8E3C-4717-9656-D303D9758A7B
+:ARCHIVE_TIME: 2022-04-27 Wed 18:22
+:END:
+:LOGBOOK:
+CLOCK: [2022-04-27 Wed 16:44]--[2022-04-27 Wed 18:19] =>  1:35
+:END:
+As suggested by Alphapapa [[https://github.com/alphapapa/org-ql/issues/210][here]].
+
+[2021-06-13 Sun 20:55] I checked the link but I don't know enough Emacs Lisp to know what to do.
+
+[2021-12-03 Fri 17:59] I think I now probably know enough to do it. And yantar92's fork is no longer working.
+
+[2022-04-27 Wed 17:38] I tried tweaking this function, but strangely even just replacing the function in the source file with a verbatim replica here makes the command stop working!
+
+[2022-04-27 Wed 18:17] Okay, I did it! But I need to modify the original function; I can't apply my usual method of creating a personal function and overriding the original with an advice. Not sure why.
+**** DONE Follow up with Adam Porter on [[mu4e:msgid:alphapapa/org-ql/issues/210/1158456029@github.com][Re: [alphapapa/org-ql] Make helm-org-ql ignore archive siblings by default? (#210)]]
+CLOSED: [2022-06-18 Sat 14:06] SCHEDULED: <2022-06-17 Fri>
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-06-18 Sat 14:06
+:ID:       0794EF45-CB8B-40DC-AC71-8188B78FCC57
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-18 Sat 11:22]--[2022-06-18 Sat 11:53] =>  0:31
+:END:
+
+** helm-pass
+:PROPERTIES:
+:ID:       27A45C51-0A2E-47B8-BA06-F9BCCCFC6680
+:END:
+[2022-06-21 Tue 20:50] No longer using ~helm~.
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print ps/file-init))
+(use-package helm-pass
+  :general
+  ("H-P" 'helm-pass))
+#+end_src
+
+** helm-rg
+:PROPERTIES:
+:ID:       EAEE284B-D54C-49A5-A523-8DA86F825B0C
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-31 Sat 16:07]--[2021-07-31 Sat 16:19] =>  0:12
+:END:
+[2022-06-21 Tue 20:44] Replaced by ~consult-ripgrep~.
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print ps/file-init))
+(use-package helm-rg
+  :custom
+  (helm-rg-default-directory ps/dir-org)
+  (helm-rg-thing-at-point nil) ; do not prepopulate minibuffer
+  :config
+  (defun ps/helm-rg-root ()
+    "Search entire hard drive."
+    (interactive)
+    (let ((helm-rg-default-directory "/"))
+      (call-interactively #'helm-rg)))
+  :general
+  ("H-r" 'helm-rg
+   "H-R" 'ps/helm-rg-root)
+  )
+#+end_src
+
+** helm-slack
+:PROPERTIES:
+:ID:       E315A4AC-7265-447E-9A2E-AD24F041BECC
+:END:
+:LOGBOOK:
+CLOCK: [2021-04-14 Wed 18:59]--[2021-04-14 Wed 19:07] =>  0:08
+:END:
+
+Not working. Seems abandoned.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package helm-slack
+  :straight (helm-slack :type git :host github :repo "yuya373/helm-slack"))
+#+end_src
+
+** helm-swiper
+:PROPERTIES:
+:ID:       E2248367-B32E-4E11-8DEC-B942A9B919EC
+:END:
+After installing it, I realized I already have ~helm-swoop~, so I don't see a need for this. I'm keeping it for a while just in case I change my mind.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package swiper-helm
+  :disabled
+  ("C-s" 'swiper-helm))
+#+end_src
+
+** helm-swoop
+:PROPERTIES:
+:ID:       7BB8F4EF-B5D2-417C-90C0-D0B2BC3B4142
+:END:
+:LOGBOOK:
+CLOCK: [2021-04-14 Wed 12:55]--[2021-04-14 Wed 13:14] =>  0:19
+:END:
+[2022-06-21 Tue 20:46] Migrated to ~consult~.
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print ps/file-init))
+(use-package helm-swoop
+  :custom
+  (helm-swoop-pre-input-function (lambda () "")) ; do not start search with thing at point (press 'C-w' when you need it)
+  :general
+  ("C-a" 'helm-swoop)
+  (helm-swoop-map
+   "C-a" 'helm-multi-swoop-current-mode-from-helm-swoop
+   "C-s" 'helm-next-line
+   "C-r" 'helm-previous-line)
+  (helm-multi-swoop-map
+   "C-s" 'helm-next-line
+   "C-r" 'helm-previous-line))
+#+end_src
+
+** helm-yasnippet
+:PROPERTIES:
+:ID:       E4FD1FE2-9684-4315-A235-6F1E398E0587
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-25 Fri 21:15]--[2021-06-25 Fri 21:16] =>  0:01
+:END:
+[2022-06-22 Wed 06:09] Replaced by [[id:437A790A-467F-46CB-9EE3-25AA91D43D89][consult-yasnippet]].
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package helm-c-yasnippet
+  :after yasnippet
+  :general
+  ("A-C-y" 'helm-yas-complete))
+#+end_src
+
+** MacOS Contacts
+:PROPERTIES:
+:ID:       42394996-C7A1-4F43-99FD-5C87E2DC9E82
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-11 Sun 17:18]--[2021-07-11 Sun 18:02] =>  0:44
+CLOCK: [2021-07-10 Sat 20:20]--[2021-07-10 Sat 20:35] =>  0:15
+CLOCK: [2021-05-26 Wed 12:30]--[2021-05-26 Wed 12:39] =>  0:09
+CLOCK: [2021-03-22 Mon 13:43]--[2021-03-22 Mon 13:54] =>  0:11
+:END:
+
+The following code block, courtesy of [[https://codeisgreat.org/writings.html][Pankaj Jangid]], doesn't require the installation of any packages, though it only works on Emacs 28. When point is on an address field of the Message mode, type a few words of the name whose email you want to insert and press ~ ~C-TAB~. The matching entry will be inserted; if multiple matches are found, they will be all displayed by your active completion system.
+
+[2021-07-11 Sun 13:36] Freezes. Emailed the author.
+
+[2021-07-11 Sun 22:25] The cause is async.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(when (eq system-type 'darwin)
+  (eval-and-compile (require 'eudcb-macos-contacts))
+  (eudc-macos-contacts-set-server "localhost"))
+(eval-when-compile (require 'message))
+(define-key message-mode-map
+  [(control ?c) (tab)] 'eudc-expand-inline)
+(eval-when-compile (require 'sendmail))
+(define-key mail-mode-map
+  [(control ?c) (tab)] 'eudc-expand-inline)
+#+end_src
+
+To manage contacts within Emacs, I should check out [[https://www.gnu.org/software/hyperbole/][Hyperbole]]. Ideally I'd like my contacts to be synched bidirectionally with MacOS Contacts, because Google Contacts also syncs with them (which I use on my phone and on Gmail).
+
+** Metaculus
+:PROPERTIES:
+:ID:       DC5340DF-AD35-4561-B815-E34CFE48EE4D
+:END:
+:LOGBOOK:
+CLOCK: [2021-03-07 Sun 18:57]--[2021-03-07 Sun 19:01] =>  0:04
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle no
+(defun ps/switch-to-custom-id ()
+  (interactive)
+  (org-link-open-from-string (concat "[[#" (current-kill 0) "]]"))
+  (ps/org-narrow-to-entry-and-children))
+(defun ps/metaculus-first-question ()
+  (interactive)
+  (org-agenda-goto)
+  (org-clock-in nil)
+  (end-of-buffer nil)
+  (left-char 2)
+  (link-hint-open-link-at-point))
+(defun ps/metaculus-next-question ()
+  (interactive)
+  (other-window 1)
+  (org-agenda-todo "DONE")
+  (org-agenda-next-line)
+  (org-agenda-goto)
+  (org-clock-in nil)
+  (evil-goto-line nil)
+  (org-open-at-point nil))
+(defun ps/metaculus-next-question-defer ()
+  (interactive)
+  (other-window 1)
+  (org-agenda-do-date-later 4)
+  (org-agenda-next-line)
+  (org-agenda-goto)
+  (org-clock-in nil)
+  (evil-goto-line nil)
+  (org-open-at-point nil))
+(defun ps/metaculus-next-question-keep-date ()
+  (interactive)
+  (other-window 1)
+  (org-agenda-next-line)
+  (org-agenda-goto)
+  (org-clock-in nil)
+  (evil-goto-line nil)
+  (org-open-at-point nil))
+#+end_src
+
+
+#+begin_src emacs-lisp :results silent :tangle no
+(global-set-key (kbd "C-H-M-c") 'ps/switch-to-custom-id)
+(global-set-key (kbd "s-A-f") 'ps/metaculus-first-question)
+(global-set-key (kbd "s-A-n") 'ps/metaculus-next-question)
+(global-set-key (kbd "C-S-s-n") 'ps/metaculus-next-question-defer)
+(global-set-key (kbd "C-H-A-s-n") 'ps/metaculus-next-question-keep-date)
+#+end_src
+** mini-modeline
+:PROPERTIES:
+:ID:       E0449F7C-CAB5-417C-AF42-F7859F4A4E94
+:END:
+
+I would like to have /both/ the regular modeline and a mini modeline. Unfortunately, enabling the mini modeline disables the regular modeline. So this is disabled.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package mini-modeline
+  :config
+  (mini-modeline-mode t))
+#+end_src
+
+** notmuch
+:PROPERTIES:
+:ID:       98B1D39A-3AFA-4F79-B738-91E35463425A
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-26 Wed 18:11]--[2021-05-26 Wed 18:51] =>  0:40
+CLOCK: [2021-05-26 Wed 17:28]--[2021-05-26 Wed 17:46] =>  0:18
+CLOCK: [2021-05-18 Tue 21:22]--[2021-05-18 Tue 22:33] =>  1:11
+CLOCK: [2021-04-10 Sat 21:40]--[2021-04-10 Sat 21:58] =>  0:18
+:END:
+- [[https://jonathanchu.is/posts/emacs-notmuch-isync-msmtp-setup/][Emacs, Notmuch, isync, and msmtp Setup · jonathanchu.is]]
+- [[https://github.com/or/spacemail][GitHub - or/spacemail: Mail setup using offlineimap, notmuch, and spacemacs]]
+- [[https://www.youtube.com/watch?v=GlrsoIwJ-UM][Using Emacs Episode 64 - notmuch - YouTube]]
+- [[https://www.reddit.com/r/emacs/comments/gc7h2p/mu4e_and_gmail_deleting_a_message_from_both_inbox/fpaa4pi/?utm_source=reddit&utm_medium=web2x&context=3][mu4e and Gmail -- Deleting a message from both INBOX and "All Mail" : emacs]]
+  Provides a detailed config. Looks very helpful.
+- [[https://johngodlee.github.io/2018/07/15/mutt.html][Gmail on macOS command line: neomutt + offlineimap + notmuch + pass + vim + launchd (brew services) + w3m | John L. Godlee]]
+  Very detailed offlineimap config. A bit overwhelming.
+- [[https://jherrlin.github.io/posts/emacs-mu4e/][Mail in Emacs with mu4e and mbsync | jherrlin]]
+- [[https://forsooth.org/posts/email-in-spacemacs/index.html][Email in spacemacs | forsooth!]]
+  Has a method for using the MacOS key ring rather than GPG
+
+** org-mac-ical
+:PROPERTIES:
+:ID:       ECD7C641-8B5A-4B18-BCA7-155A850F77F9
+:END:
+:LOGBOOK:
+CLOCK: [2021-03-17 Wed 16:04]--[2021-03-17 Wed 16:40] =>  0:36
+CLOCK: [2021-03-17 Wed 16:01]--[2021-03-17 Wed 16:03] =>  0:02
+:END:
+https://orgmode.org/worg/org-contrib/org-mac-iCal.html
+
+Disabling to see if this was slowing things down.
+
+[2021-03-17 Wed 16:35] I tried to make it work but I failed. The package hasn't been updated in a while and it's likely that changes to newer Mac versions have broken something. I also tried installing [[https://github.com/ndw/org-mac-iCal][this fork]], but I don't know how to install packages manually on Spacemacs. Separately, I think this package is causing problems with org agenda: when I restart Emacs, I often get an error message saying that one of my agenda files couldn't be found. Overall, trying any further doesn't seem worth the hassle; just look for an alternative or, if nothing suitable exists, wait until something develops it.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(add-to-list 'org-modules 'org-mac-iCal)
+#+end_src
+
+#+begin_src emacs-lisp :results silent :tangle no
+(setq diary-file "~/Dropbox/org/diary")
+#+end_src
+
+** org-mac-link
+:PROPERTIES:
+:ID:       CA982498-98D2-4C42-96DE-F41DF811F0A9
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-03 Sat 23:19]--[2021-07-03 Sat 23:29] =>  0:10
+:END:
+https://orgmode.org/worg/org-contrib/org-mac-link.html
+[2021-07-14 Wed 08:40] Moving to graveyard: doesn't work reliably, and I don't really need it anyway.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package org-mac-link
+  :straight org-contrib)
+#+end_src
+** org-recent-headings
+:PROPERTIES:
+:ID:       B56DE2B8-1966-45D6-9685-E5112F2B574A
+:END:
+:LOGBOOK:
+CLOCK: [2021-08-09 Mon 12:49]--[2021-08-09 Mon 12:49] =>  0:00
+:END:
+I wasn't really using it.
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package org-recent-headings
+  :demand t
+  :config (org-recent-headings-mode))
+
+(use-package helm-org-recent-headings
+  :after org-recent-headings
+  :general
+  ("H-A-j" 'helm-org-recent-headings))
+#+end_src
+** org-ref
+:PROPERTIES:
+:ID:       35FB5BB5-6552-48C6-983A-F90011CCA908
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-18 Sat 15:29]--[2022-06-18 Sat 15:50] =>  0:21
+CLOCK: [2021-11-06 Sat 18:29]--[2021-11-06 Sat 19:02] =>  0:33
+CLOCK: [2021-09-21 Tue 21:41]--[2021-09-21 Tue 21:47] =>  0:06
+CLOCK: [2021-08-09 Mon 13:55]--[2021-08-09 Mon 14:01] =>  0:06
+CLOCK: [2021-07-27 Tue 18:51]--[2021-07-27 Tue 19:36] =>  0:45
+CLOCK: [2021-07-25 Sun 15:42]--[2021-07-25 Sun 15:54] =>  0:12
+CLOCK: [2021-07-08 Thu 21:39]--[2021-07-08 Thu 21:54] =>  0:15
+CLOCK: [2021-07-06 Tue 13:06]--[2021-07-06 Tue 13:17] =>  0:11
+CLOCK: [2021-07-04 Sun 13:42]--[2021-07-04 Sun 14:30] =>  0:48
+CLOCK: [2020-09-10 Thu 10:07]--[2020-09-10 Thu 10:10] =>  0:03
+CLOCK: [2020-08-16 Sun 19:02]--[2020-08-16 Sun 19:54] =>  0:52
+CLOCK: [2020-08-16 Sun 18:34]--[2020-08-16 Sun 18:59] =>  0:25
+CLOCK: [2020-08-16 Sun 18:22]--[2020-08-16 Sun 18:30] =>  0:08
+:END:
+
+have a single notes file, rather than one file per note. I address this by replacing the  org-ref command to create a note with the bibtex-completion equivalent (see
+[cite:@80000Hours2021EffectiveAltruismTen]
+
+[2022-06-22 Wed 15:51] Migrating to [[id:35FB5BB5-6552-48C6-983A-F90011CCA908][org-ref]] and [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]]; no longer needed.
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+  (use-package org-ref
+    :demand t
+    :after (helm-bibtex bibtex-completion)
+    :custom
+    (org-ref-csl-default-style (expand-file-name "org-mode.csl" ps/dir-wiki-references))
+    (org-ref-default-bibliography bibtex-completion-bibliography)
+    (org-ref-bibliography-notes bibtex-completion-notes-path)
+    (org-ref-pdf-directory ps/dir-downloads)
+
+    ;; Make Helm-bibtex use file path specified in bibtex entry
+    ;; See emacs.stackexchange.com/a/58248/32089
+    (org-ref-get-pdf-filename-function 'org-ref-get-pdf-filename-helm-bibtex)
+
+    ;; set up LaTeX to work with org-ref (https://nickgeorge.net/science/org_ref_setup/)
+    (org-latex-pdf-process
+     '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+       "bibtex %b"
+       "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+       "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+
+    ;; set org-ref to create one file per note
+    (org-ref-notes-function 'org-ref-notes-function-many-files)
+    (org-ref-notes-directory ps/dir-bibliographic-notes)
+
+    ;; Added after upgrade to version 3
+    (org-ref-insert-link-function 'org-ref-insert-link-hydra/body)
+    (org-ref-insert-cite-function 'org-ref-cite-insert-helm)
+    (org-ref-insert-label-function 'org-ref-insert-label-link)
+    (org-ref-insert-ref-function 'org-ref-insert-ref-link)
+    (org-ref-cite-onclick-function (lambda (_) (org-ref-citation-hydra/body)))
+
+    :config
+    (require 'org-ref-helm)
+    (defun ps/org-ref-at-point (url field)
+      (interactive)
+      (browse-url
+       (url-encode-url
+        (format
+         url
+         (bibtex-completion-get-value
+          field
+          (bibtex-completion-get-entry (org-ref-get-bibtex-key-under-cursor)))))))
+
+    (defun ps/org-ref-zotero-at-point ()
+      (interactive)
+      (ps/org-ref-at-point "zotero://select/items/0_%s" "zotero"))
+
+    (defun ps/org-ref-goodreads-at-point ()
+      (interactive)
+      (ps/org-ref-at-point "https://www.goodreads.com/search?q=%s" "isbn"))
+
+    (defun ps/org-ref-amazon-at-point ()
+      (interactive)
+      (ps/org-ref-at-point "https://www.amazon.com/s?k=%s" "isbn"))
+
+    (defun ps/org-ref-wikipedia-at-point ()
+      (interactive)
+      (ps/org-ref-at-point "https://en.wikipedia.org/w/index.php?search=%s" "title"))
+
+    ;; Not working. Not sure why.
+    (defun ps/org-ref-open-pdf-at-point-externally ()
+      "Open pdf with default MacOS application."
+      (interactive)
+      (let ((org-file-apps '(("\\.pdf\\'" . default)))
+            (bibtex-completion-pdf-open-function '(lambda (fpath) (start-process "open" "*open*" "open" fpath))))
+        (org-ref-open-pdf-at-point)))
+
+    (defun ps/org-ref-copy-pdf-filename ()
+      (interactive)
+      (kill-new (org-ref-get-pdf-filename-bibtex-completion (org-ref-get-bibtex-key-under-cursor))))
+
+    (defun ps/org-ref-copy-bibtex-key ()
+      (interactive)
+      (kill-new (car (org-ref-get-bibtex-key-and-file))))
+
+    (defun ps/org-ref-paste-bibtex-key ()
+      (interactive)
+      (org-ref-insert-key-at-point (car kill-ring)))
+    (require 'doi-utils)
+
+    (defun ps/org-ref-cite-insert-helm-after-export (&optional arg)
+      "Export Zotero database before running `org-ref-cite-insert-helm'. If invoked with
+  prefix argument, export old database as well."
+      (interactive "P")
+      (if arg
+          (ps/bibtex-completion-export-zotero-database '(4)))
+      (ps/bibtex-completion-export-zotero-database)
+      (org-ref-cite-insert-helm))
+
+    (defun ps/org-ref-pdf-effort-estimate ()
+      "Assign effort estimate based on word count."
+      (interactive)
+      (when-let* ((key (org-ref-get-bibtex-key-under-cursor))
+                  (pdf (dolist (string (bibtex-completion-find-pdf key))
+                         (when (string-match-p "\\.pdf$" string)
+                           (cl-return string))))
+                  (words (string-to-number
+                          (shell-command-to-string
+                           (format "pdftotext '%s' - | wc -w" pdf))))
+                  (wpm 250) ; <- your reading speed
+                  (minutes (/ words wpm)))
+        (org-back-to-heading)
+        (org-set-effort nil (org-duration-from-minutes minutes))))
+
+    :general
+    ("H-/" 'org-ref-cite-insert-helm
+     "A-H-M-s-?" 'ps/org-ref-cite-insert-helm-after-export) ; command + ? intercepted by OSX
+    (org-ref-citation-hydra/keymap
+     "," 'ps/org-ref-copy-pdf-filename
+     "a" 'ps/org-ref-amazon-at-point
+     "c" 'ps/org-ref-copy-bibtex-key
+     ;; "n" (lambda! (bibtex-completion-edit-notes (org-ref-get-bibtex-keys)))
+     "g" 'ps/org-ref-goodreads-at-point
+     "s" 'org-ref-google-scholar-at-point
+     "P" 'ps/org-ref-open-pdf-at-point-externally
+     "l" 'ps/bibtex-completion-replace-heading-with-bibliographic-info
+     ;; "v" 'ps/org-ref-paste-bibtex-key
+     ;; "w" 'ps/org-ref-wikipedia-at-point
+     "z" 'ps/org-ref-zotero-at-point))
+#+end_src
+- [[https://www.anand-iyer.com/blog/2017/research-literature-management-with-emacs.html][Research Literature Management with Emacs | Anand Iyer]]
+- [[https://www.reddit.com/r/emacs/comments/4gudyw/help_me_with_my_orgmode_workflow_for_notetaking/d2l16uj/][Help me with my org-mode workflow for note-taking? : emacs]]. See top-rated comment.
+- [[https://emacs.stackexchange.com/questions/58861/using-org-ref-to-download-pdfs-using-sci-hub-as-a-fallback][org ref - Using org-ref to download pdfs using sci-hub as a fallback - Emacs Stack Exchange]]
+- [[https://github.com/jkitchin/org-ref/issues/426][How to customize the format of Bibtexkey? · Issue #426 · jkitchin/org-ref]]
+- [[https://github.com/dangom/org-thesis/blob/master/org-init.el#L384][org-thesis/org-init.el at master · dangom/org-thesis]]. Copy lines for defaulting to scihub.
+- [[https://nickgeorge.net/science/org_ref_setup/][Setting up and configuring org-ref]]
+- [[https://beepb00p.xyz/pkm-search.html][Building personal search infrastructure for your knowledge and code | beepb00p]]
+- [[https://org-roam.discourse.group/t/workflow-for-working-with-pdfs/103][Workflow for working with PDFs - How To / Guides - Org-roam]]
+
+*** Archive                                                                                                           :ARCHIVE:
+:PROPERTIES:
+:ID:       AAF59F35-F20F-4DBD-87BE-100D331F714A
+:END:
+**** DONE [#6] Set org-ref to use sci-hub by default
+CLOSED: [2021-06-18 Fri 15:14]
+:PROPERTIES:
+:Effort:   0:45
+:ARCHIVE_TIME: 2021-06-18 Fri 15:14
+:ID:       4FA1ED56-15AD-4353-B0E6-D5B899117035
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-18 Fri 15:05]--[2021-06-18 Fri 15:14] =>  0:09
+CLOCK: [2020-08-30 Sun 17:02]--[2020-08-30 Sun 17:17] =>  0:15
+:END:
+[[https://www.reddit.com/r/emacs/comments/fsjins/managing_my_annotated_bibliography_with_org_mode/fm2ugqo/?utm_source=reddit&utm_medium=web2x&context=3][This comment]] describes a possible implementation. Though I seem to recall seeing a way of configuring org-ref itself so that all its queries are by default done on Sci-Hub.
+@Article{North_2019,
+author       = {North, Ace R. and Burt, Austin and Godfray, H.
+Charles J.},
+title	       = {Modelling the potential of genetic control of
+malaria mosquitoes at national scale},
+journal      = {BMC Biology},
+year	       = 2019,
+volume       = 17,
+number       = 1,
+month	       = {Mar},
+issn	       = {1741-7007},
+doi	       = {10.1186/s12915-019-0645-5},
+url	       = {http://dx.doi.org/10.1186/s12915-019-0645-5},
+publisher    = {Springer Science and Business Media LLC}
+}
+
+
+https://emacs.stackexchange.com/questions/29309/how-to-debug-emacs-connection-problems
+**** DONE Format bibtex keys properly
+CLOSED: [2021-06-19 Sat 19:09]
+:PROPERTIES:
+:ARCHIVE_TIME: 2021-06-19 Sat 19:09
+:ID:       E54B365A-57F9-46B0-B927-C83E5201FFAC
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-19 Sat 19:02]--[2021-06-19 Sat 19:09] =>  0:07
+CLOCK: [2021-06-19 Sat 18:20]--[2021-06-19 Sat 18:30] =>  0:10
+:END:
+**** DONE [#5] Create function to assign effort estimate based on pdf word count
+CLOSED: [2022-06-06 Mon 10:14]
+:PROPERTIES:
+:Effort:   1:40
+:ARCHIVE_TIME: 2022-06-06 Mon 10:14
+:ID:       FA92C479-F6C3-43FC-B5E4-46F660AE974A
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-30 Mon 05:05]--[2022-05-30 Mon 05:24] =>  0:19
+CLOCK: [2021-12-13 Mon 18:19]--[2021-12-13 Mon 18:50] =>  0:31
+CLOCK: [2021-12-13 Mon 17:16]--[2021-12-13 Mon 18:12] =>  0:56
+:END:
+**** CANCELLED [#6] Tweak org-ref hydra
+CLOSED: [2022-06-22 Wed 19:20]
+:PROPERTIES:
+:Effort:   0:30
+:ID:       89C319C0-4336-4585-AA02-EA97A747CB62
+:ARCHIVE_TIME: 2022-06-23 Thu 08:39
+:END:
+Currently I've defined the key mappings but have not updated the menu to reflect these new definitions.
+** org-rifle
+:PROPERTIES:
+:ID:       AA8E94F1-9D18-44E0-A45A-15BD28CF85F1
+:END:
+:LOGBOOK:
+CLOCK: [2021-03-01 Mon 09:45]--[2021-03-01 Mon 09:58] =>  0:13
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package helm-org-rifle
+  :general
+  (org-mode-map
+   "s-A-r" 'helm-org-rifle-org-directory))
+#+end_src
+
+** org-super-agenda
+:PROPERTIES:
+:ID:       C51B234E-FAC3-4B57-AC69-DFEA3EB52C1A
+:END:
+I never found the need to use this.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package org-super-agenda
+  :after org-agenda
+  :custom
+  (org-super-agenda-groups
+   '((:auto-property "STYLE")))
+  :config
+  (org-super-agenda-mode))
+#+end_src
+** quelpa
+:PROPERTIES:
+:ID:       85E17700-FE49-4668-85C8-BD782FADE946
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-20 Thu 20:56]--[2021-05-20 Thu 21:19] =>  0:23
+CLOCK: [2021-05-15 Sat 09:40]--[2021-05-15 Sat 11:32] =>  1:52
+CLOCK: [2021-05-14 Fri 14:38]--[2021-05-14 Fri 14:55] =>  0:17
+CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
+:END:
+/I am no longer using Quelpa. This subtree is kept for historical purposes only. The code blocks below are not tangled./
+
+- If statistics is enabled (see below), use package can produce very useful reports. Invoke ~use-package-report~, then press ~S~ with point on the 'Time' column to sort the packages by time; pressing the key again reverses the sort order.
+- [[https://jwiegley.github.io/use-package/keywords/][Keywords — use-package]]
+- Useful Reddit thread: [[https://www.reddit.com/r/emacs/comments/j2xezg/usepackage_best_practices/][use-package Best Practices : emacs]]
+
+For reasons I don't understand, the below formula throws an error message. I can make it work by removing the ~unless~ condition, but then it will load on startup every time, slowing down Emacs considerably.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(unless (package-installed-p 'quelpa)
+  (with-temp-buffer
+    (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
+    (eval-buffer)
+    (quelpa-self-upgrade)))
+(setq quelpa-checkout-melpa-p nil
+      quelpa-update-melpa-p nil)
+#+end_src
+
+#+begin_src emacs-lisp :results silent :tangle no
+(quelpa '(quelpa-use-package
+          :fetcher github
+          :repo "quelpa/quelpa-use-package"))
+
+(require 'quelpa-use-package)
+#+end_src
+
+** request
+:PROPERTIES:
+:ID:       23542939-8E88-43C6-8696-C7BCAAC2A937
+:END:
+
+This is needed for some [[id:DCD9D75D-7814-49D8-A3E0-33846D5A08FD][bibtex-completion]] functions.
+
+[2022-06-23 Thu 08:32] No longer using [[id:DCD9D75D-7814-49D8-A3E0-33846D5A08FD][bibtex-completion]].
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package request
+  :demand t
+  :after bibtex-completion)
+#+end_src
+** rg
+:PROPERTIES:
+:ID:       A75847C6-5259-46DD-8D03-4EE3314E86E6
+:END:
+[2022-06-21 Tue 20:45] Replaced by ~consult-ripgrep~.
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print ps/file-init))
+(use-package rg
+  :custom
+  (rg-executable "rg")
+  (rg-group-result t))
+#+end_src
+
+** selected
+:PROPERTIES:
+:ID:       BCC2F8F6-B790-4E90-876F-4A3532063BD8
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-25 Fri 21:14]--[2021-06-25 Fri 21:15] =>  0:01
+CLOCK: [2021-04-06 Tue 16:19]--[2021-04-06 Tue 16:26] =>  0:07
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package selected
+  :commands
+  (selected-minor-mode)
+  :custom
+  (selected-org-mode-map (make-sparse-keymap))
+  :config
+  (selected-global-mode)
+  :general
+  (selected-keymap
+   "<down>" 'move-text-down
+   "<up>" 'move-text-up
+   "/" 'undo-in-region
+   "c" 'capitalize-region
+   "d" 'downcase-region
+   "D" 'delete-duplicate-lines
+   "g" 'helm-google-suggest
+   "m" 'apply-macro-to-region-lines
+   "n" 'move-text-down
+   "p" 'move-text-up
+   "q" 'selected-off
+   "s" 'sort-lines
+   "u" 'upcase-region
+   "w" 'count-words-region)
+  (selected-org-mode-map
+   "t" 'org-table-convert-region
+   "-" 'org-ctrl-c-minus))
+#+end_src
+** spotlight
+:PROPERTIES:
+:ID:       2AAD3586-2010-4206-B912-BB13BD42A4F5
+:END:
+Not needed since ~consult-locate~ can be configured to call ~mfind~.
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package spotlight)
+#+end_src
+
+** undo-tree
+:PROPERTIES:
+:ID:       BF2A8163-F19A-4780-A2B8-E501CC7CDBE2
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-25 Fri 21:16]--[2021-06-25 Fri 21:17] =>  0:01
+CLOCK: [2021-05-15 Sat 22:26]--[2021-05-15 Sat 22:30] =>  0:04
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package undo-tree
+  :demand t
+  :config
+  (global-undo-tree-mode)
+  :general
+  (undo-tree-map
+   "C-/" nil
+   "H-z" nil
+   "H-Z" nil
+   "H-A-z" 'undo-tree-visualize))
+#+end_src
+
+** ya-org-capture
+:PROPERTIES:
+:ID:       48B9914C-0E5D-4E91-B309-212D0D53ED6B
+:END:
+
+Since I don't use yankpad, I don't need this package either.
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package ya-org-capture
+  :straight (ya-org-capture
+             :host github
+             :repo "ag91/ya-org-capture")
+  :after yankpad
+  :config
+  (ya-org-capture/setup))
+#+end_src
+
+** yankpad
+:PROPERTIES:
+:ID:       FCC4AA49-E12C-416E-B25C-D754750607A3
+:END:
+https://github.com/Kungsgeten/yankpad
+I don't really see the need for this. I'm happy with have separate files for my snippets.
+
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+(use-package yankpad)
+#+end_src
+

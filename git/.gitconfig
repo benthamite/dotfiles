@@ -1,0 +1,16 @@
+[user]
+	name = Pablo Stafforini
+	email = pablo@stafforini.com
+[github]
+	user = benthamite
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[credential]
+	helper = osxkeychain
+[core]
+	excludesfile = /Users/pablostafforini/.gitignore
+[push]
+	autoSetupRemote = true

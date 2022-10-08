@@ -9,7 +9,7 @@
     "id": "cookieheader",
     "type": "hiddendata",
     "name": "CookieHeader",
-    "value": "csrf_cookie_name=2e6f5eb63abc0ff52249d373263a20b6; epl_session=096425aee07d734a0b642c9b0adab2cb"
+    "value": "csrf_cookie_name=2e6f5eb63abc0ff52249d373263a20b6; epl_session=e0c3260a77542ff8d7d68894db2a29b2"
   },
   {
     "id": "lasterror",

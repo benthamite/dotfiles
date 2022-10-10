@@ -11,7 +11,7 @@
 CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :END:
 * preface
-:properties:
+:PROPERTIES:
 :CUSTOM_ID: introduction
 :ID:       A7940400-DD17-4B0B-A9B2-565A207D680C
 :END:
@@ -25,12 +25,6 @@ CLOCK: [2021-02-03 Wed 16:32]--[2021-02-03 Wed 18:27] =>  1:55
 CLOCK: [2021-02-03 Wed 16:01]--[2021-02-03 Wed 16:32] =>  0:31
 CLOCK: [2021-02-03 Wed 15:40]--[2021-02-03 Wed 16:01] =>  0:21
 CLOCK: [2021-02-03 Wed 13:56]--[2021-02-03 Wed 15:02] =>  1:06
-:END:
-** Tips
-:PROPERTIES:
-:ID:       9CAB08E0-3753-4CA7-98D7-BD741D39556B
-:END:
-:LOGBOOK:
 CLOCK: [2021-01-31 Sun 15:22]--[2021-01-31 Sun 16:01] =>  0:39
 CLOCK: [2021-01-31 Sun 10:07]--[2021-01-31 Sun 10:28] =>  0:21
 CLOCK: [2021-01-24 Sun 11:41]--[2021-01-24 Sun 11:48] =>  0:07
@@ -70,6 +64,11 @@ CLOCK: [2020-10-05 Mon 18:56]--[2020-10-05 Mon 18:58] =>  0:02
 CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
 CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
+:END:
+
+** Tips
+:PROPERTIES:
+:ID:       9CAB08E0-3753-4CA7-98D7-BD741D39556B
 :END:
 - When you edit a code block, some features available when editing ordinary code, such as auto completion, indentation and snippets, will be unavailable. You can access these features by calling ~org-edit-special~ (~C-c '~) inside the block you want to edit.
 - See [[https://en.liujiacai.net/2021/05/21/emacs-package/][How to maintain your Emacs configuration - KeepCoding]]
@@ -111,17 +110,21 @@ You may want to auto-tangle the org file after you edit it, rather than make Ema
 :LOGBOOK:
 CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 :END:
+- Run ~bug-hunter-init-file~ (from the [[id:0C19171B-8DFA-4E06-9E17-45C1F9158C28][elisp-bug-hunter]] package) and select "automatic error detection" (~e~).
 - Run ~emacs -q~ or ~emacs --debug-init~.
-- Cut suspected sections of the org file (~org-cut-subtree~), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections but won't alter the org file itself.
+- Cut suspected sections of the org file (~org-cut-subtree~), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections, while leaving the literal org file intact.
 - Use ~git-timemachine~ to see how a suspected section of the config file compares with versions you know were working correctly.
-- Set ~debug-on-error~ to ~non-nil~ to see a backtrace of an error. Or call ~toggle-debug-on-error~ interactively.
+- Set ~debug-on-error~ to ~~t~ to see a backtrace of an error. Or call ~toggle-debug-on-error~ interactively.
 - Use Time Machine (on MacOS) to download and try increasingly older versions, to identify the version that introduced the bug. Then diff that version with its immediate successor.
 - Bisect the init file until you locate the culprit.
-  - Try [[https://github.com/Malabarba/elisp-bug-hunter][Elisp bug hunter]], which bisects a file progressively in an automated manner. It can also detect simple errors (like missing parens) without the need to bisect.
+    - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).
 - You may want to periodically save a stable init file so that you can temporarily use Emacs with all your customizations while debugging your current init file (instead of having to use an external editor or use a non-customized Emacs). Say you call this stable file ~stable.el~. Then you can tell Emacs to load this file on startup file with ~emacs -q -l ~/stable.el~.
 - Use ~edebug-defun~. See [[https://org-roam.discourse.group/t/need-help-getting-noter-pdfs-and-org-roam-bibtex-to-work/794/45?u=pablo][this discussion]].
 - For org-related issues (e.g. tangling the config file), use ~org-lint~, which checks the current buffer for syntax mistakes.
-- For more ideas, see also [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]] and [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
+- For more ideas, see:
+    - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]; and
+    - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
+      
 ** Profiling
 :PROPERTIES:
 :ID:       60B7A58C-A79A-4EEF-A91D-EECC85CFA173
@@ -129,7 +132,7 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 - If you use ~use-package~, the command ~use-package-report~ displays a table showing the impact of each package on load times.
 - You may also want to try [[https://www.emacswiki.org/emacs/ProfileDotEmacs][profile-dotemacs]].
 
-** Reinstallation
+** Installation
 :PROPERTIES:
 :ID:       6712DA4C-BA45-4E74-8AEF-C903462D9BCB
 :END:
@@ -157,28 +160,15 @@ CLOCK: [2022-04-27 Wed 16:21]--[2022-04-27 Wed 16:44] =>  0:23
 CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
 :END:
 
-/latest install/
+/latest install/ (~emacs-mac~):
 [2022-05-28 Sat 21:07] ~brew install emacs-mac --with-dbus --with-no-title-bars --with-spacemacs-icon~
 
-/install Emacs:/
+/previous install/ (~emacs-plus~):
+
 1. ~brew tap d12frosted/emacs-plus~
 2. ~brew install emacs-plus --with-no-titlebar --with-native-comp --with-imagemagick --with-spacemacs-icon --with-xwidgets --with-dbus~
 3. delete ~emacs.app~ from the ~applications~ folder
 4. ~ln -s /usr/local/opt/emacs-plus@27/Emacs.app /Applications~
-
-General notes:
-- It is normal for some packages not to work initially. This is usually resolved after re-running Emacs a couple times. Make sure you do this before spending any time trying to fix things.
-- The whole reinstallation process should take about 15 minutes. In my experience, problems often go away after a new reinstall, especially when I suspect the issues are not due to something in my config file. Given that Emacs is sometimes hard to debug, don't be reluctant to perform a new installation if the problem isn't resolved after you spend a bit of time trying to fix it.
-
-Notes about specific installations:
-- [2021-02-07 Sun 15:15] I was struggling with two issues:
-  1. Eshell was invoking a different version of Python than the Emacs Shell and the Mac Terminal (3.7 and 3.9 respectively).
-  2. Some Spacemacs commands, such as ~Spacemacs/restart-emacs-resume-layouts~, were not working.
-  Both of these issues were resolved after reinstall.
-- [2021-02-25 Thu 10:51] I recently tried installing emacs-mac, but weirdly the page up/down and home/end keys ceased to work (they were interpreted as up/down left/right respectively). So I uninstalled emacs-mac and installed emacs-plus. I am trying to make pdf's render sharply on a retina display.
-  ine
-- [2021-02-25 Thu 11:49] I traced the problem described in the previous bullet point as caused by unsetting the fn key on the OSX Spacemacs layer. I removed that line (so that 'fn' now has the default behavior) and the problem disappeared, except that I had to also remap 'home' and 'end' to ~beginning-of-buffer~ and ~end-of-buffer~ respectively (by default they were mapped to ~beginning-of-line~ and ~end-of-line~ instead). So now I'm running Emacs-Mac.
-- [2021-02-25] I tried running *emacs-mac*, which I installed running ~brew tap railwaycat/emacsmacport~ followed by ~brew install emacs-mac~, as explained [[https://github.com/railwaycat/homebrew-emacsmacport][here]]. This version has the advantage that it renders images on Retina displays correctly (including PDFs and LaTeX org-mode previews), though it's noticeably slower. On the whole, I think its costs outweigh its benefits, so I chose not to use it. ([[https://www.reddit.com/r/emacs/comments/lijn31/best_emacs_port_for_mac_early_2021_edition/][This Reddit thread]] discusses the merits and demerits of alternative Emacs ports for MacOS.)
 
 ** Other config files
 :PROPERTIES:
@@ -394,16 +384,16 @@ CLOCK: [2022-08-29 Mon 14:42]--[2022-08-29 Mon 15:00] =>  0:18
 #Minimal config
 #+begin_src emacs-lisp :results silent
 (defvar ps/computer-hostname-pablo "Pablos-MacBook-Pro.local")
-(defvar ps/computer-hostname-leo "cartagos-MBP")
+(defvar ps/computer-hostname-leo "cartagos-MacBook-Pro.local")
 (defvar ps/computer-hostname-fede "luminous-mbp.local")
   (condition-case nil
       (cond
        ;; Pablo
        ((equal (system-name) ps/computer-hostname-pablo)
-        (load-file "~/Dropbox/private/variables.el"))
+        (load-file "~/Dropbox/dotfiles/emacs/variables.el"))
        ;; Leo
        ((equal (system-name) ps/computer-hostname-leo)
-        (load-file "~/Dropbox/tlon/leo/variables.el"))
+        (load-file "~/Dropbox/emacs/variables.el"))
        ;; Fede
        ((equal (system-name) ps/computer-hostname-fede)
         (load-file (expand-file-name "variables.el" user-emacs-directory)))
@@ -3450,7 +3440,7 @@ Transient Mark mode is on but the region is inactive."
    "H-Z" 'undo-redo
    "M-A-i" 'visual-line-mode
    "M-o" 'downcase-dwim
-   "M-q" 'kill-emacs
+   "M-q" 'save-buffers-kill-terminal
    "M-u" 'capitalize-dwim
    "M-v" 'visible-mode
    "M-w" 'count-words-region
@@ -5971,54 +5961,19 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 Set Google Calendar synchronization via [[https://github.com/kidd/org-gcal.el][org-gcal]] (use that fork; the official repository is [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][obsolete]]).
 
+[2022-10-08 Sat 19:43] Google no longer supports the authentication method used by ~org-gcal~; progress in patching ~org-gcal~ is tracked [[https://github.com/kidd/org-gcal.el/pull/200][here]].
+
 #+begin_src emacs-lisp :results silent
 (use-package org-gcal
   :if (equal (system-name) ps/computer-hostname-pablo)
   :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
-  ;; :defer 30
+  :after auth-source-pass
+  :defer 10
   :init
   (setq org-gcal-up-days 0)
   (setq org-gcal-down-days 3)
   (setq org-gcal-file-alist `((,ps/personal-gmail . ,ps/file-calendar)))
 
-  (defun org-gcal-sync (&optional skip-export silent)
-  "Import events from calendars.
-Export the ones to the calendar if unless
-SKIP-EXPORT.  Set SILENT to non-nil to inhibit notifications."
-  (interactive)
-  (when org-gcal--sync-lock
-    (user-error "org-gcal sync locked. If a previous sync has failed, call ‘org-gcal--sync-unlock’ to reset the lock and try again."))
-  (org-gcal--sync-lock)
-  (org-generic-id-update-id-locations org-gcal-entry-id-property)
-  (org-gcal--ensure-token)
-  (when org-gcal-auto-archive
-    (dolist (i org-gcal-fetch-file-alist)
-      (with-current-buffer
-          (find-file-noselect (cdr i))
-        (org-gcal--archive-old-event))))
-  (let ((up-time (org-gcal--up-time))
-        (down-time (org-gcal--down-time)))
-    (deferred:try
-      (deferred:$
-        (deferred:loop org-gcal-fetch-file-alist
-          (lambda (calendar-id-file)
-            (deferred:$
-              (org-gcal--sync-calendar calendar-id-file skip-export silent
-                                       up-time down-time)
-              (deferred:succeed nil)
-              (deferred:nextc it
-                (lambda (_)
-                  (org-gcal--notify "Completed event fetching ."
-                                    (concat "Events fetched into\n"
-                                            (cdr calendar-id-file))
-                                    silent)
-                  (deferred:succeed nil))))))
-        ;; After syncing new events to Org, sync existing events in Org.
-        )
-      :finally
-      (lambda ()
-        (org-gcal--sync-unlock)))))
-        
   (defun ps/org-gcal--get-time-and-desc ()
     "Get the timestamp and description of the event at point.
 
@@ -6237,8 +6192,8 @@ the corresponding Google Calendar event in a browser."
 	    id)))
       (error "No id found.")))
 
-  (advice-add 'org-gcal-sync :before (lambda () (setq message-log-max 10000)))
-  (advice-add 'org-gcal-sync-buffer :before (lambda () (setq message-log-max 10000)))
+  ;; (advice-add 'org-gcal-sync :before (lambda () (setq message-log-max 10000)))
+  ;; (advice-add 'org-gcal-sync-buffer :before (lambda () (setq message-log-max 10000)))
 
   (defhydra hydra-org-gcal (:exit t :hint nil)
     "
@@ -6876,7 +6831,6 @@ CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
 
 #+begin_src emacs-lisp :results silent
 (use-package git-timemachine
-  :demand t
   :general
   ("A-H-t" 'git-timemachine))
 #+end_src
@@ -10503,6 +10457,10 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "Z" 'org-agenda-add-note
    "z" 'org-agenda-undo))
 #+end_src
+*** TODO align tags
+:PROPERTIES:
+:ID:       8F2D8B6E-2B3E-434E-9D60-5A1E23F8E4C1
+:END:
 *** TODO [#5] Create command to show all and only bibliographic notes in agenda
 :PROPERTIES:
 :ID:       D3067042-7F51-4115-9B24-EC347739E033
@@ -12064,16 +12022,26 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 #+begin_src emacs-lisp :results silent
 (use-package org2blog
   :if (equal (system-name) ps/computer-hostname-pablo)
+  :after auth-source-pass
+  :defer 15
   :custom
   (org2blog/wp-blog-alist
-   `(("Pablo's miscellany"
+   `(("Pablo's website"
+      :url "https://www.stafforini.com/xmlrpc.php"
+      :username ,(auth-source-pass-get "user" "chrome/stafforini.com/wp-admin/admin")
+      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/wp-admin/admin"))
+     ("Pablo's miscellany"
       :url "https://www.stafforini.com/blog/xmlrpc.php"
-      :username ,(auth-source-pass-get "user" "auth-sources/stafforini.com/blog")
-      :password ,(auth-source-pass-get 'secret "auth-sources/stafforini.com/blog"))
-     ("notatu dignum"
+      :username ,(auth-source-pass-get "user" "chrome/stafforini.com/blog/wp-admin/admin")
+      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/blog/wp-admin/admin"))
+      ("notatu dignum"
       :url "https://www.stafforini.com/quotes/xmlrpc.php"
-      :username ,(auth-source-pass-get "user" "auth-sources/stafforini.com/quotes")
-      :password ,(auth-source-pass-get 'secret "auth-sources/stafforini.com/quotes"))))
+      :username ,(auth-source-pass-get "user" "chrome/stafforini.com/quotes/wp-admin/admin")
+      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/quotes/wp-admin/admin"))
+      ("Puro compás"
+      :url "https://www.stafforini.com/tango/xmlrpc.php"
+      :username ,(auth-source-pass-get "user" "chrome/stafforini.com/tango/wp-admin/admin")
+      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/tango/wp-admin/admin"))))
   (org2blog/wp-show-post-in-browser 'show)
   (org2blog/wp-track-posts (list ps/file-org2blog "Posts"))
 
@@ -12249,6 +12217,7 @@ CLOCK: [2021-03-23 Tue 20:26]--[2021-03-23 Tue 21:13] =>  0:47
 #+begin_src emacs-lisp :results silent
 (use-package orgmdb
   :if (equal (system-name) ps/computer-hostname-pablo)
+  :after auth-source-pass
   :defer 60
   :straight (orgmdb
              :host github
@@ -12522,6 +12491,10 @@ list shorter than LIMIT."
 - And [[https://takeonrules.com/2021/08/22/ever-further-refinements-of-org-roam-usage/][this post]]
 
 
+*** TODO Check out Org transclusion
+:PROPERTIES:
+:ID:       69D13455-DC87-4BB5-9765-404A32F4F153
+:END:
 *** TODO [#4] Figure out how to search for files with a particular tag with ~org-roam~
 :PROPERTIES:
 :ID:       C4B5F6B8-9E88-43E0-ACA3-43954D2BA254
@@ -13577,7 +13550,7 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
 
 #+begin_src emacs-lisp :results silent
 (use-package org-roam-bibtex
-  :demand t
+  :defer 20
   :after bibtex-completion
   :custom
   (orb-roam-ref-format 'org-cite)
@@ -14455,6 +14428,10 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (zotra-after-add-entry-hook . ebib-reload-current-database))
 #+end_src
 
+*** TODO configure zotra
+:PROPERTIES:
+:ID:       975FD5E1-AD70-4770-8857-090F30DC9341
+:END:
 ** emacs-pubmed
 :PROPERTIES:
 :ID:       C957E1A2-1348-48D1-81B6-723F1B759008
@@ -14709,6 +14686,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :END:
 #+begin_src emacs-lisp :results silent
 (use-package smtpmail-multi
+  :after mu4e
   :demand t
   :custom
   (smtpmail-multi-accounts
@@ -15632,7 +15610,9 @@ CLOCK: [2021-04-06 Tue 18:05]--[2021-04-06 Tue 18:34] =>  0:29
         (winum-select-window-3)
       (winum-select-window-2))
     ;; TODO: switch to 'telega-chat-mode buffer if it exists
-    (telega))
+    (telega)
+    (beginning-of-buffer)
+    (forward-line 3))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -15744,7 +15724,7 @@ into a task for Leo."
     (telega-filters-push '(main)))
 
   ;; Declaring the hook via `:hook' triggers an error if package is deferred
-  (add-hook 'telega-load-hook 'global-telega-mnz-mode)
+  (add-hook 'telega-load-hook 'global-telega-mnz-mode) ; code block highlighting
 
   :hook
   (telega-chat-mode-hook . (lambda () (setq default-directory (file-name-as-directory ps/dir-downloads))))
@@ -15808,6 +15788,33 @@ into a task for Leo."
 :ID:       38E1DD37-4086-44E9-88CD-2ADEE53F7646
 :Effort:   0:25
 :END:
+:LOGBOOK:
+CLOCK: [2022-10-09 Sun 21:39]--[2022-10-09 Sun 23:48] =>  2:09
+:END:
+
+| telega                      | org       | background | foreground      |
+|-----------------------------+-----------+------------+-----------------|
+| telega-entity-type-code     | org-code  | bg-alt     | fg-special-mild |
+| telega-entity-type-pre      | org-block | bg-dim     | bg-main         |
+| telega-entity-type-text-url |           |            |                 |
+
+
+I think this should be done using the ~:inherit~ property.
+
+Find an exhaustive list of all telega entity types. See the function ~telega--entity-to-properties~.
+
+Prot already defines some of these faces, but the colors are
+
+#+begin_src  markdown :tangle no
+Hi @protesilaos,
+
+Thank you for developing and maintaining this excellent package. My apologies for reopening an issue, but I thought it would be preferable to post my comment here rather than open a new issue, given that it also concerns `telega` faces and considering that it is of comparatively minor importance.
+
+Telega has faces for code (`telega-entity-type-code`) and code blocks (`telega-entity-type-pre`), but they are currently set to inherit `fixed-pitch`. Since all text in Telega is fixed-pitch, there is currently no visual element allowing the user to discern code and code blocks from normal text. Hence, I was wondering if these two faces should instead inherit `org-code` and `org-block`, respectively. Screenshots attached.
+#+end_src
+
+https://gitlab.com/protesilaos/modus-themes/-/issues/271
+
 *** Archive                                                                                                           :ARCHIVE:
 :PROPERTIES:
 :ID:       212BC00E-8977-4E9B-ACD5-8183A09D5B0E
@@ -15860,6 +15867,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package slack
   :if (equal (system-name) ps/computer-hostname-pablo)
+  :after auth-source-pass
   :defer 60
   :commands slack-select-rooms
   :custom
@@ -15989,8 +15997,10 @@ CLOCK: [2021-06-03 Thu 14:18]--[2021-06-03 Thu 14:40] =>  0:22
 CLOCK: [2021-06-02 Wed 12:02]--[2021-06-02 Wed 12:39] =>  0:37
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package erc
+  :if (equal (system-name) ps/computer-hostname-pablo)
+  :after auth-source-pass
   :custom
   (erc-server "irc.libera.chat")
   (erc-user-full-name user-full-name)
@@ -16436,8 +16446,8 @@ poorly-designed websites."
    "b" nil
    "q" 'elfeed
    "i" 'ps/elfeed-toggle-fixed-pitch
-   "." 'elfeed-show-next
-   "," 'elfeed-show-prev
+   "j" 'elfeed-show-next
+   ";W" 'elfeed-show-prev
    "v" 'ps/elfeed-show-visit-in-eww
    "w" 'ps/elfeed-kill-link-url-of-entry
    "x" 'elfeed-show-visit))
@@ -17192,7 +17202,8 @@ CLOCK: [2022-06-22 Wed 14:50]--[2022-06-22 Wed 15:10] =>  0:20
 #+begin_src emacs-lisp :results silent
 (use-package espotify
   :if (equal (system-name) ps/computer-hostname-pablo)
-  ;; :defer 20
+  :after auth-source-pass
+  :defer 20
   :custom
   (espotify-service-name "spotify")
   (espotify-use-system-bus-p nil)
@@ -17217,6 +17228,7 @@ CLOCK: [2021-05-19 Wed 11:26]--[2021-05-19 Wed 12:23] =>  0:57
 
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package smudge
+  :after auth-source-pass
   ;; :defer 600
   :custom
   (smudge-oauth2-client-id (auth-source-pass-get "id" "auth-sources/spotify"))
@@ -17521,7 +17533,7 @@ Note that this is now part of Emacs, so should be declared as a feature rather t
 #+begin_src emacs-lisp :results silent
 (use-feature auth-source-pass
   :demand t
-  :after auth-source pass
+  :after (auth-source pass)
   :custom
   (auth-source-debug t)
   (auth-source-do-cache nil)
@@ -17801,12 +17813,12 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   :hook
   (midnight-hook . ps/midnight-hook-magit-android)
   (midnight-hook . ps/midnight-hook-magit-bibliographic-notes)
-  (midnight-hook . ps/midnight-hook-magit-dotfiles)
+  ;; (midnight-hook . ps/midnight-hook-magit-dotfiles)
   (midnight-hook . ps/midnight-hook-magit-journal)
   (midnight-hook . ps/midnight-hook-magit-people)
   (midnight-hook . ps/ledger-update-coin-prices)
   (midnight-hook . ps/ledger-update-commodities)
-  (midnight-hook . org-gcal-sync)
+  ;; (midnight-hook . org-gcal-sync)
   (midnight-hook . ps/org-id-update-id-locations)
   (midnight-hook . org-roam-db-sync)
   (midnight-hook . ps/pass-git-sync)

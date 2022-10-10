@@ -12,16 +12,16 @@
 (add-hook 'emacs-startup-hook #'ps/report-startup-time)
 
 (defvar ps/computer-hostname-pablo "Pablos-MacBook-Pro.local")
-(defvar ps/computer-hostname-leo "cartagos-MBP")
+(defvar ps/computer-hostname-leo "cartagos-MacBook-Pro.local")
 (defvar ps/computer-hostname-fede "luminous-mbp.local")
   (condition-case nil
       (cond
        ;; Pablo
        ((equal (system-name) ps/computer-hostname-pablo)
-        (load-file "~/Dropbox/private/variables.el"))
+        (load-file "~/Dropbox/dotfiles/emacs/variables.el"))
        ;; Leo
        ((equal (system-name) ps/computer-hostname-leo)
-        (load-file "~/Dropbox/tlon/leo/variables.el"))
+        (load-file "~/Dropbox/emacs/variables.el"))
        ;; Fede
        ((equal (system-name) ps/computer-hostname-fede)
         (load-file (expand-file-name "variables.el" user-emacs-directory)))
@@ -1697,7 +1697,7 @@ Transient Mark mode is on but the region is inactive."
    "H-Z" 'undo-redo
    "M-A-i" 'visual-line-mode
    "M-o" 'downcase-dwim
-   "M-q" 'kill-emacs
+   "M-q" 'save-buffers-kill-terminal
    "M-u" 'capitalize-dwim
    "M-v" 'visible-mode
    "M-w" 'count-words-region
@@ -3228,50 +3228,13 @@ with the specified date."
 (use-package org-gcal
   :if (equal (system-name) ps/computer-hostname-pablo)
   :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
-  ;; :defer 30
+  :after auth-source-pass
+  :defer 10
   :init
   (setq org-gcal-up-days 0)
   (setq org-gcal-down-days 3)
   (setq org-gcal-file-alist `((,ps/personal-gmail . ,ps/file-calendar)))
 
-  (defun org-gcal-sync (&optional skip-export silent)
-  "Import events from calendars.
-Export the ones to the calendar if unless
-SKIP-EXPORT.  Set SILENT to non-nil to inhibit notifications."
-  (interactive)
-  (when org-gcal--sync-lock
-    (user-error "org-gcal sync locked. If a previous sync has failed, call ‘org-gcal--sync-unlock’ to reset the lock and try again."))
-  (org-gcal--sync-lock)
-  (org-generic-id-update-id-locations org-gcal-entry-id-property)
-  (org-gcal--ensure-token)
-  (when org-gcal-auto-archive
-    (dolist (i org-gcal-fetch-file-alist)
-      (with-current-buffer
-          (find-file-noselect (cdr i))
-        (org-gcal--archive-old-event))))
-  (let ((up-time (org-gcal--up-time))
-        (down-time (org-gcal--down-time)))
-    (deferred:try
-      (deferred:$
-        (deferred:loop org-gcal-fetch-file-alist
-          (lambda (calendar-id-file)
-            (deferred:$
-              (org-gcal--sync-calendar calendar-id-file skip-export silent
-                                       up-time down-time)
-              (deferred:succeed nil)
-              (deferred:nextc it
-                (lambda (_)
-                  (org-gcal--notify "Completed event fetching ."
-                                    (concat "Events fetched into\n"
-                                            (cdr calendar-id-file))
-                                    silent)
-                  (deferred:succeed nil))))))
-        ;; After syncing new events to Org, sync existing events in Org.
-        )
-      :finally
-      (lambda ()
-        (org-gcal--sync-unlock)))))
-        
   (defun ps/org-gcal--get-time-and-desc ()
     "Get the timestamp and description of the event at point.
 
@@ -3490,8 +3453,8 @@ the corresponding Google Calendar event in a browser."
 	    id)))
       (error "No id found.")))
 
-  (advice-add 'org-gcal-sync :before (lambda () (setq message-log-max 10000)))
-  (advice-add 'org-gcal-sync-buffer :before (lambda () (setq message-log-max 10000)))
+  ;; (advice-add 'org-gcal-sync :before (lambda () (setq message-log-max 10000)))
+  ;; (advice-add 'org-gcal-sync-buffer :before (lambda () (setq message-log-max 10000)))
 
   (defhydra hydra-org-gcal (:exit t :hint nil)
     "
@@ -3671,7 +3634,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
 (use-package code-review)
 
 (use-package git-timemachine
-  :demand t
   :general
   ("A-H-t" 'git-timemachine))
 
@@ -6366,16 +6328,26 @@ original."
 
 (use-package org2blog
   :if (equal (system-name) ps/computer-hostname-pablo)
+  :after auth-source-pass
+  :defer 15
   :custom
   (org2blog/wp-blog-alist
-   `(("Pablo's miscellany"
+   `(("Pablo's website"
+      :url "https://www.stafforini.com/xmlrpc.php"
+      :username ,(auth-source-pass-get "user" "chrome/stafforini.com/wp-admin/admin")
+      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/wp-admin/admin"))
+     ("Pablo's miscellany"
       :url "https://www.stafforini.com/blog/xmlrpc.php"
-      :username ,(auth-source-pass-get "user" "auth-sources/stafforini.com/blog")
-      :password ,(auth-source-pass-get 'secret "auth-sources/stafforini.com/blog"))
-     ("notatu dignum"
+      :username ,(auth-source-pass-get "user" "chrome/stafforini.com/blog/wp-admin/admin")
+      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/blog/wp-admin/admin"))
+      ("notatu dignum"
       :url "https://www.stafforini.com/quotes/xmlrpc.php"
-      :username ,(auth-source-pass-get "user" "auth-sources/stafforini.com/quotes")
-      :password ,(auth-source-pass-get 'secret "auth-sources/stafforini.com/quotes"))))
+      :username ,(auth-source-pass-get "user" "chrome/stafforini.com/quotes/wp-admin/admin")
+      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/quotes/wp-admin/admin"))
+      ("Puro compás"
+      :url "https://www.stafforini.com/tango/xmlrpc.php"
+      :username ,(auth-source-pass-get "user" "chrome/stafforini.com/tango/wp-admin/admin")
+      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/tango/wp-admin/admin"))))
   (org2blog/wp-show-post-in-browser 'show)
   (org2blog/wp-track-posts (list ps/file-org2blog "Posts"))
 
@@ -6422,6 +6394,7 @@ original."
 
 (use-package orgmdb
   :if (equal (system-name) ps/computer-hostname-pablo)
+  :after auth-source-pass
   :defer 60
   :straight (orgmdb
              :host github
@@ -7014,7 +6987,7 @@ with `org-capture'."
   )
 
 (use-package org-roam-bibtex
-  :demand t
+  :defer 20
   :after bibtex-completion
   :custom
   (orb-roam-ref-format 'org-cite)
@@ -7887,6 +7860,7 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
   (add-to-list 'org-modules 'org-drill))
 
 (use-package smtpmail-multi
+  :after mu4e
   :demand t
   :custom
   (smtpmail-multi-accounts
@@ -8330,7 +8304,9 @@ without asking for user confirmation."
         (winum-select-window-3)
       (winum-select-window-2))
     ;; TODO: switch to 'telega-chat-mode buffer if it exists
-    (telega))
+    (telega)
+    (beginning-of-buffer)
+    (forward-line 3))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -8442,7 +8418,7 @@ into a task for Leo."
     (telega-filters-push '(main)))
 
   ;; Declaring the hook via `:hook' triggers an error if package is deferred
-  (add-hook 'telega-load-hook 'global-telega-mnz-mode)
+  (add-hook 'telega-load-hook 'global-telega-mnz-mode) ; code block highlighting
 
   :hook
   (telega-chat-mode-hook . (lambda () (setq default-directory (file-name-as-directory ps/dir-downloads))))
@@ -8499,6 +8475,34 @@ into a task for Leo."
    "x" 'telega-webpage-browse-url)
   (dired-mode-map
    "A-s-a" 'ps/telega-dired-attach-send))
+
+(use-package erc
+  :if (equal (system-name) ps/computer-hostname-pablo)
+  :after auth-source-pass
+  :custom
+  (erc-server "irc.libera.chat")
+  (erc-user-full-name user-full-name)
+  (erc-nick (auth-source-pass-get "user" "auth-sources/erc/libera"))
+  (erc-password (auth-source-pass-get 'secret "auth-sources/erc/libera"))
+  (erc-prompt-for-nickserv-password nil)
+  ;; erc-track-shorten-start 8 ; characters to display in modeline
+  (erc-autojoin-channels-alist '(("irc.libera.chat")))
+  (erc-kill-buffer-on-part nil)
+  (erc-auto-query t)
+
+  :config
+  (add-to-list 'erc-modules 'notifications)
+  (add-to-list 'erc-modules 'spelling)
+
+  (defun ps/erc-notify (nickname message)
+    "Displays a notification message for ERC."
+    (let* ((channel (buffer-name))
+           (nick (erc-hl-nicks-trim-irc-nick nickname))
+           (title (if (string-match-p (concat "^" nickname) channel)
+                      nick
+                    (concat nick " (" channel ")")))
+           (msg (s-trim (s-collapse-whitespace message))))
+      (alert (concat nick ": " msg) :title title))))
 
 (use-package circe)
 
@@ -8768,8 +8772,8 @@ poorly-designed websites."
    "b" nil
    "q" 'elfeed
    "i" 'ps/elfeed-toggle-fixed-pitch
-   "." 'elfeed-show-next
-   "," 'elfeed-show-prev
+   "j" 'elfeed-show-next
+   ";W" 'elfeed-show-prev
    "v" 'ps/elfeed-show-visit-in-eww
    "w" 'ps/elfeed-kill-link-url-of-entry
    "x" 'elfeed-show-visit))
@@ -9224,7 +9228,8 @@ interactively, with prefix arg, you can pick one."
 
 (use-package espotify
   :if (equal (system-name) ps/computer-hostname-pablo)
-  ;; :defer 20
+  :after auth-source-pass
+  :defer 20
   :custom
   (espotify-service-name "spotify")
   (espotify-use-system-bus-p nil)
@@ -9322,7 +9327,7 @@ to the clipboard."
 
 (use-feature auth-source-pass
   :demand t
-  :after auth-source pass
+  :after (auth-source pass)
   :custom
   (auth-source-debug t)
   (auth-source-do-cache nil)
@@ -9407,26 +9412,18 @@ is connected."
   (midnight-delay-set 'midnight-delay "4:30am")
 
   (defun ps/midnight-hook-magit-android () (ps/magit-midnight-update ps/dir-android))
-  (defun ps/midnight-hook-magit-anki () (ps/magit-midnight-update ps/dir-anki))
   (defun ps/midnight-hook-magit-bibliographic-notes () (ps/magit-midnight-update ps/dir-bibliographic-notes))
-  ;; (defun ps/midnight-hook-magit-dotemacs () (ps/magit-midnight-update ps/dir-dotemacs))
+  ;; (defun ps/midnight-hook-magit-dotfiles () (ps/magit-midnight-update ps/dir-dotfiles))
   (defun ps/midnight-hook-magit-journal () (ps/magit-midnight-update ps/dir-journal))
-  (defun ps/midnight-hook-magit-karabiner () (ps/magit-midnight-update ps/dir-karabiner))
   (defun ps/midnight-hook-magit-notes () (ps/magit-midnight-update ps/dir-notes))
   (defun ps/midnight-hook-magit-people () (ps/magit-midnight-update ps/dir-people))
-  (defun ps/midnight-hook-magit-wiki () (ps/magit-midnight-update ps/dir-wiki))
 
   :hook
   (midnight-hook . ps/midnight-hook-magit-android)
-  (midnight-hook . ps/midnight-hook-magit-anki)
   (midnight-hook . ps/midnight-hook-magit-bibliographic-notes)
-  ;; (midnight-hook . ps/midnight-hook-magit-dotemacs)
-  (midnight-hook . ps/midnight-hook-magit-GPE)
+  ;; (midnight-hook . ps/midnight-hook-magit-dotfiles)
   (midnight-hook . ps/midnight-hook-magit-journal)
-  (midnight-hook . ps/midnight-hook-magit-karabiner)
-  (midnight-hook . ps/midnight-hook-magit-notes)
   (midnight-hook . ps/midnight-hook-magit-people)
-  (midnight-hook . ps/midnight-hook-magit-wiki)
   (midnight-hook . ps/ledger-update-coin-prices)
   (midnight-hook . ps/ledger-update-commodities)
   ;; (midnight-hook . org-gcal-sync)

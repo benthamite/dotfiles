@@ -8,6 +8,68 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** consult-org-roam
+:PROPERTIES:
+:ID:       72C01454-CF59-41E3-A12C-DF356F2578E8
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-25 Sat 11:36]--[2022-06-25 Sat 12:46] =>  1:10
+:END:
+/[[https://github.com/jgru/consult-org-roam][consult-org-roam]] provides assorted convenience functions for operating [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]] with the help of [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]]./
+
+[2022-10-23 Sun 22:29] Disabling since it was interferring with ~consult-buffer~ and didn't find it useful anyway.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package consult-org-roam
+  :defer 7
+  :after (consult org-roam)
+  :init
+  (require 'consult-org-roam)
+  ;; Activate the minor-mode
+  (consult-org-roam-mode)
+  :custom
+  (consult-org-roam-grep-func #'consult-ripgrep)
+  :config
+  ;; Eventually suppress previewing for certain functions
+  (consult-customize
+   consult-org-roam-forward-links
+   :preview-key (kbd "M-.")))
+#+end_src
+
+** emacs-pubmed
+:PROPERTIES:
+:ID:       C957E1A2-1348-48D1-81B6-723F1B759008
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-16 Sat 15:49]--[2022-07-16 Sat 16:38] =>  0:49
+:END:
+/[[https://gitlab.com/fvdbeek/emacs-pubmed][emacs-pubmed]] is an Emacs interface to the PubMed database./
+
+I don't think I need this, except for the ~scihub~ functionality. However, .[[https://emacs.stackexchange.com/questions/58861/using-org-ref-to-download-pdfs-using-sci-hub-as-a-fallback][this]] could be an alternative.
+
+[2022-10-18 Tue 04:25] Replaced by [[id:29ABF514-563B-463D-9FDB-CF2C8AA25F83][scihub]].
+
+#+begin_src emacs-lisp :results silent
+(use-package pubmed
+  :defer 10
+  :commands (pubmed-search pubmed-advanced-search)
+  :config
+  (require 'pubmed-scihub)
+  (setq pubmed-scihub-url "https://sci.hubg.org/")
+
+  (defun ps/pubmed-scihub-save (&optional doi)
+    "Download and save PDF from DOI."
+    (interactive)
+    (let* ((doi (or doi
+                    (read-string "DOI: ")))
+           (url (pubmed-scihub doi))
+           (file-name (url-file-nondirectory url)))
+      (unless (equal (file-name-extension file-name) "pdf")
+        (setq file-name (file-name-with-extension file-name "pdf")))
+      (let ((file-path (file-name-concat ps/dir-downloads file-name)))
+        (url-copy-file url file-path 1)))))
+#+end_src
+
 ** org-auto-tangle
 :PROPERTIES:
 :ID:       8EBF95D8-2E58-4EE6-90EA-644295B1B908

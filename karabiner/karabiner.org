@@ -1417,7 +1417,8 @@ CLOCK: [2021-03-01 Mon 11:46]--[2021-03-01 Mon 12:05] =>  0:19
          [:period :!WTQperiod :emacs]
          [:##period :!Cdown_arrow]
          [:n :!WTQn :emacs]
-         [:v :!WTQn :emacs]
+         [:v :!WTQv :emacs]
+         [:b :!WTQb :emacs]
          [:u :!WTQu :emacs]
          [:!Cu :!WTQCu :emacs]
          [:##u :!Oleft_arrow]
@@ -1460,6 +1461,9 @@ CLOCK: [2021-03-01 Mon 11:46]--[2021-03-01 Mon 12:05] =>  0:19
 #+end_src
 
 **** Archive                                                     :ARCHIVE:
+:PROPERTIES:
+:ID:       7B593652-CA37-4AC3-A8D4-D37DC779BBA3
+:END:
 ***** DONE [#6] Configure karabiner to use Google Docs shortcuts
 CLOSED: [2022-07-06 Wed 16:09]
 :PROPERTIES:
@@ -1914,19 +1918,19 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
 
 The following are leftovers from an outdated config. If something doesn't work, check here and see if you need to make any changes on Keyboard Maestro. (Previously the scripts were called by their name, whereas now Karabiner calls a generic KM action which is then associated with multiple macros (one per app or website.)
 
-#+begin_src clojure :tangle :no
-         [:equal_sign [:km "Remove underscores from selection"]]
-         [:o [:km "Insert doi URL (o)"]]
-         [:q [:km "Switch to Anki Karabiner profile"]]
-         [:w [:km "Count words"]]
-         [:comma [:km "open: System Preferences"]]
-
+#+begin_src clojure :tangle no
+[:equal_sign [:km "Remove underscores from selection"]]
+[:o [:km "Insert doi URL (o)"]]
+[:q [:km "Switch to Anki Karabiner profile"]]
+[:w [:km "Count words"]]
+[:comma [:km "open: System Preferences"]]
 #+end_src
+
 *** end
 :PROPERTIES:
 :ID:       878439B7-635E-400A-B21F-670239A678F7
 :END:
-#+begin_src emacs-lisp :results silent
+#+begin_src clojure :results silent
 ]}
 #+end_src
 ** inactive layers

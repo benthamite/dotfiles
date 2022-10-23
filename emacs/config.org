@@ -6909,6 +6909,7 @@ CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
   (setq-default gac-automatically-add-new-files-p t))
 #+end_src
 
+
 ** git-gutter
 :PROPERTIES:
 :ID:       ECD5FD26-F74B-473A-AF56-9B67F635C924

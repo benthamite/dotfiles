@@ -35,6 +35,7 @@
   (declare (doc-string 1))
   `(lambda () (interactive) ,@body))
 
+(setq straight-repository-branch "develop") ; must precede bootstrap
 ;; Bootstrap `straight'
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -51,7 +52,6 @@
 (setq straight-default-vc 'git)
 (setq straight-check-for-modifications '(find-at-startup watch-files find-when-checking)) ; github.com/raxod502/straight.el#my-init-time-got-slower
 (setq straight-profiles `((nil . ,ps/file-straight-profile)))
-(setq straight-repository-branch "develop")
 (setq straight-use-package-by-default t)
 (require 'straight-x) ; github.com/raxod502/straight.el#how-do-i-uninstall-a-package
 
@@ -203,7 +203,11 @@ NAME and ARGS are as in `use-package'."
    `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 
 (use-package exec-path-from-shell
-  :demand t)
+  :defer 5
+  :config
+  (dolist (var '("NVM_DIR"))
+    (add-to-list 'exec-path-from-shell-variables var))
+  (exec-path-from-shell-initialize))
 
 (use-package general
   :demand t
@@ -882,21 +886,30 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   )
 
 (use-feature fringe
-:config
-(setf (cdr (assq 'truncation fringe-indicator-alist))
-      '(nil nil))) ;; no continuation indicators
-      ;; '(nil right-curly-arrow) ;; right indicator only
-      ;; '(left-curly-arrow nil) ;; left indicator only
-      ;; '(left-curly-arrow right-curly-arrow) ;; default
+:init
+(setq-default fringe-indicator-alist '(
+  (truncation nil nil)
+  (continuation nil nil)
+  (overlay-arrow . right-triangle)
+  (up . up-arrow)
+  (down . down-arrow)
+  (top top-left-angle top-right-angle)
+  (bottom bottom-left-angle bottom-right-angle top-right-angle top-left-angle)
+  (top-bottom left-bracket right-bracket top-right-angle top-left-angle)
+  (empty-line . empty-line)
+  (unknown . question-mark))))
 
-(use-feature modus-themes
+(use-package modus-themes
+  :straight (modus-themes
+             :host sourcehut
+                   :repo "protesilaos/modus-themes")
   :if (or (equal (system-name) ps/computer-hostname-pablo)
           (equal (system-name) ps/computer-hostname-leo))
   :demand t
   :init
   (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-      (load-theme 'modus-vivendi)
-    (load-theme 'modus-operandi))
+      (load-theme 'modus-vivendi t)
+    (load-theme 'modus-operandi t))
 
   :custom
   (modus-themes-headings
@@ -948,7 +961,7 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
 
 (use-package emojify
   :config
-  (emojify-set-emoji-styles 'unicode)
+  (emojify-set-emoji-styles '(unicode))
   :hook
   (after-init . global-emojify-mode)
   :general
@@ -1100,38 +1113,54 @@ and generates profiling report."
 
 (setq read-process-output-max (* 1024 1024)) ; 1mb.
 
-(use-feature repeat
+(use-feature bindings
   :general
-  ("M-r" 'repeat
-   "A-M-r" 'repeat-complex-command))
+  (w3m-minor-mode-map
+   "<left>" 'left-char
+   "<right>" 'right-char))
 
-(defun ps/scroll-down-4 ()
-  (interactive)
-  (scroll-down
-   `(4)))
+(use-feature simple
+  :general
+   ("A-C-s-p" 'forward-word
+   "A-C-s-u" 'backward-word))
 
-(defun ps/scroll-up-4 ()
-  (interactive)
-  (scroll-up
-   `(4)))
+(use-feature simple
+  :general
+  ("A-C-s-m" 'move-beginning-of-line
+   ;; karabiner maps `/' to `z'; otherwise I can't trigger the command while holding `shift'
+   "A-C-s-z" 'move-end-of-line)
+  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map help-mode-map helpful-mode-map Info-mode-map magit-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map telega-msg-button-map telega-root-mode-map eww-mode-map elfeed-search-mode-map elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
+   "k" 'previous-line
+   "l" 'next-line)
+  ((eshell-hist-mode-map w3m-minor-mode-map)
+   "<up>" 'previous-line
+   "<down>" 'next-line))
 
-(general-define-key
- "A-C-s-M-H-k" 'ps/scroll-up-4
- "A-C-s-M-H-l" 'ps/scroll-down-4)
+(use-feature paragraphs
+  :general
+  ("A-C-s-i" 'backward-sentence
+   "A-C-s-o" 'forward-sentence))
 
-(defun ps/scroll-down-16 ()
-  (interactive)
-  (scroll-down
-   `(16)))
+(use-feature paragraphs
+  :general
+  ("A-C-s-," 'backward-paragraph
+   "A-C-s-." 'forward-paragraph))
 
-(defun ps/scroll-up-16 ()
-  (interactive)
-  (scroll-up
-   `(16)))
+(use-feature lisp
+  :general
+  ("A-C-s-e" 'backward-sexp
+   "A-H-M-s-d" 'forward-sexp ; nonstandard binding because otherwise intercepted by OSX
+   ))
 
-(general-define-key
- "A-C-s-M-H-," 'ps/scroll-up-16
- "A-C-s-M-H-." 'ps/scroll-down-16)
+(use-feature lisp
+  :general
+  ("A-C-s-w" 'beginning-of-defun
+   "A-C-s-s" 'end-of-defun))
+
+(use-feature simple
+  :general
+  ("A-C-s-<tab>" 'beginning-of-buffer
+   "A-C-s-SPC" 'end-of-buffer))
 
 (defmacro ps/delete-instead-of-kill (&rest body)
   "Replaces `kill-region' with `delete-region' in BODY."
@@ -1675,21 +1704,7 @@ Transient Mark mode is on but the region is inactive."
        arg)))
 
   :general
-  ("A-C-s-," 'backward-paragraph
-   "A-C-s-." 'forward-paragraph
-   "A-C-s-<tab>" 'beginning-of-buffer
-   "A-C-s-e" 'backward-sexp
-   "A-C-s-i" 'backward-sentence
-   "A-C-s-m" 'move-beginning-of-line
-   "A-C-s-o" 'forward-sentence
-   "A-C-s-p" 'forward-word
-   "A-C-s-s" 'end-of-defun
-   "A-C-s-SPC" 'end-of-buffer
-   "A-C-s-u" 'backward-word
-   "A-C-s-w" 'beginning-of-defun
-   "A-C-s-z" 'move-end-of-line ; karabiner maps `/' to `z'; otherwise I can't trigger the command while holding `shift'
-   "A-H-e" 'eval-defun
-   "A-H-M-s-d" 'forward-sexp ; nonstandard binding because otherwise intercepted by OSX
+  ("A-H-e" 'eval-defun
    "C-A-e" 'eval-expression
    "C-e" 'eval-last-sexp
    "H-M"  'ps/exchange-point-and-mark
@@ -1701,13 +1716,12 @@ Transient Mark mode is on but the region is inactive."
    "M-u" 'capitalize-dwim
    "M-v" 'visible-mode
    "M-w" 'count-words-region
-   "H-z" 'undo-only)
-  (mu4e-view-mode-map
-   "A-C-s-u" 'backward-word
-   "A-C-s-p" 'forward-word)
-  ((custom-mode-map help-mode-map helpful-mode-map Info-mode-map magit-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map telega-msg-button-map telega-root-mode-map eww-mode-map elfeed-search-mode-map elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
-   "k" 'previous-line
-   "l" 'next-line))
+   "H-z" 'undo-only))
+
+(use-feature repeat
+  :general
+  ("M-r" 'repeat
+   "A-M-r" 'repeat-complex-command))
 
 (use-feature view
   :general
@@ -1988,8 +2002,9 @@ _a_pend       |_k_macro      |r_e_store                    "
   (large-file-warning-threshold (* 50 1000 1000))
   (enable-local-variables :all)
   (insert-directory-program "/opt/homebrew/bin/gls" "make Emacs use coreutils to avoid 'listing directory failed' error")
-  (auto-save-interval 1 "lowest possible value is higher than 1, but this ensures it's as low as it can be")
-  (auto-save-timeout 1 "lowest possible value is higher than 1, but this ensures it's as low as it can be")
+
+  ;; (auto-save-interval 1 "lowest possible value is higher than 1, but this ensures it's as low as it can be")
+  ;; (auto-save-timeout 1 "lowest possible value is higher than 1, but this ensures it's as low as it can be")
   (auto-save-no-message t "don't emit message when auto-saving")
   (backup-by-copying t "don't clobber symlink")
   (kept-new-versions 100 "keep 100 latest versions")
@@ -2468,6 +2483,15 @@ marked, copy file at point instead."
     (unwind-protect (apply old-fun r)
       (advice-remove 'y-or-n-p #'y-or-n-p@just-yes)))
 
+  (defun ps/dired-do-delete-fast (&optional arg)
+    "Delete all marked (or next ARG) files, without using the
+external `trash' utility. This command let's you delete large
+numbers of files quickly, at the expense of losing the 'put back'
+option."
+    (interactive)
+    (cl-letf (((symbol-function 'system-move-file-to-trash) nil))
+      (dired-do-delete arg)))
+
   :hook
   (dired-mode-hook . dired-hide-details-mode) ; hide details by default
 
@@ -2488,6 +2512,7 @@ marked, copy file at point instead."
    "W" 'ps/dired-copy-filename-as-kill-sans-extension
    "z" 'ps/dired-mark-screenshots
    "H-z" 'dired-undo
+   "s-d" 'ps/dired-do-delete-fast
    "s-r" 'ps/dired-copy-to-remote-docs-directory
    "A-C-s-," 'dired-prev-dirline
    "A-C-s-." 'dired-next-dirline
@@ -2862,8 +2887,10 @@ window depending on the number of present windows."
    "A-C-s-h" 'scroll-up-command
    "A-C-s-g" 'scroll-other-window
    "A-C-s-t" 'scroll-other-window-down
-   "A-C-s-c" 'scroll-up-line
-   "A-C-s-x" 'scroll-down-line)
+   "A-C-s-x" (lambda! (scroll-down-line 4))
+   "A-C-s-c" (lambda! (scroll-up-line 4))
+   "A-C-s-v" (lambda! (scroll-down-line 16))
+   "A-C-s-b" (lambda! (scroll-up-line 16)))
   ((elfeed-show-mode-map eww-mode-map helpful-mode-map mu4e-view-mode-map telega-msg-button-map)
    "y" 'scroll-down-command
    "h" 'scroll-up-command))
@@ -3036,14 +3063,14 @@ window depending on the number of present windows."
    "C-H-s-." 'avy-goto-line-below
    "C-H-s-/" 'ps/avy-goto-end-of-line-below
    "C-H-s-k" 'avy-goto-word-1-above
-   "C-H-s-l" 'avy-goto-word-1-below
-   ;; "C-H-s-h" 'ps/avy-goto-line-above-then-enter
-   ;; "C-H-s-'" 'ps/avy-goto-line-below-then-enter
-   )
+   "C-H-s-l" 'avy-goto-word-1-below)
   (dired-mode-map
    "f" 'ps/avy-dired-find-file)
   (telega-root-mode-map
-   "f" 'ps/avy-telega-view-message))
+   "f" 'ps/avy-telega-view-message)
+   (ebib-entry-mode-map
+   "j" 'avy-goto-line-above
+   ";" 'avy-goto-line-below))
 
 (use-package iy-go-to-char
   :config
@@ -3143,7 +3170,7 @@ and start clock."
    "s" 'ps/ace-link-eww-new-buffer)
   ((help-mode-map helpful-mode-map elisp-refs-mode-map)
    "f" 'ace-link-help)
-  (Info-mode-map
+  ((ebib-entry-mode-map Info-mode-map)
    "f" 'ace-link-info)
   ((Man-mode-map woman-mode-map)
    "f" 'ace-link-woman)
@@ -3242,66 +3269,66 @@ with the specified date."
   not present."
     (let (start end desc tobj elem)
       (save-excursion
-	(org-gcal--back-to-heading)
-	(setq elem (org-element-at-point))
-	;; Parse :org-gcal: drawer for event time and description.
-	(when
-	    (re-search-forward
-	     (format "^[ \t]*:%s:[ \t]*$" org-gcal-drawer-name)
-	     (save-excursion (outline-next-heading) (point))
-	     'noerror)
-	  ;; First read any event time from the drawer if present. It's located
-	  ;; at the beginning of the drawer.
-	  (save-excursion
-	    (when
-		(re-search-forward "<[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]"
-				   (save-excursion (outline-next-heading) (point))
-				   'noerror)
-	      (goto-char (match-beginning 0))
-	      (setq tobj (org-element-timestamp-parser))))
-	  ;; Lines after the timestamp contain the description. Skip leading
-	  ;; blank lines.
-	  (forward-line)
-	  (beginning-of-line)
-	  (re-search-forward
-	   "\\(?:^[ \t]*$\\)*\\([^z-a]*?\\)\n?[ \t]*:END:"
-	   (save-excursion (outline-next-heading) (point)))
-	  (setq desc (match-string-no-properties 1))
-	  (setq desc
-		(if (string-match-p "\\‘\n*\\’" desc)
-		    nil
-		  (replace-regexp-in-string
-		   "^✱" "*"
-		   (replace-regexp-in-string
-		    "\\`\\(?: *<[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].*?>$\\)\n?\n?"
-		    ""
-		    (replace-regexp-in-string
-		     " *:PROPERTIES:\n *\\(.*\\(?:\n.*\\)*?\\) *:END:\n+"
-		     ""
-		     desc)))))))
+        (org-gcal--back-to-heading)
+        (setq elem (org-element-at-point))
+        ;; Parse :org-gcal: drawer for event time and description.
+        (when
+            (re-search-forward
+             (format "^[ \t]*:%s:[ \t]*$" org-gcal-drawer-name)
+             (save-excursion (outline-next-heading) (point))
+             'noerror)
+          ;; First read any event time from the drawer if present. It's located
+          ;; at the beginning of the drawer.
+          (save-excursion
+            (when
+                (re-search-forward "<[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]"
+                                   (save-excursion (outline-next-heading) (point))
+                                   'noerror)
+              (goto-char (match-beginning 0))
+              (setq tobj (org-element-timestamp-parser))))
+          ;; Lines after the timestamp contain the description. Skip leading
+          ;; blank lines.
+          (forward-line)
+          (beginning-of-line)
+          (re-search-forward
+           "\\(?:^[ \t]*$\\)*\\([^z-a]*?\\)\n?[ \t]*:END:"
+           (save-excursion (outline-next-heading) (point)))
+          (setq desc (match-string-no-properties 1))
+          (setq desc
+                (if (string-match-p "\\‘\n*\\’" desc)
+                    nil
+                  (replace-regexp-in-string
+                   "^✱" "*"
+                   (replace-regexp-in-string
+                    "\\`\\(?: *<[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].*?>$\\)\n?\n?"
+                    ""
+                    (replace-regexp-in-string
+                     " *:PROPERTIES:\n *\\(.*\\(?:\n.*\\)*?\\) *:END:\n+"
+                     ""
+                     desc)))))))
       ;; Prefer to read event time from the SCHEDULE property if present.
       (setq tobj (or (org-element-property :deadline elem) tobj))
       (when tobj
-	(when (plist-get (cadr tobj) :year-start)
-	  (setq
-	   start
-	   (org-gcal--format-org2iso
-	    (plist-get (cadr tobj) :year-start)
-	    (plist-get (cadr tobj) :month-start)
-	    (plist-get (cadr tobj) :day-start)
-	    (plist-get (cadr tobj) :hour-start)
-	    (plist-get (cadr tobj) :minute-start)
-	    (when (plist-get (cadr tobj) :hour-start) t))))
-	(when (plist-get (cadr tobj) :year-end)
-	  (setq
-	   end
-	   (org-gcal--format-org2iso
-	    (plist-get (cadr tobj) :year-end)
-	    (plist-get (cadr tobj) :month-end)
-	    (plist-get (cadr tobj) :day-end)
-	    (plist-get (cadr tobj) :hour-end)
-	    (plist-get (cadr tobj) :minute-end)
-	    (when (plist-get (cadr tobj) :hour-end) t)))))
+        (when (plist-get (cadr tobj) :year-start)
+          (setq
+           start
+           (org-gcal--format-org2iso
+            (plist-get (cadr tobj) :year-start)
+            (plist-get (cadr tobj) :month-start)
+            (plist-get (cadr tobj) :day-start)
+            (plist-get (cadr tobj) :hour-start)
+            (plist-get (cadr tobj) :minute-start)
+            (when (plist-get (cadr tobj) :hour-start) t))))
+        (when (plist-get (cadr tobj) :year-end)
+          (setq
+           end
+           (org-gcal--format-org2iso
+            (plist-get (cadr tobj) :year-end)
+            (plist-get (cadr tobj) :month-end)
+            (plist-get (cadr tobj) :day-end)
+            (plist-get (cadr tobj) :hour-end)
+            (plist-get (cadr tobj) :minute-end)
+            (when (plist-get (cadr tobj) :hour-end) t)))))
       (list :start start :end end :desc desc)))
 
   (defun ps/org-gcal--update-entry (calendar-id event &optional update-mode)
@@ -3318,40 +3345,40 @@ heading."
     (unless (org-at-heading-p)
       (user-error "Must be on Org-mode heading."))
     (let* ((smry  (or (plist-get event :summary)
-		      "busy"))
-	   (desc  (plist-get event :description))
-	   (loc   (plist-get event :location))
-	   (_link  (plist-get event :htmlLink))
-	   (meet  (plist-get event :hangoutLink))
-	   (etag (plist-get event :etag))
-	   (event-id    (plist-get event :id))
-	   (stime (plist-get (plist-get event :start)
-			     :dateTime))
-	   (etime (plist-get (plist-get event :end)
-			     :dateTime))
-	   (sday  (plist-get (plist-get event :start)
-			     :date))
-	   (eday  (plist-get (plist-get event :end)
-			     :date))
-	   (start (if stime (org-gcal--convert-time-to-local-timezone stime org-gcal-local-timezone) sday))
-	   (end   (if etime (org-gcal--convert-time-to-local-timezone etime org-gcal-local-timezone) eday))
-	   (old-time-desc (org-gcal--get-time-and-desc))
-	   (old-start (plist-get old-time-desc :start))
-	   (old-end (plist-get old-time-desc :start))
-	   (recurrence (plist-get event :recurrence))
-	   (elem))
+                      "busy"))
+           (desc  (plist-get event :description))
+           (loc   (plist-get event :location))
+           (_link  (plist-get event :htmlLink))
+           (meet  (plist-get event :hangoutLink))
+           (etag (plist-get event :etag))
+           (event-id    (plist-get event :id))
+           (stime (plist-get (plist-get event :start)
+                             :dateTime))
+           (etime (plist-get (plist-get event :end)
+                             :dateTime))
+           (sday  (plist-get (plist-get event :start)
+                             :date))
+           (eday  (plist-get (plist-get event :end)
+                             :date))
+           (start (if stime (org-gcal--convert-time-to-local-timezone stime org-gcal-local-timezone) sday))
+           (end   (if etime (org-gcal--convert-time-to-local-timezone etime org-gcal-local-timezone) eday))
+           (old-time-desc (org-gcal--get-time-and-desc))
+           (old-start (plist-get old-time-desc :start))
+           (old-end (plist-get old-time-desc :start))
+           (recurrence (plist-get event :recurrence))
+           (elem))
       (when loc (replace-regexp-in-string "\n" ", " loc))
       (org-edit-headline smry)
       (org-entry-put (point) org-gcal-etag-property etag)
       (when recurrence (org-entry-put (point) "recurrence" (format "%s" recurrence)))
       (when loc (org-entry-put (point) "LOCATION" loc))
       (when meet
-	(org-entry-put
-	 (point)
-	 "HANGOUTS"
-	 (format "[[%s][%s]]"
-		 meet
-		 "Join Hangouts Meet")))
+        (org-entry-put
+         (point)
+         "HANGOUTS"
+         (format "[[%s][%s]]"
+                 meet
+                 "Join Hangouts Meet")))
       (org-entry-put (point) org-gcal-calendar-id-property calendar-id)
       (org-gcal--put-id (point) calendar-id event-id)
       ;; Insert event time and description in :ORG-GCAL: drawer, erasing the
@@ -3359,65 +3386,65 @@ heading."
       (org-gcal--back-to-heading)
       (setq elem (org-element-at-point))
       (save-excursion
-	(when (re-search-forward
-	       (format
-		"^[ \t]*:%s:[^z-a]*?\n[ \t]*:END:[ \t]*\n?"
-		(regexp-quote org-gcal-drawer-name))
-	       (save-excursion (outline-next-heading) (point))
-	       'noerror)
-	  (replace-match "" 'fixedcase)))
+        (when (re-search-forward
+               (format
+                "^[ \t]*:%s:[^z-a]*?\n[ \t]*:END:[ \t]*\n?"
+                (regexp-quote org-gcal-drawer-name))
+               (save-excursion (outline-next-heading) (point))
+               'noerror)
+          (replace-match "" 'fixedcase)))
       (unless (re-search-forward ":PROPERTIES:[^z-a]*?:END:"
-				 (save-excursion (outline-next-heading) (point))
-				 'noerror)
-	(message "PROPERTIES not found: %s (%s) %d"
-		 (buffer-name) (buffer-file-name) (point)))
+                                 (save-excursion (outline-next-heading) (point))
+                                 'noerror)
+        (message "PROPERTIES not found: %s (%s) %d"
+                 (buffer-name) (buffer-file-name) (point)))
       (end-of-line)
       ;; (newline)
       ;; (insert (format ":%s:" org-gcal-drawer-name))
       ;; (newline)
       ;; Keep existing timestamps for parent recurring events.
       (when (and recurrence old-start old-end)
-	(setq start old-start
-	      end old-end))
+        (setq start old-start
+              end old-end))
       (let*
-	  ((timestamp
-	    (if (or (string= start end) (org-gcal--alldayp start end))
-		(org-gcal--format-iso2org start)
-	      (if (and
-		   (= (plist-get (org-gcal--parse-date start) :year)
-		      (plist-get (org-gcal--parse-date end)   :year))
-		   (= (plist-get (org-gcal--parse-date start) :mon)
-		      (plist-get (org-gcal--parse-date end)   :mon))
-		   (= (plist-get (org-gcal--parse-date start) :day)
-		      (plist-get (org-gcal--parse-date end)   :day)))
-		  (format "<%s-%s>"
-			  (org-gcal--format-date start "%Y-%m-%d %a %H:%M")
-			  (org-gcal--format-date end "%H:%M"))
-		(format "%s--%s"
-			(org-gcal--format-iso2org start)
-			(org-gcal--format-iso2org
-			 (if (< 11 (length end))
-			     end
-			   (org-gcal--iso-previous-day end))))))))
-	(if (org-element-property :deadline elem)
-	    (unless (and recurrence old-start) (org-deadline nil timestamp))
-	  (org-deadline nil timestamp)
-	  (newline)
-	  (when desc (newline))))
+          ((timestamp
+            (if (or (string= start end) (org-gcal--alldayp start end))
+                (org-gcal--format-iso2org start)
+              (if (and
+                   (= (plist-get (org-gcal--parse-date start) :year)
+                      (plist-get (org-gcal--parse-date end)   :year))
+                   (= (plist-get (org-gcal--parse-date start) :mon)
+                      (plist-get (org-gcal--parse-date end)   :mon))
+                   (= (plist-get (org-gcal--parse-date start) :day)
+                      (plist-get (org-gcal--parse-date end)   :day)))
+                  (format "<%s-%s>"
+                          (org-gcal--format-date start "%Y-%m-%d %a %H:%M")
+                          (org-gcal--format-date end "%H:%M"))
+                (format "%s--%s"
+                        (org-gcal--format-iso2org start)
+                        (org-gcal--format-iso2org
+                         (if (< 11 (length end))
+                             end
+                           (org-gcal--iso-previous-day end))))))))
+        (if (org-element-property :deadline elem)
+            (unless (and recurrence old-start) (org-deadline nil timestamp))
+          (org-deadline nil timestamp)
+          (newline)
+          (when desc (newline))))
       ;; Insert event description if present.
       (when desc
-	(insert (replace-regexp-in-string "^\*" "✱" desc))
-	(insert (if (string= "\n" (org-gcal--safe-substring desc -1)) "" "\n")))
+        (insert (replace-regexp-in-string "^\*" "✱" desc))
+        (insert (if (string= "\n" (org-gcal--safe-substring desc -1)) "" "\n")))
       ;; (insert ":END:")
       (when (org-gcal--event-cancelled-p event)
-	(save-excursion
-	  (org-back-to-heading t)
-	  (org-gcal--handle-cancelled-entry)))
+        (save-excursion
+          (org-back-to-heading t)
+          (org-gcal--handle-cancelled-entry)))
       (when update-mode
-	(cl-dolist (f org-gcal-after-update-entry-functions)
-	  (save-excursion
-	    (org-back-to-heading t)
-	    (funcall f calendar-id event update-mode))))))
+        (cl-dolist (f org-gcal-after-update-entry-functions)
+          (save-excursion
+            (org-back-to-heading t)
+            (funcall f calendar-id event update-mode))))))
 
   ;; I replace the two native functions with the slightly tweaked
   ;; versions under `:init' so that `org-gcal' uses the `DEADLINE'
@@ -3439,18 +3466,18 @@ heading."
 the corresponding Google Calendar event in a browser."
     (interactive)
     (if (org-entry-get nil "entry-id")
-	(let ((id (s-replace
-		   "\n"
-		   ""
-		   (base64-encode-string
-		    (s-replace
-		     "/"
-		     " "
-		     (org-entry-get nil "entry-id"))))))
-	  (browse-url
-	   (concat
-	    "https://calendar.google.com/calendar/u/0/r/eventedit/"
-	    id)))
+        (let ((id (s-replace
+                   "\n"
+                   ""
+                   (base64-encode-string
+                    (s-replace
+                     "/"
+                     " "
+                     (org-entry-get nil "entry-id"))))))
+          (browse-url
+           (concat
+            "https://calendar.google.com/calendar/u/0/r/eventedit/"
+            id)))
       (error "No id found.")))
 
   ;; (advice-add 'org-gcal-sync :before (lambda () (setq message-log-max 10000)))
@@ -3641,7 +3668,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
   :demand t
   :config
   (setq-default gac-automatically-push-p t)
-  (setq-default gac-debounce-interval 10)
+  (setq-default gac-debounce-interval 30)
   (setq-default gac-silent-message-p t)
   (setq-default gac-automatically-add-new-files-p t))
 
@@ -3764,9 +3791,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
   (vertico-multiform-commands
          '((consult-line buffer)
            (consult-imenu buffer)
-           (consult-grep buffer)
-           (ps/consult-org-agenda buffer)
-           (ps/consult-org-headings buffer)))
+           (consult-grep buffer)))
   ;; Configure the display per completion category.
   ;; Use the grid display for files and a buffer
   ;; for the consult-grep commands.
@@ -3787,8 +3812,8 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
   (consult-widen-key ">")
   ;; TODO: Configure mode histories
   (consult-mode-histories '(eshell-mode . eshell-history-ring)
-                            (comint-mode . comint-input-ring)
-                            (term-mode . term-input-ring))
+                          (comint-mode . comint-input-ring)
+                          (term-mode . term-input-ring))
 
   :config
   (defun ps/consult-locate-current ()
@@ -3848,6 +3873,16 @@ content matches a regexp."
     (interactive)
     (consult-ripgrep ps/dir-root))
 
+  (defun ps/consult-rga ()
+    "Search with `rga' for files in the current directory where the
+content matches a regexp."
+    (interactive)
+    (let ((consult-ripgrep-args
+           (->> consult-ripgrep-args
+                (string-remove-prefix "rg")
+                (concat "rga"))))
+      (consult-ripgrep)))
+
   (defun ps/consult-org-heading (&optional match scope)
     "Jump to an Org heading.
 
@@ -3875,7 +3910,7 @@ By default, all agenda entries are offered. MATCH is as in
   ;; (advice-remove 'consult-org-heading #'ps/org-cycle-content)
   ;; (advice-add 'consult-org-agenda :after #'ps/org-narrow-to-entry-and-children)
 
-  :general
+    :general
   ("A-C-l" 'consult-line
    "H-b" 'consult-buffer
    "H-r" 'consult-history
@@ -3887,13 +3922,41 @@ By default, all agenda entries are offered. MATCH is as in
    "H-k" 'ps/consult-locate-current
    "H-K" 'ps/consult-locate-home
    "A-H-k" 'ps/consult-locate-anywhere
+   "C-p" 'ps/consult-rga
    "H-p" 'ps/consult-ripgrep-current
    "H-P" 'ps/consult-ripgrep-home
    "A-H-p" 'ps/consult-ripgrep-anywhere)
   (org-mode-map
    "s-j" 'ps/consult-org-heading)
-   (prog-mode-map
+  (prog-mode-map
    "s-j" 'consult-imenu))
+
+(use-package consult-org-roam
+  :defer 7
+  :after (consult org-roam)
+  :init
+  (require 'consult-org-roam)
+  ;; Activate the minor-mode
+  (consult-org-roam-mode -1)
+  :custom
+  (consult-org-roam-grep-func #'consult-ripgrep)
+  :config
+  ;; Eventually suppress previewing for certain functions
+  (consult-customize
+   consult-org-roam-forward-links
+   :preview-key (kbd "M-.")))
+
+(use-package consult-dir
+  :after consult
+  :defer 15
+
+  :custom
+  (consult-dir-default-command 'consult-dir-dired)
+  ;; Should start using `projectile' first
+  ;; (consult-dir-project-list-function 'consult-dir-projectile-dirs)
+
+  :general
+  ("H-B" 'consult-dir))
 
 (use-package consult-yasnippet
   :after (consult yasnippet)
@@ -3916,6 +3979,7 @@ By default, all agenda entries are offered. MATCH is as in
 
   :general
   ("C-;" 'embark-act
+  "A-C-;" 'embark-dwim
   "C-h B" 'embark-bindings))
 
 (use-package embark-consult
@@ -4094,6 +4158,12 @@ buffer displays and push it to the kill ring."
     (let ((shell-command-buffer-name-async "*homebrew update*"))
       (async-shell-command "brew update; brew upgrade --greedy; brew unlink xpdf; brew upgrade; brew cleanup; brew doctor; brew link --overwrite xpdf")))
 
+  (defun ps/crontab-e ()
+    "Run `crontab -e' in a emacs buffer."
+    (interactive)
+    (with-editor-async-shell-command "crontab -e"))
+
+
   :general
   ("A-s" 'shell)
   (shell-mode-map
@@ -4130,10 +4200,7 @@ buffer displays and push it to the kill ring."
    "s-d" 'eshell-send-eof-to-process
    "H-n" 'ps/eshell-new-session
    "M-p" nil
-   "M-n" nil)
-  (eshell-hist-mode-map
-   "<up>" 'previous-line
-   "<down>" 'next-line))
+   "M-n" nil))
 
 (use-package eshell-git-prompt
   :after eshell
@@ -4280,15 +4347,19 @@ buffer displays and push it to the kill ring."
           (set-process-query-on-exit-flag ispell-process nil)))))
 
   :config
-  (defvar ps/ispell-toggle-language "en")
+  (defvar ps/ispell-language "en")
   (defun ps/ispell-toggle-language ()
     "Toggle ispell dictionaries between English and Spanish."
     (interactive)
-    (if (string= ps/ispell-toggle-language "en")
-        (setq ps/ispell-toggle-language "es")
-      (setq ps/ispell-toggle-language "en"))
-    (ispell-change-dictionary ps/ispell-toggle-language)
-    (flyspell-buffer))
+    (if (string= ps/ispell-language "en")
+        (setq ps/ispell-language "es")
+      (setq ps/ispell-language "en"))
+    (ispell-change-dictionary ps/ispell-language)
+    (flyspell-buffer)
+    (message (format "Language set to %s"
+                     (if (string= ps/ispell-language "en")
+                         "English"
+                       "Spanish"))))
 
   :general
   ("M-A-p" 'ps/ispell-toggle-language))
@@ -4355,6 +4426,9 @@ buffer displays and push it to the kill ring."
             (message "No more missspelled words!")
             (setq arg 0))))))
 
+(advice-add 'flyspell-region :around
+	    #'telega-chatbuf-input-as-region-advice)
+
   :general
   ("M-p" 'flyspell-buffer
    "A-M-," 'ps/flyspell-goto-previous-error
@@ -4373,7 +4447,6 @@ buffer displays and push it to the kill ring."
 
   :hook
   (text-mode-hook . flyspell-mode)
-  (telega-chat-mode-hook . flyspell-mode)
   (prog-mode-hook . flyspell-prog-mode))
 
 (use-package flyspell-correct
@@ -4382,16 +4455,12 @@ buffer displays and push it to the kill ring."
 
 (use-package keytar
   :if (equal (system-name) ps/computer-hostname-pablo)
-  :defer 10
-  :ensure-system-package
-  (keytar . "sudo npm install -g @emacs-grammarly/keytar-cli"))
+  :defer 10)
 
 (use-package lsp-grammarly
   :if (equal (system-name) ps/computer-hostname-pablo)
   :after (lsp-mode keytar)
   :demand t
-  :ensure-system-package
-  (unofficial-grammarly-language-server . "sudo npm i -g @emacs-grammarly/unofficial-grammarly-language-server")
 
   :custom
   (lsp-grammarly-suggestions-split-infinitive nil)
@@ -4413,10 +4482,12 @@ buffer displays and push it to the kill ring."
 
 (use-feature text-mode
   :hook
-  (text-mode-hook . visual-line-mode)
+  (text-mode-hook . visual-line-mode))
+
+(use-feature with-editor
   :general
-  (text-mode-map
-   "s-c" 'with-editor-finish
+  ("s-c" 'with-editor-finish
+   "s-k" 'with-editor-abort
    "C-c C-c" 'with-editor-finish))
 
 (use-feature dictionary
@@ -4467,7 +4538,8 @@ the user will be prompt for a valid value."
         (setq beg nil end nil))))
     (funcall 'powerthesaurus-lookup query-term query-type beg end)))
 
-  (advice-add 'ps/powerthesaurus-lookup-dwimz  :override #'ps/ps/powerthesaurus-lookup-dwim)
+  (advice-add 'ps/powerthesaurus-lookup-dwim  :override #'ps/ps/powerthesaurus-lookup-dwim)
+
   :general
   ("H-Y" 'powerthesaurus-lookup-dwim))
 
@@ -4502,19 +4574,27 @@ around point."
   (google-translate-default-source-language "es")
 
   :config
-  (defun google-translate--search-tkk () "Search TKK." (list 430675 2721866130))
+  (defun google-translate--search-tkk ()
+    "Search TKK."
+    (list 430675 2721866130))
+
   (setq google-translate-backend-method 'curl)
 
   (defun ps/google-translate-at-point (&optional arg)
-    "Translate word at point. If invoked with a prefix argument, perform a reverse translation."
+    "Translate word at point. If invoked with a prefix argument,
+perform a reverse translation."
     (interactive "P")
-    (if arg
-        (google-translate-at-point-reverse)
-      (google-translate-at-point)))
+    (let ((google-translate-default-source-language ps/ispell-language)
+          (google-translate-default-target-language
+           (if (string= ps/ispell-language "en")
+                        "es"
+                        "en")))
+      (if arg
+          (google-translate-at-point-reverse)
+        (google-translate-at-point))))
 
-  :bind
-
-  ("H-A-y" . 'ps/google-translate-at-point))
+  :general
+  ("H-A-y" 'ps/google-translate-at-point))
 
 (use-package atomic-chrome
   :defer 10
@@ -4572,6 +4652,7 @@ insert italic delimiters and place the point in between them."
    "s-i" 'markdown-insert-italic
    "s-k" 'markdown-insert-link)
   (gfm-mode-map
+   "s-a" 'markdown-insert-gfm-code-block
    "s-z" 'markdown-edit-code-block))
 
 (use-package mediawiki
@@ -4607,6 +4688,8 @@ To see a list of Google Docs and their respective IDs, run
   (ledger-default-date-format ledger-iso-date-format)
   (ledger-reconcile-default-commodity "ARS")
   (ledger-schedule-file ps/file-tlon-ledger-schedule-file)
+  (ledger-schedule-look-forward 0)
+  (ledger-schedule-look-backward 30)
 
   :config
   (add-to-list 'ledger-reports '("net worth" "%(binary) -f %(ledger-file) bal --strict"))
@@ -4951,7 +5034,9 @@ FILE."
    "A-M-d" 'toggle-debug-on-quit)
   (prog-mode-map
    "A-H-C-i" 'mark-defun
-   "M-." 'xref-find-definitions))
+   "M-." 'xref-find-definitions)
+  (emacs-lisp-mode-map shell-mode-map
+      "s-c" 'exit-recursive-edit))
 
 (use-package lsp-mode
   :init
@@ -4997,9 +5082,7 @@ FILE."
   :general
   (emacs-lisp-mode-map
    "s-d" 'eval-defun
-   "A-s-d" 'edebug-defun
-   "s-c" 'exit-recursive-edit
-   "s-z" 'org-edit-src-exit))
+   "A-s-d" 'edebug-defun))
 
 (use-package clojure-mode)
 
@@ -5030,6 +5113,20 @@ FILE."
    "s-u" 'sp-cheat-sheet)
   :hook
   (prog-mode-hook . smartparens-mode))
+
+(use-package copilot
+  :if (equal (system-name) ps/computer-hostname-pablo)
+  :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+
+  :custom
+  (copilot-node-executable "/opt/homebrew/opt/node@16/bin/node")
+
+  :hook
+  (prog-mode-hook . copilot-mode)
+
+  :general
+  (copilot-mode-map
+  "TAB" 'copilot-accept-completion))
 
 (use-package elpy
   :custom
@@ -5095,6 +5192,7 @@ FILE."
   (org-pretty-entities nil)
   (org-image-actual-width '(800))
   (org-ellipsis " ")
+  (org-link-elisp-confirm-function nil)
   (org-file-apps '((auto-mode . emacs)
                    (directory . emacs)
                    ("\\.mm\\'" . default)
@@ -5125,6 +5223,12 @@ FILE."
     (when (org-in-regexp org-link-bracket-re 1)
       (kill-new (org-link-unescape (match-string-no-properties arg)))))
 
+  (defun ps/org-link-get-link-at-point ()
+    "When point is on org link, extract link (both url and
+description)."
+    (interactive)
+    (ps/org-link-get-thing-at-point 0))
+
   (defun ps/org-link-get-url-at-point ()
     "When point is on org link, extract url."
     (interactive)
@@ -5134,12 +5238,6 @@ FILE."
     "When point is on org link, extract description."
     (interactive)
     (ps/org-link-get-thing-at-point 2))
-
-  (defun ps/org-link-get-link-at-point ()
-    "When point is on org link, extract link (both url and
-description)."
-    (interactive)
-    (ps/org-link-get-thing-at-point 0))
 
   (defun ps/org-isearch-visible-org-heading ()
     "Jump to first visible org heading that matches string."
@@ -5177,10 +5275,9 @@ address."
       (org-do-demote)))
 
   ;; Adapted from hungyi.net/posts/org-mode-subtree-contents
-  (defun ps/org-copy-heading-contents ()
+  (defun ps/org-get-heading-contents ()
     "Get the content text of the heading at point and add it to the `kill-ring'.
 Excludes the heading itself and any child subtrees."
-    (interactive)
     (if (org-before-first-heading-p)
         (message "Not in or on an org heading")
       (save-excursion
@@ -5191,121 +5288,129 @@ Excludes the heading itself and any child subtrees."
                          (org-agenda-get-some-entry-text
                           (point-marker)
                           most-positive-fixnum))))
-          (message "Copied: %s" contents)
-          (kill-new contents)))))
+          contents))))
 
-  (defun ps/org-copy-heading-name ()
+  (defun ps/org-copy-heading-contents ()
     (interactive)
-    "Copy name of heading at point."
-    (kill-new (org-entry-get nil "ITEM")))
+    (let ((contents (ps/org-get-heading-contents)))
+      (if (string= contents "")
+          (message "Heading is empty.")
+        (message "Copied: %s" contents)
+        (kill-new contents))))
 
-  ;; reddit.com/r/emacs/comments/e4jnlj/how_to_create_a_word_counter_that_counts_words_in/f9e3796
-  (defun ps/org-count-words ()
-    "If region is active, count words in it; otherwise count words
+
+(defun ps/org-copy-heading-name ()
+  (interactive)
+  "Copy name of heading at point."
+  (kill-new (org-entry-get nil "ITEM")))
+
+;; reddit.com/r/emacs/comments/e4jnlj/how_to_create_a_word_counter_that_counts_words_in/f9e3796
+(defun ps/org-count-words ()
+  "If region is active, count words in it; otherwise count words
 in current subtree."
-    (interactive)
-    (if (use-region-p)
-        (funcall-interactively #'count-words-region (region-beginning) (region-end))
-      (org-with-wide-buffer
-       (cl-loop for (lines words characters)
-                in (org-map-entries
-                    (lambda ()
-                      (unpackaged/org-forward-to-entry-content 'unsafe)
-                      (let ((end (org-entry-end-position)))
-                        (list (count-lines (point) end)
-                              (count-words (point) end)
-                              (- end (point)))))
-                    nil 'tree)
-                sum lines into total-lines
-                sum words into total-words
-                sum characters into total-characters
-                finally return (let ((message (format "Subtree \"%s\" has %s lines, %s words, and %s characters."
-                                                      (org-get-heading t t) total-lines total-words total-characters)))
-                                 (kill-new (number-to-string total-words))
-                                 (message message)
-                                 message)))))
+  (interactive)
+  (if (use-region-p)
+      (funcall-interactively #'count-words-region (region-beginning) (region-end))
+    (org-with-wide-buffer
+     (cl-loop for (lines words characters)
+              in (org-map-entries
+                  (lambda ()
+                    (unpackaged/org-forward-to-entry-content 'unsafe)
+                    (let ((end (org-entry-end-position)))
+                      (list (count-lines (point) end)
+                            (count-words (point) end)
+                            (- end (point)))))
+                  nil 'tree)
+              sum lines into total-lines
+              sum words into total-words
+              sum characters into total-characters
+              finally return (let ((message (format "Subtree \"%s\" has %s lines, %s words, and %s characters."
+                                                    (org-get-heading t t) total-lines total-words total-characters)))
+                               (kill-new (number-to-string total-words))
+                               (message message)
+                               message)))))
 
-  ;; Note that there exists `org-back-to-heading', possibly making the below redundant or inferior
-  (defun ps/org-jump-to-beginning-of-heading ()
-    "Move to the beginning of heading at point."
-    (interactive)
-    (if visual-line-mode
-        (progn
-          (visual-line-mode -1)
-          (setq visual-line-mode-toggle t)))
-    (when (org-at-heading-p)
-      (next-line))
-    (org-previous-visible-heading 1)
-    (if visual-line-mode-toggle
-        (visual-line-mode)))
+;; Note that there exists `org-back-to-heading', possibly making the below redundant or inferior
+(defun ps/org-jump-to-beginning-of-heading ()
+  "Move to the beginning of heading at point."
+  (interactive)
+  (if visual-line-mode
+      (progn
+        (visual-line-mode -1)
+        (setq visual-line-mode-toggle t)))
+  (when (org-at-heading-p)
+    (next-line))
+  (org-previous-visible-heading 1)
+  (if visual-line-mode-toggle
+      (visual-line-mode)))
 
-  (defun ps/org-move-subtree ()
-    "Move subtree at point to separate file. If parent heading is
+(defun ps/org-move-subtree ()
+  "Move subtree at point to separate file. If parent heading is
 'Parent heading', file will be named `parent-heading.org'."
-    (interactive)
+  (interactive)
+  (ps/org-jump-to-beginning-of-heading)
+  (let* ((name (ps/org-copy-heading-name))
+         ;; TODO: expand regular expression so that it reflects the transformation used by the EA Wiki
+         (filename (expand-file-name
+                    (concat (ps/org-wiki-slug name) ".org")
+                    ps/dir-people)))
+    (org-cut-subtree)
+    (find-file-other-window filename)
+    (let ((subtree (replace-regexp-in-string "^\\*+" "*" (current-kill 0))))
+      (insert (concat "#+title: " name "\n\n" subtree)))
     (ps/org-jump-to-beginning-of-heading)
-    (let* ((name (ps/org-copy-heading-name))
-           ;; TODO: expand regular expression so that it reflects the transformation used by the EA Wiki
-           (filename (expand-file-name
-                      (concat (ps/org-wiki-slug name) ".org")
-                      ps/dir-people)))
-      (org-cut-subtree)
-      (find-file-other-window filename)
-      (let ((subtree (replace-regexp-in-string "^\\*+" "*" (current-kill 0))))
-        (insert (concat "#+title: " name "\n\n" subtree)))
-      (ps/org-jump-to-beginning-of-heading)
-      (ps/switch-to-last-window)))
+    (ps/switch-to-last-window)))
 
-  (defun ps/org-jump-to-first-heading ()
-    "Move point to the beginning of the first org heading in the
+(defun ps/org-jump-to-first-heading ()
+  "Move point to the beginning of the first org heading in the
 current buffer."
-    (interactive)
-    (widen)
-    (goto-char (point-min))
-    (org-next-visible-heading 1))
+  (interactive)
+  (widen)
+  (goto-char (point-min))
+  (org-next-visible-heading 1))
 
-  ;; This tweaked command calls `ps/org-cycle-global' instead.
-  ;; [2022-06-19 Sun] No longer using `ps/org-cycle-global' so this
-  ;; command isn't used either.
-  (defun ps/org-shifttab (&optional arg)
-    "Global visibility cycling or move to previous table field.
+;; This tweaked command calls `ps/org-cycle-global' instead.
+;; [2022-06-19 Sun] No longer using `ps/org-cycle-global' so this
+;; command isn't used either.
+(defun ps/org-shifttab (&optional arg)
+  "Global visibility cycling or move to previous table field.
 Call `org-table-previous-field' within a table.
 When ARG is nil, cycle globally through visibility states.
 When ARG is a numeric prefix, show contents of this level."
-    (interactive "P")
-    (cond
-     ((org-at-table-p) (call-interactively 'org-table-previous-field))
-     ((integerp arg)
-      (let ((arg2 (if org-odd-levels-only (1- (* 2 arg)) arg)))
-        (message "Content view to level: %d" arg)
-        (org-cycle-content (prefix-numeric-value arg2))
-        (org-cycle-show-empty-lines t)
-        (setq org-cycle-global-status 'overview)
-        (run-hook-with-args 'org-cycle-hook 'overview)))
-     (t (call-interactively 'ps/org-cycle-global))))
+  (interactive "P")
+  (cond
+   ((org-at-table-p) (call-interactively 'org-table-previous-field))
+   ((integerp arg)
+    (let ((arg2 (if org-odd-levels-only (1- (* 2 arg)) arg)))
+      (message "Content view to level: %d" arg)
+      (org-cycle-content (prefix-numeric-value arg2))
+      (org-cycle-show-empty-lines t)
+      (setq org-cycle-global-status 'overview)
+      (run-hook-with-args 'org-cycle-hook 'overview)))
+   (t (call-interactively 'ps/org-cycle-global))))
 
-  (defun ps/org-super-return (&optional indent arg interactive)
-    "When `org-return-follows-link' is non-nil and point is on a
+(defun ps/org-super-return (&optional indent arg interactive)
+  "When `org-return-follows-link' is non-nil and point is on a
 link, call `org-open-at-point' and set
 `browse-url-browser-function' to `eww-browse-url'"
-    (interactive "P")
-    (let ((browse-url-browser-function 'eww-browse-url)
-          (browse-url-handlers nil))
-      (org-open-at-point)))
+  (interactive "P")
+  (let ((browse-url-browser-function 'eww-browse-url)
+        (browse-url-handlers nil))
+    (org-open-at-point)))
 
-  (defun ps/backward-org-transpose-element ()
-    "Transpose current and previous elements, keeping blank lines between.
+(defun ps/backward-org-transpose-element ()
+  "Transpose current and previous elements, keeping blank lines between.
 Point is moved after both elements."
-    (interactive)
-    (org-skip-whitespace)
-    (let ((end (org-element-property :end (org-element-at-point))))
-      (org-drag-element-forward)
-      (goto-char end)))
+  (interactive)
+  (org-skip-whitespace)
+  (let ((end (org-element-property :end (org-element-at-point))))
+    (org-drag-element-forward)
+    (goto-char end)))
 
-  (defun ps/org-clear-heading-contents (&optional include-children include-properties)
-    "Remove contents in org heading at point."
-    (interactive)
-    (save-restriction
+(defun ps/org-clear-heading-contents (&optional include-children include-properties)
+  "Remove contents in org heading at point."
+  (interactive)
+  (save-restriction
     (if include-children
         (ps/org-narrow-to-entry-and-children)
       (ps/org-narrow-to-entry-no-children))
@@ -5315,65 +5420,65 @@ Point is moved after both elements."
       (org-end-of-meta-data t))
     (delete-region (point) (point-max))))
 
-  :general
-  (org-mode-map
-   "<S-left>" nil
-   "<S-right>" nil
-   "<S-up>" nil
-   "<S-down>" nil
-   "<M-left>" nil
-   "<M-right>" nil
-   "<M-S-left>" nil
-   "<M-S-right>" nil
-   "<M-up>" nil
-   "<M-down>" nil
-   "C-j" nil
-   "<backtab>" 'org-shifttab
-   "s-<return>" 'ps/org-super-return
-   "C-k" nil
-   "C-," nil
-   "A-C-s-i" 'org-backward-sentence
-   "A-C-s-o" 'org-forward-sentence
-   "A-C-s-," 'org-backward-paragraph
-   "A-C-s-." 'org-forward-paragraph ; org element?
-   "A-C-s-m" 'org-beginning-of-line
-   "A-C-s-z" 'org-end-of-line ; karabiner maps `/' to `z'; otherwise I can't trigger the command while holding `shift'
-   "A-C-s-r" 'org-previous-visible-heading
-   "A-C-s-f" 'org-next-visible-heading
-   "A-C-s-v" 'ps/org-jump-to-beginning-of-heading ; move to beginning of heading
-   "A-C-s-M-m" 'org-previous-block
-   "A-C-s-M-/" 'org-next-block
-   "A-C-M-s-j" 'org-previous-link
-   "A-C-M-s-;" 'org-next-link
-   "A-H-M-t" 'org-transpose-element
-   "H-s-o" 'org-open-at-point
-   "A-C-s-n" 'ps/org-jump-to-first-heading
-   "s-A-b" 'ps/org-set-todo-properties
-   "s-c" 'org-ctrl-c-ctrl-c
-   "s-d" 'org-deadline
-   "s-e" 'org-set-effort
-   "s-f" 'org-insert-todo-subheading
-   "s-A-f" 'ps/org-insert-todo-subheading-after-body
-   "s-h" 'ps/org-copy-heading-name
-   "s-A-h" 'ps/org-copy-heading-contents
-   "s-p" 'org-time-stamp-inactive
-   "s-A-p" 'org-time-stamp
-   "s-q" 'org-set-tags-command
-   "s-A-s" 'org-schedule
-   ;; "s-A-s" 'ps/org-isearch-visible-org-heading
-   "s-t" 'org-todo
-   "s-A-t" 'org-sort
-   "s-v" 'org-copy-visible
-   "s-y" 'org-evaluate-time-range
-   "s-A-y" 'ps/org-open-at-point-with-eww
-   "s-z" 'org-edit-special
-   "s-A-z" 'ps/org-export-to-ea-wiki
-   "s-," 'org-priority
-   "A-<return>" "C-u M-<return>"
-   "A-M-<return>" 'org-insert-todo-heading
-   ;; bindings with matching commands in Fundamental mode
-   "H-v" 'org-yank
-   "M-w" 'ps/org-count-words))
+:general
+(org-mode-map
+ "<S-left>" nil
+ "<S-right>" nil
+ "<S-up>" nil
+ "<S-down>" nil
+ "<M-left>" nil
+ "<M-right>" nil
+ "<M-S-left>" nil
+ "<M-S-right>" nil
+ "<M-up>" nil
+ "<M-down>" nil
+ "C-j" nil
+ "<backtab>" 'org-shifttab
+ "s-<return>" 'ps/org-super-return
+ "C-k" nil
+ "C-," nil
+ "A-C-s-i" 'org-backward-sentence
+ "A-C-s-o" 'org-forward-sentence
+ "A-C-s-," 'org-backward-paragraph
+ "A-C-s-." 'org-forward-paragraph ; org element?
+ "A-C-s-m" 'org-beginning-of-line
+ "A-C-s-z" 'org-end-of-line ; karabiner maps `/' to `z'; otherwise I can't trigger the command while holding `shift'
+ "A-C-s-r" 'org-previous-visible-heading
+ "A-C-s-f" 'org-next-visible-heading
+ "A-C-s-n" 'ps/org-jump-to-beginning-of-heading ; move to beginning of heading
+ "A-C-s-M-m" 'org-previous-block
+ "A-C-s-M-/" 'org-next-block
+ "A-C-M-s-j" 'org-previous-link
+ "A-C-M-s-;" 'org-next-link
+ "A-H-M-t" 'org-transpose-element
+ "H-s-o" 'org-open-at-point
+ "A-C-s-n" 'ps/org-jump-to-first-heading
+ "s-A-b" 'ps/org-set-todo-properties
+ "s-c" 'org-ctrl-c-ctrl-c
+ "s-d" 'org-deadline
+ "s-e" 'org-set-effort
+ "s-f" 'org-insert-todo-subheading
+ "s-A-f" 'ps/org-insert-todo-subheading-after-body
+ "s-h" 'ps/org-copy-heading-name
+ "s-A-h" 'ps/org-copy-heading-contents
+ "s-p" 'org-time-stamp-inactive
+ "s-A-p" 'org-time-stamp
+ "s-q" 'org-set-tags-command
+ "s-A-s" 'org-schedule
+ ;; "s-A-s" 'ps/org-isearch-visible-org-heading
+ "s-t" 'org-todo
+ "s-A-t" 'org-sort
+ "s-v" 'org-copy-visible
+ "s-y" 'org-evaluate-time-range
+ "s-A-y" 'ps/org-open-at-point-with-eww
+ "s-z" 'org-edit-special
+ "s-A-z" 'ps/org-export-to-ea-wiki
+ "s-," 'org-priority
+ "A-<return>" "C-u M-<return>"
+ "A-M-<return>" 'org-insert-todo-heading
+ ;; bindings with matching commands in Fundamental mode
+ "H-v" 'org-yank
+ "M-w" 'ps/org-count-words))
 
 (use-feature org-agenda
   :defer 4
@@ -5423,7 +5528,7 @@ Point is moved after both elements."
       ((org-ql-block '(and (todo)
                            (not (property "effort")))
                      ((org-ql-block-header "TODOs without effort")))))
-     ("r" "Weekly review"
+     ("w" "Weekly review"
       agenda ""
       ((org-agenda-clockreport-mode t)
        (org-agenda-archives-mode t)
@@ -5433,6 +5538,11 @@ Point is moved after both elements."
      ("p" "Appointments" agenda* "Today's appointments"
       ((org-agenda-span 1)
        (org-agenda-max-entries 3)))
+       ("r"
+      "Reading list"
+      tags
+      "PRIORITY=\"1\"|PRIORITY=\"2\"|PRIORITY=\"3\"|PRIORITY=\"4\"|PRIORITY=\"5\"|PRIORITY=\"6\"|PRIORITY=\"7\"|PRIORITY=\"8\"|PRIORITY=\"9\""
+      ((org-agenda-files (list ps/dir-bibliographic-notes))))
      ("g" "All TODOs"
       todo "TODO")
      ("," "All tasks with no priority"
@@ -5486,6 +5596,16 @@ Point is moved after both elements."
     "Interactive version of `org-unhighlight'."
     (interactive)
     (org-unhighlight))
+
+  ; Replace native function with variant that doesn't ask the user
+  ; multiple times to remove non-existent agenda file
+  (defun ps/org-check-agenda-file (file)
+    "Make sure FILE exists.  If not, ask user what to do."
+    (unless (file-exists-p file)
+      (org-remove-file file)
+      (throw 'nextfile t)))
+
+  (advice-add 'org-check-agenda-file :override #'ps/org-check-agenda-file)
 
   :hook
   (org-agenda-mode-hook . (lambda ()
@@ -5545,7 +5665,7 @@ Point is moved after both elements."
       "* TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("f" "Fede")
      ("ff" "Fede: generic task" entry
-      (file+headline ps/file-tareas-fede "Tareas")
+      (file+headline ps/file-tareas-fede "Tareas Fede")
       "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
      ("fp" "Fede: Pending for next meeting" plain
       (id "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
@@ -5554,16 +5674,16 @@ Point is moved after both elements."
       "" :empty-lines 1)
      ("l" "Leo")
      ("la" "Leo: Process article" entry
-      (file+headline ps/file-tareas-leo "Tareas")
+      (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#5] Procesar :leo:\n" :immediate-finish t :empty-lines 1 :prepend t)
      ("lb" "Leo: Add to ea.news" entry
-      (file+headline ps/file-tareas-leo "Tareas")
+      (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#6] Agregar a ea.news :leo:\n%c" :empty-lines 1 :prepend t)
      ("le" "Leo: Rename article" entry
-      (file+headline ps/file-tareas-leo "Tareas")
+      (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#5] Renombrar ~%?~ :leo:\n" :empty-lines 1 :prepend t)
      ("ll" "Leo: Generic task" entry
-      (file+headline ps/file-tareas-leo "Tareas")
+      (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
      ("lm" "Leo: Meetings" entry
       (id "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")
@@ -5615,8 +5735,9 @@ Point is moved after both elements."
      ("y" "YouTube playlist" entry
       (id "319B1611-A5A6-42C8-923F-884A354333F9")
       "* %(ps/org-web-tools--youtube-dl (current-kill 0))\n[[%c][YouTube link]]" :empty-lines 1 :prepend t :immediate-finish t)
+     ;; github.com/alphapapa/org-protocol-capture-html#org-capture-template
      ("w" "Web site" entry
-      (file "")
+      (file ps/file-downloadsk)
       "* %a :website:\n\n%U %?\n\n%:initial")))
   ;; ("w" "Film watchlist" entry
   ;; (id "E821F19E-C619-4895-A084-54D0A2772BAE")
@@ -5794,7 +5915,8 @@ conditional on active capture template."
 
 (use-feature org-fold
   :custom
-  (org-catch-invisible-edits 'smart)
+  (org-fold-catch-invisible-edits 'smart)
+
   :config
   (defun ps/org-fold-show-all-headings ()
     "Show contents of all headings in buffer, except archives."
@@ -6217,7 +6339,8 @@ original."
   (advice-add 'org-src--construct-edit-buffer-name :override #'ps/org-src--construct-edit-buffer-name)
 
   :general
-  ("s-z" 'org-edit-src-exit))
+  (emacs-lisp-mode-map
+  "s-z" 'org-edit-src-exit))
 
 (use-feature org-table
   :config
@@ -6239,9 +6362,10 @@ original."
              :repo "shankar2k/orgtbl-edit"))
 
 (use-feature org-crypt
+:demand t
   :custom
-  (org-tags-exclude-from-inheritance (quote ("crypt")))
-  (org-crypt-key nil)
+  (org-tags-exclude-from-inheritance '("crypt"))
+  (org-crypt-key ps/personal-gmail)
 
   :config
   (org-crypt-use-before-save-magic))
@@ -6329,7 +6453,7 @@ original."
 (use-package org2blog
   :if (equal (system-name) ps/computer-hostname-pablo)
   :after auth-source-pass
-  :defer 15
+  :defer 10
   :custom
   (org2blog/wp-blog-alist
    `(("Pablo's website"
@@ -6340,16 +6464,36 @@ original."
       :url "https://www.stafforini.com/blog/xmlrpc.php"
       :username ,(auth-source-pass-get "user" "chrome/stafforini.com/blog/wp-admin/admin")
       :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/blog/wp-admin/admin"))
-      ("notatu dignum"
+     ("notatu dignum"
       :url "https://www.stafforini.com/quotes/xmlrpc.php"
       :username ,(auth-source-pass-get "user" "chrome/stafforini.com/quotes/wp-admin/admin")
       :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/quotes/wp-admin/admin"))
-      ("Puro compás"
+     ("Puro compás"
       :url "https://www.stafforini.com/tango/xmlrpc.php"
       :username ,(auth-source-pass-get "user" "chrome/stafforini.com/tango/wp-admin/admin")
-      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/tango/wp-admin/admin"))))
+      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/tango/wp-admin/admin"))
+      ("EA Quotes"
+      :url "https://eaquotes.net/xmlrpc.php"
+      :username ,(auth-source-pass-get "user" "tlon/EAQUOTES/eaquotes.net/wp_admin@eaquotes.net")
+      :password ,(auth-source-pass-get 'secret "tlon/EAQUOTES/eaquotes.net/wp_admin@eaquotes.net"))))
+
   (org2blog/wp-show-post-in-browser 'show)
   (org2blog/wp-track-posts (list ps/file-org2blog "Posts"))
+
+  :config
+  (defun ps/org2blog-move-tags-to-drawer ()
+    "Convert org-mode tags to values of the property `POST_TAGS' in
+an org drawer."
+    (interactive)
+    (while (re-search-forward "^\\* .*?:\\(.*\\):
+")
+    (let ((tags (string-join
+                 (split-string
+                  (substring-no-properties
+                   (match-string 1))
+                  ":")
+                 ", ")))
+      (org-set-property "POSG_TAGS" tags))))
 
   :general
   ("°" 'org2blog-user-interface))
@@ -6467,87 +6611,96 @@ With optional prefix argument, open with eww."
   :after emacsql-sqlite3
   :demand t
   :init
-  (defun ps/org-roam-recent (days limit)
-    "Return list of files modified in the last DAYS, if length of
-list shorter than LIMIT."
+  (defun ps/org-roam-recent (days &optional limit)
+    "Return list of files modified in the last DAYS. Optionally,
+return such list if its length is less than LIMIT."
     (let* ((mins (* 60 24 days))
-           (list (split-string
-                  (shell-command-to-string
-                   (format
-                    "find %s -name \"*.org\" -mmin -%s"
-                    org-roam-directory mins)))))
-      (when (< (length list) limit)
-        list)))
+           (file-list (split-string
+                       (shell-command-to-string
+                        (format
+                         "find %s -name '*.org'  -mmin -%s"
+                         (directory-file-name org-roam-directory) mins)))))
+      ;; Remove excluded files
+      (setq file-list (cl-delete-if (lambda (k)
+                                      (string-match-p org-roam-file-exclude-regexp k))
+                                    file-list))
+      (when (and limit
+                 (< (length file-list) limit))
+        file-list)))
 
-  :custom
-  ;; `sqlite3' is deprecated, but I cannot get org-roam to work with
-  ;; either `sqlite' or `sqlite-builtin'. So using this for the time
-  ;; being, until I succeed in diagnosing the problem. See the
-  ;; `org-roam-database-connector' docstring and the 'How to cache'
-  ;; section of the manual: orgroam.com/manual.html#How-to-cache
-  (org-roam-database-connector 'sqlite3)
-  (org-roam-directory ps/dir-org-roam)
-  (org-roam-complete-everywhere t)
-  (org-roam-node-display-template #("${title:*} ${tags:10}" 11 21
-                                    (face org-tag)))
-  (org-roam-capture-templates
-   `(("r" "bibliography reference" plain
-      (file ,ps/file-orb-noter-template)
-      :if-new
-      (file ,ps/file-orb-capture-template)
-      :unnarrowed t)))
+:custom
+;; `sqlite3' is deprecated, but I cannot get org-roam to work with
+;; either `sqlite' or `sqlite-builtin'. So using this for the time
+;; being, until I succeed in diagnosing the problem. See the
+;; `org-roam-database-connector' docstring and the 'How to cache'
+;; section of the manual: orgroam.com/manual.html#How-to-cache
+(org-roam-database-connector 'sqlite3)
+(org-roam-directory ps/dir-org-roam)
+(org-roam-complete-everywhere t)
+(org-roam-node-display-template #("${title:*} ${tags:10}" 11 21
+                                  (face org-tag)))
+(org-roam-capture-templates
+ `(("r" "bibliography reference" plain
+    (file ,ps/file-orb-noter-template)
+    :if-new
+    (file ,ps/file-orb-capture-template)
+    :unnarrowed t)))
 
-  ;; github.com/org-roam/org-roam/issues/1221
-  ;; See variable `ps/org-roam-excluded-dirs' defined below
-  (org-roam-db-node-include-function
-   (lambda ()
-     (let* ((file-path (buffer-file-name (buffer-base-buffer)))
-            (rel-file-path (f-relative file-path org-roam-directory))
-            (parent-directories (butlast (f-split rel-file-path))))
-       (if (cl-intersection ps/org-roam-excluded-dirs parent-directories :test #'string=) nil t))))
+;; Exclude files
+(org-roam-file-exclude-regexp "conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")
 
-  :config
-  (setq ps/org-roam-excluded-dirs '("archive" "inactive"))
+;; Exclude dirs
+;; github.com/org-roam/org-roam/issues/1221
+;; See variable `ps/org-roam-excluded-dirs' defined below
+(org-roam-db-node-include-function
+ (lambda ()
+   (let* ((file-path (buffer-file-name (buffer-base-buffer)))
+          (rel-file-path (f-relative file-path org-roam-directory))
+          (parent-directories (butlast (f-split rel-file-path))))
+     (if (cl-intersection ps/org-roam-excluded-dirs parent-directories :test #'string=) nil t))))
 
-  (defun ps/org-roam-db-query (sql &rest args)
-    "Run SQL query on Org-roam database with ARGS.
+:config
+(setq ps/org-roam-excluded-dirs '("archive" "inactive"))
+
+(defun ps/org-roam-db-query (sql &rest args)
+  "Run SQL query on Org-roam database with ARGS.
  SQL can be either the emacsql vector representation, or a string."
-    (sleep-for 0 1)
-    (apply #'emacsql (org-roam-db) sql args))
+  (sleep-for 0 1)
+  (apply #'emacsql (org-roam-db) sql args))
 
-  (advice-add 'org-roam-db-query :override #'ps/org-roam-db-query)
-  (advice-add 'org-roam-node-find :before #'widen)
-  (advice-add 'org-roam-node-find :after #'ps/org-narrow-to-entry-and-children)
+(advice-add 'org-roam-db-query :override #'ps/org-roam-db-query)
+(advice-add 'org-roam-node-find :before #'widen)
+(advice-add 'org-roam-node-find :after #'ps/org-narrow-to-entry-and-children)
 
-  ;; org-roam.discourse.group/t/org-roam-v2-org-id-id-link-resolution-problem/1491/7
-  (defun ps/org-roam-update-id-locations ()
-    "Update org id locations indexed by org roam."
-    (interactive)
-    (org-id-update-id-locations (org-roam-list-files)))
+;; org-roam.discourse.group/t/org-roam-v2-org-id-id-link-resolution-problem/1491/7
+(defun ps/org-roam-update-id-locations ()
+  "Update org id locations indexed by org roam."
+  (interactive)
+  (org-id-update-id-locations (org-roam-list-files)))
 
-  (defun ps/org-roam-remove-file-level-properties ()
-    "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
-    (when (string= "r" (plist-get org-capture-plist :key))
-      (goto-char (point-min))
-      (unless (org-get-heading)
-        ;; Take action with file-level properties only.
-        (org-delete-property "ID")
-        (org-delete-property "ROAM_REFS")
-        (ps/org-jump-to-first-heading)
-        (org-id-get-create))))
+(defun ps/org-roam-remove-file-level-properties ()
+  "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
+  (when (string= "r" (plist-get org-capture-plist :key))
+    (goto-char (point-min))
+    (unless (org-get-heading)
+      ;; Take action with file-level properties only.
+      (org-delete-property "ID")
+      (org-delete-property "ROAM_REFS")
+      (ps/org-jump-to-first-heading)
+      (org-id-get-create))))
 
-  (org-roam-db-autosync-mode -1)
+(org-roam-db-autosync-mode -1)
 
-  :hook
-  (org-roam-capture-new-node-hook . orb--insert-captured-ref-h)
-  (org-roam-capture-new-node-hook . org-roam-capture--insert-captured-ref-h)
-  (org-capture-prepare-finalize-hook . ps/org-roam-remove-file-level-properties)
+:hook
+(org-roam-capture-new-node-hook . orb--insert-captured-ref-h)
+(org-roam-capture-new-node-hook . org-roam-capture--insert-captured-ref-h)
+(org-capture-prepare-finalize-hook . ps/org-roam-remove-file-level-properties)
 
-  :general
-  ("H-s-j" 'org-roam-node-find
-   "H-s-i" 'org-roam-node-insert)
-  (org-mode-map
-   "s-r" 'org-roam-buffer-toggle))
+:general
+("H-s-j" 'org-roam-node-find
+ "H-s-i" 'org-roam-node-insert)
+(org-mode-map
+ "s-r" 'org-roam-buffer-toggle))
 
 (use-package vulpea
   :commands (vulpea-buffer-p vulpea-agenda-files-update vulpea-buffer-prop-get-list vulpea-project-update-tag)
@@ -6699,23 +6852,25 @@ tasks."
 (use-feature oc
   :demand t
   :custom
-  (org-cite-global-bibliography `(,ps/file-bibliography))
-  ;; (org-cite-csl-locales-dir (expand-file-name (concat user-emacs-directory "locales/")))
-  (org-cite-csl-styles-dir ps/dir-bibliography)
+  (org-cite-global-bibliography `(,ps/file-bibliography-new
+                                  ,ps/file-bibliography-old))
+  (org-cite-csl-styles-dir ps/dir-csl-styles)
+  (org-cite-csl-locales-dir ps/dir-csl-locales)
   (org-cite-insert-processor 'citar)
   (org-cite-follow-processor 'citar) ; `org-open-at-point` integration
   (org-cite-activate-processor 'citar) ;
   (org-cite-export-processors
    '(
-     ;; (md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
-     ;; (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
-     ;; (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
-     ;; (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
+     (md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
+     (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
+     (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
+     (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
      (t csl "american-medical-association-brackets.csl")       ; Fallback
      ))
 
   :config
-  ;; This command is no longer used, since I have stopped using Zotero.
+  ;; Since migrating from Zotero to a pure Emacs solution, I no longer
+  ;; use this command.
   (defun ps/org-cite-zotero-db-export (&optional arg)
     "Export `new.bib' Zotero collection as BibLaTeX file.
 With prefix argument, export `old.bib' instead."
@@ -6728,10 +6883,10 @@ With prefix argument, export `old.bib' instead."
                     ps/file-bibliography-old
                   ps/file-bibliography-new)))
       (request collection
-               :success (cl-function
-                         (lambda (&key data &allow-other-keys)
-                           (write-region data nil file)))
-               :sync t)))
+        :success (cl-function
+                  (lambda (&key data &allow-other-keys)
+                    (write-region data nil file)))
+        :sync t)))
 
   :general
   ("H-/" 'org-cite-insert))
@@ -6753,12 +6908,12 @@ With prefix argument, export `old.bib' instead."
   :demand t)
 
 (use-package citeproc
-  :defer 10)
+  :demand t)
 
 (use-package citar
   :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
   :demand t
-  :after (oc vertico embark marginalia)
+  :after (oc vertico embark marginalia citeproc)
   :custom
   (citar-open-note-functions '(orb-citar-edit-note))
   (citar-bibliography org-cite-global-bibliography)
@@ -6769,6 +6924,7 @@ With prefix argument, export `old.bib' instead."
      (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
      (link ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01) . " ")))
   (citar-symbol-separator "  ")
+  (citar-format-reference-function 'citar-citeproc-format-reference)
 
   :config
   (defun ps/citar--get-title (entry)
@@ -6841,6 +6997,13 @@ With prefix, rebuild the cache before offering candidates."
    "s" 'ps/citar-search-google-scholar
    "v" 'ps/citar-search-internet-archive
    "w" 'ps/citar-search-worldcat))
+
+(use-feature citar-citeproc
+  :after citar
+  :demand t
+  :custom
+  (citar-citeproc-csl-styles-dir org-cite-csl-styles-dir)
+  (citar-citeproc-csl-locales-dir org-cite-csl-locales-dir))
 
 (use-package citar-embark
   :after (citar embark)
@@ -6996,7 +7159,7 @@ with `org-capture'."
   (orb-preformat-keywords
    '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
   (orb-process-file-keyword t)
-  (orb-file-field-extensions '("pdf"))
+  (orb-attached-file-extensions '("pdf"))
   :config
   (add-to-list 'orb-preformat-keywords "year")
   (org-roam-bibtex-mode))
@@ -7155,7 +7318,7 @@ window and make the frame active,"
   (defun ps/ebib-add-by-identifier (id)
     "docstring"
     (interactive "sEnter ISBN or DOI: ")
-    (let ((bibfile ps/file-bibliography))
+    (let ((bibfile ps/file-bibliography-new))
       ;; TODO: Add support for arXiv
       (cond ((ps/doi-utils-doi-p id)
              (doi-utils-add-bibtex-entry-from-doi id bibfile))
@@ -7169,7 +7332,7 @@ window and make the frame active,"
     (interactive "sEnter ISBN or DOI: ")
     ;; TODO: Add support for arXiv
     (cond ((ps/doi-utils-doi-p id)
-           (pubmed-scihub id))
+           (scihub id))
           ((ps/isbn-p id)
            (ps/ebib-search-book (s-replace "-" "" id)))
           (t
@@ -7326,7 +7489,7 @@ entry's key."
                   ps/dir-library
                   (file-name-with-extension key ".pdf"))))
       (ps/ebib-copy-doi)
-      (url-copy-file (pubmed-scihub (current-kill 0)) file)
+      (url-copy-file (scihub (current-kill 0)) file)
       (ebib-set-field-value "file" file key ebib--cur-db ";")))
 
   (defun ps/ebib-attach-most-recent-file ()
@@ -7581,34 +7744,6 @@ If not invoked from `ebib', prompt for search query."
     ;; ("f" () "" :column "")
     ;; ("g" () "" :column "")
     ("h" (ps/ebib-open-html-file) "HTML" :column "open")
-    ("H--" (ps/ebib-jump-to-pages) "pages" :column "jump")
-    ("H-." (ps/ebib-jump-to-abstract) "abstract" :column "jump")
-    ("H-a" (ps/ebib-jump-to-author) "author" :column "jump")
-    ("H-b" (ps/ebib-jump-to-booktitle) "booktitle" :column "jump")
-    ;; ("H-c" () "" :column "")
-    ("H-d" (ps/ebib-jump-to-doi) "doi" :column "jump")
-    ("H-e" (ps/ebib-jump-to-editor) "editor" :column "jump")
-    ("H-f" (ps/ebib-jump-to-file) "file" :column "jump")
-    ;; ("H-g" () "" :column "")
-    ;; ("H-h" () "" :column "")
-    ("H-i" (ps/ebib-jump-to-isbn) "isbn" :column "jump")
-    ("H-j" (ps/ebib-jump-to-journal) "journal" :column "jump")
-    ("H-k" (ps/ebib-jump-to-keywords) "keywords" :column "jump")
-    ;; ("H-l" () "" :column "")
-    ;; ("H-m" () "" :column "")
-    ("H-n" (ps/ebib-jump-to-number) "number" :column "jump")
-    ("H-o" (ps/ebib-jump-to-location) "location" :column "jump")
-    ("H-p" (ps/ebib-jump-to-publisher) "publisher" :column "jump")
-    ;; ("H-q" () "" :column "")
-    ;; ("H-r" () "" :column "")
-    ("H-s" (ps/ebib-jump-to-shorttitle) "short title" :column "jump")
-    ("H-t" (ps/ebib-jump-to-title) "title" :column "jump")
-    ("H-u" (ps/ebib-jump-to-url) "url" :column "jump")
-    ("H-v" (ps/ebib-jump-to-volume) "volume" :column "jump")
-    ;; ("H-w" () "" :column "")
-    ;; ("H-x" () "" :column "")
-    ("H-y" (ps/ebib-jump-to-date) "date" :column "jump")
-    ;; ("H-z" () "" :column "")
     ("i" (ps/ebib-search-book-by-isbn) "ISBN" :column "browse")
     ;; ("j" () "" :column "")
     ;; ("k" () "" :column "")
@@ -7629,8 +7764,8 @@ If not invoked from `ebib', prompt for search query."
     ("y" (ps/ebib-search-hathitrust) "HathiTrust" :column "search")
     ;; ("z" () "" :column "")
     ("/" (ps/ebib-attach-most-recent-file) "attach latest" :column "edit")
-    ("," (ps/ebib-sentence-case) "sentence case" :column "edit")
-    ("," (ps/ebib-title-case) "title case" :column "edit")
+    ;; ("" (ps/ebib-sentence-case) "sentence case" :column "edit")
+    ;; ("" (ps/ebib-title-case) "title case" :column "edit")
     )
 
     ;; Triggers "Error (use-package): ebib/:config: Symbol’s function definition is void: file-notify-add-watch"
@@ -7652,28 +7787,15 @@ If not invoked from `ebib', prompt for search query."
   (ebib-entry-mode-map
    "!" 'ebib-generate-autokey
    "," 'ps/ebib-switch-old-db
-   "-" 'ps/ebib-jump-to-pages
    "." 'ps/ebib-switch-new-db
    "1" (lambda! (ebib-view-file-in-field 1))
    "2" (lambda! (ebib-view-file-in-field 2))
-   "a" 'ps/ebib-jump-to-author
-   "b" 'ps/ebib-jump-to-booktitle
-   "d" 'ps/ebib-jump-to-doi
-   "e" 'ps/ebib-jump-to-editor
-   "f" 'ps/ebib-jump-to-file
-   "h" 'ps/ebib-jump-to-publisher
-   "i" 'ps/ebib-jump-to-isbn
-   "k" 'ps/ebib-jump-to-keywords
    "l" 'ps/ebib-search-library-genesis
-   "o" 'ps/ebib-jump-to-location
    "p" 'ps/ebib-open-pdf-file
    "Q" 'ebib-quit
    "SPC" 'ps/ebib-attach-most-recent-file
-   "t" 'ps/ebib-jump-to-title
-   "u" 'ps/ebib-jump-to-url
    "x" 'ebib-delete-current-field-contents
    "X" 'ps/ebib-open-current-bibtex-file
-   "y" 'ps/ebib-jump-to-date
    "z" 'ps/ebib-search-amazon)
   (ebib-index-mode-map
    "<return>" 'ebib-edit-entry
@@ -7700,42 +7822,30 @@ If not invoked from `ebib', prompt for search query."
   :defer 10
   :init
   (defun ps/zotra-run-translator-server ()
-    "docstring"
+    "Start translator server in the background."
     (interactive)
-    (async-shell-command (format "cd %s; nvm user 14; npm start" ps/dir-translation-server
-    )))
+    (async-shell-command
+     (format
+      "cd %s; nvm use 14; npm start"
+      ps/dir-translation-server)))
 
-    ;; (ps/zotra-run-translator-server)
+    (ps/zotra-run-translator-server)
 
   :custom
   (zotra-use-curl nil)
   (zotra-url-retrieve-timeout 10)
-  (zotra-default-bibliography ps/file-bibliography)
+  (zotra-default-bibliography ps/file-bibliography-new)
   (zotra-default-entry-format "biblatex")
-  :config
 
   :hook
   (zotra-after-add-entry-hook . org-ref-clean-bibtex-entry)
   (zotra-after-add-entry-hook . ebib-reload-current-database))
 
-(use-package pubmed
-  :defer 10
-  :commands (pubmed-search pubmed-advanced-search)
-  :config
-  (require 'pubmed-scihub)
-  (setq pubmed-scihub-url "https://sci-hub.se/")
-
-  (defun ps/pubmed-scihub-save (&optional doi)
-    "Download and save PDF from DOI."
-    (interactive)
-    (let* ((doi (or doi
-                    (read-string "DOI: ")))
-           (url (pubmed-scihub doi))
-           (file-name (url-file-nondirectory url)))
-      (unless (equal (file-name-extension file-name) "pdf")
-        (setq file-name (file-name-with-extension file-name "pdf")))
-      (let ((file-path (file-name-concat ps/dir-downloads file-name)))
-        (url-copy-file url file-path 1)))))
+(use-package scihub
+  :custom
+  (scihub-download-directory ps/dir-downloads)
+  (scihub-open-after-download nil)
+  (scihub-fetch-domain 'scihub-fetch-domains-lovescihub))
 
 (use-package anki-editor
   ;; this version handles mathjax correctly
@@ -8048,7 +8158,8 @@ for confirmation."
   (defun ps/mu4e-view-in-gmail ()
     "Open Gmail in a browser and view message at point in it."
     (interactive)
-    (let* ((id (plist-get (mu4e-message-at-point) :message-id))
+    (let* ((id (url-hexify-string
+                (plist-get (mu4e-message-at-point) :message-id)))
            (url (concat "https://mail.google.com/mail/u/0/#search/rfc822msgid%3A" id)))
       (browse-url url)))
 
@@ -8163,7 +8274,7 @@ without asking for user confirmation."
   (mu4e-mark-execute-pre-hook . ps/mu4e-gmail-fix-flags)
   (mu4e-compose-pre-hook . org-msg-mode)
   (mu4e-compose-pre-hook . ps/mu4e-set-account)
-  (mu4e-compose-mode-hook . (lambda () "prevent accumulation of drafts" (auto-save-visited-mode 1)))
+  ;; (mu4e-compose-mode-hook . (lambda () "prevent accumulation of drafts" (auto-save-visited-mode 1)))
 
   :general
   ("µ" 'mu4e) ; µ = A-m
@@ -8175,7 +8286,6 @@ without asking for user confirmation."
    "<" 'mu4e-headers-split-view-shrink
    ">" 'mu4e-headers-split-view-grow
    "F" 'mu4e-compose-forward
-   "g" 'ps/mu4e-view-in-gmail
    "i" 'mu4e-select-other-view
    "r" 'mu4e-compose-reply)
   (mu4e-main-mode-map
@@ -8212,11 +8322,14 @@ without asking for user confirmation."
    "d" 'mu4e-view-mark-for-delete
    "D" 'ps/mu4e-view-trash
    "e" 'ps/mu4e-view-archive
+   "x" 'ps/mu4e-view-in-gmail
    "L" 'mu4e-view-save-attachments
    "m" 'mu4e-view-mark-for-something
    "o" 'ps/mu4e-view-org-capture
    "v" 'ps/mu4e-view-move
-   "w" 'mu4e-copy-message-path))
+   "w" 'mu4e-copy-message-path
+   "A-C-s-u" nil
+   "A-C-s-p" nil))
 
 (use-feature mu4e-org
   :after mu4e
@@ -8277,6 +8390,7 @@ without asking for user confirmation."
 
 (use-package telega
   :defer 8
+
   :custom
   (telega-server-libs-prefix "/opt/homebrew")
   (telega-chat-input-markups '("markdown2" "org"))
@@ -8291,11 +8405,9 @@ without asking for user confirmation."
                             (not saved-messages) (user is-online))
                            ("Groups" type basicgroup supergroup)
                            ("Channels" type channel)))
+  (telega-completing-read-function 'completing-read)
+                           
   :config
-  (require 'ol-telega)
-  (require 'telega-dired-dwim)
-  (require 'telega-mnz)
-
   (defun ps/telega-switch-to ()
     "docstring"
     (interactive)
@@ -8327,48 +8439,6 @@ into a task for Leo."
            (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
-  ;; copied from github.com/zevlg/telega.el/issues/231
-  (defun ps/telega-dired-attach-func (file)
-    "Identify msg type for FILE."
-    (let ((file-ext (file-name-extension file)))
-      (cond ((member file-ext '("mp3" "flac"))
-             #'telega-chatbuf-attach-audio)
-            ((member file-ext '("mp4" "mkv"))
-             #'telega-chatbuf-attach-video)
-            ((image-type-from-file-name file)
-             #'telega-chatbuf-attach-photo)
-            (t
-             #'telega-chatbuf-attach-file))))
-
-  (defun ps/telega-dired-attach-send ()
-    "Send the marked files."
-    (interactive)
-    (let ((dired-files (dired-get-marked-files)))
-      (unless dired-files
-        (user-error "No marked files"))
-      (with-current-buffer (telega-chat--pop-to-buffer
-                            (telega-completing-read-chat
-                             (format "Send %d files to: " (length dired-files))))
-        (let ((inhibit-read-only t)
-              (buffer-undo-list t))
-          (dolist (file dired-files)
-            (funcall (ps/telega-dired-attach-func file) file))))))
-
-  (defun ps/telega-chatbuf-attach-most-recent-screenshot ()
-    "Attach most recently captured screenshot as photo."
-    (interactive)
-    (let ((screenshot (ps/newest-file default-directory "\\.png$")))
-      (if screenshot
-          (telega-chatbuf-attach-photo screenshot)
-        (user-error (format "No screenshots found in %s" default-directory)))))
-
-  (defun ps/telega-chatbuf-attach-most-recent-file ()
-    "Attach most recently saved file in `downloads' folder."
-    (interactive)
-    (let ((file (ps/newest-file ps/dir-downloads)))
-      (if file
-          (telega-chatbuf-attach-file file)
-        (user-error (format "No files found in %s" ps/dir-downloads)))))
 
   (defun ps/telega-docs-change-notify (&optional change-begins change-ends)
     "TODO: write docstring"
@@ -8417,8 +8487,8 @@ into a task for Leo."
     (interactive)
     (telega-filters-push '(main)))
 
-  ;; Declaring the hook via `:hook' triggers an error if package is deferred
-  (add-hook 'telega-load-hook 'global-telega-mnz-mode) ; code block highlighting
+
+  (telega-mode-line-mode 1)
 
   :hook
   (telega-chat-mode-hook . (lambda () (setq default-directory (file-name-as-directory ps/dir-downloads))))
@@ -8438,7 +8508,7 @@ into a task for Leo."
    "s-d" 'telega-chatbuf-goto-date
    "s-f" 'telega-chatbuf-filter
    "s-m" 'telega-chatbuf-attach-media
-   "s-r" 'telega-msg-set-reaction
+   "s-r" 'telega-msg-add-reaction
    "s-s" 'telega-chatbuf-filter-search
    "s-t" 'telega-sticker-choose-favorite-or-recent
    "s-v" 'telega-chatbuf-attach-clipboard
@@ -8475,6 +8545,65 @@ into a task for Leo."
    "x" 'telega-webpage-browse-url)
   (dired-mode-map
    "A-s-a" 'ps/telega-dired-attach-send))
+
+(use-feature telega-mnz
+  :after telega
+  :demand t
+  :custom
+  (telega-mnz-use-language-detection nil)
+
+  :config
+  (add-hook 'telega-load-hook 'global-telega-mnz-mode))
+
+  ;; :hook
+  ;; (telega-load-hook . global-telega-mnz-mode))
+
+(use-feature telega-dired-dwim
+  :after telega
+  :demand t
+  :config
+  ;; copied from github.com/zevlg/telega.el/issues/231
+  (defun ps/telega-dired-attach-func (file)
+    "Identify msg type for FILE."
+    (let ((file-ext (file-name-extension file)))
+      (cond ((member file-ext '("mp3" "flac"))
+             #'telega-chatbuf-attach-audio)
+            ((member file-ext '("mp4" "mkv"))
+             #'telega-chatbuf-attach-video)
+            ((image-type-from-file-name file)
+             #'telega-chatbuf-attach-photo)
+            (t
+             #'telega-chatbuf-attach-file))))
+
+  (defun ps/telega-dired-attach-send ()
+    "Send the marked files."
+    (interactive)
+    (let ((dired-files (dired-get-marked-files)))
+      (unless dired-files
+        (user-error "No marked files"))
+      (with-current-buffer (telega-chat--pop-to-buffer
+                            (telega-completing-read-chat
+                             (format "Send %d files to: " (length dired-files))))
+        (let ((inhibit-read-only t)
+              (buffer-undo-list t))
+          (dolist (file dired-files)
+            (funcall (ps/telega-dired-attach-func file) file))))))
+
+  (defun ps/telega-chatbuf-attach-most-recent-screenshot ()
+    "Attach most recently captured screenshot as photo."
+    (interactive)
+    (if-let ((screenshot (ps/newest-file default-directory "\\.png$")))
+        (telega-chatbuf-attach-photo screenshot)
+      (user-error (format "No screenshots found in %s" default-directory))))
+
+  (defun ps/telega-chatbuf-attach-most-recent-file ()
+    "Attach most recently saved file in `downloads' folder."
+    (interactive)
+    (if-let ((file (ps/newest-file ps/dir-downloads)))
+          (telega-chatbuf-attach-file file)
+        (user-error (format "No files found in %s" ps/dir-downloads)))))
+
+(use-feature ol-telega)
 
 (use-package erc
   :if (equal (system-name) ps/computer-hostname-pablo)
@@ -8615,11 +8744,6 @@ To be used by `eww-after-render-hook'."
   :custom
   (mm-text-html-renderer 'w3m)
   :general
-  (w3m-minor-mode-map
-   "<up>" 'previous-line
-   "<down>" 'next-line
-   "<left>" 'left-char
-   "<right>" 'right-char)
   (w3m-mode-map
    "S-<return>" 'w3m-view-url-with-browse-url) ; open externally
   (mu4e-view-mode-map
@@ -8961,8 +9085,9 @@ account."
   (twittering-mode-map
    "s-m" 'twittering-replies-timeline
    "s-r" 'twittering-mentions-timeline
-   "n" 'twittering-goto-next-status
-   "p" 'twittering-goto-previous-status
+   "d" 'twittering-delete-status
+   "" 'twittering-goto-next-status
+   "" 'twittering-goto-previous-status
    "P" 'ps/twittering-mode-search-people-externally
    "q" 'twittering-kill-buffer
    "s" 'twittering-search
@@ -9452,29 +9577,31 @@ is connected."
 (defun ps/tlon-meeting-with-fede ()
   (interactive)
   (ps/tlon--meeting-with
-  "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
-  "56CBB3F8-8E75-4298-99B3-899365EB75E0"
-  "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
+   "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
+   "56CBB3F8-8E75-4298-99B3-899365EB75E0"
+   "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
 
 (defun ps/tlon-meeting-with-leo ()
   (interactive)
   (ps/tlon--meeting-with
-  "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
-  "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-  "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
+   "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
+   "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
+   "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
 
 (defun ps/tlon--meeting-with (tareas-id meetings-id pending-id)
   ;; "[person] > Meetings > Pending for next meeting" org heading in `work-dashboard.org'
   (ps/org-id-goto pending-id)
-  (ps/org-copy-heading-contents)
-  (ps/org-clear-heading-contents)
-  ;; "[person] > Meetings" org heading in `work-dashboard.org'
-  (ps/org-id-goto meetings-id)
-  (org-narrow-to-subtree)
-  (goto-char (point-max))
-  (org-insert-heading)
-  (ps/org-time-stamp-inactive-current-time)
-  (insert (concat "\nTo discuss:\n" (current-kill 0) "\n"))
+  (let ((contents (ps/org-get-heading-contents)))
+    (ps/org-clear-heading-contents)
+    ;; "[person] > Meetings" org heading in `work-dashboard.org'
+    (ps/org-id-goto meetings-id)
+    (org-narrow-to-subtree)
+    (goto-char (point-max))
+    (org-insert-heading)
+    (ps/org-time-stamp-inactive-current-time)
+    (unless (string= contents "")
+      (insert (concat "\nTo discuss:\n" contents "\n"))))
+  (forward-line)
   (ps/org-narrow-to-entry-and-children)
   (ps/window-split-if-unsplit)
   (ps/switch-to-last-window)

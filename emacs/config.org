@@ -8522,10 +8522,9 @@ CLOCK: [2021-12-12 Sun 17:47]--[2021-12-12 Sun 17:50] =>  0:03
              :repo "junjizhi/aide.el")
   :after request             
   :demand t
-  :custom
-  (openai-api-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
+  :config
+  (setq openai-api-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
 #+end_src
-
 
 * prose
 :PROPERTIES:

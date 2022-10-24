@@ -13379,7 +13379,6 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   :demand t
   :after (oc vertico embark marginalia citeproc)
   :custom
-  (citar-notes-source 'orb-citar-source)
   (citar-open-note-functions '(orb-citar-edit-note))
   (citar-bibliography org-cite-global-bibliography)
   (citar-notes-paths `(,ps/dir-bibliographic-notes))
@@ -13400,6 +13399,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
                            :open #'citar-org-roam-open-note
                            :create #'orb-citar-edit-note
                            :annotate #'citar-org-roam--annotate))
+  (setq citar-notes-source 'orb-citar-source)
 
   (defun ps/citar--get-title (entry)
     "Return title of ENTRY."
@@ -13481,6 +13481,7 @@ With prefix, rebuild the cache before offering candidates."
 
 [cite:@Ord2020PrecipiceExistentialRisk]
 
+
 *** Archive                                                       :ARCHIVE:
 :PROPERTIES:
 :ID:       D5209A3D-C985-4B14-B2E7-60D57C256459
@@ -13534,6 +13535,7 @@ Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
 
 #+begin_src emacs-lisp :results silent
 (use-package citar-org-roam
+  :demand t
   :after (citar org-roam)
   :config
   (citar-org-roam-mode))
@@ -17857,7 +17859,6 @@ https://github.com/jimeh/emacs-builds/issues/17#issuecomment-997455295
 https://www.mail-archive.com/emacs-orgmode@gnu.org/msg137704.html
 
 Man, I give up.
-
 
 * calc
 :PROPERTIES:

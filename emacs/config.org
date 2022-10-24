@@ -68,7 +68,7 @@ CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
 
-** Debugging
+** Debugging                                                      :noexport:
 :PROPERTIES:
 :ID:       ED2955EA-3BD8-4058-A973-3CC87847D9A5
 :END:

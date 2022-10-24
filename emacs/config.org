@@ -8509,6 +8509,24 @@ CLOSED: [2021-12-12 Sun 18:48]
 CLOCK: [2021-12-12 Sun 18:10]--[2021-12-12 Sun 18:48] =>  0:38
 CLOCK: [2021-12-12 Sun 17:47]--[2021-12-12 Sun 17:50] =>  0:03
 :END:
+
+** aide.el
+:PROPERTIES:
+:ID:       5BCD6E4D-0264-4CB6-A0D8-0A6225A671B6
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-package aide
+  :straight (aide
+             :host github
+             :repo "junjizhi/aide.el")
+  :after request             
+  :demand t
+  :custom
+  (openai-api-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
+#+end_src
+
+
 * prose
 :PROPERTIES:
 :ID:       9C33C68A-B82E-4898-B967-337B7D0619EE
@@ -13377,7 +13395,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 (use-package citar
   :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
   :demand t
-  :after (oc vertico embark marginalia citeproc)
+  :after (oc vertico embark marginalia citeproc citar-org-roam)
   :custom
   (citar-open-note-functions '(orb-citar-edit-note))
   (citar-bibliography org-cite-global-bibliography)
@@ -13536,7 +13554,7 @@ Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
 #+begin_src emacs-lisp :results silent
 (use-package citar-org-roam
   :demand t
-  :after (citar org-roam)
+  :after (org-roam)
   :config
   (citar-org-roam-mode))
 #+end_src
@@ -17111,6 +17129,15 @@ if none."
   (advice-add 'org-web-tools--get-first-url :override #'ps/org-web-tools--get-first-url)
   :general
   ("s-A-k" 'org-web-tools-insert-link-for-url))
+#+end_src
+** request
+:PROPERTIES:
+:ID:       4B7C17EE-0346-4059-AFF1-24DD7A609ADE
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-package request
+  :defer 15)
 #+end_src
 
 ** mullvad

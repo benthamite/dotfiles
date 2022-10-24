@@ -554,10 +554,40 @@ NAME and ARGS are as in `use-package'."
   :demand t)
 #+end_src
 
-*** TODO [#5] Optimize ~defer~ declarations
+*** Archive                                                                                                           :ARCHIVE:
+:PROPERTIES:
+:ID:       AD68DBF4-9E34-4E6E-BC03-8D2B72AD75B0
+:END:
+**** DONE Figure out how to load a package once another package loads
+CLOSED: [2021-12-03 Fri 21:35]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-04-01 Fri 14:19
+:ID:       42F23B32-2520-4BE8-8BB4-E84633897D8D
+:END:
+:LOGBOOK:
+CLOCK: [2021-12-03 Fri 11:57]--[2021-12-03 Fri 12:01] =>  0:04
+:END:
+e.g. ~org-msg-mode~ after ~mu4e~.
+
+The answer seems to be to [[https://jwiegley.github.io/use-package/keywords/][use hooks]]:
+
+#+begin_quote
+Pay attention if you set use-package-always-defer to t, and also use the :after keyword, as you will need to specify how the declared package is to be loaded: e.g., by some :bind. If you’re not using one of tho mechanisms that registers autoloads, such as :bind or :hook, and your package manager does not provide autoloads, it’s possible that without adding :demand t to those declarations, your package will never be loaded.
+#+end_quote
+**** DONE [#4] Understand this
+CLOSED: [2022-06-21 Tue 14:57]
+:PROPERTIES:
+:Effort:   0:15
+:ARCHIVE_TIME: 2022-06-21 Tue 14:57
+:ID:       76A14036-D4B4-4493-B195-36AEE5F7CD0A
+:END:
+https://github.com/jwiegley/use-package/issues/562
+**** CANCELLED [#5] Optimize ~defer~ declarations
+CLOSED: [2022-10-24 Mon 01:19]
 :PROPERTIES:
 :Effort:   1:30
 :ID:       7804BD3C-A126-4576-8AFA-5AF864DB8398
+:ARCHIVE_TIME: 2022-10-24 Mon 01:19
 :END:
 :LOGBOOK:
 CLOCK: [2021-10-02 Sat 18:12]--[2021-10-02 Sat 18:32] =>  0:20
@@ -731,34 +761,8 @@ The idea is to defer the loading of each package in such a way as to minimize th
 
 Based on estimates of how frequently each package is used and on assumptions about the distribution of idle time, one can then select the optimal defer value.
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       AD68DBF4-9E34-4E6E-BC03-8D2B72AD75B0
-:END:
-**** DONE Figure out how to load a package once another package loads
-CLOSED: [2021-12-03 Fri 21:35]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-04-01 Fri 14:19
-:ID:       42F23B32-2520-4BE8-8BB4-E84633897D8D
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-03 Fri 11:57]--[2021-12-03 Fri 12:01] =>  0:04
-:END:
-e.g. ~org-msg-mode~ after ~mu4e~.
+[2022-10-24 Mon 01:18] I think this is overkill. Canceling.
 
-The answer seems to be to [[https://jwiegley.github.io/use-package/keywords/][use hooks]]:
-
-#+begin_quote
-Pay attention if you set use-package-always-defer to t, and also use the :after keyword, as you will need to specify how the declared package is to be loaded: e.g., by some :bind. If you’re not using one of tho mechanisms that registers autoloads, such as :bind or :hook, and your package manager does not provide autoloads, it’s possible that without adding :demand t to those declarations, your package will never be loaded.
-#+end_quote
-**** DONE [#4] Understand this
-CLOSED: [2022-06-21 Tue 14:57]
-:PROPERTIES:
-:Effort:   0:15
-:ARCHIVE_TIME: 2022-06-21 Tue 14:57
-:ID:       76A14036-D4B4-4493-B195-36AEE5F7CD0A
-:END:
-https://github.com/jwiegley/use-package/issues/562
 ** paradox
 :PROPERTIES:
 :ID:       2263DD83-80FF-4180-903B-33FEB83C8179
@@ -13375,6 +13379,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   :demand t
   :after (oc vertico embark marginalia citeproc)
   :custom
+  (citar-notes-source 'orb-citar-source)
   (citar-open-note-functions '(orb-citar-edit-note))
   (citar-bibliography org-cite-global-bibliography)
   (citar-notes-paths `(,ps/dir-bibliographic-notes))
@@ -13387,13 +13392,22 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   (citar-format-reference-function 'citar-citeproc-format-reference)
 
   :config
+  (citar-register-notes-source
+   'orb-citar-source (list :name "Org-Roam Notes"
+                           :category 'org-roam-node
+                           :items #'citar-org-roam--get-candidates
+                           :hasitems #'citar-org-roam-has-notes
+                           :open #'citar-org-roam-open-note
+                           :create #'orb-citar-edit-note
+                           :annotate #'citar-org-roam--annotate))
+
   (defun ps/citar--get-title (entry)
     "Return title of ENTRY."
     (let* ((field (citar--field-with-value '(title) entry)))
       (when field
         (citar--get-value field entry))))
 
-(defun ps/citar-search-library-genesis (key-entry)
+  (defun ps/citar-search-library-genesis (key-entry)
     "Search title of KEY-ENTRY on Library Genesis.
 
 With prefix, rebuild the cache before offering candidates."
@@ -13407,7 +13421,7 @@ With prefix, rebuild the cache before offering candidates."
                        ps/library-genesis-suffix))
         (message "No link found for %s" (car key-entry)))))
 
-(defun ps/citar-search-worldcat (key-entry)
+  (defun ps/citar-search-worldcat (key-entry)
     "Search title of KEY-ENTRY on Worldcat.
 
 With prefix, rebuild the cache before offering candidates."
@@ -13421,7 +13435,7 @@ With prefix, rebuild the cache before offering candidates."
                        ps/worldcat-suffix))
         (message "No link found for %s" (car key-entry)))))
 
-(defun ps/citar-search-internet-archive (key-entry)
+  (defun ps/citar-search-internet-archive (key-entry)
     "Search title of KEY-ENTRY on the Internet Archive.
 
 With prefix, rebuild the cache before offering candidates."
@@ -13435,7 +13449,7 @@ With prefix, rebuild the cache before offering candidates."
                        ps/internet-archive-suffix))
         (message "No link found for %s" (car key-entry)))))
 
- (defun ps/citar-search-amazon (key-entry)
+  (defun ps/citar-search-amazon (key-entry)
     "Search title of KEY-ENTRY on Amazon.
 
 With prefix, rebuild the cache before offering candidates."
@@ -13510,6 +13524,19 @@ Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
   :demand t
   :config
   (citar-embark-mode))
+#+end_src
+
+** citar-org-roam
+:PROPERTIES:
+:ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
+:END:
+/[[https://github.com/emacs-citar/citar-org-roam][citar-org-roam]] provides integration between [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]] and [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package citar-org-roam
+  :after (citar org-roam)
+  :config
+  (citar-org-roam-mode))
 #+end_src
 
 ** org-ref
@@ -13723,7 +13750,7 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
 
 #+begin_src emacs-lisp :results silent
 (use-package org-roam-bibtex
-  :defer 20
+  :demand t
   :after bibtex-completion
   :custom
   (orb-roam-ref-format 'org-cite)
@@ -13733,6 +13760,7 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
    '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
   (orb-process-file-keyword t)
   (orb-attached-file-extensions '("pdf"))
+
   :config
   (add-to-list 'orb-preformat-keywords "year")
   (org-roam-bibtex-mode))

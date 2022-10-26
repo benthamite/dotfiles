@@ -13376,20 +13376,6 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
   :demand t)
 #+end_src
 
-** citar-org-roam
-:PROPERTIES:
-:ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
-:END:
-/[[https://github.com/emacs-citar/citar-org-roam][citar-org-roam]] provides integration between [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]] and [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package citar-org-roam
-  :demand t
-  :after org-roam
-  :config
-  (citar-org-roam-mode))
-#+end_src
-
 ** citar
 :PROPERTIES:
 :ID:       67AB4C5F-2425-4D31-9590-9D13790B4C97
@@ -13409,7 +13395,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 (use-package citar
   :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
   :demand t
-  :after (oc vertico embark marginalia citeproc)
+  :after oc vertico embark marginalia
   :custom
   (citar-open-note-functions '(orb-citar-edit-note))
   (citar-bibliography org-cite-global-bibliography)
@@ -13423,6 +13409,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   (citar-format-reference-function 'citar-citeproc-format-reference)
 
   :config
+  (require 'citar-org-roam)
   (citar-register-notes-source
    'orb-citar-source (list :name "Org-Roam Notes"
                            :category 'org-roam-node
@@ -13510,10 +13497,7 @@ With prefix, rebuild the cache before offering candidates."
 :ID:       EAB0E32B-129C-4980-A06B-94B4C25966E2
 :END:
 [cite:@Balintona2022CitationsOrgmodeOrgcite]
-
-
 [cite:@Ord2020PrecipiceExistentialRisk]
-
 
 *** Archive                                                       :ARCHIVE:
 :PROPERTIES:
@@ -13533,6 +13517,20 @@ CLOCK: [2022-06-22 Wed 15:42]--[2022-06-22 Wed 15:57] =>  0:15
 :END:
 My config predated the name change (it used to be called ~bibtex-actions~).
 Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
+
+** citar-org-roam
+:PROPERTIES:
+:ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
+:END:
+/[[https://github.com/emacs-citar/citar-org-roam][citar-org-roam]] provides integration between [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]] and [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package citar-org-roam
+  :demand t
+  :after citar org-roam
+  :config
+  (citar-org-roam-mode))
+#+end_src
 
 ** citar-citeproc
 :PROPERTIES:
@@ -13675,6 +13673,23 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (bibtex-autokey-titleword-separator "")
   (bibtex-autokey-preserve-case t)
 
+  :config
+  ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field
+  (defun ps/bibtex-autokey-get-year ()
+  "Return year field contents as a string obeying `bibtex-autokey-year-length'."
+  (let* ((str (bibtex-autokey-get-field '("date" "year" "urldate"))) ; possibly ""
+         (year (or (and (iso8601-valid-p str)
+                        (let ((year (decoded-time-year (iso8601-parse str))))
+                          (and year (number-to-string year))))
+                   ;; BibTeX permits a year field "(about 1984)", where only
+                   ;; the last four nonpunctuation characters must be numerals.
+                   (and (string-match "\\([0-9][0-9][0-9][0-9]\\)[^[:alnum:]]*\\'" str)
+                        (match-string 1 str))
+                   (user-error "Year or date field `%s' invalid" str))))
+    (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
+
+  (advice-add 'bibtex-autokey-get-year :override #'ps/bibtex-autokey-get-year)
+  
   :general
   (bibtex-mode-map
    "A-C-H-x" 'bibtex-copy-entry-as-kill
@@ -14071,7 +14086,7 @@ each of the attached files is in
                  (throw 'tag file)))
              (ebib--split-files files))
             nil)
-        (user-error "Invalid file extension!"))))
+        (user-error "Invalid file extension.df"))))
 
   (defun ps/ebib-validate-file-stem ()
     "If entry at point has attachments, check that the stem of

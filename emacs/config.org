@@ -8521,7 +8521,7 @@ CLOCK: [2021-12-12 Sun 17:47]--[2021-12-12 Sun 17:50] =>  0:03
   :straight (aide
              :host github
              :repo "junjizhi/aide.el")
-  :after request             
+  :after request
   :commands aide-openai-complete-region
   :config
   (setq openai-api-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
@@ -13238,8 +13238,9 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 (use-feature oc
   :demand t
   :custom
-  (org-cite-global-bibliography `(,ps/file-bibliography-new
-                                  ,ps/file-bibliography-old))
+  (org-cite-global-bibliography (list
+                                 (ps/file-bibliography-new
+                                  ps/file-bibliography-old)))
   (org-cite-csl-styles-dir ps/dir-csl-styles)
   (org-cite-csl-locales-dir ps/dir-csl-locales)
   (org-cite-insert-processor 'citar)
@@ -13253,26 +13254,6 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
      (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
      (t csl "american-medical-association-brackets.csl")       ; Fallback
      ))
-
-  :config
-  ;; Since migrating from Zotero to a pure Emacs solution, I no longer
-  ;; use this command.
-  (defun ps/org-cite-zotero-db-export (&optional arg)
-    "Export `new.bib' Zotero collection as BibLaTeX file.
-With prefix argument, export `old.bib' instead."
-    (interactive "P")
-    ;; see retorque.re/zotero-better-bibtex/exporting/pull/
-    (let ((collection (if arg
-                          "http://127.0.0.1:23119/better-bibtex/export/collection?/1/old.biblatex"
-                        "http://127.0.0.1:23119/better-bibtex/export/collection?/1/new.biblatex"))
-          (file (if arg
-                    ps/file-bibliography-old
-                  ps/file-bibliography-new)))
-      (request collection
-        :success (cl-function
-                  (lambda (&key data &allow-other-keys)
-                    (write-region data nil file)))
-        :sync t)))
 
   :general
   ("H-/" 'org-cite-insert))
@@ -13689,7 +13670,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
     (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
 
   (advice-add 'bibtex-autokey-get-year :override #'ps/bibtex-autokey-get-year)
-  
+
   :general
   (bibtex-mode-map
    "A-C-H-x" 'bibtex-copy-entry-as-kill
@@ -15053,9 +15034,9 @@ https://mu-discuss.narkive.com/mxM4AVIW/how-to-debug-non-zero-exit-code
   :if (equal (system-name) ps/computer-hostname-pablo)
   :defer 5
   :straight (:local-repo
-	     "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
-	     :pre-build
-	     ())
+             "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
+             :pre-build
+             ())
   :init
   (setq ps/mu4e-inbox-folder "/Inbox")
   (setq ps/mu4e-daily-folder "/Daily")
@@ -15106,9 +15087,9 @@ https://mu-discuss.narkive.com/mxM4AVIW/how-to-debug-non-zero-exit-code
   (defun ps/mu4e-gmail-fix-flags (mark msg)
     (message "fixing flags") ; for testing
     (cond ((eq mark 'trash)  (mu4e-action-retag-message msg "-\\Inbox,+\\Trash,-\\Draft"))
-	  ((eq mark 'refile) (mu4e-action-retag-message msg "-\\Inbox"))
-	  ((eq mark 'flag)   (mu4e-action-retag-message msg "+\\Starred"))
-	  ((eq mark 'unflag) (mu4e-action-retag-message msg "-\\Starred"))))
+          ((eq mark 'refile) (mu4e-action-retag-message msg "-\\Inbox"))
+          ((eq mark 'flag)   (mu4e-action-retag-message msg "+\\Starred"))
+          ((eq mark 'unflag) (mu4e-action-retag-message msg "-\\Starred"))))
 
   (defun ps/mu4e-headers-archive ()
     "In headers mode, archive message at point, without asking for
@@ -15177,21 +15158,21 @@ for confirmation."
 
   ;; copied from github.com/danielfleischer/mu4easy#mu4e
   (setf (alist-get 'trash mu4e-marks)
-	'(:char ("d" . "▼")
-		:prompt "dtrash"
-		:dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
-		;; Here's the main difference to the regular trash mark, no +T
-		;; before -N so the message is not marked as IMAP-deleted:
-		:action (lambda (docid msg target)
-			  (mu4e~proc-move docid
-					  (mu4e~mark-check-target target) "+S-u-N"))))
+        '(:char ("d" . "▼")
+                :prompt "dtrash"
+                :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
+                ;; Here's the main difference to the regular trash mark, no +T
+                ;; before -N so the message is not marked as IMAP-deleted:
+                :action (lambda (docid msg target)
+                          (mu4e~proc-move docid
+                                          (mu4e~mark-check-target target) "+S-u-N"))))
 
   (defun ps/mu4e-view-in-gmail ()
     "Open Gmail in a browser and view message at point in it."
     (interactive)
     (let* ((id (url-hexify-string
-		(plist-get (mu4e-message-at-point) :message-id)))
-	   (url (concat "https://mail.google.com/mail/u/0/#search/rfc822msgid%3A" id)))
+                (plist-get (mu4e-message-at-point) :message-id)))
+           (url (concat "https://mail.google.com/mail/u/0/#search/rfc822msgid%3A" id)))
       (browse-url url)))
 
   ;; github.com/djcb/mu/issues/2198
@@ -15208,8 +15189,8 @@ for confirmation."
     (interactive)
     (when (eq major-mode 'mu4e-headers-mode)
       (save-excursion
-	(re-search-forward "\\(\\$\\)\\([[:digit:]]+.[[:digit:]]+\\)")
-	(kill-new (match-string 2)))))
+        (re-search-forward "\\(\\$\\)\\([[:digit:]]+.[[:digit:]]+\\)")
+        (kill-new (match-string 2)))))
 
   (defun ps/mu4e-compose-new-externally ()
     "Start writing a new message in Gmail."
@@ -15282,9 +15263,9 @@ without asking for user confirmation."
 -a'."
     (interactive "P")
     (let ((mu4e-get-mail-command
-	   (if arg
-	       "mbsync -a --pull-new"
-	     "mbsync -a")))
+           (if arg
+               "mbsync -a --pull-new"
+             "mbsync -a")))
       (mu4e-update-mail-and-index t)))
 
   ;; (run-with-timer (* 60 25) t 'ps/mu4e-update-all-mail)
@@ -15292,15 +15273,15 @@ without asking for user confirmation."
   (defun ps/mu4e-set-account ()
     "Set the account for composing a message."
     (let ((mail
-	   (cdr
-	    (car
-	     (ignore-errors
-	       (mu4e-message-field mu4e-compose-parent-message :to))))))
+           (cdr
+            (car
+             (ignore-errors
+               (mu4e-message-field mu4e-compose-parent-message :to))))))
       (if mail
-	  (setq user-mail-address mail)
-	(setq user-mail-address ps/personal-gmail))))
+          (setq user-mail-address mail)
+        (setq user-mail-address ps/personal-gmail))))
 
-  
+
 
   :hook
   (mu4e-view-mode-hook . (lambda () "prevent line breaks" (toggle-truncate-lines 1)))
@@ -15615,8 +15596,8 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
   (org-msg-recipient-names `((,ps/personal-gmail . "Pablo")))
   (org-msg-greeting-name-limit 3)
   (org-msg-default-alternatives '((new		. (text html))
-				  (reply-to-html	. (text html))
-				  (reply-to-text	. (text))))
+                                  (reply-to-html	. (text html))
+                                  (reply-to-text	. (text))))
   (org-msg-convert-citation t)
   (org-msg-signature ps/personal-signature)
 
@@ -15627,7 +15608,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
     "Enable `grammarly-mode' in `org-msg-edit-mode'."
     (interactive)
     (if (eq major-mode 'org-mode)
-	(org-msg-edit-mode)
+        (org-msg-edit-mode)
       (org-mode)
       (require 'lsp-grammarly)
       (lsp)))
@@ -15636,22 +15617,22 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
     "Toggle between personal and GPE email accounts."
     (interactive)
     (if (eq user-mail-address ps/personal-gmail)
-	(setq user-mail-address ps/personal-gpe-email)
+        (setq user-mail-address ps/personal-gpe-email)
       (setq user-mail-address ps/personal-gmail))
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward "From: .*" nil t)
-	(replace-match (format "From: %s <%s>" ps/personal-name user-mail-address)))
+        (replace-match (format "From: %s <%s>" ps/personal-name user-mail-address)))
       (let ((new-signature
-	     (if (eq user-mail-address ps/personal-gmail)
-		 ps/personal-signature
-	       ps/gpe-signature))
-	    (current-signature
-	     (if (eq user-mail-address ps/personal-gmail)
-		 ps/gpe-signature
-	       ps/personal-signature)))
-	(while (search-forward current-signature nil t)
-	  (replace-match new-signature)))))
+             (if (eq user-mail-address ps/personal-gmail)
+                 ps/personal-signature
+               ps/gpe-signature))
+            (current-signature
+             (if (eq user-mail-address ps/personal-gmail)
+                 ps/gpe-signature
+               ps/personal-signature)))
+        (while (search-forward current-signature nil t)
+          (replace-match new-signature)))))
 
   (defun ps/org-msg-kill-message ()
     "Save the current message to the kill ring."

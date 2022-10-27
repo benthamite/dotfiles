@@ -17374,6 +17374,16 @@ interactively, with prefix arg, you can pick one."
 
 - To check: https://github.com/mohkale/vlc-rc
   Main benefit would be to resume playback at a particular location, though VLC usually remembers this. Not sure how robust the VLC function is; I seem to remember that it would sometimes play from the beginning videos parts of which I had already watched.
+** mpv
+:PROPERTIES:
+:ID:       8D75E528-AA79-4512-B4A9-6EB7A56F9026
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-package mpv)
+#+end_src
+
+
 ** youtube-dl-emacs
 :PROPERTIES:
 :ID:       26EEEF20-5CDC-4855-A03D-AFEBB784D637

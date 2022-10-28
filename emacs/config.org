@@ -3452,6 +3452,8 @@ Has a preference for looking backward when not directly on a symbol."
   (shift-select-mode nil "Shift keys do not activate the mark momentarily.")
   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
   (read-extended-command-predicate #'command-completion-default-include-p)
+  (eval-expression-print-level nil)
+  (eval-expression-print-length 30)
 
   :config
   (column-number-mode)
@@ -4342,14 +4344,13 @@ one hour only."
            ;; Capture Calibre book id
            (id (replace-regexp-in-string "\\(\\(\\(
 \\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
-           (calibre-directory (file-name-concat ps/dir-downloads "Calibre/"))
-           (calibre-file (car (directory-files-recursively calibre-directory "\\.pdf$" t)))
+           (calibre-file (car (directory-files-recursively ps/dir-calibre "\\.pdf$" t)))
            ;; Should match filename used in `ps/internet-archive-download-ACSM'
            (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
       (rename-file calibre-file (file-name-as-directory ps/dir-downloads))
       (shell-command (format "calibredb remove %s" id))
       (mapcar #'delete-file `(,adobe-file ,calibre-file))
-      (delete-directory calibre-directory t)
+      (delete-directory ps/dir-calibre t)
       (kill-buffer "*Shell Command Output*")
       (when (find-file acsm-file)
         (delete-file acsm-file)

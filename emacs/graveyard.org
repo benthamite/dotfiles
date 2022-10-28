@@ -8,6 +8,41 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** minibuffer-line
+:PROPERTIES:
+:ID:       FC506575-08BF-44F6-A547-97DA1062184A
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-01 Fri 11:29]--[2022-07-01 Fri 11:34] =>  0:05
+:END:
+/[[https://elpa.gnu.org/packages/minibuffer-line.html][minibuffer-line]] displays status information in the minibuffer window./
+
+[2022-10-28 Fri 22:45] Disabling since I'm now using the tab-bar to display this information.
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package minibuffer-line
+  :defer 10
+  :custom
+  (minibuffer-line-format '((:eval
+                             (format-time-string "%F %R"))))
+  (minibuffer-line-refresh-interval 30)
+  :config
+  (minibuffer-line-mode -1))
+#+end_src
+*** Archive                                                       :ARCHIVE:
+:PROPERTIES:
+:ID:       C826A1C8-ABA5-4237-ACD0-460510205726
+:END:
+**** CANCELLED [#5] Set ~minibuffer-line-format~ spacing based on value of ~ps/monitor-type~
+CLOSED: [2022-09-06 Tue 13:50]
+:PROPERTIES:
+:ID:       4C82FA13-9F21-4642-94B8-359AC270AFDE
+:Effort:   0:25
+:ARCHIVE_TIME: 2022-09-06 Tue 13:51
+:END:
+:LOGBOOK:
+CLOCK: [2022-09-06 Tue 13:47]--[2022-09-06 Tue 13:50] =>  0:03
+:END:
+I no longer want to keep the time & date centered, so no need to set any custom spacing.
 ** consult-org-roam
 :PROPERTIES:
 :ID:       72C01454-CF59-41E3-A12C-DF356F2578E8

@@ -13238,9 +13238,8 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 (use-feature oc
   :demand t
   :custom
-  (org-cite-global-bibliography (list
-                                 (ps/file-bibliography-new
-                                  ps/file-bibliography-old)))
+  (org-cite-global-bibliography `(,ps/file-bibliography-new
+                                  ,ps/file-bibliography-old))
   (org-cite-csl-styles-dir ps/dir-csl-styles)
   (org-cite-csl-locales-dir ps/dir-csl-locales)
   (org-cite-insert-processor 'citar)

@@ -2335,6 +2335,38 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 :END:
 Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
 
+** tab-bar
+:PROPERTIES:
+:ID:       F8B7C324-C5CF-4DBD-A527-92101BDA70AB
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature tab-bar
+  :custom
+  (setq tab-bar-format '(tab-bar-format-history
+                         tab-bar-format-tabs
+                         tab-bar-separator
+                         tab-bar-format-add-tab
+                         tab-bar-format-global
+                         tab-bar-separator
+                         tab-bar-separator
+                         tab-bar-separator))
+
+  :config
+  (setf mode-line-misc-info
+        ;; When the tab-bar is active, don't show global-mode-string
+        ;; in mode-line-misc-info, because we now show that in the
+        ;; tab-bar using `tab-bar-format-align-right' and
+        ;; `tab-bar-format-global'.
+        (remove '(global-mode-string ("" global-mode-string))
+                mode-line-misc-info))
+  (unless (member 'tab-bar-format-global tab-bar-format)
+    ;; Show `global-mode-string' in the tab bar.
+    (setf tab-bar-format (append tab-bar-format '(tab-bar-format-align-right tab-bar-format-global))))
+
+  (tab-bar-mode))
+#+end_src
+
 ** mixed-pitch
 :PROPERTIES:
 :ID:       A8E80A11-25A4-4034-8A86-F7F6ADFD46C7
@@ -4992,40 +5024,6 @@ CLOSED: [2021-10-20 Wed 21:47]
 CLOCK: [2021-10-20 Wed 21:38]--[2021-10-20 Wed 21:46] =>  0:08
 :END:
 
-** minibuffer-line
-:PROPERTIES:
-:ID:       FC506575-08BF-44F6-A547-97DA1062184A
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-01 Fri 11:29]--[2022-07-01 Fri 11:34] =>  0:05
-:END:
-/[[https://elpa.gnu.org/packages/minibuffer-line.html][minibuffer-line]] displays status information in the minibuffer window./
-
-#+begin_src emacs-lisp :results silent
-(use-package minibuffer-line
-  :defer 10
-  :custom
-  (minibuffer-line-format '((:eval
-                             (format-time-string "%F %R"))))
-  (minibuffer-line-refresh-interval 30)
-  :config
-  (minibuffer-line-mode))
-#+end_src
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       C826A1C8-ABA5-4237-ACD0-460510205726
-:END:
-**** CANCELLED [#5] Set ~minibuffer-line-format~ spacing based on value of ~ps/monitor-type~
-CLOSED: [2022-09-06 Tue 13:50]
-:PROPERTIES:
-:ID:       4C82FA13-9F21-4642-94B8-359AC270AFDE
-:Effort:   0:25
-:ARCHIVE_TIME: 2022-09-06 Tue 13:51
-:END:
-:LOGBOOK:
-CLOCK: [2022-09-06 Tue 13:47]--[2022-09-06 Tue 13:50] =>  0:03
-:END:
-I no longer want to keep the time & date centered, so no need to set any custom spacing.
 ** ibuffer
 :PROPERTIES:
 :ID:       11E1F107-4D7A-40DE-AA8E-9D995A10A351
@@ -6533,6 +6531,12 @@ https://github.com/insanum/gcalcli
                       ("America/Nassau" "Nassau")
                       ("America/New_York" "New York")
                       ("America/Los_Angeles" "San Francisco")))
+  (display-time-format "%a %e %b %T")
+  (display-time-interval 1)
+
+  :config
+  (display-time-mode)
+
   :general
   ("M-A-t" 'world-clock))
 #+end_src
@@ -6543,6 +6547,18 @@ https://github.com/insanum/gcalcli
 #+begin_src emacs-lisp :results silent
 (use-package tmr
   :defer 10)
+#+end_src
+** hammy
+:PROPERTIES:
+:ID:       79C8D6B8-7D86-4B63-82C2-61E6DFFC4152
+:END:
+#+begin_src emacs-lisp :results silent
+(use-package hammy
+  :straight (hammy
+             :host github
+                   :repo "alphapapa/hammy.el")
+
+  )
 #+end_src
 
 * history

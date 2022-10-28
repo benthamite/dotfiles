@@ -12587,7 +12587,7 @@ return such list if its length is less than LIMIT."
     (file ,ps/file-orb-noter-template)
     :if-new
     (file ,ps/file-orb-capture-template)
-    :unnarrowed t)))
+    :unnarrowed t :immediate-finish t :jump-to-captured t)))
 
 ;; Exclude files
 (org-roam-file-exclude-regexp "conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")
@@ -13357,6 +13357,20 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
   :demand t)
 #+end_src
 
+** citar-org-roam
+:PROPERTIES:
+:ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
+:END:
+/[[https://github.com/emacs-citar/citar-org-roam][citar-org-roam]] provides integration between [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]] and [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package citar-org-roam
+  :demand t
+  :after org-roam
+  :config
+  (citar-org-roam-mode))
+#+end_src
+
 ** citar
 :PROPERTIES:
 :ID:       67AB4C5F-2425-4D31-9590-9D13790B4C97
@@ -13497,20 +13511,6 @@ CLOCK: [2022-06-22 Wed 15:42]--[2022-06-22 Wed 15:57] =>  0:15
 :END:
 My config predated the name change (it used to be called ~bibtex-actions~).
 Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
-
-** citar-org-roam
-:PROPERTIES:
-:ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
-:END:
-/[[https://github.com/emacs-citar/citar-org-roam][citar-org-roam]] provides integration between [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]] and [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package citar-org-roam
-  :demand t
-  :after citar org-roam
-  :config
-  (citar-org-roam-mode))
-#+end_src
 
 ** citar-citeproc
 :PROPERTIES:

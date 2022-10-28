@@ -8,6 +8,17 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** doom-themes
+:PROPERTIES:
+:ID:       76685027-9575-48EF-982E-60148A0BD287
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package doom-themes
+  :custom
+  (doom-theme 'doom-gruvbox))
+#+end_src
+
 ** minibuffer-line
 :PROPERTIES:
 :ID:       FC506575-08BF-44F6-A547-97DA1062184A

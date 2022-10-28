@@ -13263,6 +13263,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 :PROPERTIES:
 :ID:       8EA82227-F7EF-4C46-B40C-C5DE40F13130
 :END:
+
 - [cite:@Balintona2022CitationsOrgmodeOrgcite]. The most comprehensive explanation I'm aware of about how to use ~org-cite~. See [[https://www.reddit.com/r/orgmode/comments/vc7ys6/how_i_run_my_wiki_with_org_mode/][Reddit discussion]].
 - [cite:@Kolsc2021HowActuallyInsert]. Reddit thread about the basics of ~org-cite~.
 
@@ -13390,7 +13391,6 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   (citar-format-reference-function 'citar-citeproc-format-reference)
 
   :config
-  (require 'citar-org-roam)
   (citar-register-notes-source
    'orb-citar-source (list :name "Org-Roam Notes"
                            :category 'org-roam-node

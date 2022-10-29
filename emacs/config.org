@@ -10891,10 +10891,10 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
       (id "8B2F18B4-A309-4F29-A5E6-CD40E010970D")
       "" :empty-lines 1 :empty-lines-after 3)
      ("lr" "Leo: Add to Future Matters: research" entry
-      (file+headline ps/file-tareas-leo "Tareas")
+      (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
      ("lt" "Leo: Telegram" entry
-      (file+headline ps/file-tareas-leo "Tareas")
+      (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
      ("m" "Leo: Messaging (to send later)" entry
       (file ps/file-inbox-desktop)

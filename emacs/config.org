@@ -2311,14 +2311,16 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (doom-modeline-mode)
 
   :custom
-  ;; we disable time display, since the tab-bar already does
+  ;; we disable the display of time and email, since the tab-bar already does
   (doom-modeline-time nil)
+  (doom-modeline-mu4e nil)
+  
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-irc t)
   (doom-modeline-irc-buffers t)
   ;; (doom-modeline--flycheck-icon t)
-  (doom-modeline-mu4e nil)
   (doom-modeline-github t)
+  (doom-modeline-github-interval (* 10 60))
 
   :config
   (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
@@ -6922,6 +6924,17 @@ CLOSED: [2022-01-24 Mon 17:48]
 CLOCK: [2022-01-24 Mon 17:44]--[2022-01-24 Mon 17:48] =>  0:04
 :END:
 Seems fixed now.
+** ghub
+:PROPERTIES:
+:ID:       C557A862-9EC7-406C-98E1-C248F7D579F5
+:END:
+/[[https://github.com/magit/ghub][Ghub]] provides basic support for using the APIs of various Git forges from Emacs packages./
+
+#+begin_src emacs-lisp :results silent
+(use-package ghub
+  :demand t)
+#+end_src
+
 ** forge
 :PROPERTIES:
 :ID:       16015B63-B0D8-4646-A61A-51CF6049CA27
@@ -6936,7 +6949,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :results silent
 (use-package forge
-  :after magit
+  :after magit ghub
   :demand t
   :custom
   (forge-owned-accounts `((,ps/forge-owned-accounts))))
@@ -15816,6 +15829,7 @@ CLOSED: [2022-05-07 Sat 19:06]
 :LOGBOOK:
 CLOCK: [2022-04-27 Wed 09:42]--[2022-04-27 Wed 09:49] =>  0:07
 :END:
+
 
 ** htmlize
 :PROPERTIES:

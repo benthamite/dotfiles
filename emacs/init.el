@@ -955,10 +955,6 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   :general
   ("A-d" 'modus-themes-toggle))
 
-(use-package doom-themes
-  :custom
-  (doom-theme 'doom-gruvbox))
-
 (use-package emojify
   :config
   (emojify-set-emoji-styles '(unicode))
@@ -1012,13 +1008,55 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   :demand t
   :init
   (doom-modeline-mode)
+
   :custom
+  ;; we disable time display, since the tab-bar already does
+  (doom-modeline-time nil)
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-irc t)
   (doom-modeline-irc-buffers t)
   ;; (doom-modeline--flycheck-icon t)
   (doom-modeline-mu4e t)
-  (doom-modeline-github t))
+  (doom-modeline-github t)
+
+  :config
+  (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
+  (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
+  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
+  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline))
+
+(use-feature tab-bar
+  :demand t
+  :custom
+  (tab-bar-format '(tab-bar-align-right
+                    tab-bar-format-global))
+  (auto-resize-tab-bar nil)
+
+  :config
+  (setf mode-line-misc-info
+        ;; When the tab-bar is active, don't show global-mode-string
+        ;; in mode-line-misc-info, because we now show that in the
+        ;; tab-bar using `tab-bar-format-align-right' and
+        ;; `tab-bar-format-global'.
+        (remove '(global-mode-string ("" global-mode-string))
+                mode-line-misc-info))
+                
+  ;; (setq global-mode-string `(" "
+                             ;; ,display-time-string
+                             ;; " | "
+                             ;; ,fancy-battery-mode-line
+                             ;; " | "
+                             ;; ,telega-mode-line-format
+                             ;; " | "))
+  (tab-bar-mode))
+
+(use-package fancy-battery
+  :demand t
+  :custom
+  (fancy-battery-show-percentage t)
+
+  :config
+  (fancy-battery-mode))
 
 (use-package mixed-pitch
   :demand t
@@ -1687,6 +1725,8 @@ Has a preference for looking backward when not directly on a symbol."
   (shift-select-mode nil "Shift keys do not activate the mark momentarily.")
   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
   (read-extended-command-predicate #'command-completion-default-include-p)
+  (eval-expression-print-level nil)
+  (eval-expression-print-length 30)
 
   :config
   (column-number-mode)
@@ -2237,14 +2277,13 @@ one hour only."
            ;; Capture Calibre book id
            (id (replace-regexp-in-string "\\(\\(\\(
 \\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
-           (calibre-directory (file-name-concat ps/dir-downloads "Calibre/"))
-           (calibre-file (car (directory-files-recursively calibre-directory "\\.pdf$" t)))
+           (calibre-file (car (directory-files-recursively ps/dir-calibre "\\.pdf$" t)))
            ;; Should match filename used in `ps/internet-archive-download-ACSM'
            (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
       (rename-file calibre-file (file-name-as-directory ps/dir-downloads))
       (shell-command (format "calibredb remove %s" id))
       (mapcar #'delete-file `(,adobe-file ,calibre-file))
-      (delete-directory calibre-directory t)
+      (delete-directory ps/dir-calibre t)
       (kill-buffer "*Shell Command Output*")
       (when (find-file acsm-file)
         (delete-file acsm-file)
@@ -2640,15 +2679,6 @@ option."
   ((minibuffer-mode-map)
    "M-n" nil
    "M-p" nil))
-
-(use-package minibuffer-line
-  :defer 10
-  :custom
-  (minibuffer-line-format '((:eval
-                             (format-time-string "%F %R"))))
-  (minibuffer-line-refresh-interval 30)
-  :config
-  (minibuffer-line-mode))
 
 (use-feature ibuffer
   :general
@@ -3505,6 +3535,8 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
    "s-g" 'hydra-org-gcal/body))
 
 (use-feature time
+  :after tab-bar
+  :demand t
   :custom
   (world-clock-list '(("Europe/Barcelona" "Barcelona")
                       ("Europe/London" "London")
@@ -3512,11 +3544,76 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
                       ("America/Nassau" "Nassau")
                       ("America/New_York" "New York")
                       ("America/Los_Angeles" "San Francisco")))
+  (display-time-format "%a %e %b %T")
+  (display-time-interval 1)
+  (display-time-default-load-average nil)
+
+  :config
+  (display-time-mode)
+
   :general
   ("M-A-t" 'world-clock))
 
 (use-package tmr
   :defer 10)
+
+(use-package hammy
+  :straight (hammy
+             :host github
+             :repo "alphapapa/hammy.el")
+
+  :config
+  (hammy-define "Move"
+    :documentation "Don't forget to stretch your legs."
+    :intervals
+    ;; A list of intervals, each defined with the `interval' function.
+    (list (interval
+           ;; The name of the interval is a string, used when selecting
+           ;; hammys and shown in the mode line.
+           :name "💺"
+           ;; The duration of the interval: a number of seconds, a string
+           ;; passed to `timer-duration', or a function which returns such.
+           :duration "45 minutes"
+           ;; Optionally, a face in which to show the
+           ;; interval's name in the mode line.
+           :face 'font-lock-type-face
+           ;; A list of actions to take before starting the interval
+           ;; (really, one or a list of functions to call with the hammy
+           ;; as the argument).  The `do' macro expands to a lambda,
+           ;; which the interval's `before' slot is set to.  In its
+           ;; body, we call two built-in helper functions.
+           :before (do (announce "Whew!")
+                       (notify "Whew!"))
+           ;; We want this interval to not automatically advance to the
+           ;; next one; rather, we want the user to call the
+           ;; `hammy-next' command to indicate when the standing-up is
+           ;; actually happening.  So we provide a list of actions to
+           ;; take when it's time to advance to the next interval.  We
+           ;; wrap the list in a call to the built-in `remind' function,
+           ;; which causes the actions to be repeated every 10 minutes
+           ;; until the user manually advances to the next interval.
+           :advance (remind "10 minutes"
+                            ;; Every 10 minutes, while the hammy is waiting
+                            ;; to be advanced to the next interval, remind
+                            ;; the user by doing these things:
+                            (do (announce "Time to stretch your legs!")
+                                (notify "Time to stretch your legs!")
+                              (play-sound-file "~/Misc/Sounds/mooove-it.wav"))))
+          (interval :name "🤸"
+                    :duration "5 minutes"
+                    :face 'font-lock-builtin-face
+                    :before (do (announce "Mooove it!")
+                                (notify "Mooove it!"))
+                    ;; Again, the interval should not advance automatically
+                    ;; to the next--the user should indicate when he's
+                    ;; actually sat down again.  (If we omitted the
+                    ;; `:advance' slot, the interval would automatically
+                    ;; advance when it reached its duration.)
+                    :advance (do (announce "Time for a sit-down...")
+                                 (notify "Time for a sit-down...")
+                               (play-sound-file org-pomodoro-finished-sound)))))
+
+  (hammy-mode))
 
 (use-feature simple
   :general
@@ -3914,7 +4011,6 @@ By default, all agenda entries are offered. MATCH is as in
   ("A-C-l" 'consult-line
    "H-b" 'consult-buffer
    "H-r" 'consult-history
-   "H-j" 'ps/consult-org-agenda
    "H-V" 'consult-yank-pop
    "H-f" 'ps/consult-locate-file-current
    "H-F" 'ps/consult-locate-file-home
@@ -3931,21 +4027,6 @@ By default, all agenda entries are offered. MATCH is as in
   (prog-mode-map
    "s-j" 'consult-imenu))
 
-(use-package consult-org-roam
-  :defer 7
-  :after (consult org-roam)
-  :init
-  (require 'consult-org-roam)
-  ;; Activate the minor-mode
-  (consult-org-roam-mode -1)
-  :custom
-  (consult-org-roam-grep-func #'consult-ripgrep)
-  :config
-  ;; Eventually suppress previewing for certain functions
-  (consult-customize
-   consult-org-roam-forward-links
-   :preview-key (kbd "M-.")))
-
 (use-package consult-dir
   :after consult
   :defer 15
@@ -3960,7 +4041,6 @@ By default, all agenda entries are offered. MATCH is as in
 
 (use-package consult-yasnippet
   :after (consult yasnippet)
-  :defer 10
   :general
   ("A-C-y" 'consult-yasnippet))
 
@@ -4427,7 +4507,7 @@ buffer displays and push it to the kill ring."
             (setq arg 0))))))
 
 (advice-add 'flyspell-region :around
-	    #'telega-chatbuf-input-as-region-advice)
+            #'telega-chatbuf-input-as-region-advice)
 
   :general
   ("M-p" 'flyspell-buffer
@@ -4479,6 +4559,15 @@ buffer displays and push it to the kill ring."
   (org-mode-hook . (lambda ()
                      (require 'lsp-grammarly)
                      (lsp))))
+
+(use-package aide
+  :straight (aide
+             :host github
+             :repo "junjizhi/aide.el")
+  :after request
+  :commands aide-openai-complete-region
+  :config
+  (setq openai-api-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
 
 (use-feature text-mode
   :hook
@@ -5866,7 +5955,7 @@ conditional on active capture template."
     (interactive)
     (crux-duplicate-current-line-or-region 1)
     (org-beginning-of-line)
-    (previous-line)
+    (forward-line -1)
     (let ((query "\\[\\([[:digit:]]\\)\\{4\\}-\\([[:digit:]]\\)\\{2\\}-\\([[:digit:]]\\)\\{2\\} \\w\\w\\w "))
       (search-forward-regexp query)
       (set-mark-command nil)
@@ -6238,6 +6327,7 @@ refresh cache."
 (use-feature ox
   :defer 30
   :custom
+  (org-export-exclude-tags '("noexport" "ARCHIVE"))
   (org-export-backends '(ascii html icalendar latex md odt) "set export backends")
   (org-export-with-broken-links 'mark "allow export with broken links")
   (org-export-with-section-numbers nil "do not add numbers to section headings")
@@ -6644,7 +6734,7 @@ return such list if its length is less than LIMIT."
     (file ,ps/file-orb-noter-template)
     :if-new
     (file ,ps/file-orb-capture-template)
-    :unnarrowed t)))
+    :unnarrowed t :immediate-finish t :jump-to-captured t)))
 
 ;; Exclude files
 (org-roam-file-exclude-regexp "conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")
@@ -6697,7 +6787,7 @@ return such list if its length is less than LIMIT."
 (org-capture-prepare-finalize-hook . ps/org-roam-remove-file-level-properties)
 
 :general
-("H-s-j" 'org-roam-node-find
+("H-j" 'org-roam-node-find
  "H-s-i" 'org-roam-node-insert)
 (org-mode-map
  "s-r" 'org-roam-buffer-toggle))
@@ -6713,16 +6803,32 @@ TODO entries marked as done are ignored, meaning the this
 function returns nil if current buffer contains only completed
 tasks."
     (when (eq major-mode 'org-mode)
-    (org-element-map
-        (org-element-parse-buffer 'headline)
-        'headline
-      (lambda (headline)
-        (or
-         (eq (org-element-property :todo-type headline)
-             'todo)
-         (org-element-property :scheduled headline)
-         (org-element-property :deadline headline)))
-      nil 'first-match)))
+      (org-element-map
+          (org-element-parse-buffer 'headline)
+          'headline
+        (lambda (headline)
+          (or
+           (eq (org-element-property :todo-type headline)
+               'todo)
+           (org-element-property :scheduled headline)
+           (org-element-property :deadline headline)))
+        nil
+        'first-match)))
+
+  (defun ps/vulpea-priority-p ()
+    "Return non-nil if current buffer has a heading with a priority.
+
+TODO entries marked as done are ignored, meaning the this
+function returns nil if current buffer contains only completed
+tasks."
+    (when (eq major-mode 'org-mode)
+      (org-element-map
+          (org-element-parse-buffer 'headline)
+          'headline
+        (lambda (headline)
+          (org-element-property :priority headline))
+        nil
+        'first-match)))
 
   (defun vulpea-project-files ()
     "Return a list of note files containing 'project' tag." ;
@@ -6764,8 +6870,7 @@ tasks."
                         (vulpea-project-files)
                         ;; include files modified in past three days,
                         ;; provided number of such files less than 1000
-                        (ps/org-roam-recent 1 1000)
-                        ))))
+                        (ps/org-roam-recent 1 1000)))))
 
   (advice-add 'org-agenda :before #'vulpea-agenda-files-update)
 
@@ -6868,26 +6973,6 @@ tasks."
      (t csl "american-medical-association-brackets.csl")       ; Fallback
      ))
 
-  :config
-  ;; Since migrating from Zotero to a pure Emacs solution, I no longer
-  ;; use this command.
-  (defun ps/org-cite-zotero-db-export (&optional arg)
-    "Export `new.bib' Zotero collection as BibLaTeX file.
-With prefix argument, export `old.bib' instead."
-    (interactive "P")
-    ;; see retorque.re/zotero-better-bibtex/exporting/pull/
-    (let ((collection (if arg
-                          "http://127.0.0.1:23119/better-bibtex/export/collection?/1/old.biblatex"
-                        "http://127.0.0.1:23119/better-bibtex/export/collection?/1/new.biblatex"))
-          (file (if arg
-                    ps/file-bibliography-old
-                  ps/file-bibliography-new)))
-      (request collection
-        :success (cl-function
-                  (lambda (&key data &allow-other-keys)
-                    (write-region data nil file)))
-        :sync t)))
-
   :general
   ("H-/" 'org-cite-insert))
 
@@ -6910,10 +6995,16 @@ With prefix argument, export `old.bib' instead."
 (use-package citeproc
   :demand t)
 
+(use-package citar-org-roam
+  :demand t
+  :after org-roam
+  :config
+  (citar-org-roam-mode))
+
 (use-package citar
   :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
   :demand t
-  :after (oc vertico embark marginalia citeproc)
+  :after oc vertico embark marginalia
   :custom
   (citar-open-note-functions '(orb-citar-edit-note))
   (citar-bibliography org-cite-global-bibliography)
@@ -6927,13 +7018,23 @@ With prefix argument, export `old.bib' instead."
   (citar-format-reference-function 'citar-citeproc-format-reference)
 
   :config
+  (citar-register-notes-source
+   'orb-citar-source (list :name "Org-Roam Notes"
+                           :category 'org-roam-node
+                           :items #'citar-org-roam--get-candidates
+                           :hasitems #'citar-org-roam-has-notes
+                           :open #'citar-org-roam-open-note
+                           :create #'orb-citar-edit-note
+                           :annotate #'citar-org-roam--annotate))
+  (setq citar-notes-source 'orb-citar-source)
+
   (defun ps/citar--get-title (entry)
     "Return title of ENTRY."
     (let* ((field (citar--field-with-value '(title) entry)))
       (when field
         (citar--get-value field entry))))
 
-(defun ps/citar-search-library-genesis (key-entry)
+  (defun ps/citar-search-library-genesis (key-entry)
     "Search title of KEY-ENTRY on Library Genesis.
 
 With prefix, rebuild the cache before offering candidates."
@@ -6947,7 +7048,7 @@ With prefix, rebuild the cache before offering candidates."
                        ps/library-genesis-suffix))
         (message "No link found for %s" (car key-entry)))))
 
-(defun ps/citar-search-worldcat (key-entry)
+  (defun ps/citar-search-worldcat (key-entry)
     "Search title of KEY-ENTRY on Worldcat.
 
 With prefix, rebuild the cache before offering candidates."
@@ -6961,7 +7062,7 @@ With prefix, rebuild the cache before offering candidates."
                        ps/worldcat-suffix))
         (message "No link found for %s" (car key-entry)))))
 
-(defun ps/citar-search-internet-archive (key-entry)
+  (defun ps/citar-search-internet-archive (key-entry)
     "Search title of KEY-ENTRY on the Internet Archive.
 
 With prefix, rebuild the cache before offering candidates."
@@ -6975,7 +7076,7 @@ With prefix, rebuild the cache before offering candidates."
                        ps/internet-archive-suffix))
         (message "No link found for %s" (car key-entry)))))
 
- (defun ps/citar-search-amazon (key-entry)
+  (defun ps/citar-search-amazon (key-entry)
     "Search title of KEY-ENTRY on Amazon.
 
 With prefix, rebuild the cache before offering candidates."
@@ -7104,6 +7205,23 @@ in the file. Data comes from www.ebook.de."
   (bibtex-autokey-titleword-separator "")
   (bibtex-autokey-preserve-case t)
 
+  :config
+  ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field
+  (defun ps/bibtex-autokey-get-year ()
+  "Return year field contents as a string obeying `bibtex-autokey-year-length'."
+  (let* ((str (bibtex-autokey-get-field '("date" "year" "urldate"))) ; possibly ""
+         (year (or (and (iso8601-valid-p str)
+                        (let ((year (decoded-time-year (iso8601-parse str))))
+                          (and year (number-to-string year))))
+                   ;; BibTeX permits a year field "(about 1984)", where only
+                   ;; the last four nonpunctuation characters must be numerals.
+                   (and (string-match "\\([0-9][0-9][0-9][0-9]\\)[^[:alnum:]]*\\'" str)
+                        (match-string 1 str))
+                   (user-error "Year or date field `%s' invalid" str))))
+    (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
+
+  (advice-add 'bibtex-autokey-get-year :override #'ps/bibtex-autokey-get-year)
+
   :general
   (bibtex-mode-map
    "A-C-H-x" 'bibtex-copy-entry-as-kill
@@ -7150,7 +7268,7 @@ with `org-capture'."
   )
 
 (use-package org-roam-bibtex
-  :defer 20
+  :demand t
   :after bibtex-completion
   :custom
   (orb-roam-ref-format 'org-cite)
@@ -7160,6 +7278,7 @@ with `org-capture'."
    '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
   (orb-process-file-keyword t)
   (orb-attached-file-extensions '("pdf"))
+
   :config
   (add-to-list 'orb-preformat-keywords "year")
   (org-roam-bibtex-mode))
@@ -7406,7 +7525,7 @@ each of the attached files is in
                  (throw 'tag file)))
              (ebib--split-files files))
             nil)
-        (user-error "Invalid file extension!"))))
+        (user-error "Invalid file extension.df"))))
 
   (defun ps/ebib-validate-file-stem ()
     "If entry at point has attachments, check that the stem of
@@ -8258,7 +8377,7 @@ without asking for user confirmation."
 
   ;; (run-with-timer (* 60 25) t 'ps/mu4e-update-all-mail)
 
-    (defun ps/mu4e-set-account ()
+  (defun ps/mu4e-set-account ()
     "Set the account for composing a message."
     (let ((mail
            (cdr
@@ -8268,6 +8387,8 @@ without asking for user confirmation."
       (if mail
           (setq user-mail-address mail)
         (setq user-mail-address ps/personal-gmail))))
+
+
 
   :hook
   (mu4e-view-mode-hook . (lambda () "prevent line breaks" (toggle-truncate-lines 1)))
@@ -8372,16 +8493,49 @@ without asking for user confirmation."
       (goto-char (point-min))
       (while (re-search-forward "From: .*" nil t)
         (replace-match (format "From: %s <%s>" ps/personal-name user-mail-address)))
-      (let ((new-signature (if (eq user-mail-address ps/personal-gmail) ps/personal-signature ps/gpe-signature))
-            (current-signature (if (eq user-mail-address ps/personal-gmail) ps/gpe-signature ps/personal-signature)))
+      (let ((new-signature
+             (if (eq user-mail-address ps/personal-gmail)
+                 ps/personal-signature
+               ps/gpe-signature))
+            (current-signature
+             (if (eq user-mail-address ps/personal-gmail)
+                 ps/gpe-signature
+               ps/personal-signature)))
         (while (search-forward current-signature nil t)
           (replace-match new-signature)))))
+
+  (defun ps/org-msg-kill-message ()
+    "Save the current message to the kill ring."
+    (interactive)
+    (goto-char (org-msg-start))
+    (re-search-forward "^:END:\n")
+    (let ((beg (point)))
+      (goto-char (org-msg-end))
+      (search-backward "#+begin_signature" nil t)
+      (kill-region beg (point))))
+
+  (defun ps/org-msg-open-in-wordtune ()
+    "Save the current message to the kill ring and open it in
+Wordtune."
+    (interactive)
+    (ps/org-msg-kill-message)
+    (browse-url "https://app.wordtune.com/v2/editor/"))
+
+  (defun ps/org-msg-open-in-grammarly ()
+    "Save the current message to the kill ring and open it in
+Grammarly."
+    (interactive)
+    (ps/org-msg-kill-message)
+    (browse-url "https://app.grammarly.com/ddocs/1789329083"))
 
   :general
   (org-msg-edit-mode-map
    "s-a" 'org-msg-attach
-   "s-b" 'org-msg-goto-body)
-   (org-mode-map
+   "s-b" 'org-msg-goto-body
+   "s-g" 'ps/org-msg-open-in-grammarly
+   "s-x" 'ps/org-msg-kill-message
+   "s-w" 'ps/org-msg-open-in-wordtune)
+  (org-mode-map
    "A-s-g" 'ps/org-msg-grammarly))
 
 (use-package htmlize
@@ -8406,7 +8560,7 @@ without asking for user confirmation."
                            ("Groups" type basicgroup supergroup)
                            ("Channels" type channel)))
   (telega-completing-read-function 'completing-read)
-                           
+
   :config
   (defun ps/telega-switch-to ()
     "docstring"
@@ -9177,6 +9331,9 @@ if none."
   :general
   ("s-A-k" 'org-web-tools-insert-link-for-url))
 
+(use-package request
+  :defer 15)
+
 (defvar ps/mullvad-servers
   '(("London" . "gb4-wireguard")
     ("Madrid" . "es4-wireguard")
@@ -9319,6 +9476,8 @@ interactively, with prefix arg, you can pick one."
     ("RET" (lambda! (vlc-enqueue-uri-at-point) (call-interactively #'vlc-play)) "enqueue uri at point and play"))
   :general
   ("A-v" 'hydra-vlc/body))
+
+(use-package mpv)
 
 (use-package youtube-dl
   :custom
@@ -9536,19 +9695,7 @@ is connected."
   (midnight-mode)
   (midnight-delay-set 'midnight-delay "4:30am")
 
-  (defun ps/midnight-hook-magit-android () (ps/magit-midnight-update ps/dir-android))
-  (defun ps/midnight-hook-magit-bibliographic-notes () (ps/magit-midnight-update ps/dir-bibliographic-notes))
-  ;; (defun ps/midnight-hook-magit-dotfiles () (ps/magit-midnight-update ps/dir-dotfiles))
-  (defun ps/midnight-hook-magit-journal () (ps/magit-midnight-update ps/dir-journal))
-  (defun ps/midnight-hook-magit-notes () (ps/magit-midnight-update ps/dir-notes))
-  (defun ps/midnight-hook-magit-people () (ps/magit-midnight-update ps/dir-people))
-
   :hook
-  (midnight-hook . ps/midnight-hook-magit-android)
-  (midnight-hook . ps/midnight-hook-magit-bibliographic-notes)
-  ;; (midnight-hook . ps/midnight-hook-magit-dotfiles)
-  (midnight-hook . ps/midnight-hook-magit-journal)
-  (midnight-hook . ps/midnight-hook-magit-people)
   (midnight-hook . ps/ledger-update-coin-prices)
   (midnight-hook . ps/ledger-update-commodities)
   ;; (midnight-hook . org-gcal-sync)

@@ -2326,7 +2326,9 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
   (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
   (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
-  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline))
+  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline)
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)
+  )
 #+end_src
 
 *** TODO [#6] Diagnose why modeline is sometimes not highlighted
@@ -5750,6 +5752,7 @@ CLOCK: [2021-04-05 Mon 18:53]--[2021-04-05 Mon 19:15] =>  0:22
 CLOCK: [2021-03-30 Tue 12:34]--[2021-03-30 Tue 13:06] =>  0:32
 CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
 :END:
+/[[https://github.com/joostkremers/writeroom-mode][writeroom-mode]] provides distraction-free writing for Emacs./
 
 #+begin_src emacs-lisp :results silent
 (use-package writeroom-mode
@@ -5772,6 +5775,9 @@ window."
 
   :hook
   (writeroom-mode-hook . ps/writeroom-set-width)
+  ;; (writeroom-mode-hook . (lambda () (setq writeroom-width (window-total-width))))
+  (writeroom-mode-enable-hook . (lambda () (tab-bar-mode -1)))
+  (writeroom-mode-disable-hook . (lambda () (tab-bar-mode)))
 
   :general
   ("M-'" 'writeroom-mode

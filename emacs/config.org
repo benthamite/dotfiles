@@ -2130,6 +2130,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   (modus-themes-org-blocks 'gray-background)
   (modus-themes-org-agenda
    '((header-date . (workaholic)))) ; of course ;-)
+   (modus-themes-fringes nil)
 
   :config
   ;; (defun ps/modus-themes-match-system ()
@@ -2316,7 +2317,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (doom-modeline-irc t)
   (doom-modeline-irc-buffers t)
   ;; (doom-modeline--flycheck-icon t)
-  (doom-modeline-mu4e t)
+  (doom-modeline-mu4e nil)
   (doom-modeline-github t)
 
   :config
@@ -15665,6 +15666,21 @@ I should use an [[https://stackoverflow.com/questions/27664267/python-dictionary
 (use-feature mu4e-org
   :after mu4e
   :demand t)
+#+end_src
+
+** mu4e-alert
+:PROPERTIES:
+:ID:       32C6498F-B3C5-4D50-8ACC-8DD83FF48448
+:END:
+/[[https://github.com/iqbalansari/mu4e-alert][mu4e-alert]] supports desktop notifications and modeline display for mu4e./
+
+#+begin_src emacs-lisp :results silent
+(use-package mu4e-alert
+  :after mu4e
+  :demand t
+  :custom
+  ;; Notify about unread emails in inbox only
+  (mu4e-alert-interesting-mail-query "flag:unread AND maildir:/inbox"))
 #+end_src
 
 ** org-msg

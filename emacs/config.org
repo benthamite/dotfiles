@@ -2176,17 +2176,6 @@ CLOCK: [2021-11-17 Wed 18:26]--[2021-11-17 Wed 19:48] =>  1:22
 :END:
 This is done by creating a function with all the customizations and then calling this function with ~modus-themes-after-load-theme-hook~.
 
-** doom-themes
-:PROPERTIES:
-:ID:       76685027-9575-48EF-982E-60148A0BD287
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-package doom-themes
-  :custom
-  (doom-theme 'doom-gruvbox))
-#+end_src
-
 ** emacs-emojify
 :PROPERTIES:
 :ID:       92919C07-A782-4079-AE20-75B248D34A13
@@ -2319,13 +2308,22 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :demand t
   :init
   (doom-modeline-mode)
+
   :custom
+  ;; we disable time display, since the tab-bar already does
+  (doom-modeline-time nil)
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-irc t)
   (doom-modeline-irc-buffers t)
   ;; (doom-modeline--flycheck-icon t)
   (doom-modeline-mu4e t)
-  (doom-modeline-github t))
+  (doom-modeline-github t)
+
+  :config
+  (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
+  (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
+  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
+  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline))
 #+end_src
 
 *** TODO [#6] Diagnose why modeline is sometimes not highlighted
@@ -2343,28 +2341,36 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
 #+begin_src emacs-lisp :results silent
 (use-feature tab-bar
   :custom
-  (setq tab-bar-format '(tab-bar-format-history
-                         tab-bar-format-tabs
-                         tab-bar-separator
-                         tab-bar-format-add-tab
-                         tab-bar-format-global
-                         tab-bar-separator
-                         tab-bar-separator
-                         tab-bar-separator))
+  (tab-bar-format '(tab-bar-format-add-tab
+                    tab-bar-format-global
+                    ;; tab-bar-align-right
+                    tab-bar-separator
+                    tab-bar-separator
+                    tab-bar-separator))
+  (auto-resize-tab-bar nil)
 
   :config
-  (setf mode-line-misc-info
-        ;; When the tab-bar is active, don't show global-mode-string
-        ;; in mode-line-misc-info, because we now show that in the
-        ;; tab-bar using `tab-bar-format-align-right' and
-        ;; `tab-bar-format-global'.
-        (remove '(global-mode-string ("" global-mode-string))
-                mode-line-misc-info))
-  (unless (member 'tab-bar-format-global tab-bar-format)
-    ;; Show `global-mode-string' in the tab bar.
-    (setf tab-bar-format (append tab-bar-format '(tab-bar-format-align-right tab-bar-format-global))))
-
+  (setq global-mode-string `(" "
+                             ,display-time-string
+                             " | "
+                             ,fancy-battery-mode-line
+                             " | "
+                             ,telega-mode-line-format))
   (tab-bar-mode))
+#+end_src
+
+** fancy-battery
+:PROPERTIES:
+:ID:       DDFE34BA-7C23-459E-B4E2-2957D2535700
+:END:
+#+begin_src emacs-lisp :results silent
+(use-package fancy-battery
+  :demand t
+  :custom
+  (fancy-battery-show-percentage t)
+
+  :config
+  (fancy-battery-mode))
 #+end_src
 
 ** mixed-pitch
@@ -6524,6 +6530,7 @@ https://github.com/insanum/gcalcli
 :END:
 #+begin_src emacs-lisp :results silent
 (use-feature time
+:demand t
   :custom
   (world-clock-list '(("Europe/Barcelona" "Barcelona")
                       ("Europe/London" "London")
@@ -6533,6 +6540,7 @@ https://github.com/insanum/gcalcli
                       ("America/Los_Angeles" "San Francisco")))
   (display-time-format "%a %e %b %T")
   (display-time-interval 1)
+  (display-time-load-average nil)
 
   :config
   (display-time-mode)
@@ -6540,6 +6548,7 @@ https://github.com/insanum/gcalcli
   :general
   ("M-A-t" 'world-clock))
 #+end_src
+
 ** tmr
 :PROPERTIES:
 :ID:       87D2EB00-727C-4CA3-85F1-B8D82D37B48D
@@ -6548,6 +6557,7 @@ https://github.com/insanum/gcalcli
 (use-package tmr
   :defer 10)
 #+end_src
+
 ** hammy
 :PROPERTIES:
 :ID:       79C8D6B8-7D86-4B63-82C2-61E6DFFC4152
@@ -6556,9 +6566,62 @@ https://github.com/insanum/gcalcli
 (use-package hammy
   :straight (hammy
              :host github
-                   :repo "alphapapa/hammy.el")
+             :repo "alphapapa/hammy.el")
 
-  )
+  :config
+  (hammy-define "Move"
+    :documentation "Don't forget to stretch your legs."
+    :intervals
+    ;; A list of intervals, each defined with the `interval' function.
+    (list (interval
+           ;; The name of the interval is a string, used when selecting
+           ;; hammys and shown in the mode line.
+           :name "💺"
+           ;; The duration of the interval: a number of seconds, a string
+           ;; passed to `timer-duration', or a function which returns such.
+           :duration "45 minutes"
+           ;; Optionally, a face in which to show the
+           ;; interval's name in the mode line.
+           :face 'font-lock-type-face
+           ;; A list of actions to take before starting the interval
+           ;; (really, one or a list of functions to call with the hammy
+           ;; as the argument).  The `do' macro expands to a lambda,
+           ;; which the interval's `before' slot is set to.  In its
+           ;; body, we call two built-in helper functions.
+           :before (do (announce "Whew!")
+                       (notify "Whew!"))
+           ;; We want this interval to not automatically advance to the
+           ;; next one; rather, we want the user to call the
+           ;; `hammy-next' command to indicate when the standing-up is
+           ;; actually happening.  So we provide a list of actions to
+           ;; take when it's time to advance to the next interval.  We
+           ;; wrap the list in a call to the built-in `remind' function,
+           ;; which causes the actions to be repeated every 10 minutes
+           ;; until the user manually advances to the next interval.
+           :advance (remind "10 minutes"
+                            ;; Every 10 minutes, while the hammy is waiting
+                            ;; to be advanced to the next interval, remind
+                            ;; the user by doing these things:
+                            (do (announce "Time to stretch your legs!")
+                                (notify "Time to stretch your legs!")
+                              (play-sound-file "~/Misc/Sounds/mooove-it.wav"))))
+          (interval :name "🤸"
+                    :duration "5 minutes"
+                    :face 'font-lock-builtin-face
+                    :before (do (announce "Mooove it!")
+                                (notify "Mooove it!"))
+                    ;; Again, the interval should not advance automatically
+                    ;; to the next--the user should indicate when he's
+                    ;; actually sat down again.  (If we omitted the
+                    ;; `:advance' slot, the interval would automatically
+                    ;; advance when it reached its duration.)
+                    :advance (do (announce "Time for a sit-down...")
+                                 (notify "Time for a sit-down...")
+                               (play-sound-file org-pomodoro-finished-sound)))))
+
+  (hammy-mode))
+
+
 #+end_src
 
 * history

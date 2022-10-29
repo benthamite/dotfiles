@@ -2340,23 +2340,32 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
 
 #+begin_src emacs-lisp :results silent
 (use-feature tab-bar
+  :demand t
   :custom
-  (tab-bar-format '(tab-bar-format-add-tab
-                    tab-bar-format-global
-                    ;; tab-bar-align-right
-                    tab-bar-separator
-                    tab-bar-separator
-                    tab-bar-separator))
+  (tab-bar-format '(tab-bar-align-right
+                    tab-bar-format-global))
   (auto-resize-tab-bar nil)
 
   :config
-  (setq global-mode-string `(" "
-                             ,display-time-string
+  (setf mode-line-misc-info
+        ;; When the tab-bar is active, don't show global-mode-string
+        ;; in mode-line-misc-info, because we now show that in the
+        ;; tab-bar using `tab-bar-format-align-right' and
+        ;; `tab-bar-format-global'.
+        (remove '(global-mode-string ("" global-mode-string))
+                mode-line-misc-info))
+
+  (setq global-mode-string '(" "
+                             (:eval (propertize display-time-string 'face 'ps/display-time))
                              " | "
-                             ,fancy-battery-mode-line
+                             fancy-battery-mode-line
                              " | "
-                             ,telega-mode-line-format))
-  (tab-bar-mode))
+                             telega-mode-line-format
+                             " | "
+                             (hammy-mode
+                              (:eval
+                               (hammy-mode-lighter)))))
+  (tab-bar-mode ))
 #+end_src
 
 ** fancy-battery
@@ -6530,7 +6539,8 @@ https://github.com/insanum/gcalcli
 :END:
 #+begin_src emacs-lisp :results silent
 (use-feature time
-:demand t
+  :after tab-bar
+  :demand t
   :custom
   (world-clock-list '(("Europe/Barcelona" "Barcelona")
                       ("Europe/London" "London")
@@ -6540,11 +6550,16 @@ https://github.com/insanum/gcalcli
                       ("America/Los_Angeles" "San Francisco")))
   (display-time-format "%a %e %b %T")
   (display-time-interval 1)
-  (display-time-load-average nil)
+  (display-time-default-load-average nil)
 
   :config
   (display-time-mode)
 
+  ;; github.com/arunkmv/.config/tree/main/emacs#tab-bar
+  (defface ps/display-time
+    '((t (:inherit bold)))
+    "Face for `display-time-string' in `global-mode-string'")
+    
   :general
   ("M-A-t" 'world-clock))
 #+end_src

@@ -15699,8 +15699,11 @@ I should use an [[https://stackoverflow.com/questions/27664267/python-dictionary
   :demand t
   :custom
   ;; Notify about unread emails in inbox only
-  (mu4e-alert-interesting-mail-query "flag:unread AND maildir:/inbox"))
+  (mu4e-alert-interesting-mail-query "flag:unread AND maildir:/inbox")
+  :hook
+  (after-init-hook . mu4e-alert-enable-mode-line-display))
 #+end_src
+
 
 ** org-msg
 :PROPERTIES:

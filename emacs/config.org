@@ -5377,7 +5377,7 @@ otherwise in two windows."
         (split-window-right))
       (balance-windows)))
 
-  (ps/window-split-if-unsplit)
+  (run-with-timer 2 nil 'ps/window-split-if-unsplit)
 
   (defun ps/window--move-or-swap (this-buffer other-buffer &optional target-window)
     "docstring"
@@ -7641,7 +7641,7 @@ To check out: https://kristofferbalintona.me/posts/202202270056/
 
 #+begin_src emacs-lisp :results silent
 (use-package corfu
-  :defer 6
+  :demand t
   :custom
   (corfu-auto t)                 ;; Enable auto completion
   (corfu-cycle vertico-cycle)

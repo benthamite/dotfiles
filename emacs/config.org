@@ -1019,6 +1019,11 @@ CLOCK: [2021-02-05 Fri 19:09]--[2021-02-05 Fri 19:14] =>  0:05
   (exec-path-from-shell-initialize))
 #+end_src
 
+*** TODO Figure out why env variables differ between shell and eshell
+:PROPERTIES:
+:ID:       E57974CA-1CC6-45B7-A1D3-359C1C025E92
+:END:
+e.g. ~nvm~ isn't recognized by eshell
 *** resources
 :PROPERTIES:
 :ID:       23633754-5D4D-4473-8E61-B700551AC7C5
@@ -12616,8 +12621,9 @@ CLOCK: [2022-03-31 Thu 17:22]--[2022-03-31 Thu 17:25] =>  0:03
 :END:
 #+begin_src emacs-lisp :results silent
 (use-package emacsql-sqlite3
-  :defer 2)
+  :demand t)
 #+end_src
+
 ** org-roam
 :PROPERTIES:
 :ID:       2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17
@@ -16456,14 +16462,15 @@ CLOCK: [2021-05-18 Tue 18:26]--[2021-05-18 Tue 18:54] =>  0:28
      ;; My VPN settings apply to Firefox only (via split tunneling),
      ;; so the websites requiring VPN access are listed below, and
      ;; will be opened with this browser.
-     ("libgen" . browse-url-firefox)
-     ("hathitrust\\.org" . browse-url-firefox)
+     ;; [2022-10-30 Sun] Disabling until I configure split tunneling
+     ;; ("libgen" . browse-url-firefox)
+     ;; ("hathitrust\\.org" . browse-url-firefox)
      ;; Use the default MacOS browser for all other websites
      ("." . browse-url-default-macosx-browser)))
 
   :general
   (mhtml-mode-map
-   "s-w" 'browse-url-of-buffer)
+   "s-x" 'browse-url-of-buffer)
   (dired-mode-map
    "e" 'browse-url-of-dired-file))
 #+end_src
@@ -16486,7 +16493,11 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
   (shr-image-animate nil)
   (shr-width nil)
   (shr-discard-aria-hidden t)
-  (shr-cookie-policy t))
+  (shr-cookie-policy t)
+
+  :general
+  (mhtml-mode-map
+   "s-w" 'shr-render-buffer))
 #+end_src
 
 ** shr-tag-pre-highlight

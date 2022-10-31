@@ -2319,7 +2319,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   ;; we disable the display of time and email, since the tab-bar already does
   (doom-modeline-time nil)
   (doom-modeline-mu4e nil)
-  
+
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-irc t)
   (doom-modeline-irc-buffers t)
@@ -6573,7 +6573,7 @@ https://github.com/insanum/gcalcli
   (defface ps/display-time
     '((t (:inherit bold)))
     "Face for `display-time-string' in `global-mode-string'")
-    
+
   :general
   ("M-A-t" 'world-clock))
 #+end_src
@@ -14119,17 +14119,24 @@ window and make the frame active,"
           (t
            (user-error "Identifier does not appear to be an ISBN or DOI."))))
 
-  (defun ps/ebib-reload-current-database-no-confirm ()
-    "Reload the current database from disk, without prompting for
-confirmation."
+  (defun ps/ebib-reload-current-database (&optional no-confirm)
+    "Reload the current database from disk. If NO-CONFIRM, do not ask
+for confirmation.
+
+This command replaces the native one to allow for reloading
+without confirmation."
     (interactive)
     (ebib--execute-when
       (entries
-       (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-       (ebib--reload-database ebib--cur-db)
-       (ebib--set-modified nil ebib--cur-db)
-       (ebib--update-buffers)
-       (message "Database reloaded"))
+       (when (or (and (ebib-db-modified-p ebib--cur-db)
+                      (yes-or-no-p "Database modified.  Really reload from file? "))
+                 no-confirm
+                 (y-or-n-p "Reload current database from file? "))
+         (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+         (ebib--reload-database ebib--cur-db)
+         (ebib--set-modified nil ebib--cur-db)
+         (ebib--update-buffers)
+         (message "Database reloaded")))
       (default
         (beep))))
 
@@ -14549,11 +14556,11 @@ If not invoked from `ebib', prompt for search query."
     ;; ("" (ps/ebib-title-case) "title case" :column "edit")
     )
 
-    ;; Triggers "Error (use-package): ebib/:config: Symbol’s function definition is void: file-notify-add-watch"
+  ;; Triggers "Error (use-package): ebib/:config: Symbol’s function definition is void: file-notify-add-watch"
   ;; (file-notify-add-watch
-   ;; ps/file-bibliography-emacs
-   ;; '(change)
-   ;; (lambda (event) (ps/ebib-reload-current-database-no-confirm)))
+  ;; ps/file-bibliography-emacs
+  ;; '(change)
+  ;; (lambda (event) (ps/ebib-reload-current-database t)))
 
   :hook
   (ebib-index-mode-hook . doom-modeline-mode)
@@ -14714,7 +14721,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
       "cd %s; nvm use 14; npm start"
       ps/dir-translation-server)))
 
-    (ps/zotra-run-translator-server)
+  (ps/zotra-run-translator-server)
 
   :custom
   (zotra-use-curl nil)
@@ -14722,9 +14729,16 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (zotra-default-bibliography ps/file-bibliography-new)
   (zotra-default-entry-format "biblatex")
 
+  :config
+  (defun ps/zotra-after-add-entry-function ()
+    "Function to trigger with `zotra-after-add-entry-hook'."
+    (org-ref-clean-bibtex-entry)
+    (unless ebib--initialized
+      (ebib))
+    (ps/ebib-reload-current-database t))
+
   :hook
-  (zotra-after-add-entry-hook . org-ref-clean-bibtex-entry)
-  (zotra-after-add-entry-hook . ebib-reload-current-database))
+  (zotra-after-add-entry-hook . ps/zotra-after-add-entry-function))
 #+end_src
 
 *** TODO configure zotra
@@ -18859,4 +18873,4 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
 # eval: (ps/buffer-local-set-key (kbd "H-i") 'use-package-report)
-# End:
+# End: 

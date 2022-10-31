@@ -8070,9 +8070,26 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
     (interactive)
     (with-editor-async-shell-command "crontab -e"))
 
+    (defun ps/shell-in-current-directory (&optional shell)
+  "Open a shell in the current directory, creating one if
+necessary."
+  (interactive)
+  (let* ((shell (or shell
+                    'shell))
+         (shell-mode (intern (concat (symbol-name shell) "-mode")))
+         (current-directory default-directory)
+         (found))
+    (dolist (buffer (buffer-list (current-buffer)))
+      (with-current-buffer buffer
+        (when (and (eq major-mode 'shell-mode)
+                   (equal current-directory default-directory))
+          (setq found buffer))))
+    (if found
+        (switch-to-buffer found)
+      (shell (generate-new-buffer-name (format "*%s*" shell))))))
 
   :general
-  ("A-s" 'shell)
+  ("A-s" 'ps/shell-in-current-directory)
   (shell-mode-map
    "M-p" nil
    "M-n" nil
@@ -8096,10 +8113,12 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :results silent
 (use-feature eshell
+  :demand t
   :custom
   (eshell-banner-message "")
   (eshell-save-history-on-exit t)
   (eshell-history-size 100000)
+
   :config
   (defun ps/eshell-open-cwd-on-dired ()
     "Open the current working directory on Dired."
@@ -8111,8 +8130,14 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
     (interactive)
     (eshell '(4)))
 
+  (defun ps/eshell-in-current-directory ()
+    "Open a shell in the current directory, creating one if
+necessary."
+    (interactive)
+    (ps/shell-in-current-directory 'eshell))
+
   :general
-  ("A-e" 'eshell)
+  ("A-e" 'ps/eshell-in-current-directory)
   (eshell-mode-map
    "C-H-M-z" 'eshell-kill-input
    "A-C-s-m" 'eshell-bol
@@ -18873,4 +18898,4 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
 # eval: (ps/buffer-local-set-key (kbd "H-i") 'use-package-report)
-# End: 
+# End:

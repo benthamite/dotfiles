@@ -8639,6 +8639,11 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
                      (lsp))))
 #+end_src
 
+*** TODO Check this
+:PROPERTIES:
+:ID:       267EC580-1F84-4820-8701-C09F5CB89172
+:END:
+https://notes.alexkehayias.com/using-grammarly-with-emacs/
 *** Archive                                                                                                           :ARCHIVE:
 :PROPERTIES:
 :ID:       CBB3AD1D-834C-4C18-B591-97AEB603981A
@@ -8672,6 +8677,11 @@ CLOCK: [2021-12-12 Sun 17:47]--[2021-12-12 Sun 17:50] =>  0:03
   (setq openai-api-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
 #+end_src
 
+** languagetool
+:PROPERTIES:
+:ID:       9666F3AD-4637-4B0B-895E-8F1F030C7AD9
+:END:
+To check: https://github.com/PillFall/languagetool.el
 * prose
 :PROPERTIES:
 :ID:       9C33C68A-B82E-4898-B967-337B7D0619EE
@@ -15745,8 +15755,8 @@ I should use an [[https://stackoverflow.com/questions/27664267/python-dictionary
   :custom
   ;; Notify about unread emails in inbox only
   (mu4e-alert-interesting-mail-query "flag:unread AND maildir:/inbox")
-  :hook
-  (after-init-hook . mu4e-alert-enable-mode-line-display))
+  :config
+  (mu4e-alert-enable-mode-line-display))
 #+end_src
 
 

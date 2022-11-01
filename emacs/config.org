@@ -447,6 +447,8 @@ Process for updating packages:
 - If the update process throws an error for a specific package, try deleting the folders inside both ~build~ and ~repos~ and then reinstall the package. See [[https://github.com/hlissner/doom-emacs/issues/5588#issuecomment-935626725][here]] for discussion.
 - If you encounter problems, first try ~M-x straight-pull-package straight~, ~M-x straight-rebuild-package straight~ and restart.
 
+[2022-10-31 Mon 15:55] At some point, it should probably be replaced with [[https://github.com/progfolio/elpaca][elpaca]]. Discussion [[https://github.com/progfolio/elpaca][here]].
+
 #Minimal config
 #+begin_src emacs-lisp :results silent
 (setq straight-repository-branch "develop") ; must precede bootstrap
@@ -3880,6 +3882,7 @@ CLOSED: [2022-07-21 Thu 21:07]
 :LOGBOOK:
 CLOCK: [2022-07-21 Thu 21:06]--[2022-07-21 Thu 21:07] =>  0:01
 :END:
+
 ** hippie-expand
 :PROPERTIES:
 :ID:       06396799-A9FB-4417-AAE3-3654BC901B93

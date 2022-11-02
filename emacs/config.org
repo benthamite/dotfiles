@@ -2080,6 +2080,20 @@ CLOCK: [2022-04-14 Thu 11:10]--[2022-04-14 Thu 11:18] =>  0:08
 I didn't quite accomplish what I wanted, since I am still not able to control the height of the variable-pitch face completely independently from that of the fixed-pitch. But I think it's good enough. See [[https://emacs.stackexchange.com/questions/62987/cannot-set-correct-size-for-variable-pitch-font-in-doom-emacs][this StackExchange question]] for some discussion.
 
 [2022-05-07 Sat 19:05] I then realized that I should control the height of the headings separately.
+
+** face-remap
+:PROPERTIES:
+:ID:       3F96E2F2-7C68-4D61-8CB8-EFE4C7220FC8
+:END:
+#+begin_src emacs-lisp :results silent
+(use-feature face-remap
+  :demand t
+  :general
+  (eww-mode-map
+   "+" 'text-scale-increase
+   "-" 'text-scale-decrease))
+#+end_src
+
 ** fringe
 :PROPERTIES:
 :ID:       A0748A82-CE1C-4700-95E1-610B6CA7F8E0
@@ -2320,7 +2334,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :custom
   ;; we disable the display of time since the tab-bar already does
   (doom-modeline-time nil)
-  
+
   (doom-modeline-mu4e t)
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-irc t)
@@ -4546,7 +4560,7 @@ or are no longer readable will be killed."
    "H-C-A-g" 'keyboard-escape-quit) ; ESC ESC ESC
   ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "q" 'bury-buffer)
-  ((apropos-mode-map calendar-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map)
+  ((apropos-mode-map calendar-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
    "q" 'ps/kill-this-buffer)
   ((dired-mode-map pdf-view-mode-map)
    "s-o" 'ps/ocr-pdf)
@@ -5863,6 +5877,17 @@ and start clock."
     (interactive)
     (ace-link-eww '(16)))
 
+  (defun ps/ace-link-w3m-in-eww ()
+    "In an `w3m-mode' buffer, open a visible link in `eww'."
+    (interactive)
+    (require 'w3m)
+    (let ((pt (avy-with ace-link-w3m
+                (avy-process
+                 (mapcar #'cdr (ace-link--w3m-collect))
+                 (avy--style-fn avy-style)))))
+      (goto-char pt)
+      (eww (w3m-url-valid (w3m-anchor)))))
+
   :general
   (elfeed-show-mode-map
    "f" 'ps/ace-link-eww-externally
@@ -5878,7 +5903,8 @@ and start clock."
   ((Man-mode-map woman-mode-map)
    "f" 'ace-link-woman)
   (mu4e-view-mode-map
-   "f" 'ps/ace-link-w3m-externally)
+   "F" 'ps/ace-link-w3m-externally
+   "f" 'ps/ace-link-w3m-in-eww)
   (org-agenda-mode-map
    "f" 'ace-link-org-agenda
    "s-f" 'ps/ace-link-org-agenda-clock-in)
@@ -12443,6 +12469,10 @@ CLOSED: [2021-06-23 Wed 12:44]
   ("A-j" 'org-journal-new-entry))
 #+end_src
 
+*** TODO Explore how to use org journal as the day organizer
+:PROPERTIES:
+:ID:       67333293-EE6D-4936-8C88-07F5AE193B81
+:END:
 *** Archive                                                       :ARCHIVE:
 :PROPERTIES:
 :ID:       A9515515-8FBC-4940-82FC-07857F80B9B4
@@ -13804,13 +13834,14 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (bibtex-autokey-names 1)
   (bibtex-autokey-name-case-convert 'capitalize)
   (bibtex-autokey-year-length 4)
-  (bibtex-autokey-year-title-separator "")
   (bibtex-autokey-titlewords 3)
   (bibtex-autokey-titlewords-stretch 0)
+  (bibtex-autokey-titleword-ignore '("A" "An" "On" "The" "Eine?" "Der" "Die" "Das" "El" "La" "Lo" "Los" "Las" "Un" "Una" "Unos" "Unas" "Le" "La" "L'" "Les" "Un" "Une" "Des" "Du" "De la" "De l'" "Des" "Lo" "Il" "La" "L'" "Gli" "I" "Le" "Uno"))
   (bibtex-autokey-title-terminators "[.!?;]\\|--")
   (bibtex-autokey-titleword-case-convert 'capitalize)
   (bibtex-autokey-titleword-length nil)
   (bibtex-autokey-titleword-separator "")
+  (bibtex-autokey-year-title-separator "")
   (bibtex-autokey-preserve-case t)
 
   :config
@@ -14576,7 +14607,7 @@ If not invoked from `ebib', prompt for search query."
     ;; ("j" () "" :column "")
     ;; ("k" () "" :column "")
     ("l" (ps/ebib-search-library-genesis) "Library Genesis" :column "search")
-    ("m" (ps/ebib-search-dwim) "dwim" :column "browse")
+    (";" (ps/ebib-search-dwim) "dwim" :column "browse")
     ("n" (ps/ebib-open-org-file) "notes" :column "open")
     ("o" (ps/ebib-search-connected-papers) "Connected Papers" :column "search")
     ("p" (ps/ebib-open-pdf-file) "PDF" :column "open")
@@ -14588,7 +14619,7 @@ If not invoked from `ebib', prompt for search query."
     ("u" (ebib-browse-url) "URL" :column "browse")
     ("v" (ps/ebib-search-internet-archive) "Internet Archive" :column "search")
     ("w" (ps/ebib-search-worldcat) "Worldcat" :column "search")
-    ("x" (ps/ebib-open-current-bibtex-file) "Bibtex" :column "open")
+    ("b" (ps/ebib-open-current-bibtex-file) "Bibtex" :column "open")
     ("y" (ps/ebib-search-hathitrust) "HathiTrust" :column "search")
     ;; ("z" () "" :column "")
     ("/" (ps/ebib-attach-most-recent-file) "attach latest" :column "edit")
@@ -15506,7 +15537,7 @@ without asking for user confirmation."
    "," 'mu4e-copy-message-path
    "<" 'mu4e-headers-split-view-shrink
    ">" 'mu4e-headers-split-view-grow
-   "F" 'mu4e-compose-forward
+   "s-f" 'mu4e-compose-forward
    "i" 'mu4e-select-other-view
    "r" 'mu4e-compose-reply)
   (mu4e-main-mode-map
@@ -16649,38 +16680,49 @@ To be used by `eww-after-render-hook'."
           (browse-url-browser-function #'eww-browse-url))
       (org-open-at-point)))
 
-      (defun ps/url-to-pdf (url)
-      ;; TODO: Default to eww buffer or kill-ring if content is URL.
+  (defun ps/url-to-pdf (url)
+    ;; TODO: Default to eww buffer or kill-ring if content is URL.
     "Generate PDF of URL."
-        (interactive "MUrl: ")
+    (interactive "MUrl: ")
     (let* ((title (ps/org-web-tools--org-title-for-url url))
            (slug (org-hugo-slug title))
            (file-name (file-name-with-extension slug ".pdf"))
            (output-file (file-name-concat ps/dir-downloads file-name))
            (shell-command-buffer-name-async title))
-        (async-shell-command
-         (format
-          "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --print-to-pdf-no-header --print-to-pdf='%s' %s"
-          output-file
-          url))))
+      (async-shell-command
+       (format
+        "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --print-to-pdf-no-header --print-to-pdf='%s' %s"
+        output-file
+        url))))
+
+  (defvar ps/eww-readable-websites
+    '("^https://forum\\.effectivealtruism\\.org"
+      "^https://www\\.lesswrong\\.com"))
+
+  (defun ps/eww-readable-autoview ()
+    "Automatically view the main 'readable' parts of the current web
+page for websites defined in `ps/eww-readable-websites'."
+    (let ((current-url (eww-current-url)))
+      (dolist (url ps/eww-readable-websites)
+        (when (string-match-p url current-url)
+          (eww-readable)))))
 
   :hook
   (eww-after-render-hook . ps/rename-buffer)
-  ;; (eww-mode-hook . (lambda () (text-scale-set 1))) ; Make eww text slightly larger
+  (eww-after-render-hook . ps/eww-readable-autoview)
 
   :general
   ("A-w" 'eww)
   (eww-mode-map
-  "[" 'eww-previous-url
-  "]" 'eww-next-url
+   "[" 'eww-previous-url
+   "]" 'eww-next-url
    "j" 'eww-back-url
    ";" 'eww-forward-url
+   "r" 'eww-readable
    "o" 'eww-toggle-fonts
    "p" 'ps/eww-pdf-of-current-webpage
    ":" (lambda! (eww-follow-link '(4)))
-   "x" 'eww-browse-with-external-browser
-   "+" 'text-scale-increase
-   "-" 'text-scale-decrease))
+   "x" 'eww-browse-with-external-browser))
 #+end_src
 
 *** TODO [#6] Create command to create PDF of URL
@@ -16706,10 +16748,8 @@ CLOCK: [2021-03-29 Mon 21:25]--[2021-03-29 Mon 21:41] =>  0:16
   :custom
   (mm-text-html-renderer 'w3m)
   :general
-  (w3m-mode-map
-   "S-<return>" 'w3m-view-url-with-browse-url) ; open externally
-  (mu4e-view-mode-map
-   "<return>" 'w3m-view-url-with-browse-url))
+  ((w3m-mode-map mu4e-view-mode-map)
+   "S-<return>" 'w3m-view-url-with-browse-url)) ; open externally
 #+end_src
 
 ** osa-chrome

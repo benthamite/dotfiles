@@ -13984,6 +13984,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 #+begin_src emacs-lisp :results silent
 (use-package ebib
+  ;; :demand t
   :defer 10
   :custom
   (ebib-filename-separator ";")
@@ -14747,8 +14748,8 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 #+begin_src emacs-lisp :results silent
 (use-package zotra
   :straight (zotra
-	     :host github
-	     :repo "mpedramfar/zotra")
+             :host github
+             :repo "mpedramfar/zotra")
   :defer 10
   :init
   (defun ps/zotra-run-translator-server ()
@@ -14771,260 +14772,43 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :config
   (defun ps/zotra-after-add-entry-function ()
     "Function to trigger with `zotra-after-add-entry-hook'."
+    (revert-buffer nil t)
+    (goto-char (point-max))
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
+    (save-buffer)
     (unless ebib--initialized
       (ebib))
     (ps/ebib-reload-current-database t))
 
-  (defun ps/select-safe-coding-system (from to &optional default-coding-system
-					 accept-default-p file)
-    "Ask a user to select a safe coding system from candidates.
-The candidates of coding systems which can safely encode a text
-between FROM and TO are shown in a popup window.  Among them, the most
-proper one is suggested as the default.
+  (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
+    (let ((bibfile
+           (or bibfile zotra-default-bibliography
+               (completing-read
+                "Bibfile: "
+                (append (directory-files "." t ".*\\.bib$")
+                        (org-cite-list-bibliography-files))))))
+      (save-window-excursion
+        (find-file bibfile)
+        (goto-char (point-max))
+        (when (not (looking-at "^")) (insert "\n"))
+        (insert (zotra-get-entry url-or-search-string is-search entry-format))
+        (save-excursion
+          (save-restriction
+            (bibtex-narrow-to-entry)
+            (bibtex-beginning-of-entry)
+            ))
+        (goto-char (point-max))
+        (when (not (looking-at "^")) (insert "\n"))
+        (advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
+        (save-buffer)
+        (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
+        (run-hooks 'zotra-after-add-entry-hook))))
 
-The list of `buffer-file-coding-system' of the current buffer, the
-default `buffer-file-coding-system', and the most preferred coding
-system (if it corresponds to a MIME charset) is treated as the
-default coding system list.  Among them, the first one that safely
-encodes the text is normally selected silently and returned without
-any user interaction.  See also the command `prefer-coding-system'.
+  ;; Ugly hack to fix encoding issues.
+  ;; TODO: Fix this properly.
+  (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)
 
-However, the user is queried if the chosen coding system is
-inconsistent with what would be selected by `find-auto-coding' from
-coding cookies &c. if the contents of the region were read from a
-file.  (That could lead to data corruption in a file subsequently
-re-visited and edited.)
-
-Optional 3rd arg DEFAULT-CODING-SYSTEM specifies a coding system or a
-list of coding systems to be prepended to the default coding system
-list.  However, if DEFAULT-CODING-SYSTEM is a list and the first
-element is t, the cdr part is used as the default coding system list,
-i.e. current `buffer-file-coding-system', default `buffer-file-coding-system',
-and the most preferred coding system are not used.
-
-Optional 4th arg ACCEPT-DEFAULT-P, if non-nil, is a function to
-determine the acceptability of the silently selected coding system.
-It is called with that coding system, and should return nil if it
-should not be silently selected and thus user interaction is required.
-
-Optional 5th arg FILE is the file name to use for this purpose.
-That is different from `buffer-file-name' when handling `write-region'
-\(for example).
-
-The variable `select-safe-coding-system-accept-default-p', if non-nil,
-overrides ACCEPT-DEFAULT-P.
-
-Kludgy feature: if FROM is a string, the string is the target text,
-and TO is ignored."
-    (if (not (listp default-coding-system))
-	(setq default-coding-system (list default-coding-system)))
-
-    (let ((no-other-defaults nil)
-	  auto-cs)
-      (unless (or (stringp from) find-file-literally)
-	;; Find an auto-coding that is specified for the current
-	;; buffer and file from the region FROM and TO.
-	(save-excursion
-	  (save-restriction
-	    (widen)
-	    (goto-char from)
-	    (setq auto-cs (find-auto-coding (or file buffer-file-name "")
-					    (- to from)))
-	    (if auto-cs
-		(if (coding-system-p (car auto-cs))
-		    (setq auto-cs (car auto-cs))
-		  (display-warning
-		   'mule
-		   (format-message "\
-Invalid coding system `%s' is specified
-for the current buffer/file by the %s.
-It is highly recommended to fix it before writing to a file."
-				   (car auto-cs)
-				   (if (eq (cdr auto-cs) :coding) ":coding tag"
-				     (format-message "variable `%s'" (cdr auto-cs))))
-		   :warning)
-		  (or (yes-or-no-p "Really proceed with writing? ")
-		      (error "Save aborted"))
-		  (setq auto-cs nil))))))
-
-      (if (eq (car default-coding-system) t)
-	  (setq no-other-defaults t
-		default-coding-system (cdr default-coding-system)))
-
-      ;; Change elements of the list to (coding . base-coding).
-      (setq default-coding-system
-	    (mapcar (lambda (x) (cons x (coding-system-base x)))
-		    default-coding-system))
-
-      (if (and auto-cs (not no-other-defaults))
-	  ;; If the file has a coding cookie, use it regardless of any
-	  ;; other setting.
-	  (let ((base (coding-system-base auto-cs)))
-	    (unless (memq base '(nil undecided))
-	      ;; For encoding, no-conversion-multibyte is the same as
-	      ;; no-conversion.
-	      (if (eq base 'no-conversion-multibyte)
-		  (setq auto-cs 'no-conversion
-			base 'no-conversion))
-	      (setq default-coding-system (list (cons auto-cs base)))
-	      (setq no-other-defaults t))))
-
-      (unless no-other-defaults
-	;; If buffer-file-coding-system is not nil nor undecided, append it
-	;; to the defaults.
-	(if buffer-file-coding-system
-	    (let ((base (coding-system-base buffer-file-coding-system)))
-	      (or (eq base 'undecided)
-		  (rassq base default-coding-system)
-		  (setq default-coding-system
-			(append default-coding-system
-				(list (cons buffer-file-coding-system base)))))))
-
-	(unless (and buffer-file-coding-system-explicit
-		     (cdr buffer-file-coding-system-explicit))
-	  ;; If default buffer-file-coding-system is not nil nor undecided,
-	  ;; append it to the defaults.
-	  (when (default-value 'buffer-file-coding-system)
-	    (let ((base (coding-system-base
-			 (default-value 'buffer-file-coding-system))))
-	      (or (eq base 'undecided)
-		  (rassq base default-coding-system)
-		  (setq default-coding-system
-			(append default-coding-system
-				(list (cons (default-value
-					      'buffer-file-coding-system)
-					    base)))))))
-
-	  ;; If the most preferred coding system has the property mime-charset,
-	  ;; append it to the defaults.
-	  (let ((preferred (coding-system-priority-list t))
-		base)
-	    (and (coding-system-p preferred)
-		 (setq base (coding-system-base preferred))
-		 (coding-system-get preferred :mime-charset)
-		 (not (rassq base default-coding-system))
-		 (setq default-coding-system
-		       (append default-coding-system
-			       (list (cons preferred base))))))))
-
-      (if select-safe-coding-system-accept-default-p
-	  (setq accept-default-p select-safe-coding-system-accept-default-p))
-
-      ;; Decide the eol-type from the top of the default codings,
-      ;; current buffer-file-coding-system, or default buffer-file-coding-system.
-      (if default-coding-system
-	  (let ((default-eol-type (coding-system-eol-type
-				   (caar default-coding-system))))
-	    (if (and (vectorp default-eol-type) buffer-file-coding-system)
-		(setq default-eol-type (coding-system-eol-type
-					buffer-file-coding-system)))
-	    (if (and (vectorp default-eol-type)
-		     (default-value 'buffer-file-coding-system))
-		(setq default-eol-type
-		      (coding-system-eol-type
-		       (default-value 'buffer-file-coding-system))))
-	    (if (and default-eol-type (not (vectorp default-eol-type)))
-		(dolist (elt default-coding-system)
-		  (setcar elt (coding-system-change-eol-conversion
-			       (car elt) default-eol-type))))))
-
-      (let ((codings (find-coding-systems-region from to))
-	    (coding-system nil)
-	    (tick (if (not (stringp from)) (buffer-chars-modified-tick)))
-	    safe rejected unsafe)
-	(if (eq (car codings) 'undecided)
-	    ;; Any coding system is ok.
-	    (setq coding-system (caar default-coding-system))
-	  ;; Reverse the list so that elements are accumulated in safe,
-	  ;; rejected, and unsafe in the correct order.
-	  (setq default-coding-system (nreverse default-coding-system))
-
-	  ;; Classify the defaults into safe, rejected, and unsafe.
-	  (dolist (elt default-coding-system)
-	    (if (memq (cdr elt) codings)
-		;; This is safe.  Is it acceptable?
-		(if (and (functionp accept-default-p)
-			 (not (funcall accept-default-p (cdr elt))))
-		    ;; No, not acceptable.
-		    (push (car elt) rejected)
-		  ;; Yes, acceptable.
-		  (push (car elt) safe))
-	      ;; This is not safe.
-	      (push (car elt) unsafe)))
-	  ;; If there are safe ones, the first one is what we want.
-	  (if safe
-	      (setq coding-system (car safe))))
-
-	;; If all the defaults failed, ask a user.
-	(when (not coding-system)
-	  ;; If UTF-8 is in CODINGS, but is not its first member, make
-	  ;; it the first one, so it is offered as the default.
-	  (and (memq 'utf-8 codings) (not (eq 'utf-8 (car codings)))
-	       (setq codings (append '(utf-8) (delq 'utf-8 codings))))
-
-	  (setq coding-system (select-safe-coding-system-interactively
-			       from to codings unsafe rejected (car codings))))
-
-	;; Check we're not inconsistent with what `coding:' spec &c would
-	;; give when file is re-read.
-	;; But don't do this if we explicitly ignored the cookie
-	;; by using `find-file-literally'.
-	(when (and auto-cs
-		   (not (and
-			 coding-system
-			 (memq (coding-system-type coding-system) '(0 5)))))
-	  ;; Merge coding-system and auto-cs as far as possible.
-	  (if (not coding-system)
-	      (setq coding-system auto-cs)
-	    (if (not auto-cs)
-		(setq auto-cs coding-system)
-	      (let ((eol-type-1 (coding-system-eol-type coding-system))
-		    (eol-type-2 (coding-system-eol-type auto-cs)))
-		(if (eq (coding-system-base coding-system) 'undecided)
-		    (setq coding-system (coding-system-change-text-conversion
-					 coding-system auto-cs))
-		  (if (eq (coding-system-base auto-cs) 'undecided)
-		      (setq auto-cs (coding-system-change-text-conversion
-				     auto-cs coding-system))))
-		(if (vectorp eol-type-1)
-		    (or (vectorp eol-type-2)
-			(setq coding-system (coding-system-change-eol-conversion
-					     coding-system eol-type-2)))
-		  (if (vectorp eol-type-2)
-		      (setq auto-cs (coding-system-change-eol-conversion
-				     auto-cs eol-type-1)))))))
-
-	  (if (and auto-cs
-		   ;; Don't barf if writing a compressed file, say.
-		   ;; This check perhaps isn't ideal, but is probably
-		   ;; the best thing to do.
-		   (not (auto-coding-alist-lookup (or file buffer-file-name "")))
-		   (not (coding-system-equal coding-system auto-cs))
-		   ;; coding-system-equal barfs on 'charset'.
-		   (or (equal (coding-system-type auto-cs) 'charset)
-		       (equal (coding-system-type coding-system) 'charset)
-		       (not (coding-system-equal (coding-system-type auto-cs)
-						 (coding-system-type
-						  coding-system)))))
-	      (unless (yes-or-no-p
-		       (format "Selected encoding %s disagrees with \
-%s specified by file contents.  Really save (else edit coding cookies \
-and try again)? " coding-system auto-cs))
-		(error "Save aborted"))))
-	(when (and tick (/= tick (buffer-chars-modified-tick)))
-	  (error "Canceled because the buffer was modified"))
-	(if (and (eq (coding-system-type coding-system) 'undecided)
-		 (coding-system-get coding-system :prefer-utf-8)
-		 (or (multibyte-string-p from)
-		     (and (number-or-marker-p from)
-			  (< (- to from)
-			     (- (position-bytes to) (position-bytes from))))))
-	    (setq coding-system
-		  (coding-system-change-text-conversion coding-system 'utf-8)))
-	coding-system)))
-  
   :hook
   (zotra-after-add-entry-hook . ps/zotra-after-add-entry-function))
 #+end_src

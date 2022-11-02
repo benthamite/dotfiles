@@ -2318,10 +2318,10 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (doom-modeline-mode)
 
   :custom
-  ;; we disable the display of time and email, since the tab-bar already does
+  ;; we disable the display of time since the tab-bar already does
   (doom-modeline-time nil)
-  (doom-modeline-mu4e nil)
-
+  
+  (doom-modeline-mu4e t)
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-irc t)
   (doom-modeline-irc-buffers t)
@@ -2334,8 +2334,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
   (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
   (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline)
-  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)
-  )
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
 #+end_src
 
 *** TODO [#6] Diagnose why modeline is sometimes not highlighted
@@ -9635,7 +9634,9 @@ Delegated to Leo.
 
 Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A guide on disabling/enabling lsp-mode features - LSP Mode - LSP support for Emacs]]
 
-#+begin_src emacs-lisp :results silent
+[2022-11-01 Tue 20:56] Disabling.
+
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package lsp-mode
   :init
   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
@@ -18730,6 +18731,8 @@ The `slug' generated from that STR follows these rules:
       (org-set-tags "person")
       (org-id-get-create)
       (ps/org-narrow-to-entry-and-children)
+      (goto-char (point-max))
+      (insert "[[id:628F4D6A-38D9-4D1F-9517-8972B96A5C5B][Mexico EA Fellowship]]")
       ;; (crux-smart-open-line nil)
       )))
 

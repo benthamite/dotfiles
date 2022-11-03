@@ -14354,37 +14354,37 @@ entry's key."
       (ebib-set-field-value "file" file key ebib--cur-db ";")))
 
   (defun ps/ebib-attach-most-recent-file ()
-  "docstring"
-  (interactive)
-  (ebib--execute-when
-    (entries
-     (let ((key (ebib--get-key-at-point)))
-       (unless (ps/ebib-valid-key-p key)
-	 (if (y-or-n-p "Entry has an invalid key. Press `y' to regenerate key, or `n' to abort.")
-	     (ebib-generate-autokey)
-	   (keyboard-quit)))
-       (let* ((field "file")
-	      (newest-file (ps/newest-file ps/dir-downloads))
-	      (extension (file-name-extension newest-file))
-	      (desination-folder
-	       (cond ((string= extension "pdf")
-		      ps/dir-library-pdf)
-		     ((string= extension "html")
-		      ps/dir-library-html)
-		     (t
-		      (user-error "Invalid file extension"))))
-	      (file-name (file-name-concat
-			  destination-folder
-			  (file-name-with-extension key extension))))
-	 (rename-file newest-file
-		      file-name)
-	 (ebib-set-field-value field file-name key ebib--cur-db ";")
-	 (ebib--store-multiline-text (current-buffer))
-	 (ebib--redisplay-field field)
-	 (ebib--redisplay-index-item field)
-	 (ebib-save-current-database nil))))
-    (default
-      (beep))))
+    "docstring"
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (let ((key (ebib--get-key-at-point)))
+         (unless (ps/ebib-valid-key-p key)
+           (if (y-or-n-p "Entry has an invalid key. Press `y' to regenerate key, or `n' to abort.")
+               (ebib-generate-autokey)
+             (keyboard-quit)))
+         (let* ((field "file")
+                (newest-file (ps/newest-file ps/dir-downloads))
+                (extension (file-name-extension newest-file))
+                (destination-folder
+                 (cond ((string= extension "pdf")
+                        ps/dir-library-pdf)
+                       ((string= extension "html")
+                        ps/dir-library-html)
+                       (t
+                        (user-error "Invalid file extension"))))
+                (file-name (file-name-concat
+                            destination-folder
+                            (file-name-with-extension key extension))))
+           (rename-file newest-file
+                        file-name)
+           (ebib-set-field-value field file-name key ebib--cur-db ";")
+           (ebib--store-multiline-text (current-buffer))
+           (ebib--redisplay-field field)
+           (ebib--redisplay-index-item field)
+           (ebib-save-current-database nil))))
+      (default
+        (beep))))
 
   (defun ps/ebib-search-internet-archive (&optional field search-query)
     "Run a search on the Internet Archive."
@@ -14598,45 +14598,6 @@ If not invoked from `ebib', prompt for search query."
   ;; timer.
   (run-with-timer 10 nil #'ps/ebib-auto-save-db)
 
-  (defhydra hydra-ebib
-    (:color blue
-            :hint nil
-            :idle 0)
-    ""
-    ("a" (ps/ebib-search-amazon) "Amazon" :column "search")
-    ("b" (ps/ebib-open-current-bibtex-file) "Bibtex" :column "open")
-    ("c" (ebib-copy-current-field-contents) "copy" :column "edit")
-    ("d" (ebib-browse-doi) "DOI" :column "browse")
-    ("D" (ebib-delete-current-field-contents) "delete" :column "edit")
-    ;; ("e" () "" :column "")
-    ;; ("f" () "" :column "")
-    ;; ("g" () "" :column "")
-    ("h" (ps/ebib-open-html-file) "HTML" :column "open")
-    ("i" (ps/ebib-search-book-by-isbn) "ISBN" :column "browse")
-    ;; ("j" () "" :column "")
-    ;; ("k" () "" :column "")
-    ("l" (ps/ebib-search-library-genesis) "Library Genesis" :column "search")
-    ;; ("m" () "" :column "")
-    ("n" (ps/ebib-open-org-file) "notes" :column "open")
-    ("o" (ps/ebib-search-connected-papers) "Connected Papers" :column "search")
-    ("p" (ps/ebib-open-pdf-file) "PDF" :column "open")
-    ("Q" (ebib-quit) "ebib" :column "quit")
-    ("q" (ebib-quit-entry-buffer) "entry" :column "quit")
-    ("r" (ps/ebib-search-university-of-toronto) "University of Toronto" :column "search")
-    ("s" (ps/ebib-search-google-scholar) "Google Scholar" :column "search")
-    ("t" (ps/ebib-search-book-dwim) "title" :column "browse")
-    ("u" (ebib-browse-url) "URL" :column "browse")
-    ("v" (ps/ebib-search-internet-archive) "Internet Archive" :column "search")
-    ("w" (ps/ebib-search-worldcat) "Worldcat" :column "search")
-    ;; ("x" () "" :column "")
-    ("y" (ps/ebib-search-hathitrust) "HathiTrust" :column "search")
-    ;; ("z" () "" :column "")
-    (";" (ps/ebib-search-dwim) "dwim" :column "browse")
-    ("/" (ps/ebib-attach-most-recent-file) "attach latest" :column "edit")
-    ("," (ps/ebib-title-case) "title case" :column "edit")
-    ("." (ps/ebib-sentence-case) "sentence case" :column "edit")
-    )
-
   ;; Triggers "Error (use-package): ebib/:config: Symbol’s function definition is void: file-notify-add-watch"
   ;; (file-notify-add-watch
   ;; ps/file-bibliography-emacs
@@ -14654,18 +14615,33 @@ If not invoked from `ebib', prompt for search query."
   (ebib-multiline-mode-map
    "s-c" 'ebib-quit-multiline-buffer-and-save)
   (ebib-entry-mode-map
-   "!" 'ebib-generate-autokey
-   "," 'ps/ebib-switch-old-db
-   "." 'ps/ebib-switch-new-db
-   "1" (lambda! (ebib-view-file-in-field 1))
-   "2" (lambda! (ebib-view-file-in-field 2))
+   "a" 'ps/ebib-search-amazon
+   "b" 'ps/ebib-open-current-bibtex-file
+   "c" 'ebib-copy-current-field-contents
+   "d" 'ebib-browse-doi
+   "D" 'ebib-delete-current-field-contents
+   "h" 'ps/ebib-open-html-file
+   "i" 'ps/ebib-search-book-by-isbn
    "l" 'ps/ebib-search-library-genesis
+   "n" 'ps/ebib-open-org-file
+   "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
    "Q" 'ebib-quit
-   "SPC" 'ps/ebib-attach-most-recent-file
-   "x" 'ebib-delete-current-field-contents
-   "X" 'ps/ebib-open-current-bibtex-file
-   "z" 'ps/ebib-search-amazon)
+   "q" 'ebib-quit-entry-buffer
+   "r" 'ps/ebib-search-university-of-toronto
+   "s" 'ps/ebib-search-google-scholar
+   "t" 'ps/ebib-search-book-dwim
+   "u" 'ebib-browse-url
+   "v" 'ps/ebib-search-internet-archive
+   "w" 'ps/ebib-search-worldcat
+   "y" 'ps/ebib-search-hathitrust
+   ";" 'ps/ebib-search-dwim
+   "/" 'ps/ebib-attach-most-recent-file
+   "," 'ps/ebib-title-case
+   "." 'ps/ebib-sentence-case
+   "!" 'ebib-generate-autokey
+   "1" (lambda! (ebib-view-file-in-field 1))
+   "2" (lambda! (ebib-view-file-in-field 2)))
   (ebib-index-mode-map
    "<return>" 'ebib-edit-entry
    "d" 'ebib-browse-doi

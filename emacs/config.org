@@ -16840,7 +16840,8 @@ To be used by `eww-after-render-hook'."
 
   (defvar ps/eww-readable-websites
     '("^https://forum\\.effectivealtruism\\.org"
-      "^https://www\\.lesswrong\\.com"))
+      "^https://www\\.lesswrong\\.com"
+      "^https://.*?\\.substack\\.com"))
 
   (defun ps/eww-readable-autoview ()
     "Automatically view the main 'readable' parts of the current web

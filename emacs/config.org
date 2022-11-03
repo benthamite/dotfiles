@@ -4183,8 +4183,6 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (enable-local-variables :all)
   (insert-directory-program "/opt/homebrew/bin/gls" "make Emacs use coreutils to avoid 'listing directory failed' error")
 
-  ;; (auto-save-interval 1 "lowest possible value is higher than 1, but this ensures it's as low as it can be")
-  ;; (auto-save-timeout 1 "lowest possible value is higher than 1, but this ensures it's as low as it can be")
   (auto-save-no-message t "don't emit message when auto-saving")
   (backup-by-copying t "don't clobber symlink")
   (kept-new-versions 100 "keep 100 latest versions")
@@ -4540,6 +4538,9 @@ or are no longer readable will be killed."
       (mapc #'file-notify-rm-watch citar-filenotify--local-watches)
       (setq citar-filenotify--local-watches 'uninitialized)))
 
+;; Disable `dired-hide-details-mode' so that session dates are shown
+;; when `recover-session' is invoked.
+(advice-add 'recover-session :after #'(lambda () (dired-hide-details-mode -1)))
 
   :general
   ("M--" 'not-modified
@@ -4688,6 +4689,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
   (dired-do-revert-buffer t)
   (dired-create-destination-dirs 'ask)
   (dired-guess-shell-alist-user '(("" "open")))
+
   :config
   (setq dired-deletion-confirmer '(lambda (x) t))
   (dired-async-mode)
@@ -14838,9 +14840,9 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
         (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
         (run-hooks 'zotra-after-add-entry-hook))))
 
-        (defun ps/select-safe-coding-system-interactively (from to codings unsafe
-						&optional rejected default)
-  "Select interactively a coding system for the region FROM ... TO.
+  (defun ps/select-safe-coding-system-interactively (from to codings unsafe
+                                                          &optional rejected default)
+    "Select interactively a coding system for the region FROM ... TO.
 FROM can be a string, as in `write-region'.
 CODINGS is the list of base coding systems known to be safe for this region,
   typically obtained with `find-coding-systems-region'.
@@ -14848,138 +14850,138 @@ UNSAFE is a list of coding systems known to be unsafe for this region.
 REJECTED is a list of coding systems which were safe but for some reason
   were not recommended in the particular context.
 DEFAULT is the coding system to use by default in the query."
-  ;; At first, if some defaults are unsafe, record at most 11
-  ;; problematic characters and their positions for them by turning
-  ;;	(CODING ...)
-  ;; into
-  ;;	((CODING (POS . CHAR) (POS . CHAR) ...) ...)
-  (if unsafe
-      (setq unsafe
-            (mapcar (lambda (coding)
-                      (cons coding
-                            (if (stringp from)
+    ;; At first, if some defaults are unsafe, record at most 11
+    ;; problematic characters and their positions for them by turning
+    ;;	(CODING ...)
+    ;; into
+    ;;	((CODING (POS . CHAR) (POS . CHAR) ...) ...)
+    (if unsafe
+        (setq unsafe
+              (mapcar (lambda (coding)
+                        (cons coding
+                              (if (stringp from)
+                                  (mapcar (lambda (pos)
+                                            (cons pos (aref from pos)))
+                                          (unencodable-char-position
+                                           0 (length from) coding
+                                           11 from))
                                 (mapcar (lambda (pos)
-                                          (cons pos (aref from pos)))
+                                          (cons pos (char-after pos)))
                                         (unencodable-char-position
-                                         0 (length from) coding
-                                         11 from))
-                              (mapcar (lambda (pos)
-                                        (cons pos (char-after pos)))
-                                      (unencodable-char-position
-                                       from to coding 11)))))
-		    unsafe)))
+                                         from to coding 11)))))
+                      unsafe)))
 
-  (setq codings (sanitize-coding-system-list codings))
+    (setq codings (sanitize-coding-system-list codings))
 
-  (let ((window-configuration (current-window-configuration))
-	(bufname (buffer-name))
-	coding-system)
-    (save-excursion
-      ;; If some defaults are unsafe, make sure the offending
-      ;; buffer is displayed.
-      (when (and unsafe (not (stringp from)))
-	(pop-to-buffer bufname)
-	(goto-char (apply #'min (mapcar (lambda (x) (or (car (cadr x)) (point-max)))
-				        unsafe))))
-      ;; Then ask users to select one from CODINGS while showing
-      ;; the reason why none of the defaults are not used.
-      (with-output-to-temp-buffer "*Warning*"
-	(with-current-buffer standard-output
-	  (if (and (null rejected) (null unsafe))
-	      (insert "No default coding systems to try for "
-		      (if (stringp from)
-			  (format "string \"%s\"." from)
-			(format-message "buffer `%s'." bufname)))
-	    (insert
-	     "These default coding systems were tried to encode"
-	     (if (stringp from)
-		 (concat " \"" (if (> (length from) 10)
-				   (concat (substring from 0 10) "...\"")
-				 (concat from "\"")))
-	       (format-message
-                " the following\nproblematic characters in the buffer `%s'"
-                bufname))
-	     ":\n")
-            (select-safe-coding-system--format-list unsafe)
-	    (when rejected
-	      (insert "These safely encode the text in the buffer,
+    (let ((window-configuration (current-window-configuration))
+          (bufname (buffer-name))
+          coding-system)
+      (save-excursion
+        ;; If some defaults are unsafe, make sure the offending
+        ;; buffer is displayed.
+        (when (and unsafe (not (stringp from)))
+          (pop-to-buffer bufname)
+          (goto-char (apply #'min (mapcar (lambda (x) (or (car (cadr x)) (point-max)))
+                                          unsafe))))
+        ;; Then ask users to select one from CODINGS while showing
+        ;; the reason why none of the defaults are not used.
+        (with-output-to-temp-buffer "*Warning*"
+          (with-current-buffer standard-output
+            (if (and (null rejected) (null unsafe))
+                (insert "No default coding systems to try for "
+                        (if (stringp from)
+                            (format "string \"%s\"." from)
+                          (format-message "buffer `%s'." bufname)))
+              (insert
+               "These default coding systems were tried to encode"
+               (if (stringp from)
+                   (concat " \"" (if (> (length from) 10)
+                                     (concat (substring from 0 10) "...\"")
+                                   (concat from "\"")))
+                 (format-message
+                  " the following\nproblematic characters in the buffer `%s'"
+                  bufname))
+               ":\n")
+              (select-safe-coding-system--format-list unsafe)
+              (when rejected
+                (insert "These safely encode the text in the buffer,
 but are not recommended for encoding text in this context,
 e.g., for sending an email message.\n ")
-              (dolist (x rejected)
-                (princ " ") (princ x))
-              (insert "\n"))
-	    (when unsafe
-	      (insert (if rejected "The other coding systems"
-			"However, each of them")
-		      (substitute-command-keys
-		       " encountered characters it couldn't encode:\n"))
-	      (dolist (coding unsafe)
-		(insert (format "  %s cannot encode these:" (car coding)))
-		(let ((i 0)
-		      (func1
-                       (lambda (bufname pos)
-                         (when (buffer-live-p (get-buffer bufname))
-                           (pop-to-buffer bufname)
-                           (goto-char pos))))
-		      (func2
-                       (lambda (bufname pos coding)
-                         (when (buffer-live-p (get-buffer bufname))
-                           (pop-to-buffer bufname)
-                           (if (< (point) pos)
-                               (goto-char pos)
-                             (forward-char 1)
-                             (search-unencodable-char coding)
-                             (forward-char -1))))))
-		  (dolist (elt (cdr coding))
-		    (insert " ")
-		    (if (stringp from)
-			(insert (if (< i 10) (cdr elt) "..."))
-		      (if (< i 10)
-			  (insert-text-button
-			   (cdr elt)
-			   :type 'help-xref
-			   'face 'link
-			   'help-echo
-			   "mouse-2, RET: jump to this character"
-			   'help-function func1
-			   'help-args (list bufname (car elt)))
-			(insert-text-button
-			 "..."
-			 :type 'help-xref
-			 'face 'link
-			 'help-echo
-			 "mouse-2, RET: next unencodable character"
-			 'help-function func2
-			 'help-args (list bufname (car elt)
-					  (car coding)))))
-		    (setq i (1+ i))))
-		(insert "\n"))
-	      (insert (substitute-command-keys "\
+                (dolist (x rejected)
+                  (princ " ") (princ x))
+                (insert "\n"))
+              (when unsafe
+                (insert (if rejected "The other coding systems"
+                          "However, each of them")
+                        (substitute-command-keys
+                         " encountered characters it couldn't encode:\n"))
+                (dolist (coding unsafe)
+                  (insert (format "  %s cannot encode these:" (car coding)))
+                  (let ((i 0)
+                        (func1
+                         (lambda (bufname pos)
+                           (when (buffer-live-p (get-buffer bufname))
+                             (pop-to-buffer bufname)
+                             (goto-char pos))))
+                        (func2
+                         (lambda (bufname pos coding)
+                           (when (buffer-live-p (get-buffer bufname))
+                             (pop-to-buffer bufname)
+                             (if (< (point) pos)
+                                 (goto-char pos)
+                               (forward-char 1)
+                               (search-unencodable-char coding)
+                               (forward-char -1))))))
+                    (dolist (elt (cdr coding))
+                      (insert " ")
+                      (if (stringp from)
+                          (insert (if (< i 10) (cdr elt) "..."))
+                        (if (< i 10)
+                            (insert-text-button
+                             (cdr elt)
+                             :type 'help-xref
+                             'face 'link
+                             'help-echo
+                             "mouse-2, RET: jump to this character"
+                             'help-function func1
+                             'help-args (list bufname (car elt)))
+                          (insert-text-button
+                           "..."
+                           :type 'help-xref
+                           'face 'link
+                           'help-echo
+                           "mouse-2, RET: next unencodable character"
+                           'help-function func2
+                           'help-args (list bufname (car elt)
+                                            (car coding)))))
+                      (setq i (1+ i))))
+                  (insert "\n"))
+                (insert (substitute-command-keys "\
 
 Click on a character (or switch to this window by `\\[other-window]'\n\
 and select the characters by RET) to jump to the place it appears,\n\
 where `\\[universal-argument] \\[what-cursor-position]' will give information about it.\n"))))
-	  (insert (substitute-command-keys "\nSelect \
+            (insert (substitute-command-keys "\nSelect \
 one of the safe coding systems listed below,\n\
 or cancel the writing with \\[keyboard-quit] and edit the buffer\n\
    to remove or modify the problematic characters,\n\
 or specify any other coding system (and risk losing\n\
    the problematic characters).\n\n"))
-	  (let ((pos (point))
-		(fill-prefix "  "))
-	    (dolist (x codings)
-	      (princ "  ") (princ x))
-	    (insert "\n")
-	    (fill-region-as-paragraph pos (point)))))
+            (let ((pos (point))
+                  (fill-prefix "  "))
+              (dolist (x codings)
+                (princ "  ") (princ x))
+              (insert "\n")
+              (fill-region-as-paragraph pos (point)))))
 
-      ;; Read a coding system.
-      (setq coding-system 'utf-8)
-      (setq last-coding-system-specified coding-system))
+        ;; Read a coding system.
+        (setq coding-system 'utf-8)
+        (setq last-coding-system-specified coding-system))
 
-    (kill-buffer "*Warning*")
-    (set-window-configuration window-configuration)
-    coding-system))
-    
+      (kill-buffer "*Warning*")
+      (set-window-configuration window-configuration)
+      coding-system))
+
   ;; Ugly hack to fix encoding issues.
   ;; TODO: Fix this properly.
   (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)

@@ -14354,30 +14354,37 @@ entry's key."
       (ebib-set-field-value "file" file key ebib--cur-db ";")))
 
   (defun ps/ebib-attach-most-recent-file ()
-    "docstring"
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (let ((key (ebib--get-key-at-point)))
-         (unless (ps/ebib-valid-key-p key)
-           (if (y-or-n-p "Entry has an invalid key. Press `y' to regenerate key, or `n' to abort.")
-               (ebib-generate-autokey)
-             (keyboard-quit)))
-         (let* ((field "file")
-                (newest-file (ps/newest-file ps/dir-downloads))
-                (extension (file-name-extension newest-file))
-                (file-name (file-name-concat
-                            ps/dir-library
-                            (file-name-with-extension key extension))))
-           (rename-file newest-file
-                        file-name)
-           (ebib-set-field-value field file-name key ebib--cur-db ";")
-           (ebib--store-multiline-text (current-buffer))
-           (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field)
-           (ebib-save-current-database nil))))
-      (default
-        (beep))))
+  "docstring"
+  (interactive)
+  (ebib--execute-when
+    (entries
+     (let ((key (ebib--get-key-at-point)))
+       (unless (ps/ebib-valid-key-p key)
+	 (if (y-or-n-p "Entry has an invalid key. Press `y' to regenerate key, or `n' to abort.")
+	     (ebib-generate-autokey)
+	   (keyboard-quit)))
+       (let* ((field "file")
+	      (newest-file (ps/newest-file ps/dir-downloads))
+	      (extension (file-name-extension newest-file))
+	      (desination-folder
+	       (cond ((string= extension "pdf")
+		      ps/dir-library-pdf)
+		     ((string= extension "html")
+		      ps/dir-library-html)
+		     (t
+		      (user-error "Invalid file extension"))))
+	      (file-name (file-name-concat
+			  destination-folder
+			  (file-name-with-extension key extension))))
+	 (rename-file newest-file
+		      file-name)
+	 (ebib-set-field-value field file-name key ebib--cur-db ";")
+	 (ebib--store-multiline-text (current-buffer))
+	 (ebib--redisplay-field field)
+	 (ebib--redisplay-index-item field)
+	 (ebib-save-current-database nil))))
+    (default
+      (beep))))
 
   (defun ps/ebib-search-internet-archive (&optional field search-query)
     "Run a search on the Internet Archive."

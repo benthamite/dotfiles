@@ -13654,10 +13654,16 @@ With prefix, rebuild the cache before offering candidates."
                        ps/amazon-suffix))
         (message "No link found for %s" (car key-entry)))))
 
+  (defun ps/citar-open-in-ebib (citekey)
+    "Open bibliographic entry associated with the CITEKEY in Ebib."
+    (interactive (list (citar-select-ref)))
+    (ps/ebib-open-key citekey))
+
   :general
   (citar-map
    "a" 'ps/citar-search-amazon
    "c" 'embark-copy-as-kill
+   "i" 'ps/citar-open-in-ebib
    "l" 'ps/citar-search-library-genesis
    "s" 'ps/citar-search-google-scholar
    "v" 'ps/citar-search-internet-archive
@@ -13860,6 +13866,15 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
                         (match-string 1 str))
                    (user-error "Year or date field `%s' invalid" str))))
     (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
+
+  (defun ps/bibtex-get-key ()
+  "Return the key of the current BibTeX entry."
+  (save-excursion
+    (bibtex-narrow-to-entry)
+    (goto-char (point-min))
+    (if (re-search-forward "@\\w+{\\([^,]+\\),")
+        (match-string-no-properties 1)
+      (user-error "Not on a BibTeX entry"))))
 
   (advice-add 'bibtex-autokey-get-year :override #'ps/bibtex-autokey-get-year)
 
@@ -14353,6 +14368,39 @@ entry's key."
       (url-copy-file (scihub (current-kill 0)) file)
       (ebib-set-field-value "file" file key ebib--cur-db ";")))
 
+  (defun ps/ebib-attach-file ()
+    "docstring"
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (let ((key (ebib--get-key-at-point)))
+         (unless (ps/ebib-valid-key-p key)
+           (if (y-or-n-p "Entry has an invalid key. Press `y' to regenerate key, or `n' to abort.")
+               (ebib-generate-autokey)
+             (keyboard-quit)))
+         (let* ((field "file")
+                (file (read-file-name "The file is " ps/dir-downloads))
+                (extension (file-name-extension file))
+                (destination-folder
+                 (cond ((string= extension "pdf")
+                        ps/dir-library-pdf)
+                       ((string= extension "html")
+                        ps/dir-library-html)
+                       (t
+                        (user-error "Invalid file extension"))))
+                (file-name (file-name-concat
+                            destination-folder
+                            (file-name-with-extension key extension))))
+           (rename-file file
+                        file-name)
+           (ebib-set-field-value field file-name key ebib--cur-db ";")
+           (ebib--store-multiline-text (current-buffer))
+           (ebib--redisplay-field field)
+           (ebib--redisplay-index-item field)
+           (ebib-save-current-database nil))))
+      (default
+        (beep))))
+
   (defun ps/ebib-attach-most-recent-file ()
     "docstring"
     (interactive)
@@ -14593,6 +14641,14 @@ If not invoked from `ebib', prompt for search query."
       (ebib-save-current-database t))
     (run-with-timer 10 nil #'ps/ebib-auto-save-db))
 
+  (defun ps/ebib-open-key (key)
+    "Open the entry for KEY in Ebib."
+    (ebib--execute-when
+      (entries
+       (ebib nil key))
+      (default
+        (ebib--error "No database is loaded"))))
+
   ;; mysteriously, setting REPEAT to `t' does not restart the timer.
   ;; So instead the function the timer calls itself starts a new
   ;; timer.
@@ -14610,8 +14666,6 @@ If not invoked from `ebib', prompt for search query."
 
   :general
   ("A-i" 'ebib)
-  ((ebib-multiline-mode-map ebib-entry-mode-map)
-   "H-/" 'hydra-ebib/body)
   (ebib-multiline-mode-map
    "s-c" 'ebib-quit-multiline-buffer-and-save)
   (ebib-entry-mode-map
@@ -14795,9 +14849,13 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
     (save-buffer)
-    (unless ebib--initialized
-      (ebib))
-    (ps/ebib-reload-current-database t))
+    (let ((citekey (ps/bibtex-get-key)))
+      (unless ebib--initialized
+        (ebib))
+      ;; Switch to `new.bib' database
+      (ebib-switch-to-database-key 2)
+      (ps/ebib-reload-current-database t)
+      (ps/ebib-open-key citekey)))
 
   (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
     (let ((bibfile

@@ -13748,7 +13748,7 @@ Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
   :custom
   (org-ref-insert-cite-function 'org-cite-insert)
   (org-ref-bibtex-pdf-download-dir ps/dir-downloads)
-  (bibtex-completion-library-path ps/dir-library)
+  (bibtex-completion-library-path ps/dir-library-pdf)
 
   :config
   (defvar ps/isbn-p "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")

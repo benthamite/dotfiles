@@ -13670,6 +13670,8 @@ With prefix, rebuild the cache before offering candidates."
    "w" 'ps/citar-search-worldcat))
 #+end_src
 
+
+
 *** Resources
 :PROPERTIES:
 :ID:       EAB0E32B-129C-4980-A06B-94B4C25966E2
@@ -13706,7 +13708,8 @@ Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
 (use-package citar-org-roam
   :straight (citar-org-roam
              :host github
-		   :repo "emacs-citar/citar-org-roam")
+             :repo "emacs-citar/citar-org-roam")
+  :demand t
   :after org-roam
   :config
   (citar-org-roam-mode))

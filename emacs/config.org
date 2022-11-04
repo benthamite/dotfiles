@@ -13704,7 +13704,9 @@ Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
 
 #+begin_src emacs-lisp :results silent
 (use-package citar-org-roam
-  :demand t
+  :straight (citar-org-roam
+             :host github
+		   :repo "emacs-citar/citar-org-roam")
   :after org-roam
   :config
   (citar-org-roam-mode))

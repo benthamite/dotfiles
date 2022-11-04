@@ -14824,7 +14824,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :straight (zotra
              :host github
              :repo "mpedramfar/zotra")
-  :defer 10
+  :defer 2
   :init
   (defun ps/zotra-run-translator-server ()
     "Start translator server in the background."

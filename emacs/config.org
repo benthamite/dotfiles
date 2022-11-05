@@ -6973,7 +6973,7 @@ Seems fixed now.
 
 #+begin_src emacs-lisp :results silent
 (use-package ghub
-  :demand t)
+  :defer 5)
 #+end_src
 
 ** forge
@@ -13581,10 +13581,10 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 :END:
 /[[https://github.com/bdarcus/bibtex-actions][citar]] is a package to quickly find and act on bibliographic references, and edit org, markdown, and latex academic documents./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package citar
   :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
-  :demand t
+  :defer 2
   :after oc vertico embark marginalia citar-org-roam
   :custom
   (citar-open-note-functions '(orb-citar-edit-note))
@@ -16034,7 +16034,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 #+begin_src emacs-lisp :results silent
 (use-package org-msg
   :after (org mu4e)
-  :demand t
+  :defer 3
   :custom
   (org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t")
   (org-msg-startup "hidestars indent inlineimages")

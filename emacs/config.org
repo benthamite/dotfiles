@@ -12861,16 +12861,6 @@ return such list if its length is less than LIMIT."
 CLOCK: [2022-07-15 Fri 17:03]--[2022-07-15 Fri 17:33] =>  0:30
 :END:
 
-*** TODO [#4] Implement relevant parts of this workflow
-:PROPERTIES:
-:ID:       7004CF1B-E3A4-47AF-AC5E-160ABF2F7F78
-:Effort:   0:30
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-21 Tue 20:57]--[2022-06-21 Tue 21:48] =>  0:51
-:END:
-[cite:@pragmat1c12022OrgroamAbsolutelyFantastic]
-
 *** TODO [#4] Diagnose issue with idle timer
 :PROPERTIES:
 :Effort:   1:00
@@ -13061,6 +13051,18 @@ CLOSED: [2022-09-06 Tue 13:53]
 :ID:       6A75013E-9342-42FB-86A9-3227C1C091B0
 :ARCHIVE_TIME: 2022-09-06 Tue 13:53
 :END:
+
+**** DONE [#4] Implement relevant parts of this workflow
+CLOSED: [2022-11-04 Fri 19:07]
+:PROPERTIES:
+:ID:       7004CF1B-E3A4-47AF-AC5E-160ABF2F7F78
+:Effort:   0:30
+:ARCHIVE_TIME: 2022-11-04 Fri 19:07
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-21 Tue 20:57]--[2022-06-21 Tue 21:48] =>  0:51
+:END:
+[cite:@pragmat1c12022OrgroamAbsolutelyFantastic]
 
 ** org-roam-ui
 :PROPERTIES:
@@ -13585,7 +13587,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 (use-package citar
   :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
   :defer 2
-  :after oc vertico embark marginalia citar-org-roam
+  ;; :after oc vertico embark marginalia citar-org-roam
   :custom
   (citar-open-note-functions '(orb-citar-edit-note))
   (citar-bibliography org-cite-global-bibliography)
@@ -13692,8 +13694,6 @@ With prefix, rebuild the cache before offering candidates."
 :ID:       EAB0E32B-129C-4980-A06B-94B4C25966E2
 :END:
 [cite:@Balintona2022CitationsOrgmodeOrgcite]
-[cite:@Ord2020PrecipiceExistentialRisk]
-Ord, T. (2020) /[[https://en.wikipedia.org/wiki/Special:BookSources/1-5266-0021-8][The Precipice: Existential Risk and the Future of Humanity]]/, London: Bloomsbury Publishing.
 
 *** Archive                                                       :ARCHIVE:
 :PROPERTIES:

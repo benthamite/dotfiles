@@ -13549,6 +13549,23 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
   :demand t)
 #+end_src
 
+** citar-org-roam
+:PROPERTIES:
+:ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
+:END:
+/[[https://github.com/emacs-citar/citar-org-roam][citar-org-roam]] provides integration between [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]] and [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package citar-org-roam
+  :straight (citar-org-roam
+             :host github
+             :repo "emacs-citar/citar-org-roam")
+  :demand t
+  :after org-roam
+  :config
+  (citar-org-roam-mode))
+#+end_src
+
 ** citar
 :PROPERTIES:
 :ID:       67AB4C5F-2425-4D31-9590-9D13790B4C97
@@ -13670,14 +13687,13 @@ With prefix, rebuild the cache before offering candidates."
    "w" 'ps/citar-search-worldcat))
 #+end_src
 
-
-
 *** Resources
 :PROPERTIES:
 :ID:       EAB0E32B-129C-4980-A06B-94B4C25966E2
 :END:
 [cite:@Balintona2022CitationsOrgmodeOrgcite]
 [cite:@Ord2020PrecipiceExistentialRisk]
+Ord, T. (2020) /[[https://en.wikipedia.org/wiki/Special:BookSources/1-5266-0021-8][The Precipice: Existential Risk and the Future of Humanity]]/, London: Bloomsbury Publishing.
 
 *** Archive                                                       :ARCHIVE:
 :PROPERTIES:
@@ -13697,23 +13713,6 @@ CLOCK: [2022-06-22 Wed 15:42]--[2022-06-22 Wed 15:57] =>  0:15
 :END:
 My config predated the name change (it used to be called ~bibtex-actions~).
 Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
-
-** citar-org-roam
-:PROPERTIES:
-:ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
-:END:
-/[[https://github.com/emacs-citar/citar-org-roam][citar-org-roam]] provides integration between [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]] and [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package citar-org-roam
-  :straight (citar-org-roam
-             :host github
-             :repo "emacs-citar/citar-org-roam")
-  :demand t
-  :after org-roam
-  :config
-  (citar-org-roam-mode))
-#+end_src
 
 ** citar-citeproc
 :PROPERTIES:

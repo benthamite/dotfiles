@@ -829,7 +829,6 @@ CLOCK: [2021-07-25 Sun 16:11]--[2021-07-25 Sun 17:02] =>  0:51
 :PROPERTIES:
 :ID:       533B81E8-E738-4374-88D0-4EE942561659
 :END:
-
 **** tab
 :PROPERTIES:
 :ID:       06A8716B-F75B-4B6C-80BC-C331FDC401FB
@@ -859,7 +858,6 @@ CLOCK: [2021-07-25 Sun 16:11]--[2021-07-25 Sun 17:02] =>  0:51
          [:##left_option :left_shift :!moonlander {:alone :!CT0}]
          ]}
 #+end_src
-
 
 **** left_command
 :PROPERTIES:
@@ -1439,7 +1437,9 @@ CLOCK: [2021-03-01 Mon 11:46]--[2021-03-01 Mon 12:05] =>  0:19
          [:##h :page_down]
          [:t :!WTQt :emacs]
          [:g :!WTQg :emacs]
+         [:right_command :!WTQtab :emacs]
          [:tab :!WTQtab :emacs]
+         [:##right_command :home]
          [:##tab :home]
          [:spacebar :!WTQspacebar :emacs]
          [:##spacebar :end]

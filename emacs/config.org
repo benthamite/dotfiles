@@ -13912,39 +13912,13 @@ Required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-bibtex]].
 #+begin_src emacs-lisp :results silent
 (use-package bibtex-completion
   :defer 10
-  :after citar
+  ;; :after citar
   :custom
   (bibtex-completion-pdf-open-function 'find-file)
   (bibtex-completion-bibliography citar-bibliography)
   (bibtex-completion-notes-path ps/dir-bibliographic-notes)
   (bibtex-completion-pdf-field "file")
-  (bibtex-dialect 'biblatex)
-
-  :config
-  (defun ps/bibtex-completion-replace-heading-with-bibliographic-info ()
-    "Replace the contents of the current org heading with the
-bibliographic details of the `org-ref' entry at point. For use
-with `org-capture'."
-    (interactive)
-    (org-narrow-to-subtree)
-    (let ((key (car (org-ref-get-bibtex-keys)))
-          (template "${author-or-editor} — ${title}")
-          ;; (org-catch-invisible-edits nil)
-          (org-ctrl-k-protect-subtree nil)
-          (truncate-lines t))
-      (let ((visible-mode 1))
-        (org-end-of-line)
-        (org-beginning-of-line)
-        (ps/org-kill-logical-line)
-        (insert (bibtex-completion-fill-template (bibtex-completion-get-entry key)
-                                                 template)))
-      (ps/org-narrow-to-entry-and-children)
-      (crux-smart-open-line nil)
-      (insert (concat "cite:" key))
-      (ps/org-ref-pdf-effort-estimate)
-      (ps/org-jump-to-beginning-of-heading)
-      (ps/org-widen-and-reveal)))
-  )
+  (bibtex-dialect 'biblatex))
 #+end_src
 
 *** Archive                                                       :ARCHIVE:

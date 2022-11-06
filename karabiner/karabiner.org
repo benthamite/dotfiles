@@ -2113,5 +2113,3 @@ Experimental; currently not tangled.
                                   :afterup {:set ["launch_mode" 0]}}} {:set ["launch_mode" 1]}]
                          [:condi :launch_mode :!open_mode]
 #+end_src
-
-qt

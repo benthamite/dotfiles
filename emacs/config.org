@@ -14660,8 +14660,7 @@ first name, and names are separated by a semicolon."
             (string-join authors-fixed "; ")
             (ebib--get-key-at-point)
             ebib--cur-db
-            'overwrite
-            nil)
+            'overwrite)
            (ebib--store-multiline-text (current-buffer))
            (ebib--redisplay-field field)
            (ebib--redisplay-index-item field)

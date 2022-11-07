@@ -5896,7 +5896,7 @@ and start clock."
    "F" 'ace-link-eww)
   (eww-mode-map
    "f" 'ace-link-eww
-   "F" ''ps/ace-link-eww-externally
+   "F" 'ps/ace-link-eww-externally
    "s" 'ps/ace-link-eww-new-buffer)
   ((help-mode-map helpful-mode-map elisp-refs-mode-map)
    "f" 'ace-link-help)
@@ -13588,11 +13588,11 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 :END:
 /[[https://github.com/bdarcus/bibtex-actions][citar]] is a package to quickly find and act on bibliographic references, and edit org, markdown, and latex academic documents./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package citar
   :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
-  :defer 2
-  ;; :after oc vertico embark marginalia citar-org-roam
+  :demand t
+  :after oc vertico embark marginalia citar-org-roam
   :custom
   (citar-open-note-functions '(orb-citar-edit-note))
   (citar-bibliography org-cite-global-bibliography)
@@ -16931,6 +16931,10 @@ page for websites defined in `ps/eww-readable-websites'."
    "x" 'eww-browse-with-external-browser))
 #+end_src
 
+*** TODO Create command to background open in ~eww~
+:PROPERTIES:
+:ID:       52CAC919-6942-466F-AA47-4FF86F7F13AE
+:END:
 *** TODO [#6] Create command to create PDF of URL
 :PROPERTIES:
 :ID:       19C5F99D-E00D-4552-8B6C-81150C61DF2F

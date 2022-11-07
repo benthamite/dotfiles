@@ -4787,7 +4787,7 @@ option."
   (pdf-annot-minor-mode-map
    "x" 'dired-jump))
 #+end_src
-q
+
 *** Archive                                                                                                           :ARCHIVE:
 :PROPERTIES:
 :ID:       5EF4CDEF-2F19-4D27-8EDD-4C826AE80C64
@@ -4840,6 +4840,31 @@ CLOSED: [2022-07-14 Thu 16:26]
 :ARCHIVE_TIME: 2022-07-14 Thu 16:26
 :END:
 [2022-07-14 Thu 16:26] Seems to have resolved itself.
+
+** image-dired
+:PROPERTIES:
+:ID:       E07C1115-1881-4D5F-8B88-613DA4FD38A8
+:END:
+#+begin_src emacs-lisp :results silent
+(use-feature image-dired
+  :custom
+  (image-dired-main-image-directory "~/Pictures/")
+
+  :config
+  (defun ps/image-dired-current-directory ()
+    "Run `image-dired' in the current directory."
+    (interactive)
+    (image-dired (dired-current-directory))
+    (image-dired-display-thumbnail-original-image))
+
+  :general
+  (image-dired-thumbnail-mode-map
+   "k" 'image-dired-display-previous-thumbnail-original
+   "l" 'image-dired-display-next-thumbnail-original)
+  (dired-mode-map
+   "I" 'ps/image-dired-current-directory))
+#+end_src
+
 ** all-the-icons-dired
 :PROPERTIES:
 :ID:       53778128-E0F3-4199-9D7D-2118904F39A9

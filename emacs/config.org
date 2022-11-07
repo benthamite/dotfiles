@@ -2697,7 +2697,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)
    "<up>" 'previous-line
-   "<down>" 'next-line))
+   "<down>" 'next-line))k
 #+end_src
 
 ** sentences
@@ -7693,6 +7693,11 @@ Useful for prompts such as `eval-expression' and `shell-command'."
       (corfu-mode)))
 
   (global-corfu-mode)
+
+  :general
+  (corfu-map
+  "<return>" 'corfu-complete
+  "RET" 'corfu-complete)
 
   :hook
   (minibuffer-setup-hook . ps/corfu-enable-always-in-minibuffer))
@@ -14400,7 +14405,8 @@ entry's key."
                        (t
                         (user-error "Invalid file extension"))))
                 (file-name (file-name-concat
-                            destination-folder
+                            ;; We abbreviate the filename so that it works when invoked by different users
+                            (abbreviate-file-name destination-folder)
                             (file-name-with-extension key extension))))
            (rename-file newest-file
                         file-name)
@@ -14627,6 +14633,42 @@ If not invoked from `ebib', prompt for search query."
       (default
         (ebib--error "No database is loaded"))))
 
+  (defun ps/ebib-fix-authors ()
+    "Rearrange the name of each author so that last name comes before
+first name, and names are separated by a semicolon."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (let ((field "author")
+             (authors-fixed))
+         (when-let ((authors
+                     (replace-regexp-in-string
+                      "\n "
+                      ""
+                      (substring-no-properties
+                       (ebib-get-field-value
+                        field
+                        (ebib--get-key-at-point)
+                        ebib--cur-db
+                        'noerror
+                        'unbraced
+                        'xref)))))
+           (dolist (author (split-string authors ", "))
+             (push (replace-regexp-in-string "\\(.*\\) \\(.*\\)" "\\2, \\1" author) authors-fixed))
+           (ebib-set-field-value
+            field
+            (string-join authors-fixed "; ")
+            (ebib--get-key-at-point)
+            ebib--cur-db
+            'overwrite
+            nil)
+           (ebib--store-multiline-text (current-buffer))
+           (ebib--redisplay-field field)
+           (ebib--redisplay-index-item field)
+           (ebib-save-current-database nil))))
+      (default
+        (beep))))
+
   ;; mysteriously, setting REPEAT to `t' does not restart the timer.
   ;; So instead the function the timer calls itself starts a new
   ;; timer.
@@ -14652,9 +14694,9 @@ If not invoked from `ebib', prompt for search query."
    "c" 'ebib-copy-current-field-contents
    "d" 'ebib-browse-doi
    "D" 'ebib-delete-current-field-contents
+   "g" 'ps/ebib-search-library-genesis
    "h" 'ps/ebib-open-html-file
    "i" 'ps/ebib-search-book-by-isbn
-   "l" 'ps/ebib-search-library-genesis
    "n" 'ps/ebib-open-org-file
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file

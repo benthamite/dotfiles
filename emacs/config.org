@@ -15107,9 +15107,15 @@ or specify any other coding system (and risk losing\n\
   (zotra-after-add-entry-hook . ps/zotra-after-add-entry-function))
 #+end_src
 
-*** TODO configure zotra
+*** [#6] Archive                                                  :ARCHIVE:
+:PROPERTIES:
+:ID:       6BFE5851-35CD-481C-9E3C-7F4D81336A29
+:END:
+**** DONE configure zotra
+CLOSED: [2022-11-07 Mon 14:13]
 :PROPERTIES:
 :ID:       975FD5E1-AD70-4770-8857-090F30DC9341
+:ARCHIVE_TIME: 2022-11-07 Mon 14:13
 :END:
 :LOGBOOK:
 CLOCK: [2022-10-10 Mon 20:09]--[2022-10-10 Mon 20:17] =>  0:08
@@ -17787,10 +17793,12 @@ that duration."
      #'ps/mullvad-disconnect)))
 #+end_src
 
-*** TODO Set up split tunneling for Firefox
+*** CANCELLED Set up split tunneling for Firefox
+CLOSED: [2022-11-07 Mon 14:13]
 :PROPERTIES:
 :ID:       70B128D0-2B14-4302-87D6-7E39A5B6EC32
 :END:
+Too complicated.
 * multimedia
 :PROPERTIES:
 :ID:       358E28B5-0274-43A0-AE9C-AA004B4775E5

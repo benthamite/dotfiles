@@ -2697,7 +2697,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)
    "<up>" 'previous-line
-   "<down>" 'next-line))k
+   "<down>" 'next-line))
 #+end_src
 
 ** sentences
@@ -12374,6 +12374,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   (org2blog/wp-track-posts (list ps/file-org2blog "Posts"))
 
   :config
+  ;; (load-file "/Users/pablostafforini/.emacs.d/straight/repos/org2blog/org2blog.el")
   (defun ps/org2blog-move-tags-to-drawer ()
     "Convert org-mode tags to values of the property `POST_TAGS' in
 an org drawer."
@@ -13591,7 +13592,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 #+begin_src emacs-lisp :results silent
 (use-package citar
   :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
-  :demand t
+  :defer 3
   :after oc vertico embark marginalia citar-org-roam
   :custom
   (citar-open-note-functions '(orb-citar-edit-note))
@@ -13916,8 +13917,8 @@ Required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-bibtex]].
 
 #+begin_src emacs-lisp :results silent
 (use-package bibtex-completion
-  :defer 10
-  ;; :after citar
+  :after citar
+  :demand t
   :custom
   (bibtex-completion-pdf-open-function 'find-file)
   (bibtex-completion-bibliography citar-bibliography)

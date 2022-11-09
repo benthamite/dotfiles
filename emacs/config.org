@@ -14750,13 +14750,13 @@ first name, and names are separated by a semicolon."
 
   (file-notify-add-watch
    ps/file-bibliography-new
-   '(change)
+   '(change attribute-change)
    (lambda (event)
      (ps/ebib-reload-current-database-no-confirm)))
 
   (file-notify-add-watch
    ps/file-bibliography-old
-   '(change)
+   '(change attribute-change)
    (lambda (event)
      (run-with-idle-timer 30 nil #'ps/ebib-reload-current-database-no-confirm)))
 

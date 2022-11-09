@@ -14247,21 +14247,21 @@ window and make the frame active,"
           (t
            (user-error "Identifier does not appear to be an ISBN or DOI."))))
 
-(defun ps/ebib-reload-current-database-no-confirm ()
+  (defun ps/ebib-reload-current-database-no-confirm ()
     "Reload the current database from disk, without asking for
 confirmation."
     (interactive)
     (ebib--execute-when
       (entries
-         (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-         (ebib--reload-database ebib--cur-db)
-         (ebib--set-modified nil ebib--cur-db)
-         (ebib--update-buffers)
-         (message "Database reloaded"))
+       (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+       (ebib--reload-database ebib--cur-db)
+       (ebib--set-modified nil ebib--cur-db)
+       (ebib--update-buffers)
+       (message "Database reloaded"))
       (default
         (beep))))
-        
-    (defun ps/ebib-get-file (extension)
+
+  (defun ps/ebib-get-file (extension)
     "docstring"
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
       (catch 'tag
@@ -14718,6 +14718,25 @@ first name, and names are separated by a semicolon."
       (default
         (beep))))
 
+  (defvar ps/ebib-sort-toggle nil)
+  (defun ps/ebib-sort-toggle ()
+    "Toggle between sorting by date and sorting by title."
+    (interactive)
+    (if ps/ebib-sort-toggle
+	(setq ps/ebib-sort-toggle nil)
+	(setq ps/ebib-sort-toggle t))
+    (let ((field (if ps/ebib-sort-toggle
+		     "Title"
+		   "date"))
+	  (order (if ps/ebib-sort-toggle
+		     'ascend
+		   'descend)))
+    (ebib--execute-when
+      (entries
+       (ebib--index-sort field order))
+      (default
+        (beep)))))
+
   ;; mysteriously, setting REPEAT to `t' does not restart the timer.
   ;; So instead the function the timer calls itself starts a new
   ;; timer.
@@ -14779,6 +14798,8 @@ first name, and names are separated by a semicolon."
    "f" 'ps/ebib-view-file
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry
+   "s" 'ps/ebib-sort-toggle
+   "H-s" 'ebib-save-current-database
    "Q" 'ebib-quit))
 #+end_src
 

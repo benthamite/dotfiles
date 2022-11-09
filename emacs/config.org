@@ -4364,6 +4364,12 @@ selected instead of creating a new buffer."
     (interactive)
     (mapc 'kill-buffer (buffer-list)))
 
+    (defun ps/bury-buffer-switch-to-other-window ()
+    "Bury the current buffer and switch to the other window."
+    (interactive)
+    (bury-buffer)
+    (ps/switch-to-last-window))
+
   (defun ps/download-bypass-paywalls-chrome ()
     "Download and install `bypass-paywalls-chrome'."
     (interactive)
@@ -4559,8 +4565,10 @@ or are no longer readable will be killed."
    "H-C-g" 'abort-recursive-edit
    "H-C-S-g" 'top-level
    "H-C-A-g" 'keyboard-escape-quit) ; ESC ESC ESC
-  ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
+  ((ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "q" 'bury-buffer)
+   ((ebib-entry-mode-map)
+   "q" 'ps/bury-buffer-switch-to-other-window)
   ((apropos-mode-map calendar-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
    "q" 'ps/kill-this-buffer)
   ((dired-mode-map pdf-view-mode-map)
@@ -14402,15 +14410,13 @@ entry's key."
       (ebib-set-field-value "file" file key ebib--cur-db ";")))
 
   (defun ps/ebib-attach-file ()
-    "docstring"
+    "Attach the most recent file stored in `ps/dir-downloads'."
     (interactive)
     (ebib--execute-when
       (entries
        (let ((key (ebib--get-key-at-point)))
          (unless (ps/ebib-valid-key-p key)
-           (if (y-or-n-p "Entry has an invalid key. Press `y' to regenerate key, or `n' to abort.")
-               (ebib-generate-autokey)
-             (keyboard-quit)))
+           (user-error "Entry has an invalid key; press regenerate it."))
          (let* ((field "file")
                 (file (read-file-name "The file is " ps/dir-downloads))
                 (extension (file-name-extension file))
@@ -14723,19 +14729,19 @@ first name, and names are separated by a semicolon."
     "Toggle between sorting by date and sorting by title."
     (interactive)
     (if ps/ebib-sort-toggle
-	(setq ps/ebib-sort-toggle nil)
-	(setq ps/ebib-sort-toggle t))
+        (setq ps/ebib-sort-toggle nil)
+      (setq ps/ebib-sort-toggle t))
     (let ((field (if ps/ebib-sort-toggle
-		     "Title"
-		   "date"))
-	  (order (if ps/ebib-sort-toggle
-		     'ascend
-		   'descend)))
-    (ebib--execute-when
-      (entries
-       (ebib--index-sort field order))
-      (default
-        (beep)))))
+                     "Title"
+                   "date"))
+          (order (if ps/ebib-sort-toggle
+                     'ascend
+                   'descend)))
+      (ebib--execute-when
+        (entries
+         (ebib--index-sort field order))
+        (default
+          (beep)))))
 
   ;; mysteriously, setting REPEAT to `t' does not restart the timer.
   ;; So instead the function the timer calls itself starts a new
@@ -14775,7 +14781,6 @@ first name, and names are separated by a semicolon."
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
    "Q" 'ebib-quit
-   "q" 'ebib-quit-entry-buffer
    "r" 'ps/ebib-search-university-of-toronto
    "s" 'ps/ebib-search-google-scholar
    "t" 'ps/ebib-search-book-dwim
@@ -14794,7 +14799,7 @@ first name, and names are separated by a semicolon."
    "<return>" 'ebib-edit-entry
    "d" 'ebib-browse-doi
    "D" 'ebib-delete-entry
-   "i" 'isbn-to-bibtex
+   "i" 'ps/ebib-add-by-identifier
    "f" 'ps/ebib-view-file
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry

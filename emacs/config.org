@@ -14244,16 +14244,20 @@ window and make the frame active,"
             (t
              (user-error "Identifier does not appear to be an ISBN or DOI.")))))
 
-  (defun ps/ebib-download-by-identifier (id)
+  (defun ps/ebib-download-by-identifier (&optional id)
     "docstring"
-    (interactive "sEnter ISBN or DOI: ")
-    ;; TODO: Add support for arXiv
-    (cond ((ps/doi-utils-doi-p id)
-           (scihub id))
-          ((ps/isbn-p id)
-           (ps/ebib-search-book (s-replace "-" "" id)))
-          (t
-           (user-error "Identifier does not appear to be an ISBN or DOI."))))
+    (interactive)
+    (let ((id (or id
+                  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+                  (read-string "Enter ISBN or DOI: "))))
+      ;; TODO: Add support for arXiv
+      (cond ((ps/doi-utils-doi-p id)
+             (scihub id))
+            ((ps/isbn-p id)
+             (ps/ebib-search-book (s-replace "-" "" id)))
+            (t
+             (user-error "Identifier does not appear to be an ISBN or DOI.")))
+      (ps/ebib-attach-most-recent-file)))
 
   (defun ps/ebib-reload-current-database-no-confirm ()
     "Reload the current database from disk, without asking for
@@ -14394,7 +14398,7 @@ entry's key."
       (entries
        (let ((doi (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
          (unless doi
-           (error "[Ebib] No DOI found in doi field"))
+           (user-error "[Ebib] No DOI found in doi field"))
          ;; FIXME: `(return doi)' fails to return DOI; why?
          (kill-new doi)))))
 
@@ -14776,7 +14780,8 @@ first name, and names are separated by a semicolon."
    "D" 'ebib-delete-current-field-contents
    "g" 'ps/ebib-search-library-genesis
    "h" 'ps/ebib-open-html-file
-   "i" 'ps/ebib-search-book-by-isbn
+   "i" 'ps/ebib-download-by-identifier
+   "I" 'ps/ebib-search-book-by-isbn
    "n" 'ps/ebib-open-org-file
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file

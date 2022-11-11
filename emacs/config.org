@@ -14293,10 +14293,23 @@ exists."
         (find-file file-name)
       (user-error (format "No (unique) `%s' file found" extension))))
 
+  (defun ps/ebib-open-file-externally (extension)
+    "Open file with EXTENSION in entry at point, if it (uniquely)
+exists."
+    (interactive)
+    (if-let ((file-name (expand-file-name (ps/ebib-get-file extension))))
+        (shell-command (format "open '%s'" file-name))
+      (user-error (format "No (unique) `%s' file found" extension))))
+
   (defun ps/ebib-open-pdf-file ()
     "Open `pdf' file in entry at point, if it (uniquely) exists."
     (interactive)
     (ps/ebib-open-file "pdf"))
+
+  (defun ps/ebib-open-pdf-file-externally ()
+    "Open `pdf' file in entry at point, if it (uniquely) exists."
+    (interactive)
+    (ps/ebib-open-file-externally "pdf"))
 
   (defun ps/ebib-open-org-file ()
     "Open `org' file in entry at point, if it (uniquely) exists."
@@ -14786,6 +14799,7 @@ first name, and names are separated by a semicolon."
    "n" 'ps/ebib-open-org-file
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
+   "P" 'ps/ebib-open-pdf-file-externally
    "Q" 'ebib-quit
    "r" 'ps/ebib-search-university-of-toronto
    "s" 'ps/ebib-search-google-scholar

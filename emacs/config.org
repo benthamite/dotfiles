@@ -9482,7 +9482,8 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
 #+begin_src emacs-lisp :results silent
 (use-package pdf-tools
-  :if (equal (system-name) ps/computer-hostname-pablo)
+  :if (or (equal (system-name) ps/computer-hostname-pablo)
+          (equal (system-name) ps/computer-hostname-leo))
   :defer 10
   :mode ("\\.pdf\\'" . pdf-view-mode)
   :custom

@@ -14737,7 +14737,7 @@ first name, and names are separated by a semicolon."
       (setq ps/ebib-sort-toggle t))
     (let ((field (if ps/ebib-sort-toggle
                      "Title"
-                   "date"))
+                   "timestamp"))
           (order (if ps/ebib-sort-toggle
                      'ascend
                    'descend)))
@@ -14804,7 +14804,7 @@ first name, and names are separated by a semicolon."
    "<return>" 'ebib-edit-entry
    "d" 'ebib-browse-doi
    "D" 'ebib-delete-entry
-   "i" 'ps/ebib-add-by-identifier
+   ;; "i" 'ps/ebib-add-by-identifier ; using `zotra-add-entry-from-search'
    "f" 'ps/ebib-view-file
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry
@@ -15134,7 +15134,11 @@ or specify any other coding system (and risk losing\n\
   (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)
 
   :hook
-  (zotra-after-add-entry-hook . ps/zotra-after-add-entry-function))
+  (zotra-after-add-entry-hook . ps/zotra-after-add-entry-function)
+
+  :general
+  (ebib-index-mode-map
+  "i" 'zotra-add-entry-from-search))
 #+end_src
 
 *** [#6] Archive                                                  :ARCHIVE:

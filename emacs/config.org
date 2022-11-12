@@ -13446,8 +13446,8 @@ See [[https://github.com/emacs-citar/citar/wiki/Comparisons#summary-of-diverse-e
     ""))
 
 (defvar ps/ebib-search-book
-  '(ps/goodreads
-  ps/ebib-search-hathitrust
+  '(ps/ebib-search-goodreads
+    ps/ebib-search-hathitrust
     ps/ebib-search-internet-archive
     ps/ebib-search-university-of-toronto
     ps/ebib-search-library-genesis
@@ -14548,6 +14548,14 @@ entry's key."
      field
      search-query))
 
+  (defun ps/ebib-search-goodreads (&optional field search-query)
+    "Run a search on Goodreads."
+    (interactive)
+    (ps/ebib-search
+     ps/goodreads
+     field
+     search-query))
+
   (defun ps/ebib-search-worldcat (&optional field search-query)
     "Run a search on Worldcat."
     (interactive)
@@ -14680,7 +14688,7 @@ If not invoked from `ebib', prompt for search query."
     (interactive)
     (when-let ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point) ebib--cur-db)))
       (cond
-       ((member type '("book" "mvbook" "inbook" "incollection" "bookinbook" "suppbook"))
+       ((member type '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook"))
         (ps/ebib-search-book-by-title))
        ((member type '("article"))
         (ps/ebib-search-article-by-title))

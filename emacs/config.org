@@ -13654,7 +13654,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 :END:
 /[[https://github.com/bdarcus/bibtex-actions][citar]] is a package to quickly find and act on bibliographic references, and edit org, markdown, and latex academic documents./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package citar
   :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
   :defer 10

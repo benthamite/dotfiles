@@ -13453,6 +13453,12 @@ See [[https://github.com/emacs-citar/citar/wiki/Comparisons#summary-of-diverse-e
     ps/ebib-search-library-genesis
     ps/ebib-search-amazon))
 
+(defvar ps/ebib-download-isbn
+  '(ps/ebib-search-hathitrust
+    ps/ebib-search-internet-archive
+    ps/ebib-search-university-of-toronto
+    ps/ebib-search-library-genesis))
+
 (defvar ps/ebib-search-article
   '(ps/ebib-search-connected-papers
     ps/ebib-search-google-scholar))
@@ -13824,11 +13830,7 @@ Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
   (bibtex-completion-library-path ps/dir-library-pdf)
 
   :config
-  (defvar ps/isbn-p "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
 
-  (defun ps/isbn-p (string)
-    "Return `t' if string looks like an ISBN."
-    (string-match ps/isbn-p string))
 
     ;; Tweak function to remove redundant and conflicting `Year' field
   (defun isbn-to-bibtex (isbn bibfile)
@@ -14136,6 +14138,19 @@ window and make the frame active,"
 
   (advice-add 'ebib--setup-windows :override #'ps/ebib--setup-windows)
 
+  (defvar ps/ebib-isbn-p "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
+
+  (defun ps/ebib-isbn-p (string)
+    "Return `t' if string looks like an ISBN."
+    (string-match ps/isbn-p string))
+
+  (defun ps/ebib-get-isbn ()
+    "Return ISBN for the current entry."
+    (when-let ((isbn
+                (substring-no-properties
+                 (ebib-get-field-value "isbn" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))))
+      (s-replace "-" "" isbn)))
+
   (defun ps/ebib-jump-to (field)
     "Jump to FIELD of entry at point."
     (when (equal major-mode 'ebib-index-mode)
@@ -14240,7 +14255,7 @@ window and make the frame active,"
       ;; TODO: Add support for arXiv
       (cond ((ps/doi-utils-doi-p id)
              (doi-utils-add-bibtex-entry-from-doi id bibfile))
-            ((ps/isbn-p id)
+            ((ps/ebib-isbn-p id)
              (isbn-to-bibtex id bibfile))
             (t
              (user-error "Identifier does not appear to be an ISBN or DOI.")))))
@@ -14250,15 +14265,15 @@ window and make the frame active,"
     (interactive)
     (let ((id (or id
                   (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+                  (ps/ebib-get-isbn)
                   (read-string "Enter ISBN or DOI: "))))
       ;; TODO: Add support for arXiv
       (cond ((ps/doi-utils-doi-p id)
              (scihub id))
-            ((ps/isbn-p id)
-             (ps/ebib-search-book (s-replace "-" "" id)))
+            ((ps/ebib-isbn-p id)
+             (ps/ebib-download-isbn nil id))
             (t
-             (user-error "Identifier does not appear to be an ISBN or DOI.")))
-      (ps/ebib-attach-most-recent-file)))
+             (user-error "Identifier does not appear to be an ISBN or DOI.")))))
 
   (defun ps/ebib-reload-current-database-no-confirm ()
     "Reload the current database from disk, without asking for
@@ -14619,6 +14634,12 @@ If not invoked from `ebib', prompt for search query."
 `ps/ebib-search-book'."
     (interactive)
     (ps/ebib-search-multi field search-query ps/ebib-search-book))
+
+  (defun ps/ebib-download-isbn (&optional field search-query)
+    "The list of search engines is specified by the variable
+`ps/ebib-search-isbn'."
+    (interactive)
+    (ps/ebib-search-multi field search-query ps/ebib-download-isbn))
 
   (defun ps/ebib-search-article (&optional field search-query)
     "The list of search engines is specified by the variable
@@ -17079,7 +17100,7 @@ CLOCK: [2021-03-29 Mon 21:25]--[2021-03-29 Mon 21:41] =>  0:16
   (mm-text-html-renderer 'w3m)
   :general
   ((w3m-mode-map mu4e-view-mode-map)
-   "S-<return>" 'w3m-view-url-with-browse-url)) ; open externally
+   "s-<return>" 'w3m-view-url-with-browse-url)) ; open externally
 #+end_src
 
 ** osa-chrome

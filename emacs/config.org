@@ -9158,8 +9158,15 @@ To populate the database of historical prices:
   (ledger-schedule-look-backward 30)
 
   :config
-  (add-to-list 'ledger-reports '("net worth" "%(binary) -f %(ledger-file) bal --strict"))
-  (add-to-list 'ledger-reports '("net worth (USD)" "%(binary) -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict"))
+  (dolist (report
+           '(("net worth"
+              "%(binary) -f %(ledger-file) bal --strict")
+             ("net worth (USD)"
+              "%(binary) -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict")
+             ; I need to understand how the `--basis' flag works
+             ("cost basis"
+              "%(binary) -f %(ledger-file) --basis bal %(account) --strict")))
+    (add-to-list 'ledger-reports report))
 
   (defun ps/ledger-new-entry-below ()
     "Create new entry below one at point."
@@ -9296,16 +9303,16 @@ and clean it up."
       (goto-char (+ (match-beginning 0) point-delta))))
 
   (defun ps/ledger-sort-buffer-reversed ()
-  "Sort the entire buffer in reverse chronological order."
-  (interactive)
-  (let (sort-start
-        sort-end)
-    (save-excursion
-      (goto-char (point-min))
-      (setq sort-start (ledger-sort-find-start)
-            sort-end (ledger-sort-find-end)))
-    (ps/ledger-sort-region-reversed (or sort-start (point-min))
-                        (or sort-end (point-max)))))
+    "Sort the entire buffer in reverse chronological order."
+    (interactive)
+    (let (sort-start
+          sort-end)
+      (save-excursion
+        (goto-char (point-min))
+        (setq sort-start (ledger-sort-find-start)
+              sort-end (ledger-sort-find-end)))
+      (ps/ledger-sort-region-reversed (or sort-start (point-min))
+                                      (or sort-end (point-max)))))
 
   (defun ps/ledger-sort-region-or-buffer ()
     "Sort a region if selected, otherwise the whole buffer."

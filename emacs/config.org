@@ -16499,6 +16499,7 @@ into a task for Leo."
   :hook
   (telega-chat-mode-hook . (lambda () (setq default-directory (file-name-as-directory ps/dir-downloads))))
   (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
+  (telega-chat-mode-hook . telega-autoplay-mode)
 
   :general
   ("C-f" 'ps/telega-switch-to)

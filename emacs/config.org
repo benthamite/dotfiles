@@ -14104,7 +14104,8 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
                         ("Author/Editor" 25 t)
                         ("Year" 4 t)
                         ("Title" 50 t)))
-
+  (ebib-hidden-fields (remove "isbn" ebib-hidden-fields))
+  
   :config
   ;; Tweak original function to prevent unnecessary vertical window splits
   (defun ps/ebib--setup-windows ()
@@ -14814,6 +14815,22 @@ first name, and names are separated by a semicolon."
    (lambda (event)
      (run-with-idle-timer 30 nil #'ps/ebib-reload-current-database-no-confirm)))
 
+  (defun ps/ebib-merge-databases (source target)
+  "Move the contents of SOURCE to TARGET."
+  (find-file-noselect source)
+  (find-file-noselect target)
+  (with-current-buffer (file-name-nondirectory target)
+    (goto-char (point-max))
+    (insert-file-contents source))
+  (with-current-buffer (file-name-nondirectory source)
+    (erase-buffer)))
+
+  (defun ps/ebib-merge-old-new ()
+    "Merge the old and new bibliography files."
+    (interactive)
+    (ps/ebib-merge-databases ps/file-bibliography-old ps/file-bibliography-new)
+    (ps/ebib-reload-current-database-no-confirm))
+  
   :hook
   (ebib-index-mode-hook . doom-modeline-mode)
   (ebib-entry-mode-hook . visual-line-mode)

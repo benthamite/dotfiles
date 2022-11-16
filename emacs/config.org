@@ -14717,7 +14717,7 @@ If not invoked from `ebib', prompt for search query."
     (interactive)
     (when-let ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point) ebib--cur-db)))
       (cond
-       ((member type '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook"))
+       ((member type '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook" "Book" "Collection" "MVBook" "Inbook" "Incollection" "Bookinbook" "Suppbook"))
         (ps/ebib-search-book-by-title))
        ((member type '("article"))
         (ps/ebib-search-article-by-title))

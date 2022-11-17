@@ -4180,7 +4180,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (find-file-visit-truename t)
   (kill-buffer-query-functions nil "emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation")
   (create-lockfiles nil "lockfiles are indexed by `org-roam', which causes problems with `org-agenda'")
-  (large-file-warning-threshold (* 50 1000 1000))
+  (large-file-warning-threshold (* 200 1000 1000))
   (enable-local-variables :all)
   (insert-directory-program "/opt/homebrew/bin/gls" "make Emacs use coreutils to avoid 'listing directory failed' error")
 
@@ -14140,6 +14140,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
                         ("Year" 4 t)
                         ("Title" 50 t)))
   (ebib-hidden-fields (remove "isbn" ebib-hidden-fields))
+  (ebib-hidden-fields (remove "titleaddon" ebib-hidden-fields))
 
   :config
   ;; Tweak original function to prevent unnecessary vertical window splits
@@ -14769,7 +14770,7 @@ If not invoked from `ebib', prompt for search query."
     "docstring"
     (when (ebib-db-modified-p ebib--cur-db)
       (ebib-save-current-database t))
-    (run-with-timer 10 nil #'ps/ebib-auto-save-db))
+    (run-with-timer 5 nil #'ps/ebib-auto-save-db))
 
   (defun ps/ebib-open-key (key)
     "Open the entry for KEY in Ebib."

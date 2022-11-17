@@ -3769,9 +3769,10 @@ To suppress warnings when a snippet executes elisp code, you may want to configu
   (yas-reload-all)
   (add-to-list 'warning-suppress-log-types '(yasnippet backquote-change))
 
+  ;; FIXME: this isn't working properly, unlike the `ps/yasnippet-expand-by-key' command
   (defun ps/yasnippet-expand-by-name (name)
     "Expand the yasnippet named `snippet'."
-    (yas-expand-snippet (yas-lookup-snippet name mode)))
+    (yas-expand-snippet (yas-lookup-snippet name)))
 
   (defun ps/yasnippet-expand-by-key (key)
     "Expand snippet whose key is KEY."

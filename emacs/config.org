@@ -14105,7 +14105,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
                         ("Year" 4 t)
                         ("Title" 50 t)))
   (ebib-hidden-fields (remove "isbn" ebib-hidden-fields))
-  
+
   :config
   ;; Tweak original function to prevent unnecessary vertical window splits
   (defun ps/ebib--setup-windows ()
@@ -14830,7 +14830,7 @@ first name, and names are separated by a semicolon."
     (interactive)
     (ps/ebib-merge-databases ps/file-bibliography-old ps/file-bibliography-new)
     (ps/ebib-reload-current-database-no-confirm))
-  
+
   :hook
   (ebib-index-mode-hook . doom-modeline-mode)
   (ebib-entry-mode-hook . visual-line-mode)
@@ -17066,17 +17066,15 @@ To be used by `eww-after-render-hook'."
         output-file
         url))))
 
-  (defvar ps/eww-readable-websites
-    '("^https://forum\\.effectivealtruism\\.org"
-      "^https://www\\.lesswrong\\.com"
-      "^https://.*?\\.substack\\.com"))
+  (defvar ps/eww-readable-exceptions
+    '("protesilaos\\.com"))
 
   (defun ps/eww-readable-autoview ()
     "Automatically view the main 'readable' parts of the current web
-page for websites defined in `ps/eww-readable-websites'."
+page for all websites except those in `ps/eww-readable-exceptions'."
     (let ((current-url (eww-current-url)))
-      (dolist (url ps/eww-readable-websites)
-        (when (string-match-p url current-url)
+      (dolist (url ps/eww-readable-exceptions)
+        (unless (string-match-p (concat "^\\(?:https?://\\)?\\(?:www\\.\\)?" url) current-url)
           (eww-readable)))))
 
   :hook

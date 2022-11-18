@@ -7779,7 +7779,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (use-package corfu-doc-terminal
   :straight (corfu-doc-terminal
              :host codeberg
-		   :repo "akib/emacs-corfu-doc-terminal")
+                   :repo "akib/emacs-corfu-doc-terminal")
   :after corfu-doc corfu-terminal
   :demand t
   :config
@@ -10844,6 +10844,10 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "Z" 'org-agenda-add-note
    "z" 'org-agenda-undo))
 #+end_src
+*** TODO Exclude Fede and Leo ~tareas.org~ files from ~org-agenda~
+:PROPERTIES:
+:ID:       7512BCCE-B29A-4CB3-8B6B-A8C63E3407CD
+:END:
 *** TODO [#6] align tags
 :PROPERTIES:
 :ID:       8F2D8B6E-2B3E-434E-9D60-5A1E23F8E4C1
@@ -14852,20 +14856,27 @@ first name, and names are separated by a semicolon."
      (run-with-idle-timer 30 nil #'ps/ebib-reload-current-database-no-confirm)))
 
   (defun ps/ebib-merge-databases (source target)
-  "Move the contents of SOURCE to TARGET."
-  (find-file-noselect source)
-  (find-file-noselect target)
-  (with-current-buffer (file-name-nondirectory target)
-    (goto-char (point-max))
-    (insert-file-contents source))
-  (with-current-buffer (file-name-nondirectory source)
-    (erase-buffer)))
+    "Move the contents of SOURCE to TARGET."
+    (find-file-noselect source)
+    (find-file-noselect target)
+    (with-current-buffer (file-name-nondirectory target)
+      (goto-char (point-max))
+      (insert-file-contents source))
+    (with-current-buffer (file-name-nondirectory source)
+      (erase-buffer)))
 
   (defun ps/ebib-merge-old-new ()
     "Merge the old and new bibliography files."
     (interactive)
     (ps/ebib-merge-databases ps/file-bibliography-old ps/file-bibliography-new)
     (ps/ebib-reload-current-database-no-confirm))
+
+  (defun ps/ebib-end-of-index-buffer ()
+    "Move to the end of the index buffer."
+    (interactive)
+    (when (equal major-mode 'ebib-index-mode)
+      (goto-char (point-max))
+      (forward-line -1)))
 
   :hook
   (ebib-index-mode-hook . doom-modeline-mode)
@@ -14906,6 +14917,7 @@ first name, and names are separated by a semicolon."
    "2" (lambda! (ebib-view-file-in-field 2)))
   (ebib-index-mode-map
    "<return>" 'ebib-edit-entry
+   "A-C-s-SPC" 'ps/ebib-end-of-index-buffer
    "d" 'ebib-browse-doi
    "D" 'ebib-delete-entry
    ;; "i" 'ps/ebib-add-by-identifier ; using `zotra-add-entry-from-search'
@@ -14999,23 +15011,6 @@ CLOCK: [2022-07-16 Sat 15:17]--[2022-07-16 Sat 15:18] =>  0:01
     (string-match ps/biblio-arxiv-regexp string)))
 #+end_src
 
-** biblio-zotero
-:PROPERTIES:
-:ID:       D384FC60-56CD-4401-ADED-F2708964840F
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-16 Sat 15:40]--[2022-07-16 Sat 15:49] =>  0:09
-:END:
-This does the same as [[id:815B8CEA-D36D-4E47-B728-D86FEFB736DF][zotra]]. Keeping it for the time being, just in case.
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package biblio-zotero
-  :straight (biblio-zotero :type git :host github :repo "gkowzan/biblio-zotero")
-  :after biblio
-  :demand t
-  :commands (biblio-zotero-insert-bibtex))
-#+end_src
-
 ** zotra
 :PROPERTIES:
 :ID:       815B8CEA-D36D-4E47-B728-D86FEFB736DF
@@ -15058,6 +15053,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (goto-char (point-max))
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
+    (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format) (ebib--get-key-at-point) ebib--cur-db 'overwrite)
     (save-buffer)
     (let ((citekey (ps/bibtex-get-key)))
       (unless ebib--initialized

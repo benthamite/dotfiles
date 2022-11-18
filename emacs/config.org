@@ -15048,20 +15048,22 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
   :config
   (defun ps/zotra-after-add-entry-function ()
-    "Function to trigger with `zotra-after-add-entry-hook'."
-    (revert-buffer nil t)
-    (goto-char (point-max))
-    (bibtex-clean-entry)
-    (org-ref-clean-bibtex-entry)
-    (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format) (ebib--get-key-at-point) ebib--cur-db 'overwrite)
-    (save-buffer)
-    (let ((citekey (ps/bibtex-get-key)))
-      (unless ebib--initialized
-        (ebib))
-      ;; Switch to `new.bib' database
-      (ebib-switch-to-database-key 2)
-      (ps/ebib-reload-current-database-no-confirm)
-      (ps/ebib-open-key citekey)))
+  "Function to trigger with `zotra-after-add-entry-hook'."
+  (revert-buffer nil t)
+  (goto-char (point-max))
+  (bibtex-clean-entry)
+  (org-ref-clean-bibtex-entry)
+  (save-buffer)
+  (sleep-for 3)
+  (let ((citekey (ps/bibtex-get-key)))
+    (print citekey)
+    (ebib nil citekey)
+    ;; Switch to `new.bib' database
+    ;; (ebib-switch-to-database-key 2)
+    (sleep-for 3)
+    (ps/ebib-open-key citekey)
+    (ebib-set-field-value "date" (format-time-string ebib-timestamp-format) citekey ebib--cur-db 'overwrite)))
+;; (ps/ebib-reload-current-database-no-confirm)))
 
   (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
     (let ((bibfile
@@ -15255,6 +15257,7 @@ CLOSED: [2022-11-07 Mon 14:13]
 CLOCK: [2022-10-10 Mon 20:09]--[2022-10-10 Mon 20:17] =>  0:08
 CLOCK: [2022-10-10 Mon 19:29]--[2022-10-10 Mon 19:59] =>  0:30
 :END:
+
 ** scihub
 :PROPERTIES:
 :ID:       29ABF514-563B-463D-9FDB-CF2C8AA25F83

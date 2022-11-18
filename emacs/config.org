@@ -15243,6 +15243,10 @@ or specify any other coding system (and risk losing\n\
   "i" 'zotra-add-entry-from-search))
 #+end_src
 
+*** TODO Make sure all new bibtex entries have a ~timestamp~ field
+:PROPERTIES:
+:ID:       5B05526E-8279-4C39-80F8-D0B81C665912
+:END:
 *** [#6] Archive                                                  :ARCHIVE:
 :PROPERTIES:
 :ID:       6BFE5851-35CD-481C-9E3C-7F4D81336A29

@@ -5969,73 +5969,76 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 :END:
 
 #+begin_src emacs-lisp :results silent
-  (use-feature calendar
-    :custom
-    (calendar-week-start-day 1)    ; week starts on Monday
-    (calendar-set-date-style 'iso) ; this isn't the default?
-    (calendar-latitude -34.6079)
-    (calendar-longitude -58.3660)
-    (calendar-location-name "Comuna 1, Buenos Aires, Argentina")
-    (calendar-time-display-form
-     '(24-hours ":" minutes
-                (when time-zone
-                  (concat " (" time-zone ")"))))
-    (calendar-mark-holidays-flag nil)
-    (calendar-time-zone-style 'numeric) ; Emacs 28.1
-    (holiday-bahai-holidays nil)
-    (holiday-other-holidays '((holiday-fixed 1 30 "Arkhipov's birth")
-                              (holiday-fixed 2 12 "Darwin's birth")
-                              (holiday-fixed 2 15 "Bentham's birth")
-                              (holiday-fixed 5 13 "Pilecki's birth")
-                              (holiday-fixed 8 04 "Wallenberg's birth")
-                              (holiday-fixed 9 07 "Petrov's birth")))
-    :config
-    ;; Adapted from Prot
-    (defcustom ps/date-specifier "%F"
-      "Date specifier for `format-time-string'.
-  Used by `ps/insert-date'."
-      :type 'string)
+(use-feature calendar
+  :custom
+  (calendar-week-start-day 1)    ; week starts on Monday
+  (calendar-set-date-style 'iso) ; this isn't the default?
+  ;; (calendar-latitude -34.6079)
+  ;; (calendar-longitude -58.3660)
+  ;; (calendar-location-name "Comuna 1, Buenos Aires, Argentina")
+  (calendar-latitude 19.4326)
+  (calendar-longitude -99.1332)
+  (calendar-location-name "Mexico DF")
+  (calendar-time-display-form
+   '(24-hours ":" minutes
+              (when time-zone
+                (concat " (" time-zone ")"))))
+  (calendar-mark-holidays-flag nil)
+  (calendar-time-zone-style 'numeric) ; Emacs 28.1
+  (holiday-bahai-holidays nil)
+  (holiday-other-holidays '((holiday-fixed 1 30 "Arkhipov's birth")
+                            (holiday-fixed 2 12 "Darwin's birth")
+                            (holiday-fixed 2 15 "Bentham's birth")
+                            (holiday-fixed 5 13 "Pilecki's birth")
+                            (holiday-fixed 8 04 "Wallenberg's birth")
+                            (holiday-fixed 9 07 "Petrov's birth")))
+  :config
+  ;; Adapted from Prot
+  (defcustom ps/date-specifier "%F"
+    "Date specifier for `format-time-string'.
+Used by `ps/insert-date'."
+    :type 'string)
 
-     (defcustom ps/time-specifier "%R %z"
-      "Time specifier for `format-time-string'.
-  Used by `ps/insert-date'."
-      :type 'string)
+   (defcustom ps/time-specifier "%R %z"
+    "Time specifier for `format-time-string'.
+Used by `ps/insert-date'."
+    :type 'string)
 
-    (defun ps/insert-date (&optional arg)
-      "Insert the current date as `ps/date-specifier'.
+  (defun ps/insert-date (&optional arg)
+    "Insert the current date as `ps/date-specifier'.
 
-  With optional prefix ARG (\\[universal-argument]) also append the
-  current time understood as `ps/time-specifier'.
+With optional prefix ARG (\\[universal-argument]) also append the
+current time understood as `ps/time-specifier'.
 
-  When region is active, delete the highlighted text and replace it
-  with the specified date."
-      (interactive "P")
-      (let* ((date ps/date-specifier)
-             (time ps/time-specifier)
-             (format (if arg (format "%s %s" date time) date)))
-        (when (use-region-p)
-          (delete-region (region-beginning) (region-end)))
-        (insert (format-time-string format))))
+When region is active, delete the highlighted text and replace it
+with the specified date."
+    (interactive "P")
+    (let* ((date ps/date-specifier)
+           (time ps/time-specifier)
+           (format (if arg (format "%s %s" date time) date)))
+      (when (use-region-p)
+        (delete-region (region-beginning) (region-end)))
+      (insert (format-time-string format))))
 
-    :general
-    ("C-d" 'calendar
-     "A-s-=" 'ps/insert-date
-     "s-=" "C-u A-s-=")
-    (calendar-mode-map
-    "H-m" 'calendar-set-mark
-     "A-C-s-u" 'calendar-backward-day
-     "A-C-s-i" 'calendar-backward-week
-     "A-C-s-o" 'calendar-forward-week
-     "A-C-s-p" 'calendar-forward-day
-     "A-C-s-m" 'calendar-backward-month
-     "A-C-s-," 'calendar-backward-year
-     "A-C-s-." 'calendar-forward-year
-     "A-C-s-/" 'calendar-forward-month
-     "C-f" nil
-     "C-b" nil
-     "C-n" nil
-     "C-p" nil
-     "=" 'calendar-count-days-region))
+  :general
+  ("C-d" 'calendar
+   "A-s-=" 'ps/insert-date
+   "s-=" "C-u A-s-=")
+  (calendar-mode-map
+  "H-m" 'calendar-set-mark
+   "A-C-s-u" 'calendar-backward-day
+   "A-C-s-i" 'calendar-backward-week
+   "A-C-s-o" 'calendar-forward-week
+   "A-C-s-p" 'calendar-forward-day
+   "A-C-s-m" 'calendar-backward-month
+   "A-C-s-," 'calendar-backward-year
+   "A-C-s-." 'calendar-forward-year
+   "A-C-s-/" 'calendar-forward-month
+   "C-f" nil
+   "C-b" nil
+   "C-n" nil
+   "C-p" nil
+   "=" 'calendar-count-days-region))
 #+end_src
 
 *** TODO [#7] remove mother's, father's day from Emacs diary
@@ -14143,8 +14146,8 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
                         ("Author/Editor" 25 t)
                         ("Year" 4 t)
                         ("Title" 50 t)))
-  (ebib-hidden-fields (remove "isbn" ebib-hidden-fields))
-  (ebib-hidden-fields (remove "titleaddon" ebib-hidden-fields))
+  ;; (ebib-hidden-fields (remove "isbn" ebib-hidden-fields))
+  ;; (ebib-hidden-fields (remove "titleaddon" ebib-hidden-fields))
 
   :config
   ;; Tweak original function to prevent unnecessary vertical window splits

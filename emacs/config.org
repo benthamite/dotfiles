@@ -10847,7 +10847,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "Z" 'org-agenda-add-note
    "z" 'org-agenda-undo))
 #+end_src
-*** TODO Exclude Fede and Leo ~tareas.org~ files from ~org-agenda~
+*** TODO [#5] Exclude Fede and Leo ~tareas.org~ files from ~org-agenda~
 :PROPERTIES:
 :ID:       7512BCCE-B29A-4CB3-8B6B-A8C63E3407CD
 :END:
@@ -15246,7 +15246,7 @@ or specify any other coding system (and risk losing\n\
   "i" 'zotra-add-entry-from-search))
 #+end_src
 
-*** TODO Make sure all new bibtex entries have a ~timestamp~ field
+*** TODO [#5] Make sure all new bibtex entries have a ~timestamp~ field
 :PROPERTIES:
 :ID:       5B05526E-8279-4C39-80F8-D0B81C665912
 :END:
@@ -16477,7 +16477,7 @@ CLOCK: [2021-04-06 Tue 18:05]--[2021-04-06 Tue 18:34] =>  0:29
     "docstring"
     (interactive)
     (ps/window-split-if-unsplit)
-    (if (> (frame-width) ps/frame-width-threshold)
+    (if (> (frame-width) ps/frame-width-old)
         (winum-select-window-3)
       (winum-select-window-2))
     ;; TODO: switch to 'telega-chat-mode buffer if it exists

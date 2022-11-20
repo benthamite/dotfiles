@@ -8169,7 +8169,8 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
     "Update Homebrew."
     (interactive)
     (let ((shell-command-buffer-name-async "*homebrew update*"))
-      (async-shell-command "brew update; brew upgrade --greedy; brew upgrade; brew cleanup; brew doctor")))
+      (async-shell-command "brew update; brew upgrade --greedy; brew cleanup; brew doctor")
+      (message "Update process finished.")))
 
   (defun ps/crontab-e ()
     "Run `crontab -e' in a emacs buffer."

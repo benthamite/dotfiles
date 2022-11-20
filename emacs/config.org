@@ -8166,10 +8166,10 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
 (use-feature shell
   :config
   (defun ps/shell-update-homebrew ()
-    "Update Homebrew, using Eshell buffer if one exists"
+    "Update Homebrew."
     (interactive)
     (let ((shell-command-buffer-name-async "*homebrew update*"))
-      (async-shell-command "brew update; brew upgrade --greedy; brew unlink xpdf; brew upgrade; brew cleanup; brew doctor; brew link --overwrite xpdf")))
+      (async-shell-command "brew update; brew upgrade --greedy; brew upgrade; brew cleanup; brew doctor")))
 
   (defun ps/crontab-e ()
     "Run `crontab -e' in a emacs buffer."

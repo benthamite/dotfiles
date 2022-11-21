@@ -17883,12 +17883,13 @@ This section collects a few functions I created for interfacing with Mullvad, a 
 (defvar ps/mullvad-websites
   '(("Library Genesis" . "Malmö")
     ("HathiTrust" . "New York")
+    ("Criterion Channel" . "New York")
     ("Pirate Bay" . "Malmö")
     ("Wise" . "Madrid"))
   "For each website that requires a VPN connection, specify the
 optimal server city.")
 
-(defun ps/mullvad-connect-to-server (selection)
+(defun ps/mullvad-connect-to-server (server)
   "Prompt the user to select from a list of servers and connection
 durations, and connect to the server for that duration.
 
@@ -17898,11 +17899,16 @@ The list of servers is defined in `ps/mullvad-servers'."
     (completing-read
      "Select server: "
      ps/mullvad-servers)))
-  (call-interactively 'ps/mullvad-disconnect-after)
-  (let ((server (cdr (assoc selection ps/mullvad-servers))))
-    (shell-command (format
-                    "mullvad relay set hostname %s; mullvad connect"
-                    server))))
+  (let* ((duration (call-interactively 'ps/mullvad-disconnect-after))
+	 (server (cdr (assoc server ps/mullvad-servers)))
+	 (connection (replace-regexp-in-string
+		      "Setting location constraint to \\(.*\\)\n.*\n.*" "\\1"
+		      (shell-command-to-string (format
+						"mullvad relay set hostname %s; mullvad connect"
+						server)))))
+    (if duration
+	(message (format "Connected to server %s. Disconnecting in %s minutes." connection duration))
+      (message (format "Connected to server %s." connection)))))
 
 (defun ps/mullvad-connect-to-website (website)
   "Prompt the user to select from a list of websites and connection
@@ -17913,11 +17919,17 @@ that duration."
     (completing-read
      "Select website: "
      ps/mullvad-websites)))
-  (call-interactively 'ps/mullvad-disconnect-after)
-  (let ((city (cdr (assoc website ps/mullvad-websites))))
-    (shell-command (format
-                    "mullvad relay set hostname %s; mullvad connect"
-                    (cdr (assoc city ps/mullvad-servers))))))
+  (let* ((duration (call-interactively 'ps/mullvad-disconnect-after))
+	 (city (cdr (assoc website ps/mullvad-websites)))
+	 (server (cdr (assoc city ps/mullvad-servers)))
+	 (connection (replace-regexp-in-string
+		      "Setting location constraint to \\(.*\\)\n.*\n.*" "\\1"
+		      (shell-command-to-string (format
+						"mullvad relay set hostname %s; mullvad connect"
+						server)))))
+    (if duration
+	(message (format "Connected to server %s. Disconnecting in %s minutes." connection duration))
+      (message (format "Connected to server %s." connection)))))
 
 (defun ps/mullvad-disconnect ()
   "Disconnect from server."
@@ -17928,13 +17940,19 @@ that duration."
   "End connection to Mullvad VPN server after DURATION minutes."
   (interactive
    (list (completing-read
-          "Select duration (minutes): "
-          '("1" "5" "10" "30" "60" "unlimited"))))
+	  "Select duration (minutes): "
+	  '("1" "5" "10" "30" "60" "custom" "unlimited"))))
+  (when (equal duration "custom")
+    (setq duration (read-string "Enter duration (minutes): ")))
   (unless (equal duration "unlimited")
+    ;; If a previous timer is running, cancel it.
+    (cancel-function-timers #'ps/mullvad-disconnect)
+    ;; Now run a new timer.
     (run-with-timer
      (* (string-to-number duration) 60)
      nil
-     #'ps/mullvad-disconnect)))
+     #'ps/mullvad-disconnect)
+    duration))
 #+end_src
 
 *** Archive                         :ARCHIVE:

@@ -6825,8 +6825,9 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
 
 #+begin_src emacs-lisp :results silent
 (use-package persistent-scratch
-  :defer 10
+  :demand t
   :custom
+  (persistent-scratch-autosave-interval 30)
   ;; What follows is copied from umarahmad.xyz/blog/quick-scratch-buffers/
   (persistent-scratch-scratch-buffer-p-function 'ps/persistent-scratch-buffer-identifier)
 
@@ -6860,7 +6861,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
         (persistent-scratch-restore-this))
       (persistent-scratch-mode)))
 
-  (persistent-scratch-autosave-mode))
+  (persistent-scratch-setup-default))
 #+end_src
 
 ** remember
@@ -7720,6 +7721,7 @@ To check out: https://kristofferbalintona.me/posts/202202270056/
   (corfu-cycle vertico-cycle)
   (corfu-count vertico-count)
   (corfu-echo-documentation nil "Disable documentation in echo area; replaced by `corfu-doc'")
+  (corfu-doc-delay 0)
 
   :config
   ;; Adapted from Prot
@@ -7730,7 +7732,9 @@ Useful for prompts such as `eval-expression' and `shell-command'."
     (unless (bound-and-true-p vertico--input)
       (corfu-mode)))
 
+
   (global-corfu-mode)
+  (corfu-doc-mode)
 
   :general
   (corfu-map
@@ -7739,21 +7743,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
   :hook
   (minibuffer-setup-hook . ps/corfu-enable-always-in-minibuffer))
-#+end_src
-
-** corfu-doc
-:PROPERTIES:
-:ID:       07DC5DEC-40BB-43CD-B679-9481C3691905
-:END:
-#+begin_src emacs-lisp :results silent
-(use-package corfu-doc
-  :demand t
-  :after corfu
-  :custom
-  (corfu-doc-delay 0)
-
-  :config
-  (corfu-doc-mode))
 #+end_src
 
 ** corfu-terminal
@@ -7783,7 +7772,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :straight (corfu-doc-terminal
              :host codeberg
                    :repo "akib/emacs-corfu-doc-terminal")
-  :after corfu-doc corfu-terminal
+  :after corfu-terminal
   :demand t
   :config
   (corfu-doc-terminal-mode))
@@ -11054,9 +11043,12 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
      ("lr" "Leo: Add to Future Matters: research" entry
       (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
-     ("lt" "Leo: Telegram" entry
+     ("lt" "Leo: Add to translations spreadsheet" entry
       (file+headline ps/file-tareas-leo "Tareas Leo")
-      "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
+      "** TODO [#4] Add to translation master file :leo:\n%c\n[[https://docs.google.com/spreadsheets/d/1YpqWK2Vpxwc_JuCf7isjwpdCQ_7_NRAY/edit#gid=2099842495][spreadsheet]]" :empty-lines 1 :prepend t)
+     ;; ("lt" "Leo: Telegram" entry
+      ;; (file+headline ps/file-tareas-leo "Tareas Leo")
+      ;; "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
      ("m" "Leo: Messaging (to send later)" entry
       (file ps/file-inbox-desktop)
       "* TODO Send message\n%?\n")
@@ -14148,7 +14140,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
                         ("Year" 4 t)
                         ("Title" 50 t)))
   ;; (ebib-hidden-fields (remove "isbn" ebib-hidden-fields))
-  ;; (ebib-hidden-fields (remove "titleaddon" ebib-hidden-fields))
+  (ebib-hidden-fields (remove "titleaddon" ebib-hidden-fields))
 
   :config
   ;; Tweak original function to prevent unnecessary vertical window splits
@@ -14525,6 +14517,32 @@ entry's key."
       (default
         (beep))))
 
+  (defun ps/ebib-generate-autokey-and-rename-files ()
+    "Automatically generate a key for the current entry and rename attached file(s).
+This function uses the function BIBTEX-GENERATE-AUTOKEY to
+generate the key, see that function's documentation for details."
+    (interactive)
+    (ebib--execute-when
+      ((and real-db entries)
+       (let ((new-key
+              (with-temp-buffer
+                ;; We sort the entry fields when formatting, because if both
+                ;; `author' and `editor' fields are present,
+                ;; `bibtex-generate-autokey' will simply use the first one it
+                ;; finds.  By sorting we make sure it's always the author.
+                (ebib--format-entry (ebib--get-key-at-point) ebib--cur-db nil 'sort)
+                (let ((x-ref (ebib-get-field-value "crossref" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced)))
+                  (if x-ref
+                      (ebib--format-entry x-ref ebib--cur-db nil 'sort)))
+                (goto-char (point-min))
+                (bibtex-set-dialect (ebib--get-dialect ebib--cur-db) 'local)
+                (bibtex-generate-autokey))))
+         (if (string= new-key "")
+             (error (format "[Ebib] Cannot create key"))
+           (ebib--update-keyname new-key))))
+      (default
+        (beep))))
+
   (defun ps/ebib-attach-most-recent-file ()
     "docstring"
     (interactive)
@@ -14532,9 +14550,7 @@ entry's key."
       (entries
        (let ((key (ebib--get-key-at-point)))
          (unless (ps/ebib-valid-key-p key)
-           (if (y-or-n-p "Entry has an invalid key. Press `y' to regenerate key, or `n' to abort.")
-               (ebib-generate-autokey)
-             (keyboard-quit)))
+           (user-error "Entry has an invalid key; pleasse regenerate it."))
          (let* ((field "file")
                 (newest-file (ps/newest-file ps/dir-downloads))
                 (extension (file-name-extension newest-file))
@@ -17900,14 +17916,14 @@ The list of servers is defined in `ps/mullvad-servers'."
      "Select server: "
      ps/mullvad-servers)))
   (let* ((duration (call-interactively 'ps/mullvad-disconnect-after))
-	 (server (cdr (assoc server ps/mullvad-servers)))
-	 (connection (replace-regexp-in-string
-		      "Setting location constraint to \\(.*\\)\n.*\n.*" "\\1"
-		      (shell-command-to-string (format
-						"mullvad relay set hostname %s; mullvad connect"
-						server)))))
+         (server (cdr (assoc server ps/mullvad-servers)))
+         (connection (replace-regexp-in-string
+                      "Setting location constraint to \\(.*\\)\n.*\n.*" "\\1"
+                      (shell-command-to-string (format
+                                                "mullvad relay set hostname %s; mullvad connect"
+                                                server)))))
     (if duration
-	(message (format "Connected to server %s. Disconnecting in %s minutes." connection duration))
+        (message (format "Connected to server %s. Disconnecting in %s minutes." connection duration))
       (message (format "Connected to server %s." connection)))))
 
 (defun ps/mullvad-connect-to-website (website)
@@ -17920,15 +17936,15 @@ that duration."
      "Select website: "
      ps/mullvad-websites)))
   (let* ((duration (call-interactively 'ps/mullvad-disconnect-after))
-	 (city (cdr (assoc website ps/mullvad-websites)))
-	 (server (cdr (assoc city ps/mullvad-servers)))
-	 (connection (replace-regexp-in-string
-		      "Setting location constraint to \\(.*\\)\n.*\n.*" "\\1"
-		      (shell-command-to-string (format
-						"mullvad relay set hostname %s; mullvad connect"
-						server)))))
+         (city (cdr (assoc website ps/mullvad-websites)))
+         (server (cdr (assoc city ps/mullvad-servers)))
+         (connection (replace-regexp-in-string
+                      "Setting location constraint to \\(.*\\)\n.*\n.*" "\\1"
+                      (shell-command-to-string (format
+                                                "mullvad relay set hostname %s; mullvad connect"
+                                                server)))))
     (if duration
-	(message (format "Connected to server %s. Disconnecting in %s minutes." connection duration))
+        (message (format "Connected to server %s. Disconnecting in %s minutes." connection duration))
       (message (format "Connected to server %s." connection)))))
 
 (defun ps/mullvad-disconnect ()
@@ -17940,8 +17956,8 @@ that duration."
   "End connection to Mullvad VPN server after DURATION minutes."
   (interactive
    (list (completing-read
-	  "Select duration (minutes): "
-	  '("1" "5" "10" "30" "60" "custom" "unlimited"))))
+          "Select duration (minutes): "
+          '("1" "5" "10" "30" "60" "custom" "unlimited"))))
   (when (equal duration "custom")
     (setq duration (read-string "Enter duration (minutes): ")))
   (unless (equal duration "unlimited")

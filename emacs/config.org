@@ -16502,7 +16502,7 @@ CLOCK: [2021-04-06 Tue 18:05]--[2021-04-06 Tue 18:34] =>  0:29
     "docstring"
     (interactive)
     (ps/window-split-if-unsplit)
-    (if (> (frame-width) ps/frame-width-old)
+    (if (> (frame-width) ps/frame-width-threshold)
         (winum-select-window-3)
       (winum-select-window-2))
     ;; TODO: switch to 'telega-chat-mode buffer if it exists

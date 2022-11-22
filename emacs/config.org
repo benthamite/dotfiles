@@ -14459,16 +14459,29 @@ entry's key."
     (interactive)
     (ebib--execute-when
       (entries
-       (let* ((key (ebib--get-key-at-point))
-              (field "file")
-              (extension (file-name-extension newest-file))
-              (file-name (file-name-concat
-                          ps/dir-library
-                          (file-name-with-extension key extension))))
-         (rename-file newest-file
-                      file-name)
-         (ebib-set-field-value field file-name key ebib--cur-db ";")
-         (ebib--store-multiline-text (current-buffer))
+       (let ((field "file")
+             (key (ebib--get-key-at-point))
+             (new-file-field))
+         (unless (ps/ebib-valid-key-p key)
+           (user-error "Entry has an invalid key; pleasse regenerate it."))
+         (dolist (filename (split-string
+                            (ebib-get-field-value field key ebib--cur-db t t)
+                            ";"))
+           (let ((stem (file-name-sans-extension (file-name-nondirectory filename)))
+                 (extension (file-name-extension filename)))
+             (unless (equal stem key)
+               (let ((new-file-field)
+                     (new-filename (file-name-concat
+                                    (abbreviate-file-name
+                                     (eval (intern (concat "ps/dir-library-" extension))))
+                                    (file-name-with-extension key extension))))
+                 (rename-file filename new-filename)
+                 (ebib-delete-field-contents field t)
+                 (setq new-file-field
+                       (if new-file-field
+                           (concat ";" new-file-field new-filename)
+                         new-filename))
+                 (ebib-set-field-value field new-file-field key ebib--cur-db 'overwrite)))))
          (ebib--redisplay-field field)
          (ebib--redisplay-index-item field)
          (ebib-save-current-database nil)))

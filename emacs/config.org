@@ -1892,7 +1892,7 @@ Done. See [[https://stackoverflow.com/a/21493693/4479455][here]].
   (inhibit-startup-screen t)
   (initial-scratch-message nil)
   (initial-buffer-choice 'remember-notes)
-  (initial-major-mode 'lisp-interaction-mode))
+  (initial-major-mode 'emacs-lisp-mode))
 #+end_src
 
 ** emacsclient
@@ -9918,7 +9918,7 @@ The video I watche
 
   :general
   (copilot-mode-map
-  "TAB" 'copilot-accept-completion))
+   "TAB" 'copilot-accept-completion))
 #+end_src
 
 ** elpy
@@ -14127,8 +14127,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 #+begin_src emacs-lisp :results silent
 (use-package ebib
-  :demand t
-  ;; :defer 10
+  :defer 5
   :custom
   (ebib-filename-separator ";")
   (ebib-file-associations nil "do not open any file types externally")

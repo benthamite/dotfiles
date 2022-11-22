@@ -14141,7 +14141,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
                         ("Title" 50 t)))
 
   :config
-  (setq ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "venue" "version" "volumes"))
+  (setq ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "venue" "version" "volumes" "year"))
 
   ;; Tweak original function to prevent unnecessary vertical window splits
   (defun ps/ebib--setup-windows ()
@@ -14400,7 +14400,7 @@ each of the attached files is in
                  (throw 'tag file)))
              (ebib--split-files files))
             nil)
-        (user-error "Invalid file extension.df"))))
+        (user-error "Invalid file extension."))))
 
   (defun ps/ebib-validate-file-stem ()
     "If entry at point has attachments, check that the stem of
@@ -14415,7 +14415,7 @@ each of the attached files is the entry's unique key."
                  (throw 'tag file)))
              (ebib--split-files files))
             nil)
-        (user-error "Invalid file stem!"))))
+        (user-error "Invalid file stem."))))
 
   (defun ps/ebib-validate-file-name ()
     "If entry at point has attachments, check that their stems match

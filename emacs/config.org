@@ -4639,15 +4639,6 @@ Seems to have fixed itself.
 #+end_src
 
 
-** TODO [#4] Have persistent scratch buffer!
-:PROPERTIES:
-:Effort:   0:25
-:ID:       CB7EBE56-33F0-4F90-8715-5447296E2678
-:END:
-:LOGBOOK:
-CLOCK: [2022-10-02 Sun 14:10]--[2022-10-02 Sun 14:26] =>  0:16
-:END:
-
 ** dired
 :PROPERTIES:
 :ID:       617F5323-6518-4751-948B-3E8032D93130
@@ -5306,6 +5297,17 @@ CLOSED: [2022-05-07 Sat 19:05]
 CLOCK: [2022-04-23 Sat 17:09]--[2022-04-23 Sat 17:18] =>  0:09
 :END:
 A solution is given [[https://askubuntu.com/questions/1063331/how-to-install-google-chrome-extensions-though-terminal][here]]. But it requires entering the system password and restarting Chrome. Which is more trouble than dropping the folder on the extensions tab.
+*** DONE [#4] Have persistent scratch buffer!
+CLOSED: [2022-11-21 Mon 23:09]
+:PROPERTIES:
+:Effort:   0:25
+:ID:       CB7EBE56-33F0-4F90-8715-5447296E2678
+:ARCHIVE_TIME: 2022-11-21 Mon 23:09
+:END:
+:LOGBOOK:
+CLOCK: [2022-10-02 Sun 14:10]--[2022-10-02 Sun 14:26] =>  0:16
+:END:
+
 * windows & frames
 :PROPERTIES:
 :ID:       7E9A81E0-CAEB-4029-AD2C-B2416439FCDA
@@ -6829,7 +6831,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
   :custom
   (persistent-scratch-autosave-interval 30)
   ;; What follows is copied from umarahmad.xyz/blog/quick-scratch-buffers/
-  (persistent-scratch-scratch-buffer-p-function 'ps/persistent-scratch-buffer-identifier)
+  ;; (persistent-scratch-scratch-buffer-p-function 'ps/persistent-scratch-buffer-identifier)
 
   :config
   (defun ps/persistent-scratch-buffer-identifier ()
@@ -7734,7 +7736,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 
   (global-corfu-mode)
-  (corfu-doc-mode)
 
   :general
   (corfu-map
@@ -14126,8 +14127,8 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 #+begin_src emacs-lisp :results silent
 (use-package ebib
-  ;; :demand t
-  :defer 10
+  :demand t
+  ;; :defer 10
   :custom
   (ebib-filename-separator ";")
   (ebib-file-associations nil "do not open any file types externally")
@@ -14139,10 +14140,10 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
                         ("Author/Editor" 25 t)
                         ("Year" 4 t)
                         ("Title" 50 t)))
-  ;; (ebib-hidden-fields (remove "isbn" ebib-hidden-fields))
-  (ebib-hidden-fields (remove "titleaddon" ebib-hidden-fields))
 
   :config
+  (setq ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "venue" "version" "volumes"))
+
   ;; Tweak original function to prevent unnecessary vertical window splits
   (defun ps/ebib--setup-windows ()
     "Create Ebib's window configuration.

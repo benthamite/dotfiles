@@ -14061,7 +14061,7 @@ Version 2015-06-08"
       (insert String)
       (ps/bibtex-asciify-text (point-min) (point-max))
       (buffer-string)))
-  
+
   ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field
   (defun ps/bibtex-autokey-get-year ()
   "Return year field contents as a string obeying `bibtex-autokey-year-length'."
@@ -14277,7 +14277,7 @@ window and make the frame active,"
 
   (defun ps/ebib-isbn-p (string)
     "Return `t' if string looks like an ISBN."
-    (string-match ps/isbn-p string))
+    (string-match ps/ebib-isbn-p string))
 
   (defun ps/ebib-get-isbn ()
     "Return ISBN for the current entry."
@@ -14410,6 +14410,18 @@ window and make the frame active,"
             (t
              (user-error "Identifier does not appear to be an ISBN or DOI.")))))
 
+  (defun ps/ebib-download-dwim ()
+    (if (string= (ebib--current-field) "title")
+        (when-let ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point) ebib--cur-db)))
+          (cond
+           ((member type '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook" "Book" "Collection" "MVBook" "Inbook" "Incollection" "Bookinbook" "Suppbook"))
+            (ps/ebib-download-book-by-title))
+           ((member type '("article"))
+            (ps/ebib-download-article-by-title))
+           (t
+            (user-error (format "No action defined for entries of type `%s'" type)))))
+      (ps/ebib-download-by-identifier)))
+
   (defun ps/ebib-reload-current-database-no-confirm ()
     "Reload the current database from disk, without asking for
 confirmation."
@@ -14521,32 +14533,30 @@ entry's key."
     (interactive)
     (ebib--execute-when
       (entries
-       (let ((field "file")
-             (key (ebib--get-key-at-point))
-             (new-file-field))
+       (let* ((field "file")
+              (key (ebib--get-key-at-point))
+              (new-file-field)
+              (file-list (split-string
+                          (ebib-get-field-value field key ebib--cur-db t t)
+                          ";")))
          (unless (ps/ebib-valid-key-p key)
            (user-error "Entry has an invalid key; pleasse regenerate it."))
-         (dolist (filename (split-string
-                            (ebib-get-field-value field key ebib--cur-db t t)
-                            ";"))
-           (let ((stem (file-name-sans-extension (file-name-nondirectory filename)))
-                 (extension (file-name-extension filename)))
-             (unless (equal stem key)
-               (let ((new-file-field)
-                     (new-filename (file-name-concat
-                                    (abbreviate-file-name
-                                     (eval (intern (concat "ps/dir-library-" extension))))
-                                    (file-name-with-extension key extension))))
-                 (rename-file filename new-filename)
-                 (ebib-delete-field-contents field t)
-                 (setq new-file-field
-                       (if new-file-field
-                           (concat ";" new-file-field new-filename)
-                         new-filename))
-                 (ebib-set-field-value field new-file-field key ebib--cur-db 'overwrite)))))
-         (ebib--redisplay-field field)
-         (ebib--redisplay-index-item field)
-         (ebib-save-current-database nil)))
+         (when file-list
+           (ebib-delete-field-contents field t)
+           (dolist (filename file-list)
+             (let ((stem (file-name-sans-extension (file-name-nondirectory filename)))
+                   (extension (file-name-extension filename)))
+               (unless (equal stem key)
+                 (let ((new-file-field)
+                       (new-filename (file-name-concat
+                                      (abbreviate-file-name
+                                       (eval (intern (concat "ps/dir-library-" extension))))
+                                      (file-name-with-extension key extension))))
+                   (rename-file filename new-filename)
+                   (ebib-set-field-value field new-filename key ebib--cur-db ";")))))
+           (ebib--redisplay-field field)
+           (ebib--redisplay-index-item field)
+           (ebib-save-current-database nil))))
       (default
         (beep))))
 
@@ -14782,6 +14792,12 @@ If not invoked from `ebib', prompt for search query."
     (interactive)
     (ps/ebib-search-multi field search-query ps/ebib-search-book))
 
+  (defun ps/ebib-download-book (&optional field search-query)
+    "The list of search engines is specified by the variable
+`ps/ebib-download-book'."
+    (interactive)
+    (ps/ebib-search-multi field search-query ps/ebib-search-book))
+
   (defun ps/ebib-download-isbn (&optional field search-query)
     "The list of search engines is specified by the variable
 `ps/ebib-search-isbn'."
@@ -14794,6 +14810,12 @@ If not invoked from `ebib', prompt for search query."
     (interactive)
     (ps/ebib-search-multi field search-query ps/ebib-search-article))
 
+  (defun ps/ebib-download-article (&optional field search-query)
+    "The list of search engines is specified by the variable
+`ps/ebib-download-article'."
+    (interactive)
+    (ps/ebib-search-multi field search-query ps/ebib-search-article))
+
   (defun ps/ebib-search-book-by-title ()
     "docstring"
     (interactive)
@@ -14801,6 +14823,14 @@ If not invoked from `ebib', prompt for search query."
             (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
             (user-error "`title' field is empty!"))
         (ps/ebib-search-book "title")))
+
+  (defun ps/ebib-download-book-by-title ()
+    "docstring"
+    (interactive)
+    (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+            (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+            (user-error "`title' field is empty!"))
+        (ps/ebib-download-book "title")))
 
   (defun ps/ebib-search-book-by-isbn ()
     "docstring"
@@ -14815,6 +14845,13 @@ If not invoked from `ebib', prompt for search query."
     (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
         (user-error "`title' field is empty!")
       (ps/ebib-search-article "title")))
+
+  (defun ps/ebib-download-article-by-title ()
+    "docstring"
+    (interactive)
+    (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+        (user-error "`title' field is empty!")
+      (ps/ebib-download-article "title")))
 
   (defun ps/ebib-search-article-by-doi ()
     "docstring"

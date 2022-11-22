@@ -14939,7 +14939,8 @@ first name, and names are separated by a semicolon."
    "p" 'ps/ebib-open-pdf-file
    "P" 'ps/ebib-open-pdf-file-externally
    "Q" 'ebib-quit
-   "r" 'ps/ebib-search-university-of-toronto
+   "r" 'ps/ebib-rename-files
+   "z" 'ps/ebib-search-university-of-toronto
    "s" 'ps/ebib-search-google-scholar
    "t" 'ps/ebib-search-book-dwim
    "u" 'ebib-browse-url
@@ -14948,6 +14949,7 @@ first name, and names are separated by a semicolon."
    "y" 'ps/ebib-search-hathitrust
    ";" 'ps/ebib-search-dwim
    "/" 'ps/ebib-attach-most-recent-file
+   "?" 'ps/ebib-attach-file
    "," 'ps/ebib-title-case
    "." 'ps/ebib-sentence-case
    "!" 'ebib-generate-autokey

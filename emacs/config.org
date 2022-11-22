@@ -14393,7 +14393,7 @@ exists."
       (browse-url-of-buffer)
       (kill-buffer html-buffer)))
 
-  (defvar ps/ebib-valid-file-extensions '("html" "org" "pdf"))
+  (defvar ps/ebib-valid-file-extensions '("html" "pdf"))
 
   (defun ps/ebib-validate-file-extension ()
     "If entry at point has attachments, check that the extension of
@@ -14532,7 +14532,8 @@ generate the key, see that function's documentation for details."
     (interactive)
     (ebib--execute-when
       ((and real-db entries)
-       (let ((new-key
+       (let ((old-key (ebib--get-key-at-point))
+	     (new-key
               (with-temp-buffer
                 ;; We sort the entry fields when formatting, because if both
                 ;; `author' and `editor' fields are present,
@@ -14547,7 +14548,12 @@ generate the key, see that function's documentation for details."
                 (bibtex-generate-autokey))))
          (if (string= new-key "")
              (error (format "[Ebib] Cannot create key"))
-           (ebib--update-keyname new-key))))
+           (ebib--update-keyname new-key)
+	   (let ((old-filename (file-name (file-name-concat
+           
+                            (abbreviate-file-name (intern (concat "ps/dir-library-" extension))
+                            (file-name-with-extension old-key extension)))
+           ))))))
       (default
         (beep))))
 

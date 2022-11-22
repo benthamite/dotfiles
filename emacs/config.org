@@ -5113,7 +5113,7 @@ CLOCK: [2021-10-20 Wed 21:38]--[2021-10-20 Wed 21:46] =>  0:08
 #+begin_src emacs-lisp :results silent
 (use-feature filenotify
   :config
-  Copied from lists.gnu.org/archive/html/emacs-devel/2021-10/msg01206.html
+  ;; Copied from lists.gnu.org/archive/html/emacs-devel/2021-10/msg01206.html
   (defun ps/file-notify-rm-all-watches ()
     "Remove all existing file notification watches from Emacs."
     (interactive)

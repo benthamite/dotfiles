@@ -14023,7 +14023,9 @@ CLOCK: [2021-07-11 Sun 15:41]--[2021-07-11 Sun 15:42] =>  0:01
 CLOCK: [2021-07-10 Sat 22:16]--[2021-07-10 Sat 22:49] =>  0:33
 CLOCK: [2021-07-10 Sat 22:07]--[2021-07-10 Sat 22:07] =>  0:00
 :END:
-Required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-bibtex]].
+/[[https://github.com/tmalsburg/helm-bibtex][bibtex-completion]] is a backend for searching and managing bibliographies in Emacs./
+
+The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-bibtex]].
 
 #+begin_src emacs-lisp :results silent
 (use-package bibtex-completion

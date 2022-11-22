@@ -7079,7 +7079,7 @@ CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
   :straight
   (git-timemachine
    :type git
-   :host "https://codeberg.org/"
+   :host codeberg
    :repo "pidu/git-timemachine")
   :demand t
   :general

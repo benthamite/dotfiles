@@ -14941,7 +14941,7 @@ If not invoked from `ebib', prompt for search query."
     "docstring"
     (when (ebib-db-modified-p ebib--cur-db)
       (ebib-save-current-database t))
-    (run-with-timer 5 nil #'ps/ebib-auto-save-db))
+    (run-with-timer 30 nil #'ps/ebib-auto-save-db))
 
   (defun ps/ebib-open-key (key)
     "Open the entry for KEY in Ebib."
@@ -15008,7 +15008,7 @@ first name, and names are separated by a semicolon."
   ;; mysteriously, setting REPEAT to `t' does not restart the timer.
   ;; So instead the function the timer calls itself starts a new
   ;; timer.
-  (run-with-timer 10 nil #'ps/ebib-auto-save-db)
+  (run-with-timer 30 nil #'ps/ebib-auto-save-db)
 
   (file-notify-add-watch
    ps/file-bibliography-new
@@ -18108,7 +18108,7 @@ that duration."
   (interactive
    (list (completing-read
           "Select duration (minutes): "
-          '("1" "5" "10" "30" "60" "custom" "unlimited"))))
+          '("1" "5" "10" "30" "60" "120" "custom" "unlimited"))))
   (when (equal duration "custom")
     (setq duration (read-string "Enter duration (minutes): ")))
   (unless (equal duration "unlimited")

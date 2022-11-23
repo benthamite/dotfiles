@@ -15411,6 +15411,13 @@ or specify any other coding system (and risk losing\n\
   ;; TODO: Fix this properly.
   (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)
 
+  (defun ps/zotra-add-entry-from-search-advice ()
+    "Functions to call after `zotra-add-entry-from-search' is run."
+    (ebib-switch-to-database-nth 1)
+    (ps/ebib-reload-current-database-no-confirm))
+
+  (advice-add 'zotra-add-entry-from-search :after #'ps/zotra-add-entry-from-search-advice)
+    
   :hook
   (zotra-after-add-entry-hook . ps/zotra-after-add-entry-function)
 

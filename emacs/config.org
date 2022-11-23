@@ -15043,8 +15043,7 @@ first name, and names are separated by a semicolon."
   (defun ps/ebib-merge-old-new ()
     "Merge the old and new bibliography files."
     (interactive)
-    (ps/ebib-merge-databases ps/file-bibliography-old ps/file-bibliography-new)
-    (ps/ebib-reload-current-database-no-confirm))
+    (ps/ebib-merge-databases ps/file-bibliography-old ps/file-bibliography-new))
 
   (defun ps/ebib-end-of-index-buffer ()
     "Move to the end of the index buffer."
@@ -15241,7 +15240,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (sleep-for 3)
     (ps/ebib-open-key citekey)
     (ebib-set-field-value "date" (format-time-string ebib-timestamp-format) citekey ebib--cur-db 'overwrite)))
-;; (ps/ebib-reload-current-database-no-confirm)))
 
   (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
     (let ((bibfile

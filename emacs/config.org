@@ -3525,8 +3525,10 @@ Has a preference for looking backward when not directly on a symbol."
   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
   (read-extended-command-predicate #'command-completion-default-include-p)
   (eval-expression-print-level nil)
-  (eval-expression-print-length 30)
-
+  (eval-expression-print-length nil)
+  (print-level nil)
+  (print-length nil)
+  
   :config
   (column-number-mode)
 
@@ -14592,8 +14594,8 @@ entry's key."
                    (rename-file filename new-filename)
                    (ebib-set-field-value field new-filename key ebib--cur-db ";")))))
            (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field)
-           (ebib-save-current-database nil))))
+           (ebib--redisplay-index-item field))))
+           ;; (ebib-save-current-database nil))))
       (default
         (beep))))
 
@@ -14667,8 +14669,8 @@ entry's key."
            (ebib-set-field-value field file-name key ebib--cur-db ";")
            (ebib--store-multiline-text (current-buffer))
            (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field)
-           (ebib-save-current-database nil))))
+           (ebib--redisplay-index-item field))))
+           ;; (ebib-save-current-database nil))))
       (default
         (beep))))
 
@@ -18047,6 +18049,7 @@ This section collects a few functions I created for interfacing with Mullvad, a 
   '(("London" . "gb4-wireguard")
     ("Madrid" . "es4-wireguard")
     ("Malmö" . "se1-wireguard")
+    ("Frankfurt" . "de5-wireguard")
     ("New York" . "us276-wireguard")
     ("São Paulo" . "br1-wireguard")
     ("Switzerland" . "ch5-wireguard"))

@@ -11533,40 +11533,43 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 not already have one."
     ;; Positive conditions
     (when (and (equal (system-name) ps/computer-hostname-pablo)
-               (eq major-mode 'org-mode)
-               (eq buffer-read-only nil))
+	       (eq major-mode 'org-mode)
+	       (eq buffer-read-only nil))
       ;; Negative conditions
       (unless (or
-               ;; exclude selected directories
-               (member
-                (file-name-directory (buffer-file-name))
-                `(,(file-name-as-directory ps/dir-bibliographic-notes)))
-               ;; exclude selected files
-               (member
-                (file-name-nondirectory (buffer-file-name))
-                '("orb-noter-template.org"
-                  "tareas.org"
-                  "calendar.org"))
-               ;; exclude selected headings
-               (member (org-get-heading) '("Local variables"
-                                           "COMMENT Local variables"
-                                           "TODO Local variables"
-                                           "Archive :ARCHIVE:"))
-               ;; exclude buffers when in list of special dirs and org
-               ;; heading at point is of level higher than 1 (i.e.
-               ;; don't create unnecessary IDs for article
-               ;; subsections)
-               (and
-                (member
-                 (file-name-directory (buffer-file-name))
-                 (mapcar #'file-name-as-directory
-                         ;; List of special dirs
-                         (list
-                          ps/dir-journal
-                          ps/dir-wiki-entries
-                          ps/dir-people)))
-                (> (org-current-level) 1)))
-        (org-map-entries 'org-id-get-create))))
+	       ;; exclude selected directories
+	       (member
+		(file-name-directory (buffer-file-name))
+		`(,(file-name-as-directory ps/dir-bibliographic-notes)))
+	       ;; exclude selected files
+	       (member
+		(file-name-nondirectory (buffer-file-name))
+		'("orb-noter-template.org"
+		  "tareas.org"
+		  "calendar.org"
+		  ".org2blog.org"))
+	       ;; exclude selected headings
+	       (member (org-get-heading) '("Local variables"
+					   "COMMENT Local variables"
+					   "TODO Local variables"
+					   "Archive :ARCHIVE:"))
+	       ;; exclude buffers when in list of special dirs and org
+	       ;; heading at point is of level higher than 1 (i.e.
+	       ;; don't create unnecessary IDs for article
+	       ;; subsections)
+	       (and
+		; dir condition
+		(member
+		 (file-name-directory (buffer-file-name))
+		 (mapcar #'file-name-as-directory
+			 ;; List of special dirs
+			 (list
+			  ps/dir-journal
+			  ps/dir-wiki-entries
+			  ps/dir-people)))
+		; heading condition
+		(> (org-current-level) 1)))
+	(org-map-entries 'org-id-get-create))))
 
   :config
   ;; copied from emacs.stackexchange.com/a/58834/32089
@@ -11579,84 +11582,84 @@ files currently mentioned in `org-id-locations'.
 When FILES is given, scan these files instead."
     (interactive)
     (if (not org-id-track-globally)
-        (error "Please turn on `org-id-track-globally' if you want to track IDs")
+	(error "Please turn on `org-id-track-globally' if you want to track IDs")
       (let* ((org-id-search-archives
-              (or org-id-search-archives
-                  (and (symbolp org-id-extra-files)
-                       (symbol-value org-id-extra-files)
-                       (member 'agenda-archives org-id-extra-files))))
-             (files
-              (or files
-                  (append
-                   ;; Agenda files and all associated archives
-                   (org-agenda-files t org-id-search-archives)
-                   ;; Explicit extra files
-                   (if (symbolp org-id-extra-files)
-                       (symbol-value org-id-extra-files)
-                     org-id-extra-files)
-                   ;; Files associated with live Org buffers
-                   (delq nil
-                         (mapcar (lambda (b)
-                                   (with-current-buffer b
-                                     (and (derived-mode-p 'org-mode) (buffer-file-name))))
-                                 (buffer-list)))
-                   ;; All files known to have IDs
-                   org-id-files)))
-             org-agenda-new-buffers
-             file nfiles tfile ids reg found id seen (ndup 0))
-        (when (member 'agenda-archives files)
-          (setq files (delq 'agenda-archives (copy-sequence files))))
-        (setq nfiles (length files))
-        (while (setq file (pop files))
-          (unless silent
-            (message "Finding ID locations (%d/%d files): %s"
-                     (- nfiles (length files)) nfiles file))
-          (setq tfile (file-truename file))
-          (when (and (file-exists-p file) (not (member tfile seen)))
-            (push tfile seen)
-            (setq ids nil)
-            (with-current-buffer (org-get-agenda-file-buffer file)
-              (save-excursion
-                (save-restriction
-                  (widen)
-                  (goto-char (point-min))
-                  (while (re-search-forward "^[ \t]*:ID:[ \t]+\\(\\S-+\\)[ \t]*$"
-                                            nil t)
-                    (setq id (match-string-no-properties 1))
-                    (if (member id found)
-                        (progn
-                                        ;added logic
-                          (if org-clone-delete-id
-                              (org-entry-delete nil "ID")
-                            (org-id-get-create t))
-                                        ;end of added logic
-                          (message "Duplicate ID \"%s\", also in file %s"
-                                   id (or (car (delq
-                                                nil
-                                                (mapcar
-                                                 (lambda (x)
-                                                   (if (member id (cdr x))
-                                                       (car x)))
-                                                 reg)))
-                                          (buffer-file-name)))
-                          (when (= ndup 0)
-                            (ding)
-                            (sit-for 2))
-                          (setq ndup (1+ ndup)))
-                      (push id found)
-                      (push id ids)))
-                  (push (cons (abbreviate-file-name file) ids) reg))))))
-        (org-release-buffers org-agenda-new-buffers)
-        (setq org-agenda-new-buffers nil)
-        (setq org-id-locations reg)
-        (setq org-id-files (mapcar 'car org-id-locations))
-        (org-id-locations-save) ;; this function can also handle the alist form
-        ;; now convert to a hash
-        (setq org-id-locations (org-id-alist-to-hash org-id-locations))
-        (if (> ndup 0)
-            (message "WARNING: %d duplicate IDs found, check *Messages* buffer" ndup)
-          (message "%d unique files scanned for IDs" (length org-id-files)))
-        org-id-locations)))
+	      (or org-id-search-archives
+		  (and (symbolp org-id-extra-files)
+		       (symbol-value org-id-extra-files)
+		       (member 'agenda-archives org-id-extra-files))))
+	     (files
+	      (or files
+		  (append
+		   ;; Agenda files and all associated archives
+		   (org-agenda-files t org-id-search-archives)
+		   ;; Explicit extra files
+		   (if (symbolp org-id-extra-files)
+		       (symbol-value org-id-extra-files)
+		     org-id-extra-files)
+		   ;; Files associated with live Org buffers
+		   (delq nil
+			 (mapcar (lambda (b)
+				   (with-current-buffer b
+				     (and (derived-mode-p 'org-mode) (buffer-file-name))))
+				 (buffer-list)))
+		   ;; All files known to have IDs
+		   org-id-files)))
+	     org-agenda-new-buffers
+	     file nfiles tfile ids reg found id seen (ndup 0))
+	(when (member 'agenda-archives files)
+	  (setq files (delq 'agenda-archives (copy-sequence files))))
+	(setq nfiles (length files))
+	(while (setq file (pop files))
+	  (unless silent
+	    (message "Finding ID locations (%d/%d files): %s"
+		     (- nfiles (length files)) nfiles file))
+	  (setq tfile (file-truename file))
+	  (when (and (file-exists-p file) (not (member tfile seen)))
+	    (push tfile seen)
+	    (setq ids nil)
+	    (with-current-buffer (org-get-agenda-file-buffer file)
+	      (save-excursion
+		(save-restriction
+		  (widen)
+		  (goto-char (point-min))
+		  (while (re-search-forward "^[ \t]*:ID:[ \t]+\\(\\S-+\\)[ \t]*$"
+					    nil t)
+		    (setq id (match-string-no-properties 1))
+		    (if (member id found)
+			(progn
+					;added logic
+			  (if org-clone-delete-id
+			      (org-entry-delete nil "ID")
+			    (org-id-get-create t))
+					;end of added logic
+			  (message "Duplicate ID \"%s\", also in file %s"
+				   id (or (car (delq
+						nil
+						(mapcar
+						 (lambda (x)
+						   (if (member id (cdr x))
+						       (car x)))
+						 reg)))
+					  (buffer-file-name)))
+			  (when (= ndup 0)
+			    (ding)
+			    (sit-for 2))
+			  (setq ndup (1+ ndup)))
+		      (push id found)
+		      (push id ids)))
+		  (push (cons (abbreviate-file-name file) ids) reg))))))
+	(org-release-buffers org-agenda-new-buffers)
+	(setq org-agenda-new-buffers nil)
+	(setq org-id-locations reg)
+	(setq org-id-files (mapcar 'car org-id-locations))
+	(org-id-locations-save) ;; this function can also handle the alist form
+	;; now convert to a hash
+	(setq org-id-locations (org-id-alist-to-hash org-id-locations))
+	(if (> ndup 0)
+	    (message "WARNING: %d duplicate IDs found, check *Messages* buffer" ndup)
+	  (message "%d unique files scanned for IDs" (length org-id-files)))
+	org-id-locations)))
 
   :hook
   (before-save-hook . ps/org-id-add-ids-to-headlines-in-file)

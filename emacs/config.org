@@ -15052,6 +15052,18 @@ first name, and names are separated by a semicolon."
       (goto-char (point-max))
       (forward-line -1)))
 
+  (defun ps/ebib-duplicate-entry ()
+    "Duplicate the entry at point."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (let ((key (ebib--get-key-at-point)))
+	 (ebib-copy-entry key ebib--cur-db)
+	 (ebib--redisplay-index-item key)
+	 (ebib--redisplay-entry-buffer key)))
+      (default
+	(beep))))
+  
   :hook
   (ebib-index-mode-hook . doom-modeline-mode)
   (ebib-entry-mode-hook . visual-line-mode)

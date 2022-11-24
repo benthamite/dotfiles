@@ -7421,6 +7421,54 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
    "<C-i>" 'vertico-exit))
 #+end_src
 
+** embark
+:PROPERTIES:
+:ID:       19A4F21C-2169-4529-92E4-68E3A584DDAC
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-22 Fri 18:10]--[2022-07-22 Fri 18:13] =>  0:03
+CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
+:END:
+/[[https://github.com/oantolin/embark][embark]] provides contextually relevant actions in completion menus and in normal buffers./
+
+#+begin_src emacs-lisp :results silent
+(use-package embark
+  :demand t
+  :config
+  (embark-define-keymap embark-yasnippet-completion-actions
+    "Embark actions for `consult-yasnippet' and derivatives"
+    ("d" consult-yasnippet-visit-snippet-file))
+
+  (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
+
+  :general
+  ("C-;" 'embark-act
+  "A-C-;" 'embark-dwim
+  "C-h B" 'embark-bindings))
+#+end_src
+
+*** resources
+:PROPERTIES:
+:ID:       D6A07E88-F786-4E8A-AE58-25DA6C562AA5
+:END:
+
+** embark-consult
+:PROPERTIES:
+:ID:       C7BDCA9D-F507-4C25-9AF8-1EBB86D99A61
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
+:END:
+/[[https://github.com/oantolin/embark/blob/master/embark-consult.el][embark-consult]] provides integration between [[id:19A4F21C-2169-4529-92E4-68E3A584DDAC][embark]] and [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package embark-consult
+  :demand t
+  :hook
+  (embark-collect-mode-hook . consult-preview-at-point-mode))
+#+end_src
+
+
 ** consult
 :PROPERTIES:
 :ID:       C6144D48-2E3C-4033-AD6E-5D7EE175D9E1
@@ -7645,50 +7693,6 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
   :after (consult flyspell))
 #+end_src
 
-** embark
-:PROPERTIES:
-:ID:       19A4F21C-2169-4529-92E4-68E3A584DDAC
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-22 Fri 18:10]--[2022-07-22 Fri 18:13] =>  0:03
-CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
-:END:
-/[[https://github.com/oantolin/embark][embark]] provides contextually relevant actions in completion menus and in normal buffers./
-
-#+begin_src emacs-lisp :results silent
-(use-package embark
-  :demand t
-  :config
-  (embark-define-keymap embark-yasnippet-completion-actions
-    "Embark actions for `consult-yasnippet' and derivatives"
-    ("d" consult-yasnippet-visit-snippet-file))
-
-  (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
-
-  :general
-  ("C-;" 'embark-act
-  "A-C-;" 'embark-dwim
-  "C-h B" 'embark-bindings))
-#+end_src
-
-*** resources
-:PROPERTIES:
-:ID:       D6A07E88-F786-4E8A-AE58-25DA6C562AA5
-:END:
-
-** embark-consult
-:PROPERTIES:
-:ID:       C7BDCA9D-F507-4C25-9AF8-1EBB86D99A61
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
-:END:
-#+begin_src emacs-lisp :results silent
-(use-package embark-consult
-  :demand t
-  :after (embark consult))
-#+end_src
-
 ** marginalia
 :PROPERTIES:
 :ID:       C1B0678E-7334-4AF3-B1FE-9D63DFB6BE68
@@ -7705,6 +7709,7 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 :PROPERTIES:
 :ID:       D0A453D1-784F-49E4-B238-ED009AF84EDB
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-package orderless
   :defer 5
@@ -13709,6 +13714,222 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
   :demand t)
 #+end_src
 
+** bibtex
+:PROPERTIES:
+:ID:       42191633-D2A1-4EDB-903F-3965ECB61510
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
+:END:
+#+begin_src emacs-lisp :results silent
+(use-feature bibtex
+  :demand t
+  :custom
+  ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
+  ;; retorque.re/zotero-better-bibtex/citing/
+  (bibtex-autokey-names 1)
+  (bibtex-autokey-name-case-convert 'capitalize)
+  (bibtex-autokey-year-length 4)
+  (bibtex-autokey-titlewords 3)
+  (bibtex-autokey-titlewords-stretch 0)
+  (bibtex-autokey-titleword-ignore '("A" "An" "On" "The" "Eine?" "Der" "Die" "Das" "El" "La" "Lo" "Los" "Las" "Un" "Una" "Unos" "Unas" "Le" "La" "L'" "Les" "Un" "Une" "Des" "Du" "De la" "De l'" "Des" "Lo" "Il" "La" "L'" "Gli" "I" "Le" "Uno"))
+  (bibtex-autokey-title-terminators "[.!?;]\\|--")
+  (bibtex-autokey-titleword-case-convert 'capitalize)
+  (bibtex-autokey-titleword-length nil)
+  (bibtex-autokey-titleword-separator "")
+  (bibtex-autokey-year-title-separator "")
+  (bibtex-autokey-preserve-case t)
+  ;; Remove accents
+  (bibtex-autokey-before-presentation-function 'ps/bibtex-asciify-string)
+
+  :config
+  ;; Copied from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
+  (defun ps/bibtex-asciify-text (&optional Begin End)
+  "Remove accents in some letters. e.g. café → cafe.
+Change European language characters into equivalent ASCII ones.
+When called interactively, work on current line or text selection.
+
+URL `http://xahlee.info/emacs/emacs/emacs_zap_gremlins.html'
+Version 2018-11-12 2021-09-17"
+  (interactive)
+  (let (($charMap
+          [
+           ["ß" "ss"]
+           ["á\\|à\\|â\\|ä\\|ā\\|ǎ\\|ã\\|å\\|ą\\|ă\\|ạ\\|ả\\|ả\\|ấ\\|ầ\\|ẩ\\|ẫ\\|ậ\\|ắ\\|ằ\\|ẳ\\|ặ" "a"]
+           ["æ" "ae"]
+           ["ç\\|č\\|ć" "c"]
+           ["é\\|è\\|ê\\|ë\\|ē\\|ě\\|ę\\|ẹ\\|ẻ\\|ẽ\\|ế\\|ề\\|ể\\|ễ\\|ệ" "e"]
+           ["í\\|ì\\|î\\|ï\\|ī\\|ǐ\\|ỉ\\|ị" "i"]
+           ["ñ\\|ň\\|ń" "n"]
+           ["ó\\|ò\\|ô\\|ö\\|õ\\|ǒ\\|ø\\|ō\\|ồ\\|ơ\\|ọ\\|ỏ\\|ố\\|ổ\\|ỗ\\|ộ\\|ớ\\|ờ\\|ở\\|ợ" "o"]
+           ["ú\\|ù\\|û\\|ü\\|ū\\|ũ\\|ư\\|ụ\\|ủ\\|ứ\\|ừ\\|ử\\|ữ\\|ự"     "u"]
+           ["ý\\|ÿ\\|ỳ\\|ỷ\\|ỹ"     "y"]
+           ["þ" "th"]
+           ["ď\\|ð\\|đ" "d"]
+           ["ĩ" "i"]
+           ["ľ\\|ĺ\\|ł" "l"]
+           ["ř\\|ŕ" "r"]
+           ["š\\|ś" "s"]
+           ["ť" "t"]
+           ["ž\\|ź\\|ż" "z"]
+           [" " " "]       ; thin space etc
+           ["–" "-"]       ; dash
+           ["—\\|一" "--"] ; em dash etc
+           ])
+         ($p1 (if Begin Begin
+                (if (region-active-p)
+                    (region-beginning)
+                  (line-beginning-position))))
+         ($p2 (if End End
+                (if (region-active-p)
+                    (region-end)
+                  (line-end-position)))))
+    (let ((case-fold-search t))
+      (save-restriction
+        (narrow-to-region $p1 $p2)
+        (mapc
+         (lambda ($pair)
+           (goto-char (point-min))
+           (while (re-search-forward (elt $pair 0) (point-max) t)
+             (replace-match (elt $pair 1))))
+         $charMap)))))
+
+  (defun ps/bibtex-asciify-string (String)
+  "Returns a new string. e.g. café → cafe.
+See `xah-asciify-text'
+Version 2015-06-08"
+  (with-temp-buffer
+      (insert String)
+      (ps/bibtex-asciify-text (point-min) (point-max))
+      (buffer-string)))
+
+  ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field
+  (defun ps/bibtex-autokey-get-year ()
+  "Return year field contents as a string obeying `bibtex-autokey-year-length'."
+  (let* ((str (bibtex-autokey-get-field '("date" "year" "urldate"))) ; possibly ""
+         (year (or (and (iso8601-valid-p str)
+                        (let ((year (decoded-time-year (iso8601-parse str))))
+                          (and year (number-to-string year))))
+                   ;; BibTeX permits a year field "(about 1984)", where only
+                   ;; the last four nonpunctuation characters must be numerals.
+                   (and (string-match "\\([0-9][0-9][0-9][0-9]\\)[^[:alnum:]]*\\'" str)
+                        (match-string 1 str))
+                   (user-error "Year or date field `%s' invalid" str))))
+    (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
+
+  (defun ps/bibtex-get-key ()
+  "Return the key of the current BibTeX entry."
+  (save-excursion
+    (bibtex-narrow-to-entry)
+    (goto-char (point-min))
+    (if (re-search-forward "@\\w+{\\([^,]+\\),")
+        (match-string-no-properties 1)
+      (user-error "Not on a BibTeX entry"))))
+
+  (advice-add 'bibtex-autokey-get-year :override #'ps/bibtex-autokey-get-year)
+
+  :general
+  (bibtex-mode-map
+   "A-C-H-x" 'bibtex-copy-entry-as-kill
+   "A-C-H-c" 'bibtex-kill-entry
+   "A-C-H-a" 'bibtex-copy-field-as-kill
+   "A-C-H-f" 'bibtex-kill-field
+   "A-C-s-r" 'bibtex-previous-entry
+   "A-C-s-f" 'bibtex-next-entry))
+#+end_src
+
+** bibtex-completion
+:PROPERTIES:
+:ID:       DCD9D75D-7814-49D8-A3E0-33846D5A08FD
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-29 Sun 15:10]--[2022-05-29 Sun 15:15] =>  0:05
+CLOCK: [2021-11-08 Mon 18:40]--[2021-11-08 Mon 18:53] =>  0:13
+CLOCK: [2021-08-24 Tue 12:02]--[2021-08-24 Tue 12:11] =>  0:09
+CLOCK: [2021-07-14 Wed 20:44]--[2021-07-14 Wed 21:21] =>  0:37
+CLOCK: [2021-07-13 Tue 22:42]--[2021-07-13 Tue 23:08] =>  0:26
+CLOCK: [2021-07-13 Tue 15:32]--[2021-07-13 Tue 16:01] =>  0:29
+CLOCK: [2021-07-11 Sun 15:41]--[2021-07-11 Sun 15:42] =>  0:01
+CLOCK: [2021-07-10 Sat 22:16]--[2021-07-10 Sat 22:49] =>  0:33
+CLOCK: [2021-07-10 Sat 22:07]--[2021-07-10 Sat 22:07] =>  0:00
+:END:
+/[[https://github.com/tmalsburg/helm-bibtex][bibtex-completion]] is a backend for searching and managing bibliographies in Emacs./
+
+The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-bibtex]].
+
+#+begin_src emacs-lisp :results silent
+(use-package bibtex-completion
+  ;; :after citar
+  :demand t
+  :custom
+  (bibtex-completion-pdf-open-function 'find-file)
+  (bibtex-completion-bibliography org-cite-global-bibliography)
+  (bibtex-completion-notes-path ps/dir-bibliographic-notes)
+  (bibtex-completion-pdf-field "file")
+  (bibtex-dialect 'biblatex))
+#+end_src
+
+*** Archive                                                       :ARCHIVE:
+:PROPERTIES:
+:ID:       664ACDBD-58F7-4174-8A6B-2FF5E4441362
+:END:
+**** DONE [#5] Diagnose why ~bibtex-completion~ is not returning key at point
+CLOSED: [2022-06-18 Sat 15:51]
+:PROPERTIES:
+:Effort:   0:40
+:ARCHIVE_TIME: 2022-06-18 Sat 15:51
+:ID:       053F708E-4F49-41D2-A65C-804F531E4CC8
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-18 Sat 15:51]--[2022-06-18 Sat 15:51] =>  0:00
+:END:
+** org-roam-bibtex
+:PROPERTIES:
+:ID:       EC73B84D-530E-4179-BB67-F19110A543DF
+:END:
+:LOGBOOK:
+CLOCK: [2022-08-30 Tue 14:58]--[2022-08-30 Tue 15:05] =>  0:07
+CLOCK: [2022-06-26 Sun 08:47]--[2022-06-26 Sun 09:08] =>  0:21
+CLOCK: [2021-07-27 Tue 23:26]--[2021-07-27 Tue 23:54] =>  0:28
+CLOCK: [2021-07-26 Mon 12:38]--[2021-07-26 Mon 13:16] =>  0:38
+CLOCK: [2021-07-26 Mon 12:28]--[2021-07-26 Mon 12:29] =>  0:01
+CLOCK: [2021-07-26 Mon 11:17]--[2021-07-26 Mon 11:26] =>  0:09
+CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
+:END:
+/[[https://github.com/org-roam/org-roam-bibtex][org-roam-bibtex]] integrates [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]] and [[id:42191633-D2A1-4EDB-903F-3965ECB61510][bibtex]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package org-roam-bibtex
+  :demand t
+  ;; :after bibtex-completion
+  :custom
+  (orb-roam-ref-format 'org-cite)
+  (orb-insert-interface 'citar-open-notes)
+  (orb-note-actions-interface 'default)
+  (orb-preformat-keywords
+   '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
+  (orb-process-file-keyword t)
+  (orb-attached-file-extensions '("pdf"))
+
+  :config
+  (add-to-list 'orb-preformat-keywords "year")
+  (org-roam-bibtex-mode))
+#+end_src
+
+*** Archive                                                       :ARCHIVE:
+:PROPERTIES:
+:ID:       BF807BC6-65EB-4D24-88B0-A13E39C387AD
+:END:
+**** DONE [#6] Remove 'keywords' from note template
+CLOSED: [2022-06-23 Thu 17:44]
+:PROPERTIES:
+:Effort:   0:30
+:ID:       BA144CFA-45C3-4DC5-9371-D1AE462D01DB
+:ARCHIVE_TIME: 2022-06-23 Thu 17:45
+:END:
+
+
+
 ** citar-org-roam
 :PROPERTIES:
 :ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
@@ -13717,11 +13938,9 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
 
 #+begin_src emacs-lisp :results silent
 (use-package citar-org-roam
-  :straight (citar-org-roam
-             :host github
-             :repo "emacs-citar/citar-org-roam")
   :demand t
-  :after org-roam
+  :no-require t
+  :after  org-roam
   :config
   (citar-org-roam-mode))
 #+end_src
@@ -13760,6 +13979,8 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   (citar-format-reference-function 'citar-citeproc-format-reference)
 
   :config
+  ;; (run-with-timer 5 nil (lambda ()
+  (require 'citar-org-roam)
   (citar-register-notes-source
    'orb-citar-source (list :name "Org-Roam Notes"
                            :category 'org-roam-node
@@ -13984,220 +14205,6 @@ in the file. Data comes from www.ebook.de."
     "Return `t' if string is a valid DOI."
     (string-match "^10.[[:digit:]]\\{4,9\\}/[().-;A-Z_-]+$" string)))
 #+end_src
-
-** bibtex
-:PROPERTIES:
-:ID:       42191633-D2A1-4EDB-903F-3965ECB61510
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
-:END:
-#+begin_src emacs-lisp :results silent
-(use-feature bibtex
-  :demand t
-  :custom
-  ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
-  ;; retorque.re/zotero-better-bibtex/citing/
-  (bibtex-autokey-names 1)
-  (bibtex-autokey-name-case-convert 'capitalize)
-  (bibtex-autokey-year-length 4)
-  (bibtex-autokey-titlewords 3)
-  (bibtex-autokey-titlewords-stretch 0)
-  (bibtex-autokey-titleword-ignore '("A" "An" "On" "The" "Eine?" "Der" "Die" "Das" "El" "La" "Lo" "Los" "Las" "Un" "Una" "Unos" "Unas" "Le" "La" "L'" "Les" "Un" "Une" "Des" "Du" "De la" "De l'" "Des" "Lo" "Il" "La" "L'" "Gli" "I" "Le" "Uno"))
-  (bibtex-autokey-title-terminators "[.!?;]\\|--")
-  (bibtex-autokey-titleword-case-convert 'capitalize)
-  (bibtex-autokey-titleword-length nil)
-  (bibtex-autokey-titleword-separator "")
-  (bibtex-autokey-year-title-separator "")
-  (bibtex-autokey-preserve-case t)
-  ;; Remove accents
-  (bibtex-autokey-before-presentation-function 'ps/bibtex-asciify-string)
-
-  :config
-  ;; Copied from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
-  (defun ps/bibtex-asciify-text (&optional Begin End)
-  "Remove accents in some letters. e.g. café → cafe.
-Change European language characters into equivalent ASCII ones.
-When called interactively, work on current line or text selection.
-
-URL `http://xahlee.info/emacs/emacs/emacs_zap_gremlins.html'
-Version 2018-11-12 2021-09-17"
-  (interactive)
-  (let (($charMap
-          [
-           ["ß" "ss"]
-           ["á\\|à\\|â\\|ä\\|ā\\|ǎ\\|ã\\|å\\|ą\\|ă\\|ạ\\|ả\\|ả\\|ấ\\|ầ\\|ẩ\\|ẫ\\|ậ\\|ắ\\|ằ\\|ẳ\\|ặ" "a"]
-           ["æ" "ae"]
-           ["ç\\|č\\|ć" "c"]
-           ["é\\|è\\|ê\\|ë\\|ē\\|ě\\|ę\\|ẹ\\|ẻ\\|ẽ\\|ế\\|ề\\|ể\\|ễ\\|ệ" "e"]
-           ["í\\|ì\\|î\\|ï\\|ī\\|ǐ\\|ỉ\\|ị" "i"]
-           ["ñ\\|ň\\|ń" "n"]
-           ["ó\\|ò\\|ô\\|ö\\|õ\\|ǒ\\|ø\\|ō\\|ồ\\|ơ\\|ọ\\|ỏ\\|ố\\|ổ\\|ỗ\\|ộ\\|ớ\\|ờ\\|ở\\|ợ" "o"]
-           ["ú\\|ù\\|û\\|ü\\|ū\\|ũ\\|ư\\|ụ\\|ủ\\|ứ\\|ừ\\|ử\\|ữ\\|ự"     "u"]
-           ["ý\\|ÿ\\|ỳ\\|ỷ\\|ỹ"     "y"]
-           ["þ" "th"]
-           ["ď\\|ð\\|đ" "d"]
-           ["ĩ" "i"]
-           ["ľ\\|ĺ\\|ł" "l"]
-           ["ř\\|ŕ" "r"]
-           ["š\\|ś" "s"]
-           ["ť" "t"]
-           ["ž\\|ź\\|ż" "z"]
-           [" " " "]       ; thin space etc
-           ["–" "-"]       ; dash
-           ["—\\|一" "--"] ; em dash etc
-           ])
-         ($p1 (if Begin Begin
-                (if (region-active-p)
-                    (region-beginning)
-                  (line-beginning-position))))
-         ($p2 (if End End
-                (if (region-active-p)
-                    (region-end)
-                  (line-end-position)))))
-    (let ((case-fold-search t))
-      (save-restriction
-        (narrow-to-region $p1 $p2)
-        (mapc
-         (lambda ($pair)
-           (goto-char (point-min))
-           (while (re-search-forward (elt $pair 0) (point-max) t)
-             (replace-match (elt $pair 1))))
-         $charMap)))))
-
-  (defun ps/bibtex-asciify-string (String)
-  "Returns a new string. e.g. café → cafe.
-See `xah-asciify-text'
-Version 2015-06-08"
-  (with-temp-buffer
-      (insert String)
-      (ps/bibtex-asciify-text (point-min) (point-max))
-      (buffer-string)))
-
-  ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field
-  (defun ps/bibtex-autokey-get-year ()
-  "Return year field contents as a string obeying `bibtex-autokey-year-length'."
-  (let* ((str (bibtex-autokey-get-field '("date" "year" "urldate"))) ; possibly ""
-         (year (or (and (iso8601-valid-p str)
-                        (let ((year (decoded-time-year (iso8601-parse str))))
-                          (and year (number-to-string year))))
-                   ;; BibTeX permits a year field "(about 1984)", where only
-                   ;; the last four nonpunctuation characters must be numerals.
-                   (and (string-match "\\([0-9][0-9][0-9][0-9]\\)[^[:alnum:]]*\\'" str)
-                        (match-string 1 str))
-                   (user-error "Year or date field `%s' invalid" str))))
-    (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
-
-  (defun ps/bibtex-get-key ()
-  "Return the key of the current BibTeX entry."
-  (save-excursion
-    (bibtex-narrow-to-entry)
-    (goto-char (point-min))
-    (if (re-search-forward "@\\w+{\\([^,]+\\),")
-        (match-string-no-properties 1)
-      (user-error "Not on a BibTeX entry"))))
-
-  (advice-add 'bibtex-autokey-get-year :override #'ps/bibtex-autokey-get-year)
-
-  :general
-  (bibtex-mode-map
-   "A-C-H-x" 'bibtex-copy-entry-as-kill
-   "A-C-H-c" 'bibtex-kill-entry
-   "A-C-H-a" 'bibtex-copy-field-as-kill
-   "A-C-H-f" 'bibtex-kill-field
-   "A-C-s-r" 'bibtex-previous-entry
-   "A-C-s-f" 'bibtex-next-entry))
-#+end_src
-
-** bibtex-completion
-:PROPERTIES:
-:ID:       DCD9D75D-7814-49D8-A3E0-33846D5A08FD
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-29 Sun 15:10]--[2022-05-29 Sun 15:15] =>  0:05
-CLOCK: [2021-11-08 Mon 18:40]--[2021-11-08 Mon 18:53] =>  0:13
-CLOCK: [2021-08-24 Tue 12:02]--[2021-08-24 Tue 12:11] =>  0:09
-CLOCK: [2021-07-14 Wed 20:44]--[2021-07-14 Wed 21:21] =>  0:37
-CLOCK: [2021-07-13 Tue 22:42]--[2021-07-13 Tue 23:08] =>  0:26
-CLOCK: [2021-07-13 Tue 15:32]--[2021-07-13 Tue 16:01] =>  0:29
-CLOCK: [2021-07-11 Sun 15:41]--[2021-07-11 Sun 15:42] =>  0:01
-CLOCK: [2021-07-10 Sat 22:16]--[2021-07-10 Sat 22:49] =>  0:33
-CLOCK: [2021-07-10 Sat 22:07]--[2021-07-10 Sat 22:07] =>  0:00
-:END:
-/[[https://github.com/tmalsburg/helm-bibtex][bibtex-completion]] is a backend for searching and managing bibliographies in Emacs./
-
-The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-bibtex]].
-
-#+begin_src emacs-lisp :results silent
-(use-package bibtex-completion
-  ;; :after citar
-  :demand t
-  :custom
-  (bibtex-completion-pdf-open-function 'find-file)
-  (bibtex-completion-bibliography citar-bibliography)
-  (bibtex-completion-notes-path ps/dir-bibliographic-notes)
-  (bibtex-completion-pdf-field "file")
-  (bibtex-dialect 'biblatex))
-#+end_src
-
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       664ACDBD-58F7-4174-8A6B-2FF5E4441362
-:END:
-**** DONE [#5] Diagnose why ~bibtex-completion~ is not returning key at point
-CLOSED: [2022-06-18 Sat 15:51]
-:PROPERTIES:
-:Effort:   0:40
-:ARCHIVE_TIME: 2022-06-18 Sat 15:51
-:ID:       053F708E-4F49-41D2-A65C-804F531E4CC8
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-18 Sat 15:51]--[2022-06-18 Sat 15:51] =>  0:00
-:END:
-** org-roam-bibtex
-:PROPERTIES:
-:ID:       EC73B84D-530E-4179-BB67-F19110A543DF
-:END:
-:LOGBOOK:
-CLOCK: [2022-08-30 Tue 14:58]--[2022-08-30 Tue 15:05] =>  0:07
-CLOCK: [2022-06-26 Sun 08:47]--[2022-06-26 Sun 09:08] =>  0:21
-CLOCK: [2021-07-27 Tue 23:26]--[2021-07-27 Tue 23:54] =>  0:28
-CLOCK: [2021-07-26 Mon 12:38]--[2021-07-26 Mon 13:16] =>  0:38
-CLOCK: [2021-07-26 Mon 12:28]--[2021-07-26 Mon 12:29] =>  0:01
-CLOCK: [2021-07-26 Mon 11:17]--[2021-07-26 Mon 11:26] =>  0:09
-CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
-:END:
-/[[https://github.com/org-roam/org-roam-bibtex][org-roam-bibtex]] integrates [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]] and [[id:42191633-D2A1-4EDB-903F-3965ECB61510][bibtex]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package org-roam-bibtex
-  :demand t
-  ;; :after bibtex-completion
-  :custom
-  (orb-roam-ref-format 'org-cite)
-  (orb-insert-interface 'citar-open-notes)
-  (orb-note-actions-interface 'default)
-  (orb-preformat-keywords
-   '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
-  (orb-process-file-keyword t)
-  (orb-attached-file-extensions '("pdf"))
-
-  :config
-  (add-to-list 'orb-preformat-keywords "year")
-  (org-roam-bibtex-mode))
-#+end_src
-
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       BF807BC6-65EB-4D24-88B0-A13E39C387AD
-:END:
-**** DONE [#6] Remove 'keywords' from note template
-CLOSED: [2022-06-23 Thu 17:44]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       BA144CFA-45C3-4DC5-9371-D1AE462D01DB
-:ARCHIVE_TIME: 2022-06-23 Thu 17:45
-:END:
 
 ** ebib
 :PROPERTIES:
@@ -16656,11 +16663,13 @@ CLOCK: [2021-08-03 Tue 23:13]--[2021-08-03 Tue 23:26] =>  0:13
 CLOCK: [2021-05-17 Mon 11:55]--[2021-05-17 Mon 12:05] =>  0:10
 CLOCK: [2021-04-06 Tue 18:05]--[2021-04-06 Tue 18:34] =>  0:29
 :END:
+/[[https://github.com/zevlg/telega.el][telega]] is an unofficial Emacs Telegram client./
+
+To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~, then ~M-x telega-server-build~.
 
 #+begin_src emacs-lisp :results silent
 (use-package telega
-  :defer 8
-
+  :demand t
   :custom
   (telega-server-libs-prefix "/opt/homebrew")
   (telega-chat-input-markups '("markdown2" "org"))

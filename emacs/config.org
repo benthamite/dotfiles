@@ -14059,7 +14059,7 @@ With prefix, rebuild the cache before offering candidates."
     (ps/ebib-open-key citekey))
 
   :general
-  (citar-map
+  ((citar-map citar-citation-map)
    "a" 'ps/citar-search-amazon
    "c" 'embark-copy-as-kill
    "i" 'ps/citar-open-in-ebib
@@ -14108,13 +14108,13 @@ Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
   (citar-citeproc-csl-locales-dir org-cite-csl-locales-dir))
 #+end_src
 
-** citar-consult
+** citar-embark
 :PROPERTIES:
 :ID:       846EEC59-E022-41B7-96D3-4B379F8F91D4
 :END:
 #+begin_src emacs-lisp :results silent
 (use-package citar-embark
-  :after (citar embark)
+  :after citar embark
   :demand t
   :config
   (citar-embark-mode))
@@ -14124,6 +14124,7 @@ Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
 :PROPERTIES:
 :ID:       1FC5528A-9F5A-4A9D-B168-5A1F51110455
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-package org-ref
   :defer 20
@@ -15230,6 +15231,7 @@ CLOCK: [2022-08-31 Wed 14:05]--[2022-08-31 Wed 14:17] =>  0:12
 CLOCK: [2022-07-16 Sat 21:03]--[2022-07-16 Sat 21:15] =>  0:12
 CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 :END:
+/[[https://github.com/mpedramfar/zotra][zotra]]  provides functions to get bibliographic information from a URL via [[https://www.zotero.org/support/translators][Zotero translators]], but without relying on the Zotero client./
 
 #+begin_src emacs-lisp :results silent
 (use-package zotra
@@ -15481,14 +15483,17 @@ CLOCK: [2022-10-10 Mon 19:29]--[2022-10-10 Mon 19:59] =>  0:30
 :PROPERTIES:
 :ID:       29ABF514-563B-463D-9FDB-CF2C8AA25F83
 :END:
-https://github.com/emacs-pe/scihub.el
+/[[https://github.com/emacs-pe/scihub.el][scihub]] supports downloading papers from Sci-Hub./
 
 #+begin_src emacs-lisp :results silent
 (use-package scihub
   :custom
   (scihub-download-directory ps/dir-downloads)
   (scihub-open-after-download nil)
-  (scihub-fetch-domain 'scihub-fetch-domains-lovescihub))
+  (scihub-fetch-domain 'scihub-fetch-domains-lovescihub)
+  ;; run `scihub-homepage' for a list of available scihub webservers
+  ;; if the URL below stops working
+  (scihub-homepage "http://sci-hub.ee"))
 #+end_src
 
 * spaced-repetition
@@ -15518,7 +15523,7 @@ CLOCK: [2021-04-05 Mon 22:19]--[2021-04-05 Mon 22:44] =>  0:25
 CLOCK: [2021-03-17 Wed 19:31]--[2021-03-17 Wed 19:33] =>  0:02
 CLOCK: [2021-03-17 Wed 17:46]--[2021-03-17 Wed 17:56] =>  0:10
 :END:
-https://github.com/louietan/anki-editor
+/[[https://github.com/louietan/anki-editor][anki-editor]] is a minor mode for making Anki cards with Org./
 
 #+begin_src emacs-lisp :results silent
 (use-package anki-editor
@@ -15711,6 +15716,8 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :PROPERTIES:
 :ID:       DDFE6DC9-A986-4E79-BF5B-A99124B65BA2
 :END:
+/[[https://github.com/vapniks/smtpmail-multi][smtpmail-multi]] allows for  different smtp servers for sending mail./
+
 #+begin_src emacs-lisp :results silent
 (use-package smtpmail-multi
   :after mu4e
@@ -15739,6 +15746,8 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :PROPERTIES:
 :ID:       25BB02C1-B537-4D2F-AF95-3B1217A58E6D
 :END:
+/[[https://www.gnu.org/software/emacs/manual/html_node/emacs/Mail-Sending.html][sendmail]] is a mode that provides mail-sending facilities from within Emacs./
+
 #+begin_src emacs-lisp :results silent
 (use-feature sendmail
   :custom

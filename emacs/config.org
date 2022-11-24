@@ -3528,7 +3528,7 @@ Has a preference for looking backward when not directly on a symbol."
   (eval-expression-print-length nil)
   (print-level nil)
   (print-length nil)
-  
+
   :config
   (column-number-mode)
 
@@ -14595,7 +14595,7 @@ entry's key."
                    (ebib-set-field-value field new-filename key ebib--cur-db ";")))))
            (ebib--redisplay-field field)
            (ebib--redisplay-index-item field))))
-           ;; (ebib-save-current-database nil))))
+      ;; (ebib-save-current-database nil))))
       (default
         (beep))))
 
@@ -14670,7 +14670,7 @@ entry's key."
            (ebib--store-multiline-text (current-buffer))
            (ebib--redisplay-field field)
            (ebib--redisplay-index-item field))))
-           ;; (ebib-save-current-database nil))))
+      ;; (ebib-save-current-database nil))))
       (default
         (beep))))
 
@@ -15058,12 +15058,15 @@ first name, and names are separated by a semicolon."
     (ebib--execute-when
       (entries
        (let ((key (ebib--get-key-at-point)))
-	 (ebib-copy-entry key ebib--cur-db)
-	 (ebib--redisplay-index-item key)
-	 (ebib--redisplay-entry-buffer key)))
+	 (find-file zotra-default-bibliography)
+	 (goto-char (point-max))
+         (ebib--format-entry key ebib--cur-db)
+	 (bibtex-narrow-to-entry)
+	 (goto-char (point-min))
+	 (replace-regex "^\\(@.*{.*\\)," "\\1-dup")))
       (default
-	(beep))))
-  
+        (beep))))
+
   :hook
   (ebib-index-mode-hook . doom-modeline-mode)
   (ebib-entry-mode-hook . visual-line-mode)
@@ -15429,7 +15432,7 @@ or specify any other coding system (and risk losing\n\
     (ps/ebib-reload-current-database-no-confirm))
 
   (advice-add 'zotra-add-entry-from-search :after #'ps/zotra-add-entry-from-search-advice)
-    
+
   :hook
   (zotra-after-add-entry-hook . ps/zotra-after-add-entry-function)
 

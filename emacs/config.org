@@ -15749,6 +15749,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :PROPERTIES:
 :ID:       67208BCE-6FFD-48B2-A5AD-7B72BAF31692
 :END:
+/[[https://www.gnu.org/software/emacs/manual/html_mono/message.html][message]] is a message composition mode./
 
 #+begin_src emacs-lisp :results silent
 (use-feature message
@@ -15779,6 +15780,8 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :PROPERTIES:
 :ID:       2A87061B-BE45-443B-AB2C-893A69C20003
 :END:
+/[[https://www.gnu.org/software/emacs/manual/html_node/emacs-mime/Composing.html][mml]] is a library that parses a MML (MIME Meta Language) and generates MIME messages./
+
 #+begin_src emacs-lisp :results silent
 (use-feature mml
   :general
@@ -16464,6 +16467,7 @@ CLOCK: [2021-12-18 Sat 14:19]--[2021-12-18 Sat 14:22] =>  0:03
 CLOCK: [2021-08-17 Tue 21:26]--[2021-08-17 Tue 21:33] =>  0:07
 CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 :END:
+/[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
 #+begin_src emacs-lisp :results silent
 (use-package org-msg
@@ -16958,6 +16962,7 @@ https://gitlab.com/protesilaos/modus-themes/-/issues/271
           (telega-chatbuf-attach-file file)
         (user-error (format "No files found in %s" ps/dir-downloads)))))
 #+end_src
+
 ** ol-telega
 :PROPERTIES:
 :ID:       E973DAC8-E1DE-4B94-80C6-CF80BD0F0836
@@ -17126,9 +17131,10 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 CLOCK: [2021-06-03 Thu 14:18]--[2021-06-03 Thu 14:40] =>  0:22
 CLOCK: [2021-06-02 Wed 12:02]--[2021-06-02 Wed 12:39] =>  0:37
 :END:
+/[[https://www.gnu.org/software/emacs/manual/html_mono/erc.html][erc]] is an IRC client for Emacs./
 
 #+begin_src emacs-lisp :results silent
-(use-package erc
+(use-feature erc
   :if (equal (system-name) ps/computer-hostname-pablo)
   :after auth-source-pass
   :custom
@@ -17164,12 +17170,12 @@ CLOCK: [2021-06-02 Wed 12:02]--[2021-06-02 Wed 12:39] =>  0:37
 :LOGBOOK:
 CLOCK: [2021-10-07 Thu 14:31]--[2021-10-07 Thu 15:23] =>  0:52
 :END:
+/[[https://github.com/emacs-circe/circe][circe]] is another IRC client for Emacs./
 
 #+begin_src emacs-lisp :results silent
 (use-package circe)
 #+end_src
 
-https://github.com/bitlbee/bitlbee-facebook
 
 ** accord
 :PROPERTIES:

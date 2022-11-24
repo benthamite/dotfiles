@@ -16665,7 +16665,7 @@ CLOCK: [2021-04-06 Tue 18:05]--[2021-04-06 Tue 18:34] =>  0:29
 :END:
 /[[https://github.com/zevlg/telega.el][telega]] is an unofficial Emacs Telegram client./
 
-To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~, then ~M-x telega-server-build~.
+To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a terminal, then ~M-x telega-server-build~.
 
 #+begin_src emacs-lisp :results silent
 (use-package telega

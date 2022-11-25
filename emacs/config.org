@@ -2223,9 +2223,6 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   ;; on startup
   (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
 
-  ;; Configurations for `highlight-parentheses':
-  ;; (require 'highlight-parentheses)
-
   (defvar my-highlight-parentheses-use-background t
     "Prefer `highlight-parentheses-background-colors'.")
 
@@ -17609,7 +17606,7 @@ poorly-designed websites."
   ;; github.com/skeeto/elfeed/issues/190#issuecomment-384346895
   (setq elfeed-show-mode-hook
         (lambda ()
-          (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family ps/face-variable-pitch :size 13))
+          (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family ps/face-variable-pitch :size 15))
           (setq fill-column 120)
           (setq elfeed-show-entry-switch #'ps/show-elfeed)))
 

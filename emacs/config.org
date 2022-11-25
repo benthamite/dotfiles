@@ -13998,6 +13998,10 @@ CLOSED: [2022-06-23 Thu 17:44]
 
 #+begin_src emacs-lisp :results silent
 (use-package citar-org-roam
+  :straight (citar-org-roam
+             :host github
+		   :repo "emacs-citar/citar-org-roam")
+
   :demand t
   :no-require t
   :after  org-roam

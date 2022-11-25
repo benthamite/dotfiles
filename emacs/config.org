@@ -5841,25 +5841,34 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
   :defer 5
 
   :init
-  (defun ps/writeroom-set-width ()
-    "Set width of `writeroom-mode' window to equal width of selected
-window."
-    (unless writeroom-mode
-      (setq writeroom-width (window-total-width))))
-
+  ;; This neds to be delayed a few seconds because the value returned
+  ;; by `window-total-width' changes as Emacs restarts.
+  (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))))
+  
+  (defun ps/writerrom-global-effects (arg)
+  "Enable and disable custom effects when `writeroom-mode' is
+activated (`arg' = 1) and deactivated (`arg' = -1). The function
+needs to be included as an element in the list defined by
+`writeroom-global-effects'."
+	(tab-bar-mode (* -1 arg)))
+    
   :custom
+  (writeroom-global-effects '(writeroom-set-fullscreen
+                              writeroom-set-alpha
+                              writeroom-set-menu-bar-lines
+                              writeroom-set-tool-bar-lines
+                              writeroom-set-vertical-scroll-bars
+                              writeroom-set-bottom-divider-width
+                              ps/writerrom-global-effects))
+
   (writeroom-restore-window-config t "upon leaving writeroom mode, restore pre-existing number of windows")
-  (writeroom-major-modes '(elfeed-search-mode
+  (writeroom-major-modes '(org-mode
+                           elfeed-search-mode
                            elfeed-show-mode
                            eww-mode
                            eww-buffers-mode) "major modes activated in global-writeroom-mode")
   (writeroom-fullscreen-effect 'maximized "disables annoying fullscreen transition effect on MacOS")
-
-  :hook
-  (writeroom-mode-hook . ps/writeroom-set-width)
-  ;; (writeroom-mode-hook . (lambda () (setq writeroom-width (window-total-width))))
-  (writeroom-mode-enable-hook . (lambda () (tab-bar-mode -1)))
-  (writeroom-mode-disable-hook . (lambda () (tab-bar-mode)))
+  (writeroom-maximize-window t)
 
   :general
   ("M-'" 'writeroom-mode
@@ -5895,6 +5904,7 @@ CLOCK: [2021-06-25 Fri 21:24]--[2021-06-25 Fri 21:35] =>  0:11
 CLOCK: [2021-06-18 Fri 10:05]--[2021-06-18 Fri 10:47] =>  0:42
 CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 :END:
+/[[https://github.com/abo-abo/ace-link][ace-link]] lets you quickly follow links in Emacs, Vimium-style./
 
 #+begin_src emacs-lisp :results silent
 (use-package ace-link
@@ -13979,7 +13989,6 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   (citar-format-reference-function 'citar-citeproc-format-reference)
 
   :config
-  ;; (run-with-timer 5 nil (lambda ()
   (require 'citar-org-roam)
   (citar-register-notes-source
    'orb-citar-source (list :name "Org-Roam Notes"

@@ -5398,7 +5398,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 #+begin_src emacs-lisp :results silent
 (use-feature window
   :demand t
-  
+
   :custom
   (split-width-threshold 300)
   (split-height-threshold nil)
@@ -5635,13 +5635,13 @@ CLOCK: [2021-10-03 Sun 18:45]--[2021-12-30 Thu 12:11] => 2105:26
 #+begin_src emacs-lisp :results silent
 (use-feature winner
   :demand t
-  
+
   :custom
   (winner-mode 1)
-  
+
   :config
   (remove-hook 'minibuffer-setup-hook 'winner-save-unconditionally)
-  
+
   :general
   ("H-A-w" 'winner-undo
    "H-A-W" 'winner-redo))
@@ -5676,13 +5676,13 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
 #+begin_src emacs-lisp :results silent
 (use-package avy
   :commands ps/avy-dired-find-file
-  
+
   :custom
   (avy-case-fold-search nil)
   (avy-timeout-seconds 0.2)
   (avy-all-windows nil)
   (avy-keys '(97 115 100 102 106 107 108 13 32 113 119 101 114 117 105 111 112 122 120 99 118 109 44 46 47))
-  
+
   :config
   ;; Launch dispatcher with `/' rather than `?'
   (defun ps/avy-handler-default (char)
@@ -6197,7 +6197,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   :after auth-source-pass
   :defer 10
   :demand t
-  
+
   :init
   (setq org-gcal-up-days 0)
   (setq org-gcal-down-days 3)
@@ -6825,7 +6825,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
   :demand t
   :init
   (savehist-mode)
-  
+
   :custom
   (history-length t "unlimited history")
   (savehist-additional-variables
@@ -14000,7 +14000,7 @@ CLOSED: [2022-06-23 Thu 17:44]
 (use-package citar-org-roam
   :straight (citar-org-roam
              :host github
-		   :repo "emacs-citar/citar-org-roam")
+                   :repo "emacs-citar/citar-org-roam")
   :demand t
   :no-require t
   :after  org-roam
@@ -14537,20 +14537,6 @@ window and make the frame active,"
     (interactive)
     (ps/ebib--search-or-download-dwim 'download))
 
-  (defun ps/ebib-reload-current-database-no-confirm ()
-    "Reload the current database from disk, without asking for
-confirmation."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-       (ebib--reload-database ebib--cur-db)
-       (ebib--set-modified nil ebib--cur-db)
-       (ebib--update-buffers)
-       (message "Database reloaded"))
-      (default
-        (beep))))
-
   (defun ps/ebib-get-file (extension)
     "docstring"
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
@@ -14747,6 +14733,41 @@ entry's key."
            (ebib--redisplay-field field)
            (ebib--redisplay-index-item field))))
       ;; (ebib-save-current-database nil))))
+      (default
+        (beep))))
+
+  (defun ps/ebib-reload-current-database ()
+    "Reload the current database from disk."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (when (or (and (ebib-db-modified-p ebib--cur-db)
+                      (yes-or-no-p "Database modified.  Really reload from file? "))
+                 (y-or-n-p "Reload current database from file? "))
+         (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+         (ebib--reload-database ebib--cur-db)
+         (ebib--set-modified nil ebib--cur-db)
+         (ebib--update-buffers)
+         ;; Adding this line so that entry doesn't change upon reload
+         (ebib--pop-to-buffer (ebib--buffer 'entry))
+         (message "Database reloaded")))
+      (default
+        (beep))))
+
+  (advice-add 'ebib-reload-current-database :override #'ps/ebib-reload-current-database)     
+
+    (defun ps/ebib-reload-current-database-no-confirm ()
+    "Reload the current database from disk, without asking for
+confirmation."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+       (ebib--reload-database ebib--cur-db)
+       (ebib--set-modified nil ebib--cur-db)
+       (ebib--update-buffers)
+       (message "Database reloaded")
+       (ebib--pop-to-buffer (ebib--buffer 'entry)))
       (default
         (beep))))
 
@@ -15027,7 +15048,7 @@ If not invoked from `ebib', prompt for search query."
       (ebib-save-current-database t))
     (run-with-idle-timer 30 nil #'ps/ebib-auto-save-old-db))
 
-    (defun ps/ebib-auto-save-new-db ()
+  (defun ps/ebib-auto-save-new-db ()
     "docstring"
     (ebib-switch-to-database-nth 1)
     (when (ebib-db-modified-p ebib--cur-db)
@@ -15038,7 +15059,8 @@ If not invoked from `ebib', prompt for search query."
     "Open the entry for KEY in Ebib."
     (ebib--execute-when
       (entries
-       (ebib nil key))
+       (let ((db (nth 0 ebib--databases)))
+	 (ebib--goto-entry db key)))
       (default
         (ebib--error "No database is loaded"))))
 

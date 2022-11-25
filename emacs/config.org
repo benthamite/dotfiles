@@ -14754,9 +14754,9 @@ entry's key."
       (default
         (beep))))
 
-  (advice-add 'ebib-reload-current-database :override #'ps/ebib-reload-current-database)     
+  (advice-add 'ebib-reload-current-database :override #'ps/ebib-reload-current-database)
 
-    (defun ps/ebib-reload-current-database-no-confirm ()
+  (defun ps/ebib-reload-current-database-no-confirm ()
     "Reload the current database from disk, without asking for
 confirmation."
     (interactive)
@@ -15041,13 +15041,6 @@ If not invoked from `ebib', prompt for search query."
     (when-let ((file (ebib-db-get-filename ebib--cur-db)))
       (find-file file)))
 
-  (defun ps/ebib-auto-save-old-db ()
-    "docstring"
-    (ebib-switch-to-database-nth 2)
-    (when (ebib-db-modified-p ebib--cur-db)
-      (ebib-save-current-database t))
-    (run-with-idle-timer 30 nil #'ps/ebib-auto-save-old-db))
-
   (defun ps/ebib-auto-save-new-db ()
     "docstring"
     (ebib-switch-to-database-nth 1)
@@ -15055,12 +15048,23 @@ If not invoked from `ebib', prompt for search query."
       (ebib-save-current-database t))
     (run-with-timer 30 nil #'ps/ebib-auto-save-new-db))
 
+  (defun ps/ebib-auto-save-old-db ()
+    "docstring"
+    (ebib-switch-to-database-nth 2)
+    (when (ebib-db-modified-p ebib--cur-db)
+      (ebib-save-current-database t))
+    (run-with-idle-timer 30 nil #'ps/ebib-auto-save-old-db))
+
   (defun ps/ebib-open-key (key)
     "Open the entry for KEY in Ebib."
     (ebib--execute-when
       (entries
-       (let ((db (nth 0 ebib--databases)))
-	 (ebib--goto-entry db key)))
+       (let ((file))
+         (if (member key (ebib-db-list-keys (nth 0 ebib--databases)))
+             (setq file ps/file-bibliography-new)
+           (setq file ps/file-bibliography-old))
+         (ebib file key)
+         (ebib--pop-to-buffer (ebib--buffer 'entry))))
       (default
         (ebib--error "No database is loaded"))))
 

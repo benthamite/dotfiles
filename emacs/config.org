@@ -6177,8 +6177,9 @@ CLOCK: [2021-07-26 Mon 21:15]--[2021-07-26 Mon 21:29] =>  0:14
 CLOCK: [2021-07-22 Thu 12:23]--[2021-07-22 Thu 12:50] =>  0:27
 CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 :END:
+/[[https://github.com/kidd/org-gcal.el][org-gcal]] integrates org with Google Calendar./
 
-Set Google Calendar synchronization via [[https://github.com/kidd/org-gcal.el][org-gcal]] (use that fork; the official repository is [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][obsolete]]).
+(That's the actively maintained fork; the [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][official repository]] is no longer maintained.)
 
 [2022-10-08 Sat 19:43] Google no longer supports the authentication method used by ~org-gcal~; progress in patching ~org-gcal~ is tracked [[https://github.com/kidd/org-gcal.el/pull/200][here]].
 
@@ -6188,6 +6189,8 @@ Set Google Calendar synchronization via [[https://github.com/kidd/org-gcal.el][o
   :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass
   :defer 10
+  :demand t
+  
   :init
   (setq org-gcal-up-days 0)
   (setq org-gcal-down-days 3)

@@ -14001,7 +14001,6 @@ CLOSED: [2022-06-23 Thu 17:44]
   :straight (citar-org-roam
              :host github
 		   :repo "emacs-citar/citar-org-roam")
-
   :demand t
   :no-require t
   :after  org-roam
@@ -15021,11 +15020,19 @@ If not invoked from `ebib', prompt for search query."
     (when-let ((file (ebib-db-get-filename ebib--cur-db)))
       (find-file file)))
 
-  (defun ps/ebib-auto-save-db ()
+  (defun ps/ebib-auto-save-old-db ()
     "docstring"
+    (ebib-switch-to-database-nth 2)
     (when (ebib-db-modified-p ebib--cur-db)
       (ebib-save-current-database t))
-    (run-with-idle-timer 30 nil #'ps/ebib-auto-save-db))
+    (run-with-idle-timer 30 nil #'ps/ebib-auto-save-old-db))
+
+    (defun ps/ebib-auto-save-new-db ()
+    "docstring"
+    (ebib-switch-to-database-nth 1)
+    (when (ebib-db-modified-p ebib--cur-db)
+      (ebib-save-current-database t))
+    (run-with-timer 30 nil #'ps/ebib-auto-save-new-db))
 
   (defun ps/ebib-open-key (key)
     "Open the entry for KEY in Ebib."
@@ -15092,7 +15099,8 @@ first name, and names are separated by a semicolon."
   ;; mysteriously, setting REPEAT to `t' does not restart the timer.
   ;; So instead the function the timer calls itself starts a new
   ;; timer.
-  (run-with-idle-timer 30 nil #'ps/ebib-auto-save-db)
+  (run-with-timer 30 nil #'ps/ebib-auto-save-new-db)
+  (run-with-idle-timer 30 nil #'ps/ebib-auto-save-old-db)
 
   (file-notify-add-watch
    ps/file-bibliography-new
@@ -15168,6 +15176,7 @@ first name, and names are separated by a semicolon."
    "c" 'ebib-copy-current-field-contents
    "D" 'ebib-delete-current-field-contents
    "d" 'ps/ebib-download-dwim
+   "E" 'ebib-edit-keyname
    "g" 'ps/ebib-search-library-genesis
    "h" 'ps/ebib-open-html-file
    "i" 'ebib-browse-doi

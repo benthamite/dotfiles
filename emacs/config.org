@@ -2001,6 +2001,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :END:
 The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8A86-F7F6ADFD46C7][mixed-pitch]] package.
 
+
 #+begin_src emacs-lisp :results silent
 (defun ps/custom-faces ()
   "My custom faces, to be used in conjunction with theme."
@@ -2081,6 +2082,47 @@ I didn't quite accomplish what I wanted, since I am still not able to control th
 
 [2022-05-07 Sat 19:05] I then realized that I should control the height of the headings separately.
 
+** mixed-pitch
+:PROPERTIES:
+:ID:       A8E80A11-25A4-4034-8A86-F7F6ADFD46C7
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-04 Wed 19:52]--[2022-05-04 Wed 19:54] =>  0:02
+CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-package mixed-pitch
+  :demand t
+  :custom
+  (mixed-pitch-set-height t)
+
+  :config
+  (set-face-attribute 'variable-pitch nil
+                      :family ps/face-variable-pitch
+                      :height 1.4)
+  :hook
+  (mu4e-view-mode-hook . mixed-pitch-mode)
+  (org-mode-hook . mixed-pitch-mode)
+  (outline-mode-hook . mixed-pitch-mode))
+#+end_src
+
+*** Archive                                                       :ARCHIVE:
+:PROPERTIES:
+:ID:       0B98C77D-3921-4666-9881-FC15097B9F0C
+:END:
+**** DONE Fix indentantion in nested lists
+CLOSED: [2022-05-06 Fri 16:59]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-05-06 Fri 16:59
+:ID:       4452E6C4-A2F1-4D9E-AF20-CF3D9B579E22
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-06 Fri 15:06]--[2022-05-06 Fri 16:00] =>  0:54
+:END:
+I don't think this is possible. See [[https://gitlab.com/jabranham/mixed-pitch/-/issues/4][here]]. At best, one could make org lists use fixed pitch font. But the user-contributed snippet doesn't work for me. In any case, the costs of displaying all plain lists in fixed pitch font seem higher than the costs of misaligned indentation (since many lists have items none of which span more than one line).
+
+
 ** face-remap
 :PROPERTIES:
 :ID:       3F96E2F2-7C68-4D61-8CB8-EFE4C7220FC8
@@ -2114,6 +2156,23 @@ I didn't quite accomplish what I wanted, since I am still not able to control th
   (unknown . question-mark))))
 #+end_src
 
+** highlight-parentheses
+:PROPERTIES:
+:ID:       2B0F192C-2147-4CF6-AE69-73C1D85FEB77
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-package highlight-parentheses
+  ;; :after modus-themes
+  :demand t
+  :custom
+  (highlight-parentheses-delay 0))
+#+end_src
+
+
 ** modus-themes
 :PROPERTIES:
 :ID:       95665A5E-A88C-4DCA-BDDD-84DC436A1E80
@@ -2123,57 +2182,90 @@ CLOCK: [2021-11-18 Thu 18:12]--[2021-11-18 Thu 18:28] =>  0:16
 CLOCK: [2021-05-13 Thu 18:36]--[2021-05-13 Thu 18:37] =>  0:01
 CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 :END:
+/[[https://protesilaos.com/emacs/modus-themes][modus-themes]] are a pair of accessible white/dark themes for Emacs./
 
 #+begin_src emacs-lisp :results silent
 (use-package modus-themes
   :straight (modus-themes
              :host sourcehut
-                   :repo "protesilaos/modus-themes")
+             :repo "protesilaos/modus-themes")
   :if (or (equal (system-name) ps/computer-hostname-pablo)
           (equal (system-name) ps/computer-hostname-leo))
-  :demand t
-  :init
-  (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-      (load-theme 'modus-vivendi t)
-    (load-theme 'modus-operandi t))
 
-  :custom
-  (modus-themes-headings
-   '((1 . (background overline))
-     (2 . (background overline))
-     (3 . (background overline))
-     (4 . (background overline))
-     (5 . (background overline))
-     (6 . (background overline))
-     (7 . (background overline))
-     (8 . (background overline))))
-  (modus-themes-links nil)
-  (modus-themes-org-blocks 'gray-background)
-  (modus-themes-org-agenda
-   '((header-date . (workaholic)))) ; of course ;-)
-   (modus-themes-fringes nil)
+  :demand t
+
+  :init
+  (setq modus-themes-headings
+        '((1 . (background overline))
+          (2 . (background overline))
+          (3 . (background overline))
+          (4 . (background overline))
+          (5 . (background overline))
+          (6 . (background overline))
+          (7 . (background overline))
+          (8 . (background overline))))
+  (setq modus-themes-links nil)
+  (setq modus-themes-org-blocks 'gray-background)
+  (setq modus-themes-org-agenda
+        '((header-date . (workaholic)))) ; of course ;-)
+  (setq modus-themes-fringes nil)
+  (modus-themes-load-themes)
 
   :config
   ;; (defun ps/modus-themes-match-system ()
-    ;; "Load modus theme that matches system."
-    ;; (interactive)
-    ;; (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-        ;; (load-theme 'modus-vivendi)
-      ;; (load-theme 'modus-operandi)))
+  ;; "Load modus theme that matches system."
+  ;; (interactive)
+  ;; (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
+  ;; (load-theme 'modus-vivendi)
+  ;; (load-theme 'modus-operandi)))
 
   ;; This ugly hack is necessary to make the theme load all the faces
   ;; on startup
   (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
 
-  ;; protesilaos.com/emacs/modus-themes#h:24bab397-dcb2-421d-aa6e-ec5bd622b913
+  ;; Configurations for `highlight-parentheses':
+  ;; (require 'highlight-parentheses)
+
+  (defvar my-highlight-parentheses-use-background t
+    "Prefer `highlight-parentheses-background-colors'.")
+
+  (setq my-highlight-parentheses-use-background t) ; Set to nil to disable backgrounds
+
   (defun ps/modus-themes-highlight-parentheses ()
     (modus-themes-with-colors
-      (setq highlight-parentheses-colors (list green-intense
-                                               magenta-intense
-                                               blue-intense
-                                               red-intense)
-            highlight-parentheses-background-colors nil))
+      ;; Our preference for setting either background or foreground
+      ;; styles, depending on `my-highlight-parentheses-use-background'.
+      (if my-highlight-parentheses-use-background
+
+          ;; Here we set color combinations that involve both a background
+          ;; and a foreground value.
+          (setq highlight-parentheses-background-colors (list cyan-refine-bg
+                                                              magenta-refine-bg
+                                                              green-refine-bg
+                                                              yellow-refine-bg)
+                highlight-parentheses-colors (list cyan-refine-fg
+                                                   magenta-refine-fg
+                                                   green-refine-fg
+                                                   yellow-refine-fg))
+
+        ;; And here we pass only foreground colors while disabling any
+        ;; backgrounds.
+        (setq highlight-parentheses-colors (list green-intense
+                                                 magenta-intense
+                                                 blue-intense
+                                                 red-intense)
+              highlight-parentheses-background-colors nil)))
+
+    ;; Include this if you also want to make the parentheses bold:
+    ;; (set-face-attribute 'highlight-parentheses-highlight nil :inherit 'bold)
+
+    ;; Our changes must be evaluated before enabling the relevant mode, so
+    ;; this comes last.
     (global-highlight-parentheses-mode))
+
+  (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
+      (load-theme 'modus-vivendi t)
+    (load-theme 'modus-operandi t))
 
   :hook
   (modus-themes-after-load-theme-hook . ps/custom-faces)
@@ -2270,22 +2362,6 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
   (show-paren-delay 0)
   :config
   (show-paren-mode))
-#+end_src
-
-** highlight-parentheses
-:PROPERTIES:
-:ID:       2B0F192C-2147-4CF6-AE69-73C1D85FEB77
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-package highlight-parentheses
-  :after modus-themes
-  :demand t
-  :custom
-  (highlight-parentheses-delay 0))
 #+end_src
 
 ** modeline
@@ -2406,45 +2482,6 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
   :config
   (fancy-battery-mode))
 #+end_src
-
-** mixed-pitch
-:PROPERTIES:
-:ID:       A8E80A11-25A4-4034-8A86-F7F6ADFD46C7
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-04 Wed 19:52]--[2022-05-04 Wed 19:54] =>  0:02
-CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-package mixed-pitch
-  :demand t
-  :custom
-  (mixed-pitch-set-height t)
-  :config
-  (set-face-attribute 'variable-pitch nil
-                      :family ps/face-variable-pitch
-                      :height 1.4)
-  :hook
-  (mu4e-view-mode-hook . mixed-pitch-mode)
-  (org-mode-hook . mixed-pitch-mode)
-  (outline-mode-hook . mixed-pitch-mode))
-#+end_src
-
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       0B98C77D-3921-4666-9881-FC15097B9F0C
-:END:
-**** DONE Fix indentantion in nested lists
-CLOSED: [2022-05-06 Fri 16:59]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-05-06 Fri 16:59
-:ID:       4452E6C4-A2F1-4D9E-AF20-CF3D9B579E22
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-06 Fri 15:06]--[2022-05-06 Fri 16:00] =>  0:54
-:END:
-I don't think this is possible. See [[https://gitlab.com/jabranham/mixed-pitch/-/issues/4][here]]. At best, one could make org lists use fixed pitch font. But the user-contributed snippet doesn't work for me. In any case, the costs of displaying all plain lists in fixed pitch font seem higher than the costs of misaligned indentation (since many lists have items none of which span more than one line).
 
 ** all-the-icons
 :PROPERTIES:
@@ -5844,14 +5881,14 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
   ;; This neds to be delayed a few seconds because the value returned
   ;; by `window-total-width' changes as Emacs restarts.
   (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))))
-  
+
   (defun ps/writerrom-global-effects (arg)
   "Enable and disable custom effects when `writeroom-mode' is
 activated (`arg' = 1) and deactivated (`arg' = -1). The function
 needs to be included as an element in the list defined by
 `writeroom-global-effects'."
-	(tab-bar-mode (* -1 arg)))
-    
+        (tab-bar-mode (* -1 arg)))
+
   :custom
   (writeroom-global-effects '(writeroom-set-fullscreen
                               writeroom-set-alpha

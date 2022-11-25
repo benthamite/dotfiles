@@ -6815,17 +6815,22 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
   :demand t
   :init
   (savehist-mode)
+  
   :custom
   (history-length t "unlimited history")
   (savehist-additional-variables
    '(citar-history
      command-history
      compile-history
+     compilation-command
      eww-history
      extended-command-history
      file-name-history
+     Info-history-list
      ido-file-history
      kill-ring
+     kmacro-ring
+     last-kbd-macro
      log-edit-comment-ring
      magit-read-rev-history
      mark-ring
@@ -6833,6 +6838,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
      regexp-search-ring
      register-alist
      search-ring
+     shell-command-history
      telega-search-history
      twittering-search-history))
   (savehist-save-minibuffer-history t))
@@ -14167,6 +14173,7 @@ Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
 :PROPERTIES:
 :ID:       1FC5528A-9F5A-4A9D-B168-5A1F51110455
 :END:
+/[[https://github.com/jkitchin/org-ref][org-ref]] supports citations, cross-references, bibliographies in org-mode and useful bibtex tools./
 
 #+begin_src emacs-lisp :results silent
 (use-package org-ref
@@ -15308,13 +15315,13 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (bibtex-clean-entry)
   (org-ref-clean-bibtex-entry)
   (save-buffer)
-  (sleep-for 3)
+  ;; (sleep-for 3)
   (let ((citekey (ps/bibtex-get-key)))
     (print citekey)
     (ebib nil citekey)
     ;; Switch to `new.bib' database
-    ;; (ebib-switch-to-database-key 2)
-    (sleep-for 3)
+    (ebib-switch-to-database-nth 1)
+    ;; (sleep-for 3)
     (ps/ebib-open-key citekey)
     (ebib-set-field-value "date" (format-time-string ebib-timestamp-format) citekey ebib--cur-db 'overwrite)))
 
@@ -15333,8 +15340,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
         (save-excursion
           (save-restriction
             (bibtex-narrow-to-entry)
-            (bibtex-beginning-of-entry)
-            ))
+            (bibtex-beginning-of-entry)))
         (goto-char (point-max))
         (when (not (looking-at "^")) (insert "\n"))
         (advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
@@ -16648,6 +16654,7 @@ CLOCK: [2022-04-27 Wed 09:42]--[2022-04-27 Wed 09:49] =>  0:07
 :PROPERTIES:
 :ID:       F22F2F4B-619E-4A7C-BF65-8FF5CE7953C4
 :END:
+/[[https://github.com/hniksic/emacs-htmlize][htmlize]] converts buffer text and decorations to HTML./
 
 #+begin_src emacs-lisp :results silent
 (use-package htmlize

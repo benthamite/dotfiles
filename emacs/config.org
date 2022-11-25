@@ -5174,6 +5174,7 @@ CLOCK: [2021-10-20 Wed 21:38]--[2021-10-20 Wed 21:46] =>  0:08
 :PROPERTIES:
 :ID:       5BA0A794-59F0-471D-AD81-4C281095BF48
 :END:
+/[[https://github.com/kaz-yos/reveal-in-osx-finder][reveal-in-osx-finder]] lets you open the file at point or the current file-visiting buffer in OS X Finder./
 
 #+begin_src emacs-lisp :results silent
 (use-package reveal-in-osx-finder
@@ -5397,6 +5398,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 #+begin_src emacs-lisp :results silent
 (use-feature window
   :demand t
+  
   :custom
   (split-width-threshold 300)
   (split-height-threshold nil)
@@ -5633,10 +5635,13 @@ CLOCK: [2021-10-03 Sun 18:45]--[2021-12-30 Thu 12:11] => 2105:26
 #+begin_src emacs-lisp :results silent
 (use-feature winner
   :demand t
+  
   :custom
   (winner-mode 1)
+  
   :config
   (remove-hook 'minibuffer-setup-hook 'winner-save-unconditionally)
+  
   :general
   ("H-A-w" 'winner-undo
    "H-A-W" 'winner-redo))
@@ -5666,16 +5671,18 @@ CLOCK: [2021-08-10 Tue 16:50]--[2021-08-10 Tue 18:15] =>  1:25
 CLOCK: [2021-07-13 Tue 08:23]--[2021-07-13 Tue 08:44] =>  0:21
 CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
 :END:
+/[[https://github.com/abo-abo/avy][avy]] lets you jump to any visible text using a char-based decision tree./
 
 #+begin_src emacs-lisp :results silent
 (use-package avy
-  ;; :demand t
   :commands ps/avy-dired-find-file
+  
   :custom
   (avy-case-fold-search nil)
   (avy-timeout-seconds 0.2)
   (avy-all-windows nil)
   (avy-keys '(97 115 100 102 106 107 108 13 32 113 119 101 114 117 105 111 112 122 120 99 118 109 44 46 47))
+  
   :config
   ;; Launch dispatcher with `/' rather than `?'
   (defun ps/avy-handler-default (char)

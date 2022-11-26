@@ -14736,6 +14736,39 @@ entry's key."
       (default
         (beep))))
 
+  ;; We tweak the two functions below so that focus doesn't move away
+  ;; from the current entry when the database is saved or reloaded.
+  
+  (defun ps/ebib--save-database (db &optional force)
+    "Save the database DB.
+The FORCE argument is used as in `ebib-save-current-database'."
+    ;; See if we need to make a backup.
+    (when (and (ebib-db-backup-p db)
+               (file-exists-p (ebib-db-get-filename db)))
+      (ebib--make-backup (ebib-db-get-filename db))
+      (ebib-db-set-backup nil db))
+
+    ;; Check if the file has changed on disk.
+    (let ((db-modtime (ebib-db-get-modtime db))
+          (file-modtime (ebib--get-file-modtime (ebib-db-get-filename db))))
+      ;; If the file to be saved has been newly created, both modtimes are nil.
+      (when (and db-modtime file-modtime
+                 (time-less-p db-modtime file-modtime))
+        (unless (or (and (listp force)
+                         (eq 16 (car force)))
+                    (yes-or-no-p (format "File `%s' changed on disk.  Overwrite? " (ebib-db-get-filename db))))
+          (error "[Ebib] File not saved"))))
+
+    ;; Now save the database.
+    (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+    (with-temp-buffer
+      (ebib--format-database-as-bibtex db)
+      (write-region (point-min) (point-max) (ebib-db-get-filename db)))
+    (ebib--pop-to-buffer (ebib--buffer 'entry))
+    (ebib--set-modified nil db))
+
+  (advice-add 'ebib--save-database :override #'ps/ebib--save-database)
+    
   (defun ps/ebib-reload-current-database ()
     "Reload the current database from disk."
     (interactive)
@@ -14793,13 +14826,13 @@ confirmation."
                             ;; We abbreviate the filename so that it works when invoked by different users
                             (abbreviate-file-name destination-folder)
                             (file-name-with-extension key extension))))
-           (rename-file newest-file
-                        file-name)
-           (ebib-set-field-value field file-name key ebib--cur-db ";")
-           (ebib--store-multiline-text (current-buffer))
-           (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field)
-           (ebib-save-current-database nil))))
+           (when (or (not (f-file-p file-name))
+                     (y-or-n-p "File exists. Overwrite? "))
+             (rename-file newest-file file-name t)
+             (ebib-set-field-value field file-name key ebib--cur-db ";")
+             (ebib--store-multiline-text (current-buffer))
+             (ebib--redisplay-field field)
+             (ebib--redisplay-index-item field)))))
       (default
         (beep))))
 

@@ -6001,13 +6001,10 @@ and start clock."
       (eww (w3m-url-valid (w3m-anchor)))))
 
   :general
-  (elfeed-show-mode-map
-   "f" 'ps/ace-link-eww-externally
-   "F" 'ace-link-eww)
-  (eww-mode-map
+  ((eww-mode-map elfeed-show-mode-map)
    "f" 'ace-link-eww
    "F" 'ps/ace-link-eww-externally
-   "s" 'ps/ace-link-eww-new-buffer)
+   "s-f" 'ps/ace-link-eww-new-buffer)
   ((help-mode-map helpful-mode-map elisp-refs-mode-map)
    "f" 'ace-link-help)
   ((ebib-entry-mode-map Info-mode-map)
@@ -6015,8 +6012,8 @@ and start clock."
   ((Man-mode-map woman-mode-map)
    "f" 'ace-link-woman)
   (mu4e-view-mode-map
-   "F" 'ps/ace-link-w3m-externally
-   "f" 'ps/ace-link-w3m-in-eww)
+   "f" 'ps/ace-link-w3m-in-eww
+   "F" 'ps/ace-link-w3m-externally)
   (org-agenda-mode-map
    "f" 'ace-link-org-agenda
    "s-f" 'ps/ace-link-org-agenda-clock-in)
@@ -14738,7 +14735,7 @@ entry's key."
 
   ;; We tweak the two functions below so that focus doesn't move away
   ;; from the current entry when the database is saved or reloaded.
-  
+
   (defun ps/ebib--save-database (db &optional force)
     "Save the database DB.
 The FORCE argument is used as in `ebib-save-current-database'."
@@ -14768,7 +14765,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
     (ebib--set-modified nil db))
 
   (advice-add 'ebib--save-database :override #'ps/ebib--save-database)
-    
+
   (defun ps/ebib-reload-current-database ()
     "Reload the current database from disk."
     (interactive)

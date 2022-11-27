@@ -15155,21 +15155,21 @@ first name, and names are separated by a semicolon."
   ;; mysteriously, setting REPEAT to `t' does not restart the timer.
   ;; So instead the function the timer calls itself starts a new
   ;; timer.
-  (run-with-timer 30 nil #'ps/ebib-auto-save-new-db)
-  (run-with-idle-timer 30 nil #'ps/ebib-auto-save-old-db)
+  ;; (run-with-timer 30 nil #'ps/ebib-auto-save-new-db)
+  ;; (run-with-idle-timer 30 nil #'ps/ebib-auto-save-old-db)
 
-  (file-notify-add-watch
-   ps/file-bibliography-new
-   '(change attribute-change)
-   (lambda (event)
-     (ps/ebib-reload-current-database-no-confirm)))
+  ;; (file-notify-add-watch
+   ;; ps/file-bibliography-new
+   ;; '(change attribute-change)
+   ;; (lambda (event)
+     ;; (ps/ebib-reload-current-database-no-confirm)))
 
-  (file-notify-add-watch
-   ps/file-bibliography-old
-   '(change attribute-change)
-   (lambda (event)
-     (cancel-function-timers #'ps/ebib-reload-current-database-no-confirm)
-     (run-with-idle-timer 10 nil #'ps/ebib-reload-current-database-no-confirm)))
+  ;; (file-notify-add-watch
+   ;; ps/file-bibliography-old
+   ;; '(change attribute-change)
+   ;; (lambda (event)
+     ;; (cancel-function-timers #'ps/ebib-reload-current-database-no-confirm)
+     ;; (run-with-idle-timer 10 nil #'ps/ebib-reload-current-database-no-confirm)))
 
   (defun ps/ebib-merge-databases (source target)
     "Move the contents of SOURCE to TARGET."

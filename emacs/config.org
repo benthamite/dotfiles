@@ -15071,19 +15071,19 @@ If not invoked from `ebib', prompt for search query."
     (when-let ((file (ebib-db-get-filename ebib--cur-db)))
       (find-file file)))
 
-  (defun ps/ebib-auto-save-new-db ()
-    "docstring"
-    (ebib-switch-to-database-nth 1)
-    (when (ebib-db-modified-p ebib--cur-db)
-      (ebib-save-current-database t))
-    (run-with-timer 30 nil #'ps/ebib-auto-save-new-db))
+  ;; (defun ps/ebib-auto-save-new-db ()
+    ;; "docstring"
+    ;; (ebib-switch-to-database-nth 1)
+    ;; (when (ebib-db-modified-p ebib--cur-db)
+      ;; (ebib-save-current-database t))
+    ;; (run-with-timer 30 nil #'ps/ebib-auto-save-new-db))
 
-  (defun ps/ebib-auto-save-old-db ()
-    "docstring"
-    (ebib-switch-to-database-nth 2)
-    (when (ebib-db-modified-p ebib--cur-db)
-      (ebib-save-current-database t))
-    (run-with-idle-timer 30 nil #'ps/ebib-auto-save-old-db))
+  ;; (defun ps/ebib-auto-save-old-db ()
+    ;; "docstring"
+    ;; (ebib-switch-to-database-nth 2)
+    ;; (when (ebib-db-modified-p ebib--cur-db)
+      ;; (ebib-save-current-database t))
+    ;; (run-with-idle-timer 30 nil #'ps/ebib-auto-save-old-db))
 
   (defun ps/ebib-open-key (key)
     "Open the entry for KEY in Ebib."

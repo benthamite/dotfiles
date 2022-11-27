@@ -4674,7 +4674,6 @@ Seems to have fixed itself.
   (real-auto-save-interval 5))
 #+end_src
 
-
 ** dired
 :PROPERTIES:
 :ID:       617F5323-6518-4751-948B-3E8032D93130

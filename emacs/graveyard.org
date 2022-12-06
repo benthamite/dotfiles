@@ -8,6 +8,23 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** biblio-zotero
+:PROPERTIES:
+:ID:       D384FC60-56CD-4401-ADED-F2708964840F
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-16 Sat 15:40]--[2022-07-16 Sat 15:49] =>  0:09
+:END:
+This does the same as [[id:815B8CEA-D36D-4E47-B728-D86FEFB736DF][zotra]]. 
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package biblio-zotero
+  :straight (biblio-zotero :type git :host github :repo "gkowzan/biblio-zotero")
+  :after biblio
+  :demand t
+  :commands (biblio-zotero-insert-bibtex))
+#+end_src
+
 ** doom-themes
 :PROPERTIES:
 :ID:       76685027-9575-48EF-982E-60148A0BD287

@@ -802,7 +802,7 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   (inhibit-startup-screen t)
   (initial-scratch-message nil)
   (initial-buffer-choice 'remember-notes)
-  (initial-major-mode 'lisp-interaction-mode))
+  (initial-major-mode 'emacs-lisp-mode))
 
 (use-package server
   :demand t
@@ -885,6 +885,27 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
                       :height 0.8)
   )
 
+(use-package mixed-pitch
+  :demand t
+  :custom
+  (mixed-pitch-set-height t)
+
+  :config
+  (set-face-attribute 'variable-pitch nil
+                      :family ps/face-variable-pitch
+                      :height 1.4)
+  :hook
+  (mu4e-view-mode-hook . mixed-pitch-mode)
+  (org-mode-hook . mixed-pitch-mode)
+  (outline-mode-hook . mixed-pitch-mode))
+
+(use-feature face-remap
+  :demand t
+  :general
+  (eww-mode-map
+   "+" 'text-scale-increase
+   "-" 'text-scale-decrease))
+
 (use-feature fringe
 :init
 (setq-default fringe-indicator-alist '(
@@ -899,54 +920,90 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   (empty-line . empty-line)
   (unknown . question-mark))))
 
+(use-package highlight-parentheses
+  ;; :after modus-themes
+  :demand t
+  :custom
+  (highlight-parentheses-delay 0))
+
 (use-package modus-themes
   :straight (modus-themes
              :host sourcehut
-                   :repo "protesilaos/modus-themes")
+             :repo "protesilaos/modus-themes")
   :if (or (equal (system-name) ps/computer-hostname-pablo)
           (equal (system-name) ps/computer-hostname-leo))
-  :demand t
-  :init
-  (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-      (load-theme 'modus-vivendi t)
-    (load-theme 'modus-operandi t))
 
-  :custom
-  (modus-themes-headings
-   '((1 . (background overline))
-     (2 . (background overline))
-     (3 . (background overline))
-     (4 . (background overline))
-     (5 . (background overline))
-     (6 . (background overline))
-     (7 . (background overline))
-     (8 . (background overline))))
-  (modus-themes-links nil)
-  (modus-themes-org-blocks 'gray-background)
-  (modus-themes-org-agenda
-   '((header-date . (workaholic)))) ; of course ;-)
+  :demand t
+
+  :init
+  (setq modus-themes-headings
+        '((1 . (background overline))
+          (2 . (background overline))
+          (3 . (background overline))
+          (4 . (background overline))
+          (5 . (background overline))
+          (6 . (background overline))
+          (7 . (background overline))
+          (8 . (background overline))))
+  (setq modus-themes-links nil)
+  (setq modus-themes-org-blocks 'gray-background)
+  (setq modus-themes-org-agenda
+        '((header-date . (workaholic)))) ; of course ;-)
+  (setq modus-themes-fringes nil)
+  (modus-themes-load-themes)
 
   :config
   ;; (defun ps/modus-themes-match-system ()
-    ;; "Load modus theme that matches system."
-    ;; (interactive)
-    ;; (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-        ;; (load-theme 'modus-vivendi)
-      ;; (load-theme 'modus-operandi)))
+  ;; "Load modus theme that matches system."
+  ;; (interactive)
+  ;; (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
+  ;; (load-theme 'modus-vivendi)
+  ;; (load-theme 'modus-operandi)))
 
   ;; This ugly hack is necessary to make the theme load all the faces
   ;; on startup
   (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
 
-  ;; protesilaos.com/emacs/modus-themes#h:24bab397-dcb2-421d-aa6e-ec5bd622b913
+  (defvar my-highlight-parentheses-use-background t
+    "Prefer `highlight-parentheses-background-colors'.")
+
+  (setq my-highlight-parentheses-use-background t) ; Set to nil to disable backgrounds
+
   (defun ps/modus-themes-highlight-parentheses ()
     (modus-themes-with-colors
-      (setq highlight-parentheses-colors (list green-intense
-                                               magenta-intense
-                                               blue-intense
-                                               red-intense)
-            highlight-parentheses-background-colors nil))
+      ;; Our preference for setting either background or foreground
+      ;; styles, depending on `my-highlight-parentheses-use-background'.
+      (if my-highlight-parentheses-use-background
+
+          ;; Here we set color combinations that involve both a background
+          ;; and a foreground value.
+          (setq highlight-parentheses-background-colors (list cyan-refine-bg
+                                                              magenta-refine-bg
+                                                              green-refine-bg
+                                                              yellow-refine-bg)
+                highlight-parentheses-colors (list cyan-refine-fg
+                                                   magenta-refine-fg
+                                                   green-refine-fg
+                                                   yellow-refine-fg))
+
+        ;; And here we pass only foreground colors while disabling any
+        ;; backgrounds.
+        (setq highlight-parentheses-colors (list green-intense
+                                                 magenta-intense
+                                                 blue-intense
+                                                 red-intense)
+              highlight-parentheses-background-colors nil)))
+
+    ;; Include this if you also want to make the parentheses bold:
+    ;; (set-face-attribute 'highlight-parentheses-highlight nil :inherit 'bold)
+
+    ;; Our changes must be evaluated before enabling the relevant mode, so
+    ;; this comes last.
     (global-highlight-parentheses-mode))
+
+  (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
+      (load-theme 'modus-vivendi t)
+    (load-theme 'modus-operandi t))
 
   :hook
   (modus-themes-after-load-theme-hook . ps/custom-faces)
@@ -998,32 +1055,29 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   :config
   (show-paren-mode))
 
-(use-package highlight-parentheses
-  :after modus-themes
-  :demand t
-  :custom
-  (highlight-parentheses-delay 0))
-
 (use-package doom-modeline
   :demand t
   :init
   (doom-modeline-mode)
 
   :custom
-  ;; we disable time display, since the tab-bar already does
+  ;; we disable the display of time since the tab-bar already does
   (doom-modeline-time nil)
+
+  (doom-modeline-mu4e t)
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-irc t)
   (doom-modeline-irc-buffers t)
   ;; (doom-modeline--flycheck-icon t)
-  (doom-modeline-mu4e t)
   (doom-modeline-github t)
+  (doom-modeline-github-interval (* 10 60))
 
   :config
   (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
   (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
   (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
-  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline))
+  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline)
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
 
 (use-feature tab-bar
   :demand t
@@ -1040,15 +1094,18 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
         ;; `tab-bar-format-global'.
         (remove '(global-mode-string ("" global-mode-string))
                 mode-line-misc-info))
-                
-  ;; (setq global-mode-string `(" "
-                             ;; ,display-time-string
-                             ;; " | "
-                             ;; ,fancy-battery-mode-line
-                             ;; " | "
-                             ;; ,telega-mode-line-format
-                             ;; " | "))
-  (tab-bar-mode))
+
+  (setq global-mode-string '(" "
+                             (:eval (propertize display-time-string 'face 'ps/display-time))
+                             " | "
+                             fancy-battery-mode-line
+                             " | "
+                             telega-mode-line-format
+                             " | "
+                             (hammy-mode
+                              (:eval
+                               (hammy-mode-lighter)))))
+  (tab-bar-mode ))
 
 (use-package fancy-battery
   :demand t
@@ -1057,19 +1114,6 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
 
   :config
   (fancy-battery-mode))
-
-(use-package mixed-pitch
-  :demand t
-  :custom
-  (mixed-pitch-set-height t)
-  :config
-  (set-face-attribute 'variable-pitch nil
-                      :family ps/face-variable-pitch
-                      :height 1.4)
-  :hook
-  (mu4e-view-mode-hook . mixed-pitch-mode)
-  (org-mode-hook . mixed-pitch-mode)
-  (outline-mode-hook . mixed-pitch-mode))
 
 (use-package all-the-icons
   :demand t)
@@ -1726,7 +1770,9 @@ Has a preference for looking backward when not directly on a symbol."
   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
   (read-extended-command-predicate #'command-completion-default-include-p)
   (eval-expression-print-level nil)
-  (eval-expression-print-length 30)
+  (eval-expression-print-length nil)
+  (print-level nil)
+  (print-length nil)
 
   :config
   (column-number-mode)
@@ -1846,9 +1892,10 @@ indent block only, else indent whole buffer."
   (yas-reload-all)
   (add-to-list 'warning-suppress-log-types '(yasnippet backquote-change))
 
+  ;; FIXME: this isn't working properly, unlike the `ps/yasnippet-expand-by-key' command
   (defun ps/yasnippet-expand-by-name (name)
     "Expand the yasnippet named `snippet'."
-    (yas-expand-snippet (yas-lookup-snippet name mode)))
+    (yas-expand-snippet (yas-lookup-snippet name)))
 
   (defun ps/yasnippet-expand-by-key (key)
     "Expand snippet whose key is KEY."
@@ -2039,12 +2086,10 @@ _a_pend       |_k_macro      |r_e_store                    "
   (find-file-visit-truename t)
   (kill-buffer-query-functions nil "emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation")
   (create-lockfiles nil "lockfiles are indexed by `org-roam', which causes problems with `org-agenda'")
-  (large-file-warning-threshold (* 50 1000 1000))
+  (large-file-warning-threshold (* 200 1000 1000))
   (enable-local-variables :all)
   (insert-directory-program "/opt/homebrew/bin/gls" "make Emacs use coreutils to avoid 'listing directory failed' error")
 
-  ;; (auto-save-interval 1 "lowest possible value is higher than 1, but this ensures it's as low as it can be")
-  ;; (auto-save-timeout 1 "lowest possible value is higher than 1, but this ensures it's as low as it can be")
   (auto-save-no-message t "don't emit message when auto-saving")
   (backup-by-copying t "don't clobber symlink")
   (kept-new-versions 100 "keep 100 latest versions")
@@ -2226,6 +2271,12 @@ selected instead of creating a new buffer."
     (interactive)
     (mapc 'kill-buffer (buffer-list)))
 
+    (defun ps/bury-buffer-switch-to-other-window ()
+    "Bury the current buffer and switch to the other window."
+    (interactive)
+    (bury-buffer)
+    (ps/switch-to-last-window))
+
   (defun ps/download-bypass-paywalls-chrome ()
     "Download and install `bypass-paywalls-chrome'."
     (interactive)
@@ -2400,6 +2451,9 @@ or are no longer readable will be killed."
       (mapc #'file-notify-rm-watch citar-filenotify--local-watches)
       (setq citar-filenotify--local-watches 'uninitialized)))
 
+;; Disable `dired-hide-details-mode' so that session dates are shown
+;; when `recover-session' is invoked.
+(advice-add 'recover-session :after #'(lambda () (dired-hide-details-mode -1)))
 
   :general
   ("M--" 'not-modified
@@ -2418,9 +2472,11 @@ or are no longer readable will be killed."
    "H-C-g" 'abort-recursive-edit
    "H-C-S-g" 'top-level
    "H-C-A-g" 'keyboard-escape-quit) ; ESC ESC ESC
-  ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
+  ((ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "q" 'bury-buffer)
-  ((apropos-mode-map calendar-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map)
+   ((ebib-entry-mode-map)
+   "q" 'ps/bury-buffer-switch-to-other-window)
+  ((apropos-mode-map calendar-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
    "q" 'ps/kill-this-buffer)
   ((dired-mode-map pdf-view-mode-map)
    "s-o" 'ps/ocr-pdf)
@@ -2463,6 +2519,7 @@ or are no longer readable will be killed."
   (dired-do-revert-buffer t)
   (dired-create-destination-dirs 'ask)
   (dired-guess-shell-alist-user '(("" "open")))
+
   :config
   (setq dired-deletion-confirmer '(lambda (x) t))
   (dired-async-mode)
@@ -2559,6 +2616,24 @@ option."
    "A-C-s-f" 'dired-next-marked-file)
   (pdf-annot-minor-mode-map
    "x" 'dired-jump))
+
+(use-feature image-dired
+  :custom
+  (image-dired-main-image-directory "~/Pictures/")
+
+  :config
+  (defun ps/image-dired-current-directory ()
+    "Run `image-dired' in the current directory."
+    (interactive)
+    (image-dired (dired-current-directory))
+    (image-dired-display-thumbnail-original-image))
+
+  :general
+  (image-dired-thumbnail-mode-map
+   "k" 'image-dired-display-previous-thumbnail-original
+   "l" 'image-dired-display-next-thumbnail-original)
+  (dired-mode-map
+   "I" 'ps/image-dired-current-directory))
 
 (use-package all-the-icons-dired
   :demand t
@@ -2685,6 +2760,17 @@ option."
   (ibuffer-mode-map
    "k" 'ibuffer-do-delete))
 
+(use-feature filenotify
+  :config
+  ;; Copied from lists.gnu.org/archive/html/emacs-devel/2021-10/msg01206.html
+  (defun ps/file-notify-rm-all-watches ()
+    "Remove all existing file notification watches from Emacs."
+    (interactive)
+    (maphash
+     (lambda (key _value)
+       (file-notify-rm-watch key))
+     file-notify-descriptors)))
+
 (use-package uniquify-files
   :custom
   (uniquify-buffer-name-style 'forward))
@@ -2744,6 +2830,7 @@ option."
 
 (use-feature window
   :demand t
+
   :custom
   (split-width-threshold 300)
   (split-height-threshold nil)
@@ -2840,7 +2927,7 @@ otherwise in two windows."
         (split-window-right))
       (balance-windows)))
 
-  (ps/window-split-if-unsplit)
+  (run-with-timer 2 nil 'ps/window-split-if-unsplit)
 
   (defun ps/window--move-or-swap (this-buffer other-buffer &optional target-window)
     "docstring"
@@ -2952,10 +3039,13 @@ window depending on the number of present windows."
 
 (use-feature winner
   :demand t
+
   :custom
   (winner-mode 1)
+
   :config
   (remove-hook 'minibuffer-setup-hook 'winner-save-unconditionally)
+
   :general
   ("H-A-w" 'winner-undo
    "H-A-W" 'winner-redo))
@@ -2965,13 +3055,14 @@ window depending on the number of present windows."
   (scroll-bar-mode -1))
 
 (use-package avy
-  ;; :demand t
   :commands ps/avy-dired-find-file
+
   :custom
   (avy-case-fold-search nil)
   (avy-timeout-seconds 0.2)
   (avy-all-windows nil)
   (avy-keys '(97 115 100 102 106 107 108 13 32 113 119 101 114 117 105 111 112 122 120 99 118 109 44 46 47))
+
   :config
   ;; Launch dispatcher with `/' rather than `?'
   (defun ps/avy-handler-default (char)
@@ -3128,22 +3219,34 @@ then to selected character immediately ahead of point."
   :defer 5
 
   :init
-  (defun ps/writeroom-set-width ()
-    "Set width of `writeroom-mode' window to equal width of selected
-window."
-    (unless writeroom-mode
-      (setq writeroom-width (window-total-width))))
+  ;; This neds to be delayed a few seconds because the value returned
+  ;; by `window-total-width' changes as Emacs restarts.
+  (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))))
+
+  (defun ps/writerrom-global-effects (arg)
+  "Enable and disable custom effects when `writeroom-mode' is
+activated (`arg' = 1) and deactivated (`arg' = -1). The function
+needs to be included as an element in the list defined by
+`writeroom-global-effects'."
+        (tab-bar-mode (* -1 arg)))
 
   :custom
+  (writeroom-global-effects '(writeroom-set-fullscreen
+                              writeroom-set-alpha
+                              writeroom-set-menu-bar-lines
+                              writeroom-set-tool-bar-lines
+                              writeroom-set-vertical-scroll-bars
+                              writeroom-set-bottom-divider-width
+                              ps/writerrom-global-effects))
+
   (writeroom-restore-window-config t "upon leaving writeroom mode, restore pre-existing number of windows")
-  (writeroom-major-modes '(elfeed-search-mode
+  (writeroom-major-modes '(org-mode
+                           elfeed-search-mode
                            elfeed-show-mode
                            eww-mode
                            eww-buffers-mode) "major modes activated in global-writeroom-mode")
   (writeroom-fullscreen-effect 'maximized "disables annoying fullscreen transition effect on MacOS")
-
-  :hook
-  (writeroom-mode-hook . ps/writeroom-set-width)
+  (writeroom-maximize-window t)
 
   :general
   ("M-'" 'writeroom-mode
@@ -3190,14 +3293,22 @@ and start clock."
     (interactive)
     (ace-link-eww '(16)))
 
+  (defun ps/ace-link-w3m-in-eww ()
+    "In an `w3m-mode' buffer, open a visible link in `eww'."
+    (interactive)
+    (require 'w3m)
+    (let ((pt (avy-with ace-link-w3m
+                (avy-process
+                 (mapcar #'cdr (ace-link--w3m-collect))
+                 (avy--style-fn avy-style)))))
+      (goto-char pt)
+      (eww (w3m-url-valid (w3m-anchor)))))
+
   :general
-  (elfeed-show-mode-map
-   "f" 'ps/ace-link-eww-externally
-   "F" 'ace-link-eww)
-  (eww-mode-map
+  ((eww-mode-map elfeed-show-mode-map)
    "f" 'ace-link-eww
-   "F" ''ps/ace-link-eww-externally
-   "s" 'ps/ace-link-eww-new-buffer)
+   "F" 'ps/ace-link-eww-externally
+   "s-f" 'ps/ace-link-eww-new-buffer)
   ((help-mode-map helpful-mode-map elisp-refs-mode-map)
    "f" 'ace-link-help)
   ((ebib-entry-mode-map Info-mode-map)
@@ -3205,7 +3316,8 @@ and start clock."
   ((Man-mode-map woman-mode-map)
    "f" 'ace-link-woman)
   (mu4e-view-mode-map
-   "f" 'ps/ace-link-w3m-externally)
+   "f" 'ps/ace-link-w3m-in-eww
+   "F" 'ps/ace-link-w3m-externally)
   (org-agenda-mode-map
    "f" 'ace-link-org-agenda
    "s-f" 'ps/ace-link-org-agenda-clock-in)
@@ -3218,9 +3330,12 @@ and start clock."
   :custom
   (calendar-week-start-day 1)    ; week starts on Monday
   (calendar-set-date-style 'iso) ; this isn't the default?
-  (calendar-latitude -34.6079)
-  (calendar-longitude -58.3660)
-  (calendar-location-name "Comuna 1, Buenos Aires, Argentina")
+  ;; (calendar-latitude -34.6079)
+  ;; (calendar-longitude -58.3660)
+  ;; (calendar-location-name "Comuna 1, Buenos Aires, Argentina")
+  (calendar-latitude 19.4326)
+  (calendar-longitude -99.1332)
+  (calendar-location-name "Mexico DF")
   (calendar-time-display-form
    '(24-hours ":" minutes
               (when time-zone
@@ -3287,6 +3402,8 @@ with the specified date."
   :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass
   :defer 10
+  :demand t
+
   :init
   (setq org-gcal-up-days 0)
   (setq org-gcal-down-days 3)
@@ -3551,6 +3668,11 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
   :config
   (display-time-mode)
 
+  ;; github.com/arunkmv/.config/tree/main/emacs#tab-bar
+  (defface ps/display-time
+    '((t (:inherit bold)))
+    "Face for `display-time-string' in `global-mode-string'")
+
   :general
   ("M-A-t" 'world-clock))
 
@@ -3625,17 +3747,22 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
   :demand t
   :init
   (savehist-mode)
+
   :custom
   (history-length t "unlimited history")
   (savehist-additional-variables
    '(citar-history
      command-history
      compile-history
+     compilation-command
      eww-history
      extended-command-history
      file-name-history
+     Info-history-list
      ido-file-history
      kill-ring
+     kmacro-ring
+     last-kbd-macro
      log-edit-comment-ring
      magit-read-rev-history
      mark-ring
@@ -3643,6 +3770,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
      regexp-search-ring
      register-alist
      search-ring
+     shell-command-history
      telega-search-history
      twittering-search-history))
   (savehist-save-minibuffer-history t))
@@ -3672,10 +3800,11 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
   (recentf-mode))
 
 (use-package persistent-scratch
-  :defer 10
+  :demand t
   :custom
+  (persistent-scratch-autosave-interval 30)
   ;; What follows is copied from umarahmad.xyz/blog/quick-scratch-buffers/
-  (persistent-scratch-scratch-buffer-p-function 'ps/persistent-scratch-buffer-identifier)
+  ;; (persistent-scratch-scratch-buffer-p-function 'ps/persistent-scratch-buffer-identifier)
 
   :config
   (defun ps/persistent-scratch-buffer-identifier ()
@@ -3707,7 +3836,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
         (persistent-scratch-restore-this))
       (persistent-scratch-mode)))
 
-  (persistent-scratch-autosave-mode))
+  (persistent-scratch-setup-default))
 
 (use-feature remember
   :custom
@@ -3749,8 +3878,11 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
   :general
   ("A-g" 'magit))
 
+(use-package ghub
+  :defer 5)
+
 (use-package forge
-  :after magit
+  :after magit ghub
   :demand t
   :custom
   (forge-owned-accounts `((,ps/forge-owned-accounts))))
@@ -3758,6 +3890,12 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
 (use-package code-review)
 
 (use-package git-timemachine
+  :straight
+  (git-timemachine
+   :type git
+   :host codeberg
+   :repo "pidu/git-timemachine")
+  :demand t
   :general
   ("A-H-t" 'git-timemachine))
 
@@ -3900,6 +4038,25 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
   :general
   (vertico-map
    "<C-i>" 'vertico-exit))
+
+(use-package embark
+  :demand t
+  :config
+  (embark-define-keymap embark-yasnippet-completion-actions
+    "Embark actions for `consult-yasnippet' and derivatives"
+    ("d" consult-yasnippet-visit-snippet-file))
+
+  (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
+
+  :general
+  ("C-;" 'embark-act
+  "A-C-;" 'embark-dwim
+  "C-h B" 'embark-bindings))
+
+(use-package embark-consult
+  :demand t
+  :hook
+  (embark-collect-mode-hook . consult-preview-at-point-mode))
 
 (use-package consult
   :demand t
@@ -4048,24 +4205,6 @@ By default, all agenda entries are offered. MATCH is as in
   :demand t
   :after (consult flyspell))
 
-(use-package embark
-  :demand t
-  :config
-  (embark-define-keymap embark-yasnippet-completion-actions
-    "Embark actions for `consult-yasnippet' and derivatives"
-    ("d" consult-yasnippet-visit-snippet-file))
-
-  (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
-
-  :general
-  ("C-;" 'embark-act
-  "A-C-;" 'embark-dwim
-  "C-h B" 'embark-bindings))
-
-(use-package embark-consult
-  :demand t
-  :after (embark consult))
-
 (use-package marginalia
   :demand t
   :init
@@ -4083,12 +4222,14 @@ By default, all agenda entries are offered. MATCH is as in
    "i" 'ido-find-file))
 
 (use-package corfu
-  :defer 6
+  :demand t
   :custom
   (corfu-auto t)                 ;; Enable auto completion
+  (corfu-quit-no-match t)        ;; Automatically quit if there is no match
   (corfu-cycle vertico-cycle)
   (corfu-count vertico-count)
   (corfu-echo-documentation nil "Disable documentation in echo area; replaced by `corfu-doc'")
+  (corfu-doc-delay 0)
 
   :config
   ;; Adapted from Prot
@@ -4099,19 +4240,31 @@ Useful for prompts such as `eval-expression' and `shell-command'."
     (unless (bound-and-true-p vertico--input)
       (corfu-mode)))
 
+
   (global-corfu-mode)
+
+  :general
+  (corfu-map
+  "<return>" 'corfu-complete
+  "RET" 'corfu-complete)
 
   :hook
   (minibuffer-setup-hook . ps/corfu-enable-always-in-minibuffer))
 
-(use-package corfu-doc
-  :demand t
+(use-package corfu-terminal
   :after corfu
-  :custom
-  (corfu-doc-delay 0)
-
+  :demand t
   :config
-  (corfu-doc-mode))
+  (corfu-terminal-mode))
+
+(use-package corfu-doc-terminal
+  :straight (corfu-doc-terminal
+             :host codeberg
+                   :repo "akib/emacs-corfu-doc-terminal")
+  :after corfu-terminal
+  :demand t
+  :config
+  (corfu-doc-terminal-mode))
 
 (use-package kind-icon
   :after corfu
@@ -4233,19 +4386,37 @@ buffer displays and push it to the kill ring."
 (use-feature shell
   :config
   (defun ps/shell-update-homebrew ()
-    "Update Homebrew, using Eshell buffer if one exists"
+    "Update Homebrew."
     (interactive)
     (let ((shell-command-buffer-name-async "*homebrew update*"))
-      (async-shell-command "brew update; brew upgrade --greedy; brew unlink xpdf; brew upgrade; brew cleanup; brew doctor; brew link --overwrite xpdf")))
+      (async-shell-command "brew update; brew upgrade --greedy; brew cleanup; brew doctor")
+      (message "Update process finished.")))
 
   (defun ps/crontab-e ()
     "Run `crontab -e' in a emacs buffer."
     (interactive)
     (with-editor-async-shell-command "crontab -e"))
 
+    (defun ps/shell-in-current-directory (&optional shell)
+  "Open a shell in the current directory, creating one if
+necessary."
+  (interactive)
+  (let* ((shell (or shell
+                    'shell))
+         (shell-mode (intern (concat (symbol-name shell) "-mode")))
+         (current-directory default-directory)
+         (found))
+    (dolist (buffer (buffer-list (current-buffer)))
+      (with-current-buffer buffer
+        (when (and (eq major-mode 'shell-mode)
+                   (equal current-directory default-directory))
+          (setq found buffer))))
+    (if found
+        (switch-to-buffer found)
+      (shell (generate-new-buffer-name (format "*%s*" shell))))))
 
   :general
-  ("A-s" 'shell)
+  ("A-s" 'ps/shell-in-current-directory)
   (shell-mode-map
    "M-p" nil
    "M-n" nil
@@ -4253,10 +4424,12 @@ buffer displays and push it to the kill ring."
    "M-l" 'comint-next-input))
 
 (use-feature eshell
+  :demand t
   :custom
   (eshell-banner-message "")
   (eshell-save-history-on-exit t)
   (eshell-history-size 100000)
+
   :config
   (defun ps/eshell-open-cwd-on-dired ()
     "Open the current working directory on Dired."
@@ -4268,8 +4441,14 @@ buffer displays and push it to the kill ring."
     (interactive)
     (eshell '(4)))
 
+  (defun ps/eshell-in-current-directory ()
+    "Open a shell in the current directory, creating one if
+necessary."
+    (interactive)
+    (ps/shell-in-current-directory 'eshell))
+
   :general
-  ("A-e" 'eshell)
+  ("A-e" 'ps/eshell-in-current-directory)
   (eshell-mode-map
    "C-H-M-z" 'eshell-kill-input
    "A-C-s-m" 'eshell-bol
@@ -4519,8 +4698,8 @@ buffer displays and push it to the kill ring."
    "C-;" nil)
   (flyspell-mouse-map ;; this key map becomes active only when point is on a highlighted word
    "s-a" 'flyspell-auto-correct-word
-   "s-," 'ps/flyspell-goto-previous-error
-   "s-." 'flyspell-goto-next-error
+   "s-k" 'ps/flyspell-goto-previous-error
+   "s-l" 'flyspell-goto-next-error
    "s-s" 'ps/flyspell-save-word
    "A-s-s" 'ps/flyspell-save-word-and-next
    "s-c" 'flyspell-correct-wrapper)
@@ -4781,8 +4960,15 @@ To see a list of Google Docs and their respective IDs, run
   (ledger-schedule-look-backward 30)
 
   :config
-  (add-to-list 'ledger-reports '("net worth" "%(binary) -f %(ledger-file) bal --strict"))
-  (add-to-list 'ledger-reports '("net worth (USD)" "%(binary) -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict"))
+  (dolist (report
+           '(("net worth"
+              "%(binary) -f %(ledger-file) bal --strict")
+             ("net worth (USD)"
+              "%(binary) -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict")
+             ; I need to understand how the `--basis' flag works
+             ("cost basis"
+              "%(binary) -f %(ledger-file) --basis bal %(account) --strict")))
+    (add-to-list 'ledger-reports report))
 
   (defun ps/ledger-new-entry-below ()
     "Create new entry below one at point."
@@ -4819,7 +5005,7 @@ and clean it up."
     "Add transaction at point in `orgtbl' buffer imported via
 `ps/ledger-import-ftx-transactions'."
     (interactive)
-    (switch-to-buffer-other-window (concat "*orgtbl: " ps/dir-downloads "/order-history.csv*"))
+    ;; (switch-to-buffer-other-window (concat "*orgtbl: " ps/dir-downloads "/order-history.csv*"))
     (ps/org-table-copy-cell)
     (org-table-goto-column 8)
     (ps/org-table-copy-cell)
@@ -4828,7 +5014,7 @@ and clean it up."
     (org-table-goto-column 6)
     (ps/org-table-copy-cell)
     (other-window 1)
-    (ps/yasnippet-expand-by-key "ftxa")
+    (ps/yasnippet-expand-by-key "ftxm")
     (yank)
     (yas-next-field-or-maybe-expand)
     (yank 2)
@@ -4837,7 +5023,7 @@ and clean it up."
     (yas-next-field-or-maybe-expand)
     (other-window 1)
     (org-table-next-row)
-    (other-window 1))
+    )
 
   (defun ps/ledger-align-and-next ()
     "Align transaction at point and move point to next entry."
@@ -4919,16 +5105,16 @@ and clean it up."
       (goto-char (+ (match-beginning 0) point-delta))))
 
   (defun ps/ledger-sort-buffer-reversed ()
-  "Sort the entire buffer in reverse chronological order."
-  (interactive)
-  (let (sort-start
-        sort-end)
-    (save-excursion
-      (goto-char (point-min))
-      (setq sort-start (ledger-sort-find-start)
-            sort-end (ledger-sort-find-end)))
-    (ps/ledger-sort-region-reversed (or sort-start (point-min))
-                        (or sort-end (point-max)))))
+    "Sort the entire buffer in reverse chronological order."
+    (interactive)
+    (let (sort-start
+          sort-end)
+      (save-excursion
+        (goto-char (point-min))
+        (setq sort-start (ledger-sort-find-start)
+              sort-end (ledger-sort-find-end)))
+      (ps/ledger-sort-region-reversed (or sort-start (point-min))
+                                      (or sort-end (point-max)))))
 
   (defun ps/ledger-sort-region-or-buffer ()
     "Sort a region if selected, otherwise the whole buffer."
@@ -4989,7 +5175,8 @@ otherwise the whole buffer."
 (use-package parse-csv)
 
 (use-package pdf-tools
-  :if (equal (system-name) ps/computer-hostname-pablo)
+  :if (or (equal (system-name) ps/computer-hostname-pablo)
+          (equal (system-name) ps/computer-hostname-leo))
   :defer 10
   :mode ("\\.pdf\\'" . pdf-view-mode)
   :custom
@@ -5127,33 +5314,6 @@ FILE."
   (emacs-lisp-mode-map shell-mode-map
       "s-c" 'exit-recursive-edit))
 
-(use-package lsp-mode
-  :init
-  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-  (setq lsp-keymap-prefix "A-C-l")
-
-  :custom
-  (lsp-ui-doc-show-with-cursor t) ; move the cursor over a symbol to show its documentation
-  (lsp-warn-no-matched-clients nil)
-  (lsp-headerline-breadcrumb-enable nil)
-
-  :config
-
-  (defun ps/lsp-toggle ()
-    "Connect/disconnect to lsp server."
-    (interactive)
-    (if (or (not lsp-mode)
-            (equal lsp-mode '(lsp-enable-which-key-integration)))
-        (lsp)
-      (lsp-disconnect)))
-
-  :hook
-  ;; if you want which-key integration
-  (lsp-mode . lsp-enable-which-key-integration)
-
-  :general
-  ("A-l" 'ps/lsp-toggle))
-
 (use-package lsp-ui
   :after lsp-mode
   :demand t
@@ -5215,7 +5375,7 @@ FILE."
 
   :general
   (copilot-mode-map
-  "TAB" 'copilot-accept-completion))
+   "TAB" 'copilot-accept-completion))
 
 (use-package elpy
   :custom
@@ -5778,17 +5938,20 @@ Point is moved after both elements."
       (id "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")
       "** %(ps/org-time-stamp-inactive-current-time)\n%?")
      ("ln" "Leo: Add to Future Matters: news" entry
-      (file+headline ps/file-tareas-leo "Tareas")
+      (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#4] Future Matters: news :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
      ("lp" "Leo: Pending for next meeting" plain
       (id "8B2F18B4-A309-4F29-A5E6-CD40E010970D")
       "" :empty-lines 1 :empty-lines-after 3)
      ("lr" "Leo: Add to Future Matters: research" entry
-      (file+headline ps/file-tareas-leo "Tareas")
+      (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
-     ("lt" "Leo: Telegram" entry
-      (file+headline ps/file-tareas-leo "Tareas")
-      "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
+     ("lt" "Leo: Add to translations spreadsheet" entry
+      (file+headline ps/file-tareas-leo "Tareas Leo")
+      "** TODO [#4] Add to translation master file :leo:\n%c\n[[https://docs.google.com/spreadsheets/d/1YpqWK2Vpxwc_JuCf7isjwpdCQ_7_NRAY/edit#gid=2099842495][spreadsheet]]" :empty-lines 1 :prepend t)
+     ;; ("lt" "Leo: Telegram" entry
+      ;; (file+headline ps/file-tareas-leo "Tareas Leo")
+      ;; "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
      ("m" "Leo: Messaging (to send later)" entry
       (file ps/file-inbox-desktop)
       "* TODO Send message\n%?\n")
@@ -6040,7 +6203,9 @@ not already have one."
                 (file-name-nondirectory (buffer-file-name))
                 '("orb-noter-template.org"
                   "tareas.org"
-                  "calendar.org"))
+                  "calendar.org"
+                  ".org2blog.org"
+                  "feeds.org"))
                ;; exclude selected headings
                (member (org-get-heading) '("Local variables"
                                            "COMMENT Local variables"
@@ -6051,6 +6216,7 @@ not already have one."
                ;; don't create unnecessary IDs for article
                ;; subsections)
                (and
+                                        ; dir condition
                 (member
                  (file-name-directory (buffer-file-name))
                  (mapcar #'file-name-as-directory
@@ -6059,6 +6225,7 @@ not already have one."
                           ps/dir-journal
                           ps/dir-wiki-entries
                           ps/dir-people)))
+                                        ; heading condition
                 (> (org-current-level) 1)))
         (org-map-entries 'org-id-get-create))))
 
@@ -6571,6 +6738,7 @@ original."
   (org2blog/wp-track-posts (list ps/file-org2blog "Posts"))
 
   :config
+  ;; (load-file "/Users/pablostafforini/.emacs.d/straight/repos/org2blog/org2blog.el")
   (defun ps/org2blog-move-tags-to-drawer ()
     "Convert org-mode tags to values of the property `POST_TAGS' in
 an org drawer."
@@ -6695,7 +6863,7 @@ With optional prefix argument, open with eww."
    "I" 'org-pomodoro))
 
 (use-package emacsql-sqlite3
-  :defer 2)
+  :demand t)
 
 (use-package org-roam
   :after emacsql-sqlite3
@@ -6937,18 +7105,29 @@ tasks."
     "https://scholar.google.com/scholar?q="
     ""))
 
+(defvar ps/wikipedia
+  '("Google Scholar"
+    "http://en.wikipedia.org/w/index.php?title=Special%3ASearch&profile=default&search="
+    "&fulltext=Search"))
+
 (defvar ps/goodreads
   '("Goodreads"
     "https://www.goodreads.com/search?q="
     ""))
 
 (defvar ps/ebib-search-book
-  '(ps/goodreads
-  ps/ebib-search-hathitrust
+  '(ps/ebib-search-goodreads
+    ps/ebib-search-hathitrust
     ps/ebib-search-internet-archive
     ps/ebib-search-university-of-toronto
     ps/ebib-search-library-genesis
     ps/ebib-search-amazon))
+
+(defvar ps/ebib-download-book
+  '(ps/ebib-search-hathitrust
+    ps/ebib-search-internet-archive
+    ps/ebib-search-university-of-toronto
+    ps/ebib-search-library-genesis))
 
 (defvar ps/ebib-search-article
   '(ps/ebib-search-connected-papers
@@ -6973,6 +7152,37 @@ tasks."
      (t csl "american-medical-association-brackets.csl")       ; Fallback
      ))
 
+  :config
+  ;; Comment out `org-cite--allowed-p' condition to allow invocation
+  ;; in any mode. Even if inserting a citation is not allowed, one may
+  ;; want to invoke the command to trigger contextual actions via
+  ;; `embark'.
+  (defun ps/org-cite-insert (arg)
+    "Insert a citation at point.
+Insertion is done according to the processor set in `org-cite-insert-processor'.
+ARG is the prefix argument received when calling interactively the function."
+    (interactive "P")
+    (unless org-cite-insert-processor
+      (user-error "No processor set to insert citations"))
+    (org-cite-try-load-processor org-cite-insert-processor)
+    (let ((name org-cite-insert-processor))
+      (cond
+       ((not (org-cite-get-processor name))
+        (user-error "Unknown processor %S" name))
+       ((not (org-cite-processor-has-capability-p name 'insert))
+        (user-error "Processor %S cannot insert citations" name))
+       (t
+        (let ((context (org-element-context))
+              (insert (org-cite-processor-insert (org-cite-get-processor name))))
+          (cond
+           ((memq (org-element-type context) '(citation citation-reference))
+            (funcall insert context arg))
+           (t
+            (org-cite--allowed-p context)
+            (funcall insert nil arg))))))))
+
+  (advice-add 'org-cite-insert :override #'ps/org-cite-insert)
+
   :general
   ("H-/" 'org-cite-insert))
 
@@ -6995,16 +7205,162 @@ tasks."
 (use-package citeproc
   :demand t)
 
-(use-package citar-org-roam
+(use-feature bibtex
   :demand t
-  :after org-roam
+  :custom
+  ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
+  ;; retorque.re/zotero-better-bibtex/citing/
+  (bibtex-autokey-names 1)
+  (bibtex-autokey-name-case-convert 'capitalize)
+  (bibtex-autokey-year-length 4)
+  (bibtex-autokey-titlewords 3)
+  (bibtex-autokey-titlewords-stretch 0)
+  (bibtex-autokey-titleword-ignore '("A" "An" "On" "The" "Eine?" "Der" "Die" "Das" "El" "La" "Lo" "Los" "Las" "Un" "Una" "Unos" "Unas" "Le" "La" "L'" "Les" "Un" "Une" "Des" "Du" "De la" "De l'" "Des" "Lo" "Il" "La" "L'" "Gli" "I" "Le" "Uno"))
+  (bibtex-autokey-title-terminators "[.!?;]\\|--")
+  (bibtex-autokey-titleword-case-convert 'capitalize)
+  (bibtex-autokey-titleword-length nil)
+  (bibtex-autokey-titleword-separator "")
+  (bibtex-autokey-year-title-separator "")
+  (bibtex-autokey-preserve-case t)
+  ;; Remove accents
+  (bibtex-autokey-before-presentation-function 'ps/bibtex-asciify-string)
+
+  :config
+  ;; Copied from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
+  (defun ps/bibtex-asciify-text (&optional Begin End)
+  "Remove accents in some letters. e.g. café → cafe.
+Change European language characters into equivalent ASCII ones.
+When called interactively, work on current line or text selection.
+
+URL `http://xahlee.info/emacs/emacs/emacs_zap_gremlins.html'
+Version 2018-11-12 2021-09-17"
+  (interactive)
+  (let (($charMap
+          [
+           ["ß" "ss"]
+           ["á\\|à\\|â\\|ä\\|ā\\|ǎ\\|ã\\|å\\|ą\\|ă\\|ạ\\|ả\\|ả\\|ấ\\|ầ\\|ẩ\\|ẫ\\|ậ\\|ắ\\|ằ\\|ẳ\\|ặ" "a"]
+           ["æ" "ae"]
+           ["ç\\|č\\|ć" "c"]
+           ["é\\|è\\|ê\\|ë\\|ē\\|ě\\|ę\\|ẹ\\|ẻ\\|ẽ\\|ế\\|ề\\|ể\\|ễ\\|ệ" "e"]
+           ["í\\|ì\\|î\\|ï\\|ī\\|ǐ\\|ỉ\\|ị" "i"]
+           ["ñ\\|ň\\|ń" "n"]
+           ["ó\\|ò\\|ô\\|ö\\|õ\\|ǒ\\|ø\\|ō\\|ồ\\|ơ\\|ọ\\|ỏ\\|ố\\|ổ\\|ỗ\\|ộ\\|ớ\\|ờ\\|ở\\|ợ" "o"]
+           ["ú\\|ù\\|û\\|ü\\|ū\\|ũ\\|ư\\|ụ\\|ủ\\|ứ\\|ừ\\|ử\\|ữ\\|ự"     "u"]
+           ["ý\\|ÿ\\|ỳ\\|ỷ\\|ỹ"     "y"]
+           ["þ" "th"]
+           ["ď\\|ð\\|đ" "d"]
+           ["ĩ" "i"]
+           ["ľ\\|ĺ\\|ł" "l"]
+           ["ř\\|ŕ" "r"]
+           ["š\\|ś" "s"]
+           ["ť" "t"]
+           ["ž\\|ź\\|ż" "z"]
+           [" " " "]       ; thin space etc
+           ["–" "-"]       ; dash
+           ["—\\|一" "--"] ; em dash etc
+           ])
+         ($p1 (if Begin Begin
+                (if (region-active-p)
+                    (region-beginning)
+                  (line-beginning-position))))
+         ($p2 (if End End
+                (if (region-active-p)
+                    (region-end)
+                  (line-end-position)))))
+    (let ((case-fold-search t))
+      (save-restriction
+        (narrow-to-region $p1 $p2)
+        (mapc
+         (lambda ($pair)
+           (goto-char (point-min))
+           (while (re-search-forward (elt $pair 0) (point-max) t)
+             (replace-match (elt $pair 1))))
+         $charMap)))))
+
+  (defun ps/bibtex-asciify-string (String)
+  "Returns a new string. e.g. café → cafe.
+See `xah-asciify-text'
+Version 2015-06-08"
+  (with-temp-buffer
+      (insert String)
+      (ps/bibtex-asciify-text (point-min) (point-max))
+      (buffer-string)))
+
+  ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field
+  (defun ps/bibtex-autokey-get-year ()
+  "Return year field contents as a string obeying `bibtex-autokey-year-length'."
+  (let* ((str (bibtex-autokey-get-field '("date" "year" "urldate"))) ; possibly ""
+         (year (or (and (iso8601-valid-p str)
+                        (let ((year (decoded-time-year (iso8601-parse str))))
+                          (and year (number-to-string year))))
+                   ;; BibTeX permits a year field "(about 1984)", where only
+                   ;; the last four nonpunctuation characters must be numerals.
+                   (and (string-match "\\([0-9][0-9][0-9][0-9]\\)[^[:alnum:]]*\\'" str)
+                        (match-string 1 str))
+                   (user-error "Year or date field `%s' invalid" str))))
+    (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
+
+  (defun ps/bibtex-get-key ()
+  "Return the key of the current BibTeX entry."
+  (save-excursion
+    (bibtex-narrow-to-entry)
+    (goto-char (point-min))
+    (if (re-search-forward "@\\w+{\\([^,]+\\),")
+        (match-string-no-properties 1)
+      (user-error "Not on a BibTeX entry"))))
+
+  (advice-add 'bibtex-autokey-get-year :override #'ps/bibtex-autokey-get-year)
+
+  :general
+  (bibtex-mode-map
+   "A-C-H-x" 'bibtex-copy-entry-as-kill
+   "A-C-H-c" 'bibtex-kill-entry
+   "A-C-H-a" 'bibtex-copy-field-as-kill
+   "A-C-H-f" 'bibtex-kill-field
+   "A-C-s-r" 'bibtex-previous-entry
+   "A-C-s-f" 'bibtex-next-entry))
+
+(use-package bibtex-completion
+  ;; :after citar
+  :demand t
+  :custom
+  (bibtex-completion-pdf-open-function 'find-file)
+  (bibtex-completion-bibliography org-cite-global-bibliography)
+  (bibtex-completion-notes-path ps/dir-bibliographic-notes)
+  (bibtex-completion-pdf-field "file")
+  (bibtex-dialect 'biblatex))
+
+(use-package org-roam-bibtex
+  :demand t
+  ;; :after bibtex-completion
+  :custom
+  (orb-roam-ref-format 'org-cite)
+  (orb-insert-interface 'citar-open-notes)
+  (orb-note-actions-interface 'default)
+  (orb-preformat-keywords
+   '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
+  (orb-process-file-keyword t)
+  (orb-attached-file-extensions '("pdf"))
+
+  :config
+  (add-to-list 'orb-preformat-keywords "year")
+  (org-roam-bibtex-mode))
+
+(use-package citar-org-roam
+  :straight (citar-org-roam
+             :host github
+                   :repo "emacs-citar/citar-org-roam")
+  :demand t
+  :no-require t
+  :after  org-roam
   :config
   (citar-org-roam-mode))
 
 (use-package citar
   :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
+  ;; :defer 10
+  ;; :after oc vertico embark marginalia citar-org-roam
   :demand t
-  :after oc vertico embark marginalia
   :custom
   (citar-open-note-functions '(orb-citar-edit-note))
   (citar-bibliography org-cite-global-bibliography)
@@ -7018,6 +7374,7 @@ tasks."
   (citar-format-reference-function 'citar-citeproc-format-reference)
 
   :config
+  (require 'citar-org-roam)
   (citar-register-notes-source
    'orb-citar-source (list :name "Org-Roam Notes"
                            :category 'org-roam-node
@@ -7090,10 +7447,16 @@ With prefix, rebuild the cache before offering candidates."
                        ps/amazon-suffix))
         (message "No link found for %s" (car key-entry)))))
 
+  (defun ps/citar-open-in-ebib (citekey)
+    "Open bibliographic entry associated with the CITEKEY in Ebib."
+    (interactive (list (citar-select-ref)))
+    (ps/ebib-open-key citekey))
+
   :general
-  (citar-map
+  ((citar-map citar-citation-map)
    "a" 'ps/citar-search-amazon
    "c" 'embark-copy-as-kill
+   "i" 'ps/citar-open-in-ebib
    "l" 'ps/citar-search-library-genesis
    "s" 'ps/citar-search-google-scholar
    "v" 'ps/citar-search-internet-archive
@@ -7107,7 +7470,7 @@ With prefix, rebuild the cache before offering candidates."
   (citar-citeproc-csl-locales-dir org-cite-csl-locales-dir))
 
 (use-package citar-embark
-  :after (citar embark)
+  :after citar embark
   :demand t
   :config
   (citar-embark-mode))
@@ -7117,14 +7480,10 @@ With prefix, rebuild the cache before offering candidates."
   :custom
   (org-ref-insert-cite-function 'org-cite-insert)
   (org-ref-bibtex-pdf-download-dir ps/dir-downloads)
-  (bibtex-completion-library-path ps/dir-library)
+  (bibtex-completion-library-path ps/dir-library-pdf)
 
   :config
-  (defvar ps/isbn-p "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
 
-  (defun ps/isbn-p (string)
-    "Return `t' if string looks like an ISBN."
-    (string-match ps/isbn-p string))
 
     ;; Tweak function to remove redundant and conflicting `Year' field
   (defun isbn-to-bibtex (isbn bibfile)
@@ -7188,103 +7547,8 @@ in the file. Data comes from www.ebook.de."
     "Return `t' if string is a valid DOI."
     (string-match "^10.[[:digit:]]\\{4,9\\}/[().-;A-Z_-]+$" string)))
 
-(use-feature bibtex
-  :demand t
-  :custom
-  ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
-  ;; retorque.re/zotero-better-bibtex/citing/
-  (bibtex-autokey-names 1)
-  (bibtex-autokey-name-case-convert 'capitalize)
-  (bibtex-autokey-year-length 4)
-  (bibtex-autokey-year-title-separator "")
-  (bibtex-autokey-titlewords 3)
-  (bibtex-autokey-titlewords-stretch 0)
-  (bibtex-autokey-title-terminators "[.!?;]\\|--")
-  (bibtex-autokey-titleword-case-convert 'capitalize)
-  (bibtex-autokey-titleword-length nil)
-  (bibtex-autokey-titleword-separator "")
-  (bibtex-autokey-preserve-case t)
-
-  :config
-  ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field
-  (defun ps/bibtex-autokey-get-year ()
-  "Return year field contents as a string obeying `bibtex-autokey-year-length'."
-  (let* ((str (bibtex-autokey-get-field '("date" "year" "urldate"))) ; possibly ""
-         (year (or (and (iso8601-valid-p str)
-                        (let ((year (decoded-time-year (iso8601-parse str))))
-                          (and year (number-to-string year))))
-                   ;; BibTeX permits a year field "(about 1984)", where only
-                   ;; the last four nonpunctuation characters must be numerals.
-                   (and (string-match "\\([0-9][0-9][0-9][0-9]\\)[^[:alnum:]]*\\'" str)
-                        (match-string 1 str))
-                   (user-error "Year or date field `%s' invalid" str))))
-    (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
-
-  (advice-add 'bibtex-autokey-get-year :override #'ps/bibtex-autokey-get-year)
-
-  :general
-  (bibtex-mode-map
-   "A-C-H-x" 'bibtex-copy-entry-as-kill
-   "A-C-H-c" 'bibtex-kill-entry
-   "A-C-H-a" 'bibtex-copy-field-as-kill
-   "A-C-H-f" 'bibtex-kill-field
-   "A-C-s-r" 'bibtex-previous-entry
-   "A-C-s-f" 'bibtex-next-entry))
-
-(use-package bibtex-completion
-  :defer 10
-  :after citar
-  :custom
-  (bibtex-completion-pdf-open-function 'find-file)
-  (bibtex-completion-bibliography citar-bibliography)
-  (bibtex-completion-notes-path ps/dir-bibliographic-notes)
-  (bibtex-completion-pdf-field "file")
-  (bibtex-dialect 'biblatex)
-
-  :config
-  (defun ps/bibtex-completion-replace-heading-with-bibliographic-info ()
-    "Replace the contents of the current org heading with the
-bibliographic details of the `org-ref' entry at point. For use
-with `org-capture'."
-    (interactive)
-    (org-narrow-to-subtree)
-    (let ((key (car (org-ref-get-bibtex-keys)))
-          (template "${author-or-editor} — ${title}")
-          ;; (org-catch-invisible-edits nil)
-          (org-ctrl-k-protect-subtree nil)
-          (truncate-lines t))
-      (let ((visible-mode 1))
-        (org-end-of-line)
-        (org-beginning-of-line)
-        (ps/org-kill-logical-line)
-        (insert (bibtex-completion-fill-template (bibtex-completion-get-entry key)
-                                                 template)))
-      (ps/org-narrow-to-entry-and-children)
-      (crux-smart-open-line nil)
-      (insert (concat "cite:" key))
-      (ps/org-ref-pdf-effort-estimate)
-      (ps/org-jump-to-beginning-of-heading)
-      (ps/org-widen-and-reveal)))
-  )
-
-(use-package org-roam-bibtex
-  :demand t
-  :after bibtex-completion
-  :custom
-  (orb-roam-ref-format 'org-cite)
-  (orb-insert-interface 'citar-open-notes)
-  (orb-note-actions-interface 'default)
-  (orb-preformat-keywords
-   '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
-  (orb-process-file-keyword t)
-  (orb-attached-file-extensions '("pdf"))
-
-  :config
-  (add-to-list 'orb-preformat-keywords "year")
-  (org-roam-bibtex-mode))
-
 (use-package ebib
-  :defer 10
+  :defer 5
   :custom
   (ebib-filename-separator ";")
   (ebib-file-associations nil "do not open any file types externally")
@@ -7292,61 +7556,81 @@ with `org-capture'."
   (ebib-bibtex-dialect 'biblatex)
   (ebib-use-timestamp t)
   (ebib-preload-bib-files org-cite-global-bibliography)
-  (ebib-index-columns '(("Author/Editor" 30 t)
-                        ("Year" 6 t)
-                        ("Title" 50 t)
-                        ("Entry Key" 40 t)))
+  (ebib-index-columns '(("Entry Key" 30 t)
+			("Author/Editor" 25 t)
+			("Year" 4 t)
+			("Title" 50 t)))
 
   :config
+  (setq ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "venue" "version" "volumes" "year"))
+
   ;; Tweak original function to prevent unnecessary vertical window splits
   (defun ps/ebib--setup-windows ()
     "Create Ebib's window configuration.
 If the index buffer is already visible in some frame, select its
 window and make the frame active,"
     (let ((index-window (get-buffer-window (ebib--buffer 'index) t))
-          (old-frame (selected-frame)))
+	  (old-frame (selected-frame)))
       (if index-window
-          (progn (select-window index-window t)
-                 (unless (eq (window-frame) old-frame)
-                   (select-frame-set-input-focus (window-frame))
-                   (setq ebib--frame-before old-frame)))
-        (setq ebib--saved-window-config (current-window-configuration))
-        (setq ebib--frame-before nil)
-        (cond
-         ((eq ebib-layout 'full)
-          (delete-other-windows))
-         ((eq ebib-layout 'custom)
-          (setq ebib--window-before (selected-window))
-          (delete-other-windows)
-          (let ((width (cond
-                        ((integerp ebib-width)
-                         (- (window-total-width) ebib-width))
-                        ((floatp ebib-width)
-                         (- (window-total-width) (truncate (* (window-total-width) ebib-width)))))))
-            (select-window (split-window (selected-window) width t)))))
-        (let* ((index-window (selected-window))
-               (entry-window (selected-window)))
-          (switch-to-buffer (ebib--buffer 'index))
-          (unless (eq ebib-layout 'index-only)
-            (set-window-buffer entry-window (ebib--buffer 'entry)))
-          ;; (set-window-dedicated-p index-window t)
-          (if (eq ebib-layout 'custom)
-              (set-window-dedicated-p entry-window t)))))
+	  (progn (select-window index-window t)
+		 (unless (eq (window-frame) old-frame)
+		   (select-frame-set-input-focus (window-frame))
+		   (setq ebib--frame-before old-frame)))
+	(setq ebib--saved-window-config (current-window-configuration))
+	(setq ebib--frame-before nil)
+	(cond
+	 ((eq ebib-layout 'full)
+	  (delete-other-windows))
+	 ((eq ebib-layout 'custom)
+	  (setq ebib--window-before (selected-window))
+	  (delete-other-windows)
+	  (let ((width (cond
+			((integerp ebib-width)
+			 (- (window-total-width) ebib-width))
+			((floatp ebib-width)
+			 (- (window-total-width) (truncate (* (window-total-width) ebib-width)))))))
+	    (select-window (split-window (selected-window) width t)))))
+	(let* ((index-window (selected-window))
+	       (entry-window (selected-window)))
+	  (switch-to-buffer (ebib--buffer 'index))
+	  (unless (eq ebib-layout 'index-only)
+	    (set-window-buffer entry-window (ebib--buffer 'entry)))
+	  ;; (set-window-dedicated-p index-window t)
+	  (if (eq ebib-layout 'custom)
+	      (set-window-dedicated-p entry-window t)))))
     (if (buffer-local-value 'ebib--dirty-index-buffer (ebib--buffer 'index))
-        (setq ebib--needs-update t)))
+	(setq ebib--needs-update t)))
 
   (advice-add 'ebib--setup-windows :override #'ps/ebib--setup-windows)
+
+  (defvar ps/ebib-isbn-p "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
+
+  (defun ps/ebib-isbn-p (string)
+    "Return `t' if string looks like an ISBN."
+    (string-match ps/ebib-isbn-p string))
+
+  (defun ps/ebib-get-isbn ()
+    "Return ISBN for the current entry."
+    (when-let ((isbn
+		(split-string
+		 (s-replace
+		  "-"
+		  ""
+		  (substring-no-properties
+		   (ebib-get-field-value "isbn" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+		 " ")))
+      (car isbn)))
 
   (defun ps/ebib-jump-to (field)
     "Jump to FIELD of entry at point."
     (when (equal major-mode 'ebib-index-mode)
       (ebib-edit-entry))
     (let ((location (save-excursion
-                      (goto-char (point-min))
-                      (re-search-forward (concat "^" field) nil t))))
+		      (goto-char (point-min))
+		      (re-search-forward (concat "^" field) nil t))))
       (if location
-          (goto-char location)
-        (beginning-of-line))
+	  (goto-char location)
+	(beginning-of-line))
       (ps/switch-to-most-recent-buffer-in-mode 'ebib-entry-mode)))
 
   (defun ps/ebib-jump-to-abstract ()
@@ -7434,66 +7718,108 @@ window and make the frame active,"
     (interactive)
     (ps/ebib-jump-to "volume"))
 
-  (defun ps/ebib-add-by-identifier (id)
+  (defun ps/ebib-download-by-identifier (&optional id)
     "docstring"
-    (interactive "sEnter ISBN or DOI: ")
-    (let ((bibfile ps/file-bibliography-new))
+    (interactive)
+    (let ((id (or id
+		  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+		  (ps/ebib-get-isbn)
+		  (read-string "Enter ISBN or DOI: "))))
       ;; TODO: Add support for arXiv
       (cond ((ps/doi-utils-doi-p id)
-             (doi-utils-add-bibtex-entry-from-doi id bibfile))
-            ((ps/isbn-p id)
-             (isbn-to-bibtex id bibfile))
-            (t
-             (user-error "Identifier does not appear to be an ISBN or DOI.")))))
+	     (scihub id))
+	    ((ps/ebib-isbn-p id)
+	     (ps/ebib-download-book nil id))
+	    (t
+	     (user-error "Identifier does not appear to be an ISBN or DOI.")))))
 
-  (defun ps/ebib-download-by-identifier (id)
+  (defun ps/ebib-search-by-identifier (&optional id)
     "docstring"
-    (interactive "sEnter ISBN or DOI: ")
-    ;; TODO: Add support for arXiv
-    (cond ((ps/doi-utils-doi-p id)
-           (scihub id))
-          ((ps/isbn-p id)
-           (ps/ebib-search-book (s-replace "-" "" id)))
-          (t
-           (user-error "Identifier does not appear to be an ISBN or DOI."))))
-
-  (defun ps/ebib-reload-current-database-no-confirm ()
-    "Reload the current database from disk, without prompting for
-confirmation."
     (interactive)
-    (ebib--execute-when
-      (entries
-       (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-       (ebib--reload-database ebib--cur-db)
-       (ebib--set-modified nil ebib--cur-db)
-       (ebib--update-buffers)
-       (message "Database reloaded"))
-      (default
-        (beep))))
+    (let ((id (or id
+		  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+		  (ps/ebib-get-isbn)
+		  (read-string "Enter ISBN or DOI: "))))
+      ;; TODO: Add support for arXiv
+      (cond ((ps/doi-utils-doi-p id)
+	     (scihub id))
+	    ((ps/ebib-isbn-p id)
+	     (ps/ebib-search-book nil id))
+	    (t
+	     (user-error "Identifier does not appear to be an ISBN or DOI.")))))
+
+  (defun ps/ebib--search-or-download-dwim (action)
+    "docstring"
+    (if (string= (ebib--current-field) "title")
+	(when-let ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point) ebib--cur-db)))
+	  (cond
+	   ((member type '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook" "Book" "Collection" "MVBook" "Inbook" "Incollection" "Bookinbook" "Suppbook"))
+	    (cond ((eq action 'search)
+		   (ps/ebib-search-book-by-title))
+		  ((eq action 'download)
+		   (ps/ebib-download-book-by-title))))
+	   ((member type '("article" "Article"))
+	    (cond ((eq action 'search)
+		   (ps/ebib-search-article-by-title))
+		  ((eq action 'download)
+		   (ps/ebib-download-article-by-title))))
+	   (t
+	    (user-error (format "No action defined for entries of type `%s'" type))))))
+    (cond ((eq action 'search)
+	   (ps/ebib-search-by-identifier))
+	  ((eq action 'download)
+	   (ps/ebib-download-by-identifier))))
+
+  (defun ps/ebib-search-dwim ()
+    "If field at point is 'title', run a search with its value; otherwise use identifier.
+
+  The list of websites for the search query is defined by the variable `ps/ebib-search-book'"
+    (interactive)
+    (ps/ebib--search-or-download-dwim 'search))
+
+  (defun ps/ebib-download-dwim ()
+    "If field at point is 'title', run a search with its value; otherwise use identifier.
+
+  The list of websites for the search query is defined by the variable `ps/ebib-download-book'"
+    (interactive)
+    (ps/ebib--search-or-download-dwim 'download))
 
   (defun ps/ebib-get-file (extension)
     "docstring"
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
       (catch 'tag
-        (mapc
-         (lambda (file)
-           (when (equal (file-name-extension file) extension)
-             (throw 'tag file)))
-         (ebib--split-files files))
-        nil)))
+	(mapc
+	 (lambda (file)
+	   (when (equal (file-name-extension file) extension)
+	     (throw 'tag file)))
+	 (ebib--split-files files))
+	nil)))
 
   (defun ps/ebib-open-file (extension)
     "Open file with EXTENSION in entry at point, if it (uniquely)
 exists."
     (interactive)
     (if-let ((file-name (ps/ebib-get-file extension)))
-        (find-file file-name)
+	(find-file file-name)
+      (user-error (format "No (unique) `%s' file found" extension))))
+
+  (defun ps/ebib-open-file-externally (extension)
+    "Open file with EXTENSION in entry at point, if it (uniquely)
+exists."
+    (interactive)
+    (if-let ((file-name (expand-file-name (ps/ebib-get-file extension))))
+	(shell-command (format "open '%s'" file-name))
       (user-error (format "No (unique) `%s' file found" extension))))
 
   (defun ps/ebib-open-pdf-file ()
     "Open `pdf' file in entry at point, if it (uniquely) exists."
     (interactive)
     (ps/ebib-open-file "pdf"))
+
+  (defun ps/ebib-open-pdf-file-externally ()
+    "Open `pdf' file in entry at point, if it (uniquely) exists."
+    (interactive)
+    (ps/ebib-open-file-externally "pdf"))
 
   (defun ps/ebib-open-org-file ()
     "Open `org' file in entry at point, if it (uniquely) exists."
@@ -7505,12 +7831,12 @@ exists."
     (interactive)
     (ps/ebib-open-file "html")
     (let ((html-buffer (buffer-name))
-          (browse-url-handlers nil)
-          (browse-url-browser-function #'eww-browse-url))
+	  (browse-url-handlers nil)
+	  (browse-url-browser-function #'eww-browse-url))
       (browse-url-of-buffer)
       (kill-buffer html-buffer)))
 
-  (defvar ps/ebib-valid-file-extensions '("html" "org" "pdf"))
+  (defvar ps/ebib-valid-file-extensions '("html" "pdf"))
 
   (defun ps/ebib-validate-file-extension ()
     "If entry at point has attachments, check that the extension of
@@ -7518,29 +7844,29 @@ each of the attached files is in
 `ps/ebib-valid-file-extensions'."
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
       (when
-          (catch 'tag
-            (mapc
-             (lambda (file)
-               (unless (member (file-name-extension file) ps/ebib-valid-file-extensions)
-                 (throw 'tag file)))
-             (ebib--split-files files))
-            nil)
-        (user-error "Invalid file extension.df"))))
+	  (catch 'tag
+	    (mapc
+	     (lambda (file)
+	       (unless (member (file-name-extension file) ps/ebib-valid-file-extensions)
+		 (throw 'tag file)))
+	     (ebib--split-files files))
+	    nil)
+	(user-error "Invalid file extension."))))
 
   (defun ps/ebib-validate-file-stem ()
     "If entry at point has attachments, check that the stem of
 each of the attached files is the entry's unique key."
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
       (when
-          (catch 'tag
-            (mapc
-             (lambda (file)
-               (unless (equal (file-name-nondirectory (file-name-sans-extension file))
-                              (ebib--get-key-at-point))
-                 (throw 'tag file)))
-             (ebib--split-files files))
-            nil)
-        (user-error "Invalid file stem!"))))
+	  (catch 'tag
+	    (mapc
+	     (lambda (file)
+	       (unless (equal (file-name-nondirectory (file-name-sans-extension file))
+			      (ebib--get-key-at-point))
+		 (throw 'tag file)))
+	     (ebib--split-files files))
+	    nil)
+	(user-error "Invalid file stem."))))
 
   (defun ps/ebib-validate-file-name ()
     "If entry at point has attachments, check that their stems match
@@ -7555,28 +7881,39 @@ entry's key."
     (interactive)
     (ebib--execute-when
       (entries
-       (let* ((key (ebib--get-key-at-point))
-              (field "file")
-              (extension (file-name-extension newest-file))
-              (file-name (file-name-concat
-                          ps/dir-library
-                          (file-name-with-extension key extension))))
-         (rename-file newest-file
-                      file-name)
-         (ebib-set-field-value field file-name key ebib--cur-db ";")
-         (ebib--store-multiline-text (current-buffer))
-         (ebib--redisplay-field field)
-         (ebib--redisplay-index-item field)
-         (ebib-save-current-database nil)))
+       (let* ((field "file")
+	      (key (ebib--get-key-at-point))
+	      (new-file-field)
+	      (file-list (split-string
+			  (ebib-get-field-value field key ebib--cur-db t t)
+			  ";")))
+	 (unless (ps/ebib-valid-key-p key)
+	   (user-error "Entry has an invalid key; pleasse regenerate it."))
+	 (when file-list
+	   (ebib-delete-field-contents field t)
+	   (dolist (filename file-list)
+	     (let ((stem (file-name-sans-extension (file-name-nondirectory filename)))
+		   (extension (file-name-extension filename)))
+	       (unless (equal stem key)
+		 (let ((new-file-field)
+		       (new-filename (file-name-concat
+				      (abbreviate-file-name
+				       (eval (intern (concat "ps/dir-library-" extension))))
+				      (file-name-with-extension key extension))))
+		   (rename-file filename new-filename)
+		   (ebib-set-field-value field new-filename key ebib--cur-db ";")))))
+	   (ebib--redisplay-field field)
+	   (ebib--redisplay-index-item field))))
+      ;; (ebib-save-current-database nil))))
       (default
-        (beep))))
+	(beep))))
 
   (defun ps/ebib-valid-key-p (&optional key)
     "docstring"
     (let ((key (or key
-                   (ebib--get-key-at-point))))
+		   (ebib--get-key-at-point))))
       (string-match
-       "^[_[:alnum:]]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
+       "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
        key)))
 
   (defun ps/ebib-switch-old-db ()
@@ -7595,21 +7932,126 @@ entry's key."
     (ebib--execute-when
       (entries
        (let ((doi (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
-         (unless doi
-           (error "[Ebib] No DOI found in doi field"))
-         ;; FIXME: `(return doi)' fails to return DOI; why?
-         (kill-new doi)))))
+	 (unless doi
+	   (user-error "[Ebib] No DOI found in doi field"))
+	 ;; FIXME: `(return doi)' fails to return DOI; why?
+	 (kill-new doi)))))
 
   (defun ps/ebib-download-doi ()
     "docstring"
     (interactive)
     (let* ((key (ebib--get-key-at-point))
-           (file (file-name-concat
-                  ps/dir-library
-                  (file-name-with-extension key ".pdf"))))
+	   (file (file-name-concat
+		  ps/dir-library
+		  (file-name-with-extension key ".pdf"))))
       (ps/ebib-copy-doi)
       (url-copy-file (scihub (current-kill 0)) file)
       (ebib-set-field-value "file" file key ebib--cur-db ";")))
+
+  ;; We tweak the two functions below so that focus doesn't move away
+  ;; from the current entry when the database is saved or reloaded.
+
+  (defun ps/ebib--save-database (db &optional force)
+    "Save the database DB.
+The FORCE argument is used as in `ebib-save-current-database'."
+    ;; See if we need to make a backup.
+    (when (and (ebib-db-backup-p db)
+	       (file-exists-p (ebib-db-get-filename db)))
+      (ebib--make-backup (ebib-db-get-filename db))
+      (ebib-db-set-backup nil db))
+
+    ;; Check if the file has changed on disk.
+    (let ((db-modtime (ebib-db-get-modtime db))
+	  (file-modtime (ebib--get-file-modtime (ebib-db-get-filename db))))
+      ;; If the file to be saved has been newly created, both modtimes are nil.
+      (when (and db-modtime file-modtime
+		 (time-less-p db-modtime file-modtime))
+	(unless (or (and (listp force)
+			 (eq 16 (car force)))
+		    (yes-or-no-p (format "File `%s' changed on disk.  Overwrite? " (ebib-db-get-filename db))))
+	  (error "[Ebib] File not saved"))))
+
+    ;; Now save the database.
+    (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+    (with-temp-buffer
+      (ebib--format-database-as-bibtex db)
+      (write-region (point-min) (point-max) (ebib-db-get-filename db)))
+    (ebib--pop-to-buffer (ebib--buffer 'entry))
+    (ebib--set-modified nil db))
+
+  (advice-add 'ebib--save-database :override #'ps/ebib--save-database)
+
+  (defun ps/ebib-reload-current-database ()
+    "Reload the current database from disk."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (when (or (and (ebib-db-modified-p ebib--cur-db)
+		      (yes-or-no-p "Database modified.  Really reload from file? "))
+		 (y-or-n-p "Reload current database from file? "))
+	 (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+	 (ebib--reload-database ebib--cur-db)
+	 (ebib--set-modified nil ebib--cur-db)
+	 (ebib--update-buffers)
+	 ;; Adding this line so that entry doesn't change upon reload
+	 (ebib--pop-to-buffer (ebib--buffer 'entry))
+	 (message "Database reloaded")))
+      (default
+	(beep))))
+
+  (advice-add 'ebib-reload-current-database :override #'ps/ebib-reload-current-database)
+
+  (defun ps/ebib-reload-current-database-no-confirm ()
+    "Reload the current database from disk, without asking for
+confirmation."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+       (ebib--reload-database ebib--cur-db)
+       (ebib--set-modified nil ebib--cur-db)
+       (ebib--update-buffers)
+       (message "Database reloaded")
+       (ebib--pop-to-buffer (ebib--buffer 'entry)))
+      (default
+	(beep))))
+
+  (defun ps/ebib-attach-file ()
+    "Prompt the user for a file to attach to the current entry."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (let ((key (ebib--get-key-at-point)))
+	 (unless (ps/ebib-valid-key-p key)
+	   (user-error "Entry has an invalid key; press regenerate it."))
+	 (let* ((field "file")
+		(file (read-file-name "File to attach " ps/dir-downloads))
+		(extension (file-name-extension file))
+		(destination-folder
+		 (cond ((string= extension "pdf")
+			ps/dir-library-pdf)
+		       ((string= extension "html")
+			ps/dir-library-html)
+		       (t
+			(user-error "Invalid file extension"))))
+		(file-name (file-name-concat
+			    ;; We abbreviate the filename so that it
+			    ;; works when invoked by different users,
+			    ;; as long as they have the same folder
+			    ;; structure.
+			    (abbreviate-file-name destination-folder)
+			    (file-name-with-extension key extension))))
+	   (when (or (not (f-file-p file-name))
+		     (y-or-n-p "File exists. Overwrite? "))
+
+	     (rename-file file file-name t)
+	     (ebib-set-field-value field file-name key ebib--cur-db ";")
+	     (ebib--store-multiline-text (current-buffer))
+	     (ebib--redisplay-field field)
+	     (ebib--redisplay-index-item field)))))
+      ;; (ebib-save-current-database nil))))
+      (default
+	(beep))))
 
   (defun ps/ebib-attach-most-recent-file ()
     "docstring"
@@ -7617,25 +8059,31 @@ entry's key."
     (ebib--execute-when
       (entries
        (let ((key (ebib--get-key-at-point)))
-         (unless (ps/ebib-valid-key-p key)
-           (if (y-or-n-p "Entry has an invalid key. Press `y' to regenerate key, or `n' to abort.")
-               (ebib-generate-autokey)
-             (keyboard-quit)))
-         (let* ((field "file")
-                (newest-file (ps/newest-file ps/dir-downloads))
-                (extension (file-name-extension newest-file))
-                (file-name (file-name-concat
-                            ps/dir-library
-                            (file-name-with-extension key extension))))
-           (rename-file newest-file
-                        file-name)
-           (ebib-set-field-value field file-name key ebib--cur-db ";")
-           (ebib--store-multiline-text (current-buffer))
-           (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field)
-           (ebib-save-current-database nil))))
+	 (unless (ps/ebib-valid-key-p key)
+	   (user-error "Entry has an invalid key; pleasse regenerate it."))
+	 (let* ((field "file")
+		(newest-file (ps/newest-file ps/dir-downloads))
+		(extension (file-name-extension newest-file))
+		(destination-folder
+		 (cond ((string= extension "pdf")
+			ps/dir-library-pdf)
+		       ((string= extension "html")
+			ps/dir-library-html)
+		       (t
+			(user-error "Invalid file extension"))))
+		(file-name (file-name-concat
+			    ;; We abbreviate the filename so that it works when invoked by different users
+			    (abbreviate-file-name destination-folder)
+			    (file-name-with-extension key extension))))
+	   (when (or (not (f-file-p file-name))
+		     (y-or-n-p "File exists. Overwrite? "))
+	     (rename-file newest-file file-name t)
+	     (ebib-set-field-value field file-name key ebib--cur-db ";")
+	     (ebib--store-multiline-text (current-buffer))
+	     (ebib--redisplay-field field)
+	     (ebib--redisplay-index-item field)))))
       (default
-        (beep))))
+	(beep))))
 
   (defun ps/ebib-search-internet-archive (&optional field search-query)
     "Run a search on the Internet Archive."
@@ -7650,6 +8098,14 @@ entry's key."
     (interactive)
     (ps/ebib-search
      ps/google-scholar
+     field
+     search-query))
+
+  (defun ps/ebib-search-wikipedia (&optional field search-query)
+    "Run a search on Wikipedia."
+    (interactive)
+    (ps/ebib-search
+     ps/wikipedia
      field
      search-query))
 
@@ -7693,6 +8149,14 @@ entry's key."
      field
      search-query))
 
+  (defun ps/ebib-search-goodreads (&optional field search-query)
+    "Run a search on Goodreads."
+    (interactive)
+    (ps/ebib-search
+     ps/goodreads
+     field
+     search-query))
+
   (defun ps/ebib-search-worldcat (&optional field search-query)
     "Run a search on Worldcat."
     (interactive)
@@ -7709,47 +8173,47 @@ FIELD is given, use the field at point.
 
 If not invoked from `ebib', prompt for search query."
     (let* ((name (nth 0 search-engine))
-           (prefix (nth 1 search-engine))
-           (suffix (nth 2 search-engine))
-           (search-query
-            (if search-query
-                (url-hexify-string search-query)
-              (if (member major-mode (list 'ebib-entry-mode 'ebib-index-mode))
-                  (let* ((field (or field
-                                    ;; There's no point in searching
-                                    ;; the contents of the field
-                                    ;; `type', so we default to
-                                    ;; `title' in such cases
-                                    (if (equal (ebib--current-field) "=type=")
-                                        "title"
-                                      (ebib--current-field))))
-                         (value (ebib-get-field-value
-                                 field
-                                 (ebib--get-key-at-point)
-                                 ebib--cur-db
-                                 'noerror
-                                 'unbraced
-                                 'xref)))
-                    (cond ((equal field "title")
-                           (url-hexify-string value))
-                          ((equal field "isbn")
-                           (s-replace "-" "" value))
-                          (t
-                           value)))
-                (url-hexify-string
-                 (read-string
-                  (concat
-                   name
-                   ": ")))))))
+	   (prefix (nth 1 search-engine))
+	   (suffix (nth 2 search-engine))
+	   (search-query
+	    (if search-query
+		(url-hexify-string search-query)
+	      (if (member major-mode (list 'ebib-entry-mode 'ebib-index-mode))
+		  (let* ((field (or field
+				    ;; There's no point in searching
+				    ;; the contents of the field
+				    ;; `type', so we default to
+				    ;; `title' in such cases
+				    (if (equal (ebib--current-field) "=type=")
+					"title"
+				      (ebib--current-field))))
+			 (value (ebib-get-field-value
+				 field
+				 (ebib--get-key-at-point)
+				 ebib--cur-db
+				 'noerror
+				 'unbraced
+				 'xref)))
+		    (cond ((equal field "title")
+			   (url-hexify-string value))
+			  ((equal field "isbn")
+			   (s-replace "-" "" value))
+			  (t
+			   value)))
+		(url-hexify-string
+		 (read-string
+		  (concat
+		   name
+		   ": ")))))))
       (browse-url (concat prefix search-query suffix))))
 
   (defun ps/ebib-search-multi (&optional field search-query search-group)
     "docstring"
     (let ((search-query (or search-query
-                            (unless (member major-mode (list 'ebib-entry-mode 'ebib-index-mode))
-                              (read-string "Search query: ")))))
+			    (unless (member major-mode (list 'ebib-entry-mode 'ebib-index-mode))
+			      (read-string "Search query: ")))))
       (dolist (search-engine search-group)
-        (funcall search-engine field search-query))))
+	(funcall search-engine field search-query))))
 
   (defun ps/ebib-search-book (&optional field search-query)
     "The list of search engines is specified by the variable
@@ -7757,9 +8221,27 @@ If not invoked from `ebib', prompt for search query."
     (interactive)
     (ps/ebib-search-multi field search-query ps/ebib-search-book))
 
+  (defun ps/ebib-download-book (&optional field search-query)
+    "The list of search engines is specified by the variable
+`ps/ebib-download-book'."
+    (interactive)
+    (ps/ebib-search-multi field search-query ps/ebib-download-book))
+
+  (defun ps/ebib-download-isbn (&optional field search-query)
+    "The list of search engines is specified by the variable
+`ps/ebib-download-isbn'."
+    (interactive)
+    (ps/ebib-search-multi field search-query ps/ebib-download-book))
+
   (defun ps/ebib-search-article (&optional field search-query)
     "The list of search engines is specified by the variable
 `ps/ebib-search-article'."
+    (interactive)
+    (ps/ebib-search-multi field search-query ps/ebib-search-article))
+
+  (defun ps/ebib-download-article (&optional field search-query)
+    "The list of search engines is specified by the variable
+`ps/ebib-download-article'."
     (interactive)
     (ps/ebib-search-multi field search-query ps/ebib-search-article))
 
@@ -7767,29 +8249,44 @@ If not invoked from `ebib', prompt for search query."
     "docstring"
     (interactive)
     (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (user-error "`title' field is empty!"))
-        (ps/ebib-search-book "title")))
+	    (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+	    (user-error "`title' field is empty!"))
+	(ps/ebib-search-book "title")))
+
+  (defun ps/ebib-download-book-by-title ()
+    "docstring"
+    (interactive)
+    (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+	    (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+	    (user-error "`title' field is empty!"))
+	(ps/ebib-download-book "title")))
 
   (defun ps/ebib-search-book-by-isbn ()
     "docstring"
     (interactive)
     (if (ebib-get-field-value "isbn" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (ps/ebib-search-book "isbn")
+	(ps/ebib-search-book "isbn")
       (user-error "`ISBN' field is empty!")))
 
   (defun ps/ebib-search-article-by-title ()
     "docstring"
     (interactive)
     (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (user-error "`title' field is empty!")
+	(user-error "`title' field is empty!")
       (ps/ebib-search-article "title")))
+
+  (defun ps/ebib-download-article-by-title ()
+    "docstring"
+    (interactive)
+    (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+	(user-error "`title' field is empty!")
+      (ps/ebib-download-article "title")))
 
   (defun ps/ebib-search-article-by-doi ()
     "docstring"
     (interactive)
     (if (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (ps/ebib-search-article "doi")
+	(ps/ebib-search-article "doi")
       (user-error "`DOI' field is empty!")))
 
   (defun ps/ebib-sentence-case ()
@@ -7798,39 +8295,27 @@ If not invoked from `ebib', prompt for search query."
     (ebib--execute-when
       (entries
        (let* ((field (ebib--current-field))
-              (value (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
-              (words (split-string value)))
-         (setq words (mapcar
-                      (lambda (word)
-                        (if
-                            ;; match words containing {} or \ which are probably
-                            ;; LaTeX or protected words
-                            (string-match "\\$\\|{\\|}\\|\\\\" word)
-                            word
-                          (s-downcase word)))
-                      words))
-         ;; capitalize first word
-         (setf (car words) (s-capitalize (car words)))
-         (setq value (mapconcat 'identity words " "))
-         (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite 'unbraced)
-         (ebib--store-multiline-text (current-buffer))
-         (ebib--redisplay-field field)
-         (ebib--redisplay-index-item field)
-         (ebib-save-current-database nil)))
+	      (value (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+	      (words (split-string value)))
+	 (setq words (mapcar
+		      (lambda (word)
+			(if
+			    ;; match words containing {} or \ which are probably
+			    ;; LaTeX or protected words
+			    (string-match "\\$\\|{\\|}\\|\\\\" word)
+			    word
+			  (s-downcase word)))
+		      words))
+	 ;; capitalize first word
+	 (setf (car words) (s-capitalize (car words)))
+	 (setq value (mapconcat 'identity words " "))
+	 (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite 'unbraced)
+	 (ebib--store-multiline-text (current-buffer))
+	 (ebib--redisplay-field field)
+	 (ebib--redisplay-index-item field)
+	 (ebib-save-current-database nil)))
       (default
-        (beep))))
-
-  (defun ps/ebib-search-dwim ()
-    ""
-    (interactive)
-    (when-let ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point) ebib--cur-db)))
-      (cond
-       ((member type '("book" "mvbook" "inbook" "incollection" "bookinbook" "suppbook"))
-        (ps/ebib-search-book-by-title))
-       ((member type '("article"))
-        (ps/ebib-search-article-by-title))
-       (t
-        (user-error (format "No action defined for entries of type `%s'" type))))))
+	(beep))))
 
   (defun ps/ebib-open-current-bibtex-file ()
     "Open bibtex file associated with the current entry."
@@ -7838,60 +8323,146 @@ If not invoked from `ebib', prompt for search query."
     (when-let ((file (ebib-db-get-filename ebib--cur-db)))
       (find-file file)))
 
-  (defun ps/ebib-auto-save-db ()
-    "docstring"
-    (when (ebib-db-modified-p ebib--cur-db)
-      (ebib-save-current-database t))
-    (run-with-timer 10 nil #'ps/ebib-auto-save-db))
+  ;; (defun ps/ebib-auto-save-new-db ()
+  ;; "docstring"
+  ;; (ebib-switch-to-database-nth 1)
+  ;; (when (ebib-db-modified-p ebib--cur-db)
+  ;; (ebib-save-current-database t))
+  ;; (run-with-timer 30 nil #'ps/ebib-auto-save-new-db))
+
+  ;; (defun ps/ebib-auto-save-old-db ()
+  ;; "docstring"
+  ;; (ebib-switch-to-database-nth 2)
+  ;; (when (ebib-db-modified-p ebib--cur-db)
+  ;; (ebib-save-current-database t))
+  ;; (run-with-idle-timer 30 nil #'ps/ebib-auto-save-old-db))
+
+  (defun ps/ebib-open-key (key)
+    "Open the entry for KEY in Ebib."
+    (ebib--execute-when
+      (entries
+       (let ((file))
+	 (if (member key (ebib-db-list-keys (nth 0 ebib--databases)))
+	     (setq file ps/file-bibliography-new)
+	   (setq file ps/file-bibliography-old))
+	 (ebib file key)
+	 (ebib--pop-to-buffer (ebib--buffer 'entry))))
+      (default
+	(ebib--error "No database is loaded"))))
+
+  (defun ps/ebib-fix-authors ()
+    "Rearrange the name of each author so that last name comes before
+first name, and names are separated by a semicolon."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (let ((field "author")
+	     (authors-fixed))
+	 (when-let ((authors
+		     (replace-regexp-in-string
+		      "\n "
+		      ""
+		      (substring-no-properties
+		       (ebib-get-field-value
+			field
+			(ebib--get-key-at-point)
+			ebib--cur-db
+			'noerror
+			'unbraced
+			'xref)))))
+	   (dolist (author (split-string authors ", "))
+	     (push (replace-regexp-in-string "\\(.*\\) \\(.*\\)" "\\2, \\1" author) authors-fixed))
+	   (ebib-set-field-value
+	    field
+	    (string-join authors-fixed "; ")
+	    (ebib--get-key-at-point)
+	    ebib--cur-db
+	    'overwrite)
+	   (ebib--store-multiline-text (current-buffer))
+	   (ebib--redisplay-field field)
+	   (ebib--redisplay-index-item field)
+	   (ebib-save-current-database nil))))
+      (default
+	(beep))))
+
+  (defvar ps/ebib-sort-toggle nil)
+  (defun ps/ebib-sort-toggle ()
+    "Toggle between sorting by date and sorting by title."
+    (interactive)
+    (if ps/ebib-sort-toggle
+	(setq ps/ebib-sort-toggle nil)
+      (setq ps/ebib-sort-toggle t))
+    (let ((field (if ps/ebib-sort-toggle
+		     "Title"
+		   "timestamp"))
+	  (order (if ps/ebib-sort-toggle
+		     'ascend
+		   'descend)))
+      (ebib--execute-when
+	(entries
+	 (ebib--index-sort field order))
+	(default
+	  (beep)))))
 
   ;; mysteriously, setting REPEAT to `t' does not restart the timer.
   ;; So instead the function the timer calls itself starts a new
   ;; timer.
-  (run-with-timer 10 nil #'ps/ebib-auto-save-db)
+  ;; (run-with-timer 30 nil #'ps/ebib-auto-save-new-db)
+  ;; (run-with-idle-timer 30 nil #'ps/ebib-auto-save-old-db)
 
-  (defhydra hydra-ebib
-    (:color blue
-            :hint nil
-            :idle 0)
-    ""
-    ("a" (ps/ebib-search-amazon) "Amazon" :column "search")
-    ;; ("b" () "" :column "")
-    ("c" (ebib-copy-current-field-contents) "copy" :column "edit")
-    ("d" (ebib-browse-doi) "DOI" :column "browse")
-    ("D" (ebib-delete-current-field-contents) "delete" :column "edit")
-    ;; ("e" () "" :column "")
-    ;; ("f" () "" :column "")
-    ;; ("g" () "" :column "")
-    ("h" (ps/ebib-open-html-file) "HTML" :column "open")
-    ("i" (ps/ebib-search-book-by-isbn) "ISBN" :column "browse")
-    ;; ("j" () "" :column "")
-    ;; ("k" () "" :column "")
-    ("l" (ps/ebib-search-library-genesis) "Library Genesis" :column "search")
-    ("m" (ps/ebib-search-dwim) "dwim" :column "browse")
-    ("n" (ps/ebib-open-org-file) "notes" :column "open")
-    ("o" (ps/ebib-search-connected-papers) "Connected Papers" :column "search")
-    ("p" (ps/ebib-open-pdf-file) "PDF" :column "open")
-    ("Q" (ebib-quit) "ebib" :column "quit")
-    ("q" (ebib-quit-entry-buffer) "entry" :column "quit")
-    ("r" (ps/ebib-search-university-of-toronto) "University of Toronto" :column "search")
-    ("s" (ps/ebib-search-google-scholar) "Google Scholar" :column "search")
-    ("t" (ps/ebib-search-book-dwim) "title" :column "browse")
-    ("u" (ebib-browse-url) "URL" :column "browse")
-    ("v" (ps/ebib-search-internet-archive) "Internet Archive" :column "search")
-    ("w" (ps/ebib-search-worldcat) "Worldcat" :column "search")
-    ("x" (ps/ebib-open-current-bibtex-file) "Bibtex" :column "open")
-    ("y" (ps/ebib-search-hathitrust) "HathiTrust" :column "search")
-    ;; ("z" () "" :column "")
-    ("/" (ps/ebib-attach-most-recent-file) "attach latest" :column "edit")
-    ;; ("" (ps/ebib-sentence-case) "sentence case" :column "edit")
-    ;; ("" (ps/ebib-title-case) "title case" :column "edit")
-    )
+  (file-notify-add-watch
+   ps/file-bibliography-new
+   '(change attribute-change)
+   (lambda (event)
+     (ps/ebib-reload-current-database-no-confirm)))
 
-    ;; Triggers "Error (use-package): ebib/:config: Symbol’s function definition is void: file-notify-add-watch"
-  ;; (file-notify-add-watch
-   ;; ps/file-bibliography-emacs
-   ;; '(change)
-   ;; (lambda (event) (ps/ebib-reload-current-database-no-confirm)))
+  (file-notify-add-watch
+   ps/file-bibliography-old
+   '(change attribute-change)
+   (lambda (event)
+     (cancel-function-timers #'ps/ebib-reload-current-database-no-confirm)
+     (run-with-idle-timer 10 nil #'ps/ebib-reload-current-database-no-confirm)))
+
+  (defun ps/ebib-merge-databases (source target)
+    "Move the contents of SOURCE to TARGET."
+    (find-file-noselect source)
+    (find-file-noselect target)
+    (with-current-buffer (file-name-nondirectory target)
+      (goto-char (point-max))
+      (insert-file-contents source))
+    (with-current-buffer (file-name-nondirectory source)
+      (erase-buffer)))
+
+  (defun ps/ebib-merge-old-new ()
+    "Merge the old and new bibliography files."
+    (interactive)
+    (ps/ebib-merge-databases ps/file-bibliography-old ps/file-bibliography-new))
+
+  (defun ps/ebib-end-of-index-buffer ()
+    "Move to the end of the index buffer."
+    (interactive)
+    (when (equal major-mode 'ebib-index-mode)
+      (goto-char (point-max))
+      (forward-line -1)))
+
+  (defun ps/ebib-duplicate-entry ()
+    "Duplicate the entry at point."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (let ((key (ebib--get-key-at-point)))
+	 (save-window-excursion
+	   (find-file zotra-default-bibliography)
+	   (goto-char (point-max))
+	   (ebib--format-entry key ebib--cur-db)
+	   (bibtex-narrow-to-entry)
+	   (goto-char (point-min))
+	   (replace-regexp "^\\(@.*{.*\\)," "\\1-dup,")
+	   (save-buffer))
+	 (ebib-switch-to-database-nth 1)
+	 (ps/ebib-reload-current-database-no-confirm)))
+      (default
+	(beep))))
 
   :hook
   (ebib-index-mode-hook . doom-modeline-mode)
@@ -7899,31 +8470,53 @@ If not invoked from `ebib', prompt for search query."
 
   :general
   ("A-i" 'ebib)
-  ((ebib-multiline-mode-map ebib-entry-mode-map)
-   "H-/" 'hydra-ebib/body)
   (ebib-multiline-mode-map
    "s-c" 'ebib-quit-multiline-buffer-and-save)
   (ebib-entry-mode-map
+   "H-s" 'ebib-save-current-database
    "!" 'ebib-generate-autokey
-   "," 'ps/ebib-switch-old-db
-   "." 'ps/ebib-switch-new-db
-   "1" (lambda! (ebib-view-file-in-field 1))
-   "2" (lambda! (ebib-view-file-in-field 2))
-   "l" 'ps/ebib-search-library-genesis
+   "," 'ps/ebib-title-case
+   "." 'ps/ebib-sentence-case
+   "/" 'ps/ebib-attach-most-recent-file
+   "?" 'ps/ebib-attach-file
+   "a" 'ps/ebib-search-amazon
+   "b" 'ps/ebib-open-current-bibtex-file
+   "c" 'ebib-copy-current-field-contents
+   "D" 'ebib-delete-current-field-contents
+   "d" 'ps/ebib-download-dwim
+   "E" 'ebib-edit-keyname
+   "g" 'ps/ebib-search-library-genesis
+   "h" 'ps/ebib-open-html-file
+   "i" 'ebib-browse-doi
+   "i" 'ps/ebib-download-by-identifier
+   "I" 'ps/ebib-search-book-by-isbn
+   "n" 'ps/ebib-open-org-file
+   "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
+   "P" 'ps/ebib-open-pdf-file-externally
    "Q" 'ebib-quit
-   "SPC" 'ps/ebib-attach-most-recent-file
-   "x" 'ebib-delete-current-field-contents
-   "X" 'ps/ebib-open-current-bibtex-file
-   "z" 'ps/ebib-search-amazon)
+   "r" 'ps/ebib-rename-files
+   "s" 'ps/ebib-search-dwim
+   "t" 'ps/ebib-search-book-dwim
+   "u" 'ebib-browse-url
+   "v" 'ps/ebib-search-internet-archive
+   "w" 'ps/ebib-search-worldcat
+   "W" 'ps/ebib-search-wikipedia
+   "x" 'ps/ebib-search-university-of-toronto
+   "y" 'ps/ebib-search-hathitrust
+   "z" 'ps/ebib-search-google-scholar
+   "1" (lambda! (ebib-view-file-in-field 1))
+   "2" (lambda! (ebib-view-file-in-field 2)))
   (ebib-index-mode-map
    "<return>" 'ebib-edit-entry
-   "d" 'ebib-browse-doi
+   "A-C-s-SPC" 'ps/ebib-end-of-index-buffer
+   "d" 'ps/ebib-duplicate-entry
    "D" 'ebib-delete-entry
-   "i" 'isbn-to-bibtex
    "f" 'ps/ebib-view-file
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry
+   "s" 'ps/ebib-sort-toggle
+   "H-s" 'ebib-save-current-database
    "Q" 'ebib-quit))
 
 (use-package biblio
@@ -7938,7 +8531,7 @@ If not invoked from `ebib', prompt for search query."
   :straight (zotra
              :host github
              :repo "mpedramfar/zotra")
-  :defer 10
+  :defer 2
   :init
   (defun ps/zotra-run-translator-server ()
     "Start translator server in the background."
@@ -7948,23 +8541,224 @@ If not invoked from `ebib', prompt for search query."
       "cd %s; nvm use 14; npm start"
       ps/dir-translation-server)))
 
-    (ps/zotra-run-translator-server)
+  (ps/zotra-run-translator-server)
 
   :custom
   (zotra-use-curl nil)
   (zotra-url-retrieve-timeout 10)
   (zotra-default-bibliography ps/file-bibliography-new)
   (zotra-default-entry-format "biblatex")
+  (zotra-after-add-entry-hook nil)
+
+  :config
+  (defun ps/zotra-after-add-entry-function ()
+  "Function to trigger with `zotra-after-add-entry-hook'."
+  (revert-buffer nil t)
+  (goto-char (point-max))
+  (bibtex-clean-entry)
+  (org-ref-clean-bibtex-entry)
+  (save-buffer)
+  ;; (sleep-for 3)
+  (let ((citekey (ps/bibtex-get-key)))
+    (print citekey)
+    (ebib nil citekey)
+    ;; Switch to `new.bib' database
+    (ebib-switch-to-database-nth 1)
+    ;; (sleep-for 3)
+    (ps/ebib-open-key citekey)
+    (ebib-set-field-value "date" (format-time-string ebib-timestamp-format) citekey ebib--cur-db 'overwrite)))
+
+  (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
+    (let ((bibfile
+           (or bibfile zotra-default-bibliography
+               (completing-read
+                "Bibfile: "
+                (append (directory-files "." t ".*\\.bib$")
+                        (org-cite-list-bibliography-files))))))
+      (save-window-excursion
+        (find-file bibfile)
+        (goto-char (point-max))
+        (when (not (looking-at "^")) (insert "\n"))
+        (insert (zotra-get-entry url-or-search-string is-search entry-format))
+        (save-excursion
+          (save-restriction
+            (bibtex-narrow-to-entry)
+            (bibtex-beginning-of-entry)))
+        (goto-char (point-max))
+        (when (not (looking-at "^")) (insert "\n"))
+        (advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
+        (save-buffer)
+        (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
+        (run-hooks 'zotra-after-add-entry-hook))))
+
+  (defun ps/select-safe-coding-system-interactively (from to codings unsafe
+                                                          &optional rejected default)
+    "Select interactively a coding system for the region FROM ... TO.
+FROM can be a string, as in `write-region'.
+CODINGS is the list of base coding systems known to be safe for this region,
+  typically obtained with `find-coding-systems-region'.
+UNSAFE is a list of coding systems known to be unsafe for this region.
+REJECTED is a list of coding systems which were safe but for some reason
+  were not recommended in the particular context.
+DEFAULT is the coding system to use by default in the query."
+    ;; At first, if some defaults are unsafe, record at most 11
+    ;; problematic characters and their positions for them by turning
+    ;;	(CODING ...)
+    ;; into
+    ;;	((CODING (POS . CHAR) (POS . CHAR) ...) ...)
+    (if unsafe
+        (setq unsafe
+              (mapcar (lambda (coding)
+                        (cons coding
+                              (if (stringp from)
+                                  (mapcar (lambda (pos)
+                                            (cons pos (aref from pos)))
+                                          (unencodable-char-position
+                                           0 (length from) coding
+                                           11 from))
+                                (mapcar (lambda (pos)
+                                          (cons pos (char-after pos)))
+                                        (unencodable-char-position
+                                         from to coding 11)))))
+                      unsafe)))
+
+    (setq codings (sanitize-coding-system-list codings))
+
+    (let ((window-configuration (current-window-configuration))
+          (bufname (buffer-name))
+          coding-system)
+      (save-excursion
+        ;; If some defaults are unsafe, make sure the offending
+        ;; buffer is displayed.
+        (when (and unsafe (not (stringp from)))
+          (pop-to-buffer bufname)
+          (goto-char (apply #'min (mapcar (lambda (x) (or (car (cadr x)) (point-max)))
+                                          unsafe))))
+        ;; Then ask users to select one from CODINGS while showing
+        ;; the reason why none of the defaults are not used.
+        (with-output-to-temp-buffer "*Warning*"
+          (with-current-buffer standard-output
+            (if (and (null rejected) (null unsafe))
+                (insert "No default coding systems to try for "
+                        (if (stringp from)
+                            (format "string \"%s\"." from)
+                          (format-message "buffer `%s'." bufname)))
+              (insert
+               "These default coding systems were tried to encode"
+               (if (stringp from)
+                   (concat " \"" (if (> (length from) 10)
+                                     (concat (substring from 0 10) "...\"")
+                                   (concat from "\"")))
+                 (format-message
+                  " the following\nproblematic characters in the buffer `%s'"
+                  bufname))
+               ":\n")
+              (select-safe-coding-system--format-list unsafe)
+              (when rejected
+                (insert "These safely encode the text in the buffer,
+but are not recommended for encoding text in this context,
+e.g., for sending an email message.\n ")
+                (dolist (x rejected)
+                  (princ " ") (princ x))
+                (insert "\n"))
+              (when unsafe
+                (insert (if rejected "The other coding systems"
+                          "However, each of them")
+                        (substitute-command-keys
+                         " encountered characters it couldn't encode:\n"))
+                (dolist (coding unsafe)
+                  (insert (format "  %s cannot encode these:" (car coding)))
+                  (let ((i 0)
+                        (func1
+                         (lambda (bufname pos)
+                           (when (buffer-live-p (get-buffer bufname))
+                             (pop-to-buffer bufname)
+                             (goto-char pos))))
+                        (func2
+                         (lambda (bufname pos coding)
+                           (when (buffer-live-p (get-buffer bufname))
+                             (pop-to-buffer bufname)
+                             (if (< (point) pos)
+                                 (goto-char pos)
+                               (forward-char 1)
+                               (search-unencodable-char coding)
+                               (forward-char -1))))))
+                    (dolist (elt (cdr coding))
+                      (insert " ")
+                      (if (stringp from)
+                          (insert (if (< i 10) (cdr elt) "..."))
+                        (if (< i 10)
+                            (insert-text-button
+                             (cdr elt)
+                             :type 'help-xref
+                             'face 'link
+                             'help-echo
+                             "mouse-2, RET: jump to this character"
+                             'help-function func1
+                             'help-args (list bufname (car elt)))
+                          (insert-text-button
+                           "..."
+                           :type 'help-xref
+                           'face 'link
+                           'help-echo
+                           "mouse-2, RET: next unencodable character"
+                           'help-function func2
+                           'help-args (list bufname (car elt)
+                                            (car coding)))))
+                      (setq i (1+ i))))
+                  (insert "\n"))
+                (insert (substitute-command-keys "\
+
+Click on a character (or switch to this window by `\\[other-window]'\n\
+and select the characters by RET) to jump to the place it appears,\n\
+where `\\[universal-argument] \\[what-cursor-position]' will give information about it.\n"))))
+            (insert (substitute-command-keys "\nSelect \
+one of the safe coding systems listed below,\n\
+or cancel the writing with \\[keyboard-quit] and edit the buffer\n\
+   to remove or modify the problematic characters,\n\
+or specify any other coding system (and risk losing\n\
+   the problematic characters).\n\n"))
+            (let ((pos (point))
+                  (fill-prefix "  "))
+              (dolist (x codings)
+                (princ "  ") (princ x))
+              (insert "\n")
+              (fill-region-as-paragraph pos (point)))))
+
+        ;; Read a coding system.
+        (setq coding-system 'utf-8)
+        (setq last-coding-system-specified coding-system))
+
+      (kill-buffer "*Warning*")
+      (set-window-configuration window-configuration)
+      coding-system))
+
+  ;; Ugly hack to fix encoding issues.
+  ;; TODO: Fix this properly.
+  (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)
+
+  (defun ps/zotra-add-entry-from-search-advice ()
+    "Functions to call after `zotra-add-entry-from-search' is run."
+    (ebib-switch-to-database-nth 1)
+    (ps/ebib-reload-current-database-no-confirm))
+
+  (advice-add 'zotra-add-entry-from-search :after #'ps/zotra-add-entry-from-search-advice)
 
   :hook
-  (zotra-after-add-entry-hook . org-ref-clean-bibtex-entry)
-  (zotra-after-add-entry-hook . ebib-reload-current-database))
+  (zotra-after-add-entry-hook . ps/zotra-after-add-entry-function)
+
+  :general
+  (ebib-index-mode-map
+  "i" 'zotra-add-entry-from-search))
 
 (use-package scihub
   :custom
   (scihub-download-directory ps/dir-downloads)
   (scihub-open-after-download nil)
-  (scihub-fetch-domain 'scihub-fetch-domains-lovescihub))
+  (scihub-fetch-domain 'scihub-fetch-domains-lovescihub)
+  ;; run `scihub-homepage' for a list of available scihub webservers
+  ;; if the URL below stops working
+  (scihub-homepage "http://sci-hub.ee"))
 
 (use-package anki-editor
   ;; this version handles mathjax correctly
@@ -8406,7 +9200,7 @@ without asking for user confirmation."
    "," 'mu4e-copy-message-path
    "<" 'mu4e-headers-split-view-shrink
    ">" 'mu4e-headers-split-view-grow
-   "F" 'mu4e-compose-forward
+   "s-f" 'mu4e-compose-forward
    "i" 'mu4e-select-other-view
    "r" 'mu4e-compose-reply)
   (mu4e-main-mode-map
@@ -8456,9 +9250,18 @@ without asking for user confirmation."
   :after mu4e
   :demand t)
 
+(use-package mu4e-alert
+  :after mu4e
+  :demand t
+  :custom
+  ;; Notify about unread emails in inbox only
+  (mu4e-alert-interesting-mail-query "flag:unread AND maildir:/inbox")
+  :config
+  (mu4e-alert-enable-mode-line-display))
+
 (use-package org-msg
   :after (org mu4e)
-  :demand t
+  :defer 3
   :custom
   (org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t")
   (org-msg-startup "hidestars indent inlineimages")
@@ -8543,8 +9346,7 @@ Grammarly."
   (htmlize-ignore-face-size nil))
 
 (use-package telega
-  :defer 8
-
+  :demand t
   :custom
   (telega-server-libs-prefix "/opt/homebrew")
   (telega-chat-input-markups '("markdown2" "org"))
@@ -8647,6 +9449,7 @@ into a task for Leo."
   :hook
   (telega-chat-mode-hook . (lambda () (setq default-directory (file-name-as-directory ps/dir-downloads))))
   (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
+  (telega-chat-mode-hook . telega-autoplay-mode)
 
   :general
   ("C-f" 'ps/telega-switch-to)
@@ -8655,7 +9458,7 @@ into a task for Leo."
    "<return>" 'newline
    "A-C-s-r" 'telega-chatbuf-beginning-of-thing
    "C-<return>" 'telega-chatbuf-input-send
-   "H-:" (lambda! (telega-chatbuf-input-send "org"))
+   "s-<return>" (lambda! (telega-chatbuf-input-send "org"))
    "s-," 'telega-chatbuf-goto-pinned-message
    "s-a" 'telega-chatbuf-attach
    "s-c" 'telega-mnz-chatbuf-attach-code
@@ -8759,7 +9562,7 @@ into a task for Leo."
 
 (use-feature ol-telega)
 
-(use-package erc
+(use-feature erc
   :if (equal (system-name) ps/computer-hostname-pablo)
   :after auth-source-pass
   :custom
@@ -8801,14 +9604,15 @@ into a task for Leo."
      ;; My VPN settings apply to Firefox only (via split tunneling),
      ;; so the websites requiring VPN access are listed below, and
      ;; will be opened with this browser.
-     ("libgen" . browse-url-firefox)
-     ("hathitrust\\.org" . browse-url-firefox)
+     ;; [2022-10-30 Sun] Disabling until I configure split tunneling
+     ;; ("libgen" . browse-url-firefox)
+     ;; ("hathitrust\\.org" . browse-url-firefox)
      ;; Use the default MacOS browser for all other websites
      ("." . browse-url-default-macosx-browser)))
 
   :general
   (mhtml-mode-map
-   "s-w" 'browse-url-of-buffer)
+   "s-x" 'browse-url-of-buffer)
   (dired-mode-map
    "e" 'browse-url-of-dired-file))
 
@@ -8821,7 +9625,11 @@ into a task for Leo."
   (shr-image-animate nil)
   (shr-width nil)
   (shr-discard-aria-hidden t)
-  (shr-cookie-policy t))
+  (shr-cookie-policy t)
+
+  :general
+  (mhtml-mode-map
+   "s-w" 'shr-render-buffer))
 
 (use-package shr-tag-pre-highlight
   :after shr
@@ -8861,47 +9669,55 @@ To be used by `eww-after-render-hook'."
           (browse-url-browser-function #'eww-browse-url))
       (org-open-at-point)))
 
-      (defun ps/url-to-pdf (url)
-      ;; TODO: Default to eww buffer or kill-ring if content is URL.
+  (defun ps/url-to-pdf (url)
+    ;; TODO: Default to eww buffer or kill-ring if content is URL.
     "Generate PDF of URL."
-        (interactive "MUrl: ")
+    (interactive "MUrl: ")
     (let* ((title (ps/org-web-tools--org-title-for-url url))
            (slug (org-hugo-slug title))
            (file-name (file-name-with-extension slug ".pdf"))
            (output-file (file-name-concat ps/dir-downloads file-name))
            (shell-command-buffer-name-async title))
-        (async-shell-command
-         (format
-          "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --print-to-pdf-no-header --print-to-pdf='%s' %s"
-          output-file
-          url))))
+      (async-shell-command
+       (format
+        "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --print-to-pdf-no-header --print-to-pdf='%s' %s"
+        output-file
+        url))))
+
+  (defvar ps/eww-readable-exceptions
+    '("protesilaos\\.com"))
+
+  (defun ps/eww-readable-autoview ()
+    "Automatically view the main 'readable' parts of the current web
+page for all websites except those in `ps/eww-readable-exceptions'."
+    (let ((current-url (eww-current-url)))
+      (dolist (url ps/eww-readable-exceptions)
+        (unless (string-match-p (concat "^\\(?:https?://\\)?\\(?:www\\.\\)?" url) current-url)
+          (eww-readable)))))
 
   :hook
   (eww-after-render-hook . ps/rename-buffer)
-  ;; (eww-mode-hook . (lambda () (text-scale-set 1))) ; Make eww text slightly larger
+  (eww-after-render-hook . ps/eww-readable-autoview)
 
   :general
   ("A-w" 'eww)
   (eww-mode-map
-  "[" 'eww-previous-url
-  "]" 'eww-next-url
+   "[" 'eww-previous-url
+   "]" 'eww-next-url
    "j" 'eww-back-url
    ";" 'eww-forward-url
+   "r" 'eww-readable
    "o" 'eww-toggle-fonts
    "p" 'ps/eww-pdf-of-current-webpage
    ":" (lambda! (eww-follow-link '(4)))
-   "x" 'eww-browse-with-external-browser
-   "+" 'text-scale-increase
-   "-" 'text-scale-decrease))
+   "x" 'eww-browse-with-external-browser))
 
 (use-package w3m
   :custom
   (mm-text-html-renderer 'w3m)
   :general
-  (w3m-mode-map
-   "S-<return>" 'w3m-view-url-with-browse-url) ; open externally
-  (mu4e-view-mode-map
-   "<return>" 'w3m-view-url-with-browse-url))
+  ((w3m-mode-map mu4e-view-mode-map)
+   "s-<return>" 'w3m-view-url-with-browse-url)) ; open externally
 
 (use-package elfeed
   :custom
@@ -9010,7 +9826,7 @@ poorly-designed websites."
   ;; github.com/skeeto/elfeed/issues/190#issuecomment-384346895
   (setq elfeed-show-mode-hook
         (lambda ()
-          (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family ps/face-variable-pitch :size 13))
+          (set-face-attribute 'variable-pitch (selected-frame) :font (font-spec :family ps/face-variable-pitch :size 15))
           (setq fill-column 120)
           (setq elfeed-show-entry-switch #'ps/show-elfeed)))
 
@@ -9338,7 +10154,8 @@ if none."
   '(("London" . "gb4-wireguard")
     ("Madrid" . "es4-wireguard")
     ("Malmö" . "se1-wireguard")
-    ("New York" . "us251-wireguard")
+    ("Frankfurt" . "de5-wireguard")
+    ("New York" . "us276-wireguard")
     ("São Paulo" . "br1-wireguard")
     ("Switzerland" . "ch5-wireguard"))
   "Specify the optimal Mullvad VPN servers for each city.")
@@ -9346,12 +10163,13 @@ if none."
 (defvar ps/mullvad-websites
   '(("Library Genesis" . "Malmö")
     ("HathiTrust" . "New York")
+    ("Criterion Channel" . "New York")
     ("Pirate Bay" . "Malmö")
     ("Wise" . "Madrid"))
   "For each website that requires a VPN connection, specify the
 optimal server city.")
 
-(defun ps/mullvad-connect-to-server (selection)
+(defun ps/mullvad-connect-to-server (server)
   "Prompt the user to select from a list of servers and connection
 durations, and connect to the server for that duration.
 
@@ -9361,11 +10179,16 @@ The list of servers is defined in `ps/mullvad-servers'."
     (completing-read
      "Select server: "
      ps/mullvad-servers)))
-  (call-interactively 'ps/mullvad-disconnect-after)
-  (let ((server (cdr (assoc selection ps/mullvad-servers))))
-    (shell-command (format
-                    "mullvad relay set hostname %s; mullvad connect"
-                    server))))
+  (let* ((duration (call-interactively 'ps/mullvad-disconnect-after))
+         (server (cdr (assoc server ps/mullvad-servers)))
+         (connection (replace-regexp-in-string
+                      "Setting location constraint to \\(.*\\)\n.*\n.*" "\\1"
+                      (shell-command-to-string (format
+                                                "mullvad relay set hostname %s; mullvad connect"
+                                                server)))))
+    (if duration
+        (message (format "Connected to server %s. Disconnecting in %s minutes." connection duration))
+      (message (format "Connected to server %s." connection)))))
 
 (defun ps/mullvad-connect-to-website (website)
   "Prompt the user to select from a list of websites and connection
@@ -9376,11 +10199,17 @@ that duration."
     (completing-read
      "Select website: "
      ps/mullvad-websites)))
-  (call-interactively 'ps/mullvad-disconnect-after)
-  (let ((city (cdr (assoc website ps/mullvad-websites))))
-    (shell-command (format
-                    "mullvad relay set hostname %s; mullvad connect"
-                    (cdr (assoc city ps/mullvad-servers))))))
+  (let* ((duration (call-interactively 'ps/mullvad-disconnect-after))
+         (city (cdr (assoc website ps/mullvad-websites)))
+         (server (cdr (assoc city ps/mullvad-servers)))
+         (connection (replace-regexp-in-string
+                      "Setting location constraint to \\(.*\\)\n.*\n.*" "\\1"
+                      (shell-command-to-string (format
+                                                "mullvad relay set hostname %s; mullvad connect"
+                                                server)))))
+    (if duration
+        (message (format "Connected to server %s. Disconnecting in %s minutes." connection duration))
+      (message (format "Connected to server %s." connection)))))
 
 (defun ps/mullvad-disconnect ()
   "Disconnect from server."
@@ -9392,12 +10221,18 @@ that duration."
   (interactive
    (list (completing-read
           "Select duration (minutes): "
-          '("1" "5" "10" "30" "60" "unlimited"))))
+          '("1" "5" "10" "30" "60" "120" "custom" "unlimited"))))
+  (when (equal duration "custom")
+    (setq duration (read-string "Enter duration (minutes): ")))
   (unless (equal duration "unlimited")
+    ;; If a previous timer is running, cancel it.
+    (cancel-function-timers #'ps/mullvad-disconnect)
+    ;; Now run a new timer.
     (run-with-timer
      (* (string-to-number duration) 60)
      nil
-     #'ps/mullvad-disconnect)))
+     #'ps/mullvad-disconnect)
+    duration))
 
 (use-package vlc
   :config
@@ -9872,6 +10707,8 @@ The `slug' generated from that STR follows these rules:
       (org-set-tags "person")
       (org-id-get-create)
       (ps/org-narrow-to-entry-and-children)
+      (goto-char (point-max))
+      (insert "[[id:628F4D6A-38D9-4D1F-9517-8972B96A5C5B][Mexico EA Fellowship]]")
       ;; (crux-smart-open-line nil)
       )))
 

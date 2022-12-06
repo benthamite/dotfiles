@@ -14805,7 +14805,7 @@ If MOST-RECENT is `t', attach the most recent file instead."
     (ebib--execute-when
       (entries
        (let ((key (ebib--get-key-at-point)))
-         (unless (ps/ebib-vali;d-key-p key)
+         (unless (ps/ebib-valid-key-p key)
                   (user-error "Entry has an invalid key; pleasse regenerate it."))
            (let* ((field "file")
                   (file-to-attach (if most-recent

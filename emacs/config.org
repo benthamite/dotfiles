@@ -13820,7 +13820,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (bibtex-autokey-year-length 4)
   (bibtex-autokey-titlewords 3)
   (bibtex-autokey-titlewords-stretch 0)
-  (bibtex-autokey-titleword-ignore '("A" "An" "On" "The" "Eine?" "Der" "Die" "Das" "El" "La" "Lo" "Los" "Las" "Un" "Una" "Unos" "Unas" "Le" "La" "L'" "Les" "Un" "Une" "Des" "Du" "De la" "De l'" "Des" "Lo" "Il" "La" "L'" "Gli" "I" "Le" "Uno"))
+  (bibtex-autokey-titleword-ignore '("A" "An" "On" "The" "Eine?" "Der" "Die" "Das" "El" "La" "Lo" "Los" "Las" "Un" "Una" "Unos" "Unas" "y" "o" "Le" "La" "L'" "Les" "Un" "Une" "Des" "Du" "De la" "De l'" "Des" "Lo" "Il" "La" "L'" "Gli" "I" "Le" "Uno"))
   (bibtex-autokey-title-terminators "[.!?;]\\|--")
   (bibtex-autokey-titleword-case-convert 'capitalize)
   (bibtex-autokey-titleword-length nil)

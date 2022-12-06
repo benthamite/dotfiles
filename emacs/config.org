@@ -14394,90 +14394,90 @@ window and make the frame active,"
         (beginning-of-line))
       (ps/switch-to-most-recent-buffer-in-mode 'ebib-entry-mode)))
 
-  ;; (defun ps/ebib-jump-to-abstract ()
-  ;;   "Jump to `abstract' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "abstract"))
+  (defun ps/ebib-jump-to-abstract ()
+    "Jump to `abstract' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "abstract"))
 
-  ;; (defun ps/ebib-jump-to-author ()
-  ;;   "Jump to `author' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "author"))
+  (defun ps/ebib-jump-to-author ()
+    "Jump to `author' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "author"))
 
-  ;; (defun ps/ebib-jump-to-booktitle ()
-  ;;   "Jump to `booktitle' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "booktitle"))
+  (defun ps/ebib-jump-to-booktitle ()
+    "Jump to `booktitle' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "booktitle"))
 
-  ;; (defun ps/ebib-jump-to-date ()
-  ;;   "Jump to `date' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "date"))
+  (defun ps/ebib-jump-to-date ()
+    "Jump to `date' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "date"))
 
-  ;; (defun ps/ebib-jump-to-doi ()
-  ;;   "Jump to `doi' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "doi"))
+  (defun ps/ebib-jump-to-doi ()
+    "Jump to `doi' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "doi"))
 
-  ;; (defun ps/ebib-jump-to-editor ()
-  ;;   "Jump to `editor' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "editor"))
+  (defun ps/ebib-jump-to-editor ()
+    "Jump to `editor' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "editor"))
 
-  ;; (defun ps/ebib-jump-to-file ()
-  ;;   "Jump to `file' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "file"))
+  (defun ps/ebib-jump-to-file ()
+    "Jump to `file' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "file"))
 
-  ;; (defun ps/ebib-jump-to-isbn ()
-  ;;   "Jump to `isbn' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "isbn"))
+  (defun ps/ebib-jump-to-isbn ()
+    "Jump to `isbn' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "isbn"))
 
-  ;; (defun ps/ebib-jump-to-journal ()
-  ;;   "Jump to `journal' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "journal"))
+  (defun ps/ebib-jump-to-journal ()
+    "Jump to `journal' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "journal"))
 
-  ;; (defun ps/ebib-jump-to-keywords ()
-  ;;   "Jump to `keywords' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "keywords"))
+  (defun ps/ebib-jump-to-keywords ()
+    "Jump to `keywords' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "keywords"))
 
-  ;; (defun ps/ebib-jump-to-location ()
-  ;;   "Jump to `location' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "location"))
+  (defun ps/ebib-jump-to-location ()
+    "Jump to `location' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "location"))
 
-  ;; (defun ps/ebib-jump-to-pages ()
-  ;;   "Jump to `pages' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "pages"))
+  (defun ps/ebib-jump-to-pages ()
+    "Jump to `pages' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "pages"))
 
-  ;; (defun ps/ebib-jump-to-publisher ()
-  ;;   "Jump to `publisher' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "publisher"))
+  (defun ps/ebib-jump-to-publisher ()
+    "Jump to `publisher' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "publisher"))
 
-  ;; (defun ps/ebib-jump-to-shorttitle ()
-  ;;   "Jump to `shorttitle' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "shorttitle"))
+  (defun ps/ebib-jump-to-shorttitle ()
+    "Jump to `shorttitle' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "shorttitle"))
 
-  ;; (defun ps/ebib-jump-to-title ()
-  ;;   "Jump to `title' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "title"))
+  (defun ps/ebib-jump-to-title ()
+    "Jump to `title' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "title"))
 
-  ;; (defun ps/ebib-jump-to-url ()
-  ;;   "Jump to `url' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "url"))
+  (defun ps/ebib-jump-to-url ()
+    "Jump to `url' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "url"))
 
-  ;; (defun ps/ebib-jump-to-volume ()
-  ;;   "Jump to `volume' field of entry at point."
-  ;;   (interactive)
-  ;;   (ps/ebib-jump-to "volume"))
+  (defun ps/ebib-jump-to-volume ()
+    "Jump to `volume' field of entry at point."
+    (interactive)
+    (ps/ebib-jump-to "volume"))
 
   (defun ps/ebib-download-by-identifier (&optional id)
     "docstring"
@@ -15260,45 +15260,6 @@ first name, and names are separated by a semicolon."
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
-#+begin_src emacs-lisp :results silent :tangle no
-(defmacro ps/ebib-jump-to (field)
-  "Generates command to jump to FIELD in entry at point."
-  (list 'defun (intern (concat "ps/ebib-jump-to–" field)) ()
-        (format "Jump to `%s' field of entry at point." field)
-        (list 'interactive)
-        `(let ((location (save-excursion
-                           (goto-char (point-min))
-                           (re-search-forward (concat "^" ,field) nil t))))
-           (if location
-               (goto-char location)
-             (beginning-of-line)))))
-
-(ps/ebib-jump-to "author")
-(ps/ebib-jump-to "editor")
-(ps/ebib-jump-to "title")
-(ps/ebib-jump-to "booktitle")
-(ps/ebib-jump-to "publisher")
-(ps/ebib-jump-to "location")
-(ps/ebib-jump-to "date")
-(ps/ebib-jump-to "url")
-(ps/ebib-jump-to "pages")
-(ps/ebib-jump-to "isbn")
-(ps/ebib-jump-to "doi")
-(ps/ebib-jump-to "keywords")
-(ps/ebib-jump-to "abstract")
-(ps/ebib-jump-to "file")
-#+end_src
-
-*** TODO [#6] Remove ~year~ field
-:PROPERTIES:
-:ID:       EB854917-C82F-4114-B779-EF1E83BF7EF4
-:END:
-It doesn't seem to be a proper field ([[https://joostkremers.github.io/ebib/ebib-manual.html#displaying-and-sorting-the-entries-list][manual]]):
-
-#+begin_quote
-Furthermore, the column label "Year" does not simply display the contents of the year field. Rather, it first checks the contents of the date field, which is biblatex’s replacement of the year field, and extracts the first year in it. Only if the date field is empty does it display the year field.
-#+end_quote
-
 *** resources
 :PROPERTIES:
 :ID:       A05D6298-646A-4E47-B3B2-07A14EABCEC5
@@ -15320,6 +15281,18 @@ CLOSED: [2022-09-05 Mon 10:43]
 CLOCK: [2022-09-05 Mon 10:45]--[2022-09-05 Mon 10:54] =>  0:09
 CLOCK: [2022-09-05 Mon 10:34]--[2022-09-05 Mon 10:43] =>  0:09
 :END:
+**** DONE [#6] Remove ~year~ field
+CLOSED: [2022-12-05 Mon 23:32]
+:PROPERTIES:
+:ID:       EB854917-C82F-4114-B779-EF1E83BF7EF4
+:ARCHIVE_TIME: 2022-12-05 Mon 23:32
+:END:
+It doesn't seem to be a proper field ([[https://joostkremers.github.io/ebib/ebib-manual.html#displaying-and-sorting-the-entries-list][manual]]):
+
+#+begin_quote
+Furthermore, the column label "Year" does not simply display the contents of the year field. Rather, it first checks the contents of the date field, which is biblatex’s replacement of the year field, and extracts the first year in it. Only if the date field is empty does it display the year field.
+#+end_quote
+
 ** biblio
 :PROPERTIES:
 :ID:       4EDDE179-9DE5-4F31-9FB4-17A5B68F6557

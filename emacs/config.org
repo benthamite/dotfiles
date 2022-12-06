@@ -9939,6 +9939,17 @@ The video I watche
 - [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Debugging.html][manual]]
 - [[http://tech.memoryimprintstudio.com/debug-emacs-lisp-with-edebug-debug/][Debug Emacs Lisp with Edebug & Debug – Emacs, Arduino, Raspberry Pi, Linux and Programming etc]]
 - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
+** macrostep
+:PROPERTIES:
+:ID:       8AE42CAA-5B62-4B1C-9C7C-DFD72AC5B3CD
+:END:
+/[[https://github.com/joddie/macrostep][macrostep]] is an interactive macro-expander./
+
+See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:30) for an introduction to this package.
+
+#+begin_src emacs-lisp :results silent
+(use-package macrostep)
+#+end_src
 
 ** clojure
 :PROPERTIES:
@@ -9947,6 +9958,14 @@ The video I watche
 
 #+begin_src emacs-lisp :results silent
 (use-package clojure-mode)
+#+end_src
+
+** cider
+:PROPERTIES:
+:ID:       308A0DCB-A51A-493F-B729-A0156ED1C4B7
+:END:
+#+begin_src emacs-lisp :results silent
+(use-package cider)
 #+end_src
 
 ** python

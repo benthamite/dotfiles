@@ -9939,7 +9939,7 @@ The video I watched
 - [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Debugging.html][manual]]
 - [[http://tech.memoryimprintstudio.com/debug-emacs-lisp-with-edebug-debug/][Debug Emacs Lisp with Edebug & Debug – Emacs, Arduino, Raspberry Pi, Linux and Programming etc]]
 - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
- 
+
 ** macrostep
 :PROPERTIES:
 :ID:       8AE42CAA-5B62-4B1C-9C7C-DFD72AC5B3CD
@@ -11476,12 +11476,12 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
     (org-beginning-of-line))
 
   :general
-  ("H-J" 'org-clock-goto)
+  ("A-H-j" 'org-clock-goto
+   "A-H-x" 'org-clock-cancel)
   (org-mode-map
    "s-i" 'org-clock-in
    "s-o" 'org-clock-out
    "s-u" 'ps/org-clone-clock-entry
-   "s-x" 'org-clock-cancel
    "s-A-n" 'ps/org-new-clock-entry-today
    "s--" 'ps/org-time-stamp-active-current-time
    "s-A--" 'ps/org-time-stamp-active-current-date

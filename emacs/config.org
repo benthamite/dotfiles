@@ -1982,6 +1982,7 @@ CLOCK: [2021-03-28 Sun 19:21]--[2021-03-28 Sun 19:35] =>  0:14
 
 #+begin_src emacs-lisp :results silent
 (setq-default line-spacing 2)
+(tool-bar-mode -1)
 (add-to-list 'default-frame-alist '(fullscreen . maximized)) ; start Emacs maximized
 #+end_src
 
@@ -16574,7 +16575,6 @@ I should use an [[https://stackoverflow.com/questions/27664267/python-dictionary
   :config
   (mu4e-alert-enable-mode-line-display))
 #+end_src
-
 
 ** org-msg
 :PROPERTIES:

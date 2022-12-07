@@ -18498,10 +18498,11 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
 #+begin_src emacs-lisp :results silent
 (use-package read-aloud
   :defer 20
-  :custom
-  (read-aloud-engine "say")
+  :config
+  (setq read-aloud-engine "say")
+  
   :general
-  ("A-C-r" 'read-aloud-this)) ; remember that `A-C-d` starts/stops dictation
+  ("A-C-r" 'read-aloud-this)) ; remember that `A-C-d' starts/stops dictation
 #+end_src
 
 ** EMMS

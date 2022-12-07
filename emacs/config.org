@@ -18306,104 +18306,6 @@ Too complicated.
 :PROPERTIES:
 :ID:       358E28B5-0274-43A0-AE9C-AA004B4775E5
 :END:
-** vlc
-:PROPERTIES:
-:ID:       AE13808C-BA71-4901-BC7D-16DA4D563813
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-28 Fri 19:00]--[2021-05-28 Fri 19:30] =>  0:30
-CLOCK: [2021-05-28 Fri 18:18]--[2021-05-28 Fri 18:52] =>  0:34
-CLOCK: [2021-04-12 Mon 20:43]--[2021-04-12 Mon 20:55] =>  0:12
-CLOCK: [2021-04-12 Mon 12:42]--[2021-04-12 Mon 13:12] =>  0:30
-CLOCK: [2021-04-11 Sun 17:35]--[2021-04-11 Sun 17:36] =>  0:01
-CLOCK: [2021-04-11 Sun 12:28]--[2021-04-11 Sun 13:29] =>  1:01
-CLOCK: [2021-04-11 Sun 11:27]--[2021-04-11 Sun 12:01] =>  0:34
-CLOCK: [2021-04-11 Sun 10:20]--[2021-04-11 Sun 10:24] =>  0:04
-:END:
-[[https://github.com/xuchunyang/vlc.el][vlc]] lets you control the VLC media player from Emacs.
-
-#+begin_src emacs-lisp :results silent
-(use-package vlc
-  :config
-  ;; from https://ag91.github.io/blog/2021/01/25/vlc-via-emacs-how-to-open-a-youtube-link/
-  (defun vlc-add-uri (uri &optional noaudio novideo)
-    "Add URI to playlist and start playback.
-NOAUDIO and NOVIDEO are optional options. If NOAUDIO is non-nil,
-disable audio. If NOVIDEO is non-nil, disable video. When called
-interactively, with prefix arg, you can pick one."
-    (interactive (cons (let ((uri (read-string "Add file or url: ")))
-                         (if (s-starts-with-p "http" uri) uri
-                           (concat "file://" (expand-file-name uri))))
-                       (pcase current-prefix-arg
-                         ('nil (list nil nil))
-                         (_ (pcase (completing-read "Option: " '("noaudio" "novideo") nil t)
-                              ("noaudio" (list t nil))
-                              ("novideo" (list nil t)))))))
-    (vlc-add uri noaudio novideo))
-
-  (defun vlc-enqueue-uri (uri)
-    "Add URI to playlist."
-    (interactive (list (let ((uri (read-string "Add file or url: ")))
-                         (if (s-starts-with-p "http" uri) uri
-                           (concat "file://" (expand-file-name uri))))
-                       ))
-    (vlc-enqueue uri))
-
-  (defun vlc-enqueue-uri-at-point ()
-    "Add URI to playlist."
-    (interactive)
-    (let ((uri (thing-at-point 'url)))
-      (when uri (vlc-enqueue uri))))
-
-  (defun vlc-uris-in-clipboard ()
-    (--> (with-temp-buffer
-           (clipboard-yank)
-           (buffer-substring-no-properties (point-min) (point-max)))
-         (s-split "\n" it)
-         (--filter (s-starts-with-p "http" it) it)))
-
-  (defun vlc-enqueue-uris (uris)
-    "Queue URIS to current VLC playlist."
-    (interactive)
-    (let ((uris (or uris (vlc-uris-in-clipboard))))
-      (-each uris 'vlc-enqueue-uri)))
-
-  ;; the formulas below were kindly shared with my by Andrea
-  (defun ps/get-link-from-heading ()
-    (let ((my/tmp-result))
-      (save-excursion
-        (ignore-errors
-          (progn
-            (org-narrow-to-subtree)
-            (search-forward "youtu" nil 't)
-            (setq my/tmp-result (org-element-property :raw-link (org-element-context)))))
-        (widen))
-      my/tmp-result))
-
-  (defun ps/vlc-enqueue-all-in-heading ()
-    "Enque all org links in heading at point."
-    (interactive)
-    (mapcar 'vlc-enqueue-uri (-remove 'null (-distinct (org-map-entries 'ps/get-link-from-heading nil 'tree)))))
-
-  (defhydra hydra-vlc
-    (:exit t
-           :idle 0.5)
-    "VLC commands"
-    ("s" (vlc-start) "start")
-    ("a" (vlc-add) "add")
-    ("n" (vlc-next) "next")
-    ("p" (vlc-previous) "previous")
-    ("l" (ps/vlc-enqueue-all-in-heading) "enqueue all in heading")
-    ("SPC" (lambda! (call-interactively #'vlc-play)) "play")
-    ("k" (lambda! (call-interactively #'vlc-seek)) "seek")
-    ("u" (vlc-enqueue-uri-at-point) "enqueue uri at point")
-    ("RET" (lambda! (vlc-enqueue-uri-at-point) (call-interactively #'vlc-play)) "enqueue uri at point and play"))
-  :general
-  ("A-v" 'hydra-vlc/body))
-#+end_src
-
-- To check: https://github.com/mohkale/vlc-rc
-  Main benefit would be to resume playback at a particular location, though VLC usually remembers this. Not sure how robust the VLC function is; I seem to remember that it would sometimes play from the beginning videos parts of which I had already watched.
 ** mpv
 :PROPERTIES:
 :ID:       8D75E528-AA79-4512-B4A9-6EB7A56F9026
@@ -18425,7 +18327,7 @@ CLOCK: [2021-10-14 Thu 17:50]--[2021-10-14 Thu 18:14] =>  0:24
 :END:
 /[[https://github.com/skeeto/youtube-dl-emacs][youtube-dl-emacs]] lets you control the [[https://youtube-dl.org/][youtube-dl]] download manager from Emacs./
 
-Note that this package also appears to work with [[https://github.com/yt-dlp/yt-dlp][yt-dlp]], a ~youtube-dl~ fork.
+Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dlp]], a ~youtube-dl~ fork.
 
 #+begin_src emacs-lisp :results silent
 (use-package youtube-dl
@@ -18485,7 +18387,7 @@ CLOCK: [2022-05-21 Sat 18:48]--[2022-05-21 Sat 19:18] =>  0:30
 :PROPERTIES:
 :ID:       E3F6210D-F6CD-4397-9004-3D31B5623D18
 :END:
-/[[https://github.com/skangas/mentor][mentor]] is a GNU Emacs frontend for the rTorrent bittorrent client./
+/[[https://github.com/skangas/mentor][mentor]] is an Emacs frontend for the rTorrent bittorrent client./
 
 [2022-10-07 Fri 21:48] I wasn't able to make it work.
 

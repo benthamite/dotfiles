@@ -8262,28 +8262,23 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
       (async-shell-command "brew update; brew upgrade --greedy; brew cleanup; brew doctor")
       (message "Update process finished.")))
 
-  (defun ps/crontab-e ()
-    "Run `crontab -e' in a emacs buffer."
-    (interactive)
-    (with-editor-async-shell-command "crontab -e"))
-
-    (defun ps/shell-in-current-directory (&optional shell)
-  "Open a shell in the current directory, creating one if
+  (defun ps/shell-in-current-directory (&optional shell)
+    "Open a shell in the current directory, creating one if
 necessary."
-  (interactive)
-  (let* ((shell (or shell
-                    'shell))
-         (shell-mode (intern (concat (symbol-name shell) "-mode")))
-         (current-directory default-directory)
-         (found))
-    (dolist (buffer (buffer-list (current-buffer)))
-      (with-current-buffer buffer
-        (when (and (eq major-mode 'shell-mode)
-                   (equal current-directory default-directory))
-          (setq found buffer))))
-    (if found
-        (switch-to-buffer found)
-      (shell (generate-new-buffer-name (format "*%s*" shell))))))
+    (interactive)
+    (let* ((shell (or shell
+                      'shell))
+           (shell-mode (intern (concat (symbol-name shell) "-mode")))
+           (current-directory default-directory)
+           (found))
+      (dolist (buffer (buffer-list (current-buffer)))
+        (with-current-buffer buffer
+          (when (and (eq major-mode 'shell-mode)
+                     (equal current-directory default-directory))
+            (setq found buffer))))
+      (if found
+          (switch-to-buffer found)
+        (funcall shell (generate-new-buffer-name (format "*%s*" shell))))))
 
   :general
   ("A-s" 'ps/shell-in-current-directory)
@@ -8352,7 +8347,7 @@ necessary."
 :PROPERTIES:
 :ID:       D8CACBDA-19AA-4D2F-9707-07B37AE3DF89
 :END:
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package eshell-git-prompt
   :after eshell
   :demand t
@@ -18413,11 +18408,11 @@ interactively, with prefix arg, you can pick one."
 :PROPERTIES:
 :ID:       8D75E528-AA79-4512-B4A9-6EB7A56F9026
 :END:
+/[[https://github.com/kljohann/mpv.el][mpv]] provides various functions to control [[https://en.wikipedia.org/wiki/Mpv_(media_player)][mpv]]./
 
 #+begin_src emacs-lisp :results silent
 (use-package mpv)
 #+end_src
-
 
 ** youtube-dl-emacs
 :PROPERTIES:

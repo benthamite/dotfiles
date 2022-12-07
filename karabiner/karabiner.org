@@ -908,7 +908,7 @@ CLOCK: [2021-07-25 Sun 16:11]--[2021-07-25 Sun 17:02] =>  0:51
 #+begin_src clojure
 {:des "on Emacs, quote → quote (alone) | super (held)"
  :rules [
-         [:##return_or_enter :right_control :emacs {:alone :quote}]
+         [:##return_or_enter :right_control [:!moonlander :emacs] {:alone :quote}]
          ]}
 #+end_src
 

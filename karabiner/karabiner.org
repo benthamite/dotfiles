@@ -912,6 +912,13 @@ CLOCK: [2021-07-25 Sun 16:11]--[2021-07-25 Sun 17:02] =>  0:51
          ]}
 #+end_src
 
+#+begin_src clojure
+{:des "outside Emacs, quote → quote (alone) | super (held)"
+ :rules [:!moonlander
+         [:##return_or_enter :quote]
+         ]}
+#+end_src
+
 *** moonlander
 :PROPERTIES:
 :ID:       FC41F58A-AFDC-4F61-80C8-70AF5987AF8D

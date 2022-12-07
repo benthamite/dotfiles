@@ -10332,7 +10332,6 @@ CLOCK: [2021-03-22 Mon 12:25]--[2021-03-22 Mon 12:44] =>  0:19
 | [2021-11-24 Wed] | [[https://orgmode.org/manual/Field-and-range-formulas.html][3.5.5 Field and range formulas]] |
 | [2021-11-26 Fri] | [[https://orgmode.org/manual/Hyperlinks.html][4 Hyperlinks]]                   |
 | [2021-11-27 Sat] | [[https://orgmode.org/manual/Handling-Links.html][4.5 Handling Links]]             |
-|                  |                                |
 
 ** org
 :PROPERTIES:
@@ -15388,7 +15387,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (bibtex-clean-entry)
   (org-ref-clean-bibtex-entry)
   (save-buffer)
-  ;; (sleep-for 3)
   (let ((citekey (ps/bibtex-get-key)))
     (print citekey)
     (ebib nil citekey)

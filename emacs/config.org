@@ -4280,363 +4280,367 @@ Requires the command-line utility `trash' (`brew install trash')."
     (ps/org-narrow-to-entry-and-children))
 
   ;; Adapted from `spacemacs/new-empty-buffer'.
-  (defun ps/new-empty-buffer (&optional)
-    "Create a new buffer called `untitled<n>'."
+  (defun ps/new-buffer-in-current-mode ()
+    "Create a new buffer in the same major mode
+as the current buffer."
     (interactive)
-    (let ((newbuf (generate-new-buffer "untitled")))
-      ;; Prompt to save on `save-some-buffers' with positive PRED
-      (with-current-buffer newbuf
-        (setq-local buffer-offer-save t)
-        (when ps/new-empty-buffer-major-mode
-          (funcall ps/new-empty-buffer-major-mode)))
-      ;; pass non-nil force-same-window to prevent `switch-to-buffer' from
-      ;; displaying buffer in another window
-      (switch-to-buffer newbuf nil 'force-same-window)))
+    (let ((buffer-name (generate-new-buffer "untitled"))
+          (buffer-major-mode major-mode))
+      (cond ((eq buffer-major-mode 'shell-mode)
+             (shell))
+            ((eq buffer-major-mode 'eshell-mode)
+             (eshell))
+            (t
+             ;; Prompt to save on `save-some-buffers' with positive PRED
+             (with-current-buffer buffer-name
+               (setq-local buffer-offer-save t)
+               (funcall buffer-major-mode))
+               (switch-to-buffer buffer-name nil 'force-same-window)))))
 
-  (defun ps/new-empty-buffer-other-window ()
-    "Create a new buffer called `untitled<n>' in other window."
-    (interactive)
-    (ps/switch-to-last-window)
-    (ps/new-empty-buffer))
+(defun ps/new-empty-buffer-other-window ()
+  "Create a new buffer called `untitled<n>' in other window."
+  (interactive)
+  (ps/switch-to-last-window)
+  (ps/new-empty-buffer))
 
-  (defun ps/save-all-buffers ()
-    "Save all file-visiting buffers."
-    (interactive)
-    (save-some-buffers
-     `(4)))
+(defun ps/save-all-buffers ()
+  "Save all file-visiting buffers."
+  (interactive)
+  (save-some-buffers
+   `(4)))
 
-  (defun ps/visit-file-or-switch-to-buffer (thing)
-    "Visit file or switch to corresponding file-visiting buffer."
-    (interactive)
-    (if (get-buffer thing)
-        (switch-to-buffer thing)
-      (find-file thing)))
+(defun ps/visit-file-or-switch-to-buffer (thing)
+  "Visit file or switch to corresponding file-visiting buffer."
+  (interactive)
+  (if (get-buffer thing)
+      (switch-to-buffer thing)
+    (find-file thing)))
 
-  (defun ps/org-show-subtree-hide-drawers ()
-    (outline-hide-subtree)
-    (org-show-entry)
-    (org-show-children))
+(defun ps/org-show-subtree-hide-drawers ()
+  (outline-hide-subtree)
+  (org-show-entry)
+  (org-show-children))
 
-  (defun ps/org-narrow-to-entry-and-children ()
-    "Narrow org buffer to entry and all its children."
-    (interactive)
-    (org-narrow-to-subtree)
-    (ps/org-show-subtree-hide-drawers))
+(defun ps/org-narrow-to-entry-and-children ()
+  "Narrow org buffer to entry and all its children."
+  (interactive)
+  (org-narrow-to-subtree)
+  (ps/org-show-subtree-hide-drawers))
 
-  (defun ps/org-narrow-to-entry-no-children ()
-    "Narrow org buffer to entry excluding all children."
-    (interactive)
-    (org-narrow-to-subtree)
-    (save-excursion
-      (org-next-visible-heading 1)
-      (narrow-to-region (point-min) (point))))
+(defun ps/org-narrow-to-entry-no-children ()
+  "Narrow org buffer to entry excluding all children."
+  (interactive)
+  (org-narrow-to-subtree)
+  (save-excursion
+    (org-next-visible-heading 1)
+    (narrow-to-region (point-min) (point))))
 
-  (defun ps/org-widen-and-reveal ()
-    "Widen and reveal subtree."
-    (interactive)
-    (widen)
-    (org-reveal nil))
+(defun ps/org-widen-and-reveal ()
+  "Widen and reveal subtree."
+  (interactive)
+  (widen)
+  (org-reveal nil))
 
-  (defun ps/eval-region-or-buffer ()
-    "Evaluate a region if selected, otherwise the whole buffer."
-    (interactive)
-    (if (region-active-p)
-        (eval-region (region-beginning) (region-end))
-      (eval-buffer)))
+(defun ps/eval-region-or-buffer ()
+  "Evaluate a region if selected, otherwise the whole buffer."
+  (interactive)
+  (if (region-active-p)
+      (eval-region (region-beginning) (region-end))
+    (eval-buffer)))
 
-  ;; Adapted from alphapapa: reddit.com/r/orgmode/comments/fuvdqv/org_notetaking_workflow_with_orgroam/fmhl3ml/?utm_source=reddit&utm_medium=web2x&context=3
-  (defun ps/org-to-indirect-buffer ()
-    "Create indirect buffer and narrow it to current subtree.
+;; Adapted from alphapapa: reddit.com/r/orgmode/comments/fuvdqv/org_notetaking_workflow_with_orgroam/fmhl3ml/?utm_source=reddit&utm_medium=web2x&context=3
+(defun ps/org-to-indirect-buffer ()
+  "Create indirect buffer and narrow it to current subtree.
 The buffer is named after the subtree heading, with the filename
 appended.  If a buffer by that name already exists, it is
 selected instead of creating a new buffer."
-    (interactive "P")
-    (let* ((new-buffer-p)
-           (pos (point))
-           (buffer-name (let* ((heading (org-get-heading t t))
-                               (level (org-outline-level))
-                               (face (intern (concat "outline-" (number-to-string level))))
-                               (heading-string (propertize (org-link-display-format heading)
-                                                           'face face)))
-                          (concat heading-string "::" (buffer-name))))
-           (new-buffer (or (get-buffer buffer-name)
-                           (prog1 (condition-case nil
-                                      (make-indirect-buffer (current-buffer) buffer-name 'clone)
-                                    (error (make-indirect-buffer (current-buffer) buffer-name)))
-                             (setq new-buffer-p t)))))
-      (switch-to-buffer new-buffer)
-      (when new-buffer-p
-        ;; I don't understand why setting the point again is necessary, but it is.
-        (goto-char pos)
-        (rename-buffer buffer-name)
-        (org-narrow-to-subtree))))
+  (interactive "P")
+  (let* ((new-buffer-p)
+         (pos (point))
+         (buffer-name (let* ((heading (org-get-heading t t))
+                             (level (org-outline-level))
+                             (face (intern (concat "outline-" (number-to-string level))))
+                             (heading-string (propertize (org-link-display-format heading)
+                                                         'face face)))
+                        (concat heading-string "::" (buffer-name))))
+         (new-buffer (or (get-buffer buffer-name)
+                         (prog1 (condition-case nil
+                                    (make-indirect-buffer (current-buffer) buffer-name 'clone)
+                                  (error (make-indirect-buffer (current-buffer) buffer-name)))
+                           (setq new-buffer-p t)))))
+    (switch-to-buffer new-buffer)
+    (when new-buffer-p
+      ;; I don't understand why setting the point again is necessary, but it is.
+      (goto-char pos)
+      (rename-buffer buffer-name)
+      (org-narrow-to-subtree))))
 
-  (defun ps/get-alternate-buffer ()
-    "Return name of last buffer active in the current window."
-    (let ((current-buffer (window-buffer))
-          (buffer-predicate
-           (frame-parameter (window-frame) 'buffer-predicate)))
-      ;; switch to first buffer previously shown in this window that matches
-      ;; frame-parameter `buffer-predicate'
-      (or (cl-find-if (lambda (buffer)
-                        (and (not (eq buffer current-buffer))
-                             (or (null buffer-predicate)
-                                 (funcall buffer-predicate buffer))))
-                      (mapcar #'car (window-prev-buffers)))
-          ;; `other-buffer' honors `buffer-predicate' so no need to filter
-          (other-buffer current-buffer t))))
+(defun ps/get-alternate-buffer ()
+  "Return name of last buffer active in the current window."
+  (let ((current-buffer (window-buffer))
+        (buffer-predicate
+         (frame-parameter (window-frame) 'buffer-predicate)))
+    ;; switch to first buffer previously shown in this window that matches
+    ;; frame-parameter `buffer-predicate'
+    (or (cl-find-if (lambda (buffer)
+                      (and (not (eq buffer current-buffer))
+                           (or (null buffer-predicate)
+                               (funcall buffer-predicate buffer))))
+                    (mapcar #'car (window-prev-buffers)))
+        ;; `other-buffer' honors `buffer-predicate' so no need to filter
+        (other-buffer current-buffer t))))
 
-  (defun ps/switch-to-alternate-buffer ()
-    "Switch to the last buffer active in the current window."
-    (interactive)
-    (switch-to-buffer (ps/get-alternate-buffer)))
+(defun ps/switch-to-alternate-buffer ()
+  "Switch to the last buffer active in the current window."
+  (interactive)
+  (switch-to-buffer (ps/get-alternate-buffer)))
 
-  (defun ps/switch-to-other-alternate-buffer ()
-    "Switch to the last buffer in the other window."
-    (interactive)
+(defun ps/switch-to-other-alternate-buffer ()
+  "Switch to the last buffer in the other window."
+  (interactive)
+  (other-window 1)
+  (switch-to-buffer (ps/get-alternate-buffer)))
+
+;; reddit.com/r/emacs/comments/64xb3q/killthisbuffer_sometimes_just_stops_working/
+(defun ps/kill-this-buffer ()
+  "Kill the current buffer."
+  (interactive)
+  (kill-buffer (current-buffer)))
+
+(defun ps/kill-other-buffer ()
+  "Kill the buffer in the other window."
+  (interactive)
+  (save-window-excursion
     (other-window 1)
-    (switch-to-buffer (ps/get-alternate-buffer)))
+    (ps/kill-this-buffer)))
 
-  ;; reddit.com/r/emacs/comments/64xb3q/killthisbuffer_sometimes_just_stops_working/
-  (defun ps/kill-this-buffer ()
-    "Kill the current buffer."
-    (interactive)
-    (kill-buffer (current-buffer)))
+(defun ps/kill-this-buffer-switch-to-other-window ()
+  "Kill the current buffer and switch to the other window."
+  (interactive)
+  (ps/kill-this-buffer)
+  (ps/switch-to-last-window))
 
-  (defun ps/kill-other-buffer ()
-    "Kill the buffer in the other window."
-    (interactive)
-    (save-window-excursion
-      (other-window 1)
-      (ps/kill-this-buffer)))
+(defun ps/kill-all-buffers ()
+  (interactive)
+  (mapc 'kill-buffer (buffer-list)))
 
-  (defun ps/kill-this-buffer-switch-to-other-window ()
-    "Kill the current buffer and switch to the other window."
-    (interactive)
-    (ps/kill-this-buffer)
-    (ps/switch-to-last-window))
+(defun ps/bury-buffer-switch-to-other-window ()
+  "Bury the current buffer and switch to the other window."
+  (interactive)
+  (bury-buffer)
+  (ps/switch-to-last-window))
 
-  (defun ps/kill-all-buffers ()
-    (interactive)
-    (mapc 'kill-buffer (buffer-list)))
+(defun ps/download-bypass-paywalls-chrome ()
+  "Download and install `bypass-paywalls-chrome'."
+  (interactive)
+  (let ((file (file-name-concat ps/dir-downloads "bypass-paywalls.zip")))
+    (url-copy-file "https://github.com/iamadamdev/bypass-paywalls-chrome/archive/master.zip" file)
+    (shell-command (format "unzip %s -d %s" file ps/dir-downloads))
+    (dired ps/dir-downloads)
+    (goto-char (point-min))
+    (search-forward "bypass-paywalls-chrome-master")
+    (reveal-in-osx-finder)
+    (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"89243CDA-4876-45C8-9AF2-3666664A0EAA\"'")))
 
-    (defun ps/bury-buffer-switch-to-other-window ()
-    "Bury the current buffer and switch to the other window."
-    (interactive)
-    (bury-buffer)
-    (ps/switch-to-last-window))
-
-  (defun ps/download-bypass-paywalls-chrome ()
-    "Download and install `bypass-paywalls-chrome'."
-    (interactive)
-    (let ((file (file-name-concat ps/dir-downloads "bypass-paywalls.zip")))
-      (url-copy-file "https://github.com/iamadamdev/bypass-paywalls-chrome/archive/master.zip" file)
-      (shell-command (format "unzip %s -d %s" file ps/dir-downloads))
-      (dired ps/dir-downloads)
-      (goto-char (point-min))
-      (search-forward "bypass-paywalls-chrome-master")
-      (reveal-in-osx-finder)
-      (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"89243CDA-4876-45C8-9AF2-3666664A0EAA\"'")))
-
-  (defun ps/internet-archive-download-ACSM ()
-    "Download and open ACSM file from Internet Archive URL in kill
+(defun ps/internet-archive-download-ACSM ()
+  "Download and open ACSM file from Internet Archive URL in kill
 ring.
 
 NB: You need to have previously borrowed the book for the command
 to work. The command will work even if the book was borrowed for
 one hour only."
-    (interactive)
-    (if (string-search "archive.org" (current-kill 0))
-        (progn
-          (let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
-                 (suffix "&format=pdf&redirect=1")
-                 (id (replace-regexp-in-string
-                      "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
-                      "\\2"
-                      (current-kill 0)))
-                 (url (concat prefix id suffix))
-                 (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
-            ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
-            ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
-            ;; Then replace the path below with the location of the downloaded cookies file.
-            (save-window-excursion
-              (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
-                (async-shell-command
-                 (format
-                  "wget --load-cookies='%s' '%s' -O '%s'; open %s"
-                  ps/file-cookies url acsm-file acsm-file))))))
-      (user-error "You forgot to copy the URL!")))
+  (interactive)
+  (if (string-search "archive.org" (current-kill 0))
+      (progn
+        (let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
+               (suffix "&format=pdf&redirect=1")
+               (id (replace-regexp-in-string
+                    "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
+                    "\\2"
+                    (current-kill 0)))
+               (url (concat prefix id suffix))
+               (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
+          ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
+          ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
+          ;; Then replace the path below with the location of the downloaded cookies file.
+          (save-window-excursion
+            (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
+              (async-shell-command
+               (format
+                "wget --load-cookies='%s' '%s' -O '%s'; open %s"
+                ps/file-cookies url acsm-file acsm-file))))))
+    (user-error "You forgot to copy the URL!")))
 
-  (defun ps/internet-archive-convert-ACSM ()
-    "Convert ACSM file to PDF."
-    (interactive)
-    (let* ((adobe-file
-            ;; stackoverflow.com/a/30887300/4479455
-            (car (directory-files (file-name-as-directory ps/dir-ade) 'full "\\.pdf$" #'file-newer-than-file-p)))
-           (output (shell-command-to-string (format "calibredb add '%s'" adobe-file)))
-           ;; Capture Calibre book id
-           (id (replace-regexp-in-string "\\(\\(\\(
+(defun ps/internet-archive-convert-ACSM ()
+  "Convert ACSM file to PDF."
+  (interactive)
+  (let* ((adobe-file
+          ;; stackoverflow.com/a/30887300/4479455
+          (car (directory-files (file-name-as-directory ps/dir-ade) 'full "\\.pdf$" #'file-newer-than-file-p)))
+         (output (shell-command-to-string (format "calibredb add '%s'" adobe-file)))
+         ;; Capture Calibre book id
+         (id (replace-regexp-in-string "\\(\\(\\(
 \\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
-           (calibre-file (car (directory-files-recursively ps/dir-calibre "\\.pdf$" t)))
-           ;; Should match filename used in `ps/internet-archive-download-ACSM'
-           (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
-      (rename-file calibre-file (file-name-as-directory ps/dir-downloads))
-      (shell-command (format "calibredb remove %s" id))
-      (mapcar #'delete-file `(,adobe-file ,calibre-file))
-      (delete-directory ps/dir-calibre t)
-      (kill-buffer "*Shell Command Output*")
-      (when (find-file acsm-file)
-        (delete-file acsm-file)
-        (kill-buffer))
-      (message "ACSM file converted successfully.")))
+         (calibre-file (car (directory-files-recursively ps/dir-calibre "\\.pdf$" t)))
+         ;; Should match filename used in `ps/internet-archive-download-ACSM'
+         (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
+    (rename-file calibre-file (file-name-as-directory ps/dir-downloads))
+    (shell-command (format "calibredb remove %s" id))
+    (mapcar #'delete-file `(,adobe-file ,calibre-file))
+    (delete-directory ps/dir-calibre t)
+    (kill-buffer "*Shell Command Output*")
+    (when (find-file acsm-file)
+      (delete-file acsm-file)
+      (kill-buffer))
+    (message "ACSM file converted successfully.")))
 
-  ;; Copied from emacs.stackexchange.com/a/24461/32089
-  (defun ps/revert-all-file-buffers ()
-    "Refresh all open file buffers without confirmation.
+;; Copied from emacs.stackexchange.com/a/24461/32089
+(defun ps/revert-all-file-buffers ()
+  "Refresh all open file buffers without confirmation.
 Buffers in modified (not yet saved) state in emacs will not be
 reverted. They will be reverted though if they were modified
 outside emacs. Buffers visiting files which do not exist any more
 or are no longer readable will be killed."
-    (interactive)
-    (dolist (buf (buffer-list))
-      (let ((filename (buffer-file-name buf)))
-        ;; Revert only buffers containing files, which are not modified;
-        ;; do not try to revert non-file buffers like *Messages*.
-        (when (and filename
-                   (not (buffer-modified-p buf)))
-          (if (file-readable-p filename)
-              ;; If the file exists and is readable, revert the buffer.
-              (with-current-buffer buf
-                (revert-buffer :ignore-auto :noconfirm :preserve-modes))
-            ;; Otherwise, kill the buffer.
-            (let (kill-buffer-query-functions) ; No query done when killing buffer
-              (kill-buffer buf)
-              (message "Killed non-existing/unreadable file buffer: %s" filename))))))
-    (message "Finished reverting buffers containing unmodified files."))
+  (interactive)
+  (dolist (buf (buffer-list))
+    (let ((filename (buffer-file-name buf)))
+      ;; Revert only buffers containing files, which are not modified;
+      ;; do not try to revert non-file buffers like *Messages*.
+      (when (and filename
+                 (not (buffer-modified-p buf)))
+        (if (file-readable-p filename)
+            ;; If the file exists and is readable, revert the buffer.
+            (with-current-buffer buf
+              (revert-buffer :ignore-auto :noconfirm :preserve-modes))
+          ;; Otherwise, kill the buffer.
+          (let (kill-buffer-query-functions) ; No query done when killing buffer
+            (kill-buffer buf)
+            (message "Killed non-existing/unreadable file buffer: %s" filename))))))
+  (message "Finished reverting buffers containing unmodified files."))
 
-  (defun ps/get-title (file)
-    "Return title of buffer at point."
-    (let (title)
-      (when file
-        (with-current-buffer
-            (get-file-buffer file)
-          (pcase (org-collect-keywords '("TITLE"))
-            (`(("TITLE" . ,val))
-             (setq title (car val)))))
-        title)))
+(defun ps/get-title (file)
+  "Return title of buffer at point."
+  (let (title)
+    (when file
+      (with-current-buffer
+          (get-file-buffer file)
+        (pcase (org-collect-keywords '("TITLE"))
+          (`(("TITLE" . ,val))
+           (setq title (car val)))))
+      title)))
 
-  ;; stackoverflow.com/a/44489067/4479455
-  (defun ps/show-buffer-file-name ()
-    "Show the full path to the current file in the minibuffer."
-    (interactive)
-    (let ((file-name (buffer-file-name)))
-      (if file-name
-          (progn
-            (message file-name)
-            (kill-new file-name))
-        (error "Buffer not visiting a file"))))
+;; stackoverflow.com/a/44489067/4479455
+(defun ps/show-buffer-file-name ()
+  "Show the full path to the current file in the minibuffer."
+  (interactive)
+  (let ((file-name (buffer-file-name)))
+    (if file-name
+        (progn
+          (message file-name)
+          (kill-new file-name))
+      (error "Buffer not visiting a file"))))
 
-  (defun ps/show-buffer-name ()
-    "Show the full path to the current file in the minibuffer."
-    (interactive)
-    (let ((buffer-name (buffer-name)))
-      (if buffer-name
-          (progn
-            (message buffer-name)
-            (kill-new buffer-name))
-        (error "Buffer not visiting a file"))))
+(defun ps/show-buffer-name ()
+  "Show the full path to the current file in the minibuffer."
+  (interactive)
+  (let ((buffer-name (buffer-name)))
+    (if buffer-name
+        (progn
+          (message buffer-name)
+          (kill-new buffer-name))
+      (error "Buffer not visiting a file"))))
 
-  ;; On MacOS, `DS_Store' files can interfere with this command.
-  ;; Disable their creation with `$ defaults write
-  ;; com.apple.desktopservices DSDontWriteNetworkStores true'
-  (defun ps/newest-file (path)
-    "Get latest file (including directory) in PATH."
-    (car
-     (seq-find
-      #'(lambda (x) (not (nth 1 x))) ; non-directory
-      (sort
-       (directory-files-and-attributes path 'full nil t)
-       #'(lambda (x y) (time-less-p (nth 5 y) (nth 5 x)))))))
+;; On MacOS, `DS_Store' files can interfere with this command.
+;; Disable their creation with `$ defaults write
+;; com.apple.desktopservices DSDontWriteNetworkStores true'
+(defun ps/newest-file (path)
+  "Get latest file (including directory) in PATH."
+  (car
+   (seq-find
+    #'(lambda (x) (not (nth 1 x))) ; non-directory
+    (sort
+     (directory-files-and-attributes path 'full nil t)
+     #'(lambda (x y) (time-less-p (nth 5 y) (nth 5 x)))))))
 
-  (defun ps/switch-to-most-recent-buffer-in-mode (mode)
-    "Switch to the most recent buffer in major mode MODE."
-    (let (found)
-      (catch 'done
-        (mapc (lambda (x)
-                (when (with-current-buffer x (eq major-mode mode))
-                  (switch-to-buffer x)
-                  (setq found t)
-                  (throw 'done nil)))
-              (buffer-list))
-        (unless found (print "not found")))))
+(defun ps/switch-to-most-recent-buffer-in-mode (mode)
+  "Switch to the most recent buffer in major mode MODE."
+  (let (found)
+    (catch 'done
+      (mapc (lambda (x)
+              (when (with-current-buffer x (eq major-mode mode))
+                (switch-to-buffer x)
+                (setq found t)
+                (throw 'done nil)))
+            (buffer-list))
+      (unless found (print "not found")))))
 
-  ;; stackoverflow.com/questions/21486934/file-specific-key-binding-in-emacs/21493693#21493693
-  (defun ps/buffer-local-set-key (key command)
-    (interactive "KSet key buffer-locally: \nCSet key %s buffer-locally to command: ")
-    (let ((oldmap (current-local-map))
-          (newmap (make-sparse-keymap)))
-      (when oldmap
-        (set-keymap-parent newmap oldmap))
-      (define-key newmap key command)
-      (use-local-map newmap)))
+;; stackoverflow.com/questions/21486934/file-specific-key-binding-in-emacs/21493693#21493693
+(defun ps/buffer-local-set-key (key command)
+  (interactive "KSet key buffer-locally: \nCSet key %s buffer-locally to command: ")
+  (let ((oldmap (current-local-map))
+        (newmap (make-sparse-keymap)))
+    (when oldmap
+      (set-keymap-parent newmap oldmap))
+    (define-key newmap key command)
+    (use-local-map newmap)))
 
-  (defun ps/ocr-pdf ()
-    "OCR the file at point or visited by the current buffer."
-    (interactive)
-    ;; TODO: add disjunct to handle file at point in minibuffer.
-    (let ((filename (cond ((equal major-mode 'dired-mode) (dired-get-filename))
-                          ((equal major-mode 'pdf-view-mode) (buffer-file-name))))
-          (shell-command-buffer-name-async "*ocr-pdf*"))
-      (async-shell-command (format "ocrmypdf --force '%s' '%s'" filename filename))))
+(defun ps/ocr-pdf ()
+  "OCR the file at point or visited by the current buffer."
+  (interactive)
+  ;; TODO: add disjunct to handle file at point in minibuffer.
+  (let ((filename (cond ((equal major-mode 'dired-mode) (dired-get-filename))
+                        ((equal major-mode 'pdf-view-mode) (buffer-file-name))))
+        (shell-command-buffer-name-async "*ocr-pdf*"))
+    (async-shell-command (format "ocrmypdf --force '%s' '%s'" filename filename))))
 
-  (defun ps/kill-buffer ()
-    "Ugly hack to kill buffer when
+(defun ps/kill-buffer ()
+  "Ugly hack to kill buffer when
 `citar-filenotify-rm-local-watches' prevents it."
-    (interactive)
-    (defun  citar-filenotify-rm-local-watches ())
-    (kill-buffer)
-    (defun  citar-filenotify-rm-local-watches ()
-      "Delete the filenotify watches for the local bib files."
-      (mapc #'file-notify-rm-watch citar-filenotify--local-watches)
-      (setq citar-filenotify--local-watches 'uninitialized)))
+  (interactive)
+  (defun  citar-filenotify-rm-local-watches ())
+  (kill-buffer)
+  (defun  citar-filenotify-rm-local-watches ()
+    "Delete the filenotify watches for the local bib files."
+    (mapc #'file-notify-rm-watch citar-filenotify--local-watches)
+    (setq citar-filenotify--local-watches 'uninitialized)))
 
 ;; Disable `dired-hide-details-mode' so that session dates are shown
 ;; when `recover-session' is invoked.
 (advice-add 'recover-session :after #'(lambda () (dired-hide-details-mode -1)))
 
-  :general
-  ("M--" 'not-modified
-   "M-b" 'ps/save-and-revert-buffer
-   "M-e" 'ps/eval-region-or-buffer
-   "H-q" 'ps/kill-this-buffer
-   "A-H-M-s-q" 'ps/kill-this-buffer-switch-to-other-window
-   "A-H-q" 'ps/kill-other-buffer
-   "H-n" 'ps/new-empty-buffer
-   "H-N" 'ps/new-empty-buffer-other-window
-   "H-a" 'mark-whole-buffer
-   "H-s" 'save-buffer
-   "H-S" 'ps/save-all-buffers
-   "A-H-M-s-SPC" 'ps/switch-to-alternate-buffer
-   "C-b" 'clone-indirect-buffer-other-window
-   "H-C-g" 'abort-recursive-edit
-   "H-C-S-g" 'top-level
-   "H-C-A-g" 'keyboard-escape-quit) ; ESC ESC ESC
-  ((ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
-   "q" 'bury-buffer)
-   ((ebib-entry-mode-map)
-   "q" 'ps/bury-buffer-switch-to-other-window)
-  ((apropos-mode-map calendar-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
-   "q" 'ps/kill-this-buffer)
-  ((dired-mode-map pdf-view-mode-map)
-   "s-o" 'ps/ocr-pdf)
-  ;; We typically enter these modes to lookup some information and
-  ;; then return to the previous buffer, so we set `q' to switch to
-  ;; the other window, and reserve `Q' for the normal behavior
-  ((help-mode-map helpful-mode-map osx-dictionary-mode-map)
-   "Q" 'ps/kill-this-buffer
-   "q" 'ps/kill-this-buffer-switch-to-other-window)
-  ((telega-chat-mode-map)
-   "s-q" 'ps/kill-this-buffer))
+:general
+("M--" 'not-modified
+ "M-b" 'ps/save-and-revert-buffer
+ "M-e" 'ps/eval-region-or-buffer
+ "H-q" 'ps/kill-this-buffer
+ "A-H-M-s-q" 'ps/kill-this-buffer-switch-to-other-window
+ "A-H-q" 'ps/kill-other-buffer
+ "H-n" 'ps/new-buffer-in-current-mode
+ "H-N" 'ps/new-empty-buffer-other-window
+ "H-a" 'mark-whole-buffer
+ "H-s" 'save-buffer
+ "H-S" 'ps/save-all-buffers
+ "A-H-M-s-SPC" 'ps/switch-to-alternate-buffer
+ "C-b" 'clone-indirect-buffer-other-window
+ "H-C-g" 'abort-recursive-edit
+ "H-C-S-g" 'top-level
+ "H-C-A-g" 'keyboard-escape-quit) ; ESC ESC ESC
+((ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
+ "q" 'bury-buffer)
+((ebib-entry-mode-map)
+ "q" 'ps/bury-buffer-switch-to-other-window)
+((apropos-mode-map calendar-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
+ "q" 'ps/kill-this-buffer)
+((dired-mode-map pdf-view-mode-map)
+ "s-o" 'ps/ocr-pdf)
+;; We typically enter these modes to lookup some information and
+;; then return to the previous buffer, so we set `q' to switch to
+;; the other window, and reserve `Q' for the normal behavior
+((help-mode-map helpful-mode-map osx-dictionary-mode-map)
+ "Q" 'ps/kill-this-buffer
+ "q" 'ps/kill-this-buffer-switch-to-other-window)
+((telega-chat-mode-map)
+ "s-q" 'ps/kill-this-buffer))
 #+end_src
 
 *** Archive                                                       :ARCHIVE:
@@ -11678,7 +11682,7 @@ not already have one."
                ;; don't create unnecessary IDs for article
                ;; subsections)
                (and
-		;; dir condition
+                ;; dir condition
                 (member
                  (file-name-directory (buffer-file-name))
                  (mapcar #'file-name-as-directory
@@ -11687,7 +11691,7 @@ not already have one."
                           ps/dir-journal
                           ps/dir-wiki-entries
                           ps/dir-people)))
-		;; heading condition
+                ;; heading condition
                 (> (org-current-level) 1)))
         (org-map-entries 'org-id-get-create))))
 

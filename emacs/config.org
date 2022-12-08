@@ -3608,7 +3608,7 @@ Transient Mark mode is on but the region is inactive."
    "H-z" 'undo-only))
 #+end_src
 
-*** TODO Post StackExchange question
+*** TODO [#5] Post StackExchange question
 :PROPERTIES:
 :ID:       BDB38FE9-8E13-4D36-9302-121894A328AF
 :END:
@@ -6461,10 +6461,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
    "s-g" 'hydra-org-gcal/body))
 #+end_src
 
-*** TODO Fix org-gcal
-:PROPERTIES:
-:ID:       4E94020D-9A1A-49B8-B080-6501241CD419
-:END:
 *** TODO [#5] Fix org-gcal
 :PROPERTIES:
 :ID:       CCC399F6-32B4-4264-89A1-6A6C72F22C81

@@ -11652,7 +11652,7 @@ not already have one."
                (member
                 (file-name-directory (buffer-file-name))
                 `(,(file-name-as-directory ps/dir-bibliographic-notes)))
-               ;; exclude selected files
+               ;; exclude selected file names
                (member
                 (file-name-nondirectory (buffer-file-name))
                 '("orb-noter-template.org"
@@ -11660,17 +11660,25 @@ not already have one."
                   "calendar.org"
                   ".org2blog.org"
                   "feeds.org"))
-               ;; exclude selected headings
+               ;; exclude selected file tags
+               ;; #+FILETAGS: noid
+               (member
+                "noid"
+                (org-get-tags))
+               ;; exclude selected heading names
                (member (org-get-heading) '("Local variables"
                                            "COMMENT Local variables"
                                            "TODO Local variables"
                                            "Archive :ARCHIVE:"))
+               ;; exclude selected heading tags
+               (member "noid" (org-get-tags))
+
                ;; exclude buffers when in list of special dirs and org
                ;; heading at point is of level higher than 1 (i.e.
                ;; don't create unnecessary IDs for article
                ;; subsections)
                (and
-                                        ; dir condition
+		;; dir condition
                 (member
                  (file-name-directory (buffer-file-name))
                  (mapcar #'file-name-as-directory
@@ -11679,7 +11687,7 @@ not already have one."
                           ps/dir-journal
                           ps/dir-wiki-entries
                           ps/dir-people)))
-                                        ; heading condition
+		;; heading condition
                 (> (org-current-level) 1)))
         (org-map-entries 'org-id-get-create))))
 

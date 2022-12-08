@@ -11,6 +11,15 @@
 :LOGBOOK:
 CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :END:
+
+* installation
+:PROPERTIES:
+:ID:       D941204B-E22E-43DD-9564-EB49874C8673
+:END:
+For personal reference: Emacs was last installed [2022-12-07 Wed 18:05]. I used the [[https://github.com/railwaycat/homebrew-emacsmacport][Homebrew emacs-mac port]], with the following flags:
+
+~brew install emacs-mac --with-dbus --with-starter --with-natural-title-bar --with-native-comp --with-mac-metal --with-xwidgets --with-imagemagick --with-librsvg  --with-spacemacs-icon~
+
 * preface
 :PROPERTIES:
 :CUSTOM_ID: introduction

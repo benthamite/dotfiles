@@ -4289,6 +4289,20 @@ Requires the command-line utility `trash' (`brew install trash')."
     (ps/org-narrow-to-entry-and-children))
 
   ;; Adapted from `spacemacs/new-empty-buffer'.
+  (defun ps/new-empty-buffer (&optional)
+    "Create a new buffer called `untitled<n>'."
+    (interactive)
+    (let ((newbuf (generate-new-buffer "untitled")))
+      ;; Prompt to save on `save-some-buffers' with positive PRED
+      (with-current-buffer newbuf
+        (setq-local buffer-offer-save t)
+        (when ps/new-empty-buffer-major-mode
+          (funcall ps/new-empty-buffer-major-mode)))
+      ;; pass non-nil force-same-window to prevent `switch-to-buffer' from
+      ;; displaying buffer in another window
+      (switch-to-buffer newbuf nil 'force-same-window)))
+
+      
   (defun ps/new-buffer-in-current-mode ()
     "Create a new buffer in the same major mode
 as the current buffer."
@@ -4624,8 +4638,8 @@ or are no longer readable will be killed."
  "H-q" 'ps/kill-this-buffer
  "A-H-M-s-q" 'ps/kill-this-buffer-switch-to-other-window
  "A-H-q" 'ps/kill-other-buffer
- "H-n" 'ps/new-buffer-in-current-mode
- "H-N" 'ps/new-empty-buffer-other-window
+ "H-n" 'ps/new-empty-buffer
+ "H-N" 'ps/new-buffer-in-current-mode
  "H-a" 'mark-whole-buffer
  "H-s" 'save-buffer
  "H-S" 'ps/save-all-buffers

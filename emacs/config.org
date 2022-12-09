@@ -15336,7 +15336,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (ebib-switch-to-database-nth 1)
     ;; (sleep-for 3)
     (ps/ebib-open-key citekey)
-    (ebib-set-field-value "date" (format-time-string ebib-timestamp-format) citekey ebib--cur-db 'overwrite)))
+    (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format) citekey ebib--cur-db 'overwrite)))
 
   (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
     (let ((bibfile
@@ -15510,6 +15510,7 @@ or specify any other coding system (and risk losing\n\
   (defun ps/zotra-add-entry-from-search-advice ()
     "Functions to call after `zotra-add-entry-from-search' is run."
     (ebib-switch-to-database-nth 1)
+    (save-buffer ps/file-bibliography-new)
     (ps/ebib-reload-current-database-no-confirm))
 
   (advice-add 'zotra-add-entry-from-search :after #'ps/zotra-add-entry-from-search-advice)

@@ -15509,8 +15509,6 @@ or specify any other coding system (and risk losing\n\
 
   (defun ps/zotra-add-entry-from-search-advice ()
     "Functions to call after `zotra-add-entry-from-search' is run."
-    (set-buffer (file-name-nondirectory ps/file-bibliography-new))
-    (save-buffer)
     (ebib-switch-to-database-nth 1)
     (ps/ebib-reload-current-database-no-confirm))
 

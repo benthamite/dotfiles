@@ -13883,6 +13883,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (bibtex-autokey-preserve-case t)
   ;; Remove accents
   (bibtex-autokey-before-presentation-function 'ps/bibtex-asciify-string)
+  (bibtex-entry-format '(opts-or-alts numerical-fields realign))
 
   :config
   ;; Copied from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
@@ -14750,8 +14751,8 @@ confirmation."
        (ebib--reload-database ebib--cur-db)
        (ebib--set-modified nil ebib--cur-db)
        (ebib--update-buffers)
-       (message "Database reloaded")
-       (ebib--pop-to-buffer (ebib--buffer 'entry)))
+       (message "Database reloaded"))
+       ;; (ebib--pop-to-buffer (ebib--buffer 'entry)))
       (default
         (beep))))
 
@@ -15340,6 +15341,20 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   "Function to trigger with `zotra-after-add-entry-hook'."
   (revert-buffer nil t)
   (goto-char (point-max))
+  (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format))
+  (bibtex-clean-entry)
+  (org-ref-clean-bibtex-entry)
+  (save-buffer)
+  (ps/ebib-reload-current-database-no-confirm)
+  (let ((citekey (ps/bibtex-get-key)))
+    (ebib ps/file-bibliography-new citekey)
+    (ps/ebib-open-key citekey)))
+
+  
+  (defun ps/zotra-after-add-entry-function ()
+  "Function to trigger with `zotra-after-add-entry-hook'."
+  (revert-buffer nil t)
+  (goto-char (point-max))
   (bibtex-clean-entry)
   (org-ref-clean-bibtex-entry)
   (save-buffer)
@@ -15349,7 +15364,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     ;; Switch to `new.bib' database
     (ebib-switch-to-database-nth 1)
     ;; (sleep-for 3)
-    (ps/ebib-open-key citekey)
+    (ps/ebib-open-key "2022DevelopingTheScience")
     (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format) citekey ebib--cur-db 'overwrite)))
 
   (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
@@ -15521,12 +15536,12 @@ or specify any other coding system (and risk losing\n\
   ;; TODO: Fix this properly.
   (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)
 
-  (defun ps/zotra-add-entry-from-search-advice ()
-    "Functions to call after `zotra-add-entry-from-search' is run."
-    (ebib-switch-to-database-nth 1)
-    (ps/ebib-reload-current-database-no-confirm))
+  ;; (defun ps/zotra-add-entry-from-search-advice ()
+    ;; "Functions to call after `zotra-add-entry-from-search' is run."
+    ;; (ebib-switch-to-database-nth 1)
+    ;; (ps/ebib-reload-current-database-no-confirm))
 
-  (advice-add 'zotra-add-entry-from-search :after #'ps/zotra-add-entry-from-search-advice)
+  ;; (advice-add 'zotra-add-entry-from-search :after #'ps/zotra-add-entry-from-search-advice)
 
   :hook
   (zotra-after-add-entry-hook . ps/zotra-after-add-entry-function)

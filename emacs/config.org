@@ -4302,7 +4302,7 @@ Requires the command-line utility `trash' (`brew install trash')."
       ;; displaying buffer in another window
       (switch-to-buffer newbuf nil 'force-same-window)))
 
-      
+
   (defun ps/new-buffer-in-current-mode ()
     "Create a new buffer in the same major mode
 as the current buffer."
@@ -4651,6 +4651,7 @@ or are no longer readable will be killed."
 ((ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
  "q" 'bury-buffer)
 ((ebib-entry-mode-map)
+"H-q" 'bury-buffer
  "q" 'ps/bury-buffer-switch-to-other-window)
 ((apropos-mode-map calendar-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
  "q" 'ps/kill-this-buffer)
@@ -14440,7 +14441,7 @@ window and make the frame active,"
   (advice-add 'ebib--setup-windows :override #'ps/ebib--setup-windows)
 
   (defvar ps/ebib-isbn-p
-  "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
+    "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
 
   (defun ps/ebib-isbn-p (string)
     "Return `t' if string looks like an ISBN."
@@ -14752,7 +14753,7 @@ confirmation."
        (ebib--set-modified nil ebib--cur-db)
        (ebib--update-buffers)
        (message "Database reloaded"))
-       ;; (ebib--pop-to-buffer (ebib--buffer 'entry)))
+      ;; (ebib--pop-to-buffer (ebib--buffer 'entry)))
       (default
         (beep))))
 
@@ -15113,9 +15114,10 @@ first name, and names are separated by a semicolon."
   (defun ps/ebib-sort-toggle ()
     "Toggle between sorting by date and sorting by title."
     (interactive)
-    (if ps/ebib-sort-toggle
-        (setq ps/ebib-sort-toggle nil)
-      (setq ps/ebib-sort-toggle t))
+    (unless (string= (ebib-db-get-filename ebib--cur-db) ps/file-bibliography-new)
+      (user-error (format "This command only works on database `%s'"
+			  (file-name-nondirectory ps/file-bibliography-new))))
+    (setq ps/ebib-sort-toggle (not ps/ebib-sort-toggle))
     (let ((field (if ps/ebib-sort-toggle
                      "Title"
                    "timestamp"))
@@ -15197,6 +15199,7 @@ first name, and names are separated by a semicolon."
   (ebib-multiline-mode-map
    "s-c" 'ebib-quit-multiline-buffer-and-save)
   (ebib-entry-mode-map
+   "H-q" nil
    "H-s" 'ebib-save-current-database
    "!" 'ebib-generate-autokey
    "," 'ps/ebib-title-case
@@ -15350,7 +15353,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (ebib ps/file-bibliography-new citekey)
     (ps/ebib-open-key citekey)))
 
-  
+
   (defun ps/zotra-after-add-entry-function ()
   "Function to trigger with `zotra-after-add-entry-hook'."
   (revert-buffer nil t)
@@ -15537,7 +15540,7 @@ or specify any other coding system (and risk losing\n\
   (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)
 
   ;; (defun ps/zotra-add-entry-from-search-advice ()
-    ;; "Functions to call after `zotra-add-entry-from-search' is run."
+    ;; "Functionsps/ebib-sort-toggle to call after `zotra-add-entry-from-search' is run."
     ;; (ebib-switch-to-database-nth 1)
     ;; (ps/ebib-reload-current-database-no-confirm))
 
@@ -16779,7 +16782,9 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   (telega-chat-input-markups '("markdown2" "org"))
   (telega-use-images t)
   (telega-emoji-font-family 'noto-emoji)
-  (telega-emoji-use-images 'noto-emoji)
+  (telega-emoji-use-images nil)
+  ;; disabing: librsvg bug
+  ;; (telega-emoji-use-images 'noto-emoji)
   (telega-filters-custom '(("Main" . main)
                            ("Important" or mention
                             (and unread unmuted))

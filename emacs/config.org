@@ -15511,7 +15511,7 @@ or specify any other coding system (and risk losing\n\
     "Functions to call after `zotra-add-entry-from-search' is run."
     (ebib-switch-to-database-nth 1)
     (save-buffer ps/file-bibliography-new)
-    (ps/ebib-reload-current-database-no-confirm))
+    (ps/ebib-reload-current-database-no-confirm)k)
 
   (advice-add 'zotra-add-entry-from-search :after #'ps/zotra-add-entry-from-search-advice)
 

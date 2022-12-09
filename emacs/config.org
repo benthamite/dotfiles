@@ -9518,6 +9518,7 @@ otherwise the whole buffer."
    "s-s" 'ledger-report-save
    "s-t" 'ps/ledger-sort-region-or-buffer
    "s-u" 'ledger-schedule-upcoming
+   "s-v" 'ledger-copy-transaction-at-point
    "s-x" 'ledger-fully-complete-xact
    "s-z" 'ledger-report-redo
    "A-s-a" 'ps/ledger-report-account
@@ -15116,7 +15117,7 @@ first name, and names are separated by a semicolon."
     (interactive)
     (unless (string= (ebib-db-get-filename ebib--cur-db) ps/file-bibliography-new)
       (user-error (format "This command only works on database `%s'"
-			  (file-name-nondirectory ps/file-bibliography-new))))
+                          (file-name-nondirectory ps/file-bibliography-new))))
     (setq ps/ebib-sort-toggle (not ps/ebib-sort-toggle))
     (let ((field (if ps/ebib-sort-toggle
                      "Title"
@@ -15341,34 +15342,17 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
   :config
   (defun ps/zotra-after-add-entry-function ()
-  "Function to trigger with `zotra-after-add-entry-hook'."
-  (revert-buffer nil t)
-  (goto-char (point-max))
-  (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format))
-  (bibtex-clean-entry)
-  (org-ref-clean-bibtex-entry)
-  (save-buffer)
-  (ps/ebib-reload-current-database-no-confirm)
-  (let ((citekey (ps/bibtex-get-key)))
-    (ebib ps/file-bibliography-new citekey)
-    (ps/ebib-open-key citekey)))
-
-
-  (defun ps/zotra-after-add-entry-function ()
-  "Function to trigger with `zotra-after-add-entry-hook'."
-  (revert-buffer nil t)
-  (goto-char (point-max))
-  (bibtex-clean-entry)
-  (org-ref-clean-bibtex-entry)
-  (save-buffer)
-  (let ((citekey (ps/bibtex-get-key)))
-    (print citekey)
-    (ebib nil citekey)
-    ;; Switch to `new.bib' database
-    (ebib-switch-to-database-nth 1)
-    ;; (sleep-for 3)
-    (ps/ebib-open-key "2022DevelopingTheScience")
-    (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format) citekey ebib--cur-db 'overwrite)))
+    "Function to trigger with `zotra-after-add-entry-hook'."
+    (revert-buffer nil t)
+    (goto-char (point-max))
+    (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format))
+    (bibtex-clean-entry)
+    (org-ref-clean-bibtex-entry)
+    (save-buffer)
+    (ps/ebib-reload-current-database-no-confirm)
+    (let ((citekey (ps/bibtex-get-key)))
+      (ebib ps/file-bibliography-new citekey)
+      (ps/ebib-open-key citekey)))
 
   (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
     (let ((bibfile
@@ -15540,9 +15524,9 @@ or specify any other coding system (and risk losing\n\
   (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)
 
   ;; (defun ps/zotra-add-entry-from-search-advice ()
-    ;; "Functionsps/ebib-sort-toggle to call after `zotra-add-entry-from-search' is run."
-    ;; (ebib-switch-to-database-nth 1)
-    ;; (ps/ebib-reload-current-database-no-confirm))
+  ;; "Functionsps/ebib-sort-toggle to call after `zotra-add-entry-from-search' is run."
+  ;; (ebib-switch-to-database-nth 1)
+  ;; (ps/ebib-reload-current-database-no-confirm))
 
   ;; (advice-add 'zotra-add-entry-from-search :after #'ps/zotra-add-entry-from-search-advice)
 
@@ -15551,7 +15535,7 @@ or specify any other coding system (and risk losing\n\
 
   :general
   (ebib-index-mode-map
-  "i" 'zotra-add-entry-from-search))
+   "i" 'zotra-add-entry-from-search))
 #+end_src
 
 *** TODO [#5] Make sure all new bibtex entries have a ~timestamp~ field

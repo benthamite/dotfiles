@@ -13390,6 +13390,8 @@ tasks."
     "Return non-nil if current buffer has a birthday, a date of
 death, or a marriage anniversary."
     (when (eq major-mode 'org-mode)
+    (save-excursion
+    (search-forw
       (org-element-map
           (org-element-parse-buffer 'headline)
           'headline

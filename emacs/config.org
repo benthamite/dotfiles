@@ -10883,7 +10883,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   (org-agenda-restore-windows-after-quit t)  ; don't destroy window splits
   (org-deadline-warning-days 0)              ; show due tasks only on the day the tasks are due
   (org-agenda-span 1)                        ; show daily view by default
-  (org-agenda-include-diary t)               ; show holidays
+  (org-agenda-include-diary nil)               ; show holidays
   (org-agenda-clock-consistency-checks       ; highlight gaps of five or more minutes in agenda log mode
    '(:max-duration "5:00" :min-duration "0:01" :max-gap 5 :gap-ok-around ("2:00")))
   (org-agenda-skip-scheduled-if-done t)
@@ -13375,33 +13375,23 @@ function returns nil if current buffer contains only completed
 tasks."
     (when (eq major-mode 'org-mode)
       (org-element-map
-          (org-element-parse-buffer 'headline)
-          'headline
-        (lambda (headline)
-          (or
-           (eq (org-element-property :todo-type headline)
-               'todo)
-           (org-element-property :scheduled headline)
-           (org-element-property :deadline headline)))
-        nil
-        'first-match)))
+	  (org-element-parse-buffer 'headline)
+	  'headline
+	(lambda (headline)
+	  (or
+	   (eq (org-element-property :todo-type headline)
+	       'todo)
+	   (org-element-property :scheduled headline)
+	   (org-element-property :deadline headline)))
+	nil
+	'first-match)))
 
   (defun ps/vulpea-anniversary-p ()
-    "Return non-nil if current buffer has a birthday, a date of
-death, or a marriage anniversary."
+    "Return non-nil if current buffer has an anniversary."
     (when (eq major-mode 'org-mode)
-    (save-excursion
-    (search-forw
-      (org-element-map
-          (org-element-parse-buffer 'headline)
-          'headline
-        (lambda (headline)
-          (or
-           (org-element-property :BORN headline)
-           (org-element-property :DIED headline)
-           (org-element-property :MARRIED headline)))
-        nil
-        'first-match)))
+      (save-excursion
+	(goto-char (point-min))
+	(search-forward "%%(org-anniversary" nil t))))
 
   (defun ps/vulpea-priority-p ()
     "Return non-nil if current buffer has a heading with a priority.
@@ -13411,12 +13401,12 @@ function returns nil if current buffer contains only completed
 tasks."
     (when (eq major-mode 'org-mode)
       (org-element-map
-          (org-element-parse-buffer 'headline)
-          'headline
-        (lambda (headline)
-          (org-element-property :priority headline))
-        nil
-        'first-match)))
+	  (org-element-parse-buffer 'headline)
+	  'headline
+	(lambda (headline)
+	  (org-element-property :priority headline))
+	nil
+	'first-match)))
 
   (defun vulpea-project-files ()
     "Return a list of note files containing 'project' tag." ;
@@ -13425,49 +13415,49 @@ tasks."
       #'car
       (org-roam-db-query
        [:select [nodes:file]
-                :from tags
-                :left-join nodes
-                :on (= tags:node-id nodes:id)
-                :where (like tag (quote "%\"project\"%"))]))))
+		:from tags
+		:left-join nodes
+		:on (= tags:node-id nodes:id)
+		:where (like tag (quote "%\"project\"%"))]))))
 
   (defun vulpea-project-update-tag ()
     "Update PROJECT tag in the current buffer."
     (when (and (not (active-minibuffer-window))
-               (vulpea-buffer-p))
+	       (vulpea-buffer-p))
       (save-excursion
-        (goto-char (point-min))
-        (let* ((tags (vulpea-buffer-tags-get))
-               (original-tags tags))
-          (if (or (ps/vulpea-project-p) (ps/vulpea-anniversary-p))
-              (setq tags (cons "project" tags))
-            (setq tags (remove "project" tags)))
+	(goto-char (point-min))
+	(let* ((tags (vulpea-buffer-tags-get))
+	       (original-tags tags))
+	  (if (or (ps/vulpea-project-p) (ps/vulpea-anniversary-p))
+	      (setq tags (cons "project" tags))
+	    (setq tags (remove "project" tags)))
 
-          ;; cleanup duplicates
-          (setq tags (seq-uniq tags))
+	  ;; cleanup duplicates
+	  (setq tags (seq-uniq tags))
 
-          ;; update tags if changed
-          (when (or (seq-difference tags original-tags)
-                    (seq-difference original-tags tags))
-            (apply #'vulpea-buffer-tags-set tags))))))
+	  ;; update tags if changed
+	  (when (or (seq-difference tags original-tags)
+		    (seq-difference original-tags tags))
+	    (apply #'vulpea-buffer-tags-set tags))))))
 
   (defun vulpea-agenda-files-update (&rest _)
     "Update the value of `org-agenda-files'."
     (setq org-agenda-files
-          (delete-dups (append
-                        (org-agenda-files)
-                        (vulpea-project-files)
-                        ;; include files modified in past three days,
-                        ;; provided number of such files less than 1000
-                        (ps/org-roam-recent 1 1000)))))
+	  (delete-dups (append
+			(org-agenda-files)
+			(vulpea-project-files)
+			;; include files modified in past three days,
+			;; provided number of such files less than 1000
+			(ps/org-roam-recent 1 1000)))))
 
   (advice-add 'org-agenda :before #'vulpea-agenda-files-update)
 
   (defun vulpea-buffer-p ()
     "Return non-nil if the currently visited buffer is a note."
     (and buffer-file-name
-         (string-prefix-p
-          (expand-file-name (file-name-as-directory org-roam-directory))
-          (file-name-directory buffer-file-name))))
+	 (string-prefix-p
+	  (expand-file-name (file-name-as-directory org-roam-directory))
+	  (file-name-directory buffer-file-name))))
 
   :hook
   (find-file-hook . vulpea-project-update-tag)
@@ -18034,6 +18024,17 @@ account."
                    "https://twitter.com/search?q="
                    query
                    "&src=typed_query&f=user"))))
+  (defun ps/twittering-mode-org-capture-future-matters-research ()
+    "Launch 'Future Matters: Research' `org-capture' template."
+    (interactive)
+    (twittering-push-uri-onto-kill-ring)
+    (org-capture nil "lr"))
+
+  (defun ps/twittering-mode-org-capture-future-matters-news ()
+    "Launch 'Future Matters: News' `org-capture' template."
+    (interactive)
+    (twittering-push-uri-onto-kill-ring)
+    (org-capture nil "ln"))
 
   :general
   ("A-t" 'ps/twittering-account-select)
@@ -18043,8 +18044,10 @@ account."
    "d" 'twittering-delete-status
    "" 'twittering-goto-next-status
    "" 'twittering-goto-previous-status
+   "n" 'ps/twittering-mode-org-capture-future-matters-news
    "P" 'ps/twittering-mode-search-people-externally
    "q" 'twittering-kill-buffer
+   "r" 'ps/twittering-mode-org-capture-future-matters-research
    "s" 'twittering-search
    "S" 'ps/twittering-mode-search-people-externally
    "w" 'twittering-push-uri-onto-kill-ring

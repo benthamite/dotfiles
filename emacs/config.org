@@ -222,7 +222,7 @@ Literate configuration
 Some useful config files:
 - [[https://zzamboni.org/post/my-emacs-configuration-with-commentary/][Diego Zamboni]]
 - [[https://jamiecollinson.com/blog/my-emacs-config/][Jamie Collinson]]
-- [[https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el][Jethro Kuan]]. By the creator or ~org-roam~ and author of some great posts on note-taking. Not literal.
+- [[https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el][Jethro Kuan]]. Creator or ~org-roam~ and author of some great posts on note-taking. Not literal.
 - [[https://github.com/joodie/emacs-literal-config/blob/master/emacs.org][Joost Diepenmat]]
 - [[https://github.com/gjstein/emacs.d][Gregory Stein]]. Author of the excellent [[http://cachestocaches.com/][Caches to Caches]] blog.
 - [[https://luca.cambiaghi.me/vanilla-emacs/readme.html][Luca Cambiaghi]]

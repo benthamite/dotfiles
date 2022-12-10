@@ -224,23 +224,24 @@ Some useful config files:
 - [[https://jamiecollinson.com/blog/my-emacs-config/][Jamie Collinson]]
 - [[https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el][Jethro Kuan]]. By the creator or ~org-roam~ and author of some great posts on note-taking. Not literal.
 - [[https://github.com/joodie/emacs-literal-config/blob/master/emacs.org][Joost Diepenmat]]
+- [[https://github.com/gjstein/emacs.d][Gregory Stein]]. Author of the excellent [[http://cachestocaches.com/][Caches to Caches]] blog.
 - [[https://luca.cambiaghi.me/vanilla-emacs/readme.html][Luca Cambiaghi]]
 - [[https://config.phundrak.com/emacs][Lucien Cartier-Tilet]] (Spacemacs)
 - [[https://github.com/isamert/dotfiles/blob/master/emacs/index.org][Isa Mert Gurbuz]]
-  - Has a cool [[https://isamert.net/index.html][blog]] about org mode and other topics.
+    - Has a cool [[https://isamert.net/index.html][blog]] about org mode and other topics.
 - [[https://www.mfoot.com/blog/2015/11/22/literate-emacs-configuration-with-org-mode/][Martin Foot]]
-  - Has a very simple init file.
-  - [[https://github.com/mfoo/dotfiles/blob/master/.emacs.d/config.org][.org file]]
+    - Has a very simple init file.
+    - [[https://github.com/mfoo/dotfiles/blob/master/.emacs.d/config.org][.org file]]
 - [[https://github.com/mpereira/.emacs.d][Murilo Pereira]].
-  - Very well organized. The author has also written some excellent blog posts about Emacs.
+    - Very well organized. The author has also written some excellent blog posts about Emacs.
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][OutOfCheeseError]]
 - [[https://protesilaos.com/dotemacs/][Protesilaos Stavrou]]
-  - [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][here]] is the last commit before he abandoned ~use-package~ and ~straight~
+    - [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][here]] is the last commit before he abandoned ~use-package~ and ~straight~
 - [[https://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua]]. A legend in the Emacs community.
 - [[https://github.com/novoid/dot-emacs/blob/master/config.org][Karl Voit]].
-  - Author of ~Memacs~, prolific blogger.
+    - Author of ~Memacs~, prolific blogger.
 - [[https://github.com/sriramkswamy/dotemacs][Sriram Krishnaswamy]] ([[https://sriramkswamy.github.io/][website]])
-  - [[https://sriramkswamy.github.io/dotemacs/][.org file]]
+    - [[https://sriramkswamy.github.io/dotemacs/][.org file]]
 - [[https://github.com/sfromm/emacs.d#twitter][Stephen Fromm]]. Has an extended list of config files [[https://github.com/sfromm/emacs.d#inspiration][here]].
 - [[https://tecosaur.github.io/emacs-config/config.html][Tecosaur]]
 - [[https://www.tquelch.com/posts/emacs-config/#languages][Tim Quelch]]

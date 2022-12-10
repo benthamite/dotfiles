@@ -10068,10 +10068,12 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
   :hook
   (prog-mode-hook . copilot-mode)
+  (scr-buffer-mode-hook . copilot-mode)
 
   :general
   (copilot-mode-map
-   "TAB" 'copilot-accept-completion))
+   "TAB" 'copilot-accept-completion
+   "<backtab>" 'copilot-accept-completion-by-line))
 #+end_src
 
 ** elpy
@@ -13383,6 +13385,21 @@ tasks."
         nil
         'first-match)))
 
+  (defun ps/vulpea-anniversary-p ()
+    "Return non-nil if current buffer has a birthday, a date of
+death, or a marriage anniversary."
+    (when (eq major-mode 'org-mode)
+      (org-element-map
+          (org-element-parse-buffer 'headline)
+          'headline
+        (lambda (headline)
+          (or
+           (org-element-property :BORN headline)
+           (org-element-property :DIED headline)
+           (org-element-property :MARRIED headline)))
+        nil
+        'first-match)))
+
   (defun ps/vulpea-priority-p ()
     "Return non-nil if current buffer has a heading with a priority.
 
@@ -13418,7 +13435,7 @@ tasks."
         (goto-char (point-min))
         (let* ((tags (vulpea-buffer-tags-get))
                (original-tags tags))
-          (if (ps/vulpea-project-p)
+          (if (or (ps/vulpea-project-p) (ps/vulpea-anniversary-p))
               (setq tags (cons "project" tags))
             (setq tags (remove "project" tags)))
 

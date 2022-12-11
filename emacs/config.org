@@ -11010,6 +11010,10 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "Z" 'org-agenda-add-note
    "z" 'org-agenda-undo))
 #+end_src
+*** TODO remove ~project~ tag from agenda view
+:PROPERTIES:
+:ID:       1097ADCA-5DF0-40F2-9FF9-D8E44946CE66
+:END:
 *** TODO [#5] Exclude Fede and Leo ~tareas.org~ files from ~org-agenda~
 :PROPERTIES:
 :ID:       7512BCCE-B29A-4CB3-8B6B-A8C63E3407CD
@@ -15261,6 +15265,10 @@ first name, and names are separated by a semicolon."
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
+*** TODO Figure out difference between ~date~ and ~urldate~ bibtex fields
+:PROPERTIES:
+:ID:       7B7EA121-F1C0-4EAD-99F5-AAF4162DFDE9
+:END:
 *** resources
 :PROPERTIES:
 :ID:       A05D6298-646A-4E47-B3B2-07A14EABCEC5
@@ -15373,6 +15381,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
                         (org-cite-list-bibliography-files))))))
       (save-window-excursion
         (find-file bibfile)
+        (widen)
         (goto-char (point-max))
         (when (not (looking-at "^")) (insert "\n"))
         (insert (zotra-get-entry url-or-search-string is-search entry-format))

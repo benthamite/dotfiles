@@ -4089,6 +4089,14 @@ CLOCK: [2021-06-25 Fri 21:18]--[2021-06-25 Fri 21:19] =>  0:01
   ("C-z" 'goto-last-change))
 #+end_src
 
+** titlecase
+:PROPERTIES:
+:ID:       32939B31-3D76-4D0F-B898-24FF740AA595
+:END:
+#+begin_src emacs-lisp :results silent
+(use-package titlecase)
+#+end_src
+
 * registers & bookmarks
 :PROPERTIES:
 :ID:       E40A01AD-2B18-4B98-83E9-5E78D1E7195F
@@ -10070,7 +10078,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
   :hook
   (prog-mode-hook . copilot-mode)
-  (scr-buffer-mode-hook . copilot-mode)
+  (emacs-lisp-mode-hook . copilot-mode)
 
   :general
   (copilot-mode-map
@@ -16801,7 +16809,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   :demand t
   :custom
   (telega-server-libs-prefix "/opt/homebrew")
-  (telega-chat-input-markups '("markdown2" "org"))
+  (telega-chat-input-markups '("org"))
   (telega-use-images t)
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
@@ -19461,15 +19469,17 @@ The `slug' generated from that STR follows these rules:
          (str (replace-regexp-in-string "\\(^[-]*\\|[-]*$\\)" "" str)))
     str))
 
-(defun ps/create-new-person ()
+(defun ps/create-new-person (&optional name)
   "Create note for a new person."
   (interactive)
-  (let* ((name (read-from-minibuffer "Entry name: "))
+  (let* ((name (or
+		name
+		(read-from-minibuffer "Entry name: ")))
          (slug (org-hugo-slug name))
          (filename (concat slug ".org")))
-    (find-file (file-name-concat ps/dir-people filename))
     (if (file-exists-p filename)
         (message "File already exists.")
+    (find-file (file-name-concat ps/dir-people filename))
       (insert "#+title: " name "\n\n")
       (org-insert-heading)
       (insert name)
@@ -19477,7 +19487,7 @@ The `slug' generated from that STR follows these rules:
       (org-id-get-create)
       (ps/org-narrow-to-entry-and-children)
       (goto-char (point-max))
-      (insert "[[id:628F4D6A-38D9-4D1F-9517-8972B96A5C5B][Mexico EA Fellowship]]")
+      ;; (insert "[[id:628F4D6A-38D9-4D1F-9517-8972B96A5C5B][Mexico EA Fellowship]]")
       ;; (crux-smart-open-line nil)
       )))
 

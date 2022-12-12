@@ -14386,7 +14386,8 @@ in the file. Data comes from www.ebook.de."
                   (s-trim (buffer-string))))
         (save-buffer))))
 
-  (delete 'orcb-check-journal org-ref-clean-bibtex-entry-hook))
+  (delete 'orcb-check-journal org-ref-clean-bibtex-entry-hook)
+  (delete 'orcb-download-pdf org-ref-clean-bibtex-entry-hook))
 #+end_src
 
 ** doi-utils
@@ -15412,10 +15413,35 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (zotra-after-add-entry-hook nil)
 
   :config
+
+  (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
+  (let ((bibfile
+	 (or bibfile zotra-default-bibliography
+	     (completing-read
+	      "Bibfile: "
+	      (append (directory-files "." t ".*\\.bib$")
+		      (org-cite-list-bibliography-files))))))
+    (find-file bibfile)
+    (widen)
+    (goto-char (point-max))
+    (when (not (looking-at "^")) (insert "\n"))
+    (insert (zotra-get-entry url-or-search-string is-search entry-format))
+    (save-excursion
+      (save-restriction
+	(bibtex-narrow-to-entry)
+	(bibtex-beginning-of-entry)
+	;; (goto-char (point-max))
+	;; (when (not (looking-at "^")) (insert "\n"))
+	(advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
+	(save-buffer)
+	(advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
+	(run-hooks 'zotra-after-add-entry-hook)))))
+
+  
   (defun ps/zotra-after-add-entry-function ()
     "Function to trigger with `zotra-after-add-entry-hook'."
-    (revert-buffer nil t)
-    (goto-char (point-max))
+    ;; (revert-buffer nil t)
+    ;; (goto-char (point-max))
     (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format))
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
@@ -15425,29 +15451,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
       (ebib ps/file-bibliography-new citekey)
       (ps/ebib-open-key citekey)))
 
-  (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
-    (let ((bibfile
-           (or bibfile zotra-default-bibliography
-               (completing-read
-                "Bibfile: "
-                (append (directory-files "." t ".*\\.bib$")
-                        (org-cite-list-bibliography-files))))))
-      (save-window-excursion
-        (find-file bibfile)
-        (widen)
-        (goto-char (point-max))
-        (when (not (looking-at "^")) (insert "\n"))
-        (insert (zotra-get-entry url-or-search-string is-search entry-format))
-        (save-excursion
-          (save-restriction
-            (bibtex-narrow-to-entry)
-            (bibtex-beginning-of-entry)))
-        (goto-char (point-max))
-        (when (not (looking-at "^")) (insert "\n"))
-        (advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
-        (save-buffer)
-        (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
-        (run-hooks 'zotra-after-add-entry-hook))))
+  
 
   (defun ps/select-safe-coding-system-interactively (from to codings unsafe
                                                           &optional rejected default)

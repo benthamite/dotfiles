@@ -11739,6 +11739,9 @@ not already have one."
                ;; exclude selected heading names
                (member (org-get-heading) '("Local variables"
                                            "COMMENT Local variables"
+                                           "External links"
+                                           "Further reading"
+                                           "Related entries"
                                            "TODO Local variables"
                                            "Archive :ARCHIVE:"))
                ;; exclude selected heading tags
@@ -13925,9 +13928,9 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (bibtex-autokey-year-length 4)
   (bibtex-autokey-titlewords 3)
   (bibtex-autokey-titlewords-stretch 0)
-  (bibtex-autokey-titleword-ignore '("A" "An" "On" "The" "Eine?" "Der" "Die" "Das" "El" "La" "Lo" "Los" "Las" "Un" "Una" "Unos" "Unas" "y" "o" "Le" "La" "L'" "Les" "Un" "Une" "Des" "Du" "De la" "De l'" "Des" "Lo" "Il" "La" "L'" "Gli" "I" "Le" "Uno"))
-  (bibtex-autokey-title-terminators "[.!?;]\\|--")
-  (bibtex-autokey-titleword-case-convert 'capitalize)
+  (bibtex-autokey-titleword-ignore '("A" "a" "An" "an" "On" "on" "The" "the" "Eine?" "Der" "Die" "Das" "El" "La" "Lo" "Los" "Las" "Un" "Una" "Unos" "Unas" "el" "la" "lo" "los" "las" "un" "una" "unos" "unas" "y" "o" "Le" "La" "L'" "Les" "Un" "Une" "Des" "Du" "De la" "De l'" "Des" "le" "la" "l'" "les" "un" "une" "des" "du" "de la" "de l'" "des" "Lo" "Il" "La" "L'" "Gli" "I" "Le" "Uno" "lo" "il" "la" "l'" "gli" "i" "le" "uno"))
+  (Bibtex-Autokey-Title-Terminators "[.!?;]\\|--")
+  (Bibtex-autokey-titleword-case-convert 'capitalize)
   (bibtex-autokey-titleword-length nil)
   (bibtex-autokey-titleword-separator "")
   (bibtex-autokey-year-title-separator "")
@@ -15430,8 +15433,8 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
       (save-restriction
 	(bibtex-narrow-to-entry)
 	(bibtex-beginning-of-entry)
-	;; (goto-char (point-max))
-	;; (when (not (looking-at "^")) (insert "\n"))
+	(goto-char (point-max))
+	(when (not (looking-at "^")) (insert "\n"))
 	(advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
 	(save-buffer)
 	(advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)

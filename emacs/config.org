@@ -11864,6 +11864,12 @@ When FILES is given, scan these files instead."
    "s-A-u" 'ps/org-id-update-id-locations))
 #+end_src
 
+*** TODO Revise function above to robustly exclude selected headings
+:PROPERTIES:
+:ID:       77F06C6A-1F3F-4F9D-A1CF-02B16D00DB62
+:END:
+Now the headings are excluded if one creates them, but if one creates /other/ headings, the headings are included.
+
 *** TODO [#4] Update save hook to exclude Anki file
 :PROPERTIES:
 :ID:       FB3B93BF-EFCB-41F0-A732-844EDB162BE0

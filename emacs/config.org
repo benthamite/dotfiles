@@ -6101,12 +6101,12 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   :custom
   (calendar-week-start-day 1)    ; week starts on Monday
   (calendar-set-date-style 'iso) ; this isn't the default?
+  ;; (calendar-location-name "Ciudad de Buenos Aires, Argentina")
   ;; (calendar-latitude -34.6079)
   ;; (calendar-longitude -58.3660)
-  ;; (calendar-location-name "Ciudad de Buenos Aires, Argentina")
+  (calendar-location-name "Mexico DF")
   (calendar-latitude 19.4326)
   (calendar-longitude -99.1332)
-  (calendar-location-name "Mexico DF")
   (calendar-time-display-form
    '(24-hours ":" minutes
               (when time-zone

@@ -6499,9 +6499,6 @@ SCHEDULED: <2022-12-11 Sun>
 :ID:       CCC399F6-32B4-4264-89A1-6A6C72F22C81
 :Effort:   0:30
 :END:
-:LOGBOOK:
-CLOCK: [2022-12-11 Sun 23:16]
-:END:
 *** Archive                                                       :ARCHIVE:
 :PROPERTIES:
 :ID:       D90EB0FC-F92B-4ACB-8B55-4DB8B598D979

@@ -1691,7 +1691,6 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("G" (dired ps/dir-Google-drive-tlon-GPE) "Google Drive: GPE")
   ("h" (dired ps/dir-dropbox-tlon-HEAR) "Dropbox: HEAR")
   ("H" (dired ps/dir-Google-drive-tlon-HEAR) "Google Drive: HEAR")
-  ("H" (dired ps/dir-google-drive) "Google Drive")
   ("i" (dired ps/dir-anki) "Anki")
   ("j" (dired ps/dir-health) "Health")
   ("k" (dired ps/dir-PW) "PW")
@@ -1699,6 +1698,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("L" (dired ps/dir-Google-drive-tlon-leo) "Google Drive: leo")
   ("m" (hydra-dired-music/body) "Music")
   ("n" (dired ps/dir-notes) "Notes")
+  ("o" (dired ps/dir-google-drive) "Google Drive")
   ("p" (dired ps/dir-people) "people")
   ("q" (dired ps/dir-youtube) "youtube")
   ("r" (dired ps/dir-dropbox-tlon-RAE) "Dropbox: RAE")
@@ -6103,7 +6103,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   (calendar-set-date-style 'iso) ; this isn't the default?
   ;; (calendar-latitude -34.6079)
   ;; (calendar-longitude -58.3660)
-  ;; (calendar-location-name "Comuna 1, Buenos Aires, Argentina")
+  ;; (calendar-location-name "Ciudad de Buenos Aires, Argentina")
   (calendar-latitude 19.4326)
   (calendar-longitude -99.1332)
   (calendar-location-name "Mexico DF")
@@ -6114,12 +6114,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   (calendar-mark-holidays-flag nil)
   (calendar-time-zone-style 'numeric) ; Emacs 28.1
   (holiday-bahai-holidays nil)
-  (holiday-other-holidays '((holiday-fixed 1 30 "Arkhipov's birth")
-                            (holiday-fixed 2 12 "Darwin's birth")
-                            (holiday-fixed 2 15 "Bentham's birth")
-                            (holiday-fixed 5 13 "Pilecki's birth")
-                            (holiday-fixed 8 04 "Wallenberg's birth")
-                            (holiday-fixed 9 07 "Petrov's birth")))
+  
   :config
   ;; Adapted from Prot
   (defcustom ps/date-specifier "%F"

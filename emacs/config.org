@@ -7715,21 +7715,6 @@ By default, all agenda entries are offered. MATCH is as in
     (consult-org-agenda)
     (recenter 1))
 
-  (defun ps/consult-recent-files-in-dir (dir)
-    "Find recent files in directory using `completing-read'."
-    (interactive)
-    (find-file
-     (consult--read
-      (or (mapcar #'abbreviate-file-name
-                  (consult--recent-files-sort (f-entries dir)))
-          (user-error "No recent files"))
-      :prompt "Find recent file: "
-      :sort nil
-      :require-match t
-      :category 'file
-      :state (consult--file-preview)
-      :history 'file-name-history)))
-
   ;; (advice-remove 'consult-org-heading #'widen)
   ;; (advice-remove 'consult-org-heading #'ps/org-cycle-content)
   ;; (advice-add 'consult-org-agenda :after #'ps/org-narrow-to-entry-and-children)
@@ -14832,7 +14817,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
                                             ps/dir-downloads
                                             ps/dir-library-pdf
                                             ps/dir-library-html))))
-                     (read-file-name
+                     (dired-get-filename
                       "File to attach: "
                       ;; Use key as default selection if key-based file exists
                       ;; else default to `initial-folder'

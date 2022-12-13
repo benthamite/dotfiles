@@ -10016,20 +10016,18 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 :PROPERTIES:
 :ID:       4ADAE24A-49F4-47F2-AF5A-B15B8137E714
 :END:
-*** TODO [#6] Learn to use ~edebug~
+*** Archive                                                       :ARCHIVE:
+**** DONE [#6] Learn to use ~edebug~
+CLOSED: [2022-12-12 Mon 23:02]
 :PROPERTIES:
 :Effort:   0:45
 :ID:       A1B9B804-ABDF-4E0E-850D-32C11E457983
+:ARCHIVE_TIME: 2022-12-12 Mon 23:02
 :END:
 :LOGBOOK:
 CLOCK: [2021-11-25 Thu 22:06]--[2021-11-25 Thu 22:46] =>  0:40
 :END:
-The video I watched
-  Not very clear
-
-- [[http://tech.memoryimprintstudio.com/debug-emacs-lisp-with-edebug-debug/][Debug Emacs Lisp with Edebug & Debug – Emacs, Arduino, Raspberry Pi, Linux and Programming etc]]
-- [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
-
+See [[id:94184DD8-591C-46CD-BFC3-9738113DA640][debugging emacs lisp]].
 ** macrostep
 :PROPERTIES:
 :ID:       8AE42CAA-5B62-4B1C-9C7C-DFD72AC5B3CD

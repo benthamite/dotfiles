@@ -8743,7 +8743,7 @@ I have configured Ispell to use AppleSpell, the native OSX spell checker, since 
 (defun ps/flyspell-goto-previous-error (arg)
   "Go to arg previous spelling error."
   (interactive "p")
-  (while (not (= 0 arg))
+  (while (/= 0 arg)
     (let ((pos (point))
           (min (point-min)))
       (if (and (eq (current-buffer) flyspell-old-buffer-error)
@@ -9147,19 +9147,37 @@ CLOCK: [2021-05-31 Mon 21:27]--[2021-05-31 Mon 21:41] =>  0:14
 
   (setq google-translate-backend-method 'curl)
 
-  (defun ps/google-translate-at-point (&optional arg)
-    "Translate word at point. If invoked with a prefix argument,
-perform a reverse translation."
+  (defun ps/google-translate-dwim (&optional arg)
+    "Translate region if active, word if at point, else prompt for
+text. If invoked with a prefix argument, perform a reverse
+translation."
     (interactive "P")
     (let ((google-translate-default-source-language ps/ispell-language)
-          (google-translate-default-target-language
-           (if (string= ps/ispell-language "en")
-                        "es"
-                        "en")))
+	  (google-translate-default-target-language
+	   (if (string= ps/ispell-language "en")
+	       "es"
+	     "en")))
       (if arg
-          (google-translate-at-point-reverse)
-        (google-translate-at-point))))
+	  (google-translate-at-point-reverse)
+	(google-translate-at-point))))
 
+  ;; modify original function so that it prompts for text to translate
+  ;; if region is inactive and no word is at point.
+  (defun ps/%google-translate-at-point (override-p reverse-p)
+    (let* ((langs (google-translate-read-args override-p reverse-p))
+	   (source-language (car langs))
+	   (target-language (cadr langs))
+	   (bounds nil))
+      (google-translate-translate
+       source-language target-language
+       (cond ((string-equal major-mode "pdf-view-mode") (car (pdf-view-active-region-text)))
+	     ((use-region-p) (buffer-substring-no-properties (region-beginning) (region-end)))
+	     (t (or (and (setq bounds (bounds-of-thing-at-point 'word))
+			 (buffer-substring-no-properties (car bounds) (cdr bounds)))
+		    (google-translate-query-translate nil arg)))))))
+  
+  (advice-add '%google-translate-at-point :override #'ps/%google-translate-at-point)
+  
   :general
   ("H-A-y" 'ps/google-translate-at-point))
 #+end_src
@@ -10009,7 +10027,7 @@ The video I watched
 - [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Debugging.html][manual]]
 - [[http://tech.memoryimprintstudio.com/debug-emacs-lisp-with-edebug-debug/][Debug Emacs Lisp with Edebug & Debug – Emacs, Arduino, Raspberry Pi, Linux and Programming etc]]
 - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
-
+  
 ** macrostep
 :PROPERTIES:
 :ID:       8AE42CAA-5B62-4B1C-9C7C-DFD72AC5B3CD

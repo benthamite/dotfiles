@@ -9171,25 +9171,8 @@ translation."
           (google-translate-at-point-reverse)
         (google-translate-at-point))))
 
-  ;; modify original function so that it prompts for text to translate
-  ;; if region is inactive and no word is at point.
-  (defun ps/%google-translate-at-point (override-p reverse-p)
-    (let* ((langs (google-translate-read-args override-p reverse-p))
-           (source-language (car langs))
-           (target-language (cadr langs))
-           (bounds nil))
-      (google-translate-translate
-       source-language target-language
-       (cond ((string-equal major-mode "pdf-view-mode") (car (pdf-view-active-region-text)))
-             ((use-region-p) (buffer-substring-no-properties (region-beginning) (region-end)))
-             (t (or (and (setq bounds (bounds-of-thing-at-point 'word))
-                         (buffer-substring-no-properties (car bounds) (cdr bounds)))
-                    (google-translate-query-translate nil arg)))))))
-
-  (advice-add '%google-translate-at-point :override #'ps/%google-translate-at-point)
-
   :general
-  ("H-A-y" 'ps/google-translate-at-point))
+  ("H-A-y" 'ps/google-translate-dwim))
 #+end_src
 
 ** reverso
@@ -14995,7 +14978,8 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
                (ebib-set-field-value field file-name key ebib--cur-db ";")))
            (ebib--store-multiline-text (current-buffer))
            (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field))))
+           (ebib--redisplay-index-item field))
+	 (ebib-save-current-database t)))
       (default
         (beep))))
 

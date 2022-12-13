@@ -10009,6 +10009,7 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 :ID:       89FDC8BC-DD5B-4616-8E73-37EDD9C088C1
 :END:
 Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-customary-to-put-many-closing-parentheses-on-one-line-in-lisp-based-la][here]].
+
 ** edebug
 :PROPERTIES:
 :ID:       4ADAE24A-49F4-47F2-AF5A-B15B8137E714
@@ -10160,6 +10161,19 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :END:
 https://github.com/semiosis/pen.el
 Disscussion [[https://www.reddit.com/r/emacs/comments/zhwhww/comment/izp8rxy/?utm_source=reddit&utm_medium=web2x&context=3][here]].
+** advent
+:PROPERTIES:
+:ID:       198F829A-CAC5-4D05-A965-09B07FF7FF76
+:END:
+/[[https://github.com/keegancsmith/advent/blob/master/advent.el][advent]] is a helper for Advent of Core which downloads today's input and opens  today's question./
+
+[2022-12-12 Mon 22:42] Not working: the repo is not updated.
+
+#+begin_src emacs-lisp :results silent
+(load-file (file-name-concat ps/dir-emacs-local "advent.el"))
+(setq advent-dir "/Users/pablostafforini/Dropbox/source/advent")
+(setq advent-src-name (file-name-concat advent-dir "template/main/py"))
+#+end_src
 
 ** elpy
 :PROPERTIES:
@@ -15529,8 +15543,8 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
   (defun ps/zotra-after-add-entry-function ()
     "Function to trigger with `zotra-after-add-entry-hook'."
-    ;; (revert-buffer nil t)
-    ;; (goto-char (point-max))
+    (revert-buffer nil t)
+    (goto-char (point-max))
     (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)

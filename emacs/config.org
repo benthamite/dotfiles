@@ -10116,12 +10116,15 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :PROPERTIES:
 :ID:       D059F98D-55C4-4D8C-939D-3415FAC6AEB9
 :END:
+/[[https://github.com/joshcho/ChatGPT.el][chatgpt]] communicates with ChatGPT./
+
 #+begin_src emacs-lisp :results silent
 (use-package chatgpt
   :straight (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el"))
   :init
   (setq chatgpt-repo-path "~/.emacs.d/straight/repos/ChatGPT.el/")
-  :bind ("C-c q" . chatgpt-query))
+  :custom
+  (chatgpt-python-interpreter "python3"))q
 #+end_src
 
 ** elpy

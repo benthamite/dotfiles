@@ -1688,21 +1688,21 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("f" (dired ps/dir-dropbox-tlon-fede) "fede")
   ("F" (dired ps/dir-google-drive-tlon-fede) "Google Drive: fede")
   ("g" (dired ps/dir-dropbox-tlon-GPE) "Dropbox: GPE")
-  ("G" (dired ps/dir-Google-drive-tlon-GPE) "Google Drive: GPE")
+  ("G" (dired ps/dir-google-drive-tlon-GPE) "Google Drive: GPE")
   ("h" (dired ps/dir-dropbox-tlon-HEAR) "Dropbox: HEAR")
-  ("H" (dired ps/dir-Google-drive-tlon-HEAR) "Google Drive: HEAR")
+  ("H" (dired ps/dir-google-drive-tlon-HEAR) "Google Drive: HEAR")
   ("i" (dired ps/dir-anki) "Anki")
   ("j" (dired ps/dir-health) "Health")
   ("k" (dired ps/dir-PW) "PW")
   ("l" (dired ps/dir-dropbox-tlon-leo) "Dropbox: leo")
-  ("L" (dired ps/dir-Google-drive-tlon-leo) "Google Drive: leo")
+  ("L" (dired ps/dir-google-drive-tlon-leo) "Google Drive: leo")
   ("m" (hydra-dired-music/body) "Music")
   ("n" (dired ps/dir-notes) "Notes")
   ("o" (dired ps/dir-google-drive) "Google Drive")
   ("p" (dired ps/dir-people) "people")
   ("q" (dired ps/dir-youtube) "youtube")
   ("r" (dired ps/dir-dropbox-tlon-RAE) "Dropbox: RAE")
-  ("R" (dired ps/dir-Google-drive-tlon-RAE) "Google Drive: RAE")
+  ("R" (dired ps/dir-google-drive-tlon-RAE) "Google Drive: RAE")
   ("s" (dired ps/dir-dropbox-FM) "Dropbox: FM")
   ("S" (dired ps/dir-google-drive-FM) "Google Drive: FM")
   ("t" (dired ps/dir-dropbox-tlon) "Dropbox: tlon")
@@ -8715,7 +8715,7 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
 I have configured Ispell to use AppleSpell, the native OSX spell checker, since I don't want to keep two separate personal dictionaries updated. This can be done by following [[http://www.lonecpluspluscoder.com/2021/02/01/setting-up-enchant-for-use-with-f07:15-07:30lyspell-mode-on-macos/][Timo Geusch]]'s simple instructions. Once [[https://abiword.github.io/enchant/][Enchant]] is installed and configured to give priority to AppleSpell, I add the code block below, which tells Ispell to use Enchant if available, and otherwise default to Aspell.
 
 #+begin_src emacs-lisp :results silent
-(use-package flyspell
+(use-feature flyspell
   :demand t
   :after ispell
   :custom
@@ -10112,6 +10112,18 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
    "<backtab>" 'copilot-accept-completion-by-line))
 #+end_src
 
+** chatgpt
+:PROPERTIES:
+:ID:       D059F98D-55C4-4D8C-939D-3415FAC6AEB9
+:END:
+#+begin_src emacs-lisp :results silent
+(use-package chatgpt
+  :straight (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el"))
+  :init
+  (setq chatgpt-repo-path "~/.emacs.d/straight/repos/ChatGPT.el/")
+  :bind ("C-c q" . chatgpt-query))
+#+end_src
+
 ** elpy
 :PROPERTIES:
 :ID:       E96C6026-AEFA-42A1-930E-863EA3FF651E
@@ -10128,6 +10140,14 @@ CLOCK: [2021-11-01 Mon 12:09]--[2021-11-01 Mon 12:10] =>  0:01
   (elpy-rpc-virtualenv-path 'current)
   :config
   (elpy-enable))
+#+end_src
+
+** epc
+:PROPERTIES:
+:ID:       474AA19E-D682-4A5E-9853-845333D82912
+:END:
+#+begin_src emacs-lisp :results silent
+(use-package epc)
 #+end_src
 
 ** eldoc
@@ -11728,6 +11748,7 @@ not already have one."
                 (file-name-nondirectory (buffer-file-name))
                 '("orb-noter-template.org"
                   "tareas.org"
+                  "feeds.org"
                   "calendar.org"
                   ".org2blog.org"
                   "feeds.org"))
@@ -16319,6 +16340,14 @@ without asking for user confirmation."
         (setq user-mail-address ps/personal-gmail))))
 
 
+  (defun ps/mu4e-headers-mark-read-and-archive ()
+    "In headers mode, mark message at point as read and archive
+it, without asking for confirmation."
+    (interactive)
+    (mu4e-headers-mark-for-read)
+    (mu4e-mark-execute-all t)
+    (forward-line -1)
+    (ps/mu4e-headers-archive))
 
   :hook
   (mu4e-view-mode-hook . (lambda () "prevent line breaks" (toggle-truncate-lines 1)))
@@ -16358,6 +16387,7 @@ without asking for user confirmation."
    "d" 'mu4e-headers-mark-for-delete
    "D" 'ps/mu4e-headers-trash
    "e" 'ps/mu4e-headers-archive
+   "E" 'ps/mu4e-headers-mark-read-and-archive
    "f" 'ps/mu4e-headers-view-message
    "k" 'mu4e-headers-prev
    "l" 'mu4e-headers-next

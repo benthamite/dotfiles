@@ -5828,6 +5828,12 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
     (avy-goto-line)
     (dired-find-alternate-file))
 
+    (defun ps/avy-ebib-view-entry ()
+    "In Ebib, view the entry in selected line."
+    (interactive)
+    (avy-goto-line)
+    (ebib-edit-entry))
+    
   (defun ps/mu4e-headers-view-message ()
     "In mu4e, view the message in selected line."
     (interactive)
@@ -5864,6 +5870,8 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
    "C-H-s-l" 'avy-goto-word-1-below)
   (dired-mode-map
    "f" 'ps/avy-dired-find-file)
+   (ebib-index-mode-map
+   "f" 'ps/avy-ebib-view-entry)
   (telega-root-mode-map
    "f" 'ps/avy-telega-view-message)
    (ebib-entry-mode-map
@@ -10017,6 +10025,9 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 :ID:       4ADAE24A-49F4-47F2-AF5A-B15B8137E714
 :END:
 *** Archive                                                       :ARCHIVE:
+:PROPERTIES:
+:ID:       17678075-A57B-43BE-B370-EFB77935BE05
+:END:
 **** DONE [#6] Learn to use ~edebug~
 CLOSED: [2022-12-12 Mon 23:02]
 :PROPERTIES:
@@ -14895,6 +14906,21 @@ The FORCE argument is used as in `ebib-save-current-database'."
 
   (advice-add 'ebib-reload-current-database :override #'ps/ebib-reload-current-database)
 
+  ;; hack to solve the issue whereby hitting `RET' in
+  ;; `ebib-index-mode' sometimes does not edit the entry at point
+  (defun ps/ebib-edit-entry ()
+  "Edit the current BibTeX entry."
+  (interactive)
+  (ebib--execute-when
+    (entries
+     (ebib-prev-entry)
+     (ebib-next-entry)
+     (ebib--edit-entry-internal))
+    (default
+      (beep))))
+
+  (advice-add 'ebib-edit-entry :override #'ps/ebib-edit-entry)
+  
   (defun ps/ebib-reload-current-database-no-confirm ()
     "Reload the current database from disk, without asking for
 confirmation."

@@ -19320,6 +19320,41 @@ The [[https://github.com/dacap/keyfreq][keyfreq]] package track Emacs command fr
   (custom-file (file-name-concat ps/dir-downloads "delete.me") "move unintended customizations to a garbage file"))
 #+end_src
 
+** productivity
+:PROPERTIES:
+:ID:       4C1989D5-13B4-4047-9BAC-C983A7097F45
+:END:
+The following functions, created by [[https://200ok.ch/posts/2022-12-06_how_much_did_you_get_done_today.html][Alain Lafon]], produce a count of the ~TODOs~ added or removed from all agenda files in the last day:
+
+#+begin_src emacs-lisp :results silent
+(defun ps/count-lines-with-expression (s exp)
+  "Count the number of lines in the string S that contain the regular expression EXP."
+  (let ((count 0))
+    (mapc (lambda (line)
+	    (when (string-match-p exp line)
+	      (setq count (+ 1 count))))
+	  (split-string s "\n"))
+    count))
+
+(defun ps/productivity-of-the-day ()
+  (seq-reduce
+   (lambda (acc it)
+     (let* ((folder (file-name-directory it))
+	    (file (file-name-nondirectory it))
+	    (base-cmd (concat "cd "
+			      folder
+			      "; git log --since=midnight -p "
+			      file
+			      "| grep TODO"))
+	    (changed (shell-command-to-string base-cmd))
+	    (added (count-lines-with-expression changed "^\\+"))
+	    (removed (count-lines-with-expression changed "^\\-")))
+       (cons (+ (car acc) added)
+	     (- (cdr acc) removed))))
+   org-agenda-files
+   '(0 . 0)))
+#+end_src
+
 ** Archive                                                         :ARCHIVE:
 :PROPERTIES:
 :ID:       EDC5DFF7-CCA3-4C1B-8E08-9629392A168E

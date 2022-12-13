@@ -99,7 +99,7 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
     - [[https://whatacold.io/blog/2022-07-17-emacs-elisp-debug/][Emacs Debugging Basics - whatacold's space]]
     - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
     - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]]
-      
+
 *** Archive                                                                                                           :ARCHIVE:
 :PROPERTIES:
 :ID:       7A45BBD1-33AD-42BE-BCFC-DC8C86E113F7
@@ -5833,7 +5833,7 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
     (interactive)
     (avy-goto-line)
     (ebib-edit-entry))
-    
+
   (defun ps/mu4e-headers-view-message ()
     "In mu4e, view the message in selected line."
     (interactive)
@@ -10150,8 +10150,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 #+begin_src emacs-lisp :results silent
 (use-package chatgpt
   :straight (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el"))
-  :init
-  (setq chatgpt-repo-path "~/.emacs.d/straight/repos/ChatGPT.el/")
 
   :custom
   (chatgpt-python-interpreter "python3")
@@ -10160,7 +10158,8 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   (google-this-mode-submap
    "g" 'chatgpt-query))
 #+end_src
-[[id:84BEDE21-387D-443A-99D1-DEDCEE5100D7][Joe Carlsmith]]
+
+
 ** pen
 :PROPERTIES:
 :ID:       DEEF7EF7-E79C-427B-9E1D-86D22FC2056E
@@ -14603,7 +14602,7 @@ error."
     actual-key))
 
   (a(advice-add 'ebib--store-entry :override #'ps/ebib--store-entry)
-    
+
   (defvar ps/ebib-isbn-p
     "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
 
@@ -14920,7 +14919,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
       (beep))))
 
   (advice-add 'ebib-edit-entry :override #'ps/ebib-edit-entry)
-  
+
   (defun ps/ebib-reload-current-database-no-confirm ()
     "Reload the current database from disk, without asking for
 confirmation."
@@ -15396,7 +15395,6 @@ first name, and names are separated by a semicolon."
   (ebib-multiline-mode-map
    "s-c" 'ebib-quit-multiline-buffer-and-save)
   (ebib-entry-mode-map
-   "H-q" nil
    "H-s" 'ebib-save-current-database
    "!" 'ebib-generate-autokey
    "," 'ps/ebib-title-case
@@ -18274,6 +18272,28 @@ CLOSED: [2022-07-19 Tue 19:29]
 See [[https://www.emacswiki.org/emacs/TwitteringMode][EmacsWiki: Twittering Mode]].
 
 [2022-07-19 Tue 19:29] This was related to [[id:37064B69-E447-45E8-9C54-84A415521849][pinentry-mac]].
+
+
+** reddit
+:PROPERTIES:
+:ID:       CEDBA9CB-F7FB-4E7F-8CAB-C96812BE1517
+:END:
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package md4rd
+  :custom
+  (md4rd-subs-active '(emacs))
+  (md4rd--oauth-access-token
+   (auth-source-pass-get 'secret "auth-sources/reddit"))
+  (md4rd--oauth-refresh-token
+   (auth-source-pass-get "refresh" "auth-sources/reddit"))
+
+  :config
+  (run-with-timer 0 3540 'md4rd-refresh-login)
+
+  :hook
+  (md4rd-mode-hook . md4rd-indent-all-the-lines))
+#+end_src
+
 ** hugo
 :PROPERTIES:
 :ID:       7C6912C7-B5CB-4A04-8145-A89B891F7A0C
@@ -18381,6 +18401,7 @@ if none."
              return item))
 
   (advice-add 'org-web-tools--get-first-url :override #'ps/org-web-tools--get-first-url)
+  
   :general
   ("s-A-k" 'org-web-tools-insert-link-for-url))
 #+end_src
@@ -18463,13 +18484,14 @@ that duration."
                                                 "mullvad relay set hostname %s; mullvad connect"
                                                 server)))))
     (if duration
-        (message (format "Connected to server %s. Disconnecting in %s minutes." connection duration))
-      (message (format "Connected to server %s." connection)))))
+        (message (format "Connected to Mullvad server %s. Disconnecting in %s minute(s)." connection duration))
+      (message (format "Connected to Mullvad server %s." connection)))))
 
 (defun ps/mullvad-disconnect ()
   "Disconnect from server."
   (interactive)
-  (shell-command "mullvad disconnect"))
+  (shell-command "mullvad disconnect")
+  (message "Disconnected from Mullvad server."))
 
 (defun ps/mullvad-disconnect-after (duration)
   "End connection to Mullvad VPN server after DURATION minutes."

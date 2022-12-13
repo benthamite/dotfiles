@@ -2482,11 +2482,11 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
                              " | "
                              fancy-battery-mode-line
                              " | "
-                             telega-mode-line-format
-                             " | "
-                             (hammy-mode
-                              (:eval
-                               (hammy-mode-lighter)))))
+                             telega-mode-line-format))
+                             ;; " | "
+                             ;; (hammy-mode
+                              ;; (:eval
+                               ;; (hammy-mode-lighter)))))
   (tab-bar-mode ))
 #+end_src
 
@@ -9153,31 +9153,31 @@ text. If invoked with a prefix argument, perform a reverse
 translation."
     (interactive "P")
     (let ((google-translate-default-source-language ps/ispell-language)
-	  (google-translate-default-target-language
-	   (if (string= ps/ispell-language "en")
-	       "es"
-	     "en")))
+          (google-translate-default-target-language
+           (if (string= ps/ispell-language "en")
+               "es"
+             "en")))
       (if arg
-	  (google-translate-at-point-reverse)
-	(google-translate-at-point))))
+          (google-translate-at-point-reverse)
+        (google-translate-at-point))))
 
   ;; modify original function so that it prompts for text to translate
   ;; if region is inactive and no word is at point.
   (defun ps/%google-translate-at-point (override-p reverse-p)
     (let* ((langs (google-translate-read-args override-p reverse-p))
-	   (source-language (car langs))
-	   (target-language (cadr langs))
-	   (bounds nil))
+           (source-language (car langs))
+           (target-language (cadr langs))
+           (bounds nil))
       (google-translate-translate
        source-language target-language
        (cond ((string-equal major-mode "pdf-view-mode") (car (pdf-view-active-region-text)))
-	     ((use-region-p) (buffer-substring-no-properties (region-beginning) (region-end)))
-	     (t (or (and (setq bounds (bounds-of-thing-at-point 'word))
-			 (buffer-substring-no-properties (car bounds) (cdr bounds)))
-		    (google-translate-query-translate nil arg)))))))
-  
+             ((use-region-p) (buffer-substring-no-properties (region-beginning) (region-end)))
+             (t (or (and (setq bounds (bounds-of-thing-at-point 'word))
+                         (buffer-substring-no-properties (car bounds) (cdr bounds)))
+                    (google-translate-query-translate nil arg)))))))
+
   (advice-add '%google-translate-at-point :override #'ps/%google-translate-at-point)
-  
+
   :general
   ("H-A-y" 'ps/google-translate-at-point))
 #+end_src
@@ -10027,7 +10027,7 @@ The video I watched
 - [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Debugging.html][manual]]
 - [[http://tech.memoryimprintstudio.com/debug-emacs-lisp-with-edebug-debug/][Debug Emacs Lisp with Edebug & Debug – Emacs, Arduino, Raspberry Pi, Linux and Programming etc]]
 - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
-  
+
 ** macrostep
 :PROPERTIES:
 :ID:       8AE42CAA-5B62-4B1C-9C7C-DFD72AC5B3CD
@@ -10141,15 +10141,15 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :straight (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el"))
   :init
   (setq chatgpt-repo-path "~/.emacs.d/straight/repos/ChatGPT.el/")
-  
+
   :custom
   (chatgpt-python-interpreter "python3")
-  
+
   :general
   (google-this-mode-submap
    "g" 'chatgpt-query))
 #+end_src
-
+[[id:84BEDE21-387D-443A-99D1-DEDCEE5100D7][Joe Carlsmith]]
 ** pen
 :PROPERTIES:
 :ID:       DEEF7EF7-E79C-427B-9E1D-86D22FC2056E
@@ -14516,6 +14516,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
                         ("Author/Editor" 25 t)
                         ("Year" 4 t)
                         ("Title" 50 t)))
+  (ebib-timestamp-format "%Y-%m-%d %T (%Z)")
 
   :config
   (setq ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "venue" "version" "volumes" "year"))
@@ -14559,6 +14560,26 @@ window and make the frame active,"
 
   (advice-add 'ebib--setup-windows :override #'ps/ebib--setup-windows)
 
+  ;; tweak original function to pass custom arguments to `format-time-string'
+  (defun ps/ebib--store-entry (entry-key fields db &optional timestamp if-exists)
+  "Store the entry defined by ENTRY-KEY and FIELDS into DB.
+Optional argument TIMESTAMP indicates whether a timestamp is to
+be added to the entry.  Note that for a timestamp to be added,
+`ebib-use-timestamp' must also be set to T. IF-EXISTS is as for
+`ebib-db-set-entry'.
+
+If storing the entry was successful, return the key under which
+the entry is actually stored (which, if IF-EXISTS is `uniquify',
+may differ from ENTRY-KEY); otherwise return nil.  Depending on
+the value of IF-EXISTS, storing an entry may also result in an
+error."
+  (let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
+    (when (and actual-key timestamp ebib-use-timestamp)
+      (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format nil "GMT") actual-key db 'overwrite))
+    actual-key))
+
+  (a(advice-add 'ebib--store-entry :override #'ps/ebib--store-entry)
+    
   (defvar ps/ebib-isbn-p
     "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
 
@@ -14876,7 +14897,7 @@ confirmation."
       (default
         (beep))))
 
-(defun ps/ebib-attach-file (&optional most-recent)
+  (defun ps/ebib-attach-file (&optional most-recent)
     "Prompt the user for a file to attach to the current entry.
 
 If MOST-RECENT is non-nil, attach the most recent file instead."
@@ -15252,7 +15273,7 @@ first name, and names are separated by a semicolon."
     "Toggle between sorting by date and sorting by title."
     (interactive)
     (unless (string= (ebib-db-get-filename ebib--cur-db) ps/file-bibliography-new)
-      (user-error (format "This command only works on database `%s'"
+      (user-error (format "Due to performane issues, this command only works on database `%s'"
                           (file-name-nondirectory ps/file-bibliography-new))))
     (setq ps/ebib-sort-toggle (not ps/ebib-sort-toggle))
     (let ((field (if ps/ebib-sort-toggle
@@ -15510,7 +15531,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     "Function to trigger with `zotra-after-add-entry-hook'."
     ;; (revert-buffer nil t)
     ;; (goto-char (point-max))
-    (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format))
+    (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
     (save-buffer)
@@ -19349,26 +19370,26 @@ The following functions, created by [[https://200ok.ch/posts/2022-12-06_how_much
   "Count the number of lines in the string S that contain the regular expression EXP."
   (let ((count 0))
     (mapc (lambda (line)
-	    (when (string-match-p exp line)
-	      (setq count (+ 1 count))))
-	  (split-string s "\n"))
+            (when (string-match-p exp line)
+              (setq count (+ 1 count))))
+          (split-string s "\n"))
     count))
 
 (defun ps/productivity-of-the-day ()
   (seq-reduce
    (lambda (acc it)
      (let* ((folder (file-name-directory it))
-	    (file (file-name-nondirectory it))
-	    (base-cmd (concat "cd "
-			      folder
-			      "; git log --since=midnight -p "
-			      file
-			      "| grep TODO"))
-	    (changed (shell-command-to-string base-cmd))
-	    (added (count-lines-with-expression changed "^\\+"))
-	    (removed (count-lines-with-expression changed "^\\-")))
+            (file (file-name-nondirectory it))
+            (base-cmd (concat "cd "
+                              folder
+                              "; git log --since=midnight -p "
+                              file
+                              "| grep TODO"))
+            (changed (shell-command-to-string base-cmd))
+            (added (count-lines-with-expression changed "^\\+"))
+            (removed (count-lines-with-expression changed "^\\-")))
        (cons (+ (car acc) added)
-	     (- (cdr acc) removed))))
+             (- (cdr acc) removed))))
    org-agenda-files
    '(0 . 0)))
 #+end_src

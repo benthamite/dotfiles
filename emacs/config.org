@@ -10136,10 +10136,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :PROPERTIES:
 :ID:       DEEF7EF7-E79C-427B-9E1D-86D22FC2056E
 :END:
-*** TODO sdfsdf
-:PROPERTIES:
-:ID:       E1E32C07-D745-4A9C-AAA6-B52C11881C4E
-:END:
 *** TODO Check out pen.el
 :PROPERTIES:
 :ID:       2743B1F0-CCA8-4F48-8DC4-EF93E1A4607F

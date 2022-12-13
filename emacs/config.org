@@ -76,7 +76,7 @@ CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
 
-** Debugging                                                      :noexport:
+** Debugging the config file                                      :noexport:
 :PROPERTIES:
 :ID:       ED2955EA-3BD8-4058-A973-3CC87847D9A5
 :END:
@@ -98,6 +98,8 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
     - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
     - [[https://whatacold.io/blog/2022-07-17-emacs-elisp-debug/][Emacs Debugging Basics - whatacold's space]]
     - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
+    - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]]
+      
 *** Archive                                                                                                           :ARCHIVE:
 :PROPERTIES:
 :ID:       7A45BBD1-33AD-42BE-BCFC-DC8C86E113F7

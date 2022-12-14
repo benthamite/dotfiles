@@ -9157,7 +9157,7 @@ CLOCK: [2021-05-31 Mon 21:27]--[2021-05-31 Mon 21:41] =>  0:14
 
   (setq google-translate-backend-method 'curl)
 
-  (defun ps/google-translate-dwim (&optional arg)
+  (defun ps/google-translate-dwim (&optional reverse-p)
     "Translate region if active, word if at point, else prompt for
 text. If invoked with a prefix argument, perform a reverse
 translation."
@@ -9167,9 +9167,26 @@ translation."
            (if (string= ps/ispell-language "en")
                "es"
              "en")))
-      (if arg
+      (if reverse-p
           (google-translate-at-point-reverse)
         (google-translate-at-point))))
+
+  ;; modify original function so that it prompts for text to translate
+  ;; if region is inactive and no word is at point.
+  (defun ps/%google-translate-at-point (override-p reverse-p)
+    (let* ((langs (google-translate-read-args override-p reverse-p))
+           (source-language (car langs))
+           (target-language (cadr langs))
+           (bounds nil))
+      (google-translate-translate
+       source-language target-language
+       (cond ((string-equal major-mode "pdf-view-mode") (car (pdf-view-active-region-text)))
+             ((use-region-p) (buffer-substring-no-properties (region-beginning) (region-end)))
+             (t (or (and (setq bounds (bounds-of-thing-at-point 'word))
+                         (buffer-substring-no-properties (car bounds) (cdr bounds)))
+                    (google-translate-query-translate)))))))
+
+  (advice-add '%google-translate-at-point :override #'ps/%google-translate-at-point)
 
   :general
   ("H-A-y" 'ps/google-translate-dwim))
@@ -14584,7 +14601,7 @@ error."
       (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format nil "GMT") actual-key db 'overwrite))
     actual-key))
 
-  (a(advice-add 'ebib--store-entry :override #'ps/ebib--store-entry)
+  (advice-add 'ebib--store-entry :override #'ps/ebib--store-entry)
 
   (defvar ps/ebib-isbn-p
     "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
@@ -16879,7 +16896,7 @@ CLOCK: [2022-04-27 Wed 09:42]--[2022-04-27 Wed 09:49] =>  0:07
 :END:
 /[[https://github.com/hniksic/emacs-htmlize][htmlize]] converts buffer text and decorations to HTML./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package htmlize
   :custom
   (htmlize-ignore-face-size nil))

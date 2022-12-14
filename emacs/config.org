@@ -14572,7 +14572,7 @@ window and make the frame active,"
 
   ;; tweak original function to pass custom arguments to `format-time-string'
   (defun ps/ebib--store-entry (entry-key fields db &optional timestamp if-exists)
-  "Store the entry defined by ENTRY-KEY and FIELDS into DB.
+    "Store the entry defined by ENTRY-KEY and FIELDS into DB.
 Optional argument TIMESTAMP indicates whether a timestamp is to
 be added to the entry.  Note that for a timestamp to be added,
 `ebib-use-timestamp' must also be set to T. IF-EXISTS is as for
@@ -14583,10 +14583,10 @@ the entry is actually stored (which, if IF-EXISTS is `uniquify',
 may differ from ENTRY-KEY); otherwise return nil.  Depending on
 the value of IF-EXISTS, storing an entry may also result in an
 error."
-  (let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
-    (when (and actual-key timestamp ebib-use-timestamp)
-      (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format nil "GMT") actual-key db 'overwrite))
-    actual-key))
+    (let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
+      (when (and actual-key timestamp ebib-use-timestamp)
+        (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format nil "GMT") actual-key db 'overwrite))
+      actual-key))
 
   (advice-add 'ebib--store-entry :override #'ps/ebib--store-entry)
 
@@ -14895,15 +14895,15 @@ The FORCE argument is used as in `ebib-save-current-database'."
   ;; hack to solve the issue whereby hitting `RET' in
   ;; `ebib-index-mode' sometimes does not edit the entry at point
   (defun ps/ebib-edit-entry ()
-  "Edit the current BibTeX entry."
-  (interactive)
-  (ebib--execute-when
-    (entries
-     (ebib-prev-entry)
-     (ebib-next-entry)
-     (ebib--edit-entry-internal))
-    (default
-      (beep))))
+    "Edit the current BibTeX entry."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (ebib-prev-entry)
+       (ebib-next-entry)
+       (ebib--edit-entry-internal))
+      (default
+        (beep))))
 
   (advice-add 'ebib-edit-entry :override #'ps/ebib-edit-entry)
 
@@ -14982,8 +14982,10 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
                (ebib-set-field-value field file-name key ebib--cur-db ";")))
            (ebib--store-multiline-text (current-buffer))
            (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field))
-	 (ebib-save-current-database t)))
+           (ebib--redisplay-index-item field)
+           (ebib-save-current-database t)
+	   (when (string= extension "pdf")
+             (ps/ebib-open-pdf-file)))))
       (default
         (beep))))
 
@@ -18389,7 +18391,7 @@ if none."
              return item))
 
   (advice-add 'org-web-tools--get-first-url :override #'ps/org-web-tools--get-first-url)
-  
+
   :general
   ("s-A-k" 'org-web-tools-insert-link-for-url))
 #+end_src

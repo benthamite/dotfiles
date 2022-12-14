@@ -12765,7 +12765,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   (org2blog/wp-track-posts (list ps/file-org2blog "Posts"))
 
   :config
-  ;; (load-file "/Users/pablostafforini/.emacs.d/straight/repos/org2blog/org2blog.el")
+  ;; (load-file "/Users/pablostafforini/.emacs.d/straight/repos/org2blog/org2blog.el")=
   (defun ps/org2blog-move-tags-to-drawer ()
     "Convert org-mode tags to values of the property `POST_TAGS' in
 an org drawer."

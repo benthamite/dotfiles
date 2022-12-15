@@ -17678,20 +17678,6 @@ CLOCK: [2021-03-29 Mon 21:25]--[2021-03-29 Mon 21:41] =>  0:16
    "s-<return>" 'w3m-view-url-with-browse-url)) ; open externally
 #+end_src
 
-** osa-chrome
-:PROPERTIES:
-:ID:       5C3B8730-761F-43D1-A483-C98523D6F3AD
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-11 Mon 12:33]--[2022-07-11 Mon 12:37] =>  0:04
-:END:
-
-Requires emacs-mac.
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package osa-chrome
-  :demand t)
-#+end_src
-
 ** elfeed
 :PROPERTIES:
 :ID:       FF5DDBC3-ABB6-48A9-9B47-BC9A18F532D5

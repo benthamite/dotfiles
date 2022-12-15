@@ -8,6 +8,22 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** osa-chrome
+:PROPERTIES:
+:ID:       5C3B8730-761F-43D1-A483-C98523D6F3AD
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-11 Mon 12:33]--[2022-07-11 Mon 12:37] =>  0:04
+:END:
+
+Requires emacs-mac.
+
+[2022-12-14 Wed 21:52] Not using.
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package osa-chrome
+  :demand t)
+#+end_src
+
 ** vlc
 :PROPERTIES:
 :ID:       AE13808C-BA71-4901-BC7D-16DA4D563813

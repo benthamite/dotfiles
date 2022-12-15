@@ -7430,16 +7430,17 @@ Currently history clears after Emacs is restarted.
   :custom
   ;; emacs.stackexchange.com/a/12318/32089
   (query-replace-from-history-variable 'regexp-search-ring)
+  
   :general
   (isearch-mode-map
-   "C-A-e" 'query-replace-regexp))
+   "A-C-e" 'query-replace-regexp))
 #+end_src
 
 ** visual-regexp
 :PROPERTIES:
 :ID:       0DE5075B-AC82-4AB3-9B0A-3D84DC6CF942
 :END:
-/~visual-regexp~ provides visual feedback to regexp search and replace./
+/[[https://github.com/benma/visual-regexp.el][visual-regexp]] provides visual feedback to regexp search and replace./
 
 #+begin_src emacs-lisp :results silent
 (use-package visual-regexp)
@@ -7449,10 +7450,16 @@ Currently history clears after Emacs is restarted.
 :PROPERTIES:
 :ID:       375D8037-D6A0-4519-A3B2-32E88810DA6D
 :END:
+/[[https://github.com/benma/visual-regexp-steroids.el/][visual-regexp-steroids]] extends [[id:0DE5075B-AC82-4AB3-9B0A-3D84DC6CF942][visual-regexp]] to support additional regexp engines./
+
 #+begin_src emacs-lisp :results silent
 (use-package visual-regexp-steroids
   :after visual-regexp
   :demand t
+  :custom
+  (vr/engine 'python)
+  (vr/command-python "python3 /Users/pablostafforini/.emacs.d/straight/build/visual-regexp-steroids/regexp.py")
+  
   :general
   (isearch-mode-map
    "A-C-s" 'vr/isearch-forward

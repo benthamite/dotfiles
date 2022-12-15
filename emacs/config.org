@@ -7116,11 +7116,12 @@ To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. Tha
 :ID:       E0DBC2C7-47F4-41AC-982A-23E139F3B1AC
 :END:
 
-1. clone repository (~C~)
+1. clone repository (~M-x magit-clone~, ~u~)
 2. fork repository (~N c f~)
      1. accept defaults in both prompts
 3. add remote (~N a~)
      1. give it any name, e.g. ~mine~
+     2. pull individual topics, unless you want to pull all
 4. create branch (~b c~)
      1. first select ~master~, then name your branch, e.g. ~fix/supply-missing-arguments-to-eaf-read-input~
 5. make changes
@@ -14993,7 +14994,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
            (ebib--redisplay-field field)
            (ebib--redisplay-index-item field)
            (ebib-save-current-database t)
-	   (when (string= extension "pdf")
+           (when (string= extension "pdf")
              (ps/ebib-open-pdf-file)))))
       (default
         (beep))))
@@ -17853,7 +17854,8 @@ poorly-designed websites."
     (switch-to-buffer buffer))
 
   ;; update feeds every five mins, starting one min after startup
-  (run-at-time 100 600 'ps/elfeed-full-update)
+  ;; UPFATE: disabling to diagnose freezes
+  ;; (run-at-time 100 600 'ps/elfeed-full-update)
 
   :general
   ;; ("A-f" (lambda! (elfeed) (ps/elfeed-full-update)))
@@ -18678,7 +18680,6 @@ CLOCK: [2021-05-19 Wed 11:26]--[2021-05-19 Wed 12:23] =>  0:57
    "s" 'smudge-track-search
    "t" 'smudge-track-artist-select
    "y" 'smudge-playlist-search
-   "," 'end-of-buffer
    "." 'ps/smudge-track-load-more)
   (smudge-playlist-search-mode-map
    "RET" 'smudge-track-select
@@ -18689,7 +18690,6 @@ CLOCK: [2021-05-19 Wed 11:26]--[2021-05-19 Wed 12:23] =>  0:57
    "s" 'smudge-track-search
    "t" 'smudge-track-artist-select
    "y" 'smudge-playlist-search
-   "," 'end-of-buffer
    "." 'ps/smudge-track-load-more))
 #+end_src
 

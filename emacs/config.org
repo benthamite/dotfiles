@@ -7191,7 +7191,14 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 [2022-08-29 Mon 17:02] To check at some point.
 
 #+begin_src emacs-lisp :results silent
-(use-package code-review)
+(use-package code-review
+  :custom
+  (code-review-fill-column 80)
+  (code-review-new-buffer-window-strategy #'switch-to-buffer)
+  (code-review-auth-login-marker 'forge)
+  
+  :hook
+  (code-review-mode-hook . emojify-mode))
 #+end_src
 
 ** projectile
@@ -7247,7 +7254,6 @@ CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
   (setq-default gac-silent-message-p t)
   (setq-default gac-automatically-add-new-files-p t))
 #+end_src
-
 
 ** git-gutter
 :PROPERTIES:

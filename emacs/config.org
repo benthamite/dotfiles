@@ -10158,6 +10158,8 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   (copilot-node-executable "/opt/homebrew/opt/node@16/bin/node")
 
   :hook
+  (telega-chat-mode-hook . copilot-mode)
+  (text-mode-hook . copilot-mode)
   (prog-mode-hook . copilot-mode)
   (emacs-lisp-mode-hook . copilot-mode)
 

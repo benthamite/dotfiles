@@ -17326,7 +17326,7 @@ CLOCK: [2021-04-11 Sun 14:18]--[2021-04-11 Sun 14:36] =>  0:18
 CLOCK: [2021-04-07 Wed 12:41]--[2021-04-07 Wed 12:42] =>  0:01
 CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 :END:
-/[[https://github.com/yuya373/emacs-slack][Slack]] is a Slack client for Emacs./
+/[[https://github.com/yuya373/emacs-slack][slack]] is a Slack client for Emacs./
 
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package slack

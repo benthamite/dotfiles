@@ -7430,7 +7430,7 @@ Currently history clears after Emacs is restarted.
   :custom
   ;; emacs.stackexchange.com/a/12318/32089
   (query-replace-from-history-variable 'regexp-search-ring)
-  
+
   :general
   (isearch-mode-map
    "A-C-e" 'query-replace-regexp))
@@ -7459,7 +7459,7 @@ Currently history clears after Emacs is restarted.
   :custom
   (vr/engine 'python)
   (vr/command-python "python3 /Users/pablostafforini/.emacs.d/straight/build/visual-regexp-steroids/regexp.py")
-  
+
   :general
   (isearch-mode-map
    "A-C-s" 'vr/isearch-forward
@@ -10176,6 +10176,10 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 #+begin_src emacs-lisp :results silent
 (use-package chatgpt
   :straight (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el"))
+
+  :init
+  (require 'python)
+  (setq chatgpt-repo-path "~/.emacs.d/straight/repos/ChatGPT.el/")
 
   :custom
   (chatgpt-python-interpreter "python3")

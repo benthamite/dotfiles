@@ -1706,7 +1706,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("r" (dired ps/dir-dropbox-tlon-RAE) "Dropbox: RAE")
   ("R" (dired ps/dir-google-drive-tlon-RAE) "Google Drive: RAE")
   ("s" (dired ps/dir-dropbox-FM) "Dropbox: FM")
-  ("S" (dired ps/dir-google-drive-FM) "Google Drive: FM")
+  ("S" (dired ps/dir-google-drive-tlon-FM) "Google Drive: FM")
   ("t" (dired ps/dir-dropbox-tlon) "Dropbox: tlon")
   ("T" (dired ps/dir-google-drive-tlon) "Google Drive: tlon")
   ("u" (dired ps/dir-dropbox-tlon-EAN) "Dropbox: EAN")
@@ -1724,6 +1724,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("SPC" (dired "~/") "user")
   (";" (dired-jump) "Current buffer")
   ("H-;" (dired-jump-other-window) "Current buffer in other window"))
+  
 (defhydra hydra-dired-google-drive
   (:exit t)
   "Dired folders: apps"

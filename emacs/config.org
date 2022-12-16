@@ -9737,6 +9737,7 @@ CLOCK: [2021-07-25 Sun 15:35]--[2021-07-25 Sun 15:42] =>  0:07
 CLOCK: [2021-06-10 Thu 19:08]--[2021-06-10 Thu 19:20] =>  0:12
 CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :END:
+/[[https://github.com/vedang/pdf-tools][pdf-tools]] is a support library for PDF files./
 
 #+begin_src emacs-lisp :results silent
 (use-package pdf-tools
@@ -12776,7 +12777,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   (org2blog/wp-track-posts (list ps/file-org2blog "Posts"))
 
   :config
-  ;; (load-file "/Users/pablostafforini/.emacs.d/straight/repos/org2blog/org2blog.el")=
+  ;; (load-file "/Users/pablostafforini/.emacs.d/straight/repos/org2blog/org2blog.el")
   (defun ps/org2blog-move-tags-to-drawer ()
     "Convert org-mode tags to values of the property `POST_TAGS' in
 an org drawer."
@@ -18159,7 +18160,7 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
 /[[https://github.com/hayamiz/twittering-mode][twittering-mode]] is a Twitter client for Emacs./
 
 #+begin_src emacs-lisp :results silent
-(defalias 'epa--decode-coding-string 'decode-coding-string) ; https://github.com/sfromm/emacs.d#twitter
+(defalias 'epa--decode-coding-string 'decode-coding-string) ; github.com/sfromm/emacs.d#twitter
 (use-package twittering-mode
   :if (equal (system-name) ps/computer-hostname-pablo)
   :custom
@@ -18204,7 +18205,6 @@ account."
   (defun ps/twittering-future-matters ()
     "Start a `twittering-mode' session with the `futurematters_'
 account."
-    (interactive)
     (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-future-matters.gpg"))
     (ps/twittering-reload))
 
@@ -18247,6 +18247,30 @@ account."
     (interactive)
     (twittering-push-uri-onto-kill-ring)
     (org-capture nil "ln"))
+
+  ;; what follows copied from github.com/sfromm/emacs.d#twitter
+  (defun ps/twittering-toggle-icons ()
+    "Toggle use of icons in twittering mode."
+    (interactive)
+    (if (eq twittering-icon-mode t)
+        (twittering-icon-mode nil)
+      (twittering-icon-mode t)))
+
+    (defun ps/twittering-add-image-format (format-table-func status-sym prefix-sym)
+    "Adds the I format code to display images in the twittering-mode format table."
+    (let ((format-table (funcall format-table-func status-sym prefix-sym)))
+      (push `("I" .
+              (let* ((entities (cdr (assq 'entity ,status-sym)))
+                     text)
+                (mapc (lambda (url-info)
+                        (setq text (or (cdr (assq 'media-url url-info)) "")))
+                      (cdr (assq 'media entities)))
+                (if (string-equal "" text)
+                    text
+                  (let ((twittering-convert-fix-size 720))
+                    (twittering-make-icon-string nil nil text))))) format-table)))
+
+  (advice-add #'twittering-generate-format-table :around #'ps/twittering-add-image-format)
 
   :general
   ("A-t" 'ps/twittering-account-select)

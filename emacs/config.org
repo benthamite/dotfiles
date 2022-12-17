@@ -4799,13 +4799,13 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
     (interactive)
     (when (equal major-mode 'dired-mode)
       (if (or (not (boundp 'dired-dotfiles-show-p)) dired-dotfiles-show-p) ; if currently showing
-          (progn
-            (set (make-local-variable 'dired-dotfiles-show-p) nil)
-            (message "h")
-            (dired-mark-files-regexp "^\\\.")
-            (dired-do-kill-lines))
-        (progn (revert-buffer) ; otherwise just revert to re-show
-               (set (make-local-variable 'dired-dotfiles-show-p) t)))))
+	  (progn
+	    (set (make-local-variable 'dired-dotfiles-show-p) nil)
+	    (message "h")
+	    (dired-mark-files-regexp "^\\\.")
+	    (dired-do-kill-lines))
+	(progn (revert-buffer) ; otherwise just revert to re-show
+	       (set (make-local-variable 'dired-dotfiles-show-p) t)))))
 
   (defun ps/dired-mark-screenshots ()
     "Mark all screenshot files."
@@ -4836,9 +4836,9 @@ marked, copy file at point instead."
       (:around (old-fun &rest r) kill-dired-buffer-quietly)
     (define-advice y-or-n-p (:around (old-fun prompt) just-yes)
       (if (or (string-prefix-p "Kill Dired buffer" prompt)
-              (string-prefix-p "Kill buffer of" prompt))
-          t
-        (funcall old-fun prompt)))
+	      (string-prefix-p "Kill buffer of" prompt))
+	  t
+	(funcall old-fun prompt)))
     (unwind-protect (apply old-fun r)
       (advice-remove 'y-or-n-p #'y-or-n-p@just-yes)))
 
@@ -4851,6 +4851,21 @@ option."
     (cl-letf (((symbol-function 'system-move-file-to-trash) nil))
       (dired-do-delete arg)))
 
+  ;; emacs.stackexchange.com/a/60663/32089
+  (defun ps/dired-duplicate-this-file ()
+    "Duplicate file at point."
+    (interactive)
+    (let* ((existing-file (dired-get-filename t))
+	   (existing-file-stem (file-name-sans-extension existing-file))
+	   (existing-file-extension (file-name-extension existing-file))
+	   (counter 1)
+	   (new-file (format "%s[%d].%s" existing-file-stem counter existing-file-extension)))
+      (while (file-exists-p new-file)
+	(setq counter (1+ counter)
+	      new-file (format "%s[%d].%s" existing-file-stem counter existing-file-extension)))
+      (copy-file existing-file new-file))
+    (revert-buffer))
+
   :hook
   (dired-mode-hook . dired-hide-details-mode) ; hide details by default
 
@@ -4858,7 +4873,7 @@ option."
   (dired-mode-map
    "<tab>" 'ps/dired-subtree-toggle
    "," 'ps/dired-up-directory-reuse
-   ";" 'dired-do-rename
+   ";" 'dired-do-renamed
    "-" 'dired-hide-details-mode
    "." 'dired-find-alternate-file
    "'" 'ps/dired-copy-filename-as-kill-absolute

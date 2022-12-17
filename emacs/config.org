@@ -7119,10 +7119,13 @@ To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. Tha
 :PROPERTIES:
 :ID:       18842ACD-AD1A-4940-866B-C8E27150D7BB
 :END:
-1. call ~magit-status~ from the relevant directory (~A-g~)
+1. ~magit-status~ from the relevant directory (~A-g~)
 2. make the commits
-3. call ~format-patches~ (~W~)
-4. 
+3. ~format-patches~ (~W~)
+4. ~save diff as patch~ (~s~)
+   # I think this is the right command but I'm not sure
+   # It has to be a command that generates a .patch file
+   
 *** pull request workflow
 :PROPERTIES:
 :ID:       E0DBC2C7-47F4-41AC-982A-23E139F3B1AC

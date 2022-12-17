@@ -1724,7 +1724,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("SPC" (dired "~/") "user")
   (";" (dired-jump) "Current buffer")
   ("H-;" (dired-jump-other-window) "Current buffer in other window"))
-  
+
 (defhydra hydra-dired-google-drive
   (:exit t)
   "Dired folders: apps"
@@ -2117,7 +2117,7 @@ I didn't quite accomplish what I wanted, since I am still not able to control th
 CLOCK: [2022-05-04 Wed 19:52]--[2022-05-04 Wed 19:54] =>  0:02
 CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 :END:
-
+mixed-pitch is 
 #+begin_src emacs-lisp :results silent
 (use-package mixed-pitch
   :demand t
@@ -7557,20 +7557,6 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
   :config
   (vertico-multiform-mode)
 
-  ;; github.com/minad/vertico/wiki#additions-for-moving-up-and-down-directories-in-find-file
-  (defun ps/vertico-directory-delete-entry ()
-  "Delete directory or entire entry before point."
-  (interactive)
-  (when (and (> (point) (minibuffer-prompt-end))
-             ;; Check vertico--base for stepwise file path completion
-             (not (equal vertico--base ""))
-             (eq 'file (vertico--metadata-get 'category)))
-    (save-excursion
-      (goto-char (1- (point)))
-      (when (search-backward "/" (minibuffer-prompt-end) t)
-        (delete-region (1+ (point)) (point-max))
-        t))))
-
   :custom
   (vertico-multiform-commands
          '((consult-line buffer)
@@ -7583,11 +7569,14 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
    '((file grid)))
   (vertico-cycle t)
   (vertico-count 16)
+  (vertico-quick1 avy-keys)
+  (vertico-quick2 avy-keys)
 
   :general
   (vertico-map
    "<C-i>" 'vertico-exit
-   "C-H-M-w" 'ps/vertico-directory-delete-entry))
+   "M-f" 'vertico-quick-exit
+   "C-H-M-w" 'vertico-directory-up))
 #+end_src
 
 
@@ -7657,15 +7646,11 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 (use-package consult
   :demand t
   :custom
-  ;; replace `rg' with `rga'`
+  ;; replace `rg' with `rga'
   (consult-ripgrep-args "rga --null --line-buffered --color=never --max-columns=1000 --path-separator /   --smart-case --no-heading --line-number .")
   (consult-locate-args "mdfind")
   (consult-narrow-key "<")
   (consult-widen-key ">")
-  ;; TODO: Configure mode histories
-  (consult-mode-histories '(eshell-mode . eshell-history-ring)
-			  (comint-mode . comint-input-ring)
-			  (term-mode . term-input-ring))
 
   :config
   (defun ps/consult-locate-current ()
@@ -7754,8 +7739,8 @@ By default, all agenda entries are offered. MATCH is as in
     (find-file
      (consult--read
       (or (mapcar #'abbreviate-file-name
-		  (consult--recent-files-sort (f-entries dir)))
-	  (user-error "No recent files"))
+                  (consult--recent-files-sort (f-entries dir)))
+          (user-error "No recent files"))
       :prompt "Find recent file: "
       :sort nil
       :require-match t
@@ -8013,6 +7998,27 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 :END:
 [2022-10-04 Tue 18:38] Disabling until I configure it properly.
 
+#+begin_src emacs-lisp :results silent
+(use-package cape
+  :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-yasnippet)
+  (add-to-list 'completion-at-point-functions #'cape-history)
+  (add-to-list 'completion-at-point-functions #'cape-abbrev)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  (add-to-list 'completion-at-point-functions #'cape-ispell)
+  (add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;; (add-to-list 'completion-at-point-functions #'cape-tex)
+  ;; (add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;; (add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;; (add-to-list 'completion-at-point-functions #'cape-dict)
+  ;; (add-to-list 'completion-at-point-functions #'cape-line)
+  )
+#+end_src
+
+
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package cape
   :after corfu
@@ -8037,7 +8043,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
           (add-to-list 'completion-at-point-functions element))))
     (setq corfu-auto nil))
 
-  ;; Eshellzz
+  ;; Eshell
   (defun ps/cape-capf-setup-eshell ()
     (let ((result))
       (dolist (element '(pcomplete-completions-at-point cape-file) result)
@@ -8083,16 +8089,15 @@ Additionally, add `cape-file' as early as possible to the list."
   (git-commit-mode-hook . ps/cape-capf-setup-git-commit))
 #+end_src
 
-** company
+** cape-yasnippet
 :PROPERTIES:
-:ID:       978C4165-514C-4F1E-BD7B-83BFF7C7F497
+:ID:       E1783BB4-D7BD-4264-B490-5E2F903CCCA7
 :END:
-Preserved for yasnippet backend only.
-
 #+begin_src emacs-lisp :results silent
-(use-package company
-  :after corfu
-  :demand t)
+(use-package cape-yasnippet
+  :straight (cape-yasnippet
+             :host github
+             :repo "elken/cape-yasnippet"))
 #+end_src
 
 * help
@@ -12724,23 +12729,21 @@ The packages [[https://github.com/alphapapa/org-ql][org-ql]] and ~helm-org-ql~ o
     (org-ql-find org-agenda-files :query-prefix "!tags:ARCHIVE")))
 #+end_src
 
-** org-superstar
+** org-modern
 :PROPERTIES:
-:ID:       12BD56CF-07AA-4700-A07D-F36524BF8649
+:ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
 :END:
-:LOGBOOK:
-CLOCK: [2021-11-16 Tue 15:54]--[2021-11-16 Tue 16:12] =>  0:18
-:END:
+/[[https://github.com/minad/org-modern][org-modern]] prettifies org mode./
 
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package org-superstar
+#+begin_src emacs-lisp :results silent
+(use-package org-modern
   :custom
-  (org-superstar-headline-bullets-list '(9673 9673 9673 9673))
-  (org-superstar-item-bullet-alist '((42 . "○")
-                                     (43 . "○")
-                                     (45 . "○")))
-  :hook
-  (org-mode-hook . org-superstar-mode))
+  (org-modern-star '("◉" "◉" "◉" "◉" "◉"))
+  (org-modern-list '((42 . "○")
+                     (43 . "○")
+                     (45 . "○")))
+  :config
+  (global-org-modern-mode))
 #+end_src
 
 ** org2blog

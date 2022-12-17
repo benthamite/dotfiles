@@ -4,3 +4,7 @@
 --input-date-format %Y-%m-%d
 --date-format %Y-%m-%d
 --start-of-week=mon
+--sort date
+--no-pager
+--strict
+--no-color

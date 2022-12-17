@@ -1880,7 +1880,9 @@ Done. See [[https://stackoverflow.com/a/21493693/4479455][here]].
 (use-feature warnings
   :demand t
   :config
-  (add-to-list 'warning-suppress-types '(yasnippet backquote-change)))
+  (dolist (element '((comp)
+                     (yasnippet backquote-change)))
+    (add-to-list 'warning-suppress-types element)))
 #+end_src
 
 ** comp
@@ -2012,108 +2014,6 @@ CLOCK: [2021-03-28 Sun 19:21]--[2021-03-28 Sun 19:35] =>  0:14
 (add-to-list 'default-frame-alist '(fullscreen . maximized)) ; start Emacs maximized
 #+end_src
 
-** faces
-:PROPERTIES:
-:ID:       168A61B0-4580-443D-B04F-78F08EFA0458
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-04 Wed 10:45]--[2022-05-04 Wed 11:00] =>  0:15
-CLOCK: [2021-11-17 Wed 19:48]--[2021-11-17 Wed 19:57] =>  0:09
-CLOCK: [2021-11-17 Wed 11:27]--[2021-11-17 Wed 11:38] =>  0:11
-CLOCK: [2021-11-16 Tue 16:27]--[2021-11-16 Tue 17:55] =>  1:28
-CLOCK: [2021-08-19 Thu 19:18]--[2021-08-19 Thu 19:31] =>  0:13
-CLOCK: [2021-03-28 Sun 21:05]--[2021-03-28 Sun 21:21] =>  0:16
-CLOCK: [2021-02-27 Sat 18:27]--[2021-02-27 Sat 18:32] =>  0:05
-CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
-:END:
-The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8A86-F7F6ADFD46C7][mixed-pitch]] package.
-
-
-#+begin_src emacs-lisp :results silent
-(defun ps/custom-faces ()
-  "My custom faces, to be used in conjunction with theme."
-  (set-face-attribute 'default nil
-                      :family ps/face-fixed-pitch
-                      :height 115)
-  (set-face-attribute 'fixed-pitch nil
-                      :family ps/face-fixed-pitch
-                      :height 1.0)
-  (set-face-attribute 'org-drawer nil
-                      :foreground "LightSkyBlue"
-                      :family ps/face-fixed-pitch
-                      :height 0.7)
-  (set-face-attribute 'org-property-value nil
-                      :family ps/face-fixed-pitch
-                      :height 0.8)
-  (set-face-attribute 'org-todo nil
-                      :height 1.0)
-  (set-face-attribute 'org-archived nil
-                      :height 0.9)
-  (set-face-attribute 'org-document-title nil
-                      :underline t
-                      :height 1.0)
-  (set-face-attribute 'org-special-keyword nil
-                      :family ps/face-fixed-pitch
-                      :height 0.8)
-  (set-face-attribute 'org-tag nil
-                      :height 0.9)
-  (set-face-attribute 'org-level-1 nil
-                      :family ps/face-fixed-pitch
-                      :height 0.9)
-  (set-face-attribute 'org-level-2 nil
-                      :family ps/face-fixed-pitch
-                      :height 0.9)
-  (set-face-attribute 'org-level-3 nil
-                      :family ps/face-fixed-pitch
-                      :height 0.9)
-  (set-face-attribute 'org-level-4 nil
-                      :family ps/face-fixed-pitch
-                      :height 0.9)
-  (set-face-attribute 'org-level-5 nil
-                      :family ps/face-fixed-pitch
-                      :height 0.9)
-  (set-face-attribute 'org-level-6 nil
-                      :family ps/face-fixed-pitch
-                      :height 0.9)
-  (set-face-attribute 'org-level-7 nil
-                      :family ps/face-fixed-pitch
-                      :height 0.9)
-  (set-face-attribute 'org-level-8 nil
-                      :family ps/face-fixed-pitch
-                      :height 0.9)
-  (set-face-attribute 'org-date nil
-                      :family ps/face-fixed-pitch
-                      :height 0.8)
-  ;; (set-face-attribute 'org-modern-date-active nil
-                      ;; :family ps/face-fixed-pitch
-                      ;; :height 0.8)
-  ;; (set-face-attribute 'org-modern-date-inactive nil
-                      ;; :family ps/face-fixed-pitch
-                      ;; :height 0.8)
-  )
-#+end_src
-
-- [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
-- [[https://zzamboni.org/post/beautifying-org-mode-in-emacs/][- zzamboni.org | Beautifying Org Mode in Emacs]]
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       48DD89AF-277D-427B-9AF1-FBAFA91EC6EC
-:END:
-**** DONE Increase variable pitch font size
-CLOSED: [2022-05-07 Sat 19:05]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-05-07 Sat 19:13
-:ID:       DEBF4218-62C7-4D63-8A39-89FF99555407
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-03 Tue 21:45]--[2022-05-03 Tue 22:38] =>  0:53
-CLOCK: [2022-05-03 Tue 22:38]--[2022-05-03 Tue 22:38] =>  0:00
-CLOCK: [2022-04-14 Thu 11:10]--[2022-04-14 Thu 11:18] =>  0:08
-:END:
-I didn't quite accomplish what I wanted, since I am still not able to control the height of the variable-pitch face completely independently from that of the fixed-pitch. But I think it's good enough. See [[https://emacs.stackexchange.com/questions/62987/cannot-set-correct-size-for-variable-pitch-font-in-doom-emacs][this StackExchange question]] for some discussion.
-
-[2022-05-07 Sat 19:05] I then realized that I should control the height of the headings separately.
-
 ** mixed-pitch
 :PROPERTIES:
 :ID:       A8E80A11-25A4-4034-8A86-F7F6ADFD46C7
@@ -2154,7 +2054,6 @@ CLOSED: [2022-05-06 Fri 16:59]
 CLOCK: [2022-05-06 Fri 15:06]--[2022-05-06 Fri 16:00] =>  0:54
 :END:
 I don't think this is possible. See [[https://gitlab.com/jabranham/mixed-pitch/-/issues/4][here]]. At best, one could make org lists use fixed pitch font. But the user-contributed snippet doesn't work for me. In any case, the costs of displaying all plain lists in fixed pitch font seem higher than the costs of misaligned indentation (since many lists have items none of which span more than one line).
-
 
 ** face-remap
 :PROPERTIES:
@@ -2205,6 +2104,132 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   (highlight-parentheses-delay 0))
 #+end_src
 
+** org-modern
+:PROPERTIES:
+:ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
+:END:
+/[[https://github.com/minad/org-modern][org-modern]] prettifies org mode./
+
+#+begin_src emacs-lisp :results silent
+(use-package org-modern
+  :demand t
+  :custom
+  (org-modern-statistics nil)
+  (org-modern-star '("◉" "◉" "◉" "◉" "◉"))
+  (org-modern-list '((42 . "○")
+                     (43 . "○")
+                     (45 . "○")))
+  :config
+  (global-org-modern-mode))
+#+end_src
+
+** org-faces
+:PROPERTIES:
+:ID:       168A61B0-4580-443D-B04F-78F08EFA0458
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-04 Wed 10:45]--[2022-05-04 Wed 11:00] =>  0:15
+CLOCK: [2021-11-17 Wed 19:48]--[2021-11-17 Wed 19:57] =>  0:09
+CLOCK: [2021-11-17 Wed 11:27]--[2021-11-17 Wed 11:38] =>  0:11
+CLOCK: [2021-11-16 Tue 16:27]--[2021-11-16 Tue 17:55] =>  1:28
+CLOCK: [2021-08-19 Thu 19:18]--[2021-08-19 Thu 19:31] =>  0:13
+CLOCK: [2021-03-28 Sun 21:05]--[2021-03-28 Sun 21:21] =>  0:16
+CLOCK: [2021-02-27 Sat 18:27]--[2021-02-27 Sat 18:32] =>  0:05
+CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
+:END:
+The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8A86-F7F6ADFD46C7][mixed-pitch]] package.
+
+#+begin_src emacs-lisp :results silent
+(use-feature org-faces
+  :after org-modern
+
+  :config
+  (defun ps/custom-faces ()
+    "My custom faces, to be used in conjunction with theme."
+    (set-face-attribute 'default nil
+                        :family ps/face-fixed-pitch
+                        :height 115)
+    (set-face-attribute 'fixed-pitch nil
+                        :family ps/face-fixed-pitch
+                        :height 1.0)
+    (set-face-attribute 'org-drawer nil
+                        :foreground "LightSkyBlue"
+                        :family ps/face-fixed-pitch
+                        :height 0.7)
+    (set-face-attribute 'org-property-value nil
+                        :family ps/face-fixed-pitch
+                        :height 0.8)
+    (set-face-attribute 'org-todo nil
+                        :height 1.0)
+    (set-face-attribute 'org-archived nil
+                        :height 0.9)
+    (set-face-attribute 'org-document-title nil
+                        :underline t
+                        :height 1.0)
+    (set-face-attribute 'org-special-keyword nil
+                        :family ps/face-fixed-pitch
+                        :height 0.8)
+    (set-face-attribute 'org-tag nil
+                        :height 0.9)
+    (set-face-attribute 'org-level-1 nil
+                        :family ps/face-fixed-pitch
+                        :height 0.9)
+    (set-face-attribute 'org-level-2 nil
+                        :family ps/face-fixed-pitch
+                        :height 0.9)
+    (set-face-attribute 'org-level-3 nil
+                        :family ps/face-fixed-pitch
+                        :height 0.9)
+    (set-face-attribute 'org-level-4 nil
+                        :family ps/face-fixed-pitch
+                        :height 0.9)
+    (set-face-attribute 'org-level-5 nil
+                        :family ps/face-fixed-pitch
+                        :height 0.9)
+    (set-face-attribute 'org-level-6 nil
+                        :family ps/face-fixed-pitch
+                        :height 0.9)
+    (set-face-attribute 'org-level-7 nil
+                        :family ps/face-fixed-pitch
+                        :height 0.9)
+    (set-face-attribute 'org-level-8 nil
+                        :family ps/face-fixed-pitch
+                        :height 0.9)
+    (set-face-attribute 'org-date nil
+                        :family ps/face-fixed-pitch
+                        :height 0.8)
+    (set-face-attribute 'org-modern-date-active nil
+                        :family ps/face-fixed-pitch
+                        :height 0.8)
+    (set-face-attribute 'org-modern-date-inactive nil
+                        :family ps/face-fixed-pitch
+                        :height 0.8)
+    (set-face-attribute 'org-modern-tag nil
+                        :family ps/face-fixed-pitch
+                        :height 0.8)))
+#+end_src
+
+- [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
+- [[https://zzamboni.org/post/beautifying-org-mode-in-emacs/][- zzamboni.org | Beautifying Org Mode in Emacs]]
+
+*** Archive                                                       :ARCHIVE:
+:PROPERTIES:
+:ID:       48DD89AF-277D-427B-9AF1-FBAFA91EC6EC
+:END:
+**** DONE Increase variable pitch font size
+CLOSED: [2022-05-07 Sat 19:05]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-05-07 Sat 19:13
+:ID:       DEBF4218-62C7-4D63-8A39-89FF99555407
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-03 Tue 21:45]--[2022-05-03 Tue 22:38] =>  0:53
+CLOCK: [2022-05-03 Tue 22:38]--[2022-05-03 Tue 22:38] =>  0:00
+CLOCK: [2022-04-14 Thu 11:10]--[2022-04-14 Thu 11:18] =>  0:08
+:END:
+I didn't quite accomplish what I wanted, since I am still not able to control the height of the variable-pitch face completely independently from that of the fixed-pitch. But I think it's good enough. See [[https://emacs.stackexchange.com/questions/62987/cannot-set-correct-size-for-variable-pitch-font-in-doom-emacs][this StackExchange question]] for some discussion.
+
+[2022-05-07 Sat 19:05] I then realized that I should control the height of the headings separately.
 
 ** modus-themes
 :PROPERTIES:
@@ -12749,25 +12774,6 @@ The packages [[https://github.com/alphapapa/org-ql][org-ql]] and ~helm-org-ql~ o
     (org-ql-find org-agenda-files :query-prefix "!tags:ARCHIVE")))
 #+end_src
 
-** org-modern
-:PROPERTIES:
-:ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
-:END:
-/[[https://github.com/minad/org-modern][org-modern]] prettifies org mode./
-
-#+begin_src emacs-lisp :results silent
-(use-package org-modern
-  :demand t
-  :custom
-  (org-modern-star '("◉" "◉" "◉" "◉" "◉"))
-  ;; (org-modern-list '((42 . "○")
-  ;; (43 . "○")
-  ;; (45 . "○")))
-  :config
-  (global-org-modern-mode))
-#+end_src
-
-
 ** org2blog
 :PROPERTIES:
 :ID:       56AD66CB-240C-4BAA-918B-CCD63BD518C4
@@ -17039,7 +17045,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
 #+begin_src emacs-lisp :results silent
 (use-package telega
-  :demand t
+  :defer 3
   :custom
   (telega-server-libs-prefix "/opt/homebrew")
   (telega-chat-input-markups '("markdown2" "org"))

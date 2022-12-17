@@ -8,6 +8,26 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** org-superstar
+:PROPERTIES:
+:ID:       12BD56CF-07AA-4700-A07D-F36524BF8649
+:END:
+:LOGBOOK:
+CLOCK: [2021-11-16 Tue 15:54]--[2021-11-16 Tue 16:12] =>  0:18
+:END:
+[2022-12-17 Sat 06:58] Replaced with [[id:FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD][org-modern]].
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package org-superstar
+  :custom
+  (org-superstar-headline-bullets-list '(9673 9673 9673 9673))
+  (org-modern-list '((42 . "○")
+                                     (43 . "○")
+                                     (45 . "○")))
+  :hook
+  (org-mode-hook . org-superstar-mode))
+#+end_src
+
 ** osa-chrome
 :PROPERTIES:
 :ID:       5C3B8730-761F-43D1-A483-C98523D6F3AD

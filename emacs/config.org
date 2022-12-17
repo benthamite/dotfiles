@@ -7131,7 +7131,7 @@ To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. Tha
 4. ~save diff as patch~ (~s~)
    # I think this is the right command but I'm not sure
    # It has to be a command that generates a .patch file
-   
+
 *** pull request workflow
 :PROPERTIES:
 :ID:       E0DBC2C7-47F4-41AC-982A-23E139F3B1AC
@@ -7525,7 +7525,7 @@ Currently history clears after Emacs is restarted.
 :END:
 /[[https://github.com/minad/affe][affe]] is an asynchronous fuzzy finder similar to the fzf command-line fuzzy finder, written in pure Elisp./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package affe)
 #+end_src
 
@@ -8016,7 +8016,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 :END:
 [2022-10-04 Tue 18:38] Disabling until I configure it properly.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package cape
   :init
   ;; Add `completion-at-point-functions', used by `completion-at-point'.
@@ -10191,8 +10191,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   (copilot-node-executable "/opt/homebrew/opt/node@16/bin/node")
 
   :hook
-  (telega-chat-mode-hook . copilot-mode)
-  (text-mode-hook . copilot-mode)
   (prog-mode-hook . copilot-mode)
   (emacs-lisp-mode-hook . copilot-mode)
 
@@ -10208,7 +10206,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :END:
 /[[https://github.com/joshcho/ChatGPT.el][chatgpt]] communicates with ChatGPT./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package chatgpt
   :straight (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el"))
 
@@ -12759,14 +12757,16 @@ The packages [[https://github.com/alphapapa/org-ql][org-ql]] and ~helm-org-ql~ o
 
 #+begin_src emacs-lisp :results silent
 (use-package org-modern
+  :demand t
   :custom
   (org-modern-star '("◉" "◉" "◉" "◉" "◉"))
-  (org-modern-list '((42 . "○")
-                     (43 . "○")
-                     (45 . "○")))
+  ;; (org-modern-list '((42 . "○")
+  ;; (43 . "○")
+  ;; (45 . "○")))
   :config
   (global-org-modern-mode))
 #+end_src
+
 
 ** org2blog
 :PROPERTIES:

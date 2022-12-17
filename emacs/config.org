@@ -7114,6 +7114,15 @@ To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. Tha
      2. remote url: Github URL, e.g. ~https://github.com/benthamite/anki.git~
      3. answer ~y~ to prompt
 5. push (~P p~)
+
+*** bug submission workflow
+:PROPERTIES:
+:ID:       18842ACD-AD1A-4940-866B-C8E27150D7BB
+:END:
+1. call ~magit-status~ from the relevant directory (~A-g~)
+2. make the commits
+3. call ~format-patches~ (~W~)
+4. 
 *** pull request workflow
 :PROPERTIES:
 :ID:       E0DBC2C7-47F4-41AC-982A-23E139F3B1AC

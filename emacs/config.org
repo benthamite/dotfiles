@@ -2084,9 +2084,14 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
   (set-face-attribute 'org-date nil
                       :family ps/face-fixed-pitch
                       :height 0.8)
+  (set-face-attribute 'org-modern-date-active nil
+                      :family ps/face-fixed-pitch
+                      :height 0.8)
+  (set-face-attribute 'org-modern-date-inactive nil
+                      :family ps/face-fixed-pitch
+                      :height 0.8)
   )
 #+end_src
-
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
 - [[https://zzamboni.org/post/beautifying-org-mode-in-emacs/][- zzamboni.org | Beautifying Org Mode in Emacs]]
@@ -9645,7 +9650,11 @@ otherwise the whole buffer."
    "A-C-s-f" 'ledger-navigate-next-xact-or-directive))
 #+end_src
 
-
+*** TODO Consider replacing ~commodities.py~ with Elisp alternative
+:PROPERTIES:
+:ID:       303E3552-2FD9-41A9-A6E6-C26110E61282
+:END:
+[[https://www.reddit.com/r/emacs/comments/xdrg1r/semiautomatically_fetching_ledger_commodity/][This]] could be adapted.
 *** resources
 :PROPERTIES:
 :ID:       FD6B578E-9794-4C38-A2F3-5A877ED2C4C8
@@ -19313,7 +19322,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 :PROPERTIES:
 :ID:       8E1274F1-2A21-463C-875F-F9D8DAE587F1
 :END:
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 Traceback (most recent call last):
   File "/Users/pablostafforini/Dropbox/ledger/coinprices/coinprices.py", line 4, in <module>
     from dotenv import load_dotenv

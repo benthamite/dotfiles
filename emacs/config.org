@@ -2084,12 +2084,12 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
   (set-face-attribute 'org-date nil
                       :family ps/face-fixed-pitch
                       :height 0.8)
-  (set-face-attribute 'org-modern-date-active nil
-                      :family ps/face-fixed-pitch
-                      :height 0.8)
-  (set-face-attribute 'org-modern-date-inactive nil
-                      :family ps/face-fixed-pitch
-                      :height 0.8)
+  ;; (set-face-attribute 'org-modern-date-active nil
+                      ;; :family ps/face-fixed-pitch
+                      ;; :height 0.8)
+  ;; (set-face-attribute 'org-modern-date-inactive nil
+                      ;; :family ps/face-fixed-pitch
+                      ;; :height 0.8)
   )
 #+end_src
 
@@ -2122,7 +2122,8 @@ I didn't quite accomplish what I wanted, since I am still not able to control th
 CLOCK: [2022-05-04 Wed 19:52]--[2022-05-04 Wed 19:54] =>  0:02
 CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 :END:
-mixed-pitch is 
+/[[https://gitlab.com/jabranham/mixed-pitch][mixed-pitch]] allows for mixing fixed-pitch and variable-pitch fonts./
+
 #+begin_src emacs-lisp :results silent
 (use-package mixed-pitch
   :demand t

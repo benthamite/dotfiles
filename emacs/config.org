@@ -7943,7 +7943,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
     (unless (bound-and-true-p vertico--input)
       (corfu-mode)))
 
-
   (global-corfu-mode)
 
   :general
@@ -8998,6 +8997,10 @@ To check: https://github.com/PillFall/languagetool.el
   (text-mode-hook . visual-line-mode))
 #+end_src
 
+*** TODO Define ~text-mode-hook~ and ~prog-mode-hook~
+:PROPERTIES:
+:ID:       30886FEE-60C4-4BAA-B629-2871CFC120A1
+:END:
 ** with-editor
 :PROPERTIES:
 :ID:       48431AA9-2ABE-403C-9E91-68066B24CB26
@@ -10166,8 +10169,8 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
   :general
   (copilot-mode-map
-   "TAB" 'copilot-accept-completion
-   "<backtab>" 'copilot-accept-completion-by-line))
+   "M-<tab>" 'copilot-accept-completion
+   "A-M-<tab>" 'copilot-accept-completion-by-line))
 #+end_src
 
 ** chatgpt
@@ -13104,7 +13107,7 @@ CLOCK: [2022-03-31 Thu 17:22]--[2022-03-31 Thu 17:25] =>  0:03
 :ID:       1146CE48-9243-435A-8394-07C385538104
 :END:
 *** TODO Try memacs
-SCHEDULED: <2022-12-15 Thu>
+SCHEDULED: <2022-12-17 Sat>
 :PROPERTIES:
 :ID:       B27D8912-4089-4E37-B4BD-195B398C066B
 :END:
@@ -13268,6 +13271,11 @@ return such list if its length is less than LIMIT."
 - And [[https://github.com/alexkehayias/emacs.d/blob/master/init.el#L715][this one]] (by the author of [[https://notes.alexkehayias.com/][this notes repository]], created with org-roam)
 - And [[https://takeonrules.com/2021/08/22/ever-further-refinements-of-org-roam-usage/][this post]]
 
+
+*** TODO Turn all notes into lowercase unless uppercase is appropriate
+:PROPERTIES:
+:ID:       60F7D02B-ACBE-410C-9304-DBE5E4414B26
+:END:
 
 *** TODO [#5] Check out Org transclusion
 :PROPERTIES:
@@ -14033,6 +14041,8 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
 :LOGBOOK:
 CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 :END:
+[cite:@DeSouza2022TestingEmbryosFor]
+
 #+begin_src emacs-lisp :results silent
 (use-feature bibtex
   :demand t
@@ -19274,9 +19284,8 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (midnight-delay-set 'midnight-delay "4:30am")
 
   :hook
-  (midnight-hook . ps/ledger-update-coin-prices)
   (midnight-hook . ps/ledger-update-commodities)
-  ;; (midnight-hook . org-gcal-sync)
+  (midnight-hook . org-gcal-sync)
   (midnight-hook . ps/org-id-update-id-locations)
   (midnight-hook . org-roam-db-sync)
   (midnight-hook . ps/pass-git-sync)
@@ -19284,10 +19293,17 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 ;; (midnight-hook . straight-prune-build)
 #+end_src
 
-*** TODO [#4] Diagnose why midnight does not update all repositories
+*** TODO Fix coinprices
 :PROPERTIES:
-:ID:       067F2688-FEF5-458A-946B-A901999F9AD2
+:ID:       8E1274F1-2A21-463C-875F-F9D8DAE587F1
 :END:
+#+begin_src emacs-lisp :results silent
+Traceback (most recent call last):
+  File "/Users/pablostafforini/Dropbox/ledger/coinprices/coinprices.py", line 4, in <module>
+    from dotenv import load_dotenv
+ModuleNotFoundError: No module named 'dotenv'
+#+end_src
+
 *** Archive                                                       :ARCHIVE:
 :PROPERTIES:
 :ID:       D894A551-F2E1-436D-8D4A-C12779C64F8D
@@ -19409,6 +19425,12 @@ CLOSED: [2022-06-25 Sat 18:38] SCHEDULED: <2022-06-25 Sat>
 :END:
 :LOGBOOK:
 CLOCK: [2022-06-25 Sat 15:14]--[2022-06-25 Sat 15:50] =>  0:36
+:END:
+**** CANCELLED [#4] Diagnose why midnight does not update all repositories
+CLOSED: [2022-12-17 Sat 04:37]
+:PROPERTIES:
+:ID:       067F2688-FEF5-458A-946B-A901999F9AD2
+:ARCHIVE_TIME: 2022-12-17 Sat 04:37
 :END:
 ** keycast
 :PROPERTIES:

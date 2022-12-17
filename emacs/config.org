@@ -7657,13 +7657,15 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 (use-package consult
   :demand t
   :custom
+  ;; replace `rg' with `rga'`
+  (consult-ripgrep-args "rga --null --line-buffered --color=never --max-columns=1000 --path-separator /   --smart-case --no-heading --line-number .")
   (consult-locate-args "mdfind")
   (consult-narrow-key "<")
   (consult-widen-key ">")
   ;; TODO: Configure mode histories
   (consult-mode-histories '(eshell-mode . eshell-history-ring)
-                          (comint-mode . comint-input-ring)
-                          (term-mode . term-input-ring))
+			  (comint-mode . comint-input-ring)
+			  (term-mode . term-input-ring))
 
   :config
   (defun ps/consult-locate-current ()
@@ -7723,16 +7725,6 @@ content matches a regexp."
     (interactive)
     (consult-ripgrep ps/dir-root))
 
-  (defun ps/consult-rga ()
-    "Search with `rga' for files in the current directory where the
-content matches a regexp."
-    (interactive)
-    (let ((consult-ripgrep-args
-           (->> consult-ripgrep-args
-                (string-remove-prefix "rg")
-                (concat "rga"))))
-      (consult-ripgrep)))
-
   (defun ps/consult-org-heading (&optional match scope)
     "Jump to an Org heading.
 
@@ -7762,8 +7754,8 @@ By default, all agenda entries are offered. MATCH is as in
     (find-file
      (consult--read
       (or (mapcar #'abbreviate-file-name
-                  (consult--recent-files-sort (f-entries dir)))
-          (user-error "No recent files"))
+		  (consult--recent-files-sort (f-entries dir)))
+	  (user-error "No recent files"))
       :prompt "Find recent file: "
       :sort nil
       :require-match t

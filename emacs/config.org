@@ -7501,6 +7501,16 @@ Currently history clears after Emacs is restarted.
    "s-c" 'wgrep-finish-edit))
 #+end_src
 
+** affe
+:PROPERTIES:
+:ID:       9191AA62-62B9-436B-ACF1-8858EDE47C34
+:END:
+/[[https://github.com/minad/affe][affe]] is an asynchronous fuzzy finder similar to the fzf command-line fuzzy finder, written in pure Elisp./
+
+#+begin_src emacs-lisp :results silent
+(use-package affe)
+#+end_src
+
 * minibuffer completion
 :PROPERTIES:
 :ID:       E83EC00B-0C94-44CD-9EC0-355992C99234
@@ -14041,7 +14051,6 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
 :LOGBOOK:
 CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 :END:
-[cite:@DeSouza2022TestingEmbryosFor]
 
 #+begin_src emacs-lisp :results silent
 (use-feature bibtex

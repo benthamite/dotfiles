@@ -2147,70 +2147,73 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
   (defun ps/custom-faces ()
     "My custom faces, to be used in conjunction with theme."
     (set-face-attribute 'default nil
-                        :family ps/face-fixed-pitch
-                        :height 115)
+			:family ps/face-fixed-pitch
+			:height 115)
     (set-face-attribute 'fixed-pitch nil
-                        :family ps/face-fixed-pitch
-                        :height 1.0)
+			:family ps/face-fixed-pitch
+			:height 1.1)
     (set-face-attribute 'org-drawer nil
-                        :foreground "LightSkyBlue"
-                        :family ps/face-fixed-pitch
-                        :height 0.7)
+			:foreground "LightSkyBlue"
+			:family ps/face-fixed-pitch
+			:height 0.7)
     (set-face-attribute 'org-property-value nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
+			:family ps/face-fixed-pitch
+			:height 0.8)
     (set-face-attribute 'org-todo nil
-                        :height 1.0)
+			:height 1.0)
     (set-face-attribute 'org-archived nil
-                        :height 0.9)
+			:height 0.9)
     (set-face-attribute 'org-document-title nil
-                        :underline t
-                        :height 1.0)
+			:underline t
+			:height 1.0)
     (set-face-attribute 'org-special-keyword nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
+			:family ps/face-fixed-pitch
+			:height 0.8)
     (set-face-attribute 'org-tag nil
-                        :height 0.9)
+			:height 0.9)
     (set-face-attribute 'org-code nil
-                        :family ps/face-fixed-pitch
-                        :height 1.0)
+			:family ps/face-fixed-pitch
+			:height 1.0)
     (set-face-attribute 'org-level-1 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
+			:family ps/face-fixed-pitch
+			:height 0.9)
     (set-face-attribute 'org-level-2 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
+			:family ps/face-fixed-pitch
+			:height 0.9)
     (set-face-attribute 'org-level-3 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
+			:family ps/face-fixed-pitch
+			:height 0.9)
     (set-face-attribute 'org-level-4 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
+			:family ps/face-fixed-pitch
+			:height 0.9)
     (set-face-attribute 'org-level-5 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
+			:family ps/face-fixed-pitch
+			:height 0.9)
     (set-face-attribute 'org-level-6 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
+			:family ps/face-fixed-pitch
+			:height 0.9)
     (set-face-attribute 'org-level-7 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
+			:family ps/face-fixed-pitch
+			:height 0.9)
     (set-face-attribute 'org-level-8 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
+			:family ps/face-fixed-pitch
+			:height 0.9)
     (set-face-attribute 'org-date nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
+			:family ps/face-fixed-pitch
+			:height 0.8)
     (set-face-attribute 'org-modern-date-active nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
+			:family ps/face-fixed-pitch
+			:height 0.8)
     (set-face-attribute 'org-modern-date-inactive nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
+			:family ps/face-fixed-pitch
+			:height 0.8)
     (set-face-attribute 'org-modern-tag nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9
-                        :)))
+			:family ps/face-fixed-pitch
+			:height 0.9)
+    (set-face-attribute 'corfu-default nil
+			:family ps/face-fixed-pitch
+			:height 0.9)
+    ))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -8045,18 +8048,20 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 :END:
 [2022-10-04 Tue 18:38] Disabling until I configure it properly.
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package cape
+  :after corfu
+  :demand t
   :init
   ;; Add `completion-at-point-functions', used by `completion-at-point'.
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-file)
   (add-to-list 'completion-at-point-functions #'cape-yasnippet)
-  (add-to-list 'completion-at-point-functions #'cape-history)
-  (add-to-list 'completion-at-point-functions #'cape-abbrev)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
-  (add-to-list 'completion-at-point-functions #'cape-ispell)
-  (add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;; (add-to-list 'completion-at-point-functions #'cape-history)
+  ;; (add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;; (add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
+  ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
   ;; (add-to-list 'completion-at-point-functions #'cape-tex)
   ;; (add-to-list 'completion-at-point-functions #'cape-sgml)
   ;; (add-to-list 'completion-at-point-functions #'cape-rfc1345)
@@ -12796,7 +12801,6 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 (use-package org2blog
   :if (equal (system-name) ps/computer-hostname-pablo)
   :after auth-source-pass
-  :defer 10
   :custom
   (org2blog/wp-blog-alist
    `(("Pablo's website"

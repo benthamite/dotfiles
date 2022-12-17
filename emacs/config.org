@@ -1706,7 +1706,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("r" (dired ps/dir-dropbox-tlon-RAE) "Dropbox: RAE")
   ("R" (dired ps/dir-google-drive-tlon-RAE) "Google Drive: RAE")
   ("s" (dired ps/dir-dropbox-FM) "Dropbox: FM")
-  ("S" (dired ps/dir-google-drive-tlon-FM) "Google Drive: FM")
+  ("S" (dired ps/dir-google-drive-FM) "Google Drive: FM")
   ("t" (dired ps/dir-dropbox-tlon) "Dropbox: tlon")
   ("T" (dired ps/dir-google-drive-tlon) "Google Drive: tlon")
   ("u" (dired ps/dir-dropbox-tlon-EAN) "Dropbox: EAN")
@@ -1724,7 +1724,6 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("SPC" (dired "~/") "user")
   (";" (dired-jump) "Current buffer")
   ("H-;" (dired-jump-other-window) "Current buffer in other window"))
-
 (defhydra hydra-dired-google-drive
   (:exit t)
   "Dired folders: apps"
@@ -2084,14 +2083,9 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
   (set-face-attribute 'org-date nil
                       :family ps/face-fixed-pitch
                       :height 0.8)
-  (set-face-attribute 'org-modern-date-active nil
-                      :family ps/face-fixed-pitch
-                      :height 0.8)
-  (set-face-attribute 'org-modern-date-inactive nil
-                      :family ps/face-fixed-pitch
-                      :height 0.8)
   )
 #+end_src
+
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
 - [[https://zzamboni.org/post/beautifying-org-mode-in-emacs/][- zzamboni.org | Beautifying Org Mode in Emacs]]
@@ -2122,7 +2116,7 @@ I didn't quite accomplish what I wanted, since I am still not able to control th
 CLOCK: [2022-05-04 Wed 19:52]--[2022-05-04 Wed 19:54] =>  0:02
 CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 :END:
-mixed-pitch is 
+
 #+begin_src emacs-lisp :results silent
 (use-package mixed-pitch
   :demand t
@@ -7119,18 +7113,6 @@ To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. Tha
      2. remote url: Github URL, e.g. ~https://github.com/benthamite/anki.git~
      3. answer ~y~ to prompt
 5. push (~P p~)
-
-*** bug submission workflow
-:PROPERTIES:
-:ID:       18842ACD-AD1A-4940-866B-C8E27150D7BB
-:END:
-1. ~magit-status~ from the relevant directory (~A-g~)
-2. make the commits
-3. ~format-patches~ (~W~)
-4. ~save diff as patch~ (~s~)
-   # I think this is the right command but I'm not sure
-   # It has to be a command that generates a .patch file
-   
 *** pull request workflow
 :PROPERTIES:
 :ID:       E0DBC2C7-47F4-41AC-982A-23E139F3B1AC
@@ -7448,7 +7430,7 @@ Currently history clears after Emacs is restarted.
   :custom
   ;; emacs.stackexchange.com/a/12318/32089
   (query-replace-from-history-variable 'regexp-search-ring)
-
+  
   :general
   (isearch-mode-map
    "A-C-e" 'query-replace-regexp))
@@ -7477,7 +7459,7 @@ Currently history clears after Emacs is restarted.
   :custom
   (vr/engine 'python)
   (vr/command-python "python3 /Users/pablostafforini/.emacs.d/straight/build/visual-regexp-steroids/regexp.py")
-
+  
   :general
   (isearch-mode-map
    "A-C-s" 'vr/isearch-forward
@@ -7516,16 +7498,6 @@ Currently history clears after Emacs is restarted.
   :general
   (wgrep-mode-map
    "s-c" 'wgrep-finish-edit))
-#+end_src
-
-** affe
-:PROPERTIES:
-:ID:       9191AA62-62B9-436B-ACF1-8858EDE47C34
-:END:
-/[[https://github.com/minad/affe][affe]] is an asynchronous fuzzy finder similar to the fzf command-line fuzzy finder, written in pure Elisp./
-
-#+begin_src emacs-lisp :results silent
-(use-package affe)
 #+end_src
 
 * minibuffer completion
@@ -7574,6 +7546,20 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
   :config
   (vertico-multiform-mode)
 
+  ;; github.com/minad/vertico/wiki#additions-for-moving-up-and-down-directories-in-find-file
+  (defun ps/vertico-directory-delete-entry ()
+  "Delete directory or entire entry before point."
+  (interactive)
+  (when (and (> (point) (minibuffer-prompt-end))
+             ;; Check vertico--base for stepwise file path completion
+             (not (equal vertico--base ""))
+             (eq 'file (vertico--metadata-get 'category)))
+    (save-excursion
+      (goto-char (1- (point)))
+      (when (search-backward "/" (minibuffer-prompt-end) t)
+        (delete-region (1+ (point)) (point-max))
+        t))))
+
   :custom
   (vertico-multiform-commands
          '((consult-line buffer)
@@ -7586,14 +7572,11 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
    '((file grid)))
   (vertico-cycle t)
   (vertico-count 16)
-  (vertico-quick1 avy-keys)
-  (vertico-quick2 avy-keys)
 
   :general
   (vertico-map
    "<C-i>" 'vertico-exit
-   "M-f" 'vertico-quick-exit
-   "C-H-M-w" 'vertico-directory-up))
+   "C-H-M-w" 'ps/vertico-directory-delete-entry))
 #+end_src
 
 
@@ -7663,11 +7646,13 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 (use-package consult
   :demand t
   :custom
-  ;; replace `rg' with `rga'
-  (consult-ripgrep-args "rga --null --line-buffered --color=never --max-columns=1000 --path-separator /   --smart-case --no-heading --line-number .")
   (consult-locate-args "mdfind")
   (consult-narrow-key "<")
   (consult-widen-key ">")
+  ;; TODO: Configure mode histories
+  (consult-mode-histories '(eshell-mode . eshell-history-ring)
+                          (comint-mode . comint-input-ring)
+                          (term-mode . term-input-ring))
 
   :config
   (defun ps/consult-locate-current ()
@@ -7726,6 +7711,16 @@ matches a regexp."
 content matches a regexp."
     (interactive)
     (consult-ripgrep ps/dir-root))
+
+  (defun ps/consult-rga ()
+    "Search with `rga' for files in the current directory where the
+content matches a regexp."
+    (interactive)
+    (let ((consult-ripgrep-args
+           (->> consult-ripgrep-args
+                (string-remove-prefix "rg")
+                (concat "rga"))))
+      (consult-ripgrep)))
 
   (defun ps/consult-org-heading (&optional match scope)
     "Jump to an Org heading.
@@ -7947,6 +7942,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
     (unless (bound-and-true-p vertico--input)
       (corfu-mode)))
 
+
   (global-corfu-mode)
 
   :general
@@ -8015,27 +8011,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 :END:
 [2022-10-04 Tue 18:38] Disabling until I configure it properly.
 
-#+begin_src emacs-lisp :results silent
-(use-package cape
-  :init
-  ;; Add `completion-at-point-functions', used by `completion-at-point'.
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-yasnippet)
-  (add-to-list 'completion-at-point-functions #'cape-history)
-  (add-to-list 'completion-at-point-functions #'cape-abbrev)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
-  (add-to-list 'completion-at-point-functions #'cape-ispell)
-  (add-to-list 'completion-at-point-functions #'cape-symbol)
-  ;; (add-to-list 'completion-at-point-functions #'cape-tex)
-  ;; (add-to-list 'completion-at-point-functions #'cape-sgml)
-  ;; (add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  ;; (add-to-list 'completion-at-point-functions #'cape-dict)
-  ;; (add-to-list 'completion-at-point-functions #'cape-line)
-  )
-#+end_src
-
-
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package cape
   :after corfu
@@ -8060,7 +8035,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
           (add-to-list 'completion-at-point-functions element))))
     (setq corfu-auto nil))
 
-  ;; Eshell
+  ;; Eshellzz
   (defun ps/cape-capf-setup-eshell ()
     (let ((result))
       (dolist (element '(pcomplete-completions-at-point cape-file) result)
@@ -8106,15 +8081,16 @@ Additionally, add `cape-file' as early as possible to the list."
   (git-commit-mode-hook . ps/cape-capf-setup-git-commit))
 #+end_src
 
-** cape-yasnippet
+** company
 :PROPERTIES:
-:ID:       E1783BB4-D7BD-4264-B490-5E2F903CCCA7
+:ID:       978C4165-514C-4F1E-BD7B-83BFF7C7F497
 :END:
+Preserved for yasnippet backend only.
+
 #+begin_src emacs-lisp :results silent
-(use-package cape-yasnippet
-  :straight (cape-yasnippet
-             :host github
-             :repo "elken/cape-yasnippet"))
+(use-package company
+  :after corfu
+  :demand t)
 #+end_src
 
 * help
@@ -9021,10 +8997,6 @@ To check: https://github.com/PillFall/languagetool.el
   (text-mode-hook . visual-line-mode))
 #+end_src
 
-*** TODO Define ~text-mode-hook~ and ~prog-mode-hook~
-:PROPERTIES:
-:ID:       30886FEE-60C4-4BAA-B629-2871CFC120A1
-:END:
 ** with-editor
 :PROPERTIES:
 :ID:       48431AA9-2ABE-403C-9E91-68066B24CB26
@@ -9650,11 +9622,7 @@ otherwise the whole buffer."
    "A-C-s-f" 'ledger-navigate-next-xact-or-directive))
 #+end_src
 
-*** TODO Consider replacing ~commodities.py~ with Elisp alternative
-:PROPERTIES:
-:ID:       303E3552-2FD9-41A9-A6E6-C26110E61282
-:END:
-[[https://www.reddit.com/r/emacs/comments/xdrg1r/semiautomatically_fetching_ledger_commodity/][This]] could be adapted.
+
 *** resources
 :PROPERTIES:
 :ID:       FD6B578E-9794-4C38-A2F3-5A877ED2C4C8
@@ -10190,15 +10158,13 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   (copilot-node-executable "/opt/homebrew/opt/node@16/bin/node")
 
   :hook
-  (telega-chat-mode-hook . copilot-mode)
-  (text-mode-hook . copilot-mode)
   (prog-mode-hook . copilot-mode)
   (emacs-lisp-mode-hook . copilot-mode)
 
   :general
   (copilot-mode-map
-   "M-<tab>" 'copilot-accept-completion
-   "A-M-<tab>" 'copilot-accept-completion-by-line))
+   "TAB" 'copilot-accept-completion
+   "<backtab>" 'copilot-accept-completion-by-line))
 #+end_src
 
 ** chatgpt
@@ -10210,10 +10176,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 #+begin_src emacs-lisp :results silent
 (use-package chatgpt
   :straight (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el"))
-
-  :init
-  (require 'python)
-  (setq chatgpt-repo-path "~/.emacs.d/straight/repos/ChatGPT.el/")
 
   :custom
   (chatgpt-python-interpreter "python3")
@@ -12750,21 +12712,23 @@ The packages [[https://github.com/alphapapa/org-ql][org-ql]] and ~helm-org-ql~ o
     (org-ql-find org-agenda-files :query-prefix "!tags:ARCHIVE")))
 #+end_src
 
-** org-modern
+** org-superstar
 :PROPERTIES:
-:ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
+:ID:       12BD56CF-07AA-4700-A07D-F36524BF8649
 :END:
-/[[https://github.com/minad/org-modern][org-modern]] prettifies org mode./
+:LOGBOOK:
+CLOCK: [2021-11-16 Tue 15:54]--[2021-11-16 Tue 16:12] =>  0:18
+:END:
 
-#+begin_src emacs-lisp :results silent
-(use-package org-modern
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package org-superstar
   :custom
-  (org-modern-star '("◉" "◉" "◉" "◉" "◉"))
-  (org-modern-list '((42 . "○")
-                     (43 . "○")
-                     (45 . "○")))
-  :config
-  (global-org-modern-mode))
+  (org-superstar-headline-bullets-list '(9673 9673 9673 9673))
+  (org-superstar-item-bullet-alist '((42 . "○")
+                                     (43 . "○")
+                                     (45 . "○")))
+  :hook
+  (org-mode-hook . org-superstar-mode))
 #+end_src
 
 ** org2blog
@@ -13133,7 +13097,7 @@ CLOCK: [2022-03-31 Thu 17:22]--[2022-03-31 Thu 17:25] =>  0:03
 :ID:       1146CE48-9243-435A-8394-07C385538104
 :END:
 *** TODO Try memacs
-SCHEDULED: <2022-12-17 Sat>
+SCHEDULED: <2022-12-15 Thu>
 :PROPERTIES:
 :ID:       B27D8912-4089-4E37-B4BD-195B398C066B
 :END:
@@ -13297,11 +13261,6 @@ return such list if its length is less than LIMIT."
 - And [[https://github.com/alexkehayias/emacs.d/blob/master/init.el#L715][this one]] (by the author of [[https://notes.alexkehayias.com/][this notes repository]], created with org-roam)
 - And [[https://takeonrules.com/2021/08/22/ever-further-refinements-of-org-roam-usage/][this post]]
 
-
-*** TODO Turn all notes into lowercase unless uppercase is appropriate
-:PROPERTIES:
-:ID:       60F7D02B-ACBE-410C-9304-DBE5E4414B26
-:END:
 
 *** TODO [#5] Check out Org transclusion
 :PROPERTIES:
@@ -14067,7 +14026,6 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
 :LOGBOOK:
 CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 :END:
-
 #+begin_src emacs-lisp :results silent
 (use-feature bibtex
   :demand t
@@ -17364,7 +17322,7 @@ CLOCK: [2021-04-11 Sun 14:18]--[2021-04-11 Sun 14:36] =>  0:18
 CLOCK: [2021-04-07 Wed 12:41]--[2021-04-07 Wed 12:42] =>  0:01
 CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 :END:
-/[[https://github.com/yuya373/emacs-slack][slack]] is a Slack client for Emacs./
+/[[https://github.com/yuya373/emacs-slack][Slack]] is a Slack client for Emacs./
 
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package slack
@@ -19309,8 +19267,9 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (midnight-delay-set 'midnight-delay "4:30am")
 
   :hook
+  (midnight-hook . ps/ledger-update-coin-prices)
   (midnight-hook . ps/ledger-update-commodities)
-  (midnight-hook . org-gcal-sync)
+  ;; (midnight-hook . org-gcal-sync)
   (midnight-hook . ps/org-id-update-id-locations)
   (midnight-hook . org-roam-db-sync)
   (midnight-hook . ps/pass-git-sync)
@@ -19318,17 +19277,10 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 ;; (midnight-hook . straight-prune-build)
 #+end_src
 
-*** TODO Fix coinprices
+*** TODO [#4] Diagnose why midnight does not update all repositories
 :PROPERTIES:
-:ID:       8E1274F1-2A21-463C-875F-F9D8DAE587F1
+:ID:       067F2688-FEF5-458A-946B-A901999F9AD2
 :END:
-#+begin_src emacs-lisp :results silent :tangle no
-Traceback (most recent call last):
-  File "/Users/pablostafforini/Dropbox/ledger/coinprices/coinprices.py", line 4, in <module>
-    from dotenv import load_dotenv
-ModuleNotFoundError: No module named 'dotenv'
-#+end_src
-
 *** Archive                                                       :ARCHIVE:
 :PROPERTIES:
 :ID:       D894A551-F2E1-436D-8D4A-C12779C64F8D
@@ -19450,12 +19402,6 @@ CLOSED: [2022-06-25 Sat 18:38] SCHEDULED: <2022-06-25 Sat>
 :END:
 :LOGBOOK:
 CLOCK: [2022-06-25 Sat 15:14]--[2022-06-25 Sat 15:50] =>  0:36
-:END:
-**** CANCELLED [#4] Diagnose why midnight does not update all repositories
-CLOSED: [2022-12-17 Sat 04:37]
-:PROPERTIES:
-:ID:       067F2688-FEF5-458A-946B-A901999F9AD2
-:ARCHIVE_TIME: 2022-12-17 Sat 04:37
 :END:
 ** keycast
 :PROPERTIES:

@@ -1280,7 +1280,7 @@ CLOCK: [2022-07-24 Sun 18:58]--[2022-07-24 Sun 19:17] =>  0:19
          [:g [:km "Activate: Goldendict"]]
          [:h [:km "Activate: Chrome"]]
          [:i [:km "Activate: Anki"]]
-         [:j [:km "Activate: Media Center"]]
+         [:m [:km "Activate: Media Center"]]
          [:k [:km "Activate: Keyboard Maestro"]]
          [:l [:km "Activate: Calendar"]]
          [:o [:km "Activate: Zotero"]]

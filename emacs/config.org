@@ -3640,8 +3640,22 @@ Transient Mark mode is on but the region is inactive."
     (interactive "P")
     (exchange-point-and-mark
      (if (and transient-mark-mode (not mark-active))
-         (not arg)
+	 (not arg)
        arg)))
+
+  (defun ps/visible-mode-enhanced ()
+    "Toggle `visible-mode' as well as appropriate actions associated
+with the current major mode."
+    (interactive)
+    (if visible-mode
+	(progn
+	  (visible-mode -1)
+	  (org-display-inline-images)
+	  (org-modern-mode))
+      (visible-mode)
+      (org-remove-inline-images)
+      (org-modern-mode -1)))
+
 
   :general
   ("A-H-e" 'eval-defun
@@ -3654,7 +3668,7 @@ Transient Mark mode is on but the region is inactive."
    "M-o" 'downcase-dwim
    "M-q" 'save-buffers-kill-terminal
    "M-u" 'capitalize-dwim
-   "M-v" 'visible-mode
+   "M-v" 'ps/visible-mode-enhanced
    "M-w" 'count-words-region
    "H-z" 'undo-only))
 #+end_src
@@ -12724,19 +12738,18 @@ https://www.reddit.com/r/emacs/comments/cptwh4/org_analyzer_an_app_that_visualiz
 :PROPERTIES:
 :ID:       D79FFD02-0270-4E22-923F-A9BE1AFA0421
 :END:
-This function, taken from [[https://github.com/mpereira/.emacs.d#paste-images-in-the-clipboard-directly-into-org-buffers][Murilo Pereira]], pastes a clipboard image to an org document:
-
 #+begin_src emacs-lisp :results silent
 (defun ps/org-paste-clipboard-image ()
   (interactive)
   (if (executable-find "pngpaste")
-      (let ((image-file (concat temporary-file-directory
-                                (make-temp-name "org-image-paste-")
-                                ".png")))
-        (call-process-shell-command (concat "pngpaste " image-file))
+      (let ((image-file (file-name-concat ps/dir-org-images
+                                (file-name-with-extension (org-id-get nil 'create)
+                                ".png"))))
+        (call-process-shell-command (format "pngpaste '%s'" image-file))
         (insert (concat  "#+CAPTION: " (read-string "Caption: ") "\n"))
         (insert (format "[[file:%s]]" image-file))
-        (org-display-inline-images))
+        (org-display-inline-images)
+	(message "You can toggle inline images with C-c C-x C-v"))
     (message "Requires pngpaste in PATH")))
 #+end_src
 

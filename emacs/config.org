@@ -2230,7 +2230,7 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
 			:height 0.9)
     (set-face-attribute 'corfu-default nil
 			:family ps/face-fixed-pitch
-			:height 0.9))
+			:height 0.9)))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -12791,7 +12791,7 @@ https://www.reddit.com/r/emacs/comments/cptwh4/org_analyzer_an_app_that_visualiz
 	(insert (concat  "#+CAPTION: " (read-string "Caption: ") "\n"))
 	(insert (format "[[file:%s]]" image-file))
 	(org-display-inline-images)
-	(message "You can toggle inline images with C-c C-x C-v"))
+	(message "You can toggle inline images with C-c C-x C-v"))))
     (user-error "Requires pngpaste in PATH")))
 #+end_src
 

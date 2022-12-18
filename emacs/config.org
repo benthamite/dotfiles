@@ -11099,18 +11099,18 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (interactive)
     (ps/window-split-if-unsplit)
     (let ((agenda
-           (cl-remove
-            nil
-            (mapcar (lambda (buf)
-                      (let ((pos (string-match "*Org agenda" (buffer-name buf))))
-                        (when pos
-                          (cons pos buf))))
-                    (buffer-list)))))
+	   (cl-remove
+	    nil
+	    (mapcar (lambda (buf)
+		      (let ((pos (string-match "*Org agenda" (buffer-name buf))))
+			(when pos
+			  (cons pos buf))))
+		    (buffer-list)))))
       (winum-select-window-1)
       (if agenda
-          (progn
-            (setq agenda (cl-sort agenda #'< :key 'car)))
-        (switch-to-buffer (cdr (car agenda))))
+	  (progn
+	    (setq agenda (cl-sort agenda #'< :key 'car)))
+	(switch-to-buffer (cdr (car agenda))))
       (setq org-habit-show-habits nil)
       (org-agenda nil "a")))
 
@@ -11137,8 +11137,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    '(
      ("E" "TODOs without effort"
       ((org-ql-block '(and (todo)
-                           (not (property "effort")))
-                     ((org-ql-block-header "TODOs without effort")))))
+			   (not (property "effort")))
+		     ((org-ql-block-header "TODOs without effort")))))
      ("w" "Weekly review"
       agenda ""
       ((org-agenda-clockreport-mode t)
@@ -11149,7 +11149,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
      ("p" "Appointments" agenda* "Today's appointments"
       ((org-agenda-span 1)
        (org-agenda-max-entries 3)))
-       ("r"
+     ("r"
       "Reading list"
       tags
       "PRIORITY=\"1\"|PRIORITY=\"2\"|PRIORITY=\"3\"|PRIORITY=\"4\"|PRIORITY=\"5\"|PRIORITY=\"6\"|PRIORITY=\"7\"|PRIORITY=\"8\"|PRIORITY=\"9\""
@@ -11160,11 +11160,11 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
       tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")
      ("w" "Wiki tasks"
       ((org-ql-block '(and (todo "TODO")
-                           (buffers-files "wiki-entries.org"))
-                     ((org-ql-block-header "Wiki TODO: notes")))
+			   (buffers-files "wiki-entries.org"))
+		     ((org-ql-block-header "Wiki TODO: notes")))
        (org-ql-block '(and (todo "TODO")
-                           (tags "articles"))
-                     ((org-ql-block-header "Wiki TODO: articles")))))))
+			   (tags "articles"))
+		     ((org-ql-block-header "Wiki TODO: articles")))))))
   (org-agenda-clockreport-parameter-plist
    (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter ps/org-clocktable-sorter)))
 
@@ -11183,8 +11183,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (funcall (or org-clock-clocktable-formatter 'org-clocktable-write-default) ipos tables params))
 
   (advice-add 'org-agenda-goto :after
-              (lambda (&rest args)
-                (ps/org-narrow-to-entry-and-children)))
+	      (lambda (&rest args)
+		(ps/org-narrow-to-entry-and-children)))
 
   (setq org-agenda-archives-mode 'trees) ; this variable is non-customizable, so won't work in `:custom'
 
@@ -11208,8 +11208,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (interactive)
     (org-unhighlight))
 
-  ; Replace native function with variant that doesn't ask the user
-  ; multiple times to remove non-existent agenda file
+  ;; Replace native function with variant that doesn't ask the user
+  ;; multiple times to remove non-existent agenda file
   (defun ps/org-check-agenda-file (file)
     "Make sure FILE exists.  If not, ask user what to do."
     (unless (file-exists-p file)
@@ -11218,10 +11218,22 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 
   (advice-add 'org-check-agenda-file :override #'ps/org-check-agenda-file)
 
+  ;; We add these two advices because `org-modern-mode' interferes
+  ;; with the display of the habits progress bar
+  (advice-add 'org-habit-toggle-display-in-agenda :before
+	      (lambda (arg)
+		(if org-habit-show-habits
+		    (global-org-modern-mode)
+		  (global-org-modern-mode -1))))
+  (advice-add 'org-habit-toggle-display-in-agenda :after
+	      (lambda (arg)
+		(org-agenda-redo)
+		(global-org-modern-mode)))
+  
   :hook
   (org-agenda-mode-hook . (lambda ()
-                            (visual-line-mode -1)
-                            (toggle-truncate-lines 1)))
+			    (visual-line-mode -1)
+			    (toggle-truncate-lines 1)))
   :general
   ("C-<escape>" 'org-agenda)
   (org-agenda-mode-map

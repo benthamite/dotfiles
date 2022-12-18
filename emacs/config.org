@@ -10220,7 +10220,8 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :config
   (remove-hook 'python-mode-hook #'yasnippet-snippets--fixed-indent) ; some package (`elpy'?) is adding this
   (org-babel-do-load-languages
-   'org-babel-load-languages
+   'org-babel-l
+   oad-languages
    '((python . t)))
   :general
   (python-mode-map

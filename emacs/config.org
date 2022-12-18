@@ -2104,6 +2104,24 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   (highlight-parentheses-delay 0))
 #+end_src
 
+** prism
+:PROPERTIES:
+:ID:       0D8B37A1-4923-4155-8595-F39B0238F1B1
+:END:
+/[[https://github.com/alphapapa/prism.el][prism]] applies coloration to different levels of depth in the code structure./
+
+Most of the customizations below are copied from the [[https://protesilaos.com/emacs/modus-themes#h:a94272e0-99da-4149-9e80-11a7e67a2cf2][modus-themes manual]].
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package prism
+  :demand t
+  :custom
+  (prism-num-faces 16)
+
+  :hook
+  (prog-mode-hook . prism-mode))
+#+end_src
+
 ** org-modern
 :PROPERTIES:
 :ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
@@ -2212,8 +2230,7 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
 			:height 0.9)
     (set-face-attribute 'corfu-default nil
 			:family ps/face-fixed-pitch
-			:height 0.9)
-    ))
+			:height 0.9))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -2319,7 +2336,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
               highlight-parentheses-background-colors nil)))
 
     ;; Include this if you also want to make the parentheses bold:
-    ;; (set-face-attribute 'highlight-parentheses-highlight nil :inherit 'bold)
+    (set-face-attribute 'highlight-parentheses-highlight nil :inherit 'bold)
 
     ;; Our changes must be evaluated before enabling the relevant mode, so
     ;; this comes last.
@@ -3640,7 +3657,7 @@ Transient Mark mode is on but the region is inactive."
     (interactive "P")
     (exchange-point-and-mark
      (if (and transient-mark-mode (not mark-active))
-	 (not arg)
+         (not arg)
        arg)))
 
   (defun ps/visible-mode-enhanced ()
@@ -3648,10 +3665,10 @@ Transient Mark mode is on but the region is inactive."
 with the current major mode."
     (interactive)
     (if visible-mode
-	(progn
-	  (visible-mode -1)
-	  (org-display-inline-images)
-	  (org-modern-mode))
+        (progn
+          (visible-mode -1)
+          (org-display-inline-images)
+          (org-modern-mode))
       (visible-mode)
       (org-remove-inline-images)
       (org-modern-mode -1)))
@@ -4903,6 +4920,21 @@ option."
     (interactive)
     (cl-letf (((symbol-function 'system-move-file-to-trash) nil))
       (dired-do-delete arg)))
+
+  ;; emacs.stackexchange.com/a/60663/32089
+  (defun ps/dired-duplicate-this-file ()
+    "Duplicate file at point."
+    (interactive)
+    (let* ((existing-file (dired-get-filename t))
+	   (existing-file-stem (file-name-sans-extension existing-file))
+	   (existing-file-extension (file-name-extension existing-file))
+	   (counter 1)
+	   (new-file (format "%s[%d].%s" existing-file-stem counter existing-file-extension)))
+      (while (file-exists-p new-file)
+	(setq counter (1+ counter)
+	      new-file (format "%s[%d].%s" existing-file-stem counter existing-file-extension)))
+      (copy-file existing-file new-file))
+    (revert-buffer))
 
   :hook
   (dired-mode-hook . dired-hide-details-mode) ; hide details by default
@@ -12734,6 +12766,7 @@ https://www.reddit.com/r/emacs/comments/cptwh4/org_analyzer_an_app_that_visualiz
   :after org)
 #+end_src
 
+
 ** images
 :PROPERTIES:
 :ID:       D79FFD02-0270-4E22-923F-A9BE1AFA0421
@@ -12742,15 +12775,23 @@ https://www.reddit.com/r/emacs/comments/cptwh4/org_analyzer_an_app_that_visualiz
 (defun ps/org-paste-clipboard-image ()
   (interactive)
   (if (executable-find "pngpaste")
-      (let ((image-file (file-name-concat ps/dir-org-images
-                                (file-name-with-extension (org-id-get nil 'create)
-                                ".png"))))
-        (call-process-shell-command (format "pngpaste '%s'" image-file))
-        (insert (concat  "#+CAPTION: " (read-string "Caption: ") "\n"))
-        (insert (format "[[file:%s]]" image-file))
-        (org-display-inline-images)
+      (let* ((counter 1)
+	     (image-file (concat
+			  ps/dir-org-images
+			  (org-id-get nil 'create)
+			  (format "-%d.png" counter)))
+	(while (file-exists-p image-file)
+	  (setq counter (1+ counter))
+	  (setq image-file (concat
+			    ps/dir-org-images
+			    (org-id-get nil 'create)
+			    (format "-%d.png" counter)))
+	(call-process-shell-command (format "pngpaste '%s'" image-file))
+	(insert (concat  "#+CAPTION: " (read-string "Caption: ") "\n"))
+	(insert (format "[[file:%s]]" image-file))
+	(org-display-inline-images)
 	(message "You can toggle inline images with C-c C-x C-v"))
-    (message "Requires pngpaste in PATH")))
+    (user-error "Requires pngpaste in PATH")))
 #+end_src
 
 ** org-ql

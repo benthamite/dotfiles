@@ -14484,11 +14484,6 @@ With prefix, rebuild the cache before offering candidates."
                        ps/amazon-suffix))
         (message "No link found for %s" (car key-entry)))))
 
-  (defun ps/citar-open-in-ebib (citekey)
-    "Open bibliographic entry associated with the CITEKEY in Ebib."
-    (interactive (list (citar-select-ref)))
-    (ps/ebib-open-key citekey))
-
   :general
   ((citar-map citar-citation-map)
    "c" 'embark-copy-as-kill
@@ -15486,7 +15481,7 @@ first name, and names are separated by a semicolon."
    '(change attribute-change)
    (lambda (event)
      (cancel-function-timers #'ps/ebib-reload-current-database-no-confirm)
-     (run-with-idle-timer 10 nil #'ps/ebib-reload-current-database-no-confirm)))
+     (run-with-idle-timer 30 nil #'ps/ebib-reload-current-database-no-confirm)))
 
   (defun ps/ebib-merge-databases (source target)
     "Move the contents of SOURCE to TARGET."

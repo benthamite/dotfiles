@@ -11642,11 +11642,11 @@ Links to check out:
 - [[https://www.reddit.com/r/orgmode/comments/nmgs2i/hey_orgmode_users_show_us_your_org_capture/][Hey Org-Mode Users, show us your org capture templates : orgmode]]. [[https://www.reddit.com/r/orgmode/comments/nmgs2i/hey_orgmode_users_show_us_your_org_capture/gzq9h2v/?utm_source=reddit&utm_medium=web2x&context=3][this one]] has templates for capturing appointments directly to Google Calendar via org-gcal. [I've now incorporated it]
 - [[https://orgmode.org/worg/org-contrib/org-collector.html][org-collector.el &#x2014; collect properties into tables]]
 - potentially useful capture templates:
-  - [[https://helpdeskheadesk.net/help-desk-head-desk/sub-menus-in-org/][Submenus in org-mode Capture · The Art of Not Asking Why]]
-  - [[https://helpdeskheadesk.net/help-desk-head-desk/org-capture-in-files/][Org-capture in Files · The Art of Not Asking Why]]
-  - [[https://helpdeskheadesk.net/help-desk-head-desk/org-capture-template-3/][My Org Capture Templates - Part 3 · The Art of Not Asking Why]]
-  - [[https://helpdeskheadesk.net/help-desk-head-desk/org-capture-template-2/][My Org Capture Templates - Part 2 · The Art of Not Asking Why]]
-  - [[https://helpdeskheadesk.net/help-desk-head-desk/org-capture-template-1/][My Org Capture Templates - Part 1 · The Art of Not Asking Why]]
+    - [[https://helpdeskheadesk.net/help-desk-head-desk/sub-menus-in-org/][Submenus in org-mode Capture · The Art of Not Asking Why]]
+    - [[https://helpdeskheadesk.net/org-capture-in-files/][Org-capture in Files · The Art of Not Asking Why]]
+    - [[https://helpdeskheadesk.net/org-capture-template-1/][My Org Capture Templates - Part 1 emacs: · The Art of Not Asking Why]]
+    - [[https://helpdeskheadesk.net/org-capture-template-2/][My Org Capture Templates - Part 2 emacs: · The Art of Not Asking Why]]
+    - [[https://helpdeskheadesk.net/org-capture-template-3/][My Org Capture Templates - Part 3 emacs:css: · The Art of Not Asking Why]]
 *** Archive                                                                                                           :ARCHIVE:
 :PROPERTIES:
 :ID:       32625A75-E92B-43A2-809A-4DE4C7D23C95

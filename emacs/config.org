@@ -11274,26 +11274,6 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "Z" 'org-agenda-add-note
    "z" 'org-agenda-undo))
 #+end_src
-*** TODO [#5] Exclude Fede and Leo ~tareas.org~ files from ~org-agenda~
-:PROPERTIES:
-:ID:       7512BCCE-B29A-4CB3-8B6B-A8C63E3407CD
-:END:
-Added the final line to this function:
-
-#+begin_src emacs-lisp :results silent :tangle no
-(defun vulpea-agenda-files-update (&rest _)
-    "Update the value of `org-agenda-files'."
-    (setq org-agenda-files
-	  (seq-difference
-	   (delete-dups (append
-			 (org-agenda-files)
-			 (vulpea-project-files)
-			 ;; include files modified in past three days,
-			 ;; provided number of such files less than 1000
-			 (ps/org-roam-recent 1 1000)))
-	   ps/org-agenda-files-excluded)))
-#+end_src
-
 *** TODO [#6] align tags
 :PROPERTIES:
 :ID:       8F2D8B6E-2B3E-434E-9D60-5A1E23F8E4C1
@@ -11409,6 +11389,28 @@ CLOSED: [2022-12-19 Mon 08:52]
 CLOCK: [2022-12-19 Mon 08:50]--[2022-12-19 Mon 08:52] =>  0:02
 :END:
 Easy: ~(org-agenda-hide-tags-regexp "project")~
+**** DONE [#5] Exclude Fede and Leo ~tareas.org~ files from ~org-agenda~
+CLOSED: [2022-12-19 Mon 09:22]
+:PROPERTIES:
+:ID:       7512BCCE-B29A-4CB3-8B6B-A8C63E3407CD
+:ARCHIVE_TIME: 2022-12-19 Mon 09:22
+:END:
+Added the final line to this function:
+
+#+begin_src emacs-lisp :results silent :tangle no
+(defun vulpea-agenda-files-update (&rest _)
+    "Update the value of `org-agenda-files'."
+    (setq org-agenda-files
+	  (seq-difference
+	   (delete-dups (append
+			 (org-agenda-files)
+			 (vulpea-project-files)
+			 ;; include files modified in past three days,
+			 ;; provided number of such files less than 1000
+			 (ps/org-roam-recent 1 1000)))
+	   ps/org-agenda-files-excluded)))
+#+end_src
+
 ** org-capture
 :PROPERTIES:
 :ID:       14F93A83-0BE7-42E3-891E-F6806192296B
@@ -19651,6 +19653,11 @@ The following functions, created by [[https://200ok.ch/posts/2022-12-06_how_much
    org-agenda-files
    '(0 . 0)))
 #+end_src
+*** TODO Tweak ~ps/productivity-of-the-day~ function to compute value created
+:PROPERTIES:
+:ID:       1B86CB4D-D297-4C6D-99F7-49A80B7B0688
+:END:
+By considering both tasks completed and their associated priorities.
 
 ** Archive                                                         :ARCHIVE:
 :PROPERTIES:

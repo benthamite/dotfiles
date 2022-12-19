@@ -10667,15 +10667,15 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (org-directory ps/dir-org) ; set org directory
   (org-todo-keywords
    '((sequence "TODO(t)"
-               "DOING(g)"
-               "SOMEDAY(s)"
-               "MAYBE(m)"
-               "WAITING(w)"
-               "PROJECT(p)"
-               "|"
-               "DELEGATED(l)"
-               "CANCELLED(c)"
-               "DONE(d)")))
+	       "DOING(g)"
+	       "SOMEDAY(s)"
+	       "MAYBE(m)"
+	       "WAITING(w)"
+	       "PROJECT(p)"
+	       "|"
+	       "DELEGATED(l)"
+	       "CANCELLED(c)"
+	       "DONE(d)")))
   (org-priority-highest 1)
   (org-priority-default 7)
   (org-priority-lowest 9 "set priorities")
@@ -10701,10 +10701,10 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (org-ellipsis " ")
   (org-link-elisp-confirm-function nil)
   (org-file-apps '((auto-mode . emacs)
-                   (directory . emacs)
-                   ("\\.mm\\'" . default)
-                   ("\\.x?html?\\'" . default)
-                   ("\\.pdf\\'" . emacs)))
+		   (directory . emacs)
+		   ("\\.mm\\'" . default)
+		   ("\\.x?html?\\'" . default)
+		   ("\\.pdf\\'" . emacs)))
 
   :config
   (add-to-list 'org-modules 'org-habit)
@@ -10751,7 +10751,7 @@ description)."
     (interactive)
     (widen)
     (let ((search-invisible nil)
-          (isearchp-regexp-quote-yank-flag nil))
+	  (isearchp-regexp-quote-yank-flag nil))
       (isearch-forward-regexp nil 1) ; isearch+
       (ps/isearch-yank-unquoted-string "^\*+ ")))
 
@@ -10761,14 +10761,14 @@ description)."
 address."
     (interactive)
     (if (org-in-regexp org-link-bracket-re 1)
-        (save-excursion
-          (let ((remove (list (match-beginning 0) (match-end 0)))
-                (description
-                 (if (match-end 2)
-                     (org-match-string-no-properties 2)
-                   (org-match-string-no-properties 1))))
-            (apply 'delete-region remove)
-            (insert description)))))
+	(save-excursion
+	  (let ((remove (list (match-beginning 0) (match-end 0)))
+		(description
+		 (if (match-end 2)
+		     (org-match-string-no-properties 2)
+		   (org-match-string-no-properties 1))))
+	    (apply 'delete-region remove)
+	    (insert description)))))
 
   (defun ps/org-insert-todo-subheading-after-body ()
     (interactive)
@@ -10786,221 +10786,223 @@ address."
     "Get the content text of the heading at point and add it to the `kill-ring'.
 Excludes the heading itself and any child subtrees."
     (if (org-before-first-heading-p)
-        (message "Not in or on an org heading")
+	(message "Not in or on an org heading")
       (save-excursion
-        ;; If inside heading contents, move the point back to the heading
-        ;; otherwise `org-agenda-get-some-entry-text' won't work.
-        (unless (org-at-heading-p) (org-previous-visible-heading 1))
-        (let ((contents (substring-no-properties
-                         (org-agenda-get-some-entry-text
-                          (point-marker)
-                          most-positive-fixnum))))
-          contents))))
+	;; If inside heading contents, move the point back to the heading
+	;; otherwise `org-agenda-get-some-entry-text' won't work.
+	(unless (org-at-heading-p) (org-previous-visible-heading 1))
+	(let ((contents (substring-no-properties
+			 (org-agenda-get-some-entry-text
+			  (point-marker)
+			  most-positive-fixnum))))
+	  contents))))
 
   (defun ps/org-copy-heading-contents ()
     (interactive)
     (let ((contents (ps/org-get-heading-contents)))
       (if (string= contents "")
-          (message "Heading is empty.")
-        (message "Copied: %s" contents)
-        (kill-new contents))))
+	  (message "Heading is empty.")
+	(message "Copied: %s" contents)
+	(kill-new contents))))
 
 
-(defun ps/org-copy-heading-name ()
-  (interactive)
-  "Copy name of heading at point."
-  (kill-new (org-entry-get nil "ITEM")))
+  (defun ps/org-copy-heading-name ()
+    (interactive)
+    "Copy name of heading at point."
+    (kill-new (org-entry-get nil "ITEM")))
 
-;; reddit.com/r/emacs/comments/e4jnlj/how_to_create_a_word_counter_that_counts_words_in/f9e3796
-(defun ps/org-count-words ()
-  "If region is active, count words in it; otherwise count words
+  ;; reddit.com/r/emacs/comments/e4jnlj/how_to_create_a_word_counter_that_counts_words_in/f9e3796
+  (defun ps/org-count-words ()
+    "If region is active, count words in it; otherwise count words
 in current subtree."
-  (interactive)
-  (if (use-region-p)
-      (funcall-interactively #'count-words-region (region-beginning) (region-end))
-    (org-with-wide-buffer
-     (cl-loop for (lines words characters)
-              in (org-map-entries
-                  (lambda ()
-                    (unpackaged/org-forward-to-entry-content 'unsafe)
-                    (let ((end (org-entry-end-position)))
-                      (list (count-lines (point) end)
-                            (count-words (point) end)
-                            (- end (point)))))
-                  nil 'tree)
-              sum lines into total-lines
-              sum words into total-words
-              sum characters into total-characters
-              finally return (let ((message (format "Subtree \"%s\" has %s lines, %s words, and %s characters."
-                                                    (org-get-heading t t) total-lines total-words total-characters)))
-                               (kill-new (number-to-string total-words))
-                               (message message)
-                               message)))))
+    (interactive)
+    (if (use-region-p)
+	(funcall-interactively #'count-words-region (region-beginning) (region-end))
+      (org-with-wide-buffer
+       (cl-loop for (lines words characters)
+		in (org-map-entries
+		    (lambda ()
+		      (unpackaged/org-forward-to-entry-content 'unsafe)
+		      (let ((end (org-entry-end-position)))
+			(list (count-lines (point) end)
+			      (count-words (point) end)
+			      (- end (point)))))
+		    nil 'tree)
+		sum lines into total-lines
+		sum words into total-words
+		sum characters into total-characters
+		finally return (let ((message (format "Subtree \"%s\" has %s lines, %s words, and %s characters."
+						      (org-get-heading t t) total-lines total-words total-characters)))
+				 (kill-new (number-to-string total-words))
+				 (message message)
+				 message)))))
 
-;; Note that there exists `org-back-to-heading', possibly making the below redundant or inferior
-(defun ps/org-jump-to-beginning-of-heading ()
-  "Move to the beginning of heading at point."
-  (interactive)
-  (if visual-line-mode
-      (progn
-        (visual-line-mode -1)
-        (setq visual-line-mode-toggle t)))
-  (when (org-at-heading-p)
-    (next-line))
-  (org-previous-visible-heading 1)
-  (if visual-line-mode-toggle
-      (visual-line-mode)))
+  ;; Note that there exists `org-back-to-heading', possibly making the below redundant or inferior
+  (defun ps/org-jump-to-beginning-of-heading ()
+    "Move to the beginning of heading at point."
+    (interactive)
+    (if visual-line-mode
+	(progn
+	  (visual-line-mode -1)
+	  (setq visual-line-mode-toggle t)))
+    (when (org-at-heading-p)
+      (next-line))
+    (org-previous-visible-heading 1)
+    (if visual-line-mode-toggle
+	(visual-line-mode)))
 
-(defun ps/org-move-subtree ()
-  "Move subtree at point to separate file. If parent heading is
+  (defun ps/org-move-subtree ()
+    "Move subtree at point to separate file. If parent heading is
 'Parent heading', file will be named `parent-heading.org'."
-  (interactive)
-  (ps/org-jump-to-beginning-of-heading)
-  (let* ((name (ps/org-copy-heading-name))
-         ;; TODO: expand regular expression so that it reflects the transformation used by the EA Wiki
-         (filename (expand-file-name
-                    (concat (ps/org-wiki-slug name) ".org")
-                    ps/dir-people)))
-    (org-cut-subtree)
-    (find-file-other-window filename)
-    (let ((subtree (replace-regexp-in-string "^\\*+" "*" (current-kill 0))))
-      (insert (concat "#+title: " name "\n\n" subtree)))
+    (interactive)
     (ps/org-jump-to-beginning-of-heading)
-    (ps/switch-to-last-window)))
+    (let* ((name (ps/org-copy-heading-name))
+	   ;; TODO: expand regular expression so that it reflects the transformation used by the EA Wiki
+	   (filename (expand-file-name
+		      (concat (ps/org-wiki-slug name) ".org")
+		      ps/dir-people)))
+      (org-cut-subtree)
+      (find-file-other-window filename)
+      (let ((subtree (replace-regexp-in-string "^\\*+" "*" (current-kill 0))))
+	(insert (concat "#+title: " name "\n\n" subtree)))
+      (ps/org-jump-to-beginning-of-heading)
+      (ps/switch-to-last-window)))
 
-(defun ps/org-jump-to-first-heading ()
-  "Move point to the beginning of the first org heading in the
+  (defun ps/org-jump-to-first-heading ()
+    "Move point to the beginning of the first org heading in the
 current buffer."
-  (interactive)
-  (widen)
-  (goto-char (point-min))
-  (org-next-visible-heading 1))
+    (interactive)
+    (widen)
+    (goto-char (point-min))
+    (org-next-visible-heading 1))
 
-;; This tweaked command calls `ps/org-cycle-global' instead.
-;; [2022-06-19 Sun] No longer using `ps/org-cycle-global' so this
-;; command isn't used either.
-(defun ps/org-shifttab (&optional arg)
-  "Global visibility cycling or move to previous table field.
+  ;; This tweaked command calls `ps/org-cycle-global' instead.
+  ;; [2022-06-19 Sun] No longer using `ps/org-cycle-global' so this
+  ;; command isn't used either.
+  (defun ps/org-shifttab (&optional arg)
+    "Global visibility cycling or move to previous table field.
 Call `org-table-previous-field' within a table.
 When ARG is nil, cycle globally through visibility states.
 When ARG is a numeric prefix, show contents of this level."
-  (interactive "P")
-  (cond
-   ((org-at-table-p) (call-interactively 'org-table-previous-field))
-   ((integerp arg)
-    (let ((arg2 (if org-odd-levels-only (1- (* 2 arg)) arg)))
-      (message "Content view to level: %d" arg)
-      (org-cycle-content (prefix-numeric-value arg2))
-      (org-cycle-show-empty-lines t)
-      (setq org-cycle-global-status 'overview)
-      (run-hook-with-args 'org-cycle-hook 'overview)))
-   (t (call-interactively 'ps/org-cycle-global))))
+    (interactive "P")
+    (cond
+     ((org-at-table-p) (call-interactively 'org-table-previous-field))
+     ((integerp arg)
+      (let ((arg2 (if org-odd-levels-only (1- (* 2 arg)) arg)))
+	(message "Content view to level: %d" arg)
+	(org-cycle-content (prefix-numeric-value arg2))
+	(org-cycle-show-empty-lines t)
+	(setq org-cycle-global-status 'overview)
+	(run-hook-with-args 'org-cycle-hook 'overview)))
+     (t (call-interactively 'ps/org-cycle-global))))
 
-(defun ps/org-super-return (&optional indent arg interactive)
-  "When `org-return-follows-link' is non-nil and point is on a
+  (defun ps/org-super-return (&optional indent arg interactive)
+    "When `org-return-follows-link' is non-nil and point is on a
 link, call `org-open-at-point' and set
 `browse-url-browser-function' to `eww-browse-url'"
-  (interactive "P")
-  (let ((browse-url-browser-function 'eww-browse-url)
-        (browse-url-handlers nil))
-    (org-open-at-point)))
+    (interactive "P")
+    (let ((browse-url-browser-function 'eww-browse-url)
+	  (browse-url-handlers nil))
+      (org-open-at-point)))
 
-(defun ps/backward-org-transpose-element ()
-  "Transpose current and previous elements, keeping blank lines between.
+  (defun ps/backward-org-transpose-element ()
+    "Transpose current and previous elements, keeping blank lines between.
 Point is moved after both elements."
-  (interactive)
-  (org-skip-whitespace)
-  (let ((end (org-element-property :end (org-element-at-point))))
-    (org-drag-element-forward)
-    (goto-char end)))
+    (interactive)
+    (org-skip-whitespace)
+    (let ((end (org-element-property :end (org-element-at-point))))
+      (org-drag-element-forward)
+      (goto-char end)))
 
-(defun ps/org-clear-heading-contents (&optional include-children include-properties)
-  "Remove contents in org heading at point."
-  (interactive)
-  (save-restriction
-    (if include-children
-        (ps/org-narrow-to-entry-and-children)
-      (ps/org-narrow-to-entry-no-children))
-    (org-back-to-heading)
-    (if include-properties
-        (forward-line)
-      (org-end-of-meta-data t))
-    (delete-region (point) (point-max))))
+  (defun ps/org-clear-heading-contents (&optional include-children include-properties)
+    "Remove contents in org heading at point."
+    (interactive)
+    (save-restriction
+      (if include-children
+	  (ps/org-narrow-to-entry-and-children)
+	(ps/org-narrow-to-entry-no-children))
+      (org-back-to-heading)
+      (if include-properties
+	  (forward-line)
+	(org-end-of-meta-data t))
+      (delete-region (point) (point-max))))
 
-(defun ps/paste-html-to-org ()
-  "Takes the contents of the system clip/paste-board, and uses
+  (defun ps/paste-html-to-org ()
+    "Takes the contents of the system clip/paste-board, and uses
 `pandoc' to convert it to the org-mode format."
-  (interactive)
-  (let* ((clip (if (eq system-type 'darwin)
-                   "pbv public.html"
-                 "xclip -out -selection 'clipboard' -t text/html"))
-         (format (if (eq major-mode 'org-mode) "org" "markdown"))
-         (pandoc (concat "pandoc -f html -t " format))
-         (cmd    (concat clip " | " pandoc))
-         (text   (shell-command-to-string cmd)))
-    (kill-new text)
-    (yank)))
+    (interactive)
+    (let* ((clip (if (eq system-type 'darwin)
+		     "pbv public.html"
+		   "xclip -out -selection 'clipboard' -t text/html"))
+	   (format (if (eq major-mode 'org-mode) "org" "markdown"))
+	   (pandoc (concat "pandoc -f html -t " format))
+	   (cmd    (concat clip " | " pandoc))
+	   (text   (shell-command-to-string cmd)))
+      (kill-new text)
+      (yank)))
 
-:general
-(org-mode-map
- "<S-left>" nil
- "<S-right>" nil
- "<S-up>" nil
- "<S-down>" nil
- "<M-left>" nil
- "<M-right>" nil
- "<M-S-left>" nil
- "<M-S-right>" nil
- "<M-up>" nil
- "<M-down>" nil
- "C-j" nil
- "<backtab>" 'org-shifttab
- "s-<return>" 'ps/org-super-return
- "C-k" nil
- "C-," nil
- "A-C-s-i" 'org-backward-sentence
- "A-C-s-o" 'org-forward-sentence
- "A-C-s-," 'org-backward-paragraph
- "A-C-s-." 'org-forward-paragraph ; org element?
- "A-C-s-m" 'org-beginning-of-line
- "A-C-s-z" 'org-end-of-line ; karabiner maps `/' to `z'; otherwise I can't trigger the command while holding `shift'
- "A-C-s-r" 'org-previous-visible-heading
- "A-C-s-f" 'org-next-visible-heading
- "A-C-s-n" 'ps/org-jump-to-beginning-of-heading ; move to beginning of heading
- "A-C-s-M-m" 'org-previous-block
- "A-C-s-M-/" 'org-next-block
- "A-C-M-s-j" 'org-previous-link
- "A-C-M-s-;" 'org-next-link
- "A-H-M-t" 'org-transpose-element
- "H-s-o" 'org-open-at-point
- "A-C-s-n" 'ps/org-jump-to-first-heading
- "s-A-b" 'ps/org-set-todo-properties
- "s-c" 'org-ctrl-c-ctrl-c
- "s-d" 'org-deadline
- "s-e" 'org-set-effort
- "s-f" 'org-insert-todo-subheading
- "s-A-f" 'ps/org-insert-todo-subheading-after-body
- "s-h" 'ps/org-copy-heading-name
- "s-A-h" 'ps/org-copy-heading-contents
- "s-p" 'org-time-stamp-inactive
- "s-A-p" 'org-time-stamp
- "s-q" 'org-set-tags-command
- "s-A-s" 'org-schedule
- ;; "s-A-s" 'ps/org-isearch-visible-org-heading
- "s-t" 'org-todo
- "s-A-t" 'org-sort
- "s-v" 'ps/paste-html-to-org
- "s-A-v" 'org-copy-visible
- "s-y" 'org-evaluate-time-range
- "s-A-y" 'ps/org-open-at-point-with-eww
- "s-z" 'org-edit-special
- "s-A-z" 'ps/org-export-to-ea-wiki
- "s-," 'org-priority
- "A-<return>" "C-u M-<return>"
- "A-M-<return>" 'org-insert-todo-heading
- ;; bindings with matching commands in Fundamental mode
- "H-v" 'org-yank
- "M-w" 'ps/org-count-words))
+  :general
+  (org-mode-map
+   "<S-left>" nil
+   "<S-right>" nil
+   "<S-up>" nil
+   "<S-down>" nil
+   "<M-left>" nil
+   "<M-right>" nil
+   "<M-S-left>" nil
+   "<M-S-right>" nil
+   "<M-up>" nil
+   "<M-down>" nil
+   "C-j" nil
+   "<backtab>" 'org-shifttab
+   "s-<return>" 'ps/org-super-return
+   "C-k" nil
+   "C-," nil
+   "A-C-s-i" 'org-backward-sentence
+   "A-C-s-o" 'org-forward-sentence
+   "A-C-s-," 'org-backward-paragraph
+   "A-C-s-." 'org-forward-paragraph ; org element?
+   "A-C-s-m" 'org-beginning-of-line
+   "A-C-s-z" 'org-end-of-line ; karabiner maps `/' to `z'; otherwise I can't trigger the command while holding `shift'
+   "A-C-s-r" 'org-previous-visible-heading
+   "A-C-s-f" 'org-next-visible-heading
+   "A-C-s-n" 'ps/org-jump-to-beginning-of-heading ; move to beginning of heading
+   "A-C-s-M-m" 'org-previous-block
+   "A-C-s-M-/" 'org-next-block
+   "A-C-M-s-j" 'org-previous-link
+   "A-C-M-s-;" 'org-next-link
+   "A-H-M-t" 'org-transpose-element
+   "H-s-o" 'org-open-at-point
+   "A-C-s-n" 'ps/org-jump-to-first-heading
+   "s-A-b" 'ps/org-set-todo-properties
+   "s-c" 'org-ctrl-c-ctrl-c
+   "s-d" 'org-deadline
+   "s-e" 'org-set-effort
+   "s-f" 'org-insert-todo-subheading
+   "s-A-f" 'ps/org-insert-todo-subheading-after-body
+   "s-h" 'ps/org-copy-heading-name
+   "s-A-h" 'ps/org-copy-heading-contents
+   "s-p" 'org-time-stamp-inactive
+   "s-A-p" 'org-time-stamp
+   "s-q" 'org-set-tags-command
+   "s-A-s" 'org-schedule
+   ;; "s-A-s" 'ps/org-isearch-visible-org-heading
+   "s-t" 'org-todo
+   "s-A-t" 'org-sort
+   "s-v" 'ps/paste-html-to-org
+   "s-A-v" 'org-copy-visible
+   "s-y" 'org-evaluate-time-range
+   "s-A-y" 'ps/org-open-at-point-with-eww
+   "s-z" 'org-edit-special
+   "s-A-z" 'ps/org-export-to-ea-wiki
+   "s-," 'org-priority
+   "A-<return>" "C-u M-<return>"
+   "A-M-<return>" 'org-insert-todo-heading
+   ;; bindings with matching commands in Fundamental mode
+   "H-v" 'org-yank
+   "M-w" 'ps/org-count-words)
+  (org-agenda-mode-map
+   "s-s" 'org-save-all-org-buffers))
 #+end_src
 
 *** Archive                                                                                                           :ARCHIVE:
@@ -11265,7 +11267,6 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "p" 'org-agenda-date-earlier
    "q" 'org-agenda-kill-all-agenda-buffers
    "s" 'org-agenda-schedule
-   "s-s" 'org-save-all-org-buffers
    "SPC" 'ps/org-agenda-goto-and-start-clock
    "W" 'org-agenda-refile
    "X" 'org-agenda-exit
@@ -19658,7 +19659,10 @@ The following functions, created by [[https://200ok.ch/posts/2022-12-06_how_much
 :ID:       1B86CB4D-D297-4C6D-99F7-49A80B7B0688
 :END:
 By considering both tasks completed and their associated priorities.
-
+**** TODO Implement percentile feedback
+:PROPERTIES:
+:ID:       B37445B2-EED7-41E1-9413-73E4E02F394E
+:END:
 ** Archive                                                         :ARCHIVE:
 :PROPERTIES:
 :ID:       EDC5DFF7-CCA3-4C1B-8E08-9629392A168E

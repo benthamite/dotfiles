@@ -9101,7 +9101,7 @@ To check: https://github.com/PillFall/languagetool.el
   (text-mode-hook . visual-line-mode))
 #+end_src
 
-*** TODO Define ~text-mode-hook~ and ~prog-mode-hook~
+*** TODO [#6] Define ~text-mode-hook~ and ~prog-mode-hook~
 :PROPERTIES:
 :ID:       30886FEE-60C4-4BAA-B629-2871CFC120A1
 :END:
@@ -9730,7 +9730,7 @@ otherwise the whole buffer."
    "A-C-s-f" 'ledger-navigate-next-xact-or-directive))
 #+end_src
 
-*** TODO Consider replacing ~commodities.py~ with Elisp alternative
+*** TODO [#6] Consider replacing ~commodities.py~ with Elisp alternative
 :PROPERTIES:
 :ID:       303E3552-2FD9-41A9-A6E6-C26110E61282
 :END:
@@ -10217,11 +10217,13 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   (flycheck-python-pycompile-executable "python3")
   (python-shell-interpreter "python3")
   (org-babel-python-command "python3")
+  
   :config
   (remove-hook 'python-mode-hook #'yasnippet-snippets--fixed-indent) ; some package (`elpy'?) is adding this
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((python . t)))
+   
   :general
   (python-mode-map
    "s-l" 'python-shell-send-file
@@ -10306,7 +10308,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :PROPERTIES:
 :ID:       DEEF7EF7-E79C-427B-9E1D-86D22FC2056E
 :END:
-*** TODO Check out pen.el
+*** TODO [#5] Check out pen.el
 :PROPERTIES:
 :ID:       2743B1F0-CCA8-4F48-8DC4-EF93E1A4607F
 :END:
@@ -11265,7 +11267,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "Z" 'org-agenda-add-note
    "z" 'org-agenda-undo))
 #+end_src
-*** TODO remove ~project~ tag from agenda view
+*** TODO [#6] remove ~project~ tag from agenda view
 :PROPERTIES:
 :ID:       1097ADCA-5DF0-40F2-9FF9-D8E44946CE66
 :END:
@@ -12086,7 +12088,7 @@ When FILES is given, scan these files instead."
    "s-A-u" 'ps/org-id-update-id-locations))
 #+end_src
 
-*** TODO Revise function above to robustly exclude selected headings
+*** TODO [#5] Revise function above to robustly exclude selected headings
 :PROPERTIES:
 :ID:       77F06C6A-1F3F-4F9D-A1CF-02B16D00DB62
 :END:
@@ -13212,7 +13214,7 @@ CLOCK: [2022-03-31 Thu 17:22]--[2022-03-31 Thu 17:25] =>  0:03
 :PROPERTIES:
 :ID:       1146CE48-9243-435A-8394-07C385538104
 :END:
-*** TODO Try memacs
+*** TODO [#5] Try memacs
 :PROPERTIES:
 :ID:       B27D8912-4089-4E37-B4BD-195B398C066B
 :END:
@@ -13377,7 +13379,7 @@ return such list if its length is less than LIMIT."
 - And [[https://takeonrules.com/2021/08/22/ever-further-refinements-of-org-roam-usage/][this post]]
 
 
-*** TODO Turn all notes into lowercase unless uppercase is appropriate
+*** TODO [#6] Turn all notes into lowercase unless uppercase is appropriate
 :PROPERTIES:
 :ID:       60F7D02B-ACBE-410C-9304-DBE5E4414B26
 :END:
@@ -15591,7 +15593,7 @@ first name, and names are separated by a semicolon."
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
-*** TODO Figure out difference between ~date~ and ~urldate~ bibtex fields
+*** TODO [#6] Figure out difference between ~date~ and ~urldate~ bibtex fields
 :PROPERTIES:
 :ID:       7B7EA121-F1C0-4EAD-99F5-AAF4162DFDE9
 :END:
@@ -19398,7 +19400,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 ;; (midnight-hook . straight-prune-build)
 #+end_src
 
-*** TODO Fix coinprices
+*** TODO [#6] Fix coinprices
 :PROPERTIES:
 :ID:       8E1274F1-2A21-463C-875F-F9D8DAE587F1
 :END:

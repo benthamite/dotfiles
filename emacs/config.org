@@ -18921,6 +18921,34 @@ CLOCK: [2021-05-04 Tue 21:41]--[2021-05-04 Tue 21:56] =>  0:15
 :END:
 :LOGBOOK:
 :END:
+** plstore
+:PROPERTIES:
+:ID:       5257E611-7953-4898-B743-25803EC7D9B4
+:END:
+#+begin_src emacs-lisp :results silent
+(use-feature plstore
+  :init
+  (setq plstore-cache-passphrase-for-symmetric-encryption t))
+#+end_src
+
+** auth-source
+:PROPERTIES:
+:ID:       291F9998-9940-4249-A048-92B5F2A2895E
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature auth-source
+  :defer 5
+  :preface
+  (eval-when-compile
+    (defvar auth-sources))
+  :custom
+  (auth-sources '(macos-keychain-internet macos-keychain-generic)))
+#+end_src
+
 ** pass
 :PROPERTIES:
 :ID:       518D3C1F-AFD6-4B72-8980-CAD10BBAEDDE
@@ -19081,24 +19109,6 @@ CLOSED: [2022-06-03 Fri 16:43]
 :ID:       243B8F7F-4320-46F8-89EF-82FF6262C988
 :ARCHIVE_TIME: 2022-06-03 Fri 16:43
 :END:
-** auth-source
-:PROPERTIES:
-:ID:       291F9998-9940-4249-A048-92B5F2A2895E
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature auth-source
-  :defer 5
-  :preface
-  (eval-when-compile
-    (defvar auth-sources))
-  :custom
-  (auth-sources '(macos-keychain-internet macos-keychain-generic)))
-#+end_src
-
 ** auth-source-pass
 :PROPERTIES:
 :ID:       00772E1B-A97C-46B5-8DE9-77462AAE0189

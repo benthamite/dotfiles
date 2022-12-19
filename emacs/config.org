@@ -11169,7 +11169,14 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   (org-agenda-clockreport-parameter-plist
    (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter ps/org-clocktable-sorter)))
 
+  (org-agenda-hide-tags-regexp "project")
+
   :config
+  (defvar ps/org-agenda-files-excluded
+    `(,ps/file-tareas-leo
+      ,ps/file-tareas-fede)
+    "List of files to remove from `org-agenda-files'")
+  
   (defun ps/org-agenda-goto-and-start-clock ()
     "In org-agenda, go to entry at point and clock in."
     (interactive)
@@ -11267,14 +11274,26 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "Z" 'org-agenda-add-note
    "z" 'org-agenda-undo))
 #+end_src
-*** TODO [#6] remove ~project~ tag from agenda view
-:PROPERTIES:
-:ID:       1097ADCA-5DF0-40F2-9FF9-D8E44946CE66
-:END:
 *** TODO [#5] Exclude Fede and Leo ~tareas.org~ files from ~org-agenda~
 :PROPERTIES:
 :ID:       7512BCCE-B29A-4CB3-8B6B-A8C63E3407CD
 :END:
+Added the final line to this function:
+
+#+begin_src emacs-lisp :results silent :tangle no
+(defun vulpea-agenda-files-update (&rest _)
+    "Update the value of `org-agenda-files'."
+    (setq org-agenda-files
+	  (seq-difference
+	   (delete-dups (append
+			 (org-agenda-files)
+			 (vulpea-project-files)
+			 ;; include files modified in past three days,
+			 ;; provided number of such files less than 1000
+			 (ps/org-roam-recent 1 1000)))
+	   ps/org-agenda-files-excluded)))
+#+end_src
+
 *** TODO [#6] align tags
 :PROPERTIES:
 :ID:       8F2D8B6E-2B3E-434E-9D60-5A1E23F8E4C1
@@ -11380,6 +11399,16 @@ CLOSED: [2022-01-03 Mon 22:54]
 :LOGBOOK:
 CLOCK: [2022-01-03 Mon 21:49]--[2022-01-03 Mon 22:16] =>  0:27
 :END:
+**** DONE [#6] remove ~project~ tag from agenda view
+CLOSED: [2022-12-19 Mon 08:52]
+:PROPERTIES:
+:ID:       1097ADCA-5DF0-40F2-9FF9-D8E44946CE66
+:ARCHIVE_TIME: 2022-12-19 Mon 08:52
+:END:
+:LOGBOOK:
+CLOCK: [2022-12-19 Mon 08:50]--[2022-12-19 Mon 08:52] =>  0:02
+:END:
+Easy: ~(org-agenda-hide-tags-regexp "project")~
 ** org-capture
 :PROPERTIES:
 :ID:       14F93A83-0BE7-42E3-891E-F6806192296B
@@ -11951,7 +11980,6 @@ not already have one."
                 (file-name-nondirectory (buffer-file-name))
                 '("orb-noter-template.org"
                   "tareas.org"
-                  "feeds.org"
                   "calendar.org"
                   ".org2blog.org"
                   "feeds.org"))
@@ -13648,23 +13676,23 @@ function returns nil if current buffer contains only completed
 tasks."
     (when (eq major-mode 'org-mode)
       (org-element-map
-          (org-element-parse-buffer 'headline)
-          'headline
-        (lambda (headline)
-          (or
-           (eq (org-element-property :todo-type headline)
-               'todo)
-           (org-element-property :scheduled headline)
-           (org-element-property :deadline headline)))
-        nil
-        'first-match)))
+	  (org-element-parse-buffer 'headline)
+	  'headline
+	(lambda (headline)
+	  (or
+	   (eq (org-element-property :todo-type headline)
+	       'todo)
+	   (org-element-property :scheduled headline)
+	   (org-element-property :deadline headline)))
+	nil
+	'first-match)))
 
   (defun ps/vulpea-anniversary-p ()
     "Return non-nil if current buffer has an anniversary."
     (when (eq major-mode 'org-mode)
       (save-excursion
-        (goto-char (point-min))
-        (search-forward "%%(org-anniversary" nil t))))
+	(goto-char (point-min))
+	(search-forward "%%(org-anniversary" nil t))))
 
   (defun ps/vulpea-priority-p ()
     "Return non-nil if current buffer has a heading with a priority.
@@ -13674,12 +13702,12 @@ function returns nil if current buffer contains only completed
 tasks."
     (when (eq major-mode 'org-mode)
       (org-element-map
-          (org-element-parse-buffer 'headline)
-          'headline
-        (lambda (headline)
-          (org-element-property :priority headline))
-        nil
-        'first-match)))
+	  (org-element-parse-buffer 'headline)
+	  'headline
+	(lambda (headline)
+	  (org-element-property :priority headline))
+	nil
+	'first-match)))
 
   (defun vulpea-project-files ()
     "Return a list of note files containing 'project' tag." ;
@@ -13688,49 +13716,51 @@ tasks."
       #'car
       (org-roam-db-query
        [:select [nodes:file]
-                :from tags
-                :left-join nodes
-                :on (= tags:node-id nodes:id)
-                :where (like tag (quote "%\"project\"%"))]))))
+		:from tags
+		:left-join nodes
+		:on (= tags:node-id nodes:id)
+		:where (like tag (quote "%\"project\"%"))]))))
 
   (defun vulpea-project-update-tag ()
     "Update PROJECT tag in the current buffer."
     (when (and (not (active-minibuffer-window))
-               (vulpea-buffer-p))
+	       (vulpea-buffer-p))
       (save-excursion
-        (goto-char (point-min))
-        (let* ((tags (vulpea-buffer-tags-get))
-               (original-tags tags))
-          (if (or (ps/vulpea-project-p) (ps/vulpea-anniversary-p))
-              (setq tags (cons "project" tags))
-            (setq tags (remove "project" tags)))
+	(goto-char (point-min))
+	(let* ((tags (vulpea-buffer-tags-get))
+	       (original-tags tags))
+	  (if (or (ps/vulpea-project-p) (ps/vulpea-anniversary-p))
+	      (setq tags (cons "project" tags))
+	    (setq tags (remove "project" tags)))
 
-          ;; cleanup duplicates
-          (setq tags (seq-uniq tags))
+	  ;; cleanup duplicates
+	  (setq tags (seq-uniq tags))
 
-          ;; update tags if changed
-          (when (or (seq-difference tags original-tags)
-                    (seq-difference original-tags tags))
-            (apply #'vulpea-buffer-tags-set tags))))))
+	  ;; update tags if changed
+	  (when (or (seq-difference tags original-tags)
+		    (seq-difference original-tags tags))
+	    (apply #'vulpea-buffer-tags-set tags))))))
 
   (defun vulpea-agenda-files-update (&rest _)
     "Update the value of `org-agenda-files'."
     (setq org-agenda-files
-          (delete-dups (append
-                        (org-agenda-files)
-                        (vulpea-project-files)
-                        ;; include files modified in past three days,
-                        ;; provided number of such files less than 1000
-                        (ps/org-roam-recent 1 1000)))))
+	  (seq-difference
+	   (delete-dups (append
+			 (org-agenda-files)
+			 (vulpea-project-files)
+			 ;; include files modified in past three days,
+			 ;; provided number of such files less than 1000
+			 (ps/org-roam-recent 1 1000)))
+	   ps/org-agenda-files-excluded)))
 
   (advice-add 'org-agenda :before #'vulpea-agenda-files-update)
 
   (defun vulpea-buffer-p ()
     "Return non-nil if the currently visited buffer is a note."
     (and buffer-file-name
-         (string-prefix-p
-          (expand-file-name (file-name-as-directory org-roam-directory))
-          (file-name-directory buffer-file-name))))
+	 (string-prefix-p
+	  (expand-file-name (file-name-as-directory org-roam-directory))
+	  (file-name-directory buffer-file-name))))
 
   :hook
   (find-file-hook . vulpea-project-update-tag)
@@ -18965,7 +18995,7 @@ CLOCK: [2021-04-11 Sun 14:36]--[2021-04-11 Sun 14:47] =>  0:11
 CLOCK: [2021-04-11 Sun 12:14]--[2021-04-11 Sun 12:28] =>  0:14
 CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 :END:
-/[[https://github.com/NicolasPetton/pass][Pass]] is a major mode for password-store./
+/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for password-store./
 
 #+begin_src emacs-lisp :results silent
 (use-package pass
@@ -19118,8 +19148,6 @@ CLOCK: [2021-05-29 Sat 15:10]--[2021-05-29 Sat 15:44] =>  0:34
 CLOCK: [2021-05-29 Sat 13:52]--[2021-05-29 Sat 14:10] =>  0:18
 CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 :END:
-
-Note that this is now part of Emacs, so should be declared as a feature rather than as an external package.
 
 #+begin_src emacs-lisp :results silent
 (use-feature auth-source-pass

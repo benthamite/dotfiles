@@ -741,7 +741,7 @@ CLOCK: [2021-03-23 Tue 19:30]--[2021-03-23 Tue 19:38] =>  0:08
 {:des "on Emacs, left_control → command + tab (alone) | left_command (held)"
  :rules [
           [:!Ch :!QCOWh :emacs]
-          [:!CQh :!QCOWH :emacs]
+          [:!CQh :!QTCWh :emacs]
          [:##left_control :!Qleft_command [:!steam :emacs] {:alone :!Ctab}]
          ]}
 #+end_src

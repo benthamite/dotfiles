@@ -740,7 +740,8 @@ CLOCK: [2021-03-23 Tue 19:30]--[2021-03-23 Tue 19:38] =>  0:08
 #+begin_src clojure
 {:des "on Emacs, left_control → command + tab (alone) | left_command (held)"
  :rules [
-          [:!CQh :!QCOWh :emacs]
+          ;; [:!Ch :!QCOWh :emacs]
+          ;; [:!CQh :!QCOWSh :emacs]
          [:##left_control :!Qleft_command [:!steam :emacs] {:alone :!Ctab}]
          ]}
 #+end_src
@@ -1013,13 +1014,6 @@ A normal Command+Spacebar event triggered within Emacs is intercepted by OSX, gi
 #+end_src
 
 Similarly, OSX intercepts Command+h, so we circumvent it by creating a new mapping:
-
-#+begin_src clojure
-{:des "On Emacs, disable OSX behavior of command + h"
- :rules [
-         [:!Ch :!QCOWh :emacs]
-         ]}
-#+end_src
 
 #+begin_src clojure
 {:des "On Emacs, disable OSX behavior of command + ?"

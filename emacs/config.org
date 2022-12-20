@@ -2161,6 +2161,9 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
 (use-feature org-faces
   :after org-modern
 
+  :custom
+  (org-fontify-quote-and-verse-blocks t)
+  
   :config
   (defun ps/custom-faces ()
     "My custom faces, to be used in conjunction with theme."

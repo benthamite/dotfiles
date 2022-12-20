@@ -740,8 +740,8 @@ CLOCK: [2021-03-23 Tue 19:30]--[2021-03-23 Tue 19:38] =>  0:08
 #+begin_src clojure
 {:des "on Emacs, left_control → command + tab (alone) | left_command (held)"
  :rules [
-          [:!CQh :!QCOWh :emacs]
-          ;; :!Qleft_command [:!steam :emacs] {:alone :!Ctab}]
+          ;; [:!CQh :!QCOWh :emacs]
+          :!Qleft_command [:!steam :emacs] {:alone :!Ctab}]
          ]}
 #+end_src
 

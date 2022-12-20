@@ -1037,7 +1037,7 @@ Similarly, OSX intercepts Command+h, so we circumvent it by creating a new mappi
 #+begin_src clojure
 {:des "On Emacs, disable OSX behavior of command + Option + H"
  :rules [
-         [:!CSq :!QCOWh :emacs]
+         [:!COh :!QCOWh :emacs]
          ]}
 #+end_src
 

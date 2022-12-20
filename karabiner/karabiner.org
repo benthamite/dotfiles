@@ -737,15 +737,15 @@ CLOCK: [2021-03-23 Tue 19:30]--[2021-03-23 Tue 19:38] =>  0:08
 :PROPERTIES:
 :ID:       E5FED8CC-8FA4-4964-87EF-4801A2B91848
 :END:
-#+begin_src clojure :tangle no
+#+begin_src clojure
 {:des "on Emacs, left_control → command + tab (alone) | left_command (held)"
  :rules [
-          [:!CQadd :!QCOWh :emacs]
-         ;; [:##left_control :!Qleft_command [:!steam :emacs] {:alone :!Ctab}]
+          [:!CQh :!QCOWh :emacs]
+         [:##left_control :!Qleft_command [:!steam :emacs] {:alone :!Ctab}]
          ]}
 #+end_src
 
-#+begin_src clojure :tangle no
+#+begin_src clojure
 {:des "outside Emacs, left_control → command + tab (alone) | left_option + left_command (held)"
  :rules [
          [:##left_control :!Oleft_command :!steam {:alone :!Ctab}]

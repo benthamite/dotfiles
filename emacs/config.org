@@ -4103,17 +4103,19 @@ Position the cursor at its beginning, according to the current mode.
 
 With a prefix ARG open line above the current line."
     (interactive "P")
+    (ps/visible-mode-enhanced)
     (if arg
         (crux-smart-open-line-above)
       (let ((org-at-heading-p (org-at-heading-p)))
         (move-end-of-line nil)
-        (newline-and-indent))))
+        (newline-and-indent)))
+    (ps/visible-mode-enhanced))
   ;; (when org-at-heading-p
   ;; (org-cycle)))))
 
   :general
   ("M-l" 'ps/crux-smart-open-line
-   "M-A-l" 'crux-smart-open-line-above
+   "M-A-l" (lambda! (ps/crux-smart-open-line t))
    "H-A-l" 'crux-duplicate-current-line-or-region))
 #+end_src
 
@@ -8418,9 +8420,9 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
         (kmacro-set-counter 1)
         (message "Set to numeric"))))
   :general
-  ("A-H-M-s-h" 'kmacro-end-or-call-macro ; = H-h, to circumvent OSX mapping
+  ("A-H-M-s" 'kmacro-end-or-call-macro ; = H-h, to circumvent OSX mapping
    "H-H" 'kmacro-start-macro-or-insert-counter
-   "H-A-h" 'kmacro-set-counter
+   "A-C-H-s-h" 'kmacro-set-counter
    "C-A-h" 'ps/kmacro-counter-toggle-alpha-number
    "A-h" 'name-last-kbd-macro
    "M-h" 'kmacro-edit-macro
@@ -14326,6 +14328,10 @@ Version 2015-06-08"
    "A-C-s-f" 'bibtex-next-entry))
 #+end_src
 
+*** TODO Figure out why the line at the top of ~old.bib~ is deleted
+:PROPERTIES:
+:ID:       704615F4-0253-4992-BE50-268C40F5B9C4
+:END:
 ** bibtex-completion
 :PROPERTIES:
 :ID:       DCD9D75D-7814-49D8-A3E0-33846D5A08FD
@@ -15045,7 +15051,7 @@ entry's key."
     (interactive)
     (let* ((key (ebib--get-key-at-point))
            (file (file-name-concat
-                  ps/dir-library
+                  ps/dir-library-pdf
                   (file-name-with-extension key ".pdf"))))
       (ps/ebib-copy-doi)
       (url-copy-file (scihub (current-kill 0)) file)
@@ -17859,6 +17865,10 @@ page for all websites except those in `ps/eww-readable-exceptions'."
    "x" 'eww-browse-with-external-browser))
 #+end_src
 
+*** TODO Integrate eww Chrome, Firefox history
+:PROPERTIES:
+:ID:       2C3DB6DF-B599-49DF-AD30-41C77D2326D7
+:END:
 *** TODO Check out these functions for implementing ~vimium~ on ~eww~
 :PROPERTIES:
 :ID:       4858793B-10A2-4014-84A8-5264551ED1CD

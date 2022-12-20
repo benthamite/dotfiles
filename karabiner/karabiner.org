@@ -61,14 +61,14 @@ CLOCK: [2021-06-07 Mon 20:38]--[2021-06-07 Mon 21:52] =>  1:14
 | ! | command + control + optional + shift (hyper) |
 |   |                                              |
 
-| physical key                                                     | k-alone         | e-alone         | karabiner | Emacs     | Emacs function              |
-|------------------------------------------------------------------+-----------------+-----------------+-----------+-----------+-----------------------------|
+| physical key        | k-alone         | e-alone         | karabiner | Emacs     | Emacs function              |
+|---------------------+-----------------+-----------------+-----------+-----------+-----------------------------|
 | [[id:7A4C371E-862F-4F1D-80D9-4E33869AEDE7][equal_sign]]          | =               | =               | SO        | A         |                             |
 | [[id:20033DF1-9596-4257-8C3C-8A90BE97B221][caps_lock]]           | escape          | C-g             | O         | M         |                             |
 | [[id:CF0E3547-DE12-40CE-8BBB-4347FFEE7401][left_shift]]          | -               | -               | QO        | A-M       |                             |
 | [[id:E5FED8CC-8FA4-4964-87EF-4801A2B91848][left_control]]        | Ctab            |                 | QC        | A-H       |                             |
 | [[id:CC3880F6-F71B-492D-8F0E-585ADB552004][delete_or_backspace]] | return_or_enter | return_or_enter | C         | H         |                             |
-| delete_forward                                                   | TC0             | C-H-0           | S         | S         |                             |
+| delete_forward      | TC0             | C-H-0           | S         | S         |                             |
 | [[id:D9295C31-3375-4F78-974C-9EDDEFA6E8A3][tab]]                 | tab             | tab             | T         | C         |                             |
 | [[id:30827877-0622-4450-A217-56C7A05CC20F][right_control]]       | f18             | f18             | QT        | A-C       |                             |
 | [[id:18FD5116-6D73-4B5D-9379-A0DD1D01970F][right_shift]]         | –               | –               | QW        | A-s       | major mode                  |
@@ -83,18 +83,18 @@ CLOCK: [2021-06-07 Mon 20:38]--[2021-06-07 Mon 21:52] =>  1:14
 | [[id:A670C98B-FCD0-4B4C-A3D9-C0DB143209AE][x]]                   |                 |                 | TCW       | C-H-s     | avy                         |
 | [[id:303127EC-3362-408C-9A3B-45C2A108D994][z]]                   |                 |                 | QTW       | A-C-s     | movement                    |
 | [[id:5BA69509-7C1B-4DD6-A54D-112902320CCB][semicolon]]           | ;               | ;               |           |           | special characters          |
-|                                                                  |                 |                 | QCOW      | A-H-M-s   | resvd. for misc. remappings |
-|------------------------------------------------------------------+-----------------+-----------------+-----------+-----------+-----------------------------|
-|                                                                  |                 |                 | TO        | C-M       |                             |
-|                                                                  |                 |                 | TW        | C-s       |                             |
-|                                                                  |                 |                 | CO        | H-M       |                             |
+|                     |                 |                 | QCOW      | A-H-M-s   | resvd. for misc. remappings |
+|---------------------+-----------------+-----------------+-----------+-----------+-----------------------------|
+|                     |                 |                 | TO        | C-M       |                             |
+|                     |                 |                 | TW        | C-s       |                             |
+|                     |                 |                 | CO        | H-M       |                             |
 | [[id:7898DDC0-CE2C-45A7-A418-A75CEFA743AC][Cj]]                  |                 |                 | TCOWQ     | A-C-H-M-s | copy                        |
-|                                                                  |                 |                 | TCO       | C-H-M     |                             |
-|                                                                  |                 |                 | COW       | H-M-s     |                             |
+|                     |                 |                 | TCO       | C-H-M     |                             |
+|                     |                 |                 | COW       | H-M-s     |                             |
 | [[id:DAEB0BD5-535B-42E1-9170-C1039B8EC794][CSj]]                 |                 |                 | QTCO      | A-C-H-M   | delete                      |
-|                                                                  |                 |                 | WTQO      | A-C-M-s   |                             |
-|                                                                  |                 |                 | QTCW      | A-C-H-s   |                             |
-|                                                                  |                 |                 |           |           |                             |
+|                     |                 |                 | WTQO      | A-C-M-s   |                             |
+|                     |                 |                 | QTCW      | A-C-H-s   |                             |
+|                     |                 |                 |           |           |                             |
 
 ** List of keys
 :PROPERTIES:

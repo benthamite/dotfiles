@@ -1034,6 +1034,13 @@ Similarly, OSX intercepts Command+h, so we circumvent it by creating a new mappi
          ]}
 #+end_src
 
+#+begin_src clojure
+{:des "On Emacs, disable OSX behavior of command + Option + H"
+ :rules [
+         [:!CSq :!QCOWh :emacs]
+         ]}
+#+end_src
+
 On Emacs, caps lock triggers C-g instead of escape. So we create a reverse mapping:
 
 #+begin_src clojure

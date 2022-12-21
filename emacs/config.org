@@ -10181,11 +10181,6 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 :ID:       4ADAE24A-49F4-47F2-AF5A-B15B8137E714
 :END:
 
-#+begin_src emacs-lisp :results silent
-(use-feature edebug
-  :custom
-  (debug-on-message "") ; set to message you want to debug
-  )
 #+end_src
 *** Archive                                                       :ARCHIVE:
 :PROPERTIES:
@@ -10207,7 +10202,7 @@ See [[id:94184DD8-591C-46CD-BFC3-9738113DA640][debugging emacs lisp]].
 :PROPERTIES:
 :ID:       B69F718B-9BAE-4EAD-99DE-2C8C1E98CCA3
 :END:
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-feature backtrace
   :custom
   (backtrace-line-length nil))

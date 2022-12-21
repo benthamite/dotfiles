@@ -4109,12 +4109,13 @@ With a prefix ARG open line above the current line."
     (ps/visible-mode-enhanced)
     (if arg
         (crux-smart-open-line-above)
-      (let ((org-at-heading-p (org-at-heading-p)))
-        (move-end-of-line nil)
-        (newline-and-indent)))
-    (ps/visible-mode-enhanced))
-  ;; (when org-at-heading-p
-  ;; (org-cycle)))))
+      (move-end-of-line nil)
+      (when (org-at-heading-p)
+        (org-end-of-meta-data t)
+        (when (eq org-cycle-subtree-status 'folded)
+          (show-subtree)))
+      (newline-and-indent)
+      (ps/visible-mode-enhanced)))
 
   :general
   ("M-l" 'ps/crux-smart-open-line
@@ -4126,6 +4127,7 @@ With a prefix ARG open line above the current line."
 :PROPERTIES:
 :ID:       38C9C0A7-5979-4656-879D-F71638FCF40D
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature button
   :general

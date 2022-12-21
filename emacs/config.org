@@ -6239,7 +6239,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 Used by `ps/insert-date'."
     :type 'string)
 
-   (defcustom ps/time-specifier "%R %z"
+  (defcustom ps/time-specifier "%R %z"
     "Time specifier for `format-time-string'.
 Used by `ps/insert-date'."
     :type 'string)
@@ -6265,7 +6265,7 @@ with the specified date."
    "A-s-=" 'ps/insert-date
    "s-=" "C-u A-s-=")
   (calendar-mode-map
-  "H-m" 'calendar-set-mark
+   "H-m" 'calendar-set-mark
    "A-C-s-u" 'calendar-backward-day
    "A-C-s-i" 'calendar-backward-week
    "A-C-s-o" 'calendar-forward-week
@@ -6281,15 +6281,6 @@ with the specified date."
    "=" 'calendar-count-days-region))
 #+end_src
 
-*** TODO [#7] remove mother's, father's day from Emacs diary
-:PROPERTIES:
-:Effort:   0:10
-:ID:       59B9BACC-2802-4AF8-93C6-F7AFAF6B9682
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-19 Sun 06:31]--[2022-06-19 Sun 06:44] =>  0:13
-:END:
-It's defined in the variable ~holiday-general-holidays~
 *** Archive                                                       :ARCHIVE:
 :PROPERTIES:
 :ID:       9C38D5E5-7717-405F-833D-28EF09AC752B
@@ -6319,7 +6310,28 @@ CLOSED: [2021-07-04 Sun 22:32]
 :ARCHIVE_TIME: 2021-07-04 Sun 22:32
 :ID:       A7BD0851-692C-4556-BABB-F4F1A8E0946F
 :END:
-
+**** DONE [#7] remove mother's, father's day from Emacs diary
+CLOSED: [2022-12-21 Wed 00:09]
+:PROPERTIES:
+:Effort:   0:10
+:ID:       59B9BACC-2802-4AF8-93C6-F7AFAF6B9682
+:ARCHIVE_TIME: 2022-12-21 Wed 00:09
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-19 Sun 06:31]--[2022-06-19 Sun 06:44] =>  0:13
+:END:
+It's defined in the variable ~holiday-general-holidays~
+** loaddefs
+:PROPERTIES:
+:ID:       08F898A1-71C0-4BF4-B6E8-5D6649DB230C
+:END:
+#+begin_src emacs-lisp :results silent
+(use-feature loaddefs
+  :config
+  (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
+                     (holiday-float 5 0 2 "Mother's Day"))
+                   (delete holiday holiday-general-holidays))))
+#+end_src
 ** org-gcal
 :PROPERTIES:
 :ID:       9E8AEF97-2E1A-489E-929A-CE5789EABFB9
@@ -6360,7 +6372,6 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass
   :defer 10
-  :demand t
 
   :init
   (setq org-gcal-up-days 0)

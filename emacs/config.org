@@ -19022,7 +19022,7 @@ CLOCK: [2021-05-04 Tue 21:41]--[2021-05-04 Tue 21:56] =>  0:15
 #+begin_src emacs-lisp :results silent
 (use-feature plstore
   :init
-  (setq plstore-cache-passphrase-for-symmetric-encryption t))
+  (setq-default plstore-cache-passphrase-for-symmetric-encryption t))
 #+end_src
 
 ** auth-source

@@ -19024,6 +19024,16 @@ CLOCK: [2021-05-04 Tue 21:41]--[2021-05-04 Tue 21:56] =>  0:15
   :init
   (setq-default plstore-cache-passphrase-for-symmetric-encryption t))
 #+end_src
+** epg-config
+:PROPERTIES:
+:ID:       012F15A3-7717-4B09-9F43-74DA6F5F7C1A
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature epg-config
+  :custom
+  (epg-pinentry-mode 'loopback))
+#+end_src
 
 ** auth-source
 :PROPERTIES:

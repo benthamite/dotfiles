@@ -11322,25 +11322,12 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 :PROPERTIES:
 :ID:       8F2D8B6E-2B3E-434E-9D60-5A1E23F8E4C1
 :END:
-*** TODO [#5] Create command to show all and only bibliographic notes in agenda
-:PROPERTIES:
-:ID:       D3067042-7F51-4115-9B24-EC347739E033
-:Effort:   0:50
-:END:
-This would let me sort headings by priority.
-It could be an ~org-agenda~ call wrapped around a ~let~ declaration for ~org-agenda-files~.
 *** TODO [#4] Find way to represent day agenda visually as a series of 30-minute blocks
 :PROPERTIES:
 :Effort:   0:40
 :ID:       48717679-CF3D-475E-BCB6-87CAD939941F
 :END:
 Similar to Google Calendar.
-*** TODO [#5] Add to agenda all files with dates like this:
-:PROPERTIES:
-:Effort:   0:30
-:ID:       6F93BBA0-ABCC-4926-B44F-C3AA57206655
-:END:
-%%(diary-float 10 0 3) Mother's day
 *** SOMEDAY [#4] Show agenda task in different color if it recurs
 :PROPERTIES:
 :Effort:   0:45
@@ -11455,6 +11442,23 @@ Added the final line to this function:
            ps/org-agenda-files-excluded)))
 #+end_src
 
+**** DONE [#5] Create command to show all and only bibliographic notes in agenda
+CLOSED: [2022-12-21 Wed 00:14]
+:PROPERTIES:
+:ID:       D3067042-7F51-4115-9B24-EC347739E033
+:Effort:   0:50
+:ARCHIVE_TIME: 2022-12-21 Wed 00:14
+:END:
+This would let me sort headings by priority.
+It could be an ~org-agenda~ call wrapped around a ~let~ declaration for ~org-agenda-files~.
+**** DONE [#5] Add to agenda all files with dates like this
+CLOSED: [2022-12-21 Wed 00:14]
+:PROPERTIES:
+:Effort:   0:30
+:ID:       6F93BBA0-ABCC-4926-B44F-C3AA57206655
+:ARCHIVE_TIME: 2022-12-21 Wed 00:14
+:END:
+%%(diary-float 10 0 3) Mother's day
 ** org-capture
 :PROPERTIES:
 :ID:       14F93A83-0BE7-42E3-891E-F6806192296B
@@ -15967,10 +15971,6 @@ or specify any other coding system (and risk losing\n\
    "i" 'zotra-add-entry-from-search))
 #+end_src
 
-*** TODO [#5] Make sure all new bibtex entries have a ~timestamp~ field
-:PROPERTIES:
-:ID:       5B05526E-8279-4C39-80F8-D0B81C665912
-:END:
 *** [#6] Archive                                                  :ARCHIVE:
 :PROPERTIES:
 :ID:       6BFE5851-35CD-481C-9E3C-7F4D81336A29
@@ -15984,6 +15984,17 @@ CLOSED: [2022-11-07 Mon 14:13]
 :LOGBOOK:
 CLOCK: [2022-10-10 Mon 20:09]--[2022-10-10 Mon 20:17] =>  0:08
 CLOCK: [2022-10-10 Mon 19:29]--[2022-10-10 Mon 19:59] =>  0:30
+:END:
+
+*** Archive                                                       :ARCHIVE:
+:PROPERTIES:
+:ID:       B8B5D792-0C5B-4058-87CB-BF933B2E7AF9
+:END:
+**** DONE [#5] Make sure all new bibtex entries have a ~timestamp~ field
+CLOSED: [2022-12-21 Wed 00:18]
+:PROPERTIES:
+:ID:       5B05526E-8279-4C39-80F8-D0B81C665912
+:ARCHIVE_TIME: 2022-12-21 Wed 00:18
 :END:
 
 ** scihub
@@ -16741,11 +16752,6 @@ it, without asking for confirmation."
 - Package to try: [[https://github.com/rougier/mu4e-thread-folding][GitHub - rougier/mu4e-thread-folding: Functions for folding threads in mu4e headers view]]
   - See also [[https://gist.github.com/rougier/98e83fb50e19fb73fe34a7ecc5fc1ccc][this]] (discussed [[https://www.reddit.com/r/emacs/comments/pvpb6d/mu4e_very_fast_thread_folding/][here]])
 
-*** TODO [#5] Diagnose why database has to be constant resynched
-:PROPERTIES:
-:Effort:   0:30
-:ID:       97DD58AE-03CB-435B-B866-A7531C107FB5
-:END:
 *** Archive                                                                                                           :ARCHIVE:
 :PROPERTIES:
 :ID:       7914B367-02AA-4BB6-876E-DB154B692D86
@@ -16952,6 +16958,13 @@ CLOSED: [2022-07-26 Tue 17:03]
 :ARCHIVE_TIME: 2022-08-29 Mon 21:07
 :END:
 I should use an [[https://stackoverflow.com/questions/27664267/python-dictionary-or-map-in-elisp][association list]] with email-signature pairs
+**** DONE [#5] Diagnose why database has to be constant resynched
+CLOSED: [2022-12-21 Wed 00:19]
+:PROPERTIES:
+:Effort:   0:30
+:ID:       97DD58AE-03CB-435B-B866-A7531C107FB5
+:ARCHIVE_TIME: 2022-12-21 Wed 00:19
+:END:
 ** mu4e-org
 :PROPERTIES:
 :ID:       6E72E4DE-4CFE-4BC0-BC3C-39FB3D6EB526
@@ -17866,6 +17879,65 @@ page for all websites except those in `ps/eww-readable-exceptions'."
         (unless (string-match-p (concat "^\\(?:https?://\\)?\\(?:www\\.\\)?" url) current-url)
           (eww-readable)))))
 
+  ;; The following four commands copied from
+  ;; github.com/gopar/.emacs.d#eww
+  (defun ps/eww-edit-current-url (&optional arg)
+    (interactive)
+    (let* ((url (eww-copy-page-url))
+           (uris (eww-suggested-uris)))
+      (setq url (read-string "Edit URL or new search: " url 'eww-promt-history uris))
+      (setq url (eww--dwim-expand-url url))
+      (eww url (if arg 4 nil))))
+
+  (defun ps/open-eww-with-recent-kill-ring (&optional arg)
+    "Open current EWW with most recent item in kill ring.
+If prefix arg is passed, then open in new EWW buffer."
+    (interactive "P")
+    (if arg
+        (with-current-buffer
+            (if (eq major-mode 'eww-mode) (clone-buffer)
+              (generate-new-buffer "*eww*"))
+          (eww-mode)
+          (eww (current-kill 0)))
+      (eww (current-kill 0))))
+
+  (defun ps/eww-go-up-url-heirarchy ()
+    "Go up the URL heirarchy."
+    (interactive)
+    (let* ((url (url-generic-parse-url (eww-current-url)))
+           (filepath (url-filename url))
+           (paths (s-split "/" filepath))
+           (new-path (s-join "/" (butlast paths 1)))
+           (new-url nil))
+      (setq new-url (url-parse-make-urlobj
+                     (url-type url)
+                     (url-user url)
+                     (url-password url)
+                     (url-host url)
+                     (url-port url)
+                     new-path
+                     (url-target url)
+                     nil
+                     (url-fullness url)))
+      (eww-browse-url (url-recreate-url new-url))))
+
+  (defun ps/eww-go-to-root-url-heirarchy ()
+    "Go to root of current URL heirarchy"
+    (interactive)
+    (let* ((url (url-generic-parse-url (eww-current-url)))
+           (new-url nil))
+      (setq new-url (url-parse-make-urlobj
+                     (url-type url)
+                     (url-user url)
+                     (url-password url)
+                     (url-host url)
+                     (url-port url)
+                     ""
+                     (url-target url)
+                     nil
+                     (url-fullness url)))
+      (eww-browse-url (url-recreate-url new-url))))
+
   :hook
   (eww-after-render-hook . ps/rename-buffer)
   (eww-after-render-hook . ps/eww-readable-autoview)
@@ -17878,6 +17950,11 @@ page for all websites except those in `ps/eww-readable-exceptions'."
    "j" 'eww-back-url
    ";" 'eww-forward-url
    "r" 'eww-readable
+   "g" nil
+   "g e" 'ps/eww-edit-current-url
+   "g u" 'ps/eww-go-up-url-heirarchy
+   "g U" 'ps/eww-go-to-root-url-heirarchy
+   "p" 'ps/open-eww-with-recent-kill-ring
    "o" 'eww-toggle-fonts
    "p" 'ps/eww-pdf-of-current-webpage
    ":" (lambda! (eww-follow-link '(4)))
@@ -17888,11 +17965,6 @@ page for all websites except those in `ps/eww-readable-exceptions'."
 :PROPERTIES:
 :ID:       2C3DB6DF-B599-49DF-AD30-41C77D2326D7
 :END:
-*** TODO Check out these functions for implementing ~vimium~ on ~eww~
-:PROPERTIES:
-:ID:       4858793B-10A2-4014-84A8-5264551ED1CD
-:END:
-https://github.com/gopar/.emacs.d#eww
 *** TODO [#6] Create command to background open in ~eww~
 :PROPERTIES:
 :ID:       52CAC919-6942-466F-AA47-4FF86F7F13AE
@@ -17907,6 +17979,17 @@ CLOCK: [2022-07-25 Mon 13:51]--[2022-07-25 Mon 14:01] =>  0:10
 CLOCK: [2022-07-19 Tue 21:36]--[2022-07-19 Tue 22:31] =>  0:55
 CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 :END:
+*** Archive                                                         :ARCHIVE:
+:PROPERTIES:
+:ID:       6ED17D19-FE7B-4AC2-8D62-8FB3F65F1DA1
+:END:
+**** DONE Check out these functions for implementing ~vimium~ on ~eww~
+CLOSED: [2022-12-21 Wed 00:32]
+:PROPERTIES:
+:ID:       4858793B-10A2-4014-84A8-5264551ED1CD
+:ARCHIVE_TIME: 2022-12-21 Wed 00:32
+:END:
+https://github.com/gopar/.emacs.d#eww
 ** w3m
 :PROPERTIES:
 :ID:       986E4522-7EE1-477A-89EB-08855BCBECEE

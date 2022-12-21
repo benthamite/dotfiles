@@ -61,5 +61,9 @@ echo 'Hide Transmission app donate message'
 defaults write -g WebAutomaticTextReplacementEnabled -bool false
 echo 'Disable macOS/iOS text expansion'
 
+# https://apple.stackexchange.com/a/270625
+defaults write com.apple.CrashReporter DialogType none
+echo 'Do not ask to send crash reports'
+
 echo 'Some commands here require restart! Please do that for them to take effect.'
 

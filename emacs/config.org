@@ -4108,12 +4108,12 @@ With a prefix ARG open line above the current line."
     (interactive "P")
     (ps/visible-mode-enhanced)
     (if arg
-	(crux-smart-open-line-above)
+        (crux-smart-open-line-above)
       (move-end-of-line nil)
       (when (or (org-at-heading-p) (org-at-drawer-p) (org-at-timestamp-p))
-	(org-end-of-meta-data t)
-	(when (eq org-cycle-subtree-status 'folded)
-	  (show-subtree)))
+        (org-end-of-meta-data t)
+        (when (eq org-cycle-subtree-status 'folded)
+          (show-subtree)))
       (newline-and-indent))
     (ps/visible-mode-enhanced))
 
@@ -6059,11 +6059,11 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
   (run-with-timer 4 nil (lambda () (setq writeroom-width (window-total-width))))
 
   (defun ps/writerrom-global-effects (arg)
-  "Enable and disable custom effects when `writeroom-mode' is
+    "Enable and disable custom effects when `writeroom-mode' is
 activated (`arg' = 1) and deactivated (`arg' = -1). The function
 needs to be included as an element in the list defined by
 `writeroom-global-effects'."
-        (tab-bar-mode (* -1 arg)))
+    (tab-bar-mode (* -1 arg)))
 
   :custom
   (writeroom-global-effects '(writeroom-set-fullscreen
@@ -6074,7 +6074,7 @@ needs to be included as an element in the list defined by
                               writeroom-set-bottom-divider-width
                               ps/writerrom-global-effects))
 
-  (writeroom-restore-window-config t "upon leaving writeroom mode, restore pre-existing number of windows")
+  (writeroom-restore-window-config t "upon leaving `writeroom mode', restore pre-existing number of windows")
   (writeroom-major-modes '(org-mode
                            elfeed-search-mode
                            elfeed-show-mode
@@ -11147,8 +11147,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (winum-select-window-1)
     (let ((agenda "*Org Agenda(a)*"))
       (if (get-buffer agenda)
-	  (switch-to-buffer "*Org Agenda(a)*")
-	(org-agenda nil "a"))))
+          (switch-to-buffer "*Org Agenda(a)*")
+        (org-agenda nil "a"))))
 
   :custom
   (org-agenda-files `(,ps/dir-android))
@@ -11173,8 +11173,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    '(
      ("E" "TODOs without effort"
       ((org-ql-block '(and (todo)
-			   (not (property "effort")))
-		     ((org-ql-block-header "TODOs without effort")))))
+                           (not (property "effort")))
+                     ((org-ql-block-header "TODOs without effort")))))
      ("w" "Weekly review"
       agenda ""
       ((org-agenda-clockreport-mode t)
@@ -11196,11 +11196,11 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
       tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")
      ("w" "Wiki tasks"
       ((org-ql-block '(and (todo "TODO")
-			   (buffers-files "wiki-entries.org"))
-		     ((org-ql-block-header "Wiki TODO: notes")))
+                           (buffers-files "wiki-entries.org"))
+                     ((org-ql-block-header "Wiki TODO: notes")))
        (org-ql-block '(and (todo "TODO")
-			   (tags "articles"))
-		     ((org-ql-block-header "Wiki TODO: articles")))))))
+                           (tags "articles"))
+                     ((org-ql-block-header "Wiki TODO: articles")))))))
   (org-agenda-clockreport-parameter-plist
    (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter ps/org-clocktable-sorter)))
 
@@ -11226,8 +11226,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (funcall (or org-clock-clocktable-formatter 'org-clocktable-write-default) ipos tables params))
 
   (advice-add 'org-agenda-goto :after
-	      (lambda (&rest args)
-		(ps/org-narrow-to-entry-and-children)))
+              (lambda (&rest args)
+                (ps/org-narrow-to-entry-and-children)))
 
   (setq org-agenda-archives-mode 'trees) ; this variable is non-customizable, so won't work in `:custom'
 
@@ -11264,19 +11264,19 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   ;; We add these two advices because `org-modern-mode' interferes
   ;; with the display of the habits progress bar
   (advice-add 'org-habit-toggle-display-in-agenda :before
-	      (lambda (arg)
-		(if org-habit-show-habits
-		    (global-org-modern-mode)
-		  (global-org-modern-mode -1))))
+              (lambda (arg)
+                (if org-habit-show-habits
+                    (global-org-modern-mode)
+                  (global-org-modern-mode -1))))
   (advice-add 'org-habit-toggle-display-in-agenda :after
-	      (lambda (arg)
-		(org-agenda-redo)
-		(global-org-modern-mode)))
+              (lambda (arg)
+                (org-agenda-redo)
+                (global-org-modern-mode)))
 
   :hook
   (org-agenda-mode-hook . (lambda ()
-			    (visual-line-mode -1)
-			    (toggle-truncate-lines 1)))
+                            (visual-line-mode -1)
+                            (toggle-truncate-lines 1)))
   :general
   ("C-<escape>" 'org-agenda)
   (org-agenda-mode-map

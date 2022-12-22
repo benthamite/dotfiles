@@ -18249,10 +18249,11 @@ I [[https://github.com/skeeto/elfeed/issues/434][opened]] an issue.
 (use-package elfeed-org
   :after elfeed
   :custom
-  (rmh-elfeed-org-files (list ps/file-feeds))
+  (rmh-elfeed-org-files (list ps/file-feeds-pablo ps/file-feeds-tlon))
   :config
   (elfeed-org))
 #+end_src
+
 ** elfeed-score
 :PROPERTIES:
 :ID:       613BE063-E193-4C4D-9FFA-D0B9DBB73805

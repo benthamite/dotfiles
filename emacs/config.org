@@ -6325,7 +6325,7 @@ It's defined in the variable ~holiday-general-holidays~
 :PROPERTIES:
 :ID:       08F898A1-71C0-4BF4-B6E8-5D6649DB230C
 :END:
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-feature loaddefs
   :init
   (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
@@ -6372,7 +6372,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   :if (equal (system-name) ps/computer-hostname-pablo)
   :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass
-  :defer 10
+  :demand t
+  ;; :defer 10
 
   :init
   (setq org-gcal-up-days 0)
@@ -19123,7 +19124,7 @@ CLOCK: [2021-05-04 Tue 21:41]--[2021-05-04 Tue 21:56] =>  0:15
 #+begin_src emacs-lisp :results silent
 (use-feature epg-config
   :custom
-  (epg-pinentry-mode nil))
+  (epg-pinentry-mode 'loopback)) ; use minibuffer for password entry
 #+end_src
 
 ** auth-source
@@ -19141,6 +19142,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
   (eval-when-compile
     (defvar auth-sources))
   :custom
+  (auth-source-debug t) ; uncomment for debugging
   (auth-sources '(macos-keychain-internet macos-keychain-generic)))
 #+end_src
 

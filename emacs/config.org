@@ -11143,21 +11143,11 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     "Open agenda in left window, creating it if necessary."
     (interactive)
     (ps/window-split-if-unsplit)
-    (let ((agenda
-           (cl-remove
-            nil
-            (mapcar (lambda (buf)
-                      (let ((pos (string-match "*Org agenda" (buffer-name buf))))
-                        (when pos
-                          (cons pos buf))))
-                    (buffer-list)))))
-      (winum-select-window-1)
-      (if agenda
-          (progn
-            (setq agenda (cl-sort agenda #'< :key 'car)))
-        (switch-to-buffer (cdr (car agenda))))
-      (setq org-habit-show-habits nil)
-      (org-agenda nil "a")))
+    (let ((agenda "*Org Agenda(a)*"))
+      (if (get-buffer agenda)
+	  (switch-to-buffer "*Org Agenda(a)*")
+	(org-agenda nil "a")
+	(setq org-habit-show-habits nil))))
 
   :custom
   (org-agenda-files `(,ps/dir-android))
@@ -11182,8 +11172,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    '(
      ("E" "TODOs without effort"
       ((org-ql-block '(and (todo)
-                           (not (property "effort")))
-                     ((org-ql-block-header "TODOs without effort")))))
+			   (not (property "effort")))
+		     ((org-ql-block-header "TODOs without effort")))))
      ("w" "Weekly review"
       agenda ""
       ((org-agenda-clockreport-mode t)
@@ -11205,11 +11195,11 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
       tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")
      ("w" "Wiki tasks"
       ((org-ql-block '(and (todo "TODO")
-                           (buffers-files "wiki-entries.org"))
-                     ((org-ql-block-header "Wiki TODO: notes")))
+			   (buffers-files "wiki-entries.org"))
+		     ((org-ql-block-header "Wiki TODO: notes")))
        (org-ql-block '(and (todo "TODO")
-                           (tags "articles"))
-                     ((org-ql-block-header "Wiki TODO: articles")))))))
+			   (tags "articles"))
+		     ((org-ql-block-header "Wiki TODO: articles")))))))
   (org-agenda-clockreport-parameter-plist
    (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter ps/org-clocktable-sorter)))
 
@@ -11235,8 +11225,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (funcall (or org-clock-clocktable-formatter 'org-clocktable-write-default) ipos tables params))
 
   (advice-add 'org-agenda-goto :after
-              (lambda (&rest args)
-                (ps/org-narrow-to-entry-and-children)))
+	      (lambda (&rest args)
+		(ps/org-narrow-to-entry-and-children)))
 
   (setq org-agenda-archives-mode 'trees) ; this variable is non-customizable, so won't work in `:custom'
 
@@ -11273,19 +11263,19 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   ;; We add these two advices because `org-modern-mode' interferes
   ;; with the display of the habits progress bar
   (advice-add 'org-habit-toggle-display-in-agenda :before
-              (lambda (arg)
-                (if org-habit-show-habits
-                    (global-org-modern-mode)
-                  (global-org-modern-mode -1))))
+	      (lambda (arg)
+		(if org-habit-show-habits
+		    (global-org-modern-mode)
+		  (global-org-modern-mode -1))))
   (advice-add 'org-habit-toggle-display-in-agenda :after
-              (lambda (arg)
-                (org-agenda-redo)
-                (global-org-modern-mode)))
+	      (lambda (arg)
+		(org-agenda-redo)
+		(global-org-modern-mode)))
 
   :hook
   (org-agenda-mode-hook . (lambda ()
-                            (visual-line-mode -1)
-                            (toggle-truncate-lines 1)))
+			    (visual-line-mode -1)
+			    (toggle-truncate-lines 1)))
   :general
   ("C-<escape>" 'org-agenda)
   (org-agenda-mode-map
@@ -15746,7 +15736,7 @@ CLOCK: [2022-08-31 Wed 14:05]--[2022-08-31 Wed 14:17] =>  0:12
 CLOCK: [2022-07-16 Sat 21:03]--[2022-07-16 Sat 21:15] =>  0:12
 CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 :END:
-/[[https://github.com/mpedramfar/zotra][zotra]]  provides functions to get bibliographic information from a URL via [[https://www.zotero.org/support/translators][Zotero translators]], but without relying on the Zotero client./
+/[[https://github.com/mpedramfar/zotra][zotra]] provides functions to get bibliographic information from a URL via [[https://www.zotero.org/support/translators][Zotero translators]], but without relying on the Zotero client./
 
 #+begin_src emacs-lisp :results silent
 (use-package zotra
@@ -15771,6 +15761,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (zotra-default-bibliography ps/file-bibliography-new)
   (zotra-default-entry-format "biblatex")
   (zotra-after-add-entry-hook nil)
+  (zotra-cli-command "/Users/pablostafforini/Dropbox/source/zotra-cli/bin/index.js")
 
   :config
 
@@ -19129,7 +19120,7 @@ CLOCK: [2021-05-04 Tue 21:41]--[2021-05-04 Tue 21:56] =>  0:15
 #+begin_src emacs-lisp :results silent
 (use-feature epg-config
   :custom
-  (epg-pinentry-mode 'loopback))
+  (epg-pinentry-mode nil))
 #+end_src
 
 ** auth-source

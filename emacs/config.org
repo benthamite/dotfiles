@@ -4108,14 +4108,14 @@ With a prefix ARG open line above the current line."
     (interactive "P")
     (ps/visible-mode-enhanced)
     (if arg
-        (crux-smart-open-line-above)
+	(crux-smart-open-line-above)
       (move-end-of-line nil)
       (when (or (org-at-heading-p) (org-at-drawer-p) (org-at-timestamp-p))
-        (org-end-of-meta-data t)
-        (when (eq org-cycle-subtree-status 'folded)
-          (show-subtree)))
-      (newline-and-indent)
-      (ps/visible-mode-enhanced)))
+	(org-end-of-meta-data t)
+	(when (eq org-cycle-subtree-status 'folded)
+	  (show-subtree)))
+      (newline-and-indent))
+    (ps/visible-mode-enhanced))
 
   :general
   ("M-l" 'ps/crux-smart-open-line
@@ -6332,6 +6332,7 @@ It's defined in the variable ~holiday-general-holidays~
                      (holiday-float 5 0 2 "Mother's Day"))
                    (delete holiday holiday-general-holidays))))
 #+end_src
+
 ** org-gcal
 :PROPERTIES:
 :ID:       9E8AEF97-2E1A-489E-929A-CE5789EABFB9
@@ -8449,7 +8450,7 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
    "C-A-h" 'ps/kmacro-counter-toggle-alpha-number
    "A-h" 'name-last-kbd-macro
    "M-h" 'kmacro-edit-macro
-   "M-A-h" 'kmacro-bind-to-key)
+   "M-A-h" 'kmacro-bind-to-key))
 #+end_src
 *** Archive                                                                                                           :ARCHIVE:
 :PROPERTIES:

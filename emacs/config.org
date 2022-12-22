@@ -6056,7 +6056,7 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
   :init
   ;; This neds to be delayed a few seconds because the value returned
   ;; by `window-total-width' changes as Emacs restarts.
-  (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))))
+  (run-with-timer 4 nil (lambda () (setq writeroom-width (window-total-width))))
 
   (defun ps/writerrom-global-effects (arg)
   "Enable and disable custom effects when `writeroom-mode' is
@@ -15967,7 +15967,7 @@ or specify any other coding system (and risk losing\n\
    "i" 'zotra-add-entry-from-search))
 #+end_src
 
-*** [#6] Archive                                                  :ARCHIVE:
+*** Archive                                                  :ARCHIVE:
 :PROPERTIES:
 :ID:       6BFE5851-35CD-481C-9E3C-7F4D81336A29
 :END:

@@ -4110,7 +4110,7 @@ With a prefix ARG open line above the current line."
     (if arg
         (crux-smart-open-line-above)
       (move-end-of-line nil)
-      (when (org-at-heading-p)
+      (when (or (org-at-heading-p) (org-at-drawer-p) (org-at-timestamp-p))
         (org-end-of-meta-data t)
         (when (eq org-cycle-subtree-status 'folded)
           (show-subtree)))
@@ -8443,13 +8443,13 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
         (kmacro-set-counter 1)
         (message "Set to numeric"))))
   :general
-  ("A-H-M-s" 'kmacro-end-or-call-macro ; = H-h, to circumvent OSX mapping
+  ("A-H-M-s-h" 'kmacro-end-or-call-macro ; = H-h, to circumvent OSX mapping
    "H-H" 'kmacro-start-macro-or-insert-counter
    "A-C-H-s-h" 'kmacro-set-counter
    "C-A-h" 'ps/kmacro-counter-toggle-alpha-number
    "A-h" 'name-last-kbd-macro
    "M-h" 'kmacro-edit-macro
-   "M-A-h" 'kmacro-bind-to-key))
+   "M-A-h" 'kmacro-bind-to-key)
 #+end_src
 *** Archive                                                                                                           :ARCHIVE:
 :PROPERTIES:
@@ -12868,24 +12868,27 @@ https://www.reddit.com/r/emacs/comments/cptwh4/org_analyzer_an_app_that_visualiz
 :END:
 #+begin_src emacs-lisp :results silent
 (defun ps/org-paste-clipboard-image ()
+  ;; TODO: write docstring
   (interactive)
   (if (executable-find "pngpaste")
       (let* ((counter 1)
              (image-file (concat
                           ps/dir-org-images
                           (org-id-get nil 'create)
-                          (format "-%d.png" counter)))
+                          (format "-%d.png" counter))))
         (while (file-exists-p image-file)
           (setq counter (1+ counter))
           (setq image-file (concat
                             ps/dir-org-images
                             (org-id-get nil 'create)
-                            (format "-%d.png" counter)))
+                            (format "-%d.png" counter))))
         (call-process-shell-command (format "pngpaste '%s'" image-file))
-        (insert (concat  "#+CAPTION: " (read-string "Caption: ") "\n"))
+        (let ((caption (read-string "Caption: ")))
+          (unless (string= caption "")
+            (insert (format "#+CAPTION: %s \n" caption))))
         (insert (format "[[file:%s]]" image-file))
         (org-display-inline-images)
-        (message "You can toggle inline images with C-c C-x C-v"))))
+        (message "You can toggle inline images with C-c C-x C-v"))
     (user-error "Requires pngpaste in PATH")))
 #+end_src
 
@@ -13993,7 +13996,7 @@ See [[https://github.com/emacs-citar/citar/wiki/Comparisons#summary-of-diverse-e
 #+begin_src emacs-lisp :results silent
 (defvar ps/library-genesis
   '("Library Genesis"
-    "http://libgen.is/search.php?&res=100&req="
+    "https://libgen.lc/index.php?req="
     "&phrase=1&view=simple&column=def&sort=extension&sortmode=DESC"))
 
 (defvar ps/amazon

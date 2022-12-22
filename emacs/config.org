@@ -6327,7 +6327,7 @@ It's defined in the variable ~holiday-general-holidays~
 :END:
 #+begin_src emacs-lisp :results silent
 (use-feature loaddefs
-  :config
+  :init
   (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
                      (holiday-float 5 0 2 "Mother's Day"))
                    (delete holiday holiday-general-holidays))))
@@ -11144,11 +11144,11 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     "Open agenda in left window, creating it if necessary."
     (interactive)
     (ps/window-split-if-unsplit)
+    (winum-select-window-1)
     (let ((agenda "*Org Agenda(a)*"))
       (if (get-buffer agenda)
 	  (switch-to-buffer "*Org Agenda(a)*")
-	(org-agenda nil "a")
-	(setq org-habit-show-habits nil))))
+	(org-agenda nil "a"))))
 
   :custom
   (org-agenda-files `(,ps/dir-android))
@@ -12752,6 +12752,7 @@ See if you can use it to store passwords in the config file.
   (org-habit-preceding-days 29)
   (org-habit-following-days 1)
   (org-habit-graph-column 3)
+  (org-habit-show-habits nil)
   (org-habit-show-habits-only-for-today nil)
 
   :config

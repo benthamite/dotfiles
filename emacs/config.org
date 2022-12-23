@@ -5657,7 +5657,7 @@ otherwise in two windows."
         (split-window-right))
       (balance-windows)))
 
-  (run-with-timer 2 nil 'ps/window-split-if-unsplit)
+  (run-with-timer 5 nil 'ps/window-split-if-unsplit)
 
   (defun ps/window--move-or-swap (this-buffer other-buffer &optional target-window)
     "docstring"
@@ -6052,11 +6052,10 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
 #+begin_src emacs-lisp :results silent
 (use-package writeroom-mode
   :defer 5
-
   :init
   ;; This neds to be delayed a few seconds because the value returned
   ;; by `window-total-width' changes as Emacs restarts.
-  (run-with-timer 4 nil (lambda () (setq writeroom-width (window-total-width))))
+  (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))))
 
   (defun ps/writerrom-global-effects (arg)
     "Enable and disable custom effects when `writeroom-mode' is
@@ -7998,13 +7997,40 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
 :PROPERTIES:
 :ID:       D0A453D1-784F-49E4-B238-ED009AF84EDB
 :END:
+/[[https://github.com/oantolin/orderless][orderless]] is an completion style that matches multiple regexps in any order./
 
 #+begin_src emacs-lisp :results silent
 (use-package orderless
   :defer 5
   :custom
   (completion-styles '(orderless basic partial-completion))
-  (completion-category-overrides '((file (styles basic partial-completion)))))
+  (completion-category-overrides '((file (styles basic partial-completion))))
+  (orderless-matching-styles '(orderless-regexp))
+  (orderless-style-dispatchers '(ps/orderless-flex-dispatcher
+                                 ps/orderless-initialism-dispatcher
+                                 ps/orderless-exclusion-dispatcher))
+
+  :config
+  ;; copied from github.com/oantolin/orderless#style-dispatchers
+  (defun ps/orderless-flex-dispatcher (pattern _index _total)
+    "Flex dispatcher using the tilde suffix."
+    (when (string-suffix-p "~" pattern)
+      `(orderless-flex . ,(substring pattern 0 -1))))
+
+  (defun ps/orderless-initialism-dispatcher (pattern index _total)
+    "Initialism dispatcher using the comma suffix."
+    (when (string-suffix-p "," pattern)
+      `(orderless-initialism . ,(substring pattern 0 -1))))
+
+      (defun ps/orderless-prefix-dispatcher (pattern index _total)
+    "Prefix dispatcher using the suffix."
+    (when (string-suffix-p "," pattern)
+      `(orderless-initialism . ,(substring pattern 0 -1))))
+
+  (defun ps/orderless-exclusion-dispatcher (pattern _index _total)
+    "Exclusion dispatcher using `!' as suffix."
+    (when (string-suffix-p "!" pattern)
+      `(orderless-without-literal . ,(substring pattern 1)))))
 #+end_src
 
 ** ido
@@ -9678,7 +9704,7 @@ otherwise the whole buffer."
 
   ;; :hook
   ;; (ledger-mode-hook . (lambda () (setq-local ledger-complete-in-steps t)))
-  
+
   :general
   (ledger-mode-map
    "s-SPC" 'ps/ledger-new-entry-below

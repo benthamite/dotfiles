@@ -9552,7 +9552,7 @@ To populate the database of historical prices:
               "%(binary) -f %(ledger-file) bal --strict")
              ("net worth (USD)"
               "%(binary) -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict")
-             ; I need to understand how the `--basis' flag works
+                                        ; I need to understand how the `--basis' flag works
              ("cost basis"
               "%(binary) -f %(ledger-file) --basis bal %(account) --strict")))
     (add-to-list 'ledger-reports report))
@@ -9563,54 +9563,6 @@ To populate the database of historical prices:
     (indent-for-tab-command)
     (ledger-navigate-next-xact-or-directive)
     (crux-smart-open-line-above))
-
-  (defun ps/ledger-import-ftx-transactions ()
-    "Import comma-separated file with FTX transactions as `org-table'
-and clean it up."
-    (interactive)
-    (other-window 1)
-    (orgtbl-edit (expand-file-name "order-history.csv" ps/dir-downloads))
-    (goto-char (+ (point-min) 1))
-    (dotimes (i 2)
-      (org-table-delete-column))
-    (while (re-search-forward ".*?|          0 |.*\n" nil t)
-      (replace-match ""))
-    (goto-char (point-min))
-    (while (search-forward "-PERP" nil t)
-      (replace-match "PERP"))
-    (goto-char (point-min))
-    (while (search-forward "/USD" nil t)
-      (replace-match ""))
-    (goto-char (point-min))
-    (while (re-search-forward "\\(sell.*?|.*?|.*?\\)\\([[:digit:]]\\{1,8\\}\\)" nil t)
-      (replace-match "\\1-\\2"))
-    (goto-char (point-min))
-    (call-interactively 'orgtbl-tab)
-    (org-table-next-row))
-
-  (defun ps/ledger-add-ftx-transaction ()
-    "Add transaction at point in `orgtbl' buffer imported via
-`ps/ledger-import-ftx-transactions'."
-    (interactive)
-    ;; (switch-to-buffer-other-window (concat "*orgtbl: " ps/dir-downloads "/order-history.csv*"))
-    (ps/org-table-copy-cell)
-    (org-table-goto-column 8)
-    (ps/org-table-copy-cell)
-    (org-table-goto-column 2)
-    (ps/org-table-copy-cell)
-    (org-table-goto-column 6)
-    (ps/org-table-copy-cell)
-    (other-window 1)
-    (ps/yasnippet-expand-by-key "ftxm")
-    (yank)
-    (yas-next-field-or-maybe-expand)
-    (yank 2)
-    (yas-next-field-or-maybe-expand)
-    (yank 2)
-    (yas-next-field-or-maybe-expand)
-    (other-window 1)
-    (org-table-next-row)
-    )
 
   (defun ps/ledger-align-and-next ()
     "Align transaction at point and move point to next entry."
@@ -9724,6 +9676,9 @@ otherwise the whole buffer."
     (ledger-toggle-current-transaction)
     (ledger-navigate-next-xact-or-directive))
 
+  ;; :hook
+  ;; (ledger-mode-hook . (lambda () (setq-local ledger-complete-in-steps t)))
+  
   :general
   (ledger-mode-map
    "s-SPC" 'ps/ledger-new-entry-below

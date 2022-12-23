@@ -7,7 +7,7 @@ export PS1="%~ $ "
 export NVM_DIR=~/.nvm
 source $(brew --prefix nvm)/nvm.sh
 
-alias emacsgui='/opt/homebrew/Cellar/emacs-mac/emacs-28.1-mac-9.0/Emacs.app/Contents/MacOS/Emacs'
+alias emacsgui='/opt/homebrew/Cellar/emacs-mac/emacs-28.2-mac-9.1/Emacs.app/Contents/MacOS/Emacs'
 
 mkvenv() {
     CURR_VENV=$(basename "$(pwd)")
@@ -18,3 +18,5 @@ mkvenv() {
     pip install --upgrade setuptools wheel
 }
 
+GPG_TTY=$(tty)
+export GPG_TTY

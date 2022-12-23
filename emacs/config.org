@@ -12685,7 +12685,6 @@ original."
 :LOGBOOK:
 CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 :END:
-
 /[[https://orgmode.org/manual/Org-Crypt.html][org-crypt]] encrypts the text under all headlines with a designated tag./
 
 #+begin_src emacs-lisp :results silent

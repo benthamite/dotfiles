@@ -8008,31 +8008,34 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
   (orderless-matching-styles '(orderless-regexp))
   (orderless-style-dispatchers '(ps/orderless-flex-dispatcher
                                  ps/orderless-initialism-dispatcher
+                                 ps/orderless-prefixes-dispatcher
                                  ps/orderless-exclusion-dispatcher))
 
   :config
-  ;; copied from github.com/oantolin/orderless#style-dispatchers
   (defun ps/orderless-flex-dispatcher (pattern _index _total)
-    "Flex dispatcher using the tilde suffix."
+    "Flex dispatcher using `~' as suffix."
     (when (string-suffix-p "~" pattern)
       `(orderless-flex . ,(substring pattern 0 -1))))
 
   (defun ps/orderless-initialism-dispatcher (pattern index _total)
-    "Initialism dispatcher using the comma suffix."
+    "Initialism dispatcher using `\,' as suffix."
     (when (string-suffix-p "," pattern)
       `(orderless-initialism . ,(substring pattern 0 -1))))
 
-      (defun ps/orderless-prefix-dispatcher (pattern index _total)
-    "Prefix dispatcher using the suffix."
-    (when (string-suffix-p "," pattern)
-      `(orderless-initialism . ,(substring pattern 0 -1))))
+      (defun ps/orderless-prefixes-dispatcher (pattern index _total)
+    "Prefix dispatcher using `\;' as suffix."
+    (when (string-suffix-p ";" pattern)
+      `(orderless-prefixes . ,(substring pattern 0 -1))))
 
   (defun ps/orderless-exclusion-dispatcher (pattern _index _total)
     "Exclusion dispatcher using `!' as suffix."
     (when (string-suffix-p "!" pattern)
       `(orderless-without-literal . ,(substring pattern 1)))))
 #+end_src
-
+*** resources
+:PROPERTIES:
+:ID:       27FB5F19-5F3F-4169-8B67-FCD3689558AF
+:END:
 ** ido
 :PROPERTIES:
 :ID:       458A26BD-1601-41D9-BC7E-7630466BC374

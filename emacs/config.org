@@ -7250,10 +7250,10 @@ To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. Tha
 2. fork repository (~N c f~)
      1. accept defaults in both prompts
      2. Answer "y" to "Set `remote.pushDefault' to "benthamite"? (y or n)"
-#  I believe this is not needed
-# 3. add remote (~N a~)
-     # 1. give it any name, e.g. ~mine~
-     # 2. pull individual topics, unless you want to pull all
+ I believe this is not needed
+3. add remote (~N a~)
+     1. give it any name, e.g. ~mine~
+     2. pull individual topics, unless you want to pull all
 4. create branch (~b c~)
      1. first select ~master~, then name your branch, e.g. ~fix/supply-missing-arguments-to-eaf-read-input~
 5. make changes
@@ -7264,7 +7264,6 @@ To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. Tha
      1. as source branch, select the remote branch selected above, e.g. ~mine/fix/supply-missing-arguments-to-eaf-read-input~.
      2. as target branch, select the branch of the repository you cloned originally, e.g. ~origin/master~.
      3. The first line (starting with a hash) is the commit summary; what you are asked to type below is a fuller description of the commit. If you leave it empty, the pull request won't be created (I think).
-     4. Finish with ~C-c C-c~ (~s-c~ is not configured)
 
 *** Archive                                                                                                           :ARCHIVE:
 :PROPERTIES:
@@ -7308,7 +7307,11 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :after magit ghub
   :demand t
   :custom
-  (forge-owned-accounts `((,ps/forge-owned-accounts))))
+  (forge-owned-accounts `((,ps/forge-owned-accounts)))
+
+  :general
+  (forge-post-mode-map
+  "s-c" 'forge-post-submit))
 #+end_src
 
 ** code-review
@@ -19108,7 +19111,7 @@ CLOCK: [2021-05-04 Tue 21:41]--[2021-05-04 Tue 21:56] =>  0:15
 #+begin_src emacs-lisp :results silent
 (use-feature epg-config
   :custom
-  (epg-pinentry-mode 'loopback)) ; use minibuffer for password entry
+  (epg-pinentry-mode nil)) ; use minibuffer for password entry
 #+end_src
 
 ** auth-source
@@ -19128,6 +19131,19 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
   :custom
   (auth-source-debug t) ; uncomment for debugging
   (auth-sources '(macos-keychain-internet macos-keychain-generic)))
+#+end_src
+
+** emacs-oauth2-auto
+:PROPERTIES:
+:ID:       C7B36982-D472-4248-8C61-B7EB0ED6ACF6
+:END:
+#+begin_src emacs-lisp :results silent
+(use-package emacs-oauth2-auto
+  :straight (emacs-oauth2-auto
+             :host github
+		   :repo "telotortium/emacs-oauth2-auto")
+
+  )
 #+end_src
 
 ** pass

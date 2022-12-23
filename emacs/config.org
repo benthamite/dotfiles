@@ -6365,8 +6365,6 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 (That's the actively maintained fork; the [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][official repository]] is no longer maintained.)
 
-[2022-10-08 Sat 19:43] Google no longer supports the authentication method used by ~org-gcal~; progress in patching ~org-gcal~ is tracked [[https://github.com/kidd/org-gcal.el/pull/200][here]].
-
 #+begin_src emacs-lisp :results silent
 (use-package org-gcal
   :if (equal (system-name) ps/computer-hostname-pablo)
@@ -18493,12 +18491,14 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
 account."
     (interactive)
     (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-ea-news.gpg"))
+    (auth-source-pass-get 'secret "auth-sources/twitter/ea_dot_news")
     (ps/twittering-reload))
 
   (defun ps/twittering-future-matters ()
     "Start a `twittering-mode' session with the `futurematters_'
 account."
     (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-future-matters.gpg"))
+    (auth-source-pass-get 'secret "auth-sources/twitter/futurematters_")
     (ps/twittering-reload))
 
   (defun ps/twittering-mode-get-uri ()

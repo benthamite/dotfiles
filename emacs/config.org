@@ -8520,6 +8520,17 @@ https://www.emacswiki.org/emacs/EmacsKeyboardMacroCounter
 :ID:       BD2CACC7-6077-4B9B-98D3-5D565F340D87
 :END:
 https://emacs.stackexchange.com/questions/14947/can-emacs-commands-be-called-from-a-shell-script
+
+** simple
+:PROPERTIES:
+:ID:       A34DA7F2-47E4-400E-B2C8-167BCAEA73E7
+:END:
+#+begin_src emacs-lisp :results silent
+(use-feature simple
+  :custom
+  (async-shell-command-buffer 'new-buffer)) ; don't ask for confirmation before running command in a new buffer
+#+end_src
+
 ** shell
 :PROPERTIES:
 :ID:       231A8710-B820-4761-ABF8-5BE648908CD1

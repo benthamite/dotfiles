@@ -3836,11 +3836,14 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
     "Like `fill-paragraph', but unfill if used twice."
     (interactive)
     (let ((fill-column
-           (if (eq last-command 'ps/fill-or-unfill-paragraph)
+           (if (eq last-command #'endless/fill-or-unfill)
                (progn (setq this-command nil)
                       (point-max))
              fill-column)))
-      (call-interactively #'fill-paragraph)))
+      (if (eq major-mode 'org-mode)
+          (call-interactively #' org-fill-paragraph)
+      (call-interactively #'fill-paragraph))))
+      
   :general
   ("A-M-f" 'ps/fill-or-unfill-paragraph))
 #+end_src

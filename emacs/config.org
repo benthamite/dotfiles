@@ -15645,6 +15645,10 @@ first name, and names are separated by a semicolon."
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
+*** TODO set up ebib for youtube
+:PROPERTIES:
+:ID:       FAA1F1C8-3663-489A-8DF4-8D5360C26C6B
+:END:
 *** TODO [#6] Figure out difference between ~date~ and ~urldate~ bibtex fields
 :PROPERTIES:
 :ID:       7B7EA121-F1C0-4EAD-99F5-AAF4162DFDE9

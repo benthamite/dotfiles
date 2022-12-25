@@ -3833,16 +3833,14 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
   :init
   ;; endlessparentheses.com/fill-and-unfill-paragraphs-with-a-single-key.html
   (defun ps/fill-or-unfill-paragraph ()
-    "Like `fill-paragraph', but unfill if used twice."
-    (interactive)
-    (let ((fill-column
-           (if (eq last-command #'endless/fill-or-unfill)
-               (progn (setq this-command nil)
-                      (point-max))
-             fill-column)))
-      (if (eq major-mode 'org-mode)
-          (call-interactively #' org-fill-paragraph)
-      (call-interactively #'fill-paragraph))))
+  "Like `fill-paragraph', but unfill if used twice."
+  (interactive)
+  (let ((fill-column
+         (if (eq last-command 'endless/fill-or-unfill)
+             (progn (setq this-command nil)
+                    (point-max))
+           fill-column)))
+    (call-interactively #'fill-paragraph)))
       
   :general
   ("A-M-f" 'ps/fill-or-unfill-paragraph))
@@ -19842,6 +19840,15 @@ By considering both tasks completed and their associated priorities.
 :PROPERTIES:
 :ID:       B37445B2-EED7-41E1-9413-73E4E02F394E
 :END:
+- Approach it as a package. Perhaps at some point you can release it publicly.
+- This minor mode works unobtrusively: when it is enabled, it operates in the background, triggered by the org commands ~org-clock-in~ and ~org-clock-out~.
+- The "subjective day" starts when the first task of the calendar day is clocked in.
+- Upon clocking out a task, compute value generated.
+    - Each task should have a value associated to its completion, and an estimated completion time ("effort estimate").
+    - If the task is completed, the value generated is its completion value.
+    - If the task is not completed, the value generated is the fraction of its duration by its effort estimate, multiplied by its completion value.
+- Add this value to the running value since the day started.
+- Calculate fraction of past days in which I had produced at least this much value at this point of the subjective day.
 ** Archive                                                         :ARCHIVE:
 :PROPERTIES:
 :ID:       EDC5DFF7-CCA3-4C1B-8E08-9629392A168E

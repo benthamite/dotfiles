@@ -10958,7 +10958,7 @@ Point is moved after both elements."
            (cmd    (concat clip " | " pandoc))
            (text   (shell-command-to-string cmd)))
       (kill-new text)
-      (yank)))
+      (yank))))
 
   :general
   (org-mode-map

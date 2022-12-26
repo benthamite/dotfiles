@@ -14837,6 +14837,17 @@ error."
      string))
 
 
+  (defun ps/ebib--update-file-field-contents (key file-name)
+    "docstring"
+    (let ((file-field-contents (ebib-get-field-value "file" key ebib--cur-db t t)))
+      (unless (and
+               file-field-contents
+               (catch 'file-exists
+                 (dolist (file (ebib--split-files file-field-contents))
+                   (when (string= file file-name)
+                     (throw 'file-exists file)))))
+        (ebib-set-field-value "file" file-name key ebib--cur-db ";"))))
+
   (defun ps/ebib-download-by-identifier (&optional id)
     "docstring"
     (interactive)
@@ -14850,10 +14861,17 @@ error."
              (scihub id))
             ((ps/ebib-isbn-p id)
              (ps/ebib-download-book nil id))
-            ((ps/ebib-youtube-p (ebib--select-url (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref) nil))
-            (youtube-dl (current-kill 0) :directory ps/dir-library-video :destination (org-hugo-slug (ebib--get-key-at-point))))
-      (t
-       (user-error "Identifier does not appear to be an ISBN or DOI.")))))
+            ((ps/ebib-youtube-p id)
+             (let* ((key (ebib--get-key-at-point))
+                    (file-name (file-name-concat
+                                (abbreviate-file-name ps/dir-library-video)
+                                (file-name-with-extension key "webm"))))
+               (youtube-dl id :directory ps/dir-library-video :destination key)
+               (message (format "Downloading video from '%s'" (substring-no-properties id)))
+               (ps/ebib--update-file-field-contents key file-name)))
+            (t
+             (user-error "Identifier does not appear to be an ISBN or DOI.")))))
+
 
   (defun ps/ebib-search-by-identifier (&optional id)
     "docstring"
@@ -14938,15 +14956,15 @@ exists."
     (interactive)
     (ps/ebib-open-file "pdf"))
 
+  (defun ps/ebib-open-webm-file ()
+    "Open `webm' file in entry at point, if it (uniquely) exists."
+    (interactive)
+    (ps/ebib-open-file-externally "webm"))
+
   (defun ps/ebib-open-pdf-file-externally ()
     "Open `pdf' file in entry at point, if it (uniquely) exists."
     (interactive)
     (ps/ebib-open-file-externally "pdf"))
-
-  (defun ps/ebib-open-org-file ()
-    "Open `org' file in entry at point, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file "org"))
 
   (defun ps/ebib-open-html-file ()
     "Open `html' file in entry at point, if it (uniquely) exists."
@@ -14958,7 +14976,24 @@ exists."
       (browse-url-of-buffer)
       (kill-buffer html-buffer)))
 
-  (defvar ps/ebib-valid-file-extensions '("html" "pdf"))
+  (defun ps/ebib-open-file-dwim ()
+    "Open file in entry at point. If the entry contains more than one
+file, use the preference ordering defined in
+`ps/ebib-valid-file-extensions'."
+    (interactive)
+    (if-let ((extension
+              (catch 'tag
+                (dolist (extension ps/ebib-valid-file-extensions)
+                  (when (ps/ebib-get-file extension)
+                    (throw 'tag extension))))))
+        (call-interactively
+         (intern
+          (concat "ps/ebib-open-" extension "-file")))
+      (user-error "No file found.")))
+
+  (defvar ps/ebib-valid-file-extensions
+    '("webm" "pdf" "html")
+    "List of valid file extensions for Ebib, in order of preference.")
 
   (defun ps/ebib-validate-file-extension ()
     "If entry at point has attachments, check that the extension of
@@ -15171,8 +15206,9 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
                           (completing-read "Select folder: "
                                            (list
                                             ps/dir-downloads
+                                            ps/dir-library-html
                                             ps/dir-library-pdf
-                                            ps/dir-library-html))))
+                                            ps/dir-library-video))))
                      (read-file-name
                       "File to attach: "
                       ;; Use key as default selection if key-based file exists
@@ -15203,14 +15239,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
            (when (or (not (f-file-p file-name))
                      (y-or-n-p "File exists. Overwrite? "))
              (rename-file file-to-attach file-name t))
-           (let ((file-field-contents (ebib-get-field-value field key ebib--cur-db t t)))
-             (unless (and
-                      file-field-contents
-                      (catch 'file-exists
-                        (dolist (file (ebib--split-files file-field-contents))
-                          (when (string= file file-name)
-                            (throw 'file-exists file)))))
-               (ebib-set-field-value field file-name key ebib--cur-db ";")))
+           (ps/ebib--update-file-field-contents key file-name)
            (ebib--store-multiline-text (current-buffer))
            (ebib--redisplay-field field)
            (ebib--redisplay-index-item field)
@@ -15603,6 +15632,8 @@ first name, and names are separated by a semicolon."
   (ebib-multiline-mode-map
    "s-c" 'ebib-quit-multiline-buffer-and-save)
   (ebib-entry-mode-map
+   "TAB" 'ebib-goto-next-set
+   "SPC" 'ps/ebib-open-file-dwim
    "H-s" 'ebib-save-current-database
    "!" 'ebib-generate-autokey
    "," 'ps/ebib-title-case
@@ -18888,7 +18919,7 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
                           ;; "--skip=translated_subs"
                           ))
   (youtube-dl-directory ps/dir-downloads)
-  
+
   :config
   ;; TODO:
   ;; - make it work even when point is at start of heading

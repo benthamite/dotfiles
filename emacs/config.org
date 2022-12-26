@@ -14904,7 +14904,7 @@ error."
         (ebib--redisplay-index-item field)
         (ebib-save-current-database t)
         ;; we open the pdf to make sure it displays the web page correctly
-        (when (string= extension "pdf")
+        (when (string= (file-name-extension file-name) "pdf")
           (ps/ebib-open-pdf-file)))))
 
   (defun ps/ebib-download-by-identifier (&optional id)

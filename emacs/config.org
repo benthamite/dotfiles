@@ -15691,6 +15691,7 @@ first name, and names are separated by a semicolon."
    "s-c" 'ebib-quit-multiline-buffer-and-save)
   (ebib-entry-mode-map
    "TAB" 'ebib-goto-next-set
+   "S-TAB" 'ebib-goto-prev-set
    "SPC" 'ps/ebib-open-file-dwim
    "H-s" 'ebib-save-current-database
    "!" 'ebib-generate-autokey

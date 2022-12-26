@@ -13416,42 +13416,34 @@ return such list if its length is less than LIMIT."
         (ps/org-jump-to-first-heading)
         (org-id-get-create))))
 
-  (defun ps/org-roam-create-new-person (&optional name)
-    "Create note for a new person."
-    (interactive)
-    (let* ((name (or
-                  name
-                  (read-from-minibuffer "Entry name: ")))
-           (slug (org-hugo-slug name))
-           (filename (concat slug ".org")))
-      (when (file-exists-p filename)
-        (user-error (format "File %s already exists." filename)))
-      (find-file (file-name-concat ps/dir-people filename))
-      (insert "#+title: " name "\n\n")
-      (org-insert-heading)
-      (insert name)
-      (org-set-tags "person")
-      (org-id-get-create)
-      (ps/org-narrow-to-entry-and-children)
-      (goto-char (point-max))
-      ;; (insert "[[id:628F4D6A-38D9-4D1F-9517-8972B96A5C5B][Mexico EA Fellowship]]")
-      ;; (crux-smart-open-line nil)
-      ))
-
-  (defun ps/org-roam-create-new-note ()
-    "Create new personal note."
-    (interactive)
-    (let* ((name (read-from-minibuffer "Entry name: "))
-           (slug (org-hugo-slug name))
-           (filename (concat slug ".org")))
-      (find-file (expand-file-name filename ps/dir-notes))
-      (insert "#+title: " name "\n\n")
-      (org-insert-heading)
-      (insert name "\n")
-      (org-id-get-create)
-      (org-back-to-heading)
-      (org-set-tags "note")
-      (ps/org-narrow-to-entry-and-children)))
+  (defun ps/org-roam-new-note (note-type)
+    "Create a new `org-roam' note."
+    (interactive
+     (list
+      (completing-read
+       "Select note type: "
+       '("generic" "person"))))
+    (let ((tags)
+          (directory))
+      (cond ((string= note-type "generic")
+             (setq tags "note")
+             (setq directory ps/dir-notes))
+            ((string= note-type "person")
+             (setq tags "person")
+             (setq directory ps/dir-people)))
+      (let* ((name (read-from-minibuffer "Entry name: "))
+             (slug (org-hugo-slug name))
+             (filename (concat slug ".org")))
+        (when (file-exists-p filename)
+          (user-error (format "File `%s' already exists." filename)))
+        (find-file (file-name-concat directory filename))
+        (insert "#+title: " name "\n\n")
+        (org-insert-heading)
+        (insert name)
+        (org-set-tags tags)
+        (org-id-get-create)
+        (ps/org-narrow-to-entry-and-children)
+        (goto-char (point-max)))))
 
   (org-roam-db-autosync-mode -1)
 
@@ -13461,7 +13453,8 @@ return such list if its length is less than LIMIT."
   (org-capture-prepare-finalize-hook . ps/org-roam-remove-file-level-properties)
 
   :general
-  ("H-j" 'org-roam-node-find
+  ("A-H-n" 'ps/org-roam-new-note
+   "H-j" 'org-roam-node-find
    "H-s-i" 'org-roam-node-insert)
   (org-mode-map
    "s-r" 'org-roam-buffer-toggle))
@@ -13705,7 +13698,22 @@ CLOCK: [2022-06-21 Tue 20:57]--[2022-06-21 Tue 21:48] =>  0:51
 :LOGBOOK:
 CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
 :END:
-https://github.com/org-roam/org-roam-ui
+/[[https://github.com/org-roam/org-roam-ui][org-roam-ui]] is a graphical frontend for exploring org-roam./
+#+begin_src emacs-lisp :results silent
+(use-package org-roam-ui
+  :straight
+  (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
+  :after org-roam
+  ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+  ;;         a hookable mode anymore, you're advised to pick something yourself
+  ;;         if you don't care about startup time, use
+  ;;  :hook (after-init . org-roam-ui-mode)
+  :custom
+  (org-roam-ui-sync-theme t)
+  (org-roam-ui-follow t)
+  (org-roam-ui-update-on-save nil)
+  (org-roam-ui-open-on-start nil))
+#+end_src
 
 ** org-roam-browser-extension
 :PROPERTIES:
@@ -13947,7 +13955,6 @@ Remember that you should create the notes file using ~bibtex-completion~! Then y
   ;; (org-noter-property-doc-file "file") ;; change to this once everything is working
   (org-noter-separate-notes-from-heading t)
   :general
-  ("H-A-n" 'org-noter)
   (pdf-annot-minor-mode-map
    "s-s" 'org-noter-create-skeleton))
 #+End_src

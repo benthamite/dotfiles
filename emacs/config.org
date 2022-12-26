@@ -15602,6 +15602,7 @@ first name, and names are separated by a semicolon."
    "/" (lambda! (ps/ebib-attach-file t))
    "?" 'ps/ebib-attach-file
    "a" 'ps/ebib-search-amazon
+   "A" 'ebib-add-field
    "b" 'ps/ebib-open-current-bibtex-file
    "c" 'ebib-copy-current-field-contents
    "D" 'ebib-delete-current-field-contents
@@ -20143,6 +20144,7 @@ The `slug' generated from that STR follows these rules:
 
 (defun ps/org-wiki-add-datestamp-to-heading-from-clipboard ()
   "Find heading in Wiki list of articles whose name matches clipboard string and add the current date to it."
+
   (interactive)
   (ps/visit-file-or-switch-to-buffer ps/file-wiki-entries)
   (org-link-open-from-string (concat "[[*" (current-kill 0) "]]"))

@@ -14851,9 +14851,9 @@ error."
             ((ps/ebib-isbn-p id)
              (ps/ebib-download-book nil id))
             ((ps/ebib-youtube-p (ebib--select-url (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref) nil))
-            (youtube-dl (current-kill 0) :directory ps/dir-libra :destination (org-hugo-slug (ps/org-web-tools--org-title-for-url))))
+            (youtube-dl (current-kill 0) :directory ps/dir-library-video :destination (org-hugo-slug (ebib--get-key-at-point))))
       (t
-       (user-error "Identifier does not appear to be an ISBN or DOI."))))
+       (user-error "Identifier does not appear to be an ISBN or DOI.")))))
 
   (defun ps/ebib-search-by-identifier (&optional id)
     "docstring"

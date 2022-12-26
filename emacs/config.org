@@ -14370,10 +14370,12 @@ Version 2015-06-08"
    "A-C-s-f" 'bibtex-next-entry))
 #+end_src
 
-*** TODO Figure out why the line at the top of ~old.bib~ is deleted
+*** CANCELLED Figure out why the line at the top of ~old.bib~ is deleted
+CLOSED: [2022-12-26 Mon 17:17]
 :PROPERTIES:
 :ID:       704615F4-0253-4992-BE50-268C40F5B9C4
 :END:
+I'm dealing with this with a directory-local variable.
 ** bibtex-completion
 :PROPERTIES:
 :ID:       DCD9D75D-7814-49D8-A3E0-33846D5A08FD
@@ -14871,15 +14873,27 @@ error."
     "Return `t' if string looks like an ISBN."
     (string-match ps/ebib-isbn-p string))
 
-  (defun ps/ebib-get-isbn ()
+    (defun ps/ebib-get-isbn ()
     "Return ISBN for the current entry."
-    (when-let ((isbn
-                (ebib-get-field-value "isbn" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
-      (car (split-string
-            (s-replace
-             "-"
-             ""
-             (substring-no-properties isbn " "))))))
+    (when-let ((isbn (ebib-get-field-value "isbn" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+      (split-string
+       (s-replace
+	"-"
+	""
+	(substring-no-properties
+	 isbn))
+       " ")
+    (car isbn)))
+
+(defun ps/ebib-get-isbn ()
+  "Return ISBN for the current entry."
+  (when-let ((isbn
+	      (ebib-get-field-value "isbn" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+    (car (split-string
+	  (s-replace
+	   "-"
+	   ""
+	   (substring-no-properties isbn " "))))))
 
   (defun ps/ebib-video-p (string)
     "Return `t' if string looks like a video URL."

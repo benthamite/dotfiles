@@ -14966,11 +14966,11 @@ error."
                   ((eq action 'download)
                    (ps/ebib-download-article-by-title))))
            (t
-            (user-error (format "No action defined for entries of type `%s'" type))))))
+            (user-error (format "No action defined for entries of type `%s'" type)))))
     (cond ((eq action 'search)
            (ps/ebib-search-by-identifier))
           ((eq action 'download)
-           (ps/ebib-download-by-identifier))))
+           (ps/ebib-download-by-identifier)))))
 
   (defun ps/ebib-search-dwim ()
     "If field at point is 'title', run a search with its value; otherwise use identifier.

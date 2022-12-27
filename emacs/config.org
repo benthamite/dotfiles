@@ -4702,14 +4702,17 @@ or are no longer readable will be killed."
       (define-key newmap key command)
       (use-local-map newmap)))
 
-  (defun ps/ocr-pdf ()
-    "OCR the file at point or visited by the current buffer."
+  (defun ps/ocr-pdf (&optional parameters)
+    "OCR the PDF file at point or visited by the current buffer."
     (interactive)
     ;; TODO: add disjunct to handle file at point in minibuffer.
-    (let ((filename (cond ((equal major-mode 'dired-mode) (dired-get-filename))
-                          ((equal major-mode 'pdf-view-mode) (buffer-file-name))))
-          (shell-command-buffer-name-async "*ocr-pdf*"))
-      (async-shell-command (format "ocrmypdf --force '%s' '%s'" filename filename))))
+    (let* ((filename (cond ((equal major-mode 'dired-mode) (dired-get-filename))
+                           ((equal major-mode 'pdf-view-mode) (buffer-file-name))))
+           (parameters (or parameters
+                           (format "--force '%s' '%s'" filename filename)))
+           (shell-command-buffer-name-async "*ocr-pdf*"))
+      (async-shell-command (concat "ocrmypdf " parameters))))
+  
 
   (defun ps/kill-buffer ()
     "Ugly hack to kill buffer when
@@ -14873,27 +14876,22 @@ error."
     "Return `t' if string looks like an ISBN."
     (string-match ps/ebib-isbn-p string))
 
-    (defun ps/ebib-get-isbn ()
-    "Return ISBN for the current entry."
-    (when-let ((isbn (ebib-get-field-value "isbn" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
-      (split-string
-       (s-replace
-	"-"
-	""
-	(substring-no-properties
-	 isbn))
-       " ")
-    (car isbn)))
-
-(defun ps/ebib-get-isbn ()
-  "Return ISBN for the current entry."
-  (when-let ((isbn
-	      (ebib-get-field-value "isbn" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
-    (car (split-string
-	  (s-replace
-	   "-"
-	   ""
-	   (substring-no-properties isbn " "))))))
+  (defun ps/ebib-get-isbn ()
+    "Return ISBN for the current entry, if it exists."
+    (when-let ((isbn
+                (ebib-get-field-value
+                 "isbn"
+                 (ebib--get-key-at-point)
+                 ebib--cur-db
+                 'noerror
+                 'unbraced
+                 'xref)))
+      (car (split-string
+            (s-replace "-"
+                       ""
+                       (substring-no-properties
+                        isbn))
+            " "))))
 
   (defun ps/ebib-video-p (string)
     "Return `t' if string looks like a video URL."
@@ -14916,10 +14914,7 @@ error."
         (ebib--store-multiline-text (current-buffer))
         (ebib--redisplay-field field)
         (ebib--redisplay-index-item field)
-        (ebib-save-current-database t)
-        ;; we open the pdf to make sure it displays the web page correctly
-        (when (string= (file-name-extension file-name) "pdf")
-          (ps/ebib-open-pdf-file)))))
+        (ebib-save-current-database t))))
 
   (defun ps/ebib-download-by-identifier (&optional id)
     "docstring"
@@ -14958,9 +14953,11 @@ error."
   (defun ps/ebib--search-or-download-dwim (action)
     "docstring"
     (if (string= (ebib--current-field) "title")
-        (when-let ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point) ebib--cur-db)))
+        (when-let ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point)
+                                               ebib--cur-db)))
           (cond
-           ((member type '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook" "Book" "Collection" "MVBook" "Inbook" "Incollection" "Bookinbook" "Suppbook"))
+           ((member type
+                    '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook" "Book" "Collection" "MVBook" "Inbook" "Incollection" "Bookinbook" "Suppbook"))
             (cond ((eq action 'search)
                    (ps/ebib-search-book-by-title))
                   ((eq action 'download)
@@ -14985,9 +14982,11 @@ error."
     (ps/ebib--search-or-download-dwim 'search))
 
   (defun ps/ebib-download-dwim ()
-    "If field at point is 'title', run a search with its value; otherwise use identifier.
+    "If field at point is 'title', run a search with its value;
+otherwise use identifier.
 
-  The list of websites for the search query is defined by the variable `ps/ebib-download-book'"
+The list of websites for the search query is defined by the
+  variable `ps/ebib-download-book'"
     (interactive)
     (ps/ebib--search-or-download-dwim 'download))
 
@@ -15307,7 +15306,12 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
            (when (or (not (f-file-p file-name))
                      (y-or-n-p "File exists. Overwrite? "))
              (rename-file file-to-attach file-name t))
-           (ps/ebib--update-file-field-contents key file-name))))
+           (ps/ebib--update-file-field-contents key file-name)
+           (when (string= (file-name-extension file-name) "pdf")
+             ;; open the pdf to make sure it displays the web page correctly
+             (ps/ebib-open-pdf-file)
+	     ;; ocr the pdf if necessary
+             (ps/ocr-pdf (format "'%s' '%s'" (expand-file-name file-name) (expand-file-name file-name)))))))
       (default
         (beep))))
 
@@ -15413,8 +15417,7 @@ If not invoked from `ebib', prompt for search query."
                                      ((equal (ebib--current-field) "title")
                                       "title")
                                      ;; ...to "isbn" or "doi" if either field present,
-                                     ((ebib-get-field-value "isbn" (ebib--get-key-at-point) ebib--cur-db)
-                                      "isbn")
+                                     (ps/ebib-get-isbn)
                                      ((ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db)
                                       "doi")
                                      ;; ...else to the field at point.
@@ -15429,8 +15432,8 @@ If not invoked from `ebib', prompt for search query."
                                  'xref)))
                     (cond ((equal field "title")
                            (url-hexify-string value))
-                          ((equal field "isbn")
-                           (s-replace "-" "" value))
+                          ;; ((equal field "isbn")
+                          ;; (s-replace "-" "" value))
                           (t
                            value)))
                 (url-hexify-string
@@ -18051,7 +18054,7 @@ If prefix arg is passed, then open in new EWW buffer."
    "x" 'eww-browse-with-external-browser))
 #+end_src
 
-*** TODO Integrate eww Chrome, Firefox history
+*** TODO [#5] Integrate eww Chrome, Firefox history
 :PROPERTIES:
 :ID:       2C3DB6DF-B599-49DF-AD30-41C77D2326D7
 :END:
@@ -18448,6 +18451,7 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     :keybinding "y")
   (engine/set-keymap-prefix (kbd "A-H-g")))
 #+end_src
+
 
 ** emacs-webkit
 :PROPERTIES:
@@ -19927,12 +19931,12 @@ The following functions, created by [[https://200ok.ch/posts/2022-12-06_how_much
    org-agenda-files
    '(0 . 0)))
 #+end_src
-*** TODO Tweak ~ps/productivity-of-the-day~ function to compute value created
+*** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
 :PROPERTIES:
 :ID:       1B86CB4D-D297-4C6D-99F7-49A80B7B0688
 :END:
 By considering both tasks completed and their associated priorities.
-**** TODO Implement percentile feedback
+**** TODO [#2] Implement percentile feedback
 :PROPERTIES:
 :ID:       B37445B2-EED7-41E1-9413-73E4E02F394E
 :END:

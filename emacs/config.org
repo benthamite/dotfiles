@@ -4335,7 +4335,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (create-lockfiles nil "lockfiles are indexed by `org-roam', which causes problems with `org-agenda'")
   (large-file-warning-threshold (* 200 1000 1000))
   (enable-local-variables :all)
-  (insert-directory-program "/opt/homebrew/bin/gls" "make Emacs use coreutils to avoid 'listing directory failed' error")
+  (insert-directory-program "/opt/homebrew/bin/gls" "use coreutils to avoid 'listing directory failed' error")
 
   (auto-save-no-message t "don't emit message when auto-saving")
   (backup-by-copying t "don't clobber symlink")
@@ -4387,8 +4387,6 @@ Requires the command-line utility `trash' (`brew install trash')."
         (setq-local buffer-offer-save t)
         (when ps/new-empty-buffer-major-mode
           (funcall ps/new-empty-buffer-major-mode)))
-      ;; pass non-nil force-same-window to prevent `switch-to-buffer' from
-      ;; displaying buffer in another window
       (switch-to-buffer newbuf nil 'force-same-window)))
 
 
@@ -4460,7 +4458,7 @@ as the current buffer."
         (eval-region (region-beginning) (region-end))
       (eval-buffer)))
 
-  ;; Adapted from alphapapa: reddit.com/r/orgmode/comments/fuvdqv/org_notetaking_workflow_with_orgroam/fmhl3ml/?utm_source=reddit&utm_medium=web2x&context=3
+  ;; Adapted from alphapapa: reddit.com/r/orgmode/comments/fuvdqv/org_notetaking_workflow_with_orgroam/fmhl3ml/
   (defun ps/org-to-indirect-buffer ()
     "Create indirect buffer and narrow it to current subtree.
 The buffer is named after the subtree heading, with the filename
@@ -4669,8 +4667,8 @@ or are no longer readable will be killed."
         (error "Buffer not visiting a file"))))
 
   ;; On MacOS, `DS_Store' files can interfere with this command.
-  ;; Disable their creation with `$ defaults write
-  ;; com.apple.desktopservices DSDontWriteNetworkStores true'
+  ;; Disable their creation with
+  ;; `defaults write com.apple.desktopservices DSDontWriteNetworkStores true'
   (defun ps/newest-file (path)
     "Get latest file (including directory) in PATH."
     (car

@@ -8,6 +8,305 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** emacs-websearch
+:PROPERTIES:
+:ID:       3D76FDB6-7957-4673-8714-9580F4B6C795
+:END:
+[2022-12-26 Mon 20:24] I tried it as a potential substitute for [[id:437B98FC-3667-43C4-9EF6-470E23FE7561][engine-mode]], but didn't find a reason to migrate.
+
+#+begin_src emacs-lisp :results silent
+(use-package websearch)
+#+end_src
+
+** Wiki
+:PROPERTIES:
+:ID:       4373E661-B19D-4E6C-B7DE-C2A26619A515
+:END:
+:LOGBOOK:
+CLOCK: [2021-12-09 Thu 22:13]--[2021-12-09 Thu 22:24] =>  0:11
+CLOCK: [2021-12-06 Mon 21:43]--[2021-12-06 Mon 21:55] =>  0:12
+CLOCK: [2021-05-23 Sun 22:20]--[2021-05-23 Sun 22:56] =>  0:36
+CLOCK: [2021-05-20 Thu 10:58]--[2021-05-20 Thu 11:04] =>  0:06
+:END:
+
+#+begin_src emacs-lisp :results silent
+(defun ps/org-append-unpublished-heading ()
+  "Insert 'Unpublished' heading directly above the paragraph at
+point."
+  (interactive)
+  (org-backward-paragraph)
+  (insert "\n***** Unpublished  :noexport:")
+  (org-align-all-tags))
+
+;; [2022-07-13 Wed] Apparently not being used; delete after confirming that this is so.
+;; (defun ps/org-duplicate-heading-in-wiki-published ()
+;; "Create a duplicate of the heading at point or immediately above it in wiki-published.org, and a link to it at point."
+;; (interactive)
+;; (save-excursion
+;; (ps/org-copy-heading-name)
+;; (org-id-goto "A5217610-1806-4D8C-A679-617AB73DE2FF")
+;; (widen)
+;; (org-id-goto "A5217610-1806-4D8C-A679-617AB73DE2FF")
+;; (org-insert-heading-respect-content)
+;; (org-demote-subtree)
+;; (org-yank)
+;; (org-id-copy)
+;; (ps/org-show-subtree-hide-drawers)
+;; (ps/visit-file-or-switch-to-buffer ps/file-wiki-entries)
+;; (ps/yasnippet-expand-by-key "wpe")
+;; (current-kill 2)))
+
+;; This may no longer necessary since org has now added doi support
+(defun ps/org-format-doi-url ()
+  (interactive)
+  (org-narrow-to-subtree)
+  (perform-replace "doi:" "http://doi.org/" nil nil nil))
+
+;; Adapted from github.com/kaushalmodi/ox-hugo/blob/e42a824c3253e127fc8b86a5370c8d5b96a45166/ox-hugo.el#L1816-L1886
+(defun ps/org-wiki-slug (str)
+  "Convert string STR to a `slug' and return that string.
+A `slug' is the part of a URL which identifies a particular page
+on a website in an easy to read form.
+Example: If STR is \"My First Post\", it will be converted to a
+slug \"my-first-post\", which can become part of an easy to read
+URL like \"https://example.com/posts/my-first-post/\".
+In general, STR is a string.  But it can also be a string with
+Markdown markup as that string passed to this function is often
+the sub-headings of a post (which can contain bold, italics,
+link, etc markup).
+The `slug' generated from that STR follows these rules:
+- Contain only lower case alphabet, number and hyphen characters
+  ([[:alnum:]-]).
+- Not have *any* HTML tag like \"<code>..</code>\",
+  \"<span class=..>..</span>\", etc.
+- Not contain any URLs (if STR happens to be a Markdown link).
+- Replace \".\" in STR with \"dot\", \"&\" with \"and\",
+  \"+\" with \"plus\".
+- Replace parentheses with hyphens.  So \"foo (bar) baz\"
+  becomes \"foo-bar-baz\".
+- Replace non [[:alnum:]-] chars with spaces, and then one or
+  more consecutive spaces with a single hyphen.
+- At most two consecutive hyphens are allowed.
+- No hyphens allowed at the leading or trailing end of the slug."
+  (let* (;; All lower-case
+         (str (downcase str))
+         ;; Remove "<FOO>..</FOO>" HTML tags if present.
+         (str (replace-regexp-in-string "<\\(?1:[a-z]+\\)[^>]*>.*</\\1>" "" str))
+         ;; Remove URLs if present in the string.  The ")" in the
+         ;; below regexp is the closing parenthesis of a Markdown
+         ;; link: [Desc](Link).
+         (str (replace-regexp-in-string (concat "\\](" ffap-url-regexp "[^)]+)") "]" str))
+         ;; Replace "&" with " and ", "." with " dot ", "+" with
+         ;; " plus ".
+         (str (replace-regexp-in-string
+               "&" " and "
+               (replace-regexp-in-string
+                "\\." " dot "
+                (replace-regexp-in-string
+                 "\\+" " plus " str))))
+         ;; Replace all characters except alphabets, numbers and
+         ;; parentheses with spaces.
+         (str (replace-regexp-in-string "[^[:alnum:]()]" " " str))
+         ;; On emacs 24.5, multibyte punctuation characters like "："
+         ;; are considered as alphanumeric characters! Below evals to
+         ;; non-nil on emacs 24.5:
+         ;;   (string-match-p "[[:alnum:]]+" "：")
+         ;; So replace them with space manually..
+         (str (if (version< emacs-version "25.0")
+                  (let ((multibyte-punctuations-str "：")) ;String of multibyte punctuation chars
+                    (replace-regexp-in-string (format "[%s]" multibyte-punctuations-str) " " str))
+                str))
+         ;; Remove leading and trailing whitespace.
+         (str (replace-regexp-in-string "\\(^[[:space:]]*\\|[[:space:]]*$\\)" "" str))
+         ;; Replace 2 or more spaces with a single space.
+         (str (replace-regexp-in-string "[[:space:]]\\{2,\\}" " " str))
+         ;; Replace parentheses with hyphens.
+         (str (replace-regexp-in-string "\\s-*([[:space:]]*\\([^)]+?\\)[[:space:]]*)\\s-*" " \\1 " str))
+         ;; Remove any remaining parentheses character.
+         (str (replace-regexp-in-string "[()]" "" str))
+         ;; Replace spaces with hyphens.
+         (str (replace-regexp-in-string " " "-" str))
+         ;; Remove leading and trailing hyphens.
+         (str (replace-regexp-in-string "\\(^[-]*\\|[-]*$\\)" "" str)))
+    str))
+
+
+(defun ps/create-new-wiki-entry ()
+  "Create new EA Wiki entry."
+  (interactive)
+  (let* ((name (read-from-minibuffer "Entry name: "))
+         (slug (org-hugo-slug name))
+         (filename (concat slug ".org")))
+    (find-file (expand-file-name filename ps/dir-wiki-entries))
+    (insert "#+title: " name
+            "\n[[https://forum.effectivealtruism.org/tag/" slug "][online entry]]\n")
+    (ps/yasnippet-expand-by-name "wiki-new-entry-checklist")
+    (org-insert-heading)
+    (org-id-get-create)
+    (org-schedule nil (current-time))
+    (insert name)
+    (org-set-tags "unprocessed:wiki")
+    (org-end-of-meta-data)
+    (insert "\n*" name "* is ")
+    (push-mark)
+    (insert "\n\n")
+    (ps/yasnippet-expand-by-name "wiki-bibliography-external-related")
+    (exchange-point-and-mark)))
+
+(defun ps/create-new-hear-note ()
+  "Create new HEAR note."
+  (interactive)
+  (let* ((name (read-from-minibuffer "Entry name: "))
+         (slug (org-hugo-slug name))
+         (filename (concat slug ".org")))
+    (find-file (expand-file-name filename ps/dir-hear-notes))
+    (insert "#+title: " name "\n\n")
+    (org-insert-heading)
+    (insert name "\n")
+    (org-id-get-create)
+    (org-back-to-heading)
+    (org-set-tags "note")
+    (ps/org-narrow-to-entry-and-children)))
+
+(defun ps/org-wiki-add-datestamp-to-heading-from-clipboard ()
+  "Find heading in Wiki list of articles whose name matches clipboard string and add the current date to it."
+
+  (interactive)
+  (ps/visit-file-or-switch-to-buffer ps/file-wiki-entries)
+  (org-link-open-from-string (concat "[[*" (current-kill 0) "]]"))
+  (org-schedule nil "today"))
+
+(defun ps/org-export-to-ea-wiki ()
+  (interactive)
+  (org-narrow-to-subtree)
+  (let ((org-export-show-temporary-export-buffer t))
+    (org-html-export-as-html))
+  ;; repair broken links
+  (while (re-search-forward "\\(\\[BROKEN LINK: \\*\\)\\(.*?\\)\\(]\\)" nil t)
+    (replace-match (concat "<A href=\"https://forum.effectivealtruism.org/topics/"
+                           (downcase (replace-regexp-in-string "[ ,]" "-" (match-string 2))) ; replace spaces, commas with hyphens
+                           "\">"
+                           (match-string 2)
+                           "</A>")))
+  ;; repair IDs
+  (goto-char 0)
+  (while (re-search-forward "\\(<a href=\"[0-9A-Z_a-z-]*?\\)\\(\\.html\#ID-.\\{8\\}-.\\{4\\}-.\\{4\\}-.\\{4\\}-.\\{12\\}\\)\\(\">\\)\\(.*?\\)\\(</a>\\)" nil t)
+    (replace-match (concat "<A href=\"https://forum.effectivealtruism.org/topics/"
+                           (downcase (replace-regexp-in-string "[ ,]" "-" (match-string 4))) ; replace spaces, commas with hyphens
+                           "\">"
+                           (match-string 4)
+                           "</A>")))
+
+  ;; repair DOI links
+  (goto-char 0)
+  (while (re-search-forward "<a href=\"10" nil t)
+    (replace-match "<a href=\"http://doi.org/10"))
+  ;; promote <h> tags by one
+  (setq count 3)
+  (while (< count 6)
+    (goto-char 0)
+    (while (re-search-forward (concat "\\(\\Wh\\)\\("
+                                      (number-to-string count)
+                                      "\\)\\(\\W\\)")
+                              nil t)
+      (replace-match (concat "\\1" (number-to-string (- count 1)) "\\3")))
+    (setq count (1+ count)))
+  (browse-url-of-buffer)
+  (sleep-for 0.5)
+  (ps/kill-this-buffer)
+  (ps/switch-to-last-window))
+
+(defun ps/wiki-sort-related-entries ()
+  "Sorts 'Related entries' section alphabetically."
+  (interactive)
+  (ps/org-narrow-to-entry-no-children)
+  (goto-char 0)
+  (forward-line)
+  (insert "- ")
+  (while (re-search-forward "[ ]*|[ ]*" nil t)
+    (replace-match "\n- "))
+  (org-sort-list nil ?a)
+  (delete-char 2)
+  (while (re-search-forward "\n- " nil t)
+    (replace-match " | "))
+  )
+#+end_src
+
+#+begin_src emacs-lisp :results silent
+(defun ps/wiki-daily-word-count ()
+  (interactive)
+  (org-id-goto "6E725763-8B53-43EC-9197-C0FE7468328D")
+  (widen)
+  (org-id-goto "6E725763-8B53-43EC-9197-C0FE7468328D")
+  (ps/org-count-words)
+  (org-id-goto "A5217610-1806-4D8C-A679-617AB73DE2FF")
+  (widen)
+  (org-id-goto "A5217610-1806-4D8C-A679-617AB73DE2FF")
+  (ps/org-count-words)
+  (org-id-goto "1D51646A-8E3C-4CAC-AC00-26883FBD5365")
+  (widen)
+  (org-id-goto "1D51646A-8E3C-4CAC-AC00-26883FBD5365")
+  (widen)
+  (search-backward "TBLFM:")
+  (forward-line -1)
+  (org-table-insert-row `(0))
+  (ps/org-time-stamp-inactive-current-date)
+  (org-table-next-field)
+  (org-table-next-field)
+  (org-yank)
+  (org-table-previous-field)
+  (current-kill 1)
+  (org-yank)
+  (org-shifttab)
+  (forward-line)
+  (org-ctrl-c-ctrl-c))
+#+end_src
+
+*** TODO [#4] Modify new person command so that it removes accents from file name
+:PROPERTIES:
+:ID:       7D683836-56EF-4B49-B577-FB73FF3C658B
+:Effort:   0:40
+:END:
+*** Resources
+:PROPERTIES:
+:ID:       965413C5-F42F-4164-9BF7-CEE2C733157A
+:END:
+- [cite:@weakty2020HowOrgmodeRuns]
+
+*** Archive                                                                                                           :ARCHIVE:
+:PROPERTIES:
+:ID:       C426256A-7490-4DD0-8D43-DEE69AE57C62
+:END:
+**** DONE Fix ~ps/org-export-to-ea-wiki~
+CLOSED: [2022-03-27 Sun 12:51]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-03-27 Sun 12:51
+:ID:       E66F7B84-E6D0-48F5-ABFB-A6CCFBDBC57F
+:END:
+:LOGBOOK:
+CLOCK: [2022-03-27 Sun 12:27]--[2022-03-27 Sun 12:37] =>  0:10
+:END:
+**** DONE Create function to sort related entries alphabetically
+CLOSED: [2022-04-02 Sat 16:13]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-04-02 Sat 18:11
+:ID:       C36CBE5B-D95D-4687-B45F-031A26846154
+:END:
+:LOGBOOK:
+CLOCK: [2022-04-02 Sat 15:26]--[2022-04-02 Sat 16:13] =>  0:47
+:END:
+
+
+**** DONE Create command to create new person
+CLOSED: [2022-05-31 Tue 11:03]
+:PROPERTIES:
+:ARCHIVE_TIME: 2022-06-01 Wed 11:32
+:ID:       E006B111-4486-42C4-AAFA-C18475CCD394
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-31 Tue 10:15]--[2022-05-31 Tue 11:03] =>  0:48
+:END:
+
 ** org-superstar
 :PROPERTIES:
 :ID:       12BD56CF-07AA-4700-A07D-F36524BF8649

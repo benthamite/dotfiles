@@ -4351,9 +4351,9 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 
 Requires the command-line utility `trash' (`brew install trash')."
     (shell-command (concat "trash -vF \"" path "\""
-			   "| sed -e 's/^/Trashed: /'")
-		   nil ;; Name of output buffer
-		   "*Trash Error Buffer*"))
+                           "| sed -e 's/^/Trashed: /'")
+                   nil ;; Name of output buffer
+                   "*Trash Error Buffer*"))
 
   (defun ps/save-and-revert-buffer ()
     "Save buffer, then revert it."
@@ -4364,7 +4364,7 @@ Requires the command-line utility `trash' (`brew install trash')."
   (defun ps/bury-scratch-buffer ()
     "When trying to kill `*scratch' buffer, bury it instead."
     (if (not (equal (buffer-name) "*scratch*"))
-	t
+        t
       (bury-buffer)
       nil))
 
@@ -4384,9 +4384,9 @@ Requires the command-line utility `trash' (`brew install trash')."
     (let ((newbuf (generate-new-buffer "untitled")))
       ;; Prompt to save on `save-some-buffers' with positive PRED
       (with-current-buffer newbuf
-	(setq-local buffer-offer-save t)
-	(when ps/new-empty-buffer-major-mode
-	  (funcall ps/new-empty-buffer-major-mode)))
+        (setq-local buffer-offer-save t)
+        (when ps/new-empty-buffer-major-mode
+          (funcall ps/new-empty-buffer-major-mode)))
       (switch-to-buffer newbuf nil 'force-same-window)))
 
 
@@ -4395,17 +4395,17 @@ Requires the command-line utility `trash' (`brew install trash')."
 as the current buffer."
     (interactive)
     (let ((buffer-name (generate-new-buffer "untitled"))
-	  (buffer-major-mode major-mode))
+          (buffer-major-mode major-mode))
       (cond ((eq buffer-major-mode 'shell-mode)
-	     (shell))
-	    ((eq buffer-major-mode 'eshell-mode)
-	     (eshell))
-	    (t
-	     ;; Prompt to save on `save-some-buffers' with positive PRED
-	     (with-current-buffer buffer-name
-	       (setq-local buffer-offer-save t)
-	       (funcall buffer-major-mode))
-	     (switch-to-buffer buffer-name nil 'force-same-window)))))
+             (shell))
+            ((eq buffer-major-mode 'eshell-mode)
+             (eshell))
+            (t
+             ;; Prompt to save on `save-some-buffers' with positive PRED
+             (with-current-buffer buffer-name
+               (setq-local buffer-offer-save t)
+               (funcall buffer-major-mode))
+             (switch-to-buffer buffer-name nil 'force-same-window)))))
 
   (defun ps/new-empty-buffer-other-window ()
     "Create a new buffer called `untitled<n>' in other window."
@@ -4423,7 +4423,7 @@ as the current buffer."
     "Visit file or switch to corresponding file-visiting buffer."
     (interactive)
     (if (get-buffer thing)
-	(switch-to-buffer thing)
+        (switch-to-buffer thing)
       (find-file thing)))
 
   (defun ps/org-show-subtree-hide-drawers ()
@@ -4440,7 +4440,7 @@ as the current buffer."
   (defun ps/org-narrow-to-entry-no-children ()
     "Narrow org buffer to entry excluding all children."
     (interactive)
-    (org-narrow-to-subtree)
+ji    (org-narrow-to-subtree)
     (save-excursion
       (org-next-visible-heading 1)
       (narrow-to-region (point-min) (point))))
@@ -4455,7 +4455,7 @@ as the current buffer."
     "Evaluate a region if selected, otherwise the whole buffer."
     (interactive)
     (if (region-active-p)
-	(eval-region (region-beginning) (region-end))
+        (eval-region (region-beginning) (region-end))
       (eval-buffer)))
 
   ;; Adapted from alphapapa: reddit.com/r/orgmode/comments/fuvdqv/org_notetaking_workflow_with_orgroam/fmhl3ml/
@@ -4466,39 +4466,39 @@ appended.  If a buffer by that name already exists, it is
 selected instead of creating a new buffer."
     (interactive "P")
     (let* ((new-buffer-p)
-	   (pos (point))
-	   (buffer-name (let* ((heading (org-get-heading t t))
-			       (level (org-outline-level))
-			       (face (intern (concat "outline-" (number-to-string level))))
-			       (heading-string (propertize (org-link-display-format heading)
-							   'face face)))
-			  (concat heading-string "::" (buffer-name))))
-	   (new-buffer (or (get-buffer buffer-name)
-			   (prog1 (condition-case nil
-				      (make-indirect-buffer (current-buffer) buffer-name 'clone)
-				    (error (make-indirect-buffer (current-buffer) buffer-name)))
-			     (setq new-buffer-p t)))))
+           (pos (point))
+           (buffer-name (let* ((heading (org-get-heading t t))
+                               (level (org-outline-level))
+                               (face (intern (concat "outline-" (number-to-string level))))
+                               (heading-string (propertize (org-link-display-format heading)
+                                                           'face face)))
+                          (concat heading-string "::" (buffer-name))))
+           (new-buffer (or (get-buffer buffer-name)
+                           (prog1 (condition-case nil
+                                      (make-indirect-buffer (current-buffer) buffer-name 'clone)
+                                    (error (make-indirect-buffer (current-buffer) buffer-name)))
+                             (setq new-buffer-p t)))))
       (switch-to-buffer new-buffer)
       (when new-buffer-p
-	;; I don't understand why setting the point again is necessary, but it is.
-	(goto-char pos)
-	(rename-buffer buffer-name)
-	(org-narrow-to-subtree))))
+        ;; I don't understand why setting the point again is necessary, but it is.
+        (goto-char pos)
+        (rename-buffer buffer-name)
+        (org-narrow-to-subtree))))
 
   (defun ps/get-alternate-buffer ()
     "Return name of last buffer active in the current window."
     (let ((current-buffer (window-buffer))
-	  (buffer-predicate
-	   (frame-parameter (window-frame) 'buffer-predicate)))
+          (buffer-predicate
+           (frame-parameter (window-frame) 'buffer-predicate)))
       ;; switch to first buffer previously shown in this window that matches
       ;; frame-parameter `buffer-predicate'
       (or (cl-find-if (lambda (buffer)
-			(and (not (eq buffer current-buffer))
-			     (or (null buffer-predicate)
-				 (funcall buffer-predicate buffer))))
-		      (mapcar #'car (window-prev-buffers)))
-	  ;; `other-buffer' honors `buffer-predicate' so no need to filter
-	  (other-buffer current-buffer t))))
+                        (and (not (eq buffer current-buffer))
+                             (or (null buffer-predicate)
+                                 (funcall buffer-predicate buffer))))
+                      (mapcar #'car (window-prev-buffers)))
+          ;; `other-buffer' honors `buffer-predicate' so no need to filter
+          (other-buffer current-buffer t))))
 
   (defun ps/switch-to-alternate-buffer ()
     "Switch to the last buffer active in the current window."
@@ -4557,7 +4557,7 @@ selected instead of creating a new buffer."
 ACSM file is present in `ps/dir-downloads'."
     (interactive)
     (if (member "book.acsm" (directory-files ps/dir-downloads))
-	(ps/internet-archive-convert-ACSM)
+        (ps/internet-archive-convert-ACSM)
       (ps/internet-archive-download-ACSM)))
 
   (defun ps/internet-archive-download-ACSM ()
@@ -4568,46 +4568,46 @@ NB: You need to have previously borrowed the book for the command
 to work. The command will work even if the book was borrowed for
 one hour only."
     (if (string-search "archive.org" (current-kill 0))
-	(let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
-	       (suffix "&format=pdf&redirect=1")
-	       (id (replace-regexp-in-string
-		    "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
-		    "\\2"
-		    (current-kill 0)))
-	       (url (concat prefix id suffix))
-	       (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
-	  ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
-	  ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
-	  ;; Then replace the path below with the location of the downloaded cookies file.
-	  (save-window-excursion
-	    (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
-	      (async-shell-command
-	       (format
-		"wget --load-cookies='%s' '%s' -O '%s'; open %s"
-		ps/file-cookies url acsm-file acsm-file))))
-	  (message "ACSM file downloaded successfully."))
+        (let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
+               (suffix "&format=pdf&redirect=1")
+               (id (replace-regexp-in-string
+                    "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
+                    "\\2"
+                    (current-kill 0)))
+               (url (concat prefix id suffix))
+               (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
+          ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
+          ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
+          ;; Then replace the path below with the location of the downloaded cookies file.
+          (save-window-excursion
+            (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
+              (async-shell-command
+               (format
+                "wget --load-cookies='%s' '%s' -O '%s'; open %s"
+                ps/file-cookies url acsm-file acsm-file))))
+          (message "ACSM file downloaded successfully."))
       (user-error "You forgot to copy the URL!")))
 
   (defun ps/internet-archive-convert-ACSM ()
     "Convert ACSM file to PDF."
     (let* ((adobe-file
-	    ;; stackoverflow.com/a/30887300/4479455
-	    (car (directory-files (file-name-as-directory ps/dir-ade) 'full "\\.pdf$" #'file-newer-than-file-p)))
-	   (output (shell-command-to-string (format "calibredb add '%s'" adobe-file)))
-	   ;; Capture Calibre book id
-	   (id (replace-regexp-in-string "\\(\\(\\(
+            ;; stackoverflow.com/a/30887300/4479455
+            (car (directory-files (file-name-as-directory ps/dir-ade) 'full "\\.pdf$" #'file-newer-than-file-p)))
+           (output (shell-command-to-string (format "calibredb add '%s'" adobe-file)))
+           ;; Capture Calibre book id
+           (id (replace-regexp-in-string "\\(\\(\\(
 \\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
-	   (calibre-file (car (directory-files-recursively ps/dir-calibre "\\.pdf$" t)))
-	   ;; Should match filename used in `ps/internet-archive-download-ACSM'
-	   (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
+           (calibre-file (car (directory-files-recursively ps/dir-calibre "\\.pdf$" t)))
+           ;; Should match filename used in `ps/internet-archive-download-ACSM'
+           (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
       (rename-file calibre-file (file-name-as-directory ps/dir-downloads))
       (shell-command (format "calibredb remove %s" id))
       (mapcar #'delete-file `(,adobe-file ,calibre-file))
       (delete-directory ps/dir-calibre t)
       (kill-buffer "*Shell Command Output*")
       (when (find-file acsm-file)
-	(delete-file acsm-file)
-	(kill-buffer))
+        (delete-file acsm-file)
+        (kill-buffer))
       (message "ACSM file converted successfully.")))
 
   ;; Copied from emacs.stackexchange.com/a/24461/32089
@@ -4620,30 +4620,30 @@ or are no longer readable will be killed."
     (interactive)
     (dolist (buf (buffer-list))
       (let ((filename (buffer-file-name buf)))
-	;; Revert only buffers containing files, which are not modified;
-	;; do not try to revert non-file buffers like *Messages*.
-	(when (and filename
-		   (not (buffer-modified-p buf)))
-	  (if (file-readable-p filename)
-	      ;; If the file exists and is readable, revert the buffer.
-	      (with-current-buffer buf
-		(revert-buffer :ignore-auto :noconfirm :preserve-modes))
-	    ;; Otherwise, kill the buffer.
-	    (let (kill-buffer-query-functions) ; No query done when killing buffer
-	      (kill-buffer buf)
-	      (message "Killed non-existing/unreadable file buffer: %s" filename))))))
+        ;; Revert only buffers containing files, which are not modified;
+        ;; do not try to revert non-file buffers like *Messages*.
+        (when (and filename
+                   (not (buffer-modified-p buf)))
+          (if (file-readable-p filename)
+              ;; If the file exists and is readable, revert the buffer.
+              (with-current-buffer buf
+                (revert-buffer :ignore-auto :noconfirm :preserve-modes))
+            ;; Otherwise, kill the buffer.
+            (let (kill-buffer-query-functions) ; No query done when killing buffer
+              (kill-buffer buf)
+              (message "Killed non-existing/unreadable file buffer: %s" filename))))))
     (message "Finished reverting buffers containing unmodified files."))
 
   (defun ps/get-title (file)
     "Return title of buffer at point."
     (let (title)
       (when file
-	(with-current-buffer
-	    (get-file-buffer file)
-	  (pcase (org-collect-keywords '("TITLE"))
-	    (`(("TITLE" . ,val))
-	     (setq title (car val)))))
-	title)))
+        (with-current-buffer
+            (get-file-buffer file)
+          (pcase (org-collect-keywords '("TITLE"))
+            (`(("TITLE" . ,val))
+             (setq title (car val)))))
+        title)))
 
   ;; stackoverflow.com/a/44489067/4479455
   (defun ps/show-buffer-file-name ()
@@ -4651,20 +4651,20 @@ or are no longer readable will be killed."
     (interactive)
     (let ((file-name (buffer-file-name)))
       (if file-name
-	  (progn
-	    (message file-name)
-	    (kill-new file-name))
-	(error "Buffer not visiting a file"))))
+          (progn
+            (message file-name)
+            (kill-new file-name))
+        (error "Buffer not visiting a file"))))
 
   (defun ps/show-buffer-name ()
     "Show the full path to the current file in the minibuffer."
     (interactive)
     (let ((buffer-name (buffer-name)))
       (if buffer-name
-	  (progn
-	    (message buffer-name)
-	    (kill-new buffer-name))
-	(error "Buffer not visiting a file"))))
+          (progn
+            (message buffer-name)
+            (kill-new buffer-name))
+        (error "Buffer not visiting a file"))))
 
   ;; On MacOS, `DS_Store' files can interfere with this command.
   ;; Disable their creation with
@@ -4682,21 +4682,21 @@ or are no longer readable will be killed."
     "Switch to the most recent buffer in major mode MODE."
     (let (found)
       (catch 'done
-	(mapc (lambda (x)
-		(when (with-current-buffer x (eq major-mode mode))
-		  (switch-to-buffer x)
-		  (setq found t)
-		  (throw 'done nil)))
-	      (buffer-list))
-	(unless found (print "not found")))))
+        (mapc (lambda (x)
+                (when (with-current-buffer x (eq major-mode mode))
+                  (switch-to-buffer x)
+                  (setq found t)
+                  (throw 'done nil)))
+              (buffer-list))
+        (unless found (print "not found")))))
 
   ;; stackoverflow.com/questions/21486934/file-specific-key-binding-in-emacs/21493693#21493693
   (defun ps/buffer-local-set-key (key command)
     (interactive "KSet key buffer-locally: \nCSet key %s buffer-locally to command: ")
     (let ((oldmap (current-local-map))
-	  (newmap (make-sparse-keymap)))
+          (newmap (make-sparse-keymap)))
       (when oldmap
-	(set-keymap-parent newmap oldmap))
+        (set-keymap-parent newmap oldmap))
       (define-key newmap key command)
       (use-local-map newmap)))
 
@@ -4705,10 +4705,10 @@ or are no longer readable will be killed."
     (interactive)
     ;; TODO: add disjunct to handle file at point in minibuffer.
     (let* ((filename (cond ((equal major-mode 'dired-mode) (dired-get-filename))
-			   ((equal major-mode 'pdf-view-mode) (buffer-file-name))))
-	   (parameters (or parameters
-			   (format "--force '%s' '%s'" filename filename)))
-	   (shell-command-buffer-name-async "*ocr-pdf*"))
+                           ((equal major-mode 'pdf-view-mode) (buffer-file-name))))
+           (parameters (or parameters
+                           (format "--force '%s' '%s'" filename filename)))
+           (shell-command-buffer-name-async "*ocr-pdf*"))
       (async-shell-command (concat "ocrmypdf " parameters))))
 
   ;; we add `*ocr-pdf' buffer to list of buffers not to be displayed,
@@ -8052,6 +8052,15 @@ To check out: https://kristofferbalintona.me/posts/202202270056/
 
 #+begin_src emacs-lisp :results silent
 (use-package corfu
+  :straight (corfu :files (:defaults "extensions/*")
+		   :includes (corfu-info
+			      ;; corfu-echo
+			      corfu-history
+			      ;; corfu-indexed
+			      ;; corfu-popupinfo
+			      corfu-quick
+			      ))
+
   :demand t
   :custom
   (corfu-auto t)                 ;; Enable auto completion
@@ -8059,7 +8068,9 @@ To check out: https://kristofferbalintona.me/posts/202202270056/
   (corfu-cycle vertico-cycle)
   (corfu-count vertico-count)
   (corfu-echo-documentation nil "Disable documentation in echo area; replaced by `corfu-doc'")
-  (corfu-doc-delay 0)
+  (corfu-auto-delay 0)
+  (corfu-auto-prefix 3)
+  (corfu-doc-delay 0.1)
 
   :config
   ;; Adapted from Prot
@@ -8071,14 +8082,17 @@ Useful for prompts such as `eval-expression' and `shell-command'."
       (corfu-mode)))
 
   (global-corfu-mode)
+  
+  :hook
+  (prog-mode-hook . corfu-doc-mode)
+  (corfu-mode-hook . corfu-history-mode)
+  (minibuffer-setup-hook . ps/corfu-enable-always-in-minibuffer)
 
   :general
   (corfu-map
-  "<return>" 'corfu-complete
-  "RET" 'corfu-complete)
-
-  :hook
-  (minibuffer-setup-hook . ps/corfu-enable-always-in-minibuffer))
+   "M-f" 'corfu-quick-complete
+   "<return>" 'corfu-complete
+   "RET" 'corfu-complete))
 #+end_src
 
 ** corfu-terminal
@@ -8239,6 +8253,20 @@ Additionally, add `cape-file' as early as possible to the list."
   :straight (cape-yasnippet
              :host github
              :repo "elken/cape-yasnippet"))
+#+end_src
+
+** company
+:PROPERTIES:
+:ID:       D8BC79D0-C883-45A9-A5B2-98E88C59EE6B
+:END:
+
+I use ~completion-at-point~ for completion, not company. However, I still rely on company for a few completion backends.
+
+#+begin_src emacs-lisp :results silent
+(use-package company
+  :defer 5
+  :hook
+  (telega-chat-mode-hook . company-mode))
 #+end_src
 
 * help
@@ -9903,6 +9931,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
     (let ((writeroom-width 120))
       (writeroom-mode 'toggle)
       (pdf-view-fit-height-to-window)))
+
   (load-file (file-name-concat ps/dir-emacs-local "scroll-other-window.el"))
 
   (defun ps/pdf-tools-open-externally ()
@@ -15272,49 +15301,49 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     (entries
      (let ((key (ebib--get-key-at-point)))
        (unless (ps/ebib-valid-key-p key)
-	 (user-error "Entry has an invalid key; pleasse regenerate it."))
+         (user-error "Entry has an invalid key; pleasse regenerate it."))
        (let* ((field "file")
-	      (file-to-attach
-	       (if most-recent
-		   (ps/newest-file ps/dir-downloads)
-		 (let ((initial-folder
-			(completing-read "Select folder: "
-					 (list
-					  ps/dir-downloads
-					  ps/dir-library-html
-					  ps/dir-library-pdf
-					  ps/dir-library-video))))
-		   (read-file-name
-		    "File to attach: "
-		    ;; Use key as default selection if key-based file exists
-		    ;; else default to `initial-folder'
-		    (if (catch 'found
-			  (dolist (extension ps/ebib-valid-file-extensions)
-			    (when (f-file-p (file-name-concat
-					     initial-folder
-					     (file-name-with-extension key extension)))
-			      (throw 'found extension))))
-			(file-name-concat initial-folder key)
-		      initial-folder)))))
-	      (extension (file-name-extension file-to-attach))
-	      (destination-folder
-	       (cond ((string= extension "pdf")
-		      ps/dir-library-pdf)
-		     ((string= extension "html")
-		      ps/dir-library-html)
-		     (t
-		      (user-error "Invalid file extension"))))
-	      (file-name (ps/ebib--rename-and-abbreviate-file
-			  destination-folder key extension)))
-	 (when (or (not (f-file-p file-name))
-		   (y-or-n-p "File exists. Overwrite? "))
-	   (rename-file file-to-attach file-name t))
-	 (ps/ebib--update-file-field-contents key file-name)
-	 (when (string= (file-name-extension file-name) "pdf")
-	   ;; open the pdf to make sure it displays the web page correctly
-	   (ps/ebib-open-pdf-file)
-	   ;; ocr the pdf if necessary
-	   (ps/ocr-pdf (format "'%s' '%s'" (expand-file-name file-name) (expand-file-name file-name)))))))
+              (file-to-attach
+               (if most-recent
+                   (ps/newest-file ps/dir-downloads)
+                 (let ((initial-folder
+                        (completing-read "Select folder: "
+                                         (list
+                                          ps/dir-downloads
+                                          ps/dir-library-html
+                                          ps/dir-library-pdf
+                                          ps/dir-library-video))))
+                   (read-file-name
+                    "File to attach: "
+                    ;; Use key as default selection if key-based file exists
+                    ;; else default to `initial-folder'
+                    (if (catch 'found
+                          (dolist (extension ps/ebib-valid-file-extensions)
+                            (when (f-file-p (file-name-concat
+                                             initial-folder
+                                             (file-name-with-extension key extension)))
+                              (throw 'found extension))))
+                        (file-name-concat initial-folder key)
+                      initial-folder)))))
+              (extension (file-name-extension file-to-attach))
+              (destination-folder
+               (cond ((string= extension "pdf")
+                      ps/dir-library-pdf)
+                     ((string= extension "html")
+                      ps/dir-library-html)
+                     (t
+                      (user-error "Invalid file extension"))))
+              (file-name (ps/ebib--rename-and-abbreviate-file
+                          destination-folder key extension)))
+         (when (or (not (f-file-p file-name))
+                   (y-or-n-p "File exists. Overwrite? "))
+           (rename-file file-to-attach file-name t))
+         (ps/ebib--update-file-field-contents key file-name)
+         (when (string= (file-name-extension file-name) "pdf")
+           ;; open the pdf to make sure it displays the web page correctly
+           (ps/ebib-open-pdf-file)
+           ;; ocr the pdf if necessary
+           (ps/ocr-pdf (format "'%s' '%s'" (expand-file-name file-name) (expand-file-name file-name)))))))
      (default
        (beep))))
 
@@ -17307,7 +17336,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
 #+begin_src emacs-lisp :results silent
 (use-package telega
-  :defer 3
+  :defer 5
   :custom
   (telega-server-libs-prefix "/opt/homebrew")
   (telega-chat-input-markups '("markdown2" "org"))
@@ -17406,10 +17435,16 @@ into a task for Leo."
     (interactive)
     (telega-filters-push '(main)))
 
+  (defun ps/telega-chat-mode ()
+    (require 'company)
+    (add-hook 'completion-at-point-functions
+              #'telega-chatbuf-complete-at-point nil 'local))
+
 
   (telega-mode-line-mode 1)
 
   :hook
+  (telega-chat-mode-hook . ps/telega-chat-mode)
   (telega-chat-mode-hook . (lambda () (setq default-directory (file-name-as-directory ps/dir-downloads))))
   (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
   (telega-chat-mode-hook . telega-autoplay-mode)

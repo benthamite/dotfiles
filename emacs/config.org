@@ -4715,7 +4715,6 @@ or are no longer readable will be killed."
   ;; so that the process runs in the background`
   (push '("*ocr-pdf*" display-buffer-no-window) display-buffer-alist)
 
-
   (defun ps/kill-buffer ()
     "Ugly hack to kill buffer when
 `citar-filenotify-rm-local-watches' prevents it."

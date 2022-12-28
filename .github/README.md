@@ -1,1 +1,1 @@
-../emacs/config.org
+emacs/config.org

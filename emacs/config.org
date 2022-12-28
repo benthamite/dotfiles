@@ -2,14 +2,20 @@
 #+AUTHOR: Pablo Stafforini
 #+PROPERTY: header-args :tangle ~/Dropbox/dotfiles/emacs/init.el
 #+filetags: :project:
+:PROPERTIES:
+:TOC:      ignore
+:END:
 
 * table of contents
 :PROPERTIES:
-:TOC:      :include all
+:TOC:      :include all :depth 3
 :ID:       536D7BF2-AA0D-43D7-8865-601DFB6BB8E6
 :END:
 :LOGBOOK:
 CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
+:END:
+:CONTENTS:
+
 :END:
 
 * installation

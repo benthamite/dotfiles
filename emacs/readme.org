@@ -1,1 +1,1 @@
-config.org
+/Users/pablostafforini/Dropbox/dotfiles/emacs/config.org

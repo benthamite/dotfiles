@@ -70,12 +70,14 @@
 
 {:des "on Emacs, left_control → command + tab (alone) | left_command (held)"
  :rules [
+          [:!Ch :!QCOWh :emacs] ; circunvent macOS command + h
+          [:!CQh :!QTCWh :emacs] ; circunvent macOS command + option + h
          [:##left_control :!Qleft_command [:!steam :emacs] {:alone :!Ctab}]
          ]}
 
 {:des "outside Emacs, left_control → command + tab (alone) | left_option + left_command (held)"
  :rules [
-         [:##left_control :!Oleft_command :!steam {:alone :!Ctab}]
+         [:##left_control :!Oleft_command [:!steam :!emacs] {:alone :!Ctab}]
          ]}
 
 {:des "on Emacs, right_shift → en dash (alone) | Super + Alt (held)"
@@ -167,9 +169,9 @@
          [:##right_option :!Qright_control :!moonlander {:alone :f18}]
          ]}
 
-{:des "on Emacs, quote → quote (alone) | super (held)"
+{:des "on Emacs, return_or_enter → quote (alone) | super (held)"
  :rules [
-         [:##return_or_enter :right_control :emacs {:alone :quote}]
+         [:##quote :right_control [:!moonlander :emacs] {:alone :quote}]
          ]}
 
 {:des "on Emacs, equal_sign → equal_sign (alone) | Alt (held)"
@@ -215,11 +217,6 @@
 {:des "On Emacs, command + space → trigger different events on Emacs and elsewhere"
  :rules [
          [:!Cspacebar :!QCOWspacebar :emacs]
-         ]}
-
-{:des "On Emacs, disable OSX behavior of command + h"
- :rules [
-         [:!Ch :!QCOWh :emacs]
          ]}
 
 {:des "On Emacs, disable OSX behavior of command + ?"
@@ -427,7 +424,7 @@
          [:g [:km "Activate: Goldendict"]]
          [:h [:km "Activate: Chrome"]]
          [:i [:km "Activate: Anki"]]
-         [:j [:km "Activate: Media Center"]]
+         [:m [:km "Activate: Media Center"]]
          [:k [:km "Activate: Keyboard Maestro"]]
          [:l [:km "Activate: Calendar"]]
          [:o [:km "Activate: Zotero"]]

@@ -2,6 +2,9 @@
 #+AUTHOR: Pablo Stafforini
 #+PROPERTY: header-args :tangle ~/Dropbox/dotfiles/emacs/init.el
 #+filetags: :project:
+:PROPERTIES:
+:TOC:      ignore
+:END:
 
 * table of contents
 :PROPERTIES:

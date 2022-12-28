@@ -29,4 +29,6 @@
 
 (add-hook 'emacs-startup-hook #'init-reset-startup-settings)
 
+(add-to-list 'default-frame-alist '(undecorated . t))
+
 (put 'list-threads 'disabled nil)

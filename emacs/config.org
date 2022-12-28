@@ -265,6 +265,7 @@ Some useful config files:
 - [[https://github.com/karthink/.emacs.d][Karthik Chikmagalur]]. Has excellent blog posts on ~avy~, ~eshell~, ~re-builder~, etc.
 - [[https://github.com/iqbalansari/dotEmacs][Iqbal Ansari]].
 - [[https://www.danielclemente.com/emacs/confi.html][Daniel Clemente]].
+- [[https://github.com/patrl][Patrick Elliott]]
 ** Archive                                                                                                             :ARCHIVE:
 :PROPERTIES:
 :ID:       F1026BA4-886F-4020-A4A4-0F9440F4DF2E
@@ -3833,15 +3834,15 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
   :init
   ;; endlessparentheses.com/fill-and-unfill-paragraphs-with-a-single-key.html
   (defun ps/fill-or-unfill-paragraph ()
-  "Like `fill-paragraph', but unfill if used twice."
-  (interactive)
-  (let ((fill-column
-         (if (eq last-command 'endless/fill-or-unfill)
-             (progn (setq this-command nil)
-                    (point-max))
-           fill-column)))
-    (call-interactively #'fill-paragraph)))
-
+    "Like `fill-paragraph', but unfill if used twice."
+    (interactive)
+    (let ((fill-column
+           (if (eq last-command 'ps/fill-or-unfill-paragraph)
+               (progn (setq this-command nil)
+                      (point-max))
+             fill-column)))
+      (call-interactively #'fill-paragraph)))
+      
   :general
   ("A-M-f" 'ps/fill-or-unfill-paragraph))
 #+end_src
@@ -8054,7 +8055,7 @@ To check out: https://kristofferbalintona.me/posts/202202270056/
 (use-package corfu
   :straight (corfu :files (:defaults "extensions/*")
 		   :includes (corfu-info
-			      ;; corfu-echo
+			      corfu-echo
 			      corfu-history
 			      ;; corfu-indexed
 			      ;; corfu-popupinfo
@@ -8070,7 +8071,7 @@ To check out: https://kristofferbalintona.me/posts/202202270056/
   (corfu-echo-documentation nil "Disable documentation in echo area; replaced by `corfu-doc'")
   (corfu-auto-delay 0)
   (corfu-auto-prefix 3)
-  (corfu-doc-delay 0.1)
+  (corfu-doc-delay 0)
 
   :config
   ;; Adapted from Prot
@@ -8085,6 +8086,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   
   :hook
   (prog-mode-hook . corfu-doc-mode)
+  (prog-mode-hook . corfu-echo-mode)
   (corfu-mode-hook . corfu-history-mode)
   (minibuffer-setup-hook . ps/corfu-enable-always-in-minibuffer)
 

@@ -16108,8 +16108,9 @@ first name, and names are separated by a semicolon."
         (beep))))
 
   (defvar ps/ebib-sort-toggle nil)
+  
   (defun ps/ebib-sort-toggle ()
-    "Toggle between sorting by date and sorting by title."
+    "Toggle between sorting by timestamp, author, and title."
     (interactive)
     (unless (string= (ebib-db-get-filename ebib--cur-db) ps/file-bibliography-new)
       (user-error (format "Due to performane issues, this command only works on database `%s'"
@@ -16317,10 +16318,11 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (defun ps/zotra-run-translator-server ()
     "Start translator server in the background."
     (interactive)
+    (let ((shell-command-buffer-name-async "*zotra-translation-server*"))
     (async-shell-command
      (format
       "cd %s; nvm use 14; npm start"
-      ps/dir-translation-server)))
+      ps/dir-translation-server))))
 
   (ps/zotra-run-translator-server)
 

@@ -5404,6 +5404,8 @@ option."
    "." 'dired-find-alternate-file
    "'" 'ps/dired-copy-filename-as-kill-absolute
    "H-." 'ps/dired-dotfiles-toggle
+   "c" 'ps/dired-copy-filename-as-kill-absolute
+   "C" 'dired-do-compress
    "C-s" 'dired-isearch-filenames
    "J" 'dired-jump-other-window
    "k" 'dired-previous-line
@@ -11464,7 +11466,6 @@ Point is moved after both elements."
    "H-s-o" 'org-open-at-point
    "A-C-s-n" 'ps/org-jump-to-first-heading
    "s-A-b" 'ps/org-set-todo-properties
-   "s-c" 'org-ctrl-c-ctrl-c
    "s-d" 'org-deadline
    "s-e" 'org-set-effort
    "s-f" 'org-insert-todo-subheading
@@ -13563,7 +13564,8 @@ CLOCK: [2022-07-26 Tue 13:48]--[2022-07-26 Tue 14:21] =>  0:33
   (ox-clip-osx-cmd "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
 
   :general
-   ("H-C" 'ox-clip-formatted-copy))
+  ((org-mode-map)
+   ("s-c" 'ox-clip-formatted-copy))
 #+end_src
 
 ** ox-pandoc
@@ -19822,6 +19824,7 @@ to the clipboard."
   :general
   ("A-H-o" 'pass)
   (pass-mode-map
+   "c" 'pass-copy
    "d" 'pass-kill
    "<return>" 'ps/pass-edit
    "SPC" 'ps/pass-open-at-point

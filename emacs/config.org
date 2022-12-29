@@ -11160,15 +11160,15 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (org-directory ps/dir-org) ; set org directory
   (org-todo-keywords
    '((sequence "TODO(t)"
-               "DOING(g)"
-               "SOMEDAY(s)"
-               "MAYBE(m)"
-               "WAITING(w)"
-               "PROJECT(p)"
-               "|"
-               "DELEGATED(l)"
-               "CANCELLED(c)"
-               "DONE(d)")))
+	       "DOING(g)"
+	       "SOMEDAY(s)"
+	       "MAYBE(m)"
+	       "WAITING(w)"
+	       "PROJECT(p)"
+	       "|"
+	       "DELEGATED(l)"
+	       "CANCELLED(c)"
+	       "DONE(d)")))
   (org-priority-highest 1)
   (org-priority-default 7)
   (org-priority-lowest 9 "set priorities")
@@ -11194,10 +11194,10 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (org-ellipsis " ")
   (org-link-elisp-confirm-function nil)
   (org-file-apps '((auto-mode . emacs)
-                   (directory . emacs)
-                   ("\\.mm\\'" . default)
-                   ("\\.x?html?\\'" . default)
-                   ("\\.pdf\\'" . emacs)))
+		   (directory . emacs)
+		   ("\\.mm\\'" . default)
+		   ("\\.x?html?\\'" . default)
+		   ("\\.pdf\\'" . emacs)))
 
   :config
   (add-to-list 'org-modules 'org-habit)
@@ -11244,7 +11244,7 @@ description)."
     (interactive)
     (widen)
     (let ((search-invisible nil)
-          (isearchp-regexp-quote-yank-flag nil))
+	  (isearchp-regexp-quote-yank-flag nil))
       (isearch-forward-regexp nil 1) ; isearch+
       (ps/isearch-yank-unquoted-string "^\*+ ")))
 
@@ -11254,14 +11254,14 @@ description)."
 address."
     (interactive)
     (if (org-in-regexp org-link-bracket-re 1)
-        (save-excursion
-          (let ((remove (list (match-beginning 0) (match-end 0)))
-                (description
-                 (if (match-end 2)
-                     (org-match-string-no-properties 2)
-                   (org-match-string-no-properties 1))))
-            (apply 'delete-region remove)
-            (insert description)))))
+	(save-excursion
+	  (let ((remove (list (match-beginning 0) (match-end 0)))
+		(description
+		 (if (match-end 2)
+		     (org-match-string-no-properties 2)
+		   (org-match-string-no-properties 1))))
+	    (apply 'delete-region remove)
+	    (insert description)))))
 
   (defun ps/org-insert-todo-subheading-after-body ()
     (interactive)
@@ -11279,24 +11279,24 @@ address."
     "Get the content text of the heading at point and add it to the `kill-ring'.
 Excludes the heading itself and any child subtrees."
     (if (org-before-first-heading-p)
-        (message "Not in or on an org heading")
+	(message "Not in or on an org heading")
       (save-excursion
-        ;; If inside heading contents, move the point back to the heading
-        ;; otherwise `org-agenda-get-some-entry-text' won't work.
-        (unless (org-at-heading-p) (org-previous-visible-heading 1))
-        (let ((contents (substring-no-properties
-                         (org-agenda-get-some-entry-text
-                          (point-marker)
-                          most-positive-fixnum))))
-          contents))))
+	;; If inside heading contents, move the point back to the heading
+	;; otherwise `org-agenda-get-some-entry-text' won't work.
+	(unless (org-at-heading-p) (org-previous-visible-heading 1))
+	(let ((contents (substring-no-properties
+			 (org-agenda-get-some-entry-text
+			  (point-marker)
+			  most-positive-fixnum))))
+	  contents))))
 
   (defun ps/org-copy-heading-contents ()
     (interactive)
     (let ((contents (ps/org-get-heading-contents)))
       (if (string= contents "")
-          (message "Heading is empty.")
-        (message "Copied: %s" contents)
-        (kill-new contents))))
+	  (message "Heading is empty.")
+	(message "Copied: %s" contents)
+	(kill-new contents))))
 
 
   (defun ps/org-copy-heading-name ()
@@ -11310,39 +11310,39 @@ Excludes the heading itself and any child subtrees."
 in current subtree."
     (interactive)
     (if (use-region-p)
-        (funcall-interactively #'count-words-region (region-beginning) (region-end))
+	(funcall-interactively #'count-words-region (region-beginning) (region-end))
       (org-with-wide-buffer
        (cl-loop for (lines words characters)
-                in (org-map-entries
-                    (lambda ()
-                      (unpackaged/org-forward-to-entry-content 'unsafe)
-                      (let ((end (org-entry-end-position)))
-                        (list (count-lines (point) end)
-                              (count-words (point) end)
-                              (- end (point)))))
-                    nil 'tree)
-                sum lines into total-lines
-                sum words into total-words
-                sum characters into total-characters
-                finally return (let ((message (format "Subtree \"%s\" has %s lines, %s words, and %s characters."
-                                                      (org-get-heading t t) total-lines total-words total-characters)))
-                                 (kill-new (number-to-string total-words))
-                                 (message message)
-                                 message)))))
+		in (org-map-entries
+		    (lambda ()
+		      (unpackaged/org-forward-to-entry-content 'unsafe)
+		      (let ((end (org-entry-end-position)))
+			(list (count-lines (point) end)
+			      (count-words (point) end)
+			      (- end (point)))))
+		    nil 'tree)
+		sum lines into total-lines
+		sum words into total-words
+		sum characters into total-characters
+		finally return (let ((message (format "Subtree \"%s\" has %s lines, %s words, and %s characters."
+						      (org-get-heading t t) total-lines total-words total-characters)))
+				 (kill-new (number-to-string total-words))
+				 (message message)
+				 message)))))
 
   ;; Note that there exists `org-back-to-heading', possibly making the below redundant or inferior
   (defun ps/org-jump-to-beginning-of-heading ()
     "Move to the beginning of heading at point."
     (interactive)
     (if visual-line-mode
-        (progn
-          (visual-line-mode -1)
-          (setq visual-line-mode-toggle t)))
+	(progn
+	  (visual-line-mode -1)
+	  (setq visual-line-mode-toggle t)))
     (when (org-at-heading-p)
       (next-line))
     (org-previous-visible-heading 1)
     (if visual-line-mode-toggle
-        (visual-line-mode)))
+	(visual-line-mode)))
 
   (defun ps/org-move-subtree ()
     "Move subtree at point to separate file. If parent heading is
@@ -11350,14 +11350,14 @@ in current subtree."
     (interactive)
     (ps/org-jump-to-beginning-of-heading)
     (let* ((name (ps/org-copy-heading-name))
-           ;; TODO: expand regular expression so that it reflects the transformation used by the EA Wiki
-           (filename (expand-file-name
-                      (concat (ps/org-wiki-slug name) ".org")
-                      ps/dir-people)))
+	   ;; TODO: expand regular expression so that it reflects the transformation used by the EA Wiki
+	   (filename (expand-file-name
+		      (concat (ps/org-wiki-slug name) ".org")
+		      ps/dir-people)))
       (org-cut-subtree)
       (find-file-other-window filename)
       (let ((subtree (replace-regexp-in-string "^\\*+" "*" (current-kill 0))))
-        (insert (concat "#+title: " name "\n\n" subtree)))
+	(insert (concat "#+title: " name "\n\n" subtree)))
       (ps/org-jump-to-beginning-of-heading)
       (ps/switch-to-last-window)))
 
@@ -11382,11 +11382,11 @@ When ARG is a numeric prefix, show contents of this level."
      ((org-at-table-p) (call-interactively 'org-table-previous-field))
      ((integerp arg)
       (let ((arg2 (if org-odd-levels-only (1- (* 2 arg)) arg)))
-        (message "Content view to level: %d" arg)
-        (org-cycle-content (prefix-numeric-value arg2))
-        (org-cycle-show-empty-lines t)
-        (setq org-cycle-global-status 'overview)
-        (run-hook-with-args 'org-cycle-hook 'overview)))
+	(message "Content view to level: %d" arg)
+	(org-cycle-content (prefix-numeric-value arg2))
+	(org-cycle-show-empty-lines t)
+	(setq org-cycle-global-status 'overview)
+	(run-hook-with-args 'org-cycle-hook 'overview)))
      (t (call-interactively 'ps/org-cycle-global))))
 
   (defun ps/org-super-return (&optional indent arg interactive)
@@ -11395,7 +11395,7 @@ link, call `org-open-at-point' and set
 `browse-url-browser-function' to `eww-browse-url'"
     (interactive "P")
     (let ((browse-url-browser-function 'eww-browse-url)
-          (browse-url-handlers nil))
+	  (browse-url-handlers nil))
       (org-open-at-point)))
 
   (defun ps/backward-org-transpose-element ()
@@ -11412,25 +11412,27 @@ Point is moved after both elements."
     (interactive)
     (save-restriction
       (if include-children
-          (ps/org-narrow-to-entry-and-children)
-        (ps/org-narrow-to-entry-no-children))
+	  (ps/org-narrow-to-entry-and-children)
+	(ps/org-narrow-to-entry-no-children))
       (org-back-to-heading)
       (if include-properties
-          (forward-line)
-        (org-end-of-meta-data t))
+	  (forward-line)
+	(org-end-of-meta-data t))
       (delete-region (point) (point-max))))
 
-  (defun ps/paste-html-to-org ()
-    "Takes the contents of the system clip/paste-board, and uses
-`pandoc' to convert it to the org-mode format."
+  (defun ps/org-paste-html ()
+    "Takes the contents of the system clipboard, and uses `pandoc' to
+convert it to `org-mode' format."
     (interactive)
     (let* ((clipboard (if (eq system-type 'darwin)
-                     "pbv public.html"
-                   "xclip -out -selection 'clipboard' -t text/html"))
-           (format (if (eq major-mode 'org-mode) "org" "markdown"))
-           (pandoc (concat "pandoc -f html -t " format))
-           (cmd    (concat clipboard " | " pandoc))
-           (text   (shell-command-to-string cmd)))
+			  "pbv public.html"
+			"xclip -out -selection 'clipboard' -t text/html"))
+	   (pandoc (concat "pandoc --wrap=none -f html -t org"))
+	   (cmd (concat clipboard " | " pandoc))
+	   (output (shell-command-to-string cmd))
+	   ;; Not sure why Pandoc adds these double slashes; we remove them
+	   (output (replace-regexp-in-string "^\\\\\\\\$" "" output))
+	   (text (replace-regexp-in-string "= " "= " output)))
       (kill-new text)
       (yank)))
 
@@ -11479,7 +11481,7 @@ Point is moved after both elements."
    ;; "s-A-s" 'ps/org-isearch-visible-org-heading
    "s-t" 'org-todo
    "s-A-t" 'org-sort
-   "s-v" 'ps/paste-html-to-org
+   "s-v" 'ps/org-paste-html
    "s-A-v" 'org-copy-visible
    "s-y" 'org-evaluate-time-range
    "s-A-y" 'ps/org-open-at-point-with-eww

@@ -1,11 +1,12 @@
 #+PROPERTY: header-args :tangle (print ps/file-karabiner-edn)
 #+TITLE:Pablo's Karabiner config
 #+AUTHOR: Pablo Stafforini <pablo@stafforini.com>
+#+filetags: :project:
 :PROPERTIES:
 :TOC:      ignore
 :ARCH:      ignore
 :END:
-#+filetags: :project:
+
 * Introduction
 :PROPERTIES:
 :ID:       F8A496BC-A40E-4362-B36B-9B7941844ACC

@@ -136,10 +136,10 @@ echo 'Disable shadow in screenshots'
 
 #+begin_src shell :results none
 defaults write com.apple.finder QuitMenuItem -bool true
-echo 'Finder: allow quitting via ⌘ + Q; doing so will also hide desktop icons'
+echo 'In Finder, allow quitting via ⌘ + Q; doing so will also hide desktop icons'
 
 defaults write com.apple.finder DisableAllAnimations -bool true
-echo 'Finder: disable window animations and Get Info animations'
+echo 'In Finder, disable window animations and Get Info animations'
 
 defaults write com.apple.finder NewWindowTarget -string "PfLo"
 defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/"
@@ -155,7 +155,7 @@ defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
 # echo 'Finder: show hidden files by default'
 
 defaults write NSGlobalDomain AppleShowAllExtensions -bool true
-echo 'Finder: show all filename extensions'
+echo 'In Finder, show all filename extensions'
 
 defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
 echo 'Display full POSIX path as Finder window title'
@@ -207,9 +207,6 @@ echo 'Use list view in all Finder windows by default'
 
 defaults write com.apple.finder WarnOnEmptyTrash -bool false
 echo 'Disable the warning before emptying the Trash'
-
-chflags nohidden ~/Library && xattr -d com.apple.FinderInfo ~/Library
-echo 'Show the ~/Library folder'
 
 sudo chflags nohidden /Volumes
 echo 'Show the /Volumes folder'
@@ -555,9 +552,6 @@ defaults write com.googlecode.iterm2 PromptOnQuit -bool false
 #+begin_src shell :results none
 defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
 echo 'Prevent Time Machine from prompting to use new hard drives as backup volume'
-
-hash tmutil &> /dev/null && sudo tmutil disablelocal
-echo 'Disable local Time Machine backups'
 #+end_src
 
 * Activity Monitor

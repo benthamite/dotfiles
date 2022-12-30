@@ -95,7 +95,8 @@ CLOCK: [2021-02-28 Sun 19:56]--[2021-02-28 Sun 20:00] =>  0:04
 :END:
 
 #+attr_org: :width 1000px
-[[https://drive.google.com/open?id=1hPSJLC9axsHJyuTnakl5Nu0lMz8bA33H&authuser=pablo.stafforini%40gmail.com&usp=drive_fs]]
+[[file:moonlander.png]]
+
 ** Key associations
 :PROPERTIES:
 :ID:       B12E6A52-5176-4484-B44B-137310DCFB6C

@@ -16393,7 +16393,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
       "cd %s; nvm use 14; npm start"
       ps/dir-translation-server))))
 
-  (ps/zotra-run-translator-server)
+  (run-with-timer 5 nil 'ps/zotra-run-translator-server)
 
   :custom
   (zotra-use-curl nil)

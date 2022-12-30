@@ -13319,12 +13319,14 @@ https://www.reddit.com/r/emacs/comments/cptwh4/org_analyzer_an_app_that_visualiz
 :PROPERTIES:
 :ID:       5BAB49C3-DB85-4CB1-9CF7-5FD72AFB4608
 :END:
+/[[https://github.com/alphapapa/org-make-toc][org-make-toc]] generates automatic tables of contents for org files./
 
 #+begin_src emacs-lisp :results silent
 (use-package org-make-toc
-  :after org)
+  :after org
+  :hook
+  (org-mode-hook . org-make-toc-mode))
 #+end_src
-
 
 ** images
 :PROPERTIES:
@@ -18964,10 +18966,10 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     :keybinding "c")
   (defengine EAForum
     "https://forum.effectivealtruism.org/search?terms=%s"
-    :keybinding "Z f")
+    :keybinding "f")
   (defengine GitHub
     "https://github.com/search?q=%s&type=Code"
-    :keybinding "Z g")
+    :keybinding "g")
   (defengine IMDb
     "http://www.imdb.com/find?s=all;q=%s"
     :keybinding "i")

@@ -1,16 +1,16 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-# Set my preferred macOS defaults.
-# Inspired by: https://github.com/nikitavoloboev/dotfiles/blob/master/macos/set-defaults.sh
-# See also: https://github.com/mathiasbynens/dotfiles
-# and: https://gist.github.com/brandonb927/3195465
+# ~/.macos — https://mths.be/macos
 
-# If not ran on macOS, exit
-if [ "$(uname -s)" != "Darwin" ]; then
-	exit 0
-fi
+# Close any open System Preferences panes, to prevent them from overriding
+# settings we’re about to change
+osascript -e 'tell application "System Preferences" to quit'
 
-set +e
+# Ask for the administrator password upfront
+sudo -v
+
+# Keep-alive: update existing `sudo` time stamp until `.macos` has finished
+while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 defaults write -g NSAutomaticWindowAnimationsEnabled -bool false
 defaults write -g NSScrollAnimationEnabled -bool false
@@ -49,6 +49,15 @@ echo 'Fast key repeat. Requires restart.'
 defaults write NSGlobalDomain KeyRepeat -int 0.02
 echo 'Set a blazingly fast keyboard repeat rate'
 
+echo "Allow quitting Finder via ⌘ + Q; doing so will also hide desktop icons"
+defaults write com.apple.finder QuitMenuItem -bool true
+
+echo "Disable the “Are you sure you want to open this application?” dialog"
+defaults write com.apple.LaunchServices LSQuarantine -bool false
+
+echo "Disable the warning when changing a file extension"
+defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+
 defaults write -g NSAutomaticWindowAnimationsEnabled -bool false
 echo 'Fast opening and closing windows and popovers'
 
@@ -66,5 +75,16 @@ echo 'Disable macOS/iOS text expansion'
 defaults write com.apple.CrashReporter DialogType none
 echo 'Do not ask to send crash reports'
 
-echo 'Some commands here require restart! Please do that for them to take effect.'
+defaults write com.apple.screencapture type -string "png"
+echo 'Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)'
+
+defaults write com.apple.dock autohide-delay -float 0
+echo 'Remove the auto-hiding Dock delay'
+
+defaults write com.apple.dock autohide-time-modifier -float 0
+echo 'Remove the animation when hiding/showing the Dock'
+
+defaults write com.apple.dock autohide -bool true
+echo 'Automatically hide and show the Dock'
+
 

@@ -1939,7 +1939,7 @@ indent block only, else indent whole buffer."
                       (point-max))
              fill-column)))
       (call-interactively #'fill-paragraph)))
-      
+
   :general
   ("A-M-f" 'ps/fill-or-unfill-paragraph))
 
@@ -2713,6 +2713,8 @@ option."
    "." 'dired-find-alternate-file
    "'" 'ps/dired-copy-filename-as-kill-absolute
    "H-." 'ps/dired-dotfiles-toggle
+   "c" 'ps/dired-copy-filename-as-kill-absolute
+   "C" 'dired-do-compress
    "C-s" 'dired-isearch-filenames
    "J" 'dired-jump-other-window
    "k" 'dired-previous-line
@@ -3313,8 +3315,7 @@ window depending on the number of present windows."
   (telega-root-mode-map
    "f" 'ps/avy-telega-view-message)
    (ebib-entry-mode-map
-   "j" 'avy-goto-line-above
-   ";" 'avy-goto-line-below))
+   "f" 'avy-goto-line))
 
 (use-package iy-go-to-char
   :config
@@ -3433,7 +3434,7 @@ and start clock."
    "s-f" 'ps/ace-link-eww-new-buffer)
   ((help-mode-map helpful-mode-map elisp-refs-mode-map)
    "f" 'ace-link-help)
-  ((ebib-entry-mode-map Info-mode-map)
+  ((Info-mode-map)
    "f" 'ace-link-info)
   ((Man-mode-map woman-mode-map)
    "f" 'ace-link-woman)
@@ -4393,13 +4394,13 @@ By default, all agenda entries are offered. MATCH is as in
 
 (use-package corfu
   :straight (corfu :files (:defaults "extensions/*")
-		   :includes (corfu-info
-			      corfu-echo
-			      corfu-history
-			      ;; corfu-indexed
-			      ;; corfu-popupinfo
-			      corfu-quick
-			      ))
+                   :includes (corfu-info
+                              corfu-echo
+                              corfu-history
+                              ;; corfu-indexed
+                              ;; corfu-popupinfo
+                              corfu-quick
+                              ))
 
   :demand t
   :custom
@@ -4422,7 +4423,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
       (corfu-mode)))
 
   (global-corfu-mode)
-  
+
   :hook
   (prog-mode-hook . corfu-doc-mode)
   (prog-mode-hook . corfu-echo-mode)
@@ -5126,20 +5127,29 @@ insert italic delimiters and place the point in between them."
 
   (advice-add 'markdown-insert-italic :override #'ps/markdown-insert-italic)
 
-  (defun ps/markdown-paste-org-link ()
-    "Paste org-mode link in markdown format."
+  (defun ps/markdown-paste-from-org ()
+    "Take the contents of the system clipboard and use `pandoc' to
+convert it from org-mode to markdown."
     (interactive)
-    (let ((url (ps/org-link-get-url-at-point))
-          (description (ps/org-link-get-description-at-point)))
-      ;; the below should probably be refactored to use `markdown-insert-italic'
-      (insert (format "[%s](%s)" description url))))
+    (let* ((clipboard (if (eq system-type 'darwin)
+                          "pbv public.utf8-plain-text"
+                        "xclip -out -selection 'clipboard' -t text/html"))
+           (pandoc (concat "pandoc --wrap=none -f org -t markdown"))
+           (cmd (concat clipboard " | " pandoc))
+           (output (shell-command-to-string cmd))
+           ;; Not sure why Pandoc adds these double slashes; we remove them
+           (output (replace-regexp-in-string "^\\\\\\\\$" "" output))
+           (text (replace-regexp-in-string "= " "= " output)))
+      (kill-new text)
+      (yank)))
 
   :general
   ((gfm-mode-map markdown-mode-map telega-chat-mode-map)
    "s-b" 'markdown-insert-bold
    "s-e" 'markdown-insert-code
    "s-i" 'markdown-insert-italic
-   "s-k" 'markdown-insert-link)
+   "s-k" 'markdown-insert-link
+   "s-v" 'ps/markdown-paste-from-org)
   (gfm-mode-map
    "s-a" 'markdown-insert-gfm-code-block
    "s-z" 'markdown-edit-code-block))
@@ -5857,19 +5867,46 @@ Point is moved after both elements."
         (org-end-of-meta-data t))
       (delete-region (point) (point-max))))
 
-  (defun ps/paste-html-to-org ()
-    "Takes the contents of the system clip/paste-board, and uses
-`pandoc' to convert it to the org-mode format."
+  (defun ps/org-paste-html ()
+    "Take the contents of the system clipboard and use `pandoc' to
+convert it to `org-mode' format."
     (interactive)
-    (let* ((clip (if (eq system-type 'darwin)
-                     "pbv public.html"
-                   "xclip -out -selection 'clipboard' -t text/html")
-           (format (if (eq major-mode 'org-mode) "org" "markdown"))
-           (pandoc (concat "pandoc -f html -t " format))
-           (cmd    (concat clip " | " pandoc))
-           (text   (shell-command-to-string cmd)))
+    (let* ((clipboard (if (eq system-type 'darwin)
+                          "pbv public.html"
+                        "xclip -out -selection 'clipboard' -t text/html"))
+           (pandoc (concat "pandoc --wrap=none -f html -t org"))
+           (cmd (concat clipboard " | " pandoc))
+           (output (shell-command-to-string cmd))
+           ;; Not sure why Pandoc adds these double slashes; we remove them
+           (output (replace-regexp-in-string "^\\\\\\\\$" "" output))
+           (text (replace-regexp-in-string "= " "= " output)))
       (kill-new text)
-      (yank))))
+      (yank)))
+
+  (defun ps/org-paste-image ()
+    "Take the contents of the system clipboard and paste it as an
+image."
+  (interactive)
+  (if (executable-find "pngpaste")
+      (let* ((counter 1)
+             (image-file (concat
+                          ps/dir-org-images
+                          (org-id-get nil 'create)
+                          (format "-%d.png" counter))))
+        (while (file-exists-p image-file)
+          (setq counter (1+ counter))
+          (setq image-file (concat
+                            ps/dir-org-images
+                            (org-id-get nil 'create)
+                            (format "-%d.png" counter))))
+        (call-process-shell-command (format "pngpaste '%s'" image-file))
+        (let ((caption (read-string "Caption: ")))
+          (unless (string= caption "")
+            (insert (format "#+CAPTION: %s \n" caption))))
+        (insert (format "[[file:%s]]" image-file))
+        (org-display-inline-images)
+        (message "You can toggle inline images with C-c C-x C-v"))
+    (user-error "Requires pngpaste in PATH")))
 
   :general
   (org-mode-map
@@ -5903,7 +5940,6 @@ Point is moved after both elements."
    "H-s-o" 'org-open-at-point
    "A-C-s-n" 'ps/org-jump-to-first-heading
    "s-A-b" 'ps/org-set-todo-properties
-   "s-c" 'org-ctrl-c-ctrl-c
    "s-d" 'org-deadline
    "s-e" 'org-set-effort
    "s-f" 'org-insert-todo-subheading
@@ -5917,8 +5953,8 @@ Point is moved after both elements."
    ;; "s-A-s" 'ps/org-isearch-visible-org-heading
    "s-t" 'org-todo
    "s-A-t" 'org-sort
-   "s-v" 'ps/paste-html-to-org
-   "s-A-v" 'org-copy-visible
+   "s-v" 'ps/org-paste-html
+   "s-A-v" 'ps/org-paste-image
    "s-y" 'org-evaluate-time-range
    "s-A-y" 'ps/org-open-at-point-with-eww
    "s-z" 'org-edit-special
@@ -7029,7 +7065,8 @@ an org drawer."
   (ox-clip-osx-cmd "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
 
   :general
-   ("H-C" 'ox-clip-formatted-copy))
+  ((org-mode-map)
+   ("s-c" 'ox-clip-formatted-copy))
 
 (use-package ox-pandoc)
 
@@ -7609,6 +7646,29 @@ Version 2015-06-08"
 
   (advice-add 'bibtex-autokey-get-year :override #'ps/bibtex-autokey-get-year)
 
+  ;; Add custom 'video' field
+  (push '("Video" "Video file"
+        (("author" nil nil 0)
+         ("title")
+         ("date" nil nil 1)
+         ("year" nil nil -1)
+         ("url" nil nil 2))
+        nil
+        (("subtitle")
+         ("titleaddon")
+         ("language")
+         ("version")
+         ("note")
+         ("organization")
+         ("month")
+         ("addendum")
+         ("pubstate")
+         ("eprintclass" nil nil 4)
+         ("primaryclass" nil nil -4)
+         ("eprinttype" nil nil 5)
+         ("archiveprefix" nil nil -5)
+         ("urldate"))) bibtex-biblatex-entry-alist)
+
   :general
   (bibtex-mode-map
    "A-C-H-x" 'bibtex-copy-entry-as-kill
@@ -7869,6 +7929,7 @@ in the file. Data comes from www.ebook.de."
                         ("Title" 50 t)))
   (ebib-timestamp-format "%Y-%m-%d %T (%Z)")
   (ebib-save-xrefs-first nil)
+  (ebib-default-entry-type "online")
 
   :config
   (setq ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "urldate" "venue" "version" "volumes" "year"))
@@ -8032,10 +8093,10 @@ error."
                    (ps/ebib-download-article-by-title))))
            (t
             (user-error (format "No action defined for entries of type `%s'" type)))))
-    (cond ((eq action 'search)
-           (ps/ebib-search-by-identifier))
-          ((eq action 'download)
-           (ps/ebib-download-by-identifier)))))
+      (cond ((eq action 'search)
+             (ps/ebib-search-by-identifier))
+            ((eq action 'download)
+             (ps/ebib-download-by-identifier)))))
 
   (defun ps/ebib-search-dwim ()
     "If field at point is 'title', run a search with its value; otherwise use identifier.
@@ -8090,6 +8151,11 @@ exists."
     (interactive)
     (ps/ebib-open-file-externally "webm"))
 
+  (defun ps/ebib-open-mp3-file ()
+    "Open `webm' file in entry at point, if it (uniquely) exists."
+    (interactive)
+    (ps/ebib-open-file-externally "mp3"))
+
   (defun ps/ebib-open-pdf-file-externally ()
     "Open `pdf' file in entry at point, if it (uniquely) exists."
     (interactive)
@@ -8121,7 +8187,7 @@ file, use the preference ordering defined in
       (user-error "No file found.")))
 
   (defvar ps/ebib-valid-file-extensions
-    '("webm" "pdf" "html")
+    '("pdf" "html" "webm" "flac" "mp3")
     "List of valid file extensions for Ebib, in order of preference.")
 
   (defun ps/ebib-validate-file-extension ()
@@ -8181,7 +8247,7 @@ the entry's unique key and that their extensions are listed in
                (unless (equal stem key)
                  (let ((new-filename
                         (ps/ebib--rename-and-abbreviate-file
-                         (eval (intern (concat "ps/dir-library-" extension)))
+                         (ps/ebib--extension-directories extension)
                          key
                          extension)))
                    (rename-file filename new-filename)
@@ -8325,60 +8391,68 @@ confirmation."
       (default
         (beep))))
 
+  (defun ps/ebib--extension-directories (extension)
+    "Return directory associated with EXTENSION."
+    (cond ((string= extension "pdf")
+           ps/dir-library-pdf)
+          ((string= extension "html")
+           ps/dir-library-html)
+          ((or (string= extension "webm")
+               (string= extension "mp3")
+               (string= extension "flac"))
+           ps/dir-library-media)
+          (t
+           (user-error "Invalid file extension"))))
+
   (defun ps/ebib-attach-file (&optional most-recent)
-  "Prompt the user for a file to attach to the current entry.
+    "Prompt the user for a file to attach to the current entry.
 
 If MOST-RECENT is non-nil, attach the most recent file instead."
-  (interactive)
-  (ebib--execute-when
-    (entries
-     (let ((key (ebib--get-key-at-point)))
-       (unless (ps/ebib-valid-key-p key)
-         (user-error "Entry has an invalid key; pleasse regenerate it."))
-       (let* ((field "file")
-              (file-to-attach
-               (if most-recent
-                   (ps/newest-file ps/dir-downloads)
-                 (let ((initial-folder
-                        (completing-read "Select folder: "
-                                         (list
-                                          ps/dir-downloads
-                                          ps/dir-library-html
-                                          ps/dir-library-pdf
-                                          ps/dir-library-video))))
-                   (read-file-name
-                    "File to attach: "
-                    ;; Use key as default selection if key-based file exists
-                    ;; else default to `initial-folder'
-                    (if (catch 'found
-                          (dolist (extension ps/ebib-valid-file-extensions)
-                            (when (f-file-p (file-name-concat
-                                             initial-folder
-                                             (file-name-with-extension key extension)))
-                              (throw 'found extension))))
-                        (file-name-concat initial-folder key)
-                      initial-folder)))))
-              (extension (file-name-extension file-to-attach))
-              (destination-folder
-               (cond ((string= extension "pdf")
-                      ps/dir-library-pdf)
-                     ((string= extension "html")
-                      ps/dir-library-html)
-                     (t
-                      (user-error "Invalid file extension"))))
-              (file-name (ps/ebib--rename-and-abbreviate-file
-                          destination-folder key extension)))
-         (when (or (not (f-file-p file-name))
-                   (y-or-n-p "File exists. Overwrite? "))
-           (rename-file file-to-attach file-name t))
-         (ps/ebib--update-file-field-contents key file-name)
-         (when (string= (file-name-extension file-name) "pdf")
-           ;; open the pdf to make sure it displays the web page correctly
-           (ps/ebib-open-pdf-file)
-           ;; ocr the pdf if necessary
-           (ps/ocr-pdf (format "'%s' '%s'" (expand-file-name file-name) (expand-file-name file-name)))))))
-     (default
-       (beep))))
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (let ((key (ebib--get-key-at-point)))
+         (unless (ps/ebib-valid-key-p key)
+           (user-error "Entry has an invalid key; pleasse regenerate it."))
+         (let* ((field "file")
+                (file-to-attach
+                 (if most-recent
+                     (ps/newest-file ps/dir-downloads)
+                   (let ((initial-folder
+                          (completing-read "Select folder: "
+                                           (list
+                                            ps/dir-downloads
+                                            ps/dir-library-html
+                                            ps/dir-library-pdf
+                                            ps/dir-library-media))))
+                     (read-file-name
+                      "File to attach: "
+                      ;; Use key as default selection if key-based file exists
+                      ;; else default to `initial-folder'
+                      (if (catch 'found
+                            (dolist (extension ps/ebib-valid-file-extensions)
+                              (when (f-file-p (file-name-concat
+                                               initial-folder
+                                               (file-name-with-extension key extension)))
+                                (throw 'found extension))))
+                          (file-name-concat initial-folder key)
+                        initial-folder)))))
+                (extension (file-name-extension file-to-attach))
+                (destination-folder
+                 (ps/ebib--extension-directories extension))
+                (file-name (ps/ebib--rename-and-abbreviate-file
+                            destination-folder key extension)))
+           (when (or (not (f-file-p file-name))
+                     (y-or-n-p "File exists. Overwrite? "))
+             (rename-file file-to-attach file-name t))
+           (ps/ebib--update-file-field-contents key file-name)
+           (when (string= (file-name-extension file-name) "pdf")
+             ;; open the pdf to make sure it displays the web page correctly
+             (ps/ebib-open-pdf-file)
+             ;; ocr the pdf if necessary
+             (ps/ocr-pdf (format "'%s' '%s'" (expand-file-name file-name) (expand-file-name file-name)))))))
+      (default
+        (beep))))
 
   (defun ps/ebib-search-internet-archive (&optional field search-query)
     "Run a search on the Internet Archive."
@@ -8588,8 +8662,8 @@ If not invoked from `ebib', prompt for search query."
     (let* ((key (ebib--get-key-at-point))
            (file-name
             (ps/ebib--rename-and-abbreviate-file
-             ps/dir-library-video key "webm")))
-      (youtube-dl id :directory ps/dir-library-video :destination key)
+             ps/dir-library-media key "webm")))
+      (youtube-dl id :directory ps/dir-library-media :destination key)
       (message (format "Downloading video from '%s'" (substring-no-properties id)))
       (ps/ebib--update-file-field-contents key file-name)))
 
@@ -8701,25 +8775,29 @@ first name, and names are separated by a semicolon."
       (default
         (beep))))
 
-  (defvar ps/ebib-sort-toggle nil)
+  (defvar ps/ebib-sort-toggle 'Title)
+
   (defun ps/ebib-sort-toggle ()
-    "Toggle between sorting by date and sorting by title."
+    "Toggle between sorting by timestamp, author, and title."
     (interactive)
     (unless (string= (ebib-db-get-filename ebib--cur-db) ps/file-bibliography-new)
       (user-error (format "Due to performane issues, this command only works on database `%s'"
                           (file-name-nondirectory ps/file-bibliography-new))))
-    (setq ps/ebib-sort-toggle (not ps/ebib-sort-toggle))
-    (let ((field (if ps/ebib-sort-toggle
-                     "Title"
-                   "timestamp"))
-          (order (if ps/ebib-sort-toggle
-                     'ascend
-                   'descend)))
-      (ebib--execute-when
-        (entries
-         (ebib--index-sort field order))
-        (default
-          (beep)))))
+    (ebib--execute-when
+      (entries
+       (let ((order 'ascend))
+         (cond ((eq ps/ebib-sort-toggle 'Timestamp)
+                (setq ps/ebib-sort-toggle 'Author))
+               ((eq ps/ebib-sort-toggle 'Author)
+                (setq ps/ebib-sort-toggle 'Title))
+               ((eq ps/ebib-sort-toggle 'Title)
+                (setq ps/ebib-sort-toggle 'Timestamp)
+                (setq order 'descend)))
+         (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
+         (goto-char (point-min))
+         (message (format "Sorting by %s" ps/ebib-sort-toggle))))
+      (default
+        (beep))))
 
 
   (defun ps/ebib-merge-databases (source target)
@@ -8773,7 +8851,7 @@ first name, and names are separated by a semicolon."
    "s-c" 'ebib-quit-multiline-buffer-and-save)
   (ebib-entry-mode-map
    "TAB" 'ebib-goto-next-set
-   "S-TAB" 'ebib-goto-prev-set
+   "<backtab>" 'ebib-goto-prev-set
    "SPC" 'ps/ebib-open-file-dwim
    "H-s" 'ebib-save-current-database
    "!" 'ebib-generate-autokey
@@ -8816,7 +8894,6 @@ first name, and names are separated by a semicolon."
    "A-C-s-SPC" 'ps/ebib-end-of-index-buffer
    "d" 'ps/ebib-duplicate-entry
    "D" 'ebib-delete-entry
-   "f" 'ps/ebib-view-file
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry
    "s" 'ps/ebib-sort-toggle
@@ -8840,10 +8917,11 @@ first name, and names are separated by a semicolon."
   (defun ps/zotra-run-translator-server ()
     "Start translator server in the background."
     (interactive)
+    (let ((shell-command-buffer-name-async "*zotra-translation-server*"))
     (async-shell-command
      (format
       "cd %s; nvm use 14; npm start"
-      ps/dir-translation-server)))
+      ps/dir-translation-server))))
 
   (ps/zotra-run-translator-server)
 
@@ -9787,12 +9865,14 @@ into a task for Leo."
    "s-r" 'telega-msg-add-reaction
    "s-s" 'telega-chatbuf-filter-search
    "s-t" 'telega-sticker-choose-favorite-or-recent
-   "s-v" 'telega-chatbuf-attach-clipboard
+   "s-v" 'ps/markdown-paste-from-org
+   "A-s-v" 'telega-chatbuf-attach-clipboard
    "s-z" 'telega-mnz-chatbuf-attach-code
    "A-s-e" 'telega-chatbuf-edit-prev
    "A-s-s" 'ps/telega-chatbuf-attach-most-recent-screenshot
    "A-s-t" 'ps/telega-chatbuf-attach-most-recent-file
-   "A-s-v" 'telega-chatbuf-attach-voice-note)
+   "A-s-v" 'telega-chatbuf-attach-clipboard
+   "" 'telega-chatbuf-attach-voice-note)
   (telega-msg-button-map
    "<return>" 'push-button
    "." 'ps/telega-docs-change-open
@@ -10300,10 +10380,10 @@ PREFIX determines quoting."
     :keybinding "c")
   (defengine EAForum
     "https://forum.effectivealtruism.org/search?terms=%s"
-    :keybinding "f")
+    :keybinding "Z f")
   (defengine GitHub
     "https://github.com/search?q=%s&type=Code"
-    :keybinding "g")
+    :keybinding "Z g")
   (defengine IMDb
     "http://www.imdb.com/find?s=all;q=%s"
     :keybinding "i")
@@ -10801,6 +10881,7 @@ to the clipboard."
   :general
   ("A-H-o" 'pass)
   (pass-mode-map
+   "c" 'pass-copy
    "d" 'pass-kill
    "<return>" 'ps/pass-edit
    "SPC" 'ps/pass-open-at-point

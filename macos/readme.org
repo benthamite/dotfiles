@@ -25,10 +25,11 @@ These defaults have been mostly taken from Mathias Bynens's [[https://github.com
 - [[#terminal--iterm-2][Terminal & iTerm 2]]
 - [[#time-machine][Time Machine]]
 - [[#activity-monitor][Activity Monitor]]
-- [[#texteditl][Texteditl]]
+- [[#textedit][Textedit]]
 - [[#mac-app-store][Mac App Store]]
 - [[#photos][Photos]]
 - [[#google-chrome--google-chrome-canary][Google Chrome & Google Chrome Canary]]
+- [[#misc][Misc]]
 - [[#kill-affected-applications][Kill affected applications]]
 :END:
 
@@ -671,8 +672,8 @@ echo 'Prevent Photos from opening automatically when devices are plugged in'
 :END:
 
 #+begin_src shell :results none
-defaults write com.google.Chrome DisablePrintPreview -bool true
-defaults write com.google.Chrome.canary DisablePrintPreview -bool true
+defaults write com.google.Chrome DisablePrintPreview -bool false
+defaults write com.google.Chrome.canary DisablePrintPreview -bool false
 echo 'Use the system-native print preview dialog'
 
 defaults write com.google.Chrome PMPrintingExpandedStateForPrint2 -bool true

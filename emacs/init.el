@@ -7066,7 +7066,7 @@ an org drawer."
 
   :general
   ((org-mode-map)
-   ("s-c" 'ox-clip-formatted-copy))
+   "s-c" 'ox-clip-formatted-copy))
 
 (use-package ox-pandoc)
 

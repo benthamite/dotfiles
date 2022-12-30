@@ -15,6 +15,63 @@
 CLOCK: [2022-07-01 Fri 11:06]--[2022-07-01 Fri 11:24] =>  0:18
 CLOCK: [2021-02-28 Sun 19:56]--[2021-02-28 Sun 20:00] =>  0:04
 :END:
+** Table of contents
+:PROPERTIES:
+:TOC:      :include all :depth 4 :force (nothing) :ignore (nothing) :local (nothing)
+:ID:       8810B51F-81BB-4AB9-A525-C39EBE079BD3
+:END:
+:CONTENTS:
+- [[#introduction][Introduction]]
+  - [[#table-of-contents][Table of contents]]
+  - [[#useful-links][Useful links]]
+  - [[#moonlander-key-layout][moonlander key layout]]
+  - [[#key-associations][Key associations]]
+  - [[#list-of-keys][List of keys]]
+  - [[#letter-frequencies][Letter frequencies]]
+- [[#profiles][Profiles]]
+  - [[#alone][alone]]
+  - [[#held][held]]
+  - [[#delay][delay]]
+  - [[#sim][sim]]
+  - [[#simlayer-threshold][simlayer threshold]]
+- [[#applications][Applications]]
+- [[#devices][Devices]]
+- [[#layers][Layers]]
+  - [[#ask-how-to-apply-modifiers-to-simlayers][Ask how to apply modifiers to simlayers]]
+  - [[#archive][Archive]]
+    - [[#find-way-to-eliminate-accidental-triggers][Find way to eliminate accidental triggers]]
+- [[#templates][Templates]]
+- [[#main][Main]]
+  - [[#individual-bindings][individual bindings]]
+    - [[#shared][shared]]
+    - [[#internal-keyboard][internal keyboard]]
+    - [[#moonlander][moonlander]]
+    - [[#misc][misc]]
+  - [[#active-layers][active layers]]
+    - [[#j-mode][j-mode]]
+    - [[#cj-mode][Cj-mode]]
+    - [[#csj-mode][CSj-mode]]
+    - [[#l-mode][l-mode]]
+    - [[#p-mode][p-mode]]
+    - [[#q-mode][q-mode]]
+    - [[#x-mode][x-mode]]
+    - [[#z-mode][z-mode]]
+    - [[#comma-mode][comma-mode]]
+    - [[#period-mode][period-mode]]
+    - [[#quote-mode][quote-mode]]
+    - [[#semicolon-mode][semicolon-mode]]
+    - [[#csemicolon-mode][Csemicolon-mode]]
+    - [[#osemicolon-mode][Osemicolon-mode]]
+    - [[#slash-mode][slash-mode]]
+    - [[#end][end]]
+  - [[#inactive-layers][inactive layers]]
+    - [[#k-mode][k-mode]]
+    - [[#b-mode][b-mode]]
+    - [[#-mode][?-mode]]
+    - [[#enter--space-pseudo-mode][enter + space pseudo-mode]]
+    - [[#zx-chord][zx-chord]]
+:END:
+
 ** Useful links
 :PROPERTIES:
 :ID:       1AAF1939-3FD7-477B-B56F-6BDCD2BB01B1

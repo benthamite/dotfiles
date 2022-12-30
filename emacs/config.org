@@ -17974,7 +17974,8 @@ into a task for Leo."
    "s-r" 'telega-msg-add-reaction
    "s-s" 'telega-chatbuf-filter-search
    "s-t" 'telega-sticker-choose-favorite-or-recent
-   "s-v" '
+   "s-v" 'ps/markdown-paste-from-org
+   "A-s-v" 'telega-chatbuf-attach-clipboard
    "s-z" 'telega-mnz-chatbuf-attach-code
    "A-s-e" 'telega-chatbuf-edit-prev
    "A-s-s" 'ps/telega-chatbuf-attach-most-recent-screenshot
@@ -18945,6 +18946,7 @@ PREFIX determines quoting."
 :LOGBOOK:
 CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
 :END:
+/[[https://github.com/hrs/engine-mode][engine-mode]] is a minor mode for defining and querying search engines through Emacs./
 
 #+begin_src emacs-lisp :results silent
 (use-package engine-mode
@@ -18962,10 +18964,10 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     :keybinding "c")
   (defengine EAForum
     "https://forum.effectivealtruism.org/search?terms=%s"
-    :keybinding "f")
+    :keybinding "Z f")
   (defengine GitHub
     "https://github.com/search?q=%s&type=Code"
-    :keybinding "g")
+    :keybinding "Z g")
   (defengine IMDb
     "http://www.imdb.com/find?s=all;q=%s"
     :keybinding "i")

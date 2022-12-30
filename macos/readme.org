@@ -659,7 +659,7 @@ echo 'Expand the print dialog by default'
 :ID:       4CEC48CF-F0CD-4A29-996F-DA1C6ECC3A32
 :END:
 
-#+begin_src shell :results none
+#+begin_src shell :results none :tangle no
 for app in "Activity Monitor" \
 	"Address Book" \
 	"Calendar" \

@@ -95,7 +95,7 @@ CLOCK: [2021-02-28 Sun 19:56]--[2021-02-28 Sun 20:00] =>  0:04
 :END:
 
 #+attr_org: :width 1000px
-l[[file:~/google drive/Pictures/org/moonlander.png]]
+[[file:~/google drive/Pictures/org/moonlander.png]]
 ** Key associations
 :PROPERTIES:
 :ID:       B12E6A52-5176-4484-B44B-137310DCFB6C
@@ -1961,16 +1961,6 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
          [:escape [:km "Local app escape"] :!emacs]
          [:hyphen [:km "Local app hyphen"] :!emacs]
          ]}
-#+end_src
-
-The following are leftovers from an outdated config. If something doesn't work, check here and see if you need to make any changes on Keyboard Maestro. (Previously the scripts were called by their name, whereas now Karabiner calls a generic KM action which is then associated with multiple macros (one per app or website.)
-
-#+begin_src clojure :tangle no
-[:equal_sign [:km "Remove underscores from selection"]]
-[:o [:km "Insert doi URL (o)"]]
-[:q [:km "Switch to Anki Karabiner profile"]]
-[:w [:km "Count words"]]
-[:comma [:km "open: System Preferences"]]
 #+end_src
 
 *** end

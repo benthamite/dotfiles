@@ -687,7 +687,3 @@ done
 echo "Done. Note that some of these changes require a logout/restart to take effect."
 #+end_src
 
-#+begin_src shell :exports result :results output :tangle no
-sh /Users/pablostafforini/Dropbox/dotfiles/macos/macos.sh
-#+end_src
-

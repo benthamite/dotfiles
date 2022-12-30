@@ -14862,27 +14862,27 @@ Version 2015-06-08"
 
   ;; Add custom 'video' field
   (push '("Video" "Video file"
-	(("author" nil nil 0)
-	 ("title")
-	 ("date" nil nil 1)
-	 ("year" nil nil -1)
-	 ("url" nil nil 2))
-	nil
-	(("subtitle")
-	 ("titleaddon")
-	 ("language")
-	 ("version")
-	 ("note")
-	 ("organization")
-	 ("month")
-	 ("addendum")
-	 ("pubstate")
-	 ("eprintclass" nil nil 4)
-	 ("primaryclass" nil nil -4)
-	 ("eprinttype" nil nil 5)
-	 ("archiveprefix" nil nil -5)
-	 ("urldate"))) bibtex-biblatex-entry-alist)
-  
+        (("author" nil nil 0)
+         ("title")
+         ("date" nil nil 1)
+         ("year" nil nil -1)
+         ("url" nil nil 2))
+        nil
+        (("subtitle")
+         ("titleaddon")
+         ("language")
+         ("version")
+         ("note")
+         ("organization")
+         ("month")
+         ("addendum")
+         ("pubstate")
+         ("eprintclass" nil nil 4)
+         ("primaryclass" nil nil -4)
+         ("eprinttype" nil nil 5)
+         ("archiveprefix" nil nil -5)
+         ("urldate"))) bibtex-biblatex-entry-alist)
+
   :general
   (bibtex-mode-map
    "A-C-H-x" 'bibtex-copy-entry-as-kill
@@ -15548,7 +15548,7 @@ exists."
     (interactive)
     (ps/ebib-open-file-externally "webm"))
 
-    (defun ps/ebib-open-mp3-file ()
+  (defun ps/ebib-open-mp3-file ()
     "Open `webm' file in entry at point, if it (uniquely) exists."
     (interactive)
     (ps/ebib-open-file-externally "mp3"))
@@ -15644,7 +15644,7 @@ the entry's unique key and that their extensions are listed in
                (unless (equal stem key)
                  (let ((new-filename
                         (ps/ebib--rename-and-abbreviate-file
-                         (eval (intern (concat "ps/dir-library-" extension)))
+                         (ps/ebib--extension-directories extension)
                          key
                          extension)))
                    (rename-file filename new-filename)
@@ -15788,6 +15788,19 @@ confirmation."
       (default
         (beep))))
 
+  (defun ps/ebib--extension-directories (extension)
+    "Return directory associated with EXTENSION."
+    (cond ((string= extension "pdf")
+           ps/dir-library-pdf)
+          ((string= extension "html")
+           ps/dir-library-html)
+          ((or (string= extension "webm")
+               (string= extension "mp3")
+               (string= extension "flac"))
+           ps/dir-library-media)
+          (t
+           (user-error "Invalid file extension"))))
+
   (defun ps/ebib-attach-file (&optional most-recent)
     "Prompt the user for a file to attach to the current entry.
 
@@ -15823,16 +15836,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
                         initial-folder)))))
                 (extension (file-name-extension file-to-attach))
                 (destination-folder
-                 (cond ((string= extension "pdf")
-                        ps/dir-library-pdf)
-                       ((string= extension "html")
-                        ps/dir-library-html)
-                       ((or (string= extension "webm")
-                            (string= extension "mp3")
-                            (string= extension "flac"))
-                        ps/dir-library-media)
-                       (t
-                        (user-error "Invalid file extension"))))
+                 (ps/ebib--extension-directories extension))
                 (file-name (ps/ebib--rename-and-abbreviate-file
                             destination-folder key extension)))
            (when (or (not (f-file-p file-name))

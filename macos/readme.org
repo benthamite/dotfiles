@@ -62,11 +62,41 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 sudo nvram SystemAudioVolume=" "
 echo 'Disable the sound effects on boot'
 
+defaults write com.apple.PowerChime ChimeOnNoHardware -bool true && killall PowerChime
+echo 'disable power chime'
+
+defaults write -g NSAutomaticWindowAnimationsEnabled -bool false
+defaults write -g NSScrollAnimationEnabled -bool false
+defaults write -g NSWindowResizeTime -float 0.001
+defaults write -g QLPanelAnimationDuration -float 0
+defaults write -g NSScrollViewRubberbanding -bool false
+defaults write -g NSDocumentRevisionsWindowTransformAnimation -bool false
+defaults write -g NSToolbarFullScreenAnimationDuration -float 0
+defaults write -g NSBrowserColumnAnimationSpeedMultiplier -float 0
+defaults write com.apple.dock autohide-time-modifier -float 0
+defaults write com.apple.dock autohide-delay -float 0
+defaults write com.apple.dock expose-animation-duration -float 0
+defaults write com.apple.dock springboard-show-duration -float 0
+defaults write com.apple.dock springboard-hide-duration -float 0
+defaults write com.apple.dock springboard-page-duration -float 0
+defaults write com.apple.finder DisableAllAnimations -bool true
+defaults write com.apple.Mail DisableSendAnimations -bool true
+defaults write com.apple.Mail DisableReplyAnimations -bool true
 defaults write NSGlobalDomain NSUseAnimatedFocusRing -bool false
-echo 'Disable the over-the-top focus ring animation'
+echo 'Disable animations'
+
+defaults write -g NSAutomaticWindowAnimationsEnabled -bool false
+echo 'Fast opening and closing windows and popovers'
+
+# https://robservatory.com/speed-up-your-mac-via-hidden-prefs/
+defaults write NSGlobalDomain NSWindowResizeTimes 0.001
+echo 'Sped up dialogue boxes'
 
 defaults write com.apple.LaunchServices LSQuarantine -bool false
 echo 'Disable the “Are you sure you want to open this application?” dialog'
+
+defaults write com.apple.CrashReporter DialogType none
+echo 'Do not ask to send crash reports'
 
 sudo defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
 echo 'Reveal IP address, hostname, OS version, etc. when clicking the clock in the login window'
@@ -76,6 +106,9 @@ echo 'Disable Notification Center and remove the menu bar icon'
 
 defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
 echo 'Disable automatic capitalization'
+
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 70 '<dict><key>enabled</key><false/></dict>'
+echo 'disable word definition'
 #+end_src
 
 * Trackpad, mouse, keyboard, Bluetooth accessories, and input
@@ -109,8 +142,11 @@ echo 'Set the timezone; see `sudo systemsetup -listtimezones` for other values'
 # Europe/London
 # Europe/Madrid
 
-#launchctl unload -w /System/Library/LaunchAgents/com.apple.rcd.plist 2> /dev/null
+launchctl unload -w /System/Library/LaunchAgents/com.apple.rcd.plist 2> /dev/null
 echo 'Stop iTunes from responding to the keyboard media keys'
+
+defaults write -g WebAutomaticTextReplacementEnableds -bool false
+echo 'Disable macOS/iOS text expansion'
 #+end_src
 
 * Screen
@@ -137,9 +173,6 @@ echo 'Disable shadow in screenshots'
 #+begin_src shell :results none
 defaults write com.apple.finder QuitMenuItem -bool true
 echo 'In Finder, allow quitting via ⌘ + Q; doing so will also hide desktop icons'
-
-defaults write com.apple.finder DisableAllAnimations -bool true
-echo 'In Finder, disable window animations and Get Info animations'
 
 defaults write com.apple.finder NewWindowTarget -string "PfLo"
 defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/"
@@ -253,9 +286,6 @@ defaults write com.apple.dock show-process-indicators -bool true
 # Don’t animate opening applications from the Dock
 defaults write com.apple.dock launchanim -bool false
 
-# Speed up Mission Control animations
-defaults write com.apple.dock expose-animation-duration -float 0.1
-
 # Don’t group windows by application in Mission Control
 # (i.e. use the old Exposé behavior instead)
 defaults write com.apple.dock expose-group-by-app -bool false
@@ -269,10 +299,11 @@ defaults write com.apple.dock dashboard-in-overlay -bool true
 # Don’t automatically rearrange Spaces based on most recent use
 defaults write com.apple.dock mru-spaces -bool false
 
-# Remove the auto-hiding Dock delay
 defaults write com.apple.dock autohide-delay -float 0
-# Remove the animation when hiding/showing the Dock
-defaults write com.apple.dock autohide-time-modifier -float 0
+echo 'Remove the auto-hiding Dock delay'
+
+defaults write com.apple.dock autohide-delay -float 0
+echo 'Remove the auto-hiding Dock delay'
 
 # Automatically hide and show the Dock
 defaults write com.apple.dock autohide -bool true
@@ -377,6 +408,7 @@ defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
 
 # Enable continuous spellchecking
 defaults write com.apple.Safari WebContinuousSpellCheckingEnabled -bool true
+
 # Disable auto-correct
 defaults write com.apple.Safari WebAutomaticSpellingCorrectionEnabled -bool false
 
@@ -574,7 +606,7 @@ defaults write com.apple.ActivityMonitor SortDirection -int 0
 echo 'Sort Activity Monitor results by CPU usage'
 #+end_src
 
-* Texteditl
+* Textedit
 :PROPERTIES:
 :ID:       A17E6C51-6824-4833-9CA1-5F9C10D13C82
 :END:
@@ -646,6 +678,15 @@ echo 'Use the system-native print preview dialog'
 defaults write com.google.Chrome PMPrintingExpandedStateForPrint2 -bool true
 defaults write com.google.Chrome.canary PMPrintingExpandedStateForPrint2 -bool true
 echo 'Expand the print dialog by default'
+#+end_src
+
+* Misc
+:PROPERTIES:
+:ID:       61EE2E38-88ED-46E7-8498-4B9CC7CB14FA
+:END:
+#+begin_src shell :results none
+defaults write org.m0k.transmission WarningDonate -bool false
+echo 'Hide Transmission app donate message'
 #+end_src
 
 * Kill affected applications

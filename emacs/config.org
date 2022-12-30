@@ -13591,7 +13591,7 @@ CLOCK: [2022-07-26 Tue 13:48]--[2022-07-26 Tue 14:21] =>  0:33
 
   :general
   ((org-mode-map)
-   ("s-c" 'ox-clip-formatted-copy))
+   "s-c" 'ox-clip-formatted-copy))
 #+end_src
 
 ** ox-pandoc

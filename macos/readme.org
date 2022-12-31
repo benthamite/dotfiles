@@ -672,10 +672,6 @@ echo 'Prevent Photos from opening automatically when devices are plugged in'
 :END:
 
 #+begin_src shell :results none
-defaults write com.google.Chrome DisablePrintPreview -bool false
-defaults write com.google.Chrome.canary DisablePrintPreview -bool false
-echo 'Use the system-native print preview dialog'
-
 defaults write com.google.Chrome PMPrintingExpandedStateForPrint2 -bool true
 defaults write com.google.Chrome.canary PMPrintingExpandedStateForPrint2 -bool true
 echo 'Expand the print dialog by default'
@@ -687,7 +683,7 @@ echo 'Expand the print dialog by default'
 :END:
 #+begin_src shell :results none
 defaults write org.m0k.transmission WarningDonate -bool false
-echo 'Hide Transmission app donate message'
+echo 'Hidek Transmission app donate message'
 #+end_src
 
 * Kill affected applications

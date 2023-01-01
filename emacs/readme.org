@@ -14811,26 +14811,49 @@ Version 2015-06-08"
 
   ;; Add custom 'video' field
   (push '("Video" "Video file"
-        (("author" nil nil 0)
-         ("title")
-         ("date" nil nil 1)
-         ("year" nil nil -1)
-         ("url" nil nil 2))
-        nil
-        (("subtitle")
-         ("titleaddon")
-         ("language")
-         ("version")
-         ("note")
-         ("organization")
-         ("month")
-         ("addendum")
-         ("pubstate")
-         ("eprintclass" nil nil 4)
-         ("primaryclass" nil nil -4)
-         ("eprinttype" nil nil 5)
-         ("archiveprefix" nil nil -5)
-         ("urldate"))) bibtex-biblatex-entry-alist)
+          (("author" nil nil 0)
+           ("title")
+           ("date" nil nil 1)
+           ("year" nil nil -1)
+           ("url" nil nil 2))
+          nil
+          (("subtitle")
+           ("titleaddon")
+           ("language")
+           ("version")
+           ("note")
+           ("organization")
+           ("month")
+           ("addendum")
+           ("pubstate")
+           ("eprintclass" nil nil 4)
+           ("primaryclass" nil nil -4)
+           ("eprinttype" nil nil 5)
+           ("archiveprefix" nil nil -5)
+           ("urldate"))) bibtex-biblatex-entry-alist)
+
+  (push '("Movie" "Film"
+          (("author" nil nil 0)
+           ("title")
+           ("date" nil nil 1)
+           ("year" nil nil -1)
+           ("url" nil nil 2))
+          nil
+          (("abstract")
+          ("keywords")
+           ("titleaddon")
+           ("language")
+           ("version")
+           ("note")
+           ("organization")
+           ("month")
+           ("addendum")
+           ("pubstate")
+           ("eprintclass" nil nil 4)
+           ("primaryclass" nil nil -4)
+           ("eprinttype" nil nil 5)
+           ("archiveprefix" nil nil -5)
+           ("urldate"))) bibtex-biblatex-entry-alist)
 
   :general
   (bibtex-mode-map
@@ -19126,7 +19149,7 @@ account."
                    "https://twitter.com/search?q="
                    query
                    "&src=typed_query&f=user"))))
-                   
+
   (defun ps/twittering-mode-org-capture-future-matters-research ()
     "Launch 'Future Matters: Research' `org-capture' template."
     (interactive)

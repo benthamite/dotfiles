@@ -317,7 +317,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-crypt][org-crypt]]
   - [[#org-lint][org-lint]]
   - [[#org-habit][org-habit]]
-  - [[#org-brain][org-brain]]
   - [[#org-contrib][org-contrib]]
   - [[#org-analyzer][org-analyzer]]
   - [[#org-make-toc][org-make-toc]]
@@ -2143,7 +2142,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ;; ("q" (dired ps/dir-youtube))
   ("r" (dired ps/dir-dropbox-tlon-RAE) "Dropbox: RAE")
   ("R" (dired ps/dir-google-drive-tlon-RAE) "Google Drive: RAE")
-  ("s" (dired ps/dir-dropbox-FM) "Dropbox: FM")
+  ("s" (dired ps/dir-dropbox-tlon-FM) "Dropbox: FM")
   ("S" (dired ps/dir-google-drive-tlon-FM) "Google Drive: FM")
   ("t" (dired ps/dir-dropbox-tlon) "Dropbox: tlon")
   ("T" (dired ps/dir-google-drive-tlon) "Google Drive: tlon")
@@ -13323,9 +13322,7 @@ https://www.reddit.com/r/emacs/comments/cptwh4/org_analyzer_an_app_that_visualiz
 
 #+begin_src emacs-lisp :results silent
 (use-package org-make-toc
-  :after org
-  :hook
-  (org-mode-hook . org-make-toc-mode))
+  :after org)
 #+end_src
 
 ** images
@@ -19179,6 +19176,7 @@ account."
                    "https://twitter.com/search?q="
                    query
                    "&src=typed_query&f=user"))))
+                   
   (defun ps/twittering-mode-org-capture-future-matters-research ()
     "Launch 'Future Matters: Research' `org-capture' template."
     (interactive)
@@ -19220,17 +19218,18 @@ account."
   (twittering-mode-map
    "s-m" 'twittering-replies-timeline
    "s-r" 'twittering-mentions-timeline
+   "c" 'twittering-push-tweet-onto-kill-ring
    "d" 'twittering-delete-status
-   "" 'twittering-goto-next-status
-   "" 'twittering-goto-previous-status
+   "A-C-s-f" 'twittering-goto-next-status
+   "A-C-s-r" 'twittering-goto-previous-status
+   "g" 'twittering-update-status-interactive
    "n" 'ps/twittering-mode-org-capture-future-matters-news
    "P" 'ps/twittering-mode-search-people-externally
    "q" 'twittering-kill-buffer
    "r" 'ps/twittering-mode-org-capture-future-matters-research
    "s" 'twittering-search
    "S" 'ps/twittering-mode-search-people-externally
-   "w" 'twittering-push-uri-onto-kill-ring
-   "W" 'twittering-push-tweet-onto-kill-ring
+   "u" 'twittering-push-uri-onto-kill-ring
    "x" 'ps/twittering-mode-open-externally
    "X" 'ps/twittering-mode-open-internally)
   (twittering-edit-mode-map

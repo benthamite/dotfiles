@@ -19385,7 +19385,7 @@ This section collects a few functions I created for interfacing with Mullvad, a 
 #+begin_src emacs-lisp :results silent
 (defvar ps/mullvad-servers
   '(("London" . "gb4-wireguard")
-    ("Madrid" . "es4-wireguard")
+    ("Madrid" . "es-mad-wg-101")
     ("Malmö" . "se1-wireguard")
     ("Frankfurt" . "de5-wireguard")
     ("New York" . "us276-wireguard")

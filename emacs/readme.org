@@ -11672,14 +11672,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
      ("g" "All TODOs"
       todo "TODO")
      ("," "All tasks with no priority"
-      tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")
-     ("w" "Wiki tasks"
-      ((org-ql-block '(and (todo "TODO")
-                           (buffers-files "wiki-entries.org"))
-                     ((org-ql-block-header "Wiki TODO: notes")))
-       (org-ql-block '(and (todo "TODO")
-                           (tags "articles"))
-                     ((org-ql-block-header "Wiki TODO: articles")))))))
+      tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")))
   (org-agenda-clockreport-parameter-plist
    (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter ps/org-clocktable-sorter)))
 

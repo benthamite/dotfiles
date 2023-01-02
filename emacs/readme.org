@@ -10789,11 +10789,13 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp :results silent
 (use-package gpt
-  :demand t
   :commands gpt-dwim
   :config
-  (setq gpt-openai-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
+  (setq gpt-openai-key (auth-source-pass-get 'secret "auth-sources/openai.com"))
+  :general
+  ("A-C-g" 'gpt-dwim))
 #+end_src
+
 
 ** chatgpt
 :PROPERTIES:

@@ -14940,7 +14940,7 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
   (orb-insert-interface 'citar-open-notes)
   (orb-note-actions-interface 'default)
   (orb-preformat-keywords
-   '("citekey" "title" "url" "author-or-editor" "keywords" "file"))
+   '("citekey" "title" "url" "author" "author-or-editor" "keywords" "file"))
   (orb-process-file-keyword t)
   (orb-attached-file-extensions '("pdf"))
 

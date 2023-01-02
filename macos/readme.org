@@ -150,6 +150,16 @@ defaults write -g WebAutomaticTextReplacementEnableds -bool false
 echo 'Disable macOS/iOS text expansion'
 #+end_src
 
+* Shortcuts
+:PROPERTIES:
+:ID:       7583A267-9D04-4200-A491-F8A6DA7648FB
+:END:
+
+#+begin_src shell :results none
+defaults write -g NSUserKeyEquivalents -dict-add ‘Emoji & Symbols’ ‘\0’
+echo 'Disable emoji panel shortcut'
+#+end_src
+
 * Screen
 :PROPERTIES:
 :ID:       8E100952-84E3-412C-9B4A-A39F75B5A95C

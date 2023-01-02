@@ -284,6 +284,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#applescript-mode][applescript-mode]]
   - [[#smartparens][smartparens]]
   - [[#copilot][copilot]]
+  - [[#gpt][gpt]]
   - [[#chatgpt][chatgpt]]
   - [[#pen][pen]]
   - [[#elpy][elpy]]
@@ -9598,8 +9599,8 @@ CLOCK: [2021-12-12 Sun 17:47]--[2021-12-12 Sun 17:50] =>  0:03
              :repo "junjizhi/aide.el")
   :after request
   :commands aide-openai-complete-region
-  :config
-  (setq openai-api-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
+  :custom
+  (openai-api-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
 #+end_src
 
 ** languagetool
@@ -10778,6 +10779,20 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   (copilot-mode-map
    "M-<tab>" 'copilot-accept-completion
    "A-M-<tab>" 'copilot-accept-completion-by-line))
+#+end_src
+
+** gpt
+:PROPERTIES:
+:ID:       6BA1A737-40A1-4253-8FC8-E211F6060BC9
+:END:
+/[[https://github.com/stuhlmueller/gpt.el][gpt]] is an Emacs package for calling instruction-following language models./
+
+#+begin_src emacs-lisp :results silent
+(use-package gpt
+  :demand t
+  :commands gpt-dwim
+  :config
+  (setq gpt-openai-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
 #+end_src
 
 ** chatgpt
@@ -16616,7 +16631,7 @@ CLOSED: [2022-12-21 Wed 00:18]
   (scihub-fetch-domain 'scihub-fetch-domains-lovescihub)
   ;; run `scihub-homepage' for a list of available scihub webservers
   ;; if the URL below stops working
-  (scihub-homepage "http://sci-hub.ee"))
+  (scihub-homepage "http://sci-hub.wf"))
 #+end_src
 
 * spaced-repetition

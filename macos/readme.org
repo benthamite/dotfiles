@@ -262,7 +262,7 @@ defaults write com.apple.finder FXInfoPanesExpanded -dict \
 echo 'Expand the following File Info panes: “General”, “Open with”, and “Sharing & Permissions”'
 #+end_src
 
-* Dock, Dashboard, and hot corners
+* Dock, Dashboard
 :PROPERTIES:
 :ID:       8050AC51-F82B-40DE-9C04-80DE107BA40A
 :END:

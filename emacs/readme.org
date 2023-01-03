@@ -13142,7 +13142,7 @@ original."
   (advice-add 'org-src--construct-edit-buffer-name :override #'ps/org-src--construct-edit-buffer-name)
 
   :general
-  (emacs-lisp-mode-map
+  (org-src-mode-map
   "s-z" 'org-edit-src-exit))
 #+end_src
 

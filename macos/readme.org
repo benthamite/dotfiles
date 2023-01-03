@@ -562,7 +562,7 @@ echo 'Expand the print dialog by default'
 :END:
 #+begin_src shell :results none
 defaults write org.m0k.transmission WarningDonate -bool false
-echo 'Hidek Transmission app donate message'
+echo 'Hide Transmission app donate message'
 #+end_src
 
 * Kill affected applications

@@ -17,10 +17,10 @@ These defaults have been mostly taken from Mathias Bynens's [[https://github.com
 - [[#preface][preface]]
 - [[#general-uiux][General UI/UX]]
 - [[#trackpad-mouse-keyboard-bluetooth-accessories-and-input][Trackpad, mouse, keyboard, Bluetooth accessories, and input]]
+- [[#keyboard-shortcuts][Keyboard shortcuts]]
 - [[#screen][Screen]]
 - [[#finder][Finder]]
-- [[#dock-dashboard-and-hot-corners][Dock, Dashboard, and hot corners]]
-- [[#safari--webkit][Safari & WebKit]]
+- [[#dock-dashboard][Dock, Dashboard]]
 - [[#spotlight][Spotlight]]
 - [[#terminal--iterm-2][Terminal & iTerm 2]]
 - [[#time-machine][Time Machine]]
@@ -378,7 +378,6 @@ killall mds > /dev/null 2>&1
 sudo mdutil -i on / > /dev/null
 # Rebuild the index from scratch
 sudo mdutil -E / > /dev/null
-
 #+end_src
 
 * Terminal & iTerm 2

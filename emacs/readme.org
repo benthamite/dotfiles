@@ -12510,7 +12510,8 @@ not already have one."
                (member
                 (file-name-directory (buffer-file-name))
                 `(,(file-name-as-directory ps/dir-bibliographic-notes)
-                  ,(file-name-as-directory ps/dir-anki)))
+                  ,(file-name-as-directory ps/dir-anki)
+                  ,(file-name-as-directory ps/dir-source)))
                ;; exclude selected file names
                (member
                 (file-name-nondirectory (buffer-file-name))
@@ -12656,7 +12657,9 @@ When FILES is given, scan these files instead."
 :PROPERTIES:
 :ID:       77F06C6A-1F3F-4F9D-A1CF-02B16D00DB62
 :END:
-Now the headings are excluded if one creates them, but if one creates /other/ headings, the headings are included.
+- [ ] Now the headings are excluded if one creates them, but if one creates /other/ headings, the headings are included.
+- [ ] Files under ~/source/foo~ are  nott excluded if one merely adds ~source/~ to the list of excluded directories.
+- [ ] I think I do /not/ want to exclude bibliographic notes.
 
 *** TODO [#4] Update save hook to exclude Anki file
 :PROPERTIES:

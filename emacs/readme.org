@@ -14248,12 +14248,14 @@ I should check this out.
 
 #+begin_src emacs-lisp :results silent
 (use-package org-transclusion
-  :after org)
+  :after org
+  :custom
+  (org-transclusion-include-first-section nil)
+  :config
+  (dolist (element '(headline drawer))
+    (push element org-transclusion-exclude-elements)))
 #+end_src
 
-#+transclude [[id:FEA49AC5-9FE2-4474-960B-505216DECF0C][AI bull portfolio]]
-
-[[id:697CE296-FAA8-4485-94D8-B1321B59226F][vulpea]]
 
 ** vulpea                                                     :project:
 :PROPERTIES:

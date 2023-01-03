@@ -7027,23 +7027,24 @@ heading."
 
   :config
   (defun ps/org-gcal-open-at-point ()
-    "Get entry id of `org-gcal' entry at point and open
-the corresponding Google Calendar event in a browser."
+    "Get entry id of `org-gcal' entry at point and open the
+associated Google Calendar event in a browser."
     (interactive)
-    (if (org-entry-get nil "entry-id")
-        (let ((id (s-replace
-                   "\n"
-                   ""
-                   (base64-encode-string
-                    (s-replace
-                     "/"
-                     " "
-                     (org-entry-get nil "entry-id"))))))
-          (browse-url
-           (concat
-            "https://calendar.google.com/calendar/u/0/r/eventedit/"
-            id)))
-      (error "No id found.")))
+    (if-let ((id (org-entry-get nil "entry-id")))
+        (browse-url
+         (concat
+          "https://calendar.google.com/calendar/u/0/r/eventedit/"
+          (replace-regexp-in-string
+           "
+"
+           ""
+           (base64-encode-string
+            (replace-regexp-in-string
+             "/"
+             " "
+             id))))))
+    (user-error "No id found."))
+
 
   ;; (advice-add 'org-gcal-sync :before (lambda () (setq message-log-max 10000)))
   ;; (advice-add 'org-gcal-sync-buffer :before (lambda () (setq message-log-max 10000)))

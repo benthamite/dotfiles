@@ -63,8 +63,11 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 sudo nvram SystemAudioVolume=" "
 echo 'Disable the sound effects on boot'
 
-defaults write com.apple.PowerChime ChimeOnNoHardware -bool true && killall PowerChime
-echo 'disable power chime'
+defaults write com.apple.PowerChime ChimeOnAllHardware -bool false;killall PowerChime
+echo 'Disable the Chime Sound Effect on Power Cable Connect'
+
+defaults write com.apple.systemsound “com.apple.sound.uiaudio.enabled” -int 0
+echo 'Disable screenshot sound'
 
 defaults write -g NSAutomaticWindowAnimationsEnabled -bool false
 defaults write -g NSScrollAnimationEnabled -bool false

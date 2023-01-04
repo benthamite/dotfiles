@@ -109,6 +109,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#outline][outline]]
   - [[#ediff][ediff]]
   - [[#fill][fill]]
+  - [[#abbrev][abbrev]]
   - [[#yasnippet][yasnippet]]
   - [[#hippie-expand][hippie-expand]]
   - [[#expand-region][expand-region]]
@@ -314,6 +315,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-archive][org-archive]]
   - [[#org-babel][org-babel]]
   - [[#org-src][org-src]]
+  - [[#org-tempo][org-tempo]]
   - [[#org-table][org-table]]
   - [[#orgtbl-edit][orgtbl-edit]]
   - [[#org-crypt][org-crypt]]
@@ -4314,6 +4316,16 @@ CLOSED: [2021-05-06 Thu 11:08]
 CLOCK: [2021-05-06 Thu 11:02]--[2021-05-06 Thu 11:08] =>  0:06
 :END:
 
+** abbrev
+:PROPERTIES:
+:ID:       2D69896F-CF17-4D0C-BEFE-E7C473FB1C2B
+:END:
+#+begin_src emacs-lisp :results silent
+(use-feature abbrev
+  :custom
+  (abbrev-file-name (file-name-concat ps/dir-abbrev "abbrev_defs")))
+#+end_src
+
 ** yasnippet
 :PROPERTIES:
 :ID:       6405B8E7-6612-4D71-8C2C-A51F8808F4C6
@@ -4428,6 +4440,7 @@ NO-TEMPLATE is non-nil."
    "TAB" 'yas-maybe-expand))
 #+end_src
 
+
 *** Metaculus
 :PROPERTIES:
 :ID:       655BDD93-46BA-4AF5-B5C8-1CDDEC4F3DCC
@@ -4491,10 +4504,18 @@ CLOCK: [2022-07-21 Thu 21:06]--[2022-07-21 Thu 21:07] =>  0:01
 :END:
 #+begin_src emacs-lisp :results silent
 (use-feature hippie-expand
-  :general
-  ("A-M-/" 'hippie-expand))
-#+end_src
+  :config
+  ;; stackoverflow.com/a/8723712/4479455
+  (defadvice hippie-expand (around hippie-expand-case-fold)
+    "Try to do case-sensitive matching (not effective with all functions)."
+    (let ((case-fold-search nil))
+      ad-do-it))
+  (ad-activate 'hippie-expand)
 
+  :general
+  ("A-M-<tab>" 'hippie-expand))
+#+end_src
+All the best,
 ** expand-region
 :PROPERTIES:
 :ID:       8C9AE82C-9B5D-44D7-8FEE-1738032AD3C0
@@ -4887,7 +4908,7 @@ as the current buffer."
   (defun ps/org-narrow-to-entry-no-children ()
     "Narrow org buffer to entry excluding all children."
     (interactive)
-ji    (org-narrow-to-subtree)
+   (org-narrow-to-subtree)
     (save-excursion
       (org-next-visible-heading 1)
       (narrow-to-region (point-min) (point))))
@@ -8598,6 +8619,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 :PROPERTIES:
 :ID:       5A103245-9DC3-4D95-96D7-2161F6CCD0B1
 :END:
+Check out [[https://github.com/Ubunteous/Emacs-Configuration/blob/06a3cece044eb85bb8cddd2fd5f8a684aed04ab0/packages/composite/cape.el][this]].
 
 #+begin_src emacs-lisp :results silent
 (use-package cape
@@ -10789,7 +10811,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
    "M-<tab>" 'copilot-accept-completion
    "A-M-<tab>" 'copilot-accept-completion-by-line))
 #+end_src
-
+ 
 ** gpt
 :PROPERTIES:
 :ID:       6BA1A737-40A1-4253-8FC8-E211F6060BC9
@@ -11229,6 +11251,22 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
                    ("\\.mm\\'" . default)
                    ("\\.x?html?\\'" . default)
                    ("\\.pdf\\'" . emacs)))
+
+  (org-structure-template-alist '(("a" . "export ascii")
+				     ("c" . "center")
+				     ("C" . "comment")
+				     ("e" . "example")
+				     ("E" . "export")
+				     ("h" . "export html")
+				     ("l" . "export latex")
+				     ("q" . "quote")
+				     ("s" . "src")
+				     ("se" . "src emacs-lisp")
+				     ("sj" . "src clojure")
+				     ("sp" . "src python")
+				     ("ss" . "src shell")
+				     ("v" . "verse")
+				     ("w" . "WP")))
 
   :config
   (add-to-list 'org-modules 'org-habit)
@@ -13154,6 +13192,17 @@ original."
   :general
   (org-src-mode-map
   "s-z" 'org-edit-src-exit))
+#+end_src
+
+** org-tempo
+:PROPERTIES:
+:ID:       45A1E0C7-83E2-4E58-88E5-3E146EF8EB4F
+:END:
+
+#+begin_src emacs-lisp
+(use-feature org-tempo
+  :config
+  (add-to-list 'org-modules 'org-drill))
 #+end_src
 
 ** org-table

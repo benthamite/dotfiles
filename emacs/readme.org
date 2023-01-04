@@ -4419,21 +4419,6 @@ NO-TEMPLATE is non-nil."
       (if (and (not no-template) ps/yas-new-snippet-tlon)
           (yas-expand-snippet ps/yas-new-snippet-tlon))))
 
-  (defhydra hydra-yasnippet
-    (:exit t
-           :idle 0.3)
-    "Yasnippets"
-    ("c" (ps/yasnippet-expand-by-key "/comm") "comment")
-    ("e" (ps/yasnippet-expand-code-block-snippet "emacs-lisp_") "elisp")
-    ("i" (ps/yasnippet-expand-by-key "org-img") "org image")
-    ("j" (ps/yasnippet-expand-code-block-snippet "cl_") "clojure")
-    ("l" (ps/yasnippet-expand-by-key "org-lib") "library")
-    ("p" (ps/yasnippet-expand-code-block-snippet "py_") "python")
-    ("q" (ps/yasnippet-expand-by-key "<q") "quote")
-    ("s" (ps/yasnippet-expand-by-key "shell_") "shell")
-    ("v" (ps/yasnippet-expand-by-key "<v") "verse")
-    ("x" (ps/yasnippet-expand-by-key "ltx-in") "latex inline"))
-
   :general
   ("C-y" 'yas-new-snippet)
   (minibuffer-mode-map

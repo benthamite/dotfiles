@@ -6,6 +6,7 @@
 :TOC:      ignore
 :END:
 
+
 * table of contents
 :PROPERTIES:
 :TOC:      :include all :depth 2 :force ((nothing)) :ignore ((nothing)) :local ((nothing))
@@ -4326,6 +4327,7 @@ CLOCK: [2021-05-06 Thu 11:02]--[2021-05-06 Thu 11:08] =>  0:06
   (abbrev-file-name (file-name-concat ps/dir-abbrev "abbrev_defs")))
 #+end_src
 
+
 ** yasnippet
 :PROPERTIES:
 :ID:       6405B8E7-6612-4D71-8C2C-A51F8808F4C6
@@ -4424,7 +4426,6 @@ NO-TEMPLATE is non-nil."
   (minibuffer-mode-map
    "TAB" 'yas-maybe-expand))
 #+end_src
-
 
 *** Metaculus
 :PROPERTIES:

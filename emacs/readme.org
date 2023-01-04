@@ -38,6 +38,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#general][general]]
   - [[#el-patch][el-patch]]
   - [[#hydra][hydra]]
+  - [[#transient][transient]]
   - [[#elisp-bug-hunter][elisp-bug-hunter]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
@@ -320,6 +321,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-habit][org-habit]]
   - [[#org-contrib][org-contrib]]
   - [[#org-analyzer][org-analyzer]]
+  - [[#org-ql][org-ql]]
   - [[#org-make-toc][org-make-toc]]
   - [[#images][images]]
   - [[#org2blog][org2blog]]
@@ -338,6 +340,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-roam][org-roam]]
   - [[#org-roam-ui][org-roam-ui]]
   - [[#org-roam-browser-extension][org-roam-browser-extension]]
+  - [[#org-transclusion][org-transclusion]]
   - [[#vulpea][vulpea]]
   - [[#org-noter][org-noter]]
 - [[#reference--citation][reference & citation]]
@@ -12015,6 +12018,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
      ("fp" "Fede: Pending for next meeting" plain
       (id "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
       "" :empty-lines 1 :empty-lines-after 3)
+      ("fr" "Fede: RAE suggestion" entry
+      (file+headline ps/file-tareas-fede "sugerencias de Pablo")
+      "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
      ("g" "Ledger" plain (file ps/file-ledger)
       "" :empty-lines 1)
      ("l" "Leo")
@@ -19302,6 +19308,7 @@ account."
    "r" 'ps/twittering-mode-org-capture-future-matters-research
    "s" 'twittering-search
    "S" 'ps/twittering-mode-search-people-externally
+   "t" 'twittering-update-status-interactive
    "u" 'twittering-push-uri-onto-kill-ring
    "x" 'ps/twittering-mode-open-externally
    "X" 'ps/twittering-mode-open-internally)

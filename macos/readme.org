@@ -5,7 +5,9 @@
 :TOC:      ignore
 :END:
 
-These defaults have been mostly taken from Mathias Bynens's [[https://github.com/mathiasbynens/dotfiles][dotfiles.]]
+These defaults have been mostly taken from Mathias Bynens's [[https://github.com/mathiasbynens/dotfiles][dotfiles]]. I have also benefited from:
+- Jamie's [[https://notrab.dev/posts/friendly-mac-os-defaults/][Friendly macOS defaults]]
+- Nikita's [[https://github.com/nikitavoloboev/dotfiles/tree/master/macos][dotfiles]]
 
 * table of contents
 :PROPERTIES:
@@ -96,8 +98,8 @@ echo 'Fast opening and closing windows and popovers'
 defaults write NSGlobalDomain NSWindowResizeTimes 0.001
 echo 'Sped up dialogue boxes'
 
-defaults write com.apple.LaunchServices LSQuarantine -bool false
-echo 'Disable the “Are you sure you want to open this application?” dialog'
+sudo spctl - master-disable
+echo 'Allow apps downloaded from "Anywhere" allowed to be opened.'
 
 defaults write com.apple.CrashReporter DialogType none
 echo 'Do not ask to send crash reports'
@@ -179,7 +181,7 @@ defaults write com.apple.screencapture type -string "png"
 echo 'Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)'
 
 defaults write com.apple.screencapture disable-shadow -bool true
-echo 'Disable shadow in screenshots'
+echo 'Disable screenshot shadow effect'
 #+end_src
 
 * Finder

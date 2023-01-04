@@ -6,7 +6,6 @@
 :TOC:      ignore
 :END:
 
-
 * table of contents
 :PROPERTIES:
 :TOC:      :include all :depth 2 :force ((nothing)) :ignore ((nothing)) :local ((nothing))
@@ -4324,9 +4323,12 @@ CLOCK: [2021-05-06 Thu 11:02]--[2021-05-06 Thu 11:08] =>  0:06
 #+begin_src emacs-lisp :results silent
 (use-feature abbrev
   :custom
-  (abbrev-file-name (file-name-concat ps/dir-abbrev "abbrev_defs")))
-#+end_src
+  (save-abbrevs 'silently)
+  (abbrev-file-name (file-name-concat ps/dir-abbrev "abbrev_defs"))
 
+  :config
+  (setq-default abbrev-mode t))
+#+end_src
 
 ** yasnippet
 :PROPERTIES:

@@ -135,7 +135,7 @@ echo 'Follow the keyboard focus while zoomed in'
 # The step values that correspond to the sliders on the GUI are as follow (lower equals faster):
 # KeyRepeat: 120, 90, 60, 30, 12, 6, 2
 # InitialKeyRepeat: 120, 94, 68, 35, 25, 15
-defaults write NSGlobalDomain KeyRepeat -int 0.1
+defaults write NSGlobalDomain KeyRepeat -int 30
 defaults write NSGlobalDomain InitialKeyRepeat -int 10
 echo 'Set a blazingly fast keyboard repeat rate'
 

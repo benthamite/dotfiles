@@ -30,7 +30,7 @@ These defaults have been mostly taken from Mathias Bynens's [[https://github.com
 - [[#textedit][Textedit]]
 - [[#mac-app-store][Mac App Store]]
 - [[#photos][Photos]]
-- [[#google-chrome--google-chrome-canary][Google Chrome & Google Chrome Canary]]
+- [[#google-chrome][Google Chrome]]
 - [[#misc][Misc]]
 - [[#kill-affected-applications][Kill affected applications]]
 :END:
@@ -135,7 +135,7 @@ echo 'Follow the keyboard focus while zoomed in'
 # The step values that correspond to the sliders on the GUI are as follow (lower equals faster):
 # KeyRepeat: 120, 90, 60, 30, 12, 6, 2
 # InitialKeyRepeat: 120, 94, 68, 35, 25, 15
-defaults write NSGlobalDomain KeyRepeat -int 2
+defaults write NSGlobalDomain KeyRepeat -int 0.1
 defaults write NSGlobalDomain InitialKeyRepeat -int 10
 echo 'Set a blazingly fast keyboard repeat rate'
 
@@ -550,7 +550,7 @@ defaults -currentHost write com.apple.ImageCapture disableHotPlug -bool true
 echo 'Prevent Photos from opening automatically when devices are plugged in'
 #+end_src
 
-* Google Chrome & Google Chrome Canary
+* Google Chrome
 :PROPERTIES:
 :ID:       FA4E151D-5869-47CF-B70E-3B258025A9B1
 :END:

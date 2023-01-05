@@ -2723,7 +2723,6 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   :straight (modus-themes
              :host sourcehut
              :repo "protesilaos/modus-themes")
-
   :demand t
 
   :init
@@ -2741,15 +2740,16 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   (setq modus-themes-org-agenda
         '((header-date . (workaholic)))) ; of course ;-)
   (setq modus-themes-fringes nil)
-  (modus-themes-load-themes)
 
   :config
-  ;; (defun ps/modus-themes-match-system ()
-  ;; "Load modus theme that matches system."
-  ;; (interactive)
-  ;; (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-  ;; (load-theme 'modus-vivendi)
-  ;; (load-theme 'modus-operandi)))
+  (defun ps/modus-themes-match-system ()
+  "Load modus theme that matches system."
+  (interactive)
+  (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
+  (load-theme 'modus-vivendi)
+  (load-theme 'modus-operandi)))
+
+  (ps/modus-themes-match-system)
 
   ;; This ugly hack is necessary to make the theme load all the faces
   ;; on startup
@@ -2768,14 +2768,14 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 
           ;; Here we set color combinations that involve both a background
           ;; and a foreground value.
-          (setq highlight-parentheses-background-colors (list cyan-refine-bg
-                                                              magenta-refine-bg
-                                                              green-refine-bg
-                                                              yellow-refine-bg)
-                highlight-parentheses-colors (list cyan-refine-fg
-                                                   magenta-refine-fg
-                                                   green-refine-fg
-                                                   yellow-refine-fg))
+        (setq highlight-parentheses-background-colors (list bg-cyan-intense
+                                                            bg-magenta-intense
+                                                            bg-green-intense
+                                                            bg-yellow-intense)
+              highlight-parentheses-colors (list cyan
+                                                 magenta
+                                                 green
+                                                 yellow))
 
         ;; And here we pass only foreground colors while disabling any
         ;; backgrounds.
@@ -2930,7 +2930,7 @@ CLOCK: [2021-05-23 Sun 12:38]--[2021-05-23 Sun 12:43] =>  0:05
 CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package doom-modeline
   :demand t
   :init
@@ -12819,10 +12819,10 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (corfu-quit-no-match t)        ;; Automatically quit if there is no match
   (corfu-cycle vertico-cycle)
   (corfu-count vertico-count)
-  (corfu-echo-documentation nil "Disable documentation in echo area; replaced by `corfu-doc'")
+  (corfu-info-documentation nil)
   (corfu-auto-delay 0)
   (corfu-auto-prefix 3)
-  (corfu-doc-delay 0)
+  (corfu-popupinfo-delay 0)
 
   :config
   ;; Adapted from Prot
@@ -12836,7 +12836,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   (global-corfu-mode)
 
   :hook
-  (prog-mode-hook . corfu-doc-mode)
+  (prog-mode-hook . corfu-popupinfo-mode)
   (prog-mode-hook . corfu-echo-mode)
   (corfu-mode-hook . corfu-history-mode)
   (minibuffer-setup-hook . ps/corfu-enable-always-in-minibuffer)
@@ -20689,7 +20689,8 @@ first name, and names are separated by a semicolon."
    "s" 'ps/ebib-search-dwim
    "t" 'ps/ebib-search-book-dwim
    "u" 'ebib-browse-url
-   "v" 'ps/ebib-search-internet-archive
+   "v" 'ps/ebib-open-webm-file
+   "V" 'ps/ebib-search-internet-archive
    "w" 'ps/ebib-search-worldcat
    "W" 'ps/ebib-search-wikipedia
    "x" 'ps/ebib-search-university-of-toronto

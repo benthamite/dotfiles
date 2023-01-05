@@ -2723,8 +2723,6 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   :straight (modus-themes
              :host sourcehut
              :repo "protesilaos/modus-themes")
-  :if (or (equal (system-name) ps/computer-hostname-pablo)
-          (equal (system-name) ps/computer-hostname-leo))
 
   :demand t
 

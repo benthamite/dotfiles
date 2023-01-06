@@ -2942,7 +2942,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 (use-package doom-modeline
   :demand t
   :init
-  (doom-modeline-mode)
+  (doom-modeline-mode))
 
   :custom
   ;; we disable the display of time since the tab-bar already does

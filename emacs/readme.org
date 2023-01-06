@@ -2521,6 +2521,7 @@ I don't think this is possible. See [[https://gitlab.com/jabranham/mixed-pitch/-
 :PROPERTIES:
 :ID:       A0748A82-CE1C-4700-95E1-610B6CA7F8E0
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature fringe
 :init
@@ -2726,15 +2727,15 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   :demand t
 
   :init
-  (setq modus-themes-headings
-        '((1 . (background overline))
-          (2 . (background overline))
-          (3 . (background overline))
-          (4 . (background overline))
-          (5 . (background overline))
-          (6 . (background overline))
-          (7 . (background overline))
-          (8 . (background overline))))
+  ;; (setq modus-themes-headings
+  ;; '((1 . (background overline))
+  ;; (2 . (background overline))
+  ;; (3 . (background overline))
+  ;; (4 . (background overline))
+  ;; (5 . (background overline))
+  ;; (6 . (background overline))
+  ;; (7 . (background overline))
+  ;; (8 . (background overline))))
   (setq modus-themes-org-blocks 'gray-background)
   (setq modus-themes-common-palette-overrides
         '((date-common cyan)   ; default value (for timestamps and more)
@@ -2749,18 +2750,6 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
         '((fringe unspecified)))
 
   :config
-  (defun ps/modus-themes-match-system ()
-    "Load modus theme that matches system."
-    (interactive)
-    (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-        (load-theme 'modus-vivendi :no-confim)
-      (load-theme 'modus-operandi :no-confim)))
-
-  (ps/modus-themes-match-system)
-
-  ;; This ugly hack is necessary to make the theme load all the faces
-  ;; on startup
-  (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
 
   (defvar my-highlight-parentheses-use-background t
     "Prefer `highlight-parentheses-background-colors'.")
@@ -2799,9 +2788,19 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
     ;; this comes last.
     (global-highlight-parentheses-mode))
 
-  (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-      (load-theme 'modus-vivendi t)
-    (load-theme 'modus-operandi t))
+
+  (defun ps/modus-themes-match-system ()
+    "Load modus theme that matches system."
+    (interactive)
+    (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
+        (load-theme 'modus-vivendi :no-confim)
+      (load-theme 'modus-operandi :no-confim)))
+
+  (ps/modus-themes-match-system)
+
+  ;; This ugly hack is necessary to make the theme load all the faces
+  ;; on startup
+  (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
 
   :hook
   (modus-themes-after-load-theme-hook . ps/custom-faces)
@@ -2871,6 +2870,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
      pdf-outline-buffer-mode-hook
      proced-mode-hook
      tabulated-list-mode-hook))
+
   :config
   (lin-global-mode))
 #+end_src

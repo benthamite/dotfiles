@@ -2735,19 +2735,26 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
           (6 . (background overline))
           (7 . (background overline))
           (8 . (background overline))))
-  (setq modus-themes-links nil)
   (setq modus-themes-org-blocks 'gray-background)
-  (setq modus-themes-org-agenda
-        '((header-date . (workaholic)))) ; of course ;-)
-  (setq modus-themes-fringes nil)
+  (setq modus-themes-common-palette-overrides
+        '((date-common cyan)   ; default value (for timestamps and more)
+          (date-deadline red-warmer)
+          (date-event magenta-warmer)
+          (date-holiday blue) ; for M-x calendar
+          (date-now yellow-warmer)
+          (date-scheduled magenta-cooler)
+          (date-weekday cyan-cooler)
+          (date-weekend blue-faint)))
+  (setq modus-themes-common-palette-overrides
+        '((fringe unspecified)))
 
   :config
   (defun ps/modus-themes-match-system ()
-  "Load modus theme that matches system."
-  (interactive)
-  (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-  (load-theme 'modus-vivendi)
-  (load-theme 'modus-operandi)))
+    "Load modus theme that matches system."
+    (interactive)
+    (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
+        (load-theme 'modus-vivendi :no-confim)
+      (load-theme 'modus-operandi :no-confim)))
 
   (ps/modus-themes-match-system)
 
@@ -2768,14 +2775,14 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 
           ;; Here we set color combinations that involve both a background
           ;; and a foreground value.
-        (setq highlight-parentheses-background-colors (list bg-cyan-intense
-                                                            bg-magenta-intense
-                                                            bg-green-intense
-                                                            bg-yellow-intense)
-              highlight-parentheses-colors (list cyan
-                                                 magenta
-                                                 green
-                                                 yellow))
+          (setq highlight-parentheses-background-colors (list bg-cyan-intense
+                                                              bg-magenta-intense
+                                                              bg-green-intense
+                                                              bg-yellow-intense)
+                highlight-parentheses-colors (list cyan
+                                                   magenta
+                                                   green
+                                                   yellow))
 
         ;; And here we pass only foreground colors while disabling any
         ;; backgrounds.
@@ -2929,6 +2936,7 @@ CLOCK: [2021-06-02 Wed 18:04]--[2021-06-02 Wed 18:07] =>  0:03
 CLOCK: [2021-05-23 Sun 12:38]--[2021-05-23 Sun 12:43] =>  0:05
 CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 :END:
+/[[https://github.com/seagle0128/doom-modeline/][doom-modeline]] is a tidier and more aesthetically pleasing modeline./
 
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package doom-modeline
@@ -7025,7 +7033,7 @@ originnally->originally
 origional->original
 orignally->originally
 orignially->originally
-otehr->other 
+otehr->other
 otherwordly->otherworldly
 oublisher->publisher
 ouevre->oeuvre
@@ -15095,7 +15103,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
    "M-<tab>" 'copilot-accept-completion
    "A-M-<tab>" 'copilot-accept-completion-by-line))
 #+end_src
- 
+
 ** gpt
 :PROPERTIES:
 :ID:       6BA1A737-40A1-4253-8FC8-E211F6060BC9
@@ -15537,20 +15545,20 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
                    ("\\.pdf\\'" . emacs)))
 
   (org-structure-template-alist '(("a" . "export ascii")
-				     ("c" . "center")
-				     ("C" . "comment")
-				     ("e" . "example")
-				     ("E" . "export")
-				     ("h" . "export html")
-				     ("l" . "export latex")
-				     ("q" . "quote")
-				     ("s" . "src")
-				     ("se" . "src emacs-lisp")
-				     ("sj" . "src clojure")
-				     ("sp" . "src python")
-				     ("ss" . "src shell")
-				     ("v" . "verse")
-				     ("w" . "WP")))
+                                     ("c" . "center")
+                                     ("C" . "comment")
+                                     ("e" . "example")
+                                     ("E" . "export")
+                                     ("h" . "export html")
+                                     ("l" . "export latex")
+                                     ("q" . "quote")
+                                     ("s" . "src")
+                                     ("se" . "src emacs-lisp")
+                                     ("sj" . "src clojure")
+                                     ("sp" . "src python")
+                                     ("ss" . "src shell")
+                                     ("v" . "verse")
+                                     ("w" . "WP")))
 
   :config
   (dolist (module '(org-habit org-tempo))
@@ -20650,7 +20658,7 @@ first name, and names are separated by a semicolon."
         (beep))))
 
   :hook
-  (ebib-index-mode-hook . doom-modeline-mode)
+  ;; (ebib-index-mode-hook . doom-modeline-mode)
   (ebib-entry-mode-hook . visual-line-mode)
 
   :general

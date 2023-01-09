@@ -9,6 +9,6 @@
 
 (define-abbrev-table 'text-mode-abbrev-table
   '(
-    ("atb" "All the best," nil :count 2)
+    ("ata" "All the best," nil :count 2)
    ))
 

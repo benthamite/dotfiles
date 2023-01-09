@@ -284,7 +284,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#cider][cider]]
   - [[#python][python]]
   - [[#applescript-mode][applescript-mode]]
-  - [[#smartparens][smartparens]]
+  - [[#puny][puny]]
   - [[#copilot][copilot]]
   - [[#gpt][gpt]]
   - [[#chatgpt][chatgpt]]
@@ -15069,19 +15069,17 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 (use-package applescript-mode)
 #+end_src
 
-** smartparens
+** puny
 :PROPERTIES:
-:ID:       4CCBCEAB-AE0C-4D74-94B3-CA3AE6DCF5F0
+:ID:       1E0E065E-46CE-4961-8620-6554935CE68F
 :END:
-/[[https://github.com/Fuco1/smartparens][smartparens]] is minor mode for handling parens pairs./
+/[[https://github.com/AmaiKinono/puni][puni]] is a structural editing package that supports many major modes out of the box./
 
-#+begin_src emacs-lisp :results silent
-(use-package smartparens
-  :general
-  (prog-mode-map
-   "s-u" 'sp-cheat-sheet)
+#+begin_src emacs-lisp
+(use-package puni
+  :demand t
   :hook
-  (prog-mode-hook . smartparens-mode))
+  ((prog-mode-hook sgml-mode-hook nxml-mode-hook tex-mode-hook eval-expression-minibuffer-setup-hook) . puni-mode))
 #+end_src
 
 ** copilot

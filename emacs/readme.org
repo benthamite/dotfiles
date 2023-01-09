@@ -10198,6 +10198,10 @@ CLOCK: [2021-03-29 Mon 11:13]--[2021-03-29 Mon 12:04] =>  0:51
   ("A-p" 'pandoc-main-hydra/body))
 #+end_src
 
+*** TODO Make pandoc preserve emojis
+:PROPERTIES:
+:ID:       3C4F154F-6600-4DF0-826F-0EB031146BA2
+:END:
 ** curl-to-elisp
 :PROPERTIES:
 :ID:       7B9D14E2-752E-4705-A438-78DA6663083A

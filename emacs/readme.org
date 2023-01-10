@@ -11678,6 +11678,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 
 #+begin_src emacs-lisp :results silent
 (use-feature org-agenda
+  :if (equal (system-name) ps/computer-hostname-pablo)
   :defer 4
   :init
   (defun ps/org-agenda-switch-to-agenda-current-day ()

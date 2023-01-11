@@ -364,6 +364,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#doi-utils][doi-utils]]
   - [[#ebib][ebib]]
   - [[#biblio][biblio]]
+  - [[#persid][persid]]
   - [[#zotra][zotra]]
   - [[#scihub][scihub]]
 - [[#spaced-repetition][spaced-repetition]]
@@ -372,6 +373,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#email][email]]
   - [[#smtpmail-multi][smtpmail-multi]]
   - [[#sendmail][sendmail]]
+  - [[#async-mail-sending][async-mail-sending]]
   - [[#message][message]]
   - [[#mml][mml]]
   - [[#mu4e][mu4e]]
@@ -1917,23 +1919,24 @@ CLOCK: [2022-06-14 Tue 18:54]--[2022-06-14 Tue 18:58] =>  0:04
   ;; ("b" (ps/org-id-goto "") "")
   ;; ("c" (ps/org-id-goto "") "")
   ("r" (ps/org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Main")
-  ("t" (ps/org-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Main")
-  ("b" (ps/org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLH" :column "Main")
+  ("b" (ps/org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAE" :column "Main")
+  ("m" (ps/org-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Main")
+  ("d" (ps/org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLH" :column "Main")
   ("u" (ps/org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Main")
   ("i" (ps/org-id-goto "6C7F53ED-B43E-401D-BEEA-DB38CAE367FD") "EAI" :column "Main")
   ("w" (ps/org-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
   ("v" (ps/org-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87") "Samotsvety" :column "Other")
-  ("m" (ps/org-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99") "Misc" :column "Other")
+  ("x" (ps/org-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99") "Misc" :column "Other")
   ("a" (ps/org-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD") "EA Archive" :column "Someday")
   ("o" (ps/org-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD") "Open Access EA" :column "Someday")
-  ("d" (ps/org-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110") "EA Nomad" :column "Someday")
+  ("n" (ps/org-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110") "EA Nomad" :column "Someday")
   ("h" (ps/org-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2") "HEAR" :column "On hold")
   ("g" (ps/org-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1") "GPE" :column "On hold")
-  ("x" (ps/org-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A") "RCGs" :column "Done")
+  ("" (ps/org-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A") "RCGs" :column "Done")
   ("" (ps/org-id-goto "AE8F5AD4-B85A-4EE2-8A94-AA7B2AFF3E7F") "Regranting" :column "Done")
   ("e" (ps/org-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5") "email" :column "Comms")
   ("s" (ps/org-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C") "slack" :column "Comms")
-  ("n" (ps/org-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
+  ("t" (ps/org-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
   ("f" (ps/org-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "People")
   ("F" (ps/tlon-meeting-with-fede) "fede: meeting" :column "People")
   ("l" (ps/org-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "People")
@@ -7057,8 +7060,7 @@ associated Google Calendar event in a browser."
          (concat
           "https://calendar.google.com/calendar/u/0/r/eventedit/"
           (replace-regexp-in-string
-           "
-"
+           "\n"
            ""
            (base64-encode-string
             (replace-regexp-in-string
@@ -8097,15 +8099,15 @@ Currently history clears after Emacs is restarted.
 CLOCK: [2021-06-10 Thu 12:43]--[2021-06-10 Thu 12:49] =>  0:06
 :END:
 
-| package    | what it does           |
-|------------+------------------------|
-| [[id:970043EC-39A9-46AE-9CC9-1F5F2175BF70][vertico]]    | completion UI          |
-| [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]]    | completion backend     |
-| [[id:D0A453D1-784F-49E4-B238-ED009AF84EDB][orderless]]  | completion styles      |
-| [[id:C1B0678E-7334-4AF3-B1FE-9D63DFB6BE68][marginalia]] | completion annotations |
-| [[id:19A4F21C-2169-4529-92E4-68E3A584DDAC][embark]]     | completion actions     |
+| package    | what it does                      |
+|------------+-----------------------------------|
+| [[id:970043EC-39A9-46AE-9CC9-1F5F2175BF70][vertico]]    | minibuffer completion UI          |
+| [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]]    | minibuffer completion backend     |
+| [[id:D0A453D1-784F-49E4-B238-ED009AF84EDB][orderless]]  | minibuffer completion styles      |
+| [[id:C1B0678E-7334-4AF3-B1FE-9D63DFB6BE68][marginalia]] | minibuffer completion annotations |
+| [[id:19A4F21C-2169-4529-92E4-68E3A584DDAC][embark]]     | minibuffer completion actions     |
 
-For a comprehensive overview of completion in Emacs, with an emphasis on the packages above, I recommend [[https://www.youtube.com/watch?v=fnE0lXoe7Y0][this video]] by Andrew Tropin.
+For a comprehensive overview of completion in Emacs—both minibuffer completion and completion at point—I recommend [[https://www.youtube.com/watch?v=fnE0lXoe7Y0][this video]] by Andrew Tropin.
 
 ** vertico
 :PROPERTIES:
@@ -16487,6 +16489,13 @@ CLOCK: [2022-07-16 Sat 15:17]--[2022-07-16 Sat 15:18] =>  0:01
     "Return `t' if string has the form of an arXiv ID."
     (string-match ps/biblio-arxiv-regexp string)))
 #+end_src
+** persid
+:PROPERTIES:
+:ID:       57366A1C-A55A-47F8-8B62-E3412D674879
+:END:
+/[[https://github.com/rougier/persid][persid]] is a persistent identifier library for Emacs./
+
+To check out.
 
 ** zotra
 :PROPERTIES:
@@ -17029,6 +17038,14 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
   :custom
   (send-mail-function 'smtpmail-multi-send-it))
 #+end_src
+
+** async-mail-sending
+:PROPERTIES:
+:ID:       BEF562DB-61D5-4AB5-8B8A-44DD866FE285
+:END:
+/[[https://github.com/lordpretzel/async-email-sending][async-email-sending]] enables asynchronous sending of emails in Emacs using the new built-in sqlite support in Emacs 29./
+
+To try once I switch to Emacs 29.
 
 ** message
 :PROPERTIES:

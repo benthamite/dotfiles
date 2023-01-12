@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: pdfcrop
+# key: pdfc
+# --
+pdfcrop $1 $1

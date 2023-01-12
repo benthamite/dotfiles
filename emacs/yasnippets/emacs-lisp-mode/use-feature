@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: use-feature
+# key: uf
+# --
+(use-feature ${1:feature-name})

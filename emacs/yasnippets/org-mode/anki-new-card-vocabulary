@@ -1,0 +1,43 @@
+# -*- mode: snippet -*-
+# name: anki-new-card-vocabulary
+# key: ankiv
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+** $1
+:PROPERTIES:
+:ANKI_DECK: Main
+:ANKI_NOTE_TYPE: Vocabulary
+:ANKI_TAGS: english_vocabulary anki-editor
+:END:
+*** Word
+$1
+*** Pronunciation
+$2
+*** Word class
+$3
+*** Etymology
+$4
+*** Definition1
+$5
+*** Example1
+$6
+*** Spanish1
+$7
+*** Definition2
+$8
+*** Example2
+$9
+*** Spanish2
+$10
+*** Definition3
+$11
+*** Example3
+$12
+*** Spanish3
+$13
+*** Comment
+$14
+*** Audio
+$15
+*** Meta
+$16

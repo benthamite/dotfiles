@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: anki-new-card
+# key: anki
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+* New card
+  :PROPERTIES:
+  :ANKI_DECK: ${1:$$(yas-choose-value '("Main" "New content"))}
+  :ANKI_NOTE_TYPE: ${2:$$(yas-choose-value '("anki-shortcuts" "Architecture" "Basic" "BasicBothSides" "Classical morphemes" "Cloze" "Code" "Code output question" "French sentences" "Geography - Basic" "Geography - Country maps" "German 1" "German 2" "Gmail keyboard shortcuts" "IPA" "Latin phrases" "PlayAudio" "Regex" "Tango" "Vocabulary"))}
+  :ANKI_TAGS: $3 anki-editor
+  :END:
+** Front
+$4
+** Back
+$5

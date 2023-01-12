@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wiki-apply-job
+# key: waj
+# --
+[[`(current-kill 0)`][Apply for a job]].

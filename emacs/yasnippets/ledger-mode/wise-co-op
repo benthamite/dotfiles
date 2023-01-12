@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: wise-co-op
+# key: wco
+# --
+`(ps/insert-date)` Transfer
+    Assets:Wise                              -$1 USD
+    Expenses:Fees                           0.51 $2USD
+    Assets:Co-op
+

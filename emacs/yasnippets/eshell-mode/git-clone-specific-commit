@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: git-clone-specific-commit
+# key: gcsc
+# --
+git reset --hard ${1:commit-hash} # you must first have cloned the repo

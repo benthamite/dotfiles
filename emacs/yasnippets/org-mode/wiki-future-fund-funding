@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wiki-future-fund-funding
+# key: wfff
+# --
+As of  `(format-time-string "%B %Y")`, $2`(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))` has received over \$$1 in funding from the [[id:380F3F80-B92A-48B9-ACDB-560FF6D4F029][Future Fund]]. Future Fund (`(format-time-string "%Y")`) [[`(concat "https://ftxfuturefund.org/all-grants/?_organization_name=" (org-hugo-slug (ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))))`][Our grants and investments: `(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))`]], /Future Fund/. $0

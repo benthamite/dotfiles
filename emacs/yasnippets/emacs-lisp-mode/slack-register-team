@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: slack-register-team
+# key: srt
+# --
+(slack-register-team
+   :name "$1"
+   :token (auth-source-pick-first-password
+           :host "$2"
+           :user ps/personal-gmail)
+   :cookie (auth-source-pick-first-password
+            :host "$2^cookie"
+            :user (concat ps/personal-gmail "^cookie")))

@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: ftx-metamask
+# key: ftxmm
+# --
+`(ps/insert-date)` Transfer
+    Assets:FTX:Main                        -$1 USD
+    Assets:MetaMask
+
+$0

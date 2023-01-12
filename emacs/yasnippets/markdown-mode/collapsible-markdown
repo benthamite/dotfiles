@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: collapsible-markdown
+# key: cmd
+# --
+<details><summary>$1</summary>
+<p>
+
+```
+$2
+
+```
+
+</p>
+</details>

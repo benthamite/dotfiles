@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wiki-internal-link
+# key: wil
+# --
+[[*${1:$(ps/capitalize-first-char yas-text)}][${1:}]] 

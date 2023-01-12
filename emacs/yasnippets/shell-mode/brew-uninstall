@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: brew-uninstall
+# key: bu
+# --
+brew uninstall $1

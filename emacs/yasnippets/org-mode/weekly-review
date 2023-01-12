@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: weekly-review
+# key: wrev
+# --
+*** Mistakes made
+$1
+*** Lessons learned
+$2

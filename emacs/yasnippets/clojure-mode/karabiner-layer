@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: karabiner-layer
+# key: kl
+# --
+{:des "$1 ($2)"
+ :rules [:$1
+         $0
+         ]}

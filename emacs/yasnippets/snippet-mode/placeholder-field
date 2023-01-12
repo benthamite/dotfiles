@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: placeholder-field
+# key: pf
+# --
+\${N:default value}

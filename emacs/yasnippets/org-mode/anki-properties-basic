@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: anki-properties-basic
+# key: akpb
+# --
+  :PROPERTIES:
+  :ANKI_DECK: Main
+  :ANKI_NOTE_TYPE: Basic
+  :ANKI_TAGS: anki-editor $1
+  :END:
+$2

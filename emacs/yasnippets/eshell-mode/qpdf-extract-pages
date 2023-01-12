@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: qpdf-extract-pages
+# key: qep
+## qpdf.readthedocs.io/en/stable/cli.html#page-ranges
+# --
+qpdf ${1:input}.pdf --pages . ${2:1-3 OR 1,2,3} -- ${3:output}.pdf

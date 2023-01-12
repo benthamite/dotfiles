@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: substack-donation
+# key: sd
+# --
+`(ps/insert-date)` Substack
+    Expenses:Donation                              10 USD ; Forecasting Newsletter
+    Assets:Revolut
+
+$0

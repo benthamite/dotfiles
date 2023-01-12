@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: wiki-related-entries
+# key: wre
+# --
+*** Related entries
+$1

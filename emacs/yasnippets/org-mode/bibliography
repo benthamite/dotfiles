@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: wiki-bibliography
+# key: wbib
+# --
+*** Bibliography
+$1

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wikipedia-heading-3
+# key: wh3
+# --
+===$1===

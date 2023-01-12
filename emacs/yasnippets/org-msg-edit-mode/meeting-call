@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: meeting-call
+# key: mmeet
+# --
+Hi $1,
+
+Good to hear from you. Happy to chat.
+
+With few exceptions, I'm free every day between 2pm and 6pm, Buenos Aires time. Could you please suggest a slot within that range that suits you?
+
+Meet is fine. Please note that I don't have a camera, so it will be an audio-only conversation.
+
+Best,

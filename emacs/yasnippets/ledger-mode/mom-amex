@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: mom-amex
+# key: amex
+# --
+`(ps/yasnippet-expand-by-key "ldlm")` $1
+    Expenses:$3  $2.00 ARS
+    Liabilities:Mom:Amex
+
+$4

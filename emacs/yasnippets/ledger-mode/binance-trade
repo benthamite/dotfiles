@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: binance-trade
+# key: bt
+# --
+`(ps/insert-date)` Trade
+    Assets:Binance                          $1 $2 @ $3 $4
+    Assets:Binance
+
+
+
+

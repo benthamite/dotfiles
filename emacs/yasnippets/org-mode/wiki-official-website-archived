@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: wiki-official-website-archived
+# key: wowa
+# --
+[[${1:`(current-kill 0)`}][`(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))`]]. Official website, archived from the original.
+$0

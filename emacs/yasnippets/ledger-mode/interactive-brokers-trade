@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: interactive-brokers-trade
+# key: ib
+# --
+`(ps/insert-date)` Trade
+    Assets:IB                                     $1 $2 @ $3 USD
+    Assets:IB
+
+$5

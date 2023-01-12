@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: tlon-pablo
+# key: tp
+# --
+`(ps/insert-date)` ${1:recipient}
+    Expenses:${5:account}  ${2:amount, inc. decimal} ${3:$$(yas-choose-value '("USD" "EUR" "GBP"))} ; ${4:details}
+    Liabilities:Pablo Stafforini
+
+$0

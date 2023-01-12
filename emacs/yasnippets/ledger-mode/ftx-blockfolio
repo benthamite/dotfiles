@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: ftx-blockfolio
+# key: ftxb
+# --
+`(ps/insert-date)` Transfer
+    Assets:FTX:Main                              -$1 USD
+    Assets:Ftx-Blockfolio
+
+$2

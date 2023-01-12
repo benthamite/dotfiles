@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: adobe-digital-editions
+# key: ade
+# --
+calibredb add "`(current-kill 0)`"

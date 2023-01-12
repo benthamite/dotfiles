@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: dad-wise
+# key: dwise
+# --
+`(ps/insert-date)` $1
+    Expenses:$3  $2 USD
+    Assets:Dad's Wise
+
+$4

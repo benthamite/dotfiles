@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: wiki-open-phil-funding
+# key: wopf
+# --
+As of  `(format-time-string "%B %Y")`, $2`(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))` has received over \$$1 in funding from [[id:026CECA1-041B-49B6-8ECA-CAF75D496D02][Open Philanthropy]]. Open Philanthropy (`(format-time-string "%Y")`) [[`(concat "https://www.openphilanthropy.org/grants/?q=&organization-name=" (org-hugo-slug (ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))))`][Grants database: `(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))`]], /Open Philanthropy/. $0
+
+

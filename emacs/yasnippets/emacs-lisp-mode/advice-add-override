@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: advice-add-override
+# key: aao
+# --
+(advice-add '$1 :override #'ps/$1)

@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: mom-master
+# key: master
+# `(ps/insert-date)` $1
+`(ps/yasnippet-expand-by-key "ldlm")`
+2022-04-22 $1
+    Expenses:$3  $2.00 ARS
+    Liabilities:Mom:Master
+
+$0

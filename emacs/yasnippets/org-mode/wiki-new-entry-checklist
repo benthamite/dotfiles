@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: wiki-new-entry-checklist
+# key: wnec
+# --
+- [ ] Tag relevant posts
+- [ ] Add to [[https://forum.effectivealtruism.org/tags/all][tag portal]]
+- [ ] Add to [[https://www.semrush.com/tracking/overview/6978845.html?domain_1=forum.effectivealtruism.org%2Ftag%2F&report_mode=domain_1&sort=0_pos_asc][SEMRush]]
+- [ ] Link to this entry from related entries
+  - Search wiki for other entries containing that term or expression
+- [ ] Add to [[https://scholar.google.com/][Google Scholar]]
+- [ ] Add to EA Blogs
+- [ ] Add to Wikipedia [[https://en.wikipedia.org/wiki/Special:Watchlist][watchlist]]
+- [ ] Add to [[https://www.lesswrong.com/][LessWrong]] watchlist
+
+

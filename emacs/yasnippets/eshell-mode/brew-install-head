@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: brew-install-head
+# key: bih
+# --
+brew install --HEAD $1

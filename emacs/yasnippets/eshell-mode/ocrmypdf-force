@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: ocrmypdf-force
+# key: ocrf
+# --
+ocrmypdf `(current-kill 0)` `(current-kill 0)` --force-ocr

@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: ledn
+# key: ledn
+# --
+`(ps/insert-date)` Ledn
+    Income:Capital gains                   -$1 USD
+    Assets:Ledn
+

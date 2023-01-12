@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wiki-published-entry
+# key: wpe
+# --
+[[id:${1:`(current-kill 0)`}][published]]

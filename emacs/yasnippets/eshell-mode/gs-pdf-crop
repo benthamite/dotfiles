@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: gs-pdf-crop
+# key: gspc
+# --
+## xiaokeyang.com/blog/crop_pdf_files_with_ghostscript
+gs -o $0cropped.pdf -sDEVICE=pdfwrite -dFirstPage=$1 -dLastPage=$2 -c "[/CropBox [$3 $3 $4 $4]" -f $5.pdf

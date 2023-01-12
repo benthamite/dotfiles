@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: wiki-new-entry-template
+# key: wnet
+# --
+`(ps/expand-yasnippet-by-key "wnec")`
+`(ps/expand-yasnippet-by-key "wbib")`
+`(ps/expand-yasnippet-by-key "wel")`
+`(ps/expand-yasnippet-by-key "wre")`
+

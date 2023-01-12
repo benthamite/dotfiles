@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: brew-weekly-update
+# key: bwu
+# --
+brew update; brew upgrade; brew cleanup; brew doctor

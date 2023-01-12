@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wikipedia-ref
+# key: wr
+# --
+<ref>$1</ref>

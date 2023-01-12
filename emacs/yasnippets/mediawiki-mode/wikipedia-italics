@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wikipedia-italics
+# key: wi
+# --
+''$1''

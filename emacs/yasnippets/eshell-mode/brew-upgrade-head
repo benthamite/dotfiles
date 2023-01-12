@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: brew-upgrade-head
+# key: buh
+# --
+brew upgrade $1 --fetch-HEAD

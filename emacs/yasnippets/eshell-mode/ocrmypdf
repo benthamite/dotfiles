@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: ocrmypdf
+# key: ocr
+# --
+ocrmypdf '`(current-kill 0)`' '`(current-kill 0)`'

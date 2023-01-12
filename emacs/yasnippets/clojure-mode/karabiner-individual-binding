@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: karabiner-individual-binding
+# key: kib
+# --
+{:des "$1"
+ :rules [
+         [:$2 :$3]
+         ]}

@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: mom-cash
+# key: mcash
+# --
+`(ps/yasnippet-expand-by-key "ldlm")` $1
+    Expenses:$3   $2.00 ARS
+    Liabilities:Mom:Cash
+
+$0

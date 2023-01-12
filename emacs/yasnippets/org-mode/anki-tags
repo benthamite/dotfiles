@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: anki-tags
+# key: atags
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+:ANKI_TAGS: $1 anki-editor

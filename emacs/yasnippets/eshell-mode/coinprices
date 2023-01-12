@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: coinprices
+# key: coinp
+# --
+python3 ~/Dropbox/org/ledger/coinprices/coinprices.py >> ~/Dropbox/org/ledger/.pricedb

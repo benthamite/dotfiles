@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: tlon-adjustment
+# key: ta
+# --
+`(ps/insert-date)` Adjustment
+    ${5:account}                      = ${2:current account balance} ${3:$$(yas-choose-value '("USD" "EUR" "GBP"))} ; Balancing account
+    Equity:Adjustment
+
+$0

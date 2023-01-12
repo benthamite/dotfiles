@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: metaculus-source
+## key: msheet
+## binding: C-s-e
+# --
+([[`(current-kill 0)`][source]])

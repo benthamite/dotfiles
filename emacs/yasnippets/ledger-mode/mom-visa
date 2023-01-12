@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: mom-visa
+# key: visa
+# `(ps/insert-date)` $1
+`(ps/yasnippet-expand-by-key "ldlm")`
+2021-12-22 $1
+    Expenses:$2  $3.00 ARS
+    Liabilities:Mom:Visa
+$4

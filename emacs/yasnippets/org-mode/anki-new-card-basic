@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: anki-new-card-basic
+# key: ankib
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+* 
+  :PROPERTIES:
+  :ANKI_DECK: ${1:$$(yas-choose-value '("Main" "New content"))}
+  :ANKI_NOTE_TYPE: Basic
+  :ANKI_TAGS: $2 anki-editor
+  :END:
+** Front
+$3
+** Back
+$4

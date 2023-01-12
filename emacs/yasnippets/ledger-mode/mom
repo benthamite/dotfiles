@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: mom-extension
+# key: mext
+# --
+`(ps/insert-date)` $1
+    Expenses:$3  $2.00 ARS
+    Liabilities:Mom:Extension
+
+$4

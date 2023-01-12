@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: ebook-convert
+# key: ec
+# --
+ebook-convert "`(current-kill 0)`" "`(file-name-with-extension (file-name-sans-extension (current-kill 0)) "pdf")`"

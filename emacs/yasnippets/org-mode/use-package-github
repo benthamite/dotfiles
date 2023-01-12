@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: use-package-github
+# key: upg
+# --
+(use-package $1
+  :straight ($1
+             :host github
+             :repo "$2/$1"))

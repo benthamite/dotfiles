@@ -1,0 +1,18 @@
+# -*- mode: snippet -*-
+# name: notatu dignum post
+# key: ndp
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+** $1
+:PROPERTIES:
+:BLOG: notatu dignum
+:DATE: $5 
+:OPTIONS: toc:nil num:nil todo:nil pri:nil tags:nil ^:nil 
+:CATEGORY: $1
+:POST_TAGS: $2
+:END:
+#+begin_quote
+$3
+#+end_quote
+
+$1, $4

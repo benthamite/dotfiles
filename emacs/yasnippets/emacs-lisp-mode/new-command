@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: new-command
+# key: nc
+# --
+(defun ps/${1:function} (${2:args})
+  "${3:docstring}"
+  ${4:(interactive${5: "${6:P}"})}
+  $7)

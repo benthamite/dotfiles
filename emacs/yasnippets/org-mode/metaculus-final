@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: metaculus-final
+## key: mfinal
+## binding: C-s-f
+# --
+/Final prediction/: 

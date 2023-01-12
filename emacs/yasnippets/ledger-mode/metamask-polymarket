@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: metamask-polymarket
+# key: mpq
+# --
+`(ps/insert-date)` Transfer
+    Assets:MetaMask                          $1 USD
+    Expenses:Fees                            $2 ETH
+    Assets:Polymarket                        
+

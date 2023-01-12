@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wiki-survival-and-flourishing-fund-funding
+# key: wsf
+# --
+$3As of `(format-time-string "%B %Y")`, $2`(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))` has received over \$$1 in funding from the [[*Survival and Flourishing][Survival and Flourishing]] Fund. ${4:(references)}$0

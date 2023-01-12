@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: revolut-interactive-brokers
+# key: rib
+# --
+`(ps/insert-date)` Transfer
+    Assets:Revolut                              -$1 USD
+    Expenses:Fees                           $2 USD
+    Assets:IB
+
+$0
+

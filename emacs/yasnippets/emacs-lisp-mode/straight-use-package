@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: straight-use-package
+# key: sup
+# --
+(use-package $1
+  :straight ($1
+             :host github
+             :repo "$2")
+$0
+)

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: wikipedia-blockquote
+# key: wbq
+# --
+<blockquote>
+$1
+</blockquote>

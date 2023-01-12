@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: airbnb-tucuman-11-amex
+# key: at1a
+# --
+`(ps/yasnippet-expand-by-key "ldlm")` $1
+    Expenses:Tucumán 11                         $2.00 ARS
+    Liabilities:Mom:Amex
+
+$0

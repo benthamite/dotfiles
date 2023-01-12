@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: gpe-google-domains
+# key: ggd
+# --
+`(ps/insert-date)` Google Domains
+    Expenses:GPE  11.59$1 USD
+    Assets:Revolut GPE
+
+$0

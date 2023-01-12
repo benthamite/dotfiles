@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: anki-emacs-lisp-cloze
+# key: aelc
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+*** 
+    :PROPERTIES:
+    :ANKI_DECK: Emacs Lisp Reference Manual
+    :ANKI_NOTE_TYPE: Cloze
+    :ANKI_TAGS: emacs emacs_lisp anki-editor
+    :END:
+**** Text
+$1
+**** Extra
+$2

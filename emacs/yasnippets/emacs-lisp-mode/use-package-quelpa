@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: use-package-quelpa
+# key: upq
+# --
+(use-package $1
+  :quelpa ($1 :fetcher github :repo "$2/$1"))

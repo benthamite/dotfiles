@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: anki-properties
+# key: akp
+# --
+  :PROPERTIES:
+  :ANKI_DECK: $1
+  :ANKI_NOTE_TYPE: $2
+  :ANKI_TAGS:$3 anki-editor
+  :END:
+  $4

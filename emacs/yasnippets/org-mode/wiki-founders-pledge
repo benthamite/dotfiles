@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wiki-founders-pledge
+# key: wfp
+# --
+$0`(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))` is one of the $1 organizations focused on $2 recommended by [[id:29A2A506-1DD3-47DC-9C23-47D848F728EA][Founders Pledge]]. $3

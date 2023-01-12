@@ -1,0 +1,17 @@
+# -*- mode: snippet -*-
+# name: anki-new-card-ea-numbers
+# key: aean
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+* $1
+  :PROPERTIES:
+  :ANKI_DECK: EA-numbers
+  :ANKI_NOTE_TYPE: EA
+  :ANKI_TAGS: ea_numbers anki-editor
+  :END:
+** Front
+$2
+** Back
+$3
+** Source
+$4

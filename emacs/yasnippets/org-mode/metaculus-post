@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: metaculus-post
+# key: mpost
+## binding: C-s-m
+# --
+/Post-mortem:/ 

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: pdf-to-text
+# key: pt
+# --
+pdftotext "`(current-kill 0)`"

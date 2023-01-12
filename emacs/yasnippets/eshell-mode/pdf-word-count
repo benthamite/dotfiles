@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: pdf-word-count
+# key: pwc
+# --
+pdftotext $1 - | wc -w

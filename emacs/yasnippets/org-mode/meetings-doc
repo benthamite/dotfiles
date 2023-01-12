@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: meetings-doc
+# key: md
+# --
+[[${1:`(current-kill 0)`}][Meetings doc]]
+$0

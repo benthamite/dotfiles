@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: charity-entrepreneurship-incubation-program
+# key: ceip
+# --
+${1:`(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))`} was launched in $2 with a \$100,000 seed grant from [[id:92ADE1AB-4808-42DC-A161-BB277DFA486C][Charity Entrepreneurship]]'s incubation program.$0

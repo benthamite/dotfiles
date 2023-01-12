@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: emacs-lisp-normal
+# key: eln
+# --
+#+begin_src emacs-lisp :results silent

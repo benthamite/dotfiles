@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: python-inline
+# key: pyi
+# --
+src_python{return($0)}

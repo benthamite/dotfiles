@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: bypass-paywalls
+# key: bp
+# --
+wget https://github.com/iamadamdev/bypass-paywalls-chrome/archive/master.zip ~/Downloads/auto-delete

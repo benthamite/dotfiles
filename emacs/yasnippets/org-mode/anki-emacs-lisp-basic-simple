@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: anki-emacs-lisp-basic-simple
+# key: aelbs
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+*** $1
+    :PROPERTIES:
+    :ANKI_DECK: Emacs Lisp Reference Manual
+    :ANKI_NOTE_TYPE: Basic
+    :ANKI_TAGS: emacs emacs_lisp anki-editor
+    :END:
+$2

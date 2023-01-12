@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: engine-mode
+# key: emd
+# --
+(defengine $1
+  "$2%s"
+  :keybinding "$3")

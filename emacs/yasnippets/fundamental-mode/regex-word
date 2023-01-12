@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: regex-word
+# key: \w
+# --
+[_[:alnum:]]

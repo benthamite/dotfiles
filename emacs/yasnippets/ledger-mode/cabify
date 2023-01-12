@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: cabify
+# key: cab
+# --
+`(ps/insert-date)` Cabify
+    Expenses:Transportation:Taxi  $1 ARS
+    Liabilities:Mom:Extension

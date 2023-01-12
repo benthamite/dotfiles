@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: metaculus-previous
+# key: mst
+## binding: C-s-p
+# --
+Sticking to previous prediction.

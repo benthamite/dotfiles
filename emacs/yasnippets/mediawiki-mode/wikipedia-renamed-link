@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wikipedia-renamed-link
+# key: wrl
+# --
+[[${1:target}|${2:displayed}]]

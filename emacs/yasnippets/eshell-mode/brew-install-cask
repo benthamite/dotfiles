@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: brew-install-cask
+# key: bic
+# --
+HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask $1

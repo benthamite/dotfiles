@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: ftx-wise
+# key: ftxw
+# --
+`(ps/insert-date)` Transfer
+    Assets:FTX:Main                              -$1 USD
+    Expenses:Fees                                7.5 USD
+    Assets:Wise
+
+$2

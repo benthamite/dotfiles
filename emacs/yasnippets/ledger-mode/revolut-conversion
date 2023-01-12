@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: revolut-conversion
+# key: rc
+# --
+`(ps/insert-date)` Conversion
+    Assets:Revolut                               -${1:source amount} ${2:$$(yas-choose-value '("USD" "EUR" "GBP" "MXN" "ARS"))} @ ${3:conversion rate} ${4:$$(yas-choose-value '("USD" "EUR" "GBP" "MXN" "ARS"))}
+    Expenses:Fees                               $5 $2 @ $3 $4
+    Assets:Revolut                             
+
+$6

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: metaculus-sheet
+## key: msheet
+## binding: C-s-s
+# --
+[[`(current-kill 0)`][spreadsheet]]

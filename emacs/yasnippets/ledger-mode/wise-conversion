@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: wise-conversion
+# key: wc
+# --
+`(ps/insert-date)` Conversion
+    Assets:Wise                               -${1:source amount} ${2:$$(yas-choose-value '("USD" "EUR" "GBP" "MXN" "ARS"))} @ ${3:conversion rate} ${4:$$(yas-choose-value '("USD" "EUR" "GBP" "MXN" "ARS"))}
+    Expenses:Fees                               $5 $2 @ $3 $4
+    Assets:Wise                                
+
+$6

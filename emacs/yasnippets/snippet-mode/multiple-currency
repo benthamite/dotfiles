@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: multiple-currency
+# key: mc
+# --
+\${$1:\$\$(yas-choose-value '("USD" "EUR" "GBP"))}

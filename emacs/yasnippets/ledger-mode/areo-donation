@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: areo-donation
+# key: ad
+# --
+`(ps/insert-date)` Patreon
+    Expenses:Donation                              50.00 USD ; Areo
+    Assets:Revolut Virtual
+
+$0

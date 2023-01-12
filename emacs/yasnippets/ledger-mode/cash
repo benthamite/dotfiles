@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: cash
+# key: cash
+# --
+`(ps/insert-date)` $1
+    Expenses:$3  $2 ARS
+    Assets:Cash
+$0

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: calibre-move
+# key: cm
+# --
+mv "`(current-kill 0)`" "`ps/dir-downloads`"

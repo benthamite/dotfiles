@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: general-define-key
+# key: gdk
+# --
+ "$1" '$2

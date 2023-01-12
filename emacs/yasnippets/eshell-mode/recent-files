@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: recent-files
+# key: rf
+# --
+find . -type f -mmin -10

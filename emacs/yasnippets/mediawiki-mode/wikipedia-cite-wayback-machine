@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wikipedia-cite-wayback-machine
+# key: wcwm
+# --
+|archive-url=https://web.archive.org/web/<date>/http://www.originalurl.com |archive-date=<date> |url-status=dead

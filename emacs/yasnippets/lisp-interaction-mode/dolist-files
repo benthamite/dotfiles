@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: dolist-files
+# key: df
+# --
+(dolist (file (f-entries "${1:folder with files}"))
+  (message "processing %s" file)
+  ${2:functions to run}
+)

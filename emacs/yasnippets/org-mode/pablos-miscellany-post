@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: Pablo's miscellany post
+# key: pmp
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+* $1
+:PROPERTIES:
+:BLOG: Pablo's miscellany
+:DATE: $2
+:OPTIONS: toc:nil num:nil todo:nil pri:nil tags:nil ^:nil 
+:CATEGORY: $3
+:POST_TAGS: $4
+:END:
+$5

@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: making-sense-subscription
+# key: mss
+# --
+`(ps/insert-date)` Making Sense
+    Expenses:Donation                              99.99 USD
+    Assets:Revolut
+
+$0

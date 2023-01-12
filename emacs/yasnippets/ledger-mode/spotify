@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: spotify
+# key: spot
+# --
+`(ps/yasnippet-expand-by-key "ldlm")` Spotify
+    Expenses:Leisure:Music  485.00 ARS
+    Liabilities:Mom:Visa
+

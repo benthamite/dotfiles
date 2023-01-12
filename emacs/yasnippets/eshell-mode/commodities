@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: commodities
+# key: comp
+# --
+python3 ~/Dropbox/org/ledger/commodities.py

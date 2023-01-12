@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: regex-replace-loop
+# key: rrl
+# --
+(while (re-search-forward "foo[ \t]+bar" nil t)
+       (replace-match "foobar"))

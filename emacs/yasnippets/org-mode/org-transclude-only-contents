@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: org-transclude-only-contents
+# key: ot
+# --
+#+transclude: `(org-roam-node-insert)` :only-contents 

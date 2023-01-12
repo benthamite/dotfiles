@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wikipedia-bold
+# key: wb
+# --
+'''$1'''

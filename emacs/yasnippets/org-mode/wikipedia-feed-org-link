@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wikipedia-feed-org-link
+# key: wfol
+# --
+[[http://en.wikipedia.org/w/index.php?title=${1:$(ps/replace-spaces-with-underscores yas-text)}&action=history&feed=rss][${1:}]] 

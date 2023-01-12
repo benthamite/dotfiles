@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: laplace-range
+# key: laplace-range
+# --
+# check that the formula is correct
+# snippet has to be fixed
+#+begin_src python :results output
+from datetime import date
+begins = date($0,$1,$2)
+today = date.today()
+firstQ = begins - 1 + (sofar + 1)/.75
+thirdQ = begins - 1 + (sofar + 1)/.25
+print(firstQ.days)
+#+end_src

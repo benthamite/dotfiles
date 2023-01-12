@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: anki-emacs-lisp-excluded
+# key: aele
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+*** 
+**** 

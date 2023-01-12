@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: leo-payment
+# key: leo
+# --
+`(ps/insert-date)` Leonardo Picón
+    Expenses:GPE:Salaries  4,583.00 USD ; salary for the month of `(format-time-string "%B")`
+    Assets:Revolut
+
+$0

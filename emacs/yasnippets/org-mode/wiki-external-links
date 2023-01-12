@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: wiki-external-links
+# key: wel
+# --
+*** External links
+$1

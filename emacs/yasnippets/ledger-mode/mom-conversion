@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: mom-usd-conversion
+# key: muc
+# --
+`(ps/yasnippet-expand-by-key "ldlm")` Conversion
+    Liabilities:Mom:Consolidated                -$2 USD @ $3.00 ARS
+    Liabilities:Mom:Consolidated
+$4

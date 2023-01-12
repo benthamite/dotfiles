@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: future-fund-explore-funding
+# key: ffef
+# --
+Hi $1,
+
+I'm a regrantor for the [[https://ftxfuturefund.org/][Future Fund]], and am looking for underfunded projects with the potential to help improve humanity's long-term prospects.
+
+$2- why I'm excited about their project
+
+I would be interested in exploring the possibility of providing funding for $3.
+
+If it would be easier for you to discuss this in a call, feel free to book a slot [[https://calendly.com/stafforini/meeting][here]]. And if you have any questions, please let me know.

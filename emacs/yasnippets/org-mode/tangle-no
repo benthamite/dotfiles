@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: tangle-no
+# key: tn
+# --
+:tangle no

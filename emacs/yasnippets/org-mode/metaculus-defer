@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: metaculus-defer
+## key: mdef
+## binding: C-s-u
+# --
+Deferring to the community.

@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: tlon-wise-conversion
+# key: twc
+# --
+`(ps/insert-date)` Conversion
+    Assets:Wise                               -$1 $2 @ $3 $4
+    Expenses:Core:Misc                         $5 $2 @ $3 $4
+    Assets:Wise                                
+
+$6

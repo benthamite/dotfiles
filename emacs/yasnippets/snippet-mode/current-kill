@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: current-kill
+# key: ck
+# --
+[[\$\{1:\`(current-kill 0)\`}][\$2]]
+$0

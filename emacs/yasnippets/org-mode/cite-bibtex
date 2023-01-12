@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: cite-bibtex
+# key: ct
+# --
+[[cite:&${1:`(current-kill 0)`}]]

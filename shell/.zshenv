@@ -15,7 +15,7 @@ export OBJECT_STORAGE_REGION_NAME="sa-east-1"
 export PATH="/opt/homebrew/opt/node@16/bin:$PATH"
 export PATH="$HOME/bin:$PATH"
 export PATH="/Users/pablostafforini/Library/Python/3.9/bin:$PATH"
-# alias python="python3"
+alias python="python3"
 # export NVM_DIR="$HOME/.nvm"
   # [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
   # [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion

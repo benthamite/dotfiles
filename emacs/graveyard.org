@@ -8,6 +8,23 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** smartparens
+:PROPERTIES:
+:ID:       4CCBCEAB-AE0C-4D74-94B3-CA3AE6DCF5F0
+:END:
+/[[https://github.com/Fuco1/smartparens][smartparens]] is minor mode for handling parens pairs./
+
+[2023-01-09 Mon 12:39] Replaced with [[https://github.com/AmaiKinono/puni][puni]].
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package smartparens
+  :general
+  (prog-mode-map
+   "s-u" 'sp-cheat-sheet)
+  :hook
+  (prog-mode-hook . smartparens-mode))
+#+end_src
+
 ** emacs-websearch
 :PROPERTIES:
 :ID:       3D76FDB6-7957-4673-8714-9580F4B6C795

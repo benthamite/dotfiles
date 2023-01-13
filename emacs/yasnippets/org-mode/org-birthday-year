@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: org-birthday
-# key: ob
+# name: org-birthday-year
+# key: oby
 # --
 %%(org-anniversary $1 $2 $3) $4%d%s birthday

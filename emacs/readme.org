@@ -187,6 +187,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#search--replace][search & replace]]
   - [[#isearch][isearch]]
   - [[#replace][replace]]
+  - [[#rg][rg]]
   - [[#visual-regexp][visual-regexp]]
   - [[#visual-regexp-steroids][visual-regexp-steroids]]
   - [[#imenu][imenu]]
@@ -8020,6 +8021,20 @@ Currently history clears after Emacs is restarted.
    "A-C-e" 'query-replace-regexp))
 #+end_src
 
+** rg
+:PROPERTIES:
+:ID:       A75847C6-5259-46DD-8D03-4EE3314E86E6
+:END:
+
+[2023-01-14 Sat] I mostly use ~consult-ripgrep~; however, that command currently can't handle multiline searches, whereas ~rg~ can.
+
+#+begin_src emacs-lisp :results silent
+(use-package rg
+  :custom
+  (rg-executable "rg")
+  (rg-group-result t))
+#+end_src
+
 ** visual-regexp
 :PROPERTIES:
 :ID:       0DE5075B-AC82-4AB3-9B0A-3D84DC6CF942
@@ -12575,6 +12590,8 @@ not already have one."
                ;; exclude selected heading names
                (member (org-get-heading) '("Local variables"
                                            "COMMENT Local variables"
+					   "Evaluation"
+                                           "History"
                                            "External links"
                                            "Further reading"
                                            "Related entries"
@@ -12691,8 +12708,8 @@ When FILES is given, scan these files instead."
           (message "%d unique files scanned for IDs" (length org-id-files)))
         org-id-locations)))
 
-  :hook
-  (before-save-hook . ps/org-id-add-ids-to-headlines-in-file)
+  ;; :hook
+  ;; (before-save-hook . ps/org-id-add-ids-to-headlines-in-file)
 
   :general
   (org-mode-map
@@ -20803,3 +20820,4 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
 # eval: (ps/buffer-local-set-key (kbd "H-i") 'use-package-report)
 # End:
+z

@@ -7328,6 +7328,9 @@ CLOSED: [2022-12-12 Mon 00:04] SCHEDULED: <2022-12-11 Sun>
 :ID:       BDDB27DC-E5E2-42CC-B6B1-BBD17565EEC8
 :END:
 /The section below contains some custom functions for interfacing with [[https://github.com/insanum/gcalcli][gcalcli]], a Google Calendar Command Line Interface./
+
+[2023-01-14 Sat] I wasn't able to make it work, probably because of the issue reported [[https://github.com/insanum/gcalcli/issues][here]]. Maybe wait a couple of months and see if the problem is fixed.
+
 *** Archive                                                       :ARCHIVE:
 :PROPERTIES:
 :ID:       35CF1116-B12A-4A18-B99A-FDD62063DE20

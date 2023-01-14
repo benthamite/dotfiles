@@ -12592,7 +12592,7 @@ not already have one."
                ;; exclude selected heading names
                (member (org-get-heading) '("Local variables"
                                            "COMMENT Local variables"
-					   "Evaluation"
+                                           "Evaluation"
                                            "History"
                                            "External links"
                                            "Further reading"
@@ -13978,10 +13978,9 @@ return such list if its length is less than LIMIT."
   ;; See variable `ps/org-roam-excluded-dirs' defined below
   (org-roam-db-node-include-function
    (lambda ()
-     (let* ((file-path (buffer-file-name (buffer-base-buffer)))
-            (rel-file-path (f-relative file-path org-roam-directory))
-            (parent-directories (butlast (f-split rel-file-path))))
-       (if (cl-intersection ps/org-roam-excluded-dirs parent-directories :test #'string=) nil t))))
+       (if (not (member "ARCHIVE" (org-get-tags)))
+           nil
+         t)))
 
   :config
   (setq ps/org-roam-excluded-dirs '("archive" "inactive"))

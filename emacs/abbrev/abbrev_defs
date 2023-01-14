@@ -3,7 +3,6 @@
   '(
     ("atb" "All the best," nil :count 2)
     ("fbi" "Federal Bureau of Investigation" nil :count 5)
-    ("ps" "Pablo Stafforini" nil :count 2)
     ("––" "—" nil :count 0)
    ))
 

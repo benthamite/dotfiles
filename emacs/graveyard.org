@@ -2532,18 +2532,6 @@ This is needed for some [[id:DCD9D75D-7814-49D8-A3E0-33846D5A08FD][bibtex-comple
   :demand t
   :after bibtex-completion)
 #+end_src
-** rg
-:PROPERTIES:
-:ID:       A75847C6-5259-46DD-8D03-4EE3314E86E6
-:END:
-[2022-06-21 Tue 20:45] Replaced by ~consult-ripgrep~.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print ps/file-init))
-(use-package rg
-  :custom
-  (rg-executable "rg")
-  (rg-group-result t))
-#+end_src
-
 ** selected
 :PROPERTIES:
 :ID:       BCC2F8F6-B790-4E90-876F-4A3532063BD8

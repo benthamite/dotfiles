@@ -8025,6 +8025,7 @@ Currently history clears after Emacs is restarted.
 :PROPERTIES:
 :ID:       A75847C6-5259-46DD-8D03-4EE3314E86E6
 :END:
+/[[https://github.com/dajva/rg.el][rg]] is a search tool based on ripgrep./
 
 [2023-01-14 Sat] I mostly use ~consult-ripgrep~; however, that command currently can't handle multiline searches, whereas ~rg~ can.
 
@@ -8032,6 +8033,7 @@ Currently history clears after Emacs is restarted.
 (use-package rg
   :custom
   (rg-executable "rg")
+  (rg-command-line-flags '("--multiline"))
   (rg-group-result t))
 #+end_src
 

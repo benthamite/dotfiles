@@ -5432,7 +5432,7 @@ option."
    "'" 'ps/dired-copy-filename-as-kill-absolute
    "H-." 'ps/dired-dotfiles-toggle
    "c" 'ps/dired-copy-filename-as-kill-absolute
-   "C" 'dired-do-compress
+   "C" 'dired-do-copy
    "C-s" 'dired-isearch-filenames
    "J" 'dired-jump-other-window
    "k" 'dired-previous-line

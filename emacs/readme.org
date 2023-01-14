@@ -13976,11 +13976,16 @@ return such list if its length is less than LIMIT."
   ;; Exclude dirs
   ;; github.com/org-roam/org-roam/issues/1221
   ;; See variable `ps/org-roam-excluded-dirs' defined below
-  (org-roam-db-node-include-function
+  (setq org-roam-db-node-include-function
    (lambda ()
-       (if (not (member "ARCHIVE" (org-get-tags)))
+     (let* ((file-path (buffer-file-name (buffer-base-buffer)))
+            (rel-file-path (f-relative file-path org-roam-directory))
+            (parent-directories (butlast (f-split rel-file-path))))
+       (if (or
+            (member "ARCHIVE" (org-get-tags))
+            (cl-intersection ps/org-roam-excluded-dirs parent-directories :test #'string=))
            nil
-         t)))
+         t))))
 
   :config
   (setq ps/org-roam-excluded-dirs '("archive" "inactive"))

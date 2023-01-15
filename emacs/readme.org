@@ -12553,7 +12553,7 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 
 #+begin_src emacs-lisp :results silent
 (use-feature org-id
-  :defer 5
+  :demand t
   :custom
   (org-id-extra-files
    `(,ps/file-tareas-leo
@@ -14055,7 +14055,6 @@ return such list if its length is less than LIMIT."
 - And [[https://github.com/alexkehayias/emacs.d/blob/master/init.el#L715][this one]] (by the author of [[https://notes.alexkehayias.com/][this notes repository]], created with org-roam)
 - And [[https://takeonrules.com/2021/08/22/ever-further-refinements-of-org-roam-usage/][this post]]
 
-
 *** TODO [#6] Turn all notes into lowercase unless uppercase is appropriate
 :PROPERTIES:
 :ID:       60F7D02B-ACBE-410C-9304-DBE5E4414B26
@@ -14088,17 +14087,6 @@ Run org-roam with minimal config and see if the problem with idle times persist
 :ID:       83AA4CF2-A783-4C27-895F-C68EAE5AB456
 :END:
 So the links to other Wiki articles do not break.
-*** MAYBE [#6] Remove IDs from child headings
-:PROPERTIES:
-:Effort:   0:30
-:ID:       FB1FD9AE-C82B-4D51-93E9-ECC40D2065D9
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-03 Fri 18:16]--[2021-12-03 Fri 18:37] =>  0:21
-:END:
-This will allow me to use org roam search commands to find notes easily. I can always use ~helm-org-ql~ or ~helm-org-rifle~ if I need more fine-grained search. I guess I can also use ~helm-for-files~.
-
-[2021-12-03 Fri 21:36] I'm not sure this is necessary, because ~org-roam~ (for better or for worse) doesn't display duplicate headings. Although other tools, such as ~helm-org-ql~ and ~helm-org-rifle~ do.
 *** Archive                                                                                                           :ARCHIVE:
 :PROPERTIES:
 :ID:       59F8E3AC-CEB8-495D-8F6F-DACA6313F987
@@ -14284,6 +14272,22 @@ CLOSED: [2023-01-02 Mon 20:38]
 :ID:       69D13455-DC87-4BB5-9765-404A32F4F153
 :ARCHIVE_TIME: 2023-01-02 Mon 20:38
 :END:
+**** CANCELLED [#6] Remove IDs from child headings
+CLOSED: [2023-01-14 Sat 20:06]
+:PROPERTIES:
+:Effort:   0:30
+:ID:       FB1FD9AE-C82B-4D51-93E9-ECC40D2065D9
+:ARCHIVE_TIME: 2023-01-14 Sat 20:07
+:END:
+:LOGBOOK:
+CLOCK: [2021-12-03 Fri 18:16]--[2021-12-03 Fri 18:37] =>  0:21
+:END:
+This will allow me to use org roam search commands to find notes easily. I can always use ~helm-org-ql~ or ~helm-org-rifle~ if I need more fine-grained search. I guess I can also use ~helm-for-files~.
+
+[2021-12-03 Fri 21:36] I'm not sure this is necessary, because ~org-roam~ (for better or for worse) doesn't display duplicate headings. Although other tools, such as ~helm-org-ql~ and ~helm-org-rifle~ do.
+
+[2023-01-14 Sat] I have now switched to a different approach: I add IDs to all headings, without exception, but then exclude them via the functions ~org-roam-file-exclude-regexp~ and ~org-roam-db-node-include-function~. So I'm marking this as ~CANCELLED~.
+
 ** org-roam-ui
 :PROPERTIES:
 :ID:       BAEADCA3-68C6-4B59-A45A-7A1C11C6F6BB

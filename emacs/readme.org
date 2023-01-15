@@ -12570,20 +12570,6 @@ not already have one."
                (eq buffer-read-only nil))
       ;; Negative conditions
       (unless (or
-               ;; exclude selected directories
-               (member
-                (file-name-directory (buffer-file-name))
-                `(,(file-name-as-directory ps/dir-bibliographic-notes)
-                  ,(file-name-as-directory ps/dir-anki)
-                  ,(file-name-as-directory ps/dir-source)))
-               ;; exclude selected file names
-               (member
-                (file-name-nondirectory (buffer-file-name))
-                '("orb-noter-template.org"
-                  "tareas.org"
-                  "calendar.org"
-                  ".org2blog.org"
-                  "feeds.org"))
                ;; exclude selected file tags
                ;; #+FILETAGS: noid
                (member
@@ -13970,17 +13956,27 @@ return such list if its length is less than LIMIT."
       (file ,ps/file-orb-capture-template)
       :unnarrowed t :immediate-finish t :jump-to-captured t)))
 
-  (setq org-roam-db-node-include-function
-        (lambda ()
-          (if (member "ARCHIVE" (org-get-tags))
-              nil
-            t)))
-
   :config
   (dolist (dir `(,ps/dir-anki
                  ,ps/dir-inactive
                  ,ps/dir-archive))
     (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs))
+
+    (dolist (file '("orb-noter-template.org"
+                  "tareas.org"
+                  "calendar.org"
+                  ".org2blog.org"
+                  "feeds.org")
+    (push (file-relative-name file ps/dir-org-roam) ps/org-roam-excluded-files))
+
+  (setq org-roam-file-exclude-regexp
+  (concatps/org-roam-excluded-dirs)
+
+  (setq org-roam-db-node-include-function
+        (lambda ()
+          (if (member "ARCHIVE" (org-get-tags))
+              nil
+            t)))
 
   (defun ps/org-roam-db-query (sql &rest args)
     "Run SQL query on Org-roam database with ARGS.

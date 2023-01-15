@@ -13970,25 +13970,17 @@ return such list if its length is less than LIMIT."
       (file ,ps/file-orb-capture-template)
       :unnarrowed t :immediate-finish t :jump-to-captured t)))
 
-  ;; Exclude files
-  (org-roam-file-exclude-regexp "conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")
-
-  ;; Exclude dirs
-  ;; github.com/org-roam/org-roam/issues/1221
-  ;; See variable `ps/org-roam-excluded-dirs' defined below
   (setq org-roam-db-node-include-function
-   (lambda ()
-     (let* ((file-path (buffer-file-name (buffer-base-buffer)))
-            (rel-file-path (f-relative file-path org-roam-directory))
-            (parent-directories (butlast (f-split rel-file-path))))
-       (if (or
-            (member "ARCHIVE" (org-get-tags))
-            (cl-intersection ps/org-roam-excluded-dirs parent-directories :test #'string=))
-           nil
-         t))))
+        (lambda ()
+          (if (member "ARCHIVE" (org-get-tags))
+              nil
+            t)))
 
   :config
-  (setq ps/org-roam-excluded-dirs '("archive" "inactive"))
+  (dolist (dir `(,ps/dir-anki
+                 ,ps/dir-inactive
+                 ,ps/dir-archive))
+    (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs))
 
   (defun ps/org-roam-db-query (sql &rest args)
     "Run SQL query on Org-roam database with ARGS.

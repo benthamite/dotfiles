@@ -12668,30 +12668,6 @@ When FILES is given, scan these files instead."
    "s-A-u" 'ps/org-id-update-id-locations))
 #+end_src
 
-*** TODO [#5] Revise function above to robustly exclude selected headings
-:PROPERTIES:
-:ID:       77F06C6A-1F3F-4F9D-A1CF-02B16D00DB62
-:END:
-- [ ] Now the headings are excluded if one creates them, but if one creates /other/ headings, the headings are included.
-- [ ] Files under ~/source/foo~ are  nott excluded if one merely adds ~source/~ to the list of excluded directories.
-- [ ] I think I do /not/ want to exclude bibliographic notes.
-
-*** TODO [#4] Update save hook to exclude Anki file
-:PROPERTIES:
-:ID:       FB3B93BF-EFCB-41F0-A732-844EDB162BE0
-:Effort:   0:25
-:END:
-/Users/pablostafforini/Dropbox/org/anki/main.org
-
-Also remove IDs from file.
-*** TODO [#6] Remove IDs from ARCHIVE
-:PROPERTIES:
-:ID:       0218D5CD-2CEE-44E6-9F0F-EA4BCEFC6AA3
-:Effort:   0:20
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-01 Fri 05:14]--[2022-07-01 Fri 05:32] =>  0:18
-:END:
 *** Archive                                                       :ARCHIVE:
 :PROPERTIES:
 :ID:       8AF14CB2-00AF-4370-8926-11D5D2019913
@@ -12707,6 +12683,41 @@ CLOCK: [2022-06-28 Tue 20:49]--[2022-06-28 Tue 21:49] =>  1:00
 CLOCK: [2022-06-28 Tue 20:47]--[2022-06-28 Tue 20:49] =>  0:02
 :END:
 [[id:9AB1D1EB-A502-4DA2-8BB1-7B2D3B73189B][example]]
+
+**** CANCELLED [#5] Revise function above to robustly exclude selected headings
+CLOSED: [2023-01-14 Sat 20:10]
+:PROPERTIES:
+:ID:       77F06C6A-1F3F-4F9D-A1CF-02B16D00DB62
+:ARCHIVE_TIME: 2023-01-14 Sat 20:10
+:END:
+- [ ] Now the headings are excluded if one creates them, but if one creates /other/ headings, the headings are included.
+- [ ] Files under ~/source/foo~ are  nott excluded if one merely adds ~source/~ to the list of excluded directories.
+- [ ] I think I do /not/ want to exclude bibliographic notes.
+
+[2023-01-14 Sat] Marking as ~CANCELLED~ for the reason described [[id:FB1FD9AE-C82B-4D51-93E9-ECC40D2065D9][here]].
+**** CANCELLED [#4] Update save hook to exclude Anki file
+CLOSED: [2023-01-14 Sat 20:11]
+:PROPERTIES:
+:ID:       FB3B93BF-EFCB-41F0-A732-844EDB162BE0
+:Effort:   0:25
+:ARCHIVE_TIME: 2023-01-14 Sat 20:11
+:END:
+/Users/pablostafforini/Dropbox/org/anki/main.org
+
+Also remove IDs from file.
+
+[2023-01-14 Sat 20:10] Marking as ~CANCELLED~ for the reason described [[id:FB1FD9AE-C82B-4D51-93E9-ECC40D2065D9][here]].
+**** CANCELLED [#6] Remove IDs from ARCHIVE
+CLOSED: [2023-01-14 Sat 20:11]
+:PROPERTIES:
+:ID:       0218D5CD-2CEE-44E6-9F0F-EA4BCEFC6AA3
+:Effort:   0:20
+:ARCHIVE_TIME: 2023-01-14 Sat 20:11
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-01 Fri 05:14]--[2022-07-01 Fri 05:32] =>  0:18
+:END:
+[2023-01-14 Sat 20:10] Marking as ~CANCELLED~ for the reason described [[id:FB1FD9AE-C82B-4D51-93E9-ECC40D2065D9][here]].
 
 ** org-list
 :PROPERTIES:

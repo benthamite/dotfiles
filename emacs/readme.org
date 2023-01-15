@@ -12564,47 +12564,10 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
   (defun ps/org-id-add-ids-to-headlines-in-file ()
     "Add ID properties to all headlines in the current file which do
 not already have one."
-    ;; Positive conditions
     (when (and (equal (system-name) ps/computer-hostname-pablo)
                (eq major-mode 'org-mode)
                (eq buffer-read-only nil))
-      ;; Negative conditions
-      (unless (or
-               ;; exclude selected file tags
-               ;; #+FILETAGS: noid
-               (member
-                "noid"
-                (org-get-tags))
-               ;; exclude selected heading names
-               (member (org-get-heading) '("Local variables"
-                                           "COMMENT Local variables"
-                                           "Evaluation"
-                                           "History"
-                                           "External links"
-                                           "Further reading"
-                                           "Related entries"
-                                           "TODO Local variables"
-                                           "Archive :ARCHIVE:"))
-               ;; exclude selected heading tags
-               (member "noid" (org-get-tags))
-
-               ;; exclude buffers when in list of special dirs and org
-               ;; heading at point is of level higher than 1 (i.e.
-               ;; don't create unnecessary IDs for article
-               ;; subsections)
-               (and
-                ;; dir condition
-                (member
-                 (file-name-directory (buffer-file-name))
-                 (mapcar #'file-name-as-directory
-                         ;; List of special dirs
-                         (list
-                          ps/dir-journal
-                          ps/dir-wiki-entries
-                          ps/dir-people)))
-                ;; heading condition
-                (> (org-current-level) 1)))
-        (org-map-entries 'org-id-get-create))))
+        (org-map-entries 'org-id-get-create)))
 
   :config
   ;; copied from emacs.stackexchange.com/a/58834/32089
@@ -12696,8 +12659,8 @@ When FILES is given, scan these files instead."
           (message "%d unique files scanned for IDs" (length org-id-files)))
         org-id-locations)))
 
-  ;; :hook
-  ;; (before-save-hook . ps/org-id-add-ids-to-headlines-in-file)
+  :hook
+  (before-save-hook . ps/org-id-add-ids-to-headlines-in-file)
 
   :general
   (org-mode-map
@@ -13925,18 +13888,18 @@ Once I activate ~org-roam-bibtex~, I should make sure deferring ~org-roam-setup~
     "Return list of files modified in the last DAYS. Optionally,
 return such list if its length is less than LIMIT."
     (let* ((mins (* 60 24 days))
-           (file-list (split-string
-                       (shell-command-to-string
-                        (format
-                         "find %s -name '*.org'  -mmin -%s"
-                         (directory-file-name org-roam-directory) mins)))))
+	   (file-list (split-string
+		       (shell-command-to-string
+			(format
+			 "find %s -name '*.org'  -mmin -%s"
+			 (directory-file-name org-roam-directory) mins)))))
       ;; Remove excluded files
       (setq file-list (cl-delete-if (lambda (k)
-                                      (string-match-p org-roam-file-exclude-regexp k))
-                                    file-list))
+				      (string-match-p org-roam-file-exclude-regexp k))
+				    file-list))
       (when (and limit
-                 (< (length file-list) limit))
-        file-list)))
+		 (< (length file-list) limit))
+	file-list)))
 
   :custom
   ;; `sqlite3' is deprecated, but I cannot get org-roam to work with
@@ -13948,7 +13911,7 @@ return such list if its length is less than LIMIT."
   (org-roam-directory ps/dir-org-roam)
   (org-roam-complete-everywhere t)
   (org-roam-node-display-template #("${title:*} ${tags:10}" 11 21
-                                    (face org-tag)))
+				    (face org-tag)))
   (org-roam-capture-templates
    `(("r" "bibliography reference" plain
       (file ,ps/file-orb-noter-template)
@@ -13957,26 +13920,62 @@ return such list if its length is less than LIMIT."
       :unnarrowed t :immediate-finish t :jump-to-captured t)))
 
   :config
+  (defvar ps/org-roam-excluded-dirs nil)
+  (defvar ps/org-roam-excluded-files nil)
+
   (dolist (dir `(,ps/dir-anki
-                 ,ps/dir-inactive
-                 ,ps/dir-archive))
+		 ,ps/dir-inactive
+		 ,ps/dir-archive))
     (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs))
 
-    (dolist (file '("orb-noter-template.org"
-                  "tareas.org"
-                  "calendar.org"
-                  ".org2blog.org"
-                  "feeds.org")
-    (push (file-relative-name file ps/dir-org-roam) ps/org-roam-excluded-files))
+  (dolist (file '("orb-noter-template.org"
+		  "tareas.org"
+		  "calendar.org"
+		  ".org2blog.org"
+		  "feeds.org"))
+    (push file ps/org-roam-excluded-files))
 
   (setq org-roam-file-exclude-regexp
-  (concatps/org-roam-excluded-dirs)
+	(append
+	 ps/org-roam-excluded-dirs
+	 ps/org-roam-excluded-files
+	 '("conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")))
 
   (setq org-roam-db-node-include-function
-        (lambda ()
-          (if (member "ARCHIVE" (org-get-tags))
-              nil
-            t)))
+	(lambda ()
+	  (if (or
+	       ;; exclude selected tags
+	       (member "noid" (org-get-tags))
+	       (member "ARCHIVE" (org-get-tags))
+	       ;; exclude selected headings
+	       (member (org-get-heading) '("Local variables"
+					   "COMMENT Local variables"
+					   "TODO Local variables"
+					   "Evaluation"
+					   "History"
+					   "Further reading"
+					   "External links"
+					   "Related entries"
+					   "Archive :ARCHIVE:"))
+	       ;; exclude buffers when in list of special dirs and org
+	       ;; heading at point is of level higher than 1 (i.e.
+	       ;; don't create unnecessary IDs for article
+	       ;; subsections)
+	       (and
+		;; dir condition
+		(member
+		 (file-name-directory (buffer-file-name))
+		 (mapcar #'file-name-as-directory
+			 ;; List of special dirs
+			 (list
+			  ps/dir-journal
+			  ps/dir-wiki-entries
+			  ps/dir-people)))
+		;; heading condition
+		(> (org-current-level) 1))
+	       )
+	      nil
+	    t)))
 
   (defun ps/org-roam-db-query (sql &rest args)
     "Run SQL query on Org-roam database with ARGS.
@@ -13999,11 +13998,11 @@ return such list if its length is less than LIMIT."
     (when (string= "r" (plist-get org-capture-plist :key))
       (goto-char (point-min))
       (unless (org-get-heading)
-        ;; Take action with file-level properties only.
-        (org-delete-property "ID")
-        (org-delete-property "ROAM_REFS")
-        (ps/org-jump-to-first-heading)
-        (org-id-get-create))))
+	;; Take action with file-level properties only.
+	(org-delete-property "ID")
+	(org-delete-property "ROAM_REFS")
+	(ps/org-jump-to-first-heading)
+	(org-id-get-create))))
 
   (defun ps/org-roam-new-note (note-type)
     "Create a new `org-roam' note."
@@ -14013,26 +14012,26 @@ return such list if its length is less than LIMIT."
        "Select note type: "
        '("generic" "person"))))
     (let ((tags)
-          (directory))
+	  (directory))
       (cond ((string= note-type "generic")
-             (setq tags "note")
-             (setq directory ps/dir-notes))
-            ((string= note-type "person")
-             (setq tags "person")
-             (setq directory ps/dir-people)))
+	     (setq tags "note")
+	     (setq directory ps/dir-notes))
+	    ((string= note-type "person")
+	     (setq tags "person")
+	     (setq directory ps/dir-people)))
       (let* ((name (read-from-minibuffer "Entry name: "))
-             (slug (org-hugo-slug name))
-             (filename (concat slug ".org")))
-        (when (file-exists-p filename)
-          (user-error (format "File `%s' already exists." filename)))
-        (find-file (file-name-concat directory filename))
-        (insert "#+title: " name "\n\n")
-        (org-insert-heading)
-        (insert name)
-        (org-set-tags tags)
-        (org-id-get-create)
-        (ps/org-narrow-to-entry-and-children)
-        (goto-char (point-max)))))
+	     (slug (org-hugo-slug name))
+	     (filename (concat slug ".org")))
+	(when (file-exists-p filename)
+	  (user-error (format "File `%s' already exists." filename)))
+	(find-file (file-name-concat directory filename))
+	(insert "#+title: " name "\n\n")
+	(org-insert-heading)
+	(insert name)
+	(org-set-tags tags)
+	(org-id-get-create)
+	(ps/org-narrow-to-entry-and-children)
+	(goto-char (point-max)))))
 
   ;; include transcluded links in `org-roam' backlinks
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)

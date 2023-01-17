@@ -2727,7 +2727,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 (use-package modus-themes
   :straight (modus-themes
              :host sourcehut
-             :repo "protesilaos/modus-themes")
+             :repo "protesilaos/modus-themes"))
 #+end_src
 
 #+begin_src emacs-lisp :results silent :tangle no
@@ -13989,7 +13989,7 @@ return such list if its length is less than LIMIT."
                           ps/dir-journal))
                 ;; heading condition
                 (> (org-current-level) 1))
-               )
+               ))
               nil
             t)))
 

@@ -2726,13 +2726,12 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 #+begin_src emacs-lisp :results silent
 (use-package modus-themes
   :straight (modus-themes
-             :host sourcehut
-             :repo "protesilaos/modus-themes")
+	     :host sourcehut
+	     :repo "protesilaos/modus-themes")
   :demand t
 
-  :init
-  (setq modus-themes-org-blocks 'gray-background)
-  (setq modus-themes-common-palette-overrides modus-themes-preset-overrides-intense)
+  :custom
+  (modus-themes-org-blocks 'gray-background)
 
   :config
 
@@ -2747,24 +2746,24 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
       ;; styles, depending on `my-highlight-parentheses-use-background'.
       (if my-highlight-parentheses-use-background
 
-          ;; Here we set color combinations that involve both a background
-          ;; and a foreground value.
-          (setq highlight-parentheses-background-colors (list bg-cyan-intense
-                                                              bg-magenta-intense
-                                                              bg-green-intense
-                                                              bg-yellow-intense)
-                highlight-parentheses-colors (list cyan
-                                                   magenta
-                                                   green
-                                                   yellow))
+	  ;; Here we set color combinations that involve both a background
+	  ;; and a foreground value.
+	  (setq highlight-parentheses-background-colors (list bg-cyan-intense
+							      bg-magenta-intense
+							      bg-green-intense
+							      bg-yellow-intense)
+		highlight-parentheses-colors (list cyan
+						   magenta
+						   green
+						   yellow))
 
-        ;; And here we pass only foreground colors while disabling any
-        ;; backgrounds.
-        (setq highlight-parentheses-colors (list green-intense
-                                                 magenta-intense
-                                                 blue-intense
-                                                 red-intense)
-              highlight-parentheses-background-colors nil)))
+	;; And here we pass only foreground colors while disabling any
+	;; backgrounds.
+	(setq highlight-parentheses-colors (list green-intense
+						 magenta-intense
+						 blue-intense
+						 red-intense)
+	      highlight-parentheses-background-colors nil)))
 
     ;; Include this if you also want to make the parentheses bold:
     (set-face-attribute 'highlight-parentheses-highlight nil :inherit 'bold)
@@ -2773,12 +2772,13 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
     ;; this comes last.
     (global-highlight-parentheses-mode))
 
+      (setq modus-themes-common-palette-overrides modus-themes-preset-overrides-intense)
 
   (defun ps/modus-themes-match-system ()
     "Load modus theme that matches system."
     (interactive)
     (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-        (load-theme 'modus-vivendi :no-confim)
+	(load-theme 'modus-vivendi :no-confim)
       (load-theme 'modus-operandi :no-confim)))
 
   (ps/modus-themes-match-system)

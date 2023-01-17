@@ -7390,7 +7390,7 @@ https://github.com/insanum/gcalcli
 :ID:       79C8D6B8-7D86-4B63-82C2-61E6DFFC4152
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package hammy
   :if (equal (system-name) ps/computer-hostname-pablo)
   :straight (hammy

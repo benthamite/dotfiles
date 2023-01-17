@@ -13983,9 +13983,7 @@ return such list if its length is less than LIMIT."
                  (mapcar #'file-name-as-directory
                          ;; List of special dirs
                          (list
-                          ps/dir-journal
-                          ps/dir-wiki-entries
-                          ps/dir-people)))
+                          ps/dir-journal))
                 ;; heading condition
                 (> (org-current-level) 1))
                )
@@ -14054,8 +14052,8 @@ return such list if its length is less than LIMIT."
   (org-roam-db-autosync-mode -1)
 
   :hook
-  (org-roam-capture-new-node-hook . orb--insert-captured-ref-h)
-  (org-roam-capture-new-node-hook . org-roam-capture--insert-captured-ref-h)
+  (org-roam-capture-new-node-hook . (orb--insert-captured-ref-h
+				     org-roam-capture--insert-captured-ref-h))
   (org-capture-prepare-finalize-hook . ps/org-roam-remove-file-level-properties)
 
   :general

@@ -2957,6 +2957,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   ;; (doom-modeline--flycheck-icon t)
   (doom-modeline-github t)
   (doom-modeline-github-interval (* 10 60))
+  (doom-modeline-enable-word-count t)
 
   :config
   (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
@@ -3031,7 +3032,7 @@ CLOCK: [2022-07-17 Sun 11:13]--[2022-07-17 Sun 11:21] =>  0:08
 CLOCK: [2021-05-20 Thu 18:21]--[2021-05-20 Thu 18:39] =>  0:18
 CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 :END:
-/[[https://github.com/domtronn/all-the-icons.el][All-the-icons]] collects various icon fonts and propertizes them within Emacs./
+/[[https://github.com/domtronn/all-the-icons.el][all-the-icons]] collects various icon fonts and propertizes them./
 
 #+begin_src emacs-lisp :results silent
 (use-package all-the-icons
@@ -3042,7 +3043,7 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 :PROPERTIES:
 :ID:       A0DAA757-1CC9-460B-9F46-78A5145E7E61
 :END:
-/[[https://github.com/iyefrat/all-the-icons-completion][all-the-icons-completion]] adds icons to completion candidates in Emacs./
+/[[https://github.com/iyefrat/all-the-icons-completion][all-the-icons-completion]] adds icons to completion candidates./
 
 #+begin_src emacs-lisp :results silent
 (use-package all-the-icons-completion
@@ -3211,7 +3212,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 (use-package gcmh
   :demand t
   :config
-  (gcmh-mode 1))
+  (gcmh-mode))
 #+end_src
 
 ** misc.

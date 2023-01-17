@@ -2731,7 +2731,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   :demand t
 
   :init
-  (setq modus-themes-org-blocks 'tinted-background)
+  (setq modus-themes-org-blocks 'gray-background)
   (setq modus-themes-common-palette-overrides modus-themes-preset-overrides-intense)
 
   :config

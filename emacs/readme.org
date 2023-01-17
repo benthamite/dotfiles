@@ -2727,10 +2727,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 (use-package modus-themes
   :straight (modus-themes
              :host sourcehut
-             :repo "protesilaos/modus-themes"))
-#+end_src
-
-#+begin_src emacs-lisp :results silent :tangle no
+             :repo "protesilaos/modus-themes")
   :demand t
 
   :init
@@ -2744,17 +2741,16 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   ;; (7 . (background overline))
   ;; (8 . (background overline))))
   (setq modus-themes-org-blocks 'gray-background)
-  (setq modus-themes-common-palette-overrides
-        '((date-common cyan)   ; default value (for timestamps and more)
-          (date-deadline red-warmer)
-          (date-event magenta-warmer)
-          (date-holiday blue) ; for M-x calendar
-          (date-now yellow-warmer)
-          (date-scheduled magenta-cooler)
-          (date-weekday cyan-cooler)
-          (date-weekend blue-faint)))
-  (setq modus-themes-common-palette-overrides
-        '((fringe unspecified)))
+  (setq modus-themes-common-palette-overrides modus-themes-preset-overrides-intense)
+  ;; '((fringe unspecified)
+  ;; (date-common cyan)   ; default value (for timestamps and more)
+  ;; (date-deadline red-warmer)
+  ;; (date-event magenta-warmer)
+  ;; (date-holiday blue) ; for M-x calendar
+  ;; (date-now yellow-warmer)
+  ;; (date-scheduled magenta-cooler)
+  ;; (date-weekday cyan-cooler)
+  ;; (date-weekend blue-faint)))
 
   :config
 
@@ -2945,12 +2941,11 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 :END:
 /[[https://github.com/seagle0128/doom-modeline/][doom-modeline]] is a tidier and more aesthetically pleasing modeline./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package doom-modeline
   :demand t
   :init
-  (doom-modeline-mode))
-
+  (doom-modeline-mode)
   :custom
   ;; we disable the display of time since the tab-bar already does
   (doom-modeline-time nil)
@@ -14056,7 +14051,7 @@ return such list if its length is less than LIMIT."
 
   :hook
   (org-roam-capture-new-node-hook . (orb--insert-captured-ref-h
-				     org-roam-capture--insert-captured-ref-h))
+                                     org-roam-capture--insert-captured-ref-h))
   (org-capture-prepare-finalize-hook . ps/org-roam-remove-file-level-properties)
 
   :general

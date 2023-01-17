@@ -2731,26 +2731,8 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   :demand t
 
   :init
-  ;; (setq modus-themes-headings
-  ;; '((1 . (background overline))
-  ;; (2 . (background overline))
-  ;; (3 . (background overline))
-  ;; (4 . (background overline))
-  ;; (5 . (background overline))
-  ;; (6 . (background overline))
-  ;; (7 . (background overline))
-  ;; (8 . (background overline))))
-  (setq modus-themes-org-blocks 'gray-background)
+  (setq modus-themes-org-blocks 'tinted-background)
   (setq modus-themes-common-palette-overrides modus-themes-preset-overrides-intense)
-  ;; '((fringe unspecified)
-  ;; (date-common cyan)   ; default value (for timestamps and more)
-  ;; (date-deadline red-warmer)
-  ;; (date-event magenta-warmer)
-  ;; (date-holiday blue) ; for M-x calendar
-  ;; (date-now yellow-warmer)
-  ;; (date-scheduled magenta-cooler)
-  ;; (date-weekday cyan-cooler)
-  ;; (date-weekend blue-faint)))
 
   :config
 

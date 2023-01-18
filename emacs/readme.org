@@ -10677,6 +10677,16 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 :END:
 Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-customary-to-put-many-closing-parentheses-on-one-line-in-lisp-based-la][here]].
 
+** debug
+:PROPERTIES:
+:ID:       AACCFE88-084B-4428-82DB-7C695D9624C4
+:END:
+
+#+begin_src emacs-lisp
+(use-feature debug
+)
+#+end_src
+
 ** edebug
 :PROPERTIES:
 :ID:       4ADAE24A-49F4-47F2-AF5A-B15B8137E714
@@ -12512,16 +12522,16 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 :END:
 
 #+begin_src emacs-lisp :results silent
-  (use-feature org-fold
-    :custom
-    (org-fold-catch-invisible-edits 'smart)
+(use-feature org-fold
+  :custom
+  (org-fold-catch-invisible-edits 'smart)
 
-    :config
-    (defun ps/org-fold-show-all-headings ()
-      "Show contents of all headings in buffer, except archives."
-      (interactive)
-      (org-fold-show-all '(headings))
-      (org-cycle-hide-archived-subtrees 'all)))
+  :config
+  (defun ps/org-fold-show-all-headings ()
+    "Show contents of all headings in buffer, except archives."
+    (interactive)
+    (org-fold-show-all '(headings))
+    (org-cycle-hide-archived-subtrees 'all)))
 #+end_src
 
 ** org-id

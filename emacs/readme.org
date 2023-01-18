@@ -7938,6 +7938,7 @@ Recenter after each isearch iteration (https://stackoverflow.com/questions/11052
    "C-n" 'isearch-end-of-buffer
    "C-o" 'isearch-occur
    "C-p" 'isearch-highlight-regexp
+   "C-t" 'substitute-target-in-buffer
    "C-v" 'isearch-yank-kill
    "C-y" 'isearch-forward-symbol-at-point
    "H-c" 'ps/isearch-copy-match
@@ -8000,6 +8001,17 @@ Currently history clears after Emacs is restarted.
   :general
   (isearch-mode-map
    "A-C-e" 'query-replace-regexp))
+#+end_src
+
+** substitute
+:PROPERTIES:
+:ID:       CDB7BD03-86D2-4780-871E-205F20EFA367
+:END:
+/[[https://git.sr.ht/~protesilaos/substitute][substitute]] efficiently replaces targets in the buffer or context./
+
+#+begin_src emacs-lisp
+(use-package substitute
+  :demand t)
 #+end_src
 
 ** rg
@@ -16833,7 +16845,7 @@ CLOCK: [2021-03-17 Wed 17:46]--[2021-03-17 Wed 17:56] =>  0:10
 :END:
 /[[https://github.com/louietan/anki-editor][anki-editor]] is a minor mode for making Anki cards with Org./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package anki-editor
   ;; this version handles mathjax correctly
   ;; :straight (:fork (:repo "louietan/anki-editor" :branch "develop"))

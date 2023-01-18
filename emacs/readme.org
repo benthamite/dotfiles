@@ -12540,6 +12540,8 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
    `(,ps/file-tareas-leo
      ,ps/file-tareas-fede))
 
+     (org-id-link-to-org-use-id t)
+
   :init
   ;; stackoverflow.com/a/16247032/4479455
   (defun ps/org-id-add-ids-to-headlines-in-file ()

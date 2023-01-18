@@ -2726,8 +2726,8 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 #+begin_src emacs-lisp :results silent
 (use-package modus-themes
   :straight (modus-themes
-	     :host sourcehut
-	     :repo "protesilaos/modus-themes")
+             :host sourcehut
+             :repo "protesilaos/modus-themes")
   :demand t
 
   :custom
@@ -2746,24 +2746,24 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
       ;; styles, depending on `my-highlight-parentheses-use-background'.
       (if my-highlight-parentheses-use-background
 
-	  ;; Here we set color combinations that involve both a background
-	  ;; and a foreground value.
-	  (setq highlight-parentheses-background-colors (list bg-cyan-intense
-							      bg-magenta-intense
-							      bg-green-intense
-							      bg-yellow-intense)
-		highlight-parentheses-colors (list cyan
-						   magenta
-						   green
-						   yellow))
+          ;; Here we set color combinations that involve both a background
+          ;; and a foreground value.
+          (setq highlight-parentheses-background-colors (list bg-cyan-intense
+                                                              bg-magenta-intense
+                                                              bg-green-intense
+                                                              bg-yellow-intense)
+                highlight-parentheses-colors (list cyan
+                                                   magenta
+                                                   green
+                                                   yellow))
 
-	;; And here we pass only foreground colors while disabling any
-	;; backgrounds.
-	(setq highlight-parentheses-colors (list green-intense
-						 magenta-intense
-						 blue-intense
-						 red-intense)
-	      highlight-parentheses-background-colors nil)))
+        ;; And here we pass only foreground colors while disabling any
+        ;; backgrounds.
+        (setq highlight-parentheses-colors (list green-intense
+                                                 magenta-intense
+                                                 blue-intense
+                                                 red-intense)
+              highlight-parentheses-background-colors nil)))
 
     ;; Include this if you also want to make the parentheses bold:
     (set-face-attribute 'highlight-parentheses-highlight nil :inherit 'bold)
@@ -2778,7 +2778,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
     "Load modus theme that matches system."
     (interactive)
     (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-	(load-theme 'modus-vivendi :no-confim)
+        (load-theme 'modus-vivendi :no-confim)
       (load-theme 'modus-operandi :no-confim)))
 
   (ps/modus-themes-match-system)
@@ -8011,6 +8011,9 @@ Currently history clears after Emacs is restarted.
 
 #+begin_src emacs-lisp
 (use-package substitute
+  :straight (substitute
+             :host sourcehut
+		   :repo "protesilaos/substitute")
   :demand t)
 #+end_src
 
@@ -10805,9 +10808,30 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 #+begin_src emacs-lisp
 (use-package puni
   :demand t
+
+  :general
+  (puni-mode-map
+   "C-M-a" 'puni-beginning-of-sexp
+   "C-M-b" 'puni-backward-sexp
+   "C-M-e" 'puni-end-of-sexp
+   "C-M-f" 'puni-forward-sexp
+   "C-S-k" 'puni-backward-kill-line
+   "C-c DEL" 'puni-force-delete
+   "C-d" 'puni-forward-delete-char
+   "C-k" nil
+   "C-w" nil
+   "DEL" 'puni-backward-delete-char
+   "M-(" 'puni-syntactic-backward-punct
+   "M-)" 'puni-syntactic-forward-punct
+   "M-DEL"    'puni-backward-kill-word)
+
   :hook
   ((prog-mode-hook sgml-mode-hook nxml-mode-hook tex-mode-hook eval-expression-minibuffer-setup-hook) . puni-mode))
 #+end_src
+*** TODO Define ~puni~ key bindings
+:PROPERTIES:
+:ID:       BEF1B425-C23E-4C1C-A468-92F7AD54FA18
+:END:
 
 ** copilot
 :PROPERTIES:

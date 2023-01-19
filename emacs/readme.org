@@ -16486,6 +16486,15 @@ first name, and names are separated by a semicolon."
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
+*** TODO Fix ebib issues Leo reported
+:PROPERTIES:
+:ID:       359ADA5E-7B2F-4BF9-94CC-DE0BB5A516C9
+:END:
+EA Survey 2018 / 2019
+
+Wildeford 2018 EA Survey
+comienzan con las mismas palabras
+por qué ebib no recarga
 *** TODO [#6] Figure out difference between ~date~ and ~urldate~ bibtex fields
 :PROPERTIES:
 :ID:       7B7EA121-F1C0-4EAD-99F5-AAF4162DFDE9

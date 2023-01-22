@@ -515,7 +515,6 @@
     ("automaticly" "automatically" nil :count 1)
     ("automibile" "automobile" nil :count 1)
     ("automonomous" "autonomous" nil :count 1)
-    ("autor" "author" nil :count 1)
     ("autority" "authority" nil :count 1)
     ("auxilary" "auxiliary" nil :count 1)
     ("auxillaries" "auxiliaries" nil :count 1)

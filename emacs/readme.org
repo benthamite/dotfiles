@@ -13877,6 +13877,23 @@ CLOCK: [2022-03-31 Thu 17:22]--[2022-03-31 Thu 17:25] =>  0:03
 :PROPERTIES:
 :ID:       EC6700D7-C65D-4430-8DAC-57772B423D69
 :END:
+** TODO Add ~biblio~ tag to all bibliographic notes
+:PROPERTIES:
+:ID:       51E3274E-1A08-4082-9863-0A62F3233C1B
+:END:
+Done until ~Gates2022RisksAdvancedAI.org~.
+
+#+begin_src emacs-lisp :tangle no
+(dolist (file (f-entries "/Users/pablostafforini/Dropbox/bibliographic-notes"))
+  (message "processing %s" file)
+  (when (string= (file-name-extension file) "org")
+  (with-current-buffer (or (find-buffer-visiting file)
+                           (find-file-noselect file))
+    (ps/org-jump-to-first-heading)
+    (org-roam-tag-add '("biblio"))
+    (save-buffer))))
+#+end_src
+
 ** emacs-sqlite3
 :PROPERTIES:
 :ID:       7A7A0C7B-AC94-40ED-A50E-AAB67D9522E8

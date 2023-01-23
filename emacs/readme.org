@@ -166,6 +166,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#time][time]]
   - [[#tmr][tmr]]
   - [[#hammy][hammy]]
+  - [[#display-wttr][display-wttr]]
 - [[#history][history]]
   - [[#savehist][savehist]]
   - [[#saveplace][saveplace]]
@@ -187,6 +188,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#search--replace][search & replace]]
   - [[#isearch][isearch]]
   - [[#replace][replace]]
+  - [[#substitute][substitute]]
   - [[#rg][rg]]
   - [[#visual-regexp][visual-regexp]]
   - [[#visual-regexp-steroids][visual-regexp-steroids]]
@@ -214,6 +216,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#kind-icon][kind-icon]]
   - [[#cape][cape]]
   - [[#cape-yasnippet][cape-yasnippet]]
+  - [[#org-block-cafp][org-block-cafp]]
   - [[#company][company]]
 - [[#help][help]]
   - [[#help][help]]
@@ -278,9 +281,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dap-mode][dap-mode]]
   - [[#dumb-jump][dumb-jump]]
   - [[#elisp-mode][elisp-mode]]
+  - [[#debug][debug]]
   - [[#edebug][edebug]]
   - [[#backtrace][backtrace]]
   - [[#macrostep][macrostep]]
+  - [[#ess][ESS]]
   - [[#clojure][clojure]]
   - [[#cider][cider]]
   - [[#python][python]]
@@ -339,6 +344,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-pomodoro][org-pomodoro]]
   - [[#memacs][memacs]]
 - [[#note-taking][note-taking]]
+  - [[#add-biblio-tag-to-all-bibliographic-notes][Add biblio tag to all bibliographic notes]]
   - [[#emacs-sqlite3][emacs-sqlite3]]
   - [[#org-roam][org-roam]]
   - [[#org-roam-ui][org-roam-ui]]
@@ -2983,8 +2989,8 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
                              " | "
                              fancy-battery-mode-line
                              " | "
-                             telega-mode-line-format))
-                             ;; " | "
+                             telega-mode-line-format
+                             " | "))
                              ;; (hammy-mode
                               ;; (:eval
                                ;; (hammy-mode-lighter)))))
@@ -7440,11 +7446,16 @@ https://github.com/insanum/gcalcli
 :END:
 #+begin_src emacs-lisp
 (use-package display-wttr
+  :after tab-bar
+  :demand t
   :custom
-  ;; (display-wttr-format "4")
-  (display-wttr-locatizons '("Mexico City"))
   (display-wttr-interval (* 1 60))
+
   :config
+  (cond ((equal (system-name) ps/computer-hostname-pablo)
+         (setq display-wttr-locatizons '("Mexico City")))
+        ((equal (system-name) ps/computer-hostname-leo)
+         (setq display-wttr-locatizons '("Barcelona"))))
   (display-wttr-mode))
 #+end_src
 
@@ -8027,7 +8038,7 @@ Currently history clears after Emacs is restarted.
 (use-package substitute
   :straight (substitute
              :host sourcehut
-		   :repo "protesilaos/substitute")
+                   :repo "protesilaos/substitute")
   :demand t)
 #+end_src
 
@@ -8765,8 +8776,8 @@ Additionally, add `cape-file' as early as possible to the list."
 #+begin_src emacs-lisp
 (use-package org-block-capf
   :straight (org-block-capf
-	     :host github
-	     :repo "xenodium/org-block-capf")
+             :host github
+             :repo "xenodium/org-block-capf")
   :demand t
   :hook
   (org-mode-hook . org-block-capf-add-to-completion-at-point-functions))

@@ -20315,14 +20315,16 @@ CLOCK: [2022-03-31 Thu 16:33]--[2022-03-31 Thu 16:33] =>  0:00
 CLOCK: [2021-04-08 Thu 18:18]--[2021-04-08 Thu 18:29] =>  0:11
 CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 :END:
-/[[Https://github.com/jwiegley/alert][alert]] is a Growl-like alerts notifier for Emacs./
+/[[https://github.com/jwiegley/alert][alert]] is a Growl-like alerts notifier for Emacs./
 
 #+begin_src emacs-lisp :results silent
 (use-package alert
-  :defer 10
+  ;; :defer 10
+  :demand t
   :custom
   (alert-default-style 'osx-notifier)
-  (alert-fade-time 1)
+  (alert-fade-time 2)
+  
   :config
   (defun ps/alert-dismiss-osx-notification ()
     "docstring"

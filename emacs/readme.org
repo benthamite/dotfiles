@@ -10746,6 +10746,14 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 (use-package macrostep)
 #+end_src
 
+** ESS
+:PROPERTIES:
+:ID:       5B1FC084-42CD-47F3-B8AD-1D2113488CBC
+:END:
+#+begin_src emacs-lisp
+(use-package ess)
+#+end_src
+
 ** clojure
 :PROPERTIES:
 :ID:       A9508F41-E82B-4E6C-9304-53981A8F0C27
@@ -10779,7 +10787,8 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   (remove-hook 'python-mode-hook #'yasnippet-snippets--fixed-indent) ; some package (`elpy'?) is adding this
   (org-babel-do-load-languages
    'org-babel-load-languages
-   '((python . t)))
+   '((python . t)
+     (R . t)))
 
   :general
   (python-mode-map

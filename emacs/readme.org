@@ -2984,17 +2984,14 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
         (remove '(global-mode-string ("" global-mode-string))
                 mode-line-misc-info))
 
+  (tab-bar-mode)
   (setq global-mode-string '(" "
                              (:eval (propertize display-time-string 'face 'ps/display-time))
                              " | "
                              fancy-battery-mode-line
                              " | "
                              telega-mode-line-format
-                             " | "))
-                             ;; (hammy-mode
-                              ;; (:eval
-                               ;; (hammy-mode-lighter)))))
-  (tab-bar-mode))
+                             " | ")))
 #+end_src
 
 ** fancy-battery
@@ -7449,7 +7446,7 @@ https://github.com/insanum/gcalcli
   :after tab-bar
   :demand t
   :custom
-  (display-wttr-interval (* 1 60))
+  (display-wttr-interval (* 10 60))
 
   :config
   (cond ((equal (system-name) ps/computer-hostname-pablo)
@@ -14081,10 +14078,10 @@ return such list if its length is less than LIMIT."
 		 (mapcar #'file-name-as-directory
 			 ;; List of special dirs
 			 (list
-			  ps/dir-journal))
+			  ps/dir-journal)))
 		 ;; heading condition
 		 (> (org-current-level) 1))
-		))
+		)
 	      nil
 	    t)))
 

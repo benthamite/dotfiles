@@ -2949,7 +2949,8 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   ;; (doom-modeline--flycheck-icon t)
   (doom-modeline-github t)
   (doom-modeline-github-interval (* 10 60))
-  (doom-modeline-enable-word-count t)
+  ;; I think this causes significant slowdown
+  (doom-modeline-enable-word-count nil)
 
   :config
   (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
@@ -6519,7 +6520,7 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
   :init
   ;; This neds to be delayed a few seconds because the value returned
   ;; by `window-total-width' changes as Emacs restarts.
-  (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))e))
+  (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))))
 
   (defun ps/writerrom-global-effects (arg)
     "Enable and disable custom effects when `writeroom-mode' is
@@ -8775,7 +8776,7 @@ Additionally, add `cape-file' as early as possible to the list."
 
 /[[https://github.com/xenodium/org-block-capf][org-block-cafp]] adds support fro org block completion at point./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package org-block-capf
   :straight (org-block-capf
              :host github
@@ -10742,8 +10743,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 :END:
 
 #+begin_src emacs-lisp
-(use-feature debug
-)
+(use-feature debug)
 #+end_src
 
 ** edebug
@@ -10794,7 +10794,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :PROPERTIES:
 :ID:       5B1FC084-42CD-47F3-B8AD-1D2113488CBC
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package ess)
 #+end_src
 
@@ -12617,7 +12617,7 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
    `(,ps/file-tareas-leo
      ,ps/file-tareas-fede))
 
-     (org-id-link-to-org-use-id t)
+     ;; (org-id-link-to-org-use-id t)
 
   :init
   ;; stackoverflow.com/a/16247032/4479455
@@ -14005,7 +14005,7 @@ return such list if its length is less than LIMIT."
   ;; 29 is released. See `org-roam-database-connector' docstring.
   (org-roam-database-connector 'sqlite3)
   (org-roam-directory ps/dir-org-roam)
-  (org-roam-complete-everywhere t)
+  ;; (org-roam-complete-everywhere t)
   (org-roam-node-display-template #("${title:*} ${tags:10}" 11 21
                                     (face org-tag)))
   (org-roam-capture-templates
@@ -14138,8 +14138,8 @@ return such list if its length is less than LIMIT."
   (org-roam-db-autosync-mode -1)
 
   :hook
-  (org-roam-capture-new-node-hook . (orb--insert-captured-ref-h
-                                     org-roam-capture--insert-captured-ref-h))
+  (org-roam-capture-new-node-hook . orb--insert-captured-ref-h)
+  (org-roam-capture-new-node-hook . org-roam-capture--insert-captured-ref-h)
   (org-capture-prepare-finalize-hook . ps/org-roam-remove-file-level-properties)
 
   :general
@@ -14809,7 +14809,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 (use-feature oc
   :demand t
   :custom
-  (org-cite-global-bibliography `(,ps/file-bibliography-new
+  (org-cite-global-bibliography `(,ps/file-bibliography-new))
                                   ,ps/file-bibliography-old))
   (org-cite-csl-styles-dir ps/dir-csl-styles)
   (org-cite-csl-locales-dir ps/dir-csl-locales)
@@ -14854,7 +14854,7 @@ ARG is the prefix argument received when calling interactively the function."
             (org-cite--allowed-p context)
             (funcall insert nil arg))))))))
 
-  (advice-add 'org-cite-insert :override #'ps/org-cite-insert)
+  (advice-remove 'org-cite-insert #'ps/org-cite-insert)
 
   :general
   ("H-/" 'org-cite-insert))

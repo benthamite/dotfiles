@@ -7453,6 +7453,7 @@ https://github.com/insanum/gcalcli
          (setq display-wttr-locatizons '("Mexico City")))
         ((equal (system-name) ps/computer-hostname-leo)
          (setq display-wttr-locatizons '("Barcelona"))))
+         
   (display-wttr-mode))
 #+end_src
 
@@ -8551,6 +8552,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 | [[id:35370B0F-9EBD-433F-B59C-576EE8A69772][corfu]]   | completion at point UI      |
 | [[id:5A103245-9DC3-4D95-96D7-2161F6CCD0B1][cape]]    | completion at point backend |
 
+
 ** corfu
 :PROPERTIES:
 :ID:       35370B0F-9EBD-433F-B59C-576EE8A69772
@@ -8657,7 +8659,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 :PROPERTIES:
 :ID:       5A103245-9DC3-4D95-96D7-2161F6CCD0B1
 :END:
-Check out [[https://github.com/Ubunteous/Emacs-Configuration/blob/06a3cece044eb85bb8cddd2fd5f8a684aed04ab0/packages/composite/cape.el][this]].
 
 #+begin_src emacs-lisp :results silent
 (use-package cape
@@ -10817,12 +10818,13 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp :results silent
 (use-feature python
+  :demand t
   :custom
-  (flycheck-python-pycompile-executable "python3")
   (python-shell-interpreter "python3")
   (org-babel-python-command "python3")
 
   :config
+  (setq flycheck-python-pycompile-executable "python3")
   (remove-hook 'python-mode-hook #'yasnippet-snippets--fixed-indent) ; some package (`elpy'?) is adding this
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -10916,10 +10918,10 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :commands gpt-dwim
   :config
   (setq gpt-openai-key (auth-source-pass-get 'secret "auth-sources/openai.com"))
+
   :general
   ("A-C-g" 'gpt-dwim))
 #+end_src
-
 
 ** chatgpt
 :PROPERTIES:
@@ -10934,9 +10936,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :init
   (require 'python)
   (setq chatgpt-repo-path "~/.emacs.d/straight/repos/ChatGPT.el/")
-
-  :custom
-  (chatgpt-python-interpreter "python3")
+  (setq chatgpt-python-interpreter "python3")
 
   :general
   (google-this-mode-submap
@@ -13987,6 +13987,7 @@ CLOCK: [2020-09-10 Thu 19:53]--[2020-09-10 Thu 20:01] =>  0:08
 CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 :END:
 Once I activate ~org-roam-bibtex~, I should make sure deferring ~org-roam-setup~ and the loading of the package (with the ~:defer~ declaration) doesn't cause problems.
+
 
 #+begin_src emacs-lisp :results silent
 (use-package org-roam

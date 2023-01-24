@@ -14014,7 +14014,8 @@ return such list if its length is less than LIMIT."
       :if-new
       (file ,ps/file-orb-capture-template)
       :unnarrowed t :immediate-finish t :jump-to-captured t)))
-  (org-roam-completion-everywhere t)
+      
+  ;; (org-roam-completion-everywhere t)
 
   :config
   (defvar ps/org-roam-excluded-dirs nil)

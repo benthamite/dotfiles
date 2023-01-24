@@ -2696,7 +2696,7 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
                         :height 0.9)
     (set-face-attribute 'org-quote nil
                         :family ps/face-variable-pitch
-			:height 1.3)))
+                        :height 1.3)))
 
 #+end_src
 
@@ -2974,7 +2974,7 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
 
 #+begin_src emacs-lisp :results silent
 (use-feature tab-bar
-  :demand t
+  :defer 5
   :custom
   (tab-bar-format '(tab-bar-align-right
                     tab-bar-format-global))
@@ -2989,14 +2989,14 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
         (remove '(global-mode-string ("" global-mode-string))
                 mode-line-misc-info))
 
-  (tab-bar-mode)
   (setq global-mode-string '(" "
                              (:eval (propertize display-time-string 'face 'ps/display-time))
                              " | "
                              fancy-battery-mode-line
                              " | "
                              telega-mode-line-format
-                             " | ")))
+                             " | "))
+  (run-with-timer 10 nil (tab-bar-mode)))
 #+end_src
 
 ** fancy-battery
@@ -7446,7 +7446,7 @@ https://github.com/insanum/gcalcli
 :PROPERTIES:
 :ID:       E1DB2097-7273-4FAC-BA84-67D46815FC45
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package display-wttr
   :after tab-bar
   :demand t
@@ -14000,7 +14000,7 @@ return such list if its length is less than LIMIT."
   ;; being, until I succeed in diagnosing the problem. See the
   ;; `org-roam-database-connector' docstring and the 'How to cache'
   ;; section of the manual: orgroam.com/manual.html#How-to-cache
-  
+
   ;; [2023-01-24 Tue] I should migrate to `sqlite-builtin' when Emacs
   ;; 29 is released. See `org-roam-database-connector' docstring.
   (org-roam-database-connector 'sqlite3)
@@ -14014,7 +14014,7 @@ return such list if its length is less than LIMIT."
       :if-new
       (file ,ps/file-orb-capture-template)
       :unnarrowed t :immediate-finish t :jump-to-captured t)))
-      
+
   ;; (org-roam-completion-everywhere t)
 
   :config
@@ -14809,7 +14809,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 (use-feature oc
   :demand t
   :custom
-  (org-cite-global-bibliography `(,ps/file-bibliography-new))
+  (org-cite-global-bibliography `(,ps/file-bibliography-new
                                   ,ps/file-bibliography-old))
   (org-cite-csl-styles-dir ps/dir-csl-styles)
   (org-cite-csl-locales-dir ps/dir-csl-locales)
@@ -20329,7 +20329,7 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
   (if (eq system-type 'darwin)
       (setq alert-default-style 'osx-notifier)
     (setq alert-default-style 'notifications))
-  
+
   (defun ps/alert-dismiss-osx-notification ()
     "docstring"
     (interactive)

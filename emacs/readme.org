@@ -14143,7 +14143,7 @@ return such list if its length is less than LIMIT."
         (goto-char (point-max)))))
 
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
-  (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
+  ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
 
   ;; include transcluded links in `org-roam' backlinks
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
@@ -14162,7 +14162,6 @@ return such list if its length is less than LIMIT."
   (org-mode-map
    "s-r" 'org-roam-buffer-toggle))
 #+end_src
-
 
 
 - Check [[https://www.reddit.com/r/emacs/comments/omxl6n/config_for_orgroam_v2/][this config]] (v 2.0)

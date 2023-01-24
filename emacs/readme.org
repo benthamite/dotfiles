@@ -2989,15 +2989,15 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
         (remove '(global-mode-string ("" global-mode-string))
                 mode-line-misc-info))
 
-  (setq global-mode-string '(" "
+  (run-with-timer 5 nil (lambda () (setq global-mode-string '(" "
                              (:eval (propertize display-time-string 'face 'ps/display-time))
                              " | "
                              fancy-battery-mode-line
                              " | "
                              telega-mode-line-format
-                             " | "))
+                             " | "))))
                              
-  (run-with-timer 10 nil 'tab-bar-mode))
+  (tab-bar-mode))
 #+end_src
 
 ** fancy-battery
@@ -7449,8 +7449,7 @@ https://github.com/insanum/gcalcli
 :END:
 #+begin_src emacs-lisp :tangle no
 (use-package display-wttr
-  :after tab-bar
-  :demand t
+  :defer 6
   :custom
   (display-wttr-interval (* 10 60))
 

@@ -2974,7 +2974,7 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
 
 #+begin_src emacs-lisp :results silent
 (use-feature tab-bar
-  :defer 5
+  :demand t
   :custom
   (tab-bar-format '(tab-bar-align-right
                     tab-bar-format-global))
@@ -2996,7 +2996,8 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
                              " | "
                              telega-mode-line-format
                              " | "))
-  (run-with-timer 10 nil (tab-bar-mode)))
+                             
+  (run-with-timer 10 nil 'tab-bar-mode))
 #+end_src
 
 ** fancy-battery

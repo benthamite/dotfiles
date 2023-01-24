@@ -994,7 +994,7 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 #Minimal config
 #+begin_src emacs-lisp :results silent
 (straight-use-package 'use-package)
-(setq use-package-verbose nil                ; setting back to nil (default) as it was producing too much output
+(setq use-package-verbose t                ; setting back to nil (default) as it was producing too much output
       use-package-compute-statistics t       ; compute stats
       use-package-always-defer t             ; always defer loading
       use-package-always-ensure nil          ; essential for `straight'
@@ -2693,7 +2693,11 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
                         :height 0.9)
     (set-face-attribute 'corfu-default nil
                         :family ps/face-fixed-pitch
-                        :height 0.9)))
+                        :height 0.9)
+    (set-face-attribute 'org-quote nil
+                        :family ps/face-variable-pitch
+			:height 1.3)))
+
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -10923,27 +10927,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   ("A-C-g" 'gpt-dwim))
 #+end_src
 
-** chatgpt
-:PROPERTIES:
-:ID:       D059F98D-55C4-4D8C-939D-3415FAC6AEB9
-:END:
-/[[https://github.com/joshcho/ChatGPT.el][chatgpt]] communicates with ChatGPT./
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package chatgpt
-  :straight (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el"))
-
-  :init
-  (require 'python)
-  (setq chatgpt-repo-path "~/.emacs.d/straight/repos/ChatGPT.el/")
-  (setq chatgpt-python-interpreter "python3")
-
-  :general
-  (google-this-mode-submap
-   "g" 'chatgpt-query))
-#+end_src
-
-
 ** pen
 :PROPERTIES:
 :ID:       DEEF7EF7-E79C-427B-9E1D-86D22FC2056E
@@ -14017,6 +14000,9 @@ return such list if its length is less than LIMIT."
   ;; being, until I succeed in diagnosing the problem. See the
   ;; `org-roam-database-connector' docstring and the 'How to cache'
   ;; section of the manual: orgroam.com/manual.html#How-to-cache
+  
+  ;; [2023-01-24 Tue] I should migrate to `sqlite-builtin' when Emacs
+  ;; 29 is released. See `org-roam-database-connector' docstring.
   (org-roam-database-connector 'sqlite3)
   (org-roam-directory ps/dir-org-roam)
   (org-roam-complete-everywhere t)
@@ -20336,10 +20322,13 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
   ;; :defer 10
   :demand t
   :custom
-  (alert-default-style 'osx-notifier)
   (alert-fade-time 2)
 
   :config
+  (if (eq system-type 'darwin)
+      (setq alert-default-style 'osx-notifier)
+    (setq alert-default-style 'notifications))
+  
   (defun ps/alert-dismiss-osx-notification ()
     "docstring"
     (interactive)
@@ -20351,6 +20340,10 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
   ("H-\"" 'ps/alert-dismiss-osx-notification))
 #+end_src
 
+*** TODO Fix ~alert~
+:PROPERTIES:
+:ID:       5469B1A2-7284-43A7-86B4-75ACA49DCEC9
+:END:
 ** dbus
 :PROPERTIES:
 :ID:       6DFC9E2F-E77A-4966-9AA6-D0DFDA17E11B

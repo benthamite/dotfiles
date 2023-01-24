@@ -60,7 +60,7 @@
 (straight-use-package 'org-contrib)
 
 (straight-use-package 'use-package)
-(setq use-package-verbose nil                ; setting back to nil (default) as it was producing too much output
+(setq use-package-verbose t                ; setting back to nil (default) as it was producing too much output
       use-package-compute-statistics t       ; compute stats
       use-package-always-defer t             ; always defer loading
       use-package-always-ensure nil          ; essential for `straight'
@@ -488,23 +488,24 @@ NAME and ARGS are as in `use-package'."
   ;; ("b" (ps/org-id-goto "") "")
   ;; ("c" (ps/org-id-goto "") "")
   ("r" (ps/org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Main")
-  ("t" (ps/org-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Main")
-  ("b" (ps/org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLH" :column "Main")
+  ("b" (ps/org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAE" :column "Main")
+  ("m" (ps/org-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Main")
+  ("d" (ps/org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLH" :column "Main")
   ("u" (ps/org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Main")
   ("i" (ps/org-id-goto "6C7F53ED-B43E-401D-BEEA-DB38CAE367FD") "EAI" :column "Main")
   ("w" (ps/org-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
   ("v" (ps/org-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87") "Samotsvety" :column "Other")
-  ("m" (ps/org-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99") "Misc" :column "Other")
+  ("x" (ps/org-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99") "Misc" :column "Other")
   ("a" (ps/org-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD") "EA Archive" :column "Someday")
   ("o" (ps/org-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD") "Open Access EA" :column "Someday")
-  ("d" (ps/org-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110") "EA Nomad" :column "Someday")
+  ("n" (ps/org-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110") "EA Nomad" :column "Someday")
   ("h" (ps/org-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2") "HEAR" :column "On hold")
   ("g" (ps/org-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1") "GPE" :column "On hold")
-  ("x" (ps/org-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A") "RCGs" :column "Done")
+  ("" (ps/org-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A") "RCGs" :column "Done")
   ("" (ps/org-id-goto "AE8F5AD4-B85A-4EE2-8A94-AA7B2AFF3E7F") "Regranting" :column "Done")
   ("e" (ps/org-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5") "email" :column "Comms")
   ("s" (ps/org-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C") "slack" :column "Comms")
-  ("n" (ps/org-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
+  ("t" (ps/org-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
   ("f" (ps/org-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "People")
   ("F" (ps/tlon-meeting-with-fede) "fede: meeting" :column "People")
   ("l" (ps/org-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "People")
@@ -973,7 +974,10 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
                         :height 0.9)
     (set-face-attribute 'corfu-default nil
                         :family ps/face-fixed-pitch
-                        :height 0.9)))
+                        :height 0.9)
+    (set-face-attribute 'org-quote nil
+                        :family ps/face-variable-pitch
+			:height 1.3)))
 
 (use-package modus-themes
   :straight (modus-themes
@@ -981,28 +985,8 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
              :repo "protesilaos/modus-themes")
   :demand t
 
-  :init
-  ;; (setq modus-themes-headings
-  ;; '((1 . (background overline))
-  ;; (2 . (background overline))
-  ;; (3 . (background overline))
-  ;; (4 . (background overline))
-  ;; (5 . (background overline))
-  ;; (6 . (background overline))
-  ;; (7 . (background overline))
-  ;; (8 . (background overline))))
-  (setq modus-themes-org-blocks 'gray-background)
-  (setq modus-themes-common-palette-overrides
-        '((date-common cyan)   ; default value (for timestamps and more)
-          (date-deadline red-warmer)
-          (date-event magenta-warmer)
-          (date-holiday blue) ; for M-x calendar
-          (date-now yellow-warmer)
-          (date-scheduled magenta-cooler)
-          (date-weekday cyan-cooler)
-          (date-weekend blue-faint)))
-  (setq modus-themes-common-palette-overrides
-        '((fringe unspecified)))
+  :custom
+  (modus-themes-org-blocks 'gray-background)
 
   :config
 
@@ -1043,6 +1027,7 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
     ;; this comes last.
     (global-highlight-parentheses-mode))
 
+      (setq modus-themes-common-palette-overrides modus-themes-preset-overrides-intense)
 
   (defun ps/modus-themes-match-system ()
     "Load modus theme that matches system."
@@ -1108,6 +1093,30 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   :config
   (show-paren-mode))
 
+(use-package doom-modeline
+  :demand t
+  :init
+  (doom-modeline-mode)
+  :custom
+  ;; we disable the display of time since the tab-bar already does
+  (doom-modeline-time nil)
+
+  (doom-modeline-mu4e t)
+  (doom-modeline-buffer-encoding nil)
+  (doom-modeline-irc t)
+  (doom-modeline-irc-buffers t)
+  ;; (doom-modeline--flycheck-icon t)
+  (doom-modeline-github t)
+  (doom-modeline-github-interval (* 10 60))
+  (doom-modeline-enable-word-count t)
+
+  :config
+  (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
+  (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
+  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
+  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline)
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
+
 (use-feature tab-bar
   :demand t
   :custom
@@ -1124,17 +1133,14 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
         (remove '(global-mode-string ("" global-mode-string))
                 mode-line-misc-info))
 
+  (tab-bar-mode)
   (setq global-mode-string '(" "
                              (:eval (propertize display-time-string 'face 'ps/display-time))
                              " | "
                              fancy-battery-mode-line
                              " | "
-                             telega-mode-line-format))
-                             ;; " | "
-                             ;; (hammy-mode
-                              ;; (:eval
-                               ;; (hammy-mode-lighter)))))
-  (tab-bar-mode ))
+                             telega-mode-line-format
+                             " | ")))
 
 (use-package fancy-battery
   :demand t
@@ -1220,7 +1226,7 @@ and generates profiling report."
 (use-package gcmh
   :demand t
   :config
-  (gcmh-mode 1))
+  (gcmh-mode))
 
 (setq read-process-output-max (* 1024 1024)) ; 1mb.
 
@@ -2695,7 +2701,7 @@ option."
    "'" 'ps/dired-copy-filename-as-kill-absolute
    "H-." 'ps/dired-dotfiles-toggle
    "c" 'ps/dired-copy-filename-as-kill-absolute
-   "C" 'dired-do-compress
+   "C" 'dired-do-copy
    "C-s" 'dired-isearch-filenames
    "J" 'dired-jump-other-window
    "k" 'dired-previous-line
@@ -3325,7 +3331,7 @@ then to selected character immediately ahead of point."
   :init
   ;; This neds to be delayed a few seconds because the value returned
   ;; by `window-total-width' changes as Emacs restarts.
-  (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))))
+  (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))e))
 
   (defun ps/writerrom-global-effects (arg)
     "Enable and disable custom effects when `writeroom-mode' is
@@ -3716,8 +3722,7 @@ associated Google Calendar event in a browser."
          (concat
           "https://calendar.google.com/calendar/u/0/r/eventedit/"
           (replace-regexp-in-string
-           "
-"
+           "\n"
            ""
            (base64-encode-string
             (replace-regexp-in-string
@@ -3779,64 +3784,19 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
 (use-package tmr
   :defer 10)
 
-(use-package hammy
-  :if (equal (system-name) ps/computer-hostname-pablo)
-  :straight (hammy
-             :host github
-             :repo "alphapapa/hammy.el")
+(use-package display-wttr
+  :after tab-bar
+  :demand t
+  :custom
+  (display-wttr-interval (* 10 60))
 
   :config
-  (hammy-define "Move"
-    :documentation "Don't forget to stretch your legs."
-    :intervals
-    ;; A list of intervals, each defined with the `interval' function.
-    (list (interval
-           ;; The name of the interval is a string, used when selecting
-           ;; hammys and shown in the mode line.
-           :name "💺"
-           ;; The duration of the interval: a number of seconds, a string
-           ;; passed to `timer-duration', or a function which returns such.
-           :duration "45 minutes"
-           ;; Optionally, a face in which to show the
-           ;; interval's name in the mode line.
-           :face 'font-lock-type-face
-           ;; A list of actions to take before starting the interval
-           ;; (really, one or a list of functions to call with the hammy
-           ;; as the argument).  The `do' macro expands to a lambda,
-           ;; which the interval's `before' slot is set to.  In its
-           ;; body, we call two built-in helper functions.
-           :before (do (announce "Whew!")
-                       (notify "Whew!"))
-           ;; We want this interval to not automatically advance to the
-           ;; next one; rather, we want the user to call the
-           ;; `hammy-next' command to indicate when the standing-up is
-           ;; actually happening.  So we provide a list of actions to
-           ;; take when it's time to advance to the next interval.  We
-           ;; wrap the list in a call to the built-in `remind' function,
-           ;; which causes the actions to be repeated every 10 minutes
-           ;; until the user manually advances to the next interval.
-           :advance (remind "10 minutes"
-                            ;; Every 10 minutes, while the hammy is waiting
-                            ;; to be advanced to the next interval, remind
-                            ;; the user by doing these things:
-                            (do (announce "Time to stretch your legs!")
-                                (notify "Time to stretch your legs!")
-                              (play-sound-file "~/Misc/Sounds/mooove-it.wav"))))
-          (interval :name "🤸"
-                    :duration "5 minutes"
-                    :face 'font-lock-builtin-face
-                    :before (do (announce "Mooove it!")
-                                (notify "Mooove it!"))
-                    ;; Again, the interval should not advance automatically
-                    ;; to the next--the user should indicate when he's
-                    ;; actually sat down again.  (If we omitted the
-                    ;; `:advance' slot, the interval would automatically
-                    ;; advance when it reached its duration.)
-                    :advance (do (announce "Time for a sit-down...")
-                                 (notify "Time for a sit-down...")
-                               (play-sound-file org-pomodoro-finished-sound)))))
+  (cond ((equal (system-name) ps/computer-hostname-pablo)
+         (setq display-wttr-locatizons '("Mexico City")))
+        ((equal (system-name) ps/computer-hostname-leo)
+         (setq display-wttr-locatizons '("Barcelona"))))
 
-  (hammy-mode))
+  (display-wttr-mode))
 
 (use-feature simple
   :general
@@ -4067,6 +4027,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
    "C-n" 'isearch-end-of-buffer
    "C-o" 'isearch-occur
    "C-p" 'isearch-highlight-regexp
+   "C-t" 'substitute-target-in-buffer
    "C-v" 'isearch-yank-kill
    "C-y" 'isearch-forward-symbol-at-point
    "H-c" 'ps/isearch-copy-match
@@ -4096,6 +4057,18 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
   :general
   (isearch-mode-map
    "A-C-e" 'query-replace-regexp))
+
+(use-package substitute
+  :straight (substitute
+             :host sourcehut
+                   :repo "protesilaos/substitute")
+  :demand t)
+
+(use-package rg
+  :custom
+  (rg-executable "rg")
+  (rg-command-line-flags '("--multiline"))
+  (rg-group-result t))
 
 (use-package visual-regexp)
 
@@ -4467,6 +4440,14 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :straight (cape-yasnippet
              :host github
              :repo "elken/cape-yasnippet"))
+
+(use-package org-block-capf
+  :straight (org-block-capf
+             :host github
+             :repo "xenodium/org-block-capf")
+  :demand t
+  :hook
+  (org-mode-hook . org-block-capf-add-to-completion-at-point-functions))
 
 (use-package company
   :defer 5
@@ -5503,23 +5484,30 @@ FILE."
    "s-d" 'eval-defun
    "A-s-d" 'edebug-defun))
 
+(use-feature debug
+)
+
 (use-package macrostep)
+
+(use-package ess)
 
 (use-package clojure-mode)
 
 (use-package cider)
 
 (use-feature python
+  :demand t
   :custom
-  (flycheck-python-pycompile-executable "python3")
   (python-shell-interpreter "python3")
   (org-babel-python-command "python3")
 
   :config
+  (setq flycheck-python-pycompile-executable "python3")
   (remove-hook 'python-mode-hook #'yasnippet-snippets--fixed-indent) ; some package (`elpy'?) is adding this
   (org-babel-do-load-languages
    'org-babel-load-languages
-   '((python . t)))
+   '((python . t)
+     (R . t)))
 
   :general
   (python-mode-map
@@ -5534,6 +5522,23 @@ FILE."
 
 (use-package puni
   :demand t
+
+  :general
+  (puni-mode-map
+   "C-M-a" 'puni-beginning-of-sexp
+   "C-M-b" 'puni-backward-sexp
+   "C-M-e" 'puni-end-of-sexp
+   "C-M-f" 'puni-forward-sexp
+   "C-S-k" 'puni-backward-kill-line
+   "C-c DEL" 'puni-force-delete
+   "C-d" 'puni-forward-delete-char
+   "C-k" nil
+   "C-w" nil
+   "DEL" 'puni-backward-delete-char
+   "M-(" 'puni-syntactic-backward-punct
+   "M-)" 'puni-syntactic-forward-punct
+   "M-DEL"    'puni-backward-kill-word)
+
   :hook
   ((prog-mode-hook sgml-mode-hook nxml-mode-hook tex-mode-hook eval-expression-minibuffer-setup-hook) . puni-mode))
 
@@ -5557,6 +5562,7 @@ FILE."
   :commands gpt-dwim
   :config
   (setq gpt-openai-key (auth-source-pass-get 'secret "auth-sources/openai.com"))
+
   :general
   ("A-C-g" 'gpt-dwim))
 
@@ -6210,11 +6216,11 @@ image."
      ;; ("m" "To discuss in meeting with Leo" plain
      ;; (id "3AAD2510-0522-4598-9182-50E97504EAF6")
      ;; "- [ ] %?" :empty-lines 1)
-     ("r" "bibliography reference" plain
-      (file ,ps/file-orb-noter-template)
-      :if-new
-      (file ,ps/file-orb-capture-template)
-      :unnarrowed t :immediate-finish t)
+     ;; ("r" "bibliography reference" plain
+      ;; (file ,ps/file-orb-noter-template)
+      ;; :if-new
+      ;; (file ,ps/file-orb-capture-template)
+      ;; :unnarrowed t :immediate-finish t)
      ("s" "Slack" entry
       (file ps/file-inbox-desktop)
       "* TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
@@ -6426,69 +6432,26 @@ conditional on active capture template."
     (org-cycle-hide-archived-subtrees 'all)))
 
 (use-feature org-id
-  :defer 5
+  :demand t
   :custom
   (org-id-extra-files
    `(,ps/file-tareas-leo
      ,ps/file-tareas-fede))
+
+     (org-id-link-to-org-use-id t)
 
   :init
   ;; stackoverflow.com/a/16247032/4479455
   (defun ps/org-id-add-ids-to-headlines-in-file ()
     "Add ID properties to all headlines in the current file which do
 not already have one."
-    ;; Positive conditions
     (when (and (equal (system-name) ps/computer-hostname-pablo)
                (eq major-mode 'org-mode)
                (eq buffer-read-only nil))
-      ;; Negative conditions
-      (unless (or
-               ;; exclude selected directories
-               (member
-                (file-name-directory (buffer-file-name))
-                `(,(file-name-as-directory ps/dir-bibliographic-notes)
-                  ,(file-name-as-directory ps/dir-anki)
-                  ,(file-name-as-directory ps/dir-source)))
-               ;; exclude selected file names
-               (member
-                (file-name-nondirectory (buffer-file-name))
-                '("orb-noter-template.org"
-                  "tareas.org"
-                  "calendar.org"
-                  ".org2blog.org"
-                  "feeds.org"))
-               ;; exclude selected file tags
-               ;; #+FILETAGS: noid
-               (member
-                "noid"
-                (org-get-tags))
-               ;; exclude selected heading names
-               (member (org-get-heading) '("Local variables"
-                                           "COMMENT Local variables"
-                                           "External links"
-                                           "Further reading"
-                                           "Related entries"
-                                           "TODO Local variables"
-                                           "Archive :ARCHIVE:"))
-               ;; exclude selected heading tags
-               (member "noid" (org-get-tags))
-
-               ;; exclude buffers when in list of special dirs and org
-               ;; heading at point is of level higher than 1 (i.e.
-               ;; don't create unnecessary IDs for article
-               ;; subsections)
-               (and
-                ;; dir condition
-                (member
-                 (file-name-directory (buffer-file-name))
-                 (mapcar #'file-name-as-directory
-                         ;; List of special dirs
-                         (list
-                          ps/dir-journal
-                          ps/dir-wiki-entries
-                          ps/dir-people)))
-                ;; heading condition
-                (> (org-current-level) 1)))
+      (unless
+          (member (org-get-heading) '("Local variables"
+                                      "COMMENT Local variables"
+                                      "TODO Local variables"))
         (org-map-entries 'org-id-get-create))))
 
   :config
@@ -7180,22 +7143,7 @@ return such list if its length is less than LIMIT."
       (file ,ps/file-orb-capture-template)
       :unnarrowed t :immediate-finish t :jump-to-captured t)))
 
-  ;; Exclude files
-  (org-roam-file-exclude-regexp "conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")
-
-  ;; Exclude dirs
-  ;; github.com/org-roam/org-roam/issues/1221
-  ;; See variable `ps/org-roam-excluded-dirs' defined below
-  (org-roam-db-node-include-function
-   (lambda ()
-     (let* ((file-path (buffer-file-name (buffer-base-buffer)))
-            (rel-file-path (f-relative file-path org-roam-directory))
-            (parent-directories (butlast (f-split rel-file-path))))
-       (if (cl-intersection ps/org-roam-excluded-dirs parent-directories :test #'string=) nil t))))
-
   :config
-  (setq ps/org-roam-excluded-dirs '("archive" "inactive"))
-
   (defun ps/org-roam-db-query (sql &rest args)
     "Run SQL query on Org-roam database with ARGS.
  SQL can be either the emacsql vector representation, or a string."
@@ -7268,6 +7216,7 @@ return such list if its length is less than LIMIT."
    "H-s-i" 'org-roam-node-insert)
   (org-mode-map
    "s-r" 'org-roam-buffer-toggle))
+
 
 (use-package org-roam-ui
   :straight
@@ -7376,10 +7325,10 @@ tasks."
           (seq-difference
            (delete-dups (append
                          (org-agenda-files)
-                         (vulpea-project-files)
+                         (vulpea-project-files)))
                          ;; include files modified in past three days,
                          ;; provided number of such files less than 1000
-                         (ps/org-roam-recent 1 1000)))
+                         ;; (ps/org-roam-recent 1 1000)))
            ps/org-agenda-files-excluded)))
 
   (advice-add 'org-agenda :before #'vulpea-agenda-files-update)
@@ -7522,7 +7471,7 @@ ARG is the prefix argument received when calling interactively the function."
             (org-cite--allowed-p context)
             (funcall insert nil arg))))))))
 
-  (advice-add 'org-cite-insert :override #'ps/org-cite-insert)
+  (advice-remove 'org-cite-insert #'ps/org-cite-insert)
 
   :general
   ("H-/" 'org-cite-insert))
@@ -7718,22 +7667,6 @@ Version 2015-06-08"
   (bibtex-completion-notes-path ps/dir-bibliographic-notes)
   (bibtex-completion-pdf-field "file")
   (bibtex-dialect 'biblatex))
-
-(use-package org-roam-bibtex
-  :demand t
-  ;; :after bibtex-completion
-  :custom
-  (orb-roam-ref-format 'org-cite)
-  (orb-insert-interface 'citar-open-notes)
-  (orb-note-actions-interface 'default)
-  (orb-preformat-keywords
-   '("citekey" "title" "url" "author" "author-or-editor" "keywords" "file"))
-  (orb-process-file-keyword t)
-  (orb-attached-file-extensions '("pdf"))
-
-  :config
-  (add-to-list 'orb-preformat-keywords "year")
-  (org-roam-bibtex-mode))
 
 (use-package citar-org-roam
   :straight (citar-org-roam
@@ -9175,124 +9108,6 @@ or specify any other coding system (and risk losing\n\
   ;; run `scihub-homepage' for a list of available scihub webservers
   ;; if the URL below stops working
   (scihub-homepage "http://sci-hub.wf"))
-
-(use-package anki-editor
-  ;; this version handles mathjax correctly
-  ;; :straight (:fork (:repo "louietan/anki-editor" :branch "develop"))
-  ;; this version simplifies the tree structure
-  ;; :straight
-  ;; (:type git :host github :repo "louietan/anki-editor"
-  ;; :fork (:host github :repo "leoc/anki-editor"
-  ;; :branch "develop"))
-  :if (equal (system-name) ps/computer-hostname-pablo)
-  :init
-  (setq-default anki-editor-use-math-jax t) ; github.com/louietan/anki-editor/issues/60#issuecomment-617441799
-  ;; create custom key map
-  (progn
-    (defvar anki-editor-mode-map (make-sparse-keymap))
-    (add-to-list 'minor-mode-map-alist (cons 'anki-editor-mode
-                                             anki-editor-mode-map)))
-
-  :custom
-  (anki-editor-create-decks t)
-  (anki-editor-org-tags-as-anki-tags t)
-  :config
-  (defun ps/anki-editor-open-note-externally ()
-    "Copy note id to clipboard, switch to Anki desktop, and open note in browser."
-    (interactive)
-    (let ((note-id (org-entry-get nil "ANKI_NOTE_ID")))
-      (if (not note-id)
-          (error "Note id not found")
-        (progn
-          (kill-new (concat "nid:" note-id))
-          (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"496A3425-8985-4117-AE0F-ABD6DC85FB9F\"'")))))
-
-  (defun ps/anki-editor-push-notes-under-heading (&optional match scope)
-    "Push notes under heading to Anki."
-    (interactive)
-    (anki-editor-push-notes '(4) match scope))
-
-  ;; the two modified functions below allow for notes with empty fields to be pushed without error
-  ;; github.com/leoc/anki-editor/pull/1
-  (defun ps/anki-editor--build-field-from-content-at-point (name)
-    "Build a field with NAME entry from the heading at point."
-    (let* ((element (org-element-at-point))
-           (format (anki-editor-entry-format))
-           (begin (cl-loop for eoh = (org-element-property :contents-begin element)
-                           then (org-element-property :end subelem)
-                           while eoh
-                           for subelem = (progn
-                                           (goto-char eoh)
-                                           (org-element-context))
-                           while (memq (org-element-type subelem)
-                                       '(drawer planning property-drawer))
-                           finally return (and eoh (org-element-property :begin subelem))))
-           (end (org-element-property :contents-end element))
-           (raw (or (and begin
-                         end
-                         (buffer-substring-no-properties
-                          begin
-                          ;; in case the buffer is narrowed,
-                          ;; e.g. by `org-map-entries' when
-                          ;; scope is `tree'
-                          (min (point-max) end)))
-                    "")))
-      (cons name (anki-editor--export-string raw format))))
-
-  (defun ps/anki-editor--build-fields ()
-    "Build a list of fields from subheadings of current heading.
-
-Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
-    (save-excursion
-      (cl-loop with inhibit-message = t ; suppress echo message from `org-babel-exp-src-block'
-               initially (unless (org-goto-first-child)
-                           (cl-return `(,(anki-editor--build-field-from-content-at-point "Back"))))
-               for last-pt = (point)
-               for element = (org-element-at-point)
-               for heading = (substring-no-properties
-                              (org-element-property :raw-value element))
-               for format = (anki-editor-entry-format)
-               ;; contents-begin includes drawers and scheduling data,
-               ;; which we'd like to ignore, here we skip these
-               ;; elements and reset contents-begin.
-               for begin = (cl-loop for eoh = (org-element-property :contents-begin element)
-                                    then (org-element-property :end subelem)
-                                    while eoh
-                                    for subelem = (progn
-                                                    (goto-char eoh)
-                                                    (org-element-context))
-                                    while (memq (org-element-type subelem)
-                                                '(drawer planning property-drawer))
-                                    finally return (and eoh (org-element-property :begin subelem)))
-               for end = (org-element-property :contents-end element)
-               for raw = (or (and begin
-                                  end
-                                  (buffer-substring-no-properties
-                                   begin
-                                   ;; in case the buffer is narrowed,
-                                   ;; e.g. by `org-map-entries' when
-                                   ;; scope is `tree'
-                                   (min (point-max) end)))
-                             "")
-               for content = (anki-editor--export-string raw format)
-               collect (cons heading content)
-               ;; proceed to next field entry and check last-pt to
-               ;; see if it's already the last entry
-               do (org-forward-heading-same-level nil t)
-               until (= last-pt (point)))))
-
-  (advice-add #'anki-editor--build-fields :override #'ps/anki-editor--build-fields)
-  (advice-add #'anki-editor--build-field-from-content-at-point :override #'ps/anki-editor--build-field-from-content-at-point)
-
-  :general
-  ;; ("A-i" 'anki-editor-mode)
-  (anki-editor-mode-map
-   "s-z" 'anki-editor-cloze-region
-   "s-i" 'anki-editor-insert-note
-   "s-h" 'ps/anki-editor-push-notes-under-heading
-   "s-c" 'anki-editor-push-new-notes
-   "s-a" 'anki-editor-push-notes ; push all notes
-   "s-x" 'ps/anki-editor-open-note-externally))
 
 (use-package org-drill
   :config
@@ -10809,16 +10624,6 @@ that duration."
                                    (file-name-directory filename))))))
       (org-archive-to-archive-sibling))))
 
-(use-package espotify
-  :if (equal (system-name) ps/computer-hostname-pablo)
-  :after auth-source-pass
-  :defer 20
-  :custom
-  (espotify-service-name "spotify")
-  (espotify-use-system-bus-p nil)
-  (espotify-client-id (auth-source-pass-get "id" "auth-sources/spotify"))
-  (espotify-client-secret (auth-source-pass-get 'secret "auth-sources/spotify")))
-
 (use-package read-aloud
   :defer 20
   :config
@@ -10936,11 +10741,16 @@ to the clipboard."
   (auth-source-pass-enable))
 
 (use-package alert
-  :defer 10
+  ;; :defer 10
+  :demand t
   :custom
-  (alert-default-style 'osx-notifier)
-  (alert-fade-time 1)
+  (alert-fade-time 2)
+
   :config
+  (if (eq system-type 'darwin)
+      (setq alert-default-style 'osx-notifier)
+    (setq alert-default-style 'notifications))
+  
   (defun ps/alert-dismiss-osx-notification ()
     "docstring"
     (interactive)

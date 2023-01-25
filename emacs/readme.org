@@ -7460,12 +7460,11 @@ https://github.com/insanum/gcalcli
   :custom
   (display-wttr-interval (* 15 60))
 
-  
-  ;; :config
-  ;; (cond ((equal (system-name) ps/computer-hostname-pablo)
-         ;; (setq display-wttr-locations '("Mexico City")))
-        ;; ((equal (system-name) ps/computer-hostname-leo)
-         ;; (setq display-wttr-locations '("Barcelona"))))
+  :config
+  (cond ((equal (system-name) ps/computer-hostname-pablo)
+         (setq display-wttr-locations '("Mexico City")))
+        ((equal (system-name) ps/computer-hostname-leo)
+         (setq display-wttr-locations '("Barcelona"))))
 
   (display-wttr-mode))
 #+end_src

@@ -2996,7 +2996,7 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
                              " | "
                              telega-mode-line-format
                              " | "))))
-                             
+
   (tab-bar-mode))
 #+end_src
 
@@ -7447,7 +7447,7 @@ https://github.com/insanum/gcalcli
 :PROPERTIES:
 :ID:       E1DB2097-7273-4FAC-BA84-67D46815FC45
 :END:
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package display-wttr
   :defer 6
   :custom
@@ -8037,7 +8037,7 @@ Currently history clears after Emacs is restarted.
 :END:
 /[[https://git.sr.ht/~protesilaos/substitute][substitute]] efficiently replaces targets in the buffer or context./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package substitute
   :straight (substitute
              :host sourcehut
@@ -12617,7 +12617,7 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
    `(,ps/file-tareas-leo
      ,ps/file-tareas-fede))
 
-     ;; (org-id-link-to-org-use-id t)
+     (org-id-link-to-org-use-id t)
 
   :init
   ;; stackoverflow.com/a/16247032/4479455
@@ -14432,10 +14432,19 @@ I should check this out.
   :config
   (dolist (element '(headline drawer property-drawer))
     (push element org-transclusion-exclude-elements))
-  (set-face-attribute
-   'org-transclusion-source-fringe nil)
-   (set-face-attribute
-   'org-transclusion-fringe nil))
+
+  (face-spec-set 'org-transclusion-fringe
+                 '((((background light))
+                    :foreground "black")
+                   (t
+                    :foreground "white"))
+                 'face-override-spec)
+  (face-spec-set 'org-transclusion-source-fringe
+                 '((((background light))
+                    :foreground "black")
+                   (t
+                    :foreground "white"))
+                 'face-override-spec))
 #+end_src
 
 ** vulpea                                                     :project:
@@ -15543,6 +15552,22 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 (use-package ebib
   :defer 5
   :init
+
+  (defun ps/ebib-reload-current-database-no-confirm ()
+    "Reload the current database from disk, without asking for
+confirmation."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+       (ebib--reload-database ebib--cur-db)
+       (ebib--set-modified nil ebib--cur-db)
+       (ebib--update-buffers)
+       (message "Database reloaded"))
+      ;; (ebib--pop-to-buffer (ebib--buffer 'entry)))
+      (default
+        (beep))))
+        
   (file-notify-add-watch
    ps/file-bibliography-new
    '(change attribute-change)
@@ -16016,20 +16041,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
 
   (advice-add 'ebib-edit-entry :override #'ps/ebib-edit-entry)
 
-  (defun ps/ebib-reload-current-database-no-confirm ()
-    "Reload the current database from disk, without asking for
-confirmation."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-       (ebib--reload-database ebib--cur-db)
-       (ebib--set-modified nil ebib--cur-db)
-       (ebib--update-buffers)
-       (message "Database reloaded"))
-      ;; (ebib--pop-to-buffer (ebib--buffer 'entry)))
-      (default
-        (beep))))
+  
 
   (defun ps/ebib--extension-directories (extension)
     "Return directory associated with EXTENSION."

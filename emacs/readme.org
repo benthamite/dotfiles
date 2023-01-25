@@ -6683,21 +6683,28 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   :custom
   (calendar-week-start-day 1)    ; week starts on Monday
   (calendar-set-date-style 'iso) ; this isn't the default?
-  ;; (calendar-location-name "Ciudad de Buenos Aires, Argentina")
-  ;; (calendar-latitude -34.6079)
-  ;; (calendar-longitude -58.3660)
-  (calendar-location-name "Mexico DF")
-  (calendar-latitude 19.4326)
-  (calendar-longitude -99.1332)
   (calendar-time-display-form
    '(24-hours ":" minutes
-              (when time-zone
-                (concat " (" time-zone ")"))))
+	      (when time-zone
+		(concat " (" time-zone ")"))))
   (calendar-mark-holidays-flag nil)
   (calendar-time-zone-style 'numeric) ; Emacs 28.1
   (holiday-bahai-holidays nil)
 
   :config
+  (cond ((equal (system-name) ps/computer-hostname-pablo)
+	 (setq calendar-location-name "Condesa, Mexico City")
+	 (setq calendar-latitude 19.424335622396516)
+	 (setq calendar-longitude -99.16659969406722))
+	((equal (system-name) ps/computer-hostname-leo)
+	 (setq calendar-location-name "Barcelona")
+	 (setq calendar-latitude 41.3874)
+	 (setq calendar-longitude 2.1686)))
+  ;; To copy the current latitude and longitude, go to Google Maps,
+  ;; right-click on your location, and select the coordinates.
+  ;; (calendar-location-name "Ciudad de Buenos Aires, Argentina")
+  ;; (calendar-latitude -34.6079) (calendar-longitude -58.3660)
+    
   ;; Adapted from Prot
   (defcustom ps/date-specifier "%F"
     "Date specifier for `format-time-string'.
@@ -6719,10 +6726,10 @@ When region is active, delete the highlighted text and replace it
 with the specified date."
     (interactive "P")
     (let* ((date ps/date-specifier)
-           (time ps/time-specifier)
-           (format (if arg (format "%s %s" date time) date)))
+	   (time ps/time-specifier)
+	   (format (if arg (format "%s %s" date time) date)))
       (when (use-region-p)
-        (delete-region (region-beginning) (region-end)))
+	(delete-region (region-beginning) (region-end)))
       (insert (format-time-string format))))
 
   :general
@@ -7451,13 +7458,14 @@ https://github.com/insanum/gcalcli
 (use-package display-wttr
   :defer 6
   :custom
-  (display-wttr-interval (* 10 60))
+  (display-wttr-interval (* 15 60))
 
-  :config
-  (cond ((equal (system-name) ps/computer-hostname-pablo)
-         (setq display-wttr-locatizons '("Mexico City")))
-        ((equal (system-name) ps/computer-hostname-leo)
-         (setq display-wttr-locatizons '("Barcelona"))))
+  
+  ;; :config
+  ;; (cond ((equal (system-name) ps/computer-hostname-pablo)
+         ;; (setq display-wttr-locations '("Mexico City")))
+        ;; ((equal (system-name) ps/computer-hostname-leo)
+         ;; (setq display-wttr-locations '("Barcelona"))))
 
   (display-wttr-mode))
 #+end_src

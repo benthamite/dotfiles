@@ -6685,26 +6685,26 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   (calendar-set-date-style 'iso) ; this isn't the default?
   (calendar-time-display-form
    '(24-hours ":" minutes
-	      (when time-zone
-		(concat " (" time-zone ")"))))
+              (when time-zone
+                (concat " (" time-zone ")"))))
   (calendar-mark-holidays-flag nil)
   (calendar-time-zone-style 'numeric) ; Emacs 28.1
   (holiday-bahai-holidays nil)
 
   :config
   (cond ((equal (system-name) ps/computer-hostname-pablo)
-	 (setq calendar-location-name "Condesa, Mexico City")
-	 (setq calendar-latitude 19.424335622396516)
-	 (setq calendar-longitude -99.16659969406722))
-	((equal (system-name) ps/computer-hostname-leo)
-	 (setq calendar-location-name "Barcelona")
-	 (setq calendar-latitude 41.3874)
-	 (setq calendar-longitude 2.1686)))
+         (setq calendar-location-name "Condesa, Mexico City")
+         (setq calendar-latitude 19.424335622396516)
+         (setq calendar-longitude -99.16659969406722))
+        ((equal (system-name) ps/computer-hostname-leo)
+         (setq calendar-location-name "Barcelona")
+         (setq calendar-latitude 41.3874)
+         (setq calendar-longitude 2.1686)))
   ;; To copy the current latitude and longitude, go to Google Maps,
   ;; right-click on your location, and select the coordinates.
   ;; (calendar-location-name "Ciudad de Buenos Aires, Argentina")
   ;; (calendar-latitude -34.6079) (calendar-longitude -58.3660)
-    
+
   ;; Adapted from Prot
   (defcustom ps/date-specifier "%F"
     "Date specifier for `format-time-string'.
@@ -6726,10 +6726,10 @@ When region is active, delete the highlighted text and replace it
 with the specified date."
     (interactive "P")
     (let* ((date ps/date-specifier)
-	   (time ps/time-specifier)
-	   (format (if arg (format "%s %s" date time) date)))
+           (time ps/time-specifier)
+           (format (if arg (format "%s %s" date time) date)))
       (when (use-region-p)
-	(delete-region (region-beginning) (region-end)))
+        (delete-region (region-beginning) (region-end)))
       (insert (format-time-string format))))
 
   :general
@@ -9899,7 +9899,7 @@ CLOCK: [2021-05-31 Mon 21:27]--[2021-05-31 Mon 21:41] =>  0:14
 
 [2023-01-25 Wed] I'm replacing it with [[id:BE78F0BD-D676-4E19-838A-2E6BD4504F52][txl]].
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package google-translate
   :defer 20
   :functions (my-google-translate-at-point google-translate--search-tkk)
@@ -9959,16 +9959,17 @@ translation."
 #+begin_src emacs-lisp
 (use-package txl
   :straight (txl
-	     :host github
-	     :repo "tmalsburg/txl.el")
+             :host github
+             :repo "tmalsburg/txl.el")
   :demand t
   :custom
-  (txl-languages '(ES . EN-US))
+  (txl-languages '(ES . EN-US)
+                 '(EN-US . ES))
   (txl-deepl-api-key "3e9cd4d2-f0ba-724e-101d-529638b959e3")
-  :general
-    ("H-A-y" 'ps/google-translate-dwim)))
-#+end_src
 
+  :general
+  ("H-A-y" 'txl-translate-region-or-paragraph))
+#+end_src
 
 ** reverso
 :PROPERTIES:
@@ -15598,7 +15599,7 @@ confirmation."
       ;; (ebib--pop-to-buffer (ebib--buffer 'entry)))
       (default
         (beep))))
-        
+
   (file-notify-add-watch
    ps/file-bibliography-new
    '(change attribute-change)
@@ -16072,7 +16073,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
 
   (advice-add 'ebib-edit-entry :override #'ps/ebib-edit-entry)
 
-  
+
 
   (defun ps/ebib--extension-directories (extension)
     "Return directory associated with EXTENSION."

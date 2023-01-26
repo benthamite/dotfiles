@@ -9961,14 +9961,15 @@ translation."
   :straight (txl
              :host github
              :repo "tmalsburg/txl.el")
-  :demand t
   :custom
-  (txl-languages '(ES . EN-US)
-                 '(EN-US . ES))
+  (txl-languages '(ES . EN-US))
   (txl-deepl-api-key (auth-source-pass-get "api" (concat "tlon/BAE/deepl.com/" ps/personal-email)))
 
   :general
-  ("H-A-y" 'txl-translate-region-or-paragraph))
+  ("H-A-y" 'txl-translate-region-or-paragraph)
+  (txl-edit-translation-mode-map
+   "RET" 'txl-accept-translation
+   "q" 'txl-dismiss-translation))
 #+end_src
 
 ** reverso
@@ -20574,8 +20575,8 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
   :hook
   (midnight-hook . ps/ledger-update-commodities)
-  (midnight-hook . org-gcal-sync)
-  (midnight-hook . ps/org-id-update-id-locations)
+  ;; (midnight-hook . org-gcal-sync)
+  ;; (midnight-hook . ps/org-id-update-id-locations)
   (midnight-hook . org-roam-db-sync)
   (midnight-hook . ps/pass-git-sync)
   (midnight-hook . clean-buffer-list))

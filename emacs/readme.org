@@ -9965,7 +9965,7 @@ translation."
   :custom
   (txl-languages '(ES . EN-US)
                  '(EN-US . ES))
-  (txl-deepl-api-key "3e9cd4d2-f0ba-724e-101d-529638b959e3")
+  (txl-deepl-api-key (auth-source-pass-get "api" (concat "tlon/BAE/deepl.com/" ps/personal-email)))
 
   :general
   ("H-A-y" 'txl-translate-region-or-paragraph))

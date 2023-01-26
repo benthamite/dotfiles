@@ -7454,6 +7454,8 @@ https://github.com/insanum/gcalcli
 :PROPERTIES:
 :ID:       E1DB2097-7273-4FAC-BA84-67D46815FC45
 :END:
+/[[https://github.com/josegpt/display-wttr][display-wttr]] displays weather information in the modeline (or tab-bar)./
+
 #+begin_src emacs-lisp
 (use-package display-wttr
   :defer 6
@@ -9895,6 +9897,8 @@ CLOCK: [2021-05-31 Mon 21:27]--[2021-05-31 Mon 21:41] =>  0:14
 
 [2022-08-31 Wed] I should probably replace this with [[id:F3063A73-ED50-42BD-8ABD-8D7FC68758FD][reverso]].
 
+[2023-01-25 Wed] I'm replacing it with [[id:BE78F0BD-D676-4E19-838A-2E6BD4504F52][txl]].
+
 #+begin_src emacs-lisp :results silent
 (use-package google-translate
   :defer 20
@@ -9945,6 +9949,26 @@ translation."
   :general
   ("H-A-y" 'ps/google-translate-dwim))
 #+end_src
+
+** txl
+:PROPERTIES:
+:ID:       BE78F0BD-D676-4E19-838A-2E6BD4504F52
+:END:
+/[[https://github.com/tmalsburg/txl.el][txl]] provies direct access to DeepL's machine translation API./
+
+#+begin_src emacs-lisp
+(use-package txl
+  :straight (txl
+	     :host github
+	     :repo "tmalsburg/txl.el")
+  :demand t
+  :custom
+  (txl-languages '(ES . EN-US))
+  (txl-deepl-api-key "3e9cd4d2-f0ba-724e-101d-529638b959e3")
+  :general
+    ("H-A-y" 'ps/google-translate-dwim)))
+#+end_src
+
 
 ** reverso
 :PROPERTIES:

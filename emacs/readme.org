@@ -20594,9 +20594,9 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
   :hook
   (midnight-hook . ps/ledger-update-commodities)
-  ;; (midnight-hook . org-gcal-sync)
+  (midnight-hook . org-gcal-sync)
   ;; (midnight-hook . ps/org-id-update-id-locations)
-  (midnight-hook . org-roam-db-sync)
+  ;; (midnight-hook . org-roam-db-sync)
   (midnight-hook . ps/pass-git-sync)
   (midnight-hook . clean-buffer-list))
 ;; (midnight-hook . straight-prune-build)

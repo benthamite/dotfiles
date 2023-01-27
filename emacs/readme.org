@@ -14462,6 +14462,8 @@ I should check this out.
 #+begin_src emacs-lisp :results silent
 (use-package org-transclusion
   :after org
+  :defer 5
+
   :config
   (dolist (element '(headline drawer property-drawer))
     (push element org-transclusion-exclude-elements))
@@ -14477,7 +14479,9 @@ I should check this out.
                     :foreground "black")
                    (t
                     :foreground "white"))
-                 'face-override-spec))
+                 'face-override-spec)
+  :general
+  ("s-l" 'org-transclusion-add))
 #+end_src
 
 ** vulpea                                                     :project:

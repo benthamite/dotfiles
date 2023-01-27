@@ -4896,7 +4896,7 @@ as the current buffer."
   (defun ps/org-narrow-to-entry-no-children ()
     "Narrow org buffer to entry excluding all children."
     (interactive)
-   (org-narrow-to-subtree)
+    (org-narrow-to-subtree)
     (save-excursion
       (org-next-visible-heading 1)
       (narrow-to-region (point-min) (point))))
@@ -5144,7 +5144,8 @@ or are no longer readable will be killed."
                   (setq found t)
                   (throw 'done nil)))
               (buffer-list))
-        (unless found (print "not found")))))
+        (unless found
+          (print "not found")))))
 
   ;; stackoverflow.com/questions/21486934/file-specific-key-binding-in-emacs/21493693#21493693
   (defun ps/buffer-local-set-key (key command)
@@ -18171,8 +18172,6 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   (telega-use-images t)
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
-  ;; disabing: librsvg bug
-  ;; (telega-emoji-use-images 'noto-emoji)
   (telega-filters-custom '(("Main" . main)
                            ("Important" or mention
                             (and unread unmuted))
@@ -18185,16 +18184,29 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
   :config
   (defun ps/telega-switch-to ()
-    "docstring"
+    "Switch to the most recent chat buffer. If none exists,
+switch to the root buffer, starting telega if necessary."
     (interactive)
     (ps/window-split-if-unsplit)
     (if (> (frame-width) ps/frame-width-threshold)
         (winum-select-window-3)
       (winum-select-window-2))
-    ;; TODO: switch to 'telega-chat-mode buffer if it exists
-    (telega)
-    (beginning-of-buffer)
-    (forward-line 3))
+    (let ((buf (or
+                (let ((chatbuf))
+                  (mapc (lambda (x)
+                          (when (with-current-buffer x
+                                  (eq major-mode 'telega-chat-mode))
+                            (switch-to-buffer x)
+                            (setq chatbuf x)))
+                        (buffer-list))
+                  chatbuf)
+                (get-buffer "*Telega Root*"))))
+      (if buf
+          (progn
+            (switch-to-buffer buf)
+            (beginning-of-buffer)
+            (forward-line 3))
+        (telega))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."

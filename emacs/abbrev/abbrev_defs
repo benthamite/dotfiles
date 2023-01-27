@@ -1,13 +1,13 @@
 ;;-*-coding: utf-8;-*-
 (define-abbrev-table 'global-abbrev-table
   '(
-    ("atb" "All the best," nil :count 2)
-    ("fbi" "Federal Bureau of Investigation" nil :count 5)
+    ("ppound" "£" nil :count 0)
     ("––" "—" nil :count 0)
    ))
 
 (define-abbrev-table 'text-mode-abbrev-table
   '(
+    ("atb" "All the best," nil :count 2)
     ("abandonned" "abandoned" nil :count 2)
     ("abbout" "about" nil :count 1)
     ("aberation" "aberration" nil :count 1)

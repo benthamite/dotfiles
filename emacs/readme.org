@@ -14056,6 +14056,7 @@ return such list if its length is less than LIMIT."
 
   (dolist (dir `(,ps/dir-anki
                  ,ps/dir-inactive
+                 ,ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
                  ,ps/dir-archive))
     (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs))
 
@@ -15286,6 +15287,7 @@ CLOSED: [2022-06-23 Thu 17:44]
 :END:
 /[[https://github.com/emacs-citar/citar-org-roam][citar-org-roam]] provides integration between [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]] and [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]]./
 
+[2023-01-26 Thu] I chose to exclude the directory containing my bibliographic notes from the org roam database (via ~org-roam-file-exclude-regexp~), but since ~citar-org-roam~ relies on the roam databa
 #+begin_src emacs-lisp :results silent
 (use-package citar-org-roam
   :straight (citar-org-roam

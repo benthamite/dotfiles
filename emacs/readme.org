@@ -259,6 +259,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict][goldendict]]
   - [[#google-translate][google-translate]]
+  - [[#txl][txl]]
   - [[#reverso][reverso]]
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown][markdown]]
@@ -293,7 +294,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#puni][puni]]
   - [[#copilot][copilot]]
   - [[#gpt][gpt]]
-  - [[#chatgpt][chatgpt]]
   - [[#pen][pen]]
   - [[#elpy][elpy]]
   - [[#epc][epc]]
@@ -4330,6 +4330,13 @@ CLOCK: [2021-05-06 Thu 11:02]--[2021-05-06 Thu 11:08] =>  0:06
   (setq-default abbrev-mode t))
 #+end_src
 
+*** TODO Add these abbrevs
+:PROPERTIES:
+:ID:       E276F182-573B-4773-8B44-048605A60271
+:END:
+- [[http://xahlee.info/emacs/emacs/emacs_abbrev_mode_tutorial.html][Emacs: Abbrev Mode by Commands]]
+- [[https://impaktor.gitlab.io/dot_emacs.html#org87d6718][My .emacs]]
+  
 ** yasnippet
 :PROPERTIES:
 :ID:       6405B8E7-6612-4D71-8C2C-A51F8808F4C6
@@ -14902,7 +14909,7 @@ ARG is the prefix argument received when calling interactively the function."
             (org-cite--allowed-p context)
             (funcall insert nil arg))))))))
 
-  (advice-remove 'org-cite-insert #'ps/org-cite-insert)
+  (advice-add 'org-cite-insert :override #'ps/org-cite-insert)
 
   :general
   ("H-/" 'org-cite-insert))
@@ -15290,16 +15297,14 @@ CLOSED: [2022-06-23 Thu 17:44]
 
 [2023-01-26 Thu] I chose to exclude the directory containing my bibliographic notes from the org roam database (via ~org-roam-file-exclude-regexp~), but since ~citar-org-roam~ relies on the roam database to determine whether a bibliographic entry has an associated note, ~org-cite-insert~ fails to show any notes. So I'm disabling the package.
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package citar-org-roam
   :straight (citar-org-roam
              :host github
                    :repo "emacs-citar/citar-org-roam")
   :demand t
   :no-require t
-  :after  org-roam
-  :config
-  (citar-org-roam-mode))
+  :after  org-roam)
 #+end_src
 
 ** citar
@@ -15321,7 +15326,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 (use-package citar
   :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
   ;; :defer 10
-  ;; :after oc vertico embark marginalia citar-org-roam
+  ;; :after oc vertico embark marginalia
   :demand t
   :custom
   (citar-open-note-functions '(orb-citar-edit-note))
@@ -15345,6 +15350,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
                            :open #'citar-org-roam-open-note
                            :create #'orb-citar-edit-note
                            :annotate #'citar-org-roam--annotate))
+                           
   (setq citar-notes-source 'orb-citar-source)
 
   (defun ps/citar--get-title (entry)

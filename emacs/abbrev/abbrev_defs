@@ -3,6 +3,9 @@
   '(
     ("ppound" "£" nil :count 0)
     ("––" "—" nil :count 0)
+    ("--" "—" nil :count 0)
+    ("-–" "—" nil :count 0)
+    ("emdash" "—" nil :count 0)
    ))
 
 (define-abbrev-table 'text-mode-abbrev-table

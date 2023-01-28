@@ -6227,10 +6227,12 @@ window depending on the number of present windows."
    "H-W" 'delete-other-windows
    "M-A-q" 'delete-frame
    "s-A-," 'ps/split-emacs-chrome-sideways
-   "M--" 'ps/window-buffer-move-dwim
+   "M-–" 'ps/window-buffer-move-dwim ; `emacs-mac'
+   "M--" 'ps/window-buffer-move-dwim ; `emacs-plus' 
    "M-," 'ps/window-buffer-move-left
    "M-." 'ps/window-buffer-move-right
-   "A-M--" 'ps/window-buffer-swap
+   "A-M--" 'ps/window-buffer-swap ; `emacs-mac'
+   "A-M-–" 'ps/window-buffer-swap ; `emacs-plus'
    "A-C-s-y" 'scroll-down-command
    "A-C-s-h" 'scroll-up-command
    "A-C-s-g" 'scroll-other-window

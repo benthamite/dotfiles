@@ -1,4 +1,4 @@
-#+TITLE:Pablo's Emacs config
+﻿#+TITLE:Pablo's Emacs config
 #+AUTHOR: Pablo Stafforini
 #+PROPERTY: header-args :tangle ~/Dropbox/dotfiles/emacs/init.el
 #+filetags: :project:
@@ -346,6 +346,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#note-taking][note-taking]]
   - [[#add-biblio-tag-to-all-bibliographic-notes][Add biblio tag to all bibliographic notes]]
   - [[#emacs-sqlite3][emacs-sqlite3]]
+  - [[#emacsql-sqlite-builtin][emacsql-sqlite-builtin]]
   - [[#org-roam][org-roam]]
   - [[#org-roam-ui][org-roam-ui]]
   - [[#org-roam-browser-extension][org-roam-browser-extension]]
@@ -466,7 +467,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :PROPERTIES:
 :ID:       D941204B-E22E-43DD-9564-EB49874C8673
 :END:
-For personal reference: Emacs was last installed [2022-12-07 Wed 18:05]. I used the [[https://github.com/railwaycat/homebrew-emacsmacport][Homebrew emacs-mac port]], with the following flags:
+For personal reference: Emacs was last installed [2023-01-27 Fri 23:26]. I used the emacs-plus, with the following flags:
+
+emacs-plus@29 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+
+Prior to that, Emacs was installed [2022-12-07 Wed 18:05]. I used the [[https://github.com/railwaycat/homebrew-emacsmacport][Homebrew emacs-mac port]], with the following flags:
 
 ~brew install emacs-mac --with-dbus --with-starter --with-natural-title-bar --with-native-comp --with-mac-metal --with-xwidgets --with-imagemagick --with-librsvg  --with-spacemacs-icon~
 
@@ -2633,7 +2638,7 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
   (org-fontify-quote-and-verse-blocks t)
 
   :config
-  (defun ps/custom-faces ()
+  (defun ps/org-faces-custom-faces ()
     "My custom faces, to be used in conjunction with theme."
     (set-face-attribute 'default nil
                         :family ps/face-fixed-pitch
@@ -2753,6 +2758,45 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 
   :config
 
+  (defun ps/modus-themes-load-theme-emacs-mac ()
+    "Load modus theme that matches system."
+    (interactive)
+    (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
+        (load-theme 'modus-vivendi :no-confirm)
+      (load-theme 'modus-operandi :no-confirm)))
+
+  (defun ps/modus-themes-load-theme-emacs-plus (appearance)
+    "Load theme, taking current system APPEARANCE into consideration."
+    (mapc #'disable-theme custom-enabled-themes)
+    (pcase appearance
+      ('light (load-theme 'modus-operandi :no-confirm))
+      ('dark (load-theme 'modus-vivendi :no-confirm))))
+
+  (defun ps/modus-themes-load-theme-conditionally ()
+    "Load themes conditional on which distribution of Emacs is
+installed."
+    (if (boundp 'mac-effective-appearance-change-hook)
+        ;; `emacs-mac'
+        (ps/modus-themes-load-theme-emacs-mac)
+      ;; `emacs-plus'
+      ;; (load-theme 'modus-vivendi :no-confirm)
+      (add-hook 'ns-system-appearance-change-functions #'ps/modus-theme-load-theme-emacs-plus)))
+
+  (setq modus-themes-common-palette-overrides modus-themes-preset-overrides-intense)
+
+  ;; This ugly hack is necessary to make the theme load all the faces
+  ;; on startup
+  (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
+
+  :hook
+  (modus-themes-after-load-theme-hook . ps/org-faces-custom-faces)
+  ;; (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
+
+  :general
+  ("A-d" 'modus-themes-toggle))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
   (defvar my-highlight-parentheses-use-background t
     "Prefer `highlight-parentheses-background-colors'.")
 
@@ -2790,29 +2834,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
     ;; this comes last.
     (global-highlight-parentheses-mode))
 
-      (setq modus-themes-common-palette-overrides modus-themes-preset-overrides-intense)
-
-  (defun ps/modus-themes-match-system ()
-    "Load modus theme that matches system."
-    (interactive)
-    (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-        (load-theme 'modus-vivendi :no-confim)
-      (load-theme 'modus-operandi :no-confim)))
-
-  (ps/modus-themes-match-system)
-
-  ;; This ugly hack is necessary to make the theme load all the faces
-  ;; on startup
-  (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
-
-  :hook
-  (modus-themes-after-load-theme-hook . ps/custom-faces)
-  (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
-
-  :general
-  ("A-d" 'modus-themes-toggle))
 #+end_src
-
 *** Archive                                                                                                           :ARCHIVE:
 :PROPERTIES:
 :ID:       E53CF042-FAF6-4CA6-9FD4-D1472BA3C814
@@ -5813,6 +5835,7 @@ CLOCK: [2021-10-20 Wed 21:38]--[2021-10-20 Wed 21:46] =>  0:08
 
 #+begin_src emacs-lisp :results silent
 (use-package reveal-in-osx-finder
+  :defer 10
   :general
   (dired-mode-map
    "/" 'reveal-in-osx-finder))
@@ -6127,6 +6150,7 @@ selected frame."
     "Split windows when frame is unsplit. Split in three windows if
 `frame-width' is greater than `ps/frame-width-threshold',
 otherwise in two windows."
+    (interactive)
     (when (= (length (window-list)) 1)
       (split-window-right))
     (when (> (frame-width) ps/frame-width-threshold)
@@ -7789,12 +7813,16 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 (use-package forge
   :after magit ghub
   :demand t
+  :init
+  (unless (version<= emacs-version "29.0")
+    (setq forge-database-connector 'sqlite-builtin))
+
   :custom
   (forge-owned-accounts `((,ps/forge-owned-accounts)))
 
   :general
   (forge-post-mode-map
-  "s-c" 'forge-post-submit))
+   "s-c" 'forge-post-submit))
 #+end_src
 
 ** code-review
@@ -13072,7 +13100,8 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 CLOCK: [2022-07-17 Sun 11:51]--[2022-07-17 Sun 11:55] =>  0:04
 CLOCK: [2022-07-16 Sat 21:15]--[2022-07-17 Sun 10:49] => 13:34
 :END:
-Note that [[https://bitbucket.org/mituharu/emacs-mac/][emacs-mac]] supports ~org-protocol~ out of the box and doesn't require turning on the Emacs server.
+[[https://github.com/xuchunyang/setup-org-protocol-on-mac][This article]] describes how to set up ~org-protocol~ on macOS. Note that [[https://bitbucket.org/mituharu/emacs-mac/][emacs-mac]] supports ~org-protocol~ out of the box and doesn't require turning on the Emacs server.
+
 
 #+begin_src emacs-lisp :results silent
 (use-feature org-protocol
@@ -13963,9 +13992,18 @@ Done until ~Gates2022RisksAdvancedAI.org~.
 :PROPERTIES:
 :ID:       7A7A0C7B-AC94-40ED-A50E-AAB67D9522E8
 :END:
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package emacsql-sqlite3
   :demand t)
+#+end_src
+
+** emacsql-sqlite-builtin
+:PROPERTIES:
+:ID:       437F93FC-BDEE-48E2-A523-0813808871BC
+:END:
+#+begin_src emacs-lisp
+(use-package emacsql-sqlite-builtin
+:demand t)
 #+end_src
 
 ** org-roam
@@ -14017,9 +14055,21 @@ Once I activate ~org-roam-bibtex~, I should make sure deferring ~org-roam-setup~
 
 #+begin_src emacs-lisp :results silent
 (use-package org-roam
-  :after emacsql-sqlite3
+  :after (:any emacsql-sqlite3 emacsql-sqlite-builtin)
   :demand t
   :init
+  ;; `sqlite3' is deprecated, but I cannot get org-roam to work with
+  ;; either `sqlite' or `sqlite-builtin'. So using this for the time
+  ;; being, until I succeed in diagnosing the problem. See the
+  ;; `org-roam-database-connector' docstring and the 'How to cache'
+  ;; section of the manual: orgroam.com/manual.html#How-to-cache
+
+  ;; [2023-01-24 Tue] I should migrate to `sqlite-builtin' when Emacs
+  ;; 29 is released. See `org-roam-database-connector' docstring.
+  (if (version< emacs-version "29.0")
+      (setq org-roam-database-connector 'sqlite3)
+    (setq org-roam-database-connector 'sqlite-builtin))
+
   (defun ps/org-roam-recent (days &optional limit)
     "Return list of files modified in the last DAYS. Optionally,
 return such list if its length is less than LIMIT."
@@ -14038,16 +14088,6 @@ return such list if its length is less than LIMIT."
         file-list)))
 
   :custom
-  ;; `sqlite3' is deprecated, but I cannot get org-roam to work with
-  ;; either `sqlite' or `sqlite-builtin'. So using this for the time
-  ;; being, until I succeed in diagnosing the problem. See the
-  ;; `org-roam-database-connector' docstring and the 'How to cache'
-  ;; section of the manual: orgroam.com/manual.html#How-to-cache
-
-  ;; [2023-01-24 Tue] I should migrate to `sqlite-builtin' when Emacs
-  ;; 29 is released. See `org-roam-database-connector' docstring.
-  (org-roam-database-connector 'sqlite3)
-  (org-roam-directory ps/dir-org-roam)
   ;; (org-roam-complete-everywhere t)
   (org-roam-node-display-template #("${title:*} ${tags:10}" 11 21
                                     (face org-tag)))
@@ -18181,13 +18221,13 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
   (telega-filters-custom '(("Main" . main)
-			   ("Important" or mention
-			    (and unread unmuted))
-			   ("Archive" . archive)
-			   ("Online" and
-			    (not saved-messages) (user is-online))
-			   ("Groups" type basicgroup supergroup)
-			   ("Channels" type channel)))
+                           ("Important" or mention
+                            (and unread unmuted))
+                           ("Archive" . archive)
+                           ("Online" and
+                            (not saved-messages) (user is-online))
+                           ("Groups" type basicgroup supergroup)
+                           ("Channels" type channel)))
   (telega-completing-read-function 'completing-read)
 
   :config
@@ -18197,25 +18237,25 @@ switch to the root buffer, starting telega if necessary."
     (interactive)
     (ps/window-split-if-unsplit)
     (if (> (frame-width) ps/frame-width-threshold)
-	(winum-select-window-3)
+        (winum-select-window-3)
       (winum-select-window-2))
     (let* ((rootbuf "*Telega Root*")
-	   (buf (or
-		 (let ((chatbuf))
-		   (mapc (lambda (x)
-			   (when (with-current-buffer x
-				   (eq major-mode 'telega-chat-mode))
-			     (switch-to-buffer x)
-			     (setq chatbuf x)))
-			 (buffer-list))
-		   chatbuf)
-		 (get-buffer rootbuf))))
+           (buf (or
+                 (let ((chatbuf))
+                   (mapc (lambda (x)
+                           (when (with-current-buffer x
+                                   (eq major-mode 'telega-chat-mode))
+                             (switch-to-buffer x)
+                             (setq chatbuf x)))
+                         (buffer-list))
+                   chatbuf)
+                 (get-buffer rootbuf))))
       (if buf
-	  (progn
-	    (switch-to-buffer rootbuf)
-	    (beginning-of-buffer)
-	    (forward-line 3))
-	(telega))))
+          (progn
+            (switch-to-buffer rootbuf)
+            (beginning-of-buffer)
+            (forward-line 3))
+        (telega))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -18232,8 +18272,8 @@ into a task for Leo."
   (defun ps/telega-move-downloaded-file (file)
     "Move downloaded file(s) to `ps/dir-downloads' directory."
     (let* ((old-path (plist-get (plist-get file :local) :path))
-	   (file-name (file-name-nondirectory old-path))
-	   (new-path (concat ps/dir-downloads "/" file-name)))
+           (file-name (file-name-nondirectory old-path))
+           (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
 
@@ -18243,36 +18283,36 @@ into a task for Leo."
     (unless (telega-server-live-p)
       (user-error "Please launch Telega before running this command."))
     (if (equal (buffer-file-name) ps/file-tlon-docs)
-	(progn
-	  (unless (region-active-p)
-	    (user-error "Please select the region containing the changes you introduced."))
-	  (let ((docs-section (org-get-heading)))
-	    (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
-	    (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
+        (progn
+          (unless (region-active-p)
+            (user-error "Please select the region containing the changes you introduced."))
+          (let ((docs-section (org-get-heading)))
+            (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
+            (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
       (user-error "You aren't visiting `docs.org'!")))
 
   (defun ps/telega-docs-change-open (msg)
     "TODO: write docstring"
     (interactive (list (telega-msg-for-interactive)))
     (let* ((content (plist-get msg :content))
-	   (msg-text (or (telega-tl-str content :text)
-			 (telega-tl-str content :caption)
-			 ;; See FR https://t.me/emacs_telega/34839
-			 (and (telega-msg-match-p msg '(type VoiceNote))
-			      (telega-tl-str (plist-get content :voice_note)
-					     :recognized_text)))))
+           (msg-text (or (telega-tl-str content :text)
+                         (telega-tl-str content :caption)
+                         ;; See FR https://t.me/emacs_telega/34839
+                         (and (telega-msg-match-p msg '(type VoiceNote))
+                              (telega-tl-str (plist-get content :voice_note)
+                                             :recognized_text)))))
       (with-temp-buffer
-	(insert msg-text)
-	(goto-char (point-min))
-	(re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
-	(let ((change-begins (string-to-number (match-string 1)))
-	      (change-ends (string-to-number (match-string 2))))
-	  (find-file ps/file-tlon-docs)
-	  (org-show-all)
-	  (org-hide-drawer-all)
-	  (org-highlight change-begins change-ends)
-	  (goto-char change-begins))
-	(message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
+        (insert msg-text)
+        (goto-char (point-min))
+        (re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
+        (let ((change-begins (string-to-number (match-string 1)))
+              (change-ends (string-to-number (match-string 2))))
+          (find-file ps/file-tlon-docs)
+          (org-show-all)
+          (org-hide-drawer-all)
+          (org-highlight change-begins change-ends)
+          (goto-char change-begins))
+        (message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
 
   (defun ps/telega-filters-push-archive ()
     "Set active filters list to `archive'."
@@ -18287,7 +18327,7 @@ into a task for Leo."
   (defun ps/telega-chat-mode ()
     (require 'company)
     (add-hook 'completion-at-point-functions
-	      #'telega-chatbuf-complete-at-point nil 'local))
+              #'telega-chatbuf-complete-at-point nil 'local))
 
 
   (telega-mode-line-mode 1)

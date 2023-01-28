@@ -13100,7 +13100,7 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 CLOCK: [2022-07-17 Sun 11:51]--[2022-07-17 Sun 11:55] =>  0:04
 CLOCK: [2022-07-16 Sat 21:15]--[2022-07-17 Sun 10:49] => 13:34
 :END:
-[[https://github.com/xuchunyang/setup-org-protocol-on-mac][This article]] describes how to set up ~org-protocol~ on macOS. Note that [[https://bitbucket.org/mituharu/emacs-mac/][emacs-mac]] supports ~org-protocol~ out of the box and doesn't require turning on the Emacs server.
+[[https://www.orgroam.com/manual.html#Mac-OS][This section of the org-roam manual]] describes how to set up ~org-protocol~ on macOS. Note that [[https://bitbucket.org/mituharu/emacs-mac/][emacs-mac]] supports ~org-protocol~ out of the box and doesn't require turning on the Emacs server.
 
 
 #+begin_src emacs-lisp :results silent
@@ -13992,8 +13992,9 @@ Done until ~Gates2022RisksAdvancedAI.org~.
 :PROPERTIES:
 :ID:       7A7A0C7B-AC94-40ED-A50E-AAB67D9522E8
 :END:
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package emacsql-sqlite3
+  :if (version< emacs-version "29.0")
   :demand t)
 #+end_src
 
@@ -14003,7 +14004,8 @@ Done until ~Gates2022RisksAdvancedAI.org~.
 :END:
 #+begin_src emacs-lisp
 (use-package emacsql-sqlite-builtin
-:demand t)
+  :if (not (version< emacs-version "29.0"))
+  :demand t)
 #+end_src
 
 ** org-roam

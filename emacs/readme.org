@@ -1928,7 +1928,7 @@ CLOCK: [2022-06-14 Tue 18:54]--[2022-06-14 Tue 18:58] =>  0:04
   ("r" (ps/org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Main")
   ("b" (ps/org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAE" :column "Main")
   ("m" (ps/org-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Main")
-  ("d" (ps/org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLH" :column "Main")
+  ("d" (ps/org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Main")
   ("u" (ps/org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Main")
   ("i" (ps/org-id-goto "6C7F53ED-B43E-401D-BEEA-DB38CAE367FD") "EAI" :column "Main")
   ("w" (ps/org-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
@@ -2135,34 +2135,18 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   "Dired folders"
   ("a" (hydra-dired-google-drive/body) "apps")
   ("b" (dired ps/dir-bibliography) "bibliography")
-  ("c" (dired ps/dir-dropbox-tlon-core) "core")
-  ("C" (dired ps/dir-google-drive-tlon-core) "Google Drive: core")
   ("d" (dired ps/dir-dotfiles) "dotfiles")
   ("e" (dired ps/dir-emacs) "Emacs")
-  ("f" (dired ps/dir-dropbox-tlon-fede) "fede")
-  ("F" (dired ps/dir-google-drive-tlon-fede) "Google Drive: fede")
-  ("g" (dired ps/dir-dropbox-tlon-GPE) "Dropbox: GPE")
-  ("G" (dired ps/dir-google-drive-tlon-GPE) "Google Drive: GPE")
-  ("h" (dired ps/dir-dropbox-tlon-HEAR) "Dropbox: HEAR")
-  ("H" (dired ps/dir-google-drive-tlon-HEAR) "Google Drive: HEAR")
   ("i" (dired ps/dir-anki) "Anki")
   ("j" (dired ps/dir-health) "Health")
   ("k" (dired ps/dir-PW) "PW")
-  ("l" (dired ps/dir-dropbox-tlon-leo) "Dropbox: leo")
-  ("L" (dired ps/dir-google-drive-tlon-leo) "Google Drive: leo")
   ("m" (hydra-dired-music/body) "Music")
   ("n" (dired ps/dir-notes) "Notes")
   ("o" (dired ps/dir-google-drive) "Google Drive")
   ("p" (dired ps/dir-people) "people")
   ;; ("q" (dired ps/dir-youtube))
-  ("r" (dired ps/dir-dropbox-tlon-RAE) "Dropbox: RAE")
-  ("R" (dired ps/dir-google-drive-tlon-RAE) "Google Drive: RAE")
-  ("s" (dired ps/dir-dropbox-tlon-FM) "Dropbox: FM")
-  ("S" (dired ps/dir-google-drive-tlon-FM) "Google Drive: FM")
-  ("t" (dired ps/dir-dropbox-tlon) "Dropbox: tlon")
-  ("T" (dired ps/dir-google-drive-tlon) "Google Drive: tlon")
-  ("u" (dired ps/dir-dropbox-tlon-EAN) "Dropbox: EAN")
-  ("U" (dired ps/dir-google-drive-tlon-EAN) "Google Drive: EAN")
+  ("t" (hydra-dired-tlon/body) "Tlön")
+  ("H-t" (hydra-dired-tlon/body) "Tlön")
   ("U" (dired ps/dir-audiobooks) "Audiobooks")
   ("v" (dired ps/dir-movies) "movies")
   ("w" (dired ps/dir-downloads) "downloads")
@@ -2176,6 +2160,30 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("SPC" (dired "~/") "user")
   (";" (dired-jump) "Current buffer")
   ("H-;" (dired-jump-other-window) "Current buffer in other window"))
+
+(defhydra hydra-dired-tlon
+  (:exit t)
+  "Dired folders: Tlön"
+  ("b" (dired ps/dir-dropbox-tlon-LBDLH) "Dropbox: LBDLH")
+  ("H-b" (dired ps/dir-dropbox-tlon-LBDLH) "Google Drive: LBDLH")
+  ("c" (dired ps/dir-dropbox-tlon-core) "core")
+  ("H-c" (dired ps/dir-google-drive-tlon-core) "Google Drive: core")
+  ("f" (dired ps/dir-dropbox-tlon-fede) "fede")
+  ("H-f" (dired ps/dir-google-drive-tlon-fede) "Google Drive: fede")
+  ("g" (dired ps/dir-dropbox-tlon-GPE) "Dropbox: GPE")
+  ("H-g" (dired ps/dir-google-drive-tlon-GPE) "Google Drive: GPE")
+  ("h" (dired ps/dir-dropbox-tlon-HEAR) "Dropbox: HEAR")
+  ("H-h" (dired ps/dir-google-drive-tlon-HEAR) "Google Drive: HEAR")
+  ("l" (dired ps/dir-dropbox-tlon-leo) "Dropbox: leo")
+  ("H-l" (dired ps/dir-google-drive-tlon-leo) "Google Drive: leo")
+  ("r" (dired ps/dir-dropbox-tlon-RAE) "Dropbox: RAE")
+  ("H-r" (dired ps/dir-google-drive-tlon-RAE) "Google Drive: RAE")
+  ("s" (dired ps/dir-dropbox-tlon-FM) "Dropbox: FM")
+  ("H-s" (dired ps/dir-google-drive-tlon-FM) "Google Drive: FM")
+  ("t" (dired ps/dir-dropbox-tlon) "Dropbox: tlon")
+  ("H-t" (dired ps/dir-google-drive-tlon) "Google Drive: tlon")
+  ("u" (dired ps/dir-dropbox-tlon-EAN) "Dropbox: EAN")
+  ("H-u" (dired ps/dir-google-drive-tlon-EAN) "Google Drive: EAN"))
 
 (defhydra hydra-dired-google-drive
   (:exit t)
@@ -4044,36 +4052,30 @@ Has a preference for looking backward when not directly on a symbol."
 :ID:       CB2EA5F8-B566-466D-8CCA-1DA7F99591BA
 :END:
 
-#Minimal config
 #+begin_src emacs-lisp :results silent
-(setq save-interprogram-paste-before-kill t) ; add system clipboard to kill ring
+(use-feature simple
+  :custom
+  (kill-ring-max 500)
+  (save-interprogram-paste-before-kill t) ; add system clipboard to kill ring
 
-;; 2022-06-21 Replaced by `consult-yank-pop'
-(defun ps/yank-pop-or-show-kill-ring (&optional arg)
-  "If called after a yank, call `yank-pop'; otherwise call `consult-yank-from-kill-ring'."
-  (interactive "*p")
-  (if (eq last-command 'yank)
-      (yank-pop arg)
-    (call-interactively 'consult-yank-from-kill-ring)))
+  :config
+  (defun ps/yank-pop-forward (arg)
+    (interactive "p")
+    (yank-pop (- arg)))
 
-(defun ps/yank-pop-forward (arg)
-  (interactive "p")
-  (yank-pop (- arg)))
-(defun ps/yank-and-pop ()
-  "Yank, then pop the last kill off the ring."
-  (interactive)
-  (yank)
-  (when kill-ring
-    (setq kill-ring (cdr kill-ring)))
-  (when kill-ring-yank-pointer
-    (setq kill-ring-yank-pointer kill-ring))
-  (message "Last kill popped off kill-ring."))
+  (defun ps/yank-and-pop ()
+    "Yank, then pop the last kill off the ring."
+    (interactive)
+    (yank)
+    (when kill-ring
+      (setq kill-ring (cdr kill-ring)))
+    (when kill-ring-yank-pointer
+      (setq kill-ring-yank-pointer kill-ring))
+    (message "Last kill popped off kill-ring."))
 
-(general-define-key
- "H-v" 'yank
- ;; "H-V" 'ps/yank-pop-or-show-kill-ring
- ;; "" 'ps/yank-pop-forward
- "H-A-v" 'ps/yank-and-pop)
+  :general
+  ("H-v" 'yank
+   "H-A-v" 'ps/yank-and-pop))
 #+end_src
 
 * editing
@@ -4336,7 +4338,7 @@ CLOCK: [2021-05-06 Thu 11:02]--[2021-05-06 Thu 11:08] =>  0:06
 :END:
 - [[http://xahlee.info/emacs/emacs/emacs_abbrev_mode_tutorial.html][Emacs: Abbrev Mode by Commands]]
 - [[https://impaktor.gitlab.io/dot_emacs.html#org87d6718][My .emacs]]
-  
+
 ** yasnippet
 :PROPERTIES:
 :ID:       6405B8E7-6612-4D71-8C2C-A51F8808F4C6
@@ -15350,7 +15352,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
                            :open #'citar-org-roam-open-note
                            :create #'orb-citar-edit-note
                            :annotate #'citar-org-roam--annotate))
-                           
+
   (setq citar-notes-source 'orb-citar-source)
 
   (defun ps/citar--get-title (entry)
@@ -18179,13 +18181,13 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
   (telega-filters-custom '(("Main" . main)
-                           ("Important" or mention
-                            (and unread unmuted))
-                           ("Archive" . archive)
-                           ("Online" and
-                            (not saved-messages) (user is-online))
-                           ("Groups" type basicgroup supergroup)
-                           ("Channels" type channel)))
+			   ("Important" or mention
+			    (and unread unmuted))
+			   ("Archive" . archive)
+			   ("Online" and
+			    (not saved-messages) (user is-online))
+			   ("Groups" type basicgroup supergroup)
+			   ("Channels" type channel)))
   (telega-completing-read-function 'completing-read)
 
   :config
@@ -18195,24 +18197,25 @@ switch to the root buffer, starting telega if necessary."
     (interactive)
     (ps/window-split-if-unsplit)
     (if (> (frame-width) ps/frame-width-threshold)
-        (winum-select-window-3)
+	(winum-select-window-3)
       (winum-select-window-2))
-    (let ((buf (or
-                (let ((chatbuf))
-                  (mapc (lambda (x)
-                          (when (with-current-buffer x
-                                  (eq major-mode 'telega-chat-mode))
-                            (switch-to-buffer x)
-                            (setq chatbuf x)))
-                        (buffer-list))
-                  chatbuf)
-                (get-buffer "*Telega Root*"))))
+    (let* ((rootbuf "*Telega Root*")
+	   (buf (or
+		 (let ((chatbuf))
+		   (mapc (lambda (x)
+			   (when (with-current-buffer x
+				   (eq major-mode 'telega-chat-mode))
+			     (switch-to-buffer x)
+			     (setq chatbuf x)))
+			 (buffer-list))
+		   chatbuf)
+		 (get-buffer rootbuf))))
       (if buf
-          (progn
-            (switch-to-buffer buf)
-            (beginning-of-buffer)
-            (forward-line 3))
-        (telega))))
+	  (progn
+	    (switch-to-buffer rootbuf)
+	    (beginning-of-buffer)
+	    (forward-line 3))
+	(telega))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -18229,8 +18232,8 @@ into a task for Leo."
   (defun ps/telega-move-downloaded-file (file)
     "Move downloaded file(s) to `ps/dir-downloads' directory."
     (let* ((old-path (plist-get (plist-get file :local) :path))
-           (file-name (file-name-nondirectory old-path))
-           (new-path (concat ps/dir-downloads "/" file-name)))
+	   (file-name (file-name-nondirectory old-path))
+	   (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
 
@@ -18240,36 +18243,36 @@ into a task for Leo."
     (unless (telega-server-live-p)
       (user-error "Please launch Telega before running this command."))
     (if (equal (buffer-file-name) ps/file-tlon-docs)
-        (progn
-          (unless (region-active-p)
-            (user-error "Please select the region containing the changes you introduced."))
-          (let ((docs-section (org-get-heading)))
-            (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
-            (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
+	(progn
+	  (unless (region-active-p)
+	    (user-error "Please select the region containing the changes you introduced."))
+	  (let ((docs-section (org-get-heading)))
+	    (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
+	    (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
       (user-error "You aren't visiting `docs.org'!")))
 
   (defun ps/telega-docs-change-open (msg)
     "TODO: write docstring"
     (interactive (list (telega-msg-for-interactive)))
     (let* ((content (plist-get msg :content))
-           (msg-text (or (telega-tl-str content :text)
-                         (telega-tl-str content :caption)
-                         ;; See FR https://t.me/emacs_telega/34839
-                         (and (telega-msg-match-p msg '(type VoiceNote))
-                              (telega-tl-str (plist-get content :voice_note)
-                                             :recognized_text)))))
+	   (msg-text (or (telega-tl-str content :text)
+			 (telega-tl-str content :caption)
+			 ;; See FR https://t.me/emacs_telega/34839
+			 (and (telega-msg-match-p msg '(type VoiceNote))
+			      (telega-tl-str (plist-get content :voice_note)
+					     :recognized_text)))))
       (with-temp-buffer
-        (insert msg-text)
-        (goto-char (point-min))
-        (re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
-        (let ((change-begins (string-to-number (match-string 1)))
-              (change-ends (string-to-number (match-string 2))))
-          (find-file ps/file-tlon-docs)
-          (org-show-all)
-          (org-hide-drawer-all)
-          (org-highlight change-begins change-ends)
-          (goto-char change-begins))
-        (message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
+	(insert msg-text)
+	(goto-char (point-min))
+	(re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
+	(let ((change-begins (string-to-number (match-string 1)))
+	      (change-ends (string-to-number (match-string 2))))
+	  (find-file ps/file-tlon-docs)
+	  (org-show-all)
+	  (org-hide-drawer-all)
+	  (org-highlight change-begins change-ends)
+	  (goto-char change-begins))
+	(message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
 
   (defun ps/telega-filters-push-archive ()
     "Set active filters list to `archive'."
@@ -18284,7 +18287,7 @@ into a task for Leo."
   (defun ps/telega-chat-mode ()
     (require 'company)
     (add-hook 'completion-at-point-functions
-              #'telega-chatbuf-complete-at-point nil 'local))
+	      #'telega-chatbuf-complete-at-point nil 'local))
 
 
   (telega-mode-line-mode 1)

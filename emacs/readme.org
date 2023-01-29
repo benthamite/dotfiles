@@ -1330,11 +1330,6 @@ CLOCK: [2021-03-28 Sun 13:35]--[2021-03-28 Sun 14:31] =>  0:56
 
 #Minimal config
 #+begin_src emacs-lisp :results silent
-(setq iso-transl-char-map nil) ; https://emacs.stackexchange.com/questions/17508/
-#+end_src
-
-#Minimal config
-#+begin_src emacs-lisp :results silent
 (global-unset-key (kbd "C-a"))
 (global-unset-key (kbd "C-b"))
 (global-unset-key (kbd "C-d"))
@@ -1444,6 +1439,24 @@ CLOCK: [2021-03-28 Sun 13:35]--[2021-03-28 Sun 14:31] =>  0:56
 (define-key esc-map (kbd "A-'") nil)
 (global-unset-key (kbd "s-q"))
 (global-unset-key (kbd "s-j"))
+#+end_src
+** iso-transl
+:PROPERTIES:
+:ID:       0A62A6C8-D3D8-4960-A809-35B60A479D2B
+:END:
+
+#+begin_src emacs-lisp
+(use-feature iso-transl
+  :config
+  (setq iso-transl-char-map nil) ; https://emacs.stackexchange.com/questions/17508/
+
+  :general
+  (key-translation-map
+   "A-c" nil
+   "A-o" nil
+   "A-u" nil
+   "A-m" nil
+   "A-x" nil))
 #+end_src
 
 ** no-littering
@@ -2089,9 +2102,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("r" (ps/org-id-goto "3FAE7C0D-FB22-4175-A0A4-FFA392539743") "org-refile")
   ("t" (ps/org-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A") "org-cite")
   ("x" (ps/org-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF") "org-roam-bibtex"))
-
 #+end_src
-
 **** wiki-entries.org
 :PROPERTIES:
 :ID:       CC88D9BE-6617-4D53-BCCF-02097C2A81E1
@@ -2325,6 +2336,7 @@ CLOCK: [2021-05-11 Tue 13:07]--[2021-05-11 Tue 13:28] =>  0:21
 
 Done. See [[https://stackoverflow.com/a/21493693/4479455][here]].
 
+
 ** transient
 :PROPERTIES:
 :ID:       246036BE-CBDF-4ABA-8297-11952B57B551
@@ -2503,9 +2515,8 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   (mixed-pitch-set-height t)
 
   :config
-  (set-face-attribute 'variable-pitch nil
-                      :family ps/face-variable-pitch
-                      :height 1.4)
+  (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
+  
   :hook
   (mu4e-view-mode-hook . mixed-pitch-mode)
   (org-mode-hook . mixed-pitch-mode)
@@ -2526,6 +2537,18 @@ CLOSED: [2022-05-06 Fri 16:59]
 CLOCK: [2022-05-06 Fri 15:06]--[2022-05-06 Fri 16:00] =>  0:54
 :END:
 I don't think this is possible. See [[https://gitlab.com/jabranham/mixed-pitch/-/issues/4][here]]. At best, one could make org lists use fixed pitch font. But the user-contributed snippet doesn't work for me. In any case, the costs of displaying all plain lists in fixed pitch font seem higher than the costs of misaligned indentation (since many lists have items none of which span more than one line).
+
+** fontaine
+/[[https://protesilaos.com/emacs/fontaine][fontaine]] lets the user specify presets of font configurations and set them on demand on graphical Emacs frames./
+
+I haven't yet explored this package.
+
+#+begin_src emacs-lisp :tangle no
+(use-package fontaine
+  :demand t
+  :config
+  (fontaine-mode))
+#+end_src
 
 ** face-remap
 :PROPERTIES:
@@ -2640,76 +2663,30 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
   :config
   (defun ps/org-faces-custom-faces ()
     "My custom faces, to be used in conjunction with theme."
-    (set-face-attribute 'default nil
-                        :family ps/face-fixed-pitch
-                        :height 115)
-    (set-face-attribute 'fixed-pitch nil
-                        :family ps/face-fixed-pitch
-                        :height 1.1)
-    (set-face-attribute 'org-drawer nil
-                        :foreground "LightSkyBlue"
-                        :family ps/face-fixed-pitch
-                        :height 0.7)
-    (set-face-attribute 'org-property-value nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
-    (set-face-attribute 'org-todo nil
-                        :height 1.0)
-    (set-face-attribute 'org-archived nil
-                        :height 0.9)
-    (set-face-attribute 'org-document-title nil
-                        :underline t
-                        :height 1.0)
-    (set-face-attribute 'org-special-keyword nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
-    (set-face-attribute 'org-tag nil
-                        :height 0.9)
-    (set-face-attribute 'org-code nil
-                        :family ps/face-fixed-pitch
-                        :height 1.0)
-    (set-face-attribute 'org-level-1 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-2 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-3 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-4 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-5 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-6 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-7 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-8 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-date nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
-    (set-face-attribute 'org-modern-date-active nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
-    (set-face-attribute 'org-modern-date-inactive nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
-    (set-face-attribute 'org-modern-tag nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'corfu-default nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-quote nil
-                        :family ps/face-variable-pitch
-                        :height 1.3)))
+    (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
+    (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
+    (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family ps/face-fixed-pitch :height 0.7)
+    (set-face-attribute 'org-property-value nil :family ps/face-fixed-pitch :height 0.8)
+    (set-face-attribute 'org-todo nil :family ps/face-fixed-pitch :height 1.0)
+    (set-face-attribute 'org-archived nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-document-title :family ps/face-fixed-pitch nil :underline t :height 1.0)
+    (set-face-attribute 'org-special-keyword nil :family ps/face-fixed-pitch :height 0.8)
+    (set-face-attribute 'org-tag nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-code nil :family ps/face-fixed-pitch :height 1.0)
+    (set-face-attribute 'org-level-1 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-2 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-3 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-4 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-5 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-6 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-7 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-8 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-date nil :family ps/face-fixed-pitch :height 0.8)
+    (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
+    (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
+    (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)))
 
 #+end_src
 
@@ -6228,7 +6205,7 @@ window depending on the number of present windows."
    "M-A-q" 'delete-frame
    "s-A-," 'ps/split-emacs-chrome-sideways
    "M-–" 'ps/window-buffer-move-dwim ; `emacs-mac'
-   "M--" 'ps/window-buffer-move-dwim ; `emacs-plus' 
+   "M--" 'ps/window-buffer-move-dwim ; `emacs-plus'
    "M-," 'ps/window-buffer-move-left
    "M-." 'ps/window-buffer-move-right
    "A-M--" 'ps/window-buffer-swap ; `emacs-mac'
@@ -12686,9 +12663,8 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 (use-feature org-id
   :demand t
   :custom
-  (org-id-extra-files
-   `(,ps/file-tareas-leo
-     ,ps/file-tareas-fede))
+  (setq org-id-extra-files
+	(directory-files-recursively ps/dir-org "\\.org"))
 
      (org-id-link-to-org-use-id t)
 
@@ -14092,6 +14068,7 @@ return such list if its length is less than LIMIT."
         file-list)))
 
   :custom
+  (org-roam-directory ps/dir-org-roam)
   ;; (org-roam-complete-everywhere t)
   (org-roam-node-display-template #("${title:*} ${tags:10}" 11 21
                                     (face org-tag)))
@@ -15055,6 +15032,7 @@ CLOSED: [2022-09-22 Thu 15:13]
 :LOGBOOK:
 CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-package citeproc
   :demand t)
@@ -15067,6 +15045,7 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
 :LOGBOOK:
 CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 :END:
+/bibtex is major mode for editing and validating BibTeX ~.bib~ files./
 
 #+begin_src emacs-lisp :results silent
 (use-feature bibtex
@@ -15503,6 +15482,7 @@ Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
 :PROPERTIES:
 :ID:       8CE6DBC7-E180-4E6D-B6E2-8D1E2756E765
 :END:
+/[[https://github.com/emacs-citar/citar/blob/main/citar-citeproc.el][citar-citeproc]] provides Citeproc reference support for citar./
 
 #+begin_src emacs-lisp :results silent
 (use-feature citar-citeproc
@@ -15517,6 +15497,8 @@ Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
 :PROPERTIES:
 :ID:       846EEC59-E022-41B7-96D3-4B379F8F91D4
 :END:
+/[[https://github.com/emacs-citar/citar/tree/9d7088c1fe82e9cfa508ead7ef7738c732556644#embark][citar-embark]] adds contextual access actions in the minibuffer and at-point via the citar-embark-mode minor mode./
+
 #+begin_src emacs-lisp :results silent
 (use-package citar-embark
   :after citar embark
@@ -16969,9 +16951,9 @@ or specify any other coding system (and risk losing\n\
    "i" 'zotra-add-entry-from-search))
 #+end_src
 
-*** Archive                                                  :ARCHIVE:
+*** Archive                                                       :ARCHIVE:
 :PROPERTIES:
-:ID:       6BFE5851-35CD-481C-9E3C-7F4D81336A29
+:ID:       B8B5D792-0C5B-4058-87CB-BF933B2E7AF9
 :END:
 **** DONE configure zotra
 CLOSED: [2022-11-07 Mon 14:13]
@@ -16984,10 +16966,6 @@ CLOCK: [2022-10-10 Mon 20:09]--[2022-10-10 Mon 20:17] =>  0:08
 CLOCK: [2022-10-10 Mon 19:29]--[2022-10-10 Mon 19:59] =>  0:30
 :END:
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       B8B5D792-0C5B-4058-87CB-BF933B2E7AF9
-:END:
 **** DONE [#5] Make sure all new bibtex entries have a ~timestamp~ field
 CLOSED: [2022-12-21 Wed 00:18]
 :PROPERTIES:
@@ -17395,6 +17373,7 @@ CLOCK: [2021-04-18 Sun 20:55]--[2021-04-18 Sun 21:27] =>  0:32
 CLOCK: [2021-04-15 Thu 20:52]--[2021-04-15 Thu 21:10] =>  0:18
 CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 :END:
+/[[https://github.com/djcb/mu][mu4e]] is an an emacs-based e-mail client./
 
 - [[https://www.youtube.com/watch?v=yZRyEhi4y44]]
 - [[http://cachestocaches.com/2017/3/complete-guide-email-emacs-using-mu-and-/][A Complete Guide to Email in Emacs using Mu and Mu4e]]. Advanced setup, for MacOS. But uses OfflineMAP rather than isync.
@@ -17697,7 +17676,7 @@ it, without asking for confirmation."
   ;; (mu4e-compose-mode-hook . (lambda () "prevent accumulation of drafts" (auto-save-visited-mode 1)))
 
   :general
-  ("µ" 'mu4e) ; µ = A-m
+  ("A-m" 'mu4e)
   ((mu4e-main-mode-map mu4e-headers-mode-map mu4e-view-mode-map)
    "c" 'mu4e-compose-new)
   ((mu4e-headers-mode-map mu4e-view-mode-map)
@@ -17975,8 +17954,9 @@ CLOSED: [2022-12-21 Wed 00:19]
 :PROPERTIES:
 :ID:       6E72E4DE-4CFE-4BC0-BC3C-39FB3D6EB526
 :END:
+[2023-01-28 Sat] I don't know what this does. Disabling for the time being.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-feature mu4e-org
   :after mu4e
   :demand t)

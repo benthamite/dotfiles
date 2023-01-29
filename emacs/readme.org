@@ -3268,7 +3268,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   ("A-C-s-m" 'move-beginning-of-line
    ;; karabiner maps `/' to `z'; otherwise I can't trigger the command while holding `shift'
    "A-C-s-z" 'move-end-of-line)
-  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map help-mode-map helpful-mode-map Info-mode-map magit-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map telega-msg-button-map telega-root-mode-map eww-mode-map elfeed-search-mode-map elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
+  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map help-mode-map helpful-mode-map Info-mode-map magit-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
    "k" 'previous-line
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)
@@ -7872,7 +7872,7 @@ CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
 (use-package git-auto-commit-mode
   :demand t
   :config
-  (setq-default gac-automatically-push-p t)
+  (setq-default gac-automatically-push-p nil)
   (setq-default gac-debounce-interval 30)
   (setq-default gac-silent-message-p t)
   (setq-default gac-automatically-add-new-files-p t))
@@ -10989,7 +10989,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :PROPERTIES:
 :ID:       2743B1F0-CCA8-4F48-8DC4-EF93E1A4607F
 :END:
-https://github.com/semiosis/pen.el
+https://github.com/mullikine/pen.el
 Disscussion [[https://www.reddit.com/r/emacs/comments/zhwhww/comment/izp8rxy/?utm_source=reddit&utm_medium=web2x&context=3][here]].
 ** elpy
 :PROPERTIES:
@@ -14098,6 +14098,8 @@ return such list if its length is less than LIMIT."
   (dolist (file '("orb-noter-template.org"
                   "tareas.org"
                   "calendar.org"
+                  "notatu-dignum.org"
+                  "quotes-old.org"
                   ".org2blog.org"
                   "feeds.org"))
     (push file ps/org-roam-excluded-files))
@@ -16635,6 +16637,13 @@ first name, and names are separated by a semicolon."
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
+*** TODO Add imdb movies to ebib
+:PROPERTIES:
+:ID:       B801240B-B0F4-46EB-859F-9755ECCFB3DF
+:END:
+- First export them to csv.
+- Then convert the csv to bibtex
+  https://www.google.com/search?q=csv+to+bibtex&oq=csv+to+bib&aqs=chrome.0.0i512j69i57j0i512l2j0i22i30j0i10i22i30l5.7911j0j9&sourceid=chrome&ie=UTF-8
 *** TODO Fix ebib issues Leo reported
 :PROPERTIES:
 :ID:       359ADA5E-7B2F-4BF9-94CC-DE0BB5A516C9
@@ -18209,13 +18218,13 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
   (telega-filters-custom '(("Main" . main)
-                           ("Important" or mention
-                            (and unread unmuted))
-                           ("Archive" . archive)
-                           ("Online" and
-                            (not saved-messages) (user is-online))
-                           ("Groups" type basicgroup supergroup)
-                           ("Channels" type channel)))
+			   ("Important" or mention
+			    (and unread unmuted))
+			   ("Archive" . archive)
+			   ("Online" and
+			    (not saved-messages) (user is-online))
+			   ("Groups" type basicgroup supergroup)
+			   ("Channels" type channel)))
   (telega-completing-read-function 'completing-read)
 
   :config
@@ -18225,25 +18234,25 @@ switch to the root buffer, starting telega if necessary."
     (interactive)
     (ps/window-split-if-unsplit)
     (if (> (frame-width) ps/frame-width-threshold)
-        (winum-select-window-3)
+	(winum-select-window-3)
       (winum-select-window-2))
     (let* ((rootbuf "*Telega Root*")
-           (buf (or
-                 (let ((chatbuf))
-                   (mapc (lambda (x)
-                           (when (with-current-buffer x
-                                   (eq major-mode 'telega-chat-mode))
-                             (switch-to-buffer x)
-                             (setq chatbuf x)))
-                         (buffer-list))
-                   chatbuf)
-                 (get-buffer rootbuf))))
+	   (buf (or
+		 (let ((chatbuf))
+		   (mapc (lambda (x)
+			   (when (with-current-buffer x
+				   (eq major-mode 'telega-chat-mode))
+			     (switch-to-buffer x)
+			     (setq chatbuf x)))
+			 (buffer-list))
+		   chatbuf)
+		 (get-buffer rootbuf))))
       (if buf
-          (progn
-            (switch-to-buffer rootbuf)
-            (beginning-of-buffer)
-            (forward-line 3))
-        (telega))))
+	  (progn
+	    (switch-to-buffer rootbuf)
+	    (beginning-of-buffer)
+	    (forward-line 3))
+	(telega))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -18260,8 +18269,8 @@ into a task for Leo."
   (defun ps/telega-move-downloaded-file (file)
     "Move downloaded file(s) to `ps/dir-downloads' directory."
     (let* ((old-path (plist-get (plist-get file :local) :path))
-           (file-name (file-name-nondirectory old-path))
-           (new-path (concat ps/dir-downloads "/" file-name)))
+	   (file-name (file-name-nondirectory old-path))
+	   (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
 
@@ -18271,36 +18280,36 @@ into a task for Leo."
     (unless (telega-server-live-p)
       (user-error "Please launch Telega before running this command."))
     (if (equal (buffer-file-name) ps/file-tlon-docs)
-        (progn
-          (unless (region-active-p)
-            (user-error "Please select the region containing the changes you introduced."))
-          (let ((docs-section (org-get-heading)))
-            (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
-            (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
+	(progn
+	  (unless (region-active-p)
+	    (user-error "Please select the region containing the changes you introduced."))
+	  (let ((docs-section (org-get-heading)))
+	    (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
+	    (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
       (user-error "You aren't visiting `docs.org'!")))
 
   (defun ps/telega-docs-change-open (msg)
     "TODO: write docstring"
     (interactive (list (telega-msg-for-interactive)))
     (let* ((content (plist-get msg :content))
-           (msg-text (or (telega-tl-str content :text)
-                         (telega-tl-str content :caption)
-                         ;; See FR https://t.me/emacs_telega/34839
-                         (and (telega-msg-match-p msg '(type VoiceNote))
-                              (telega-tl-str (plist-get content :voice_note)
-                                             :recognized_text)))))
+	   (msg-text (or (telega-tl-str content :text)
+			 (telega-tl-str content :caption)
+			 ;; See FR https://t.me/emacs_telega/34839
+			 (and (telega-msg-match-p msg '(type VoiceNote))
+			      (telega-tl-str (plist-get content :voice_note)
+					     :recognized_text)))))
       (with-temp-buffer
-        (insert msg-text)
-        (goto-char (point-min))
-        (re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
-        (let ((change-begins (string-to-number (match-string 1)))
-              (change-ends (string-to-number (match-string 2))))
-          (find-file ps/file-tlon-docs)
-          (org-show-all)
-          (org-hide-drawer-all)
-          (org-highlight change-begins change-ends)
-          (goto-char change-begins))
-        (message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
+	(insert msg-text)
+	(goto-char (point-min))
+	(re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
+	(let ((change-begins (string-to-number (match-string 1)))
+	      (change-ends (string-to-number (match-string 2))))
+	  (find-file ps/file-tlon-docs)
+	  (org-show-all)
+	  (org-hide-drawer-all)
+	  (org-highlight change-begins change-ends)
+	  (goto-char change-begins))
+	(message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
 
   (defun ps/telega-filters-push-archive ()
     "Set active filters list to `archive'."
@@ -18315,7 +18324,7 @@ into a task for Leo."
   (defun ps/telega-chat-mode ()
     (require 'company)
     (add-hook 'completion-at-point-functions
-              #'telega-chatbuf-complete-at-point nil 'local))
+	      #'telega-chatbuf-complete-at-point nil 'local))
 
 
   (telega-mode-line-mode 1)
@@ -18328,6 +18337,10 @@ into a task for Leo."
 
   :general
   ("C-f" 'ps/telega-switch-to)
+  ((telega-msg-button-map telega-root-mode-map)
+   "k" 'telega-button-backward
+   "l" 'telega-button-forward
+   "o" 'ps/telega-chat-org-capture)
   (telega-chat-mode-map
    "M-p" nil
    "<return>" 'newline
@@ -18359,7 +18372,6 @@ into a task for Leo."
    "F" 'telega-msg-forward-marked-or-at-point
    "C" 'telega-msg-copy-link
    "L" 'ps/telega-chat-org-capture-leo
-   "o" 'ps/telega-chat-org-capture
    "s" 'telega-chatbuf-filter-search
    "w" 'telega-browse-url
    "W" 'telega-chatbuf-filter-cancel)
@@ -18370,15 +18382,14 @@ into a task for Leo."
    "SPC" 'telega-root-next-unread
    "." 'telega-chat-with
    "a" 'telega-chat-toggle-archive
-   "m" 'telega-chat-toggle-muted
-   "o" 'ps/telega-chat-org-capture)
-  (telega-root-view-map
-   "a" 'ps/telega-filters-push-archive
-   "m" 'ps/telega-filters-push-main)
-  (telega-webpage-mode-map
-   "x" 'telega-webpage-browse-url)
-  (dired-mode-map
-   "A-s-a" 'ps/telega-dired-attach-send))
+   "m" 'telega-chat-toggle-muted)
+   (telega-root-view-map
+    "a" 'ps/telega-filters-push-archive
+    "m" 'ps/telega-filters-push-main)
+   (telega-webpage-mode-map
+    "x" 'telega-webpage-browse-url)
+   (dired-mode-map
+    "A-s-a" 'ps/telega-dired-attach-send))
 #+end_src
 
 *** Archive                                                                                                           :ARCHIVE:

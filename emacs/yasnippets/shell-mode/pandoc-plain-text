@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: pandoc-plain-text
+# key: ppt
+# --
+pandoc --to=plain --wrap=none $1

@@ -86,8 +86,6 @@ NAME and ARGS are as in `use-package'."
       mac-right-control-modifier 'super
       mac-right-command-modifier 'alt)
 
-(setq iso-transl-char-map nil) ; https://emacs.stackexchange.com/questions/17508/
-
 (global-unset-key (kbd "C-a"))
 (global-unset-key (kbd "C-b"))
 (global-unset-key (kbd "C-d"))
@@ -194,6 +192,16 @@ NAME and ARGS are as in `use-package'."
 (define-key esc-map (kbd "A-'") nil)
 (global-unset-key (kbd "s-q"))
 (global-unset-key (kbd "s-j"))
+
+(use-feature iso-transl
+  :config
+  (setq iso-transl-char-map nil) ; https://emacs.stackexchange.com/questions/17508/
+
+(define-key key-translation-map (kbd "A-c") nil)
+(define-key key-translation-map (kbd "A-o") nil)
+(define-key key-translation-map (kbd "A-u") nil)
+(define-key key-translation-map (kbd "A-m") nil)
+(define-key key-translation-map (kbd "A-x") nil))
 
 (use-package no-littering
   :demand t
@@ -490,7 +498,7 @@ NAME and ARGS are as in `use-package'."
   ("r" (ps/org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Main")
   ("b" (ps/org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAE" :column "Main")
   ("m" (ps/org-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Main")
-  ("d" (ps/org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLH" :column "Main")
+  ("d" (ps/org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Main")
   ("u" (ps/org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Main")
   ("i" (ps/org-id-goto "6C7F53ED-B43E-401D-BEEA-DB38CAE367FD") "EAI" :column "Main")
   ("w" (ps/org-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
@@ -661,34 +669,18 @@ NAME and ARGS are as in `use-package'."
   "Dired folders"
   ("a" (hydra-dired-google-drive/body) "apps")
   ("b" (dired ps/dir-bibliography) "bibliography")
-  ("c" (dired ps/dir-dropbox-tlon-core) "core")
-  ("C" (dired ps/dir-google-drive-tlon-core) "Google Drive: core")
   ("d" (dired ps/dir-dotfiles) "dotfiles")
   ("e" (dired ps/dir-emacs) "Emacs")
-  ("f" (dired ps/dir-dropbox-tlon-fede) "fede")
-  ("F" (dired ps/dir-google-drive-tlon-fede) "Google Drive: fede")
-  ("g" (dired ps/dir-dropbox-tlon-GPE) "Dropbox: GPE")
-  ("G" (dired ps/dir-google-drive-tlon-GPE) "Google Drive: GPE")
-  ("h" (dired ps/dir-dropbox-tlon-HEAR) "Dropbox: HEAR")
-  ("H" (dired ps/dir-google-drive-tlon-HEAR) "Google Drive: HEAR")
   ("i" (dired ps/dir-anki) "Anki")
   ("j" (dired ps/dir-health) "Health")
   ("k" (dired ps/dir-PW) "PW")
-  ("l" (dired ps/dir-dropbox-tlon-leo) "Dropbox: leo")
-  ("L" (dired ps/dir-google-drive-tlon-leo) "Google Drive: leo")
   ("m" (hydra-dired-music/body) "Music")
   ("n" (dired ps/dir-notes) "Notes")
   ("o" (dired ps/dir-google-drive) "Google Drive")
   ("p" (dired ps/dir-people) "people")
   ;; ("q" (dired ps/dir-youtube))
-  ("r" (dired ps/dir-dropbox-tlon-RAE) "Dropbox: RAE")
-  ("R" (dired ps/dir-google-drive-tlon-RAE) "Google Drive: RAE")
-  ("s" (dired ps/dir-dropbox-tlon-FM) "Dropbox: FM")
-  ("S" (dired ps/dir-google-drive-tlon-FM) "Google Drive: FM")
-  ("t" (dired ps/dir-dropbox-tlon) "Dropbox: tlon")
-  ("T" (dired ps/dir-google-drive-tlon) "Google Drive: tlon")
-  ("u" (dired ps/dir-dropbox-tlon-EAN) "Dropbox: EAN")
-  ("U" (dired ps/dir-google-drive-tlon-EAN) "Google Drive: EAN")
+  ("t" (hydra-dired-tlon/body) "Tlön")
+  ("H-t" (hydra-dired-tlon/body) "Tlön")
   ("U" (dired ps/dir-audiobooks) "Audiobooks")
   ("v" (dired ps/dir-movies) "movies")
   ("w" (dired ps/dir-downloads) "downloads")
@@ -702,6 +694,30 @@ NAME and ARGS are as in `use-package'."
   ("SPC" (dired "~/") "user")
   (";" (dired-jump) "Current buffer")
   ("H-;" (dired-jump-other-window) "Current buffer in other window"))
+
+(defhydra hydra-dired-tlon
+  (:exit t)
+  "Dired folders: Tlön"
+  ("b" (dired ps/dir-dropbox-tlon-LBDLH) "Dropbox: LBDLH")
+  ("H-b" (dired ps/dir-dropbox-tlon-LBDLH) "Google Drive: LBDLH")
+  ("c" (dired ps/dir-dropbox-tlon-core) "core")
+  ("H-c" (dired ps/dir-google-drive-tlon-core) "Google Drive: core")
+  ("f" (dired ps/dir-dropbox-tlon-fede) "fede")
+  ("H-f" (dired ps/dir-google-drive-tlon-fede) "Google Drive: fede")
+  ("g" (dired ps/dir-dropbox-tlon-GPE) "Dropbox: GPE")
+  ("H-g" (dired ps/dir-google-drive-tlon-GPE) "Google Drive: GPE")
+  ("h" (dired ps/dir-dropbox-tlon-HEAR) "Dropbox: HEAR")
+  ("H-h" (dired ps/dir-google-drive-tlon-HEAR) "Google Drive: HEAR")
+  ("l" (dired ps/dir-dropbox-tlon-leo) "Dropbox: leo")
+  ("H-l" (dired ps/dir-google-drive-tlon-leo) "Google Drive: leo")
+  ("r" (dired ps/dir-dropbox-tlon-RAE) "Dropbox: RAE")
+  ("H-r" (dired ps/dir-google-drive-tlon-RAE) "Google Drive: RAE")
+  ("s" (dired ps/dir-dropbox-tlon-FM) "Dropbox: FM")
+  ("H-s" (dired ps/dir-google-drive-tlon-FM) "Google Drive: FM")
+  ("t" (dired ps/dir-dropbox-tlon) "Dropbox: tlon")
+  ("H-t" (dired ps/dir-google-drive-tlon) "Google Drive: tlon")
+  ("u" (dired ps/dir-dropbox-tlon-EAN) "Dropbox: EAN")
+  ("H-u" (dired ps/dir-google-drive-tlon-EAN) "Google Drive: EAN"))
 
 (defhydra hydra-dired-google-drive
   (:exit t)
@@ -853,9 +869,8 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   (mixed-pitch-set-height t)
 
   :config
-  (set-face-attribute 'variable-pitch nil
-                      :family ps/face-variable-pitch
-                      :height 1.4)
+  (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
+
   :hook
   (mu4e-view-mode-hook . mixed-pitch-mode)
   (org-mode-hook . mixed-pitch-mode)
@@ -906,78 +921,32 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   (org-fontify-quote-and-verse-blocks t)
 
   :config
-  (defun ps/custom-faces ()
+  (defun ps/org-faces-custom-faces ()
     "My custom faces, to be used in conjunction with theme."
-    (set-face-attribute 'default nil
-                        :family ps/face-fixed-pitch
-                        :height 115)
-    (set-face-attribute 'fixed-pitch nil
-                        :family ps/face-fixed-pitch
-                        :height 1.1)
-    (set-face-attribute 'org-drawer nil
-                        :foreground "LightSkyBlue"
-                        :family ps/face-fixed-pitch
-                        :height 0.7)
-    (set-face-attribute 'org-property-value nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
-    (set-face-attribute 'org-todo nil
-                        :height 1.0)
-    (set-face-attribute 'org-archived nil
-                        :height 0.9)
-    (set-face-attribute 'org-document-title nil
-                        :underline t
-                        :height 1.0)
-    (set-face-attribute 'org-special-keyword nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
-    (set-face-attribute 'org-tag nil
-                        :height 0.9)
-    (set-face-attribute 'org-code nil
-                        :family ps/face-fixed-pitch
-                        :height 1.0)
-    (set-face-attribute 'org-level-1 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-2 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-3 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-4 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-5 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-6 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-7 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-level-8 nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-date nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
-    (set-face-attribute 'org-modern-date-active nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
-    (set-face-attribute 'org-modern-date-inactive nil
-                        :family ps/face-fixed-pitch
-                        :height 0.8)
-    (set-face-attribute 'org-modern-tag nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'corfu-default nil
-                        :family ps/face-fixed-pitch
-                        :height 0.9)
-    (set-face-attribute 'org-quote nil
-                        :family ps/face-variable-pitch
-			:height 1.3)))
+    (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
+    (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
+    (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family ps/face-fixed-pitch :height 0.7)
+    (set-face-attribute 'org-property-value nil :family ps/face-fixed-pitch :height 0.8)
+    (set-face-attribute 'org-todo nil :family ps/face-fixed-pitch :height 1.0)l
+    (set-face-attribute 'org-archived nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-document-title nil :family ps/face-fixed-pitch :underline t :height 1.0)
+    (set-face-attribute 'org-special-keyword nil :family ps/face-fixed-pitch :height 0.8)
+    (set-face-attribute 'org-tag nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-code nil :family ps/face-fixed-pitch :height 1.0)
+    (set-face-attribute 'org-level-1 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-2 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-3 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-4 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-5 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-6 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-7 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-level-8 nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-date nil :family ps/face-fixed-pitch :height 0.8)
+    (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
+    (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
+    (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 0.9)
+    (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)))
 
 (use-package modus-themes
   :straight (modus-themes
@@ -990,61 +959,39 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
 
   :config
 
-  (defvar my-highlight-parentheses-use-background t
-    "Prefer `highlight-parentheses-background-colors'.")
-
-  (setq my-highlight-parentheses-use-background t) ; Set to nil to disable backgrounds
-
-  (defun ps/modus-themes-highlight-parentheses ()
-    (modus-themes-with-colors
-      ;; Our preference for setting either background or foreground
-      ;; styles, depending on `my-highlight-parentheses-use-background'.
-      (if my-highlight-parentheses-use-background
-
-          ;; Here we set color combinations that involve both a background
-          ;; and a foreground value.
-          (setq highlight-parentheses-background-colors (list bg-cyan-intense
-                                                              bg-magenta-intense
-                                                              bg-green-intense
-                                                              bg-yellow-intense)
-                highlight-parentheses-colors (list cyan
-                                                   magenta
-                                                   green
-                                                   yellow))
-
-        ;; And here we pass only foreground colors while disabling any
-        ;; backgrounds.
-        (setq highlight-parentheses-colors (list green-intense
-                                                 magenta-intense
-                                                 blue-intense
-                                                 red-intense)
-              highlight-parentheses-background-colors nil)))
-
-    ;; Include this if you also want to make the parentheses bold:
-    (set-face-attribute 'highlight-parentheses-highlight nil :inherit 'bold)
-
-    ;; Our changes must be evaluated before enabling the relevant mode, so
-    ;; this comes last.
-    (global-highlight-parentheses-mode))
-
-      (setq modus-themes-common-palette-overrides modus-themes-preset-overrides-intense)
-
-  (defun ps/modus-themes-match-system ()
+  (defun ps/modus-themes-load-theme-emacs-mac ()
     "Load modus theme that matches system."
     (interactive)
     (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-        (load-theme 'modus-vivendi :no-confim)
-      (load-theme 'modus-operandi :no-confim)))
+        (load-theme 'modus-vivendi :no-confirm)
+      (load-theme 'modus-operandi :no-confirm)))
 
-  (ps/modus-themes-match-system)
+  (defun ps/modus-themes-load-theme-emacs-plus (appearance)
+    "Load theme, taking current system APPEARANCE into consideration."
+    (mapc #'disable-theme custom-enabled-themes)
+    (pcase appearance
+      ('light (load-theme 'modus-operandi :no-confirm))
+      ('dark (load-theme 'modus-vivendi :no-confirm))))
+
+  (defun ps/modus-themes-load-theme-conditionally ()
+    "Load themes conditional on which distribution of Emacs is
+installed."
+    (if (boundp 'mac-effective-appearance-change-hook)
+        ;; `emacs-mac'
+        (ps/modus-themes-load-theme-emacs-mac)
+      ;; `emacs-plus'
+      ;; (load-theme 'modus-vivendi :no-confirm)
+      (add-hook 'ns-system-appearance-change-functions #'ps/modus-theme-load-theme-emacs-plus)))
+
+  (setq modus-themes-common-palette-overrides modus-themes-preset-overrides-intense)
 
   ;; This ugly hack is necessary to make the theme load all the faces
   ;; on startup
   (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
 
   :hook
-  (modus-themes-after-load-theme-hook . ps/custom-faces)
-  (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
+  (modus-themes-after-load-theme-hook . ps/org-faces-custom-faces)
+  ;; (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
 
   :general
   ("A-d" 'modus-themes-toggle))
@@ -1108,7 +1055,8 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   ;; (doom-modeline--flycheck-icon t)
   (doom-modeline-github t)
   (doom-modeline-github-interval (* 10 60))
-  (doom-modeline-enable-word-count t)
+  ;; I think this causes significant slowdown
+  (doom-modeline-enable-word-count nil)
 
   :config
   (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
@@ -1133,14 +1081,15 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
         (remove '(global-mode-string ("" global-mode-string))
                 mode-line-misc-info))
 
-  (tab-bar-mode)
-  (setq global-mode-string '(" "
+  (run-with-timer 5 nil (lambda () (setq global-mode-string '(" "
                              (:eval (propertize display-time-string 'face 'ps/display-time))
                              " | "
                              fancy-battery-mode-line
                              " | "
                              telega-mode-line-format
-                             " | ")))
+                             " | "))))
+
+  (tab-bar-mode))
 
 (use-package fancy-battery
   :demand t
@@ -1246,7 +1195,7 @@ and generates profiling report."
   ("A-C-s-m" 'move-beginning-of-line
    ;; karabiner maps `/' to `z'; otherwise I can't trigger the command while holding `shift'
    "A-C-s-z" 'move-end-of-line)
-  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map help-mode-map helpful-mode-map Info-mode-map magit-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map telega-msg-button-map telega-root-mode-map eww-mode-map elfeed-search-mode-map elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
+  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map help-mode-map helpful-mode-map Info-mode-map magit-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
    "k" 'previous-line
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)
@@ -1770,34 +1719,29 @@ Has a preference for looking backward when not directly on a symbol."
 (general-define-key
  "C-H-M-b" 'ps/strip-thing-at-point)
 
-(setq save-interprogram-paste-before-kill t) ; add system clipboard to kill ring
+(use-feature simple
+  :custom
+  (kill-ring-max 500)
+  (save-interprogram-paste-before-kill t) ; add system clipboard to kill ring
 
-;; 2022-06-21 Replaced by `consult-yank-pop'
-(defun ps/yank-pop-or-show-kill-ring (&optional arg)
-  "If called after a yank, call `yank-pop'; otherwise call `consult-yank-from-kill-ring'."
-  (interactive "*p")
-  (if (eq last-command 'yank)
-      (yank-pop arg)
-    (call-interactively 'consult-yank-from-kill-ring)))
+  :config
+  (defun ps/yank-pop-forward (arg)
+    (interactive "p")
+    (yank-pop (- arg)))
 
-(defun ps/yank-pop-forward (arg)
-  (interactive "p")
-  (yank-pop (- arg)))
-(defun ps/yank-and-pop ()
-  "Yank, then pop the last kill off the ring."
-  (interactive)
-  (yank)
-  (when kill-ring
-    (setq kill-ring (cdr kill-ring)))
-  (when kill-ring-yank-pointer
-    (setq kill-ring-yank-pointer kill-ring))
-  (message "Last kill popped off kill-ring."))
+  (defun ps/yank-and-pop ()
+    "Yank, then pop the last kill off the ring."
+    (interactive)
+    (yank)
+    (when kill-ring
+      (setq kill-ring (cdr kill-ring)))
+    (when kill-ring-yank-pointer
+      (setq kill-ring-yank-pointer kill-ring))
+    (message "Last kill popped off kill-ring."))
 
-(general-define-key
- "H-v" 'yank
- ;; "H-V" 'ps/yank-pop-or-show-kill-ring
- ;; "" 'ps/yank-pop-forward
- "H-A-v" 'ps/yank-and-pop)
+  :general
+  ("H-v" 'yank
+   "H-A-v" 'ps/yank-and-pop))
 
 (use-feature simple
   :custom
@@ -2249,7 +2193,7 @@ as the current buffer."
   (defun ps/org-narrow-to-entry-no-children ()
     "Narrow org buffer to entry excluding all children."
     (interactive)
-   (org-narrow-to-subtree)
+    (org-narrow-to-subtree)
     (save-excursion
       (org-next-visible-heading 1)
       (narrow-to-region (point-min) (point))))
@@ -2497,7 +2441,8 @@ or are no longer readable will be killed."
                   (setq found t)
                   (throw 'done nil)))
               (buffer-list))
-        (unless found (print "not found")))))
+        (unless found
+          (print "not found")))))
 
   ;; stackoverflow.com/questions/21486934/file-specific-key-binding-in-emacs/21493693#21493693
   (defun ps/buffer-local-set-key (key command)
@@ -2878,6 +2823,7 @@ option."
   (uniquify-buffer-name-style 'forward))
 
 (use-package reveal-in-osx-finder
+  :defer 10
   :general
   (dired-mode-map
    "/" 'reveal-in-osx-finder))
@@ -3022,6 +2968,7 @@ selected frame."
     "Split windows when frame is unsplit. Split in three windows if
 `frame-width' is greater than `ps/frame-width-threshold',
 otherwise in two windows."
+    (interactive)
     (when (= (length (window-list)) 1)
       (split-window-right))
     (when (> (frame-width) ps/frame-width-threshold)
@@ -3098,10 +3045,12 @@ window depending on the number of present windows."
    "H-W" 'delete-other-windows
    "M-A-q" 'delete-frame
    "s-A-," 'ps/split-emacs-chrome-sideways
-   "M--" 'ps/window-buffer-move-dwim
+   "M-–" 'ps/window-buffer-move-dwim ; `emacs-mac'
+   "M--" 'ps/window-buffer-move-dwim ; `emacs-plus'
    "M-," 'ps/window-buffer-move-left
    "M-." 'ps/window-buffer-move-right
-   "A-M--" 'ps/window-buffer-swap
+   "A-M--" 'ps/window-buffer-swap ; `emacs-mac'
+   "A-M-–" 'ps/window-buffer-swap ; `emacs-plus'
    "A-C-s-y" 'scroll-down-command
    "A-C-s-h" 'scroll-up-command
    "A-C-s-g" 'scroll-other-window
@@ -3331,7 +3280,7 @@ then to selected character immediately ahead of point."
   :init
   ;; This neds to be delayed a few seconds because the value returned
   ;; by `window-total-width' changes as Emacs restarts.
-  (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))e))
+  (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))))
 
   (defun ps/writerrom-global-effects (arg)
     "Enable and disable custom effects when `writeroom-mode' is
@@ -3440,12 +3389,6 @@ and start clock."
   :custom
   (calendar-week-start-day 1)    ; week starts on Monday
   (calendar-set-date-style 'iso) ; this isn't the default?
-  ;; (calendar-location-name "Ciudad de Buenos Aires, Argentina")
-  ;; (calendar-latitude -34.6079)
-  ;; (calendar-longitude -58.3660)
-  (calendar-location-name "Mexico DF")
-  (calendar-latitude 19.4326)
-  (calendar-longitude -99.1332)
   (calendar-time-display-form
    '(24-hours ":" minutes
               (when time-zone
@@ -3455,6 +3398,19 @@ and start clock."
   (holiday-bahai-holidays nil)
 
   :config
+  (cond ((equal (system-name) ps/computer-hostname-pablo)
+         (setq calendar-location-name "Condesa, Mexico City")
+         (setq calendar-latitude 19.424335622396516)
+         (setq calendar-longitude -99.16659969406722))
+        ((equal (system-name) ps/computer-hostname-leo)
+         (setq calendar-location-name "Barcelona")
+         (setq calendar-latitude 41.3874)
+         (setq calendar-longitude 2.1686)))
+  ;; To copy the current latitude and longitude, go to Google Maps,
+  ;; right-click on your location, and select the coordinates.
+  ;; (calendar-location-name "Ciudad de Buenos Aires, Argentina")
+  ;; (calendar-latitude -34.6079) (calendar-longitude -58.3660)
+
   ;; Adapted from Prot
   (defcustom ps/date-specifier "%F"
     "Date specifier for `format-time-string'.
@@ -3785,16 +3741,15 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
   :defer 10)
 
 (use-package display-wttr
-  :after tab-bar
-  :demand t
+  :defer 6
   :custom
-  (display-wttr-interval (* 10 60))
+  (display-wttr-interval (* 15 60))
 
   :config
   (cond ((equal (system-name) ps/computer-hostname-pablo)
-         (setq display-wttr-locatizons '("Mexico City")))
+         (setq display-wttr-locations '("Mexico City")))
         ((equal (system-name) ps/computer-hostname-leo)
-         (setq display-wttr-locatizons '("Barcelona"))))
+         (setq display-wttr-locations '("Barcelona"))))
 
   (display-wttr-mode))
 
@@ -3945,12 +3900,16 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
 (use-package forge
   :after magit ghub
   :demand t
+  :init
+  (unless (version<= emacs-version "29.0")
+    (setq forge-database-connector 'sqlite-builtin))
+
   :custom
   (forge-owned-accounts `((,ps/forge-owned-accounts)))
 
   :general
   (forge-post-mode-map
-  "s-c" 'forge-post-submit))
+   "s-c" 'forge-post-submit))
 
 (use-package code-review
   :custom
@@ -3974,7 +3933,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
 (use-package git-auto-commit-mode
   :demand t
   :config
-  (setq-default gac-automatically-push-p t)
+  (setq-default gac-automatically-push-p nil)
   (setq-default gac-debounce-interval 30)
   (setq-default gac-silent-message-p t)
   (setq-default gac-automatically-add-new-files-p t))
@@ -4057,12 +4016,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
   :general
   (isearch-mode-map
    "A-C-e" 'query-replace-regexp))
-
-(use-package substitute
-  :straight (substitute
-             :host sourcehut
-                   :repo "protesilaos/substitute")
-  :demand t)
 
 (use-package rg
   :custom
@@ -4440,14 +4393,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :straight (cape-yasnippet
              :host github
              :repo "elken/cape-yasnippet"))
-
-(use-package org-block-capf
-  :straight (org-block-capf
-             :host github
-             :repo "xenodium/org-block-capf")
-  :demand t
-  :hook
-  (org-mode-hook . org-block-capf-add-to-completion-at-point-functions))
 
 (use-package company
   :defer 5
@@ -5000,54 +4945,19 @@ around point."
 (general-define-key
  "A-y" 'ps/goldendict-search-input)
 
-(use-package google-translate
-  :defer 20
-  :functions (my-google-translate-at-point google-translate--search-tkk)
-
+(use-package txl
+  :straight (txl
+             :host github
+             :repo "tmalsburg/txl.el")
   :custom
-  (google-translate-default-target-language "en")
-  (google-translate-default-source-language "es")
-
-  :config
-  (defun google-translate--search-tkk ()
-    "Search TKK."
-    (list 430675 2721866130))
-
-  (setq google-translate-backend-method 'curl)
-
-  (defun ps/google-translate-dwim (&optional reverse-p)
-    "Translate region if active, word if at point, else prompt for
-text. If invoked with a prefix argument, perform a reverse
-translation."
-    (interactive "P")
-    (let ((google-translate-default-source-language ps/ispell-language)
-          (google-translate-default-target-language
-           (if (string= ps/ispell-language "en")
-               "es"
-             "en")))
-      (if reverse-p
-          (google-translate-at-point-reverse)
-        (google-translate-at-point))))
-
-  ;; modify original function so that it prompts for text to translate
-  ;; if region is inactive and no word is at point.
-  (defun ps/%google-translate-at-point (override-p reverse-p)
-    (let* ((langs (google-translate-read-args override-p reverse-p))
-           (source-language (car langs))
-           (target-language (cadr langs))
-           (bounds nil))
-      (google-translate-translate
-       source-language target-language
-       (cond ((string-equal major-mode "pdf-view-mode") (car (pdf-view-active-region-text)))
-             ((use-region-p) (buffer-substring-no-properties (region-beginning) (region-end)))
-             (t (or (and (setq bounds (bounds-of-thing-at-point 'word))
-                         (buffer-substring-no-properties (car bounds) (cdr bounds)))
-                    (google-translate-query-translate)))))))
-
-  (advice-add '%google-translate-at-point :override #'ps/%google-translate-at-point)
+  (txl-languages '(ES . EN-US))
+  (txl-deepl-api-key (auth-source-pass-get "api" (concat "tlon/BAE/deepl.com/" ps/personal-email)))
 
   :general
-  ("H-A-y" 'ps/google-translate-dwim))
+  ("H-A-y" 'txl-translate-region-or-paragraph)
+  (txl-edit-translation-mode-map
+   "RET" 'txl-accept-translation
+   "q" 'txl-dismiss-translation))
 
 (use-package atomic-chrome
   :defer 10
@@ -5484,12 +5394,9 @@ FILE."
    "s-d" 'eval-defun
    "A-s-d" 'edebug-defun))
 
-(use-feature debug
-)
+(use-feature debug)
 
 (use-package macrostep)
-
-(use-package ess)
 
 (use-package clojure-mode)
 
@@ -6216,11 +6123,11 @@ image."
      ;; ("m" "To discuss in meeting with Leo" plain
      ;; (id "3AAD2510-0522-4598-9182-50E97504EAF6")
      ;; "- [ ] %?" :empty-lines 1)
-     ;; ("r" "bibliography reference" plain
-      ;; (file ,ps/file-orb-noter-template)
-      ;; :if-new
-      ;; (file ,ps/file-orb-capture-template)
-      ;; :unnarrowed t :immediate-finish t)
+     ("r" "bibliography reference" plain
+      (file ,ps/file-orb-noter-template)
+      :if-new
+      (file ,ps/file-orb-capture-template)
+      :unnarrowed t :immediate-finish t)
      ("s" "Slack" entry
       (file ps/file-inbox-desktop)
       "* TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
@@ -6434,11 +6341,7 @@ conditional on active capture template."
 (use-feature org-id
   :demand t
   :custom
-  (org-id-extra-files
-   `(,ps/file-tareas-leo
-     ,ps/file-tareas-fede))
-
-     (org-id-link-to-org-use-id t)
+  (org-id-link-to-org-use-id t)
 
   :init
   ;; stackoverflow.com/a/16247032/4479455
@@ -6453,6 +6356,9 @@ not already have one."
                                       "COMMENT Local variables"
                                       "TODO Local variables"))
         (org-map-entries 'org-id-get-create))))
+
+  ;; (setq org-id-extra-files
+        ;; (directory-files-recursively ps/dir-org "\\.org"))
 
   :config
   ;; copied from emacs.stackexchange.com/a/58834/32089
@@ -7102,12 +7008,29 @@ With optional prefix argument, open with eww."
    "I" 'org-pomodoro))
 
 (use-package emacsql-sqlite3
+  :if (version< emacs-version "29.0")
+  :demand t)
+
+(use-package emacsql-sqlite-builtin
+  :if (not (version< emacs-version "29.0"))
   :demand t)
 
 (use-package org-roam
-  :after emacsql-sqlite3
+  :after (:any emacsql-sqlite3 emacsql-sqlite-builtin)
   :demand t
   :init
+  ;; `sqlite3' is deprecated, but I cannot get org-roam to work with
+  ;; either `sqlite' or `sqlite-builtin'. So using this for the time
+  ;; being, until I succeed in diagnosing the problem. See the
+  ;; `org-roam-database-connector' docstring and the 'How to cache'
+  ;; section of the manual: orgroam.com/manual.html#How-to-cache
+
+  ;; [2023-01-24 Tue] I should migrate to `sqlite-builtin' when Emacs
+  ;; 29 is released. See `org-roam-database-connector' docstring.
+  (if (version< emacs-version "29.0")
+      (setq org-roam-database-connector 'sqlite3)
+    (setq org-roam-database-connector 'sqlite-builtin))
+
   (defun ps/org-roam-recent (days &optional limit)
     "Return list of files modified in the last DAYS. Optionally,
 return such list if its length is less than LIMIT."
@@ -7126,14 +7049,8 @@ return such list if its length is less than LIMIT."
         file-list)))
 
   :custom
-  ;; `sqlite3' is deprecated, but I cannot get org-roam to work with
-  ;; either `sqlite' or `sqlite-builtin'. So using this for the time
-  ;; being, until I succeed in diagnosing the problem. See the
-  ;; `org-roam-database-connector' docstring and the 'How to cache'
-  ;; section of the manual: orgroam.com/manual.html#How-to-cache
-  (org-roam-database-connector 'sqlite3)
   (org-roam-directory ps/dir-org-roam)
-  (org-roam-complete-everywhere t)
+  ;; (org-roam-complete-everywhere t)
   (org-roam-node-display-template #("${title:*} ${tags:10}" 11 21
                                     (face org-tag)))
   (org-roam-capture-templates
@@ -7143,7 +7060,67 @@ return such list if its length is less than LIMIT."
       (file ,ps/file-orb-capture-template)
       :unnarrowed t :immediate-finish t :jump-to-captured t)))
 
+  ;; (org-roam-completion-everywhere t)
+
   :config
+  (defvar ps/org-roam-excluded-dirs nil)
+  (defvar ps/org-roam-excluded-files nil)
+
+  (dolist (dir `(,ps/dir-anki
+                 ,ps/dir-inactive
+                 ,ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
+                 ,ps/dir-archive))
+    (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs))
+
+  (dolist (file '("orb-noter-template.org"
+                  "tareas.org"
+                  "calendar.org"
+                  "notatu-dignum.org"
+                  "quotes-old.org"
+                  ".org2blog.org"
+                  "feeds.org"))
+    (push file ps/org-roam-excluded-files))
+
+  (setq org-roam-file-exclude-regexp
+        (append
+         ps/org-roam-excluded-dirs
+         ps/org-roam-excluded-files
+         '("conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")))
+
+  (setq org-roam-db-node-include-function
+        (lambda ()
+          (if (or
+               ;; exclude selected tags
+               (member "noid" (org-get-tags))
+               (member "ARCHIVE" (org-get-tags))
+               ;; exclude selected headings
+               (member (org-get-heading) '("Local variables"
+                                           "COMMENT Local variables"
+                                           "TODO Local variables"
+                                           "Evaluation"
+                                           "History"
+                                           "Further reading"
+                                           "External links"
+                                           "Related entries"
+                                           "Archive :ARCHIVE:"))
+               ;; exclude buffers when in list of special dirs and org
+               ;; heading at point is of level higher than 1 (i.e.
+               ;; don't create unnecessary IDs for article
+               ;; subsections)
+               (and
+                ;; dir condition
+                (member
+                 (file-name-directory (buffer-file-name))
+                 (mapcar #'file-name-as-directory
+                         ;; List of special dirs
+                         (list
+                          ps/dir-journal)))
+                ;; heading condition
+                (> (org-current-level) 1))
+               )
+              nil
+            t)))
+
   (defun ps/org-roam-db-query (sql &rest args)
     "Run SQL query on Org-roam database with ARGS.
  SQL can be either the emacsql vector representation, or a string."
@@ -7200,6 +7177,9 @@ return such list if its length is less than LIMIT."
         (ps/org-narrow-to-entry-and-children)
         (goto-char (point-max)))))
 
+  (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
+  ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
+
   ;; include transcluded links in `org-roam' backlinks
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
 
@@ -7217,7 +7197,6 @@ return such list if its length is less than LIMIT."
   (org-mode-map
    "s-r" 'org-roam-buffer-toggle))
 
-
 (use-package org-roam-ui
   :straight
   (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
@@ -7234,13 +7213,26 @@ return such list if its length is less than LIMIT."
 
 (use-package org-transclusion
   :after org
+  :defer 5
+
   :config
   (dolist (element '(headline drawer property-drawer))
     (push element org-transclusion-exclude-elements))
-  (set-face-attribute
-   'org-transclusion-source-fringe nil)
-   (set-face-attribute
-   'org-transclusion-fringe nil))
+
+  (face-spec-set 'org-transclusion-fringe
+                 '((((background light))
+                    :foreground "black")
+                   (t
+                    :foreground "white"))
+                 'face-override-spec)
+  (face-spec-set 'org-transclusion-source-fringe
+                 '((((background light))
+                    :foreground "black")
+                   (t
+                    :foreground "white"))
+                 'face-override-spec)
+  :general
+  ("s-l" 'org-transclusion-add-all))
 
 (use-package vulpea
   :commands (vulpea-buffer-p vulpea-agenda-files-update vulpea-buffer-prop-get-list vulpea-project-update-tag)
@@ -7471,7 +7463,7 @@ ARG is the prefix argument received when calling interactively the function."
             (org-cite--allowed-p context)
             (funcall insert nil arg))))))))
 
-  (advice-remove 'org-cite-insert #'ps/org-cite-insert)
+  (advice-add 'org-cite-insert :override #'ps/org-cite-insert)
 
   :general
   ("H-/" 'org-cite-insert))
@@ -7668,20 +7660,34 @@ Version 2015-06-08"
   (bibtex-completion-pdf-field "file")
   (bibtex-dialect 'biblatex))
 
+(use-package org-roam-bibtex
+  :demand t
+  ;; :after bibtex-completion
+  :custom
+  (orb-roam-ref-format 'org-cite)
+  (orb-insert-interface 'citar-open-notes)
+  (orb-note-actions-interface 'default)
+  (orb-preformat-keywords
+   '("citekey" "title" "url" "author" "author-or-editor" "keywords" "file"))
+  (orb-process-file-keyword t)
+  (orb-attached-file-extensions '("pdf"))
+
+  :config
+  (add-to-list 'orb-preformat-keywords "year")
+  (org-roam-bibtex-mode))
+
 (use-package citar-org-roam
   :straight (citar-org-roam
              :host github
                    :repo "emacs-citar/citar-org-roam")
   :demand t
   :no-require t
-  :after  org-roam
-  :config
-  (citar-org-roam-mode))
+  :after  org-roam)
 
 (use-package citar
   :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
   ;; :defer 10
-  ;; :after oc vertico embark marginalia citar-org-roam
+  ;; :after oc vertico embark marginalia
   :demand t
   :custom
   (citar-open-note-functions '(orb-citar-edit-note))
@@ -7705,6 +7711,7 @@ Version 2015-06-08"
                            :open #'citar-org-roam-open-note
                            :create #'orb-citar-edit-note
                            :annotate #'citar-org-roam--annotate))
+
   (setq citar-notes-source 'orb-citar-source)
 
   (defun ps/citar--get-title (entry)
@@ -7867,6 +7874,22 @@ in the file. Data comes from www.ebook.de."
 (use-package ebib
   :defer 5
   :init
+
+  (defun ps/ebib-reload-current-database-no-confirm ()
+    "Reload the current database from disk, without asking for
+confirmation."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+       (ebib--reload-database ebib--cur-db)
+       (ebib--set-modified nil ebib--cur-db)
+       (ebib--update-buffers)
+       (message "Database reloaded"))
+      ;; (ebib--pop-to-buffer (ebib--buffer 'entry)))
+      (default
+        (beep))))
+
   (file-notify-add-watch
    ps/file-bibliography-new
    '(change attribute-change)
@@ -8340,20 +8363,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
 
   (advice-add 'ebib-edit-entry :override #'ps/ebib-edit-entry)
 
-  (defun ps/ebib-reload-current-database-no-confirm ()
-    "Reload the current database from disk, without asking for
-confirmation."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-       (ebib--reload-database ebib--cur-db)
-       (ebib--set-modified nil ebib--cur-db)
-       (ebib--update-buffers)
-       (message "Database reloaded"))
-      ;; (ebib--pop-to-buffer (ebib--buffer 'entry)))
-      (default
-        (beep))))
+
 
   (defun ps/ebib--extension-directories (extension)
     "Return directory associated with EXTENSION."
@@ -9431,7 +9441,7 @@ it, without asking for confirmation."
   ;; (mu4e-compose-mode-hook . (lambda () "prevent accumulation of drafts" (auto-save-visited-mode 1)))
 
   :general
-  ("µ" 'mu4e) ; µ = A-m
+  ("A-m" 'mu4e)
   ((mu4e-main-mode-map mu4e-headers-mode-map mu4e-view-mode-map)
    "c" 'mu4e-compose-new)
   ((mu4e-headers-mode-map mu4e-view-mode-map)
@@ -9485,10 +9495,6 @@ it, without asking for confirmation."
    "w" 'mu4e-copy-message-path
    "A-C-s-u" nil
    "A-C-s-p" nil))
-
-(use-feature mu4e-org
-  :after mu4e
-  :demand t)
 
 (use-package mu4e-alert
   :after mu4e
@@ -9589,30 +9595,42 @@ Grammarly."
   (telega-use-images t)
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
-  ;; disabing: librsvg bug
-  ;; (telega-emoji-use-images 'noto-emoji)
   (telega-filters-custom '(("Main" . main)
-                           ("Important" or mention
-                            (and unread unmuted))
-                           ("Archive" . archive)
-                           ("Online" and
-                            (not saved-messages) (user is-online))
-                           ("Groups" type basicgroup supergroup)
-                           ("Channels" type channel)))
+			   ("Important" or mention
+			    (and unread unmuted))
+			   ("Archive" . archive)
+			   ("Online" and
+			    (not saved-messages) (user is-online))
+			   ("Groups" type basicgroup supergroup)
+			   ("Channels" type channel)))
   (telega-completing-read-function 'completing-read)
 
   :config
   (defun ps/telega-switch-to ()
-    "docstring"
+    "Switch to the most recent chat buffer. If none exists,
+switch to the root buffer, starting telega if necessary."
     (interactive)
     (ps/window-split-if-unsplit)
     (if (> (frame-width) ps/frame-width-threshold)
-        (winum-select-window-3)
+	(winum-select-window-3)
       (winum-select-window-2))
-    ;; TODO: switch to 'telega-chat-mode buffer if it exists
-    (telega)
-    (beginning-of-buffer)
-    (forward-line 3))
+    (let* ((rootbuf "*Telega Root*")
+	   (buf (or
+		 (let ((chatbuf))
+		   (mapc (lambda (x)
+			   (when (with-current-buffer x
+				   (eq major-mode 'telega-chat-mode))
+			     (switch-to-buffer x)
+			     (setq chatbuf x)))
+			 (buffer-list))
+		   chatbuf)
+		 (get-buffer rootbuf))))
+      (if buf
+	  (progn
+	    (switch-to-buffer rootbuf)
+	    (beginning-of-buffer)
+	    (forward-line 3))
+	(telega))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -9629,8 +9647,8 @@ into a task for Leo."
   (defun ps/telega-move-downloaded-file (file)
     "Move downloaded file(s) to `ps/dir-downloads' directory."
     (let* ((old-path (plist-get (plist-get file :local) :path))
-           (file-name (file-name-nondirectory old-path))
-           (new-path (concat ps/dir-downloads "/" file-name)))
+	   (file-name (file-name-nondirectory old-path))
+	   (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
 
@@ -9640,36 +9658,36 @@ into a task for Leo."
     (unless (telega-server-live-p)
       (user-error "Please launch Telega before running this command."))
     (if (equal (buffer-file-name) ps/file-tlon-docs)
-        (progn
-          (unless (region-active-p)
-            (user-error "Please select the region containing the changes you introduced."))
-          (let ((docs-section (org-get-heading)))
-            (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
-            (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
+	(progn
+	  (unless (region-active-p)
+	    (user-error "Please select the region containing the changes you introduced."))
+	  (let ((docs-section (org-get-heading)))
+	    (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
+	    (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
       (user-error "You aren't visiting `docs.org'!")))
 
   (defun ps/telega-docs-change-open (msg)
     "TODO: write docstring"
     (interactive (list (telega-msg-for-interactive)))
     (let* ((content (plist-get msg :content))
-           (msg-text (or (telega-tl-str content :text)
-                         (telega-tl-str content :caption)
-                         ;; See FR https://t.me/emacs_telega/34839
-                         (and (telega-msg-match-p msg '(type VoiceNote))
-                              (telega-tl-str (plist-get content :voice_note)
-                                             :recognized_text)))))
+	   (msg-text (or (telega-tl-str content :text)
+			 (telega-tl-str content :caption)
+			 ;; See FR https://t.me/emacs_telega/34839
+			 (and (telega-msg-match-p msg '(type VoiceNote))
+			      (telega-tl-str (plist-get content :voice_note)
+					     :recognized_text)))))
       (with-temp-buffer
-        (insert msg-text)
-        (goto-char (point-min))
-        (re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
-        (let ((change-begins (string-to-number (match-string 1)))
-              (change-ends (string-to-number (match-string 2))))
-          (find-file ps/file-tlon-docs)
-          (org-show-all)
-          (org-hide-drawer-all)
-          (org-highlight change-begins change-ends)
-          (goto-char change-begins))
-        (message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
+	(insert msg-text)
+	(goto-char (point-min))
+	(re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
+	(let ((change-begins (string-to-number (match-string 1)))
+	      (change-ends (string-to-number (match-string 2))))
+	  (find-file ps/file-tlon-docs)
+	  (org-show-all)
+	  (org-hide-drawer-all)
+	  (org-highlight change-begins change-ends)
+	  (goto-char change-begins))
+	(message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
 
   (defun ps/telega-filters-push-archive ()
     "Set active filters list to `archive'."
@@ -9684,7 +9702,7 @@ into a task for Leo."
   (defun ps/telega-chat-mode ()
     (require 'company)
     (add-hook 'completion-at-point-functions
-              #'telega-chatbuf-complete-at-point nil 'local))
+	      #'telega-chatbuf-complete-at-point nil 'local))
 
 
   (telega-mode-line-mode 1)
@@ -9697,6 +9715,10 @@ into a task for Leo."
 
   :general
   ("C-f" 'ps/telega-switch-to)
+  ((telega-msg-button-map telega-root-mode-map)
+   "k" 'telega-button-backward
+   "l" 'telega-button-forward
+   "o" 'ps/telega-chat-org-capture)
   (telega-chat-mode-map
    "M-p" nil
    "<return>" 'newline
@@ -9728,7 +9750,6 @@ into a task for Leo."
    "F" 'telega-msg-forward-marked-or-at-point
    "C" 'telega-msg-copy-link
    "L" 'ps/telega-chat-org-capture-leo
-   "o" 'ps/telega-chat-org-capture
    "s" 'telega-chatbuf-filter-search
    "w" 'telega-browse-url
    "W" 'telega-chatbuf-filter-cancel)
@@ -9739,15 +9760,14 @@ into a task for Leo."
    "SPC" 'telega-root-next-unread
    "." 'telega-chat-with
    "a" 'telega-chat-toggle-archive
-   "m" 'telega-chat-toggle-muted
-   "o" 'ps/telega-chat-org-capture)
-  (telega-root-view-map
-   "a" 'ps/telega-filters-push-archive
-   "m" 'ps/telega-filters-push-main)
-  (telega-webpage-mode-map
-   "x" 'telega-webpage-browse-url)
-  (dired-mode-map
-   "A-s-a" 'ps/telega-dired-attach-send))
+   "m" 'telega-chat-toggle-muted)
+   (telega-root-view-map
+    "a" 'ps/telega-filters-push-archive
+    "m" 'ps/telega-filters-push-main)
+   (telega-webpage-mode-map
+    "x" 'telega-webpage-browse-url)
+   (dired-mode-map
+    "A-s-a" 'ps/telega-dired-attach-send))
 
 (use-feature telega-mnz
   :after telega
@@ -10750,7 +10770,7 @@ to the clipboard."
   (if (eq system-type 'darwin)
       (setq alert-default-style 'osx-notifier)
     (setq alert-default-style 'notifications))
-  
+
   (defun ps/alert-dismiss-osx-notification ()
     "docstring"
     (interactive)
@@ -10825,8 +10845,8 @@ is connected."
   :hook
   (midnight-hook . ps/ledger-update-commodities)
   (midnight-hook . org-gcal-sync)
-  (midnight-hook . ps/org-id-update-id-locations)
-  (midnight-hook . org-roam-db-sync)
+  ;; (midnight-hook . ps/org-id-update-id-locations)
+  ;; (midnight-hook . org-roam-db-sync)
   (midnight-hook . ps/pass-git-sync)
   (midnight-hook . clean-buffer-list))
 ;; (midnight-hook . straight-prune-build)

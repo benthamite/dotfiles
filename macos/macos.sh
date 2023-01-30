@@ -308,3 +308,7 @@ echo 'Expand the print dialog by default'
 
 defaults write org.m0k.transmission WarningDonate -bool false
 echo 'Hide Transmission app donate message'
+
+defaults write com.google.Chrome URLAllowlist -array-add -string 'org-protocol://*'
+echo 'Disable confirmation prompts when running org-protocol'
+# reddit.com/r/emacs/comments/icjaie/comment/glup0ma/?utm_source=reddit&utm_medium=web2x&context=3

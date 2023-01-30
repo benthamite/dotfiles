@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: org-birthday-no-year
+# key: obny
+# --
+%%(org-anniversary nil $1 $2) birthday

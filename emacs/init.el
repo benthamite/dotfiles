@@ -927,7 +927,7 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
     (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
     (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family ps/face-fixed-pitch :height 0.7)
     (set-face-attribute 'org-property-value nil :family ps/face-fixed-pitch :height 0.8)
-    (set-face-attribute 'org-todo nil :family ps/face-fixed-pitch :height 1.0)l
+    (set-face-attribute 'org-todo nil :family ps/face-fixed-pitch :height 1.0)
     (set-face-attribute 'org-archived nil :family ps/face-fixed-pitch :height 0.9)
     (set-face-attribute 'org-document-title nil :family ps/face-fixed-pitch :underline t :height 1.0)
     (set-face-attribute 'org-special-keyword nil :family ps/face-fixed-pitch :height 0.8)
@@ -9173,9 +9173,11 @@ or specify any other coding system (and risk losing\n\
    "s-a" 'mml-attach-file))
 
 (use-package mu4e
-  :if (equal (system-name) ps/computer-hostname-pablo)
-  :defer 5
+  ;; :if (equal (system-name) ps/computer-hostname-pablo)
+  :demand t
+  ;; :defer 5
   :straight (:local-repo
+             ;; "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
              "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
              :pre-build
              ())
@@ -10677,7 +10679,8 @@ that duration."
   )
 
 (use-package pass
-  :defer 6
+  :demand t
+  ;; :defer 6
   :config
   (defun ps/pass-open-at-point ()
     "Open the URL associated with the entry at point and its password

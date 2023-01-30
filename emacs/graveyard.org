@@ -8,6 +8,28 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** chatgpt
+:PROPERTIES:
+:ID:       D059F98D-55C4-4D8C-939D-3415FAC6AEB9
+:END:
+/[[https://github.com/joshcho/ChatGPT.el][chatgpt]] communicates with ChatGPT./
+
+[2023-01-24 Tue] Superseded by [[id:6BA1A737-40A1-4253-8FC8-E211F6060BC9][gpt]]
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package chatgpt
+  :straight (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el"))
+
+  :init
+  (require 'python)
+  (setq chatgpt-repo-path "~/.emacs.d/straight/repos/ChatGPT.el/")
+  (setq chatgpt-python-interpreter "python3")
+
+  :general
+  (google-this-mode-submap
+   "g" 'chatgpt-query))
+#+end_src
+
+
 ** smartparens
 :PROPERTIES:
 :ID:       4CCBCEAB-AE0C-4D74-94B3-CA3AE6DCF5F0

@@ -17418,23 +17418,27 @@ To initialize the database (after reinstalling), ~mu init --maildir=~/Maildir --
 
 [2021-08-12 Thu 09:45] If you encounter problems with mu and Straight, see [[https://github.com/raxod502/straight.el/issues/491#issuecomment-760150634][this thread]].
 
-[2022-07-11 Mon 23:58] Note: ~mu~ is now pinned in ~brew~ (~brew pin mu~) to version 1.6.11. The most recent version (1.8.5) wasn't working well with [[id:DADEABFE-0E73-4E8F-9973-771FFEF55B60][org-msg]] (see [[https://github.com/jeremy-compostella/org-msg/issues/153][this issue]]). Once the issue is resolved, unpin it and upgrade to the latest version. Process I followed:
+[2022-07-11 Mon 23:58] Note: ~mu~ is now pinned in ~brew~ (~brew pin mu~) to version 1.6.11. The most recent version (1.8.5) wasn't working well with [[id:DADEABFE-0E73-4E8F-9973-771FFEF55B60][org-msg]] (see [[https://github.com/jeremy-compostella/org-msg/issues/153][this issue]] and [[https://groups.google.com/g/mu-discuss/c/V1WxQzglkZA/m/Av9vJ_BkAgAJ][this thread]]). Once the issue is resolved, unpin it and upgrade to the latest version.
+
+Here's the process I followed:
 
 1. ~$ brew uninstall mu~
 2. download [[https://raw.githubusercontent.com/Homebrew/homebrew-core/c42744ba370044e5363e1a6547014c810304b520/Formula/mu.rb][this formula]]
 3. ~$ HOMEBREW_NO_INSTALL_CLEANUP=1 brew install /Users/pablostafforini/Downloads/mu.rb~
 4. ~$ brew pin mu~
 
+[2023-01-30 Mon 17:12] The problem is still not solved.
+
 #+begin_src emacs-lisp :results silent
 (use-package mu4e
-  :if (equal (system-name) ps/computer-hostname-pablo)
+  ;; :if (equal (system-name) ps/computer-hostname-pablo)
   :demand t
   ;; :defer 5
   :straight (:local-repo
-             "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
-             ;; "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
+             ;; "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
+             "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
              :pre-build
-             ()))
+             ())
   :init
   (setq ps/mu4e-inbox-folder "/Inbox")
   (setq ps/mu4e-daily-folder "/Daily")

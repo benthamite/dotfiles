@@ -17430,7 +17430,8 @@ https://mu-discuss.narkive.com/mxM4AVIW/how-to-debug-non-zero-exit-code
   :if (equal (system-name) ps/computer-hostname-pablo)
   :defer 5
   :straight (:local-repo
-             "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
+             "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
+             ;; "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
              :pre-build
              ())
   :init

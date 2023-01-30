@@ -2668,7 +2668,7 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
     (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
     (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family ps/face-fixed-pitch :height 0.7)
     (set-face-attribute 'org-property-value nil :family ps/face-fixed-pitch :height 0.8)
-    (set-face-attribute 'org-todo nil :family ps/face-fixed-pitch :height 1.0)l
+    (set-face-attribute 'org-todo nil :family ps/face-fixed-pitch :height 1.0)
     (set-face-attribute 'org-archived nil :family ps/face-fixed-pitch :height 0.9)
     (set-face-attribute 'org-document-title nil :family ps/face-fixed-pitch :underline t :height 1.0)
     (set-face-attribute 'org-special-keyword nil :family ps/face-fixed-pitch :height 0.8)

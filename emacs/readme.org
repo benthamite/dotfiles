@@ -17412,10 +17412,10 @@ To re-index the database without restarting Emacs, run ~pkill -2 -u $UID mu~ or 
 If you get a ~pinentry~ problem, try running this on the termnal ~gpgconf --kill gpg-agent~.
 
 To debug "Update process returned with non-zero exit code", ~(start-process-shell-command "test-mu4e" "test-mu4e" mu4e-get-mail-command)~
-
-To initialize the database (after reinstalling), ~mu init --maildir=~/Maildir --my-address=jim@example.com~. If you have multiple email addresses, include each address as a separate ~--my-address~ parameter, e.g. ~mu init --maildir=~/Mail --my-address=jim@example.com --my-address=bob@example.com~. See [[https://www.djcbsoftware.nl/code/mu/mu4e/Initializing-the-message-store.html][documentation]].
-
 https://mu-discuss.narkive.com/mxM4AVIW/how-to-debug-non-zero-exit-code
+
+To initialize the database (after reinstalling), ~mu init --maildir=~/Maildir --my-address=jim@example.com~. If you have multiple email addresses, include each address as a separate ~--my-address~ parameter, e.g. ~mu init --maildir=~/Mail --my-address=jim@example.com --my-address=bob@example.com~. Then run ~mu index~. See [[https://www.djcbsoftware.nl/code/mu/mu4e/Initializing-the-message-store.html][documentation]].
+
 [2021-08-12 Thu 09:45] If you encounter problems with mu and Straight, see [[https://github.com/raxod502/straight.el/issues/491#issuecomment-760150634][this thread]].
 
 [2022-07-11 Mon 23:58] Note: ~mu~ is now pinned in ~brew~ (~brew pin mu~) to version 1.6.11. The most recent version (1.8.5) wasn't working well with [[id:DADEABFE-0E73-4E8F-9973-771FFEF55B60][org-msg]] (see [[https://github.com/jeremy-compostella/org-msg/issues/153][this issue]]). Once the issue is resolved, unpin it and upgrade to the latest version. Process I followed:
@@ -17428,12 +17428,13 @@ https://mu-discuss.narkive.com/mxM4AVIW/how-to-debug-non-zero-exit-code
 #+begin_src emacs-lisp :results silent
 (use-package mu4e
   :if (equal (system-name) ps/computer-hostname-pablo)
-  :defer 5
+  :demand t
+  ;; :defer 5
   :straight (:local-repo
              "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
              ;; "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
              :pre-build
-             ())
+             ()))
   :init
   (setq ps/mu4e-inbox-folder "/Inbox")
   (setq ps/mu4e-daily-folder "/Daily")

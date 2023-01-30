@@ -20211,7 +20211,8 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 
 #+begin_src emacs-lisp :results silent
 (use-package pass
-  :defer 6
+  :demand t
+  ;; :defer 6
   :config
   (defun ps/pass-open-at-point ()
     "Open the URL associated with the entry at point and its password

@@ -620,15 +620,16 @@ CLOCK: [2022-04-27 Wed 16:21]--[2022-04-27 Wed 16:44] =>  0:23
 CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
 :END:
 
-/latest install/ (~emacs-mac~):
-[2022-05-28 Sat 21:07] ~brew install emacs-mac --with-dbus --with-no-title-bars --with-spacemacs-icon~
-
-/previous install/ (~emacs-plus~):
+/latest install/ (~emacs-plus~):
 
 1. ~brew tap d12frosted/emacs-plus~
 2. ~brew install emacs-plus --with-no-titlebar --with-native-comp --with-imagemagick --with-spacemacs-icon --with-xwidgets --with-dbus~
 3. delete ~emacs.app~ from the ~applications~ folder
 4. ~ln -s /usr/local/opt/emacs-plus@27/Emacs.app /Applications~
+
+/previous install/ (~emacs-mac~):
+[2022-05-28 Sat 21:07] ~brew install emacs-mac --with-dbus --with-no-title-bars --with-spacemacs-icon~
+
 
 ** Other config files
 :PROPERTIES:
@@ -10483,7 +10484,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :END:
 /[[https://github.com/vedang/pdf-tools][pdf-tools]] is a support library for PDF files./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package pdf-tools
   :if (or (equal (system-name) ps/computer-hostname-pablo)
           (equal (system-name) ps/computer-hostname-leo))
@@ -17431,14 +17432,16 @@ Here's the process I followed:
 
 #+begin_src emacs-lisp :results silent
 (use-package mu4e
-  ;; :if (equal (system-name) ps/computer-hostname-pablo)
-  :demand t
-  ;; :defer 5
+  :if (equal (system-name) ps/computer-hostname-pablo)
+  ;; :demand t
+  :defer 5
   :straight (:local-repo
-             ;; "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
-             "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
+             "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
              :pre-build
-             ())
+             ()))
+  #+end_src
+  
+  #+begin_src emacs-lisp :results silent :tangle no
   :init
   (setq ps/mu4e-inbox-folder "/Inbox")
   (setq ps/mu4e-daily-folder "/Daily")
@@ -18017,7 +18020,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 :END:
 /[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package org-msg
   :after (org mu4e)
   :defer 3
@@ -20223,8 +20226,8 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 
 #+begin_src emacs-lisp :results silent
 (use-package pass
-  :demand t
-  ;; :defer 6
+  ;; :demand t
+  :defer 6
   :config
   (defun ps/pass-open-at-point ()
     "Open the URL associated with the entry at point and its password

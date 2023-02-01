@@ -5,9 +5,8 @@ export PYENV_ROOT="$HOME/.pyenv" # https://github.com/pyenv/pyenv/issues/1906#is
 export PATH="$PYENV_ROOT/bin:$PATH"
 # alias brew='env PATH="${PATH//$(pyenv root)\/shims:/}" brew' # https://github.com/pyenv/pyenv#homebrew-in-macos
 export GOKU_EDN_CONFIG_FILE="/Users/pablostafforini/Dropbox/dotfiles/karabiner/karabiner.edn"
-# export EDITOR="emacsclient -nw"
+export EDITOR="emacsclient -nw"
 # export VISUAL="emacsclient"   # $VISUAL opens in GUI mode
-# export VISUAL="/Users/pablostafforini/bin/emacs-client"         # $VISUAL opens in GUI mode
 export COIN_MARKET_CAP_API_KEY="58d45be2-5e34-4ed0-a588-7f5d395f2128"
 export OBJECT_STORAGE_ACCESS_KEY_ID="AKIATCKDUHFSN45GLIG4"
 export OBJECT_STORAGE_SECRET="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"

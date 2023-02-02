@@ -6703,22 +6703,20 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
               (when time-zone
                 (concat " (" time-zone ")"))))
   (calendar-mark-holidays-flag nil)
-  (calendar-time-zone-style 'numeric) ; Emacs 28.1
+  (calendar-time-zone-style 'numeric)
   (holiday-bahai-holidays nil)
 
   :config
   (cond ((equal (system-name) ps/computer-hostname-pablo)
-         (setq calendar-location-name "Condesa, Mexico City")
-         (setq calendar-latitude 19.424335622396516)
-         (setq calendar-longitude -99.16659969406722))
+         (setq calendar-location-name "Ciudad de Buenos Aires, Argentina")
+         (setq calendar-latitude -34.58194921101665)
+         (setq calendar-longitude -58.41290172678564))
         ((equal (system-name) ps/computer-hostname-leo)
          (setq calendar-location-name "Barcelona")
          (setq calendar-latitude 41.3874)
          (setq calendar-longitude 2.1686)))
   ;; To copy the current latitude and longitude, go to Google Maps,
   ;; right-click on your location, and select the coordinates.
-  ;; (calendar-location-name "Ciudad de Buenos Aires, Argentina")
-  ;; (calendar-latitude -34.6079) (calendar-longitude -58.3660)
 
   ;; Adapted from Prot
   (defcustom ps/date-specifier "%F"
@@ -7088,8 +7086,8 @@ associated Google Calendar event in a browser."
 
   (defhydra hydra-org-gcal (:exit t :hint nil)
     "
-_f_etch all       |_s_ync all        |_p_ost at point   |_d_elete at point |token _r_equest   |_t_oggle debug
-_F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |token _c_lear     |_q_uit  "
+_f_etch all       |_s_ync all        |_p_ost at point   |_d_elete at point |_r_equest token    |_t_oggle debug
+_F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_lear token      |re_l_oad secret  "
     ("f" org-gcal-fetch)
     ("F" org-gcal-fetch-buffer)
     ("s" org-gcal-sync)
@@ -7101,7 +7099,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
     ("r" org-gcal-request-token)
     ("c" org-gcal-sync-tokens-clear)
     ("t" org-gcal-toggle-debug)
-    ("q" nil))
+    ("l" org-gcal-reload-client-id-secret))
 
   :general
   (org-mode-map
@@ -7479,7 +7477,7 @@ https://github.com/insanum/gcalcli
 
   :config
   (cond ((equal (system-name) ps/computer-hostname-pablo)
-         (setq display-wttr-locations '("Mexico City")))
+         (setq display-wttr-locations '("Buenos Aires")))
         ((equal (system-name) ps/computer-hostname-leo)
          (setq display-wttr-locations '("Barcelona"))))
 
@@ -10323,6 +10321,16 @@ otherwise the whole buffer."
     (ledger-toggle-current-transaction)
     (ledger-navigate-next-xact-or-directive))
 
+  (defun ps/ledger-copy-transaction-at-point ()
+    (interactive)
+    "Save transaction at point to the kill ring."
+    (save-excursion
+      (ledger-navigate-next-xact-or-directive)
+      (let ((end (point)))
+        (ledger-navigate-prev-xact-or-directive)
+        (copy-region-as-kill (point) end))
+      (message "Transaction copied.")))
+
   ;; :hook
   ;; (ledger-mode-hook . (lambda () (setq-local ledger-complete-in-steps t)))
 
@@ -10333,6 +10341,7 @@ otherwise the whole buffer."
    "s-a" 'ledger-add-transaction
    "s-b" 'ledger-post-edit-amount
    "s-c" 'ps/ledger-align-and-next
+   "A-s-c" 'ps/ledger-copy-transaction-at-point
    "s-d" 'ledger-delete-current-transaction
    "s-e" 'ps/ledger-toggle-current-transaction-and-next
    "s-f" 'ledger-occur
@@ -10484,7 +10493,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :END:
 /[[https://github.com/vedang/pdf-tools][pdf-tools]] is a support library for PDF files./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package pdf-tools
   :if (or (equal (system-name) ps/computer-hostname-pablo)
           (equal (system-name) ps/computer-hostname-leo))
@@ -12243,7 +12252,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
       (file ps/file-inbox-desktop)
       "* TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("t" "Todo" entry
-      (file ps/file-inbox-desktop)
+      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
       "** TODO %?\n")
      ;; ("n" "Day reflection" plain (function org-journal-find-location)
      ;; "** %(format-time-string org-journal-time-format)Day reflection\n%i%?")
@@ -13640,7 +13649,7 @@ an org drawer."
       (org-set-property "POSG_TAGS" tags))))
 
   :general
-  ("°" 'org2blog-user-interface))
+  ("A-o" 'org2blog-user-interface))
 #+end_src
 
 *** Archive                                                       :ARCHIVE:
@@ -14541,7 +14550,7 @@ CLOCK: [2022-05-08 Sun 08:45]--[2022-05-08 Sun 09:07] =>  0:22
 CLOCK: [2021-12-14 Tue 19:46]--[2021-12-14 Tue 20:06] =>  0:20
 :END:
 [[https://github.com/d12frosted/vulpea][vulpea]] is a collection of functions for note taking based on ~org~ and ~org-roam~.
-#+transclude: [[id:5461B907-53F6-4D99-B70C-45E9C3902EB4][org-roam-browser-extension]] 
+#+transclude: [[id:5461B907-53F6-4D99-B70C-45E9C3902EB4][org-roam-browser-extension]]
 
 #+begin_src emacs-lisp :results silent
 (use-package vulpea
@@ -17438,10 +17447,7 @@ Here's the process I followed:
   :straight (:local-repo
              "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
              :pre-build
-             ()))
-  #+end_src
-  
-  #+begin_src emacs-lisp :results silent :tangle no
+             ())
   :init
   (setq ps/mu4e-inbox-folder "/Inbox")
   (setq ps/mu4e-daily-folder "/Daily")
@@ -18233,13 +18239,13 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
   (telega-filters-custom '(("Main" . main)
-			   ("Important" or mention
-			    (and unread unmuted))
-			   ("Archive" . archive)
-			   ("Online" and
-			    (not saved-messages) (user is-online))
-			   ("Groups" type basicgroup supergroup)
-			   ("Channels" type channel)))
+                           ("Important" or mention
+                            (and unread unmuted))
+                           ("Archive" . archive)
+                           ("Online" and
+                            (not saved-messages) (user is-online))
+                           ("Groups" type basicgroup supergroup)
+                           ("Channels" type channel)))
   (telega-completing-read-function 'completing-read)
 
   :config
@@ -18249,25 +18255,25 @@ switch to the root buffer, starting telega if necessary."
     (interactive)
     (ps/window-split-if-unsplit)
     (if (> (frame-width) ps/frame-width-threshold)
-	(winum-select-window-3)
+        (winum-select-window-3)
       (winum-select-window-2))
     (let* ((rootbuf "*Telega Root*")
-	   (buf (or
-		 (let ((chatbuf))
-		   (mapc (lambda (x)
-			   (when (with-current-buffer x
-				   (eq major-mode 'telega-chat-mode))
-			     (switch-to-buffer x)
-			     (setq chatbuf x)))
-			 (buffer-list))
-		   chatbuf)
-		 (get-buffer rootbuf))))
+           (buf (or
+                 (let ((chatbuf))
+                   (mapc (lambda (x)
+                           (when (with-current-buffer x
+                                   (eq major-mode 'telega-chat-mode))
+                             (switch-to-buffer x)
+                             (setq chatbuf x)))
+                         (buffer-list))
+                   chatbuf)
+                 (get-buffer rootbuf))))
       (if buf
-	  (progn
-	    (switch-to-buffer rootbuf)
-	    (beginning-of-buffer)
-	    (forward-line 3))
-	(telega))))
+          (progn
+            (switch-to-buffer rootbuf)
+            (beginning-of-buffer)
+            (forward-line 3))
+        (telega))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -18284,8 +18290,8 @@ into a task for Leo."
   (defun ps/telega-move-downloaded-file (file)
     "Move downloaded file(s) to `ps/dir-downloads' directory."
     (let* ((old-path (plist-get (plist-get file :local) :path))
-	   (file-name (file-name-nondirectory old-path))
-	   (new-path (concat ps/dir-downloads "/" file-name)))
+           (file-name (file-name-nondirectory old-path))
+           (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
 
@@ -18295,36 +18301,36 @@ into a task for Leo."
     (unless (telega-server-live-p)
       (user-error "Please launch Telega before running this command."))
     (if (equal (buffer-file-name) ps/file-tlon-docs)
-	(progn
-	  (unless (region-active-p)
-	    (user-error "Please select the region containing the changes you introduced."))
-	  (let ((docs-section (org-get-heading)))
-	    (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
-	    (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
+        (progn
+          (unless (region-active-p)
+            (user-error "Please select the region containing the changes you introduced."))
+          (let ((docs-section (org-get-heading)))
+            (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
+            (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
       (user-error "You aren't visiting `docs.org'!")))
 
   (defun ps/telega-docs-change-open (msg)
     "TODO: write docstring"
     (interactive (list (telega-msg-for-interactive)))
     (let* ((content (plist-get msg :content))
-	   (msg-text (or (telega-tl-str content :text)
-			 (telega-tl-str content :caption)
-			 ;; See FR https://t.me/emacs_telega/34839
-			 (and (telega-msg-match-p msg '(type VoiceNote))
-			      (telega-tl-str (plist-get content :voice_note)
-					     :recognized_text)))))
+           (msg-text (or (telega-tl-str content :text)
+                         (telega-tl-str content :caption)
+                         ;; See FR https://t.me/emacs_telega/34839
+                         (and (telega-msg-match-p msg '(type VoiceNote))
+                              (telega-tl-str (plist-get content :voice_note)
+                                             :recognized_text)))))
       (with-temp-buffer
-	(insert msg-text)
-	(goto-char (point-min))
-	(re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
-	(let ((change-begins (string-to-number (match-string 1)))
-	      (change-ends (string-to-number (match-string 2))))
-	  (find-file ps/file-tlon-docs)
-	  (org-show-all)
-	  (org-hide-drawer-all)
-	  (org-highlight change-begins change-ends)
-	  (goto-char change-begins))
-	(message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
+        (insert msg-text)
+        (goto-char (point-min))
+        (re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
+        (let ((change-begins (string-to-number (match-string 1)))
+              (change-ends (string-to-number (match-string 2))))
+          (find-file ps/file-tlon-docs)
+          (org-show-all)
+          (org-hide-drawer-all)
+          (org-highlight change-begins change-ends)
+          (goto-char change-begins))
+        (message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
 
   (defun ps/telega-filters-push-archive ()
     "Set active filters list to `archive'."
@@ -18339,7 +18345,7 @@ into a task for Leo."
   (defun ps/telega-chat-mode ()
     (require 'company)
     (add-hook 'completion-at-point-functions
-	      #'telega-chatbuf-complete-at-point nil 'local))
+              #'telega-chatbuf-complete-at-point nil 'local))
 
 
   (telega-mode-line-mode 1)

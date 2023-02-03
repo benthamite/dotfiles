@@ -2,8 +2,6 @@
 # name: mom-extension
 # key: mext
 # --
-`(ps/insert-date)` $1
-    Expenses:$3  $2.00 ARS
+`(ps/insert-date)`$6 ${1:recipient}
+    Expenses:${5:account}  ${2:amount} ${3:$$(yas-completing-read "Currency: " ps/ledger-active-currencies)} ; ${4:details}
     Liabilities:Mom:Extension
-
-$4

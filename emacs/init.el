@@ -3394,22 +3394,20 @@ and start clock."
               (when time-zone
                 (concat " (" time-zone ")"))))
   (calendar-mark-holidays-flag nil)
-  (calendar-time-zone-style 'numeric) ; Emacs 28.1
+  (calendar-time-zone-style 'numeric)
   (holiday-bahai-holidays nil)
 
   :config
   (cond ((equal (system-name) ps/computer-hostname-pablo)
-         (setq calendar-location-name "Condesa, Mexico City")
-         (setq calendar-latitude 19.424335622396516)
-         (setq calendar-longitude -99.16659969406722))
+         (setq calendar-location-name "Ciudad de Buenos Aires, Argentina")
+         (setq calendar-latitude -34.58194921101665)
+         (setq calendar-longitude -58.41290172678564))
         ((equal (system-name) ps/computer-hostname-leo)
          (setq calendar-location-name "Barcelona")
          (setq calendar-latitude 41.3874)
          (setq calendar-longitude 2.1686)))
   ;; To copy the current latitude and longitude, go to Google Maps,
   ;; right-click on your location, and select the coordinates.
-  ;; (calendar-location-name "Ciudad de Buenos Aires, Argentina")
-  ;; (calendar-latitude -34.6079) (calendar-longitude -58.3660)
 
   ;; Adapted from Prot
   (defcustom ps/date-specifier "%F"
@@ -3693,8 +3691,8 @@ associated Google Calendar event in a browser."
 
   (defhydra hydra-org-gcal (:exit t :hint nil)
     "
-_f_etch all       |_s_ync all        |_p_ost at point   |_d_elete at point |token _r_equest   |_t_oggle debug
-_F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |token _c_lear     |_q_uit  "
+_f_etch all       |_s_ync all        |_p_ost at point   |_d_elete at point |_r_equest token    |_t_oggle debug
+_F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_lear token      |re_l_oad secret  "
     ("f" org-gcal-fetch)
     ("F" org-gcal-fetch-buffer)
     ("s" org-gcal-sync)
@@ -3706,7 +3704,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
     ("r" org-gcal-request-token)
     ("c" org-gcal-sync-tokens-clear)
     ("t" org-gcal-toggle-debug)
-    ("q" nil))
+    ("l" org-gcal-reload-client-id-secret))
 
   :general
   (org-mode-map
@@ -3747,7 +3745,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |toke
 
   :config
   (cond ((equal (system-name) ps/computer-hostname-pablo)
-         (setq display-wttr-locations '("Mexico City")))
+         (setq display-wttr-locations '("Buenos Aires")))
         ((equal (system-name) ps/computer-hostname-leo)
          (setq display-wttr-locations '("Barcelona"))))
 
@@ -5193,6 +5191,16 @@ otherwise the whole buffer."
     (ledger-toggle-current-transaction)
     (ledger-navigate-next-xact-or-directive))
 
+  (defun ps/ledger-copy-transaction-at-point ()
+    (interactive)
+    "Save transaction at point to the kill ring."
+    (save-excursion
+      (ledger-navigate-next-xact-or-directive)
+      (let ((end (point)))
+        (ledger-navigate-prev-xact-or-directive)
+        (copy-region-as-kill (point) end))
+      (message "Transaction copied.")))
+
   ;; :hook
   ;; (ledger-mode-hook . (lambda () (setq-local ledger-complete-in-steps t)))
 
@@ -5203,6 +5211,7 @@ otherwise the whole buffer."
    "s-a" 'ledger-add-transaction
    "s-b" 'ledger-post-edit-amount
    "s-c" 'ps/ledger-align-and-next
+   "A-s-c" 'ps/ledger-copy-transaction-at-point
    "s-d" 'ledger-delete-current-transaction
    "s-e" 'ps/ledger-toggle-current-transaction-and-next
    "s-f" 'ledger-occur
@@ -5233,6 +5242,119 @@ otherwise the whole buffer."
    "A-C-s-f" 'ledger-navigate-next-xact-or-directive))
 
 (use-package parse-csv)
+
+(use-package pdf-tools
+  :if (or (equal (system-name) ps/computer-hostname-pablo)
+          (equal (system-name) ps/computer-hostname-leo))
+  :defer 10
+  :mode ("\\.pdf\\'" . pdf-view-mode)
+  :custom
+  (pdf-view-use-scaling t)
+  (pdf-view-use-imagemagick nil)
+  (pdf-view-resize-factor 1.1)
+  (pdf-annot-default-annotation-properties
+   '((t
+      (label . ps/personal-name))
+     (text
+      (color . "#ff0000")
+      (icon . "Note"))
+     (highlight
+      (color . "LightBlue2"))
+     (underline
+      (color . "blue"))
+     (squiggly
+      (color . "orange"))
+     (strike-out
+      (color . "red"))))
+
+  :config
+  (unless (or noninteractive (eq this-command 'pdf-tools-install))
+    (pdf-tools-install))
+
+  (defun ps/pdf-tools-apply-theme ()
+    "Activate `pdf-tools' midnight mode iff dark theme is active."
+    (if (string= (modus-themes--current-theme) "modus-vivendi")
+        (pdf-view-midnight-minor-mode 1)
+      (pdf-view-midnight-minor-mode -1)))
+
+  ;; gist.github.com/politza/3f46785742e6e12ba0d1a849f853d0b9#file-scroll-other-window-el
+  (defun ps/pdf-tools-toggle-writeroom ()
+    "Toggle `writeroom-mode' on/off."
+    (interactive)
+    (let ((writeroom-width 120))
+      (writeroom-mode 'toggle)
+      (pdf-view-fit-height-to-window)))
+
+  (load-file (file-name-concat ps/dir-emacs-local "scroll-other-window.el"))
+
+  (defun ps/pdf-tools-open-externally ()
+    "Open current PDF in external application."
+    ;; TODO: tweak so that the PDF opens externally at the right page
+    ;; apple.stackexchange.com/questions/233945/opening-a-specific-page-on-mac-preview-from-terminal
+    (interactive)
+    (shell-command (format "open %s" (buffer-file-name))))
+
+  (defvar ps/pdf-tools-selected-pages '())
+
+  (defun ps/pdf-tools-add-or-remove-page ()
+    "Add current page number to list of selected pages. If page
+number is already listed, remove it from list."
+    (interactive)
+    (if (member (pdf-view-current-page) ps/pdf-tools-selected-pages)
+        (progn
+          (setq ps/pdf-tools-selected-pages (delete (pdf-view-current-page) ps/pdf-tools-selected-pages)
+                ps/pdf-tools-selected-pages (sort ps/pdf-tools-selected-pages #'<))
+          (message "Page removed. Current selection: %s." ps/pdf-tools-selected-pages))
+      (add-to-list 'ps/pdf-tools-selected-pages (pdf-view-current-page) t)
+      (setq ps/pdf-tools-selected-pages (sort ps/pdf-tools-selected-pages #'<))
+      (message "Page added. Current selection: %s." ps/pdf-tools-selected-pages))
+    (when (< (pdf-view-current-page) (pdf-cache-number-of-pages))
+      (pdf-view-next-page))
+    (setq ps/pdf-tools-selected-pages (sort ps/pdf-tools-selected-pages #'<)))
+
+  (defun ps/pdf-tools-clear-page-selection ()
+    "Clear the list of pages selected in `ps/pdf-tools-selected-pages'."
+    (interactive)
+    (setq ps/pdf-tools-selected-pages '())
+    (message "Page selection cleared."))
+
+  (defun ps/pdf-tools-extract-pages (file)
+    "Save pages selected in `ps/pdf-tools-selected-pages' to
+FILE."
+    (interactive "FSave as: ")
+    (let ((output (if (string= (expand-file-name file) (buffer-file-name))
+                      "--replace-input"
+                    (expand-file-name file))))
+      (shell-command (format "qpdf '%s' --pages . %s -- '%s'"
+                             (buffer-file-name)
+                             (mapconcat #'number-to-string
+                                        ps/pdf-tools-selected-pages
+                                        ",")
+                             output)))
+    (ps/pdf-tools-clear-page-selection))
+
+  :hook
+  (pdf-tools-enabled-hook . ps/pdf-tools-apply-theme)
+  (pdf-tools-enabled-hook . pdf-view-fit-page-to-window)
+  (pdf-tools-enabled-hook . sow-mode)
+
+  :general
+  ((pdf-view-mode-map pdf-annot-minor-mode-map pdf-history-minor-mode-map)
+   "C" 'ps/pdf-tools-clear-page-selection
+   "e" 'pdf-annot-add-highlight-markup-annotation
+   "h" 'pdf-annot-add-highlight-markup-annotation
+   "j" 'pdf-view-goto-page
+   "k" 'pdf-view-previous-line-or-previous-page
+   "l" 'pdf-view-next-line-or-next-page
+   "t" 'ps/pdf-tools-toggle-writeroom
+   "x" 'ps/pdf-tools-open-externally
+   "S" 'ps/pdf-tools-add-or-remove-page
+   "X" 'ps/pdf-tools-extract-pages
+   "H-c" 'pdf-view-kill-ring-save
+   "A-d" 'pdf-view-midnight-minor-mode)
+  (sow-mode-map
+   "A-C-s-t" 'sow-scroll-other-window-down
+   "A-C-s-g" 'sow-scroll-other-window))
 
 (use-package pdf-view-restore
   :after pdf-tools
@@ -6019,8 +6141,8 @@ image."
       (file ps/file-inbox-desktop)
       "* TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("t" "Todo" entry
-      (file ps/file-inbox-desktop)
-      "* TODO %?\n")
+      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      "** TODO %?\n")
      ;; ("n" "Day reflection" plain (function org-journal-find-location)
      ;; "** %(format-time-string org-journal-time-format)Day reflection\n%i%?")
      ;; ("j" "Pomodoro" plain (function org-journal-find-location)
@@ -6780,7 +6902,7 @@ an org drawer."
       (org-set-property "POSG_TAGS" tags))))
 
   :general
-  ("°" 'org2blog-user-interface))
+  ("A-o" 'org2blog-user-interface))
 
 (use-package org-journal
   :custom
@@ -9393,88 +9515,6 @@ it, without asking for confirmation."
   :config
   (mu4e-alert-enable-mode-line-display))
 
-(use-package org-msg
-  :after (org mu4e)
-  :defer 3
-  :custom
-  (org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t")
-  (org-msg-startup "hidestars indent inlineimages")
-  ;; (org-msg-greeting-fmt "\nHi *%s*,\n\n")
-  (org-msg-recipient-names `((,ps/personal-gmail . "Pablo")))
-  (org-msg-greeting-name-limit 3)
-  (org-msg-default-alternatives '((new		. (text html))
-                                  (reply-to-html	. (text html))
-                                  (reply-to-text	. (text))))
-  (org-msg-convert-citation t)
-  (org-msg-signature ps/personal-signature)
-
-  :config
-  (org-msg-mode)
-
-  (defun ps/org-msg-grammarly ()
-    "Enable `grammarly-mode' in `org-msg-edit-mode'."
-    (interactive)
-    (if (eq major-mode 'org-mode)
-        (org-msg-edit-mode)
-      (org-mode)
-      (require 'lsp-grammarly)
-      (lsp)))
-
-  (defun ps/org-msg-toggle-accounts ()
-    "Toggle between personal and GPE email accounts."
-    (interactive)
-    (if (eq user-mail-address ps/personal-gmail)
-        (setq user-mail-address ps/personal-gpe-email)
-      (setq user-mail-address ps/personal-gmail))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "From: .*" nil t)
-        (replace-match (format "From: %s <%s>" ps/personal-name user-mail-address)))
-      (let ((new-signature
-             (if (eq user-mail-address ps/personal-gmail)
-                 ps/personal-signature
-               ps/gpe-signature))
-            (current-signature
-             (if (eq user-mail-address ps/personal-gmail)
-                 ps/gpe-signature
-               ps/personal-signature)))
-        (while (search-forward current-signature nil t)
-          (replace-match new-signature)))))
-
-  (defun ps/org-msg-kill-message ()
-    "Save the current message to the kill ring."
-    (interactive)
-    (goto-char (org-msg-start))
-    (re-search-forward "^:END:\n")
-    (let ((beg (point)))
-      (goto-char (org-msg-end))
-      (search-backward "#+begin_signature" nil t)
-      (kill-region beg (point))))
-
-  (defun ps/org-msg-open-in-wordtune ()
-    "Save the current message to the kill ring and open it in
-Wordtune."
-    (interactive)
-    (ps/org-msg-kill-message)
-    (browse-url "https://app.wordtune.com/v2/editor/"))
-
-  (defun ps/org-msg-open-in-grammarly ()
-    "Save the current message to the kill ring and open it in
-Grammarly."
-    (interactive)
-    (ps/org-msg-kill-message)
-    (browse-url "https://app.grammarly.com/ddocs/1789329083"))
-
-  :general
-  (org-msg-edit-mode-map
-   "s-a" 'org-msg-attach
-   "s-b" 'org-msg-goto-body
-   "s-g" 'ps/org-msg-open-in-grammarly
-   "s-x" 'ps/org-msg-kill-message
-   "s-w" 'ps/org-msg-open-in-wordtune)
-  (org-mode-map
-   "A-s-g" 'ps/org-msg-grammarly))
-
 (use-package telega
   :defer 5
   :custom
@@ -9484,13 +9524,13 @@ Grammarly."
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
   (telega-filters-custom '(("Main" . main)
-			   ("Important" or mention
-			    (and unread unmuted))
-			   ("Archive" . archive)
-			   ("Online" and
-			    (not saved-messages) (user is-online))
-			   ("Groups" type basicgroup supergroup)
-			   ("Channels" type channel)))
+                           ("Important" or mention
+                            (and unread unmuted))
+                           ("Archive" . archive)
+                           ("Online" and
+                            (not saved-messages) (user is-online))
+                           ("Groups" type basicgroup supergroup)
+                           ("Channels" type channel)))
   (telega-completing-read-function 'completing-read)
 
   :config
@@ -9500,25 +9540,25 @@ switch to the root buffer, starting telega if necessary."
     (interactive)
     (ps/window-split-if-unsplit)
     (if (> (frame-width) ps/frame-width-threshold)
-	(winum-select-window-3)
+        (winum-select-window-3)
       (winum-select-window-2))
     (let* ((rootbuf "*Telega Root*")
-	   (buf (or
-		 (let ((chatbuf))
-		   (mapc (lambda (x)
-			   (when (with-current-buffer x
-				   (eq major-mode 'telega-chat-mode))
-			     (switch-to-buffer x)
-			     (setq chatbuf x)))
-			 (buffer-list))
-		   chatbuf)
-		 (get-buffer rootbuf))))
+           (buf (or
+                 (let ((chatbuf))
+                   (mapc (lambda (x)
+                           (when (with-current-buffer x
+                                   (eq major-mode 'telega-chat-mode))
+                             (switch-to-buffer x)
+                             (setq chatbuf x)))
+                         (buffer-list))
+                   chatbuf)
+                 (get-buffer rootbuf))))
       (if buf
-	  (progn
-	    (switch-to-buffer rootbuf)
-	    (beginning-of-buffer)
-	    (forward-line 3))
-	(telega))))
+          (progn
+            (switch-to-buffer rootbuf)
+            (beginning-of-buffer)
+            (forward-line 3))
+        (telega))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -9535,8 +9575,8 @@ into a task for Leo."
   (defun ps/telega-move-downloaded-file (file)
     "Move downloaded file(s) to `ps/dir-downloads' directory."
     (let* ((old-path (plist-get (plist-get file :local) :path))
-	   (file-name (file-name-nondirectory old-path))
-	   (new-path (concat ps/dir-downloads "/" file-name)))
+           (file-name (file-name-nondirectory old-path))
+           (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
 
@@ -9546,36 +9586,36 @@ into a task for Leo."
     (unless (telega-server-live-p)
       (user-error "Please launch Telega before running this command."))
     (if (equal (buffer-file-name) ps/file-tlon-docs)
-	(progn
-	  (unless (region-active-p)
-	    (user-error "Please select the region containing the changes you introduced."))
-	  (let ((docs-section (org-get-heading)))
-	    (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
-	    (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
+        (progn
+          (unless (region-active-p)
+            (user-error "Please select the region containing the changes you introduced."))
+          (let ((docs-section (org-get-heading)))
+            (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
+            (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
       (user-error "You aren't visiting `docs.org'!")))
 
   (defun ps/telega-docs-change-open (msg)
     "TODO: write docstring"
     (interactive (list (telega-msg-for-interactive)))
     (let* ((content (plist-get msg :content))
-	   (msg-text (or (telega-tl-str content :text)
-			 (telega-tl-str content :caption)
-			 ;; See FR https://t.me/emacs_telega/34839
-			 (and (telega-msg-match-p msg '(type VoiceNote))
-			      (telega-tl-str (plist-get content :voice_note)
-					     :recognized_text)))))
+           (msg-text (or (telega-tl-str content :text)
+                         (telega-tl-str content :caption)
+                         ;; See FR https://t.me/emacs_telega/34839
+                         (and (telega-msg-match-p msg '(type VoiceNote))
+                              (telega-tl-str (plist-get content :voice_note)
+                                             :recognized_text)))))
       (with-temp-buffer
-	(insert msg-text)
-	(goto-char (point-min))
-	(re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
-	(let ((change-begins (string-to-number (match-string 1)))
-	      (change-ends (string-to-number (match-string 2))))
-	  (find-file ps/file-tlon-docs)
-	  (org-show-all)
-	  (org-hide-drawer-all)
-	  (org-highlight change-begins change-ends)
-	  (goto-char change-begins))
-	(message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
+        (insert msg-text)
+        (goto-char (point-min))
+        (re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
+        (let ((change-begins (string-to-number (match-string 1)))
+              (change-ends (string-to-number (match-string 2))))
+          (find-file ps/file-tlon-docs)
+          (org-show-all)
+          (org-hide-drawer-all)
+          (org-highlight change-begins change-ends)
+          (goto-char change-begins))
+        (message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
 
   (defun ps/telega-filters-push-archive ()
     "Set active filters list to `archive'."
@@ -9590,7 +9630,7 @@ into a task for Leo."
   (defun ps/telega-chat-mode ()
     (require 'company)
     (add-hook 'completion-at-point-functions
-	      #'telega-chatbuf-complete-at-point nil 'local))
+              #'telega-chatbuf-complete-at-point nil 'local))
 
 
   (telega-mode-line-mode 1)

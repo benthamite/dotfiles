@@ -9988,7 +9988,7 @@ translation."
              :repo "tmalsburg/txl.el")
   :custom
   (txl-languages '(ES . EN-US))
-  (txl-deepl-api-key (auth-source-pass-get "api" (concat "tlon/BAE/deepl.com/" ps/personal-email)))
+  (txl-deepl-api-key (auth-source-pass-get "api" (concat "chrome/deepl.com/" ps/personal-email)))
 
   :general
   ("H-A-y" 'txl-translate-region-or-paragraph)
@@ -12194,8 +12194,8 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
       (id "AE09BAB8-5EA0-4CB0-AC5A-FF876CB9ABC5")
       "**** TODO Discuss %(ps/org-web-tools-insert-link-for-clipboard-url-ea-forum)\nSCHEDULED: %(org-insert-time-stamp nil nil nil nil nil \" .+1d\")" :empty-lines 1 :prepend t)
      ("e" "email" entry
-      (file ps/file-inbox-desktop)
-      "* TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
+      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("f" "Fede")
      ("ff" "Fede: generic task" entry
       (file+headline ps/file-tareas-fede "Tareas Fede")
@@ -12240,11 +12240,11 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
       ;; (file+headline ps/file-tareas-leo "Tareas Leo")
       ;; "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
      ("m" "Leo: Messaging (to send later)" entry
-      (file ps/file-inbox-desktop)
-      "* TODO Send message\n%?\n")
+      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      "** TODO Send message\n%?\n")
      ("n" "telegram" entry
-      (file ps/file-inbox-desktop)
-      "* TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
+     (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ;; ("m" "To discuss in meeting with Leo" plain
      ;; (id "3AAD2510-0522-4598-9182-50E97504EAF6")
      ;; "- [ ] %?" :empty-lines 1)
@@ -12254,8 +12254,8 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
       (file ,ps/file-orb-capture-template)
       :unnarrowed t :immediate-finish t)
      ("s" "Slack" entry
-      (file ps/file-inbox-desktop)
-      "* TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
+      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("t" "Todo" entry
       (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
       "** TODO %?\n")
@@ -14662,7 +14662,7 @@ tasks."
 #+end_src
 
 *** TODO [#5] Revise ~vulpea-project-p~ function so that it excludes buffers tagged ~excluded~
-SCHEDULED: <2023-02-01 Wed .+4m>
+SCHEDULED: <2023-02-04 Sat .+4m>
 :PROPERTIES:
 :Effort:   0:40
 :LAST_REPEAT: [2022-10-01 Sat 22:24]
@@ -20318,8 +20318,8 @@ to the clipboard."
    "s-s" 'server-edit))
 #+end_src
 
-*** TODO Fix pass
-SCHEDULED: <2023-01-31 Tue>
+*** DONE Fix pass
+CLOSED: [2023-02-03 Fri 13:31] SCHEDULED: <2023-01-31 Tue>
 :PROPERTIES:
 :ID:       9FC76175-03AB-42F1-91FC-933A31323991
 :END:

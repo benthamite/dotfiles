@@ -15474,6 +15474,11 @@ With prefix, rebuild the cache before offering candidates."
    "u" 'citar-open-links))
 #+end_src
 
+*** TODO Fixme: ~citar-open-notes~ creates note even when it already exists
+:PROPERTIES:
+:ID:       8DBC282D-3935-4740-9907-3D73150DC3B6
+:END:
+The problem seems to be that ~(citar--select-resource citekeys :notes t)~ returns nil even for existing citekeys.
 *** Resources
 :PROPERTIES:
 :ID:       EAB0E32B-129C-4980-A06B-94B4C25966E2

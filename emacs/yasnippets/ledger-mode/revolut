@@ -3,7 +3,7 @@
 # key: rv
 # --
 `(ps/insert-date)`$6 ${1:recipient}
-    Expenses:${5:account}  ${2:amount} ${3:$$(yas-completing-read "Currency: " '("USD" "EUR" "GBP" "MXN" "ARS"))} ; ${4:details}
+    Expenses:${5:account}  ${2:amount} ${3:$$(yas-completing-read "Currency: " ps/ledger-active-currencies)} ; ${4:details}
     Assets:Revolut
 
 $0

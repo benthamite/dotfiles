@@ -18363,7 +18363,7 @@ into a task for Leo."
   :hook
   (telega-chat-mode-hook . (ps/telega-chat-mode
 			    telega-autoplay-mode))
-  (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
+  ;; (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
   (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
 
   :general

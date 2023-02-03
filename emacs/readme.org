@@ -7704,16 +7704,15 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
       (magit-commit-create (list "-m" message)))
     (call-interactively #'magit-push-current-to-pushremote))
 
+  (defun ps/magit-stage-commit-and-push-all-repos ()
+    "Update all active depositories."
+    (dolist (dir ps/dir-all-repos)
+      (ps/magit-midnight-update dir)))
+
   (defun ps/magit-midnight-update (arg)
     "Update repository daily using `midnight'."
     (let ((default-directory arg))
       (ps/magit-stage-commit-and-push "Midnight update")))
-
-  (defun ps/magit-stage-commit-and-push-all-repos ()
-    "Update all active depositories."
-    (interactive)
-    (dolist (dir ps/dir-all-repos)
-      (ps/magit-midnight-update dir)))
 
   :general
   ("A-g" 'magit))

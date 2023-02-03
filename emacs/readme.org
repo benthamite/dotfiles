@@ -12236,15 +12236,15 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
      ("lt" "Leo: Add to translations spreadsheet" entry
       (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#4] Add to translation master file :leo:\n%c\n[[https://docs.google.com/spreadsheets/d/1YpqWK2Vpxwc_JuCf7isjwpdCQ_7_NRAY/edit#gid=2099842495][spreadsheet]]" :empty-lines 1 :prepend t)
-     ;; ("lt" "Leo: Telegram" entry
-      ;; (file+headline ps/file-tareas-leo "Tareas Leo")
-      ;; "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
+     ("lt" "Leo: Telegram" entry
+      (file+headline ps/file-tareas-leo "Tareas Leo")
+      "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
      ("m" "Leo: Messaging (to send later)" entry
       (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
       "** TODO Send message\n%?\n")
      ("n" "telegram" entry
      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
-      "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
+      "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ;; ("m" "To discuss in meeting with Leo" plain
      ;; (id "3AAD2510-0522-4598-9182-50E97504EAF6")
      ;; "- [ ] %?" :empty-lines 1)
@@ -18249,13 +18249,13 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
   (telega-filters-custom '(("Main" . main)
-                           ("Important" or mention
-                            (and unread unmuted))
-                           ("Archive" . archive)
-                           ("Online" and
-                            (not saved-messages) (user is-online))
-                           ("Groups" type basicgroup supergroup)
-                           ("Channels" type channel)))
+			   ("Important" or mention
+			    (and unread unmuted))
+			   ("Archive" . archive)
+			   ("Online" and
+			    (not saved-messages) (user is-online))
+			   ("Groups" type basicgroup supergroup)
+			   ("Channels" type channel)))
   (telega-completing-read-function 'completing-read)
 
   :config
@@ -18265,29 +18265,30 @@ switch to the root buffer, starting telega if necessary."
     (interactive)
     (ps/window-split-if-unsplit)
     (if (> (frame-width) ps/frame-width-threshold)
-        (winum-select-window-3)
+	(winum-select-window-3)
       (winum-select-window-2))
     (let* ((rootbuf "*Telega Root*")
-           (buf (or
-                 (let ((chatbuf))
-                   (mapc (lambda (x)
-                           (when (with-current-buffer x
-                                   (eq major-mode 'telega-chat-mode))
-                             (switch-to-buffer x)
-                             (setq chatbuf x)))
-                         (buffer-list))
-                   chatbuf)
-                 (get-buffer rootbuf))))
+	   (buf (or
+		 (let ((chatbuf))
+		   (mapc (lambda (x)
+			   (when (with-current-buffer x
+				   (eq major-mode 'telega-chat-mode))
+			     (switch-to-buffer x)
+			     (setq chatbuf x)))
+			 (buffer-list))
+		   chatbuf)
+		 (get-buffer rootbuf))))
       (if buf
-          (progn
-            (switch-to-buffer rootbuf)
-            (beginning-of-buffer)
-            (forward-line 3))
-        (telega))))
+	  (progn
+	    (switch-to-buffer rootbuf)
+	    (beginning-of-buffer)
+	    (forward-line 3))
+	(telega))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
     (interactive)
+    (org-store-link nil)
     (org-capture nil "n"))
 
   (defun ps/telega-chat-org-capture-leo ()
@@ -18300,8 +18301,8 @@ into a task for Leo."
   (defun ps/telega-move-downloaded-file (file)
     "Move downloaded file(s) to `ps/dir-downloads' directory."
     (let* ((old-path (plist-get (plist-get file :local) :path))
-           (file-name (file-name-nondirectory old-path))
-           (new-path (concat ps/dir-downloads "/" file-name)))
+	   (file-name (file-name-nondirectory old-path))
+	   (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
 
@@ -18311,36 +18312,36 @@ into a task for Leo."
     (unless (telega-server-live-p)
       (user-error "Please launch Telega before running this command."))
     (if (equal (buffer-file-name) ps/file-tlon-docs)
-        (progn
-          (unless (region-active-p)
-            (user-error "Please select the region containing the changes you introduced."))
-          (let ((docs-section (org-get-heading)))
-            (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
-            (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
+	(progn
+	  (unless (region-active-p)
+	    (user-error "Please select the region containing the changes you introduced."))
+	  (let ((docs-section (org-get-heading)))
+	    (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
+	    (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
       (user-error "You aren't visiting `docs.org'!")))
 
   (defun ps/telega-docs-change-open (msg)
     "TODO: write docstring"
     (interactive (list (telega-msg-for-interactive)))
     (let* ((content (plist-get msg :content))
-           (msg-text (or (telega-tl-str content :text)
-                         (telega-tl-str content :caption)
-                         ;; See FR https://t.me/emacs_telega/34839
-                         (and (telega-msg-match-p msg '(type VoiceNote))
-                              (telega-tl-str (plist-get content :voice_note)
-                                             :recognized_text)))))
+	   (msg-text (or (telega-tl-str content :text)
+			 (telega-tl-str content :caption)
+			 ;; See FR https://t.me/emacs_telega/34839
+			 (and (telega-msg-match-p msg '(type VoiceNote))
+			      (telega-tl-str (plist-get content :voice_note)
+					     :recognized_text)))))
       (with-temp-buffer
-        (insert msg-text)
-        (goto-char (point-min))
-        (re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
-        (let ((change-begins (string-to-number (match-string 1)))
-              (change-ends (string-to-number (match-string 2))))
-          (find-file ps/file-tlon-docs)
-          (org-show-all)
-          (org-hide-drawer-all)
-          (org-highlight change-begins change-ends)
-          (goto-char change-begins))
-        (message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
+	(insert msg-text)
+	(goto-char (point-min))
+	(re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
+	(let ((change-begins (string-to-number (match-string 1)))
+	      (change-ends (string-to-number (match-string 2))))
+	  (find-file ps/file-tlon-docs)
+	  (org-show-all)
+	  (org-hide-drawer-all)
+	  (org-highlight change-begins change-ends)
+	  (goto-char change-begins))
+	(message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
 
   (defun ps/telega-filters-push-archive ()
     "Set active filters list to `archive'."
@@ -18355,16 +18356,15 @@ into a task for Leo."
   (defun ps/telega-chat-mode ()
     (require 'company)
     (add-hook 'completion-at-point-functions
-              #'telega-chatbuf-complete-at-point nil 'local))
-
+	      #'telega-chatbuf-complete-at-point nil 'local))
 
   (telega-mode-line-mode 1)
 
   :hook
-  (telega-chat-mode-hook . ps/telega-chat-mode)
-  (telega-chat-mode-hook . (lambda () (setq default-directory (file-name-as-directory ps/dir-downloads))))
+  (telega-chat-mode-hook . (ps/telega-chat-mode
+			    telega-autoplay-mode))
+  (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
   (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
-  (telega-chat-mode-hook . telega-autoplay-mode)
 
   :general
   ("C-f" 'ps/telega-switch-to)
@@ -18414,13 +18414,13 @@ into a task for Leo."
    "." 'telega-chat-with
    "a" 'telega-chat-toggle-archive
    "m" 'telega-chat-toggle-muted)
-   (telega-root-view-map
-    "a" 'ps/telega-filters-push-archive
-    "m" 'ps/telega-filters-push-main)
-   (telega-webpage-mode-map
-    "x" 'telega-webpage-browse-url)
-   (dired-mode-map
-    "A-s-a" 'ps/telega-dired-attach-send))
+  (telega-root-view-map
+   "a" 'ps/telega-filters-push-archive
+   "m" 'ps/telega-filters-push-main)
+  (telega-webpage-mode-map
+   "x" 'telega-webpage-browse-url)
+  (dired-mode-map
+   "A-s-a" 'ps/telega-dired-attach-send))
 #+end_src
 
 *** Archive                                                                                                           :ARCHIVE:
@@ -18562,7 +18562,9 @@ https://gitlab.com/protesilaos/modus-themes/-/issues/271
 /[[https://github.com/zevlg/telega.el/blob/master/contrib/ol-telega.el][ol-telega]] enables Org mode links to Telega chats and messages./
 
 #+begin_src emacs-lisp :results silent
-(use-feature ol-telega)
+(use-feature ol-telega
+  :after telega
+  :demand t)
 #+end_src
 
 ** slack

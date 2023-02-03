@@ -7682,35 +7682,44 @@ CLOCK: [2021-02-25 Thu 17:24]--[2021-02-25 Thu 17:45] =>  0:21
 CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 :END:
 #+begin_src emacs-lisp :results silent
-  (use-package magit
-    :defer 15
-    :custom
-    ;; chris.beams.io/posts/git-commit/
-    (git-commit-summary-max-length 50)
-    (magit-commit-ask-to-stage 'stage)
+(use-package magit
+  :defer 15
+  :custom
+  ;; chris.beams.io/posts/git-commit/
+  (git-commit-summary-max-length 50)
+  (magit-commit-ask-to-stage 'stage)
 
-    :init
-
-    ;; adapted from Sacha Chua
-    (defun ps/magit-stage-commit-and-push-all (message)
-      "Stage, commit and push all changes."
-      (interactive (list (progn (magit-diff-unstaged) (read-string "Commit Message: "))))
-      (add-to-list 'magit-no-confirm 'stage-all-changes)
+  :init
+  ;; adapted from Sacha Chua
+  (defun ps/magit-stage-commit-and-push (message)
+    "Stage, commit and push all changes."
+    (interactive
+     (list (progn (magit-diff-unstaged) (read-string "Commit Message: "))))
+    (when (or
+           (magit-anything-staged-p)
+           (magit-anything-unstaged-p))
       (magit-stage-modified '(4))
-      (magit-commit-create (list "-m" message))
-      (call-interactively #'magit-push-current-to-pushremote))
+      (magit-commit-create (list "-m" message)))
+    (call-interactively #'magit-push-current-to-pushremote))
 
-    (defun ps/magit-midnight-update (arg)
-      "Update repository daily using `midnight'."
-      (let ((default-directory arg))
-        (when (or (magit-anything-staged-p) (magit-anything-unstaged-p))
-          (ps/magit-stage-commit-and-push-all "Midnight update"))))
+  (defun ps/magit-midnight-update (arg)
+    "Update repository daily using `midnight'."
+    (let ((default-directory arg))
+      (ps/magit-stage-commit-and-push "Midnight update")))
 
-    :config
-    ;; It was prompting me to save every modified file-visiting buffer
-    ;; (magit-wip-mode)
-    :general
-    ("A-g" 'magit))
+  (defun ps/magit-stage-commit-and-push-all-repos ()
+    "Update all active depositories."
+    (interactive)
+    (dolist (dir ps/dir-all-repos)
+      (ps/magit-midnight-update dir)))
+
+  :config
+  ;; It was prompting me to save every modified file-visiting buffer
+  ;; (magit-wip-mode)
+  (add-to-list 'magit-no-confirm 'stage-all-changes)
+
+  :general
+  ("A-g" 'magit))
 #+end_src
 
 To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. That generates a ~.patch~ file which you can attach to an email using whatever email client you usually use.
@@ -18031,7 +18040,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 :END:
 /[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package org-msg
   :after (org mu4e)
   :defer 3
@@ -20695,13 +20704,15 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (midnight-delay-set 'midnight-delay "4:30am")
 
   :hook
-  (midnight-hook . ps/ledger-update-commodities)
-  (midnight-hook . org-gcal-sync)
-  ;; (midnight-hook . ps/org-id-update-id-locations)
-  ;; (midnight-hook . org-roam-db-sync)
-  (midnight-hook . ps/pass-git-sync)
-  (midnight-hook . clean-buffer-list))
-;; (midnight-hook . straight-prune-build)
+  (midnight-hook . (ps/ledger-update-commodities
+                    org-gcal-sync
+                    ps/pass-git-sync
+                    ps/magit-stage-commit-and-push-all-repos
+                    clean-buffer-list
+                    ;; ps/org-id-update-id-locations
+                    ;; org-roam-db-sync
+                    ;; straight-prune-build
+                    )))
 #+end_src
 
 *** SOMEDAY [#6] Fix coinprices
@@ -20809,7 +20820,7 @@ To try:
 [2022-03-17 Thu 10:55] Didn't work. But maybe I forgot to launch Magit? Trying again tonight.
 [2022-03-26 Sat 16:55] It worked! For the record, here's the working config
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-feature midnight
   :demand t
   :config

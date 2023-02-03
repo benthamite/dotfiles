@@ -7689,7 +7689,9 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   (git-commit-summary-max-length 50)
   (magit-commit-ask-to-stage 'stage)
 
-  :init
+  :config
+  (add-to-list 'magit-no-confirm 'stage-all-changes)
+
   ;; adapted from Sacha Chua
   (defun ps/magit-stage-commit-and-push (message)
     "Stage, commit and push all changes."
@@ -7712,11 +7714,6 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
     (interactive)
     (dolist (dir ps/dir-all-repos)
       (ps/magit-midnight-update dir)))
-
-  :config
-  ;; It was prompting me to save every modified file-visiting buffer
-  ;; (magit-wip-mode)
-  (add-to-list 'magit-no-confirm 'stage-all-changes)
 
   :general
   ("A-g" 'magit))

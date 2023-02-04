@@ -14159,31 +14159,32 @@ return such list if its length is less than LIMIT."
 
   :config
   ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#showing-node-hierarchy
-    (cl-defmethod org-roam-node-hierarchy ((node org-roam-node))
-  (let ((level (org-roam-node-level node)))
-    (concat
-     ;; (when (> level 0) (concat (org-roam-node-file-title node) " > "))
-     (when (> level 1) (concat (string-join (org-roam-node-olp node) " > ") " > "))
-     (org-roam-node-title node))))
+  (cl-defmethod org-roam-node-hierarchy ((node org-roam-node))
+    (let ((level (org-roam-node-level node)))
+      (concat
+       (when (> level 0) (concat (propertize (org-roam-node-file-title node) 'face 'org-level-1) "/"))
+       (when (> level 1) (concat (propertize (string-join (propertize (org-roam-node-olp node)'face 'org-level-3) "/") 'face 'org-level-2) "/"))
+       (propertize (org-roam-node-title node) 'face 'org-level-7))))
 
+  (setq org-roam-node-display-template
+	(concat "${hierarchy:*} "
+        (propertize "${tags:30}" 'face 'org-tag)))
 
-    (setq org-roam-node-display-template "${hierarchy:*} ${tags:20}")
+  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#run-org-roam-db-sync-when-emacs-is-idle
+  (defvar ps/auto-org-roam-db-sync--timer nil)
+  (defvar ps/auto-org-roam-db-sync--timer-interval 5)
 
-    ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#run-org-roam-db-sync-when-emacs-is-idle
-    (defvar ps/auto-org-roam-db-sync--timer nil)
-(defvar ps/auto-org-roam-db-sync--timer-interval 5)
-
-(define-minor-mode ps/auto-org-roam-db-sync-mode
-  "Toggle automatic `org-roam-db-sync' when Emacs is idle.
+  (define-minor-mode ps/auto-org-roam-db-sync-mode
+    "Toggle automatic `org-roam-db-sync' when Emacs is idle.
 Referece: `auto-save-visited-mode'"
-  :group 'org-roam
-  :global t
-  (when ps/auto-org-roam-db-sync--timer (cancel-timer ps/auto-org-roam-db-sync--timer))
-  (setq ps/auto-org-roam-db-sync--timer
-        (when ps/auto-org-roam-db-sync-mode
-          (run-with-idle-timer
-           ps/auto-org-roam-db-sync--timer-interval :repeat
-           #'org-roam-db-sync))))
+    :group 'org-roam
+    :global t
+    (when ps/auto-org-roam-db-sync--timer (cancel-timer ps/auto-org-roam-db-sync--timer))
+    (setq ps/auto-org-roam-db-sync--timer
+	  (when ps/auto-org-roam-db-sync-mode
+	    (run-with-idle-timer
+	     ps/auto-org-roam-db-sync--timer-interval :repeat
+	     #'org-roam-db-sync))))
 
 
   (defvar ps/org-roam-excluded-dirs nil)

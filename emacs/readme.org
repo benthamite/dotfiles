@@ -4129,10 +4129,12 @@ with the current major mode."
           (visible-mode -1)
           (org-display-inline-images)
           (ps/org-hide-properties)
+          (ps/org-hide-logbook)
           (org-modern-mode))
       (visible-mode)
       (org-remove-inline-images)
       (ps/org-show-properties)
+      (ps/org-show-logbook)
       (org-modern-mode -1)))
 
   :general
@@ -12721,58 +12723,60 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 
   ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
   (defun ps/org-hide-properties ()
-  "Hide all org-mode headline property drawers in buffer. Could be
+    "Hide all org-mode headline property drawers in buffer. Could be
 slow if it has a lot of overlays."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward
-            "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
-      (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-        (overlay-put ov_this 'display "")
-        (overlay-put ov_this 'hidden-prop-drawer t))))
-  (put 'org-toggle-properties-hide-state 'state 'hidden))
+    (interactive)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward
+	      "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
+	(let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
+	  (overlay-put ov_this 'display "")
+	  (overlay-put ov_this 'hidden-prop-drawer t))))
+    (put 'org-toggle-properties-hide-state 'state 'hidden))
 
   (defun ps/org-hide-logbook ()
-  "Hide all org-mode headline logbook drawers in buffer. Could be
+    "Hide all org-mode headline logbook drawers in buffer. Could be
 slow if it has a lot of overlays."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward
-            "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
-      (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-        (overlay-put ov_this 'display "")
-        (overlay-put ov_this 'hidden-logbook-drawer t))))
-  (put 'org-toggle-logbook-hide-state 'state 'hidden))
+    (interactive)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward
+	      "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
+	(let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
+	  (overlay-put ov_this 'display "")
+	  (overlay-put ov_this 'hidden-logbook-drawer t))))
+    (put 'org-toggle-logbook-hide-state 'state 'hidden))
 
-(defun ps/org-show-properties ()
-  "Show all org-mode property drawers hidden by org-hide-properties."
-  (interactive)
-  (remove-overlays (point-min) (point-max) 'hidden-prop-drawer t)
-  (put 'org-toggle-properties-hide-state 'state 'shown))
+  (defun ps/org-show-properties ()
+    "Show all org-mode property drawers hidden by org-hide-properties."
+    (interactive)
+    (remove-overlays (point-min) (point-max) 'hidden-prop-drawer t)
+    (put 'org-toggle-properties-hide-state 'state 'shown))
 
-(defun ps/org-show-logbook ()
-  "Show all org-mode logbook drawers hidden by org-hide-properties."
-  (interactive)
-  (remove-overlays (point-min) (point-max) 'hidden-logbook-drawer t)
-  (put 'org-toggle-logbook-hide-state 'state 'shown))
+  (defun ps/org-show-logbook ()
+    "Show all org-mode logbook drawers hidden by org-hide-properties."
+    (interactive)
+    (remove-overlays (point-min) (point-max) 'hidden-logbook-drawer t)
+    (put 'org-toggle-logbook-hide-state 'state 'shown))
 
-(defun ps/org-toggle-properties ()
-  "Toggle visibility of property drawers."
-  (interactive)
-  (if (eq (get 'org-toggle-properties-hide-state 'state) 'hidden)
-      (ps/org-show-properties)
-    (ps/org-hide-properties)))
+  (defun ps/org-toggle-properties ()
+    "Toggle visibility of property drawers."
+    (interactive)
+    (if (eq (get 'org-toggle-properties-hide-state 'state) 'hidden)
+	(ps/org-show-properties)
+      (ps/org-hide-properties)))
 
-(defun ps/org-toggle-logbook ()
-  "Toggle visibility of logbook drawers."
-  (interactive)
-  (if (eq (get 'org-toggle-logbook-hide-state 'state) 'hidden)
-      (ps/org-show-logbook)
-    (ps/org-hide-logbook)))
+  (defun ps/org-toggle-logbook ()
+    "Toggle visibility of logbook drawers."
+    (interactive)
+    (if (eq (get 'org-toggle-logbook-hide-state 'state) 'hidden)
+	(ps/org-show-logbook)
+      (ps/org-hide-logbook)))
 
-)
+  :hook
+  (org-mode-hook . ps/org-hide-properties)
+  (org-mode-hook . ps/org-hide-logbook))
 #+end_src
 
 ** org-id
@@ -18509,7 +18513,7 @@ into a task for Leo."
 
   :hook
   (telega-chat-mode-hook . ps/telega-chat-mode)
-			    ;; telega-autoplay-mode))
+  (telega-chat-mode-hook . telega-autoplay-mode)
   (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
   ;; (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
 
@@ -20850,15 +20854,15 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (midnight-delay-set 'midnight-delay "4:30am")
 
   :hook
-  (midnight-hook . (ps/ledger-update-commodities
-                    org-gcal-sync
-                    ps/pass-git-sync
-                    ps/magit-stage-commit-and-push-all-repos
-                    clean-buffer-list
-                    ;; ps/org-id-update-id-locations
-                    ;; org-roam-db-sync
-                    ;; straight-prune-build
-                    )))
+  (midnight-hook . ps/ledger-update-commodities)
+  (midnight-hook . org-gcal-sync)
+  (midnight-hook . ps/pass-git-sync)
+  (midnight-hook . ps/magit-stage-commit-and-push-all-repos)
+  (midnight-hook . clean-buffer-list)
+  ;; (midnight-hook . ps/org-id-update-id-locations)
+  ;; (midnight-hook . org-roam-db-sync)
+  ;; (midnight-hook . straight-prune-build)
+  )
 #+end_src
 
 *** SOMEDAY [#6] Fix coinprices

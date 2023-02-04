@@ -7392,6 +7392,17 @@ https://github.com/insanum/gcalcli
   ("M-A-t" 'world-clock))
 #+end_src
 
+** time-stamp
+:PROPERTIES:
+:ID:       1CB392B1-5844-45C5-8EBD-29E10F757C94
+:END:
+#+begin_src emacs-lisp
+(use-feature time-stamp
+  :demand t
+  :hook
+  (write-file-functions . time-stamp))
+#+end_src
+
 ** tmr
 :PROPERTIES:
 :ID:       87D2EB00-727C-4CA3-85F1-B8D82D37B48D
@@ -14110,24 +14121,26 @@ Once I activate ~org-roam-bibtex~, I should make sure deferring ~org-roam-setup~
     "Return list of files modified in the last DAYS. Optionally,
 return such list if its length is less than LIMIT."
     (let* ((mins (* 60 24 days))
-           (file-list (split-string
-                       (shell-command-to-string
-                        (format
-                         "find %s -name '*.org'  -mmin -%s"
-                         (directory-file-name org-roam-directory) mins)))))
+	   (file-list (split-string
+		       (shell-command-to-string
+			(format
+			 "find %s -name '*.org'  -mmin -%s"
+			 (directory-file-name org-roam-directory) mins)))))
       ;; Remove excluded files
       (setq file-list (cl-delete-if (lambda (k)
-                                      (string-match-p org-roam-file-exclude-regexp k))
-                                    file-list))
+				      (string-match-p org-roam-file-exclude-regexp k))
+				    file-list))
       (when (and limit
-                 (< (length file-list) limit))
-        file-list)))
+		 (< (length file-list) limit))
+	file-list)))
 
   :custom
   (org-roam-directory ps/dir-org-roam)
   ;; (org-roam-complete-everywhere t)
-  (org-roam-node-display-template #("${title:*} ${tags:10}" 11 21
-                                    (face org-tag)))
+  (org-roam-node-display-template
+   (concat "${title:*} "
+	   (propertize "${tags:10}" 'face 'org-tag)))
+
   (org-roam-capture-templates
    `(("r" "bibliography reference" plain
       (file ,ps/file-orb-noter-template)
@@ -14138,63 +14151,91 @@ return such list if its length is less than LIMIT."
   ;; (org-roam-completion-everywhere t)
 
   :config
+  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#showing-node-hierarchy
+    (cl-defmethod org-roam-node-hierarchy ((node org-roam-node))
+  (let ((level (org-roam-node-level node)))
+    (concat
+     ;; (when (> level 0) (concat (org-roam-node-file-title node) " > "))
+     (when (> level 1) (concat (string-join (org-roam-node-olp node) " > ") " > "))
+     (org-roam-node-title node))))
+
+
+    (setq org-roam-node-display-template "${hierarchy:*} ${tags:20}")
+
+    ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#run-org-roam-db-sync-when-emacs-is-idle
+    (defvar ps/auto-org-roam-db-sync--timer nil)
+(defvar ps/auto-org-roam-db-sync--timer-interval 5)
+
+(define-minor-mode ps/auto-org-roam-db-sync-mode
+  "Toggle automatic `org-roam-db-sync' when Emacs is idle.
+Referece: `auto-save-visited-mode'"
+  :group 'org-roam
+  :global t
+  (when ps/auto-org-roam-db-sync--timer (cancel-timer ps/auto-org-roam-db-sync--timer))
+  (setq ps/auto-org-roam-db-sync--timer
+        (when ps/auto-org-roam-db-sync-mode
+          (run-with-idle-timer
+           ps/auto-org-roam-db-sync--timer-interval :repeat
+           #'org-roam-db-sync))))
+
+
   (defvar ps/org-roam-excluded-dirs nil)
   (defvar ps/org-roam-excluded-files nil)
 
   (dolist (dir `(,ps/dir-anki
-                 ,ps/dir-inactive
-                 ,ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
-                 ,ps/dir-archive))
+		 ,ps/dir-inactive
+		 ,ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
+		 ,ps/dir-archive))
     (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs))
 
   (dolist (file '("orb-noter-template.org"
-                  "tareas.org"
-                  "calendar.org"
-                  "notatu-dignum.org"
-                  "quotes-old.org"
-                  ".org2blog.org"
-                  "feeds.org"))
+		  "tareas.org"
+		  "calendar.org"
+		  "notatu-dignum.org"
+		  "quotes-old.org"
+		  ".org2blog.org"
+		  "feeds.org"))
     (push file ps/org-roam-excluded-files))
 
   (setq org-roam-file-exclude-regexp
-        (append
-         ps/org-roam-excluded-dirs
-         ps/org-roam-excluded-files
-         '("conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")))
+	(append
+	 ps/org-roam-excluded-dirs
+	 ps/org-roam-excluded-files
+	 '("conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")))
 
   (setq org-roam-db-node-include-function
-        (lambda ()
-          (if (or
-               ;; exclude selected tags
-               (member "noid" (org-get-tags))
-               (member "ARCHIVE" (org-get-tags))
-               ;; exclude selected headings
-               (member (org-get-heading) '("Local variables"
-                                           "COMMENT Local variables"
-                                           "TODO Local variables"
-                                           "Evaluation"
-                                           "History"
-                                           "Further reading"
-                                           "External links"
-                                           "Related entries"
-                                           "Archive :ARCHIVE:"))
-               ;; exclude buffers when in list of special dirs and org
-               ;; heading at point is of level higher than 1 (i.e.
-               ;; don't create unnecessary IDs for article
-               ;; subsections)
-               (and
-                ;; dir condition
-                (member
-                 (file-name-directory (buffer-file-name))
-                 (mapcar #'file-name-as-directory
-                         ;; List of special dirs
-                         (list
-                          ps/dir-journal)))
-                ;; heading condition
-                (> (org-current-level) 1))
-               )
-              nil
-            t)))
+	(lambda ()
+	  (if (or
+	       ;; exclude selected tags
+	       (member "noid" (org-get-tags))
+	       (member "ARCHIVE" (org-get-tags))
+	       ;; exclude selected headings
+	       (member (org-get-heading) '("Local variables"
+					   "COMMENT Local variables"
+					   "TODO Local variables"
+					   "Evaluation"
+					   "History"
+					   "Further reading"
+					   "External links"
+					   "Related entries"
+					   "Archive :ARCHIVE:"))
+	       ;; exclude buffers when in list of special dirs and org
+	       ;; heading at point is of level higher than 1 (i.e.
+	       ;; don't create unnecessary IDs for article
+	       ;; subsections)
+	       (and
+		;; dir condition
+		(member
+		 (file-name-directory (buffer-file-name))
+		 (mapcar #'file-name-as-directory
+			 ;; List of special dirs
+			 (list
+			  ps/dir-journal)))
+		;; heading condition
+		(> (org-current-level) 1))
+	       )
+	      nil
+	    t)))
 
   (defun ps/org-roam-db-query (sql &rest args)
     "Run SQL query on Org-roam database with ARGS.
@@ -14217,11 +14258,11 @@ return such list if its length is less than LIMIT."
     (when (string= "r" (plist-get org-capture-plist :key))
       (goto-char (point-min))
       (unless (org-get-heading)
-        ;; Take action with file-level properties only.
-        (org-delete-property "ID")
-        (org-delete-property "ROAM_REFS")
-        (ps/org-jump-to-first-heading)
-        (org-id-get-create))))
+	;; Take action with file-level properties only.
+	(org-delete-property "ID")
+	(org-delete-property "ROAM_REFS")
+	(ps/org-jump-to-first-heading)
+	(org-id-get-create))))
 
   (defun ps/org-roam-new-note (note-type)
     "Create a new `org-roam' note."
@@ -14231,26 +14272,26 @@ return such list if its length is less than LIMIT."
        "Select note type: "
        '("generic" "person"))))
     (let ((tags)
-          (directory))
+	  (directory))
       (cond ((string= note-type "generic")
-             (setq tags "note")
-             (setq directory ps/dir-notes))
-            ((string= note-type "person")
-             (setq tags "person")
-             (setq directory ps/dir-people)))
+	     (setq tags "note")
+	     (setq directory ps/dir-notes))
+	    ((string= note-type "person")
+	     (setq tags "person")
+	     (setq directory ps/dir-people)))
       (let* ((name (read-from-minibuffer "Entry name: "))
-             (slug (org-hugo-slug name))
-             (filename (concat slug ".org")))
-        (when (file-exists-p filename)
-          (user-error (format "File `%s' already exists." filename)))
-        (find-file (file-name-concat directory filename))
-        (insert "#+title: " name "\n\n")
-        (org-insert-heading)
-        (insert name)
-        (org-set-tags tags)
-        (org-id-get-create)
-        (ps/org-narrow-to-entry-and-children)
-        (goto-char (point-max)))))
+	     (slug (org-hugo-slug name))
+	     (filename (concat slug ".org")))
+	(when (file-exists-p filename)
+	  (user-error (format "File `%s' already exists." filename)))
+	(find-file (file-name-concat directory filename))
+	(insert "#+title: " name "\n\n")
+	(org-insert-heading)
+	(insert name)
+	(org-set-tags tags)
+	(org-id-get-create)
+	(ps/org-narrow-to-entry-and-children)
+	(goto-char (point-max)))))
 
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
   ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)

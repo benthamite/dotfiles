@@ -12729,7 +12729,7 @@ slow if it has a lot of overlays."
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
-	      "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
+	      "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:" nil t)
 	(let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
 	  (overlay-put ov_this 'display "")
 	  (overlay-put ov_this 'hidden-prop-drawer t))))
@@ -12742,7 +12742,7 @@ slow if it has a lot of overlays."
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
-	      "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
+	      "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:" nil t)
 	(let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
 	  (overlay-put ov_this 'display "")
 	  (overlay-put ov_this 'hidden-logbook-drawer t))))
@@ -20758,6 +20758,7 @@ Man, I give up.
 :PROPERTIES:
 :ID:       F4C5A232-7788-4240-9CE2-B6761C905786
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature tetris
   :general
@@ -20819,7 +20820,7 @@ is connected."
       (match-string 1 list-external)))))
 #+end_src
 
-** midnight-mode
+** midnight
 :PROPERTIES:
 :ID:       C6B68696-DCCC-4143-A0BC-E5EEE249AACF
 :END:
@@ -20837,6 +20838,8 @@ CLOCK: [2021-07-08 Thu 10:09]--[2021-07-08 Thu 10:33] =>  0:24
 CLOCK: [2021-07-07 Wed 23:25]--[2021-07-07 Wed 23:46] =>  0:21
 CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 :END:
+
+/midnight runs custom processes every night./
 
 #+begin_src emacs-lisp :results silent
 (use-feature midnight
@@ -20882,6 +20885,10 @@ ModuleNotFoundError: No module named 'dotenv'
 
 I'm not tracking prices anymore so this is probably not worth it currently.
 *** Archive                                                       :ARCHIVE:
+:PROPERTIES:
+:ID:       498E1B87-1265-4A57-9312-8E047ADACE1B
+:END:
+
 :PROPERTIES:
 :ID:       D894A551-F2E1-436D-8D4A-C12779C64F8D
 :END:
@@ -21009,10 +21016,12 @@ CLOSED: [2022-12-17 Sat 04:37]
 :ID:       067F2688-FEF5-458A-946B-A901999F9AD2
 :ARCHIVE_TIME: 2022-12-17 Sat 04:37
 :END:
+
 ** keycast
 :PROPERTIES:
 :ID:       8D51F4B0-7443-420B-919F-7AA9B0EC0CE9
 :END:
+
 /[[https://github.com/tarsius/keycast/tree/a12ef1fb480b56c34c92f48fc7f7aa8a1d7c4c4b][keycast]] shows the current command and its key in the mode line./
 
 #+begin_src emacs-lisp :results silent
@@ -21038,7 +21047,7 @@ CLOCK: [2021-02-07 Sun 13:55]--[2021-02-07 Sun 13:57] =>  0:02
 CLOCK: [2021-02-07 Sun 13:25]--[2021-02-07 Sun 13:37] =>  0:12
 :END:
 
-The [[https://github.com/dacap/keyfreq][keyfreq]] package track Emacs command frequency.
+/[[https://github.com/dacap/keyfreq][keyfreq]] track Emacs command frequency./
 
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package keyfreq

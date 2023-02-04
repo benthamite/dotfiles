@@ -18598,10 +18598,11 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 :END:
 /[[https://github.com/yuya373/emacs-slack][slack]] is a Slack client for Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package slack
   :if (equal (system-name) ps/computer-hostname-pablo)
   :after auth-source-pass
+  ;; :demand t
   :defer 60
   :commands slack-select-rooms
   :custom

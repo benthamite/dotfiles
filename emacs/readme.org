@@ -12733,18 +12733,46 @@ slow if it has a lot of overlays."
         (overlay-put ov_this 'hidden-prop-drawer t))))
   (put 'org-toggle-properties-hide-state 'state 'hidden))
 
+  (defun ps/org-hide-logbook ()
+  "Hide all org-mode headline logbook drawers in buffer. Could be
+slow if it has a lot of overlays."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward
+            "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
+      (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
+        (overlay-put ov_this 'display "")
+        (overlay-put ov_this 'hidden-logbook-drawer t))))
+  (put 'org-toggle-logbook-hide-state 'state 'hidden))
+
 (defun ps/org-show-properties ()
   "Show all org-mode property drawers hidden by org-hide-properties."
   (interactive)
   (remove-overlays (point-min) (point-max) 'hidden-prop-drawer t)
   (put 'org-toggle-properties-hide-state 'state 'shown))
 
+(defun ps/org-show-logbook ()
+  "Show all org-mode logbook drawers hidden by org-hide-properties."
+  (interactive)
+  (remove-overlays (point-min) (point-max) 'hidden-logbook-drawer t)
+  (put 'org-toggle-logbook-hide-state 'state 'shown))
+
 (defun ps/org-toggle-properties ()
   "Toggle visibility of property drawers."
   (interactive)
   (if (eq (get 'org-toggle-properties-hide-state 'state) 'hidden)
-      (org-show-properties)
-    (org-hide-properties))))
+      (ps/org-show-properties)
+    (ps/org-hide-properties)))
+
+(defun ps/org-toggle-logbook ()
+  "Toggle visibility of logbook drawers."
+  (interactive)
+  (if (eq (get 'org-toggle-logbook-hide-state 'state) 'hidden)
+      (ps/org-show-logbook)
+    (ps/org-hide-logbook)))
+
+)
 #+end_src
 
 ** org-id

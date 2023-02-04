@@ -2,6 +2,7 @@
 #+AUTHOR: Pablo Stafforini
 #+PROPERTY: header-args :tangle ~/Dropbox/dotfiles/emacs/init.el
 #+filetags: :project:
+#+LAST_MODIFIED: [2023-02-04 Sat 13:27]
 :PROPERTIES:
 :TOC:      ignore
 :END:
@@ -7399,6 +7400,12 @@ https://github.com/insanum/gcalcli
 #+begin_src emacs-lisp
 (use-feature time-stamp
   :demand t
+  :custom
+  (time-stamp-active t)
+  (time-stamp-start "#\\+LAST_MODIFIED:[ \t]*")
+  (time-stamp-end "$")
+  (time-stamp-format "\[%Y-%02m-%02d %3a %02H:%02M\]")
+
   :hook
   (write-file-functions . time-stamp))
 #+end_src

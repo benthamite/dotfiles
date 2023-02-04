@@ -1776,11 +1776,14 @@ with the current major mode."
         (progn
           (visible-mode -1)
           (org-display-inline-images)
+          (ps/org-hide-properties)
+          (ps/org-hide-logbook)
           (org-modern-mode))
       (visible-mode)
       (org-remove-inline-images)
+      (ps/org-show-properties)
+      (ps/org-show-logbook)
       (org-modern-mode -1)))
-
 
   :general
   ("A-H-e" 'eval-defun
@@ -3735,6 +3738,17 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :general
   ("M-A-t" 'world-clock))
 
+(use-feature time-stamp
+  :demand t
+  :custom
+  (time-stamp-active t)
+  (time-stamp-start "#\\+LAST_MODIFIED:[ \t]*")
+  (time-stamp-end "$")
+  (time-stamp-format "\[%Y-%02m-%02d %3a %02H:%02M\]")
+
+  :hook
+  (write-file-functions . time-stamp))
+
 (use-package tmr
   :defer 10)
 
@@ -3869,26 +3883,31 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   (git-commit-summary-max-length 50)
   (magit-commit-ask-to-stage 'stage)
 
-  :init
+  :config
+  (add-to-list 'magit-no-confirm 'stage-all-changes)
 
   ;; adapted from Sacha Chua
-  (defun ps/magit-stage-commit-and-push-all (message)
+  (defun ps/magit-stage-commit-and-push (message)
     "Stage, commit and push all changes."
-    (interactive (list (progn (magit-diff-unstaged) (read-string "Commit Message: "))))
-    (add-to-list 'magit-no-confirm 'stage-all-changes)
-    (magit-stage-modified '(4))
-    (magit-commit-create (list "-m" message))
+    (interactive
+     (list (progn (magit-diff-unstaged) (read-string "Commit Message: "))))
+    (when (or
+           (magit-anything-staged-p)
+           (magit-anything-unstaged-p))
+      (magit-stage-modified '(4))
+      (magit-commit-create (list "-m" message)))
     (call-interactively #'magit-push-current-to-pushremote))
+
+  (defun ps/magit-stage-commit-and-push-all-repos ()
+    "Update all active depositories."
+    (dolist (dir ps/dir-all-repos)
+      (ps/magit-midnight-update dir)))
 
   (defun ps/magit-midnight-update (arg)
     "Update repository daily using `midnight'."
     (let ((default-directory arg))
-      (when (or (magit-anything-staged-p) (magit-anything-unstaged-p))
-        (ps/magit-stage-commit-and-push-all "Midnight update"))))
+      (ps/magit-stage-commit-and-push "Midnight update")))
 
-  :config
-  ;; It was prompting me to save every modified file-visiting buffer
-  ;; (magit-wip-mode)
   :general
   ("A-g" 'magit))
 
@@ -4826,6 +4845,12 @@ necessary."
   :if (equal (system-name) ps/computer-hostname-pablo)
   :defer 10)
 
+(use-package grammarly
+  :demand t
+  :custom
+  (grammarly-username ps/personal-gmail)
+  (grammarly-password (auth-source-pass-get 'secret (concat "chrome/grammarly.com/" ps/personal-gmail))))
+
 (use-package lsp-grammarly
   :if (equal (system-name) ps/computer-hostname-pablo)
   :after (lsp-mode keytar)
@@ -4848,6 +4873,13 @@ necessary."
   (org-mode-hook . (lambda ()
                      (require 'lsp-grammarly)
                      (lsp))))
+
+(use-package eglot-grammarly
+  :straight (:host github :repo "emacs-grammarly/eglot-grammarly")
+  :defer t
+  :hook ((text-mode markdown-mode). (lambda ()
+                                      (require 'eglot-grammarly)
+                                      (eglot-ensure))))
 
 (use-package aide
   :straight (aide
@@ -4949,7 +4981,7 @@ around point."
              :repo "tmalsburg/txl.el")
   :custom
   (txl-languages '(ES . EN-US))
-  (txl-deepl-api-key (auth-source-pass-get "api" (concat "tlon/BAE/deepl.com/" ps/personal-email)))
+  (txl-deepl-api-key (auth-source-pass-get "api" (concat "chrome/deepl.com/" ps/personal-email)))
 
   :general
   ("H-A-y" 'txl-translate-region-or-paragraph)
@@ -5554,6 +5586,7 @@ FILE."
                    ("\\.mm\\'" . default)
                    ("\\.x?html?\\'" . default)
                    ("\\.pdf\\'" . emacs)))
+                   (org-use-tag-inheritance nil)
 
   (org-structure-template-alist '(("a" . "export ascii")
                                      ("c" . "center")
@@ -6078,8 +6111,8 @@ image."
       (id "AE09BAB8-5EA0-4CB0-AC5A-FF876CB9ABC5")
       "**** TODO Discuss %(ps/org-web-tools-insert-link-for-clipboard-url-ea-forum)\nSCHEDULED: %(org-insert-time-stamp nil nil nil nil nil \" .+1d\")" :empty-lines 1 :prepend t)
      ("e" "email" entry
-      (file ps/file-inbox-desktop)
-      "* TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
+      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("f" "Fede")
      ("ff" "Fede: generic task" entry
       (file+headline ps/file-tareas-fede "Tareas Fede")
@@ -6120,15 +6153,15 @@ image."
      ("lt" "Leo: Add to translations spreadsheet" entry
       (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#4] Add to translation master file :leo:\n%c\n[[https://docs.google.com/spreadsheets/d/1YpqWK2Vpxwc_JuCf7isjwpdCQ_7_NRAY/edit#gid=2099842495][spreadsheet]]" :empty-lines 1 :prepend t)
-     ;; ("lt" "Leo: Telegram" entry
-      ;; (file+headline ps/file-tareas-leo "Tareas Leo")
-      ;; "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
+     ("lt" "Leo: Telegram" entry
+      (file+headline ps/file-tareas-leo "Tareas Leo")
+      "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
      ("m" "Leo: Messaging (to send later)" entry
-      (file ps/file-inbox-desktop)
-      "* TODO Send message\n%?\n")
+      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      "** TODO Send message\n%?\n")
      ("n" "telegram" entry
-      (file ps/file-inbox-desktop)
-      "* TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
+     (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ;; ("m" "To discuss in meeting with Leo" plain
      ;; (id "3AAD2510-0522-4598-9182-50E97504EAF6")
      ;; "- [ ] %?" :empty-lines 1)
@@ -6138,8 +6171,8 @@ image."
       (file ,ps/file-orb-capture-template)
       :unnarrowed t :immediate-finish t)
      ("s" "Slack" entry
-      (file ps/file-inbox-desktop)
-      "* TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
+      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("t" "Todo" entry
       (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
       "** TODO %?\n")
@@ -6345,7 +6378,64 @@ conditional on active capture template."
     "Show contents of all headings in buffer, except archives."
     (interactive)
     (org-fold-show-all '(headings))
-    (org-cycle-hide-archived-subtrees 'all)))
+    (org-cycle-hide-archived-subtrees 'all))
+
+  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
+  (defun ps/org-hide-properties ()
+    "Hide all org-mode headline property drawers in buffer. Could be
+slow if it has a lot of overlays."
+    (interactive)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward
+	      "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
+	(let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
+	  (overlay-put ov_this 'display "")
+	  (overlay-put ov_this 'hidden-prop-drawer t))))
+    (put 'org-toggle-properties-hide-state 'state 'hidden))
+
+  (defun ps/org-hide-logbook ()
+    "Hide all org-mode headline logbook drawers in buffer. Could be
+slow if it has a lot of overlays."
+    (interactive)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward
+	      "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
+	(let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
+	  (overlay-put ov_this 'display "")
+	  (overlay-put ov_this 'hidden-logbook-drawer t))))
+    (put 'org-toggle-logbook-hide-state 'state 'hidden))
+
+  (defun ps/org-show-properties ()
+    "Show all org-mode property drawers hidden by org-hide-properties."
+    (interactive)
+    (remove-overlays (point-min) (point-max) 'hidden-prop-drawer t)
+    (put 'org-toggle-properties-hide-state 'state 'shown))
+
+  (defun ps/org-show-logbook ()
+    "Show all org-mode logbook drawers hidden by org-hide-properties."
+    (interactive)
+    (remove-overlays (point-min) (point-max) 'hidden-logbook-drawer t)
+    (put 'org-toggle-logbook-hide-state 'state 'shown))
+
+  (defun ps/org-toggle-properties ()
+    "Toggle visibility of property drawers."
+    (interactive)
+    (if (eq (get 'org-toggle-properties-hide-state 'state) 'hidden)
+	(ps/org-show-properties)
+      (ps/org-hide-properties)))
+
+  (defun ps/org-toggle-logbook ()
+    "Toggle visibility of logbook drawers."
+    (interactive)
+    (if (eq (get 'org-toggle-logbook-hide-state 'state) 'hidden)
+	(ps/org-show-logbook)
+      (ps/org-hide-logbook)))
+
+  :hook
+  (org-mode-hook . ps/org-hide-properties)
+  (org-mode-hook . ps/org-hide-logbook))
 
 (use-feature org-id
   :demand t
@@ -7044,24 +7134,26 @@ With optional prefix argument, open with eww."
     "Return list of files modified in the last DAYS. Optionally,
 return such list if its length is less than LIMIT."
     (let* ((mins (* 60 24 days))
-           (file-list (split-string
-                       (shell-command-to-string
-                        (format
-                         "find %s -name '*.org'  -mmin -%s"
-                         (directory-file-name org-roam-directory) mins)))))
+	   (file-list (split-string
+		       (shell-command-to-string
+			(format
+			 "find %s -name '*.org'  -mmin -%s"
+			 (directory-file-name org-roam-directory) mins)))))
       ;; Remove excluded files
       (setq file-list (cl-delete-if (lambda (k)
-                                      (string-match-p org-roam-file-exclude-regexp k))
-                                    file-list))
+				      (string-match-p org-roam-file-exclude-regexp k))
+				    file-list))
       (when (and limit
-                 (< (length file-list) limit))
-        file-list)))
+		 (< (length file-list) limit))
+	file-list)))
 
   :custom
   (org-roam-directory ps/dir-org-roam)
   ;; (org-roam-complete-everywhere t)
-  (org-roam-node-display-template #("${title:*} ${tags:10}" 11 21
-                                    (face org-tag)))
+  (org-roam-node-display-template
+   (concat "${title:*} "
+	   (propertize "${tags:10}" 'face 'org-tag)))
+
   (org-roam-capture-templates
    `(("r" "bibliography reference" plain
       (file ,ps/file-orb-noter-template)
@@ -7072,67 +7164,106 @@ return such list if its length is less than LIMIT."
   ;; (org-roam-completion-everywhere t)
 
   :config
+  ;; adapted from
+  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#showing-node-hierarchy
+  (cl-defmethod org-roam-node-hierarchy ((node org-roam-node))
+    (let ((level (org-roam-node-level node)))
+      (concat
+       (when (> level 0)
+	 (concat
+	  (propertize (org-roam-node-file-title node) 'face 'org-level-1)
+	  " > "))
+       ;; This is a hacky propertization because it doesn't color the
+       ;; intermediate headings differently, but doing that slowed
+       ;; down the function too much.
+       (when (> level 1)
+	 (concat
+	  (propertize (string-join (org-roam-node-olp node) " > ") 'face 'org-level-2)
+	  " > "))
+       (propertize (org-roam-node-title node) 'face 'org-level-3))))
+
+  (setq org-roam-node-display-template
+	(concat "${hierarchy:160} "
+		(propertize "${tags:20}" 'face 'org-tag)))
+
+  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#run-org-roam-db-sync-when-emacs-is-idle
+  (defvar ps/auto-org-roam-db-sync--timer nil)
+  (defvar ps/auto-org-roam-db-sync--timer-interval 5)
+
+  (define-minor-mode ps/auto-org-roam-db-sync-mode
+    "Toggle automatic `org-roam-db-sync' when Emacs is idle.
+		Referece: `auto-save-visited-mode'"
+    :group 'org-roam
+    :global t
+    (when ps/auto-org-roam-db-sync--timer (cancel-timer ps/auto-org-roam-db-sync--timer))
+    (setq ps/auto-org-roam-db-sync--timer
+	  (when ps/auto-org-roam-db-sync-mode
+	    (run-with-idle-timer
+	     ps/auto-org-roam-db-sync--timer-interval :repeat
+	     #'org-roam-db-sync))))
+
+
   (defvar ps/org-roam-excluded-dirs nil)
   (defvar ps/org-roam-excluded-files nil)
 
   (dolist (dir `(,ps/dir-anki
-                 ,ps/dir-inactive
-                 ,ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
-                 ,ps/dir-archive))
+		 ,ps/dir-inactive
+		 ,ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
+		 ,ps/dir-archive))
     (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs))
 
   (dolist (file '("orb-noter-template.org"
-                  "tareas.org"
-                  "calendar.org"
-                  "notatu-dignum.org"
-                  "quotes-old.org"
-                  ".org2blog.org"
-                  "feeds.org"))
+		  "tareas.org"
+		  "calendar.org"
+		  "notatu-dignum.org"
+		  "quotes-old.org"
+		  ".org2blog.org"
+		  "feeds.org"))
     (push file ps/org-roam-excluded-files))
 
   (setq org-roam-file-exclude-regexp
-        (append
-         ps/org-roam-excluded-dirs
-         ps/org-roam-excluded-files
-         '("conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")))
+	(append
+	 ps/org-roam-excluded-dirs
+	 ps/org-roam-excluded-files
+	 '("conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")))
 
   (setq org-roam-db-node-include-function
-        (lambda ()
-          (if (or
-               ;; exclude selected tags
-               (member "noid" (org-get-tags))
-               (member "ARCHIVE" (org-get-tags))
-               ;; exclude selected headings
-               (member (org-get-heading) '("Local variables"
-                                           "COMMENT Local variables"
-                                           "TODO Local variables"
-                                           "Evaluation"
-                                           "History"
-                                           "Further reading"
-                                           "External links"
-                                           "Related entries"
-                                           "Archive :ARCHIVE:"))
-               ;; exclude buffers when in list of special dirs and org
-               ;; heading at point is of level higher than 1 (i.e.
-               ;; don't create unnecessary IDs for article
-               ;; subsections)
-               (and
-                ;; dir condition
-                (member
-                 (file-name-directory (buffer-file-name))
-                 (mapcar #'file-name-as-directory
-                         ;; List of special dirs
-                         (list
-                          ps/dir-journal)))
-                ;; heading condition
-                (> (org-current-level) 1))
-               )
-              nil
-            t)))
+	(lambda ()
+	  (if (or
+	       ;; exclude selected tags
+	       (member "noid" (org-get-tags))
+	       (member "ARCHIVE" (org-get-tags))
+	       ;; exclude selected headings
+	       (member (org-get-heading) '("Local variables"
+					   "COMMENT Local variables"
+					   "TODO Local variables"
+					   "Evaluation"
+					   "History"
+					   "Further reading"
+					   "External links"
+					   "Related entries"
+					   "Archive :ARCHIVE:"))
+	       ;; exclude buffers when in list of special dirs and org
+	       ;; heading at point is of level higher than 1 (i.e.
+	       ;; don't create unnecessary IDs for article
+	       ;; subsections)
+	       (and
+		;; dir condition
+		(member
+		 (file-name-directory (buffer-file-name))
+		 (mapcar #'file-name-as-directory
+			 ;; List of special dirs
+			 (list
+			  ps/dir-journal)))
+		;; heading condition
+		(> (org-current-level) 1))
+	       )
+	      nil
+	    t)))
 
   (defun ps/org-roam-db-query (sql &rest args)
     "Run SQL query on Org-roam database with ARGS.
- SQL can be either the emacsql vector representation, or a string."
+	SQL can be either the emacsql vector representation, or a string."
     (sleep-for 0 1)
     (apply #'emacsql (org-roam-db) sql args))
 
@@ -7151,11 +7282,11 @@ return such list if its length is less than LIMIT."
     (when (string= "r" (plist-get org-capture-plist :key))
       (goto-char (point-min))
       (unless (org-get-heading)
-        ;; Take action with file-level properties only.
-        (org-delete-property "ID")
-        (org-delete-property "ROAM_REFS")
-        (ps/org-jump-to-first-heading)
-        (org-id-get-create))))
+	;; Take action with file-level properties only.
+	(org-delete-property "ID")
+	(org-delete-property "ROAM_REFS")
+	(ps/org-jump-to-first-heading)
+	(org-id-get-create))))
 
   (defun ps/org-roam-new-note (note-type)
     "Create a new `org-roam' note."
@@ -7165,26 +7296,26 @@ return such list if its length is less than LIMIT."
        "Select note type: "
        '("generic" "person"))))
     (let ((tags)
-          (directory))
+	  (directory))
       (cond ((string= note-type "generic")
-             (setq tags "note")
-             (setq directory ps/dir-notes))
-            ((string= note-type "person")
-             (setq tags "person")
-             (setq directory ps/dir-people)))
+	     (setq tags "note")
+	     (setq directory ps/dir-notes))
+	    ((string= note-type "person")
+	     (setq tags "person")
+	     (setq directory ps/dir-people)))
       (let* ((name (read-from-minibuffer "Entry name: "))
-             (slug (org-hugo-slug name))
-             (filename (concat slug ".org")))
-        (when (file-exists-p filename)
-          (user-error (format "File `%s' already exists." filename)))
-        (find-file (file-name-concat directory filename))
-        (insert "#+title: " name "\n\n")
-        (org-insert-heading)
-        (insert name)
-        (org-set-tags tags)
-        (org-id-get-create)
-        (ps/org-narrow-to-entry-and-children)
-        (goto-char (point-max)))))
+	     (slug (org-hugo-slug name))
+	     (filename (concat slug ".org")))
+	(when (file-exists-p filename)
+	  (user-error (format "File `%s' already exists." filename)))
+	(find-file (file-name-concat directory filename))
+	(insert "#+title: " name "\n\n")
+	(org-insert-heading)
+	(insert name)
+	(org-set-tags tags)
+	(org-id-get-create)
+	(ps/org-narrow-to-entry-and-children)
+	(goto-char (point-max)))))
 
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
   ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
@@ -9515,8 +9646,91 @@ it, without asking for confirmation."
   :config
   (mu4e-alert-enable-mode-line-display))
 
+(use-package org-msg
+  :after (org mu4e)
+  :defer 3
+  :custom
+  (org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t")
+  (org-msg-startup "hidestars indent inlineimages")
+  ;; (org-msg-greeting-fmt "\nHi *%s*,\n\n")
+  (org-msg-recipient-names `((,ps/personal-gmail . "Pablo")))
+  (org-msg-greeting-name-limit 3)
+  (org-msg-default-alternatives '((new		. (text html))
+                                  (reply-to-html	. (text html))
+                                  (reply-to-text	. (text))))
+  (org-msg-convert-citation t)
+  (org-msg-signature ps/personal-signature)
+
+  :config
+  (org-msg-mode)
+
+  (defun ps/org-msg-grammarly ()
+    "Enable `grammarly-mode' in `org-msg-edit-mode'."
+    (interactive)
+    (if (eq major-mode 'org-mode)
+        (org-msg-edit-mode)
+      (org-mode)
+      (require 'lsp-grammarly)
+      (lsp)))
+
+  (defun ps/org-msg-toggle-accounts ()
+    "Toggle between personal and GPE email accounts."
+    (interactive)
+    (if (eq user-mail-address ps/personal-gmail)
+        (setq user-mail-address ps/personal-gpe-email)
+      (setq user-mail-address ps/personal-gmail))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "From: .*" nil t)
+        (replace-match (format "From: %s <%s>" ps/personal-name user-mail-address)))
+      (let ((new-signature
+             (if (eq user-mail-address ps/personal-gmail)
+                 ps/personal-signature
+               ps/gpe-signature))
+            (current-signature
+             (if (eq user-mail-address ps/personal-gmail)
+                 ps/gpe-signature
+               ps/personal-signature)))
+        (while (search-forward current-signature nil t)
+          (replace-match new-signature)))))
+
+  (defun ps/org-msg-kill-message ()
+    "Save the current message to the kill ring."
+    (interactive)
+    (goto-char (org-msg-start))
+    (re-search-forward "^:END:\n")
+    (let ((beg (point)))
+      (goto-char (org-msg-end))
+      (search-backward "#+begin_signature" nil t)
+      (kill-region beg (point))))
+
+  (defun ps/org-msg-open-in-wordtune ()
+    "Save the current message to the kill ring and open it in
+Wordtune."
+    (interactive)
+    (ps/org-msg-kill-message)
+    (browse-url "https://app.wordtune.com/v2/editor/"))
+
+  (defun ps/org-msg-open-in-grammarly ()
+    "Save the current message to the kill ring and open it in
+Grammarly."
+    (interactive)
+    (ps/org-msg-kill-message)
+    (browse-url "https://app.grammarly.com/ddocs/1789329083"))
+
+  :general
+  (org-msg-edit-mode-map
+   "s-a" 'org-msg-attach
+   "s-b" 'org-msg-goto-body
+   "s-g" 'ps/org-msg-open-in-grammarly
+   "s-x" 'ps/org-msg-kill-message
+   "s-w" 'ps/org-msg-open-in-wordtune)
+  (org-mode-map
+   "A-s-g" 'ps/org-msg-grammarly))
+
 (use-package telega
-  :defer 5
+  :demand t
+  ;; :defer 5
   :custom
   (telega-server-libs-prefix "/opt/homebrew")
   (telega-chat-input-markups '("markdown2" "org"))
@@ -9524,13 +9738,13 @@ it, without asking for confirmation."
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
   (telega-filters-custom '(("Main" . main)
-                           ("Important" or mention
-                            (and unread unmuted))
-                           ("Archive" . archive)
-                           ("Online" and
-                            (not saved-messages) (user is-online))
-                           ("Groups" type basicgroup supergroup)
-                           ("Channels" type channel)))
+			   ("Important" or mention
+			    (and unread unmuted))
+			   ("Archive" . archive)
+			   ("Online" and
+			    (not saved-messages) (user is-online))
+			   ("Groups" type basicgroup supergroup)
+			   ("Channels" type channel)))
   (telega-completing-read-function 'completing-read)
 
   :config
@@ -9540,29 +9754,30 @@ switch to the root buffer, starting telega if necessary."
     (interactive)
     (ps/window-split-if-unsplit)
     (if (> (frame-width) ps/frame-width-threshold)
-        (winum-select-window-3)
+	(winum-select-window-3)
       (winum-select-window-2))
     (let* ((rootbuf "*Telega Root*")
-           (buf (or
-                 (let ((chatbuf))
-                   (mapc (lambda (x)
-                           (when (with-current-buffer x
-                                   (eq major-mode 'telega-chat-mode))
-                             (switch-to-buffer x)
-                             (setq chatbuf x)))
-                         (buffer-list))
-                   chatbuf)
-                 (get-buffer rootbuf))))
+	   (buf (or
+		 (let ((chatbuf))
+		   (mapc (lambda (x)
+			   (when (with-current-buffer x
+				   (eq major-mode 'telega-chat-mode))
+			     (switch-to-buffer x)
+			     (setq chatbuf x)))
+			 (buffer-list))
+		   chatbuf)
+		 (get-buffer rootbuf))))
       (if buf
-          (progn
-            (switch-to-buffer rootbuf)
-            (beginning-of-buffer)
-            (forward-line 3))
-        (telega))))
+	  (progn
+	    (switch-to-buffer rootbuf)
+	    (beginning-of-buffer)
+	    (forward-line 3))
+	(telega))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
     (interactive)
+    (org-store-link nil)
     (org-capture nil "n"))
 
   (defun ps/telega-chat-org-capture-leo ()
@@ -9575,8 +9790,8 @@ into a task for Leo."
   (defun ps/telega-move-downloaded-file (file)
     "Move downloaded file(s) to `ps/dir-downloads' directory."
     (let* ((old-path (plist-get (plist-get file :local) :path))
-           (file-name (file-name-nondirectory old-path))
-           (new-path (concat ps/dir-downloads "/" file-name)))
+	   (file-name (file-name-nondirectory old-path))
+	   (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
 
@@ -9586,36 +9801,36 @@ into a task for Leo."
     (unless (telega-server-live-p)
       (user-error "Please launch Telega before running this command."))
     (if (equal (buffer-file-name) ps/file-tlon-docs)
-        (progn
-          (unless (region-active-p)
-            (user-error "Please select the region containing the changes you introduced."))
-          (let ((docs-section (org-get-heading)))
-            (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
-            (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
+	(progn
+	  (unless (region-active-p)
+	    (user-error "Please select the region containing the changes you introduced."))
+	  (let ((docs-section (org-get-heading)))
+	    (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
+	    (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
       (user-error "You aren't visiting `docs.org'!")))
 
   (defun ps/telega-docs-change-open (msg)
     "TODO: write docstring"
     (interactive (list (telega-msg-for-interactive)))
     (let* ((content (plist-get msg :content))
-           (msg-text (or (telega-tl-str content :text)
-                         (telega-tl-str content :caption)
-                         ;; See FR https://t.me/emacs_telega/34839
-                         (and (telega-msg-match-p msg '(type VoiceNote))
-                              (telega-tl-str (plist-get content :voice_note)
-                                             :recognized_text)))))
+	   (msg-text (or (telega-tl-str content :text)
+			 (telega-tl-str content :caption)
+			 ;; See FR https://t.me/emacs_telega/34839
+			 (and (telega-msg-match-p msg '(type VoiceNote))
+			      (telega-tl-str (plist-get content :voice_note)
+					     :recognized_text)))))
       (with-temp-buffer
-        (insert msg-text)
-        (goto-char (point-min))
-        (re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
-        (let ((change-begins (string-to-number (match-string 1)))
-              (change-ends (string-to-number (match-string 2))))
-          (find-file ps/file-tlon-docs)
-          (org-show-all)
-          (org-hide-drawer-all)
-          (org-highlight change-begins change-ends)
-          (goto-char change-begins))
-        (message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
+	(insert msg-text)
+	(goto-char (point-min))
+	(re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
+	(let ((change-begins (string-to-number (match-string 1)))
+	      (change-ends (string-to-number (match-string 2))))
+	  (find-file ps/file-tlon-docs)
+	  (org-show-all)
+	  (org-hide-drawer-all)
+	  (org-highlight change-begins change-ends)
+	  (goto-char change-begins))
+	(message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
 
   (defun ps/telega-filters-push-archive ()
     "Set active filters list to `archive'."
@@ -9630,16 +9845,15 @@ into a task for Leo."
   (defun ps/telega-chat-mode ()
     (require 'company)
     (add-hook 'completion-at-point-functions
-              #'telega-chatbuf-complete-at-point nil 'local))
-
+	      #'telega-chatbuf-complete-at-point nil 'local))
 
   (telega-mode-line-mode 1)
 
   :hook
   (telega-chat-mode-hook . ps/telega-chat-mode)
-  (telega-chat-mode-hook . (lambda () (setq default-directory (file-name-as-directory ps/dir-downloads))))
-  (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
   (telega-chat-mode-hook . telega-autoplay-mode)
+  (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
+  ;; (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
 
   :general
   ("C-f" 'ps/telega-switch-to)
@@ -9689,13 +9903,13 @@ into a task for Leo."
    "." 'telega-chat-with
    "a" 'telega-chat-toggle-archive
    "m" 'telega-chat-toggle-muted)
-   (telega-root-view-map
-    "a" 'ps/telega-filters-push-archive
-    "m" 'ps/telega-filters-push-main)
-   (telega-webpage-mode-map
-    "x" 'telega-webpage-browse-url)
-   (dired-mode-map
-    "A-s-a" 'ps/telega-dired-attach-send))
+  (telega-root-view-map
+   "a" 'ps/telega-filters-push-archive
+   "m" 'ps/telega-filters-push-main)
+  (telega-webpage-mode-map
+   "x" 'telega-webpage-browse-url)
+  (dired-mode-map
+   "A-s-a" 'ps/telega-dired-attach-send))
 
 (use-feature telega-mnz
   :after telega
@@ -9754,7 +9968,9 @@ into a task for Leo."
           (telega-chatbuf-attach-file file)
         (user-error (format "No files found in %s" ps/dir-downloads)))))
 
-(use-feature ol-telega)
+(use-feature ol-telega
+  :after telega
+  :demand t)
 
 (use-feature erc
   :if (equal (system-name) ps/computer-hostname-pablo)
@@ -10774,11 +10990,13 @@ is connected."
   :hook
   (midnight-hook . ps/ledger-update-commodities)
   (midnight-hook . org-gcal-sync)
+  (midnight-hook . ps/pass-git-sync)
+  (midnight-hook . ps/magit-stage-commit-and-push-all-repos)
+  (midnight-hook . clean-buffer-list)
   ;; (midnight-hook . ps/org-id-update-id-locations)
   ;; (midnight-hook . org-roam-db-sync)
-  (midnight-hook . ps/pass-git-sync)
-  (midnight-hook . clean-buffer-list))
-;; (midnight-hook . straight-prune-build)
+  ;; (midnight-hook . straight-prune-build)
+  )
 
 (use-package keycast
   :config

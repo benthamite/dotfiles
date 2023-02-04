@@ -14158,173 +14158,178 @@ return such list if its length is less than LIMIT."
   ;; (org-roam-completion-everywhere t)
 
   :config
+  ;; adapted from
   ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#showing-node-hierarchy
   (cl-defmethod org-roam-node-hierarchy ((node org-roam-node))
     (let ((level (org-roam-node-level node)))
       (concat
-       (when (> level 0) (concat (propertize (org-roam-node-file-title node) 'face 'org-level-1) "/"))
-       (when (> level 1) (let ((result)
-			       (level 1))
-			   (dolist (heading (org-roam-node-olp node) result)
-			     (propertize heading 'face (intern (format "org-level-%s" level)))
-			     (push heading result)
-			     (setq level (1+ level)))
-			   (string-join result "/")))
-    (propertize (org-roam-node-title node) 'face 'org-level-7))))
+       (when (> level 0)
+	 (concat
+	  (propertize (org-roam-node-file-title node) 'face 'org-level-1)
+	  " > "))
+       ;; This is a hacky propertization because it doesn't color the
+       ;; intermediate headings differently, but doing that slowed
+       ;; down the function too much.
+       (when (> level 1)
+	 (concat
+	  (propertize (string-join (org-roam-node-olp node) " > ") 'face 'org-level-2)
+	  " > "))
+       (propertize (org-roam-node-title node) 'face 'org-level-3))))
 
-(setq org-roam-node-display-template
-      (concat "${hierarchy:*} "
-	      (propertize "${tags:30}" 'face 'org-tag)))
+  (setq org-roam-node-display-template
+	(concat "${hierarchy:160} "
+		(propertize "${tags:20}" 'face 'org-tag)))
 
-;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#run-org-roam-db-sync-when-emacs-is-idle
-(defvar ps/auto-org-roam-db-sync--timer nil)
-(defvar ps/auto-org-roam-db-sync--timer-interval 5)
+  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#run-org-roam-db-sync-when-emacs-is-idle
+  (defvar ps/auto-org-roam-db-sync--timer nil)
+  (defvar ps/auto-org-roam-db-sync--timer-interval 5)
 
-(define-minor-mode ps/auto-org-roam-db-sync-mode
-  "Toggle automatic `org-roam-db-sync' when Emacs is idle.
-Referece: `auto-save-visited-mode'"
-  :group 'org-roam
-  :global t
-  (when ps/auto-org-roam-db-sync--timer (cancel-timer ps/auto-org-roam-db-sync--timer))
-  (setq ps/auto-org-roam-db-sync--timer
-	(when ps/auto-org-roam-db-sync-mode
-	  (run-with-idle-timer
-	   ps/auto-org-roam-db-sync--timer-interval :repeat
-	   #'org-roam-db-sync))))
+  (define-minor-mode ps/auto-org-roam-db-sync-mode
+    "Toggle automatic `org-roam-db-sync' when Emacs is idle.
+		Referece: `auto-save-visited-mode'"
+    :group 'org-roam
+    :global t
+    (when ps/auto-org-roam-db-sync--timer (cancel-timer ps/auto-org-roam-db-sync--timer))
+    (setq ps/auto-org-roam-db-sync--timer
+	  (when ps/auto-org-roam-db-sync-mode
+	    (run-with-idle-timer
+	     ps/auto-org-roam-db-sync--timer-interval :repeat
+	     #'org-roam-db-sync))))
 
-(defvar ps/org-roam-excluded-dirs nil)
-(defvar ps/org-roam-excluded-files nil)
 
-(dolist (dir `(,ps/dir-anki
-	       ,ps/dir-inactive
-	       ,ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
-	       ,ps/dir-archive))
-  (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs))
+  (defvar ps/org-roam-excluded-dirs nil)
+  (defvar ps/org-roam-excluded-files nil)
 
-(dolist (file '("orb-noter-template.org"
-		"tareas.org"
-		"calendar.org"
-		"notatu-dignum.org"
-		"quotes-old.org"
-		".org2blog.org"
-		"feeds.org"))
-  (push file ps/org-roam-excluded-files))
+  (dolist (dir `(,ps/dir-anki
+		 ,ps/dir-inactive
+		 ,ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
+		 ,ps/dir-archive))
+    (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs))
 
-(setq org-roam-file-exclude-regexp
-      (append
-       ps/org-roam-excluded-dirs
-       ps/org-roam-excluded-files
-       '("conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")))
+  (dolist (file '("orb-noter-template.org"
+		  "tareas.org"
+		  "calendar.org"
+		  "notatu-dignum.org"
+		  "quotes-old.org"
+		  ".org2blog.org"
+		  "feeds.org"))
+    (push file ps/org-roam-excluded-files))
 
-(setq org-roam-db-node-include-function
-      (lambda ()
-	(if (or
-	     ;; exclude selected tags
-	     (member "noid" (org-get-tags))
-	     (member "ARCHIVE" (org-get-tags))
-	     ;; exclude selected headings
-	     (member (org-get-heading) '("Local variables"
-					 "COMMENT Local variables"
-					 "TODO Local variables"
-					 "Evaluation"
-					 "History"
-					 "Further reading"
-					 "External links"
-					 "Related entries"
-					 "Archive :ARCHIVE:"))
-	     ;; exclude buffers when in list of special dirs and org
-	     ;; heading at point is of level higher than 1 (i.e.
-	     ;; don't create unnecessary IDs for article
-	     ;; subsections)
-	     (and
-	      ;; dir condition
-	      (member
-	       (file-name-directory (buffer-file-name))
-	       (mapcar #'file-name-as-directory
-		       ;; List of special dirs
-		       (list
-			ps/dir-journal)))
-	      ;; heading condition
-	      (> (org-current-level) 1))
-	     )
-	    nil
-	  t)))
+  (setq org-roam-file-exclude-regexp
+	(append
+	 ps/org-roam-excluded-dirs
+	 ps/org-roam-excluded-files
+	 '("conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")))
 
-(defun ps/org-roam-db-query (sql &rest args)
-  "Run SQL query on Org-roam database with ARGS.
- SQL can be either the emacsql vector representation, or a string."
-  (sleep-for 0 1)
-  (apply #'emacsql (org-roam-db) sql args))
+  (setq org-roam-db-node-include-function
+	(lambda ()
+	  (if (or
+	       ;; exclude selected tags
+	       (member "noid" (org-get-tags))
+	       (member "ARCHIVE" (org-get-tags))
+	       ;; exclude selected headings
+	       (member (org-get-heading) '("Local variables"
+					   "COMMENT Local variables"
+					   "TODO Local variables"
+					   "Evaluation"
+					   "History"
+					   "Further reading"
+					   "External links"
+					   "Related entries"
+					   "Archive :ARCHIVE:"))
+	       ;; exclude buffers when in list of special dirs and org
+	       ;; heading at point is of level higher than 1 (i.e.
+	       ;; don't create unnecessary IDs for article
+	       ;; subsections)
+	       (and
+		;; dir condition
+		(member
+		 (file-name-directory (buffer-file-name))
+		 (mapcar #'file-name-as-directory
+			 ;; List of special dirs
+			 (list
+			  ps/dir-journal)))
+		;; heading condition
+		(> (org-current-level) 1))
+	       )
+	      nil
+	    t)))
 
-(advice-add 'org-roam-db-query :override #'ps/org-roam-db-query)
-(advice-add 'org-roam-node-find :before #'widen)
-(advice-add 'org-roam-node-find :after #'ps/org-narrow-to-entry-and-children)
+  (defun ps/org-roam-db-query (sql &rest args)
+    "Run SQL query on Org-roam database with ARGS.
+	SQL can be either the emacsql vector representation, or a string."
+    (sleep-for 0 1)
+    (apply #'emacsql (org-roam-db) sql args))
 
-;; org-roam.discourse.group/t/org-roam-v2-org-id-id-link-resolution-problem/1491/7
-(defun ps/org-roam-update-id-locations ()
-  "Update org id locations indexed by org roam."
-  (interactive)
-  (org-id-update-id-locations (org-roam-list-files)))
+  (advice-add 'org-roam-db-query :override #'ps/org-roam-db-query)
+  (advice-add 'org-roam-node-find :before #'widen)
+  (advice-add 'org-roam-node-find :after #'ps/org-narrow-to-entry-and-children)
 
-(defun ps/org-roam-remove-file-level-properties ()
-  "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
-  (when (string= "r" (plist-get org-capture-plist :key))
-    (goto-char (point-min))
-    (unless (org-get-heading)
-      ;; Take action with file-level properties only.
-      (org-delete-property "ID")
-      (org-delete-property "ROAM_REFS")
-      (ps/org-jump-to-first-heading)
-      (org-id-get-create))))
+  ;; org-roam.discourse.group/t/org-roam-v2-org-id-id-link-resolution-problem/1491/7
+  (defun ps/org-roam-update-id-locations ()
+    "Update org id locations indexed by org roam."
+    (interactive)
+    (org-id-update-id-locations (org-roam-list-files)))
 
-(defun ps/org-roam-new-note (note-type)
-  "Create a new `org-roam' note."
-  (interactive
-   (list
-    (completing-read
-     "Select note type: "
-     '("generic" "person"))))
-  (let ((tags)
-	(directory))
-    (cond ((string= note-type "generic")
-	   (setq tags "note")
-	   (setq directory ps/dir-notes))
-	  ((string= note-type "person")
-	   (setq tags "person")
-	   (setq directory ps/dir-people)))
-    (let* ((name (read-from-minibuffer "Entry name: "))
-	   (slug (org-hugo-slug name))
-	   (filename (concat slug ".org")))
-      (when (file-exists-p filename)
-	(user-error (format "File `%s' already exists." filename)))
-      (find-file (file-name-concat directory filename))
-      (insert "#+title: " name "\n\n")
-      (org-insert-heading)
-      (insert name)
-      (org-set-tags tags)
-      (org-id-get-create)
-      (ps/org-narrow-to-entry-and-children)
-      (goto-char (point-max)))))
+  (defun ps/org-roam-remove-file-level-properties ()
+    "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
+    (when (string= "r" (plist-get org-capture-plist :key))
+      (goto-char (point-min))
+      (unless (org-get-heading)
+	;; Take action with file-level properties only.
+	(org-delete-property "ID")
+	(org-delete-property "ROAM_REFS")
+	(ps/org-jump-to-first-heading)
+	(org-id-get-create))))
 
-(add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
-;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
+  (defun ps/org-roam-new-note (note-type)
+    "Create a new `org-roam' note."
+    (interactive
+     (list
+      (completing-read
+       "Select note type: "
+       '("generic" "person"))))
+    (let ((tags)
+	  (directory))
+      (cond ((string= note-type "generic")
+	     (setq tags "note")
+	     (setq directory ps/dir-notes))
+	    ((string= note-type "person")
+	     (setq tags "person")
+	     (setq directory ps/dir-people)))
+      (let* ((name (read-from-minibuffer "Entry name: "))
+	     (slug (org-hugo-slug name))
+	     (filename (concat slug ".org")))
+	(when (file-exists-p filename)
+	  (user-error (format "File `%s' already exists." filename)))
+	(find-file (file-name-concat directory filename))
+	(insert "#+title: " name "\n\n")
+	(org-insert-heading)
+	(insert name)
+	(org-set-tags tags)
+	(org-id-get-create)
+	(ps/org-narrow-to-entry-and-children)
+	(goto-char (point-max)))))
 
-;; include transcluded links in `org-roam' backlinks
-(delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
+  (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
+  ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
 
-(org-roam-db-autosync-mode -1)
+  ;; include transcluded links in `org-roam' backlinks
+  (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
 
-:hook
-(org-roam-capture-new-node-hook . orb--insert-captured-ref-h)
-(org-roam-capture-new-node-hook . org-roam-capture--insert-captured-ref-h)
-(org-capture-prepare-finalize-hook . ps/org-roam-remove-file-level-properties)
+  (org-roam-db-autosync-mode -1)
 
-:general
-("A-H-n" 'ps/org-roam-new-note
- "H-j" 'org-roam-node-find
- "H-s-i" 'org-roam-node-insert)
-(org-mode-map
- "s-r" 'org-roam-buffer-toggle))
+  :hook
+  (org-roam-capture-new-node-hook . orb--insert-captured-ref-h)
+  (org-roam-capture-new-node-hook . org-roam-capture--insert-captured-ref-h)
+  (org-capture-prepare-finalize-hook . ps/org-roam-remove-file-level-properties)
+
+  :general
+  ("A-H-n" 'ps/org-roam-new-note
+   "H-j" 'org-roam-node-find
+   "H-s-i" 'org-roam-node-insert)
+  (org-mode-map
+   "s-r" 'org-roam-buffer-toggle))
 #+end_src
 
 

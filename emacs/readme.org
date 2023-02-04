@@ -469,11 +469,15 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :END:
 For personal reference: Emacs was last installed [2023-01-27 Fri 23:26]. I used the emacs-plus, with the following flags:
 
-emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+begin_src shell :tangle no
+brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+end_src
 
 Prior to that, Emacs was installed [2022-12-07 Wed 18:05]. I used the [[https://github.com/railwaycat/homebrew-emacsmacport][Homebrew emacs-mac port]], with the following flags:
 
-~brew install emacs-mac --with-dbus --with-starter --with-natural-title-bar --with-native-comp --with-mac-metal --with-xwidgets --with-imagemagick --with-librsvg  --with-spacemacs-icon~
+#+begin_src shell :tangle no
+brew install emacs-mac --with-dbus --with-starter --with-natural-title-bar --with-native-comp --with-mac-metal --with-xwidgets --with-imagemagick --with-librsvg  --with-spacemacs-icon
+#+end_src
 
 * preface
 :PROPERTIES:
@@ -18241,7 +18245,8 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
 #+begin_src emacs-lisp :results silent
 (use-package telega
-  :defer 5
+  :demand t
+  ;; :defer 5
   :custom
   (telega-server-libs-prefix "/opt/homebrew")
   (telega-chat-input-markups '("markdown2" "org"))
@@ -18361,10 +18366,10 @@ into a task for Leo."
   (telega-mode-line-mode 1)
 
   :hook
-  (telega-chat-mode-hook . (ps/telega-chat-mode
-			    telega-autoplay-mode))
-  ;; (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
-  (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
+  (telega-chat-mode-hook . ps/telega-chat-mode)
+			    ;; telega-autoplay-mode))
+  (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
+  ;; (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
 
   :general
   ("C-f" 'ps/telega-switch-to)
@@ -18593,7 +18598,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 :END:
 /[[https://github.com/yuya373/emacs-slack][slack]] is a Slack client for Emacs./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package slack
   :if (equal (system-name) ps/computer-hostname-pablo)
   :after auth-source-pass
@@ -18601,7 +18606,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   :commands slack-select-rooms
   :custom
   (slack-file-dir ps/dir-downloads)
-  ;; (slack-prefer-current-team t)
+  (slack-prefer-current-team t)
 
   :config
   (slack-register-team

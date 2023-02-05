@@ -20754,10 +20754,12 @@ Man, I give up.
 :PROPERTIES:
 :ID:       5694074B-989E-4B06-B9EB-5807AAB36DDC
 :END:
+
 ** tetris
 :PROPERTIES:
 :ID:       F4C5A232-7788-4240-9CE2-B6761C905786
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature tetris
   :general
@@ -20772,6 +20774,7 @@ Man, I give up.
 :PROPERTIES:
 :ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
 :END:
+
 #+begin_src emacs-lisp :results silent
 ;; github.com/Gleek/emacs.d/blob/761dad7e97accd6d1537a201c5d447a6be1d155c/core/core-util.el#L31
 (defun ps/random-alnum (&optional length)

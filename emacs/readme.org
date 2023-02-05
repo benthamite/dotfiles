@@ -12729,7 +12729,7 @@ slow if it has a lot of overlays."
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
-	      "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:" nil t)
+	      "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
 	(let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
 	  (overlay-put ov_this 'display "")
 	  (overlay-put ov_this 'hidden-prop-drawer t))))
@@ -12742,7 +12742,7 @@ slow if it has a lot of overlays."
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
-	      "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:" nil t)
+	      "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
 	(let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
 	  (overlay-put ov_this 'display "")
 	  (overlay-put ov_this 'hidden-logbook-drawer t))))
@@ -20758,7 +20758,6 @@ Man, I give up.
 :PROPERTIES:
 :ID:       F4C5A232-7788-4240-9CE2-B6761C905786
 :END:
-tetris
 #+begin_src emacs-lisp :results silent
 (use-feature tetris
   :general

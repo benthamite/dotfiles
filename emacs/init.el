@@ -7919,6 +7919,8 @@ With prefix, rebuild the cache before offering candidates."
   (defun ps/citar-open-in-ebib (citekey)
     "Open bibliographic entry associated with the CITEKEY in Ebib."
     (interactive (list (citar-select-ref)))
+    (unless (get-buffer "*ebib*")
+      (ebib))
     (ps/ebib-open-key citekey))
 
   :general

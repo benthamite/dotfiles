@@ -2038,7 +2038,7 @@ With a prefix ARG open line above the current line."
 
 (use-feature goto-addr
   :config
-  (global-goto-address-mode)))
+  (global-goto-address-mode))
 
 (use-feature register
   :config
@@ -6731,12 +6731,13 @@ refresh cache."
   :defer 30
   :custom
   (org-export-exclude-tags '("noexport" "ARCHIVE"))
-  (org-export-backends '(ascii html icalendar latex md odt) "set export backends")
-  (org-export-with-broken-links 'mark "allow export with broken links")
-  (org-export-with-section-numbers nil "do not add numbers to section headings")
-  (org-export-with-toc nil "do not include table of contents")
-  (org-export-with-title nil "do not include title")
-  (org-export-headline-levels 4 "include up to level 4 headlines")
+  (org-export-backends '(ascii html icalendar latex md odt)) ; set export backends
+  (org-export-with-broken-links 'mark) ; allow export with broken links
+  (org-export-with-section-numbers nil) ; do not add numbers to section headings
+  (org-export-with-toc nil) ; do not include table of contents
+  (org-export-with-title nil) ; do not include title
+  (org-export-headline-levels 4) ; include up to level 4 headlines
+  (org-export-preserve-breaks t) ; respect single breaks when exporting
   ;; (org-export-with-author nil "do not include author")
   ;; (org-export-with-date nil "do not include export date")
   ;; (org-html-validation-link nil "do not include validation link")

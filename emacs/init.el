@@ -307,7 +307,7 @@ NAME and ARGS are as in `use-package'."
   ("s" (ps/org-id-goto "3513061C-5868-4EBC-9F77-9814AB776011") "Slack")
   ("j" (ps/org-id-goto "356B7595-EC5B-4DF4-949C-A637537128E4") "sleep")
   ("y" (ps/org-id-goto "FBDB7FC0-7650-48A0-933D-AE9606C2B621") "Spotify")
-  ("t" (ps/org-id-goto "B7DAD7F5-ADB2-4B10-929E-B2CE43E148A5") "tango collection")
+  ("t" (hydra-org-work/body) "tlon")
   ("n" (ps/org-id-goto "9696939D-A8B7-4179-A5C8-FEBB017DC9EF") "Telegram")
   ("q" (ps/org-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E") "YouTube")
   ;; ("RET'" (ps/org-id-goto "") "")
@@ -352,6 +352,20 @@ NAME and ARGS are as in `use-package'."
   ("H-RET" (ps/org-id-notes-with-clock "RET"))
   ("H-TAB" (ps/org-id-notes-with-clock "TAB"))
   )
+
+(defhydra hydra-dired-tlon
+  (:exit t)
+  "Org Headings: Tlön"
+  ("b" (ps/org-id-goto "") "LBDLH")
+  ("c" (ps/org-id-goto "") "core")
+  ("f" (ps/org-id-goto "") "fede")
+  ("g" (ps/org-id-goto "") "Dropbox: GPE")
+  ("h" (ps/org-id-goto "") "Dropbox: HEAR")
+  ("l" (ps/org-id-goto "") "Dropbox: leo")
+  ("r" (ps/org-id-goto "") "Dropbox: RAE")
+  ("s" (ps/org-id-goto "") "Dropbox: FM")
+  ("t" (ps/org-id-goto "") "Dropbox: tlon")
+  ("u" (ps/org-id-goto "") "Dropbox: EAN"))
 
 (defhydra hydra-org-notes-with-clock
   (:exit t
@@ -489,7 +503,7 @@ NAME and ARGS are as in `use-package'."
 
 (defhydra hydra-org-work
   (:hint nil
-  :idle 0.3
+  :idle 0
   :color blue)
   "Tlön dashboard"
   ;; ("a" (ps/org-id-goto "") "")
@@ -518,6 +532,7 @@ NAME and ARGS are as in `use-package'."
   ("F" (ps/tlon-meeting-with-fede) "fede: meeting" :column "People")
   ("l" (ps/org-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "People")
   ("L" (ps/tlon-meeting-with-leo) "leo: meeting" :column "People")
+  ("RET" (ps/org-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A"))
   ;; ("i" (ps/org-id-goto "") "")
   ;; ("j" (ps/org-id-goto "") "")
   ;; ("k" (ps/org-id-goto "") "")
@@ -6109,7 +6124,7 @@ image."
       "* %?\n" :prepend t)
      ("c" "calendar" entry
       (file ps/file-calendar)
-      "* TODO %^ \nDEADLINE: %^T" :immediate-finish t)
+      "* TODO %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t)
      ("d" "Entry: discuss" entry
       (id "AE09BAB8-5EA0-4CB0-AC5A-FF876CB9ABC5")
       "**** TODO Discuss %(ps/org-web-tools-insert-link-for-clipboard-url-ea-forum)\nSCHEDULED: %(org-insert-time-stamp nil nil nil nil nil \" .+1d\")" :empty-lines 1 :prepend t)
@@ -6129,15 +6144,9 @@ image."
      ("g" "Ledger" plain (file ps/file-ledger)
       "" :empty-lines 1)
      ("l" "Leo")
-     ("la" "Leo: Process article" entry
-      (file+headline ps/file-tareas-leo "Tareas Leo")
-      "** TODO [#5] Procesar :leo:\n" :immediate-finish t :empty-lines 1 :prepend t)
      ("lb" "Leo: Add to ea.news" entry
       (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#6] Agregar a ea.news :leo:\n%c" :empty-lines 1 :prepend t)
-     ("le" "Leo: Rename article" entry
-      (file+headline ps/file-tareas-leo "Tareas Leo")
-      "** TODO [#5] Renombrar ~%?~ :leo:\n" :empty-lines 1 :prepend t)
      ("ll" "Leo: Generic task" entry
       (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
@@ -6153,10 +6162,10 @@ image."
      ("lr" "Leo: Add to Future Matters: research" entry
       (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
-     ("lt" "Leo: Add to translations spreadsheet" entry
+     ("lt" "Leo: Add to translations Aritable" entry
       (file+headline ps/file-tareas-leo "Tareas Leo")
-      "** TODO [#4] Add to translation master file :leo:\n%c\n[[https://docs.google.com/spreadsheets/d/1YpqWK2Vpxwc_JuCf7isjwpdCQ_7_NRAY/edit#gid=2099842495][spreadsheet]]" :empty-lines 1 :prepend t)
-     ("lt" "Leo: Telegram" entry
+      "** TODO [#4] Add to translations Airtable :leo:\n%c\n[[https://airtable.com/appLHkQNT9y6z6WGb/tblgUYEx9om4IZyuQ/viwUQXm3h0fGOkNCv?blocks=hide][Airtable]]" :empty-lines 1 :prepend t)
+     ("lg" "Leo: Telegram" entry
       (file+headline ps/file-tareas-leo "Tareas Leo")
       "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
      ("m" "Leo: Messaging (to send later)" entry
@@ -6451,16 +6460,18 @@ slow if it has a lot of overlays."
     "Add ID properties to all headlines in the current file which do
 not already have one."
     (when (and (equal (system-name) ps/computer-hostname-pablo)
-               (eq major-mode 'org-mode)
-               (eq buffer-read-only nil))
+	       (eq major-mode 'org-mode)
+	       (eq buffer-read-only nil))
       (unless
-          (member (org-get-heading) '("Local variables"
-                                      "COMMENT Local variables"
-                                      "TODO Local variables"))
-        (org-map-entries 'org-id-get-create))))
+	  (or
+	   (string= (buffer-file-name) ps/file-orb-noter-template)
+	   (member (org-get-heading) '("Local variables"
+				       "COMMENT Local variables"
+				       "TODO Local variables")))
+	(org-map-entries 'org-id-get-create))))
 
   ;; (setq org-id-extra-files
-        ;; (directory-files-recursively ps/dir-org "\\.org"))
+  ;; (directory-files-recursively ps/dir-org "\\.org"))
 
   :config
   ;; copied from emacs.stackexchange.com/a/58834/32089
@@ -6473,84 +6484,84 @@ files currently mentioned in `org-id-locations'.
 When FILES is given, scan these files instead."
     (interactive)
     (if (not org-id-track-globally)
-        (error "Please turn on `org-id-track-globally' if you want to track IDs")
+	(error "Please turn on `org-id-track-globally' if you want to track IDs")
       (let* ((org-id-search-archives
-              (or org-id-search-archives
-                  (and (symbolp org-id-extra-files)
-                       (symbol-value org-id-extra-files)
-                       (member 'agenda-archives org-id-extra-files))))
-             (files
-              (or files
-                  (append
-                   ;; Agenda files and all associated archives
-                   (org-agenda-files t org-id-search-archives)
-                   ;; Explicit extra files
-                   (if (symbolp org-id-extra-files)
-                       (symbol-value org-id-extra-files)
-                     org-id-extra-files)
-                   ;; Files associated with live Org buffers
-                   (delq nil
-                         (mapcar (lambda (b)
-                                   (with-current-buffer b
-                                     (and (derived-mode-p 'org-mode) (buffer-file-name))))
-                                 (buffer-list)))
-                   ;; All files known to have IDs
-                   org-id-files)))
-             org-agenda-new-buffers
-             file nfiles tfile ids reg found id seen (ndup 0))
-        (when (member 'agenda-archives files)
-          (setq files (delq 'agenda-archives (copy-sequence files))))
-        (setq nfiles (length files))
-        (while (setq file (pop files))
-          (unless silent
-            (message "Finding ID locations (%d/%d files): %s"
-                     (- nfiles (length files)) nfiles file))
-          (setq tfile (file-truename file))
-          (when (and (file-exists-p file) (not (member tfile seen)))
-            (push tfile seen)
-            (setq ids nil)
-            (with-current-buffer (org-get-agenda-file-buffer file)
-              (save-excursion
-                (save-restriction
-                  (widen)
-                  (goto-char (point-min))
-                  (while (re-search-forward "^[ \t]*:ID:[ \t]+\\(\\S-+\\)[ \t]*$"
-                                            nil t)
-                    (setq id (match-string-no-properties 1))
-                    (if (member id found)
-                        (progn
-                                        ;added logic
-                          (if org-clone-delete-id
-                              (org-entry-delete nil "ID")
-                            (org-id-get-create t))
-                                        ;end of added logic
-                          (message "Duplicate ID \"%s\", also in file %s"
-                                   id (or (car (delq
-                                                nil
-                                                (mapcar
-                                                 (lambda (x)
-                                                   (if (member id (cdr x))
-                                                       (car x)))
-                                                 reg)))
-                                          (buffer-file-name)))
-                          (when (= ndup 0)
-                            (ding)
-                            (sit-for 2))
-                          (setq ndup (1+ ndup)))
-                      (push id found)
-                      (push id ids)))
-                  (push (cons (abbreviate-file-name file) ids) reg))))))
-        (org-release-buffers org-agenda-new-buffers)
-        (setq org-agenda-new-buffers nil)
-        (setq org-id-locations reg)
-        (setq org-id-files (mapcar 'car org-id-locations))
-        (org-id-locations-save) ;; this function can also handle the alist form
-        ;; now convert to a hash
-        (setq org-id-locations (org-id-alist-to-hash org-id-locations))
-        (if (> ndup 0)
-            (message "WARNING: %d duplicate IDs found, check *Messages* buffer" ndup)
-          (message "%d unique files scanned for IDs" (length org-id-files)))
-        org-id-locations)))
+	      (or org-id-search-archives
+		  (and (symbolp org-id-extra-files)
+		       (symbol-value org-id-extra-files)
+		       (member 'agenda-archives org-id-extra-files))))
+	     (files
+	      (or files
+		  (append
+		   ;; Agenda files and all associated archives
+		   (org-agenda-files t org-id-search-archives)
+		   ;; Explicit extra files
+		   (if (symbolp org-id-extra-files)
+		       (symbol-value org-id-extra-files)
+		     org-id-extra-files)
+		   ;; Files associated with live Org buffers
+		   (delq nil
+			 (mapcar (lambda (b)
+				   (with-current-buffer b
+				     (and (derived-mode-p 'org-mode) (buffer-file-name))))
+				 (buffer-list)))
+		   ;; All files known to have IDs
+		   org-id-files)))
+	     org-agenda-new-buffers
+	     file nfiles tfile ids reg found id seen (ndup 0))
+	(when (member 'agenda-archives files)
+	  (setq files (delq 'agenda-archives (copy-sequence files))))
+	(setq nfiles (length files))
+	(while (setq file (pop files))
+	  (unless silent
+	    (message "Finding ID locations (%d/%d files): %s"
+		     (- nfiles (length files)) nfiles file))
+	  (setq tfile (file-truename file))
+	  (when (and (file-exists-p file) (not (member tfile seen)))
+	    (push tfile seen)
+	    (setq ids nil)
+	    (with-current-buffer (org-get-agenda-file-buffer file)
+	      (save-excursion
+		(save-restriction
+		  (widen)
+		  (goto-char (point-min))
+		  (while (re-search-forward "^[ \t]*:ID:[ \t]+\\(\\S-+\\)[ \t]*$"
+					    nil t)
+		    (setq id (match-string-no-properties 1))
+		    (if (member id found)
+			(progn
+					;added logic
+			  (if org-clone-delete-id
+			      (org-entry-delete nil "ID")
+			    (org-id-get-create t))
+					;end of added logic
+			  (message "Duplicate ID \"%s\", also in file %s"
+				   id (or (car (delq
+						nil
+						(mapcar
+						 (lambda (x)
+						   (if (member id (cdr x))
+						       (car x)))
+						 reg)))
+					  (buffer-file-name)))
+			  (when (= ndup 0)
+			    (ding)
+			    (sit-for 2))
+			  (setq ndup (1+ ndup)))
+		      (push id found)
+		      (push id ids)))
+		  (push (cons (abbreviate-file-name file) ids) reg))))))
+	(org-release-buffers org-agenda-new-buffers)
+	(setq org-agenda-new-buffers nil)
+	(setq org-id-locations reg)
+	(setq org-id-files (mapcar 'car org-id-locations))
+	(org-id-locations-save) ;; this function can also handle the alist form
+	;; now convert to a hash
+	(setq org-id-locations (org-id-alist-to-hash org-id-locations))
+	(if (> ndup 0)
+	    (message "WARNING: %d duplicate IDs found, check *Messages* buffer" ndup)
+	  (message "%d unique files scanned for IDs" (length org-id-files)))
+	org-id-locations)))
 
   :hook
   (before-save-hook . ps/org-id-add-ids-to-headlines-in-file)

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: pandoc-to-markdown
+# key: pmd
+# --
+pandoc -s '`(current-kill 0)`' -t markdown -o '`(file-name-with-extension (file-name-sans-extension (current-kill 0)) "md")`'

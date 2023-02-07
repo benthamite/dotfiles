@@ -727,6 +727,8 @@ NAME and ARGS are as in `use-package'."
   ("H-h" (dired ps/dir-google-drive-tlon-HEAR) "Google Drive: HEAR")
   ("l" (dired ps/dir-dropbox-tlon-leo) "Dropbox: leo")
   ("H-l" (dired ps/dir-google-drive-tlon-leo) "Google Drive: leo")
+  ("p" (dired ps/dir-dropbox-tlon-LP) "Dropbox: LP")
+  ("H-p" (dired ps/dir-google-drive-tlon-LP) "Google Drive: LP")
   ("r" (dired ps/dir-dropbox-tlon-RAE) "Dropbox: RAE")
   ("H-r" (dired ps/dir-google-drive-tlon-RAE) "Google Drive: RAE")
   ("s" (dired ps/dir-dropbox-tlon-FM) "Dropbox: FM")
@@ -997,10 +999,19 @@ installed."
         ;; `emacs-mac'
         (ps/modus-themes-load-theme-emacs-mac)
       ;; `emacs-plus'
-      ;; (load-theme 'modus-vivendi :no-confirm)
-      (add-hook 'ns-system-appearance-change-functions #'ps/modus-theme-load-theme-emacs-plus)))
+      (add-hook 'ns-system-appearance-change-functions
+                #'ps/modus-theme-load-theme-emacs-plus)))
 
-  (setq modus-themes-common-palette-overrides modus-themes-preset-overrides-intense)
+  (ps/modus-themes-load-theme-conditionally)
+
+  (setq modus-themes-common-palette-overrides
+        `(
+          ;; hide the fringe
+          (fringe unspecified)
+          ;; additional customizations to be added here
+
+          ;; for the rest, use the predefined intense values
+          ,@modus-themes-preset-overrides-intense))
 
   ;; This ugly hack is necessary to make the theme load all the faces
   ;; on startup
@@ -2124,7 +2135,7 @@ _a_pend       |_k_macro      |r_e_store                    "
   :config
 
   (add-to-list 'auto-mode-alist '("\\.mdx\\'" . markdown-mode))
-  
+
   ;; christiantietze.de/posts/2021/06/emacs-trash-file-macos/
   (defun system-move-file-to-trash (path)
     "Moves file at PATH to the macOS Trash according to `move-file-to-trash' convention.
@@ -7105,7 +7116,7 @@ With optional prefix argument, open with eww."
 (use-package org-pomodoro
   :defer 30
   :custom
-  (org-pomodoro-length 26)
+  (org-pomodoro-length 25)
   (org-pomodoro-short-break-length (- 30 org-pomodoro-length))
   (org-pomodoro-long-break-length org-pomodoro-short-break-length)
   (org-pomodoro-finished-sound "/System/Library/Sounds/Blow.aiff")
@@ -7226,11 +7237,13 @@ return such list if its length is less than LIMIT."
   (defvar ps/org-roam-excluded-dirs nil)
   (defvar ps/org-roam-excluded-files nil)
 
-  (dolist (dir `(,ps/dir-anki
-                 ,ps/dir-inactive
-                 ,ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
-                 ,ps/dir-archive))
-    (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs))
+  ;; FIXME: why does this trigger an error in Leo's computer?
+  (unless (equal (system-name) ps/computer-hostname-leo)
+    (dolist (dir `(,ps/dir-anki
+                   ,ps/dir-inactive
+                   ,ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
+                   ,ps/dir-archive))
+      (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs)))
 
   (dolist (file '("orb-noter-template.org"
                   "tareas.org"
@@ -9336,8 +9349,8 @@ or specify any other coding system (and risk losing\n\
 
 (use-package mu4e
   :if (equal (system-name) ps/computer-hostname-pablo)
-  ;; :demand t
-  :defer 5
+  :demand t
+  ;; :defer 5
   :straight (:local-repo
              "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
              :pre-build
@@ -9596,8 +9609,22 @@ it, without asking for confirmation."
     (forward-line -1)
     (ps/mu4e-headers-archive))
 
+  (defun ps/mu4e-view-mode-hook-functions ()
+    "Functions to be invoked by `mu4e-view-mode-hook'."
+    (toggle-truncate-lines 1)
+    (set-face-attribute
+     'variable-pitch nil :family ps/face-variable-pitch :height 1.25))
+
+  (defun ps/mu4e-view-mode-leave-hook-functions ()
+    "Functions to be called by `change-major-mode-hook' when
+ leaving `mu4e-view-mode'."
+    (when (eq major-mode 'mu4e-view-mode)
+      (set-face-attribute
+       'variable-pitch nil :family ps/face-variable-pitch :height 1.4)))
+
   :hook
-  (mu4e-view-mode-hook . (lambda () "prevent line breaks" (toggle-truncate-lines 1)))
+  (change-major-mode-hook . ps/mu4e-view-mode-leave-hook-functions)
+  (mu4e-view-mode-hook . ps/mu4e-view-mode-hook-functions)
   (mu4e-mark-execute-pre-hook . ps/mu4e-gmail-fix-flags)
   (mu4e-compose-pre-hook . org-msg-mode)
   (mu4e-compose-pre-hook . ps/mu4e-set-account)
@@ -9873,8 +9900,8 @@ into a task for Leo."
 
   :hook
   (telega-chat-mode-hook . ps/telega-chat-mode)
-  (telega-chat-mode-hook . telega-autoplay-mode)
   (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
+lkkk  ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdown
   ;; (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
 
   :general
@@ -10941,6 +10968,15 @@ to the clipboard."
   (if (eq system-type 'darwin)
       (setq alert-default-style 'osx-notifier)
     (setq alert-default-style 'notifications))
+
+
+  ;; This function has to be loaded manually, for some reason.
+  (defun alert-osx-notifier-notify (info)
+    (apply #'call-process "osascript" nil nil nil "-e"
+           (list (format "display notification %S with title %S"
+                         (alert-encode-string (plist-get info :message))
+                         (alert-encode-string (plist-get info :title)))))
+    (alert-message-notify info))
 
   (defun ps/alert-dismiss-osx-notification ()
     "docstring"

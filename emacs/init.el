@@ -523,6 +523,7 @@ NAME and ARGS are as in `use-package'."
   ("n" (ps/org-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110") "EA Nomad" :column "Someday")
   ("h" (ps/org-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2") "HEAR" :column "On hold")
   ("g" (ps/org-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1") "GPE" :column "On hold")
+  ("" (ps/org-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F") "LP" :column "Done")
   ("" (ps/org-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A") "RCGs" :column "Done")
   ("" (ps/org-id-goto "AE8F5AD4-B85A-4EE2-8A94-AA7B2AFF3E7F") "Regranting" :column "Done")
   ("e" (ps/org-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5") "email" :column "Comms")
@@ -530,55 +531,11 @@ NAME and ARGS are as in `use-package'."
   ("t" (ps/org-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
   ("f" (ps/org-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "People")
   ("F" (ps/tlon-meeting-with-fede) "fede: meeting" :column "People")
+  ("H-f" (ps/org-id-goto "CE0C7638-97F1-4509-8212-5B77F4A4AF29") "fede: tareas" :column "People")
   ("l" (ps/org-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "People")
   ("L" (ps/tlon-meeting-with-leo) "leo: meeting" :column "People")
+  ("H-l" (ps/org-id-goto "76A01EAA-74BC-41FC-9050-E6BDC0D56029") "leo: tareas" :column "People")
   ("RET" (ps/org-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A"))
-  ;; ("i" (ps/org-id-goto "") "")
-  ;; ("j" (ps/org-id-goto "") "")
-  ;; ("k" (ps/org-id-goto "") "")
-  ;; ("m" (ps/org-id-goto "") "")
-  ;; ("q" (ps/org-id-goto "") "")
-  ;; ("y" (ps/org-id-goto "") "")
-  ;; ("z" (ps/org-id-goto "") "")
-  ;; ("'" (ps/org-id-goto "") "")
-  ;; ("," (ps/org-id-goto "") "")
-  ;; ("." (ps/org-id-goto "") "")
-  ("H-a" (ps/org-id-work-with-clock "a"))
-  ("H-b" (ps/org-id-work-with-clock "b"))
-  ("H-c" (ps/org-id-work-with-clock "c"))
-  ("H-d" (ps/org-id-work-with-clock "d"))
-  ("H-e" (ps/org-id-work-with-clock "e"))
-  ("H-f" (ps/org-id-work-with-clock "f"))
-  ("H-g" (ps/org-id-work-with-clock "g"))
-  ("H-h" (ps/org-id-work-with-clock "h"))
-  ("H-i" (ps/org-id-work-with-clock "i"))
-  ("H-j" (ps/org-id-work-with-clock "j"))
-  ("H-k" (ps/org-id-work-with-clock "k"))
-  ("H-l" (ps/org-id-work-with-clock "l"))
-  ("H-m" (ps/org-id-work-with-clock "m"))
-  ("H-n" (ps/org-id-work-with-clock "n"))
-  ("H-o" (ps/org-id-work-with-clock "o"))
-  ("H-p" (ps/org-id-work-with-clock "p"))
-  ("H-q" (ps/org-id-work-with-clock "q"))
-  ("H-r" (ps/org-id-work-with-clock "r"))
-  ("H-s" (ps/org-id-work-with-clock "s"))
-  ("H-t" (ps/org-id-work-with-clock "t"))
-  ("H-u" (ps/org-id-work-with-clock "u"))
-  ("H-v" (ps/org-id-work-with-clock "v"))
-  ("H-w" (ps/org-id-work-with-clock "w"))
-  ("H-x" (ps/org-id-work-with-clock "x"))
-  ("H-y" (ps/org-id-work-with-clock "y"))
-  ("H-z" (ps/org-id-work-with-clock "z"))
-  ("H-," (ps/org-id-work-with-clock ","))
-  ("H-." (ps/org-id-work-with-clock "."))
-  ("H-/" (ps/org-id-work-with-clock "/"))
-  ("H-=" (ps/org-id-work-with-clock "="))
-  ("H--" (ps/org-id-work-with-clock "-"))
-  ("H-(" (ps/org-id-work-with-clock "("))
-  ("H-'" (ps/org-id-work-with-clock "'"))
-  ("H-SPC" (ps/org-id-work-with-clock "SPC"))
-  ("H-RET" (ps/org-id-work-with-clock "RET"))
-  ("H-TAB" (ps/org-id-work-with-clock "TAB"))
   )
 
 (defhydra hydra-org-work-with-clock
@@ -3762,6 +3719,17 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :config
   (display-time-mode)
 
+  (defun ps/time-last-day-of-last-month ()
+  "Insert the last day of the most recent month."
+  (interactive)
+  (let* ((date (calendar-current-date))
+         (year (calendar-extract-year date))
+         (month (- (calendar-extract-month date) 1))
+         (day (calendar-last-day-of-month month year)))
+    (insert (format-time-string
+             "%Y-%m-%d"
+             (encode-time 0 0 0 day month year)))))
+
   ;; github.com/arunkmv/.config/tree/main/emacs#tab-bar
   (defface ps/display-time
     '((t (:inherit bold)))
@@ -5397,6 +5365,15 @@ FILE."
                              output)))
     (ps/pdf-tools-clear-page-selection))
 
+  (defun ps/pdf-count-words ()
+    "Count words in current PDF."
+    (interactive)
+    (kill-new
+     (string-trim
+      (shell-command-to-string
+       (format "pdftotext '%s' - | wc -w" (buffer-file-name)))))
+    (message (format "This PDF has %s words." (current-kill 0))))
+
   :hook
   (pdf-tools-enabled-hook . ps/pdf-tools-apply-theme)
   (pdf-tools-enabled-hook . pdf-view-fit-page-to-window)
@@ -5404,6 +5381,7 @@ FILE."
 
   :general
   ((pdf-view-mode-map pdf-annot-minor-mode-map pdf-history-minor-mode-map)
+   "c" 'ps/pdf-count-words
    "C" 'ps/pdf-tools-clear-page-selection
    "e" 'pdf-annot-add-highlight-markup-annotation
    "h" 'pdf-annot-add-highlight-markup-annotation
@@ -6148,13 +6126,13 @@ image."
       "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("f" "Fede")
      ("ff" "Fede: generic task" entry
-      (file+headline ps/file-tareas-fede "Tareas Fede")
+      (file+headline ps/file-tlon-tareas-fede "Tareas Fede")
       "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
      ("fp" "Fede: Pending for next meeting" plain
       (id "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
       "" :empty-lines 1 :empty-lines-after 3)
       ("fr" "Fede: RAE suggestion" entry
-      (file+headline ps/file-tareas-fede "sugerencias de Pablo")
+      (file+headline ps/file-tlon-tareas-fede "sugerencias de Pablo")
       "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
      ("g" "Ledger" plain (file ps/file-ledger)
       "" :empty-lines 1)
@@ -7304,10 +7282,12 @@ return such list if its length is less than LIMIT."
   (advice-add 'org-roam-node-find :after #'ps/org-narrow-to-entry-and-children)
 
   ;; org-roam.discourse.group/t/org-roam-v2-org-id-id-link-resolution-problem/1491/7
+  ;; github.com/org-roam/org-roam/issues/1702#issuecomment-888998330
   (defun ps/org-roam-update-id-locations ()
     "Update org id locations indexed by org roam."
     (interactive)
-    (org-id-update-id-locations (org-roam-list-files)))
+    (org-id-update-id-locations
+    (directory-files-recursively org-roam-directory ".org$\\|.org.gpg$")))
 
   (defun ps/org-roam-remove-file-level-properties ()
     "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
@@ -11054,7 +11034,7 @@ is connected."
   (midnight-hook . ps/pass-git-sync)
   (midnight-hook . ps/magit-stage-commit-and-push-all-repos)
   (midnight-hook . clean-buffer-list)
-  ;; (midnight-hook . ps/org-id-update-id-locations)
+  (midnight-hook . ps/org-roam-update-id-locations)
   ;; (midnight-hook . org-roam-db-sync)
   ;; (midnight-hook . straight-prune-build)
   )

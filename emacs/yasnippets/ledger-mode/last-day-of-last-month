@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: last-day-of-last-month
-# key: ldlm
-# --
-`(concat (format-time-string "%Y") "-" (number-to-string (- (string-to-number (format-time-string "%m")) 1)) "-"
-(number-to-string (timezone-last-day-of-month (- (string-to-number (format-time-string "%m")) 1) (string-to-number (format-time-string "%Y")))))`

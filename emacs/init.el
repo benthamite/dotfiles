@@ -977,7 +977,6 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   (modus-themes-org-blocks 'gray-background)
 
   :config
-
   (defun ps/modus-themes-load-theme-emacs-mac ()
     "Load modus theme that matches system."
     (interactive)
@@ -9623,7 +9622,7 @@ it, without asking for confirmation."
        'variable-pitch nil :family ps/face-variable-pitch :height 1.4)))
 
   :hook
-  (change-major-mode-hook . ps/mu4e-view-mode-leave-hook-functions)
+  (after-change-major-mode-hook . ps/mu4e-view-mode-leave-hook-functions)
   (mu4e-view-mode-hook . ps/mu4e-view-mode-hook-functions)
   (mu4e-mark-execute-pre-hook . ps/mu4e-gmail-fix-flags)
   (mu4e-compose-pre-hook . org-msg-mode)

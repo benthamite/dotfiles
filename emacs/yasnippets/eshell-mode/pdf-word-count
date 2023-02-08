@@ -2,4 +2,4 @@
 # name: pdf-word-count
 # key: pwc
 # --
-pdftotext $1 - | wc -w
+pdftotext "$1" - | wc -w

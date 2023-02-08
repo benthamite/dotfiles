@@ -2,7 +2,7 @@
 # name: airbnb-tucuman-10-cash
 # key: at0c
 # --
-`(ps/yasnippet-expand-by-key "ldlm")` $1
+`(ps/time-last-day-of-last-month)` $1
     Expenses:Tucumán 10                         $2.00 ARS
     Liabilities:Mom:Cash
 

@@ -2,7 +2,7 @@
 # name: airbnb-tucuman-10-visa
 # key: at0v
 # --
-`(ps/yasnippet-expand-by-name "last-day-of-last-month")` $1
+`(ps/time-last-day-of-last-month)` $1
     Expenses:Tucumán 10                         $2 ARS
     Liabilities:Mom:Visa
 

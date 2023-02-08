@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
-# name: pdf-word-count
+# name: pdf-count-words
 # key: pwc
 # --
 pdftotext '`(current-kill 0)`' - | wc -w

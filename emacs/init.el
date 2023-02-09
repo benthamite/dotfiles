@@ -860,24 +860,28 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
    "-" 'text-scale-decrease))
 
 (use-feature fringe
-:init
-(setq-default fringe-indicator-alist '(
-  (truncation nil nil)
-  (continuation nil nil)
-  (overlay-arrow . right-triangle)
-  (up . up-arrow)
-  (down . down-arrow)
-  (top top-left-angle top-right-angle)
-  (bottom bottom-left-angle bottom-right-angle top-right-angle top-left-angle)
-  (top-bottom left-bracket right-bracket top-right-angle top-left-angle)
-  (empty-line . empty-line)
-  (unknown . question-mark))))
+  :init
+  (setq-default fringe-indicator-alist
+                '((truncation nil nil)
+                  (continuation nil nil)
+                  (overlay-arrow . right-triangle)
+                  (up . up-arrow)
+                  (down . down-arrow)
+                  (top top-left-angle top-right-angle)
+                  (bottom bottom-left-angle bottom-right-angle top-right-angle top-left-angle)
+                  (top-bottom left-bracket right-bracket top-right-angle top-left-angle)
+                  (empty-line . empty-line)
+                  (unknown . question-mark))))
 
 (use-package highlight-parentheses
   ;; :after modus-themes
   :demand t
   :custom
-  (highlight-parentheses-delay 0))
+  (highlight-parentheses-delay 0)
+  (global-highlight-parentheses-mode)
+
+  :hook
+  (minibuffer-setup-hook . highlight-parentheses-minibuffer-setup))
 
 (use-package org-modern
   :demand t
@@ -1031,7 +1035,6 @@ installed."
   :custom
   ;; we disable the display of time since the tab-bar already does
   (doom-modeline-time nil)
-
   (doom-modeline-mu4e t)
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-irc t)
@@ -1040,7 +1043,8 @@ installed."
   (doom-modeline-github t)
   (doom-modeline-github-interval (* 10 60))
   ;; I think this causes significant slowdown
-  (doom-modeline-enable-word-count nil)
+  (doom-modeline-enable-word-count t)
+  (doom-modeline-buffer-file-name-style 'truncate-from-project)
 
   :config
   (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
@@ -1118,17 +1122,6 @@ installed."
   ;;
   (jit-lock-chunk-size 120000 "emacs.stackexchange.com/a/72439/32089"))
 
-(use-feature emacs
-  :custom
-  (bidi-display-reordering nil)
-  (inhibit-compacting-font-caches t)
-  (setq this 'that)
-
-  (redisplay-skip-fontification-on-input t)
-  (bidi-inhibit-bpa t)
-  :config
-  (setq-default bidi-paragraph-direction 'left-to-right))
-
 (use-feature profiler
   :config
   (defvar ps/profiler-toggle nil)
@@ -1161,7 +1154,18 @@ and generates profiling report."
   :config
   (gcmh-mode))
 
-(setq read-process-output-max (* 1024 1024)) ; 1mb.
+(use-feature emacs
+  :custom
+  (bidi-display-reordering nil)
+  (inhibit-compacting-font-caches t)
+  (redisplay-skip-fontification-on-input t)
+  (bidi-inhibit-bpa t)
+  
+  :config
+   ;; emacs-lsp.github.io/lsp-mode/page/performance/
+  (setq read-process-output-max (* 1024 1024)) ; 1mb.
+
+  (setq-default bidi-paragraph-direction 'left-to-right))
 
 (use-feature bindings
   :general
@@ -3737,17 +3741,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 
   :general
   ("M-A-t" 'world-clock))
-
-(use-feature time-stamp
-  :demand t
-  :custom
-  (time-stamp-active t)
-  (time-stamp-start "#\\+LAST_MODIFIED:[ \t]*")
-  (time-stamp-end "$")
-  (time-stamp-format "\[%Y-%02m-%02d %3a %02H:%02M\]")
-
-  :hook
-  (write-file-functions . time-stamp))
 
 (use-package tmr
   :defer 10)
@@ -6454,6 +6447,7 @@ slow if it has a lot of overlays."
 not already have one."
     (when (and (equal (system-name) ps/computer-hostname-pablo)
                (eq major-mode 'org-mode)
+               (string-match ps/dir-org (buffer-file-name))
                (eq buffer-read-only nil))
       (unless
           (or
@@ -7287,7 +7281,7 @@ return such list if its length is less than LIMIT."
     "Update org id locations indexed by org roam."
     (interactive)
     (org-id-update-id-locations
-    (directory-files-recursively org-roam-directory ".org$\\|.org.gpg$")))
+     (directory-files-recursively org-roam-directory ".org$\\|.org.gpg$")))
 
   (defun ps/org-roam-remove-file-level-properties ()
     "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
@@ -7335,7 +7329,7 @@ return such list if its length is less than LIMIT."
   ;; include transcluded links in `org-roam' backlinks
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
 
-  (org-roam-db-autosync-mode -1)
+  (org-roam-db-autosync-mode)
 
   :hook
   (org-roam-capture-new-node-hook . orb--insert-captured-ref-h)
@@ -7362,6 +7356,16 @@ return such list if its length is less than LIMIT."
   (org-roam-ui-follow t)
   (org-roam-ui-update-on-save nil)
   (org-roam-ui-open-on-start nil))
+
+(use-package org-roam-timestamps
+  :after org-roam
+  :demand t
+  :custom
+  (org-roam-timestamps-remember-timestamps nil)
+  (org-roam-timestamps-timestamp-parent-file t)
+
+  :config
+  (org-roam-timestamps-mode))
 
 (use-package org-transclusion
   :after org
@@ -10333,7 +10337,7 @@ poorly-designed websites."
           (set-face-attribute 'variable-pitch (selected-frame)
           :font (font-spec :family ps/face-variable-pitch))
           (setq fill-column (current-fill-column))
-          ;; (setq-local shr-width (current-fill-column))
+          (setq-local shr-width (current-fill-column))
           (setq elfeed-show-entry-switch #'ps/show-elfeed)))
 
   (defun ps/show-elfeed (buffer)
@@ -10381,8 +10385,10 @@ poorly-designed websites."
 
 (use-package elfeed-org
   :after elfeed
+  :demand t
   :custom
-  (rmh-elfeed-org-files (list ps/file-feeds-pablo ps/file-feeds-tlon))
+  (rmh-elfeed-org-files (list ps/file-feeds-pablo ps/file-tlon-feeds))
+
   :config
   (elfeed-org))
 

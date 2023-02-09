@@ -1042,8 +1042,6 @@ installed."
   ;; (doom-modeline--flycheck-icon t)
   (doom-modeline-github t)
   (doom-modeline-github-interval (* 10 60))
-  ;; I think this causes significant slowdown
-  (doom-modeline-enable-word-count t)
   (doom-modeline-buffer-file-name-style 'truncate-from-project)
 
   :config
@@ -7281,7 +7279,7 @@ return such list if its length is less than LIMIT."
     "Update org id locations indexed by org roam."
     (interactive)
     (org-id-update-id-locations
-     (directory-files-recursively org-roam-directory ".org$\\|.org.gpg$")))
+    (directory-files-recursively org-roam-directory ".org$\\|.org.gpg$")))
 
   (defun ps/org-roam-remove-file-level-properties ()
     "Remove `ROAM_REFS' and `ID' properties from file-level drawer."

@@ -3,5 +3,7 @@
 # key: cab
 # --
 `(ps/insert-date)` Cabify
-    Expenses:Transportation:Taxi  $1 ARS
+    Expenses:Transportation:Taxi  $1 ARS ; $2
     Liabilities:Mom:Extension
+
+$0

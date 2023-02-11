@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: tlon-brubank-cabify
+# key: tbc
+# --
+`(ps/insert-date)` Cabify
+    Expenses:Core:Transportation            $1 ARS ; taxi $2
+    Assets:Brubank
+$0

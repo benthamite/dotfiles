@@ -2,7 +2,7 @@
 # name: mom-usd-conversion
 # key: muc
 # --
-`(ps/yasnippet-expand-by-key "ldlm")` Conversion
+`(ps/time-last-day-of-last-month)` Conversion
     Liabilities:Mom:Consolidated                -$2 USD @ $3.00 ARS
     Liabilities:Mom:Consolidated
 $4

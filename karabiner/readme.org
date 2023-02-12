@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230212131513
+:mtime:    20230212131605
 :ctime:    20230212123656
 :END:
 #+PROPERTY: header-args :tangle (print ps/file-karabiner-edn)
@@ -1029,7 +1029,7 @@ CLOCK: [2022-07-24 Sun 18:58]--[2022-07-24 Sun 19:17] =>  0:19
 *** x-mode
 :PROPERTIES:
 :ID:       A670C98B-FCD0-4B4C-A3D9-C0DB143209AE
-:mtime:    20230212131513
+:mtime:    20230212131605
 :ctime:    20230212131513
 :END:
 :LOGBOOK:
@@ -1165,8 +1165,9 @@ CLOCK: [2021-03-01 Mon 11:46]--[2021-03-01 Mon 12:05] =>  0:19
          [:g :!WTQg :emacs]
          [:right_command :!WTQtab :emacs :!moonlander]
          [:tab :!WTQtab :emacs]
-         ;; [:##right_command :home :!moonlander]
-         [:##tab :home]
+         [:##right_command :home :!moonlander]
+         [:##tab :home :moonlander]
+         [:##return_or_enter :home :kinesis]
          [:spacebar :!WTQspacebar :emacs]
          [:##spacebar :end]
          [:x :!WTQx]

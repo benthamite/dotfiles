@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230212123126
+:mtime:    20230212123320
 :END:
 #+PROPERTY: header-args :tangle (print ps/file-karabiner-edn)
 #+TITLE:Pablo's Karabiner config
@@ -637,33 +637,34 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
 
 *** kinesis
 
-**** tab
+**** return_or_enter
 :PROPERTIES:
 :ID:       D9295C31-3375-4F78-974C-9EDDEFA6E8A3
+:mtime:    20230212123320
+:ctime:    20230212123320
 :END:
 #+begin_src clojure
-{:des "tab → tab (alone) | left_control (held)"
+{:des "tab → return_or_enter (alone) | left_control (held)"
  :rules [
-         [:##tab :left_control :moonlander {:alone :tab}]
+         [:##return_or_enter :left_control :kinesis {:alone :tab}]
          ]}
 #+end_src
 
-
-**** equal_sign
+**** tab
 :PROPERTIES:
 :ID:       7A4C371E-862F-4F1D-80D9-4E33869AEDE7
 :mtime:    20230212122632
 :ctime:    20230212121714
 :END:
 #+begin_src clojure
-{:des "on Emacs, equal_sign → equal_sign (alone) | Alt (held)"
+{:des "on Emacs, tab → equal_sign (alone) | Alt (held)"
  :rules [
          [:##tab :right_command [:kinesis :emacs] {:alone :equal_sign}]
          ]}
 #+end_src
 
 #+begin_src clojure
-{:des "outside Emacs, equal_sign → equal_sign (alone) | left_shift + left_option (held)"
+{:des "outside Emacs, tab → equal_sign (alone) | left_shift + left_option (held)"
  :rules [
          [:##tab :!Sleft_option :kinesis  {:alone :equal_sign}]
          ]}

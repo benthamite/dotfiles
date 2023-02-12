@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230212122632
+:mtime:    20230212122805
 :END:
 #+PROPERTY: header-args :tangle (print ps/file-karabiner-edn)
 #+TITLE:Pablo's Karabiner config
@@ -644,7 +644,7 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
 #+begin_src clojure
 {:des "delete_forward → toggle tabs (alone) | left_shift (held)"
  :rules [
-         [:##delete_forward :left_shift :moonlander {:alone :!CT0}]
+         [:##delete_forward :left_shift [:moonlander :kinesis] {:alone :!CT0}]
          ]}
 #+end_src
 
@@ -662,18 +662,20 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
 **** right_control
 :PROPERTIES:
 :ID:       30827877-0622-4450-A217-56C7A05CC20F
+:mtime:    20230212122805
+:ctime:    20230212122805
 :END:
 #+begin_src clojure
 {:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
  :rules [
-         [:##right_control :!Tright_command [:moonlander :emacs] {:alone :f18}]
+         [:##right_control :!Tright_command [:moonlander :kinesis :emacs] {:alone :f18}]
          ]}
 #+end_src
 
 #+begin_src clojure
 {:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
  :rules [
-         [:##right_control :!Qright_control :moonlander {:alone :f18}]
+         [:##right_control :!Qright_control [:moonlander :kinesis] {:alone :f18}]
          ]}
 #+end_src
 
@@ -684,7 +686,7 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
 #+begin_src clojure
 {:des "on Emacs, quote → quote (alone) | super (held)"
  :rules [
-         [:##quote :right_control [:moonlander :emacs] {:alone :quote}]
+         [:##quote :right_control [:moonlander :kinesis :emacs] {:alone :quote}]
          ]}
 #+end_src
 

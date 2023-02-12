@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230212121229
+:mtime:    20230212121714
 :END:
 #+PROPERTY: header-args :tangle (print ps/file-karabiner-edn)
 #+TITLE:Pablo's Karabiner config
@@ -600,13 +600,12 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
 #+end_src
 
 *** moonlander
-:PROPERTIES:
-:ID:       FC41F58A-AFDC-4F61-80C8-70AF5987AF8D
-:END:
 
 **** equal_sign
 :PROPERTIES:
 :ID:       7A4C371E-862F-4F1D-80D9-4E33869AEDE7
+:mtime:    20230212121714
+:ctime:    20230212121714
 :END:
 #+begin_src clojure
 {:des "on Emacs, equal_sign → equal_sign (alone) | Alt (held)"
@@ -622,6 +621,12 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
          ]}
 #+end_src
 
+
+*** moonlander & kinesis
+:PROPERTIES:
+:ID:       FC41F58A-AFDC-4F61-80C8-70AF5987AF8D
+:END:
+
 **** delete_or_backspace
 :PROPERTIES:
 :ID:       CC3880F6-F71B-492D-8F0E-585ADB552004
@@ -629,7 +634,7 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
 #+begin_src clojure
 {:des "delete_or_backspace → return_or_enter (alone) | left_command (held)"
  :rules [
-         [:##delete_or_backspace :left_command :moonlander {:alone :return_or_enter}]
+         [:##delete_or_backspace :left_command [:moonlander :kinesis] {:alone :return_or_enter}]
          ]}
 #+end_src
 

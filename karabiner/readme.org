@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230212123656
+:mtime:    20230212131513
 :ctime:    20230212123656
 :END:
 #+PROPERTY: header-args :tangle (print ps/file-karabiner-edn)
@@ -324,6 +324,8 @@ CLOCK: [2021-07-16 Fri 20:05]--[2021-07-16 Fri 21:14] =>  1:09
 * Templates
 :PROPERTIES:
 :ID:       B03B897C-779E-431A-B78A-466935EF011A
+:mtime:    20230212131116
+:ctime:    20230212131116
 :END:
 #+begin_src clojure
 :templates {:alfred "osascript -e 'tell application \"Alfred 4\" to run trigger \"%s\" in workflow \"%s\" with argument \"%s\"'"
@@ -1027,6 +1029,8 @@ CLOCK: [2022-07-24 Sun 18:58]--[2022-07-24 Sun 19:17] =>  0:19
 *** x-mode
 :PROPERTIES:
 :ID:       A670C98B-FCD0-4B4C-A3D9-C0DB143209AE
+:mtime:    20230212131513
+:ctime:    20230212131513
 :END:
 :LOGBOOK:
 CLOCK: [2021-07-16 Fri 17:34]--[2021-07-16 Fri 18:32] =>  0:58
@@ -1161,7 +1165,7 @@ CLOCK: [2021-03-01 Mon 11:46]--[2021-03-01 Mon 12:05] =>  0:19
          [:g :!WTQg :emacs]
          [:right_command :!WTQtab :emacs :!moonlander]
          [:tab :!WTQtab :emacs]
-         [:##right_command :home :!moonlander]
+         ;; [:##right_command :home :!moonlander]
          [:##tab :home]
          [:spacebar :!WTQspacebar :emacs]
          [:##spacebar :end]

@@ -20,7 +20,8 @@
                }
 
 :devices {
-         :moonlander [{:vendor_id 12951 }]
+         :moonlander [{:vendor_id 12951}]
+         :kinesis [{:vendor_id 10730}]
          }
 
 :layers {
@@ -134,6 +135,31 @@
          ]
  }
 
+{:des "delete_or_backspace → return_or_enter (alone) | left_command (held)"
+ :rules [
+         [:##delete_or_backspace :left_command [:moonlander :kinesis] {:alone :return_or_enter}]
+         ]}
+
+{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
+ :rules [
+         [:##delete_forward :left_shift [:moonlander :kinesis] {:alone :!CT0}]
+         ]}
+
+{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
+ :rules [
+         [:##right_control :!Tright_command [:moonlander :kinesis :emacs] {:alone :f18}]
+         ]}
+
+{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
+ :rules [
+         [:##right_control :!Qright_control [:moonlander :kinesis] {:alone :f18}]
+         ]}
+
+{:des "on Emacs, quote → quote (alone) | super (held)"
+ :rules [
+         [:##quote :right_control [:moonlander :kinesis :emacs] {:alone :quote}]
+         ]}
+
 {:des "on Emacs, equal_sign → equal_sign (alone) | Alt (held)"
  :rules [
          [:##tab :right_command [:!moonlander :emacs] {:alone :equal_sign}]
@@ -171,7 +197,12 @@
 
 {:des "on Emacs, return_or_enter → quote (alone) | super (held)"
  :rules [
-         [:##quote :right_control [:!moonlander :emacs] {:alone :quote}]
+         [:##quote :right_control [:!moonlander :!kinesis :emacs] {:alone :quote}]
+         ]}
+
+{:des "tab → tab (alone) | left_control (held)"
+ :rules [
+         [:##tab :left_control :moonlander {:alone :tab}]
          ]}
 
 {:des "on Emacs, equal_sign → equal_sign (alone) | Alt (held)"
@@ -184,34 +215,19 @@
          [:##equal_sign :!Sleft_option :moonlander  {:alone :equal_sign}]
          ]}
 
-{:des "delete_or_backspace → return_or_enter (alone) | left_command (held)"
+{:des "tab → return_or_enter (alone) | left_control (held)"
  :rules [
-         [:##delete_or_backspace :left_command :moonlander {:alone :return_or_enter}]
+         [:##return_or_enter :left_control :kinesis {:alone :tab}]
          ]}
 
-{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
+{:des "on Emacs, tab → equal_sign (alone) | Alt (held)"
  :rules [
-         [:##delete_forward :left_shift :moonlander {:alone :!CT0}]
+         [:##tab :right_command [:kinesis :emacs] {:alone :equal_sign}]
          ]}
 
-{:des "tab → tab (alone) | left_control (held)"
+{:des "outside Emacs, tab → equal_sign (alone) | left_shift + left_option (held)"
  :rules [
-         [:##tab :left_control :moonlander {:alone :tab}]
-         ]}
-
-{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
- :rules [
-         [:##right_control :!Tright_command [:moonlander :emacs] {:alone :f18}]
-         ]}
-
-{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
- :rules [
-         [:##right_control :!Qright_control :moonlander {:alone :f18}]
-         ]}
-
-{:des "on Emacs, quote → quote (alone) | super (held)"
- :rules [
-         [:##quote :right_control [:moonlander :emacs] {:alone :quote}]
+         [:##tab :!Sleft_option :kinesis  {:alone :equal_sign}]
          ]}
 
 {:des "On Emacs, command + space → trigger different events on Emacs and elsewhere"
@@ -523,7 +539,8 @@
          [:right_command :!WTQtab :emacs :!moonlander]
          [:tab :!WTQtab :emacs]
          [:##right_command :home :!moonlander]
-         [:##tab :home]
+         [:##tab :home :moonlander]
+         [:##return_or_enter :home :kinesis]
          [:spacebar :!WTQspacebar :emacs]
          [:##spacebar :end]
          [:x :!WTQx]

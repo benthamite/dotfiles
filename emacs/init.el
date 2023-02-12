@@ -1078,7 +1078,7 @@ installed."
   (tab-bar-mode))
 
 (use-package fancy-battery
-  :demand t
+  :defer 10
   :custom
   (fancy-battery-show-percentage t)
 
@@ -2933,9 +2933,9 @@ option."
   ;; Modified from endlessparentheses.com/emacs-narrow-or-widen-dwim.html
   (defun ps/narrow-or-widen-dwim ()
     "Widen if buffer is narrowed, narrow-dwim otherwise.
-  Dwim means: region, org-src-block, org-subtree, or defun,
-  whichever applies first. Narrowing to org-src-block actually
-  calls `org-edit-src-code'.
+  Dwim means: region, org-src-block, org-subtree, ledger
+  transaction, or defun, whichever applies first. Narrowing to
+  org-src-block actually calls `org-edit-src-code'.
 
   With prefix P, don't widen, just narrow even if buffer
   is already narrowed."
@@ -2953,6 +2953,8 @@ option."
                  (t (ps/org-narrow-to-entry-and-children))))
           ((derived-mode-p 'latex-mode)
            (LaTeX-narrow-to-environment))
+	  ((derived-mode-p 'ledger-mode)
+	   (ps/ledger-narrow-to-xact))
           (t (narrow-to-defun))))
 
   (defun ps/count-visible-buffers (&optional frame)
@@ -5087,13 +5089,13 @@ To see a list of Google Docs and their respective IDs, run
 
   :config
   (dolist (report
-           '(("net worth"
-              "%(binary) -f %(ledger-file) bal --strict")
-             ("net worth (USD)"
-              "%(binary) -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict")
-                                        ; I need to understand how the `--basis' flag works
-             ("cost basis"
-              "%(binary) -f %(ledger-file) --basis bal %(account) --strict")))
+	   '(("net worth"
+	      "%(binary) -f %(ledger-file) bal --strict")
+	     ("net worth (USD)"
+	      "%(binary) -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict")
+					; I need to understand how the `--basis' flag works
+	     ("cost basis"
+	      "%(binary) -f %(ledger-file) --basis bal %(account) --strict")))
     (add-to-list 'ledger-reports report))
 
   (defun ps/ledger-new-entry-below ()
@@ -5134,49 +5136,49 @@ To see a list of Google Docs and their respective IDs, run
     (interactive)
     (shell-command
      (format "python3 %s"
-             (file-name-concat ps/dir-ledger "commodities.py"))))
+	     (file-name-concat ps/dir-ledger "commodities.py"))))
 
   (defun ps/ledger-update-coin-prices ()
     "Update `coinprices.py'."
     (interactive)
     (shell-command
      (format "python3 %s >> %s"
-             (file-name-concat ps/dir-ledger "coinprices/coinprices.py")
-             ps/file-ledger-db)))
+	     (file-name-concat ps/dir-ledger "coinprices/coinprices.py")
+	     ps/file-ledger-db)))
 
   (defun ps/ledger-sort-region-reversed (beg end)
     "Sort the region from BEG to END in reverse chronological order."
     (interactive "r") ;; load beg and end from point and mark
     ;; automagically
     (let* ((new-beg beg)
-           (new-end end)
-           (bounds (ledger-navigate-find-xact-extents (point)))
-           (point-delta (- (point) (car bounds)))
-           (target-xact (buffer-substring (car bounds) (cadr bounds)))
-           (inhibit-modification-hooks t))
+	   (new-end end)
+	   (bounds (ledger-navigate-find-xact-extents (point)))
+	   (point-delta (- (point) (car bounds)))
+	   (target-xact (buffer-substring (car bounds) (cadr bounds)))
+	   (inhibit-modification-hooks t))
       (save-excursion
-        (save-restriction
-          (goto-char beg)
-          ;; make sure beg of region is at the beginning of a line
-          (beginning-of-line)
-          ;; make sure point is at the beginning of a xact
-          (unless (looking-at ledger-payee-any-status-regex)
-            (ledger-navigate-next-xact))
-          (setq new-beg (point))
-          (goto-char end)
-          (ledger-navigate-next-xact)
-          ;; make sure end of region is at the beginning of next record
-          ;; after the region
-          (setq new-end (point))
-          (narrow-to-region new-beg new-end)
-          (goto-char new-beg)
+	(save-restriction
+	  (goto-char beg)
+	  ;; make sure beg of region is at the beginning of a line
+	  (beginning-of-line)
+	  ;; make sure point is at the beginning of a xact
+	  (unless (looking-at ledger-payee-any-status-regex)
+	    (ledger-navigate-next-xact))
+	  (setq new-beg (point))
+	  (goto-char end)
+	  (ledger-navigate-next-xact)
+	  ;; make sure end of region is at the beginning of next record
+	  ;; after the region
+	  (setq new-end (point))
+	  (narrow-to-region new-beg new-end)
+	  (goto-char new-beg)
 
-          (let ((inhibit-field-text-motion t))
-            (sort-subr
-             t
-             'ledger-navigate-next-xact
-             'ledger-navigate-end-of-xact
-             'ledger-sort-startkey))))
+	  (let ((inhibit-field-text-motion t))
+	    (sort-subr
+	     t
+	     'ledger-navigate-next-xact
+	     'ledger-navigate-end-of-xact
+	     'ledger-sort-startkey))))
 
       (goto-char (point-min))
       (re-search-forward (regexp-quote target-xact))
@@ -5186,19 +5188,19 @@ To see a list of Google Docs and their respective IDs, run
     "Sort the entire buffer in reverse chronological order."
     (interactive)
     (let (sort-start
-          sort-end)
+	  sort-end)
       (save-excursion
-        (goto-char (point-min))
-        (setq sort-start (ledger-sort-find-start)
-              sort-end (ledger-sort-find-end)))
+	(goto-char (point-min))
+	(setq sort-start (ledger-sort-find-start)
+	      sort-end (ledger-sort-find-end)))
       (ps/ledger-sort-region-reversed (or sort-start (point-min))
-                                      (or sort-end (point-max)))))
+				      (or sort-end (point-max)))))
 
   (defun ps/ledger-sort-region-or-buffer ()
     "Sort a region if selected, otherwise the whole buffer."
     (interactive)
     (if (region-active-p)
-        (ledger-sort-region)
+	(ledger-sort-region)
       (ledger-sort-buffer)))
 
   (defun ps/ledger-sort-region-or-buffer-reversed ()
@@ -5206,7 +5208,7 @@ To see a list of Google Docs and their respective IDs, run
 otherwise the whole buffer."
     (interactive)
     (if (region-active-p)
-        (ps/ledger-sort-region-reversed)
+	(ps/ledger-sort-region-reversed)
       (ps/ledger-sort-buffer-reversed)))
 
   (defun ps/ledger-toggle-current-transaction-and-next ()
@@ -5221,9 +5223,44 @@ otherwise the whole buffer."
     (save-excursion
       (ledger-navigate-next-xact-or-directive)
       (let ((end (point)))
-        (ledger-navigate-prev-xact-or-directive)
-        (copy-region-as-kill (point) end))
+	(ledger-navigate-prev-xact-or-directive)
+	(copy-region-as-kill (point) end))
       (message "Transaction copied.")))
+
+  (defun ps/ledger-narrow-to-xact ()
+    "Narrow to the current transaction."
+    (interactive)
+    (let ((xact-begins (ledger-navigate-beginning-of-xact))
+	  (xact-ends (ledger-navigate-end-of-xact)))
+      (narrow-to-region xact-begins xact-ends)))
+
+  (defun ps/ledger--increase-date-of-transaction-at-point (days)
+  (interactive)
+  "Increase date of transaction at point by DAYS."
+  (let* ((xact-begins (ledger-navigate-beginning-of-xact))
+	 (xact-ends (ledger-navigate-end-of-xact))
+	 (xact (buffer-substring xact-begins xact-ends)))
+    (delete-region xact-begins xact-ends)
+    (insert
+     (with-temp-buffer
+       (insert xact)
+       (let* ((date (ledger-xact-date))
+	      (timestamp (date-to-time date))
+	      (date-minus-one-day (format-time-string "%Y-%m-%d" (time-add timestamp (days-to-time days)))))
+	 (beginning-of-buffer)
+	 (replace-regexp ledger-iso-date-regexp "")
+	 (insert date-minus-one-day)
+	 (buffer-string))))))
+
+  (defun ps/ledger-increase-date-of-transaction-at-point-by-one-day ()
+    (interactive)
+    "Increase date of transaction at point by one day."
+    (ps/ledger--increase-date-of-transaction-at-point 1))
+
+  (defun ps/ledger-decrease-date-of-transaction-at-point-by-one-day ()
+    (interactive)
+    "Decrease date of transaction at point by one day."
+    (ps/ledger--increase-date-of-transaction-at-point -1))
 
   ;; :hook
   ;; (ledger-mode-hook . (lambda () (setq-local ledger-complete-in-steps t)))
@@ -5233,12 +5270,16 @@ otherwise the whole buffer."
    "s-SPC" 'ps/ledger-new-entry-below
    "s-=" 'ledger-reconcile
    "s-a" 'ledger-add-transaction
+   "A-s-a" 'ps/ledger-report-account
    "s-b" 'ledger-post-edit-amount
+   "A-s-b" 'ps/ledger-decrease-date-of-transaction-at-point-by-one-day
    "s-c" 'ps/ledger-align-and-next
    "A-s-c" 'ps/ledger-copy-transaction-at-point
    "s-d" 'ledger-delete-current-transaction
    "s-e" 'ps/ledger-toggle-current-transaction-and-next
+   "A-s-e" 'ledger-toggle-current-transaction
    "s-f" 'ledger-occur
+   "A-s-f" 'ps/ledger-increase-date-of-transaction-at-point-by-one-day
    "s-g" 'ledger-report-goto
    "s-i" 'ledger-insert-effective-date
    "s-y" 'ledger-copy-transaction-at-point
@@ -5246,22 +5287,18 @@ otherwise the whole buffer."
    "s-l" 'ledger-display-ledger-stats
    "s-o" 'ledger-report-edit-report
    "s-p" 'ledger-display-balance-at-point
+   "A-s-p" 'ps/ledger-report-payee
    "s-q" 'ledger-post-align-dwim
    "s-r" 'ledger-report
    "s-s" 'ledger-report-save
    "s-t" 'ps/ledger-sort-region-or-buffer
+   "A-s-t" 'ps/ledger-sort-region-or-buffer-reversed
    "s-u" 'ledger-schedule-upcoming
+   "A-s-u" 'ps/ledger-report-net-worth-USD
    "s-v" 'ledger-copy-transaction-at-point
+   "A-s-w" 'ps/ledger-report-net-worth
    "s-x" 'ledger-fully-complete-xact
    "s-z" 'ledger-report-redo
-   "A-s-a" 'ps/ledger-report-account
-   "A-s-e" 'ledger-toggle-current-transaction
-   "A-s-f" 'ps/ledger-add-ftx-transaction
-   "A-s-t" 'ps/ledger-sort-region-or-buffer-reversed
-   ;; "A-s-t" 'ps/ledger-import-ftx-transactions
-   "A-s-w" 'ps/ledger-report-net-worth
-   "A-s-u" 'ps/ledger-report-net-worth-USD
-   "A-s-p" 'ps/ledger-report-payee
    "A-C-s-r" 'ledger-navigate-prev-xact-or-directive
    "A-C-s-f" 'ledger-navigate-next-xact-or-directive))
 
@@ -5397,7 +5434,7 @@ FILE."
   (pdf-view-mode-hook . pdf-view-restore-mode))
 
 (use-package org-pdftools
-  :after (org pdf-tools)
+  :after org pdf-tools
   :demand t
   :hook
   (org-mode-hook . org-pdftools-setup-link))
@@ -8033,7 +8070,24 @@ in the file. Data comes from www.ebook.de."
   :defer 5
   :init
 
-  (defun ps/ebib-open-or-switch ()
+  :custom
+  (ebib-filename-separator ";")
+  (ebib-file-associations nil "do not open any file types externally")
+  (ebib-layout 'index-only)
+  (ebib-bibtex-dialect 'biblatex)
+  (ebib-use-timestamp t)
+  (ebib-preload-bib-files org-cite-global-bibliography)
+  (ebib-index-columns '(("Entry Key" 30 t)
+                        ("Author/Editor" 25 t)
+                        ("Year" 4 t)
+                        ("Title" 50 t)))
+  (ebib-timestamp-format "%Y-%m-%d %T (%Z)")
+  (ebib-save-xrefs-first nil)
+  (ebib-default-entry-type "online")
+  (ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "urldate" "venue" "version" "volumes" "year"))
+
+  :config
+    (defun ps/ebib-open-or-switch ()
       "Open ebib in the right window or switch to it if already open."
     (interactive)
     (ps/window-split-if-unsplit)
@@ -8092,24 +8146,7 @@ confirmation."
    '(change attribute-change)
    (lambda (event)
      (ps/ebib-reload-current-database-no-confirm)))
-
-  :custom
-  (ebib-filename-separator ";")
-  (ebib-file-associations nil "do not open any file types externally")
-  (ebib-layout 'index-only)
-  (ebib-bibtex-dialect 'biblatex)
-  (ebib-use-timestamp t)
-  (ebib-preload-bib-files org-cite-global-bibliography)
-  (ebib-index-columns '(("Entry Key" 30 t)
-                        ("Author/Editor" 25 t)
-                        ("Year" 4 t)
-                        ("Title" 50 t)))
-  (ebib-timestamp-format "%Y-%m-%d %T (%Z)")
-  (ebib-save-xrefs-first nil)
-  (ebib-default-entry-type "online")
-  (ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "urldate" "venue" "version" "volumes" "year"))
-
-  :config
+  
   ;; Tweak original function to prevent unnecessary vertical window splits
   (defun ps/ebib--setup-windows ()
     "Create Ebib's window configuration.
@@ -9037,7 +9074,7 @@ first name, and names are separated by a semicolon."
    "d" 'ps/ebib-duplicate-entry
    "D" 'ebib-delete-entry
    "k" 'ebib-prev-entry
-   "l" 'ebib-next-entry
+   "l" 'ebib-next-ezntry
    "s" 'ps/ebib-sort-toggle
    "H-s" 'ebib-save-current-database
    "Q" 'ebib-quit))
@@ -9352,8 +9389,8 @@ or specify any other coding system (and risk losing\n\
 
 (use-package mu4e
   :if (equal (system-name) ps/computer-hostname-pablo)
-  :demand t
-  ;; :defer 5
+  ;; :demand t
+  :defer 5
   :straight (:local-repo
              "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
              :pre-build
@@ -9781,8 +9818,8 @@ Grammarly."
    "A-s-g" 'ps/org-msg-grammarly))
 
 (use-package telega
-  :demand t
-  ;; :defer 5
+  ;; :demand t
+  :defer 5
   :custom
   (telega-server-libs-prefix "/opt/homebrew")
   (telega-chat-input-markups '("markdown2" "org"))

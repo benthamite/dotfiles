@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230212122531
+:mtime:    20230212122632
 :END:
 #+PROPERTY: header-args :tangle (print ps/file-karabiner-edn)
 #+TITLE:Pablo's Karabiner config
@@ -604,7 +604,7 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
 **** equal_sign
 :PROPERTIES:
 :ID:       7A4C371E-862F-4F1D-80D9-4E33869AEDE7
-:mtime:    20230212121751
+:mtime:    20230212122632
 :ctime:    20230212121714
 :END:
 #+begin_src clojure
@@ -621,7 +621,6 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
          ]}
 #+end_src
 
-
 *** moonlander & kinesis
 :PROPERTIES:
 :ID:       FC41F58A-AFDC-4F61-80C8-70AF5987AF8D
@@ -634,7 +633,7 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
 #+begin_src clojure
 {:des "delete_or_backspace → return_or_enter (alone) | left_command (held)"
  :rules [
-         [:##delete_or_backspace :left_command :kinesis {:alone :return_or_enter}]
+         [:##delete_or_backspace :left_command [:moonlander :kinesis] {:alone :return_or_enter}]
          ]}
 #+end_src
 

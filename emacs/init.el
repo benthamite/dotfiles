@@ -9343,7 +9343,7 @@ or specify any other coding system (and risk losing\n\
   :general
   (eww-mode-map
    "A-C-s-r" 'shr-heading-previous
-   "A-C-s-f" 'shr-heading-next)
+   "A-C-s-f" 'shr-heading-next))
 
 (use-feature mml
   :general
@@ -10112,7 +10112,7 @@ lkkk  ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdow
   :general
   (eww-mode-map
    "A-C-s-r" 'shr-heading-previous
-   "A-C-s-f" 'shr-heading-next)
+   "A-C-s-f" 'shr-heading-next))
 
 (use-feature eww
   ;; :defer 30

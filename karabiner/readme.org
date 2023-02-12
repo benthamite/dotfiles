@@ -1,5 +1,6 @@
 :PROPERTIES:
-:mtime:    20230212123320
+:mtime:    20230212123656
+:ctime:    20230212123656
 :END:
 #+PROPERTY: header-args :tangle (print ps/file-karabiner-edn)
 #+TITLE:Pablo's Karabiner config
@@ -374,7 +375,7 @@ CLOCK: [2021-03-28 Sun 18:47]--[2021-03-28 Sun 19:01] =>  0:14
 CLOCK: [2021-03-23 Tue 19:30]--[2021-03-23 Tue 19:38] =>  0:08
 :END:
 
-*** shared
+*** shared: all
 :PROPERTIES:
 :ID:       39F5EF4F-7354-4E13-833F-D250C4F597A9
 :END:
@@ -509,6 +510,64 @@ CLOCK: [2021-07-25 Sun 16:11]--[2021-07-25 Sun 17:02] =>  0:51
  }
 #+end_src
 
+*** shared: moonlander & kinesis
+:PROPERTIES:
+:ID:       FC41F58A-AFDC-4F61-80C8-70AF5987AF8D
+:END:
+
+**** delete_or_backspace
+:PROPERTIES:
+:ID:       CC3880F6-F71B-492D-8F0E-585ADB552004
+:END:
+#+begin_src clojure
+{:des "delete_or_backspace → return_or_enter (alone) | left_command (held)"
+ :rules [
+         [:##delete_or_backspace :left_command [:moonlander :kinesis] {:alone :return_or_enter}]
+         ]}
+#+end_src
+
+**** delete_forward
+:PROPERTIES:
+:ID:       C016D30A-E2DF-4E28-89A0-90DDD9293D29
+:END:
+#+begin_src clojure
+{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
+ :rules [
+         [:##delete_forward :left_shift [:moonlander :kinesis] {:alone :!CT0}]
+         ]}
+#+end_src
+
+**** right_control
+:PROPERTIES:
+:ID:       30827877-0622-4450-A217-56C7A05CC20F
+:mtime:    20230212122805
+:ctime:    20230212122805
+:END:
+#+begin_src clojure
+{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
+ :rules [
+         [:##right_control :!Tright_command [:moonlander :kinesis :emacs] {:alone :f18}]
+         ]}
+#+end_src
+
+#+begin_src clojure
+{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
+ :rules [
+         [:##right_control :!Qright_control [:moonlander :kinesis] {:alone :f18}]
+         ]}
+#+end_src
+ 
+**** quote
+:PROPERTIES:
+:ID:       D14C4590-0118-47A1-8095-E7A18EC694C0
+:END:
+#+begin_src clojure
+{:des "on Emacs, quote → quote (alone) | super (held)"
+ :rules [
+         [:##quote :right_control [:moonlander :kinesis :emacs] {:alone :quote}]
+         ]}
+#+end_src
+
 *** internal keyboard
 :PROPERTIES:
 :ID:       533B81E8-E738-4374-88D0-4EE942561659
@@ -602,6 +661,9 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
 #+end_src
 
 *** moonlander
+:PROPERTIES:
+:ID:       4A03CCD3-54C8-4B3A-AB2F-ABCB7FB130B1
+:END:
 
 **** tab
 :PROPERTIES:
@@ -613,7 +675,6 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
          [:##tab :left_control :moonlander {:alone :tab}]
          ]}
 #+end_src
-
 
 **** equal_sign
 :PROPERTIES:
@@ -636,7 +697,9 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
 #+end_src
 
 *** kinesis
-
+:PROPERTIES:
+:ID:       0F19B8ED-56B3-4AFB-AE81-BD9C7A0C3332
+:END:
 **** return_or_enter
 :PROPERTIES:
 :ID:       D9295C31-3375-4F78-974C-9EDDEFA6E8A3
@@ -649,7 +712,7 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
          [:##return_or_enter :left_control :kinesis {:alone :tab}]
          ]}
 #+end_src
-
+ 
 **** tab
 :PROPERTIES:
 :ID:       7A4C371E-862F-4F1D-80D9-4E33869AEDE7
@@ -667,65 +730,6 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
 {:des "outside Emacs, tab → equal_sign (alone) | left_shift + left_option (held)"
  :rules [
          [:##tab :!Sleft_option :kinesis  {:alone :equal_sign}]
-         ]}
-#+end_src
-
-*** moonlander & kinesis
-:PROPERTIES:
-:ID:       FC41F58A-AFDC-4F61-80C8-70AF5987AF8D
-:END:
-
-**** delete_or_backspace
-:PROPERTIES:
-:ID:       CC3880F6-F71B-492D-8F0E-585ADB552004
-:END:
-#+begin_src clojure
-{:des "delete_or_backspace → return_or_enter (alone) | left_command (held)"
- :rules [
-         [:##delete_or_backspace :left_command [:moonlander :kinesis] {:alone :return_or_enter}]
-         ]}
-#+end_src
-
-**** delete_forward
-:PROPERTIES:
-:ID:       C016D30A-E2DF-4E28-89A0-90DDD9293D29
-:END:
-#+begin_src clojure
-{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
- :rules [
-         [:##delete_forward :left_shift [:moonlander :kinesis] {:alone :!CT0}]
-         ]}
-#+end_src
-
-
-**** right_control
-:PROPERTIES:
-:ID:       30827877-0622-4450-A217-56C7A05CC20F
-:mtime:    20230212122805
-:ctime:    20230212122805
-:END:
-#+begin_src clojure
-{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
- :rules [
-         [:##right_control :!Tright_command [:moonlander :kinesis :emacs] {:alone :f18}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
- :rules [
-         [:##right_control :!Qright_control [:moonlander :kinesis] {:alone :f18}]
-         ]}
-#+end_src
- 
-**** quote
-:PROPERTIES:
-:ID:       D14C4590-0118-47A1-8095-E7A18EC694C0
-:END:
-#+begin_src clojure
-{:des "on Emacs, quote → quote (alone) | super (held)"
- :rules [
-         [:##quote :right_control [:moonlander :kinesis :emacs] {:alone :quote}]
          ]}
 #+end_src
 
@@ -1645,6 +1649,7 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
 :PROPERTIES:
 :ID:       B228F5AC-BC34-4908-A3A3-50B8AFF41A97
 :END:
+
 *** k-mode
 :PROPERTIES:
 :ID:       4A0DD582-A767-445D-8B9F-B6B8E98EB1D2
@@ -1724,6 +1729,7 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
 :Effort:   0:20
 :ID:       441944E1-33ED-43E2-A1BB-D6F8A601677E
 :END:
+
 *** ?-mode
 :PROPERTIES:
 :ID:       42A014D7-D011-43E8-B401-9B080DF5AD61
@@ -1826,6 +1832,7 @@ Experimental; currently not tangled.
 :PROPERTIES:
 :ID:       C12143F1-B67F-444C-BC27-94B666A7BE04
 :END:
+
 ** Useful links
 :PROPERTIES:
 :ID:       1AAF1939-3FD7-477B-B56F-6BDCD2BB01B1

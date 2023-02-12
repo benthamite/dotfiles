@@ -1,3 +1,6 @@
+:PROPERTIES:
+:mtime:    20230212121229
+:END:
 #+PROPERTY: header-args :tangle (print ps/file-karabiner-edn)
 #+TITLE:Pablo's Karabiner config
 #+AUTHOR: Pablo Stafforini <pablo@stafforini.com>
@@ -15,6 +18,7 @@
 CLOCK: [2022-07-01 Fri 11:06]--[2022-07-01 Fri 11:24] =>  0:18
 CLOCK: [2021-02-28 Sun 19:56]--[2021-02-28 Sun 20:00] =>  0:04
 :END:
+
 ** Table of contents
 :PROPERTIES:
 :TOC:      :include all :depth 4 :force (nothing) :ignore (nothing) :local (nothing)
@@ -139,7 +143,6 @@ CLOCK: [2021-06-07 Mon 20:38]--[2021-06-07 Mon 21:52] =>  1:14
 |                     |                 |                 | QTCW      | A-C-H-s   |                             |
 |                     |                 |                 |           |           |                             |
 
-
 * Profiles
 :PROPERTIES:
 :ID:       B42AA5C9-7EB9-415A-ACFE-BBB532055EFE
@@ -229,6 +232,8 @@ CLOCK: [2021-07-16 Fri 21:54]--[2021-07-16 Fri 22:04] =>  0:10
 * Applications
 :PROPERTIES:
 :ID:       55F2D50D-3B4B-4AF9-A800-E2E4A2F22D63
+:mtime:    20230212121229
+:ctime:    20230212121229
 :END:
 
 #+begin_src clojure
@@ -243,17 +248,22 @@ CLOCK: [2021-07-16 Fri 21:54]--[2021-07-16 Fri 22:04] =>  0:10
 * Devices
 :PROPERTIES:
 :ID:       EDA2FC19-4435-4077-8AC9-35A8A1199FCB
+:mtime:    20230212120850
+:ctime:    20230212120850
 :END:
 
 #+begin_src clojure
  :devices {
           :moonlander [{:vendor_id 12951 }]
+          :kinesis [{:vendor_id }]
           }
 #+end_src
 
 * Layers
 :PROPERTIES:
 :ID:       369A7942-816B-433F-92F7-46EA80BC1CEB
+:mtime:    20230212115726
+:ctime:    20230212115726
 :END:
 :LOGBOOK:
 CLOCK: [2022-06-07 Tue 14:51]--[2022-06-07 Tue 15:24] =>  0:33
@@ -292,6 +302,7 @@ CLOCK: [2021-03-20 Sat 21:48]--[2021-03-20 Sat 21:56] =>  0:08
 :Effort:   0:30
 :ID:       7E78549B-98AF-4287-84A7-E09996BF4810
 :END:
+
 ** Archive                                                                                                             :ARCHIVE:
 :PROPERTIES:
 :ID:       08B6968B-6DB5-426F-AB52-79D33972E1D0
@@ -308,6 +319,7 @@ CLOSED: [2021-07-16 Fri 21:27]
 :LOGBOOK:
 CLOCK: [2021-07-16 Fri 20:05]--[2021-07-16 Fri 21:14] =>  1:09
 :END:
+
 * Templates
 :PROPERTIES:
 :ID:       B03B897C-779E-431A-B78A-466935EF011A
@@ -501,6 +513,7 @@ CLOCK: [2021-07-25 Sun 16:11]--[2021-07-25 Sun 17:02] =>  0:51
 :PROPERTIES:
 :ID:       533B81E8-E738-4374-88D0-4EE942561659
 :END:
+
 **** tab
 :PROPERTIES:
 :ID:       06A8716B-F75B-4B6C-80BC-C331FDC401FB
@@ -590,6 +603,7 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
 :PROPERTIES:
 :ID:       FC41F58A-AFDC-4F61-80C8-70AF5987AF8D
 :END:
+
 **** equal_sign
 :PROPERTIES:
 :ID:       7A4C371E-862F-4F1D-80D9-4E33869AEDE7

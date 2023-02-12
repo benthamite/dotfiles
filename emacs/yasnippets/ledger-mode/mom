@@ -5,3 +5,5 @@
 `(ps/insert-date)`$6 ${1:recipient}
     Expenses:${5:account}  ${2:amount} ${3:$$(yas-completing-read "Currency: " ps/ledger-active-currencies)} ; ${4:details}
     Liabilities:Mom:Extension
+
+$0

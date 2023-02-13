@@ -878,6 +878,8 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   :demand t
   :custom
   (highlight-parentheses-delay 0)
+
+  :config
   (global-highlight-parentheses-mode)
 
   :hook
@@ -955,12 +957,13 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   (defun ps/modus-themes-load-theme-conditionally ()
     "Load themes conditional on which distribution of Emacs is
 installed."
-    (if (boundp 'mac-effective-appearance-change-hook)
-        ;; `emacs-mac'
-        (ps/modus-themes-load-theme-emacs-mac)
-      ;; `emacs-plus'
-      (add-hook 'ns-system-appearance-change-functions
-                #'ps/modus-theme-load-theme-emacs-plus)))
+    (cond ((boundp 'mac-effective-appearance-change-hook)
+           ;; `emacs-mac'
+           (ps/modus-themes-load-theme-emacs-mac))
+          ;; `emacs-plus'
+          ((boundp 'ns-system-appearance-change-functions)
+           (add-hook 'ns-system-appearance-change-functions
+                     #'ps/modus-themes-load-theme-emacs-plus))))
 
   (ps/modus-themes-load-theme-conditionally)
 
@@ -968,7 +971,7 @@ installed."
         `(
           ;; hide the fringe
           (fringe unspecified)
-          ;; additional customizations to be added here
+          ;; additional customizations can be added here
 
           ;; for the rest, use the predefined intense values
           ,@modus-themes-preset-overrides-intense))
@@ -979,7 +982,7 @@ installed."
 
   :hook
   (modus-themes-after-load-theme-hook . ps/org-faces-custom-faces)
-  ;; (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
+  (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
 
   :general
   ("A-d" 'modus-themes-toggle))
@@ -2953,8 +2956,8 @@ option."
                  (t (ps/org-narrow-to-entry-and-children))))
           ((derived-mode-p 'latex-mode)
            (LaTeX-narrow-to-environment))
-	  ((derived-mode-p 'ledger-mode)
-	   (ps/ledger-narrow-to-xact))
+          ((derived-mode-p 'ledger-mode)
+           (ps/ledger-narrow-to-xact))
           (t (narrow-to-defun))))
 
   (defun ps/count-visible-buffers (&optional frame)
@@ -5041,7 +5044,7 @@ convert it from org-mode to markdown."
       (yank)))
 
   :general
-  ((gfm-mode-map markdown-mode-map telega-chat-mode-map)
+  ((gfm-mode-map markdown-mode-map)
    "s-b" 'markdown-insert-bold
    "s-e" 'markdown-insert-code
    "s-i" 'markdown-insert-italic
@@ -5089,13 +5092,13 @@ To see a list of Google Docs and their respective IDs, run
 
   :config
   (dolist (report
-	   '(("net worth"
-	      "%(binary) -f %(ledger-file) bal --strict")
-	     ("net worth (USD)"
-	      "%(binary) -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict")
-					; I need to understand how the `--basis' flag works
-	     ("cost basis"
-	      "%(binary) -f %(ledger-file) --basis bal %(account) --strict")))
+           '(("net worth"
+              "%(binary) -f %(ledger-file) bal --strict")
+             ("net worth (USD)"
+              "%(binary) -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict")
+                                        ; I need to understand how the `--basis' flag works
+             ("cost basis"
+              "%(binary) -f %(ledger-file) --basis bal %(account) --strict")))
     (add-to-list 'ledger-reports report))
 
   (defun ps/ledger-new-entry-below ()
@@ -5136,49 +5139,49 @@ To see a list of Google Docs and their respective IDs, run
     (interactive)
     (shell-command
      (format "python3 %s"
-	     (file-name-concat ps/dir-ledger "commodities.py"))))
+             (file-name-concat ps/dir-ledger "commodities.py"))))
 
   (defun ps/ledger-update-coin-prices ()
     "Update `coinprices.py'."
     (interactive)
     (shell-command
      (format "python3 %s >> %s"
-	     (file-name-concat ps/dir-ledger "coinprices/coinprices.py")
-	     ps/file-ledger-db)))
+             (file-name-concat ps/dir-ledger "coinprices/coinprices.py")
+             ps/file-ledger-db)))
 
   (defun ps/ledger-sort-region-reversed (beg end)
     "Sort the region from BEG to END in reverse chronological order."
     (interactive "r") ;; load beg and end from point and mark
     ;; automagically
     (let* ((new-beg beg)
-	   (new-end end)
-	   (bounds (ledger-navigate-find-xact-extents (point)))
-	   (point-delta (- (point) (car bounds)))
-	   (target-xact (buffer-substring (car bounds) (cadr bounds)))
-	   (inhibit-modification-hooks t))
+           (new-end end)
+           (bounds (ledger-navigate-find-xact-extents (point)))
+           (point-delta (- (point) (car bounds)))
+           (target-xact (buffer-substring (car bounds) (cadr bounds)))
+           (inhibit-modification-hooks t))
       (save-excursion
-	(save-restriction
-	  (goto-char beg)
-	  ;; make sure beg of region is at the beginning of a line
-	  (beginning-of-line)
-	  ;; make sure point is at the beginning of a xact
-	  (unless (looking-at ledger-payee-any-status-regex)
-	    (ledger-navigate-next-xact))
-	  (setq new-beg (point))
-	  (goto-char end)
-	  (ledger-navigate-next-xact)
-	  ;; make sure end of region is at the beginning of next record
-	  ;; after the region
-	  (setq new-end (point))
-	  (narrow-to-region new-beg new-end)
-	  (goto-char new-beg)
+        (save-restriction
+          (goto-char beg)
+          ;; make sure beg of region is at the beginning of a line
+          (beginning-of-line)
+          ;; make sure point is at the beginning of a xact
+          (unless (looking-at ledger-payee-any-status-regex)
+            (ledger-navigate-next-xact))
+          (setq new-beg (point))
+          (goto-char end)
+          (ledger-navigate-next-xact)
+          ;; make sure end of region is at the beginning of next record
+          ;; after the region
+          (setq new-end (point))
+          (narrow-to-region new-beg new-end)
+          (goto-char new-beg)
 
-	  (let ((inhibit-field-text-motion t))
-	    (sort-subr
-	     t
-	     'ledger-navigate-next-xact
-	     'ledger-navigate-end-of-xact
-	     'ledger-sort-startkey))))
+          (let ((inhibit-field-text-motion t))
+            (sort-subr
+             t
+             'ledger-navigate-next-xact
+             'ledger-navigate-end-of-xact
+             'ledger-sort-startkey))))
 
       (goto-char (point-min))
       (re-search-forward (regexp-quote target-xact))
@@ -5188,19 +5191,19 @@ To see a list of Google Docs and their respective IDs, run
     "Sort the entire buffer in reverse chronological order."
     (interactive)
     (let (sort-start
-	  sort-end)
+          sort-end)
       (save-excursion
-	(goto-char (point-min))
-	(setq sort-start (ledger-sort-find-start)
-	      sort-end (ledger-sort-find-end)))
+        (goto-char (point-min))
+        (setq sort-start (ledger-sort-find-start)
+              sort-end (ledger-sort-find-end)))
       (ps/ledger-sort-region-reversed (or sort-start (point-min))
-				      (or sort-end (point-max)))))
+                                      (or sort-end (point-max)))))
 
   (defun ps/ledger-sort-region-or-buffer ()
     "Sort a region if selected, otherwise the whole buffer."
     (interactive)
     (if (region-active-p)
-	(ledger-sort-region)
+        (ledger-sort-region)
       (ledger-sort-buffer)))
 
   (defun ps/ledger-sort-region-or-buffer-reversed ()
@@ -5208,7 +5211,7 @@ To see a list of Google Docs and their respective IDs, run
 otherwise the whole buffer."
     (interactive)
     (if (region-active-p)
-	(ps/ledger-sort-region-reversed)
+        (ps/ledger-sort-region-reversed)
       (ps/ledger-sort-buffer-reversed)))
 
   (defun ps/ledger-toggle-current-transaction-and-next ()
@@ -5223,34 +5226,34 @@ otherwise the whole buffer."
     (save-excursion
       (ledger-navigate-next-xact-or-directive)
       (let ((end (point)))
-	(ledger-navigate-prev-xact-or-directive)
-	(copy-region-as-kill (point) end))
+        (ledger-navigate-prev-xact-or-directive)
+        (copy-region-as-kill (point) end))
       (message "Transaction copied.")))
 
   (defun ps/ledger-narrow-to-xact ()
     "Narrow to the current transaction."
     (interactive)
     (let ((xact-begins (ledger-navigate-beginning-of-xact))
-	  (xact-ends (ledger-navigate-end-of-xact)))
+          (xact-ends (ledger-navigate-end-of-xact)))
       (narrow-to-region xact-begins xact-ends)))
 
   (defun ps/ledger--increase-date-of-transaction-at-point (days)
   (interactive)
   "Increase date of transaction at point by DAYS."
   (let* ((xact-begins (ledger-navigate-beginning-of-xact))
-	 (xact-ends (ledger-navigate-end-of-xact))
-	 (xact (buffer-substring xact-begins xact-ends)))
+         (xact-ends (ledger-navigate-end-of-xact))
+         (xact (buffer-substring xact-begins xact-ends)))
     (delete-region xact-begins xact-ends)
     (insert
      (with-temp-buffer
        (insert xact)
        (let* ((date (ledger-xact-date))
-	      (timestamp (date-to-time date))
-	      (date-minus-one-day (format-time-string "%Y-%m-%d" (time-add timestamp (days-to-time days)))))
-	 (beginning-of-buffer)
-	 (replace-regexp ledger-iso-date-regexp "")
-	 (insert date-minus-one-day)
-	 (buffer-string))))))
+              (timestamp (date-to-time date))
+              (date-minus-one-day (format-time-string "%Y-%m-%d" (time-add timestamp (days-to-time days)))))
+         (beginning-of-buffer)
+         (replace-regexp ledger-iso-date-regexp "")
+         (insert date-minus-one-day)
+         (buffer-string))))))
 
   (defun ps/ledger-increase-date-of-transaction-at-point-by-one-day ()
     (interactive)
@@ -5964,7 +5967,11 @@ image."
    "H-v" 'org-yank
    "M-w" 'ps/org-count-words)
   (org-agenda-mode-map
-   "s-s" 'org-save-all-org-buffers))
+   "s-s" 'org-save-all-org-buffers)
+  (telega-chat-mode-map
+   "s-b" (lambda! (org-emphasize ?*))
+   "s-i" (lambda! (org-emphasize ?/))
+   "s-e" (lambda! (org-emphasize ?~))))
 
 (use-feature org-agenda
   :if (equal (system-name) ps/computer-hostname-pablo)
@@ -6753,8 +6760,9 @@ refresh cache."
    "A-C-M-s-j" 'org-previous-link
    "A-C-M-s-;" 'org-next-link)
   ((org-mode-map org-msg-edit-mode-map)
-   "s-k" 'org-insert-link
-   "s-A-l" 'ps/org-url-dwim))
+   "s-A-l" 'ps/org-url-dwim)
+  ((org-mode-map org-msg-edit-mode-map telega-chat-mode-map)
+   "s-k" 'org-insert-link))
 
 (use-feature org-protocol
   :defer 15)
@@ -7249,7 +7257,9 @@ return such list if its length is less than LIMIT."
     (dolist (dir `(,ps/dir-anki
                    ,ps/dir-inactive
                    ,ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
-                   ,ps/dir-archive))
+                   ,ps/dir-archive
+                   ,ps/dir-dropbox-tlon-leo
+                   ,ps/dir-dropbox-tlon-fede))
       (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs)))
 
   (dolist (file '("orb-noter-template.org"
@@ -8095,7 +8105,7 @@ in the file. Data comes from www.ebook.de."
         (winum-select-window-3)
       (winum-select-window-2))
     (ebib))
-  
+
   (defun ps/ebib-reload-current-database-no-confirm ()
     "Reload the current database from disk, without asking for
 confirmation."
@@ -8146,7 +8156,7 @@ confirmation."
    '(change attribute-change)
    (lambda (event)
      (ps/ebib-reload-current-database-no-confirm)))
-  
+
   ;; Tweak original function to prevent unnecessary vertical window splits
   (defun ps/ebib--setup-windows ()
     "Create Ebib's window configuration.
@@ -9074,7 +9084,7 @@ first name, and names are separated by a semicolon."
    "d" 'ps/ebib-duplicate-entry
    "D" 'ebib-delete-entry
    "k" 'ebib-prev-entry
-   "l" 'ebib-next-ezntry
+   "l" 'ebib-next-entry
    "s" 'ps/ebib-sort-toggle
    "H-s" 'ebib-save-current-database
    "Q" 'ebib-quit))
@@ -9371,9 +9381,9 @@ or specify any other coding system (and risk losing\n\
 
 (use-package message-extras
   :straight (message-extras
-	     :host github
-	     :repo "oantolin/emacs-config"
-	     :files ("my-lisp/message-extras.el"))
+             :host github
+             :repo "oantolin/emacs-config"
+             :files ("my-lisp/message-extras.el"))
   :demand t
   :hook
   (eww-mode-hook . shr-heading-setup-imenu)
@@ -9822,7 +9832,7 @@ Grammarly."
   :defer 5
   :custom
   (telega-server-libs-prefix "/opt/homebrew")
-  (telega-chat-input-markups '("markdown2" "org"))
+  (telega-chat-input-markups '("org" "markdown2"))
   (telega-use-images t)
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
@@ -9838,30 +9848,45 @@ Grammarly."
 
   :config
   (defun ps/telega-switch-to ()
-    "Switch to the most recent chat buffer. If none exists,
-switch to the root buffer, starting telega if necessary."
+    "Switch to the most recent telega buffer, if one exists, else
+ start telega. Always display telega buffers in the rightmost
+ window."
     (interactive)
-    (ps/window-split-if-unsplit)
-    (if (> (frame-width) ps/frame-width-threshold)
-        (winum-select-window-3)
-      (winum-select-window-2))
-    (let* ((rootbuf "*Telega Root*")
-           (buf (or
-                 (let ((chatbuf))
-                   (mapc (lambda (x)
-                           (when (with-current-buffer x
-                                   (eq major-mode 'telega-chat-mode))
-                             (switch-to-buffer x)
-                             (setq chatbuf x)))
-                         (buffer-list))
-                   chatbuf)
-                 (get-buffer rootbuf))))
-      (if buf
-          (progn
-            (switch-to-buffer rootbuf)
-            (beginning-of-buffer)
-            (forward-line 3))
-        (telega))))
+    (let* ((telega-buffer-root "*Telega Root*")
+           (telega-buffer
+            (catch 'tag
+              (dolist (buffer (buffer-list))
+                (when (with-current-buffer buffer
+                        (member major-mode '(telega-root-mode telega-chat-mode)))
+                  (throw 'tag (buffer-name buffer))))))
+           (telega-buffer-is-current (string= (buffer-name (current-buffer)) telega-buffer)))
+      (if telega-buffer
+          (if telega-buffer-is-current
+              (if (string> telega-buffer telega-buffer-root)
+                  (end-of-buffer)
+                (beginning-of-buffer)
+                (forward-line 3))
+            (switch-to-buffer telega-buffer))
+        (telega))
+      (let ((telega-buffer (current-buffer)))
+        (ps/window-split-if-unsplit)
+        (if (> (frame-width) ps/frame-width-threshold)
+            (winum-select-window-3)
+          (winum-select-window-2))
+        (let ((rightmost-window (selected-window))
+              (other-window (previous-window)))
+          (unless telega-buffer-is-current
+            ;; find the most recent buffer that isn't a telega buffer,
+            ;; so that we switch to it in the window that isn't
+            ;; assigned to telega
+            (let ((non-telega-buffer
+                   (catch 'tag
+                     (dolist (buffer (buffer-list))
+                       (unless (with-current-buffer buffer
+                                 (member major-mode '(telega-root-mode telega-chat-mode)))
+                         (throw 'tag buffer))))))
+              (set-window-buffer other-window non-telega-buffer)))
+          (set-window-buffer rightmost-window telega-buffer)))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -9941,7 +9966,7 @@ into a task for Leo."
   :hook
   (telega-chat-mode-hook . ps/telega-chat-mode)
   (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
-lkkk  ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdown
+  lkkk  ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdown
   ;; (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
 
   :general
@@ -9955,7 +9980,7 @@ lkkk  ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdow
    "<return>" 'newline
    "A-C-s-r" 'telega-chatbuf-beginning-of-thing
    "C-<return>" 'telega-chatbuf-input-send
-   "s-<return>" (lambda! (telega-chatbuf-input-send "org"))
+   "s-<return>" (lambda! (telega-chatbuf-input-send "markdown1"))
    "s-," 'telega-chatbuf-goto-pinned-message
    "s-a" 'telega-chatbuf-attach
    "s-c" 'telega-mnz-chatbuf-attach-code
@@ -10140,9 +10165,9 @@ lkkk  ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdow
 
 (use-package shr-heading
   :straight (shr-heading
-	     :host github
-	     :repo "oantolin/emacs-config"
-	     :files ("my-lisp/shr-heading.el"))
+             :host github
+             :repo "oantolin/emacs-config"
+             :files ("my-lisp/shr-heading.el"))
   :demand t
   :hook
   (eww-mode-hook . shr-heading-setup-imenu)
@@ -10383,8 +10408,8 @@ poorly-designed websites."
           (kill-matching-buffers "^\*elfeed\-*\*" nil t))
       (elfeed)
       (when (< elfeed-search-last-update
-	       (time-to-seconds (time-subtract (current-time) (seconds-to-time (* 60 60 2)))))
-	(elfeed-update))
+               (time-to-seconds (time-subtract (current-time) (seconds-to-time (* 60 60 2)))))
+        (elfeed-update))
       ;; (global-writeroom-mode 1)
       ))
 
@@ -10431,7 +10456,7 @@ poorly-designed websites."
 
   :hook
   (elfeed-show-mode-hook . shr-heading-setup-imenu)
-  
+
   :general
   ;; ("A-f" (lambda! (elfeed) (ps/elfeed-full-update)))
   ("A-f" 'ps/elfeed-toggle-session)
@@ -10567,6 +10592,7 @@ PREFIX determines quoting."
 (defalias 'epa--decode-coding-string 'decode-coding-string) ; github.com/sfromm/emacs.d#twitter
 (use-package twittering-mode
   :if (equal (system-name) ps/computer-hostname-pablo)
+  :defer t
   :custom
   (twittering-use-master-password t)
   (twittering-icon-mode t)
@@ -10748,11 +10774,11 @@ account."
   (twittering-mode-map
    "s-m" 'twittering-replies-timeline
    "s-r" 'twittering-mentions-timeline
+   "g" (lambda! (twittering-get-and-render-timeline)) ; refresh
    "c" 'twittering-push-tweet-onto-kill-ring
    "d" 'twittering-delete-status
    "A-C-s-f" 'twittering-goto-next-status
    "A-C-s-r" 'twittering-goto-previous-status
-   "g" 'twittering-update-status-interactive
    "n" 'ps/twittering-mode-org-capture-future-matters-news
    "P" 'ps/twittering-mode-search-people-externally
    "q" 'twittering-kill-buffer

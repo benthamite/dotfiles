@@ -484,6 +484,7 @@
          [:y :!TCWy :emacs]
          [:period :!TCWperiod :emacs]
          [:return_or_enter :!TCWreturn_or_enter :emacs]
+         [:semicolon :!TCWsemicolon :emacs]
          [:comma :!TCWcomma :emacs]
          [:slash :!TCWslash :emacs]
          [:spacebar :!TCWspacebar :emacs]

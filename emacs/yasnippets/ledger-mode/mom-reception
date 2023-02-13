@@ -2,11 +2,11 @@
 # name: mom-reception
 # key: mr
 # --
-`(ps/insert-date)` Reception
+`(ps/time-last-day-of-last-month)` Reception
     Expenses:Tucumán 11                          $1.00 USD
     Liabilities:Mom:Consolidated
 
-`(ps/insert-date)` Reception
+`(ps/time-last-day-of-last-month)` Reception
     Expenses:Tucumán 10                          $1.00 USD
     Liabilities:Mom:Consolidated
 

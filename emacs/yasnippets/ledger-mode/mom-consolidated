@@ -2,7 +2,7 @@
 # name: mom-consolidated
 # key: cons
 # --
-`(ps/yasnippet-expand-by-key "ldlm")` Transfer
+`(ps/time-last-day-of-last-month)` Transfer
     Liabilities:Mom:$3  $2.00 ARS
     Liabilities:Mom:Consolidated
 

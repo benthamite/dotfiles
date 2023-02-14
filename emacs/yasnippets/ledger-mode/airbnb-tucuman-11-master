@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: airbnb-tucuman-11-master
+# key: at1m
+# --
+`(ps/time-last-day-of-last-month)` $1
+    Expenses:Tucumán 11                         $2.00 ARS
+    Liabilities:Mom:Mastercard
+
+$0

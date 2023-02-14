@@ -982,7 +982,7 @@ installed."
 
   :hook
   (modus-themes-after-load-theme-hook . ps/org-faces-custom-faces)
-  (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
+  ;; (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
 
   :general
   ("A-d" 'modus-themes-toggle))
@@ -10447,10 +10447,6 @@ poorly-designed websites."
       (setq buffer-read-only t))
     (switch-to-buffer buffer)
     (elfeed-show-refresh))
-
-  ;; update feeds every five mins, starting one min after startup
-  ;; UPFATE: disabling to diagnose freezes
-  ;; (run-at-time 100 600 'ps/elfeed-full-update)
 
   (run-with-idle-timer (* 60 10) t 'elfeed-update)
 

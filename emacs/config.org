@@ -525,11 +525,10 @@ CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :PROPERTIES:
 :ID:       4DDE0CCB-D619-4045-8148-796EE95D1971
 :END:
-~readme.org~ should be a very simple document linking to ~config.org~ and proving a very simple expalantion.
-** TODO Archive config tasks externally
-:PROPERTIES:
-:ID:       974B860F-4574-4347-A1DA-AE354AA86BFB
+:LOGBOOK:
+CLOCK: [2023-02-15 Wed 06:33]
 :END:
+~readme.org~ should be a very simple document linking to ~config.org~ and proving a very simple expalantion.
 ** Debugging the config file                                      :noexport:
 :PROPERTIES:
 :ID:       ED2955EA-3BD8-4058-A973-3CC87847D9A5
@@ -6876,7 +6875,6 @@ Recenter after each isearch iteration (https://stackoverflow.com/questions/11052
    "C-n" 'isearch-end-of-buffer
    "C-o" 'isearch-occur
    "C-p" 'isearch-highlight-regexp
-   "C-t" 'substitute-target-in-buffer
    "C-v" 'isearch-yank-kill
    "C-y" 'isearch-forward-symbol-at-point
    "H-c" 'ps/isearch-copy-match
@@ -6929,12 +6927,15 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :END:
 /[[https://git.sr.ht/~protesilaos/substitute][substitute]] efficiently replaces targets in the buffer or context./
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package substitute
   :straight (substitute
-             :host sourcehut
-                   :repo "protesilaos/substitute")
-  :demand t)
+	     :host sourcehut
+	     :repo "protesilaos/substitute")
+  :demand t
+  :general
+  (isearch-mode-map
+   "C-t" 'substitute-target-in-buffer))
 #+end_src
 
 ** rg
@@ -11102,7 +11103,7 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
 :Effort:   2:00
 :END:
 :LOGBOOK:
-CLOCK: [2023-02-15 Wed 05:58]
+CLOCK: [2023-02-15 Wed 05:58]--[2023-02-15 Wed 06:33] =>  0:35
 :END:
 
 I think Munilo Pereira had a package that allowed for this.

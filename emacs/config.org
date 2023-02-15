@@ -565,30 +565,6 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 :END:
 :LOGBOOK:
 :END:
-**** DONE [#5] Speed up the config file
-CLOSED: [2021-01-11 Mon 17:46] SCHEDULED: <2021-01-11 Mon>
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-01-23 Sat 12:58
-:ID:       708C4822-7763-426B-91BA-11DC2F14D846
-:END:
-https://tychoish.com/post/towards-faster-emacs-start-times/
-
-**** DONE [#6] Turn config file into org file
-CLOSED: [2021-02-04 Thu 12:50]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-02-04 Thu 22:02
-:ID:       A7576CA1-2504-479D-9EF4-65DA8ECB9B27
-:END:
-:LOGBOOK:
-CLOCK: [2021-02-01 Mon 12:11]--[2021-02-01 Mon 13:02] =>  0:51
-CLOCK: [2021-01-26 Tue 15:38]--[2021-01-26 Tue 15:46] =>  0:08
-CLOCK: [2021-01-21 Thu 14:27]--[2021-01-21 Thu 14:30] =>  0:03
-CLOCK: [2021-01-19 Tue 14:52]--[2021-01-19 Tue 15:06] =>  0:14
-CLOCK: [2021-01-19 Tue 14:45]--[2021-01-19 Tue 14:46] =>  0:01
-:END:
-You may want to auto-tangle the org file after you edit it, rather than make Emacs tangle it when loading, to reduce startup times. [[https://emacs.stackexchange.com/questions/20707/automatically-tangle-org-files-in-a-specific-directory/20733#20733][This Stackechange answer]] explains how.
-
-
 ** Profiling
 :PROPERTIES:
 :ID:       60B7A58C-A79A-4EEF-A91D-EECC85CFA173
@@ -749,33 +725,6 @@ Some useful config files:
 :PROPERTIES:
 :ID:       F1026BA4-886F-4020-A4A4-0F9440F4DF2E
 :END:
-*** DONE Consider organizing file around Emacs/org manuals
-CLOSED: [2021-04-12 Mon 18:11]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-04-12 Mon 18:11
-:ID:       263743E2-A29A-4B63-B629-B74F89526F7D
-:END:
-After reading a few chapters of the Emacs manual, I conclude that this is not practical.
-*** DONE [#5] Fix erratic connectivity issue
-CLOSED: [2022-06-08 Wed 20:12]
-:PROPERTIES:
-:Effort:   0:25
-:ID:       58A8E67E-B85C-477C-BB1D-359973788329
-:ARCHIVE_TIME: 2022-06-09 Thu 16:08
-:END:
-Run ~emacs --Q~ and load the relevant org package, see if it works well. If it does, it's probably something in my config. If it doesn't, it may be something in my internet connection.
-
-[2021-07-29 Thu 12:52] Seems to be less bad lately.
-
-[2022-06-08 Wed 20:12] Solved itself spontaneously.
-*** CANCELLED [#5] Configure Fede's bash script for keeping multiple versions of Emacs config file
-CLOSED: [2022-06-08 Wed 20:12]
-:PROPERTIES:
-:Effort:   1:00
-:ID:       3604E54E-552A-459E-B5B3-F00E8F44DB0E
-:ARCHIVE_TIME: 2022-06-09 Thu 16:09
-:END:
-
 * startup
 :PROPERTIES:
 :ID:       9DBC455B-7ED4-422F-BE05-2FBB3548A86F
@@ -838,29 +787,6 @@ Adapted from [[https://github.com/sfromm/emacs.d#startup][here]]:
 :PROPERTIES:
 :ID:       EAC96AD7-DDF1-42DD-A9B4-B07EAE6AF6C6
 :END:
-*** DONE Fix byte compile errors
-CLOSED: [2021-07-04 Sun 10:36]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-04 Sun 10:36
-:ID:       6F76FA54-5EAD-484D-A90C-A7380FD30267
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-04 Sun 10:04]--[2021-07-04 Sun 10:36] =>  0:32
-:END:
-A few errors remained, but I wasn't able to fix them.
-*** CANCELLED Tangle only blocks with certain property (essential blocks
-CLOSED: [2021-07-29 Thu 12:52]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-29 Thu 12:52
-:ID:       154DD18A-64C3-4CDF-A5B9-611E9DD2D7C0
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-28 Wed 17:28]--[2021-07-28 Wed 17:38] =>  0:10
-:END:
-Here is a possible way to implement this idea: https://www.reddit.com/r/orgmode/comments/ahh689/tangling_some_source_blocks_based_on_a/
-
-But it seems that one needs to have the original code as plain text, which is a major drawback. I checked the config file of the author and he doesn't implement that approach, or any other, suggesting there may not be a reasonable way to do it.
-
 ** variables
 :PROPERTIES:
 :ID:       E5B435F8-1FE3-4F98-964E-D805FA3B26D2
@@ -980,29 +906,6 @@ Process for updating packages:
 :PROPERTIES:
 :ID:       07827A82-1E6C-4128-95BB-08009CACB247
 :END:
-**** DONE [#6] Try Straight
-CLOSED: [2021-06-23 Wed 11:00]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-06-23 Wed 11:00
-:ID:       46435ED1-9BFD-459D-A8AD-34A79D1036CD
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-22 Tue 20:52]--[2021-06-22 Tue 21:39] =>  0:47
-CLOCK: [2021-06-22 Tue 19:51]--[2021-06-22 Tue 20:03] =>  0:12
-CLOCK: [2021-06-22 Tue 19:01]--[2021-06-22 Tue 19:43] =>  0:42
-CLOCK: [2021-06-05 Sat 19:41]--[2021-06-05 Sat 20:01] =>  0:20
-:END:
-
-**** DONE Import use-feature function
-CLOSED: [2021-07-29 Thu 12:52]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-29 Thu 12:52
-:ID:       DDD09D5C-2642-491A-A34C-00698E9EAEFC
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-25 Sun 13:04]--[2021-07-25 Sun 13:14] =>  0:10
-:END:
-
 ** Use-package
 :PROPERTIES:
 :ID:       C53EA5F9-B256-480E-9BCB-7AD2D0D5DDC2
@@ -1058,211 +961,6 @@ NAME and ARGS are as in `use-package'."
 :PROPERTIES:
 :ID:       AD68DBF4-9E34-4E6E-BC03-8D2B72AD75B0
 :END:
-**** DONE Figure out how to load a package once another package loads
-CLOSED: [2021-12-03 Fri 21:35]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-04-01 Fri 14:19
-:ID:       42F23B32-2520-4BE8-8BB4-E84633897D8D
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-03 Fri 11:57]--[2021-12-03 Fri 12:01] =>  0:04
-:END:
-e.g. ~org-msg-mode~ after ~mu4e~.
-
-The answer seems to be to [[https://jwiegley.github.io/use-package/keywords/][use hooks]]:
-
-#+begin_quote
-Pay attention if you set use-package-always-defer to t, and also use the :after keyword, as you will need to specify how the declared package is to be loaded: e.g., by some :bind. If you’re not using one of tho mechanisms that registers autoloads, such as :bind or :hook, and your package manager does not provide autoloads, it’s possible that without adding :demand t to those declarations, your package will never be loaded.
-#+end_quote
-**** DONE [#4] Understand this
-CLOSED: [2022-06-21 Tue 14:57]
-:PROPERTIES:
-:Effort:   0:15
-:ARCHIVE_TIME: 2022-06-21 Tue 14:57
-:ID:       76A14036-D4B4-4493-B195-36AEE5F7CD0A
-:END:
-https://github.com/jwiegley/use-package/issues/562
-**** CANCELLED [#5] Optimize ~defer~ declarations
-CLOSED: [2022-10-24 Mon 01:19]
-:PROPERTIES:
-:Effort:   1:30
-:ID:       7804BD3C-A126-4576-8AFA-5AF864DB8398
-:ARCHIVE_TIME: 2022-10-24 Mon 01:19
-:END:
-:LOGBOOK:
-CLOCK: [2021-10-02 Sat 18:12]--[2021-10-02 Sat 18:32] =>  0:20
-CLOCK: [2021-10-02 Sat 17:29]--[2021-10-02 Sat 18:08] =>  0:39
-:END:
-
-| package               | load time | time until used |
-|-----------------------+-----------+-----------------|
-| paradox               |      0.31 |                 |
-| exec-path-from-shell  |      0.17 |                 |
-| general               |      0.01 |                 |
-| restart-emacs         |      0.03 |                 |
-| bug-hunter            |      0.00 |                 |
-| warnings              |      0.01 |                 |
-| startup               |      0.00 |                 |
-| midnight              |      0.01 |                 |
-| emacs                 |      0.00 |                 |
-| so-long               |      0.00 |                 |
-| undo-tree             |      0.00 |                 |
-| gcmh                  |      0.00 |                 |
-| server                |      0.00 |                 |
-| hydra                 |      0.00 |                 |
-| writeroom-mode        |      0.01 |                 |
-| modus-themes          |      0.14 |                 |
-| doom-modeline         |      0.16 |                 |
-| all-the-icons         |      0.00 |                 |
-| all-the-icons-dired   |      0.03 |                 |
-| gnuplot-mode          |      0.00 |                 |
-| yasnippet             |      0.20 |                 |
-| hippie-expand         |      0.01 |                 |
-| yankpad               |      0.52 |                 |
-| ya-org-capture        |      0.00 |                 |
-| expand-region         |      0.04 |                 |
-| multiple-cursors      |      0.07 |                 |
-| crux                  |      0.21 |                 |
-| back-button           |      1.56 |                 |
-| goto-last-change      |      0.00 |                 |
-| register              |      0.00 |                 |
-| bookmark              |      0.02 |                 |
-| files                 |      0.00 |                 |
-| dired                 |      0.00 |                 |
-| dired-subtree         |      0.01 |                 |
-| minibuffer            |      0.00 |                 |
-| uniquify-files        |      0.03 |                 |
-| reveal-in-osx-finder  |      0.00 |                 |
-| pandoc-mode           |      0.09 |                 |
-| curl-to-elisp         |      0.75 |                 |
-| remember              |      0.02 |                 |
-| winum                 |      0.01 |                 |
-| buffer-move           |      0.03 |                 |
-| avy                   |      0.01 |                 |
-| iy-go-to-char         |      0.01 |                 |
-| ace-link              |      0.01 |                 |
-| vc                    |      0.04 |                 |
-| magit                 |      0.76 |                 |
-| forge                 |      0.45 |                 |
-| projectile            |      0.19 |                 |
-| git-timemachine       |      0.04 |                 |
-| isearch               |      0.00 |                 |
-| isearch+              |      0.07 |                 |
-| rg                    |      0.04 |                 |
-| imenu                 |      0.00 |                 |
-| pcre2el               |      0.05 |                 |
-| counsel               |      0.18 |                 |
-| company               |      0.02 |                 |
-| help                  |      0.03 |                 |
-| helpful               |      2.64 |                 |
-| elisp-demos           |      0.00 |                 |
-| which-key             |      0.01 |                 |
-| kmacro                |      0.01 |                 |
-| request               |      0.01 |                 |
-| calc                  |      0.14 |                 |
-| eshell                |      0.04 |                 |
-| calendar              |      0.00 |                 |
-| async                 |      0.00 |                 |
-| ispell                |      0.05 |                 |
-| flyspell              |      0.03 |                 |
-| flyspell-correct      |      0.01 |                 |
-| text-mode             |      0.00 |                 |
-| atomic-chrome         |      0.05 |                 |
-| dictionary            |      0.21 |                 |
-| osx-dictionary        |      0.01 |                 |
-| powerthesaurus        |      0.04 |                 |
-| goldendict            |      0.01 |                 |
-| google-translate      |      0.13 |                 |
-| wikinforg             |      0.01 |                 |
-| markdown-mode         |      0.00 |                 |
-| edit-indirect         |      0.01 |                 |
-| ledger-mode           |      0.08 |                 |
-| pdf-tools             |      3.35 |                 |
-| pdf-view-restore      |      0.01 |                 |
-| parse-csv             |      0.00 |                 |
-| org                   |      0.00 |                 |
-| org-agenda            |      0.05 |                 |
-| org-capture           |      0.00 |                 |
-| org-clock             |      0.03 |                 |
-| org-id                |      0.03 |                 |
-| org-refile            |      0.00 |                 |
-| org-keys              |      0.00 |                 |
-| org-archive           |      0.03 |                 |
-| org-crypt             |      0.03 |                 |
-| org-habit             |      0.03 |                 |
-| org-checklist         |      0.07 |                 |
-| org-make-toc          |      0.01 |                 |
-| org-msg               |      2.17 |                 |
-| bibtex-completion     |      0.13 |                 |
-| org-ref               |      0.40 |                 |
-| org-roam              |      0.04 |                 |
-| org-roam-bibtex       |      0.03 |                 |
-| org-noter             |      0.01 |                 |
-| org-ql                |      0.15 |                 |
-| org-sidebar           |      0.01 |                 |
-| org-mime              |      0.04 |                 |
-| org-drill             |      0.02 |                 |
-| anki-editor           |      0.01 |                 |
-| org2blog              |      0.05 |                 |
-| org-wild-notifier     |      0.29 |                 |
-| org-journal           |      0.07 |                 |
-| org-pomodoro          |      0.05 |                 |
-| org-download          |      0.05 |                 |
-| org-web-tools         |      0.08 |                 |
-| org-autosort          |      0.01 |                 |
-| ox-clip               |      0.01 |                 |
-| ox-pandoc             |      0.22 |                 |
-| org-gcal              |      0.05 |                 |
-| orgmdb                |      0.01 |                 |
-| prog-mode             |      0.00 |                 |
-| elisp-mode            |      0.00 |                 |
-| python                |      0.25 |                 |
-| clojure-mode          |      0.10 |                 |
-| bicycle               |      0.06 |                 |
-| simple                |      0.00 |                 |
-| smtpmail              |      0.11 |                 |
-| sendmail              |      0.00 |                 |
-| message               |      0.00 |                 |
-| mu4e                  |      1.37 |                 |
-| mu4e-org              |      0.00 |                 |
-| htmlize               |      0.00 |                 |
-| google-contacts       |      0.12 |                 |
-| erc                   |      0.14 |                 |
-| slack                 |      0.43 |                 |
-| telega                |      0.54 |                 |
-| browse-url            |      0.00 |                 |
-| shr                   |      0.00 |                 |
-| shr-tag-pre-highlight |      0.24 |                 |
-| eww                   |      0.00 |                 |
-| emacs-w3m             |      0.06 |                 |
-| elfeed                |      1.02 |                 |
-| elfeed-org            |      0.01 |                 |
-| engine-mode           |      0.00 |                 |
-| google-this           |      0.01 |                 |
-| twittering-mode       |      0.04 |                 |
-| vlc                   |      0.01 |                 |
-| pass                  |      0.02 |                 |
-| auth-source           |      0.00 |                 |
-| auth-source-pass      |      0.00 |                 |
-| alert                 |      0.00 |                 |
-| unpackaged            |      0.23 |                 |
-| cus-edit              |      0.00 |                 |
-| ox                    |      0.00 |                 |
-| package               |      0.00 |                 |
-| smerge-mode           |      0.00 |                 |
-| keycast               |      0.01 |                 |
-| custom                |      0.00 |                 |
-|                       |           |                 |
-
-The idea is to defer the loading of each package in such a way as to minimize the expected time waiting for it to load. This can happen in one of two ways:
-
-1. The package is invoked before it has been loaded.
-2. The user resumes activity while the package is loading after an idle period.
-
-Based on estimates of how frequently each package is used and on assumptions about the distribution of idle time, one can then select the optimal defer value.
-
-[2022-10-24 Mon 01:18] I think this is overkill. Canceling.
-
 ** paradox
 :PROPERTIES:
 :ID:       2263DD83-80FF-4180-903B-33FEB83C8179
@@ -1290,47 +988,10 @@ CLOCK: [2021-06-03 Thu 14:11]--[2021-06-03 Thu 14:16] =>  0:05
 :PROPERTIES:
 :ID:       7F880AA9-7A0F-432B-BA32-C9F003369637
 :END:
-**** DONE Fix github authentication issue
-CLOSED: [2021-06-03 Thu 14:11]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-06-03 Thu 14:11
-:ID:       90634D85-7FAC-42E5-BA24-8D8737D8562A
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-03 Thu 13:52]--[2021-06-03 Thu 14:11] =>  0:19
-:END:
-
 ** Archive                                                                                                             :ARCHIVE:
 :PROPERTIES:
 :ID:       6CD78068-201A-4479-8DDD-D5D8B14862E0
 :END:
-*** CANCELLED [#6] Try dired-auto-readme
-CLOSED: [2021-06-05 Sat 14:42]
-:PROPERTIES:
-:Effort:   0:20
-:ARCHIVE_TIME: 2021-06-05 Sat 14:42
-:ID:       A2FFE0A5-B75B-4917-A15A-1D9F142E877E
-:END:
-https://github.com/amno1/dired-auto-readme
-I don't think I'm interested in this.
-
-*** DONE [#6] Try move-text
-CLOSED: [2021-06-30 Wed 19:32]
-:PROPERTIES:
-:Effort:   0:20
-:ARCHIVE_TIME: 2021-06-30 Wed 19:32
-:ID:       C38CDDE2-B174-452D-9292-8A61B8D94C48
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-30 Wed 19:32]--[2021-06-30 Wed 19:32] =>  0:00
-CLOCK: [2021-04-15 Thu 12:49]--[2021-04-15 Thu 12:52] =>  0:03
-:END:
-
-"At some point I was tired of not everything available on Melpa and Elpa, so I've started using straight.el, which can pull directly from services like github and gitlab, and provides reproducible emacs configs across systems."
-https://www.philnewton.net/blog/moving-text-in-emacs/
-
-[2021-06-30 Wed 19:32] No need to install this. I can reproduce the functionality with transpose commands.
-
 * foundational
 :PROPERTIES:
 :ID:       25915A25-30F2-4A58-86FD-E27438D269B6
@@ -1546,19 +1207,6 @@ e.g. ~nvm~ isn't recognized by eshell
 :PROPERTIES:
 :ID:       ACC80B29-5AE3-4A50-AC87-7E17B5889E51
 :END:
-**** DONE Configure exec-path-from-shell
-CLOSED: [2021-02-06 Sat 23:01]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-02-06 Sat 23:19
-:ID:       F95B959D-43E8-4238-B99C-EB5551EE21EA
-:END:
-https://github.com/purcell/exec-path-from-shell
-
-I think the macro-expansion or markdown-mode errors are related to this.
-https://www.reddit.com/r/emacs/comments/bxsvnc/help_installing_pandoc_markdownmode_pandocmode_osx/
-
-[2021-02-06 Sat 23:00] Upon further inspection, I don't think they are related. I'm marking this as DONE sine I don't think there's anything else to do. I still don't understand how PATH works very well, but that's a separate thing.
-
 ** general
 :PROPERTIES:
 :ID:       70C622E0-FAC7-4AB1-841F-36437858218C
@@ -2327,20 +1975,6 @@ This function is used by some of the above snippets.
 :PROPERTIES:
 :ID:       D784F4A4-3CF1-48B6-96B4-CFE9075F1F3D
 :END:
-**** DONE [#5] Figure out how to create buffer-local hydras
-CLOSED: [2021-05-11 Tue 15:13]
-:PROPERTIES:
-:Effort:   0:20
-:ARCHIVE_TIME: 2021-05-11 Tue 15:13
-:ID:       257E1D93-8373-45CA-A315-3766BBC41823
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-11 Tue 14:20]--[2021-05-11 Tue 15:12] =>  0:52
-CLOCK: [2021-05-11 Tue 13:07]--[2021-05-11 Tue 13:28] =>  0:21
-:END:
-
-Done. See [[https://stackoverflow.com/a/21493693/4479455][here]].
-
 ** transient
 :PROPERTIES:
 :ID:       246036BE-CBDF-4ABA-8297-11952B57B551
@@ -2531,17 +2165,6 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 :PROPERTIES:
 :ID:       0B98C77D-3921-4666-9881-FC15097B9F0C
 :END:
-**** DONE Fix indentantion in nested lists
-CLOSED: [2022-05-06 Fri 16:59]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-05-06 Fri 16:59
-:ID:       4452E6C4-A2F1-4D9E-AF20-CF3D9B579E22
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-06 Fri 15:06]--[2022-05-06 Fri 16:00] =>  0:54
-:END:
-I don't think this is possible. See [[https://gitlab.com/jabranham/mixed-pitch/-/issues/4][here]]. At best, one could make org lists use fixed pitch font. But the user-contributed snippet doesn't work for me. In any case, the costs of displaying all plain lists in fixed pitch font seem higher than the costs of misaligned indentation (since many lists have items none of which span more than one line).
-
 ** fontaine
 :PROPERTIES:
 :ID:       B375DC03-A71F-4F87-8B03-59437D9CA857
@@ -2695,23 +2318,6 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
 :PROPERTIES:
 :ID:       48DD89AF-277D-427B-9AF1-FBAFA91EC6EC
 :END:
-**** DONE Increase variable pitch font size
-CLOSED: [2022-05-07 Sat 19:05]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-05-07 Sat 19:13
-:ID:       DEBF4218-62C7-4D63-8A39-89FF99555407
-:mtime:    20230213143247
-:ctime:    20230213143247
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-03 Tue 21:45]--[2022-05-03 Tue 22:38] =>  0:53
-CLOCK: [2022-05-03 Tue 22:38]--[2022-05-03 Tue 22:38] =>  0:00
-CLOCK: [2022-04-14 Thu 11:10]--[2022-04-14 Thu 11:18] =>  0:08
-:END:
-I didn't quite accomplish what I wanted, since I am still not able to control the height of the variable-pitch face completely independently from that of the fixed-pitch. But I think it's good enough. See [[https://emacs.stackexchange.com/questions/62987/cannot-set-correct-size-for-variable-pitch-font-in-doom-emacs][this StackExchange question]] for some discussion.
-
-[2022-05-07 Sat 19:05] I then realized that I should control the height of the headings separately.
-
 ** modus-themes
 :PROPERTIES:
 :ID:       95665A5E-A88C-4DCA-BDDD-84DC436A1E80
@@ -2829,17 +2435,6 @@ installed."
 :PROPERTIES:
 :ID:       E53CF042-FAF6-4CA6-9FD4-D1472BA3C814
 :END:
-**** DONE Tweak modus-theme so that it doesn't override org-faces
-CLOSED: [2021-11-17 Wed 19:58]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-11-17 Wed 19:58
-:ID:       0BADCFC0-FFE7-4C04-9912-3F748EAE3460
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-17 Wed 18:26]--[2021-11-17 Wed 19:48] =>  1:22
-:END:
-This is done by creating a function with all the customizations and then calling this function with ~modus-themes-after-load-theme-hook~.
-
 ** emacs-emojify
 :PROPERTIES:
 :ID:       92919C07-A782-4079-AE20-75B248D34A13
@@ -2924,25 +2519,6 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 :PROPERTIES:
 :ID:       AA28A06C-A686-442C-BA95-EBEB1F4EC9EC
 :END:
-**** CANCELLED [#6] Check Emacs 28 has a global mode line
-CLOSED: [2022-06-20 Mon 21:55]
-:PROPERTIES:
-:Effort:   0:20
-:ID:       87B629FE-EB36-4930-BB9A-BF255011C532
-:ARCHIVE_TIME: 2022-06-20 Mon 21:55
-:mtime:    20230209161905
-:ctime:    20230209161905
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-20 Mon 21:40]--[2022-06-20 Mon 21:42] =>  0:02
-CLOCK: [2021-11-14 Sun 11:21]--[2021-11-14 Sun 11:26] =>  0:05
-CLOCK: [2021-10-01 Fri 21:56]--[2021-10-01 Fri 22:04] =>  0:08
-:END:
-
-http://ruzkuku.com/texts/emacs-global.html#fn2
-
-[2021-11-14 Sun 11:24] I tried the code but it didn't work. Not sure if this is because I'm using the Doom modeline.
-
 ** doom-modeline
 :PROPERTIES:
 :ID:       C3D90EBC-EB70-440E-9718-A2832FF9F077
@@ -3353,18 +2929,6 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :PROPERTIES:
 :ID:       801281DE-B78A-402D-85B1-9286940DCA31
 :END:
-*** DONE [#6] m, k, l, / as canonical movement keys
-CLOSED: [2021-10-20 Wed 19:49]
-:PROPERTIES:
-:Effort:   0:20
-:ARCHIVE_TIME: 2021-10-20 Wed 19:49
-:ID:       626B6E64-4215-4DFA-BD23-58AED61889FB
-:END:
-:LOGBOOK:
-CLOCK: [2021-10-20 Wed 19:38]--[2021-10-20 Wed 19:49] =>  0:11
-CLOCK: [2021-10-16 Sat 14:29]--[2021-10-16 Sat 14:40] =>  0:11
-:END:
-I think this is too disruptive. Perhaps a better alternative is to preserve the current bindings for writable buffers and use ~<~ and ~>~ for read-only buffers. I just set these kind bindings for Vimium, and if I like it I may adopt if for Emacs.
 * text manipulation
 :PROPERTIES:
 :ID:       179BB021-8B2A-4BF0-B3AA-43AF5A212D4B
@@ -3568,17 +3132,6 @@ CLOCK: [2021-05-29 Sat 21:12]--[2021-05-29 Sat 21:28] =>  0:16
 :PROPERTIES:
 :ID:       A51E4C5F-5562-469B-BF79-60107BEF43C4
 :END:
-**** CANCELLED [#6] Create function to mark whole word
-CLOSED: [2022-06-21 Tue 15:25]
-:PROPERTIES:
-:Effort:   0:10
-:ID:       43199F2D-2445-40AF-95E3-6B89974597E1
-:ARCHIVE_TIME: 2022-06-21 Tue 15:25
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-21 Tue 15:13]--[2022-06-21 Tue 15:25] =>  0:12
-:END:
-
 ** lines
 :PROPERTIES:
 :ID:       E0C7E822-7CC0-40A0-925D-737015A5A2FC
@@ -3671,17 +3224,6 @@ between the two."
 :PROPERTIES:
 :ID:       337327A9-BC2D-4D6E-A304-EDF37B0DBE86
 :END:
-**** CANCELLED [#6] Create function to mark whole line
-CLOSED: [2022-06-21 Tue 15:26]
-:PROPERTIES:
-:Effort:   0:10
-:ID:       C24196D7-3534-4F7D-83EF-F734074F33EF
-:ARCHIVE_TIME: 2022-06-21 Tue 15:26
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-21 Tue 15:25]--[2022-06-21 Tue 15:26] =>  0:01
-:END:
-
 ** sentences
 :PROPERTIES:
 :ID:       CEEDCAFA-4527-401D-A262-C80871AD49E8
@@ -3750,17 +3292,6 @@ CLOCK: [2021-05-29 Sat 21:28]--[2021-05-29 Sat 22:17] =>  0:49
 :PROPERTIES:
 :ID:       35E3FAA2-5850-4423-A35B-8E0DAC867857
 :END:
-**** CANCELLED [#6] Create function to mark whole sentence
-CLOSED: [2022-06-21 Tue 15:34]
-:PROPERTIES:
-:Effort:   0:10
-:ID:       CCB486F6-6FA2-44C3-946F-91FD3987C8F3
-:ARCHIVE_TIME: 2022-06-21 Tue 15:34
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-21 Tue 15:26]--[2022-06-21 Tue 15:31] =>  0:05
-:END:
-
 ** paragraphs
 :PROPERTIES:
 :ID:       2B3DDC12-D660-47EF-BA22-8B1419A5F5D2
@@ -3835,14 +3366,6 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 :PROPERTIES:
 :ID:       1FB11ED1-AF35-4DD9-BCC4-9FFCA1CBE986
 :END:
-**** CANCELLED [#6] Create function to mark whole paragraph
-CLOSED: [2022-06-21 Tue 15:31]
-:PROPERTIES:
-:Effort:   0:10
-:ID:       0A82C89C-A021-45FD-AFF5-5469B5066CE3
-:ARCHIVE_TIME: 2022-06-21 Tue 15:31
-:END:
-
 ** sexps
 :PROPERTIES:
 :ID:       E07DF88D-B083-4D93-91D2-97DC7C2E3EAD
@@ -4325,16 +3848,6 @@ include this special hyphen: ­
 :PROPERTIES:
 :ID:       1FC444AF-7AA6-4D5A-AC81-966D57FB9377
 :END:
-**** DONE Fix ps/org-copy-heading-contents
-CLOSED: [2021-05-06 Thu 11:08]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-05-06 Thu 11:08
-:ID:       5D466866-3B5F-41D9-9B03-126B51CA8830
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-06 Thu 11:02]--[2021-05-06 Thu 11:08] =>  0:06
-:END:
-
 ** abbrev
 :PROPERTIES:
 :ID:       2D69896F-CF17-4D0C-BEFE-E7C473FB1C2B
@@ -4481,39 +3994,6 @@ NO-TEMPLATE is non-nil."
 :PROPERTIES:
 :ID:       068EBE9B-7485-48FB-89D8-3007DDE6072C
 :END:
-**** DONE [#6] Migrate text expansions to yas
-CLOSED: [2021-11-17 Wed 23:08]
-:PROPERTIES:
-:Effort:   1:30
-:ARCHIVE_TIME: 2021-11-17 Wed 23:08
-:ID:       1FE83906-834C-479E-B87C-28AF1643B50A
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-17 Wed 22:22]--[2021-11-17 Wed 23:08] =>  0:46
-:END:
-
-
-**** DONE Make yasnippet work with Company
-CLOSED: [2021-11-28 Sun 15:11]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-11-28 Sun 15:11
-:ID:       EF474DB3-B8AB-40E6-99AF-65FE05F476FE
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-23 Tue 20:05]--[2021-11-23 Tue 20:29] =>  0:24
-:END:
-
-**** CANCELLED [#5] Create function to create new snippet
-CLOSED: [2022-07-21 Thu 21:07]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       5CDF79C7-CD55-4B57-98C3-C6FF92FD0F55
-:ARCHIVE_TIME: 2022-07-21 Thu 21:07
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-21 Thu 21:06]--[2022-07-21 Thu 21:07] =>  0:01
-:END:
-
 ** hippie-expand
 :PROPERTIES:
 :ID:       06396799-A9FB-4417-AAE3-3654BC901B93
@@ -4736,19 +4216,6 @@ _a_pend       |_k_macro      |r_e_store                    "
 :PROPERTIES:
 :ID:       1BCDDAC7-B567-45E9-AA32-6DEB2AE511AB
 :END:
-**** DONE [#6] Make registers persistent
-CLOSED: [2021-07-31 Sat 22:32]
-:PROPERTIES:
-:Effort:   0:30
-:ARCHIVE_TIME: 2021-07-31 Sat 22:32
-:ID:       4FE77B50-6C59-48A8-AD45-EA9D3F98D399
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-13 Sun 18:31]--[2021-06-13 Sun 18:36] =>  0:05
-CLOCK: [2021-06-13 Sun 18:24]--[2021-06-13 Sun 18:28] =>  0:04
-:END:
-You can do it with ~desktop~ or by adding ~register-alist~ to ~savehist~. I did the latter.
-https://emacs.stackexchange.com/questions/16919/how-can-i-get-sessions-el-to-save-my-registers
 ** bookmarks
 :PROPERTIES:
 :ID:       943D5DC0-7F0E-449C-8D21-089E051F1027
@@ -4766,13 +4233,6 @@ To check: [[https://irreal.org/blog/?p=9969][Prot on Bookmarks | Irreal]] (bookm
 :PROPERTIES:
 :ID:       FFF624AA-7778-4C0C-B513-E89E8310504E
 :END:
-*** CANCELLED Check out bookmarks plus
-CLOSED: [2021-04-15 Thu 12:49]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-04-15 Thu 12:49
-:ID:       D6332D17-BF50-44BB-A59D-F4ECF3838ACF
-:END:
-
 * files & buffers
 :PROPERTIES:
 :ID:       B29F4586-2B8D-41FE-82DE-FEDCD863C74B
@@ -5273,15 +4733,6 @@ or are no longer readable will be killed."
 :PROPERTIES:
 :ID:       42EAFE0B-2444-43E0-B624-48A85C0DD24A
 :END:
-**** DONE [#5] Diagnose what's causing shutdown delay
-CLOSED: [2022-06-21 Tue 15:35]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       3141238F-9B83-4AA4-8EC8-C48C7C126D7D
-:ARCHIVE_TIME: 2022-06-21 Tue 15:35
-:END:
-Seems to have fixed itself.
-
 ** f
 :PROPERTIES:
 :ID:       4FD6758A-4021-4B05-BD36-BB09C2063C93
@@ -5493,55 +4944,6 @@ option."
 :PROPERTIES:
 :ID:       5EF4CDEF-2F19-4D27-8EDD-4C826AE80C64
 :END:
-**** DONE Copy Prot's Dired config
-CLOSED: [2021-07-11 Sun 15:28]
-:PROPERTIES:
-:ID:       A5F5C82C-9C60-49BB-89C4-CE180531C541
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-11 Sun 15:18]--[2021-07-11 Sun 15:29] =>  0:11
-:END:
-
-https://protesilaos.com/dotemacs/#h:402cb0db-1e93-4b1f-8f6d-e17b4409fb86
-
-**** DONE [#5] Learn how to use Dired
-CLOSED: [2021-02-07 Sun 22:40]
-:PROPERTIES:
-:Effort:   2:00
-:ARCHIVE_TIME: 2021-02-07 Sun 22:40
-:ID:       F7553304-68C2-48D5-BD52-F17E0922F1B7
-:END:
-:LOGBOOK:
-CLOCK: [2021-01-20 Wed 11:08]--[2021-01-20 Wed 11:30] =>  0:22
-CLOCK: [2021-01-20 Wed 10:56]--[2021-01-20 Wed 11:08] =>  0:12
-CLOCK: [2021-01-19 Tue 14:16]--[2021-01-19 Tue 14:45] =>  0:29
-CLOCK: [2021-01-19 Tue 10:44]--[2021-01-19 Tue 11:41] =>  0:57
-CLOCK: [2021-01-18 Mon 14:30]--[2021-01-18 Mon 14:45] =>  0:15
-:END:
-I watched these videos:
-- [[https://www.youtube.com/watch?v=PMWwM8QJAtU][Emacs From Scratch #10 - Effortless File Management with Dired - YouTube]]
-- [[https://www.youtube.com/watch?v=g6YA4tiW1eQ&t=5s][Emacs: techniques to narrow Dired - YouTube]]
-
-From now on, it's just a matter of ankifying the shortcuts and learning them.
-
-**** DONE Open macOS Finder Window in Emacs Dired • Christian Tietze
-CLOSED: [2021-07-29 Thu 12:53]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-29 Thu 12:53
-:ID:       35CAD990-7474-4605-8A8D-B418DF580F4B
-:END:
-
-https://christiantietze.de/posts/2021/07/open-finder-window-in-dired/
-
-**** DONE [#6] Diagnose error when attempting to rename files with Dired
-CLOSED: [2022-07-14 Thu 16:26]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       8A48A076-96A8-404A-929D-1AD25B16E228
-:ARCHIVE_TIME: 2022-07-14 Thu 16:26
-:END:
-[2022-07-14 Thu 16:26] Seems to have resolved itself.
-
 ** image-dired
 :PROPERTIES:
 :ID:       E07C1115-1881-4D5F-8B88-613DA4FD38A8
@@ -5677,18 +5079,6 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 :PROPERTIES:
 :ID:       AE30914E-C56E-44D1-9CDE-113A8D1B9CA0
 :END:
-**** DONE [#7] Fix dired-x
-CLOSED: [2021-11-21 Sun 20:50]
-:PROPERTIES:
-:Effort:   0:25
-:ARCHIVE_TIME: 2021-11-21 Sun 20:50
-:ID:       6A6FF188-5F9C-4785-9F00-073C726D452B
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-21 Sun 20:28]--[2021-11-21 Sun 20:55] =>  0:27
-:END:
-I wasn't able to make it work with a ~use-package~ declaration.
-
 ** dired-subtree
 :PROPERTIES:
 :ID:       C3E2CA62-26C4-4681-81D8-4326BE474717
@@ -5790,16 +5180,6 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 :PROPERTIES:
 :ID:       6EEE5A79-EED7-4587-887E-7855CD147F4B
 :END:
-**** DONE Key binding to return to minibuffer
-CLOSED: [2021-10-20 Wed 21:47]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-10-20 Wed 21:47
-:ID:       9A9E24E0-2065-4E15-AF18-6262DA5CFEBE
-:END:
-:LOGBOOK:
-CLOCK: [2021-10-20 Wed 21:38]--[2021-10-20 Wed 21:46] =>  0:08
-:END:
-
 ** ibuffer
 :PROPERTIES:
 :ID:       11E1F107-4D7A-40DE-AA8E-9D995A10A351
@@ -5915,23 +5295,6 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 :PROPERTIES:
 :ID:       9463C70C-84CF-43E9-AACA-4087D3A059D0
 :END:
-**** DONE Configure TRAMP
-CLOSED: [2021-03-29 Mon 13:16]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-03-29 Mon 22:28
-:ID:       5BB2C867-9CCB-4963-9C58-006DFD943CAF
-:END:
-
-Process I followed:
-- Generated a public/private key pair on Hostgator in SSH Access within cpanel.
-- Moved the private key to ~/.ssh/.
-- Edited ~/.ssh/config with [[https://portal.hostgator.com/hosting/shared/3171028/dashboard][relevant details]], with some help from [[https://linuxize.com/post/using-the-ssh-config-file/][this article]].
-- Ran ~ssh gator4206~ in the terminal and entered my Hostgator password (now stored in Google; search for "ab80508").
-:LOGBOOK:
-CLOCK: [2021-03-29 Mon 12:07]--[2021-03-29 Mon 13:16] =>  1:09
-CLOCK: [2021-03-29 Mon 11:13]--[2021-03-29 Mon 12:04] =>  0:51
-:END:
-
 ** pandoc
 :PROPERTIES:
 :ID:       8EBA8303-EA43-4FB2-BB9D-1734F40DDB77
@@ -5960,90 +5323,6 @@ CLOCK: [2021-03-29 Mon 11:13]--[2021-03-29 Mon 12:04] =>  0:51
 :PROPERTIES:
 :ID:       CC23C5F4-78BB-4CCD-AF19-702DF6E43E48
 :END:
-*** DONE Write and post StackExchange question about command that switches to the most recent buffer in the same window
-CLOSED: [2021-05-11 Tue 08:27]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-05-11 Tue 08:27
-:ID:       082FDEC8-FBB6-453C-A090-86D4C8639B2E
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-11 Tue 07:54]--[2021-05-11 Tue 08:26] =>  0:32
-:END:
-[[https://emacs.stackexchange.com/questions/64796/switch-to-the-most-recently-selected-buffer-in-the-current-window][question]]
-*** DONE Try dropbox-conflicts
-CLOSED: [2021-07-07 Wed 23:17]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-07 Wed 23:17
-:ID:       44782188-8706-48EE-B2E0-19ADBEDC8293
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-25 Fri 10:46]--[2021-06-25 Fri 11:00] =>  0:14
-CLOCK: [2021-06-23 Wed 20:55]--[2021-06-23 Wed 21:05] =>  0:10
-:END:
-https://github.com/jezcope/dropbox-conflicts-el
-Has to be manually installed.
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package dropbox-conflicts-el
-  :demand t
-  :straight (dropbox-conflicts :host github :repo "jezcope/dropbox-conflicts-el"))
-#+end_src
-
-Not working.
-*** DONE Create command to save book from Internet Archive
-CLOSED: [2022-04-26 Tue 13:48]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-04-30 Sat 18:04
-:ID:       A73F0F54-A103-4D00-8D95-FEAF2EAEE5FE
-:END:
-:LOGBOOK:
-CLOCK: [2022-04-26 Tue 16:54]--[2022-04-26 Tue 17:36] =>  0:42
-CLOCK: [2022-04-26 Tue 13:56]--[2022-04-26 Tue 14:31] =>  0:35
-CLOCK: [2022-04-26 Tue 13:00]--[2022-04-26 Tue 13:48] =>  0:48
-:END:
-
-
-*** DONE Learn how to download books from Internet Archive only available for one-hour loans
-CLOSED: [2022-04-26 Tue 13:48]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-04-30 Sat 18:04
-:ID:       A876CCB6-139A-44B0-A39D-A9A700546F97
-:END:
-:LOGBOOK:
-CLOCK: [2022-04-26 Tue 12:41]--[2022-04-26 Tue 12:59] =>  0:18
-:END:
-https://digiztal.blogspot.com/2021/05/save-internet-archive-borrow-books.html
-*** DONE Create function to automate conversion of IA PDFs
-CLOSED: [2022-05-05 Thu 21:41]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-05-05 Thu 21:41
-:ID:       5A75AB93-6D1B-4B01-89E4-5C072EF25FAF
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-04 Wed 20:39]--[2022-05-04 Wed 23:35] =>  2:56
-:END:
-
-*** CANCELLED Tweak function to install ~bypass paywalls~
-CLOSED: [2022-05-07 Sat 19:05]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-05-26 Thu 19:16
-:ID:       9CB2E55B-6CFB-43D4-B06D-C0B3F55A7AEC
-:END:
-:LOGBOOK:
-CLOCK: [2022-04-23 Sat 17:09]--[2022-04-23 Sat 17:18] =>  0:09
-:END:
-A solution is given [[https://askubuntu.com/questions/1063331/how-to-install-google-chrome-extensions-though-terminal][here]]. But it requires entering the system password and restarting Chrome. Which is more trouble than dropping the folder on the extensions tab.
-*** DONE [#4] Have persistent scratch buffer!
-CLOSED: [2022-11-21 Mon 23:09]
-:PROPERTIES:
-:Effort:   0:25
-:ID:       CB7EBE56-33F0-4F90-8715-5447296E2678
-:ARCHIVE_TIME: 2022-11-21 Mon 23:09
-:END:
-:LOGBOOK:
-CLOCK: [2022-10-02 Sun 14:10]--[2022-10-02 Sun 14:26] =>  0:16
-:END:
-
 * windows & frames
 :PROPERTIES:
 :ID:       7E9A81E0-CAEB-4029-AD2C-B2416439FCDA
@@ -6612,16 +5891,6 @@ needs to be included as an element in the list defined by
 :PROPERTIES:
 :ID:       46C5C873-562C-43CB-98B1-1EC4A1292039
 :END:
-**** DONE Prevent ~writeroom-mode~ from killing windows when exiting
-CLOSED: [2021-10-01 Fri 21:56]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-10-01 Fri 21:56
-:ID:       A59206D1-7E8E-4D38-AFD5-452A6F680558
-:END:
-:LOGBOOK:
-CLOCK: [2021-09-28 Tue 13:02]--[2021-09-28 Tue 13:36] =>  0:34
-:END:
-
 ** ace-link
 :PROPERTIES:
 :ID:       F1C54CDB-1E70-41D1-8FAB-A45598C5021A
@@ -6813,42 +6082,6 @@ with the specified date."
 :PROPERTIES:
 :ID:       9C38D5E5-7717-405F-833D-28EF09AC752B
 :END:
-**** DONE [#6] Define ~calendar-mode~ key bindings.
-CLOSED: [2021-05-11 Tue 12:28]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-05-11 Tue 12:28
-:ID:       339E9102-E28D-49CB-AD49-0186A451BCC4
-:END:
-Prot's video may be useful: https://www.youtube.com/watch?v=NkhgIB64zgc
-
-**** DONE Add father's, mother's Day to calendar
-CLOSED: [2021-07-04 Sun 22:06]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-04 Sun 22:06
-:ID:       DC2E7462-6C58-4721-98B7-7E486772AB9C
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-04 Sun 21:12]--[2021-07-04 Sun 21:56] =>  0:44
-:END:
-Also as tasks, so that I get a reminder in advance.
-https://www.gnu.org/software/emacs/manual/html_node/emacs/Sexp-Diary-Entries.html
-**** DONE Activate all holidays by default
-CLOSED: [2021-07-04 Sun 22:32]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-04 Sun 22:32
-:ID:       A7BD0851-692C-4556-BABB-F4F1A8E0946F
-:END:
-**** DONE [#7] remove mother's, father's day from Emacs diary
-CLOSED: [2022-12-21 Wed 00:09]
-:PROPERTIES:
-:Effort:   0:10
-:ID:       59B9BACC-2802-4AF8-93C6-F7AFAF6B9682
-:ARCHIVE_TIME: 2022-12-21 Wed 00:09
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-19 Sun 06:31]--[2022-06-19 Sun 06:44] =>  0:13
-:END:
-It's defined in the variable ~holiday-general-holidays~
 ** loaddefs
 :PROPERTIES:
 :ID:       08F898A1-71C0-4BF4-B6E8-5D6649DB230C
@@ -7151,231 +6384,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 :PROPERTIES:
 :ID:       D90EB0FC-F92B-4ACB-8B55-4DB8B598D979
 :END:
-**** DONE Fix org-gcal
-CLOSED: [2021-07-06 Tue 21:34]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-06 Tue 21:34
-:ID:       2F3A9C7F-8183-4837-81C8-1DBFDB22F5E2
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-06 Tue 21:16]--[2021-07-06 Tue 21:40] =>  0:24
-:END:
-- [X] Set up Straight so you can specify loath path (official repo is not maintained)
-- [X] Run ~org-gcal-sync~ and see what happens.
-
-[2021-07-06 Tue 21:33] It seems to have reverted to the state it was initially, where I'd get some errors but the events would be fetched. I'm slightly bothered by the errors, but I don't think it's worth the trouble of fixing them, since it looks like they don't affect the functionality.
-
-**** CANCELLED [#6] Set org-gcal so that Google Calendar events are created for all TODOs with deadlines
-CLOSED: [2021-07-29 Thu 16:15]
-:PROPERTIES:
-:Effort:   0:40
-:ARCHIVE_TIME: 2021-07-29 Thu 16:15
-:ID:       41367ABA-CEB9-4495-9866-6F1FFFB70640
-:END:
-**** DONE [#4] Figure out why new events created on Google Calendar aren't imported
-CLOSED: [2021-08-02 Mon 18:44]
-:PROPERTIES:
-:Effort:   0:30
-:ARCHIVE_TIME: 2021-08-02 Mon 18:44
-:ID:       9FCD34A2-982A-48BC-9802-DE378A538AB7
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-02 Mon 18:01]--[2021-08-02 Mon 18:40] =>  0:39
-:END:
-
-**** CANCELLED Color tasks with ~org-gcal~ property
-CLOSED: [2021-08-02 Mon 19:41]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-08-02 Mon 19:41
-:ID:       DF68FC33-B214-4A5B-935D-F49247B5C8DD
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-02 Mon 19:10]--[2021-08-02 Mon 19:40] =>  0:30
-CLOCK: [2021-08-02 Mon 18:50]--[2021-08-02 Mon 19:06] =>  0:16
-:END:
-I tried [[https://stackoverflow.com/questions/17066580/color-code-agenda-view-per-file][this]] but it didn't work.
-**** DONE [#4] Fix ~org-gcal~
-CLOSED: [2021-09-24 Fri 19:05]
-:PROPERTIES:
-:Effort:   0:45
-:ARCHIVE_TIME: 2021-09-24 Fri 19:05
-:ID:       7F55EC77-DC43-42E0-9CC0-D122E8FC3EF4
-:END:
-:LOGBOOK:
-CLOCK: [2021-09-24 Fri 18:44]--[2021-09-24 Fri 19:05] =>  0:21
-:END:
-Using ~inbox.org~ instead of ~appointments.org~ fixed it. This is probably happening because I used ~inbox.org~ right after setting things up for the first time.
-
-**** DONE [#5] Fix org-gcal (once and for all!)
-CLOSED: [2021-11-17 Wed 13:10]
-:PROPERTIES:
-:Effort:   0:30
-:ARCHIVE_TIME: 2021-11-17 Wed 13:10
-:ID:       356E3FA4-1D53-413B-B5EB-8EBC698DADFF
-:END:
-:LOGBOOK:
-CLOCK: [2021-10-05 Tue 23:52]--[2021-10-06 Wed 00:07] =>  0:15
-:END:
-**** DONE [#5] Diagnose why org-gcal downloads events again if they are moved out of ~calendar.org~
-CLOSED: [2022-04-28 Thu 19:05] SCHEDULED: <2022-04-27 Wed>
-:PROPERTIES:
-:Effort:   0:25
-:ARCHIVE_TIME: 2022-04-28 Thu 19:05
-:ID:       BB6B2E3A-C345-4768-BA84-FEA9EEAA50AC
-:END:
-[2022-04-28 Thu 16:05] Let's just keep active events in ~calendar.org~ and move them to the relevant file only when archiving.
-:LOGBOOK:
-CLOCK: [2022-04-28 Thu 16:30]--[2022-04-28 Thu 16:38] =>  0:08
-CLOCK: [2022-04-28 Thu 16:05]--[2022-04-28 Thu 16:10] =>  0:05
-:END:
-**** DONE Fix calendar duplicates
-CLOSED: [2022-06-30 Thu 08:41]
-:PROPERTIES:
-:ID:       ABA7101D-E448-4158-B903-D66A9311BD9B
-:ARCHIVE_TIME: 2022-07-11 Mon 16:06
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-30 Thu 08:22]--[2022-06-30 Thu 08:41] =>  0:19
-:END:
-
-**** DONE [#6] Why Matthew meetings aren't syncing?
-CLOSED: [2022-07-11 Mon 16:09]
-:PROPERTIES:
-:Effort:   0:25
-:ID:       F15DBB41-A4AA-4924-9AE4-EFFB9E9FABF7
-:ARCHIVE_TIME: 2022-07-11 Mon 16:09
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-01 Wed 21:47]--[2022-06-01 Wed 22:14] =>  0:27
-CLOCK: [2022-05-30 Mon 16:02]--[2022-05-30 Mon 16:06] =>  0:04
-:END:
-**** DONE Fix org-gcal
-CLOSED: [2022-07-25 Mon 18:52] SCHEDULED: <2022-07-25 Mon>
-:PROPERTIES:
-:ID:       7A0C685D-C979-48C6-9CFF-FD94818156EA
-:ARCHIVE_TIME: 2022-07-25 Mon 18:52
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-25 Mon 18:35]--[2022-07-25 Mon 18:52] =>  0:17
-:END:
-
-Example of errors I get:
-
-#+begin_src text
-[error] request--callback: peculiar error: 401
-[error] request-default-error-callback: https://www.googleapis.com/calendar/v3/calendars/pablo.stafforini%40gmail.com/events?access_token=ya29.A0AVA9y1uVdNqLm6X5Hh1JHHIrjO5xcldJL6Rsffq_nnq5VyhPGxYHLJWeAR6KLQ80HYH-5i7fj6-NPTNrVS_XzOvaHpQqbiMuHs6ePuP204MA7vQc0eqIEQXtN-GBkOAjQuTQJ3KxEue92DFTCnGJ70B12EDvn6IYUNnWUtBVEFTQVRBU0ZRRTY1ZHI4QVBIcVJyRV8tS1Q0ZEgxNDNDWVhCUQ0166&singleEvents=True&syncToken=CJitp8jphvkCEJitp8jphvkCGAUgnpb32gE%3D error
-Received HTTP 401
-OAuth token expired. Now trying to refresh-token
-Deadline on <2022-07-21 Thu 14:30-15:00>
-[error] request--callback: peculiar error: 412
-[error] request-default-error-callback: https://www.googleapis.com/calendar/v3/calendars/pablo.stafforini%40gmail.com/events/9p5rrfhm5rsch6rqtm6igt950j_20220302T170000Z parse-error
-Received HTTP 412
-ETag stale for David Jonny Pablo UwU ^_^ Call
-9p5rrfhm5rsch6rqtm6igt950j_20220302T170000Z/pablo.stafforini@gmail.com
-
-Will overwrite this entry with event from server.
-Deadline on <2022-03-02 Wed 12:00-13:00>
-[error] request--callback: peculiar error: 412
-[error] request-default-error-callback: https://www.googleapis.com/calendar/v3/calendars/pablo.stafforini%40gmail.com/events/9p5rrfhm5rsch6rqtm6igt950j_20220316T160000Z parse-error
-Received HTTP 412
-ETag stale for David Jonny Pablo UwU ^_^ Call
-9p5rrfhm5rsch6rqtm6igt950j_20220316T160000Z/pablo.stafforini@gmail.com
-
-Will overwrite this entry with event from server.
-Deadline on <2022-03-16 Wed 12:00-13:00>
-[error] request--callback: peculiar error: 412
-[error] request-default-error-callback: https://www.googleapis.com/calendar/v3/calendars/pablo.stafforini%40gmail.com/events/9p5rrfhm5rsch6rqtm6igt950j_20220330T160000Z parse-error
-Received HTTP 412
-ETag stale for David Jonny Pablo UwU ^_^ Call
-9p5rrfhm5rsch6rqtm6igt950j_20220330T160000Z/pablo.stafforini@gmail.com
-
-Will overwrite this entry with event from server.
-Deadline on <2022-03-30 Wed 12:00-13:00>
-[error] request--callback: peculiar error: 412
-[error] request-default-error-callback: https://www.googleapis.com/calendar/v3/calendars/pablo.stafforini%40gmail.com/events/9p5rrfhm5rsch6rqtm6igt950j_20220216T170000Z parse-error
-Received HTTP 412
-ETag stale for David Jonny Pablo UwU ^_^ Call
-9p5rrfhm5rsch6rqtm6igt950j_20220216T170000Z/pablo.stafforini@gmail.com
-
-Will overwrite this entry with event from server.
-Deadline on <2022-02-16 Wed 12:00-13:00>
-[error] request--callback: peculiar error: 412
-[error] request-default-error-callback: https://www.googleapis.com/calendar/v3/calendars/pablo.stafforini%40gmail.com/events/9p5rrfhm5rsch6rqtm6igt950j_20220223T170000Z parse-error
-Received HTTP 412
-ETag stale for David Jonny Pablo UwU ^_^ Call
-9p5rrfhm5rsch6rqtm6igt950j_20220223T170000Z/pablo.stafforini@gmail.com
-
-Will overwrite this entry with event from server.
-Deadline on <2022-02-23 Wed 12:00-13:00>
-[error] request--callback: peculiar error: 412
-[error] request-default-error-callback: https://www.googleapis.com/calendar/v3/calendars/pablo.stafforini%40gmail.com/events/9p5rrfhm5rsch6rqtm6igt950j_20220309T170000Z parse-error
-Received HTTP 412
-ETag stale for David Jonny Pablo UwU ^_^ Call
-9p5rrfhm5rsch6rqtm6igt950j_20220309T170000Z/pablo.stafforini@gmail.com
-
-Will overwrite this entry with event from server.
-Deadline on <2022-03-09 Wed 12:00-13:00>
-[error] request--callback: peculiar error: 412
-[error] request-default-error-callback: https://www.googleapis.com/calendar/v3/calendars/pablo.stafforini%40gmail.com/events/9p5rrfhm5rsch6rqtm6igt950j_20220323T160000Z parse-error
-Received HTTP 412
-ETag stale for David Jonny Pablo UwU ^_^ Call
-9p5rrfhm5rsch6rqtm6igt950j_20220323T160000Z/pablo.stafforini@gmail.com
-
-Will overwrite this entry with event from server.
-Deadline on <2022-03-23 Wed 12:00-13:00>
-[error] request--callback: peculiar error: 412
-[error] request-default-error-callback: https://www.googleapis.com/calendar/v3/calendars/pablo.stafforini%40gmail.com/events/9p5rrfhm5rsch6rqtm6igt950j_20220406T160000Z parse-error
-Received HTTP 412
-ETag stale for David Jonny Pablo UwU ^_^ Call
-9p5rrfhm5rsch6rqtm6igt950j_20220406T160000Z/pablo.stafforini@gmail.com
-
-Will overwrite this entry with event from server.
-Deadline on <2022-04-06 Wed 12:00-13:00>
-[error] request--callback: peculiar error: 412
-[error] request-default-error-callback: https://www.googleapis.com/calendar/v3/calendars/pablo.stafforini%40gmail.com/events/9p5rrfhm5rsch6rqtm6igt950j_20220413T160000Z parse-error
-Received HTTP 412
-ETag stale for David Jonny Pablo UwU ^_^ Call
-9p5rrfhm5rsch6rqtm6igt950j_20220413T160000Z/pablo.stafforini@gmail.com
-
-Will overwrite this entry with event from server.
-Deadline on <2022-04-13 Wed 12:00-12:45>
-[error] request--callback: peculiar error: 412
-[error] request-default-error-callback: https://www.googleapis.com/calendar/v3/calendars/pablo.stafforini%40gmail.com/events/9p5rrfhm5rsch6rqtm6igt950j_20220420T160000Z parse-error
-Received HTTP 412
-ETag stale for David Jonny Pablo UwU ^_^ Call
-9p5rrfhm5rsch6rqtm6igt950j_20220420T160000Z/pablo.stafforini@gmail.com
-
-Will overwrite this entry with event from server.
-Deadline on <2022-04-20 Wed 12:00-12:45>
-mouse-2 or RET jump to Org file ~/Dropbox/org/notes/FTX-Fellowship.org
-Rebuilding agenda buffer...
-Truncate long lines enabled
-Preparing diary...done
-Rebuilding agenda buffer...done
-Saving file /Users/pablostafforini/Dropbox/org/android/calendar.org...
-Wrote /Users/pablostafforini/Dropbox/org/android/calendar.org
-mouse-2 or RET jump to org file ~/Dropbox/org/android/calendar.org
-Clipboard pasted as level 1 subtree
-Mark set
-#+end_src
-**** CANCELLED [#7] Submit org-gcal hydra as pull request
-CLOSED: [2022-07-25 Mon 18:55]
-:PROPERTIES:
-:Effort:   0:30
-:org-gcal-managed: org
-:ID:       F94AAA76-257C-402D-B22D-195C27587C1B
-:ARCHIVE_TIME: 2022-07-25 Mon 18:56
-:END:
-[2022-07-25 Mon 18:55] When I shared my config with the maintainer, which included the hydra, he didn't express interest in it.
-
-**** DONE [#5] Fix org-gcal
-CLOSED: [2022-12-12 Mon 00:04] SCHEDULED: <2022-12-11 Sun>
-:PROPERTIES:
-:ID:       CCC399F6-32B4-4264-89A1-6A6C72F22C81
-:Effort:   0:30
-:ARCHIVE_TIME: 2022-12-12 Mon 00:04
-:END:
-
 ** gcalcli
 :PROPERTIES:
 :ID:       BDDB27DC-E5E2-42CC-B6B1-BBD17565EEC8
@@ -7388,17 +6396,6 @@ CLOSED: [2022-12-12 Mon 00:04] SCHEDULED: <2022-12-11 Sun>
 :PROPERTIES:
 :ID:       35CF1116-B12A-4A18-B99A-FDD62063DE20
 :END:
-**** DONE Configure gcalcli
-CLOSED: [2022-09-29 Thu 15:36]
-:PROPERTIES:
-:ID:       79262744-B093-48AB-8D4B-9B9B7C09C6C3
-:ARCHIVE_TIME: 2022-10-01 Sat 21:01
-:END:
-:LOGBOOK:
-CLOCK: [2022-09-29 Thu 15:12]--[2022-09-29 Thu 15:36] =>  0:24
-:END:
-https://github.com/insanum/gcalcli
-
 ** time
 :PROPERTIES:
 :ID:       88CCE9CB-8284-4C8B-8264-A1E54E299941
@@ -7815,16 +6812,6 @@ To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. Tha
 :PROPERTIES:
 :ID:       8CAE56AA-E12D-4A19-AA6E-F964EB7B65E0
 :END:
-**** DONE Fix magit-no-confirm
-CLOSED: [2022-01-24 Mon 17:48]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-01-24 Mon 17:48
-:ID:       3C78871A-BF77-41D3-A2F7-3140994DF0AF
-:END:
-:LOGBOOK:
-CLOCK: [2022-01-24 Mon 17:44]--[2022-01-24 Mon 17:48] =>  0:04
-:END:
-Seems fixed now.
 ** ghub
 :PROPERTIES:
 :ID:       C557A862-9EC7-406C-98E1-C248F7D579F5
@@ -7959,32 +6946,6 @@ CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
 :PROPERTIES:
 :ID:       A15BC2BA-0157-48CA-ACDC-E3D1CE4D640F
 :END:
-*** DONE Fix 'deprecation notice' Github issue
-CLOSED: [2021-07-06 Tue 23:29]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-06 Tue 23:29
-:ID:       9B966C08-9A97-4261-9C67-A4BBE0A91945
-:END:
-:STATES:
-- Not scheduled, was "[2021-07-07 Wed 16:00-16:30]" on [2021-07-06 Tue 23:29]
-- Rescheduled from "[2021-06-26 Sat]" on [2021-06-25 Fri 22:55]
-:END:
-[[https://mail.google.com/mail/u/0/?tab=wm#inbox/FMfcgzGkXwHpKDllwpHSTcBKwgZWvZlc][email link]]
-
-Looks like I'm no longer getting this message.
-*** DONE [#6] Set elpa folder as a local git repository
-CLOSED: [2021-07-10 Sat 18:47]
-:PROPERTIES:
-:Effort:   1:30
-:ARCHIVE_TIME: 2021-07-10 Sat 18:47
-:ID:       DAD74B35-7A07-4C30-9853-1BDEEB0BC08A
-:END:
-
-I should keep the =.emacs.d/elpa= directory as a local git repository. I can then update packages periodically and rollback any breaking changes easily. Inspired by reading [[https://www.reddit.com/r/emacs/comments/9e4yop/lets_talk_about_when_to_update_packages/][this Reddit comment thread]]. I did this just before my installation broke, so I'm not sure if the break was related. I should probably investigate a bit before going ahead, in case there are certain precautions I should take into account.
-
-[2021-04-24 Sat 19:57] Is this really worth it, compared to just making a backup of the packages before updating? I don't think so.
-
-[2021-07-10 Sat 18:46] No longer needed, since I'm using Straight.
 * search & replace
 :PROPERTIES:
 :ID:       9FDBBF3E-724F-4402-9DDB-F9349F65AB0E
@@ -8093,20 +7054,6 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :PROPERTIES:
 :ID:       D5290EEA-8426-41B9-9346-A622FF07D695
 :END:
-**** DONE [#6] Enable persistent isearch history
-CLOSED: [2022-10-05 Wed 21:15]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       5ED2AB6C-A6CC-40CB-9A6B-552325E0D1B7
-:ARCHIVE_TIME: 2022-10-05 Wed 21:15
-:END:
-:LOGBOOK:
-CLOCK: [2022-10-05 Wed 20:42]--[2022-10-05 Wed 21:15] =>  0:33
-CLOCK: [2022-07-21 Thu 21:08]--[2022-07-21 Thu 21:18] =>  0:10
-CLOCK: [2022-06-22 Wed 22:14]--[2022-06-22 Wed 22:45] =>  0:31
-:END:
-Currently history clears after Emacs is restarted.
-
 ** replace
 :PROPERTIES:
 :ID:       DC08C217-5005-4A65-986B-85EA876ECB6D
@@ -8493,16 +7440,6 @@ By default, all agenda entries are offered. MATCH is as in
 :PROPERTIES:
 :ID:       4120BFCB-78B2-472D-9D34-C204A51F5B58
 :END:
-**** DONE Leave comment about consult excluding archives
-CLOSED: [2022-06-28 Tue 10:08]
-:PROPERTIES:
-:ID:       358D0E9E-80AD-47EC-9B30-D29AD592EEFB
-:ARCHIVE_TIME: 2022-06-28 Tue 10:08
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-28 Tue 10:01]--[2022-06-28 Tue 10:08] =>  0:07
-:END:
-
 ** consult-dir
 :PROPERTIES:
 :ID:       3250EBD7-513E-439F-972F-B43C8214AC46
@@ -8986,17 +7923,6 @@ always use face at point."
 :PROPERTIES:
 :ID:       DC1EADB1-D5A1-4E14-ABB0-1E4A1CF757E5
 :END:
-**** DONE Tweak ~describe-face~ function so that it is not affected by ~hl-line-mode~
-CLOSED: [2023-02-14 Tue 13:16]
-:PROPERTIES:
-:ID:       204A90D9-752E-4751-B06C-16EEB7103490
-:ARCHIVE_TIME: 2023-02-14 Tue 13:16
-:END:
-:LOGBOOK:
-CLOCK: [2023-02-14 Tue 12:55]--[2023-02-14 Tue 13:16] =>  0:21
-:END:
-
-
 ** helpful
 :PROPERTIES:
 :ID:       6DCDFA24-4561-43CD-9D82-7C870A1044D1
@@ -9037,18 +7963,6 @@ buffer displays and push it to the kill ring."
 :PROPERTIES:
 :ID:       56C739C3-8C73-4EF4-ACB7-A4B9573DB3E1
 :END:
-**** DONE [#5] Create function to copy name of helpful buffer symbol
-CLOSED: [2021-05-20 Thu 12:01]
-:PROPERTIES:
-:Effort:   0:20
-:ARCHIVE_TIME: 2021-05-20 Thu 12:01
-:ID:       9A49D53B-C92E-4710-B1F6-3A72882B802E
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-20 Thu 11:23]--[2021-05-20 Thu 12:00] =>  0:37
-CLOCK: [2021-05-20 Thu 11:08]--[2021-05-20 Thu 11:19] =>  0:11
-:END:
-
 ** info
 :PROPERTIES:
 :ID:       28966DB8-E893-4AEA-A7BD-8C18B8A97592
@@ -9109,16 +8023,6 @@ Emacs 28 has a useful builtin [[https://www.masteringemacs.org/article/emacs-bui
 :PROPERTIES:
 :ID:       0745A5BC-3066-447E-BAFA-CC4976F65561
 :END:
-*** DONE Create function to return keymap of current major mode
-CLOSED: [2021-05-11 Tue 18:54]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-05-19 Wed 18:06
-:ID:       227C2E48-1C3E-4E22-82D0-871B8DCB0F7C
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-06 Thu 16:30]--[2021-05-06 Thu 17:10] =>  0:40
-:END:
-
 * keyboard macros
 :PROPERTIES:
 :ID:       ADB25EC1-6E97-4057-AEBD-FB7B7E4503CF
@@ -9162,13 +8066,6 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 :PROPERTIES:
 :ID:       C59419A1-0B6B-44A2-84F3-EA5F54374AD0
 :END:
-**** DONE Advice ~kmacro-start-macro-or-insert-counter~ to set counter to 1
-CLOSED: [2021-07-25 Sun 17:56]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-25 Sun 17:56
-:ID:       8A091ABF-B638-4C34-A3A3-72927433F9C5
-:END:
-https://www.emacswiki.org/emacs/EmacsKeyboardMacroCounter
 ** elmacro
 :PROPERTIES:
 :ID:       B7816A82-2E9C-434F-AAB3-A92FA5F3368B
@@ -9545,41 +8442,6 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
 :PROPERTIES:
 :ID:       97E8B3C4-2217-444D-BDFD-1772289D2778
 :END:
-**** CANCELLED Move personal dictionary to dotfiles folder
-CLOSED: [2021-08-15 Sun 22:52]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-08-15 Sun 22:52
-:ID:       0825D749-092D-4A3D-A258-81A4C1831C44
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-15 Sun 22:34]--[2021-08-15 Sun 22:52] =>  0:18
-:END:
-https://www.scivision.dev/aspell-user-dictionary-location/
-
-I don't think this makes sense. The location of the personal dictionary can only be set by a configuration file whose location itself cannot be changed. So if I migrate to a new computer I will have to manually edit that file. It's best to keep the personal dictionary in its current location.
-**** CANCELLED Consolidate aspell and macos personal dictionaries
-CLOSED: [2021-08-15 Sun 22:52]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-08-15 Sun 22:52
-:ID:       A839A09C-2ADD-490C-BF70-E86431D1A97F
-:END:
-https://www.cultofmac.com/522307/how-to-find-use-custom-spelling-dictionary-mac/
-
-Not worth it. My MacOS dictionary has just a dozen words, after years of using it.
-
-**** DONE Configure personal dictionary
-CLOSED: [2022-07-19 Tue 19:29]
-:PROPERTIES:
-:ID:       F4654C26-5D0B-43C4-B521-487CEA4A4F18
-:ARCHIVE_TIME: 2022-07-22 Fri 20:39
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-18 Mon 21:35]--[2022-07-18 Mon 23:00] =>  1:25
-CLOCK: [2022-07-18 Mon 20:45]--[2022-07-18 Mon 21:00] =>  0:15
-:END:
-- Decide whether to use ~Aspell~ or ~AppleSpell~.
-- Once you do that, define the relevant user options and create the relevant symlinks, so that in the future Emacs keeps saving to the same file even after Emacs or OS reinstallations.
-
 ** flyspell
 :PROPERTIES:
 :ID:       78ABBC76-7474-4C1C-A9B0-E8BEC972E75E
@@ -9699,39 +8561,6 @@ I have configured Ispell to use AppleSpell, the native OSX spell checker, since 
 :PROPERTIES:
 :ID:       93BE5B36-4B03-4ED0-9C20-A0AE4915C304
 :END:
-**** DONE Figure out why Flyspell is not working consistently
-CLOSED: [2021-06-23 Wed 16:10]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-06-23 Wed 16:10
-:ID:       B6B28C4A-A75B-486A-815B-FC8629AEE63B
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-23 Wed 14:07]--[2021-06-23 Wed 15:32] =>  1:25
-:END:
-
-**** DONE [#6] See if there is a way to enable flyspell key bindings only when point is on highlighted word
-CLOSED: [2021-07-27 Tue 16:11]
-:PROPERTIES:
-:Effort:   1:00
-:ARCHIVE_TIME: 2021-07-27 Tue 16:11
-:ID:       E01CDFBA-1935-4541-861E-B5DA14788BAA
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-12 Mon 13:11]--[2021-07-12 Mon 13:16] =>  0:05
-:END:
-Similar to how org-ref works. I would need to create a new key map, since ~flyspell-mode-map~ is active iff ~flyspell-mode~ is active, and I want the key map, but not flyspell-mode itself, to become inactive when point is not on a highlighted word.
-
-Next step is to inspect ~org-ref-cite-keymap~ and see what functions call that variable. Perhaps [[https://www.emacswiki.org/emacs/FlySpell#h5o-10][this]] is useful.
-**** DONE [#6] Configure flyspell properly
-CLOSED: [2022-09-01 Thu 15:26]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       690E26A8-DEAF-4292-BAC4-3281BAE37152
-:ARCHIVE_TIME: 2022-09-01 Thu 15:26
-:END:
-- Check if ~flyspell-correct~ and ~flyspell-correct~ are working.
-- Diagnose why sometimes misspellings are recognized only after point is on them.
-- Maybe this is unnecessary given that I'm using Grammarly? Though the latter has a number of problems and perhaps it should only be used before publication rather than being enabled by default.
 ** flyspell-correct
 :PROPERTIES:
 :ID:       5E8AA3D3-68AE-407E-B662-524B8B0AAD43
@@ -9818,18 +8647,6 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 :PROPERTIES:
 :ID:       CBB3AD1D-834C-4C18-B591-97AEB603981A
 :END:
-**** DONE Enable grammarly
-CLOSED: [2021-12-12 Sun 18:48]
-:PROPERTIES:
-:Effort:   0:30
-:ARCHIVE_TIME: 2021-12-12 Sun 18:48
-:ID:       F0A2B576-9892-4A98-9E48-837F899AA552
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-12 Sun 18:10]--[2021-12-12 Sun 18:48] =>  0:38
-CLOCK: [2021-12-12 Sun 17:47]--[2021-12-12 Sun 17:50] =>  0:03
-:END:
-
 ** eglot-grammarly
 :PROPERTIES:
 :ID:       4C20D1C9-F6CB-42A0-963F-91D48E212248
@@ -10576,54 +9393,6 @@ otherwise the whole buffer."
 :PROPERTIES:
 :ID:       3ACCA3B0-B00C-43C9-AB33-7EA3B37AE0A3
 :END:
-**** DONE Create function to import FTX transactions
-CLOSED: [2021-11-06 Sat 23:01]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-11-06 Sat 23:01
-:ID:       F96EE86A-FA6F-460E-A227-8E13C16A3E9E
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-06 Sat 21:34]--[2021-11-06 Sat 23:01] =>  1:27
-CLOCK: [2021-11-06 Sat 20:23]--[2021-11-06 Sat 21:16] =>  0:53
-CLOCK: [2021-11-06 Sat 14:58]--[2021-11-06 Sat 15:02] =>  0:04
-:END:
-
-
-**** DONE [#6] Configure Ledger so that it only accepts transactions involving pre-defined accounts
-CLOSED: [2021-11-14 Sun 16:47]
-:PROPERTIES:
-:Effort:   0:40
-:ARCHIVE_TIME: 2021-11-14 Sun 16:47
-:ID:       20F7C45D-2D74-4955-B75F-BC7C20AC9073
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-14 Sun 16:15]--[2021-11-14 Sun 16:47] =>  0:32
-:END:
-File with accounts is accounts.dat. See reports defined in config.org.
-**** DONE [#5] Fix Ledger crypto coin database
-CLOSED: [2022-04-06 Wed 13:23]
-:PROPERTIES:
-:Effort:   1:00
-:ID:       19E22753-FA61-412D-B2DC-A7E256B47D1B
-:ARCHIVE_TIME: 2022-04-06 Wed 13:23
-:END:
-:LOGBOOK:
-CLOCK: [2022-04-06 Wed 13:19]--[2022-04-06 Wed 13:23] =>  0:04
-CLOCK: [2022-01-03 Mon 22:38]--[2022-01-03 Mon 22:57] =>  0:19
-CLOCK: [2022-01-03 Mon 22:21]--[2022-01-03 Mon 22:33] =>  0:12
-:END:
-**** DONE [#4] Fix ~coinprices.py~
-CLOSED: [2022-07-19 Tue 20:12]
-:PROPERTIES:
-:ID:       850C56D6-22E5-4798-9EAE-5084D4159B57
-:ARCHIVE_TIME: 2022-07-19 Tue 20:12
-:END:
-
-
-:LOGBOOK:
-CLOCK: [2022-07-19 Tue 20:00]--[2022-07-19 Tue 20:12] =>  0:12
-:END:
-
 ** parse-csv
 :PROPERTIES:
 :ID:       55B470DB-E9D2-45B1-8E74-58CB9DDF7D27
@@ -10637,14 +9406,6 @@ CLOCK: [2022-07-19 Tue 20:00]--[2022-07-19 Tue 20:12] =>  0:12
 :PROPERTIES:
 :ID:       96310305-E456-418C-8D3B-2023B10CA436
 :END:
-*** CANCELLED Check out konstare/gdcv: gdcv - GoldenDict console version and emacs dynamic module
-CLOSED: [2021-07-29 Thu 22:30]
-:PROPERTIES:
-:Effort:   0:25
-:ARCHIVE_TIME: 2021-07-29 Thu 22:30
-:ID:       B1EB476C-136F-49EF-9FC0-B56FC944B3E7
-:END:
-
 * pdf
 :PROPERTIES:
 :ID:       6C0D0737-734E-4EAB-8A3F-138EF990B967
@@ -10803,30 +9564,6 @@ FILE."
 :PROPERTIES:
 :ID:       C1097526-0DDF-4AF0-84A1-047B138B2DEF
 :END:
-**** DONE Find way to defer loading (it currently delays loading the init file by almost five seconds)
-CLOSED: [2021-07-30 Fri 11:58]
-:PROPERTIES:
-:Effort:   0:25
-:ARCHIVE_TIME: 2021-07-30 Fri 11:58
-:ID:       E1377359-F7A8-4912-ACE7-333D2B44C74F
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-29 Thu 22:32]--[2021-07-29 Thu 22:42] =>  0:10
-:END:
-
-Maybe this: https://github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org#pdf-tools
-**** CANCELLED [#6] Disable auto-save
-CLOSED: [2021-11-11 Thu 16:46]
-:PROPERTIES:
-:Effort:   0:15
-:ARCHIVE_TIME: 2021-11-11 Thu 16:46
-:ID:       71F144FE-9E84-491B-B23F-22A021F5F9BD
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-11 Thu 16:45]--[2021-11-11 Thu 16:46] =>  0:01
-:END:
-Doesn't seem to be needed.
-
 ** pdf-view-restore
 :PROPERTIES:
 :ID:       159A7ABF-5D9C-46C3-BAA2-C1E486682875
@@ -11011,18 +9748,6 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 :PROPERTIES:
 :ID:       17678075-A57B-43BE-B370-EFB77935BE05
 :END:
-**** DONE [#6] Learn to use ~edebug~
-CLOSED: [2022-12-12 Mon 23:02]
-:PROPERTIES:
-:Effort:   0:45
-:ID:       A1B9B804-ABDF-4E0E-850D-32C11E457983
-:ARCHIVE_TIME: 2022-12-12 Mon 23:02
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-25 Thu 22:06]--[2021-11-25 Thu 22:46] =>  0:40
-:END:
-See [[id:94184DD8-591C-46CD-BFC3-9738113DA640][debugging emacs lisp]].
-
 ** backtrace
 :PROPERTIES:
 :ID:       B69F718B-9BAE-4EAD-99DE-2C8C1E98CCA3
@@ -11934,46 +10659,6 @@ image."
 :PROPERTIES:
 :ID:       40506BF5-AB78-4109-AA1D-717739B92591
 :END:
-**** DONE Create command to turn subtree at point into separate file
-CLOSED: [2021-12-03 Fri 13:23]
-:PROPERTIES:
-:ID:       E73D25D7-6530-4DA5-852E-5C210568793C
-:ARCHIVE_TIME: 2021-12-03 Fri 13:23
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-03 Fri 12:35]--[2021-12-03 Fri 13:27] =>  0:52
-:END:
-The command is ~ps/org-move-subtree~.
-**** DONE [#6] Improve the appearance of org-mode
-CLOSED: [2021-11-18 Thu 18:27]
-:PROPERTIES:
-:Effort:   1:00
-:ARCHIVE_TIME: 2021-11-18 Thu 18:27
-:ID:       764E0F1C-DE1B-47AB-B462-CCC80F003AF7
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-19 Thu 14:31]--[2021-08-19 Thu 14:57] =>  0:26
-:END:
-https://zzamboni.org/post/beautifying-org-mode-in-emacs/
-If you have problems, maybe see [[https://emacs.stackexchange.com/questions/62987/cannot-set-correct-size-for-variable-pitch-font-in-doom-emacs][this]].
-**** DONE Create shortcut to jump to first heading
-CLOSED: [2022-05-01 Sun 22:23]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-05-01 Sun 22:23
-:ID:       AEFF2B8B-A5E7-4F09-9FC6-666399495668
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-01 Sun 21:30]--[2022-05-01 Sun 22:22] =>  0:52
-:END:
-**** CANCELLED [#7] Figure out how to properly align tags
-CLOSED: [2022-10-03 Mon 22:37]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       B5667A0C-C318-43C6-9B96-FE5BDD9D8356
-:ARCHIVE_TIME: 2022-10-03 Mon 22:37
-:END:
-I have commented out some hooks I had for this purpose, because they were inserting excessive spaces.
-
 ** org-agenda
 :PROPERTIES:
 :ID:       E03F4142-C90D-4550-8990-15391E27AD77
@@ -12220,113 +10905,6 @@ Posted a question to [[https://emacs.stackexchange.com/questions/66343/in-org-ag
 :PROPERTIES:
 :ID:       AF09A036-FF55-41C8-B356-F25D5CA4AB0B
 :END:
-**** DONE Define custom agenda views using org-ql
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-04-04 Sun 22:47
-:ID:       9132D0E3-91D5-4B8E-BF17-A019FC97DB24
-:END:
-:LOGBOOK:
-CLOCK: [2021-04-04 Sun 18:22]--[2021-04-04 Sun 19:25] =>  1:03
-CLOCK: [2021-04-02 Fri 16:33]--[2021-04-02 Fri 16:45] =>  0:12
-CLOCK: [2021-04-02 Fri 16:10]--[2021-04-02 Fri 16:24] =>  0:14
-CLOCK: [2021-03-02 Tue 20:50]--[2021-03-02 Tue 21:01] =>  0:03
-:END:
-Define custom view for weekly review.
-https://github.com/alphapapa/org-ql
-[[https://github.com/alphapapa/org-ql/issues/8][This]] may explain how to do it.
-
-**** CANCELLED Try org-weather
-CLOSED: [2021-06-30 Wed 21:02]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-06-30 Wed 21:02
-:ID:       9E0DE012-7639-4E7E-B777-65FE4E0B1B09
-:END:
-https://github.com/kautsig/org-weather
-**** DONE [#4] Highlight calendar entries from agenda
-:PROPERTIES:
-:Effort:   0:45
-:ARCHIVE_TIME: 2021-10-06 Wed 12:03
-:ID:       416B202F-5BA7-4865-B45B-2B76E73BAF78
-:END:
-Solved by modifying ~org-gcal~ native function to recognize date set by ~org-deadline~.
-**** DONE [#6] Diagnose problem when moving some of the ~setq~ declarations to the ~:custom~ section
-CLOSED: [2021-11-18 Thu 18:28]
-:PROPERTIES:
-:Effort:   0:30
-:ARCHIVE_TIME: 2021-11-18 Thu 18:28
-:ID:       540FE502-8A52-44BD-B810-BDE2D851C5C2
-:END:
-Problem is that ~org-indent-mode~ ceases to work.
-
-I think the culprit is ~org-agenda-inhibit-startup~. The problem disappeared when I commented away the line which set it to ~t~.
-
-**** DONE Fix ~org-agenda-files~ specification
-CLOSED: [2021-12-02 Thu 16:46]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-12-02 Thu 16:47
-:ID:       174F5360-16E9-4504-A7EB-243E48EF63D4
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-02 Thu 16:27]--[2021-12-02 Thu 16:46] =>  0:19
-:END:
-**** DONE Create key binding for global agenda
-CLOSED: [2022-01-03 Mon 22:54]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-02-11 Fri 14:14
-:ID:       98ABA812-41FB-463A-876B-3974D05461BF
-:END:
-:LOGBOOK:
-CLOCK: [2022-01-03 Mon 21:49]--[2022-01-03 Mon 22:16] =>  0:27
-:END:
-**** DONE [#6] remove ~project~ tag from agenda view
-CLOSED: [2022-12-19 Mon 08:52]
-:PROPERTIES:
-:ID:       1097ADCA-5DF0-40F2-9FF9-D8E44946CE66
-:ARCHIVE_TIME: 2022-12-19 Mon 08:52
-:END:
-:LOGBOOK:
-CLOCK: [2022-12-19 Mon 08:50]--[2022-12-19 Mon 08:52] =>  0:02
-:END:
-Easy: ~(org-agenda-hide-tags-regexp "project")~
-**** DONE [#5] Exclude Fede and Leo ~tareas.org~ files from ~org-agenda~
-CLOSED: [2022-12-19 Mon 09:22]
-:PROPERTIES:
-:ID:       7512BCCE-B29A-4CB3-8B6B-A8C63E3407CD
-:ARCHIVE_TIME: 2022-12-19 Mon 09:22
-:END:
-Added the final line to this function:
-
-#+begin_src emacs-lisp :results silent :tangle no
-(defun vulpea-agenda-files-update (&rest _)
-    "Update the value of `org-agenda-files'."
-    (setq org-agenda-files
-          (seq-difference
-           (delete-dups (append
-                         (org-agenda-files)
-                         (vulpea-project-files)
-                         ;; include files modified in past three days,
-                         ;; provided number of such files less than 1000
-                         (ps/org-roam-recent 1 1000)))
-           ps/org-agenda-files-excluded)))
-#+end_src
-
-**** DONE [#5] Create command to show all and only bibliographic notes in agenda
-CLOSED: [2022-12-21 Wed 00:14]
-:PROPERTIES:
-:ID:       D3067042-7F51-4115-9B24-EC347739E033
-:Effort:   0:50
-:ARCHIVE_TIME: 2022-12-21 Wed 00:14
-:END:
-This would let me sort headings by priority.
-It could be an ~org-agenda~ call wrapped around a ~let~ declaration for ~org-agenda-files~.
-**** DONE [#5] Add to agenda all files with dates like this
-CLOSED: [2022-12-21 Wed 00:14]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       6F93BBA0-ABCC-4926-B44F-C3AA57206655
-:ARCHIVE_TIME: 2022-12-21 Wed 00:14
-:END:
-%%(diary-float 10 0 3) Mother's day
 ** org-capture
 :PROPERTIES:
 :ID:       14F93A83-0BE7-42E3-891E-F6806192296B
@@ -12566,88 +11144,6 @@ Links to check out:
 :PROPERTIES:
 :ID:       32625A75-E92B-43A2-809A-4DE4C7D23C95
 :END:
-**** CANCELLED Once Syncthing is set up, modify capture template to create new task in inbox.org
-CLOSED: [2021-03-02 Tue 18:51]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-03-02 Tue 22:07
-:ID:       596E7C65-E28E-40A9-9196-833666E179B2
-:END:
-:LOGBOOK:
-CLOCK: [2021-03-02 Tue 18:36]--[2021-03-02 Tue 18:51] =>  0:15
-CLOCK: [2021-03-01 Mon 10:56]--[2021-03-01 Mon 11:01] =>  0:05
-:END:
-**** DONE [#5] Check this template for meetings
-CLOSED: [2021-06-07 Mon 19:20]
-:PROPERTIES:
-:Effort:   0:25
-:ARCHIVE_TIME: 2021-06-07 Mon 19:20
-:ID:       5AFBC8F1-0B49-4A48-89D6-09B29DAEEC8A
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-07 Mon 18:48]--[2021-06-07 Mon 19:02] =>  0:14
-CLOCK: [2021-06-01 Tue 20:40]--[2021-06-01 Tue 20:43] =>  0:03
-:END:
-https://youtu.be/bTbiC6SamT4?t=233
-
-It uses org-gcal, so it apparently creates an appointment on Google Calendar.
-
-[2021-06-07 Mon 19:19] I've used the similar one found on [[https://www.reddit.com/r/orgmode/comments/nmgs2i/hey_orgmode_users_show_us_your_org_capture/gzq9h2v/?utm_source=reddit&utm_medium=web2x&context=3][Reddit]].
-**** DONE Fix maddening highlighting of recent captures issue!
-CLOSED: [2021-07-04 Sun 15:25]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-04 Sun 15:25
-:ID:       E2139AFB-8124-40F5-B60B-D8A45E826683
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-21 Mon 11:10]--[2021-06-21 Mon 11:42] =>  0:32
-:END:
-
-Context [[id:B0F17F61-DCFB-4B33-A543-5E8793FD273D][here]].
-
-[2021-07-04 Sun 15:25] I think this is an org feature.
-**** DONE Create stress org-journal capture template
-CLOSED: [2021-07-28 Wed 19:10]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-28 Wed 19:10
-:ID:       36A69B58-4DEA-4C76-B2D8-80584CC77BBC
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-28 Wed 18:45]--[2021-07-28 Wed 19:10] =>  0:25
-CLOCK: [2021-07-28 Wed 17:46]--[2021-07-28 Wed 18:39] =>  0:53
-:END:
-
-**** DONE [#4] Fix broken capture templates
-CLOSED: [2021-07-31 Sat 12:59]
-:PROPERTIES:
-:Effort:   1:00
-:ARCHIVE_TIME: 2021-07-31 Sat 12:59
-:ID:       28940D57-8532-469D-8E84-52B6F8807C2C
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-31 Sat 12:53]--[2021-07-31 Sat 12:59] =>  0:06
-:END:
-- [X] Email
-- [X] Leo
-- [ ] Others?
-**** DONE [#5] Update Wiki capture templates
-CLOSED: [2022-06-08 Wed 20:13]
-:PROPERTIES:
-:Effort:   0:30
-:ARCHIVE_TIME: 2022-06-08 Wed 20:13
-:ID:       C81AA128-80F7-46AA-AB77-1A81856AB07E
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-07 Tue 11:01]--[2021-12-07 Tue 11:33] =>  0:32
-:END:
-First determine which templates need updating.
-**** DONE Create ~org-journal~ meeting templates
-CLOSED: [2022-09-15 Thu 13:39]
-:PROPERTIES:
-:ID:       DF4D8EE5-3DBA-491E-BA81-8173A43DB454
-:ARCHIVE_TIME: 2022-09-15 Thu 13:39
-:END:
-In the end, I decided to use a regular ~org-capture~ template.
-
 ** org-clock
 :PROPERTIES:
 :ID:       90E8B1CE-433C-4B2B-8AA2-844506EAC031
@@ -12749,13 +11245,6 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
 :PROPERTIES:
 :ID:       6A89B80F-A4F6-436E-A29D-ACDBAF084C9B
 :END:
-**** DONE [#6] Why does org clock not resume upon restart?
-CLOSED: [2022-10-23 Sun 22:02]
-:PROPERTIES:
-:Effort:   0:20
-:ID:       D27B1F31-22C4-4F12-BFA0-A1BD27111615
-:ARCHIVE_TIME: 2022-10-23 Sun 22:02
-:END:
 ** org-cycle
 :PROPERTIES:
 :ID:       AAB14053-B232-4627-8C1D-635FAE417A98
@@ -12837,8 +11326,12 @@ CLOSED: [2022-10-23 Sun 22:02]
 :ID:       DF8001AB-5B1E-4B6D-A3E5-BAEFDB041171
 :Effort:   2:00
 :END:
+:LOGBOOK:
+CLOCK: [2023-02-15 Wed 05:58]
+:END:
 
 I think Munilo Pereira had a package that allowed for this.
+
 ** org-archive-hierarchically
 :PROPERTIES:
 :ID:       27C3C7F9-C040-4844-AC5A-762BBC26C18F
@@ -13068,53 +11561,6 @@ When FILES is given, scan these files instead."
 :PROPERTIES:
 :ID:       8AF14CB2-00AF-4370-8926-11D5D2019913
 :END:
-**** DONE Remove ID from ~local variables~
-CLOSED: [2022-06-28 Tue 21:49]
-:PROPERTIES:
-:ID:       46A36EBB-8E21-40F5-BF60-55DD51A3D508
-:ARCHIVE_TIME: 2022-07-01 Fri 05:15
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-28 Tue 20:49]--[2022-06-28 Tue 21:49] =>  1:00
-CLOCK: [2022-06-28 Tue 20:47]--[2022-06-28 Tue 20:49] =>  0:02
-:END:
-[[id:9AB1D1EB-A502-4DA2-8BB1-7B2D3B73189B][example]]
-
-**** CANCELLED [#5] Revise function above to robustly exclude selected headings
-CLOSED: [2023-01-14 Sat 20:10]
-:PROPERTIES:
-:ID:       77F06C6A-1F3F-4F9D-A1CF-02B16D00DB62
-:ARCHIVE_TIME: 2023-01-14 Sat 20:10
-:END:
-- [ ] Now the headings are excluded if one creates them, but if one creates /other/ headings, the headings are included.
-- [ ] Files under ~/source/foo~ are  nott excluded if one merely adds ~source/~ to the list of excluded directories.
-- [ ] I think I do /not/ want to exclude bibliographic notes.
-
-[2023-01-14 Sat] Marking as ~CANCELLED~ for the reason described [[id:FB1FD9AE-C82B-4D51-93E9-ECC40D2065D9][here]].
-**** CANCELLED [#4] Update save hook to exclude Anki file
-CLOSED: [2023-01-14 Sat 20:11]
-:PROPERTIES:
-:ID:       FB3B93BF-EFCB-41F0-A732-844EDB162BE0
-:Effort:   0:25
-:ARCHIVE_TIME: 2023-01-14 Sat 20:11
-:END:
-/Users/pablostafforini/Dropbox/org/anki/main.org
-
-Also remove IDs from file.
-
-[2023-01-14 Sat 20:10] Marking as ~CANCELLED~ for the reason described [[id:FB1FD9AE-C82B-4D51-93E9-ECC40D2065D9][here]].
-**** CANCELLED [#6] Remove IDs from ARCHIVE
-CLOSED: [2023-01-14 Sat 20:11]
-:PROPERTIES:
-:ID:       0218D5CD-2CEE-44E6-9F0F-EA4BCEFC6AA3
-:Effort:   0:20
-:ARCHIVE_TIME: 2023-01-14 Sat 20:11
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-01 Fri 05:14]--[2022-07-01 Fri 05:32] =>  0:18
-:END:
-[2023-01-14 Sat 20:10] Marking as ~CANCELLED~ for the reason described [[id:FB1FD9AE-C82B-4D51-93E9-ECC40D2065D9][here]].
-
 ** org-list
 :PROPERTIES:
 :ID:       DD345C01-CEAC-4CEC-A8D5-89C16A0182CB
@@ -13256,16 +11702,6 @@ refresh cache."
 :PROPERTIES:
 :ID:       1B7125C0-A456-441E-BCCC-E78D46DFA06B
 :END:
-**** DONE Expand ps/org-refile-to
-CLOSED: [2021-07-28 Wed 23:58]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-28 Wed 23:58
-:ID:       E57F54F1-E10B-40BC-BFBD-F4BC41151726
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-28 Wed 23:03]--[2021-07-28 Wed 23:58] =>  0:55
-:END:
-In the future, these functions could be extended so that the refile target is specified as the value of the parent heading. So e.g. if point is on ~*** child heading~ and the value of the ~REFILE_TARGET_FILE~ property of ~** parent heading~ is ~movies.org~, invoking the command would move ~** child heading~ to the file ~movies.org~. The target heading could be similarly specified.
 ** org-keys
 :PROPERTIES:
 :ID:       19FC2EEB-7C71-43C1-97E6-52913C31CCDE
@@ -13539,15 +11975,6 @@ This custom command also saves the buffer before tangling it. In combination wit
 :PROPERTIES:
 :ID:       9362FA35-B0E9-4466-8CD2-B59087593AC6
 :END:
-**** DONE [#7] Diagnose why some preset code snippets aren't working
-CLOSED: [2022-07-17 Sun 11:58]
-:PROPERTIES:
-:Effort:   0:40
-:ID:       A65CC609-BE64-4DDF-975D-69356CE0067A
-:ARCHIVE_TIME: 2022-07-17 Sun 11:58
-:END:
-E.g. ~<q~ creates a quote block, but ~<el~ doesn't create an elisp block.
-
 ** org-src
 :PROPERTIES:
 :ID:       5D173B55-ED72-495C-80EE-39063BAB0550
@@ -13651,19 +12078,6 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 :PROPERTIES:
 :ID:       D6606D43-0B9F-4136-B0DD-AF06DE69A98C
 :END:
-**** DONE Set up org-crypt
-CLOSED: [2021-03-18 Thu 18:49]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-03-19 Fri 22:42
-:ID:       40D0DCED-0DE6-4F89-805C-8A5A6D110B35
-:END:
-:LOGBOOK:
-CLOCK: [2021-03-18 Thu 17:35]--[2021-03-18 Thu 18:47] =>  1:12
-:END:
-https://pages.sachachua.com/.emacs.d/Sacha.html#org0278a14
-
-See if you can use it to store passwords in the config file.
-
 ** org-lint
 :PROPERTIES:
 :ID:       43E5754F-7EB8-4FB7-8A92-B57D8BA2AF81
@@ -13922,57 +12336,6 @@ an org drawer."
 :PROPERTIES:
 :ID:       FC1AD69E-E920-4B9B-896A-B5575D5F5A24
 :END:
-**** DONE Make org2blog work with pass
-CLOSED: [2021-06-07 Mon 19:21]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-06-07 Mon 19:21
-:ID:       DC16DA10-55A4-47B8-9738-DD29B74A3FCC
-:END:
-(setq org2blog/wp-blog-alist nil)
-
-(let*
-((setq autent
-(car
-(auth-source-search :host "stafforini.com"
-:requires '(user secret))))
-(mi-usuario (plist-get autent :user))
-(mi-password (funcall (plist-get autent :secret))))
-(message "El usuario es %s y la contraseña es %s" mi-usuario mi-password))
-
-
-
-(use-package org2blog
-:config
-(require 'org2blog-autoloads)
-(setq org2blog/wp-blog-alist
-`(("Pablo's miscellany"
-:url "https://www.stafforini.com/blog/xmlrpc.php"
-;; :username ,(cl-getf (car (auth-source-search :host "stafforini.com"))
-;; :user)
-:password ,(cl-getf (car (auth-source-search :host "stafforini.com"))
-:secret)
-))
-;; ("notatu dignum"
-;; :url "https://www.stafforini.com/quotes/xmlrpc.php"
-;; :username ,(car (auth-source-user-and-password "stafforini.com"))
-;; :password ,(cadr (auth-source-user-and-password "stafforini.com"))
-;; ))
-org2blog/wp-show-post-in-browser 'show)
-)
-
-(setq auth-sources '("~/.authinfo" "~/.authinfo.gpg" "~/.netrc"))
-
-This is how ~org2blog/wp-blog-alist~ should look:
-
-
-**** DONE See if you can generate a tag list natively with org2blog, otherwise generate one manually
-CLOSED: [2021-06-23 Wed 12:44]
-:PROPERTIES:
-:Effort:   0:45
-:ARCHIVE_TIME: 2021-06-23 Wed 12:44
-:ID:       5F2E1A51-8092-4ADE-AB30-C1FEA480DD0E
-:END:
-
 ** org-journal
 :PROPERTIES:
 :ID:       16DB534E-D606-4510-84ED-6C6640780E7A
@@ -14012,16 +12375,6 @@ CLOSED: [2021-06-23 Wed 12:44]
 :PROPERTIES:
 :ID:       A9515515-8FBC-4940-82FC-07857F80B9B4
 :END:
-**** DONE Create command to go to today's entry in ~org-journal~
-CLOSED: [2022-07-26 Tue 17:03]
-:PROPERTIES:
-:ID:       3CA14232-86B5-409D-B747-4399C94694F4
-:ARCHIVE_TIME: 2022-07-27 Wed 12:43
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-26 Tue 13:48]--[2022-07-26 Tue 14:21] =>  0:33
-:END:
-
 ** org-autosort
 :PROPERTIES:
 :ID:       1BC53647-A492-4EA3-A9A5-352C71119629
@@ -14217,16 +12570,6 @@ Pomodoro system:
 :PROPERTIES:
 :ID:       2977BCF3-1364-4C7E-BBD7-CCB9C796489E
 :END:
-**** DONE Set ~org-pomodoro~ so that end-of-session notification is prominently displayed
-CLOSED: [2022-03-31 Thu 17:25]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-03-31 Thu 17:25
-:ID:       53B8C463-5779-43FD-AD42-19DC5230371E
-:END:
-:LOGBOOK:
-CLOCK: [2022-03-31 Thu 17:22]--[2022-03-31 Thu 17:25] =>  0:03
-:END:
-
 ** memacs
 :PROPERTIES:
 :ID:       1146CE48-9243-435A-8394-07C385538104
@@ -14625,203 +12968,6 @@ So the links to other Wiki articles do not break.
 :PROPERTIES:
 :ID:       59F8E3AC-CEB8-495D-8F6F-DACA6313F987
 :END:
-**** DONE Cancel Roam subscription
-CLOSED: [2021-04-21 Wed 22:33] DEADLINE: <2021-04-22 Thu>
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-04-21 Wed 22:33
-:ID:       C717FC84-7343-45D4-8F12-72D2D2FF7FCC
-:END:
-
-**** DONE Configure org-roam v2 to update database only when idle: OrgRoam
-CLOSED: [2021-07-23 Fri 18:31]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-23 Fri 18:31
-:ID:       AF396BE7-2502-4641-ACE0-693360C05CC3
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-23 Fri 18:19]--[2021-07-23 Fri 18:31] =>  0:12
-:END:
-
-https://www.reddit.com/r/OrgRoam/comments/opmgpp/configure_orgroam_v2_to_update_database_only_when/
-
-**** DONE Set up org-roam in multiple directories
-CLOSED: [2021-07-26 Mon 12:28]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-26 Mon 12:28
-:ID:       282319A0-D34D-46D9-B7E5-468E18013DB8
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-24 Sat 22:15]--[2021-07-24 Sat 22:37] =>  0:22
-CLOCK: [2021-07-23 Fri 22:56]--[2021-07-23 Fri 23:30] =>  0:34
-:END:
-https://www.orgroam.com/manual.html#How-do-I-have-more-than-one-Org_002droam-directory_003f
-
-For the time being, I should make sure everything works well using a single directory (the EA Wiki directory) and only do this when things are stable.
-
-[2021-07-23 Fri 22:59] This explains how to have separate org-roam databases. What I want is to have a single database of links from files in different directories.
-
-[2021-07-24 Sat 22:15] It's just a matter of using symlinks.
-**** DONE [#4] Fix delay problem
-CLOSED: [2021-11-30 Tue 21:08]
-:PROPERTIES:
-:Effort:   1:15
-:ARCHIVE_TIME: 2021-11-30 Tue 21:08
-:ID:       7712B9C0-E029-4675-89A9-A5D6BA6E6B16
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-30 Tue 20:12]--[2021-11-30 Tue 21:08] =>  0:56
-CLOCK: [2021-11-30 Tue 19:53]--[2021-11-30 Tue 20:11] =>  0:18
-CLOCK: [2021-11-21 Sun 14:06]--[2021-11-21 Sun 14:20] =>  0:14
-CLOCK: [2021-11-21 Sun 12:20]--[2021-11-21 Sun 12:35] =>  0:15
-CLOCK: [2021-10-03 Sun 10:57]--[2021-10-03 Sun 11:51] =>  0:54
-:END:
-
-[2021-11-21 Sun 14:06] Created symlinks for ~notes.org~, ~wiki-notes.org~ and ~wiki-entries.org~. Things I did:
-- Deleted database
-- Run ~(org-roam-setup)~ and went to have dinner.
-  - When I returned 45 minutes later, it was at 99%. I left it for another 10 minutes and it was finally done.
-- When I run ~(org-roam-buffer-toggle)~, it takes about ten seconds to open the org-roam buffer, and then it shows a "backlinks" section but underneath it shows the entire buffer, rather than the specific section.
-  - But the ~org-roam-bibtex~ backlinks do not seem to be working. E.g. if I call the org-roam buffer with point on the notes buffer of /Stubborn attachments/, the org-roam buffer shows just one line with the title of the work.
-
-I was still experiencing long delays after several restarts, so I'm deleting the symlinks. I don't know what else to do to make it work.
-
-[[https://org-roam.discourse.group/t/org-roam-db-sync-hangs-with-processing-modified-files/2234][This]] may be relevant.
-
-[2021-11-30 Tue 21:08] Fixed by moving to separate files.
-
-**** DONE Create command to create new pages/nodes
-CLOSED: [2021-12-06 Mon 21:37]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-12-06 Mon 21:37
-:ID:       A7A25828-839E-4164-A8F7-3A296174FC9C
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-06 Mon 20:07]--[2021-12-06 Mon 21:37] =>  1:30
-CLOCK: [2021-12-05 Sun 12:03]--[2021-12-05 Sun 13:34] =>  1:31
-:END:
-
-**** DONE Exclude temporary files from org-roam db
-CLOSED: [2021-12-12 Sun 14:16]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-12-12 Sun 14:16
-:ID:       F99876D8-AA30-410E-80E5-CAC371BDD32E
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-05 Sun 14:52]--[2021-12-05 Sun 15:15] =>  0:23
-:END:
-These are files beginning with ~.#~.
-
-I installed the ~no-littering~ package and changed the auto-save path using the code [[https://github.com/emacscollective/no-littering#auto-save-settings][here]].
-
-The above didn't work because, as I now realize, the files causing the conflict are /lockfiles/, which aren't handled by ~no-littering~. I excluded them from the ~org-roam~ database with ~(org-roam-file-exclude-regexp "^\\.#.*")~. Waiting to see if this fixes the issue.
-
-**** DONE Exclude Leo's files from ~org-roam~
-CLOSED: [2021-12-12 Sun 14:17]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-12-12 Sun 14:17
-:ID:       CF18E055-D27B-4271-8D8C-1D15065D285B
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-03 Fri 16:29]--[2021-12-03 Fri 16:46] =>  0:17
-:END:
-**** DONE Exclude temporary files from the ~org-roam~ database
-CLOSED: [2021-12-12 Sun 14:18]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-12-12 Sun 14:18
-:ID:       603ED280-D157-46C1-8181-FD73973D5D92
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-03 Fri 18:51]--[2021-12-03 Fri 19:03] =>  0:12
-:END:
-Not sure if this is necessary. org-roam-file-exclude-regexp
-**** DONE Fix performance issues
-CLOSED: [2021-12-15 Wed 10:20]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-12-15 Wed 10:20
-:ID:       6FD2F535-5A9B-4946-8AE5-C59CAAA5CCAC
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-15 Wed 10:05]--[2021-12-15 Wed 10:20] =>  0:15
-:END:
-I now use an idle timer instead of hooks.
-**** DONE [#5] Improve appearance of menu in ~org-roam-node-find~
-CLOSED: [2022-06-19 Sun 21:52]
-:PROPERTIES:
-:Effort:   0:45
-:ARCHIVE_TIME: 2022-06-19 Sun 21:52
-:ID:       CB60C6A6-15C3-43B6-B8A0-768C5F4E8A2E
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-02 Thu 19:52]--[2021-12-02 Thu 20:56] =>  1:04
-:END:
-Left a comment [[https://github.com/org-roam/org-roam/issues/1640?notification_referrer_id=MDE4Ok5vdGlmaWNhdGlvblRocmVhZDIxOTMyMTYyMjk6NTQ5MDY3Nw%3D%3D&notifications_query=is%3Adone#issuecomment-985582391][here]]. Maybe someone with more knowledge will reply?
-**** DONE [#5] Decide whether to always create IDs for new nodes and tasks
-CLOSED: [2022-07-15 Fri 17:05]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       D50CBB7A-743E-4C8D-A8F5-3E958C0CD5D5
-:ARCHIVE_TIME: 2022-07-15 Fri 17:05
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-24 Fri 11:26]--[2022-06-24 Fri 11:46] =>  0:20
-CLOCK: [2022-06-24 Fri 11:14]--[2022-06-24 Fri 11:22] =>  0:08
-:END:
-[2022-06-24 Fri 11:17] I currently lean toward just relying on the [[id:51E91355-66E0-479C-B616-116EF261F930][org-id]] hook, which will automatically add an ID to any new heading.
-
-[2022-07-15 Fri 17:05] Relying on hook.
-**** DONE [#5] Tweak ~org-roam-node-find~ so that it isn't affected if target buffer is narrowed
-CLOSED: [2022-07-15 Fri 17:05]
-:PROPERTIES:
-:Effort:   0:25
-:ID:       B5F5765C-7452-444B-9427-07A0DC048861
-:ARCHIVE_TIME: 2022-07-15 Fri 17:05
-:END:
-:LOGBOOK:
-CLOCK: [2022-02-21 Mon 13:41]--[2022-02-21 Mon 13:58] =>  0:17
-:END:
-Check ~ps/org-refile-jump~ for inspiration.
-**** DONE [#5] Look into Org roam dailies
-CLOSED: [2022-09-06 Tue 13:53]
-:PROPERTIES:
-:Effort:   0:20
-:ID:       6A75013E-9342-42FB-86A9-3227C1C091B0
-:ARCHIVE_TIME: 2022-09-06 Tue 13:53
-:END:
-
-**** DONE [#4] Implement relevant parts of this workflow
-CLOSED: [2022-11-04 Fri 19:07]
-:PROPERTIES:
-:ID:       7004CF1B-E3A4-47AF-AC5E-160ABF2F7F78
-:Effort:   0:30
-:ARCHIVE_TIME: 2022-11-04 Fri 19:07
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-21 Tue 20:57]--[2022-06-21 Tue 21:48] =>  0:51
-:END:
-[cite:@pragmat1c12022OrgroamAbsolutelyFantastic]
-
-**** DONE [#5] Check out Org transclusion
-CLOSED: [2023-01-02 Mon 20:38]
-:PROPERTIES:
-:ID:       69D13455-DC87-4BB5-9765-404A32F4F153
-:ARCHIVE_TIME: 2023-01-02 Mon 20:38
-:END:
-**** CANCELLED [#6] Remove IDs from child headings
-CLOSED: [2023-01-14 Sat 20:06]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       FB1FD9AE-C82B-4D51-93E9-ECC40D2065D9
-:ARCHIVE_TIME: 2023-01-14 Sat 20:07
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-03 Fri 18:16]--[2021-12-03 Fri 18:37] =>  0:21
-:END:
-This will allow me to use org roam search commands to find notes easily. I can always use ~helm-org-ql~ or ~helm-org-rifle~ if I need more fine-grained search. I guess I can also use ~helm-for-files~.
-
-[2021-12-03 Fri 21:36] I'm not sure this is necessary, because ~org-roam~ (for better or for worse) doesn't display duplicate headings. Although other tools, such as ~helm-org-ql~ and ~helm-org-rifle~ do.
-
-[2023-01-14 Sat] I have now switched to a different approach: I add IDs to all headings, without exception, but then exclude them via the functions ~org-roam-file-exclude-regexp~ and ~org-roam-db-node-include-function~. So I'm marking this as ~CANCELLED~.
-
 ** org-roam-ui
 :PROPERTIES:
 :ID:       BAEADCA3-68C6-4B59-A45A-7A1C11C6F6BB
@@ -15049,65 +13195,6 @@ Asked question [[https://org-roam.discourse.group/t/how-to-query-the-database-fo
 :PROPERTIES:
 :ID:       8CBE5449-7E42-4D7A-841B-E73249BBAF47
 :END:
-**** DONE Restrict ~org-agenda~ files to files with TODOs
-CLOSED: [2021-11-30 Tue 23:39]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-11-30 Tue 23:39
-:ID:       24BF3071-F827-44C8-8D92-6A027B7E30FF
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-30 Tue 21:58]--[2021-11-30 Tue 23:39] =>  1:41
-CLOCK: [2021-11-30 Tue 21:21]--[2021-11-30 Tue 21:54] =>  0:33
-CLOCK: [2021-11-30 Tue 21:14]--[2021-11-30 Tue 21:16] =>  0:02
-:END:
-
-**** DONE Restrict ~org-agenda~ files to files modified in past day
-CLOSED: [2021-12-01 Wed 16:53]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-12-01 Wed 16:53
-:ID:       95E2817B-B55E-43DE-8CA3-8E1664881137
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-01 Wed 15:28]--[2021-12-01 Wed 16:53] =>  1:25
-CLOCK: [2021-12-01 Wed 12:25]--[2021-12-01 Wed 13:31] =>  1:06
-:END:
-**** DONE Learn how to use ~org-element-api~
-CLOSED: [2021-12-14 Tue 19:08]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-12-14 Tue 19:08
-:ID:       143FBEE3-C6E3-4522-AD2F-0BE4F2998174
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-14 Tue 18:38]--[2021-12-14 Tue 19:08] =>  0:30
-:END:
-It turns out it was just a matter of creating a disjunction in the original ~vulpea-project-p~ function and adding ~(org-element-property :scheduled headline)~ as the second disjunct.
-**** DONE [#4] Revise function so that it checks for items with schedule or deadline, even if they aren't a TODO
-CLOSED: [2021-12-14 Tue 19:08]
-:PROPERTIES:
-:Effort:   0:40
-:ARCHIVE_TIME: 2021-12-14 Tue 19:08
-:ID:       933740E3-3A67-4968-96CF-8A9E04F1F64D
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-14 Tue 18:25]--[2021-12-14 Tue 18:38] =>  0:13
-:END:
-**** DONE [#5] Debug ~rx ‘**’ range error~
-CLOSED: [2022-07-26 Tue 22:12]
-:PROPERTIES:
-:Effort:   1:00
-:ID:       1ECD2822-BF94-4DFA-A98F-5B76C0B4F8C1
-:ARCHIVE_TIME: 2022-07-26 Tue 22:12
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-15 Fri 16:09]--[2022-07-15 Fri 17:03] =>  0:54
-:END:
-It is triggered erratically in many org contexts (e.g. ~org-ref~), but reliably when opening the variables file (~/-z~). So you can bisect the init file and keep opening that file until the trigger is isolated.
-
-[2022-07-16 Sat 15:34] See also [[https://list.orgmode.org/orgmode/CAEDXn+LWf83vs8rhfVKXaEe1heH4hauKaGA5C=Ynj=8EjLmgQg@mail.gmail.com/][this]].
-
-[2022-07-16 Sat 23:05] I think I managed to diagnose the issue: it seems to originate in the function ~vulpea-project-update-tag~, which is triggered by ~find-file-hook~ and ~before-save-hook~. When the hooks are disabled, the issue appears to disappear. Next step is to check [[https://gist.github.com/d12frosted/a60e8ccb9aceba031af243dff0d19b2e][this thread]], which might help me gain more clarity about the issue and identify potential next actions.
-
-
 ** org-noter
 :PROPERTIES:
 :NOTER_DOCUMENT: ../library.org
@@ -15151,39 +13238,6 @@ Remember that you should create the notes file using ~bibtex-completion~! Then y
 :PROPERTIES:
 :ID:       DA95C162-B8B0-4A31-95A8-A1D6F890FC3E
 :END:
-**** DONE Customizable variable for note template? · Issue #45 · weirdNox/org-noter
-CLOSED: [2021-07-26 Mon 23:27]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-26 Mon 23:27
-:ID:       4B750C56-F093-4570-AAC3-0669405EEFDC
-:END:
-
-https://github.com/weirdNox/org-noter/issues/45
-
-**** DONE Diagnose why ~org-noter~ is creating additional frames
-CLOSED: [2021-08-17 Tue 10:43]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-08-17 Tue 10:43
-:ID:       A2E87674-7289-4F2D-A64D-E6EE80B8BA96
-:END:
-I've set ~org-noter-always-create-frame~ to ~nil~ but a new frame is still created.
-
-- Run on a minimal configuration and see what happens.
-
-[2021-08-17 Tue 10:42] Mysteriously, the issue is now. For reference, here's the current config:
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package org-noter
-  :demand t
-  :custom
-  (org-noter-notes-search-path `(,ps/dir-bibliographic-notes))
-  (org-noter-auto-save-last-location t)
-  (org-noter-always-create-frame nil)
-  (org-noter-separate-notes-from-heading t)
-  :general
-  ("H-A-n" 'org-noter))
-#+End_src
-
 * reference & citation
 :PROPERTIES:
 :ID:       4939B006-F4F6-4A5C-9B78-85C998FDA7D8
@@ -15341,40 +13395,6 @@ ARG is the prefix argument received when calling interactively the function."
 :PROPERTIES:
 :ID:       99B1B771-2330-4DE7-A25F-362E8857A779
 :END:
-**** DONE Read [cite:Tecosaur2021July2021]
-CLOSED: [2021-08-29 Sun 13:05]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-08-29 Sun 13:05
-:ID:       1F2C63A8-0BA9-49E5-9940-6D2EF96CBE19
-:END:
-
-**** DONE Replace [[id:35FB5BB5-6552-48C6-983A-F90011CCA908][org-ref]] citations with [[id:8AF25840-AC38-4FF7-A45F-F01B96C5DF5A][oc]] citations
-CLOSED: [2022-06-28 Tue 14:09]
-:PROPERTIES:
-:ID:       68978095-A0D3-47A2-ABA8-AEEBCA83F600
-:ARCHIVE_TIME: 2022-07-03 Sun 12:48
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-28 Tue 13:50]--[2022-06-28 Tue 14:09] =>  0:19
-:END:
-**** DONE [#5] Create command to search [[https://www.connectedpapers.com/][Connected Papers]]
-CLOSED: [2022-09-06 Tue 13:56]
-:PROPERTIES:
-:Effort:   0:20
-:ID:       6F2041CC-A315-4773-B7F4-FB16DC84AAA5
-:ARCHIVE_TIME: 2022-09-06 Tue 13:56
-:END:
-:LOGBOOK:
-CLOCK: [2022-09-06 Tue 13:54]--[2022-09-06 Tue 13:56] =>  0:02
-:END:
-**** CANCELLED [#5] Diagnose error message I get every time I try to open a PDF
-CLOSED: [2022-09-22 Thu 15:13]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       E38AE3CE-E43D-49D5-984A-490661AF186E
-:ARCHIVE_TIME: 2022-09-22 Thu 15:13
-:END:
-
 ** oc-basic
 :PROPERTIES:
 :ID:       DD72A5D8-057E-4945-8EF0-E681904731D4
@@ -15613,13 +13633,6 @@ Version 2015-06-08"
 :PROPERTIES:
 :ID:       8713F59B-64AA-4706-9F4D-84D1BC36249C
 :END:
-**** CANCELLED Figure out why the line at the top of ~old.bib~ is deleted
-CLOSED: [2022-12-26 Mon 17:17]
-:PROPERTIES:
-:ID:       704615F4-0253-4992-BE50-268C40F5B9C4
-:ARCHIVE_TIME: 2023-02-09 Thu 13:40
-:END:
-I'm dealing with this with a directory-local variable.
 ** bibtex-completion
 :PROPERTIES:
 :ID:       DCD9D75D-7814-49D8-A3E0-33846D5A08FD
@@ -15655,17 +13668,6 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
 :PROPERTIES:
 :ID:       664ACDBD-58F7-4174-8A6B-2FF5E4441362
 :END:
-**** DONE [#5] Diagnose why ~bibtex-completion~ is not returning key at point
-CLOSED: [2022-06-18 Sat 15:51]
-:PROPERTIES:
-:Effort:   0:40
-:ARCHIVE_TIME: 2022-06-18 Sat 15:51
-:ID:       053F708E-4F49-41D2-A65C-804F531E4CC8
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-18 Sat 15:51]--[2022-06-18 Sat 15:51] =>  0:00
-:END:
-
 ** org-roam-bibtex
 :PROPERTIES:
 :ID:       EC73B84D-530E-4179-BB67-F19110A543DF
@@ -15703,16 +13705,6 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
 :PROPERTIES:
 :ID:       BF807BC6-65EB-4D24-88B0-A13E39C387AD
 :END:
-**** DONE [#6] Remove 'keywords' from note template
-CLOSED: [2022-06-23 Thu 17:44]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       BA144CFA-45C3-4DC5-9371-D1AE462D01DB
-:ARCHIVE_TIME: 2022-06-23 Thu 17:45
-:END:
-
-
-
 ** citar-org-roam
 :PROPERTIES:
 :ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
@@ -15869,21 +13861,6 @@ The problem seems to be that ~(citar--select-resource citekeys :notes t)~ return
 :PROPERTIES:
 :ID:       D5209A3D-C985-4B14-B2E7-60D57C256459
 :END:
-**** DONE [#5] Configure citar package
-CLOSED: [2022-06-22 Wed 19:27]
-:PROPERTIES:
-:ID:       FCBFE270-2604-4B9B-A7C7-F8C2304E151D
-:Effort:   0:45
-:ARCHIVE_TIME: 2022-06-22 Wed 19:27
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-22 Wed 17:47]--[2022-06-22 Wed 19:27] =>  1:40
-CLOCK: [2022-06-22 Wed 16:05]--[2022-06-22 Wed 16:15] =>  0:10
-CLOCK: [2022-06-22 Wed 15:42]--[2022-06-22 Wed 15:57] =>  0:15
-:END:
-My config predated the name change (it used to be called ~bibtex-actions~).
-Maybe also check [[https://github.com/mclear-tools/citar-capf][this]].
-
 ** citar-citeproc
 :PROPERTIES:
 :ID:       8CE6DBC7-E180-4E6D-B6E2-8D1E2756E765
@@ -17084,35 +15061,6 @@ por qué ebib no recarga
 :PROPERTIES:
 :ID:       C9E6B4A2-BB3C-4D2F-B6F8-D315C422676B
 :END:
-**** DONE Crear función Hathi Trust
-CLOSED: [2022-09-05 Mon 10:43]
-:PROPERTIES:
-:ID:       D7AD63FA-0E01-48EB-9B55-F1CE8584F7D0
-:ARCHIVE_TIME: 2022-09-05 Mon 20:19
-:END:
-:LOGBOOK:
-CLOCK: [2022-09-05 Mon 10:45]--[2022-09-05 Mon 10:54] =>  0:09
-CLOCK: [2022-09-05 Mon 10:34]--[2022-09-05 Mon 10:43] =>  0:09
-:END:
-**** DONE [#6] Remove ~year~ field
-CLOSED: [2022-12-05 Mon 23:32]
-:PROPERTIES:
-:ID:       EB854917-C82F-4114-B779-EF1E83BF7EF4
-:ARCHIVE_TIME: 2022-12-05 Mon 23:32
-:END:
-It doesn't seem to be a proper field ([[https://joostkremers.github.io/ebib/ebib-manual.html#displaying-and-sorting-the-entries-list][manual]]):
-
-#+begin_quote
-Furthermore, the column label "Year" does not simply display the contents of the year field. Rather, it first checks the contents of the date field, which is biblatex’s replacement of the year field, and extracts the first year in it. Only if the date field is empty does it display the year field.
-#+end_quote
-
-**** DONE set up ebib for youtube
-CLOSED: [2022-12-26 Mon 00:33]
-:PROPERTIES:
-:ID:       FAA1F1C8-3663-489A-8DF4-8D5360C26C6B
-:ARCHIVE_TIME: 2022-12-26 Mon 00:33
-:END:
-
 ** biblio
 :PROPERTIES:
 :ID:       4EDDE179-9DE5-4F31-9FB4-17A5B68F6557
@@ -17386,24 +15334,6 @@ or specify any other coding system (and risk losing\n\
 :PROPERTIES:
 :ID:       B8B5D792-0C5B-4058-87CB-BF933B2E7AF9
 :END:
-**** DONE configure zotra
-CLOSED: [2022-11-07 Mon 14:13]
-:PROPERTIES:
-:ID:       975FD5E1-AD70-4770-8857-090F30DC9341
-:ARCHIVE_TIME: 2022-11-07 Mon 14:13
-:END:
-:LOGBOOK:
-CLOCK: [2022-10-10 Mon 20:09]--[2022-10-10 Mon 20:17] =>  0:08
-CLOCK: [2022-10-10 Mon 19:29]--[2022-10-10 Mon 19:59] =>  0:30
-:END:
-
-**** DONE [#5] Make sure all new bibtex entries have a ~timestamp~ field
-CLOSED: [2022-12-21 Wed 00:18]
-:PROPERTIES:
-:ID:       5B05526E-8279-4C39-80F8-D0B81C665912
-:ARCHIVE_TIME: 2022-12-21 Wed 00:18
-:END:
-
 ** scihub
 :PROPERTIES:
 :ID:       29ABF514-563B-463D-9FDB-CF2C8AA25F83
@@ -17577,27 +15507,6 @@ Of possible interest:
 :PROPERTIES:
 :ID:       94D5EA30-9B67-4384-A4A8-A251EA5EA4FC
 :END:
-***** DONE Check this anki-editor config
-CLOSED: [2021-07-10 Sat 13:29]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-10 Sat 13:29
-:ID:       6F9CAACC-8CBD-4C1B-9DC3-E2400EE36116
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-10 Sat 12:58]--[2021-07-10 Sat 13:29] =>  0:31
-:END:
-https://yiufung.net/post/anki-org/
-
-***** DONE Consider posting comment about Anki editor using code blocks
-CLOSED: [2021-07-13 Tue 11:06]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-13 Tue 11:06
-:ID:       C2ED39C9-4649-401D-B2BC-2D55FC3990FC
-:END:
-This is not about Org Roam, but about integrating it, and org mode, with Anki. (I imagine there is interest in this integration here, given that the main image in the Org Roam GitHub page shows the template for an Anki card, and that org users are disproportionally likely to also be Anki users.) My question is whether it is in principle possible to extend or modify Anki editor, or develop a similar package, so that babel code blocks rather than org headings are the card delimiters. While I’m really excited about
-
-[2021-07-13 Tue 11:06] No longer necessary with the Anki develop branch.
-
 ** org-drill
 :PROPERTIES:
 :ID:       34FB61E2-5BF6-44F1-B3C4-759D61DB2D34
@@ -18221,216 +16130,6 @@ it, without asking for confirmation."
 :PROPERTIES:
 :ID:       7914B367-02AA-4BB6-876E-DB154B692D86
 :END:
-**** DONE Adapt config from Nan Zhong
-CLOSED: [2021-08-10 Tue 20:39]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-08-10 Tue 20:39
-:ID:       BC944B2C-E4B7-4CF1-BD84-C777F984CB79
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-10 Tue 20:38]--[2021-08-10 Tue 20:39] =>  0:01
-CLOCK: [2021-08-08 Sun 18:25]--[2021-08-08 Sun 18:53] =>  0:28
-:END:
-[[https://github.com/nanzhong/nanzho.ng/blob/e68934dc2804a5148ebda9b0c4f444c45a875be8/posts/better-email-with-mu4e/index.org][post]]
-**** DONE Fix mu4e issues
-CLOSED: [2021-08-17 Tue 14:54]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-08-17 Tue 14:54
-:ID:       9566DEA1-45A9-40ED-AA40-5C1B0A9EE6AB
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-17 Tue 14:52]--[2021-08-17 Tue 14:54] =>  0:02
-CLOCK: [2021-08-16 Mon 22:30]--[2021-08-17 Tue 00:49] =>  2:19
-CLOCK: [2021-08-16 Mon 21:45]--[2021-08-16 Mon 22:27] =>  0:42
-CLOCK: [2021-08-15 Sun 23:10]--[2021-08-16 Mon 00:41] =>  1:31
-CLOCK: [2021-08-15 Sun 22:53]--[2021-08-15 Sun 23:02] =>  0:09
-CLOCK: [2021-08-14 Sat 00:00]--[2021-08-14 Sat 00:05] =>  0:05
-CLOCK: [2021-08-13 Fri 23:35]--[2021-08-13 Fri 23:46] =>  0:11
-CLOCK: [2021-08-13 Fri 23:17]--[2021-08-13 Fri 23:26] =>  0:09
-CLOCK: [2021-08-13 Fri 22:43]--[2021-08-13 Fri 23:03] =>  0:20
-CLOCK: [2021-08-13 Fri 22:11]--[2021-08-13 Fri 22:31] =>  0:20
-CLOCK: [2021-08-13 Fri 21:12]--[2021-08-13 Fri 21:31] =>  0:19
-:END:
-- [X] ~mbsync~ fails to create trash folder
-  - when I delete the local [Gmail]/Trash folder and I move a message to the trash using Gmail, running ~mbsync -a~ does not return an error, but it does not create a local ~[Gmail]/Trash~ either.
-  - I then set the ~mu4e~ variable ~mu4e-trash-folder~ to ~"/[Gmail]/Trash"~ and run ~mu4e~. I am asked if I want to create that folder and confirm that I do. Then I run ~mbsync -a~ from the terminal and get this error message:
-    Maildir notice: no UIDVALIDITY, creating new.
-    Error: channel gmail: far side box [Gmail]/Trash cannot be opened.
-  - From ~mu4e~ I then move the email in trash to ~[Gmail]/All mail~, and from ~Dired~ delete the ~[Gmail]/Trash~ folder. I configure ~mbsync~ and ~mu4e~ to use ~[Gmail]/Bin~ as the trash folder, then run ~mbsync -a~. No error is logged. Then from ~mu4e~ I move a couple of emails to ~[Gmail]/Bin~ and run ~mbsync -a~. No errors are logged, but the emails do not show up in the Gmail trash.
-  - I now repeat all the steps in the previous bullet point, but using instead ~[Gmail]/Bin2~ as a test. This results in the creation of a ~[Gmail]/Bin2~ "label" on Gmail (i.e. an entity different from the native Gmail bin).
-  - I now reverse all these steps (delete the new label from Gmail, delete the corresponding folder in my hard drive, and set the trash folder on both ~mbsync~ and ~mu4e~ to ~[Gmail]/Bin~. The key issue is whether Gmail now also creates a new label or not. If not, it means it's treating ~[Gmail]/Bin~ and ~[Gmail]/Bin2~ differently, which suggests ~[Gmail]/Bin~ is the folder Gmail recognizes as the trash folder. But no: I now see that it creates another folder, so it's treating the two equally.
-  - SOLVED! I had to change the Gmail settings: labels > tick 'Show in IMAP' for Trash.
-- [X] Multiple drafts are created per message (both on mu and on Gmail), which are not discarded when the email is sent.
-  It's very likely this is caused by ~org-msg~.
-  SOLVED! With the function above.
-- [X] Sent items appear unread
-  Need to check if this persists. Something to try is other values of the ~mu4e-sent-messages-behavior~ variable.
-
-  [2021-08-17 Tue 14:54] I'm almost certain this is now solved, though I haven't double-checked.
-- [X] Trashed items can't be opened:
-  - When ~mu4e~ trashes a message, it can be opened, but only before a sync is completed.
-  Original message trashed:
-  1629083497.01b8b230b0fa8074.192.168.1.2:2,T
-
-  After sync:
-  1629083497.01b8b230b0fa8074.192.168.1.2,U=12:2,T
-  1629083249.4bc482bca235ddd3.192.168.1.2,U=11:2,T
-
-  The first file is the original, but a second one is created.
-
-  [2021-08-17 Tue 14:53] This was solved by deleting the databse and reindexing.
-- [X] Archived items are not moved out of inbox
-  This was fixed by tweaking the hook. Maybe it's because it now calls a proper function rather than a lambda? But there are differences between the function and the lambda, so it's probably that.
-  [2021-08-16 Mon 00:02] Now the problem has reappeared. :( Next steps:
-  - Restore previous states of version-controlled init file and see if it works with any of them.
-
-  I restored version from two days ago and the issue appears fixed. I tried various actions and they all worked fine:
-
-  2021-06-10: d - Moved message to trash
-  2021-06-09: D - Expunges it
-  2021-06-08: v i - Moved it to inbox
-  2021-06-07: v d - Moved it to drafts
-  2021-06-06: + - starred it
-
-  It did this both on mu4e and gmail, and the emails could be opened without a problem after sync.
-
-  [2021-08-17 Tue 14:53] This was solved by copying Daniel Fleischer's [[https://github.com/danielfleischer/mu4easy][mbsync configuration]].
-- [X] Marking and deleting behaves differently than moving to trash
-  This is simply because ~mu4e~ has separate ~delete~ and ~trash~ commands.
-
-**** DONE [#5] Fix "error in process filter" problem
-CLOSED: [2021-09-27 Mon 14:48]
-:PROPERTIES:
-:Effort:   2:00
-:ARCHIVE_TIME: 2021-09-27 Mon 14:48
-:ID:       6DAFB873-7B62-4EF3-81B7-E6CF8FED64BC
-:END:
-To try:
-- [X] Set ~mu4e-index-lazy-check~ to ~nil~
-  Problems persisted.
-- [ ] Set ~mu4e-index-cleanup~ to ~t~
-  [2021-08-29 Sun 13:05] Has been working fine for the past several days.
-
-  I did notice an error message, which probably precedes the problem I'm trying to fix, though I haven't encountered any manifestation of the problem. The [[https://sourceforge.net/p/isync/mailman/isync-devel/?limit=250&page=2][mbsync]] list contains a discussion:
-
-  "it's just telling you that you modified the message in both stores in ways that cannot be reconciled (which means it drops the less interesting change, e.g., a flag update on one end when the message was deleted on the other end)."
-
-  [2021-09-01 Wed 12:44] Seems to be working fine. I will now enable periodic checking of messages, setting ~mu4e-update-interval~ to ~600~.
-
-  [2021-09-06 Mon 09:16] Sometimes I experience the old problem where mu4e stops working. I think this happens because I launch it while it is in the process of checking for email. See [[https://www.djcbsoftware.nl/code/mu/mu4e/Retrieving-mail.html][here]].
-- [ ] Set ~mu4e-index-cleanup~ to ~t~ and ~mu4e-index-lazy-check~ to ~nil~
-
-  bottom line: with both variables set to ~t~ it has worked fine for over a few weeks. so marking as DONE.
-**** DONE Figure out why sent messages are not being saved
-CLOSED: [2021-10-20 Wed 19:38]
-:PROPERTIES:
-:Effort:   0:30
-:ARCHIVE_TIME: 2021-10-20 Wed 19:38
-:ID:       E775187D-CF83-4936-8BC7-D5F0307D0D77
-:END:
-:LOGBOOK:
-CLOCK: [2021-10-20 Wed 19:30]--[2021-10-20 Wed 19:38] =>  0:08
-:END:
-Setting ~mu4e-sent-messages-behavior~ to ~sent~ solves the issue.
-
-**** DONE Create command to open in Gmail
-CLOSED: [2021-12-11 Sat 11:17]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-12-11 Sat 11:17
-:ID:       D266FFD9-B9D0-4B2C-949B-C0A2207E4E44
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-11 Sat 10:58]--[2021-12-11 Sat 11:17] =>  0:19
-CLOCK: [2021-12-10 Fri 20:24]--[2021-12-10 Fri 21:08] =>  0:44
-:END:
-
-**** DONE Figure out how to re-index mu database without restarting Emacs
-CLOSED: [2022-02-20 Sun 16:57]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-02-20 Sun 16:57
-:ID:       18F8F2FD-A9C8-43BE-9216-4E732E900B72
-:END:
-~pkill -2 -u $UID mu~
-**** DONE [#4] Fix cert issue
-CLOSED: [2022-02-23 Wed 16:33]
-:PROPERTIES:
-:Effort:   0:40
-:ARCHIVE_TIME: 2022-02-23 Wed 16:33
-:ID:       7BEC34EF-51D7-4D6C-8DC6-34769C6F6146
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-10 Fri 22:35]--[2021-12-10 Fri 23:19] =>  0:44
-:END:
-Posted a question [[https://emacs.stackexchange.com/questions/69719/fingerprint-has-changed-message-when-attempting-to-connect-to-smtp-gmail-com][here]].
-**** DONE [#5] Fix 'Buffer " *mu4e-update*" has a running process; kill it? (y or n) y'
-CLOSED: [2022-06-06 Mon 20:03]
-:PROPERTIES:
-:Effort:   0:30
-:ARCHIVE_TIME: 2022-06-08 Wed 21:42
-:ID:       38F9293B-610E-426A-AFD8-27278859495F
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-06 Mon 19:53]--[2022-06-06 Mon 20:03] =>  0:10
-:END:
-~(setq kill-buffer-query-functions (delq 'process-kill-buffer-query-function kill-buffer-query-functions))~
-**** DONE [#7] Cleanup 'drafts' folder in mu4e
-CLOSED: [2022-06-10 Fri 14:06]
-:PROPERTIES:
-:Effort:   1:00
-:ARCHIVE_TIME: 2022-06-10 Fri 14:06
-:ID:       99679FED-8701-4590-8028-D6073275CD02
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-10 Fri 13:38]--[2022-06-10 Fri 14:06] =>  0:28
-CLOCK: [2022-06-02 Thu 19:31]--[2022-06-02 Thu 19:51] =>  0:20
-CLOCK: [2022-06-02 Thu 18:54]--[2022-06-02 Thu 19:31] =>  0:37
-:END:
-**** DONE [#6] Figure out why drafts are not synchronized with Gmail
-CLOSED: [2022-06-10 Fri 14:06]
-:PROPERTIES:
-:Effort:   0:45
-:ARCHIVE_TIME: 2022-06-10 Fri 14:06
-:ID:       73DD715A-DC15-4CC6-97B9-2C0C7E9CBC8B
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-07 Sat 18:15]--[2022-05-07 Sat 18:29] =>  0:14
-:END:
-**** DONE Disable auto-save
-CLOSED: [2022-06-10 Fri 14:08]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-06-10 Fri 14:08
-:ID:       0E80B380-4658-4FD2-B013-A7F5A18C7BD6
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-10 Fri 13:34]--[2022-06-10 Fri 13:38] =>  0:04
-:END:
-I don't think this is possible given that I have ~auto-save-visited-mode~ enabled. It can be disabled on a per-buffer basis, but I this would require the buffer in question to be modified in a special way. (It would work for a typical file-visiting buffer, but not for the ~org-msg~ buffer.) So I've resigned myself to not synchronize the drafts folder, i.e. exclude this folder in the ~mbsync~ config file. I don't think this is a big deal because I hardly ever want to save messages to a drafts folder.
-**** DONE Configure mbsync to send with gpe Google account
-CLOSED: [2022-07-21 Thu 17:37]
-:PROPERTIES:
-:ID:       76CE0EAD-FE7C-48E4-AEA5-44C9DE67611E
-:ARCHIVE_TIME: 2022-08-29 Mon 21:07
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-21 Thu 17:57]--[2022-07-21 Thu 18:17] =>  0:20
-CLOCK: [2022-07-21 Thu 16:30]--[2022-07-21 Thu 17:36] =>  1:06
-CLOCK: [2022-07-21 Thu 15:21]--[2022-07-21 Thu 15:57] =>  0:36
-:END:
-**** DONE Tweak ~ps/mu4e-set-account~ to change signature
-CLOSED: [2022-07-26 Tue 17:03]
-:PROPERTIES:
-:ID:       055B82FE-BC58-4EDE-91B6-94797E6A431E
-:ARCHIVE_TIME: 2022-08-29 Mon 21:07
-:END:
-I should use an [[https://stackoverflow.com/questions/27664267/python-dictionary-or-map-in-elisp][association list]] with email-signature pairs
-**** DONE [#5] Diagnose why database has to be constant resynched
-CLOSED: [2022-12-21 Wed 00:19]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       97DD58AE-03CB-435B-B866-A7531C107FB5
-:ARCHIVE_TIME: 2022-12-21 Wed 00:19
-:END:
-
 ** mu4e-org
 :PROPERTIES:
 :ID:       6E72E4DE-4CFE-4BC0-BC3C-39FB3D6EB526
@@ -18589,17 +16288,6 @@ This is controlled with ~org-msg-enforce-css~.
 :mtime:    20230214200740
 :ctime:    20230214200740
 :END:
-**** DONE Enable emojis for email
-CLOSED: [2022-05-07 Sat 19:06]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-05-07 Sat 19:06
-:ID:       C1066A80-072C-414C-872E-9FE491331D53
-:END:
-:LOGBOOK:
-CLOCK: [2022-04-27 Wed 09:42]--[2022-04-27 Wed 09:49] =>  0:07
-:END:
-
-
 ** htmlize
 :PROPERTIES:
 :ID:       F22F2F4B-619E-4A7C-BF65-8FF5CE7953C4
@@ -18618,17 +16306,6 @@ CLOCK: [2022-04-27 Wed 09:42]--[2022-04-27 Wed 09:49] =>  0:07
 :PROPERTIES:
 :ID:       D9FA47E0-E55D-48DA-B0BE-BBB66ACFABCD
 :END:
-*** DONE Fix text reflow on rmail
-CLOSED: [2021-07-12 Mon 12:09]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-12 Mon 12:09
-:ID:       262CCFDF-F608-4A35-A983-2A6CF21635F7
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-12 Mon 12:06]--[2021-07-12 Mon 12:22] =>  0:16
-:END:
-# Had to add a hook to disable auto-fill-mode.
-w
 * messaging
 :PROPERTIES:
 :ID:       7DD09AFA-70A6-4E9D-AA78-C8E8421A9673
@@ -18890,60 +16567,6 @@ into a task for Leo."
 :PROPERTIES:
 :ID:       212BC00E-8977-4E9B-ACD5-8183A09D5B0E
 :END:
-**** DONE Use ~telega-file-downloaded-hook~ to move saved files to ~downloads~ folder
-CLOSED: [2021-11-28 Sun 15:14]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-11-28 Sun 15:14
-:ID:       A4C3E175-F0C5-4614-A849-96285E76B5ED
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-28 Sun 13:30]--[2021-11-28 Sun 14:23] =>  0:53
-:END:
-https://t.me/emacs_telega/21925
-**** DONE [#7] Integrate telega with company
-CLOSED: [2022-07-26 Tue 22:15]
-:PROPERTIES:
-:Effort:   1:00
-:ID:       64FD58BF-4B0F-4739-8B24-756F42F5A68F
-:ARCHIVE_TIME: 2022-07-26 Tue 22:15
-:END:
-https://zevlg.github.io/telega.el/#completing-input-in-chatbuf
-search for "setup might look like"
-**** DONE [#7] Use different face for ~telega-entity-type-code~
-CLOSED: [2022-10-22 Sat 02:47]
-:PROPERTIES:
-:ID:       38E1DD37-4086-44E9-88CD-2ADEE53F7646
-:Effort:   0:25
-:ARCHIVE_TIME: 2022-10-22 Sat 02:47
-:END:
-:LOGBOOK:
-CLOCK: [2022-10-10 Mon 18:30]--[2022-10-10 Mon 18:39] =>  0:09
-CLOCK: [2022-10-09 Sun 21:39]--[2022-10-09 Sun 23:48] =>  2:09
-:END:
-
-| telega                      | org       | background | foreground      |
-|-----------------------------+-----------+------------+-----------------|
-| telega-entity-type-code     | org-code  | bg-alt     | fg-special-mild |
-| telega-entity-type-pre      | org-block | bg-dim     | bg-main         |
-| telega-entity-type-text-url |           |            |                 |
-
-
-I think this should be done using the ~:inherit~ property.
-
-Find an exhaustive list of all telega entity types. See the function ~telega--entity-to-properties~.
-
-Prot already defines some of these faces, but the colors are
-
-#+begin_src  markdown :tangle no
-Hi @protesilaos,
-
-Thank you for developing and maintaining this excellent package. My apologies for reopening an issue, but I thought it would be preferable to post my comment here rather than open a new issue, given that it also concerns `telega` faces and considering that it is of comparatively minor importance.
-
-Telega has faces for code (`telega-entity-type-code`) and code blocks (`telega-entity-type-pre`), but they are currently set to inherit `fixed-pitch`. Since all text in Telega is fixed-pitch, there is currently no visual element allowing the user to discern code and code blocks from normal text. Hence, I was wondering if these two faces should instead inherit `org-code` and `org-block`, respectively. Screenshots attached.
-#+end_src
-
-https://gitlab.com/protesilaos/modus-themes/-/issues/271
-
 ** telega-mnz
 :PROPERTIES:
 :ID:       473F7E47-4980-4A4A-8EC7-C008DB30BA22
@@ -19534,13 +17157,6 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 :mtime:    20230212014328
 :ctime:    20230212014328
 :END:
-**** DONE Check out these functions for implementing ~vimium~ on ~eww~
-CLOSED: [2022-12-21 Wed 00:32]
-:PROPERTIES:
-:ID:       4858793B-10A2-4014-84A8-5264551ED1CD
-:ARCHIVE_TIME: 2022-12-21 Wed 00:32
-:END:
-https://github.com/gopar/.emacs.d#eww
 ** w3m
 :PROPERTIES:
 :ID:       986E4522-7EE1-477A-89EB-08855BCBECEE
@@ -19775,38 +17391,6 @@ poorly-designed websites."
 :PROPERTIES:
 :ID:       93D26DD3-A658-4892-AA96-2CF05CD37556
 :END:
-**** DONE Configure Elfeed
-CLOSED: [2021-04-07 Wed 22:44] SCHEDULED: <2021-04-07 Wed>
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-04-11 Sun 08:22
-:ID:       D3E88324-ACED-4E0F-B5F9-34616259C95E
-:END:
-:LOGBOOK:
-CLOCK: [2021-04-07 Wed 21:44]--[2021-04-07 Wed 22:44] =>  1:00
-:END:
-
-**** DONE [#6] Figure out why Elfeed is not updating properly
-CLOSED: [2021-06-23 Wed 21:46]
-:PROPERTIES:
-:Effort:   0:15
-:ARCHIVE_TIME: 2021-06-23 Wed 21:46
-:ID:       44E12BD7-F126-4DD7-A352-9E781CFE063F
-:END:
-**** CANCELLED [#7] Figure out how to make elfeed display formatting properly
-CLOSED: [2021-11-14 Sun 10:33]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-11-14 Sun 10:33
-:Effort:   1:30
-:ID:       FD4E903E-8F47-4292-AE45-ED19932E6136
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-05 Thu 22:27]--[2021-08-05 Thu 23:05] =>  0:38
-:END:
-Italics, boldface, colors are not shown.
-
-I [[https://github.com/skeeto/elfeed/issues/434][opened]] an issue.
-
-[2021-11-14 Sun 10:33] No longer using elfeed for Wikipedia.
 ** elfeed-org
 :PROPERTIES:
 :ID:       DF954E99-17CB-4698-934E-53E038C654EF
@@ -19981,17 +17565,6 @@ CLOCK: [2022-07-24 Sun 16:09]--[2022-07-24 Sun 17:21] =>  1:12
 :PROPERTIES:
 :ID:       E3B60EF3-B637-4826-A6B3-57D5D65BEBA7
 :END:
-**** DONE Follow up with Andy Stewart on [[mu4e:msgid:emacs-eaf/eaf-browser/issues/38/1193426292@github.com][Re: [emacs-eaf/eaf-browser] 'eaf-import-chrome-bookmarks' triggers 'wrong-number-of-arguments' error (Issue #38)]]
-CLOSED: [2022-07-25 Mon 13:47] SCHEDULED: <2022-07-24 Sun>
-:PROPERTIES:
-:ID:       DF2F1759-8105-484E-BFE4-44C377747413
-:ARCHIVE_TIME: 2022-09-05 Mon 20:20
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-25 Mon 10:50]--[2022-07-25 Mon 11:53] =>  1:03
-CLOCK: [2022-07-24 Sun 22:52]--[2022-07-25 Mon 00:05] =>  1:13
-:END:
-
 ** osm
 :PROPERTIES:
 :ID:       1DCEE01C-1951-45F0-B9B8-60977E2D4314
@@ -20239,16 +17812,6 @@ account."
 :PROPERTIES:
 :ID:       964A8BEC-3FAD-4E9B-98C4-7E6CC7A46CD8
 :END:
-**** DONE Make ~twittering-mode~ not ask for passwords every time
-CLOSED: [2022-07-19 Tue 19:29]
-:PROPERTIES:
-:ID:       2C96944E-DCBF-4683-8A1E-D2791EE84227
-:ARCHIVE_TIME: 2022-07-21 Thu 14:57
-:END:
-See [[https://www.emacswiki.org/emacs/TwitteringMode][EmacsWiki: Twittering Mode]].
-
-[2022-07-19 Tue 19:29] This was related to [[id:37064B69-E447-45E8-9C54-84A415521849][pinentry-mac]].
-
 ** mastodon
 :PROPERTIES:
 :ID:       252C88FE-B66D-4A8F-8286-78777F418EC3
@@ -20499,13 +18062,6 @@ that duration."
 :PROPERTIES:
 :ID:       41575F1D-9348-4E44-A189-49F5B2B4990A
 :END:
-**** CANCELLED Set up split tunneling for Firefox
-CLOSED: [2022-11-07 Mon 14:13]
-:PROPERTIES:
-:ID:       70B128D0-2B14-4302-87D6-7E39A5B6EC32
-:ARCHIVE_TIME: 2022-11-07 Mon 14:13
-:END:
-Too complicated.
 * multimedia
 :PROPERTIES:
 :ID:       358E28B5-0274-43A0-AE9C-AA004B4775E5
@@ -20580,16 +18136,6 @@ CLOCK: [2022-09-05 Mon 20:22]--[2022-09-05 Mon 21:28] =>  1:06
 :PROPERTIES:
 :ID:       126B3CB9-D2C0-4257-B1C4-C49041F84F05
 :END:
-**** DONE Create command to archive watched videos
-CLOSED: [2022-05-22 Sun 13:55]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-05-23 Mon 20:58
-:ID:       6EA38525-A50F-489C-856F-ECF54C8D40E1
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-21 Sat 18:48]--[2022-05-21 Sat 19:18] =>  0:30
-:END:
-
 ** mentor
 :PROPERTIES:
 :ID:       E3F6210D-F6CD-4397-9004-3D31B5623D18
@@ -20915,96 +18461,6 @@ to the clipboard."
 :PROPERTIES:
 :ID:       BADBCCAF-DC50-4FCE-A4C2-3606418D0F9C
 :END:
-**** DONE [#3] Fix Pass discrepancy local/remote discrepancy
-CLOSED: [2021-07-20 Tue 21:50]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-20 Tue 21:50
-:ID:       A999E246-9B7C-4BB7-B9C9-75F8C9EAA731
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-20 Tue 21:41]--[2021-07-20 Tue 21:50] =>  0:09
-:END:
-- [ ] Determine what the best folder structure is
-- [ ] Use Dired to structure my ~pass~ folder accordingly
-- [ ] Push changes to remote repository
-  First do a test run with a single file to see how it works.
-**** DONE Revise ~midnight~ declaration for Pass
-CLOSED: [2021-07-20 Tue 21:56]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-20 Tue 21:56
-:ID:       B4890C5D-1026-4C9B-860A-173102B6B43A
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-20 Tue 21:50]--[2021-07-20 Tue 21:55] =>  0:05
-:END:
-Determine if this is best done by pulling and pushing or if there is a better option.
-
-**** DONE [#5] Fix Pass edit issue
-CLOSED: [2021-07-26 Mon 18:54]
-:PROPERTIES:
-:Effort:   0:40
-:ARCHIVE_TIME: 2021-07-26 Mon 18:54
-:ID:       A99981DA-2D26-487D-AF3B-20F6F0DB68B9
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-06 Tue 21:49]--[2021-07-06 Tue 23:24] =>  1:35
-CLOCK: [2021-06-15 Tue 18:55]--[2021-06-15 Tue 19:03] =>  0:08
-:END:
-There seem to be two problems that I need to fix:
-1. [ ] I get an error message when I try to edit a record.
-2. [ ] Even ignoring the error message, it appears that ~pass~ is not integrated with git.
-   I don't understand the reason for (2), since ~$ pass edit~ works well (I believe; I should test this), and apparently invoking ~edit~ within the pass Emacs buffer simply calls ~pass edit~.
-
-**** DONE [#4] Fix GitHub authentication issue
-CLOSED: [2021-08-15 Sun 22:14]
-:PROPERTIES:
-:Effort:   0:45
-:ARCHIVE_TIME: 2021-08-15 Sun 22:14
-:ID:       F494438C-18D9-4799-8AD8-4C08A7FAA059
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-15 Sun 21:43]--[2021-08-15 Sun 22:14] =>  0:31
-CLOCK: [2021-07-26 Mon 18:23]--[2021-07-26 Mon 18:54] =>  0:31
-:END:
-https://github.blog/2020-12-15-token-authentication-requirements-for-git-operations/
-Wait until I can no longer access GitHub, to determine which repositories are affected.
-
-Done. Followed steps [[https://gist.github.com/jonjack/bf295d4170edeb00e96fb158f9b1ba3c][here]].
-**** CANCELLED [#4] Move password repository to Dropbox
-CLOSED: [2022-06-03 Fri 16:43]
-:PROPERTIES:
-:Effort:   1:00
-:ID:       243B8F7F-4320-46F8-89EF-82FF6262C988
-:ARCHIVE_TIME: 2022-06-03 Fri 16:43
-:END:
-**** DONE Fix pass
-CLOSED: [2023-02-03 Fri 13:31] SCHEDULED: <2023-01-31 Tue>
-:PROPERTIES:
-:ID:       9FC76175-03AB-42F1-91FC-933A31323991
-:ARCHIVE_TIME: 2023-02-09 Thu 13:39
-:END:
-k0A@S1NN03za94U
-+1 (510) 944-9071‬
-
-Taxpayer number
-32087850635
-
-File number
-0804874237
-
-Webfile number
-FQ062851
-
-
-Full name of most important person?
-Gaverick Matheny
-
-Where for vacation?
-Bhutan
-
-First pet?
-Marron
-
 ** auth-source-pass
 :PROPERTIES:
 :ID:       00772E1B-A97C-46B5-8DE9-77462AAE0189
@@ -21040,33 +18496,6 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
 :PROPERTIES:
 :ID:       53229CB3-1BAF-4F8C-933E-A1D623E8EA9B
 :END:
-*** DONE [#5] Diagnose error
-CLOSED: [2021-04-20 Tue 22:24]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-04-20 Tue 22:24
-:ID:       05A3D0BF-304E-4AF0-80AC-233BBE768AEA
-:END:
-
-*** DONE Fix GPG ID issue
-CLOSED: [2021-06-07 Mon 19:25]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-06-07 Mon 19:25
-:ID:       8B2F3263-674A-46B7-8001-FA7AA696C2BA
-:END:
-
-https://github.com/android-password-store/Android-Password-Store/issues/1089
-
-*** DONE [#3] Export private keys
-CLOSED: [2022-07-25 Mon 13:48]
-:PROPERTIES:
-:ID:       5E74E0A2-B2B6-4130-9697-921A3A865D42
-:Effort:   0:30
-:ARCHIVE_TIME: 2022-08-28 Sun 16:01
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-25 Mon 13:48]--[2022-07-25 Mon 13:51] =>  0:03
-:END:
-
 * notifications
 :PROPERTIES:
 :ID:       7F48BD07-3570-46C7-A535-87CA5833E84E
@@ -21120,13 +18549,6 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 :PROPERTIES:
 :ID:       524DF96A-F936-4504-9ACB-48CA92E400A4
 :END:
-**** DONE Fix ~alert~
-CLOSED: [2023-02-07 Tue 17:18]
-:PROPERTIES:
-:ID:       5469B1A2-7284-43A7-86B4-75ACA49DCEC9
-:ARCHIVE_TIME: 2023-02-07 Tue 17:18
-:END:
-
 ** dbus
 :PROPERTIES:
 :ID:       6DFC9E2F-E77A-4966-9AA6-D0DFDA17E11B
@@ -21135,50 +18557,6 @@ CLOSED: [2023-02-07 Tue 17:18]
 :PROPERTIES:
 :ID:       6EB0E5A6-5DFF-4385-8F4F-35C5CC45A4D1
 :END:
-**** CANCELLED [#5] Fix ~dbus~
-CLOSED: [2022-07-13 Wed 16:45]
-:PROPERTIES:
-:Effort:   0:30
-:ID:       86EE7A94-E470-45DB-B0A5-0AE717A15353
-:ARCHIVE_TIME: 2022-07-13 Wed 16:45
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-13 Wed 15:35]--[2022-07-13 Wed 16:45] =>  1:10
-CLOCK: [2022-07-11 Mon 09:26]--[2022-07-11 Mon 09:44] =>  0:18
-CLOCK: [2022-06-09 Thu 13:29]--[2022-06-09 Thu 13:49] =>  0:20
-:END:
-#+begin_src emacs-lisp :tangle no
-Debugger entered--Lisp error: (dbus-error "No connection to bus" :session)
-dbus-message-internal(1 :session "org.freedesktop.Notifications" "/org/freedesktop/Notifications" "org.freedesktop.Notifications" "Notify" dbus-call-method-handler :string "Emacs" :uint32 0 :string "/opt/homebrew/Cellar/emacs-mac/emacs-28.1-mac-9.0/..." :string "Org mode message" :string "Task ‘Anki daily reviews [0/23]’ should be finishe..." (:array) ((:dict-entry "urgency" (:variant :byte 0))) :int32 3000)
-apply(dbus-message-internal 1 :session "org.freedesktop.Notifications" "/org/freedesktop/Notifications" "org.freedesktop.Notifications" "Notify" dbus-call-method-handler (:string "Emacs" :uint32 0 :string "/opt/homebrew/Cellar/emacs-mac/emacs-28.1-mac-9.0/..." :string "Org mode message" :string "Task ‘Anki daily reviews [0/23]’ should be finishe..." (:array) ((:dict-entry "urgency" (:variant :byte 0))) :int32 3000))
-dbus-call-method(:session "org.freedesktop.Notifications" "/org/freedesktop/Notifications" "org.freedesktop.Notifications" "Notify" :string "Emacs" :uint32 0 :string "/opt/homebrew/Cellar/emacs-mac/emacs-28.1-mac-9.0/..." :string "Org mode message" :string "Task ‘Anki daily reviews [0/23]’ should be finishe..." (:array) ((:dict-entry "urgency" (:variant :byte 0))) :int32 3000)
-notifications-notify(:title "Org mode message" :body "Task ‘Anki daily reviews [0/23]’ should be finishe..." :timeout 3000 :urgency low)
-org-show-notification("Task ‘Anki daily reviews [0/23]’ should be finishe...")
-org-notify("Task ‘Anki daily reviews [0/23]’ should be finishe..." nil)
-org-clock-notify-once-if-expired()
-org-clock-update-mode-line()
-org-clock-in()
-ps/org-id-notes-with-clock("i")
-(closure (bootstrap-version t) nil (interactive) (ps/org-id-notes-with-clock "i"))()
-funcall-interactively((closure (bootstrap-version t) nil (interactive) (ps/org-id-notes-with-clock "i")))
-hydra--call-interactively-remap-maybe((closure (bootstrap-version t) nil (interactive) (ps/org-id-notes-with-clock "i")))
-hydra-org-notes/lambda-H-i-and-exit()
-funcall-interactively(hydra-org-notes/lambda-H-i-and-exit)
-command-execute(hydra-org-notes/lambda-H-i-and-exit)
-#+end_src
-
-My diagnosis is that ~dbus~ is just not working at all. I've came to this conclusion after noticing that the ~tmr~ notifications also trigger this error (~tmr~ relies on ~dbus~ to generate these alerts).
-
-[2022-07-13 Wed 16:40]
-https://github.com/zbentley/dbus-osx-examples/blob/master/installation/README.md
-- I followed the instructions and confirm that it passed the test, using the first (homebrew) method. However, I still get the same error on Emacs
-- I tried the alternative methods but these didn't pass the test.
-- I also checked the following links:
-https://github.com/jimeh/emacs-builds/issues/17#issuecomment-997455295
-https://www.mail-archive.com/emacs-orgmode@gnu.org/msg137704.html
-
-Man, I give up.
-
 * calc
 :PROPERTIES:
 :ID:       29FF5CB1-E727-4CDC-B745-6A9B5711549C
@@ -21353,131 +18731,6 @@ I'm not tracking prices anymore so this is probably not worth it currently.
 :PROPERTIES:
 :ID:       D894A551-F2E1-436D-8D4A-C12779C64F8D
 :END:
-**** DONE [#5] Figure out how to enable midnight-mode at startup without causing all the hooks to be executed
-CLOSED: [2021-07-22 Thu 18:33]
-:PROPERTIES:
-:Effort:   0:20
-:ARCHIVE_TIME: 2021-07-22 Thu 18:33
-:ID:       ECA8732A-0FD3-436A-BB11-DD84C4A57116
-:END:
-
-**** DONE Check why midnight isn't working
-CLOSED: [2021-07-29 Thu 22:19]
-:PROPERTIES:
-:Effort:   0:25
-:ARCHIVE_TIME: 2021-07-29 Thu 22:19
-:ID:       AB453B4E-A5CA-4930-8E67-BA0DFFBAEF06
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-29 Thu 22:13]--[2021-07-29 Thu 22:19] =>  0:06
-:END:
-**** DONE [#4] Fix midnight-mode
-CLOSED: [2021-10-03 Sun 18:39]
-:PROPERTIES:
-:Effort:   0:25
-:ARCHIVE_TIME: 2021-10-03 Sun 18:39
-:ID:       8F67E628-BE03-4213-9071-5F392A40ABA7
-:END:
-:LOGBOOK:
-CLOCK: [2021-10-03 Sun 18:25]--[2021-10-03 Sun 18:39] =>  0:14
-CLOCK: [2021-10-02 Sat 12:52]--[2021-10-02 Sat 12:58] =>  0:06
-CLOCK: [2021-09-30 Thu 20:38]--[2021-09-30 Thu 20:42] =>  0:04
-CLOCK: [2021-09-30 Thu 19:14]--[2021-09-30 Thu 19:27] =>  0:13
-CLOCK: [2021-09-29 Wed 09:07]--[2021-09-29 Wed 09:22] =>  0:15
-:END:
-Is not running.
-
-Also, should emit a message whenever it runs successfully, so I know something has to be investigated if I don't see that message when I check Emacs first thing in the morning.
-
-**** DONE [#7] Diagnose why ledger hooks aren't working
-CLOSED: [2022-01-03 Mon 22:50]
-:PROPERTIES:
-:Effort:   0:20
-:ARCHIVE_TIME: 2022-01-03 Mon 22:50
-:ID:       5C35B700-6A0C-46C6-94E2-EF48D190F603
-:END:
-- ~commodities.py~ wasn't working because I hadn't updated the location of the database file in the file itself.
-- ~coinprices.py~ wasn't working because I was using the wrong Python version.
-**** DONE Fix midnight
-CLOSED: [2022-02-18 Fri 17:33]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-02-18 Fri 17:34
-:ID:       C39C158B-FF50-4615-9CE4-0AD08D041A5D
-:END:
-:LOGBOOK:
-CLOCK: [2022-02-18 Fri 17:28]--[2022-02-18 Fri 17:33] =>  0:05
-:END:
-
-**** DONE Fix midnight
-CLOSED: [2022-05-06 Fri 08:25]
-:PROPERTIES:
-:ARCHIVE_TIME: 2022-05-06 Fri 08:25
-:Effort:   0:30
-:ID:       9D307F4C-F5F3-4908-B4C6-D5091859D74C
-:END:
-:LOGBOOK:
-CLOCK: [2022-04-25 Mon 10:39]--[2022-04-25 Mon 11:31] =>  0:18
-CLOCK: [2022-04-23 Sat 15:48]--[2022-04-23 Sat 15:48] =>  0:00
-CLOCK: [2022-04-23 Sat 15:44]--[2022-04-23 Sat 15:46] =>  0:02
-CLOCK: [2022-04-12 Tue 09:34]--[2022-04-12 Tue 09:36] =>  0:02
-CLOCK: [2022-04-11 Mon 17:17]--[2022-04-11 Mon 17:19] =>  0:02
-CLOCK: [2022-04-06 Wed 13:07]--[2022-04-06 Wed 13:19] =>  0:12
-CLOCK: [2022-04-05 Tue 16:44]--[2022-04-05 Tue 16:46] =>  0:02
-CLOCK: [2022-03-31 Thu 09:34]--[2022-03-31 Thu 09:36] =>  0:02
-CLOCK: [2022-03-30 Wed 13:23]--[2022-03-30 Wed 13:23] =>  0:00
-CLOCK: [2022-03-26 Sat 16:54]--[2022-03-26 Sat 16:58] =>  0:04
-CLOCK: [2022-03-17 Thu 10:55]--[2022-03-17 Thu 10:58] =>  0:03
-CLOCK: [2022-03-15 Tue 16:54]--[2022-03-15 Tue 17:04] =>  0:10
-CLOCK: [2022-03-10 Thu 16:09]--[2022-03-10 Thu 16:16] =>  0:07
-CLOCK: [2022-02-25 Fri 11:51]--[2022-02-25 Fri 12:03] =>  0:12
-:END:
-To try:
-- [X] ~:demand t~
-- [X] ~:demand t~ /and/ ~(midnight-delay-set 'midnight-delay "4:00am")~ [[https://www.emacswiki.org/emacs/MidnightMode#:~:text=Midnight%20mode%20is%20a%20package,easily%20turn%20on%20Midnight%20mode.][Emacs Wiki]] says that midnight needs to be "enabled" with the function ~midnight-delay-set~. So it appears that that function is not an optional way to specify a "midnight" at times other than midnight, but is required for midnight to run at all.
-[2022-03-16 Wed 10:29] Didn't work. Now trying commenting out all the lines except one hook and the two functions.
-[2022-03-17 Thu 10:55] Didn't work. But maybe I forgot to launch Magit? Trying again tonight.
-[2022-03-26 Sat 16:55] It worked! For the record, here's the working config
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-feature midnight
-  :demand t
-  :config
-  (midnight-mode)
-  (midnight-delay-set 'midnight-delay 16200) ; this causes all the hooks to run immediately
-  :hook
-  (midnight-hook . (lambda () (ps/magit-midnight-update ps/dir-org)))
-  )
-#+end_src
-
-Now I'll gradually uncomment remaining lines:
-- [ ] ~midnight-hook~
-- [ ] ~midnight-mode-hook~
-- [ ] rest
-
-[2022-04-25 Mon 11:32] ~magit-midnight-update~ need to be executed at the end, apparently, which means they should be declared at the beginning.
-**** CANCELLED [#5] Replace ~midnight-mode~ with CRON
-CLOSED: [2022-06-19 Sun 10:45]
-:PROPERTIES:
-:Effort:   0:45
-:ARCHIVE_TIME: 2022-06-19 Sun 10:45
-:ID:       BE3F308F-9108-4EA1-9C64-F624561E34B8
-:END:
-**** DONE Create new respositories
-CLOSED: [2022-06-25 Sat 18:38] SCHEDULED: <2022-06-25 Sat>
-:PROPERTIES:
-:ID:       D8F7F7BF-0000-4696-BBD8-B1E9ED2C54CD
-:ARCHIVE_TIME: 2022-07-08 Fri 22:38
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-25 Sat 15:14]--[2022-06-25 Sat 15:50] =>  0:36
-:END:
-**** CANCELLED [#4] Diagnose why midnight does not update all repositories
-CLOSED: [2022-12-17 Sat 04:37]
-:PROPERTIES:
-:ID:       067F2688-FEF5-458A-946B-A901999F9AD2
-:ARCHIVE_TIME: 2022-12-17 Sat 04:37
-:END:
-
 ** keycast
 :PROPERTIES:
 :ID:       8D51F4B0-7443-420B-919F-7AA9B0EC0CE9
@@ -21587,81 +18840,6 @@ This may be useful: [cite:@Wellons2018OptionsForStructured]
 :PROPERTIES:
 :ID:       EDC5DFF7-CCA3-4C1B-8E08-9629392A168E
 :END:
-*** DONE Implement 'Org and Mac OS X' suggestions
-CLOSED: [2021-03-09 Tue 14:35]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-03-09 Tue 22:48
-:ID:       AA57F15A-8A33-4133-80D3-34A3D76C1E0A
-:END:
-:LOGBOOK:
-CLOCK: [2021-03-09 Tue 14:20]--[2021-03-09 Tue 14:35] =>  0:15
-:END:
-https://orgmode.org/worg/org-mac.html
-*** DONE [#5] Check org mode features you may not know about
-CLOSED: [2021-03-17 Wed 15:41]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-03-17 Wed 22:27
-:ID:       6674D53C-E3FA-4DB7-A9B5-ABDFC06E95EC
-:END:
-:LOGBOOK:
-CLOCK: [2021-03-17 Wed 15:10]--[2021-03-17 Wed 15:17] =>  0:07
-CLOCK: [2021-03-16 Tue 16:40]--[2021-03-16 Tue 17:07] =>  0:27
-CLOCK: [2021-03-16 Tue 16:18]--[2021-03-16 Tue 16:33] =>  0:15
-:END:
-https://bzg.fr/en/some-emacs-org-mode-features-you-may-not-know.html/
-
-| description                       | key binding | function             |
-|-----------------------------------+-------------+----------------------|
-| insert all stored links as a list | C-c C-M-l   | org-insert-all-links |
-| turn list into a checklist        | C-u C-c C-c | org-ctrl-c-ctrl-c    |
-
-*** DONE Debugging ~org-cycle~ issue
-CLOSED: [2021-07-12 Mon 18:29]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-12 Mon 18:29
-:ID:       FFFE23B6-0A69-4A06-B214-0821354D0069
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-12 Mon 16:00]--[2021-07-12 Mon 18:29] =>  2:29
-:END:
-
-It turned out to be a bug upstream. See [[https://github.com/emacs-mirror/emacs/blob/master/lisp/outline.el][here]]. I wasted over two hours with this.
-*** CANCELLED Check out org-super-links
-CLOSED: [2021-07-16 Fri 15:45]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-16 Fri 19:01
-:ID:       AE8D8A51-6B2B-4D09-8B10-951E58F6BA70
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-16 Fri 14:22]--[2021-07-16 Fri 14:33] =>  0:11
-:END:
-https://github.com/toshism/org-super-links
-"One thing that I do wish would get m ore recognition is org-super-links, which is a whole thing that's a bit hard to explain. In one word though: back links. Combined with unique IDs (this one is buried somewhere in the manual, here's a link that kind of explains it) it means links are never broken when you refile headers. So say I'm writing about spaceships, the header will have a property "back links" which will link back to all the other entries I wrote about spaceships, and it will never break. It's not well known because every org-mode user and their mom are all about org-roam these days.. I vented about this enough, to me it's an overkill."
-
-Not sure how it differs from org-roam.
-
-[2021-07-16 Fri 15:45] As far as I can tell, this provides similar functionality as ~org-roam~. But it's much less developed, so better to use the latter.
-*** DONE Create function to add effort estimates to all tasks missing this information
-CLOSED: [2021-07-27 Tue 16:12]
-:PROPERTIES:
-:ARCHIVE_TIME: 2021-07-27 Tue 16:12
-:ID:       16F5D3FA-B37F-439C-86FE-6EA4E464FF08
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-26 Mon 21:10]--[2021-07-26 Mon 21:15] =>  0:05
-CLOCK: [2021-06-17 Thu 21:52]--[2021-06-17 Thu 22:05] =>  0:13
-CLOCK: [2021-06-17 Thu 20:47]--[2021-06-17 Thu 20:56] =>  0:09
-:END:
-No need to create function. I simply set the highest option to '99:00' and ~org-agenda-sort-noeffort-is-high~ to ~t~.
-*** DONE [#5] Advice org-ctrl-c-ctrl-c so that it triggers org2blog-complete when point is on relevant tag
-CLOSED: [2021-10-01 Fri 21:48]
-:PROPERTIES:
-:Effort:   0:40
-:ARCHIVE_TIME: 2021-10-01 Fri 21:48
-:ID:       F6B35E6D-470E-4923-B509-1D7A441CED46
-:END:
-Seems to be working without the need to advice anything.
-
 * personal projects
 :PROPERTIES:
 :ID:       9D7B5C99-2380-4159-A8C8-4021CC0482DE

@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230215090723
+:mtime:    20230215135032
 :ctime:    20230215082042
 :END:
 #+TITLE:Pablo's Emacs config
@@ -21,7 +21,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :CONTENTS:
 - [[#table-of-contents][table of contents]]
 - [[#preface][preface]]
-  - [[#rename-config-file][Rename config file]]
   - [[#profiling][Profiling]]
   - [[#installation][Installation]]
   - [[#other-config-files][Other config files]]
@@ -11383,8 +11382,8 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
                         (buffer-file-name x)))
                   (buffer-list))))
 
-  ;; Regenerate cache every five minutes
-  (run-with-idle-timer 600 t (lambda ()
+  ;; Regenerate cache every half hour minutes
+  (run-with-idle-timer (* 60 30) t (lambda ()
                                (org-refile-cache-clear)
                                (org-refile-get-targets)))
   ;; [2022-06-21] Replaced by `consult-org-heading'; consider
@@ -12407,23 +12406,6 @@ return such list if its length is less than LIMIT."
   (setq org-roam-node-display-template
         (concat "${hierarchy:160} "
                 (propertize "${tags:20}" 'face 'org-tag)))
-
-  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#run-org-roam-db-sync-when-emacs-is-idle
-  (defvar ps/auto-org-roam-db-sync--timer nil)
-  (defvar ps/auto-org-roam-db-sync--timer-interval 5)
-
-  (define-minor-mode ps/auto-org-roam-db-sync-mode
-    "Toggle automatic `org-roam-db-sync' when Emacs is idle.
-                Referece: `auto-save-visited-mode'"
-    :group 'org-roam
-    :global t
-    (when ps/auto-org-roam-db-sync--timer (cancel-timer ps/auto-org-roam-db-sync--timer))
-    (setq ps/auto-org-roam-db-sync--timer
-          (when ps/auto-org-roam-db-sync-mode
-            (run-with-idle-timer
-             ps/auto-org-roam-db-sync--timer-interval :repeat
-             #'org-roam-db-sync))))
-
 
   (defvar ps/org-roam-excluded-dirs nil)
   (defvar ps/org-roam-excluded-files nil)
@@ -16788,6 +16770,8 @@ CLOCK: [2021-03-29 Mon 21:25]--[2021-03-29 Mon 21:41] =>  0:16
 ** elfeed
 :PROPERTIES:
 :ID:       FF5DDBC3-ABB6-48A9-9B47-BC9A18F532D5
+:mtime:    20230215135032
+:ctime:    20230215135032
 :END:
 :LOGBOOK:
 CLOCK: [2021-12-06 Mon 18:29]--[2021-12-06 Mon 18:41] =>  0:12
@@ -16962,7 +16946,7 @@ poorly-designed websites."
     (switch-to-buffer buffer)
     (elfeed-show-refresh))
 
-  (run-with-idle-timer (* 60 10) t 'elfeed-update)
+  ;; (run-with-idle-timer (* 60 10) t 'elfeed-update)
 
   :hook
   (elfeed-show-mode-hook . shr-heading-setup-imenu)

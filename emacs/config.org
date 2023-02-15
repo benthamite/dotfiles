@@ -1,14 +1,14 @@
 :PROPERTIES:
-:mtime:    20230215082042
+:mtime:    20230215090723
 :ctime:    20230215082042
 :END:
 #+TITLE:Pablo's Emacs config
 #+AUTHOR: Pablo Stafforini
 #+PROPERTY: header-args :tangle ~/Dropbox/dotfiles/emacs/init.el
-#+filetags: :project:
 :PROPERTIES:
 :TOC:      ignore
 :END:
+#+filetags: :project:
 
 * table of contents
 :PROPERTIES:
@@ -18466,9 +18466,11 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 * Local variables
 :PROPERTIES:
 :ID:       9F0FFFD3-3A33-4EB5-BD56-CD40AE6A23C5
+:mtime:    20230215090723
+:ctime:    20230215090723
 :END:
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
 # eval: (ps/buffer-local-set-key (kbd "H-i") 'use-package-report)
-#eval: (define-key org-mode-map (kbd "s-a") 'org-archive-hierarchically)
+# eval: (define-key org-mode-map (kbd "s-a") 'org-archive-hierarchically)
 # End:

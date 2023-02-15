@@ -510,14 +510,6 @@ CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
 
-** TODO Rename config file
-:PROPERTIES:
-:ID:       4DDE0CCB-D619-4045-8148-796EE95D1971
-:END:
-:LOGBOOK:
-CLOCK: [2023-02-15 Wed 06:33]
-:END:
-~readme.org~ should be a very simple document linking to ~config.org~ and proving a very simple expalantion.
 ** Debugging the config file                                      :noexport:
 :PROPERTIES:
 :ID:       ED2955EA-3BD8-4058-A973-3CC87847D9A5

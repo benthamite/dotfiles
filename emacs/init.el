@@ -2886,6 +2886,7 @@ option."
   ;; stackoverflow.com/questions/23207958/how-to-prevent-emacs-dired-from-splitting-frame-into-more-than-two-windows
 
   :config
+  (add-to-list 'default-frame-alist '(undecorated . t))
   (add-to-list 'display-buffer-alist `(,shell-command-buffer-name-async display-buffer-no-window))
   (defvar ps/split-emacs-chrome-sideways nil)
   (defun ps/split-emacs-chrome-sideways ()
@@ -3998,7 +3999,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
    "C-n" 'isearch-end-of-buffer
    "C-o" 'isearch-occur
    "C-p" 'isearch-highlight-regexp
-   "C-t" 'substitute-target-in-buffer
    "C-v" 'isearch-yank-kill
    "C-y" 'isearch-forward-symbol-at-point
    "H-c" 'ps/isearch-copy-match
@@ -4028,6 +4028,15 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :general
   (isearch-mode-map
    "A-C-e" 'query-replace-regexp))
+
+(use-package substitute
+  :straight (substitute
+	     :host sourcehut
+	     :repo "protesilaos/substitute")
+  :demand t
+  :general
+  (isearch-mode-map
+   "C-t" 'substitute-target-in-buffer))
 
 (use-package rg
   :custom
@@ -6421,10 +6430,42 @@ conditional on active capture template."
     (org-cycle-hide-archived-subtrees 'all)))
 
 (use-feature org-archive
+  :custom
+  (org-archive-default-command 'org-archive-to-archive-sibling)
+  (org-archive-location (expand-file-name "%s_archive.org::" ps/dir-archive))
+
+  :config
+  ;; Based on stackoverflow.com/a/27043756/4479455
+  (defun ps/org-archive-done-tasks-in-file ()
+    "Archive all DONE tasks in file."
+    (interactive)
+    (org-map-entries
+     (lambda ()
+       (org-archive-to-archive-sibling)
+       (setq org-map-continue-from (org-element-property :begin (org-element-at-point))))
+     "/DONE" 'file))
+
+  (defun ps/org-mark-as-done-for-good-and-archive ()
+    "Mark task as DONE, removing any schedules and deadlines, if
+present, then archive it."
+    (interactive)
+    (org-schedule '(4) nil)
+    (org-deadline '(4) nil)
+    (org-todo "DONE")
+    (org-archive-to-archive-sibling))
+
   :general
+  ("A-s-d" 'ps/org-mark-as-done-for-good-and-archive)
   (org-mode-map
    "s-a" 'org-archive-to-archive-sibling
    "s-A-a" 'org-archive-subtree))
+
+(use-package org-archive-hierarchically
+  :straight (org-archive-hierarchically
+             :host gitlab
+		   :repo "andersjohansson/org-archive-hierarchically")
+
+  )
 
 (use-feature org-fold
   :custom
@@ -6811,34 +6852,6 @@ refresh cache."
 
 (use-package ox-hugo
   :defer 100)
-
-(use-feature org-archive
-  :custom
-  (org-archive-default-command 'org-archive-to-archive-sibling)
-  (org-archive-location (expand-file-name "%s_archive.org::" ps/dir-archive))
-
-  :config
-  ;; Based on stackoverflow.com/a/27043756/4479455
-  (defun ps/org-archive-done-tasks-in-file ()
-    "Archive all DONE tasks in file."
-    (interactive)
-    (org-map-entries
-     (lambda ()
-       (org-archive-to-archive-sibling)
-       (setq org-map-continue-from (org-element-property :begin (org-element-at-point))))
-     "/DONE" 'file))
-
-  (defun ps/org-mark-as-done-for-good-and-archive ()
-    "Mark task as DONE, removing any schedules and deadlines, if
-present, then archive it."
-    (interactive)
-    (org-schedule '(4) nil)
-    (org-deadline '(4) nil)
-    (org-todo "DONE")
-    (org-archive-to-archive-sibling))
-
-  :general
-  ("A-s-d" 'ps/org-mark-as-done-for-good-and-archive))
 
 (use-feature ob
   :custom

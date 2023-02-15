@@ -1,3 +1,7 @@
+:PROPERTIES:
+:mtime:    20230215082042
+:ctime:    20230215082042
+:END:
 #+TITLE:Pablo's Emacs config
 #+AUTHOR: Pablo Stafforini
 #+PROPERTY: header-args :tangle ~/Dropbox/dotfiles/emacs/init.el
@@ -5209,6 +5213,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   ;; stackoverflow.com/questions/23207958/how-to-prevent-emacs-dired-from-splitting-frame-into-more-than-two-windows
 
   :config
+  (add-to-list 'default-frame-alist '(undecorated . t))
   (add-to-list 'display-buffer-alist `(,shell-command-buffer-name-async display-buffer-no-window))
   (defvar ps/split-emacs-chrome-sideways nil)
   (defun ps/split-emacs-chrome-sideways ()
@@ -5933,6 +5938,8 @@ with the specified date."
 :PROPERTIES:
 :ID:       9E8AEF97-2E1A-489E-929A-CE5789EABFB9
 :org-gcal-managed: org
+:mtime:    20230215082042
+:ctime:    20230215082042
 :END:
 :LOGBOOK:
 CLOCK: [2022-07-15 Fri 11:10]--[2022-07-15 Fri 11:19] =>  0:09

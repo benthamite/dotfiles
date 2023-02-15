@@ -18121,6 +18121,7 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 :PROPERTIES:
 :ID:       6DFC9E2F-E77A-4966-9AA6-D0DFDA17E11B
 :END:
+
 * calc
 :PROPERTIES:
 :ID:       29FF5CB1-E727-4CDC-B745-6A9B5711549C
@@ -18462,4 +18463,5 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
 # eval: (ps/buffer-local-set-key (kbd "H-i") 'use-package-report)
+#eval: (define-key org-mode-map (kbd "s-a") 'org-archive-hierarchically)
 # End:

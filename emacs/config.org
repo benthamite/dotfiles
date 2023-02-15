@@ -2001,25 +2001,6 @@ To be explored. The [[https://github.com/positron-solutions/transient-showcase][
   (initial-major-mode 'emacs-lisp-mode))
 #+end_src
 
-** emacsclient
-:PROPERTIES:
-:ID:       CF9CC5EC-5562-47AC-9460-FCE684BDB028
-:END:
-:LOGBOOK:
-CLOCK: [2021-03-20 Sat 12:17]--[2021-03-20 Sat 12:50] =>  0:33
-CLOCK: [2021-03-20 Sat 10:38]--[2021-03-20 Sat 12:00] =>  1:22
-:END:
-
-If you try to open a file externally on Emacs, a new Emacs instance will be launched. Given Emacs's notorious startup times, this can be quite annoying. Fortunately, there exists an app, [[https://www.emacswiki.org/emacs/EmacsClient][emacsclient]], that lets you open new files near-instantaneously in an already running Emacs. For this to work, Emacs must be started as a server.
-
-[[https://medium.com/@bobbypriambodo/blazingly-fast-spacemacs-with-persistent-server-92260f2118b7][This article]] has a number of suggestions, some of which I adopted. I addition, I used [[https://support.apple.com/en-gb/guide/automator/welcome/mac][Automator]] to create an app that runs a shell script that lets me open files from Finder. Launch Automator, then select 'Run Shell Script' as the action, then ~/bin/szh~ in the Shell menu and ~as arguments~ in the 'Pass input' menu, and paste the following:
-
-#+begin_src shell :results silent :tangle no
-/usr/local/bin/emacsclient -c "$@" >/tmp/out.log 2>&1 &
-#+end_src
-
-Save the file as 'emacsclient' and put it in the ~Applications~ folder. Then to always open a file with a particular extension (e.g. ~.py~) on Emacs, right-click the file, select Open with > Other, 'Enable' in the menu, tick 'Always open with', and select 'emacsclient'. Repeat for each desired file extension.
-
 ** server
 :PROPERTIES:
 :ID:       8514378A-0BA2-4A8E-971F-10C07ED4D38A
@@ -2561,6 +2542,7 @@ CLOCK: [2022-07-17 Sun 11:13]--[2022-07-17 Sun 11:21] =>  0:08
 CLOCK: [2021-05-20 Thu 18:21]--[2021-05-20 Thu 18:39] =>  0:18
 CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 :END:
+
 /[[https://github.com/domtronn/all-the-icons.el][all-the-icons]] collects various icon fonts and propertizes them./
 
 #+begin_src emacs-lisp :results silent

@@ -308,7 +308,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-protocol-capture-html][org-protocol-capture-html]]
   - [[#ox][ox]]
   - [[#ox-hugo][ox-hugo]]
-  - [[#org-archive][org-archive]]
   - [[#org-babel][org-babel]]
   - [[#org-src][org-src]]
   - [[#org-tempo][org-tempo]]
@@ -11025,6 +11024,12 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
 :PROPERTIES:
 :ID:       354B22B6-B3BD-409D-B04F-051D4AD87959
 :END:
+:LOGBOOK:
+CLOCK: [2021-07-22 Thu 12:12]--[2021-07-22 Thu 12:23] =>  0:11
+CLOCK: [2021-04-24 Sat 13:10]--[2021-04-24 Sat 13:14] =>  0:04
+CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
+:END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature org-archive
   :custom
@@ -11616,16 +11621,6 @@ Hugo should be able to export ~org-cite~ citations.
 (use-package ox-hugo
   :defer 100)
 #+end_src
-
-** org-archive
-:PROPERTIES:
-:ID:       35501F37-CD5A-4852-ADCE-C910E2A060E2
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-22 Thu 12:12]--[2021-07-22 Thu 12:23] =>  0:11
-CLOCK: [2021-04-24 Sat 13:10]--[2021-04-24 Sat 13:14] =>  0:04
-CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
-:END:
 
 ** org-babel
 :PROPERTIES:

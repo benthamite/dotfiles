@@ -1,8 +1,3 @@
-:PROPERTIES:
-:mtime:    20230215054911
-:ID:       A06F3832-B0F3-4333-898A-6322DC4EAA1A
-:ctime:    20230209161748
-:END:
 #+TITLE:Pablo's Emacs config
 #+AUTHOR: Pablo Stafforini
 #+PROPERTY: header-args :tangle ~/Dropbox/dotfiles/emacs/init.el
@@ -559,12 +554,6 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
     - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
     - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]]
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       7A45BBD1-33AD-42BE-BCFC-DC8C86E113F7
-:END:
-:LOGBOOK:
-:END:
 ** Profiling
 :PROPERTIES:
 :ID:       60B7A58C-A79A-4EEF-A91D-EECC85CFA173
@@ -721,10 +710,6 @@ Some useful config files:
 - [[https://github.com/iqbalansari/dotEmacs][Iqbal Ansari]].
 - [[https://www.danielclemente.com/emacs/confi.html][Daniel Clemente]].
 - [[https://github.com/patrl][Patrick Elliott]]
-** Archive                                                                                                             :ARCHIVE:
-:PROPERTIES:
-:ID:       F1026BA4-886F-4020-A4A4-0F9440F4DF2E
-:END:
 * startup
 :PROPERTIES:
 :ID:       9DBC455B-7ED4-422F-BE05-2FBB3548A86F
@@ -783,10 +768,6 @@ Adapted from [[https://github.com/sfromm/emacs.d#startup][here]]:
 (add-hook 'emacs-startup-hook #'ps/report-startup-time)
 #+end_src
 
-** Archive                                                                                                             :ARCHIVE:
-:PROPERTIES:
-:ID:       EAC96AD7-DDF1-42DD-A9B4-B07EAE6AF6C6
-:END:
 ** variables
 :PROPERTIES:
 :ID:       E5B435F8-1FE3-4F98-964E-D805FA3B26D2
@@ -902,10 +883,6 @@ Process for updating packages:
 (straight-use-package 'org-contrib)
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       07827A82-1E6C-4128-95BB-08009CACB247
-:END:
 ** Use-package
 :PROPERTIES:
 :ID:       C53EA5F9-B256-480E-9BCB-7AD2D0D5DDC2
@@ -957,10 +934,6 @@ NAME and ARGS are as in `use-package'."
   :demand t)
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       AD68DBF4-9E34-4E6E-BC03-8D2B72AD75B0
-:END:
 ** paradox
 :PROPERTIES:
 :ID:       2263DD83-80FF-4180-903B-33FEB83C8179
@@ -984,14 +957,6 @@ CLOCK: [2021-06-03 Thu 14:11]--[2021-06-03 Thu 14:16] =>  0:05
   (remove-hook 'paradox-after-execute-functions #'paradox--report-buffer-print))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       7F880AA9-7A0F-432B-BA32-C9F003369637
-:END:
-** Archive                                                                                                             :ARCHIVE:
-:PROPERTIES:
-:ID:       6CD78068-201A-4479-8DDD-D5D8B14862E0
-:END:
 * foundational
 :PROPERTIES:
 :ID:       25915A25-30F2-4A58-86FD-E27438D269B6
@@ -1203,10 +1168,6 @@ e.g. ~nvm~ isn't recognized by eshell
 :END:
  [[https://blog.flowblok.id.au/2013-02/shell-startup-scripts.html][Shell startup scripts — flowblok’s blog]]
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       ACC80B29-5AE3-4A50-AC87-7E17B5889E51
-:END:
 ** general
 :PROPERTIES:
 :ID:       70C622E0-FAC7-4AB1-841F-36437858218C
@@ -1971,10 +1932,6 @@ This function is used by some of the above snippets.
     (replace-regexp-in-string "[ ,]" "_" string)))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       D784F4A4-3CF1-48B6-96B4-CFE9075F1F3D
-:END:
 ** transient
 :PROPERTIES:
 :ID:       246036BE-CBDF-4ABA-8297-11952B57B551
@@ -2161,10 +2118,6 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   (outline-mode-hook . mixed-pitch-mode))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       0B98C77D-3921-4666-9881-FC15097B9F0C
-:END:
 ** fontaine
 :PROPERTIES:
 :ID:       B375DC03-A71F-4F87-8B03-59437D9CA857
@@ -2314,10 +2267,6 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
 - [[https://zzamboni.org/post/beautifying-org-mode-in-emacs/][- zzamboni.org | Beautifying Org Mode in Emacs]]
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       48DD89AF-277D-427B-9AF1-FBAFA91EC6EC
-:END:
 ** modus-themes
 :PROPERTIES:
 :ID:       95665A5E-A88C-4DCA-BDDD-84DC436A1E80
@@ -2431,10 +2380,6 @@ installed."
 
 
 #+end_src
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       E53CF042-FAF6-4CA6-9FD4-D1472BA3C814
-:END:
 ** emacs-emojify
 :PROPERTIES:
 :ID:       92919C07-A782-4079-AE20-75B248D34A13
@@ -2515,10 +2460,6 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 :ID:       0C458CC1-28B8-49D7-8C61-DDB58604BCAD
 :END:
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       AA28A06C-A686-442C-BA95-EBEB1F4EC9EC
-:END:
 ** doom-modeline
 :PROPERTIES:
 :ID:       C3D90EBC-EB70-440E-9718-A2832FF9F077
@@ -2925,10 +2866,6 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    "A-C-s-SPC" 'end-of-buffer))
 #+end_src
 
-** Archive                                                                                                             :ARCHIVE:
-:PROPERTIES:
-:ID:       801281DE-B78A-402D-85B1-9286940DCA31
-:END:
 * text manipulation
 :PROPERTIES:
 :ID:       179BB021-8B2A-4BF0-B3AA-43AF5A212D4B
@@ -3128,10 +3065,6 @@ CLOCK: [2021-05-29 Sat 21:12]--[2021-05-29 Sat 21:28] =>  0:16
  "A-H-M-q" 'ps/transpose-words-backward)
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       A51E4C5F-5562-469B-BF79-60107BEF43C4
-:END:
 ** lines
 :PROPERTIES:
 :ID:       E0C7E822-7CC0-40A0-925D-737015A5A2FC
@@ -3220,10 +3153,6 @@ between the two."
  "A-H-M-v" 'transpose-lines
  "A-H-M-z" 'ps/transpose-lines-backward)
 #+end_src
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       337327A9-BC2D-4D6E-A304-EDF37B0DBE86
-:END:
 ** sentences
 :PROPERTIES:
 :ID:       CEEDCAFA-4527-401D-A262-C80871AD49E8
@@ -3288,10 +3217,6 @@ CLOCK: [2021-05-29 Sat 21:28]--[2021-05-29 Sat 22:17] =>  0:49
  "A-H-M-e" 'transpose-sentences
  "A-H-M-w" 'ps/transpose-sentences-backward)
 #+end_src
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       35E3FAA2-5850-4423-A35B-8E0DAC867857
-:END:
 ** paragraphs
 :PROPERTIES:
 :ID:       2B3DDC12-D660-47EF-BA22-8B1419A5F5D2
@@ -3362,10 +3287,6 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
    "A-H-M-c" 'transpose-paragraphs
    "A-H-M-x" 'ps/transpose-paragraphs-backward))
 #+end_src
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       1FB11ED1-AF35-4DD9-BCC4-9FFCA1CBE986
-:END:
 ** sexps
 :PROPERTIES:
 :ID:       E07DF88D-B083-4D93-91D2-97DC7C2E3EAD
@@ -3844,10 +3765,6 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 :END:
 https://stackoverflow.com/questions/42595418/how-to-remove-hyphens-during-fill-paragraph
 include this special hyphen: ­
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       1FC444AF-7AA6-4D5A-AC81-966D57FB9377
-:END:
 ** abbrev
 :PROPERTIES:
 :ID:       2D69896F-CF17-4D0C-BEFE-E7C473FB1C2B
@@ -3990,10 +3907,6 @@ NO-TEMPLATE is non-nil."
   ("t" (ps/yasnippet-expand-by-key "mpass") "passage of time"))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       068EBE9B-7485-48FB-89D8-3007DDE6072C
-:END:
 ** hippie-expand
 :PROPERTIES:
 :ID:       06396799-A9FB-4417-AAE3-3654BC901B93
@@ -4212,10 +4125,6 @@ _a_pend       |_k_macro      |r_e_store                    "
   :general
   ("C-r" 'hydra-register/body))
 #+end_src
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       1BCDDAC7-B567-45E9-AA32-6DEB2AE511AB
-:END:
 ** bookmarks
 :PROPERTIES:
 :ID:       943D5DC0-7F0E-449C-8D21-089E051F1027
@@ -4229,10 +4138,6 @@ _a_pend       |_k_macro      |r_e_store                    "
 
 To check: [[https://irreal.org/blog/?p=9969][Prot on Bookmarks | Irreal]] (bookmarking web pages, in particular, is something I may want to look into)
 
-** Archive                                                                                                             :ARCHIVE:
-:PROPERTIES:
-:ID:       FFF624AA-7778-4C0C-B513-E89E8310504E
-:END:
 * files & buffers
 :PROPERTIES:
 :ID:       B29F4586-2B8D-41FE-82DE-FEDCD863C74B
@@ -4729,10 +4634,6 @@ or are no longer readable will be killed."
    "s-q" 'ps/kill-this-buffer))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       42EAFE0B-2444-43E0-B624-48A85C0DD24A
-:END:
 ** f
 :PROPERTIES:
 :ID:       4FD6758A-4021-4B05-BD36-BB09C2063C93
@@ -4940,10 +4841,6 @@ option."
    "x" 'dired-jump))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       5EF4CDEF-2F19-4D27-8EDD-4C826AE80C64
-:END:
 ** image-dired
 :PROPERTIES:
 :ID:       E07C1115-1881-4D5F-8B88-613DA4FD38A8
@@ -5075,10 +4972,6 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
    "–" 'dired-omit-mode))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       AE30914E-C56E-44D1-9CDE-113A8D1B9CA0
-:END:
 ** dired-subtree
 :PROPERTIES:
 :ID:       C3E2CA62-26C4-4681-81D8-4326BE474717
@@ -5176,10 +5069,6 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
    "M-p" nil))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       6EEE5A79-EED7-4587-887E-7855CD147F4B
-:END:
 ** ibuffer
 :PROPERTIES:
 :ID:       11E1F107-4D7A-40DE-AA8E-9D995A10A351
@@ -5291,10 +5180,6 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
     (unless (file-remote-p default-directory 'no-identification) ad-do-it)))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       9463C70C-84CF-43E9-AACA-4087D3A059D0
-:END:
 ** pandoc
 :PROPERTIES:
 :ID:       8EBA8303-EA43-4FB2-BB9D-1734F40DDB77
@@ -5319,10 +5204,6 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 (use-package curl-to-elisp)
 #+end_src
 
-** Archive                                                                                                             :ARCHIVE:
-:PROPERTIES:
-:ID:       CC23C5F4-78BB-4CCD-AF19-702DF6E43E48
-:END:
 * windows & frames
 :PROPERTIES:
 :ID:       7E9A81E0-CAEB-4029-AD2C-B2416439FCDA
@@ -5887,10 +5768,6 @@ needs to be included as an element in the list defined by
    "M-A-'" 'global-writeroom-mode))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       46C5C873-562C-43CB-98B1-1EC4A1292039
-:END:
 ** ace-link
 :PROPERTIES:
 :ID:       F1C54CDB-1E70-41D1-8FAB-A45598C5021A
@@ -6078,10 +5955,6 @@ with the specified date."
    "=" 'calendar-count-days-region))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       9C38D5E5-7717-405F-833D-28EF09AC752B
-:END:
 ** loaddefs
 :PROPERTIES:
 :ID:       08F898A1-71C0-4BF4-B6E8-5D6649DB230C
@@ -6380,10 +6253,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
    "s-g" 'hydra-org-gcal/body))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       D90EB0FC-F92B-4ACB-8B55-4DB8B598D979
-:END:
 ** gcalcli
 :PROPERTIES:
 :ID:       BDDB27DC-E5E2-42CC-B6B1-BBD17565EEC8
@@ -6392,10 +6261,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 
 [2023-01-14 Sat] I wasn't able to make it work, probably because of the issue reported [[https://github.com/insanum/gcalcli/issues][here]]. Maybe wait a couple of months and see if the problem is fixed.
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       35CF1116-B12A-4A18-B99A-FDD62063DE20
-:END:
 ** time
 :PROPERTIES:
 :ID:       88CCE9CB-8284-4C8B-8264-A1E54E299941
@@ -6808,10 +6673,6 @@ To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. Tha
    # I think this is the right command but I'm not sure
    # It has to be a command that generates a .patch file
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       8CAE56AA-E12D-4A19-AA6E-F964EB7B65E0
-:END:
 ** ghub
 :PROPERTIES:
 :ID:       C557A862-9EC7-406C-98E1-C248F7D579F5
@@ -6942,10 +6803,6 @@ CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
    (global-git-gutter-mode))
 #+end_src
 
-** Archive                                                                                                             :ARCHIVE:
-:PROPERTIES:
-:ID:       A15BC2BA-0157-48CA-ACDC-E3D1CE4D640F
-:END:
 * search & replace
 :PROPERTIES:
 :ID:       9FDBBF3E-724F-4402-9DDB-F9349F65AB0E
@@ -7049,10 +6906,6 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :PROPERTIES:
 :Effort:   0:30
 :ID:       C1131D3A-4E66-48E5-9353-C7E785391DFA
-:END:
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       D5290EEA-8426-41B9-9346-A622FF07D695
 :END:
 ** replace
 :PROPERTIES:
@@ -7436,10 +7289,6 @@ By default, all agenda entries are offered. MATCH is as in
    "s-j" 'consult-imenu))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       4120BFCB-78B2-472D-9D34-C204A51F5B58
-:END:
 ** consult-dir
 :PROPERTIES:
 :ID:       3250EBD7-513E-439F-972F-B43C8214AC46
@@ -7919,10 +7768,6 @@ always use face at point."
   ("C-h C-f" 'ps/describe-face))
 #+end_src
 
-*** Archive                                                         :ARCHIVE:
-:PROPERTIES:
-:ID:       DC1EADB1-D5A1-4E14-ABB0-1E4A1CF757E5
-:END:
 ** helpful
 :PROPERTIES:
 :ID:       6DCDFA24-4561-43CD-9D82-7C870A1044D1
@@ -7959,10 +7804,6 @@ buffer displays and push it to the kill ring."
    "h" 'helpful-symbol))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       56C739C3-8C73-4EF4-ACB7-A4B9573DB3E1
-:END:
 ** info
 :PROPERTIES:
 :ID:       28966DB8-E893-4AEA-A7BD-8C18B8A97592
@@ -8019,10 +7860,6 @@ Emacs 28 has a useful builtin [[https://www.masteringemacs.org/article/emacs-bui
   (which-key-idle-delay 0))
 #+end_src
 
-** Archive                                                                                                             :ARCHIVE:
-:PROPERTIES:
-:ID:       0745A5BC-3066-447E-BAFA-CC4976F65561
-:END:
 * keyboard macros
 :PROPERTIES:
 :ID:       ADB25EC1-6E97-4057-AEBD-FB7B7E4503CF
@@ -8062,10 +7899,6 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
    "M-h" 'kmacro-edit-macro
    "M-A-h" 'kmacro-bind-to-key))
 #+end_src
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       C59419A1-0B6B-44A2-84F3-EA5F54374AD0
-:END:
 ** elmacro
 :PROPERTIES:
 :ID:       B7816A82-2E9C-434F-AAB3-A92FA5F3368B
@@ -8438,10 +8271,6 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
   ("M-A-p" 'ps/ispell-toggle-language))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       97E8B3C4-2217-444D-BDFD-1772289D2778
-:END:
 ** flyspell
 :PROPERTIES:
 :ID:       78ABBC76-7474-4C1C-A9B0-E8BEC972E75E
@@ -8557,10 +8386,6 @@ I have configured Ispell to use AppleSpell, the native OSX spell checker, since 
 :ID:       05BDF065-280F-4F09-B55A-9B32D10A36B1
 :END:
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       93BE5B36-4B03-4ED0-9C20-A0AE4915C304
-:END:
 ** flyspell-correct
 :PROPERTIES:
 :ID:       5E8AA3D3-68AE-407E-B662-524B8B0AAD43
@@ -8643,10 +8468,6 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 
 [2023-01-28 Sat] I followed the instructions but couldn't make it work.
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       CBB3AD1D-834C-4C18-B591-97AEB603981A
-:END:
 ** eglot-grammarly
 :PROPERTIES:
 :ID:       4C20D1C9-F6CB-42A0-963F-91D48E212248
@@ -9389,10 +9210,6 @@ otherwise the whole buffer."
 :ID:       49D7A193-157E-4A10-9C33-98727FC191BF
 :END:
 1. [[https://felixcrux.com/blog/ledger-practices-create-a-ledgerrc][create a ~.ledgerrc~ file]]
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       3ACCA3B0-B00C-43C9-AB33-7EA3B37AE0A3
-:END:
 ** parse-csv
 :PROPERTIES:
 :ID:       55B470DB-E9D2-45B1-8E74-58CB9DDF7D27
@@ -9402,10 +9219,6 @@ otherwise the whole buffer."
 (use-package parse-csv)
 #+end_src
 
-** Archive                                                                                                             :ARCHIVE:
-:PROPERTIES:
-:ID:       96310305-E456-418C-8D3B-2023B10CA436
-:END:
 * pdf
 :PROPERTIES:
 :ID:       6C0D0737-734E-4EAB-8A3F-138EF990B967
@@ -9560,10 +9373,6 @@ FILE."
    "A-C-s-g" 'sow-scroll-other-window))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       C1097526-0DDF-4AF0-84A1-047B138B2DEF
-:END:
 ** pdf-view-restore
 :PROPERTIES:
 :ID:       159A7ABF-5D9C-46C3-BAA2-C1E486682875
@@ -9598,20 +9407,6 @@ FILE."
 :ID:       9ACD5D5E-29E2-49E6-A899-E90558112D5A
 :END:
 
-** Archive                                                         :ARCHIVE:
-:PROPERTIES:
-:ID:       6F1727AC-C7FD-49B5-89D9-F203E96DC849
-:END:
-*** DELEGATED Investigate book scanners
-CLOSED: [2022-09-06 Tue 10:20]
-:PROPERTIES:
-:ID:       DCF8644B-A497-486F-9479-FB340E86A599
-:ARCHIVE_TIME: 2022-09-13 Tue 17:26
-:END:
-:LOGBOOK:
-CLOCK: [2022-09-06 Tue 10:05]--[2022-09-06 Tue 10:20] =>  0:15
-:END:
-Delegated to Leo.
 * prog-mode
 :PROPERTIES:
 :ID:       A8700D18-574A-4093-938C-5707589DBB41
@@ -9744,10 +9539,6 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 :END:
 
 #+end_src
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       17678075-A57B-43BE-B370-EFB77935BE05
-:END:
 ** backtrace
 :PROPERTIES:
 :ID:       B69F718B-9BAE-4EAD-99DE-2C8C1E98CCA3
@@ -10655,10 +10446,6 @@ image."
    "s-e" (lambda! (org-emphasize ?~))))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       40506BF5-AB78-4109-AA1D-717739B92591
-:END:
 ** org-agenda
 :PROPERTIES:
 :ID:       E03F4142-C90D-4550-8990-15391E27AD77
@@ -10901,10 +10688,6 @@ Posted a question to [[https://emacs.stackexchange.com/questions/66343/in-org-ag
 
 [2021-06-25 Fri 23:00] Since no one replied by now, it's unlikely anyone will reply anytime soon. Marking as SOMEDAY and removing scheduling.
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       AF09A036-FF55-41C8-B356-F25D5CA4AB0B
-:END:
 ** org-capture
 :PROPERTIES:
 :ID:       14F93A83-0BE7-42E3-891E-F6806192296B
@@ -11140,10 +10923,6 @@ Links to check out:
     - [[https://helpdeskheadesk.net/org-capture-template-1/][My Org Capture Templates - Part 1 emacs: · The Art of Not Asking Why]]
     - [[https://helpdeskheadesk.net/org-capture-template-2/][My Org Capture Templates - Part 2 emacs: · The Art of Not Asking Why]]
     - [[https://helpdeskheadesk.net/org-capture-template-3/][My Org Capture Templates - Part 3 emacs:css: · The Art of Not Asking Why]]
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       32625A75-E92B-43A2-809A-4DE4C7D23C95
-:END:
 ** org-clock
 :PROPERTIES:
 :ID:       90E8B1CE-433C-4B2B-8AA2-844506EAC031
@@ -11241,10 +11020,6 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
    "s-=" 'ps/org-time-stamp-inactive-current-time
    "s-A-=" 'ps/org-time-stamp-inactive-current-date))
 #+end_src
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       6A89B80F-A4F6-436E-A29D-ACDBAF084C9B
-:END:
 ** org-cycle
 :PROPERTIES:
 :ID:       AAB14053-B232-4627-8C1D-635FAE417A98
@@ -11557,10 +11332,6 @@ When FILES is given, scan these files instead."
    "s-A-u" 'ps/org-id-update-id-locations))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       8AF14CB2-00AF-4370-8926-11D5D2019913
-:END:
 ** org-list
 :PROPERTIES:
 :ID:       DD345C01-CEAC-4CEC-A8D5-89C16A0182CB
@@ -11698,10 +11469,6 @@ refresh cache."
    "s-A-w" 'ps/org-refile-latest))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       1B7125C0-A456-441E-BCCC-E78D46DFA06B
-:END:
 ** org-keys
 :PROPERTIES:
 :ID:       19FC2EEB-7C71-43C1-97E6-52913C31CCDE
@@ -11971,10 +11738,6 @@ defined as part of a minimal configuration instead."
 
 This custom command also saves the buffer before tangling it. In combination with ~git-auto-commit-mode~, executing this command insures that I commit this (org) file whenever I generate an associated ~.spacemacs~ version. Because of this, I can always revert to the closest working config file whenever the latest version is broken. (~org-babel-tangle~ automatically saves the file, but unlike calling ~save-buffer~ explicitly, this doesn't cause ~git-auto-commit-mode~ to create a new commit.)
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       9362FA35-B0E9-4466-8CD2-B59087593AC6
-:END:
 ** org-src
 :PROPERTIES:
 :ID:       5D173B55-ED72-495C-80EE-39063BAB0550
@@ -12074,10 +11837,6 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   (org-crypt-use-before-save-magic))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       D6606D43-0B9F-4136-B0DD-AF06DE69A98C
-:END:
 ** org-lint
 :PROPERTIES:
 :ID:       43E5754F-7EB8-4FB7-8A92-B57D8BA2AF81
@@ -12332,10 +12091,6 @@ an org drawer."
   ("A-o" 'org2blog-user-interface))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       FC1AD69E-E920-4B9B-896A-B5575D5F5A24
-:END:
 ** org-journal
 :PROPERTIES:
 :ID:       16DB534E-D606-4510-84ED-6C6640780E7A
@@ -12371,10 +12126,6 @@ an org drawer."
 :ID:       67333293-EE6D-4936-8C88-07F5AE193B81
 :END:
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       A9515515-8FBC-4940-82FC-07857F80B9B4
-:END:
 ** org-autosort
 :PROPERTIES:
 :ID:       1BC53647-A492-4EA3-A9A5-352C71119629
@@ -12566,10 +12317,6 @@ Pomodoro system:
 
 - Always working on a task (rather than merely on a heading)
 - At the beginning of each 30-minute session, leave a note on what I will do in that session
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       2977BCF3-1364-4C7E-BBD7-CCB9C796489E
-:END:
 ** memacs
 :PROPERTIES:
 :ID:       1146CE48-9243-435A-8394-07C385538104
@@ -12964,10 +12711,6 @@ Run org-roam with minimal config and see if the problem with idle times persist
 :ID:       83AA4CF2-A783-4C27-895F-C68EAE5AB456
 :END:
 So the links to other Wiki articles do not break.
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       59F8E3AC-CEB8-495D-8F6F-DACA6313F987
-:END:
 ** org-roam-ui
 :PROPERTIES:
 :ID:       BAEADCA3-68C6-4B59-A45A-7A1C11C6F6BB
@@ -13191,10 +12934,6 @@ CLOCK: [2021-12-03 Fri 16:46]--[2021-12-03 Fri 17:03] =>  0:17
 :END:
 Asked question [[https://org-roam.discourse.group/t/how-to-query-the-database-for-files-having-one-tag-but-missing-another/2256][here]]. Check for answers every four months.
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       8CBE5449-7E42-4D7A-841B-E73249BBAF47
-:END:
 ** org-noter
 :PROPERTIES:
 :NOTER_DOCUMENT: ../library.org
@@ -13234,10 +12973,6 @@ Remember that you should create the notes file using ~bibtex-completion~! Then y
 - To check: https://org-roam.discourse.group/t/org-roam-bibtex-in-a-sub-directory/649/5
 - https://notes.andymatuschak.org/About_these_notes
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       DA95C162-B8B0-4A31-95A8-A1D6F890FC3E
-:END:
 * reference & citation
 :PROPERTIES:
 :ID:       4939B006-F4F6-4A5C-9B78-85C998FDA7D8
@@ -13391,10 +13126,6 @@ ARG is the prefix argument received when calling interactively the function."
 - [cite:@Balintona2022CitationsOrgmodeOrgcite]. The most comprehensive explanation I'm aware of about how to use ~org-cite~. See [[https://www.reddit.com/r/orgmode/comments/vc7ys6/how_i_run_my_wiki_with_org_mode/][Reddit discussion]].
 - [cite:@Kolsc2021HowActuallyInsert]. Reddit thread about the basics of ~org-cite~.
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       99B1B771-2330-4DE7-A25F-362E8857A779
-:END:
 ** oc-basic
 :PROPERTIES:
 :ID:       DD72A5D8-057E-4945-8EF0-E681904731D4
@@ -13629,10 +13360,6 @@ Version 2015-06-08"
 :ID:       8B243BA8-8CA1-4E6F-82CA-5CD950D8C498
 :END:
 
-*** Archive                                                         :ARCHIVE:
-:PROPERTIES:
-:ID:       8713F59B-64AA-4706-9F4D-84D1BC36249C
-:END:
 ** bibtex-completion
 :PROPERTIES:
 :ID:       DCD9D75D-7814-49D8-A3E0-33846D5A08FD
@@ -13664,10 +13391,6 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
   (bibtex-dialect 'biblatex))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       664ACDBD-58F7-4174-8A6B-2FF5E4441362
-:END:
 ** org-roam-bibtex
 :PROPERTIES:
 :ID:       EC73B84D-530E-4179-BB67-F19110A543DF
@@ -13701,10 +13424,6 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
   (org-roam-bibtex-mode))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       BF807BC6-65EB-4D24-88B0-A13E39C387AD
-:END:
 ** citar-org-roam
 :PROPERTIES:
 :ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
@@ -13857,10 +13576,6 @@ The problem seems to be that ~(citar--select-resource citekeys :notes t)~ return
 [cite:@Balintona2022CitationsOrgmodeOrgcite]
 
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       D5209A3D-C985-4B14-B2E7-60D57C256459
-:END:
 ** citar-citeproc
 :PROPERTIES:
 :ID:       8CE6DBC7-E180-4E6D-B6E2-8D1E2756E765
@@ -15057,10 +14772,6 @@ por qué ebib no recarga
 [[https://juanjose.garciaripoll.com/blog/ebib-biblio-interface/index.html][eBib-Biblio interface, aka. Mendeley for Emacs]]
 
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       C9E6B4A2-BB3C-4D2F-B6F8-D315C422676B
-:END:
 ** biblio
 :PROPERTIES:
 :ID:       4EDDE179-9DE5-4F31-9FB4-17A5B68F6557
@@ -15330,10 +15041,6 @@ or specify any other coding system (and risk losing\n\
    "i" 'zotra-add-entry-from-search))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       B8B5D792-0C5B-4058-87CB-BF933B2E7AF9
-:END:
 ** scihub
 :PROPERTIES:
 :ID:       29ABF514-563B-463D-9FDB-CF2C8AA25F83
@@ -15503,10 +15210,6 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
 
 Of possible interest:
 - [[https://emacstil.com/til/2021/11/19/anki-org/][Anki Org – Emacs TIL – Today I learned in Emacs]]
-**** Archive                                                                                                         :ARCHIVE:
-:PROPERTIES:
-:ID:       94D5EA30-9B67-4384-A4A8-A251EA5EA4FC
-:END:
 ** org-drill
 :PROPERTIES:
 :ID:       34FB61E2-5BF6-44F1-B3C4-759D61DB2D34
@@ -16126,10 +15829,6 @@ it, without asking for confirmation."
 - Package to try: [[https://github.com/rougier/mu4e-thread-folding][GitHub - rougier/mu4e-thread-folding: Functions for folding threads in mu4e headers view]]
   - See also [[https://gist.github.com/rougier/98e83fb50e19fb73fe34a7ecc5fc1ccc][this]] (discussed [[https://www.reddit.com/r/emacs/comments/pvpb6d/mu4e_very_fast_thread_folding/][here]])
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       7914B367-02AA-4BB6-876E-DB154B692D86
-:END:
 ** mu4e-org
 :PROPERTIES:
 :ID:       6E72E4DE-4CFE-4BC0-BC3C-39FB3D6EB526
@@ -16282,12 +15981,6 @@ This is controlled with ~org-msg-enforce-css~.
 :ctime:    20230214200452
 :END:
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       4F355806-D1F5-4EAD-86ED-F5E7DC016A07
-:mtime:    20230214200740
-:ctime:    20230214200740
-:END:
 ** htmlize
 :PROPERTIES:
 :ID:       F22F2F4B-619E-4A7C-BF65-8FF5CE7953C4
@@ -16302,10 +15995,6 @@ This is controlled with ~org-msg-enforce-css~.
   (htmlize-ignore-face-size nil))
 #+end_src
 
-** Archive                                                                                                             :ARCHIVE:
-:PROPERTIES:
-:ID:       D9FA47E0-E55D-48DA-B0BE-BBB66ACFABCD
-:END:
 * messaging
 :PROPERTIES:
 :ID:       7DD09AFA-70A6-4E9D-AA78-C8E8421A9673
@@ -16563,10 +16252,6 @@ into a task for Leo."
    "A-s-a" 'ps/telega-dired-attach-send))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       212BC00E-8977-4E9B-ACD5-8183A09D5B0E
-:END:
 ** telega-mnz
 :PROPERTIES:
 :ID:       473F7E47-4980-4A4A-8EC7-C008DB30BA22
@@ -17151,12 +16836,6 @@ CLOCK: [2022-07-19 Tue 21:36]--[2022-07-19 Tue 22:31] =>  0:55
 CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 :END:
 
-*** Archive                                                         :ARCHIVE:
-:PROPERTIES:
-:ID:       6ED17D19-FE7B-4AC2-8D62-8FB3F65F1DA1
-:mtime:    20230212014328
-:ctime:    20230212014328
-:END:
 ** w3m
 :PROPERTIES:
 :ID:       986E4522-7EE1-477A-89EB-08855BCBECEE
@@ -17387,10 +17066,6 @@ poorly-designed websites."
    "x" 'elfeed-show-visit))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       93D26DD3-A658-4892-AA96-2CF05CD37556
-:END:
 ** elfeed-org
 :PROPERTIES:
 :ID:       DF954E99-17CB-4698-934E-53E038C654EF
@@ -17561,10 +17236,6 @@ CLOCK: [2022-07-24 Sun 16:09]--[2022-07-24 Sun 17:21] =>  1:12
   (eaf-bind-key ps/kill-this-buffer "q" eaf-browser-keybinding))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       E3B60EF3-B637-4826-A6B3-57D5D65BEBA7
-:END:
 ** osm
 :PROPERTIES:
 :ID:       1DCEE01C-1951-45F0-B9B8-60977E2D4314
@@ -17808,10 +17479,6 @@ account."
    "s-c" 'twittering-edit-post-status))
 #+end_src
 
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       964A8BEC-3FAD-4E9B-98C4-7E6CC7A46CD8
-:END:
 ** mastodon
 :PROPERTIES:
 :ID:       252C88FE-B66D-4A8F-8286-78777F418EC3
@@ -18058,10 +17725,6 @@ that duration."
     duration))
 #+end_src
 
-*** Archive                         :ARCHIVE:
-:PROPERTIES:
-:ID:       41575F1D-9348-4E44-A189-49F5B2B4990A
-:END:
 * multimedia
 :PROPERTIES:
 :ID:       358E28B5-0274-43A0-AE9C-AA004B4775E5
@@ -18131,10 +17794,6 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 :END:
 :LOGBOOK:
 CLOCK: [2022-09-05 Mon 20:22]--[2022-09-05 Mon 21:28] =>  1:06
-:END:
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       126B3CB9-D2C0-4257-B1C4-C49041F84F05
 :END:
 ** mentor
 :PROPERTIES:
@@ -18453,14 +18112,6 @@ to the clipboard."
    "s-s" 'server-edit))
 #+end_src
 
-*** Archive                                                                                                           :ARCHIVE:
-:PROPERTIES:
-:ID:       F680962F-6777-44B6-8996-DABCDB4C09D7
-:END:
-
-:PROPERTIES:
-:ID:       BADBCCAF-DC50-4FCE-A4C2-3606418D0F9C
-:END:
 ** auth-source-pass
 :PROPERTIES:
 :ID:       00772E1B-A97C-46B5-8DE9-77462AAE0189
@@ -18492,10 +18143,6 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
 :END:
 [[https://github.com/tadfisher/pass-otp][GitHub - tadfisher/pass-otp: A pass extension for managing one-time-password (OTP) tokens]]
 
-** Archive                                                                                                             :ARCHIVE:
-:PROPERTIES:
-:ID:       53229CB3-1BAF-4F8C-933E-A1D623E8EA9B
-:END:
 * notifications
 :PROPERTIES:
 :ID:       7F48BD07-3570-46C7-A535-87CA5833E84E
@@ -18545,17 +18192,9 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
   ("H-\"" 'ps/alert-dismiss-osx-notification))
 #+end_src
 
-*** Archive                                                         :ARCHIVE:
-:PROPERTIES:
-:ID:       524DF96A-F936-4504-9ACB-48CA92E400A4
-:END:
 ** dbus
 :PROPERTIES:
 :ID:       6DFC9E2F-E77A-4966-9AA6-D0DFDA17E11B
-:END:
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       6EB0E5A6-5DFF-4385-8F4F-35C5CC45A4D1
 :END:
 * calc
 :PROPERTIES:
@@ -18723,14 +18362,6 @@ ModuleNotFoundError: No module named 'dotenv'
 #+end_src
 
 I'm not tracking prices anymore so this is probably not worth it currently.
-*** Archive                                                       :ARCHIVE:
-:PROPERTIES:
-:ID:       498E1B87-1265-4A57-9312-8E047ADACE1B
-:END:
-
-:PROPERTIES:
-:ID:       D894A551-F2E1-436D-8D4A-C12779C64F8D
-:END:
 ** keycast
 :PROPERTIES:
 :ID:       8D51F4B0-7443-420B-919F-7AA9B0EC0CE9
@@ -18836,10 +18467,6 @@ By considering both tasks completed and their associated priorities.
 - Calculate fraction of past days in which I had produced at least this much value at this point of the subjective day.
 This may be useful: [cite:@Wellons2018OptionsForStructured]
 
-** Archive                                                         :ARCHIVE:
-:PROPERTIES:
-:ID:       EDC5DFF7-CCA3-4C1B-8E08-9629392A168E
-:END:
 * personal projects
 :PROPERTIES:
 :ID:       9D7B5C99-2380-4159-A8C8-4021CC0482DE

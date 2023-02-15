@@ -16,23 +16,21 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :END:
 :CONTENTS:
 - [[#table-of-contents][table of contents]]
-- [[#installation][installation]]
 - [[#preface][preface]]
+  - [[#rename-config-file][Rename config file]]
   - [[#profiling][Profiling]]
   - [[#installation][Installation]]
   - [[#other-config-files][Other config files]]
-  - [[#archive][Archive]]
 - [[#startup][startup]]
-  - [[#archive][Archive]]
   - [[#variables][variables]]
   - [[#macros][macros]]
 - [[#package-management][package management]]
   - [[#straight][straight]]
   - [[#use-package][Use-package]]
   - [[#paradox][paradox]]
-  - [[#archive][Archive]]
 - [[#foundational][foundational]]
   - [[#key-bindings][key bindings]]
+  - [[#iso-transl][iso-transl]]
   - [[#no-littering][no-littering]]
   - [[#exec-path-from-shell][exec-path-from-shell]]
   - [[#general][general]]
@@ -44,16 +42,15 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#comp][comp]]
   - [[#bytecomp][bytecomp]]
   - [[#startup][startup]]
-  - [[#emacsclient][emacsclient]]
   - [[#server][server]]
   - [[#async][async]]
   - [[#misc][misc.]]
 - [[#display][display]]
   - [[#mixed-pitch][mixed-pitch]]
+  - [[#fontaine][fontaine]]
   - [[#face-remap][face-remap]]
   - [[#fringe][fringe]]
   - [[#highlight-parentheses][highlight-parentheses]]
-  - [[#prism][prism]]
   - [[#org-modern][org-modern]]
   - [[#org-faces][org-faces]]
   - [[#modus-themes][modus-themes]]
@@ -72,7 +69,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#hl-line][hl-line]]
   - [[#jit-lock][jit-lock]]
 - [[#performance][performance]]
-  - [[#bidirectional-writing][bidirectional writing]]
   - [[#profiler][profiler]]
   - [[#so-long][so-long]]
   - [[#gcmh][gcmh]]
@@ -86,7 +82,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#sexps][sexps]]
   - [[#defuns][defuns]]
   - [[#buffers][buffers]]
-  - [[#archive][Archive]]
 - [[#text-manipulation][text manipulation]]
   - [[#characters][characters]]
   - [[#words][words]]
@@ -119,10 +114,10 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#back-button][back-button]]
   - [[#goto-last-change][goto-last-change]]
   - [[#titlecase][titlecase]]
+  - [[#goto-addr][goto-addr]]
 - [[#registers--bookmarks][registers & bookmarks]]
   - [[#registers][registers]]
   - [[#bookmarks][bookmarks]]
-  - [[#archive][Archive]]
 - [[#files--buffers][files & buffers]]
   - [[#files][files]]
   - [[#f][f]]
@@ -147,7 +142,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#tramp][tramp]]
   - [[#pandoc][pandoc]]
   - [[#curl-to-elisp][curl-to-elisp]]
-  - [[#archive][Archive]]
 - [[#windows--frames][windows & frames]]
   - [[#window][window]]
   - [[#frame][frame]]
@@ -184,7 +178,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#git-timemachine][git-timemachine]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
   - [[#git-gutter][git-gutter]]
-  - [[#archive][Archive]]
 - [[#search--replace][search & replace]]
   - [[#isearch][isearch]]
   - [[#replace][replace]]
@@ -221,18 +214,17 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#help][help]]
   - [[#help][help]]
   - [[#help-at-pt][help-at-pt]]
+  - [[#help-fns][help-fns]]
   - [[#helpful][helpful]]
   - [[#info][info]]
   - [[#man][man]]
   - [[#shortdoc][shortdoc]]
   - [[#elisp-demos][elisp-demos]]
   - [[#which-key][which-key]]
-  - [[#archive][Archive]]
 - [[#keyboard-macros][keyboard macros]]
   - [[#kmacro][kmacro]]
   - [[#elmacro][elmacro]]
 - [[#shells][shells]]
-  - [[#learn-how-to-call-emacs-commands-from-shell][Learn how to call Emacs commands from shell]]
   - [[#simple][simple]]
   - [[#shell][shell]]
   - [[#eshell][eshell]]
@@ -246,7 +238,9 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#flyspell][flyspell]]
   - [[#flyspell-correct][flyspell-correct]]
   - [[#keytar][keytar]]
+  - [[#grammarly][grammarly]]
   - [[#lsp-grammarly][lsp-grammarly]]
+  - [[#eglot-grammarly][eglot-grammarly]]
   - [[#aide][aide]]
   - [[#languagetool][languagetool]]
 - [[#prose][prose]]
@@ -255,7 +249,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#latex-mode][latex-mode]]
   - [[#dictionary][dictionary]]
   - [[#osx-dictionary][osx-dictionary]]
-  - [[#check-out-shawcmgoldendict-emacs-lookup-marked-text-by-goldendict-in-emacs][Check out shawcm/goldendict-emacs: Lookup marked text by GoldenDict in Emacs]]
+  - [[#goldendict][goldendict]]
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict][goldendict]]
   - [[#google-translate][google-translate]]
@@ -268,14 +262,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#edit-indirect][edit-indirect]]
   - [[#ledger-mode][ledger-mode]]
   - [[#parse-csv][parse-csv]]
-  - [[#archive][Archive]]
 - [[#pdf][pdf]]
-  - [[#tweak-chrome-headless-command-so-that-chrome-authenticates-before-printing-a-pdf][Tweak chrome headless command so that chrome authenticates before printing a pdf]]
   - [[#pdf-tools][pdf-tools]]
   - [[#pdf-view-restore][pdf-view-restore]]
   - [[#org-pdftools][org-pdftools]]
   - [[#org-noter-pdftools][org-noter-pdftools]]
-  - [[#archive][Archive]]
 - [[#prog-mode][prog-mode]]
   - [[#lsp-mode][lsp-mode]]
   - [[#lsp-ui][lsp-ui]]
@@ -300,14 +291,13 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#eldoc][eldoc]]
   - [[#bicycle][bicycle]]
 - [[#org-mode][org-mode]]
-  - [[#create-function-to-compute-the-total-number-of-hours-in-effort-estimates-as-well-as-the-total-number-of-todos-then-check-it-every-evening][Create function to compute the total number of hours in effort estimates, as well as the total number of Todos, then check it every evening]]
-  - [[#read-org-manual][Read Org manual]]
   - [[#org][org]]
   - [[#org-agenda][org-agenda]]
   - [[#org-capture][org-capture]]
   - [[#org-clock][org-clock]]
   - [[#org-cycle][org-cycle]]
   - [[#org-archive][org-archive]]
+  - [[#org-archive-hierarchically][org-archive-hierarchically]]
   - [[#org-fold][org-fold]]
   - [[#org-id][org-id]]
   - [[#org-list][org-list]]
@@ -344,11 +334,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-pomodoro][org-pomodoro]]
   - [[#memacs][memacs]]
 - [[#note-taking][note-taking]]
-  - [[#add-biblio-tag-to-all-bibliographic-notes][Add biblio tag to all bibliographic notes]]
   - [[#emacs-sqlite3][emacs-sqlite3]]
   - [[#emacsql-sqlite-builtin][emacsql-sqlite-builtin]]
   - [[#org-roam][org-roam]]
   - [[#org-roam-ui][org-roam-ui]]
+  - [[#org-roam-timestamps][org-roam-timestamps]]
   - [[#org-roam-browser-extension][org-roam-browser-extension]]
   - [[#org-transclusion][org-transclusion]]
   - [[#vulpea][vulpea]]
@@ -383,13 +373,13 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#sendmail][sendmail]]
   - [[#async-mail-sending][async-mail-sending]]
   - [[#message][message]]
+  - [[#message-extras][message-extras]]
   - [[#mml][mml]]
   - [[#mu4e][mu4e]]
   - [[#mu4e-org][mu4e-org]]
   - [[#mu4e-alert][mu4e-alert]]
   - [[#org-msg][org-msg]]
   - [[#htmlize][htmlize]]
-  - [[#archive][Archive]]
 - [[#messaging][messaging]]
   - [[#telega][telega]]
   - [[#telega-mnz][telega-mnz]]
@@ -404,10 +394,12 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#browse-url][browse-url]]
   - [[#shr][shr]]
   - [[#shr-tag-pre-highlight][shr-tag-pre-highlight]]
+  - [[#shr-heading][shr-heading]]
   - [[#eww][eww]]
   - [[#w3m][w3m]]
   - [[#elfeed][elfeed]]
   - [[#elfeed-org][elfeed-org]]
+  - [[#elfeed-tube][elfeed-tube]]
   - [[#elfeed-score][elfeed-score]]
   - [[#google-this][google-this]]
   - [[#engine-mode][engine-mode]]
@@ -439,7 +431,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#pass][pass]]
   - [[#auth-source-pass][auth-source-pass]]
   - [[#pass-otp][pass-otp]]
-  - [[#archive][Archive]]
 - [[#notifications][notifications]]
   - [[#alert][alert]]
   - [[#dbus][dbus]]
@@ -451,12 +442,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#misc][misc.]]
   - [[#unpackaged][unpackaged]]
   - [[#macos][macos]]
-  - [[#midnight-mode][midnight-mode]]
+  - [[#midnight][midnight]]
   - [[#keycast][keycast]]
   - [[#keyfreq][keyfreq]]
   - [[#custom][custom]]
   - [[#productivity][productivity]]
-  - [[#archive][Archive]]
 - [[#personal-projects][personal projects]]
   - [[#tlon][Tlon]]
   - [[#keyboard-maestro][Keyboard Maestro]]
@@ -7902,13 +7892,6 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
   ("C-A-s" 'shell-command))
 #+end_src
 
-** TODO [#6] Learn how to call Emacs commands from shell
-:PROPERTIES:
-:Effort:   0:30
-:ID:       BD2CACC7-6077-4B9B-98D3-5D565F340D87
-:END:
-https://emacs.stackexchange.com/questions/14947/can-emacs-commands-be-called-from-a-shell-script
-
 ** simple
 :PROPERTIES:
 :ID:       A34DA7F2-47E4-400E-B2C8-167BCAEA73E7
@@ -7962,6 +7945,13 @@ necessary."
    "M-k" 'comint-previous-input
    "M-l" 'comint-next-input))
 #+end_src
+
+*** TODO [#6] Call Emacs commands from shell
+:PROPERTIES:
+:Effort:   0:30
+:ID:       BD2CACC7-6077-4B9B-98D3-5D565F340D87
+:END:
+https://emacs.stackexchange.com/questions/14947/can-emacs-commands-be-called-from-a-shell-script
 
 ** eshell
 :PROPERTIES:
@@ -8557,8 +8547,11 @@ CLOCK: [2021-04-03 Sat 18:49]--[2021-04-03 Sat 18:54] =>  0:05
   :general
   ("H-y" 'osx-dictionary-search-input))
 #+end_src
-
-** TODO [#5] Check out shawcm/goldendict-emacs: Lookup marked text by GoldenDict in Emacs
+** goldendict
+:PROPERTIES:
+:ID:       32143368-5DE3-44F5-A35B-05F157DEC2A5
+:END:
+*** TODO [#5] Check out shawcm/goldendict-emacs: Lookup marked text by GoldenDict in Emacs
 :PROPERTIES:
 :Effort:   0:25
 :ID:       4B44B3FE-6553-4BA0-98B9-5C0ECFE0C913
@@ -9207,15 +9200,6 @@ otherwise the whole buffer."
 :ID:       6C0D0737-734E-4EAB-8A3F-138EF990B967
 :END:
 
-** TODO [#4] Tweak chrome headless command so that chrome authenticates before printing a pdf
-:PROPERTIES:
-:ID:       BDE975FE-56AA-45C3-AF47-C70503051B30
-:Effort:   0:20
-:mtime:    20230212131110
-:ctime:    20230212131110
-:END:
-https://stackoverflow.com/questions/62602327/headless-chrome-sharing-credentials
-Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 ** pdf-tools
 :PROPERTIES:
 :ID:       B4272338-4DCA-44FC-9330-804CC88BF189
@@ -9356,6 +9340,15 @@ FILE."
    "A-C-s-g" 'sow-scroll-other-window))
 #+end_src
 
+*** TODO [#4] Tweak chrome headless command so that chrome authenticates before printing a pdf
+:PROPERTIES:
+:ID:       BDE975FE-56AA-45C3-AF47-C70503051B30
+:Effort:   0:20
+:mtime:    20230212131110
+:ctime:    20230212131110
+:END:
+https://stackoverflow.com/questions/62602327/headless-chrome-sharing-credentials
+Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 ** pdf-view-restore
 :PROPERTIES:
 :ID:       159A7ABF-5D9C-46C3-BAA2-C1E486682875
@@ -9958,46 +9951,6 @@ CLOCK: [2020-07-10 Fri 19:36]--[2020-07-10 Fri 19:41] =>  0:05
 CLOCK: [2020-07-11 Sat 13:11]--[2020-07-11 Sat 14:59] =>  1:48
 :END:
 
-** TODO [#4] Create function to compute the total number of hours in effort estimates, as well as the total number of Todos, then check it every evening
-:PROPERTIES:
-:Effort:   2:00
-:ID:       FCC486F6-7391-4EA3-9087-6BC3D5AB72B3
-:END:
-
-** TODO [#5] Read Org manual
-:PROPERTIES:
-:Effort:   7:00
-:LAST_REPEAT: [2021-11-27 Sat 15:51]
-:ID:       94F31A7E-7977-4FC6-9E75-9D098FBB029D
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-12 Sun 19:17]--[2021-12-12 Sun 20:17] =>  1:00
-CLOCK: [2021-11-27 Sat 15:44]--[2021-11-27 Sat 15:51] =>  0:07
-CLOCK: [2021-11-27 Sat 15:36]--[2021-11-27 Sat 15:41] =>  0:05
-CLOCK: [2021-11-26 Fri 18:39]--[2021-11-26 Fri 18:51] =>  0:12
-CLOCK: [2021-11-25 Thu 20:17]--[2021-11-25 Thu 20:28] =>  0:11
-CLOCK: [2021-11-25 Thu 19:44]--[2021-11-25 Thu 20:05] =>  0:21
-CLOCK: [2021-11-24 Wed 22:45]--[2021-11-24 Wed 22:58] =>  0:13
-CLOCK: [2021-11-23 Tue 14:55]--[2021-11-23 Tue 15:17] =>  0:22
-CLOCK: [2021-11-22 Mon 14:41]--[2021-11-22 Mon 15:09] =>  0:28
-CLOCK: [2021-11-21 Sun 18:49]--[2021-11-21 Sun 19:18] =>  0:29
-CLOCK: [2021-11-20 Sat 21:05]--[2021-11-20 Sat 21:25] =>  0:20
-CLOCK: [2021-11-19 Fri 22:00]--[2021-11-19 Fri 22:18] =>  0:18
-CLOCK: [2021-03-22 Mon 12:25]--[2021-03-22 Mon 12:44] =>  0:19
-:END:
-[[https://orgmode.org/manual/][Online manual]]
-
-| date             | section                        |
-|------------------+--------------------------------|
-| [2021-11-19 Fri] | [[https://orgmode.org/manual/Global-and-local-cycling.html][2.2.1 Global and local cycling]] |
-| [2021-11-20 Sat] | [[https://orgmode.org/manual/Sparse-Trees.html][2.5 Sparse Trees]]               |
-| [2021-11-21 Sun] | [[https://orgmode.org/manual/Blocks.html][2.8 Blocks]]                     |
-| [2021-11-22 Mon] | [[https://orgmode.org/manual/Column-Width-and-Alignment.html][3.2 Column Width and Alignment]] |
-| [2021-11-23 Tue] | [[https://orgmode.org/manual/Formula-syntax-for-Calc.html][3.5.2 Formula syntax for Calc]]  |
-| [2021-11-24 Wed] | [[https://orgmode.org/manual/Field-and-range-formulas.html][3.5.5 Field and range formulas]] |
-| [2021-11-26 Fri] | [[https://orgmode.org/manual/Hyperlinks.html][4 Hyperlinks]]                   |
-| [2021-11-27 Sat] | [[https://orgmode.org/manual/Handling-Links.html][4.5 Handling Links]]             |
-
 ** org
 :PROPERTIES:
 :ID:       268B60E4-708C-4372-A59D-5DD876E493CA
@@ -10428,6 +10381,12 @@ image."
    "s-i" (lambda! (org-emphasize ?/))
    "s-e" (lambda! (org-emphasize ?~))))
 #+end_src
+
+*** TODO [#4] Create function to compute the total number of TODOs and hours in effort estimates
+:PROPERTIES:
+:Effort:   2:00
+:ID:       FCC486F6-7391-4EA3-9087-6BC3D5AB72B3
+:END:
 
 ** org-agenda
 :PROPERTIES:
@@ -11068,11 +11027,37 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
 :END:
 #+begin_src emacs-lisp :results silent
 (use-feature org-archive
+  :custom
+  (org-archive-default-command 'org-archive-to-archive-sibling)
+  (org-archive-location (expand-file-name "%s_archive.org::" ps/dir-archive))
+
+  :config
+  ;; Based on stackoverflow.com/a/27043756/4479455
+  (defun ps/org-archive-done-tasks-in-file ()
+    "Archive all DONE tasks in file."
+    (interactive)
+    (org-map-entries
+     (lambda ()
+       (org-archive-to-archive-sibling)
+       (setq org-map-continue-from (org-element-property :begin (org-element-at-point))))
+     "/DONE" 'file))
+
+  (defun ps/org-mark-as-done-for-good-and-archive ()
+    "Mark task as DONE, removing any schedules and deadlines, if
+present, then archive it."
+    (interactive)
+    (org-schedule '(4) nil)
+    (org-deadline '(4) nil)
+    (org-todo "DONE")
+    (org-archive-to-archive-sibling))
+
   :general
+  ("A-s-d" 'ps/org-mark-as-done-for-good-and-archive)
   (org-mode-map
    "s-a" 'org-archive-to-archive-sibling
    "s-A-a" 'org-archive-subtree))
 #+end_src
+
 *** TODO [#6] Process archives ~org/archive~
 :PROPERTIES:
 :ID:       855BC5BD-2A50-4DB8-BD91-4E0F6ECD50D6
@@ -11641,36 +11626,6 @@ CLOCK: [2021-07-22 Thu 12:12]--[2021-07-22 Thu 12:23] =>  0:11
 CLOCK: [2021-04-24 Sat 13:10]--[2021-04-24 Sat 13:14] =>  0:04
 CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
 :END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature org-archive
-  :custom
-  (org-archive-default-command 'org-archive-to-archive-sibling)
-  (org-archive-location (expand-file-name "%s_archive.org::" ps/dir-archive))
-
-  :config
-  ;; Based on stackoverflow.com/a/27043756/4479455
-  (defun ps/org-archive-done-tasks-in-file ()
-    "Archive all DONE tasks in file."
-    (interactive)
-    (org-map-entries
-     (lambda ()
-       (org-archive-to-archive-sibling)
-       (setq org-map-continue-from (org-element-property :begin (org-element-at-point))))
-     "/DONE" 'file))
-
-  (defun ps/org-mark-as-done-for-good-and-archive ()
-    "Mark task as DONE, removing any schedules and deadlines, if
-present, then archive it."
-    (interactive)
-    (org-schedule '(4) nil)
-    (org-deadline '(4) nil)
-    (org-todo "DONE")
-    (org-archive-to-archive-sibling))
-
-  :general
-  ("A-s-d" 'ps/org-mark-as-done-for-good-and-archive))
-#+end_src
 
 ** org-babel
 :PROPERTIES:
@@ -12314,23 +12269,6 @@ Pomodoro system:
 :PROPERTIES:
 :ID:       EC6700D7-C65D-4430-8DAC-57772B423D69
 :END:
-
-** TODO Add ~biblio~ tag to all bibliographic notes
-:PROPERTIES:
-:ID:       51E3274E-1A08-4082-9863-0A62F3233C1B
-:END:
-Done until ~Gates2022RisksAdvancedAI.org~.
-
-#+begin_src emacs-lisp :tangle no
-(dolist (file (f-entries "/Users/pablostafforini/Dropbox/bibliographic-notes"))
-  (message "processing %s" file)
-  (when (string= (file-name-extension file) "org")
-  (with-current-buffer (or (find-buffer-visiting file)
-                           (find-file-noselect file))
-    (ps/org-jump-to-first-heading)
-    (org-roam-tag-add '("biblio"))
-    (save-buffer))))
-#+end_src
 
 ** emacs-sqlite3
 :PROPERTIES:
@@ -13099,6 +13037,23 @@ ARG is the prefix argument received when calling interactively the function."
 
   :general
   ("H-/" 'org-cite-insert))
+#+end_src
+
+*** TODO Add ~biblio~ tag to all bibliographic notes
+:PROPERTIES:
+:ID:       51E3274E-1A08-4082-9863-0A62F3233C1B
+:END:
+Done until ~Gates2022RisksAdvancedAI.org~.
+
+#+begin_src emacs-lisp :tangle no
+(dolist (file (f-entries "/Users/pablostafforini/Dropbox/bibliographic-notes"))
+  (message "processing %s" file)
+  (when (string= (file-name-extension file) "org")
+  (with-current-buffer (or (find-buffer-visiting file)
+                           (find-file-noselect file))
+    (ps/org-jump-to-first-heading)
+    (org-roam-tag-add '("biblio"))
+    (save-buffer))))
 #+end_src
 
 *** Resources

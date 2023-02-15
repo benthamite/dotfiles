@@ -11219,12 +11219,12 @@ is connected."
 
   :hook
   (midnight-hook . ps/ledger-update-commodities)
-  (midnight-hook . org-gcal-sync)
-  (midnight-hook . ps/pass-git-sync)
   (midnight-hook . ps/magit-stage-commit-and-push-all-repos)
   (midnight-hook . clean-buffer-list)
+  (midnight-hook . org-roam-db-sync)
   (midnight-hook . ps/org-roam-update-id-locations)
-  ;; (midnight-hook . org-roam-db-sync)
+  (midnight-hook . org-gcal-sync)
+  (midnight-hook . ps/pass-git-sync)
   ;; (midnight-hook . straight-prune-build)
   )
 

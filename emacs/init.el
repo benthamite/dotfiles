@@ -6709,8 +6709,8 @@ When FILES is given, scan these files instead."
                         (buffer-file-name x)))
                   (buffer-list))))
 
-  ;; Regenerate cache every five minutes
-  (run-with-idle-timer 600 t (lambda ()
+  ;; Regenerate cache every half hour minutes
+  (run-with-idle-timer (* 60 30) t (lambda ()
                                (org-refile-cache-clear)
                                (org-refile-get-targets)))
   ;; [2022-06-21] Replaced by `consult-org-heading'; consider
@@ -7260,23 +7260,6 @@ return such list if its length is less than LIMIT."
   (setq org-roam-node-display-template
         (concat "${hierarchy:160} "
                 (propertize "${tags:20}" 'face 'org-tag)))
-
-  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#run-org-roam-db-sync-when-emacs-is-idle
-  (defvar ps/auto-org-roam-db-sync--timer nil)
-  (defvar ps/auto-org-roam-db-sync--timer-interval 5)
-
-  (define-minor-mode ps/auto-org-roam-db-sync-mode
-    "Toggle automatic `org-roam-db-sync' when Emacs is idle.
-                Referece: `auto-save-visited-mode'"
-    :group 'org-roam
-    :global t
-    (when ps/auto-org-roam-db-sync--timer (cancel-timer ps/auto-org-roam-db-sync--timer))
-    (setq ps/auto-org-roam-db-sync--timer
-          (when ps/auto-org-roam-db-sync-mode
-            (run-with-idle-timer
-             ps/auto-org-roam-db-sync--timer-interval :repeat
-             #'org-roam-db-sync))))
-
 
   (defvar ps/org-roam-excluded-dirs nil)
   (defvar ps/org-roam-excluded-files nil)
@@ -10479,7 +10462,7 @@ poorly-designed websites."
     (switch-to-buffer buffer)
     (elfeed-show-refresh))
 
-  (run-with-idle-timer (* 60 10) t 'elfeed-update)
+  ;; (run-with-idle-timer (* 60 10) t 'elfeed-update)
 
   :hook
   (elfeed-show-mode-hook . shr-heading-setup-imenu)

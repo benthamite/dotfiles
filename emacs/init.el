@@ -519,7 +519,6 @@ NAME and ARGS are as in `use-package'."
   ("v" (ps/org-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87") "Samotsvety" :column "Other")
   ("x" (ps/org-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99") "Misc" :column "Other")
   ("a" (ps/org-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD") "EA Archive" :column "Someday")
-  ("o" (ps/org-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD") "Open Access EA" :column "Someday")
   ("n" (ps/org-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110") "EA Nomad" :column "Someday")
   ("h" (ps/org-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2") "HEAR" :column "On hold")
   ("g" (ps/org-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1") "GPE" :column "On hold")
@@ -671,11 +670,11 @@ NAME and ARGS are as in `use-package'."
   (:exit t)
   "Dired folders: Tlön"
   ("b" (dired ps/dir-dropbox-tlon-BAE) "Dropbox: BAE")
-  ("H-b" (dired ps/dir-dropbox-tlon-BAE) "Google Drive: BAE")
+  ("H-b" (dired ps/dir-google-drive-tlon-BAE) "Google Drive: BAE")
   ("c" (dired ps/dir-dropbox-tlon-core) "core")
   ("H-c" (dired ps/dir-google-drive-tlon-core) "Google Drive: core")
   ("d" (dired ps/dir-dropbox-tlon-LBDLH) "Dropbox: LBDLH")
-  ("H-d" (dired ps/dir-dropbox-tlon-LBDLH) "Google Drive: LBDLH")
+  ("H-d" (dired ps/dir-google-drive-tlon-LBDLH) "Google Drive: LBDLH")
   ("f" (dired ps/dir-dropbox-tlon-fede) "fede")
   ("H-f" (dired ps/dir-google-drive-tlon-fede) "Google Drive: fede")
   ("g" (dired ps/dir-dropbox-tlon-GPE) "Dropbox: GPE")
@@ -4439,6 +4438,21 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :config
   (help-at-pt-set-timer))                ; set timer, thus enabling local help
 
+(use-feature help-fns
+  :config
+  (defun ps/describe-face ()
+    "Like `describe-face', but with `hl-line-mode' disabled, and
+always use face at point."
+    (interactive)
+    (let ((global-hl-line-mode-enabled global-hl-line-mode))
+      (global-hl-line-mode -1)
+      (describe-face (face-at-point t))
+      (when global-hl-line-mode-enabled
+	(global-hl-line-mode))))
+
+  :general
+  ("C-h C-f" 'ps/describe-face))
+
 (use-package helpful
   :defer 20
   :config
@@ -5303,7 +5317,9 @@ otherwise the whole buffer."
    "s-x" 'ledger-fully-complete-xact
    "s-z" 'ledger-report-redo
    "A-C-s-r" 'ledger-navigate-prev-xact-or-directive
-   "A-C-s-f" 'ledger-navigate-next-xact-or-directive))
+   "A-C-s-f" 'ledger-navigate-next-xact-or-directive)
+  (ledger-reconcile-mode-map
+   "q" 'ledger-reconcile-quit))
 
 (use-package parse-csv)
 
@@ -7268,6 +7284,7 @@ return such list if its length is less than LIMIT."
                   "notatu-dignum.org"
                   "quotes-old.org"
                   ".org2blog.org"
+                  "wiki-notes.org" ; removing temporarily
                   "feeds.org"))
     (push file ps/org-roam-excluded-files))
 
@@ -9837,13 +9854,13 @@ Grammarly."
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
   (telega-filters-custom '(("Main" . main)
-                           ("Important" or mention
-                            (and unread unmuted))
-                           ("Archive" . archive)
-                           ("Online" and
-                            (not saved-messages) (user is-online))
-                           ("Groups" type basicgroup supergroup)
-                           ("Channels" type channel)))
+			   ("Important" or mention
+			    (and unread unmuted))
+			   ("Archive" . archive)
+			   ("Online" and
+			    (not saved-messages) (user is-online))
+			   ("Groups" type basicgroup supergroup)
+			   ("Channels" type channel)))
   (telega-completing-read-function 'completing-read)
 
   :config
@@ -9853,40 +9870,41 @@ Grammarly."
  window."
     (interactive)
     (let* ((telega-buffer-root "*Telega Root*")
-           (telega-buffer
-            (catch 'tag
-              (dolist (buffer (buffer-list))
-                (when (with-current-buffer buffer
-                        (member major-mode '(telega-root-mode telega-chat-mode)))
-                  (throw 'tag (buffer-name buffer))))))
-           (telega-buffer-is-current (string= (buffer-name (current-buffer)) telega-buffer)))
+	   (telega-buffer
+	    (catch 'tag
+	      (dolist (buffer (buffer-list))
+		(when (with-current-buffer buffer
+			(member major-mode '(telega-root-mode telega-chat-mode)))
+		  (throw 'tag (buffer-name buffer))))))
+	   (current-buffer (current-buffer))
+	   (telega-buffer-is-current (string= (buffer-name current-buffer) telega-buffer)))
       (if telega-buffer
-          (if telega-buffer-is-current
-              (if (string> telega-buffer telega-buffer-root)
-                  (end-of-buffer)
-                (beginning-of-buffer)
-                (forward-line 3))
-            (switch-to-buffer telega-buffer))
-        (telega))
+	  (if telega-buffer-is-current
+	      (if (string> telega-buffer telega-buffer-root)
+		  (end-of-buffer)
+		(beginning-of-buffer)
+		(forward-line 3))
+	    (switch-to-buffer telega-buffer))
+	(telega))
       (let ((telega-buffer (current-buffer)))
-        (ps/window-split-if-unsplit)
-        (if (> (frame-width) ps/frame-width-threshold)
-            (winum-select-window-3)
-          (winum-select-window-2))
-        (let ((rightmost-window (selected-window))
-              (other-window (previous-window)))
-          (unless telega-buffer-is-current
-            ;; find the most recent buffer that isn't a telega buffer,
-            ;; so that we switch to it in the window that isn't
-            ;; assigned to telega
-            (let ((non-telega-buffer
-                   (catch 'tag
-                     (dolist (buffer (buffer-list))
-                       (unless (with-current-buffer buffer
-                                 (member major-mode '(telega-root-mode telega-chat-mode)))
-                         (throw 'tag buffer))))))
-              (set-window-buffer other-window non-telega-buffer)))
-          (set-window-buffer rightmost-window telega-buffer)))))
+	(ps/window-split-if-unsplit)
+	(if (> (frame-width) ps/frame-width-threshold)
+	    (winum-select-window-3)
+	  (winum-select-window-2))
+	(let ((rightmost-window (selected-window))
+	      (other-window (previous-window)))
+	  ;; When the command is invoked from a Telega buffer which
+	  ;; isn't on the rightmost window, we display on that window
+	  ;; the most recent non-telega buffer.
+	  (when telega-buffer-is-current
+	    (setq current-buffer
+		  (catch 'tag
+		    (dolist (buffer (buffer-list))
+		      (unless (with-current-buffer buffer
+				(member major-mode '(telega-root-mode telega-chat-mode)))
+			(throw 'tag buffer))))))
+	  (set-window-buffer (selected-window) telega-buffer)
+	  (set-window-buffer other-window current-buffer)))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -9904,8 +9922,8 @@ into a task for Leo."
   (defun ps/telega-move-downloaded-file (file)
     "Move downloaded file(s) to `ps/dir-downloads' directory."
     (let* ((old-path (plist-get (plist-get file :local) :path))
-           (file-name (file-name-nondirectory old-path))
-           (new-path (concat ps/dir-downloads "/" file-name)))
+	   (file-name (file-name-nondirectory old-path))
+	   (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
 
@@ -9915,36 +9933,36 @@ into a task for Leo."
     (unless (telega-server-live-p)
       (user-error "Please launch Telega before running this command."))
     (if (equal (buffer-file-name) ps/file-tlon-docs)
-        (progn
-          (unless (region-active-p)
-            (user-error "Please select the region containing the changes you introduced."))
-          (let ((docs-section (org-get-heading)))
-            (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
-            (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
+	(progn
+	  (unless (region-active-p)
+	    (user-error "Please select the region containing the changes you introduced."))
+	  (let ((docs-section (org-get-heading)))
+	    (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
+	    (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
       (user-error "You aren't visiting `docs.org'!")))
 
   (defun ps/telega-docs-change-open (msg)
     "TODO: write docstring"
     (interactive (list (telega-msg-for-interactive)))
     (let* ((content (plist-get msg :content))
-           (msg-text (or (telega-tl-str content :text)
-                         (telega-tl-str content :caption)
-                         ;; See FR https://t.me/emacs_telega/34839
-                         (and (telega-msg-match-p msg '(type VoiceNote))
-                              (telega-tl-str (plist-get content :voice_note)
-                                             :recognized_text)))))
+	   (msg-text (or (telega-tl-str content :text)
+			 (telega-tl-str content :caption)
+			 ;; See FR https://t.me/emacs_telega/34839
+			 (and (telega-msg-match-p msg '(type VoiceNote))
+			      (telega-tl-str (plist-get content :voice_note)
+					     :recognized_text)))))
       (with-temp-buffer
-        (insert msg-text)
-        (goto-char (point-min))
-        (re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
-        (let ((change-begins (string-to-number (match-string 1)))
-              (change-ends (string-to-number (match-string 2))))
-          (find-file ps/file-tlon-docs)
-          (org-show-all)
-          (org-hide-drawer-all)
-          (org-highlight change-begins change-ends)
-          (goto-char change-begins))
-        (message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
+	(insert msg-text)
+	(goto-char (point-min))
+	(re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
+	(let ((change-begins (string-to-number (match-string 1)))
+	      (change-ends (string-to-number (match-string 2))))
+	  (find-file ps/file-tlon-docs)
+	  (org-show-all)
+	  (org-hide-drawer-all)
+	  (org-highlight change-begins change-ends)
+	  (goto-char change-begins))
+	(message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
 
   (defun ps/telega-filters-push-archive ()
     "Set active filters list to `archive'."
@@ -9959,7 +9977,7 @@ into a task for Leo."
   (defun ps/telega-chat-mode ()
     (require 'company)
     (add-hook 'completion-at-point-functions
-              #'telega-chatbuf-complete-at-point nil 'local))
+	      #'telega-chatbuf-complete-at-point nil 'local))
 
   (telega-mode-line-mode 1)
 

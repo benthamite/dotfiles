@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230216203615
+:mtime:    20230216203757
 :ctime:    20230215082042
 :END:
 #+TITLE:Pablo's Emacs config
@@ -515,8 +515,10 @@ CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 ** Key bindings
 :PROPERTIES:
 :ID:       a47d148a-1b5e-4850-a1a7-6cd745bad696
+:mtime:    20230216203757
+:ctime:    20230216203757
 :END:
-Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~control~, ~meta~, ~super~, ~hyper~ and ~alt~. I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "quasi modifiers", i.e., mappings between individual keys and combinations of Emacs modifiers. For example, the left shift key is mapped to the combination of ~alt~ and ~meta~ (~A-M~). For details, see my [[file:~/Dropbox/dotfiles/karabiner/config.org][karabiner configuration]], specifically the "Key associations" section.
+Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~control~, ~meta~, ~super~, ~hyper~ and ~alt~. I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "quasi modifiers", i.e., mappings between individual keys and combinations of Emacs modifiers. For example, the left shift key is mapped to the combination of ~alt~ and ~meta~ (~A-M~). For details, see my [[file:~/Dropbox/dotfiles/karabiner/config.org][karabiner configuration]], specifically the "Key associations" section. When you see a monstrous key binding such as ~C-H-M-s-d~, remember that everything that precedes the self-inserting key (in this case, ~d~) represents a single key press (in this case, ~l~).
 
 ** Debugging                                                       :noexport:
 :PROPERTIES:

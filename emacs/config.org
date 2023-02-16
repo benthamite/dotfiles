@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230216193511
+:mtime:    20230216194123
 :ctime:    20230215082042
 :END:
 #+TITLE:Pablo's Emacs config
@@ -6559,6 +6559,8 @@ Nothing for the time being. Just a reminder to look into Emacs's native vc frame
 ** magit
 :PROPERTIES:
 :ID:       B662CE1B-3F94-486E-A3DE-052775035960
+:mtime:    20230216194123
+:ctime:    20230216194123
 :END:
 :LOGBOOK:
 CLOCK: [2021-11-18 Thu 21:51]--[2021-11-18 Thu 21:52] =>  0:01
@@ -6600,6 +6602,27 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
     (let ((default-directory arg))
       (ps/magit-stage-commit-and-push "Midnight update")))
 
+  ;; gist.github.com/dotemacs/9a0433341e75e01461c9
+(defun ps/magit-parse-url (url)
+  "convert a git remote location as a HTTP URL"
+  (if (string-match "^http" url)
+      url
+    (replace-regexp-in-string "\\(.*\\)@\\(.*\\):\\(.*\\)\\(\\.git?\\)"
+                              "https://\\2/\\3"
+                              url)))
+
+(defun ps/magit-open-repo ()
+  "open remote repo URL"
+  (interactive)
+  (let ((url (magit-get "remote" "origin" "url")))
+    (progn
+      (browse-url (ps/magit-parse-url url))
+      (message "opening repo %s" url))))
+
+  :hook
+  (magit-mode-hook . (lambda ()
+            (local-set-key (kbd "o") 'magit-open-repo)))
+            
   :general
   ("A-g" 'magit))
 #+end_src

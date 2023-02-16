@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230215135032
+:mtime:    20230216193511
 :ctime:    20230215082042
 :END:
 #+TITLE:Pablo's Emacs config
@@ -10008,6 +10008,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (org-priority-default 7)
   (org-priority-lowest 9 "set priorities")
   ;; (org-extend-today-until 4 "youtu.be/31gwvApo8zg?t=3342")
+    (org-deadline-warning-days 0)              ; show due tasks only on the day the tasks are due
   (org-hide-emphasis-markers t)
   (org-hide-leading-stars t "indent every heading and hide all but the last leading star")
   (org-return-follows-link t)
@@ -10383,6 +10384,8 @@ image."
 :PROPERTIES:
 :Effort:   2:00
 :ID:       FCC486F6-7391-4EA3-9087-6BC3D5AB72B3
+:mtime:    20230216193511
+:ctime:    20230216193511
 :END:
 
 ** org-agenda
@@ -10455,9 +10458,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   (org-agenda-todo-ignore-with-date t)       ; exclude tasks with a date.
   (org-agenda-todo-ignore-scheduled 'future) ; exclude scheduled tasks.
   (org-agenda-restore-windows-after-quit t)  ; don't destroy window splits
-  (org-deadline-warning-days 0)              ; show due tasks only on the day the tasks are due
   (org-agenda-span 1)                        ; show daily view by default
-  (org-agenda-include-diary nil)               ; show holidays
   (org-agenda-clock-consistency-checks       ; highlight gaps of five or more minutes in agenda log mode
    '(:max-duration "5:00" :min-duration "0:01" :max-gap 5 :gap-ok-around ("2:00")))
   (org-agenda-skip-scheduled-if-done t)

@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230216194339
+:mtime:    20230216203615
 :ctime:    20230215082042
 :END:
 #+TITLE:Pablo's Emacs config
@@ -10,7 +10,7 @@
 :END:
 #+filetags: :project:
 
-* table of contents
+* Table of contents
 :PROPERTIES:
 :TOC:      :include all :depth 2 :force ((nothing)) :ignore ((nothing)) :local ((nothing))
 :ID:       536D7BF2-AA0D-43D7-8865-601DFB6BB8E6
@@ -455,11 +455,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#local-variables][Local variables]]
 :END:
 
-* preface
+* Introduction
 :PROPERTIES:
 :CUSTOM_ID: introduction
 :ID:       A7940400-DD17-4B0B-A9B2-565A207D680C
-:mtime:    20230215054911
+:mtime:    20230216203615
 :ctime:    20230214200647
 :END:
 :LOGBOOK:
@@ -512,8 +512,13 @@ CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
 CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
+** Key bindings
+:PROPERTIES:
+:ID:       a47d148a-1b5e-4850-a1a7-6cd745bad696
+:END:
+Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~control~, ~meta~, ~super~, ~hyper~ and ~alt~. I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "quasi modifiers", i.e., mappings between individual keys and combinations of Emacs modifiers. For example, the left shift key is mapped to the combination of ~alt~ and ~meta~ (~A-M~). For details, see my [[file:~/Dropbox/dotfiles/karabiner/config.org][karabiner configuration]], specifically the "Key associations" section.
 
-** Debugging the config file                                      :noexport:
+** Debugging                                                       :noexport:
 :PROPERTIES:
 :ID:       ED2955EA-3BD8-4058-A973-3CC87847D9A5
 :END:
@@ -1178,11 +1183,8 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 CLOCK: [2021-10-05 Tue 12:20]--[2021-10-05 Tue 13:11] =>  0:51
 CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :END:
+
 /[[https://github.com/raxod502/el-patch][el-patch]] lets you customize the behavior of Emacs Lisp functions that do not provide enough variables and hooks to let you make them do what you want./
-
-[2021-11-17 Wed 17:25] Moving to graveyard because I felt it was working erratically and I don't see significant benefits relative to using an advice that overrides the original function.
-
-[2022-07-19 Tue 11:57] Trying it again.
 
 #+begin_src emacs-lisp :results silent
 (use-package el-patch

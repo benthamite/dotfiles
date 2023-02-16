@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: uber
+# key: uber
+# --
+`(ps/insert-date)` Uber
+    Expenses:Transportation:Taxi  $1 ARS ; $2
+    Liabilities:Mom:Extension
+
+$0
+

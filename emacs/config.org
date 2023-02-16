@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230216194123
+:mtime:    20230216194339
 :ctime:    20230215082042
 :END:
 #+TITLE:Pablo's Emacs config
@@ -527,15 +527,15 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 - Set ~debug-on-error~ to ~t~ to see a backtrace of an error. Or call ~toggle-debug-on-error~ interactively.
 - Use Time Machine (on MacOS) to download and try increasingly older versions, to identify the version that introduced the bug. Then diff that version with its immediate successor.
 - Bisect the init file until you locate the culprit.
-    - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).
+  - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).
 - You may want to periodically save a stable init file so that you can temporarily use Emacs with all your customizations while debugging your current init file (instead of having to use an external editor or a non-customized Emacs). Say you call this stable file ~stable.el~. Then you can tell Emacs to load this file on startup file with ~emacs -q -l ~/stable.el~.
 - Use ~edebug-defun~. See [[https://org-roam.discourse.group/t/need-help-getting-noter-pdfs-and-org-roam-bibtex-to-work/794/45?u=pablo][this discussion]].
 - For org-related issues (e.g. tangling the config file), use ~org-lint~, which checks the current buffer for syntax mistakes.
 - For more ideas, see:
-    - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
-    - [[https://whatacold.io/blog/2022-07-17-emacs-elisp-debug/][Emacs Debugging Basics - whatacold's space]]
-    - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
-    - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]]
+  - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
+  - [[https://whatacold.io/blog/2022-07-17-emacs-elisp-debug/][Emacs Debugging Basics - whatacold's space]]
+  - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
+  - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]]
 
 ** Profiling
 :PROPERTIES:
@@ -657,20 +657,20 @@ Some useful config files:
 - [[https://luca.cambiaghi.me/vanilla-emacs/readme.html][Luca Cambiaghi]]
 - [[https://config.phundrak.com/emacs][Lucien Cartier-Tilet]] (Spacemacs)
 - [[https://github.com/isamert/dotfiles/blob/master/emacs/index.org][Isa Mert Gurbuz]]
-    - Has a cool [[https://isamert.net/index.html][blog]] about org mode and other topics.
+  - Has a cool [[https://isamert.net/index.html][blog]] about org mode and other topics.
 - [[https://www.mfoot.com/blog/2015/11/22/literate-emacs-configuration-with-org-mode/][Martin Foot]]
-    - Has a very simple init file.
-    - [[https://github.com/mfoo/dotfiles/blob/master/.emacs.d/config.org][.org file]]
+  - Has a very simple init file.
+  - [[https://github.com/mfoo/dotfiles/blob/master/.emacs.d/config.org][.org file]]
 - [[https://github.com/mpereira/.emacs.d][Murilo Pereira]].
-    - Very well organized. The author has also written some excellent blog posts about Emacs.
+  - Very well organized. The author has also written some excellent blog posts about Emacs.
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][OutOfCheeseError]]
 - [[https://protesilaos.com/dotemacs/][Protesilaos Stavrou]]
-    - [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][here]] is the last commit before he abandoned ~use-package~ and ~straight~
+  - [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][here]] is the last commit before he abandoned ~use-package~ and ~straight~
 - [[https://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua]]. A legend in the Emacs community.
 - [[https://github.com/novoid/dot-emacs/blob/master/config.org][Karl Voit]].
-    - Author of ~Memacs~, prolific blogger.
+  - Author of ~Memacs~, prolific blogger.
 - [[https://github.com/sriramkswamy/dotemacs][Sriram Krishnaswamy]] ([[https://sriramkswamy.github.io/][website]])
-    - [[https://sriramkswamy.github.io/dotemacs/][.org file]]
+  - [[https://sriramkswamy.github.io/dotemacs/][.org file]]
 - [[https://github.com/sfromm/emacs.d#twitter][Stephen Fromm]]. Has an extended list of config files [[https://github.com/sfromm/emacs.d#inspiration][here]].
 - [[https://tecosaur.github.io/emacs-config/config.html][Tecosaur]]
 - [[https://www.tquelch.com/posts/emacs-config/#languages][Tim Quelch]]
@@ -1149,7 +1149,7 @@ e.g. ~nvm~ isn't recognized by eshell
 :PROPERTIES:
 :ID:       23633754-5D4D-4473-8E61-B700551AC7C5
 :END:
- [[https://blog.flowblok.id.au/2013-02/shell-startup-scripts.html][Shell startup scripts — flowblok’s blog]]
+[[https://blog.flowblok.id.au/2013-02/shell-startup-scripts.html][Shell startup scripts — flowblok’s blog]]
 
 ** general
 :PROPERTIES:
@@ -6569,6 +6569,9 @@ CLOCK: [2021-07-01 Thu 22:05]--[2021-07-01 Thu 22:55] =>  0:50
 CLOCK: [2021-02-25 Thu 17:24]--[2021-02-25 Thu 17:45] =>  0:21
 CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 :END:
+
+/[[https://github.com/magit/magit][magit]] is a complete text-based user interface to Git./
+
 #+begin_src emacs-lisp :results silent
 (use-package magit
   :defer 15
@@ -6603,26 +6606,26 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
       (ps/magit-stage-commit-and-push "Midnight update")))
 
   ;; gist.github.com/dotemacs/9a0433341e75e01461c9
-(defun ps/magit-parse-url (url)
-  "convert a git remote location as a HTTP URL"
-  (if (string-match "^http" url)
-      url
-    (replace-regexp-in-string "\\(.*\\)@\\(.*\\):\\(.*\\)\\(\\.git?\\)"
-                              "https://\\2/\\3"
-                              url)))
+  (defun ps/magit-parse-url (url)
+    "convert a git remote location as a HTTP URL"
+    (if (string-match "^http" url)
+        url
+      (replace-regexp-in-string "\\(.*\\)@\\(.*\\):\\(.*\\)\\(\\.git?\\)"
+                                "https://\\2/\\3"
+                                url)))
 
-(defun ps/magit-open-repo ()
-  "open remote repo URL"
-  (interactive)
-  (let ((url (magit-get "remote" "origin" "url")))
-    (progn
-      (browse-url (ps/magit-parse-url url))
-      (message "opening repo %s" url))))
+  (defun ps/magit-open-repo ()
+    "open remote repo URL"
+    (interactive)
+    (let ((url (magit-get "remote" "origin" "url")))
+      (progn
+        (browse-url (ps/magit-parse-url url))
+        (message "opening repo %s" url))))
 
   :hook
   (magit-mode-hook . (lambda ()
-            (local-set-key (kbd "o") 'magit-open-repo)))
-            
+                       (local-set-key (kbd "o") 'magit-open-repo)))
+
   :general
   ("A-g" 'magit))
 #+end_src
@@ -6635,39 +6638,18 @@ To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. Tha
 *** resources
 :PROPERTIES:
 :ID:       09A7E16B-377A-4BB7-AC3B-4D7A673E7CA8
+:mtime:    20230216194339
+:ctime:    20230216194339
 :END:
 - [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
 - https://tvraman.github.io/emacspeak/blog/github-quick-workflow.html
 - [[https://prathamesh.tech/2019/06/21/creating-pull-requests-from-emacs/][Creating pull requests from emacs]]
 
-*** new repository workflow
-:PROPERTIES:
-:ID:       65F06149-41AE-46C8-9F80-71CB98C11965
-:END:
-1. create repository
-2. stage changes (~s~)
-3. commit changes (~c c~)
-4. add remote (~M a~)
-     1. remote name: ~origin~
-     2. remote url: Github URL, e.g. ~https://github.com/benthamite/anki.git~
-     3. answer ~y~ to prompt
-5. push (~P p~)
-
-*** bug submission workflow
-:PROPERTIES:
-:ID:       18842ACD-AD1A-4940-866B-C8E27150D7BB
-:END:
-1. ~magit-status~ from the relevant directory (~A-g~)
-2. make the commits
-3. ~format-patches~ (~W~)
-4. ~save diff as patch~ (~s~)
-   # I think this is the right command but I'm not sure
-   # It has to be a command that generates a .patch file
-
 ** ghub
 :PROPERTIES:
 :ID:       C557A862-9EC7-406C-98E1-C248F7D579F5
 :END:
+
 /[[https://github.com/magit/ghub][ghub]] provides basic support for using the APIs of various Git forges from Emacs packages./
 
 #+begin_src emacs-lisp :results silent
@@ -6922,8 +6904,8 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 #+begin_src emacs-lisp
 (use-package substitute
   :straight (substitute
-	     :host sourcehut
-	     :repo "protesilaos/substitute")
+             :host sourcehut
+             :repo "protesilaos/substitute")
   :demand t
   :general
   (isearch-mode-map
@@ -7755,7 +7737,7 @@ always use face at point."
       (global-hl-line-mode -1)
       (describe-face (face-at-point t))
       (when global-hl-line-mode-enabled
-	(global-hl-line-mode))))
+        (global-hl-line-mode))))
 
   :general
   ("C-h C-f" 'ps/describe-face))
@@ -10881,11 +10863,11 @@ Links to check out:
 - [[https://www.reddit.com/r/orgmode/comments/nmgs2i/hey_orgmode_users_show_us_your_org_capture/][Hey Org-Mode Users, show us your org capture templates : orgmode]]. [[https://www.reddit.com/r/orgmode/comments/nmgs2i/hey_orgmode_users_show_us_your_org_capture/gzq9h2v/?utm_source=reddit&utm_medium=web2x&context=3][this one]] has templates for capturing appointments directly to Google Calendar via org-gcal. [I've now incorporated it]
 - [[https://orgmode.org/worg/org-contrib/org-collector.html][org-collector.el &#x2014; collect properties into tables]]
 - potentially useful capture templates:
-    - [[https://helpdeskheadesk.net/sub-menus-in-org/][Submenus in org-mode Capture · The Art of Not Asking Why]]
-    - [[https://helpdeskheadesk.net/org-capture-in-files/][Org-capture in Files · The Art of Not Asking Why]]
-    - [[https://helpdeskheadesk.net/org-capture-template-1/][My Org Capture Templates - Part 1 emacs: · The Art of Not Asking Why]]
-    - [[https://helpdeskheadesk.net/org-capture-template-2/][My Org Capture Templates - Part 2 emacs: · The Art of Not Asking Why]]
-    - [[https://helpdeskheadesk.net/org-capture-template-3/][My Org Capture Templates - Part 3 emacs:css: · The Art of Not Asking Why]]
+  - [[https://helpdeskheadesk.net/sub-menus-in-org/][Submenus in org-mode Capture · The Art of Not Asking Why]]
+  - [[https://helpdeskheadesk.net/org-capture-in-files/][Org-capture in Files · The Art of Not Asking Why]]
+  - [[https://helpdeskheadesk.net/org-capture-template-1/][My Org Capture Templates - Part 1 emacs: · The Art of Not Asking Why]]
+  - [[https://helpdeskheadesk.net/org-capture-template-2/][My Org Capture Templates - Part 2 emacs: · The Art of Not Asking Why]]
+  - [[https://helpdeskheadesk.net/org-capture-template-3/][My Org Capture Templates - Part 3 emacs:css: · The Art of Not Asking Why]]
 ** org-clock
 :PROPERTIES:
 :ID:       90E8B1CE-433C-4B2B-8AA2-844506EAC031
@@ -11110,7 +11092,7 @@ I think Munilo Pereira had a package that allowed for this.
 (use-package org-archive-hierarchically
   :straight (org-archive-hierarchically
              :host gitlab
-		   :repo "andersjohansson/org-archive-hierarchically")
+                   :repo "andersjohansson/org-archive-hierarchically")
 
   )
 #+end_src
@@ -11689,7 +11671,7 @@ defined as part of a minimal configuration instead."
   :general
   (org-mode-map
    "s-b" 'ps/org-babel-tangle-config-file))
-   #+end_src
+#+end_src
 
 This custom command also saves the buffer before tangling it. In combination with ~git-auto-commit-mode~, executing this command insures that I commit this (org) file whenever I generate an associated ~.spacemacs~ version. Because of this, I can always revert to the closest working config file whenever the latest version is broken. (~org-babel-tangle~ automatically saves the file, but unlike calling ~save-buffer~ explicitly, this doesn't cause ~git-auto-commit-mode~ to create a new commit.)
 
@@ -16000,13 +15982,13 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
   (telega-filters-custom '(("Main" . main)
-			   ("Important" or mention
-			    (and unread unmuted))
-			   ("Archive" . archive)
-			   ("Online" and
-			    (not saved-messages) (user is-online))
-			   ("Groups" type basicgroup supergroup)
-			   ("Channels" type channel)))
+                           ("Important" or mention
+                            (and unread unmuted))
+                           ("Archive" . archive)
+                           ("Online" and
+                            (not saved-messages) (user is-online))
+                           ("Groups" type basicgroup supergroup)
+                           ("Channels" type channel)))
   (telega-completing-read-function 'completing-read)
 
   :config
@@ -16016,41 +15998,41 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
  window."
     (interactive)
     (let* ((telega-buffer-root "*Telega Root*")
-	   (telega-buffer
-	    (catch 'tag
-	      (dolist (buffer (buffer-list))
-		(when (with-current-buffer buffer
-			(member major-mode '(telega-root-mode telega-chat-mode)))
-		  (throw 'tag (buffer-name buffer))))))
-	   (current-buffer (current-buffer))
-	   (telega-buffer-is-current (string= (buffer-name current-buffer) telega-buffer)))
+           (telega-buffer
+            (catch 'tag
+              (dolist (buffer (buffer-list))
+                (when (with-current-buffer buffer
+                        (member major-mode '(telega-root-mode telega-chat-mode)))
+                  (throw 'tag (buffer-name buffer))))))
+           (current-buffer (current-buffer))
+           (telega-buffer-is-current (string= (buffer-name current-buffer) telega-buffer)))
       (if telega-buffer
-	  (if telega-buffer-is-current
-	      (if (string> telega-buffer telega-buffer-root)
-		  (end-of-buffer)
-		(beginning-of-buffer)
-		(forward-line 3))
-	    (switch-to-buffer telega-buffer))
-	(telega))
+          (if telega-buffer-is-current
+              (if (string> telega-buffer telega-buffer-root)
+                  (end-of-buffer)
+                (beginning-of-buffer)
+                (forward-line 3))
+            (switch-to-buffer telega-buffer))
+        (telega))
       (let ((telega-buffer (current-buffer)))
-	(ps/window-split-if-unsplit)
-	(if (> (frame-width) ps/frame-width-threshold)
-	    (winum-select-window-3)
-	  (winum-select-window-2))
-	(let ((rightmost-window (selected-window))
-	      (other-window (previous-window)))
-	  ;; When the command is invoked from a Telega buffer which
-	  ;; isn't on the rightmost window, we display on that window
-	  ;; the most recent non-telega buffer.
-	  (when telega-buffer-is-current
-	    (setq current-buffer
-		  (catch 'tag
-		    (dolist (buffer (buffer-list))
-		      (unless (with-current-buffer buffer
-				(member major-mode '(telega-root-mode telega-chat-mode)))
-			(throw 'tag buffer))))))
-	  (set-window-buffer (selected-window) telega-buffer)
-	  (set-window-buffer other-window current-buffer)))))
+        (ps/window-split-if-unsplit)
+        (if (> (frame-width) ps/frame-width-threshold)
+            (winum-select-window-3)
+          (winum-select-window-2))
+        (let ((rightmost-window (selected-window))
+              (other-window (previous-window)))
+          ;; When the command is invoked from a Telega buffer which
+          ;; isn't on the rightmost window, we display on that window
+          ;; the most recent non-telega buffer.
+          (when telega-buffer-is-current
+            (setq current-buffer
+                  (catch 'tag
+                    (dolist (buffer (buffer-list))
+                      (unless (with-current-buffer buffer
+                                (member major-mode '(telega-root-mode telega-chat-mode)))
+                        (throw 'tag buffer))))))
+          (set-window-buffer (selected-window) telega-buffer)
+          (set-window-buffer other-window current-buffer)))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -16068,8 +16050,8 @@ into a task for Leo."
   (defun ps/telega-move-downloaded-file (file)
     "Move downloaded file(s) to `ps/dir-downloads' directory."
     (let* ((old-path (plist-get (plist-get file :local) :path))
-	   (file-name (file-name-nondirectory old-path))
-	   (new-path (concat ps/dir-downloads "/" file-name)))
+           (file-name (file-name-nondirectory old-path))
+           (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
 
@@ -16079,36 +16061,36 @@ into a task for Leo."
     (unless (telega-server-live-p)
       (user-error "Please launch Telega before running this command."))
     (if (equal (buffer-file-name) ps/file-tlon-docs)
-	(progn
-	  (unless (region-active-p)
-	    (user-error "Please select the region containing the changes you introduced."))
-	  (let ((docs-section (org-get-heading)))
-	    (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
-	    (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
+        (progn
+          (unless (region-active-p)
+            (user-error "Please select the region containing the changes you introduced."))
+          (let ((docs-section (org-get-heading)))
+            (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
+            (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
       (user-error "You aren't visiting `docs.org'!")))
 
   (defun ps/telega-docs-change-open (msg)
     "TODO: write docstring"
     (interactive (list (telega-msg-for-interactive)))
     (let* ((content (plist-get msg :content))
-	   (msg-text (or (telega-tl-str content :text)
-			 (telega-tl-str content :caption)
-			 ;; See FR https://t.me/emacs_telega/34839
-			 (and (telega-msg-match-p msg '(type VoiceNote))
-			      (telega-tl-str (plist-get content :voice_note)
-					     :recognized_text)))))
+           (msg-text (or (telega-tl-str content :text)
+                         (telega-tl-str content :caption)
+                         ;; See FR https://t.me/emacs_telega/34839
+                         (and (telega-msg-match-p msg '(type VoiceNote))
+                              (telega-tl-str (plist-get content :voice_note)
+                                             :recognized_text)))))
       (with-temp-buffer
-	(insert msg-text)
-	(goto-char (point-min))
-	(re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
-	(let ((change-begins (string-to-number (match-string 1)))
-	      (change-ends (string-to-number (match-string 2))))
-	  (find-file ps/file-tlon-docs)
-	  (org-show-all)
-	  (org-hide-drawer-all)
-	  (org-highlight change-begins change-ends)
-	  (goto-char change-begins))
-	(message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
+        (insert msg-text)
+        (goto-char (point-min))
+        (re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
+        (let ((change-begins (string-to-number (match-string 1)))
+              (change-ends (string-to-number (match-string 2))))
+          (find-file ps/file-tlon-docs)
+          (org-show-all)
+          (org-hide-drawer-all)
+          (org-highlight change-begins change-ends)
+          (goto-char change-begins))
+        (message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
 
   (defun ps/telega-filters-push-archive ()
     "Set active filters list to `archive'."
@@ -16123,7 +16105,7 @@ into a task for Leo."
   (defun ps/telega-chat-mode ()
     (require 'company)
     (add-hook 'completion-at-point-functions
-	      #'telega-chatbuf-complete-at-point nil 'local))
+              #'telega-chatbuf-complete-at-point nil 'local))
 
   (telega-mode-line-mode 1)
 
@@ -18401,9 +18383,9 @@ By considering both tasks completed and their associated priorities.
 - This minor mode works unobtrusively: when it is enabled, it operates in the background, triggered by the org commands ~org-clock-in~ and ~org-clock-out~.
 - The "subjective day" starts when the first task of the calendar day is clocked in.
 - Upon clocking out a task, compute value generated.
-    - Each task should have a value associated to its completion, and an estimated completion time ("effort estimate").
-    - If the task is completed, the value generated is its completion value.
-    - If the task is not completed, the value generated is the fraction of its duration by its effort estimate, multiplied by its completion value.
+  - Each task should have a value associated to its completion, and an estimated completion time ("effort estimate").
+  - If the task is completed, the value generated is its completion value.
+  - If the task is not completed, the value generated is the fraction of its duration by its effort estimate, multiplied by its completion value.
 - Add this value to the running value since the day started.
 - Calculate fraction of past days in which I had produced at least this much value at this point of the subjective day.
 This may be useful: [cite:@Wellons2018OptionsForStructured]

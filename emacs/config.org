@@ -2245,10 +2245,13 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
 :ctime:    20230209010106
 :END:
 :LOGBOOK:
+CLOCK: [2023-02-17 Fri 10:42]--[2023-02-17 Fri 10:55] =>  0:13
+CLOCK: [2023-02-17 Fri 10:42]--[2023-02-17 Fri 11:25] =>  0:43
 CLOCK: [2021-11-18 Thu 18:12]--[2021-11-18 Thu 18:28] =>  0:16
 CLOCK: [2021-05-13 Thu 18:36]--[2021-05-13 Thu 18:37] =>  0:01
 CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 :END:
+
 /[[https://protesilaos.com/emacs/modus-themes][modus-themes]] are a pair of accessible white/dark themes for Emacs./
 
 #+begin_src emacs-lisp :results silent
@@ -2300,6 +2303,7 @@ installed."
 
   ;; This ugly hack is necessary to make the theme load all the faces
   ;; on startup
+  ;; FIXME: diagnose why this is happening and fix it properly.
   (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
 
   :hook
@@ -10972,6 +10976,7 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
    "s-=" 'ps/org-time-stamp-inactive-current-time
    "s-A-=" 'ps/org-time-stamp-inactive-current-date))
 #+end_src
+
 ** org-cycle
 :PROPERTIES:
 :ID:       AAB14053-B232-4627-8C1D-635FAE417A98
@@ -11072,6 +11077,7 @@ present, then archive it."
   (org-mode-map
    "s-a" 'org-archive-to-archive-sibling
    "s-A-a" 'org-archive-subtree))
+   
 #+end_src
 
 *** TODO [#6] Process archives ~org/archive~
@@ -14610,7 +14616,7 @@ first name, and names are separated by a semicolon."
        (beep))))
 
   :hook
-  ;; (ebib-index-mode-hook . doom-modeline-mode)
+  (ebib-index-mode-hook . doom-modeline-mode)
   (ebib-entry-mode-hook . visual-line-mode)
 
   :general
@@ -18265,6 +18271,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (midnight-delay-set 'midnight-delay "4:30am")
 
   :hook
+  (midnight-mode . ps/save-all-buffers)
   (midnight-hook . ps/ledger-update-commodities)
   (midnight-hook . ps/magit-stage-commit-and-push-all-repos)
   (midnight-hook . clean-buffer-list)

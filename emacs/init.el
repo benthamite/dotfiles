@@ -18,7 +18,7 @@
       (cond
        ;; Pablo
        ((equal (system-name) ps/computer-hostname-pablo)
-        (load-file "~/Dropbox/dotfiles/emacs/variables.el"))
+        (load-file "~/Dropbox/dotfiles-old/emacs/variables.el"))
        ;; Leo
        ((equal (system-name) ps/computer-hostname-leo)
         (load-file "~/Dropbox/emacs/variables.el"))

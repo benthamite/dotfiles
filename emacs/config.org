@@ -3545,7 +3545,7 @@ Transient Mark mode is on but the region is inactive."
     (interactive "P")
     (exchange-point-and-mark
      (if (and transient-mark-mode (not mark-active))
-         (not arg)
+	 (not arg)
        arg)))
 
   (defun ps/visible-mode-enhanced ()
@@ -3553,29 +3553,36 @@ Transient Mark mode is on but the region is inactive."
 with the current major mode."
     (interactive)
     (if visible-mode
-        (progn
-          (visible-mode -1)
-          (org-display-inline-images)
-          (ps/org-hide-properties)
-          (ps/org-hide-logbook)
-          (org-modern-mode))
+	(progn
+	  (visible-mode -1)
+	  (org-display-inline-images)
+	  (ps/org-hide-properties)
+	  (ps/org-hide-logbook)
+	  (org-modern-mode))
       (visible-mode)
       (org-remove-inline-images)
       (ps/org-show-properties)
       (ps/org-show-logbook)
       (org-modern-mode -1)))
 
-      (defun ps/count-words-in-clipboard ()
-  "Count the number of words in the clipboard."
-  (interactive nil)
-  (let ((clipboard-text (current-kill 0)))
-    (with-temp-buffer
-      (insert clipboard-text)
-      (let ((clipboard-count (kill-new (format "%d" (count-words-region (point-min) (point-max))))))
-      (message "Clipboard has %d words" (count-words-region (point-min) (point-max)))))))
+  (defun ps/count-words-dwim ()
+    "Count the number of words in region, if active, otherwise in
+clipboard. Either way, save count to kill ring."
+    (interactive)
+    (if (region-active-p)
+	(let ((count (how-many "\\w+" (region-beginning) (region-end))))
+	  (message "%s words in region" count)
+	  (kill-new (number-to-string count))
+	  (message "region has %s words" count))
+      (let ((clipboard-text (current-kill 0)))
+	(with-temp-buffer
+	  (insert clipboard-text)
+	  (let ((clipboard-count (kill-new (format "%d" (count-words-region (point-min) (point-max))))))
+	    (message "Clipboard has %d words" (count-words-region (point-min) (point-max))))))))
 
   :general
-  ("A-H-e" 'eval-defun
+  ("A-H-c" 'ps/count-words-dwim
+   "A-H-e" 'eval-defun
    "C-A-e" 'eval-expression
    "C-e" 'eval-last-sexp
    "H-M"  'ps/exchange-point-and-mark
@@ -11086,7 +11093,7 @@ present, then archive it."
   (org-mode-map
    "s-a" 'org-archive-to-archive-sibling
    "s-A-a" 'org-archive-subtree))
-   
+
 #+end_src
 
 *** TODO [#6] Process archives ~org/archive~

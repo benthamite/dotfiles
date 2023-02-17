@@ -18,7 +18,7 @@
       (cond
        ;; Pablo
        ((equal (system-name) ps/computer-hostname-pablo)
-        (load-file "~/Dropbox/dotfiles-old/emacs/variables.el"))
+        (load-file "~/Dropbox/dotfiles/emacs/variables.el"))
        ;; Leo
        ((equal (system-name) ps/computer-hostname-leo)
         (load-file "~/Dropbox/emacs/variables.el"))
@@ -3904,6 +3904,27 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
     (let ((default-directory arg))
       (ps/magit-stage-commit-and-push "Midnight update")))
 
+  ;; gist.github.com/dotemacs/9a0433341e75e01461c9
+  (defun ps/magit-parse-url (url)
+    "convert a git remote location as a HTTP URL"
+    (if (string-match "^http" url)
+        url
+      (replace-regexp-in-string "\\(.*\\)@\\(.*\\):\\(.*\\)\\(\\.git?\\)"
+                                "https://\\2/\\3"
+                                url)))
+
+  (defun ps/magit-open-repo ()
+    "open remote repo URL"
+    (interactive)
+    (let ((url (magit-get "remote" "origin" "url")))
+      (progn
+        (browse-url (ps/magit-parse-url url))
+        (message "opening repo %s" url))))
+
+  :hook
+  (magit-mode-hook . (lambda ()
+                       (local-set-key (kbd "o") 'magit-open-repo)))
+
   :general
   ("A-g" 'magit))
 
@@ -4031,8 +4052,8 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 
 (use-package substitute
   :straight (substitute
-	     :host sourcehut
-	     :repo "protesilaos/substitute")
+             :host sourcehut
+             :repo "protesilaos/substitute")
   :demand t
   :general
   (isearch-mode-map
@@ -4457,7 +4478,7 @@ always use face at point."
       (global-hl-line-mode -1)
       (describe-face (face-at-point t))
       (when global-hl-line-mode-enabled
-	(global-hl-line-mode))))
+        (global-hl-line-mode))))
 
   :general
   ("C-h C-f" 'ps/describe-face))
@@ -5628,6 +5649,7 @@ FILE."
   (org-priority-default 7)
   (org-priority-lowest 9 "set priorities")
   ;; (org-extend-today-until 4 "youtu.be/31gwvApo8zg?t=3342")
+    (org-deadline-warning-days 0)              ; show due tasks only on the day the tasks are due
   (org-hide-emphasis-markers t)
   (org-hide-leading-stars t "indent every heading and hide all but the last leading star")
   (org-return-follows-link t)
@@ -6023,9 +6045,7 @@ image."
   (org-agenda-todo-ignore-with-date t)       ; exclude tasks with a date.
   (org-agenda-todo-ignore-scheduled 'future) ; exclude scheduled tasks.
   (org-agenda-restore-windows-after-quit t)  ; don't destroy window splits
-  (org-deadline-warning-days 0)              ; show due tasks only on the day the tasks are due
   (org-agenda-span 1)                        ; show daily view by default
-  (org-agenda-include-diary nil)               ; show holidays
   (org-agenda-clock-consistency-checks       ; highlight gaps of five or more minutes in agenda log mode
    '(:max-duration "5:00" :min-duration "0:01" :max-gap 5 :gap-ok-around ("2:00")))
   (org-agenda-skip-scheduled-if-done t)
@@ -6463,9 +6483,7 @@ present, then archive it."
 (use-package org-archive-hierarchically
   :straight (org-archive-hierarchically
              :host gitlab
-		   :repo "andersjohansson/org-archive-hierarchically")
-
-  )
+                   :repo "andersjohansson/org-archive-hierarchically"))
 
 (use-feature org-fold
   :custom
@@ -7415,17 +7433,6 @@ return such list if its length is less than LIMIT."
   (org-roam-ui-follow t)
   (org-roam-ui-update-on-save nil)
   (org-roam-ui-open-on-start nil))
-
-(use-package org-roam-timestamps
-  :if (equal (system-name) ps/computer-hostname-pablo)
-  :after org-roam
-  :demand t
-  :custom
-  (org-roam-timestamps-remember-timestamps nil)
-  (org-roam-timestamps-timestamp-parent-file t)
-
-  :config
-  (org-roam-timestamps-mode))
 
 (use-package org-transclusion
   :after org
@@ -9850,13 +9857,13 @@ Grammarly."
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
   (telega-filters-custom '(("Main" . main)
-			   ("Important" or mention
-			    (and unread unmuted))
-			   ("Archive" . archive)
-			   ("Online" and
-			    (not saved-messages) (user is-online))
-			   ("Groups" type basicgroup supergroup)
-			   ("Channels" type channel)))
+                           ("Important" or mention
+                            (and unread unmuted))
+                           ("Archive" . archive)
+                           ("Online" and
+                            (not saved-messages) (user is-online))
+                           ("Groups" type basicgroup supergroup)
+                           ("Channels" type channel)))
   (telega-completing-read-function 'completing-read)
 
   :config
@@ -9866,41 +9873,41 @@ Grammarly."
  window."
     (interactive)
     (let* ((telega-buffer-root "*Telega Root*")
-	   (telega-buffer
-	    (catch 'tag
-	      (dolist (buffer (buffer-list))
-		(when (with-current-buffer buffer
-			(member major-mode '(telega-root-mode telega-chat-mode)))
-		  (throw 'tag (buffer-name buffer))))))
-	   (current-buffer (current-buffer))
-	   (telega-buffer-is-current (string= (buffer-name current-buffer) telega-buffer)))
+           (telega-buffer
+            (catch 'tag
+              (dolist (buffer (buffer-list))
+                (when (with-current-buffer buffer
+                        (member major-mode '(telega-root-mode telega-chat-mode)))
+                  (throw 'tag (buffer-name buffer))))))
+           (current-buffer (current-buffer))
+           (telega-buffer-is-current (string= (buffer-name current-buffer) telega-buffer)))
       (if telega-buffer
-	  (if telega-buffer-is-current
-	      (if (string> telega-buffer telega-buffer-root)
-		  (end-of-buffer)
-		(beginning-of-buffer)
-		(forward-line 3))
-	    (switch-to-buffer telega-buffer))
-	(telega))
+          (if telega-buffer-is-current
+              (if (string> telega-buffer telega-buffer-root)
+                  (end-of-buffer)
+                (beginning-of-buffer)
+                (forward-line 3))
+            (switch-to-buffer telega-buffer))
+        (telega))
       (let ((telega-buffer (current-buffer)))
-	(ps/window-split-if-unsplit)
-	(if (> (frame-width) ps/frame-width-threshold)
-	    (winum-select-window-3)
-	  (winum-select-window-2))
-	(let ((rightmost-window (selected-window))
-	      (other-window (previous-window)))
-	  ;; When the command is invoked from a Telega buffer which
-	  ;; isn't on the rightmost window, we display on that window
-	  ;; the most recent non-telega buffer.
-	  (when telega-buffer-is-current
-	    (setq current-buffer
-		  (catch 'tag
-		    (dolist (buffer (buffer-list))
-		      (unless (with-current-buffer buffer
-				(member major-mode '(telega-root-mode telega-chat-mode)))
-			(throw 'tag buffer))))))
-	  (set-window-buffer (selected-window) telega-buffer)
-	  (set-window-buffer other-window current-buffer)))))
+        (ps/window-split-if-unsplit)
+        (if (> (frame-width) ps/frame-width-threshold)
+            (winum-select-window-3)
+          (winum-select-window-2))
+        (let ((rightmost-window (selected-window))
+              (other-window (previous-window)))
+          ;; When the command is invoked from a Telega buffer which
+          ;; isn't on the rightmost window, we display on that window
+          ;; the most recent non-telega buffer.
+          (when telega-buffer-is-current
+            (setq current-buffer
+                  (catch 'tag
+                    (dolist (buffer (buffer-list))
+                      (unless (with-current-buffer buffer
+                                (member major-mode '(telega-root-mode telega-chat-mode)))
+                        (throw 'tag buffer))))))
+          (set-window-buffer (selected-window) telega-buffer)
+          (set-window-buffer other-window current-buffer)))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -9918,8 +9925,8 @@ into a task for Leo."
   (defun ps/telega-move-downloaded-file (file)
     "Move downloaded file(s) to `ps/dir-downloads' directory."
     (let* ((old-path (plist-get (plist-get file :local) :path))
-	   (file-name (file-name-nondirectory old-path))
-	   (new-path (concat ps/dir-downloads "/" file-name)))
+           (file-name (file-name-nondirectory old-path))
+           (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
 
@@ -9929,36 +9936,36 @@ into a task for Leo."
     (unless (telega-server-live-p)
       (user-error "Please launch Telega before running this command."))
     (if (equal (buffer-file-name) ps/file-tlon-docs)
-	(progn
-	  (unless (region-active-p)
-	    (user-error "Please select the region containing the changes you introduced."))
-	  (let ((docs-section (org-get-heading)))
-	    (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
-	    (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
+        (progn
+          (unless (region-active-p)
+            (user-error "Please select the region containing the changes you introduced."))
+          (let ((docs-section (org-get-heading)))
+            (telega-chat--pop-to-buffer (telega-chat-get "-661475865"))
+            (insert (format "FYI: I've made some changes to `docs.org` in section '%s' (%s–%s). Run `ps/telega-docs-change-open` (`.`) with point on this message to see the changes." docs-section change-begins change-ends))))
       (user-error "You aren't visiting `docs.org'!")))
 
   (defun ps/telega-docs-change-open (msg)
     "TODO: write docstring"
     (interactive (list (telega-msg-for-interactive)))
     (let* ((content (plist-get msg :content))
-	   (msg-text (or (telega-tl-str content :text)
-			 (telega-tl-str content :caption)
-			 ;; See FR https://t.me/emacs_telega/34839
-			 (and (telega-msg-match-p msg '(type VoiceNote))
-			      (telega-tl-str (plist-get content :voice_note)
-					     :recognized_text)))))
+           (msg-text (or (telega-tl-str content :text)
+                         (telega-tl-str content :caption)
+                         ;; See FR https://t.me/emacs_telega/34839
+                         (and (telega-msg-match-p msg '(type VoiceNote))
+                              (telega-tl-str (plist-get content :voice_note)
+                                             :recognized_text)))))
       (with-temp-buffer
-	(insert msg-text)
-	(goto-char (point-min))
-	(re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
-	(let ((change-begins (string-to-number (match-string 1)))
-	      (change-ends (string-to-number (match-string 2))))
-	  (find-file ps/file-tlon-docs)
-	  (org-show-all)
-	  (org-hide-drawer-all)
-	  (org-highlight change-begins change-ends)
-	  (goto-char change-begins))
-	(message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
+        (insert msg-text)
+        (goto-char (point-min))
+        (re-search-forward "(\\([[:digit:]]*\\)–\\([[:digit:]]*\\))")
+        (let ((change-begins (string-to-number (match-string 1)))
+              (change-ends (string-to-number (match-string 2))))
+          (find-file ps/file-tlon-docs)
+          (org-show-all)
+          (org-hide-drawer-all)
+          (org-highlight change-begins change-ends)
+          (goto-char change-begins))
+        (message "The highlighting is not persistent and will disappear when you close the buffer. You can also remove it by running `ps/org-unhighlight' or by reverting the buffer."))))
 
   (defun ps/telega-filters-push-archive ()
     "Set active filters list to `archive'."
@@ -9973,7 +9980,7 @@ into a task for Leo."
   (defun ps/telega-chat-mode ()
     (require 'company)
     (add-hook 'completion-at-point-functions
-	      #'telega-chatbuf-complete-at-point nil 'local))
+              #'telega-chatbuf-complete-at-point nil 'local))
 
   (telega-mode-line-mode 1)
 

@@ -11102,7 +11102,7 @@ I think Munilo Pereira had a package that allowed for this.
 :ID:       27C3C7F9-C040-4844-AC5A-762BBC26C18F
 :END:
 :LOGBOOK:
-CLOCK: [2023-02-17 Fri 11:34]
+CLOCK: [2023-02-17 Fri 11:34]--[2023-02-17 Fri 11:47] =>  0:13
 :END:
 
 /[[https://gitlab.com/andersjohansson/org-archive-hierarchically][org-archive-hierarchically]] archives org subtrees in a way that preserves the original heading structure./

@@ -12,7 +12,8 @@
 (add-hook 'emacs-startup-hook #'ps/report-startup-time)
 
 (defvar ps/computer-hostname-pablo "Pablos-MacBook-Pro.local")
-(defvar ps/computer-hostname-leo "cartagos-MacBook-Pro.local")
+;; (defvar ps/computer-hostname-leo "cartagos-MacBook-Pro.local")
+(defvar ps/computer-hostname-leo "cartagos-MBP.fibertel.com.ar")
 (defvar ps/computer-hostname-fede "luminous-mbp.local")
   (condition-case nil
       (cond

@@ -11101,13 +11101,21 @@ I think Munilo Pereira had a package that allowed for this.
 :PROPERTIES:
 :ID:       27C3C7F9-C040-4844-AC5A-762BBC26C18F
 :END:
+:LOGBOOK:
+CLOCK: [2023-02-17 Fri 11:34]
+:END:
+
+/[[https://gitlab.com/andersjohansson/org-archive-hierarchically][org-archive-hierarchically]] archives org subtrees in a way that preserves the original heading structure./
+
+I normally archive subtrees with ~org-archive-to-archive-sibling~, but use ~org-archive-hierarchically~ for files in public repositories. ~org-archive-to-archive-sibling~ moves archived tasks to a heading, which is by default collapsed in org, but in Github archived tasks are always fully visible, creating a lot of clutter.
+
 #+begin_src emacs-lisp
 (use-package org-archive-hierarchically
   :straight (org-archive-hierarchically
              :host gitlab
-                   :repo "andersjohansson/org-archive-hierarchically"))
+             :repo "andersjohansson/org-archive-hierarchically")
+  :demand t)
 #+end_src
-
 
 ** org-fold
 :PROPERTIES:

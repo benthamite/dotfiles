@@ -11099,9 +11099,7 @@ I think Munilo Pereira had a package that allowed for this.
 (use-package org-archive-hierarchically
   :straight (org-archive-hierarchically
              :host gitlab
-                   :repo "andersjohansson/org-archive-hierarchically")
-
-  )
+                   :repo "andersjohansson/org-archive-hierarchically"))
 #+end_src
 
 
@@ -18471,5 +18469,4 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
 # eval: (ps/buffer-local-set-key (kbd "H-i") 'use-package-report)
-# eval: (define-key org-mode-map (kbd "s-a") 'org-archive-hierarchically)
 # End:

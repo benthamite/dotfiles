@@ -3565,6 +3565,15 @@ with the current major mode."
       (ps/org-show-logbook)
       (org-modern-mode -1)))
 
+      (defun ps/count-words-in-clipboard ()
+  "Count the number of words in the clipboard."
+  (interactive nil)
+  (let ((clipboard-text (current-kill 0)))
+    (with-temp-buffer
+      (insert clipboard-text)
+      (let ((clipboard-count (kill-new (format "%d" (count-words-region (point-min) (point-max))))))
+      (message "Clipboard has %d words" (count-words-region (point-min) (point-max)))))))
+
   :general
   ("A-H-e" 'eval-defun
    "C-A-e" 'eval-expression

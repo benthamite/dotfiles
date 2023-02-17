@@ -1342,7 +1342,7 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   ("r" (ps/org-id-goto "1C5DCC5A-DA18-4CBD-8E2E-205766A656D6") "Documentaries")
   ("z" (ps/org-id-goto "8F8E5495-A0D8-451A-B1F1-0A8706CBF6A0") "eablogs.net")
   ("e" (ps/org-id-goto "96BBA849-B4CF-41C0-ABA3-A5D901BCDB18") "Email")
-  ("d" (ps/org-id-goto "D61B81B9-852F-4816-A316-B89FC8F302FC") "Feeds")
+  ("d" (ps/org-id-goto "6504C81B-28F0-44C3-BFC0-2F3E648974F0") "Feeds")
   ("v" (ps/org-id-goto "E821F19E-C619-4895-A084-54D0A2772BAE") "films")
   ("f" (ps/org-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C") "finance")
   ("/" (ps/org-id-goto "D9D71BF0-6BD6-40A5-9896-E58C7D9556B7") "inbox")

@@ -1,5 +1,5 @@
 :PROPERTIES:
-:mtime:    20230216204431
+:mtime:    20230216221514
 :ctime:    20230215082042
 :END:
 #+TITLE:Pablo's Emacs config
@@ -12619,6 +12619,8 @@ Run org-roam with minimal config and see if the problem with idle times persist
 :PROPERTIES:
 :Effort:   0:30
 :ID:       83AA4CF2-A783-4C27-895F-C68EAE5AB456
+:mtime:    20230216221514
+:ctime:    20230216221514
 :END:
 So the links to other Wiki articles do not break.
 ** org-roam-ui
@@ -12654,7 +12656,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
 
 /[[https://github.com/tefkah/org-roam-timestamps][org-roam-timestamps]] adds modified and creation timestamps to the org-roam property drawer./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package org-roam-timestamps
   :if (equal (system-name) ps/computer-hostname-pablo)
   :after org-roam

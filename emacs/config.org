@@ -3545,7 +3545,7 @@ Transient Mark mode is on but the region is inactive."
     (interactive "P")
     (exchange-point-and-mark
      (if (and transient-mark-mode (not mark-active))
-	 (not arg)
+         (not arg)
        arg)))
 
   (defun ps/visible-mode-enhanced ()
@@ -3553,12 +3553,12 @@ Transient Mark mode is on but the region is inactive."
 with the current major mode."
     (interactive)
     (if visible-mode
-	(progn
-	  (visible-mode -1)
-	  (org-display-inline-images)
-	  (ps/org-hide-properties)
-	  (ps/org-hide-logbook)
-	  (org-modern-mode))
+        (progn
+          (visible-mode -1)
+          (org-display-inline-images)
+          (ps/org-hide-properties)
+          (ps/org-hide-logbook)
+          (org-modern-mode))
       (visible-mode)
       (org-remove-inline-images)
       (ps/org-show-properties)
@@ -3570,15 +3570,15 @@ with the current major mode."
 clipboard. Either way, save count to kill ring."
     (interactive)
     (if (region-active-p)
-	(let ((count (how-many "\\w+" (region-beginning) (region-end))))
-	  (message "%s words in region" count)
-	  (kill-new (number-to-string count))
-	  (message "region has %s words" count))
+        (let ((count (how-many "\\w+" (region-beginning) (region-end))))
+          (message "%s words in region" count)
+          (kill-new (number-to-string count))
+          (message "region has %s words" count))
       (let ((clipboard-text (current-kill 0)))
-	(with-temp-buffer
-	  (insert clipboard-text)
-	  (let ((clipboard-count (kill-new (format "%d" (count-words-region (point-min) (point-max))))))
-	    (message "Clipboard has %d words" (count-words-region (point-min) (point-max))))))))
+        (with-temp-buffer
+          (insert clipboard-text)
+          (let ((clipboard-count (kill-new (format "%d" (count-words-region (point-min) (point-max))))))
+            (message "Clipboard has %d words" (count-words-region (point-min) (point-max))))))))
 
   :general
   ("A-H-c" 'ps/count-words-dwim
@@ -14783,10 +14783,10 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     "Start translator server in the background."
     (interactive)
     (let ((shell-command-buffer-name-async "*zotra-translation-server*"))
-    (async-shell-command
-     (format
-      "cd %s; nvm use 14; npm start"
-      ps/dir-translation-server))))
+      (async-shell-command
+       (format
+        "cd %s; nvm use 14; npm start"
+        ps/dir-translation-server))))
 
   (run-with-timer 5 nil 'ps/zotra-run-translator-server)
 
@@ -14802,27 +14802,27 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
   :config
   (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
-  (let ((bibfile
-         (or bibfile zotra-default-bibliography
-             (completing-read
-              "Bibfile: "
-              (append (directory-files "." t ".*\\.bib$")
-                      (org-cite-list-bibliography-files))))))
-    (find-file bibfile)
-    (widen)
-    (goto-char (point-max))
-    (when (not (looking-at "^")) (insert "\n"))
-    (insert (zotra-get-entry url-or-search-string is-search entry-format))
-    (save-excursion
-      (save-restriction
-        (bibtex-narrow-to-entry)
-        (bibtex-beginning-of-entry)
-        (goto-char (point-max))
-        (when (not (looking-at "^")) (insert "\n"))
-        (advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
-        (save-buffer)
-        (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
-        (run-hooks 'zotra-after-add-entry-hook)))))
+    (let ((bibfile
+           (or bibfile zotra-default-bibliography
+               (completing-read
+                "Bibfile: "
+                (append (directory-files "." t ".*\\.bib$")
+                        (org-cite-list-bibliography-files))))))
+      (find-file bibfile)
+      (widen)
+      (goto-char (point-max))
+      (when (not (looking-at "^")) (insert "\n"))
+      (insert (zotra-get-entry url-or-search-string is-search entry-format))
+      (save-excursion
+        (save-restriction
+          (bibtex-narrow-to-entry)
+          (bibtex-beginning-of-entry)
+          (goto-char (point-max))
+          (when (not (looking-at "^")) (insert "\n"))
+          (advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
+          (save-buffer)
+          (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
+          (run-hooks 'zotra-after-add-entry-hook)))))
 
   (defun ps/zotra-after-add-entry-hook-function ()
     "Function to trigger with `zotra-after-add-entry-hook'."

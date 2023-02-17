@@ -7,7 +7,7 @@ export PATH="$PYENV_ROOT/bin:$PATH"
 export GOKU_EDN_CONFIG_FILE="/Users/pablostafforini/Dropbox/dotfiles/karabiner/karabiner.edn"
 export EDITOR="emacsclient -nw"
 # export VISUAL="emacsclient"   # $VISUAL opens in GUI mode
-source ".zshenv-secrets"
+source "/Users/pablostafforini/Dropbox/dotfiles/shell/.zshenv-secrets"
 export OBJECT_STORAGE_REGION_NAME="sa-east-1"
 export PATH="/opt/homebrew/opt/node@16/bin:$PATH"
 export PATH="$HOME/bin:$PATH"

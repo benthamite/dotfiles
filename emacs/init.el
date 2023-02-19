@@ -12,7 +12,6 @@
 (add-hook 'emacs-startup-hook #'ps/report-startup-time)
 
 (defvar ps/computer-hostname-pablo "Pablos-MacBook-Pro.local")
-;; (defvar ps/computer-hostname-leo "cartagos-MacBook-Pro.local")
 (defvar ps/computer-hostname-leo "cartagos-MBP.fibertel.com.ar")
 (defvar ps/computer-hostname-fede "luminous-mbp.local")
   (condition-case nil
@@ -295,7 +294,7 @@ NAME and ARGS are as in `use-package'."
   ("r" (ps/org-id-goto "1C5DCC5A-DA18-4CBD-8E2E-205766A656D6") "Documentaries")
   ("z" (ps/org-id-goto "8F8E5495-A0D8-451A-B1F1-0A8706CBF6A0") "eablogs.net")
   ("e" (ps/org-id-goto "96BBA849-B4CF-41C0-ABA3-A5D901BCDB18") "Email")
-  ("d" (ps/org-id-goto "D61B81B9-852F-4816-A316-B89FC8F302FC") "Feeds")
+  ("d" (ps/org-id-goto "6504C81B-28F0-44C3-BFC0-2F3E648974F0") "Feeds")
   ("v" (ps/org-id-goto "E821F19E-C619-4895-A084-54D0A2772BAE") "films")
   ("f" (ps/org-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C") "finance")
   ("/" (ps/org-id-goto "D9D71BF0-6BD6-40A5-9896-E58C7D9556B7") "inbox")
@@ -978,6 +977,7 @@ installed."
 
   ;; This ugly hack is necessary to make the theme load all the faces
   ;; on startup
+  ;; FIXME: diagnose why this is happening and fix it properly.
   (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
 
   :hook
@@ -1774,8 +1774,24 @@ with the current major mode."
       (ps/org-show-logbook)
       (org-modern-mode -1)))
 
+  (defun ps/count-words-dwim ()
+    "Count the number of words in region, if active, otherwise in
+clipboard. Either way, save count to kill ring."
+    (interactive)
+    (if (region-active-p)
+        (let ((count (how-many "\\w+" (region-beginning) (region-end))))
+          (message "%s words in region" count)
+          (kill-new (number-to-string count))
+          (message "region has %s words" count))
+      (let ((clipboard-text (current-kill 0)))
+        (with-temp-buffer
+          (insert clipboard-text)
+          (let ((clipboard-count (kill-new (format "%d" (count-words-region (point-min) (point-max))))))
+            (message "Clipboard has %d words" (count-words-region (point-min) (point-max))))))))
+
   :general
-  ("A-H-e" 'eval-defun
+  ("A-H-c" 'ps/count-words-dwim
+   "A-H-e" 'eval-defun
    "C-A-e" 'eval-expression
    "C-e" 'eval-last-sexp
    "H-M"  'ps/exchange-point-and-mark
@@ -6484,7 +6500,8 @@ present, then archive it."
 (use-package org-archive-hierarchically
   :straight (org-archive-hierarchically
              :host gitlab
-                   :repo "andersjohansson/org-archive-hierarchically"))
+             :repo "andersjohansson/org-archive-hierarchically")
+  :demand t)
 
 (use-feature org-fold
   :custom
@@ -9052,7 +9069,7 @@ first name, and names are separated by a semicolon."
        (beep))))
 
   :hook
-  ;; (ebib-index-mode-hook . doom-modeline-mode)
+  (ebib-index-mode-hook . doom-modeline-mode)
   (ebib-entry-mode-hook . visual-line-mode)
 
   :general
@@ -9128,10 +9145,10 @@ first name, and names are separated by a semicolon."
     "Start translator server in the background."
     (interactive)
     (let ((shell-command-buffer-name-async "*zotra-translation-server*"))
-    (async-shell-command
-     (format
-      "cd %s; nvm use 14; npm start"
-      ps/dir-translation-server))))
+      (async-shell-command
+       (format
+        "cd %s; nvm use 14; npm start"
+        ps/dir-translation-server))))
 
   (run-with-timer 5 nil 'ps/zotra-run-translator-server)
 
@@ -9147,27 +9164,27 @@ first name, and names are separated by a semicolon."
 
   :config
   (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
-  (let ((bibfile
-         (or bibfile zotra-default-bibliography
-             (completing-read
-              "Bibfile: "
-              (append (directory-files "." t ".*\\.bib$")
-                      (org-cite-list-bibliography-files))))))
-    (find-file bibfile)
-    (widen)
-    (goto-char (point-max))
-    (when (not (looking-at "^")) (insert "\n"))
-    (insert (zotra-get-entry url-or-search-string is-search entry-format))
-    (save-excursion
-      (save-restriction
-        (bibtex-narrow-to-entry)
-        (bibtex-beginning-of-entry)
-        (goto-char (point-max))
-        (when (not (looking-at "^")) (insert "\n"))
-        (advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
-        (save-buffer)
-        (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
-        (run-hooks 'zotra-after-add-entry-hook)))))
+    (let ((bibfile
+           (or bibfile zotra-default-bibliography
+               (completing-read
+                "Bibfile: "
+                (append (directory-files "." t ".*\\.bib$")
+                        (org-cite-list-bibliography-files))))))
+      (find-file bibfile)
+      (widen)
+      (goto-char (point-max))
+      (when (not (looking-at "^")) (insert "\n"))
+      (insert (zotra-get-entry url-or-search-string is-search entry-format))
+      (save-excursion
+        (save-restriction
+          (bibtex-narrow-to-entry)
+          (bibtex-beginning-of-entry)
+          (goto-char (point-max))
+          (when (not (looking-at "^")) (insert "\n"))
+          (advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
+          (save-buffer)
+          (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
+          (run-hooks 'zotra-after-add-entry-hook)))))
 
   (defun ps/zotra-after-add-entry-hook-function ()
     "Function to trigger with `zotra-after-add-entry-hook'."
@@ -11222,6 +11239,7 @@ is connected."
   (midnight-delay-set 'midnight-delay "4:30am")
 
   :hook
+  (midnight-mode . ps/save-all-buffers)
   (midnight-hook . ps/ledger-update-commodities)
   (midnight-hook . ps/magit-stage-commit-and-push-all-repos)
   (midnight-hook . clean-buffer-list)

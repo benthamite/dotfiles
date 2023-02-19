@@ -2276,8 +2276,8 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
     "Load theme, taking current system APPEARANCE into consideration."
     (mapc #'disable-theme custom-enabled-themes)
     (pcase appearance
-      ('light (load-theme 'modus-operandi :no-confirm))
-      ('dark (load-theme 'modus-vivendi :no-confirm))))
+      ('light (modus-themes-load-theme 'modus-operandi))
+      ('dark (modus-themes-load-theme 'modus-vivendi))))
 
   (defun ps/modus-themes-load-theme-conditionally ()
     "Load themes conditional on which distribution of Emacs is
@@ -2304,7 +2304,7 @@ installed."
   ;; This ugly hack is necessary to make the theme load all the faces
   ;; on startup
   ;; FIXME: diagnose why this is happening and fix it properly.
-  (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
+  ;; (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
 
   :hook
   (modus-themes-after-load-theme-hook . ps/org-faces-custom-faces)

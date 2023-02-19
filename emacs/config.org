@@ -2276,7 +2276,6 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   (modus-themes-org-blocks 'gray-background)
 
   :config
-  (defvar ps/
   (defun ps/modus-themes-load-theme-emacs-mac ()
     "Load modus theme that matches system."
     (interactive)
@@ -9288,7 +9287,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
   (defun ps/pdf-tools-apply-theme ()
     "Activate `pdf-tools' midnight mode iff dark theme is active."
-    (if (string= (modus-themes--current-theme) "modus-vivendi")
+    (if (eq (modus-themes--current-theme) ps/theme-loaddefs-dark)
         (pdf-view-midnight-minor-mode 1)
       (pdf-view-midnight-minor-mode -1)))
 

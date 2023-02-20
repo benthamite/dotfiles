@@ -11207,7 +11207,7 @@ slow if it has a lot of overlays."
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
-              "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:" nil t)
+              "\n^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:" nil t)
         (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
           (overlay-put ov_this 'display "")
           (overlay-put ov_this 'hidden-prop-drawer t))))

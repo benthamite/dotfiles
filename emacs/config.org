@@ -9681,8 +9681,8 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp
 (use-package puni
+  :disabled
   :demand t
-
   :general
   (puni-mode-map
    "C-M-a" 'puni-beginning-of-sexp

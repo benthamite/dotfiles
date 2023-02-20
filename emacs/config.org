@@ -6687,10 +6687,6 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
         (browse-url (ps/magit-parse-url url))
         (message "opening repo %s" url))))
 
-  :hook
-  (remove-hook 'magit-mode-hook (lambda ()
-                       (local-set-key (kbd "o") 'magit-open-repo)))
-
   :general
   ("A-g" 'magit)
   (magit-mode-map
@@ -11211,7 +11207,7 @@ slow if it has a lot of overlays."
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
-              "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
+              "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:" nil t)
         (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
           (overlay-put ov_this 'display "")
           (overlay-put ov_this 'hidden-prop-drawer t))))

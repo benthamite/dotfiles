@@ -12,7 +12,7 @@
 (add-hook 'emacs-startup-hook #'ps/report-startup-time)
 
 (defvar ps/computer-hostname-pablo "Pablos-MacBook-Pro.local")
-(defvar ps/computer-hostname-leo "cartagos-MBP.fibertel.com.ar")
+(defvar ps/computer-hostname-leo "cartagos-MacBook-Pro.local")
 (defvar ps/computer-hostname-fede "luminous-mbp.local")
   (condition-case nil
       (cond
@@ -929,6 +929,11 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
     (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 0.9)
     (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)))
 
+(use-feature theme-loaddefs
+  :config
+  (defvar ps/theme-loaddefs-light 'modus-operandi)
+  (defvar ps/theme-loaddefs-dark 'modus-vivendi))
+
 (use-package modus-themes
   :straight (modus-themes
              :host sourcehut
@@ -943,15 +948,15 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
     "Load modus theme that matches system."
     (interactive)
     (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-        (load-theme 'modus-vivendi :no-confirm)
-      (load-theme 'modus-operandi :no-confirm)))
+        (modus-themes-load-theme ps/theme-loaddefs-light)
+      (modus-themes-load-theme ps/theme-loaddefs-dark)))
 
   (defun ps/modus-themes-load-theme-emacs-plus (appearance)
     "Load theme, taking current system APPEARANCE into consideration."
     (mapc #'disable-theme custom-enabled-themes)
     (pcase appearance
-      ('light (load-theme 'modus-operandi :no-confirm))
-      ('dark (load-theme 'modus-vivendi :no-confirm))))
+      ('light (modus-themes-load-theme ps/theme-loaddefs-light))
+      ('dark (modus-themes-load-theme ps/theme-loaddefs-dark))))
 
   (defun ps/modus-themes-load-theme-conditionally ()
     "Load themes conditional on which distribution of Emacs is
@@ -978,7 +983,7 @@ installed."
   ;; This ugly hack is necessary to make the theme load all the faces
   ;; on startup
   ;; FIXME: diagnose why this is happening and fix it properly.
-  (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
+  ;; (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
 
   :hook
   (modus-themes-after-load-theme-hook . ps/org-faces-custom-faces)
@@ -5400,7 +5405,7 @@ otherwise the whole buffer."
 
   (defun ps/pdf-tools-apply-theme ()
     "Activate `pdf-tools' midnight mode iff dark theme is active."
-    (if (string= (modus-themes--current-theme) "modus-vivendi")
+    (if (eq (modus-themes--current-theme) ps/theme-loaddefs-dark)
         (pdf-view-midnight-minor-mode 1)
       (pdf-view-midnight-minor-mode -1)))
 
@@ -6052,7 +6057,9 @@ image."
         (org-agenda nil "a"))))
 
   :custom
-  (org-agenda-files `(,ps/dir-android))
+  (org-agenda-files `(,ps/dir-android
+		      ,ps/file-tlon-tareas-leo
+		      ,ps/file-tlon-tareas-fede))
   (org-agenda-window-setup 'current-window)
   (org-agenda-use-time-grid nil) ; disable agenda time grid
   ;; Speed up agenda (orgmode.org/worg/agenda-optimization.html)
@@ -6236,7 +6243,7 @@ image."
       "" :empty-lines 1)
      ("l" "Leo")
      ("lb" "Leo: Add to ea.news" entry
-      (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
+      (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
       "** TODO [#6] Agregar a ea.news :leo:\n%c" :empty-lines 1 :prepend t)
      ("ll" "Leo: Generic task" entry
       (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
@@ -6245,16 +6252,16 @@ image."
       (id "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")
       "** %(ps/org-time-stamp-inactive-current-time)\n%?")
      ("ln" "Leo: Add to Future Matters: news" entry
-      (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
+      (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
       "** TODO [#4] Future Matters: news :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
      ("lp" "Leo: Pending for next meeting" plain
       (id "8B2F18B4-A309-4F29-A5E6-CD40E010970D")
       "" :empty-lines 1 :empty-lines-after 3)
      ("lr" "Leo: Add to Future Matters: research" entry
-      (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
+      (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
       "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
      ("lt" "Leo: Add to translations Aritable" entry
-      (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
+      (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
       "** TODO [#4] Add to translations Airtable :leo:\n%c\n[[https://airtable.com/appLHkQNT9y6z6WGb/tblgUYEx9om4IZyuQ/viwUQXm3h0fGOkNCv?blocks=hide][Airtable]]" :empty-lines 1 :prepend t)
      ("lg" "Leo: Telegram" entry
       (file+headline ps/file-tlon-tareas-leo "Tareas Leo")

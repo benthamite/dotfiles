@@ -2172,6 +2172,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 (use-package org-modern
   :demand t
   :custom
+  (org-modern-table nil)
   (org-modern-statistics nil)
   (org-modern-star '("◉" "◉" "◉" "◉" "◉"))
   (org-modern-list '((42 . "○")
@@ -3783,7 +3784,7 @@ include this special hyphen: ­
   (setq-default abbrev-mode t))
 #+end_src
 
-*** TODO Add these abbrevs
+*** TODO [#6] Add these abbrevs
 :PROPERTIES:
 :ID:       E276F182-573B-4773-8B44-048605A60271
 :END:
@@ -5194,7 +5195,7 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
   ("A-p" 'pandoc-main-hydra/body))
 #+end_src
 
-*** TODO Make pandoc preserve emojis
+*** TODO [#7] Make pandoc preserve emojis
 :PROPERTIES:
 :ID:       3C4F154F-6600-4DF0-826F-0EB031146BA2
 :END:
@@ -6022,7 +6023,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
   (org-gcal-notify-p nil)
   (org-gcal-auto-archive nil)
-  (org-gcal-up-days 0)
+  (org-gcal-up-days 1)
   (org-gcal-down-days 3)
 
   :config
@@ -9670,7 +9671,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :hook
   ((prog-mode-hook sgml-mode-hook nxml-mode-hook tex-mode-hook eval-expression-minibuffer-setup-hook) . puni-mode))
 #+end_src
-*** TODO Define ~puni~ key bindings
+*** TODO [#5] Define ~puni~ key bindings
 :PROPERTIES:
 :ID:       BEF1B425-C23E-4C1C-A468-92F7AD54FA18
 :END:
@@ -12608,23 +12609,18 @@ return such list if its length is less than LIMIT."
 - And [[https://github.com/alexkehayias/emacs.d/blob/master/init.el#L715][this one]] (by the author of [[https://notes.alexkehayias.com/][this notes repository]], created with org-roam)
 - And [[https://takeonrules.com/2021/08/22/ever-further-refinements-of-org-roam-usage/][this post]]
 
-*** TODO Tweak ~ps/org-roam-update-id-locations~ so that it doesn't find duplicate IDs in Leo's directory
+*** TODO [#5] Tweak ~ps/org-roam-update-id-locations~ so that it doesn't find duplicate IDs in Leo's directory
 :PROPERTIES:
 :ID:       E212A384-4DD2-4449-8DF3-F46133EA66E1
 :END:
 
-*** TODO Add #+LAST_MODIFIED: field to all org files
-:PROPERTIES:
-:ID:       1774E282-337F-44AA-A580-2C7D72454A40
-:END:
-
-*** TODO check this org-roam config for ideas
+*** TODO [#7] check this org-roam config for ideas
 :PROPERTIES:
 :ID:       C375E205-3B70-4C1C-BB0B-1F7FC3A56187
 :END:
 
 https://github.com/hieutkt/.doom.d/blob/master/config.el#L690-L742
-*** TODO Create new generic and person notes via capture templates, not function
+*** TODO [#6] Create new generic and person notes via capture templates, not function
 :PROPERTIES:
 :ID:       569027E9-D918-4A06-A85A-8E800DAC16EA
 :END:
@@ -12665,6 +12661,17 @@ Run org-roam with minimal config and see if the problem with idle times persist
 :ctime:    20230216221514
 :END:
 So the links to other Wiki articles do not break.
+*** Archive                                                         :ARCHIVE:
+:PROPERTIES:
+:ID:       7BBA8FEC-AF1E-4F70-B3AF-402BF61911C3
+:END:
+**** CANCELLED Add #+LAST_MODIFIED: field to all org files
+CLOSED: [2023-02-20 Mon 12:58]
+:PROPERTIES:
+:ID:       1774E282-337F-44AA-A580-2C7D72454A40
+:ARCHIVE_TIME: 2023-02-20 Mon 12:58
+:END:
+I use version control, so this seems overkill.
 ** org-roam-ui
 :PROPERTIES:
 :ID:       BAEADCA3-68C6-4B59-A45A-7A1C11C6F6BB
@@ -13072,7 +13079,8 @@ ARG is the prefix argument received when calling interactively the function."
   ("H-/" 'org-cite-insert))
 #+end_src
 
-*** TODO Add ~biblio~ tag to all bibliographic notes
+*** DONE Add ~biblio~ tag to all bibliographic notes
+CLOSED: [2023-02-20 Mon 12:58]
 :PROPERTIES:
 :ID:       51E3274E-1A08-4082-9863-0A62F3233C1B
 :END:
@@ -13326,7 +13334,7 @@ Version 2015-06-08"
    "A-C-s-f" 'bibtex-next-entry))
 #+end_src
 
-*** TODO Standardize author names in bibtex file
+*** TODO [#6] Standardize author names in bibtex file
 :PROPERTIES:
 :ID:       8B243BA8-8CA1-4E6F-82CA-5CD950D8C498
 :END:
@@ -13535,7 +13543,7 @@ With prefix, rebuild the cache before offering candidates."
    "u" 'citar-open-links))
 #+end_src
 
-*** TODO Fixme: ~citar-open-notes~ creates note even when it already exists
+*** TODO [#4] Fixme: ~citar-open-notes~ creates note even when it already exists
 :PROPERTIES:
 :ID:       8DBC282D-3935-4740-9907-3D73150DC3B6
 :END:
@@ -14715,14 +14723,14 @@ first name, and names are separated by a semicolon."
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
-*** TODO Add imdb movies to ebib
+*** TODO [#6] Add imdb movies to ebib
 :PROPERTIES:
 :ID:       B801240B-B0F4-46EB-859F-9755ECCFB3DF
 :END:
 - First export them to csv.
 - Then convert the csv to bibtex
   https://www.google.com/search?q=csv+to+bibtex&oq=csv+to+bib&aqs=chrome.0.0i512j69i57j0i512l2j0i22i30j0i10i22i30l5.7911j0j9&sourceid=chrome&ie=UTF-8
-*** TODO Fix ebib issues Leo reported
+*** TODO [#5] Fix ebib issues Leo reported
 :PROPERTIES:
 :ID:       359ADA5E-7B2F-4BF9-94CC-DE0BB5A516C9
 :END:

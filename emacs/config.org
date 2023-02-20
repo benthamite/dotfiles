@@ -6688,7 +6688,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
         (message "opening repo %s" url))))
 
   :hook
-  (magit-mode-hook . (lambda ()
+  (remove-hook 'magit-mode-hook (lambda ()
                        (local-set-key (kbd "o") 'magit-open-repo)))
 
   :general

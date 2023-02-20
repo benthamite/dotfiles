@@ -182,7 +182,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#code-review][code-review]]
   - [[#projectile][projectile]]
   - [[#git-timemachine][git-timemachine]]
-  - [[#git-auto-commit-mode][git-auto-commit-mode]]
+  - [[#git-auto-commit-mode][git-auto--commit-mode]]
   - [[#git-gutter][git-gutter]]
 - [[#search--replace][search & replace]]
   - [[#isearch][isearch]]
@@ -917,6 +917,7 @@ NAME and ARGS are as in `use-package'."
      :straight nil
      ,@args))
 #+end_src
+
 *** use-package-ensure-system-package
 :PROPERTIES:
 :ID:       5C17424A-4950-4745-B7FD-F0CACEB48AFB
@@ -6588,6 +6589,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
 
 #+begin_src emacs-lisp :results silent
 (use-feature remember
+  :disabled
   :custom
   (remember-data-file (file-name-concat ps/dir-emacs "var/remember"))
   (remember-notes-buffer-name "\*scratch\*"))

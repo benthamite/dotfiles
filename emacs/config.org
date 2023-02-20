@@ -935,8 +935,9 @@ NAME and ARGS are as in `use-package'."
 CLOCK: [2021-06-03 Thu 14:11]--[2021-06-03 Thu 14:16] =>  0:05
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package paradox
+  :disabled
   ;; :defer 600
   :custom
   (paradox-column-width-package 27)
@@ -2097,8 +2098,9 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 
 I haven't yet explored this package.
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package fontaine
+  :disabled
   :demand t
   :config
   (fontaine-mode))
@@ -2992,6 +2994,7 @@ See also `zap-up-to-char'."
 :ID:       E2655C82-F60C-4504-B8C1-7ACE864C2E01
 :END:
 :LOGBOOK:
+CLOCK: [2023-02-20 Mon 13:44]--[2023-02-20 Mon 13:48] =>  0:04
 CLOCK: [2021-06-05 Sat 13:03]--[2021-06-05 Sat 13:07] =>  0:04
 CLOCK: [2021-06-05 Sat 11:51]--[2021-06-05 Sat 11:59] =>  0:08
 CLOCK: [2021-05-29 Sat 21:12]--[2021-05-29 Sat 21:28] =>  0:16
@@ -2999,6 +3002,8 @@ CLOCK: [2021-05-29 Sat 21:12]--[2021-05-29 Sat 21:28] =>  0:16
 
 #Minimal config
 #+begin_src emacs-lisp :results silent
+(use-feature simple
+  :config
 (defun ps/delete-word (&optional arg)
   "Like `kill-word', but deletes instead of killing."
   (interactive "p")
@@ -3040,7 +3045,9 @@ CLOCK: [2021-05-29 Sat 21:12]--[2021-05-29 Sat 21:28] =>  0:16
   (interactive)
   (transpose-words -1))
 
-(general-define-key
+:general
+("C-<delete>" nil
+ "M-DEL" nil
  "C-H-M-r" 'kill-word
  "C-H-M-q" 'backward-kill-word
  "A-C-H-M-S-s-r" 'ps/delete-word
@@ -3051,7 +3058,7 @@ CLOCK: [2021-05-29 Sat 21:12]--[2021-05-29 Sat 21:28] =>  0:16
  "A-H-C-q" 'ps/copy-whole-word
  "A-H-C-u" 'ps/kill-whole-word
  "A-H-M-r" 'transpose-words
- "A-H-M-q" 'ps/transpose-words-backward)
+ "A-H-M-q" 'ps/transpose-words-backward))
 #+end_src
 
 ** lines
@@ -3068,6 +3075,8 @@ CLOCK: [2021-05-31 Mon 20:46]--[2021-05-31 Mon 20:53] =>  0:07
 
 #Minimal config
 #+begin_src emacs-lisp :results silent
+(use-feature simple
+  :config
 (defun ps/delete-line (&optional arg)
   "Like `kill-line', but deletes instead of killing."
   (interactive "p")
@@ -3129,8 +3138,8 @@ between the two."
   (interactive)
   (transpose-lines -1))
 
-(general-define-key
- "C-H-M-v" 'kill-line
+:general
+("C-H-M-v" 'kill-line
  "C-H-M-z" 'crux-kill-line-backwards
  "A-C-H-M-S-s-v" 'ps/delete-line
  "A-C-H-M-S-s-z" 'ps/backward-delete-line
@@ -3140,7 +3149,7 @@ between the two."
  "A-H-C-m" 'ps/kill-whole-line
  "A-H-C-z" 'ps/copy-whole-line
  "A-H-M-v" 'transpose-lines
- "A-H-M-z" 'ps/transpose-lines-backward)
+ "A-H-M-z" 'ps/transpose-lines-backward))
 #+end_src
 ** sentences
 :PROPERTIES:
@@ -3152,59 +3161,61 @@ CLOCK: [2021-05-29 Sat 21:28]--[2021-05-29 Sat 22:17] =>  0:49
 
 #Minimal config
 #+begin_src emacs-lisp :results silent
-(defun ps/delete-sentence (&optional arg)
-  "Like `kill-sentence', but deletes instead of killing."
-  (interactive "p")
-  (ps/delete-instead-of-kill (kill-sentence arg)))
+(use-feature paragraphs
+  :config
+  (defun ps/delete-sentence (&optional arg)
+    "Like `kill-sentence', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (kill-sentence arg)))
 
-(defun ps/backward-delete-sentence (&optional arg)
-  "Like `backward-kill-sentence', but deletes instead of killing."
-  (interactive "p")
-  (ps/delete-instead-of-kill (backward-kill-sentence arg)))
+  (defun ps/backward-delete-sentence (&optional arg)
+    "Like `backward-kill-sentence', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (backward-kill-sentence arg)))
 
-(defun ps/copy-sentence (&optional arg)
-  "Like `kill-sentence', but copies instead of killing."
-  (interactive "P")
-  (ps/copy-instead-of-kill (kill-sentence arg)))
+  (defun ps/copy-sentence (&optional arg)
+    "Like `kill-sentence', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (kill-sentence arg)))
 
-(defun ps/backward-copy-sentence (&optional arg)
-  "Like `backward-kill-sentence', but copies instead of killing."
-  (interactive "P")
-  (ps/copy-instead-of-kill (backward-kill-sentence arg)))
+  (defun ps/backward-copy-sentence (&optional arg)
+    "Like `backward-kill-sentence', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (backward-kill-sentence arg)))
 
-(defun ps/kill-whole-sentence ()
-  "Kill the sentence at point."
-  (interactive)
-  (ps/kill-whole-thing 'sentence))
+  (defun ps/kill-whole-sentence ()
+    "Kill the sentence at point."
+    (interactive)
+    (ps/kill-whole-thing 'sentence))
 
-(defun ps/delete-whole-sentence ()
-  "Like `kill-whole-sentence', but deletes instead of killing."
-  (interactive)
-  (ps/delete-instead-of-kill (ps/kill-whole-sentence)))
+  (defun ps/delete-whole-sentence ()
+    "Like `kill-whole-sentence', but deletes instead of killing."
+    (interactive)
+    (ps/delete-instead-of-kill (ps/kill-whole-sentence)))
 
-(defun ps/copy-whole-sentence ()
-  "Like `kill-whole-sentence', but copies instead of killing."
-  (interactive)
-  (ps/copy-instead-of-kill (ps/kill-whole-sentence)))
+  (defun ps/copy-whole-sentence ()
+    "Like `kill-whole-sentence', but copies instead of killing."
+    (interactive)
+    (ps/copy-instead-of-kill (ps/kill-whole-sentence)))
 
-(defun ps/transpose-sentences-backward ()
-  "Interchange the current sentence with the previous one."
-  (interactive)
-  (transpose-sentences -1))
+  (defun ps/transpose-sentences-backward ()
+    "Interchange the current sentence with the previous one."
+    (interactive)
+    (transpose-sentences -1))
 
-(general-define-key
- ;; :keymaps '(text-mode-map org-mode-map outline-mode-map telega-chat-mode-map)
- "C-H-M-e" 'kill-sentence
- "C-H-M-w" 'backward-kill-sentence
- "A-C-H-M-S-s-e" 'ps/delete-sentence
- "A-C-H-M-S-s-w" 'ps/backward-delete-sentence
- "C-H-M-s-A-e" 'ps/copy-sentence
- "C-H-M-s-A-w" 'ps/backward-copy-sentence
- "A-H-C-e" 'ps/delete-whole-sentence
- "A-H-C-w" 'ps/copy-whole-sentence
- "A-H-C-i" 'ps/kill-whole-sentence
- "A-H-M-e" 'transpose-sentences
- "A-H-M-w" 'ps/transpose-sentences-backward)
+  :general
+  ;; :keymaps '(text-mode-map org-mode-map outline-mode-map telega-chat-mode-map)
+  ("C-H-M-e" 'kill-sentence
+   "C-H-M-w" 'backward-kill-sentence
+   "A-C-H-M-S-s-e" 'ps/delete-sentence
+   "A-C-H-M-S-s-w" 'ps/backward-delete-sentence
+   "C-H-M-s-A-e" 'ps/copy-sentence
+   "C-H-M-s-A-w" 'ps/backward-copy-sentence
+   "A-H-C-e" 'ps/delete-whole-sentence
+   "A-H-C-w" 'ps/copy-whole-sentence
+   "A-H-C-i" 'ps/kill-whole-sentence
+   "A-H-M-e" 'transpose-sentences
+   "A-H-M-w" 'ps/transpose-sentences-backward))
 #+end_src
 ** paragraphs
 :PROPERTIES:
@@ -3257,12 +3268,13 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
     (interactive)
     (ps/copy-instead-of-kill (ps/kill-whole-paragraph)))
 
-(defun ps/transpose-paragraphs-backward ()
+  (defun ps/transpose-paragraphs-backward ()
     "Interchange the current paragraph with the previous one."
     (interactive)
     (transpose-paragraphs -1))
 
   :general
+  ("M-k" nil)
   ((text-mode-map org-mode-map outline-mode-map telega-chat-mode-map)
    "C-H-M-c" 'kill-paragraph
    "C-H-M-x" 'backward-kill-paragraph
@@ -3276,11 +3288,13 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
    "A-H-M-c" 'transpose-paragraphs
    "A-H-M-x" 'ps/transpose-paragraphs-backward))
 #+end_src
+
 ** sexps
 :PROPERTIES:
 :ID:       E07DF88D-B083-4D93-91D2-97DC7C2E3EAD
 :END:
 :LOGBOOK:
+CLOCK: [2023-02-20 Mon 13:48]--[2023-02-20 Mon 13:52] =>  0:04
 CLOCK: [2022-06-21 Tue 15:31]--[2022-06-21 Tue 15:35] =>  0:04
 CLOCK: [2021-06-05 Sat 13:14]--[2021-06-05 Sat 13:20] =>  0:06
 CLOCK: [2021-05-31 Mon 20:53]--[2021-05-31 Mon 21:21] =>  0:28
@@ -3289,58 +3303,62 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 
 #Minimal config
 #+begin_src emacs-lisp :results silent
-(defun ps/delete-sexp (&optional arg)
-  "Like `kill-sexp', but deletes instead of killing."
-  (interactive "p")
-  (ps/delete-instead-of-kill (kill-sexp arg)))
+(use-feature lisp
+  :config
+  (defun ps/delete-sexp (&optional arg)
+    "Like `kill-sexp', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (kill-sexp arg)))
 
-(defun ps/backward-delete-sexp (&optional arg)
-  "Like `backward-kill-sexp', but deletes instead of killing."
-  (interactive "p")
-  (ps/delete-instead-of-kill (backward-kill-sexp arg)))
+  (defun ps/backward-delete-sexp (&optional arg)
+    "Like `backward-kill-sexp', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (backward-kill-sexp arg)))
 
-(defun ps/copy-sexp (&optional arg)
-  "Like `kill-sexp', but copies instead of killing."
-  (interactive "P")
-  (ps/copy-instead-of-kill (kill-sexp arg)))
+  (defun ps/copy-sexp (&optional arg)
+    "Like `kill-sexp', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (kill-sexp arg)))
 
-(defun ps/backward-copy-sexp (&optional arg)
-  "Like `backward-kill-sexp', but copies instead of killing."
-  (interactive "P")
-  (ps/copy-instead-of-kill (backward-kill-sexp arg)))
+  (defun ps/backward-copy-sexp (&optional arg)
+    "Like `backward-kill-sexp', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (backward-kill-sexp arg)))
 
-(defun ps/kill-whole-sexp ()
-  "Kill the sexp at point."
-  (interactive)
-  (ps/kill-whole-thing 'sexp))
+  (defun ps/kill-whole-sexp ()
+    "Kill the sexp at point."
+    (interactive)
+    (ps/kill-whole-thing 'sexp))
 
-(defun ps/delete-whole-sexp ()
-  "Like `kill-whole-sexp', but deletes instead of killing."
-  (interactive)
-  (ps/delete-instead-of-kill (ps/kill-whole-sexp)))
+  (defun ps/delete-whole-sexp ()
+    "Like `kill-whole-sexp', but deletes instead of killing."
+    (interactive)
+    (ps/delete-instead-of-kill (ps/kill-whole-sexp)))
 
-(defun ps/copy-whole-sexp ()
-  "Like `kill-whole-sexp', but copies instead of killing."
-  (interactive)
-  (ps/copy-instead-of-kill (ps/kill-whole-sexp)))
+  (defun ps/copy-whole-sexp ()
+    "Like `kill-whole-sexp', but copies instead of killing."
+    (interactive)
+    (ps/copy-instead-of-kill (ps/kill-whole-sexp)))
 
-(defun ps/transpose-sexps-backward ()
-  "Like `transpose-sexps', but in reverse order."
-  (interactive)
-  (transpose-sexps -1))
+  (defun ps/transpose-sexps-backward ()
+    "Like `transpose-sexps', but in reverse order."
+    (interactive)
+    (transpose-sexps -1))
 
-(general-define-key
- "C-H-M-f" 'kill-sexp
- "C-H-M-a" 'backward-kill-sexp
- "A-C-H-M-S-s-f" 'ps/delete-sexp
- "A-C-H-M-S-s-a" 'ps/backward-delete-sexp
- "C-H-M-s-A-f" 'ps/copy-sexp
- "C-H-M-s-A-a" 'ps/backward-copy-sexp
- "A-H-C-a" 'ps/copy-whole-sexp
- "A-H-C-f" 'ps/delete-whole-sexp
- "A-H-C-j" 'ps/kill-whole-sexp
- "A-H-M-f" 'transpose-sexps
- "A-H-M-a" 'ps/transpose-sexps-backward)
+  :general
+  ("C-M-k" nil
+   "C-M-<backspace>" nil
+   "C-H-M-f" 'kill-sexp
+   "C-H-M-a" 'backward-kill-sexp
+   "A-C-H-M-S-s-f" 'ps/delete-sexp
+   "A-C-H-M-S-s-a" 'ps/backward-delete-sexp
+   "C-H-M-s-A-f" 'ps/copy-sexp
+   "C-H-M-s-A-a" 'ps/backward-copy-sexp
+   "A-H-C-a" 'ps/copy-whole-sexp
+   "A-H-C-f" 'ps/delete-whole-sexp
+   "A-H-C-j" 'ps/kill-whole-sexp
+   "A-H-M-f" 'transpose-sexps
+   "A-H-M-a" 'ps/transpose-sexps-backward))
 #+end_src
 
 *** TODO [#5] Check mark-sexp-at-point by Tony alon
@@ -3363,20 +3381,21 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 
 #Minimal config
 #+begin_src emacs-lisp :results silent
-(general-define-key
- :keymaps 'org-mode-map
- "C-H-M-s-z" 'org-shiftleft
- "C-H-M-s-x" 'org-shiftup
- "C-H-M-s-c" 'org-shiftdown
- "C-H-M-s-v" 'org-shiftright
- "C-H-M-s-a" 'org-metaleft
- "C-H-M-s-s" 'org-metaup
- "C-H-M-s-d" 'org-metadown
- "C-H-M-s-f" 'org-metaright
- "C-H-M-s-q" 'org-shiftmetaleft
- "C-H-M-s-w" 'org-shiftmetaup
- "C-H-M-s-e" 'org-shiftmetadown
- "C-H-M-s-r" 'org-shiftmetaright)
+(use-package org
+  :general
+  (org-mode-map
+   "C-H-M-s-z" 'org-shiftleft
+   "C-H-M-s-x" 'org-shiftup
+   "C-H-M-s-c" 'org-shiftdown
+   "C-H-M-s-v" 'org-shiftright
+   "C-H-M-s-a" 'org-metaleft
+   "C-H-M-s-s" 'org-metaup
+   "C-H-M-s-d" 'org-metadown
+   "C-H-M-s-f" 'org-metaright
+   "C-H-M-s-q" 'org-shiftmetaleft
+   "C-H-M-s-w" 'org-shiftmetaup
+   "C-H-M-s-e" 'org-shiftmetadown
+   "C-H-M-s-r" 'org-shiftmetaright))
 #+end_src
 
 ** element
@@ -5965,8 +5984,9 @@ with the specified date."
 :PROPERTIES:
 :ID:       08F898A1-71C0-4BF4-B6E8-5D6649DB230C
 :END:
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-feature loaddefs
+  :disabled
   :init
   (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
                      (holiday-float 5 0 2 "Mother's Day"))
@@ -6327,8 +6347,9 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 :ctime:    20230211190206
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package hammy
+#+begin_src emacs-lisp :results silent
+(use-package
+  :disabled
   :if (equal (system-name) ps/computer-hostname-pablo)
   :straight (hammy
              :host github
@@ -6758,8 +6779,9 @@ CLOCK: [2021-07-22 Thu 17:20]--[2021-07-22 Thu 17:24] =>  0:04
 :END:
 Disabling since I'm not really using it.
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package projectile
+  :disabled
   :config
   (projectile-mode)
   :general
@@ -6809,8 +6831,9 @@ CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
 :END:
 [2022-08-24 Wed 13:17] Disabling for the time being. I wasn't really using it, and found the sudden margin changes distracting and annoying.
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package git-gutter
+  :disabled
    :defer 10
    :config
    (global-git-gutter-mode))
@@ -7037,8 +7060,9 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :END:
 /[[https://github.com/minad/affe][affe]] is an asynchronous fuzzy finder similar to the fzf command-line fuzzy finder, written in pure Elisp./
 
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package affe)
+#+begin_src emacs-lisp :results silent
+(use-package affe
+  :disabled)
 #+end_src
 
 * minibuffer completion
@@ -7330,8 +7354,9 @@ By default, all agenda entries are offered. MATCH is as in
 :END:
 [2022-10-05 Wed 14:50] Performance seemed abysmal when I tried it. Maybe it can be optimized?
 
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package consult-notes)
+#+begin_src emacs-lisp :results silent
+(use-package consult-notes
+:disabled)
 #+end_src
 
 ** consult-yasnippet
@@ -7357,8 +7382,9 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
 
 Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I'm disabling this.
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package consult-spotify
+  :disabled
   :demand t
   :after (consult espotify))
 #+end_src
@@ -7582,8 +7608,9 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 #+end_src
 
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package cape
+  :disabled
   :after corfu
   :demand t
 
@@ -7668,10 +7695,11 @@ Additionally, add `cape-file' as early as possible to the list."
 :ID:       5D18297C-CB85-47D0-9637-D38F3BD01332
 :END:
 
-/[[https://github.com/xenodium/org-block-capf][org-block-cafp]] adds support fro org block completion at point./
+/[[https://github.com/xenodium/org-block-capf][org-block-cafp]] adds support for org block completion at point./
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package org-block-capf
+  :disabled
   :straight (org-block-capf
              :host github
              :repo "xenodium/org-block-capf")
@@ -8053,8 +8081,9 @@ necessary."
 :PROPERTIES:
 :ID:       D8CACBDA-19AA-4D2F-9707-07B37AE3DF89
 :END:
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package eshell-git-prompt
+  :disabled
   :after eshell
   :demand t
   :config
@@ -8081,8 +8110,9 @@ necessary."
 :END:
 /[[https://github.com/JonWaltman/pcmpl-args.el][pcmpl-args]] provies enhanced shell completion./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package pcmpl-args
+  :disabled
   :defer 5)
 #+end_src
 
@@ -8095,8 +8125,9 @@ CLOCK: [2022-06-17 Fri 17:41]--[2022-06-17 Fri 17:55] =>  0:14
 :END:
 /[[https://github.com/CeleritasCelery/emacs-native-shell-complete][emacs-native-shell-complete]] provides completion in shell buffers using native mechanisms./
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package emacs-native-shell-complete
+  :disabled
   :after shell
   :demand t
   :straight (emacs-native-shell-complete
@@ -8712,8 +8743,9 @@ CLOCK: [2021-05-31 Mon 21:27]--[2021-05-31 Mon 21:41] =>  0:14
 
 [2023-01-25 Wed] I'm replacing it with [[id:BE78F0BD-D676-4E19-838A-2E6BD4504F52][txl]].
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package google-translate
+  :disabled
   :defer 20
   :functions (my-google-translate-at-point google-translate--search-tkk)
 
@@ -9458,8 +9490,9 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 
 [2022-11-01 Tue 20:56] Disabling.
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package lsp-mode
+  :disabled
   :init
   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
   (setq lsp-keymap-prefix "A-C-l")
@@ -9551,18 +9584,13 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 (use-feature debug)
 #+end_src
 
-** edebug
-:PROPERTIES:
-:ID:       4ADAE24A-49F4-47F2-AF5A-B15B8137E714
-:END:
-
-#+end_src
 ** backtrace
 :PROPERTIES:
 :ID:       B69F718B-9BAE-4EAD-99DE-2C8C1E98CCA3
 :END:
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-feature backtrace
+  :disabled
   :custom
   (backtrace-line-length nil))
 #+end_src
@@ -9583,8 +9611,9 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :PROPERTIES:
 :ID:       5B1FC084-42CD-47F3-B8AD-1D2113488CBC
 :END:
-#+begin_src emacs-lisp :tangle no
-(use-package ess)
+#+begin_src emacs-lisp
+(use-package ess
+:disabled)
 #+end_src
 
 ** clojure
@@ -10494,8 +10523,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 
   :custom
   (org-agenda-files `(,ps/dir-android
-		      ,ps/file-tlon-tareas-leo
-		      ,ps/file-tlon-tareas-fede))
+                      ,ps/file-tlon-tareas-leo
+                      ,ps/file-tlon-tareas-fede))
   (org-agenda-window-setup 'current-window)
   (org-agenda-use-time-grid nil) ; disable agenda time grid
   ;; Speed up agenda (orgmode.org/worg/agenda-optimization.html)
@@ -11913,8 +11942,9 @@ Export content of subtree without heading. Add the ~ignore~ tag to the headlines
 
 [2021-07-12 Mon 15:58] Not working.
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package org-extra
+  :disabled
   :defer 30
   :straight org-contrib
   :config
@@ -11962,8 +11992,9 @@ The packages [[https://github.com/alphapapa/org-ql][org-ql]] and ~helm-org-ql~ o
 
 [2022-12-31 Sat 18:37] I no longer see a need for this; instead, I use ~org-roam-node-find~ and ~consult-org-heading~.
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package org-ql
+  :disabled
   :custom
   (org-ql-search-directories-files-recursive t)
   :config
@@ -12705,8 +12736,9 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
 
 /[[https://github.com/tefkah/org-roam-timestamps][org-roam-timestamps]] adds modified and creation timestamps to the org-roam property drawer./
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package org-roam-timestamps
+  :disabled
   :if (equal (system-name) ps/computer-hostname-pablo)
   :after org-roam
   :demand t
@@ -15067,8 +15099,9 @@ CLOCK: [2021-03-17 Wed 17:46]--[2021-03-17 Wed 17:56] =>  0:10
 :END:
 /[[https://github.com/louietan/anki-editor][anki-editor]] is a minor mode for making Anki cards with Org./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package anki-editor
+  :disabled
   ;; this version handles mathjax correctly
   ;; :straight (:fork (:repo "louietan/anki-editor" :branch "develop"))
   ;; this version simplifies the tree structure
@@ -15814,8 +15847,9 @@ it, without asking for confirmation."
 :END:
 [2023-01-28 Sat] I don't know what this does. Disabling for the time being.
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-feature mu4e-org
+  :disabled
   :after mu4e
   :demand t)
 #+end_src
@@ -15968,8 +16002,9 @@ This is controlled with ~org-msg-enforce-css~.
 :END:
 /[[https://github.com/hniksic/emacs-htmlize][htmlize]] converts buffer text and decorations to HTML./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package htmlize
+  :disabled
   :custom
   (htmlize-ignore-face-size nil))
 #+end_src
@@ -16171,7 +16206,7 @@ into a task for Leo."
   :hook
   (telega-chat-mode-hook . ps/telega-chat-mode)
   (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
-  ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdown
+   ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdown
   ;; (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
 
   :general
@@ -16343,8 +16378,9 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 :END:
 /[[https://github.com/yuya373/emacs-slack][slack]] is a Slack client for Emacs./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package slack
+  :disabled
   :if (equal (system-name) ps/computer-hostname-pablo)
   :after auth-source-pass
   ;; :demand t
@@ -16460,8 +16496,9 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 :END:
 /[[https://github.com/ag91/ol-emacs-slack][ol-emacs-slack]] provides ~org-store-link~ support for [[94F76C3D-9547-431D-93AB-8814F4218AFF][slack]]./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package ol-emacs-slack
+  :disabled
   :straight (ol-emacs-slack
              :host github
              :repo "ag91/ol-emacs-slack")
@@ -17188,8 +17225,9 @@ Unstable, not yet on Melpa. Best to wait for a stable release.
 :LOGBOOK:
 CLOCK: [2022-07-24 Sun 16:09]--[2022-07-24 Sun 17:21] =>  1:12
 :END:
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package eaf
+  :disabled
   :straight (eaf
              :type git
              :host github
@@ -17472,8 +17510,9 @@ https://holgerschurig.github.io/en/emacs-mastodon-hydra/
 :PROPERTIES:
 :ID:       CEDBA9CB-F7FB-4E7F-8CAB-C96812BE1517
 :END:
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package md4rd
+  :disabled
   :custom
   (md4rd-subs-active '(emacs))
   (md4rd--oauth-access-token
@@ -17784,8 +17823,9 @@ CLOCK: [2022-09-05 Mon 20:22]--[2022-09-05 Mon 21:28] =>  1:06
 
 [2022-10-07 Fri 21:48] I wasn't able to make it work.
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package mentor
+  :disabled
   :custom
   (mentor-rtorrent-download-directory ps/dir-downloads)
   (mentor-rtorrent-external-rpc "~/.rtorrent-rpc.socket")
@@ -17804,8 +17844,9 @@ CLOCK: [2022-06-22 Wed 14:50]--[2022-06-22 Wed 15:10] =>  0:20
 :END:
 [2022-06-22 Wed 15:07] I can't make this work. Maybe related to the [[id:86EE7A94-E470-45DB-B0A5-0AE717A15353][dbus problem]]?
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package espotify
+  :disabled
   :if (equal (system-name) ps/computer-hostname-pablo)
   :after auth-source-pass
   :defer 20
@@ -17831,8 +17872,9 @@ CLOCK: [2021-05-19 Wed 11:26]--[2021-05-19 Wed 12:23] =>  0:57
 :END:
 /[[https://github.com/danielfm/smudge][smudge]] lets you control Spotify from Emacs./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package smudge
+  :disabled
   :after auth-source-pass
   ;; :defer 600
   :custom
@@ -17907,8 +17949,9 @@ CLOCK: [2021-05-04 Tue 21:41]--[2021-05-04 Tue 21:56] =>  0:15
 :END:
 /[[https://www.gnu.org/software/emms/][EMMS]] (Emacs MultiMedia System) is media player software for Emacs./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package emms
+  :disabled
   :demand t
   :custom
   (emms-source-file-default-directory ps/dir-music-tango)
@@ -18377,8 +18420,9 @@ CLOCK: [2021-02-07 Sun 13:25]--[2021-02-07 Sun 13:37] =>  0:12
 
 /[[https://github.com/dacap/keyfreq][keyfreq]] track Emacs command frequency./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package keyfreq
+  :disabled
   :config
   (keyfreq-mode 1)
   (keyfreq-autosave-mode 1))

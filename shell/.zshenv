@@ -1,9 +1,6 @@
 export PATH="/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export LDFLAGS="-L/opt/homebrew/opt/sqlite/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/sqlite/include"
-export PYENV_ROOT="$HOME/.pyenv" # https://github.com/pyenv/pyenv/issues/1906#issuecomment-834751771
-export PATH="$PYENV_ROOT/bin:$PATH"
-# alias brew='env PATH="${PATH//$(pyenv root)\/shims:/}" brew' # https://github.com/pyenv/pyenv#homebrew-in-macos
 export GOKU_EDN_CONFIG_FILE="/Users/pablostafforini/Dropbox/dotfiles/karabiner/karabiner.edn"
 export EDITOR="emacsclient -nw"
 # export VISUAL="emacsclient"   # $VISUAL opens in GUI mode

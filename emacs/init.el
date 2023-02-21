@@ -78,6 +78,20 @@ NAME and ARGS are as in `use-package'."
 (use-package use-package-ensure-system-package
   :demand t)
 
+(use-package paradox
+  :disabled
+  ;; :defer 600
+  :custom
+  (paradox-column-width-package 27)
+  (paradox-column-width-version 13)
+  (paradox-execute-asynchronously t)
+  (paradox-hide-wiki-packages t)
+  (paradox-github-token
+   (auth-source-pass-get 'secret "auth-sources/api.github.com"))
+  :config
+  ;; (paradox-enable)
+  (remove-hook 'paradox-after-execute-functions #'paradox--report-buffer-print))
+
 (setq mac-option-modifier 'meta
       mac-control-modifier 'control
       mac-command-modifier 'hyper
@@ -851,6 +865,12 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   (org-mode-hook . mixed-pitch-mode)
   (outline-mode-hook . mixed-pitch-mode))
 
+(use-package fontaine
+  :disabled
+  :demand t
+  :config
+  (fontaine-mode))
+
 (use-feature face-remap
   :demand t
   :general
@@ -887,6 +907,7 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
 (use-package org-modern
   :demand t
   :custom
+  (org-modern-table nil)
   (org-modern-statistics nil)
   (org-modern-star '("◉" "◉" "◉" "◉" "◉"))
   (org-modern-list '((42 . "○")
@@ -1318,6 +1339,8 @@ See also `zap-up-to-char'."
  :keymaps 'org-mode-map
  "C-H-M-s" 'org-delete-backward-char)
 
+(use-feature simple
+  :config
 (defun ps/delete-word (&optional arg)
   "Like `kill-word', but deletes instead of killing."
   (interactive "p")
@@ -1359,7 +1382,9 @@ See also `zap-up-to-char'."
   (interactive)
   (transpose-words -1))
 
-(general-define-key
+:general
+("C-<delete>" nil
+ "M-DEL" nil
  "C-H-M-r" 'kill-word
  "C-H-M-q" 'backward-kill-word
  "A-C-H-M-S-s-r" 'ps/delete-word
@@ -1370,8 +1395,10 @@ See also `zap-up-to-char'."
  "A-H-C-q" 'ps/copy-whole-word
  "A-H-C-u" 'ps/kill-whole-word
  "A-H-M-r" 'transpose-words
- "A-H-M-q" 'ps/transpose-words-backward)
+ "A-H-M-q" 'ps/transpose-words-backward))
 
+(use-feature simple
+  :config
 (defun ps/delete-line (&optional arg)
   "Like `kill-line', but deletes instead of killing."
   (interactive "p")
@@ -1433,8 +1460,8 @@ between the two."
   (interactive)
   (transpose-lines -1))
 
-(general-define-key
- "C-H-M-v" 'kill-line
+:general
+("C-H-M-v" 'kill-line
  "C-H-M-z" 'crux-kill-line-backwards
  "A-C-H-M-S-s-v" 'ps/delete-line
  "A-C-H-M-S-s-z" 'ps/backward-delete-line
@@ -1444,61 +1471,63 @@ between the two."
  "A-H-C-m" 'ps/kill-whole-line
  "A-H-C-z" 'ps/copy-whole-line
  "A-H-M-v" 'transpose-lines
- "A-H-M-z" 'ps/transpose-lines-backward)
+ "A-H-M-z" 'ps/transpose-lines-backward))
 
-(defun ps/delete-sentence (&optional arg)
-  "Like `kill-sentence', but deletes instead of killing."
-  (interactive "p")
-  (ps/delete-instead-of-kill (kill-sentence arg)))
+(use-feature paragraphs
+  :config
+  (defun ps/delete-sentence (&optional arg)
+    "Like `kill-sentence', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (kill-sentence arg)))
 
-(defun ps/backward-delete-sentence (&optional arg)
-  "Like `backward-kill-sentence', but deletes instead of killing."
-  (interactive "p")
-  (ps/delete-instead-of-kill (backward-kill-sentence arg)))
+  (defun ps/backward-delete-sentence (&optional arg)
+    "Like `backward-kill-sentence', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (backward-kill-sentence arg)))
 
-(defun ps/copy-sentence (&optional arg)
-  "Like `kill-sentence', but copies instead of killing."
-  (interactive "P")
-  (ps/copy-instead-of-kill (kill-sentence arg)))
+  (defun ps/copy-sentence (&optional arg)
+    "Like `kill-sentence', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (kill-sentence arg)))
 
-(defun ps/backward-copy-sentence (&optional arg)
-  "Like `backward-kill-sentence', but copies instead of killing."
-  (interactive "P")
-  (ps/copy-instead-of-kill (backward-kill-sentence arg)))
+  (defun ps/backward-copy-sentence (&optional arg)
+    "Like `backward-kill-sentence', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (backward-kill-sentence arg)))
 
-(defun ps/kill-whole-sentence ()
-  "Kill the sentence at point."
-  (interactive)
-  (ps/kill-whole-thing 'sentence))
+  (defun ps/kill-whole-sentence ()
+    "Kill the sentence at point."
+    (interactive)
+    (ps/kill-whole-thing 'sentence))
 
-(defun ps/delete-whole-sentence ()
-  "Like `kill-whole-sentence', but deletes instead of killing."
-  (interactive)
-  (ps/delete-instead-of-kill (ps/kill-whole-sentence)))
+  (defun ps/delete-whole-sentence ()
+    "Like `kill-whole-sentence', but deletes instead of killing."
+    (interactive)
+    (ps/delete-instead-of-kill (ps/kill-whole-sentence)))
 
-(defun ps/copy-whole-sentence ()
-  "Like `kill-whole-sentence', but copies instead of killing."
-  (interactive)
-  (ps/copy-instead-of-kill (ps/kill-whole-sentence)))
+  (defun ps/copy-whole-sentence ()
+    "Like `kill-whole-sentence', but copies instead of killing."
+    (interactive)
+    (ps/copy-instead-of-kill (ps/kill-whole-sentence)))
 
-(defun ps/transpose-sentences-backward ()
-  "Interchange the current sentence with the previous one."
-  (interactive)
-  (transpose-sentences -1))
+  (defun ps/transpose-sentences-backward ()
+    "Interchange the current sentence with the previous one."
+    (interactive)
+    (transpose-sentences -1))
 
-(general-define-key
- ;; :keymaps '(text-mode-map org-mode-map outline-mode-map telega-chat-mode-map)
- "C-H-M-e" 'kill-sentence
- "C-H-M-w" 'backward-kill-sentence
- "A-C-H-M-S-s-e" 'ps/delete-sentence
- "A-C-H-M-S-s-w" 'ps/backward-delete-sentence
- "C-H-M-s-A-e" 'ps/copy-sentence
- "C-H-M-s-A-w" 'ps/backward-copy-sentence
- "A-H-C-e" 'ps/delete-whole-sentence
- "A-H-C-w" 'ps/copy-whole-sentence
- "A-H-C-i" 'ps/kill-whole-sentence
- "A-H-M-e" 'transpose-sentences
- "A-H-M-w" 'ps/transpose-sentences-backward)
+  :general
+  ;; :keymaps '(text-mode-map org-mode-map outline-mode-map telega-chat-mode-map)
+  ("C-H-M-e" 'kill-sentence
+   "C-H-M-w" 'backward-kill-sentence
+   "A-C-H-M-S-s-e" 'ps/delete-sentence
+   "A-C-H-M-S-s-w" 'ps/backward-delete-sentence
+   "C-H-M-s-A-e" 'ps/copy-sentence
+   "C-H-M-s-A-w" 'ps/backward-copy-sentence
+   "A-H-C-e" 'ps/delete-whole-sentence
+   "A-H-C-w" 'ps/copy-whole-sentence
+   "A-H-C-i" 'ps/kill-whole-sentence
+   "A-H-M-e" 'transpose-sentences
+   "A-H-M-w" 'ps/transpose-sentences-backward))
 
 (use-feature paragraphs
   :custom
@@ -1540,12 +1569,13 @@ between the two."
     (interactive)
     (ps/copy-instead-of-kill (ps/kill-whole-paragraph)))
 
-(defun ps/transpose-paragraphs-backward ()
+  (defun ps/transpose-paragraphs-backward ()
     "Interchange the current paragraph with the previous one."
     (interactive)
     (transpose-paragraphs -1))
 
   :general
+  ("M-k" nil)
   ((text-mode-map org-mode-map outline-mode-map telega-chat-mode-map)
    "C-H-M-c" 'kill-paragraph
    "C-H-M-x" 'backward-kill-paragraph
@@ -1559,73 +1589,78 @@ between the two."
    "A-H-M-c" 'transpose-paragraphs
    "A-H-M-x" 'ps/transpose-paragraphs-backward))
 
-(defun ps/delete-sexp (&optional arg)
-  "Like `kill-sexp', but deletes instead of killing."
-  (interactive "p")
-  (ps/delete-instead-of-kill (kill-sexp arg)))
+(use-feature lisp
+  :config
+  (defun ps/delete-sexp (&optional arg)
+    "Like `kill-sexp', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (kill-sexp arg)))
 
-(defun ps/backward-delete-sexp (&optional arg)
-  "Like `backward-kill-sexp', but deletes instead of killing."
-  (interactive "p")
-  (ps/delete-instead-of-kill (backward-kill-sexp arg)))
+  (defun ps/backward-delete-sexp (&optional arg)
+    "Like `backward-kill-sexp', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (backward-kill-sexp arg)))
 
-(defun ps/copy-sexp (&optional arg)
-  "Like `kill-sexp', but copies instead of killing."
-  (interactive "P")
-  (ps/copy-instead-of-kill (kill-sexp arg)))
+  (defun ps/copy-sexp (&optional arg)
+    "Like `kill-sexp', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (kill-sexp arg)))
 
-(defun ps/backward-copy-sexp (&optional arg)
-  "Like `backward-kill-sexp', but copies instead of killing."
-  (interactive "P")
-  (ps/copy-instead-of-kill (backward-kill-sexp arg)))
+  (defun ps/backward-copy-sexp (&optional arg)
+    "Like `backward-kill-sexp', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (backward-kill-sexp arg)))
 
-(defun ps/kill-whole-sexp ()
-  "Kill the sexp at point."
-  (interactive)
-  (ps/kill-whole-thing 'sexp))
+  (defun ps/kill-whole-sexp ()
+    "Kill the sexp at point."
+    (interactive)
+    (ps/kill-whole-thing 'sexp))
 
-(defun ps/delete-whole-sexp ()
-  "Like `kill-whole-sexp', but deletes instead of killing."
-  (interactive)
-  (ps/delete-instead-of-kill (ps/kill-whole-sexp)))
+  (defun ps/delete-whole-sexp ()
+    "Like `kill-whole-sexp', but deletes instead of killing."
+    (interactive)
+    (ps/delete-instead-of-kill (ps/kill-whole-sexp)))
 
-(defun ps/copy-whole-sexp ()
-  "Like `kill-whole-sexp', but copies instead of killing."
-  (interactive)
-  (ps/copy-instead-of-kill (ps/kill-whole-sexp)))
+  (defun ps/copy-whole-sexp ()
+    "Like `kill-whole-sexp', but copies instead of killing."
+    (interactive)
+    (ps/copy-instead-of-kill (ps/kill-whole-sexp)))
 
-(defun ps/transpose-sexps-backward ()
-  "Like `transpose-sexps', but in reverse order."
-  (interactive)
-  (transpose-sexps -1))
+  (defun ps/transpose-sexps-backward ()
+    "Like `transpose-sexps', but in reverse order."
+    (interactive)
+    (transpose-sexps -1))
 
-(general-define-key
- "C-H-M-f" 'kill-sexp
- "C-H-M-a" 'backward-kill-sexp
- "A-C-H-M-S-s-f" 'ps/delete-sexp
- "A-C-H-M-S-s-a" 'ps/backward-delete-sexp
- "C-H-M-s-A-f" 'ps/copy-sexp
- "C-H-M-s-A-a" 'ps/backward-copy-sexp
- "A-H-C-a" 'ps/copy-whole-sexp
- "A-H-C-f" 'ps/delete-whole-sexp
- "A-H-C-j" 'ps/kill-whole-sexp
- "A-H-M-f" 'transpose-sexps
- "A-H-M-a" 'ps/transpose-sexps-backward)
+  :general
+  ("C-M-k" nil
+   "C-M-<backspace>" nil
+   "C-H-M-f" 'kill-sexp
+   "C-H-M-a" 'backward-kill-sexp
+   "A-C-H-M-S-s-f" 'ps/delete-sexp
+   "A-C-H-M-S-s-a" 'ps/backward-delete-sexp
+   "C-H-M-s-A-f" 'ps/copy-sexp
+   "C-H-M-s-A-a" 'ps/backward-copy-sexp
+   "A-H-C-a" 'ps/copy-whole-sexp
+   "A-H-C-f" 'ps/delete-whole-sexp
+   "A-H-C-j" 'ps/kill-whole-sexp
+   "A-H-M-f" 'transpose-sexps
+   "A-H-M-a" 'ps/transpose-sexps-backward))
 
-(general-define-key
- :keymaps 'org-mode-map
- "C-H-M-s-z" 'org-shiftleft
- "C-H-M-s-x" 'org-shiftup
- "C-H-M-s-c" 'org-shiftdown
- "C-H-M-s-v" 'org-shiftright
- "C-H-M-s-a" 'org-metaleft
- "C-H-M-s-s" 'org-metaup
- "C-H-M-s-d" 'org-metadown
- "C-H-M-s-f" 'org-metaright
- "C-H-M-s-q" 'org-shiftmetaleft
- "C-H-M-s-w" 'org-shiftmetaup
- "C-H-M-s-e" 'org-shiftmetadown
- "C-H-M-s-r" 'org-shiftmetaright)
+(use-package org
+  :general
+  (org-mode-map
+   "C-H-M-s-z" 'org-shiftleft
+   "C-H-M-s-x" 'org-shiftup
+   "C-H-M-s-c" 'org-shiftdown
+   "C-H-M-s-v" 'org-shiftright
+   "C-H-M-s-a" 'org-metaleft
+   "C-H-M-s-s" 'org-metaup
+   "C-H-M-s-d" 'org-metadown
+   "C-H-M-s-f" 'org-metaright
+   "C-H-M-s-q" 'org-shiftmetaleft
+   "C-H-M-s-w" 'org-shiftmetaup
+   "C-H-M-s-e" 'org-shiftmetadown
+   "C-H-M-s-r" 'org-shiftmetaright))
 
 (defun ps/smart-kill-region ()
   "kill region if active, else kill line."
@@ -3479,6 +3514,13 @@ with the specified date."
    "C-p" nil
    "=" 'calendar-count-days-region))
 
+(use-feature loaddefs
+  :disabled
+  :init
+  (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
+                     (holiday-float 5 0 2 "Mother's Day"))
+                   (delete holiday holiday-general-holidays))))
+
 (use-package org-gcal
   :if (equal (system-name) ps/computer-hostname-pablo)
   :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
@@ -3494,7 +3536,7 @@ with the specified date."
   (org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
   (org-gcal-notify-p nil)
   (org-gcal-auto-archive nil)
-  (org-gcal-up-days 0)
+  (org-gcal-up-days 1)
   (org-gcal-down-days 3)
 
   :config
@@ -3770,6 +3812,66 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 (use-package tmr
   :defer 10)
 
+(use-package
+  :disabled
+  :if (equal (system-name) ps/computer-hostname-pablo)
+  :straight (hammy
+             :host github
+             :repo "alphapapa/hammy.el")
+
+  :config
+  (hammy-define "Move"
+    :documentation "Don't forget to stretch your legs."
+    :intervals
+    ;; A list of intervals, each defined with the `interval' function.
+    (list (interval
+           ;; The name of the interval is a string, used when selecting
+           ;; hammys and shown in the mode line.
+           :name "💺"
+           ;; The duration of the interval: a number of seconds, a string
+           ;; passed to `timer-duration', or a function which returns such.
+           :duration "45 minutes"
+           ;; Optionally, a face in which to show the
+           ;; interval's name in the mode line.
+           :face 'font-lock-type-face
+           ;; A list of actions to take before starting the interval
+           ;; (really, one or a list of functions to call with the hammy
+           ;; as the argument).  The `do' macro expands to a lambda,
+           ;; which the interval's `before' slot is set to.  In its
+           ;; body, we call two built-in helper functions.
+           :before (do (announce "Whew!")
+                       (notify "Whew!"))
+           ;; We want this interval to not automatically advance to the
+           ;; next one; rather, we want the user to call the
+           ;; `hammy-next' command to indicate when the standing-up is
+           ;; actually happening.  So we provide a list of actions to
+           ;; take when it's time to advance to the next interval.  We
+           ;; wrap the list in a call to the built-in `remind' function,
+           ;; which causes the actions to be repeated every 10 minutes
+           ;; until the user manually advances to the next interval.
+           :advance (remind "10 minutes"
+                            ;; Every 10 minutes, while the hammy is waiting
+                            ;; to be advanced to the next interval, remind
+                            ;; the user by doing these things:
+                            (do (announce "Time to stretch your legs!")
+                                (notify "Time to stretch your legs!")
+                              (play-sound-file "~/Misc/Sounds/mooove-it.wav"))))
+          (interval :name "🤸"
+                    :duration "5 minutes"
+                    :face 'font-lock-builtin-face
+                    :before (do (announce "Mooove it!")
+                                (notify "Mooove it!"))
+                    ;; Again, the interval should not advance automatically
+                    ;; to the next--the user should indicate when he's
+                    ;; actually sat down again.  (If we omitted the
+                    ;; `:advance' slot, the interval would automatically
+                    ;; advance when it reached its duration.)
+                    :advance (do (announce "Time for a sit-down...")
+                                 (notify "Time for a sit-down...")
+                               (play-sound-file org-pomodoro-finished-sound)))))
+
+  (hammy-mode))
+
 (use-package display-wttr
   :defer 10
   :custom
@@ -3885,6 +3987,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   (persistent-scratch-setup-default))
 
 (use-feature remember
+  :disabled
   :custom
   (remember-data-file (file-name-concat ps/dir-emacs "var/remember"))
   (remember-notes-buffer-name "\*scratch\*"))
@@ -3976,6 +4079,13 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :hook
   (code-review-mode-hook . emojify-mode))
 
+(use-package projectile
+  :disabled
+  :config
+  (projectile-mode)
+  :general
+  ("H-p" 'projectile-command-map))
+
 (use-package git-timemachine
   :straight
   (git-timemachine
@@ -3993,6 +4103,12 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   (setq-default gac-debounce-interval 30)
   (setq-default gac-silent-message-p t)
   (setq-default gac-automatically-add-new-files-p t))
+
+(use-package git-gutter
+  :disabled
+   :defer 10
+   :config
+   (global-git-gutter-mode))
 
 (use-feature isearch
   :custom
@@ -4111,6 +4227,9 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :general
   (wgrep-mode-map
    "s-c" 'wgrep-finish-edit))
+
+(use-package affe
+  :disabled)
 
 (use-package vertico
   :straight (vertico :files (:defaults "extensions/*")
@@ -4314,10 +4433,18 @@ By default, all agenda entries are offered. MATCH is as in
   :general
   ("H-B" 'consult-dir))
 
+(use-package consult-notes
+:disabled)
+
 (use-package consult-yasnippet
   :after (consult yasnippet)
   :general
   ("A-C-y" 'consult-yasnippet))
+
+(use-package consult-spotify
+  :disabled
+  :demand t
+  :after (consult espotify))
 
 (use-package consult-flyspell
   :demand t
@@ -4454,10 +4581,88 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   ;; (add-to-list 'completion-at-point-functions #'cape-line)
   )
 
+(use-package cape
+  :disabled
+  :after corfu
+  :demand t
+
+  :custom
+  (cape-dabbrev-min-length 2)
+
+  :config
+
+  ;; All the below adapted from
+  ;; kristofferbalintona.me/posts/202203130102/
+  (defun ps/cape-capf-setup-org ()
+    (require 'org-roam)
+    (if (org-roam-file-p)
+        (org-roam--register-completion-functions-h)
+      (let (result)
+        (dolist (element (list
+                          ;; (cape-super-capf #'cape-ispell #'cape-dabbrev)
+                          (cape-company-to-capf #'company-yasnippet))
+                         result)
+          (add-to-list 'completion-at-point-functions element))))
+    (setq corfu-auto nil))
+
+  ;; Eshell
+  (defun ps/cape-capf-setup-eshell ()
+    (let ((result))
+      (dolist (element '(pcomplete-completions-at-point cape-file) result)
+        (add-to-list 'completion-at-point-functions element))))
+
+  ;; Git-commit
+  (defun ps/cape-capf-setup-git-commit ()
+    (general-define-key
+     :keymaps 'local
+     :states 'insert
+     "<tab>" 'completion-at-point)      ; Keybinding for `completion-at-point'
+    (let ((result))
+      (dolist (element '(cape-dabbrev cape-symbol) result)
+        (add-to-list 'completion-at-point-functions element))))
+
+  ;; Elisp
+  (defun ps/cape-capf-ignore-keywords-elisp (cand)
+    "Ignore keywords with forms that begin with \":\" (e.g.
+:history)."
+    (or (not (keywordp cand))
+        (eq (char-after (car completion-in-region--data)) ?:)))
+
+  (defun ps/cape-capf-setup-elisp ()
+    "Replace the default `elisp-completion-at-point'
+completion-at-point-function. Doing it this way will prevent
+disrupting the addition of other capfs (e.g. merely setting the
+variable entirely, or adding to list).
+
+Additionally, add `cape-file' as early as possible to the list."
+    (setf (elt (cl-member 'elisp-completion-at-point completion-at-point-functions) 0)
+          #'elisp-completion-at-point)
+    (add-to-list 'completion-at-point-functions #'cape-symbol)
+    ;; I prefer this being early/first in the list
+    (add-to-list 'completion-at-point-functions #'cape-file)
+    (require 'company-yasnippet)
+    (add-to-list 'completion-at-point-functions (cape-company-to-capf #'company-yasnippet))
+    (setq corfu-auto t))
+
+  :hook
+  (emacs-lisp-mode-hook .  ps/cape-capf-setup-elisp)
+  (org-mode-hook . ps/cape-capf-setup-org)
+  (eshell-mode-hook . ps/cape-capf-setup-eshell)
+  (git-commit-mode-hook . ps/cape-capf-setup-git-commit))
+
 (use-package cape-yasnippet
   :straight (cape-yasnippet
              :host github
              :repo "elken/cape-yasnippet"))
+
+(use-package org-block-capf
+  :disabled
+  :straight (org-block-capf
+             :host github
+             :repo "xenodium/org-block-capf")
+  :demand t
+  :hook
+  (org-mode-hook . org-block-capf-add-to-completion-at-point-functions))
 
 (use-package company
   :defer 5
@@ -4659,11 +4864,30 @@ necessary."
    "M-p" nil
    "M-n" nil))
 
+(use-package eshell-git-prompt
+  :disabled
+  :after eshell
+  :demand t
+  :config
+  (eshell-git-prompt-use-theme 'powerline))
+
 (use-package eshell-syntax-highlighting
   :after eshell
   :demand t
   :hook
   (eshell-mode-hook . eshell-syntax-highlighting-global-mode))
+
+(use-package pcmpl-args
+  :disabled
+  :defer 5)
+
+(use-package emacs-native-shell-complete
+  :disabled
+  :after shell
+  :demand t
+  :straight (emacs-native-shell-complete
+             :host github
+             :repo "CeleritasCelery/emacs-native-shell-complete"))
 
 (use-package dwim-shell-command
   :straight (dwim-shell-command
@@ -5037,6 +5261,56 @@ around point."
 
 (general-define-key
  "A-y" 'ps/goldendict-search-input)
+
+(use-package google-translate
+  :disabled
+  :defer 20
+  :functions (my-google-translate-at-point google-translate--search-tkk)
+
+  :custom
+  (google-translate-default-target-language "en")
+  (google-translate-default-source-language "es")
+
+  :config
+  (defun google-translate--search-tkk ()
+    "Search TKK."
+    (list 430675 2721866130))
+
+  (setq google-translate-backend-method 'curl)
+
+  (defun ps/google-translate-dwim (&optional reverse-p)
+    "Translate region if active, word if at point, else prompt for
+text. If invoked with a prefix argument, perform a reverse
+translation."
+    (interactive "P")
+    (let ((google-translate-default-source-language ps/ispell-language)
+          (google-translate-default-target-language
+           (if (string= ps/ispell-language "en")
+               "es"
+             "en")))
+      (if reverse-p
+          (google-translate-at-point-reverse)
+        (google-translate-at-point))))
+
+  ;; modify original function so that it prompts for text to translate
+  ;; if region is inactive and no word is at point.
+  (defun ps/%google-translate-at-point (override-p reverse-p)
+    (let* ((langs (google-translate-read-args override-p reverse-p))
+           (source-language (car langs))
+           (target-language (cadr langs))
+           (bounds nil))
+      (google-translate-translate
+       source-language target-language
+       (cond ((string-equal major-mode "pdf-view-mode") (car (pdf-view-active-region-text)))
+             ((use-region-p) (buffer-substring-no-properties (region-beginning) (region-end)))
+             (t (or (and (setq bounds (bounds-of-thing-at-point 'word))
+                         (buffer-substring-no-properties (car bounds) (cdr bounds)))
+                    (google-translate-query-translate)))))))
+
+  (advice-add '%google-translate-at-point :override #'ps/%google-translate-at-point)
+
+  :general
+  ("H-A-y" 'ps/google-translate-dwim))
 
 (use-package txl
   :straight (txl
@@ -5526,6 +5800,34 @@ FILE."
   (emacs-lisp-mode-map shell-mode-map
       "s-c" 'exit-recursive-edit))
 
+(use-package lsp-mode
+  :disabled
+  :init
+  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+  (setq lsp-keymap-prefix "A-C-l")
+
+  :custom
+  (lsp-ui-doc-show-with-cursor t) ; move the cursor over a symbol to show its documentation
+  (lsp-warn-no-matched-clients nil)
+  (lsp-headerline-breadcrumb-enable nil)
+
+  :config
+
+  (defun ps/lsp-toggle ()
+    "Connect/disconnect to lsp server."
+    (interactive)
+    (if (or (not lsp-mode)
+            (equal lsp-mode '(lsp-enable-which-key-integration)))
+        (lsp)
+      (lsp-disconnect)))
+
+  :hook
+  ;; if you want which-key integration
+  (lsp-mode . lsp-enable-which-key-integration)
+
+  :general
+  ("A-l" 'ps/lsp-toggle))
+
 (use-package lsp-ui
   :after lsp-mode
   :demand t
@@ -5547,7 +5849,15 @@ FILE."
 
 (use-feature debug)
 
+(use-feature backtrace
+  :disabled
+  :custom
+  (backtrace-line-length nil))
+
 (use-package macrostep)
+
+(use-package ess
+:disabled)
 
 (use-package clojure-mode)
 
@@ -5579,8 +5889,8 @@ FILE."
 (use-package applescript-mode)
 
 (use-package puni
+  :disabled
   :demand t
-
   :general
   (puni-mode-map
    "C-M-a" 'puni-beginning-of-sexp
@@ -6058,8 +6368,8 @@ image."
 
   :custom
   (org-agenda-files `(,ps/dir-android
-		      ,ps/file-tlon-tareas-leo
-		      ,ps/file-tlon-tareas-fede))
+                      ,ps/file-tlon-tareas-leo
+                      ,ps/file-tlon-tareas-fede))
   (org-agenda-window-setup 'current-window)
   (org-agenda-use-time-grid nil) ; disable agenda time grid
   ;; Speed up agenda (orgmode.org/worg/agenda-optimization.html)
@@ -7037,6 +7347,23 @@ original."
   :defer 30
   :straight org-contrib)
 
+(use-package org-extra
+  :disabled
+  :defer 30
+  :straight org-contrib
+  :config
+  (ox-extras-activate '(ignore-headlines)))
+
+(use-package org-ql
+  :disabled
+  :custom
+  (org-ql-search-directories-files-recursive t)
+  :config
+  (defun ps/org-ql-find-agenda ()
+    "docstring"
+    (interactive)
+    (org-ql-find org-agenda-files :query-prefix "!tags:ARCHIVE")))
+
 (use-package org-make-toc
   :after org)
 
@@ -7458,6 +7785,18 @@ return such list if its length is less than LIMIT."
   (org-roam-ui-follow t)
   (org-roam-ui-update-on-save nil)
   (org-roam-ui-open-on-start nil))
+
+(use-package org-roam-timestamps
+  :disabled
+  :if (equal (system-name) ps/computer-hostname-pablo)
+  :after org-roam
+  :demand t
+  :custom
+  (org-roam-timestamps-remember-timestamps nil)
+  (org-roam-timestamps-timestamp-parent-file t)
+
+  :config
+  (org-roam-timestamps-mode))
 
 (use-package org-transclusion
   :after org
@@ -9375,6 +9714,125 @@ or specify any other coding system (and risk losing\n\
   ;; if the URL below stops working
   (scihub-homepage "http://sci-hub.wf"))
 
+(use-package anki-editor
+  :disabled
+  ;; this version handles mathjax correctly
+  ;; :straight (:fork (:repo "louietan/anki-editor" :branch "develop"))
+  ;; this version simplifies the tree structure
+  ;; :straight
+  ;; (:type git :host github :repo "louietan/anki-editor"
+  ;; :fork (:host github :repo "leoc/anki-editor"
+  ;; :branch "develop"))
+  :if (equal (system-name) ps/computer-hostname-pablo)
+  :init
+  (setq-default anki-editor-use-math-jax t) ; github.com/louietan/anki-editor/issues/60#issuecomment-617441799
+  ;; create custom key map
+  (progn
+    (defvar anki-editor-mode-map (make-sparse-keymap))
+    (add-to-list 'minor-mode-map-alist (cons 'anki-editor-mode
+                                             anki-editor-mode-map)))
+
+  :custom
+  (anki-editor-create-decks t)
+  (anki-editor-org-tags-as-anki-tags t)
+  :config
+  (defun ps/anki-editor-open-note-externally ()
+    "Copy note id to clipboard, switch to Anki desktop, and open note in browser."
+    (interactive)
+    (let ((note-id (org-entry-get nil "ANKI_NOTE_ID")))
+      (if (not note-id)
+          (error "Note id not found")
+        (progn
+          (kill-new (concat "nid:" note-id))
+          (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"496A3425-8985-4117-AE0F-ABD6DC85FB9F\"'")))))
+
+  (defun ps/anki-editor-push-notes-under-heading (&optional match scope)
+    "Push notes under heading to Anki."
+    (interactive)
+    (anki-editor-push-notes '(4) match scope))
+
+  ;; the two modified functions below allow for notes with empty fields to be pushed without error
+  ;; github.com/leoc/anki-editor/pull/1
+  (defun ps/anki-editor--build-field-from-content-at-point (name)
+    "Build a field with NAME entry from the heading at point."
+    (let* ((element (org-element-at-point))
+           (format (anki-editor-entry-format))
+           (begin (cl-loop for eoh = (org-element-property :contents-begin element)
+                           then (org-element-property :end subelem)
+                           while eoh
+                           for subelem = (progn
+                                           (goto-char eoh)
+                                           (org-element-context))
+                           while (memq (org-element-type subelem)
+                                       '(drawer planning property-drawer))
+                           finally return (and eoh (org-element-property :begin subelem))))
+           (end (org-element-property :contents-end element))
+           (raw (or (and begin
+                         end
+                         (buffer-substring-no-properties
+                          begin
+                          ;; in case the buffer is narrowed,
+                          ;; e.g. by `org-map-entries' when
+                          ;; scope is `tree'
+                          (min (point-max) end)))
+                    "")))
+      (cons name (anki-editor--export-string raw format))))
+
+  (defun ps/anki-editor--build-fields ()
+    "Build a list of fields from subheadings of current heading.
+
+Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
+    (save-excursion
+      (cl-loop with inhibit-message = t ; suppress echo message from `org-babel-exp-src-block'
+               initially (unless (org-goto-first-child)
+                           (cl-return `(,(anki-editor--build-field-from-content-at-point "Back"))))
+               for last-pt = (point)
+               for element = (org-element-at-point)
+               for heading = (substring-no-properties
+                              (org-element-property :raw-value element))
+               for format = (anki-editor-entry-format)
+               ;; contents-begin includes drawers and scheduling data,
+               ;; which we'd like to ignore, here we skip these
+               ;; elements and reset contents-begin.
+               for begin = (cl-loop for eoh = (org-element-property :contents-begin element)
+                                    then (org-element-property :end subelem)
+                                    while eoh
+                                    for subelem = (progn
+                                                    (goto-char eoh)
+                                                    (org-element-context))
+                                    while (memq (org-element-type subelem)
+                                                '(drawer planning property-drawer))
+                                    finally return (and eoh (org-element-property :begin subelem)))
+               for end = (org-element-property :contents-end element)
+               for raw = (or (and begin
+                                  end
+                                  (buffer-substring-no-properties
+                                   begin
+                                   ;; in case the buffer is narrowed,
+                                   ;; e.g. by `org-map-entries' when
+                                   ;; scope is `tree'
+                                   (min (point-max) end)))
+                             "")
+               for content = (anki-editor--export-string raw format)
+               collect (cons heading content)
+               ;; proceed to next field entry and check last-pt to
+               ;; see if it's already the last entry
+               do (org-forward-heading-same-level nil t)
+               until (= last-pt (point)))))
+
+  (advice-add #'anki-editor--build-fields :override #'ps/anki-editor--build-fields)
+  (advice-add #'anki-editor--build-field-from-content-at-point :override #'ps/anki-editor--build-field-from-content-at-point)
+
+  :general
+  ;; ("A-i" 'anki-editor-mode)
+  (anki-editor-mode-map
+   "s-z" 'anki-editor-cloze-region
+   "s-i" 'anki-editor-insert-note
+   "s-h" 'ps/anki-editor-push-notes-under-heading
+   "s-c" 'anki-editor-push-new-notes
+   "s-a" 'anki-editor-push-notes ; push all notes
+   "s-x" 'ps/anki-editor-open-note-externally))
+
 (use-package org-drill
   :config
   (add-to-list 'org-modules 'org-drill))
@@ -9781,6 +10239,11 @@ it, without asking for confirmation."
    "A-C-s-u" nil
    "A-C-s-p" nil))
 
+(use-feature mu4e-org
+  :disabled
+  :after mu4e
+  :demand t)
+
 (use-package mu4e-alert
   :after mu4e
   :demand t
@@ -9871,6 +10334,11 @@ Grammarly."
    "s-w" 'ps/org-msg-open-in-wordtune)
   (org-mode-map
    "A-s-g" 'ps/org-msg-grammarly))
+
+(use-package htmlize
+  :disabled
+  :custom
+  (htmlize-ignore-face-size nil))
 
 (use-package telega
   ;; :demand t
@@ -10012,7 +10480,7 @@ into a task for Leo."
   :hook
   (telega-chat-mode-hook . ps/telega-chat-mode)
   (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
-  lkkk  ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdown
+   ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdown
   ;; (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
 
   :general
@@ -10130,6 +10598,118 @@ into a task for Leo."
 
 (use-feature ol-telega
   :after telega
+  :demand t)
+
+(use-package slack
+  :disabled
+  :if (equal (system-name) ps/computer-hostname-pablo)
+  :after auth-source-pass
+  ;; :demand t
+  :defer 60
+  :commands slack-select-rooms
+  :custom
+  (slack-file-dir ps/dir-downloads)
+  (slack-prefer-current-team t)
+
+  :config
+  (slack-register-team
+   :default t
+   :name "EA Forum Moderators"
+   :token (auth-source-pick-first-password
+           :host "eaforummoderators"
+           :user ps/personal-gmail))
+
+  (slack-register-team
+   :name "CEA Core"
+   :token (auth-source-pick-first-password
+           :host "cea-core"
+           :user ps/personal-gmail))
+
+  (slack-register-team
+   :name "Altruismo Eficaz y Racionalidad"
+   :token (auth-source-pick-first-password
+           :host "altruismo-eficaz"
+           :user ps/personal-gmail)
+   :cookie (auth-source-pick-first-password
+            :host "altruismo-eficaz^cookie"
+            :user (concat ps/personal-gmail "^cookie")))
+
+  (slack-register-team
+   :name "Samotsvety Forecasting"
+   :token (auth-source-pick-first-password
+           :host "samotsvety"
+           :user ps/personal-gmail)
+   :cookie (auth-source-pick-first-password
+            :host "samotsvety^cookie"
+            :user (concat ps/personal-gmail "^cookie")))
+
+  (slack-register-team
+   :name "Future Fund Regrantors"
+   :token (auth-source-pick-first-password
+           :host "futurefundregrantors"
+           :user ps/personal-gmail)
+   :cookie (auth-source-pick-first-password
+            :host "futurefundregrantors^cookie"
+            :user (concat ps/personal-gmail "^cookie")))
+
+  (slack-register-team
+   :name "EA Bahamas"
+   :token (auth-source-pick-first-password
+           :host "eabahamas"
+           :user ps/personal-gmail)
+   :cookie (auth-source-pick-first-password
+            :host "eabahamas^cookie"
+            :user (concat ps/personal-gmail "^cookie")))
+
+  (slack-register-team
+   :name "EAOxfordOffice"
+   :token (auth-source-pick-first-password
+           :host "eaoxfordoffice"
+           :user ps/personal-email)
+   :cookie (auth-source-pick-first-password
+            :host "eaoxfordoffice^cookie"
+            :user (concat ps/personal-email "^cookie")))
+
+  (defun ps/slack-chat-org-capture ()
+    "Capture Slack message at point with `org-capture'."
+    (interactive)
+    (org-capture nil "s"))
+
+  (slack-start)
+
+  :hook
+  (slack-buffer-mode-hook . (lambda () (setq line-spacing nil)))
+
+  :general
+  ("A-s" 'slack-channel-select)
+  ((slack-mode-map slack-buffer-mode-map)
+   "s-a" 'slack-all-threads
+   "s-c" 'slack-channel-select
+   "s-g" 'slack-group-select
+   "s-m" 'slack-im-select
+   "H-s-t" 'slack-change-current-team
+   "s-u" 'slack-select-rooms
+   "H-s-u" 'slack-select-unread-rooms) ; `slack-all-unreads' not working
+  ((slack-thread-message-buffer-mode-map slack-message-buffer-mode-map)
+   "d" 'slack-thread-show-or-create
+   "e" 'slack-message-edit
+   "k" 'slack-buffer-goto-prev-message
+   "l" 'slack-buffer-goto-next-message
+   "o" 'ps/slack-chat-org-capture
+   "r" 'slack-message-add-reaction
+   "R" 'slack-message-remove-reaction
+   "z" 'slack-message-write-another-buffer)
+  (slack-message-compose-buffer-mode-map
+   "s-c" 'slack-message-send-from-buffer
+   "s-f" 'slack-message-select-file
+   "s-m" 'slack-message-embed-mention))
+
+(use-package ol-emacs-slack
+  :disabled
+  :straight (ol-emacs-slack
+             :host github
+             :repo "ag91/ol-emacs-slack")
+  :after slack
   :demand t)
 
 (use-feature erc
@@ -10611,6 +11191,17 @@ PREFIX determines quoting."
     :keybinding "y")
   (engine/set-keymap-prefix (kbd "A-H-g")))
 
+(use-package eaf
+  :disabled
+  :straight (eaf
+             :type git
+             :host github
+             :repo "emacs-eaf/emacs-application-framework"
+             :files ("*.el" "*.py" "core" "app" "*.json")
+             :includes (eaf-browser) ; Straight won't try to search for these packages when we make further use-package invocations for them
+             :pre-build (("python3" "install-eaf.py" "--install" "browser" "--ignore-sys-deps"))
+             ))
+
 (use-package eaf-browser
   :custom
   (eaf-browser-continue-where-left-off t)
@@ -10837,6 +11428,21 @@ account."
 
 
 
+(use-package md4rd
+  :disabled
+  :custom
+  (md4rd-subs-active '(emacs))
+  (md4rd--oauth-access-token
+   (auth-source-pass-get 'secret "auth-sources/reddit"))
+  (md4rd--oauth-refresh-token
+   (auth-source-pass-get "refresh" "auth-sources/reddit"))
+
+  :config
+  (run-with-timer 0 3540 'md4rd-refresh-login)
+
+  :hook
+  (md4rd-mode-hook . md4rd-indent-all-the-lines))
+
 (use-package org-download
   :after org
   :general
@@ -11037,6 +11643,73 @@ that duration."
                                    (file-name-directory filename))))))
       (org-archive-to-archive-sibling))))
 
+(use-package mentor
+  :disabled
+  :custom
+  (mentor-rtorrent-download-directory ps/dir-downloads)
+  (mentor-rtorrent-external-rpc "~/.rtorrent-rpc.socket")
+  :general
+  (mentor-mode-map
+   "SPC" 'mentor-download-load-magnet-link-or-url
+   "<return>" 'mentor-download-load-torrent))
+
+(use-package espotify
+  :disabled
+  :if (equal (system-name) ps/computer-hostname-pablo)
+  :after auth-source-pass
+  :defer 20
+  :custom
+  (espotify-service-name "spotify")
+  (espotify-use-system-bus-p nil)
+  (espotify-client-id (auth-source-pass-get "id" "auth-sources/spotify"))
+  (espotify-client-secret (auth-source-pass-get 'secret "auth-sources/spotify")))
+
+(use-package smudge
+  :disabled
+  :after auth-source-pass
+  ;; :defer 600
+  :custom
+  (smudge-oauth2-client-id (auth-source-pass-get "id" "auth-sources/spotify"))
+  (smudge-oauth2-client-secret (auth-source-pass-get 'secret "auth-sources/spotify"))
+  (smudge-player-status-format "[%a - %t ◷ %l]")
+  (smudge-api-search-limit 100) ; values >100 result in a 400 error
+  (smudge-status-location nil)
+  :config
+  ;; should renew credentials and store with `pass'
+  (defun ps/smudge ()
+    "Turn on global smudge remote mode and go to my playlists."
+    (interactive)
+    (global-smudge-remote-mode 1)
+    (smudge-my-playlists))
+  (defun ps/smudge-track-load-more ()
+    "Move point to end of playlist buffer and load more tracks."
+    (interactive)
+    (end-of-buffer)
+    (smudge-track-load-more))
+  :general
+  ("A-y" 'ps/smudge)
+  (smudge-track-search-mode-map
+   "RET" 'smudge-track-select
+   "b" 'smudge-track-album-select
+   "d" 'smudge-select-device
+   "m" 'smudge-my-playlists
+   "t" 'smudge-track-search
+   "r" 'smudge-recently-played
+   "s" 'smudge-track-search
+   "t" 'smudge-track-artist-select
+   "y" 'smudge-playlist-search
+   "." 'ps/smudge-track-load-more)
+  (smudge-playlist-search-mode-map
+   "RET" 'smudge-track-select
+   "b" 'smudge-track-album-select
+   "d" 'smudge-select-device
+   "m" 'smudge-my-playlists
+   "r" 'smudge-recently-played
+   "s" 'smudge-track-search
+   "t" 'smudge-track-artist-select
+   "y" 'smudge-playlist-search
+   "." 'ps/smudge-track-load-more))
+
 (use-package read-aloud
   :defer 20
   :config
@@ -11044,6 +11717,27 @@ that duration."
 
   :general
   ("A-C-r" 'read-aloud-this)) ; remember that `A-C-d' starts/stops dictation
+
+(use-package emms
+  :disabled
+  :demand t
+  :custom
+  (emms-source-file-default-directory ps/dir-music-tango)
+  (emms-playlist-buffer-name "*Music*")
+  (emms-info-asynchronously t)
+  (emms-info-functions '(emms-info-libtag) "make sure libtag is the only thing delivering metadata")
+  (emms-source-file-directory-tree-function 'emms-source-file-directory-tree-find "~1 order of magnitude faster; requires GNU find: `brew install findutils'")
+  :config
+  (require 'emms-setup)
+  (emms-all)
+  (emms-default-players)
+  (require 'emms-info-libtag) ;;; load functions that will talk to emms-print-metadata which in turn talks to libtag and gets metadata
+  (require 'emms-info-metaflac)
+  (add-to-list 'emms-info-functions 'emms-info-libtag)
+  (require 'emms-mode-line)
+  (emms-mode-line 1)
+  (require 'emms-playing-time)
+  (emms-playing-time 1))
 
 (use-feature plstore
   :init
@@ -11267,6 +11961,12 @@ is connected."
           (add-hook 'pre-command-hook 'keycast--update t)
         (remove-hook 'pre-command-hook 'keycast--update)))
     (add-to-list 'global-mode-string '("" mode-line-keycast))))
+
+(use-package keyfreq
+  :disabled
+  :config
+  (keyfreq-mode 1)
+  (keyfreq-autosave-mode 1))
 
 (use-feature custom
   :custom

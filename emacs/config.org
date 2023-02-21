@@ -708,7 +708,6 @@ Some useful config files:
 :ID:       9DBC455B-7ED4-422F-BE05-2FBB3548A86F
 :END:
 :LOGBOOK:
-CLOCK: [2023-02-20 Mon 17:15]
 CLOCK: [2021-10-20 Wed 19:56]--[2021-10-20 Wed 19:59] =>  0:03
 CLOCK: [2021-07-24 Sat 10:45]--[2021-07-24 Sat 10:56] =>  0:11
 CLOCK: [2021-07-23 Fri 15:26]--[2021-07-23 Fri 15:58] =>  0:32
@@ -11207,7 +11206,7 @@ slow if it has a lot of overlays."
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
-              "\n^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:" nil t)
+              "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
         (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
           (overlay-put ov_this 'display "")
           (overlay-put ov_this 'hidden-prop-drawer t))))

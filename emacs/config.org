@@ -1218,7 +1218,6 @@ CLOCK: [2021-03-30 Tue 08:50]--[2021-03-30 Tue 09:02] =>  0:12
    "M-t" 'hydra-straight/body
    "M-y" 'hydra-yasnippet/body)
   (org-mode-map
-   "A-s-j" 'hydra-wiki/body
    "A-s-r" 'hydra-org-rating/body))
 #+end_src
 
@@ -1705,6 +1704,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("t" (ps/org-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A") "org-cite")
   ("x" (ps/org-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF") "org-roam-bibtex"))
 #+end_src
+
 *** dired
 :PROPERTIES:
 :ID:       D71128ED-F3CC-43E1-8C8F-8938BDE9DE16

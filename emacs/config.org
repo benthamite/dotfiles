@@ -7312,12 +7312,9 @@ By default, all agenda entries are offered. MATCH is as in
    "H-b" 'consult-buffer
    "H-r" 'consult-history
    "H-V" 'consult-yank-pop
-   "H-f" 'ps/consult-locate-file-current
-   "H-F" 'ps/consult-locate-file-home
-   "A-H-f" 'ps/consult-locate-file-anywhere
-   "H-k" 'ps/consult-locate-current
-   "H-K" 'ps/consult-locate-home
-   "A-H-k" 'ps/consult-locate-anywhere
+   "H-f" 'ps/consult-locate-current
+   "H-f" 'ps/consult-locate-home
+   "A-H-f" 'ps/consult-locate-anywhere
    "C-p" 'ps/consult-rga
    "H-p" 'ps/consult-ripgrep-current
    "H-P" 'ps/consult-ripgrep-home

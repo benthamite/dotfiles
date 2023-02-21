@@ -6590,7 +6590,6 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
 
 #+begin_src emacs-lisp :results silent
 (use-feature remember
-  :disabled
   :custom
   (remember-data-file (file-name-concat ps/dir-emacs "var/remember"))
   (remember-notes-buffer-name "\*scratch\*"))
@@ -10524,8 +10523,9 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 
   :custom
   (org-agenda-files `(,ps/dir-android
-                      ,ps/file-tlon-tareas-leo
-                      ,ps/file-tlon-tareas-fede))
+                      ;; ,ps/file-tlon-tareas-leo
+                      ;; ,ps/file-tlon-tareas-fede
+                      ))
   (org-agenda-window-setup 'current-window)
   (org-agenda-use-time-grid nil) ; disable agenda time grid
   ;; Speed up agenda (orgmode.org/worg/agenda-optimization.html)

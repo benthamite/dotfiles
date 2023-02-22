@@ -16635,8 +16635,8 @@ If prefix arg is passed, then open in new EWW buffer."
           (eww (current-kill 0)))
       (eww (current-kill 0))))
 
-  (defun ps/eww-go-up-url-heirarchy ()
-    "Go up the URL heirarchy."
+  (defun ps/eww-go-up-url-hierarchy ()
+    "Go up the URL hierarchy."
     (interactive)
     (let* ((url (url-generic-parse-url (eww-current-url)))
            (filepath (url-filename url))
@@ -16655,8 +16655,8 @@ If prefix arg is passed, then open in new EWW buffer."
                      (url-fullness url)))
       (eww-browse-url (url-recreate-url new-url))))
 
-  (defun ps/eww-go-to-root-url-heirarchy ()
-    "Go to root of current URL heirarchy"
+  (defun ps/eww-go-to-root-url-hierarchy ()
+    "Go to root of current URL hierarchy"
     (interactive)
     (let* ((url (url-generic-parse-url (eww-current-url)))
            (new-url nil))
@@ -16686,8 +16686,8 @@ If prefix arg is passed, then open in new EWW buffer."
    "r" 'eww-readable
    "g" nil
    "g e" 'ps/eww-edit-current-url
-   "g u" 'ps/eww-go-up-url-heirarchy
-   "g U" 'ps/eww-go-to-root-url-heirarchy
+   "g u" 'ps/eww-go-up-url-hierarchy
+   "g U" 'ps/eww-go-to-root-url-hierarchy
    "p" 'ps/open-eww-with-recent-kill-ring
    "o" 'eww-toggle-fonts
    "p" 'ps/eww-pdf-of-current-webpage

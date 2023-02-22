@@ -8278,8 +8278,8 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
           (two (cadr ps/ispell-languages)))
       (if (string= ispell-local-dictionary one)
           (ispell-change-dictionary two)
-        (ispell-change-dictionary one))))
-    ;; (flyspell-buffer)
+        (ispell-change-dictionary one)))
+    (flyspell-buffer))
     ;; (message "Language set to %s" ispell-local-dictionary))
 
   ;; emacs.stackexchange.com/a/74070/32089
@@ -10937,7 +10937,7 @@ Links to check out:
 :ID:       90E8B1CE-433C-4B2B-8AA2-844506EAC031
 :END:
 :LOGBOOK:
-CLOCK: [2023-02-22 Wed 15:58]
+CLOCK: [2023-02-22 Wed 15:58]--[2023-02-22 Wed 16:03] =>  0:05
 CLOCK: [2023-02-22 Wed 15:07]--[2023-02-22 Wed 15:28] =>  0:21
 CLOCK: [2023-02-22 Wed 14:41]--[2023-02-22 Wed 15:06] =>  0:25
 CLOCK: [2023-02-21 Tue 23:25]--[2023-02-21 Tue 23:46] =>  0:21
@@ -11153,7 +11153,6 @@ present, then archive it."
   (org-mode-map
    "s-a" 'org-archive-to-archive-sibling
    "s-A-a" 'org-archive-subtree))
-
 #+end_src
 
 *** TODO [#6] Process archives ~org/archive~
@@ -11187,6 +11186,7 @@ I normally archive subtrees with ~org-archive-to-archive-sibling~, but use ~org-
 
 #+begin_src emacs-lisp
 (use-package org-archive-hierarchically
+  :disabled
   :straight (org-archive-hierarchically
              :host gitlab
              :repo "andersjohansson/org-archive-hierarchically")
@@ -11446,6 +11446,7 @@ When FILES is given, scan these files instead."
 :REFILE_TARGET_HEADING: Watched
 :END:
 :LOGBOOK:
+CLOCK: [2023-02-22 Wed 17:05]
 CLOCK: [2021-12-15 Wed 10:20]--[2021-12-15 Wed 10:30] =>  0:10
 CLOCK: [2021-12-14 Tue 18:00]--[2021-12-14 Tue 18:08] =>  0:08
 CLOCK: [2021-10-08 Fri 10:22]--[2021-10-08 Fri 10:32] =>  0:10
@@ -11471,22 +11472,22 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
   (org-refile-use-cache t)
   (org-refile-use-outline-path t)
   (org-refile-targets '((org-agenda-files :maxlevel . 9)
-                        (ps/open-buffer-files :maxlevel . 9)))
+			(ps/open-buffer-files :maxlevel . 9)))
   :config
   (defun ps/open-buffer-files ()
     "Return the list of files currently open in emacs"
     (delq nil
-          (mapcar (lambda (x)
-                    (if (and (buffer-file-name x)
-                             (string-match "\\.org$"
-                                           (buffer-file-name x)))
-                        (buffer-file-name x)))
-                  (buffer-list))))
+	  (mapcar (lambda (x)
+		    (if (and (buffer-file-name x)
+			     (string-match "\\.org$"
+					   (buffer-file-name x)))
+			(buffer-file-name x)))
+		  (buffer-list))))
 
   ;; Regenerate cache every half hour minutes
   (run-with-idle-timer (* 60 30) t (lambda ()
-                               (org-refile-cache-clear)
-                               (org-refile-get-targets)))
+				     (org-refile-cache-clear)
+				     (org-refile-get-targets)))
   ;; [2022-06-21] Replaced by `consult-org-heading'; consider
   ;; deleting.
   (defun ps/org-refile-jump (&optional arg)
@@ -11505,12 +11506,21 @@ refresh cache."
     (widen)
     (org-refile '(16)))
 
+  (defun ps/org-refile-and-archive ()
+    "Refile and archive the current subtree."
+    (interactive)
+    (org-refile)
+    (save-excursion
+      (org-refile '(16))
+      (org-archive-to-archive-sibling))
+      (org-mark-ring-goto))
+
   ;; Inspired by emacs.stackexchange.com/q/8045/32089
   (defun ps/org-refile-to (file heading)
     "Refile current heading to specified location."
     (let ((pos (save-excursion
-                 (find-file file)
-                 (org-find-exact-headline-in-buffer heading))))
+		 (find-file file)
+		 (org-find-exact-headline-in-buffer heading))))
       (org-refile nil nil (list heading file nil pos))))
 
   (defun ps/org-refile-video-to-watched ()
@@ -11532,7 +11542,7 @@ refresh cache."
       (widen)
       (org-next-visible-heading -1)
       (let ((file (org-entry-get nil "REFILE_TARGET_FILE"))
-            (heading (org-entry-get nil "REFILE_TARGET_HEADING")))))
+	    (heading (org-entry-get nil "REFILE_TARGET_HEADING")))))
     (save-window-excursion (ps/org-refile-to file heading)))
 
   :general
@@ -18581,5 +18591,4 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
 # eval: (ps/buffer-local-set-key (kbd "H-i") 'use-package-report)
-# eval: (ps/buffer-local-set-key (kbd "s-a") 'org-archive-to-archive-sibling)
 # End:

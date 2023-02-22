@@ -8,6 +8,46 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** wiki-entries.org
+:PROPERTIES:
+:ID:       CC88D9BE-6617-4D53-BCCF-02097C2A81E1
+:END:
+
+[2023-02-21 Tue] No longer working on the Wiki.
+
+#+begin_src emacs-lisp :results silent
+(defhydra hydra-org-wiki-entries
+  (:exit t
+         :idle 0.5)
+  "wiki-entries.org headings"
+  ("a" (ps/org-id-goto "AF906098-7A60-47D3-8C11-EBE97673E563" '(4)) "a")
+  ("b" (ps/org-id-goto "F0F8744C-0729-46C3-9279-23EA29FBDC3E" '(4)) "b")
+  ("c" (ps/org-id-goto "BD1484F6-57C0-4C15-A1CC-2B30C0F7271E" '(4)) "c")
+  ("d" (ps/org-id-goto "9145DB82-8FEF-49BC-B7FD-5E9434AD3C09" '(4)) "d")
+  ("e" (ps/org-id-goto "2E3D31FC-4796-4A3F-BDFF-F5D9653BCC24" '(4)) "e")
+  ("f" (ps/org-id-goto "159BCED3-190D-403F-91C3-7D47F27CF4D1" '(4)) "f")
+  ("g" (ps/org-id-goto "FDAB4C29-438E-40ED-B0A4-EB0DBBAD2913" '(4)) "g")
+  ("h" (ps/org-id-goto "FF8D2857-67F5-4358-9F5A-421CA090E00D" '(4)) "h")
+  ("i" (ps/org-id-goto "AB86A62C-B441-49BE-AA22-C603824AC4B4" '(4)) "i")
+  ("j" (ps/org-id-goto "8231CB28-1B57-4663-8F3D-85B1CCD0F094" '(4)) "j")
+  ("k" (ps/org-id-goto "8985B007-38AE-4520-9159-7326C64ED904" '(4)) "k")
+  ("l" (ps/org-id-goto "A4591114-1168-4175-A52D-759497CD451D" '(4)) "l")
+  ("m" (ps/org-id-goto "605014A2-FDFC-421B-9E8C-9ED6D315C091" '(4)) "m")
+  ("n" (ps/org-id-goto "7720956E-2126-4869-9573-4669569C4BD0" '(4)) "n")
+  ("o" (ps/org-id-goto "D908650E-91A0-4E45-9487-7EAEBE501F99" '(4)) "o")
+  ("p" (ps/org-id-goto "F896D5A7-17B5-4044-9102-D8E59CD51975" '(4)) "p")
+  ("q" (ps/org-id-goto "CDF9C8C4-6DE6-4898-A816-38119C1CBCDD" '(4)) "q")
+  ("r" (ps/org-id-goto "D0BFC28D-2F56-4667-BFF4-E1E047E959DB" '(4)) "r")
+  ("s" (ps/org-id-goto "E8841345-829B-4338-8355-4E6FF4F203E6" '(4)) "s")
+  ("t" (ps/org-id-goto "961A1084-E300-49CB-AEBC-627DB628344D" '(4)) "t")
+  ("u" (ps/org-id-goto "961A1084-E300-49CB-AEBC-627DB628344D" '(4)) "u")
+  ("v" (ps/org-id-goto "0562CCC1-3CC2-4C43-8BEA-61BD5BBA3266" '(4)) "v")
+  ("w" (ps/org-id-goto "9C1E1C22-5878-44AC-8A26-918915DA9AF9" '(4)) "w")
+  ("x" (ps/org-id-goto "4AD979AA-FBEF-4640-A9B7-10186EE8BB21" '(4)) "x")
+  ("y" (ps/org-id-goto "7AC51E00-0EC6-42B9-BBBC-AF9AFA466855" '(4)) "y")
+  ("z" (ps/org-id-goto "8E6F4F80-1FCF-4228-B300-5BDC00F27982" '(4)) "z"))
+#+end_src
+
 ** chatgpt
 :PROPERTIES:
 :ID:       D059F98D-55C4-4D8C-939D-3415FAC6AEB9

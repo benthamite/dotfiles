@@ -250,7 +250,6 @@ NAME and ARGS are as in `use-package'."
    "M-t" 'hydra-straight/body
    "M-y" 'hydra-yasnippet/body)
   (org-mode-map
-   "A-s-j" 'hydra-wiki/body
    "A-s-r" 'hydra-org-rating/body))
 
 (defhydra hydra-major-modes
@@ -618,37 +617,6 @@ NAME and ARGS are as in `use-package'."
   ("t" (ps/org-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A") "org-cite")
   ("x" (ps/org-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF") "org-roam-bibtex"))
 
-(defhydra hydra-org-wiki-entries
-  (:exit t
-         :idle 0.5)
-  "wiki-entries.org headings"
-  ("a" (ps/org-id-goto "AF906098-7A60-47D3-8C11-EBE97673E563" '(4)) "a")
-  ("b" (ps/org-id-goto "F0F8744C-0729-46C3-9279-23EA29FBDC3E" '(4)) "b")
-  ("c" (ps/org-id-goto "BD1484F6-57C0-4C15-A1CC-2B30C0F7271E" '(4)) "c")
-  ("d" (ps/org-id-goto "9145DB82-8FEF-49BC-B7FD-5E9434AD3C09" '(4)) "d")
-  ("e" (ps/org-id-goto "2E3D31FC-4796-4A3F-BDFF-F5D9653BCC24" '(4)) "e")
-  ("f" (ps/org-id-goto "159BCED3-190D-403F-91C3-7D47F27CF4D1" '(4)) "f")
-  ("g" (ps/org-id-goto "FDAB4C29-438E-40ED-B0A4-EB0DBBAD2913" '(4)) "g")
-  ("h" (ps/org-id-goto "FF8D2857-67F5-4358-9F5A-421CA090E00D" '(4)) "h")
-  ("i" (ps/org-id-goto "AB86A62C-B441-49BE-AA22-C603824AC4B4" '(4)) "i")
-  ("j" (ps/org-id-goto "8231CB28-1B57-4663-8F3D-85B1CCD0F094" '(4)) "j")
-  ("k" (ps/org-id-goto "8985B007-38AE-4520-9159-7326C64ED904" '(4)) "k")
-  ("l" (ps/org-id-goto "A4591114-1168-4175-A52D-759497CD451D" '(4)) "l")
-  ("m" (ps/org-id-goto "605014A2-FDFC-421B-9E8C-9ED6D315C091" '(4)) "m")
-  ("n" (ps/org-id-goto "7720956E-2126-4869-9573-4669569C4BD0" '(4)) "n")
-  ("o" (ps/org-id-goto "D908650E-91A0-4E45-9487-7EAEBE501F99" '(4)) "o")
-  ("p" (ps/org-id-goto "F896D5A7-17B5-4044-9102-D8E59CD51975" '(4)) "p")
-  ("q" (ps/org-id-goto "CDF9C8C4-6DE6-4898-A816-38119C1CBCDD" '(4)) "q")
-  ("r" (ps/org-id-goto "D0BFC28D-2F56-4667-BFF4-E1E047E959DB" '(4)) "r")
-  ("s" (ps/org-id-goto "E8841345-829B-4338-8355-4E6FF4F203E6" '(4)) "s")
-  ("t" (ps/org-id-goto "961A1084-E300-49CB-AEBC-627DB628344D" '(4)) "t")
-  ("u" (ps/org-id-goto "961A1084-E300-49CB-AEBC-627DB628344D" '(4)) "u")
-  ("v" (ps/org-id-goto "0562CCC1-3CC2-4C43-8BEA-61BD5BBA3266" '(4)) "v")
-  ("w" (ps/org-id-goto "9C1E1C22-5878-44AC-8A26-918915DA9AF9" '(4)) "w")
-  ("x" (ps/org-id-goto "4AD979AA-FBEF-4640-A9B7-10186EE8BB21" '(4)) "x")
-  ("y" (ps/org-id-goto "7AC51E00-0EC6-42B9-BBBC-AF9AFA466855" '(4)) "y")
-  ("z" (ps/org-id-goto "8E6F4F80-1FCF-4228-B300-5BDC00F27982" '(4)) "z"))
-
 (defhydra hydra-dired
   (:exit t)
   "Dired folders"
@@ -1000,11 +968,6 @@ installed."
 
           ;; for the rest, use the predefined intense values
           ,@modus-themes-preset-overrides-intense))
-
-  ;; This ugly hack is necessary to make the theme load all the faces
-  ;; on startup
-  ;; FIXME: diagnose why this is happening and fix it properly.
-  ;; (run-with-timer 2 nil (lambda () (modus-themes-toggle) (modus-themes-toggle)))
 
   :hook
   (modus-themes-after-load-theme-hook . ps/org-faces-custom-faces)
@@ -3987,7 +3950,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   (persistent-scratch-setup-default))
 
 (use-feature remember
-  :disabled
   :custom
   (remember-data-file (file-name-concat ps/dir-emacs "var/remember"))
   (remember-notes-buffer-name "\*scratch\*"))
@@ -4046,12 +4008,10 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
         (browse-url (ps/magit-parse-url url))
         (message "opening repo %s" url))))
 
-  :hook
-  (magit-mode-hook . (lambda ()
-                       (local-set-key (kbd "o") 'magit-open-repo)))
-
   :general
-  ("A-g" 'magit))
+  ("A-g" 'magit)
+  (magit-mode-map
+   "o" 'ps/magit-open-repo))
 
 (use-package ghub
   :defer 5)
@@ -4406,12 +4366,9 @@ By default, all agenda entries are offered. MATCH is as in
    "H-b" 'consult-buffer
    "H-r" 'consult-history
    "H-V" 'consult-yank-pop
-   "H-f" 'ps/consult-locate-file-current
-   "H-F" 'ps/consult-locate-file-home
-   "A-H-f" 'ps/consult-locate-file-anywhere
-   "H-k" 'ps/consult-locate-current
-   "H-K" 'ps/consult-locate-home
-   "A-H-k" 'ps/consult-locate-anywhere
+   "H-f" 'ps/consult-locate-current
+   "H-f" 'ps/consult-locate-home
+   "A-H-f" 'ps/consult-locate-anywhere
    "C-p" 'ps/consult-rga
    "H-p" 'ps/consult-ripgrep-current
    "H-P" 'ps/consult-ripgrep-home
@@ -4864,6 +4821,13 @@ necessary."
    "M-p" nil
    "M-n" nil))
 
+(use-feature em-hist
+  :after eshell
+  :demand t
+  :custom
+  (eshell-hist-ignoredups t)
+  (eshell-save-history-on-exit t))
+
 (use-package eshell-git-prompt
   :disabled
   :after eshell
@@ -4895,146 +4859,39 @@ necessary."
                    :repo "xenodium/dwim-shell-command"))
 
 (use-package ispell
-  :defer 10
+  :defer 15
   ;; :demand t
   :custom
   (ispell-silently-savep t)
   (ispell-program-name "/opt/homebrew/bin/aspell")
 
-  :config/el-patch
-  ;; Make it less verbose
-  (defun ispell-init-process ()
-    "Check status of Ispell process and start if necessary."
-    (let* (;; Basename of dictionary used by the spell-checker
-           (dict-bname (or (car (cdr (member "-d" (ispell-get-ispell-args))))
-                           ispell-current-dictionary))
-           ;; The default directory for the process.
-           ;; Use "~/n" as default-directory unless using Ispell with per-dir
-           ;; personal dictionaries
-           (default-directory
-             (if (or ispell-really-aspell
-                     ispell-really-hunspell
-                     ;; Protect against bad default-directory
-                     (not (file-accessible-directory-p default-directory))
-                     ;; Ispell and per-dir personal dicts available
-                     (not (or (file-readable-p (concat default-directory
-                                                       ".ispell_words"))
-                              (file-readable-p (concat default-directory
-                                                       ".ispell_"
-                                                       (or dict-bname
-                                                           "default")))))
-                     ;; Ispell, in a minibuffer
-                     (window-minibuffer-p))
-                 (expand-file-name "~/")
-               (expand-file-name default-directory))))
-      ;; Check if process needs restart
-      (if (and ispell-process
-               (eq (ispell-process-status) 'run)
-               ;; Unless we are using an explicit personal dictionary, ensure
-               ;; we're in the same default directory!  Restart check for
-               ;; personal dictionary is done in
-               ;; `ispell-internal-change-dictionary', called from
-               ;; `ispell-buffer-local-dict'
-               (or (or ispell-local-pdict ispell-personal-dictionary)
-                   (equal ispell-process-directory default-directory)))
-          (setq ispell-filter nil ispell-filter-continue nil)
-        ;; may need to restart to select new personal dictionary.
-        (ispell-kill-ispell t)
-        (let ((reporter
-               (make-progress-reporter
-                (format "Starting new Ispell process %s with %s dictionary..."
-                        ispell-program-name
-                        (or ispell-local-dictionary ispell-dictionary
-                            "default")))))
-          (sit-for 0)
-          (setq ispell-library-directory (ispell-check-version)
-                ;; Assign a non-nil value to ispell-process-directory
-                ;; before calling ispell-start-process, since that
-                ;; function needs it to set default-directory when
-                ;; ispell-async-processp is nil.
-                ispell-process-directory default-directory
-                ispell-process (ispell-start-process)
-                ispell-filter nil
-                ispell-filter-continue nil)
-          (el-patch-remove
-            (progress-reporter-done reporter)))
-
-        (unless (equal ispell-process-directory (expand-file-name "~/"))
-          ;; At this point, `ispell-process-directory' will be "~/" unless using
-          ;; Ispell with directory-specific dicts.
-          ;; If not, kill ispell process when killing buffer.  It may be in a
-          ;; removable device that would otherwise become un-mountable.
-          (with-current-buffer
-              (if (window-minibuffer-p)                  ;; In minibuffer
-                  ;; In this case kill ispell only when parent buffer is killed
-                  ;; to avoid over and over ispell kill.
-                  (window-buffer (minibuffer-selected-window))
-                (current-buffer))
-            (add-hook 'kill-buffer-hook
-                      (lambda () (ispell-kill-ispell t)) nil 'local)))
-
-        (if ispell-async-processp
-            (set-process-filter ispell-process 'ispell-filter))
-        (if (and enable-multibyte-characters
-                 ;; Evidently, some people use the synchronous mode even
-                 ;; when async subprocesses are supported, in which case
-                 ;; set-process-coding-system is bound, but
-                 ;; ispell-process is not a process object.
-                 ispell-async-processp)
-            (set-process-coding-system ispell-process (ispell-get-coding-system)
-                                       (ispell-get-coding-system)))
-        ;; Get version ID line
-        (ispell-accept-output 3)
-        ;; get more output if filter empty?
-        (if (null ispell-filter) (ispell-accept-output 3))
-        (cond ((null ispell-filter)
-               (error "%s did not output version line" ispell-program-name))
-              ((and
-                (stringp (car ispell-filter))
-                (if (string-match "warning: " (car ispell-filter))
-                    (progn
-                      (ispell-accept-output 3) ; was warn msg.
-                      (stringp (car ispell-filter)))
-                  (null (cdr ispell-filter)))
-                (string-match "^@(#) " (car ispell-filter)))
-               ;; got the version line as expected (we already know it's the right
-               ;; version, so don't bother checking again.)
-               nil)
-              (t
-               ;; Otherwise, it must be an error message.  Show the user.
-               ;; But first wait to see if some more output is going to arrive.
-               ;; Otherwise we get cool errors like "Can't open ".
-               (sleep-for 1)
-               ;; Only call `ispell-accept-output' if the Ispell process
-               ;; is alive, to avoid showing an unhelpful error message
-               ;; about a missing process, instead of the error which
-               ;; reports why the Ispell process died.
-               (when (if ispell-async-processp
-                         (process-live-p ispell-process)
-                       ispell-process)
-                 (ispell-accept-output 3))
-               (error "%s" (mapconcat #'identity ispell-filter "\n"))))
-        (setq ispell-filter nil)		; Discard version ID line
-        (let ((extended-char-mode (ispell-get-extended-character-mode)))
-          (if extended-char-mode		; ~ extended character mode
-              (ispell-send-string (concat extended-char-mode "\n"))))
-        (when ispell-async-processp
-          (set-process-query-on-exit-flag ispell-process nil)))))
-
   :config
-  (defvar ps/ispell-language "en")
+  (defvar ps/ispell-languages '("espanol" "english")
+    "List of languages to use for ispell.")
+
   (defun ps/ispell-toggle-language ()
-    "Toggle ispell dictionaries between English and Spanish."
+    "Toggle ispell dictionaries between languages defined in
+ `ps/ispell-languages'."
     (interactive)
-    (if (string= ps/ispell-language "en")
-        (setq ps/ispell-language "es")
-      (setq ps/ispell-language "en"))
-    (ispell-change-dictionary ps/ispell-language)
-    (flyspell-buffer)
-    (message (format "Language set to %s"
-                     (if (string= ps/ispell-language "en")
-                         "English"
-                       "Spanish"))))
+    (let ((one (car ps/ispell-languages))
+          (two (cadr ps/ispell-languages)))
+      (if (string= ispell-local-dictionary one)
+          (ispell-change-dictionary two)
+        (ispell-change-dictionary one))))
+    ;; (flyspell-buffer)
+    ;; (message "Language set to %s" ispell-local-dictionary))
+
+  ;; emacs.stackexchange.com/a/74070/32089
+  (defun suppress-messages (old-fun &rest args)
+    (cl-flet ((silence (&rest args1) (ignore)))
+      (advice-add 'message :around #'silence)
+      (unwind-protect
+	  (apply old-fun args)
+	(advice-remove 'message #'silence))))
+
+  (advice-add 'ispell-init-process :around #'suppress-messages)
+  (advice-add 'ispell-kill-ispell :around #'suppress-messages)
+
 
   :general
   ("M-A-p" 'ps/ispell-toggle-language))
@@ -6368,8 +6225,9 @@ image."
 
   :custom
   (org-agenda-files `(,ps/dir-android
-                      ,ps/file-tlon-tareas-leo
-                      ,ps/file-tlon-tareas-fede))
+                      ;; ,ps/file-tlon-tareas-leo
+                      ;; ,ps/file-tlon-tareas-fede
+                      ))
   (org-agenda-window-setup 'current-window)
   (org-agenda-use-time-grid nil) ; disable agenda time grid
   ;; Speed up agenda (orgmode.org/worg/agenda-optimization.html)
@@ -6708,13 +6566,14 @@ conditional on active capture template."
   (org-clock-ask-before-exiting nil)
   :config
   (org-clock-persistence-insinuate)
+
   (defun ps/org-new-clock-entry-today (begin end)
     "Insert a new clock entry with today's date, prompting for times."
     (interactive "sTime begins: \nsTime ends: ")
     (ps/org-jump-to-latest-clock-entry)
     (crux-smart-open-line-above)
     (let ((today (format-time-string "%Y-%m-%d %a" (current-time))))
-      (insert (concat "CLOCK: [" today " " begin "]--[" today " " end "]")))
+      (insert "CLOCK: [%s %s]--[%s %s]" today begin today end)))
     (org-evaluate-time-range))
 
   (defun ps/org-time-stamp-active-current-time ()
@@ -8472,21 +8331,21 @@ in the file. Data comes from www.ebook.de."
   (ebib-use-timestamp t)
   (ebib-preload-bib-files org-cite-global-bibliography)
   (ebib-index-columns '(("Entry Key" 30 t)
-                        ("Author/Editor" 25 t)
-                        ("Year" 4 t)
-                        ("Title" 50 t)))
+			("Author/Editor" 25 t)
+			("Year" 4 t)
+			("Title" 50 t)))
   (ebib-timestamp-format "%Y-%m-%d %T (%Z)")
   (ebib-save-xrefs-first nil)
   (ebib-default-entry-type "online")
   (ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "urldate" "venue" "version" "volumes" "year"))
 
   :config
-    (defun ps/ebib-open-or-switch ()
-      "Open ebib in the right window or switch to it if already open."
+  (defun ps/ebib-open-or-switch ()
+    "Open ebib in the right window or switch to it if already open."
     (interactive)
     (ps/window-split-if-unsplit)
     (if (> (frame-width) ps/frame-width-threshold)
-        (winum-select-window-3)
+	(winum-select-window-3)
       (winum-select-window-2))
     (ebib))
 
@@ -8497,13 +8356,13 @@ confirmation."
     (ebib--execute-when
       (entries
        (let ((buf (current-buffer)))
-         (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-         (ebib--reload-database ebib--cur-db)
-         (ebib--set-modified nil ebib--cur-db)
-         ;; This is the line that causes point to disappear, but
-         ;; disabling it seems harmless.
-         ;; (ebib--update-buffers)
-         (message "Database reloaded")))
+	 (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+	 (ebib--reload-database ebib--cur-db)
+	 (ebib--set-modified nil ebib--cur-db)
+	 ;; This is the line that causes point to disappear, but
+	 ;; disabling it seems harmless.
+	 ;; (ebib--update-buffers)
+	 (message "Database reloaded")))
       (default
        (beep))))
 
@@ -8547,36 +8406,36 @@ confirmation."
 If the index buffer is already visible in some frame, select its
 window and make the frame active,"
     (let ((index-window (get-buffer-window (ebib--buffer 'index) t))
-          (old-frame (selected-frame)))
+	  (old-frame (selected-frame)))
       (if index-window
-          (progn (select-window index-window t)
-                 (unless (eq (window-frame) old-frame)
-                   (select-frame-set-input-focus (window-frame))
-                   (setq ebib--frame-before old-frame)))
-        (setq ebib--saved-window-config (current-window-configuration))
-        (setq ebib--frame-before nil)
-        (cond
-         ((eq ebib-layout 'full)
-          (delete-other-windows))
-         ((eq ebib-layout 'custom)
-          (setq ebib--window-before (selected-window))
-          (delete-other-windows)
-          (let ((width (cond
-                        ((integerp ebib-width)
-                         (- (window-total-width) ebib-width))
-                        ((floatp ebib-width)
-                         (- (window-total-width) (truncate (* (window-total-width) ebib-width)))))))
-            (select-window (split-window (selected-window) width t)))))
-        (let* ((index-window (selected-window))
-               (entry-window (selected-window)))
-          (switch-to-buffer (ebib--buffer 'index))
-          (unless (eq ebib-layout 'index-only)
-            (set-window-buffer entry-window (ebib--buffer 'entry)))
-          ;; (set-window-dedicated-p index-window t)
-          (if (eq ebib-layout 'custom)
-              (set-window-dedicated-p entry-window t)))))
+	  (progn (select-window index-window t)
+		 (unless (eq (window-frame) old-frame)
+		   (select-frame-set-input-focus (window-frame))
+		   (setq ebib--frame-before old-frame)))
+	(setq ebib--saved-window-config (current-window-configuration))
+	(setq ebib--frame-before nil)
+	(cond
+	 ((eq ebib-layout 'full)
+	  (delete-other-windows))
+	 ((eq ebib-layout 'custom)
+	  (setq ebib--window-before (selected-window))
+	  (delete-other-windows)
+	  (let ((width (cond
+			((integerp ebib-width)
+			 (- (window-total-width) ebib-width))
+			((floatp ebib-width)
+			 (- (window-total-width) (truncate (* (window-total-width) ebib-width)))))))
+	    (select-window (split-window (selected-window) width t)))))
+	(let* ((index-window (selected-window))
+	       (entry-window (selected-window)))
+	  (switch-to-buffer (ebib--buffer 'index))
+	  (unless (eq ebib-layout 'index-only)
+	    (set-window-buffer entry-window (ebib--buffer 'entry)))
+	  ;; (set-window-dedicated-p index-window t)
+	  (if (eq ebib-layout 'custom)
+	      (set-window-dedicated-p entry-window t)))))
     (if (buffer-local-value 'ebib--dirty-index-buffer (ebib--buffer 'index))
-        (setq ebib--needs-update t)))
+	(setq ebib--needs-update t)))
 
   (advice-add 'ebib--setup-windows :override #'ps/ebib--setup-windows)
 
@@ -8595,7 +8454,7 @@ the value of IF-EXISTS, storing an entry may also result in an
 error."
     (let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
       (when (and actual-key timestamp ebib-use-timestamp)
-        (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format nil "GMT") actual-key db 'overwrite))
+	(ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format nil "GMT") actual-key db 'overwrite))
       actual-key))
 
   (advice-add 'ebib--store-entry :override #'ps/ebib--store-entry)
@@ -8610,100 +8469,100 @@ error."
   (defun ps/ebib-get-isbn ()
     "Return ISBN for the current entry, if it exists."
     (when-let ((isbn
-                (ebib-get-field-value
-                 "isbn"
-                 (ebib--get-key-at-point)
-                 ebib--cur-db
-                 'noerror
-                 'unbraced
-                 'xref)))
+		(ebib-get-field-value
+		 "isbn"
+		 (ebib--get-key-at-point)
+		 ebib--cur-db
+		 'noerror
+		 'unbraced
+		 'xref)))
       (car (split-string
-            (s-replace "-"
-                       ""
-                       (substring-no-properties
-                        isbn))
-            " "))))
+	    (s-replace "-"
+		       ""
+		       (substring-no-properties
+			isbn))
+	    " "))))
 
   (defun ps/ebib-video-p (string)
     "Return `t' if string looks like a video URL."
     ;; TODO: Add more video sites
     (string-match
-     "https?://\\(www\\.\\)?youtube\\.com/watch\\?v=\\([a-zA-Z0-9_-]+\\)"
+     "https?://\\(www\\.\\)?\\(youtube\\.com/watch\\?v=\\|youtu.be/\\)\\([a-zA-Z0-9_-]+\\)"
      string))
 
   (defun ps/ebib--update-file-field-contents (key file-name)
     "docstring"
     (let* ((field "file")
-           (file-field-contents (ebib-get-field-value field key ebib--cur-db t t)))
+	   (file-field-contents (ebib-get-field-value field key ebib--cur-db t t)))
       (unless (and
-               file-field-contents
-               (catch 'file-exists
-                 (dolist (file (ebib--split-files file-field-contents))
-                   (when (string= file file-name)
-                     (throw 'file-exists file)))))
-        (ebib-set-field-value field file-name key ebib--cur-db ";")
-        (ebib--store-multiline-text (current-buffer))
-        (ebib--redisplay-field field)
-        (ebib--redisplay-index-item field)
-        (ebib-save-current-database t))))
+	       file-field-contents
+	       (catch 'file-exists
+		 (dolist (file (ebib--split-files file-field-contents))
+		   (when (string= file file-name)
+		     (throw 'file-exists file)))))
+	(ebib-set-field-value field file-name key ebib--cur-db ";")
+	(ebib--store-multiline-text (current-buffer))
+	(ebib--redisplay-field field)
+	(ebib--redisplay-index-item field)
+	(ebib-save-current-database t))))
 
   (defun ps/ebib-download-by-identifier (&optional id)
     "docstring"
     (interactive)
     (let ((id (or id
-                  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-                  (ps/ebib-get-isbn)
-                  (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-                  (read-string "Enter ISBN or DOI: "))))
+		  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+		  (ps/ebib-get-isbn)
+		  (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+		  (read-string "Enter ISBN or DOI: "))))
       ;; TODO: Add support for arXiv
       (cond ((ps/doi-utils-doi-p id)
-             (scihub id))
-            ((ps/ebib-isbn-p id)
-             (ps/ebib-download-book nil id))
-            ((ps/ebib-video-p id)
-             (ps/ebib-download-video id))
-            (t
-             (user-error "Identifier does not appear to be an ISBN or DOI.")))))
+	     (scihub id))
+	    ((ps/ebib-isbn-p id)
+	     (ps/ebib-download-book nil id))
+	    ((ps/ebib-video-p id)
+	     (ps/ebib-download-video id))
+	    (t
+	     (user-error "Identifier does not appear to be an ISBN or DOI.")))))
 
 
   (defun ps/ebib-search-by-identifier (&optional id)
     "docstring"
     (interactive)
     (let ((id (or id
-                  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-                  (ps/ebib-get-isbn)
-                  (read-string "Enter ISBN or DOI: "))))
+		  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+		  (ps/ebib-get-isbn)
+		  (read-string "Enter ISBN or DOI: "))))
       ;; TODO: Add support for arXiv
       (cond ((ps/doi-utils-doi-p id)
-             (scihub id))
-            ((ps/ebib-isbn-p id)
-             (ps/ebib-search-book nil id))
-            (t
-             (user-error "Identifier does not appear to be an ISBN or DOI.")))))
+	     (scihub id))
+	    ((ps/ebib-isbn-p id)
+	     (ps/ebib-search-book nil id))
+	    (t
+	     (user-error "Identifier does not appear to be an ISBN or DOI.")))))
 
   (defun ps/ebib--search-or-download-dwim (action)
     "docstring"
     (if (string= (ebib--current-field) "title")
-        (when-let ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point)
-                                               ebib--cur-db)))
-          (cond
-           ((member type
-                    '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook" "Book" "Collection" "MVBook" "Inbook" "Incollection" "Bookinbook" "Suppbook"))
-            (cond ((eq action 'search)
-                   (ps/ebib-search-book-by-title))
-                  ((eq action 'download)
-                   (ps/ebib-download-book-by-title))))
-           ((member type '("article" "Article"))
-            (cond ((eq action 'search)
-                   (ps/ebib-search-article-by-title))
-                  ((eq action 'download)
-                   (ps/ebib-download-article-by-title))))
-           (t
-            (user-error (format "No action defined for entries of type `%s'" type)))))
+	(when-let ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point)
+					       ebib--cur-db)))
+	  (cond
+	   ((member type
+		    '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook" "Book" "Collection" "MVBook" "Inbook" "Incollection" "Bookinbook" "Suppbook"))
+	    (cond ((eq action 'search)
+		   (ps/ebib-search-book-by-title))
+		  ((eq action 'download)
+		   (ps/ebib-download-book-by-title))))
+	   ((member type '("article" "Article"))
+	    (cond ((eq action 'search)
+		   (ps/ebib-search-article-by-title))
+		  ((eq action 'download)
+		   (ps/ebib-download-article-by-title))))
+	   (t
+	    (user-error (format "No action defined for entries of type `%s'" type)))))
       (cond ((eq action 'search)
-             (ps/ebib-search-by-identifier))
-            ((eq action 'download)
-             (ps/ebib-download-by-identifier)))))
+	     (ps/ebib-search-by-identifier))
+	    ((eq action 'download)
+	     (ps/ebib-download-by-identifier)))))
 
   (defun ps/ebib-search-dwim ()
     "If field at point is 'title', run a search with its value; otherwise use identifier.
@@ -8725,19 +8584,19 @@ The list of websites for the search query is defined by the
     "docstring"
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
       (catch 'tag
-        (mapc
-         (lambda (file)
-           (when (equal (file-name-extension file) extension)
-             (throw 'tag file)))
-         (ebib--split-files files))
-        nil)))
+	(mapc
+	 (lambda (file)
+	   (when (equal (file-name-extension file) extension)
+	     (throw 'tag file)))
+	 (ebib--split-files files))
+	nil)))
 
   (defun ps/ebib-open-file (extension)
     "Open file with EXTENSION in entry at point, if it (uniquely)
 exists."
     (interactive)
     (if-let ((file-name (ps/ebib-get-file extension)))
-        (find-file file-name)
+	(find-file file-name)
       (user-error (format "No (unique) `%s' file found" extension))))
 
   (defun ps/ebib-open-file-externally (extension)
@@ -8745,7 +8604,7 @@ exists."
 exists."
     (interactive)
     (if-let ((file-name (expand-file-name (ps/ebib-get-file extension))))
-        (shell-command (format "open '%s'" file-name))
+	(shell-command (format "open '%s'" file-name))
       (user-error (format "No (unique) `%s' file found" extension))))
 
   (defun ps/ebib-open-pdf-file ()
@@ -8773,8 +8632,8 @@ exists."
     (interactive)
     (ps/ebib-open-file "html")
     (let ((html-buffer (buffer-name))
-          (browse-url-handlers nil)
-          (browse-url-browser-function #'eww-browse-url))
+	  (browse-url-handlers nil)
+	  (browse-url-browser-function #'eww-browse-url))
       (browse-url-of-buffer)
       (kill-buffer html-buffer)))
 
@@ -8784,13 +8643,13 @@ file, use the preference ordering defined in
 `ps/ebib-valid-file-extensions'."
     (interactive)
     (if-let ((extension
-              (catch 'tag
-                (dolist (extension ps/ebib-valid-file-extensions)
-                  (when (ps/ebib-get-file extension)
-                    (throw 'tag extension))))))
-        (call-interactively
-         (intern
-          (concat "ps/ebib-open-" extension "-file")))
+	      (catch 'tag
+		(dolist (extension ps/ebib-valid-file-extensions)
+		  (when (ps/ebib-get-file extension)
+		    (throw 'tag extension))))))
+	(call-interactively
+	 (intern
+	  (concat "ps/ebib-open-" extension "-file")))
       (user-error "No file found.")))
 
   (defvar ps/ebib-valid-file-extensions
@@ -8803,29 +8662,29 @@ each of the attached files is in
 `ps/ebib-valid-file-extensions'."
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
       (when
-          (catch 'tag
-            (mapc
-             (lambda (file)
-               (unless (member (file-name-extension file) ps/ebib-valid-file-extensions)
-                 (throw 'tag file)))
-             (ebib--split-files files))
-            nil)
-        (user-error "Invalid file extension."))))
+	  (catch 'tag
+	    (mapc
+	     (lambda (file)
+	       (unless (member (file-name-extension file) ps/ebib-valid-file-extensions)
+		 (throw 'tag file)))
+	     (ebib--split-files files))
+	    nil)
+	(user-error "Invalid file extension."))))
 
   (defun ps/ebib-validate-file-stem ()
     "If entry at point has attachments, check that the stem of
 each of the attached files is the entry's unique key."
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
       (when
-          (catch 'tag
-            (mapc
-             (lambda (file)
-               (unless (equal (file-name-nondirectory (file-name-sans-extension file))
-                              (ebib--get-key-at-point))
-                 (throw 'tag file)))
-             (ebib--split-files files))
-            nil)
-        (user-error "Invalid file stem."))))
+	  (catch 'tag
+	    (mapc
+	     (lambda (file)
+	       (unless (equal (file-name-nondirectory (file-name-sans-extension file))
+			      (ebib--get-key-at-point))
+		 (throw 'tag file)))
+	     (ebib--split-files files))
+	    nil)
+	(user-error "Invalid file stem."))))
 
   (defun ps/ebib-validate-file-name ()
     "If entry at point has attachments, check that their stems match
@@ -8841,28 +8700,28 @@ corresponding entry key."
     (ebib--execute-when
       (entries
        (let* ((field "file")
-              (key (ebib--get-key-at-point))
-              (file-list (split-string
-                          (ebib-get-field-value field key ebib--cur-db t t)
-                          ";")))
-         (unless (ps/ebib-valid-key-p key)
-           (user-error "Entry has an invalid key; pleasse regenerate it."))
-         (when file-list
-           (ebib-delete-field-contents field t)
-           (dolist (filename file-list)
-             (let ((stem (file-name-sans-extension (file-name-nondirectory filename)))
-                   (extension (file-name-extension filename)))
-               (unless (equal stem key)
-                 (let ((new-filename
-                        (ps/ebib--rename-and-abbreviate-file
-                         (ps/ebib--extension-directories extension)
-                         key
-                         extension)))
-                   (rename-file filename new-filename)
-                   (setq filename new-filename)))
-               (ebib-set-field-value field filename key ebib--cur-db ";")))
-           (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field))))
+	      (key (ebib--get-key-at-point))
+	      (file-list (split-string
+			  (ebib-get-field-value field key ebib--cur-db t t)
+			  ";")))
+	 (unless (ps/ebib-valid-key-p key)
+	   (user-error "Entry has an invalid key; pleasse regenerate it."))
+	 (when file-list
+	   (ebib-delete-field-contents field t)
+	   (dolist (filename file-list)
+	     (let ((stem (file-name-sans-extension (file-name-nondirectory filename)))
+		   (extension (file-name-extension filename)))
+	       (unless (equal stem key)
+		 (let ((new-filename
+			(ps/ebib--rename-and-abbreviate-file
+			 (ps/ebib--extension-directories extension)
+			 key
+			 extension)))
+		   (rename-file filename new-filename)
+		   (setq filename new-filename)))
+	       (ebib-set-field-value field filename key ebib--cur-db ";")))
+	   (ebib--redisplay-field field)
+	   (ebib--redisplay-index-item field))))
       ;; (ebib-save-current-database nil))))
       (default
        (beep))))
@@ -8878,7 +8737,7 @@ different users, as long as they have the same folder structure."
   (defun ps/ebib-valid-key-p (&optional key)
     "docstring"
     (let ((key (or key
-                   (ebib--get-key-at-point))))
+		   (ebib--get-key-at-point))))
       (string-match
        "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
        key)))
@@ -8899,18 +8758,18 @@ different users, as long as they have the same folder structure."
     (ebib--execute-when
       (entries
        (let ((doi (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
-         (unless doi
-           (user-error "[Ebib] No DOI found in doi field"))
-         ;; FIXME: `(return doi)' fails to return DOI; why?
-         (kill-new doi)))))
+	 (unless doi
+	   (user-error "[Ebib] No DOI found in doi field"))
+	 ;; FIXME: `(return doi)' fails to return DOI; why?
+	 (kill-new doi)))))
 
   (defun ps/ebib-download-doi ()
     "docstring"
     (interactive)
     (let* ((key (ebib--get-key-at-point))
-           (file (file-name-concat
-                  ps/dir-library-pdf
-                  (file-name-with-extension key ".pdf"))))
+	   (file (file-name-concat
+		  ps/dir-library-pdf
+		  (file-name-with-extension key ".pdf"))))
       (ps/ebib-copy-doi)
       (url-copy-file (scihub (current-kill 0)) file)
       (ebib-set-field-value "file" file key ebib--cur-db ";")))
@@ -8923,27 +8782,27 @@ different users, as long as they have the same folder structure."
 The FORCE argument is used as in `ebib-save-current-database'."
     ;; See if we need to make a backup.
     (when (and (ebib-db-backup-p db)
-               (file-exists-p (ebib-db-get-filename db)))
+	       (file-exists-p (ebib-db-get-filename db)))
       (ebib--make-backup (ebib-db-get-filename db))
       (ebib-db-set-backup nil db))
 
     ;; Check if the file has changed on disk.
     (let ((db-modtime (ebib-db-get-modtime db))
-          (file-modtime (ebib--get-file-modtime (ebib-db-get-filename db))))
+	  (file-modtime (ebib--get-file-modtime (ebib-db-get-filename db))))
       ;; If the file to be saved has been newly created, both modtimes are nil.
       (when (and db-modtime file-modtime
-                 (time-less-p db-modtime file-modtime))
-        (unless (or (and (listp force)
-                         (eq 16 (car force)))
-                    (yes-or-no-p (format "File `%s' changed on disk.  Overwrite? " (ebib-db-get-filename db))))
-          (error "[Ebib] File not saved"))))
+		 (time-less-p db-modtime file-modtime))
+	(unless (or (and (listp force)
+			 (eq 16 (car force)))
+		    (yes-or-no-p (format "File `%s' changed on disk.  Overwrite? " (ebib-db-get-filename db))))
+	  (error "[Ebib] File not saved"))))
 
     ;; Now save the database.
     (let ((buf (current-buffer)))
       (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
       (with-temp-buffer
-        (ebib--format-database-as-bibtex db)
-        (write-region (point-min) (point-max) (ebib-db-get-filename db)))
+	(ebib--format-database-as-bibtex db)
+	(write-region (point-min) (point-max) (ebib-db-get-filename db)))
       ;; (ebib--pop-to-buffer
       ;; (cond ((string= (buffer-name buf) "*Ebib-entry*")
       ;; (ebib--buffer 'entry))
@@ -8960,9 +8819,9 @@ The FORCE argument is used as in `ebib-save-current-database'."
     (ebib--execute-when
       (entries
        (when (or (and (ebib-db-modified-p ebib--cur-db)
-                      (yes-or-no-p "Database modified.  Really reload from file? "))
-                 (y-or-n-p "Reload current database from file? "))
-         (ps/ebib-reload-current-database-no-confirm)))
+		      (yes-or-no-p "Database modified.  Really reload from file? "))
+		 (y-or-n-p "Reload current database from file? "))
+	 (ps/ebib-reload-current-database-no-confirm)))
       (default
        (beep))))
 
@@ -8976,8 +8835,8 @@ The FORCE argument is used as in `ebib-save-current-database'."
     (ebib--execute-when
       (entries
        (unless (string= (what-line) "Line 1")
-         (ebib-prev-entry)
-         (ebib-next-entry))
+	 (ebib-prev-entry)
+	 (ebib-next-entry))
        (ebib--edit-entry-internal))
       (default
        (beep))))
@@ -8987,15 +8846,15 @@ The FORCE argument is used as in `ebib-save-current-database'."
   (defun ps/ebib--extension-directories (extension)
     "Return directory associated with EXTENSION."
     (cond ((string= extension "pdf")
-           ps/dir-library-pdf)
-          ((string= extension "html")
-           ps/dir-library-html)
-          ((or (string= extension "webm")
-               (string= extension "mp3")
-               (string= extension "flac"))
-           ps/dir-library-media)
-          (t
-           (user-error "Invalid file extension"))))
+	   ps/dir-library-pdf)
+	  ((string= extension "html")
+	   ps/dir-library-html)
+	  ((or (string= extension "webm")
+	       (string= extension "mp3")
+	       (string= extension "flac"))
+	   ps/dir-library-media)
+	  (t
+	   (user-error "Invalid file extension"))))
 
   (defun ps/ebib-attach-file (&optional most-recent)
     "Prompt the user for a file to attach to the current entry.
@@ -9005,45 +8864,45 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     (ebib--execute-when
       (entries
        (let ((key (ebib--get-key-at-point)))
-         (unless (ps/ebib-valid-key-p key)
-           (user-error "Entry has an invalid key; pleasse regenerate it."))
-         (let* ((field "file")
-                (file-to-attach
-                 (if most-recent
-                     (ps/newest-file ps/dir-downloads)
-                   (let ((initial-folder
-                          (completing-read "Select folder: "
-                                           (list
-                                            ps/dir-downloads
-                                            ps/dir-library-html
-                                            ps/dir-library-pdf
-                                            ps/dir-library-media))))
-                     (read-file-name
-                      "File to attach: "
-                      ;; Use key as default selection if key-based file exists
-                      ;; else default to `initial-folder'
-                      (if (catch 'found
-                            (dolist (extension ps/ebib-valid-file-extensions)
-                              (when (f-file-p (file-name-concat
-                                               initial-folder
-                                               (file-name-with-extension key extension)))
-                                (throw 'found extension))))
-                          (file-name-concat initial-folder key)
-                        initial-folder)))))
-                (extension (file-name-extension file-to-attach))
-                (destination-folder
-                 (ps/ebib--extension-directories extension))
-                (file-name (ps/ebib--rename-and-abbreviate-file
-                            destination-folder key extension)))
-           (when (or (not (f-file-p file-name))
-                     (y-or-n-p "File exists. Overwrite? "))
-             (rename-file file-to-attach file-name t))
-           (ps/ebib--update-file-field-contents key file-name)
-           (when (string= (file-name-extension file-name) "pdf")
-             ;; open the pdf to make sure it displays the web page correctly
-             (ps/ebib-open-pdf-file)
-             ;; ocr the pdf if necessary
-             (ps/ocr-pdf (format "'%s' '%s'" (expand-file-name file-name) (expand-file-name file-name)))))))
+	 (unless (ps/ebib-valid-key-p key)
+	   (user-error "Entry has an invalid key; pleasse regenerate it."))
+	 (let* ((field "file")
+		(file-to-attach
+		 (if most-recent
+		     (ps/newest-file ps/dir-downloads)
+		   (let ((initial-folder
+			  (completing-read "Select folder: "
+					   (list
+					    ps/dir-downloads
+					    ps/dir-library-html
+					    ps/dir-library-pdf
+					    ps/dir-library-media))))
+		     (read-file-name
+		      "File to attach: "
+		      ;; Use key as default selection if key-based file exists
+		      ;; else default to `initial-folder'
+		      (if (catch 'found
+			    (dolist (extension ps/ebib-valid-file-extensions)
+			      (when (f-file-p (file-name-concat
+					       initial-folder
+					       (file-name-with-extension key extension)))
+				(throw 'found extension))))
+			  (file-name-concat initial-folder key)
+			initial-folder)))))
+		(extension (file-name-extension file-to-attach))
+		(destination-folder
+		 (ps/ebib--extension-directories extension))
+		(file-name (ps/ebib--rename-and-abbreviate-file
+			    destination-folder key extension)))
+	   (when (or (not (f-file-p file-name))
+		     (y-or-n-p "File exists. Overwrite? "))
+	     (rename-file file-to-attach file-name t))
+	   (ps/ebib--update-file-field-contents key file-name)
+	   (when (string= (file-name-extension file-name) "pdf")
+	     ;; open the pdf to make sure it displays the web page correctly
+	     (ps/ebib-open-pdf-file)
+	     ;; ocr the pdf if necessary
+	     (ps/ocr-pdf (format "'%s' '%s'" (expand-file-name file-name) (expand-file-name file-name)))))))
       (default
        (beep))))
 
@@ -9136,52 +8995,52 @@ in 'title' field, otherwise the field at point.
 
 If not invoked from `ebib', prompt for search query."
     (let* ((name (nth 0 search-engine))
-           (prefix (nth 1 search-engine))
-           (suffix (nth 2 search-engine))
-           (search-query
-            (if search-query
-                (url-hexify-string search-query)
-              (if (member major-mode (list 'ebib-entry-mode 'ebib-index-mode))
-                  (let* ((field (or field
-                                    ;; if no field given, set `field'...
-                                    (cond
-                                     ;; ...to "title" if point is on "title" field,
-                                     ((equal (ebib--current-field) "title")
-                                      "title")
-                                     ;; ...to "isbn" or "doi" if either field present,
-                                     (ps/ebib-get-isbn)
-                                     ((ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db)
-                                      "doi")
-                                     ;; ...else to the field at point.
-                                     (t
-                                      (ebib--current-field)))))
-                         (value (ebib-get-field-value
-                                 field
-                                 (ebib--get-key-at-point)
-                                 ebib--cur-db
-                                 'noerror
-                                 'unbraced
-                                 'xref)))
-                    (cond ((equal field "title")
-                           (url-hexify-string value))
-                          ;; ((equal field "isbn")
-                          ;; (s-replace "-" "" value))
-                          (t
-                           value)))
-                (url-hexify-string
-                 (read-string
-                  (concat
-                   name
-                   ": ")))))))
+	   (prefix (nth 1 search-engine))
+	   (suffix (nth 2 search-engine))
+	   (search-query
+	    (if search-query
+		(url-hexify-string search-query)
+	      (if (member major-mode (list 'ebib-entry-mode 'ebib-index-mode))
+		  (let* ((field (or field
+				    ;; if no field given, set `field'...
+				    (cond
+				     ;; ...to "title" if point is on "title" field,
+				     ((equal (ebib--current-field) "title")
+				      "title")
+				     ;; ...to "isbn" or "doi" if either field present,
+				     (ps/ebib-get-isbn)
+				     ((ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db)
+				      "doi")
+				     ;; ...else to the field at point.
+				     (t
+				      (ebib--current-field)))))
+			 (value (ebib-get-field-value
+				 field
+				 (ebib--get-key-at-point)
+				 ebib--cur-db
+				 'noerror
+				 'unbraced
+				 'xref)))
+		    (cond ((equal field "title")
+			   (url-hexify-string value))
+			  ;; ((equal field "isbn")
+			  ;; (s-replace "-" "" value))
+			  (t
+			   value)))
+		(url-hexify-string
+		 (read-string
+		  (concat
+		   name
+		   ": ")))))))
       (browse-url (concat prefix search-query suffix))))
 
   (defun ps/ebib-search-multi (&optional field search-query search-group)
     "docstring"
     (let ((search-query (or search-query
-                            (unless (member major-mode (list 'ebib-entry-mode 'ebib-index-mode))
-                              (read-string "Search query: ")))))
+			    (unless (member major-mode (list 'ebib-entry-mode 'ebib-index-mode))
+			      (read-string "Search query: ")))))
       (dolist (search-engine search-group)
-        (funcall search-engine field search-query))))
+	(funcall search-engine field search-query))))
 
   (defun ps/ebib-search-book (&optional field search-query)
     "The list of search engines is specified by the variable
@@ -9217,45 +9076,45 @@ If not invoked from `ebib', prompt for search query."
     "docstring"
     (interactive)
     (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (user-error "`title' field is empty!"))
-        (ps/ebib-search-book "title")))
+	    (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+	    (user-error "`title' field is empty!"))
+	(ps/ebib-search-book "title")))
 
   (defun ps/ebib-download-book-by-title ()
     "docstring"
     (interactive)
     (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (user-error "`title' field is empty!"))
-        (ps/ebib-download-book "title")))
+	    (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+	    (user-error "`title' field is empty!"))
+	(ps/ebib-download-book "title")))
 
   (defun ps/ebib-search-book-by-isbn ()
     "docstring"
     (interactive)
     (if (ebib-get-field-value "isbn" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (ps/ebib-search-book "isbn")
+	(ps/ebib-search-book "isbn")
       (user-error "`ISBN' field is empty!")))
 
   (defun ps/ebib-search-article-by-title ()
     "docstring"
     (interactive)
     (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (user-error "`title' field is empty!")
+	(user-error "`title' field is empty!")
       (ps/ebib-search-article "title")))
 
   (defun ps/ebib-download-article-by-title ()
     "docstring"
     (interactive)
     (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (user-error "`title' field is empty!")
+	(user-error "`title' field is empty!")
       (ps/ebib-download-article "title")))
 
   (defun ps/ebib-download-video (id)
     ""
     (let* ((key (ebib--get-key-at-point))
-           (file-name
-            (ps/ebib--rename-and-abbreviate-file
-             ps/dir-library-media key "webm")))
+	   (file-name
+	    (ps/ebib--rename-and-abbreviate-file
+	     ps/dir-library-media key "webm")))
       (youtube-dl id :directory ps/dir-library-media :destination key)
       (message (format "Downloading video from '%s'" (substring-no-properties id)))
       (ps/ebib--update-file-field-contents key file-name)))
@@ -9264,7 +9123,7 @@ If not invoked from `ebib', prompt for search query."
     "docstring"
     (interactive)
     (if (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (ps/ebib-search-article "doi")
+	(ps/ebib-search-article "doi")
       (user-error "`DOI' field is empty!")))
 
   (defun ps/ebib-sentence-case ()
@@ -9273,25 +9132,25 @@ If not invoked from `ebib', prompt for search query."
     (ebib--execute-when
       (entries
        (let* ((field (ebib--current-field))
-              (value (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
-              (words (split-string value)))
-         (setq words (mapcar
-                      (lambda (word)
-                        (if
-                            ;; match words containing {} or \ which are probably
-                            ;; LaTeX or protected words
-                            (string-match "\\$\\|{\\|}\\|\\\\" word)
-                            word
-                          (s-downcase word)))
-                      words))
-         ;; capitalize first word
-         (setf (car words) (s-capitalize (car words)))
-         (setq value (mapconcat 'identity words " "))
-         (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite 'unbraced)
-         (ebib--store-multiline-text (current-buffer))
-         (ebib--redisplay-field field)
-         (ebib--redisplay-index-item field)
-         (ebib-save-current-database nil)))
+	      (value (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+	      (words (split-string value)))
+	 (setq words (mapcar
+		      (lambda (word)
+			(if
+			    ;; match words containing {} or \ which are probably
+			    ;; LaTeX or protected words
+			    (string-match "\\$\\|{\\|}\\|\\\\" word)
+			    word
+			  (s-downcase word)))
+		      words))
+	 ;; capitalize first word
+	 (setf (car words) (s-capitalize (car words)))
+	 (setq value (mapconcat 'identity words " "))
+	 (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite 'unbraced)
+	 (ebib--store-multiline-text (current-buffer))
+	 (ebib--redisplay-field field)
+	 (ebib--redisplay-index-item field)
+	 (ebib-save-current-database nil)))
       (default
        (beep))))
 
@@ -9306,11 +9165,11 @@ If not invoked from `ebib', prompt for search query."
     (ebib--execute-when
       (entries
        (let ((file))
-         (if (member key (ebib-db-list-keys (nth 0 ebib--databases)))
-             (setq file ps/file-bibliography-new)
-           (setq file ps/file-bibliography-old))
-         (ebib file key)
-         (ebib--pop-to-buffer (ebib--buffer 'entry))))
+	 (if (member key (ebib-db-list-keys (nth 0 ebib--databases)))
+	     (setq file ps/file-bibliography-new)
+	   (setq file ps/file-bibliography-old))
+	 (ebib file key)
+	 (ebib--pop-to-buffer (ebib--buffer 'entry))))
       (default
        (ebib--error "No database is loaded"))))
 
@@ -9321,31 +9180,31 @@ first name, and names are separated by a semicolon."
     (ebib--execute-when
       (entries
        (let ((field "author")
-             (authors-fixed))
-         (when-let ((authors
-                     (replace-regexp-in-string
-                      "\n "
-                      ""
-                      (substring-no-properties
-                       (ebib-get-field-value
-                        field
-                        (ebib--get-key-at-point)
-                        ebib--cur-db
-                        'noerror
-                        'unbraced
-                        'xref)))))
-           (dolist (author (split-string authors ", "))
-             (push (replace-regexp-in-string "\\(.*\\) \\(.*\\)" "\\2, \\1" author) authors-fixed))
-           (ebib-set-field-value
-            field
-            (string-join authors-fixed "; ")
-            (ebib--get-key-at-point)
-            ebib--cur-db
-            'overwrite)
-           (ebib--store-multiline-text (current-buffer))
-           (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field)
-           (ebib-save-current-database nil))))
+	     (authors-fixed))
+	 (when-let ((authors
+		     (replace-regexp-in-string
+		      "\n "
+		      ""
+		      (substring-no-properties
+		       (ebib-get-field-value
+			field
+			(ebib--get-key-at-point)
+			ebib--cur-db
+			'noerror
+			'unbraced
+			'xref)))))
+	   (dolist (author (split-string authors ", "))
+	     (push (replace-regexp-in-string "\\(.*\\) \\(.*\\)" "\\2, \\1" author) authors-fixed))
+	   (ebib-set-field-value
+	    field
+	    (string-join authors-fixed "; ")
+	    (ebib--get-key-at-point)
+	    ebib--cur-db
+	    'overwrite)
+	   (ebib--store-multiline-text (current-buffer))
+	   (ebib--redisplay-field field)
+	   (ebib--redisplay-index-item field)
+	   (ebib-save-current-database nil))))
       (default
        (beep))))
 
@@ -9356,20 +9215,20 @@ first name, and names are separated by a semicolon."
     (interactive)
     (unless (string= (ebib-db-get-filename ebib--cur-db) ps/file-bibliography-new)
       (user-error (format "Due to performane issues, this command only works on database `%s'"
-                          (file-name-nondirectory ps/file-bibliography-new))))
+			  (file-name-nondirectory ps/file-bibliography-new))))
     (ebib--execute-when
       (entries
        (let ((order 'ascend))
-         (cond ((eq ps/ebib-sort-toggle 'Timestamp)
-                (setq ps/ebib-sort-toggle 'Author))
-               ((eq ps/ebib-sort-toggle 'Author)
-                (setq ps/ebib-sort-toggle 'Title))
-               ((eq ps/ebib-sort-toggle 'Title)
-                (setq ps/ebib-sort-toggle 'Timestamp)
-                (setq order 'descend)))
-         (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
-         (goto-char (point-min))
-         (message (format "Sorting by %s" ps/ebib-sort-toggle))))
+	 (cond ((eq ps/ebib-sort-toggle 'Timestamp)
+		(setq ps/ebib-sort-toggle 'Author))
+	       ((eq ps/ebib-sort-toggle 'Author)
+		(setq ps/ebib-sort-toggle 'Title))
+	       ((eq ps/ebib-sort-toggle 'Title)
+		(setq ps/ebib-sort-toggle 'Timestamp)
+		(setq order 'descend)))
+	 (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
+	 (goto-char (point-min))
+	 (message (format "Sorting by %s" ps/ebib-sort-toggle))))
       (default
        (beep))))
 
@@ -9401,16 +9260,16 @@ first name, and names are separated by a semicolon."
     (ebib--execute-when
       (entries
        (let ((key (ebib--get-key-at-point)))
-         (save-window-excursion
-           (find-file zotra-default-bibliography)
-           (goto-char (point-max))
-           (ebib--format-entry key ebib--cur-db)
-           (bibtex-narrow-to-entry)
-           (goto-char (point-min))
-           (replace-regexp "^\\(@.*{.*\\)," "\\1-dup,")
-           (save-buffer))
-         (ebib-switch-to-database-nth 1)
-         (ps/ebib-reload-current-database-no-confirm)))
+	 (save-window-excursion
+	   (find-file zotra-default-bibliography)
+	   (goto-char (point-max))
+	   (ebib--format-entry key ebib--cur-db)
+	   (bibtex-narrow-to-entry)
+	   (goto-char (point-min))
+	   (replace-regexp "^\\(@.*{.*\\)," "\\1-dup,")
+	   (save-buffer))
+	 (ebib-switch-to-database-nth 1)
+	 (ps/ebib-reload-current-database-no-confirm)))
       (default
        (beep))))
 
@@ -10803,7 +10662,6 @@ into a task for Leo."
    "A-C-s-f" 'shr-heading-next))
 
 (use-feature eww
-  ;; :defer 30
   :custom
   (eww-search-prefix "https://www.google.com/search?q=")
   (eww-restore-desktop t)
@@ -10881,8 +10739,8 @@ If prefix arg is passed, then open in new EWW buffer."
           (eww (current-kill 0)))
       (eww (current-kill 0))))
 
-  (defun ps/eww-go-up-url-heirarchy ()
-    "Go up the URL heirarchy."
+  (defun ps/eww-go-up-url-hierarchy ()
+    "Go up the URL hierarchy."
     (interactive)
     (let* ((url (url-generic-parse-url (eww-current-url)))
            (filepath (url-filename url))
@@ -10901,8 +10759,8 @@ If prefix arg is passed, then open in new EWW buffer."
                      (url-fullness url)))
       (eww-browse-url (url-recreate-url new-url))))
 
-  (defun ps/eww-go-to-root-url-heirarchy ()
-    "Go to root of current URL heirarchy"
+  (defun ps/eww-go-to-root-url-hierarchy ()
+    "Go to root of current URL hierarchy"
     (interactive)
     (let* ((url (url-generic-parse-url (eww-current-url)))
            (new-url nil))
@@ -10932,8 +10790,8 @@ If prefix arg is passed, then open in new EWW buffer."
    "r" 'eww-readable
    "g" nil
    "g e" 'ps/eww-edit-current-url
-   "g u" 'ps/eww-go-up-url-heirarchy
-   "g U" 'ps/eww-go-to-root-url-heirarchy
+   "g u" 'ps/eww-go-up-url-hierarchy
+   "g U" 'ps/eww-go-to-root-url-hierarchy
    "p" 'ps/open-eww-with-recent-kill-ring
    "o" 'eww-toggle-fonts
    "p" 'ps/eww-pdf-of-current-webpage
@@ -11581,9 +11439,8 @@ that duration."
                       (shell-command-to-string (format
                                                 "mullvad relay set hostname %s; mullvad connect"
                                                 server)))))
-    (if duration
-        (message (format "Connected to Mullvad server %s. Disconnecting in %s minute(s)." connection duration))
-      (message (format "Connected to Mullvad server %s." connection)))))
+    (message "Connected to Mullvad server %s." connection
+                     (when duration (message " Disconnecting in %s minute(s)." duration)))))
 
 (defun ps/mullvad-disconnect ()
   "Disconnect from server."

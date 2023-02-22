@@ -3268,6 +3268,119 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 #+begin_src emacs-lisp :results silent
 ;; the feature should be `lisp', but for some reason it is not loaded.
 (use-feature emacs
+  :demand t
+  :config
+  (defun ps/delete-sexp (&optional arg)
+    "Like `kill-sexp', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (kill-sexp arg)))
+
+  (defun ps/backward-delete-sexp (&optional arg)
+    "Like `backward-kill-sexp', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (backward-kill-sexp arg)))
+
+  (defun ps/copy-sexp (&optional arg)
+    "Like `kill-sexp', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (kill-sexp arg)))
+
+  (defun ps/backward-copy-sexp (&optional arg)
+    "Like `backward-kill-sexp', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (backward-kill-sexp arg)))
+
+  (defun ps/kill-whole-sexp ()
+    "Kill the sexp at point."
+    (interactive)
+    (ps/kill-whole-thing 'sexp))
+
+  (defun ps/delete-whole-sexp ()
+    "Like `kill-whole-sexp', but deletes instead of killing."
+    (interactive)
+    (ps/delete-instead-of-kill (ps/kill-whole-sexp)))
+
+  (defun ps/copy-whole-sexp ()
+    "Like `kill-whole-sexp', but copies instead of killing."
+    (interactive)
+    (ps/copy-instead-of-kill (ps/kill-whole-sexp)))
+
+  (defun ps/transpose-sexps-backward ()
+    "Like `transpose-sexps', but in reverse order."
+    (interactive)
+    (transpose-sexps -1))
+
+  :general
+  ("C-M-k" nil
+   "C-M-<backspace>" nil
+   "C-H-M-f" 'kill-sexp
+   "C-H-M-a" 'backward-kill-sexp
+   "A-C-H-M-S-s-f" 'ps/delete-sexp
+   "A-C-H-M-S-s-a" 'ps/backward-delete-sexp
+   "C-H-M-s-A-f" 'ps/copy-sexp
+   "C-H-M-s-A-a" 'ps/backward-copy-sexp
+   "A-H-C-a" 'ps/copy-whole-sexp
+   "A-H-C-f" 'ps/delete-whole-sexp
+   "A-H-C-j" 'ps/kill-whole-sexp
+   "A-H-M-f" 'transpose-sexps
+   "A-H-M-a" 'ps/transpose-sexps-backward))(use-feature emacs
+  :demand t
+  :config
+  (defun ps/delete-sexp (&optional arg)
+    "Like `kill-sexp', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (kill-sexp arg)))
+
+  (defun ps/backward-delete-sexp (&optional arg)
+    "Like `backward-kill-sexp', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (backward-kill-sexp arg)))
+
+  (defun ps/copy-sexp (&optional arg)
+    "Like `kill-sexp', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (kill-sexp arg)))
+
+  (defun ps/backward-copy-sexp (&optional arg)
+    "Like `backward-kill-sexp', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (backward-kill-sexp arg)))
+
+  (defun ps/kill-whole-sexp ()
+    "Kill the sexp at point."
+    (interactive)
+    (ps/kill-whole-thing 'sexp))
+
+  (defun ps/delete-whole-sexp ()
+    "Like `kill-whole-sexp', but deletes instead of killing."
+    (interactive)
+    (ps/delete-instead-of-kill (ps/kill-whole-sexp)))
+
+  (defun ps/copy-whole-sexp ()
+    "Like `kill-whole-sexp', but copies instead of killing."
+    (interactive)
+    (ps/copy-instead-of-kill (ps/kill-whole-sexp)))
+
+  (defun ps/transpose-sexps-backward ()
+    "Like `transpose-sexps', but in reverse order."
+    (interactive)
+    (transpose-sexps -1))
+
+  :general
+  ("C-M-k" nil
+   "C-M-<backspace>" nil
+   "C-H-M-f" 'kill-sexp
+   "C-H-M-a" 'backward-kill-sexp
+   "A-C-H-M-S-s-f" 'ps/delete-sexp
+   "A-C-H-M-S-s-a" 'ps/backward-delete-sexp
+   "C-H-M-s-A-f" 'ps/copy-sexp
+   "C-H-M-s-A-a" 'ps/backward-copy-sexp
+   "A-H-C-a" 'ps/copy-whole-sexp
+   "A-H-C-f" 'ps/delete-whole-sexp
+   "A-H-C-j" 'ps/kill-whole-sexp
+   "A-H-M-f" 'transpose-sexps
+   "A-H-M-a" 'ps/transpose-sexps-backward))(use-feature emacs
+  :demand t
   :config
   (defun ps/delete-sexp (&optional arg)
     "Like `kill-sexp', but deletes instead of killing."
@@ -10589,7 +10702,7 @@ Posted a question to [[https://emacs.stackexchange.com/questions/66343/in-org-ag
 :ID:       14F93A83-0BE7-42E3-891E-F6806192296B
 :END:
 :LOGBOOK:
-CLOCK: [2022-07-05 Tue 16:58]--[2022-07-05 Tue 17:10] =>  0:12
+CLOCK: [2022-07-05 Tue 16:58]--[2023-02-22 Wed 15:06] => 5566:08
 CLOCK: [2022-06-13 Mon 14:45]--[2022-06-13 Mon 15:00] =>  0:15
 CLOCK: [2022-06-11 Sat 13:40]--[2022-06-11 Sat 14:03] =>  0:23
 CLOCK: [2022-06-11 Sat 13:19]--[2022-06-11 Sat 13:25] =>  0:06
@@ -10824,6 +10937,8 @@ Links to check out:
 :ID:       90E8B1CE-433C-4B2B-8AA2-844506EAC031
 :END:
 :LOGBOOK:
+CLOCK: [2023-02-22 Wed 15:07]--[2023-02-22 Wed 15:28] =>  0:21
+CLOCK: [2023-02-22 Wed 14:41]--[2023-02-22 Wed 15:06] =>  0:25
 CLOCK: [2023-02-21 Tue 23:25]--[2023-02-21 Tue 23:46] =>  0:21
 CLOCK: [2022-07-06 Wed 20:26]--[2022-07-06 Wed 21:10] =>  0:44
 CLOCK: [2022-06-19 Sun 10:16]--[2022-06-19 Sun 10:53] =>  0:37
@@ -10842,81 +10957,98 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
 :END:
 
 #+begin_src emacs-lisp :results silent
-  (use-feature org-clock
-    :defer 20
-    :custom
-    (org-clock-out-when-done t)
-    (org-clock-persist t)
-    (org-clock-persist-query-resume nil)
-    (org-clock-in-resume t)
-    (org-clock-report-include-clocking-task t)
-    (org-clock-ask-before-exiting nil)
-    :config
-    (org-clock-persistence-insinuate)
+(use-feature org-clock
+  :defer 20
+  :custom
+  (org-clock-out-when-done t)
+  (org-clock-persist t)
+  (org-clock-persist-query-resume nil)
+  (org-clock-in-resume t)
+  (org-clock-report-include-clocking-task t)
+  (org-clock-ask-before-exiting nil)
+  :config
+  (org-clock-persistence-insinuate)
 
-    (defun ps/org-new-clock-entry-today (begin end)
-      "Insert a new clock entry with today's date, prompting for times."
-      (interactive "sTime begins: \nsTime ends: ")
-      (ps/org-jump-to-latest-clock-entry)
-      (crux-smart-open-line-above)
-      (let ((today (format-time-string "%Y-%m-%d %a" (current-time))))
-        (insert "CLOCK: [%s %s]--[%s %s]" today begin today end))
+  
+  (defun ps/org-clock-new-log ()
+    "Prompt user for start and end times, then create a new org clock record."
+    (interactive)
+    (let* ((start-time (org-read-date nil t nil "Start time: "))
+	   (end-time (org-read-date nil t nil "End time: "))
+	   (duration (time-subtract end-time start-time))
+	   (duration-minutes (time-to-seconds duration))
+	   (duration-hours (/ duration-minutes 3600.0))
+	   (duration-string (format "%.2f" duration-hours)))))
+      (org-clock-in '(16))
+      (org-clock-modify-effort-estimate duration-string)
+      (org-clock-out))
+
+
+(defun ps/org-new-clock-entry-today (begin end)
+    "Insert a new clock entry with today's date, prompting for times."
+    (interactive "sTime begins: \nsTime ends: ")
+    (ps/org-jump-to-latest-clock-entry)
+    (crux-smart-open-line-above)
+    (let ((today (format-time-string "%Y-%m-%d %a" (current-time))))
+      (insert "CLOCK: [%s %s]--[%s %s]" today begin today end)))
     (org-evaluate-time-range))
 
-    (defun ps/org-time-stamp-active-current-time ()
-      "Insert an active timestamp with the current date and time."
-      (interactive)
-      (org-time-stamp '(16)))
 
-    (defun ps/org-time-stamp-inactive-current-time ()
-      "Insert an inactive timestamp with the current date and time."
-      (interactive)
-      (org-time-stamp '(16) t))
 
-    (defun ps/org-time-stamp-active-current-date ()
-      "Insert an active timestamp with the current date."
-      (interactive)
-      (org-insert-time-stamp (current-time) nil))
+  (defun ps/org-time-stamp-active-current-time ()
+    "Insert an active timestamp with the current date and time."
+    (interactive)
+    (org-time-stamp '(16)))
 
-    (defun ps/org-time-stamp-inactive-current-date ()
-      "Insert an inactive timestamp with the current date."
-      (interactive)
-      (org-insert-time-stamp (current-time) nil t))
+  (defun ps/org-time-stamp-inactive-current-time ()
+    "Insert an inactive timestamp with the current date and time."
+    (interactive)
+    (org-time-stamp '(16) t))
 
-    (defun ps/org-clone-clock-entry ()
-      "Duplicate clock entry at point and set mark for editing via multiple cursors."
-      (interactive)
-      (crux-duplicate-current-line-or-region 1)
-      (org-beginning-of-line)
-      (forward-line -1)
-      (let ((query "\\[\\([[:digit:]]\\)\\{4\\}-\\([[:digit:]]\\)\\{2\\}-\\([[:digit:]]\\)\\{2\\} \\w\\w\\w "))
-        (search-forward-regexp query)
-        (set-mark-command nil)
-        (set-mark-command nil)
-        (next-line)
-        (search-forward-regexp query)))
+  (defun ps/org-time-stamp-active-current-date ()
+    "Insert an active timestamp with the current date."
+    (interactive)
+    (org-insert-time-stamp (current-time) nil))
 
-    (defun ps/org-jump-to-latest-clock-entry ()
-      "Jump to most recent clock entry for org heading at point."
-      (interactive)
-      (org-back-to-heading)
-      (isearch-forward nil t)
-      (isearch-yank-string "CLOCK: ")
-      (isearch-exit)
-      (org-beginning-of-line))
+  (defun ps/org-time-stamp-inactive-current-date ()
+    "Insert an inactive timestamp with the current date."
+    (interactive)
+    (org-insert-time-stamp (current-time) nil t))
 
-    :general
-    ("A-H-j" 'org-clock-goto
-     "A-H-x" 'org-clock-cancel)
-    (org-mode-map
-     "s-i" 'org-clock-in
-     "s-o" 'org-clock-out
-     "s-u" 'ps/org-clone-clock-entry
-     "s-A-n" 'ps/org-new-clock-entry-today
-     "s--" 'ps/org-time-stamp-active-current-time
-     "s-A--" 'ps/org-time-stamp-active-current-date
-     "s-=" 'ps/org-time-stamp-inactive-current-time
-     "s-A-=" 'ps/org-time-stamp-inactive-current-date))
+  (defun ps/org-clone-clock-entry ()
+    "Duplicate clock entry at point and set mark for editing via multiple cursors."
+    (interactive)
+    (crux-duplicate-current-line-or-region 1)
+    (org-beginning-of-line)
+    (forward-line -1)
+    (let ((query "\\[\\([[:digit:]]\\)\\{4\\}-\\([[:digit:]]\\)\\{2\\}-\\([[:digit:]]\\)\\{2\\} \\w\\w\\w "))
+      (search-forward-regexp query)
+      (set-mark-command nil)
+      (set-mark-command nil)
+      (next-line)
+      (search-forward-regexp query)))
+
+  (defun ps/org-jump-to-latest-clock-entry ()
+    "Jump to most recent clock entry for org heading at point."
+    (interactive)
+    (org-back-to-heading)
+    (isearch-forward nil t)
+    (isearch-yank-string "CLOCK: ")
+    (isearch-exit)
+    (org-beginning-of-line))
+
+  :general
+  ("A-H-j" 'org-clock-goto
+   "A-H-x" 'org-clock-cancel)
+  (org-mode-map
+   "s-i" 'org-clock-in
+   "s-o" 'org-clock-out
+   "s-u" 'ps/org-clone-clock-entry
+   "s-A-n" 'ps/org-new-clock-entry-today
+   "s--" 'ps/org-time-stamp-active-current-time
+   "s-A--" 'ps/org-time-stamp-active-current-date
+   "s-=" 'ps/org-time-stamp-inactive-current-time
+   "s-A-=" 'ps/org-time-stamp-inactive-current-date))
 #+end_src
 
 ** org-cycle

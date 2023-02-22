@@ -6573,8 +6573,8 @@ conditional on active capture template."
     (ps/org-jump-to-latest-clock-entry)
     (crux-smart-open-line-above)
     (let ((today (format-time-string "%Y-%m-%d %a" (current-time))))
-      (insert "CLOCK: [%s %s]--[%s %s]" today begin today end)))
-    (org-evaluate-time-range))
+      (insert "CLOCK: [%s %s]--[%s %s]" today begin today end))
+  (org-evaluate-time-range))
 
   (defun ps/org-time-stamp-active-current-time ()
     "Insert an active timestamp with the current date and time."
@@ -10662,6 +10662,7 @@ into a task for Leo."
    "A-C-s-f" 'shr-heading-next))
 
 (use-feature eww
+  ;; :defer 30
   :custom
   (eww-search-prefix "https://www.google.com/search?q=")
   (eww-restore-desktop t)

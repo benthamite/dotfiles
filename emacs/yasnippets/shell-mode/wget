@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: wget
+# key: wg
+# --
+wget '`(current-kill 0)`'

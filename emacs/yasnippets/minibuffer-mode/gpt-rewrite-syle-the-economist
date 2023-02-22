@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: gpt-rewrite-syle-the-economist
+# key: rse
+# author: Pablo Stafforini
+# --
+Rewrite in the style of The Economist: "`(current-kill 0)`"

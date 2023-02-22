@@ -10937,6 +10937,7 @@ Links to check out:
 :ID:       90E8B1CE-433C-4B2B-8AA2-844506EAC031
 :END:
 :LOGBOOK:
+CLOCK: [2023-02-22 Wed 15:58]
 CLOCK: [2023-02-22 Wed 15:07]--[2023-02-22 Wed 15:28] =>  0:21
 CLOCK: [2023-02-22 Wed 14:41]--[2023-02-22 Wed 15:06] =>  0:25
 CLOCK: [2023-02-21 Tue 23:25]--[2023-02-21 Tue 23:46] =>  0:21
@@ -10969,20 +10970,21 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
   :config
   (org-clock-persistence-insinuate)
 
-  
-  (defun ps/org-clock-new-log ()
-    "Prompt user for start and end times, then create a new org clock record."
-    (interactive)
-    (let* ((start-time (org-read-date nil t nil "Start time: "))
-	   (end-time (org-read-date nil t nil "End time: "))
-	   (duration (time-subtract end-time start-time))
-	   (duration-minutes (time-to-seconds duration))
-	   (duration-hours (/ duration-minutes 3600.0))
-	   (duration-string (format "%.2f" duration-hours)))))
-      (org-clock-in '(16))
-      (org-clock-modify-effort-estimate duration-string)
-      (org-clock-out))
 
+;; FIXME: suggested by copilot; not working: the date entities are not being
+;; converted properly
+(defun ps/org-clock-create-clock-entry ()
+  "Create a new clock entry for the org heading at point,
+ prompting the user for start and end times."
+  (interactive)
+  (let* ((start-time (org-read-date nil t nil "Start time: "))
+	 (end-time (org-read-date nil t nil "End time: "))
+	 (start-time (date-to-time start-time))
+	 (end-time (org-time-string-to-time end-time))
+	 (duration (org-time-subtract end-time start-time))
+	 (duration (org-duration-from-minutes (org-duration-to-minutes duration))))
+    (org-clock-in '(16))
+    (org-clock-modify-effort-estimate duration)))
 
 (defun ps/org-new-clock-entry-today (begin end)
     "Insert a new clock entry with today's date, prompting for times."

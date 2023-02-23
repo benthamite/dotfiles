@@ -587,6 +587,17 @@ CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
 
 For personal reference, these are the most recent Emacs installations (in reverse chronological order).
 
+[2023-02-23 Thu 02:10]
+- Very slow.
+- Theme broke for some reason.
+- Some functions (e.g. ~keymap-unset~) not available).
+- Telega doesn't show profile pics
+  
+#+begin_src shell :tangle no
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@28 --with-dbus --with-no-titlebar --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+end_src
+
 [2023-02-14 Tue 20:07]:
 
 #+begin_src shell :tangle no
@@ -7683,73 +7694,78 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 :END:
 
 #+begin_src emacs-lisp :results silent
-(use-package cape
-  :after corfu
-  :demand t
+  (use-package cape
+    :after corfu
+    :demand t
 
-  :custom
-  (cape-dabbrev-min-length 3)
+    :custom
+    (cape-dabbrev-min-length 3)
 
-  :config
-  ;; All the below adapted from
-  ;; kristofferbalintona.me/posts/202203130102/
-  (defun ps/cape-capf-setup-org ()
-    (require 'org-roam)
-    (if (org-roam-file-p)
-        (org-roam--register-completion-functions-h)
-      (let (result)
-        (dolist (element (list
-                          ;; (cape-super-capf #'cape-ispell #'cape-dabbrev)
-                          (cape-company-to-capf #'company-yasnippet))
-                         result)
-          (add-to-list 'completion-at-point-functions element))))
-    (setq corfu-auto nil))
+    :config
+    ;; All the below adapted from
+    ;; kristofferbalintona.me/posts/202203130102/
+    (defun ps/cape-capf-setup-org ()
+      (require 'org-roam)
+      (if (org-roam-file-p)
+	  (org-roam--register-completion-functions-h)
+	(let (result)
+	  (dolist (element (list
+			    ;; (cape-super-capf #'cape-ispell #'cape-dabbrev)
+			    ;; (cape-company-to-capf #'company-yasnippet)
+			    )
+			   result)
+	    (add-to-list 'completion-at-point-functions element))))
+      (setq corfu-auto nil))
 
-  ;; Eshell
-  (defun ps/cape-capf-setup-eshell ()
-    (let ((result))
-      (dolist (element '(pcomplete-completions-at-point cape-file) result)
-        (add-to-list 'completion-at-point-functions element))))
+    ;; Eshell
+    (defun ps/cape-capf-setup-eshell ()
+      (let ((result))
+	(dolist (element '(pcomplete-completions-at-point cape-file) result)
+	  (add-to-list 'completion-at-point-functions element))))
 
-  ;; Git-commit
-  (defun ps/cape-capf-setup-git-commit ()
-    (general-define-key
-     :keymaps 'local
-     :states 'insert
-     "<tab>" 'completion-at-point)      ; Keybinding for `completion-at-point'
-    (let ((result))
-      (dolist (element '(cape-dabbrev cape-symbol) result)
-        (add-to-list 'completion-at-point-functions element))))
+    ;; Git-commit
+    (defun ps/cape-capf-setup-git-commit ()
+      (general-define-key
+       :keymaps 'local
+       :states 'insert
+       "<tab>" 'completion-at-point)      ; Keybinding for `completion-at-point'
+      (let ((result))
+	(dolist (element '(cape-dabbrev cape-symbol) result)
+	  (add-to-list 'completion-at-point-functions element))))
 
-  ;; Elisp
-  (defun ps/cape-capf-ignore-keywords-elisp (cand)
-    "Ignore keywords with forms that begin with \":\" (e.g.
-:history)."
-    (or (not (keywordp cand))
-        (eq (char-after (car completion-in-region--data)) ?:)))
+    ;; Elisp
+    (defun ps/cape-capf-ignore-keywords-elisp (cand)
+      "Ignore keywords with forms that begin with \":\" (e.g.
+  :history)."
+      (or (not (keywordp cand))
+	  (eq (char-after (car completion-in-region--data)) ?:)))
 
-  (defun ps/cape-capf-setup-elisp ()
-    "Replace the default `elisp-completion-at-point'
-completion-at-point-function. Doing it this way will prevent
-disrupting the addition of other capfs (e.g. merely setting the
-variable entirely, or adding to list).
+    (defun ps/cape-capf-setup-elisp ()
+      "Replace the default `elisp-completion-at-point'
+  completion-at-point-function. Doing it this way will prevent
+  disrupting the addition of other capfs (e.g. merely setting the
+  variable entirely, or adding to list).
 
-Additionally, add `cape-file' as early as possible to the list."
-    (setf (elt (cl-member 'elisp-completion-at-point completion-at-point-functions) 0)
-          #'elisp-completion-at-point)
-    (add-to-list 'completion-at-point-functions #'cape-symbol)
-    ;; I prefer this being early/first in the list
-    (add-to-list 'completion-at-point-functions #'cape-file)
-    (require 'company-yasnippet)
-    (add-to-list 'completion-at-point-functions (cape-company-to-capf #'company-yasnippet))
-    (setq corfu-auto t))
+  Additionally, add `cape-file' as early as possible to the list."
+      (setf (elt (cl-member 'elisp-completion-at-point completion-at-point-functions) 0)
+	    #'elisp-completion-at-point)
+      (add-to-list 'completion-at-point-functions #'cape-symbol)
+      ;; I prefer this being early/first in the list
+      (add-to-list 'completion-at-point-functions #'cape-file)
+      ;; (require 'company-yasnippet)
+      ;; (add-to-list 'completion-at-point-functions (cape-company-to-capf #'company-yasnippet))
+      
+      #+end_src
+      
+      #+begin_src emacs-lisp :results silent
+      (setq corfu-auto t))
 
 
-  :hook
-  (emacs-lisp-mode-hook .  ps/cape-capf-setup-elisp)
-  (org-mode-hook . ps/cape-capf-setup-org)
-  (eshell-mode-hook . ps/cape-capf-setup-eshell)
-  (git-commit-mode-hook . ps/cape-capf-setup-git-commit))
+    :hook
+    (emacs-lisp-mode-hook .  ps/cape-capf-setup-elisp)
+    (org-mode-hook . ps/cape-capf-setup-org)
+    (eshell-mode-hook . ps/cape-capf-setup-eshell)
+    (git-commit-mode-hook . ps/cape-capf-setup-git-commit))
 #+end_src
 
 
@@ -7789,10 +7805,10 @@ Additionally, add `cape-file' as early as possible to the list."
 I use ~completion-at-point~ for completion, not company. However, I still rely on company for a few completion backends.
 
 #+begin_src emacs-lisp :results silent
-(use-package company
-  :defer 5
-  :hook
-  (telega-chat-mode-hook . company-mode))
+  (use-package company
+    :defer 5
+    :hook
+    (telega-chat-mode-hook . company-mode))
 #+end_src
 
 * help
@@ -10970,32 +10986,29 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
   :config
   (org-clock-persistence-insinuate)
 
-
-;; FIXME: suggested by copilot; not working: the date entities are not being
-;; converted properly
-(defun ps/org-clock-create-clock-entry ()
-  "Create a new clock entry for the org heading at point,
+  ;; FIXME: suggested by copilot; not working: the date entities are not being
+  ;; converted properly
+  (defun ps/org-clock-create-clock-entry ()
+    "Create a new clock entry for the org heading at point,
  prompting the user for start and end times."
-  (interactive)
-  (let* ((start-time (org-read-date nil t nil "Start time: "))
-         (end-time (org-read-date nil t nil "End time: "))
-         (start-time (date-to-time start-time))
-         (end-time (org-time-string-to-time end-time))
-         (duration (org-time-subtract end-time start-time))
-         (duration (org-duration-from-minutes (org-duration-to-minutes duration))))
-    (org-clock-in '(16))
-    (org-clock-modify-effort-estimate duration)))
+    (interactive)
+    (let* ((start-time (org-read-date nil t nil "Start time: "))
+           (end-time (org-read-date nil t nil "End time: "))
+           (start-time (date-to-time start-time))
+           (end-time (org-time-string-to-time end-time))
+           (duration (org-time-subtract end-time start-time))
+           (duration (org-duration-from-minutes (org-duration-to-minutes duration))))
+      (org-clock-in '(16))
+      (org-clock-modify-effort-estimate duration)))
 
-(defun ps/org-new-clock-entry-today (begin end)
+  (defun ps/org-new-clock-entry-today (begin end)
     "Insert a new clock entry with today's date, prompting for times."
     (interactive "sTime begins: \nsTime ends: ")
     (ps/org-jump-to-latest-clock-entry)
     (crux-smart-open-line-above)
     (let ((today (format-time-string "%Y-%m-%d %a" (current-time))))
-      (insert "CLOCK: [%s %s]--[%s %s]" today begin today end)))
+      (insert "CLOCK: [%s %s]--[%s %s]" today begin today end))
     (org-evaluate-time-range))
-
-
 
   (defun ps/org-time-stamp-active-current-time ()
     "Insert an active timestamp with the current date and time."
@@ -15266,8 +15279,9 @@ Of possible interest:
 
 #+begin_src emacs-lisp
 (use-package org-anki
-  :disabled))
+  :disabled)
 #+end_src
+
 ** org-drill
 :PROPERTIES:
 :ID:       34FB61E2-5BF6-44F1-B3C4-759D61DB2D34

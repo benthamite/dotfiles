@@ -2,7 +2,7 @@
 # name: airbnb-beyond-pricing
 # key: abp
 # --
-$1 Beyond Pricing
+2023-$1-22 Beyond Pricing
     Expenses:Tucumán ${2:10 if even; 11 if odd}                  $3 USD
     Assets:Revolut
 $0

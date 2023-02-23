@@ -1397,26 +1397,6 @@ See also `zap-up-to-char'."
   (interactive)
   (ps/copy-instead-of-kill (ps/kill-whole-line)))
 
-(defun ps/org-kill-logical-line (&optional arg)
-  "Kill line, to tags or end of line."
-  (interactive "P")
-  (cond
-   ((or (not org-special-ctrl-k)
-        (bolp)
-        (not (org-at-heading-p)))
-    (if (and (get-char-property (min (point-max) (point-at-eol)) 'invisible)
-             org-ctrl-k-protect-subtree)
-        (if (or (eq org-ctrl-k-protect-subtree 'error)
-                (not (y-or-n-p "Kill hidden subtree along with headline? ")))
-            (user-error "C-k aborted as it would kill a hidden subtree")))
-    (call-interactively
-     'kill-line))
-   ((looking-at (org-re ".*?\\S-\\([ \t]+\\(:[[:alnum:address@hidden:]+:\\)\\)[
-\t]*$"))
-    (kill-region (point) (match-beginning 1))
-    (org-set-tags nil t))
-   (t (kill-region (point) (point-at-eol)))))
-
 (defun ps/transpose-lines-backward ()
   "Exchange current line and previous line, leaving point
 between the two."

@@ -11,7 +11,7 @@ source "/Users/pablostafforini/Dropbox/dotfiles/shell/.zshenv-secrets"
 export OBJECT_STORAGE_REGION_NAME="sa-east-1"
 export PATH="/opt/homebrew/opt/node@16/bin:$PATH"
 export PATH="$HOME/bin:$PATH"
-export PATH="/Users/pablostafforini/Library/Python/3.9/bin:$PATH"
+# export PATH="/Users/pablostafforini/.pyenv/versions/3.10.10/bin/:$PATH"
 
 # https://stackoverflow.com/a/49711594/4479455
 export PATH="/opt/homebrew/opt/python@3.10/libexec/bin:$PATH"

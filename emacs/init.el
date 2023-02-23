@@ -1472,8 +1472,7 @@ between the two."
    "A-H-M-e" 'transpose-sentences
    "A-H-M-w" 'ps/transpose-sentences-backward))
 
-;; the feature should be `paragraphs', but for some reason it is not loaded.
-(use-feature emacs
+(use-feature paragraphs
   :custom
   (sentence-end-double-space nil)
 

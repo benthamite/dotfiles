@@ -3181,8 +3181,7 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 
 
 #+begin_src emacs-lisp :results silent
-;; the feature should be `paragraphs', but for some reason it is not loaded.
-(use-feature emacs
+(use-feature paragraphs
   :custom
   (sentence-end-double-space nil)
 

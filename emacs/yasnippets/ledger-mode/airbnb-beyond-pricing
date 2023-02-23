@@ -2,6 +2,6 @@
 # name: airbnb-beyond-pricing
 # key: abp
 # --
-`(ps/yasnippet-expand-by-key "ldlm")` Beyond Pricing
+`(ps/time-last-day-of-last-month)` Beyond Pricing
     Expenses:Tucumán ${1:10 if even; 11 if odd}                  $2 USD
     Assets:Revolut

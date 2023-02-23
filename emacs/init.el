@@ -11852,7 +11852,6 @@ to the clipboard."
    "e" 'ps/pass-edit
    "y" 'ps/pass-git-sync)
   (pass-view-mode-map
-   "H-s" 'pass-view-toggle-password ; to prevent accidental save without commit
    "s-c" 'pass-view-toggle-password
    "s-s" 'server-edit))
 

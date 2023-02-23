@@ -11790,21 +11790,21 @@ to the clipboard."
     (when (eq major-mode 'pass-mode)
       (pass-copy)
       (pass--with-closest-entry entry
-        (let* ((inhibit-message t)
-               (parsed-entries (password-store-parse-entry entry))
-               (field password-store-url-field))
-          (unless (assoc field parsed-entries)
-            (user-error "Field `%s' not in  %s" field entry))
-          (browse-url (password-store-get-field entry field))))))
+	(let* ((inhibit-message t)
+	       (parsed-entries (password-store-parse-entry entry))
+	       (field password-store-url-field))
+	  (unless (assoc field parsed-entries)
+	    (user-error "Field `%s' not in  %s" field entry))
+	  (browse-url (password-store-get-field entry field))))))
 
   (defun ps/pass-quit ()
     "Kill the buffer quitting the window."
     (interactive)
     (dolist (buf (buffer-list))
       (with-current-buffer buf
-        (when (eq major-mode 'pass-view-mode)
-          (quit-window t))
-        (kill-buffer buf))))
+	(when (eq major-mode 'pass-view-mode)
+	  (quit-window t))
+	(kill-buffer buf))))
   (advice-add 'pass-quit :override #'ps/pass-quit)
 
   (defun ps/pass-edit ()
@@ -11852,6 +11852,7 @@ to the clipboard."
    "e" 'ps/pass-edit
    "y" 'ps/pass-git-sync)
   (pass-view-mode-map
+   "H-s" 'pass-view-toggle-password ; to prevent accidental save without commit
    "s-c" 'pass-view-toggle-password
    "s-s" 'server-edit))
 

@@ -746,7 +746,7 @@ CLOCK: [2021-04-03 Sat 19:06]--[2021-04-03 Sat 19:31] =>  0:25
 
 Adapted from [[https://github.com/sfromm/emacs.d#startup][here]]:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 ;;; init.el --- Init File -*- lexical-binding: t -*-
 
@@ -769,7 +769,7 @@ Adapted from [[https://github.com/sfromm/emacs.d#startup][here]]:
 :LOGBOOK:
 CLOCK: [2022-08-29 Mon 14:42]--[2022-08-29 Mon 15:00] =>  0:18
 :END:
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (defvar ps/computer-hostname-pablo "Pablos-MacBook-Pro.local")
 (defvar ps/computer-hostname-leo "cartagos-MacBook-Pro.local")
@@ -795,7 +795,7 @@ CLOCK: [2022-08-29 Mon 14:42]--[2022-08-29 Mon 15:00] =>  0:18
 :ID:       E120C28B-458A-4F30-8C02-389B3351AFC4
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 ;; From Gonçalo Santos (github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org#helpers)
 (defmacro lambda! (&rest body)
@@ -847,7 +847,7 @@ Process for updating packages:
 
 [2022-10-31 Mon 15:55] At some point, it should probably be replaced with [[https://github.com/progfolio/elpaca][elpaca]]. Discussion [[https://github.com/progfolio/elpaca][here]].
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (setq straight-repository-branch "develop") ; must precede bootstrap
 ;; Bootstrap `straight'
@@ -870,7 +870,7 @@ Process for updating packages:
 (require 'straight-x) ; github.com/raxod502/straight.el#how-do-i-uninstall-a-package
 #+end_src
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 ;; Early load Org from Git version instead of Emacs built-in version
 (straight-use-package 'org)
@@ -900,7 +900,7 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
   - /hook deferral/: we use ~:hook~ to create a hook that calls a package function when some event occurs. Upon the occurrence of this event, typically the loading of a major mode, the package will load.
   - /package deferral/: we use ~:after~ to load the package after some other package which itself has been conditionally deferred (using one of the other methods above). Note that if  ~use-package-always-defer~ is set to ~t~, you need to add ~demand t~ to the declaration.
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (straight-use-package 'use-package)
 (setq use-package-verbose t                ; setting back to nil (default) as it was producing too much output
@@ -923,7 +923,7 @@ NAME and ARGS are as in `use-package'."
 :PROPERTIES:
 :ID:       5C17424A-4950-4745-B7FD-F0CACEB48AFB
 :END:
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-package use-package-ensure-system-package
   :demand t)
@@ -966,22 +966,7 @@ CLOCK: [2021-06-03 Thu 14:11]--[2021-06-03 Thu 14:16] =>  0:05
 CLOCK: [2021-03-28 Sun 13:35]--[2021-03-28 Sun 14:31] =>  0:56
 :END:
 
-#Minimal config
-#+begin_src emacs-lisp :results silent
-(setq mac-option-modifier 'meta
-      mac-control-modifier 'control
-      mac-command-modifier 'hyper
-      mac-function-modifier 'none
-      mac-right-option-modifier 'none
-      mac-right-control-modifier 'super
-      mac-right-command-modifier 'alt)
-#+end_src
 
-[2021-02-07 Sun 12:42] Disabling a bunch of native control key bindings that I don't use. See if anything breaks, otherwise proceed to creating new bindings.
-
-[2021-02-28 Sun 10:03] Everything works fine, /except/ that I should not disable ~C-i~ and ~C-m~, which cause ~TAB~ and ~RET~, respectively, to be disabled in certain contexts. See also the variable ~dotspacemacs-distinguish-gui-tab~.
-
-#Minimal config
 #+begin_src emacs-lisp :results silent
 (global-unset-key (kbd "C-a"))
 (global-unset-key (kbd "C-b"))
@@ -1050,49 +1035,61 @@ CLOCK: [2021-03-28 Sun 13:35]--[2021-03-28 Sun 14:31] =>  0:56
 (global-unset-key (kbd "M-,"))
 (global-unset-key (kbd "M-."))
 (global-unset-key (kbd "H-n"))
+(keymap-unset esc-map "A-a")
+(keymap-unset esc-map "A-b")
+(keymap-unset esc-map "A-c")
+(keymap-unset esc-map "A-d")
+(keymap-unset esc-map "A-e")
+(keymap-unset esc-map "A-f")
+(keymap-unset esc-map "A-g")
+(keymap-unset esc-map "A-h")
+(keymap-unset esc-map "A-i")
+(keymap-unset esc-map "A-j")
+(keymap-unset esc-map "A-k")
+(keymap-unset esc-map "A-l")
+(keymap-unset esc-map "A-m")
+(keymap-unset esc-map "A-n")
+(keymap-unset esc-map "A-o")
+(keymap-unset esc-map "A-p")
+(keymap-unset esc-map "A-q")
+(keymap-unset esc-map "A-r")
+(keymap-unset esc-map "A-s")
+(keymap-unset esc-map "A-t")
+(keymap-unset esc-map "A-u")
+(keymap-unset esc-map "A-v")
+(keymap-unset esc-map "A-w")
+(keymap-unset esc-map "A-x")
+(keymap-unset esc-map "A-y")
+(keymap-unset esc-map "A-z")
+(keymap-unset esc-map "A-RET")
+(keymap-unset esc-map "A-DEL")
+(keymap-unset esc-map "A-SPC")
+(keymap-unset esc-map "A-.")
+(keymap-unset esc-map "A-,")
+(keymap-unset esc-map "A-/")
+(keymap-unset esc-map "A-(")
+(keymap-unset esc-map "A-=")
+(keymap-unset esc-map "A--")
+(keymap-unset esc-map "A-'")
 #+end_src
 
-#Minimal config
+** ns-win
+:PROPERTIES:
+:ID:       3411777E-E554-4EF3-9389-63242D4F3072
+:END:
+
 #+begin_src emacs-lisp :results silent
-(define-key esc-map (kbd "A-a") nil)
-(define-key esc-map (kbd "A-b") nil)
-(define-key esc-map (kbd "A-c") nil)
-(define-key esc-map (kbd "A-d") nil)
-(define-key esc-map (kbd "A-e") nil)
-(define-key esc-map (kbd "A-f") nil)
-(define-key esc-map (kbd "A-g") nil)
-(define-key esc-map (kbd "A-h") nil)
-(define-key esc-map (kbd "A-i") nil)
-(define-key esc-map (kbd "A-j") nil)
-(define-key esc-map (kbd "A-k") nil)
-(define-key esc-map (kbd "A-l") nil)
-(define-key esc-map (kbd "A-m") nil)
-(define-key esc-map (kbd "A-n") nil)
-(define-key esc-map (kbd "A-o") nil)
-(define-key esc-map (kbd "A-p") nil)
-(define-key esc-map (kbd "A-q") nil)
-(define-key esc-map (kbd "A-r") nil)
-(define-key esc-map (kbd "A-s") nil)
-(define-key esc-map (kbd "A-t") nil)
-(define-key esc-map (kbd "A-u") nil)
-(define-key esc-map (kbd "A-v") nil)
-(define-key esc-map (kbd "A-w") nil)
-(define-key esc-map (kbd "A-x") nil)
-(define-key esc-map (kbd "A-y") nil)
-(define-key esc-map (kbd "A-z") nil)
-(define-key esc-map (kbd "A-RET") nil)
-(define-key esc-map (kbd "A-DEL") nil)
-(define-key esc-map (kbd "A-SPC") nil)
-(define-key esc-map (kbd "A-.") nil)
-(define-key esc-map (kbd "A-,") nil)
-(define-key esc-map (kbd "A-/") nil)
-(define-key esc-map (kbd "A-(") nil)
-(define-key esc-map (kbd "A-=") nil)
-(define-key esc-map (kbd "A--") nil)
-(define-key esc-map (kbd "A-'") nil)
-(global-unset-key (kbd "s-q"))
-(global-unset-key (kbd "s-j"))
+(use-feature ns-win
+  :custom
+  (mac-option-modifier 'meta)
+  (mac-control-modifier 'control)
+  (mac-command-modifier 'hyper)
+  (mac-function-modifier 'none)
+  (mac-right-option-modifier 'none)
+  (mac-right-control-modifier 'super)
+  (mac-right-command-modifier 'alt))
 #+end_src
+
 ** iso-transl
 :PROPERTIES:
 :ID:       0A62A6C8-D3D8-4960-A809-35B60A479D2B
@@ -1101,13 +1098,14 @@ CLOCK: [2021-03-28 Sun 13:35]--[2021-03-28 Sun 14:31] =>  0:56
 #+begin_src emacs-lisp
 (use-feature iso-transl
   :config
-  (setq iso-transl-char-map nil) ; https://emacs.stackexchange.com/questions/17508/
+  (setq iso-transl-char-map nil) ; emacs.stackexchange.com/questions/17508/
 
-(define-key key-translation-map (kbd "A-c") nil)
-(define-key key-translation-map (kbd "A-o") nil)
-(define-key key-translation-map (kbd "A-u") nil)
-(define-key key-translation-map (kbd "A-m") nil)
-(define-key key-translation-map (kbd "A-x") nil))
+  (let ((map key-translation-map))
+    (keymap-unset map "A-c")
+    (keymap-unset map "A-o")
+    (keymap-unset map "A-u")
+    (keymap-unset map "A-m")
+    (keymap-unset map "A-x")))
 #+end_src
 
 ** no-littering
@@ -1116,7 +1114,7 @@ CLOCK: [2021-03-28 Sun 13:35]--[2021-03-28 Sun 14:31] =>  0:56
 :END:
 /[[https://github.com/emacscollective/no-littering][no-littering]] helps keep ~.emacs.d~ clean./
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-package no-littering
   :demand t
@@ -1143,7 +1141,7 @@ CLOCK: [2021-02-05 Fri 19:09]--[2021-02-05 Fri 19:14] =>  0:05
 
 [2022-10-05 Wed 16:37] Disabling since booting from the command line.
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-package exec-path-from-shell
   :defer 5
@@ -1172,7 +1170,7 @@ e.g. ~nvm~ isn't recognized by eshell
 CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-package general
   :demand t
@@ -1287,7 +1285,7 @@ CLOCK: [2021-03-31 Wed 11:21]--[2021-03-31 Wed 11:35] =>  0:14
 CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (general-define-key
  "H-M-s-." (lambda! (ps/visit-file-or-switch-to-buffer ps/file-inbox-mobile))
@@ -1898,7 +1896,7 @@ To be explored. The [[https://github.com/positron-solutions/transient-showcase][
 :ID:       0C19171B-8DFA-4E06-9E17-45C1F9158C28
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-package bug-hunter
   :general
@@ -2178,14 +2176,14 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
     "My custom faces, to be used in conjunction with theme."
     (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
     (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
-    (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family ps/face-fixed-pitch :height 0.7)
+    (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family ps/face-fixed-pitch :height 0.8)
     (set-face-attribute 'org-property-value nil :family ps/face-fixed-pitch :height 0.8)
     (set-face-attribute 'org-todo nil :family ps/face-fixed-pitch :height 1.0)
     (set-face-attribute 'org-archived nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-document-title nil :family ps/face-fixed-pitch :underline t :height 1.0)
+    (set-face-attribute 'org-document-title nil :family ps/face-fixed-pitch :height 1.0)
     (set-face-attribute 'org-special-keyword nil :family ps/face-fixed-pitch :height 0.8)
     (set-face-attribute 'org-tag nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-code nil :family ps/face-fixed-pitch :height 1.0)
+    (set-face-attribute 'org-code nil :family ps/face-fixed-pitch :height 1.1)
     (set-face-attribute 'org-level-1 nil :family ps/face-fixed-pitch :height 0.9)
     (set-face-attribute 'org-level-2 nil :family ps/face-fixed-pitch :height 0.9)
     (set-face-attribute 'org-level-3 nil :family ps/face-fixed-pitch :height 0.9)
@@ -2198,8 +2196,8 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
     (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
     (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
     (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)))
+    (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)
+    (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -2632,7 +2630,7 @@ CLOCK: [2021-04-05 Mon 21:50]--[2021-04-05 Mon 22:15] =>  0:25
 CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 :END:
 
-#Minimal config
+
 
 #+begin_src emacs-lisp :results silent
 (use-feature profiler
@@ -2839,7 +2837,7 @@ CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
 
 Macro adapted from ?
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (defmacro ps/delete-instead-of-kill (&rest body)
   "Replaces `kill-region' with `delete-region' in BODY."
@@ -2878,7 +2876,7 @@ CLOCK: [2021-06-05 Sat 18:28]--[2021-06-05 Sat 19:09] =>  0:41
 CLOCK: [2021-04-21 Wed 21:25]--[2021-04-21 Wed 21:39] =>  0:14
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 ;; (use-package iy-go-to-char)
 (defun ps/backward-zap-to-char ()
@@ -2962,7 +2960,7 @@ CLOCK: [2021-06-05 Sat 11:51]--[2021-06-05 Sat 11:59] =>  0:08
 CLOCK: [2021-05-29 Sat 21:12]--[2021-05-29 Sat 21:28] =>  0:16
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-feature simple
   :config
@@ -3035,7 +3033,7 @@ CLOCK: [2021-06-01 Tue 12:43]--[2021-06-01 Tue 13:10] =>  0:27
 CLOCK: [2021-05-31 Mon 20:46]--[2021-05-31 Mon 20:53] =>  0:07
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-feature simple
   :config
@@ -3121,7 +3119,7 @@ between the two."
 CLOCK: [2021-05-29 Sat 21:28]--[2021-05-29 Sat 22:17] =>  0:49
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-feature paragraphs
   :config
@@ -3188,7 +3186,7 @@ CLOCK: [2021-06-05 Sat 13:07]--[2021-06-05 Sat 13:10] =>  0:03
 CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 ;; the feature should be `paragraphs', but for some reason it is not loaded.
 (use-feature emacs
@@ -3264,7 +3262,7 @@ CLOCK: [2021-05-31 Mon 20:53]--[2021-05-31 Mon 21:21] =>  0:28
 CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 ;; the feature should be `lisp', but for some reason it is not loaded.
 (use-feature emacs
@@ -3456,7 +3454,7 @@ CLOCK: [2021-07-16 Fri 09:44]--[2021-07-16 Fri 09:45] =>  0:01
 CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-package org
   :general
@@ -3493,7 +3491,7 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
 
 The following function, adapted from [[https://stackoverflow.com/a/8956311/4479455][this answer]], makes ~kill-region~ work only when there is an active selection; otherwise it will kill the entire line.
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (defun ps/smart-kill-region ()
   "kill region if active, else kill line."
@@ -3527,7 +3525,7 @@ The following function, adapted from [[https://stackoverflow.com/a/8956311/44794
 :ID:       ECC26808-6B27-4CD8-AF52-570B877A6F26
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 ;; github.com/typester/emacs/blob/master/lisp/url/url-util.el
 (defun ps/get-url-at-point (&optional pt)
@@ -4281,6 +4279,7 @@ CLOCK: [2021-04-09 Fri 11:49]--[2021-04-09 Fri 11:49] =>  0:00
 :ID:       A7E824CC-5E71-4B12-A99B-D4C09CE164FF
 :END:
 :LOGBOOK:
+CLOCK: [2023-02-22 Wed 21:58]--[2023-02-22 Wed 23:59] =>  2:01
 CLOCK: [2022-08-19 Fri 13:45]--[2022-08-19 Fri 13:47] =>  0:02
 CLOCK: [2021-07-24 Sat 21:09]--[2021-07-24 Sat 21:34] =>  0:25
 CLOCK: [2021-07-24 Sat 20:41]--[2021-07-24 Sat 20:46] =>  0:05
@@ -4288,7 +4287,7 @@ CLOCK: [2021-07-01 Thu 20:45]--[2021-07-01 Thu 20:55] =>  0:10
 CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-feature files
   :custom
@@ -4699,6 +4698,11 @@ or are no longer readable will be killed."
   ;; when `recover-session' is invoked.
   (advice-add 'recover-session :after #'(lambda () (dired-hide-details-mode -1)))
 
+  (defun ps/get-stem-of-current-buffer ()
+    "Return the stem of the current buffer."
+    (when-let ((file-name buffer-file-name))
+      (file-name-sans-extension (file-name-nondirectory file-name))))
+
   :general
   ("M--" 'not-modified
    "M-b" 'ps/save-and-revert-buffer
@@ -4811,7 +4815,7 @@ CLOCK: [2021-03-27 Sat 21:30]--[2021-03-27 Sat 21:33] =>  0:03
 CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-feature dired
   :custom
@@ -6938,7 +6942,7 @@ Recenter after each isearch iteration (https://stackoverflow.com/questions/11052
 
 [2021-05-22 Sat 22:24] Thanks to Prot, I learn that when ~isearch~ is regexp-aware, so is ~isearch-query-replace~. So one can do a regexp replacement by invoking the following series of commands: ~isearch-forward~, ~isearch-toggle-regexp~, ~isearch-query-replace~. I find it easier to use ~C-s~ as my single point of entry to Emacs's powerful search and replace functions, and then make liberal use of all the ~isearch~ commands, accessible via their corresponding key bindings. That approach also suggests creating a lambda for the second and third commands in the series above.
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-feature isearch
   :custom
@@ -7401,6 +7405,15 @@ By default, all agenda entries are offered. MATCH is as in
    "s-j" 'consult-imenu))
 #+end_src
 
+*** DONE Fix rg/rga
+CLOSED: [2023-02-23 Thu 01:02]
+:PROPERTIES:
+:ID:       2BA7D713-63E9-4AFC-BA5C-F34BDBCE0BED
+:END:
+:LOGBOOK:
+CLOCK: [2023-02-22 Wed 18:05]--[2023-02-22 Wed 18:38] =>  0:33
+:END:
+
 ** consult-dir
 :PROPERTIES:
 :ID:       3250EBD7-513E-439F-972F-B43C8214AC46
@@ -7556,6 +7569,8 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 :ID:       35370B0F-9EBD-433F-B59C-576EE8A69772
 :END:
 
+/[[https://github.com/minad/corfu][corfu]] enhances completion at point with a small completion popup./
+
 #+begin_src emacs-lisp :results silent
 (use-package corfu
   :straight (corfu :files (:defaults "extensions/*")
@@ -7587,6 +7602,14 @@ Useful for prompts such as `eval-expression' and `shell-command'."
     (unless (bound-and-true-p vertico--input)
       (corfu-mode)))
 
+      ;; github.com/minad/corfu#transfer-completion-to-the-minibuffer
+        (defun ps/corfu-move-to-minibuffer ()
+  (interactive)
+  (let ((completion-extra-properties corfu--extra)
+        completion-cycle-threshold completion-cycling)
+    (apply #'consult-completion-in-region completion-in-region--data)))
+
+
   (global-corfu-mode)
 
   :hook
@@ -7598,6 +7621,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :general
   (corfu-map
    "M-f" 'corfu-quick-complete
+   "M-m" 'ps/corfu-move-to-minibuffer
    "<return>" 'corfu-complete
    "RET" 'corfu-complete))
 #+end_src
@@ -7662,36 +7686,11 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (use-package cape
   :after corfu
   :demand t
-  :init
-  ;; Add `completion-at-point-functions', used by `completion-at-point'.
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-yasnippet)
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-abbrev)
-  ;; (add-to-list 'completion-at-point-functions #'cape-history)
-  ;; (add-to-list 'completion-at-point-functions #'cape-keyword)
-  ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
-  ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
-  ;; (add-to-list 'completion-at-point-functions #'cape-tex)
-  ;; (add-to-list 'completion-at-point-functions #'cape-sgml)
-  ;; (add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  ;; (add-to-list 'completion-at-point-functions #'cape-dict)
-  ;; (add-to-list 'completion-at-point-functions #'cape-line)
-  )
-#+end_src
-
-
-#+begin_src emacs-lisp :results silent
-(use-package cape
-  :disabled
-  :after corfu
-  :demand t
 
   :custom
-  (cape-dabbrev-min-length 2)
+  (cape-dabbrev-min-length 3)
 
   :config
-
   ;; All the below adapted from
   ;; kristofferbalintona.me/posts/202203130102/
   (defun ps/cape-capf-setup-org ()
@@ -7745,12 +7744,14 @@ Additionally, add `cape-file' as early as possible to the list."
     (add-to-list 'completion-at-point-functions (cape-company-to-capf #'company-yasnippet))
     (setq corfu-auto t))
 
+
   :hook
   (emacs-lisp-mode-hook .  ps/cape-capf-setup-elisp)
   (org-mode-hook . ps/cape-capf-setup-org)
   (eshell-mode-hook . ps/cape-capf-setup-eshell)
   (git-commit-mode-hook . ps/cape-capf-setup-git-commit))
 #+end_src
+
 
 ** cape-yasnippet
 :PROPERTIES:
@@ -7772,7 +7773,6 @@ Additionally, add `cape-file' as early as possible to the list."
 
 #+begin_src emacs-lisp
 (use-package org-block-capf
-  :disabled
   :straight (org-block-capf
              :host github
              :repo "xenodium/org-block-capf")
@@ -7815,7 +7815,7 @@ Distinguish ~C-m~ from ~RET~ in the GUI. (Setting the Spacemacs variable ~dotspa
 :PROPERTIES:
 :ID:       B4F00E3C-2682-486D-B05A-E983ACC82D09
 :END:
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-feature help
   :custom
@@ -7894,7 +7894,7 @@ CLOCK: [2021-05-11 Tue 10:01]--[2021-05-11 Tue 10:12] =>  0:11
 CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-package helpful
   :defer 20
@@ -7966,7 +7966,7 @@ Emacs 28 has a useful builtin [[https://www.masteringemacs.org/article/emacs-bui
 :ID:       7781DC87-0D61-4482-91EE-6D2E1F8E122D
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-package which-key
   :defer 10
@@ -9271,7 +9271,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 #+begin_src emacs-lisp :results silent
 (use-package pdf-tools
   :if (or (equal (system-name) ps/computer-hostname-pablo)
-	  (equal (system-name) ps/computer-hostname-leo))
+          (equal (system-name) ps/computer-hostname-leo))
   :defer 10
   :mode ("\\.pdf\\'" . pdf-view-mode)
   :custom
@@ -9300,7 +9300,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   (defun ps/pdf-tools-apply-theme ()
     "Activate `pdf-tools' midnight mode iff dark theme is active."
     (if (eq (modus-themes--current-theme) ps/theme-loaddefs-dark)
-	(pdf-view-midnight-minor-mode 1)
+        (pdf-view-midnight-minor-mode 1)
       (pdf-view-midnight-minor-mode -1)))
 
   ;; gist.github.com/politza/3f46785742e6e12ba0d1a849f853d0b9#file-scroll-other-window-el
@@ -9318,10 +9318,10 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
  script is available, open to current page."
     (interactive)
     (let ((file (pdf-view-buffer-file-name))
-	  (script "opentopage.sh")) ; apple.stackexchange.com/a/233987
+          (script "opentopage.sh")) ; apple.stackexchange.com/a/233987
       (if (file-exists-p (file-name-concat "~/bin" script))
-	  (shell-command (format "sh %s '%s' %d" script file (pdf-view-current-page)))
-	(shell-command (format "open '%s'" file)))))
+          (shell-command (format "sh %s '%s' %d" script file (pdf-view-current-page)))
+        (shell-command (format "open '%s'" file)))))
 
   (defvar ps/pdf-tools-selected-pages '())
 
@@ -9330,10 +9330,10 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 number is already listed, remove it from list."
     (interactive)
     (if (member (pdf-view-current-page) ps/pdf-tools-selected-pages)
-	(progn
-	  (setq ps/pdf-tools-selected-pages (delete (pdf-view-current-page) ps/pdf-tools-selected-pages)
-		ps/pdf-tools-selected-pages (sort ps/pdf-tools-selected-pages #'<))
-	  (message "Page removed. Current selection: %s." ps/pdf-tools-selected-pages))
+        (progn
+          (setq ps/pdf-tools-selected-pages (delete (pdf-view-current-page) ps/pdf-tools-selected-pages)
+                ps/pdf-tools-selected-pages (sort ps/pdf-tools-selected-pages #'<))
+          (message "Page removed. Current selection: %s." ps/pdf-tools-selected-pages))
       (add-to-list 'ps/pdf-tools-selected-pages (pdf-view-current-page) t)
       (setq ps/pdf-tools-selected-pages (sort ps/pdf-tools-selected-pages #'<))
       (message "Page added. Current selection: %s." ps/pdf-tools-selected-pages))
@@ -9352,14 +9352,14 @@ number is already listed, remove it from list."
 FILE."
     (interactive "FSave as: ")
     (let ((output (if (string= (expand-file-name file) (buffer-file-name))
-		      "--replace-input"
-		    (expand-file-name file))))
+                      "--replace-input"
+                    (expand-file-name file))))
       (shell-command (format "qpdf '%s' --pages . %s -- '%s'"
-			     (buffer-file-name)
-			     (mapconcat #'number-to-string
-					ps/pdf-tools-selected-pages
-					",")
-			     output)))
+                             (buffer-file-name)
+                             (mapconcat #'number-to-string
+                                        ps/pdf-tools-selected-pages
+                                        ",")
+                             output)))
     (ps/pdf-tools-clear-page-selection))
 
   (defun ps/pdf-count-words ()
@@ -9551,7 +9551,7 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 :ID:       24475DE5-E129-4832-BAE5-C22D846C251E
 :END:
 
-#Minimal config
+
 #+begin_src emacs-lisp :results silent
 (use-feature elisp-mode
   :general
@@ -10978,11 +10978,11 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
  prompting the user for start and end times."
   (interactive)
   (let* ((start-time (org-read-date nil t nil "Start time: "))
-	 (end-time (org-read-date nil t nil "End time: "))
-	 (start-time (date-to-time start-time))
-	 (end-time (org-time-string-to-time end-time))
-	 (duration (org-time-subtract end-time start-time))
-	 (duration (org-duration-from-minutes (org-duration-to-minutes duration))))
+         (end-time (org-read-date nil t nil "End time: "))
+         (start-time (date-to-time start-time))
+         (end-time (org-time-string-to-time end-time))
+         (duration (org-time-subtract end-time start-time))
+         (duration (org-duration-from-minutes (org-duration-to-minutes duration))))
     (org-clock-in '(16))
     (org-clock-modify-effort-estimate duration)))
 
@@ -11446,7 +11446,7 @@ When FILES is given, scan these files instead."
 :REFILE_TARGET_HEADING: Watched
 :END:
 :LOGBOOK:
-CLOCK: [2023-02-22 Wed 17:05]
+CLOCK: [2023-02-22 Wed 17:05]--[2023-02-22 Wed 17:30] =>  0:25
 CLOCK: [2021-12-15 Wed 10:20]--[2021-12-15 Wed 10:30] =>  0:10
 CLOCK: [2021-12-14 Tue 18:00]--[2021-12-14 Tue 18:08] =>  0:08
 CLOCK: [2021-10-08 Fri 10:22]--[2021-10-08 Fri 10:32] =>  0:10
@@ -11472,22 +11472,22 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
   (org-refile-use-cache t)
   (org-refile-use-outline-path t)
   (org-refile-targets '((org-agenda-files :maxlevel . 9)
-			(ps/open-buffer-files :maxlevel . 9)))
+                        (ps/open-buffer-files :maxlevel . 9)))
   :config
   (defun ps/open-buffer-files ()
     "Return the list of files currently open in emacs"
     (delq nil
-	  (mapcar (lambda (x)
-		    (if (and (buffer-file-name x)
-			     (string-match "\\.org$"
-					   (buffer-file-name x)))
-			(buffer-file-name x)))
-		  (buffer-list))))
+          (mapcar (lambda (x)
+                    (if (and (buffer-file-name x)
+                             (string-match "\\.org$"
+                                           (buffer-file-name x)))
+                        (buffer-file-name x)))
+                  (buffer-list))))
 
   ;; Regenerate cache every half hour minutes
   (run-with-idle-timer (* 60 30) t (lambda ()
-				     (org-refile-cache-clear)
-				     (org-refile-get-targets)))
+                                     (org-refile-cache-clear)
+                                     (org-refile-get-targets)))
   ;; [2022-06-21] Replaced by `consult-org-heading'; consider
   ;; deleting.
   (defun ps/org-refile-jump (&optional arg)
@@ -11519,8 +11519,8 @@ refresh cache."
   (defun ps/org-refile-to (file heading)
     "Refile current heading to specified location."
     (let ((pos (save-excursion
-		 (find-file file)
-		 (org-find-exact-headline-in-buffer heading))))
+                 (find-file file)
+                 (org-find-exact-headline-in-buffer heading))))
       (org-refile nil nil (list heading file nil pos))))
 
   (defun ps/org-refile-video-to-watched ()
@@ -11542,7 +11542,7 @@ refresh cache."
       (widen)
       (org-next-visible-heading -1)
       (let ((file (org-entry-get nil "REFILE_TARGET_FILE"))
-	    (heading (org-entry-get nil "REFILE_TARGET_HEADING")))))
+            (heading (org-entry-get nil "REFILE_TARGET_HEADING")))))
     (save-window-excursion (ps/org-refile-to file heading)))
 
   :general
@@ -11743,7 +11743,6 @@ CLOCK: [2021-04-05 Mon 19:18]--[2021-04-05 Mon 19:50] =>  0:32
 CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 :END:
 
-#Minimal config
 #+begin_src emacs-lisp :results silent
 (use-feature ob
   :custom
@@ -13594,7 +13593,13 @@ With prefix, rebuild the cache before offering candidates."
       (ebib))
     (ps/ebib-open-key citekey))
 
+  (defun ps/citar-open-file-at-point ()
+    "Launch citar with citekey associated with file at point."
+    (interactive)
+      (citar-open `(,(ps/get-stem-of-current-buffer))))
+
   :general
+  ("A-H-M-s-?" 'ps/citar-open-file-at-point)
   ((citar-map citar-citation-map)
    "c" 'embark-copy-as-kill
    "i" 'ps/citar-open-in-ebib
@@ -15248,6 +15253,20 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
 
 Of possible interest:
 - [[https://emacstil.com/til/2021/11/19/anki-org/][Anki Org – Emacs TIL – Today I learned in Emacs]]
+
+** org-anki
+:PROPERTIES:
+:ID:       FDC2B609-5A2A-4EE5-9D52-4DC0E32B4CE6
+:END:
+
+/[[https://github.com/eyeinsky/org-anki][org-anki]] sync org notes to Anki via AnkiConnect./
+
+[2023-02-23 Thu 00:31] To explore.
+
+#+begin_src emacs-lisp
+(use-package org-anki
+  :disabled))
+#+end_src
 ** org-drill
 :PROPERTIES:
 :ID:       34FB61E2-5BF6-44F1-B3C4-759D61DB2D34
@@ -15259,6 +15278,7 @@ CLOCK: [2021-05-04 Tue 11:55]--[2021-05-04 Tue 12:12] =>  0:17
 
 #+begin_src emacs-lisp :results silent
 (use-package org-drill
+  :disabled
   :config
   (add-to-list 'org-modules 'org-drill))
 #+end_src

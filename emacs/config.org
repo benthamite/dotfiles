@@ -11777,8 +11777,6 @@ defined as part of a minimal configuration instead."
    "s-b" 'ps/org-babel-tangle-config-file))
 #+end_src
 
-This custom command also saves the buffer before tangling it. In combination with ~git-auto-commit-mode~, executing this command insures that I commit this (org) file whenever I generate an associated ~.spacemacs~ version. Because of this, I can always revert to the closest working config file whenever the latest version is broken. (~org-babel-tangle~ automatically saves the file, but unlike calling ~save-buffer~ explicitly, this doesn't cause ~git-auto-commit-mode~ to create a new commit.)
-
 ** org-src
 :PROPERTIES:
 :ID:       5D173B55-ED72-495C-80EE-39063BAB0550
@@ -11814,8 +11812,11 @@ original."
 :END:
 /org-tempo reimplements completions of structure template before point./
 
+[2023-02-23 Thu 02:04] To explore.
+
 #+begin_src emacs-lisp
-(use-feature org-tempo)
+(use-feature org-tempo
+  :disabled)
 #+end_src
 
 ** org-table

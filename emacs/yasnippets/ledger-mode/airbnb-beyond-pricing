@@ -2,6 +2,7 @@
 # name: airbnb-beyond-pricing
 # key: abp
 # --
-`(ps/time-last-day-of-last-month)` Beyond Pricing
-    Expenses:Tucumán ${1:10 if even; 11 if odd}                  $2 USD
+$1 Beyond Pricing
+    Expenses:Tucumán ${2:10 if even; 11 if odd}                  $3 USD
     Assets:Revolut
+$0

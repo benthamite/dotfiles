@@ -1911,10 +1911,6 @@ clipboard. Either way, save count to kill ring."
   :general
   ("M-A-v" 'view-mode))
 
-(use-feature newcomment
-  :general
-  ("M-/" 'comment-line))
-
 (use-feature emacs
   :demand t
   :custom
@@ -2083,6 +2079,10 @@ NO-TEMPLATE is non-nil."
   :general
    ("C-H-s-n" 'er/expand-region
    "C-H-s-h" 'er/contract-region))
+
+(use-package evil-nerd-commenter
+  :general
+  ("M-/" 'evilnc-comment-or-uncomment-lines))
 
 (use-package multiple-cursors
   :general

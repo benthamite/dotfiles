@@ -106,7 +106,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#simple][simple]]
   - [[#repeat][repeat]]
   - [[#view][view]]
-  - [[#newcomment][newcomment]]
   - [[#indent][indent]]
   - [[#sort][sort]]
   - [[#outline][outline]]
@@ -116,6 +115,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#yasnippet][yasnippet]]
   - [[#hippie-expand][hippie-expand]]
   - [[#expand-region][expand-region]]
+  - [[#evil-nerd-commenter]]
   - [[#multiple-cursors][multiple-cursors]]
   - [[#crux][crux]]
   - [[#button][button]]
@@ -3728,16 +3728,6 @@ https://emacs.stackexchange.com/questions/46186/how-to-expand-truncated-informat
   ("M-A-v" 'view-mode))
 #+end_src
 
-** newcomment
-:PROPERTIES:
-:ID:       AF32F54D-13C4-4AF9-9CF5-EB7D671E84E6
-:END:
-#+begin_src emacs-lisp :results silent
-(use-feature newcomment
-  :general
-  ("M-/" 'comment-line))
-#+end_src
-
 ** indent
 :PROPERTIES:
 :ID:       584EE793-F2D0-4C21-A3C2-FF93C5B5F2F1
@@ -4036,6 +4026,18 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
   :general
    ("C-H-s-n" 'er/expand-region
    "C-H-s-h" 'er/contract-region))
+#+end_src
+
+** [[id:][evil-nerd-commenter]]
+:PROPERTIES:
+:ID:       220E65BC-D954-4F1E-91F5-C3036F2DE091
+:END:
+/comment and uncomment lines efficiently/
+
+#+begin_src emacs-lisp
+(use-package evil-nerd-commenter
+  :general
+  ("M-/" 'evilnc-comment-or-uncomment-lines))
 #+end_src
 
 ** multiple-cursors

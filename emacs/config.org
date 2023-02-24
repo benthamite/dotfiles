@@ -800,7 +800,7 @@ CLOCK: [2022-08-29 Mon 14:42]--[2022-08-29 Mon 15:00] =>  0:18
       (cond
        ;; Pablo
        ((equal (system-name) ps/computer-hostname-pablo)
-        (load-file "~/Dropbox/dotfiles/emacs/variables.el"))
+        (load-file "~/Library/CloudStorage/Dropbox/dotfiles/emacs/variables.el"))
        ;; Leo
        ((equal (system-name) ps/computer-hostname-leo)
         (load-file "~/Dropbox/emacs/variables.el"))
@@ -2651,8 +2651,6 @@ CLOCK: [2021-04-05 Mon 21:50]--[2021-04-05 Mon 22:15] =>  0:25
 :LOGBOOK:
 CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 :END:
-
-
 
 #+begin_src emacs-lisp :results silent
 (use-feature profiler

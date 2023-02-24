@@ -2050,19 +2050,6 @@ NO-TEMPLATE is non-nil."
   (minibuffer-mode-map
    "TAB" 'yas-maybe-expand))
 
-(defhydra hydra-yasnippet-Metaculus
-  (:exit t
-         :idle 0.5)
-  "Metaculus yasnippets"
-  ("c" (ps/yasnippet-expand-by-key "") "sticking to current") ; bound to C-s-p, I need to find the snippet
-  ("d" (ps/yasnippet-expand-by-key "mdef") "defer")
-  ("f" (ps/yasnippet-expand-by-key "mfinal") "final prediction")
-  ("l" (ps/yasnippet-expand-by-key "mcs") "community split")
-  ("m" (ps/yasnippet-expand-by-key "mpost") "post mortem")
-  ("p" (ps/yasnippet-expand-by-key "mst") "sticking to previous")
-  ("s" (ps/yasnippet-expand-by-key "msheet") "spreadsheet")
-  ("t" (ps/yasnippet-expand-by-key "mpass") "passage of time"))
-
 (use-feature hippie-expand
   :config
   ;; stackoverflow.com/a/8723712/4479455

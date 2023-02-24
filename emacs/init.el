@@ -4616,72 +4616,12 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (use-package cape
   :after corfu
   :demand t
-
-  :custom
-  (cape-dabbrev-min-length 3)
-
-  :config
-  ;; All the below adapted from
-  ;; kristofferbalintona.me/posts/202203130102/
-  (defun ps/cape-capf-setup-org ()
-    (require 'org-roam)
-    (if (org-roam-file-p)
-        (org-roam--register-completion-functions-h)
-      (let (result)
-        (dolist (element (list
-                          ;; (cape-super-capf #'cape-ispell #'cape-dabbrev)
-                          ;; (cape-company-to-capf #'company-yasnippet)
-                          )
-                         result)
-          (add-to-list 'completion-at-point-functions element))))
-    (setq corfu-auto nil))
-
-  ;; Eshell
-  (defun ps/cape-capf-setup-eshell ()
-    (let ((result))
-      (dolist (element '(pcomplete-completions-at-point cape-file) result)
-        (add-to-list 'completion-at-point-functions element))))
-
-  ;; Git-commit
-  (defun ps/cape-capf-setup-git-commit ()
-    (general-define-key
-     :keymaps 'local
-     :states 'insert
-     "<tab>" 'completion-at-point)      ; Keybinding for `completion-at-point'
-    (let ((result))
-      (dolist (element '(cape-dabbrev cape-symbol) result)
-        (add-to-list 'completion-at-point-functions element))))
-
-  ;; Elisp
-  (defun ps/cape-capf-ignore-keywords-elisp (cand)
-    "Ignore keywords with forms that begin with \":\" (e.g.
-:history)."
-    (or (not (keywordp cand))
-        (eq (char-after (car completion-in-region--data)) ?:)))
-
-  (defun ps/cape-capf-setup-elisp ()
-    "Replace the default `elisp-completion-at-point'
-completion-at-point-function. Doing it this way will prevent
-disrupting the addition of other capfs (e.g. merely setting the
-variable entirely, or adding to list).
-
-Additionally, add `cape-file' as early as possible to the list."
-    (setf (elt (cl-member 'elisp-completion-at-point completion-at-point-functions) 0)
-          #'elisp-completion-at-point)
-    (add-to-list 'completion-at-point-functions #'cape-symbol)
-    ;; I prefer this being early/first in the list
-    (add-to-list 'completion-at-point-functions #'cape-file)
-    ;; (require 'company-yasnippet)
-    ;; (add-to-list 'completion-at-point-functions (cape-company-to-capf #'company-yasnippet))
-
-(setq corfu-auto t))
-
-
-:hook
-(emacs-lisp-mode-hook .  ps/cape-capf-setup-elisp)
-(org-mode-hook . ps/cape-capf-setup-org)
-(eshell-mode-hook . ps/cape-capf-setup-eshell)
-(git-commit-mode-hook . ps/cape-capf-setup-git-commit))
+  :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-yasnippet)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-abbrev))
 
 (use-package cape-yasnippet
   :straight (cape-yasnippet

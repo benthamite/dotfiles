@@ -10797,7 +10797,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
       "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
      ("lt" "Leo: Add to translations Aritable" entry
       (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
-      "** TODO [#4] Add to translations Airtable :leo:\n%c\n[[https://airtable.com/appLHkQNT9y6z6WGb/tblgUYEx9om4IZyuQ/viwUQXm3h0fGOkNCv?blocks=hide][Airtable]]" :empty-lines 1 :prepend t)
+      "** TODO [#4] Add to translations Airtable :leo:\n%c\nPrioridad: %(completing-read \"Priority\" '(\"highest\" \"high\" \"medium\" \"low\" \"lowest\"))" :empty-lines 1 :prepend t)
      ("lg" "Leo: Telegram" entry
       (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
       "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)

@@ -6531,7 +6531,7 @@ image."
       "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
      ("lt" "Leo: Add to translations Aritable" entry
       (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
-      "** TODO [#4] Add to translations Airtable :leo:\n%c\n[[https://airtable.com/appLHkQNT9y6z6WGb/tblgUYEx9om4IZyuQ/viwUQXm3h0fGOkNCv?blocks=hide][Airtable]]" :empty-lines 1 :prepend t)
+      "** TODO [#4] Add to translations Airtable :leo:\n%c\nPrioridad: %(completing-read \"Priority\" '(\"highest\" \"high\" \"medium\" \"low\" \"lowest\"))" :empty-lines 1 :prepend t)
      ("lg" "Leo: Telegram" entry
       (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
       "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
@@ -7884,7 +7884,7 @@ tasks."
                     (seq-difference original-tags tags))
             (apply #'vulpea-buffer-tags-set tags))))))
 
-  (defun vulpea-agenda-files-update (&rest _)
+    (defun vulpea-agenda-files-update (&rest _)
     "Update the value of `org-agenda-files'."
     (setq org-agenda-files
           (seq-difference
@@ -11870,13 +11870,16 @@ to the clipboard."
       (shell-command "osascript ~/Library/Scripts/notifications.applescript")
       (kill-buffer shell-command-buffer-name)))
 
-  (dolist (user (list "leo" "fede"))
-    (when (equal (system-name) (concat "ps/computer-hostname-" user))
-	      (file-notify-add-watch
-	       (concat ps/file-tlon-tareas- user)
-	       '(change)
-	       (lambda (event)
-		 (alert "Changes to `tareas.org' have been detected.")))))
+  (dolist (user (list "pablo" "leo" "fede"))
+    ;; is there a more elegant way of declaring these variables?
+    (let ((hostname (symbol-value (intern (concat "ps/computer-hostname-" user))))
+          (file (symbol-value (intern (concat "ps/file-tlon-tareas-" user)))))
+      (when (equal (system-name) hostname)
+        (file-notify-add-watch
+         file
+         '(change)
+         (lambda (event)
+           (alert "Changes to `tareas.org' have been detected."))))))
 
   :general
   ("H-\"" 'ps/alert-dismiss-osx-notification))

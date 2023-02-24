@@ -18260,13 +18260,16 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
       (shell-command "osascript ~/Library/Scripts/notifications.applescript")
       (kill-buffer shell-command-buffer-name)))
 
-  (dolist (user (list "leo" "fede"))
-    (when (equal (system-name) (concat "ps/computer-hostname-" user))
-	      (file-notify-add-watch
-	       (concat ps/file-tlon-tareas- user)
-	       '(change)
-	       (lambda (event)
-		 (alert "Changes to `tareas.org' have been detected.")))))
+  (dolist (user (list "pablo" "leo" "fede"))
+    ;; is there a more elegant way of declaring these variables?
+    (let ((hostname (symbol-value (intern (concat "ps/computer-hostname-" user))))
+          (file (symbol-value (intern (concat "ps/file-tlon-tareas-" user)))))
+      (when (equal (system-name) hostname)
+        (file-notify-add-watch
+         file
+         '(change)
+         (lambda (event)
+           (alert "Changes to `tareas.org' have been detected."))))))
 
   :general
   ("H-\"" 'ps/alert-dismiss-osx-notification))

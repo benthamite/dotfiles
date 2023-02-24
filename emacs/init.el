@@ -7893,7 +7893,7 @@ tasks."
                          (vulpea-project-files)))
                          ;; include files modified in past three days,
                          ;; provided number of such files less than 1000
-                         (ps/org-roam-recent 1 1000)))
+                         ;; (ps/org-roam-recent 1 1000)))
            ps/org-agenda-files-excluded)))
 
   (advice-add 'org-agenda :before #'vulpea-agenda-files-update)

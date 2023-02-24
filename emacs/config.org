@@ -4,7 +4,7 @@
 :END:
 #+TITLE:Pablo's Emacs config
 #+AUTHOR: Pablo Stafforini
-#+PROPERTY: header-args :tangle ~/Dropbox/dotfiles/emacs/init.el
+#+PROPERTY: header-args :tangle ~/Library/CloudStorage/Dropbox/dotfiles/emacs/init.el
 :PROPERTIES:
 :TOC:      ignore
 :END:
@@ -14884,7 +14884,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (zotra-after-add-entry-hook nil)
   (zotra-download-attachment-default-directory ps/dir-downloads)
   (zotra-backend 'translation-server)
-  (zotra-cli-command "/Users/pablostafforini/Dropbox/source/zotra-cli/bin/index.js")
+  (zotra-cli-command (file-name-concat ps/dir-dropbox "source/zotra-cli/bin/index.js"))
 
   :config
   (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)

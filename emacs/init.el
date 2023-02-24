@@ -9498,7 +9498,7 @@ first name, and names are separated by a semicolon."
   (zotra-after-add-entry-hook nil)
   (zotra-download-attachment-default-directory ps/dir-downloads)
   (zotra-backend 'translation-server)
-  (zotra-cli-command "/Users/pablostafforini/Dropbox/source/zotra-cli/bin/index.js")
+  (zotra-cli-command (file-name-concat ps/dir-dropbox "source/zotra-cli/bin/index.js"))
 
   :config
   (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)

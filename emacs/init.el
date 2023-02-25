@@ -916,31 +916,31 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
 
 (use-package modus-themes
   :straight (modus-themes
-	     :host sourcehut
-	     :repo "protesilaos/modus-themes")
+             :host sourcehut
+             :repo "protesilaos/modus-themes")
   :demand t
-  
+
   :custom
   (modus-themes-org-blocks 'gray-background)
-  
+
   :init
   (defun ps/modus-themes-highlight-parentheses ()
     (modus-themes-with-colors
       (setq highlight-parentheses-background-colors (list bg-cyan-intense
-							  bg-magenta-intense
-							  bg-green-intense
-							  bg-yellow-intense)
-	    highlight-parentheses-colors (list cyan
-					       magenta
-					       green
-					       yellow))))
+                                                          bg-magenta-intense
+                                                          bg-green-intense
+                                                          bg-yellow-intense)
+            highlight-parentheses-colors (list cyan
+                                               magenta
+                                               green
+                                               yellow))))
 
   :config
   (defun ps/modus-themes-load-theme-emacs-mac ()
     "Load modus theme that matches system."
     (interactive)
     (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-	(modus-themes-load-theme ps/theme-loaddefs-light)
+        (modus-themes-load-theme ps/theme-loaddefs-light)
       (modus-themes-load-theme ps/theme-loaddefs-dark)))
 
   (defun ps/modus-themes-load-theme-emacs-plus (appearance)
@@ -954,21 +954,21 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
     "Load themes conditional on which distribution of Emacs is
 installed."
     (cond ((boundp 'mac-effective-appearance-change-hook)
-	   ;; `emacs-mac'
-	   (ps/modus-themes-load-theme-emacs-mac))
-	  ;; `emacs-plus'
-	  ((boundp 'ns-system-appearance-change-functions)
-	   (add-hook 'ns-system-appearance-change-functions
-		     #'ps/modus-themes-load-theme-emacs-plus))))
+           ;; `emacs-mac'
+           (ps/modus-themes-load-theme-emacs-mac))
+          ;; `emacs-plus'
+          ((boundp 'ns-system-appearance-change-functions)
+           (add-hook 'ns-system-appearance-change-functions
+                     #'ps/modus-themes-load-theme-emacs-plus))))
 
   (setq modus-themes-common-palette-overrides
-	`(
-	  ;; hide the fringe
-	  (fringe unspecified)
-	  ;; additional customizations can be added here
+        `(
+          ;; hide the fringe
+          (fringe unspecified)
+          ;; additional customizations can be added here
 
-	  ;; for the rest, use the predefined intense values
-	  ,@modus-themes-preset-overrides-intense))
+          ;; for the rest, use the predefined intense values
+          ,@modus-themes-preset-overrides-intense))
 
   (ps/modus-themes-load-theme-conditionally)
 

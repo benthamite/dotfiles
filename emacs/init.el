@@ -7775,6 +7775,7 @@ return such list if its length is less than LIMIT."
   ("s-l" 'org-transclusion-add-all))
 
 (use-package vulpea
+  :if (equal (system-name) ps/computer-hostname-pablo)
   :commands (vulpea-buffer-p vulpea-agenda-files-update vulpea-buffer-prop-get-list vulpea-project-update-tag)
   :config
   ;; everything below adapted from d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html

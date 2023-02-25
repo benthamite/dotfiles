@@ -1,7 +1,3 @@
-:PROPERTIES:
-:mtime:    20230216221514
-:ctime:    20230215082042
-:END:
 #+TITLE:Pablo's Emacs config
 #+AUTHOR: Pablo Stafforini
 #+PROPERTY: header-args :tangle ~/Library/CloudStorage/Dropbox/dotfiles/emacs/init.el
@@ -14,8 +10,6 @@
 :PROPERTIES:
 :TOC:      :include all :depth 2 :force ((nothing)) :ignore ((nothing)) :local ((nothing))
 :ID:       536D7BF2-AA0D-43D7-8865-601DFB6BB8E6
-:mtime:    20230216204016
-:ctime:    20230216204016
 :END:
 :LOGBOOK:
 CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
@@ -465,8 +459,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :PROPERTIES:
 :CUSTOM_ID: introduction
 :ID:       A7940400-DD17-4B0B-A9B2-565A207D680C
-:mtime:    20230216203615
-:ctime:    20230214200647
 :END:
 :LOGBOOK:
 CLOCK: [2022-05-29 Sun 09:25]--[2022-05-29 Sun 10:31] =>  1:13
@@ -521,8 +513,6 @@ CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 ** Key bindings
 :PROPERTIES:
 :ID:       a47d148a-1b5e-4850-a1a7-6cd745bad696
-:mtime:    20230216204431
-:ctime:    20230216203757
 :END:
 Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~control~, ~meta~, ~super~, ~hyper~ and ~alt~. I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "quasi modifiers", i.e., mappings between individual keys and combinations of two or more Emacs modifiers. For example, in my configuration the left shift key is mapped to the combination of ~alt~ and ~meta~ (~A-M~). When you see a monstrous key binding such as ~C-H-M-s-d~, remember that everything that precedes the self-inserting key (in this case, ~d~) represents a single key press (in this case, ~l~). For details, see my [[../karabiner/config.org][karabiner config file]], specifically the "Key associations" section.
 
@@ -560,8 +550,6 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 ** Installation
 :PROPERTIES:
 :ID:       6712DA4C-BA45-4E74-8AEF-C903462D9BCB
-:mtime:    20230214204018
-:ctime:    20230214200716
 :END:
 :LOGBOOK:
 CLOCK: [2021-04-20 Tue 22:00]--[2021-04-20 Tue 23:28] =>  1:28
@@ -829,15 +817,11 @@ CLOCK: [2022-08-29 Mon 14:42]--[2022-08-29 Mon 15:00] =>  0:18
 * package management
 :PROPERTIES:
 :ID:       0A714FC1-D562-4E41-A000-D5F369EBEBBD
-:mtime:    20230209163916
-:ctime:    20230209163916
 :END:
 
 ** straight
 :PROPERTIES:
 :ID:       A402D9BB-63D7-4A4C-839C-9AC21B245725
-:mtime:    20230209161748
-:ctime:    20230209161748
 :END:
 :LOGBOOK:
 CLOCK: [2021-11-28 Sun 12:28]--[2021-11-28 Sun 13:30] =>  1:02
@@ -2171,8 +2155,6 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 ** org-faces
 :PROPERTIES:
 :ID:       168A61B0-4580-443D-B04F-78F08EFA0458
-:mtime:    20230213013122
-:ctime:    20230213013122
 :END:
 :LOGBOOK:
 CLOCK: [2022-05-04 Wed 10:45]--[2022-05-04 Wed 11:00] =>  0:15
@@ -2239,10 +2221,9 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
 ** modus-themes
 :PROPERTIES:
 :ID:       95665A5E-A88C-4DCA-BDDD-84DC436A1E80
-:mtime:    20230209010106
-:ctime:    20230209010106
 :END:
 :LOGBOOK:
+CLOCK: [2023-02-25 Sat 00:37]
 CLOCK: [2023-02-17 Fri 10:42]--[2023-02-17 Fri 10:55] =>  0:13
 CLOCK: [2023-02-17 Fri 10:42]--[2023-02-17 Fri 11:25] =>  0:43
 CLOCK: [2021-11-18 Thu 18:12]--[2021-11-18 Thu 18:28] =>  0:16
@@ -2512,8 +2493,6 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
 ** fancy-battery
 :PROPERTIES:
 :ID:       DDFE34BA-7C23-459E-B4E2-2957D2535700
-:mtime:    20230212144929
-:ctime:    20230212144929
 :END:
 #+begin_src emacs-lisp :results silent
 (use-package fancy-battery
@@ -2614,8 +2593,6 @@ Not sure which of the two (or both) are needed.
 * performance
 :PROPERTIES:
 :ID:       EF047473-EE10-41A2-852A-8CCD803469CD
-:mtime:    20230209135333
-:ctime:    20230209135333
 :END:
 :LOGBOOK:
 CLOCK: [2021-10-15 Fri 12:34]--[2021-10-15 Fri 12:40] =>  0:06
@@ -3876,8 +3853,6 @@ include this special hyphen: ­
 ** yasnippet
 :PROPERTIES:
 :ID:       6405B8E7-6612-4D71-8C2C-A51F8808F4C6
-:mtime:    20230212234213
-:ctime:    20230212234213
 :END:
 :LOGBOOK:
 CLOCK: [2022-10-01 Sat 13:23]--[2022-10-01 Sat 13:26] =>  0:03
@@ -5867,8 +5842,6 @@ needs to be included as an element in the list defined by
 ** ace-link
 :PROPERTIES:
 :ID:       F1C54CDB-1E70-41D1-8FAB-A45598C5021A
-:mtime:    20230211043538
-:ctime:    20230211043538
 :END:
 :LOGBOOK:
 CLOCK: [2022-07-15 Fri 13:48]--[2022-07-15 Fri 13:51] =>  0:03
@@ -6068,8 +6041,6 @@ with the specified date."
 :PROPERTIES:
 :ID:       9E8AEF97-2E1A-489E-929A-CE5789EABFB9
 :org-gcal-managed: org
-:mtime:    20230215082042
-:ctime:    20230215082042
 :END:
 :LOGBOOK:
 CLOCK: [2022-07-15 Fri 11:10]--[2022-07-15 Fri 11:19] =>  0:09
@@ -6414,8 +6385,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 ** hammy
 :PROPERTIES:
 :ID:       79C8D6B8-7D86-4B63-82C2-61E6DFFC4152
-:mtime:    20230211190206
-:ctime:    20230211190206
 :END:
 
 #+begin_src emacs-lisp :results silent
@@ -6691,8 +6660,6 @@ Nothing for the time being. Just a reminder to look into Emacs's native vc frame
 ** magit
 :PROPERTIES:
 :ID:       B662CE1B-3F94-486E-A3DE-052775035960
-:mtime:    20230216194123
-:ctime:    20230216194123
 :END:
 :LOGBOOK:
 CLOCK: [2021-11-18 Thu 21:51]--[2021-11-18 Thu 21:52] =>  0:01
@@ -6768,8 +6735,6 @@ To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. Tha
 *** resources
 :PROPERTIES:
 :ID:       09A7E16B-377A-4BB7-AC3B-4D7A673E7CA8
-:mtime:    20230216194339
-:ctime:    20230216194339
 :END:
 - [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
 - https://tvraman.github.io/emacspeak/blog/github-quick-workflow.html
@@ -7205,8 +7170,6 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
 ** embark
 :PROPERTIES:
 :ID:       19A4F21C-2169-4529-92E4-68E3A584DDAC
-:mtime:    20230210122140
-:ctime:    20230210122027
 :END:
 :LOGBOOK:
 CLOCK: [2022-07-22 Fri 18:10]--[2022-07-22 Fri 18:13] =>  0:03
@@ -7728,8 +7691,6 @@ I use ~completion-at-point~ for completion, not company. However, I still rely o
 * help
 :PROPERTIES:
 :ID:       7F0CBD06-FDB3-4889-91CE-D8A25D4F2613
-:mtime:    20230214131624
-:ctime:    20230214131624
 :END:
 :LOGBOOK:
 CLOCK: [2021-07-04 Sun 11:55]--[2021-07-04 Sun 12:05] =>  0:10
@@ -8889,8 +8850,6 @@ CLOCK: [2022-05-19 Thu 20:30]--[2022-05-19 Thu 20:33] =>  0:03
 ** edit-indirect
 :PROPERTIES:
 :ID:       1F18FACA-0A55-4B8F-98C3-800C07D62257
-:mtime:    20230212144255
-:ctime:    20230212144255
 :END:
 
 #+begin_src emacs-lisp :results silent
@@ -9340,8 +9299,6 @@ FILE."
 :PROPERTIES:
 :ID:       BDE975FE-56AA-45C3-AF47-C70503051B30
 :Effort:   0:20
-:mtime:    20230212131110
-:ctime:    20230212131110
 :END:
 https://stackoverflow.com/questions/62602327/headless-chrome-sharing-credentials
 Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
@@ -10380,8 +10337,6 @@ image."
 :PROPERTIES:
 :Effort:   2:00
 :ID:       FCC486F6-7391-4EA3-9087-6BC3D5AB72B3
-:mtime:    20230216193511
-:ctime:    20230216193511
 :END:
 
 ** org-agenda
@@ -11348,8 +11303,6 @@ When FILES is given, scan these files instead."
 ** org-list
 :PROPERTIES:
 :ID:       DD345C01-CEAC-4CEC-A8D5-89C16A0182CB
-:mtime:    20230210124608
-:ctime:    20230210124608
 :END:
 
 #+begin_src emacs-lisp :results silent
@@ -12330,8 +12283,6 @@ Pomodoro system:
 ** emacsql-sqlite-builtin
 :PROPERTIES:
 :ID:       437F93FC-BDEE-48E2-A523-0813808871BC
-:mtime:    20230209163652
-:ctime:    20230209163652
 :END:
 #+begin_src emacs-lisp
 (use-package emacsql-sqlite-builtin
@@ -12342,8 +12293,6 @@ Pomodoro system:
 ** org-roam
 :PROPERTIES:
 :ID:       2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17
-:mtime:    20230213152324
-:ctime:    20230210153706
 :END:
 :LOGBOOK:
 CLOCK: [2022-09-30 Fri 20:53]--[2022-09-30 Fri 21:21] =>  0:28
@@ -12655,8 +12604,6 @@ Run org-roam with minimal config and see if the problem with idle times persist
 :PROPERTIES:
 :Effort:   0:30
 :ID:       83AA4CF2-A783-4C27-895F-C68EAE5AB456
-:mtime:    20230216221514
-:ctime:    20230216221514
 :END:
 So the links to other Wiki articles do not break.
 *** Archive                                                         :ARCHIVE:
@@ -12697,8 +12644,6 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
 ** org-roam-timestamps
 :PROPERTIES:
 :ID:       F9892121-725F-4BD7-9AAE-7E93460F5C58
-:mtime:    20230211002008
-:ctime:    20230210193133
 :END:
 
 /[[https://github.com/tefkah/org-roam-timestamps][org-roam-timestamps]] adds modified and creation timestamps to the org-roam property drawer./
@@ -13592,8 +13537,6 @@ The problem seems to be that ~(citar--select-resource citekeys :notes t)~ return
 ** org-ref
 :PROPERTIES:
 :ID:       1FC5528A-9F5A-4A9D-B168-5A1F51110455
-:mtime:    20230213005149
-:ctime:    20230213005149
 :END:
 /[[https://github.com/jkitchin/org-ref][org-ref]] supports citations, cross-references, bibliographies in org-mode and useful bibtex tools./
 
@@ -13666,8 +13609,6 @@ in the file. Data comes from www.ebook.de."
 ** doi-utils
 :PROPERTIES:
 :ID:       0A568E85-C775-4894-BE59-A7DAB0F41F87
-:mtime:    20230212131744
-:ctime:    20230211163153
 :END:
 /[[https://github.com/jkitchin/org-ref/blob/master/doi-utils.el][doi-utils]] is a set of DOI utilities for making bibtex entries. It is part of [[id:1FC5528A-9F5A-4A9D-B168-5A1F51110455][org-ref]]./
 
@@ -13683,8 +13624,6 @@ in the file. Data comes from www.ebook.de."
 ** ebib
 :PROPERTIES:
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
-:mtime:    20230211034525
-:ctime:    20230211024455
 :END:
 :LOGBOOK:
 CLOCK: [2022-09-22 Thu 14:39]--[2022-09-22 Thu 15:15] =>  0:36
@@ -14759,8 +14698,6 @@ por qué ebib no recarga
 ** biblio
 :PROPERTIES:
 :ID:       4EDDE179-9DE5-4F31-9FB4-17A5B68F6557
-:mtime:    20230211194635
-:ctime:    20230211194635
 :END:
 :LOGBOOK:
 CLOCK: [2022-07-16 Sat 15:22]--[2022-07-16 Sat 15:26] =>  0:04
@@ -14788,8 +14725,6 @@ To check out.
 ** zotra
 :PROPERTIES:
 :ID:       815B8CEA-D36D-4E47-B728-D86FEFB736DF
-:mtime:    20230211170814
-:ctime:    20230211170814
 :END:
 :LOGBOOK:
 CLOCK: [2022-08-31 Wed 16:37]--[2022-08-31 Wed 17:37] =>  1:00
@@ -15254,8 +15189,6 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 ** smtpmail-multi
 :PROPERTIES:
 :ID:       DDFE6DC9-A986-4E79-BF5B-A99124B65BA2
-:mtime:    20230212121046
-:ctime:    20230212121046
 :END:
 /[[https://github.com/vapniks/smtpmail-multi][smtpmail-multi]] allows for  different smtp servers for sending mail./
 
@@ -15286,8 +15219,6 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 ** sendmail
 :PROPERTIES:
 :ID:       25BB02C1-B537-4D2F-AF95-3B1217A58E6D
-:mtime:    20230212150817
-:ctime:    20230212150347
 :END:
 /[[https://www.gnu.org/software/emacs/manual/html_node/emacs/Mail-Sending.html][sendmail]] is a mode that provides mail-sending facilities from within Emacs./
 
@@ -15342,8 +15273,6 @@ To try once I switch to Emacs 29.
 ** message-extras
 :PROPERTIES:
 :ID:       17DB4B28-B670-4B3C-9D4E-09EB466D5A17
-:mtime:    20230212120838
-:ctime:    20230212120838
 :END:
 
 #+begin_src emacs-lisp
@@ -15979,15 +15908,11 @@ This is controlled with ~org-msg-enforce-css~.
 :PROPERTIES:
 :Effort:   0:30
 :ID:       E128A0A2-DA3E-4435-ADBF-472E7268678D
-:mtime:    20230214200452
-:ctime:    20230214200452
 :END:
 
 ** htmlize
 :PROPERTIES:
 :ID:       F22F2F4B-619E-4A7C-BF65-8FF5CE7953C4
-:mtime:    20230213105443
-:ctime:    20230212182750
 :END:
 /[[https://github.com/hniksic/emacs-htmlize][htmlize]] converts buffer text and decorations to HTML./
 
@@ -16001,8 +15926,6 @@ This is controlled with ~org-msg-enforce-css~.
 * messaging
 :PROPERTIES:
 :ID:       7DD09AFA-70A6-4E9D-AA78-C8E8421A9673
-:mtime:    20230214003029
-:ctime:    20230214003029
 :END:
 :LOGBOOK:
 :END:
@@ -16671,8 +16594,6 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
 ** eww
 :PROPERTIES:
 :ID:       E9E3FE6F-5580-4D21-90D8-6B0E595C10F7
-:mtime:    20230213142944
-:ctime:    20230212115719
 :END:
 :LOGBOOK:
 CLOCK: [2021-05-18 Tue 17:41]--[2021-05-18 Tue 18:26] =>  0:45
@@ -16830,8 +16751,6 @@ If prefix arg is passed, then open in new EWW buffer."
 *** TODO [#6] Create command to background open in ~eww~
 :PROPERTIES:
 :ID:       52CAC919-6942-466F-AA47-4FF86F7F13AE
-:mtime:    20230212111721
-:ctime:    20230212111721
 :END:
 
 *** TODO [#6] Create command to create PDF of URL
@@ -16865,8 +16784,6 @@ CLOCK: [2021-03-29 Mon 21:25]--[2021-03-29 Mon 21:41] =>  0:16
 ** elfeed
 :PROPERTIES:
 :ID:       FF5DDBC3-ABB6-48A9-9B47-BC9A18F532D5
-:mtime:    20230215135032
-:ctime:    20230215135032
 :END:
 :LOGBOOK:
 CLOCK: [2021-12-06 Mon 18:29]--[2021-12-06 Mon 18:41] =>  0:12
@@ -17271,8 +17188,6 @@ CLOCK: [2022-05-16 Mon 19:11]--[2022-05-16 Mon 19:19] =>  0:08
 ** twittering-mode
 :PROPERTIES:
 :ID:       125BC626-0D89-468E-9026-AF3CF58939F2
-:mtime:    20230211050930
-:ctime:    20230211050930
 :END:
 :LOGBOOK:
 CLOCK: [2022-07-19 Tue 14:40]--[2022-07-19 Tue 15:56] =>  1:16
@@ -18294,8 +18209,6 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 ** unpackaged
 :PROPERTIES:
 :ID:       484FDD89-4C12-4624-82CB-FC36795C0A8F
-:mtime:    20230214235535
-:ctime:    20230214235535
 :END:
 :LOGBOOK:
 :END:
@@ -18564,8 +18477,6 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 * Local variables
 :PROPERTIES:
 :ID:       9F0FFFD3-3A33-4EB5-BD56-CD40AE6A23C5
-:mtime:    20230215090723
-:ctime:    20230215090723
 :END:
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)

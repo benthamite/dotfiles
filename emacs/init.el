@@ -1187,7 +1187,7 @@ and generates profiling report."
   ("A-C-s-m" 'move-beginning-of-line
    ;; karabiner maps `/' to `z'; otherwise I can't trigger the command while holding `shift'
    "A-C-s-z" 'move-end-of-line)
-  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map help-mode-map helpful-mode-map Info-mode-map magit-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
+  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map help-mode-map helpful-mode-map Info-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
    "k" 'previous-line
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)

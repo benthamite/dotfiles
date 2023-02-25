@@ -16078,7 +16078,9 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   (defun ps/telega-switch-to ()
     "Switch to the most recent telega buffer, if one exists, else
  start telega. Always display telega buffers in the rightmost
- window."
+ window. Repeated invocations of the command will move point from
+ the middle of the chatbuf to the end of it, then to the root
+ buffer, then to the beginning of it."
     (interactive)
     (let* ((telega-buffer-root "*Telega Root*")
            (telega-buffer
@@ -16092,7 +16094,9 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
       (if telega-buffer
           (if telega-buffer-is-current
               (if (string> telega-buffer telega-buffer-root)
-                  (end-of-buffer)
+                  (if (ps/bollp)
+                      (switch-to-buffer telega-buffer-root)
+                    (end-of-buffer))
                 (beginning-of-buffer)
                 (forward-line 3))
             (switch-to-buffer telega-buffer))

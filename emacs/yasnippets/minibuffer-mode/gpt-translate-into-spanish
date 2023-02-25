@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: gpt-translate-into-spanish
+# key: gts
+# --
+Translate "$1" into Spanish

@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: tlon-aurora-humaran
+# key: tah
+# --
+`(ps/insert-date)` Auora Humarán
+    Expenses:Core:Translations  $1 ARS ; translation of '$2'
+    Assets:Brubank
+
+$0

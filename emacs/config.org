@@ -51,11 +51,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#fontaine][fontaine]]
   - [[#face-remap][face-remap]]
   - [[#fringe][fringe]]
-  - [[#highlight-parentheses][highlight-parentheses]]
   - [[#org-modern][org-modern]]
   - [[#org-faces][org-faces]]
   - [[#theme-loaddefs][theme-loaddefs]]
   - [[#modus-themes][modus-themes]]
+  - [[#highlight-parentheses][highlight-parentheses]]
   - [[#emacs-emojify][emacs-emojify]]
   - [[#lin][lin]]
   - [[#image][image]]
@@ -2112,29 +2112,6 @@ I haven't yet explored this package.
                   (unknown . question-mark))))
 #+end_src
 
-** highlight-parentheses
-:PROPERTIES:
-:ID:       2B0F192C-2147-4CF6-AE69-73C1D85FEB77
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
-:END:
-/[[https://sr.ht/~tsdh/highlight-parentheses.el/][highlight-parenthesis]] dynamically highlights the parentheses surrounding point based on nesting-level using configurable lists of colors, background colors, and other properties./
-
-#+begin_src emacs-lisp :results silent
-(use-package highlight-parentheses
-  ;; :after modus-themes
-  :demand t
-  :custom
-  (highlight-parentheses-delay 0)
-
-  :config
-  (global-highlight-parentheses-mode)
-
-  :hook
-  (minibuffer-setup-hook . highlight-parentheses-minibuffer-setup))
-#+end_src
-
 ** org-modern
 :PROPERTIES:
 :ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
@@ -2239,19 +2216,31 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 #+begin_src emacs-lisp :results silent
 (use-package modus-themes
   :straight (modus-themes
-             :host sourcehut
-             :repo "protesilaos/modus-themes")
+	     :host sourcehut
+	     :repo "protesilaos/modus-themes")
   :demand t
-
+  
   :custom
   (modus-themes-org-blocks 'gray-background)
+  
+  :init
+  (defun ps/modus-themes-highlight-parentheses ()
+    (modus-themes-with-colors
+      (setq highlight-parentheses-background-colors (list bg-cyan-intense
+							  bg-magenta-intense
+							  bg-green-intense
+							  bg-yellow-intense)
+	    highlight-parentheses-colors (list cyan
+					       magenta
+					       green
+					       yellow))))
 
   :config
   (defun ps/modus-themes-load-theme-emacs-mac ()
     "Load modus theme that matches system."
     (interactive)
     (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-        (modus-themes-load-theme ps/theme-loaddefs-light)
+	(modus-themes-load-theme ps/theme-loaddefs-light)
       (modus-themes-load-theme ps/theme-loaddefs-dark)))
 
   (defun ps/modus-themes-load-theme-emacs-plus (appearance)
@@ -2265,75 +2254,52 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
     "Load themes conditional on which distribution of Emacs is
 installed."
     (cond ((boundp 'mac-effective-appearance-change-hook)
-           ;; `emacs-mac'
-           (ps/modus-themes-load-theme-emacs-mac))
-          ;; `emacs-plus'
-          ((boundp 'ns-system-appearance-change-functions)
-           (add-hook 'ns-system-appearance-change-functions
-                     #'ps/modus-themes-load-theme-emacs-plus))))
+	   ;; `emacs-mac'
+	   (ps/modus-themes-load-theme-emacs-mac))
+	  ;; `emacs-plus'
+	  ((boundp 'ns-system-appearance-change-functions)
+	   (add-hook 'ns-system-appearance-change-functions
+		     #'ps/modus-themes-load-theme-emacs-plus))))
+
+  (setq modus-themes-common-palette-overrides
+	`(
+	  ;; hide the fringe
+	  (fringe unspecified)
+	  ;; additional customizations can be added here
+
+	  ;; for the rest, use the predefined intense values
+	  ,@modus-themes-preset-overrides-intense))
 
   (ps/modus-themes-load-theme-conditionally)
 
-  (setq modus-themes-common-palette-overrides
-        `(
-          ;; hide the fringe
-          (fringe unspecified)
-          ;; additional customizations can be added here
-
-          ;; for the rest, use the predefined intense values
-          ,@modus-themes-preset-overrides-intense))
-
   :hook
   (modus-themes-after-load-theme-hook . ps/org-faces-custom-faces)
-  ;; (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
+  (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
 
   :general
   ("A-d" 'modus-themes-toggle))
 #+end_src
 
-The code block below is not tangled.
+** highlight-parentheses
+:PROPERTIES:
+:ID:       2B0F192C-2147-4CF6-AE69-73C1D85FEB77
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
+:END:
+/[[https://sr.ht/~tsdh/highlight-parentheses.el/][highlight-parentheses]] dynamically highlights the parentheses surrounding point based on nesting-level using configurable lists of colors, background colors, and other properties./
 
-#+begin_src emacs-lisp :tangle no
-;; FIXME: why doesn't this work?
+#+begin_src emacs-lisp :results silent
+(use-package highlight-parentheses
+  :demand t
+  :custom
+  (highlight-parentheses-delay 0)
 
-(defvar my-highlight-parentheses-use-background t
-  "Prefer `highlight-parentheses-background-colors'.")
+  :config
+  (global-highlight-parentheses-mode)
 
-(setq my-highlight-parentheses-use-background t) ; Set to nil to disable backgrounds
-
-(defun ps/modus-themes-highlight-parentheses ()
-  (modus-themes-with-colors
-    ;; Our preference for setting either background or foreground
-    ;; styles, depending on `my-highlight-parentheses-use-background'.
-    (if my-highlight-parentheses-use-background
-
-        ;; Here we set color combinations that involve both a background
-        ;; and a foreground value.
-        (setq highlight-parentheses-background-colors (list bg-cyan-intense
-                                                            bg-magenta-intense
-                                                            bg-green-intense
-                                                            bg-yellow-intense)
-              highlight-parentheses-colors (list cyan
-                                                 magenta
-                                                 green
-                                                 yellow))
-
-      ;; And here we pass only foreground colors while disabling any
-      ;; backgrounds.
-      (setq highlight-parentheses-colors (list green-intense
-                                               magenta-intense
-                                               blue-intense
-                                               red-intense)
-            highlight-parentheses-background-colors nil)))
-
-  ;; Include this if you also want to make the parentheses bold:
-  (set-face-attribute 'highlight-parentheses-highlight nil :inherit 'bold)
-
-  ;; Our changes must be evaluated before enabling the relevant mode, so
-  ;; this comes last.
-  (global-highlight-parentheses-mode))
-
-
+  :hook
+  (minibuffer-setup-hook . highlight-parentheses-minibuffer-setup))
 #+end_src
 
 ** emacs-emojify

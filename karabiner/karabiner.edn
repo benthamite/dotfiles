@@ -49,48 +49,6 @@
 
 :main [
 
-{:des "caps_lock → C-g (alone) | left_option (held)"
- :rules [
-         [:##caps_lock :left_option :emacs {:alone :!Tg}]
-         ]}
-
-{:des "outside Emacs, caps → escape (alone) | left_option (held)"
- :rules [
-         [:##caps_lock :left_option nil {:alone :escape}]
-         ]}
-
-{:des "on Emacs, left_shift → right_command (alone) | hyphen (held)"
- :rules [
-         [:##left_shift :!Oright_command :emacs {:alone :hyphen}]
-         ]}
-
-{:des "outside Emacs, left_shift → Option + control (alone) | hyphen (held)"
- :rules [
-         [:##left_shift :!Oleft_control nil {:alone :hyphen}]
-         ]}
-
-{:des "on Emacs, left_control → command + tab (alone) | left_command (held)"
- :rules [
-          [:!Ch :!QCOWh :emacs] ; circunvent macOS command + h
-          [:!CQh :!QTCWh :emacs] ; circunvent macOS command + option + h
-         [:##left_control :!Qleft_command [:!steam :emacs] {:alone :!Ctab}]
-         ]}
-
-{:des "outside Emacs, left_control → command + tab (alone) | left_option + left_command (held)"
- :rules [
-         [:##left_control :!Oleft_command [:!steam :!emacs] {:alone :!Ctab}]
-         ]}
-
-{:des "on Emacs, right_shift → en dash (alone) | Super + Alt (held)"
- :rules [
-         [:right_shift :!Wright_command :emacs {:alone :!Ehyphen}]
-         ]}
-
-{:des "outside Emacs, right_shift → en dash (alone) | right_option + right_control (held)"
- :rules [
-         [:##right_shift :!Wright_option nil {:alone :!Ehyphen}]
-         ]}
-
 {:des "On Emacs: diacritics if pressed in succession, otherwise hyper-super modifier"
  :rules [:emacs
          [:backslash :!Cright_control [:!blocked] {:alone ["ctrl" 1] :delayed {:invoked ["ctrl" 0]}}]
@@ -135,9 +93,14 @@
          ]
  }
 
-{:des "delete_or_backspace → return_or_enter (alone) | left_command (held)"
+{:des "caps_lock → C-g (alone) | left_option (held)"
  :rules [
-         [:##delete_or_backspace :left_command [:moonlander :kinesis] {:alone :return_or_enter}]
+         [:##caps_lock :left_option :emacs {:alone :!Tg}]
+         ]}
+
+{:des "outside Emacs, caps → escape (alone) | left_option (held)"
+ :rules [
+         [:##caps_lock :left_option nil {:alone :escape}]
          ]}
 
 {:des "delete_forward → toggle tabs (alone) | left_shift (held)"
@@ -145,64 +108,9 @@
          [:##delete_forward :left_shift [:moonlander :kinesis] {:alone :!CT0}]
          ]}
 
-{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
+{:des "delete_or_backspace → return_or_enter (alone) | left_command (held)"
  :rules [
-         [:##right_control :!Tright_command [:moonlander :kinesis :emacs] {:alone :f18}]
-         ]}
-
-{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
- :rules [
-         [:##right_control :!Qright_control [:moonlander :kinesis] {:alone :f18}]
-         ]}
-
-{:des "on Emacs, quote → quote (alone) | super (held)"
- :rules [
-         [:##quote :right_control [:moonlander :kinesis :emacs] {:alone :quote}]
-         ]}
-
-{:des "on Emacs, equal_sign → equal_sign (alone) | Alt (held)"
- :rules [
-         [:##tab :right_command [:!moonlander :emacs] {:alone :equal_sign}]
-         ]}
-
-{:des "outside Emacs, equal_sign → equal_sign (alone) | left_shift + left_option (held)"
- :rules [
-         [:##tab :!Sleft_option :!moonlander  {:alone :equal_sign}]
-         ]}
-
-{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
- :rules [
-         [:##left_option :left_shift :!moonlander {:alone :!CT0}]
-         ]}
-
-{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
- :rules [
-         [:##left_command :left_command [:!moonlander :!steam] {:alone :return_or_enter}]
-         ]}
-
-{:des "spacebar → tab (alone) | left_control (held)"
- :rules [
-         [:##right_command :left_control :!moonlander {:alone :tab}]
-         ]}
-
-{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
- :rules [
-         [:##right_option :!Tright_command [:!moonlander :emacs] {:alone :f18}]
-         ]}
-
-{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
- :rules [
-         [:##right_option :!Qright_control :!moonlander {:alone :f18}]
-         ]}
-
-{:des "on Emacs, return_or_enter → quote (alone) | super (held)"
- :rules [
-         [:##quote :right_control [:!moonlander :!kinesis :emacs] {:alone :quote}]
-         ]}
-
-{:des "tab → tab (alone) | left_control (held)"
- :rules [
-         [:##tab :left_control :moonlander {:alone :tab}]
+         [:##delete_or_backspace :left_command [:moonlander :kinesis] {:alone :return_or_enter}]
          ]}
 
 {:des "on Emacs, equal_sign → equal_sign (alone) | Alt (held)"
@@ -215,9 +123,101 @@
          [:##equal_sign :!Sleft_option :moonlander  {:alone :equal_sign}]
          ]}
 
+{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
+ :rules [
+         [:##left_command :left_command [:!moonlander :!steam] {:alone :return_or_enter}]
+         ]}
+
+{:des "on Emacs, left_control → command + tab (alone) | left_command (held)"
+ :rules [
+          [:!Ch :!QCOWh :emacs] ; circunvent macOS command + h
+          [:!CQh :!QTCWh :emacs] ; circunvent macOS command + option + h
+         [:##left_control :!Qleft_command [:!steam :emacs] {:alone :!Ctab}]
+         ]}
+
+{:des "outside Emacs, left_control → command + tab (alone) | left_option + left_command (held)"
+ :rules [
+         [:##left_control :!Oleft_command [:!steam :!emacs] {:alone :!Ctab}]
+         ]}
+
+{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
+ :rules [
+         [:##left_option :left_shift :!moonlander {:alone :!CT0}]
+         ]}
+
+{:des "on Emacs, left_shift → right_command (alone) | hyphen (held)"
+ :rules [
+         [:##left_shift :!Oright_command :emacs {:alone :hyphen}]
+         ]}
+
+{:des "outside Emacs, left_shift → Option + control (alone) | hyphen (held)"
+ :rules [
+         [:##left_shift :!Oleft_control nil {:alone :hyphen}]
+         ]}
+
+{:des "on Emacs, quote → quote (alone) | super (held)"
+ :rules [
+         [:##quote :right_control [:moonlander :kinesis :emacs] {:alone :quote}]
+         ]}
+
+{:des "on Emacs, return_or_enter → quote (alone) | super (held)"
+ :rules [
+         [:##quote :right_control [:!moonlander :!kinesis :emacs] {:alone :quote}]
+         ]}
+
 {:des "tab → return_or_enter (alone) | left_control (held)"
  :rules [
          [:##return_or_enter :left_control :kinesis {:alone :tab}]
+         ]}
+
+{:des "spacebar → tab (alone) | left_control (held)"
+ :rules [
+         [:##right_command :left_control :!moonlander {:alone :tab}]
+         ]}
+
+{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
+ :rules [
+         [:##right_control :!Tright_command [:moonlander :kinesis :emacs] {:alone :f18}]
+         ]}
+
+{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
+ :rules [
+         [:##right_control :!Qright_control [:moonlander :kinesis] {:alone :f18}]
+         ]}
+
+{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
+ :rules [
+         [:##right_option :!Tright_command [:!moonlander :emacs] {:alone :f18}]
+         ]}
+
+{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
+ :rules [
+         [:##right_option :!Qright_control :!moonlander {:alone :f18}]
+         ]}
+
+{:des "on Emacs, right_shift → en dash (alone) | Super + Alt (held)"
+ :rules [
+         [:right_shift :!Wright_command :emacs {:alone :!Ehyphen}]
+         ]}
+
+{:des "outside Emacs, right_shift → en dash (alone) | right_option + right_control (held)"
+ :rules [
+         [:##right_shift :!Wright_option nil {:alone :!Ehyphen}]
+         ]}
+
+{:des "on Emacs, equal_sign → equal_sign (alone) | Alt (held)"
+ :rules [
+         [:##tab :right_command [:!moonlander :emacs] {:alone :equal_sign}]
+         ]}
+
+{:des "outside Emacs, equal_sign → equal_sign (alone) | left_shift + left_option (held)"
+ :rules [
+         [:##tab :!Sleft_option :!moonlander  {:alone :equal_sign}]
+         ]}
+
+{:des "tab → tab (alone) | left_control (held)"
+ :rules [
+         [:##tab :left_control :moonlander {:alone :tab}]
          ]}
 
 {:des "on Emacs, tab → equal_sign (alone) | Alt (held)"

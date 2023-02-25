@@ -4683,6 +4683,15 @@ or are no longer readable will be killed."
     (when-let ((file-name buffer-file-name))
       (file-name-sans-extension (file-name-nondirectory file-name))))
 
+      (defun ps/bollp ()
+    "Return t if point is at the beginning of the last line."
+    (let ((beginning-of-last-line
+           (save-excursion
+             (end-of-buffer)
+             (beginning-of-line)
+             (point))))
+      (>= (point) beginning-of-last-line)))
+
   :general
   ("M--" 'not-modified
    "M-b" 'ps/save-and-revert-buffer

@@ -10448,7 +10448,7 @@ into a task for Leo."
   :hook
   (telega-chat-mode-hook . ps/telega-chat-mode)
   (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
-   ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdown
+  ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdown
   ;; (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
 
   :general

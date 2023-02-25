@@ -6261,10 +6261,14 @@ image."
         (org-agenda nil "a"))))
 
   :custom
-  (org-agenda-files `(,ps/dir-android
-                      ;; ,ps/file-tlon-tareas-leo
-                      ;; ,ps/file-tlon-tareas-fede
-                      ))
+  (cond ((equal (system-name) ps/computer-hostname-pablo)
+         (org-agenda-files `(,ps/dir-android
+                             ;; ,ps/file-tlon-tareas-leo
+                             ;; ,ps/file-tlon-tareas-fede
+                             )))
+        ((equal (system-name) ps/computer-hostname-leo)
+         (org-agenda-files `(,ps/file-tlon-tareas-leo
+                             ))))
   (org-agenda-window-setup 'current-window)
   (org-agenda-use-time-grid nil) ; disable agenda time grid
   ;; Speed up agenda (orgmode.org/worg/agenda-optimization.html)
@@ -6311,10 +6315,11 @@ image."
   (org-agenda-hide-tags-regexp "project")
 
   :config
-  (defvar ps/org-agenda-files-excluded
-    `(,ps/file-tlon-tareas-leo
-      ,ps/file-tlon-tareas-fede)
-    "List of files to remove from `org-agenda-files'")
+  (when (equal (system-name) ps/computer-hostname-pablo)
+    (defvar ps/org-agenda-files-excluded
+      `(,ps/file-tlon-tareas-leo
+        ,ps/file-tlon-tareas-fede)
+      "List of files to remove from `org-agenda-files'"))
 
   (defun ps/org-agenda-goto-and-start-clock ()
     "In org-agenda, go to entry at point and clock in."

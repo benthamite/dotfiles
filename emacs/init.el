@@ -11842,7 +11842,7 @@ to the clipboard."
       (shell-command "osascript ~/Library/Scripts/notifications.applescript")
       (kill-buffer shell-command-buffer-name)))
 
-  (dolist (user (list "pablo" "leo" "fede"))
+  (dolist (user (list "leo" "fede"))
     ;; is there a more elegant way of declaring these variables?
     (let ((hostname (symbol-value (intern (concat "ps/computer-hostname-" user))))
           (file (symbol-value (intern (concat "ps/file-tlon-tareas-" user)))))

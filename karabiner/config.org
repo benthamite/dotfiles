@@ -45,9 +45,22 @@ CLOCK: [2021-02-28 Sun 19:56]--[2021-02-28 Sun 20:00] =>  0:04
 - [[#templates][Templates]]
 - [[#main][Main]]
   - [[#individual-bindings][individual bindings]]
-    - [[#shared][shared]]
-    - [[#internal-keyboard][internal keyboard]]
-    - [[#moonlander][moonlander]]
+    - [[#backslash][backslash]]
+    - [[#caps_lock][caps_lock]]
+    - [[#delete_forward][delete_forward]]
+    - [[#delete_or_backspace][delete_or_backspace]]
+    - [[#equal_sign][equal_sign]]
+    - [[#left_command][left_command]]
+    - [[#left_control][left_control]]
+    - [[#left_option][left_option]]
+    - [[#left_shift][left_shift]]
+    - [[#quote][quote]]
+    - [[#return_or_enter][return_or_enter]]
+    - [[#right_command][right_command]]
+    - [[#right_control][right_control]]
+    - [[#right_option][right_option]]
+    - [[#right_shift][right_shift]]
+    - [[#tab][tab]]
     - [[#misc][misc]]
   - [[#active-layers][active layers]]
     - [[#j-mode][j-mode]]
@@ -377,86 +390,7 @@ CLOCK: [2021-03-28 Sun 18:47]--[2021-03-28 Sun 19:01] =>  0:14
 CLOCK: [2021-03-23 Tue 19:30]--[2021-03-23 Tue 19:38] =>  0:08
 :END:
 
-*** shared: all
-:PROPERTIES:
-:ID:       39F5EF4F-7354-4E13-833F-D250C4F597A9
-:END:
-
-**** caps_lock
-:PROPERTIES:
-:ID:       20033DF1-9596-4257-8C3C-8A90BE97B221
-:END:
-#+begin_src clojure
-{:des "caps_lock → C-g (alone) | left_option (held)"
- :rules [
-         [:##caps_lock :left_option :emacs {:alone :!Tg}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "outside Emacs, caps → escape (alone) | left_option (held)"
- :rules [
-         [:##caps_lock :left_option nil {:alone :escape}]
-         ]}
-#+end_src
-
-**** left_shift
-:PROPERTIES:
-:ID:       CF0E3547-DE12-40CE-8BBB-4347FFEE7401
-:END:
-#+begin_src clojure
-{:des "on Emacs, left_shift → right_command (alone) | hyphen (held)"
- :rules [
-         [:##left_shift :!Oright_command :emacs {:alone :hyphen}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "outside Emacs, left_shift → Option + control (alone) | hyphen (held)"
- :rules [
-         [:##left_shift :!Oleft_control nil {:alone :hyphen}]
-         ]}
-#+end_src
-
-**** left_control
-:PROPERTIES:
-:ID:       E5FED8CC-8FA4-4964-87EF-4801A2B91848
-:END:
-#+begin_src clojure
-{:des "on Emacs, left_control → command + tab (alone) | left_command (held)"
- :rules [
-          [:!Ch :!QCOWh :emacs] ; circunvent macOS command + h
-          [:!CQh :!QTCWh :emacs] ; circunvent macOS command + option + h
-         [:##left_control :!Qleft_command [:!steam :emacs] {:alone :!Ctab}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "outside Emacs, left_control → command + tab (alone) | left_option + left_command (held)"
- :rules [
-         [:##left_control :!Oleft_command [:!steam :!emacs] {:alone :!Ctab}]
-         ]}
-#+end_src
-
-**** right_shift
-:PROPERTIES:
-:ID:       18FD5116-6D73-4B5D-9379-A0DD1D01970F
-:END:
-#+begin_src clojure
-{:des "on Emacs, right_shift → en dash (alone) | Super + Alt (held)"
- :rules [
-         [:right_shift :!Wright_command :emacs {:alone :!Ehyphen}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "outside Emacs, right_shift → en dash (alone) | right_option + right_control (held)"
- :rules [
-         [:##right_shift :!Wright_option nil {:alone :!Ehyphen}]
-         ]}
-#+end_src
-
-**** backslash
+*** backslash
 :PROPERTIES:
 :ID:       18AA9398-C7DA-4FA2-BC6A-E8C0382D75C5
 :END:
@@ -512,23 +446,25 @@ CLOCK: [2021-07-25 Sun 16:11]--[2021-07-25 Sun 17:02] =>  0:51
  }
 #+end_src
 
-*** shared: moonlander & kinesis
+*** caps_lock
 :PROPERTIES:
-:ID:       FC41F58A-AFDC-4F61-80C8-70AF5987AF8D
-:END:
-
-**** delete_or_backspace
-:PROPERTIES:
-:ID:       CC3880F6-F71B-492D-8F0E-585ADB552004
+:ID:       20033DF1-9596-4257-8C3C-8A90BE97B221
 :END:
 #+begin_src clojure
-{:des "delete_or_backspace → return_or_enter (alone) | left_command (held)"
+{:des "caps_lock → C-g (alone) | left_option (held)"
  :rules [
-         [:##delete_or_backspace :left_command [:moonlander :kinesis] {:alone :return_or_enter}]
+         [:##caps_lock :left_option :emacs {:alone :!Tg}]
          ]}
 #+end_src
 
-**** delete_forward
+#+begin_src clojure
+{:des "outside Emacs, caps → escape (alone) | left_option (held)"
+ :rules [
+         [:##caps_lock :left_option nil {:alone :escape}]
+         ]}
+#+end_src
+
+*** delete_forward
 :PROPERTIES:
 :ID:       C016D30A-E2DF-4E28-89A0-90DDD9293D29
 :END:
@@ -539,146 +475,18 @@ CLOCK: [2021-07-25 Sun 16:11]--[2021-07-25 Sun 17:02] =>  0:51
          ]}
 #+end_src
 
-**** right_control
+*** delete_or_backspace
 :PROPERTIES:
-:ID:       30827877-0622-4450-A217-56C7A05CC20F
-:mtime:    20230212122805
-:ctime:    20230212122805
+:ID:       CC3880F6-F71B-492D-8F0E-585ADB552004
 :END:
 #+begin_src clojure
-{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
+{:des "delete_or_backspace → return_or_enter (alone) | left_command (held)"
  :rules [
-         [:##right_control :!Tright_command [:moonlander :kinesis :emacs] {:alone :f18}]
+         [:##delete_or_backspace :left_command [:moonlander :kinesis] {:alone :return_or_enter}]
          ]}
 #+end_src
 
-#+begin_src clojure
-{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
- :rules [
-         [:##right_control :!Qright_control [:moonlander :kinesis] {:alone :f18}]
-         ]}
-#+end_src
- 
-**** quote
-:PROPERTIES:
-:ID:       D14C4590-0118-47A1-8095-E7A18EC694C0
-:END:
-#+begin_src clojure
-{:des "on Emacs, quote → quote (alone) | super (held)"
- :rules [
-         [:##quote :right_control [:moonlander :kinesis :emacs] {:alone :quote}]
-         ]}
-#+end_src
-
-*** internal keyboard
-:PROPERTIES:
-:ID:       533B81E8-E738-4374-88D0-4EE942561659
-:END:
-
-**** tab
-:PROPERTIES:
-:ID:       06A8716B-F75B-4B6C-80BC-C331FDC401FB
-:END:
-
-#+begin_src clojure
-{:des "on Emacs, equal_sign → equal_sign (alone) | Alt (held)"
- :rules [
-         [:##tab :right_command [:!moonlander :emacs] {:alone :equal_sign}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "outside Emacs, equal_sign → equal_sign (alone) | left_shift + left_option (held)"
- :rules [
-         [:##tab :!Sleft_option :!moonlander  {:alone :equal_sign}]
-         ]}
-#+end_src
-
-**** left_option
-:PROPERTIES:
-:ID:       F39F132B-8D79-4461-A07F-642827D7957A
-:END:
-#+begin_src clojure
-{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
- :rules [
-         [:##left_option :left_shift :!moonlander {:alone :!CT0}]
-         ]}
-#+end_src
-
-**** left_command
-:PROPERTIES:
-:ID:       F35E661F-F9C4-4950-931F-DCAA5E668859
-:END:
-#+begin_src clojure
-{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
- :rules [
-         [:##left_command :left_command [:!moonlander :!steam] {:alone :return_or_enter}]
-         ]}
-#+end_src
-
-**** right_command
-:PROPERTIES:
-:ID:       EE9EC966-6B9E-4C10-AB37-2D932D4426A0
-:END:
-
-#+begin_src clojure
-{:des "spacebar → tab (alone) | left_control (held)"
- :rules [
-         [:##right_command :left_control :!moonlander {:alone :tab}]
-         ]}
-#+end_src
-
-**** right_option
-:PROPERTIES:
-:ID:       E35A6F0B-BD09-4160-BC74-E1B8090C70AD
-:END:
-
-#+begin_src clojure
-{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
- :rules [
-         [:##right_option :!Tright_command [:!moonlander :emacs] {:alone :f18}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
- :rules [
-         [:##right_option :!Qright_control :!moonlander {:alone :f18}]
-         ]}
-#+end_src
-
-**** return_or_enter
-:PROPERTIES:
-:ID:       397F7E6A-A4DB-4FC8-84C7-ADB6CC2D9E2A
-:mtime:    20230212123126
-:ctime:    20230212123126
-:END:
-Note that we use a simple modification to map ~return_or-enter~ to ~quote~, because we later define a ~quote~ simlayer, which works if the mapping is defined via a simple modification, but not via a complex modification.
-
-#+begin_src clojure
-{:des "on Emacs, return_or_enter → quote (alone) | super (held)"
- :rules [
-         [:##quote :right_control [:!moonlander :!kinesis :emacs] {:alone :quote}]
-         ]}
-#+end_src
-
-*** moonlander
-:PROPERTIES:
-:ID:       4A03CCD3-54C8-4B3A-AB2F-ABCB7FB130B1
-:END:
-
-**** tab
-:PROPERTIES:
-:ID:       D9295C31-3375-4F78-974C-9EDDEFA6E8A3
-:END:
-#+begin_src clojure
-{:des "tab → tab (alone) | left_control (held)"
- :rules [
-         [:##tab :left_control :moonlander {:alone :tab}]
-         ]}
-#+end_src
-
-**** equal_sign
+*** equal_sign
 :PROPERTIES:
 :ID:       7A4C371E-862F-4F1D-80D9-4E33869AEDE7
 :mtime:    20230212122632
@@ -698,29 +506,194 @@ Note that we use a simple modification to map ~return_or-enter~ to ~quote~, beca
          ]}
 #+end_src
 
-*** kinesis
+*** left_command
 :PROPERTIES:
-:ID:       0F19B8ED-56B3-4AFB-AE81-BD9C7A0C3332
+:ID:       F35E661F-F9C4-4950-931F-DCAA5E668859
 :END:
-**** return_or_enter
+#+begin_src clojure
+{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
+ :rules [
+         [:##left_command :left_command [:!moonlander :!steam] {:alone :return_or_enter}]
+         ]}
+#+end_src
+
+*** left_control
 :PROPERTIES:
-:ID:       D9295C31-3375-4F78-974C-9EDDEFA6E8A3
-:mtime:    20230212123320
-:ctime:    20230212123320
+:ID:       E5FED8CC-8FA4-4964-87EF-4801A2B91848
 :END:
+#+begin_src clojure
+{:des "on Emacs, left_control → command + tab (alone) | left_command (held)"
+ :rules [
+          [:!Ch :!QCOWh :emacs] ; circunvent macOS command + h
+          [:!CQh :!QTCWh :emacs] ; circunvent macOS command + option + h
+         [:##left_control :!Qleft_command [:!steam :emacs] {:alone :!Ctab}]
+         ]}
+#+end_src
+
+#+begin_src clojure
+{:des "outside Emacs, left_control → command + tab (alone) | left_option + left_command (held)"
+ :rules [
+         [:##left_control :!Oleft_command [:!steam :!emacs] {:alone :!Ctab}]
+         ]}
+#+end_src
+
+*** left_option
+:PROPERTIES:
+:ID:       F39F132B-8D79-4461-A07F-642827D7957A
+:END:
+#+begin_src clojure
+{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
+ :rules [
+         [:##left_option :left_shift :!moonlander {:alone :!CT0}]
+         ]}
+#+end_src
+
+*** left_shift
+:PROPERTIES:
+:ID:       CF0E3547-DE12-40CE-8BBB-4347FFEE7401
+:END:
+#+begin_src clojure
+{:des "on Emacs, left_shift → right_command (alone) | hyphen (held)"
+ :rules [
+         [:##left_shift :!Oright_command :emacs {:alone :hyphen}]
+         ]}
+#+end_src
+
+#+begin_src clojure
+{:des "outside Emacs, left_shift → Option + control (alone) | hyphen (held)"
+ :rules [
+         [:##left_shift :!Oleft_control nil {:alone :hyphen}]
+         ]}
+#+end_src
+
+*** quote
+:PROPERTIES:
+:ID:       D14C4590-0118-47A1-8095-E7A18EC694C0
+:END:
+#+begin_src clojure
+{:des "on Emacs, quote → quote (alone) | super (held)"
+ :rules [
+         [:##quote :right_control [:moonlander :kinesis :emacs] {:alone :quote}]
+         ]}
+#+end_src
+
+*** return_or_enter
+:PROPERTIES:
+:ID:       397F7E6A-A4DB-4FC8-84C7-ADB6CC2D9E2A
+:mtime:    20230212123126
+:ctime:    20230212123126
+:END:
+Note that we use a simple modification to map ~return_or-enter~ to ~quote~, because we later define a ~quote~ simlayer, which works if the mapping is defined via a simple modification, but not via a complex modification.
+
+#+begin_src clojure
+{:des "on Emacs, return_or_enter → quote (alone) | super (held)"
+ :rules [
+         [:##quote :right_control [:!moonlander :!kinesis :emacs] {:alone :quote}]
+         ]}
+#+end_src
+
 #+begin_src clojure
 {:des "tab → return_or_enter (alone) | left_control (held)"
  :rules [
          [:##return_or_enter :left_control :kinesis {:alone :tab}]
          ]}
 #+end_src
- 
-**** tab
+
+*** right_command
 :PROPERTIES:
-:ID:       7A4C371E-862F-4F1D-80D9-4E33869AEDE7
-:mtime:    20230212122632
-:ctime:    20230212121714
+:ID:       EE9EC966-6B9E-4C10-AB37-2D932D4426A0
 :END:
+
+#+begin_src clojure
+{:des "spacebar → tab (alone) | left_control (held)"
+ :rules [
+         [:##right_command :left_control :!moonlander {:alone :tab}]
+         ]}
+#+end_src
+
+*** right_control
+:PROPERTIES:
+:ID:       30827877-0622-4450-A217-56C7A05CC20F
+:mtime:    20230212122805
+:ctime:    20230212122805
+:END:
+#+begin_src clojure
+{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
+ :rules [
+         [:##right_control :!Tright_command [:moonlander :kinesis :emacs] {:alone :f18}]
+         ]}
+#+end_src
+
+#+begin_src clojure
+{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
+ :rules [
+         [:##right_control :!Qright_control [:moonlander :kinesis] {:alone :f18}]
+         ]}
+#+end_src
+ 
+*** right_option
+:PROPERTIES:
+:ID:       E35A6F0B-BD09-4160-BC74-E1B8090C70AD
+:END:
+
+#+begin_src clojure
+{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
+ :rules [
+         [:##right_option :!Tright_command [:!moonlander :emacs] {:alone :f18}]
+         ]}
+#+end_src
+
+#+begin_src clojure
+{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
+ :rules [
+         [:##right_option :!Qright_control :!moonlander {:alone :f18}]
+         ]}
+#+end_src
+
+*** right_shift
+:PROPERTIES:
+:ID:       18FD5116-6D73-4B5D-9379-A0DD1D01970F
+:END:
+#+begin_src clojure
+{:des "on Emacs, right_shift → en dash (alone) | Super + Alt (held)"
+ :rules [
+         [:right_shift :!Wright_command :emacs {:alone :!Ehyphen}]
+         ]}
+#+end_src
+
+#+begin_src clojure
+{:des "outside Emacs, right_shift → en dash (alone) | right_option + right_control (held)"
+ :rules [
+         [:##right_shift :!Wright_option nil {:alone :!Ehyphen}]
+         ]}
+#+end_src
+
+*** tab
+:PROPERTIES:
+:ID:       06A8716B-F75B-4B6C-80BC-C331FDC401FB
+:END:
+
+#+begin_src clojure
+{:des "on Emacs, equal_sign → equal_sign (alone) | Alt (held)"
+ :rules [
+         [:##tab :right_command [:!moonlander :emacs] {:alone :equal_sign}]
+         ]}
+#+end_src
+
+#+begin_src clojure
+{:des "outside Emacs, equal_sign → equal_sign (alone) | left_shift + left_option (held)"
+ :rules [
+         [:##tab :!Sleft_option :!moonlander  {:alone :equal_sign}]
+         ]}
+#+end_src
+
+#+begin_src clojure
+{:des "tab → tab (alone) | left_control (held)"
+ :rules [
+         [:##tab :left_control :moonlander {:alone :tab}]
+         ]}
+#+end_src
+
 #+begin_src clojure
 {:des "on Emacs, tab → equal_sign (alone) | Alt (held)"
  :rules [
@@ -777,6 +750,7 @@ On Emacs, caps lock triggers C-g instead of escape. So we create a reverse mappi
 :PROPERTIES:
 :ID:       348C5A9E-09EC-4E0C-B03F-4C347B016E36
 :END:
+
 *** j-mode
 :PROPERTIES:
 :ID:       0901DE3D-511F-4547-ACCD-3AAD9703DAAD

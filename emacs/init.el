@@ -6675,6 +6675,15 @@ conditional on active capture template."
     (isearch-exit)
     (org-beginning-of-line))
 
+  (defun ps/org-clock-report (start-date end-date)
+    "Generate an org clock report for the period between START-DATE and END-DATE."
+    (interactive
+     (list (org-read-date nil nil nil "Start date: ")
+           (org-read-date nil nil nil "End date: ")))
+    (insert (format "#+BEGIN: clocktable :scope subtree :maxlevel 4 :narrow 50 :tstart \"%s\" :tend \"%s\"\n#+END:" start-date end-date))
+    (previous-line)
+    (org-ctrl-c-ctrl-c))
+
   :general
   ("A-H-j" 'org-clock-goto
    "A-H-x" 'org-clock-cancel)

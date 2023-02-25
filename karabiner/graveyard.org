@@ -1,0 +1,188 @@
+#+filetags: :project:
+* graveyard
+:PROPERTIES:
+:ID:       ECC3DE43-56AD-43A7-9386-CA1D720FFBB0
+:END:
+** inactive layers
+:PROPERTIES:
+:ID:       B228F5AC-BC34-4908-A3A3-50B8AFF41A97
+:END:
+
+*** k-mode
+:PROPERTIES:
+:ID:       4A0DD582-A767-445D-8B9F-B6B8E98EB1D2
+:END:
+
+#+begin_src clojure :tangle no
+{:des "k-mode (transposition)"
+ :rules [:k-mode
+         [:a :!TCOWQa :emacs] ;
+         [:b :!TCOWQb :emacs] ;
+         [:c :!TCOWQc :emacs] ;
+         [:d :!TCOWQd :emacs] ;
+         [:e :!TCOWQe :emacs] ;
+         [:f :!TCOWQf :emacs] ;
+         [:g :!TCOWQg :emacs] ;
+         [:h :!TCOWQh :emacs] ;
+         [:i :!TCOWQi :emacs] ;
+         [:j :!TCOWQj :emacs] ;
+         [:l :!TCOWQl :emacs] ;
+         [:m :!TCOWQm :emacs] ;
+         [:n :!TCOWQn :emacs] ;
+         [:o :!TCOWQo :emacs] ;
+         [:p :!TCOWQp :emacs] ;
+         [:q :!TCOWQq :emacs] ;
+         [:r :!TCOWQr :emacs] ;
+         [:s :!TCOWQs :emacs] ;
+         [:t :!TCOWQt :emacs] ;
+         [:u :!TCOWQu :emacs] ;
+         [:v :!TCOWQv :emacs] ;
+         [:w :!TCOWQw :emacs] ;
+         [:z :!TCOWQz :emacs] ;
+         [:x :!TCOWQx :emacs] ;
+         [:y :!TCOWQy :emacs] ;
+         [:period :!TCOWQperiod :emacs] ;
+         [:spacebar :!TCOWQspacebar :emacs] ;
+         ]}
+#+end_src
+
+*** b-mode
+:PROPERTIES:
+:ID:       E1E84416-54BF-40A5-8482-F3ED1DE75F29
+:END:
+
+#+begin_src clojure :tangle no
+{:des "b-key (Chrome tabs)"
+ :rules [:b-mode
+         ;; [:a [:km ""]]
+         [:e [:km "Open: Effective Altruism Blogs"]]
+         [:c [:km "Open: Finances"]]
+         [:d [:km "Open: Clipboard"]]
+         ;; [:e [:km ""]]
+         [:f [:km "Open: Effective Altruism Forum"]]
+         [:g [:km "Open: Library Genesis"]]
+         [:h [:km "Open: Khan Academy"]]
+         [:e [:km "Open: Gmail"]]
+         ;; [:j [:km "Open: "]]
+         [:k [:km "Open: Book search"]]
+         [:l [:km "Open: LessWrong"]]
+         [:m [:km "Open: Metaculus"]]
+         ;; [:n [:km "Open: "]]
+         ;; [:o [:km "Open: "]]
+         [:p [:km "Open: Metaculus Pandemic"]]
+                                        ; [:q [:km "Open: "]]
+         [:r [:km "Open: Reaction time"]]
+         [:s [:km "Open: Sci Hub"]]
+         [:t [:km "Open: Worldcat"]]
+         [:v [:km "Open: Drive"]]
+         [:w [:km "Open: Wayback Machine"]]
+         ;; [:x [:km ""]]
+         [:y [:km "Open: YouTube"]]
+         ;; [:z [:km ""]]
+         ]}
+#+end_src
+
+**** TODO [#5] Use two-key chord for this
+:PROPERTIES:
+:Effort:   0:20
+:ID:       441944E1-33ED-43E2-A1BB-D6F8A601677E
+:END:
+
+*** ?-mode
+:PROPERTIES:
+:ID:       42A014D7-D011-43E8-B401-9B080DF5AD61
+:END:
+
+#+begin_src clojure :tangle no
+{:des "?-key (folders)"
+ :rules [:?-mode
+         [:a [:!Cd :a] :emacs]
+         [:b [:!Cd :b] :emacs] ;
+         [:c [:!Cd :c] :emacs] ;
+         [:d [:!Cd :d] :emacs] ;
+         [:e [:!Cd :e] :emacs] ;
+         [:f [:!Cd :f] :emacs] ;
+         [:g [:!Cd :g] :emacs] ;
+         [:h [:!Cd :h] :emacs] ;
+         [:i [:!Cd :i] :emacs] ;
+         [:j [:!Cd :j] :emacs] ;
+         [:k [:!Cd :k] :emacs] ;
+         [:l [:!Cd :l] :emacs] ;
+         [:m [:!Cd :m] :emacs] ;
+         [:n [:!Cd :n] :emacs] ;
+         [:o [:!Cd :o] :emacs] ;
+         [:p [:!Cd :p] :emacs] ;
+         [:q [:!Cd :q] :emacs] ;
+         [:r [:!Cd :r] :emacs] ;
+         [:s [:!Cd :s] :emacs] ;
+         [:t [:!Cd :t] :emacs] ;
+         [:u [:!Cd :u] :emacs] ;
+         [:v [:!Cd :v] :emacs] ;'
+         [:w [:!Cd :w] :emacs] ;
+         [:y [:!Cd :y] :emacs] ;
+         [:z [:!Cd :z] :emacs] ;
+         [:period [:!Cd :period] :emacs] ;
+         [:comma [:!Cd :comma]:emacs] ;
+         [:a [:km "open: Apps"]]
+         [:b [:km "open: Books"]]
+         [:c [:km "open: Emacs"]]
+         [:d [:km "open: Documentaries"]]
+         ;; [:e [:km "open: "]]
+         [:f [:km "open: Finance"]]
+         ;; [:g [:km "open: "]]
+         [:h [:km "open: Google Drive"]]
+         [:i [:km "open: Anki"]]
+         [:j [:km "open: Health"]]
+         ;; [:k [:km "open: "]]
+         [:l [:km "open: Library"]]
+         [:m [:km "open: Metaculus"]]
+         ;; [:n [:km "open: "]]
+         [:o [:km "open: Org"]]
+         [:p [:km "open: Audiobooks"]]
+         ;; [:q [:km "open: "]]
+         ;; [:r [:km "open: "]]
+         ;; [:s [:km "open: "]]
+         [:t [:km "open: Tango"]]
+         [:u [:km "open: User"]]
+         [:v [:km "open: Movies"]]
+         [:w [:km "open: Downloads"]]
+         [:y [:km "open: Music"]]
+         ;; [:z [:km "open: "]]
+         [:slash [:km "open: Root"]]
+         ]}
+#+end_src
+
+*** enter + space pseudo-mode
+:PROPERTIES:
+:ID:       F47AD6F6-4B33-4411-81F7-3F6E27B85DDC
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-22 Sat 17:54]--[2021-05-22 Sat 18:05] =>  0:11
+:END:
+
+I'd like to make ~:spacebar~ behave as ~shift~ when pressed together with ~return_or_enter~. But the code below doesn't work.
+
+#+begin_src clojure :tangle no
+{:des ""
+ :rules [
+         :emacs
+         [[:!Sspacebar :s] [:a]]
+         ]}
+#+end_src
+
+*** zx-chord
+:PROPERTIES:
+:ID:       60726A89-2CDB-4B4E-91B4-2DF4D3D55EB6
+:END:
+
+Experimental; currently not tangled.
+
+#+begin_src clojure :tangle no
+{:des "zx-chord" :rules [[{:sim [:z :x]
+                           :simo {:interrupt true
+                                  :dorder :insensitive
+                                  :uorder :insensitive
+                                  :afterup {:set ["launch_mode" 0]}}} {:set ["launch_mode" 1]}]
+                         [:condi :launch_mode :!open_mode]
+#+end_src
+

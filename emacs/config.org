@@ -6693,7 +6693,10 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :general
   ("A-g" 'magit)
   (magit-mode-map
-   "o" 'ps/magit-open-repo))
+   "o" 'ps/magit-open-repo)
+  (magit-status-mode-map
+   "A-C-s-r" 'magit-section-backward
+   "A-C-s-f" 'magit-section-forward))
 #+end_src
 
 To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. That generates a ~.patch~ file which you can attach to an email using whatever email client you usually use.

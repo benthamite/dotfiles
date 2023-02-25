@@ -4120,7 +4120,10 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :general
   ("A-g" 'magit)
   (magit-mode-map
-   "o" 'ps/magit-open-repo))
+   "o" 'ps/magit-open-repo)
+  (magit-status-mode-map
+   "A-C-s-r" 'magit-section-backward
+   "A-C-s-f" 'magit-section-forward))
 
 (use-package ghub
   :defer 5)

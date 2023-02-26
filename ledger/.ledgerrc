@@ -1,6 +1,6 @@
---file ~/Dropbox/ledger/journal.ledger
---file ~/Dropbox/tlon/tlon.ledger
---price-db ~/Dropbox/ledger/.pricedb
+--file ~/Library/CloudStorage/Dropbox/ledger/journal.ledger
+--file ~/Library/CloudStorage/Dropbox/tlon/tlon.ledger
+--price-db ~/Library/CloudStorage/Dropbox/ledger/.pricedb
 --input-date-format %Y-%m-%d
 --date-format %Y-%m-%d
 --start-of-week=mon

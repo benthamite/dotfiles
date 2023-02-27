@@ -1,7 +1,3 @@
-:PROPERTIES:
-:mtime:    20230213030913
-:ctime:    20230212123656
-:END:
 #+PROPERTY: header-args :tangle (print ps/file-karabiner-edn)
 #+TITLE:Pablo's Karabiner config
 #+AUTHOR: Pablo Stafforini <pablo@stafforini.com>

@@ -15145,11 +15145,13 @@ To try once I switch to Emacs 29.
 #+begin_src emacs-lisp :results silent
 (use-feature message
   :custom
-  (message-kill-buffer-on-exit t "`message-send-and-exit' kills buffer, rather than burying it")
+  (message-kill-buffer-on-exit t) ; `message-send-and-exit' kills buffer, rather than burying it
   (message-send-mail-function 'smtpmail-multi-send-it)
+
   :hook
   (message-mode-hook . (lambda () (auto-fill-mode -1)))
   (message-send-hook . message-lint)
+
   :general
   ((message-mode-map org-msg-edit-mode-map)
    "s-c" 'message-send-and-exit

@@ -10990,14 +10990,14 @@ PREFIX determines quoting."
 
 (defalias 'epa--decode-coding-string 'decode-coding-string) ; github.com/sfromm/emacs.d#twitter
 (use-package twittering-mode
-  :if (equal (system-name) ps/computer-hostname-pablo)
+  ;; :if (equal (system-name) ps/computer-hostname-pablo)
   :defer t
   :custom
   (twittering-use-master-password t)
   (twittering-icon-mode t)
   (twittering-use-icon-storage t)
   (twittering-icon-storage-limit 10000)
-  (twittering-timeline-header "")
+  (twittering-timeline-header "Refresh buffer contents\n")
   (twittering-timeline-footer "")
   (twittering-status-format "%FACE[font-lock-function-name-face]{  @%s}  %FACE[italic]{%@}  %FACE[error]{%FIELD-IF-NONZERO[❤ %d]{favorite_count}}  %FACE[warning]{%FIELD-IF-NONZERO[↺ %d]{retweet_count}}
 %FOLD[   ]{%FILL{%t}%QT{

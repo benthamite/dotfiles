@@ -11656,17 +11656,6 @@ to the clipboard."
       (shell-command "osascript ~/Library/Scripts/notifications.applescript")
       (kill-buffer shell-command-buffer-name)))
 
-  (dolist (user (list "leo" "fede"))
-    ;; is there a more elegant way of declaring these variables?
-    (let ((hostname (symbol-value (intern (concat "ps/computer-hostname-" user))))
-          (file (symbol-value (intern (concat "ps/file-tlon-tareas-" user)))))
-      (when (equal (system-name) hostname)
-        (file-notify-add-watch
-         file
-         '(change)
-         (lambda (event)
-           (alert "Changes to `tareas.org' have been detected."))))))
-
   :general
   ("H-\"" 'ps/alert-dismiss-osx-notification))
 

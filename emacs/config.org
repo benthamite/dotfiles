@@ -12304,7 +12304,7 @@ return such list if its length is less than LIMIT."
   (defvar ps/org-roam-excluded-files nil)
   (when (equal (system-name) ps/computer-hostname-pablo)
     (dolist (file '("orb-noter-template.org"
-                    "calendar.org"
+                    "calendar.org" ; added directly as agenda file
                     "notatu-dignum.org"
                     "quotes-old.org"
                     ".org2blog.org"

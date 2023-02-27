@@ -862,6 +862,7 @@ installed."
           ;; additional customizations can be added here
 
           ;; for the rest, use the predefined intense values
+
           ,@modus-themes-preset-overrides-intense))
 
   (ps/modus-themes-load-theme-conditionally)

@@ -1981,7 +1981,6 @@ _a_pend       |_k_macro      |r_e_store                    "
   (large-file-warning-threshold (* 200 1000 1000))
   (enable-local-variables :all)
   (insert-directory-program "/opt/homebrew/bin/gls" "use coreutils to avoid 'listing directory failed' error")
-
   (auto-save-no-message t "don't emit message when auto-saving")
   (backup-by-copying t "don't clobber symlink")
   (kept-new-versions 100 "keep 100 latest versions")
@@ -1990,7 +1989,6 @@ _a_pend       |_k_macro      |r_e_store                    "
   (version-control t "number backups")
 
   :config
-
   (add-to-list 'auto-mode-alist '("\\.mdx\\'" . markdown-mode))
 
   ;; christiantietze.de/posts/2021/06/emacs-trash-file-macos/

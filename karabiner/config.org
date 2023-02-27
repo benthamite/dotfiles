@@ -2017,5 +2017,5 @@ Source: [[https://en.wikipedia.org/wiki/Letter_frequency][Wikipedia]]
 :ID:       2137CAE3-8576-467C-BA76-7060BE9FE6D0
 :END:
 # Local Variables:
-# before-save-hook: org-make-toc
+# eval: (add-hook 'before-save-hook 'org-make-toc nil t)
 # End:

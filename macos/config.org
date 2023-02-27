@@ -35,6 +35,7 @@ The code blocks in this file are [[https://orgmode.org/manual/Extracting-Source-
 - [[#google-chrome][Google Chrome]]
 - [[#misc][Misc]]
 - [[#kill-affected-applications][Kill affected applications]]
+- [[#local-variables][Local variables]]
 :END:
 
 * preface
@@ -607,5 +608,5 @@ echo "Done. Note that some of these changes require a logout/restart to take eff
 
 * Local variables
 # Local Variables:
-# before-save-hook: org-make-toc
+# eval: (add-hook 'before-save-hook 'org-make-toc nil t)
 # End:

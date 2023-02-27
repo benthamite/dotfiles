@@ -12566,21 +12566,39 @@ CLOCK: [2022-05-08 Sun 08:45]--[2022-05-08 Sun 09:07] =>  0:22
 CLOCK: [2021-12-14 Tue 19:46]--[2021-12-14 Tue 20:06] =>  0:20
 :END:
 [[https://github.com/d12frosted/vulpea][vulpea]] is a collection of functions for note taking based on ~org~ and ~org-roam~.
-#+transclude: [[id:5461B907-53F6-4D99-B70C-45E9C3902EB4][org-roam-browser-extension]]
+
+I use this package only to define a dynamic agenda, as explained and illustrated [[d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html][here]]. I've made some changes to the system in that link, specifically to exclude files and directories at various stages:
+1. At the broadest level, I exclude files and directories from the function (~ps/org-id-add-ids-to-headings-in-file~) that otherwise automatically adds an ID to every org heading in a file-visiting buffer. Headings so excluded are not indexed by org-roam, because a heading requires an ID to be indexed.
+2. I then exclude some headings with IDs from the org-roam database (via the variables  ~org-roam-file-exclude-regexp~ and ~org-roam-db-node-include-function~).
+3. Finally, I selectively add to ~org-agenda-files~ files that satisfy certain conditions (as defined by ~ps/vulpea-project-p~) and files modified recently (as specified by ~ps/org-roam-recent~), and exclude from ~org-agenda-files~ files listed in ~ps/org-agenda-files-excluded~.
 
 #+begin_src emacs-lisp :results silent
 (use-package vulpea
   :if (equal (system-name) ps/computer-hostname-pablo)
   :commands (vulpea-buffer-p vulpea-agenda-files-update vulpea-buffer-prop-get-list vulpea-project-update-tag)
   :config
-  ;; everything below adapted from d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html
+  ;; adapted from
+  (defvar ps/vulpea-excluded-directories nil
+    "Directories containing files to exclude from list of projects")
+
+  (defvar ps/vulpea-excluded-files nil
+    "files to exclude from list of projects")
+
   (defun ps/vulpea-project-p ()
     "Return non-nil if current buffer has a TODO, a schedule or a deadline.
 
 TODO entries marked as done are ignored, meaning the this
 function returns nil if current buffer contains only completed
 tasks."
-    (when (eq major-mode 'org-mode)
+    (when (and (eq major-mode 'org-mode)
+
+               ;; exclude dirs
+               (not (member (file-name-directory (buffer-file-name))
+                            ps/vulpea-excluded-directories))
+
+               ;; exclude files
+               (not (member (buffer-file-name) ps/vulpea-excluded-files)))
+
       (org-element-map
           (org-element-parse-buffer 'headline)
           'headline

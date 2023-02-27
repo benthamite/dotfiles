@@ -11633,7 +11633,9 @@ to the clipboard."
   ;; :defer 10
   :demand t
   :custom
+  ;; the settings below are not working; is it because `alert-default-style' is set to `notifier'?
   (alert-fade-time 2)
+  (alert-persist-idle-time 60)
 
   :config
   (if (eq system-type 'darwin)

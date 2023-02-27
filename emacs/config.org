@@ -3557,7 +3557,6 @@ https://emacs.stackexchange.com/questions/46186/how-to-expand-truncated-informat
 
 #+begin_src emacs-lisp :results silent
 (use-feature emacs
-  :demand t
   :custom
   (tab-always-indent 'complete)
 

@@ -1142,7 +1142,8 @@ and generates profiling report."
  "C-H-M-g" 'append-next-kill
  "A-M-n" 'ps/remove-newlines-from-region)
 
-;; (use-package iy-go-to-char)
+(use-feature simple
+  :config
 (defun ps/backward-zap-to-char ()
   (interactive)
   (zap-to-char -1 (read-char-from-minibuffer "Zap to char: "
@@ -1195,8 +1196,8 @@ See also `zap-up-to-char'."
   (interactive)
   (transpose-chars -1))
 
-(general-define-key
- "A-H-M-d" 'transpose-chars
+:general
+( "A-H-M-d" 'transpose-chars
  "A-H-M-s" 'ps/transpose-chars-backward
  "C-H-M-s" 'delete-backward-char
  "C-H-M-d" 'delete-forward-char
@@ -1208,67 +1209,66 @@ See also `zap-up-to-char'."
  "C-H-M-s-A-f" 'ps/zap-copy-to-char
  "C-H-M-s-A-a" 'ps/backward-zap-copy-to-char
  "C-H-M-=" 'overwrite-mode)
-(general-define-key
- :keymaps 'org-mode-map
- "C-H-M-s" 'org-delete-backward-char)
+(org-mode-map
+ "C-H-M-s" 'org-delete-backward-char))
 
 (use-feature simple
   :config
-(defun ps/delete-word (&optional arg)
-  "Like `kill-word', but deletes instead of killing."
-  (interactive "p")
-  (ps/delete-instead-of-kill (kill-word arg)))
+  (defun ps/delete-word (&optional arg)
+    "Like `kill-word', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (kill-word arg)))
 
-(defun ps/backward-delete-word (&optional arg)
-  "Like `backward-kill-word', but deletes instead of killing."
-  (interactive "p")
-  (ps/delete-instead-of-kill (backward-kill-word arg)))
+  (defun ps/backward-delete-word (&optional arg)
+    "Like `backward-kill-word', but deletes instead of killing."
+    (interactive "p")
+    (ps/delete-instead-of-kill (backward-kill-word arg)))
 
-(defun ps/copy-word (&optional arg)
-  "Like `kill-word', but copies instead of killing."
-  (interactive "P")
-  (ps/copy-instead-of-kill (kill-word arg)))
+  (defun ps/copy-word (&optional arg)
+    "Like `kill-word', but copies instead of killing."
+    (interactive "P")
+    (ps/copy-instead-of-kill (kill-word arg)))
 
-;; The macro wasn't working for `backward-kill-word', so using a custom function.
-(defun ps/backward-copy-word ()
-  "Like `backward-kill-word', but copies instead of killing."
-  (interactive)
-  (copy-region-as-kill (point) (progn (backward-word) (point))))
+  ;; The macro wasn't working for `backward-kill-word', so using a custom function.
+  (defun ps/backward-copy-word ()
+    "Like `backward-kill-word', but copies instead of killing."
+    (interactive)
+    (copy-region-as-kill (point) (progn (backward-word) (point))))
 
-(defun ps/kill-whole-word ()
-  "Kill the word at point."
-  (interactive)
-  (ps/kill-whole-thing 'word))
+  (defun ps/kill-whole-word ()
+    "Kill the word at point."
+    (interactive)
+    (ps/kill-whole-thing 'word))
 
-(defun ps/delete-whole-word ()
-  "Like `kill-whole-word', but deletes instead of killing."
-  (interactive)
-  (ps/delete-instead-of-kill (ps/kill-whole-word)))
+  (defun ps/delete-whole-word ()
+    "Like `kill-whole-word', but deletes instead of killing."
+    (interactive)
+    (ps/delete-instead-of-kill (ps/kill-whole-word)))
 
-(defun ps/copy-whole-word (&optional arg)
-  "Like `kill-whole-word', but copies instead of killing."
-  (interactive)
-  (ps/copy-instead-of-kill (ps/kill-whole-word)))
+  (defun ps/copy-whole-word (&optional arg)
+    "Like `kill-whole-word', but copies instead of killing."
+    (interactive)
+    (ps/copy-instead-of-kill (ps/kill-whole-word)))
 
-(defun ps/transpose-words-backward ()
-  "Interchange words around point, leaving point at beginning."
-  (interactive)
-  (transpose-words -1))
+  (defun ps/transpose-words-backward ()
+    "Interchange words around point, leaving point at beginning."
+    (interactive)
+    (transpose-words -1))
 
-:general
-("C-<delete>" nil
- "M-DEL" nil
- "C-H-M-r" 'kill-word
- "C-H-M-q" 'backward-kill-word
- "A-C-H-M-S-s-r" 'ps/delete-word
- "A-C-H-M-S-s-q" 'ps/backward-delete-word
- "C-H-M-s-A-r" 'ps/copy-word
- "C-H-M-s-A-q" 'ps/backward-copy-word
- "A-H-C-r" 'ps/delete-whole-word
- "A-H-C-q" 'ps/copy-whole-word
- "A-H-C-u" 'ps/kill-whole-word
- "A-H-M-r" 'transpose-words
- "A-H-M-q" 'ps/transpose-words-backward))
+  :general
+  ("C-<delete>" nil
+   "M-DEL" nil
+   "C-H-M-r" 'kill-word
+   "C-H-M-q" 'backward-kill-word
+   "A-C-H-M-S-s-r" 'ps/delete-word
+   "A-C-H-M-S-s-q" 'ps/backward-delete-word
+   "C-H-M-s-A-r" 'ps/copy-word
+   "C-H-M-s-A-q" 'ps/backward-copy-word
+   "A-H-C-r" 'ps/delete-whole-word
+   "A-H-C-q" 'ps/copy-whole-word
+   "A-H-C-u" 'ps/kill-whole-word
+   "A-H-M-r" 'transpose-words
+   "A-H-M-q" 'ps/transpose-words-backward))
 
 (use-feature simple
   :config
@@ -1382,7 +1382,7 @@ between the two."
    "A-H-M-e" 'transpose-sentences
    "A-H-M-w" 'ps/transpose-sentences-backward))
 
-(use-feature paragraphs
+(use-feature emacs
   :custom
   (sentence-end-double-space nil)
 
@@ -1442,121 +1442,7 @@ between the two."
    "A-H-M-c" 'transpose-paragraphs
    "A-H-M-x" 'ps/transpose-paragraphs-backward))
 
-;; the feature should be `lisp', but for some reason it is not loaded.
 (use-feature emacs
-  :demand t
-  :config
-  (defun ps/delete-sexp (&optional arg)
-    "Like `kill-sexp', but deletes instead of killing."
-    (interactive "p")
-    (ps/delete-instead-of-kill (kill-sexp arg)))
-
-  (defun ps/backward-delete-sexp (&optional arg)
-    "Like `backward-kill-sexp', but deletes instead of killing."
-    (interactive "p")
-    (ps/delete-instead-of-kill (backward-kill-sexp arg)))
-
-  (defun ps/copy-sexp (&optional arg)
-    "Like `kill-sexp', but copies instead of killing."
-    (interactive "P")
-    (ps/copy-instead-of-kill (kill-sexp arg)))
-
-  (defun ps/backward-copy-sexp (&optional arg)
-    "Like `backward-kill-sexp', but copies instead of killing."
-    (interactive "P")
-    (ps/copy-instead-of-kill (backward-kill-sexp arg)))
-
-  (defun ps/kill-whole-sexp ()
-    "Kill the sexp at point."
-    (interactive)
-    (ps/kill-whole-thing 'sexp))
-
-  (defun ps/delete-whole-sexp ()
-    "Like `kill-whole-sexp', but deletes instead of killing."
-    (interactive)
-    (ps/delete-instead-of-kill (ps/kill-whole-sexp)))
-
-  (defun ps/copy-whole-sexp ()
-    "Like `kill-whole-sexp', but copies instead of killing."
-    (interactive)
-    (ps/copy-instead-of-kill (ps/kill-whole-sexp)))
-
-  (defun ps/transpose-sexps-backward ()
-    "Like `transpose-sexps', but in reverse order."
-    (interactive)
-    (transpose-sexps -1))
-
-  :general
-  ("C-M-k" nil
-   "C-M-<backspace>" nil
-   "C-H-M-f" 'kill-sexp
-   "C-H-M-a" 'backward-kill-sexp
-   "A-C-H-M-S-s-f" 'ps/delete-sexp
-   "A-C-H-M-S-s-a" 'ps/backward-delete-sexp
-   "C-H-M-s-A-f" 'ps/copy-sexp
-   "C-H-M-s-A-a" 'ps/backward-copy-sexp
-   "A-H-C-a" 'ps/copy-whole-sexp
-   "A-H-C-f" 'ps/delete-whole-sexp
-   "A-H-C-j" 'ps/kill-whole-sexp
-   "A-H-M-f" 'transpose-sexps
-   "A-H-M-a" 'ps/transpose-sexps-backward))(use-feature emacs
-  :demand t
-  :config
-  (defun ps/delete-sexp (&optional arg)
-    "Like `kill-sexp', but deletes instead of killing."
-    (interactive "p")
-    (ps/delete-instead-of-kill (kill-sexp arg)))
-
-  (defun ps/backward-delete-sexp (&optional arg)
-    "Like `backward-kill-sexp', but deletes instead of killing."
-    (interactive "p")
-    (ps/delete-instead-of-kill (backward-kill-sexp arg)))
-
-  (defun ps/copy-sexp (&optional arg)
-    "Like `kill-sexp', but copies instead of killing."
-    (interactive "P")
-    (ps/copy-instead-of-kill (kill-sexp arg)))
-
-  (defun ps/backward-copy-sexp (&optional arg)
-    "Like `backward-kill-sexp', but copies instead of killing."
-    (interactive "P")
-    (ps/copy-instead-of-kill (backward-kill-sexp arg)))
-
-  (defun ps/kill-whole-sexp ()
-    "Kill the sexp at point."
-    (interactive)
-    (ps/kill-whole-thing 'sexp))
-
-  (defun ps/delete-whole-sexp ()
-    "Like `kill-whole-sexp', but deletes instead of killing."
-    (interactive)
-    (ps/delete-instead-of-kill (ps/kill-whole-sexp)))
-
-  (defun ps/copy-whole-sexp ()
-    "Like `kill-whole-sexp', but copies instead of killing."
-    (interactive)
-    (ps/copy-instead-of-kill (ps/kill-whole-sexp)))
-
-  (defun ps/transpose-sexps-backward ()
-    "Like `transpose-sexps', but in reverse order."
-    (interactive)
-    (transpose-sexps -1))
-
-  :general
-  ("C-M-k" nil
-   "C-M-<backspace>" nil
-   "C-H-M-f" 'kill-sexp
-   "C-H-M-a" 'backward-kill-sexp
-   "A-C-H-M-S-s-f" 'ps/delete-sexp
-   "A-C-H-M-S-s-a" 'ps/backward-delete-sexp
-   "C-H-M-s-A-f" 'ps/copy-sexp
-   "C-H-M-s-A-a" 'ps/backward-copy-sexp
-   "A-H-C-a" 'ps/copy-whole-sexp
-   "A-H-C-f" 'ps/delete-whole-sexp
-   "A-H-C-j" 'ps/kill-whole-sexp
-   "A-H-M-f" 'transpose-sexps
-   "A-H-M-a" 'ps/transpose-sexps-backward))(use-feature emacs
-  :demand t
   :config
   (defun ps/delete-sexp (&optional arg)
     "Like `kill-sexp', but deletes instead of killing."
@@ -1740,6 +1626,7 @@ Has a preference for looking backward when not directly on a symbol."
    "H-A-v" 'ps/yank-and-pop))
 
 (use-feature simple
+  :demand t
   :custom
   (shift-select-mode nil "Shift keys do not activate the mark momentarily.")
   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
@@ -1822,7 +1709,6 @@ clipboard. Either way, save count to kill ring."
   ("M-A-v" 'view-mode))
 
 (use-feature emacs
-  :demand t
   :custom
   (tab-always-indent 'complete)
 

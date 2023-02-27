@@ -2013,6 +2013,9 @@ Source: [[https://en.wikipedia.org/wiki/Letter_frequency][Wikipedia]]
 #+TBLFM: $3=@2$2/$2
 
 * Local variables
+:PROPERTIES:
+:ID:       2137CAE3-8576-467C-BA76-7060BE9FE6D0
+:END:
 # Local Variables:
-# after-save-hook: org-make-toc
+# before-save-hook: org-make-toc
 # End:

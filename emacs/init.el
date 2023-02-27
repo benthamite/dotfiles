@@ -7386,42 +7386,42 @@ return such list if its length is less than LIMIT."
         (concat "${hierarchy:160} "
                 (propertize "${tags:20}" 'face 'org-tag)))
 
-  (defvar ps/org-roam-excluded-dirs nil)
-  (defvar ps/org-roam-excluded-files nil)
 
-  ;; FIXME: why does this trigger an error in Leo's computer?
-  (unless (equal (system-name) ps/computer-hostname-leo)
-    (dolist (dir `(,ps/dir-anki
-                   ,ps/dir-inactive
-                   ,ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
-                   ,ps/dir-archive
-                   ,ps/dir-dropbox-tlon-leo
-                   ,ps/dir-dropbox-tlon-fede))
+  (defvar ps/org-roam-excluded-dirs nil)
+  (when (equal (system-name) ps/computer-hostname-pablo)
+    (dolist (dir (list ps/dir-anki
+                       ps/dir-inactive
+                       ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
+                       ps/dir-archive))
       (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs)))
 
-  (dolist (file '("orb-noter-template.org"
-                  "tareas.org"
-                  "calendar.org"
-                  "notatu-dignum.org"
-                  "quotes-old.org"
-                  ".org2blog.org"
-                  "wiki-notes.org" ; removing temporarily
-                  "feeds.org"))
-    (push file ps/org-roam-excluded-files))
+  (defvar ps/org-roam-excluded-files nil)
+  (when (equal (system-name) ps/computer-hostname-pablo)
+    (dolist (file '("orb-noter-template.org"
+                    "calendar.org"
+                    "notatu-dignum.org"
+                    "quotes-old.org"
+                    ".org2blog.org"
+                    "wiki-notes.org" ; removing temporarily
+                    "feeds.org"
+                    "conflicted-copy"))
+      (push file ps/org-roam-excluded-files)))
 
+  ;; exclude selected headings based on parent files or directories
   (setq org-roam-file-exclude-regexp
-        (append
-         ps/org-roam-excluded-dirs
-         ps/org-roam-excluded-files
-         '("conflicted copy [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\})\\.org")))
+        (regexp-opt (delete-dups
+                     (append
+                      ps/org-roam-excluded-dirs
+                      ps/org-roam-excluded-files))))
 
+  ;; exclude selected headings based on other criteria
   (setq org-roam-db-node-include-function
         (lambda ()
           (if (or
-               ;; exclude selected tags
+               ;; exclude based on tags
                (member "noid" (org-get-tags))
                (member "ARCHIVE" (org-get-tags))
-               ;; exclude selected headings
+               ;; exclude based on heading names
                (member (org-get-heading) '("Local variables"
                                            "COMMENT Local variables"
                                            "TODO Local variables"
@@ -7465,7 +7465,7 @@ return such list if its length is less than LIMIT."
     "Update org id locations indexed by org roam."
     (interactive)
     (org-id-update-id-locations
-    (directory-files-recursively org-roam-directory ".org$\\|.org.gpg$")))
+     (directory-files-recursively org-roam-directory ".org$\\|.org.gpg$")))
 
   (defun ps/org-roam-remove-file-level-properties ()
     "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
@@ -7513,7 +7513,7 @@ return such list if its length is less than LIMIT."
   ;; include transcluded links in `org-roam' backlinks
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
 
-    (org-roam-db-autosync-mode -1)
+  (org-roam-db-autosync-mode -1)
 
   :hook
   (org-roam-capture-new-node-hook . orb--insert-captured-ref-h)

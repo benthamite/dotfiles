@@ -4498,6 +4498,21 @@ or are no longer readable will be killed."
              (point))))
       (>= (point) beginning-of-last-line)))
 
+  ;; `recover-this-file' notifications are easy to miss. The
+  ;; function below triggers a more intrusive alert.
+  (defun ps/alert-when-auto-save-detected ()
+    (when (and (not buffer-read-only)
+               (file-newer-than-file-p (or buffer-auto-save-file-name
+                                           (make-auto-save-file-name))
+                                       buffer-file-name)
+               (alert (format "%s has auto save data"
+                              (file-name-nondirectory buffer-file-name))
+		      :title "Auto save detected"
+		      :severity 'high))))
+
+  :hook
+  (find-file-hook . ps/alert-when-auto-save-detected)
+
   :general
   ("M--" 'not-modified
    "M-b" 'ps/save-and-revert-buffer

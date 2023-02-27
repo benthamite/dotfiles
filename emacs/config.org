@@ -6211,6 +6211,8 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 :PROPERTIES:
 :ID:       87D2EB00-727C-4CA3-85F1-B8D82D37B48D
 :END:
+/[[https://protesilaos.com/emacs/tmr][tmr]] set timers using a convenient notation./
+
 #+begin_src emacs-lisp :results silent
 (use-package tmr
   :defer 10)

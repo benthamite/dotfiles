@@ -2015,4 +2015,7 @@ Source: [[https://en.wikipedia.org/wiki/Letter_frequency][Wikipedia]]
 | Z      | 0.00074 |  175.67568 | t    |
 #+TBLFM: $3=@2$2/$2
 
-
+* Local variables
+# Local Variables:
+# after-save-hook: org-make-toc
+# End:

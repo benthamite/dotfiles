@@ -10188,7 +10188,6 @@ into a task for Leo."
            (new-path (concat ps/dir-downloads "/" file-name)))
       (rename-file old-path new-path)))
 
-
   (defun ps/telega-docs-change-notify (&optional change-begins change-ends)
     "TODO: write docstring"
     (interactive (list (region-beginning) (region-end)))

@@ -5382,11 +5382,11 @@ otherwise the whole buffer."
   (load-file (file-name-concat ps/dir-emacs-local "scroll-other-window.el"))
 
   (defun ps/pdf-tools-open-externally ()
-    "Open current PDF in external application. If `opentopage.sh'
+    "Open current PDF in external application. If `opentopage
  script is available, open to current page."
     (interactive)
     (let ((file (pdf-view-buffer-file-name))
-          (script "opentopage.sh")) ; apple.stackexchange.com/a/233987
+          (script "opentopage")) ; apple.stackexchange.com/a/233987
       (if (file-exists-p (file-name-concat "~/bin" script))
           (shell-command (format "sh %s '%s' %d" script file (pdf-view-current-page)))
         (shell-command (format "open '%s'" file)))))

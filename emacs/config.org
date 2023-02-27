@@ -60,7 +60,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#lin][lin]]
   - [[#image][image]]
   - [[#paren][paren]]
-  - [[#modeline][modeline]]
   - [[#doom-modeline][doom-modeline]]
   - [[#tab-bar][tab-bar]]
   - [[#fancy-battery][fancy-battery]]
@@ -125,7 +124,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#f][f]]
   - [[#locate][locate]]
   - [[#autorevert][autorevert]]
-  - [[#real-auto-save][real-auto-save]]
   - [[#dired][dired]]
   - [[#image-dired][image-dired]]
   - [[#dired-undo][dired-undo]]
@@ -239,6 +237,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#spelling--grammar][spelling & grammar]]
   - [[#ispell][ispell]]
   - [[#flyspell][flyspell]]
+  - [[#flyspell-lazy][flyspell-lazy]]
   - [[#flyspell-correct][flyspell-correct]]
   - [[#keytar][keytar]]
   - [[#grammarly][grammarly]]
@@ -371,6 +370,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-anki][org-anki]]
   - [[#org-drill][org-drill]]
 - [[#email][email]]
+  - [[#simple][simple]]
   - [[#smtpmail-multi][smtpmail-multi]]
   - [[#sendmail][sendmail]]
   - [[#async-mail-sending][async-mail-sending]]
@@ -578,7 +578,6 @@ CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
 For personal reference, these are the most recent Emacs installations (in reverse chronological order).
 
 [2023-02-23 Thu]
-
 
 #+begin_src shell :tangle no
 brew tap d12frosted/emacs-plus

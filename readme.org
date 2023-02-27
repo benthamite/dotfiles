@@ -1,0 +1,7 @@
+#+Pablo's dotfiles
+
+This repository contains my dotfiles, including
+
+- my [[emacs/config.org][Emacs config]];
+- my [[karabiner/config.org][Karabiner config]]; and
+- my [[macos/config.org][macOS defaults]].

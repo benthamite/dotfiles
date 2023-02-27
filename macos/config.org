@@ -605,3 +605,7 @@ done
 echo "Done. Note that some of these changes require a logout/restart to take effect."
 #+end_src
 
+* Local variables
+# Local Variables:
+# before-save-hook: org-make-toc
+# End:

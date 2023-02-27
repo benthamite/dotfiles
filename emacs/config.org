@@ -2375,14 +2375,10 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 (use-feature paren
   :custom
   (show-paren-delay 0)
+
   :config
   (show-paren-mode))
 #+end_src
-
-** modeline
-:PROPERTIES:
-:ID:       0C458CC1-28B8-49D7-8C61-DDB58604BCAD
-:END:
 
 ** doom-modeline
 :PROPERTIES:

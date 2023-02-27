@@ -11718,7 +11718,7 @@ is connected."
   :hook
   (midnight-mode . ps/save-all-buffers)
   (midnight-hook . ps/ledger-update-commodities)
-  (midnight-hook . ps/magit-stage-commit-and-push-all-repos)
+  ;; (midnight-hook . ps/magit-stage-commit-and-push-all-repos)
   (midnight-hook . clean-buffer-list)
   (midnight-hook . org-roam-db-sync)
   (midnight-hook . ps/org-roam-update-id-locations)

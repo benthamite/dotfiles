@@ -10310,7 +10310,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    )
   :config
   (cond ((equal (system-name) ps/computer-hostname-pablo)
-         (setq org-agenda-files nil))
+         (setq org-agenda-files (list
+				 ps/file-calendar)))
         ((equal (system-name) ps/computer-hostname-leo)
          (setq org-agenda-files (list
                                  ps/file-tlon-tareas-leo))))

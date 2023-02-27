@@ -9624,6 +9624,11 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
   :config
   (add-to-list 'org-modules 'org-drill))
 
+(use-feature simple
+  :custom
+  (mail-user-agent 'mu4e-user-agent)
+  (read-mail-command 'mu4e))
+
 (use-package smtpmail-multi
   :after mu4e
   :demand t

@@ -15074,6 +15074,18 @@ CLOCK: [2021-04-08 Thu 10:10]--[2021-04-08 Thu 10:52] =>  0:42
 CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :END:
 
+** simple
+:PROPERTIES:
+:ID:       509B1DFA-E776-4BF5-8231-4A5984FD0150
+:END:
+
+#+begin_src emacs-lisp
+(use-feature simple
+  :custom
+  (mail-user-agent 'mu4e-user-agent)
+  (read-mail-command 'mu4e))
+#+end_src
+
 ** smtpmail-multi
 :PROPERTIES:
 :ID:       DDFE6DC9-A986-4E79-BF5B-A99124B65BA2

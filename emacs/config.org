@@ -11798,11 +11798,16 @@ The packages [[https://github.com/alphapapa/org-ql][org-ql]] and ~helm-org-ql~ o
 :PROPERTIES:
 :ID:       5BAB49C3-DB85-4CB1-9CF7-5FD72AFB4608
 :END:
+:LOGBOOK:
+CLOCK: [2023-02-26 Sun 13:15]--[2023-02-26 Sun 13:28] =>  0:13
+:END:
+
 /[[https://github.com/alphapapa/org-make-toc][org-make-toc]] generates automatic tables of contents for org files./
 
 #+begin_src emacs-lisp :results silent
 (use-package org-make-toc
-  :after org)
+  :after org
+  :defer 10)
 #+end_src
 
 ** images

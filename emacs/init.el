@@ -7127,7 +7127,8 @@ original."
     (org-ql-find org-agenda-files :query-prefix "!tags:ARCHIVE")))
 
 (use-package org-make-toc
-  :after org)
+  :after org
+  :defer 10)
 
 (defun ps/org-paste-clipboard-image ()
   ;; TODO: write docstring

@@ -9675,8 +9675,10 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
              :repo "oantolin/emacs-config"
              :files ("my-lisp/message-extras.el"))
   :demand t
+
   :hook
   (eww-mode-hook . shr-heading-setup-imenu)
+
   :general
   (eww-mode-map
    "A-C-s-r" 'shr-heading-previous
@@ -9689,7 +9691,6 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
 
 (use-package mu4e
   :if (equal (system-name) ps/computer-hostname-pablo)
-  ;; :demand t
   :defer 5
   :straight (:local-repo
              "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
@@ -9700,9 +9701,7 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
   (setq ps/mu4e-daily-folder "/Daily")
 
   :custom
-  (mu4e-debug t "uncomment when debugging")
-  (mail-user-agent 'mu4e-user-agent)
-  (read-mail-command 'mu4e)
+  ;; (mu4e-debug t) ; uncomment when debugging
   (mu4e-split-view 'single-window)
   (mu4e-headers-show-target nil)
   (mu4e-get-mail-command "mbsync -a")
@@ -9711,32 +9710,32 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
   (mu4e-sent-folder "/[Gmail]/Sent Mail")
   (mu4e-refile-folder "/[Gmail]/All Mail")
   (mu4e-trash-folder "/[Gmail]/Trash")
+  (mu4e-attachment-dir ps/dir-downloads)
+  (mu4e-change-filenames-when-moving t)
   (mu4e-maildir-shortcuts
    `((,ps/mu4e-inbox-folder . ?i)
      (,ps/mu4e-daily-folder . ?y)
      (,mu4e-drafts-folder  . ?d)
      (,mu4e-sent-folder    . ?t)
      (,mu4e-trash-folder   . ?x)
-     (,mu4e-refile-folder  . ?a)))
-  (mu4e-headers-results-limit 1000)
-  (mu4e-headers-date-format "%Y-%m-%d %H:%M")
-  (mu4e-view-show-images t)
-  (mu4e-view-show-addresses t)
-  (mu4e-headers-visible-lines 25)
-  (mu4e-headers-include-related nil)
-  (mu4e-change-filenames-when-moving t "required for correct Gmail refiling")
-  (mu4e-sent-messages-behavior 'delete "Gmail already keeps a copy")
-  (mu4e-attachment-dir ps/dir-downloads)
+     (,mu4e-refile-folder  . ?a))) ; required for correct Gmail refiling
+  (mu4e-compose-dont-reply-to-self t)
   (mu4e-compose-format-flowed t)
-  (mu4e-hide-index-messages t)
   (mu4e-confirm-quit nil)
-  (mu4e-html2text-command 'mu4e-shr2text "requires `mu4e-contrib'")
+  (mu4e-headers-date-format "%Y-%m-%d %H:%M")
+  (mu4e-headers-include-related nil)
+  (mu4e-headers-results-limit 1000)
+  (mu4e-headers-visible-lines 25)
+  (mu4e-hide-index-messages t)
+  (mu4e-html2text-command 'mu4e-shr2text) ; requires `mu4e-contrib'
+  (mu4e-sent-messages-behavior 'delete) ; Gmail already keeps a copy
+  (mu4e-view-show-addresses t)
+  (mu4e-view-show-images t)
   ;; performance improvements
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
-  (mu4e-index-cleanup t "`nil' improves performance")
-  (mu4e-index-lazy-check t "`t' improves performance")
-  (mu4e-compose-dont-reply-to-self t)
+  (mu4e-index-cleanup t) ; `nil' improves performance"
+  (mu4e-index-lazy-check) ; `t' improves performance"
 
   :config
   (require 'mu4e-contrib)
@@ -9807,14 +9806,13 @@ for confirmation."
     (mu4e-view-mark-for-move)
     (mu4e-mark-execute-all t))
 
-  ;; copied from David Wilson
   ;; github.com/daviwil/emacs-from-scratch/blob/master/show-notes/Emacs-Mail-05.org#creating-a-mail-processing-workflow
   (defun ps/store-link-to-mu4e-query ()
     (interactive)
     (let ((org-mu4e-link-query-in-headers-mode t))
       (call-interactively 'org-store-link)))
 
-  ;; copied from github.com/danielfleischer/mu4easy#mu4e
+  ;; github.com/danielfleischer/mu4easy#mu4e
   (setf (alist-get 'trash mu4e-marks)
         '(:char ("d" . "▼")
                 :prompt "dtrash"
@@ -9861,31 +9859,6 @@ without asking for user confirmation."
     (interactive)
     (mu4e-mark-execute-all))
 
-  ;; (defun ps/mu4e--main-menu ()
-  ;; "mu4e main view in the minibuffer."
-  ;; (interactive)
-  ;; (let ((func (mu4e-read-option
-  ;; "Doit:"
-  ;; '(("all" . mu4e-refile-folder)
-  ;; ("compose" . mu4e-compose-new)
-  ;; ("drafts" . mu4e-drafts-folder)
-  ;; ("gmail-compose" . ps/mu4e-compose-new-externally)
-  ;; ("inbox" . ps/mu4e-inbox-folder)
-  ;; ("jump" . mu4e~headers-jump-to-maildir()
-  ;; ("reindex" . ps/mu4e-reindex-db)
-  ;; ("search" . mu4e-search)
-  ;; ("sent" . mu4e-sent-folder)
-  ;; ("trash" . mu4e-trash-folder)
-  ;; ("bookmarks" . mu4e-headers-search-bookmark)
-  ;; ("update" . mu4e-update-mail-and-index)
-  ;; ("help" . mu4e-display-manual))))))
-  ;; (call-interactively func)
-  ;; (when (eq func mu4e-context-switch)
-  ;; (sit-for 1)
-  ;; (mu4e--main-menu)))))
-
-  ;; (advice-add 'mu4e--main-menu :override #'ps/mu4e--main-menu)
-
   (defun ps/mu4e-goto-archive ()
     "Go to `archive' folder."
     (interactive)
@@ -9926,22 +9899,18 @@ without asking for user confirmation."
              "mbsync -a")))
       (mu4e-update-mail-and-index t)))
 
-  ;; (run-with-timer (* 60 25) t 'ps/mu4e-update-all-mail)
-
   (defun ps/mu4e-set-account ()
     "Set the account for composing a message."
     (let ((mail
-           (cdr
-            (car
+           (cdar
              (ignore-errors
-               (mu4e-message-field mu4e-compose-parent-message :to))))))
+               (mu4e-message-field mu4e-compose-parent-message :to)))))
       (if mail
           (setq user-mail-address mail)
         (setq user-mail-address ps/personal-gmail))))
 
-
   (defun ps/mu4e-headers-mark-read-and-archive ()
-    "In headers mode, mark message at point as read and archive
+    "In headers mode, mark message at point and read and archive
 it, without asking for confirmation."
     (interactive)
     (mu4e-headers-mark-for-read)
@@ -9949,8 +9918,9 @@ it, without asking for confirmation."
     (forward-line -1)
     (ps/mu4e-headers-archive))
 
+  ;; I believe the functions below are no longer needed
   (defun ps/mu4e-view-mode-hook-functions ()
-    "Functions to be invoked by `mu4e-view-mode-hook'."
+    "Functions to be called by `mu4e-view-mode-hook'."
     (toggle-truncate-lines 1)
     (set-face-attribute
      'variable-pitch nil :family ps/face-variable-pitch :height 1.25))
@@ -9964,11 +9934,10 @@ it, without asking for confirmation."
 
   :hook
   (after-change-major-mode-hook . ps/mu4e-view-mode-leave-hook-functions)
-  (mu4e-view-mode-hook . ps/mu4e-view-mode-hook-functions)
+  ;; (mu4e-view-mode-hook . ps/mu4e-view-mode-hook-functions)
   (mu4e-mark-execute-pre-hook . ps/mu4e-gmail-fix-flags)
   (mu4e-compose-pre-hook . org-msg-mode)
   (mu4e-compose-pre-hook . ps/mu4e-set-account)
-  ;; (mu4e-compose-mode-hook . (lambda () "prevent accumulation of drafts" (auto-save-visited-mode 1)))
 
   :general
   ("A-m" 'mu4e)
@@ -10037,6 +10006,7 @@ it, without asking for confirmation."
   :custom
   ;; Notify about unread emails in inbox only
   (mu4e-alert-interesting-mail-query "flag:unread AND maildir:/inbox")
+
   :config
   (mu4e-alert-enable-mode-line-display))
 

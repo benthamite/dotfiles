@@ -4123,14 +4123,15 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 (use-package embark
   :demand t
   :config
-  (unless (equal (system-name) ps/computer-hostname-leo)
-    (embark-define-keymap embark-yasnippet-completion-actions
-      "Embark actions for `consult-yasnippet' and derivatives"
-      ("d" consult-yasnippet-visit-snippet-file)))
 
   (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
 
+  (defvar-keymap embark-yasnippet-completion-actions
+  :parent embark-general-map)
+  
   :general
+  (embark-yasnippet-completion-actions
+  "d" 'consult-yasnippet-visit-snippet-file)
   ("C-;" 'embark-act
    "A-C-;" 'embark-dwim
    "C-h B" 'embark-bindings))

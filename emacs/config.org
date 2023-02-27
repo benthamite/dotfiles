@@ -3449,6 +3449,7 @@ Has a preference for looking backward when not directly on a symbol."
 
 #+begin_src emacs-lisp :results silent
 (use-feature simple
+  :demand t
   :custom
   (shift-select-mode nil "Shift keys do not activate the mark momentarily.")
   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.

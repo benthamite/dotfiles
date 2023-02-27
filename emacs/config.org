@@ -511,7 +511,7 @@ CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
 I am not a programmer, let alone an Elisp hacker. My background is in the humanities. It is only a slight exaggeration to say that, before I started using Emacs in 2020, I didn't know the difference between a function and a variable.
 
-I am sharing this file primarily to keep myself accountable. Knowing that others will see the rudimentary code I write motivates me to learn how to write slightly better code. 
+I am sharing this file primarily to keep myself accountable. Knowing that others will see the rudimentary code I write motivates me to learn how to write slightly better code.
 
 ** Key bindings
 :PROPERTIES:
@@ -533,15 +533,16 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 - Set ~debug-on-error~ to ~t~ to see a backtrace of an error. Or call ~toggle-debug-on-error~ interactively.
 - Use Time Machine (on MacOS) to download and try increasingly older versions, to identify the version that introduced the bug. Then diff that version with its immediate successor.
 - Bisect the init file until you locate the culprit.
-  - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).
+    - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).
+- If Emacs becomes unresponsive, run ~pkill -USR2 Emacs~ in a terminal. Emacs will likely trigger a backtrace, which you can inspect to diagnose the issue.
 - You may want to periodically save a stable init file so that you can temporarily use Emacs with all your customizations while debugging your current init file (instead of having to use an external editor or a non-customized Emacs). Say you call this stable file ~stable.el~. Then you can tell Emacs to load this file on startup file with ~emacs -q -l ~/stable.el~.
 - Use ~edebug-defun~. See [[https://org-roam.discourse.group/t/need-help-getting-noter-pdfs-and-org-roam-bibtex-to-work/794/45?u=pablo][this discussion]].
 - For org-related issues (e.g. tangling the config file), use ~org-lint~, which checks the current buffer for syntax mistakes.
 - For more ideas, see:
-  - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
-  - [[https://whatacold.io/blog/2022-07-17-emacs-elisp-debug/][Emacs Debugging Basics - whatacold's space]]
-  - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
-  - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]]
+    - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
+    - [[https://whatacold.io/blog/2022-07-17-emacs-elisp-debug/][Emacs Debugging Basics - whatacold's space]]
+    - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
+    - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]]
 
 ** Profiling
 :PROPERTIES:
@@ -643,7 +644,6 @@ CLOCK: [2021-02-28 Sun 10:12]--[2021-02-28 Sun 10:27] =>  0:15
 CLOCK: [2021-02-04 Thu 12:49]--[2021-02-04 Thu 14:36] =>  1:47
 :END:
 The below is a link dump for config files and other related links I have found useful in the past or may want to check out for ideas at some point in the future.
-
 - [[https://github.com/emacs-tw/awesome-emacs][Awesome Emacs]]: A list of useful Emacs packages.
 - [[https://sam217pa.github.io/2016/09/02/how-to-build-your-own-spacemacs/][How to build your own spacemacs · Samuel Barreto]]
 - [[https://www.reddit.com/r/emacs/comments/3lt3c6/using_spacemacs_modeline_in_vanilla_emacs/][Using SpaceMacs mode-line in vanilla Emacs : emacs]]

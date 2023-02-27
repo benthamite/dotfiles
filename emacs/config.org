@@ -613,19 +613,6 @@ brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xw
 brew install emacs-mac --with-dbus --with-starter --with-natural-title-bar --with-native-comp --with-mac-metal --with-xwidgets --with-imagemagick  --with-librsvg  --with-spacemacs-icon
 #+end_src
 
-[2023-01-27 Fri 23:26]:
-
-#+begin_src shell :tangle no
-brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
-#+end_src
-
-[2022-12-07 Wed 18:05]:
-
-#+begin_src shell :tangle no
-brew install emacs-mac --with-dbus --with-starter --with-natural-title-bar --with-native-comp --with-mac-metal --with-xwidgets --with-imagemagick --with-librsvg  --with-spacemacs-icon
-#+end_src
-
-
 ** Other config files
 :PROPERTIES:
 :ID:       20E3D45E-D8AB-44BD-A5E2-C6DF9C20744E

@@ -7767,11 +7767,14 @@ buffer displays and push it to the kill ring."
   :general
   ("H-U" 'helpful-at-point
    "C-k" 'helpful-key
+   "C-h k" 'helpful-key
+   "C-h f" 'helpful-function
    "C-A-f" 'helpful-function
+   "C-h o" 'helpful-symbol
    "C-A-o" 'helpful-symbol
+   "C-h v" 'helpful-variable
    "C-A-v" 'helpful-variable
-   "C-h c" 'helpful-command
-   "C-h f" 'helpful-function)
+   "C-h c" 'helpful-command)
   (helpful-mode-map
    "w" 'ps/helpful-copy-as-kill)
   (embark-symbol-map

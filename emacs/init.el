@@ -4742,7 +4742,7 @@ necessary."
   :after ispell
   :custom
   (flyspell-issue-message-flag nil) ; auto-save personal dictionary whenever a word is added, avoiding prompts
-  
+
   :config
   (defun ps/flyspell-save-word ()
     "Save word at point to personal dictionary."

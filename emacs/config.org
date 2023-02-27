@@ -11063,12 +11063,12 @@ not already have one."
                (eq buffer-read-only nil))
       (unless
           (or
-	   ;; exclude directories
+           ;; exclude directories
            (member (file-name-directory (buffer-file-name))
                    ps/org-id-excluded-directories)
-	   ;; exclude files
+           ;; exclude files
            (member (buffer-file-name)
-		   ps/org-id-excluded-files)
+                   ps/org-id-excluded-files)
            (member (org-get-heading)
                    '("Local variables"
                      "COMMENT Local variables"

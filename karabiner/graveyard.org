@@ -1,5 +1,5 @@
 #+filetags: :project:
-* graveyard
+* Karabiner graveyard
 :PROPERTIES:
 :ID:       ECC3DE43-56AD-43A7-9386-CA1D720FFBB0
 :END:

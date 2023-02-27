@@ -15186,8 +15186,10 @@ To try once I switch to Emacs 29.
              :repo "oantolin/emacs-config"
              :files ("my-lisp/message-extras.el"))
   :demand t
+
   :hook
   (eww-mode-hook . shr-heading-setup-imenu)
+
   :general
   (eww-mode-map
    "A-C-s-r" 'shr-heading-previous

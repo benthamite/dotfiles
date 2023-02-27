@@ -703,7 +703,7 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
 (setq use-dialog-box nil)
 (setq default-directory ps/dir-dropbox)
 (setq use-short-answers t)
-(setq message-log-max 10000)
+(setq message-log-max t) ; don't truncate *Messages* buffer when it becomes large
 (setq ring-bell-function 'ignore) ; silence bell when mistake is made
 (setq x-stretch-cursor t) ; make curor the width of the character under it
 ;; emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation

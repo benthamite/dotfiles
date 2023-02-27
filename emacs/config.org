@@ -1998,7 +1998,7 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 (setq use-dialog-box nil)
 (setq default-directory ps/dir-dropbox)
 (setq use-short-answers t)
-(setq message-log-max 10000)
+(setq message-log-max t) ; don't truncate *Messages* buffer when it becomes large
 (setq ring-bell-function 'ignore) ; silence bell when mistake is made
 (setq x-stretch-cursor t) ; make curor the width of the character under it
 ;; emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation

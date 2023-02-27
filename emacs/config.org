@@ -6858,21 +6858,15 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 
 ** isearch
 :PROPERTIES:
-:ID:       496C21E2-3557-4D76-A937-508009288CA8
+:ID:       4B274841-062C-4511-8FF3-C850BAB05905
 :END:
-:LOGBOOK:
-CLOCK: [2021-05-30 Sun 19:30]--[2021-05-30 Sun 19:55] =>  0:25
-CLOCK: [2021-05-30 Sun 13:00]--[2021-05-30 Sun 13:09] =>  0:09
-:END:
-Recenter after each isearch iteration (https://stackoverflow.com/questions/11052678/emacs-combine-iseach-forward-and-recenter-top-bottom)
 
-[2021-05-22 Sat 22:24] Thanks to Prot, I learn that when ~isearch~ is regexp-aware, so is ~isearch-query-replace~. So one can do a regexp replacement by invoking the following series of commands: ~isearch-forward~, ~isearch-toggle-regexp~, ~isearch-query-replace~. I find it easier to use ~C-s~ as my single point of entry to Emacs's powerful search and replace functions, and then make liberal use of all the ~isearch~ commands, accessible via their corresponding key bindings. That approach also suggests creating a lambda for the second and third commands in the series above.
-
+[2021-05-22 Sat 22:24] Thanks to Prot, I learn that when ~isearch~ is regexp-aware, so is ~isearch-query-replace~. So one can do a regexp replacement by invoking the following series of commands: ~isearch-forward~, ~isearch-toggle-regexp~, ~isearch-query-replace~. I find it easier to use ~C-s~ as my single point of entry to Emacs's powerful search and replace functions, and then make liberal use of all the ~isearch~ commands, accessible via their corresponding key bindings.
 
 #+begin_src emacs-lisp :results silent
 (use-feature isearch
   :custom
-  (search-default-mode #'char-fold-to-regexp "`bar' matches `bár'")
+  (search-default-mode #'char-fold-to-regexp)
   (search-whitespace-regexp ".*?")
   (isearch-lax-whitespace t)
   (isearch-regexp-lax-whitespace nil)
@@ -6882,6 +6876,7 @@ Recenter after each isearch iteration (https://stackoverflow.com/questions/11052
   (lazy-count-suffix-format " (%s/%s)")
   (isearch-allow-scroll 'unlimited)
   (search-upper-case t)
+  (search-exit-option t) ; `t' is the default, but some alternative value may be more sensible
 
   :config
   (defun ps/isearch-exit-other-end ()

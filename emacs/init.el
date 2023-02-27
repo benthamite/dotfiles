@@ -4179,7 +4179,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 
 (use-feature isearch
   :custom
-  (search-default-mode #'char-fold-to-regexp "`bar' matches `bár'")
+  (search-default-mode #'char-fold-to-regexp)
   (search-whitespace-regexp ".*?")
   (isearch-lax-whitespace t)
   (isearch-regexp-lax-whitespace nil)
@@ -4189,6 +4189,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   (lazy-count-suffix-format " (%s/%s)")
   (isearch-allow-scroll 'unlimited)
   (search-upper-case t)
+  (search-exit-option t) ; `t' is the default, but some alternative value may be more sensible
 
   :config
   (defun ps/isearch-exit-other-end ()

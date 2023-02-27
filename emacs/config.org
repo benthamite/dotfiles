@@ -11161,7 +11161,7 @@ When FILES is given, scan these files instead."
         org-id-locations)))
 
   :hook
-  (before-save-hook . ps/org-id-add-ids-to-headlines-in-file)
+  (before-save-hook . ps/org-id-add-ids-to-headings-in-file)
 
   :general
   (org-mode-map

@@ -10108,7 +10108,7 @@ Grammarly."
   :defer 5
   :custom
   (telega-server-libs-prefix "/opt/homebrew")
-  (telega-chat-input-markups '("org" "markdown2"))
+  (setq telega-chat-input-markups '("org"))
   (telega-use-images t)
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)

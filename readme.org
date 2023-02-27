@@ -1,7 +1,8 @@
-#+Pablo's dotfiles
+#+title: Pablo's dotfiles
+#+author: Pablo Stafforini
 
 This repository contains my dotfiles, including
 
-- my [[emacs/config.org][Emacs config]];
-- my [[karabiner/config.org][Karabiner config]]; and
-- my [[macos/config.org][macOS defaults]].
+- my [[file:emacs/config.org][Emacs config]];
+- my [[file:karabiner/config.org][Karabiner config]]; and
+- my [[file:macos/config.org][macOS defaults]].

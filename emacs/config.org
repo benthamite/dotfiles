@@ -510,6 +510,10 @@ CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
 CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
+I am not a programmer, let alone an Elisp hacker. My background is in the humanities. It is only a slight exaggeration to say that, before I started using Emacs in 2020, I didn't know the difference between a function and a variable.
+
+I am sharing this file primarily to keep myself accountable. Knowing that others will see the rudimentary code I write motivates me to learn how to write slightly better code. 
+
 ** Key bindings
 :PROPERTIES:
 :ID:       a47d148a-1b5e-4850-a1a7-6cd745bad696

@@ -7580,14 +7580,28 @@ return such list if its length is less than LIMIT."
   :if (equal (system-name) ps/computer-hostname-pablo)
   :commands (vulpea-buffer-p vulpea-agenda-files-update vulpea-buffer-prop-get-list vulpea-project-update-tag)
   :config
-  ;; everything below adapted from d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html
+  ;; adapted from
+  (defvar ps/vulpea-excluded-directories nil
+    "Directories containing files to exclude from list of projects")
+
+  (defvar ps/vulpea-excluded-files nil
+    "files to exclude from list of projects")
+
   (defun ps/vulpea-project-p ()
     "Return non-nil if current buffer has a TODO, a schedule or a deadline.
 
 TODO entries marked as done are ignored, meaning the this
 function returns nil if current buffer contains only completed
 tasks."
-    (when (eq major-mode 'org-mode)
+    (when (and (eq major-mode 'org-mode)
+
+               ;; exclude dirs
+               (not (member (file-name-directory (buffer-file-name))
+                            ps/vulpea-excluded-directories))
+
+               ;; exclude files
+               (not (member (buffer-file-name) ps/vulpea-excluded-files)))
+
       (org-element-map
           (org-element-parse-buffer 'headline)
           'headline
@@ -7654,16 +7668,16 @@ tasks."
                     (seq-difference original-tags tags))
             (apply #'vulpea-buffer-tags-set tags))))))
 
-    (defun vulpea-agenda-files-update (&rest _)
+  (defun vulpea-agenda-files-update (&rest _)
     "Update the value of `org-agenda-files'."
     (setq org-agenda-files
           (seq-difference
            (delete-dups (append
                          (org-agenda-files)
-                         (vulpea-project-files)))
+                         (vulpea-project-files)
                          ;; include files modified in past three days,
                          ;; provided number of such files less than 1000
-                         ;; (ps/org-roam-recent 1 1000)))
+                         (ps/org-roam-recent 1 1000)))
            ps/org-agenda-files-excluded)))
 
   (advice-add 'org-agenda :before #'vulpea-agenda-files-update)

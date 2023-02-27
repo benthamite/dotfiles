@@ -6798,6 +6798,7 @@ do the same for other relevant commands
 #+end_src
 
 To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridging Islands in Emacs: re-builder and query-replace-regexp | Karthinks]]
+
 *** TODO [#5] Add advice for other relevant commands
 :PROPERTIES:
 :Effort:   0:30

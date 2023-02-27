@@ -4931,6 +4931,8 @@ necessary."
           (apply old-fun args)
         (advice-remove 'message #'silence))))
 
+  (add-to-list 'ispell-extra-args "--sug-mode=ultra") ; github.com/rolandwalker/flyspell-lazy#notes
+
   (advice-add 'ispell-init-process :around #'suppress-messages)
   (advice-add 'ispell-kill-ispell :around #'suppress-messages)
 

@@ -2658,11 +2658,6 @@ or are no longer readable will be killed."
   :config
   (global-auto-revert-mode 1))
 
-(use-package real-auto-save
-  :demand t
-  :custom
-  (real-auto-save-interval 5))
-
 (use-feature dired
   :custom
   (dired-listing-switches

@@ -8,6 +8,22 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** real-auto-save
+:PROPERTIES:
+:ID:       C81AC339-3CDB-4410-88D7-D18731145D8A
+:END:
+
+[2023-02-25 Sat 16:31] Disabling after experiencing mysterious behavior: ~real-auto-save~ would allegedly save the buffer but the buffer contents would not be actually saved to the file.
+
+#+begin_src emacs-lisp :results silent
+(use-package real-auto-save
+  :disabled
+  :demand t
+  :custom
+  (real-auto-save-interval 5))
+#+end_src
+
+
 ** Metaculus
 :PROPERTIES:
 :ID:       655BDD93-46BA-4AF5-B5C8-1CDDEC4F3DCC
@@ -27,7 +43,6 @@ This is a place where I move packages I no longer use. Originally I would delete
   ("s" (ps/yasnippet-expand-by-key "msheet") "spreadsheet")
   ("t" (ps/yasnippet-expand-by-key "mpass") "passage of time"))
 #+end_src
-
 
 ** wiki-entries.org
 :PROPERTIES:
@@ -89,7 +104,6 @@ This is a place where I move packages I no longer use. Originally I would delete
   (google-this-mode-submap
    "g" 'chatgpt-query))
 #+end_src
-
 
 ** smartparens
 :PROPERTIES:
@@ -931,6 +945,7 @@ CLOSED: [2021-11-23 Tue 22:32]
 :ARCHIVE_TIME: 2021-11-23 Tue 22:32
 :ID:       86AED371-65A1-4738-9792-2CDF7E7489F2
 :END:
+
 ** remember
 :PROPERTIES:
 :ID:       F828B700-4144-48F8-838C-A9744D315175

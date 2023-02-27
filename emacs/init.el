@@ -4611,6 +4611,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
    "RET" 'corfu-complete))
 
 (use-package corfu-terminal
+  :if (equal (system-name) ps/computer-hostname-pablo)
   :after corfu
   :demand t
   :config
@@ -4620,6 +4621,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :straight (corfu-doc-terminal
              :host codeberg
                    :repo "akib/emacs-corfu-doc-terminal")
+  :if (equal (system-name) ps/computer-hostname-pablo)
   :after corfu-terminal
   :demand t
   :config

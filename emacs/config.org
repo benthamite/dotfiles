@@ -4700,17 +4700,6 @@ or are no longer readable will be killed."
   (global-auto-revert-mode 1))
 #+end_src
 
-** real-auto-save
-:PROPERTIES:
-:ID:       C81AC339-3CDB-4410-88D7-D18731145D8A
-:END:
-#+begin_src emacs-lisp :results silent
-(use-package real-auto-save
-  :demand t
-  :custom
-  (real-auto-save-interval 5))
-#+end_src
-
 ** dired
 :PROPERTIES:
 :ID:       617F5323-6518-4751-948B-3E8032D93130

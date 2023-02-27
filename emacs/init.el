@@ -7711,74 +7711,6 @@ tasks."
   (pdf-annot-minor-mode-map
    "s-s" 'org-noter-create-skeleton))
 
-(defvar ps/library-genesis
-  '("Library Genesis"
-    "https://libgen.lc/index.php?req="
-    "&phrase=1&view=simple&column=def&sort=extension&sortmode=DESC"))
-
-(defvar ps/amazon
-  '("Amazon"
-    "https://smile.amazon.com/s?k="
-    "&i=stripbooks"))
-
-(defvar ps/worldcat
-  '("Worldcat"
-    "https://www.worldcat.org/search?q="
-    "&itemType=book&limit=50&offset=1"))
-
-(defvar ps/internet-archive
-  '("Internet Archive"
-    "https://archive.org/search.php?query="
-    ""))
-
-(defvar ps/university-of-toronto
-  '("University of Toronto"
-    "https://librarysearch.library.utoronto.ca/discovery/search?query=any,contains,"
-    "&tab=Everything&search_scope=UTL_AND_CI&vid=01UTORONTO_INST:UTORONTO&offset=0"))
-
-(defvar ps/hathitrust
-  '("HathiTrust"
-    "https://babel.hathitrust.org/cgi/ls?q1="
-    "&field1=ocr;a=srchls;lmt=ft;sz=100"))
-
-(defvar ps/connected-papers
-  '("Connected Papers"
-    "https://www.connectedpapers.com/search?q="
-    ""))
-
-(defvar ps/google-scholar
-  '("Google Scholar"
-    "https://scholar.google.com/scholar?q="
-    ""))
-
-(defvar ps/wikipedia
-  '("Google Scholar"
-    "http://en.wikipedia.org/w/index.php?title=Special%3ASearch&profile=default&search="
-    "&fulltext=Search"))
-
-(defvar ps/goodreads
-  '("Goodreads"
-    "https://www.goodreads.com/search?q="
-    ""))
-
-(defvar ps/ebib-search-book
-  '(ps/ebib-search-goodreads
-    ps/ebib-search-hathitrust
-    ps/ebib-search-internet-archive
-    ps/ebib-search-university-of-toronto
-    ps/ebib-search-library-genesis
-    ps/ebib-search-amazon))
-
-(defvar ps/ebib-download-book
-  '(ps/ebib-search-hathitrust
-    ps/ebib-search-internet-archive
-    ps/ebib-search-university-of-toronto
-    ps/ebib-search-library-genesis))
-
-(defvar ps/ebib-search-article
-  '(ps/ebib-search-connected-papers
-    ps/ebib-search-google-scholar))
-
 (use-feature oc
   :demand t
   :custom
@@ -8829,6 +8761,74 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
              (ps/ocr-pdf (format "'%s' '%s'" (expand-file-name file-name) (expand-file-name file-name)))))))
       (default
        (beep))))
+
+  (defvar ps/library-genesis
+    '("Library Genesis"
+      "https://libgen.lc/index.php?req="
+      "&phrase=1&view=simple&column=def&sort=extension&sortmode=DESC"))
+
+  (defvar ps/amazon
+    '("Amazon"
+      "https://smile.amazon.com/s?k="
+      "&i=stripbooks"))
+
+  (defvar ps/worldcat
+    '("Worldcat"
+      "https://www.worldcat.org/search?q="
+      "&itemType=book&limit=50&offset=1"))
+
+  (defvar ps/internet-archive
+    '("Internet Archive"
+      "https://archive.org/search.php?query="
+      ""))
+
+  (defvar ps/university-of-toronto
+    '("University of Toronto"
+      "https://librarysearch.library.utoronto.ca/discovery/search?query=any,contains,"
+      "&tab=Everything&search_scope=UTL_AND_CI&vid=01UTORONTO_INST:UTORONTO&offset=0"))
+
+  (defvar ps/hathitrust
+    '("HathiTrust"
+      "https://babel.hathitrust.org/cgi/ls?q1="
+      "&field1=ocr;a=srchls;lmt=ft;sz=100"))
+
+  (defvar ps/connected-papers
+    '("Connected Papers"
+      "https://www.connectedpapers.com/search?q="
+      ""))
+
+  (defvar ps/google-scholar
+    '("Google Scholar"
+      "https://scholar.google.com/scholar?q="
+      ""))
+
+  (defvar ps/wikipedia
+    '("Google Scholar"
+      "http://en.wikipedia.org/w/index.php?title=Special%3ASearch&profile=default&search="
+      "&fulltext=Search"))
+
+  (defvar ps/goodreads
+    '("Goodreads"
+      "https://www.goodreads.com/search?q="
+      ""))
+
+  (defvar ps/ebib-search-book
+    '(ps/ebib-search-goodreads
+      ps/ebib-search-hathitrust
+      ps/ebib-search-internet-archive
+      ps/ebib-search-university-of-toronto
+      ps/ebib-search-library-genesis
+      ps/ebib-search-amazon))
+
+  (defvar ps/ebib-download-book
+    '(ps/ebib-search-hathitrust
+      ps/ebib-search-internet-archive
+      ps/ebib-search-university-of-toronto
+      ps/ebib-search-library-genesis))
+
+  (defvar ps/ebib-search-article
+    '(ps/ebib-search-connected-papers
+      ps/ebib-search-google-scholar))
 
   (defun ps/ebib-search-internet-archive (&optional field search-query)
     "Run a search on the Internet Archive."

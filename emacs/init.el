@@ -6050,7 +6050,7 @@ image."
 
 (use-feature org-agenda
   :if (equal (system-name) ps/computer-hostname-pablo)
-  :defer 4
+  :demand t
   :init
   (defun ps/org-agenda-switch-to-agenda-current-day ()
     "Open agenda in left window, creating it if necessary."
@@ -6062,18 +6062,17 @@ image."
           (switch-to-buffer "*Org Agenda(a)*")
         (org-agenda nil "a"))))
 
+  (setq org-agenda-hide-tags-regexp "project")
+
+  (defun ps/org-agenda-goto-and-start-clock ()
+    "In org-agenda, go to entry at point and clock in."
+    (interactive)
+    (org-agenda-goto)
+    (org-clock-in))
+
   :custom
-  (cond ((equal (system-name) ps/computer-hostname-pablo)
-         (org-agenda-files `(,ps/dir-android
-                             ;; ,ps/file-tlon-tareas-leo
-                             ;; ,ps/file-tlon-tareas-fede
-                             )))
-        ((equal (system-name) ps/computer-hostname-leo)
-         (org-agenda-files `(,ps/file-tlon-tareas-leo
-                             ))))
   (org-agenda-window-setup 'current-window)
-  (org-agenda-use-time-grid nil) ; disable agenda time grid
-  ;; Speed up agenda (orgmode.org/worg/agenda-optimization.html)
+  (org-agenda-use-time-grid nil)
   (org-agenda-ignore-properties '(effort appt category))
   (org-agenda-dim-blocked-tasks nil)
   (org-agenda-sticky t)
@@ -6086,6 +6085,7 @@ image."
   (org-agenda-skip-scheduled-if-done t)
   (org-agenda-skip-deadline-if-done t)
   (org-agenda-log-mode-items '(clock))
+  (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter ps/org-clocktable-sorter))
   (org-agenda-custom-commands
    '(
      ("E" "TODOs without effort"
@@ -6112,22 +6112,24 @@ image."
      ("," "All tasks with no priority"
       tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")))
   (org-agenda-clockreport-parameter-plist
-   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter ps/org-clocktable-sorter)))
-
-  (org-agenda-hide-tags-regexp "project")
-
+   )
   :config
-  (when (equal (system-name) ps/computer-hostname-pablo)
-    (defvar ps/org-agenda-files-excluded
-      `(,ps/file-tlon-tareas-leo
-        ,ps/file-tlon-tareas-fede)
-      "List of files to remove from `org-agenda-files'"))
+  (cond ((equal (system-name) ps/computer-hostname-pablo)
+         (setq org-agenda-files nil))
+        ((equal (system-name) ps/computer-hostname-leo)
+         (setq org-agenda-files (list
+                                 ps/file-tlon-tareas-leo))))
 
-  (defun ps/org-agenda-goto-and-start-clock ()
-    "In org-agenda, go to entry at point and clock in."
-    (interactive)
-    (org-agenda-goto)
-    (org-clock-in))
+  (when (equal (system-name) ps/computer-hostname-pablo)
+    (setq ps/org-agenda-files-excluded
+      (list
+       ;; I have to exclude these files because otherwise extraneous
+       ;; information shows up in my agenda, such as TODOs and time
+       ;; logs. These files lack the `property' tag but the may still
+       ;; otherwise be included if they have been modified recently
+       ;; (see the function `vulpea-agenda-files-update')
+       ps/file-tlon-tareas-leo
+       ps/file-tlon-tareas-fede)))
 
   (run-with-idle-timer 602 nil 'ps/org-agenda-switch-to-agenda-current-day)
   (run-with-idle-timer 602 t 'org-agenda-redo)
@@ -6623,8 +6625,17 @@ slow if it has a lot of overlays."
 
   :init
   ;; stackoverflow.com/a/16247032/4479455
-  (defun ps/org-id-add-ids-to-headlines-in-file ()
-    "Add ID properties to all headlines in the current file which do
+  (defvar ps/org-id-excluded-directories
+    (list ps/dir-dropbox-tlon-fede
+          ps/dir-dropbox-tlon-leo)
+    "Directories containing files to exclude from `ps/org-id-add-ids-to-headings-in-file'")
+
+  (defvar ps/org-id-excluded-files
+    (list ps/file-orb-noter-template)
+    "Files to exclude from `ps/org-id-add-ids-to-headings-in-file'")
+
+  (defun ps/org-id-add-ids-to-headings-in-file ()
+    "Add ID properties to all headings in the current file which do
 not already have one."
     (when (and (equal (system-name) ps/computer-hostname-pablo)
                (eq major-mode 'org-mode)
@@ -6632,10 +6643,16 @@ not already have one."
                (eq buffer-read-only nil))
       (unless
           (or
-           (string= (buffer-file-name) ps/file-orb-noter-template)
-           (member (org-get-heading) '("Local variables"
-                                       "COMMENT Local variables"
-                                       "TODO Local variables")))
+	   ;; exclude directories
+           (member (file-name-directory (buffer-file-name))
+                   ps/org-id-excluded-directories)
+	   ;; exclude files
+           (member (buffer-file-name)
+		   ps/org-id-excluded-files)
+           (member (org-get-heading)
+                   '("Local variables"
+                     "COMMENT Local variables"
+                     "TODO Local variables")))
         (org-map-entries 'org-id-get-create))))
 
   ;; (setq org-id-extra-files

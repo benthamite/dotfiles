@@ -8138,6 +8138,21 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
 :ID:       05BDF065-280F-4F09-B55A-9B32D10A36B1
 :END:
 
+** flyspell-lazy
+:PROPERTIES:
+:ID:       180FEF70-1430-4FFB-8909-A2B03694D3C5
+:END:
+
+/[[https://github.com/rolandwalker/flyspell-lazy][flyspell-lazy]] improves Emacs flyspell responsiveness using idle timers./
+
+#+begin_src emacs-lisp
+(use-package flyspell-lazy
+  :after flyspell
+  :demand t
+  :config
+  (flyspell-lazy-mode))
+#+end_src
+
 ** flyspell-correct
 :PROPERTIES:
 :ID:       5E8AA3D3-68AE-407E-B662-524B8B0AAD43

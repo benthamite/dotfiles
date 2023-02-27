@@ -4807,6 +4807,12 @@ necessary."
   (text-mode-hook . flyspell-mode)
   (prog-mode-hook . flyspell-prog-mode))
 
+(use-package flyspell-lazy
+  :after flyspell
+  :demand t
+  :config
+  (flyspell-lazy-mode))
+
 (use-package flyspell-correct
   :demand t
   :after flyspell)

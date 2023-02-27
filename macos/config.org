@@ -9,6 +9,8 @@ These defaults have been mostly taken from Mathias Bynens's [[https://github.com
 - Jamie's [[https://notrab.dev/posts/friendly-mac-os-defaults/][Friendly macOS defaults]]
 - Nikita's [[https://github.com/nikitavoloboev/dotfiles/tree/master/macos][dotfiles]]
 
+The code blocks in this file are [[https://orgmode.org/manual/Extracting-Source-Code.html][tangled]] to generate an associated [[config.org][shell script]]. Run that script to enable all these customizations in one go.
+  
 * table of contents
 :PROPERTIES:
 :ID:       427F4E49-0644-4AF3-9292-5A290A4248C3

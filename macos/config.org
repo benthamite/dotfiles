@@ -38,7 +38,7 @@ The code blocks in this file are [[https://orgmode.org/manual/Extracting-Source-
 - [[#local-variables][Local variables]]
 :END:
 
-* preface
+* Preface
 :PROPERTIES:
 :ID:       58999664-45D8-4227-B73E-96A2DD6E4E4A
 :END:

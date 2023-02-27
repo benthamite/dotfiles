@@ -4144,7 +4144,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 
   (defvar-keymap embark-yasnippet-completion-actions
   :parent embark-general-map)
-  
+
   :general
   (embark-yasnippet-completion-actions
   "d" 'consult-yasnippet-visit-snippet-file)

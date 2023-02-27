@@ -7021,7 +7021,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
 
   (defvar-keymap embark-yasnippet-completion-actions
   :parent embark-general-map)
-  
+
   :general
   (embark-yasnippet-completion-actions
   "d" 'consult-yasnippet-visit-snippet-file)

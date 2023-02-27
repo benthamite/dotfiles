@@ -11,14 +11,14 @@ These defaults have been mostly taken from Mathias Bynens's [[https://github.com
 
 The code blocks in this file are [[https://orgmode.org/manual/Extracting-Source-Code.html][tangled]] to generate an associated [[config.org][shell script]]. Run that script to enable all these customizations in one go.
   
-* table of contents
+* Table of contents
 :PROPERTIES:
 :ID:       427F4E49-0644-4AF3-9292-5A290A4248C3
 :TOC:      :include all :depth 2 :force (nothing) :ignore (nothing) :local (nothing)
 :END:
 :CONTENTS:
-- [[#table-of-contents][table of contents]]
-- [[#preface][preface]]
+- [[#table-of-contents][Table of contents]]
+- [[#preface][Preface]]
 - [[#general-uiux][General UI/UX]]
 - [[#trackpad-mouse-keyboard-bluetooth-accessories-and-input][Trackpad, mouse, keyboard, Bluetooth accessories, and input]]
 - [[#keyboard-shortcuts][Keyboard shortcuts]]

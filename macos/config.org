@@ -1,6 +1,6 @@
 #+title: Pablo's defaults for macOS
 #+author: Pablo Stafforini
-#+PROPERTY: header-args :tangle ~/Dropbox/dotfiles/macos/macos.sh
+#+PROPERTY: header-args :tangle ~/Dropbox/dotfiles/macos/macos
 :PROPERTIES:
 :TOC:      ignore
 :END:

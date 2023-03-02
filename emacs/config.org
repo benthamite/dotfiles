@@ -6380,7 +6380,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
 (use-feature recentf
   :defer 10
   :custom
-  (recentf-max-saved-items 1000)
+  (recentf-max-saved-items 100)
   :config
   (add-to-list 'recentf-exclude no-littering-var-directory)
   (add-to-list 'recentf-exclude no-littering-etc-directory)

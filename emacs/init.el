@@ -3797,7 +3797,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 (use-feature recentf
   :defer 10
   :custom
-  (recentf-max-saved-items 1000)
+  (recentf-max-saved-items 100)
   :config
   (add-to-list 'recentf-exclude no-littering-var-directory)
   (add-to-list 'recentf-exclude no-littering-etc-directory)

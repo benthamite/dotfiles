@@ -5570,6 +5570,12 @@ FILE."
 
 (use-feature debug)
 
+(use-feature edebug
+  :custom
+  ;; do not truncate print results in Edebug
+  (edebug-print-level nil)
+  (edebug-print-length nil))
+
 (use-feature backtrace
   :disabled
   :custom

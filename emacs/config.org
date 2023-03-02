@@ -9306,6 +9306,19 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 (use-feature debug)
 #+end_src
 
+** edebug
+:PROPERTIES:
+:ID:       021794F3-1663-449D-B4B7-41C6F3A72083
+:END:
+
+#+begin_src emacs-lisp
+(use-feature edebug
+  :custom
+  ;; do not truncate print results in Edebug
+  (edebug-print-level nil)
+  (edebug-print-length nil))
+#+end_src
+
 ** backtrace
 :PROPERTIES:
 :ID:       B69F718B-9BAE-4EAD-99DE-2C8C1E98CCA3

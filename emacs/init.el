@@ -3842,6 +3842,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   (persistent-scratch-setup-default))
 
 (use-feature remember
+  :disabled
   :custom
   (remember-data-file (file-name-concat ps/dir-emacs "var/remember"))
   (remember-notes-buffer-name "\*scratch\*"))

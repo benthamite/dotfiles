@@ -6432,10 +6432,12 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
 :PROPERTIES:
 :ID:       438AD8A8-0F4F-4A1D-9BC9-110906944509
 :END:
+
 [2022-10-02 Sun 14:12] I installed this package only because I wanted to have a persistent ~*scratch*~ buffer. But I am now accomplishing this with [[id:B6CB6A6C-0BCC-4A07-9608-BDCA6184C63A][persistent scratch]].
 
 #+begin_src emacs-lisp :results silent
 (use-feature remember
+  :disabled
   :custom
   (remember-data-file (file-name-concat ps/dir-emacs "var/remember"))
   (remember-notes-buffer-name "\*scratch\*"))

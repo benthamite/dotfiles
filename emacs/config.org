@@ -7069,7 +7069,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
       (consult-locate)))
 
   (defun ps/consult-locate-anywhere ()
-    "Search with `consult-locate' anywhere on my hard drive."
+    "Search with `consult-locate' anywhere in the hard drive."
     (interactive)
     (let ((consult-locate-args (concat "mdfind ")))
       (consult-locate)))
@@ -7157,30 +7157,24 @@ By default, all agenda entries are offered. MATCH is as in
 
   :general
   ("A-C-l" 'consult-line
+   "C-f" 'consult-find
    "H-b" 'consult-buffer
    "H-r" 'consult-history
    "H-V" 'consult-yank-pop
-   "H-f" 'ps/consult-locate-current
-   "H-f" 'ps/consult-locate-home
-   "A-H-f" 'ps/consult-locate-anywhere
-   "C-p" 'ps/consult-rga
+   "H-f" 'ps/consult-locate-file-current
+   "H-f" 'ps/consult-locate-file-home
+   "A-H-f" 'ps/consult-locate-file-anywhere
+   "H-k" 'ps/consult-locate-current
+   "H-K" 'ps/consult-locate-home
+   "A-H-k" 'ps/consult-locate-anywhere
    "H-p" 'ps/consult-ripgrep-current
    "H-P" 'ps/consult-ripgrep-home
    "A-H-p" 'ps/consult-ripgrep-anywhere)
   (org-mode-map
-   "s-j" 'ps/consult-org-heading)
+   "s-j" 'consult-org-heading)
   ((elfeed-show-mode-map eww-mode-map prog-mode-map)
    "s-j" 'consult-imenu))
 #+end_src
-
-*** DONE Fix rg/rga
-CLOSED: [2023-02-23 Thu 01:02]
-:PROPERTIES:
-:ID:       2BA7D713-63E9-4AFC-BA5C-F34BDBCE0BED
-:END:
-:LOGBOOK:
-CLOCK: [2023-02-22 Wed 18:05]--[2023-02-22 Wed 18:38] =>  0:33
-:END:
 
 ** consult-dir
 :PROPERTIES:

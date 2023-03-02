@@ -4174,7 +4174,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
       (consult-locate)))
 
   (defun ps/consult-locate-anywhere ()
-    "Search with `consult-locate' anywhere on my hard drive."
+    "Search with `consult-locate' anywhere in the hard drive."
     (interactive)
     (let ((consult-locate-args (concat "mdfind ")))
       (consult-locate)))
@@ -4262,18 +4262,21 @@ By default, all agenda entries are offered. MATCH is as in
 
   :general
   ("A-C-l" 'consult-line
+   "C-f" 'consult-find
    "H-b" 'consult-buffer
    "H-r" 'consult-history
    "H-V" 'consult-yank-pop
-   "H-f" 'ps/consult-locate-current
-   "H-f" 'ps/consult-locate-home
-   "A-H-f" 'ps/consult-locate-anywhere
-   "C-p" 'ps/consult-rga
+   "H-f" 'ps/consult-locate-file-current
+   "H-f" 'ps/consult-locate-file-home
+   "A-H-f" 'ps/consult-locate-file-anywhere
+   "H-k" 'ps/consult-locate-current
+   "H-K" 'ps/consult-locate-home
+   "A-H-k" 'ps/consult-locate-anywhere
    "H-p" 'ps/consult-ripgrep-current
    "H-P" 'ps/consult-ripgrep-home
    "A-H-p" 'ps/consult-ripgrep-anywhere)
   (org-mode-map
-   "s-j" 'ps/consult-org-heading)
+   "s-j" 'consult-org-heading)
   ((elfeed-show-mode-map eww-mode-map prog-mode-map)
    "s-j" 'consult-imenu))
 

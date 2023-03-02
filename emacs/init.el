@@ -3604,6 +3604,8 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   (org-mode-map
    "s-g" 'hydra-org-gcal/body))
 
+(use-package calfw
+  :defer 20)
 (use-feature time
   :after tab-bar
   :demand t

@@ -757,8 +757,10 @@ CLOCK: [2022-06-25 Sat 11:36]--[2022-06-25 Sat 12:46] =>  1:10
   (require 'consult-org-roam)
   ;; Activate the minor-mode
   (consult-org-roam-mode)
+  
   :custom
   (consult-org-roam-grep-func #'consult-ripgrep)
+  
   :config
   ;; Eventually suppress previewing for certain functions
   (consult-customize

@@ -655,12 +655,8 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
 (setq-default line-spacing 2)
 
 (use-package mixed-pitch
-  :demand t
   :custom
   (mixed-pitch-set-height t)
-
-  :config
-  (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
 
   :hook
   (mu4e-view-mode-hook . mixed-pitch-mode)
@@ -672,13 +668,6 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   :demand t
   :config
   (fontaine-mode))
-
-(use-feature face-remap
-  :demand t
-  :general
-  (eww-mode-map
-   "+" 'text-scale-increase
-   "-" 'text-scale-decrease))
 
 (use-feature fringe
   :init
@@ -706,17 +695,15 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   :config
   (global-org-modern-mode))
 
-(use-feature org-faces
+(use-feature faces
   :after org-modern
 
-  :custom
-  (org-fontify-quote-and-verse-blocks t)
-
   :config
-  (defun ps/org-faces-custom-faces ()
+  (defun ps/faces-load-custom-faces ()
     "My custom faces, to be used in conjunction with theme."
     (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
     (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
+    (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
     (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family ps/face-fixed-pitch :height 0.8)
     (set-face-attribute 'org-property-value nil :family ps/face-fixed-pitch :height 0.8)
     (set-face-attribute 'org-todo nil :family ps/face-fixed-pitch :height 1.0)
@@ -739,6 +726,13 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
     (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
     (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)
     (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))
+
+(use-feature face-remap
+  :demand t
+  :general
+  (eww-mode-map
+   "+" 'text-scale-increase
+   "-" 'text-scale-decrease))
 
 (use-feature theme-loaddefs
   :config
@@ -805,7 +799,7 @@ installed."
   (ps/modus-themes-load-theme-conditionally)
 
   :hook
-  (modus-themes-after-load-theme-hook . ps/org-faces-custom-faces)
+  (modus-themes-after-load-theme-hook . ps/faces-load-custom-faces)
   (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
 
   :general
@@ -6632,6 +6626,10 @@ slow if it has a lot of overlays."
   (org-mode-hook . ps/org-hide-properties)
   (org-mode-hook . ps/org-hide-logbook))
 
+(use-feature org-faces
+  :custom
+  (org-fontify-quote-and-verse-blocks t))
+
 (use-feature org-id
   :demand t
   :custom
@@ -9924,23 +9922,15 @@ it, without asking for confirmation."
     (forward-line -1)
     (ps/mu4e-headers-archive))
 
-  ;; I believe the functions below are no longer needed
   (defun ps/mu4e-view-mode-hook-functions ()
     "Functions to be called by `mu4e-view-mode-hook'."
+    (interactive)
     (toggle-truncate-lines 1)
-    (set-face-attribute
-     'variable-pitch nil :family ps/face-variable-pitch :height 1.25))
-
-  (defun ps/mu4e-view-mode-leave-hook-functions ()
-    "Functions to be called by `change-major-mode-hook' when
- leaving `mu4e-view-mode'."
-    (when (eq major-mode 'mu4e-view-mode)
-      (set-face-attribute
-       'variable-pitch nil :family ps/face-variable-pitch :height 1.4)))
+    (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.25))
 
   :hook
-  (after-change-major-mode-hook . ps/mu4e-view-mode-leave-hook-functions)
-  ;; (mu4e-view-mode-hook . ps/mu4e-view-mode-hook-functions)
+  (mu4e-view-mode-hook . ps/mu4e-view-mode-hook-functions)
+  (change-major-mode-hook . ps/faces-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode
   (mu4e-mark-execute-pre-hook . ps/mu4e-gmail-fix-flags)
   (mu4e-compose-pre-hook . org-msg-mode)
   (mu4e-compose-pre-hook . ps/mu4e-set-account)
@@ -10823,14 +10813,6 @@ poorly-designed websites."
       (unless (or elfeed-search-remain-on-entry (use-region-p))
         (forward-line))))
 
-  ;; github.com/skeeto/elfeed/issues/190#issuecomment-384346895
-  (setq elfeed-show-mode-hook
-        (lambda ()
-          (set-face-attribute 'variable-pitch (selected-frame)
-          :font (font-spec :family ps/face-variable-pitch :size 14))
-          (setq fill-column (current-fill-column))
-          ;; (setq-local shr-width (current-fill-column))
-          (setq elfeed-show-entry-switch #'ps/show-elfeed)))
 
   (defun ps/show-elfeed (buffer)
     (with-current-buffer buffer

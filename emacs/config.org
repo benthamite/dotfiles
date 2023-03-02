@@ -1931,16 +1931,13 @@ CLOCK: [2021-03-28 Sun 19:21]--[2021-03-28 Sun 19:35] =>  0:14
 CLOCK: [2022-05-04 Wed 19:52]--[2022-05-04 Wed 19:54] =>  0:02
 CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 :END:
+
 /[[https://gitlab.com/jabranham/mixed-pitch][mixed-pitch]] allows for mixing fixed-pitch and variable-pitch fonts./
 
 #+begin_src emacs-lisp :results silent
 (use-package mixed-pitch
-  :demand t
   :custom
   (mixed-pitch-set-height t)
-
-  :config
-  (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
 
   :hook
   (mu4e-view-mode-hook . mixed-pitch-mode)
@@ -1962,20 +1959,6 @@ I haven't yet explored this package.
   :demand t
   :config
   (fontaine-mode))
-#+end_src
-
-** face-remap
-:PROPERTIES:
-:ID:       3F96E2F2-7C68-4D61-8CB8-EFE4C7220FC8
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature face-remap
-  :demand t
-  :general
-  (eww-mode-map
-   "+" 'text-scale-increase
-   "-" 'text-scale-decrease))
 #+end_src
 
 ** fringe
@@ -2019,7 +2002,7 @@ I haven't yet explored this package.
   (global-org-modern-mode))
 #+end_src
 
-** org-faces
+** faces
 :PROPERTIES:
 :ID:       168A61B0-4580-443D-B04F-78F08EFA0458
 :END:
@@ -2033,20 +2016,17 @@ CLOCK: [2021-03-28 Sun 21:05]--[2021-03-28 Sun 21:21] =>  0:16
 CLOCK: [2021-02-27 Sat 18:27]--[2021-02-27 Sat 18:32] =>  0:05
 CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :END:
-The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8A86-F7F6ADFD46C7][mixed-pitch]] package.
 
 #+begin_src emacs-lisp :results silent
-(use-feature org-faces
+(use-feature faces
   :after org-modern
 
-  :custom
-  (org-fontify-quote-and-verse-blocks t)
-
   :config
-  (defun ps/org-faces-custom-faces ()
+  (defun ps/faces-load-custom-faces ()
     "My custom faces, to be used in conjunction with theme."
     (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
     (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
+    (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
     (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family ps/face-fixed-pitch :height 0.8)
     (set-face-attribute 'org-property-value nil :family ps/face-fixed-pitch :height 0.8)
     (set-face-attribute 'org-todo nil :family ps/face-fixed-pitch :height 1.0)
@@ -2073,6 +2053,20 @@ The height for ~variable-pitch~ should be set with the [[id:A8E80A11-25A4-4034-8
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
 - [[https://zzamboni.org/post/beautifying-org-mode-in-emacs/][- zzamboni.org | Beautifying Org Mode in Emacs]]
+
+** face-remap
+:PROPERTIES:
+:ID:       3F96E2F2-7C68-4D61-8CB8-EFE4C7220FC8
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature face-remap
+  :demand t
+  :general
+  (eww-mode-map
+   "+" 'text-scale-increase
+   "-" 'text-scale-decrease))
+#+end_src
 
 ** theme-loaddefs
 :PROPERTIES:
@@ -2161,7 +2155,7 @@ installed."
   (ps/modus-themes-load-theme-conditionally)
 
   :hook
-  (modus-themes-after-load-theme-hook . ps/org-faces-custom-faces)
+  (modus-themes-after-load-theme-hook . ps/faces-load-custom-faces)
   (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
 
   :general
@@ -10954,6 +10948,17 @@ slow if it has a lot of overlays."
   (org-mode-hook . ps/org-hide-logbook))
 #+end_src
 
+** org-faces
+:PROPERTIES:
+:ID:       1A295AA4-31BD-4B2E-828B-5B3443AD8D35
+:END:
+
+#+begin_src emacs-lisp
+(use-feature org-faces
+  :custom
+  (org-fontify-quote-and-verse-blocks t))
+#+end_src
+
 ** org-id
 :PROPERTIES:
 :ID:       51E91355-66E0-479C-B616-116EF261F930
@@ -15460,23 +15465,15 @@ it, without asking for confirmation."
     (forward-line -1)
     (ps/mu4e-headers-archive))
 
-  ;; I believe the functions below are no longer needed
   (defun ps/mu4e-view-mode-hook-functions ()
     "Functions to be called by `mu4e-view-mode-hook'."
+    (interactive)
     (toggle-truncate-lines 1)
-    (set-face-attribute
-     'variable-pitch nil :family ps/face-variable-pitch :height 1.25))
-
-  (defun ps/mu4e-view-mode-leave-hook-functions ()
-    "Functions to be called by `change-major-mode-hook' when
- leaving `mu4e-view-mode'."
-    (when (eq major-mode 'mu4e-view-mode)
-      (set-face-attribute
-       'variable-pitch nil :family ps/face-variable-pitch :height 1.4)))
+    (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.25))
 
   :hook
-  (after-change-major-mode-hook . ps/mu4e-view-mode-leave-hook-functions)
-  ;; (mu4e-view-mode-hook . ps/mu4e-view-mode-hook-functions)
+  (mu4e-view-mode-hook . ps/mu4e-view-mode-hook-functions)
+  (change-major-mode-hook . ps/faces-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode
   (mu4e-mark-execute-pre-hook . ps/mu4e-gmail-fix-flags)
   (mu4e-compose-pre-hook . org-msg-mode)
   (mu4e-compose-pre-hook . ps/mu4e-set-account)
@@ -16723,14 +16720,6 @@ poorly-designed websites."
       (unless (or elfeed-search-remain-on-entry (use-region-p))
         (forward-line))))
 
-  ;; github.com/skeeto/elfeed/issues/190#issuecomment-384346895
-  (setq elfeed-show-mode-hook
-        (lambda ()
-          (set-face-attribute 'variable-pitch (selected-frame)
-          :font (font-spec :family ps/face-variable-pitch :size 14))
-          (setq fill-column (current-fill-column))
-          ;; (setq-local shr-width (current-fill-column))
-          (setq elfeed-show-entry-switch #'ps/show-elfeed)))
 
   (defun ps/show-elfeed (buffer)
     (with-current-buffer buffer

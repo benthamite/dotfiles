@@ -6632,7 +6632,7 @@ present, then archive it."
   ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
   (defun ps/org-hide-properties ()
     "Hide all org-mode headline property drawers in buffer. Could be
-slow if it has a lot of overlays."
+  slow if it has a lot of overlays."
     (interactive)
     (save-excursion
       (goto-char (point-min))

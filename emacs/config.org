@@ -11035,7 +11035,7 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
   ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
   (defun ps/org-hide-properties ()
     "Hide all org-mode headline property drawers in buffer. Could be
-slow if it has a lot of overlays."
+  slow if it has a lot of overlays."
     (interactive)
     (save-excursion
       (goto-char (point-min))

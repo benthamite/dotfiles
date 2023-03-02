@@ -536,6 +536,7 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 - Cut suspected sections of the org file (~org-cut-subtree~), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections, while leaving the literal org file intact.
 - Use ~git-timemachine~ to see how a suspected section of the config file compares with versions you know were working correctly.
 - Set ~debug-on-error~ to ~t~ to see a backtrace of an error. Or call ~toggle-debug-on-error~ interactively.
+    - To determine what function is changing the value of a variable, use ~debug-on-variable-change~.
 - Use Time Machine (on MacOS) to download and try increasingly older versions, to identify the version that introduced the bug. Then diff that version with its immediate successor.
 - Bisect the init file until you locate the culprit.
     - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).

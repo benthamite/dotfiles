@@ -7603,7 +7603,9 @@ return such list if its length is less than LIMIT."
   (defvar ps/vulpea-excluded-directories nil
     "Directories containing files to exclude from list of projects")
 
-  (defvar ps/vulpea-excluded-files nil
+  (defvar ps/vulpea-excluded-files (list
+                                    ps/file-tlon-tareas-leo
+                                    ps/file-tlon-tareas-fede)
     "files to exclude from list of projects")
 
   (defun ps/vulpea-project-p ()

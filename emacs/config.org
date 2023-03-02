@@ -10377,18 +10377,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
   :custom
   (org-default-notes-file ps/file-inbox-desktop)
   (org-capture-templates
-   `(("a" "Entry: add" entry
-      (id "6E725763-8B53-43EC-9197-C0FE7468328D")
-      "*** %(ps/org-web-tools-insert-title-for-clipboard-url-ea-forum)\nSCHEDULED: %(org-insert-time-stamp nil nil nil nil nil \" .+1d\")\n[[%c][online entry]]\n\nwber%?" :empty-lines 1 :prepend t)
-     ("b" "Library" entry
-      (id "ABE4DDD1-8107-487A-B09F-2FE7466D23DA")
-      "* %?\n" :prepend t)
-     ("c" "calendar" entry
+   `(("c" "calendar" entry
       (file ps/file-calendar)
       "* TODO %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t)
-     ("d" "Entry: discuss" entry
-      (id "AE09BAB8-5EA0-4CB0-AC5A-FF876CB9ABC5")
-      "**** TODO Discuss %(ps/org-web-tools-insert-link-for-clipboard-url-ea-forum)\nSCHEDULED: %(org-insert-time-stamp nil nil nil nil nil \" .+1d\")" :empty-lines 1 :prepend t)
      ("e" "email" entry
       (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
       "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
@@ -10399,41 +10390,76 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
      ("fp" "Fede: Pending for next meeting" plain
       (id "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
       "" :empty-lines 1 :empty-lines-after 3)
-      ("fr" "Fede: RAE suggestion" entry
+     ("fr" "Fede: RAE")
+     ("frs" "Fede: RAE suggestion" entry
       (file+headline ps/file-tlon-tareas-fede "sugerencias de Pablo")
       "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
      ("g" "Ledger" plain (file ps/file-ledger)
       "" :empty-lines 1)
      ("l" "Leo")
-     ("lb" "Leo: Add to ea.news" entry
-      (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
-      "** TODO [#6] Agregar a ea.news :leo:\n%c" :empty-lines 1 :prepend t)
      ("ll" "Leo: Generic task" entry
       (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
       "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-     ("lm" "Leo: Meetings" entry
-      (id "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")
-      "** %(ps/org-time-stamp-inactive-current-time)\n%?")
-     ("ln" "Leo: Add to Future Matters: news" entry
+     ("lb" "Leo: BAE")
+     ("lba" "Leo: Add to translations Airtable" entry
+      (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
+      "** TODO [#4] Add to translations Airtable :leo:\n%c\nPrioridad: %(completing-read \"Priority\" '(\"highest\" \"high\" \"medium\" \"low\" \"lowest\"))" :empty-lines 1 :prepend t)
+     ("lbb" "Leo: Generic BAE task" entry
+      (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
+      "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+     ("li" "Leo: EAI")
+     ("lii" "Leo: Generic EAI task" entry
+      (id "698743B9-B754-4061-89BD-6E49F3B64DE2")
+      "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+     ("ln" "Leo: EAN")
+     ("lna" "Leo: Add to ea.news" entry
+      (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
+      "** TODO [#6] Agregar a ea.news :leo:\n%c" :empty-lines 1 :prepend t)
+     ("lnn" "Leo: Generic EAN" entry
+      (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
+      "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+     ("lm" "Leo: FM")
+     ("lmm" "Leo: Generic FM task" entry
+      (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+      "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+     ("lg" "Leo: GPE")
+     ("lgg" "Leo: Generic GPE task" entry
+      (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
+      "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+     ("lh" "Leo: HEAR")
+     ("lhh" "Leo: Generic HEAR task" entry
+      (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
+      "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+     ("lmn" "Leo: Add to Future Matters: news" entry
       (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
       "** TODO [#4] Future Matters: news :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
+     ("lmr" "Leo: Add to Future Matters: research" entry
+      (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+      "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
+
+     ("ld" "Leo: LBDLH")
+     ("ldd" "Leo: Generic LBDLH task" entry
+      (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
+      "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+     ("lw" "Leo: PW")
+     ("lww" "Leo: Generic PW task" entry
+      (id "12645897-A06F-44DD-876D-0FFC47D0E742")
+      "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+     ("lr" "Leo: RAE")
+     ("lrr" "Leo: Generic RAE task" entry
+      (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
+      "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+     ("lx" "Leo: Meetings" entry
+      (id "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")
+      "** %(ps/org-time-stamp-inactive-current-time)\n%?")
      ("lp" "Leo: Pending for next meeting" plain
       (id "8B2F18B4-A309-4F29-A5E6-CD40E010970D")
       "" :empty-lines 1 :empty-lines-after 3)
-     ("lr" "Leo: Add to Future Matters: research" entry
-      (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-      "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
-     ("lt" "Leo: Add to translations Aritable" entry
-      (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
-      "** TODO [#4] Add to translations Airtable :leo:\n%c\nPrioridad: %(completing-read \"Priority\" '(\"highest\" \"high\" \"medium\" \"low\" \"lowest\"))" :empty-lines 1 :prepend t)
      ("lg" "Leo: Telegram" entry
       (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
       "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
-     ("m" "Leo: Messaging (to send later)" entry
-      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
-      "** TODO Send message\n%?\n")
      ("n" "telegram" entry
-     (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
       "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ;; ("m" "To discuss in meeting with Leo" plain
      ;; (id "3AAD2510-0522-4598-9182-50E97504EAF6")
@@ -10489,9 +10515,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
     (cond
      ((string= "fm" (plist-get org-capture-plist :key))
       (save-window-excursion
-        (org-id-goto "22E9B7E2-A48E-41EA-8320-64578AB6C9A1")
-        (org-narrow-to-subtree)
-        (ps/org-copy-heading-contents))
+	(org-id-goto "22E9B7E2-A48E-41EA-8320-64578AB6C9A1")
+	(org-narrow-to-subtree)
+	(ps/org-copy-heading-contents))
       (insert (current-kill 0)))))
 
   (defun ps/org-capture-before-finalize-hook-behavior ()
@@ -10505,21 +10531,21 @@ conditional on active capture template."
       (ispell-change-dictionary "english"))
      ((string= "la" (plist-get org-capture-plist :key))
       (save-window-excursion
-        (ps/switch-to-alternate-buffer)
-        (ps/org-jump-to-first-heading)
-        (widen)
-        (org-narrow-to-subtree)
-        (let ((org-use-tag-inheritance))
-          (org-roam-tag-remove '("unprocessed" "empty" "leo" "unpublished"))
-          (org-roam-tag-add '("leo")))
-        (ps/show-buffer-name))
+	(ps/switch-to-alternate-buffer)
+	(ps/org-jump-to-first-heading)
+	(widen)
+	(org-narrow-to-subtree)
+	(let ((org-use-tag-inheritance))
+	  (org-roam-tag-remove '("unprocessed" "empty" "leo" "unpublished"))
+	  (org-roam-tag-add '("leo")))
+	(ps/show-buffer-name))
       (goto-char 0)
       (search-forward "Procesar ")
       (insert (format "~%s~" (current-kill 0))))
      ((string= "le" (plist-get org-capture-plist :key))
       (save-window-excursion
-        (ps/switch-to-alternate-buffer)
-        (ps/show-buffer-name))
+	(ps/switch-to-alternate-buffer)
+	(ps/show-buffer-name))
       (goto-char 0)
       (search-forward "Renombrar ")
       (insert (concat "~" (current-kill 0) "~ ")))
@@ -10527,11 +10553,11 @@ conditional on active capture template."
      ((string= "s" (plist-get org-capture-plist :key))
       (org-narrow-to-subtree)
       (let ((url (s-replace-regexp
-                  "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
-                  "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
-                  (plist-get org-store-link-plist :link))))
-        (goto-char (point-max))
-        (insert (format "[[%s][external link]]" url))))
+		  "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
+		  "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
+		  (plist-get org-store-link-plist :link))))
+	(goto-char (point-max))
+	(insert (format "[[%s][external link]]" url))))
      ((string= "v" (plist-get org-capture-plist :key))
       (org-do-demote))
      ((string= "y" (plist-get org-capture-plist :key))

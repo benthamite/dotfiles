@@ -1901,10 +1901,9 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 :END:
 
 #+begin_src emacs-lisp :results silent
-(setq use-dialog-box nil)
 (setq default-directory ps/dir-dropbox)
 (setq use-short-answers t)
-(setq message-log-max t) ; don't truncate *Messages* buffer when it becomes large
+(setq message-log-max t)
 (setq ring-bell-function 'ignore) ; silence bell when mistake is made
 (setq x-stretch-cursor t) ; make curor the width of the character under it
 ;; emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
@@ -1929,8 +1928,6 @@ CLOCK: [2021-03-28 Sun 19:21]--[2021-03-28 Sun 19:35] =>  0:14
 
 #+begin_src emacs-lisp :results silent
 (setq-default line-spacing 2)
-(tool-bar-mode -1)
-(add-to-list 'default-frame-alist '(fullscreen . maximized)) ; start Emacs maximized
 #+end_src
 
 ** mixed-pitch

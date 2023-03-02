@@ -640,10 +640,9 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
 (use-package async
   :commands dired-async-mode)
 
-(setq use-dialog-box nil)
 (setq default-directory ps/dir-dropbox)
 (setq use-short-answers t)
-(setq message-log-max t) ; don't truncate *Messages* buffer when it becomes large
+(setq message-log-max t)
 (setq ring-bell-function 'ignore) ; silence bell when mistake is made
 (setq x-stretch-cursor t) ; make curor the width of the character under it
 ;; emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
@@ -654,8 +653,6 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
 (set-keyboard-coding-system 'utf-8)
 
 (setq-default line-spacing 2)
-(tool-bar-mode -1)
-(add-to-list 'default-frame-alist '(fullscreen . maximized)) ; start Emacs maximized
 
 (use-package mixed-pitch
   :demand t

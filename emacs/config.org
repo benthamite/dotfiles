@@ -6349,6 +6349,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
 :PROPERTIES:
 :ID:       F4D1CD7C-0BA9-4D20-8D99-399331682D1B
 :END:
+
 /[[https://github.com/emacsorphanage/session][session]] lets you use variables, registers and buffer places across sessions./
 
 #+begin_src emacs-lisp :results silent
@@ -6356,10 +6357,11 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
   :demand t
   :custom
   (session-globals-include '((kill-ring 100)
-                             (session-file-alist 500 t)
-                             (file-name-history 10000)
+                             (session-file-alist 100 t)
+                             (file-name-history 100)
                              search-ring regexp-search-ring))
   (history-length 1000)
+
   :hook
   (after-init-hook . session-initialize))
 #+end_src

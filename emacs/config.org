@@ -12886,24 +12886,6 @@ ARG is the prefix argument received when calling interactively the function."
   ("H-/" 'org-cite-insert))
 #+end_src
 
-*** DONE Add ~biblio~ tag to all bibliographic notes
-CLOSED: [2023-02-20 Mon 12:58]
-:PROPERTIES:
-:ID:       51E3274E-1A08-4082-9863-0A62F3233C1B
-:END:
-Done until ~Gates2022RisksAdvancedAI.org~.
-
-#+begin_src emacs-lisp :tangle no
-(dolist (file (f-entries "/Users/pablostafforini/Dropbox/bibliographic-notes"))
-  (message "processing %s" file)
-  (when (string= (file-name-extension file) "org")
-  (with-current-buffer (or (find-buffer-visiting file)
-                           (find-file-noselect file))
-    (ps/org-jump-to-first-heading)
-    (org-roam-tag-add '("biblio"))
-    (save-buffer))))
-#+end_src
-
 *** Resources
 :PROPERTIES:
 :ID:       8EA82227-F7EF-4C46-B40C-C5DE40F13130

@@ -271,6 +271,9 @@ defaults write com.apple.finder FXInfoPanesExpanded -dict \
 	OpenWith -bool true \
 	Privileges -bool true
 echo 'Expand the following File Info panes: “General”, “Open with”, and “Sharing & Permissions”'
+
+defaults write com.apple.finder CreateDesktop -bool false;killall Finder;say icons hidden
+echo 'Hide icons for hard drives, servers, and removable media on the desktop'
 #+end_src
 
 * Dock, Dashboard
@@ -607,6 +610,9 @@ echo "Done. Note that some of these changes require a logout/restart to take eff
 #+end_src
 
 * Local variables
+:PROPERTIES:
+:ID:       56E28299-B0B4-4487-B79D-5B8D5CB25451
+:END:
 # Local Variables:
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
 # End:

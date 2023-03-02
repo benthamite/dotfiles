@@ -9411,6 +9411,21 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :ID:       BEF1B425-C23E-4C1C-A468-92F7AD54FA18
 :END:
 
+** hideshow
+:PROPERTIES:
+:ID:       8E6459FA-9978-42F8-9DAC-C4D7FB385F97
+:END:
+
+/hideshow is a minor mode for block hiding and showing./
+
+[2023-03-01 Wed 03:56] I don't remember why I created this hook.
+
+#+begin_src emacs-lisp
+(use-feature hideshow
+
+  :hook
+  (prog-mode-hook . hs-minor-mode))
+#+end_src
 ** copilot
 :PROPERTIES:
 :ID:       2064FE34-0301-4E33-AB51-FE4921CA0E16

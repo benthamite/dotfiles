@@ -5624,6 +5624,11 @@ FILE."
   :hook
   ((prog-mode-hook sgml-mode-hook nxml-mode-hook tex-mode-hook eval-expression-minibuffer-setup-hook) . puni-mode))
 
+(use-feature hideshow
+
+  :hook
+  (prog-mode-hook . hs-minor-mode))
+
 (use-package copilot
   :if (equal (system-name) ps/computer-hostname-pablo)
   :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))

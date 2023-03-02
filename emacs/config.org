@@ -15802,7 +15802,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   :defer 5
   :custom
   (telega-server-libs-prefix "/opt/homebrew")
-  (setq telega-chat-input-markups '("org"))
+  (telega-chat-input-markups '("org"))
   (telega-use-images t)
   (telega-emoji-font-family 'noto-emoji)
   (telega-emoji-use-images nil)
@@ -15822,7 +15822,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
  start telega. Always display telega buffers in the rightmost
  window. Repeated invocations of the command will move point from
  the middle of the chatbuf to the end of it, then to the root
- buffer, then to the beginning of it."
+ buffer, then to the beginning of it if not already there."
     (interactive)
     (let* ((telega-buffer-root "*Telega Root*")
            (telega-buffer
@@ -15837,10 +15837,12 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
           (if telega-buffer-is-current
               (if (string> telega-buffer telega-buffer-root)
                   (if (ps/bollp)
-                      (switch-to-buffer telega-buffer-root)
+                      (progn
+                        (kill-buffer)
+                        (switch-to-buffer telega-buffer-root))
                     (end-of-buffer))
                 (beginning-of-buffer)
-                (forward-line 3))
+                (forward-line 4)) ; one extra to move past pinned message
             (switch-to-buffer telega-buffer))
         (telega))
       (let ((telega-buffer (current-buffer)))
@@ -15935,6 +15937,7 @@ into a task for Leo."
     (add-hook 'completion-at-point-functions
               #'telega-chatbuf-complete-at-point nil 'local))
 
+
   (telega-mode-line-mode 1)
 
   :hook
@@ -15944,7 +15947,7 @@ into a task for Leo."
   ;; (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
 
   :general
-  ("C-f" 'ps/telega-switch-to)
+  ("A-l" 'ps/telega-switch-to)
   ((telega-msg-button-map telega-root-mode-map)
    "k" 'telega-button-backward
    "l" 'telega-button-forward

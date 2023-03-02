@@ -5657,7 +5657,7 @@ FILE."
 
   :hook
   (prog-mode-hook . copilot-mode)
-  (emacs-lisp-mode-hook . copilot-mode)
+  (persistent-scratch-mode-hook . copilot-mode)
 
   :general
   (copilot-mode-map

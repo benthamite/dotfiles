@@ -2407,6 +2407,17 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
   (tool-bar-mode -1))
 #+end_src
 
+** scroll-bar-mode
+:PROPERTIES:
+:ID:       0AE186DB-0FC3-4B1B-B38E-7597B97A8DBA
+:END:
+
+#+begin_src emacs-lisp
+(use-feature scroll-bar-mode
+  :config
+  (scroll-bar-mode 1))
+#+end_src
+
 ** gnuplot-mode
 :PROPERTIES:
 :ID:       9817156B-B940-4DCB-A10C-FBBC558B4B66
@@ -5338,16 +5349,6 @@ CLOCK: [2021-10-03 Sun 18:45]--[2021-12-30 Thu 12:11] => 2105:26
   :general
   ("H-A-w" 'winner-undo
    "H-A-W" 'winner-redo))
-#+end_src
-
-** scroll-bar
-:PROPERTIES:
-:ID:       E7F1404A-43CF-434F-9540-5CB4C2CC1BAB
-:END:
-#+begin_src emacs-lisp :results silent
-(use-feature scroll-bar
-  :config
-  (scroll-bar-mode -1))
 #+end_src
 
 ** avy

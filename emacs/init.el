@@ -938,6 +938,10 @@ installed."
   :config
   (tool-bar-mode -1))
 
+(use-feature scroll-bar-mode
+  :config
+  (scroll-bar-mode 1))
+
 ;; (use-package gnuplot-mode
 ;; :demand t)
 (use-package gnuplot)
@@ -2991,10 +2995,6 @@ window depending on the number of present windows."
   :general
   ("H-A-w" 'winner-undo
    "H-A-W" 'winner-redo))
-
-(use-feature scroll-bar
-  :config
-  (scroll-bar-mode -1))
 
 (use-package avy
   :commands ps/avy-dired-find-file

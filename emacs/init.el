@@ -8155,8 +8155,10 @@ With prefix, rebuild the cache before offering candidates."
 
 (use-package org-ref
   :defer 20
+
   :custom
-  (org-ref-insert-cite-function 'org-cite-insert)
+  (org-ref-insert-cite-function
+        (org-cite-insert nil))
   (org-ref-bibtex-pdf-download-dir ps/dir-downloads)
   (bibtex-completion-library-path ps/dir-library-pdf)
 

@@ -13368,17 +13368,21 @@ The problem seems to be that ~(citar--select-resource citekeys :notes t)~ return
   (citar-embark-mode))
 #+end_src
 
+
 ** org-ref
 :PROPERTIES:
 :ID:       1FC5528A-9F5A-4A9D-B168-5A1F51110455
 :END:
+
 /[[https://github.com/jkitchin/org-ref][org-ref]] supports citations, cross-references, bibliographies in org-mode and useful bibtex tools./
 
 #+begin_src emacs-lisp :results silent
 (use-package org-ref
   :defer 20
+
   :custom
-  (org-ref-insert-cite-function 'org-cite-insert)
+  (org-ref-insert-cite-function
+        (org-cite-insert nil))
   (org-ref-bibtex-pdf-download-dir ps/dir-downloads)
   (bibtex-completion-library-path ps/dir-library-pdf)
 
@@ -13439,7 +13443,6 @@ in the file. Data comes from www.ebook.de."
   (delete 'orcb-check-journal org-ref-clean-bibtex-entry-hook)
   (delete 'orcb-download-pdf org-ref-clean-bibtex-entry-hook))
 #+end_src
-
 ** doi-utils
 :PROPERTIES:
 :ID:       0A568E85-C775-4894-BE59-A7DAB0F41F87

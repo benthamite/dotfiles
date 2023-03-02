@@ -10880,6 +10880,12 @@ poorly-designed websites."
 
   :hook
   (elfeed-show-mode-hook . shr-heading-setup-imenu)
+  ;; I believe this is no longer needed
+  ;; github.com/skeeto/elfeed/issues/190#issuecomment-384346895
+  ;; (elfeed-show-mode-hook . (lambda ()
+  ;;                            (setq fill-column (current-fill-column))
+  ;;                            (setq-local shr-width (current-fill-column))
+  ;;                            (setq elfeed-show-entry-switch #'ps/show-elfeed)))
 
   :general
   ;; ("A-f" (lambda! (elfeed) (ps/elfeed-full-update)))

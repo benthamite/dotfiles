@@ -2873,8 +2873,6 @@ otherwise in two windows."
         (split-window-right))
       (balance-windows)))
 
-  (run-with-timer 5 nil 'ps/window-split-if-unsplit)
-
   (defun ps/window--move-or-swap (this-buffer other-buffer &optional target-window)
     "docstring"
     (ps/window-split-if-unsplit)
@@ -2934,6 +2932,8 @@ necessary, and move buffer to the other window or to the middle
 window depending on the number of present windows."
     (interactive)
     (ps/window-buffer-move (when (> (count-windows) 2) (winum-get-window-by-number 2))))
+
+  (add-hook 'emacs-startup-hook #'ps/window-split-if-unsplit -50)
 
   :general
   ("C-H-0" 'ps/switch-to-last-window

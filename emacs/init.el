@@ -6157,7 +6157,8 @@ image."
    )
   :config
   (cond ((equal (system-name) ps/computer-hostname-pablo)
-         (setq org-agenda-files nil))
+         (setq org-agenda-files (list
+                                 ps/file-calendar)))
         ((equal (system-name) ps/computer-hostname-leo)
          (setq org-agenda-files (list
                                  ps/file-tlon-tareas-leo))))

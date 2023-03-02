@@ -18042,6 +18042,15 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
              (i (% (abs (random)) (length alnum))))
                        (substring alnum i (1+ i))))))
     random))
+
+(defun ps/string-match-in-list-p (string list-of-strings)
+  ""
+  (catch 'tag
+    (mapc
+     (lambda (-x)
+       (when (string-match (regexp-quote string) -x ) (throw 'tag -x)))
+     list-of-strings)
+    nil))
 #+end_src
 
 ** unpackaged

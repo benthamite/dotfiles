@@ -11709,6 +11709,15 @@ to the clipboard."
                        (substring alnum i (1+ i))))))
     random))
 
+(defun ps/string-match-in-list-p (string list-of-strings)
+  ""
+  (catch 'tag
+    (mapc
+     (lambda (-x)
+       (when (string-match (regexp-quote string) -x ) (throw 'tag -x)))
+     list-of-strings)
+    nil))
+
 (use-package unpackaged
   :straight (unpackaged :host github :repo "alphapapa/unpackaged.el")
   :commands (unpackaged/org-forward-to-entry-content))

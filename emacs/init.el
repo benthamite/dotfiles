@@ -1578,6 +1578,7 @@ Has a preference for looking backward when not directly on a symbol."
   (eval-expression-print-length nil)
   (print-level nil)
   (print-length nil)
+  (truncate-partial-width-windows nil)
 
   :config
   (column-number-mode)

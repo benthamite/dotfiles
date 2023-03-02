@@ -2385,6 +2385,17 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
   (marginalia-mode-hook . all-the-icons-completion-marginalia-setup))
 #+end_src
 
+** menu-bar-mode
+:PROPERTIES:
+:ID:       08F1FCC3-7287-43B6-B455-C2D4377848E7
+:END:
+
+#+begin_src emacs-lisp
+(use-feature menu-bar-mode
+  :config
+  (menu-bar-mode -1))
+#+end_src
+
 ** gnuplot-mode
 :PROPERTIES:
 :ID:       9817156B-B940-4DCB-A10C-FBBC558B4B66

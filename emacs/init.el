@@ -930,6 +930,10 @@ installed."
   :hook
   (marginalia-mode-hook . all-the-icons-completion-marginalia-setup))
 
+(use-feature menu-bar-mode
+  :config
+  (menu-bar-mode -1))
+
 ;; (use-package gnuplot-mode
 ;; :demand t)
 (use-package gnuplot)

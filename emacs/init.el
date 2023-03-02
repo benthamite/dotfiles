@@ -612,7 +612,7 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
 (use-feature comp
   :defer 60
   :custom
-  (native-comp-async-report-warnings-errors nil))
+  (native-comp-async-report-warnings-errors 'silent))
 
 (use-feature bytecomp
   :demand t

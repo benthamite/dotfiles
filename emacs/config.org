@@ -1830,7 +1830,7 @@ To be explored. The [[https://github.com/positron-solutions/transient-showcase][
 (use-feature comp
   :defer 60
   :custom
-  (native-comp-async-report-warnings-errors nil))
+  (native-comp-async-report-warnings-errors 'silent))
 #+End_src
 
 ** bytecomp

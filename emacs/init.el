@@ -3606,6 +3606,23 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 
 (use-package calfw
   :defer 20)
+
+(use-package calfw-blocks
+  :straight (calfw-blocks
+             :host github
+             :repo "ml729/calfw-blocks")
+  :after calfw
+  :demand t
+
+  :config
+  (defun ps/open-calendar-agenda ()
+    (interactive)
+    (cfw:open-calendar-buffer
+     :contents-sources
+     (list
+      (cfw:org-create-source "medium purple"))
+     :view 'block-week)))
+
 (use-feature time
   :after tab-bar
   :demand t

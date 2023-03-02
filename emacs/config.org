@@ -11759,51 +11759,6 @@ Export content of subtree without heading. Add the ~ignore~ tag to the headlines
 To try:
 https://github.com/rksm/clj-org-analyzer/
 https://www.reddit.com/r/emacs/comments/cptwh4/org_analyzer_an_app_that_visualizes_orgmode_time/
-** org-ql
-:PROPERTIES:
-:ID:       09C4BC5C-8308-497F-A8B6-B135B79AA848
-:END:
-:LOGBOOK:
-CLOCK: [2022-04-27 Wed 18:24]--[2022-04-27 Wed 19:26] =>  1:02
-CLOCK: [2021-11-21 Sun 14:20]--[2021-11-21 Sun 14:22] =>  0:02
-CLOCK: [2021-07-31 Sat 15:31]--[2021-07-31 Sat 15:41] =>  0:10
-CLOCK: [2021-07-26 Mon 21:36]--[2021-07-26 Mon 22:00] =>  0:24
-CLOCK: [2021-07-26 Mon 21:29]--[2021-07-26 Mon 21:31] =>  0:02
-CLOCK: [2021-06-13 Sun 20:52]--[2021-06-13 Sun 21:31] =>  0:39
-CLOCK: [2021-05-11 Tue 12:14]--[2021-05-11 Tue 12:17] =>  0:03
-CLOCK: [2021-05-10 Mon 21:10]--[2021-05-10 Mon 22:11] =>  1:01
-CLOCK: [2021-05-08 Sat 21:58]--[2021-05-08 Sat 22:31] =>  0:33
-CLOCK: [2021-04-07 Wed 17:51]--[2021-04-07 Wed 18:27] =>  0:36
-CLOCK: [2021-04-07 Wed 17:21]--[2021-04-07 Wed 17:40] =>  0:19
-CLOCK: [2021-04-02 Fri 16:45]--[2021-04-02 Fri 16:48] =>  0:03
-CLOCK: [2021-03-01 Mon 15:41]--[2021-03-01 Mon 15:47] =>  0:06
-CLOCK: [2021-03-01 Mon 13:46]--[2021-03-01 Mon 13:57] =>  0:11
-CLOCK: [2021-02-28 Sun 19:35]--[2021-02-28 Sun 19:56] =>  0:21
-CLOCK: [2021-02-28 Sun 19:07]--[2021-02-28 Sun 19:26] =>  0:19
-CLOCK: [2021-02-27 Sat 09:40]--[2021-02-27 Sat 12:00] =>  2:20
-CLOCK: [2021-02-06 Sat 22:52]--[2021-02-06 Sat 23:11] =>  0:19
-:END:
-
-The packages [[https://github.com/alphapapa/org-ql][org-ql]] and ~helm-org-ql~ offer blazing fast search of org headings. Previously, I used ~org-goto~ and ~org-refile~, but the initial cache build after restart took over ten seconds, and subsequently it was a choice between retaining an outdated cache or building one periodically and experiencing further delays or freezes. This is an invalauble set of packages if you have lots of org headings.
-
-[2022-06-08 Wed 16:49] Consider migrating from ~helm-org-ql~ to [[https://www.reddit.com/r/orgmode/comments/v13ont/ann_orgqlfind_new_org_ql_command_using_emacss/][org-ql-find]] (since the former was my main reason for keeping ~helm~, this would allow me to migrate to a different completion setup).
-
-[2022-06-22 Wed 08:11] Disabling while I explore ~consult-org-heading~.
-
-[2022-12-31 Sat 18:37] I no longer see a need for this; instead, I use ~org-roam-node-find~ and ~consult-org-heading~.
-
-#+begin_src emacs-lisp :results silent
-(use-package org-ql
-  :disabled
-  :custom
-  (org-ql-search-directories-files-recursive t)
-  :config
-  (defun ps/org-ql-find-agenda ()
-    "docstring"
-    (interactive)
-    (org-ql-find org-agenda-files :query-prefix "!tags:ARCHIVE")))
-#+end_src
-
 ** org-make-toc
 :PROPERTIES:
 :ID:       5BAB49C3-DB85-4CB1-9CF7-5FD72AFB4608

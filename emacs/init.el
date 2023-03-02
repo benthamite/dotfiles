@@ -7158,16 +7158,6 @@ original."
   :config
   (ox-extras-activate '(ignore-headlines)))
 
-(use-package org-ql
-  :disabled
-  :custom
-  (org-ql-search-directories-files-recursive t)
-  :config
-  (defun ps/org-ql-find-agenda ()
-    "docstring"
-    (interactive)
-    (org-ql-find org-agenda-files :query-prefix "!tags:ARCHIVE")))
-
 (use-package org-make-toc
   :after org
   :defer 10)

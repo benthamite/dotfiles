@@ -1930,6 +1930,10 @@ _a_pend       |_k_macro      |r_e_store                    "
   (kept-old-versions 10 "keep 10 earliest versions")
   (delete-old-versions t "don't ask about deleting old versions")
   (version-control t "number backups")
+  ;; disabling until we diagnose issues
+  ;; (auto-save-visited-predicate
+  ;;  (lambda () (string-match "tareas.org" buffer-file-name)))
+  ;; (auto-save-visited-interval 5)
 
   :config
   (add-to-list 'auto-mode-alist '("\\.mdx\\'" . markdown-mode))

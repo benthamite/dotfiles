@@ -4718,17 +4718,18 @@ necessary."
     ;; (message "Language set to %s" ispell-local-dictionary))
 
   ;; emacs.stackexchange.com/a/74070/32089
-  (defun suppress-messages (old-fun &rest args)
-    (cl-flet ((silence (&rest args1) (ignore)))
-      (advice-add 'message :around #'silence)
-      (unwind-protect
-          (apply old-fun args)
-        (advice-remove 'message #'silence))))
+  ;; I think this was causing Emacs to freeze; disabling
+  ;; (defun suppress-messages (old-fun &rest args)
+  ;;   (cl-flet ((silence (&rest args1) (ignore)))
+  ;;     (advice-add 'message :around #'silence)
+  ;;     (unwind-protect
+  ;;         (apply old-fun args)
+  ;;       (advice-remove 'message #'silence))))
 
   (add-to-list 'ispell-extra-args "--sug-mode=ultra") ; github.com/rolandwalker/flyspell-lazy#notes
 
-  (advice-add 'ispell-init-process :around #'suppress-messages)
-  (advice-add 'ispell-kill-ispell :around #'suppress-messages)
+  ;; (advice-add 'ispell-init-process :around #'suppress-messages)
+  ;; (advice-add 'ispell-kill-ispell :around #'suppress-messages)
 
 
   :general

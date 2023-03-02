@@ -9684,21 +9684,6 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
   (message-mode-map
    "s-b" 'message-goto-body))
 
-(use-package message-extras
-  :straight (message-extras
-             :host github
-             :repo "oantolin/emacs-config"
-             :files ("my-lisp/message-extras.el"))
-  :demand t
-
-  :hook
-  (eww-mode-hook . shr-heading-setup-imenu)
-
-  :general
-  (eww-mode-map
-   "A-C-s-r" 'shr-heading-previous
-   "A-C-s-f" 'shr-heading-next))
-
 (use-feature mml
   :general
   (message-mode-map

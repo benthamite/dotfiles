@@ -15102,28 +15102,6 @@ To try once I switch to Emacs 29.
 :END:
 [[https://turkja.fi/posts/emacs-and-smtp/][Emacs and SMTP with gmail | Jarkko Turkulainen]]
 
-** message-extras
-:PROPERTIES:
-:ID:       17DB4B28-B670-4B3C-9D4E-09EB466D5A17
-:END:
-
-#+begin_src emacs-lisp
-(use-package message-extras
-  :straight (message-extras
-             :host github
-             :repo "oantolin/emacs-config"
-             :files ("my-lisp/message-extras.el"))
-  :demand t
-
-  :hook
-  (eww-mode-hook . shr-heading-setup-imenu)
-
-  :general
-  (eww-mode-map
-   "A-C-s-r" 'shr-heading-previous
-   "A-C-s-f" 'shr-heading-next))
-#+end_src
-
 ** mml
 :PROPERTIES:
 :ID:       2A87061B-BE45-443B-AB2C-893A69C20003

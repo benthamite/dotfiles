@@ -5298,6 +5298,9 @@ window depending on the number of present windows."
 (use-feature frame
   :config
   (blink-cursor-mode)
+  (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ;; maximize frame on startup
+  (setq window-divider-default-right-width 1)
+  (window-divider-mode)
 
   :general
   ("H-S-SPC" 'other-frame))

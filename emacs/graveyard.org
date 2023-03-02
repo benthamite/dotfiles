@@ -8,6 +8,62 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** orgmdb
+:PROPERTIES:
+:ID:       504577FD-DACD-4D35-B9E6-307DF3D9BE7E
+:END:
+:LOGBOOK:
+CLOCK: [2022-03-14 Mon 14:55]--[2022-03-14 Mon 15:13] =>  0:18
+CLOCK: [2021-07-22 Thu 12:50]--[2021-07-22 Thu 12:52] =>  0:02
+CLOCK: [2021-06-22 Tue 10:53]--[2021-06-22 Tue 11:28] =>  0:35
+CLOCK: [2021-06-25 Fri 21:00]--[2021-06-25 Fri 21:03] =>  0:03
+CLOCK: [2021-06-22 Tue 10:39]--[2021-06-22 Tue 10:53] =>  0:14
+CLOCK: [2021-05-29 Sat 20:36]--[2021-05-29 Sat 21:01] =>  0:25
+CLOCK: [2021-05-14 Fri 18:20]--[2021-05-14 Fri 18:24] =>  0:04
+CLOCK: [2021-05-11 Tue 19:43]--[2021-05-11 Tue 20:01] =>  0:18
+CLOCK: [2021-05-10 Mon 20:48]--[2021-05-10 Mon 21:10] =>  0:22
+CLOCK: [2021-05-10 Mon 14:38]--[2021-05-10 Mon 14:47] =>  0:09
+CLOCK: [2021-05-10 Mon 14:16]--[2021-05-10 Mon 14:17] =>  0:01
+CLOCK: [2021-03-18 Thu 21:44]--[2021-03-18 Thu 21:50] =>  0:06
+CLOCK: [2021-03-23 Tue 21:17]--[2021-03-23 Tue 21:41] =>  0:24
+CLOCK: [2021-03-23 Tue 20:26]--[2021-03-23 Tue 21:13] =>  0:47
+:END:
+/[[https://github.com/isamert/orgmdb.el][orgmdb]] is an OMDb API client with some org-mode related convenience functions./
+
+[2023-03-02 Thu 13:07] I'm using ~org-cite~ for films, too, so this is no longer relevant. 
+
+#+begin_src emacs-lisp :results silent
+(use-package orgmdb
+  :if (equal (system-name) ps/computer-hostname-pablo)
+  :after auth-source-pass
+  :defer 60
+  :straight (orgmdb
+             :host github
+             :repo "isamert/orgmdb.el")
+  :config
+  (setq orgmdb-omdb-apikey (auth-source-pass-get 'secret "auth-sources/omdb"))
+  (defun ps/orgdmb-see-movie-in-imdb (&optional arg)
+    "Visit the IMDb page of the movie at point.
+
+With optional prefix argument, open with eww."
+    (interactive "P")
+    (let ((url (concat "https://www.imdb.com/title/" (org-entry-get nil "IMDB-ID"))))
+      (if arg
+          (eww url)
+        (browse-url url))))
+  (defhydra hydra-orgmdb
+    (:exit t :idle 0.5)
+    "orgmdb"
+    ("f" (orgmdb-fill-movie-properties nil) "Fill properties")
+    ("r" (orgmdb-fill-movie-properties 4) "Fill properties and replace title")
+    ("w" (ps/orgdmb-see-movie-in-imdb 4) "See in IMDb (eww)")
+    ("x" (ps/orgdmb-see-movie-in-imdb) "See in IMDb (external)"))
+  :general
+  (org-mode-map
+   ;; "s-A-g" 'hydra-orgmdb/body
+   ))
+#+end_src
+
 ** global-priorities-encyclopedia.org
 :PROPERTIES:
 :ID:       08E1895E-2E55-4CB0-BD9F-288505BB8B74

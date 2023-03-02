@@ -7307,36 +7307,6 @@ an org drawer."
   :custom
   (org-reveal-root "https://cdn.jsdelivr.net/npm/reveal.js"))
 
-(use-package orgmdb
-  :if (equal (system-name) ps/computer-hostname-pablo)
-  :after auth-source-pass
-  :defer 60
-  :straight (orgmdb
-             :host github
-             :repo "isamert/orgmdb.el")
-  :config
-  (setq orgmdb-omdb-apikey (auth-source-pass-get 'secret "auth-sources/omdb"))
-  (defun ps/orgdmb-see-movie-in-imdb (&optional arg)
-    "Visit the IMDb page of the movie at point.
-
-With optional prefix argument, open with eww."
-    (interactive "P")
-    (let ((url (concat "https://www.imdb.com/title/" (org-entry-get nil "IMDB-ID"))))
-      (if arg
-          (eww url)
-        (browse-url url))))
-  (defhydra hydra-orgmdb
-    (:exit t :idle 0.5)
-    "orgmdb"
-    ("f" (orgmdb-fill-movie-properties nil) "Fill properties")
-    ("r" (orgmdb-fill-movie-properties 4) "Fill properties and replace title")
-    ("w" (ps/orgdmb-see-movie-in-imdb 4) "See in IMDb (eww)")
-    ("x" (ps/orgdmb-see-movie-in-imdb) "See in IMDb (external)"))
-  :general
-  (org-mode-map
-   ;; "s-A-g" 'hydra-orgmdb/body
-   ))
-
 (use-package org-mime
   :general
   (org-mode-map

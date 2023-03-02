@@ -3172,9 +3172,6 @@ then to selected character immediately ahead of point."
 (use-package writeroom-mode
   :defer 5
   :init
-  ;; This neds to be delayed a few seconds because the value returned
-  ;; by `window-total-width' changes as Emacs restarts.
-  (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))))
 
   (defun ps/writerrom-global-effects (arg)
     "Enable and disable custom effects when `writeroom-mode' is
@@ -3200,6 +3197,11 @@ needs to be included as an element in the list defined by
                            eww-buffers-mode) "major modes activated in global-writeroom-mode")
   (writeroom-fullscreen-effect 'maximized "disables annoying fullscreen transition effect on MacOS")
   (writeroom-maximize-window t)
+
+  :hook
+  ;; This neds to be delayed because the value of `window-total-width'
+  ;; is changed during startup..
+  (emacs-startup-hook . (lambda () (setq writeroom-width (window-total-width))))
 
   :general
   ("M-'" 'writeroom-mode
@@ -3786,18 +3788,17 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :demand t
   :custom
   (session-globals-include '((kill-ring 100)
-                             (session-file-alist 100 t)
-                             (file-name-history 100)
+                             (session-file-alist 500 t)
+                             (file-name-history 10000)
                              search-ring regexp-search-ring))
   (history-length 1000)
-
   :hook
   (after-init-hook . session-initialize))
 
 (use-feature recentf
   :defer 10
   :custom
-  (recentf-max-saved-items 100)
+  (recentf-max-saved-items 1000)
   :config
   (add-to-list 'recentf-exclude no-littering-var-directory)
   (add-to-list 'recentf-exclude no-littering-etc-directory)

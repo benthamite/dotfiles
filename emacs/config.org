@@ -5587,9 +5587,6 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
 (use-package writeroom-mode
   :defer 5
   :init
-  ;; This neds to be delayed a few seconds because the value returned
-  ;; by `window-total-width' changes as Emacs restarts.
-  (run-with-timer 10 nil (lambda () (setq writeroom-width (window-total-width))))
 
   (defun ps/writerrom-global-effects (arg)
     "Enable and disable custom effects when `writeroom-mode' is
@@ -5615,6 +5612,11 @@ needs to be included as an element in the list defined by
                            eww-buffers-mode) "major modes activated in global-writeroom-mode")
   (writeroom-fullscreen-effect 'maximized "disables annoying fullscreen transition effect on MacOS")
   (writeroom-maximize-window t)
+
+  :hook
+  ;; This neds to be delayed because the value of `window-total-width'
+  ;; is changed during startup..
+  (emacs-startup-hook . (lambda () (setq writeroom-width (window-total-width))))
 
   :general
   ("M-'" 'writeroom-mode

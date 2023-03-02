@@ -2771,7 +2771,6 @@ option."
   :custom
   (split-width-threshold 300)
   (split-height-threshold nil)
-  (frame-resize-pixelwise t) ; github.com/d12frosted/homebrew-emacs-plus#no-titlebar
   (scroll-error-top-bottom t "move point to top of buffer if `scroll-down-command' invoked when screen can scroll no further")
   ;; The following prevents Emacs from splitting windows indefinitely when the monitor config changes
   ;; stackoverflow.com/questions/23207958/how-to-prevent-emacs-dired-from-splitting-frame-into-more-than-two-windows

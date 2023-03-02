@@ -623,10 +623,13 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   :custom
   (user-full-name ps/personal-name)
   (user-mail-address ps/personal-gmail)
-  (inhibit-startup-screen t)
   (initial-scratch-message nil)
-  (initial-buffer-choice 'remember-notes)
-  (initial-major-mode 'emacs-lisp-mode))
+  (inhibit-splash-screen t)
+  (inhibit-startup-screen t)
+  (inhibit-startup-echo-area-message user-login-name)
+  (inhibit-startup-buffer-menu t)
+  (initial-major-mode 'emacs-lisp-mode)
+  (frame-resize-pixelwise t))
 
 (use-package server
   :demand t

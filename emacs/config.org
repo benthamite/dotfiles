@@ -4055,13 +4055,6 @@ Requires the command-line utility `trash' (`brew install trash')."
 
   (add-hook 'kill-buffer-query-functions #'ps/bury-scratch-buffer)
 
-  (defun ps/org-id-goto (id &optional arg)
-    "Open ID even if narrowed."
-    (dotimes (i 2)
-      (ps/org-widen-and-reveal)
-      (org-id-goto id))
-    (ps/org-narrow-to-entry-and-children))
-
   ;; Adapted from `spacemacs/new-empty-buffer'.
   (defun ps/new-empty-buffer (&optional)
     "Create a new buffer called `untitled<n>'."
@@ -11163,6 +11156,12 @@ When FILES is given, scan these files instead."
             (message "WARNING: %d duplicate IDs found, check *Messages* buffer" ndup)
           (message "%d unique files scanned for IDs" (length org-id-files)))
         org-id-locations)))
+
+  (defun ps/org-id-goto (id &optional arg)
+    "Open ID even if narrowed."
+    (dotimes (i 2)
+      (ps/org-widen-and-reveal)
+      (org-id-goto id)))
 
   :hook
   (before-save-hook . ps/org-id-add-ids-to-headings-in-file)

@@ -4433,17 +4433,20 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (use-package cape
   :after corfu
   :demand t
+  :custom
+  (cape-dabbrev-min-length 4)
+
   :init
   ;; Add `completion-at-point-functions', used by `completion-at-point'.
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-yasnippet)
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-abbrev))
+  (add-hook 'emacs-startup-hook (lambda () (dolist (backend '(cape-yasnippet cape-symbol cape-file cape-keyword cape-dabbrev org))
+                                        (add-to-list 'completion-at-point-functions backend))) 100))
 
 (use-package cape-yasnippet
   :straight (cape-yasnippet
              :host github
-             :repo "elken/cape-yasnippet"))
+             :repo "elken/cape-yasnippet")
+  :after cape
+  :demand t)
 
 (use-package org-block-capf
   :straight (org-block-capf

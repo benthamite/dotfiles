@@ -7442,17 +7442,22 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 :ID:       5A103245-9DC3-4D95-96D7-2161F6CCD0B1
 :END:
 
+/[[https://github.com/minad/cape][cape]] provides completion-at-point extensions/
+
 #+begin_src emacs-lisp
 (use-package cape
   :after corfu
   :demand t
+  :custom
+  (cape-dabbrev-min-length 4)
+
   :init
   ;; Add `completion-at-point-functions', used by `completion-at-point'.
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-yasnippet)
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-abbrev))
+  (add-hook 'emacs-startup-hook (lambda () (dolist (backend '(cape-yasnippet cape-symbol cape-file cape-keyword cape-dabbrev org))
+                                        (add-to-list 'completion-at-point-functions backend))) 100))
 #+end_src
+
+
 
 ** cape-yasnippet
 :PROPERTIES:

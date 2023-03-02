@@ -2398,9 +2398,7 @@ or are no longer readable will be killed."
    "H-C-g" 'abort-recursive-edit
    "H-C-S-g" 'top-level
    "H-C-A-g" 'keyboard-escape-quit) ; ESC ESC ESC
-  ((messages-buffer-mode-map telega-root-mode-map)
-   "q" 'bury-buffer)
-  ((ebib-entry-mode-map ebib-index-mode-map)
+  ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "H-q" 'bury-buffer
    "q" 'ps/bury-buffer-switch-to-other-window)
   ((apropos-mode-map calendar-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)

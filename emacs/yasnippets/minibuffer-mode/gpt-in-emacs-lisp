@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
 # name: gpt-in-emacs-lisp
-# key: el
+# key: gel
 # --
 In Emacs Lisp, $1?

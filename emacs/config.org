@@ -280,6 +280,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dumb-jump][dumb-jump]]
   - [[#elisp-mode][elisp-mode]]
   - [[#debug][debug]]
+  - [[#edebug][edebug]]
   - [[#backtrace][backtrace]]
   - [[#macrostep][macrostep]]
   - [[#ess][ESS]]
@@ -10343,13 +10344,23 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   (org-agenda-clockreport-parameter-plist
    )
   :config
-  (setq org-agenda-fles ps/org-agenda-files)
-  ;; I have to exclude these files because otherwise extraneous
-  ;; information shows up in my agenda, such as TODOs and time
-  ;; logs. These files lack the `property' tag but the may still
-  ;; otherwise be included if they have been modified recently
-  ;; (see the function `vulpea-agenda-files-update')
-  (setq org-agenda-files-excluded ps/org-agenda-files-excluded)
+  (cond ((equal (system-name) ps/computer-hostname-pablo)
+         (setq org-agenda-files (list
+                                 ps/file-calendar)))
+        ((equal (system-name) ps/computer-hostname-leo)
+         (setq org-agenda-files (list
+                                 ps/file-tlon-tareas-leo))))
+
+  (when (equal (system-name) ps/computer-hostname-pablo)
+    (setq ps/org-agenda-files-excluded
+      (list
+       ;; I have to exclude these files because otherwise extraneous
+       ;; information shows up in my agenda, such as TODOs and time
+       ;; logs. These files lack the `property' tag but the may still
+       ;; otherwise be included if they have been modified recently
+       ;; (see the function `vulpea-agenda-files-update')
+       ps/file-tlon-tareas-leo
+       ps/file-tlon-tareas-fede)))
 
   (run-with-idle-timer 602 nil 'ps/org-agenda-switch-to-agenda-current-day)
   (run-with-idle-timer 602 t 'org-agenda-redo)
@@ -16458,6 +16469,7 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
   :demand t
   :hook
   (eww-mode-hook . shr-heading-setup-imenu)
+
   :general
   (eww-mode-map
    "A-C-s-r" 'shr-heading-previous

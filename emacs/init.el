@@ -4354,9 +4354,8 @@ By default, all agenda entries are offered. MATCH is as in
                               corfu-echo
                               corfu-history
                               ;; corfu-indexed
-                              ;; corfu-popupinfo
-                              corfu-quick
-                              ))
+                              corfu-popupinfo
+                              corfu-quick))
 
   :demand t
   :custom
@@ -11574,9 +11573,7 @@ that duration."
 (use-package emacs-oauth2-auto
   :straight (emacs-oauth2-auto
              :host github
-                   :repo "telotortium/emacs-oauth2-auto")
-
-  )
+                   :repo "telotortium/emacs-oauth2-auto"))
 
 (use-package pass
   ;; :demand t

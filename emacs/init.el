@@ -9732,6 +9732,7 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
 
 (use-package mu4e
   :if (equal (system-name) ps/computer-hostname-pablo)
+  ;; :demand t
   :defer 5
   :straight (:local-repo
              "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
@@ -9776,14 +9777,13 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
   (mu4e-index-cleanup t) ; `nil' improves performance"
-  (mu4e-index-lazy-check) ; `t' improves performance"
+  (mu4e-index-lazy-check nil) ; `t' improves performance"
 
   :config
   (require 'mu4e-contrib)
 
   (mu4e t)
   (defun ps/mu4e-gmail-fix-flags (mark msg)
-    (message "fixing flags") ; for testing
     (cond ((eq mark 'trash)  (mu4e-action-retag-message msg "-\\Inbox,+\\Trash,-\\Draft"))
           ((eq mark 'refile) (mu4e-action-retag-message msg "-\\Inbox"))
           ((eq mark 'flag)   (mu4e-action-retag-message msg "+\\Starred"))
@@ -9944,8 +9944,8 @@ without asking for user confirmation."
     "Set the account for composing a message."
     (let ((mail
            (cdar
-             (ignore-errors
-               (mu4e-message-field mu4e-compose-parent-message :to)))))
+            (ignore-errors
+              (mu4e-message-field mu4e-compose-parent-message :to)))))
       (if mail
           (setq user-mail-address mail)
         (setq user-mail-address ps/personal-gmail))))

@@ -48,10 +48,10 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#display][display]]
   - [[#mixed-pitch][mixed-pitch]]
   - [[#fontaine][fontaine]]
-  - [[#face-remap][face-remap]]
   - [[#fringe][fringe]]
   - [[#org-modern][org-modern]]
-  - [[#org-faces][org-faces]]
+  - [[#faces][faces]]
+  - [[#face-remap][face-remap]]
   - [[#theme-loaddefs][theme-loaddefs]]
   - [[#modus-themes][modus-themes]]
   - [[#highlight-parentheses][highlight-parentheses]]
@@ -64,6 +64,9 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#fancy-battery][fancy-battery]]
   - [[#all-the-icons][all-the-icons]]
   - [[#all-the-icons-completion][all-the-icons-completion]]
+  - [[#menu-bar-mode][menu-bar-mode]]
+  - [[#tool-bar-mode][tool-bar-mode]]
+  - [[#scroll-bar-mode][scroll-bar-mode]]
   - [[#gnuplot-mode][gnuplot-mode]]
   - [[#delsel][delsel]]
   - [[#hl-line][hl-line]]
@@ -146,7 +149,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#frame][frame]]
   - [[#winum][winum]]
   - [[#winner][winner]]
-  - [[#scroll-bar][scroll-bar]]
   - [[#avy][avy]]
   - [[#iy-go-to-char][iy-go-to-char]]
   - [[#writeroom-mode][writeroom-mode]]
@@ -155,6 +157,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#calendar][calendar]]
   - [[#loaddefs][loaddefs]]
   - [[#org-gcal][org-gcal]]
+  - [[#calfw][calfw]]
+  - [[#calfw-blocks][calfw-blocks]]
   - [[#gcalcli][gcalcli]]
   - [[#time][time]]
   - [[#tmr][tmr]]
@@ -299,6 +303,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-archive][org-archive]]
   - [[#org-archive-hierarchically][org-archive-hierarchically]]
   - [[#org-fold][org-fold]]
+  - [[#org-faces][org-faces]]
   - [[#org-id][org-id]]
   - [[#org-list][org-list]]
   - [[#org-refile][org-refile]]
@@ -373,7 +378,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#sendmail][sendmail]]
   - [[#async-mail-sending][async-mail-sending]]
   - [[#message][message]]
-  - [[#message-extras][message-extras]]
   - [[#mml][mml]]
   - [[#mu4e][mu4e]]
   - [[#mu4e-org][mu4e-org]]
@@ -15306,6 +15310,8 @@ Here's the process I followed:
 
 #+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/mu4e)
 (use-package mu4e
+  :if (equal (system-name) ps/computer-hostname-pablo)
+  ;; :demand t
   :defer 5
   :straight (:local-repo
              "/opt/homebrew/Cellar/mu/1.8.14/share/emacs/site-lisp/mu/mu4e"
@@ -15350,14 +15356,13 @@ Here's the process I followed:
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
   (mu4e-index-cleanup t) ; `nil' improves performance"
-  (mu4e-index-lazy-check) ; `t' improves performance"
+  (mu4e-index-lazy-check nil) ; `t' improves performance"
 
   :config
   (require 'mu4e-contrib)
 
   (mu4e t)
   (defun ps/mu4e-gmail-fix-flags (mark msg)
-    (message "fixing flags") ; for testing
     (cond ((eq mark 'trash)  (mu4e-action-retag-message msg "-\\Inbox,+\\Trash,-\\Draft"))
           ((eq mark 'refile) (mu4e-action-retag-message msg "-\\Inbox"))
           ((eq mark 'flag)   (mu4e-action-retag-message msg "+\\Starred"))
@@ -15518,8 +15523,8 @@ without asking for user confirmation."
     "Set the account for composing a message."
     (let ((mail
            (cdar
-             (ignore-errors
-               (mu4e-message-field mu4e-compose-parent-message :to)))))
+            (ignore-errors
+              (mu4e-message-field mu4e-compose-parent-message :to)))))
       (if mail
           (setq user-mail-address mail)
         (setq user-mail-address ps/personal-gmail))))

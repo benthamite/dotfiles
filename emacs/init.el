@@ -6612,7 +6612,6 @@ present, then archive it."
    "s-A-a" 'org-archive-subtree))
 
 (use-package org-archive-hierarchically
-  :disabled
   :straight (org-archive-hierarchically
              :host gitlab
              :repo "andersjohansson/org-archive-hierarchically")

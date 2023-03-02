@@ -11005,7 +11005,6 @@ I normally archive subtrees with ~org-archive-to-archive-sibling~, but use ~org-
 
 #+begin_src emacs-lisp
 (use-package org-archive-hierarchically
-  :disabled
   :straight (org-archive-hierarchically
              :host gitlab
              :repo "andersjohansson/org-archive-hierarchically")

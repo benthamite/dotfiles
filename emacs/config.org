@@ -9119,6 +9119,11 @@ FILE."
    "A-d" 'pdf-view-midnight-minor-mode))
 #+end_src
 
+*** TODO Tweak function to copy all pdf text to clipboard so that the region is copied instead, if active
+:PROPERTIES:
+:ID:       2CA2A24B-DB63-47EC-977E-B7EFC6F7CAB9
+:END:
+
 *** TODO [#4] Tweak chrome headless command so that chrome authenticates before printing a pdf
 :PROPERTIES:
 :ID:       BDE975FE-56AA-45C3-AF47-C70503051B30

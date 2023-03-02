@@ -2330,19 +2330,48 @@ or are no longer readable will be killed."
 
   ;; `recover-this-file' notifications are easy to miss. The
   ;; function below triggers a more intrusive alert.
-  (defun ps/alert-when-auto-save-detected ()
+  (defun ps/auto-save-alert ()
     (when (and (not buffer-read-only)
                (file-newer-than-file-p (or buffer-auto-save-file-name
                                            (make-auto-save-file-name))
                                        buffer-file-name)
                (alert (format "%s has auto save data"
                               (file-name-nondirectory buffer-file-name))
-		      :title "Auto save detected"
-		      :severity 'high))))
+                      :title "Auto save detected"
+                      :severity 'high))))
 
+  ;; for some reason, `alert' fails to create persistent alerts. so we
+  ;; trigger a warning if either `*log4e-alert*' or `*Messages*'
+  ;; buffers have logged a message related to `recover-this-file'.
+  (defun ps/auto-save-persist ()
+    "Prevent killing buffer when auto save data is detected."
+    ;; FIXME: This doesn't work
+    (alert--log-open-log
+    ;; we check both `*log4e-alert*' and `*Messages*' buffers for
+    ;; extra safety
+    (let ((alert-buffers '(" *log4e-alert*" "*Messages*")))
+      (dolist (buffer alert-buffers)
+        (when (get-buffer buffer)
+          (set-buffer buffer)
+          (goto-char (point-min))
+          (when (search-forward "has auto save data" nil t)
+            (yes-or-no-p "Buffers with auto save data detected. Check `*log4e-alert*' and `*Messages*' for details. Are you sure you want to proceed? "))
+          (kill-buffer))))))
+
+  ;; https://emacs.stackexchange.com/a/3778/32089
+  (defun ps/diff-buffer-with-file ()
+    "Compare the current modified buffer with the saved version."
+    (interactive)
+    (let ((diff-switches "-u")) ;; unified diff
+      (diff-buffer-with-file (current-buffer))))
+
+  (advice-add 'recover-this-file :after #'ps/diff-buffer-with-file)
+
+  ;; (auto-save-visited-mode)
 
   :hook
-  (find-file-hook . ps/alert-when-auto-save-detected)
+  (find-file-hook . ps/auto-save-alert)
+  ;; (kill-buffer-query-functions . ps/auto-save-persist)
 
   :general
   ("M--" 'not-modified

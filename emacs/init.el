@@ -5395,7 +5395,6 @@ otherwise the whole buffer."
       (writeroom-mode 'toggle)
       (pdf-view-fit-height-to-window)))
 
-  (load-file (file-name-concat ps/dir-emacs-local "scroll-other-window.el"))
 
   (defun ps/pdf-tools-open-externally ()
     "Open current PDF in external application. If `opentopage
@@ -5484,7 +5483,16 @@ FILE."
    "S" 'ps/pdf-tools-add-or-remove-page
    "X" 'ps/pdf-tools-extract-pages
    "H-c" 'pdf-view-kill-ring-save
-   "A-d" 'pdf-view-midnight-minor-mode)
+   "A-d" 'pdf-view-midnight-minor-mode))
+
+(use-package scroll-other-window
+  :straight (scroll-other-window
+	     :host github
+	     :repo "benthamite/scroll-other-window")
+  :after pdf-tools
+  :demand t
+  
+  :general
   (sow-mode-map
    "A-C-s-t" 'sow-scroll-other-window-down
    "A-C-s-g" 'sow-scroll-other-window))

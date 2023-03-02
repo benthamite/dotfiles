@@ -9119,10 +9119,7 @@ FILE."
    "S" 'ps/pdf-tools-add-or-remove-page
    "X" 'ps/pdf-tools-extract-pages
    "H-c" 'pdf-view-kill-ring-save
-   "A-d" 'pdf-view-midnight-minor-mode)
-  (sow-mode-map
-   "A-C-s-t" 'sow-scroll-other-window-down
-   "A-C-s-g" 'sow-scroll-other-window))
+   "A-d" 'pdf-view-midnight-minor-mode))
 #+end_src
 
 *** TODO [#4] Tweak chrome headless command so that chrome authenticates before printing a pdf
@@ -9132,6 +9129,28 @@ FILE."
 :END:
 https://stackoverflow.com/questions/62602327/headless-chrome-sharing-credentials
 Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
+
+** scroll-other-window
+:PROPERTIES:
+:ID:       4F29AAB8-CC48-4216-B309-2C26337FE12B
+:END:
+
+/[[https://github.com/benthamite/scroll-other-window][scroll-other-window]] enables scrolling of the other window in ~pdf-tools~./
+
+#+begin_src emacs-lisp
+(use-package scroll-other-window
+  :straight (scroll-other-window
+	     :host github
+	     :repo "benthamite/scroll-other-window")
+  :after pdf-tools
+  :demand t
+  
+  :general
+  (sow-mode-map
+   "A-C-s-t" 'sow-scroll-other-window-down
+   "A-C-s-g" 'sow-scroll-other-window))
+#+end_src
+
 ** pdf-view-restore
 :PROPERTIES:
 :ID:       159A7ABF-5D9C-46C3-BAA2-C1E486682875

@@ -9029,8 +9029,6 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
       (writeroom-mode 'toggle)
       (pdf-view-fit-height-to-window)))
 
-  ;; (load-file (file-name-concat ps/dir-emacs-local "scroll-other-window.el"))
-
   (defun ps/pdf-tools-open-externally ()
     "Open current PDF in external application. If `opentopage
  script is available, open to current page."

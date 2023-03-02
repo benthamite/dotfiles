@@ -934,6 +934,10 @@ installed."
   :config
   (menu-bar-mode -1))
 
+(use-feature tool-bar-mode
+  :config
+  (tool-bar-mode -1))
+
 ;; (use-package gnuplot-mode
 ;; :demand t)
 (use-package gnuplot)

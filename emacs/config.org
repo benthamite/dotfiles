@@ -2396,6 +2396,17 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
   (menu-bar-mode -1))
 #+end_src
 
+** tool-bar-mode
+:PROPERTIES:
+:ID:       EBE7677A-4C70-4312-816A-E9F8E5999078
+:END:
+
+#+begin_src emacs-lisp
+(use-feature tool-bar-mode
+  :config
+  (tool-bar-mode -1))
+#+end_src
+
 ** gnuplot-mode
 :PROPERTIES:
 :ID:       9817156B-B940-4DCB-A10C-FBBC558B4B66

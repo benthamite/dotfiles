@@ -3525,6 +3525,10 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :END:
 #+begin_src emacs-lisp :results silent
 (use-feature outline
+
+  :hook
+    (prog-mode-hook . outline-minor-mode)
+
   :general
   ((outline-mode-map outline-minor-mode-map)
    "TAB" 'outline-cycle
@@ -9173,9 +9177,6 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 (use-feature prog-mode
   :config
   (global-prettify-symbols-mode)
-  :hook
-  (prog-mode-hook . outline-minor-mode)
-  (prog-mode-hook . hs-minor-mode)
   :general
   ("A-H-v" 'set-variable
    "M-d" 'toggle-debug-on-error

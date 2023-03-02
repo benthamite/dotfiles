@@ -1687,6 +1687,10 @@ indent block only, else indent whole buffer."
   ("C-t" 'sort-lines))
 
 (use-feature outline
+
+  :hook
+    (prog-mode-hook . outline-minor-mode)
+
   :general
   ((outline-mode-map outline-minor-mode-map)
    "TAB" 'outline-cycle
@@ -5500,9 +5504,6 @@ FILE."
 (use-feature prog-mode
   :config
   (global-prettify-symbols-mode)
-  :hook
-  (prog-mode-hook . outline-minor-mode)
-  (prog-mode-hook . hs-minor-mode)
   :general
   ("A-H-v" 'set-variable
    "M-d" 'toggle-debug-on-error

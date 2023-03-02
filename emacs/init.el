@@ -5629,6 +5629,12 @@ FILE."
   :hook
   (prog-mode-hook . hs-minor-mode))
 
+(use-package aggressive-indent-mode
+  :disabled
+  :demand t
+  :config
+  (global-aggressive-indent-mode))
+
 (use-package copilot
   :if (equal (system-name) ps/computer-hostname-pablo)
   :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))

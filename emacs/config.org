@@ -9426,6 +9426,21 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :hook
   (prog-mode-hook . hs-minor-mode))
 #+end_src
+
+** aggressive-indent-mode
+:PROPERTIES:
+:ID:       94B7795A-09C3-4627-934D-1F4AEB14F7C0
+:END:
+/[[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent-mode]] keeps code always indented./
+
+#+begin_src emacs-lisp
+(use-package aggressive-indent-mode
+  :disabled
+  :demand t
+  :config
+  (global-aggressive-indent-mode))
+#+end_src
+
 ** copilot
 :PROPERTIES:
 :ID:       2064FE34-0301-4E33-AB51-FE4921CA0E16

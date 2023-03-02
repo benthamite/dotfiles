@@ -4378,13 +4378,12 @@ Useful for prompts such as `eval-expression' and `shell-command'."
     (unless (bound-and-true-p vertico--input)
       (corfu-mode)))
 
-      ;; github.com/minad/corfu#transfer-completion-to-the-minibuffer
-        (defun ps/corfu-move-to-minibuffer ()
-  (interactive)
-  (let ((completion-extra-properties corfu--extra)
-        completion-cycle-threshold completion-cycling)
-    (apply #'consult-completion-in-region completion-in-region--data)))
-
+  ;; github.com/minad/corfu#transfer-completion-to-the-minibuffer
+  (defun ps/corfu-move-to-minibuffer ()
+    (interactive)
+    (let ((completion-extra-properties corfu--extra)
+          completion-cycle-threshold completion-cycling)
+      (apply #'consult-completion-in-region completion-in-region--data)))
 
   (global-corfu-mode)
 

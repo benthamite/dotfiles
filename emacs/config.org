@@ -17824,9 +17824,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 (use-package emacs-oauth2-auto
   :straight (emacs-oauth2-auto
              :host github
-                   :repo "telotortium/emacs-oauth2-auto")
-
-  )
+                   :repo "telotortium/emacs-oauth2-auto"))
 #+end_src
 
 ** pass

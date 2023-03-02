@@ -906,7 +906,6 @@ installed."
                              " | "
                              telega-mode-line-format
                              " | "))))
-
   (tab-bar-mode))
 
 (use-package fancy-battery
@@ -5660,8 +5659,10 @@ FILE."
 
 (use-package gpt
   :commands gpt-dwim
+
   :config
   (setq gpt-openai-key (auth-source-pass-get 'secret "auth-sources/openai.com"))
+  (setq gpt-openai-engine "text-davinci-003")
 
   :general
   ("A-C-g" 'gpt-dwim))
@@ -10607,6 +10608,7 @@ into a task for Leo."
   :demand t
   :hook
   (eww-mode-hook . shr-heading-setup-imenu)
+
   :general
   (eww-mode-map
    "A-C-s-r" 'shr-heading-previous

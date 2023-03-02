@@ -269,6 +269,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#parse-csv][parse-csv]]
 - [[#pdf][pdf]]
   - [[#pdf-tools][pdf-tools]]
+  - [[#scroll-other-window][scroll-other-window]]
   - [[#pdf-view-restore][pdf-view-restore]]
   - [[#org-pdftools][org-pdftools]]
   - [[#org-noter-pdftools][org-noter-pdftools]]
@@ -287,6 +288,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#python][python]]
   - [[#applescript-mode][applescript-mode]]
   - [[#puni][puni]]
+  - [[#hideshow][hideshow]]
+  - [[#aggressive-indent-mode][aggressive-indent-mode]]
   - [[#copilot][copilot]]
   - [[#gpt][gpt]]
   - [[#pen][pen]]
@@ -323,7 +326,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-habit][org-habit]]
   - [[#org-contrib][org-contrib]]
   - [[#org-analyzer][org-analyzer]]
-  - [[#org-ql][org-ql]]
   - [[#org-make-toc][org-make-toc]]
   - [[#images][images]]
   - [[#org2blog][org2blog]]
@@ -2337,7 +2339,6 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
                              " | "
                              telega-mode-line-format
                              " | "))))
-
   (tab-bar-mode))
 #+end_src
 
@@ -5823,6 +5824,7 @@ with the specified date."
 :ID:       9E8AEF97-2E1A-489E-929A-CE5789EABFB9
 :org-gcal-managed: org
 :END:
+
 :LOGBOOK:
 CLOCK: [2022-07-15 Fri 11:10]--[2022-07-15 Fri 11:19] =>  0:09
 CLOCK: [2022-07-11 Mon 15:51]--[2022-07-11 Mon 16:17] =>  0:26
@@ -5850,7 +5852,10 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 (That's the actively maintained fork; the [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][official repository]] is no longer maintained.)
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org-gcal)
+[2023-03-01 Wed 10:54] Check [[https://github.com/dedenbangkit/.emacs.d/blob/2cf69eb102af5a5cab7ec1d65af77e997082e17a/custom/main.el#L34][this config]] in case it helps me figure out how to avoid getting prompted for a password so frequently.
+
+#+begin_src emacs-lisp :results silent
+>>>>>>> 299adde (add/remove spaces, indents, etc)
 (use-package org-gcal
   :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass
@@ -6267,6 +6272,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 :PROPERTIES:
 :ID:       E1DB2097-7273-4FAC-BA84-67D46815FC45
 :END:
+
 /[[https://github.com/josegpt/display-wttr][display-wttr]] displays weather information in the modeline (or tab-bar)./
 
 #+begin_src emacs-lisp
@@ -6545,7 +6551,6 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
    "A-C-s-f" 'magit-section-forward))
 #+end_src
 
-To submit a patch: make the commits in git, then call ~magit-status~, ~W p~. That generates a ~.patch~ file which you can attach to an email using whatever email client you usually use.
 
 - [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
 - To read: [[https://emacsredux.com/blog/2020/12/11/super-keybindings-for-magit/][Super Keybindings for Magit | Emacs Redux]]
@@ -6790,6 +6795,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :Effort:   0:30
 :ID:       C1131D3A-4E66-48E5-9353-C7E785391DFA
 :END:
+
 ** replace
 :PROPERTIES:
 :ID:       DC08C217-5005-4A65-986B-85EA876ECB6D
@@ -7008,11 +7014,6 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
    "A-C-;" 'embark-dwim
    "C-h B" 'embark-bindings))
 #+end_src
-
-*** resources
-:PROPERTIES:
-:ID:       D6A07E88-F786-4E8A-AE58-25DA6C562AA5
-:END:
 
 ** embark-consult
 :PROPERTIES:
@@ -7297,10 +7298,6 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
     (when (string-suffix-p "!" pattern)
       `(orderless-without-literal . ,(substring pattern 1)))))
 #+end_src
-*** resources
-:PROPERTIES:
-:ID:       27FB5F19-5F3F-4169-8B67-FCD3689558AF
-:END:
 
 ** ido
 :PROPERTIES:
@@ -9486,13 +9483,16 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :PROPERTIES:
 :ID:       6BA1A737-40A1-4253-8FC8-E211F6060BC9
 :END:
+
 /[[https://github.com/stuhlmueller/gpt.el][gpt]] is an Emacs package for calling instruction-following language models./
 
 #+begin_src emacs-lisp :results silent
 (use-package gpt
   :commands gpt-dwim
+
   :config
   (setq gpt-openai-key (auth-source-pass-get 'secret "auth-sources/openai.com"))
+  (setq gpt-openai-engine "text-davinci-003")
 
   :general
   ("A-C-g" 'gpt-dwim))
@@ -9509,6 +9509,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :END:
 https://github.com/mullikine/pen.el
 Disscussion [[https://www.reddit.com/r/emacs/comments/zhwhww/comment/izp8rxy/?utm_source=reddit&utm_medium=web2x&context=3][here]].
+
 ** elpy
 :PROPERTIES:
 :ID:       E96C6026-AEFA-42A1-930E-863EA3FF651E
@@ -17576,6 +17577,7 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 :LOGBOOK:
 CLOCK: [2022-09-05 Mon 20:22]--[2022-09-05 Mon 21:28] =>  1:06
 :END:
+
 ** mentor
 :PROPERTIES:
 :ID:       E3F6210D-F6CD-4397-9004-3D31B5623D18
@@ -17931,6 +17933,7 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
 :PROPERTIES:
 :ID:       7F48BD07-3570-46C7-A535-87CA5833E84E
 :END:
+
 ** alert
 :PROPERTIES:
 :ID:       694AAC2E-669E-40D4-9794-5E352D77734C
@@ -17988,6 +17991,7 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 :PROPERTIES:
 :ID:       29FF5CB1-E727-4CDC-B745-6A9B5711549C
 :END:
+
 ** calc
 :PROPERTIES:
 :ID:       50FAD2F3-E501-408E-A9A2-8358FAA87C1C

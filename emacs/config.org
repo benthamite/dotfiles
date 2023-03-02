@@ -12216,33 +12216,35 @@ return such list if its length is less than LIMIT."
         (concat "${hierarchy:160} "
                 (propertize "${tags:20}" 'face 'org-tag)))
 
+  (defvar ps/org-roam-excluded-dirs (list
+                                     ps/dir-anki
+                                     ps/dir-inactive
+                                     ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
+                                     ps/dir-archive))
 
-  (defvar ps/org-roam-excluded-dirs nil)
-  (when (equal (system-name) ps/computer-hostname-pablo)
-    (dolist (dir (list ps/dir-anki
-                       ps/dir-inactive
-                       ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
-                       ps/dir-archive))
-      (push (file-relative-name dir ps/dir-org-roam) ps/org-roam-excluded-dirs)))
 
-  (defvar ps/org-roam-excluded-files nil)
-  (when (equal (system-name) ps/computer-hostname-pablo)
-    (dolist (file '("orb-noter-template.org"
-                    "calendar.org" ; added directly as agenda file
-                    "notatu-dignum.org"
-                    "quotes-old.org"
-                    ".org2blog.org"
-                    "wiki-notes.org" ; removing temporarily
-                    "feeds.org"
-                    "conflicted-copy"))
-      (push file ps/org-roam-excluded-files)))
+  (defvar ps/org-roam-excluded-files (list
+                                      "orb-noter-template.org"
+                                      "calendar.org" ; added directly as agenda file
+                                      "notatu-dignum.org"
+                                      "quotes-old.org"
+                                      ".org2blog.org"
+                                      "wiki-notes.org" ; removing temporarily
+                                      "feeds.org"
+                                      "conflicted-copy"))
 
-  ;; exclude selected headings based on parent files or directories
+  ;; exclude headings in specific files and directories
   (setq org-roam-file-exclude-regexp
-        (regexp-opt (delete-dups
-                     (append
-                      ps/org-roam-excluded-dirs
-                      ps/org-roam-excluded-files))))
+        (let (result)
+          (dolist (dir-or-file
+                   (append
+                    ps/org-roam-excluded-dirs
+                    ps/org-roam-excluded-files)
+                   (regexp-opt result))
+            (push (if (f-directory-p dir-or-file)
+                      (file-relative-name dir-or-file ps/dir-org-roam)
+                    dir-or-file)
+                  result))))
 
   ;; exclude selected headings based on other criteria
   (setq org-roam-db-node-include-function
@@ -12295,7 +12297,9 @@ return such list if its length is less than LIMIT."
     "Update org id locations indexed by org roam."
     (interactive)
     (org-id-update-id-locations
-     (directory-files-recursively org-roam-directory ".org$\\|.org.gpg$")))
+     (directory-files-recursively org-roam-directory ".org$\\|.org.gpg$" nil
+                                  (lambda (dir)
+                                    (not (ps/string-match-in-list-p dir ps/org-roam-excluded-dirs))))))
 
   (defun ps/org-roam-remove-file-level-properties ()
     "Remove `ROAM_REFS' and `ID' properties from file-level drawer."

@@ -6558,7 +6558,8 @@ conditional on active capture template."
 
   :general
   ("A-H-j" 'org-clock-goto
-   "A-H-x" 'org-clock-cancel)
+   "A-H-x" 'org-clock-cancel
+   "H-o" 'org-clock-out)
   (org-mode-map
    "s-i" 'org-clock-in
    "s-o" 'org-clock-out

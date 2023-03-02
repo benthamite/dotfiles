@@ -1,6 +1,5 @@
 ;;; init.el --- Init File -*- lexical-binding: t -*-
 
-(message "Loading up Emacs...")
 (defvar ps/core-start-time (current-time))
 
 (defun ps/report-startup-time ()

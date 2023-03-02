@@ -9349,8 +9349,6 @@ first name, and names are separated by a semicolon."
         "cd %s; nvm use 14; npm start"
         ps/dir-translation-server))))
 
-  (run-with-timer 5 nil 'ps/zotra-run-translator-server)
-
   :custom
   (zotra-use-curl nil)
   (zotra-url-retrieve-timeout 10)
@@ -9553,6 +9551,7 @@ or specify any other coding system (and risk losing\n\
 
   :hook
   (zotra-after-add-entry-hook . ps/zotra-after-add-entry-hook-function)
+  (emacs-startup-hook . ps/zotra-run-translator-server)
 
   :general
   (ebib-index-mode-map

@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: tlon-wise-conversion
 # key: twc
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Conversion
     Assets:Wise                               -$1 $2 @ $3 $4

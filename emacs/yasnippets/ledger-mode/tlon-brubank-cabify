@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: tlon-brubank-cabify
 # key: tbc
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Cabify
     Expenses:Core:Transportation            $1 ARS ; taxi $2

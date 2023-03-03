@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: mom-usd-ars-exchange
 # key: mx
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Conversion
     Liabilities:Mom             $1.00 ARS @ $2 USD

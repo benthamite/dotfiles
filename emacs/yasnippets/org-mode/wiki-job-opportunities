@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wiki-job-opportunities
 # key: wjo
+# contributor: Pablo Stafforini
 # --
 ** Job opportunities
 `(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))` is currently hiring for several roles.

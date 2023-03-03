@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: use-package-github
 # key: upg
+# contributor: Pablo Stafforini
 # --
 (use-package $1
   :straight ($1

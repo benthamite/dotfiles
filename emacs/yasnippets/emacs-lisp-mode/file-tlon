@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: file-tlon
 # key: ft
+# contributor: Pablo Stafforini
 # --
 (defvar ps/file-tlon-$1
   (cond

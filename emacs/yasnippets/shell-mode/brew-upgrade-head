@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: brew-upgrade-head
 # key: buh
+# contributor: Pablo Stafforini
 # --
 brew upgrade $1 --fetch-HEAD

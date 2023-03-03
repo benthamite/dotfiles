@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: org-transclude-only-contents
 # key: ot
+# contributor: Pablo Stafforini
 # --
 #+transclude: $1 :only-contents 

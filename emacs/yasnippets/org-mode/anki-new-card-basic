@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: anki-new-card-basic
 # key: ankib
+# contributor: Pablo Stafforini
 # expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
 # --
 * 

@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: tangle-no
 # key: tn
+# contributor: Pablo Stafforini
 # --
 :tangle no

@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: anki-new-card-ea-numbers
 # key: aean
+# contributor: Pablo Stafforini
 # expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
 # --
 * $1

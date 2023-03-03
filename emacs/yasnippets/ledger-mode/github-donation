@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: github-donation
 # key: gd
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` GitHub
     Expenses:Donation                              37.00 USD ; Jethro, Bastien, David W., Lissner, Prot, Tarsius, Minad

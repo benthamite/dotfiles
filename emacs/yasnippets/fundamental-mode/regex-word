@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: regex-word
 # key: \w
+# contributor: Pablo Stafforini
 # --
 [_[:alnum:]]

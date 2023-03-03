@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: mom-usd-conversion
 # key: muc
+# contributor: Pablo Stafforini
 # --
 `(ps/time-last-day-of-last-month)` Conversion
     Liabilities:Mom:Consolidated                -$2 USD @ $3.00 ARS

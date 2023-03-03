@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: tlon-brubank
 # key: tbr
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` ${1:recipient}
     Expenses:${5:account}  ${2:amount, inc. decimal} ${3:$$(yas-choose-value ps/ledger-active-currencies)} ; ${4:details}

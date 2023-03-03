@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: timelines-wiki-new-table-row
 # key: twt
+# contributor: Pablo Stafforini
 # --
 | ${1:year} || {{dts|${2:month (letters)} ${3:day (number)}}} || Blog post || ${4:blog name} || || "${5:title}"<ref>{{cite web |url= ${6:url}|title= $5 |accessdate=`(let ((ps/date-specifier "%B %d, %Y")) (ps/insert-date))`}}</ref> || ||
 |-

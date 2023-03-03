@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: meetings-doc
 # key: md
+# contributor: Pablo Stafforini
 # --
 [[${1:`(current-kill 0)`}][Meetings doc]]
 $0

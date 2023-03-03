@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: emacs-lisp-minimal
 # key: elm
+# contributor: Pablo Stafforini
 # --
 #+begin_src emacs-lisp :results silent :tangle (when (memq version '(minimal)) (print ps/file-init))

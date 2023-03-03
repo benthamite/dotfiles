@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: metaculus-source
 ## key: msheet
+# contributor: Pablo Stafforini
 ## binding: C-s-e
 # --
 ([[`(current-kill 0)`][source]])

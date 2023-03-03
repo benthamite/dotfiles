@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wiki-apply-job
 # key: waj
+# contributor: Pablo Stafforini
 # --
 [[`(current-kill 0)`][Apply for a job]].

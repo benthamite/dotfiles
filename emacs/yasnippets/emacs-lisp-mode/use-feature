@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: use-feature
 # key: uf
+# contributor: Pablo Stafforini
 # --
 (use-feature ${1:feature-name})

@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: tlon-aurora-humaran
 # key: tah
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Auora Humarán
     Expenses:Core:Translations  $1 ARS ; translation of '$2'

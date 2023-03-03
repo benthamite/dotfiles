@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: metaculus-time
 # key: mpass
+# contributor: Pablo Stafforini
 ## binding: C-s-t
 # --
 Updating to account for passage of time.

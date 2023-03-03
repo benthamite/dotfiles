@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: commodities
 # key: comp
+# contributor: Pablo Stafforini
 # --
 python3 ~/Dropbox/org/ledger/commodities.py

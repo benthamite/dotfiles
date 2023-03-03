@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: org-image
-# key: org-img
-# --
-#+attr_html: :width 800px
-[[file:~/google drive/Pictures/org/$1.$2]]

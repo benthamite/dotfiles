@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: mom-health-insurance
 # key: mhi
+# contributor: Pablo Stafforini
 # --
 `(ps/yasnippet-expand-by-key "ldlm")` Health insurance
     Expenses:Health:Medical                 $1.00 ARS

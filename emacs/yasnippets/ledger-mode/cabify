@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: cabify
 # key: cab
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Cabify
     Expenses:Transportation:Taxi  $1 ARS ; $2

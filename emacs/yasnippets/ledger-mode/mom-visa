@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: mom-visa
 # key: visa
+# contributor: Pablo Stafforini
 # `(ps/insert-date)` $1
 `(ps/yasnippet-expand-by-key "ldlm")`
 2022-12-31 $1

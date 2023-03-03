@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: airbnb-income
 # key: ai
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Airbnb
     Income:Rent                                 -$1 USD

@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: gpt-translate-into-spanish
 # key: gts
+# contributor: Pablo Stafforini
 # --
 Translate "$1" into Spanish

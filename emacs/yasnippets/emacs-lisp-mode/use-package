@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # contributor: Daniel Hitzel
 # name: use-package
+# contributor: Pablo Stafforini
 # key: up
 # --
 (use-package ${1:package-name})

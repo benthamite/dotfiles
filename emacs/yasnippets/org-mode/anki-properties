@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: anki-properties
 # key: akp
+# contributor: Pablo Stafforini
 # --
   :PROPERTIES:
   :ANKI_DECK: $1

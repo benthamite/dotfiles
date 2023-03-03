@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wise-telegram
 # key: wst
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Telegram
     Expenses:Core:Web services  5.00 USD ; Telegram Premium subscription

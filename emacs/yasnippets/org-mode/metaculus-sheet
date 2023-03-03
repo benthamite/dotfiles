@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: metaculus-sheet
 ## key: msheet
+# contributor: Pablo Stafforini
 ## binding: C-s-s
 # --
 [[`(current-kill 0)`][spreadsheet]]

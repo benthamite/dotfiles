@@ -1,9 +1,0 @@
-# -*- mode: snippet -*-
-# name: longtermism-newsletter
-# key: ln
-# --
-`(ps/insert-date)` $1
-    Expenses:Longtermism Newsletter  $2 USD
-    Assets:Dad's Wise
-
-$4

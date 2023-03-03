@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: substack-donation
 # key: sd
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Substack
     Expenses:Donation                              10 USD ; Forecasting Newsletter

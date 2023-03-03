@@ -1,9 +1,0 @@
-# -*- mode: snippet -*-
-# name: wikipedia-photo-request
-# key: wpr
-# --
-Hi $1,
-       
-I'm helping some folks improve the quality of EA-related articles on Wikipedia, and one thing we'd like to do is have good-quality photos of every notable figure associated with effective altruism  with a Wikipedia entry. $0Do you happen to have a photo of yourself that you can license so we can use it in your article? If so, may I ask you to upload it [[https://commons.wikimedia.org/wiki/Special:UploadWizard][here]]? (Sending me the photo as an email attachment won't do, unfortunately, since I cannot license the photo myself. But the process is pretty simple; the main annoyance is probably having to create a Wikimedia account, assuming you don't have one already.) Thanks!
-
-Best,

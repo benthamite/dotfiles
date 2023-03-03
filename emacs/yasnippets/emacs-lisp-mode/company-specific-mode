@@ -1,8 +1,0 @@
-# -*- mode: snippet -*-
-# name: company-specific-mode
-# key: csm
-# --
-(defun ps/company-$1-mode ()
-  "Setup \`company-mode' for \`$1-mode'."
-  (add-to-list (make-local-variable 'company-backends)
-	       'company-$2))

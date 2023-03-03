@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: brew-uninstall
 # key: bu
+# contributor: Pablo Stafforini
 # --
 brew uninstall $1

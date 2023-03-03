@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: pandoc-plain-text
 # key: ppt
+# contributor: Pablo Stafforini
 # --
 pandoc --to=plain --wrap=none $1

@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: airbnb-tucuman-11-visa
 # key: at1v
+# contributor: Pablo Stafforini
 # --
 `(ps/time-last-day-of-last-month)` $1
     Expenses:Tucumán 11                         $2.00 ARS

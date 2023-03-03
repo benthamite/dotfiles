@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: telega-markdown-link
-# key: lk
-# --
-[$1]($2) $3

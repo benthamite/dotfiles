@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: notatu dignum post
 # key: ndp
+# contributor: Pablo Stafforini
 # expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
 # --
 ** $1

@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: org-clock-new-line
-# key: ocnl
-# --
-CLOCK: `(ps/org-time-stamp-inactive-current-time)`$1--`(ps/org-time-stamp-inactive-current-time)`

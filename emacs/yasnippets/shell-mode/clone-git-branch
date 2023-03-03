@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: clone-git-branch
 # key: cgb
+# contributor: Pablo Stafforini
 # --
 git clone -b ${1:branch} ${2:repo}

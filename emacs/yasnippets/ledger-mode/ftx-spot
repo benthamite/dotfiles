@@ -1,8 +1,0 @@
-# -*- mode: snippet -*-
-# name: ftx-arb
-# key: ftxa
-# --
-`(ps/insert-date)` Trade
-    Assets:FTX:Arb                           $1 $2 @ $3 USD
-    Assets:FTX:Arb
-

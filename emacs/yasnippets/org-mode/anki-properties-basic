@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: anki-properties-basic
 # key: akpb
+# contributor: Pablo Stafforini
 # --
   :PROPERTIES:
   :ANKI_DECK: Main

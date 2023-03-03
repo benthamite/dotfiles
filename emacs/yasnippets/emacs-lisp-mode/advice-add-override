@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: advice-add-override
 # key: aao
+# contributor: Pablo Stafforini
 # --
 (advice-add '$1 :override #'ps/$1)

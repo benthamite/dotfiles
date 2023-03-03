@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: hydra-expand-yasnippet-by-key
 # key: hy
+# contributor: Pablo Stafforini
 # --
 ("$1" (ps/expand-yasnippet-by-key "$2") "$3")
 $4

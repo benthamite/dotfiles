@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: org-birthday-no-year
 # key: obny
+# contributor: Pablo Stafforini
 # --
 %%(org-anniversary nil $1 $2) birthday

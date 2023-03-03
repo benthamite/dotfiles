@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: org-clock-report
 # key: ocr
+# contributor: Pablo Stafforini
 # --
 $1#+BEGIN: clocktable :scope subtree :maxlevel 4 :narrow 50 :tstart `(org-time-stamp nil)` :tend :tstart `(org-time-stampnil)`
 #+END:

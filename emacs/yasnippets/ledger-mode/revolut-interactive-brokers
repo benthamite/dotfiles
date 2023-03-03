@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: revolut-interactive-brokers
 # key: rib
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Transfer
     Assets:Revolut                              -$1 USD

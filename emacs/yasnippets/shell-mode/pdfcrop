@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: pdfcrop
 # key: pdfc
+# contributor: Pablo Stafforini
 # --
 pdfcrop $1 $1

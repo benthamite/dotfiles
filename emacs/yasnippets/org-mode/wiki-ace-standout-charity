@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wiki-ace-standout-charity
 # key: wasc
+# contributor: Pablo Stafforini
 # --
 [[id:5A54A7E8-1567-488A-BB29-971C63C61DCB][Animal Charity Evaluators]] rates `(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))` a Standout Charity.

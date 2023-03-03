@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: python-requirements
 # key: pr
+# contributor: Pablo Stafforini
 # --
 pip install -r requirements.txt

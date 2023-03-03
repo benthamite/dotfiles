@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wiki-evaluation
 # key: we
+# contributor: Pablo Stafforini
 # --
 ** Evaluation
 $1

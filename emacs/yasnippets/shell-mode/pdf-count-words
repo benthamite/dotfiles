@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: pdf-count-words
 # key: pwc
+# contributor: Pablo Stafforini
 # --
 pdftotext '`(current-kill 0)`' - | wc -w

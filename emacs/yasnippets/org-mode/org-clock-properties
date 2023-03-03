@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: org-clock-properties
 # key: clck
+# contributor: Pablo Stafforini
 # --
 :LOGBOOK:
 ${1:`(current-kill 0)`}:END:

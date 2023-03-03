@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: making-sense-subscription
 # key: mss
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Making Sense
     Expenses:Donation                              99.99 USD

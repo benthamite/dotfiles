@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: config-directory-variable
-# key: cdv
-# --
-(defvar ps/dir-$1 (expand-file-name "$1"$2 ps/dir-$3))
-$0

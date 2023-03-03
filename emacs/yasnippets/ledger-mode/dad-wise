@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: dad-wise
 # key: dwise
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` $1
     Expenses:$3  $2 USD

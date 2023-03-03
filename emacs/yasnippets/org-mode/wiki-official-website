@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wiki-official-website
 # key: wow
+# contributor: Pablo Stafforini
 # --
 [[${1:`(current-kill 0)`}][`(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))`]]. Official website.
 $0

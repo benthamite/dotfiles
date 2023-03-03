@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: mom-cash
 # key: mcash
+# contributor: Pablo Stafforini
 # --
 `(ps/yasnippet-expand-by-key "ldlm")` $1
     Expenses:$3   $2.00 ARS

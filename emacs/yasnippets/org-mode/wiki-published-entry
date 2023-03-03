@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wiki-published-entry
 # key: wpe
+# contributor: Pablo Stafforini
 # --
 [[id:${1:`(current-kill 0)`}][published]]

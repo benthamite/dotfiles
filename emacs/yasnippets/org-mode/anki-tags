@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: anki-tags
 # key: atags
+# contributor: Pablo Stafforini
 # expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
 # --
 :ANKI_TAGS: $1 anki-editor

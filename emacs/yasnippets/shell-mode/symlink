@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: symlink
 # key: sym
+# contributor: Pablo Stafforini
 # --
 ln -s '${1:target}' '${2:symlink}'

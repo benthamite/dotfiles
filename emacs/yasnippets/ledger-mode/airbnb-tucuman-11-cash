@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: airbnb-tucuman-11-cash
 # key: at1c
+# contributor: Pablo Stafforini
 # --
 `(ps/time-last-day-of-last-month)` $1
     Expenses:Tucumán 11                         $2.00 ARS

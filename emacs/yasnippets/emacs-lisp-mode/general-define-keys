@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: general-define-keys
-# key: gdks
-# --
-(general-define-key
- :keymaps '$1-map
- "$2" '$3)

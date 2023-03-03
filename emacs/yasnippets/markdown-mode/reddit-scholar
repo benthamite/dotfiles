@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: reddit-scholar
-# key: rs
-# --
-[book] ${1:Author} — ${2:Title}
-- ISBN: $3
-- [Worldcat](${4:URL})

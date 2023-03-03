@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: straight-use-package
 # key: sup
+# contributor: Pablo Stafforini
 # --
 (use-package $1
   :straight ($1

@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: ea-bahamas-slack-introduction
-# key: eabs
-# --
-[[${1:`(current-kill 0)`}][EA Bahamas Slack introduction]]:
-$0

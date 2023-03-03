@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: git-remove-file-from-history
 # key: grfh
+# contributor: Pablo Stafforini
 # --
 git filter-branch --index-filter 'git rm -rf --cached --ignore-unmatch ${1:file}  ' HEAD -f

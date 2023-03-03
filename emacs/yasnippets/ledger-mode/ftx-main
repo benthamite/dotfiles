@@ -1,8 +1,0 @@
-# -*- mode: snippet -*-
-# name: ftx-main
-# key: ftxm
-# --
-`(ps/insert-date)` Trade
-    Assets:FTX:Main                            $1 $2 @ $3 USD
-    Assets:FTX:Main
-

@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: anki-emacs-lisp-cloze
 # key: aelc
+# contributor: Pablo Stafforini
 # expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
 # --
 *** 

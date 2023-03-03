@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wiki-internal-link
 # key: wil
+# contributor: Pablo Stafforini
 # --
 [[*${1:$(ps/capitalize-first-char yas-text)}][${1:}]] 

@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: collapsible-section
 # key: cs
+# contributor: Pablo Stafforini
 # --
 <details>
 <summary>$1</summary>

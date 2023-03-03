@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: python-inline
 # key: pyi
+# contributor: Pablo Stafforini
 # --
 src_python{return($0)}

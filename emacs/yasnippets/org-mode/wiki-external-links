@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wiki-external-links
 # key: wel
+# contributor: Pablo Stafforini
 # --
 *** External links
 $1

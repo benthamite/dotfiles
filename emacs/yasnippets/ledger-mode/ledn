@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: ledn
 # key: ledn
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Ledn
     Income:Capital gains                   -$1 USD

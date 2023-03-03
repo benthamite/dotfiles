@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: karabiner-individual-binding
 # key: kib
+# contributor: Pablo Stafforini
 # --
 {:des "$1"
  :rules [

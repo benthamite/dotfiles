@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wiki-80k-problem
 # key: w80p
+# contributor: Pablo Stafforini
 # --
 ** Evaluation
 [[id:FAD77F01-6E36-4891-AD27-842294CB4FA4][80,000 Hours]] rates `(downcase (ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window)))))` a "potential highest priority area": an issue that, if more thoroughly examined, could rank as a top global challenge.  80,000 Hours (2022) [[https://80000hours.org/problem-profiles/][Our current list of pressing world problems]], /80,000 Hours/.

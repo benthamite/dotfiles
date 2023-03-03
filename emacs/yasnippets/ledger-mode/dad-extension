@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: dad-extension
 # key: dext
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` $1
     Expenses:$3  $2 USD

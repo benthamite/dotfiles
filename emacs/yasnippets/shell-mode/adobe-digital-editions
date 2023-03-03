@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: adobe-digital-editions
 # key: ade
+# contributor: Pablo Stafforini
 # --
 calibredb add "`(current-kill 0)`"

@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wiki-bibliography
 # key: wbib
+# contributor: Pablo Stafforini
 # --
 *** Bibliography
 $1

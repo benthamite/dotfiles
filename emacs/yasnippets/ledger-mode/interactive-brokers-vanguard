@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: interactive-brokers-vti
 # key: ibv
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Trade
     Assets:IB                                     $1 VTI @ $2 USD

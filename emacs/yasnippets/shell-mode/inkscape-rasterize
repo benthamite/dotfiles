@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: inkscape-rasterize
 # key: ir
+# contributor: Pablo Stafforini
 # --
 inkscape -w ${1:width} -h ${2:height} '`(current-kill 0)`' -o '`(file-name-with-extension (file-name-sans-extension (current-kill 0)) "png")`'

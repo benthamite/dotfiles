@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wise-interactive-brokers
 # key: wib
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Transfer
     Assets:Wise                              -$1 USD

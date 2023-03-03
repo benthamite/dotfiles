@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: uber
 # key: uber
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Uber
     Expenses:Transportation:Taxi  $1 ARS ; $2

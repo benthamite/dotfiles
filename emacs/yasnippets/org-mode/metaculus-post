@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: metaculus-post
 # key: mpost
+# contributor: Pablo Stafforini
 ## binding: C-s-m
 # --
 /Post-mortem:/ 

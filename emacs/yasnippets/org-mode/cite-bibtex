@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: cite-bibtex
 # key: ct
+# contributor: Pablo Stafforini
 # --
 [[cite:&${1:`(current-kill 0)`}]]

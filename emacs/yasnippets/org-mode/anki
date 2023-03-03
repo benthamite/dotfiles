@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: anki-new-card
 # key: anki
+# contributor: Pablo Stafforini
 # --
 * Idiom
   :PROPERTIES:

@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: use-package-hook
-# key: hk
-# --
-($1-hook . $2)
-$3

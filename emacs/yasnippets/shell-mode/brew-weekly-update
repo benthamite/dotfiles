@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: brew-weekly-update
 # key: bwu
+# contributor: Pablo Stafforini
 # --
 brew update; brew upgrade; brew cleanup; brew doctor

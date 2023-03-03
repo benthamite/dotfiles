@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: karabiner-layer
 # key: kl
+# contributor: Pablo Stafforini
 # --
 {:des "$1 ($2)"
  :rules [:$1

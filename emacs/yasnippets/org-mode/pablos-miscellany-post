@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: Pablo's miscellany post
 # key: pmp
+# contributor: Pablo Stafforini
 # expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
 # --
 * $1

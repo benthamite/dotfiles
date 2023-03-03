@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: metamask-polymarket
 # key: mpq
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Transfer
     Assets:MetaMask                          $1 USD

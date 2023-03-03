@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: gpe-google-domains
 # key: ggd
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Google Domains
     Expenses:GPE  11.59$1 USD

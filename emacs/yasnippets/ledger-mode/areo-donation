@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: areo-donation
 # key: ad
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Patreon
     Expenses:Donation                              50.00 USD ; Areo

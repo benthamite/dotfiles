@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: midnight-hook-magit
 # key: mhm
+# contributor: Pablo Stafforini
 # --
 (defun ps/midnight-hook-magit-$1 () (ps/magit-midnight-update ps/dir-$1))

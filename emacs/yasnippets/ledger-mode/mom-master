@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: mom-master
 # key: master
+# contributor: Pablo Stafforini
 # `(ps/insert-date)` $1
 `(ps/yasnippet-expand-by-key "ldlm")`
 2022-04-22 $1

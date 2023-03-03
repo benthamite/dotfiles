@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wiki-related-entries
 # key: wre
+# contributor: Pablo Stafforini
 # --
 *** Related entries
 $1

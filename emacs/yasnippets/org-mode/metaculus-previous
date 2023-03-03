@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: metaculus-previous
 # key: mst
+# contributor: Pablo Stafforini
 ## binding: C-s-p
 # --
 Sticking to previous prediction.

@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wiki-effective-altruism-forum-account
 # key: weafa
+# contributor: Pablo Stafforini
 # --
 [[$1][`(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))`]]. [[id:AED989C3-1744-4351-8CA7-7BBE597628D1][Effective Altruism Forum]] account.

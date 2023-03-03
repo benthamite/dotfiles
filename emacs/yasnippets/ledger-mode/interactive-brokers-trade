@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: interactive-brokers-trade
 # key: ib
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Trade
     Assets:Interactive Brokers                                     $1 $2 @ $3 USD

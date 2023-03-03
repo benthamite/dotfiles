@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: calibre-move
 # key: cm
+# contributor: Pablo Stafforini
 # --
 mv "`(current-kill 0)`" "`ps/dir-downloads`"

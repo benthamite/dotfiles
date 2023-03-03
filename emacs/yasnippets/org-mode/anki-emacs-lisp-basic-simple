@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: anki-emacs-lisp-basic-simple
 # key: aelbs
+# contributor: Pablo Stafforini
 # expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
 # --
 *** $1

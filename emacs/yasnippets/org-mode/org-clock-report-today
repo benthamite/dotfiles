@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: org-clock-report-today
 # key: ocrt
+# contributor: Pablo Stafforini
 # --
 $1#+BEGIN: clocktable :scope subtree :maxlevel 4 :narrow 50 :tstart "<today>" :tend "<now>"
 #+END:

@@ -1,9 +1,0 @@
-# -*- mode: snippet -*-
-# name: ftx-fellowship
-# key: ftxf
-# --
-`(ps/insert-date)` $1
-    Assets:Dad's Wise                         -$2 USD
-    Assets:Revolut
-
-$3

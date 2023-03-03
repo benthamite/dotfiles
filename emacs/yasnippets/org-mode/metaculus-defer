@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: metaculus-defer
 ## key: mdef
+# contributor: Pablo Stafforini
 ## binding: C-s-u
 # --
 Deferring to the community.

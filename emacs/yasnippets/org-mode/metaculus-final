@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: metaculus-final
 ## key: mfinal
+# contributor: Pablo Stafforini
 ## binding: C-s-f
 # --
 /Final prediction/: 

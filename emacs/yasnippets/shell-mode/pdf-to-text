@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: pdf-to-text
 # key: pt
+# contributor: Pablo Stafforini
 # --
 pdftotext "`(current-kill 0)`"

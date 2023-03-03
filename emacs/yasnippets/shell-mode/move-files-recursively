@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: move-files-recursively
 # key: mfr
+# contributor: Pablo Stafforini
 # --
 find '$1' -type f -print0 | xargs -0 mv -t '$2'

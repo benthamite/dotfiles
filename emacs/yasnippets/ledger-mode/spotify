@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: spotify
 # key: spot
+# contributor: Pablo Stafforini
 # --
 `(ps/yasnippet-expand-by-key "ldlm")` Spotify
     Expenses:Leisure:Music  485.00 ARS

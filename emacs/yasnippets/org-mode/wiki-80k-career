@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wiki-80k-career
 # key: w80c
+# contributor: Pablo Stafforini
 # --
 ** `(ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window))))` as a career
 [[id:FAD77F01-6E36-4891-AD27-842294CB4FA4][80,000 Hours]]' ${1:$$(yas-choose-value '("in-depth" "medium-depth" "shallow"))} profile rates `(downcase (ps/get-title (buffer-file-name (window-buffer (minibuffer-selected-window)))))` a ${2:$$(yas-choose-value '("\\"sometimes recommended\\" career, especially for " "\\"priority path\\"—among the most promising career opportunities the organization has identified so far"))}.$0

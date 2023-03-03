@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: recent-files
 # key: rf
+# contributor: Pablo Stafforini
 # --
 find . -type f -mmin -10

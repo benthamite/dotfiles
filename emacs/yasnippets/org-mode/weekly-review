@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: weekly-review
 # key: wrev
+# contributor: Pablo Stafforini
 # --
 *** Mistakes made
 $1

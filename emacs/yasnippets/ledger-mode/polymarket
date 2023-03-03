@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: polymarket
 # key: pm
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Trade
     Assets:Polymarket                          $1 $2 @ $3 USD

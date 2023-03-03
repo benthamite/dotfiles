@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: slack-register-team
 # key: srt
+# contributor: Pablo Stafforini
 # --
 (slack-register-team
    :name "$1"

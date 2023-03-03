@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: airbnb-beyond-pricing
 # key: abp
+# contributor: Pablo Stafforini
 # --
 2023-$1-22 Beyond Pricing
     Expenses:Tucumán ${2:10 if even; 11 if odd}                  $3 USD

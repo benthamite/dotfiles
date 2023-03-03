@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: config-file-variable
-# key: cfv
-# --
-(defvar ps/file-$1 (expand-file-name "$1.org$3" ps/dir-org$4))
-$2

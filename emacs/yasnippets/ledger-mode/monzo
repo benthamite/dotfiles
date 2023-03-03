@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: monzo
 # key: mz
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)`$6 ${1:recipient}
     Expenses:${5:account}  ${2:amount} ${3:$$(yas-choose-value '( "GBP" "USD" "EUR"))} ; ${4:details}

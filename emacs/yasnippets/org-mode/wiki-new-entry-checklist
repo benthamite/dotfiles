@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wiki-new-entry-checklist
 # key: wnec
+# contributor: Pablo Stafforini
 # --
 - [ ] Tag relevant posts
 - [ ] Add to [[https://forum.effectivealtruism.org/tags/all][tag portal]]

@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: gdrive-root
 # key: gdr
+# contributor: Pablo Stafforini
 # --
 gdrive list --query " 'root' in parents"

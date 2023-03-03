@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: mom-consolidated
 # key: cons
+# contributor: Pablo Stafforini
 # --
 `(ps/time-last-day-of-last-month)` Transfer
     Liabilities:Mom:$2                          $1.00 ARS

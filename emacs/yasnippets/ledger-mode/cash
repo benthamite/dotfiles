@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: cash
 # key: cash
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` $1
     Expenses:$3  $2 ARS

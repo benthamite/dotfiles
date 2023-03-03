@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wiki-new-entry-template
 # key: wnet
+# contributor: Pablo Stafforini
 # --
 `(ps/expand-yasnippet-by-key "wnec")`
 `(ps/expand-yasnippet-by-key "wbib")`

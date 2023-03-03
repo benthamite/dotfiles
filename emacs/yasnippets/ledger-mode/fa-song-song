@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: fa-song-song
 # key: fss
+# contributor: Pablo Stafforini
 # --
 `(ps/insert-date)` Fa Song Song
     Expenses:Food:Takeaway                   1,300.00 ARS

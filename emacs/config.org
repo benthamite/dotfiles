@@ -821,7 +821,7 @@ Process for updating packages:
 
 
 #+begin_src emacs-lisp :results silent
-(setq straight-repository-branch "develop") ; must precede bootstrap
+(setq straight-repository-branch "master") ; must precede bootstrap
 ;; Bootstrap `straight'
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -2032,31 +2032,34 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
   :config
   (defun ps/faces-load-custom-faces ()
     "My custom faces, to be used in conjunction with theme."
-    (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
-    (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
-    (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
-    (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family ps/face-fixed-pitch :height 0.8)
-    (set-face-attribute 'org-property-value nil :family ps/face-fixed-pitch :height 0.8)
-    (set-face-attribute 'org-todo nil :family ps/face-fixed-pitch :height 1.0)
-    (set-face-attribute 'org-archived nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-document-title nil :family ps/face-fixed-pitch :height 1.0)
-    (set-face-attribute 'org-special-keyword nil :family ps/face-fixed-pitch :height 0.8)
-    (set-face-attribute 'org-tag nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-code nil :family ps/face-fixed-pitch :height 1.1)
-    (set-face-attribute 'org-level-1 nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-level-2 nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-level-3 nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-level-4 nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-level-5 nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-level-6 nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-level-7 nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-level-8 nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-date nil :family ps/face-fixed-pitch :height 0.8)
-    (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
-    (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
-    (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
-    (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)
-    (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))
+    (ps/init-override-code-if-available
+     :ps/faces
+     (progn
+       (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
+       (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
+       (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
+       (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family ps/face-fixed-pitch :height 0.8)
+       (set-face-attribute 'org-property-value nil :family ps/face-fixed-pitch :height 0.8)
+       (set-face-attribute 'org-todo nil :family ps/face-fixed-pitch :height 1.0)
+       (set-face-attribute 'org-archived nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-document-title nil :family ps/face-fixed-pitch :height 1.0)
+       (set-face-attribute 'org-special-keyword nil :family ps/face-fixed-pitch :height 0.8)
+       (set-face-attribute 'org-tag nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-code nil :family ps/face-fixed-pitch :height 1.1)
+       (set-face-attribute 'org-level-1 nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-level-2 nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-level-3 nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-level-4 nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-level-5 nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-level-6 nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-level-7 nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-level-8 nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-date nil :family ps/face-fixed-pitch :height 0.8)
+       (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
+       (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
+       (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)
+       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -14819,7 +14822,7 @@ or specify any other coding system (and risk losing\n\
   ;; (ps/ebib-reload-current-database-no-confirm))
 
   ;; (advice-add 'zotra-add-entry-from-search :after #'ps/zotra-add-entry-from-search-advice)
-  
+
   :init
   (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
   (defun ps/zotra-run-translator-server ()
@@ -14830,11 +14833,11 @@ or specify any other coding system (and risk losing\n\
        (format
         "cd %s; nvm use 14; npm start"
         ps/dir-translation-server))))
-        
+
   (ps/init-override-code-if-available
    :ps/zotra-startup
    (add-hook 'emacs-startup-hook #'ps/zotra-run-translator-server))
-  
+
   :general
   (ebib-index-mode-map
    "i" 'zotra-add-entry-from-search))

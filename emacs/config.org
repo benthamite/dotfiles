@@ -3819,8 +3819,7 @@ With a prefix ARG open line above the current line."
 
   :general
   ("M-l" 'ps/crux-smart-open-line
-   "M-A-l" (lambda! (ps/crux-smart-open-line t))
-   "H-A-l" 'crux-duplicate-current-line-or-region))
+   "M-A-l" (lambda! (ps/crux-smart-open-line t)))
 #+end_src
 
 ** button

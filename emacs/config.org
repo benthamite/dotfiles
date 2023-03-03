@@ -1866,7 +1866,7 @@ To be explored. The [[https://github.com/positron-solutions/transient-showcase][
 :ID:       8514378A-0BA2-4A8E-971F-10C07ED4D38A
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/server)
 (use-package server
   :demand t
   :config
@@ -1941,7 +1941,7 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 
 /[[https://gitlab.com/jabranham/mixed-pitch][mixed-pitch]] allows for mixing fixed-pitch and variable-pitch fonts./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/mixed-pitch)
 (use-package mixed-pitch
   :custom
   (mixed-pitch-set-height t)
@@ -2316,7 +2316,7 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
 :ID:       F8B7C324-C5CF-4DBD-A527-92101BDA70AB
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle  :tangle (ps/init-get-tangle-flag :ps/tab-bar)
 (use-feature tab-bar
   :demand t
   :custom
@@ -2347,7 +2347,7 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
 :PROPERTIES:
 :ID:       DDFE34BA-7C23-459E-B4E2-2957D2535700
 :END:
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/tab-bar)
 (use-package fancy-battery
   :defer 10
   :custom
@@ -3819,7 +3819,7 @@ With a prefix ARG open line above the current line."
 
   :general
   ("M-l" 'ps/crux-smart-open-line
-   "M-A-l" (lambda! (ps/crux-smart-open-line t)))
+   "M-A-l" (lambda! (ps/crux-smart-open-line t))))
 #+end_src
 
 ** button
@@ -5096,7 +5096,7 @@ CLOCK: [2022-09-02 Fri 18:13]--[2022-09-02 Fri 21:20] =>  3:07
 CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/window)
 (use-feature window
   :demand t
 
@@ -5854,8 +5854,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 [2023-03-01 Wed 10:54] Check [[https://github.com/dedenbangkit/.emacs.d/blob/2cf69eb102af5a5cab7ec1d65af77e997082e17a/custom/main.el#L34][this config]] in case it helps me figure out how to avoid getting prompted for a password so frequently.
 
-#+begin_src emacs-lisp :results silent
->>>>>>> 299adde (add/remove spaces, indents, etc)
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org-gcal)
 (use-package org-gcal
   :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass
@@ -6275,7 +6274,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 
 /[[https://github.com/josegpt/display-wttr][display-wttr]] displays weather information in the modeline (or tab-bar)./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/tab-bar)
 (use-package display-wttr
   :defer 10
   :custom
@@ -6446,7 +6445,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
 
 [2022-10-02 Sun 14:12] I installed this package only because I wanted to have a persistent ~*scratch*~ buffer. But I am now accomplishing this with [[id:B6CB6A6C-0BCC-4A07-9608-BDCA6184C63A][persistent scratch]].
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/remember)
 (use-feature remember
   :disabled
   :custom
@@ -6672,7 +6671,7 @@ CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
 :END:
 /[[https://github.com/ryuslash/git-auto-commit-mode][git-auto-commit-mode]] allows for committing and pushing automatically after each save./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/git-auto-commit-mode)
 (use-package git-auto-commit-mode
   :demand t
   :config
@@ -7241,7 +7240,7 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
 :PROPERTIES:
 :ID:       272C2359-045B-49A7-8DFB-71F9B349D07D
 :END:
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-package consult-flyspell
   :demand t
   :after (consult flyspell))
@@ -7963,7 +7962,7 @@ CLOCK: [2021-08-03 Tue 10:05]--[2021-08-03 Tue 10:13] =>  0:08
 CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-package ispell
   :defer 15
   ;; :demand t
@@ -8127,7 +8126,7 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
 
 /[[https://github.com/rolandwalker/flyspell-lazy][flyspell-lazy]] improves Emacs flyspell responsiveness using idle timers./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-package flyspell-lazy
   :after flyspell
   :demand t
@@ -8139,7 +8138,7 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
 :PROPERTIES:
 :ID:       5E8AA3D3-68AE-407E-B662-524B8B0AAD43
 :END:
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-package flyspell-correct
   :demand t
   :after flyspell)
@@ -8159,7 +8158,7 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
 :PROPERTIES:
 :ID:       C87EAC5F-7831-469C-96FB-603397C51925
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-package grammarly
   :demand t
   :custom
@@ -8183,7 +8182,7 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 
 [2022-10-06 Thu 23:35] At the moment, the premium version isn't working. The package maintainers are migrating to to a new server, which may resolve the issues I was having authenticating my account. You can check whether the premium account is being used by evaluating ~(grammarly-premium-p)~.
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/lsp-grammarly)
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-package lsp-grammarly
   :after (lsp-mode keytar)
   :demand t
@@ -8219,7 +8218,7 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 :PROPERTIES:
 :ID:       4C20D1C9-F6CB-42A0-963F-91D48E212248
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-package eglot-grammarly
   :straight (:host github :repo "emacs-grammarly/eglot-grammarly")
   :defer t
@@ -8234,7 +8233,7 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 :END:
 /[[https://github.com/junjizhi/aide.el][aide]] is an Emacs front end for GPT APIs like OpenAI./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/aide)
 (use-package aide
   :straight (aide
              :host github
@@ -8988,7 +8987,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :END:
 /[[https://github.com/vedang/pdf-tools][pdf-tools]] is a support library for PDF files./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/pdf-tools)
 (use-package pdf-tools
   :defer 10
   :mode ("\\.pdf\\'" . pdf-view-mode)
@@ -9142,11 +9141,11 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 #+begin_src emacs-lisp
 (use-package scroll-other-window
   :straight (scroll-other-window
-	     :host github
-	     :repo "benthamite/scroll-other-window")
+             :host github
+             :repo "benthamite/scroll-other-window")
   :after pdf-tools
   :demand t
-  
+
   :general
   (sow-mode-map
    "A-C-s-t" 'sow-scroll-other-window-down
@@ -9417,7 +9416,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :END:
 /[[https://github.com/AmaiKinono/puni][puni]] is a structural editing package that supports many major modes out of the box./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/puni)
 (use-package puni
   :disabled
   :demand t
@@ -10343,23 +10342,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   (org-agenda-clockreport-parameter-plist
    )
   :config
-  (cond ((equal (system-name) ps/computer-hostname-pablo)
-         (setq org-agenda-files (list
-                                 ps/file-calendar)))
-        ((equal (system-name) ps/computer-hostname-leo)
-         (setq org-agenda-files (list
-                                 ps/file-tlon-tareas-leo))))
-
-  (when (equal (system-name) ps/computer-hostname-pablo)
-    (setq ps/org-agenda-files-excluded
-      (list
-       ;; I have to exclude these files because otherwise extraneous
-       ;; information shows up in my agenda, such as TODOs and time
-       ;; logs. These files lack the `property' tag but the may still
-       ;; otherwise be included if they have been modified recently
-       ;; (see the function `vulpea-agenda-files-update')
-       ps/file-tlon-tareas-leo
-       ps/file-tlon-tareas-fede)))
+  (setq org-agenda-files ps/org-agenda-files)
+  (setq org-agenda-files-excluded ps/org-agenda-files-excluded)
 
   (run-with-idle-timer 602 nil 'ps/org-agenda-switch-to-agenda-current-day)
   (run-with-idle-timer 602 t 'org-agenda-redo)
@@ -10670,9 +10654,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
     (cond
      ((string= "fm" (plist-get org-capture-plist :key))
       (save-window-excursion
-	(org-id-goto "22E9B7E2-A48E-41EA-8320-64578AB6C9A1")
-	(org-narrow-to-subtree)
-	(ps/org-copy-heading-contents))
+        (org-id-goto "22E9B7E2-A48E-41EA-8320-64578AB6C9A1")
+        (org-narrow-to-subtree)
+        (ps/org-copy-heading-contents))
       (insert (current-kill 0)))))
 
   (defun ps/org-capture-before-finalize-hook-behavior ()
@@ -10686,21 +10670,21 @@ conditional on active capture template."
       (ispell-change-dictionary "english"))
      ((string= "la" (plist-get org-capture-plist :key))
       (save-window-excursion
-	(ps/switch-to-alternate-buffer)
-	(ps/org-jump-to-first-heading)
-	(widen)
-	(org-narrow-to-subtree)
-	(let ((org-use-tag-inheritance))
-	  (org-roam-tag-remove '("unprocessed" "empty" "leo" "unpublished"))
-	  (org-roam-tag-add '("leo")))
-	(ps/show-buffer-name))
+        (ps/switch-to-alternate-buffer)
+        (ps/org-jump-to-first-heading)
+        (widen)
+        (org-narrow-to-subtree)
+        (let ((org-use-tag-inheritance))
+          (org-roam-tag-remove '("unprocessed" "empty" "leo" "unpublished"))
+          (org-roam-tag-add '("leo")))
+        (ps/show-buffer-name))
       (goto-char 0)
       (search-forward "Procesar ")
       (insert (format "~%s~" (current-kill 0))))
      ((string= "le" (plist-get org-capture-plist :key))
       (save-window-excursion
-	(ps/switch-to-alternate-buffer)
-	(ps/show-buffer-name))
+        (ps/switch-to-alternate-buffer)
+        (ps/show-buffer-name))
       (goto-char 0)
       (search-forward "Renombrar ")
       (insert (concat "~" (current-kill 0) "~ ")))
@@ -10708,11 +10692,11 @@ conditional on active capture template."
      ((string= "s" (plist-get org-capture-plist :key))
       (org-narrow-to-subtree)
       (let ((url (s-replace-regexp
-		  "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
-		  "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
-		  (plist-get org-store-link-plist :link))))
-	(goto-char (point-max))
-	(insert (format "[[%s][external link]]" url))))
+                  "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
+                  "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
+                  (plist-get org-store-link-plist :link))))
+        (goto-char (point-max))
+        (insert (format "[[%s][external link]]" url))))
      ((string= "v" (plist-get org-capture-plist :key))
       (org-do-demote))
      ((string= "y" (plist-get org-capture-plist :key))
@@ -12048,7 +12032,7 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 
 - [[https://revealjs.com/][The HTML presentation framework | reveal.js]]
 - [[https://www.youtube.com/watch?v=je_xPoqtnSM][GNU/Emacs Org-mode For Presentation Slides/HTML Slides (Emacs org-reveal) - YouTube]]
-  
+
 ** org-mime
 :PROPERTIES:
 :ID:       EB437B48-CEB2-4727-8910-627061F4701F
@@ -12554,7 +12538,7 @@ I should check this out.
 :END:
 /[[https://github.com/nobiot/org-transclusion][org-transclusion]] supports [[https://en.wikipedia.org/wiki/Transclusion][transclusion]] with org-mode./
 
-#+begin_src emacs-lisp :results silent 
+#+begin_src emacs-lisp :results silent
 (use-package org-transclusion
   :after org
   :defer 5
@@ -14619,15 +14603,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
              :host github
              :repo "mpedramfar/zotra")
   :demand t
-  :init
-  (defun ps/zotra-run-translator-server ()
-    "Start translator server in the background."
-    (interactive)
-    (let ((shell-command-buffer-name-async "*zotra-translation-server*"))
-      (async-shell-command
-       (format
-        "cd %s; nvm use 14; npm start"
-        ps/dir-translation-server))))
 
   :custom
   (zotra-use-curl nil)
@@ -14828,11 +14803,22 @@ or specify any other coding system (and risk losing\n\
   ;; (ps/ebib-reload-current-database-no-confirm))
 
   ;; (advice-add 'zotra-add-entry-from-search :after #'ps/zotra-add-entry-from-search-advice)
-
-  :hook
-  (zotra-after-add-entry-hook . ps/zotra-after-add-entry-hook-function)
-  (emacs-startup-hook . ps/zotra-run-translator-server)
-
+  
+  :init
+  (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
+  (defun ps/zotra-run-translator-server ()
+    "Start translator server in the background."
+    (interactive)
+    (let ((shell-command-buffer-name-async "*zotra-translation-server*"))
+      (async-shell-command
+       (format
+        "cd %s; nvm use 14; npm start"
+        ps/dir-translation-server))))
+        
+  (ps/init-override-code-if-available
+   :ps/zotra-startup
+   (add-hook 'emacs-startup-hook #'ps/zotra-run-translator-server))
+  
   :general
   (ebib-index-mode-map
    "i" 'zotra-add-entry-from-search))
@@ -15286,7 +15272,6 @@ Here's the process I followed:
 
 #+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/mu4e)
 (use-package mu4e
-  :if (equal (system-name) ps/computer-hostname-pablo)
   ;; :demand t
   :defer 5
   :straight (:local-repo

@@ -1,1 +1,2 @@
 variables.el filter=git-crypt diff=git-crypt
+yasnippets-private/** filter=git-crypt diff=git-crypt

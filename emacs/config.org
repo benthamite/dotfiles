@@ -108,6 +108,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#fill][fill]]
   - [[#abbrev][abbrev]]
   - [[#yasnippet][yasnippet]]
+  - [[#yasnippet-snippets][yasnippet-snippets]]
   - [[#hippie-expand][hippie-expand]]
   - [[#expand-region][expand-region]]
   - [[#evil-nerd-commenter]]
@@ -3596,6 +3597,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 :END:
 https://stackoverflow.com/questions/42595418/how-to-remove-hyphens-during-fill-paragraph
 include this special hyphen: ­
+
 ** abbrev
 :PROPERTIES:
 :ID:       2D69896F-CF17-4D0C-BEFE-E7C473FB1C2B
@@ -3650,10 +3652,12 @@ To suppress warnings when a snippet executes elisp code, you may want to configu
 (use-package yasnippet
   :defer 5
   :init
-  (setq yas-snippet-dirs `(,ps/dir-yasnippets))
+  (setq yas-snippet-dirs (list ps/dir-yasnippets
+			       (concat (directory-file-name ps/dir-yasnippets) "-private")
+			       "~/.emacs.d/straight/build/yasnippet-snippets/snippets"))
 
   :custom
-  (yas-triggers-in-field t "allow stacked expansions")
+  (yas-triggers-in-field t) ; allow stacked expansions
 
   :config
   (yas-global-mode 1)
@@ -3692,10 +3696,10 @@ Expands a snippet-writing snippet, unless the optional prefix arg
 NO-TEMPLATE is non-nil."
     (interactive "P")
     (let ((guessed-directories (yas--guess-snippet-directories))
-          (yas-selected-text (or yas-selected-text
-                                 (and (region-active-p)
-                                      (buffer-substring-no-properties
-                                       (region-beginning) (region-end))))))
+	  (yas-selected-text (or yas-selected-text
+				 (and (region-active-p)
+				      (buffer-substring-no-properties
+				       (region-beginning) (region-end))))))
 
       (switch-to-buffer yas-new-snippet-buffer-name)
       (erase-buffer)
@@ -3703,17 +3707,29 @@ NO-TEMPLATE is non-nil."
       (snippet-mode)
       (yas-minor-mode 1)
       (set (make-local-variable 'yas--guessed-modes)
-           (mapcar (lambda (d) (yas--table-mode (car d)))
-                   guessed-directories))
+	   (mapcar (lambda (d) (yas--table-mode (car d)))
+		   guessed-directories))
       (set (make-local-variable 'default-directory)
-           (car (cdr (car guessed-directories))))
+	   (car (cdr (car guessed-directories))))
       (if (and (not no-template) ps/yas-new-snippet-tlon)
-          (yas-expand-snippet ps/yas-new-snippet-tlon))))
+	  (yas-expand-snippet ps/yas-new-snippet-tlon))))
 
   :general
   ("C-y" 'yas-new-snippet)
   (minibuffer-mode-map
    "TAB" 'yas-maybe-expand))
+#+end_src
+
+** yasnippet-snippets
+:PROPERTIES:
+:ID:       E3499A47-009A-4A52-9134-2067C79FFBC8
+:END:
+/[[https://github.com/AndreaCrotti/yasnippet-snippets][yasnippet-snippets]] is a public repository of yasnippet snippets./
+
+#+begin_src emacs-lisp
+(use-package yasnippet-snippets
+  :after yasnippet
+  :demand t)
 #+end_src
 
 ** hippie-expand

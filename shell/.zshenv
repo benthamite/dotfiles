@@ -9,7 +9,7 @@ export EDITOR="emacsclient -nw"
 # export VISUAL="emacsclient"   # $VISUAL opens in GUI mode
 source "/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/shell/.zshenv-secrets"
 export OBJECT_STORAGE_REGION_NAME="sa-east-1"
-export PATH="/opt/homebrew/opt/node@16/bin:$PATH"
+export PATH="/opt/homebrew/opt/node/bin:$PATH"
 export PATH="$HOME/bin:$PATH"
 # export PATH="/Users/pablostafforini/.pyenv/versions/3.10.10/bin/:$PATH"
 

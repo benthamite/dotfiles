@@ -9502,6 +9502,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :PROPERTIES:
 :ID:       2064FE34-0301-4E33-AB51-FE4921CA0E16
 :END:
+
 /[[https://github.com/zerolfx/copilot.el][copilot]] is an unofficial Copilot plugin for Emacs./
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/copilot)
@@ -18038,7 +18039,8 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
   (catch 'tag
     (mapc
      (lambda (-x)
-       (when (string-match (regexp-quote string) -x ) (throw 'tag -x)))
+       (when (string-match (regexp-quote string) -x )
+	 (throw 'tag -x)))
      list-of-strings)
     nil))
 #+end_src

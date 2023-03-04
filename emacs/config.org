@@ -9114,11 +9114,10 @@ FILE."
   (defun ps/pdf-tools-copy-all-text ()
     "Copy all text in current PDF to kill ring."
     (interactive)
-    (kill-new
-     (string-trim
-      (shell-command-to-string
-       (format "pdftotext '%s' -" (buffer-file-name)))))
-    (message "Copied all text in PDF to kill ring."))
+    (let ((string (string-trim (shell-command-to-string
+                                (format "pdftotext '%s' -" (buffer-file-name))))))
+      (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
+      (message "Copied all text in PDF to kill ring.")))
 
   :hook
   (pdf-tools-enabled-hook . ps/pdf-tools-apply-theme)

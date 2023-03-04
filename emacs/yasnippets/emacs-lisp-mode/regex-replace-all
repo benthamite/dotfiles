@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: regex-replace-all
+# key:rra
+# contributor: Pablo Stafforini
+# --
+(while (re-search-forward "$1" nil t)
+  (replace-match "$2"))

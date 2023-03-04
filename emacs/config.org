@@ -17140,13 +17140,13 @@ account."
     "Launch 'Future Matters: Research' `org-capture' template."
     (interactive)
     (twittering-push-uri-onto-kill-ring)
-    (org-capture nil "lr"))
+    (org-capture nil "lmr"))
 
   (defun ps/twittering-mode-org-capture-future-matters-news ()
     "Launch 'Future Matters: News' `org-capture' template."
     (interactive)
     (twittering-push-uri-onto-kill-ring)
-    (org-capture nil "ln"))
+    (org-capture nil "lmn"))
 
   ;; what follows copied from github.com/sfromm/emacs.d#twitter
   (defun ps/twittering-toggle-icons ()

@@ -2325,25 +2325,30 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
   :demand t
   :custom
   (tab-bar-format '(tab-bar-align-right
-                    tab-bar-format-global))
+		    tab-bar-format-global))
   (auto-resize-tab-bar nil)
 
   :config
   (setf mode-line-misc-info
-        ;; When the tab-bar is active, don't show global-mode-string
-        ;; in mode-line-misc-info, because we now show that in the
-        ;; tab-bar using `tab-bar-format-align-right' and
-        ;; `tab-bar-format-global'.
-        (remove '(global-mode-string ("" global-mode-string))
-                mode-line-misc-info))
+	;; When the tab-bar is active, don't show global-mode-string
+	;; in mode-line-misc-info, because we now show that in the
+	;; tab-bar using `tab-bar-format-align-right' and
+	;; `tab-bar-format-global'.
+	(remove '(global-mode-string ("" global-mode-string))
+		mode-line-misc-info))
 
-  (run-with-timer 5 nil (lambda () (setq global-mode-string '(" "
-                             (:eval (propertize display-time-string 'face 'ps/display-time))
-                             " | "
-                             fancy-battery-mode-line
-                             " | "
-                             telega-mode-line-format
-                             " | "))))
+  (run-with-timer 5 nil (lambda () (setq global-mode-string
+				    '(" "
+				      (:eval (propertize display-time-string 'face 'ps/display-time))
+				      " |  "
+				      chemacs-profile-name
+				      " | "
+				      fancy-battery-mode-line
+				      " ("
+				      (:eval (alist-get 116 fancy-battery-last-status))
+				      " remaining) | "
+				      telega-mode-line-format
+				      " | "))))
   (tab-bar-mode))
 #+end_src
 
@@ -2351,6 +2356,7 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
 :PROPERTIES:
 :ID:       DDFE34BA-7C23-459E-B4E2-2957D2535700
 :END:
+
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/tab-bar)
 (use-package fancy-battery
   :defer 10

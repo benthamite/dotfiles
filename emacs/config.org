@@ -29,7 +29,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =
   - [[#use-package][Use-package]]
   - [[#paradox][paradox]]
 - [[#foundational][foundational]]
-  - [[#key-bindings][key bindings]]
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
   - [[#no-littering][no-littering]]
@@ -926,123 +925,24 @@ CLOCK: [2021-06-03 Thu 14:11]--[2021-06-03 Thu 14:16] =>  0:05
 :ID:       25915A25-30F2-4A58-86FD-E27438D269B6
 :END:
 
-** key bindings
+** no-littering
 :PROPERTIES:
-:ID:       B24FFD2C-67E3-46D5-844B-8CF80AD28CE6
-:END:
-:LOGBOOK:
-CLOCK: [2021-03-28 Sun 13:35]--[2021-03-28 Sun 14:31] =>  0:56
+:ID:       21B40C49-BBD2-4E04-871B-BB578C92F71B
 :END:
 
+/[[https://github.com/emacscollective/no-littering][no-littering]] helps keep ~.emacs.d~ clean./
 
-#+begin_src emacs-lisp :results silent :tangle no
-(global-unset-key (kbd "C-a"))
-(global-unset-key (kbd "C-b"))
-(global-unset-key (kbd "C-d"))
-(global-unset-key (kbd "C-f"))
-(global-unset-key (kbd "C-F"))
-(global-unset-key (kbd "C-j"))
-(global-unset-key (kbd "C-k"))
-(global-unset-key (kbd "C-n"))
-(global-unset-key (kbd "C-o"))
-(global-unset-key (kbd "C-p"))
-(global-unset-key (kbd "C-r"))
-(global-unset-key (kbd "C-t"))
-(global-unset-key (kbd "C-y"))
-(global-unset-key (kbd "C-z"))
-(global-unset-key (kbd "C-,"))
-(global-unset-key (kbd "C-."))
-(global-unset-key (kbd "s-a"))
-(global-unset-key (kbd "s-b"))
-(global-unset-key (kbd "s-c"))
-(global-unset-key (kbd "s-d"))
-(global-unset-key (kbd "s-e"))
-(global-unset-key (kbd "s-f"))
-(global-unset-key (kbd "s-g"))
-(global-unset-key (kbd "s-h"))
-(global-unset-key (kbd "s-i"))
-(global-unset-key (kbd "s-j"))
-(global-unset-key (kbd "s-k"))
-(global-unset-key (kbd "s-l"))
-(global-unset-key (kbd "s-m"))
-(global-unset-key (kbd "s-n"))
-(global-unset-key (kbd "s-o"))
-(global-unset-key (kbd "s-p"))
-(global-unset-key (kbd "s-q"))
-(global-unset-key (kbd "s-r"))
-(global-unset-key (kbd "s-s"))
-(global-unset-key (kbd "s-t"))
-(global-unset-key (kbd "s-u"))
-(global-unset-key (kbd "s-v"))
-(global-unset-key (kbd "s-w"))
-(global-unset-key (kbd "s-x"))
-(global-unset-key (kbd "s-y"))
-(global-unset-key (kbd "s-z"))
-(global-unset-key (kbd "s-SPC"))
-(global-unset-key (kbd "M-a"))
-(global-unset-key (kbd "M-b"))
-(global-unset-key (kbd "M-c"))
-(global-unset-key (kbd "M-d"))
-(global-unset-key (kbd "M-e"))
-(global-unset-key (kbd "M-f"))
-(global-unset-key (kbd "M-h"))
-(global-unset-key (kbd "M-i"))
-(global-unset-key (kbd "M-j"))
-(global-unset-key (kbd "M-l"))
-(global-unset-key (kbd "M-m"))
-(global-unset-key (kbd "M-n"))
-(global-unset-key (kbd "M-p"))
-(global-unset-key (kbd "M-q"))
-(global-unset-key (kbd "M-r"))
-(global-unset-key (kbd "M-t"))
-(global-unset-key (kbd "M-u"))
-(global-unset-key (kbd "M-v"))
-(global-unset-key (kbd "M-w"))
-(global-unset-key (kbd "M-y"))
-(global-unset-key (kbd "M-z"))
-(global-unset-key (kbd "M-,"))
-(global-unset-key (kbd "M-."))
-(global-unset-key (kbd "H-n"))
-(let ((map esc-map))
-(unless (version< emacs-version "29.0")
-(keymap-unset map "A-a")
-(keymap-unset map "A-b")
-(keymap-unset map "A-c")
-(keymap-unset map "A-d")
-(keymap-unset map "A-e")
-(keymap-unset map "A-f")
-(keymap-unset map "A-g")
-(keymap-unset map "A-h")
-(keymap-unset map "A-i")
-(keymap-unset map "A-j")
-(keymap-unset map "A-k")
-(keymap-unset map "A-l")
-(keymap-unset map "A-m")
-(keymap-unset map "A-n")
-(keymap-unset map "A-o")
-(keymap-unset map "A-p")
-(keymap-unset map "A-q")
-(keymap-unset map "A-r")
-(keymap-unset map "A-s")
-(keymap-unset map "A-t")
-(keymap-unset map "A-u")
-(keymap-unset map "A-v")
-(keymap-unset map "A-w")
-(keymap-unset map "A-x")
-(keymap-unset map "A-y")
-(keymap-unset map "A-z")
-(keymap-unset map "A-RET")
-(keymap-unset map "A-DEL")
-(keymap-unset map "A-SPC")
-(keymap-unset map "A-.")
-(keymap-unset map "A-,")
-(keymap-unset map "A-/")
-(keymap-unset map "A-(")
-(keymap-unset map "A-=")
-(keymap-unset map "A--")
-(keymap-unset map "A-'")
-(let ((map prog-mode-map))
-  (keymap-unset map "M-q"))))
+#+begin_src emacs-lisp :results silent
+(use-package no-littering
+  :demand t
+  :init
+  (setq no-littering-etc-directory "/Users/pablostafforini/.config/emacs-profiles/etc/")
+  (setq no-littering-var-directory "/Users/pablostafforini/.config/emacs-profiles/var/")
+
+  :config
+  ;; github.com/emacscollective/no-littering#auto-save-settings
+  (setq auto-save-file-name-transforms
+        `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 #+end_src
 
 ** ns-win

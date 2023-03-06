@@ -410,7 +410,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =
   - [[#elfeed-score][elfeed-score]]
   - [[#google-this][google-this]]
   - [[#engine-mode][engine-mode]]
-  - [[#eaf][eaf]]
   - [[#eaf-browser][eaf-browser]]
   - [[#osm][osm]]
   - [[#twittering-mode][twittering-mode]]
@@ -16965,26 +16964,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (engine/set-keymap-prefix (kbd "A-H-g")))
 #+end_src
 
-
-** eaf
-:PROPERTIES:
-:ID:       4CDDA7F2-07D5-4D09-A8D5-3A271946491A
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-24 Sun 16:09]--[2022-07-24 Sun 17:21] =>  1:12
-:END:
-#+begin_src emacs-lisp :results silent
-(use-package eaf
-  :disabled
-  :straight (eaf
-             :type git
-             :host github
-             :repo "emacs-eaf/emacs-application-framework"
-             :files ("*.el" "*.py" "core" "app" "*.json")
-             :includes (eaf-browser) ; Straight won't try to search for these packages when we make further use-package invocations for them
-             :pre-build (("python3" "install-eaf.py" "--install" "browser" "--ignore-sys-deps"))
-             ))
-#+end_src
 
 ** eaf-browser
 :PROPERTIES:

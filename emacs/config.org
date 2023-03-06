@@ -410,7 +410,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =
   - [[#elfeed-score][elfeed-score]]
   - [[#google-this][google-this]]
   - [[#engine-mode][engine-mode]]
-  - [[#emacs-webkit][emacs-webkit]]
   - [[#eaf][eaf]]
   - [[#eaf-browser][eaf-browser]]
   - [[#osm][osm]]
@@ -16966,16 +16965,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (engine/set-keymap-prefix (kbd "A-H-g")))
 #+end_src
 
-
-** emacs-webkit
-:PROPERTIES:
-:ID:       FD609FAA-D60B-4B3F-8B1A-55292EBC286A
-:END:
-https://github.com/akirakyle/emacs-webkit
-
-Unstable, not yet on Melpa. Best to wait for a stable release.
-
-[2022-07-24 Sun 15:53] No new commits since September 2021. [[https://github.com/akirakyle/emacs-webkit/issues/34#issuecomment-912244110][This user]] notes that it doesn't work on macOS.
 
 ** eaf
 :PROPERTIES:

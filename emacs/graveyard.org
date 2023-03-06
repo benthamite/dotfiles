@@ -8,6 +8,16 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** emacs-webkit
+:PROPERTIES:
+:ID:       FD609FAA-D60B-4B3F-8B1A-55292EBC286A
+:END:
+https://github.com/akirakyle/emacs-webkit
+
+Unstable, not yet on Melpa. Best to wait for a stable release.
+
+[2022-07-24 Sun 15:53] No new commits since September 2021. [[https://github.com/akirakyle/emacs-webkit/issues/34#issuecomment-912244110][This user]] notes that it doesn't work on macOS.
+
 ** orgmdb
 :PROPERTIES:
 :ID:       504577FD-DACD-4D35-B9E6-307DF3D9BE7E

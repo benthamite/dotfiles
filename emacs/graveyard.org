@@ -38,6 +38,23 @@ CLOCK: [2022-07-24 Sun 16:09]--[2022-07-24 Sun 17:21] =>  1:12
              ))
 #+end_src
 
+** eaf-browser
+:PROPERTIES:
+:ID:       22BD9052-06E6-4D5F-9E72-C9A154AF6F8E
+:END:
+#+begin_src emacs-lisp :results silent
+(use-package eaf-browser
+  :config
+  (setq eaf-browser-continue-where-left-off t)
+  (setq browse-url-browser-function 'eaf-open-browser)
+  (setq eaf-browser-enable-adblocker t)
+  ;; the history file is stored in `.emacs.d/eaf/browser/history/log.txt'
+  (setq eaf-browser-chrome-history-file "/Users/pablostafforini/Library/Application Support/Google/Chrome/Default/History")
+  (defalias 'browse-web #'eaf-open-browser)
+  (eaf-bind-key ps/kill-this-buffer "q" eaf-browser-keybinding))
+#+end_src
+
+
 ** orgmdb
 :PROPERTIES:
 :ID:       504577FD-DACD-4D35-B9E6-307DF3D9BE7E
@@ -226,7 +243,6 @@ The packages [[https://github.com/alphapapa/org-ql][org-ql]] and ~helm-org-ql~ o
   :custom
   (real-auto-save-interval 5))
 #+end_src
-
 
 ** Metaculus
 :PROPERTIES:

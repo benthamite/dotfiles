@@ -410,7 +410,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =
   - [[#elfeed-score][elfeed-score]]
   - [[#google-this][google-this]]
   - [[#engine-mode][engine-mode]]
-  - [[#eaf-browser][eaf-browser]]
   - [[#osm][osm]]
   - [[#twittering-mode][twittering-mode]]
   - [[#mastodon][mastodon]]
@@ -16964,23 +16963,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (engine/set-keymap-prefix (kbd "A-H-g")))
 #+end_src
 
-
-** eaf-browser
-:PROPERTIES:
-:ID:       22BD9052-06E6-4D5F-9E72-C9A154AF6F8E
-:END:
-#+begin_src emacs-lisp :results silent
-(use-package eaf-browser
-  :custom
-  (eaf-browser-continue-where-left-off t)
-  (browse-url-browser-function 'eaf-open-browser)
-  (eaf-browser-enable-adblocker t)
-  ;; the history file is stored in `.emacs.d/eaf/browser/history/log.txt'
-  (eaf-browser-chrome-history-file "/Users/pablostafforini/Library/Application Support/Google/Chrome/Default/History")
-  :config
-  (defalias 'browse-web #'eaf-open-browser)
-  (eaf-bind-key ps/kill-this-buffer "q" eaf-browser-keybinding))
-#+end_src
 
 ** osm
 :PROPERTIES:

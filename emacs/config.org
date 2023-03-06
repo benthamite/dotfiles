@@ -22,6 +22,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =
   - [[#profiling][Profiling]]
   - [[#installation][Installation]]
   - [[#other-config-files][Other config files]]
+- [[#early-init][early-init]]
 - [[#startup][startup]]
   - [[#macros][macros]]
 - [[#package-management][package management]]
@@ -706,6 +707,26 @@ Some useful config files:
 - [[https://github.com/iqbalansari/dotEmacs][Iqbal Ansari]].
 - [[https://www.danielclemente.com/emacs/confi.html][Daniel Clemente]].
 - [[https://github.com/patrl][Patrick Elliott]]
+
+* early-init
+:PROPERTIES:
+:ID:       F59230DF-14ED-44FF-B54B-4A6758C12D99
+:END:
+
+The contents of this code block are tangled to the ~early-init.el~ file.
+
+#+begin_src emacs-lisp :tangle (print ps/early-init-location)
+(add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bart
+(add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
+
+;; github.com/emacscollective/no-littering#native-compilation-cache
+(when (fboundp 'startup-redirect-eln-cache)
+  (startup-redirect-eln-cache
+   (convert-standard-filename
+    "/Users/pablostafforini/.config/emacs-profiles/develop/var/eln-cache/")))
+
+#+end_src
+
 * startup
 :PROPERTIES:
 :ID:       9DBC455B-7ED4-422F-BE05-2FBB3548A86F

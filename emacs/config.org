@@ -2034,7 +2034,8 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
     "My custom faces, to be used in conjunction with theme."
     (ps/init-override-code-if-available
      :ps/faces
-     (progn
+     '(
+       (message "Setting Pablo's faces...")
        (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
        (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
        (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
@@ -2272,14 +2273,14 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 #+end_src
 
 ** doom-modeline
-:PROPERTIES:
-:ID:       C3D90EBC-EB70-440E-9718-A2832FF9F077
-:END:
 :LOGBOOK:
 CLOCK: [2021-06-02 Wed 21:16]--[2021-06-02 Wed 21:32] =>  0:16
 CLOCK: [2021-06-02 Wed 18:04]--[2021-06-02 Wed 18:07] =>  0:03
 CLOCK: [2021-05-23 Sun 12:38]--[2021-05-23 Sun 12:43] =>  0:05
 CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
+:END:
+:PROPERTIES:
+:ID:       C3D90EBC-EB70-440E-9718-A2832FF9F077
 :END:
 /[[https://github.com/seagle0128/doom-modeline/][doom-modeline]] is a tidier and more aesthetically pleasing modeline./
 
@@ -2288,24 +2289,28 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :demand t
   :init
   (doom-modeline-mode)
-  :custom
-  ;; we disable the display of time since the tab-bar already does
-  (doom-modeline-time nil)
-  (doom-modeline-mu4e t)
-  (doom-modeline-buffer-encoding nil)
-  (doom-modeline-irc t)
-  (doom-modeline-irc-buffers t)
-  ;; (doom-modeline--flycheck-icon t)
-  (doom-modeline-github t)
-  (doom-modeline-github-interval (* 10 60))
-  (doom-modeline-buffer-file-name-style 'truncate-from-project)
 
   :config
-  (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
-  (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
-  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
-  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline)
-  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
+  (ps/init-override-code-if-available
+   :ps/doom-modeline
+   '(
+     ;; we disable the display of time since the tab-bar already does
+     (setq doom-modeline-time nil)
+     (setq doom-modeline-mu4e t)
+     (setq doom-modeline-buffer-encoding nil)
+     (setq doom-modeline-irc t)
+     (setq doom-modeline-irc-buffers t)
+     ;; (doom-modeline--flycheck-icon t)
+     (setq doom-modeline-github t)
+     (setq doom-modeline-github-interval (* 10 60))
+     (setq doom-modeline-buffer-file-name-style 'truncate-from-project)
+
+     (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
+     (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
+     (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
+     (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline)
+     (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
+   ))
 #+end_src
 
 *** TODO [#6] Diagnose why modeline is sometimes not highlighted
@@ -3533,7 +3538,7 @@ CLOCK: [2021-03-28 Sun 08:40]--[2021-03-28 Sun 10:35] =>  1:55
 CLOCK: [2021-03-27 Sat 18:01]--[2021-03-27 Sat 19:53] =>  1:52
 CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :END:
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/outline)
 (use-feature outline
 
   :hook
@@ -3656,8 +3661,8 @@ To suppress warnings when a snippet executes elisp code, you may want to configu
   :defer 5
   :init
   (setq yas-snippet-dirs (list ps/dir-yasnippets
-			       (concat (directory-file-name ps/dir-yasnippets) "-private")
-			       "~/.emacs.d/straight/build/yasnippet-snippets/snippets"))
+                               (concat (directory-file-name ps/dir-yasnippets) "-private")
+                               "~/.emacs.d/straight/build/yasnippet-snippets/snippets"))
 
   :custom
   (yas-triggers-in-field t) ; allow stacked expansions
@@ -3699,10 +3704,10 @@ Expands a snippet-writing snippet, unless the optional prefix arg
 NO-TEMPLATE is non-nil."
     (interactive "P")
     (let ((guessed-directories (yas--guess-snippet-directories))
-	  (yas-selected-text (or yas-selected-text
-				 (and (region-active-p)
-				      (buffer-substring-no-properties
-				       (region-beginning) (region-end))))))
+          (yas-selected-text (or yas-selected-text
+                                 (and (region-active-p)
+                                      (buffer-substring-no-properties
+                                       (region-beginning) (region-end))))))
 
       (switch-to-buffer yas-new-snippet-buffer-name)
       (erase-buffer)
@@ -3710,12 +3715,12 @@ NO-TEMPLATE is non-nil."
       (snippet-mode)
       (yas-minor-mode 1)
       (set (make-local-variable 'yas--guessed-modes)
-	   (mapcar (lambda (d) (yas--table-mode (car d)))
-		   guessed-directories))
+           (mapcar (lambda (d) (yas--table-mode (car d)))
+                   guessed-directories))
       (set (make-local-variable 'default-directory)
-	   (car (cdr (car guessed-directories))))
+           (car (cdr (car guessed-directories))))
       (if (and (not no-template) ps/yas-new-snippet-tlon)
-	  (yas-expand-snippet ps/yas-new-snippet-tlon))))
+          (yas-expand-snippet ps/yas-new-snippet-tlon))))
 
   :general
   ("C-y" 'yas-new-snippet)
@@ -5115,7 +5120,7 @@ CLOCK: [2022-09-02 Fri 18:13]--[2022-09-02 Fri 21:20] =>  3:07
 CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :END:
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/window)
+#+begin_src emacs-lisp :results silent
 (use-feature window
   :demand t
 
@@ -5127,6 +5132,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   ;; stackoverflow.com/questions/23207958/how-to-prevent-emacs-dired-from-splitting-frame-into-more-than-two-windows
 
   :config
+  (ps/init-override-code-if-available
   (add-to-list 'default-frame-alist '(undecorated . t))
   (add-to-list 'display-buffer-alist `(,shell-command-buffer-name-async display-buffer-no-window))
   (defvar ps/split-emacs-chrome-sideways nil)
@@ -11133,22 +11139,22 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 not already have one."
     (ps/init-override-code-if-available
      :ps/org-id-add-ids-to-headings-in-file
-     (when (and (eq major-mode 'org-mode)
-                (string-match ps/dir-org (buffer-file-name))
-                (eq buffer-read-only nil))
-       (unless
-           (or
-            ;; exclude directories
-            (member (file-name-directory (buffer-file-name))
-                    ps/org-id-excluded-directories)
-            ;; exclude files
-            (member (buffer-file-name)
-                    ps/org-id-excluded-files)
-            (member (org-get-heading)
-                    '("Local variables"
-                      "COMMENT Local variables"
-                      "TODO Local variables")))
-         (org-map-entries 'org-id-get-create)))))
+     '(when (and (eq major-mode 'org-mode)
+                 (string-match ps/dir-org (buffer-file-name))
+                 (eq buffer-read-only nil))
+        (unless
+            (or
+             ;; exclude directories
+             (member (file-name-directory (buffer-file-name))
+                     ps/org-id-excluded-directories)
+             ;; exclude files
+             (member (buffer-file-name)
+                     ps/org-id-excluded-files)
+             (member (org-get-heading)
+                     '("Local variables"
+                       "COMMENT Local variables"
+                       "TODO Local variables")))
+          (org-map-entries 'org-id-get-create)))))
 
   ;; (setq org-id-extra-files
   ;; (directory-files-recursively ps/dir-org "\\.org"))
@@ -13358,8 +13364,8 @@ The problem seems to be that ~(citar--select-resource citekeys :notes t)~ return
   :defer 20
 
   :custom
-  (org-ref-insert-cite-function
-        (org-cite-insert nil))
+  ;; (org-ref-insert-cite-function
+        ;; (org-cite-insert nil))
   (org-ref-bibtex-pdf-download-dir ps/dir-downloads)
   (bibtex-completion-library-path ps/dir-library-pdf)
 
@@ -14836,7 +14842,7 @@ or specify any other coding system (and risk losing\n\
 
   (ps/init-override-code-if-available
    :ps/zotra-startup
-   (add-hook 'emacs-startup-hook #'ps/zotra-run-translator-server))
+   '(add-hook 'emacs-startup-hook #'ps/zotra-run-translator-server))
 
   :general
   (ebib-index-mode-map

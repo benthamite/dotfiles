@@ -1,6 +1,6 @@
 #+TITLE:Pablo's Emacs config
 #+AUTHOR: Pablo Stafforini
-#+PROPERTY: header-args :tangle (print ps/init-location)
+#+PROPERTY: header-args :tangle (print ps/init-user-init-path)
 :PROPERTIES:
 :TOC:      ignore
 :END:
@@ -30,9 +30,9 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =
   - [[#use-package][Use-package]]
   - [[#paradox][paradox]]
 - [[#foundational][foundational]]
+  - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
-  - [[#no-littering][no-littering]]
   - [[#exec-path-from-shell][exec-path-from-shell]]
   - [[#general][general]]
   - [[#el-patch][el-patch]]
@@ -715,7 +715,7 @@ Some useful config files:
 
 The contents of this code block are tangled to the ~early-init.el~ file.
 
-#+begin_src emacs-lisp :tangle (print ps/early-init-location)
+#+begin_src emacs-lisp :tangle (print ps/init-early-init-path)
 (add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bart
 (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
 
@@ -787,7 +787,6 @@ Adapted from [[https://github.com/sfromm/emacs.d#startup][here]].
 :PROPERTIES:
 :ID:       E120C28B-458A-4F30-8C02-389B3351AFC4
 :END:
-
 
 #+begin_src emacs-lisp :results silent
 ;; From Gonçalo Santos (github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org#helpers)
@@ -1002,26 +1001,6 @@ CLOCK: [2021-06-03 Thu 14:11]--[2021-06-03 Thu 14:16] =>  0:05
     (keymap-unset map "A-u")
     (keymap-unset map "A-m")
     (keymap-unset map "A-x"))))
-#+end_src
-
-** no-littering
-:PROPERTIES:
-:ID:       21B40C49-BBD2-4E04-871B-BB578C92F71B
-:END:
-
-/[[https://github.com/emacscollective/no-littering][no-littering]] helps keep ~.emacs.d~ clean./
-
-#+begin_src emacs-lisp :results silent
-(use-package no-littering
-  :demand t
-  :init
-  (setq no-littering-etc-directory "~/.config/emacs-profiles/etc/")
-  (setq no-littering-etc-directory "~/.config/emacs-profiles/var/")
-
-  :config
-  ;; github.com/emacscollective/no-littering#auto-save-settings
-  (setq auto-save-file-name-transforms
-   `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 #+end_src
 
 ** exec-path-from-shell
@@ -6343,6 +6322,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
   :config
   (setq recentf-max-saved-items 100)
 
+  ;; github.com/emacscollective/no-littering#suggested-settings
   (add-to-list 'recentf-exclude no-littering-var-directory)
   (add-to-list 'recentf-exclude no-littering-etc-directory)
   (recentf-mode))

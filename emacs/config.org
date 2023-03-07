@@ -9917,6 +9917,61 @@ image."
           (message "You can toggle inline images with C-c C-x C-v"))
       (user-error "Requires pngpaste in PATH")))
 
+  ;; The following functions produce a count of the TODOs added
+  ;; or removed from all agenda files in the last day:
+  ;; https://200ok.ch/posts/2022-12-06_how_much_did_you_get_done_today.html
+
+  (defun ps/org-count-lines-with-expression (s exp)
+    "Count the number of lines in the string S that contain the regular expression EXP."
+    (let ((count 0))
+      (mapc (lambda (line)
+              (when (string-match-p exp line)
+                (setq count (+ 1 count))))
+            (split-string s "\n"))
+      count))
+
+  (defun ps/org-productivity-of-the-day ()
+    (seq-reduce
+     (lambda (acc it)
+       (let* ((folder (file-name-directory it))
+              (file (file-name-nondirectory it))
+              (base-cmd (concat "cd "
+                                folder
+                                "; git log --since=midnight -p "
+                                file
+                                "| grep TODO"))
+              (changed (shell-command-to-string base-cmd))
+              (added (count-lines-with-expression changed "^\\+"))
+              (removed (count-lines-with-expression changed "^\\-")))
+         (cons (+ (car acc) added)
+               (- (cdr acc) removed))))
+     org-agenda-files
+     '(0 . 0)))
+
+  (defun ps/org-paste-clipboard-image ()
+    ;; TODO: write docstring
+    (interactive)
+    (if (executable-find "pngpaste")
+        (let* ((counter 1)
+               (image-file (concat
+                            ps/dir-org-images
+                            (org-id-get nil 'create)
+                            (format "-%d.png" counter))))
+          (while (file-exists-p image-file)
+            (setq counter (1+ counter))
+            (setq image-file (concat
+                              ps/dir-org-images
+                              (org-id-get nil 'create)
+                              (format "-%d.png" counter))))
+          (call-process-shell-command (format "pngpaste '%s'" image-file))
+          (let ((caption (read-string "Caption: ")))
+            (unless (string= caption "")
+              (insert (format "#+CAPTION: %s \n" caption))))
+          (insert (format "[[file:%s]]" image-file))
+          (org-display-inline-images)
+          (message "You can toggle inline images with `C-c C-x C-v'"))
+      (user-error "Requires pngpaste in PATH")))
+
   :general
   (org-mode-map
    "<S-left>" nil
@@ -9981,6 +10036,12 @@ image."
    "s-i" (lambda! (org-emphasize ?/))
    "s-e" (lambda! (org-emphasize ?~))))
 #+end_src
+
+*** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
+:PROPERTIES:
+:ID:       1B86CB4D-D297-4C6D-99F7-49A80B7B0688
+:END:
+By considering both tasks completed and their associated priorities.
 
 *** TODO [#4] Create function to compute the total number of TODOs and hours in effort estimates
 :PROPERTIES:
@@ -17776,11 +17837,6 @@ The following functions, created by [[https://200ok.ch/posts/2022-12-06_how_much
    org-agenda-files
    '(0 . 0)))
 #+end_src
-*** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
-:PROPERTIES:
-:ID:       1B86CB4D-D297-4C6D-99F7-49A80B7B0688
-:END:
-By considering both tasks completed and their associated priorities.
 **** TODO [#2] Implement percentile feedback
 :PROPERTIES:
 :ID:       B37445B2-EED7-41E1-9413-73E4E02F394E

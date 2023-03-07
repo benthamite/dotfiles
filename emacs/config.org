@@ -15014,7 +15014,12 @@ Here's the process I followed:
 
 #+begin_src shell :tangle no
 brew uninstall mu
-wget https://raw.githubusercontent.com/Homebrew/homebrew-core/77f10379cb42e3a41805efed8a15c7c2db46fb68/Formula/mu.rb
+# 1.6.11
+wget https://raw.githubusercontent.com/Homebrew/homebrew-core/c42744ba370044e5363e1a6547014c810304b520/Formula/mu.rb
+# 1.6.10
+wget https://raw.githubusercontent.com/Homebrew/homebrew-core/de6f736af8caa0d1383a42b93e43fadddedec6f3/Formula/mu.rb
+# 1.6.8
+wget https://raw.githubusercontent.com/Homebrew/homebrew-core/27dfe84721266543124b1fe2b052632fbd087699/Formula/mu.rb
 HOMEBREW_NO_INSTALL_CLEANUP=1 brew install /Users/pablostafforini/Downloads/mu.rb
 brew pin mu
 #+end_src
@@ -15023,9 +15028,8 @@ brew pin mu
 
 #+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/mu4e)
 (use-package mu4e
-  :defer 5
   :straight (:local-repo
-             "/opt/homebrew/Cellar/mu/HEAD-617c812/share/emacs/site-lisp/mu/mu4e"
+             "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
              :pre-build
              ())
   :init
@@ -15252,7 +15256,7 @@ it, without asking for confirmation."
     "Functions to be called by `mu4e-view-mode-hook'."
     (interactive)
     (toggle-truncate-lines 1)
-    (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.25))
+    (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.15))
 
   :hook
   (mu4e-view-mode-hook . ps/mu4e-view-mode-hook-functions)

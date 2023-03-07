@@ -1,4 +1,4 @@
-#+title: Pablo's defaults for macOS
+#+title: Pablo's macOS defaults
 #+author: Pablo Stafforini
 #+PROPERTY: header-args :tangle ~/Dropbox/dotfiles/macos/macos
 :PROPERTIES:

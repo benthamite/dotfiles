@@ -16131,7 +16131,7 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
   (eww-mode-hook . shr-heading-setup-imenu)
 
   :general
-  (eww-mode-map
+  ((elfeed-show-mode-map eww-mode-map mu4e-view-mode-map)
    "A-C-s-r" 'shr-heading-previous
    "A-C-s-f" 'shr-heading-next))
 #+end_src

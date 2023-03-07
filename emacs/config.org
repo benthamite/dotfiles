@@ -847,7 +847,7 @@ Process for updating packages:
   (load bootstrap-file nil 'nomessage))
 (setq straight-default-vc 'git)
 (setq straight-check-for-modifications '(find-at-startup watch-files find-when-checking)) ; github.com/raxod502/straight.el#my-init-time-got-slower
-(setq straight-profiles `((nil . ,(file-name-concat user-emacs-directory "straight-profile.el"))))
+(setq straight-profiles `((nil . ,(file-name-concat ps/dir-dotemacs "straight-profile.el"))))
 (setq straight-use-package-by-default t)
 (require 'straight-x) ; github.com/raxod502/straight.el#how-do-i-uninstall-a-package
 #+end_src

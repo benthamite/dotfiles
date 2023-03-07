@@ -11218,11 +11218,12 @@ refresh cache."
   (defun ps/org-refile-and-archive ()
     "Refile and archive the current subtree."
     (interactive)
-    (org-refile)
-    (save-excursion
-      (org-refile '(16))
-      (org-archive-to-archive-sibling))
-    (org-mark-ring-goto))
+    (let ((source-buffer (current-buffer)))
+      (org-refile)
+      (save-window-excursion
+      (save-excursion
+        (org-refile '(16))
+        (org-archive-to-archive-sibling)))))
 
   ;; Inspired by emacs.stackexchange.com/q/8045/32089
   (defun ps/org-refile-to (file heading)
@@ -11257,6 +11258,7 @@ refresh cache."
   :general
   (org-mode-map
    "s-w" 'org-refile
+   "H-s-w" 'ps/org-refile-and-archive
    "s-A-w" 'ps/org-refile-latest))
 #+end_src
 

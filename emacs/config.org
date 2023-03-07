@@ -436,14 +436,13 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#midnight][midnight]]
   - [[#keycast][keycast]]
   - [[#custom][custom]]
-  - [[#productivity][productivity]]
 - [[#personal-projects][personal projects]]
   - [[#tlon][Tlon]]
   - [[#keyboard-maestro][Keyboard Maestro]]
-- [[#local-variables][Local variables]]
+- [[#local-variables][local variables]]
 :END:
 
-* Introduction
+* introduction
 :PROPERTIES:
 :CUSTOM_ID: introduction
 :ID:       A7940400-DD17-4B0B-A9B2-565A207D680C
@@ -543,14 +542,14 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
   - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
   - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]]
 
-** Profiling
+** profiling
 :PROPERTIES:
 :ID:       60B7A58C-A79A-4EEF-A91D-EECC85CFA173
 :END:
 - If you use ~use-package~, the command ~use-package-report~ displays a table showing the impact of each package on load times.
 - You may also want to try [[https://www.emacswiki.org/emacs/ProfileDotEmacs][profile-dotemacs]].
 
-** Installation
+** installation
 :PROPERTIES:
 :ID:       6712DA4C-BA45-4E74-8AEF-C903462D9BCB
 :END:
@@ -612,7 +611,7 @@ brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xw
 brew install emacs-mac --with-dbus --with-starter --with-natural-title-bar --with-native-comp --with-mac-metal --with-xwidgets --with-imagemagick  --with-librsvg  --with-spacemacs-icon
 #+end_src
 
-** Other config files
+** other config files
 :PROPERTIES:
 :ID:       20E3D45E-D8AB-44BD-A5E2-C6DF9C20744E
 :END:
@@ -17857,7 +17856,7 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
  "C-H-M-S-w" 'ps/org-wiki-add-datestamp-to-heading-from-clipboard)
 #+end_src
 
-* Local variables
+* local variables
 :PROPERTIES:
 :ID:       1FCD0AB8-6922-4910-AF33-5BD8FB10D633
 :END:

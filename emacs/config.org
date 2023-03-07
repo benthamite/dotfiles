@@ -6363,8 +6363,6 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 (use-package magit
   :defer 15
   :config
-  ;; chris.beams.io/posts/git-commit/
-  (setq git-commit-summary-max-length 50)
   (setq magit-commit-ask-to-stage 'stage)
 
   (add-to-list 'magit-no-confirm 'stage-all-changes)

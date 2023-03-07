@@ -5771,10 +5771,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   :init
   (setq org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
   (setq org-gcal-client-secret (auth-source-pass-get 'secret "auth-sources/org-gcal"))
-  (org-gcal-reload-client-id-secret)
 
   :config
-
   (setq org-gcal-fetch-file-alist `((,ps/personal-gmail . ,ps/file-calendar)))
   (setq org-gcal-recurring-events-mode 'top-level)
   (setq org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events

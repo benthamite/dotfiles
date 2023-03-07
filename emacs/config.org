@@ -16379,7 +16379,6 @@ Check [[https://www.reddit.com/r/emacs/comments/gpoaaa/updating_elfeed_using_sep
 #+begin_src emacs-lisp :results silent
 (use-package elfeed
   :config
-  (setq elfeed-db-directory (file-name-concat ps/dir-emacs "~/.config/emacs-profiles/var/elfeed/"))
 
   (setq-default elfeed-search-filter "+unread -wiki")
 

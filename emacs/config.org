@@ -14590,14 +14590,18 @@ or specify any other coding system (and risk losing\n\
         "cd %s; nvm use 14; npm start"
         ps/dir-translation-server))))
 
-  (ps/init-override-code-if-available
-   :ps/zotra-startup
-   (add-hook 'emacs-startup-hook #'ps/zotra-run-translator-server))
-
   :general
   (ebib-index-mode-map
    "i" 'zotra-add-entry-from-search))
 #+end_src
+
+*** WAITING Launch zotra outside emacs
+:PROPERTIES:
+:ID:       00F3FD0E-44A4-41D6-935D-1E441B823E9D
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-06 Mon 13:45]--[2023-03-06 Mon 13:50] =>  0:05
+:END:
 
 ** scihub
 :PROPERTIES:

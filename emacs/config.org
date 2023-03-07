@@ -6,7 +6,7 @@
 :END:
 #+filetags: :project:
 
-* Table of contents
+* table of contents
 :PROPERTIES:
 :TOC:      :include all :depth 2 :force ((nothing)) :ignore ((nothing)) :local ((nothing))
 :ID:       536D7BF2-AA0D-43D7-8865-601DFB6BB8E6
@@ -28,7 +28,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#package-management][package management]]
   - [[#straight][straight]]
   - [[#use-package][Use-package]]
-  - [[#paradox][paradox]]
 - [[#foundational][foundational]]
   - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
@@ -48,7 +47,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#misc][misc.]]
 - [[#display][display]]
   - [[#mixed-pitch][mixed-pitch]]
-  - [[#fontaine][fontaine]]
   - [[#fringe][fringe]]
   - [[#org-modern][org-modern]]
   - [[#faces][faces]]
@@ -170,7 +168,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#saveplace][saveplace]]
   - [[#session][session]]
   - [[#recentf][recentf]]
-  - [[#persistent-scratch][persistent-scratch]]
   - [[#remember][remember]]
 - [[#version-control][version control]]
   - [[#vc][vc]]
@@ -178,10 +175,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ghub][ghub]]
   - [[#forge][forge]]
   - [[#code-review][code-review]]
-  - [[#projectile][projectile]]
   - [[#git-timemachine][git-timemachine]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
-  - [[#git-gutter][git-gutter]]
 - [[#search--replace][search & replace]]
   - [[#isearch][isearch]]
   - [[#replace][replace]]
@@ -258,7 +253,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#goldendict][goldendict]]
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict][goldendict]]
-  - [[#google-translate][google-translate]]
   - [[#txl][txl]]
   - [[#reverso][reverso]]
   - [[#atomic-chrome][atomic-chrome]]
@@ -284,7 +278,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#edebug][edebug]]
   - [[#backtrace][backtrace]]
   - [[#macrostep][macrostep]]
-  - [[#ess][ESS]]
   - [[#clojure][clojure]]
   - [[#cider][cider]]
   - [[#python][python]]
@@ -320,7 +313,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ox-hugo][ox-hugo]]
   - [[#org-babel][org-babel]]
   - [[#org-src][org-src]]
-  - [[#org-tempo][org-tempo]]
   - [[#org-table][org-table]]
   - [[#orgtbl-edit][orgtbl-edit]]
   - [[#org-crypt][org-crypt]]
@@ -345,7 +337,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#emacsql-sqlite-builtin][emacsql-sqlite-builtin]]
   - [[#org-roam][org-roam]]
   - [[#org-roam-ui][org-roam-ui]]
-  - [[#org-roam-timestamps][org-roam-timestamps]]
   - [[#org-roam-browser-extension][org-roam-browser-extension]]
   - [[#org-transclusion][org-transclusion]]
   - [[#vulpea][vulpea]]
@@ -374,7 +365,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#spaced-repetition][spaced-repetition]]
   - [[#anki-editor][anki-editor]]
   - [[#org-anki][org-anki]]
-  - [[#org-drill][org-drill]]
 - [[#email][email]]
   - [[#simple][simple]]
   - [[#smtpmail-multi][smtpmail-multi]]
@@ -383,10 +373,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#message][message]]
   - [[#mml][mml]]
   - [[#mu4e][mu4e]]
-  - [[#mu4e-org][mu4e-org]]
   - [[#mu4e-alert][mu4e-alert]]
   - [[#org-msg][org-msg]]
-  - [[#htmlize][htmlize]]
 - [[#messaging][messaging]]
   - [[#telega][telega]]
   - [[#telega-mnz][telega-mnz]]
@@ -412,7 +400,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#engine-mode][engine-mode]]
   - [[#osm][osm]]
   - [[#twittering-mode][twittering-mode]]
-  - [[#mastodon][mastodon]]
   - [[#reddit][reddit]]
   - [[#hugo][hugo]]
   - [[#org-download][org-download]]
@@ -448,7 +435,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#macos][macos]]
   - [[#midnight][midnight]]
   - [[#keycast][keycast]]
-  - [[#keyfreq][keyfreq]]
   - [[#custom][custom]]
   - [[#productivity][productivity]]
 - [[#personal-projects][personal projects]]
@@ -924,29 +910,6 @@ NAME and ARGS are as in `use-package'."
 #+begin_src emacs-lisp :results silent
 (use-package use-package-ensure-system-package
   :demand t)
-#+end_src
-
-** paradox
-:PROPERTIES:
-:ID:       2263DD83-80FF-4180-903B-33FEB83C8179
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-03 Thu 14:11]--[2021-06-03 Thu 14:16] =>  0:05
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-package paradox
-  :disabled
-  ;; :defer 600
-  :config
-  (setq paradox-column-width-package 27)
-  (setq paradox-column-width-version 13)
-  (setq paradox-execute-asynchronously t)
-  (setq paradox-hide-wiki-packages t)
-  (setq paradox-github-token
-   (setq auth-source-pass-get 'secret "auth-sources/api.github.com"))
-  ;; (paradox-enable)
-  (remove-hook 'paradox-after-execute-functions #'paradox--report-buffer-print))
 #+end_src
 
 * foundational
@@ -1863,22 +1826,6 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   (mu4e-view-mode-hook . mixed-pitch-mode)
   (org-mode-hook . mixed-pitch-mode)
   (outline-mode-hook . mixed-pitch-mode))
-#+end_src
-
-** fontaine
-:PROPERTIES:
-:ID:       B375DC03-A71F-4F87-8B03-59437D9CA857
-:END:
-/[[https://protesilaos.com/emacs/fontaine][fontaine]] lets the user specify presets of font configurations and set them on demand on graphical Emacs frames./
-
-I haven't yet explored this package.
-
-#+begin_src emacs-lisp
-(use-package fontaine
-  :disabled
-  :demand t
-  :config
-  (fontaine-mode))
 #+end_src
 
 ** fringe
@@ -6337,54 +6284,6 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
   (recentf-mode))
 #+end_src
 
-** persistent-scratch
-:PROPERTIES:
-:ID:       B6CB6A6C-0BCC-4A07-9608-BDCA6184C63A
-:END:
-
-/[[https://github.com/Fanael/persistent-scratch][persistent-scratch]] makes Emacs remember the scratch buffer across sessions./
-
-#+begin_src emacs-lisp :results silent
-(use-package persistent-scratch
-  :disabled
-  :demand t
-  :config
-  (setq persistent-scratch-autosave-interval 30)
-  ;; What follows is copied from umarahmad.xyz/blog/quick-scratch-buffers/
-  ;; (persistent-scratch-scratch-buffer-p-function 'ps/persistent-scratch-buffer-identifier)
-
-  (defun ps/persistent-scratch-buffer-identifier ()
-    (string-match "^*scratch:" (buffer-name)))
-
-  (defun ps/persistent-scratch-get-scratches ()
-    (let ((scratch-buffers)
-          (save-data
-           (read
-            (with-temp-buffer
-              (let ((coding-system-for-read 'utf-8-unix))
-                (insert-file-contents persistent-scratch-save-file))
-              (buffer-string)))))
-      (dolist (saved-buffer save-data)
-        (push (substring (aref saved-buffer 0) (length "*scratch:")) scratch-buffers))
-      scratch-buffers))
-
-  (defun ps/persistent-scratch-quick-open ()
-    (interactive)
-    (let* ((scratch-buffers (ps/persistent-scratch-get-scratches))
-           (chosen-scratch (concat "*scratch:"
-                                   (completing-read
-                                    "Choose a scratch: "
-                                    scratch-buffers nil nil nil nil
-                                    (ps/random-alnum 4))))
-           (buffer-exists-p (get-buffer chosen-scratch)))
-      (pop-to-buffer chosen-scratch)
-      (unless buffer-exists-p
-        (persistent-scratch-restore-this))
-      (persistent-scratch-mode)))
-
-  (persistent-scratch-setup-default))
-#+end_src
-
 ** remember
 :PROPERTIES:
 :ID:       438AD8A8-0F4F-4A1D-9BC9-110906944509
@@ -6581,24 +6480,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (code-review-mode-hook . emojify-mode))
 #+end_src
 
-** projectile
-:PROPERTIES:
-:ID:       DD7DF8D4-CB05-4E98-8125-D453D25E092A
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-22 Thu 17:20]--[2021-07-22 Thu 17:24] =>  0:04
-:END:
-Disabling since I'm not really using it.
-
-#+begin_src emacs-lisp :results silent
-(use-package projectile
-  :disabled
-  :config
-  (projectile-mode)
-  :general
-  ("H-p" 'projectile-command-map))
-#+end_src
-
 ** git-timemachine
 :PROPERTIES:
 :ID:       8D9F7AC2-EB01-4ED7-84BA-7BD6AF11A7F9
@@ -6634,20 +6515,6 @@ CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
   (setq-default gac-debounce-interval 30)
   (setq-default gac-silent-message-p t)
   (setq-default gac-automatically-add-new-files-p t))
-#+end_src
-
-** git-gutter
-:PROPERTIES:
-:ID:       ECD5FD26-F74B-473A-AF56-9B67F635C924
-:END:
-[2022-08-24 Wed 13:17] Disabling for the time being. I wasn't really using it, and found the sudden margin changes distracting and annoying.
-
-#+begin_src emacs-lisp :results silent
-(use-package git-gutter
-  :disabled
-   :defer 10
-   :config
-   (global-git-gutter-mode))
 #+end_src
 
 * search & replace
@@ -8384,72 +8251,6 @@ around point."
  "A-y" 'ps/goldendict-search-input)
 #+end_src
 
-** google-translate
-:PROPERTIES:
-:ID:       44F5E93D-AF2C-4842-96CE-8539E8C7FF96
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-29 Wed 10:13]--[2022-06-29 Wed 10:29] =>  0:16
-CLOCK: [2021-07-09 Fri 21:33]--[2021-07-09 Fri 21:39] =>  0:06
-CLOCK: [2021-05-31 Mon 21:27]--[2021-05-31 Mon 21:41] =>  0:14
-:END:
-/[[https://github.com/atykhonov/google-translate][google-translate]] is an Emacs interface to Google Translate./
-
-[2022-08-31 Wed] I should probably replace this with [[id:F3063A73-ED50-42BD-8ABD-8D7FC68758FD][reverso]].
-
-[2023-01-25 Wed] I'm replacing it with [[id:BE78F0BD-D676-4E19-838A-2E6BD4504F52][txl]].
-
-#+begin_src emacs-lisp :results silent
-(use-package google-translate
-  :disabled
-  :defer 20
-  :functions (my-google-translate-at-point google-translate--search-tkk)
-
-  :config
-  (setq google-translate-default-target-language "en")
-  (setq google-translate-default-source-language "es")
-
-  (defun google-translate--search-tkk ()
-    "Search TKK."
-    (list 430675 2721866130))
-
-  (setq google-translate-backend-method 'curl)
-
-  (defun ps/google-translate-dwim (&optional reverse-p)
-    "Translate region if active, word if at point, else prompt for
-text. If invoked with a prefix argument, perform a reverse
-translation."
-    (interactive "P")
-    (let ((google-translate-default-source-language ps/ispell-language)
-          (google-translate-default-target-language
-           (if (string= ps/ispell-language "en")
-               "es"
-             "en")))
-      (if reverse-p
-          (google-translate-at-point-reverse)
-        (google-translate-at-point))))
-
-  ;; modify original function so that it prompts for text to translate
-  ;; if region is inactive and no word is at point.
-  (defun ps/%google-translate-at-point (override-p reverse-p)
-    (let* ((langs (google-translate-read-args override-p reverse-p))
-           (source-language (car langs))
-           (target-language (cadr langs))
-           (bounds nil))
-      (google-translate-translate
-       source-language target-language
-       (cond ((string-equal major-mode "pdf-view-mode") (car (pdf-view-active-region-text)))
-             ((use-region-p) (buffer-substring-no-properties (region-beginning) (region-end)))
-             (t (or (and (setq bounds (bounds-of-thing-at-point 'word))
-                         (buffer-substring-no-properties (car bounds) (cdr bounds)))
-                    (google-translate-query-translate)))))))
-
-  (advice-add '%google-translate-at-point :override #'ps/%google-translate-at-point)
-
-  :general
-  ("H-A-y" 'ps/google-translate-dwim))
-#+end_src
-
 ** txl
 :PROPERTIES:
 :ID:       BE78F0BD-D676-4E19-838A-2E6BD4504F52
@@ -9298,15 +9099,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp :results silent
 (use-package macrostep)
-#+end_src
-
-** ESS
-:PROPERTIES:
-:ID:       5B1FC084-42CD-47F3-B8AD-1D2113488CBC
-:END:
-#+begin_src emacs-lisp
-(use-package ess
-:disabled)
 #+end_src
 
 ** clojure
@@ -11603,20 +11395,6 @@ original."
    "s-z" 'org-edit-src-exit))
 #+end_src
 
-** org-tempo
-:PROPERTIES:
-:ID:       45A1E0C7-83E2-4E58-88E5-3E146EF8EB4F
-:END:
-/org-tempo reimplements completions of structure template before point./
-
-[2023-02-23 Thu 02:04] To explore.
-
-#+begin_src emacs-lisp
-(use-feature org-tempo
-  :demand t
-  :disabled)
-#+end_src
-
 ** org-table
 :PROPERTIES:
 :ID:       6DB39CB9-0939-41CD-B3A4-4FC478F24077
@@ -12450,25 +12228,6 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
   (setq org-roam-ui-follow t)
   (setq org-roam-ui-update-on-save nil)
   (setq org-roam-ui-open-on-start nil))
-#+end_src
-
-** org-roam-timestamps
-:PROPERTIES:
-:ID:       F9892121-725F-4BD7-9AAE-7E93460F5C58
-:END:
-
-/[[https://github.com/tefkah/org-roam-timestamps][org-roam-timestamps]] adds modified and creation timestamps to the org-roam property drawer./
-
-#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/org-roam)
-(use-package org-roam-timestamps
-  :disabled
-  :after org-roam
-  :demand t
-  :config
-  (setq org-roam-timestamps-remember-timestamps nil)
-  (setq org-roam-timestamps-timestamp-parent-file t)
-
-  (org-roam-timestamps-mode))
 #+end_src
 
 ** org-roam-browser-extension
@@ -14951,35 +14710,6 @@ Of possible interest:
   :disabled)
 #+end_src
 
-** org-drill
-:PROPERTIES:
-:ID:       34FB61E2-5BF6-44F1-B3C4-759D61DB2D34
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-04 Tue 11:55]--[2021-05-04 Tue 12:12] =>  0:17
-:END:
-/[[https://gitlab.com/phillord/org-drill/][org-drill]] is a spaced-repetition package for Emacs/
-
-#+begin_src emacs-lisp :results silent
-(use-package org-drill
-  :disabled
-  :config
-  (add-to-list 'org-modules 'org-drill))
-#+end_src
-
-*** TODO [#7] Check org drill for manage music listening
-:PROPERTIES:
-:Effort:   1:00
-:ID:       AA10D76D-6ACC-4A58-BCFF-4253DC7B55F0
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-07 Fri 09:45]--[2021-05-07 Fri 09:45] =>  0:00
-:END:
-
-Could be a pilot test for integrating notes and spaced repetition
-
-When to use Anki versus org-drill? Use Anki for everything, except tags that require you to be in front of a computer.
-
 * email
 :PROPERTIES:
 :ID:       2CF6D256-143D-4F3E-8383-36CB090FC4F2
@@ -15521,19 +15251,6 @@ it, without asking for confirmation."
 - Package to try: [[https://github.com/rougier/mu4e-thread-folding][GitHub - rougier/mu4e-thread-folding: Functions for folding threads in mu4e headers view]]
   - See also [[https://gist.github.com/rougier/98e83fb50e19fb73fe34a7ecc5fc1ccc][this]] (discussed [[https://www.reddit.com/r/emacs/comments/pvpb6d/mu4e_very_fast_thread_folding/][here]])
 
-** mu4e-org
-:PROPERTIES:
-:ID:       6E72E4DE-4CFE-4BC0-BC3C-39FB3D6EB526
-:END:
-[2023-01-28 Sat] I don't know what this does. Disabling for the time being.
-
-#+begin_src emacs-lisp :results silent
-(use-feature mu4e-org
-  :disabled
-  :demand t
-  :after mu4e)
-#+end_src
-
 ** mu4e-alert
 :PROPERTIES:
 :ID:       32C6498F-B3C5-4D50-8ACC-8DD83FF48448
@@ -15669,19 +15386,6 @@ This is controlled with ~org-msg-enforce-css~.
 :Effort:   0:30
 :ID:       E128A0A2-DA3E-4435-ADBF-472E7268678D
 :END:
-
-** htmlize
-:PROPERTIES:
-:ID:       F22F2F4B-619E-4A7C-BF65-8FF5CE7953C4
-:END:
-/[[https://github.com/hniksic/emacs-htmlize][htmlize]] converts buffer text and decorations to HTML./
-
-#+begin_src emacs-lisp :results silent
-(use-package htmlize
-  :disabled
-  :config
-  (setq htmlize-ignore-face-size nil))
-#+end_src
 
 * messaging
 :PROPERTIES:
@@ -17113,21 +16817,13 @@ account."
    "s-c" 'twittering-edit-post-status))
 #+end_src
 
-** mastodon
-:PROPERTIES:
-:ID:       252C88FE-B66D-4A8F-8286-78777F418EC3
-:END:
-#+begin_src emacs-lisp :results silent
-
-#+end_src
-https://holgerschurig.github.io/en/emacs-mastodon-hydra/
-** reddit
+** md4rd
 :PROPERTIES:
 :ID:       CEDBA9CB-F7FB-4E7F-8CAB-C96812BE1517
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-package md4rd
-  :disabled
   :config
   (setq md4rd-subs-active '(emacs))
   (setq md4rd--oauth-access-token
@@ -18029,26 +17725,6 @@ I'm not tracking prices anymore so this is probably not worth it currently.
           (add-hook 'pre-command-hook 'keycast--update t)
         (remove-hook 'pre-command-hook 'keycast--update)))
     (add-to-list 'global-mode-string '("" mode-line-keycast))))
-#+end_src
-
-** keyfreq
-:PROPERTIES:
-:ID:       9EC2F318-4E9A-4E66-852E-2EB5510AC9BC
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-11 Sun 18:35]--[2021-07-11 Sun 18:38] =>  0:03
-CLOCK: [2021-02-07 Sun 13:55]--[2021-02-07 Sun 13:57] =>  0:02
-CLOCK: [2021-02-07 Sun 13:25]--[2021-02-07 Sun 13:37] =>  0:12
-:END:
-
-/[[https://github.com/dacap/keyfreq][keyfreq]] track Emacs command frequency./
-
-#+begin_src emacs-lisp :results silent
-(use-package keyfreq
-  :disabled
-  :config
-  (keyfreq-mode 1)
-  (keyfreq-autosave-mode 1))
 #+end_src
 
 ** custom

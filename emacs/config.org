@@ -6741,7 +6741,10 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :PROPERTIES:
 :ID:       9191AA62-62B9-436B-ACF1-8858EDE47C34
 :END:
+
 /[[https://github.com/minad/affe][affe]] is an asynchronous fuzzy finder similar to the fzf command-line fuzzy finder, written in pure Elisp./
+
+[2023-03-07 Tue 13:36] Disabled until I explore it.
 
 #+begin_src emacs-lisp :results silent
 (use-package affe

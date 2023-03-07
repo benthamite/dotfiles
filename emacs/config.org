@@ -3395,7 +3395,7 @@ CLOCK: [2021-03-28 Sun 08:40]--[2021-03-28 Sun 10:35] =>  1:55
 CLOCK: [2021-03-27 Sat 18:01]--[2021-03-27 Sat 19:53] =>  1:52
 CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :END:
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/outline)
 (use-feature outline
   :demand t
 
@@ -3427,7 +3427,8 @@ E.g. press ~shift + nextword~ in ~emacs-lisp-mode~.
 #+begin_src emacs-lisp :results silent
 (use-feature ediff
   :config
-  (setq ediff-window-setup-function 'ediff-setup-windows-plain))
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+  (setq ediff-split-window-function 'split-window-horizontally))
 #+end_src
 
 ** fill

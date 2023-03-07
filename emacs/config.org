@@ -7030,6 +7030,9 @@ By default, all agenda entries are offered. MATCH is as in
 :PROPERTIES:
 :ID:       5C00C666-754D-4779-9C48-A7B262EE525C
 :END:
+
+/[[https://github.com/mclear-tools/consult-notes][consult-notes]]: Use consult to search notes./
+
 [2022-10-05 Wed 14:50] Performance seemed abysmal when I tried it. Maybe it can be optimized?
 
 #+begin_src emacs-lisp :results silent
@@ -17231,6 +17234,9 @@ CLOCK: [2023-03-07 Tue 00:53]--[2023-03-07 Tue 01:30] =>  0:37
 :LOGBOOK:
 CLOCK: [2022-06-22 Wed 14:50]--[2022-06-22 Wed 15:10] =>  0:20
 :END:
+
+/[[https://codeberg.org/jao/espotify][espotify]]: interact with spotify API and players inside emacs./
+
 [2022-06-22 Wed 15:07] I can't make this work. Maybe related to the [[id:86EE7A94-E470-45DB-B0A5-0AE717A15353][dbus problem]]?
 
 #+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/espotify)
@@ -17258,7 +17264,8 @@ CLOCK: [2021-05-19 Wed 20:34]--[2021-05-19 Wed 21:13] =>  0:39
 CLOCK: [2021-05-19 Wed 16:37]--[2021-05-19 Wed 16:59] =>  0:22
 CLOCK: [2021-05-19 Wed 11:26]--[2021-05-19 Wed 12:23] =>  0:57
 :END:
-/[[https://github.com/danielfm/smudge][smudge]] lets you control Spotify from Emacs./
+
+/[[https://github.com/danielfm/smudge][smudge]]: control Spotify from Emacs./
 
 #+begin_src emacs-lisp :results silent
 (use-package smudge
@@ -17312,7 +17319,7 @@ CLOCK: [2021-05-19 Wed 11:26]--[2021-05-19 Wed 12:23] =>  0:57
 :PROPERTIES:
 :ID:       71DBC03A-D68C-4E5D-B495-55DE31F6DC2F
 :END:
-/[[https://github.com/gromnitsky/read-aloud.el][read-aloud]] is a simple Emacs interface to TTS (text-to-speech) engines./
+/[[https://github.com/gromnitsky/read-aloud.el][read-aloud]]: an Emacs interface to TTS (text-to-speech) engines./
 
 As a side note, to give Emacs access to the microphone on MacOS, clone ~https://github.com/DocSystem/tccutil~ and from the cloned repo, run ~sudo python3 tccutil.py -p /opt/homebrew/Cellar/emacs-mac/emacs-28.1-mac-9.0/Emacs.app --micro -e~ (some discussion [[https://scsynth.org/t/emacs-scsynth-and-microphone-permissions/3253][here]]).
 

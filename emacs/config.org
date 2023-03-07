@@ -11653,19 +11653,6 @@ Allows reset of checkboxes in recurring tasks. This works only on headings that 
   :straight org-contrib)
 #+end_src
 
-Export content of subtree without heading. Add the ~ignore~ tag to the headlines you want ignored in the export.
-
-[2021-07-12 Mon 15:58] Not working.
-
-#+begin_src emacs-lisp :results silent
-(use-package org-extra
-  :disabled
-  :defer 30
-  :straight org-contrib
-  :config
-  (ox-extras-activate '(ignore-headlines)))
-#+end_src
-
 ** org-analyzer
 :PROPERTIES:
 :ID:       33BBA839-D680-4D74-AF0F-C6225799DD53

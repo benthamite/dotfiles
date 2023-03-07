@@ -3551,7 +3551,7 @@ To suppress warnings when a snippet executes elisp code, you may want to configu
     (org-previous-block nil)
     (org-edit-src-code))
 
-  (defvar yas-new-snippet-default "# -*- mode: snippet -*-\n# name: $1\n# key: ${2:${1:$(yas--key-from-desc yas-text)}}\n# --\n$0")
+  (defvar yas-new-snippet-personal (concat "# -*- mode: snippet -*-\n# name: $1\n# key: ${2:${1:$(ps/first-char-of-each-letter yas-text)}}\n# contributor: " ps/personal-name "\n# --\n$0"))
 
   (defvar ps/yas-new-snippet-tlon "# -*- mode: snippet -*-\n# name: tlon-${1:name-of-snippet}\n# key: t${2:shortcut}\n# --\n$0\\`(ps/insert-date)\\` \\$1\n	${3:account1}:\\$5  \\$2.00 \\${3:\\$\\$(yas-choose-value '('USD' 'EUR' 'GBP'))} ; \\$4\n	${4:account2}:")
 

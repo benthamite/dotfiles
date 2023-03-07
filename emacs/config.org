@@ -2144,8 +2144,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (doom-modeline-mode)
 
   :config
-  ;; we disable the display of time since the tab-bar already does
-  (setq doom-modeline-time nil)
+  (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
   (setq doom-modeline-mu4e t)
   (setq doom-modeline-buffer-encoding nil)
   (setq doom-modeline-irc t)
@@ -2153,7 +2152,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   ;; (doom-modeline--flycheck-icon t)
   (setq doom-modeline-github t)
   (setq doom-modeline-github-interval (* 10 60))
-  (setq doom-modeline-buffer-file-name-style 'truncate-from-project)
+  (setq doom-modeline-buffer-file-name-style 'truncate-nil)
 
   (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
   (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)

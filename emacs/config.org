@@ -9228,11 +9228,11 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/copilot)
 (use-package copilot
-  :disabled
   :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
 
   :config
   (setq copilot-node-executable "/opt/homebrew/opt/node/bin/node")
+  (setq copilot-log-max 1000)
 
   :hook
   (prog-mode-hook . copilot-mode)

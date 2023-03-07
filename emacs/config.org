@@ -10159,11 +10159,10 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
           ("," "All tasks with no priority"
            tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")))
   ;; (setq org-agenda-clockreport-parameter-plist)
-  (setq org-agenda-files ps/org-agenda-files)
-  (setq org-agenda-files-excluded ps/org-agenda-files-excluded)
-
-  (run-with-idle-timer 602 nil 'ps/org-agenda-switch-to-agenda-current-day)
-  (run-with-idle-timer 602 t 'org-agenda-redo)
+  (setq org-agenda-files (list ps/file-calendar))
+  (setq org-agenda-files-excluded (list
+                                   ps/file-tlon-tareas-leo
+                                   ps/file-tlon-tareas-fede))
 
   (defun ps/org-clocktable-sorter (ipos tables params)
     (setq tables (cl-sort tables (lambda (table1 table2) (> (nth 1 table1) (nth 1 table2)))))

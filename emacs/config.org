@@ -318,7 +318,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-crypt][org-crypt]]
   - [[#org-lint][org-lint]]
   - [[#org-habit][org-habit]]
-  - [[#org-contrib][org-contrib]]
+  - [[#org-checklist][org-checklist]]
   - [[#org-analyzer][org-analyzer]]
   - [[#org-make-toc][org-make-toc]]
   - [[#images][images]]
@@ -11638,7 +11638,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
               :override #'ps/org-habit-insert-consistency-graphs))
 #+end_src
 
-** org-contrib
+** org-checklist
 :PROPERTIES:
 :ID:       1ABA68C3-187B-457C-9992-4C4BBEB45C18
 :END:

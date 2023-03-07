@@ -800,7 +800,6 @@ Adapted from [[https://github.com/sfromm/emacs.d#startup][here]].
 :ID:       A402D9BB-63D7-4A4C-839C-9AC21B245725
 :END:
 :LOGBOOK:
-CLOCK: [2021-11-28 Sun 12:28]--[2021-11-28 Sun 13:30] =>  1:02
 CLOCK: [2021-10-19 Tue 22:01]--[2021-10-19 Tue 23:20] =>  1:19
 CLOCK: [2021-09-30 Thu 19:27]--[2021-09-30 Thu 20:19] =>  0:52
 CLOCK: [2021-08-25 Wed 19:30]--[2021-08-25 Wed 19:36] =>  0:06

@@ -2190,15 +2190,15 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
                 mode-line-misc-info))
 
   (run-with-timer 5 nil (lambda () (setq global-mode-string
-                                    '(" "
-                                      (:eval (propertize display-time-string 'face 'ps/display-time))
-                                      " |  "
-                                      chemacs-profile-name
-                                      " | "
-                                      fancy-battery-mode-line
-                                      " | "
-                                      telega-mode-line-format
-                                      " | "))))
+                                         '(" "
+                                           (:eval (propertize display-time-string 'face 'ps/display-time))
+                                           " |  "
+                                           chemacs-profile-name
+                                           " | "
+                                           fancy-battery-mode-line
+                                           " | "
+                                           telega-mode-line-format
+                                           " | "))))
   (tab-bar-mode))
 #+end_src
 

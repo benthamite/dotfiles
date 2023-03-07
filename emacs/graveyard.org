@@ -6,7 +6,389 @@
 :LOGBOOK:
 CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
+
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
+
+** fontaine
+:PROPERTIES:
+:ID:       B375DC03-A71F-4F87-8B03-59437D9CA857
+:END:
+
+/[[https://protesilaos.com/emacs/fontaine][fontaine]] lets the user specify presets of font configurations and set them on demand on graphical Emacs frames./
+
+I haven't yet explored this package.
+
+[2023-03-07 Tue 13:49] I don't think I have a need for this at the moment. But perhaps in the future?
+
+#+begin_src emacs-lisp
+(use-package fontaine
+  :disabled
+  :demand t
+  :config
+  (fontaine-mode))
+#+end_src
+
+** paradox
+:PROPERTIES:
+:ID:       2263DD83-80FF-4180-903B-33FEB83C8179
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-03 Thu 14:11]--[2021-06-03 Thu 14:16] =>  0:05
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-package paradox
+  :disabled
+  ;; :defer 600
+  :config
+  (setq paradox-column-width-package 27)
+  (setq paradox-column-width-version 13)
+  (setq paradox-execute-asynchronously t)
+  (setq paradox-hide-wiki-packages t)
+  (setq paradox-github-token
+   (setq auth-source-pass-get 'secret "auth-sources/api.github.com"))
+  ;; (paradox-enable)
+  (remove-hook 'paradox-after-execute-functions #'paradox--report-buffer-print))
+#+end_src
+
+** keyfreq
+:PROPERTIES:
+:ID:       9EC2F318-4E9A-4E66-852E-2EB5510AC9BC
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-11 Sun 18:35]--[2021-07-11 Sun 18:38] =>  0:03
+CLOCK: [2021-02-07 Sun 13:55]--[2021-02-07 Sun 13:57] =>  0:02
+CLOCK: [2021-02-07 Sun 13:25]--[2021-02-07 Sun 13:37] =>  0:12
+:END:
+
+/[[https://github.com/dacap/keyfreq][keyfreq]] track Emacs command frequency./
+
+#+begin_src emacs-lisp :results silent
+(use-package keyfreq
+  :disabled
+  :config
+  (keyfreq-mode 1)
+  (keyfreq-autosave-mode 1))
+#+end_src
+
+** org-drill
+:PROPERTIES:
+:ID:       34FB61E2-5BF6-44F1-B3C4-759D61DB2D34
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-04 Tue 11:55]--[2021-05-04 Tue 12:12] =>  0:17
+:END:
+
+/[[https://gitlab.com/phillord/org-drill/][org-drill]] is a spaced-repetition package for Emacs/
+
+I like the idea but Anki provides too many features I need for a migration to be feasible.
+
+#+begin_src emacs-lisp :results silent
+(use-package org-drill
+  :disabled
+  :config
+  (add-to-list 'org-modules 'org-drill))
+#+end_src
+
+*** TODO [#7] Check org drill for manage music listening
+:PROPERTIES:
+:Effort:   1:00
+:ID:       AA10D76D-6ACC-4A58-BCFF-4253DC7B55F0
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-07 Fri 09:45]--[2021-05-07 Fri 09:45] =>  0:00
+:END:
+
+Could be a pilot test for integrating notes and spaced repetition
+
+When to use Anki versus org-drill? Use Anki for everything, except tags that require you to be in front of a computer.
+
+** org-roam-timestamps
+:PROPERTIES:
+:ID:       F9892121-725F-4BD7-9AAE-7E93460F5C58
+:END:
+
+/[[https://github.com/tefkah/org-roam-timestamps][org-roam-timestamps]] adds modified and creation timestamps to the org-roam property drawer./
+
+[2023-03-07 Tue 13:47] I don't really need this, and it clutters my org drawers. Moving to graveyard. 
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/org-roam)
+(use-package org-roam-timestamps
+  :disabled
+  :after org-roam
+  :demand t
+  :config
+  (setq org-roam-timestamps-remember-timestamps nil)
+  (setq org-roam-timestamps-timestamp-parent-file t)
+
+  (org-roam-timestamps-mode))
+#+end_src
+
+** google-translate
+:PROPERTIES:
+:ID:       44F5E93D-AF2C-4842-96CE-8539E8C7FF96
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-29 Wed 10:13]--[2022-06-29 Wed 10:29] =>  0:16
+CLOCK: [2021-07-09 Fri 21:33]--[2021-07-09 Fri 21:39] =>  0:06
+CLOCK: [2021-05-31 Mon 21:27]--[2021-05-31 Mon 21:41] =>  0:14
+:END:
+/[[https://github.com/atykhonov/google-translate][google-translate]] is an Emacs interface to Google Translate./
+
+[2022-08-31 Wed] I should probably replace this with [[id:F3063A73-ED50-42BD-8ABD-8D7FC68758FD][reverso]].
+
+[2023-01-25 Wed] I'm replacing it with [[id:BE78F0BD-D676-4E19-838A-2E6BD4504F52][txl]].
+
+#+begin_src emacs-lisp :results silent
+(use-package google-translate
+  :disabled
+  :defer 20
+  :functions (my-google-translate-at-point google-translate--search-tkk)
+
+  :config
+  (setq google-translate-default-target-language "en")
+  (setq google-translate-default-source-language "es")
+
+  (defun google-translate--search-tkk ()
+    "Search TKK."
+    (list 430675 2721866130))
+
+  (setq google-translate-backend-method 'curl)
+
+  (defun ps/google-translate-dwim (&optional reverse-p)
+    "Translate region if active, word if at point, else prompt for
+text. If invoked with a prefix argument, perform a reverse
+translation."
+    (interactive "P")
+    (let ((google-translate-default-source-language ps/ispell-language)
+          (google-translate-default-target-language
+           (if (string= ps/ispell-language "en")
+               "es"
+             "en")))
+      (if reverse-p
+          (google-translate-at-point-reverse)
+        (google-translate-at-point))))
+
+  ;; modify original function so that it prompts for text to translate
+  ;; if region is inactive and no word is at point.
+  (defun ps/%google-translate-at-point (override-p reverse-p)
+    (let* ((langs (google-translate-read-args override-p reverse-p))
+           (source-language (car langs))
+           (target-language (cadr langs))
+           (bounds nil))
+      (google-translate-translate
+       source-language target-language
+       (cond ((string-equal major-mode "pdf-view-mode") (car (pdf-view-active-region-text)))
+             ((use-region-p) (buffer-substring-no-properties (region-beginning) (region-end)))
+             (t (or (and (setq bounds (bounds-of-thing-at-point 'word))
+                         (buffer-substring-no-properties (car bounds) (cdr bounds)))
+                    (google-translate-query-translate)))))))
+
+  (advice-add '%google-translate-at-point :override #'ps/%google-translate-at-point)
+
+  :general
+  ("H-A-y" 'ps/google-translate-dwim))
+#+end_src
+
+** git-gutter
+:PROPERTIES:
+:ID:       ECD5FD26-F74B-473A-AF56-9B67F635C924
+:END:
+[2022-08-24 Wed 13:17] Disabling for the time being. I wasn't really using it, and found the sudden margin changes distracting and annoying.
+
+#+begin_src emacs-lisp :results silent
+(use-package git-gutter
+  :disabled
+   :defer 10
+   :config
+   (global-git-gutter-mode))
+#+end_src
+
+** projectile
+:PROPERTIES:
+:ID:       DD7DF8D4-CB05-4E98-8125-D453D25E092A
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-22 Thu 17:20]--[2021-07-22 Thu 17:24] =>  0:04
+:END:
+Disabling since I'm not really using it.
+
+#+begin_src emacs-lisp :results silent
+(use-package projectile
+  :disabled
+  :config
+  (projectile-mode)
+  :general
+  ("H-p" 'projectile-command-map))
+#+end_src
+
+** persistent-scratch
+:PROPERTIES:
+:ID:       B6CB6A6C-0BCC-4A07-9608-BDCA6184C63A
+:END:
+
+/[[https://github.com/Fanael/persistent-scratch][persistent-scratch]] makes Emacs remember the scratch buffer across sessions./
+
+[2023-03-06 Mon 21:50] Moving to graveyard since I now accomplish the same with ~remember~.
+
+#+begin_src emacs-lisp :results silent
+(use-package persistent-scratch
+  :disabled
+  :demand t
+  :config
+  (setq persistent-scratch-autosave-interval 30)
+  ;; What follows is copied from umarahmad.xyz/blog/quick-scratch-buffers/
+  ;; (persistent-scratch-scratch-buffer-p-function 'ps/persistent-scratch-buffer-identifier)
+
+  (defun ps/persistent-scratch-buffer-identifier ()
+    (string-match "^*scratch:" (buffer-name)))
+
+  (defun ps/persistent-scratch-get-scratches ()
+    (let ((scratch-buffers)
+          (save-data
+           (read
+            (with-temp-buffer
+              (let ((coding-system-for-read 'utf-8-unix))
+                (insert-file-contents persistent-scratch-save-file))
+              (buffer-string)))))
+      (dolist (saved-buffer save-data)
+        (push (substring (aref saved-buffer 0) (length "*scratch:")) scratch-buffers))
+      scratch-buffers))
+
+  (defun ps/persistent-scratch-quick-open ()
+    (interactive)
+    (let* ((scratch-buffers (ps/persistent-scratch-get-scratches))
+           (chosen-scratch (concat "*scratch:"
+                                   (completing-read
+                                    "Choose a scratch: "
+                                    scratch-buffers nil nil nil nil
+                                    (ps/random-alnum 4))))
+           (buffer-exists-p (get-buffer chosen-scratch)))
+      (pop-to-buffer chosen-scratch)
+      (unless buffer-exists-p
+        (persistent-scratch-restore-this))
+      (persistent-scratch-mode)))
+
+  (persistent-scratch-setup-default))
+#+end_src
+
+** key bindings
+:PROPERTIES:
+:ID:       B24FFD2C-67E3-46D5-844B-8CF80AD28CE6
+:END:
+:LOGBOOK:
+CLOCK: [2021-03-28 Sun 13:35]--[2021-03-28 Sun 14:31] =>  0:56
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle no
+(global-unset-key (kbd "C-a"))
+(global-unset-key (kbd "C-b"))
+(global-unset-key (kbd "C-d"))
+(global-unset-key (kbd "C-f"))
+(global-unset-key (kbd "C-F"))
+(global-unset-key (kbd "C-j"))
+(global-unset-key (kbd "C-k"))
+(global-unset-key (kbd "C-n"))
+(global-unset-key (kbd "C-o"))
+(global-unset-key (kbd "C-p"))
+(global-unset-key (kbd "C-r"))
+(global-unset-key (kbd "C-t"))
+(global-unset-key (kbd "C-y"))
+(global-unset-key (kbd "C-z"))
+(global-unset-key (kbd "C-,"))
+(global-unset-key (kbd "C-."))
+(global-unset-key (kbd "s-a"))
+(global-unset-key (kbd "s-b"))
+(global-unset-key (kbd "s-c"))
+(global-unset-key (kbd "s-d"))
+(global-unset-key (kbd "s-e"))
+(global-unset-key (kbd "s-f"))
+(global-unset-key (kbd "s-g"))
+(global-unset-key (kbd "s-h"))
+(global-unset-key (kbd "s-i"))
+(global-unset-key (kbd "s-j"))
+(global-unset-key (kbd "s-k"))
+(global-unset-key (kbd "s-l"))
+(global-unset-key (kbd "s-m"))
+(global-unset-key (kbd "s-n"))
+(global-unset-key (kbd "s-o"))
+(global-unset-key (kbd "s-p"))
+(global-unset-key (kbd "s-q"))
+(global-unset-key (kbd "s-r"))
+(global-unset-key (kbd "s-s"))
+(global-unset-key (kbd "s-t"))
+(global-unset-key (kbd "s-u"))
+(global-unset-key (kbd "s-v"))
+(global-unset-key (kbd "s-w"))
+(global-unset-key (kbd "s-x"))
+(global-unset-key (kbd "s-y"))
+(global-unset-key (kbd "s-z"))
+(global-unset-key (kbd "s-SPC"))
+(global-unset-key (kbd "M-a"))
+(global-unset-key (kbd "M-b"))
+(global-unset-key (kbd "M-c"))
+(global-unset-key (kbd "M-d"))
+(global-unset-key (kbd "M-e"))
+(global-unset-key (kbd "M-f"))
+(global-unset-key (kbd "M-h"))
+(global-unset-key (kbd "M-i"))
+(global-unset-key (kbd "M-j"))
+(global-unset-key (kbd "M-l"))
+(global-unset-key (kbd "M-m"))
+(global-unset-key (kbd "M-n"))
+(global-unset-key (kbd "M-p"))
+(global-unset-key (kbd "M-q"))
+(global-unset-key (kbd "M-r"))
+(global-unset-key (kbd "M-t"))
+(global-unset-key (kbd "M-u"))
+(global-unset-key (kbd "M-v"))
+(global-unset-key (kbd "M-w"))
+(global-unset-key (kbd "M-y"))
+(global-unset-key (kbd "M-z"))
+(global-unset-key (kbd "M-,"))
+(global-unset-key (kbd "M-."))
+(global-unset-key (kbd "H-n"))
+(let ((map esc-map))
+(unless (version< emacs-version "29.0")
+(keymap-unset map "A-a")
+(keymap-unset map "A-b")
+(keymap-unset map "A-c")
+(keymap-unset map "A-d")
+(keymap-unset map "A-e")
+(keymap-unset map "A-f")
+(keymap-unset map "A-g")
+(keymap-unset map "A-h")
+(keymap-unset map "A-i")
+(keymap-unset map "A-j")
+(keymap-unset map "A-k")
+(keymap-unset map "A-l")
+(keymap-unset map "A-m")
+(keymap-unset map "A-n")
+(keymap-unset map "A-o")
+(keymap-unset map "A-p")
+(keymap-unset map "A-q")
+(keymap-unset map "A-r")
+(keymap-unset map "A-s")
+(keymap-unset map "A-t")
+(keymap-unset map "A-u")
+(keymap-unset map "A-v")
+(keymap-unset map "A-w")
+(keymap-unset map "A-x")
+(keymap-unset map "A-y")
+(keymap-unset map "A-z")
+(keymap-unset map "A-RET")
+(keymap-unset map "A-DEL")
+(keymap-unset map "A-SPC")
+(keymap-unset map "A-.")
+(keymap-unset map "A-,")
+(keymap-unset map "A-/")
+(keymap-unset map "A-(")
+(keymap-unset map "A-=")
+(keymap-unset map "A--")
+(keymap-unset map "A-'")
+(let ((map prog-mode-map))
+  (keymap-unset map "M-q"))))
+#+end_src
+
 
 ** emacs-webkit
 :PROPERTIES:
@@ -53,7 +435,6 @@ CLOCK: [2022-07-24 Sun 16:09]--[2022-07-24 Sun 17:21] =>  1:12
   (defalias 'browse-web #'eaf-open-browser)
   (eaf-bind-key ps/kill-this-buffer "q" eaf-browser-keybinding))
 #+end_src
-
 
 ** orgmdb
 :PROPERTIES:

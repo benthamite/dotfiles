@@ -5719,13 +5719,12 @@ with the specified date."
 :ID:       08F898A1-71C0-4BF4-B6E8-5D6649DB230C
 :END:
 #+begin_src emacs-lisp :results silent
-(use-feature loaddefs
-  :demand t
-  :disabled
-  :init
-  (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
-                     (holiday-float 5 0 2 "Mother's Day"))
-                   (delete holiday holiday-general-holidays))))
+  (use-feature loaddefs
+    :demand t
+    :init
+    (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
+                       (holiday-float 5 0 2 "Mother's Day")))
+                     (delete holiday holiday-general-holidays)))
 #+end_src
 
 ** org-gcal

@@ -3903,7 +3903,8 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (setq delete-by-moving-to-trash t)
   (setq trash-directory "~/.Trash") ; fallback for `move-file-to-trash'
   (setq find-file-visit-truename t)
-  (setq kill-buffer-query-functions nil) ; emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
+  ;; emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
+  (setq kill-buffer-query-functions nil)
   (setq create-lockfiles nil) ; lockfiles are indexed by `org-roam', which causes problems with `org-agenda'
   (setq large-file-warning-threshold (* 200 1000 1000))
   (setq enable-local-variables :all)
@@ -7241,6 +7242,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 :PROPERTIES:
 :ID:       DE439647-A62B-4C32-A0BB-AA7D4BB3D9DD
 :END:
+
 /[[https://github.com/jdtsmith/kind-icon][kind-icon]] provides SVG icons for in-region completion./
 
 #+begin_src emacs-lisp :results silent
@@ -7282,6 +7284,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 :PROPERTIES:
 :ID:       E1783BB4-D7BD-4264-B490-5E2F903CCCA7
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-package cape-yasnippet
   :straight (cape-yasnippet
@@ -14641,6 +14644,7 @@ CLOCK: [2021-04-05 Mon 22:19]--[2021-04-05 Mon 22:44] =>  0:25
 CLOCK: [2021-03-17 Wed 19:31]--[2021-03-17 Wed 19:33] =>  0:02
 CLOCK: [2021-03-17 Wed 17:46]--[2021-03-17 Wed 17:56] =>  0:10
 :END:
+
 /[[https://github.com/louietan/anki-editor][anki-editor]] is a minor mode for making Anki cards with Org./
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/anki-editor)

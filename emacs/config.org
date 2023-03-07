@@ -6319,8 +6319,6 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
   (setq initial-buffer-choice
         (lambda () (kill-buffer remember-notes-buffer-name)
           (remember-notes))))
-;; (remember-data-file (file-name-concat ps/dir-emacs "var/remember"))
-;; (remember-notes-buffer-name "\*scratch\*"))
 #+end_src
 
 * version control

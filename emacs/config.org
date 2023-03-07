@@ -14878,12 +14878,11 @@ To try once I switch to Emacs 29.
 (use-feature emacs
   :demand t
   :config
-  (setq message-kill-buffer-on-exit t) ; `message-send-and-exit' kills buffer, rather than burying it
+  (setq message-kill-buffer-on-exit t) ; make `message-send-and-exit' kill buffer, not bury it
   (setq message-send-mail-function 'smtpmail-multi-send-it)
 
   :hook
   (message-mode-hook . (lambda () (auto-fill-mode -1)))
-  (message-send-hook . message-lint)
 
   :general
   ((message-mode-map org-msg-edit-mode-map)

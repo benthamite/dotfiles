@@ -3427,7 +3427,8 @@ E.g. press ~shift + nextword~ in ~emacs-lisp-mode~.
 #+begin_src emacs-lisp :results silent
 (use-feature ediff
   :config
-  (setq ediff-window-setup-function 'ediff-setup-windows-plain))
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+  (setq ediff-split-window-function 'split-window-horizontally))
 #+end_src
 
 ** fill

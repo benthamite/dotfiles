@@ -3184,6 +3184,7 @@ Has a preference for looking backward when not directly on a symbol."
 
 (defun ps/first-char-of-each-letter (str)
   (mapconcat (lambda (word) (substring word 0 1)) (split-string str "-") ""))
+
 (general-define-key
  "C-H-M-b" 'ps/strip-thing-at-point)
 #+end_src
@@ -6771,7 +6772,7 @@ For a comprehensive overview of completion in Emacs—both minibuffer completion
 :PROPERTIES:
 :ID:       970043EC-39A9-46AE-9CC9-1F5F2175BF70
 :END:
-z:LOGBOOK:
+:LOGBOOK:
 CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
 :END:
 #+begin_src emacs-lisp :results silent
@@ -7269,8 +7270,13 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :after corfu
   :init
   ;; Add `completion-at-point-functions', used by `completion-at-point'.
-  (add-hook 'emacs-startup-hook (lambda () (dolist (backend '(cape-yasnippet cape-symbol cape-file cape-keyword cape-dabbrev org))
-                                        (add-to-list 'completion-at-point-functions backend))) 100)
+  (add-hook 'emacs-startup-hook
+            (lambda () (dolist (backend '(cape-yasnippet
+                                     cape-symbol
+                                     cape-file
+                                     cape-keyword))
+                    (add-to-list 'completion-at-point-functions backend)))
+            100)
   :config
   (setq cape-dabbrev-min-length 4))
 #+end_src
@@ -7725,6 +7731,7 @@ necessary."
 :PROPERTIES:
 :ID:       6F7AFAFF-B44A-4465-BB01-EA3368A24EF0
 :END:
+
 /[[https://github.com/JonWaltman/pcmpl-args.el][pcmpl-args]] provies enhanced shell completion./
 
 #+begin_src emacs-lisp :results silent
@@ -7740,6 +7747,7 @@ necessary."
 :LOGBOOK:
 CLOCK: [2022-06-17 Fri 17:41]--[2022-06-17 Fri 17:55] =>  0:14
 :END:
+
 /[[https://github.com/CeleritasCelery/emacs-native-shell-complete][emacs-native-shell-complete]] provides completion in shell buffers using native mechanisms./
 
 #+begin_src emacs-lisp
@@ -9242,7 +9250,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   (copilot-mode-map
    "M-<tab>" 'copilot-accept-completion
    "A-M-<tab>" 'copilot-accept-completion-by-line))
-
 #+end_src
 
 ** gpt
@@ -9545,6 +9552,7 @@ CLOCK: [2020-07-11 Sat 13:11]--[2020-07-11 Sat 14:59] =>  1:48
 :PROPERTIES:
 :ID:       268B60E4-708C-4372-A59D-5DD876E493CA
 :END:
+
 :LOGBOOK:
 CLOCK: [2022-07-28 Thu 14:47]--[2022-07-28 Thu 14:58] =>  0:11
 CLOCK: [2021-10-12 Tue 19:21]--[2021-10-12 Tue 19:38] =>  0:17
@@ -9582,6 +9590,7 @@ CLOCK: [2021-10-14 Thu 19:07]--[2021-10-14 Thu 19:39] =>  0:32
 CLOCK: [2021-10-05 Tue 13:18]--[2021-10-05 Tue 13:34] =>  0:16
 CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-package org
   :config
@@ -9623,27 +9632,28 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (setq org-ellipsis " ")
   (setq org-link-elisp-confirm-function nil)
   (setq org-file-apps '((auto-mode . emacs)
-                   (directory . emacs)
-                   ("\\.mm\\'" . default)
-                   ("\\.x?html?\\'" . default)
-                   ("\\.pdf\\'" . emacs)))
+                        (directory . emacs)
+                        ("\\.mm\\'" . default)
+                        ("\\.x?html?\\'" . default)
+                        ("\\.pdf\\'" . emacs)))
   (setq org-use-tag-inheritance t)
 
-  (setq org-structure-template-alist '(("a" . "export ascii")
-                                  ("c" . "center")
-                                  ("C" . "comment")
-                                  ("e" . "example")
-                                  ("E" . "export")
-                                  ("h" . "export html")
-                                  ("l" . "export latex")
-                                  ("q" . "quote")
-                                  ("s" . "src")
-                                  ("se" . "src emacs-lisp")
-                                  ("sj" . "src clojure")
-                                  ("sp" . "src python")
-                                  ("ss" . "src shell")
-                                  ("v" . "verse")
-                                  ("w" . "WP")))
+  (setq org-structure-template-alist
+        '(("a" . "export ascii")
+          ("c" . "center")
+          ("C" . "comment")
+          ("e" . "example")
+          ("E" . "export")
+          ("h" . "export html")
+          ("l" . "export latex")
+          ("q" . "quote")
+          ("s" . "src")
+          ("se" . "src emacs-lisp")
+          ("sj" . "src clojure")
+          ("sp" . "src python")
+          ("ss" . "src shell")
+          ("v" . "verse")
+          ("w" . "WP")))
 
   (dolist (module '(org-habit org-tempo))
     (add-to-list 'org-modules module))
@@ -11059,7 +11069,7 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
   (setq org-refile-use-cache t)
   (setq org-refile-use-outline-path t)
   (setq org-refile-targets '((org-agenda-files :maxlevel . 9)
-                        (ps/open-buffer-files :maxlevel . 9)))
+                             (ps/open-buffer-files :maxlevel . 9)))
   (defun ps/open-buffer-files ()
     "Return the list of files currently open in emacs"
     (delq nil
@@ -17118,16 +17128,18 @@ CLOCK: [2022-09-05 Mon 20:22]--[2022-09-05 Mon 21:28] =>  1:06
 :PROPERTIES:
 :ID:       E3F6210D-F6CD-4397-9004-3D31B5623D18
 :END:
+:LOGBOOK:
+CLOCK: [2023-03-07 Tue 00:53]--[2023-03-07 Tue 01:30] =>  0:37
+:END:
 /[[https://github.com/skangas/mentor][mentor]] is an Emacs frontend for the rTorrent bittorrent client./
 
 [2022-10-07 Fri 21:48] I wasn't able to make it work.
 
 #+begin_src emacs-lisp :results silent
 (use-package mentor
-  :disabled
   :config
   (setq mentor-rtorrent-download-directory ps/dir-downloads)
-  (setq mentor-rtorrent-external-rpc "~/.rtorrent-rpc.socket")
+  (setq mentor-rtorrent-external-rpc (expand-file-name "~/.rtorrent-rpc.socket"))
 
   :general
   (mentor-mode-map
@@ -17246,6 +17258,7 @@ CLOCK: [2022-09-05 Mon 12:18]--[2022-09-05 Mon 13:11] =>  0:53
 CLOCK: [2022-09-05 Mon 12:09]--[2022-09-05 Mon 12:12] =>  0:03
 CLOCK: [2021-05-04 Tue 21:41]--[2021-05-04 Tue 21:56] =>  0:15
 :END:
+
 /[[https://www.gnu.org/software/emms/][EMMS]] (Emacs MultiMedia System) is media player software for Emacs./
 
 #+begin_src emacs-lisp :results silent
@@ -17695,6 +17708,7 @@ ModuleNotFoundError: No module named 'dotenv'
 #+end_src
 
 I'm not tracking prices anymore so this is probably not worth it currently.
+
 ** keycast
 :PROPERTIES:
 :ID:       8D51F4B0-7443-420B-919F-7AA9B0EC0CE9

@@ -12,16 +12,16 @@
 :ID:       536D7BF2-AA0D-43D7-8865-601DFB6BB8E6
 :END:
 :LOGBOOK:
-CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =
->  0:01
+CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :END:
 :CONTENTS:
-- [[#table-of-contents][Table of contents]]
-- [[#introduction][Introduction]]
-  - [[#key-bindings][Key bindings]]
-  - [[#profiling][Profiling]]
-  - [[#installation][Installation]]
-  - [[#other-config-files][Other config files]]
+- [[#table-of-contents][table of contents]]
+- [[#introduction][introduction]]
+  - [[#foreword][foreword]]
+  - [[#key-bindings][key bindings]]
+  - [[#profiling][profiling]]
+  - [[#installation][installation]]
+  - [[#other-config-files][other config files]]
 - [[#early-init][early-init]]
 - [[#startup][startup]]
   - [[#macros][macros]]
@@ -512,17 +512,26 @@ CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
 CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
+
+** foreword
+:PROPERTIES:
+:ID:       66EACB4A-84D2-42AE-9F85-EF30DA714A17
+:END:
 I am not a programmer, let alone an Elisp hacker. My background is in the humanities. It is only a slight exaggeration to say that, before I started using Emacs in 2020, I didn't know the difference between a function and a variable.
 
 I am sharing this file primarily to keep myself accountable. Knowing that others will see the rudimentary code I write motivates me to learn how to write slightly better code.
 
-** Key bindings
+** key bindings
 :PROPERTIES:
 :ID:       a47d148a-1b5e-4850-a1a7-6cd745bad696
 :END:
-Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~control~, ~meta~, ~super~, ~hyper~ and ~alt~. I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "quasi modifiers", i.e., mappings between individual keys and combinations of two or more Emacs modifiers. For example, in my configuration the left shift key is mapped to the combination of ~alt~ and ~meta~ (~A-M~). When you see a monstrous key binding such as ~C-H-M-s-d~, remember that everything that precedes the self-inserting key (in this case, ~d~) represents a single key press (in this case, ~l~). For details, see my [[../karabiner/config.org][karabiner config file]], specifically the "Key associations" section.
+Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~Control~ (~C~), ~Meta~ (~M~), ~Super~ (~s~), ~Hyper~ (~H~), and ~Alt~ (~A~). (The letter abbreviation for the ~Super~ modifier is ~s~ because ~S~ is reserved for the ~Shift~ key.) I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "quasi modifiers", i.e., mappings between individual keys and combinations of two or more Emacs modifiers, as follows:
 
-** Debugging                                                       :noexport:
+[[file:moonlander-emacs.png]]
+
+So when you see a monstrous key binding such as ~C-H-M-s-d~, remember that everything that precedes the final key (in this case, ~d~) represents a single key press (in this case, ~l~). For details, see my [[../karabiner/config.org][karabiner config file]], specifically the "Key associations" section.
+
+** debugging                                                       :noexport:
 :PROPERTIES:
 :ID:       ED2955EA-3BD8-4058-A973-3CC87847D9A5
 :END:

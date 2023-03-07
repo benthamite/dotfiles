@@ -3182,6 +3182,8 @@ Has a preference for looking backward when not directly on a symbol."
          (ps/strip-url)))
   (just-one-space 0))
 
+(defun ps/first-char-of-each-letter (str)
+  (mapconcat (lambda (word) (substring word 0 1)) (split-string str "-") ""))
 (general-define-key
  "C-H-M-b" 'ps/strip-thing-at-point)
 #+end_src

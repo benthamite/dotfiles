@@ -400,7 +400,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#engine-mode][engine-mode]]
   - [[#osm][osm]]
   - [[#twittering-mode][twittering-mode]]
-  - [[#reddit][reddit]]
+  - [[#md4rd][md4rd]]
   - [[#hugo][hugo]]
   - [[#org-download][org-download]]
   - [[#org-web-tools][org-web-tools]]
@@ -16827,8 +16827,6 @@ account."
         (auth-source-pass-get 'secret "auth-sources/reddit"))
   (setq md4rd--oauth-refresh-token
         (auth-source-pass-get "refresh" "auth-sources/reddit"))
-
-  (run-with-timer 0 3540 'md4rd-refresh-login)
 
   :hook
   (md4rd-mode-hook . md4rd-indent-all-the-lines))

@@ -7644,7 +7644,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :results silent
 (use-feature eshell
-  :demand t
   :config
   (setq eshell-banner-message "")
   (setq eshell-save-history-on-exit t)

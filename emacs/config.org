@@ -12224,11 +12224,6 @@ return such list if its length is less than LIMIT."
 - And [[https://github.com/alexkehayias/emacs.d/blob/master/init.el#L715][this one]] (by the author of [[https://notes.alexkehayias.com/][this notes repository]], created with org-roam)
 - And [[https://takeonrules.com/2021/08/22/ever-further-refinements-of-org-roam-usage/][this post]]
 
-*** TODO [#5] Tweak ~ps/org-roam-update-id-locations~ so that it doesn't find duplicate IDs in Leo's directory
-:PROPERTIES:
-:ID:       E212A384-4DD2-4449-8DF3-F46133EA66E1
-:END:
-
 *** TODO [#7] check this org-roam config for ideas
 :PROPERTIES:
 :ID:       C375E205-3B70-4C1C-BB0B-1F7FC3A56187

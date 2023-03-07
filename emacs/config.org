@@ -321,7 +321,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-checklist][org-checklist]]
   - [[#org-analyzer][org-analyzer]]
   - [[#org-make-toc][org-make-toc]]
-  - [[#images][images]]
   - [[#org2blog][org2blog]]
   - [[#org-journal][org-journal]]
   - [[#org-autosort][org-autosort]]
@@ -11691,36 +11690,6 @@ CLOCK: [2023-02-26 Sun 13:15]--[2023-02-26 Sun 13:28] =>  0:13
 (use-package org-make-toc
   :after org
   :defer 10)
-#+end_src
-
-** images
-:PROPERTIES:
-:ID:       D79FFD02-0270-4E22-923F-A9BE1AFA0421
-:END:
-#+begin_src emacs-lisp :results silent
-(defun ps/org-paste-clipboard-image ()
-  ;; TODO: write docstring
-  (interactive)
-  (if (executable-find "pngpaste")
-      (let* ((counter 1)
-             (image-file (concat
-                          ps/dir-org-images
-                          (org-id-get nil 'create)
-                          (format "-%d.png" counter))))
-        (while (file-exists-p image-file)
-          (setq counter (1+ counter))
-          (setq image-file (concat
-                            ps/dir-org-images
-                            (org-id-get nil 'create)
-                            (format "-%d.png" counter))))
-        (call-process-shell-command (format "pngpaste '%s'" image-file))
-        (let ((caption (read-string "Caption: ")))
-          (unless (string= caption "")
-            (insert (format "#+CAPTION: %s \n" caption))))
-        (insert (format "[[file:%s]]" image-file))
-        (org-display-inline-images)
-        (message "You can toggle inline images with `C-c C-x C-v'"))
-    (user-error "Requires pngpaste in PATH")))
 #+end_src
 
 ** org2blog

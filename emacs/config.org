@@ -2278,6 +2278,7 @@ CLOCK: [2021-06-02 Wed 18:04]--[2021-06-02 Wed 18:07] =>  0:03
 CLOCK: [2021-05-23 Sun 12:38]--[2021-05-23 Sun 12:43] =>  0:05
 CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 :END:
+
 :PROPERTIES:
 :ID:       C3D90EBC-EB70-440E-9718-A2832FF9F077
 :END:
@@ -2295,14 +2296,14 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
    '(
      ;; we disable the display of time since the tab-bar already does
      (setq doom-modeline-time nil)
-     (setq doom-modeline-mu4e t)
-     (setq doom-modeline-buffer-encoding nil)
-     (setq doom-modeline-irc t)
-     (setq doom-modeline-irc-buffers t)
+     (setq doom-modeline-mu4e nil)
+     (setq doom-modeline-buffer-encoding t)
+     (setq doom-modeline-irc nil)
+     (setq doom-modeline-irc-buffers nil)
      ;; (doom-modeline--flycheck-icon t)
-     (setq doom-modeline-github t)
-     (setq doom-modeline-github-interval (* 10 60))
-     (setq doom-modeline-buffer-file-name-style 'truncate-from-project)
+     (setq doom-modeline-github nil)
+     (setq doom-modeline-github-interval nil)
+     (setq doom-modeline-buffer-file-name-style 'truncate-nil)
 
      (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
      (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)

@@ -11445,7 +11445,7 @@ Hugo should be able to export ~org-cite~ citations.
   :defer 100)
 #+end_src
 
-** org-babel
+** ob
 :PROPERTIES:
 :ID:       A19E8C93-0435-4D02-AF4F-8213212D2386
 :END:
@@ -11471,16 +11471,12 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
   (defun ps/org-confirm-babel-evaluate (lang body)
     (not (member lang '("python" "emacs-lisp"))))
 
-  (defvar version 'normal)
-  (defun ps/org-babel-tangle-config-file (&optional arg)
-    "Tangle all code blocks defined as part of a normal configuration.
-If invoked with a prefix argument, tangle only code blocks
-defined as part of a minimal configuration instead."
+  (defun ps/org-babel-tangle ()
+    "Widen buffer, save its contents, and tangle file."
     (interactive "P")
     (widen)
     (save-buffer)
-    (let ((version (if arg 'minimal 'normal)))
-      (org-babel-tangle)))
+    (org-babel-tangle))
 
   (add-to-list 'org-babel-key-bindings (cons "j" 'org-babel-next-src-block))
   (add-to-list 'org-babel-key-bindings (cons "k" 'org-babel-previous-src-block))

@@ -14916,6 +14916,7 @@ To try once I switch to Emacs 29.
 :ID:       1B568415-F030-437B-921C-B4A65B370A6E
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-08 Wed 19:40]--[2023-03-08 Wed 19:48] =>  0:08
 CLOCK: [2022-07-19 Tue 09:23]--[2022-07-19 Tue 09:48] =>  0:25
 CLOCK: [2022-07-19 Tue 08:37]--[2022-07-19 Tue 09:01] =>  0:24
 CLOCK: [2022-07-18 Mon 23:00]--[2022-07-18 Mon 23:54] =>  0:54
@@ -14985,48 +14986,6 @@ CLOCK: [2021-04-15 Thu 20:52]--[2021-04-15 Thu 21:10] =>  0:18
 CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 :END:
 /[[https://github.com/djcb/mu][mu4e]] is an an emacs-based e-mail client./
-
-- [[https://www.youtube.com/watch?v=yZRyEhi4y44]]
-- [[http://cachestocaches.com/2017/3/complete-guide-email-emacs-using-mu-and-/][A Complete Guide to Email in Emacs using Mu and Mu4e]]. Advanced setup, for MacOS. But uses OfflineMAP rather than isync.
-- [[https://www.reddit.com/r/emacs/comments/bfsck6/mu4e_for_dummies/][mu4e for Dummies : emacs]].
-- [[https://www.ict4g.net/adolfo/notes/emacs/reading-imap-mail-with-emacs.html][Reading IMAP email in Emacs]]. Very thorough and clearly explained tutorial, written in 2021. Looks like the best resource so far.
-- [[https://gist.github.com/areina/3879626][Manage your email in emacs with mu4e · GitHub]]. Instructions from 2016, with updates in comments.
-- [[https://www.reddit.com/r/emacs/comments/mzgsm0/mu4e_look_and_feel/][Mu4e look and feel : emacs]]. Very nice appearance/layout.
-
-- How to set up ~offlineimap~ to retrieve password from ~pass~: https://unix.stackexchange.com/a/48355
-- How to install ~mu4e~: https://emacs.stackexchange.com/questions/46156/how-to-install-mu-and-mu4e-with-gui-emacs
-- https://www.sastibe.de/2021/01/setting-up-emacs-as-mail-client/
-
-  https://emacs.readthedocs.io/en/latest/mu4e__email_client.html
-
-To re-index the database without restarting Emacs, run ~pkill -2 -u $UID mu~ or ~then ~mu index~ from the terminal. Or try [[https://github.com/djcb/mu/issues/8#issuecomment-396649525][this script]].
-
-If you get a ~pinentry~ problem, try running this on the termnal ~gpgconf --kill gpg-agent~.
-
-To debug "Update process returned with non-zero exit code", ~(start-process-shell-command "test-mu4e" "test-mu4e" mu4e-get-mail-command)~
-https://mu-discuss.narkive.com/mxM4AVIW/how-to-debug-non-zero-exit-code
-
-To initialize the database (after reinstalling), ~mu init --maildir=~/Maildir --my-address=jim@example.com~. If you have multiple email addresses, include each address as a separate ~--my-address~ parameter, e.g. ~mu init --maildir=~/Mail --my-address=jim@example.com --my-address=bob@example.com~. Then run ~mu index~. See [[https://www.djcbsoftware.nl/code/mu/mu4e/Initializing-the-message-store.html][documentation]].
-
-[2021-08-12 Thu 09:45] If you encounter problems with mu and Straight, see [[https://github.com/raxod502/straight.el/issues/491#issuecomment-760150634][this thread]].
-
-[2022-07-11 Mon 23:58] Note: ~mu~ is now pinned in ~brew~ (~brew pin mu~) to version 1.6.11. The most recent version (1.8.5) wasn't working well with [[id:DADEABFE-0E73-4E8F-9973-771FFEF55B60][org-msg]] (see [[https://github.com/jeremy-compostella/org-msg/issues/153][this issue]] and [[https://groups.google.com/g/mu-discuss/c/V1WxQzglkZA/m/Av9vJ_BkAgAJ][this thread]]). Once the issue is resolved, unpin it and upgrade to the latest version.
-
-Here's the process I followed:
-
-#+begin_src shell :tangle no
-brew uninstall mu
-# 1.6.11
-wget https://raw.githubusercontent.com/Homebrew/homebrew-core/c42744ba370044e5363e1a6547014c810304b520/Formula/mu.rb
-# 1.6.10
-wget https://raw.githubusercontent.com/Homebrew/homebrew-core/de6f736af8caa0d1383a42b93e43fadddedec6f3/Formula/mu.rb
-# 1.6.8
-wget https://raw.githubusercontent.com/Homebrew/homebrew-core/27dfe84721266543124b1fe2b052632fbd087699/Formula/mu.rb
-HOMEBREW_NO_INSTALL_CLEANUP=1 brew install /Users/pablostafforini/Downloads/mu.rb
-brew pin mu
-#+end_src
-
-[2023-01-30 Mon 17:12] The problem is still not solved.
 
 #+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/mu4e)
 (use-package mu4e
@@ -15324,10 +15283,63 @@ it, without asking for confirmation."
    "A-C-s-p" nil))
 #+end_src
 
+*** installation
+:PROPERTIES:
+:ID:       888DF12E-8B90-4D04-9863-1332F715940A
+:END:
+We use an earlier version of mu, because the most recent versions (as of [2023-03-08 Wed]) are not compatible with ~org-msg~.
+
+This assumes you have already set up ~mbsync~ (or whichever program you use to download your mail locally).
+
+#+begin_src shell :tangle no
+# if brew is iinstalled, uninstall it
+brew uninstall mu
+cd ~/Downloads
+# download brew formula for mu 1.6.11
+wget https://raw.githubusercontent.com/Homebrew/homebrew-core/c42744ba370044e5363e1a6547014c810304b520/Formula/mu.rb
+HOMEBREW_NO_INSTALL_CLEANUP=1 brew install ~/Downloads/mu.rb
+# pin mu so that brew doesn't update to the latest version when you run 'brew upgrade'
+brew pin mu 
+# initialize database; 'email-n' are the email addresses from which you send mail
+# if necessary, change `~/Mail' to the location of your email
+mu init --maildir=~/Mail --my-address=email-1@example.com --my-address=email-2@example.com
+mu index # can take some time depending on the size of your email archive
+# then start Emacs and run 'mu4e'
+#+end_src
+
+*** resources
+:PROPERTIES:
+:ID:       A7472C4E-FF72-4CBE-A9E2-E3C3F0AB0B38
+:END:
+
 - [[https://github.com/morzahavi/.emacs.d/blob/3c5dcd402f19b4b6a9c07942825de52a874e870c/modules/email/mu4e/config.el][.emacs.d/config.el at 3c5dcd402f19b4b6a9c07942825de52a874e870c · morzahavi/.emacs.d · GitHub]]. Highly elaborate config.
 - https://ict4g.net/adolfo/notes/emacs/reading-imap-mail-with-emacs.html. Excellent setup instructions.
 - Package to try: [[https://github.com/rougier/mu4e-thread-folding][GitHub - rougier/mu4e-thread-folding: Functions for folding threads in mu4e headers view]]
   - See also [[https://gist.github.com/rougier/98e83fb50e19fb73fe34a7ecc5fc1ccc][this]] (discussed [[https://www.reddit.com/r/emacs/comments/pvpb6d/mu4e_very_fast_thread_folding/][here]])
+
+- [[https://www.youtube.com/watch?v=yZRyEhi4y44]]
+- [[http://cachestocaches.com/2017/3/complete-guide-email-emacs-using-mu-and-/][A Complete Guide to Email in Emacs using Mu and Mu4e]]. Advanced setup, for MacOS. But uses OfflineMAP rather than isync.
+- [[https://www.reddit.com/r/emacs/comments/bfsck6/mu4e_for_dummies/][mu4e for Dummies : emacs]].
+- [[https://www.ict4g.net/adolfo/notes/emacs/reading-imap-mail-with-emacs.html][Reading IMAP email in Emacs]]. Very thorough and clearly explained tutorial, written in 2021. Looks like the best resource so far.
+- [[https://gist.github.com/areina/3879626][Manage your email in emacs with mu4e · GitHub]]. Instructions from 2016, with updates in comments.
+- [[https://www.reddit.com/r/emacs/comments/mzgsm0/mu4e_look_and_feel/][Mu4e look and feel : emacs]]. Very nice appearance/layout.
+
+- How to set up ~offlineimap~ to retrieve password from ~pass~: https://unix.stackexchange.com/a/48355
+- How to install ~mu4e~: https://emacs.stackexchange.com/questions/46156/how-to-install-mu-and-mu4e-with-gui-emacs
+- https://www.sastibe.de/2021/01/setting-up-emacs-as-mail-client/
+
+  https://emacs.readthedocs.io/en/latest/mu4e__email_client.html
+
+To re-index the database without restarting Emacs, run ~pkill -2 -u $UID mu~ or ~then ~mu index~ from the terminal. Or try [[https://github.com/djcb/mu/issues/8#issuecomment-396649525][this script]].
+
+If you get a ~pinentry~ problem, try running this on the termnal ~gpgconf --kill gpg-agent~.
+
+To debug "Update process returned with non-zero exit code", ~(start-process-shell-command "test-mu4e" "test-mu4e" mu4e-get-mail-command)~
+https://mu-discuss.narkive.com/mxM4AVIW/how-to-debug-non-zero-exit-code
+
+If you encounter problems with mu and Straight, see [[https://github.com/raxod502/straight.el/issues/491#issuecomment-760150634][this thread]].
+
+[2022-07-11 Mon 23:58] Note: ~mu~ is now pinned in ~brew~ (~brew pin mu~) to version 1.6.11. The most recent version (1.8.5) wasn't working well with [[id:DADEABFE-0E73-4E8F-9973-771FFEF55B60][org-msg]] (see [[https://github.com/jeremy-compostella/org-msg/issues/153][this issue]] and [[https://groups.google.com/g/mu-discuss/c/V1WxQzglkZA/m/Av9vJ_BkAgAJ][this thread]]). Once the issue is resolved, unpin it and upgrade to the latest version.
 
 ** mu4e-alert
 :PROPERTIES:

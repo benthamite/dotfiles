@@ -715,8 +715,8 @@ The contents of this code block are tangled to the ~early-init.el~ file.
 ;; github.com/emacscollective/no-littering#native-compilation-cache
 (when (fboundp 'startup-redirect-eln-cache)
   (startup-redirect-eln-cache
-   (convert-standard-filename
-    "/Users/pablostafforini/.config/emacs-profiles/develop/var/eln-cache/")))
+   (file-name-concat (getenv "HOME")
+    ".config/emacs-profiles/var/eln-cache/")))
 
 #+end_src
 
@@ -925,8 +925,8 @@ NAME and ARGS are as in `use-package'."
 (use-package no-littering
   :demand t
   :init
-  (setq no-littering-etc-directory "/Users/pablostafforini/.config/emacs-profiles/etc/")
-  (setq no-littering-var-directory "/Users/pablostafforini/.config/emacs-profiles/var/")
+  (setq no-littering-etc-directory (file-name-concat (getenv "HOME") ".config/emacs-profiles/etc/"))
+  (setq no-littering-etc-directory (file-name-concat (getenv "HOME") ".config/emacs-profiles/var/"))
 
   :config
   ;; github.com/emacscollective/no-littering#auto-save-settings
@@ -1940,7 +1940,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :PROPERTIES:
 :ID:       D75F0818-F8A2-45F1-8EB5-4548BCDE86BE
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/theme-loaddefs)
 (use-feature theme-loaddefs
   :demand t
   :config
@@ -1984,6 +1984,9 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
                                                yellow))))
 
   :config
+  (ps/init-override-code-if-available
+   :ps/modus-themes-load
+   '(
   (defun ps/modus-themes-load-theme-emacs-mac ()
     "Load modus theme that matches system."
     (interactive)
@@ -2009,6 +2012,9 @@ installed."
            (add-hook 'ns-system-appearance-change-functions
                      #'ps/modus-themes-load-theme-emacs-plus))))
 
+  (ps/modus-themes-load-theme-conditionally)
+  ))
+  
   (setq modus-themes-common-palette-overrides
         `(
           ;; hide the fringe
@@ -2018,8 +2024,6 @@ installed."
           ;; for the rest, use the predefined intense values
 
           ,@modus-themes-preset-overrides-intense))
-
-  (ps/modus-themes-load-theme-conditionally)
 
   :hook
   (modus-themes-after-load-theme-hook . ps/faces-load-custom-faces)
@@ -6706,7 +6710,9 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :demand t
   :config
   (setq vr/engine 'python)
-  (setq vr/command-python "python3 /Users/pablostafforini/.emacs.d/straight/build/visual-regexp-steroids/regexp.py")
+  (setq vr/command-python
+	(concat "python3 "
+		(file-name-concat user-emacs-directory "straight/build/visual-regexp-steroids/regexp.py")))
 
   :general
   (isearch-mode-map
@@ -8791,7 +8797,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
     (pdf-tools-install))
 
   (defun ps/pdf-tools-apply-theme ()
-    "Activate `pdf-tools' midnight mode iff dark theme is active."
+    "Activate `pdf-tools' midnight mode if dark theme is active."
     (if (eq (modus-themes--current-theme) ps/theme-loaddefs-dark)
         (pdf-view-midnight-minor-mode 1)
       (pdf-view-midnight-minor-mode -1)))

@@ -1,5 +1,5 @@
 #+PROPERTY: header-args :tangle (print ps/file-karabiner-edn)
-#+TITLE:Pablo's Karabiner config
+#+TITLE:Pablo's Karabiner modifications
 #+AUTHOR: Pablo Stafforini <pablo@stafforini.com>
 #+filetags: :project:
 :PROPERTIES:

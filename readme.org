@@ -4,5 +4,5 @@
 This repository contains my dotfiles, including
 
 - my [[file:emacs/config.org][Emacs config]];
-- my [[file:karabiner/config.org][Karabiner config]]; and
-- my [[file:macos/config.org][macOS defaults]].
+- my [[file:karabiner/modifications.org][Karabiner modifications]]; and
+- my [[file:macos/defaults.org][macOS defaults]].

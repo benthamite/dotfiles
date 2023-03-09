@@ -3916,10 +3916,6 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (setq kept-old-versions 10) ; keep 10 earliest versions
   (setq delete-old-versions t) ; don't ask about deleting old versions
   (setq version-control t) ; number backups
-  ;; disabling until we diagnose issues
-  ;; (auto-save-visited-predicate
-  ;;  (lambda () (string-match "tareas.org" buffer-file-name)))
-  ;; (auto-save-visited-interval 5)
 
   (add-to-list 'auto-mode-alist '("\\.mdx\\'" . markdown-mode))
 
@@ -4374,6 +4370,10 @@ process in these cases."
 
   (advice-add 'recover-this-file :after #'ps/diff-buffer-with-file)
 
+  ;; disabling until we diagnose issues
+  ;; (setq auto-save-visited-predicate
+  ;;  (lambda () (string-match "tareas.org" buffer-file-name)))
+  ;; (setq auto-save-visited-interval 5)
   ;; (auto-save-visited-mode)
 
   :hook

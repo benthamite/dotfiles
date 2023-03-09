@@ -5226,9 +5226,13 @@ window depending on the number of present windows."
   ;; the frame is sometimes not fully maximized. This makes Emacs
   ;; maximize the frame every time focus is regained, fixing this
   ;; issue.
-  (add-function :after after-focus-change-function
-                (lambda ()
-                  (set-frame-parameter nil 'fullscreen 'maximized)))
+  (ps/init-override-code-if-available
+   :ps/frame-maximize
+   '(
+     (add-function :after after-focus-change-function
+                   (lambda ()
+                     (set-frame-parameter nil 'fullscreen 'maximized)))
+     ))
 
   :general
   ("H-S-SPC" 'other-frame))

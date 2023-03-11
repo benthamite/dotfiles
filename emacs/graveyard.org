@@ -9,6 +9,25 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
 
+** ox-reveal
+:PROPERTIES:
+:ID:       019A6815-F80E-4A8E-9CDC-854F28D7E42A
+:END:
+:LOGBOOK:
+CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
+:END:
+
+
+#+begin_src emacs-lisp :results silent
+(use-package ox-reveal
+  ;; :defer 300
+  :config
+  (setq org-reveal-root "https://cdn.jsdelivr.net/npm/reveal.js"))
+#+end_src
+
+- [[https://revealjs.com/][The HTML presentation framework | reveal.js]]
+- [[https://www.youtube.com/watch?v=je_xPoqtnSM][GNU/Emacs Org-mode For Presentation Slides/HTML Slides (Emacs org-reveal) - YouTube]]
+
 ** fontaine
 :PROPERTIES:
 :ID:       B375DC03-A71F-4F87-8B03-59437D9CA857

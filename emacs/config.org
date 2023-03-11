@@ -324,7 +324,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-autosort][org-autosort]]
   - [[#ox-clip][ox-clip]]
   - [[#ox-pandoc][ox-pandoc]]
-  - [[#ox-reveal][ox-reveal]]
   - [[#org-mime][org-mime]]
   - [[#elgantt][elgantt]]
   - [[#org-pomodoro][org-pomodoro]]
@@ -11799,23 +11798,6 @@ an org drawer."
 #+begin_src emacs-lisp :results silent
 (use-package ox-pandoc)
 #+end_src
-
-** ox-reveal
-:PROPERTIES:
-:ID:       019A6815-F80E-4A8E-9CDC-854F28D7E42A
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
-:END:
-#+begin_src emacs-lisp :results silent
-(use-package ox-reveal
-  ;; :defer 300
-  :config
-  (setq org-reveal-root "https://cdn.jsdelivr.net/npm/reveal.js"))
-#+end_src
-
-- [[https://revealjs.com/][The HTML presentation framework | reveal.js]]
-- [[https://www.youtube.com/watch?v=je_xPoqtnSM][GNU/Emacs Org-mode For Presentation Slides/HTML Slides (Emacs org-reveal) - YouTube]]
 
 ** org-mime
 :PROPERTIES:

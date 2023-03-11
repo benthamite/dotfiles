@@ -287,7 +287,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#gpt][gpt]]
   - [[#pen][pen]]
   - [[#elpy][elpy]]
-  - [[#epc][epc]]
   - [[#eldoc][eldoc]]
   - [[#bicycle][bicycle]]
 - [[#org-mode][org-mode]]
@@ -9279,14 +9278,6 @@ CLOCK: [2021-11-01 Mon 12:09]--[2021-11-01 Mon 12:10] =>  0:01
   (setq elpy-rpc-python-command "python3")
   (setq elpy-rpc-virtualenv-path 'current)
   (elpy-enable))
-#+end_src
-
-** epc
-:PROPERTIES:
-:ID:       474AA19E-D682-4A5E-9853-845333D82912
-:END:
-#+begin_src emacs-lisp :results silent
-(use-package epc)
 #+end_src
 
 ** eldoc

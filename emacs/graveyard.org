@@ -38,6 +38,15 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 (use-package ox-pandoc)
 #+end_src
 
+** epc
+:PROPERTIES:
+:ID:       474AA19E-D682-4A5E-9853-845333D82912
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-package epc)
+#+end_src
+
 ** fontaine
 :PROPERTIES:
 :ID:       B375DC03-A71F-4F87-8B03-59437D9CA857

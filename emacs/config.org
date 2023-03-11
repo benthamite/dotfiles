@@ -65,7 +65,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#menu-bar-mode][menu-bar-mode]]
   - [[#tool-bar-mode][tool-bar-mode]]
   - [[#scroll-bar-mode][scroll-bar-mode]]
-  - [[#gnuplot-mode][gnuplot-mode]]
   - [[#delsel][delsel]]
   - [[#hl-line][hl-line]]
   - [[#jit-lock][jit-lock]]
@@ -2277,19 +2276,6 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
   :demand t
   :config
   (scroll-bar-mode -1))
-#+end_src
-
-** gnuplot-mode
-:PROPERTIES:
-:ID:       9817156B-B940-4DCB-A10C-FBBC558B4B66
-:END:
-
-Not sure which of the two (or both) are needed.
-
-#+begin_src emacs-lisp :results silent
-;; (use-package gnuplot-mode
-;; :demand t)
-(use-package gnuplot)
 #+end_src
 
 ** delsel

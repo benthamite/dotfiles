@@ -10723,19 +10723,6 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
     (interactive)
     (org-insert-time-stamp (current-time) nil t))
 
-  (defun ps/org-clone-clock-entry ()
-    "Duplicate clock entry at point and set mark for editing via multiple cursors."
-    (interactive)
-    (crux-duplicate-current-line-or-region 1)
-    (org-beginning-of-line)
-    (forward-line -1)
-    (let ((query "\\[\\([[:digit:]]\\)\\{4\\}-\\([[:digit:]]\\)\\{2\\}-\\([[:digit:]]\\)\\{2\\} \\w\\w\\w "))
-      (search-forward-regexp query)
-      (set-mark-command nil)
-      (set-mark-command nil)
-      (next-line)
-      (search-forward-regexp query)))
-
   (defun ps/org-jump-to-latest-clock-entry ()
     "Jump to most recent clock entry for org heading at point."
     (interactive)
@@ -10761,7 +10748,6 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
   (org-mode-map
    "s-i" 'org-clock-in
    "s-o" 'org-clock-out
-   "s-u" 'ps/org-clone-clock-entry
    "s-A-n" 'ps/org-new-clock-entry-today
    "s--" 'ps/org-time-stamp-active-current-time
    "s-A--" 'ps/org-time-stamp-active-current-date

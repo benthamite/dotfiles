@@ -14433,35 +14433,11 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (setq zotra-url-retrieve-timeout 10)
   (setq zotra-default-bibliography ps/file-bibliography-new)
   (setq zotra-default-entry-format "biblatex")
-  (setq zotra-after-add-entry-hook nil)
   (setq zotra-download-attachment-default-directory ps/dir-downloads)
-  (setq zotra-backend 'translation-server)
-  (setq zotra-cli-command (file-name-concat ps/dir-dropbox "source/zotra-cli/bin/index.js"))
+  (setq zotra-backend 'zotra-cli)
+  (setq zotra-cli-command "~/source/zotra-cli/bin/index.js")
 
-  (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
-    (let ((bibfile
-           (or bibfile zotra-default-bibliography
-               (completing-read
-                "Bibfile: "
-                (append (directory-files "." t ".*\\.bib$")
-                        (org-cite-list-bibliography-files))))))
-      (find-file bibfile)
-      (widen)
-      (goto-char (point-max))
-      (when (not (looking-at "^")) (insert "\n"))
-      (insert (zotra-get-entry url-or-search-string is-search entry-format))
-      (save-excursion
-        (save-restriction
-          (bibtex-narrow-to-entry)
-          (bibtex-beginning-of-entry)
-          (goto-char (point-max))
-          (when (not (looking-at "^")) (insert "\n"))
-          (advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
-          (save-buffer)
-          (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
-          (run-hooks 'zotra-after-add-entry-hook)))))
-
-  (defun ps/zotra-after-add-entry-hook-function ()
+  (defun ps/zotra-after-add-entry-hook-functions ()
     "Function to trigger with `zotra-after-add-entry-hook'."
     (revert-buffer nil t)
     (goto-char (point-max))
@@ -14474,173 +14450,13 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
       (ebib ps/file-bibliography-new citekey)
       (ps/ebib-open-key citekey)))
 
-  (defun ps/select-safe-coding-system-interactively (from to codings unsafe
-                                                          &optional rejected default)
-    "Select interactively a coding system for the region FROM ... TO.
-FROM can be a string, as in `write-region'.
-CODINGS is the list of base coding systems known to be safe for this region,
-  typically obtained with `find-coding-systems-region'.
-UNSAFE is a list of coding systems known to be unsafe for this region.
-REJECTED is a list of coding systems which were safe but for some reason
-  were not recommended in the particular context.
-DEFAULT is the coding system to use by default in the query."
-    ;; At first, if some defaults are unsafe, record at most 11
-    ;; problematic characters and their positions for them by turning
-    ;;	(CODING ...)
-    ;; into
-    ;;	((CODING (POS . CHAR) (POS . CHAR) ...) ...)
-    (if unsafe
-        (setq unsafe
-              (mapcar (lambda (coding)
-                        (cons coding
-                              (if (stringp from)
-                                  (mapcar (lambda (pos)
-                                            (cons pos (aref from pos)))
-                                          (unencodable-char-position
-                                           0 (length from) coding
-                                           11 from))
-                                (mapcar (lambda (pos)
-                                          (cons pos (char-after pos)))
-                                        (unencodable-char-position
-                                         from to coding 11)))))
-                      unsafe)))
-
-    (setq codings (sanitize-coding-system-list codings))
-
-    (let ((window-configuration (current-window-configuration))
-          (bufname (buffer-name))
-          coding-system)
-      (save-excursion
-        ;; If some defaults are unsafe, make sure the offending
-        ;; buffer is displayed.
-        (when (and unsafe (not (stringp from)))
-          (pop-to-buffer bufname)
-          (goto-char (apply #'min (mapcar (lambda (x) (or (car (cadr x)) (point-max)))
-                                          unsafe))))
-        ;; Then ask users to select one from CODINGS while showing
-        ;; the reason why none of the defaults are not used.
-        (with-output-to-temp-buffer "*Warning*"
-          (with-current-buffer standard-output
-            (if (and (null rejected) (null unsafe))
-                (insert "No default coding systems to try for "
-                        (if (stringp from)
-                            (format "string \"%s\"." from)
-                          (format-message "buffer `%s'." bufname)))
-              (insert
-               "These default coding systems were tried to encode"
-               (if (stringp from)
-                   (concat " \"" (if (> (length from) 10)
-                                     (concat (substring from 0 10) "...\"")
-                                   (concat from "\"")))
-                 (format-message
-                  " the following\nproblematic characters in the buffer `%s'"
-                  bufname))
-               ":\n")
-              (select-safe-coding-system--format-list unsafe)
-              (when rejected
-                (insert "These safely encode the text in the buffer,
-but are not recommended for encoding text in this context,
-e.g., for sending an email message.\n ")
-                (dolist (x rejected)
-                  (princ " ") (princ x))
-                (insert "\n"))
-              (when unsafe
-                (insert (if rejected "The other coding systems"
-                          "However, each of them")
-                        (substitute-command-keys
-                         " encountered characters it couldn't encode:\n"))
-                (dolist (coding unsafe)
-                  (insert (format "  %s cannot encode these:" (car coding)))
-                  (let ((i 0)
-                        (func1
-                         (lambda (bufname pos)
-                           (when (buffer-live-p (get-buffer bufname))
-                             (pop-to-buffer bufname)
-                             (goto-char pos))))
-                        (func2
-                         (lambda (bufname pos coding)
-                           (when (buffer-live-p (get-buffer bufname))
-                             (pop-to-buffer bufname)
-                             (if (< (point) pos)
-                                 (goto-char pos)
-                               (forward-char 1)
-                               (search-unencodable-char coding)
-                               (forward-char -1))))))
-                    (dolist (elt (cdr coding))
-                      (insert " ")
-                      (if (stringp from)
-                          (insert (if (< i 10) (cdr elt) "..."))
-                        (if (< i 10)
-                            (insert-text-button
-                             (cdr elt)
-                             :type 'help-xref
-                             'face 'link
-                             'help-echo
-                             "mouse-2, RET: jump to this character"
-                             'help-function func1
-                             'help-args (list bufname (car elt)))
-                          (insert-text-button
-                           "..."
-                           :type 'help-xref
-                           'face 'link
-                           'help-echo
-                           "mouse-2, RET: next unencodable character"
-                           'help-function func2
-                           'help-args (list bufname (car elt)
-                                            (car coding)))))
-                      (setq i (1+ i))))
-                  (insert "\n"))
-                (insert (substitute-command-keys "\
-
-Click on a character (or switch to this window by `\\[other-window]'\n\
-and select the characters by RET) to jump to the place it appears,\n\
-where `\\[universal-argument] \\[what-cursor-position]' will give information about it.\n"))))
-            (insert (substitute-command-keys "\nSelect \
-one of the safe coding systems listed below,\n\
-or cancel the writing with \\[keyboard-quit] and edit the buffer\n\
-   to remove or modify the problematic characters,\n\
-or specify any other coding system (and risk losing\n\
-   the problematic characters).\n\n"))
-            (let ((pos (point))
-                  (fill-prefix "  "))
-              (dolist (x codings)
-                (princ "  ") (princ x))
-              (insert "\n")
-              (fill-region-as-paragraph pos (point)))))
-
-        ;; Read a coding system.
-        (setq coding-system 'utf-8)
-        (setq last-coding-system-specified coding-system))
-
-      (kill-buffer "*Warning*")
-      (set-window-configuration window-configuration)
-      coding-system))
-
-  ;; Ugly hack to fix encoding issues.
-  ;; TODO: Fix this properly.
-  (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)
-
-  ;; (defun ps/zotra-add-entry-from-search-advice ()
-  ;; "Functionsps/ebib-sort-toggle to call after `zotra-add-entry-from-search' is run."
-  ;; (ebib-switch-to-database-nth 1)
-  ;; (ps/ebib-reload-current-database-no-confirm))
-
-  ;; (advice-add 'zotra-add-entry-from-search :after #'ps/zotra-add-entry-from-search-advice)
-
-  :init
-  (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
-  (defun ps/zotra-run-translator-server ()
-    "Start translator server in the background."
-    (interactive)
-    (let ((shell-command-buffer-name-async "*zotra-translation-server*"))
-      (async-shell-command
-       (format
-        "cd %s; nvm use 14; npm start"
-        ps/dir-translation-server))))
+  (setq zotra-after-add-entry-hook nil)
+  (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-functions)
 
   :general
   (ebib-index-mode-map
-   "i" 'zotra-add-entry-from-search))
+   "i" 'zotra-add-entry-from-search
+   "u" 'zotra-add-entry-from-url))
 #+end_src
 
 *** WAITING Launch zotra outside emacs

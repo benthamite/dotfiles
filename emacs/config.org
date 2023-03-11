@@ -186,13 +186,13 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#minibuffer-completion][minibuffer completion]]
   - [[#vertico][vertico]]
   - [[#embark][embark]]
-  - [[#embark-consult][embark-consult]]
   - [[#consult][consult]]
   - [[#consult-dir][consult-dir]]
   - [[#consult-notes][consult-notes]]
   - [[#consult-yasnippet][consult-yasnippet]]
   - [[#consult-spotify][consult-spotify]]
   - [[#consult-flyspell][consult-flyspell]]
+  - [[#embark-consult][embark-consult]]
   - [[#marginalia][marginalia]]
   - [[#orderless][orderless]]
   - [[#ido][ido]]
@@ -6872,23 +6872,6 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
    "C-h B" 'embark-bindings))
 #+end_src
 
-** embark-consult
-:PROPERTIES:
-:ID:       C7BDCA9D-F507-4C25-9AF8-1EBB86D99A61
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
-:END:
-
-/[[https://github.com/oantolin/embark/blob/master/embark-consult.el][embark-consult]] provides integration between [[id:19A4F21C-2169-4529-92E4-68E3A584DDAC][embark]] and [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package embark-consult
-  :demand t
-  :hook
-  (embark-collect-mode-hook . consult-preview-at-point-mode))
-#+end_src
-
 ** consult
 :PROPERTIES:
 :ID:       C6144D48-2E3C-4033-AD6E-5D7EE175D9E1
@@ -7108,7 +7091,25 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-package consult-flyspell
-  :after (consult flyspell))
+  :after consult flyspell)
+#+end_src
+
+** embark-consult
+:PROPERTIES:
+:ID:       C7BDCA9D-F507-4C25-9AF8-1EBB86D99A61
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
+:END:
+
+/[[https://github.com/oantolin/embark/blob/master/embark-consult.el][embark-consult]] provides integration between [[id:19A4F21C-2169-4529-92E4-68E3A584DDAC][embark]] and [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package embark-consult
+  :after embark consult
+  :demand t
+  :hook
+  (embark-collect-mode-hook . consult-preview-at-point-mode))
 #+end_src
 
 ** marginalia
@@ -7125,7 +7126,6 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
   (marginalia-mode))
 #+end_src
 
-[cite:@Kinsey1948SexualBehaviorHuman]
 ** orderless
 :PROPERTIES:
 :ID:       D0A453D1-784F-49E4-B238-ED009AF84EDB

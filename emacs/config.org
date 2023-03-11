@@ -286,6 +286,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-agenda][org-agenda]]
   - [[#org-capture][org-capture]]
   - [[#org-clock][org-clock]]
+  - [[#org-clock-split][org-clock-split]]
   - [[#org-cycle][org-cycle]]
   - [[#org-archive][org-archive]]
   - [[#org-archive-hierarchically][org-archive-hierarchically]]

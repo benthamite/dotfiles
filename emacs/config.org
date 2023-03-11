@@ -8418,15 +8418,6 @@ To see a list of Google Docs and their respective IDs, run
 CLOCK: [2022-05-19 Thu 20:30]--[2022-05-19 Thu 20:33] =>  0:03
 :END:
 
-** edit-indirect
-:PROPERTIES:
-:ID:       1F18FACA-0A55-4B8F-98C3-800C07D62257
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-package edit-indirect)
-#+end_src
-
 ** ledger-mode
 :PROPERTIES:
 :ID:       6C259EFC-0CF9-4CD7-A8C5-B29B66E98776

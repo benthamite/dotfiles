@@ -67,6 +67,17 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 (use-package parse-csv)
 #+end_src
 
+** edit-indirect
+:PROPERTIES:
+:ID:       1F18FACA-0A55-4B8F-98C3-800C07D62257
+:END:
+
+[2023-03-10 Fri 20:10] Not using it.
+
+#+begin_src emacs-lisp :results silent
+(use-package edit-indirect)
+#+end_src
+
 ** fontaine
 :PROPERTIES:
 :ID:       B375DC03-A71F-4F87-8B03-59437D9CA857

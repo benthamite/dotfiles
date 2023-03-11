@@ -10370,97 +10370,24 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
   :config
   (setq org-default-notes-file ps/file-inbox-desktop)
   (setq org-capture-templates
-        `(("c" "calendar" entry
+        `(("." "Todo" entry
+           (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+           "** TODO %?\n" :empty-lines 1)
+          ("c" "Calendar" entry
            (file ps/file-calendar)
            "* TODO %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t)
-          ("e" "email" entry
+          ("e" "Email" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
-          ("f" "Fede")
-          ("ff" "Fede: generic task" entry
-           (file+headline ps/file-tlon-tareas-fede "Tareas Fede")
-           "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
-          ("fp" "Fede: Pending for next meeting" plain
-           (id "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
-           "" :empty-lines 1 :empty-lines-after 3)
-          ("fr" "Fede: RAE")
-          ("frs" "Fede: RAE suggestion" entry
-           (file+headline ps/file-tlon-tareas-fede "sugerencias de Pablo")
-           "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
           ("g" "Ledger" plain (file ps/file-ledger)
            "" :empty-lines 1)
-          ("l" "Leo")
-          ("ll" "Leo: Generic task" entry
-           (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("lb" "Leo: BAE")
-          ("lba" "Leo: Add to translations Airtable" entry
-           (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
-           "** TODO [#6] Add to translations Airtable :leo:\n%c" :empty-lines 1 :prepend t)
-          ("lbb" "Leo: Generic BAE task" entry
-           (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("li" "Leo: EAI")
-          ("lii" "Leo: Generic EAI task" entry
-           (id "698743B9-B754-4061-89BD-6E49F3B64DE2")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("ln" "Leo: EAN")
-          ("lna" "Leo: Add to ea.news" entry
-           (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
-           "** TODO [#6] Agregar a ea.news :leo:\n%c" :empty-lines 1 :prepend t)
-          ("lnn" "Leo: Generic EAN" entry
-           (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("lm" "Leo: FM")
-          ("lmm" "Leo: Generic FM task" entry
-           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("lg" "Leo: GPE")
-          ("lgg" "Leo: Generic GPE task" entry
-           (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("lh" "Leo: HEAR")
-          ("lhh" "Leo: Generic HEAR task" entry
-           (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("lmn" "Leo: Add to Future Matters: news" entry
-           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-           "** TODO [#4] Future Matters: news :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
-          ("lmr" "Leo: Add to Future Matters: research" entry
-           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-           "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
-
-          ("ld" "Leo: LBDLH")
-          ("ldd" "Leo: Generic LBDLH task" entry
-           (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("lw" "Leo: PW")
-          ("lww" "Leo: Generic PW task" entry
-           (id "12645897-A06F-44DD-876D-0FFC47D0E742")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("lr" "Leo: RAE")
-          ("lrl" "Leo: RAE add to lexicon" entry
-           (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
-           "** TODO [#6] Agregar al lexicon de Azure :leo:\n%?" :empty-lines 1 :prepend t)
-          ("lrr" "Leo: Generic RAE task" entry
-           (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("lx" "Leo: Meetings" entry
-           (id "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")
-           "** %(ps/org-time-stamp-inactive-current-time)\n%?")
-          ("lp" "Leo: Pending for next meeting" plain
-           (id "8B2F18B4-A309-4F29-A5E6-CD40E010970D")
-           "" :empty-lines 1 :empty-lines-after 3)
-          ("lg" "Leo: Telegram" entry
-           (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
-           "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
-          ("n" "telegram" entry
-           (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
-           "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
           ;; ("m" "To discuss in meeting with Leo" plain
           ;; (id "3AAD2510-0522-4598-9182-50E97504EAF6")
           ;; "- [ ] %?" :empty-lines 1)
-          ("r" "bibliography reference" plain
+          ("n" "Telegram" entry
+           (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+           "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
+          ("r" "Bibliography reference" plain
            (file ,ps/file-orb-noter-template)
            :if-new
            (file ,ps/file-orb-capture-template)
@@ -10488,6 +10415,12 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tmm" "Tlön: FM: Generic " entry
            (id "9066D77E-7F2B-4176-9533-243060F11276")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
+          ("tmt" "Tlön: FM: Post to Twitter" entry
+           (id "244D8486-9F36-4AC5-A185-8FE77C7ED7A7")
+           "** TODO [#6] %s" :empty-lines 1 :prepend t)
+          ("tmr" "Tlön: FM: Review transcript of conversation" entry
+           (id "9066D77E-7F2B-4176-9533-243060F11276")
+           "** TODO [#5] Review transcript of conversation with %? \n" :empty-lines 1 :prepend t)
           ("tg" "Tlön: GPE")
           ("tgg" "Tlön: GPE: Generic " entry
            (id "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1")
@@ -10508,17 +10441,92 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("trr" "Tlön: RAE: Generic " entry
            (id "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
+          ("trn" "Tlön: RAE: Interacting with narrators " entry
+           (id "D90B718C-6933-47AC-9B15-F95C2A2E1FD5")
+           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
           ("tc" "Tlön: Core")
           ("tcc" "Tlön: Core: Generic " entry
            (id "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-           ("tce" "Tlön: Core: Emacs")
-           ("tcee" "Tlön: Core: Emacs: Generic " entry
+          ("tce" "Tlön: Core: Emacs")
+          ("tcee" "Tlön: Core: Emacs: Generic " entry
            (id "91CEC8F0-F690-4318-B63B-040D6B98A6E2")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("." "Todo" entry
-           (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
-           "** TODO %?\n" :empty-lines 1)
+          ("tf" "Tlön: Fede")
+          ("tff" "Tlön: Fede: generic task" entry
+           (file+headline ps/file-tlon-tareas-fede "Tareas Fede")
+           "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
+          ("tfp" "Tlön: Fede: Pending for next meeting" plain
+           (id "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
+           "" :empty-lines 1 :empty-lines-after 3)
+          ("tfr" "Tlön: Fede: RAE")
+          ("tfrs" "Tlön: Fede: RAE suggestion" entry
+           (file+headline ps/file-tlon-tareas-fede "sugerencias de Pablo")
+           "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
+          ("tl" "Tlön: Leo")
+          ("tll" "Tlön: Leo: Generic task" entry
+           (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
+           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlb" "Tlön: Leo: BAE")
+          ("tlba" "Tlön: Leo: Add to translations Airtable" entry
+           (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
+           "** TODO [#6] Add to translations Airtable :leo:\n%c" :empty-lines 1 :prepend t)
+          ("tlbb" "Tlön: Leo: Generic BAE task" entry
+           (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
+           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tli" "Tlön: Leo: EAI")
+          ("tlii" "Tlön: Leo: Generic EAI task" entry
+           (id "698743B9-B754-4061-89BD-6E49F3B64DE2")
+           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tln" "Tlön: Leo: EAN")
+          ("tlna" "Tlön: Leo: Add to ea.news" entry
+           (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
+           "** TODO [#6] Agregar a ea.news :leo:\n%c" :empty-lines 1 :prepend t)
+          ("tlnn" "Tlön: Leo: Generic EAN" entry
+           (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
+           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlm" "Tlön: Leo: FM")
+          ("tlmm" "Tlön: Leo: Generic FM task" entry
+           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlg" "Tlön: Leo: GPE")
+          ("tlgg" "Tlön: Leo: Generic GPE task" entry
+           (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
+           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlh" "Tlön: Leo: HEAR")
+          ("tlhh" "Tlön: Leo: Generic HEAR task" entry
+           (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
+           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlmn" "Tlön: Leo: Add to Future Matters: news" entry
+           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+           "** TODO [#4] Future Matters: news :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
+          ("tlmr" "Tlön: Leo: Add to Future Matters: research" entry
+           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+           "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
+          ("tld" "Tlön: Leo: LBDLH")
+          ("tldd" "Tlön: Leo: Generic LBDLH task" entry
+           (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
+           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlw" "Tlön: Leo: PW")
+          ("tlww" "Tlön: Leo: Generic PW task" entry
+           (id "12645897-A06F-44DD-876D-0FFC47D0E742")
+           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlr" "Tlön: Leo: RAE")
+          ("tlrl" "Tlön: Leo: RAE add to lexicon" entry
+           (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
+           "** TODO [#6] Agregar al lexicon de Azure :leo:\n%?" :empty-lines 1 :prepend t)
+          ("tlrr" "Tlön: Leo: Generic RAE task" entry
+           (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
+           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlx" "Tlön: Leo: Meetings" entry
+           (id "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")
+           "** %(ps/org-time-stamp-inactive-current-time)\n%?")
+          ("tlp" "Tlön: Leo: Pending for next meeting" plain
+           (id "8B2F18B4-A309-4F29-A5E6-CD40E010970D")
+           "" :empty-lines 1 :empty-lines-after 3)
+          ("tlg" "Tlön: Leo: Telegram" entry
+           (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
+           "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
           ;; ("n" "Day reflection" plain (function org-journal-find-location)
           ;; "** %(format-time-string org-journal-time-format)Day reflection\n%i%?")
           ;; ("j" "Pomodoro" plain (function org-journal-find-location)
@@ -10601,6 +10609,8 @@ conditional on active capture template."
                   (plist-get org-store-link-plist :link))))
         (goto-char (point-max))
         (insert (format "[[%s][external link]]" url))))
+     ((string= "tmt" (plist-get org-capture-plist :key))
+      (org-web-tools-insert-link-for-url (current-kill 0)))
      ((string= "v" (plist-get org-capture-plist :key))
       (org-do-demote))
      ((string= "y" (plist-get org-capture-plist :key))
@@ -16681,13 +16691,13 @@ account."
     "Launch 'Future Matters: Research' `org-capture' template."
     (interactive)
     (twittering-push-uri-onto-kill-ring)
-    (org-capture nil "lmr"))
+    (org-capture nil "tlmr"))
 
   (defun ps/twittering-mode-org-capture-future-matters-news ()
     "Launch 'Future Matters: News' `org-capture' template."
     (interactive)
     (twittering-push-uri-onto-kill-ring)
-    (org-capture nil "lmn"))
+    (org-capture nil "tlmn"))
 
   ;; what follows copied from github.com/sfromm/emacs.d#twitter
   (defun ps/twittering-toggle-icons ()

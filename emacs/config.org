@@ -5215,9 +5215,8 @@ window depending on the number of present windows."
   (setq window-divider-default-right-width 1)
   (window-divider-mode)
   ;; When returning focus to Emacs after browsing other macOS windows,
-  ;; the frame is sometimes not fully maximized. This makes Emacs
-  ;; maximize the frame every time focus is regained, fixing this
-  ;; issue.
+  ;; the frame is sometimes not fully maximized. This advice makes
+  ;; Emacs maximize the frame every time focus is regained.
   (add-function :after after-focus-change-function
                 (lambda ()
                   (set-frame-parameter nil 'fullscreen 'maximized)))

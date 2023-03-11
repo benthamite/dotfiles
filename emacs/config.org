@@ -5016,12 +5016,13 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   :demand t
 
   :config
-  (setq split-width-threshold 300)
+  (setq split-width-threshold 200)
   (setq split-height-threshold nil)
-  (setq scroll-error-top-bottom t) ; move point to top of buffer if `scroll-down-command' invoked when screen can scroll no further
+  ;; move point to top of buffer if `scroll-down-command' invoked when screen can scroll no further
+  (setq scroll-error-top-bottom t)
+
   ;; The following prevents Emacs from splitting windows indefinitely when the monitor config changes
   ;; stackoverflow.com/questions/23207958/how-to-prevent-emacs-dired-from-splitting-frame-into-more-than-two-windows
-
   (add-to-list 'display-buffer-alist `(,shell-command-buffer-name-async display-buffer-no-window))
   (defvar ps/split-emacs-chrome-sideways nil)
   (defun ps/split-emacs-chrome-sideways ()

@@ -3543,7 +3543,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
     (org-previous-block nil)
     (org-edit-src-code))
 
-  (defvar yas-new-snippet-personal (concat "# -*- mode: snippet -*-\n# name: $1\n# key: ${2:${1:$(ps/first-char-of-each-letter yas-text)}}\n# contributor: " ps/personal-name "\n# --\n$0"))
+  (defvar yas-new-snippet-default (concat "# -*- mode: snippet -*-\n# name: $1\n# key: ${2:${1:$(ps/first-char-of-each-letter yas-text)}}\n# contributor: " ps/personal-name "\n# --\n$0"))
 
   (defvar ps/yas-new-snippet-tlon "# -*- mode: snippet -*-\n# name: tlon-${1:name-of-snippet}\n# key: t${2:shortcut}\n# --\n$0\\`(ps/insert-date)\\` \\$1\n	${3:account1}:\\$5  \\$2.00 \\${3:\\$\\$(yas-choose-value '('USD' 'EUR' 'GBP'))} ; \\$4\n	${4:account2}:")
 

@@ -15556,7 +15556,11 @@ into a task for Leo."
    "<return>" 'newline
    "A-C-s-r" 'telega-chatbuf-beginning-of-thing
    "C-<return>" 'telega-chatbuf-input-send
-   "s-<return>" (lambda! (telega-chatbuf-input-send "markdown1"))
+   ;; if point is on a URL, `telega-msg-button-map' ceases to be
+   ;; active and `<return>' triggers `newline' rather than
+   ;; `push-button'. this seems to be a bug. as a workaround, we also
+   ;; bind `push-button' to `M-<return>' in `telega-chat-mode-map'.
+   "M-<return>" 'push-button
    "s-," 'telega-chatbuf-goto-pinned-message
    "s-a" 'telega-chatbuf-attach
    "s-c" 'telega-mnz-chatbuf-attach-code

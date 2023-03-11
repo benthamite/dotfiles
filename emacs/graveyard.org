@@ -78,6 +78,16 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 (use-package edit-indirect)
 #+end_src
 
+** elmacro
+:PROPERTIES:
+:ID:       B7816A82-2E9C-434F-AAB3-A92FA5F3368B
+:END:
+
+[2023-03-10 Fri 19:49] Not using anymore.
+#+begin_src emacs-lisp :results silent
+(use-package elmacro)
+#+end_src
+
 ** fontaine
 :PROPERTIES:
 :ID:       B375DC03-A71F-4F87-8B03-59437D9CA857

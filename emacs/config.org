@@ -220,7 +220,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#which-key][which-key]]
 - [[#keyboard-macros][keyboard macros]]
   - [[#kmacro][kmacro]]
-  - [[#elmacro][elmacro]]
 - [[#shell][shell]]
   - [[#simple][simple]]
   - [[#shell][shell]]
@@ -7530,14 +7529,6 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
    "A-h" 'name-last-kbd-macro
    "M-h" 'kmacro-edit-macro
    "M-A-h" 'kmacro-bind-to-key))
-#+end_src
-** elmacro
-:PROPERTIES:
-:ID:       B7816A82-2E9C-434F-AAB3-A92FA5F3368B
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-package elmacro)
 #+end_src
 
 * shell

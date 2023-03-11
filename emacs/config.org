@@ -12068,18 +12068,17 @@ return such list if its length is less than LIMIT."
   :config
   (setq org-roam-directory ps/dir-org-roam)
   ;; (org-roam-complete-everywhere t)
+  ;; (org-roam-completion-everywhere t)
   (setq org-roam-node-display-template
-   (concat "${title:*} "
-           (propertize "${tags:10}" 'face 'org-tag)))
+        (concat "${title:*} "
+                (propertize "${tags:10}" 'face 'org-tag)))
 
   (setq org-roam-capture-templates
-   `(("r" "bibliography reference" plain
-      (file ,ps/file-orb-noter-template)
-      :if-new
-      (file ,ps/file-orb-capture-template)
-      :unnarrowed t :immediate-finish t :jump-to-captured t)))
-
-  ;; (org-roam-completion-everywhere t)
+        `(("r" "bibliography reference" plain
+           (file ,ps/file-orb-noter-template)
+           :if-new
+           (file ,ps/file-orb-capture-template)
+           :unnarrowed t :immediate-finish t :jump-to-captured t)))
 
   ;; adapted from
   ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#showing-node-hierarchy
@@ -12177,16 +12176,6 @@ return such list if its length is less than LIMIT."
   (advice-add 'org-roam-db-query :override #'ps/org-roam-db-query)
   (advice-add 'org-roam-node-find :before #'widen)
   (advice-add 'org-roam-node-find :after #'ps/org-narrow-to-entry-and-children)
-
-  ;; org-roam.discourse.group/t/org-roam-v2-org-id-id-link-resolution-problem/1491/7
-  ;; github.com/org-roam/org-roam/issues/1702#issuecomment-888998330
-  (defun ps/org-roam-update-id-locations ()
-    "Update org id locations indexed by org roam."
-    (interactive)
-    (org-id-update-id-locations
-     (directory-files-recursively org-roam-directory ".org$\\|.org.gpg$" nil
-                                  (lambda (dir)
-                                    (not (ps/string-match-in-list-p dir ps/org-roam-excluded-dirs))))))
 
   (defun ps/org-roam-remove-file-level-properties ()
     "Remove `ROAM_REFS' and `ID' properties from file-level drawer."

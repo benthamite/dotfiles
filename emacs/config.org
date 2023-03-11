@@ -3627,16 +3627,15 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
    "C-H-s-h" 'er/contract-region))
 #+end_src
 
-** [[id:][evil-nerd-commenter]]
+** newcomment
 :PROPERTIES:
-:ID:       220E65BC-D954-4F1E-91F5-C3036F2DE091
+:ID:       C079E18F-8A96-4A3E-8024-C0F9E29CD182
 :END:
-/comment and uncomment lines efficiently/
 
 #+begin_src emacs-lisp
-(use-package evil-nerd-commenter
+(use-feature newcomment
   :general
-  ("M-/" 'evilnc-comment-or-uncomment-lines))
+  ("M-/" 'comment-line))
 #+end_src
 
 ** multiple-cursors

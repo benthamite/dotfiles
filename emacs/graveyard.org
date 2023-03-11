@@ -47,6 +47,17 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 (use-package epc)
 #+end_src
 
+** cider
+:PROPERTIES:
+:ID:       308A0DCB-A51A-493F-B729-A0156ED1C4B7
+:END:
+
+/[[https://github.com/clojure-emacs/cider][cider]] is CIDER is the "Clojure(Script) Interactive Development Environment that Rocks"./
+
+#+begin_src emacs-lisp :results silent
+(use-package cider)
+#+end_src
+
 ** fontaine
 :PROPERTIES:
 :ID:       B375DC03-A71F-4F87-8B03-59437D9CA857

@@ -277,7 +277,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#backtrace][backtrace]]
   - [[#macrostep][macrostep]]
   - [[#clojure][clojure]]
-  - [[#cider][cider]]
   - [[#python][python]]
   - [[#applescript-mode][applescript-mode]]
   - [[#puni][puni]]
@@ -9095,16 +9094,9 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :ID:       A9508F41-E82B-4E6C-9304-53981A8F0C27
 :END:
 
-#+begin_src emacs-lisp :results silent
-(use-package clojure-mode)
-#+end_src
+/[[https://github.com/clojure-emacs/clojure-mode][clojure-mode]] provides support for the Clojure(Script) programming language./
 
-** cider
-:PROPERTIES:
-:ID:       308A0DCB-A51A-493F-B729-A0156ED1C4B7
-:END:
 #+begin_src emacs-lisp :results silent
-(use-package cider)
 #+end_src
 
 ** python

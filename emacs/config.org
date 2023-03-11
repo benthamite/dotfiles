@@ -257,9 +257,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#markdown][markdown]]
   - [[#mediawiki-el][mediawiki-el]]
   - [[#gdrive][gdrive]]
-  - [[#edit-indirect][edit-indirect]]
   - [[#ledger-mode][ledger-mode]]
-  - [[#parse-csv][parse-csv]]
 - [[#pdf][pdf]]
   - [[#pdf-tools][pdf-tools]]
   - [[#scroll-other-window][scroll-other-window]]
@@ -8701,15 +8699,7 @@ otherwise the whole buffer."
 :ID:       49D7A193-157E-4A10-9C33-98727FC191BF
 :END:
 1. [[https://felixcrux.com/blog/ledger-practices-create-a-ledgerrc][create a ~.ledgerrc~ file]]
-** parse-csv
-:PROPERTIES:
-:ID:       55B470DB-E9D2-45B1-8E74-58CB9DDF7D27
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-package parse-csv)
-#+end_src
-
+   
 * pdf
 :PROPERTIES:
 :ID:       6C0D0737-734E-4EAB-8A3F-138EF990B967
@@ -9094,7 +9084,9 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :ID:       A9508F41-E82B-4E6C-9304-53981A8F0C27
 :END:
 
-/[[https://github.com/clojure-emacs/clojure-mode][clojure-mode]] provides support for the Clojure(Script) programming language./
+#+begin_src emacs-lisp :results silent
+(use-package clojure-mode)
+#+end_src
 
 #+begin_src emacs-lisp :results silent
 #+end_src

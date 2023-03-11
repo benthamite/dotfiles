@@ -58,6 +58,15 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 (use-package cider)
 #+end_src
 
+** parse-csv
+:PROPERTIES:
+:ID:       55B470DB-E9D2-45B1-8E74-58CB9DDF7D27
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-package parse-csv)
+#+end_src
+
 ** fontaine
 :PROPERTIES:
 :ID:       B375DC03-A71F-4F87-8B03-59437D9CA857

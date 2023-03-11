@@ -323,7 +323,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-journal][org-journal]]
   - [[#org-autosort][org-autosort]]
   - [[#ox-clip][ox-clip]]
-  - [[#ox-pandoc][ox-pandoc]]
   - [[#org-mime][org-mime]]
   - [[#elgantt][elgantt]]
   - [[#org-pomodoro][org-pomodoro]]
@@ -11788,15 +11787,6 @@ an org drawer."
   :general
   ((org-mode-map)
    "s-c" 'ox-clip-formatted-copy))
-#+end_src
-
-** ox-pandoc
-:PROPERTIES:
-:ID:       C16B02FA-64E6-423B-9596-B3B023C93B21
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-package ox-pandoc)
 #+end_src
 
 ** org-mime

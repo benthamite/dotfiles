@@ -697,6 +697,9 @@ Some useful config files:
 The contents of this code block are tangled to the ~early-init.el~ file.
 
 #+begin_src emacs-lisp :tangle (print ps/init-early-init-path)
+;; recommended for straight (github.com/radian-software/straight.el#getting-started)
+(setq package-enable-at-startup nil)
+
 (add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bart
 (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
 
@@ -817,6 +820,7 @@ Process for updating packages:
 
 #+begin_src emacs-lisp :results silent
 (setq straight-repository-branch "develop") ; must precede bootstrap
+(setq straight-profiles `((nil . ,(file-name-concat ps/dir-dotemacs "straight-profile.el"))))
 ;; Bootstrap `straight'
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -832,7 +836,6 @@ Process for updating packages:
   (load bootstrap-file nil 'nomessage))
 (setq straight-default-vc 'git)
 (setq straight-check-for-modifications '(find-at-startup watch-files find-when-checking)) ; github.com/raxod502/straight.el#my-init-time-got-slower
-(setq straight-profiles `((nil . ,(file-name-concat ps/dir-dotemacs "straight-profile.el"))))
 (setq straight-use-package-by-default t)
 (require 'straight-x) ; github.com/raxod502/straight.el#how-do-i-uninstall-a-package
 #+end_src

@@ -17792,5 +17792,6 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
 # eval: (ps/buffer-local-set-key (kbd "H-i") 'use-package-report)
+# eval: (ps/buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
 # End:

@@ -36,7 +36,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#general][general]]
   - [[#el-patch][el-patch]]
   - [[#hydra][hydra]]
-  - [[#transient][transient]]
   - [[#elisp-bug-hunter][elisp-bug-hunter]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
@@ -1660,17 +1659,12 @@ This function is used by some of the above snippets.
     (replace-regexp-in-string "[ ,]" "_" string)))
 #+end_src
 
-** transient
-:PROPERTIES:
-:ID:       246036BE-CBDF-4ABA-8297-11952B57B551
-:END:
-To be explored. The [[https://github.com/positron-solutions/transient-showcase][transient-showcase]] repo is useful.
-
 ** elisp-bug-hunter
 :PROPERTIES:
 :ID:       0C19171B-8DFA-4E06-9E17-45C1F9158C28
 :END:
 
+/[[https://github.com/Malabarba/elisp-bug-hunter][elisp-bug-hunter]] hunts down errors in elisp files./
 
 #+begin_src emacs-lisp :results silent
 (use-package bug-hunter

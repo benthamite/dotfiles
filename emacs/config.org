@@ -17,7 +17,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :CONTENTS:
 - [[#table-of-contents][table of contents]]
 - [[#introduction][introduction]]
-  - [[#foreword][foreword]]
+  - [[#preface][preface]]
   - [[#key-bindings][key bindings]]
   - [[#profiling][profiling]]
   - [[#installation][installation]]
@@ -53,7 +53,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#theme-loaddefs][theme-loaddefs]]
   - [[#modus-themes][modus-themes]]
   - [[#highlight-parentheses][highlight-parentheses]]
-  - [[#emacs-emojify][emacs-emojify]]
+  - [[#emojify][emojify]]
   - [[#lin][lin]]
   - [[#image][image]]
   - [[#paren][paren]]
@@ -139,7 +139,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#uniquify][uniquify]]
   - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
   - [[#tramp][tramp]]
-  - [[#pandoc][pandoc]]
+  - [[#pandoc-mode][pandoc-mode]]
   - [[#curl-to-elisp][curl-to-elisp]]
 - [[#windows--frames][windows & frames]]
   - [[#window][window]]
@@ -304,7 +304,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-protocol-capture-html][org-protocol-capture-html]]
   - [[#ox][ox]]
   - [[#ox-hugo][ox-hugo]]
-  - [[#org-babel][org-babel]]
+  - [[#ob][ob]]
   - [[#org-src][org-src]]
   - [[#org-table][org-table]]
   - [[#orgtbl-edit][orgtbl-edit]]
@@ -488,7 +488,7 @@ CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
 
-** foreword
+** preface
 :PROPERTIES:
 :ID:       66EACB4A-84D2-42AE-9F85-EF30DA714A17
 :END:
@@ -2035,7 +2035,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   (minibuffer-setup-hook . highlight-parentheses-minibuffer-setup))
 #+end_src
 
-** emacs-emojify
+** emojify
 :PROPERTIES:
 :ID:       92919C07-A782-4079-AE20-75B248D34A13
 :END:
@@ -4924,7 +4924,7 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
     (unless (file-remote-p default-directory 'no-identification) ad-do-it)))
 #+end_src
 
-** pandoc
+** pandoc-mode
 :PROPERTIES:
 :ID:       8EBA8303-EA43-4FB2-BB9D-1734F40DDB77
 :END:

@@ -1761,17 +1761,19 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 :END:
 
 #+begin_src emacs-lisp :results silent
-(setq default-directory ps/dir-dropbox)
-(setq use-short-answers t)
-(setq message-log-max t)
-(setq ring-bell-function 'ignore) ; silence bell when mistake is made
-(setq x-stretch-cursor t) ; make curor the width of the character under it
-;; emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
-;; UTF8 stuff.
-(prefer-coding-system 'utf-8)
-(set-default-coding-systems 'utf-8)
-(set-terminal-coding-system 'utf-8)
-(set-keyboard-coding-system 'utf-8)
+(use-feature emacs
+  :config
+  (setq default-directory ps/dir-dropbox)
+  (setq use-short-answers t)
+  (setq message-log-max t)
+  (setq ring-bell-function 'ignore) ; silence bell when mistake is made
+  (setq x-stretch-cursor t) ; make curor the width of the character under it
+  ;; emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
+  ;; UTF8 stuff.
+  (prefer-coding-system 'utf-8)
+  (set-default-coding-systems 'utf-8)
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8))
 #+end_src
 
 * display

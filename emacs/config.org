@@ -6856,7 +6856,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
 
 #+begin_src emacs-lisp :results silent
 (use-package embark
-  :demand t
+  :defer 8
   :config
 
   (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))

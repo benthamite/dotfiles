@@ -11052,6 +11052,7 @@ slow if it has a lot of overlays."
 :ID:       51E91355-66E0-479C-B616-116EF261F930
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-09 Thu 20:07]--[2023-03-09 Thu 20:19] =>  0:12
 CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 :END:
 
@@ -11060,20 +11061,20 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
   :demand t
   :init
   ;; stackoverflow.com/a/16247032/4479455
-  (defvar ps/org-id-excluded-directories
+  (defvar ps/org-id-auto-add-excluded-directories
     (list ps/dir-dropbox-tlon-fede
           ps/dir-dropbox-tlon-leo)
-    "Directories containing files to exclude from `ps/org-id-add-ids-to-headings-in-file'")
+    "Directories containing files to exclude from `ps/org-id-auto-add-ids-to-headings-in-file'")
 
-  (defvar ps/org-id-excluded-files
+  (defvar ps/org-id-auto-add-excluded-files
     (list ps/file-orb-noter-template)
-    "Files to exclude from `ps/org-id-add-ids-to-headings-in-file'")
+    "Files to exclude from `ps/org-id-auto-add-ids-to-headings-in-file'")
 
-  (defun ps/org-id-add-ids-to-headings-in-file ()
+  (defun ps/org-id-auto-add-ids-to-headings-in-file ()
     "Add ID properties to all headings in the current file which do
 not already have one."
     (ps/init-override-code-if-available
-     :ps/org-id-add-ids-to-headings-in-file
+     :ps/org-id-auto-add-ids-to-headings-in-file
      (when (and (eq major-mode 'org-mode)
                 (string-match ps/dir-org (buffer-file-name))
                 (eq buffer-read-only nil))
@@ -11081,110 +11082,35 @@ not already have one."
            (or
             ;; exclude directories
             (member (file-name-directory (buffer-file-name))
-                    ps/org-id-excluded-directories)
+                    ps/org-id-auto-add-excluded-directories)
             ;; exclude files
             (member (buffer-file-name)
-                    ps/org-id-excluded-files)
+                    ps/org-id-auto-add-excluded-files)
             (member (org-get-heading)
                     '("Local variables"
                       "COMMENT Local variables"
                       "TODO Local variables")))
          (org-map-entries 'org-id-get-create)))))
 
-  ;; (setq org-id-extra-files
-  ;; (directory-files-recursively ps/dir-org "\\.org"))
-
   :config
   (setq org-id-link-to-org-use-id t)
+  ;; I want these files to be searched for IDs, so that I can use
+  ;; org-capture templates with them, but do not want them to be part
+  ;; of org-agenda or org-roam.
+  (setq org-id-extra-files (list
+                            ps/file-tlon-tareas-leo
+                            ps/file-tlon-tareas-fede))
 
-  ;; copied from emacs.stackexchange.com/a/58834/32089
-  ;; TODO: add support for scanning file at point
-  (defun ps/org-id-update-id-locations (&optional files silent)
-    "Scan relevant files for IDs.
-Store the relation between files and corresponding IDs.
-This will scan all agenda files, all associated archives, and all
-files currently mentioned in `org-id-locations'.
-When FILES is given, scan these files instead."
+  (defun ps/org-id-update-id-locations ()
+  "Scan relevant files for IDs.
+
+Store the relation between files and corresponding IDs. This will
+scan all agenda files, all associated archives, all open Org
+files, recursively all files in `org-directory', and all files in
+`org-id-extra-files'."
     (interactive)
-    (if (not org-id-track-globally)
-        (error "Please turn on `org-id-track-globally' if you want to track IDs")
-      (let* ((org-id-search-archives
-              (or org-id-search-archives
-                  (and (symbolp org-id-extra-files)
-                       (symbol-value org-id-extra-files)
-                       (member 'agenda-archives org-id-extra-files))))
-             (files
-              (or files
-                  (append
-                   ;; Agenda files and all associated archives
-                   (org-agenda-files t org-id-search-archives)
-                   ;; Explicit extra files
-                   (if (symbolp org-id-extra-files)
-                       (symbol-value org-id-extra-files)
-                     org-id-extra-files)
-                   ;; Files associated with live Org buffers
-                   (delq nil
-                         (mapcar (lambda (b)
-                                   (with-current-buffer b
-                                     (and (derived-mode-p 'org-mode) (buffer-file-name))))
-                                 (buffer-list)))
-                   ;; All files known to have IDs
-                   org-id-files)))
-             org-agenda-new-buffers
-             file nfiles tfile ids reg found id seen (ndup 0))
-        (when (member 'agenda-archives files)
-          (setq files (delq 'agenda-archives (copy-sequence files))))
-        (setq nfiles (length files))
-        (while (setq file (pop files))
-          (unless silent
-            (message "Finding ID locations (%d/%d files): %s"
-                     (- nfiles (length files)) nfiles file))
-          (setq tfile (file-truename file))
-          (when (and (file-exists-p file) (not (member tfile seen)))
-            (push tfile seen)
-            (setq ids nil)
-            (with-current-buffer (org-get-agenda-file-buffer file)
-              (save-excursion
-                (save-restriction
-                  (widen)
-                  (goto-char (point-min))
-                  (while (re-search-forward "^[ \t]*:ID:[ \t]+\\(\\S-+\\)[ \t]*$"
-                                            nil t)
-                    (setq id (match-string-no-properties 1))
-                    (if (member id found)
-                        (progn
-                                        ;added logic
-                          (if org-clone-delete-id
-                              (org-entry-delete nil "ID")
-                            (org-id-get-create t))
-                                        ;end of added logic
-                          (message "Duplicate ID \"%s\", also in file %s"
-                                   id (or (car (delq
-                                                nil
-                                                (mapcar
-                                                 (lambda (x)
-                                                   (if (member id (cdr x))
-                                                       (car x)))
-                                                 reg)))
-                                          (buffer-file-name)))
-                          (when (= ndup 0)
-                            (ding)
-                            (sit-for 2))
-                          (setq ndup (1+ ndup)))
-                      (push id found)
-                      (push id ids)))
-                  (push (cons (abbreviate-file-name file) ids) reg))))))
-        (org-release-buffers org-agenda-new-buffers)
-        (setq org-agenda-new-buffers nil)
-        (setq org-id-locations reg)
-        (setq org-id-files (mapcar 'car org-id-locations))
-        (org-id-locations-save) ;; this function can also handle the alist form
-        ;; now convert to a hash
-        (setq org-id-locations (org-id-alist-to-hash org-id-locations))
-        (if (> ndup 0)
-            (message "WARNING: %d duplicate IDs found, check *Messages* buffer" ndup)
-          (message "%d unique files scanned for IDs" (length org-id-files)))
-        org-id-locations)))
+    (org-id-update-id-locations
+     (directory-files-recursively org-directory ".org$\\|.org.gpg$")))
 
   (defun ps/org-id-goto (id &optional arg)
     "Open ID even if narrowed."
@@ -11193,7 +11119,7 @@ When FILES is given, scan these files instead."
       (org-id-goto id)))
 
   :hook
-  (before-save-hook . ps/org-id-add-ids-to-headings-in-file)
+  (before-save-hook . ps/org-id-auto-add-ids-to-headings-in-file)
 
   :general
   (org-mode-map

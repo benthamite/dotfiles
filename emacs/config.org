@@ -495,10 +495,9 @@ I am sharing this file primarily to keep myself accountable. Knowing that others
 :PROPERTIES:
 :ID:       a47d148a-1b5e-4850-a1a7-6cd745bad696
 :END:
-Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~Control~ (~C~), ~Meta~ (~M~), ~Super~ (~s~), ~Hyper~ (~H~), and ~Alt~ (~A~). (The letter abbreviation for the ~Super~ modifier is ~s~ because ~S~ is reserved for the ~Shift~ key.) I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "quasi modifiers", i.e., mappings between individual keys and combinations of two or more Emacs modifiers, as follows:
+Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~Control~ (~C~), ~Meta~ (~M~), ~Super~ (~s~), ~Hyper~ (~H~), and ~Alt~ (~A~). (The letter abbreviation for the ~Super~ modifier is ~s~ because ~S~ is assigned to the ~Shift~ key.) I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "pseudo modifiers", i.e., mappings between individual keys and combinations of two or more Emacs modifiers, as follows:
 
 [[file:etc/moonlander-emacs.png]]
-
 
 So when you see a monstrous key binding such as ~C-H-M-s-d~, remember that everything that precedes the final key (in this case, ~d~) represents a single key press (in this case, ~l~). For details, see my [[../karabiner/config.org][karabiner config file]], specifically the "Key associations" section.
 

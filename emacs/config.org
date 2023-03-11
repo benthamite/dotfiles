@@ -947,6 +947,8 @@ NAME and ARGS are as in `use-package'."
 :ID:       0A62A6C8-D3D8-4960-A809-35B60A479D2B
 :END:
 
+/iso-transl: define ways of entering the non-ASCII printable characters with codes above 127./
+
 #+begin_src emacs-lisp
 (use-feature iso-transl
   :demand t

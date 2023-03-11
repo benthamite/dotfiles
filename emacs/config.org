@@ -107,13 +107,12 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#yasnippet-snippets][yasnippet-snippets]]
   - [[#hippie-expand][hippie-expand]]
   - [[#expand-region][expand-region]]
-  - [[#evil-nerd-commenter]]
+  - [[#newcomment][newcomment]]
   - [[#multiple-cursors][multiple-cursors]]
   - [[#crux][crux]]
   - [[#button][button]]
   - [[#back-button][back-button]]
   - [[#goto-last-change][goto-last-change]]
-  - [[#titlecase][titlecase]]
   - [[#goto-addr][goto-addr]]
 - [[#registers--bookmarks][registers & bookmarks]]
   - [[#registers][registers]]
@@ -125,7 +124,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#autorevert][autorevert]]
   - [[#dired][dired]]
   - [[#image-dired][image-dired]]
-  - [[#dired-undo][dired-undo]]
   - [[#all-the-icons-dired][all-the-icons-dired]]
   - [[#wdired][wdired]]
   - [[#gnus-dired][gnus-dired]]
@@ -156,7 +154,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-gcal][org-gcal]]
   - [[#calfw][calfw]]
   - [[#calfw-blocks][calfw-blocks]]
-  - [[#gcalcli][gcalcli]]
   - [[#time][time]]
   - [[#tmr][tmr]]
   - [[#hammy][hammy]]
@@ -266,7 +263,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#prog-mode][prog-mode]]
   - [[#lsp-mode][lsp-mode]]
   - [[#lsp-ui][lsp-ui]]
-  - [[#dap-mode][dap-mode]]
   - [[#dumb-jump][dumb-jump]]
   - [[#elisp-mode][elisp-mode]]
   - [[#debug][debug]]
@@ -384,8 +380,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#w3m][w3m]]
   - [[#elfeed][elfeed]]
   - [[#elfeed-org][elfeed-org]]
-  - [[#elfeed-tube][elfeed-tube]]
-  - [[#elfeed-score][elfeed-score]]
   - [[#google-this][google-this]]
   - [[#engine-mode][engine-mode]]
   - [[#osm][osm]]
@@ -3724,14 +3718,6 @@ CLOCK: [2021-06-25 Fri 21:18]--[2021-06-25 Fri 21:19] =>  0:01
   ("C-z" 'goto-last-change))
 #+end_src
 
-** titlecase
-:PROPERTIES:
-:ID:       32939B31-3D76-4D0F-B898-24FF740AA595
-:END:
-#+begin_src emacs-lisp :results silent
-(use-package titlecase)
-#+end_src
-
 ** goto-addr
 :PROPERTIES:
 :ID:       29DA9B62-C7A6-4B53-B49C-BE2C47D0F3AF
@@ -4604,13 +4590,6 @@ option."
   (dired-mode-map
    "I" 'ps/image-dired-current-directory))
 #+end_src
-
-** dired-undo
-:PROPERTIES:
-:ID:       8E072666-76B3-4858-A22E-667B313860D1
-:END:
-
-https://gitlab.com/daanturo/e/-/blob/0c45914e756dc7ce25f9b9935e86ad77f2b892a1/lisp/my-dired-undop.el
 
 ** all-the-icons-dired
 :PROPERTIES:
@@ -6024,18 +6003,11 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
      :view 'block-week)))
 #+end_src
 
-** gcalcli
-:PROPERTIES:
-:ID:       BDDB27DC-E5E2-42CC-B6B1-BBD17565EEC8
-:END:
-/The section below contains some custom functions for interfacing with [[https://github.com/insanum/gcalcli][gcalcli]], a Google Calendar Command Line Interface./
-
-[2023-01-14 Sat] I wasn't able to make it work, probably because of the issue reported [[https://github.com/insanum/gcalcli/issues][here]]. Maybe wait a couple of months and see if the problem is fixed.
-
 ** time
 :PROPERTIES:
 :ID:       88CCE9CB-8284-4C8B-8264-A1E54E299941
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature time
   :demand t
@@ -8969,23 +8941,11 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
   :commands lsp-ui-mode)
 #+end_src
 
-** dap-mode
-:PROPERTIES:
-:ID:       8E8F58B6-FCA7-4C29-B30A-D53D148DFF70
-:END:
-
-#+begin_src emacs-lisp :results silent
-;; optionally if you want to use debugger
-(use-package dap-mode
-  :after lsp-mode
-  :demand t)
-;; (use-package dap-LANGUAGE) to load the dap adapter for your language
-#+end_src
-
 ** dumb-jump
 :PROPERTIES:
 :ID:       BF9AD57C-A2BC-450B-8EAE-0FAAC951A52D
 :END:
+
 /[[https://github.com/jacktasia/dumb-jump][dumb-jump]] is a "jump to definition" package for 50+ languages./
 
 #+begin_src emacs-lisp :results silent
@@ -16463,17 +16423,6 @@ poorly-designed websites."
 
   (elfeed-org))
 #+end_src
-** elfeed-tube
-:PROPERTIES:
-:ID:       20226C47-7EBC-4E5F-A26C-01163F8A94F1
-:END:
-https://github.com/karthink/elfeed-tube
-
-** elfeed-score
-:PROPERTIES:
-:ID:       613BE063-E193-4C4D-9FFA-D0B9DBB73805
-:END:
-Check it out. It may be helpful for discovering relevant content for the Wiki. To briefly see it in action, see the first couple of minutes of [[https://emacsconf.org/2021/talks/research/][this video]].
 
 ** google-this
 :PROPERTIES:

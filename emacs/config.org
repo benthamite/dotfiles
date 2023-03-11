@@ -12929,11 +12929,12 @@ CLOCK: [2021-07-26 Mon 12:28]--[2021-07-26 Mon 12:29] =>  0:01
 CLOCK: [2021-07-26 Mon 11:17]--[2021-07-26 Mon 11:26] =>  0:09
 CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
 :END:
+
 /[[https://github.com/org-roam/org-roam-bibtex][org-roam-bibtex]] integrates [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]] and [[id:42191633-D2A1-4EDB-903F-3965ECB61510][bibtex]]./
 
 #+begin_src emacs-lisp :results silent
 (use-package org-roam-bibtex
-  :demand t
+  :defer 5
   ;; :after bibtex-completion
   :config
   (setq orb-roam-ref-format 'org-cite)

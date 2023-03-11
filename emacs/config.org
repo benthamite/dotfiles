@@ -128,7 +128,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#wdired][wdired]]
   - [[#gnus-dired][gnus-dired]]
   - [[#dired-x][dired-x]]
-  - [[#dired-subtree][dired-subtree]]
+  - [[#dired-hacks][dired-hacks]]
   - [[#dired-quick-sort][dired-quick-sort]]
   - [[#dired-du][dired-du]]
   - [[#minibuffer][minibuffer]]
@@ -4737,7 +4737,7 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
    "–" 'dired-omit-mode))
 #+end_src
 
-** dired-subtree
+** dired-hacks
 :PROPERTIES:
 :ID:       C3E2CA62-26C4-4681-81D8-4326BE474717
 :END:
@@ -4753,6 +4753,8 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
 #+begin_src emacs-lisp :results silent
 (use-package dired-hacks
   :after dired
+  :defer 10
+  
   :config
   (advice-add 'dired-subtree-toggle :after (lambda () (dired-omit-mode) (dired-omit-mode)))
   (advice-add 'dired-subtree-cycle :after (lambda () (dired-omit-mode) (dired-omit-mode)))

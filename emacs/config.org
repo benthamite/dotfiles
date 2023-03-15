@@ -15276,12 +15276,15 @@ I.e. the message quoted when on replies to, or forwards, an existing email.
 :ID:       3F610D3D-B076-4DF5-B1AC-B9A163A5A04C
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-15 Wed 00:48]--[2023-03-15 Wed 00:55] =>  0:07
 CLOCK: [2022-06-08 Wed 20:13]--[2022-06-08 Wed 20:36] =>  0:23
 CLOCK: [2021-12-07 Tue 12:46]--[2021-12-07 Tue 12:47] =>  0:01
 :END:
 
 Also add spacing (properties are ~padding~ / ~margin~)
 This is controlled with ~org-msg-enforce-css~.
+
+See https://stackoverflow.com/questions/66214297/how-can-i-set-the-same-padding-left-in-my-template-for-outlook-gmail-emails
 *** TODO [#5] Figure out how to include LaTeX/Mathjax
 :PROPERTIES:
 :Effort:   0:30

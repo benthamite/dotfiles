@@ -387,7 +387,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#osm][osm]]
   - [[#twittering-mode][twittering-mode]]
   - [[#md4rd][md4rd]]
-  - [[#hugo][hugo]]
   - [[#org-download][org-download]]
   - [[#org-web-tools][org-web-tools]]
   - [[#request][request]]
@@ -16815,16 +16814,6 @@ account."
   (md4rd-mode-hook . md4rd-indent-all-the-lines))
 #+end_src
 
-** hugo
-:PROPERTIES:
-:ID:       7C6912C7-B5CB-4A04-8145-A89B891F7A0C
-:END:
-:LOGBOOK:
-CLOCK: [2021-04-11 Sun 09:02]--[2021-04-11 Sun 09:06] =>  0:04
-:END:
-
-- [[https://lucidmanager.org/productivity/create-websites-with-org-mode-and-hugo/][Create Websites with Emacs: Blogging with Org Mode and Hugo]]
-- [[https://sidhartharya.me/exporting-org-roam-notes-to-hugo/][Exporting Org Roam notes to hugo - Sidharth Arya]]
 
 ** org-download
 :PROPERTIES:

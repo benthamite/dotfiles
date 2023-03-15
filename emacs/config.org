@@ -13154,6 +13154,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-12 Sun 19:36]--[2023-03-12 Sun 20:19] =>  0:43
 CLOCK: [2022-09-22 Thu 14:39]--[2022-09-22 Thu 15:15] =>  0:36
 CLOCK: [2022-09-13 Tue 17:29]--[2022-09-13 Tue 17:56] =>  0:27
 CLOCK: [2022-09-13 Tue 16:36]--[2022-09-13 Tue 17:05] =>  0:29
@@ -13192,9 +13193,9 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
   (setq ebib-use-timestamp t)
   (setq ebib-preload-bib-files org-cite-global-bibliography)
   (setq ebib-index-columns '(("Entry Key" 30 t)
-                        ("Author/Editor" 25 t)
-                        ("Year" 4 t)
-                        ("Title" 50 t)))
+                             ("Author/Editor" 25 t)
+                             ("Year" 4 t)
+                             ("Title" 50 t)))
   (setq ebib-timestamp-format "%Y-%m-%d %T (%Z)")
   (setq ebib-save-xrefs-first nil)
   (setq ebib-default-entry-type "online")
@@ -13762,7 +13763,8 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
              ;; open the pdf to make sure it displays the web page correctly
              (ps/ebib-open-pdf-file)
              ;; ocr the pdf if necessary
-             (ps/ocr-pdf (format "'%s' '%s'" (expand-file-name file-name) (expand-file-name file-name)))))))
+             (let ((expanded-file-name (expand-file-name file-name)))
+               (ps/ocr-pdf (format "'%s' '%s'" expanded-file-name expanded-file-name)))))))
       (default
        (beep))))
 
@@ -14201,6 +14203,16 @@ first name, and names are separated by a semicolon."
       (default
        (beep))))
 
+  (defun ps/ebib-download-url-with-zotra ()
+    "Download the URL associated with the current entry with `zotra'."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (let ((url (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+         (zotra-download-attachment-from-url url)))
+      (default
+       (beep))))
+
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
 
@@ -14269,7 +14281,7 @@ The macro below generates the commands correcty. But attempting to define key bi
 - First export them to csv.
 - Then convert the csv to bibtex
   https://www.google.com/search?q=csv+to+bibtex&oq=csv+to+bib&aqs=chrome.0.0i512j69i57j0i512l2j0i22i30j0i10i22i30l5.7911j0j9&sourceid=chrome&ie=UTF-8
-  
+
 *** TODO [#5] Fix ebib issues Leo reported
 :PROPERTIES:
 :ID:       359ADA5E-7B2F-4BF9-94CC-DE0BB5A516C9

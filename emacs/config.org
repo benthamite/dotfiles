@@ -830,6 +830,7 @@ Process for updating packages:
 
 #+begin_src emacs-lisp :results silent
 (setq straight-repository-branch "develop") ; must precede bootstrap
+(setq straight-profiles `((nil . ,(file-name-concat ps/dir-dotemacs "straight-profile.el"))))
 ;; Bootstrap `straight'
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -845,9 +846,9 @@ Process for updating packages:
   (load bootstrap-file nil 'nomessage))
 (setq straight-default-vc 'git)
 (setq straight-check-for-modifications '(find-at-startup watch-files find-when-checking)) ; github.com/raxod502/straight.el#my-init-time-got-slower
-(setq straight-profiles `((nil . ,(file-name-concat ps/dir-dotemacs "straight-profile.el"))))
 (setq straight-use-package-by-default t)
 (require 'straight-x) ; github.com/raxod502/straight.el#how-do-i-uninstall-a-package
+ 
 #+end_src
 
 
@@ -939,7 +940,7 @@ NAME and ARGS are as in `use-package'."
 :ID:       3411777E-E554-4EF3-9389-63242D4F3072
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/ns-win)
 (use-feature ns-win
   :demand t
   :config
@@ -949,7 +950,9 @@ NAME and ARGS are as in `use-package'."
   (setq mac-function-modifier 'none)
   (setq mac-right-option-modifier 'none)
   (setq mac-right-control-modifier 'super)
-  (setq mac-right-command-modifier 'alt))
+  (setq mac-right-command-modifier 'alt)
+  
+  )
 #+end_src
 
 ** iso-transl
@@ -10889,73 +10892,77 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 :END:
 
 #+begin_src emacs-lisp :results silent
-(use-feature org-fold
-  :demand t
-  :config
-  (setq org-fold-catch-invisible-edits 'smart)
+(ps/init-override-code-if-available
+ :ps/org-fold
+ '(
+  (use-feature org-fold
+    :demand t
+    :config
+    (setq org-fold-catch-invisible-edits 'smart)
 
-  (defun ps/org-fold-show-all-headings ()
-    "Show contents of all headings in buffer, except archives."
-    (interactive)
-    (org-fold-show-all '(headings))
-    (org-cycle-hide-archived-subtrees 'all))
+    (defun ps/org-fold-show-all-headings ()
+      "Show contents of all headings in buffer, except archives."
+      (interactive)
+      (org-fold-show-all '(headings))
+      (org-cycle-hide-archived-subtrees 'all))
 
-  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
-  (defun ps/org-hide-properties ()
-    "Hide all org-mode headline property drawers in buffer. Could be
+    ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
+    (defun ps/org-hide-properties ()
+      "Hide all org-mode headline property drawers in buffer. Could be
   slow if it has a lot of overlays."
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward
-              "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
-        (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-          (overlay-put ov_this 'display "")
-          (overlay-put ov_this 'hidden-prop-drawer t))))
-    (put 'org-toggle-properties-hide-state 'state 'hidden))
+      (interactive)
+      (save-excursion
+	(goto-char (point-min))
+	(while (re-search-forward
+		"^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
+          (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
+            (overlay-put ov_this 'display "")
+            (overlay-put ov_this 'hidden-prop-drawer t))))
+      (put 'org-toggle-properties-hide-state 'state 'hidden))
 
-  (defun ps/org-hide-logbook ()
-    "Hide all org-mode headline logbook drawers in buffer. Could be
+    (defun ps/org-hide-logbook ()
+      "Hide all org-mode headline logbook drawers in buffer. Could be
 slow if it has a lot of overlays."
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward
-              "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
-        (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-          (overlay-put ov_this 'display "")
-          (overlay-put ov_this 'hidden-logbook-drawer t))))
-    (put 'org-toggle-logbook-hide-state 'state 'hidden))
+      (interactive)
+      (save-excursion
+	(goto-char (point-min))
+	(while (re-search-forward
+		"^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
+          (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
+            (overlay-put ov_this 'display "")
+            (overlay-put ov_this 'hidden-logbook-drawer t))))
+      (put 'org-toggle-logbook-hide-state 'state 'hidden))
 
-  (defun ps/org-show-properties ()
-    "Show all org-mode property drawers hidden by org-hide-properties."
-    (interactive)
-    (remove-overlays (point-min) (point-max) 'hidden-prop-drawer t)
-    (put 'org-toggle-properties-hide-state 'state 'shown))
+    (defun ps/org-show-properties ()
+      "Show all org-mode property drawers hidden by org-hide-properties."
+      (interactive)
+      (remove-overlays (point-min) (point-max) 'hidden-prop-drawer t)
+      (put 'org-toggle-properties-hide-state 'state 'shown))
 
-  (defun ps/org-show-logbook ()
-    "Show all org-mode logbook drawers hidden by org-hide-properties."
-    (interactive)
-    (remove-overlays (point-min) (point-max) 'hidden-logbook-drawer t)
-    (put 'org-toggle-logbook-hide-state 'state 'shown))
+    (defun ps/org-show-logbook ()
+      "Show all org-mode logbook drawers hidden by org-hide-properties."
+      (interactive)
+      (remove-overlays (point-min) (point-max) 'hidden-logbook-drawer t)
+      (put 'org-toggle-logbook-hide-state 'state 'shown))
 
-  (defun ps/org-toggle-properties ()
-    "Toggle visibility of property drawers."
-    (interactive)
-    (if (eq (get 'org-toggle-properties-hide-state 'state) 'hidden)
-        (ps/org-show-properties)
-      (ps/org-hide-properties)))
+    (defun ps/org-toggle-properties ()
+      "Toggle visibility of property drawers."
+      (interactive)
+      (if (eq (get 'org-toggle-properties-hide-state 'state) 'hidden)
+          (ps/org-show-properties)
+	(ps/org-hide-properties)))
 
-  (defun ps/org-toggle-logbook ()
-    "Toggle visibility of logbook drawers."
-    (interactive)
-    (if (eq (get 'org-toggle-logbook-hide-state 'state) 'hidden)
-        (ps/org-show-logbook)
-      (ps/org-hide-logbook)))
+    (defun ps/org-toggle-logbook ()
+      "Toggle visibility of logbook drawers."
+      (interactive)
+      (if (eq (get 'org-toggle-logbook-hide-state 'state) 'hidden)
+          (ps/org-show-logbook)
+	(ps/org-hide-logbook)))
 
-  :hook
-  (org-mode-hook . ps/org-hide-properties)
-  (org-mode-hook . ps/org-hide-logbook))
+    :hook
+    (org-mode-hook . ps/org-hide-properties)
+    (org-mode-hook . ps/org-hide-logbook))
+  ))
 #+end_src
 
 ** org-faces

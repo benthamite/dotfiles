@@ -4529,6 +4529,7 @@ option."
 
 #+begin_src emacs-lisp :results silent
 (use-feature image-dired
+  :after dired
   :config
   (setq image-dired-main-image-directory "~/Pictures/")
 
@@ -4667,7 +4668,7 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
 (use-package dired-hacks
   :after dired
   :defer 10
-  
+
   :config
   (advice-add 'dired-subtree-toggle :after (lambda () (dired-omit-mode) (dired-omit-mode)))
   (advice-add 'dired-subtree-cycle :after (lambda () (dired-omit-mode) (dired-omit-mode)))

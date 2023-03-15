@@ -11152,7 +11152,7 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
 (use-feature org-refile
   :defer 10
   :config
-  (setq org-refile-use-outline-path t)
+  (setq org-refile-use-outline-path 'level3)
   (setq org-outline-path-complete-in-steps nil)
   (setq org-refile-allow-creating-parent-nodes 'confirm)
   (setq org-reverse-note-order t) ; refile to the beginning of header

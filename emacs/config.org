@@ -48,6 +48,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#mixed-pitch][mixed-pitch]]
   - [[#fringe][fringe]]
   - [[#org-modern][org-modern]]
+  - [[#org-modern-indent][org-modern-indent]]
   - [[#faces][faces]]
   - [[#face-remap][face-remap]]
   - [[#theme-loaddefs][theme-loaddefs]]
@@ -1855,6 +1856,24 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
                      (43 . "○")
                      (45 . "○")))
   (global-org-modern-mode))
+#+end_src
+
+** org-modern-indent
+:PROPERTIES:
+:ID:       740E3E7F-BF38-484E-BBD6-BF9AEC978612
+:END:
+
+/[[https://github.com/jdtsmith/org-modern-indent][org-modern-indent]] extends org-modern stylistic improvements to contexts involving indentation./
+
+#+begin_src emacs-lisp
+(use-package org-modern-indent
+  :straight (org-modern-indent
+             :host github
+             :repo "jdtsmith/org-modern-indent")
+  :after org-modern org-indent
+  :demand t
+  :config
+  (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
 #+end_src
 
 ** faces

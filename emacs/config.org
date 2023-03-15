@@ -414,14 +414,13 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#calc][calc]]
   - [[#calc][calc]]
   - [[#constants][constants]]
-- [[#games][games]]
-  - [[#tetris][tetris]]
 - [[#misc][misc.]]
   - [[#unpackaged][unpackaged]]
   - [[#macos][macos]]
   - [[#midnight][midnight]]
   - [[#keycast][keycast]]
   - [[#custom][custom]]
+  - [[#tetris][tetris]]
 - [[#personal-projects][personal projects]]
   - [[#tlon][Tlon]]
   - [[#keyboard-maestro][Keyboard Maestro]]
@@ -17567,26 +17566,6 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 (use-package constants)
 #+end_src
 
-* games
-:PROPERTIES:
-:ID:       5694074B-989E-4B06-B9EB-5807AAB36DDC
-:END:
-
-** tetris
-:PROPERTIES:
-:ID:       F4C5A232-7788-4240-9CE2-B6761C905786
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature tetris
-  :general
-  (tetris-mode-map
-   "k" 'tetris-rotate-prev
-   "l" 'tetris-move-down
-   "j" 'tetris-move-left
-   ";" 'tetris-move-right))
-#+end_src
-
 * misc.
 :PROPERTIES:
 :ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
@@ -17748,6 +17727,21 @@ I'm not tracking prices anymore so this is probably not worth it currently.
   :config
   (setq custom-safe-themes t)
   (setq custom-file (file-name-concat ps/dir-downloads "delete.me"))) ; move unintended customizations to a garbage file
+#+end_src
+
+** tetris
+:PROPERTIES:
+:ID:       F4C5A232-7788-4240-9CE2-B6761C905786
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature tetris
+  :general
+  (tetris-mode-map
+   "k" 'tetris-rotate-prev
+   "l" 'tetris-move-down
+   "j" 'tetris-move-left
+   ";" 'tetris-move-right))
 #+end_src
 
 * personal projects

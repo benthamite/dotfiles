@@ -10316,6 +10316,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tbb" "Tlön: BAE: Generic " entry
            (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
+          ("tbl" "Tlön: BAE: Process Leo's revisions " entry
+           (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
+           "** TODO [#6] Process Leo's revisions of '%c%?' \n" :empty-lines 1 :prepend t)
           ("tbr" "Tlön: BAE: Revise translation " entry
            (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
            "** TODO [#6] Revise '%c%?' translation \n" :empty-lines 1 :prepend t)
@@ -10384,54 +10387,57 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlb" "Tlön: Leo: BAE")
-          ("tlba" "Tlön: Leo: Add to translations Airtable" entry
+          ("tlba" "Tlön: Leo: BAE: Add to translations Airtable" entry
            (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
-           "** TODO [#6] Add to translations Airtable :leo:\n%c" :empty-lines 1 :prepend t)
-          ("tlbb" "Tlön: Leo: Generic BAE task" entry
+           "** TODO [#5] Add to translations Airtable :leo:\n%c" :empty-lines 1 :prepend t)
+          ("tlbb" "Tlön: Leo: BAE: Generic BAE task" entry
            (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+           "** TODO [#5] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tli" "Tlön: Leo: EAI")
-          ("tlii" "Tlön: Leo: Generic EAI task" entry
+          ("tlii" "Tlön: Leo: EAI: Generic EAI task" entry
            (id "698743B9-B754-4061-89BD-6E49F3B64DE2")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tln" "Tlön: Leo: EAN")
-          ("tlna" "Tlön: Leo: Add to ea.news" entry
+          ("tlna" "Tlön: Leo: EAN: Add to ea.news" entry
            (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
            "** TODO [#6] Agregar a ea.news :leo:\n%c" :empty-lines 1 :prepend t)
-          ("tlnn" "Tlön: Leo: Generic EAN" entry
+          ("tlnn" "Tlön: Leo: EAN: Generic EAN" entry
            (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlnu" "Tlön: Leo: EAN: Update ea.news" entry
+           (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
+           "** TODO [#7] Actualizar feed/link de ea.news :leo:\n%?\n%c" :empty-lines 1 :prepend t)
           ("tlm" "Tlön: Leo: FM")
-          ("tlmm" "Tlön: Leo: Generic FM task" entry
+          ("tlmm" "Tlön: Leo: FM: Generic FM task" entry
            (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlmn" "Tlön: Leo: FM: Add to Future Matters: news" entry
+           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+           "** TODO [#4] Future Matters: news :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
+          ("tlmr" "Tlön: Leo: FM: Add to Future Matters: research" entry
+           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+           "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
           ("tlg" "Tlön: Leo: GPE")
-          ("tlgg" "Tlön: Leo: Generic GPE task" entry
+          ("tlgg" "Tlön: Leo: GPE: Generic GPE task" entry
            (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlh" "Tlön: Leo: HEAR")
-          ("tlhh" "Tlön: Leo: Generic HEAR task" entry
+          ("tlhh" "Tlön: Leo: HEAR: Generic HEAR task" entry
            (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tlmn" "Tlön: Leo: Add to Future Matters: news" entry
-           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-           "** TODO [#4] Future Matters: news :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
-          ("tlmr" "Tlön: Leo: Add to Future Matters: research" entry
-           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-           "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
           ("tld" "Tlön: Leo: LBDLH")
-          ("tldd" "Tlön: Leo: Generic LBDLH task" entry
+          ("tldd" "Tlön: Leo: LBDLH: Generic LBDLH task" entry
            (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlw" "Tlön: Leo: PW")
-          ("tlww" "Tlön: Leo: Generic PW task" entry
+          ("tlww" "Tlön: Leo: PW: Generic PW task" entry
            (id "12645897-A06F-44DD-876D-0FFC47D0E742")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlr" "Tlön: Leo: RAE")
-          ("tlrl" "Tlön: Leo: RAE add to lexicon" entry
+          ("tlrl" "Tlön: Leo: RAE: Add to lexicon" entry
            (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
            "** TODO [#6] Agregar al lexicon de Azure :leo:\n%?" :empty-lines 1 :prepend t)
-          ("tlrr" "Tlön: Leo: Generic RAE task" entry
+          ("tlrr" "Tlön: Leo: RAE: Generic RAE task" entry
            (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlx" "Tlön: Leo: Meetings" entry
@@ -10541,8 +10547,7 @@ conditional on active capture template."
    "H-T" 'org-capture-goto-last-stored)
   (org-capture-mode-map
    "s-c" 'org-capture-finalize
-   "s-w" 'org-capture-refile)
-
+   "s-w" 'org-capture-refile))
 #+end_src
 
 Links to check out:

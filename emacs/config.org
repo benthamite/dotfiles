@@ -407,12 +407,10 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#pass][pass]]
   - [[#auth-source-pass][auth-source-pass]]
   - [[#pass-otp][pass-otp]]
-- [[#notifications][notifications]]
-  - [[#alert][alert]]
-- [[#calc][calc]]
+- [[#misc][misc.]]
   - [[#calc][calc]]
   - [[#constants][constants]]
-- [[#misc][misc.]]
+  - [[#alert][alert]]
   - [[#unpackaged][unpackaged]]
   - [[#macos][macos]]
   - [[#midnight][midnight]]
@@ -17403,10 +17401,58 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
 
 [[https://github.com/tadfisher/pass-otp][GitHub - tadfisher/pass-otp: A pass extension for managing one-time-password (OTP) tokens]]
 
-* notifications
+* misc.
 :PROPERTIES:
-:ID:       7F48BD07-3570-46C7-A535-87CA5833E84E
+:ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
 :END:
+
+#+begin_src emacs-lisp :results silent
+;; github.com/Gleek/emacs.d/blob/761dad7e97accd6d1537a201c5d447a6be1d155c/core/core-util.el#L31
+(defun ps/random-alnum (&optional length)
+  (let ((times (or length 5))
+        (random ""))
+    (setq-local random "")
+    (dotimes (_ times)
+      (setq random (concat random (let* ((alnum "abcdefghijklmnopqrstuvwxyz0123456789")
+             (i (% (abs (random)) (length alnum))))
+                       (substring alnum i (1+ i))))))
+    random))
+
+(defun ps/string-match-in-list-p (string list-of-strings)
+  ""
+  (catch 'tag
+    (mapc
+     (lambda (-x)
+       (when (string-match (regexp-quote string) -x )
+         (throw 'tag -x)))
+     list-of-strings)
+    nil))
+#+end_src
+
+** calc
+:PROPERTIES:
+:ID:       50FAD2F3-E501-408E-A9A2-8358FAA87C1C
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature calc
+  :general
+  ("A-c" 'calc
+   "A-M-c" 'quick-calc)
+  ((calc-mode-map calc-alg-map)
+   "C-k" nil))
+#+end_src
+
+** constants
+:PROPERTIES:
+:ID:       E9DB498C-A4B6-4665-8CA1-40BBAC219B76
+:END:
+
+/[[https://github.com/emacsmirror/constants][constants]] provides physical values of physical constants and units./
+
+#+begin_src emacs-lisp :results silent
+(use-package constants)
+#+end_src
 
 ** alert
 :PROPERTIES:
@@ -17435,14 +17481,13 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
       (setq alert-default-style 'osx-notifier)
     (setq alert-default-style 'notifications))
 
-
   ;; This function has to be loaded manually, for some reason.
-  (defun alert-osx-notifier-notify (info)
-    (apply #'call-process "osascript" nil nil nil "-e"
-           (list (format "display notification %S with title %S"
-                         (alert-encode-string (plist-get info :message))
-                         (alert-encode-string (plist-get info :title)))))
-    (alert-message-notify info))
+  ;; (defun alert-osx-notifier-notify (info)
+  ;;   (apply #'call-process "osascript" nil nil nil "-e"
+  ;;          (list (format "display notification %S with title %S"
+  ;;                        (alert-encode-string (plist-get info :message))
+  ;;                        (alert-encode-string (plist-get info :title)))))
+  ;;   (alert-message-notify info))
 
   (defun ps/alert-dismiss-osx-notification ()
     "docstring"

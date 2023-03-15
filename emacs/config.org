@@ -1807,10 +1807,8 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   :config
   (setq mixed-pitch-set-height t)
 
-  :hook
-  (mu4e-view-mode-hook . mixed-pitch-mode)
-  (org-mode-hook . mixed-pitch-mode)
-  (outline-mode-hook . mixed-pitch-mode))
+  (add-hook 'mu4e-view-mode-hook #'mixed-pitch-mode)
+  (add-hook 'outline-mode-hook #'mixed-pitch-mode))
 #+end_src
 
 ** fringe
@@ -2028,9 +2026,8 @@ installed."
 
   (ps/modus-themes-load-theme-conditionally)
 
-  :hook
-  (modus-themes-after-load-theme-hook . ps/faces-load-custom-faces)
-  (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
+  (add-hook 'modus-themes-after-load-theme-hook #'ps/faces-load-custom-faces)
+  (add-hook 'modus-themes-after-load-theme-hook #'ps/modus-themes-highlight-parentheses)
 
   :general
   ("A-d" 'modus-themes-toggle))
@@ -2053,8 +2050,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   (setq highlight-parentheses-delay 0)
   (global-highlight-parentheses-mode)
 
-  :hook
-  (minibuffer-setup-hook . highlight-parentheses-minibuffer-setup))
+  (add-hook 'minibuffer-setup-hook #'highlight-parentheses-minibuffer-setup))
 #+end_src
 
 ** emojify
@@ -2068,8 +2064,8 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 (use-package emojify
   :config
   (emojify-set-emoji-styles '(unicode))
-  :hook
-  (after-init . global-emojify-mode)
+  (add-hook 'after-init #'global-emojify-mode)
+
   :general
   ("H-e" 'emojify-insert-emoji))
 #+end_src
@@ -2264,8 +2260,7 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
   :config
   (all-the-icons-completion-mode)
 
-  :hook
-  (marginalia-mode-hook . all-the-icons-completion-marginalia-setup))
+  (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
 #+end_src
 
 ** menu-bar-mode
@@ -3407,8 +3402,8 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 (use-feature outline
   :demand t
 
-  :hook
-    (prog-mode-hook . outline-minor-mode)
+  :config
+    (add-hook 'prog-mode-hook #'outline-minor-mode)
 
   :general
   ((outline-mode-map outline-minor-mode-map)
@@ -4386,9 +4381,8 @@ process in these cases."
   ;; (setq auto-save-visited-interval 5)
   ;; (auto-save-visited-mode)
 
-  :hook
-  (find-file-hook . ps/auto-save-alert)
-  ;; (kill-buffer-query-functions . ps/auto-save-persist)
+  (add-hook 'find-file-hook #'ps/auto-save-alert)
+  ;; (add-hook 'kill-buffer-query-functions #'ps/auto-save-persist)
 
   :general
   ("M--" 'not-modified
@@ -4590,8 +4584,7 @@ option."
       (copy-file existing-file new-file))
     (revert-buffer))
 
-  :hook
-  (dired-mode-hook . dired-hide-details-mode) ; hide details by default
+  (add-hook 'dired-mode-hook #'dired-hide-details-mode) ; hide details by default
 
   :general
   (dired-mode-map
@@ -4669,8 +4662,7 @@ CLOCK: [2022-07-17 Sun 10:49]--[2022-07-17 Sun 11:13] =>  0:24
         (all-the-icons-dired-mode)
       (all-the-icons-dired-mode -1)))
 
-  :hook
-  (dired-mode-hook . ps/all-the-icons-dired-mode-activate))
+  (add-hook 'dired-mode-hook #'ps/all-the-icons-dired-mode-activate))
 #+end_src
 
 ** wdired
@@ -4718,8 +4710,7 @@ The code block below, based on [[https://www.djcbsoftware.nl/code/mu/mu4e/Attach
       (nreverse buffers)))
   (advice-add 'gnus-dired-mail-buffers :override #'ps/gnus-dired-mail-buffers)
 
-  :hook
-  (dired-mode-hook . turn-on-gnus-dired-mode)
+  (add-hook 'dired-mode-hook #'turn-on-gnus-dired-mode)
 
   :general
   (dired-mode-map
@@ -4744,8 +4735,8 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
   (setq dired-omit-size-limit nil) ; always omit, regardless of directory size
   (setq dired-omit-files
         (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
-  :hook
-  (dired-mode-hook . dired-omit-mode)
+
+  (add-hook 'dired-mode-hook #'dired-omit-mode)
 
   :general
   (dired-mode-map
@@ -4844,8 +4835,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
       (select-frame-set-input-focus (window-frame (active-minibuffer-window)))
       (select-window (active-minibuffer-window))))
 
-  :hook
-  (minibuffer-setup-hook . yas-minor-mode)
+  (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
 
   :general
   ("A-C-H-0" 'ps/switch-to-minibuffer-window
@@ -5555,10 +5545,9 @@ needs to be included as an element in the list defined by
   ;; (setq writeroom-fullscreen-effect 'maximized) ; disables annoying fullscreen transition effect on MacOS
   (setq writeroom-maximize-window t)
 
-  :hook
   ;; This neds to be delayed because the value of `window-total-width'
   ;; is changed during startup..
-  (emacs-startup-hook . (lambda () (setq writeroom-width (window-total-width))))
+  (add-hook 'emacs-startup-hook (lambda () (setq writeroom-width (window-total-width))))
 
   :general
   ("M-'" 'writeroom-mode
@@ -6309,8 +6298,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
                              search-ring regexp-search-ring))
   (setq history-length 1000)
 
-  :hook
-  (after-init-hook . session-initialize))
+  (add-hook 'after-init-hook #'session-initialize))
 #+end_src
 
 ** recentf
@@ -6515,8 +6503,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq code-review-new-buffer-window-strategy #'switch-to-buffer)
   (setq code-review-auth-login-marker 'forge)
 
-  :hook
-  (code-review-mode-hook . emojify-mode))
+  (add-hook 'code-review-mode-hook #'emojify-mode))
 #+end_src
 
 ** git-timemachine
@@ -7123,8 +7110,8 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 (use-package embark-consult
   :after embark consult
   :demand t
-  :hook
-  (embark-collect-mode-hook . consult-preview-at-point-mode))
+  :config
+  (add-hook 'embark-collect-mode-hook #'consult-preview-at-point-mode))
 #+end_src
 
 ** marginalia
@@ -7250,11 +7237,10 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
   (global-corfu-mode)
 
-  :hook
-  (prog-mode-hook . corfu-popupinfo-mode)
-  (prog-mode-hook . corfu-echo-mode)
-  (corfu-mode-hook . corfu-history-mode)
-  (minibuffer-setup-hook . ps/corfu-enable-always-in-minibuffer)
+  (add-hook 'prog-mode-hook #'corfu-popupinfo-mode)
+  (add-hook 'prog-mode-hook #'corfu-echo-mode)
+  (add-hook 'corfu-mode-hook #'corfu-history-mode)
+  (add-hook 'minibuffer-setup-hook #'ps/corfu-enable-always-in-minibuffer)
 
   :general
   (corfu-map
@@ -7368,8 +7354,8 @@ Useful for prompts such as `eval-expression' and `shell-command'."
              :host github
              :repo "xenodium/org-block-capf")
   :demand t
-  :hook
-  (org-mode-hook . org-block-capf-add-to-completion-at-point-functions))
+  :config
+  (add-hook 'org-mode-hook #'org-block-capf-add-to-completion-at-point-functions))
 #+end_src
 
 ** company
@@ -7382,8 +7368,8 @@ I use ~completion-at-point~ for completion, not company. However, I still rely o
 #+begin_src emacs-lisp :results silent
 (use-package company
   :defer 5
-  :hook
-  (telega-chat-mode-hook . company-mode))
+  :config
+  (add-hook 'telega-chat-mode-hook #'company-mode))
 #+end_src
 
 * help
@@ -7791,8 +7777,8 @@ necessary."
 (use-package eshell-syntax-highlighting
   :after eshell
   :demand t
-  :hook
-  (eshell-mode-hook . eshell-syntax-highlighting-global-mode))
+  :config
+  (add-hook 'eshell-mode-hook #'eshell-syntax-highlighting-global-mode))
 #+end_src
 
 ** pcmpl-args
@@ -7992,6 +7978,9 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
   (advice-add 'flyspell-region :around
               #'telega-chatbuf-input-as-region-advice)
 
+  (add-hook 'text-mode-hook #'flyspell-mode)
+  (add-hook 'prog-mode-hook #'flyspell-prog-mode)
+
   :general
   ("M-p" 'flyspell-buffer
    "A-M-," 'ps/flyspell-goto-previous-error
@@ -8008,9 +7997,6 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
    "A-s-s" 'ps/flyspell-save-word-and-next
    "s-c" 'flyspell-correct-wrapper)
 
-  :hook
-  (text-mode-hook . flyspell-mode)
-  (prog-mode-hook . flyspell-prog-mode))
 #+end_src
 
 *** TODO [#7] Create dwim version of flyspell-buffer
@@ -8110,10 +8096,10 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
   (setq lsp-grammarly-suggestions-possibly-biased-language-race-ethnicity-related nil)
   (setq lsp-grammarly-suggestions-possibly-politically-incorrect-language nil)
 
-  :hook
-  (org-mode-hook . (lambda ()
-                     (require 'lsp-grammarly)
-                     (lsp))))
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (require 'lsp-grammarly)
+              (lsp))))
 #+end_src
 
 *** TODO [#6] Check this
@@ -8135,9 +8121,11 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 (use-package eglot-grammarly
   :straight (:host github :repo "emacs-grammarly/eglot-grammarly")
   :defer t
-  :hook ((text-mode markdown-mode). (lambda ()
-                                      (require 'eglot-grammarly)
-                                      (eglot-ensure))))
+  :config
+  (add-hook 'text-mode markdown-mode
+            (lambda ()
+              (require 'eglot-grammarly)
+              (eglot-ensure))))
 #+end_src
 
 ** aide
@@ -8178,8 +8166,8 @@ To check: https://github.com/PillFall/languagetool.el
 #+begin_src emacs-lisp :results silent
 (use-feature text-mode
   :demand t
-  :hook
-  (text-mode-hook . visual-line-mode))
+  :config
+  (add-hook 'text-mode-hook #'visual-line-mode))
 #+end_src
 
 *** TODO [#6] Define ~text-mode-hook~ and ~prog-mode-hook~
@@ -8746,8 +8734,7 @@ otherwise the whole buffer."
     "Decrease date of transaction at point by one day."
     (ps/ledger--increase-date-of-transaction-at-point -1))
 
-  ;; :hook
-  ;; (ledger-mode-hook . (lambda () (setq-local ledger-complete-in-steps t)))
+  ;; (add-hook 'ledger-mode-hook (lambda () (setq-local ledger-complete-in-steps t)))
 
   :general
   (ledger-mode-map
@@ -8941,10 +8928,9 @@ FILE."
       (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
       (message "Copied all text in PDF to kill ring.")))
 
-  :hook
-  (pdf-tools-enabled-hook . ps/pdf-tools-apply-theme)
-  (pdf-tools-enabled-hook . pdf-view-fit-page-to-window)
-  (pdf-tools-enabled-hook . sow-mode)
+  (add-hook 'pdf-tools-enabled-hook #'ps/pdf-tools-apply-theme)
+  (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
+  (add-hook 'pdf-tools-enabled-hook #'sow-mode)
 
   :general
   ((pdf-view-mode-map pdf-annot-minor-mode-map pdf-history-minor-mode-map)
@@ -9009,8 +8995,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 (use-package pdf-view-restore
   :after pdf-tools
   :demand t
-  :hook
-  (pdf-view-mode-hook . pdf-view-restore-mode))
+  :config
+  (add-hook 'pdf-view-mode-hook #'pdf-view-restore-mode))
 #+end_src
 
 ** org-pdftools
@@ -9024,8 +9010,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 (use-package org-pdftools
   :after org pdf-tools
   :defer 30
-  :hook
-  (org-mode-hook . org-pdftools-setup-link))
+  :config
+  (add-hook 'org-mode-hook #'org-pdftools-setup-link))
 #+end_src
 
 ** org-noter-pdftools
@@ -9084,9 +9070,8 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
         (lsp)
       (lsp-disconnect)))
 
-  :hook
   ;; if you want which-key integration
-  (lsp-mode . lsp-enable-which-key-integration)
+  (add-hook 'lsp-mode #'lsp-enable-which-key-integration)
 
   :general
   ("A-l" 'ps/lsp-toggle))
@@ -9246,6 +9231,14 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 (use-package puni
   :disabled
   :demand t
+  :config
+  (dolist (hook '(prog-mode-hook
+                  sgml-mode-hook
+                  nxml-mode-hook
+                  tex-mode-hook
+                  eval-expression-minibuffer-setup-hook))
+    (add-hook hook #'puni-mode))
+
   :general
   (puni-mode-map
    "C-M-a" 'puni-beginning-of-sexp
@@ -9260,10 +9253,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
    "DEL" 'puni-backward-delete-char
    "M-(" 'puni-syntactic-backward-punct
    "M-)" 'puni-syntactic-forward-punct
-   "M-DEL"    'puni-backward-kill-word)
-
-  :hook
-  ((prog-mode-hook sgml-mode-hook nxml-mode-hook tex-mode-hook eval-expression-minibuffer-setup-hook) . puni-mode))
 #+end_src
 
 *** TODO [#5] Define ~puni~ key bindings
@@ -9284,8 +9273,8 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 (use-feature hideshow
   :demand t
 
-  :hook
-  (prog-mode-hook . hs-minor-mode))
+  :config
+  (add-hook 'prog-mode-hook #'hs-minor-mode))
 #+end_src
 
 ** aggressive-indent-mode
@@ -9317,8 +9306,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   (setq copilot-node-executable "/opt/homebrew/opt/node/bin/node")
   (setq copilot-log-max 1000)
 
-  :hook
-  (prog-mode-hook . copilot-mode)
+  (add-hook 'prog-mode-hook #'copilot-mode)
 
   :general
   (copilot-mode-map
@@ -10287,10 +10275,13 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
                 (org-agenda-redo)
                 (global-org-modern-mode)))
 
-  :hook
-  (org-agenda-mode-hook . (lambda ()
-                            (visual-line-mode -1)
-                            (toggle-truncate-lines 1)))
+	      (lambda (arg)
+		(org-agenda-redo)
+		(global-org-modern-mode)))
+
+  (add-hook 'org-agenda-mode-hook (lambda ()
+				    (visual-line-mode -1)
+				    (toggle-truncate-lines 1)))
   :general
   ("C-<escape>" 'org-agenda)
   (org-agenda-mode-map
@@ -10644,6 +10635,9 @@ conditional on active capture template."
      ((string= "y" (plist-get org-capture-plist :key))
       (youtube-dl (current-kill 0) :directory ps/dir-downloads :destination (org-hugo-slug (ps/org-web-tools--org-title-for-url))))))
 
+  (add-hook 'org-capture-mode-hook #'ps/org-capture-hydra-notes-hook)
+  (add-hook 'org-capture-before-finalize-hook #'ps/org-capture-before-finalize-hook-behavior)
+  (add-hook 'org-capture-before-prepare-hook #'ps/org-capture-prepare-finalize-hook-behavior)
 
   :general
   ("H-t" 'org-capture
@@ -10652,10 +10646,6 @@ conditional on active capture template."
    "s-c" 'org-capture-finalize
    "s-w" 'org-capture-refile)
 
-  :hook
-  (org-capture-mode-hook . ps/org-capture-hydra-notes-hook)
-  (org-capture-before-finalize-hook . ps/org-capture-before-finalize-hook-behavior)
-  (org-capture-before-prepare-hook . ps/org-capture-prepare-finalize-hook-behavior))
 #+end_src
 
 Links to check out:
@@ -11058,9 +11048,8 @@ slow if it has a lot of overlays."
         (ps/org-show-logbook)
       (ps/org-hide-logbook)))
 
-  :hook
-  (org-mode-hook . ps/org-hide-properties)
-  (org-mode-hook . ps/org-hide-logbook))
+  (add-hook 'org-mode-hook #'ps/org-hide-properties)
+  (add-hook 'org-mode-hook #'ps/org-hide-logbook))
 #+end_src
 
 ** org-faces
@@ -11144,8 +11133,7 @@ files, recursively all files in `org-directory', and all files in
       (ps/org-widen-and-reveal)
       (org-id-goto id)))
 
-  :hook
-  (before-save-hook . ps/org-id-auto-add-ids-to-headings-in-file)
+  (add-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)
 
   :general
   (org-mode-map
@@ -12235,10 +12223,9 @@ return such list if its length is less than LIMIT."
 
   (org-roam-db-autosync-mode -1)
 
-  :hook
-  (org-roam-capture-new-node-hook . orb--insert-captured-ref-h)
-  (org-roam-capture-new-node-hook . org-roam-capture--insert-captured-ref-h)
-  (org-capture-prepare-finalize-hook . ps/org-roam-remove-file-level-properties)
+  (add-hook 'org-roam-capture-new-node-hook #'orb--insert-captured-ref-h)
+  (add-hook 'org-roam-capture-new-node-hook #'org-roam-capture--insert-captured-ref-h)
+  (add-hook 'org-capture-prepare-finalize-hook #'ps/org-roam-remove-file-level-properties)
 
   :general
   ("A-H-n" 'ps/org-roam-new-note
@@ -12318,7 +12305,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
   ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
   ;;         a hookable mode anymore, you're advised to pick something yourself
   ;;         if you don't care about startup time, use
-  ;;  :hook (after-init . org-roam-ui-mode)
+  ;;  (add-hook 'after-init #'org-roam-ui-mode)
   :config
   (setq org-roam-ui-sync-theme t)
   (setq org-roam-ui-follow t)
@@ -12502,9 +12489,8 @@ tasks."
           (expand-file-name (file-name-as-directory org-roam-directory))
           (file-name-directory buffer-file-name))))
 
-  :hook
-  (find-file-hook . vulpea-project-update-tag)
-  (before-save-hook . vulpea-project-update-tag))
+  (add-hook 'find-file-hook #'vulpea-project-update-tag)
+  (add-hook 'before-save-hook #'vulpea-project-update-tag))
 #+end_src
 
 *** TODO [#5] Revise ~vulpea-project-p~ function so that it excludes buffers tagged ~excluded~
@@ -14284,9 +14270,8 @@ first name, and names are separated by a semicolon."
       (default
        (beep))))
 
-  :hook
-  (ebib-index-mode-hook . doom-modeline-mode)
-  (ebib-entry-mode-hook . visual-line-mode)
+  (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
+  (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
 
   :general
   ("A-i" 'ps/ebib-open-or-switch)
@@ -14743,8 +14728,7 @@ To try once I switch to Emacs 29.
   (setq message-kill-buffer-on-exit t) ; make `message-send-and-exit' kill buffer, not bury it
   (setq message-send-mail-function 'smtpmail-multi-send-it)
 
-  :hook
-  (message-mode-hook . (lambda () (auto-fill-mode -1)))
+  (add-hook 'message-mode-hook #'(lambda () (auto-fill-mode -1)))
 
   :general
   ((message-mode-map org-msg-edit-mode-map)
@@ -15090,12 +15074,11 @@ it, without asking for confirmation."
     (toggle-truncate-lines 1)
     (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.15))
 
-  :hook
-  (mu4e-view-mode-hook . ps/mu4e-view-mode-hook-functions)
-  (change-major-mode-hook . ps/faces-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode
-  (mu4e-mark-execute-pre-hook . ps/mu4e-gmail-fix-flags)
-  (mu4e-compose-pre-hook . org-msg-mode)
-  (mu4e-compose-pre-hook . ps/mu4e-set-account)
+  (add-hook 'mu4e-view-mode-hook #'ps/mu4e-view-mode-hook-functions)
+  (add-hook 'change-major-mode-hook #'ps/faces-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode
+  (add-hook 'mu4e-mark-execute-pre-hook #'ps/mu4e-gmail-fix-flags)
+  (add-hook 'mu4e-compose-pre-hook #'org-msg-mode)
+  (add-hook 'mu4e-compose-pre-hook #'ps/mu4e-set-account)
 
   :general
   ("A-m" 'mu4e)
@@ -15549,11 +15532,10 @@ into a task for Leo."
 
   (telega-mode-line-mode 1)
 
-  :hook
-  (telega-chat-mode-hook . ps/telega-chat-mode)
-  (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
-  ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdown
-  ;; (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
+  (add-hook 'telega-chat-mode-hook #'ps/telega-chat-mode)
+  (add-hook 'telega-chat-mode-hook #'(lambda () (setq default-directory ps/dir-downloads)))
+  ;; (add-hook 'telega-chat-mode-hook #'telega-autoplay-mode) ; causes massive slowdown
+  ;; (add-hook 'telega-chat-mode-hook #'(lambda () (setq line-spacing nil)))
 
   :general
   ("A-l" 'ps/telega-switch-to)
@@ -15632,10 +15614,8 @@ into a task for Leo."
 
   (add-hook 'telega-load-hook 'global-telega-mnz-mode))
 
-;; :hook
-;; (telega-load-hook . global-telega-mnz-mode))
+;; (add-hook 'telega-load-hook #'global-telega-mnz-mode))
 #+end_src
-
 
 ** telega-dired-dwim
 :PROPERTIES:
@@ -15806,8 +15786,8 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 
   (slack-start)
 
-  :hook
-  (slack-buffer-mode-hook . (lambda () (setq line-spacing nil)))
+  (add-hook 'slack-buffer-mode-hook
+            (lambda () (setq line-spacing nil)))
 
   :general
   ("A-s" 'slack-channel-select)
@@ -16024,8 +16004,8 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
              :repo "oantolin/emacs-config"
              :files ("my-lisp/shr-heading.el"))
   :demand t
-  :hook
-  (eww-mode-hook . shr-heading-setup-imenu)
+  :config
+  (add-hook 'eww-mode-hook #'shr-heading-setup-imenu)
 
   :general
   ((elfeed-show-mode-map eww-mode-map mu4e-view-mode-map)
@@ -16160,9 +16140,8 @@ If prefix arg is passed, then open in new EWW buffer."
                      (url-fullness url)))
       (eww-browse-url (url-recreate-url new-url))))
 
-  :hook
-  (eww-after-render-hook . ps/rename-buffer)
-  (eww-after-render-hook . ps/eww-readable-autoview)
+  (add-hook 'eww-after-render-hook #'ps/rename-buffer)
+  (add-hook 'eww-after-render-hook #'ps/eww-readable-autoview)
 
   :general
   ("A-w" 'eww)
@@ -16396,8 +16375,7 @@ poorly-designed websites."
 
   ;; (run-with-idle-timer (* 60 10) t 'elfeed-update)
 
-  :hook
-  (elfeed-show-mode-hook . shr-heading-setup-imenu)
+  (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
   ;; I believe this is no longer needed
   ;; github.com/skeeto/elfeed/issues/190#issuecomment-384346895
   ;; (elfeed-show-mode-hook . (lambda ()
@@ -16810,10 +16788,8 @@ account."
   (setq md4rd--oauth-refresh-token
         (auth-source-pass-get "refresh" "auth-sources/reddit"))
 
-  :hook
-  (md4rd-mode-hook . md4rd-indent-all-the-lines))
+  (add-hook 'md4rd-mode-hook #'md4rd-indent-all-the-lines))
 #+end_src
-
 
 ** org-download
 :PROPERTIES:
@@ -17648,17 +17624,16 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (midnight-mode)
   (midnight-delay-set 'midnight-delay "4:30am")
 
-  :hook
-  (midnight-mode . ps/save-all-buffers)
-  (midnight-hook . ps/ledger-update-commodities)
-  ;; (midnight-hook . ps/magit-stage-commit-and-push-all-repos)
-  (midnight-hook . clean-buffer-list)
-  (midnight-hook . org-roam-db-sync)
-  (midnight-hook . ps/org-roam-update-id-locations)
-  (midnight-hook . org-gcal-sync)
-  (midnight-hook . ps/pass-git-sync)
-  ;; (midnight-hook . straight-prune-build)
-  )
+  (dolist (hook-function #'(ps/save-all-buffers
+                            ps/ledger-update-commodities
+                            ps/magit-stage-commit-and-push-all-repos
+                            clean-buffer-list
+                            org-roam-db-sync
+                            ps/org-roam-update-id-locations
+                            org-gcal-sync
+                            ps/pass-git-sync
+                            straight-prune-build))
+    (add-hook 'midnight-hook hook-function)))
 #+end_src
 
 *** SOMEDAY [#6] Fix coinprices

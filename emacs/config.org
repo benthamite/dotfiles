@@ -9166,6 +9166,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
    "DEL" 'puni-backward-delete-char
    "M-(" 'puni-syntactic-backward-punct
    "M-)" 'puni-syntactic-forward-punct
+   "M-DEL"    'puni-backward-kill-word))
 #+end_src
 
 *** TODO [#5] Define ~puni~ key bindings

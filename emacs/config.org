@@ -14704,7 +14704,7 @@ To try once I switch to Emacs 29.
 :END:
 
 [[https://turkja.fi/posts/emacs-and-smtp/][Emacs and SMTP with gmail | Jarkko Turkulainen]]
-
+https://gist.github.com/loziju/66d3f024e102704ff5222e54a4bfd50e
 ** mml
 :PROPERTIES:
 :ID:       2A87061B-BE45-443B-AB2C-893A69C20003

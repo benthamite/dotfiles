@@ -1063,18 +1063,6 @@ CLOCK: [2021-03-30 Tue 08:50]--[2021-03-30 Tue 09:02] =>  0:12
 https://oremacs.com/2015/02/04/pre-hydra-post/
 https://sriramkswamy.github.io/dotemacs/#orgheadline141
 
-*** TODO [#6] reorganize hydra notes/files
-:PROPERTIES:
-:Effort:   1:00
-:ID:       106D3DAC-6F8B-4E80-9F7A-417FD2EE1447
-:END:
-
-*** TODO [#5] Create function to update hydra current book ID
-:PROPERTIES:
-:Effort:   1:00
-:ID:       ED0F8043-95B5-41B5-BC1C-B0745DF41B64
-:END:
-
 *** major modes
 :PROPERTIES:
 :ID:       E6290A57-7035-4ADB-89F6-9CCADF2D74DB
@@ -3308,11 +3296,6 @@ clipboard. Either way, save count to kill ring."
    "H-z" 'undo-only))
 #+end_src
 
-*** TODO [#5] Post StackExchange question
-:PROPERTIES:
-:ID:       BDB38FE9-8E13-4D36-9302-121894A328AF
-:END:
-https://emacs.stackexchange.com/questions/46186/how-to-expand-truncated-information-displayed-in-the-echo-area/46189?noredirect=1#comment121798_46189
 ** repeat
 :PROPERTIES:
 :ID:       000730A4-2F70-4842-BD3E-2B843875D6EB
@@ -3413,16 +3396,6 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
    "A-C-s-f" 'outline-forward-same-level))
 #+end_src
 
-*** TODO [#5] Fix interference problem with ~outline-mode~ commands when movement keys are pressed while ~shift~ is held
-:PROPERTIES:
-:Effort:   1:00
-:ID:       D62DC0EE-B57D-46B7-8591-D476EAC88875
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-26 Fri 10:23]--[2021-11-26 Fri 10:34] =>  0:00
-:END:
-E.g. press ~shift + nextword~ in ~emacs-lisp-mode~.
-
 ** ediff
 :PROPERTIES:
 :ID:       987C9066-28ED-4B5A-944C-A90681182264
@@ -3461,14 +3434,6 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
   ("A-M-f" 'ps/fill-or-unfill-paragraph))
 #+end_src
 
-*** TODO [#7] Create function to remove hyphens when filling paragraph
-:PROPERTIES:
-:Effort:   0:45
-:ID:       30E1AE1C-3335-4D05-85D4-4C903F8D542F
-:END:
-https://stackoverflow.com/questions/42595418/how-to-remove-hyphens-during-fill-paragraph
-include this special hyphen: ­
-
 ** abbrev
 :PROPERTIES:
 :ID:       2D69896F-CF17-4D0C-BEFE-E7C473FB1C2B
@@ -3482,13 +3447,6 @@ include this special hyphen: ­
 
   (setq-default abbrev-mode t))
 #+end_src
-
-*** TODO [#6] Add these abbrevs
-:PROPERTIES:
-:ID:       E276F182-573B-4773-8B44-048605A60271
-:END:
-- [[http://xahlee.info/emacs/emacs/emacs_abbrev_mode_tutorial.html][Emacs: Abbrev Mode by Commands]]
-- [[https://impaktor.gitlab.io/dot_emacs.html#org87d6718][My .emacs]]
 
 ** yasnippet
 :PROPERTIES:
@@ -3665,15 +3623,6 @@ CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:17] =>  0:00
   :general
   ("M-m" 'mc/mark-pop))
 #+end_src
-
-*** TODO [#5] Check out multiple cursors hydra
-:PROPERTIES:
-:Effort:   0:30
-:ID:       06166AE5-4925-43F0-8DCE-8F919CD0DCFD
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-10 Tue 16:34]--[2021-08-10 Tue 16:50] =>  0:16
-:END:
 
 ** crux
 :PROPERTIES:

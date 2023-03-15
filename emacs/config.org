@@ -11046,7 +11046,7 @@ not already have one."
                     '("Local variables"
                       "COMMENT Local variables"
                       "TODO Local variables")))
-         (org-map-entries 'org-id-get-create)))))
+         (org-map-entries 'org-id-get-create))))
 
   :config
   (setq org-id-link-to-org-use-id t)

@@ -1378,17 +1378,6 @@ This hydra just starts the clock after the corresponding line in the hydra above
   (org-clock-in))
 #+end_src
 
-**** docs.org
-:PROPERTIES:
-:ID:       6E060E85-C1A8-4F01-B737-C050A00D9A4E
-:END:
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-org-tlon-docs
-  (:exit 1)
-  "Buffer-local commands"
-  ("." (call-interactively #'ps/telega-docs-change-notify) "Notify of changes"))
-#+end_src
-
 **** config.org
 :PROPERTIES:
 :ID:       F19DA0AC-B303-4A6B-8B4E-6E94FC98BC78
@@ -1593,47 +1582,6 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   ("g" straight-get-recipe)
   ("e" straight-prune-build)
   ("q" nil))
-#+end_src
-
-*** Wiki editing
-:PROPERTIES:
-:ID:       57C5B95B-4ADE-463E-A3B6-18CF0FF64B32
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-24 Wed 11:11]--[2021-11-24 Wed 11:17] =>  0:06
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-wiki
-  (:exit t
-         :idle 0.3)
-  "Wiki sections"
-  ("a" (ps/yasnippet-expand-by-key "wber") "bibliography, external links, related entries (all)")
-  ("b" (ps/yasnippet-expand-by-key "wbib") "bibliography")
-  ("c" (ps/yasnippet-expand-by-key "wnec") "new entry checklist")
-  ("e" (ps/yasnippet-expand-by-key "wel") "external links")
-  ("l" (ps/yasnippet-expand-by-key "wil") "internal link")
-  ("w" (ps/yasnippet-expand-by-key "wow") "official website")
-  ("o" (ps/yasnippet-expand-by-key "woe") "online entry")
-  ("p" (ps/yasnippet-expand-by-key "wpe") "published entry")
-  ("r" (ps/yasnippet-expand-by-key "wre") "related entries")
-  ("u" (ps/org-append-unpublished-heading) "unpublished"))
-#+end_src
-
-This function is used by some of the above snippets.
-
-#+begin_src emacs-lisp :results silent
-(defun ps/capitalize-first-char (&optional string)
-  "Capitalize only the first character of STRING."
-  (when (and string (> (length string) 0))
-    (let ((first-char (substring string nil 1))
-          (rest-str   (substring string 1)))
-      (concat (capitalize first-char) rest-str))))
-
-(defun ps/replace-spaces-with-underscores (&optional string)
-  "Replace spaces in string with underscores in STRING."
-  (when (and string (> (length string) 0))
-    (replace-regexp-in-string "[ ,]" "_" string)))
 #+end_src
 
 ** elisp-bug-hunter

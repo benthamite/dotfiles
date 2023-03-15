@@ -10179,15 +10179,11 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   ;; We add these two advices because `org-modern-mode' interferes
   ;; with the display of the habits progress bar
   (advice-add 'org-habit-toggle-display-in-agenda :before
-              (lambda (arg)
-                (if org-habit-show-habits
-                    (global-org-modern-mode)
-                  (global-org-modern-mode -1))))
+	      (lambda (arg)
+		(if org-habit-show-habits
+		    (global-org-modern-mode)
+		  (global-org-modern-mode -1))))
   (advice-add 'org-habit-toggle-display-in-agenda :after
-              (lambda (arg)
-                (org-agenda-redo)
-                (global-org-modern-mode)))
-
 	      (lambda (arg)
 		(org-agenda-redo)
 		(global-org-modern-mode)))

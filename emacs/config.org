@@ -16438,9 +16438,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine Amazon
     "https://www.amazon.com/s?k=%s"
     :keybinding "a")
-  (defengine EABlogs
-    "https://cse.google.com/cse?cx=013594344773078830993:k3igzr2se6y&q=%s"
-    :keybinding "b")
   (defengine MercadoLibre
     "https://listado.mercadolibre.com.ar/%s"
     :keybinding "c")
@@ -16459,6 +16456,9 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine Metaforecast
     "https://metaforecast.org/?query=%s"
     :keybinding "m")
+  (defengine EffectiveAltruismNews
+    "https://cse.google.com/cse?cx=013594344773078830993:k3igzr2se6y&q=%s"
+    :keybinding "n")
   (defengine GoogleMaps
     "https://www.google.com/maps?q=%s"
     :keybinding "p")
@@ -16482,7 +16482,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     :keybinding "y")
   (engine/set-keymap-prefix (kbd "A-H-g")))
 #+end_src
-
 
 ** osm
 :PROPERTIES:

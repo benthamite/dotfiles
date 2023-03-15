@@ -6306,12 +6306,12 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
   (defun ps/magit-stage-commit-and-push-all-repos ()
     "Update all active depositories."
-    (dolist (dir ps/dir-all-repos)
-      (ps/magit-midnight-update dir)))
+    (dolist (directory ps/dir-all-repos)
+      (ps/magit-midnight-update directory)))
 
-  (defun ps/magit-midnight-update (arg)
+  (defun ps/magit-midnight-update (directory)
     "Update repository daily using `midnight'."
-    (let ((default-directory arg))
+    (let ((default-directory directory))
       (ps/magit-stage-commit-and-push "Midnight update")))
 
   ;; gist.github.com/dotemacs/9a0433341e75e01461c9

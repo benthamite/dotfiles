@@ -410,7 +410,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#pass-otp][pass-otp]]
 - [[#notifications][notifications]]
   - [[#alert][alert]]
-  - [[#dbus][dbus]]
 - [[#calc][calc]]
   - [[#calc][calc]]
   - [[#constants][constants]]
@@ -17530,11 +17529,6 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
   :general
   ("H-\"" 'ps/alert-dismiss-osx-notification))
 #+end_src
-
-** dbus
-:PROPERTIES:
-:ID:       6DFC9E2F-E77A-4966-9AA6-D0DFDA17E11B
-:END:
 
 * calc
 :PROPERTIES:

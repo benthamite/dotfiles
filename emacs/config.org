@@ -697,7 +697,7 @@ The contents of this code block are tangled to the ~early-init.el~ file.
 ;; recommended for straight (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 
-(add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bart
+(add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bar
 (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
 
 ;; github.com/emacscollective/no-littering#native-compilation-cache
@@ -866,7 +866,6 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
   - /command deferral/: we use ~:general~ to bind a key sequence to a command belonging to the package we want to load. The package will load when the key sequence  is executed.
   - /hook deferral/: we use ~:hook~ to create a hook that calls a package function when some event occurs. Upon the occurrence of this event, typically the loading of a major mode, the package will load.
   - /package deferral/: we use ~:after~ to load the package after some other package which itself has been conditionally deferred (using one of the other methods above). Note that if  ~use-package-always-defer~ is set to ~t~, you need to add ~demand t~ to the declaration.
-
 
 #+begin_src emacs-lisp :results silent
 (straight-use-package 'use-package)

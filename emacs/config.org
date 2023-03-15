@@ -1793,8 +1793,8 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   (setq org-modern-statistics nil)
   (setq org-modern-star '("◉" "◉" "◉" "◉" "◉"))
   (setq org-modern-list '((42 . "○")
-                     (43 . "○")
-                     (45 . "○")))
+                          (43 . "○")
+                          (45 . "○")))
   (global-org-modern-mode))
 #+end_src
 
@@ -2059,8 +2059,10 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 (use-feature image
   :config
   ;; Use imagemagick, if available.
+  ;; djcbsoftware.nl/code/mu/mu4e/Viewing-images-inline.html
   (when (fboundp 'imagemagick-register-types)
     (imagemagick-register-types))
+
   :general
   (image-mode-map
    "+" 'image-increase-size
@@ -2121,6 +2123,9 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 :PROPERTIES:
 :ID:       DECB5A10-FF2E-446B-BA4E-AFB7176EFFAE
 :Effort:   0:40
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-15 Wed 00:17]--[2023-03-15 Wed 00:18] =>  0:01
 :END:
 Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
 
@@ -7472,7 +7477,7 @@ Emacs 28 has a useful builtin [[https://www.masteringemacs.org/article/emacs-bui
   :defer 10
   :init
   (which-key-mode)
-  
+
   :config
   (setq which-key-idle-delay 0))
 #+end_src
@@ -8707,7 +8712,7 @@ otherwise the whole buffer."
 :ID:       49D7A193-157E-4A10-9C33-98727FC191BF
 :END:
 1. [[https://felixcrux.com/blog/ledger-practices-create-a-ledgerrc][create a ~.ledgerrc~ file]]
-   
+
 * pdf
 :PROPERTIES:
 :ID:       6C0D0737-734E-4EAB-8A3F-138EF990B967
@@ -9550,7 +9555,6 @@ CLOCK: [2021-10-05 Tue 13:18]--[2021-10-05 Tue 13:34] =>  0:16
 CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 :END:
 
-
 ** org
 :PROPERTIES:
 :ID:       268B60E4-708C-4372-A59D-5DD876E493CA
@@ -10072,8 +10076,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (winum-select-window-1)
     (let ((agenda "*Org Agenda(a)*"))
       (if (get-buffer agenda)
-          (switch-to-buffer "*Org Agenda(a)*")
-        (org-agenda nil "a"))))
+	  (switch-to-buffer "*Org Agenda(a)*")
+	(org-agenda nil "a"))))
 
   (setq org-agenda-hide-tags-regexp "project")
 
@@ -14336,6 +14340,7 @@ CLOCK: [2022-07-16 Sat 15:17]--[2022-07-16 Sat 15:18] =>  0:01
     "Return `t' if string has the form of an arXiv ID."
     (string-match ps/biblio-arxiv-regexp string)))
 #+end_src
+
 ** persid
 :PROPERTIES:
 :ID:       57366A1C-A55A-47F8-8B62-E3412D674879
@@ -16850,6 +16855,7 @@ if none."
   :general
   ("s-A-k" 'org-web-tools-insert-link-for-url))
 #+end_src
+
 ** request
 :PROPERTIES:
 :ID:       4B7C17EE-0346-4059-AFF1-24DD7A609ADE

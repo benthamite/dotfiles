@@ -1046,6 +1046,18 @@ CLOCK: [2021-03-30 Tue 08:50]--[2021-03-30 Tue 09:02] =>  0:12
 
 #+begin_src emacs-lisp :results silent
 (use-package hydra
+  :config
+  (defun ps/hydra-update-current-book ()
+    "In `hydra-org-notes', update the ID of 'Current book' with the ID
+of the heading at point."
+    (interactive)
+    (let ((new-id (org-id-get)))
+      (save-window-excursion
+        (ps/org-id-goto "C3A44EA2-5523-45DD-8100-6228D80ECAC8")
+        (replace-regexp "\\((ps/org-id-goto \"\\)\\(.*\\)\\(\") \"Current book\\)"
+                        (concat "\\1" new-id "\\3"))))
+    (messsage "ID updated"))
+
   :general
   ("H-d" 'hydra-dired/body
    "H-l" 'hydra-org-notes/body
@@ -1109,7 +1121,6 @@ CLOCK: [2021-03-31 Wed 11:21]--[2021-03-31 Wed 11:35] =>  0:14
 CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
 :END:
 
-
 #+begin_src emacs-lisp :results silent
 (general-define-key
  "H-M-s-." (lambda! (ps/visit-file-or-switch-to-buffer ps/file-inbox-mobile))
@@ -1131,7 +1142,7 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
  "H-M-s-z" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-variables)))
 #+end_src
 
-*** Org headings
+*** org headings
 :PROPERTIES:
 :ID:       FBC1D388-0EFA-452D-828D-44724CF99191
 :END:
@@ -1143,7 +1154,6 @@ CLOCK: [2021-03-07 Sun 11:01]--[2021-03-07 Sun 11:06] =>  0:05
 CLOCK: [2021-02-24 Wed 16:02]--[2021-02-24 Wed 16:26] =>  0:24
 :END:
 
-At some point I should create different org heading hydras for each of my main org buffers. The idea is that hydra would rely on context information—in this case, the current buffer—to determine which template to trigger. Thus, for each org buffer I could define the 30 or so most used headings and access them with a single keystroke upon launching hydra.
 
 **** notes.org
 :PROPERTIES:
@@ -1241,7 +1251,6 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
 #+end_src
 
 
-This hydra just starts the clock after the corresponding line in the hydra above is run. I tried to do the same more compactly with a transient advice to the ~hydra-org-notes/body~ but it didn't work, I think because the clock needs to be started not immediately after that command but after the command invoked by it, e.g. ~hydra-org-notes/lambda-a-and-exit~.
 
 #+begin_src emacs-lisp :results silent
 (defhydra hydra-org-notes-with-clock
@@ -1267,7 +1276,7 @@ This hydra just starts the clock after the corresponding line in the hydra above
          :idle 0.5)
   "Org headings"
   ("a" (ps/org-id-notes-only-clock "a"))
-  ("b" (ps/org-id-notes-with-clock "b"))
+  ("b" (ps/org-id-notes-only-clock "b"))
   ("c" (ps/org-id-notes-only-clock "c"))
   ("d" (ps/org-id-notes-only-clock "d"))
   ("e" (ps/org-id-notes-only-clock "e"))
@@ -1304,6 +1313,7 @@ This hydra just starts the clock after the corresponding line in the hydra above
   ("TAB" (ps/org-id-notes-only-clock "TAB"))
   )
 #+end_src
+
 #+begin_src emacs-lisp :results silent
 ;; save-excursion wasn't restoring point, so using this custom
 ;; function, from stackoverflow.com/a/24283996/4479455

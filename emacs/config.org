@@ -11085,8 +11085,6 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
   (defun ps/org-id-auto-add-ids-to-headings-in-file ()
     "Add ID properties to all headings in the current file which do
 not already have one."
-    (ps/init-override-code-if-available
-     :ps/org-id-auto-add-ids-to-headings-in-file
      (when (and (eq major-mode 'org-mode)
                 (string-match ps/dir-org (buffer-file-name))
                 (eq buffer-read-only nil))
@@ -11520,12 +11518,10 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
     (save-buffer)
     (org-babel-tangle))
 
-  (dolist (cons (list (cons "j" 'org-babel-next-src-block)
-		      (cons "k" 'org-babel-previous-src-block)
-		      (cons "n" 'org-babel-insert-header-arg)
-		      (cons "p" 'org-babel-remove-result-one-or-many)))
-    (add-to-list 'org-babel-key-bindings cons))
-
+  (add-to-list 'org-babel-key-bindings (cons "j" 'org-babel-next-src-block))
+  (add-to-list 'org-babel-key-bindings (cons "k" 'org-babel-previous-src-block))
+  (add-to-list 'org-babel-key-bindings (cons "n" 'org-babel-insert-header-arg))
+  (add-to-list 'org-babel-key-bindings (cons "p" 'org-babel-remove-result-one-or-many))
   :general
   (org-mode-map
    "s-b" 'ps/org-babel-tangle))

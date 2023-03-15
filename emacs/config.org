@@ -16755,7 +16755,7 @@ account."
 CLOCK: [2021-06-23 Wed 11:43]--[2021-06-23 Wed 11:51] =>  0:08
 :END:
 
-/[[https://github.com/abo-abo/org-download][org-download]] supports drag and drop images to org-mode.
+/[[https://github.com/abo-abo/org-download][org-download]] supports drag and drop images to org-mode./
 
 #+begin_src emacs-lisp :results silent
 (use-package org-download

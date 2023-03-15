@@ -10661,6 +10661,35 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
     (previous-line)
     (org-ctrl-c-ctrl-c))
 
+  ;; replace `org-files-list' with `org-agenda-files', so that
+  ;; extraneous files are excluded from the dangling clocks check.
+  (defun ps/org-resolve-clocks (&optional only-dangling-p prompt-fn last-valid)
+    "Resolve all currently open Org clocks.
+If `only-dangling-p' is non-nil, only ask to resolve dangling
+\(i.e., not currently open and valid) clocks."
+    (interactive "P")
+    (unless org-clock-resolving-clocks
+      (let ((org-clock-resolving-clocks t))
+        (dolist (file (org-agenda-files))
+          (let ((clocks (org-find-open-clocks file)))
+            (dolist (clock clocks)
+              (let ((dangling (or (not (org-clock-is-active))
+                                  (/= (car clock) org-clock-marker))))
+                (if (or (not only-dangling-p) dangling)
+                    (org-clock-resolve
+                     clock
+                     (or prompt-fn
+                         (lambda (clock)
+                           (format
+                            "Dangling clock started %d mins ago"
+                            (floor (org-time-convert-to-integer
+                                    (time-since (cdr clock)))
+                                   60))))
+                     (or last-valid
+                         (cdr clock)))))))))))
+
+  (advice-add 'org-resolve-clocks :override #'ps/org-resolve-clocks)
+
   :general
   ("A-H-j" 'org-clock-goto
    "A-H-x" 'org-clock-cancel

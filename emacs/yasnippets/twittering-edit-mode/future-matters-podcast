@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: future-matters-podcast
+# key: fmp
+# contributor: Pablo Stafforini
+# --
+$1 () from the $2 podcast interviews $3 on $4.
+
+$0

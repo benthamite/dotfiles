@@ -17500,25 +17500,6 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
   ("H-\"" 'ps/alert-dismiss-osx-notification))
 #+end_src
 
-* calc
-:PROPERTIES:
-:ID:       29FF5CB1-E727-4CDC-B745-6A9B5711549C
-:END:
-
-** calc
-:PROPERTIES:
-:ID:       50FAD2F3-E501-408E-A9A2-8358FAA87C1C
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature calc
-  :general
-  ("A-c" 'calc
-   "A-M-c" 'quick-calc)
-  ((calc-mode-map calc-alg-map)
-   "C-k" nil))
-#+end_src
-
 ** constants
 :PROPERTIES:
 :ID:       E9DB498C-A4B6-4665-8CA1-40BBAC219B76

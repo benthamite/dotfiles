@@ -11515,15 +11515,17 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 
   (defun ps/org-babel-tangle ()
     "Widen buffer, save its contents, and tangle file."
-    (interactive "P")
+    (interactive)
     (widen)
     (save-buffer)
     (org-babel-tangle))
 
-  (add-to-list 'org-babel-key-bindings (cons "j" 'org-babel-next-src-block))
-  (add-to-list 'org-babel-key-bindings (cons "k" 'org-babel-previous-src-block))
-  (add-to-list 'org-babel-key-bindings (cons "n" 'org-babel-insert-header-arg))
-  (add-to-list 'org-babel-key-bindings (cons "p" 'org-babel-remove-result-one-or-many))
+  (dolist (cons (list (cons "j" 'org-babel-next-src-block)
+		      (cons "k" 'org-babel-previous-src-block)
+		      (cons "n" 'org-babel-insert-header-arg)
+		      (cons "p" 'org-babel-remove-result-one-or-many)))
+    (add-to-list 'org-babel-key-bindings cons))
+
   :general
   (org-mode-map
    "s-b" 'ps/org-babel-tangle))

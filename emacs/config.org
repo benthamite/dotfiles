@@ -8767,7 +8767,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   (defun ps/pdf-tools-apply-theme ()
     "Activate `pdf-tools' midnight mode iff dark theme is active."
     (if (eq (modus-themes--current-theme) ps/theme-loaddefs-dark)
-        (pdf-view-midnight-minor-mode 1)
+        (pdf-view-midnight-minor-mode)
       (pdf-view-midnight-minor-mode -1)))
 
   ;; gist.github.com/politza/3f46785742e6e12ba0d1a849f853d0b9#file-scroll-other-window-el
@@ -8863,7 +8863,7 @@ FILE."
    "S" 'ps/pdf-tools-add-or-remove-page
    "X" 'ps/pdf-tools-extract-pages
    "H-c" 'pdf-view-kill-ring-save
-   "A-d" 'pdf-view-midnight-minor-mode))
+   "A-u" 'pdf-view-midnight-minor-mode))
 #+end_src
 
 *** TODO Tweak function to copy all pdf text to clipboard so that the region is copied instead, if active

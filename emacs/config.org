@@ -11205,20 +11205,6 @@ files, recursively all files in `org-directory', and all files in
    "s-A-u" 'ps/org-id-update-id-locations))
 #+end_src
 
-*** TODO Remove duplicate IDs
-:PROPERTIES:
-:ID:       013ADB83-A4AC-430B-A1F7-59A76F776CCD
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-01 Wed 15:43]--[2023-03-01 Wed 16:30] =>  0:47
-CLOCK: [2023-03-01 Wed 14:20]--[2023-03-01 Wed 15:00] =>  0:40
-:END:
-
-*** TODO Remove duplicate IDs
-:PROPERTIES:
-:ID:       12709284-A413-4AC1-8578-6ABCEDB8A8B1
-:END:
-
 ** org-list
 :PROPERTIES:
 :ID:       DD345C01-CEAC-4CEC-A8D5-89C16A0182CB

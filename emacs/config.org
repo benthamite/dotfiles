@@ -276,7 +276,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#puni][puni]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent-mode][aggressive-indent-mode]]
-  - [[#gpt][gpt]]
   - [[#elpy][elpy]]
   - [[#eldoc][eldoc]]
   - [[#bicycle][bicycle]]
@@ -9205,25 +9204,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :defer 20
   :config
   (global-aggressive-indent-mode))
-#+end_src
-
-** gpt
-:PROPERTIES:
-:ID:       6BA1A737-40A1-4253-8FC8-E211F6060BC9
-:END:
-
-/[[https://github.com/stuhlmueller/gpt.el][gpt]] is an Emacs package for calling instruction-following language models./
-
-#+begin_src emacs-lisp :results silent
-(use-package gpt
-  :commands gpt-dwim
-
-  :config
-  (setq gpt-openai-key (auth-source-pass-get 'secret "auth-sources/openai.com"))
-  (setq gpt-openai-engine "text-davinci-003")
-
-  :general
-  ("A-C-g" 'gpt-dwim))
 #+end_src
 
 ** elpy

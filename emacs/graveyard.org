@@ -7,7 +7,28 @@
 CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
-This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
+This is a place where I move Emacs packages I no longer use.
+
+** gpt
+:PROPERTIES:
+:ID:       6BA1A737-40A1-4253-8FC8-E211F6060BC9
+:END:
+
+/[[https://github.com/stuhlmueller/gpt.el][gpt]] is an Emacs package for calling instruction-following language models./
+
+[2023-03-21 Tue 19:22] Replaced with chatgpt, which connects to the OpenAI API via an Elisp library.
+
+#+begin_src emacs-lisp :results silent
+(use-package gpt
+  :commands gpt-dwim
+
+  :config
+  (setq gpt-openai-key (auth-source-pass-get 'secret "auth-sources/openai.com"))
+  (setq gpt-openai-engine "text-davinci-003")
+
+  :general
+  ("A-C-g" 'gpt-dwim))
+#+end_src
 
 ** ox-reveal
 :PROPERTIES:

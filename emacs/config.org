@@ -15488,7 +15488,10 @@ This assumes you have already set up ~mbsync~ (or whichever program you use to d
 brew uninstall mu
 cd ~/Downloads
 # download brew formula for mu 1.6.11
-wget https://raw.githubusercontent.com/Homebrew/homebrew-core/c42744ba370044e5363e1a6547014c810304b520/Formula/mu.rb
+# if wget fails to download the file, just download it manually
+wget
+https://raw.githubusercontent.com/Homebrew/homebrew-core/c42744ba370044e5363e1a6547014c810304b520/Formula/mu.rb
+# install downloaded formula
 HOMEBREW_NO_INSTALL_CLEANUP=1 brew install ~/Downloads/mu.rb
 # pin mu so that brew doesn't update to the latest version when you run 'brew upgrade'
 brew pin mu
@@ -17945,23 +17948,27 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   :defer 600
   :config
   (setq clean-buffer-list-kill-never-buffer-names
-        '("*mu4e-headers*" " *mu4e-update*")) ; not sure if the space is part of the buffer name
+        '("*mu4e-headers*"
+          " *mu4e-update*")) ; not sure if the space is part of the buffer name
   (setq clean-buffer-list-kill-never-regexps
-        '("\\` \\*Minibuf-.*\\*\\'" "^untitled.*"))
+        '("\\` \\*Minibuf-.*\\*\\'"
+          "^untitled.*"))
   (setq clean-buffer-list-delay-general 2) ; kill buffers unused for more than three days
 
   (midnight-mode)
-  (midnight-delay-set 'midnight-delay "4:30am")
+  (midnight-delay-set 'midnight-delay "7:01pm")
 
-  (dolist (hook-function #'(ps/save-all-buffers
-                            ps/ledger-update-commodities
-                            ps/magit-stage-commit-and-push-all-repos
-                            clean-buffer-list
+  ;; note that the hooks appear in reverse order of execution
+  (dolist (hook-function #'(org-gcal-sync
+                            ps/org-id-update-id-locations
                             org-roam-db-sync
-                            ps/org-roam-update-id-locations
-                            org-gcal-sync
                             ps/pass-git-sync
-                            straight-prune-build))
+                            ps/magit-stage-commit-and-push-all-repos
+                            ps/ledger-update-commodities
+                            clean-buffer-list
+                            ps/save-all-buffers
+                            ;; straight-prune-build
+                            ))
     (add-hook 'midnight-hook hook-function)))
 #+end_src
 

@@ -10647,6 +10647,8 @@ Links to check out:
 :ID:       90E8B1CE-433C-4B2B-8AA2-844506EAC031
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-18 Sat 12:30]--[2023-03-18 Sat 12:32] =>  0:02
+CLOCK: [2023-03-18 Sat 11:55]--[2023-03-18 Sat 12:30] =>  0:35
 CLOCK: [2023-02-22 Wed 15:58]--[2023-02-22 Wed 16:03] =>  0:05
 CLOCK: [2023-02-22 Wed 15:07]--[2023-02-22 Wed 15:28] =>  0:21
 CLOCK: [2023-02-22 Wed 14:41]--[2023-02-22 Wed 15:06] =>  0:25
@@ -10677,6 +10679,7 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
   (setq org-clock-in-resume t)
   (setq org-clock-report-include-clocking-task t)
   (setq org-clock-ask-before-exiting nil)
+  (setq org-clock-history-length 30)
   (org-clock-persistence-insinuate)
 
   ;; FIXME: suggested by copilot; not working: the date entities are not being
@@ -10738,8 +10741,17 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
      (list (org-read-date nil nil nil "Start date: ")
            (org-read-date nil nil nil "End date: ")))
     (insert (format "#+BEGIN: clocktable :scope subtree :maxlevel 4 :narrow 50 :tstart \"%s\" :tend \"%s\"\n#+END:" start-date end-date))
-    (previous-line)
-    (org-ctrl-c-ctrl-c))
+    (org-clock-report))
+
+  (defun ps/org-clock-report-today-save ()
+    "Save a clock report for today in the clock reports file."
+    (interactive)
+    (let ((org-journal-dir ps/dir-org-clock-reports)
+          (org-journal-file-format "reports.org"))
+      (org-journal-new-entry nil)
+      ;; gnu.org/software/emacs/manual/html_node/org/The-clock-table.html
+      (insert "\n#+BEGIN: clocktable :scope agenda :stepskip0 t :fileskip0 t :maxlevel 4 :tstart \"<today>\" :tend \"<today>\"\n#+END:")
+      (org-clock-report)))
 
   ;; replace `org-files-list' with `org-agenda-files', so that
   ;; extraneous files are excluded from the dangling clocks check.

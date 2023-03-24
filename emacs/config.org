@@ -12439,6 +12439,7 @@ I use this package to define a dynamic agenda, as explained and illustrated [[d1
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/vulpea)
 (use-package vulpea
+  :demand t
   :commands (vulpea-buffer-p vulpea-agenda-files-update vulpea-buffer-prop-get-list vulpea-project-update-tag)
   :config
   ;; adapted from

@@ -18041,21 +18041,7 @@ I'm not tracking prices anymore so this is probably not worth it currently.
 :END:
 
 #+begin_src emacs-lisp :results silent
-(defun ps/tlon-meeting-with-fede ()
-  (interactive)
-  (ps/tlon--meeting-with
-   "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
-   "56CBB3F8-8E75-4298-99B3-899365EB75E0"
-   "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
-
-(defun ps/tlon-meeting-with-leo ()
-  (interactive)
-  (ps/tlon--meeting-with
-   "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
-   "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-   "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
-
-(defun ps/tlon--meeting-with (tareas-id meetings-id pending-id)
+(defun ps/tlon-meeting-with (tareas-id meetings-id pending-id)
   ;; "[person] > Meetings > Pending for next meeting" org heading in `work-dashboard.org'
   (ps/org-id-goto pending-id)
   (let ((contents (ps/org-get-heading-contents)))

@@ -38,6 +38,7 @@ This is a place where I move Emacs packages I no longer use.
 CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 :END:
 
+[2023-03-18 Sat 09:56] Not using it.
 
 #+begin_src emacs-lisp :results silent
 (use-package ox-reveal
@@ -65,6 +66,8 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 
 /[[https://github.com/clojure-emacs/cider][cider]] is CIDER is the "Clojure(Script) Interactive Development Environment that Rocks"./
 
+[2023-03-18 Sat 09:50] Not using Clojure.
+
 #+begin_src emacs-lisp :results silent
 (use-package cider)
 #+end_src
@@ -73,6 +76,8 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 :PROPERTIES:
 :ID:       55B470DB-E9D2-45B1-8E74-58CB9DDF7D27
 :END:
+
+[2023-03-18 Sat 09:50] Not using it.
 
 #+begin_src emacs-lisp :results silent
 (use-package parse-csv)
@@ -95,6 +100,7 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 :END:
 
 [2023-03-10 Fri 19:49] Not using anymore.
+
 #+begin_src emacs-lisp :results silent
 (use-package elmacro)
 #+end_src
@@ -125,6 +131,8 @@ I haven't yet explored this package.
 :LOGBOOK:
 CLOCK: [2021-06-03 Thu 14:11]--[2021-06-03 Thu 14:16] =>  0:05
 :END:
+
+Not using.
 
 #+begin_src emacs-lisp :results silent
 (use-package paradox
@@ -478,7 +486,6 @@ CLOCK: [2021-03-28 Sun 13:35]--[2021-03-28 Sun 14:31] =>  0:56
 (let ((map prog-mode-map))
   (keymap-unset map "M-q"))))
 #+end_src
-
 
 ** emacs-webkit
 :PROPERTIES:
@@ -3273,6 +3280,7 @@ I never found the need to use this.
   :config
   (org-super-agenda-mode))
 #+end_src
+
 ** quelpa
 :PROPERTIES:
 :ID:       85E17700-FE49-4668-85C8-BD782FADE946

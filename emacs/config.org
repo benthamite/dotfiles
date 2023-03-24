@@ -14422,9 +14422,33 @@ first name, and names are separated by a semicolon."
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
+*** TODO Add visible rating field to ebib
+:PROPERTIES:
+:ID:       311387B3-2CCB-4F40-87EB-7558F2C007BD
+:END:
+
+*** TODO Why does ebib not reload the db?
+:PROPERTIES:
+:ID:       7DA329F1-B179-4B86-8FB9-D37D43FD9B62
+:END:
+I think it's actually reloading but the buffer doesn't refresh.
+
+*** TODO Decide how ebib should deal with multi-volume works
+:PROPERTIES:
+:ID:       33D8549E-7DD8-4E4B-A690-0E6D29A8CA60
+:END:
+
+*** TODO Modify my custom ebib formulas so that they use native uniquify
+:PROPERTIES:
+:ID:       BA7B5845-B148-43B6-BE50-C1CBF89478BB
+:END:
+
 *** TODO [#6] Add imdb movies to ebib
 :PROPERTIES:
 :ID:       B801240B-B0F4-46EB-859F-9755ECCFB3DF
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-15 Wed 19:07]--[2023-03-15 Wed 20:22] =>  1:15
 :END:
 - First export them to csv.
 - Then convert the csv to bibtex

@@ -16262,6 +16262,7 @@ CLOCK: [2021-05-18 Tue 18:26]--[2021-05-18 Tue 18:54] =>  0:28
    '(("gnu\\.org"  . eww-browse-url)
      ("protesilaos\\.com" . eww-browse-url)
      ("orgmode\\.org" . eww-browse-url)
+     ("var/folders" . eww-browse-url) ; email
      ;; My VPN settings apply to Firefox only (via split tunneling),
      ;; so the websites requiring VPN access are listed below, and
      ;; will be opened with this browser.

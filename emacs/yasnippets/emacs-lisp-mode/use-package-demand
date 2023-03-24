@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: use-package-demand
+# key: :d
+# --
+:demand t
+  

@@ -12166,7 +12166,7 @@ return such list if its length is less than LIMIT."
   (defvar ps/org-roam-excluded-dirs (list
                                      ps/dir-anki
                                      ps/dir-inactive
-                                     ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
+                                     ;; ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
                                      ps/dir-archive))
 
 

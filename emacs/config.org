@@ -10128,8 +10128,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (winum-select-window-1)
     (let ((agenda "*Org Agenda(a)*"))
       (if (get-buffer agenda)
-	  (switch-to-buffer "*Org Agenda(a)*")
-	(org-agenda nil "a"))))
+          (switch-to-buffer "*Org Agenda(a)*")
+        (org-agenda nil "a"))))
 
   (setq org-agenda-hide-tags-regexp "project")
 
@@ -10226,24 +10226,33 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 
   (advice-add 'org-check-agenda-file :override #'ps/org-check-agenda-file)
 
+  (defun ps/org-agenda-switch-to-dwim ()
+  "When point is in an agenda log line, goto to that line and
+ position in the corresponding file. Else just open the file."
+  (interactive)
+  (condition-case error
+      (call-interactively 'org-clock-convenience-goto-ts)
+    (error (org-agenda-switch-to))))
+
   ;; We add these two advices because `org-modern-mode' interferes
   ;; with the display of the habits progress bar
   (advice-add 'org-habit-toggle-display-in-agenda :before
-	      (lambda (arg)
-		(if org-habit-show-habits
-		    (global-org-modern-mode)
-		  (global-org-modern-mode -1))))
+              (lambda (arg)
+                (if org-habit-show-habits
+                    (global-org-modern-mode)
+                  (global-org-modern-mode -1))))
   (advice-add 'org-habit-toggle-display-in-agenda :after
-	      (lambda (arg)
-		(org-agenda-redo)
-		(global-org-modern-mode)))
+              (lambda (arg)
+                (org-agenda-redo)
+                (global-org-modern-mode)))
 
   (add-hook 'org-agenda-mode-hook (lambda ()
-				    (visual-line-mode -1)
-				    (toggle-truncate-lines 1)))
+                                    (visual-line-mode -1)
+                                    (toggle-truncate-lines 1)))
   :general
   ("C-<escape>" 'org-agenda)
   (org-agenda-mode-map
+   "RET" 'ps/org-agenda-switch-to-dwim
    "'" 'ps/org-agenda-done-and-next
    ";" 'org-agenda-later
    "\"" 'ps/org-agenda-postpone-and-next

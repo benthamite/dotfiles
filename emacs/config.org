@@ -290,6 +290,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-agenda][org-agenda]]
   - [[#org-capture][org-capture]]
   - [[#org-clock][org-clock]]
+  - [[#org-clock-convenience][org-clock-convenience]]
   - [[#org-clock-split][org-clock-split]]
   - [[#org-cycle][org-cycle]]
   - [[#org-archive][org-archive]]
@@ -10762,6 +10763,26 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
    "s-A--" 'ps/org-time-stamp-active-current-date
    "s-=" 'ps/org-time-stamp-inactive-current-time
    "s-A-=" 'ps/org-time-stamp-inactive-current-date))
+#+end_src
+
+** org-clock-convenience
+:PROPERTIES:
+:ID:       1DB11C80-DE47-42EA-851A-4D35398C1005
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-18 Sat 13:14]--[2023-03-18 Sat 13:27] =>  0:13
+:END:
+
+/[[https://github.com/dfeich/org-clock-convenience][org-clock-convenience]] provides convenience functions to work with org-mode clocking./
+
+#+begin_src emacs-lisp
+(use-package org-clock-convenience
+  :after org-clock
+  :demand t
+  :general
+  (org-agenda-mode-map
+   "M-k" 'org-clock-convenience-timestamp-up
+   "M-l" 'org-clock-convenience-timestamp-down))
 #+end_src
 
 ** org-clock-split

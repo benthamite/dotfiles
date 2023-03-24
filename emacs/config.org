@@ -716,7 +716,7 @@ The contents of this code block are tangled to the ~early-init.el~ file.
 (when (fboundp 'startup-redirect-eln-cache)
   (startup-redirect-eln-cache
    (convert-standard-filename
-    "/Users/pablostafforini/.config/emacs-profiles/develop/var/eln-cache/")))
+    "/Users/cartago/emacs/eln-cache/")))
 
 #+end_src
 
@@ -925,8 +925,8 @@ NAME and ARGS are as in `use-package'."
 (use-package no-littering
   :demand t
   :init
-  (setq no-littering-etc-directory "/Users/pablostafforini/.config/emacs-profiles/etc/")
-  (setq no-littering-var-directory "/Users/pablostafforini/.config/emacs-profiles/var/")
+  (setq no-littering-etc-directory (file-name-concat (getenv "HOME") ".config/emacs-profiles/etc/"))
+  (setq no-littering-etc-directory (file-name-concat (getenv "HOME") ".config/emacs-profiles/var/"))
 
   :config
   ;; github.com/emacscollective/no-littering#auto-save-settings
@@ -1727,7 +1727,7 @@ To be explored. The [[https://github.com/positron-solutions/transient-showcase][
   (setq user-full-name ps/personal-name)
   (setq user-mail-address ps/personal-gmail)
   (setq initial-scratch-message nil)
-  (setq inhibit-stqartup-screen t)
+  (setq inhibit-startup-screen t)
   (setq inhibit-startup-echo-area-message user-login-name)
   (setq inhibit-startup-buffer-menu t)
   (setq initial-major-mode 'emacs-lisp-mode)
@@ -1941,7 +1941,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :ID:       D75F0818-F8A2-45F1-8EB5-4548BCDE86BE
 :END:
 #+begin_src emacs-lisp
-(use-feature theme-loaddefs
+(use-feature emacs
   :demand t
   :config
   (defvar ps/theme-loaddefs-light 'modus-operandi)
@@ -6696,7 +6696,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :demand t
   :config
   (setq vr/engine 'python)
-  (setq vr/command-python "python3 /Users/pablostafforini/.emacs.d/straight/build/visual-regexp-steroids/regexp.py")
+  (setq vr/command-python "python3 /Users/cartago/emacs/stable2-leo/straight/build/visual-regexp-steroids/regexp.py")
 
   :general
   (isearch-mode-map

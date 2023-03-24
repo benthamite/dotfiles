@@ -11986,8 +11986,8 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
   (advice-add 'org-pomodoro-notify :override #'ps/org-pomodoro-notify)
 
   :general
-  ("H-I" 'org-pomodoro
-   "A-H-i" 'org-pomodoro-extend-last-clock)
+  ("H-s-i" 'org-pomodoro
+   "A-s-e" 'org-pomodoro-extend-last-clock)
   (org-agenda-mode-map
    "I" 'org-pomodoro))
 #+end_src

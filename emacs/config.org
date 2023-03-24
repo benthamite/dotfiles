@@ -10294,6 +10294,14 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "Z" 'org-agenda-add-note
    "z" 'org-agenda-undo))
 #+end_src
+*** TODO Configure org-agenda log checks
+:PROPERTIES:
+:ID:       9FE214C2-609D-4055-91A7-EB4EEAE26348
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-18 Sat 11:30]--[2023-03-18 Sat 11:55] =>  0:25
+:END:
+
 *** TODO [#6] align tags
 :PROPERTIES:
 :ID:       8F2D8B6E-2B3E-434E-9D60-5A1E23F8E4C1

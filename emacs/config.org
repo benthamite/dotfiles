@@ -1654,7 +1654,7 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   (setq user-full-name ps/personal-name)
   (setq user-mail-address ps/personal-gmail)
   (setq initial-scratch-message nil)
-  (setq inhibit-stqartup-screen t)
+  (setq inhibit-startup-screen t)
   (setq inhibit-startup-echo-area-message user-login-name)
   (setq inhibit-startup-buffer-menu t)
   (setq initial-major-mode 'emacs-lisp-mode)

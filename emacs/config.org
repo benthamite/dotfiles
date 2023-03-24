@@ -15482,7 +15482,10 @@ This assumes you have already set up ~mbsync~ (or whichever program you use to d
 brew uninstall mu
 cd ~/Downloads
 # download brew formula for mu 1.6.11
-wget https://raw.githubusercontent.com/Homebrew/homebrew-core/c42744ba370044e5363e1a6547014c810304b520/Formula/mu.rb
+# if wget fails to download the file, just download it manually
+wget
+https://raw.githubusercontent.com/Homebrew/homebrew-core/c42744ba370044e5363e1a6547014c810304b520/Formula/mu.rb
+# install downloaded formula
 HOMEBREW_NO_INSTALL_CLEANUP=1 brew install ~/Downloads/mu.rb
 # pin mu so that brew doesn't update to the latest version when you run 'brew upgrade'
 brew pin mu

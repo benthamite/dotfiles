@@ -817,7 +817,6 @@ Process for updating packages:
 
 [2022-10-31 Mon 15:55] At some point, it should probably be replaced with [[https://github.com/progfolio/elpaca][elpaca]]. Discussion [[https://github.com/progfolio/elpaca][here]].
 
-
 #+begin_src emacs-lisp :results silent
 (setq straight-repository-branch "develop") ; must precede bootstrap
 (setq straight-profiles `((nil . ,(file-name-concat ps/dir-dotemacs "straight-profile.el"))))
@@ -838,10 +837,7 @@ Process for updating packages:
 (setq straight-check-for-modifications '(find-at-startup watch-files find-when-checking)) ; github.com/raxod502/straight.el#my-init-time-got-slower
 (setq straight-use-package-by-default t)
 (require 'straight-x) ; github.com/raxod502/straight.el#how-do-i-uninstall-a-package
-#+end_src
 
-
-#+begin_src emacs-lisp :results silent
 ;; Early load Org from Git version instead of Emacs built-in version
 (straight-use-package 'org)
 (straight-use-package 'org-contrib)
@@ -1155,7 +1151,6 @@ CLOCK: [2021-03-07 Sun 11:55]--[2021-03-07 Sun 12:13] =>  0:18
 CLOCK: [2021-03-07 Sun 11:01]--[2021-03-07 Sun 11:06] =>  0:05
 CLOCK: [2021-02-24 Wed 16:02]--[2021-02-24 Wed 16:26] =>  0:24
 :END:
-
 
 **** notes.org
 :PROPERTIES:
@@ -1893,6 +1888,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :PROPERTIES:
 :ID:       D75F0818-F8A2-45F1-8EB5-4548BCDE86BE
 :END:
+
 #+begin_src emacs-lisp
 (use-feature theme-loaddefs
   :demand t
@@ -3324,6 +3320,7 @@ indent block only, else indent whole buffer."
 :PROPERTIES:
 :ID:       64011AE8-B6DF-413B-A8CD-EF4E133272BD
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature sort
   :demand t
@@ -3346,6 +3343,7 @@ CLOCK: [2021-03-28 Sun 08:40]--[2021-03-28 Sun 10:35] =>  1:55
 CLOCK: [2021-03-27 Sat 18:01]--[2021-03-27 Sat 19:53] =>  1:52
 CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :END:
+
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/outline)
 (use-feature outline
   :demand t
@@ -4337,6 +4335,7 @@ process in these cases."
 :PROPERTIES:
 :ID:       4FD6758A-4021-4B05-BD36-BB09C2063C93
 :END:
+
 /[[https://github.com/rejeep/f.el][f]] is a modern API for working with files and directories in Emacs./
 
 #+begin_src emacs-lisp :results silent
@@ -5668,6 +5667,7 @@ with the specified date."
 :ID:       9E8AEF97-2E1A-489E-929A-CE5789EABFB9
 :org-gcal-managed: org
 :END:
+
 :LOGBOOK:
 CLOCK: [2022-07-15 Fri 11:10]--[2022-07-15 Fri 11:19] =>  0:09
 CLOCK: [2022-07-11 Mon 15:51]--[2022-07-11 Mon 16:17] =>  0:26
@@ -5999,11 +5999,11 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :after tab-bar
   :config
   (setq world-clock-list '(("Europe/Barcelona" "Barcelona")
-                      ("Europe/London" "London")
-                      ("America/Buenos_Aires" "Buenos Aires")
-                      ("America/Nassau" "Nassau")
-                      ("America/New_York" "New York")
-                      ("America/Los_Angeles" "San Francisco")))
+                           ("Europe/London" "London")
+                           ("America/Buenos_Aires" "Buenos Aires")
+                           ("America/Nassau" "Nassau")
+                           ("America/New_York" "New York")
+                           ("America/Los_Angeles" "San Francisco")))
   (setq display-time-format "%a %e %b %T")
   (setq display-time-interval 1)
   (setq display-time-default-load-average nil)
@@ -6131,8 +6131,10 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 :PROPERTIES:
 :ID:       20B0D7AB-5B27-4D80-A9D8-DAAAFCB27651
 :END:
-:LOGBOOK:
-CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
+
+** simple
+:PROPERTIES:
+:ID:       C7BA09A3-635F-4F31-A17A-F94F3B024522
 :END:
 
 #+begin_src emacs-lisp :results silent
@@ -6148,6 +6150,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
 :PROPERTIES:
 :ID:       D411AA79-C8FE-4E03-B06E-1BED5B7688BC
 :END:
+
 /savehist makes Emacs remember completion history across sessions./
 
 #+begin_src emacs-lisp :results silent
@@ -6159,28 +6162,29 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
   :config
   (setq history-length t) ; unlimited history
   (setq savehist-additional-variables
-   '(citar-history
-     command-history
-     compile-history
-     compilation-command
-     eww-history
-     extended-command-history
-     file-name-history
-     Info-history-list
-     ido-file-history
-     kill-ring
-     kmacro-ring
-     last-kbd-macro
-     log-edit-comment-ring
-     magit-read-rev-history
-     mark-ring
-     read-expression-history
-     regexp-search-ring
-     register-alist
-     search-ring
-     shell-command-history
-     telega-search-history
-     twittering-search-history))
+        '(calc-quick-calc-history
+          citar-history
+          command-history
+          compile-history
+          compilation-command
+          eww-history
+          extended-command-history
+          file-name-history
+          Info-history-list
+          ido-file-history
+          kill-ring
+          kmacro-ring
+          last-kbd-macro
+          log-edit-comment-ring
+          magit-read-rev-history
+          mark-ring
+          read-expression-history
+          regexp-search-ring
+          register-alist
+          search-ring
+          shell-command-history
+          telega-search-history
+          twittering-search-history))
   (setq savehist-save-minibuffer-history t))
 #+end_src
 
@@ -6188,6 +6192,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
 :PROPERTIES:
 :ID:       8DE4A4B7-4B96-445F-BC1F-B10BBF181F53
 :END:
+
 /saveplace makes Emacs remember point position in file across sessions./
 
 #+begin_src emacs-lisp :results silent
@@ -11577,9 +11582,9 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
     (org-babel-tangle))
 
   (dolist (cons (list (cons "j" 'org-babel-next-src-block)
-		      (cons "k" 'org-babel-previous-src-block)
-		      (cons "n" 'org-babel-insert-header-arg)
-		      (cons "p" 'org-babel-remove-result-one-or-many)))
+                      (cons "k" 'org-babel-previous-src-block)
+                      (cons "n" 'org-babel-insert-header-arg)
+                      (cons "p" 'org-babel-remove-result-one-or-many)))
     (add-to-list 'org-babel-key-bindings cons))
 
   :general
@@ -12461,7 +12466,8 @@ tasks."
           (org-element-parse-buffer 'headline)
           'headline
         (lambda (headline)
-          (or
+
+        (or
            (eq (org-element-property :todo-type headline)
                'todo)
            (org-element-property :scheduled headline)
@@ -13181,7 +13187,6 @@ l
   :config
   (citar-embark-mode))
 #+end_src
-
 
 ** org-ref
 :PROPERTIES:

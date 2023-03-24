@@ -5462,12 +5462,12 @@ needs to be included as an element in the list defined by
                                 elfeed-show-mode
                                 eww-mode
                                 eww-buffers-mode)) ; major modes activated in global-writeroom-mode
-  ;; (setq writeroom-fullscreen-effect 'maximized) ; disables annoying fullscreen transition effect on MacOS
+  (setq writeroom-fullscreen-effect 'maximized) ; disables annoying fullscreen transition effect on MacOS
   (setq writeroom-maximize-window t)
 
   ;; This neds to be delayed because the value of `window-total-width'
-  ;; is changed during startup..
-  (add-hook 'emacs-startup-hook (lambda () (setq writeroom-width (window-total-width))))
+  ;; is changed during startup.
+  (add-hook 'emacs-startup-hook (lambda () (setq writeroom-width (window-total-width))) 90)
 
   :general
   ("M-'" 'writeroom-mode

@@ -12689,6 +12689,17 @@ ARG is the prefix argument received when calling interactively the function."
   ("H-/" 'org-cite-insert))
 #+end_src
 
+*** TODO Learn how to use ~org-cite~ style and variants
+:PROPERTIES:
+:ID:       78ADAFA7-1C32-4B13-ABD2-043B38B044F8
+:END:
+https://www.youtube.com/watch?v=48fIhQ9ozH4
+
+*** TODO Learn how to use ~org-cite~ locators
+:PROPERTIES:
+:ID:       16071EF9-A033-416E-B61D-FE61297D2EE3
+:END:
+
 *** Resources
 :PROPERTIES:
 :ID:       8EA82227-F7EF-4C46-B40C-C5DE40F13130

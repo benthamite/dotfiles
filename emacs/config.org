@@ -48,6 +48,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#mixed-pitch][mixed-pitch]]
   - [[#fringe][fringe]]
   - [[#org-modern][org-modern]]
+  - [[#org-modern-indent][org-modern-indent]]
   - [[#faces][faces]]
   - [[#face-remap][face-remap]]
   - [[#theme-loaddefs][theme-loaddefs]]
@@ -275,12 +276,16 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#puni][puni]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent-mode][aggressive-indent-mode]]
-  - [[#copilot][copilot]]
   - [[#gpt][gpt]]
-  - [[#pen][pen]]
   - [[#elpy][elpy]]
   - [[#eldoc][eldoc]]
   - [[#bicycle][bicycle]]
+- [[#ai][AI]]
+  - [[#copilot][copilot]]
+  - [[#openai][openai]]
+  - [[#chatgpt][chatgpt]]
+  - [[#codegpt][codegpt]]
+  - [[#pen][pen]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
   - [[#org-agenda][org-agenda]]
@@ -386,7 +391,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#osm][osm]]
   - [[#twittering-mode][twittering-mode]]
   - [[#md4rd][md4rd]]
-  - [[#hugo][hugo]]
   - [[#org-download][org-download]]
   - [[#org-web-tools][org-web-tools]]
   - [[#request][request]]
@@ -407,20 +411,16 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#pass][pass]]
   - [[#auth-source-pass][auth-source-pass]]
   - [[#pass-otp][pass-otp]]
-- [[#notifications][notifications]]
-  - [[#alert][alert]]
-  - [[#dbus][dbus]]
-- [[#calc][calc]]
+- [[#misc][misc.]]
   - [[#calc][calc]]
   - [[#constants][constants]]
-- [[#games][games]]
-  - [[#tetris][tetris]]
-- [[#misc][misc.]]
+  - [[#alert][alert]]
   - [[#unpackaged][unpackaged]]
   - [[#macos][macos]]
   - [[#midnight][midnight]]
   - [[#keycast][keycast]]
   - [[#custom][custom]]
+  - [[#tetris][tetris]]
 - [[#personal-projects][personal projects]]
   - [[#tlon][Tlon]]
   - [[#keyboard-maestro][Keyboard Maestro]]
@@ -696,7 +696,10 @@ Some useful config files:
 The contents of this code block are tangled to the early-init.el file.
 
 #+begin_src emacs-lisp :tangle (print ps/init-early-init-path)
-(add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bart
+;; recommended for straight (github.com/radian-software/straight.el#getting-started)
+(setq package-enable-at-startup nil)
+
+(add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bar
 (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
 
 ;; github.com/emacscollective/no-littering#native-compilation-cache
@@ -865,7 +868,6 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
   - /command deferral/: we use ~:general~ to bind a key sequence to a command belonging to the package we want to load. The package will load when the key sequence  is executed.
   - /hook deferral/: we use ~:hook~ to create a hook that calls a package function when some event occurs. Upon the occurrence of this event, typically the loading of a major mode, the package will load.
   - /package deferral/: we use ~:after~ to load the package after some other package which itself has been conditionally deferred (using one of the other methods above). Note that if  ~use-package-always-defer~ is set to ~t~, you need to add ~demand t~ to the declaration.
-
 
 #+begin_src emacs-lisp :results silent
 (straight-use-package 'use-package)
@@ -1045,6 +1047,18 @@ CLOCK: [2021-03-30 Tue 08:50]--[2021-03-30 Tue 09:02] =>  0:12
 
 #+begin_src emacs-lisp :results silent
 (use-package hydra
+  :config
+  (defun ps/hydra-update-current-book ()
+    "In `hydra-org-notes', update the ID of 'Current book' with the ID
+of the heading at point."
+    (interactive)
+    (let ((new-id (org-id-get)))
+      (save-window-excursion
+        (ps/org-id-goto "C3A44EA2-5523-45DD-8100-6228D80ECAC8")
+        (replace-regexp "\\((ps/org-id-goto \"\\)\\(.*\\)\\(\") \"Current book\\)"
+                        (concat "\\1" new-id "\\3"))))
+    (messsage "ID updated"))
+
   :general
   ("H-d" 'hydra-dired/body
    "H-l" 'hydra-org-notes/body
@@ -1061,18 +1075,6 @@ CLOCK: [2021-03-30 Tue 08:50]--[2021-03-30 Tue 09:02] =>  0:12
 :END:
 https://oremacs.com/2015/02/04/pre-hydra-post/
 https://sriramkswamy.github.io/dotemacs/#orgheadline141
-
-*** TODO [#6] reorganize hydra notes/files
-:PROPERTIES:
-:Effort:   1:00
-:ID:       106D3DAC-6F8B-4E80-9F7A-417FD2EE1447
-:END:
-
-*** TODO [#5] Create function to update hydra current book ID
-:PROPERTIES:
-:Effort:   1:00
-:ID:       ED0F8043-95B5-41B5-BC1C-B0745DF41B64
-:END:
 
 *** major modes
 :PROPERTIES:
@@ -1120,7 +1122,6 @@ CLOCK: [2021-03-31 Wed 11:21]--[2021-03-31 Wed 11:35] =>  0:14
 CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
 :END:
 
-
 #+begin_src emacs-lisp :results silent
 (general-define-key
  "H-M-s-." (lambda! (ps/visit-file-or-switch-to-buffer ps/file-inbox-mobile))
@@ -1142,7 +1143,7 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
  "H-M-s-z" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-variables)))
 #+end_src
 
-*** Org headings
+*** org headings
 :PROPERTIES:
 :ID:       FBC1D388-0EFA-452D-828D-44724CF99191
 :END:
@@ -1154,7 +1155,6 @@ CLOCK: [2021-03-07 Sun 11:01]--[2021-03-07 Sun 11:06] =>  0:05
 CLOCK: [2021-02-24 Wed 16:02]--[2021-02-24 Wed 16:26] =>  0:24
 :END:
 
-At some point I should create different org heading hydras for each of my main org buffers. The idea is that hydra would rely on context information—in this case, the current buffer—to determine which template to trigger. Thus, for each org buffer I could define the 30 or so most used headings and access them with a single keystroke upon launching hydra.
 
 **** notes.org
 :PROPERTIES:
@@ -1252,7 +1252,6 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
 #+end_src
 
 
-This hydra just starts the clock after the corresponding line in the hydra above is run. I tried to do the same more compactly with a transient advice to the ~hydra-org-notes/body~ but it didn't work, I think because the clock needs to be started not immediately after that command but after the command invoked by it, e.g. ~hydra-org-notes/lambda-a-and-exit~.
 
 #+begin_src emacs-lisp :results silent
 (defhydra hydra-org-notes-with-clock
@@ -1278,7 +1277,7 @@ This hydra just starts the clock after the corresponding line in the hydra above
          :idle 0.5)
   "Org headings"
   ("a" (ps/org-id-notes-only-clock "a"))
-  ("b" (ps/org-id-notes-with-clock "b"))
+  ("b" (ps/org-id-notes-only-clock "b"))
   ("c" (ps/org-id-notes-only-clock "c"))
   ("d" (ps/org-id-notes-only-clock "d"))
   ("e" (ps/org-id-notes-only-clock "e"))
@@ -1315,6 +1314,7 @@ This hydra just starts the clock after the corresponding line in the hydra above
   ("TAB" (ps/org-id-notes-only-clock "TAB"))
   )
 #+end_src
+
 #+begin_src emacs-lisp :results silent
 ;; save-excursion wasn't restoring point, so using this custom
 ;; function, from stackoverflow.com/a/24283996/4479455
@@ -1387,17 +1387,6 @@ This hydra just starts the clock after the corresponding line in the hydra above
   (defun ps/org-id-work-with-clock (key)
   (funcall (intern (concat "hydra-org-work/lambda-" key "-and-exit")))
   (org-clock-in))
-#+end_src
-
-**** docs.org
-:PROPERTIES:
-:ID:       6E060E85-C1A8-4F01-B737-C050A00D9A4E
-:END:
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-org-tlon-docs
-  (:exit 1)
-  "Buffer-local commands"
-  ("." (call-interactively #'ps/telega-docs-change-notify) "Notify of changes"))
 #+end_src
 
 **** config.org
@@ -1606,47 +1595,6 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   ("q" nil))
 #+end_src
 
-*** Wiki editing
-:PROPERTIES:
-:ID:       57C5B95B-4ADE-463E-A3B6-18CF0FF64B32
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-24 Wed 11:11]--[2021-11-24 Wed 11:17] =>  0:06
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-wiki
-  (:exit t
-         :idle 0.3)
-  "Wiki sections"
-  ("a" (ps/yasnippet-expand-by-key "wber") "bibliography, external links, related entries (all)")
-  ("b" (ps/yasnippet-expand-by-key "wbib") "bibliography")
-  ("c" (ps/yasnippet-expand-by-key "wnec") "new entry checklist")
-  ("e" (ps/yasnippet-expand-by-key "wel") "external links")
-  ("l" (ps/yasnippet-expand-by-key "wil") "internal link")
-  ("w" (ps/yasnippet-expand-by-key "wow") "official website")
-  ("o" (ps/yasnippet-expand-by-key "woe") "online entry")
-  ("p" (ps/yasnippet-expand-by-key "wpe") "published entry")
-  ("r" (ps/yasnippet-expand-by-key "wre") "related entries")
-  ("u" (ps/org-append-unpublished-heading) "unpublished"))
-#+end_src
-
-This function is used by some of the above snippets.
-
-#+begin_src emacs-lisp :results silent
-(defun ps/capitalize-first-char (&optional string)
-  "Capitalize only the first character of STRING."
-  (when (and string (> (length string) 0))
-    (let ((first-char (substring string nil 1))
-          (rest-str   (substring string 1)))
-      (concat (capitalize first-char) rest-str))))
-
-(defun ps/replace-spaces-with-underscores (&optional string)
-  "Replace spaces in string with underscores in STRING."
-  (when (and string (> (length string) 0))
-    (replace-regexp-in-string "[ ,]" "_" string)))
-#+end_src
-
 ** elisp-bug-hunter
 :PROPERTIES:
 :ID:       0C19171B-8DFA-4E06-9E17-45C1F9158C28
@@ -1683,7 +1631,7 @@ This function is used by some of the above snippets.
 (use-feature comp
   :defer 60
   :config
-  (setq native-comp-async-report-warnings-errors 'silent))
+  (setq native-comp-async-report-warnings-errors nil))
 #+End_src
 
 ** bytecomp
@@ -1806,10 +1754,8 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   :config
   (setq mixed-pitch-set-height t)
 
-  :hook
-  (mu4e-view-mode-hook . mixed-pitch-mode)
-  (org-mode-hook . mixed-pitch-mode)
-  (outline-mode-hook . mixed-pitch-mode))
+  (add-hook 'mu4e-view-mode-hook #'mixed-pitch-mode)
+  (add-hook 'outline-mode-hook #'mixed-pitch-mode))
 #+end_src
 
 ** fringe
@@ -1849,9 +1795,27 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   (setq org-modern-statistics nil)
   (setq org-modern-star '("◉" "◉" "◉" "◉" "◉"))
   (setq org-modern-list '((42 . "○")
-                     (43 . "○")
-                     (45 . "○")))
+                          (43 . "○")
+                          (45 . "○")))
   (global-org-modern-mode))
+#+end_src
+
+** org-modern-indent
+:PROPERTIES:
+:ID:       740E3E7F-BF38-484E-BBD6-BF9AEC978612
+:END:
+
+/[[https://github.com/jdtsmith/org-modern-indent][org-modern-indent]] extends org-modern stylistic improvements to contexts involving indentation./
+
+#+begin_src emacs-lisp
+(use-package org-modern-indent
+  :straight (org-modern-indent
+             :host github
+             :repo "jdtsmith/org-modern-indent")
+  :after org-modern org-indent
+  :demand t
+  :config
+  (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
 #+end_src
 
 ** faces
@@ -2009,9 +1973,8 @@ installed."
 
   (ps/modus-themes-load-theme-conditionally)
 
-  :hook
-  (modus-themes-after-load-theme-hook . ps/faces-load-custom-faces)
-  (modus-themes-after-load-theme-hook . ps/modus-themes-highlight-parentheses)
+  (add-hook 'modus-themes-after-load-theme-hook #'ps/faces-load-custom-faces)
+  (add-hook 'modus-themes-after-load-theme-hook #'ps/modus-themes-highlight-parentheses)
 
   :general
   ("A-d" 'modus-themes-toggle))
@@ -2034,8 +1997,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   (setq highlight-parentheses-delay 0)
   (global-highlight-parentheses-mode)
 
-  :hook
-  (minibuffer-setup-hook . highlight-parentheses-minibuffer-setup))
+  (add-hook 'minibuffer-setup-hook #'highlight-parentheses-minibuffer-setup))
 #+end_src
 
 ** emojify
@@ -2049,8 +2011,8 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 (use-package emojify
   :config
   (emojify-set-emoji-styles '(unicode))
-  :hook
-  (after-init . global-emojify-mode)
+  (add-hook 'after-init #'global-emojify-mode)
+
   :general
   ("H-e" 'emojify-insert-emoji))
 #+end_src
@@ -2099,8 +2061,10 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 (use-feature image
   :config
   ;; Use imagemagick, if available.
+  ;; djcbsoftware.nl/code/mu/mu4e/Viewing-images-inline.html
   (when (fboundp 'imagemagick-register-types)
     (imagemagick-register-types))
+
   :general
   (image-mode-map
    "+" 'image-increase-size
@@ -2161,6 +2125,9 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 :PROPERTIES:
 :ID:       DECB5A10-FF2E-446B-BA4E-AFB7176EFFAE
 :Effort:   0:40
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-15 Wed 00:17]--[2023-03-15 Wed 00:18] =>  0:01
 :END:
 Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
 
@@ -2245,8 +2212,7 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
   :config
   (all-the-icons-completion-mode)
 
-  :hook
-  (marginalia-mode-hook . all-the-icons-completion-marginalia-setup))
+  (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
 #+end_src
 
 ** menu-bar-mode
@@ -3294,11 +3260,6 @@ clipboard. Either way, save count to kill ring."
    "H-z" 'undo-only))
 #+end_src
 
-*** TODO [#5] Post StackExchange question
-:PROPERTIES:
-:ID:       BDB38FE9-8E13-4D36-9302-121894A328AF
-:END:
-https://emacs.stackexchange.com/questions/46186/how-to-expand-truncated-information-displayed-in-the-echo-area/46189?noredirect=1#comment121798_46189
 ** repeat
 :PROPERTIES:
 :ID:       000730A4-2F70-4842-BD3E-2B843875D6EB
@@ -3388,8 +3349,8 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 (use-feature outline
   :demand t
 
-  :hook
-    (prog-mode-hook . outline-minor-mode)
+  :config
+    (add-hook 'prog-mode-hook #'outline-minor-mode)
 
   :general
   ((outline-mode-map outline-minor-mode-map)
@@ -3398,16 +3359,6 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
    "A-C-s-r" 'outline-backward-same-level
    "A-C-s-f" 'outline-forward-same-level))
 #+end_src
-
-*** TODO [#5] Fix interference problem with ~outline-mode~ commands when movement keys are pressed while ~shift~ is held
-:PROPERTIES:
-:Effort:   1:00
-:ID:       D62DC0EE-B57D-46B7-8591-D476EAC88875
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-26 Fri 10:23]--[2021-11-26 Fri 10:34] =>  0:00
-:END:
-E.g. press ~shift + nextword~ in ~emacs-lisp-mode~.
 
 ** ediff
 :PROPERTIES:
@@ -3447,14 +3398,6 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
   ("A-M-f" 'ps/fill-or-unfill-paragraph))
 #+end_src
 
-*** TODO [#7] Create function to remove hyphens when filling paragraph
-:PROPERTIES:
-:Effort:   0:45
-:ID:       30E1AE1C-3335-4D05-85D4-4C903F8D542F
-:END:
-https://stackoverflow.com/questions/42595418/how-to-remove-hyphens-during-fill-paragraph
-include this special hyphen: ­
-
 ** abbrev
 :PROPERTIES:
 :ID:       2D69896F-CF17-4D0C-BEFE-E7C473FB1C2B
@@ -3468,13 +3411,6 @@ include this special hyphen: ­
 
   (setq-default abbrev-mode t))
 #+end_src
-
-*** TODO [#6] Add these abbrevs
-:PROPERTIES:
-:ID:       E276F182-573B-4773-8B44-048605A60271
-:END:
-- [[http://xahlee.info/emacs/emacs/emacs_abbrev_mode_tutorial.html][Emacs: Abbrev Mode by Commands]]
-- [[https://impaktor.gitlab.io/dot_emacs.html#org87d6718][My .emacs]]
 
 ** yasnippet
 :PROPERTIES:
@@ -3652,15 +3588,6 @@ CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:17] =>  0:00
   ("M-m" 'mc/mark-pop))
 #+end_src
 
-*** TODO [#5] Check out multiple cursors hydra
-:PROPERTIES:
-:Effort:   0:30
-:ID:       06166AE5-4925-43F0-8DCE-8F919CD0DCFD
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-10 Tue 16:34]--[2021-08-10 Tue 16:50] =>  0:16
-:END:
-
 ** crux
 :PROPERTIES:
 :ID:       B7CD0E70-E601-4EEC-B51F-82F94ECA32BA
@@ -3697,7 +3624,8 @@ With a prefix ARG open line above the current line."
 
   :general
   ("M-l" 'ps/crux-smart-open-line
-   "M-A-l" (lambda! (ps/crux-smart-open-line t))))
+   "M-A-l" (lambda! (ps/crux-smart-open-line t))
+   "A-H-l" 'crux-duplicate-current-line-or-region))
 #+end_src
 
 ** button
@@ -4367,9 +4295,8 @@ process in these cases."
   ;; (setq auto-save-visited-interval 5)
   ;; (auto-save-visited-mode)
 
-  :hook
-  (find-file-hook . ps/auto-save-alert)
-  ;; (kill-buffer-query-functions . ps/auto-save-persist)
+  (add-hook 'find-file-hook #'ps/auto-save-alert)
+  ;; (add-hook 'kill-buffer-query-functions #'ps/auto-save-persist)
 
   :general
   ("M--" 'not-modified
@@ -4571,8 +4498,7 @@ option."
       (copy-file existing-file new-file))
     (revert-buffer))
 
-  :hook
-  (dired-mode-hook . dired-hide-details-mode) ; hide details by default
+  (add-hook 'dired-mode-hook #'dired-hide-details-mode) ; hide details by default
 
   :general
   (dired-mode-map
@@ -4610,6 +4536,7 @@ option."
 
 #+begin_src emacs-lisp :results silent
 (use-feature image-dired
+  :after dired
   :config
   (setq image-dired-main-image-directory "~/Pictures/")
 
@@ -4650,8 +4577,7 @@ CLOCK: [2022-07-17 Sun 10:49]--[2022-07-17 Sun 11:13] =>  0:24
         (all-the-icons-dired-mode)
       (all-the-icons-dired-mode -1)))
 
-  :hook
-  (dired-mode-hook . ps/all-the-icons-dired-mode-activate))
+  (add-hook 'dired-mode-hook #'ps/all-the-icons-dired-mode-activate))
 #+end_src
 
 ** wdired
@@ -4699,8 +4625,7 @@ The code block below, based on [[https://www.djcbsoftware.nl/code/mu/mu4e/Attach
       (nreverse buffers)))
   (advice-add 'gnus-dired-mail-buffers :override #'ps/gnus-dired-mail-buffers)
 
-  :hook
-  (dired-mode-hook . turn-on-gnus-dired-mode)
+  (add-hook 'dired-mode-hook #'turn-on-gnus-dired-mode)
 
   :general
   (dired-mode-map
@@ -4725,8 +4650,8 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
   (setq dired-omit-size-limit nil) ; always omit, regardless of directory size
   (setq dired-omit-files
         (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
-  :hook
-  (dired-mode-hook . dired-omit-mode)
+
+  (add-hook 'dired-mode-hook #'dired-omit-mode)
 
   :general
   (dired-mode-map
@@ -4750,7 +4675,7 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
 (use-package dired-hacks
   :after dired
   :defer 10
-  
+
   :config
   (advice-add 'dired-subtree-toggle :after (lambda () (dired-omit-mode) (dired-omit-mode)))
   (advice-add 'dired-subtree-cycle :after (lambda () (dired-omit-mode) (dired-omit-mode)))
@@ -4825,8 +4750,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
       (select-frame-set-input-focus (window-frame (active-minibuffer-window)))
       (select-window (active-minibuffer-window))))
 
-  :hook
-  (minibuffer-setup-hook . yas-minor-mode)
+  (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
 
   :general
   ("A-C-H-0" 'ps/switch-to-minibuffer-window
@@ -5536,10 +5460,9 @@ needs to be included as an element in the list defined by
   ;; (setq writeroom-fullscreen-effect 'maximized) ; disables annoying fullscreen transition effect on MacOS
   (setq writeroom-maximize-window t)
 
-  :hook
   ;; This neds to be delayed because the value of `window-total-width'
   ;; is changed during startup..
-  (emacs-startup-hook . (lambda () (setq writeroom-width (window-total-width))))
+  (add-hook 'emacs-startup-hook (lambda () (setq writeroom-width (window-total-width))))
 
   :general
   ("M-'" 'writeroom-mode
@@ -6290,8 +6213,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
                              search-ring regexp-search-ring))
   (setq history-length 1000)
 
-  :hook
-  (after-init-hook . session-initialize))
+  (add-hook 'after-init-hook #'session-initialize))
 #+end_src
 
 ** recentf
@@ -6392,12 +6314,12 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
   (defun ps/magit-stage-commit-and-push-all-repos ()
     "Update all active depositories."
-    (dolist (dir ps/dir-all-repos)
-      (ps/magit-midnight-update dir)))
+    (dolist (directory ps/dir-all-repos)
+      (ps/magit-midnight-update directory)))
 
-  (defun ps/magit-midnight-update (arg)
+  (defun ps/magit-midnight-update (directory)
     "Update repository daily using `midnight'."
-    (let ((default-directory arg))
+    (let ((default-directory directory))
       (ps/magit-stage-commit-and-push "Midnight update")))
 
   ;; gist.github.com/dotemacs/9a0433341e75e01461c9
@@ -6496,8 +6418,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq code-review-new-buffer-window-strategy #'switch-to-buffer)
   (setq code-review-auth-login-marker 'forge)
 
-  :hook
-  (code-review-mode-hook . emojify-mode))
+  (add-hook 'code-review-mode-hook #'emojify-mode))
 #+end_src
 
 ** git-timemachine
@@ -7104,8 +7025,8 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 (use-package embark-consult
   :after embark consult
   :demand t
-  :hook
-  (embark-collect-mode-hook . consult-preview-at-point-mode))
+  :config
+  (add-hook 'embark-collect-mode-hook #'consult-preview-at-point-mode))
 #+end_src
 
 ** marginalia
@@ -7231,11 +7152,10 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
   (global-corfu-mode)
 
-  :hook
-  (prog-mode-hook . corfu-popupinfo-mode)
-  (prog-mode-hook . corfu-echo-mode)
-  (corfu-mode-hook . corfu-history-mode)
-  (minibuffer-setup-hook . ps/corfu-enable-always-in-minibuffer)
+  (add-hook 'prog-mode-hook #'corfu-popupinfo-mode)
+  (add-hook 'prog-mode-hook #'corfu-echo-mode)
+  (add-hook 'corfu-mode-hook #'corfu-history-mode)
+  (add-hook 'minibuffer-setup-hook #'ps/corfu-enable-always-in-minibuffer)
 
   :general
   (corfu-map
@@ -7349,8 +7269,8 @@ Useful for prompts such as `eval-expression' and `shell-command'."
              :host github
              :repo "xenodium/org-block-capf")
   :demand t
-  :hook
-  (org-mode-hook . org-block-capf-add-to-completion-at-point-functions))
+  :config
+  (add-hook 'org-mode-hook #'org-block-capf-add-to-completion-at-point-functions))
 #+end_src
 
 ** company
@@ -7363,8 +7283,8 @@ I use ~completion-at-point~ for completion, not company. However, I still rely o
 #+begin_src emacs-lisp :results silent
 (use-package company
   :defer 5
-  :hook
-  (telega-chat-mode-hook . company-mode))
+  :config
+  (add-hook 'telega-chat-mode-hook #'company-mode))
 #+end_src
 
 * help
@@ -7560,7 +7480,7 @@ Emacs 28 has a useful builtin [[https://www.masteringemacs.org/article/emacs-bui
   :defer 10
   :init
   (which-key-mode)
-  
+
   :config
   (setq which-key-idle-delay 0))
 #+end_src
@@ -7772,8 +7692,8 @@ necessary."
 (use-package eshell-syntax-highlighting
   :after eshell
   :demand t
-  :hook
-  (eshell-mode-hook . eshell-syntax-highlighting-global-mode))
+  :config
+  (add-hook 'eshell-mode-hook #'eshell-syntax-highlighting-global-mode))
 #+end_src
 
 ** pcmpl-args
@@ -7973,6 +7893,9 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
   (advice-add 'flyspell-region :around
               #'telega-chatbuf-input-as-region-advice)
 
+  (add-hook 'text-mode-hook #'flyspell-mode)
+  (add-hook 'prog-mode-hook #'flyspell-prog-mode)
+
   :general
   ("M-p" 'flyspell-buffer
    "A-M-," 'ps/flyspell-goto-previous-error
@@ -7989,9 +7912,6 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
    "A-s-s" 'ps/flyspell-save-word-and-next
    "s-c" 'flyspell-correct-wrapper)
 
-  :hook
-  (text-mode-hook . flyspell-mode)
-  (prog-mode-hook . flyspell-prog-mode))
 #+end_src
 
 *** TODO [#7] Create dwim version of flyspell-buffer
@@ -8091,10 +8011,10 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
   (setq lsp-grammarly-suggestions-possibly-biased-language-race-ethnicity-related nil)
   (setq lsp-grammarly-suggestions-possibly-politically-incorrect-language nil)
 
-  :hook
-  (org-mode-hook . (lambda ()
-                     (require 'lsp-grammarly)
-                     (lsp))))
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (require 'lsp-grammarly)
+              (lsp))))
 #+end_src
 
 *** TODO [#6] Check this
@@ -8116,9 +8036,11 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 (use-package eglot-grammarly
   :straight (:host github :repo "emacs-grammarly/eglot-grammarly")
   :defer t
-  :hook ((text-mode markdown-mode). (lambda ()
-                                      (require 'eglot-grammarly)
-                                      (eglot-ensure))))
+  :config
+  (add-hook 'text-mode markdown-mode
+            (lambda ()
+              (require 'eglot-grammarly)
+              (eglot-ensure))))
 #+end_src
 
 ** aide
@@ -8159,8 +8081,8 @@ To check: https://github.com/PillFall/languagetool.el
 #+begin_src emacs-lisp :results silent
 (use-feature text-mode
   :demand t
-  :hook
-  (text-mode-hook . visual-line-mode))
+  :config
+  (add-hook 'text-mode-hook #'visual-line-mode))
 #+end_src
 
 *** TODO [#6] Define ~text-mode-hook~ and ~prog-mode-hook~
@@ -8727,8 +8649,7 @@ otherwise the whole buffer."
     "Decrease date of transaction at point by one day."
     (ps/ledger--increase-date-of-transaction-at-point -1))
 
-  ;; :hook
-  ;; (ledger-mode-hook . (lambda () (setq-local ledger-complete-in-steps t)))
+  ;; (add-hook 'ledger-mode-hook (lambda () (setq-local ledger-complete-in-steps t)))
 
   :general
   (ledger-mode-map
@@ -8794,7 +8715,7 @@ otherwise the whole buffer."
 :ID:       49D7A193-157E-4A10-9C33-98727FC191BF
 :END:
 1. [[https://felixcrux.com/blog/ledger-practices-create-a-ledgerrc][create a ~.ledgerrc~ file]]
-   
+
 * pdf
 :PROPERTIES:
 :ID:       6C0D0737-734E-4EAB-8A3F-138EF990B967
@@ -8922,10 +8843,9 @@ FILE."
       (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
       (message "Copied all text in PDF to kill ring.")))
 
-  :hook
-  (pdf-tools-enabled-hook . ps/pdf-tools-apply-theme)
-  (pdf-tools-enabled-hook . pdf-view-fit-page-to-window)
-  (pdf-tools-enabled-hook . sow-mode)
+  (add-hook 'pdf-tools-enabled-hook #'ps/pdf-tools-apply-theme)
+  (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
+  (add-hook 'pdf-tools-enabled-hook #'sow-mode)
 
   :general
   ((pdf-view-mode-map pdf-annot-minor-mode-map pdf-history-minor-mode-map)
@@ -8990,8 +8910,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 (use-package pdf-view-restore
   :after pdf-tools
   :demand t
-  :hook
-  (pdf-view-mode-hook . pdf-view-restore-mode))
+  :config
+  (add-hook 'pdf-view-mode-hook #'pdf-view-restore-mode))
 #+end_src
 
 ** org-pdftools
@@ -9005,8 +8925,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 (use-package org-pdftools
   :after org pdf-tools
   :defer 30
-  :hook
-  (org-mode-hook . org-pdftools-setup-link))
+  :config
+  (add-hook 'org-mode-hook #'org-pdftools-setup-link))
 #+end_src
 
 ** org-noter-pdftools
@@ -9065,9 +8985,8 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
         (lsp)
       (lsp-disconnect)))
 
-  :hook
   ;; if you want which-key integration
-  (lsp-mode . lsp-enable-which-key-integration)
+  (add-hook 'lsp-mode #'lsp-enable-which-key-integration)
 
   :general
   ("A-l" 'ps/lsp-toggle))
@@ -9227,6 +9146,14 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 (use-package puni
   :disabled
   :demand t
+  :config
+  (dolist (hook '(prog-mode-hook
+                  sgml-mode-hook
+                  nxml-mode-hook
+                  tex-mode-hook
+                  eval-expression-minibuffer-setup-hook))
+    (add-hook hook #'puni-mode))
+
   :general
   (puni-mode-map
    "C-M-a" 'puni-beginning-of-sexp
@@ -9241,10 +9168,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
    "DEL" 'puni-backward-delete-char
    "M-(" 'puni-syntactic-backward-punct
    "M-)" 'puni-syntactic-forward-punct
-   "M-DEL"    'puni-backward-kill-word)
-
-  :hook
-  ((prog-mode-hook sgml-mode-hook nxml-mode-hook tex-mode-hook eval-expression-minibuffer-setup-hook) . puni-mode))
+   "M-DEL"    'puni-backward-kill-word))
 #+end_src
 
 *** TODO [#5] Define ~puni~ key bindings
@@ -9265,8 +9189,8 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 (use-feature hideshow
   :demand t
 
-  :hook
-  (prog-mode-hook . hs-minor-mode))
+  :config
+  (add-hook 'prog-mode-hook #'hs-minor-mode))
 #+end_src
 
 ** aggressive-indent-mode
@@ -9281,30 +9205,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :defer 20
   :config
   (global-aggressive-indent-mode))
-#+end_src
-
-** copilot
-:PROPERTIES:
-:ID:       2064FE34-0301-4E33-AB51-FE4921CA0E16
-:END:
-
-/[[https://github.com/zerolfx/copilot.el][copilot]] is an unofficial Copilot plugin for Emacs./
-
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/copilot)
-(use-package copilot
-  :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
-
-  :config
-  (setq copilot-node-executable "/opt/homebrew/opt/node/bin/node")
-  (setq copilot-log-max 1000)
-
-  :hook
-  (prog-mode-hook . copilot-mode)
-
-  :general
-  (copilot-mode-map
-   "M-<tab>" 'copilot-accept-completion
-   "A-M-<tab>" 'copilot-accept-completion-by-line))
 #+end_src
 
 ** gpt
@@ -9325,19 +9225,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :general
   ("A-C-g" 'gpt-dwim))
 #+end_src
-
-** pen
-:PROPERTIES:
-:ID:       DEEF7EF7-E79C-427B-9E1D-86D22FC2056E
-:END:
-
-*** TODO [#5] Check out pen.el
-:PROPERTIES:
-:ID:       2743B1F0-CCA8-4F48-8DC4-EF93E1A4607F
-:END:
-
-https://github.com/mullikine/pen.el
-Disscussion [[https://www.reddit.com/r/emacs/comments/zhwhww/comment/izp8rxy/?utm_source=reddit&utm_medium=web2x&context=3][here]].
 
 ** elpy
 :PROPERTIES:
@@ -9398,6 +9285,107 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
 (use-package bicycle
   :after outline)
 #+end_src
+
+* AI
+:PROPERTIES:
+:ID:       9846A789-9972-438B-9B6F-FE6BBBD3020E
+:END:
+
+** copilot
+:PROPERTIES:
+:ID:       2064FE34-0301-4E33-AB51-FE4921CA0E16
+:END:
+
+/[[https://github.com/zerolfx/copilot.el][copilot]] is an unofficial Copilot plugin for Emacs./
+
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/copilot)
+(use-package copilot
+  :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+  :demand t
+
+  :config
+  (setq copilot-node-executable "/opt/homebrew/opt/node/bin/node")
+  (setq copilot-log-max 1000)
+
+  (add-hook 'prog-mode-hook #'copilot-mode)
+
+  :general
+  (copilot-mode-map
+   "M-<tab>" 'copilot-accept-completion
+   "A-M-<tab>" 'copilot-accept-completion-by-line))
+#+end_src
+** openai
+:PROPERTIES:
+:ID:       822430F1-51B8-4754-80B0-EC17DD931CB5
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-17 Fri 21:54]--[2023-03-17 Fri 22:24] =>  0:30
+:END:
+
+/[[https://github.com/emacs-openai/openai][openai]] is an Elisp library for the OpenAI API./
+
+#+begin_src emacs-lisp
+(use-package openai
+  :straight (openai
+             :host github
+             :repo "emacs-openai/openai")
+  :config
+  (setq openai-key (auth-source-pass-get "key" "tlon/core/openai.com")))
+#+end_src
+
+** chatgpt
+:PROPERTIES:
+:ID:       2D5B778F-E663-4569-8104-77E6D986FA90
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-21 Tue 22:51]--[2023-03-21 Tue 23:01] =>  0:10
+CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
+:END:
+
+/[[https://github.com/emacs-openai/chatgpt][chatgpt]] supports prompting GPT from within Emacs./
+
+#+begin_src emacs-lisp
+(use-package chatgpt
+  :straight (chatgpt
+             :host github
+             :repo "emacs-openai/chatgpt")
+  :after openai
+  :config
+  (setq chatgpt-model "gpt-4")
+  
+  :general
+  ("A-C-g" 'chatgpt))
+#+end_src
+
+** codegpt
+:PROPERTIES:
+:ID:       5008C40C-EC84-4817-9BE6-92996986D25E
+:END:
+
+/[[https://github.com/emacs-openai/codegpt#-using-chatgpt][codegpt]]  is a completion interface for GPT./
+
+#+begin_src emacs-lisp
+(use-package codegpt
+  :straight (codegpt
+             :host github
+             :repo "emacs-openai/codegpt")
+  :after openai
+  :config
+  (setq codegpt-model "text-davinci-003"))
+#+end_src
+
+** pen
+:PROPERTIES:
+:ID:       DEEF7EF7-E79C-427B-9E1D-86D22FC2056E
+:END:
+
+*** TODO [#5] Check out pen.el
+:PROPERTIES:
+:ID:       2743B1F0-CCA8-4F48-8DC4-EF93E1A4607F
+:END:
+
+https://github.com/mullikine/pen.el
+Disscussion [[https://www.reddit.com/r/emacs/comments/zhwhww/comment/izp8rxy/?utm_source=reddit&utm_medium=web2x&context=3][here]].
 
 * org-mode
 :PROPERTIES:
@@ -9635,7 +9623,6 @@ CLOCK: [2021-10-14 Thu 19:07]--[2021-10-14 Thu 19:39] =>  0:32
 CLOCK: [2021-10-05 Tue 13:18]--[2021-10-05 Tue 13:34] =>  0:16
 CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 :END:
-
 
 ** org
 :PROPERTIES:
@@ -10158,8 +10145,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (winum-select-window-1)
     (let ((agenda "*Org Agenda(a)*"))
       (if (get-buffer agenda)
-          (switch-to-buffer "*Org Agenda(a)*")
-        (org-agenda nil "a"))))
+	  (switch-to-buffer "*Org Agenda(a)*")
+	(org-agenda nil "a"))))
 
   (setq org-agenda-hide-tags-regexp "project")
 
@@ -10259,19 +10246,18 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   ;; We add these two advices because `org-modern-mode' interferes
   ;; with the display of the habits progress bar
   (advice-add 'org-habit-toggle-display-in-agenda :before
-              (lambda (arg)
-                (if org-habit-show-habits
-                    (global-org-modern-mode)
-                  (global-org-modern-mode -1))))
+	      (lambda (arg)
+		(if org-habit-show-habits
+		    (global-org-modern-mode)
+		  (global-org-modern-mode -1))))
   (advice-add 'org-habit-toggle-display-in-agenda :after
-              (lambda (arg)
-                (org-agenda-redo)
-                (global-org-modern-mode)))
+	      (lambda (arg)
+		(org-agenda-redo)
+		(global-org-modern-mode)))
 
-  :hook
-  (org-agenda-mode-hook . (lambda ()
-                            (visual-line-mode -1)
-                            (toggle-truncate-lines 1)))
+  (add-hook 'org-agenda-mode-hook (lambda ()
+				    (visual-line-mode -1)
+				    (toggle-truncate-lines 1)))
   :general
   ("C-<escape>" 'org-agenda)
   (org-agenda-mode-map
@@ -10409,6 +10395,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tbb" "Tlön: BAE: Generic " entry
            (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
+          ("tbl" "Tlön: BAE: Process Leo's revisions " entry
+           (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
+           "** TODO [#6] Process Leo's revisions of '%c%?' \n" :empty-lines 1 :prepend t)
           ("tbr" "Tlön: BAE: Revise translation " entry
            (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
            "** TODO [#6] Revise '%c%?' translation \n" :empty-lines 1 :prepend t)
@@ -10477,54 +10466,57 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (file+headline ps/file-tlon-tareas-leo "Tareas Leo")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlb" "Tlön: Leo: BAE")
-          ("tlba" "Tlön: Leo: Add to translations Airtable" entry
+          ("tlba" "Tlön: Leo: BAE: Add to translations Airtable" entry
            (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
-           "** TODO [#6] Add to translations Airtable :leo:\n%c" :empty-lines 1 :prepend t)
-          ("tlbb" "Tlön: Leo: Generic BAE task" entry
+           "** TODO [#5] Add to translations Airtable :leo:\n%c" :empty-lines 1 :prepend t)
+          ("tlbb" "Tlön: Leo: BAE: Generic BAE task" entry
            (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+           "** TODO [#5] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tli" "Tlön: Leo: EAI")
-          ("tlii" "Tlön: Leo: Generic EAI task" entry
+          ("tlii" "Tlön: Leo: EAI: Generic EAI task" entry
            (id "698743B9-B754-4061-89BD-6E49F3B64DE2")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tln" "Tlön: Leo: EAN")
-          ("tlna" "Tlön: Leo: Add to ea.news" entry
+          ("tlna" "Tlön: Leo: EAN: Add to ea.news" entry
            (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
            "** TODO [#6] Agregar a ea.news :leo:\n%c" :empty-lines 1 :prepend t)
-          ("tlnn" "Tlön: Leo: Generic EAN" entry
+          ("tlnn" "Tlön: Leo: EAN: Generic EAN" entry
            (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlnu" "Tlön: Leo: EAN: Update ea.news" entry
+           (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
+           "** TODO [#7] Actualizar feed/link de ea.news :leo:\n%?\n%c" :empty-lines 1 :prepend t)
           ("tlm" "Tlön: Leo: FM")
-          ("tlmm" "Tlön: Leo: Generic FM task" entry
+          ("tlmm" "Tlön: Leo: FM: Generic FM task" entry
            (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlmn" "Tlön: Leo: FM: Add to Future Matters: news" entry
+           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+           "** TODO [#4] Future Matters: news :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
+          ("tlmr" "Tlön: Leo: FM: Add to Future Matters: research" entry
+           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+           "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
           ("tlg" "Tlön: Leo: GPE")
-          ("tlgg" "Tlön: Leo: Generic GPE task" entry
+          ("tlgg" "Tlön: Leo: GPE: Generic GPE task" entry
            (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlh" "Tlön: Leo: HEAR")
-          ("tlhh" "Tlön: Leo: Generic HEAR task" entry
+          ("tlhh" "Tlön: Leo: HEAR: Generic HEAR task" entry
            (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tlmn" "Tlön: Leo: Add to Future Matters: news" entry
-           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-           "** TODO [#4] Future Matters: news :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
-          ("tlmr" "Tlön: Leo: Add to Future Matters: research" entry
-           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-           "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
           ("tld" "Tlön: Leo: LBDLH")
-          ("tldd" "Tlön: Leo: Generic LBDLH task" entry
+          ("tldd" "Tlön: Leo: LBDLH: Generic LBDLH task" entry
            (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlw" "Tlön: Leo: PW")
-          ("tlww" "Tlön: Leo: Generic PW task" entry
+          ("tlww" "Tlön: Leo: PW: Generic PW task" entry
            (id "12645897-A06F-44DD-876D-0FFC47D0E742")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlr" "Tlön: Leo: RAE")
-          ("tlrl" "Tlön: Leo: RAE add to lexicon" entry
+          ("tlrl" "Tlön: Leo: RAE: Add to lexicon" entry
            (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
            "** TODO [#6] Agregar al lexicon de Azure :leo:\n%?" :empty-lines 1 :prepend t)
-          ("tlrr" "Tlön: Leo: Generic RAE task" entry
+          ("tlrr" "Tlön: Leo: RAE: Generic RAE task" entry
            (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlx" "Tlön: Leo: Meetings" entry
@@ -10625,18 +10617,16 @@ conditional on active capture template."
      ((string= "y" (plist-get org-capture-plist :key))
       (youtube-dl (current-kill 0) :directory ps/dir-downloads :destination (org-hugo-slug (ps/org-web-tools--org-title-for-url))))))
 
+  (add-hook 'org-capture-mode-hook #'ps/org-capture-hydra-notes-hook)
+  (add-hook 'org-capture-before-finalize-hook #'ps/org-capture-before-finalize-hook-behavior)
+  (add-hook 'org-capture-before-prepare-hook #'ps/org-capture-prepare-finalize-hook-behavior)
 
   :general
   ("H-t" 'org-capture
    "H-T" 'org-capture-goto-last-stored)
   (org-capture-mode-map
    "s-c" 'org-capture-finalize
-   "s-w" 'org-capture-refile)
-
-  :hook
-  (org-capture-mode-hook . ps/org-capture-hydra-notes-hook)
-  (org-capture-before-finalize-hook . ps/org-capture-before-finalize-hook-behavior)
-  (org-capture-before-prepare-hook . ps/org-capture-prepare-finalize-hook-behavior))
+   "s-w" 'org-capture-refile))
 #+end_src
 
 Links to check out:
@@ -10749,6 +10739,35 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
     (insert (format "#+BEGIN: clocktable :scope subtree :maxlevel 4 :narrow 50 :tstart \"%s\" :tend \"%s\"\n#+END:" start-date end-date))
     (previous-line)
     (org-ctrl-c-ctrl-c))
+
+  ;; replace `org-files-list' with `org-agenda-files', so that
+  ;; extraneous files are excluded from the dangling clocks check.
+  (defun ps/org-resolve-clocks (&optional only-dangling-p prompt-fn last-valid)
+    "Resolve all currently open Org clocks.
+If `only-dangling-p' is non-nil, only ask to resolve dangling
+\(i.e., not currently open and valid) clocks."
+    (interactive "P")
+    (unless org-clock-resolving-clocks
+      (let ((org-clock-resolving-clocks t))
+        (dolist (file (org-agenda-files))
+          (let ((clocks (org-find-open-clocks file)))
+            (dolist (clock clocks)
+              (let ((dangling (or (not (org-clock-is-active))
+                                  (/= (car clock) org-clock-marker))))
+                (if (or (not only-dangling-p) dangling)
+                    (org-clock-resolve
+                     clock
+                     (or prompt-fn
+                         (lambda (clock)
+                           (format
+                            "Dangling clock started %d mins ago"
+                            (floor (org-time-convert-to-integer
+                                    (time-since (cdr clock)))
+                                   60))))
+                     (or last-valid
+                         (cdr clock)))))))))))
+
+  (advice-add 'org-resolve-clocks :override #'ps/org-resolve-clocks)
 
   :general
   ("A-H-j" 'org-clock-goto
@@ -11039,9 +11058,8 @@ slow if it has a lot of overlays."
         (ps/org-show-logbook)
       (ps/org-hide-logbook)))
 
-  :hook
-  (org-mode-hook . ps/org-hide-properties)
-  (org-mode-hook . ps/org-hide-logbook))
+  (add-hook 'org-mode-hook #'ps/org-hide-properties)
+  (add-hook 'org-mode-hook #'ps/org-hide-logbook))
 #+end_src
 
 ** org-faces
@@ -11125,8 +11143,7 @@ files, recursively all files in `org-directory', and all files in
       (ps/org-widen-and-reveal)
       (org-id-goto id)))
 
-  :hook
-  (before-save-hook . ps/org-id-auto-add-ids-to-headings-in-file)
+  (add-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)
 
   :general
   (org-mode-map
@@ -11204,7 +11221,7 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
 (use-feature org-refile
   :defer 10
   :config
-  (setq org-refile-use-outline-path t)
+  (setq org-refile-use-outline-path 'level3)
   (setq org-outline-path-complete-in-steps nil)
   (setq org-refile-allow-creating-parent-nodes 'confirm)
   (setq org-reverse-note-order t) ; refile to the beginning of header
@@ -11515,10 +11532,12 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
     (save-buffer)
     (org-babel-tangle))
 
-  (add-to-list 'org-babel-key-bindings (cons "j" 'org-babel-next-src-block))
-  (add-to-list 'org-babel-key-bindings (cons "k" 'org-babel-previous-src-block))
-  (add-to-list 'org-babel-key-bindings (cons "n" 'org-babel-insert-header-arg))
-  (add-to-list 'org-babel-key-bindings (cons "p" 'org-babel-remove-result-one-or-many))
+  (dolist (cons (list (cons "j" 'org-babel-next-src-block)
+		      (cons "k" 'org-babel-previous-src-block)
+		      (cons "n" 'org-babel-insert-header-arg)
+		      (cons "p" 'org-babel-remove-result-one-or-many)))
+    (add-to-list 'org-babel-key-bindings cons))
+
   :general
   (org-mode-map
    "s-b" 'ps/org-babel-tangle))
@@ -12103,7 +12122,6 @@ return such list if its length is less than LIMIT."
   (defvar ps/org-roam-excluded-files (list
                                       "orb-noter-template.org"
                                       "calendar.org" ; added directly as agenda file
-                                      "notatu-dignum.org"
                                       "quotes-old.org"
                                       ".org2blog.org"
                                       "wiki-notes.org" ; removing temporarily
@@ -12216,10 +12234,9 @@ return such list if its length is less than LIMIT."
 
   (org-roam-db-autosync-mode -1)
 
-  :hook
-  (org-roam-capture-new-node-hook . orb--insert-captured-ref-h)
-  (org-roam-capture-new-node-hook . org-roam-capture--insert-captured-ref-h)
-  (org-capture-prepare-finalize-hook . ps/org-roam-remove-file-level-properties)
+  (add-hook 'org-roam-capture-new-node-hook #'orb--insert-captured-ref-h)
+  (add-hook 'org-roam-capture-new-node-hook #'org-roam-capture--insert-captured-ref-h)
+  (add-hook 'org-capture-prepare-finalize-hook #'ps/org-roam-remove-file-level-properties)
 
   :general
   ("A-H-n" 'ps/org-roam-new-note
@@ -12299,7 +12316,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
   ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
   ;;         a hookable mode anymore, you're advised to pick something yourself
   ;;         if you don't care about startup time, use
-  ;;  :hook (after-init . org-roam-ui-mode)
+  ;;  (add-hook 'after-init #'org-roam-ui-mode)
   :config
   (setq org-roam-ui-sync-theme t)
   (setq org-roam-ui-follow t)
@@ -12483,9 +12500,8 @@ tasks."
           (expand-file-name (file-name-as-directory org-roam-directory))
           (file-name-directory buffer-file-name))))
 
-  :hook
-  (find-file-hook . vulpea-project-update-tag)
-  (before-save-hook . vulpea-project-update-tag))
+  (add-hook 'find-file-hook #'vulpea-project-update-tag)
+  (add-hook 'before-save-hook #'vulpea-project-update-tag))
 #+end_src
 
 *** TODO [#5] Revise ~vulpea-project-p~ function so that it excludes buffers tagged ~excluded~
@@ -13218,6 +13234,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-12 Sun 19:36]--[2023-03-12 Sun 20:19] =>  0:43
 CLOCK: [2022-09-22 Thu 14:39]--[2022-09-22 Thu 15:15] =>  0:36
 CLOCK: [2022-09-13 Tue 17:29]--[2022-09-13 Tue 17:56] =>  0:27
 CLOCK: [2022-09-13 Tue 16:36]--[2022-09-13 Tue 17:05] =>  0:29
@@ -13256,9 +13273,9 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
   (setq ebib-use-timestamp t)
   (setq ebib-preload-bib-files org-cite-global-bibliography)
   (setq ebib-index-columns '(("Entry Key" 30 t)
-                        ("Author/Editor" 25 t)
-                        ("Year" 4 t)
-                        ("Title" 50 t)))
+                             ("Author/Editor" 25 t)
+                             ("Year" 4 t)
+                             ("Title" 50 t)))
   (setq ebib-timestamp-format "%Y-%m-%d %T (%Z)")
   (setq ebib-save-xrefs-first nil)
   (setq ebib-default-entry-type "online")
@@ -13826,7 +13843,8 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
              ;; open the pdf to make sure it displays the web page correctly
              (ps/ebib-open-pdf-file)
              ;; ocr the pdf if necessary
-             (ps/ocr-pdf (format "'%s' '%s'" (expand-file-name file-name) (expand-file-name file-name)))))))
+             (let ((expanded-file-name (expand-file-name file-name)))
+               (ps/ocr-pdf (format "'%s' '%s'" expanded-file-name expanded-file-name)))))))
       (default
        (beep))))
 
@@ -14265,9 +14283,18 @@ first name, and names are separated by a semicolon."
       (default
        (beep))))
 
-  :hook
-  (ebib-index-mode-hook . doom-modeline-mode)
-  (ebib-entry-mode-hook . visual-line-mode)
+  (defun ps/ebib-download-url-with-zotra ()
+    "Download the URL associated with the current entry with `zotra'."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (let ((url (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+         (zotra-download-attachment-from-url url)))
+      (default
+       (beep))))
+
+  (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
+  (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
 
   :general
   ("A-i" 'ps/ebib-open-or-switch)
@@ -14334,7 +14361,7 @@ The macro below generates the commands correcty. But attempting to define key bi
 - First export them to csv.
 - Then convert the csv to bibtex
   https://www.google.com/search?q=csv+to+bibtex&oq=csv+to+bib&aqs=chrome.0.0i512j69i57j0i512l2j0i22i30j0i10i22i30l5.7911j0j9&sourceid=chrome&ie=UTF-8
-  
+
 *** TODO [#5] Fix ebib issues Leo reported
 :PROPERTIES:
 :ID:       359ADA5E-7B2F-4BF9-94CC-DE0BB5A516C9
@@ -14378,6 +14405,7 @@ CLOCK: [2022-07-16 Sat 15:17]--[2022-07-16 Sat 15:18] =>  0:01
     "Return `t' if string has the form of an arXiv ID."
     (string-match ps/biblio-arxiv-regexp string)))
 #+end_src
+
 ** persid
 :PROPERTIES:
 :ID:       57366A1C-A55A-47F8-8B62-E3412D674879
@@ -14724,8 +14752,7 @@ To try once I switch to Emacs 29.
   (setq message-kill-buffer-on-exit t) ; make `message-send-and-exit' kill buffer, not bury it
   (setq message-send-mail-function 'smtpmail-multi-send-it)
 
-  :hook
-  (message-mode-hook . (lambda () (auto-fill-mode -1)))
+  (add-hook 'message-mode-hook #'(lambda () (auto-fill-mode -1)))
 
   :general
   ((message-mode-map org-msg-edit-mode-map)
@@ -14747,7 +14774,7 @@ To try once I switch to Emacs 29.
 :END:
 
 [[https://turkja.fi/posts/emacs-and-smtp/][Emacs and SMTP with gmail | Jarkko Turkulainen]]
-
+https://gist.github.com/loziju/66d3f024e102704ff5222e54a4bfd50e
 ** mml
 :PROPERTIES:
 :ID:       2A87061B-BE45-443B-AB2C-893A69C20003
@@ -15071,12 +15098,11 @@ it, without asking for confirmation."
     (toggle-truncate-lines 1)
     (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.15))
 
-  :hook
-  (mu4e-view-mode-hook . ps/mu4e-view-mode-hook-functions)
-  (change-major-mode-hook . ps/faces-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode
-  (mu4e-mark-execute-pre-hook . ps/mu4e-gmail-fix-flags)
-  (mu4e-compose-pre-hook . org-msg-mode)
-  (mu4e-compose-pre-hook . ps/mu4e-set-account)
+  (add-hook 'mu4e-view-mode-hook #'ps/mu4e-view-mode-hook-functions)
+  (add-hook 'change-major-mode-hook #'ps/faces-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode
+  (add-hook 'mu4e-mark-execute-pre-hook #'ps/mu4e-gmail-fix-flags)
+  (add-hook 'mu4e-compose-pre-hook #'org-msg-mode)
+  (add-hook 'mu4e-compose-pre-hook #'ps/mu4e-set-account)
 
   :general
   ("A-m" 'mu4e)
@@ -15321,12 +15347,15 @@ I.e. the message quoted when on replies to, or forwards, an existing email.
 :ID:       3F610D3D-B076-4DF5-B1AC-B9A163A5A04C
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-15 Wed 00:48]--[2023-03-15 Wed 00:55] =>  0:07
 CLOCK: [2022-06-08 Wed 20:13]--[2022-06-08 Wed 20:36] =>  0:23
 CLOCK: [2021-12-07 Tue 12:46]--[2021-12-07 Tue 12:47] =>  0:01
 :END:
 
 Also add spacing (properties are ~padding~ / ~margin~)
 This is controlled with ~org-msg-enforce-css~.
+
+See https://stackoverflow.com/questions/66214297/how-can-i-set-the-same-padding-left-in-my-template-for-outlook-gmail-emails
 *** TODO [#5] Figure out how to include LaTeX/Mathjax
 :PROPERTIES:
 :Effort:   0:30
@@ -15530,11 +15559,10 @@ into a task for Leo."
 
   (telega-mode-line-mode 1)
 
-  :hook
-  (telega-chat-mode-hook . ps/telega-chat-mode)
-  (telega-chat-mode-hook . (lambda () (setq default-directory ps/dir-downloads)))
-  ;; (telega-chat-mode-hook . telega-autoplay-mode) ; causes massive slowdown
-  ;; (telega-chat-mode-hook . (lambda () (setq line-spacing nil)))
+  (add-hook 'telega-chat-mode-hook #'ps/telega-chat-mode)
+  (add-hook 'telega-chat-mode-hook #'(lambda () (setq default-directory ps/dir-downloads)))
+  ;; (add-hook 'telega-chat-mode-hook #'telega-autoplay-mode) ; causes massive slowdown
+  ;; (add-hook 'telega-chat-mode-hook #'(lambda () (setq line-spacing nil)))
 
   :general
   ("A-l" 'ps/telega-switch-to)
@@ -15613,10 +15641,8 @@ into a task for Leo."
 
   (add-hook 'telega-load-hook 'global-telega-mnz-mode))
 
-;; :hook
-;; (telega-load-hook . global-telega-mnz-mode))
+;; (add-hook 'telega-load-hook #'global-telega-mnz-mode))
 #+end_src
-
 
 ** telega-dired-dwim
 :PROPERTIES:
@@ -15787,8 +15813,8 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 
   (slack-start)
 
-  :hook
-  (slack-buffer-mode-hook . (lambda () (setq line-spacing nil)))
+  (add-hook 'slack-buffer-mode-hook
+            (lambda () (setq line-spacing nil)))
 
   :general
   ("A-s" 'slack-channel-select)
@@ -16005,8 +16031,8 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
              :repo "oantolin/emacs-config"
              :files ("my-lisp/shr-heading.el"))
   :demand t
-  :hook
-  (eww-mode-hook . shr-heading-setup-imenu)
+  :config
+  (add-hook 'eww-mode-hook #'shr-heading-setup-imenu)
 
   :general
   ((elfeed-show-mode-map eww-mode-map mu4e-view-mode-map)
@@ -16141,9 +16167,8 @@ If prefix arg is passed, then open in new EWW buffer."
                      (url-fullness url)))
       (eww-browse-url (url-recreate-url new-url))))
 
-  :hook
-  (eww-after-render-hook . ps/rename-buffer)
-  (eww-after-render-hook . ps/eww-readable-autoview)
+  (add-hook 'eww-after-render-hook #'ps/rename-buffer)
+  (add-hook 'eww-after-render-hook #'ps/eww-readable-autoview)
 
   :general
   ("A-w" 'eww)
@@ -16377,8 +16402,7 @@ poorly-designed websites."
 
   ;; (run-with-idle-timer (* 60 10) t 'elfeed-update)
 
-  :hook
-  (elfeed-show-mode-hook . shr-heading-setup-imenu)
+  (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
   ;; I believe this is no longer needed
   ;; github.com/skeeto/elfeed/issues/190#issuecomment-384346895
   ;; (elfeed-show-mode-hook . (lambda ()
@@ -16488,9 +16512,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine Amazon
     "https://www.amazon.com/s?k=%s"
     :keybinding "a")
-  (defengine EABlogs
-    "https://cse.google.com/cse?cx=013594344773078830993:k3igzr2se6y&q=%s"
-    :keybinding "b")
   (defengine MercadoLibre
     "https://listado.mercadolibre.com.ar/%s"
     :keybinding "c")
@@ -16509,6 +16530,9 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine Metaforecast
     "https://metaforecast.org/?query=%s"
     :keybinding "m")
+  (defengine EffectiveAltruismNews
+    "https://cse.google.com/cse?cx=013594344773078830993:k3igzr2se6y&q=%s"
+    :keybinding "n")
   (defengine GoogleMaps
     "https://www.google.com/maps?q=%s"
     :keybinding "p")
@@ -16532,7 +16556,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     :keybinding "y")
   (engine/set-keymap-prefix (kbd "A-H-g")))
 #+end_src
-
 
 ** osm
 :PROPERTIES:
@@ -16791,20 +16814,8 @@ account."
   (setq md4rd--oauth-refresh-token
         (auth-source-pass-get "refresh" "auth-sources/reddit"))
 
-  :hook
-  (md4rd-mode-hook . md4rd-indent-all-the-lines))
+  (add-hook 'md4rd-mode-hook #'md4rd-indent-all-the-lines))
 #+end_src
-
-** hugo
-:PROPERTIES:
-:ID:       7C6912C7-B5CB-4A04-8145-A89B891F7A0C
-:END:
-:LOGBOOK:
-CLOCK: [2021-04-11 Sun 09:02]--[2021-04-11 Sun 09:06] =>  0:04
-:END:
-
-- [[https://lucidmanager.org/productivity/create-websites-with-org-mode-and-hugo/][Create Websites with Emacs: Blogging with Org Mode and Hugo]]
-- [[https://sidhartharya.me/exporting-org-roam-notes-to-hugo/][Exporting Org Roam notes to hugo - Sidharth Arya]]
 
 ** org-download
 :PROPERTIES:
@@ -16814,7 +16825,7 @@ CLOCK: [2021-04-11 Sun 09:02]--[2021-04-11 Sun 09:06] =>  0:04
 CLOCK: [2021-06-23 Wed 11:43]--[2021-06-23 Wed 11:51] =>  0:08
 :END:
 
-/[[https://github.com/abo-abo/org-download][org-download]] supports drag and drop images to org-mode.
+/[[https://github.com/abo-abo/org-download][org-download]] supports drag and drop images to org-mode./
 
 #+begin_src emacs-lisp :results silent
 (use-package org-download
@@ -16909,6 +16920,7 @@ if none."
   :general
   ("s-A-k" 'org-web-tools-insert-link-for-url))
 #+end_src
+
 ** request
 :PROPERTIES:
 :ID:       4B7C17EE-0346-4059-AFF1-24DD7A609ADE
@@ -17458,10 +17470,58 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
 
 [[https://github.com/tadfisher/pass-otp][GitHub - tadfisher/pass-otp: A pass extension for managing one-time-password (OTP) tokens]]
 
-* notifications
+* misc.
 :PROPERTIES:
-:ID:       7F48BD07-3570-46C7-A535-87CA5833E84E
+:ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
 :END:
+
+#+begin_src emacs-lisp :results silent
+;; github.com/Gleek/emacs.d/blob/761dad7e97accd6d1537a201c5d447a6be1d155c/core/core-util.el#L31
+(defun ps/random-alnum (&optional length)
+  (let ((times (or length 5))
+        (random ""))
+    (setq-local random "")
+    (dotimes (_ times)
+      (setq random (concat random (let* ((alnum "abcdefghijklmnopqrstuvwxyz0123456789")
+             (i (% (abs (random)) (length alnum))))
+                       (substring alnum i (1+ i))))))
+    random))
+
+(defun ps/string-match-in-list-p (string list-of-strings)
+  ""
+  (catch 'tag
+    (mapc
+     (lambda (-x)
+       (when (string-match (regexp-quote string) -x )
+         (throw 'tag -x)))
+     list-of-strings)
+    nil))
+#+end_src
+
+** calc
+:PROPERTIES:
+:ID:       50FAD2F3-E501-408E-A9A2-8358FAA87C1C
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature calc
+  :general
+  ("A-c" 'calc
+   "A-M-c" 'quick-calc)
+  ((calc-mode-map calc-alg-map)
+   "C-k" nil))
+#+end_src
+
+** constants
+:PROPERTIES:
+:ID:       E9DB498C-A4B6-4665-8CA1-40BBAC219B76
+:END:
+
+/[[https://github.com/emacsmirror/constants][constants]] provides physical values of physical constants and units./
+
+#+begin_src emacs-lisp :results silent
+(use-package constants)
+#+end_src
 
 ** alert
 :PROPERTIES:
@@ -17490,14 +17550,13 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
       (setq alert-default-style 'osx-notifier)
     (setq alert-default-style 'notifications))
 
-
   ;; This function has to be loaded manually, for some reason.
-  (defun alert-osx-notifier-notify (info)
-    (apply #'call-process "osascript" nil nil nil "-e"
-           (list (format "display notification %S with title %S"
-                         (alert-encode-string (plist-get info :message))
-                         (alert-encode-string (plist-get info :title)))))
-    (alert-message-notify info))
+  ;; (defun alert-osx-notifier-notify (info)
+  ;;   (apply #'call-process "osascript" nil nil nil "-e"
+  ;;          (list (format "display notification %S with title %S"
+  ;;                        (alert-encode-string (plist-get info :message))
+  ;;                        (alert-encode-string (plist-get info :title)))))
+  ;;   (alert-message-notify info))
 
   (defun ps/alert-dismiss-osx-notification ()
     "docstring"
@@ -17508,89 +17567,6 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 
   :general
   ("H-\"" 'ps/alert-dismiss-osx-notification))
-#+end_src
-
-** dbus
-:PROPERTIES:
-:ID:       6DFC9E2F-E77A-4966-9AA6-D0DFDA17E11B
-:END:
-
-* calc
-:PROPERTIES:
-:ID:       29FF5CB1-E727-4CDC-B745-6A9B5711549C
-:END:
-
-** calc
-:PROPERTIES:
-:ID:       50FAD2F3-E501-408E-A9A2-8358FAA87C1C
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature calc
-  :general
-  ("A-c" 'calc
-   "A-M-c" 'quick-calc)
-  ((calc-mode-map calc-alg-map)
-   "C-k" nil))
-#+end_src
-
-** constants
-:PROPERTIES:
-:ID:       E9DB498C-A4B6-4665-8CA1-40BBAC219B76
-:END:
-
-/[[https://github.com/emacsmirror/constants][constants]] provides physical values of physical constants and units./
-
-#+begin_src emacs-lisp :results silent
-(use-package constants)
-#+end_src
-
-* games
-:PROPERTIES:
-:ID:       5694074B-989E-4B06-B9EB-5807AAB36DDC
-:END:
-
-** tetris
-:PROPERTIES:
-:ID:       F4C5A232-7788-4240-9CE2-B6761C905786
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature tetris
-  :general
-  (tetris-mode-map
-   "k" 'tetris-rotate-prev
-   "l" 'tetris-move-down
-   "j" 'tetris-move-left
-   ";" 'tetris-move-right))
-#+end_src
-
-* misc.
-:PROPERTIES:
-:ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
-:END:
-
-#+begin_src emacs-lisp :results silent
-;; github.com/Gleek/emacs.d/blob/761dad7e97accd6d1537a201c5d447a6be1d155c/core/core-util.el#L31
-(defun ps/random-alnum (&optional length)
-  (let ((times (or length 5))
-        (random ""))
-    (setq-local random "")
-    (dotimes (_ times)
-      (setq random (concat random (let* ((alnum "abcdefghijklmnopqrstuvwxyz0123456789")
-             (i (% (abs (random)) (length alnum))))
-                       (substring alnum i (1+ i))))))
-    random))
-
-(defun ps/string-match-in-list-p (string list-of-strings)
-  ""
-  (catch 'tag
-    (mapc
-     (lambda (-x)
-       (when (string-match (regexp-quote string) -x )
-         (throw 'tag -x)))
-     list-of-strings)
-    nil))
 #+end_src
 
 ** unpackaged
@@ -17664,17 +17640,16 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (midnight-mode)
   (midnight-delay-set 'midnight-delay "4:30am")
 
-  :hook
-  (midnight-mode . ps/save-all-buffers)
-  (midnight-hook . ps/ledger-update-commodities)
-  ;; (midnight-hook . ps/magit-stage-commit-and-push-all-repos)
-  (midnight-hook . clean-buffer-list)
-  (midnight-hook . org-roam-db-sync)
-  (midnight-hook . ps/org-roam-update-id-locations)
-  (midnight-hook . org-gcal-sync)
-  (midnight-hook . ps/pass-git-sync)
-  ;; (midnight-hook . straight-prune-build)
-  )
+  (dolist (hook-function #'(ps/save-all-buffers
+                            ps/ledger-update-commodities
+                            ps/magit-stage-commit-and-push-all-repos
+                            clean-buffer-list
+                            org-roam-db-sync
+                            ps/org-roam-update-id-locations
+                            org-gcal-sync
+                            ps/pass-git-sync
+                            straight-prune-build))
+    (add-hook 'midnight-hook hook-function)))
 #+end_src
 
 *** SOMEDAY [#6] Fix coinprices
@@ -17726,6 +17701,21 @@ I'm not tracking prices anymore so this is probably not worth it currently.
   :config
   (setq custom-safe-themes t)
   (setq custom-file (file-name-concat ps/dir-downloads "delete.me"))) ; move unintended customizations to a garbage file
+#+end_src
+
+** tetris
+:PROPERTIES:
+:ID:       F4C5A232-7788-4240-9CE2-B6761C905786
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature tetris
+  :general
+  (tetris-mode-map
+   "k" 'tetris-rotate-prev
+   "l" 'tetris-move-down
+   "j" 'tetris-move-left
+   ";" 'tetris-move-right))
 #+end_src
 
 * personal projects

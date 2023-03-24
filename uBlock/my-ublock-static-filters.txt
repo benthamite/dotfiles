@@ -1,0 +1,15 @@
+! 2023-03-16 https://www.imdb.com
+www.imdb.com##.ipc-page-grid__item--span-2.ipc-page-grid__item.ipc-page-section--baseAlt.ipc-page-section
+www.imdb.com##.kYJGjr.sc-fdbafff8-0
+www.imdb.com##section.ipc-page-grid__item--span-3.ipc-page-grid__item.ipc-page-section--baseAlt.ipc-page-section:nth-of-type(3)
+www.imdb.com##.eEVqDK.sc-1c00b99-1.ipc-page-content-container--center.ipc-page-content-container > div > .page-grid.fCDMKW.sc-7404859-0.ipc-page-grid--bias-left.ipc-page-grid
+www.imdb.com##.ipc-page-grid__item--span-3.ipc-page-grid__item.more-to-watch.ipc-page-section--baseAlt.ipc-page-section
+www.imdb.com##.ipc-page-grid__item--span-3.ipc-page-grid__item > .ipc-page-section--baseAlt.ipc-page-section
+www.imdb.com##.ipc-page-grid__item--span-3.ipc-page-grid__item > .ipc-title--on-accent1.ipc-title--baseAlt.ipc-title--category-title.ipc-title > hgroup > .ipc-title__text
+www.imdb.com##section.celwidget.ipc-page-section--base.ipc-page-section:nth-of-type(1)
+www.imdb.com##section.celwidget.ipc-page-section--base.ipc-page-section:nth-of-type(2)
+www.imdb.com##.ipc-sub-grid-item--span-4.ipc-sub-grid-item.imdb-editorial-single.iWSjqW.sc-6e34fae0-0.ipc-slate-card--dynamic-width.ipc-slate-card--base.ipc-slate-card > .ipc-slate-card__content
+||m.media-amazon.com/images/M/MV5BZWFiOTg5ODMtMmVhZC00Y2JlLWEwZDUtMjM0Yzg1N2YxOTk5XkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_QL75_UX*0_CR0,0,*_.jpg$image
+www.imdb.com##.litwql.sc-28d6a406-6.ipc-page-section--base.ipc-page-section
+www.imdb.com##.ipc-page-grid__item--span-1.ipc-page-grid__item.bduFjF.sc-f2e21260-0 > .ipc-page-section--base.ipc-page-section
+

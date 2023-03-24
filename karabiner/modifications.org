@@ -889,7 +889,7 @@ CLOCK: [2022-07-24 Sun 18:58]--[2022-07-24 Sun 19:17] =>  0:19
 :ID:       C1FE60BD-9863-4E45-93F7-3E23DC589DDA
 :END:
 
-**** TODO Tweak ~l~ modifiers so that it doesn't trigger accidental key presses
+**** TODO [#5] Tweak ~l~ modifiers so that it doesn't trigger accidental key presses
 :PROPERTIES:
 :ID:       78762D11-60DE-4811-AF4B-23A50F4496EC
 :END:

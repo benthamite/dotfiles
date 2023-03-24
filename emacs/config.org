@@ -14843,6 +14843,10 @@ https://gist.github.com/loziju/66d3f024e102704ff5222e54a4bfd50e
 :ID:       1B568415-F030-437B-921C-B4A65B370A6E
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-23 Thu 23:21]--[2023-03-23 Thu 23:35] =>  0:14
+CLOCK: [2023-03-22 Wed 09:29]--[2023-03-22 Wed 09:36] =>  0:07
+CLOCK: [2023-03-16 Thu 19:28]--[2023-03-16 Thu 20:20] =>  0:52
+CLOCK: [2023-03-16 Thu 17:13]--[2023-03-16 Thu 18:24] =>  1:11
 CLOCK: [2023-03-08 Wed 19:40]--[2023-03-08 Wed 19:48] =>  0:08
 CLOCK: [2022-07-19 Tue 09:23]--[2022-07-19 Tue 09:48] =>  0:25
 CLOCK: [2022-07-19 Tue 08:37]--[2022-07-19 Tue 09:01] =>  0:24
@@ -14938,12 +14942,12 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-attachment-dir ps/dir-downloads)
   (setq mu4e-change-filenames-when-moving t)
   (setq mu4e-maildir-shortcuts
-   `((,ps/mu4e-inbox-folder . ?i)
-     (,ps/mu4e-daily-folder . ?y)
-     (,mu4e-drafts-folder  . ?d)
-     (,mu4e-sent-folder    . ?t)
-     (,mu4e-trash-folder   . ?x)
-     (,mu4e-refile-folder  . ?a))) ; required for correct Gmail refiling
+        `((,ps/mu4e-inbox-folder . ?i)
+          (,ps/mu4e-daily-folder . ?y)
+          (,mu4e-drafts-folder  . ?d)
+          (,mu4e-sent-folder    . ?t)
+          (,mu4e-trash-folder   . ?x)
+          (,mu4e-refile-folder  . ?a))) ; required for correct Gmail refiling
   (setq mu4e-compose-dont-reply-to-self t)
   (setq mu4e-compose-format-flowed t)
   (setq mu4e-confirm-quit nil)
@@ -14985,21 +14989,23 @@ confirmation."
     (mu4e-view-mark-for-refile)
     (mu4e-mark-execute-all t))
 
-  (defun ps/mu4e-headers-org-capture (&optional arg)
-    "In headers mode, capture message at point with `org-capture'
- and, unless invoked with a prefix argument, archive it."
-    (interactive)
-    (org-capture nil "e")
-    (unless arg
-      (ps/mu4e-headers-archive)))
-
   (defun ps/mu4e-view-org-capture (&optional arg)
     "In view mode, capture message at point with `org-capture' and,
- unless invoked with a prefix argument, archive it."
-    (interactive)
-    (org-capture nil "e")
-    (unless arg
-      (ps/mu4e-view-archive)))
+ unless invoked with a prefix argument, archive it.
+
+If the message body contains with '[org-capture key: KEY]',
+interpret KEY as the org-capture template key."
+    (interactive "P")
+    (if (eq major-mode 'mu4e-view-mode)
+        (let* ((message-body (mu4e-message-field (mu4e-message-at-point) :body-txt))
+               (key (if
+                        (string-match "\\[org-capture key: \\(.*\\)\\]" message-body)
+                        (match-string-no-properties 1 message-body)
+                      "e")))
+          (org-capture nil key)
+          (unless arg
+            (ps/mu4e-view-archive)))
+      (user-error "Not in mu4e-view-mode")))
 
   (defun ps/mu4e-headers-trash ()
     "In headers mode, trash message at point without asking for
@@ -15147,6 +15153,54 @@ it, without asking for confirmation."
     (toggle-truncate-lines 1)
     (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.15))
 
+  ;; this function fixes a bug in the original
+  (defun mu4e-headers-change-sorting (&optional field dir)
+    "Change the sorting/threading parameters.
+FIELD is the field to sort by; DIR is a symbol: either 'ascending,
+'descending, 't (meaning: if FIELD is the same as the current
+sortfield, change the sort-order) or nil (ask the user)."
+    (interactive)
+    (let* ((field
+            (or field
+                (mu4e-read-option "Sortfield: " mu4e~headers-sort-field-choices)))
+           ;; note: 'sortable' is either a boolean (meaning: if non-nil, this is
+           ;; sortable field), _or_ another field (meaning: sort by this other field).
+           (sortable (plist-get (cdr (assoc field mu4e-header-info)) :sortable))
+           ;; error check
+           (sortable
+            (if sortable
+                sortable
+              (mu4e-error "Not a sortable field")))
+           (sortfield (if (booleanp sortable) field sortable))
+           (dir
+            (cl-case dir
+              ((ascending descending) dir)
+              ;; change the sort order if field = curfield
+              (mu4e-read-option "Direction: "
+                                '(("ascending" . 'ascending) ("descending" . 'descending)))
+              (t
+               (if (eq sortfield mu4e-headers-sort-field)
+                   (if (eq mu4e-headers-sort-direction 'ascending)
+                       'descending 'ascending)
+                 'descending)))))
+      (setq
+       mu4e-headers-sort-field sortfield
+       mu4e-headers-sort-direction dir)
+      (mu4e-message "Sorting by %s (%s)"
+                    (symbol-name sortfield)
+                    (symbol-name mu4e-headers-sort-direction))
+      (mu4e-headers-rerun-search)))
+
+  ;; this function seems to have been introduced after 1.6.11;
+  ;; since `org-msg' requires, we load it here
+  (defun mu4e-message-readable-path (&optional msg)
+    "Get a readable path to MSG or raise an error.
+If MSG is nil, use `mu4e-message-at-point'."
+    (let ((path (plist-get (or msg (mu4e-message-at-point)) :path)))
+      (unless (file-readable-p path)
+        (mu4e-error "No readable message at %s; database outdated?" path))
+      path))
+
   (add-hook 'mu4e-view-mode-hook #'ps/mu4e-view-mode-hook-functions)
   (add-hook 'change-major-mode-hook #'ps/faces-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode
   (add-hook 'mu4e-mark-execute-pre-hook #'ps/mu4e-gmail-fix-flags)
@@ -15189,7 +15243,6 @@ it, without asking for confirmation."
    "k" 'mu4e-headers-prev
    "l" 'mu4e-headers-next
    "m" 'mu4e-headers-mark-for-something
-   "o" 'ps/mu4e-headers-org-capture
    "R" 'mu4e-headers-mark-for-refile
    "V" 'mu4e-headers-mark-for-move
    "v" 'ps/mu4e-headers-move

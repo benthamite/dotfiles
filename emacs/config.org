@@ -12943,6 +12943,11 @@ Version 2015-06-08"
    "A-C-s-f" 'bibtex-next-entry))
 #+end_src
 
+*** TODO Why bibtex generates a key starting with 'Boer' when the last name is deBoer?
+:PROPERTIES:
+:ID:       2FB7CCAA-E1FE-4B93-B441-DB9E8437233F
+:END:
+
 *** TODO [#6] Standardize author names in bibtex file
 :PROPERTIES:
 :ID:       8B243BA8-8CA1-4E6F-82CA-5CD950D8C498

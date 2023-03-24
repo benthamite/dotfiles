@@ -693,12 +693,9 @@ Some useful config files:
 :ID:       F59230DF-14ED-44FF-B54B-4A6758C12D99
 :END:
 
-The contents of this code block are tangled to the ~early-init.el~ file.
+The contents of this code block are tangled to the early-init.el file.
 
 #+begin_src emacs-lisp :tangle (print ps/init-early-init-path)
-;; recommended for straight (github.com/radian-software/straight.el#getting-started)
-(setq package-enable-at-startup nil)
-
 (add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bart
 (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
 
@@ -707,8 +704,8 @@ The contents of this code block are tangled to the ~early-init.el~ file.
   (startup-redirect-eln-cache
    (file-name-concat (getenv "HOME")
     ".config/emacs-profiles/var/eln-cache/")))
-src
 
+#+end_src
 * startup
 :PROPERTIES:
 :ID:       9DBC455B-7ED4-422F-BE05-2FBB3548A86F
@@ -11100,7 +11097,7 @@ not already have one."
                     '("Local variables"
                       "COMMENT Local variables"
                       "TODO Local variables")))
-         (org-map-entries 'org-id-get-create)))))
+         (org-map-entries 'org-id-get-create))))
 
   :config
   (setq org-id-link-to-org-use-id t)

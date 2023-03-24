@@ -6515,6 +6515,21 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
     (kill-new (buffer-substring (point) isearch-other-end))
     (isearch-done))
 
+  (add-hook 'isearch-mode-end-hook #'recenter-top-bottom)
+
+  (defadvice
+      isearch-repeat-forward
+      (after isearch-repeat-forward-recenter activate)
+    (recenter))
+
+  (defadvice
+      isearch-repeat-backward
+      (after isearch-repeat-backward-recenter activate)
+    (recenter))
+
+  (ad-activate 'isearch-repeat-forward)
+  (ad-activate 'isearch-repeat-backward)
+
   :general
   (isearch-mode-map
    "C-H-M-s" 'isearch-delete-char
@@ -6544,21 +6559,6 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
    "M-l" 'isearch-ring-advance)
   ((isearch-mode-map minibuffer-mode-map)
    "C-e" 'isearch-query-replace))
-#+end_src
-
-do the same for other relevant commands
-#+begin_src emacs-lisp :results silent
-(add-hook 'isearch-mode-end-hook 'recenter-top-bottom)
-(defadvice
-    isearch-repeat-forward
-    (after isearch-repeat-forward-recenter activate)
-  (recenter))
-(defadvice
-    isearch-repeat-backward
-    (after isearch-repeat-backward-recenter activate)
-  (recenter))
-(ad-activate 'isearch-repeat-forward)
-(ad-activate 'isearch-repeat-backward)
 #+end_src
 
 To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridging Islands in Emacs: re-builder and query-replace-regexp | Karthinks]]

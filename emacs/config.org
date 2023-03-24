@@ -160,6 +160,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#hammy][hammy]]
   - [[#display-wttr][display-wttr]]
 - [[#history][history]]
+  - [[#simple][simple]]
   - [[#savehist][savehist]]
   - [[#saveplace][saveplace]]
   - [[#session][session]]
@@ -4885,7 +4886,7 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 :ID:       8EBA8303-EA43-4FB2-BB9D-1734F40DDB77
 :END:
 
-/[[https://github.com/joostkremers/pandoc-mode][pandocmode]] is a minor mode for interacting with Pandoc.
+/[[https://github.com/joostkremers/pandoc-mode][pandoc-mode]] is a minor mode for interacting with Pandoc./
 
 #+begin_src emacs-lisp :results silent
 (use-package pandoc-mode
@@ -6219,10 +6220,9 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :demand t
   :config
   (setq session-globals-include '((kill-ring 100)
-                             (session-file-alist 100 t)
-                             (file-name-history 100)
-                             search-ring regexp-search-ring))
-  (setq history-length 1000)
+                                  (session-file-alist 100 t)
+                                  (file-name-history 100)
+                                  search-ring regexp-search-ring))
 
   (add-hook 'after-init-hook #'session-initialize))
 #+end_src
@@ -6250,8 +6250,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 :PROPERTIES:
 :ID:       438AD8A8-0F4F-4A1D-9BC9-110906944509
 :END:
-
-[2022-10-02 Sun 14:12] I installed this package only because I wanted to have a persistent ~*scratch*~ buffer. But I am now accomplishing this with [[id:B6CB6A6C-0BCC-4A07-9608-BDCA6184C63A][persistent scratch]].
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/remember)
 (use-feature remember
@@ -6484,8 +6482,6 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 :PROPERTIES:
 :ID:       4B274841-062C-4511-8FF3-C850BAB05905
 :END:
-
-[2021-05-22 Sat 22:24] Thanks to Prot, I learn that when ~isearch~ is regexp-aware, so is ~isearch-query-replace~. So one can do a regexp replacement by invoking the following series of commands: ~isearch-forward~, ~isearch-toggle-regexp~, ~isearch-query-replace~. I find it easier to use ~C-s~ as my single point of entry to Emacs's powerful search and replace functions, and then make liberal use of all the ~isearch~ commands, accessible via their corresponding key bindings.
 
 #+begin_src emacs-lisp :results silent
 (use-feature isearch
@@ -15868,8 +15864,7 @@ into a task for Leo."
     (add-hook 'completion-at-point-functions
               #'telega-chatbuf-complete-at-point nil 'local))
 
-
-  (telega-mode-line-mode 1)
+  (telega-mode-line-mode)
 
   (add-hook 'telega-chat-mode-hook #'ps/telega-chat-mode)
   (add-hook 'telega-chat-mode-hook #'(lambda () (setq default-directory ps/dir-downloads)))
@@ -16405,7 +16400,8 @@ To be used by `eww-after-render-hook'."
            (shell-command-buffer-name-async title))
       (async-shell-command
        (format
-        "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --print-to-pdf-no-header --print-to-pdf='%s' %s"
+        "'%s' --headless --print-to-pdf-no-header --print-to-pdf='%s' %s"
+        browse-url-chrome-program
         output-file
         url))))
 
@@ -18080,6 +18076,20 @@ I'm not tracking prices anymore so this is probably not worth it currently.
   (ps/org-id-goto tareas-id)
   (ps/org-narrow-to-entry-and-children)
   (ps/switch-to-last-window))
+
+(defun ps/tlon-meeting-with-fede ()
+  (interactive)
+  (ps/tlon-meeting-with
+   "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
+   "56CBB3F8-8E75-4298-99B3-899365EB75E0"
+   "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
+
+(defun ps/tlon-meeting-with-leo ()
+  (interactive)
+  (ps/tlon-meeting-with
+   "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
+   "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
+   "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
 #+end_src
 
 ** Keyboard Maestro

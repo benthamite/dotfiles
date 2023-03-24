@@ -3450,15 +3450,14 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   :defer 5
   :init
   (setq yas-snippet-dirs (list ps/dir-yasnippets
-                               (concat (directory-file-name ps/dir-yasnippets) "-private")
-                               "~/.emacs.d/straight/build/yasnippet-snippets/snippets"))
+                               ps/dir-yasnippets-private
+                               (file-name-concat user-emacs-directory "straight/build/yasnippet-snippets/snippets")))
 
   :config
   (setq yas-triggers-in-field t) ; allow stacked expansions
 
-  (yas-global-mode 1)
+  (yas-global-mode)
   (yas-reload-all)
-  (add-to-list 'warning-suppress-log-types '(yasnippet backquote-change))
 
   ;; FIXME: this isn't working properly, unlike the `ps/yasnippet-expand-by-key' command
   (defun ps/yasnippet-expand-by-name (name)
@@ -15488,10 +15487,7 @@ This assumes you have already set up ~mbsync~ (or whichever program you use to d
 brew uninstall mu
 cd ~/Downloads
 # download brew formula for mu 1.6.11
-# if wget fails to download the file, just download it manually
-wget
-https://raw.githubusercontent.com/Homebrew/homebrew-core/c42744ba370044e5363e1a6547014c810304b520/Formula/mu.rb
-# install downloaded formula
+wget https://raw.githubusercontent.com/Homebrew/homebrew-core/c42744ba370044e5363e1a6547014c810304b520/Formula/mu.rb
 HOMEBREW_NO_INSTALL_CLEANUP=1 brew install ~/Downloads/mu.rb
 # pin mu so that brew doesn't update to the latest version when you run 'brew upgrade'
 brew pin mu

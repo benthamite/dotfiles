@@ -305,6 +305,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-protocol-capture-html][org-protocol-capture-html]]
   - [[#ox][ox]]
   - [[#ox-hugo][ox-hugo]]
+  - [[#ox-pandoc][ox-pandoc]]
   - [[#ob][ob]]
   - [[#org-src][org-src]]
   - [[#org-table][org-table]]
@@ -11477,6 +11478,17 @@ Hugo should be able to export ~org-cite~ citations.
 #+begin_src emacs-lisp :results silent
 (use-package ox-hugo
   :defer 100)
+#+end_src
+
+** ox-pandoc
+:PROPERTIES:
+:ID:       C16B02FA-64E6-423B-9596-B3B023C93B21
+:END:
+
+/[[https://github.com/kawabata/ox-pandoc][ox-pandoc]] is an org-mode exporter that uses Pandoc./
+
+#+begin_src emacs-lisp :results silent
+(use-package ox-pandoc)
 #+end_src
 
 ** ob

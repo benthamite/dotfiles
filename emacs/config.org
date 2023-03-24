@@ -1975,7 +1975,7 @@ installed."
   (add-hook 'modus-themes-after-load-theme-hook #'ps/modus-themes-highlight-parentheses)
 
   :general
-  ("A-d" 'modus-themes-toggle))
+  ("A-u" 'modus-themes-toggle))
 #+end_src
 
 ** highlight-parentheses

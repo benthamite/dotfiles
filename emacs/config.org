@@ -3364,11 +3364,15 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :PROPERTIES:
 :ID:       987C9066-28ED-4B5A-944C-A90681182264
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature ediff
   :config
   (setq ediff-window-setup-function 'ediff-setup-windows-plain)
-  (setq ediff-split-window-function 'split-window-horizontally))
+  (setq ediff-split-window-function 'split-window-horizontally)
+
+  :general
+  ("A-d" 'ediff))
 #+end_src
 
 ** fill

@@ -1613,8 +1613,8 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
 (use-feature warnings
   :demand t
   :config
-  (dolist (element '((comp)
-                     (yasnippet backquote-change)))
+  (dolist (element '(comp
+                     yasnippet backquote-change))
     (add-to-list 'warning-suppress-types element)))
 #+end_src
 

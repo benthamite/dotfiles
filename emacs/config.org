@@ -13297,6 +13297,8 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-22 Wed 13:55]--[2023-03-22 Wed 14:00] =>  0:05
+CLOCK: [2023-03-19 Sun 12:35]--[2023-03-19 Sun 12:58] =>  0:23
 CLOCK: [2023-03-12 Sun 19:36]--[2023-03-12 Sun 20:19] =>  0:43
 CLOCK: [2022-09-22 Thu 14:39]--[2022-09-22 Thu 15:15] =>  0:36
 CLOCK: [2022-09-13 Tue 17:29]--[2022-09-13 Tue 17:56] =>  0:27
@@ -13329,19 +13331,22 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
   :init
 
   :config
+  (setq ebib-preload-bib-files org-cite-global-bibliography)
+  (setq ebib-notes-directory ps/dir-bibliographic-notes)
+  (setq ebib-notes-use-org-capture t)
   (setq ebib-filename-separator ";")
   (setq ebib-file-associations nil) ; do not open any file types externally
   (setq ebib-layout 'index-only)
   (setq ebib-bibtex-dialect 'biblatex)
   (setq ebib-use-timestamp t)
-  (setq ebib-preload-bib-files org-cite-global-bibliography)
+  (setq ebib-timestamp-format "%Y-%m-%d %T (%Z)")
+  (setq ebib-save-xrefs-first nil)
+  (setq ebib-default-entry-type "online")
+  (setq ebib-uniquify-keys t)
   (setq ebib-index-columns '(("Entry Key" 30 t)
                              ("Author/Editor" 25 t)
                              ("Year" 4 t)
                              ("Title" 50 t)))
-  (setq ebib-timestamp-format "%Y-%m-%d %T (%Z)")
-  (setq ebib-save-xrefs-first nil)
-  (setq ebib-default-entry-type "online")
   (setq ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "urldate" "venue" "version" "volumes" "year"))
 
   (defun ps/ebib-open-or-switch ()
@@ -14363,6 +14368,10 @@ first name, and names are separated by a semicolon."
   ("A-i" 'ps/ebib-open-or-switch)
   (ebib-multiline-mode-map
    "s-c" 'ebib-quit-multiline-buffer-and-save)
+  ((ebib-entry-mode-map ebib-index-mode-map)
+   "H-s" 'ebib-save-current-database
+   "Q" 'ebib-quit
+   "n" 'ebib-popup-note)
   (ebib-entry-mode-map
    "TAB" 'ebib-goto-next-set
    "<backtab>" 'ebib-goto-prev-set
@@ -14383,13 +14392,11 @@ first name, and names are separated by a semicolon."
    "g" 'ps/ebib-search-library-genesis
    "G" 'ps/ebib-search-goodreads
    "h" 'ps/ebib-open-html-file
-   "i" 'ebib-browse-doi
    "i" 'ps/ebib-download-by-identifier
    "I" 'ps/ebib-search-book-by-isbn
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
    "P" 'ps/ebib-open-pdf-file-externally
-   "Q" 'ebib-quit
    "r" 'ps/ebib-rename-files
    "s" 'ps/ebib-search-dwim
    "t" 'ps/ebib-search-book-dwim
@@ -14410,9 +14417,7 @@ first name, and names are separated by a semicolon."
    "D" 'ebib-delete-entry
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry
-   "s" 'ps/ebib-sort-toggle
-   "H-s" 'ebib-save-current-database
-   "Q" 'ebib-quit))
+   "s" 'ps/ebib-sort-toggle))
 #+end_src
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.

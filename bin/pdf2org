@@ -1,0 +1,7 @@
+#!/bin/bash
+
+function pdf2org() {
+   key=$(gdrive import "$1" | cut -d' ' -f2)
+   gdrive export "$key" --mime application/vnd.openxmlformats-officedocument.wordprocessingml.document
+   pandoc "$1.docx" -t org -s
+}

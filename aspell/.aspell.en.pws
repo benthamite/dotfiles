@@ -1,4 +1,4 @@
-personal_ws-1.1 en 563 utf-8
+personal_ws-1.1 en 572 utf-8
 ABT
 AFIP
 ALLFED
@@ -17,6 +17,7 @@ Akrasia
 Alameda
 Alexey
 Alfour
+Alia
 Althaus
 Altruismo
 Amarins
@@ -445,6 +446,7 @@ aversive
 behavioral
 bibtex
 biosecurity
+bytecomp
 cada
 calc
 chatGPT
@@ -463,6 +465,7 @@ defence
 defuns
 der
 directedness
+dired
 disempower
 disempowering
 disjunction
@@ -473,6 +476,7 @@ dysgenics
 ebib
 ebook
 ectogenesis
+elisp
 emacs
 emacsclient
 emnity
@@ -487,6 +491,7 @@ externalists
 extracorporeal
 flyspell
 fn
+fretboards
 gametogenesis
 gnuplot
 grantmaking
@@ -505,6 +510,8 @@ ispell
 ketoconazole
 keycast
 lethality
+lin
+loaddefs
 longterm
 longtermism
 longtermist
@@ -514,6 +521,7 @@ mbsync
 metaethics
 minibuffer
 mischiefs
+modeline
 modus
 mom
 mortem
@@ -524,6 +532,7 @@ offlineimap
 organizing
 oughts
 pablostafforini
+paren
 partialist
 patienthood
 pdfcrop

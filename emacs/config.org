@@ -1747,6 +1747,7 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/mixed-pitch)
 (use-package mixed-pitch
+  :defer 5
   :config
   (setq mixed-pitch-set-height t)
 

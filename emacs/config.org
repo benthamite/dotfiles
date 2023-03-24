@@ -12638,21 +12638,22 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 (use-feature oc
   :demand t
   :config
-  (setq org-cite-global-bibliography `(,ps/file-bibliography-new
-                                  ,ps/file-bibliography-old))
+  (setq org-cite-global-bibliography (list ps/file-bibliography-new
+                                           ps/file-bibliography-old
+                                           ps/file-bibliography-films))
   (setq org-cite-csl-styles-dir ps/dir-csl-styles)
   (setq org-cite-csl-locales-dir ps/dir-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point` integration
   (setq org-cite-activate-processor 'citar) ;
   (setq org-cite-export-processors
-   '(
-     (md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
-     (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
-     (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
-     (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
-     (t csl "american-medical-association-brackets.csl")       ; Fallback
-     ))
+        '(
+          (md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
+          (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
+          (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
+          (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
+          (t csl "american-medical-association-brackets.csl")       ; Fallback
+          ))
 
   ;; Comment out `org-cite--allowed-p' condition to allow invocation
   ;; in any mode. Even if inserting a citation is not allowed, one may

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: chatgpt-translate-into-spanish
+# key: cts
+# contributor: Pablo Stafforini
+# --
+Translate "$1" into Spanish

@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: gpt-in-emacs-lisp
-# key: gel
-# contributor: Pablo Stafforini
-# --
-In Emacs Lisp, $1?

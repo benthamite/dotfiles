@@ -3,7 +3,7 @@
 # key: mx
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Conversion
+`(format-time-string "%Y-%m-%d")` Conversion
     Liabilities:Mom:Consolidated             $1.00 ARS @ $2 USD
     Liabilities:Mom:Consolidated
 

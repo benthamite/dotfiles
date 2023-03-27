@@ -3,7 +3,7 @@
 # key: sd
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Substack
+`(format-time-string "%Y-%m-%d")` Substack
     Expenses:Donation                              10 USD ; Forecasting Newsletter
     Assets:Revolut
 

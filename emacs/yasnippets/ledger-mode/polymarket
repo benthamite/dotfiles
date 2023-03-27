@@ -3,7 +3,7 @@
 # key: pm
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Trade
+`(format-time-string "%Y-%m-%d")` Trade
     Assets:Polymarket                          $1 $2 @ $3 USD
     Assets:Polymarket                        
 

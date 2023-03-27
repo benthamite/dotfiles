@@ -3,7 +3,7 @@
 # key: ad
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Patreon
+`(format-time-string "%Y-%m-%d")` Patreon
     Expenses:Donation                              50.00 USD ; Areo
     Assets:Revolut Virtual
 

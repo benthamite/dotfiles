@@ -3,7 +3,7 @@
 # key: cab
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Cabify
+`(format-time-string "%Y-%m-%d")` Cabify
     Expenses:Transportation:Taxi  $1 ARS ; $2
     Liabilities:Mom:Extension
 

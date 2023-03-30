@@ -4042,8 +4042,22 @@ selected instead of creating a new buffer."
     (ps/switch-to-last-window))
 
   (defun ps/kill-all-buffers ()
+    "Kill all open buffers."
     (interactive)
-    (mapc 'kill-buffer (buffer-list)))
+    (when (y-or-n-p "Warning: this may have undesired
+ effects. Consider using `ps/kill-all-file-visiting-buffers'
+ instead. Are you sure you want to proceed? ")
+      (mapc 'kill-buffer (buffer-list))))
+
+  (defun ps/kill-all-file-visiting-buffers (&optional excluded-files)
+    "Kill all open buffers visiting a file, with the exception of
+those visiting any of the EXCLUDED-FILES."
+    (interactive)
+    (dolist (buffer (buffer-list))
+      (when (with-current-buffer buffer
+              (and (buffer-file-name)
+                   (not (member (buffer-file-name) excluded-files))))
+        (kill-buffer buffer))))
 
   (defun ps/bury-buffer-switch-to-other-window ()
     "Bury the current buffer and switch to the other window."

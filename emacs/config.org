@@ -255,6 +255,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#reverso][reverso]]
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown][markdown]]
+  - [[#edit-indirect][edit-indirect]]
   - [[#mediawiki-el][mediawiki-el]]
   - [[#gdrive][gdrive]]
   - [[#ledger-mode][ledger-mode]]
@@ -8474,6 +8475,19 @@ convert it from org-mode to markdown."
   (gfm-mode-map
    "s-a" 'markdown-insert-gfm-code-block
    "s-z" 'markdown-edit-code-block))
+#+end_src
+
+** edit-indirect
+:PROPERTIES:
+:ID:       5660F943-C895-4847-A538-0FA11445420C
+:END:
+
+/[[https://github.com/Fanael/edit-indirect][edit-indirect]] supports editing regions in separate buffers./
+
+This package is required by the ~markdown-mode~ command ~markdown-edit-code-block~.
+
+#+begin_src emacs-lisp
+(use-package edit-indirect)
 #+end_src
 
 ** mediawiki-el

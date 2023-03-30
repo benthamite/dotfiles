@@ -18079,6 +18079,34 @@ I'm not tracking prices anymore so this is probably not worth it currently.
    "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
    "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
    "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
+
+(defun ps/tlon-bae-format-file (&optional extension)
+  "Prompt the user for bibliographic information and return a file
+name based on it."
+  (let* ((lastname (read-string "Last name(s) [separated by spaces if more than one author]: "))
+         (title (read-string "Title: "))
+         (slug-lastname (ps/bibtex-asciify-string (org-hugo-slug lastname)))
+         (slug-title (ps/bibtex-asciify-string (org-hugo-slug title)))
+         (extension (or extension "md")))
+    (file-name-with-extension (concat slug-lastname "--" slug-title) extension)))
+
+(defun ps/tlon-bae-rename-file (&optional extension)
+  "Prompt the user for bibliographic information and rename file at
+point based on it."
+  (interactive)
+  (let* ((source-file-path (dired-get-filename)))
+    (rename-file
+     source-file-path
+     (file-name-concat
+      (file-name-directory source-file-path)
+      (ps/tlon-bae-format-file extension))))
+  (revert-buffer))
+
+(defun ps/tlon-bae-create-file (&optional extension)
+  "Prompt the user for bibliographic information and create a new
+ file based on it in the current directory."
+  (interactive)
+  (find-file (ps/tlon-bae-format-file extension)))
 #+end_src
 
 ** Keyboard Maestro

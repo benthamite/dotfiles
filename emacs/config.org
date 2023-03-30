@@ -399,6 +399,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-download][org-download]]
   - [[#org-web-tools][org-web-tools]]
   - [[#request][request]]
+  - [[#graphql-mode][graphql-mode]]
   - [[#mullvad][mullvad]]
 - [[#multimedia][multimedia]]
   - [[#mpv][mpv]]
@@ -17346,6 +17347,16 @@ template."
 #+begin_src emacs-lisp :results silent
 (use-package request
   :defer 15)
+#+end_src
+** graphql-mode
+:PROPERTIES:
+:ID:       4B9A26D9-EA9B-420B-A8B2-060AAF19D4E4
+:END:
+
+/[[https://github.com/davazp/graphql-mode][graphql-mode]] is a major mode for GraphQL./
+
+#+begin_src emacs-lisp
+(use-package graphql-mode)
 #+end_src
 
 ** mullvad

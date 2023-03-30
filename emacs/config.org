@@ -10460,9 +10460,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "SPC" 'ps/org-agenda-goto-and-start-clock
    "W" 'org-agenda-refile
    "X" 'org-agenda-exit
-   "x" 'org-agenda-log-mode
+   "x" (lambda! (org-agenda-log-mode 'clockcheck))
    "y" 'org-agenda-day-view
-   "Z" 'org-agenda-add-note
    "z" 'org-agenda-undo))
 #+end_src
 *** TODO Configure org-agenda log checks

@@ -7479,9 +7479,13 @@ Distinguish ~C-m~ from ~RET~ in the GUI. (Setting the Spacemacs variable ~dotspa
     "Like `describe-face', but with `hl-line-mode' disabled, and
 always use face at point."
     (interactive)
-    (let ((global-hl-line-mode-enabled global-hl-line-mode))
+    (let ((hl-line-mode-enabled hl-line-mode)
+          (global-hl-line-mode-enabled global-hl-line-mode))
+      (hl-line-mode -1)
       (global-hl-line-mode -1)
       (describe-face (face-at-point t))
+      (when hl-line-mode-enabled
+        (hl-line-mode))
       (when global-hl-line-mode-enabled
         (global-hl-line-mode))))
 

@@ -6509,15 +6509,14 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       A0887865-7CAC-47E6-A894-D49F07BCBAF9
 :END:
 
-/[[https://github.com/wandersoncferreira/code-review][code-review]] ([[https://wandersoncferreira.github.io/code-review/][homepage]]) helps perform code reviews from Emacs./
-
-[2022-08-29 Mon 17:02] To check at some point.
+/[[https://github.com/wandersoncferreira/code-review][code-review]] helps perform code reviews from Emacs./
 
 #+begin_src emacs-lisp :results silent
 (use-package code-review
+  :after magit forge emojify
+  :demand t
   :config
   (setq code-review-fill-column 80)
-  (setq code-review-new-buffer-window-strategy #'switch-to-buffer)
   (setq code-review-auth-login-marker 'forge)
 
   (add-hook 'code-review-mode-hook #'emojify-mode))

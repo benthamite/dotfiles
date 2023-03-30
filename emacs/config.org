@@ -5475,6 +5475,7 @@ then to selected character immediately ahead of point."
 :ID:       AD1CE3FE-8897-4593-BD37-FEA38630611A
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-25 Sat 11:05]--[2023-03-25 Sat 11:26] =>  0:21
 CLOCK: [2022-09-14 Wed 18:43]--[2022-09-14 Wed 19:00] =>  0:17
 CLOCK: [2022-02-04 Fri 11:23]--[2022-02-04 Fri 11:25] =>  0:02
 CLOCK: [2021-12-12 Sun 21:14]--[2021-12-12 Sun 21:17] =>  0:03
@@ -5515,12 +5516,10 @@ needs to be included as an element in the list defined by
                                 elfeed-show-mode
                                 eww-mode
                                 eww-buffers-mode)) ; major modes activated in global-writeroom-mode
-  (setq writeroom-fullscreen-effect 'maximized) ; disables annoying fullscreen transition effect on MacOS
+  (setq writeroom-fullscreen-effect 'maximized) ; disables annoying fullscreen transition effect on macos
   (setq writeroom-maximize-window t)
 
-  ;; This neds to be delayed because the value of `window-total-width'
-  ;; is changed during startup.
-  (add-hook 'emacs-startup-hook (lambda () (setq writeroom-width (window-total-width))) 90)
+  (advice-add 'writeroom-mode :before (lambda (&rest args) (setq writeroom-width (window-total-width))))
 
   :general
   ("M-'" 'writeroom-mode

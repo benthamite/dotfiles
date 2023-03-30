@@ -13053,6 +13053,7 @@ Version 2015-06-08"
            ("titleaddon")
            ("language")
            ("version")
+           ("rating")
            ("note")
            ("organization")
            ("month")
@@ -13428,6 +13429,8 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-27 Mon 21:29]--[2023-03-27 Mon 21:45] =>  0:16
+CLOCK: [2023-03-27 Mon 20:49]--[2023-03-27 Mon 21:14] =>  0:25
 CLOCK: [2023-03-22 Wed 13:55]--[2023-03-22 Wed 14:00] =>  0:05
 CLOCK: [2023-03-19 Sun 12:35]--[2023-03-19 Sun 12:58] =>  0:23
 CLOCK: [2023-03-12 Sun 19:36]--[2023-03-12 Sun 20:19] =>  0:43

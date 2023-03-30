@@ -6431,18 +6431,20 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
                                 "https://\\2/\\3"
                                 url)))
 
-  (defun ps/magit-open-repo ()
-    "open remote repo URL"
+  (defun ps/magit-browse-repo ()
+    "Browse the remote repo URL."
     (interactive)
     (let ((url (magit-get "remote" "origin" "url")))
       (progn
         (browse-url (ps/magit-parse-url url))
-        (message "opening repo %s" url))))
+        (message "Browsing repo %s" url))))
+
+  (magit-wip-mode)
 
   :general
   ("A-g" 'magit)
   (magit-mode-map
-   "o" 'ps/magit-open-repo)
+   "o" 'ps/magit-browse-repo)
   (magit-status-mode-map
    "A-C-s-r" 'magit-section-backward
    "A-C-s-f" 'magit-section-forward))

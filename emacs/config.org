@@ -6344,12 +6344,12 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 (use-feature remember
   :demand t
   :init
-  (setq remember-data-file "~/.config/emacs-profiles/var/remember/data")
+  (setq remember-data-file "~/.config/emacs-profiles/var/remember/notes")
 
   :config
   (setq remember-notes-auto-save-visited-file-name t)
   (setq remember-notes-buffer-name "*scratch*")
-  (setq initial-buffer-choice
+  (setq initial-buffer-choice 
         (lambda () (kill-buffer remember-notes-buffer-name)
           (remember-notes))))
 #+end_src

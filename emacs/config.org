@@ -8625,9 +8625,12 @@ To populate the database of historical prices:
               "%(binary) -f %(ledger-file) bal --strict")
              ("net worth (USD)"
               "%(binary) -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict")
-                                        ; I need to understand how the `--basis' flag works
+             ("account (USD)"
+              "%(binary) -f %(ledger-file) reg %(account) --price-db .pricedb --exchange USD")
+             ;; I need to understand how the `--basis' flag works
              ("cost basis"
               "%(binary) -f %(ledger-file) --basis bal %(account) --strict")))
+
     (add-to-list 'ledger-reports report))
 
   (defun ps/ledger-new-entry-below ()

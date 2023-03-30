@@ -5285,7 +5285,12 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
             (t
              (message "No such candidate: %s, hit `C-g' to quit."
                       (if (characterp char) (string char) char))))))
-  (advice-add 'avy-handler-default :override #'ps/avy-handler-default)
+
+  :config
+  (setq avy-case-fold-search nil)
+  (setq avy-timeout-seconds 0.2)
+  (setq avy-all-windows nil)
+  (setq avy-keys '(97 115 100 102 106 107 108 13 32 113 119 101 114 117 105 111 112 122 120 99 118 109 44 46 47))
 
   (defun ps/avy-goto-word-in-line ()
     "Jump to a word start between start and end of visual line."
@@ -8326,8 +8331,6 @@ the user will be prompt for a valid value."
       (when (or beg end)
         (setq beg nil end nil))))
     (funcall 'powerthesaurus-lookup query-term query-type beg end)))
-
-  (advice-add 'ps/powerthesaurus-lookup-dwim  :override #'ps/ps/powerthesaurus-lookup-dwim)
 
   :general
   ("H-Y" 'powerthesaurus-lookup-dwim))
@@ -12087,16 +12090,10 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
   (setq org-pomodoro-length 25)
   (setq org-pomodoro-short-break-length (- 30 org-pomodoro-length))
   (setq org-pomodoro-long-break-length org-pomodoro-short-break-length)
-  (setq org-pomodoro-finished-sound "/System/Library/Sounds/Blow.aiff")
+  (when (eq system-type 'darwin)
+    (setq org-pomodoro-finished-sound "/System/Library/Sounds/Blow.aiff"))
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
-
-  (defun ps/org-pomodoro-notify (title message)
-    "Send a persistent notification with TITLE and MESSAGE using
-`alert'."
-    (alert message :title title :category 'org-pomodoro))
-
-  (advice-add 'org-pomodoro-notify :override #'ps/org-pomodoro-notify)
 
   :general
   ("H-s-i" 'org-pomodoro
@@ -12331,13 +12328,6 @@ SQL can be either the emacsql vector representation, or a string."
               nil
             t)))
 
-  (defun ps/org-roam-db-query (sql &rest args)
-    "Run SQL query on Org-roam database with ARGS.
-        SQL can be either the emacsql vector representation, or a string."
-    (sleep-for 0 1)
-    (apply #'emacsql (org-roam-db) sql args))
-
-  (advice-add 'org-roam-db-query :override #'ps/org-roam-db-query)
   (advice-add 'org-roam-node-find :before #'widen)
   (advice-add 'org-roam-node-find :after #'ps/org-narrow-to-entry-and-children)
 

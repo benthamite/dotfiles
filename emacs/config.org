@@ -844,6 +844,12 @@ Process for updating packages:
 (setq straight-default-vc 'git)
 (setq straight-check-for-modifications '(find-at-startup watch-files find-when-checking)) ; github.com/raxod502/straight.el#my-init-time-got-slower
 (setq straight-use-package-by-default t)
+(setq straight-recipe-repositories '(org-elpa
+                                     gnu-elpa-mirror
+                                     nongnu-elpa
+                                     melpa
+                                     el-get
+                                     emacsmirror-mirror))
 (require 'straight-x) ; github.com/raxod502/straight.el#how-do-i-uninstall-a-package
 
 ;; Early load Org from Git version instead of Emacs built-in version

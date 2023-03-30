@@ -17788,7 +17788,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 
 #+begin_src emacs-lisp :results silent
 (use-feature auth-source
-  :defer 5
+  :demand t
   :preface
   (eval-when-compile
     (defvar auth-sources))

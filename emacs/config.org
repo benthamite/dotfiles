@@ -425,6 +425,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#macos][macos]]
   - [[#midnight][midnight]]
   - [[#bbdb][bbdb]]
+  - [[#bbdb-vcard][bbdb-vcard]]
   - [[#keycast][keycast]]
   - [[#custom][custom]]
   - [[#tetris][tetris]]
@@ -18254,6 +18255,20 @@ Default is the first URL."
    "D" 'ps/bbdb-delete-field-or-record-no-confirm))
 #+end_src
 
+** bbdb-vcard
+:PROPERTIES:
+:ID:       EB0B93F7-30F0-4C6D-A638-CD67C307CB62
+:END:
+
+/[[https://github.com/tohojo/bbdb-vcard][bbdb-vcard]] supports import and export for BBDB./
+
+#+begin_src emacs-lisp
+(use-package bbdb-vcard
+  :after bbdb
+  :config
+  (setq bbdb-vcard-directory ps/dir-bbdb)
+  (setq bbdb-vcard-media-directory "media"))
+#+end_src
 
 ** keycast
 :PROPERTIES:

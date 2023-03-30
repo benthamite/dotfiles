@@ -924,8 +924,8 @@ NAME and ARGS are as in `use-package'."
 (use-package no-littering
   :demand t
   :init
-  (setq no-littering-etc-directory "/Users/pablostafforini/.config/emacs-profiles/etc/")
-  (setq no-littering-var-directory "/Users/pablostafforini/.config/emacs-profiles/var/")
+  (setq no-littering-etc-directory "~/.config/emacs-profiles/etc/")
+  (setq no-littering-var-directory "~/.config/emacs-profiles/var/")
 
   :config
   ;; github.com/emacscollective/no-littering#auto-save-settings

@@ -10229,6 +10229,7 @@ By considering both tasks completed and their associated priorities.
 :ID:       E03F4142-C90D-4550-8990-15391E27AD77
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-28 Tue 12:05]--[2023-03-28 Tue 12:12] =>  0:07
 CLOCK: [2022-10-10 Mon 21:40]--[2022-10-11 Tue 00:16] =>  2:36
 CLOCK: [2022-07-17 Sun 08:31]--[2022-07-17 Sun 08:54] =>  0:23
 CLOCK: [2022-06-25 Sat 11:09]--[2022-06-25 Sat 11:36] =>  0:27
@@ -10279,7 +10280,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (winum-select-window-1)
     (let ((agenda "*Org Agenda(a)*"))
       (if (get-buffer agenda)
-          (switch-to-buffer "*Org Agenda(a)*")
+          (switch-to-buffer agenda)
+        (ps/org-agenda-toggle-anniversaries t)
         (org-agenda nil "a"))))
 
   (setq org-agenda-hide-tags-regexp "project")
@@ -10408,7 +10410,28 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 
   (add-hook 'org-agenda-mode-hook (lambda ()
                                     (visual-line-mode -1)
-                                    (toggle-truncate-lines 1)))
+                                    (toggle-truncate-lines)))
+
+  ;; this comments out the line "%%(org-bbdb-anniversaries-future 2)"
+  ;; in `calendar.org', which is the only way I found to hide
+  ;; anniversaries temporarily from the agenda
+  ;; for context, see https://orgmode.org/manual/Weekly_002fdaily-agenda.html
+  (defun ps/org-agenda-toggle-anniversaries (&optional just-enable)
+    "Toggle display of BBDB birthdays in the agenda."
+    (interactive)
+    (save-window-excursion
+      (ps/org-id-goto "C84DFF77-7AEB-4BEC-B1E6-AECE4E174F62")
+      (org-narrow-to-subtree)
+      (goto-char (point-min))
+      (org-end-of-meta-data t)
+      (if (looking-at "%%")
+          (unless just-enable
+            (delete-line))
+        (insert "%%(org-bbdb-anniversaries-future 1)
+")))
+    (unless just-enable
+      (org-agenda-redo)))
+
   :general
   ("C-<escape>" 'org-agenda)
   (org-agenda-mode-map
@@ -10418,8 +10441,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "\"" 'ps/org-agenda-postpone-and-next
    "C-b" 'org-agenda-tree-to-indirect-buffer
    "C-k" nil
+   "b" 'ps/org-agenda-toggle-anniversaries
    "d" 'org-agenda-deadline
-   "h" 'org-habit-toggle-display-in-agenda
    "M-t" nil
    "H-n" nil
    "s-k" nil

@@ -2123,15 +2123,17 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (setq doom-modeline-buffer-encoding nil)
   (setq doom-modeline-irc t)
   (setq doom-modeline-irc-buffers t)
-  ;; (doom-modeline--flycheck-icon t)
   (setq doom-modeline-github t)
   (setq doom-modeline-github-interval (* 10 60))
   (setq doom-modeline-buffer-file-name-style 'truncate-nil)
+  (setq doom-modeline-height 22)
 
-  (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
-  (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
-  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
-  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline)
+  (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
+                        (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+                        (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+                        (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+    (remove-hook (car hook-cons) (cdr hook-cons)))
+
   (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
 #+end_src
 

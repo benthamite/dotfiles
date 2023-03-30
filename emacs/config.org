@@ -8832,6 +8832,10 @@ otherwise the whole buffer."
    "q" 'ledger-reconcile-quit))
 #+end_src
 
+*** TODO Run python scripts via LaunchAgent
+:PROPERTIES:
+:ID:       E235F4DC-677D-4143-A679-66FCBC310101
+:END:
 *** TODO [#6] Consider replacing ~commodities.py~ with Elisp alternative
 :PROPERTIES:
 :ID:       303E3552-2FD9-41A9-A6E6-C26110E61282

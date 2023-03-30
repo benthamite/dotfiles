@@ -11891,24 +11891,9 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   (setq org-habit-show-habits nil)
   (setq org-habit-show-habits-only-for-today nil)
 
-  ;; copied from github.com/progfolio/.emacs.d/blob/master/init.org#org-habit
-  (defun ps/org-habit-graph-on-own-line (graph)
-    "Place org habit consitency graph below the habit."
-    (let* ((count 0)
-           icon)
-      (save-excursion
-        (beginning-of-line)
-        (while (and (eq (char-after) ? ) (not (eolp)))
-          (when (get-text-property (point) 'display) (setq icon t))
-          (setq count (1+ count))
-          (forward-char)))
-      (add-text-properties (+ (line-beginning-position) count) (line-end-position)
-                           `(display ,(concat (unless icon "  ")
-                                              (string-trim-left (thing-at-point 'line))
-                                              (make-string (or org-habit-graph-column 0) ? )
-                                              (string-trim-right
-                                               (propertize graph 'mouse-face 'inherit)))))))
-
+  :general
+  (org-agenda-mode-map
+   "h" 'org-habit-toggle-display-in-agenda))
 #+end_src
 
 ** org-checklist

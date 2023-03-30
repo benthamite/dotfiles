@@ -12708,7 +12708,6 @@ Asked question [[https://org-roam.discourse.group/t/how-to-query-the-database-fo
 
 ** org-noter
 :PROPERTIES:
-:NOTER_DOCUMENT: ../library.org
 :ID:       A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7
 :END:
 :LOGBOOK:

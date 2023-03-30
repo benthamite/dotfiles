@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-pandoc-convert-to-markdown
+# key: tpctm
+# contributor: Pablo Stafforini
+# --
+pandoc -o '$1.md' '$1.docx' --extract-media '$1'

@@ -18110,39 +18110,24 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (setq clean-buffer-list-delay-general 2) ; kill buffers unused for more than three days
 
   (midnight-mode)
-  (midnight-delay-set 'midnight-delay "7:01pm")
+  (midnight-delay-set 'midnight-delay "4:30am")
 
   ;; note that the hooks appear in reverse order of execution
-  (dolist (hook-function #'(org-gcal-sync
-                            ps/org-id-update-id-locations
-                            org-roam-db-sync
-                            ps/pass-git-sync
-                            ps/magit-stage-commit-and-push-all-repos
-                            ps/ledger-update-commodities
-                            clean-buffer-list
-                            ps/save-all-buffers
-                            ;; straight-prune-build
-                            ))
-    (add-hook 'midnight-hook hook-function)))
+  (dolist (function #'(el-patch-validate-all
+                       org-gcal-sync
+                       ps/org-id-update-id-locations
+                       org-roam-db-sync
+                       ps/pass-git-sync
+                       ps/magit-stage-commit-and-push-all-repos
+                       ps/ledger-update-commodities
+                       ps/ledger-update-coin-prices
+                       clean-buffer-list
+                       ps/save-all-buffers
+                       ;; straight-prune-build
+                       ))
+    (add-hook 'midnight-hook function)))
 #+end_src
 
-*** SOMEDAY [#6] Fix coinprices
-:PROPERTIES:
-:ID:       8E1274F1-2A21-463C-875F-F9D8DAE587F1
-:Effort:   0:30
-:END:
-:LOGBOOK:
-CLOCK: [2023-01-01 Sun 23:07]--[2023-01-01 Sun 23:08] =>  0:01
-:END:
-
-#+begin_src emacs-lisp :results silent :tangle no
-Traceback (most recent call last):
-  File "/Users/pablostafforini/Dropbox/ledger/coinprices/coinprices.py", line 4, in <module>
-    from dotenv import load_dotenv
-ModuleNotFoundError: No module named 'dotenv'
-#+end_src
-
-It was just a matter of commenting out the two lines associated with the ~doenv~ package, which turns out not to be necessary.
 ** bbdb
 :PROPERTIES:
 :ID:       0537BBF6-FD95-44A5-9327-1024A3D106EB

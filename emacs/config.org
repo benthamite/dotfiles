@@ -172,6 +172,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ghub][ghub]]
   - [[#forge][forge]]
   - [[#code-review][code-review]]
+  - [[#github-review][github-review]]
   - [[#git-timemachine][git-timemachine]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#search--replace][search & replace]]
@@ -6480,6 +6481,18 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   (add-hook 'code-review-mode-hook #'emojify-mode))
 #+end_src
+
+** github-review
+:PROPERTIES:
+:ID:       7AB2F3A1-F542-4F27-A576-470630DC0909
+:END:
+
+/[[https://github.com/charignon/github-review][github-review]] provides Emacs support for GitHub code reviews ./
+
+#+begin_src emacs-lisp
+(use-package github-review)
+#+end_src
+
 
 ** git-timemachine
 :PROPERTIES:

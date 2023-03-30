@@ -1040,7 +1040,9 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp :results silent
 (use-package el-patch
-  :demand t)
+  :demand t
+  :config
+  (setq el-patch-enable-use-package-integration t))
 #+end_src
 
 ** hydra

@@ -27,7 +27,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#macros][macros]]
 - [[#package-management][package management]]
   - [[#straight][straight]]
-  - [[#use-package][Use-package]]
+  - [[#use-package][use-package]]
 - [[#foundational][foundational]]
   - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
@@ -417,7 +417,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#pass][pass]]
   - [[#auth-source-pass][auth-source-pass]]
   - [[#pass-otp][pass-otp]]
-- [[#misc][misc.]]
+- [[#misc][misc]]
   - [[#calc][calc]]
   - [[#constants][constants]]
   - [[#alert][alert]]
@@ -857,7 +857,7 @@ Process for updating packages:
 (straight-use-package 'org-contrib)
 #+end_src
 
-** Use-package
+** use-package
 :PROPERTIES:
 :ID:       C53EA5F9-B256-480E-9BCB-7AD2D0D5DDC2
 :END:
@@ -3789,8 +3789,6 @@ _a_pend       |_k_macro      |r_e_store                    "
   (setq bookmark-save-flag 1)) ; Save bookmarks after each entry
 #+end_src
 
-To check: [[https://irreal.org/blog/?p=9969][Prot on Bookmarks | Irreal]] (bookmarking web pages, in particular, is something I may want to look into)
-
 * files & buffers
 :PROPERTIES:
 :ID:       B29F4586-2B8D-41FE-82DE-FEDCD863C74B
@@ -4356,7 +4354,7 @@ process in these cases."
    "H-C-g" 'abort-recursive-edit
    "H-C-S-g" 'top-level
    "H-C-A-g" 'keyboard-escape-quit ; ESC ESC ESC
-  "A-H-v" 'ps/internet-archive-dwim)
+   "A-H-v" 'ps/internet-archive-dwim)
   ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "H-q" 'bury-buffer
    "q" 'ps/bury-buffer-switch-to-other-window)
@@ -4809,8 +4807,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
   (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
 
   :general
-  ("A-C-H-0" 'ps/switch-to-minibuffer-window
-   "C-A-g" 'exit-minibuffer)
+  ("A-C-H-0" 'ps/switch-to-minibuffer-window)
   ((minibuffer-mode-map)
    "M-n" nil
    "M-p" nil))
@@ -5374,7 +5371,7 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
     (avy-goto-line)
     (dired-find-alternate-file))
 
-    (defun ps/avy-ebib-view-entry ()
+  (defun ps/avy-ebib-view-entry ()
     "In Ebib, view the entry in selected line."
     (interactive)
     (avy-goto-line)
@@ -5416,11 +5413,11 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
    "C-H-s-l" 'avy-goto-word-1-below)
   (dired-mode-map
    "f" 'ps/avy-dired-find-file)
-   (ebib-index-mode-map
+  (ebib-index-mode-map
    "f" 'ps/avy-ebib-view-entry)
   (telega-root-mode-map
    "f" 'ps/avy-telega-view-message)
-   (ebib-entry-mode-map
+  (ebib-entry-mode-map
    "f" 'avy-goto-line))
 #+end_src
 
@@ -5726,6 +5723,7 @@ with the specified date."
 :END:
 
 :LOGBOOK:
+CLOCK: [2023-03-28 Tue 13:25]--[2023-03-28 Tue 13:28] =>  0:03
 CLOCK: [2022-07-15 Fri 11:10]--[2022-07-15 Fri 11:19] =>  0:09
 CLOCK: [2022-07-11 Mon 15:51]--[2022-07-11 Mon 16:17] =>  0:26
 CLOCK: [2022-07-03 Sun 10:53]--[2022-07-03 Sun 11:18] =>  0:25
@@ -7881,7 +7879,7 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-feature ispell
-  :defer 15
+  :defer 10
   :config
   (setq ispell-silently-savep t)
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
@@ -8765,22 +8763,22 @@ otherwise the whole buffer."
       (narrow-to-region xact-begins xact-ends)))
 
   (defun ps/ledger--increase-date-of-transaction-at-point (days)
-  (interactive)
-  "Increase date of transaction at point by DAYS."
-  (let* ((xact-begins (ledger-navigate-beginning-of-xact))
-         (xact-ends (ledger-navigate-end-of-xact))
-         (xact (buffer-substring xact-begins xact-ends)))
-    (delete-region xact-begins xact-ends)
-    (insert
-     (with-temp-buffer
-       (insert xact)
-       (let* ((date (ledger-xact-date))
-              (timestamp (date-to-time date))
-              (date-minus-one-day (format-time-string "%Y-%m-%d" (time-add timestamp (days-to-time days)))))
-         (beginning-of-buffer)
-         (replace-regexp ledger-iso-date-regexp "")
-         (insert date-minus-one-day)
-         (buffer-string))))))
+    (interactive)
+    "Increase date of transaction at point by DAYS."
+    (let* ((xact-begins (ledger-navigate-beginning-of-xact))
+           (xact-ends (ledger-navigate-end-of-xact))
+           (xact (buffer-substring xact-begins xact-ends)))
+      (delete-region xact-begins xact-ends)
+      (insert
+       (with-temp-buffer
+         (insert xact)
+         (let* ((date (ledger-xact-date))
+                (timestamp (date-to-time date))
+                (date-minus-one-day (format-time-string "%Y-%m-%d" (time-add timestamp (days-to-time days)))))
+           (beginning-of-buffer)
+           (replace-regexp ledger-iso-date-regexp "")
+           (insert date-minus-one-day)
+           (buffer-string))))))
 
   (defun ps/ledger-increase-date-of-transaction-at-point-by-one-day ()
     (interactive)
@@ -12407,7 +12405,6 @@ SQL can be either the emacsql vector representation, or a string."
    "s-r" 'org-roam-buffer-toggle))
 #+end_src
 
-
 - Check [[https://www.reddit.com/r/emacs/comments/omxl6n/config_for_orgroam_v2/][this config]] (v 2.0)
 - And [[https://github.com/alexkehayias/emacs.d/blob/master/init.el#L715][this one]] (by the author of [[https://notes.alexkehayias.com/][this notes repository]], created with org-roam)
 - And [[https://takeonrules.com/2021/08/22/ever-further-refinements-of-org-roam-usage/][this post]]
@@ -12418,6 +12415,7 @@ SQL can be either the emacsql vector representation, or a string."
 :END:
 
 https://github.com/hieutkt/.doom.d/blob/master/config.el#L690-L742
+
 *** TODO [#6] Create new generic and person notes via capture templates, not function
 :PROPERTIES:
 :ID:       569027E9-D918-4A06-A85A-8E800DAC16EA
@@ -12460,6 +12458,7 @@ Run org-roam with minimal config and see if the problem with idle times persist
 :END:
 
 So the links to other Wiki articles do not break.
+
 ** org-roam-ui
 :PROPERTIES:
 :ID:       BAEADCA3-68C6-4B59-A45A-7A1C11C6F6BB
@@ -12527,7 +12526,7 @@ I should check this out.
   ("s-l" 'org-transclusion-add-all))
 #+end_src
 
-** vulpea                                                     :project:
+** vulpea
 :PROPERTIES:
 :ID:       697CE296-FAA8-4485-94D8-B1321B59226F
 :END:
@@ -12652,7 +12651,8 @@ tasks."
                          (vulpea-project-files)
                          ;; include files modified in past three days,
                          ;; provided number of such files less than 1000
-                         (ps/org-roam-recent 1 1000)))
+                         (ps/org-roam-recent 1 500)
+                         ))
            ps/org-agenda-files-excluded)))
 
   (advice-add 'org-agenda :before #'vulpea-agenda-files-update)
@@ -12721,7 +12721,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   :general
   (pdf-annot-minor-mode-map
    "s-s" 'org-noter-create-skeleton))
-#+End_src
+#+end_src
 
 - To check: https://org-roam.discourse.group/t/org-roam-bibtex-in-a-sub-directory/649/5
 - https://notes.andymatuschak.org/About_these_notes
@@ -15780,7 +15780,7 @@ Grammarly."
    "s-w" 'ps/org-msg-open-in-wordtune)
   (org-mode-map
    "A-s-g" 'ps/org-msg-grammarly))
-#+End_src
+#+end_src
 
 *** TODO [#5] Figure out how to make ~org-msg~ preserve formatting of quoted emails
 :PROPERTIES:
@@ -15804,6 +15804,7 @@ Also add spacing (properties are ~padding~ / ~margin~)
 This is controlled with ~org-msg-enforce-css~.
 
 See https://stackoverflow.com/questions/66214297/how-can-i-set-the-same-padding-left-in-my-template-for-outlook-gmail-emails
+
 *** TODO [#5] Figure out how to include LaTeX/Mathjax
 :PROPERTIES:
 :Effort:   0:30
@@ -17901,7 +17902,7 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 #+begin_src emacs-lisp :results silent
 (use-feature auth-source-pass
   :demand t
-  :after (auth-source pass)
+  :after auth-source pass
   :config
   (setq auth-source-debug t)
   (setq auth-source-do-cache nil)
@@ -17919,7 +17920,7 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
 
 [[https://github.com/tadfisher/pass-otp][GitHub - tadfisher/pass-otp: A pass extension for managing one-time-password (OTP) tokens]]
 
-* misc.
+* misc
 :PROPERTIES:
 :ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
 :END:
@@ -18402,7 +18403,6 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
  "C-H-M-S-w" 'ps/org-wiki-add-datestamp-to-heading-from-clipboard)
 #+end_src
 
-
 * variables                                                           :crypt:
 :PROPERTIES:
 :ID:       3A5E2CF3-5CC3-4804-8AEC-89BFD943E0BF
@@ -18487,7 +18487,6 @@ xWQDHteDNHV449OQUfJH77j5U8De75lQ6YtDTtZeUD/I4kVLN/fpmTBdLxD+IRUn
 =ttpg
 -----END PGP MESSAGE-----
 
-
 * local variables
 :PROPERTIES:
 :ID:       1FCD0AB8-6922-4910-AF33-5BD8FB10D633
@@ -18496,4 +18495,4 @@ xWQDHteDNHV449OQUfJH77j5U8De75lQ6YtDTtZeUD/I4kVLN/fpmTBdLxD+IRUn
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
 # eval: (ps/buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
-# 
+# End:

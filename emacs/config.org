@@ -11716,8 +11716,7 @@ CLOCK: [2022-07-17 Sun 19:17]--[2022-07-17 Sun 21:01] =>  1:44
 Hugo should be able to export ~org-cite~ citations.
 
 #+begin_src emacs-lisp :results silent
-(use-package ox-hugo
-  :defer 100)
+(use-package ox-hugo)
 #+end_src
 
 ** ox-pandoc
@@ -12301,9 +12300,7 @@ SQL can be either the emacsql vector representation, or a string."
   (defvar ps/org-roam-excluded-dirs (list
                                      ps/dir-anki
                                      ps/dir-inactive
-                                     ;; ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
                                      ps/dir-archive))
-
 
   (defvar ps/org-roam-excluded-files (list
                                       "orb-noter-template.org"

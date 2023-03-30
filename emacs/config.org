@@ -8669,14 +8669,14 @@ To populate the database of historical prices:
   (defun ps/ledger-update-commodities ()
     "Update `commodities.py'."
     (interactive)
-    (shell-command
+    (async-shell-command
      (format "python3 %s"
              (file-name-concat ps/dir-ledger "commodities.py"))))
 
   (defun ps/ledger-update-coin-prices ()
     "Update `coinprices.py'."
     (interactive)
-    (shell-command
+    (async-shell-command
      (format "python3 %s >> %s"
              (file-name-concat ps/dir-ledger "coinprices/coinprices.py")
              ps/file-ledger-db)))

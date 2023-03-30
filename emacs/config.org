@@ -9483,9 +9483,10 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
   :straight (chatgpt
              :host github
              :repo "emacs-openai/chatgpt")
-  :after openai
   :config
   (setq chatgpt-model "gpt-4")
+  (setq chatgpt-input-method 'minibuffer)
+  (setq chatgpt-animate-text nil)
 
   :general
   ("A-C-g" 'chatgpt))

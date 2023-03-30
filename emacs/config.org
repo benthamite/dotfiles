@@ -2168,16 +2168,20 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
         (remove '(global-mode-string ("" global-mode-string))
                 mode-line-misc-info))
 
-  (run-with-timer 5 nil (lambda () (setq global-mode-string
-                                         '(" "
-                                           (:eval (propertize display-time-string 'face 'ps/display-time))
-                                           " |  "
-                                           chemacs-profile-name
-                                           " | "
-                                           fancy-battery-mode-line
-                                           " | "
-                                           telega-mode-line-format
-                                           " | "))))
+  ;; we run a recurring timer to "clean up" the tab bar, which
+  ;; sometimes shows multiple repeated clocks after a while, for
+  ;; unknown reasons
+  (run-with-timer 5 (* 30 60) (lambda () (setq global-mode-string
+                                          '(" "
+                                            (:eval (propertize display-time-string 'face 'ps/display-time))
+                                            " |  "
+                                            chemacs-profile-name
+                                            " | "
+                                            fancy-battery-mode-line
+                                            " | "
+                                            telega-mode-line-format
+                                            " | "))
+                                (display-wttr-mode)))
   (tab-bar-mode))
 #+end_src
 

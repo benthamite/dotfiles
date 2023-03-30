@@ -4615,22 +4615,35 @@ The code block below, based on [[https://www.djcbsoftware.nl/code/mu/mu4e/Attach
 (use-feature gnus-dired
   :demand t
   :after dired
-  :config
-  (setq gnus-dired-mail-mode 'mu4e-user-agent)
-
+  :config/el-patch
   ;; replaces `gnus-dired-mail-buffers' function so it works on
   ;; `message-mode' derived modes, such as `mu4e-compose-mode'
-  (defun ps/gnus-dired-mail-buffers ()
-    "Return a list of active message buffers."
+  ;; djcbsoftware.nl/code/mu/mu4e/Attaching-files-with-dired.html
+  (defun gnus-dired-mail-buffers ()
+    "Return a list of active mail composition buffers."
+    (el-patch-swap
+      (if (and (memq gnus-dired-mail-mode '(message-user-agent gnus-user-agent))
+	       (require 'message)
+	       (fboundp 'message-buffers))
+	  (message-buffers)
+	;; Cf. `message-buffers' in `message.el':
+	(let (buffers)
+	  (save-excursion
+	    (dolist (buffer (buffer-list t))
+	      (set-buffer buffer)
+	      (when (eq major-mode 'mail-mode)
+		(push (buffer-name buffer) buffers))))
+	  (nreverse buffers)))
     (let (buffers)
-      (save-current-buffer
-        (dolist (buffer (buffer-list t))
-          (set-buffer buffer)
-          (when (and (derived-mode-p 'message-mode)
-                     (null message-sent-message-via))
-            (push (buffer-name buffer) buffers))))
-      (nreverse buffers)))
-  (advice-add 'gnus-dired-mail-buffers :override #'ps/gnus-dired-mail-buffers)
+       (save-excursion
+	 (dolist (buffer (buffer-list t))
+	   (set-buffer buffer)
+	   (when (eq major-mode 'mail-mode)
+	     (push (buffer-name buffer) buffers))))
+       (nreverse buffers))))
+
+  :config
+  (setq gnus-dired-mail-mode 'mu4e-user-agent)
 
   (add-hook 'dired-mode-hook #'turn-on-gnus-dired-mode)
 
@@ -5230,14 +5243,9 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
 (use-package avy
   :commands ps/avy-dired-find-file
 
-  :config
-  (setq avy-case-fold-search nil)
-  (setq avy-timeout-seconds 0.2)
-  (setq avy-all-windows nil)
-  (setq avy-keys '(97 115 100 102 106 107 108 13 32 113 119 101 114 117 105 111 112 122 120 99 118 109 44 46 47))
-
+  :config/el-patch
   ;; Launch dispatcher with `/' rather than `?'
-  (defun ps/avy-handler-default (char)
+  (defun avy-handler-default (char)
     "The default handler for a bad CHAR."
     (let (dispatch)
       (cond ((setq dispatch (assoc char avy-dispatch-alist))
@@ -5247,7 +5255,9 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
             ((memq char avy-escape-chars)
              ;; exit silently
              (throw 'done 'abort))
-            ((eq char ?/)
+            ((el-patch-swap
+               (eq char ??)
+               (eq char ?/))
              (avy-show-dispatch-help)
              (throw 'done 'restart))
             ((mouse-event-p char)
@@ -5708,26 +5718,18 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 (use-package org-gcal
   :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass
-  :defer 30
+  :demand t
 
   :init
   (setq org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
   (setq org-gcal-client-secret (auth-source-pass-get 'secret "auth-sources/org-gcal"))
 
-  :config
-  (setq org-gcal-fetch-file-alist `((,ps/personal-gmail . ,ps/file-calendar)))
-  (setq org-gcal-recurring-events-mode 'top-level)
-  (setq org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
-  (setq org-gcal-notify-p nil)
-  (setq org-gcal-auto-archive nil)
-  (setq org-gcal-up-days 1)
-  (setq org-gcal-down-days 3)
-
-  (defun ps/org-gcal--get-time-and-desc ()
+  :config/el-patch
+  (defun org-gcal--get-time-and-desc ()
     "Get the timestamp and description of the event at point.
 
-  Return a plist with :start, :end, and :desc keys. The value for a key is nil if
-  not present."
+  Return a plist with :start, :end, and :desc keys. The value for a key is nil
+  if not present."
     (let (start end desc tobj elem)
       (save-excursion
         (org-gcal--back-to-heading)
@@ -5767,8 +5769,10 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
                      " *:PROPERTIES:\n *\\(.*\\(?:\n.*\\)*?\\) *:END:\n+"
                      ""
                      desc)))))))
-      ;; Prefer to read event time from the SCHEDULE property if present.
-      (setq tobj (or (org-element-property :deadline elem) tobj))
+      ;; Prefer to read event time from the SCHEDULED property if present.
+      (setq tobj (or (el-patch-swap (org-element-property :scheduled elem)
+                                    (org-element-property :deadline elem))
+                     tobj))
       (when tobj
         (when (plist-get (cadr tobj) :year-start)
           (setq
@@ -5792,7 +5796,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
             (when (plist-get (cadr tobj) :hour-end) t)))))
       (list :start start :end end :desc desc)))
 
-  (defun ps/org-gcal--update-entry (calendar-id event &optional update-mode)
+  (defun org-gcal--update-entry (calendar-id event &optional update-mode)
     "Update the entry at the current heading with information from EVENT.
 
 EVENT is parsed from the Calendar API JSON response using ‘org-gcal--json-read’.
@@ -5805,10 +5809,11 @@ arguments as passed to this function and the point moved to the beginning of the
 heading."
     (unless (org-at-heading-p)
       (user-error "Must be on Org-mode heading."))
-    (let* ((smry  (or (plist-get event :summary)
-                      "busy"))
+    (let* ((smry  (plist-get event :summary))
            (desc  (plist-get event :description))
            (loc   (plist-get event :location))
+           (source (plist-get event :source))
+           (transparency   (plist-get event :transparency))
            (_link  (plist-get event :htmlLink))
            (meet  (plist-get event :hangoutLink))
            (etag (plist-get event :etag))
@@ -5829,10 +5834,42 @@ heading."
            (recurrence (plist-get event :recurrence))
            (elem))
       (when loc (replace-regexp-in-string "\n" ", " loc))
-      (org-edit-headline smry)
+      (org-edit-headline
+       (cond
+        ;; Don’t update headline if the new summary is the same as the CANCELLED
+        ;; todo keyword.
+        ((equal smry org-gcal-cancelled-todo-keyword) (org-gcal--headline))
+        (smry smry)
+        ;; Set headline to “busy” if there is no existing headline and no summary
+        ;; from server.
+        ((or (null (org-gcal--headline))
+             (string-empty-p (org-gcal--headline)))
+         "busy")
+        (t (org-gcal--headline))))
       (org-entry-put (point) org-gcal-etag-property etag)
       (when recurrence (org-entry-put (point) "recurrence" (format "%s" recurrence)))
       (when loc (org-entry-put (point) "LOCATION" loc))
+      (when source
+        (let ((roam-refs
+               (org-entry-get-multivalued-property (point) "ROAM_REFS"))
+              (link (org-entry-get (point) "link")))
+          (cond
+           ;; ROAM_REFS can contain multiple references, but only bare URLs are
+           ;; supported. To make sure we can round-trip between ROAM_REFS and
+           ;; Google Calendar, only import to ROAM_REFS if there is no title in
+           ;; the source, and if ROAM_REFS has at most one entry.
+           ((and (null link)
+                 (<= (length roam-refs) 1)
+                 (or (null (plist-get source :title))
+                     (string-empty-p (plist-get source :title))))
+            (org-entry-put (point) "ROAM_REFS"
+                           (plist-get source :url)))
+           (t
+            (org-entry-put (point) "link"
+                           (org-link-make-string
+                            (plist-get source :url)
+                            (plist-get source :title)))))))
+      (when transparency (org-entry-put (point) "TRANSPARENCY" transparency))
       (when meet
         (org-entry-put
          (point)
@@ -5860,9 +5897,9 @@ heading."
         (message "PROPERTIES not found: %s (%s) %d"
                  (buffer-name) (buffer-file-name) (point)))
       (end-of-line)
-      ;; (newline)
-      ;; (insert (format ":%s:" org-gcal-drawer-name))
-      ;; (newline)
+      (newline)
+      (insert (format ":%s:" org-gcal-drawer-name))
+      (newline)
       ;; Keep existing timestamps for parent recurring events.
       (when (and recurrence old-start old-end)
         (setq start old-start
@@ -5887,16 +5924,26 @@ heading."
                          (if (< 11 (length end))
                              end
                            (org-gcal--iso-previous-day end))))))))
-        (if (org-element-property :deadline elem)
-            (unless (and recurrence old-start) (org-deadline nil timestamp))
-          (org-deadline nil timestamp)
-          (newline)
-          (when desc (newline))))
+        (el-patch-swap
+          (if (org-element-property :scheduled elem)
+              (unless (and recurrence old-start)
+                ;; Ensure CLOSED timestamp isn’t wiped out by ‘org-gcal-sync’ (see
+                ;; https://github.com/kidd/org-gcal.el/issues/218).
+                (let ((org-closed-keep-when-no-todo t))
+                  (org-schedule nil timestamp)))
+            (insert timestamp)
+            (newline)
+            (when desc (newline)))
+          (if (org-element-property :deadline elem)
+              (unless (and recurrence old-start) (org-deadline nil timestamp))
+            (org-deadline nil timestamp)
+            (newline)
+            (when desc (newline)))))
       ;; Insert event description if present.
       (when desc
         (insert (replace-regexp-in-string "^\*" "✱" desc))
         (insert (if (string= "\n" (org-gcal--safe-substring desc -1)) "" "\n")))
-      ;; (insert ":END:")
+      (insert ":END:")
       (when (org-gcal--event-cancelled-p event)
         (save-excursion
           (org-back-to-heading t)
@@ -5907,11 +5954,14 @@ heading."
             (org-back-to-heading t)
             (funcall f calendar-id event update-mode))))))
 
-  ;; I replace the two native functions with the slightly tweaked
-  ;; versions under `:init' so that `org-gcal' uses the `DEADLINE'
-  ;; property for all timestamps.
-  (advice-add 'org-gcal--get-time-and-desc :override #'ps/org-gcal--get-time-and-desc)
-  (advice-add 'org-gcal--update-entry :override #'ps/org-gcal--update-entry)
+  :config
+  (setq org-gcal-fetch-file-alist `((,ps/personal-gmail . ,ps/file-calendar)))
+  (setq org-gcal-recurring-events-mode 'top-level)
+  (setq org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
+  (setq org-gcal-notify-p nil)
+  (setq org-gcal-auto-archive nil)
+  (setq org-gcal-up-days 1)
+  (setq org-gcal-down-days 3)
 
   (defun ps/org-gcal-open-at-point ()
     "Get entry id of `org-gcal' entry at point and open the
@@ -8187,8 +8237,8 @@ CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
 
 #+begin_src emacs-lisp :results silent
 (use-package powerthesaurus
-  :config
-  (defun ps/powerthesaurus-lookup-dwim (&optional action-type query-type)
+  :config/el-patch
+  (defun powerthesaurus-lookup-dwim (&optional action-type query-type)
   "Wrapper function for general lookup commands.
 
 When called interactively, optional argument ACTION-TYPE corresponds to
@@ -8210,8 +8260,10 @@ the user will be prompt for a valid value."
                      (powerthesaurus--extract-original-word)
                    ;; nothing appropriate nearby -> ask the user
                    (list nil nil nil)))))
-    (setq query-term (or query-term
-                         (read-string "Term: " query-term))
+    (setq query-term (el-patch-swap
+                       (read-string "Term: " query-term)
+                       (or query-term
+                         (read-string "Term: " query-term)))
           query-type (or query-type
                          (completing-read "Query type: "
                                           powerthesaurus-supported-query-types
@@ -8344,25 +8396,26 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 (use-package markdown-mode
   :demand t
   :after atomic-chrome
-  :config
-  (setq markdown-fontify-code-blocks-natively t)
-  (setq markdown-command "pandoc --from markdown --to html")
-  (setq markdown-disable-tooltip-prompt t)
-  (setq markdown-italic-underscore 'double)
-
-  (defun ps/markdown-insert-italic ()
+  :config/el-patch
+  (defun markdown-insert-italic ()
     "Insert markup to make a region or word italic.
 If there is an active region, make the region italic.  If the point
 is at a non-italic word, make the word italic.  If the point is at an
 italic word or phrase, remove the italic markup.  Otherwise, simply
 insert italic delimiters and place the point in between them."
     (interactive)
-    (let ((delim (cond ((eq markdown-italic-underscore t) "_")
-                       ((eq markdown-italic-underscore nil) "*")
-                       ((eq markdown-italic-underscore 'double) "__"))))
+    (let ((delim (el-patch-swap
+                   (if markdown-italic-underscore "_" "*")
+                   (cond ((eq markdown-italic-underscore t) "_")
+                         ((eq markdown-italic-underscore nil) "*")
+                         ((eq markdown-italic-underscore 'double) "__")))))
       (markdown--insert-common delim delim markdown-regex-italic 1 3 'markdown-italic-face t)))
 
-  (advice-add 'markdown-insert-italic :override #'ps/markdown-insert-italic)
+  :config
+  (setq markdown-fontify-code-blocks-natively t)
+  (setq markdown-command "pandoc --from markdown --to html")
+  (setq markdown-disable-tooltip-prompt t)
+  (setq markdown-italic-underscore 'double)
 
   (defun ps/markdown-paste-from-org ()
     "Take the contents of the system clipboard and use `pandoc' to
@@ -10147,6 +10200,25 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (org-agenda-goto)
     (org-clock-in))
 
+  :config/el-patch
+  ;; Replace native function with variant that doesn't ask the user
+  ;; multiple times to remove non-existent agenda file
+  (defun org-check-agenda-file (file)
+    "Make sure FILE exists.  If not, ask user what to do."
+    (el-patch-swap
+      (unless (file-exists-p file)
+        (message "Non-existent agenda file %s.  [R]emove from list or [A]bort?"
+                 (abbreviate-file-name file))
+        (let ((r (downcase (read-char-exclusive))))
+          (cond
+           ((equal r ?r)
+            (org-remove-file file)
+            (throw 'nextfile t))
+           (t (user-error "Abort")))))
+      (unless (file-exists-p file)
+        (org-remove-file file)
+        (throw 'nextfile t))))
+
   :config
   (setq org-agenda-window-setup 'current-window)
   (setq org-agenda-use-time-grid nil)
@@ -10224,23 +10296,13 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (interactive)
     (org-unhighlight))
 
-  ;; Replace native function with variant that doesn't ask the user
-  ;; multiple times to remove non-existent agenda file
-  (defun ps/org-check-agenda-file (file)
-    "Make sure FILE exists.  If not, ask user what to do."
-    (unless (file-exists-p file)
-      (org-remove-file file)
-      (throw 'nextfile t)))
-
-  (advice-add 'org-check-agenda-file :override #'ps/org-check-agenda-file)
-
   (defun ps/org-agenda-switch-to-dwim ()
-  "When point is in an agenda log line, goto to that line and
+    "When point is in an agenda log line, goto to that line and
  position in the corresponding file. Else just open the file."
-  (interactive)
-  (condition-case error
-      (call-interactively 'org-clock-convenience-goto-ts)
-    (error (org-agenda-switch-to))))
+    (interactive)
+    (condition-case error
+        (call-interactively 'org-clock-convenience-goto-ts)
+      (error (org-agenda-switch-to))))
 
   ;; We add these two advices because `org-modern-mode' interferes
   ;; with the display of the habits progress bar
@@ -10689,6 +10751,35 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
 #+begin_src emacs-lisp :results silent
 (use-feature org-clock
   :defer 20
+  :config/el-patch
+  ;; replace `org-files-list' with `org-agenda-files' so that
+  ;; extraneous files are excluded from the dangling clocks check.
+  (defun org-resolve-clocks (&optional only-dangling-p prompt-fn last-valid)
+    "Resolve all currently open Org clocks.
+If `only-dangling-p' is non-nil, only ask to resolve dangling
+\(i.e., not currently open and valid) clocks."
+    (interactive "P")
+    (unless org-clock-resolving-clocks
+      (let ((org-clock-resolving-clocks t))
+        (dolist (file (el-patch-swap
+                        (org-files-list)
+                        (org-agenda-files)))
+          (let ((clocks (org-find-open-clocks file)))
+            (dolist (clock clocks)
+              (let ((dangling (or (not (org-clock-is-active))
+                                  (/= (car clock) org-clock-marker))))
+                (if (or (not only-dangling-p) dangling)
+                    (org-clock-resolve
+                     clock
+                     (or prompt-fn
+                         (lambda (clock)
+                           (format
+                            "Dangling clock started %d mins ago"
+                            (floor (org-time-convert-to-integer
+                                    (time-since (cdr clock)))
+                                   60))))
+                     (or last-valid
+                         (cdr clock)))))))))))
   :config
   (setq org-clock-out-when-done t)
   (setq org-clock-persist t)
@@ -10770,35 +10861,6 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
       (insert "\n#+BEGIN: clocktable :scope agenda :stepskip0 t :fileskip0 t :maxlevel 4 :tstart \"<today>\" :tend \"<today>\"\n#+END:")
       (org-clock-report)))
 
-  ;; replace `org-files-list' with `org-agenda-files', so that
-  ;; extraneous files are excluded from the dangling clocks check.
-  (defun ps/org-resolve-clocks (&optional only-dangling-p prompt-fn last-valid)
-    "Resolve all currently open Org clocks.
-If `only-dangling-p' is non-nil, only ask to resolve dangling
-\(i.e., not currently open and valid) clocks."
-    (interactive "P")
-    (unless org-clock-resolving-clocks
-      (let ((org-clock-resolving-clocks t))
-        (dolist (file (org-agenda-files))
-          (let ((clocks (org-find-open-clocks file)))
-            (dolist (clock clocks)
-              (let ((dangling (or (not (org-clock-is-active))
-                                  (/= (car clock) org-clock-marker))))
-                (if (or (not only-dangling-p) dangling)
-                    (org-clock-resolve
-                     clock
-                     (or prompt-fn
-                         (lambda (clock)
-                           (format
-                            "Dangling clock started %d mins ago"
-                            (floor (org-time-convert-to-integer
-                                    (time-since (cdr clock)))
-                                   60))))
-                     (or last-valid
-                         (cdr clock)))))))))))
-
-  (advice-add 'org-resolve-clocks :override #'ps/org-resolve-clocks)
-
   :general
   ("A-H-j" 'org-clock-goto
    "A-H-x" 'org-clock-cancel
@@ -10838,58 +10900,52 @@ CLOCK: [2023-03-18 Sat 13:14]--[2023-03-18 Sat 13:27] =>  0:13
 :ID:       594F8AE4-9AE7-4D7D-A504-E75C5139BB5D
 :END:
 
-/[[https://github.com/justintaft/org-clock-split][org-clock-split]]: split one clock entry into two contiguous entries./
+/[[https://github.com/justintaft/org-clock-split][org-clock-split]] allows splitting of one clock entry into two contiguous entries./
 
 #+begin_src emacs-lisp
 (use-package org-clock-split
   :after org-clock
   :demand t
-  :config
-  ;; the function has to be slightly modified to make it work (see 'FIXED' comment below)
-  (defun ps/org-clock-split (from-end splitter-string)
-  "Split CLOCK entry under cursor into two entries.
-Total time of created entries will be the same as original entry.
-
-   WARNING: Negative time entries can be created if splitting at an offset
-longer then the CLOCK entry's total time.
-
-   FROM-END: nil if the function should split with duration from
-   the start of the clock segment (default for backwards
-   compatibility), t if the function should split counting from
-   the end of the clock segment.
-
-   SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
-
-  (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
-
-  (move-beginning-of-line nil)
-  (let ((original-line (buffer-substring (line-beginning-position) (line-beginning-position 2))))
-
-    ;; Error if CLOCK line does not contain check in and check out time
-    (unless (string-match org-clock-split-clock-range-regexp original-line)
-      (error "Cursor must be placed on line with valid CLOCK entry range"))
-
-    (let* ((whitespace (match-string 1 original-line))
-           (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
-           (t0 (pop timestamps))
-           (t1 (concat "[" (pop timestamps) "]")) ; <- FIXED: this is the modified line
-           (t2 (pop timestamps)))
-      ;; delete line without moving to kill ring
-      (delete-region (line-beginning-position) (line-end-position))
-      ;; insert the earlier segment
-      (insert (format org-clock-split-clock-range-format whitespace t0 t1))
-      ;; Update interval duration, which moves point to the end of the later timestamp
-      (org-ctrl-c-ctrl-c)
-      ;; insert the later segment before the earlier segment, so it's ready for org-clock-merge
-      (move-beginning-of-line nil)
-      (newline)
-      (previous-line)
-      (insert (format org-clock-split-clock-range-format whitespace t1 t2))
-      ;; Update interval duration, which fails if point doesn't move to beginning of line
-      (org-ctrl-c-ctrl-c)
-      (move-beginning-of-line nil))))
-
-  (advice-add 'org-clock-split :override #'ps/org-clock-split)
+  :config/el-patch
+  ;; the function has to be slightly modified to make it work
+  (defun org-clock-split
+      (from-end splitter-string)
+    "Split CLOCK entry under cursor into two entries.\nTotal time of created entries will be the same as original entry.\n\n   WARNING: Negative time entries can be created if splitting at an offset\nlonger then the CLOCK entry's total time.\n\n   FROM-END: nil if the function should split with duration from\n   the start of the clock segment (default for backwards\n   compatibility), t if the function should split counting from\n   the end of the clock segment.\n \n   SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
+    (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
+    (move-beginning-of-line nil)
+    (let
+        ((original-line
+          (buffer-substring
+           (line-beginning-position)
+           (line-beginning-position 2))))
+      (unless
+          (string-match org-clock-split-clock-range-regexp original-line)
+        (error "Cursor must be placed on line with valid CLOCK entry range"))
+      (let*
+          ((whitespace
+            (match-string 1 original-line))
+           (timestamps
+            (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
+           (t0
+            (pop timestamps))
+           (t1 (el-patch-swap
+                 (pop timestamps)
+                 (concat "[" (pop timestamps) "]")))
+           (t2
+            (pop timestamps)))
+        (delete-region
+         (line-beginning-position)
+         (line-end-position))
+        (insert
+         (format org-clock-split-clock-range-format whitespace t0 t1))
+        (org-ctrl-c-ctrl-c)
+        (move-beginning-of-line nil)
+        (newline)
+        (previous-line)
+        (insert
+         (format org-clock-split-clock-range-format whitespace t1 t2))
+        (org-ctrl-c-ctrl-c)
+        (move-beginning-of-line nil))))
 
   :general
   (org-mode-map
@@ -11598,20 +11654,21 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 #+begin_src emacs-lisp :results silent
 (use-feature org-src
   :defer 5
+  :config/el-patch
+  ;; name buffers more cleanly
+  (defun org-src--construct-edit-buffer-name (org-buffer-name lang)
+    "Construct the buffer name for a source editing buffer.
+Format is \"*Org Src ORG-BUFFER-NAME [ LANG ]*\"."
+    (el-patch-swap
+      (concat "*Org Src " org-buffer-name "[ " lang " ]*")
+      (concat org-buffer-name " (org src)")))
+
   :config
   (setq org-edit-src-content-indentation 0)
   (setq org-src-preserve-indentation nil)
   (setq org-src-window-setup 'current-window)
   (setq org-src-fontify-natively t)
   (setq org-src-tab-acts-natively nil) ; When set to `nil', newlines will be properly indented
-
-  (defun ps/org-src--construct-edit-buffer-name (org-buffer-name lang)
-    "Construct the buffer name for a source editing buffer. This
-tweaked function names such buffers more cleanly than the
-original."
-    (concat org-buffer-name " (org src)"))
-
-  (advice-add 'org-src--construct-edit-buffer-name :override #'ps/org-src--construct-edit-buffer-name)
 
   :general
   (org-src-mode-map
@@ -11725,27 +11782,6 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
                                               (string-trim-right
                                                (propertize graph 'mouse-face 'inherit)))))))
 
-  (defun ps/org-habit-insert-consistency-graphs (&optional line)
-    "Insert consistency graph for any habitual tasks."
-    (let ((inhibit-read-only t)
-          (buffer-invisibility-spec '(org-link))
-          (moment (org-time-subtract nil
-                                     (* 3600 org-extend-today-until))))
-      (save-excursion
-        (goto-char (if line (point-at-bol) (point-min)))
-        (while (not (eobp))
-          (let ((habit (get-text-property (point) 'org-habit-p)))
-            (when habit
-              (let ((graph (org-habit-build-graph
-                            habit
-                            (time-subtract moment (days-to-time org-habit-preceding-days))
-                            moment
-                            (time-add moment (days-to-time org-habit-following-days)))))
-                (ps/org-habit-graph-on-own-line graph))))
-          (forward-line)))))
-
-  (advice-add #'org-habit-insert-consistency-graphs
-              :override #'ps/org-habit-insert-consistency-graphs))
 #+end_src
 
 ** org-checklist
@@ -12120,6 +12156,13 @@ return such list if its length is less than LIMIT."
       (when (and limit
                  (< (length file-list) limit))
         file-list)))
+
+  :config/el-patch
+  (defun org-roam-db-query (sql &rest args)
+    "Run SQL query on Org-roam database with ARGS.
+SQL can be either the emacsql vector representation, or a string."
+    (el-patch-add (sleep-for 0 1))
+    (apply #'emacsql (org-roam-db) sql args))
 
   :config
   (setq org-roam-directory ps/dir-org-roam)
@@ -12632,29 +12675,12 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 #+begin_src emacs-lisp :results silent
 (use-feature oc
   :demand t
-  :config
-  (setq org-cite-global-bibliography (list ps/file-bibliography-new
-                                           ps/file-bibliography-old
-                                           ps/file-bibliography-films))
-  (setq org-cite-csl-styles-dir ps/dir-csl-styles)
-  (setq org-cite-csl-locales-dir ps/dir-csl-locales)
-  (setq org-cite-insert-processor 'citar)
-  (setq org-cite-follow-processor 'citar) ; `org-open-at-point` integration
-  (setq org-cite-activate-processor 'citar) ;
-  (setq org-cite-export-processors
-        '(
-          (md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
-          (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
-          (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
-          (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
-          (t csl "american-medical-association-brackets.csl")       ; Fallback
-          ))
-
+  :config/el-patch
   ;; Comment out `org-cite--allowed-p' condition to allow invocation
   ;; in any mode. Even if inserting a citation is not allowed, one may
   ;; want to invoke the command to trigger contextual actions via
   ;; `embark'.
-  (defun ps/org-cite-insert (arg)
+  (defun org-cite-insert (arg)
     "Insert a citation at point.
 Insertion is done according to the processor set in `org-cite-insert-processor'.
 ARG is the prefix argument received when calling interactively the function."
@@ -12674,11 +12700,33 @@ ARG is the prefix argument received when calling interactively the function."
           (cond
            ((memq (org-element-type context) '(citation citation-reference))
             (funcall insert context arg))
-           (t
-            (org-cite--allowed-p context)
-            (funcall insert nil arg))))))))
+           (el-patch-remove
+             ((org-cite--allowed-p context)
+              (funcall insert nil arg)))
+           (el-patch-swap
+             (t
+              (user-error "Cannot insert a citation here"))
+             (t
+              (funcall insert nil arg)))
+           ))))))
 
-  (advice-add 'org-cite-insert :override #'ps/org-cite-insert)
+  :config
+  (setq org-cite-global-bibliography (list ps/file-bibliography-new
+                                           ps/file-bibliography-old
+                                           ps/file-bibliography-films))
+  (setq org-cite-csl-styles-dir ps/dir-csl-styles)
+  (setq org-cite-csl-locales-dir ps/dir-csl-locales)
+  (setq org-cite-insert-processor 'citar)
+  (setq org-cite-follow-processor 'citar) ; `org-open-at-point` integration
+  (setq org-cite-activate-processor 'citar) ;
+  (setq org-cite-export-processors
+        '(
+          (md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
+          (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
+          (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
+          (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
+          (t csl "american-medical-association-brackets.csl")       ; Fallback
+          ))
 
   :general
   ("H-/" 'org-cite-insert))
@@ -12769,6 +12817,7 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
 :ID:       42191633-D2A1-4EDB-903F-3965ECB61510
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-26 Sun 20:16]--[2023-03-26 Sun 20:19] =>  0:03
 CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 :END:
 
@@ -12777,6 +12826,21 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 #+begin_src emacs-lisp :results silent
 (use-feature bibtex
   :demand t
+  :config/el-patch
+  ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field
+  (defun bibtex-autokey-get-year ()
+    "Return year field contents as a string obeying `bibtex-autokey-year-length'."
+    (let* ((str (bibtex-autokey-get-field '("date" "year" (el-patch-add "urldate")))) ; possibly ""
+           (year (or (and (iso8601-valid-p str)
+                          (let ((year (decoded-time-year (iso8601-parse str))))
+                            (and year (number-to-string year))))
+                     ;; BibTeX permits a year field "(about 1984)", where only
+                     ;; the last four nonpunctuation characters must be numerals.
+                     (and (string-match "\\([0-9][0-9][0-9][0-9]\\)[^[:alnum:]]*\\'" str)
+                          (match-string 1 str))
+                     (user-error "Year or date field `%s' invalid" str))))
+      (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
+
   :config
   ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
   ;; retorque.re/zotero-better-bibtex/citing/
@@ -12856,20 +12920,6 @@ Version 2015-06-08"
       (ps/bibtex-asciify-text (point-min) (point-max))
       (buffer-string)))
 
-  ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field
-  (defun ps/bibtex-autokey-get-year ()
-    "Return year field contents as a string obeying `bibtex-autokey-year-length'."
-    (let* ((str (bibtex-autokey-get-field '("date" "year" "urldate"))) ; possibly ""
-           (year (or (and (iso8601-valid-p str)
-                          (let ((year (decoded-time-year (iso8601-parse str))))
-                            (and year (number-to-string year))))
-                     ;; BibTeX permits a year field "(about 1984)", where only
-                     ;; the last four nonpunctuation characters must be numerals.
-                     (and (string-match "\\([0-9][0-9][0-9][0-9]\\)[^[:alnum:]]*\\'" str)
-                          (match-string 1 str))
-                     (user-error "Year or date field `%s' invalid" str))))
-      (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
-
   (defun ps/bibtex-get-key ()
     "Return the key of the current BibTeX entry."
     (save-excursion
@@ -12879,8 +12929,6 @@ Version 2015-06-08"
         (if (re-search-forward "@\\w+{\\([^,]+\\),")
             (match-string-no-properties 1)
           (user-error "Not on a BibTeX entry")))))
-
-  (advice-add 'bibtex-autokey-get-year :override #'ps/bibtex-autokey-get-year)
 
   ;; Add custom 'video' field
   (push '("Video" "Video file"
@@ -13325,6 +13373,134 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
   :defer 5
   :init
 
+  :config/el-patch
+  ;; tweak original function to prevent unnecessary vertical window splits
+  (defun ebib--setup-windows ()
+  "Create Ebib's window configuration.
+If the index buffer is already visible in some frame, select its
+window and make the frame active,"
+  (let ((index-window (get-buffer-window (ebib--buffer 'index) t))
+        (old-frame (selected-frame)))
+    (if index-window
+        (progn (select-window index-window t)
+               (unless (eq (window-frame) old-frame)
+                 (select-frame-set-input-focus (window-frame))
+                 (setq ebib--frame-before old-frame)))
+      (setq ebib--saved-window-config (current-window-configuration))
+      (setq ebib--frame-before nil)
+      (cond
+       ((eq ebib-layout 'full)
+        (delete-other-windows))
+       ((eq ebib-layout 'custom)
+        (setq ebib--window-before (selected-window))
+        (delete-other-windows)
+        (let ((width (cond
+                      ((integerp ebib-width)
+                       (- (window-total-width) ebib-width))
+                      ((floatp ebib-width)
+                       (- (window-total-width) (truncate (* (window-total-width) ebib-width)))))))
+          (select-window (split-window (selected-window) width t)))))
+      (let* ((index-window (selected-window))
+             (entry-window (el-patch-swap
+                             (split-window index-window ebib-index-window-size
+                                           ebib-window-vertical-split)
+                             (selected-window))))
+        (switch-to-buffer (ebib--buffer 'index))
+        (unless (eq ebib-layout 'index-only)
+          (set-window-buffer entry-window (ebib--buffer 'entry)))
+        (el-patch-remove
+        (set-window-dedicated-p index-window t))
+        (if (eq ebib-layout 'custom)
+            (set-window-dedicated-p entry-window t)))))
+  (if (buffer-local-value 'ebib--dirty-index-buffer (ebib--buffer 'index))
+      (setq ebib--needs-update t)))
+
+  ;; tweak original function to pass custom arguments to `format-time-string'
+  (defun ebib--store-entry (entry-key fields db &optional timestamp if-exists)
+    "Store the entry defined by ENTRY-KEY and FIELDS into DB.
+Optional argument TIMESTAMP indicates whether a timestamp is to
+be added to the entry.  Note that for a timestamp to be added,
+`ebib-use-timestamp' must also be set to T. IF-EXISTS is as for
+`ebib-db-set-entry'.
+
+If storing the entry was successful, return the key under which
+the entry is actually stored (which, if IF-EXISTS is `uniquify',
+may differ from ENTRY-KEY); otherwise return nil.  Depending on
+the value of IF-EXISTS, storing an entry may also result in an
+error."
+    (let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
+      (when (and actual-key timestamp ebib-use-timestamp)
+        (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
+      actual-key))
+
+  ;; We tweak the two functions below so that focus doesn't move away
+  ;; from the current entry when the database is saved or reloaded.
+  (defun ebib--save-database (db &optional force)
+    "Save the database DB.
+The FORCE argument is used as in `ebib-save-current-database'."
+    ;; See if we need to make a backup.
+    (when (and (ebib-db-backup-p db)
+               (file-exists-p (ebib-db-get-filename db)))
+      (ebib--make-backup (ebib-db-get-filename db))
+      (ebib-db-set-backup nil db))
+
+    ;; Check if the file has changed on disk.
+    (let ((db-modtime (ebib-db-get-modtime db))
+          (file-modtime (ebib--get-file-modtime (ebib-db-get-filename db))))
+      ;; If the file to be saved has been newly created, both modtimes are nil.
+      (when (and db-modtime file-modtime
+                 (time-less-p db-modtime file-modtime))
+        (unless (or (and (listp force)
+                         (eq 16 (car force)))
+                    (yes-or-no-p (format "File `%s' changed on disk.  Overwrite? " (ebib-db-get-filename db))))
+          (error "[Ebib] File not saved"))))
+
+    ;; Now save the database.
+    (el-patch-swap
+      (with-temp-buffer
+        (ebib--format-database-as-bibtex db)
+        (write-region (point-min) (point-max) (ebib-db-get-filename db)))
+      (let ((buf (current-buffer)))
+        (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+        (with-temp-buffer
+          (ebib--format-database-as-bibtex db)
+          (write-region (point-min) (point-max) (ebib-db-get-filename db)))))
+    (ebib--set-modified nil db))
+
+  (defun ebib-reload-current-database ()
+    "Reload the current database from disk."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (when (or (and (ebib-db-modified-p ebib--cur-db)
+                      (yes-or-no-p "Database modified.  Really reload from file? "))
+                 (y-or-n-p "Reload current database from file? "))
+         (el-patch-remove
+           (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+           (ebib--reload-database ebib--cur-db)
+           (ebib--set-modified nil ebib--cur-db)
+           (ebib--update-buffers)
+           (message "Database reloaded"))
+         (el-patch-add
+           (ps/ebib-reload-current-database-no-confirm))))
+      (default
+       (beep))))
+
+  ;; hack to solve the issue whereby hitting `RET' in
+  ;; `ebib-index-mode' sometimes does not edit the entry at point
+  (defun ebib-edit-entry ()
+    "Edit the current BibTeX entry."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (el-patch-add
+         (unless (string= (what-line) "Line 1")
+           (ebib-prev-entry)
+           (ebib-next-entry)))
+       (ebib--edit-entry-internal))
+      (default
+       (beep))))
+
   :config
   (setq ebib-preload-bib-files org-cite-global-bibliography)
   (setq ebib-notes-directory ps/dir-bibliographic-notes)
@@ -13404,46 +13580,6 @@ confirmation."
    (lambda (event)
      (ps/ebib-reload-current-database-no-confirm)))
 
-  ;; Tweak original function to prevent unnecessary vertical window splits
-  (defun ps/ebib--setup-windows ()
-    "Create Ebib's window configuration.
-If the index buffer is already visible in some frame, select its
-window and make the frame active,"
-    (let ((index-window (get-buffer-window (ebib--buffer 'index) t))
-          (old-frame (selected-frame)))
-      (if index-window
-          (progn (select-window index-window t)
-                 (unless (eq (window-frame) old-frame)
-                   (select-frame-set-input-focus (window-frame))
-                   (setq ebib--frame-before old-frame)))
-        (setq ebib--saved-window-config (current-window-configuration))
-        (setq ebib--frame-before nil)
-        (cond
-         ((eq ebib-layout 'full)
-          (delete-other-windows))
-         ((eq ebib-layout 'custom)
-          (setq ebib--window-before (selected-window))
-          (delete-other-windows)
-          (let ((width (cond
-                        ((integerp ebib-width)
-                         (- (window-total-width) ebib-width))
-                        ((floatp ebib-width)
-                         (- (window-total-width) (truncate (* (window-total-width) ebib-width)))))))
-            (select-window (split-window (selected-window) width t)))))
-        (let* ((index-window (selected-window))
-               (entry-window (selected-window)))
-          (switch-to-buffer (ebib--buffer 'index))
-          (unless (eq ebib-layout 'index-only)
-            (set-window-buffer entry-window (ebib--buffer 'entry)))
-          ;; (set-window-dedicated-p index-window t)
-          (if (eq ebib-layout 'custom)
-              (set-window-dedicated-p entry-window t)))))
-    (if (buffer-local-value 'ebib--dirty-index-buffer (ebib--buffer 'index))
-        (setq ebib--needs-update t)))
-
-  (advice-add 'ebib--setup-windows :override #'ps/ebib--setup-windows)
-
-  ;; tweak original function to pass custom arguments to `format-time-string'
   (defun ps/ebib--store-entry (entry-key fields db &optional timestamp if-exists)
     "Store the entry defined by ENTRY-KEY and FIELDS into DB.
 Optional argument TIMESTAMP indicates whether a timestamp is to
@@ -13460,8 +13596,6 @@ error."
       (when (and actual-key timestamp ebib-use-timestamp)
         (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format nil "GMT") actual-key db 'overwrite))
       actual-key))
-
-  (advice-add 'ebib--store-entry :override #'ps/ebib--store-entry)
 
   (defvar ps/ebib-isbn-p
     "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
@@ -13777,75 +13911,6 @@ different users, as long as they have the same folder structure."
       (ps/ebib-copy-doi)
       (url-copy-file (scihub (current-kill 0)) file)
       (ebib-set-field-value "file" file key ebib--cur-db ";")))
-
-  ;; We tweak the two functions below so that focus doesn't move away
-  ;; from the current entry when the database is saved or reloaded.
-
-  (defun ps/ebib--save-database (db &optional force)
-    "Save the database DB.
-The FORCE argument is used as in `ebib-save-current-database'."
-    ;; See if we need to make a backup.
-    (when (and (ebib-db-backup-p db)
-               (file-exists-p (ebib-db-get-filename db)))
-      (ebib--make-backup (ebib-db-get-filename db))
-      (ebib-db-set-backup nil db))
-
-    ;; Check if the file has changed on disk.
-    (let ((db-modtime (ebib-db-get-modtime db))
-          (file-modtime (ebib--get-file-modtime (ebib-db-get-filename db))))
-      ;; If the file to be saved has been newly created, both modtimes are nil.
-      (when (and db-modtime file-modtime
-                 (time-less-p db-modtime file-modtime))
-        (unless (or (and (listp force)
-                         (eq 16 (car force)))
-                    (yes-or-no-p (format "File `%s' changed on disk.  Overwrite? " (ebib-db-get-filename db))))
-          (error "[Ebib] File not saved"))))
-
-    ;; Now save the database.
-    (let ((buf (current-buffer)))
-      (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-      (with-temp-buffer
-        (ebib--format-database-as-bibtex db)
-        (write-region (point-min) (point-max) (ebib-db-get-filename db)))
-      ;; (ebib--pop-to-buffer
-      ;; (cond ((string= (buffer-name buf) "*Ebib-entry*")
-      ;; (ebib--buffer 'entry))
-      ;; ((string= (buffer-name buf) "*Ebib-index*")
-      ;; (ebib--buffer 'index))))
-      )
-    (ebib--set-modified nil db))
-
-  (advice-add 'ebib--save-database :override #'ps/ebib--save-database)
-
-  (defun ps/ebib-reload-current-database ()
-    "Reload the current database from disk."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (when (or (and (ebib-db-modified-p ebib--cur-db)
-                      (yes-or-no-p "Database modified.  Really reload from file? "))
-                 (y-or-n-p "Reload current database from file? "))
-         (ps/ebib-reload-current-database-no-confirm)))
-      (default
-       (beep))))
-
-  (advice-add 'ebib-reload-current-database :override #'ps/ebib-reload-current-database)
-
-  ;; hack to solve the issue whereby hitting `RET' in
-  ;; `ebib-index-mode' sometimes does not edit the entry at point
-  (defun ps/ebib-edit-entry ()
-    "Edit the current BibTeX entry."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (unless (string= (what-line) "Line 1")
-         (ebib-prev-entry)
-         (ebib-next-entry))
-       (ebib--edit-entry-internal))
-      (default
-       (beep))))
-
-  (advice-add 'ebib-edit-entry :override #'ps/ebib-edit-entry)
 
   (defun ps/ebib--extension-directories (extension)
     "Return directory associated with EXTENSION."
@@ -16783,21 +16848,22 @@ CLOCK: [2021-05-22 Sat 21:42]--[2021-05-22 Sat 21:50] =>  0:08
 
 #+begin_src emacs-lisp :results silent
 (use-package google-this
-  :config
+  :config/el-patch
   ;; Tweak original function to offer contents of kill ring if there
   ;; is no symbol or word at point.
-  (defun ps/google-this-pick-term (prefix)
-    "Decide what \"this\" is and return it.
+  (defun google-this-pick-term (prefix)
+    "Decide what \"this\" and return it.
 PREFIX determines quoting."
     (let* ((term (if (region-active-p)
                      (buffer-substring-no-properties (region-beginning) (region-end))
                    (or (thing-at-point 'symbol)
                        (thing-at-point 'word)
-                       (current-kill 0))))
-         (term (read-string (concat "Googling [" term "]: ") nil nil term)))
+                       (el-patch-swap
+                         (buffer-substring-no-properties (line-beginning-position)
+                                                         (line-end-position))
+                         (current-kill 0)))))
+           (term (read-string (concat "Googling [" term "]: ") nil nil term)))
       term))
-
-  (advice-add 'google-this-pick-term :override #'ps/google-this-pick-term)
 
   :general
   ("H-g" 'google-this-search)
@@ -17216,17 +17282,6 @@ template."
       (if title
           (org-link-make-string (concat "file:" file-path) title)
         (user-error "HTML page at URL has no title"))))
-
-  (defun ps/org-web-tools--get-first-url ()
-    "Return URL in clipboard, or first URL in the `kill-ring', or nil
-if none."
-    (current-kill 0) ; added so that clipboard is pushed to kill ring; it won't otherwise
-    (cl-loop for item in (append (list (gui-get-selection 'CLIPBOARD))
-                                 kill-ring)
-             when (and item (string-match (rx bol "http" (optional "s") "://") item))
-             return item))
-
-  (advice-add 'org-web-tools--get-first-url :override #'ps/org-web-tools--get-first-url)
 
   :general
   ("s-A-k" 'org-web-tools-insert-link-for-url))
@@ -17675,7 +17730,18 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 
 #+begin_src emacs-lisp :results silent
 (use-package pass
-  :defer 6
+  :demand t
+  :config/el-patch
+  (defun pass-quit ()
+  "Kill the buffer quitting the window."
+  (interactive)
+  (when (el-patch-swap (y-or-n-p "Kill all pass entry buffers? ") t)
+    (dolist (buf (buffer-list))
+      (with-current-buffer buf
+        (when (eq major-mode 'pass-view-mode)
+          (kill-buffer buf)))))
+  (quit-window t))
+  
   :config
   (defun ps/pass-open-at-point ()
     "Open the URL associated with the entry at point and its password
@@ -17690,17 +17756,7 @@ to the clipboard."
           (unless (assoc field parsed-entries)
             (user-error "Field `%s' not in  %s" field entry))
           (browse-url (password-store-get-field entry field))))))
-
-  (defun ps/pass-quit ()
-    "Kill the buffer quitting the window."
-    (interactive)
-    (dolist (buf (buffer-list))
-      (with-current-buffer buf
-        (when (eq major-mode 'pass-view-mode)
-          (quit-window t))
-        (kill-buffer buf))))
-  (advice-add 'pass-quit :override #'ps/pass-quit)
-
+  
   (defun ps/pass-edit ()
     "Edit the entry at point, without confirmation."
     (interactive)
@@ -18079,34 +18135,6 @@ I'm not tracking prices anymore so this is probably not worth it currently.
    "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
    "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
    "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
-
-(defun ps/tlon-bae-format-file (&optional extension)
-  "Prompt the user for bibliographic information and return a file
-name based on it."
-  (let* ((lastname (read-string "Last name(s) [separated by spaces if more than one author]: "))
-         (title (read-string "Title: "))
-         (slug-lastname (ps/bibtex-asciify-string (org-hugo-slug lastname)))
-         (slug-title (ps/bibtex-asciify-string (org-hugo-slug title)))
-         (extension (or extension "md")))
-    (file-name-with-extension (concat slug-lastname "--" slug-title) extension)))
-
-(defun ps/tlon-bae-rename-file (&optional extension)
-  "Prompt the user for bibliographic information and rename file at
-point based on it."
-  (interactive)
-  (let* ((source-file-path (dired-get-filename)))
-    (rename-file
-     source-file-path
-     (file-name-concat
-      (file-name-directory source-file-path)
-      (ps/tlon-bae-format-file extension))))
-  (revert-buffer))
-
-(defun ps/tlon-bae-create-file (&optional extension)
-  "Prompt the user for bibliographic information and create a new
- file based on it in the current directory."
-  (interactive)
-  (find-file (ps/tlon-bae-format-file extension)))
 #+end_src
 
 ** Keyboard Maestro

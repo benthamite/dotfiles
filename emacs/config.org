@@ -3444,6 +3444,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 :ID:       6405B8E7-6612-4D71-8C2C-A51F8808F4C6
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-27 Mon 12:10]--[2023-03-27 Mon 12:40] =>  0:30
 CLOCK: [2022-10-01 Sat 13:23]--[2022-10-01 Sat 13:26] =>  0:03
 CLOCK: [2021-11-11 Thu 14:05]--[2021-11-11 Thu 14:09] =>  0:04
 CLOCK: [2021-10-28 Thu 19:00]--[2021-10-28 Thu 19:56] =>  0:56
@@ -3466,7 +3467,7 @@ CLOCK: [2021-03-07 Sun 11:00]--[2021-03-07 Sun 11:01] =>  0:01
 CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 :END:
 
-/[[https://github.com/joaotavora/yasnippet][yasnippet]] is a template system for Eamcs./
+/[[https://github.com/joaotavora/yasnippet][yasnippet]] is a template system for Emacs./
 
 #+begin_src emacs-lisp :results silent
 (use-package yasnippet

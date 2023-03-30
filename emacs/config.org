@@ -329,7 +329,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-mime][org-mime]]
   - [[#elgantt][elgantt]]
   - [[#org-pomodoro][org-pomodoro]]
-  - [[#memacs][memacs]]
 - [[#note-taking][note-taking]]
   - [[#emacs-sqlite3][emacs-sqlite3]]
   - [[#emacsql-sqlite-builtin][emacsql-sqlite-builtin]]
@@ -12095,15 +12094,6 @@ Pomodoro system:
 
 - Always working on a task (rather than merely on a heading)
 - At the beginning of each 30-minute session, leave a note on what I will do in that session
-** memacs
-:PROPERTIES:
-:ID:       1146CE48-9243-435A-8394-07C385538104
-:END:
-
-*** TODO [#5] Try memacs
-:PROPERTIES:
-:ID:       B27D8912-4089-4E37-B4BD-195B398C066B
-:END:
 
 * note-taking
 :PROPERTIES:

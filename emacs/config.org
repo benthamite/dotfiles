@@ -10567,8 +10567,8 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
           ("r" "Bibliography reference" plain
            (file ,ps/file-orb-noter-template)
-           :if-new
-           (file ,ps/file-orb-capture-template)
+           ;; :if-new
+           ;; (file ,ps/file-orb-capture-template)
            :unnarrowed t :immediate-finish t)
           ("s" "Slack" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
@@ -11768,11 +11768,9 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
                       (cons "k" 'org-babel-previous-src-block)
                       (cons "n" 'org-babel-insert-header-arg)
                       (cons "p" 'org-babel-remove-result-one-or-many)))
-    (add-to-list 'org-babel-key-bindings cons))
+    (add-to-list 'org-babel-key-bindings cons)))
 
-  :general
-  (org-mode-map
-   "s-b" 'ps/org-babel-tangle))
+(define-key org-mode-map (kbd "s-b") #'ps/init-build)
 #+end_src
 
 ** org-src

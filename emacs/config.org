@@ -17912,12 +17912,106 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
  "C-H-M-S-w" 'ps/org-wiki-add-datestamp-to-heading-from-clipboard)
 #+end_src
 
-* local variables
+* variables
+:PROPERTIES:
+:ID:       5A96B05D-52BD-4648-B0D6-1E0B6C49DB37
+:END:
+
+The section below defines all the variables used by this file. The variables are encrypted with ~org-crypt~. The section is tangled to a local ~variables.el~ file that isn't part of this public repository.
+
+** variables                                                          :crypt:
+:PROPERTIES:
+:ID:       3A5E2CF3-5CC3-4804-8AEC-89BFD943E0BF
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
+:END:
+
+-----BEGIN PGP MESSAGE-----
+
+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
+e5F6LYEHVF+9ewvizIPutw==
+=TFTv
+-----END PGP MESSAGE-----
+
+
+** local variables
 :PROPERTIES:
 :ID:       1FCD0AB8-6922-4910-AF33-5BD8FB10D633
 :END:
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
-# eval: (ps/buffer-local-set-key (kbd "H-i") 'use-package-report)
+# eval: (ps/buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
+# org-crypt-key: "tlon.shared@gmail.com"
 # End:

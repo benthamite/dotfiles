@@ -433,7 +433,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#tlon][Tlon]]
   - [[#keyboard-maestro][Keyboard Maestro]]
 - [[#variables][variables]]
-- [[#local-variables][local variables]]
+  - [[#variables][variables]]
+  - [[#local-variables][local variables]]
 :END:
 
 * introduction
@@ -711,11 +712,6 @@ The contents of this code block are tangled to the ~early-init.el~ file.
 (add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bar
 (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
 
-;; github.com/emacscollective/no-littering#native-compilation-cache
-(when (fboundp 'startup-redirect-eln-cache)
-  (startup-redirect-eln-cache
-   (convert-standard-filename
-    "/Users/pablostafforini/.config/emacs-profiles/develop/var/eln-cache/")))
 #+end_src
 
 * startup
@@ -924,8 +920,8 @@ NAME and ARGS are as in `use-package'."
 (use-package no-littering
   :demand t
   :init
-  (setq no-littering-etc-directory "~/.config/emacs-profiles/etc/")
-  (setq no-littering-var-directory "~/.config/emacs-profiles/var/")
+  (setq no-littering-etc-directory (file-name-concat (getenv "HOME") ".config/emacs-profiles/etc/"))
+  (setq no-littering-etc-directory (file-name-concat (getenv "HOME") ".config/emacs-profiles/var/"))
 
   :config
   ;; github.com/emacscollective/no-littering#auto-save-settings
@@ -938,7 +934,7 @@ NAME and ARGS are as in `use-package'."
 :ID:       3411777E-E554-4EF3-9389-63242D4F3072
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/ns-win)
 (use-feature ns-win
   :demand t
   :config
@@ -948,7 +944,9 @@ NAME and ARGS are as in `use-package'."
   (setq mac-function-modifier 'none)
   (setq mac-right-option-modifier 'none)
   (setq mac-right-control-modifier 'super)
-  (setq mac-right-command-modifier 'alt))
+  (setq mac-right-command-modifier 'alt)
+  
+  )
 #+end_src
 
 ** iso-transl
@@ -1856,7 +1854,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
     "My custom faces, to be used in conjunction with theme."
     (ps/init-override-code-if-available
      :ps/faces
-     (progn
+     '(
        (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
        (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
        (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
@@ -1906,8 +1904,8 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :ID:       D75F0818-F8A2-45F1-8EB5-4548BCDE86BE
 :END:
 
-#+begin_src emacs-lisp
-(use-feature theme-loaddefs
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/theme-loaddefs)
+(use-feature emacs
   :demand t
   :config
   (defvar ps/theme-loaddefs-light 'modus-operandi)
@@ -1950,6 +1948,9 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
                                                yellow))))
 
   :config
+  (ps/init-override-code-if-available
+   :ps/modus-themes-load
+   '(
   (defun ps/modus-themes-load-theme-emacs-mac ()
     "Load modus theme that matches system."
     (interactive)
@@ -1975,6 +1976,9 @@ installed."
            (add-hook 'ns-system-appearance-change-functions
                      #'ps/modus-themes-load-theme-emacs-plus))))
 
+  (ps/modus-themes-load-theme-conditionally)
+  ))
+  
   (setq modus-themes-common-palette-overrides
         `(
           ;; hide the fringe
@@ -2119,23 +2123,26 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (doom-modeline-mode)
 
   :config
-  (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
-  (setq doom-modeline-mu4e t)
-  (setq doom-modeline-buffer-encoding nil)
-  (setq doom-modeline-irc t)
-  (setq doom-modeline-irc-buffers t)
-  (setq doom-modeline-github t)
-  (setq doom-modeline-github-interval (* 10 60))
-  (setq doom-modeline-buffer-file-name-style 'truncate-nil)
-  (setq doom-modeline-height 22)
+  (ps/init-override-code-if-available
+   :ps/doom-modeline
+   '(
+     ;; we disable the display of time since the tab-bar already does
+     (setq doom-modeline-time nil)
+     (setq doom-modeline-mu4e nil)
+     (setq doom-modeline-buffer-encoding t)
+     (setq doom-modeline-irc nil)
+     (setq doom-modeline-irc-buffers nil)
+     ;; (doom-modeline--flycheck-icon t)
+     (setq doom-modeline-github nil)
+     (setq doom-modeline-github-interval nil)
+     (setq doom-modeline-buffer-file-name-style 'truncate-nil)
 
-  (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-                        (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-                        (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-                        (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-    (remove-hook (car hook-cons) (cdr hook-cons)))
-
-  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
+     (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
+     (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
+     (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
+     (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline)
+     ;; (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)
+     )))
 #+end_src
 
 *** TODO [#6] Diagnose why modeline is sometimes not highlighted
@@ -4986,7 +4993,7 @@ CLOCK: [2022-09-02 Fri 18:13]--[2022-09-02 Fri 21:20] =>  3:07
 CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :END:
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/window)
+#+begin_src emacs-lisp :results silent
 (use-feature window
   :demand t
 
@@ -5088,94 +5095,98 @@ otherwise in two windows."
         (split-window-right))
       (balance-windows)))
 
-  (defun ps/window--move-or-swap (this-buffer other-buffer &optional target-window)
-    "docstring"
-    (ps/window-split-if-unsplit)
-    (let* ((target-window (if (or (not target-window)
-                                  (eq (ps/get-last-window) target-window)
-                                  (eq (selected-window) target-window))
-                              (ps/get-last-window)
-                            target-window))
-           (source-window (if (eq (selected-window) target-window)
-                              (ps/get-last-window)
-                            (selected-window))))
-      (set-window-buffer target-window this-buffer)
-      (set-window-buffer source-window other-buffer)
-      (select-window target-window)))
+    (defun ps/window--move-or-swap (this-buffer other-buffer &optional target-window)
+      "docstring"
+      (ps/window-split-if-unsplit)
+      (let* ((target-window (if (or (not target-window)
+                                    (eq (ps/get-last-window) target-window)
+                                    (eq (selected-window) target-window))
+                                (ps/get-last-window)
+                              target-window))
+             (source-window (if (eq (selected-window) target-window)
+                                (ps/get-last-window)
+                              (selected-window))))
+        (set-window-buffer target-window this-buffer)
+        (set-window-buffer source-window other-buffer)
+        (select-window target-window)))
 
-  (defun ps/window-buffer-swap ()
-    "Swap the current buffer and the buffer in the other
+    (defun ps/window-buffer-swap ()
+      "Swap the current buffer and the buffer in the other
 window. If there is only one window, create a second one. If frame
 is wide enough, create a third."
-    (interactive)
-    (ps/window--move-or-swap
-     (window-buffer)
-     (window-buffer (ps/get-last-window))))
+      (interactive)
+      (ps/window--move-or-swap
+       (window-buffer)
+       (window-buffer (ps/get-last-window))))
 
-  (defun ps/window-buffer-move (&optional target-window)
-    "Move the current buffer to the other window. If there is only one
+    (defun ps/window-buffer-move (&optional target-window)
+      "Move the current buffer to the other window. If there is only one
 window, create a second one. If frame is wide enough, create a third."
-    (interactive)
-    (ps/window--move-or-swap
-     (window-buffer)
-     (ps/get-alternate-buffer)
-     target-window))
+      (interactive)
+      (ps/window--move-or-swap
+       (window-buffer)
+       (ps/get-alternate-buffer)
+       target-window))
 
-  (defun ps/window-buffer-move-right ()
-    "docstring."
-    (interactive)
-    (ps/window-buffer-move
-     (winum-get-window-by-number
-      (1+
-       (mod
-        (winum-get-number)
-        (count-windows))))))
+    (defun ps/window-buffer-move-right ()
+      "docstring."
+      (interactive)
+      (ps/window-buffer-move
+       (winum-get-window-by-number
+        (1+
+         (mod
+          (winum-get-number)
+          (count-windows))))))
 
-  (defun ps/window-buffer-move-left ()
-    "docstring."
-    (interactive)
-    (ps/window-buffer-move
-     (winum-get-window-by-number
-      (1+
-       (mod
-        (count-windows)
-        (winum-get-number))))))
+    (defun ps/window-buffer-move-left ()
+      "docstring."
+      (interactive)
+      (ps/window-buffer-move
+       (winum-get-window-by-number
+        (1+
+         (mod
+          (count-windows)
+          (winum-get-number))))))
 
-  (defun ps/window-buffer-move-dwim ()
-    "Based on frame size, create one or two additional windows if
+    (defun ps/window-buffer-move-dwim ()
+      "Based on frame size, create one or two additional windows if
 necessary, and move buffer to the other window or to the middle
 window depending on the number of present windows."
-    (interactive)
-    (ps/window-buffer-move (when (> (count-windows) 2) (winum-get-window-by-number 2))))
+      (interactive)
+      (ps/window-buffer-move (when (> (count-windows) 2) (winum-get-window-by-number 2))))
 
-  (add-hook 'emacs-startup-hook #'ps/window-split-if-unsplit -50)
+      (ps/init-override-code-if-available
+       :ps/window-split
+       '(
+         (add-hook 'emacs-startup-hook #'ps/window-split-if-unsplit -50)
+         ))
 
-  :general
-  ("C-H-0" 'ps/switch-to-last-window
-   "C-w" 'ps/narrow-or-widen-dwim
-   "H-w" 'delete-window
-   "H-W" 'delete-other-windows
-   "M-A-q" 'delete-frame
-   "s-A-," 'ps/split-emacs-chrome-sideways
-   "M-–" 'ps/window-buffer-move-dwim ; `emacs-mac'
-   "M--" 'ps/window-buffer-move-dwim ; `emacs-plus'
-   "M-," 'ps/window-buffer-move-left
-   "M-." 'ps/window-buffer-move-right
-   "A-M--" 'ps/window-buffer-swap ; `emacs-mac'
-   "A-M-–" 'ps/window-buffer-swap ; `emacs-plus'
-   "A-C-s-y" 'scroll-down-command
-   "A-C-s-h" 'scroll-up-command
-   "A-C-s-g" 'scroll-other-window
-   "A-C-s-t" 'scroll-other-window-down
-   "A-C-s-x" (lambda! (scroll-down-line 4))
-   "A-C-s-c" (lambda! (scroll-up-line 4))
-   "A-C-s-v" (lambda! (scroll-down-line 16))
-   "A-C-s-b" (lambda! (scroll-up-line 16)))
-  ((elfeed-show-mode-map eww-mode-map helpful-mode-map mu4e-view-mode-map telega-msg-button-map)
-   "y" 'scroll-down-command
-   "h" 'scroll-up-command)
-  (isearch-mode-map
-   "C-w" 'ps/narrow-or-widen-dwim))
+      :general
+      ("C-H-0" 'ps/switch-to-last-window
+       "C-w" 'ps/narrow-or-widen-dwim
+       "H-w" 'delete-window
+       "H-W" 'delete-other-windows
+       "M-A-q" 'delete-frame
+       "s-A-," 'ps/split-emacs-chrome-sideways
+       "M-–" 'ps/window-buffer-move-dwim ; `emacs-mac'
+       "M--" 'ps/window-buffer-move-dwim ; `emacs-plus'
+       "M-," 'ps/window-buffer-move-left
+       "M-." 'ps/window-buffer-move-right
+       "A-M--" 'ps/window-buffer-swap ; `emacs-mac'
+       "A-M-–" 'ps/window-buffer-swap ; `emacs-plus'
+       "A-C-s-y" 'scroll-down-command
+       "A-C-s-h" 'scroll-up-command
+       "A-C-s-g" 'scroll-other-window
+       "A-C-s-t" 'scroll-other-window-down
+       "A-C-s-x" (lambda! (scroll-down-line 4))
+       "A-C-s-c" (lambda! (scroll-up-line 4))
+       "A-C-s-v" (lambda! (scroll-down-line 16))
+       "A-C-s-b" (lambda! (scroll-up-line 16)))
+      ((elfeed-show-mode-map eww-mode-map helpful-mode-map mu4e-view-mode-map telega-msg-button-map)
+       "y" 'scroll-down-command
+       "h" 'scroll-up-command)
+      (isearch-mode-map
+       "C-w" 'ps/narrow-or-widen-dwim))
 #+end_src
 
 ** frame
@@ -5191,11 +5202,16 @@ window depending on the number of present windows."
   (setq window-divider-default-right-width 1)
   (window-divider-mode)
   ;; When returning focus to Emacs after browsing other macOS windows,
-  ;; the frame is sometimes not fully maximized. This advice makes
-  ;; Emacs maximize the frame every time focus is regained.
-  (add-function :after after-focus-change-function
-                (lambda ()
-                  (set-frame-parameter nil 'fullscreen 'maximized)))
+  ;; the frame is sometimes not fully maximized. This makes Emacs
+  ;; maximize the frame every time focus is regained, fixing this
+  ;; issue.
+  (ps/init-override-code-if-available
+   :ps/frame-maximize
+   '(
+     (add-function :after after-focus-change-function
+                   (lambda ()
+                     (set-frame-parameter nil 'fullscreen 'maximized)))
+     ))
 
   :general
   ("H-S-SPC" 'other-frame))
@@ -6740,7 +6756,9 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :demand t
   :config
   (setq vr/engine 'python)
-  (setq vr/command-python "python3 /Users/pablostafforini/.emacs.d/straight/build/visual-regexp-steroids/regexp.py")
+  (setq vr/command-python
+	(concat "python3 "
+		(file-name-concat user-emacs-directory "straight/build/visual-regexp-steroids/regexp.py")))
 
   :general
   (isearch-mode-map
@@ -8916,7 +8934,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
     (pdf-tools-install))
 
   (defun ps/pdf-tools-apply-theme ()
-    "Activate `pdf-tools' midnight mode iff dark theme is active."
+    "Activate `pdf-tools' midnight mode if dark theme is active."
     (if (eq (modus-themes--current-theme) ps/theme-loaddefs-dark)
         (pdf-view-midnight-minor-mode)
       (pdf-view-midnight-minor-mode -1)))
@@ -11216,69 +11234,72 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 :END:
 
 #+begin_src emacs-lisp :results silent
-(use-feature org-fold
-  :demand t
-  :config
-  (setq org-fold-catch-invisible-edits 'smart)
+(ps/init-override-code-if-available
+ :ps/org-fold
+ '(
+  (use-feature org-fold
+    :demand t
+    :config
+    (setq org-fold-catch-invisible-edits 'smart)
 
-  (defun ps/org-fold-show-all-headings ()
-    "Show contents of all headings in buffer, except archives."
-    (interactive)
-    (org-fold-show-all '(headings))
-    (org-cycle-hide-archived-subtrees 'all))
+    (defun ps/org-fold-show-all-headings ()
+      "Show contents of all headings in buffer, except archives."
+      (interactive)
+      (org-fold-show-all '(headings))
+      (org-cycle-hide-archived-subtrees 'all))
 
-  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
-  (defun ps/org-hide-properties ()
-    "Hide all org-mode headline property drawers in buffer. Could be
+    ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
+    (defun ps/org-hide-properties ()
+      "Hide all org-mode headline property drawers in buffer. Could be
   slow if it has a lot of overlays."
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward
-              "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
-        (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-          (overlay-put ov_this 'display "")
-          (overlay-put ov_this 'hidden-prop-drawer t))))
-    (put 'org-toggle-properties-hide-state 'state 'hidden))
+      (interactive)
+      (save-excursion
+	(goto-char (point-min))
+	(while (re-search-forward
+		"^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
+          (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
+            (overlay-put ov_this 'display "")
+            (overlay-put ov_this 'hidden-prop-drawer t))))
+      (put 'org-toggle-properties-hide-state 'state 'hidden))
 
-  (defun ps/org-hide-logbook ()
-    "Hide all org-mode headline logbook drawers in buffer. Could be
+    (defun ps/org-hide-logbook ()
+      "Hide all org-mode headline logbook drawers in buffer. Could be
 slow if it has a lot of overlays."
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward
-              "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
-        (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-          (overlay-put ov_this 'display "")
-          (overlay-put ov_this 'hidden-logbook-drawer t))))
-    (put 'org-toggle-logbook-hide-state 'state 'hidden))
+      (interactive)
+      (save-excursion
+	(goto-char (point-min))
+	(while (re-search-forward
+		"^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
+          (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
+            (overlay-put ov_this 'display "")
+            (overlay-put ov_this 'hidden-logbook-drawer t))))
+      (put 'org-toggle-logbook-hide-state 'state 'hidden))
 
-  (defun ps/org-show-properties ()
-    "Show all org-mode property drawers hidden by org-hide-properties."
-    (interactive)
-    (remove-overlays (point-min) (point-max) 'hidden-prop-drawer t)
-    (put 'org-toggle-properties-hide-state 'state 'shown))
+    (defun ps/org-show-properties ()
+      "Show all org-mode property drawers hidden by org-hide-properties."
+      (interactive)
+      (remove-overlays (point-min) (point-max) 'hidden-prop-drawer t)
+      (put 'org-toggle-properties-hide-state 'state 'shown))
 
-  (defun ps/org-show-logbook ()
-    "Show all org-mode logbook drawers hidden by org-hide-properties."
-    (interactive)
-    (remove-overlays (point-min) (point-max) 'hidden-logbook-drawer t)
-    (put 'org-toggle-logbook-hide-state 'state 'shown))
+    (defun ps/org-show-logbook ()
+      "Show all org-mode logbook drawers hidden by org-hide-properties."
+      (interactive)
+      (remove-overlays (point-min) (point-max) 'hidden-logbook-drawer t)
+      (put 'org-toggle-logbook-hide-state 'state 'shown))
 
-  (defun ps/org-toggle-properties ()
-    "Toggle visibility of property drawers."
-    (interactive)
-    (if (eq (get 'org-toggle-properties-hide-state 'state) 'hidden)
-        (ps/org-show-properties)
-      (ps/org-hide-properties)))
+    (defun ps/org-toggle-properties ()
+      "Toggle visibility of property drawers."
+      (interactive)
+      (if (eq (get 'org-toggle-properties-hide-state 'state) 'hidden)
+          (ps/org-show-properties)
+	(ps/org-hide-properties)))
 
-  (defun ps/org-toggle-logbook ()
-    "Toggle visibility of logbook drawers."
-    (interactive)
-    (if (eq (get 'org-toggle-logbook-hide-state 'state) 'hidden)
-        (ps/org-show-logbook)
-      (ps/org-hide-logbook)))
+    (defun ps/org-toggle-logbook ()
+      "Toggle visibility of logbook drawers."
+      (interactive)
+      (if (eq (get 'org-toggle-logbook-hide-state 'state) 'hidden)
+          (ps/org-show-logbook)
+	(ps/org-hide-logbook)))
 
   (add-hook 'org-mode-hook #'ps/org-hide-properties)
   (add-hook 'org-mode-hook #'ps/org-hide-logbook))
@@ -11365,7 +11386,10 @@ files, recursively all files in `org-directory', and all files in
       (ps/org-widen-and-reveal)
       (org-id-goto id)))
 
-  (add-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)
+    (ps/init-override-code-if-available
+     :ps/org-id-add-ids-to-headings-in-file
+     '(
+  (add-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)))
 
   :general
   (org-mode-map
@@ -18442,7 +18466,8 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 
 The section below defines all the variables used by this file. The variables are encrypted with ~org-crypt~. The section is tangled to a local ~variables.el~ file that isn't part of this public repository.
 
-** variables                                                          :crypt:
+
+** variables
 :PROPERTIES:
 :ID:       3A5E2CF3-5CC3-4804-8AEC-89BFD943E0BF
 :END:

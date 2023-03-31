@@ -3,7 +3,7 @@
 # key: tp
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` ${1:recipient}
+`(format-time-string "%Y-%m-%d")` ${1:recipient}
     Expenses:${5:account}  ${2:amount, inc. decimal} ${3:$$(yas-choose-value ps/ledger-active-currencies)} ; ${4:details}
     Liabilities:Pablo Stafforini
 

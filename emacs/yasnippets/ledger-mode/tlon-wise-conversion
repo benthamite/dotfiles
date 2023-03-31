@@ -3,7 +3,7 @@
 # key: twc
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Conversion
+`(format-time-string "%Y-%m-%d")` Conversion
     Assets:Wise                               -$1 $2 @ $3 $4
     Expenses:Core:Misc                         $5 $2 @ $3 $4
     Assets:Wise                                

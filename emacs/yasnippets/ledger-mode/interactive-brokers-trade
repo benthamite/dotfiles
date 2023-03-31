@@ -3,7 +3,7 @@
 # key: ib
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Trade
+`(format-time-string "%Y-%m-%d")` Trade
     Assets:Interactive Brokers                                     $1 $2 @ $3 USD
     Assets:Interactive Brokers
 

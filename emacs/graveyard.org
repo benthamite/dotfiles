@@ -1,5 +1,5 @@
 #+filetags: :project:
-* Emacs graveyard
+* Pablo's Emacs package graveyard
 :PROPERTIES:
 :ID:       AACAE0F4-0B25-475B-831B-3F1E91E6349D
 :END:
@@ -7,7 +7,103 @@
 CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
-This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
+This is a place where I move Emacs packages I no longer use.
+
+** gpt
+:PROPERTIES:
+:ID:       6BA1A737-40A1-4253-8FC8-E211F6060BC9
+:END:
+
+/[[https://github.com/stuhlmueller/gpt.el][gpt]] is an Emacs package for calling instruction-following language models./
+
+[2023-03-21 Tue 19:22] Replaced with chatgpt, which connects to the OpenAI API via an Elisp library.
+
+#+begin_src emacs-lisp :results silent
+(use-package gpt
+  :commands gpt-dwim
+
+  :config
+  (setq gpt-openai-key (auth-source-pass-get 'secret "auth-sources/openai.com"))
+  (setq gpt-openai-engine "text-davinci-003")
+
+  :general
+  ("A-C-g" 'gpt-dwim))
+#+end_src
+
+** ox-reveal
+:PROPERTIES:
+:ID:       019A6815-F80E-4A8E-9CDC-854F28D7E42A
+:END:
+:LOGBOOK:
+CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
+:END:
+
+[2023-03-18 Sat 09:56] Not using it.
+
+#+begin_src emacs-lisp :results silent
+(use-package ox-reveal
+  ;; :defer 300
+  :config
+  (setq org-reveal-root "https://cdn.jsdelivr.net/npm/reveal.js"))
+#+end_src
+
+- [[https://revealjs.com/][The HTML presentation framework | reveal.js]]
+- [[https://www.youtube.com/watch?v=je_xPoqtnSM][GNU/Emacs Org-mode For Presentation Slides/HTML Slides (Emacs org-reveal) - YouTube]]
+
+** epc
+:PROPERTIES:
+:ID:       474AA19E-D682-4A5E-9853-845333D82912
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-package epc)
+#+end_src
+
+** cider
+:PROPERTIES:
+:ID:       308A0DCB-A51A-493F-B729-A0156ED1C4B7
+:END:
+
+/[[https://github.com/clojure-emacs/cider][cider]] is CIDER is the "Clojure(Script) Interactive Development Environment that Rocks"./
+
+[2023-03-18 Sat 09:50] Not using Clojure.
+
+#+begin_src emacs-lisp :results silent
+(use-package cider)
+#+end_src
+
+** parse-csv
+:PROPERTIES:
+:ID:       55B470DB-E9D2-45B1-8E74-58CB9DDF7D27
+:END:
+
+[2023-03-18 Sat 09:50] Not using it.
+
+#+begin_src emacs-lisp :results silent
+(use-package parse-csv)
+#+end_src
+
+** edit-indirect
+:PROPERTIES:
+:ID:       1F18FACA-0A55-4B8F-98C3-800C07D62257
+:END:
+
+[2023-03-10 Fri 20:10] Not using it.
+
+#+begin_src emacs-lisp :results silent
+(use-package edit-indirect)
+#+end_src
+
+** elmacro
+:PROPERTIES:
+:ID:       B7816A82-2E9C-434F-AAB3-A92FA5F3368B
+:END:
+
+[2023-03-10 Fri 19:49] Not using anymore.
+
+#+begin_src emacs-lisp :results silent
+(use-package elmacro)
+#+end_src
 
 ** fontaine
 :PROPERTIES:
@@ -35,6 +131,8 @@ I haven't yet explored this package.
 :LOGBOOK:
 CLOCK: [2021-06-03 Thu 14:11]--[2021-06-03 Thu 14:16] =>  0:05
 :END:
+
+Not using.
 
 #+begin_src emacs-lisp :results silent
 (use-package paradox
@@ -388,7 +486,6 @@ CLOCK: [2021-03-28 Sun 13:35]--[2021-03-28 Sun 14:31] =>  0:56
 (let ((map prog-mode-map))
   (keymap-unset map "M-q"))))
 #+end_src
-
 
 ** emacs-webkit
 :PROPERTIES:
@@ -3183,6 +3280,7 @@ I never found the need to use this.
   :config
   (org-super-agenda-mode))
 #+end_src
+
 ** quelpa
 :PROPERTIES:
 :ID:       85E17700-FE49-4668-85C8-BD782FADE946

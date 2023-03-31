@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: add-package
+# key: ap
+# contributor: Pablo Stafforini
+# --
+$1: add package

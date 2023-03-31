@@ -3,7 +3,7 @@
 # key: tah
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Auora Humarán
+`(format-time-string "%Y-%m-%d")` Auora Humarán
     Expenses:Core:Translations  $1 ARS ; translation of '$2'
     Assets:Brubank
 

@@ -3,7 +3,7 @@
 # key: rib
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Transfer
+`(format-time-string "%Y-%m-%d")` Transfer
     Assets:Revolut                              -$1 USD
     Expenses:Fees                           $2 USD
     Assets:IB

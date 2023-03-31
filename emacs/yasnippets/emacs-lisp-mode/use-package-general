@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: use-package-general
+# key: :g
+# --
+:general
+  

@@ -4,7 +4,7 @@
 # contributor: Pablo Stafforini
 # --
 `(ps/time-last-day-of-last-month)` $1
-    Expenses:$3                $2.00 ARS
+    Expenses:$3                                    $2.00 ARS
     Liabilities:Mom:Amex
 
 $4

@@ -4,7 +4,7 @@
 # contributor: Pablo Stafforini
 # --
 `(ps/time-last-day-of-last-month)` Transfer
-    Liabilities:Mom:$2                          $1.00 ARS
+    Liabilities:Mom:$2                             $1.00 ARS
     Liabilities:Mom:Consolidated
 
 $0

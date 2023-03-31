@@ -3,7 +3,7 @@
 # key: wst
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Telegram
+`(format-time-string "%Y-%m-%d")` Telegram
     Expenses:Core:Web services  5.00 USD ; Telegram Premium subscription
     Assets:Wise
 

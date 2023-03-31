@@ -3,7 +3,7 @@
 # key: uber
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Uber
+`(format-time-string "%Y-%m-%d")` Uber
     Expenses:Transportation:Taxi  $1 ARS ; $2
     Liabilities:Mom:Extension
 

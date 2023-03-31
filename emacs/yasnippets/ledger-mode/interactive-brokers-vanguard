@@ -3,7 +3,7 @@
 # key: ibv
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Trade
+`(format-time-string "%Y-%m-%d")` Trade
     Assets:IB                                     $1 VTI @ $2 USD
     Expenses:Fees                               1.00 USD
     Assets:IB

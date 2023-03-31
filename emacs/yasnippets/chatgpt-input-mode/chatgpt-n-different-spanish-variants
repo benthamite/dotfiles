@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: chatgpt-n-different-spanish-variants
+# key: cndsv
+# contributor: Pablo Stafforini
+# --
+Por favor, genera $1 variantes de la expresión "$2".

@@ -18461,6 +18461,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 :ID:       0537BBF6-FD95-44A5-9327-1024A3D106EB
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-31 Fri 15:20]--[2023-03-31 Fri 15:23] =>  0:03
 CLOCK: [2023-03-28 Tue 22:48]--[2023-03-28 Tue 23:50] =>  1:02
 CLOCK: [2023-03-28 Tue 22:32]--[2023-03-28 Tue 22:47] =>  0:15
 :END:
@@ -18471,6 +18472,25 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 #+begin_src emacs-lisp
 (use-package bbdb
+  :init/el-patch
+  ;; open URL directly, without prompting for confirmation
+  (defun bbdb-browse-url (records &optional which)
+    "Brwose URLs stored in the `url' field of RECORDS.
+Interactively, use BBDB prefix \
+\\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'.
+Prefix WHICH specifies which URL in field `url' is used (starting from 0).
+Default is the first URL."
+    (interactive (list (bbdb-get-records "Visit (URL): ")
+                       (and current-prefix-arg
+                            (prefix-numeric-value current-prefix-arg))))
+    (unless which (setq which 0))
+    (dolist (record (bbdb-record-list records))
+      (let ((url (bbdb-record-xfield-split record 'url)))
+        (when url
+          (setq url (el-patch-swap (read-string "fetch: " (nth which url)) (nth which url)))
+          (unless (string= "" url)
+            (browse-url url))))))
+
   :config/el-patch
   ;; do not split windows
   (defun bbdb-pop-up-window (&optional select horiz-p)
@@ -18552,31 +18572,13 @@ then the window will be split horizontally rather than vertically."
                      (if select (select-window window)))
                  (error (bbdb-pop-up-window-simple buffer select))))))))
 
-  ;; open URL directly, without prompting for confirmation
-  (defun bbdb-browse-url (records &optional which)
-    "Brwose URLs stored in the `url' field of RECORDS.
-Interactively, use BBDB prefix \
-\\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'.
-Prefix WHICH specifies which URL in field `url' is used (starting from 0).
-Default is the first URL."
-    (interactive (list (bbdb-get-records "Visit (URL): ")
-                       (and current-prefix-arg
-                            (prefix-numeric-value current-prefix-arg))))
-    (unless which (setq which 0))
-    (dolist (record (bbdb-record-list records))
-      (let ((url (bbdb-record-xfield-split record 'url)))
-        (when url
-          (setq url (el-patch-swap
-                      (read-string "fetch: " (nth which url))
-                      (nth which url)))
-          (unless (string= "" url)
-            (browse-url url))))))
-
   :config
   (setq bbdb-file (file-name-concat ps/dir-bbdb "bbdn.el"))
   (setq bbdb-image-path (file-name-concat ps/dir-bbdb "media/"))
   (bbdb-initialize 'anniv)
 
+  ;; the two functions below replace the corresponding "non-quick"
+  ;; native functions. they prompt for a name only.
   (defun ps/bbdb-create-quick (record)
     "Add a new RECORD to BBDB. Prompt for name only."
     (interactive (list (ps/bbdb-read-record-quick current-prefix-arg)))

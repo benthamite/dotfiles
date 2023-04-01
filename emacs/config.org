@@ -13352,7 +13352,7 @@ With prefix, rebuild the cache before offering candidates."
 
 #+begin_src emacs-lisp :results silent
 (use-feature citar-citeproc
-  :demand t
+  :defer 10
   :after citar
   :config
   (setq citar-citeproc-csl-styles-dir org-cite-csl-styles-dir)

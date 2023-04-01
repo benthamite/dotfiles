@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: dotfiles-update-version
+# key: duv
+# contributor: Pablo Stafforini
+# --
+update to version $1

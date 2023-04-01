@@ -103,6 +103,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#outline][outline]]
   - [[#ediff][ediff]]
   - [[#fill][fill]]
+  - [[#unfill][unfill]]
   - [[#abbrev][abbrev]]
   - [[#yasnippet][yasnippet]]
   - [[#yasnippet-snippets][yasnippet-snippets]]
@@ -3430,6 +3431,17 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 
   :general
   ("A-M-f" 'ps/fill-or-unfill-paragraph))
+#+end_src
+
+** unfill
+:PROPERTIES:
+:ID:       DF5137EA-79B3-4A5F-8D6C-7222CD8D4F4A
+:END:
+
+/[[https://github.com/purcell/unfill][unfill]] provides functions to do the reverse of ~fill-paragraph~ and ~fill-region~./
+
+#+begin_src emacs-lisp
+(use-package unfill)
 #+end_src
 
 ** abbrev

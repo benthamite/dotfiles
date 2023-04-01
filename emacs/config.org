@@ -18161,7 +18161,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 
 #+begin_src emacs-lisp :results silent
 (use-package pass
-  :demand t
+  :defer 10
   :config/el-patch
   (defun pass-quit ()
   "Kill the buffer quitting the window."
@@ -18172,7 +18172,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
         (when (eq major-mode 'pass-view-mode)
           (kill-buffer buf)))))
   (quit-window t))
-  
+
   :config
   (defun ps/pass-open-at-point ()
     "Open the URL associated with the entry at point and its password
@@ -18187,7 +18187,7 @@ to the clipboard."
           (unless (assoc field parsed-entries)
             (user-error "Field `%s' not in  %s" field entry))
           (browse-url (password-store-get-field entry field))))))
-  
+
   (defun ps/pass-edit ()
     "Edit the entry at point, without confirmation."
     (interactive)

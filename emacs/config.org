@@ -824,7 +824,7 @@ Process for updating packages:
 
 #+begin_src emacs-lisp :results silent
 (setq straight-repository-branch "develop") ; must precede bootstrap
-(setq straight-profiles `((nil . ,(file-name-concat ps/dir-dotemacs "straight-profile.el"))))
+(setq straight-profiles `((nil . ,(file-name-concat user-emacs-directory "straight-profile.el"))))
 ;; Bootstrap `straight'
 (defvar bootstrap-version)
 (let ((bootstrap-file

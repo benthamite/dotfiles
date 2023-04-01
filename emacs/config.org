@@ -2120,24 +2120,28 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :config
   (ps/init-override-code-if-available
    :ps/doom-modeline
-   '(
-     ;; we disable the display of time since the tab-bar already does
-     (setq doom-modeline-time nil)
-     (setq doom-modeline-mu4e nil)
-     (setq doom-modeline-buffer-encoding t)
-     (setq doom-modeline-irc nil)
-     (setq doom-modeline-irc-buffers nil)
-     ;; (doom-modeline--flycheck-icon t)
-     (setq doom-modeline-github nil)
-     (setq doom-modeline-github-interval nil)
-     (setq doom-modeline-buffer-file-name-style 'truncate-nil)
+   '((setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
+     (setq doom-modeline-mu4e t)
+     (setq doom-modeline-buffer-encoding nil)
+     (setq doom-modeline-irc t)
+     (setq doom-modeline-irc-buffers t)
+     (setq doom-modeline-github t)
+     (setq doom-modeline-github-interval (* 10 60))
+     (setq doom-modeline-buffer-file-name-style 'auto)
+     (setq doom-modeline-height 22)
 
-     (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
-     (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
-     (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
-     (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline)
-     ;; (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)
-     )))
+     (doom-modeline-def-modeline 'main
+       '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
+       '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
+
+
+     (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
+			   (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+			   (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+			   (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+       (remove-hook (car hook-cons) (cdr hook-cons)))
+
+     (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))))
 #+end_src
 
 ** tab-bar

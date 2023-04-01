@@ -7955,6 +7955,7 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
 :ID:       78ABBC76-7474-4C1C-A9B0-E8BEC972E75E
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-30 Thu 23:58]--[2023-03-31 Fri 00:15] =>  0:17
 CLOCK: [2022-09-14 Wed 15:02]--[2022-09-14 Wed 15:06] =>  0:04
 CLOCK: [2022-08-31 Wed 20:51]--[2022-08-31 Wed 21:00] =>  0:09
 CLOCK: [2022-07-26 Tue 16:59]--[2022-07-26 Tue 17:01] =>  0:02
@@ -7984,7 +7985,6 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
           (word (flyspell-get-word)))
       (when (consp word)
         (flyspell-do-correct 'save nil (car word) current-location (cadr word) (caddr word) current-location))))
-
 
   (defun ps/flyspell-save-word-and-next ()
     "Save word at point to personal dictionary and go to next error."
@@ -8049,8 +8049,6 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
    "C-;" nil)
   (flyspell-mouse-map ;; this key map becomes active only when point is on a highlighted word
    "s-a" 'flyspell-auto-correct-word
-   "s-k" 'ps/flyspell-goto-previous-error
-   "s-l" 'flyspell-goto-next-error
    "s-s" 'ps/flyspell-save-word
    "A-s-s" 'ps/flyspell-save-word-and-next
    "s-c" 'flyspell-correct-wrapper))

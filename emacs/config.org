@@ -2140,12 +2140,10 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
 #+end_src
 
+
 ** tab-bar
 :PROPERTIES:
 :ID:       F8B7C324-C5CF-4DBD-A527-92101BDA70AB
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 :END:
 
 #+begin_src emacs-lisp :results silent :tangle  :tangle (ps/init-get-tangle-flag :ps/tab-bar)
@@ -4663,23 +4661,23 @@ The code block below, based on [[https://www.djcbsoftware.nl/code/mu/mu4e/Attach
     "Return a list of active mail composition buffers."
     (el-patch-swap
       (if (and (memq gnus-dired-mail-mode '(message-user-agent gnus-user-agent))
-	       (require 'message)
-	       (fboundp 'message-buffers))
-	  (message-buffers)
-	;; Cf. `message-buffers' in `message.el':
-	(let (buffers)
-	  (save-excursion
-	    (dolist (buffer (buffer-list t))
-	      (set-buffer buffer)
-	      (when (eq major-mode 'mail-mode)
-		(push (buffer-name buffer) buffers))))
-	  (nreverse buffers)))
+               (require 'message)
+               (fboundp 'message-buffers))
+          (message-buffers)
+        ;; Cf. `message-buffers' in `message.el':
+        (let (buffers)
+          (save-excursion
+            (dolist (buffer (buffer-list t))
+              (set-buffer buffer)
+              (when (eq major-mode 'mail-mode)
+                (push (buffer-name buffer) buffers))))
+          (nreverse buffers)))
     (let (buffers)
        (save-excursion
-	 (dolist (buffer (buffer-list t))
-	   (set-buffer buffer)
-	   (when (eq major-mode 'mail-mode)
-	     (push (buffer-name buffer) buffers))))
+         (dolist (buffer (buffer-list t))
+           (set-buffer buffer)
+           (when (eq major-mode 'mail-mode)
+             (push (buffer-name buffer) buffers))))
        (nreverse buffers))))
 
   :config

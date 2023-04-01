@@ -15749,6 +15749,335 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
                                        (reply-to-text	. (text))))
   (setq org-msg-convert-citation t)
   (setq org-msg-signature ps/personal-signature)
+  (setq org-msg-enforce-css '((del nil
+                                   ((font-family . "\"Georgia\"")
+                                    (font-size . "11pt")
+                                    (color . "grey")
+                                    (border-left . "none")
+                                    (text-decoration . "line-through")
+                                    (margin-bottom . "0px")
+                                    (margin-top . "10px")
+                                    (line-height . "1.3")))
+                              (a nil
+                                 ((color . "#0071c5")))
+                              (a reply-header
+                                 ((color . "black")
+                                  (text-decoration . "none")))
+                              (div reply-header
+                                   ((padding . "3.0pt 0in 0in 0in")
+                                    (border-top . "solid #e1e1e1 1.0pt")
+                                    (margin-bottom . "20px")))
+                              (span underline
+                                    ((text-decoration . "underline")))
+                              (li nil
+                                  ((font-family . "\"Georgia\"")
+                                   (font-size . "11pt")
+                                   (line-height . "1.3")
+                                   (margin-bottom . "0px")
+                                   (margin-top . "2px")))
+                              (nil org-ul
+                                   ((list-style-type . "square")))
+                              (nil org-ol
+                                   ((font-family . "\"Georgia\"")
+                                    (font-size . "11pt")
+                                    (line-height . "1.3")
+                                    (margin-bottom . "0px")
+                                    (margin-top . "0px")
+                                    (margin-left . "30px")
+                                    (padding-top . "0px")
+                                    (padding-left . "5px")))
+                              (nil signature
+                                   ((font-family . "\"Georgia\"")
+                                    (font-size . "11pt")
+                                    (margin-bottom . "20px")))
+                              (blockquote quote0
+                                          ((padding-left . "5px")
+                                           (font-size . "0.9")
+                                           (margin-left . "10px")
+                                           (margin-top . "10px")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (border-left . "3px solid #ccc")))
+                              (blockquote quote1
+                                          ((padding-left . "5px")
+                                           (font-size . "0.9")
+                                           (margin-left . "10px")
+                                           (margin-top . "10px")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (color . "#324e72")
+                                           (border-left . "3px solid #3c5d88")))
+                              (blockquote quote2
+                                          ((padding-left . "5px")
+                                           (margin-left . "10px")
+                                           (font-size . "0.9")
+                                           (margin-top . "10px")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (color . "#6a3a4c")
+                                           (border-left . "3px solid #7f455b")))
+                              (blockquote quote3
+                                          ((padding-left . "5px")
+                                           (margin-left . "10px")
+                                           (margin-top . "10px")
+                                           (font-size . "0.9")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (color . "#7a4900")
+                                           (border-left . "3px solid #925700")))
+                              (blockquote quote4
+                                          ((padding-left . "5px")
+                                           (margin-left . "10px")
+                                           (margin-top . "10px")
+                                           (margin-bottom . "0")
+                                           (font-size . "0.9")
+                                           (background . "#f9f9f9")
+                                           (color . "#ff34ff")
+                                           (border-left . "3px solid #fe71fe")))
+                              (blockquote quote5
+                                          ((padding-left . "5px")
+                                           (margin-left . "10px")
+                                           (margin-top . "10px")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (font-size . "0.9")
+                                           (color . "#ff4a46")
+                                           (border-left . "3px solid #ff8986")))
+                              (blockquote quote6
+                                          ((padding-left . "5px")
+                                           (margin-left . "10px")
+                                           (margin-top . "10px")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (color . "#008941")
+                                           (font-size . "0.9")
+                                           (border-left . "3px solid #00a44d")))
+                              (blockquote quote7
+                                          ((padding-left . "5px")
+                                           (font-size . "0.9")
+                                           (margin-left . "10px")
+                                           (margin-top . "10px")
+                                           (margin-bottom . "0")
+                                           (font-style . "italic")
+                                           (background . "#f9f9f9")
+                                           (color . "#006fa6")
+                                           (border-left . "3px solid #0085c7")))
+                              (blockquote quote8
+                                          ((padding-left . "5px")
+                                           (margin-left . "10px")
+                                           (font-size . "0.9")
+                                           (margin-top . "10px")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (color . "#a30059")
+                                           (border-left . "3px solid #c3006a")))
+                              (blockquote quote9
+                                          ((padding-left . "5px")
+                                           (margin-left . "10px")
+                                           (margin-top . "10px")
+                                           (font-size . "0.9")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (color . "#ffdbe5")
+                                           (border-left . "3px solid #ffffff")))
+                              (blockquote quote10
+                                          ((padding-left . "5px")
+                                           (margin-left . "10px")
+                                           (font-size . "0.9")
+                                           (margin-top . "10px")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (color . "#000000")
+                                           (border-left . "3px solid #000000")))
+                              (blockquote quote11
+                                          ((padding-left . "5px")
+                                           (margin-left . "10px")
+                                           (font-size . "0.9")
+                                           (margin-top . "10px")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (color . "#0000a6")
+                                           (border-left . "3px solid #0000c7")))
+                              (blockquote quote12
+                                          ((padding-left . "5px")
+                                           (margin-left . "10px")
+                                           (margin-top . "10px")
+                                           (font-size . "0.9")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (color . "#63ffac")
+                                           (border-left . "3px solid #a9ffd1")))
+                              (code nil
+                                    ((font-size . "11pt")
+                                     (font-family . "monospace")
+                                     (background . "#f9f9f9")))
+                              (code src\ src-asl
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-c
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-c++
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-conf
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-cpp
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-csv
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-diff
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-ditaa
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-emacs-lisp
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-fundamental
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-ini
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-json
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-makefile
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-man
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-org
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-plantuml
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-python
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-sh
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (code src\ src-xml
+                                    ((color . "#ffffff")
+                                     (background-color . "#000000")))
+                              (nil linenr
+                                   ((padding-right . "1em")
+                                    (color . "black")
+                                    (background-color . "#aaaaaa")))
+                              (pre nil
+                                   ((line-height . "1.3")
+                                    (color . "#ffffff")
+                                    (background-color . "#000000")
+                                    (margin . "0px")
+                                    (font-size . "9pt")
+                                    (font-family . "monospace")))
+                              (div org-src-container
+                                   ((margin-top . "10px")))
+                              (nil figure-number
+                                   ((font-family . "\"Georgia\"")
+                                    (font-size . "11pt")
+                                    (color . "#0071c5")
+                                    (font-weight . "bold")
+                                    (text-align . "left")))
+                              (nil table-number)
+                              (caption nil
+                                       ((text-align . "left")
+                                        (background . "#0071c5")
+                                        (color . "white")
+                                        (font-weight . "bold")))
+                              (nil t-above
+                                   ((caption-side . "top")))
+                              (nil t-bottom
+                                   ((caption-side . "bottom")))
+                              (nil listing-number
+                                   ((font-family . "\"Georgia\"")
+                                    (font-size . "11pt")
+                                    (color . "#0071c5")
+                                    (font-weight . "bold")
+                                    (text-align . "left")))
+                              (nil figure
+                                   ((font-family . "\"Georgia\"")
+                                    (font-size . "11pt")
+                                    (color . "#0071c5")
+                                    (font-weight . "bold")
+                                    (text-align . "left")))
+                              (nil org-src-name
+                                   ((font-family . "\"Andale Mono\"")
+                                    (font-size . "11pt")
+                                    (color . "#0071c5")
+                                    (font-weight . "bold")
+                                    (text-align . "left")))
+                              (table nil
+                                     ((font-family . "\"Georgia\"")
+                                      (font-size . "11pt")
+                                      (margin-top . "0px")
+                                      (line-height . "1.3")
+                                      (border-collapse . "collapse")))
+                              (th nil
+                                  ((border . "1px solid white")
+                                   (background-color . "#0071c5")
+                                   (color . "white")
+                                   (padding-left . "10px")
+                                   (padding-right . "10px")))
+                              (td nil
+                                  ((font-family . "\"Georgia\"")
+                                   (font-size . "11pt")
+                                   (margin-top . "0px")
+                                   (padding-left . "10px")
+                                   (padding-right . "10px")
+                                   (background-color . "#f9f9f9")
+                                   (border . "1px solid white")))
+                              (td org-left
+                                  ((text-align . "left")))
+                              (td org-right
+                                  ((text-align . "right")))
+                              (td org-center
+                                  ((text-align . "center")))
+                              (div outline-text-4
+                                   ((margin-left . "15px")))
+                              (div outline-4
+                                   ((margin-left . "10px")))
+                              (h4 nil
+                                  ((margin-bottom . "0px")
+                                   (font-size . "11pt")
+                                   (font-family . "\"Andale Mono\"")))
+                              (h3 nil
+                                  ((margin-bottom . "0px")
+                                   (text-decoration . "underline")
+                                   (color . "#0071c5")
+                                   (font-size . "12pt")
+                                   (font-family . "\"Andale Mono\"")))
+                              (h2 nil
+                                  ((margin-top . "20px")
+                                   (margin-bottom . "20px")
+                                   (color . "#0071c5")
+                                   (font-size . "13pt")
+                                   (font-family . "\"Andale Mono\"")))
+                              (h1 nil
+                                  ((margin-top . "20px")
+                                   (margin-bottom . "0px")
+                                   (color . "#0071c5")
+                                   (font-size . "12pt")
+                                   (font-family . "\"Andale Mono\"")))
+                              (p nil
+                                 ((text-decoration . "none")
+                                  (margin-bottom . "0px")
+                                  (margin-top . "10px")
+                                  (line-height . "1.3")
+                                  (font-size . "11pt")
+                                  (font-family . "\"Georgia\"")))
+                              (div nil
+                                   ((font-family . "\"Georgia\"")
+                                    (font-size . "11pt")
+                                    (line-height . "11pt")))))
 
   (org-msg-mode)
 
@@ -15823,22 +16152,6 @@ Grammarly."
 :Effort:   0:30
 :END:
 I.e. the message quoted when on replies to, or forwards, an existing email.
-
-*** TODO [#5] Increase font size as suggested [[mu4e:msgid:CAERy4vxjiA9KpE4z7k7fkL71xcSZffO6zPBN8O5bN62vfijZoA@mail.gmail.com][by Amy]]
-:PROPERTIES:
-:Effort:   0:25
-:ID:       3F610D3D-B076-4DF5-B1AC-B9A163A5A04C
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-15 Wed 00:48]--[2023-03-15 Wed 00:55] =>  0:07
-CLOCK: [2022-06-08 Wed 20:13]--[2022-06-08 Wed 20:36] =>  0:23
-CLOCK: [2021-12-07 Tue 12:46]--[2021-12-07 Tue 12:47] =>  0:01
-:END:
-
-Also add spacing (properties are ~padding~ / ~margin~)
-This is controlled with ~org-msg-enforce-css~.
-
-See https://stackoverflow.com/questions/66214297/how-can-i-set-the-same-padding-left-in-my-template-for-outlook-gmail-emails
 
 *** TODO [#5] Figure out how to include LaTeX/Mathjax
 :PROPERTIES:

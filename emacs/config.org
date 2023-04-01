@@ -3412,6 +3412,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 (use-feature emacs
   :demand t
   :init
+  (setq-default fill-column 72)
   ;; endlessparentheses.com/fill-and-unfill-paragraphs-with-a-single-key.html
   (defun ps/fill-or-unfill-paragraph ()
     "Like `fill-paragraph', but unfill if used twice."

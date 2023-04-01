@@ -846,12 +846,6 @@ Process for updating packages:
 (setq straight-default-vc 'git)
 (setq straight-check-for-modifications '(find-at-startup watch-files find-when-checking)) ; github.com/raxod502/straight.el#my-init-time-got-slower
 (setq straight-use-package-by-default t)
-(setq straight-recipe-repositories '(org-elpa
-                                     gnu-elpa-mirror
-                                     nongnu-elpa
-                                     melpa
-                                     el-get
-                                     emacsmirror-mirror))
 (require 'straight-x) ; github.com/raxod502/straight.el#how-do-i-uninstall-a-package
 
 ;; Early load Org from Git version instead of Emacs built-in version
@@ -2140,10 +2134,12 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
 #+end_src
 
-
 ** tab-bar
 :PROPERTIES:
 :ID:       F8B7C324-C5CF-4DBD-A527-92101BDA70AB
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 :END:
 
 #+begin_src emacs-lisp :results silent :tangle  :tangle (ps/init-get-tangle-flag :ps/tab-bar)

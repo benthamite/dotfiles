@@ -18690,6 +18690,7 @@ then the window will be split horizontally rather than vertically."
     (org-narrow-to-subtree)
     (goto-char (point-max))
     (org-insert-heading)
+    (insert "Meeting on ")
     (ps/org-time-stamp-inactive-current-time)
     (unless (string= contents "")
       (insert (concat "\nTo discuss:\n" contents "\n"))))

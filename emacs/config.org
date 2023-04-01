@@ -18620,6 +18620,8 @@ then the window will be split horizontally rather than vertically."
   :general
   ("A-b" 'bbdb)
   (bbdb-mode-map
+   "A-C-s-r" 'bbdb-prev-record
+   "A-C-s-f" 'bbdb-next-record
    "c" 'ps/bbdb-create-quick
    "C-k" nil
    "M-d" nil

@@ -6465,8 +6465,6 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
         (browse-url (ps/magit-parse-url url))
         (message "Browsing repo %s" url))))
 
-  (magit-wip-mode)
-
   :general
   ("A-g" 'magit)
   (magit-mode-map

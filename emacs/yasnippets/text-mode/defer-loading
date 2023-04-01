@@ -3,4 +3,8 @@
 # key: dl
 # contributor: Pablo Stafforini
 # --
+<<<<<<< HEAD
 $1: defer loading
+=======
+defer loading
+>>>>>>> fede-stable

@@ -2146,19 +2146,12 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
      )))
 #+end_src
 
-*** TODO [#6] Diagnose why modeline is sometimes not highlighted
-:PROPERTIES:
-:ID:       DECB5A10-FF2E-446B-BA4E-AFB7176EFFAE
-:Effort:   0:40
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-15 Wed 00:17]--[2023-03-15 Wed 00:18] =>  0:01
-:END:
-Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
-
 ** tab-bar
 :PROPERTIES:
 :ID:       F8B7C324-C5CF-4DBD-A527-92101BDA70AB
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 :END:
 
 #+begin_src emacs-lisp :results silent :tangle  :tangle (ps/init-get-tangle-flag :ps/tab-bar)

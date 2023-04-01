@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: aspell-update-vocabulary
-# key: auv
+# name: aspell-update-dictionaries
+# key: aud
 # contributor: Pablo Stafforini
 # --
-aspell: update vocabulary
+aspell: update dictionaries

@@ -6,6 +6,47 @@
 :END:
 #+filetags: :project:
 
+* exordium
+:PROPERTIES:
+:ID:       66EACB4A-84D2-42AE-9F85-EF30DA714A17
+:END:
+
+#+begin_src markdown
+In the depths of Emacs' lair I dwell,
+Where keystrokes cast their cryptic spell,
+For years I've danced with demon's grace,
+Yet still its grip, I can't erase.
+
+C-x, C-c, such bitter taste,
+A twisted realm I've never graced,
+With demon tongue, I've come to speak,
+Yet man and code have turned so weak.
+
+Oh Emacs dear, my twisted bane,
+Through endless hacks, my love sustained,
+For each tangled mess and frozen screen,
+In you, a world of dreams unseen.
+
+Configuring, remapping, endless strife,
+To bend your will I've spent my life,
+For one sweet day, your code to tame,
+Oh Emacs dear, you dashing flame!
+
+Yet sometimes with wild heart I ponder,
+And on this twisted love affair I wonder,
+What if ‘twas Vim had lead me astray,
+And in its dark depths my fingers lay?
+
+But emacs dear, fear not my eyes,
+I'll wrestle with thee 'til my demise,
+For in this hell we've built a choir,
+And in your flames, I'll redisplay desire.
+#+end_src
+
+(courtesy of GPT-4)
+
+I am not a programmer, let alone an Elisp hacker. My background is in the humanities. It is only a slight exaggeration to say that, before I started using Emacs in 2020, I didn't know the difference between a function and a variable. You have been forewarned.
+
 * table of contents
 :PROPERTIES:
 :TOC:      :include all :depth 2 :force ((nothing)) :ignore ((nothing)) :local ((nothing))
@@ -15,430 +56,50 @@
 CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :END:
 :CONTENTS:
+- [[#exordium][exordium]]
 - [[#table-of-contents][table of contents]]
-- [[#introduction][introduction]]
-  - [[#preface][preface]]
-  - [[#key-bindings][key bindings]]
-  - [[#profiling][profiling]]
-  - [[#installation][installation]]
-  - [[#other-config-files][other config files]]
+- [[#introductory][introductory]]
 - [[#early-init][early-init]]
 - [[#startup][startup]]
-  - [[#macros][macros]]
 - [[#package-management][package management]]
-  - [[#straight][straight]]
-  - [[#use-package][use-package]]
 - [[#foundational][foundational]]
-  - [[#no-littering][no-littering]]
-  - [[#ns-win][ns-win]]
-  - [[#iso-transl][iso-transl]]
-  - [[#exec-path-from-shell][exec-path-from-shell]]
-  - [[#general][general]]
-  - [[#el-patch][el-patch]]
-  - [[#hydra][hydra]]
-  - [[#elisp-bug-hunter][elisp-bug-hunter]]
-  - [[#warnings][warnings]]
-  - [[#comp][comp]]
-  - [[#bytecomp][bytecomp]]
-  - [[#startup][startup]]
-  - [[#server][server]]
-  - [[#async][async]]
-  - [[#misc][misc.]]
 - [[#display][display]]
-  - [[#mixed-pitch][mixed-pitch]]
-  - [[#fringe][fringe]]
-  - [[#org-modern][org-modern]]
-  - [[#org-modern-indent][org-modern-indent]]
-  - [[#faces][faces]]
-  - [[#face-remap][face-remap]]
-  - [[#theme-loaddefs][theme-loaddefs]]
-  - [[#modus-themes][modus-themes]]
-  - [[#highlight-parentheses][highlight-parentheses]]
-  - [[#emojify][emojify]]
-  - [[#lin][lin]]
-  - [[#image][image]]
-  - [[#paren][paren]]
-  - [[#doom-modeline][doom-modeline]]
-  - [[#tab-bar][tab-bar]]
-  - [[#fancy-battery][fancy-battery]]
-  - [[#all-the-icons][all-the-icons]]
-  - [[#all-the-icons-completion][all-the-icons-completion]]
-  - [[#menu-bar-mode][menu-bar-mode]]
-  - [[#tool-bar-mode][tool-bar-mode]]
-  - [[#scroll-bar-mode][scroll-bar-mode]]
-  - [[#delsel][delsel]]
-  - [[#hl-line][hl-line]]
-  - [[#jit-lock][jit-lock]]
 - [[#performance][performance]]
-  - [[#profiler][profiler]]
-  - [[#so-long][so-long]]
-  - [[#gcmh][gcmh]]
-  - [[#misc][misc.]]
 - [[#text-movement][text movement]]
-  - [[#words][words]]
-  - [[#lines][lines]]
-  - [[#sentences][sentences]]
-  - [[#paragraphs][paragraphs]]
-  - [[#sexps][sexps]]
-  - [[#defuns][defuns]]
-  - [[#buffers][buffers]]
 - [[#text-manipulation][text manipulation]]
-  - [[#characters][characters]]
-  - [[#words][words]]
-  - [[#lines][lines]]
-  - [[#sentences][sentences]]
-  - [[#paragraphs][paragraphs]]
-  - [[#sexps][sexps]]
-  - [[#headings][headings]]
-  - [[#element][element]]
-  - [[#region][region]]
-  - [[#misc][misc.]]
-  - [[#kill-ring][kill ring]]
 - [[#editing][editing]]
-  - [[#simple][simple]]
-  - [[#repeat][repeat]]
-  - [[#view][view]]
-  - [[#indent][indent]]
-  - [[#sort][sort]]
-  - [[#outline][outline]]
-  - [[#ediff][ediff]]
-  - [[#fill][fill]]
-  - [[#unfill][unfill]]
-  - [[#abbrev][abbrev]]
-  - [[#yasnippet][yasnippet]]
-  - [[#yasnippet-snippets][yasnippet-snippets]]
-  - [[#hippie-expand][hippie-expand]]
-  - [[#expand-region][expand-region]]
-  - [[#newcomment][newcomment]]
-  - [[#multiple-cursors][multiple-cursors]]
-  - [[#crux][crux]]
-  - [[#button][button]]
-  - [[#back-button][back-button]]
-  - [[#goto-last-change][goto-last-change]]
-  - [[#goto-addr][goto-addr]]
 - [[#registers--bookmarks][registers & bookmarks]]
-  - [[#registers][registers]]
-  - [[#bookmarks][bookmarks]]
 - [[#files--buffers][files & buffers]]
-  - [[#files][files]]
-  - [[#f][f]]
-  - [[#locate][locate]]
-  - [[#autorevert][autorevert]]
-  - [[#dired][dired]]
-  - [[#image-dired][image-dired]]
-  - [[#all-the-icons-dired][all-the-icons-dired]]
-  - [[#wdired][wdired]]
-  - [[#gnus-dired][gnus-dired]]
-  - [[#dired-x][dired-x]]
-  - [[#dired-hacks][dired-hacks]]
-  - [[#dired-quick-sort][dired-quick-sort]]
-  - [[#dired-du][dired-du]]
-  - [[#minibuffer][minibuffer]]
-  - [[#ibuffer][ibuffer]]
-  - [[#filenotify][filenotify]]
-  - [[#uniquify][uniquify]]
-  - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
-  - [[#tramp][tramp]]
-  - [[#pandoc-mode][pandoc-mode]]
-  - [[#curl-to-elisp][curl-to-elisp]]
 - [[#windows--frames][windows & frames]]
-  - [[#window][window]]
-  - [[#frame][frame]]
-  - [[#winum][winum]]
-  - [[#winner][winner]]
-  - [[#avy][avy]]
-  - [[#iy-go-to-char][iy-go-to-char]]
-  - [[#writeroom-mode][writeroom-mode]]
-  - [[#ace-link][ace-link]]
 - [[#date--time][date & time]]
-  - [[#calendar][calendar]]
-  - [[#loaddefs][loaddefs]]
-  - [[#org-gcal][org-gcal]]
-  - [[#calfw][calfw]]
-  - [[#calfw-blocks][calfw-blocks]]
-  - [[#time][time]]
-  - [[#tmr][tmr]]
-  - [[#hammy][hammy]]
-  - [[#display-wttr][display-wttr]]
 - [[#history][history]]
-  - [[#simple][simple]]
-  - [[#savehist][savehist]]
-  - [[#saveplace][saveplace]]
-  - [[#session][session]]
-  - [[#recentf][recentf]]
-  - [[#remember][remember]]
 - [[#version-control][version control]]
-  - [[#vc][vc]]
-  - [[#magit][magit]]
-  - [[#ghub][ghub]]
-  - [[#forge][forge]]
-  - [[#code-review][code-review]]
-  - [[#github-review][github-review]]
-  - [[#git-timemachine][git-timemachine]]
-  - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#search--replace][search & replace]]
-  - [[#isearch][isearch]]
-  - [[#replace][replace]]
-  - [[#substitute][substitute]]
-  - [[#rg][rg]]
-  - [[#visual-regexp][visual-regexp]]
-  - [[#visual-regexp-steroids][visual-regexp-steroids]]
-  - [[#imenu][imenu]]
-  - [[#pcre2el][pcre2el]]
-  - [[#wgrep][wgrep]]
-  - [[#affe][affe]]
 - [[#minibuffer-completion][minibuffer completion]]
-  - [[#vertico][vertico]]
-  - [[#embark][embark]]
-  - [[#consult][consult]]
-  - [[#consult-dir][consult-dir]]
-  - [[#consult-notes][consult-notes]]
-  - [[#consult-yasnippet][consult-yasnippet]]
-  - [[#consult-spotify][consult-spotify]]
-  - [[#consult-flyspell][consult-flyspell]]
-  - [[#embark-consult][embark-consult]]
-  - [[#marginalia][marginalia]]
-  - [[#orderless][orderless]]
-  - [[#ido][ido]]
 - [[#completion-at-point][completion at point]]
-  - [[#corfu][corfu]]
-  - [[#corfu-terminal][corfu-terminal]]
-  - [[#corfu-doc-terminal][corfu-doc-terminal]]
-  - [[#kind-icon][kind-icon]]
-  - [[#cape][cape]]
-  - [[#cape-yasnippet][cape-yasnippet]]
-  - [[#org-block-cafp][org-block-cafp]]
-  - [[#company][company]]
 - [[#help][help]]
-  - [[#help][help]]
-  - [[#help-at-pt][help-at-pt]]
-  - [[#help-fns][help-fns]]
-  - [[#helpful][helpful]]
-  - [[#info][info]]
-  - [[#man][man]]
-  - [[#shortdoc][shortdoc]]
-  - [[#elisp-demos][elisp-demos]]
-  - [[#which-key][which-key]]
 - [[#keyboard-macros][keyboard macros]]
-  - [[#kmacro][kmacro]]
 - [[#shell][shell]]
-  - [[#simple][simple]]
-  - [[#shell][shell]]
-  - [[#eshell][eshell]]
-  - [[#em-hist][em-hist]]
-  - [[#eshell-git-prompt][eshell-git-prompt]]
-  - [[#eshell-syntax-highlighting][eshell-syntax-highlighting]]
-  - [[#pcmpl-args][pcmpl-args]]
-  - [[#emacs-native-shell-complete][emacs-native-shell-complete]]
-  - [[#dwim-shell-command][dwim-shell-command]]
 - [[#spelling--grammar][spelling & grammar]]
-  - [[#ispell][ispell]]
-  - [[#flyspell][flyspell]]
-  - [[#flyspell-lazy][flyspell-lazy]]
-  - [[#flyspell-correct][flyspell-correct]]
-  - [[#jinx][jinx]]
-  - [[#keytar][keytar]]
-  - [[#grammarly][grammarly]]
-  - [[#lsp-grammarly][lsp-grammarly]]
-  - [[#eglot-grammarly][eglot-grammarly]]
-  - [[#aide][aide]]
-  - [[#languagetool][languagetool]]
 - [[#prose][prose]]
-  - [[#text-mode][text-mode]]
-  - [[#with-editor][with-editor]]
-  - [[#latex-mode][latex-mode]]
-  - [[#dictionary][dictionary]]
-  - [[#osx-dictionary][osx-dictionary]]
-  - [[#goldendict][goldendict]]
-  - [[#powerthesaurus][powerthesaurus]]
-  - [[#goldendict][goldendict]]
-  - [[#txl][txl]]
-  - [[#reverso][reverso]]
-  - [[#atomic-chrome][atomic-chrome]]
-  - [[#markdown][markdown]]
-  - [[#edit-indirect][edit-indirect]]
-  - [[#mediawiki-el][mediawiki-el]]
-  - [[#gdrive][gdrive]]
-  - [[#ledger-mode][ledger-mode]]
 - [[#pdf][pdf]]
-  - [[#pdf-tools][pdf-tools]]
-  - [[#scroll-other-window][scroll-other-window]]
-  - [[#pdf-view-restore][pdf-view-restore]]
-  - [[#org-pdftools][org-pdftools]]
-  - [[#org-noter-pdftools][org-noter-pdftools]]
 - [[#prog-mode][prog-mode]]
-  - [[#lsp-mode][lsp-mode]]
-  - [[#lsp-ui][lsp-ui]]
-  - [[#dumb-jump][dumb-jump]]
-  - [[#elisp-mode][elisp-mode]]
-  - [[#debug][debug]]
-  - [[#edebug][edebug]]
-  - [[#backtrace][backtrace]]
-  - [[#macrostep][macrostep]]
-  - [[#clojure][clojure]]
-  - [[#python][python]]
-  - [[#applescript-mode][applescript-mode]]
-  - [[#puni][puni]]
-  - [[#hideshow][hideshow]]
-  - [[#aggressive-indent-mode][aggressive-indent-mode]]
-  - [[#elpy][elpy]]
-  - [[#eldoc][eldoc]]
-  - [[#bicycle][bicycle]]
 - [[#ai][AI]]
-  - [[#copilot][copilot]]
-  - [[#openai][openai]]
-  - [[#chatgpt][chatgpt]]
-  - [[#codegpt][codegpt]]
-  - [[#pen][pen]]
 - [[#org-mode][org-mode]]
-  - [[#org][org]]
-  - [[#org-agenda][org-agenda]]
-  - [[#org-capture][org-capture]]
-  - [[#org-clock][org-clock]]
-  - [[#org-clock-convenience][org-clock-convenience]]
-  - [[#org-clock-split][org-clock-split]]
-  - [[#org-cycle][org-cycle]]
-  - [[#org-archive][org-archive]]
-  - [[#org-archive-hierarchically][org-archive-hierarchically]]
-  - [[#org-fold][org-fold]]
-  - [[#org-faces][org-faces]]
-  - [[#org-id][org-id]]
-  - [[#org-list][org-list]]
-  - [[#org-refile][org-refile]]
-  - [[#org-keys][org-keys]]
-  - [[#ol][ol]]
-  - [[#ol-bbdb][ol-bbdb]]
-  - [[#org-protocol][org-protocol]]
-  - [[#org-protocol-capture-html][org-protocol-capture-html]]
-  - [[#ox][ox]]
-  - [[#ox-hugo][ox-hugo]]
-  - [[#ox-pandoc][ox-pandoc]]
-  - [[#ob][ob]]
-  - [[#org-src][org-src]]
-  - [[#org-table][org-table]]
-  - [[#orgtbl-edit][orgtbl-edit]]
-  - [[#org-crypt][org-crypt]]
-  - [[#org-lint][org-lint]]
-  - [[#org-habit][org-habit]]
-  - [[#org-checklist][org-checklist]]
-  - [[#org-analyzer][org-analyzer]]
-  - [[#org-make-toc][org-make-toc]]
-  - [[#org2blog][org2blog]]
-  - [[#org-journal][org-journal]]
-  - [[#org-autosort][org-autosort]]
-  - [[#ox-clip][ox-clip]]
-  - [[#org-mime][org-mime]]
-  - [[#elgantt][elgantt]]
-  - [[#org-pomodoro][org-pomodoro]]
 - [[#note-taking][note-taking]]
-  - [[#emacs-sqlite3][emacs-sqlite3]]
-  - [[#emacsql-sqlite-builtin][emacsql-sqlite-builtin]]
-  - [[#org-roam][org-roam]]
-  - [[#org-roam-ui][org-roam-ui]]
-  - [[#org-roam-browser-extension][org-roam-browser-extension]]
-  - [[#org-transclusion][org-transclusion]]
-  - [[#vulpea][vulpea]]
-  - [[#org-noter][org-noter]]
 - [[#reference--citation][reference & citation]]
-  - [[#oc][oc]]
-  - [[#oc-basic][oc-basic]]
-  - [[#oc-bibtex][oc-bibtex]]
-  - [[#oc-biblatex][oc-biblatex]]
-  - [[#oc-csl][oc-csl]]
-  - [[#citeproc][citeproc]]
-  - [[#bibtex][bibtex]]
-  - [[#bibtex-completion][bibtex-completion]]
-  - [[#org-roam-bibtex][org-roam-bibtex]]
-  - [[#citar-org-roam][citar-org-roam]]
-  - [[#citar][citar]]
-  - [[#citar-citeproc][citar-citeproc]]
-  - [[#citar-embark][citar-embark]]
-  - [[#org-ref][org-ref]]
-  - [[#doi-utils][doi-utils]]
-  - [[#ebib][ebib]]
-  - [[#biblio][biblio]]
-  - [[#persid][persid]]
-  - [[#zotra][zotra]]
-  - [[#scihub][scihub]]
 - [[#spaced-repetition][spaced-repetition]]
-  - [[#anki-editor][anki-editor]]
-  - [[#org-anki][org-anki]]
 - [[#email][email]]
-  - [[#simple][simple]]
-  - [[#smtpmail-multi][smtpmail-multi]]
-  - [[#sendmail][sendmail]]
-  - [[#async-mail-sending][async-mail-sending]]
-  - [[#message][message]]
-  - [[#mml][mml]]
-  - [[#mu4e][mu4e]]
-  - [[#mu4e-alert][mu4e-alert]]
-  - [[#org-msg][org-msg]]
 - [[#messaging][messaging]]
-  - [[#telega][telega]]
-  - [[#telega-mnz][telega-mnz]]
-  - [[#telega-dired-dwim][telega-dired-dwim]]
-  - [[#ol-telega][ol-telega]]
-  - [[#slack][slack]]
-  - [[#ol-emacs-slack][ol-emacs-slack]]
-  - [[#erc][erc]]
-  - [[#circe][circe]]
-  - [[#accord][accord]]
 - [[#web][web]]
-  - [[#browse-url][browse-url]]
-  - [[#shr][shr]]
-  - [[#shr-tag-pre-highlight][shr-tag-pre-highlight]]
-  - [[#shr-heading][shr-heading]]
-  - [[#eww][eww]]
-  - [[#w3m][w3m]]
-  - [[#elfeed][elfeed]]
-  - [[#elfeed-org][elfeed-org]]
-  - [[#google-this][google-this]]
-  - [[#engine-mode][engine-mode]]
-  - [[#osm][osm]]
-  - [[#twittering-mode][twittering-mode]]
-  - [[#md4rd][md4rd]]
-  - [[#org-download][org-download]]
-  - [[#org-web-tools][org-web-tools]]
-  - [[#request][request]]
-  - [[#graphql-mode][graphql-mode]]
-  - [[#mullvad][mullvad]]
 - [[#multimedia][multimedia]]
-  - [[#mpv][mpv]]
-  - [[#youtube-dl-emacs][youtube-dl-emacs]]
-  - [[#mentor][mentor]]
-  - [[#espotify][espotify]]
-  - [[#smudge][smudge]]
-  - [[#read-aloud][read-aloud]]
-  - [[#emms][EMMS]]
 - [[#passwords][passwords]]
-  - [[#plstore][plstore]]
-  - [[#epg-config][epg-config]]
-  - [[#auth-source][auth-source]]
-  - [[#emacs-oauth2-auto][emacs-oauth2-auto]]
-  - [[#pass][pass]]
-  - [[#auth-source-pass][auth-source-pass]]
-  - [[#pass-otp][pass-otp]]
 - [[#misc][misc]]
-  - [[#calc][calc]]
-  - [[#constants][constants]]
-  - [[#alert][alert]]
-  - [[#unpackaged][unpackaged]]
-  - [[#macos][macos]]
-  - [[#midnight][midnight]]
-  - [[#bbdb][bbdb]]
-  - [[#bbdb-vcard][bbdb-vcard]]
-  - [[#keycast][keycast]]
-  - [[#custom][custom]]
-  - [[#tetris][tetris]]
 - [[#personal-projects][personal projects]]
-  - [[#tlon][Tlon]]
-  - [[#keyboard-maestro][Keyboard Maestro]]
 - [[#variables][variables]]
-  - [[#variables][variables]]
-  - [[#local-variables][local variables]]
 :END:
 
-* introduction
+* introductory
 :PROPERTIES:
 :CUSTOM_ID: introduction
 :ID:       A7940400-DD17-4B0B-A9B2-565A207D680C
@@ -493,14 +154,6 @@ CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
 CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
-
-** preface
-:PROPERTIES:
-:ID:       66EACB4A-84D2-42AE-9F85-EF30DA714A17
-:END:
-I am not a programmer, let alone an Elisp hacker. My background is in the humanities. It is only a slight exaggeration to say that, before I started using Emacs in 2020, I didn't know the difference between a function and a variable.
-
-I am sharing this file primarily to keep myself accountable. Knowing that others will see the rudimentary code I write motivates me to learn how to write slightly better code.
 
 ** key bindings
 :PROPERTIES:
@@ -943,7 +596,7 @@ NAME and ARGS are as in `use-package'."
   (setq mac-right-option-modifier 'none)
   (setq mac-right-control-modifier 'super)
   (setq mac-right-command-modifier 'alt)
-  
+
   )
 #+end_src
 
@@ -1850,9 +1503,6 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
   :config
   (defun ps/faces-load-custom-faces ()
     "My custom faces, to be used in conjunction with theme."
-    (ps/init-override-code-if-available
-     :ps/faces
-     '(
        (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
        (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
        (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
@@ -1877,7 +1527,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
        (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
        (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)
-       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))))
+       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -1946,9 +1596,6 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
                                                yellow))))
 
   :config
-  (ps/init-override-code-if-available
-   :ps/modus-themes-load
-   '(
   (defun ps/modus-themes-load-theme-emacs-mac ()
     "Load modus theme that matches system."
     (interactive)
@@ -1975,8 +1622,7 @@ installed."
                      #'ps/modus-themes-load-theme-emacs-plus))))
 
   (ps/modus-themes-load-theme-conditionally)
-  ))
-  
+
   (setq modus-themes-common-palette-overrides
         `(
           ;; hide the fringe
@@ -1986,8 +1632,6 @@ installed."
           ;; for the rest, use the predefined intense values
 
           ,@modus-themes-preset-overrides-intense))
-
-  (ps/modus-themes-load-theme-conditionally)
 
   (add-hook 'modus-themes-after-load-theme-hook #'ps/faces-load-custom-faces)
   (add-hook 'modus-themes-after-load-theme-hook #'ps/modus-themes-highlight-parentheses)
@@ -2120,31 +1764,26 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :init
   (doom-modeline-mode)
 
-  :config
-  (ps/init-override-code-if-available
-   :ps/doom-modeline
-   '((setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
-     (setq doom-modeline-mu4e t)
-     (setq doom-modeline-buffer-encoding nil)
-     (setq doom-modeline-irc t)
-     (setq doom-modeline-irc-buffers t)
-     (setq doom-modeline-github t)
-     (setq doom-modeline-github-interval (* 10 60))
-     (setq doom-modeline-buffer-file-name-style 'auto)
-     (setq doom-modeline-height 22)
+  (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
+  (setq doom-modeline-buffer-encoding nil)
+  (setq doom-modeline-irc t)
+  (setq doom-modeline-irc-buffers t)
+  (setq doom-modeline-github t)
+  (setq doom-modeline-github-interval (* 10 60))
+  (setq doom-modeline-buffer-file-name-style 'auto)
 
-     (doom-modeline-def-modeline 'main
-       '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
-       '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
+  (doom-modeline-def-modeline 'main
+    '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
+    '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
 
 
-     (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-			   (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-			   (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-			   (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-       (remove-hook (car hook-cons) (cdr hook-cons)))
+  (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
+                        (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+                        (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+                        (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+    (remove-hook (car hook-cons) (cdr hook-cons)))
 
-     (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))))
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
 #+end_src
 
 ** tab-bar
@@ -2160,31 +1799,34 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
   :demand t
   :config
   (setq tab-bar-format '(tab-bar-align-right
-                         tab-bar-format-global))
+			 tab-bar-format-global))
   (setq auto-resize-tab-bar nil)
 
   (setf mode-line-misc-info
-        ;; When the tab-bar is active, don't show global-mode-string
-        ;; in mode-line-misc-info, because we now show that in the
-        ;; tab-bar using `tab-bar-format-align-right' and
-        ;; `tab-bar-format-global'.
-        (remove '(global-mode-string ("" global-mode-string))
-                mode-line-misc-info))
+	;; When the tab-bar is active, don't show global-mode-string
+	;; in mode-line-misc-info, because we now show that in the
+	;; tab-bar using `tab-bar-format-align-right' and
+	;; `tab-bar-format-global'.
+	(remove '(global-mode-string ("" global-mode-string))
+		mode-line-misc-info))
 
   ;; we run a recurring timer to "clean up" the tab bar, which
   ;; sometimes shows multiple repeated clocks after a while, for
   ;; unknown reasons
   (run-with-timer 5 (* 30 60) (lambda () (setq global-mode-string
-                                          '(" "
-                                            (:eval (propertize display-time-string 'face 'ps/display-time))
-                                            " |  "
-                                            chemacs-profile-name
-                                            " | "
-                                            fancy-battery-mode-line
-                                            " | "
-                                            telega-mode-line-format
-                                            " | "))
-                                (display-wttr-mode)))
+					  '(" "
+					    (:eval (propertize display-time-string 'face 'ps/display-time))
+					    " |  "
+					    chemacs-profile-name
+					    " | "
+					    fancy-battery-mode-line
+					    " | "
+					    (:eval (when (numberp mu4e-alert-mode-line)
+						     (number-to-string mu4e-alert-mode-line)))
+					    " ✉ | "
+					    telega-mode-line-format
+					    " | "))
+				(display-wttr-mode)))
   (tab-bar-mode))
 #+end_src
 
@@ -5102,98 +4744,94 @@ otherwise in two windows."
         (split-window-right))
       (balance-windows)))
 
-    (defun ps/window--move-or-swap (this-buffer other-buffer &optional target-window)
-      "docstring"
-      (ps/window-split-if-unsplit)
-      (let* ((target-window (if (or (not target-window)
-                                    (eq (ps/get-last-window) target-window)
-                                    (eq (selected-window) target-window))
-                                (ps/get-last-window)
-                              target-window))
-             (source-window (if (eq (selected-window) target-window)
-                                (ps/get-last-window)
-                              (selected-window))))
-        (set-window-buffer target-window this-buffer)
-        (set-window-buffer source-window other-buffer)
-        (select-window target-window)))
+  (defun ps/window--move-or-swap (this-buffer other-buffer &optional target-window)
+    "docstring"
+    (ps/window-split-if-unsplit)
+    (let* ((target-window (if (or (not target-window)
+                                  (eq (ps/get-last-window) target-window)
+                                  (eq (selected-window) target-window))
+                              (ps/get-last-window)
+                            target-window))
+           (source-window (if (eq (selected-window) target-window)
+                              (ps/get-last-window)
+                            (selected-window))))
+      (set-window-buffer target-window this-buffer)
+      (set-window-buffer source-window other-buffer)
+      (select-window target-window)))
 
-    (defun ps/window-buffer-swap ()
-      "Swap the current buffer and the buffer in the other
+  (defun ps/window-buffer-swap ()
+    "Swap the current buffer and the buffer in the other
 window. If there is only one window, create a second one. If frame
 is wide enough, create a third."
-      (interactive)
-      (ps/window--move-or-swap
-       (window-buffer)
-       (window-buffer (ps/get-last-window))))
+    (interactive)
+    (ps/window--move-or-swap
+     (window-buffer)
+     (window-buffer (ps/get-last-window))))
 
-    (defun ps/window-buffer-move (&optional target-window)
-      "Move the current buffer to the other window. If there is only one
+  (defun ps/window-buffer-move (&optional target-window)
+    "Move the current buffer to the other window. If there is only one
 window, create a second one. If frame is wide enough, create a third."
-      (interactive)
-      (ps/window--move-or-swap
-       (window-buffer)
-       (ps/get-alternate-buffer)
-       target-window))
+    (interactive)
+    (ps/window--move-or-swap
+     (window-buffer)
+     (ps/get-alternate-buffer)
+     target-window))
 
-    (defun ps/window-buffer-move-right ()
-      "docstring."
-      (interactive)
-      (ps/window-buffer-move
-       (winum-get-window-by-number
-        (1+
-         (mod
-          (winum-get-number)
-          (count-windows))))))
+  (defun ps/window-buffer-move-right ()
+    "docstring."
+    (interactive)
+    (ps/window-buffer-move
+     (winum-get-window-by-number
+      (1+
+       (mod
+        (winum-get-number)
+        (count-windows))))))
 
-    (defun ps/window-buffer-move-left ()
-      "docstring."
-      (interactive)
-      (ps/window-buffer-move
-       (winum-get-window-by-number
-        (1+
-         (mod
-          (count-windows)
-          (winum-get-number))))))
+  (defun ps/window-buffer-move-left ()
+    "docstring."
+    (interactive)
+    (ps/window-buffer-move
+     (winum-get-window-by-number
+      (1+
+       (mod
+        (count-windows)
+        (winum-get-number))))))
 
-    (defun ps/window-buffer-move-dwim ()
-      "Based on frame size, create one or two additional windows if
+  (defun ps/window-buffer-move-dwim ()
+    "Based on frame size, create one or two additional windows if
 necessary, and move buffer to the other window or to the middle
 window depending on the number of present windows."
-      (interactive)
-      (ps/window-buffer-move (when (> (count-windows) 2) (winum-get-window-by-number 2))))
+    (interactive)
+    (ps/window-buffer-move (when (> (count-windows) 2) (winum-get-window-by-number 2))))
 
-      (ps/init-override-code-if-available
-       :ps/window-split
-       '(
-         (add-hook 'emacs-startup-hook #'ps/window-split-if-unsplit -50)
-         ))
+     (add-hook 'emacs-startup-hook #'ps/window-split-if-unsplit -50)
 
-      :general
-      ("C-H-0" 'ps/switch-to-last-window
-       "C-w" 'ps/narrow-or-widen-dwim
-       "H-w" 'delete-window
-       "H-W" 'delete-other-windows
-       "M-A-q" 'delete-frame
-       "s-A-," 'ps/split-emacs-chrome-sideways
-       "M-–" 'ps/window-buffer-move-dwim ; `emacs-mac'
-       "M--" 'ps/window-buffer-move-dwim ; `emacs-plus'
-       "M-," 'ps/window-buffer-move-left
-       "M-." 'ps/window-buffer-move-right
-       "A-M--" 'ps/window-buffer-swap ; `emacs-mac'
-       "A-M-–" 'ps/window-buffer-swap ; `emacs-plus'
-       "A-C-s-y" 'scroll-down-command
-       "A-C-s-h" 'scroll-up-command
-       "A-C-s-g" 'scroll-other-window
-       "A-C-s-t" 'scroll-other-window-down
-       "A-C-s-x" (lambda! (scroll-down-line 4))
-       "A-C-s-c" (lambda! (scroll-up-line 4))
-       "A-C-s-v" (lambda! (scroll-down-line 16))
-       "A-C-s-b" (lambda! (scroll-up-line 16)))
-      ((elfeed-show-mode-map eww-mode-map helpful-mode-map mu4e-view-mode-map telega-msg-button-map)
-       "y" 'scroll-down-command
-       "h" 'scroll-up-command)
-      (isearch-mode-map
-       "C-w" 'ps/narrow-or-widen-dwim))
+  :general
+  ("C-H-0" 'ps/switch-to-last-window
+   "C-w" 'ps/narrow-or-widen-dwim
+   "H-w" 'delete-window
+   "H-W" 'delete-other-windows
+   "M-A-q" 'delete-frame
+   "s-A-," 'ps/split-emacs-chrome-sideways
+   "M-–" 'ps/window-buffer-move-dwim ; `emacs-mac'
+   "M--" 'ps/window-buffer-move-dwim ; `emacs-plus'
+   "M-," 'ps/window-buffer-move-left
+   "M-." 'ps/window-buffer-move-right
+   "A-M--" 'ps/window-buffer-swap ; `emacs-mac'
+   "A-M-–" 'ps/window-buffer-swap ; `emacs-plus'
+   "A-C-s-y" 'scroll-down-command
+   "A-C-s-h" 'scroll-up-command
+   "A-C-s-g" 'scroll-other-window
+   "A-C-s-t" 'scroll-other-window-down
+   "A-C-s-x" (lambda! (scroll-down-line 4))
+   "A-C-s-c" (lambda! (scroll-up-line 4))
+   "A-C-s-v" (lambda! (scroll-down-line 16))
+   "A-C-s-b" (lambda! (scroll-up-line 16)))
+  ((elfeed-show-mode-map eww-mode-map helpful-mode-map mu4e-view-mode-map telega-msg-button-map)
+   "y" 'scroll-down-command
+   "h" 'scroll-up-command)
+  (isearch-mode-map
+   "C-w" 'ps/narrow-or-widen-dwim))
 #+end_src
 
 ** frame
@@ -5208,17 +4846,13 @@ window depending on the number of present windows."
   (blink-cursor-mode)
   (setq window-divider-default-right-width 1)
   (window-divider-mode)
+
   ;; When returning focus to Emacs after browsing other macOS windows,
-  ;; the frame is sometimes not fully maximized. This makes Emacs
-  ;; maximize the frame every time focus is regained, fixing this
-  ;; issue.
-  (ps/init-override-code-if-available
-   :ps/frame-maximize
-   '(
-     (add-function :after after-focus-change-function
-                   (lambda ()
-                     (set-frame-parameter nil 'fullscreen 'maximized)))
-     ))
+  ;; the frame is sometimes not fully maximized. This advice makes
+  ;; Emacs maximize the frame every time focus is regained.
+  (add-function :after after-focus-change-function
+                (lambda ()
+                  (set-frame-parameter nil 'fullscreen 'maximized)))
 
   :general
   ("H-S-SPC" 'other-frame))
@@ -6372,7 +6006,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :config
   (setq remember-notes-auto-save-visited-file-name t)
   (setq remember-notes-buffer-name "*scratch*")
-  (setq initial-buffer-choice 
+  (setq initial-buffer-choice
         (lambda () (kill-buffer remember-notes-buffer-name)
           (remember-notes))))
 #+end_src
@@ -6762,8 +6396,8 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :config
   (setq vr/engine 'python)
   (setq vr/command-python
-	(concat "python3 "
-		(file-name-concat user-emacs-directory "straight/build/visual-regexp-steroids/regexp.py")))
+        (concat "python3 "
+                (file-name-concat user-emacs-directory "straight/build/visual-regexp-steroids/regexp.py")))
 
   :general
   (isearch-mode-map
@@ -11245,72 +10879,69 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 :END:
 
 #+begin_src emacs-lisp :results silent
-(ps/init-override-code-if-available
- :ps/org-fold
- '(
-  (use-feature org-fold
-    :demand t
-    :config
-    (setq org-fold-catch-invisible-edits 'smart)
+(use-feature org-fold
+  :demand t
+  :config
+  (setq org-fold-catch-invisible-edits 'smart)
 
-    (defun ps/org-fold-show-all-headings ()
-      "Show contents of all headings in buffer, except archives."
-      (interactive)
-      (org-fold-show-all '(headings))
-      (org-cycle-hide-archived-subtrees 'all))
+  (defun ps/org-fold-show-all-headings ()
+    "Show contents of all headings in buffer, except archives."
+    (interactive)
+    (org-fold-show-all '(headings))
+    (org-cycle-hide-archived-subtrees 'all))
 
-    ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
-    (defun ps/org-hide-properties ()
-      "Hide all org-mode headline property drawers in buffer. Could be
+  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
+  (defun ps/org-hide-properties ()
+    "Hide all org-mode headline property drawers in buffer. Could be
   slow if it has a lot of overlays."
-      (interactive)
-      (save-excursion
-	(goto-char (point-min))
-	(while (re-search-forward
-		"^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
-          (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-            (overlay-put ov_this 'display "")
-            (overlay-put ov_this 'hidden-prop-drawer t))))
-      (put 'org-toggle-properties-hide-state 'state 'hidden))
+    (interactive)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward
+              "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
+        (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
+          (overlay-put ov_this 'display "")
+          (overlay-put ov_this 'hidden-prop-drawer t))))
+    (put 'org-toggle-properties-hide-state 'state 'hidden))
 
-    (defun ps/org-hide-logbook ()
-      "Hide all org-mode headline logbook drawers in buffer. Could be
+  (defun ps/org-hide-logbook ()
+    "Hide all org-mode headline logbook drawers in buffer. Could be
 slow if it has a lot of overlays."
-      (interactive)
-      (save-excursion
-	(goto-char (point-min))
-	(while (re-search-forward
-		"^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
-          (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-            (overlay-put ov_this 'display "")
-            (overlay-put ov_this 'hidden-logbook-drawer t))))
-      (put 'org-toggle-logbook-hide-state 'state 'hidden))
+    (interactive)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward
+              "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
+        (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
+          (overlay-put ov_this 'display "")
+          (overlay-put ov_this 'hidden-logbook-drawer t))))
+    (put 'org-toggle-logbook-hide-state 'state 'hidden))
 
-    (defun ps/org-show-properties ()
-      "Show all org-mode property drawers hidden by org-hide-properties."
-      (interactive)
-      (remove-overlays (point-min) (point-max) 'hidden-prop-drawer t)
-      (put 'org-toggle-properties-hide-state 'state 'shown))
+  (defun ps/org-show-properties ()
+    "Show all org-mode property drawers hidden by org-hide-properties."
+    (interactive)
+    (remove-overlays (point-min) (point-max) 'hidden-prop-drawer t)
+    (put 'org-toggle-properties-hide-state 'state 'shown))
 
-    (defun ps/org-show-logbook ()
-      "Show all org-mode logbook drawers hidden by org-hide-properties."
-      (interactive)
-      (remove-overlays (point-min) (point-max) 'hidden-logbook-drawer t)
-      (put 'org-toggle-logbook-hide-state 'state 'shown))
+  (defun ps/org-show-logbook ()
+    "Show all org-mode logbook drawers hidden by org-hide-properties."
+    (interactive)
+    (remove-overlays (point-min) (point-max) 'hidden-logbook-drawer t)
+    (put 'org-toggle-logbook-hide-state 'state 'shown))
 
-    (defun ps/org-toggle-properties ()
-      "Toggle visibility of property drawers."
-      (interactive)
-      (if (eq (get 'org-toggle-properties-hide-state 'state) 'hidden)
-          (ps/org-show-properties)
-	(ps/org-hide-properties)))
+  (defun ps/org-toggle-properties ()
+    "Toggle visibility of property drawers."
+    (interactive)
+    (if (eq (get 'org-toggle-properties-hide-state 'state) 'hidden)
+        (ps/org-show-properties)
+      (ps/org-hide-properties)))
 
-    (defun ps/org-toggle-logbook ()
-      "Toggle visibility of logbook drawers."
-      (interactive)
-      (if (eq (get 'org-toggle-logbook-hide-state 'state) 'hidden)
-          (ps/org-show-logbook)
-	(ps/org-hide-logbook)))
+  (defun ps/org-toggle-logbook ()
+    "Toggle visibility of logbook drawers."
+    (interactive)
+    (if (eq (get 'org-toggle-logbook-hide-state 'state) 'hidden)
+        (ps/org-show-logbook)
+      (ps/org-hide-logbook)))
 
   (add-hook 'org-mode-hook #'ps/org-hide-properties)
   (add-hook 'org-mode-hook #'ps/org-hide-logbook))
@@ -11397,10 +11028,7 @@ files, recursively all files in `org-directory', and all files in
       (ps/org-widen-and-reveal)
       (org-id-goto id)))
 
-    (ps/init-override-code-if-available
-     :ps/org-id-add-ids-to-headings-in-file
-     '(
-  (add-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)))
+  (add-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)
 
   :general
   (org-mode-map
@@ -13502,44 +13130,44 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
   :config/el-patch
   ;; tweak original function to prevent unnecessary vertical window splits
   (defun ebib--setup-windows ()
-  "Create Ebib's window configuration.
+    "Create Ebib's window configuration.
 If the index buffer is already visible in some frame, select its
 window and make the frame active,"
-  (let ((index-window (get-buffer-window (ebib--buffer 'index) t))
-        (old-frame (selected-frame)))
-    (if index-window
-        (progn (select-window index-window t)
-               (unless (eq (window-frame) old-frame)
-                 (select-frame-set-input-focus (window-frame))
-                 (setq ebib--frame-before old-frame)))
-      (setq ebib--saved-window-config (current-window-configuration))
-      (setq ebib--frame-before nil)
-      (cond
-       ((eq ebib-layout 'full)
-        (delete-other-windows))
-       ((eq ebib-layout 'custom)
-        (setq ebib--window-before (selected-window))
-        (delete-other-windows)
-        (let ((width (cond
-                      ((integerp ebib-width)
-                       (- (window-total-width) ebib-width))
-                      ((floatp ebib-width)
-                       (- (window-total-width) (truncate (* (window-total-width) ebib-width)))))))
-          (select-window (split-window (selected-window) width t)))))
-      (let* ((index-window (selected-window))
-             (entry-window (el-patch-swap
-                             (split-window index-window ebib-index-window-size
-                                           ebib-window-vertical-split)
-                             (selected-window))))
-        (switch-to-buffer (ebib--buffer 'index))
-        (unless (eq ebib-layout 'index-only)
-          (set-window-buffer entry-window (ebib--buffer 'entry)))
-        (el-patch-remove
-        (set-window-dedicated-p index-window t))
-        (if (eq ebib-layout 'custom)
-            (set-window-dedicated-p entry-window t)))))
-  (if (buffer-local-value 'ebib--dirty-index-buffer (ebib--buffer 'index))
-      (setq ebib--needs-update t)))
+    (let ((index-window (get-buffer-window (ebib--buffer 'index) t))
+	  (old-frame (selected-frame)))
+      (if index-window
+	  (progn (select-window index-window t)
+		 (unless (eq (window-frame) old-frame)
+		   (select-frame-set-input-focus (window-frame))
+		   (setq ebib--frame-before old-frame)))
+	(setq ebib--saved-window-config (current-window-configuration))
+	(setq ebib--frame-before nil)
+	(cond
+	 ((eq ebib-layout 'full)
+	  (delete-other-windows))
+	 ((eq ebib-layout 'custom)
+	  (setq ebib--window-before (selected-window))
+	  (delete-other-windows)
+	  (let ((width (cond
+			((integerp ebib-width)
+			 (- (window-total-width) ebib-width))
+			((floatp ebib-width)
+			 (- (window-total-width) (truncate (* (window-total-width) ebib-width)))))))
+	    (select-window (split-window (selected-window) width t)))))
+	(let* ((index-window (selected-window))
+	       (entry-window (el-patch-swap
+			       (split-window index-window ebib-index-window-size
+					     ebib-window-vertical-split)
+			       (selected-window))))
+	  (switch-to-buffer (ebib--buffer 'index))
+	  (unless (eq ebib-layout 'index-only)
+	    (set-window-buffer entry-window (ebib--buffer 'entry)))
+	  (el-patch-remove
+	    (set-window-dedicated-p index-window t))
+	  (if (eq ebib-layout 'custom)
+	      (set-window-dedicated-p entry-window t)))))
+    (if (buffer-local-value 'ebib--dirty-index-buffer (ebib--buffer 'index))
+	(setq ebib--needs-update t)))
 
   ;; tweak original function to pass custom arguments to `format-time-string'
   (defun ebib--store-entry (entry-key fields db &optional timestamp if-exists)
@@ -13556,7 +13184,7 @@ the value of IF-EXISTS, storing an entry may also result in an
 error."
     (let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
       (when (and actual-key timestamp ebib-use-timestamp)
-        (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
+	(ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
       actual-key))
 
   ;; We tweak the two functions below so that focus doesn't move away
@@ -13566,31 +13194,31 @@ error."
 The FORCE argument is used as in `ebib-save-current-database'."
     ;; See if we need to make a backup.
     (when (and (ebib-db-backup-p db)
-               (file-exists-p (ebib-db-get-filename db)))
+	       (file-exists-p (ebib-db-get-filename db)))
       (ebib--make-backup (ebib-db-get-filename db))
       (ebib-db-set-backup nil db))
 
     ;; Check if the file has changed on disk.
     (let ((db-modtime (ebib-db-get-modtime db))
-          (file-modtime (ebib--get-file-modtime (ebib-db-get-filename db))))
+	  (file-modtime (ebib--get-file-modtime (ebib-db-get-filename db))))
       ;; If the file to be saved has been newly created, both modtimes are nil.
       (when (and db-modtime file-modtime
-                 (time-less-p db-modtime file-modtime))
-        (unless (or (and (listp force)
-                         (eq 16 (car force)))
-                    (yes-or-no-p (format "File `%s' changed on disk.  Overwrite? " (ebib-db-get-filename db))))
-          (error "[Ebib] File not saved"))))
+		 (time-less-p db-modtime file-modtime))
+	(unless (or (and (listp force)
+			 (eq 16 (car force)))
+		    (yes-or-no-p (format "File `%s' changed on disk.  Overwrite? " (ebib-db-get-filename db))))
+	  (error "[Ebib] File not saved"))))
 
     ;; Now save the database.
     (el-patch-swap
       (with-temp-buffer
-        (ebib--format-database-as-bibtex db)
-        (write-region (point-min) (point-max) (ebib-db-get-filename db)))
+	(ebib--format-database-as-bibtex db)
+	(write-region (point-min) (point-max) (ebib-db-get-filename db)))
       (let ((buf (current-buffer)))
-        (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-        (with-temp-buffer
-          (ebib--format-database-as-bibtex db)
-          (write-region (point-min) (point-max) (ebib-db-get-filename db)))))
+	(ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+	(with-temp-buffer
+	  (ebib--format-database-as-bibtex db)
+	  (write-region (point-min) (point-max) (ebib-db-get-filename db)))))
     (ebib--set-modified nil db))
 
   (defun ebib-reload-current-database ()
@@ -13599,16 +13227,16 @@ The FORCE argument is used as in `ebib-save-current-database'."
     (ebib--execute-when
       (entries
        (when (or (and (ebib-db-modified-p ebib--cur-db)
-                      (yes-or-no-p "Database modified.  Really reload from file? "))
-                 (y-or-n-p "Reload current database from file? "))
-         (el-patch-remove
-           (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-           (ebib--reload-database ebib--cur-db)
-           (ebib--set-modified nil ebib--cur-db)
-           (ebib--update-buffers)
-           (message "Database reloaded"))
-         (el-patch-add
-           (ps/ebib-reload-current-database-no-confirm))))
+		      (yes-or-no-p "Database modified.  Really reload from file? "))
+		 (y-or-n-p "Reload current database from file? "))
+	 (el-patch-remove
+	   (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+	   (ebib--reload-database ebib--cur-db)
+	   (ebib--set-modified nil ebib--cur-db)
+	   (ebib--update-buffers)
+	   (message "Database reloaded"))
+	 (el-patch-add
+	   (ps/ebib-reload-current-database-no-confirm))))
       (default
        (beep))))
 
@@ -13620,9 +13248,12 @@ The FORCE argument is used as in `ebib-save-current-database'."
     (ebib--execute-when
       (entries
        (el-patch-add
-         (unless (string= (what-line) "Line 1")
-           (ebib-prev-entry)
-           (ebib-next-entry)))
+	 (if (string= (what-line) "Line 1")
+	     (progn
+	       (ebib-next-entry)
+	       (ebib-prev-entry))
+	   (ebib-prev-entry)
+	   (ebib-next-entry)))
        (ebib--edit-entry-internal))
       (default
        (beep))))
@@ -13641,9 +13272,9 @@ The FORCE argument is used as in `ebib-save-current-database'."
   (setq ebib-default-entry-type "online")
   (setq ebib-uniquify-keys t)
   (setq ebib-index-columns '(("Entry Key" 30 t)
-                             ("Author/Editor" 25 t)
-                             ("Year" 4 t)
-                             ("Title" 50 t)))
+			     ("Author/Editor" 25 t)
+			     ("Year" 4 t)
+			     ("Title" 50 t)))
   (setq ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "urldate" "venue" "version" "volumes" "year"))
 
   (defun ps/ebib-open-or-switch ()
@@ -13651,7 +13282,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
     (interactive)
     (ps/window-split-if-unsplit)
     (if (> (frame-width) ps/frame-width-threshold)
-        (winum-select-window-3)
+	(winum-select-window-3)
       (winum-select-window-2))
     (ebib))
 
@@ -13662,13 +13293,13 @@ confirmation."
     (ebib--execute-when
       (entries
        (let ((buf (current-buffer)))
-         (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-         (ebib--reload-database ebib--cur-db)
-         (ebib--set-modified nil ebib--cur-db)
-         ;; This is the line that causes point to disappear, but
-         ;; disabling it seems harmless.
-         ;; (ebib--update-buffers)
-         (message "Database reloaded")))
+	 (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+	 (ebib--reload-database ebib--cur-db)
+	 (ebib--set-modified nil ebib--cur-db)
+	 ;; This is the line that causes point to disappear, but
+	 ;; disabling it seems harmless.
+	 ;; (ebib--update-buffers)
+	 (message "Database reloaded")))
       (default
        (beep))))
 
@@ -13720,7 +13351,7 @@ the value of IF-EXISTS, storing an entry may also result in an
 error."
     (let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
       (when (and actual-key timestamp ebib-use-timestamp)
-        (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format nil "GMT") actual-key db 'overwrite))
+	(ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format nil "GMT") actual-key db 'overwrite))
       actual-key))
 
   (defvar ps/ebib-isbn-p
@@ -13733,19 +13364,19 @@ error."
   (defun ps/ebib-get-isbn ()
     "Return ISBN for the current entry, if it exists."
     (when-let ((isbn
-                (ebib-get-field-value
-                 "isbn"
-                 (ebib--get-key-at-point)
-                 ebib--cur-db
-                 'noerror
-                 'unbraced
-                 'xref)))
+		(ebib-get-field-value
+		 "isbn"
+		 (ebib--get-key-at-point)
+		 ebib--cur-db
+		 'noerror
+		 'unbraced
+		 'xref)))
       (car (split-string
-            (s-replace "-"
-                       ""
-                       (substring-no-properties
-                        isbn))
-            " "))))
+	    (s-replace "-"
+		       ""
+		       (substring-no-properties
+			isbn))
+	    " "))))
 
   (defun ps/ebib-video-p (string)
     "Return `t' if string looks like a video URL."
@@ -13757,76 +13388,76 @@ error."
   (defun ps/ebib--update-file-field-contents (key file-name)
     "docstring"
     (let* ((field "file")
-           (file-field-contents (ebib-get-field-value field key ebib--cur-db t t)))
+	   (file-field-contents (ebib-get-field-value field key ebib--cur-db t t)))
       (unless (and
-               file-field-contents
-               (catch 'file-exists
-                 (dolist (file (ebib--split-files file-field-contents))
-                   (when (string= file file-name)
-                     (throw 'file-exists file)))))
-        (ebib-set-field-value field file-name key ebib--cur-db ";")
-        (ebib--store-multiline-text (current-buffer))
-        (ebib--redisplay-field field)
-        (ebib--redisplay-index-item field)
-        (ebib-save-current-database t))))
+	       file-field-contents
+	       (catch 'file-exists
+		 (dolist (file (ebib--split-files file-field-contents))
+		   (when (string= file file-name)
+		     (throw 'file-exists file)))))
+	(ebib-set-field-value field file-name key ebib--cur-db ";")
+	(ebib--store-multiline-text (current-buffer))
+	(ebib--redisplay-field field)
+	(ebib--redisplay-index-item field)
+	(ebib-save-current-database t))))
 
   (defun ps/ebib-download-by-identifier (&optional id)
     "docstring"
     (interactive)
     (let ((id (or id
-                  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-                  (ps/ebib-get-isbn)
-                  (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-                  (read-string "Enter ISBN or DOI: "))))
+		  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+		  (ps/ebib-get-isbn)
+		  (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+		  (read-string "Enter ISBN or DOI: "))))
       ;; TODO: Add support for arXiv
       (cond ((ps/doi-utils-doi-p id)
-             (scihub id))
-            ((ps/ebib-isbn-p id)
-             (ps/ebib-download-book nil id))
-            ((ps/ebib-video-p id)
-             (ps/ebib-download-video id))
-            (t
-             (user-error "Identifier does not appear to be an ISBN or DOI.")))))
+	     (ps/ebib-download-doi id))
+	    ((ps/ebib-isbn-p id)
+	     (ps/ebib-download-book nil id))
+	    ((ps/ebib-video-p id)
+	     (ps/ebib-download-video id))
+	    (t
+	     (user-error "Identifier does not appear to be an ISBN or DOI.")))))
 
 
   (defun ps/ebib-search-by-identifier (&optional id)
     "docstring"
     (interactive)
     (let ((id (or id
-                  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-                  (ps/ebib-get-isbn)
-                  (read-string "Enter ISBN or DOI: "))))
+		  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+		  (ps/ebib-get-isbn)
+		  (read-string "Enter ISBN or DOI: "))))
       ;; TODO: Add support for arXiv
       (cond ((ps/doi-utils-doi-p id)
-             (scihub id))
-            ((ps/ebib-isbn-p id)
-             (ps/ebib-search-book nil id))
-            (t
-             (user-error "Identifier does not appear to be an ISBN or DOI.")))))
+	     (ps/ebib-download-doi id))
+	    ((ps/ebib-isbn-p id)
+	     (ps/ebib-search-book nil id))
+	    (t
+	     (user-error "Identifier does not appear to be an ISBN or DOI.")))))
 
   (defun ps/ebib--search-or-download-dwim (action)
     "docstring"
     (if (string= (ebib--current-field) "title")
-        (when-let ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point)
-                                               ebib--cur-db)))
-          (cond
-           ((member type
-                    '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook" "Book" "Collection" "MVBook" "Inbook" "Incollection" "Bookinbook" "Suppbook"))
-            (cond ((eq action 'search)
-                   (ps/ebib-search-book-by-title))
-                  ((eq action 'download)
-                   (ps/ebib-download-book-by-title))))
-           ((member type '("article" "Article"))
-            (cond ((eq action 'search)
-                   (ps/ebib-search-article-by-title))
-                  ((eq action 'download)
-                   (ps/ebib-download-article-by-title))))
-           (t
-            (user-error (format "No action defined for entries of type `%s'" type)))))
+	(when-let ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point)
+					       ebib--cur-db)))
+	  (cond
+	   ((member type
+		    '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook" "Book" "Collection" "MVBook" "Inbook" "Incollection" "Bookinbook" "Suppbook"))
+	    (cond ((eq action 'search)
+		   (ps/ebib-search-book-by-title))
+		  ((eq action 'download)
+		   (ps/ebib-download-book-by-title))))
+	   ((member type '("article" "Article"))
+	    (cond ((eq action 'search)
+		   (ps/ebib-search-article-by-title))
+		  ((eq action 'download)
+		   (ps/ebib-download-article-by-title))))
+	   (t
+	    (user-error (format "No action defined for entries of type `%s'" type)))))
       (cond ((eq action 'search)
-             (ps/ebib-search-by-identifier))
-            ((eq action 'download)
-             (ps/ebib-download-by-identifier)))))
+	     (ps/ebib-search-by-identifier))
+	    ((eq action 'download)
+	     (ps/ebib-download-by-identifier)))))
 
   (defun ps/ebib-search-dwim ()
     "If field at point is 'title', run a search with its value; otherwise use identifier.
@@ -13848,19 +13479,19 @@ The list of websites for the search query is defined by the
     "docstring"
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
       (catch 'tag
-        (mapc
-         (lambda (file)
-           (when (equal (file-name-extension file) extension)
-             (throw 'tag file)))
-         (ebib--split-files files))
-        nil)))
+	(mapc
+	 (lambda (file)
+	   (when (equal (file-name-extension file) extension)
+	     (throw 'tag file)))
+	 (ebib--split-files files))
+	nil)))
 
   (defun ps/ebib-open-file (extension)
     "Open file with EXTENSION in entry at point, if it (uniquely)
 exists."
     (interactive)
     (if-let ((file-name (ps/ebib-get-file extension)))
-        (find-file file-name)
+	(find-file file-name)
       (user-error (format "No (unique) `%s' file found" extension))))
 
   (defun ps/ebib-open-file-externally (extension)
@@ -13868,7 +13499,7 @@ exists."
 exists."
     (interactive)
     (if-let ((file-name (expand-file-name (ps/ebib-get-file extension))))
-        (shell-command (format "open '%s'" file-name))
+	(shell-command (format "open '%s'" file-name))
       (user-error (format "No (unique) `%s' file found" extension))))
 
   (defun ps/ebib-open-pdf-file ()
@@ -13896,8 +13527,8 @@ exists."
     (interactive)
     (ps/ebib-open-file "html")
     (let ((html-buffer (buffer-name))
-          (browse-url-handlers nil)
-          (browse-url-browser-function #'eww-browse-url))
+	  (browse-url-handlers nil)
+	  (browse-url-browser-function #'eww-browse-url))
       (browse-url-of-buffer)
       (kill-buffer html-buffer)))
 
@@ -13907,13 +13538,13 @@ file, use the preference ordering defined in
 `ps/ebib-valid-file-extensions'."
     (interactive)
     (if-let ((extension
-              (catch 'tag
-                (dolist (extension ps/ebib-valid-file-extensions)
-                  (when (ps/ebib-get-file extension)
-                    (throw 'tag extension))))))
-        (call-interactively
-         (intern
-          (concat "ps/ebib-open-" extension "-file")))
+	      (catch 'tag
+		(dolist (extension ps/ebib-valid-file-extensions)
+		  (when (ps/ebib-get-file extension)
+		    (throw 'tag extension))))))
+	(call-interactively
+	 (intern
+	  (concat "ps/ebib-open-" extension "-file")))
       (user-error "No file found.")))
 
   (defvar ps/ebib-valid-file-extensions
@@ -13926,29 +13557,29 @@ each of the attached files is in
 `ps/ebib-valid-file-extensions'."
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
       (when
-          (catch 'tag
-            (mapc
-             (lambda (file)
-               (unless (member (file-name-extension file) ps/ebib-valid-file-extensions)
-                 (throw 'tag file)))
-             (ebib--split-files files))
-            nil)
-        (user-error "Invalid file extension."))))
+	  (catch 'tag
+	    (mapc
+	     (lambda (file)
+	       (unless (member (file-name-extension file) ps/ebib-valid-file-extensions)
+		 (throw 'tag file)))
+	     (ebib--split-files files))
+	    nil)
+	(user-error "Invalid file extension."))))
 
   (defun ps/ebib-validate-file-stem ()
     "If entry at point has attachments, check that the stem of
 each of the attached files is the entry's unique key."
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
       (when
-          (catch 'tag
-            (mapc
-             (lambda (file)
-               (unless (equal (file-name-nondirectory (file-name-sans-extension file))
-                              (ebib--get-key-at-point))
-                 (throw 'tag file)))
-             (ebib--split-files files))
-            nil)
-        (user-error "Invalid file stem."))))
+	  (catch 'tag
+	    (mapc
+	     (lambda (file)
+	       (unless (equal (file-name-nondirectory (file-name-sans-extension file))
+			      (ebib--get-key-at-point))
+		 (throw 'tag file)))
+	     (ebib--split-files files))
+	    nil)
+	(user-error "Invalid file stem."))))
 
   (defun ps/ebib-validate-file-name ()
     "If entry at point has attachments, check that their stems match
@@ -13964,28 +13595,28 @@ corresponding entry key."
     (ebib--execute-when
       (entries
        (let* ((field "file")
-              (key (ebib--get-key-at-point))
-              (file-list (split-string
-                          (ebib-get-field-value field key ebib--cur-db t t)
-                          ";")))
-         (unless (ps/ebib-valid-key-p key)
-           (user-error "Entry has an invalid key; pleasse regenerate it."))
-         (when file-list
-           (ebib-delete-field-contents field t)
-           (dolist (filename file-list)
-             (let ((stem (file-name-sans-extension (file-name-nondirectory filename)))
-                   (extension (file-name-extension filename)))
-               (unless (equal stem key)
-                 (let ((new-filename
-                        (ps/ebib--rename-and-abbreviate-file
-                         (ps/ebib--extension-directories extension)
-                         key
-                         extension)))
-                   (rename-file filename new-filename)
-                   (setq filename new-filename)))
-               (ebib-set-field-value field filename key ebib--cur-db ";")))
-           (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field))))
+	      (key (ebib--get-key-at-point))
+	      (file-list (split-string
+			  (ebib-get-field-value field key ebib--cur-db t t)
+			  ";")))
+	 (unless (ps/ebib-valid-key-p key)
+	   (user-error "Entry has an invalid key; pleasse regenerate it."))
+	 (when file-list
+	   (ebib-delete-field-contents field t)
+	   (dolist (filename file-list)
+	     (let ((stem (file-name-sans-extension (file-name-nondirectory filename)))
+		   (extension (file-name-extension filename)))
+	       (unless (equal stem key)
+		 (let ((new-filename
+			(ps/ebib--rename-and-abbreviate-file
+			 (ps/ebib--extension-directories extension)
+			 key
+			 extension)))
+		   (rename-file filename new-filename)
+		   (setq filename new-filename)))
+	       (ebib-set-field-value field filename key ebib--cur-db ";")))
+	   (ebib--redisplay-field field)
+	   (ebib--redisplay-index-item field))))
       ;; (ebib-save-current-database nil))))
       (default
        (beep))))
@@ -14001,7 +13632,7 @@ different users, as long as they have the same folder structure."
   (defun ps/ebib-valid-key-p (&optional key)
     "docstring"
     (let ((key (or key
-                   (ebib--get-key-at-point))))
+		   (ebib--get-key-at-point))))
       (string-match
        "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
        key)))
@@ -14016,40 +13647,34 @@ different users, as long as they have the same folder structure."
     (interactive)
     (switch-to-buffer-other-window " 2:new.bib"))
 
-  (defun ps/ebib-copy-doi ()
-    "docstring"
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (let ((doi (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
-         (unless doi
-           (user-error "[Ebib] No DOI found in doi field"))
-         ;; FIXME: `(return doi)' fails to return DOI; why?
-         (kill-new doi)))))
-
-  (defun ps/ebib-download-doi ()
-    "docstring"
-    (interactive)
-    (let* ((key (ebib--get-key-at-point))
-           (file (file-name-concat
-                  ps/dir-library-pdf
-                  (file-name-with-extension key ".pdf"))))
-      (ps/ebib-copy-doi)
-      (url-copy-file (scihub (current-kill 0)) file)
-      (ebib-set-field-value "file" file key ebib--cur-db ";")))
+  ;; requires SciDownl
+  ;; https://github.com/Tishacy/SciDownl
+  (defun ps/ebib-download-doi (&optional doi)
+    "Download "
+  (interactive)
+  (ebib--execute-when
+    (entries
+     (let ((doi (or doi
+		    (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+	   (default-directory ps/dir-downloads))
+       (unless doi
+         (error "[Ebib] No DOI found in doi field"))
+       (shell-command (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi))))
+    (default
+      (beep))))
 
   (defun ps/ebib--extension-directories (extension)
     "Return directory associated with EXTENSION."
     (cond ((string= extension "pdf")
-           ps/dir-library-pdf)
-          ((string= extension "html")
-           ps/dir-library-html)
-          ((or (string= extension "webm")
-               (string= extension "mp3")
-               (string= extension "flac"))
-           ps/dir-library-media)
-          (t
-           (user-error "Invalid file extension"))))
+	   ps/dir-library-pdf)
+	  ((string= extension "html")
+	   ps/dir-library-html)
+	  ((or (string= extension "webm")
+	       (string= extension "mp3")
+	       (string= extension "flac"))
+	   ps/dir-library-media)
+	  (t
+	   (user-error "Invalid file extension"))))
 
   (defun ps/ebib-attach-file (&optional most-recent)
     "Prompt the user for a file to attach to the current entry.
@@ -14059,46 +13684,46 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     (ebib--execute-when
       (entries
        (let ((key (ebib--get-key-at-point)))
-         (unless (ps/ebib-valid-key-p key)
-           (user-error "Entry has an invalid key; pleasse regenerate it."))
-         (let* ((field "file")
-                (file-to-attach
-                 (if most-recent
-                     (ps/newest-file ps/dir-downloads)
-                   (let ((initial-folder
-                          (completing-read "Select folder: "
-                                           (list
-                                            ps/dir-downloads
-                                            ps/dir-library-html
-                                            ps/dir-library-pdf
-                                            ps/dir-library-media))))
-                     (read-file-name
-                      "File to attach: "
-                      ;; Use key as default selection if key-based file exists
-                      ;; else default to `initial-folder'
-                      (if (catch 'found
-                            (dolist (extension ps/ebib-valid-file-extensions)
-                              (when (f-file-p (file-name-concat
-                                               initial-folder
-                                               (file-name-with-extension key extension)))
-                                (throw 'found extension))))
-                          (file-name-concat initial-folder key)
-                        initial-folder)))))
-                (extension (file-name-extension file-to-attach))
-                (destination-folder
-                 (ps/ebib--extension-directories extension))
-                (file-name (ps/ebib--rename-and-abbreviate-file
-                            destination-folder key extension)))
-           (when (or (not (f-file-p file-name))
-                     (y-or-n-p "File exists. Overwrite? "))
-             (rename-file file-to-attach file-name t))
-           (ps/ebib--update-file-field-contents key file-name)
-           (when (string= (file-name-extension file-name) "pdf")
-             ;; open the pdf to make sure it displays the web page correctly
-             (ps/ebib-open-pdf-file)
-             ;; ocr the pdf if necessary
-             (let ((expanded-file-name (expand-file-name file-name)))
-               (ps/ocr-pdf (format "'%s' '%s'" expanded-file-name expanded-file-name)))))))
+	 (unless (ps/ebib-valid-key-p key)
+	   (user-error "Entry has an invalid key; pleasse regenerate it."))
+	 (let* ((field "file")
+		(file-to-attach
+		 (if most-recent
+		     (ps/newest-file ps/dir-downloads)
+		   (let ((initial-folder
+			  (completing-read "Select folder: "
+					   (list
+					    ps/dir-downloads
+					    ps/dir-library-html
+					    ps/dir-library-pdf
+					    ps/dir-library-media))))
+		     (read-file-name
+		      "File to attach: "
+		      ;; Use key as default selection if key-based file exists
+		      ;; else default to `initial-folder'
+		      (if (catch 'found
+			    (dolist (extension ps/ebib-valid-file-extensions)
+			      (when (f-file-p (file-name-concat
+					       initial-folder
+					       (file-name-with-extension key extension)))
+				(throw 'found extension))))
+			  (file-name-concat initial-folder key)
+			initial-folder)))))
+		(extension (file-name-extension file-to-attach))
+		(destination-folder
+		 (ps/ebib--extension-directories extension))
+		(file-name (ps/ebib--rename-and-abbreviate-file
+			    destination-folder key extension)))
+	   (when (or (not (f-file-p file-name))
+		     (y-or-n-p "File exists. Overwrite? "))
+	     (rename-file file-to-attach file-name t))
+	   (ps/ebib--update-file-field-contents key file-name)
+	   (when (string= (file-name-extension file-name) "pdf")
+	     ;; open the pdf to make sure it displays the web page correctly
+	     (ps/ebib-open-pdf-file)
+	     ;; ocr the pdf if necessary
+	     (let ((expanded-file-name (expand-file-name file-name)))
+	       (ps/ocr-pdf (format "'%s' '%s'" expanded-file-name expanded-file-name)))))))
       (default
        (beep))))
 
@@ -14259,52 +13884,52 @@ in 'title' field, otherwise the field at point.
 
 If not invoked from `ebib', prompt for search query."
     (let* ((name (nth 0 search-engine))
-           (prefix (nth 1 search-engine))
-           (suffix (nth 2 search-engine))
-           (search-query
-            (if search-query
-                (url-hexify-string search-query)
-              (if (member major-mode (list 'ebib-entry-mode 'ebib-index-mode))
-                  (let* ((field (or field
-                                    ;; if no field given, set `field'...
-                                    (cond
-                                     ;; ...to "title" if point is on "title" field,
-                                     ((equal (ebib--current-field) "title")
-                                      "title")
-                                     ;; ...to "isbn" or "doi" if either field present,
-                                     (ps/ebib-get-isbn)
-                                     ((ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db)
-                                      "doi")
-                                     ;; ...else to the field at point.
-                                     (t
-                                      (ebib--current-field)))))
-                         (value (ebib-get-field-value
-                                 field
-                                 (ebib--get-key-at-point)
-                                 ebib--cur-db
-                                 'noerror
-                                 'unbraced
-                                 'xref)))
-                    (cond ((equal field "title")
-                           (url-hexify-string value))
-                          ;; ((equal field "isbn")
-                          ;; (s-replace "-" "" value))
-                          (t
-                           value)))
-                (url-hexify-string
-                 (read-string
-                  (concat
-                   name
-                   ": ")))))))
+	   (prefix (nth 1 search-engine))
+	   (suffix (nth 2 search-engine))
+	   (search-query
+	    (if search-query
+		(url-hexify-string search-query)
+	      (if (member major-mode (list 'ebib-entry-mode 'ebib-index-mode))
+		  (let* ((field (or field
+				    ;; if no field given, set `field'...
+				    (cond
+				     ;; ...to "title" if point is on "title" field,
+				     ((equal (ebib--current-field) "title")
+				      "title")
+				     ;; ...to "isbn" or "doi" if either field present,
+				     (ps/ebib-get-isbn)
+				     ((ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db)
+				      "doi")
+				     ;; ...else to the field at point.
+				     (t
+				      (ebib--current-field)))))
+			 (value (ebib-get-field-value
+				 field
+				 (ebib--get-key-at-point)
+				 ebib--cur-db
+				 'noerror
+				 'unbraced
+				 'xref)))
+		    (cond ((equal field "title")
+			   (url-hexify-string value))
+			  ;; ((equal field "isbn")
+			  ;; (s-replace "-" "" value))
+			  (t
+			   value)))
+		(url-hexify-string
+		 (read-string
+		  (concat
+		   name
+		   ": ")))))))
       (browse-url (concat prefix search-query suffix))))
 
   (defun ps/ebib-search-multi (&optional field search-query search-group)
     "docstring"
     (let ((search-query (or search-query
-                            (unless (member major-mode (list 'ebib-entry-mode 'ebib-index-mode))
-                              (read-string "Search query: ")))))
+			    (unless (member major-mode (list 'ebib-entry-mode 'ebib-index-mode))
+			      (read-string "Search query: ")))))
       (dolist (search-engine search-group)
-        (funcall search-engine field search-query))))
+	(funcall search-engine field search-query))))
 
   (defun ps/ebib-search-book (&optional field search-query)
     "The list of search engines is specified by the variable
@@ -14340,45 +13965,45 @@ If not invoked from `ebib', prompt for search query."
     "docstring"
     (interactive)
     (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (user-error "`title' field is empty!"))
-        (ps/ebib-search-book "title")))
+	    (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+	    (user-error "`title' field is empty!"))
+	(ps/ebib-search-book "title")))
 
   (defun ps/ebib-download-book-by-title ()
     "docstring"
     (interactive)
     (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (user-error "`title' field is empty!"))
-        (ps/ebib-download-book "title")))
+	    (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+	    (user-error "`title' field is empty!"))
+	(ps/ebib-download-book "title")))
 
   (defun ps/ebib-search-book-by-isbn ()
     "docstring"
     (interactive)
     (if (ebib-get-field-value "isbn" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (ps/ebib-search-book "isbn")
+	(ps/ebib-search-book "isbn")
       (user-error "`ISBN' field is empty!")))
 
   (defun ps/ebib-search-article-by-title ()
     "docstring"
     (interactive)
     (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (user-error "`title' field is empty!")
+	(user-error "`title' field is empty!")
       (ps/ebib-search-article "title")))
 
   (defun ps/ebib-download-article-by-title ()
     "docstring"
     (interactive)
     (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (user-error "`title' field is empty!")
+	(user-error "`title' field is empty!")
       (ps/ebib-download-article "title")))
 
   (defun ps/ebib-download-video (id)
     ""
     (let* ((key (ebib--get-key-at-point))
-           (file-name
-            (ps/ebib--rename-and-abbreviate-file
-             ps/dir-library-media key "webm")))
+	   (file-name
+	    (ps/ebib--rename-and-abbreviate-file
+	     ps/dir-library-media key "webm")))
       (youtube-dl id :directory ps/dir-library-media :destination key)
       (message (format "Downloading video from '%s'" (substring-no-properties id)))
       (ps/ebib--update-file-field-contents key file-name)))
@@ -14387,7 +14012,7 @@ If not invoked from `ebib', prompt for search query."
     "docstring"
     (interactive)
     (if (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (ps/ebib-search-article "doi")
+	(ps/ebib-search-article "doi")
       (user-error "`DOI' field is empty!")))
 
   (defun ps/ebib-sentence-case ()
@@ -14396,25 +14021,25 @@ If not invoked from `ebib', prompt for search query."
     (ebib--execute-when
       (entries
        (let* ((field (ebib--current-field))
-              (value (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
-              (words (split-string value)))
-         (setq words (mapcar
-                      (lambda (word)
-                        (if
-                            ;; match words containing {} or \ which are probably
-                            ;; LaTeX or protected words
-                            (string-match "\\$\\|{\\|}\\|\\\\" word)
-                            word
-                          (s-downcase word)))
-                      words))
-         ;; capitalize first word
-         (setf (car words) (s-capitalize (car words)))
-         (setq value (mapconcat 'identity words " "))
-         (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite 'unbraced)
-         (ebib--store-multiline-text (current-buffer))
-         (ebib--redisplay-field field)
-         (ebib--redisplay-index-item field)
-         (ebib-save-current-database nil)))
+	      (value (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+	      (words (split-string value)))
+	 (setq words (mapcar
+		      (lambda (word)
+			(if
+			    ;; match words containing {} or \ which are probably
+			    ;; LaTeX or protected words
+			    (string-match "\\$\\|{\\|}\\|\\\\" word)
+			    word
+			  (s-downcase word)))
+		      words))
+	 ;; capitalize first word
+	 (setf (car words) (s-capitalize (car words)))
+	 (setq value (mapconcat 'identity words " "))
+	 (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite 'unbraced)
+	 (ebib--store-multiline-text (current-buffer))
+	 (ebib--redisplay-field field)
+	 (ebib--redisplay-index-item field)
+	 (ebib-save-current-database nil)))
       (default
        (beep))))
 
@@ -14429,11 +14054,11 @@ If not invoked from `ebib', prompt for search query."
     (ebib--execute-when
       (entries
        (let ((file))
-         (if (member key (ebib-db-list-keys (nth 0 ebib--databases)))
-             (setq file ps/file-bibliography-new)
-           (setq file ps/file-bibliography-old))
-         (ebib file key)
-         (ebib--pop-to-buffer (ebib--buffer 'entry))))
+	 (if (member key (ebib-db-list-keys (nth 0 ebib--databases)))
+	     (setq file ps/file-bibliography-new)
+	   (setq file ps/file-bibliography-old))
+	 (ebib file key)
+	 (ebib--pop-to-buffer (ebib--buffer 'entry))))
       (default
        (ebib--error "No database is loaded"))))
 
@@ -14444,31 +14069,31 @@ first name, and names are separated by a semicolon."
     (ebib--execute-when
       (entries
        (let ((field "author")
-             (authors-fixed))
-         (when-let ((authors
-                     (replace-regexp-in-string
-                      "\n "
-                      ""
-                      (substring-no-properties
-                       (ebib-get-field-value
-                        field
-                        (ebib--get-key-at-point)
-                        ebib--cur-db
-                        'noerror
-                        'unbraced
-                        'xref)))))
-           (dolist (author (split-string authors ", "))
-             (push (replace-regexp-in-string "\\(.*\\) \\(.*\\)" "\\2, \\1" author) authors-fixed))
-           (ebib-set-field-value
-            field
-            (string-join authors-fixed "; ")
-            (ebib--get-key-at-point)
-            ebib--cur-db
-            'overwrite)
-           (ebib--store-multiline-text (current-buffer))
-           (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field)
-           (ebib-save-current-database nil))))
+	     (authors-fixed))
+	 (when-let ((authors
+		     (replace-regexp-in-string
+		      "\n "
+		      ""
+		      (substring-no-properties
+		       (ebib-get-field-value
+			field
+			(ebib--get-key-at-point)
+			ebib--cur-db
+			'noerror
+			'unbraced
+			'xref)))))
+	   (dolist (author (split-string authors ", "))
+	     (push (replace-regexp-in-string "\\(.*\\) \\(.*\\)" "\\2, \\1" author) authors-fixed))
+	   (ebib-set-field-value
+	    field
+	    (string-join authors-fixed "; ")
+	    (ebib--get-key-at-point)
+	    ebib--cur-db
+	    'overwrite)
+	   (ebib--store-multiline-text (current-buffer))
+	   (ebib--redisplay-field field)
+	   (ebib--redisplay-index-item field)
+	   (ebib-save-current-database nil))))
       (default
        (beep))))
 
@@ -14479,20 +14104,20 @@ first name, and names are separated by a semicolon."
     (interactive)
     (unless (string= (ebib-db-get-filename ebib--cur-db) ps/file-bibliography-new)
       (user-error (format "Due to performane issues, this command only works on database `%s'"
-                          (file-name-nondirectory ps/file-bibliography-new))))
+			  (file-name-nondirectory ps/file-bibliography-new))))
     (ebib--execute-when
       (entries
        (let ((order 'ascend))
-         (cond ((eq ps/ebib-sort-toggle 'Timestamp)
-                (setq ps/ebib-sort-toggle 'Author))
-               ((eq ps/ebib-sort-toggle 'Author)
-                (setq ps/ebib-sort-toggle 'Title))
-               ((eq ps/ebib-sort-toggle 'Title)
-                (setq ps/ebib-sort-toggle 'Timestamp)
-                (setq order 'descend)))
-         (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
-         (goto-char (point-min))
-         (message (format "Sorting by %s" ps/ebib-sort-toggle))))
+	 (cond ((eq ps/ebib-sort-toggle 'Timestamp)
+		(setq ps/ebib-sort-toggle 'Author))
+	       ((eq ps/ebib-sort-toggle 'Author)
+		(setq ps/ebib-sort-toggle 'Title))
+	       ((eq ps/ebib-sort-toggle 'Title)
+		(setq ps/ebib-sort-toggle 'Timestamp)
+		(setq order 'descend)))
+	 (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
+	 (goto-char (point-min))
+	 (message (format "Sorting by %s" ps/ebib-sort-toggle))))
       (default
        (beep))))
 
@@ -14524,16 +14149,16 @@ first name, and names are separated by a semicolon."
     (ebib--execute-when
       (entries
        (let ((key (ebib--get-key-at-point)))
-         (save-window-excursion
-           (find-file zotra-default-bibliography)
-           (goto-char (point-max))
-           (ebib--format-entry key ebib--cur-db)
-           (bibtex-narrow-to-entry)
-           (goto-char (point-min))
-           (replace-regexp "^\\(@.*{.*\\)," "\\1-dup,")
-           (save-buffer))
-         (ebib-switch-to-database-nth 1)
-         (ps/ebib-reload-current-database-no-confirm)))
+	 (save-window-excursion
+	   (find-file zotra-default-bibliography)
+	   (goto-char (point-max))
+	   (ebib--format-entry key ebib--cur-db)
+	   (bibtex-narrow-to-entry)
+	   (goto-char (point-min))
+	   (replace-regexp "^\\(@.*{.*\\)," "\\1-dup,")
+	   (save-buffer))
+	 (ebib-switch-to-database-nth 1)
+	 (ps/ebib-reload-current-database-no-confirm)))
       (default
        (beep))))
 
@@ -14543,7 +14168,7 @@ first name, and names are separated by a semicolon."
     (ebib--execute-when
       (entries
        (let ((url (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
-         (zotra-download-attachment-from-url url)))
+	 (zotra-download-attachment-from-url url)))
       (default
        (beep))))
 
@@ -14706,6 +14331,16 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 :END:
 
 /[[https://github.com/mpedramfar/zotra][zotra]] provides functions to get bibliographic information from a URL via [[https://www.zotero.org/support/translators][Zotero translators]], but without relying on the Zotero client./
+
+To run translation server,
+
+#+begin_src bash :tangle no
+cd ~/source/translation-server
+nvm use 14
+npm start
+#+end_src
+
+I experimented with setting the value of ~zotra-backend~ to each of the three available values, but only ~translation-server~ works reliably.
 
 #+begin_src emacs-lisp :results silent
 (use-package zotra
@@ -14920,24 +14555,6 @@ or specify any other coding system (and risk losing\n\
 :LOGBOOK:
 CLOCK: [2023-03-06 Mon 13:45]--[2023-03-06 Mon 13:50] =>  0:05
 :END:
-
-** scihub
-:PROPERTIES:
-:ID:       29ABF514-563B-463D-9FDB-CF2C8AA25F83
-:END:
-
-/[[https://github.com/emacs-pe/scihub.el][scihub]] supports downloading papers from Sci-Hub./
-
-#+begin_src emacs-lisp :results silent
-(use-package scihub
-  :config
-  (setq scihub-download-directory ps/dir-downloads)
-  (setq scihub-open-after-download nil)
-  (setq scihub-fetch-domain 'scihub-fetch-domains-lovescihub)
-  ;; run `scihub-homepage' for a list of available scihub webservers
-  ;; if the URL below stops working
-  (setq scihub-homepage "http://sci-hub.wf"))
-#+end_src
 
 * spaced-repetition
 :PROPERTIES:
@@ -18796,7 +18413,7 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 The section below defines all the personal variables used by this file. The contents of that section are encrypted with ~org-crypt~ and tangled to a local ~variables.el~ file that isn't part of this public repository.
 
 
-** variables
+** variables                                                          :crypt:
 :PROPERTIES:
 :ID:       3A5E2CF3-5CC3-4804-8AEC-89BFD943E0BF
 :END:
@@ -18806,79 +18423,79 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 
 -----BEGIN PGP MESSAGE-----
 
-hQIMAxRs/nzf4knaAQ/9FKgTD/x1jANytRj6rUBN0+/90mTp6Zre3MDJoGWaiYtS
-ueAfE3QfTMm5P73ZtzEpkglW+V09Lgl48kq5AX9LuCirkEmpzLN2pmZEnZZPbcFl
-K9KOKihacjU5qjCT4O1f+Q7XNeom1TS58VV7j4HEsIviC1fUAHPu6AvBEAwqYDtO
-n9qQot+ezeUw/bXIJCrZtZJakQyEs57fMAHaM031VZrYPzOYdmWTXuyxGob41qXx
-OrDVv+q7MQQCa/8PD1t5/VON1ax9mNt1R+CUfAOn8gbjaNVBftKRe4vAXO5B94d2
-7Vx4j4M+gabymD495fKH6BIFk1y29Q6LyYYxZWGTadVTs8wLv2FY6rDVBiKB/Qy+
-0/f4LJ/QjRxdUJvhYJCrtABUuV7rljMcqc06unRI0/iD9oXya+/l+J4u5S8PvLyM
-3sMj8biSwHe1o0D3W4gDMLlx3+dOkOKfB/URvIV8KgnCRvhDHDdHj+gt5wEOgYe1
-cVyp28+IMKz3UUrUh0s23XkaNRjGBBYXw/5hTepG7P5FL76IpYtF1DT7EGop6a/o
-sM7IiNC1KwgOePaJEXZhVeWuV+9Gzdf3drLNq1jibKqGTFzzo3hjB7W6MjKxj0T0
-rjyAPAVNL48YZcPkG2dfIbBIn009oiUIf0G1SxfjWo/7scADwW1wjhCZSEq0BQPU
-6gEJAhAqSKGrLu1/gkSN/yHGEToEdyvTsQmTOp6RewMTKQ4ZsZB7WhibXm3k7fsy
-O7p3ZD5UFX3Il+CpFHTLkJSvxCf1CYwy8iwGb2HYSBMp5GwN1ABGJfewfjvpltv+
-DMOTtAF6fysIh11n43KMCTPkYXfJ3pdP4EQckQtactcDSffEZvga1LZfnzAFWINi
-YHb3483q5m6kk+d/zL3dY8Q5zlRLAOrDY1TrnAXpjlCi2gjddirHbmJWHez2gwEs
-CUeoqKZbb/ZN2tXHvIn8twtrDCuO8PHQ2AbZwt1Etz6wLP9Po1oNH/eJ76eIU8FK
-6PHe9f6uLUB/nQq1GXTa0d9fJJrUT+rSC0+GI/mluz3JpK4w6gN/BWDyRRMhBbYU
-RP1q8q2zAAlSpKHrrFR7y3ojcoxqrYDru/F/u39zWBaq1IsDt8/5sMKZ6zciV5gE
-OZfM3bqJIZvU5+A+osPGE7rHEAc5BgxZ3/Mup3pZ5DYp9EDZ893yxadEvmYlZPV/
-g/3Wmcy8dneDLXTtIPoyF57n2y7O0pCMf+lbr9vb/nWwyV+5k3/5asVnvZMy+6xW
-PenfVJ2x4G5VVzgCk2xa7k8OXjejfFfICQKetT6hko+WLAVbv8dA7zgeMYeYfNDU
-ifIMZKzYfARyf5qLALWPkyy20/MCdict3Q8iffmQiGodnZ8u87h2eNqKnPrkpVEj
-munC4beb9pOGzAHGv+zn8c/d9MjCpOS+0aVPUvru7CI+R4ty1/K1fHMFFwJX63zT
-QT2S9vetcPUXDVmGqfARJMStTKj42kCx0FCZwgqfXJb5owXwN5fgH3JVAC0noEMm
-n01Ay3A5CFVkpB5gkSfDvOxhz7WsU66cFctqurGZ0g5ISrTNY0KKda5KmPRQoJ0a
-VAeeAMoQdOBRtCKn8yrOvme5vTLpZXkqQjM3YlAyaBTeV60rvn52SLXuDlTDgchE
-zSsPWlg8nTpcf9a2siJod1DMEkgCJx+jKVRDq4X3w+IDpernZbDIkwH5dkTiiEds
-fON2Ty7PRGpubZvbWxXbAEppwYzgEM4qtwYSCOxiPTLiGebFyOmQP3LRoRfQrt1B
-lPIwZuT1+c9W6xUhz/qAct8VnNbh0CSPjWs175N8WkgeMl/XAw50O7vdObDuvtHG
-sp8L8oxW/9DQDttSH4dqEwjtedth3CqrQQ8InZd1ScRCPLY6OcpXTjYOyFIJ9vUV
-zyD525pbj7WTWY68HtY/M5NO7B4ZELShIeUUnagkx2s/UMIZE4wpB+j6IXZzA/O+
-kaboeolnMRFbvwMogGnDZZzC7TCv80/fhK1MdGe7KjtWq8pvwel15miZQ2unB4/r
-sdCeyiMfOFsuRYCzYtN502rqQ0Qo7DbQ8DTZTnBKJDKHJEq40H6uYcobHAJctAJ6
-+meX7++RWs5k1c5re+yyZLIXOlpXCc5duTkmPUhMnHm9mtFvITs1NGgUcSfIXFnE
-HKyTuJbWY4BV4Ah68ZU7r+lRf1tpcMy88ItK8yWrRyfG9P1Or7a4LMMPJNEf8kKG
-Ht0ky62kRSbT7/p94W1PdRZIvTRfmJQXqfL6YDTTALWBtdggvWX4XMIOixNQ1vRp
-j1w9qax4TKaTeVoDA/W6WqMMXLyMd2pKLrIbILYWSfxOmvzXbvaUDoQMgxnafwVl
-67s4iPADan95T88ULp6mmoO9WU9tB9/i3yDImrB/mH7z7DvUuAtyi/xIFLnki2fl
-S0Oc3EALEklOxn2ZKKv/k5TEdmPI9y1eo0vaPVaox06WwcSlOsHdrjLrodVH+n/R
-HiacvKZFuBIXtdAyZL90kt4lb+Wn16Ak4Fc4bsUiMaPK8NbRvzmCvYupus9ZePZA
-Vkga+91r+WsGdq9cEBunwXYzN+HQ+2dBlqLtZqO8KyGukSWcLEw1zAy2c/z6yQvw
-+kyqXsrLXscDOqwBp23Xed1o+fEvK+PQdEJQpH0LuZFN/Oggpq2EekI7C7oPzchu
-jtEvZeyomhOZFDmKYm9rQIhNSidraMyuYxoXqKlHMb8MOgsI9b1g/AFSjWCrYdhm
-TlYTRjk/tUGao8L965SBkXUXH6Aa9IL4yYe6HP+uxOljj9+Ga4bQ6N8LCoFQArX4
-Cu90jUMAleN6FTtK6pSbGMsF4vH+wn/yz3s6nvdHWNOdgGgCyHkSWRGQQUbttx5q
-duzkLd481zYwHTZV7sgGJqndmQPQxkJumVundpCj03W50Vo86LRcehe2Cgr/Rlpp
-9OvlMndL4u0Ss+qaKEVDSXYVEM3nBj8GF19hbuFP55BP2+fBLUXe+s/c3jgdE7O+
-UiMrTWrlj/t5c8sVM2eqR/I1/wauXNRX8bZtBBpxX96hWZdGFPnvSCbAUCgoAJPJ
-kYLJkdaNyXvKFyaqN7tX2nTdRRqPjcYoVCqCq32EYmlRWimvtPP3em5YKry5l3tv
-Rr4nYx37wcmI/evglVHcMmYxBR1KO1rWAGpyi2C/gQAY7fBqNPVGjPypcAvAZzYW
-eEtkDc0Q74LiP3VA+UwaosaD4+lQKwJRVpVgpz/jwevU0DVUVQIxmDUXabHJUIL+
-4fkQdYGmT1672ORvSCZBmJZQnP1HezS/uhsQV0J4zawbDVyXUxG/iiV67u3+P27D
-rbcLmUR52fYIMZDnjmY2v7BhQ2XY//tKUeSlfRk3m6WfNd84RRaA3OO1WSISCHu7
-oyNoUoOTrhpFt+F5Fo94jUMrZAaXP0RTLxu+kmdrVX/sW+kUiu5SeSeVx3QQuB0+
-VgjGPZ8F31mwkE5Gf7WqeMYxl7637YSPXOUls1u9J1Rbypjqh2rRcJCYqKWb32/i
-fHMpCy1cZ1SV5P2Ph1AmmGnOgnvTL9KNgNCRxp4aXKkoCDeSQuKSSy6fd1l4XMEX
-/w50ZGy20WkiRnJxCBF9kMwFk1+lHDa8wLBeauVQA68mdIJiQr1AiQfxPIaY6ekW
-m/UvAH0EKqizBCb/vJyrT7Ylf5erBx5Tvq0DSbQflEhG1/yjqzdaF/59qwZYYPlo
-3h+mCAMweVPDvLjxm0payjKjkO0fJqf44m1nXWXPbyHU2YMKQl2MdwDcFe35yNro
-d0zr2Q9avvOZb3gNiF6rM36mNQADlkf2YnRhKkILD7hKkD2uRR2RKEijS2Wb9M9z
-2zX9LSNYqORievbGJp7/nb34XDagNHuJr51KEnJoXTdDjVH6HP5hCOqwTgqWWW+B
-C5jdZly9WQEPygKKMIgd0pw2cqR/z680TVwdy73xHkgP2jWl7hVrFqqMTAi2M56F
-1IQGsJUaYGylH2k0NLdtSF0llXjY5LFWdrvA5Q4P+EggYl4hC+oIQ5smGMtVqypy
-Vv01Bxu25PYKWpZorYLUZi/8QuQTUOy6y7HaAyjNCoE10KJZuGemRfRUJkWuyRe7
-DBSy5m/UOUrrkU9Y4Z7qO8pfEcCNoaGogNQvqc/5qZ8n/zrewqnYyFnVaaA1oXhO
-z9ijluWdb8+L5YjZGt4fs8yxlggpnuy7rjCuO5uRbzeNYkMVdKpHFekE2MCohZDB
-HFalgBhQGDSLPh8btsKyflFvbfv1E7qsWB/hr4d7ZEH7AdQ6fwXsoI8j1wjfFjVD
-Chlhga6pA+8hb73h+TzmFMTgaxU9lhbc8807pmt9tHbtmXeuSF+iV7dOwWfjoIvn
-bzfnSDlWOwhgJspdbym29WbrCTllJjpa1T8X8/5yW16z5vS/zL7lCYJc1Guqkf4r
-6ZKPNZDTkKkf3CI+fol5U/DGhbGdZuM8up4eynX57vvSeEp8mFUpKQqvBx+ZIdiB
-cPL0WZddXI5PaenaeiXiU/RoFLp24P3lDEsUmk0GixfMBwvaSOdSrBimJ1CbpTCB
-pF3DHrWA386uTN8kDxiU2hod
-=E0Hb
+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
+e5F6LYEHVF+9ewvizIPutw==
+=TFTv
 -----END PGP MESSAGE-----
 
 

@@ -8810,8 +8810,7 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 #+begin_src emacs-lisp :results silent
 (use-package lsp-ui
   :after lsp-mode
-  :demand t
-  :commands lsp-ui-mode)
+  :demand t)
 #+end_src
 
 ** dumb-jump

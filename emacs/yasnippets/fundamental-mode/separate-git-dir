@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: separate-git-dir
+# key: sgd
+# contributor: Pablo Stafforini
+# --
+gitdir: /Users/pablostafforini/git-dirs/$1

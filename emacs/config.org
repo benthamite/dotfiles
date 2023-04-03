@@ -13126,8 +13126,6 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 #+begin_src emacs-lisp :results silent
 (use-package ebib
   :defer 5
-  :init
-
   :config/el-patch
   ;; tweak original function to prevent unnecessary vertical window splits
   (defun ebib--setup-windows ()

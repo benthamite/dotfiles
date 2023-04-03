@@ -2,4 +2,4 @@
 # name: wikipedia-cite-news
 # key: wcn
 # --
-{{cite news | last = $1 | first = $2 | title = $3 | newspaper = $4 | date = $5 | url = $6 | access-date = `(let ((ps/date-specifier "%B %e, %Y")) (ps/insert-date))`}}
+{{cite news | last = $1 | first = $2 | title = $3 | newspaper = $4 | date = $5 | url = $6 | access-date = `(let ((ps/date-specifier "%B %e, %Y")) (format-time-string "%Y-%m-%d"))`}}

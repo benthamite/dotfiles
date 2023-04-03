@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: use-package-config
+# key: :c
+# --
+:config
+  

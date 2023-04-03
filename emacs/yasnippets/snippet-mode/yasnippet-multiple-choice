@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: yasnippet-multiple-choice
+# key: ymc
+# contributor: Pablo Stafforini
+# --
+\\${$1:$$(yas-choose-value '("$2" "3" "$4"))}

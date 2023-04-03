@@ -3,7 +3,7 @@
 # key: mpq
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Transfer
+`(format-time-string "%Y-%m-%d")` Transfer
     Assets:MetaMask                          $1 USD
     Expenses:Fees                            $2 ETH
     Assets:Polymarket                        

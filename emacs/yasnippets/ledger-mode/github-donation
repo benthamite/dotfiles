@@ -3,7 +3,7 @@
 # key: gd
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` GitHub
+`(format-time-string "%Y-%m-%d")` GitHub
     Expenses:Donation                              37.00 USD ; Jethro, Bastien, David W., Lissner, Prot, Tarsius, Minad
     Assets:Revolut
 

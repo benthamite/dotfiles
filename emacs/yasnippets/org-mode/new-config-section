@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: new-config-section
+# key: ncs
+# --
+$1
+
+$1 $0./
+
+#+begin_src emacs-lisp
+(use-package $1
+  $2
+  
+)
+#+end_src

@@ -3,7 +3,7 @@
 # key: cash
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` $1
+`(format-time-string "%Y-%m-%d")` $1
     Expenses:$3  $2 ARS
     Assets:Cash
 $0

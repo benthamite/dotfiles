@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: chatgpt-n-different-translations
+# key: cndt
+# contributor: Pablo Stafforini
+# --
+Please generate $1 different translations of the following text: "$2"

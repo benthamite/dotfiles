@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: org-capture-update-capture-templates
+# key: ocut
+# contributor: Pablo Stafforini
+# --
+org-capture: update capture templates

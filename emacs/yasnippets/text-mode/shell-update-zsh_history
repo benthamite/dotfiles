@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: shell-update-zsh_history
+# key: suz
+# contributor: Pablo Stafforini
+# --
+shell: update .zsh_history

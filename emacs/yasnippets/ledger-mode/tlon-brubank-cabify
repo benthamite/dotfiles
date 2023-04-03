@@ -3,7 +3,7 @@
 # key: tbc
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Cabify
+`(format-time-string "%Y-%m-%d")` Cabify
     Expenses:Core:Transportation            $1 ARS ; taxi $2
     Assets:Brubank
 $0

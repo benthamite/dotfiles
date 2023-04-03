@@ -2,7 +2,7 @@
 # name: mom-master
 # key: master
 # contributor: Pablo Stafforini
-# `(ps/insert-date)` $1
+# `(format-time-string "%Y-%m-%d")` $1
 `(ps/yasnippet-expand-by-key "ldlm")`
 2022-04-22 $1
     Expenses:$3  $2.00 ARS

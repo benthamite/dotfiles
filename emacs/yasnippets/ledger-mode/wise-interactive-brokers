@@ -3,7 +3,7 @@
 # key: wib
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Transfer
+`(format-time-string "%Y-%m-%d")` Transfer
     Assets:Wise                              -$1 USD
     Expenses:Fees                           0.51 $2USD
     Assets:IB

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: visit-file-or-select-buffer
+# key: vfsb
+# --
+(with-current-buffer (or (find-buffer-visiting $1)
+                         (find-file-noselect $1))

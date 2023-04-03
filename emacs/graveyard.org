@@ -1,5 +1,5 @@
 #+filetags: :project:
-* Emacs graveyard
+* Pablo's Emacs package graveyard
 :PROPERTIES:
 :ID:       AACAE0F4-0B25-475B-831B-3F1E91E6349D
 :END:
@@ -7,7 +7,48 @@
 CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
-This is a place where I move packages I no longer use. Originally I would delete unused packages from my config file, but later I realized others perusing this file might find it useful to see my customizations and to learn the reasons I chose to stop using various packages. Moreover, I myself sometimes forget what those reasons were, and want to be reminded of them in such cases.
+This is a place where I move Emacs packages I no longer use.
+
+** scihub
+:PROPERTIES:
+:ID:       29ABF514-563B-463D-9FDB-CF2C8AA25F83
+:END:
+
+/[[https://github.com/emacs-pe/scihub.el][sc/sihub]] supports downloading papers from Sci-Hub./
+
+[2023-04-01 Sat 20:55] No longer working.
+
+#+begin_src emacs-lisp :results silent
+(use-package scihub
+  :config
+  (setq scihub-download-directory ps/dir-downloads)
+  (setq scihub-open-after-download nil)
+  (setq scihub-fetch-domain 'scihub-fetch-domains-lovescihub)
+  ;; run `scihub-homepage' for a list of available scihub webservers
+  ;; if the URL below stops working
+  (setq scihub-homepage "http://sci-hub.ee"))
+#+end_src
+
+** gpt
+:PROPERTIES:
+:ID:       6BA1A737-40A1-4253-8FC8-E211F6060BC9
+:END:
+
+/[[https://github.com/stuhlmueller/gpt.el][gpt]] is an Emacs package for calling instruction-following language models./
+
+[2023-03-21 Tue 19:22] Replaced with chatgpt, which connects to the OpenAI API via an Elisp library.
+
+#+begin_src emacs-lisp :results silent
+(use-package gpt
+  :commands gpt-dwim
+
+  :config
+  (setq gpt-openai-key (auth-source-pass-get 'secret "auth-sources/openai.com"))
+  (setq gpt-openai-engine "text-davinci-003")
+
+  :general
+  ("A-C-g" 'gpt-dwim))
+#+end_src
 
 ** ox-reveal
 :PROPERTIES:
@@ -17,6 +58,7 @@ This is a place where I move packages I no longer use. Originally I would delete
 CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 :END:
 
+[2023-03-18 Sat 09:56] Not using it.
 
 #+begin_src emacs-lisp :results silent
 (use-package ox-reveal
@@ -27,16 +69,6 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 
 - [[https://revealjs.com/][The HTML presentation framework | reveal.js]]
 - [[https://www.youtube.com/watch?v=je_xPoqtnSM][GNU/Emacs Org-mode For Presentation Slides/HTML Slides (Emacs org-reveal) - YouTube]]
-
-** ox-pandoc
-:PROPERTIES:
-:ID:       C16B02FA-64E6-423B-9596-B3B023C93B21
-:END:
-
-/[[https://github.com/kawabata/ox-pandoc][ox-pandoc]] 
-#+begin_src emacs-lisp :results silent
-(use-package ox-pandoc)
-#+end_src
 
 ** epc
 :PROPERTIES:
@@ -54,6 +86,8 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 
 /[[https://github.com/clojure-emacs/cider][cider]] is CIDER is the "Clojure(Script) Interactive Development Environment that Rocks"./
 
+[2023-03-18 Sat 09:50] Not using Clojure.
+
 #+begin_src emacs-lisp :results silent
 (use-package cider)
 #+end_src
@@ -62,6 +96,8 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 :PROPERTIES:
 :ID:       55B470DB-E9D2-45B1-8E74-58CB9DDF7D27
 :END:
+
+[2023-03-18 Sat 09:50] Not using it.
 
 #+begin_src emacs-lisp :results silent
 (use-package parse-csv)
@@ -84,6 +120,7 @@ CLOCK: [2021-11-18 Thu 13:27]--[2021-11-18 Thu 13:45] =>  0:18
 :END:
 
 [2023-03-10 Fri 19:49] Not using anymore.
+
 #+begin_src emacs-lisp :results silent
 (use-package elmacro)
 #+end_src
@@ -114,6 +151,8 @@ I haven't yet explored this package.
 :LOGBOOK:
 CLOCK: [2021-06-03 Thu 14:11]--[2021-06-03 Thu 14:16] =>  0:05
 :END:
+
+Not using.
 
 #+begin_src emacs-lisp :results silent
 (use-package paradox
@@ -467,7 +506,6 @@ CLOCK: [2021-03-28 Sun 13:35]--[2021-03-28 Sun 14:31] =>  0:56
 (let ((map prog-mode-map))
   (keymap-unset map "M-q"))))
 #+end_src
-
 
 ** emacs-webkit
 :PROPERTIES:
@@ -3262,6 +3300,7 @@ I never found the need to use this.
   :config
   (org-super-agenda-mode))
 #+end_src
+
 ** quelpa
 :PROPERTIES:
 :ID:       85E17700-FE49-4668-85C8-BD782FADE946

@@ -3,7 +3,7 @@
 # key: ggd
 # contributor: Pablo Stafforini
 # --
-`(ps/insert-date)` Google Domains
+`(format-time-string "%Y-%m-%d")` Google Domains
     Expenses:GPE  11.59$1 USD
     Assets:Revolut GPE
 

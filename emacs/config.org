@@ -6,6 +6,47 @@
 :END:
 #+filetags: :project:
 
+* exordium
+:PROPERTIES:
+:ID:       66EACB4A-84D2-42AE-9F85-EF30DA714A17
+:END:
+
+#+begin_src markdown :tangle no
+In the depths of Emacs' lair I dwell,
+Where keystrokes cast their cryptic spell,
+For years I've danced with demon's grace,
+Yet still its grip, I can't erase.
+
+C-x, C-c, such bitter taste,
+A twisted realm I've never graced,
+With demon tongue, I've come to speak,
+Yet man and code have turned so weak.
+
+Oh Emacs dear, my twisted bane,
+Through endless hacks, my love sustained,
+For each tangled mess and frozen screen,
+In you, a world of dreams unseen.
+
+Configuring, remapping, endless strife,
+To bend your will I've spent my life,
+For one sweet day, your code to tame,
+Oh Emacs dear, you dashing flame!
+
+Yet sometimes with wild heart I ponder,
+And on this twisted love affair I wonder,
+What if ‘twas Vim had lead me astray,
+And in its dark depths my fingers lay?
+
+But emacs dear, fear not my eyes,
+I'll wrestle with thee 'til my demise,
+For in this hell we've built a choir,
+And in your flames, I'll redisplay desire.
+#+end_src
+
+(courtesy of GPT-4)
+
+I am not a programmer, let alone an Elisp hacker. My background is in the humanities. It is only a slight exaggeration to say that, before I started using Emacs in 2020, I didn't know the difference between a function and a variable. You have been forewarned.
+
 * table of contents
 :PROPERTIES:
 :TOC:      :include all :depth 2 :force ((nothing)) :ignore ((nothing)) :local ((nothing))
@@ -15,419 +56,50 @@
 CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :END:
 :CONTENTS:
+- [[#exordium][exordium]]
 - [[#table-of-contents][table of contents]]
-- [[#introduction][introduction]]
-  - [[#preface][preface]]
-  - [[#key-bindings][key bindings]]
-  - [[#profiling][profiling]]
-  - [[#installation][installation]]
-  - [[#other-config-files][other config files]]
+- [[#introductory][introductory]]
 - [[#early-init][early-init]]
 - [[#startup][startup]]
-  - [[#macros][macros]]
 - [[#package-management][package management]]
-  - [[#straight][straight]]
-  - [[#use-package][Use-package]]
 - [[#foundational][foundational]]
-  - [[#no-littering][no-littering]]
-  - [[#ns-win][ns-win]]
-  - [[#iso-transl][iso-transl]]
-  - [[#exec-path-from-shell][exec-path-from-shell]]
-  - [[#general][general]]
-  - [[#el-patch][el-patch]]
-  - [[#hydra][hydra]]
-  - [[#elisp-bug-hunter][elisp-bug-hunter]]
-  - [[#warnings][warnings]]
-  - [[#comp][comp]]
-  - [[#bytecomp][bytecomp]]
-  - [[#startup][startup]]
-  - [[#server][server]]
-  - [[#async][async]]
-  - [[#misc][misc.]]
 - [[#display][display]]
-  - [[#mixed-pitch][mixed-pitch]]
-  - [[#fringe][fringe]]
-  - [[#org-modern][org-modern]]
-  - [[#org-modern-indent][org-modern-indent]]
-  - [[#faces][faces]]
-  - [[#face-remap][face-remap]]
-  - [[#theme-loaddefs][theme-loaddefs]]
-  - [[#modus-themes][modus-themes]]
-  - [[#highlight-parentheses][highlight-parentheses]]
-  - [[#emojify][emojify]]
-  - [[#lin][lin]]
-  - [[#image][image]]
-  - [[#paren][paren]]
-  - [[#doom-modeline][doom-modeline]]
-  - [[#tab-bar][tab-bar]]
-  - [[#fancy-battery][fancy-battery]]
-  - [[#all-the-icons][all-the-icons]]
-  - [[#all-the-icons-completion][all-the-icons-completion]]
-  - [[#menu-bar-mode][menu-bar-mode]]
-  - [[#tool-bar-mode][tool-bar-mode]]
-  - [[#scroll-bar-mode][scroll-bar-mode]]
-  - [[#delsel][delsel]]
-  - [[#hl-line][hl-line]]
-  - [[#jit-lock][jit-lock]]
 - [[#performance][performance]]
-  - [[#profiler][profiler]]
-  - [[#so-long][so-long]]
-  - [[#gcmh][gcmh]]
-  - [[#misc][misc.]]
 - [[#text-movement][text movement]]
-  - [[#words][words]]
-  - [[#lines][lines]]
-  - [[#sentences][sentences]]
-  - [[#paragraphs][paragraphs]]
-  - [[#sexps][sexps]]
-  - [[#defuns][defuns]]
-  - [[#buffers][buffers]]
 - [[#text-manipulation][text manipulation]]
-  - [[#characters][characters]]
-  - [[#words][words]]
-  - [[#lines][lines]]
-  - [[#sentences][sentences]]
-  - [[#paragraphs][paragraphs]]
-  - [[#sexps][sexps]]
-  - [[#headings][headings]]
-  - [[#element][element]]
-  - [[#region][region]]
-  - [[#misc][misc.]]
-  - [[#kill-ring][kill ring]]
 - [[#editing][editing]]
-  - [[#simple][simple]]
-  - [[#repeat][repeat]]
-  - [[#view][view]]
-  - [[#indent][indent]]
-  - [[#sort][sort]]
-  - [[#outline][outline]]
-  - [[#ediff][ediff]]
-  - [[#fill][fill]]
-  - [[#abbrev][abbrev]]
-  - [[#yasnippet][yasnippet]]
-  - [[#yasnippet-snippets][yasnippet-snippets]]
-  - [[#hippie-expand][hippie-expand]]
-  - [[#expand-region][expand-region]]
-  - [[#newcomment][newcomment]]
-  - [[#multiple-cursors][multiple-cursors]]
-  - [[#crux][crux]]
-  - [[#button][button]]
-  - [[#back-button][back-button]]
-  - [[#goto-last-change][goto-last-change]]
-  - [[#goto-addr][goto-addr]]
 - [[#registers--bookmarks][registers & bookmarks]]
-  - [[#registers][registers]]
-  - [[#bookmarks][bookmarks]]
 - [[#files--buffers][files & buffers]]
-  - [[#files][files]]
-  - [[#f][f]]
-  - [[#locate][locate]]
-  - [[#autorevert][autorevert]]
-  - [[#dired][dired]]
-  - [[#image-dired][image-dired]]
-  - [[#all-the-icons-dired][all-the-icons-dired]]
-  - [[#wdired][wdired]]
-  - [[#gnus-dired][gnus-dired]]
-  - [[#dired-x][dired-x]]
-  - [[#dired-hacks][dired-hacks]]
-  - [[#dired-quick-sort][dired-quick-sort]]
-  - [[#dired-du][dired-du]]
-  - [[#minibuffer][minibuffer]]
-  - [[#ibuffer][ibuffer]]
-  - [[#filenotify][filenotify]]
-  - [[#uniquify][uniquify]]
-  - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
-  - [[#tramp][tramp]]
-  - [[#pandoc-mode][pandoc-mode]]
-  - [[#curl-to-elisp][curl-to-elisp]]
 - [[#windows--frames][windows & frames]]
-  - [[#window][window]]
-  - [[#frame][frame]]
-  - [[#winum][winum]]
-  - [[#winner][winner]]
-  - [[#avy][avy]]
-  - [[#iy-go-to-char][iy-go-to-char]]
-  - [[#writeroom-mode][writeroom-mode]]
-  - [[#ace-link][ace-link]]
 - [[#date--time][date & time]]
-  - [[#calendar][calendar]]
-  - [[#loaddefs][loaddefs]]
-  - [[#org-gcal][org-gcal]]
-  - [[#calfw][calfw]]
-  - [[#calfw-blocks][calfw-blocks]]
-  - [[#time][time]]
-  - [[#tmr][tmr]]
-  - [[#hammy][hammy]]
-  - [[#display-wttr][display-wttr]]
 - [[#history][history]]
-  - [[#savehist][savehist]]
-  - [[#saveplace][saveplace]]
-  - [[#session][session]]
-  - [[#recentf][recentf]]
-  - [[#remember][remember]]
 - [[#version-control][version control]]
-  - [[#vc][vc]]
-  - [[#magit][magit]]
-  - [[#ghub][ghub]]
-  - [[#forge][forge]]
-  - [[#code-review][code-review]]
-  - [[#git-timemachine][git-timemachine]]
-  - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#search--replace][search & replace]]
-  - [[#isearch][isearch]]
-  - [[#replace][replace]]
-  - [[#substitute][substitute]]
-  - [[#rg][rg]]
-  - [[#visual-regexp][visual-regexp]]
-  - [[#visual-regexp-steroids][visual-regexp-steroids]]
-  - [[#imenu][imenu]]
-  - [[#pcre2el][pcre2el]]
-  - [[#wgrep][wgrep]]
-  - [[#affe][affe]]
 - [[#minibuffer-completion][minibuffer completion]]
-  - [[#vertico][vertico]]
-  - [[#embark][embark]]
-  - [[#consult][consult]]
-  - [[#consult-dir][consult-dir]]
-  - [[#consult-notes][consult-notes]]
-  - [[#consult-yasnippet][consult-yasnippet]]
-  - [[#consult-spotify][consult-spotify]]
-  - [[#consult-flyspell][consult-flyspell]]
-  - [[#embark-consult][embark-consult]]
-  - [[#marginalia][marginalia]]
-  - [[#orderless][orderless]]
-  - [[#ido][ido]]
 - [[#completion-at-point][completion at point]]
-  - [[#corfu][corfu]]
-  - [[#corfu-terminal][corfu-terminal]]
-  - [[#corfu-doc-terminal][corfu-doc-terminal]]
-  - [[#kind-icon][kind-icon]]
-  - [[#cape][cape]]
-  - [[#cape-yasnippet][cape-yasnippet]]
-  - [[#org-block-cafp][org-block-cafp]]
-  - [[#company][company]]
 - [[#help][help]]
-  - [[#help][help]]
-  - [[#help-at-pt][help-at-pt]]
-  - [[#help-fns][help-fns]]
-  - [[#helpful][helpful]]
-  - [[#info][info]]
-  - [[#man][man]]
-  - [[#shortdoc][shortdoc]]
-  - [[#elisp-demos][elisp-demos]]
-  - [[#which-key][which-key]]
 - [[#keyboard-macros][keyboard macros]]
-  - [[#kmacro][kmacro]]
 - [[#shell][shell]]
-  - [[#simple][simple]]
-  - [[#shell][shell]]
-  - [[#eshell][eshell]]
-  - [[#em-hist][em-hist]]
-  - [[#eshell-git-prompt][eshell-git-prompt]]
-  - [[#eshell-syntax-highlighting][eshell-syntax-highlighting]]
-  - [[#pcmpl-args][pcmpl-args]]
-  - [[#emacs-native-shell-complete][emacs-native-shell-complete]]
-  - [[#dwim-shell-command][dwim-shell-command]]
 - [[#spelling--grammar][spelling & grammar]]
-  - [[#ispell][ispell]]
-  - [[#flyspell][flyspell]]
-  - [[#flyspell-lazy][flyspell-lazy]]
-  - [[#flyspell-correct][flyspell-correct]]
-  - [[#keytar][keytar]]
-  - [[#grammarly][grammarly]]
-  - [[#lsp-grammarly][lsp-grammarly]]
-  - [[#eglot-grammarly][eglot-grammarly]]
-  - [[#aide][aide]]
-  - [[#languagetool][languagetool]]
 - [[#prose][prose]]
-  - [[#text-mode][text-mode]]
-  - [[#with-editor][with-editor]]
-  - [[#latex-mode][latex-mode]]
-  - [[#dictionary][dictionary]]
-  - [[#osx-dictionary][osx-dictionary]]
-  - [[#goldendict][goldendict]]
-  - [[#powerthesaurus][powerthesaurus]]
-  - [[#goldendict][goldendict]]
-  - [[#txl][txl]]
-  - [[#reverso][reverso]]
-  - [[#atomic-chrome][atomic-chrome]]
-  - [[#markdown][markdown]]
-  - [[#mediawiki-el][mediawiki-el]]
-  - [[#gdrive][gdrive]]
-  - [[#ledger-mode][ledger-mode]]
 - [[#pdf][pdf]]
-  - [[#pdf-tools][pdf-tools]]
-  - [[#scroll-other-window][scroll-other-window]]
-  - [[#pdf-view-restore][pdf-view-restore]]
-  - [[#org-pdftools][org-pdftools]]
-  - [[#org-noter-pdftools][org-noter-pdftools]]
 - [[#prog-mode][prog-mode]]
-  - [[#lsp-mode][lsp-mode]]
-  - [[#lsp-ui][lsp-ui]]
-  - [[#dumb-jump][dumb-jump]]
-  - [[#elisp-mode][elisp-mode]]
-  - [[#debug][debug]]
-  - [[#edebug][edebug]]
-  - [[#backtrace][backtrace]]
-  - [[#macrostep][macrostep]]
-  - [[#clojure][clojure]]
-  - [[#python][python]]
-  - [[#applescript-mode][applescript-mode]]
-  - [[#puni][puni]]
-  - [[#hideshow][hideshow]]
-  - [[#aggressive-indent-mode][aggressive-indent-mode]]
-  - [[#gpt][gpt]]
-  - [[#elpy][elpy]]
-  - [[#eldoc][eldoc]]
-  - [[#bicycle][bicycle]]
 - [[#ai][AI]]
-  - [[#copilot][copilot]]
-  - [[#openai][openai]]
-  - [[#chatgpt][chatgpt]]
-  - [[#codegpt][codegpt]]
-  - [[#pen][pen]]
 - [[#org-mode][org-mode]]
-  - [[#org][org]]
-  - [[#org-agenda][org-agenda]]
-  - [[#org-capture][org-capture]]
-  - [[#org-clock][org-clock]]
-  - [[#org-clock-split][org-clock-split]]
-  - [[#org-cycle][org-cycle]]
-  - [[#org-archive][org-archive]]
-  - [[#org-archive-hierarchically][org-archive-hierarchically]]
-  - [[#org-fold][org-fold]]
-  - [[#org-faces][org-faces]]
-  - [[#org-id][org-id]]
-  - [[#org-list][org-list]]
-  - [[#org-refile][org-refile]]
-  - [[#org-keys][org-keys]]
-  - [[#ol][ol]]
-  - [[#org-protocol][org-protocol]]
-  - [[#org-protocol-capture-html][org-protocol-capture-html]]
-  - [[#ox][ox]]
-  - [[#ox-hugo][ox-hugo]]
-  - [[#ob][ob]]
-  - [[#org-src][org-src]]
-  - [[#org-table][org-table]]
-  - [[#orgtbl-edit][orgtbl-edit]]
-  - [[#org-crypt][org-crypt]]
-  - [[#org-lint][org-lint]]
-  - [[#org-habit][org-habit]]
-  - [[#org-checklist][org-checklist]]
-  - [[#org-analyzer][org-analyzer]]
-  - [[#org-make-toc][org-make-toc]]
-  - [[#org2blog][org2blog]]
-  - [[#org-journal][org-journal]]
-  - [[#org-autosort][org-autosort]]
-  - [[#ox-clip][ox-clip]]
-  - [[#org-mime][org-mime]]
-  - [[#elgantt][elgantt]]
-  - [[#org-pomodoro][org-pomodoro]]
-  - [[#memacs][memacs]]
 - [[#note-taking][note-taking]]
-  - [[#emacs-sqlite3][emacs-sqlite3]]
-  - [[#emacsql-sqlite-builtin][emacsql-sqlite-builtin]]
-  - [[#org-roam][org-roam]]
-  - [[#org-roam-ui][org-roam-ui]]
-  - [[#org-roam-browser-extension][org-roam-browser-extension]]
-  - [[#org-transclusion][org-transclusion]]
-  - [[#vulpea][vulpea]]
-  - [[#org-noter][org-noter]]
 - [[#reference--citation][reference & citation]]
-  - [[#oc][oc]]
-  - [[#oc-basic][oc-basic]]
-  - [[#oc-bibtex][oc-bibtex]]
-  - [[#oc-biblatex][oc-biblatex]]
-  - [[#oc-csl][oc-csl]]
-  - [[#citeproc][citeproc]]
-  - [[#bibtex][bibtex]]
-  - [[#bibtex-completion][bibtex-completion]]
-  - [[#org-roam-bibtex][org-roam-bibtex]]
-  - [[#citar-org-roam][citar-org-roam]]
-  - [[#citar][citar]]
-  - [[#citar-citeproc][citar-citeproc]]
-  - [[#citar-embark][citar-embark]]
-  - [[#org-ref][org-ref]]
-  - [[#doi-utils][doi-utils]]
-  - [[#ebib][ebib]]
-  - [[#biblio][biblio]]
-  - [[#persid][persid]]
-  - [[#zotra][zotra]]
-  - [[#scihub][scihub]]
 - [[#spaced-repetition][spaced-repetition]]
-  - [[#anki-editor][anki-editor]]
-  - [[#org-anki][org-anki]]
 - [[#email][email]]
-  - [[#simple][simple]]
-  - [[#smtpmail-multi][smtpmail-multi]]
-  - [[#sendmail][sendmail]]
-  - [[#async-mail-sending][async-mail-sending]]
-  - [[#message][message]]
-  - [[#mml][mml]]
-  - [[#mu4e][mu4e]]
-  - [[#mu4e-alert][mu4e-alert]]
-  - [[#org-msg][org-msg]]
 - [[#messaging][messaging]]
-  - [[#telega][telega]]
-  - [[#telega-mnz][telega-mnz]]
-  - [[#telega-dired-dwim][telega-dired-dwim]]
-  - [[#ol-telega][ol-telega]]
-  - [[#slack][slack]]
-  - [[#ol-emacs-slack][ol-emacs-slack]]
-  - [[#erc][erc]]
-  - [[#circe][circe]]
-  - [[#accord][accord]]
 - [[#web][web]]
-  - [[#browse-url][browse-url]]
-  - [[#shr][shr]]
-  - [[#shr-tag-pre-highlight][shr-tag-pre-highlight]]
-  - [[#shr-heading][shr-heading]]
-  - [[#eww][eww]]
-  - [[#w3m][w3m]]
-  - [[#elfeed][elfeed]]
-  - [[#elfeed-org][elfeed-org]]
-  - [[#google-this][google-this]]
-  - [[#engine-mode][engine-mode]]
-  - [[#osm][osm]]
-  - [[#twittering-mode][twittering-mode]]
-  - [[#md4rd][md4rd]]
-  - [[#org-download][org-download]]
-  - [[#org-web-tools][org-web-tools]]
-  - [[#request][request]]
-  - [[#mullvad][mullvad]]
 - [[#multimedia][multimedia]]
-  - [[#mpv][mpv]]
-  - [[#youtube-dl-emacs][youtube-dl-emacs]]
-  - [[#mentor][mentor]]
-  - [[#espotify][espotify]]
-  - [[#smudge][smudge]]
-  - [[#read-aloud][read-aloud]]
-  - [[#emms][EMMS]]
 - [[#passwords][passwords]]
-  - [[#plstore][plstore]]
-  - [[#epg-config][epg-config]]
-  - [[#auth-source][auth-source]]
-  - [[#emacs-oauth2-auto][emacs-oauth2-auto]]
-  - [[#pass][pass]]
-  - [[#auth-source-pass][auth-source-pass]]
-  - [[#pass-otp][pass-otp]]
-- [[#misc][misc.]]
-  - [[#calc][calc]]
-  - [[#constants][constants]]
-  - [[#alert][alert]]
-  - [[#unpackaged][unpackaged]]
-  - [[#macos][macos]]
-  - [[#midnight][midnight]]
-  - [[#keycast][keycast]]
-  - [[#custom][custom]]
-  - [[#tetris][tetris]]
+- [[#misc][misc]]
 - [[#personal-projects][personal projects]]
-  - [[#tlon][Tlon]]
-  - [[#keyboard-maestro][Keyboard Maestro]]
-- [[#local-variables][local variables]]
+- [[#variables][variables]]
 :END:
 
-* introduction
+* introductory
 :PROPERTIES:
 :CUSTOM_ID: introduction
 :ID:       A7940400-DD17-4B0B-A9B2-565A207D680C
@@ -482,14 +154,6 @@ CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
 CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
-
-** preface
-:PROPERTIES:
-:ID:       66EACB4A-84D2-42AE-9F85-EF30DA714A17
-:END:
-I am not a programmer, let alone an Elisp hacker. My background is in the humanities. It is only a slight exaggeration to say that, before I started using Emacs in 2020, I didn't know the difference between a function and a variable.
-
-I am sharing this file primarily to keep myself accountable. Knowing that others will see the rudimentary code I write motivates me to learn how to write slightly better code.
 
 ** key bindings
 :PROPERTIES:
@@ -707,8 +371,8 @@ The contents of this code block are tangled to the early-init.el file.
   (startup-redirect-eln-cache
    (file-name-concat (getenv "HOME")
     ".config/emacs-profiles/var/eln-cache/")))
-
 #+end_src
+
 * startup
 :PROPERTIES:
 :ID:       9DBC455B-7ED4-422F-BE05-2FBB3548A86F
@@ -816,10 +480,9 @@ Process for updating packages:
 
 [2022-10-31 Mon 15:55] At some point, it should probably be replaced with [[https://github.com/progfolio/elpaca][elpaca]]. Discussion [[https://github.com/progfolio/elpaca][here]].
 
-
 #+begin_src emacs-lisp :results silent
 (setq straight-repository-branch "develop") ; must precede bootstrap
-(setq straight-profiles `((nil . ,(file-name-concat ps/dir-dotemacs "straight-profile.el"))))
+(setq straight-profiles `((nil . ,(file-name-concat user-emacs-directory "straight-profile.el"))))
 ;; Bootstrap `straight'
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -834,19 +497,19 @@ Process for updating packages:
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 (setq straight-default-vc 'git)
-(setq straight-check-for-modifications '(find-at-startup watch-files find-when-checking)) ; github.com/raxod502/straight.el#my-init-time-got-slower
+(if (and (executable-find "watchexec")
+         (executable-find "python3"))
+    (setq straight-check-for-modifications '(watch-files find-when-checking))
+  (setq straight-check-for-modifications '(find-at-startup find-when-checking)))
 (setq straight-use-package-by-default t)
 (require 'straight-x) ; github.com/raxod502/straight.el#how-do-i-uninstall-a-package
-#+end_src
 
-
-#+begin_src emacs-lisp :results silent
 ;; Early load Org from Git version instead of Emacs built-in version
 (straight-use-package 'org)
 (straight-use-package 'org-contrib)
 #+end_src
 
-** Use-package
+** use-package
 :PROPERTIES:
 :ID:       C53EA5F9-B256-480E-9BCB-7AD2D0D5DDC2
 :END:
@@ -927,7 +590,7 @@ NAME and ARGS are as in `use-package'."
 :ID:       3411777E-E554-4EF3-9389-63242D4F3072
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/ns-win)
 (use-feature ns-win
   :demand t
   :config
@@ -937,7 +600,9 @@ NAME and ARGS are as in `use-package'."
   (setq mac-function-modifier 'none)
   (setq mac-right-option-modifier 'none)
   (setq mac-right-control-modifier 'super)
-  (setq mac-right-command-modifier 'alt))
+  (setq mac-right-command-modifier 'alt)
+
+  )
 #+end_src
 
 ** iso-transl
@@ -1029,7 +694,9 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp :results silent
 (use-package el-patch
-  :demand t)
+  :demand t
+  :config
+  (setq el-patch-enable-use-package-integration t))
 #+end_src
 
 ** hydra
@@ -1154,7 +821,6 @@ CLOCK: [2021-03-07 Sun 11:55]--[2021-03-07 Sun 12:13] =>  0:18
 CLOCK: [2021-03-07 Sun 11:01]--[2021-03-07 Sun 11:06] =>  0:05
 CLOCK: [2021-02-24 Wed 16:02]--[2021-02-24 Wed 16:26] =>  0:24
 :END:
-
 
 **** notes.org
 :PROPERTIES:
@@ -1617,8 +1283,8 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
 (use-feature warnings
   :demand t
   :config
-  (dolist (element '((comp)
-                     (yasnippet backquote-change)))
+  (dolist (element '(comp
+                     yasnippet backquote-change))
     (add-to-list 'warning-suppress-types element)))
 #+end_src
 
@@ -1751,6 +1417,7 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/mixed-pitch)
 (use-package mixed-pitch
+  :defer 5
   :config
   (setq mixed-pitch-set-height t)
 
@@ -1841,9 +1508,6 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
   :config
   (defun ps/faces-load-custom-faces ()
     "My custom faces, to be used in conjunction with theme."
-    (ps/init-override-code-if-available
-     :ps/faces
-     (progn
        (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
        (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
        (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
@@ -1868,7 +1532,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
        (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
        (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)
-       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))))
+       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -1892,7 +1556,8 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :PROPERTIES:
 :ID:       D75F0818-F8A2-45F1-8EB5-4548BCDE86BE
 :END:
-#+begin_src emacs-lisp
+
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/theme-loaddefs)
 (use-feature emacs
   :demand t
   :config
@@ -1961,6 +1626,8 @@ installed."
            (add-hook 'ns-system-appearance-change-functions
                      #'ps/modus-themes-load-theme-emacs-plus))))
 
+  (ps/modus-themes-load-theme-conditionally)
+
   (setq modus-themes-common-palette-overrides
         `(
           ;; hide the fringe
@@ -1971,13 +1638,11 @@ installed."
 
           ,@modus-themes-preset-overrides-intense))
 
-  (ps/modus-themes-load-theme-conditionally)
-
   (add-hook 'modus-themes-after-load-theme-hook #'ps/faces-load-custom-faces)
   (add-hook 'modus-themes-after-load-theme-hook #'ps/modus-themes-highlight-parentheses)
 
   :general
-  ("A-d" 'modus-themes-toggle))
+  ("A-u" 'modus-themes-toggle))
 #+end_src
 
 ** highlight-parentheses
@@ -2089,6 +1754,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 :ID:       C3D90EBC-EB70-440E-9718-A2832FF9F077
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-27 Mon 21:53]--[2023-03-27 Mon 22:01] =>  0:08
 CLOCK: [2021-06-02 Wed 21:16]--[2021-06-02 Wed 21:32] =>  0:16
 CLOCK: [2021-06-02 Wed 18:04]--[2021-06-02 Wed 18:07] =>  0:03
 CLOCK: [2021-05-23 Sun 12:38]--[2021-05-23 Sun 12:43] =>  0:05
@@ -2103,37 +1769,35 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :init
   (doom-modeline-mode)
 
-  :config
-  (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
   (setq doom-modeline-mu4e t)
+  (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
   (setq doom-modeline-buffer-encoding nil)
   (setq doom-modeline-irc t)
   (setq doom-modeline-irc-buffers t)
-  ;; (doom-modeline--flycheck-icon t)
   (setq doom-modeline-github t)
   (setq doom-modeline-github-interval (* 10 60))
-  (setq doom-modeline-buffer-file-name-style 'truncate-nil)
+  (setq doom-modeline-buffer-file-name-style 'auto)
 
-  (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
-  (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
-  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
-  (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline)
+  (doom-modeline-def-modeline 'main
+    '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
+    '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
+
+
+  (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
+                        (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+                        (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+                        (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+    (remove-hook (car hook-cons) (cdr hook-cons)))
+
   (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
 #+end_src
-
-*** TODO [#6] Diagnose why modeline is sometimes not highlighted
-:PROPERTIES:
-:ID:       DECB5A10-FF2E-446B-BA4E-AFB7176EFFAE
-:Effort:   0:40
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-15 Wed 00:17]--[2023-03-15 Wed 00:18] =>  0:01
-:END:
-Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
 
 ** tab-bar
 :PROPERTIES:
 :ID:       F8B7C324-C5CF-4DBD-A527-92101BDA70AB
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 :END:
 
 #+begin_src emacs-lisp :results silent :tangle  :tangle (ps/init-get-tangle-flag :ps/tab-bar)
@@ -2152,16 +1816,20 @@ Discussion [[https://github.com/doomemacs/doomemacs/issues/4660][here]].
         (remove '(global-mode-string ("" global-mode-string))
                 mode-line-misc-info))
 
-  (run-with-timer 5 nil (lambda () (setq global-mode-string
-                                         '(" "
-                                           (:eval (propertize display-time-string 'face 'ps/display-time))
-                                           " |  "
-                                           chemacs-profile-name
-                                           " | "
-                                           fancy-battery-mode-line
-                                           " | "
-                                           telega-mode-line-format
-                                           " | "))))
+  ;; we run a recurring timer to "clean up" the tab bar, which
+  ;; sometimes shows multiple repeated clocks after a while, for
+  ;; unknown reasons
+  (run-with-timer 5 (* 30 60) (lambda () (setq global-mode-string
+                                          '(" "
+                                            (:eval (propertize display-time-string 'face 'ps/display-time))
+                                            " |  "
+                                            chemacs-profile-name
+                                            " | "
+                                            fancy-battery-mode-line
+                                            " | "
+                                            telega-mode-line-format
+                                            " | "))
+                                (display-wttr-mode)))
   (tab-bar-mode))
 #+end_src
 
@@ -3323,6 +2991,7 @@ indent block only, else indent whole buffer."
 :PROPERTIES:
 :ID:       64011AE8-B6DF-413B-A8CD-EF4E133272BD
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature sort
   :demand t
@@ -3345,6 +3014,7 @@ CLOCK: [2021-03-28 Sun 08:40]--[2021-03-28 Sun 10:35] =>  1:55
 CLOCK: [2021-03-27 Sat 18:01]--[2021-03-27 Sat 19:53] =>  1:52
 CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :END:
+
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/outline)
 (use-feature outline
   :demand t
@@ -3364,11 +3034,15 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :PROPERTIES:
 :ID:       987C9066-28ED-4B5A-944C-A90681182264
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature ediff
   :config
   (setq ediff-window-setup-function 'ediff-setup-windows-plain)
-  (setq ediff-split-window-function 'split-window-horizontally))
+  (setq ediff-split-window-function 'split-window-horizontally)
+
+  :general
+  ("A-d" 'ediff))
 #+end_src
 
 ** fill
@@ -3383,6 +3057,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 (use-feature emacs
   :demand t
   :init
+  (setq-default fill-column 72)
   ;; endlessparentheses.com/fill-and-unfill-paragraphs-with-a-single-key.html
   (defun ps/fill-or-unfill-paragraph ()
     "Like `fill-paragraph', but unfill if used twice."
@@ -3396,6 +3071,17 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 
   :general
   ("A-M-f" 'ps/fill-or-unfill-paragraph))
+#+end_src
+
+** unfill
+:PROPERTIES:
+:ID:       DF5137EA-79B3-4A5F-8D6C-7222CD8D4F4A
+:END:
+
+/[[https://github.com/purcell/unfill][unfill]] provides functions to do the reverse of ~fill-paragraph~ and ~fill-region~./
+
+#+begin_src emacs-lisp
+(use-package unfill)
 #+end_src
 
 ** abbrev
@@ -3417,6 +3103,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 :ID:       6405B8E7-6612-4D71-8C2C-A51F8808F4C6
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-27 Mon 12:10]--[2023-03-27 Mon 12:40] =>  0:30
 CLOCK: [2022-10-01 Sat 13:23]--[2022-10-01 Sat 13:26] =>  0:03
 CLOCK: [2021-11-11 Thu 14:05]--[2021-11-11 Thu 14:09] =>  0:04
 CLOCK: [2021-10-28 Thu 19:00]--[2021-10-28 Thu 19:56] =>  0:56
@@ -3439,22 +3126,21 @@ CLOCK: [2021-03-07 Sun 11:00]--[2021-03-07 Sun 11:01] =>  0:01
 CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 :END:
 
-/[[https://github.com/joaotavora/yasnippet][yasnippet]] is a template system for Eamcs./
+/[[https://github.com/joaotavora/yasnippet][yasnippet]] is a template system for Emacs./
 
 #+begin_src emacs-lisp :results silent
 (use-package yasnippet
   :defer 5
   :init
   (setq yas-snippet-dirs (list ps/dir-yasnippets
-                               (concat (directory-file-name ps/dir-yasnippets) "-private")
-                               "~/.emacs.d/straight/build/yasnippet-snippets/snippets"))
+                               ps/dir-yasnippets-private
+                               (file-name-concat user-emacs-directory "straight/build/yasnippet-snippets/snippets")))
 
   :config
   (setq yas-triggers-in-field t) ; allow stacked expansions
 
-  (yas-global-mode 1)
+  (yas-global-mode)
   (yas-reload-all)
-  (add-to-list 'warning-suppress-log-types '(yasnippet backquote-change))
 
   ;; FIXME: this isn't working properly, unlike the `ps/yasnippet-expand-by-key' command
   (defun ps/yasnippet-expand-by-name (name)
@@ -3477,9 +3163,9 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
     (org-previous-block nil)
     (org-edit-src-code))
 
-  (defvar yas-new-snippet-default (concat "# -*- mode: snippet -*-\n# name: $1\n# key: ${2:${1:$(ps/first-char-of-each-letter yas-text)}}\n# contributor: " ps/personal-name "\n# --\n$0"))
+  (setq yas-new-snippet-default (concat "# -*- mode: snippet -*-\n# name: $1\n# key: ${2:${1:$(ps/first-char-of-each-letter yas-text)}}\n# contributor: " ps/personal-name "\n# --\n$0"))
 
-  (defvar ps/yas-new-snippet-tlon "# -*- mode: snippet -*-\n# name: tlon-${1:name-of-snippet}\n# key: t${2:shortcut}\n# --\n$0\\`(ps/insert-date)\\` \\$1\n	${3:account1}:\\$5  \\$2.00 \\${3:\\$\\$(yas-choose-value '('USD' 'EUR' 'GBP'))} ; \\$4\n	${4:account2}:")
+  (defvar ps/yas-new-snippet-tlon "# -*- mode: snippet -*-\n# name: tlon-${1:name-of-snippet}\n# key: t${2:shortcut}\n#contributor: ${3: \n# --\n$0\\`(ps/insert-date)\\` \\$1\n	${4:account1}:\\$5  \\$2.00 \\${3:$$(yas-completing-read \"Currency: \" ps/ledger-active-currencies)} ; \\$4\n	${4:account2}:")
 
   (defun ps/yas-new-tlon-snippet (&optional no-template)
     "Pops a new buffer for writing a snippet.
@@ -3762,8 +3448,6 @@ _a_pend       |_k_macro      |r_e_store                    "
   (setq bookmark-save-flag 1)) ; Save bookmarks after each entry
 #+end_src
 
-To check: [[https://irreal.org/blog/?p=9969][Prot on Bookmarks | Irreal]] (bookmarking web pages, in particular, is something I may want to look into)
-
 * files & buffers
 :PROPERTIES:
 :ID:       B29F4586-2B8D-41FE-82DE-FEDCD863C74B
@@ -4017,8 +3701,22 @@ selected instead of creating a new buffer."
     (ps/switch-to-last-window))
 
   (defun ps/kill-all-buffers ()
+    "Kill all open buffers."
     (interactive)
-    (mapc 'kill-buffer (buffer-list)))
+    (when (y-or-n-p "Warning: this may have undesired
+ effects. Consider using `ps/kill-all-file-visiting-buffers'
+ instead. Are you sure you want to proceed? ")
+      (mapc 'kill-buffer (buffer-list))))
+
+  (defun ps/kill-all-file-visiting-buffers (&optional excluded-files)
+    "Kill all open buffers visiting a file, with the exception of
+those visiting any of the EXCLUDED-FILES."
+    (interactive)
+    (dolist (buffer (buffer-list))
+      (when (with-current-buffer buffer
+              (and (buffer-file-name)
+                   (not (member (buffer-file-name) excluded-files))))
+        (kill-buffer buffer))))
 
   (defun ps/bury-buffer-switch-to-other-window ()
     "Bury the current buffer and switch to the other window."
@@ -4314,11 +4012,12 @@ process in these cases."
    "C-b" 'clone-indirect-buffer-other-window
    "H-C-g" 'abort-recursive-edit
    "H-C-S-g" 'top-level
-   "H-C-A-g" 'keyboard-escape-quit) ; ESC ESC ESC
+   "H-C-A-g" 'keyboard-escape-quit ; ESC ESC ESC
+   "A-H-v" 'ps/internet-archive-dwim)
   ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "H-q" 'bury-buffer
    "q" 'ps/bury-buffer-switch-to-other-window)
-  ((apropos-mode-map calendar-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
+  ((apropos-mode-map calendar-mode-map chatgpt-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
    "q" 'ps/kill-this-buffer)
   ((dired-mode-map pdf-view-mode-map)
    "s-o" 'ps/ocr-pdf)
@@ -4336,6 +4035,7 @@ process in these cases."
 :PROPERTIES:
 :ID:       4FD6758A-4021-4B05-BD36-BB09C2063C93
 :END:
+
 /[[https://github.com/rejeep/f.el][f]] is a modern API for working with files and directories in Emacs./
 
 #+begin_src emacs-lisp :results silent
@@ -4500,6 +4200,13 @@ option."
 
   (add-hook 'dired-mode-hook #'dired-hide-details-mode) ; hide details by default
 
+  (defun ps/dired-convert-image-to-pdf ()
+    "Convert image at point to PDF."
+    (interactive)
+    (let ((file (buffer-file-name)))
+      (shell-command (format "convert '%s' '%s.pdf'" file (file-name-sans-extension file)))
+      (message "Converted image to PDF.")))
+
   :general
   (dired-mode-map
    "<tab>" 'ps/dired-subtree-toggle
@@ -4608,22 +4315,35 @@ The code block below, based on [[https://www.djcbsoftware.nl/code/mu/mu4e/Attach
 (use-feature gnus-dired
   :demand t
   :after dired
-  :config
-  (setq gnus-dired-mail-mode 'mu4e-user-agent)
-
+  :config/el-patch
   ;; replaces `gnus-dired-mail-buffers' function so it works on
   ;; `message-mode' derived modes, such as `mu4e-compose-mode'
-  (defun ps/gnus-dired-mail-buffers ()
-    "Return a list of active message buffers."
+  ;; djcbsoftware.nl/code/mu/mu4e/Attaching-files-with-dired.html
+  (defun gnus-dired-mail-buffers ()
+    "Return a list of active mail composition buffers."
+    (el-patch-swap
+      (if (and (memq gnus-dired-mail-mode '(message-user-agent gnus-user-agent))
+               (require 'message)
+               (fboundp 'message-buffers))
+          (message-buffers)
+        ;; Cf. `message-buffers' in `message.el':
+        (let (buffers)
+          (save-excursion
+            (dolist (buffer (buffer-list t))
+              (set-buffer buffer)
+              (when (eq major-mode 'mail-mode)
+                (push (buffer-name buffer) buffers))))
+          (nreverse buffers)))
     (let (buffers)
-      (save-current-buffer
-        (dolist (buffer (buffer-list t))
-          (set-buffer buffer)
-          (when (and (derived-mode-p 'message-mode)
-                     (null message-sent-message-via))
-            (push (buffer-name buffer) buffers))))
-      (nreverse buffers)))
-  (advice-add 'gnus-dired-mail-buffers :override #'ps/gnus-dired-mail-buffers)
+       (save-excursion
+         (dolist (buffer (buffer-list t))
+           (set-buffer buffer)
+           (when (eq major-mode 'mail-mode)
+             (push (buffer-name buffer) buffers))))
+       (nreverse buffers))))
+
+  :config
+  (setq gnus-dired-mail-mode 'mu4e-user-agent)
 
   (add-hook 'dired-mode-hook #'turn-on-gnus-dired-mode)
 
@@ -4753,8 +4473,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
   (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
 
   :general
-  ("A-C-H-0" 'ps/switch-to-minibuffer-window
-   "C-A-g" 'exit-minibuffer)
+  ("A-C-H-0" 'ps/switch-to-minibuffer-window)
   ((minibuffer-mode-map)
    "M-n" nil
    "M-p" nil))
@@ -4880,7 +4599,7 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 :ID:       8EBA8303-EA43-4FB2-BB9D-1734F40DDB77
 :END:
 
-/[[https://github.com/joostkremers/pandoc-mode][pandocmode]] is a minor mode for interacting with Pandoc.
+/[[https://github.com/joostkremers/pandoc-mode][pandoc-mode]] is a minor mode for interacting with Pandoc./
 
 #+begin_src emacs-lisp :results silent
 (use-package pandoc-mode
@@ -4933,7 +4652,7 @@ CLOCK: [2022-09-02 Fri 18:13]--[2022-09-02 Fri 21:20] =>  3:07
 CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :END:
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/window)
+#+begin_src emacs-lisp :results silent
 (use-feature window
   :demand t
 
@@ -5095,7 +4814,7 @@ window depending on the number of present windows."
     (interactive)
     (ps/window-buffer-move (when (> (count-windows) 2) (winum-get-window-by-number 2))))
 
-  (add-hook 'emacs-startup-hook #'ps/window-split-if-unsplit -50)
+     (add-hook 'emacs-startup-hook #'ps/window-split-if-unsplit -50)
 
   :general
   ("C-H-0" 'ps/switch-to-last-window
@@ -5137,6 +4856,7 @@ window depending on the number of present windows."
   (blink-cursor-mode)
   (setq window-divider-default-right-width 1)
   (window-divider-mode)
+
   ;; When returning focus to Emacs after browsing other macOS windows,
   ;; the frame is sometimes not fully maximized. This advice makes
   ;; Emacs maximize the frame every time focus is regained.
@@ -5223,14 +4943,9 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
 (use-package avy
   :commands ps/avy-dired-find-file
 
-  :config
-  (setq avy-case-fold-search nil)
-  (setq avy-timeout-seconds 0.2)
-  (setq avy-all-windows nil)
-  (setq avy-keys '(97 115 100 102 106 107 108 13 32 113 119 101 114 117 105 111 112 122 120 99 118 109 44 46 47))
-
+  :config/el-patch
   ;; Launch dispatcher with `/' rather than `?'
-  (defun ps/avy-handler-default (char)
+  (defun avy-handler-default (char)
     "The default handler for a bad CHAR."
     (let (dispatch)
       (cond ((setq dispatch (assoc char avy-dispatch-alist))
@@ -5240,7 +4955,9 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
             ((memq char avy-escape-chars)
              ;; exit silently
              (throw 'done 'abort))
-            ((eq char ?/)
+            ((el-patch-swap
+               (eq char ??)
+               (eq char ?/))
              (avy-show-dispatch-help)
              (throw 'done 'restart))
             ((mouse-event-p char)
@@ -5248,7 +4965,12 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
             (t
              (message "No such candidate: %s, hit `C-g' to quit."
                       (if (characterp char) (string char) char))))))
-  (advice-add 'avy-handler-default :override #'ps/avy-handler-default)
+
+  :config
+  (setq avy-case-fold-search nil)
+  (setq avy-timeout-seconds 0.2)
+  (setq avy-all-windows nil)
+  (setq avy-keys '(97 115 100 102 106 107 108 13 32 113 119 101 114 117 105 111 112 122 120 99 118 109 44 46 47))
 
   (defun ps/avy-goto-word-in-line ()
     "Jump to a word start between start and end of visual line."
@@ -5316,7 +5038,7 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
     (avy-goto-line)
     (dired-find-alternate-file))
 
-    (defun ps/avy-ebib-view-entry ()
+  (defun ps/avy-ebib-view-entry ()
     "In Ebib, view the entry in selected line."
     (interactive)
     (avy-goto-line)
@@ -5358,11 +5080,11 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55>] =>  0:25
    "C-H-s-l" 'avy-goto-word-1-below)
   (dired-mode-map
    "f" 'ps/avy-dired-find-file)
-   (ebib-index-mode-map
+  (ebib-index-mode-map
    "f" 'ps/avy-ebib-view-entry)
   (telega-root-mode-map
    "f" 'ps/avy-telega-view-message)
-   (ebib-entry-mode-map
+  (ebib-entry-mode-map
    "f" 'avy-goto-line))
 #+end_src
 
@@ -5417,6 +5139,7 @@ then to selected character immediately ahead of point."
 :ID:       AD1CE3FE-8897-4593-BD37-FEA38630611A
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-25 Sat 11:05]--[2023-03-25 Sat 11:26] =>  0:21
 CLOCK: [2022-09-14 Wed 18:43]--[2022-09-14 Wed 19:00] =>  0:17
 CLOCK: [2022-02-04 Fri 11:23]--[2022-02-04 Fri 11:25] =>  0:02
 CLOCK: [2021-12-12 Sun 21:14]--[2021-12-12 Sun 21:17] =>  0:03
@@ -5457,12 +5180,10 @@ needs to be included as an element in the list defined by
                                 elfeed-show-mode
                                 eww-mode
                                 eww-buffers-mode)) ; major modes activated in global-writeroom-mode
-  ;; (setq writeroom-fullscreen-effect 'maximized) ; disables annoying fullscreen transition effect on MacOS
+  (setq writeroom-fullscreen-effect 'maximized) ; disables annoying fullscreen transition effect on macos
   (setq writeroom-maximize-window t)
 
-  ;; This neds to be delayed because the value of `window-total-width'
-  ;; is changed during startup..
-  (add-hook 'emacs-startup-hook (lambda () (setq writeroom-width (window-total-width))))
+  (advice-add 'writeroom-mode :before (lambda (&rest args) (setq writeroom-width (window-total-width))))
 
   :general
   ("M-'" 'writeroom-mode
@@ -5667,7 +5388,9 @@ with the specified date."
 :ID:       9E8AEF97-2E1A-489E-929A-CE5789EABFB9
 :org-gcal-managed: org
 :END:
+
 :LOGBOOK:
+CLOCK: [2023-03-28 Tue 13:25]--[2023-03-28 Tue 13:28] =>  0:03
 CLOCK: [2022-07-15 Fri 11:10]--[2022-07-15 Fri 11:19] =>  0:09
 CLOCK: [2022-07-11 Mon 15:51]--[2022-07-11 Mon 16:17] =>  0:26
 CLOCK: [2022-07-03 Sun 10:53]--[2022-07-03 Sun 11:18] =>  0:25
@@ -5700,26 +5423,18 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 (use-package org-gcal
   :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass
-  :defer 30
+  :demand t
 
   :init
   (setq org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
   (setq org-gcal-client-secret (auth-source-pass-get 'secret "auth-sources/org-gcal"))
 
-  :config
-  (setq org-gcal-fetch-file-alist `((,ps/personal-gmail . ,ps/file-calendar)))
-  (setq org-gcal-recurring-events-mode 'top-level)
-  (setq org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
-  (setq org-gcal-notify-p nil)
-  (setq org-gcal-auto-archive nil)
-  (setq org-gcal-up-days 1)
-  (setq org-gcal-down-days 3)
-
-  (defun ps/org-gcal--get-time-and-desc ()
+  :config/el-patch
+  (defun org-gcal--get-time-and-desc ()
     "Get the timestamp and description of the event at point.
 
-  Return a plist with :start, :end, and :desc keys. The value for a key is nil if
-  not present."
+  Return a plist with :start, :end, and :desc keys. The value for a key is nil
+  if not present."
     (let (start end desc tobj elem)
       (save-excursion
         (org-gcal--back-to-heading)
@@ -5759,8 +5474,10 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
                      " *:PROPERTIES:\n *\\(.*\\(?:\n.*\\)*?\\) *:END:\n+"
                      ""
                      desc)))))))
-      ;; Prefer to read event time from the SCHEDULE property if present.
-      (setq tobj (or (org-element-property :deadline elem) tobj))
+      ;; Prefer to read event time from the SCHEDULED property if present.
+      (setq tobj (or (el-patch-swap (org-element-property :scheduled elem)
+                                    (org-element-property :deadline elem))
+                     tobj))
       (when tobj
         (when (plist-get (cadr tobj) :year-start)
           (setq
@@ -5784,7 +5501,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
             (when (plist-get (cadr tobj) :hour-end) t)))))
       (list :start start :end end :desc desc)))
 
-  (defun ps/org-gcal--update-entry (calendar-id event &optional update-mode)
+  (defun org-gcal--update-entry (calendar-id event &optional update-mode)
     "Update the entry at the current heading with information from EVENT.
 
 EVENT is parsed from the Calendar API JSON response using ‘org-gcal--json-read’.
@@ -5797,10 +5514,11 @@ arguments as passed to this function and the point moved to the beginning of the
 heading."
     (unless (org-at-heading-p)
       (user-error "Must be on Org-mode heading."))
-    (let* ((smry  (or (plist-get event :summary)
-                      "busy"))
+    (let* ((smry  (plist-get event :summary))
            (desc  (plist-get event :description))
            (loc   (plist-get event :location))
+           (source (plist-get event :source))
+           (transparency   (plist-get event :transparency))
            (_link  (plist-get event :htmlLink))
            (meet  (plist-get event :hangoutLink))
            (etag (plist-get event :etag))
@@ -5821,10 +5539,42 @@ heading."
            (recurrence (plist-get event :recurrence))
            (elem))
       (when loc (replace-regexp-in-string "\n" ", " loc))
-      (org-edit-headline smry)
+      (org-edit-headline
+       (cond
+        ;; Don’t update headline if the new summary is the same as the CANCELLED
+        ;; todo keyword.
+        ((equal smry org-gcal-cancelled-todo-keyword) (org-gcal--headline))
+        (smry smry)
+        ;; Set headline to “busy” if there is no existing headline and no summary
+        ;; from server.
+        ((or (null (org-gcal--headline))
+             (string-empty-p (org-gcal--headline)))
+         "busy")
+        (t (org-gcal--headline))))
       (org-entry-put (point) org-gcal-etag-property etag)
       (when recurrence (org-entry-put (point) "recurrence" (format "%s" recurrence)))
       (when loc (org-entry-put (point) "LOCATION" loc))
+      (when source
+        (let ((roam-refs
+               (org-entry-get-multivalued-property (point) "ROAM_REFS"))
+              (link (org-entry-get (point) "link")))
+          (cond
+           ;; ROAM_REFS can contain multiple references, but only bare URLs are
+           ;; supported. To make sure we can round-trip between ROAM_REFS and
+           ;; Google Calendar, only import to ROAM_REFS if there is no title in
+           ;; the source, and if ROAM_REFS has at most one entry.
+           ((and (null link)
+                 (<= (length roam-refs) 1)
+                 (or (null (plist-get source :title))
+                     (string-empty-p (plist-get source :title))))
+            (org-entry-put (point) "ROAM_REFS"
+                           (plist-get source :url)))
+           (t
+            (org-entry-put (point) "link"
+                           (org-link-make-string
+                            (plist-get source :url)
+                            (plist-get source :title)))))))
+      (when transparency (org-entry-put (point) "TRANSPARENCY" transparency))
       (when meet
         (org-entry-put
          (point)
@@ -5852,9 +5602,9 @@ heading."
         (message "PROPERTIES not found: %s (%s) %d"
                  (buffer-name) (buffer-file-name) (point)))
       (end-of-line)
-      ;; (newline)
-      ;; (insert (format ":%s:" org-gcal-drawer-name))
-      ;; (newline)
+      (newline)
+      (insert (format ":%s:" org-gcal-drawer-name))
+      (newline)
       ;; Keep existing timestamps for parent recurring events.
       (when (and recurrence old-start old-end)
         (setq start old-start
@@ -5879,16 +5629,26 @@ heading."
                          (if (< 11 (length end))
                              end
                            (org-gcal--iso-previous-day end))))))))
-        (if (org-element-property :deadline elem)
-            (unless (and recurrence old-start) (org-deadline nil timestamp))
-          (org-deadline nil timestamp)
-          (newline)
-          (when desc (newline))))
+        (el-patch-swap
+          (if (org-element-property :scheduled elem)
+              (unless (and recurrence old-start)
+                ;; Ensure CLOSED timestamp isn’t wiped out by ‘org-gcal-sync’ (see
+                ;; https://github.com/kidd/org-gcal.el/issues/218).
+                (let ((org-closed-keep-when-no-todo t))
+                  (org-schedule nil timestamp)))
+            (insert timestamp)
+            (newline)
+            (when desc (newline)))
+          (if (org-element-property :deadline elem)
+              (unless (and recurrence old-start) (org-deadline nil timestamp))
+            (org-deadline nil timestamp)
+            (newline)
+            (when desc (newline)))))
       ;; Insert event description if present.
       (when desc
         (insert (replace-regexp-in-string "^\*" "✱" desc))
         (insert (if (string= "\n" (org-gcal--safe-substring desc -1)) "" "\n")))
-      ;; (insert ":END:")
+      (insert ":END:")
       (when (org-gcal--event-cancelled-p event)
         (save-excursion
           (org-back-to-heading t)
@@ -5899,11 +5659,14 @@ heading."
             (org-back-to-heading t)
             (funcall f calendar-id event update-mode))))))
 
-  ;; I replace the two native functions with the slightly tweaked
-  ;; versions under `:init' so that `org-gcal' uses the `DEADLINE'
-  ;; property for all timestamps.
-  (advice-add 'org-gcal--get-time-and-desc :override #'ps/org-gcal--get-time-and-desc)
-  (advice-add 'org-gcal--update-entry :override #'ps/org-gcal--update-entry)
+  :config
+  (setq org-gcal-fetch-file-alist `((,ps/personal-gmail . ,ps/file-calendar)))
+  (setq org-gcal-recurring-events-mode 'top-level)
+  (setq org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
+  (setq org-gcal-notify-p nil)
+  (setq org-gcal-auto-archive nil)
+  (setq org-gcal-up-days 1)
+  (setq org-gcal-down-days 3)
 
   (defun ps/org-gcal-open-at-point ()
     "Get entry id of `org-gcal' entry at point and open the
@@ -5998,11 +5761,11 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :after tab-bar
   :config
   (setq world-clock-list '(("Europe/Barcelona" "Barcelona")
-                      ("Europe/London" "London")
-                      ("America/Buenos_Aires" "Buenos Aires")
-                      ("America/Nassau" "Nassau")
-                      ("America/New_York" "New York")
-                      ("America/Los_Angeles" "San Francisco")))
+                           ("Europe/London" "London")
+                           ("America/Buenos_Aires" "Buenos Aires")
+                           ("America/Nassau" "Nassau")
+                           ("America/New_York" "New York")
+                           ("America/Los_Angeles" "San Francisco")))
   (setq display-time-format "%a %e %b %T")
   (setq display-time-interval 1)
   (setq display-time-default-load-average nil)
@@ -6130,8 +5893,10 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 :PROPERTIES:
 :ID:       20B0D7AB-5B27-4D80-A9D8-DAAAFCB27651
 :END:
-:LOGBOOK:
-CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
+
+** simple
+:PROPERTIES:
+:ID:       C7BA09A3-635F-4F31-A17A-F94F3B024522
 :END:
 
 #+begin_src emacs-lisp :results silent
@@ -6147,6 +5912,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
 :PROPERTIES:
 :ID:       D411AA79-C8FE-4E03-B06E-1BED5B7688BC
 :END:
+
 /savehist makes Emacs remember completion history across sessions./
 
 #+begin_src emacs-lisp :results silent
@@ -6158,28 +5924,29 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
   :config
   (setq history-length t) ; unlimited history
   (setq savehist-additional-variables
-   '(citar-history
-     command-history
-     compile-history
-     compilation-command
-     eww-history
-     extended-command-history
-     file-name-history
-     Info-history-list
-     ido-file-history
-     kill-ring
-     kmacro-ring
-     last-kbd-macro
-     log-edit-comment-ring
-     magit-read-rev-history
-     mark-ring
-     read-expression-history
-     regexp-search-ring
-     register-alist
-     search-ring
-     shell-command-history
-     telega-search-history
-     twittering-search-history))
+        '(calc-quick-calc-history
+          citar-history
+          command-history
+          compile-history
+          compilation-command
+          eww-history
+          extended-command-history
+          file-name-history
+          Info-history-list
+          ido-file-history
+          kill-ring
+          kmacro-ring
+          last-kbd-macro
+          log-edit-comment-ring
+          magit-read-rev-history
+          mark-ring
+          read-expression-history
+          regexp-search-ring
+          register-alist
+          search-ring
+          shell-command-history
+          telega-search-history
+          twittering-search-history))
   (setq savehist-save-minibuffer-history t))
 #+end_src
 
@@ -6187,6 +5954,7 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
 :PROPERTIES:
 :ID:       8DE4A4B7-4B96-445F-BC1F-B10BBF181F53
 :END:
+
 /saveplace makes Emacs remember point position in file across sessions./
 
 #+begin_src emacs-lisp :results silent
@@ -6208,10 +5976,9 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
   :demand t
   :config
   (setq session-globals-include '((kill-ring 100)
-                             (session-file-alist 100 t)
-                             (file-name-history 100)
-                             search-ring regexp-search-ring))
-  (setq history-length 1000)
+                                  (session-file-alist 100 t)
+                                  (file-name-history 100)
+                                  search-ring regexp-search-ring))
 
   (add-hook 'after-init-hook #'session-initialize))
 #+end_src
@@ -6240,13 +6007,11 @@ CLOCK: [2021-04-09 Fri 20:49]--[2021-04-09 Fri 20:59] =>  0:10
 :ID:       438AD8A8-0F4F-4A1D-9BC9-110906944509
 :END:
 
-[2022-10-02 Sun 14:12] I installed this package only because I wanted to have a persistent ~*scratch*~ buffer. But I am now accomplishing this with [[id:B6CB6A6C-0BCC-4A07-9608-BDCA6184C63A][persistent scratch]].
-
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/remember)
 (use-feature remember
   :demand t
   :init
-  (setq remember-data-file "~/.config/emacs-profiles/var/remember/data")
+  (setq remember-data-file "~/.config/emacs-profiles/var/remember/notes")
 
   :config
   (setq remember-notes-auto-save-visited-file-name t)
@@ -6331,18 +6096,18 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
                                 "https://\\2/\\3"
                                 url)))
 
-  (defun ps/magit-open-repo ()
-    "open remote repo URL"
+  (defun ps/magit-browse-repo ()
+    "Browse the remote repo URL."
     (interactive)
     (let ((url (magit-get "remote" "origin" "url")))
       (progn
         (browse-url (ps/magit-parse-url url))
-        (message "opening repo %s" url))))
+        (message "Browsing repo %s" url))))
 
   :general
   ("A-g" 'magit)
   (magit-mode-map
-   "o" 'ps/magit-open-repo)
+   "o" 'ps/magit-browse-repo)
   (magit-status-mode-map
    "A-C-s-r" 'magit-section-backward
    "A-C-s-f" 'magit-section-forward))
@@ -6407,19 +6172,30 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       A0887865-7CAC-47E6-A894-D49F07BCBAF9
 :END:
 
-/[[https://github.com/wandersoncferreira/code-review][code-review]] ([[https://wandersoncferreira.github.io/code-review/][homepage]]) helps perform code reviews from Emacs./
-
-[2022-08-29 Mon 17:02] To check at some point.
+/[[https://github.com/wandersoncferreira/code-review][code-review]] helps perform code reviews from Emacs./
 
 #+begin_src emacs-lisp :results silent
 (use-package code-review
+  :after magit forge emojify
+  :demand t
   :config
   (setq code-review-fill-column 80)
-  (setq code-review-new-buffer-window-strategy #'switch-to-buffer)
   (setq code-review-auth-login-marker 'forge)
 
   (add-hook 'code-review-mode-hook #'emojify-mode))
 #+end_src
+
+** github-review
+:PROPERTIES:
+:ID:       7AB2F3A1-F542-4F27-A576-470630DC0909
+:END:
+
+/[[https://github.com/charignon/github-review][github-review]] provides Emacs support for GitHub code reviews ./
+
+#+begin_src emacs-lisp
+(use-package github-review)
+#+end_src
+
 
 ** git-timemachine
 :PROPERTIES:
@@ -6474,8 +6250,6 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 :ID:       4B274841-062C-4511-8FF3-C850BAB05905
 :END:
 
-[2021-05-22 Sat 22:24] Thanks to Prot, I learn that when ~isearch~ is regexp-aware, so is ~isearch-query-replace~. So one can do a regexp replacement by invoking the following series of commands: ~isearch-forward~, ~isearch-toggle-regexp~, ~isearch-query-replace~. I find it easier to use ~C-s~ as my single point of entry to Emacs's powerful search and replace functions, and then make liberal use of all the ~isearch~ commands, accessible via their corresponding key bindings.
-
 #+begin_src emacs-lisp :results silent
 (use-feature isearch
   :config
@@ -6502,6 +6276,21 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
     (interactive)
     (kill-new (buffer-substring (point) isearch-other-end))
     (isearch-done))
+
+  (add-hook 'isearch-mode-end-hook #'recenter-top-bottom)
+
+  (defadvice
+      isearch-repeat-forward
+      (after isearch-repeat-forward-recenter activate)
+    (recenter))
+
+  (defadvice
+      isearch-repeat-backward
+      (after isearch-repeat-backward-recenter activate)
+    (recenter))
+
+  (ad-activate 'isearch-repeat-forward)
+  (ad-activate 'isearch-repeat-backward)
 
   :general
   (isearch-mode-map
@@ -6532,21 +6321,6 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
    "M-l" 'isearch-ring-advance)
   ((isearch-mode-map minibuffer-mode-map)
    "C-e" 'isearch-query-replace))
-#+end_src
-
-do the same for other relevant commands
-#+begin_src emacs-lisp :results silent
-(add-hook 'isearch-mode-end-hook 'recenter-top-bottom)
-(defadvice
-    isearch-repeat-forward
-    (after isearch-repeat-forward-recenter activate)
-  (recenter))
-(defadvice
-    isearch-repeat-backward
-    (after isearch-repeat-backward-recenter activate)
-  (recenter))
-(ad-activate 'isearch-repeat-forward)
-(ad-activate 'isearch-repeat-backward)
 #+end_src
 
 To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridging Islands in Emacs: re-builder and query-replace-regexp | Karthinks]]
@@ -6631,7 +6405,9 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :demand t
   :config
   (setq vr/engine 'python)
-  (setq vr/command-python "python3 /Users/cartago/emacs/stable2-leo/straight/build/visual-regexp-steroids/regexp.py")
+  (setq vr/command-python
+        (concat "python3 "
+                (file-name-concat user-emacs-directory "straight/build/visual-regexp-steroids/regexp.py")))
 
   :general
   (isearch-mode-map
@@ -6794,6 +6570,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
 :ID:       C6144D48-2E3C-4033-AD6E-5D7EE175D9E1
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-18 Sat 12:32]--[2023-03-18 Sat 13:14] =>  0:42
 CLOCK: [2022-07-15 Fri 21:21]--[2022-07-15 Fri 21:44] =>  0:23
 CLOCK: [2022-07-15 Fri 13:51]--[2022-07-15 Fri 14:22] =>  0:31
 CLOCK: [2022-07-09 Sat 09:56]--[2022-07-09 Sat 10:33] =>  0:37
@@ -6809,7 +6586,10 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   :demand t
   :config
   ;; replace `rg' with `rga'
-  (setq consult-ripgrep-args "rga --null --line-buffered --color=never --max-columns=1000 --path-separator /   --smart-case --no-heading --line-number .")
+  (setq consult-ripgrep-args
+        (concat (substring consult-ripgrep-args 0 2)
+                "a"
+                (substring consult-ripgrep-args 2)))
   (setq consult-locate-args "mdfind")
   (setq consult-narrow-key "<")
   (setq consult-widen-key ">")
@@ -6917,6 +6697,7 @@ By default, all agenda entries are offered. MATCH is as in
   ("A-C-l" 'consult-line
    "C-f" 'consult-find
    "H-b" 'consult-buffer
+   "H-I" 'consult-info
    "H-r" 'consult-history
    "H-V" 'consult-yank-pop
    "H-f" 'ps/consult-locate-file-current
@@ -7368,9 +7149,13 @@ Distinguish ~C-m~ from ~RET~ in the GUI. (Setting the Spacemacs variable ~dotspa
     "Like `describe-face', but with `hl-line-mode' disabled, and
 always use face at point."
     (interactive)
-    (let ((global-hl-line-mode-enabled global-hl-line-mode))
+    (let ((hl-line-mode-enabled hl-line-mode)
+          (global-hl-line-mode-enabled global-hl-line-mode))
+      (hl-line-mode -1)
       (global-hl-line-mode -1)
       (describe-face (face-at-point t))
+      (when hl-line-mode-enabled
+        (hl-line-mode))
       (when global-hl-line-mode-enabled
         (global-hl-line-mode))))
 
@@ -7768,7 +7553,7 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-feature ispell
-  :defer 15
+  :defer 10
   :config
   (setq ispell-silently-savep t)
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
@@ -7812,6 +7597,7 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
 :ID:       78ABBC76-7474-4C1C-A9B0-E8BEC972E75E
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-30 Thu 23:58]--[2023-03-31 Fri 00:15] =>  0:17
 CLOCK: [2022-09-14 Wed 15:02]--[2022-09-14 Wed 15:06] =>  0:04
 CLOCK: [2022-08-31 Wed 20:51]--[2022-08-31 Wed 21:00] =>  0:09
 CLOCK: [2022-07-26 Tue 16:59]--[2022-07-26 Tue 17:01] =>  0:02
@@ -7841,7 +7627,6 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
           (word (flyspell-get-word)))
       (when (consp word)
         (flyspell-do-correct 'save nil (car word) current-location (cadr word) (caddr word) current-location))))
-
 
   (defun ps/flyspell-save-word-and-next ()
     "Save word at point to personal dictionary and go to next error."
@@ -7906,12 +7691,9 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
    "C-;" nil)
   (flyspell-mouse-map ;; this key map becomes active only when point is on a highlighted word
    "s-a" 'flyspell-auto-correct-word
-   "s-k" 'ps/flyspell-goto-previous-error
-   "s-l" 'flyspell-goto-next-error
    "s-s" 'ps/flyspell-save-word
    "A-s-s" 'ps/flyspell-save-word-and-next
    "s-c" 'flyspell-correct-wrapper))
-
 #+end_src
 
 *** TODO [#7] Create dwim version of flyspell-buffer
@@ -7946,6 +7728,23 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
 (use-package flyspell-correct
   :demand t
   :after flyspell)
+#+end_src
+
+** jinx
+:PROPERTIES:
+:ID:       ED021B57-190B-4A80-9884-F723B792CD5E
+:END:
+
+/[[https://github.com/minad/jinx][jinx]] is a just-in-time spell-checker based on Enchant./
+
+[2023-03-29 Wed 12:53] I'll probably migrate to this package eventually, but I'm disabling it until I do so.
+
+#+begin_src emacs-lisp
+(use-package jinx
+  :straight (:host github :repo "minad/jinx" :files (:defaults "jinx-mod.c" "emacs-module.h"))
+  :disabled
+  :config
+  (add-hook 'emacs-startup-hook #'global-jinx-mode))
 #+end_src
 
 ** keytar
@@ -7995,7 +7794,7 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-package lsp-grammarly
-  :after (lsp-mode keytar)
+  :after lsp-mode keytar
   :demand t
 
   :config
@@ -8178,8 +7977,8 @@ CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
 
 #+begin_src emacs-lisp :results silent
 (use-package powerthesaurus
-  :config
-  (defun ps/powerthesaurus-lookup-dwim (&optional action-type query-type)
+  :config/el-patch
+  (defun powerthesaurus-lookup-dwim (&optional action-type query-type)
   "Wrapper function for general lookup commands.
 
 When called interactively, optional argument ACTION-TYPE corresponds to
@@ -8201,8 +8000,10 @@ the user will be prompt for a valid value."
                      (powerthesaurus--extract-original-word)
                    ;; nothing appropriate nearby -> ask the user
                    (list nil nil nil)))))
-    (setq query-term (or query-term
-                         (read-string "Term: " query-term))
+    (setq query-term (el-patch-swap
+                       (read-string "Term: " query-term)
+                       (or query-term
+                         (read-string "Term: " query-term)))
           query-type (or query-type
                          (completing-read "Query type: "
                                           powerthesaurus-supported-query-types
@@ -8216,8 +8017,6 @@ the user will be prompt for a valid value."
       (when (or beg end)
         (setq beg nil end nil))))
     (funcall 'powerthesaurus-lookup query-term query-type beg end)))
-
-  (advice-add 'ps/powerthesaurus-lookup-dwim  :override #'ps/ps/powerthesaurus-lookup-dwim)
 
   :general
   ("H-Y" 'powerthesaurus-lookup-dwim))
@@ -8335,25 +8134,26 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 (use-package markdown-mode
   :demand t
   :after atomic-chrome
-  :config
-  (setq markdown-fontify-code-blocks-natively t)
-  (setq markdown-command "pandoc --from markdown --to html")
-  (setq markdown-disable-tooltip-prompt t)
-  (setq markdown-italic-underscore 'double)
-
-  (defun ps/markdown-insert-italic ()
+  :config/el-patch
+  (defun markdown-insert-italic ()
     "Insert markup to make a region or word italic.
 If there is an active region, make the region italic.  If the point
 is at a non-italic word, make the word italic.  If the point is at an
 italic word or phrase, remove the italic markup.  Otherwise, simply
 insert italic delimiters and place the point in between them."
     (interactive)
-    (let ((delim (cond ((eq markdown-italic-underscore t) "_")
-                       ((eq markdown-italic-underscore nil) "*")
-                       ((eq markdown-italic-underscore 'double) "__"))))
+    (let ((delim (el-patch-swap
+                   (if markdown-italic-underscore "_" "*")
+                   (cond ((eq markdown-italic-underscore t) "_")
+                         ((eq markdown-italic-underscore nil) "*")
+                         ((eq markdown-italic-underscore 'double) "__")))))
       (markdown--insert-common delim delim markdown-regex-italic 1 3 'markdown-italic-face t)))
 
-  (advice-add 'markdown-insert-italic :override #'ps/markdown-insert-italic)
+  :config
+  (setq markdown-fontify-code-blocks-natively t)
+  (setq markdown-command "pandoc --from markdown --to html")
+  (setq markdown-disable-tooltip-prompt t)
+  (setq markdown-italic-underscore 'double)
 
   (defun ps/markdown-paste-from-org ()
     "Take the contents of the system clipboard and use `pandoc' to
@@ -8381,6 +8181,19 @@ convert it from org-mode to markdown."
   (gfm-mode-map
    "s-a" 'markdown-insert-gfm-code-block
    "s-z" 'markdown-edit-code-block))
+#+end_src
+
+** edit-indirect
+:PROPERTIES:
+:ID:       5660F943-C895-4847-A538-0FA11445420C
+:END:
+
+/[[https://github.com/Fanael/edit-indirect][edit-indirect]] supports editing regions in separate buffers./
+
+This package is required by the ~markdown-mode~ command ~markdown-edit-code-block~.
+
+#+begin_src emacs-lisp
+(use-package edit-indirect)
 #+end_src
 
 ** mediawiki-el
@@ -8480,9 +8293,12 @@ To populate the database of historical prices:
               "%(binary) -f %(ledger-file) bal --strict")
              ("net worth (USD)"
               "%(binary) -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict")
-                                        ; I need to understand how the `--basis' flag works
+             ("account (USD)"
+              "%(binary) -f %(ledger-file) reg %(account) --price-db .pricedb --exchange USD")
+             ;; I need to understand how the `--basis' flag works
              ("cost basis"
               "%(binary) -f %(ledger-file) --basis bal %(account) --strict")))
+
     (add-to-list 'ledger-reports report))
 
   (defun ps/ledger-new-entry-below ()
@@ -8521,14 +8337,14 @@ To populate the database of historical prices:
   (defun ps/ledger-update-commodities ()
     "Update `commodities.py'."
     (interactive)
-    (shell-command
+    (async-shell-command
      (format "python3 %s"
              (file-name-concat ps/dir-ledger "commodities.py"))))
 
   (defun ps/ledger-update-coin-prices ()
     "Update `coinprices.py'."
     (interactive)
-    (shell-command
+    (async-shell-command
      (format "python3 %s >> %s"
              (file-name-concat ps/dir-ledger "coinprices/coinprices.py")
              ps/file-ledger-db)))
@@ -8622,22 +8438,22 @@ otherwise the whole buffer."
       (narrow-to-region xact-begins xact-ends)))
 
   (defun ps/ledger--increase-date-of-transaction-at-point (days)
-  (interactive)
-  "Increase date of transaction at point by DAYS."
-  (let* ((xact-begins (ledger-navigate-beginning-of-xact))
-         (xact-ends (ledger-navigate-end-of-xact))
-         (xact (buffer-substring xact-begins xact-ends)))
-    (delete-region xact-begins xact-ends)
-    (insert
-     (with-temp-buffer
-       (insert xact)
-       (let* ((date (ledger-xact-date))
-              (timestamp (date-to-time date))
-              (date-minus-one-day (format-time-string "%Y-%m-%d" (time-add timestamp (days-to-time days)))))
-         (beginning-of-buffer)
-         (replace-regexp ledger-iso-date-regexp "")
-         (insert date-minus-one-day)
-         (buffer-string))))))
+    (interactive)
+    "Increase date of transaction at point by DAYS."
+    (let* ((xact-begins (ledger-navigate-beginning-of-xact))
+           (xact-ends (ledger-navigate-end-of-xact))
+           (xact (buffer-substring xact-begins xact-ends)))
+      (delete-region xact-begins xact-ends)
+      (insert
+       (with-temp-buffer
+         (insert xact)
+         (let* ((date (ledger-xact-date))
+                (timestamp (date-to-time date))
+                (date-minus-one-day (format-time-string "%Y-%m-%d" (time-add timestamp (days-to-time days)))))
+           (beginning-of-buffer)
+           (replace-regexp ledger-iso-date-regexp "")
+           (insert date-minus-one-day)
+           (buffer-string))))))
 
   (defun ps/ledger-increase-date-of-transaction-at-point-by-one-day ()
     (interactive)
@@ -8691,6 +8507,10 @@ otherwise the whole buffer."
    "q" 'ledger-reconcile-quit))
 #+end_src
 
+*** TODO Run python scripts via LaunchAgent
+:PROPERTIES:
+:ID:       E235F4DC-677D-4143-A679-66FCBC310101
+:END:
 *** TODO [#6] Consider replacing ~commodities.py~ with Elisp alternative
 :PROPERTIES:
 :ID:       303E3552-2FD9-41A9-A6E6-C26110E61282
@@ -8764,9 +8584,9 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
     (pdf-tools-install))
 
   (defun ps/pdf-tools-apply-theme ()
-    "Activate `pdf-tools' midnight mode iff dark theme is active."
+    "Activate `pdf-tools' midnight mode if dark theme is active."
     (if (eq (modus-themes--current-theme) ps/theme-loaddefs-dark)
-        (pdf-view-midnight-minor-mode 1)
+        (pdf-view-midnight-minor-mode)
       (pdf-view-midnight-minor-mode -1)))
 
   ;; gist.github.com/politza/3f46785742e6e12ba0d1a849f853d0b9#file-scroll-other-window-el
@@ -8862,7 +8682,7 @@ FILE."
    "S" 'ps/pdf-tools-add-or-remove-page
    "X" 'ps/pdf-tools-extract-pages
    "H-c" 'pdf-view-kill-ring-save
-   "A-d" 'pdf-view-midnight-minor-mode))
+   "A-u" 'pdf-view-midnight-minor-mode))
 #+end_src
 
 *** TODO Tweak function to copy all pdf text to clipboard so that the region is copied instead, if active
@@ -8967,11 +8787,7 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 
 #+begin_src emacs-lisp :results silent
 (use-package lsp-mode
-  :disabled
-  :init
-  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-  (setq lsp-keymap-prefix "A-C-l")
-
+  :demand t
   :config
   (setq lsp-ui-doc-show-with-cursor t) ; move the cursor over a symbol to show its documentation
   (setq lsp-warn-no-matched-clients nil)
@@ -8985,11 +8801,8 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
         (lsp)
       (lsp-disconnect)))
 
-  ;; if you want which-key integration
-  (add-hook 'lsp-mode #'lsp-enable-which-key-integration)
-
-  :general
-  ("A-l" 'ps/lsp-toggle))
+  (add-hook 'org-mode-hook #'lsp)
+  (add-hook 'lsp-mode #'lsp-enable-which-key-integration))
 #+end_src
 
 ** lsp-ui
@@ -9002,8 +8815,7 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 #+begin_src emacs-lisp :results silent
 (use-package lsp-ui
   :after lsp-mode
-  :demand t
-  :commands lsp-ui-mode)
+  :demand t)
 #+end_src
 
 ** dumb-jump
@@ -9207,25 +9019,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   (global-aggressive-indent-mode))
 #+end_src
 
-** gpt
-:PROPERTIES:
-:ID:       6BA1A737-40A1-4253-8FC8-E211F6060BC9
-:END:
-
-/[[https://github.com/stuhlmueller/gpt.el][gpt]] is an Emacs package for calling instruction-following language models./
-
-#+begin_src emacs-lisp :results silent
-(use-package gpt
-  :commands gpt-dwim
-
-  :config
-  (setq gpt-openai-key (auth-source-pass-get 'secret "auth-sources/openai.com"))
-  (setq gpt-openai-engine "text-davinci-003")
-
-  :general
-  ("A-C-g" 'gpt-dwim))
-#+end_src
-
 ** elpy
 :PROPERTIES:
 :ID:       E96C6026-AEFA-42A1-930E-863EA3FF651E
@@ -9314,6 +9107,7 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
    "M-<tab>" 'copilot-accept-completion
    "A-M-<tab>" 'copilot-accept-completion-by-line))
 #+end_src
+
 ** openai
 :PROPERTIES:
 :ID:       822430F1-51B8-4754-80B0-EC17DD931CB5
@@ -9349,10 +9143,11 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
   :straight (chatgpt
              :host github
              :repo "emacs-openai/chatgpt")
-  :after openai
   :config
   (setq chatgpt-model "gpt-4")
-  
+  (setq chatgpt-input-method 'minibuffer)
+  (setq chatgpt-animate-text nil)
+
   :general
   ("A-C-g" 'chatgpt))
 #+end_src
@@ -10095,6 +9890,7 @@ By considering both tasks completed and their associated priorities.
 :ID:       E03F4142-C90D-4550-8990-15391E27AD77
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-28 Tue 12:05]--[2023-03-28 Tue 12:12] =>  0:07
 CLOCK: [2022-10-10 Mon 21:40]--[2022-10-11 Tue 00:16] =>  2:36
 CLOCK: [2022-07-17 Sun 08:31]--[2022-07-17 Sun 08:54] =>  0:23
 CLOCK: [2022-06-25 Sat 11:09]--[2022-06-25 Sat 11:36] =>  0:27
@@ -10145,8 +9941,9 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (winum-select-window-1)
     (let ((agenda "*Org Agenda(a)*"))
       (if (get-buffer agenda)
-	  (switch-to-buffer "*Org Agenda(a)*")
-	(org-agenda nil "a"))))
+          (switch-to-buffer agenda)
+        (ps/org-agenda-toggle-anniversaries t)
+        (org-agenda nil "a"))))
 
   (setq org-agenda-hide-tags-regexp "project")
 
@@ -10155,6 +9952,25 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (interactive)
     (org-agenda-goto)
     (org-clock-in))
+
+  :config/el-patch
+  ;; Replace native function with variant that doesn't ask the user
+  ;; multiple times to remove non-existent agenda file
+  (defun org-check-agenda-file (file)
+    "Make sure FILE exists.  If not, ask user what to do."
+    (el-patch-swap
+      (unless (file-exists-p file)
+        (message "Non-existent agenda file %s.  [R]emove from list or [A]bort?"
+                 (abbreviate-file-name file))
+        (let ((r (downcase (read-char-exclusive))))
+          (cond
+           ((equal r ?r)
+            (org-remove-file file)
+            (throw 'nextfile t))
+           (t (user-error "Abort")))))
+      (unless (file-exists-p file)
+        (org-remove-file file)
+        (throw 'nextfile t))))
 
   :config
   (setq org-agenda-window-setup 'current-window)
@@ -10233,41 +10049,61 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
     (interactive)
     (org-unhighlight))
 
-  ;; Replace native function with variant that doesn't ask the user
-  ;; multiple times to remove non-existent agenda file
-  (defun ps/org-check-agenda-file (file)
-    "Make sure FILE exists.  If not, ask user what to do."
-    (unless (file-exists-p file)
-      (org-remove-file file)
-      (throw 'nextfile t)))
-
-  (advice-add 'org-check-agenda-file :override #'ps/org-check-agenda-file)
+  (defun ps/org-agenda-switch-to-dwim ()
+    "When point is in an agenda log line, goto to that line and
+ position in the corresponding file. Else just open the file."
+    (interactive)
+    (condition-case error
+        (call-interactively 'org-clock-convenience-goto-ts)
+      (error (org-agenda-switch-to))))
 
   ;; We add these two advices because `org-modern-mode' interferes
   ;; with the display of the habits progress bar
   (advice-add 'org-habit-toggle-display-in-agenda :before
-	      (lambda (arg)
-		(if org-habit-show-habits
-		    (global-org-modern-mode)
-		  (global-org-modern-mode -1))))
+              (lambda (arg)
+                (if org-habit-show-habits
+                    (global-org-modern-mode)
+                  (global-org-modern-mode -1))))
   (advice-add 'org-habit-toggle-display-in-agenda :after
-	      (lambda (arg)
-		(org-agenda-redo)
-		(global-org-modern-mode)))
+              (lambda (arg)
+                (org-agenda-redo)
+                (global-org-modern-mode)))
 
   (add-hook 'org-agenda-mode-hook (lambda ()
-				    (visual-line-mode -1)
-				    (toggle-truncate-lines 1)))
+                                    (visual-line-mode -1)
+                                    (toggle-truncate-lines)))
+
+  ;; this comments out the line "%%(org-bbdb-anniversaries-future 2)"
+  ;; in `calendar.org', which is the only way I found to hide
+  ;; anniversaries temporarily from the agenda
+  ;; for context, see https://orgmode.org/manual/Weekly_002fdaily-agenda.html
+  (defun ps/org-agenda-toggle-anniversaries (&optional just-enable)
+    "Toggle display of BBDB birthdays in the agenda."
+    (interactive)
+    (save-window-excursion
+      (ps/org-id-goto "C84DFF77-7AEB-4BEC-B1E6-AECE4E174F62")
+      (org-narrow-to-subtree)
+      (goto-char (point-min))
+      (org-end-of-meta-data t)
+      (if (looking-at "%%")
+          (unless just-enable
+            (delete-line))
+        (insert "%%(org-bbdb-anniversaries-future 1)
+")))
+    (unless just-enable
+      (org-agenda-redo)))
+
   :general
   ("C-<escape>" 'org-agenda)
   (org-agenda-mode-map
+   "RET" 'ps/org-agenda-switch-to-dwim
    "'" 'ps/org-agenda-done-and-next
    ";" 'org-agenda-later
    "\"" 'ps/org-agenda-postpone-and-next
    "C-b" 'org-agenda-tree-to-indirect-buffer
    "C-k" nil
+   "b" 'ps/org-agenda-toggle-anniversaries
    "d" 'org-agenda-deadline
-   "h" 'org-habit-toggle-display-in-agenda
    "M-t" nil
    "H-n" nil
    "s-k" nil
@@ -10285,11 +10121,18 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "SPC" 'ps/org-agenda-goto-and-start-clock
    "W" 'org-agenda-refile
    "X" 'org-agenda-exit
-   "x" 'org-agenda-log-mode
+   "x" (lambda! (org-agenda-log-mode 'clockcheck))
    "y" 'org-agenda-day-view
-   "Z" 'org-agenda-add-note
    "z" 'org-agenda-undo))
 #+end_src
+*** TODO Configure org-agenda log checks
+:PROPERTIES:
+:ID:       9FE214C2-609D-4055-91A7-EB4EEAE26348
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-18 Sat 11:30]--[2023-03-18 Sat 11:55] =>  0:25
+:END:
+
 *** TODO [#6] align tags
 :PROPERTIES:
 :ID:       8F2D8B6E-2B3E-434E-9D60-5A1E23F8E4C1
@@ -10322,7 +10165,6 @@ Posted a question to [[https://emacs.stackexchange.com/questions/66343/in-org-ag
 :ID:       14F93A83-0BE7-42E3-891E-F6806192296B
 :END:
 :LOGBOOK:
-CLOCK: [2022-07-05 Tue 16:58]--[2023-02-22 Wed 15:06] => 5566:08
 CLOCK: [2022-06-13 Mon 14:45]--[2022-06-13 Mon 15:00] =>  0:15
 CLOCK: [2022-06-11 Sat 13:40]--[2022-06-11 Sat 14:03] =>  0:23
 CLOCK: [2022-06-11 Sat 13:19]--[2022-06-11 Sat 13:25] =>  0:06
@@ -10371,6 +10213,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("c" "Calendar" entry
            (file ps/file-calendar)
            "* TODO %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t)
+          ;; djcbsoftware.nl/code/mu/mu4e/Org_002dmode-links.html
           ("e" "Email" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
@@ -10384,8 +10227,8 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
           ("r" "Bibliography reference" plain
            (file ,ps/file-orb-noter-template)
-           :if-new
-           (file ,ps/file-orb-capture-template)
+           ;; :if-new
+           ;; (file ,ps/file-orb-capture-template)
            :unnarrowed t :immediate-finish t)
           ("s" "Slack" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
@@ -10393,11 +10236,20 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("t" "Tlön")
           ("tb" "Tlön: BAE")
           ("tbb" "Tlön: BAE: Generic " entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
+           (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
           ("tbl" "Tlön: BAE: Process Leo's revisions " entry
            (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
            "** TODO [#6] Process Leo's revisions of '%c%?' \n" :empty-lines 1 :prepend t)
+          ("tbt" "Tlön: BAE: Translate article " entry
+           (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
+           "** TODO [#5] Translate '%?' \n" :empty-lines 1 :prepend t)
+          ("tbA" "Tlön: BAE: [via email] Revise article translation and Leo's revision" entry
+           (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
+           "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
+          ("tbW" "Tlön: BAE: [via email] Revise Leo's Wiki entry translation" entry
+           (id "87996ABF-D31A-414E-81B8-604454533DB1")
+           "** TODO [#5] %a\n" :empty-lines 1 :prepend t :immediate-finish t)
           ("tbr" "Tlön: BAE: Revise translation " entry
            (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
            "** TODO [#6] Revise '%c%?' translation \n" :empty-lines 1 :prepend t)
@@ -10442,13 +10294,21 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("trn" "Tlön: RAE: Interacting with narrators " entry
            (id "D90B718C-6933-47AC-9B15-F95C2A2E1FD5")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tc" "Tlön: Core")
-          ("tcc" "Tlön: Core: Generic " entry
+          ("tt" "Tlön: Core")
+          ("ttt" "Tlön: Core: Generic " entry
            (id "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tce" "Tlön: Core: Emacs")
-          ("tcee" "Tlön: Core: Emacs: Generic " entry
+          ("tte" "Tlön: Core: Emacs")
+          ("ttee" "Tlön: Core: Emacs: Generic " entry
            (id "91CEC8F0-F690-4318-B63B-040D6B98A6E2")
+           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
+          ("tcc" "Tlön: Core: Comms")
+          ("tccc" "Tlön: Core: Comms: Generic " entry
+           (id "7E56628D-8FBA-4A58-BFCA-14A6F7FAC3BA")
+           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
+          ("ttf" "Tlön: Core: Finance")
+          ("ttff" "Tlön: Core: Finance: Generic " entry
+           (id "21E0FE78-C45B-4E6E-9447-56375111BAEA")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
           ("tf" "Tlön: Fede")
           ("tff" "Tlön: Fede: generic task" entry
@@ -10518,6 +10378,10 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            "** TODO [#6] Agregar al lexicon de Azure :leo:\n%?" :empty-lines 1 :prepend t)
           ("tlrr" "Tlön: Leo: RAE: Generic RAE task" entry
            (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
+           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
+          ("tlc" "Tlön: Leo: Core")
+          ("tlcc" "Tlön: Leo: Generic Core task" entry
+           (id "68f0150e-9b0d-4bab-86c0-2bf878e19d9e")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlx" "Tlön: Leo: Meetings" entry
            (id "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")
@@ -10646,6 +10510,8 @@ Links to check out:
 :ID:       90E8B1CE-433C-4B2B-8AA2-844506EAC031
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-18 Sat 12:30]--[2023-03-18 Sat 12:32] =>  0:02
+CLOCK: [2023-03-18 Sat 11:55]--[2023-03-18 Sat 12:30] =>  0:35
 CLOCK: [2023-02-22 Wed 15:58]--[2023-02-22 Wed 16:03] =>  0:05
 CLOCK: [2023-02-22 Wed 15:07]--[2023-02-22 Wed 15:28] =>  0:21
 CLOCK: [2023-02-22 Wed 14:41]--[2023-02-22 Wed 15:06] =>  0:25
@@ -10669,6 +10535,35 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
 #+begin_src emacs-lisp :results silent
 (use-feature org-clock
   :defer 20
+  :config/el-patch
+  ;; replace `org-files-list' with `org-agenda-files' so that
+  ;; extraneous files are excluded from the dangling clocks check.
+  (defun org-resolve-clocks (&optional only-dangling-p prompt-fn last-valid)
+    "Resolve all currently open Org clocks.
+If `only-dangling-p' is non-nil, only ask to resolve dangling
+\(i.e., not currently open and valid) clocks."
+    (interactive "P")
+    (unless org-clock-resolving-clocks
+      (let ((org-clock-resolving-clocks t))
+        (dolist (file (el-patch-swap
+                        (org-files-list)
+                        (org-agenda-files)))
+          (let ((clocks (org-find-open-clocks file)))
+            (dolist (clock clocks)
+              (let ((dangling (or (not (org-clock-is-active))
+                                  (/= (car clock) org-clock-marker))))
+                (if (or (not only-dangling-p) dangling)
+                    (org-clock-resolve
+                     clock
+                     (or prompt-fn
+                         (lambda (clock)
+                           (format
+                            "Dangling clock started %d mins ago"
+                            (floor (org-time-convert-to-integer
+                                    (time-since (cdr clock)))
+                                   60))))
+                     (or last-valid
+                         (cdr clock)))))))))))
   :config
   (setq org-clock-out-when-done t)
   (setq org-clock-persist t)
@@ -10676,6 +10571,7 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
   (setq org-clock-in-resume t)
   (setq org-clock-report-include-clocking-task t)
   (setq org-clock-ask-before-exiting nil)
+  (setq org-clock-history-length 30)
   (org-clock-persistence-insinuate)
 
   ;; FIXME: suggested by copilot; not working: the date entities are not being
@@ -10737,37 +10633,17 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
      (list (org-read-date nil nil nil "Start date: ")
            (org-read-date nil nil nil "End date: ")))
     (insert (format "#+BEGIN: clocktable :scope subtree :maxlevel 4 :narrow 50 :tstart \"%s\" :tend \"%s\"\n#+END:" start-date end-date))
-    (previous-line)
-    (org-ctrl-c-ctrl-c))
+    (org-clock-report))
 
-  ;; replace `org-files-list' with `org-agenda-files', so that
-  ;; extraneous files are excluded from the dangling clocks check.
-  (defun ps/org-resolve-clocks (&optional only-dangling-p prompt-fn last-valid)
-    "Resolve all currently open Org clocks.
-If `only-dangling-p' is non-nil, only ask to resolve dangling
-\(i.e., not currently open and valid) clocks."
-    (interactive "P")
-    (unless org-clock-resolving-clocks
-      (let ((org-clock-resolving-clocks t))
-        (dolist (file (org-agenda-files))
-          (let ((clocks (org-find-open-clocks file)))
-            (dolist (clock clocks)
-              (let ((dangling (or (not (org-clock-is-active))
-                                  (/= (car clock) org-clock-marker))))
-                (if (or (not only-dangling-p) dangling)
-                    (org-clock-resolve
-                     clock
-                     (or prompt-fn
-                         (lambda (clock)
-                           (format
-                            "Dangling clock started %d mins ago"
-                            (floor (org-time-convert-to-integer
-                                    (time-since (cdr clock)))
-                                   60))))
-                     (or last-valid
-                         (cdr clock)))))))))))
-
-  (advice-add 'org-resolve-clocks :override #'ps/org-resolve-clocks)
+  (defun ps/org-clock-report-today-save ()
+    "Save a clock report for today in the clock reports file."
+    (interactive)
+    (let ((org-journal-dir ps/dir-org-clock-reports)
+          (org-journal-file-format "reports.org"))
+      (org-journal-new-entry nil)
+      ;; gnu.org/software/emacs/manual/html_node/org/The-clock-table.html
+      (insert "\n#+BEGIN: clocktable :scope agenda :stepskip0 t :fileskip0 t :maxlevel 4 :tstart \"<today>\" :tend \"<today>\"\n#+END:")
+      (org-clock-report)))
 
   :general
   ("A-H-j" 'org-clock-goto
@@ -10783,63 +10659,77 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
    "s-A-=" 'ps/org-time-stamp-inactive-current-date))
 #+end_src
 
+** org-clock-convenience
+:PROPERTIES:
+:ID:       1DB11C80-DE47-42EA-851A-4D35398C1005
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-18 Sat 13:14]--[2023-03-18 Sat 13:27] =>  0:13
+:END:
+
+/[[https://github.com/dfeich/org-clock-convenience][org-clock-convenience]] provides convenience functions to work with org-mode clocking./
+
+#+begin_src emacs-lisp
+(use-package org-clock-convenience
+  :after org-clock
+  :demand t
+  :general
+  (org-agenda-mode-map
+   "M-k" 'org-clock-convenience-timestamp-up
+   "M-l" 'org-clock-convenience-timestamp-down))
+#+end_src
+
 ** org-clock-split
 :PROPERTIES:
 :ID:       594F8AE4-9AE7-4D7D-A504-E75C5139BB5D
 :END:
 
-/[[https://github.com/justintaft/org-clock-split][org-clock-split]]: split one clock entry into two contiguous entries./
+/[[https://github.com/justintaft/org-clock-split][org-clock-split]] allows splitting of one clock entry into two contiguous entries./
 
 #+begin_src emacs-lisp
 (use-package org-clock-split
   :after org-clock
   :demand t
-  :config
-  ;; the function has to be slightly modified to make it work (see 'FIXED' comment below)
-  (defun ps/org-clock-split (from-end splitter-string)
-  "Split CLOCK entry under cursor into two entries.
-Total time of created entries will be the same as original entry.
-
-   WARNING: Negative time entries can be created if splitting at an offset
-longer then the CLOCK entry's total time.
-
-   FROM-END: nil if the function should split with duration from
-   the start of the clock segment (default for backwards
-   compatibility), t if the function should split counting from
-   the end of the clock segment.
-
-   SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
-
-  (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
-
-  (move-beginning-of-line nil)
-  (let ((original-line (buffer-substring (line-beginning-position) (line-beginning-position 2))))
-
-    ;; Error if CLOCK line does not contain check in and check out time
-    (unless (string-match org-clock-split-clock-range-regexp original-line)
-      (error "Cursor must be placed on line with valid CLOCK entry range"))
-
-    (let* ((whitespace (match-string 1 original-line))
-           (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
-           (t0 (pop timestamps))
-           (t1 (concat "[" (pop timestamps) "]")) ; <- FIXED: this is the modified line
-           (t2 (pop timestamps)))
-      ;; delete line without moving to kill ring
-      (delete-region (line-beginning-position) (line-end-position))
-      ;; insert the earlier segment
-      (insert (format org-clock-split-clock-range-format whitespace t0 t1))
-      ;; Update interval duration, which moves point to the end of the later timestamp
-      (org-ctrl-c-ctrl-c)
-      ;; insert the later segment before the earlier segment, so it's ready for org-clock-merge
-      (move-beginning-of-line nil)
-      (newline)
-      (previous-line)
-      (insert (format org-clock-split-clock-range-format whitespace t1 t2))
-      ;; Update interval duration, which fails if point doesn't move to beginning of line
-      (org-ctrl-c-ctrl-c)
-      (move-beginning-of-line nil))))
-
-  (advice-add 'org-clock-split :override #'ps/org-clock-split)
+  :config/el-patch
+  ;; the function has to be slightly modified to make it work
+  (defun org-clock-split
+      (from-end splitter-string)
+    "Split CLOCK entry under cursor into two entries.\nTotal time of created entries will be the same as original entry.\n\n   WARNING: Negative time entries can be created if splitting at an offset\nlonger then the CLOCK entry's total time.\n\n   FROM-END: nil if the function should split with duration from\n   the start of the clock segment (default for backwards\n   compatibility), t if the function should split counting from\n   the end of the clock segment.\n \n   SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
+    (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
+    (move-beginning-of-line nil)
+    (let
+        ((original-line
+          (buffer-substring
+           (line-beginning-position)
+           (line-beginning-position 2))))
+      (unless
+          (string-match org-clock-split-clock-range-regexp original-line)
+        (error "Cursor must be placed on line with valid CLOCK entry range"))
+      (let*
+          ((whitespace
+            (match-string 1 original-line))
+           (timestamps
+            (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
+           (t0
+            (pop timestamps))
+           (t1 (el-patch-swap
+                 (pop timestamps)
+                 (concat "[" (pop timestamps) "]")))
+           (t2
+            (pop timestamps)))
+        (delete-region
+         (line-beginning-position)
+         (line-end-position))
+        (insert
+         (format org-clock-split-clock-range-format whitespace t0 t1))
+        (org-ctrl-c-ctrl-c)
+        (move-beginning-of-line nil)
+        (newline)
+        (previous-line)
+        (insert
+         (format org-clock-split-clock-range-format whitespace t1 t2))
+        (org-ctrl-c-ctrl-c)
+        (move-beginning-of-line nil))))
 
   :general
   (org-mode-map
@@ -11151,20 +11041,6 @@ files, recursively all files in `org-directory', and all files in
    "s-A-u" 'ps/org-id-update-id-locations))
 #+end_src
 
-*** TODO Remove duplicate IDs
-:PROPERTIES:
-:ID:       013ADB83-A4AC-430B-A1F7-59A76F776CCD
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-01 Wed 15:43]--[2023-03-01 Wed 16:30] =>  0:47
-CLOCK: [2023-03-01 Wed 14:20]--[2023-03-01 Wed 15:00] =>  0:40
-:END:
-
-*** TODO Remove duplicate IDs
-:PROPERTIES:
-:ID:       12709284-A413-4AC1-8578-6ABCEDB8A8B1
-:END:
-
 ** org-list
 :PROPERTIES:
 :ID:       DD345C01-CEAC-4CEC-A8D5-89C16A0182CB
@@ -11401,6 +11277,19 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
    "s-k" 'org-insert-link))
 #+end_src
 
+** ol-bbdb
+:PROPERTIES:
+:ID:       B1A25249-1E67-498D-8A68-0E4BDB3D0A2B
+:END:
+
+#+begin_src emacs-lisp
+(use-feature ol-bbdb
+  :after ol
+  :demand t
+  :config
+   (setq org-bbdb-anniversary-field 'birthday))
+#+end_src
+
 ** org-protocol
 :PROPERTIES:
 :ID:       03387678-63D2-4B72-AD25-6F6F16992D5C
@@ -11495,8 +11384,18 @@ CLOCK: [2022-07-17 Sun 19:17]--[2022-07-17 Sun 21:01] =>  1:44
 Hugo should be able to export ~org-cite~ citations.
 
 #+begin_src emacs-lisp :results silent
-(use-package ox-hugo
-  :defer 100)
+(use-package ox-hugo)
+#+end_src
+
+** ox-pandoc
+:PROPERTIES:
+:ID:       C16B02FA-64E6-423B-9596-B3B023C93B21
+:END:
+
+/[[https://github.com/kawabata/ox-pandoc][ox-pandoc]] is an org-mode exporter that uses Pandoc./
+
+#+begin_src emacs-lisp :results silent
+(use-package ox-pandoc)
 #+end_src
 
 ** ob
@@ -11533,14 +11432,12 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
     (org-babel-tangle))
 
   (dolist (cons (list (cons "j" 'org-babel-next-src-block)
-		      (cons "k" 'org-babel-previous-src-block)
-		      (cons "n" 'org-babel-insert-header-arg)
-		      (cons "p" 'org-babel-remove-result-one-or-many)))
-    (add-to-list 'org-babel-key-bindings cons))
+                      (cons "k" 'org-babel-previous-src-block)
+                      (cons "n" 'org-babel-insert-header-arg)
+                      (cons "p" 'org-babel-remove-result-one-or-many)))
+    (add-to-list 'org-babel-key-bindings cons)))
 
-  :general
-  (org-mode-map
-   "s-b" 'ps/org-babel-tangle))
+(define-key org-mode-map (kbd "s-b") #'ps/init-build)
 #+end_src
 
 ** org-src
@@ -11551,20 +11448,21 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 #+begin_src emacs-lisp :results silent
 (use-feature org-src
   :defer 5
+  :config/el-patch
+  ;; name buffers more cleanly
+  (defun org-src--construct-edit-buffer-name (org-buffer-name lang)
+    "Construct the buffer name for a source editing buffer.
+Format is \"*Org Src ORG-BUFFER-NAME [ LANG ]*\"."
+    (el-patch-swap
+      (concat "*Org Src " org-buffer-name "[ " lang " ]*")
+      (concat org-buffer-name " (org src)")))
+
   :config
   (setq org-edit-src-content-indentation 0)
   (setq org-src-preserve-indentation nil)
   (setq org-src-window-setup 'current-window)
   (setq org-src-fontify-natively t)
   (setq org-src-tab-acts-natively nil) ; When set to `nil', newlines will be properly indented
-
-  (defun ps/org-src--construct-edit-buffer-name (org-buffer-name lang)
-    "Construct the buffer name for a source editing buffer. This
-tweaked function names such buffers more cleanly than the
-original."
-    (concat org-buffer-name " (org src)"))
-
-  (advice-add 'org-src--construct-edit-buffer-name :override #'ps/org-src--construct-edit-buffer-name)
 
   :general
   (org-src-mode-map
@@ -11619,6 +11517,7 @@ original."
 :ID:       3C8E083B-55A1-4B55-A30A-BD9C4BE1D1D0
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-02 Sun 21:19]--[2023-04-02 Sun 21:22] =>  0:03
 CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 :END:
 
@@ -11660,45 +11559,9 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   (setq org-habit-show-habits nil)
   (setq org-habit-show-habits-only-for-today nil)
 
-  ;; copied from github.com/progfolio/.emacs.d/blob/master/init.org#org-habit
-  (defun ps/org-habit-graph-on-own-line (graph)
-    "Place org habit consitency graph below the habit."
-    (let* ((count 0)
-           icon)
-      (save-excursion
-        (beginning-of-line)
-        (while (and (eq (char-after) ? ) (not (eolp)))
-          (when (get-text-property (point) 'display) (setq icon t))
-          (setq count (1+ count))
-          (forward-char)))
-      (add-text-properties (+ (line-beginning-position) count) (line-end-position)
-                           `(display ,(concat (unless icon "  ")
-                                              (string-trim-left (thing-at-point 'line))
-                                              (make-string (or org-habit-graph-column 0) ? )
-                                              (string-trim-right
-                                               (propertize graph 'mouse-face 'inherit)))))))
-
-  (defun ps/org-habit-insert-consistency-graphs (&optional line)
-    "Insert consistency graph for any habitual tasks."
-    (let ((inhibit-read-only t)
-          (buffer-invisibility-spec '(org-link))
-          (moment (org-time-subtract nil
-                                     (* 3600 org-extend-today-until))))
-      (save-excursion
-        (goto-char (if line (point-at-bol) (point-min)))
-        (while (not (eobp))
-          (let ((habit (get-text-property (point) 'org-habit-p)))
-            (when habit
-              (let ((graph (org-habit-build-graph
-                            habit
-                            (time-subtract moment (days-to-time org-habit-preceding-days))
-                            moment
-                            (time-add moment (days-to-time org-habit-following-days)))))
-                (ps/org-habit-graph-on-own-line graph))))
-          (forward-line)))))
-
-  (advice-add #'org-habit-insert-consistency-graphs
-              :override #'ps/org-habit-insert-consistency-graphs))
+  :general
+  (org-agenda-mode-map
+   "h" 'org-habit-toggle-display-in-agenda))
 #+end_src
 
 ** org-checklist
@@ -11816,7 +11679,6 @@ an org drawer."
 #+begin_src emacs-lisp :results silent
 (use-package org-journal
   :config
-  ;; (org-enable-org-journal-support t)
   (setq org-journal-dir ps/dir-journal)
   (setq org-journal-date-format "%Y-%m-%d")
   (setq org-journal-file-format "%Y.org")
@@ -11930,20 +11792,14 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
   (setq org-pomodoro-length 25)
   (setq org-pomodoro-short-break-length (- 30 org-pomodoro-length))
   (setq org-pomodoro-long-break-length org-pomodoro-short-break-length)
-  (setq org-pomodoro-finished-sound "/System/Library/Sounds/Blow.aiff")
+  (when (eq system-type 'darwin)
+    (setq org-pomodoro-finished-sound "/System/Library/Sounds/Blow.aiff"))
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
 
-  (defun ps/org-pomodoro-notify (title message)
-    "Send a persistent notification with TITLE and MESSAGE using
-`alert'."
-    (alert message :title title :category 'org-pomodoro))
-
-  (advice-add 'org-pomodoro-notify :override #'ps/org-pomodoro-notify)
-
   :general
-  ("H-I" 'org-pomodoro
-   "A-H-i" 'org-pomodoro-extend-last-clock)
+  ("H-s-i" 'org-pomodoro
+   "A-s-e" 'org-pomodoro-extend-last-clock)
   (org-agenda-mode-map
    "I" 'org-pomodoro))
 #+end_src
@@ -11954,15 +11810,6 @@ Pomodoro system:
 
 - Always working on a task (rather than merely on a heading)
 - At the beginning of each 30-minute session, leave a note on what I will do in that session
-** memacs
-:PROPERTIES:
-:ID:       1146CE48-9243-435A-8394-07C385538104
-:END:
-
-*** TODO [#5] Try memacs
-:PROPERTIES:
-:ID:       B27D8912-4089-4E37-B4BD-195B398C066B
-:END:
 
 * note-taking
 :PROPERTIES:
@@ -12075,6 +11922,13 @@ return such list if its length is less than LIMIT."
                  (< (length file-list) limit))
         file-list)))
 
+  :config/el-patch
+  (defun org-roam-db-query (sql &rest args)
+    "Run SQL query on Org-roam database with ARGS.
+SQL can be either the emacsql vector representation, or a string."
+    (el-patch-add (sleep-for 0 1))
+    (apply #'emacsql (org-roam-db) sql args))
+
   :config
   (setq org-roam-directory ps/dir-org-roam)
   ;; (org-roam-complete-everywhere t)
@@ -12115,9 +11969,7 @@ return such list if its length is less than LIMIT."
   (defvar ps/org-roam-excluded-dirs (list
                                      ps/dir-anki
                                      ps/dir-inactive
-                                     ps/dir-bibliographic-notes ; excluded since discoverable via `org-cite-insert'
                                      ps/dir-archive))
-
 
   (defvar ps/org-roam-excluded-files (list
                                       "orb-noter-template.org"
@@ -12126,6 +11978,7 @@ return such list if its length is less than LIMIT."
                                       ".org2blog.org"
                                       "wiki-notes.org" ; removing temporarily
                                       "feeds.org"
+                                      "conflicted copy"
                                       "conflicted-copy"))
 
   ;; exclude headings in specific files and directories
@@ -12176,13 +12029,6 @@ return such list if its length is less than LIMIT."
               nil
             t)))
 
-  (defun ps/org-roam-db-query (sql &rest args)
-    "Run SQL query on Org-roam database with ARGS.
-        SQL can be either the emacsql vector representation, or a string."
-    (sleep-for 0 1)
-    (apply #'emacsql (org-roam-db) sql args))
-
-  (advice-add 'org-roam-db-query :override #'ps/org-roam-db-query)
   (advice-add 'org-roam-node-find :before #'widen)
   (advice-add 'org-roam-node-find :after #'ps/org-narrow-to-entry-and-children)
 
@@ -12241,7 +12087,7 @@ return such list if its length is less than LIMIT."
   :general
   ("A-H-n" 'ps/org-roam-new-note
    "H-j" 'org-roam-node-find
-   "H-s-i" 'org-roam-node-insert)
+   "H-i" 'org-roam-node-insert)
   (org-mode-map
    "s-r" 'org-roam-buffer-toggle))
 #+end_src
@@ -12256,6 +12102,7 @@ return such list if its length is less than LIMIT."
 :END:
 
 https://github.com/hieutkt/.doom.d/blob/master/config.el#L690-L742
+
 *** TODO [#6] Create new generic and person notes via capture templates, not function
 :PROPERTIES:
 :ID:       569027E9-D918-4A06-A85A-8E800DAC16EA
@@ -12298,6 +12145,7 @@ Run org-roam with minimal config and see if the problem with idle times persist
 :END:
 
 So the links to other Wiki articles do not break.
+
 ** org-roam-ui
 :PROPERTIES:
 :ID:       BAEADCA3-68C6-4B59-A45A-7A1C11C6F6BB
@@ -12365,7 +12213,7 @@ I should check this out.
   ("s-l" 'org-transclusion-add-all))
 #+end_src
 
-** vulpea                                                     :project:
+** vulpea
 :PROPERTIES:
 :ID:       697CE296-FAA8-4485-94D8-B1321B59226F
 :END:
@@ -12387,6 +12235,7 @@ I use this package to define a dynamic agenda, as explained and illustrated [[d1
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/vulpea)
 (use-package vulpea
+  :demand t
   :commands (vulpea-buffer-p vulpea-agenda-files-update vulpea-buffer-prop-get-list vulpea-project-update-tag)
   :config
   ;; adapted from
@@ -12417,7 +12266,8 @@ tasks."
           (org-element-parse-buffer 'headline)
           'headline
         (lambda (headline)
-          (or
+
+        (or
            (eq (org-element-property :todo-type headline)
                'todo)
            (org-element-property :scheduled headline)
@@ -12488,7 +12338,8 @@ tasks."
                          (vulpea-project-files)
                          ;; include files modified in past three days,
                          ;; provided number of such files less than 1000
-                         (ps/org-roam-recent 1 1000)))
+                         (ps/org-roam-recent 1 500)
+                         ))
            ps/org-agenda-files-excluded)))
 
   (advice-add 'org-agenda :before #'vulpea-agenda-files-update)
@@ -12527,7 +12378,6 @@ Asked question [[https://org-roam.discourse.group/t/how-to-query-the-database-fo
 
 ** org-noter
 :PROPERTIES:
-:NOTER_DOCUMENT: ../library.org
 :ID:       A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7
 :END:
 :LOGBOOK:
@@ -12557,7 +12407,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   :general
   (pdf-annot-minor-mode-map
    "s-s" 'org-noter-create-skeleton))
-#+End_src
+#+end_src
 
 - To check: https://org-roam.discourse.group/t/org-roam-bibtex-in-a-sub-directory/649/5
 - https://notes.andymatuschak.org/About_these_notes
@@ -12583,28 +12433,12 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 #+begin_src emacs-lisp :results silent
 (use-feature oc
   :demand t
-  :config
-  (setq org-cite-global-bibliography `(,ps/file-bibliography-new
-                                  ,ps/file-bibliography-old))
-  (setq org-cite-csl-styles-dir ps/dir-csl-styles)
-  (setq org-cite-csl-locales-dir ps/dir-csl-locales)
-  (setq org-cite-insert-processor 'citar)
-  (setq org-cite-follow-processor 'citar) ; `org-open-at-point` integration
-  (setq org-cite-activate-processor 'citar) ;
-  (setq org-cite-export-processors
-   '(
-     (md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
-     (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
-     (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
-     (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
-     (t csl "american-medical-association-brackets.csl")       ; Fallback
-     ))
-
+  :config/el-patch
   ;; Comment out `org-cite--allowed-p' condition to allow invocation
   ;; in any mode. Even if inserting a citation is not allowed, one may
   ;; want to invoke the command to trigger contextual actions via
   ;; `embark'.
-  (defun ps/org-cite-insert (arg)
+  (defun org-cite-insert (arg)
     "Insert a citation at point.
 Insertion is done according to the processor set in `org-cite-insert-processor'.
 ARG is the prefix argument received when calling interactively the function."
@@ -12624,15 +12458,48 @@ ARG is the prefix argument received when calling interactively the function."
           (cond
            ((memq (org-element-type context) '(citation citation-reference))
             (funcall insert context arg))
-           (t
-            (org-cite--allowed-p context)
-            (funcall insert nil arg))))))))
+           (el-patch-remove
+             ((org-cite--allowed-p context)
+              (funcall insert nil arg)))
+           (el-patch-swap
+             (t
+              (user-error "Cannot insert a citation here"))
+             (t
+              (funcall insert nil arg)))
+           ))))))
 
-  (advice-add 'org-cite-insert :override #'ps/org-cite-insert)
+  :config
+  (setq org-cite-global-bibliography (list ps/file-bibliography-new
+                                           ps/file-bibliography-old
+                                           ps/file-bibliography-films))
+  (setq org-cite-csl-styles-dir ps/dir-csl-styles)
+  (setq org-cite-csl-locales-dir ps/dir-csl-locales)
+  (setq org-cite-insert-processor 'citar)
+  (setq org-cite-follow-processor 'citar) ; `org-open-at-point` integration
+  (setq org-cite-activate-processor 'citar) ;
+  (setq org-cite-export-processors
+        '(
+          (md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
+          (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
+          (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
+          (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
+          (t csl "american-medical-association-brackets.csl")       ; Fallback
+          ))
 
   :general
   ("H-/" 'org-cite-insert))
 #+end_src
+
+*** TODO Learn how to use ~org-cite~ style and variants
+:PROPERTIES:
+:ID:       78ADAFA7-1C32-4B13-ABD2-043B38B044F8
+:END:
+https://www.youtube.com/watch?v=48fIhQ9ozH4
+
+*** TODO Learn how to use ~org-cite~ locators
+:PROPERTIES:
+:ID:       16071EF9-A033-416E-B61D-FE61297D2EE3
+:END:
 
 *** Resources
 :PROPERTIES:
@@ -12708,6 +12575,7 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
 :ID:       42191633-D2A1-4EDB-903F-3965ECB61510
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-26 Sun 20:16]--[2023-03-26 Sun 20:19] =>  0:03
 CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 :END:
 
@@ -12716,6 +12584,21 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 #+begin_src emacs-lisp :results silent
 (use-feature bibtex
   :demand t
+  :config/el-patch
+  ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field
+  (defun bibtex-autokey-get-year ()
+    "Return year field contents as a string obeying `bibtex-autokey-year-length'."
+    (let* ((str (bibtex-autokey-get-field '("date" "year" (el-patch-add "urldate")))) ; possibly ""
+           (year (or (and (iso8601-valid-p str)
+                          (let ((year (decoded-time-year (iso8601-parse str))))
+                            (and year (number-to-string year))))
+                     ;; BibTeX permits a year field "(about 1984)", where only
+                     ;; the last four nonpunctuation characters must be numerals.
+                     (and (string-match "\\([0-9][0-9][0-9][0-9]\\)[^[:alnum:]]*\\'" str)
+                          (match-string 1 str))
+                     (user-error "Year or date field `%s' invalid" str))))
+      (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
+
   :config
   ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
   ;; retorque.re/zotero-better-bibtex/citing/
@@ -12795,20 +12678,6 @@ Version 2015-06-08"
       (ps/bibtex-asciify-text (point-min) (point-max))
       (buffer-string)))
 
-  ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field
-  (defun ps/bibtex-autokey-get-year ()
-    "Return year field contents as a string obeying `bibtex-autokey-year-length'."
-    (let* ((str (bibtex-autokey-get-field '("date" "year" "urldate"))) ; possibly ""
-           (year (or (and (iso8601-valid-p str)
-                          (let ((year (decoded-time-year (iso8601-parse str))))
-                            (and year (number-to-string year))))
-                     ;; BibTeX permits a year field "(about 1984)", where only
-                     ;; the last four nonpunctuation characters must be numerals.
-                     (and (string-match "\\([0-9][0-9][0-9][0-9]\\)[^[:alnum:]]*\\'" str)
-                          (match-string 1 str))
-                     (user-error "Year or date field `%s' invalid" str))))
-      (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
-
   (defun ps/bibtex-get-key ()
     "Return the key of the current BibTeX entry."
     (save-excursion
@@ -12818,8 +12687,6 @@ Version 2015-06-08"
         (if (re-search-forward "@\\w+{\\([^,]+\\),")
             (match-string-no-properties 1)
           (user-error "Not on a BibTeX entry")))))
-
-  (advice-add 'bibtex-autokey-get-year :override #'ps/bibtex-autokey-get-year)
 
   ;; Add custom 'video' field
   (push '("Video" "Video file"
@@ -12856,6 +12723,7 @@ Version 2015-06-08"
            ("titleaddon")
            ("language")
            ("version")
+           ("rating")
            ("note")
            ("organization")
            ("month")
@@ -12876,6 +12744,11 @@ Version 2015-06-08"
    "A-C-s-r" 'bibtex-previous-entry
    "A-C-s-f" 'bibtex-next-entry))
 #+end_src
+
+*** TODO Why bibtex generates a key starting with 'Boer' when the last name is deBoer?
+:PROPERTIES:
+:ID:       2FB7CCAA-E1FE-4B93-B441-DB9E8437233F
+:END:
 
 *** TODO [#6] Standardize author names in bibtex file
 :PROPERTIES:
@@ -13093,13 +12966,6 @@ With prefix, rebuild the cache before offering candidates."
    "u" 'citar-open-links))
 #+end_src
 
-*** TODO [#4] Fixme: ~citar-open-notes~ creates note even when it already exists
-:PROPERTIES:
-:ID:       8DBC282D-3935-4740-9907-3D73150DC3B6
-:END:
-
-The problem seems to be that ~(citar--select-resource citekeys :notes t)~ returns nil even for existing citekeys.
-l
 *** Resources
 :PROPERTIES:
 :ID:       EAB0E32B-129C-4980-A06B-94B4C25966E2
@@ -13116,7 +12982,7 @@ l
 
 #+begin_src emacs-lisp :results silent
 (use-feature citar-citeproc
-  :demand t
+  :defer 10
   :after citar
   :config
   (setq citar-citeproc-csl-styles-dir org-cite-csl-styles-dir)
@@ -13137,7 +13003,6 @@ l
   :config
   (citar-embark-mode))
 #+end_src
-
 
 ** org-ref
 :PROPERTIES:
@@ -13234,6 +13099,10 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-27 Mon 21:29]--[2023-03-27 Mon 21:45] =>  0:16
+CLOCK: [2023-03-27 Mon 20:49]--[2023-03-27 Mon 21:14] =>  0:25
+CLOCK: [2023-03-22 Wed 13:55]--[2023-03-22 Wed 14:00] =>  0:05
+CLOCK: [2023-03-19 Sun 12:35]--[2023-03-19 Sun 12:58] =>  0:23
 CLOCK: [2023-03-12 Sun 19:36]--[2023-03-12 Sun 20:19] =>  0:43
 CLOCK: [2022-09-22 Thu 14:39]--[2022-09-22 Thu 15:15] =>  0:36
 CLOCK: [2022-09-13 Tue 17:29]--[2022-09-13 Tue 17:56] =>  0:27
@@ -13263,22 +13132,154 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 #+begin_src emacs-lisp :results silent
 (use-package ebib
   :defer 5
-  :init
+  :config/el-patch
+  ;; tweak original function to prevent unnecessary vertical window splits
+  (defun ebib--setup-windows ()
+    "Create Ebib's window configuration.
+If the index buffer is already visible in some frame, select its
+window and make the frame active,"
+    (let ((index-window (get-buffer-window (ebib--buffer 'index) t))
+          (old-frame (selected-frame)))
+      (if index-window
+          (progn (select-window index-window t)
+                 (unless (eq (window-frame) old-frame)
+                   (select-frame-set-input-focus (window-frame))
+                   (setq ebib--frame-before old-frame)))
+        (setq ebib--saved-window-config (current-window-configuration))
+        (setq ebib--frame-before nil)
+        (cond
+         ((eq ebib-layout 'full)
+          (delete-other-windows))
+         ((eq ebib-layout 'custom)
+          (setq ebib--window-before (selected-window))
+          (delete-other-windows)
+          (let ((width (cond
+                        ((integerp ebib-width)
+                         (- (window-total-width) ebib-width))
+                        ((floatp ebib-width)
+                         (- (window-total-width) (truncate (* (window-total-width) ebib-width)))))))
+            (select-window (split-window (selected-window) width t)))))
+        (let* ((index-window (selected-window))
+               (entry-window (el-patch-swap
+                               (split-window index-window ebib-index-window-size
+                                             ebib-window-vertical-split)
+                               (selected-window))))
+          (switch-to-buffer (ebib--buffer 'index))
+          (unless (eq ebib-layout 'index-only)
+            (set-window-buffer entry-window (ebib--buffer 'entry)))
+          (el-patch-remove
+            (set-window-dedicated-p index-window t))
+          (if (eq ebib-layout 'custom)
+              (set-window-dedicated-p entry-window t)))))
+    (if (buffer-local-value 'ebib--dirty-index-buffer (ebib--buffer 'index))
+        (setq ebib--needs-update t)))
+
+  ;; tweak original function to pass custom arguments to `format-time-string'
+  (defun ebib--store-entry (entry-key fields db &optional timestamp if-exists)
+    "Store the entry defined by ENTRY-KEY and FIELDS into DB.
+Optional argument TIMESTAMP indicates whether a timestamp is to
+be added to the entry.  Note that for a timestamp to be added,
+`ebib-use-timestamp' must also be set to T. IF-EXISTS is as for
+`ebib-db-set-entry'.
+
+If storing the entry was successful, return the key under which
+the entry is actually stored (which, if IF-EXISTS is `uniquify',
+may differ from ENTRY-KEY); otherwise return nil.  Depending on
+the value of IF-EXISTS, storing an entry may also result in an
+error."
+    (let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
+      (when (and actual-key timestamp ebib-use-timestamp)
+        (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
+      actual-key))
+
+  ;; We tweak the two functions below so that focus doesn't move away
+  ;; from the current entry when the database is saved or reloaded.
+  (defun ebib--save-database (db &optional force)
+    "Save the database DB.
+The FORCE argument is used as in `ebib-save-current-database'."
+    ;; See if we need to make a backup.
+    (when (and (ebib-db-backup-p db)
+               (file-exists-p (ebib-db-get-filename db)))
+      (ebib--make-backup (ebib-db-get-filename db))
+      (ebib-db-set-backup nil db))
+
+    ;; Check if the file has changed on disk.
+    (let ((db-modtime (ebib-db-get-modtime db))
+          (file-modtime (ebib--get-file-modtime (ebib-db-get-filename db))))
+      ;; If the file to be saved has been newly created, both modtimes are nil.
+      (when (and db-modtime file-modtime
+                 (time-less-p db-modtime file-modtime))
+        (unless (or (and (listp force)
+                         (eq 16 (car force)))
+                    (yes-or-no-p (format "File `%s' changed on disk.  Overwrite? " (ebib-db-get-filename db))))
+          (error "[Ebib] File not saved"))))
+
+    ;; Now save the database.
+    (el-patch-swap
+      (with-temp-buffer
+        (ebib--format-database-as-bibtex db)
+        (write-region (point-min) (point-max) (ebib-db-get-filename db)))
+      (let ((buf (current-buffer)))
+        (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+        (with-temp-buffer
+          (ebib--format-database-as-bibtex db)
+          (write-region (point-min) (point-max) (ebib-db-get-filename db)))))
+    (ebib--set-modified nil db))
+
+  (defun ebib-reload-current-database ()
+    "Reload the current database from disk."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (when (or (and (ebib-db-modified-p ebib--cur-db)
+                      (yes-or-no-p "Database modified.  Really reload from file? "))
+                 (y-or-n-p "Reload current database from file? "))
+         (el-patch-remove
+           (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+           (ebib--reload-database ebib--cur-db)
+           (ebib--set-modified nil ebib--cur-db)
+           (ebib--update-buffers)
+           (message "Database reloaded"))
+         (el-patch-add
+           (ps/ebib-reload-current-database-no-confirm))))
+      (default
+       (beep))))
+
+  ;; hack to solve the issue whereby hitting `RET' in
+  ;; `ebib-index-mode' sometimes does not edit the entry at point
+  (defun ebib-edit-entry ()
+    "Edit the current BibTeX entry."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (el-patch-add
+         (if (string= (what-line) "Line 1")
+             (progn
+               (ebib-next-entry)
+               (ebib-prev-entry))
+           (ebib-prev-entry)
+           (ebib-next-entry)))
+       (ebib--edit-entry-internal))
+      (default
+       (beep))))
 
   :config
+  (setq ebib-preload-bib-files org-cite-global-bibliography)
+  (setq ebib-notes-directory ps/dir-bibliographic-notes)
+  (setq ebib-notes-use-org-capture t)
   (setq ebib-filename-separator ";")
   (setq ebib-file-associations nil) ; do not open any file types externally
   (setq ebib-layout 'index-only)
   (setq ebib-bibtex-dialect 'biblatex)
   (setq ebib-use-timestamp t)
-  (setq ebib-preload-bib-files org-cite-global-bibliography)
+  (setq ebib-timestamp-format "%Y-%m-%d %T (%Z)")
+  (setq ebib-save-xrefs-first nil)
+  (setq ebib-default-entry-type "online")
+  (setq ebib-uniquify-keys t)
   (setq ebib-index-columns '(("Entry Key" 30 t)
                              ("Author/Editor" 25 t)
                              ("Year" 4 t)
                              ("Title" 50 t)))
-  (setq ebib-timestamp-format "%Y-%m-%d %T (%Z)")
-  (setq ebib-save-xrefs-first nil)
-  (setq ebib-default-entry-type "online")
   (setq ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "urldate" "venue" "version" "volumes" "year"))
 
   (defun ps/ebib-open-or-switch ()
@@ -13341,46 +13342,6 @@ confirmation."
    (lambda (event)
      (ps/ebib-reload-current-database-no-confirm)))
 
-  ;; Tweak original function to prevent unnecessary vertical window splits
-  (defun ps/ebib--setup-windows ()
-    "Create Ebib's window configuration.
-If the index buffer is already visible in some frame, select its
-window and make the frame active,"
-    (let ((index-window (get-buffer-window (ebib--buffer 'index) t))
-          (old-frame (selected-frame)))
-      (if index-window
-          (progn (select-window index-window t)
-                 (unless (eq (window-frame) old-frame)
-                   (select-frame-set-input-focus (window-frame))
-                   (setq ebib--frame-before old-frame)))
-        (setq ebib--saved-window-config (current-window-configuration))
-        (setq ebib--frame-before nil)
-        (cond
-         ((eq ebib-layout 'full)
-          (delete-other-windows))
-         ((eq ebib-layout 'custom)
-          (setq ebib--window-before (selected-window))
-          (delete-other-windows)
-          (let ((width (cond
-                        ((integerp ebib-width)
-                         (- (window-total-width) ebib-width))
-                        ((floatp ebib-width)
-                         (- (window-total-width) (truncate (* (window-total-width) ebib-width)))))))
-            (select-window (split-window (selected-window) width t)))))
-        (let* ((index-window (selected-window))
-               (entry-window (selected-window)))
-          (switch-to-buffer (ebib--buffer 'index))
-          (unless (eq ebib-layout 'index-only)
-            (set-window-buffer entry-window (ebib--buffer 'entry)))
-          ;; (set-window-dedicated-p index-window t)
-          (if (eq ebib-layout 'custom)
-              (set-window-dedicated-p entry-window t)))))
-    (if (buffer-local-value 'ebib--dirty-index-buffer (ebib--buffer 'index))
-        (setq ebib--needs-update t)))
-
-  (advice-add 'ebib--setup-windows :override #'ps/ebib--setup-windows)
-
-  ;; tweak original function to pass custom arguments to `format-time-string'
   (defun ps/ebib--store-entry (entry-key fields db &optional timestamp if-exists)
     "Store the entry defined by ENTRY-KEY and FIELDS into DB.
 Optional argument TIMESTAMP indicates whether a timestamp is to
@@ -13397,8 +13358,6 @@ error."
       (when (and actual-key timestamp ebib-use-timestamp)
         (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format nil "GMT") actual-key db 'overwrite))
       actual-key))
-
-  (advice-add 'ebib--store-entry :override #'ps/ebib--store-entry)
 
   (defvar ps/ebib-isbn-p
     "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
@@ -13457,7 +13416,7 @@ error."
                   (read-string "Enter ISBN or DOI: "))))
       ;; TODO: Add support for arXiv
       (cond ((ps/doi-utils-doi-p id)
-             (scihub id))
+             (ps/ebib-download-doi id))
             ((ps/ebib-isbn-p id)
              (ps/ebib-download-book nil id))
             ((ps/ebib-video-p id)
@@ -13475,7 +13434,7 @@ error."
                   (read-string "Enter ISBN or DOI: "))))
       ;; TODO: Add support for arXiv
       (cond ((ps/doi-utils-doi-p id)
-             (scihub id))
+             (ps/ebib-download-doi id))
             ((ps/ebib-isbn-p id)
              (ps/ebib-search-book nil id))
             (t
@@ -13693,96 +13652,24 @@ different users, as long as they have the same folder structure."
     (interactive)
     (switch-to-buffer-other-window " 2:new.bib"))
 
-  (defun ps/ebib-copy-doi ()
-    "docstring"
+  ;; requires SciDownl
+  ;; https://github.com/Tishacy/SciDownl
+  (defun ps/ebib-download-doi (&optional doi)
+    "Download DOI from Sci-Hub. If DOI is not supplied, obtain it from
+the Ebib entry at point."
     (interactive)
-    (ebib--execute-when
-      (entries
-       (let ((doi (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
-         (unless doi
-           (user-error "[Ebib] No DOI found in doi field"))
-         ;; FIXME: `(return doi)' fails to return DOI; why?
-         (kill-new doi)))))
-
-  (defun ps/ebib-download-doi ()
-    "docstring"
-    (interactive)
-    (let* ((key (ebib--get-key-at-point))
-           (file (file-name-concat
-                  ps/dir-library-pdf
-                  (file-name-with-extension key ".pdf"))))
-      (ps/ebib-copy-doi)
-      (url-copy-file (scihub (current-kill 0)) file)
-      (ebib-set-field-value "file" file key ebib--cur-db ";")))
-
-  ;; We tweak the two functions below so that focus doesn't move away
-  ;; from the current entry when the database is saved or reloaded.
-
-  (defun ps/ebib--save-database (db &optional force)
-    "Save the database DB.
-The FORCE argument is used as in `ebib-save-current-database'."
-    ;; See if we need to make a backup.
-    (when (and (ebib-db-backup-p db)
-               (file-exists-p (ebib-db-get-filename db)))
-      (ebib--make-backup (ebib-db-get-filename db))
-      (ebib-db-set-backup nil db))
-
-    ;; Check if the file has changed on disk.
-    (let ((db-modtime (ebib-db-get-modtime db))
-          (file-modtime (ebib--get-file-modtime (ebib-db-get-filename db))))
-      ;; If the file to be saved has been newly created, both modtimes are nil.
-      (when (and db-modtime file-modtime
-                 (time-less-p db-modtime file-modtime))
-        (unless (or (and (listp force)
-                         (eq 16 (car force)))
-                    (yes-or-no-p (format "File `%s' changed on disk.  Overwrite? " (ebib-db-get-filename db))))
-          (error "[Ebib] File not saved"))))
-
-    ;; Now save the database.
-    (let ((buf (current-buffer)))
-      (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-      (with-temp-buffer
-        (ebib--format-database-as-bibtex db)
-        (write-region (point-min) (point-max) (ebib-db-get-filename db)))
-      ;; (ebib--pop-to-buffer
-      ;; (cond ((string= (buffer-name buf) "*Ebib-entry*")
-      ;; (ebib--buffer 'entry))
-      ;; ((string= (buffer-name buf) "*Ebib-index*")
-      ;; (ebib--buffer 'index))))
-      )
-    (ebib--set-modified nil db))
-
-  (advice-add 'ebib--save-database :override #'ps/ebib--save-database)
-
-  (defun ps/ebib-reload-current-database ()
-    "Reload the current database from disk."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (when (or (and (ebib-db-modified-p ebib--cur-db)
-                      (yes-or-no-p "Database modified.  Really reload from file? "))
-                 (y-or-n-p "Reload current database from file? "))
-         (ps/ebib-reload-current-database-no-confirm)))
-      (default
-       (beep))))
-
-  (advice-add 'ebib-reload-current-database :override #'ps/ebib-reload-current-database)
-
-  ;; hack to solve the issue whereby hitting `RET' in
-  ;; `ebib-index-mode' sometimes does not edit the entry at point
-  (defun ps/ebib-edit-entry ()
-    "Edit the current BibTeX entry."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (unless (string= (what-line) "Line 1")
-         (ebib-prev-entry)
-         (ebib-next-entry))
-       (ebib--edit-entry-internal))
-      (default
-       (beep))))
-
-  (advice-add 'ebib-edit-entry :override #'ps/ebib-edit-entry)
+    (let ((doi (or doi
+                   (ebib--execute-when
+                     (entries
+                      (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+                     (default
+                      (beep)))))
+          (default-directory ps/dir-downloads))
+      (unless doi
+        (error "[Ebib] No DOI found in doi field"))
+      (message "Trying to download file...")
+      (async-shell-command
+       (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi))))
 
   (defun ps/ebib--extension-directories (extension)
     "Return directory associated with EXTENSION."
@@ -14300,6 +14187,10 @@ first name, and names are separated by a semicolon."
   ("A-i" 'ps/ebib-open-or-switch)
   (ebib-multiline-mode-map
    "s-c" 'ebib-quit-multiline-buffer-and-save)
+  ((ebib-entry-mode-map ebib-index-mode-map)
+   "H-s" 'ebib-save-current-database
+   "Q" 'ebib-quit
+   "n" 'ebib-popup-note)
   (ebib-entry-mode-map
    "TAB" 'ebib-goto-next-set
    "<backtab>" 'ebib-goto-prev-set
@@ -14320,13 +14211,11 @@ first name, and names are separated by a semicolon."
    "g" 'ps/ebib-search-library-genesis
    "G" 'ps/ebib-search-goodreads
    "h" 'ps/ebib-open-html-file
-   "i" 'ebib-browse-doi
    "i" 'ps/ebib-download-by-identifier
    "I" 'ps/ebib-search-book-by-isbn
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
    "P" 'ps/ebib-open-pdf-file-externally
-   "Q" 'ebib-quit
    "r" 'ps/ebib-rename-files
    "s" 'ps/ebib-search-dwim
    "t" 'ps/ebib-search-book-dwim
@@ -14347,16 +14236,38 @@ first name, and names are separated by a semicolon."
    "D" 'ebib-delete-entry
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry
-   "s" 'ps/ebib-sort-toggle
-   "H-s" 'ebib-save-current-database
-   "Q" 'ebib-quit))
+   "s" 'ps/ebib-sort-toggle))
 #+end_src
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
+*** TODO Add visible rating field to ebib
+:PROPERTIES:
+:ID:       311387B3-2CCB-4F40-87EB-7558F2C007BD
+:END:
+
+*** TODO Why does ebib not reload the db?
+:PROPERTIES:
+:ID:       7DA329F1-B179-4B86-8FB9-D37D43FD9B62
+:END:
+I think it's actually reloading but the buffer doesn't refresh.
+
+*** TODO Decide how ebib should deal with multi-volume works
+:PROPERTIES:
+:ID:       33D8549E-7DD8-4E4B-A690-0E6D29A8CA60
+:END:
+
+*** TODO Modify my custom ebib formulas so that they use native uniquify
+:PROPERTIES:
+:ID:       BA7B5845-B148-43B6-BE50-C1CBF89478BB
+:END:
+
 *** TODO [#6] Add imdb movies to ebib
 :PROPERTIES:
 :ID:       B801240B-B0F4-46EB-859F-9755ECCFB3DF
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-15 Wed 19:07]--[2023-03-15 Wed 20:22] =>  1:15
 :END:
 - First export them to csv.
 - Then convert the csv to bibtex
@@ -14429,6 +14340,16 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
 /[[https://github.com/mpedramfar/zotra][zotra]] provides functions to get bibliographic information from a URL via [[https://www.zotero.org/support/translators][Zotero translators]], but without relying on the Zotero client./
 
+To run translation server,
+
+#+begin_src bash :tangle no
+cd ~/source/translation-server
+nvm use 14
+npm start
+#+end_src
+
+I experimented with setting the value of ~zotra-backend~ to each of the three available values, but only ~translation-server~ works reliably.
+
 #+begin_src emacs-lisp :results silent
 (use-package zotra
   :straight (zotra
@@ -14441,11 +14362,35 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (setq zotra-url-retrieve-timeout 10)
   (setq zotra-default-bibliography ps/file-bibliography-new)
   (setq zotra-default-entry-format "biblatex")
+  (setq zotra-after-add-entry-hook nil)
   (setq zotra-download-attachment-default-directory ps/dir-downloads)
-  (setq zotra-backend 'zotra-cli)
-  (setq zotra-cli-command "~/source/zotra-cli/bin/index.js")
+  (setq zotra-backend 'translation-server)
+  (setq zotra-cli-command (file-name-concat ps/dir-dropbox "source/zotra-cli/bin/index.js"))
 
-  (defun ps/zotra-after-add-entry-hook-functions ()
+  (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
+    (let ((bibfile
+           (or bibfile zotra-default-bibliography
+               (completing-read
+                "Bibfile: "
+                (append (directory-files "." t ".*\\.bib$")
+                        (org-cite-list-bibliography-files))))))
+      (find-file bibfile)
+      (widen)
+      (goto-char (point-max))
+      (when (not (looking-at "^")) (insert "\n"))
+      (insert (zotra-get-entry url-or-search-string is-search entry-format))
+      (save-excursion
+        (save-restriction
+          (bibtex-narrow-to-entry)
+          (bibtex-beginning-of-entry)
+          (goto-char (point-max))
+          (when (not (looking-at "^")) (insert "\n"))
+          (advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
+          (save-buffer)
+          (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
+          (run-hooks 'zotra-after-add-entry-hook)))))
+
+  (defun ps/zotra-after-add-entry-hook-function ()
     "Function to trigger with `zotra-after-add-entry-hook'."
     (revert-buffer nil t)
     (goto-char (point-max))
@@ -14458,13 +14403,157 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
       (ebib ps/file-bibliography-new citekey)
       (ps/ebib-open-key citekey)))
 
-  (setq zotra-after-add-entry-hook nil)
-  (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-functions)
+  (defun ps/select-safe-coding-system-interactively (from to codings unsafe
+                                                          &optional rejected default)
+    "Select interactively a coding system for the region FROM ... TO.
+FROM can be a string, as in `write-region'.
+CODINGS is the list of base coding systems known to be safe for this region,
+  typically obtained with `find-coding-systems-region'.
+UNSAFE is a list of coding systems known to be unsafe for this region.
+REJECTED is a list of coding systems which were safe but for some reason
+  were not recommended in the particular context.
+DEFAULT is the coding system to use by default in the query."
+    ;; At first, if some defaults are unsafe, record at most 11
+    ;; problematic characters and their positions for them by turning
+    ;;	(CODING ...)
+    ;; into
+    ;;	((CODING (POS . CHAR) (POS . CHAR) ...) ...)
+    (if unsafe
+        (setq unsafe
+              (mapcar (lambda (coding)
+                        (cons coding
+                              (if (stringp from)
+                                  (mapcar (lambda (pos)
+                                            (cons pos (aref from pos)))
+                                          (unencodable-char-position
+                                           0 (length from) coding
+                                           11 from))
+                                (mapcar (lambda (pos)
+                                          (cons pos (char-after pos)))
+                                        (unencodable-char-position
+                                         from to coding 11)))))
+                      unsafe)))
+
+    (setq codings (sanitize-coding-system-list codings))
+
+    (let ((window-configuration (current-window-configuration))
+          (bufname (buffer-name))
+          coding-system)
+      (save-excursion
+        ;; If some defaults are unsafe, make sure the offending
+        ;; buffer is displayed.
+        (when (and unsafe (not (stringp from)))
+          (pop-to-buffer bufname)
+          (goto-char (apply #'min (mapcar (lambda (x) (or (car (cadr x)) (point-max)))
+                                          unsafe))))
+        ;; Then ask users to select one from CODINGS while showing
+        ;; the reason why none of the defaults are not used.
+        (with-output-to-temp-buffer "*Warning*"
+          (with-current-buffer standard-output
+            (if (and (null rejected) (null unsafe))
+                (insert "No default coding systems to try for "
+                        (if (stringp from)
+                            (format "string \"%s\"." from)
+                          (format-message "buffer `%s'." bufname)))
+              (insert
+               "These default coding systems were tried to encode"
+               (if (stringp from)
+                   (concat " \"" (if (> (length from) 10)
+                                     (concat (substring from 0 10) "...\"")
+                                   (concat from "\"")))
+                 (format-message
+                  " the following\nproblematic characters in the buffer `%s'"
+                  bufname))
+               ":\n")
+              (select-safe-coding-system--format-list unsafe)
+              (when rejected
+                (insert "These safely encode the text in the buffer,
+but are not recommended for encoding text in this context,
+e.g., for sending an email message.\n ")
+                (dolist (x rejected)
+                  (princ " ") (princ x))
+                (insert "\n"))
+              (when unsafe
+                (insert (if rejected "The other coding systems"
+                          "However, each of them")
+                        (substitute-command-keys
+                         " encountered characters it couldn't encode:\n"))
+                (dolist (coding unsafe)
+                  (insert (format "  %s cannot encode these:" (car coding)))
+                  (let ((i 0)
+                        (func1
+                         (lambda (bufname pos)
+                           (when (buffer-live-p (get-buffer bufname))
+                             (pop-to-buffer bufname)
+                             (goto-char pos))))
+                        (func2
+                         (lambda (bufname pos coding)
+                           (when (buffer-live-p (get-buffer bufname))
+                             (pop-to-buffer bufname)
+                             (if (< (point) pos)
+                                 (goto-char pos)
+                               (forward-char 1)
+                               (search-unencodable-char coding)
+                               (forward-char -1))))))
+                    (dolist (elt (cdr coding))
+                      (insert " ")
+                      (if (stringp from)
+                          (insert (if (< i 10) (cdr elt) "..."))
+                        (if (< i 10)
+                            (insert-text-button
+                             (cdr elt)
+                             :type 'help-xref
+                             'face 'link
+                             'help-echo
+                             "mouse-2, RET: jump to this character"
+                             'help-function func1
+                             'help-args (list bufname (car elt)))
+                          (insert-text-button
+                           "..."
+                           :type 'help-xref
+                           'face 'link
+                           'help-echo
+                           "mouse-2, RET: next unencodable character"
+                           'help-function func2
+                           'help-args (list bufname (car elt)
+                                            (car coding)))))
+                      (setq i (1+ i))))
+                  (insert "\n"))
+                (insert (substitute-command-keys "\
+
+Click on a character (or switch to this window by `\\[other-window]'\n\
+and select the characters by RET) to jump to the place it appears,\n\
+where `\\[universal-argument] \\[what-cursor-position]' will give information about it.\n"))))
+            (insert (substitute-command-keys "\nSelect \
+one of the safe coding systems listed below,\n\
+or cancel the writing with \\[keyboard-quit] and edit the buffer\n\
+   to remove or modify the problematic characters,\n\
+or specify any other coding system (and risk losing\n\
+   the problematic characters).\n\n"))
+            (let ((pos (point))
+                  (fill-prefix "  "))
+              (dolist (x codings)
+                (princ "  ") (princ x))
+              (insert "\n")
+              (fill-region-as-paragraph pos (point)))))
+
+        ;; Read a coding system.
+        (setq coding-system 'utf-8)
+        (setq last-coding-system-specified coding-system))
+
+      (kill-buffer "*Warning*")
+      (set-window-configuration window-configuration)
+      coding-system))
+
+  ;; Ugly hack to fix encoding issues.
+  ;; TODO: Fix this properly.
+  (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)
+
+  (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
 
   :general
   (ebib-index-mode-map
-   "i" 'zotra-add-entry-from-search
-   "u" 'zotra-add-entry-from-url))
+   "i" 'zotra-add-entry-from-search))
 #+end_src
 
 *** WAITING Launch zotra outside emacs
@@ -14474,24 +14563,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 :LOGBOOK:
 CLOCK: [2023-03-06 Mon 13:45]--[2023-03-06 Mon 13:50] =>  0:05
 :END:
-
-** scihub
-:PROPERTIES:
-:ID:       29ABF514-563B-463D-9FDB-CF2C8AA25F83
-:END:
-
-/[[https://github.com/emacs-pe/scihub.el][scihub]] supports downloading papers from Sci-Hub./
-
-#+begin_src emacs-lisp :results silent
-(use-package scihub
-  :config
-  (setq scihub-download-directory ps/dir-downloads)
-  (setq scihub-open-after-download nil)
-  (setq scihub-fetch-domain 'scihub-fetch-domains-lovescihub)
-  ;; run `scihub-homepage' for a list of available scihub webservers
-  ;; if the URL below stops working
-  (setq scihub-homepage "http://sci-hub.wf"))
-#+end_src
 
 * spaced-repetition
 :PROPERTIES:
@@ -14794,6 +14865,10 @@ https://gist.github.com/loziju/66d3f024e102704ff5222e54a4bfd50e
 :ID:       1B568415-F030-437B-921C-B4A65B370A6E
 :END:
 :LOGBOOK:
+CLOCK: [2023-03-23 Thu 23:21]--[2023-03-23 Thu 23:35] =>  0:14
+CLOCK: [2023-03-22 Wed 09:29]--[2023-03-22 Wed 09:36] =>  0:07
+CLOCK: [2023-03-16 Thu 19:28]--[2023-03-16 Thu 20:20] =>  0:52
+CLOCK: [2023-03-16 Thu 17:13]--[2023-03-16 Thu 18:24] =>  1:11
 CLOCK: [2023-03-08 Wed 19:40]--[2023-03-08 Wed 19:48] =>  0:08
 CLOCK: [2022-07-19 Tue 09:23]--[2022-07-19 Tue 09:48] =>  0:25
 CLOCK: [2022-07-19 Tue 08:37]--[2022-07-19 Tue 09:01] =>  0:24
@@ -14889,12 +14964,12 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-attachment-dir ps/dir-downloads)
   (setq mu4e-change-filenames-when-moving t)
   (setq mu4e-maildir-shortcuts
-   `((,ps/mu4e-inbox-folder . ?i)
-     (,ps/mu4e-daily-folder . ?y)
-     (,mu4e-drafts-folder  . ?d)
-     (,mu4e-sent-folder    . ?t)
-     (,mu4e-trash-folder   . ?x)
-     (,mu4e-refile-folder  . ?a))) ; required for correct Gmail refiling
+        `((,ps/mu4e-inbox-folder . ?i)
+          (,ps/mu4e-daily-folder . ?y)
+          (,mu4e-drafts-folder  . ?d)
+          (,mu4e-sent-folder    . ?t)
+          (,mu4e-trash-folder   . ?x)
+          (,mu4e-refile-folder  . ?a))) ; required for correct Gmail refiling
   (setq mu4e-compose-dont-reply-to-self t)
   (setq mu4e-compose-format-flowed t)
   (setq mu4e-confirm-quit nil)
@@ -14936,21 +15011,23 @@ confirmation."
     (mu4e-view-mark-for-refile)
     (mu4e-mark-execute-all t))
 
-  (defun ps/mu4e-headers-org-capture (&optional arg)
-    "In headers mode, capture message at point with `org-capture'
- and, unless invoked with a prefix argument, archive it."
-    (interactive)
-    (org-capture nil "e")
-    (unless arg
-      (ps/mu4e-headers-archive)))
-
   (defun ps/mu4e-view-org-capture (&optional arg)
     "In view mode, capture message at point with `org-capture' and,
- unless invoked with a prefix argument, archive it."
-    (interactive)
-    (org-capture nil "e")
-    (unless arg
-      (ps/mu4e-view-archive)))
+ unless invoked with a prefix argument, archive it.
+
+If the message body contains with '[org-capture key: KEY]',
+interpret KEY as the org-capture template key."
+    (interactive "P")
+    (if (eq major-mode 'mu4e-view-mode)
+        (let* ((message-body (mu4e-message-field (mu4e-message-at-point) :body-txt))
+               (key (if
+                        (string-match "\\[org-capture key: \\(.*\\)\\]" message-body)
+                        (match-string-no-properties 1 message-body)
+                      "e")))
+          (org-capture nil key)
+          (unless arg
+            (ps/mu4e-view-archive)))
+      (user-error "Not in mu4e-view-mode")))
 
   (defun ps/mu4e-headers-trash ()
     "In headers mode, trash message at point without asking for
@@ -15098,6 +15175,54 @@ it, without asking for confirmation."
     (toggle-truncate-lines 1)
     (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.15))
 
+  ;; this function fixes a bug in the original
+  (defun mu4e-headers-change-sorting (&optional field dir)
+    "Change the sorting/threading parameters.
+FIELD is the field to sort by; DIR is a symbol: either 'ascending,
+'descending, 't (meaning: if FIELD is the same as the current
+sortfield, change the sort-order) or nil (ask the user)."
+    (interactive)
+    (let* ((field
+            (or field
+                (mu4e-read-option "Sortfield: " mu4e~headers-sort-field-choices)))
+           ;; note: 'sortable' is either a boolean (meaning: if non-nil, this is
+           ;; sortable field), _or_ another field (meaning: sort by this other field).
+           (sortable (plist-get (cdr (assoc field mu4e-header-info)) :sortable))
+           ;; error check
+           (sortable
+            (if sortable
+                sortable
+              (mu4e-error "Not a sortable field")))
+           (sortfield (if (booleanp sortable) field sortable))
+           (dir
+            (cl-case dir
+              ((ascending descending) dir)
+              ;; change the sort order if field = curfield
+              (mu4e-read-option "Direction: "
+                                '(("ascending" . 'ascending) ("descending" . 'descending)))
+              (t
+               (if (eq sortfield mu4e-headers-sort-field)
+                   (if (eq mu4e-headers-sort-direction 'ascending)
+                       'descending 'ascending)
+                 'descending)))))
+      (setq
+       mu4e-headers-sort-field sortfield
+       mu4e-headers-sort-direction dir)
+      (mu4e-message "Sorting by %s (%s)"
+                    (symbol-name sortfield)
+                    (symbol-name mu4e-headers-sort-direction))
+      (mu4e-headers-rerun-search)))
+
+  ;; this function seems to have been introduced after 1.6.11;
+  ;; since `org-msg' requires, we load it here
+  (defun mu4e-message-readable-path (&optional msg)
+    "Get a readable path to MSG or raise an error.
+If MSG is nil, use `mu4e-message-at-point'."
+    (let ((path (plist-get (or msg (mu4e-message-at-point)) :path)))
+      (unless (file-readable-p path)
+        (mu4e-error "No readable message at %s; database outdated?" path))
+      path))
+
   (add-hook 'mu4e-view-mode-hook #'ps/mu4e-view-mode-hook-functions)
   (add-hook 'change-major-mode-hook #'ps/faces-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode
   (add-hook 'mu4e-mark-execute-pre-hook #'ps/mu4e-gmail-fix-flags)
@@ -15140,7 +15265,6 @@ it, without asking for confirmation."
    "k" 'mu4e-headers-prev
    "l" 'mu4e-headers-next
    "m" 'mu4e-headers-mark-for-something
-   "o" 'ps/mu4e-headers-org-capture
    "R" 'mu4e-headers-mark-for-refile
    "V" 'mu4e-headers-mark-for-move
    "v" 'ps/mu4e-headers-move
@@ -15175,7 +15299,10 @@ This assumes you have already set up ~mbsync~ (or whichever program you use to d
 brew uninstall mu
 cd ~/Downloads
 # download brew formula for mu 1.6.11
-wget https://raw.githubusercontent.com/Homebrew/homebrew-core/c42744ba370044e5363e1a6547014c810304b520/Formula/mu.rb
+# if wget fails to download the file, just download it manually
+wget
+https://raw.githubusercontent.com/Homebrew/homebrew-core/c42744ba370044e5363e1a6547014c810304b520/Formula/mu.rb
+# install downloaded formula
 HOMEBREW_NO_INSTALL_CLEANUP=1 brew install ~/Downloads/mu.rb
 # pin mu so that brew doesn't update to the latest version when you run 'brew upgrade'
 brew pin mu
@@ -15254,7 +15381,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
 #+begin_src emacs-lisp :results silent
 (use-package org-msg
-  :after (org mu4e)
+  :after org mu4e
   :defer 3
   :config
   (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t")
@@ -15266,6 +15393,82 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
                                        (reply-to-text	. (text))))
   (setq org-msg-convert-citation t)
   (setq org-msg-signature ps/personal-signature)
+  (setq org-msg-enforce-css '((del nil
+                                   ((font-family . "\"Georgia\"")
+                                    (font-size . "11pt")
+                                    (color . "grey")
+                                    (border-left . "none")
+                                    (text-decoration . "line-through")
+                                    (margin-bottom . "0px")
+                                    (margin-top . "10px")
+                                    (line-height . "1.3")))
+                              (a nil
+                                 ((color . "#4078F2")))
+                              (a reply-header
+                                 ((color . "black")
+                                  (text-decoration . "none")))
+                              (div reply-header
+                                   ((padding . "3.0pt 0in 0in 0in")
+                                    (border-top . "solid #d5d5d5 1.0pt")
+                                    (margin-bottom . "20px")))
+                              (span underline
+                                    ((text-decoration . "underline")))
+                              (li nil
+                                  ((font-family . "\"Georgia\"")
+                                   (font-size . "11pt")
+                                   (line-height . "1.3")
+                                   (margin-bottom . "0px")
+                                   (margin-top . "2px")))
+                              (nil org-ul
+                                   ((list-style-type . "square")))
+                              (nil org-ol
+                                   ((font-family . "\"Georgia\"")
+                                    (font-size . "11pt")
+                                    (line-height . "1.3")
+                                    (margin-bottom . "0px")
+                                    (margin-top . "0px")
+                                    (margin-left . "30px")
+                                    (padding-top . "0px")
+                                    (padding-left . "5px")))
+                              (nil signature
+                                   ((font-family . "\"Georgia\"")
+                                    (font-size . "11pt")
+                                    (margin-bottom . "20px")))
+                              (blockquote quote0
+                                          ((padding-left . "5px")
+                                           (font-size . "0.9")
+                                           (margin-left . "10px")
+                                           (margin-top . "10px")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (border-left . "3px solid #d5d5d5")))
+                              (blockquote quote1
+                                          ((padding-left . "5px")
+                                           (font-size . "0.9")
+                                           (margin-left . "10px")
+                                           (margin-top . "10px")
+                                           (margin-bottom . "0")
+                                           (background . "#f9f9f9")
+                                           (color . "#324e72")
+                                           (border-left . "3px solid #3c5d88")))
+                              (pre nil
+                                   ((line-height . "1.3")
+                                    (color . "#000000")
+                                    (background-color . "#f0f0f0")
+                                    (margin . "0px")
+                                    (font-size . "9pt")
+                                    (font-family . "monospace")))
+                              (p nil
+                                 ((text-decoration . "none")
+                                  (margin-bottom . "0px")
+                                  (margin-top . "10px")
+                                  (line-height . "1.3")
+                                  (font-size . "11pt")
+                                  (font-family . "\"Georgia\"")))
+                              (div nil
+                                   ((font-family . "\"Georgia\"")
+                                    (font-size . "11pt")
+                                    (line-height . "11pt")))))
 
   (org-msg-mode)
 
@@ -15332,7 +15535,7 @@ Grammarly."
    "s-w" 'ps/org-msg-open-in-wordtune)
   (org-mode-map
    "A-s-g" 'ps/org-msg-grammarly))
-#+End_src
+#+end_src
 
 *** TODO [#5] Figure out how to make ~org-msg~ preserve formatting of quoted emails
 :PROPERTIES:
@@ -15341,21 +15544,6 @@ Grammarly."
 :END:
 I.e. the message quoted when on replies to, or forwards, an existing email.
 
-*** TODO [#5] Increase font size as suggested [[mu4e:msgid:CAERy4vxjiA9KpE4z7k7fkL71xcSZffO6zPBN8O5bN62vfijZoA@mail.gmail.com][by Amy]]
-:PROPERTIES:
-:Effort:   0:25
-:ID:       3F610D3D-B076-4DF5-B1AC-B9A163A5A04C
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-15 Wed 00:48]--[2023-03-15 Wed 00:55] =>  0:07
-CLOCK: [2022-06-08 Wed 20:13]--[2022-06-08 Wed 20:36] =>  0:23
-CLOCK: [2021-12-07 Tue 12:46]--[2021-12-07 Tue 12:47] =>  0:01
-:END:
-
-Also add spacing (properties are ~padding~ / ~margin~)
-This is controlled with ~org-msg-enforce-css~.
-
-See https://stackoverflow.com/questions/66214297/how-can-i-set-the-same-padding-left-in-my-template-for-outlook-gmail-emails
 *** TODO [#5] Figure out how to include LaTeX/Mathjax
 :PROPERTIES:
 :Effort:   0:30
@@ -15556,8 +15744,7 @@ into a task for Leo."
     (add-hook 'completion-at-point-functions
               #'telega-chatbuf-complete-at-point nil 'local))
 
-
-  (telega-mode-line-mode 1)
+  (telega-mode-line-mode)
 
   (add-hook 'telega-chat-mode-hook #'ps/telega-chat-mode)
   (add-hook 'telega-chat-mode-hook #'(lambda () (setq default-directory ps/dir-downloads)))
@@ -15589,7 +15776,7 @@ into a task for Leo."
    "s-r" 'telega-msg-add-reaction
    "s-s" 'telega-chatbuf-filter-search
    "s-t" 'telega-sticker-choose-favorite-or-recent
-   "s-v" 'ps/markdown-paste-from-org
+   "s-v" 'ps/org-paste-html
    "A-s-v" 'telega-chatbuf-attach-clipboard
    "s-z" 'telega-mnz-chatbuf-attach-code
    "A-s-e" 'telega-chatbuf-edit-prev
@@ -15917,7 +16104,6 @@ CLOCK: [2021-10-07 Thu 14:31]--[2021-10-07 Thu 15:23] =>  0:52
 (use-package circe)
 #+end_src
 
-
 ** accord
 :PROPERTIES:
 :ID:       143D57CF-122E-4FE2-8437-4FB1DE13BC94
@@ -15954,6 +16140,7 @@ CLOCK: [2021-05-18 Tue 18:26]--[2021-05-18 Tue 18:54] =>  0:28
    '(("gnu\\.org"  . eww-browse-url)
      ("protesilaos\\.com" . eww-browse-url)
      ("orgmode\\.org" . eww-browse-url)
+     ("var/folders" . eww-browse-url) ; email
      ;; My VPN settings apply to Firefox only (via split tunneling),
      ;; so the websites requiring VPN access are listed below, and
      ;; will be opened with this browser.
@@ -16093,7 +16280,8 @@ To be used by `eww-after-render-hook'."
            (shell-command-buffer-name-async title))
       (async-shell-command
        (format
-        "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless --print-to-pdf-no-header --print-to-pdf='%s' %s"
+        "'%s' --headless --print-to-pdf-no-header --print-to-pdf='%s' %s"
+        browse-url-chrome-program
         output-file
         url))))
 
@@ -16472,21 +16660,22 @@ CLOCK: [2021-05-22 Sat 21:42]--[2021-05-22 Sat 21:50] =>  0:08
 
 #+begin_src emacs-lisp :results silent
 (use-package google-this
-  :config
+  :config/el-patch
   ;; Tweak original function to offer contents of kill ring if there
   ;; is no symbol or word at point.
-  (defun ps/google-this-pick-term (prefix)
-    "Decide what \"this\" is and return it.
+  (defun google-this-pick-term (prefix)
+    "Decide what \"this\" and return it.
 PREFIX determines quoting."
     (let* ((term (if (region-active-p)
                      (buffer-substring-no-properties (region-beginning) (region-end))
                    (or (thing-at-point 'symbol)
                        (thing-at-point 'word)
-                       (current-kill 0))))
-         (term (read-string (concat "Googling [" term "]: ") nil nil term)))
+                       (el-patch-swap
+                         (buffer-substring-no-properties (line-beginning-position)
+                                                         (line-end-position))
+                         (current-kill 0)))))
+           (term (read-string (concat "Googling [" term "]: ") nil nil term)))
       term))
-
-  (advice-add 'google-this-pick-term :override #'ps/google-this-pick-term)
 
   :general
   ("H-g" 'google-this-search)
@@ -16906,17 +17095,6 @@ template."
           (org-link-make-string (concat "file:" file-path) title)
         (user-error "HTML page at URL has no title"))))
 
-  (defun ps/org-web-tools--get-first-url ()
-    "Return URL in clipboard, or first URL in the `kill-ring', or nil
-if none."
-    (current-kill 0) ; added so that clipboard is pushed to kill ring; it won't otherwise
-    (cl-loop for item in (append (list (gui-get-selection 'CLIPBOARD))
-                                 kill-ring)
-             when (and item (string-match (rx bol "http" (optional "s") "://") item))
-             return item))
-
-  (advice-add 'org-web-tools--get-first-url :override #'ps/org-web-tools--get-first-url)
-
   :general
   ("s-A-k" 'org-web-tools-insert-link-for-url))
 #+end_src
@@ -16931,6 +17109,16 @@ if none."
 #+begin_src emacs-lisp :results silent
 (use-package request
   :defer 15)
+#+end_src
+** graphql-mode
+:PROPERTIES:
+:ID:       4B9A26D9-EA9B-420B-A8B2-060AAF19D4E4
+:END:
+
+/[[https://github.com/davazp/graphql-mode][graphql-mode]] is a major mode for GraphQL./
+
+#+begin_src emacs-lisp
+(use-package graphql-mode)
 #+end_src
 
 ** mullvad
@@ -17320,7 +17508,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 
 #+begin_src emacs-lisp :results silent
 (use-feature auth-source
-  :defer 5
+  :demand t
   :preface
   (eval-when-compile
     (defvar auth-sources))
@@ -17364,7 +17552,18 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 
 #+begin_src emacs-lisp :results silent
 (use-package pass
-  :defer 6
+  :defer 10
+  :config/el-patch
+  (defun pass-quit ()
+  "Kill the buffer quitting the window."
+  (interactive)
+  (when (el-patch-swap (y-or-n-p "Kill all pass entry buffers? ") t)
+    (dolist (buf (buffer-list))
+      (with-current-buffer buf
+        (when (eq major-mode 'pass-view-mode)
+          (kill-buffer buf)))))
+  (quit-window t))
+
   :config
   (defun ps/pass-open-at-point ()
     "Open the URL associated with the entry at point and its password
@@ -17379,16 +17578,6 @@ to the clipboard."
           (unless (assoc field parsed-entries)
             (user-error "Field `%s' not in  %s" field entry))
           (browse-url (password-store-get-field entry field))))))
-
-  (defun ps/pass-quit ()
-    "Kill the buffer quitting the window."
-    (interactive)
-    (dolist (buf (buffer-list))
-      (with-current-buffer buf
-        (when (eq major-mode 'pass-view-mode)
-          (quit-window t))
-        (kill-buffer buf))))
-  (advice-add 'pass-quit :override #'ps/pass-quit)
 
   (defun ps/pass-edit ()
     "Edit the entry at point, without confirmation."
@@ -17452,7 +17641,7 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 #+begin_src emacs-lisp :results silent
 (use-feature auth-source-pass
   :demand t
-  :after (auth-source pass)
+  :after auth-source pass
   :config
   (setq auth-source-debug t)
   (setq auth-source-do-cache nil)
@@ -17470,7 +17659,7 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
 
 [[https://github.com/tadfisher/pass-otp][GitHub - tadfisher/pass-otp: A pass extension for managing one-time-password (OTP) tokens]]
 
-* misc.
+* misc
 :PROPERTIES:
 :ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
 :END:
@@ -17632,43 +17821,205 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   :defer 600
   :config
   (setq clean-buffer-list-kill-never-buffer-names
-        '("*mu4e-headers*" " *mu4e-update*")) ; not sure if the space is part of the buffer name
+        '("*mu4e-headers*"
+          " *mu4e-update*")) ; not sure if the space is part of the buffer name
   (setq clean-buffer-list-kill-never-regexps
-        '("\\` \\*Minibuf-.*\\*\\'" "^untitled.*"))
+        '("\\` \\*Minibuf-.*\\*\\'"
+          "^untitled.*"))
   (setq clean-buffer-list-delay-general 2) ; kill buffers unused for more than three days
 
   (midnight-mode)
   (midnight-delay-set 'midnight-delay "4:30am")
 
-  (dolist (hook-function #'(ps/save-all-buffers
-                            ps/ledger-update-commodities
-                            ps/magit-stage-commit-and-push-all-repos
-                            clean-buffer-list
-                            org-roam-db-sync
-                            ps/org-roam-update-id-locations
-                            org-gcal-sync
-                            ps/pass-git-sync
-                            straight-prune-build))
-    (add-hook 'midnight-hook hook-function)))
+  ;; note that the hooks appear in reverse order of execution
+  (dolist (function #'(el-patch-validate-all
+                       org-gcal-sync
+                       ps/org-id-update-id-locations
+                       org-roam-db-sync
+                       ps/pass-git-sync
+                       ps/magit-stage-commit-and-push-all-repos
+                       ps/ledger-update-commodities
+                       ps/ledger-update-coin-prices
+                       clean-buffer-list
+                       ps/save-all-buffers
+                       ;; straight-prune-build
+                       ))
+    (add-hook 'midnight-hook function)))
 #+end_src
 
-*** SOMEDAY [#6] Fix coinprices
+** bbdb
 :PROPERTIES:
-:ID:       8E1274F1-2A21-463C-875F-F9D8DAE587F1
-:Effort:   0:30
+:ID:       0537BBF6-FD95-44A5-9327-1024A3D106EB
 :END:
 :LOGBOOK:
-CLOCK: [2023-01-01 Sun 23:07]--[2023-01-01 Sun 23:08] =>  0:01
+CLOCK: [2023-04-02 Sun 21:10]--[2023-04-02 Sun 21:19] =>  0:09
+CLOCK: [2023-03-31 Fri 15:20]--[2023-03-31 Fri 15:23] =>  0:03
+CLOCK: [2023-03-28 Tue 22:48]--[2023-03-28 Tue 23:50] =>  1:02
+CLOCK: [2023-03-28 Tue 22:32]--[2023-03-28 Tue 22:47] =>  0:15
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle no
-Traceback (most recent call last):
-  File "/Users/pablostafforini/Dropbox/ledger/coinprices/coinprices.py", line 4, in <module>
-    from dotenv import load_dotenv
-ModuleNotFoundError: No module named 'dotenv'
+/[[https://elpa.gnu.org/packages/bbdb.html][bbdb]] is a contact management package./
+
+A tutorial for this undocumented package may be found [[https://github.com/andycowl/bbdb3-manual/blob/master/tutorial.rst][here]].
+
+#+begin_src emacs-lisp
+(use-package bbdb
+  :init/el-patch
+  ;; open URL directly, without prompting for confirmation
+  (defun bbdb-browse-url (records &optional which)
+  "Brwose URLs stored in the `url' field of RECORDS.
+Interactively, use BBDB prefix \
+\\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'.
+Prefix WHICH specifies which URL in field `url' is used (starting from 0).
+Default is the first URL."
+  (interactive (list (bbdb-get-records "Visit (URL): ")
+                     (and current-prefix-arg
+                          (prefix-numeric-value current-prefix-arg))))
+  (unless which (setq which 0))
+  (dolist (record (bbdb-record-list records))
+    (let ((url (bbdb-record-xfield-split record 'url)))
+      (when url
+        (el-patch-swap (setq url (read-string "fetch: " (nth which url)))
+                       (setq url (nth which url)))
+        (unless (string= "" url)
+          (browse-url url))))))
+
+  :config/el-patch
+  ;; do not split windows
+  (defun bbdb-pop-up-window (&optional select horiz-p)
+    "Display *BBDB* buffer by popping up a new window.
+Finds the largest window on the screen, splits it, displaying the
+,*BBDB* buffer in the bottom `bbdb-pop-up-window-size' lines (unless
+the *BBDB* buffer is already visible, in which case do nothing.)
+Select this window if SELECT is non-nil.
+
+If `bbdb-mua-pop-up' is \\='horiz, and the first window matching
+the predicate HORIZ-P is wider than the car of `bbdb-horiz-pop-up-window-size'
+then the window will be split horizontally rather than vertically."
+    (let ((buffer (get-buffer bbdb-buffer-name)))
+      (unless buffer
+        (error "No %s buffer to display" bbdb-buffer-name))
+      (cond ((let ((window (get-buffer-window buffer t)))
+               ;; We already have a BBDB window so that at most we select it
+               (and window
+                    (or (not select) (select-window window)))))
+
+            ;; try horizontal split
+            ((and (eq bbdb-mua-pop-up 'horiz)
+                  horiz-p
+                  (>= (frame-width) (car bbdb-horiz-pop-up-window-size))
+                  (let ((window-list (window-list))
+                        (b-width (cdr bbdb-horiz-pop-up-window-size))
+                        (search t) s-window)
+                    (while (and (setq s-window (pop window-list))
+                                (setq search (not (funcall horiz-p s-window)))))
+                    (unless (or search (<= (window-width s-window)
+                                           (car bbdb-horiz-pop-up-window-size)))
+                      (condition-case nil ; `split-window' might fail
+                          (let ((window (split-window
+                                         s-window
+                                         (if (integerp b-width)
+                                             (- (window-width s-window) b-width)
+                                           (round (* (- 1 b-width) (window-width s-window))))
+                                         t))) ; horizontal split
+                            (set-window-buffer window buffer)
+                            (cond (bbdb-dedicated-window
+                                   (set-window-dedicated-p window bbdb-dedicated-window))
+                                  ((fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
+                                   (set-window-prev-buffers window nil)
+                                   (display-buffer-record-window 'window window buffer)))
+                            (if select (select-window window))
+                            t)
+                        (error nil))))))
+
+            ((eq t bbdb-pop-up-window-size)
+             (bbdb-pop-up-window-simple buffer select))
+
+            (t ;; vertical split
+             (let* ((window (selected-window))
+                    (window-height (window-height window)))
+               ;; find the tallest window...
+               (mapc (lambda (w)
+                       (let ((w-height (window-height w)))
+                         (if (> w-height window-height)
+                             (setq window w window-height w-height))))
+                     (window-list))
+               (condition-case nil
+                   (progn
+                     (unless (eql bbdb-pop-up-window-size 1.0)
+                       (el-patch-remove
+                         (setq window (split-window ; might fail
+                                       window
+                                       (if (integerp bbdb-pop-up-window-size)
+                                           (- window-height 1 ; for mode line
+                                              (max window-min-height bbdb-pop-up-window-size))
+                                         (round (* (- 1 bbdb-pop-up-window-size)
+                                                   window-height)))))))
+                     (set-window-buffer window buffer) ; might fail
+                     (cond (bbdb-dedicated-window
+                            (set-window-dedicated-p window bbdb-dedicated-window))
+                           ((and (fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
+                                 (not (eql bbdb-pop-up-window-size 1.0)))
+                            (set-window-prev-buffers window nil)
+                            (display-buffer-record-window 'window window buffer)))
+                     (if select (select-window window)))
+                 (error (bbdb-pop-up-window-simple buffer select))))))))
+
+  :config
+  (setq bbdb-file (file-name-concat ps/dir-bbdb "bbdn.el"))
+  (setq bbdb-image-path (file-name-concat ps/dir-bbdb "media/"))
+  (bbdb-initialize 'anniv)
+
+  ;; the two functions below replace the corresponding "non-quick"
+  ;; native functions. they prompt for a name only.
+  (defun ps/bbdb-create-quick (record)
+    "Add a new RECORD to BBDB. Prompt for name only."
+    (interactive (list (ps/bbdb-read-record-quick current-prefix-arg)))
+    (bbdb-change-record record)
+    (bbdb-display-records (list record)))
+
+  (defun ps/bbdb-read-record-quick (&optional first-and-last)
+    "Read and return a new BBDB record. To be used with `ps/bbdb-create-quick'."
+    (bbdb-editable)
+    (let ((record (bbdb-empty-record)))
+      (let (name)
+        (bbdb-error-retry
+         (setq name (bbdb-read-name first-and-last))
+         (bbdb-check-name name))
+        (setf (bbdb-record-firstname record) (car name))
+        (setf (bbdb-record-lastname record) (cdr name)))
+      record))
+
+  (defun ps/bbdb-delete-field-or-record-no-confirm ()
+    "Delete the current field or record without confirmation."
+    (interactive)
+    (bbdb-delete-field-or-record (bbdb-do-records) (bbdb-current-field) t))
+
+  :general
+  ("A-b" 'bbdb)
+  (bbdb-mode-map
+   "A-C-s-r" 'bbdb-prev-record
+   "A-C-s-f" 'bbdb-next-record
+   "c" 'ps/bbdb-create-quick
+   "C-k" nil
+   "M-d" nil
+   "D" 'ps/bbdb-delete-field-or-record-no-confirm))
 #+end_src
 
-I'm not tracking prices anymore so this is probably not worth it currently.
+** bbdb-vcard
+:PROPERTIES:
+:ID:       EB0B93F7-30F0-4C6D-A638-CD67C307CB62
+:END:
+
+/[[https://github.com/tohojo/bbdb-vcard][bbdb-vcard]] supports import and export for BBDB./
+
+#+begin_src emacs-lisp
+(use-package bbdb-vcard
+  :after bbdb
+  :config
+  (setq bbdb-vcard-directory ps/dir-bbdb)
+  (setq bbdb-vcard-media-directory "media"))
+#+end_src
 
 ** keycast
 :PROPERTIES:
@@ -17729,21 +18080,7 @@ I'm not tracking prices anymore so this is probably not worth it currently.
 :END:
 
 #+begin_src emacs-lisp :results silent
-(defun ps/tlon-meeting-with-fede ()
-  (interactive)
-  (ps/tlon--meeting-with
-   "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
-   "56CBB3F8-8E75-4298-99B3-899365EB75E0"
-   "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
-
-(defun ps/tlon-meeting-with-leo ()
-  (interactive)
-  (ps/tlon--meeting-with
-   "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
-   "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-   "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
-
-(defun ps/tlon--meeting-with (tareas-id meetings-id pending-id)
+(defun ps/tlon-meeting-with (tareas-id meetings-id pending-id)
   ;; "[person] > Meetings > Pending for next meeting" org heading in `work-dashboard.org'
   (ps/org-id-goto pending-id)
   (let ((contents (ps/org-get-heading-contents)))
@@ -17753,6 +18090,7 @@ I'm not tracking prices anymore so this is probably not worth it currently.
     (org-narrow-to-subtree)
     (goto-char (point-max))
     (org-insert-heading)
+    (insert "Meeting on ")
     (ps/org-time-stamp-inactive-current-time)
     (unless (string= contents "")
       (insert (concat "\nTo discuss:\n" contents "\n"))))
@@ -17764,6 +18102,48 @@ I'm not tracking prices anymore so this is probably not worth it currently.
   (ps/org-id-goto tareas-id)
   (ps/org-narrow-to-entry-and-children)
   (ps/switch-to-last-window))
+
+(defun ps/tlon-meeting-with-fede ()
+  (interactive)
+  (ps/tlon-meeting-with
+   "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
+   "56CBB3F8-8E75-4298-99B3-899365EB75E0"
+   "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
+
+(defun ps/tlon-meeting-with-leo ()
+  (interactive)
+  (ps/tlon-meeting-with
+   "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
+   "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
+   "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
+
+(defun ps/tlon-bae-format-file (&optional extension)
+  "Prompt the user for bibliographic information and return a file
+name based on it."
+  (let* ((lastname (read-string "Last name(s) [separated by spaces if more than one author]: "))
+         (title (read-string "Title: "))
+         (slug-lastname (ps/bibtex-asciify-string (org-hugo-slug lastname)))
+         (slug-title (ps/bibtex-asciify-string (org-hugo-slug title)))
+         (extension (or extension "md")))
+    (file-name-with-extension (concat slug-lastname "--" slug-title) extension)))
+
+(defun ps/tlon-bae-rename-file (&optional extension)
+  "Prompt the user for bibliographic information and rename file at
+point based on it."
+  (interactive)
+  (let* ((source-file-path (dired-get-filename)))
+    (rename-file
+     source-file-path
+     (file-name-concat
+      (file-name-directory source-file-path)
+      (ps/tlon-bae-format-file extension))))
+  (revert-buffer))
+
+(defun ps/tlon-bae-create-file (&optional extension)
+  "Prompt the user for bibliographic information and create a new
+ file based on it in the current directory."
+  (interactive)
+  (find-file (ps/tlon-bae-format-file extension)))
 #+end_src
 
 ** Keyboard Maestro
@@ -17782,13 +18162,108 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
  "C-H-M-S-w" 'ps/org-wiki-add-datestamp-to-heading-from-clipboard)
 #+end_src
 
-* local variables
+* variables
+:PROPERTIES:
+:ID:       5A96B05D-52BD-4648-B0D6-1E0B6C49DB37
+:END:
+
+The section below defines all the personal variables used by this file. The contents of that section are encrypted with ~org-crypt~ and tangled to a local ~variables.el~ file that isn't part of this public repository.
+
+
+** variables                                                          :crypt:
+:PROPERTIES:
+:ID:       3A5E2CF3-5CC3-4804-8AEC-89BFD943E0BF
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
+:END:
+
+-----BEGIN PGP MESSAGE-----
+
+hQIMAxRs/nzf4knaAQ//U06Ts0/2XUBQXG33VEbAoUY6sWh3cUUf1JTmlJgHysLI
+bX1LfU5WjvnSP2T70uuy19KDpMydJAar5vvxmu3cA9d9LtjAUkGXNJcjf4PLB9dW
+n3LaJW2QhpKXmCSEPCmwbFtJwyiAps2kck/kChu3rtcR4KEn0zol5iLvSpEAXsw8
+ezS0SkZgZj3Pkv0z8IGxar4WAGnCXg1Ne+Ia+so0oqUlbcHBidTy4wsPeDdksDX8
+TJGS3edTp7LmE+oUixVdxr9W+oO9b/342V0OgP6x6bH769giP1pbNNVRnOJ30fDR
+NRReqpyQyYG273zS3x6IXK44riLAJ1RU5hB+F5+KLfsVOhrCDVF+95H+MDRAWLfl
+xFpmE3BEgmvQgIjl33yQN0OFPgOzzWsPX6itWELURI7EltnRTNGZytdpmRVYCh5/
+MYZb4FkQDsBGRi9xQgegjTa9Tooxh2I9zcALWF+UW2MIWzK5uP5wVlyMqFk0xZkG
+ZG7RhZnZ4vZm9PuOIaIgjDAh8SZMNJbvVwyUHb5/KqZx5QZN0a/mieYC5VGrk9fm
+q2MsVW7Rusasd5OlfG+OtalWQYKYCjbxrWgtSYB3061fnCEJkWu/NaDQ70OOUSM8
+OAckIh7QfZBmAhI/6/BS4SiCw6aZ9qBJxUd+4GEdow4hfvrH4UFmFQV0h5hSH9vU
+6gEJAhDOu+INavgllv4D0S2G1ypNEE6crlhN4WZJIfxP83uay/DJLAXsg63lHdoE
+dpu21SM52YfUnvg5vhSeDoZ9Zi0Z1BREP7S3hdMCM7TFEx84eJFg1ZmzF5zRyCt2
+2cf/PoOTYPFl6+KopPKJZKkOG3z8NiTqsmce19e15k2P7fVOTm5QybJYlhX+rQBK
+wTqBqZatZVhKMwDDPgMlg4AEO8MX4Cr+Qi/FeE5Vfkczd1DwE8kRLw9VOwNfiMq3
+G7wJSJLYGErHZr1FtvuVgQ2thya3cS1pQqE6dNLcEabV9TbUGGoZBfPDgUhCGGtU
+OoVxOTsfnJ59WM3gFvv5SGAZqcSBGDcd3FkLGjUYTscVykR7fKw6FZNJdBrxivab
+GHd/HM6SiWg8y3unGCtDzioreIdmbaLmYz6+W6bsxSbCYSCUi5B+kxOYKZ5iJ+TX
+imwajV4seAg3/ngS4bO29Sa/P82z+lbXweoPIYSJdQJtK8EtL9r7rhWlTZ281LAz
+MjDOurl85dXQ6URC2frxYcPgh4QmO6nDo8GEhbreIMRe1/lMl2YPGYgxDjsu6CxT
+FmEzTGHQzBxOztX5kwkiykwn0/YoF3dZ3OuIkH0T5dYveGUDxcNw6DTX7k5kCyxw
+lcbAsrschQc023KaAQZmZaB2D+R+y4MSnG/iIjPnTTQkTG3YfgBHWXHF8G+JRyuk
+hpIw4w0PT+zMiHnwxzfJ0XI0PygIm3IByUrmiRGjxw7sCZfYrnPQi2y/NufK4dyP
+inTaZwH+QeV8WAwQYaFBUe0GnHQFpx6kpXZm/hVGqQ++i0YNDfcBo7OuTQL3OAVN
+3Uis+hvMeTNV1BHZ8yLyKrXg8TJSJynXdoJRnUHjxgXn30lqeEjgdDUKb5aJFnLa
+p/plTvRjvqeA+kHFaucrzXU3zKac37lBNa/14eTVmEKSGU8oK3HhB2OHNHnYwYyr
+ITy/E8VxutwO/X+TSy64lUckB1Rf/KqYqLLwCYSPOrgybz3tX6ytfpDbh1tmjfLN
+xdM048eo/Yh52fjk1CZ+dyQGoHpgpxXZ4n0/wU3nQIIDXgsW9KKtmC6XP8Tv8xyP
+BFrSEHPzfZk79NzbnggNVCWd7M+1fZkifX82DkNuXc5goD+yBPRA3mMKVCMnUFgs
+BIZvTU4d65f0bAXvExT/13l0cvUIeK94Z3B2jIMkPCCVJBgli3jZwN2P0Do54lN7
+tG4OJMgbomUOYc07G1df7+Ze6cQeCixydCxHgPR7TgdR/zuiFHJCuhUcJQ8qDl8J
+x9afL5FO3Hp4+vajYaZvSUqzTH6yj0dq2XaNhOcCXfWvSOJu7llquG/klvu/m+eI
+9YmKlJzlyEMUBe8qsvo4hzDqjCy1LwwFd0P1EtftaF9sks6RDOilo1mk1Y+JaYK3
+f8nUIn+/rsgMurrg3ciLWNlAEW/zyr7LJru2/v30LEjTTlSx/Y6LSpf1yB1FhE6A
+s6ntAWBEcQRdgt6Vj9MmAUU57u3NtscC1BVDdOnadtgdaGwwimW3KdyTkNmSyKyK
+GSo9/v7HeJyP9oSYLW/GOnVoPvhMdP2JUub/+PdF2spgWo51WIstmHNQl5OI940R
+Bf2QeA79/OQLZL/6txGauRlouea18/Yr2RWLZEkDm/3/+KwM6yrJcHDR6ZVzXYQE
+T8ZRwfW2jtUVBfYDl7W2IYNsxGsdvtRkG3UEIb/gcBDfRUEhedSwfBh3a6OUleVk
+zmCSdWeDjZ2E3omKwtnT4N57vKtpwtk63+S87GxZrYctclfJM5zmzStmERgrosgy
+ahlvj8ge2MoJBFugSbVklCRQM4wrSws2SQuNkFEpWb8+luPiNCw27Fii5q9Qd93d
+YomL9MXufW2K8MvL94aD0M7UBv6ildjB/HhAftBgdhdIO68tje28WhWm1JBM9Wc6
+aSjQlF13UKfKN39jq17QcXEl7xkptYRWhNxmUC7ystfo5KRWd85ne8BL3b4TQQTX
+j5Ph6VPvUJ2k55bGPvgKMS+93dVdV8x2Gya3rRL2lsf184NS/n9Aos9ehv/mb+dP
+pRCSjc1quRiWwBzLcy8vys1mFP9yv4cooT2Amcer5UN7EGrB38v4Qe7q/xsyrhru
+Kaqlx/QcC6eM7M0ZOHl+lQvEB19xen9PkgED4iXeo2BgfxtBEJHcml7Fd2rrpm9N
+4gAjX4MOKtqz74Jflrc/peTKGeRuPz8+22vCIrtC3/672pPWJFzS6lh/Hg4HcrCg
+kMst7+Qe+0gQxd85HRJY3nj1qQ8W2LTKENAPCSXWWslz2T+6l+uEMsbm2q+HuDoC
+pM5RwpByD6+upzcuKdOgBzHl3iJaw2g6tzDRKRN9kJVesF1GrgJSN2gavag3pqoO
+qMAC6vHOkQfzz/7yy4YGZkcLHm4U3r8fAx0xkYlVkLS1DAA+nOpoQpDTja25/DgX
+XOqS0YKVqplMLJEpvu85je5VYv3CWWQWFto3pOjxbWje2gLAQDTe/Vj8Mg4hjlSb
+74CNUZGwZAUNRCzevf6nRvSHjv9+1EUnZJ9VezE38aaqgSEtLeGLF593qATEf97A
+dMnrDxKzr+5CSPppgfzFaPO7FVkT8fLU1m7K8tsTvW8YuWlbzXyzU4CuuouXCB8B
+B/C3tjpfwmO9+h2onflkpiOhBUlYOCw0CUPc5QB2gsEJEzKehHEvr0NKb75bs15f
+5LrI7bflBQfv94PjtDl2cK1NUf6OEqi0YpkCjoUxO3iU5On8Q9IEbmAL6npEYOiD
+RQwI1s2fyr4rSkGse0BMn/VgjpOMIxGEGTH66vU5h46mP9DmqeAP8Uv67QXLl2jB
+OBklmA3Ua9TS3n2Ukc1wvD7QK07eYBppq2/mamODBs3Baz445sTdIG3szneGk4IZ
+j37cZAvkWUR9lRHAI5/7bPA+GT/5VbWPQpFCSbN6k5lUsQAEt7kBHMGqY1joZbMl
+vsZZ57uHIf+6jJhoVQzM02LXve3VVpN8rS/zwabGqU+WDkYbDsESAq1CttW9wAqn
+u+1xMgb8jmQ7IR2dokH18iOea5CYPzm1Do3hqgakLCYH//JKniBPPuVaH996/VVJ
+K8L4UCrEaKZN9vqPmHinKVczx3Fyow7jHjm/1A8mRn2MOHzlCpX5Ds3I0vAylHki
+bCsmeQxoabvEQjT8MyidtT+j0dZSNyF6xXCI42VcSCFALFwKA3O3/A3wU4UacffP
+Ftx+QgHxYG6aBhxWgvVn/KIvVh17vdcybP3IjSQqeoe5uk8kTEpA/uUxBKczTMmk
+Jdv3tXZd17QztoNaEq8mgW7MRXLYtpaHoHZzu3oR/5SIcG50LCAb0pWo942HGiRC
+KqlvNK+UV1JoNHCgslvdOBwGbGOKP/t+ShGWYfab5zsLJmiHmb6+zI4U++3k3iVR
+BnCX4TREoy12X2L8/WRcn8zGuMCL1qA94mgD774eWBxv9lsCAKqKl4tWHY5MBWvY
+32y7x/PkfpwzlkoTum1x4POS3X2S+APKm8dqKAbGh4Es6ptmKylh/3h2GlQiXCku
+uOROlcofY3LaJbcfPRtM2aQ2FwtOul0Lq8XJwJv+yuNeBWgOn4AkyoIz+cx2YqFQ
+X3GYd8CpFcHQOrkfoJcZBcMnF7H+jpaZmEmBp6p61AlhfzJhtsHYTtg0iI6fetL2
+BTQDyYbf6GquZIwpd0XFjxCw7DLFo98oGWFNvQ2tuSExDA43mxQIkQf+fLm3f0lH
+wIkBfKt8SvlE9liKRswihjtV5WQdGDnvx9B5n+x/s3W8I0+88cJcbBOZdx4KJmju
+Ve9iwBkJbVjSyYX2jsJpPEPFBsWo9rwpNa7LwjtcLc46wkU6Ut0d46jOii5RLI+7
+e5F6LYEHVF+9ewvizIPutw==
+=TFTv
+-----END PGP MESSAGE-----
+
+
+** local variables
 :PROPERTIES:
 :ID:       1FCD0AB8-6922-4910-AF33-5BD8FB10D633
 :END:
+
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
-# eval: (ps/buffer-local-set-key (kbd "H-i") 'use-package-report)
 # eval: (ps/buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
+# org-crypt-key: "tlon.shared@gmail.com"
 # End:

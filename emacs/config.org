@@ -8796,11 +8796,8 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
         (lsp)
       (lsp-disconnect)))
 
-  ;; if you want which-key integration
-  (add-hook 'lsp-mode #'lsp-enable-which-key-integration)
-
-  :general
-  ("A-l" 'ps/lsp-toggle))
+  (add-hook 'org-mode-hook #'lsp)
+  (add-hook 'lsp-mode #'lsp-enable-which-key-integration))
 #+end_src
 
 ** lsp-ui

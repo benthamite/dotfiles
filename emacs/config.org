@@ -18170,7 +18170,7 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 The section below defines all the personal variables used by this file. The contents of that section are encrypted with ~org-crypt~ and tangled to a local ~variables.el~ file that isn't part of this public repository.
 
 
-** variables                                                          :crypt:
+** shared variables                                                   :crypt:
 :PROPERTIES:
 :ID:       3A5E2CF3-5CC3-4804-8AEC-89BFD943E0BF
 :END:

@@ -8782,11 +8782,7 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 
 #+begin_src emacs-lisp :results silent
 (use-package lsp-mode
-  :disabled
-  :init
-  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-  (setq lsp-keymap-prefix "A-C-l")
-
+  :demand t
   :config
   (setq lsp-ui-doc-show-with-cursor t) ; move the cursor over a symbol to show its documentation
   (setq lsp-warn-no-matched-clients nil)

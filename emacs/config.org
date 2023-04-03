@@ -1800,16 +1800,16 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
   :demand t
   :config
   (setq tab-bar-format '(tab-bar-align-right
-			 tab-bar-format-global))
+                         tab-bar-format-global))
   (setq auto-resize-tab-bar nil)
 
   (setf mode-line-misc-info
-	;; When the tab-bar is active, don't show global-mode-string
-	;; in mode-line-misc-info, because we now show that in the
-	;; tab-bar using `tab-bar-format-align-right' and
-	;; `tab-bar-format-global'.
-	(remove '(global-mode-string ("" global-mode-string))
-		mode-line-misc-info))
+        ;; When the tab-bar is active, don't show global-mode-string
+        ;; in mode-line-misc-info, because we now show that in the
+        ;; tab-bar using `tab-bar-format-align-right' and
+        ;; `tab-bar-format-global'.
+        (remove '(global-mode-string ("" global-mode-string))
+                mode-line-misc-info))
 
   ;; we run a recurring timer to "clean up" the tab bar, which
   ;; sometimes shows multiple repeated clocks after a while, for
@@ -1822,9 +1822,6 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 					    " | "
 					    fancy-battery-mode-line
 					    " | "
-					    (:eval (when (numberp mu4e-alert-mode-line)
-						     (number-to-string mu4e-alert-mode-line)))
-					    " ✉ | "
 					    telega-mode-line-format
 					    " | "))
 				(display-wttr-mode)))

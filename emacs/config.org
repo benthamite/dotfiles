@@ -13650,18 +13650,21 @@ different users, as long as they have the same folder structure."
   ;; requires SciDownl
   ;; https://github.com/Tishacy/SciDownl
   (defun ps/ebib-download-doi (&optional doi)
-    "Download "
-  (interactive)
-  (ebib--execute-when
-    (entries
-     (let ((doi (or doi
-		    (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
-	   (default-directory ps/dir-downloads))
-       (unless doi
-         (error "[Ebib] No DOI found in doi field"))
-       (shell-command (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi))))
-    (default
-      (beep))))
+    "Download DOI from Sci-Hub. If DOI is not supplied, obtain it from
+the Ebib entry at point."
+    (interactive)
+    (let ((doi (or doi
+                   (ebib--execute-when
+                     (entries
+                      (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+                     (default
+                      (beep)))))
+          (default-directory ps/dir-downloads))
+      (unless doi
+        (error "[Ebib] No DOI found in doi field"))
+      (message "Trying to download file...")
+      (async-shell-command
+       (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi))))
 
   (defun ps/ebib--extension-directories (extension)
     "Return directory associated with EXTENSION."

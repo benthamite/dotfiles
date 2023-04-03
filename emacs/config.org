@@ -11972,6 +11972,7 @@ SQL can be either the emacsql vector representation, or a string."
                                       ".org2blog.org"
                                       "wiki-notes.org" ; removing temporarily
                                       "feeds.org"
+                                      "conflicted copy"
                                       "conflicted-copy"))
 
   ;; exclude headings in specific files and directories

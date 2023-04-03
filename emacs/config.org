@@ -7789,7 +7789,7 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-package lsp-grammarly
-  :after (lsp-mode keytar)
+  :after lsp-mode keytar
   :demand t
 
   :config

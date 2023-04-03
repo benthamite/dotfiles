@@ -9,6 +9,26 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** scihub
+:PROPERTIES:
+:ID:       29ABF514-563B-463D-9FDB-CF2C8AA25F83
+:END:
+
+/[[https://github.com/emacs-pe/scihub.el][sc/sihub]] supports downloading papers from Sci-Hub./
+
+[2023-04-01 Sat 20:55] No longer working.
+
+#+begin_src emacs-lisp :results silent
+(use-package scihub
+  :config
+  (setq scihub-download-directory ps/dir-downloads)
+  (setq scihub-open-after-download nil)
+  (setq scihub-fetch-domain 'scihub-fetch-domains-lovescihub)
+  ;; run `scihub-homepage' for a list of available scihub webservers
+  ;; if the URL below stops working
+  (setq scihub-homepage "http://sci-hub.ee"))
+#+end_src
+
 ** gpt
 :PROPERTIES:
 :ID:       6BA1A737-40A1-4253-8FC8-E211F6060BC9

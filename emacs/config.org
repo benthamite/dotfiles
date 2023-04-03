@@ -4195,6 +4195,13 @@ option."
 
   (add-hook 'dired-mode-hook #'dired-hide-details-mode) ; hide details by default
 
+  (defun ps/dired-convert-image-to-pdf ()
+    "Convert image at point to PDF."
+    (interactive)
+    (let ((file (buffer-file-name)))
+      (shell-command (format "convert '%s' '%s.pdf'" file (file-name-sans-extension file)))
+      (message "Converted image to PDF.")))
+
   :general
   (dired-mode-map
    "<tab>" 'ps/dired-subtree-toggle

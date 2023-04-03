@@ -7910,7 +7910,7 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
    "s-l" 'flyspell-goto-next-error
    "s-s" 'ps/flyspell-save-word
    "A-s-s" 'ps/flyspell-save-word-and-next
-   "s-c" 'flyspell-correct-wrapper)
+   "s-c" 'flyspell-correct-wrapper))
 
 #+end_src
 

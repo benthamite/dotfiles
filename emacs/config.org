@@ -1764,6 +1764,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :init
   (doom-modeline-mode)
 
+  (setq doom-modeline-mu4e t)
   (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
   (setq doom-modeline-buffer-encoding nil)
   (setq doom-modeline-irc t)

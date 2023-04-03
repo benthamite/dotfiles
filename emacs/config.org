@@ -15771,7 +15771,7 @@ into a task for Leo."
    "s-r" 'telega-msg-add-reaction
    "s-s" 'telega-chatbuf-filter-search
    "s-t" 'telega-sticker-choose-favorite-or-recent
-   "s-v" 'ps/markdown-paste-from-org
+   "s-v" 'ps/org-paste-html
    "A-s-v" 'telega-chatbuf-attach-clipboard
    "s-z" 'telega-mnz-chatbuf-attach-code
    "A-s-e" 'telega-chatbuf-edit-prev

@@ -1815,16 +1815,16 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
   ;; sometimes shows multiple repeated clocks after a while, for
   ;; unknown reasons
   (run-with-timer 5 (* 30 60) (lambda () (setq global-mode-string
-					  '(" "
-					    (:eval (propertize display-time-string 'face 'ps/display-time))
-					    " |  "
-					    chemacs-profile-name
-					    " | "
-					    fancy-battery-mode-line
-					    " | "
-					    telega-mode-line-format
-					    " | "))
-				(display-wttr-mode)))
+                                          '(" "
+                                            (:eval (propertize display-time-string 'face 'ps/display-time))
+                                            " |  "
+                                            chemacs-profile-name
+                                            " | "
+                                            fancy-battery-mode-line
+                                            " | "
+                                            telega-mode-line-format
+                                            " | "))
+                                (display-wttr-mode)))
   (tab-bar-mode))
 #+end_src
 

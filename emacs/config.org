@@ -360,7 +360,7 @@ Some useful config files:
 The contents of this code block are tangled to the early-init.el file.
 
 #+begin_src emacs-lisp :tangle (print ps/init-early-init-path)
-;; recommended for straight (github.com/radian-software/straight.el#getting-started)
+;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 
 (add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bar
@@ -447,9 +447,53 @@ Adapted from [[https://github.com/sfromm/emacs.d#startup][here]].
 :ID:       0A714FC1-D562-4E41-A000-D5F369EBEBBD
 :END:
 
+** elpaca
 :PROPERTIES:
+:ID:       4EB0A831-1B7D-4C7E-AE4B-6A2DE27FFD87
 :END:
 
+#+begin_src emacs-lisp
+(defvar elpaca-installer-version 0.3)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil
+                              :files (:defaults (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (condition-case-unless-debug err
+        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                 ((zerop (call-process "git" nil buffer t "clone"
+                                       (plist-get order :repo) repo)))
+                 ((zerop (call-process "git" nil buffer t "checkout"
+                                       (or (plist-get order :ref) "--"))))
+                 (emacs (concat invocation-directory invocation-name))
+                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                 ((require 'elpaca))
+                 ((elpaca-generate-autoloads "elpaca" repo)))
+            (kill-buffer buffer)
+          (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (load "./elpaca-autoloads")))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
+;; (elpaca org)
+;; (elpaca org-contrib)
+;; (eval-after-load "org"
+;; '(debug))
+(toggle-debug-on-error)
+;; (setq debug-on-message ".*Warning.*")
 #+end_src
 
 ** use-package
@@ -476,21 +520,26 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
   - /package deferral/: we use ~:after~ to load the package after some other package which itself has been conditionally deferred (using one of the other methods above). Note that if  ~use-package-always-defer~ is set to ~t~, you need to add ~demand t~ to the declaration.
 
 #+begin_src emacs-lisp :results silent
-(straight-use-package 'use-package)
-(setq use-package-verbose t                ; setting back to nil (default) as it was producing too much output
-      use-package-compute-statistics t       ; compute stats
-      use-package-always-defer t             ; always defer loading
-      use-package-always-ensure nil          ; essential for `straight'
-      use-package-hook-name-suffix nil       ; use real name for hooks, i.e. do not omit the `-hook' bit
-      use-package-minimum-reported-time 0.1) ; report if loading a package takes longer than 100 ms
 ;; github.com/raxod502/radian/blob/develop/emacs/radian.el
 (defmacro use-feature (name &rest args)
-  "Like `use-package', but with `straight-use-package-by-default' disabled.
-NAME and ARGS are as in `use-package'."
+  "Like `use-package' but accounting for asynchronous installation.
+  NAME and ARGS are in `use-package'."
   (declare (indent defun))
   `(use-package ,name
-     :straight nil
+     :elpaca nil
      ,@args))
+
+(elpaca elpaca-use-package
+        (elpaca-use-package-mode)
+        (setq elpaca-use-package-by-default t))
+
+(elpaca-wait)
+
+(setq use-package-verbose t)                ; setting back to nil (default) as it was producing too much output
+(setq use-package-compute-statistics t)       ; compute stats
+(setq use-package-always-ensure nil)          ; essential for `straight'
+(setq use-package-hook-name-suffix nil)       ; use real name for hooks, i.e. do not omit the `-hook' bit
+(setq use-package-minimum-reported-time 0.1) ; report if loading a package takes longer than 100 ms
 #+end_src
 
 *** use-package-ensure-system-package
@@ -508,6 +557,7 @@ NAME and ARGS are as in `use-package'."
 :ID:       25915A25-30F2-4A58-86FD-E27438D269B6
 :END:
 
+  (elpaca-wait)
 ** no-littering
 :PROPERTIES:
 :ID:       21B40C49-BBD2-4E04-871B-BB578C92F71B
@@ -675,8 +725,10 @@ of the heading at point."
    "H-o" 'hydra-major-modes/body
    "M-t" 'hydra-straight/body
    "M-y" 'hydra-yasnippet/body)
-  (org-mode-map
-   "A-s-r" 'hydra-org-rating/body))
+  ;; (org-mode-map
+   ;; "A-s-r" 'hydra-org-rating/body)
+   )
+   (elpaca-wait)
 #+end_src
 
 *** resources
@@ -1419,7 +1471,7 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 
 #+begin_src emacs-lisp
 (use-package org-modern-indent
-  :straight (org-modern-indent
+  :elpaca (org-modern-indent
              :host github
              :repo "jdtsmith/org-modern-indent")
   :after org-modern org-indent
@@ -1525,7 +1577,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 
 #+begin_src emacs-lisp :results silent
 (use-package modus-themes
-  :straight (modus-themes
+  :elpaca (modus-themes
              :host sourcehut
              :repo "protesilaos/modus-themes")
   :demand t
@@ -4336,6 +4388,7 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
 
 #+begin_src emacs-lisp :results silent
 (use-package dired-hacks
+  :elpaca (dired-hacks :fetcher github :repo "Fuco1/dired-hacks")
   :after dired
   :defer 10
 
@@ -5364,8 +5417,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org-gcal)
 (use-package org-gcal
-  :straight (org-gcal :type git :host github :repo "kidd/org-gcal.el")
-  :after auth-source-pass
+  :elpaca (org-gcal :type git :host github :repo "kidd/org-gcal.el")
+  :after auth-source-pass org
   :demand t
 
   :init
@@ -5678,7 +5731,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 #+begin_src emacs-lisp
 (use-package calfw-blocks
   :disabled
-  :straight (calfw-blocks
+  :elpaca (calfw-blocks
              :host github
              :repo "ml729/calfw-blocks")
   :after calfw
@@ -6152,7 +6205,7 @@ CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
 
 #+begin_src emacs-lisp :results silent
 (use-package git-timemachine
-  :straight
+  :elpaca
   (git-timemachine
    :type git
    :host codeberg
@@ -6299,7 +6352,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 #+begin_src emacs-lisp
 (use-package substitute
-  :straight (substitute
+  :elpaca (substitute
              :host sourcehut
              :repo "protesilaos/substitute")
   :general
@@ -6439,7 +6492,7 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
 
 #+begin_src emacs-lisp :results silent
 (use-package vertico
-  :straight (vertico :files (:defaults "extensions/*")
+  :elpaca (vertico :files (:defaults "extensions/*")
                      :includes (vertico-indexed
                                 vertico-flat
                                 vertico-grid
@@ -6840,7 +6893,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
 #+begin_src emacs-lisp :results silent
 (use-package corfu
-  :straight (corfu :files (:defaults "extensions/*")
+  :elpaca (corfu :files (:defaults "extensions/*")
                    :includes (corfu-info
                               corfu-echo
                               corfu-history
@@ -6911,11 +6964,9 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 /[[https://codeberg.org/akib/emacs-corfu-doc-terminal][corfu-doc-terminal]] enables corfu-doc popup on terminal./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/corfu-doc-terminal)
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package corfu-doc-terminal
-  :straight (corfu-doc-terminal
-             :host codeberg
-                   :repo "akib/emacs-corfu-doc-terminal")
+  :elpaca (corfu-doc-terminal :host codeberg :repo "akib/emacs-corfu-doc-terminal" :protocol ssh)
   :after corfu-terminal
   :demand t
   :config
@@ -6973,7 +7024,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 #+begin_src emacs-lisp :results silent
 (use-package cape-yasnippet
-  :straight (cape-yasnippet
+  :elpaca (cape-yasnippet
              :host github
              :repo "elken/cape-yasnippet")
   :after cape
@@ -6989,9 +7040,8 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 #+begin_src emacs-lisp
 (use-package org-block-capf
-  :straight (org-block-capf
-             :host github
-             :repo "xenodium/org-block-capf")
+  :elpaca (org-block-capf :host github :repo "xenodium/org-block-capf")
+  :after org
   :demand t
   :config
   (add-hook 'org-mode-hook #'org-block-capf-add-to-completion-at-point-functions))
@@ -7466,7 +7516,7 @@ CLOCK: [2022-06-17 Fri 17:41]--[2022-06-17 Fri 17:55] =>  0:14
 
 #+begin_src emacs-lisp :results silent
 (use-package dwim-shell-command
-  :straight (dwim-shell-command
+  :elpaca (dwim-shell-command
              :host github
                    :repo "xenodium/dwim-shell-command"))
 #+end_src
@@ -7776,7 +7826,7 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 
 #+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-package eglot-grammarly
-  :straight (:host github :repo "emacs-grammarly/eglot-grammarly")
+  :elpaca (:host github :repo "emacs-grammarly/eglot-grammarly")
   :defer t
   :config
   (add-hook 'text-mode markdown-mode
@@ -7794,7 +7844,7 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/aide)
 (use-package aide
-  :straight (aide
+  :elpaca (aide
              :host github
              :repo "junjizhi/aide.el")
   :after request
@@ -8006,7 +8056,7 @@ around point."
 
 #+begin_src emacs-lisp
 (use-package txl
-  :straight (txl
+  :elpaca (txl
              :host github
              :repo "tmalsburg/txl.el")
   :config
@@ -8650,7 +8700,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 
 #+begin_src emacs-lisp
 (use-package scroll-other-window
-  :straight (scroll-other-window
+  :elpaca (scroll-other-window
              :host github
              :repo "benthamite/scroll-other-window")
   :after pdf-tools
@@ -9036,7 +9086,7 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/copilot)
 (use-package copilot
-  :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+  :elpaca (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
   :demand t
 
   :config
@@ -9063,7 +9113,7 @@ CLOCK: [2023-03-17 Fri 21:54]--[2023-03-17 Fri 22:24] =>  0:30
 
 #+begin_src emacs-lisp
 (use-package openai
-  :straight (openai
+  :elpaca (openai
              :host github
              :repo "emacs-openai/openai")
   :config
@@ -9083,7 +9133,7 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
 
 #+begin_src emacs-lisp
 (use-package chatgpt
-  :straight (chatgpt
+  :elpaca (chatgpt
              :host github
              :repo "emacs-openai/chatgpt")
   :config
@@ -9104,7 +9154,7 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
 
 #+begin_src emacs-lisp
 (use-package codegpt
-  :straight (codegpt
+  :elpaca (codegpt
              :host github
              :repo "emacs-openai/codegpt")
   :after openai
@@ -10812,7 +10862,7 @@ I normally archive subtrees with ~org-archive-to-archive-sibling~, but use ~org-
 
 #+begin_src emacs-lisp
 (use-package org-archive-hierarchically
-  :straight (org-archive-hierarchically
+  :elpaca (org-archive-hierarchically
              :host gitlab
              :repo "andersjohansson/org-archive-hierarchically")
   :demand t)
@@ -11450,7 +11500,7 @@ Format is \"*Org Src ORG-BUFFER-NAME [ LANG ]*\"."
 
 #+begin_src emacs-lisp :results silent
 (use-package orgtbl-edit
-  :straight (orgtbl-edit
+  :elpaca (orgtbl-edit
              :host github
              :repo "shankar2k/orgtbl-edit"))
 #+end_src
@@ -11520,9 +11570,10 @@ CLOCK: [2021-04-20 Tue 23:28]--[2021-04-20 Tue 23:44] =>  0:16
 Allows reset of checkboxes in recurring tasks. This works only on headings that have the property ~RESET_CHECK_BOXES~ set to ~t~. You can set the property of a heading by invoking the command ~org-set-property~ with point on that heading or immediately under it.
 
 #+begin_src emacs-lisp :results silent
-(use-package org-checklist
+(use-feature org-checklist
+  :after org
   :defer 30
-  :straight org-contrib)
+  :elpaca org-contrib)
 #+end_src
 
 ** org-analyzer
@@ -11655,7 +11706,8 @@ an org drawer."
 
 #+begin_src emacs-lisp :results silent
 (use-package org-autosort
-  :straight (org-autosort :type git :host github :repo "yantar92/org-autosort"))
+  :elpaca (org-autosort :type git :host github :repo "yantar92/org-autosort")
+  :after org)
 #+end_src
 
 ** ox-clip
@@ -11707,12 +11759,13 @@ CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
 
 #+begin_src emacs-lisp :results silent
 (use-package elgantt
-  :straight (elgantt
+  :elpaca (elgantt
              :host github
              :repo "legalnonsense/elgantt")
+  :after org
   :defer 20
   :config
-  (setq elgantt-agenda-files (file-name-concat ps/dir-emacs "straight/repos/elgantt/test.org")))
+  (setq elgantt-agenda-files (file-name-concat ps/dir-emacs "elpaca/repos/elgantt/test.org")))
 #+end_src
 
 ** org-pomodoro
@@ -12101,7 +12154,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org-roam)
 (use-package org-roam-ui
-  :straight
+  :elpaca
   (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
   :after org-roam
   ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
@@ -12773,7 +12826,7 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
 
 #+begin_src emacs-lisp :results silent
 (use-package citar-org-roam
-  :straight (citar-org-roam
+  :elpaca (citar-org-roam
              :host github
                    :repo "emacs-citar/citar-org-roam")
   :demand t
@@ -12799,9 +12852,9 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 
 #+begin_src emacs-lisp :results silent
 (use-package citar
-  :straight (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
+  :elpaca (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
   ;; :defer 10
-  ;; :after oc vertico embark marginalia
+  :after oc vertico embark marginalia all-the-icons
   :demand t
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))
@@ -14295,7 +14348,7 @@ I experimented with setting the value of ~zotra-backend~ to each of the three av
 
 #+begin_src emacs-lisp :results silent
 (use-package zotra
-  :straight (zotra
+  :elpaca (zotra
              :host github
              :repo "mpedramfar/zotra")
   :demand t
@@ -14886,7 +14939,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
 #+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/mu4e)
 (use-package mu4e
-  :straight (:local-repo
+  :elpaca (:local-repo
              "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
              :pre-build
              ())
@@ -16156,7 +16209,7 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
 
 #+begin_src emacs-lisp
 (use-package shr-heading
-  :straight (shr-heading
+  :elpaca (shr-heading
              :host github
              :repo "oantolin/emacs-config"
              :files ("my-lisp/shr-heading.el"))
@@ -16701,7 +16754,7 @@ CLOCK: [2022-05-16 Mon 19:11]--[2022-05-16 Mon 19:19] =>  0:08
 
 #+begin_src emacs-lisp :results silent
 (use-package osm
-  :straight (osm
+  :elpaca (osm
              :host github
              :repo "minad/osm")
   :init
@@ -17468,10 +17521,11 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 /[[https://github.com/telotortium/emacs-oauth2-auto][emacs-oauth2-auto]] supports authentication to an OAuth2 provider from within Emacs./
 
 #+begin_src emacs-lisp :results silent
-(use-package emacs-oauth2-auto
-  :straight (emacs-oauth2-auto
-             :host github
-                   :repo "telotortium/emacs-oauth2-auto"))
+(use-package oauth2-auto
+  :elpaca (emacs-oauth2-auto
+           :host github
+           :repo "telotortium/emacs-oauth2-auto"
+           :protocol ssh))
 #+end_src
 
 ** pass
@@ -17712,7 +17766,7 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 
 #+begin_src emacs-lisp :results silent
 (use-package unpackaged
-  :straight (unpackaged :host github :repo "alphapapa/unpackaged.el")
+  :elpaca (unpackaged :host github :repo "alphapapa/unpackaged.el")
   :commands (unpackaged/org-forward-to-entry-content))
 #+end_src
 

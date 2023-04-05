@@ -7617,10 +7617,11 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
   (setq lsp-grammarly-suggestions-possibly-biased-language-race-ethnicity-related nil)
   (setq lsp-grammarly-suggestions-possibly-politically-incorrect-language nil)
 
-  (add-hook 'org-mode-hook
-            (lambda ()
-              (require 'lsp-grammarly)
-              (lsp))))
+  ;; (add-hook 'org-mode-hook
+            ;; (lambda ()
+              ;; (require 'lsp-grammarly)
+              ;; (lsp)))
+              )
 #+end_src
 
 *** TODO [#6] Check this
@@ -8605,7 +8606,7 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
         (lsp)
       (lsp-disconnect)))
 
-  (add-hook 'org-mode-hook #'lsp)
+  ;; (add-hook 'org-mode-hook #'lsp)
   (add-hook 'lsp-mode #'lsp-enable-which-key-integration))
 #+end_src
 

@@ -3126,7 +3126,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   :init
   (setq yas-snippet-dirs (list ps/dir-yasnippets
                                ps/dir-yasnippets-private
-                               (file-name-concat user-emacs-directory "straight/build/yasnippet-snippets/snippets")))
+                               (file-name-concat user-emacs-directory "elpaca/builds/yasnippet-snippets/snippets")))
 
   :config
   (setq yas-triggers-in-field t) ; allow stacked expansions

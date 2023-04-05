@@ -5106,37 +5106,6 @@ Maybe the way to do this is by creating a ~pass-to-avy~ generic function, which 
 
 [2021-11-29 Mon 23:37] Should create commands to delete/copy/kill words/sentences/paragraphs/sexp/lines/region
 
-** iy-go-to-char
-:PROPERTIES:
-:ID:       3BF309B9-5082-4810-96E5-39A07EA101A2
-:END:
-
-/[[https://github.com/doitian/iy-go-to-char][iy-go-to-char]] supports moving to the previous and next character, like ~t~ and ~f~ do in vim./
-
-#+begin_src emacs-lisp :results silent
-(use-package iy-go-to-char
-  :config
-  (defun ps/avy-goto-line-then-word-then-char-above ()
-    "Go to visible line below point, then to word ahead of point,
-then to selected character immediately ahead of point."
-    (interactive)
-    (ps/avy-goto-line-then-word-above)
-    (call-interactively 'iy-go-to-char))
-
-  (defun ps/avy-goto-line-then-word-then-char-below ()
-    "Go to visible line below point, then to word ahead of point,
-then to selected character immediately ahead of point."
-    (interactive)
-    (ps/avy-goto-line-then-word-below)
-    (call-interactively 'iy-go-to-char))
-
-  :general
-  ("C-H-s-j" 'iy-go-to-char-backward
-   "C-H-s-;" 'iy-go-to-char
-   "C-H-s-i" 'ps/avy-goto-line-then-word-then-char-above
-   "C-H-s-o" 'ps/avy-goto-line-then-word-then-char-below))
-#+end_src
-
 ** writeroom-mode
 :PROPERTIES:
 :ID:       AD1CE3FE-8897-4593-BD37-FEA38630611A

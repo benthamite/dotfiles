@@ -16846,52 +16846,6 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
   ("A-C-r" 'read-aloud-this)) ; remember that `A-C-d' starts/stops dictation
 #+end_src
 
-** EMMS
-:PROPERTIES:
-:ID:       3B176388-5D13-478F-8E13-9C8C93AB9D10
-:END:
-:LOGBOOK:
-CLOCK: [2022-09-05 Mon 12:18]--[2022-09-05 Mon 13:11] =>  0:53
-CLOCK: [2022-09-05 Mon 12:09]--[2022-09-05 Mon 12:12] =>  0:03
-CLOCK: [2021-05-04 Tue 21:41]--[2021-05-04 Tue 21:56] =>  0:15
-:END:
-
-/[[https://www.gnu.org/software/emms/][EMMS]] (Emacs MultiMedia System) is media player software for Emacs./
-
-#+begin_src emacs-lisp :results silent
-(use-package emms
-  :disabled
-  :demand t
-  :config
-  (setq emms-source-file-default-directory ps/dir-music-tango)
-  (setq emms-playlist-buffer-name "*Music*")
-  (setq emms-info-asynchronously t)
-  (setq emms-info-functions '(emms-info-libtag)) ; make sure libtag is the only thing delivering metadata
-  ;; ~1 order of magnitu faster; requires GNU find: `brew install findutils'ja
-  (setq emms-source-file-directory-tree-function 'emms-source-file-directory-tree-find)
-  (require 'emms-setup)
-  (emms-all)
-  (emms-default-players)
-  (require 'emms-info-libtag) ;;; load functions that will talk to emms-print-metadata which in turn talks to libtag and gets metadata
-  (require 'emms-info-metaflac)
-  (add-to-list 'emms-info-functions 'emms-info-libtag)
-  (require 'emms-mode-line)
-  (emms-mode-line 1)
-  (require 'emms-playing-time)
-  (emms-playing-time 1))
-#+end_src
-
-[2021-05-04 Tue 22:22] ~emms-print-metadata~ needs to be installed manually. I followed [[https://hack.org/mc/blog/emms.html][this]], installed the three dependencies via brew but wasn't able to complete the instructions. The ~emms~ directory is currently located in the user path.
-
-[2022-09-05 Mon 13:08] I think the key question is whether I can create "smart" playlists or reproduce that functionality in some way, i.e. generate lists of tracks based on metadata (such as all tracks recorded in 1927).
-
-*** resources
-:PROPERTIES:
-:ID:       C043F6EF-C922-4803-8361-E94ACE1C60F0
-:END:
-
-[[https://sqrtminusone.xyz/posts/2021-09-07-emms/][My EMMS and elfeed setup]]
-
 * passwords
 :PROPERTIES:
 :ID:       D412C998-40EE-4638-959A-C2530EC9F247

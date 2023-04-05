@@ -6311,7 +6311,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   (setq vr/engine 'python)
   (setq vr/command-python
         (concat "python3 "
-                (file-name-concat user-emacs-directory "straight/build/visual-regexp-steroids/regexp.py")))
+                (file-name-concat user-emacs-directory "elpacs/builds/visual-regexp-steroids/regexp.py")))
 
   :general
   (isearch-mode-map

@@ -8590,13 +8590,10 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 
 Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A guide on disabling/enabling lsp-mode features - LSP Mode - LSP support for Emacs]]
 
-[2022-11-01 Tue 20:56] Disabling.
-
 #+begin_src emacs-lisp :results silent
 (use-package lsp-mode
   :demand t
   :config
-  (setq lsp-ui-doc-show-with-cursor t) ; move the cursor over a symbol to show its documentation
   (setq lsp-warn-no-matched-clients nil)
   (setq lsp-headerline-breadcrumb-enable nil)
 
@@ -8622,7 +8619,9 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 #+begin_src emacs-lisp :results silent
 (use-package lsp-ui
   :after lsp-mode
-  :demand t)
+  :demand t
+  :config
+  (setq lsp-ui-doc-show-with-cursor t)) ; move the cursor over a symbol to show its documentation
 #+end_src
 
 ** dumb-jump

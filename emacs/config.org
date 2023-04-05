@@ -4106,7 +4106,6 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
   (setq dired-guess-shell-alist-user '(("" "open")))
   (setq dired-deletion-confirmer '(lambda (x) t))
 
-  (dired-async-mode)
   (put 'dired-find-alternate-file 'disabled nil) ; do not disable dired-find-alternate-file!
 
   (defun ps/dired-copy-filename-as-kill-sans-extension ()
@@ -4223,6 +4222,18 @@ option."
    "A-C-s-f" 'dired-next-marked-file)
   (pdf-annot-minor-mode-map
    "x" 'dired-jump))
+#+end_src
+
+** dired-async
+:PROPERTIES:
+:ID:       966B615F-69EF-428D-82E5-6E68B64D0FDD
+:END:
+
+#+begin_src emacs-lisp
+(use-feature dired-async
+  :after async dired
+  :config
+  (dired-async-mode))
 #+end_src
 
 ** image-dired

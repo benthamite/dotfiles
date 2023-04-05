@@ -8750,47 +8750,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 (use-package applescript-mode)
 #+end_src
 
-** puni
-:PROPERTIES:
-:ID:       1E0E065E-46CE-4961-8620-6554935CE68F
-:END:
-
-/[[https://github.com/AmaiKinono/puni][puni]] is a structural editing package that supports many major modes out of the box./
-
-#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/puni)
-(use-package puni
-  :disabled
-  :demand t
-  :config
-  (dolist (hook '(prog-mode-hook
-                  sgml-mode-hook
-                  nxml-mode-hook
-                  tex-mode-hook
-                  eval-expression-minibuffer-setup-hook))
-    (add-hook hook #'puni-mode))
-
-  :general
-  (puni-mode-map
-   "C-M-a" 'puni-beginning-of-sexp
-   "C-M-b" 'puni-backward-sexp
-   "C-M-e" 'puni-end-of-sexp
-   "C-M-f" 'puni-forward-sexp
-   "C-S-k" 'puni-backward-kill-line
-   "C-c DEL" 'puni-force-delete
-   "C-d" 'puni-forward-delete-char
-   "C-k" nil
-   "C-w" nil
-   "DEL" 'puni-backward-delete-char
-   "M-(" 'puni-syntactic-backward-punct
-   "M-)" 'puni-syntactic-forward-punct
-   "M-DEL"    'puni-backward-kill-word))
-#+end_src
-
-*** TODO [#5] Define ~puni~ key bindings
-:PROPERTIES:
-:ID:       BEF1B425-C23E-4C1C-A468-92F7AD54FA18
-:END:
-
 ** hideshow
 :PROPERTIES:
 :ID:       8E6459FA-9978-42F8-9DAC-C4D7FB385F97

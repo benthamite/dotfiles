@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
 # name: defer-loading
-# key: dl
+# key: def
 # contributor: Pablo Stafforini
 # --
 $1: defer loading

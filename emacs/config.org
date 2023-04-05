@@ -7554,23 +7554,6 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
   :after flyspell)
 #+end_src
 
-** jinx
-:PROPERTIES:
-:ID:       ED021B57-190B-4A80-9884-F723B792CD5E
-:END:
-
-/[[https://github.com/minad/jinx][jinx]] is a just-in-time spell-checker based on Enchant./
-
-[2023-03-29 Wed 12:53] I'll probably migrate to this package eventually, but I'm disabling it until I do so.
-
-#+begin_src emacs-lisp
-(use-package jinx
-  :straight (:host github :repo "minad/jinx" :files (:defaults "jinx-mod.c" "emacs-module.h"))
-  :disabled
-  :config
-  (add-hook 'emacs-startup-hook #'global-jinx-mode))
-#+end_src
-
 ** keytar
 :PROPERTIES:
 :ID:       773AD672-8356-4097-990D-96BD160DAD40

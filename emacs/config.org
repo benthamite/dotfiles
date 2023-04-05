@@ -8972,6 +8972,24 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
   (setq codegpt-model "text-davinci-003"))
 #+end_src
 
+** whisper
+:PROPERTIES:
+:ID:       19FF2502-D4A0-41CC-8F72-E1CF1D960304
+:END:
+
+/[[https://github.com/natrys/whisper.el][whisper]] is a speech-to-Text interface for Emacs using OpenAI's whisper model and whisper.cpp as inference engine./
+
+#+begin_src emacs-lisp
+(use-package whisper
+  :elpaca (whisper.el
+           :host github
+           :repo "natrys/whisper.el"
+           :protocol ssh)
+  :config
+  (setq whisper-install-directory no-littering-var-directory)
+  (setq whisper--ffmpeg-input-device ":0"))
+#+end_src
+
 ** pen
 :PROPERTIES:
 :ID:       DEEF7EF7-E79C-427B-9E1D-86D22FC2056E

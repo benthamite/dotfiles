@@ -6626,20 +6626,6 @@ By default, all agenda entries are offered. MATCH is as in
   ("H-B" 'consult-dir))
 #+end_src
 
-** consult-notes
-:PROPERTIES:
-:ID:       5C00C666-754D-4779-9C48-A7B262EE525C
-:END:
-
-/[[https://github.com/mclear-tools/consult-notes][consult-notes]]: Use consult to search notes./
-
-[2022-10-05 Wed 14:50] Performance seemed abysmal when I tried it. Maybe it can be optimized?
-
-#+begin_src emacs-lisp :results silent
-(use-package consult-notes
-:disabled)
-#+end_src
-
 ** consult-yasnippet
 :PROPERTIES:
 :ID:       437A790A-467F-46CB-9EE3-25AA91D43D89

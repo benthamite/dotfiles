@@ -11932,11 +11932,6 @@ https://github.com/hieutkt/.doom.d/blob/master/config.el#L690-L742
 
 https://commonplace.doubleloop.net/adding-timestamps-to-org-roam-notes
 
-*** TODO [#6] Turn all notes into lowercase unless uppercase is appropriate
-:PROPERTIES:
-:ID:       60F7D02B-ACBE-410C-9304-DBE5E4414B26
-:END:
-
 *** TODO [#4] Figure out how to search for files with a particular tag with ~org-roam~
 :PROPERTIES:
 :ID:       C4B5F6B8-9E88-43E0-ACA3-43954D2BA254

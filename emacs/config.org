@@ -1819,7 +1819,8 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
                                             " | "
                                             telega-mode-line-format
                                             " | "))
-                                (display-wttr-mode)))
+                                ;; (display-wttr-mode)
+                                ))
   (tab-bar-mode))
 #+end_src
 

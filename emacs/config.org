@@ -4522,7 +4522,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 :END:
 
 #+begin_src emacs-lisp :results silent
-(use-feature uniquify-files
+(use-feature uniquify
   :config
   (setq uniquify-buffer-name-style 'forward))
 #+end_src

@@ -14402,14 +14402,6 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
   (setq read-mail-command 'mu4e))
 #+end_src
 
-:PROPERTIES:
-:END:
-
-
-#+begin_src emacs-lisp :results silent
-  :config
-#+end_src
-
 ** sendmail
 :PROPERTIES:
 :ID:       25BB02C1-B537-4D2F-AF95-3B1217A58E6D
@@ -14420,8 +14412,24 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 #+begin_src emacs-lisp :results silent
 (use-feature sendmail
   :config
-  (setq send-mail-function 'smtpmail-multi-send-it))
+  (setq send-mail-function 'smtpmail-send-it))
 #+end_src
+
+** smtpmail
+:PROPERTIES:
+:ID:       F05AFA09-978B-441D-B947-0DBEA4DBC7BF
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature smtpmail
+  :config
+  (setq smtpmail-smtp-user ps/personal-gmail)
+  (setq smtpmail-local-domain "gmail.com")
+  (setq smtpmail-default-smtp-server "smtp.gmail.com")
+  (setq smtpmail-smtp-server "smtp.gmail.com")
+  (setq smtpmail-smtp-service 587))
+#+end_src
+
 
 ** async-mail-sending
 :PROPERTIES:

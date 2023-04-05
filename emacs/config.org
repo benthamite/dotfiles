@@ -7338,19 +7338,6 @@ necessary."
   (add-hook 'eshell-mode-hook #'eshell-syntax-highlighting-global-mode))
 #+end_src
 
-** pcmpl-args
-:PROPERTIES:
-:ID:       6F7AFAFF-B44A-4465-BB01-EA3368A24EF0
-:END:
-
-/[[https://github.com/JonWaltman/pcmpl-args.el][pcmpl-args]] provies enhanced shell completion./
-
-#+begin_src emacs-lisp :results silent
-(use-package pcmpl-args
-  :disabled
-  :defer 5)
-#+end_src
-
 ** emacs-native-shell-complete
 :PROPERTIES:
 :ID:       878E8350-28A3-4C00-94ED-D3C29EFF68D7

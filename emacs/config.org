@@ -590,8 +590,11 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 (use-package no-littering
   :demand t
   :init
-  (setq no-littering-etc-directory (file-name-concat (getenv "HOME") ".config/emacs-profiles/etc/"))
-  (setq no-littering-etc-directory (file-name-concat (getenv "HOME") ".config/emacs-profiles/var/"))
+  ;; these directories should be shared across profiles, so there should
+  ;; be only one `var' and one `etc' directory in `emacs-profiles'
+  ;; rather than a pair of such directories for each profile
+  (setq no-littering-etc-directory (file-name-concat ps/dir-chemacs-profiles "etc/"))
+  (setq no-littering-var-directory (file-name-concat ps/dir-chemacs-profiles "var/"))
 
   :config
   ;; github.com/emacscollective/no-littering#auto-save-settings

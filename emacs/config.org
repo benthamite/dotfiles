@@ -11643,10 +11643,8 @@ Pomodoro system:
 :ID:       7A7A0C7B-AC94-40ED-A50E-AAB67D9522E8
 :END:
 
-[2023-03-10 Fri 18:31]Use package tries to install this package even the condition fails to verify, so I'm adding ~:tangle no~ to the code block until I understand what's going on.
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package emacsql-sqlite3
+#+begin_src emacs-lisp :results silent
+(use-feature emacsql-sqlite3
   :if (version< emacs-version "29.0")
   :demand t)
 #+end_src
@@ -14469,7 +14467,7 @@ To try once I switch to Emacs 29.
   :demand t
   :config
   (setq message-kill-buffer-on-exit t) ; make `message-send-and-exit' kill buffer, not bury it
-  (setq message-send-mail-function 'smtpmail-multi-send-it)
+  (setq message-send-mail-function 'smtpmail-send-it)
 
   (add-hook 'message-mode-hook #'(lambda () (auto-fill-mode -1)))
 

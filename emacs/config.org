@@ -16482,25 +16482,6 @@ account."
    "s-c" 'twittering-edit-post-status))
 #+end_src
 
-** md4rd
-:PROPERTIES:
-:ID:       CEDBA9CB-F7FB-4E7F-8CAB-C96812BE1517
-:END:
-
-/[[https://github.com/ahungry/md4rd][md4rd]] is an Emacs mode for browsing Reddit./
-
-#+begin_src emacs-lisp :results silent
-(use-package md4rd
-  :config
-  (setq md4rd-subs-active '(emacs))
-  (setq md4rd--oauth-access-token
-        (auth-source-pass-get 'secret "auth-sources/reddit"))
-  (setq md4rd--oauth-refresh-token
-        (auth-source-pass-get "refresh" "auth-sources/reddit"))
-
-  (add-hook 'md4rd-mode-hook #'md4rd-indent-all-the-lines))
-#+end_src
-
 ** org-download
 :PROPERTIES:
 :ID:       A9F101D1-4130-4297-A2B3-203B15AA408B

@@ -11245,9 +11245,9 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
                       (cons "k" 'org-babel-previous-src-block)
                       (cons "n" 'org-babel-insert-header-arg)
                       (cons "p" 'org-babel-remove-result-one-or-many)))
-    (add-to-list 'org-babel-key-bindings cons)))
+    (add-to-list 'org-babel-key-bindings cons))
 
-(define-key org-mode-map (kbd "s-b") #'ps/init-build)
+  (define-key org-mode-map (kbd "s-b") #'ps/init-build))
 #+end_src
 
 ** org-src
@@ -14438,8 +14438,6 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 
 /[[https://github.com/lordpretzel/async-email-sending][async-email-sending]] enables asynchronous sending of emails in Emacs using the new built-in sqlite support in Emacs 29./
 
-To try once I switch to Emacs 29.
-
 ** message
 :PROPERTIES:
 :ID:       67208BCE-6FFD-48B2-A5AD-7B72BAF31692
@@ -16569,6 +16567,7 @@ template."
 (use-package request
   :defer 15)
 #+end_src
+
 ** graphql-mode
 :PROPERTIES:
 :ID:       4B9A26D9-EA9B-420B-A8B2-060AAF19D4E4

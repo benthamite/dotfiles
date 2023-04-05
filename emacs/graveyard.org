@@ -9,6 +9,768 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** straight
+:PROPERTIES:
+:ID:       A402D9BB-63D7-4A4C-839C-9AC21B245725
+:END:
+:LOGBOOK:
+CLOCK: [2021-10-19 Tue 22:01]--[2021-10-19 Tue 23:20] =>  1:19
+CLOCK: [2021-09-30 Thu 19:27]--[2021-09-30 Thu 20:19] =>  0:52
+CLOCK: [2021-08-25 Wed 19:30]--[2021-08-25 Wed 19:36] =>  0:06
+CLOCK: [2021-07-23 Fri 16:39]--[2021-07-23 Fri 17:28] =>  0:49
+CLOCK: [2021-07-19 Mon 21:17]--[2021-07-19 Mon 21:24] =>  0:07
+CLOCK: [2021-07-17 Sat 13:27]--[2021-07-17 Sat 15:20] =>  1:53
+CLOCK: [2021-07-11 Sun 18:10]--[2021-07-11 Sun 18:19] =>  0:09
+CLOCK: [2021-07-03 Sat 22:50]--[2021-07-03 Sat 23:19] =>  0:29
+CLOCK: [2021-06-27 Sun 10:44]--[2021-06-27 Sun 10:49] =>  0:05
+CLOCK: [2021-06-25 Fri 22:18]--[2021-06-25 Fri 22:30] =>  0:12
+CLOCK: [2021-06-23 Wed 13:45]--[2021-06-23 Wed 14:03] =>  0:18
+CLOCK: [2021-06-23 Wed 09:49]--[2021-06-23 Wed 09:57] =>  0:08
+:END:
+
+- Update individual packages with ~straight-pull-package~ and all packages with ~straight-pull-all~.
+- Invoke ~straight-freeze-versions~
+
+Process for updating packages:
+1. straight-normalize-all
+2. straight-pull-all
+   verify that things are working
+3. straight-freeze-versions
+
+- If the update process throws an error for a specific package, try deleting the folders inside both ~build~ and ~repos~ and then reinstall the package. See [[https://github.com/hlissner/doom-emacs/issues/5588#issuecomment-935626725][here]] for discussion.
+- If you encounter problems, first try ~M-x straight-pull-package straight~, ~M-x straight-rebuild-package straight~ and restart.
+
+[2022-10-31 Mon 15:55] At some point, it should probably be replaced with [[https://github.com/progfolio/elpaca][elpaca]]. Discussion [[https://github.com/progfolio/elpaca][here]].
+
+[2023-04-04 Tue 23:56] That point has come. /Adieu/, ~straight~!
+
+#+begin_src emacs-lisp :results silent :tangle no
+(setq straight-repository-branch "develop") ; must precede bootstrap
+(setq straight-profiles `((nil . ,(file-name-concat user-emacs-directory "straight-profile.el"))))
+;; Bootstrap `straight'
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 6))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+(setq straight-default-vc 'git)
+(if (and (executable-find "watchexec")
+         (executable-find "python3"))
+    (setq straight-check-for-modifications '(watch-files find-when-checking))
+  (setq straight-check-for-modifications '(find-at-startup find-when-checking)))
+(setq straight-use-package-by-default t)
+(setq straight-recipe-repositories '(org-elpa
+                                     gnu-elpa-mirror
+                                     nongnu-elpa
+                                     melpa
+                                     el-get
+                                     emacsmirror-mirror))
+(require 'straight-x) ; github.com/raxod502/straight.el#how-do-i-uninstall-a-package
+
+;; Early load Org from Git version instead of Emacs built-in version
+(straight-use-package org)
+(straight-use-package org-contrib)
+#+end_src
+
+** youtube-dl-emacs
+:PROPERTIES:
+:ID:       26EEEF20-5CDC-4855-A03D-AFEBB784D637
+:END:
+:LOGBOOK:
+CLOCK: [2021-11-19 Fri 12:18]--[2021-11-19 Fri 12:33] =>  0:15
+CLOCK: [2021-10-14 Thu 18:14]--[2021-10-14 Thu 19:00] =>  0:46
+CLOCK: [2021-10-14 Thu 17:50]--[2021-10-14 Thu 18:14] =>  0:24
+:END:
+
+/[[https://github.com/skeeto/youtube-dl-emacs][youtube-dl-emacs]] lets you control the [[https://youtube-dl.org/][youtube-dl]] download manager from Emacs./
+
+Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dlp]], a ~youtube-dl~ fork.
+
+[2023-04-04 Tue 21:35] Replacing with [[https://gitlab.com/tuedachu/ytdl][ytd]].
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package youtube-dl-emacs
+  :config
+  (setq youtube-dl-program "yt-dlp")
+  (setq youtube-dl-arguments '(
+                          "--no-mtime"
+                          "--restrict-filenames"
+                          "--write-subs"
+                          "--write-auto-subs"
+                          ;; the below arguments aren't working
+                          ;; "--sub-langs 'en-orig,en,fr,de,it,la,pt,es,sv,ca,ru'"
+                          ;; "--skip=translated_subs"
+                          ))
+  (setq youtube-dl-directory ps/dir-downloads)
+
+  ;; TODO:
+  ;; - make it work even when point is at start of heading
+  ;; - archive subitltes
+  (defun ps/org-archive-watched-video ()
+    "Archive TODO and associated file in video watchlist."
+    (interactive)
+    (when (ps/org-link-get-url-at-point)
+      (let ((filename (s-replace "file:" "" (ps/org-link-get-url-at-point))))
+        (rename-file
+         filename
+         (expand-file-name
+          (file-name-nondirectory filename)
+          (file-name-as-directory (expand-file-name
+                                   "archive"
+                                   (file-name-directory filename))))))
+      (org-archive-to-archive-sibling))))
+#+end_src
+
+*** TODO [#4] Fix naming problem for videos
+:PROPERTIES:
+:Effort:   0:45
+:ID:       F4F4B47A-6B45-41DD-831C-0C23D67C4398
+:END:
+:LOGBOOK:
+CLOCK: [2022-09-05 Mon 20:22]--[2022-09-05 Mon 21:28] =>  1:06
+:END:
+
+** smtpmail-multi
+:PROPERTIES:
+:ID:       DDFE6DC9-A986-4E79-BF5B-A99124B65BA2
+:END:
+
+/[[https://github.com/vapniks/smtpmail-multi][smtpmail-multi]] allows for  different smtp servers for sending mail./
+
+[2023-04-04 Tue 21:28]I no longer need to use multiple accounts.
+
+#+begin_src emacs-lisp :results silent
+(use-package smtpmail-multi
+  :after mu4e
+  :demand t
+  :config
+  (setq smtpmail-multi-accounts
+        `((gmail . (,ps/personal-gmail
+                    "smtp.gmail.com"
+                    587
+                    ,ps/personal-gmail
+                    starttls nil nil nil))
+          (gpe . (,ps/personal-gpe-email
+                  "smtp.gmail.com"
+                  587
+                  ,ps/personal-gpe-email
+                  starttls nil nil nil))))
+
+  (setq smtpmail-multi-associations
+        `((,ps/personal-gmail gmail)
+          (,ps/personal-gpe-email gpe)))
+
+  (setq smtpmail-multi-default-account (quote gmail)))
+#+end_src
+
+** md4rd
+:PROPERTIES:
+:ID:       CEDBA9CB-F7FB-4E7F-8CAB-C96812BE1517
+:END:
+
+/[[https://github.com/ahungry/md4rd][md4rd]] is an Emacs mode for browsing Reddit./
+
+[2023-04-04 Tue 18:57]
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package md4rd
+  :config
+  (setq md4rd-subs-active '(emacs))
+  (setq md4rd--oauth-access-token
+        (auth-source-pass-get 'secret "auth-sources/reddit"))
+  (setq md4rd--oauth-refresh-token
+        (auth-source-pass-get "refresh" "auth-sources/reddit"))
+
+  (add-hook 'md4rd-mode-hook #'md4rd-indent-all-the-lines))
+#+end_src
+
+** iy-go-to-char
+:PROPERTIES:
+:ID:       3BF309B9-5082-4810-96E5-39A07EA101A2
+:END:
+
+/[[https://github.com/doitian/iy-go-to-char][iy-go-to-char]] supports moving to the previous and next character, like ~t~ and ~f~ do in vim./
+
+[2023-04-04 Tue 19:36] Not using it.
+
+#+begin_src emacs-lisp :results silent
+(use-package iy-go-to-char
+  :config
+  (defun ps/avy-goto-line-then-word-then-char-above ()
+    "Go to visible line below point, then to word ahead of point,
+then to selected character immediately ahead of point."
+    (interactive)
+    (ps/avy-goto-line-then-word-above)
+    (call-interactively 'iy-go-to-char))
+
+  (defun ps/avy-goto-line-then-word-then-char-below ()
+    "Go to visible line below point, then to word ahead of point,
+then to selected character immediately ahead of point."
+    (interactive)
+    (ps/avy-goto-line-then-word-below)
+    (call-interactively 'iy-go-to-char))
+
+  :general
+  ("C-H-s-j" 'iy-go-to-char-backward
+   "C-H-s-;" 'iy-go-to-char
+   "C-H-s-i" 'ps/avy-goto-line-then-word-then-char-above
+   "C-H-s-o" 'ps/avy-goto-line-then-word-then-char-below))
+#+end_src
+
+** anki-editor
+:PROPERTIES:
+:ID:       AEA197FC-3C2F-4452-B044-319827859DF5
+:END:
+:LOGBOOK:
+CLOCK: [2022-01-15 Sat 19:12]--[2022-01-15 Sat 19:24] =>  0:12
+CLOCK: [2021-12-28 Tue 10:10]--[2021-12-28 Tue 12:43] =>  2:33
+CLOCK: [2021-12-11 Sat 22:30]--[2021-12-11 Sat 22:44] =>  0:14
+CLOCK: [2021-10-13 Wed 22:54]--[2021-10-14 Thu 00:18] =>  1:24
+CLOCK: [2021-10-13 Wed 22:54]--[2021-10-13 Wed 22:54] =>  0:00
+CLOCK: [2021-10-02 Sat 14:09]--[2021-10-02 Sat 14:28] =>  0:19
+CLOCK: [2021-10-02 Sat 13:06]--[2021-10-02 Sat 13:16] =>  0:10
+CLOCK: [2021-07-13 Tue 12:03]--[2021-07-13 Tue 12:12] =>  0:09
+CLOCK: [2021-07-13 Tue 10:35]--[2021-07-13 Tue 11:01] =>  0:26
+CLOCK: [2021-07-12 Mon 21:40]--[2021-07-12 Mon 23:13] =>  1:33
+CLOCK: [2021-07-10 Sat 14:29]--[2021-07-10 Sat 15:12] =>  0:43
+CLOCK: [2021-05-27 Thu 15:49]--[2021-05-27 Thu 16:54] =>  1:05
+CLOCK: [2021-05-26 Wed 21:05]--[2021-05-26 Wed 23:24] =>  2:19
+CLOCK: [2021-04-08 Thu 21:50]--[2021-04-08 Thu 22:35] =>  0:45
+CLOCK: [2021-04-05 Mon 22:19]--[2021-04-05 Mon 22:44] =>  0:25
+CLOCK: [2021-03-17 Wed 19:31]--[2021-03-17 Wed 19:33] =>  0:02
+CLOCK: [2021-03-17 Wed 17:46]--[2021-03-17 Wed 17:56] =>  0:10
+:END:
+
+/[[https://github.com/louietan/anki-editor][anki-editor]] is a minor mode for making Anki cards with Org./
+
+[2023-04-04 Tue 18:11] Poorly maintained.
+
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/anki-editor)
+(use-package anki-editor
+  :disabled
+  ;; this version handles mathjax correctly
+  ;; :elpaca (:fork (:repo "louietan/anki-editor" :branch "develop"))
+  ;; this version simplifies the tree structure
+  ;; :elpaca
+  ;; (:type git :host github :repo "louietan/anki-editor"
+  ;; :fork (:host github :repo "leoc/anki-editor"
+  ;; :branch "develop"))
+  :init
+  (setq-default anki-editor-use-math-jax t) ; github.com/louietan/anki-editor/issues/60#issuecomment-617441799
+  ;; create custom key map
+  (progn
+    (defvar anki-editor-mode-map (make-sparse-keymap))
+    (add-to-list 'minor-mode-map-alist (cons 'anki-editor-mode
+                                             anki-editor-mode-map)))
+
+  :config
+  (setq anki-editor-create-decks t)
+  (setq anki-editor-org-tags-as-anki-tags t)
+  (defun ps/anki-editor-open-note-externally ()
+    "Copy note id to clipboard, switch to Anki desktop, and open note in browser."
+    (interactive)
+    (let ((note-id (org-entry-get nil "ANKI_NOTE_ID")))
+      (if (not note-id)
+          (error "Note id not found")
+        (progn
+          (kill-new (concat "nid:" note-id))
+          (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"496A3425-8985-4117-AE0F-ABD6DC85FB9F\"'")))))
+
+  (defun ps/anki-editor-push-notes-under-heading (&optional match scope)
+    "Push notes under heading to Anki."
+    (interactive)
+    (anki-editor-push-notes '(4) match scope))
+
+  ;; the two modified functions below allow for notes with empty fields to be pushed without error
+  ;; github.com/leoc/anki-editor/pull/1
+  (defun ps/anki-editor--build-field-from-content-at-point (name)
+    "Build a field with NAME entry from the heading at point."
+    (let* ((element (org-element-at-point))
+           (format (anki-editor-entry-format))
+           (begin (cl-loop for eoh = (org-element-property :contents-begin element)
+                           then (org-element-property :end subelem)
+                           while eoh
+                           for subelem = (progn
+                                           (goto-char eoh)
+                                           (org-element-context))
+                           while (memq (org-element-type subelem)
+                                       '(drawer planning property-drawer))
+                           finally return (and eoh (org-element-property :begin subelem))))
+           (end (org-element-property :contents-end element))
+           (raw (or (and begin
+                         end
+                         (buffer-substring-no-properties
+                          begin
+                          ;; in case the buffer is narrowed,
+                          ;; e.g. by `org-map-entries' when
+                          ;; scope is `tree'
+                          (min (point-max) end)))
+                    "")))
+      (cons name (anki-editor--export-string raw format))))
+
+  (defun ps/anki-editor--build-fields ()
+    "Build a list of fields from subheadings of current heading.
+
+Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
+    (save-excursion
+      (cl-loop with inhibit-message = t ; suppress echo message from `org-babel-exp-src-block'
+               initially (unless (org-goto-first-child)
+                           (cl-return `(,(anki-editor--build-field-from-content-at-point "Back"))))
+               for last-pt = (point)
+               for element = (org-element-at-point)
+               for heading = (substring-no-properties
+                              (org-element-property :raw-value element))
+               for format = (anki-editor-entry-format)
+               ;; contents-begin includes drawers and scheduling data,
+               ;; which we'd like to ignore, here we skip these
+               ;; elements and reset contents-begin.
+               for begin = (cl-loop for eoh = (org-element-property :contents-begin element)
+                                    then (org-element-property :end subelem)
+                                    while eoh
+                                    for subelem = (progn
+                                                    (goto-char eoh)
+                                                    (org-element-context))
+                                    while (memq (org-element-type subelem)
+                                                '(drawer planning property-drawer))
+                                    finally return (and eoh (org-element-property :begin subelem)))
+               for end = (org-element-property :contents-end element)
+               for raw = (or (and begin
+                                  end
+                                  (buffer-substring-no-properties
+                                   begin
+                                   ;; in case the buffer is narrowed,
+                                   ;; e.g. by `org-map-entries' when
+                                   ;; scope is `tree'
+                                   (min (point-max) end)))
+                             "")
+               for content = (anki-editor--export-string raw format)
+               collect (cons heading content)
+               ;; proceed to next field entry and check last-pt to
+               ;; see if it's already the last entry
+               do (org-forward-heading-same-level nil t)
+               until (= last-pt (point)))))
+
+  (advice-add #'anki-editor--build-fields :override #'ps/anki-editor--build-fields)
+  (advice-add #'anki-editor--build-field-from-content-at-point :override #'ps/anki-editor--build-field-from-content-at-point)
+
+  :general
+  ;; ("A-i" 'anki-editor-mode)
+  (anki-editor-mode-map
+   "s-z" 'anki-editor-cloze-region
+   "s-i" 'anki-editor-insert-note
+   "s-h" 'ps/anki-editor-push-notes-under-heading
+   "s-c" 'anki-editor-push-new-notes
+   "s-a" 'anki-editor-push-notes ; push all notes
+   "s-x" 'ps/anki-editor-open-note-externally))
+#+end_src
+
+Of possible interest:
+- [[https://emacstil.com/til/2021/11/19/anki-org/][Anki Org – Emacs TIL – Today I learned in Emacs]]
+
+** puni
+:PROPERTIES:
+:ID:       1E0E065E-46CE-4961-8620-6554935CE68F
+:END:
+
+/[[https://github.com/AmaiKinono/puni][puni]] is a structural editing package that supports many major modes out of the box./
+
+[2023-04-04 Tue 18:10] Can't be bothered to explore it.
+
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/puni)
+(use-package puni
+  :disabled
+  :demand t
+  :config
+  (dolist (hook '(prog-mode-hook
+                  sgml-mode-hook
+                  nxml-mode-hook
+                  tex-mode-hook
+                  eval-expression-minibuffer-setup-hook))
+    (add-hook hook #'puni-mode))
+
+  :general
+  (puni-mode-map
+   "C-M-a" 'puni-beginning-of-sexp
+   "C-M-b" 'puni-backward-sexp
+   "C-M-e" 'puni-end-of-sexp
+   "C-M-f" 'puni-forward-sexp
+   "C-S-k" 'puni-backward-kill-line
+   "C-c DEL" 'puni-force-delete
+   "C-d" 'puni-forward-delete-char
+   "C-k" nil
+   "C-w" nil
+   "DEL" 'puni-backward-delete-char
+   "M-(" 'puni-syntactic-backward-punct
+   "M-)" 'puni-syntactic-forward-punct
+   "M-DEL"    'puni-backward-kill-word))
+#+end_src
+
+*** TODO [#5] Define ~puni~ key bindings
+:PROPERTIES:
+:ID:       BEF1B425-C23E-4C1C-A468-92F7AD54FA18
+:END:
+
+** emacs-native-shell-complete
+:PROPERTIES:
+:ID:       878E8350-28A3-4C00-94ED-D3C29EFF68D7
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-17 Fri 17:41]--[2022-06-17 Fri 17:55] =>  0:14
+:END:
+
+/[[https://github.com/CeleritasCelery/emacs-native-shell-complete][emacs-native-shell-complete]] provides completion in shell buffers using native mechanisms./
+
+[2023-04-04 Tue 18:10] Not using.
+
+#+begin_src emacs-lisp
+(use-package emacs-native-shell-complete
+  :disabled
+  :after shell
+  :demand t
+  :elpaca (emacs-native-shell-complete
+             :host github
+             :repo "CeleritasCelery/emacs-native-shell-complete"))
+#+end_src
+
+** pcmpl-args
+:PROPERTIES:
+:ID:       6F7AFAFF-B44A-4465-BB01-EA3368A24EF0
+:END:
+
+/[[https://github.com/JonWaltman/pcmpl-args.el][pcmpl-args]] provies enhanced shell completion./
+
+[2023-04-04 Tue 18:09] Not using.
+
+#+begin_src emacs-lisp :results silent
+(use-package pcmpl-args
+  :disabled
+  :defer 5)
+#+end_src
+
+** eshell-git-prompt
+:PROPERTIES:
+:ID:       D8CACBDA-19AA-4D2F-9707-07B37AE3DF89
+:END:
+
+/[[https://github.com/xuchunyang/eshell-git-prompt][eshell-git-prompt]] provides themes for eshell./
+
+[2023-04-04 Tue 18:09] Not using.
+#+begin_src emacs-lisp :results silent
+(use-package eshell-git-prompt
+  :disabled
+  :after eshell
+  :demand t
+  :config
+  (eshell-git-prompt-use-theme 'powerline))
+#+end_src
+
+** consult-notes
+:PROPERTIES:
+:ID:       5C00C666-754D-4779-9C48-A7B262EE525C
+:END:
+
+/[[https://github.com/mclear-tools/consult-notes][consult-notes]]: Use consult to search notes./
+
+[2022-10-05 Wed 14:50] Performance seemed abysmal when I tried it. Maybe it can be optimized?
+
+#+begin_src emacs-lisp :results silent
+(use-package consult-notes
+:disabled)
+#+end_src
+
+** hammy
+:PROPERTIES:
+:ID:       79C8D6B8-7D86-4B63-82C2-61E6DFFC4152
+:END:
+
+/[[https://github.com/alphapapa/hammy.el][hammy]] provides programmable, interactive interval timers./
+
+[2023-04-04 Tue 18:08] Not using because I can't get dbus to work.
+
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/hammy)
+(use-package
+  :disabled
+  :elpaca (hammy
+             :host github
+             :repo "alphapapa/hammy.el")
+
+  :config
+  (hammy-define "Move"
+    :documentation "Don't forget to stretch your legs."
+    :intervals
+    ;; A list of intervals, each defined with the `interval' function.
+    (list (interval
+           ;; The name of the interval is a string, used when selecting
+           ;; hammys and shown in the mode line.
+           :name "💺"
+           ;; The duration of the interval: a number of seconds, a string
+           ;; passed to `timer-duration', or a function which returns such.
+           :duration "45 minutes"
+           ;; Optionally, a face in which to show the
+           ;; interval's name in the mode line.
+           :face 'font-lock-type-face
+           ;; A list of actions to take before starting the interval
+           ;; (really, one or a list of functions to call with the hammy
+           ;; as the argument).  The `do' macro expands to a lambda,
+           ;; which the interval's `before' slot is set to.  In its
+           ;; body, we call two built-in helper functions.
+           :before (do (announce "Whew!")
+                       (notify "Whew!"))
+           ;; We want this interval to not automatically advance to the
+           ;; next one; rather, we want the user to call the
+           ;; `hammy-next' command to indicate when the standing-up is
+           ;; actually happening.  So we provide a list of actions to
+           ;; take when it's time to advance to the next interval.  We
+           ;; wrap the list in a call to the built-in `remind' function,
+           ;; which causes the actions to be repeated every 10 minutes
+           ;; until the user manually advances to the next interval.
+           :advance (remind "10 minutes"
+                            ;; Every 10 minutes, while the hammy is waiting
+                            ;; to be advanced to the next interval, remind
+                            ;; the user by doing these things:
+                            (do (announce "Time to stretch your legs!")
+                                (notify "Time to stretch your legs!")
+                              (play-sound-file "~/Misc/Sounds/mooove-it.wav"))))
+          (interval :name "🤸"
+                    :duration "5 minutes"
+                    :face 'font-lock-builtin-face
+                    :before (do (announce "Mooove it!")
+                                (notify "Mooove it!"))
+                    ;; Again, the interval should not advance automatically
+                    ;; to the next--the user should indicate when he's
+                    ;; actually sat down again.  (If we omitted the
+                    ;; `:advance' slot, the interval would automatically
+                    ;; advance when it reached its duration.)
+                    :advance (do (announce "Time for a sit-down...")
+                                 (notify "Time for a sit-down...")
+                               (play-sound-file org-pomodoro-finished-sound)))))
+
+  (hammy-mode))
+#+end_src
+
+** EMMS
+:PROPERTIES:
+:ID:       3B176388-5D13-478F-8E13-9C8C93AB9D10
+:END:
+:LOGBOOK:
+CLOCK: [2022-09-05 Mon 12:18]--[2022-09-05 Mon 13:11] =>  0:53
+CLOCK: [2022-09-05 Mon 12:09]--[2022-09-05 Mon 12:12] =>  0:03
+CLOCK: [2021-05-04 Tue 21:41]--[2021-05-04 Tue 21:56] =>  0:15
+:END:
+
+/[[https://www.gnu.org/software/emms/][EMMS]] (Emacs MultiMedia System) is media player software for Emacs./
+
+[2023-04-04 Tue 18:08] Not using.
+#+begin_src emacs-lisp :results silent
+(use-package emms
+  :disabled
+  :demand t
+  :config
+  (setq emms-source-file-default-directory ps/dir-music-tango)
+  (setq emms-playlist-buffer-name "*Music*")
+  (setq emms-info-asynchronously t)
+  (setq emms-info-functions '(emms-info-libtag)) ; make sure libtag is the only thing delivering metadata
+  ;; ~1 order of magnitu faster; requires GNU find: `brew install findutils'ja
+  (setq emms-source-file-directory-tree-function 'emms-source-file-directory-tree-find)
+  (require 'emms-setup)
+  (emms-all)
+  (emms-default-players)
+  (require 'emms-info-libtag) ;;; load functions that will talk to emms-print-metadata which in turn talks to libtag and gets metadata
+  (require 'emms-info-metaflac)
+  (add-to-list 'emms-info-functions 'emms-info-libtag)
+  (require 'emms-mode-line)
+  (emms-mode-line 1)
+  (require 'emms-playing-time)
+  (emms-playing-time 1))
+#+end_src
+
+[2021-05-04 Tue 22:22] ~emms-print-metadata~ needs to be installed manually. I followed [[https://hack.org/mc/blog/emms.html][this]], installed the three dependencies via brew but wasn't able to complete the instructions. The ~emms~ directory is currently located in the user path.
+
+[2022-09-05 Mon 13:08] I think the key question is whether I can create "smart" playlists or reproduce that functionality in some way, i.e. generate lists of tracks based on metadata (such as all tracks recorded in 1927).
+
+*** resources
+:PROPERTIES:
+:ID:       C043F6EF-C922-4803-8361-E94ACE1C60F0
+:END:
+
+[[https://sqrtminusone.xyz/posts/2021-09-07-emms/][My EMMS and elfeed setup]]
+
+** ol-emacs-slack
+:PROPERTIES:
+:ID:       5F9F6EF6-55A5-4DD4-BB81-BBA16266364B
+:END:
+
+/[[https://github.com/ag91/ol-emacs-slack][ol-emacs-slack]] provides ~org-store-link~ support for [[94F76C3D-9547-431D-93AB-8814F4218AFF][slack]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package ol-emacs-slack
+  :disabled
+  :elpaca (ol-emacs-slack
+             :host github
+             :repo "ag91/ol-emacs-slack")
+  :after slack
+  :demand t)
+#+end_src
+
+** slack
+:PROPERTIES:
+:ID:       94F76C3D-9547-431D-93AB-8814F4218AFF
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-14 Thu 10:44]--[2022-07-14 Thu 10:46] =>  0:02
+CLOCK: [2022-07-12 Tue 13:32]--[2022-07-12 Tue 13:51] =>  0:19
+CLOCK: [2022-07-11 Mon 14:43]--[2022-07-11 Mon 15:08] =>  0:25
+CLOCK: [2022-07-09 Sat 19:16]--[2022-07-09 Sat 19:25] =>  0:09
+CLOCK: [2022-07-09 Sat 15:17]--[2022-07-09 Sat 16:24] =>  1:07
+CLOCK: [2022-07-08 Fri 18:57]--[2022-07-08 Fri 19:26] =>  0:29
+CLOCK: [2022-07-08 Fri 17:58]--[2022-07-08 Fri 18:37] =>  0:39
+CLOCK: [2022-07-08 Fri 13:56]--[2022-07-08 Fri 14:14] =>  0:18
+CLOCK: [2022-07-08 Fri 13:42]--[2022-07-08 Fri 13:54] =>  0:12
+CLOCK: [2022-07-02 Sat 14:13]--[2022-07-02 Sat 14:25] =>  0:12
+CLOCK: [2022-06-08 Wed 16:59]--[2022-06-08 Wed 17:06] =>  0:07
+CLOCK: [2021-06-25 Fri 21:41]--[2021-06-25 Fri 22:16] =>  0:35
+CLOCK: [2021-05-29 Sat 14:10]--[2021-05-29 Sat 14:40] =>  0:30
+CLOCK: [2021-04-18 Sun 13:08]--[2021-04-18 Sun 13:16] =>  0:08
+CLOCK: [2021-04-12 Mon 19:40]--[2021-04-12 Mon 19:43] =>  0:03
+CLOCK: [2021-04-11 Sun 14:18]--[2021-04-11 Sun 14:36] =>  0:18
+CLOCK: [2021-04-07 Wed 12:41]--[2021-04-07 Wed 12:42] =>  0:01
+CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
+:END:
+
+/[[https://github.com/yuya373/emacs-slack][slack]] is a Slack client for Emacs./
+
+[2023-04-04 Tue 18:08] Poorly maintained.
+
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/slack)
+(use-package slack
+  :disabled
+  :after auth-source-pass
+  :defer 60
+  :commands slack-select-rooms
+  :config
+  (setq slack-file-dir ps/dir-downloads)
+  (setq slack-prefer-current-team t)
+
+  (slack-register-team
+   :default t
+   :name "EA Forum Moderators"
+   :token (auth-source-pick-first-password
+           :host "eaforummoderators"
+           :user ps/personal-gmail))
+
+  (slack-register-team
+   :name "CEA Core"
+   :token (auth-source-pick-first-password
+           :host "cea-core"
+           :user ps/personal-gmail))
+
+  (slack-register-team
+   :name "Altruismo Eficaz y Racionalidad"
+   :token (auth-source-pick-first-password
+           :host "altruismo-eficaz"
+           :user ps/personal-gmail)
+   :cookie (auth-source-pick-first-password
+            :host "altruismo-eficaz^cookie"
+            :user (concat ps/personal-gmail "^cookie")))
+
+  (slack-register-team
+   :name "Samotsvety Forecasting"
+   :token (auth-source-pick-first-password
+           :host "samotsvety"
+           :user ps/personal-gmail)
+   :cookie (auth-source-pick-first-password
+            :host "samotsvety^cookie"
+            :user (concat ps/personal-gmail "^cookie")))
+
+  (slack-register-team
+   :name "Future Fund Regrantors"
+   :token (auth-source-pick-first-password
+           :host "futurefundregrantors"
+           :user ps/personal-gmail)
+   :cookie (auth-source-pick-first-password
+            :host "futurefundregrantors^cookie"
+            :user (concat ps/personal-gmail "^cookie")))
+
+  (slack-register-team
+   :name "EA Bahamas"
+   :token (auth-source-pick-first-password
+           :host "eabahamas"
+           :user ps/personal-gmail)
+   :cookie (auth-source-pick-first-password
+            :host "eabahamas^cookie"
+            :user (concat ps/personal-gmail "^cookie")))
+
+  (slack-register-team
+   :name "EAOxfordOffice"
+   :token (auth-source-pick-first-password
+           :host "eaoxfordoffice"
+           :user ps/personal-email)
+   :cookie (auth-source-pick-first-password
+            :host "eaoxfordoffice^cookie"
+            :user (concat ps/personal-email "^cookie")))
+
+  (defun ps/slack-chat-org-capture ()
+    "Capture Slack message at point with `org-capture'."
+    (interactive)
+    (org-capture nil "s"))
+
+  (slack-start)
+
+  (add-hook 'slack-buffer-mode-hook
+            (lambda () (setq line-spacing nil)))
+
+  :general
+  ("A-s" 'slack-channel-select)
+  ((slack-mode-map slack-buffer-mode-map)
+   "s-a" 'slack-all-threads
+   "s-c" 'slack-channel-select
+   "s-g" 'slack-group-select
+   "s-m" 'slack-im-select
+   "H-s-t" 'slack-change-current-team
+   "s-u" 'slack-select-rooms
+   "H-s-u" 'slack-select-unread-rooms) ; `slack-all-unreads' not working
+  ((slack-thread-message-buffer-mode-map slack-message-buffer-mode-map)
+   "d" 'slack-thread-show-or-create
+   "e" 'slack-message-edit
+   "k" 'slack-buffer-goto-prev-message
+   "l" 'slack-buffer-goto-next-message
+   "o" 'ps/slack-chat-org-capture
+   "r" 'slack-message-add-reaction
+   "R" 'slack-message-remove-reaction
+   "z" 'slack-message-write-another-buffer)
+  (slack-message-compose-buffer-mode-map
+   "s-c" 'slack-message-send-from-buffer
+   "s-f" 'slack-message-select-file
+   "s-m" 'slack-message-embed-mention))
+#+end_src
+
+*** TODO [#6] Disable ~emacs-slack~ notifications
+:PROPERTIES:
+:ID:       6CF836CF-74C0-4D80-98D8-0F3CA29182DE
+:Effort:   1:00
+:END:
+
+** elisp-bug-hunter
+:PROPERTIES:
+:ID:       0C19171B-8DFA-4E06-9E17-45C1F9158C28
+:END:
+
+/[[https://github.com/Malabarba/elisp-bug-hunter][elisp-bug-hunter]] hunts down errors in elisp files./
+
+[2023-04-04 Tue 18:01] Doesn't work with Chemacs.
+
+#+begin_src emacs-lisp :results silent
+(use-package bug-hunter
+  :general
+  ("<f5>" 'bug-hunter-init-file))
+#+end_src
+
 ** scihub
 :PROPERTIES:
 :ID:       29ABF514-563B-463D-9FDB-CF2C8AA25F83

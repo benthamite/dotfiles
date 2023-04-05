@@ -447,66 +447,9 @@ Adapted from [[https://github.com/sfromm/emacs.d#startup][here]].
 :ID:       0A714FC1-D562-4E41-A000-D5F369EBEBBD
 :END:
 
-** straight
 :PROPERTIES:
-:ID:       A402D9BB-63D7-4A4C-839C-9AC21B245725
-:END:
-:LOGBOOK:
-CLOCK: [2021-10-19 Tue 22:01]--[2021-10-19 Tue 23:20] =>  1:19
-CLOCK: [2021-09-30 Thu 19:27]--[2021-09-30 Thu 20:19] =>  0:52
-CLOCK: [2021-08-25 Wed 19:30]--[2021-08-25 Wed 19:36] =>  0:06
-CLOCK: [2021-07-23 Fri 16:39]--[2021-07-23 Fri 17:28] =>  0:49
-CLOCK: [2021-07-19 Mon 21:17]--[2021-07-19 Mon 21:24] =>  0:07
-CLOCK: [2021-07-17 Sat 13:27]--[2021-07-17 Sat 15:20] =>  1:53
-CLOCK: [2021-07-11 Sun 18:10]--[2021-07-11 Sun 18:19] =>  0:09
-CLOCK: [2021-07-03 Sat 22:50]--[2021-07-03 Sat 23:19] =>  0:29
-CLOCK: [2021-06-27 Sun 10:44]--[2021-06-27 Sun 10:49] =>  0:05
-CLOCK: [2021-06-25 Fri 22:18]--[2021-06-25 Fri 22:30] =>  0:12
-CLOCK: [2021-06-23 Wed 13:45]--[2021-06-23 Wed 14:03] =>  0:18
-CLOCK: [2021-06-23 Wed 09:49]--[2021-06-23 Wed 09:57] =>  0:08
 :END:
 
-- Update individual packages with ~straight-pull-package~ and all packages with ~straight-pull-all~.
-- Invoke ~straight-freeze-versions~
-
-Process for updating packages:
-1. straight-normalize-all
-2. straight-pull-all
-   verify that things are working
-3. straight-freeze-versions
-
-- If the update process throws an error for a specific package, try deleting the folders inside both ~build~ and ~repos~ and then reinstall the package. See [[https://github.com/hlissner/doom-emacs/issues/5588#issuecomment-935626725][here]] for discussion.
-- If you encounter problems, first try ~M-x straight-pull-package straight~, ~M-x straight-rebuild-package straight~ and restart.
-
-[2022-10-31 Mon 15:55] At some point, it should probably be replaced with [[https://github.com/progfolio/elpaca][elpaca]]. Discussion [[https://github.com/progfolio/elpaca][here]].
-
-#+begin_src emacs-lisp :results silent
-(setq straight-repository-branch "develop") ; must precede bootstrap
-(setq straight-profiles `((nil . ,(file-name-concat user-emacs-directory "straight-profile.el"))))
-;; Bootstrap `straight'
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 6))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
-(setq straight-default-vc 'git)
-(if (and (executable-find "watchexec")
-         (executable-find "python3"))
-    (setq straight-check-for-modifications '(watch-files find-when-checking))
-  (setq straight-check-for-modifications '(find-at-startup find-when-checking)))
-(setq straight-use-package-by-default t)
-(require 'straight-x) ; github.com/raxod502/straight.el#how-do-i-uninstall-a-package
-
-;; Early load Org from Git version instead of Emacs built-in version
-(straight-use-package 'org)
-(straight-use-package 'org-contrib)
 #+end_src
 
 ** use-package

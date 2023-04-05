@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: demand-loading
+# key: dem
+# contributor: Pablo Stafforini
+# --
+$1: demand loading

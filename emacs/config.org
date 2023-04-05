@@ -8728,10 +8728,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
   (setq flycheck-python-pycompile-executable "python3")
   (remove-hook 'python-mode-hook #'yasnippet-snippets--fixed-indent) ; some package (`elpy'?) is adding this
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((python . t)
-     (R . t)))
 
   :general
   (python-mode-map
@@ -11230,7 +11226,9 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((emacs-lisp . t)
-     (shell . t)))
+     (shell . t)
+     (python . t)
+     (R . t)))
 
   (defun ps/org-confirm-babel-evaluate (lang body)
     (not (member lang '("python" "emacs-lisp"))))

@@ -537,6 +537,7 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 (setq use-package-verbose t)                ; setting back to nil (default) as it was producing too much output
 (setq use-package-compute-statistics t)       ; compute stats
 (setq use-package-always-ensure nil)          ; essential for `straight'
+(setq use-package-always-defer t)
 (setq use-package-hook-name-suffix nil)       ; use real name for hooks, i.e. do not omit the `-hook' bit
 (setq use-package-minimum-reported-time 0.1) ; report if loading a package takes longer than 100 ms
 #+end_src
@@ -1713,6 +1714,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 
 #+begin_src emacs-lisp :results silent
 (use-feature image
+  :defer 10
   :config
   ;; Use imagemagick, if available.
   ;; djcbsoftware.nl/code/mu/mu4e/Viewing-images-inline.html
@@ -5396,7 +5398,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 (use-package org-gcal
   :elpaca (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass org
-  :demand t
+  :defer 15
 
   :init
   (setq org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
@@ -6908,8 +6910,8 @@ Useful for prompts such as `eval-expression' and `shell-command'."
   :elpaca (cape-yasnippet
              :host github
              :repo "elken/cape-yasnippet")
-  :after cape
-  :demand t)
+  :after cape yasnippet
+  :defer 20)
 #+end_src
 
 ** org-block-cafp
@@ -8594,7 +8596,7 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 
 #+begin_src emacs-lisp :results silent
 (use-package lsp-mode
-  :demand t
+  :defer 7
   :config
   (setq lsp-warn-no-matched-clients nil)
   (setq lsp-headerline-breadcrumb-enable nil)
@@ -8945,7 +8947,6 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
                      :local-repo "org-ai"
                      :files ("*.el" "README.md" "snippets"))
   :after org
-  :demand t
   :commands org-ai-mode
   :config
   (setq org-ai-openai-api-token (auth-source-pass-get "key" "tlon/core/openai.com"))
@@ -10683,7 +10684,7 @@ I normally archive subtrees with ~org-archive-to-archive-sibling~, but use ~org-
   :elpaca (org-archive-hierarchically
              :host gitlab
              :repo "andersjohansson/org-archive-hierarchically")
-  :demand t)
+  :defer 20)
 #+end_src
 
 ** org-fold
@@ -12331,7 +12332,7 @@ https://blog.tecosaur.com/tmio/2021-07-31-citations.html#cite-syntax
 #+begin_src emacs-lisp :results silent
 (use-feature oc-basic
   :after oc
-  :demand t)
+  :defer 20)
 #+end_src
 
 ** oc-bibtex
@@ -12342,7 +12343,7 @@ https://blog.tecosaur.com/tmio/2021-07-31-citations.html#cite-syntax
 #+begin_src emacs-lisp :results silent
 (use-feature oc-bibtex
   :after oc
-  :demand t)
+  :defer 20)
 #+end_src
 
 ** oc-biblatex
@@ -12355,7 +12356,7 @@ https://blog.tecosaur.com/tmio/2021-07-31-citations.html#cite-syntax
 #+begin_src emacs-lisp :results silent
 (use-feature oc-biblatex
   :after oc
-  :demand t)
+  :defer 20)
 #+end_src
 
 ** oc-csl
@@ -12366,7 +12367,7 @@ https://blog.tecosaur.com/tmio/2021-07-31-citations.html#cite-syntax
 #+begin_src emacs-lisp :results silent
 (use-feature oc-csl
   :after oc
-  :demand t)
+  :defer 20)
 #+end_src
 
 ** citeproc
@@ -14169,7 +14170,7 @@ I experimented with setting the value of ~zotra-backend~ to each of the three av
   :elpaca (zotra
              :host github
              :repo "mpedramfar/zotra")
-  :demand t
+  :defer 15
 
   :config
   (setq zotra-use-curl nil)

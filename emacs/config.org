@@ -7338,26 +7338,6 @@ necessary."
   (add-hook 'eshell-mode-hook #'eshell-syntax-highlighting-global-mode))
 #+end_src
 
-** emacs-native-shell-complete
-:PROPERTIES:
-:ID:       878E8350-28A3-4C00-94ED-D3C29EFF68D7
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-17 Fri 17:41]--[2022-06-17 Fri 17:55] =>  0:14
-:END:
-
-/[[https://github.com/CeleritasCelery/emacs-native-shell-complete][emacs-native-shell-complete]] provides completion in shell buffers using native mechanisms./
-
-#+begin_src emacs-lisp
-(use-package emacs-native-shell-complete
-  :disabled
-  :after shell
-  :demand t
-  :straight (emacs-native-shell-complete
-             :host github
-             :repo "CeleritasCelery/emacs-native-shell-complete"))
-#+end_src
-
 ** dwim-shell-command
 :PROPERTIES:
 :ID:       89FC07FE-AB08-4C9C-B999-73D176458C64

@@ -557,7 +557,29 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 :ID:       25915A25-30F2-4A58-86FD-E27438D269B6
 :END:
 
+** general
+:PROPERTIES:
+:ID:       70C622E0-FAC7-4AB1-841F-36437858218C
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
+:END:
+
+/[[https://github.com/noctuid/general.el][general]] supports more convenient key definitions./
+
+#+begin_src emacs-lisp :results silent
+(use-package general
+  :demand t
+  :config
+  (setq general-describe-priority-keymaps '(local global org-mode-map))
+  (setq general-describe-keybinding-sort-function #'general-sort-by-car)
+  :bind
+  ("C-A-b" . 'general-describe-keybindings))
   (elpaca-wait)
+
+#+end_src
+
+
 ** no-littering
 :PROPERTIES:
 :ID:       21B40C49-BBD2-4E04-871B-BB578C92F71B
@@ -653,26 +675,6 @@ e.g. ~nvm~ isn't recognized by eshell
 :ID:       23633754-5D4D-4473-8E61-B700551AC7C5
 :END:
 [[https://blog.flowblok.id.au/2013-02/shell-startup-scripts.html][Shell startup scripts — flowblok’s blog]]
-
-** general
-:PROPERTIES:
-:ID:       70C622E0-FAC7-4AB1-841F-36437858218C
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
-:END:
-
-/[[https://github.com/noctuid/general.el][general]] supports more convenient key definitions./
-
-#+begin_src emacs-lisp :results silent
-(use-package general
-  :demand t
-  :config
-  (setq general-describe-priority-keymaps '(local global org-mode-map))
-  (setq general-describe-keybinding-sort-function #'general-sort-by-car)
-  :bind
-  ("C-A-b" . 'general-describe-keybindings))
-#+end_src
 
 ** el-patch
 :PROPERTIES:

@@ -448,6 +448,11 @@ Adapted from [[https://github.com/sfromm/emacs.d#startup][here]].
 
 ** elpaca
 :PROPERTIES:
+:ID:       9CF1D7BB-62B0-4F7C-BB5A-A695BFD4D58D
+:END:
+
+/[[https://github.com/progfolio/elpaca][elpaca]] is a package manager that supports asynchronous installation of packages./
+:PROPERTIES:
 :ID:       4EB0A831-1B7D-4C7E-AE4B-6A2DE27FFD87
 :END:
 

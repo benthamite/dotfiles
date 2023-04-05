@@ -17321,8 +17321,8 @@ CLOCK: [2023-03-28 Tue 22:32]--[2023-03-28 Tue 22:47] =>  0:15
 
 A tutorial for this undocumented package may be found [[https://github.com/andycowl/bbdb3-manual/blob/master/tutorial.rst][here]].
 
-#+begin_src emacs-lisp
-(use-package bbdb
+#+begin_src emacs-lisp :tangle no
+(use-package bbdb)
   :init/el-patch
   ;; open URL directly, without prompting for confirmation
   (defun bbdb-browse-url (records &optional which)
@@ -17464,6 +17464,10 @@ then the window will be split horizontally rather than vertically."
    "M-d" nil
    "D" 'ps/bbdb-delete-field-or-record-no-confirm))
 #+end_src
+*** TODO Diagnose why elpaca can't load this
+:PROPERTIES:
+:ID:       88C73B04-2EBA-40A6-B5F4-23C92E3306B5
+:END:
 
 ** bbdb-vcard
 :PROPERTIES:

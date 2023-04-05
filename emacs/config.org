@@ -14402,35 +14402,12 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
   (setq read-mail-command 'mu4e))
 #+end_src
 
-** smtpmail-multi
 :PROPERTIES:
-:ID:       DDFE6DC9-A986-4E79-BF5B-A99124B65BA2
 :END:
 
-/[[https://github.com/vapniks/smtpmail-multi][smtpmail-multi]] allows for  different smtp servers for sending mail./
 
 #+begin_src emacs-lisp :results silent
-(use-package smtpmail-multi
-  :after mu4e
-  :demand t
   :config
-  (setq smtpmail-multi-accounts
-        `((gmail . (,ps/personal-gmail
-                    "smtp.gmail.com"
-                    587
-                    ,ps/personal-gmail
-                    starttls nil nil nil))
-          (gpe . (,ps/personal-gpe-email
-                  "smtp.gmail.com"
-                  587
-                  ,ps/personal-gpe-email
-                  starttls nil nil nil))))
-
-  (setq smtpmail-multi-associations
-        `((,ps/personal-gmail gmail)
-          (,ps/personal-gpe-email gpe)))
-
-  (setq smtpmail-multi-default-account (quote gmail)))
 #+end_src
 
 ** sendmail

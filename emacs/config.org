@@ -7323,22 +7323,6 @@ necessary."
 #+end_src
 
 
-** eshell-git-prompt
-:PROPERTIES:
-:ID:       D8CACBDA-19AA-4D2F-9707-07B37AE3DF89
-:END:
-
-/[[https://github.com/xuchunyang/eshell-git-prompt][eshell-git-prompt]] provides themes for eshell./
-
-#+begin_src emacs-lisp :results silent
-(use-package eshell-git-prompt
-  :disabled
-  :after eshell
-  :demand t
-  :config
-  (eshell-git-prompt-use-theme 'powerline))
-#+end_src
-
 ** eshell-syntax-highlighting
 :PROPERTIES:
 :ID:       960266D6-7B07-436B-B25E-F59FBDCB818A

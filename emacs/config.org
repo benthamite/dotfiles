@@ -4435,6 +4435,22 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
   )
 #+end_src
 
+** peep-dired
+:PROPERTIES:
+:ID:       B0502885-D248-47E7-BE4F-54F597EBD390
+:END:
+
+/[[https://github.com/asok/peep-dired][peep-dired]] supports browing file contents in other window while browsing directory in dired./
+
+#+begin_src emacs-lisp
+(use-package peep-dired
+  :after dired
+  :general
+  (dired-mode-map
+   "F" 'peep-dired))
+#+end_src
+
+
 ** minibuffer
 :PROPERTIES:
 :ID:       40F49ECD-7225-4AD2-9E07-16C5A5857FFF

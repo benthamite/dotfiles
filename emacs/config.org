@@ -3972,6 +3972,7 @@ process in these cases."
       (diff-buffer-with-file (current-buffer))))
 
   (advice-add 'recover-this-file :after #'ps/diff-buffer-with-file)
+  (advice-add 'ps/recover-all-files :after #'ps/diff-buffer-with-file)
 
   ;; disabling until we diagnose issues
   ;; (setq auto-save-visited-predicate

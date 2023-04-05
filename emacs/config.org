@@ -17081,17 +17081,6 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
    "C-k" nil))
 #+end_src
 
-** constants
-:PROPERTIES:
-:ID:       E9DB498C-A4B6-4665-8CA1-40BBAC219B76
-:END:
-
-/[[https://github.com/emacsmirror/constants][constants]] provides physical values of physical constants and units./
-
-#+begin_src emacs-lisp :results silent
-(use-package constants)
-#+end_src
-
 ** alert
 :PROPERTIES:
 :ID:       694AAC2E-669E-40D4-9794-5E352D77734C

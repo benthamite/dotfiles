@@ -3922,23 +3922,17 @@ or are no longer readable will be killed."
       (>= (point) beginning-of-last-line)))
 
   (defun ps/recover-all-files ()
-    "Scan the `*Messages*' buffer for files with auto-save data and
-recover them.
+    "Scan all files in the `auto-save' directory for files with
+auto-save data and recover them.
 
 One normally uses `recover-session' for this, but when Emacs
 crashes a session may fail to be created and then each file has
 to be recovered separately. This command automates the recovery
 process in these cases."
     (interactive)
-    (with-current-buffer "*Messages*"
-      (goto-char (point-min))
-      (while
-          (re-search-forward "^\\(.*\\) has auto save data; consider M-x recover-this-file$" nil t)
-        (with-current-buffer (match-string 1)
-          ;; we ignore errors so that the recovery process continues
-          ;; even if some files have already been recovered
-          (ignore-errors
-            (recover-file (buffer-file-name)))))))
+    (dolist (file (directory-files (file-name-concat ps/dir-chemacs-profiles "var/auto-save")))
+      (when-let ((file-to-recover (string-replace "#" "" file)))
+        (ignore-errors (recover-file (string-replace "!" "/" file-to-recover))))))
 
   ;; `recover-this-file' notifications are easy to miss. The
   ;; function below triggers a more intrusive alert.

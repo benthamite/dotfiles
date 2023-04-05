@@ -7878,7 +7878,7 @@ around point."
   (setq txl-deepl-api-key (auth-source-pass-get "api" (concat "chrome/deepl.com/" ps/personal-email)))
 
   :general
-  ("H-A-y" 'txl-translate-region-or-paragraph)
+  ("A-H-y" 'txl-translate-region-or-paragraph)
   (txl-edit-translation-mode-map
    "RET" 'txl-accept-translation
    "q" 'txl-dismiss-translation))
@@ -11657,7 +11657,7 @@ Pomodoro system:
 :END:
 
 #+begin_src emacs-lisp
-(use-feature emacsql-sqlite-builtin
+(use-package emacsql-sqlite-builtin
   :if (not (version< emacs-version "29.0"))
   :demand t)
 #+end_src
@@ -12298,16 +12298,11 @@ ARG is the prefix argument received when calling interactively the function."
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point` integration
   (setq org-cite-activate-processor 'citar) ;
   (setq org-cite-export-processors
-        '(
-          (md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
+        '((md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
           (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
           (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
           (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
-          (t csl "american-medical-association-brackets.csl")       ; Fallback
-          ))
-
-  :general
-  ("H-/" 'org-cite-insert))
+          (t csl "american-medical-association-brackets.csl")))) ; fallback
 #+end_src
 
 *** TODO Learn how to use ~org-cite~ style and variants
@@ -12320,7 +12315,7 @@ https://www.youtube.com/watch?v=48fIhQ9ozH4
 :PROPERTIES:
 :ID:       16071EF9-A033-416E-B61D-FE61297D2EE3
 :END:
-
+https://blog.tecosaur.com/tmio/2021-07-31-citations.html#cite-syntax
 *** Resources
 :PROPERTIES:
 :ID:       8EA82227-F7EF-4C46-B40C-C5DE40F13130
@@ -12686,9 +12681,9 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   (setq citar-notes-paths `(,ps/dir-bibliographic-notes))
   (setq citar-at-point-function 'embark-act)
   (setq citar-symbols
-   `((file ,(all-the-icons-faicon "file-o" :face 'all-the-icons-green :v-adjust -0.1) . " ")
-     (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
-     (link ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01) . " ")))
+        `((file ,(all-the-icons-faicon "file-o" :face 'all-the-icons-green :v-adjust -0.1) . " ")
+          (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
+          (link ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01) . " ")))
   (setq citar-symbol-separator "  ")
   (setq citar-format-reference-function 'citar-citeproc-format-reference)
 
@@ -12776,7 +12771,7 @@ With prefix, rebuild the cache before offering candidates."
   (defun ps/citar-open-file-at-point ()
     "Launch citar with citekey associated with file at point."
     (interactive)
-      (citar-open `(,(ps/get-stem-of-current-buffer))))
+    (citar-open `(,(ps/get-stem-of-current-buffer))))
 
   :general
   ("A-H-M-s-?" 'ps/citar-open-file-at-point)

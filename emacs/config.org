@@ -1260,19 +1260,6 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   ("q" nil))
 #+end_src
 
-** elisp-bug-hunter
-:PROPERTIES:
-:ID:       0C19171B-8DFA-4E06-9E17-45C1F9158C28
-:END:
-
-/[[https://github.com/Malabarba/elisp-bug-hunter][elisp-bug-hunter]] hunts down errors in elisp files./
-
-#+begin_src emacs-lisp :results silent
-(use-package bug-hunter
-  :general
-  ("<f5>" 'bug-hunter-init-file))
-#+end_src
-
 ** warnings
 :PROPERTIES:
 :ID:       C8FB5BC6-6895-4D63-86A8-E49D6BB3001C

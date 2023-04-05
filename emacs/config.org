@@ -16896,7 +16896,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
   (setq auth-sources '(macos-keychain-internet macos-keychain-generic)))
 #+end_src
 
-** emacs-oauth2-auto
+** oauth2-auto
 :PROPERTIES:
 :ID:       C7B36982-D472-4248-8C61-B7EB0ED6ACF6
 :END:

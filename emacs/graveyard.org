@@ -9,6 +9,24 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** cape-yasnippet
+:PROPERTIES:
+:ID:       E1783BB4-D7BD-4264-B490-5E2F903CCCA7
+:END:
+
+/[[https://github.com/elken/cape-yasnippet][cape-yasnippet]] provides completion-at-point for yasnippet./
+
+[2023-04-06 Thu 01:03] Seems buggy.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package cape-yasnippet
+  :elpaca (cape-yasnippet
+           :host github
+           :repo "elken/cape-yasnippet")
+  :after cape yasnippet
+  :defer 20)
+#+end_src
+
 ** straight
 :PROPERTIES:
 :ID:       40207396-12B9-4374-9341-713E88772275

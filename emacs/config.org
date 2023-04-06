@@ -11632,19 +11632,11 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org-roam)
 (use-package org-roam
-  :after (:all org (:any emacsql-sqlite3 emacsql-sqlite-builtin))
+  :after org emacsql
   :demand t
   :init
-  ;; `sqlite3' is deprecated, but I cannot get org-roam to work with
-  ;; either `sqlite' or `sqlite-builtin'. So using this for the time
-  ;; being, until I succeed in diagnosing the problem. See the
-  ;; `org-roam-database-connector' docstring and the 'How to cache'
-  ;; section of the manual: orgroam.com/manual.html#How-to-cache
-
-  ;; [2023-01-24 Tue] I should migrate to `sqlite-builtin' when Emacs
-  ;; 29 is released. See `org-roam-database-connector' docstring.
   (if (version< emacs-version "29.0")
-      (setq org-roam-database-connector 'sqlite3)
+      (setq org-roam-database-connector 'sqlite)
     (setq org-roam-database-connector 'sqlite-builtin))
 
   (defun ps/org-roam-recent (days &optional limit)

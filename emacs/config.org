@@ -6736,6 +6736,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 | [[id:35370B0F-9EBD-433F-B59C-576EE8A69772][corfu]]   | completion at point UI      |
 | [[id:5A103245-9DC3-4D95-96D7-2161F6CCD0B1][cape]]    | completion at point backend |
 
+
 ** corfu
 :PROPERTIES:
 :ID:       35370B0F-9EBD-433F-B59C-576EE8A69772

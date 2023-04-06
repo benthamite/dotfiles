@@ -718,7 +718,7 @@ CLOCK: [2021-03-30 Tue 08:50]--[2021-03-30 Tue 09:02] =>  0:12
 
 #+begin_src emacs-lisp :results silent
 (use-package hydra
-:demand t
+  :demand t
   :config
   (defun ps/hydra-update-current-book ()
     "In `hydra-org-notes', update the ID of 'Current book' with the ID
@@ -736,11 +736,9 @@ of the heading at point."
    "H-l" 'hydra-org-notes/body
    "H-o" 'hydra-major-modes/body
    "M-t" 'hydra-straight/body
-   "M-y" 'hydra-yasnippet/body)
-  ;; (org-mode-map
-   ;; "A-s-r" 'hydra-org-rating/body)
-   )
-   (elpaca-wait)
+   "M-y" 'hydra-yasnippet/body))
+(elpaca-wait)
+
 #+end_src
 
 *** resources

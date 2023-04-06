@@ -11582,18 +11582,6 @@ Pomodoro system:
 :ID:       EC6700D7-C65D-4430-8DAC-57772B423D69
 :END:
 
-
-** emacsql-sqlite-builtin
-:PROPERTIES:
-:ID:       437F93FC-BDEE-48E2-A523-0813808871BC
-:END:
-
-#+begin_src emacs-lisp
-(use-package emacsql-sqlite-builtin
-  :if (not (version< emacs-version "29.0"))
-  :demand t)
-#+end_src
-
 ** org-roam
 :PROPERTIES:
 :ID:       2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17

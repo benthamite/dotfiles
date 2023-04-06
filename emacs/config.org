@@ -450,6 +450,9 @@ Adapted from [[https://github.com/sfromm/emacs.d#startup][here]].
 :PROPERTIES:
 :ID:       9CF1D7BB-62B0-4F7C-BB5A-A695BFD4D58D
 :END:
+:LOGBOOK:
+CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
+:END:
 
 /[[https://github.com/progfolio/elpaca][elpaca]] is a package manager that supports asynchronous installation of packages./
 :PROPERTIES:
@@ -587,7 +590,6 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
 #+end_src
 
-
 ** no-littering
 :PROPERTIES:
 :ID:       21B40C49-BBD2-4E04-871B-BB578C92F71B
@@ -626,17 +628,13 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   (setq mac-function-modifier 'none)
   (setq mac-right-option-modifier 'none)
   (setq mac-right-control-modifier 'super)
-  (setq mac-right-command-modifier 'alt)
-
-  )
+  (setq mac-right-command-modifier 'alt))
 #+end_src
 
 ** iso-transl
 :PROPERTIES:
 :ID:       0A62A6C8-D3D8-4960-A809-35B60A479D2B
 :END:
-
-/iso-transl: define ways of entering the non-ASCII printable characters with codes above 127./
 
 #+begin_src emacs-lisp
 (use-feature iso-transl
@@ -645,12 +643,12 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   (setq iso-transl-char-map nil) ; emacs.stackexchange.com/questions/17508/
 
   (unless (version< emacs-version "29.0")
-  (let ((map key-translation-map))
-    (keymap-unset map "A-c")
-    (keymap-unset map "A-o")
-    (keymap-unset map "A-u")
-    (keymap-unset map "A-m")
-    (keymap-unset map "A-x"))))
+    (let ((map key-translation-map))
+      (keymap-unset map "A-c")
+      (keymap-unset map "A-o")
+      (keymap-unset map "A-u")
+      (keymap-unset map "A-m")
+      (keymap-unset map "A-x"))))
 #+end_src
 
 ** exec-path-from-shell
@@ -6775,12 +6773,12 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 #+begin_src emacs-lisp :results silent
 (use-package corfu
   :elpaca (corfu :files (:defaults "extensions/*")
-                   :includes (corfu-info
-                              corfu-echo
-                              corfu-history
-                              ;; corfu-indexed
-                              corfu-popupinfo
-                              corfu-quick))
+                 :includes (corfu-info
+                            corfu-echo
+                            corfu-history
+                            ;; corfu-indexed
+                            corfu-popupinfo
+                            corfu-quick))
 
   :demand t
   :config
@@ -12237,7 +12235,6 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 See [[https://github.com/emacs-citar/citar/wiki/Comparisons#summary-of-diverse-emacs-bibliographic-and-citation-packages][this section]] of [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]]'s manual for a handy summary of the main bibliographic and citation Emacs packages.
 
-
 ** oc
 :PROPERTIES:
 :ID:       8AF25840-AC38-4FF7-A45F-F01B96C5DF5A
@@ -14108,7 +14105,6 @@ por qué ebib no recarga
 :END:
 
 [[https://juanjose.garciaripoll.com/blog/ebib-biblio-interface/index.html][eBib-Biblio interface, aka. Mendeley for Emacs]]
-
 
 ** biblio
 :PROPERTIES:

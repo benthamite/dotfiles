@@ -14718,44 +14718,6 @@ it, without asking for confirmation."
     (toggle-truncate-lines 1)
     (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.15))
 
-  ;; this function fixes a bug in the original
-  (defun mu4e-headers-change-sorting (&optional field dir)
-    "Change the sorting/threading parameters.
-FIELD is the field to sort by; DIR is a symbol: either 'ascending,
-'descending, 't (meaning: if FIELD is the same as the current
-sortfield, change the sort-order) or nil (ask the user)."
-    (interactive)
-    (let* ((field
-            (or field
-                (mu4e-read-option "Sortfield: " mu4e~headers-sort-field-choices)))
-           ;; note: 'sortable' is either a boolean (meaning: if non-nil, this is
-           ;; sortable field), _or_ another field (meaning: sort by this other field).
-           (sortable (plist-get (cdr (assoc field mu4e-header-info)) :sortable))
-           ;; error check
-           (sortable
-            (if sortable
-                sortable
-              (mu4e-error "Not a sortable field")))
-           (sortfield (if (booleanp sortable) field sortable))
-           (dir
-            (cl-case dir
-              ((ascending descending) dir)
-              ;; change the sort order if field = curfield
-              (mu4e-read-option "Direction: "
-                                '(("ascending" . 'ascending) ("descending" . 'descending)))
-              (t
-               (if (eq sortfield mu4e-headers-sort-field)
-                   (if (eq mu4e-headers-sort-direction 'ascending)
-                       'descending 'ascending)
-                 'descending)))))
-      (setq
-       mu4e-headers-sort-field sortfield
-       mu4e-headers-sort-direction dir)
-      (mu4e-message "Sorting by %s (%s)"
-                    (symbol-name sortfield)
-                    (symbol-name mu4e-headers-sort-direction))
-      (mu4e-headers-rerun-search)))
-
   ;; this function seems to have been introduced after 1.6.11;
   ;; since `org-msg' requires, we load it here
   (defun mu4e-message-readable-path (&optional msg)

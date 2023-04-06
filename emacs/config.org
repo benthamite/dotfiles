@@ -7594,24 +7594,6 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 
 [2023-01-28 Sat] I followed the instructions but couldn't make it work.
 
-** eglot-grammarly
-:PROPERTIES:
-:ID:       4C20D1C9-F6CB-42A0-963F-91D48E212248
-:END:
-
-/[[https://github.com/emacs-grammarly/eglot-grammarly][eglot-grammarly]] is an Egot client for Grammarly./
-
-#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/spelling)
-(use-package eglot-grammarly
-  :elpaca (:host github :repo "emacs-grammarly/eglot-grammarly")
-  :defer t
-  :config
-  (add-hook 'text-mode markdown-mode
-            (lambda ()
-              (require 'eglot-grammarly)
-              (eglot-ensure))))
-#+end_src
-
 ** aide
 :PROPERTIES:
 :ID:       5BCD6E4D-0264-4CB6-A0D8-0A6225A671B6

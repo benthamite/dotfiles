@@ -76,6 +76,26 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   :demand t)
 #+end_src
 
+** eglot-grammarly
+:PROPERTIES:
+:ID:       4C20D1C9-F6CB-42A0-963F-91D48E212248
+:END:
+
+/[[https://github.com/emacs-grammarly/eglot-grammarly][eglot-grammarly]] is an Egot client for Grammarly./
+
+[2023-04-05 Wed 22:38] I'm using ~lsp-grammarly~.
+
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/spelling)
+(use-package eglot-grammarly
+  :elpaca (:host github :repo "emacs-grammarly/eglot-grammarly")
+  :defer t
+  :config
+  (add-hook 'text-mode markdown-mode
+            (lambda ()
+              (require 'eglot-grammarly)
+              (eglot-ensure))))
+#+end_src
+
 ** git-timemachine
 :PROPERTIES:
 :ID:       8D9F7AC2-EB01-4ED7-84BA-7BD6AF11A7F9

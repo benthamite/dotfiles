@@ -422,10 +422,10 @@ Adapted from [[https://github.com/sfromm/emacs.d#startup][here]].
 (defun ps/report-startup-time ()
   "Report startup time."
   (interactive)
-  (message "Emacs is ready, finished loading after %.03fs."
-           (float-time (time-subtract after-init-time before-init-time))))
+  (run-with-timer 0.1 nil (lambda () (message "Emacs is ready, finished loading after %.03fs."
+                                       (float-time (time-subtract after-init-time before-init-time))))))
 
-(add-hook 'emacs-startup-hook #'ps/report-startup-time)
+(add-hook 'elpaca-after-init-hook #'ps/report-startup-time)
 #+end_src
 
 ** macros
@@ -4839,7 +4839,7 @@ window depending on the number of present windows."
     (interactive)
     (ps/window-buffer-move (when (> (count-windows) 2) (winum-get-window-by-number 2))))
 
-     (add-hook 'emacs-startup-hook #'ps/window-split-if-unsplit -50)
+     (add-hook 'elpaca-after-init-hook #'ps/window-split-if-unsplit)
 
   :general
   ("C-H-0" 'ps/switch-to-last-window
@@ -5906,7 +5906,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
                                   (file-name-history 100)
                                   search-ring regexp-search-ring))
 
-  (add-hook 'after-init-hook #'session-initialize))
+  (add-hook 'elpaca-after-init-hook #'session-initialize))
 #+end_src
 
 ** recentf

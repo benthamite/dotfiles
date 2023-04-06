@@ -12547,25 +12547,6 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
   (org-roam-bibtex-mode))
 #+end_src
 
-** citar-org-roam
-:PROPERTIES:
-:ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
-:END:
-
-/[[https://github.com/emacs-citar/citar-org-roam][citar-org-roam]] provides integration between [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]] and [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]]./
-
-[2023-01-26 Thu] I chose to exclude the directory containing my bibliographic notes from the org roam database (via ~org-roam-file-exclude-regexp~), but since ~citar-org-roam~ relies on the roam database to determine whether a bibliographic entry has an associated note, ~org-cite-insert~ fails to show any notes. So I'm disabling the package.
-
-#+begin_src emacs-lisp :results silent
-(use-package citar-org-roam
-  :elpaca (citar-org-roam
-             :host github
-                   :repo "emacs-citar/citar-org-roam")
-  :demand t
-  :no-require t
-  :after  org-roam)
-#+end_src
-
 ** citar
 :PROPERTIES:
 :ID:       67AB4C5F-2425-4D31-9590-9D13790B4C97
@@ -12730,6 +12711,23 @@ With prefix, rebuild the cache before offering candidates."
   :demand t
   :config
   (citar-embark-mode))
+#+end_src
+
+** citar-org-roam
+:PROPERTIES:
+:ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
+:END:
+
+/[[https://github.com/emacs-citar/citar-org-roam][citar-org-roam]] provides integration between [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]] and [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package citar-org-roam
+  :elpaca (citar-org-roam
+           :host github
+           :repo "emacs-citar/citar-org-roam")
+  :after citar org-roam
+  :demand t
+  :no-require t)
 #+end_src
 
 ** org-ref

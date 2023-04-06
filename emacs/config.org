@@ -5814,11 +5814,10 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 
 #+begin_src emacs-lisp :results silent
 (use-feature savehist
-  :demand t
-  :init
-  (savehist-mode)
+  :defer 3
 
   :config
+  (savehist-mode)
   (setq history-length t) ; unlimited history
   (setq savehist-additional-variables
         '(calc-quick-calc-history

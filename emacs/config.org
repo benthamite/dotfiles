@@ -1128,6 +1128,10 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 
 *** dired
 :PROPERTIES:
+:ID:       8AD794CB-0A81-4D36-BEAC-0F85F3B34831
+:END:
+
+:PROPERTIES:
 :ID:       D71128ED-F3CC-43E1-8C8F-8938BDE9DE16
 :END:
 #+begin_src emacs-lisp :results silent

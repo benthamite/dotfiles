@@ -1258,7 +1258,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   :defer 60
   :config
   (setq native-comp-async-report-warnings-errors nil))
-#+End_src
+#+end_src
 
 ** bytecomp
 :PROPERTIES:

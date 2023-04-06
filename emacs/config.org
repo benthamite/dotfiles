@@ -6049,10 +6049,11 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :results silent
 (use-package forge
-  :after magit ghub
+  :after magit ghub emacsql
   :demand t
   :init
-  (unless (version<= emacs-version "29.0")
+  (if (version<= emacs-version "29.0")
+      (setq forge-database-connector 'sqlite)
     (setq forge-database-connector 'sqlite-builtin))
 
   :config

@@ -6900,10 +6900,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 I use ~completion-at-point~ for completion, not company. However, I still rely on company for a few completion backends.
 
 #+begin_src emacs-lisp :results silent
-(use-package company
-  :defer 5
-  :config
-  (add-hook 'telega-chat-mode-hook #'company-mode))
+(use-package company)
 #+end_src
 
 * help

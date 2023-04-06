@@ -63,6 +63,19 @@ _R_ebuild package |_P_ull package  |_V_ersions thaw  |_W_atcher quit    |prun_e_
   ("q" nil))
 #+end_src
 
+** emacs-sqlite3
+:PROPERTIES:
+:ID:       7A7A0C7B-AC94-40ED-A50E-AAB67D9522E8
+:END:
+
+[2023-04-05 Wed 22:56] Obsolete.
+
+#+begin_src emacs-lisp :results silent
+(use-feature emacsql-sqlite3
+  :if (version< emacs-version "29.0")
+  :demand t)
+#+end_src
+
 ** git-timemachine
 :PROPERTIES:
 :ID:       8D9F7AC2-EB01-4ED7-84BA-7BD6AF11A7F9

@@ -12213,7 +12213,9 @@ ARG is the prefix argument received when calling interactively the function."
           (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
           (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
           (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
-          (t csl "american-medical-association-brackets.csl")))) ; fallback
+          (t csl "american-medical-association-brackets.csl"))) ; fallback
+  :general
+  ("H-/" 'org-cite-insert))
 #+end_src
 
 *** TODO Learn how to use ~org-cite~ style and variants

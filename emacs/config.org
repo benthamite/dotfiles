@@ -1317,6 +1317,18 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ;; :commands dired-async-mode)
 #+end_src
 
+** emacsql
+:PROPERTIES:
+:ID:       2E12D7A1-6B15-40E5-A54F-FDAED82B58C5
+:END:
+
+/[[https://github.com/magit/emacsql][emacsql]] is a high-level Emacs Lisp RDBMS front-end./
+
+#+begin_src emacs-lisp
+(use-package emacsql
+  :demand t)
+#+end_src
+
 ** misc.
 :PROPERTIES:
 :ID:       72D2BA33-0E12-4893-B790-B132CE2F9404

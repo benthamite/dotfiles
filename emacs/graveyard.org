@@ -9,6 +9,29 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** git-timemachine
+:PROPERTIES:
+:ID:       8D9F7AC2-EB01-4ED7-84BA-7BD6AF11A7F9
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
+:END:
+
+/[[https://github.com/emacsmirror/git-timemachine][git-timemachine]] lets you walk through git revisions of a file./
+
+[2023-04-05 Wed 19:54] I don't see the need for this, given ~magit-log-buffer-file~.
+
+#+begin_src emacs-lisp :results silent
+(use-package git-timemachine
+  :elpaca
+  (git-timemachine
+   :type git
+   :host codeberg
+   :repo "pidu/git-timemachine")
+  :general
+  ("A-H-t" 'git-timemachine))
+#+end_src
+
 ** org-protocol-capture-html
 :PROPERTIES:
 :ID:       B7DA6C67-C8F4-4D46-B17B-5DB01D2A059A

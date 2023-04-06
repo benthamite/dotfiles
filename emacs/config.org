@@ -6123,27 +6123,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 #+end_src
 
 
-** git-timemachine
-:PROPERTIES:
-:ID:       8D9F7AC2-EB01-4ED7-84BA-7BD6AF11A7F9
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-25 Fri 21:37]--[2021-06-25 Fri 21:40] =>  0:03
-:END:
-
-/[[https://github.com/emacsmirror/git-timemachine][git-timemachine]] lets you walk through git revisions of a file./
-
-#+begin_src emacs-lisp :results silent
-(use-package git-timemachine
-  :elpaca
-  (git-timemachine
-   :type git
-   :host codeberg
-   :repo "pidu/git-timemachine")
-  :general
-  ("A-H-t" 'git-timemachine))
-#+end_src
-
 ** git-auto-commit-mode
 :PROPERTIES:
 :ID:       FCB4DDAC-CD47-48CE-BA0F-96C0574C458A

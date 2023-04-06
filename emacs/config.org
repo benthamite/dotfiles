@@ -12565,8 +12565,11 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 
 #+begin_src emacs-lisp :results silent
 (use-package citar
-  :elpaca (citar :type git :host github :repo "emacs-citar/citar" :includes (citar-org))
-  ;; :defer 10
+  :elpaca
+  (citar :type git
+         :host github
+         :repo "emacs-citar/citar"
+         :includes (citar-org))
   :after oc vertico embark marginalia all-the-icons
   :demand t
   :config

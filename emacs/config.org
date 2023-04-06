@@ -16449,6 +16449,18 @@ template."
   :defer 15)
 #+end_src
 
+** deferred
+:PROPERTIES:
+:ID:       A19273DD-3802-4594-A700-237F4134740A
+:END:
+
+/[[https://github.com/kiwanami/emacs-deferred][deferred]] provides simple asynchronous functions for emacs lisp./
+
+#+begin_src emacs-lisp
+(use-package deferred
+  :defer 15)
+#+end_src
+
 ** graphql-mode
 :PROPERTIES:
 :ID:       4B9A26D9-EA9B-420B-A8B2-060AAF19D4E4

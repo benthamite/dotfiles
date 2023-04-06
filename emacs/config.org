@@ -11582,16 +11582,6 @@ Pomodoro system:
 :ID:       EC6700D7-C65D-4430-8DAC-57772B423D69
 :END:
 
-** emacs-sqlite3
-:PROPERTIES:
-:ID:       7A7A0C7B-AC94-40ED-A50E-AAB67D9522E8
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature emacsql-sqlite3
-  :if (version< emacs-version "29.0")
-  :demand t)
-#+end_src
 
 ** emacsql-sqlite-builtin
 :PROPERTIES:

@@ -6323,6 +6323,11 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 #+begin_src emacs-lisp :results silent
 (use-package wgrep
+  :demand t
+  :config
+  (setq wgrep-auto-save-buffer t)
+  (setq wgrep-enable-key "r")
+
   :general
   (wgrep-mode-map
    "s-c" 'wgrep-finish-edit))

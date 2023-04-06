@@ -16461,6 +16461,17 @@ template."
   :defer 15)
 #+end_src
 
+** request-deferred
+:PROPERTIES:
+:ID:       1C6858A1-5E3C-4061-83BB-74B0523C670D
+:END:
+
+#+begin_src emacs-lisp
+(use-feature request-deferred
+  :after request deferred
+  :demand t)
+#+end_src
+
 ** graphql-mode
 :PROPERTIES:
 :ID:       4B9A26D9-EA9B-420B-A8B2-060AAF19D4E4

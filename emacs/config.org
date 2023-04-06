@@ -5387,7 +5387,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org-gcal)
 (use-package org-gcal
   :elpaca (org-gcal :type git :host github :repo "kidd/org-gcal.el")
-  :after auth-source-pass org
+  :after auth-source-pass org request-deferred
   :defer 15
 
   :init

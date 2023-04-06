@@ -14409,6 +14409,7 @@ https://gist.github.com/loziju/66d3f024e102704ff5222e54a4bfd50e
 :ID:       1B568415-F030-437B-921C-B4A65B370A6E
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-05 Wed 22:30]--[2023-04-05 Wed 22:53] =>  0:23
 CLOCK: [2023-03-23 Thu 23:21]--[2023-03-23 Thu 23:35] =>  0:14
 CLOCK: [2023-03-22 Wed 09:29]--[2023-03-22 Wed 09:36] =>  0:07
 CLOCK: [2023-03-16 Thu 19:28]--[2023-03-16 Thu 20:20] =>  0:52
@@ -14531,8 +14532,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
   (setq mu4e-index-cleanup t) ; `nil' improves performance"
   (setq mu4e-index-lazy-check nil) ; `t' improves performance"
-
-  (require 'mu4e-contrib)
 
   (mu4e t)
   (defun ps/mu4e-gmail-fix-flags (mark msg)
@@ -14890,6 +14889,17 @@ https://mu-discuss.narkive.com/mxM4AVIW/how-to-debug-non-zero-exit-code
 If you encounter problems with mu and Straight, see [[https://github.com/raxod502/straight.el/issues/491#issuecomment-760150634][this thread]].
 
 [2022-07-11 Mon 23:58] Note: ~mu~ is now pinned in ~brew~ (~brew pin mu~) to version 1.6.11. The most recent version (1.8.5) wasn't working well with [[id:DADEABFE-0E73-4E8F-9973-771FFEF55B60][org-msg]] (see [[https://github.com/jeremy-compostella/org-msg/issues/153][this issue]] and [[https://groups.google.com/g/mu-discuss/c/V1WxQzglkZA/m/Av9vJ_BkAgAJ][this thread]]). Once the issue is resolved, unpin it and upgrade to the latest version.
+
+** mu4e-contrib
+:PROPERTIES:
+:ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature mu4e-contrib
+  :after mu4e
+  :demand t)
+#+end_src
 
 ** mu4e-alert
 :PROPERTIES:

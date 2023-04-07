@@ -37,7 +37,7 @@ And on this twisted love affair I wonder,
 What if ‘twas Vim had lead me astray,
 And in its dark depths my fingers lay?
 
-But emacs dear, fear not my eyes,
+But Emacs dear, fear not my eyes,
 I'll wrestle with thee 'til my demise,
 For in this hell we've built a choir,
 And in your flames, I'll redisplay desire.
@@ -7817,7 +7817,7 @@ around point."
 :ID:       BE78F0BD-D676-4E19-838A-2E6BD4504F52
 :END:
 
-/[[https://github.com/tmalsburg/txl.el][txl]] provies direct access to DeepL's machine translation API./
+/[[https://github.com/tmalsburg/txl.el][txl]] provides direct access to DeepL's machine translation API./
 
 #+begin_src emacs-lisp
 (use-package txl

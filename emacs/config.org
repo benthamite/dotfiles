@@ -8533,6 +8533,36 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
                        "s-c" 'exit-recursive-edit))
 #+end_src
 
+** flymake
+:PROPERTIES:
+:ID:       2259FE72-2958-4507-AD6D-4CB3F9B2E676
+:END:
+
+/flymake is a universal on-the-fly syntax checker./
+
+#+begin_src emacs-lisp
+(use-feature flymake
+  ;; copied from Prot
+  :config
+  (setq flymake-fringe-indicator-position 'left-fringe)
+  (setq flymake-suppress-zero-counters t)
+  (setq flymake-start-on-flymake-mode t)
+  (setq flymake-no-changes-timeout nil)
+  (setq flymake-start-on-save-buffer t)
+  (setq flymake-proc-compilation-prevents-syntax-check t)
+  (setq flymake-wrap-around nil)
+  (setq flymake-mode-line-format
+        '("" flymake-mode-line-exception flymake-mode-line-counters))
+  (setq flymake-mode-line-counter-format
+        '(" " flymake-mode-line-error-counter
+          flymake-mode-line-warning-counter
+          flymake-mode-line-note-counter ""))
+  :general
+  (flymake-mode-map
+   "C-c f l" 'flymake-goto-next-error
+   "C-c f k" 'flymake-goto-prev-error))
+#+end_src
+
 ** lsp-mode
 :PROPERTIES:
 :ID:       E9D2E6CA-5256-4776-801F-13281BD390C9

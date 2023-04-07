@@ -7856,7 +7856,9 @@ CLOCK: [2021-02-11 Thu 20:46]--[2021-02-11 Thu 20:54] =>  0:08
 CLOCK: [2021-02-11 Thu 19:59]--[2021-02-11 Thu 20:02] =>  0:03
 :END:
 
-/[[https://github.com/alpha22jp/atomic-chrome][atomic chrome]] lets me use Emacs to edit text from input fields in my browser. I use it in combination with [[https://ghosttext.fregante.com/][Ghost Text]]./
+/[[https://github.com/alpha22jp/atomic-chrome][atomic chrome]] enables editing of browser input fields in Emacs./
+
+I use it in combination with the [[https://ghosttext.fregante.com/][Ghost Text]] browser extension.
 
 #+begin_src emacs-lisp :results silent
 (use-package atomic-chrome

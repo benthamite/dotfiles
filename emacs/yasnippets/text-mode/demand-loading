@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: defer-loading
-# key: def
+# name: demand-loading
+# key: dem
 # contributor: Pablo Stafforini
 # --
-$1: defer loading
+$1: demand loading

@@ -8593,10 +8593,12 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 
 #+begin_src emacs-lisp :results silent
 (use-feature elisp-mode
+  :config
+  (add-hook 'emacs-lisp-mode-hook #'flymake-mode)
+
   :general
   (emacs-lisp-mode-map
-   "s-d" 'eval-defun
-   "A-s-d" 'edebug-defun))
+   "s-d" 'eval-defun))
 #+end_src
 
 *** TODO [#6] Learn to use all relevant sexp commands
@@ -8627,7 +8629,11 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
   :config
   ;; do not truncate print results in Edebug
   (setq edebug-print-level nil)
-  (setq edebug-print-length nil))
+  (setq edebug-print-length nil)
+
+  :general
+  (emacs-lisp-mode-map
+   "A-s-d" 'edebug-defun))
 #+end_src
 
 ** backtrace

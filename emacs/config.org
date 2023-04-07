@@ -1656,7 +1656,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 (use-package emojify
   :config
   (emojify-set-emoji-styles '(unicode))
-  (add-hook 'after-init #'global-emojify-mode)
+  (add-hook 'elpaca-after-init-hook #'global-emojify-mode)
 
   :general
   ("H-e" 'emojify-insert-emoji))

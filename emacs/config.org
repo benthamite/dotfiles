@@ -186,10 +186,10 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 - Run ~bug-hunter-init-file~ (from the [[id:0C19171B-8DFA-4E06-9E17-45C1F9158C28][elisp-bug-hunter]] package) and select "automatic error detection" (~e~).
 - Run ~emacs -q~ or ~emacs --debug-init~.
 - Cut suspected sections of the org file (~org-cut-subtree~), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections, while leaving the literal org file intact.
-- Use ~git-timemachine~ to see how a suspected section of the config file compares with versions you know were working correctly.
+- Use ~magit-log-buffer-file~ or ~git-timemachine~ to explore previous versions of your config file.
 - Set ~debug-on-error~ to ~t~ to see a backtrace of an error. Or call ~toggle-debug-on-error~ interactively.
   - To determine what function is changing the value of a variable, use ~debug-on-variable-change~.
-- Use Time Machine (on MacOS) to download and try increasingly older versions, to identify the version that introduced the bug. Then diff that version with its immediate successor.
+  - To determine what function is generating a particular message, use ~debug-on-message~.
 - Bisect the init file until you locate the culprit.
   - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).
 - If Emacs becomes unresponsive, run ~pkill -USR2 Emacs~ in a terminal. Emacs will likely trigger a backtrace, which you can inspect to diagnose the issue.

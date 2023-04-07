@@ -11212,11 +11212,11 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
   :config/el-patch
   ;; name buffers more cleanly
   (defun org-src--construct-edit-buffer-name (org-buffer-name lang)
-    "Construct the buffer name for a source editing buffer.
-Format is \"*Org Src ORG-BUFFER-NAME [ LANG ]*\"."
-    (el-patch-swap
-      (concat "*Org Src " org-buffer-name "[ " lang " ]*")
-      (concat org-buffer-name " (org src)")))
+  "Construct the buffer name for a source editing buffer.
+Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
+  (el-patch-swap
+    (concat "*Org Src " org-buffer-name "[ " lang " ]*")
+    (concat org-buffer-name " (org src)")))
 
   :config
   (setq org-edit-src-content-indentation 0)

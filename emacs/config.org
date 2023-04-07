@@ -17357,76 +17357,48 @@ then the window will be split horizontally rather than vertically."
 :ID:       9D7B5C99-2380-4159-A8C8-4021CC0482DE
 :END:
 
-** Tlon
+** tlon
 :PROPERTIES:
 :ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
 :END:
 
 #+begin_src emacs-lisp :results silent
-(defun ps/tlon-meeting-with (tareas-id meetings-id pending-id)
-  ;; "[person] > Meetings > Pending for next meeting" org heading in `work-dashboard.org'
-  (ps/org-id-goto pending-id)
-  (let ((contents (ps/org-get-heading-contents)))
-    (ps/org-clear-heading-contents)
-    ;; "[person] > Meetings" org heading in `work-dashboard.org'
-    (ps/org-id-goto meetings-id)
-    (org-narrow-to-subtree)
-    (goto-char (point-max))
-    (org-insert-heading)
-    (insert "Meeting on ")
-    (ps/org-time-stamp-inactive-current-time)
-    (unless (string= contents "")
-      (insert (concat "\nTo discuss:\n" contents "\n"))))
-  (forward-line)
-  (ps/org-narrow-to-entry-and-children)
-  (ps/window-split-if-unsplit)
-  (ps/switch-to-last-window)
-  ;; "Tareas" org heading in `tareas.org'
-  (ps/org-id-goto tareas-id)
-  (ps/org-narrow-to-entry-and-children)
-  (ps/switch-to-last-window))
+(use-package tlon
+  :elpaca (tlon
+           :host github
+           :repo "tlon-team/tlon")
+  :demand t
+  :config
+  (defun ps/tlon-meeting-with-fede ()
+  "TODO: docstring"
+    (interactive)
+    (ps/tlon-meeting-with
+     "Fede"
+     "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
+     "56CBB3F8-8E75-4298-99B3-899365EB75E0"
+     "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
 
-(defun ps/tlon-meeting-with-fede ()
-  (interactive)
-  (ps/tlon-meeting-with
-   "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
-   "56CBB3F8-8E75-4298-99B3-899365EB75E0"
-   "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
+  (defun ps/tlon-meeting-with-leo ()
+  "TODO: docstring"
+    (interactive)
+    (ps/tlon-meeting-with
+     "Leo"
+     "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
+     "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
+     "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
+#+end_src
 
-(defun ps/tlon-meeting-with-leo ()
-  (interactive)
-  (ps/tlon-meeting-with
-   "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
-   "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-   "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
+** new-init
+:PROPERTIES:
+:ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
+:END:
 
-(defun ps/tlon-bae-format-file (&optional extension)
-  "Prompt the user for bibliographic information and return a file
-name based on it."
-  (let* ((lastname (read-string "Last name(s) [separated by spaces if more than one author]: "))
-         (title (read-string "Title: "))
-         (slug-lastname (ps/bibtex-asciify-string (org-hugo-slug lastname)))
-         (slug-title (ps/bibtex-asciify-string (org-hugo-slug title)))
-         (extension (or extension "md")))
-    (file-name-with-extension (concat slug-lastname "--" slug-title) extension)))
-
-(defun ps/tlon-bae-rename-file (&optional extension)
-  "Prompt the user for bibliographic information and rename file at
-point based on it."
-  (interactive)
-  (let* ((source-file-path (dired-get-filename)))
-    (rename-file
-     source-file-path
-     (file-name-concat
-      (file-name-directory source-file-path)
-      (ps/tlon-bae-format-file extension))))
-  (revert-buffer))
-
-(defun ps/tlon-bae-create-file (&optional extension)
-  "Prompt the user for bibliographic information and create a new
- file based on it in the current directory."
-  (interactive)
-  (find-file (ps/tlon-bae-format-file extension)))
+#+begin_src emacs-lisp
+(use-package new-init
+  :elpaca (new-init
+           :host github
+           :repo "tlon-team/new-init")
+  :demand t)
 #+end_src
 
 ** Keyboard Maestro

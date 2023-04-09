@@ -7549,7 +7549,20 @@ This package is required by lsp-grammarly.
   :defer 25
   :config
   (setq grammarly-username ps/personal-gmail)
-  (setq grammarly-password (auth-source-pass-get 'secret (concat "chrome/grammarly.com/" ps/personal-gmail))))
+  (setq grammarly-password (auth-source-pass-get 'secret (concat "chrome/grammarly.com/" ps/personal-gmail)))
+
+  (defun ps/grammarly-open-in-external-editor (&optional text)
+    "Send TEXT to kill ring and open the external Grammarly editor."
+    (interactive)
+    (let ((text (or text
+                    (if (region-active-p) (buffer-substring (region-beginning) (region-end))
+                      (buffer-string)))))
+      (kill-new text)
+      (browse-url "https://app.grammarly.com/ddocs/1929393566")))
+
+  :general
+  ((gfm-mode-map markdown-mode-map)
+   "s-g" 'ps/grammarly-open-in-external-editor))
 #+end_src
 
 ** lsp-grammarly

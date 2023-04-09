@@ -103,7 +103,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :CUSTOM_ID: introduction
 :ID:       A7940400-DD17-4B0B-A9B2-565A207D680C
 :END:
-
 :LOGBOOK:
 CLOCK: [2022-05-29 Sun 09:25]--[2022-05-29 Sun 10:31] =>  1:13
 CLOCK: [2021-07-24 Sat 09:51]--[2021-07-24 Sat 09:58] =>  0:07
@@ -160,11 +159,20 @@ CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :ID:       720FF947-7E4D-4755-B365-B19AC0DBB4D0
 :END:
 
+*** Version 3
+:PROPERTIES:
+:ID:       DEE239CF-BC77-4888-AD69-B33D32A7DB1A
+:END:
+- move ~tlon~ functions to separate "package", handled by ~elpaca~.
+- use ~eww~ by default.
+- add ~flymake~.
+- set precedence of various packages explicitly so that ~elpaca~ doesn't throw errors.
+
 *** Version 2
 :PROPERTIES:
 :ID:       0BCC3A55-0C91-413C-A4BB-D7E4048E30F2
 :END:
-Migrated from ~straight~ to ~elpaca~.
+- Migrated from ~straight~ to ~elpaca~.
 
 ** key bindings
 :PROPERTIES:
@@ -463,6 +471,7 @@ Adapted from [[https://github.com/sfromm/emacs.d#startup][here]].
 :ID:       9CF1D7BB-62B0-4F7C-BB5A-A695BFD4D58D
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-08 Sat 19:04]--[2023-04-08 Sat 21:29] =>  2:25
 CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
 :END:
 
@@ -590,10 +599,12 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :config
   (setq general-describe-priority-keymaps '(local global org-mode-map))
   (setq general-describe-keybinding-sort-function #'general-sort-by-car)
+  (general-override-mode)
+  (general-auto-unbind-keys)
+
   :bind
   ("C-A-b" . 'general-describe-keybindings))
-  (elpaca-wait)
-
+(elpaca-wait)
 #+end_src
 
 ** no-littering
@@ -1808,9 +1819,23 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
           fancy-battery-mode-line
           " | "
           telega-mode-line-format
-          " | "
-          ;; (display-wttr-mode)
-          ))
+          " | "))
+
+  (defun ps/tab-bar-reset ()
+    "Remporary command to deal with the mysterious profliferation of clocks."
+    (interactive)
+    (setq global-mode-string
+          '(" "
+            (:eval (propertize display-time-string 'face 'ps/display-time))
+            " |  "
+            chemacs-profile-name
+            " | "
+            fancy-battery-mode-line
+            " | "
+            telega-mode-line-format
+            " | "))
+    (display-wttr-mode))
+
   (tab-bar-mode))
 #+end_src
 
@@ -6738,6 +6763,23 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (dired-mode-map
    "i" 'ido-find-file))
 #+end_src
+** which-key
+:PROPERTIES:
+:ID:       7781DC87-0D61-4482-91EE-6D2E1F8E122D
+:END:
+
+/[[https://github.com/justbur/emacs-which-key][which-key]] displays available keybindings in a popup./
+
+#+begin_src emacs-lisp :results silent
+(use-package which-key
+  :defer 10
+  :init
+  (which-key-mode)
+
+  :config
+  (setq which-key-idle-delay 0))
+#+end_src
+
 * completion at point
 :PROPERTIES:
 :ID:       9037BE0D-FD13-4D33-8514-BE503421774D
@@ -6765,7 +6807,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
                             ;; corfu-indexed
                             corfu-popupinfo
                             corfu-quick))
-
   :demand t
   :config
   (setq corfu-auto t)                 ;; Enable auto completion
@@ -6921,9 +6962,6 @@ CLOCK: [2021-05-21 Fri 17:13]--[2021-05-21 Fri 17:47] =>  0:34
 CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
 :END:
 
-Distinguish ~C-m~ from ~RET~ in the GUI. (Setting the Spacemacs variable ~dotspacemacs-distinguish-gui-tab~ to non-nil should fix this, but it only works with the related pair ~C-i~ and ~TAB~.)
-
-- *Display the line numbers.*
 ** help
 :PROPERTIES:
 :ID:       B4F00E3C-2682-486D-B05A-E983ACC82D09
@@ -6934,34 +6972,18 @@ Distinguish ~C-m~ from ~RET~ in the GUI. (Setting the Spacemacs variable ~dotspa
   :demand t
   :config
   (setq help-window-select t)
+  (lossage-size 10000)
 
   (defun ps/describe-keymap-of-current-major-mode ()
     (interactive)
     (describe-keymap (current-local-map)))
 
   :general
-  ;; "<C-m>" 'describe mode
   ("C-A-k" 'describe-keymap
    "C-A-m" 'ps/describe-keymap-of-current-major-mode)
-  (help-mode-map
-   "o" 'ps/help-copy-symbol-name) ; currently not working
   (input-decode-map
    [?\C-m] [C-m]
    [?\C-i] [C-i]))
-#+end_src
-
-*** TODO [#7] Finish creating ps/help-copy-symbol-name command
-:PROPERTIES:
-:ID:       1B5C8C6A-8E8E-4ABF-9B61-64666617E240
-:Effort:   0:45
-:END:
-
-#+begin_src emacs-lisp :results silent :tangle no
-(defun ps/help-copy-symbol-name ()
-  "Get name of the symbol which the Help buffer discussses and push it to the kill ring."
-  (interactive)
-  (when (eq major-mode 'help-mode)
-    (kill-new (replace-regexp-in-string "\\(.*\\)\\( is .*\\)" "\\1" (buffer-string)))))
 #+end_src
 
 ** help-at-pt
@@ -7093,23 +7115,6 @@ Emacs 28 has a useful builtin [[https://www.masteringemacs.org/article/emacs-bui
 (use-package elisp-demos
   :init
   (advice-add 'helpful-update :after 'elisp-demos-advice-helpful-update))
-#+end_src
-
-** which-key
-:PROPERTIES:
-:ID:       7781DC87-0D61-4482-91EE-6D2E1F8E122D
-:END:
-
-/[[https://github.com/justbur/emacs-which-key][which-key]] displays available keybindings in a popup./
-
-#+begin_src emacs-lisp :results silent
-(use-package which-key
-  :defer 10
-  :init
-  (which-key-mode)
-
-  :config
-  (setq which-key-idle-delay 0))
 #+end_src
 
 * keyboard macros
@@ -7541,6 +7546,9 @@ This package is required by lsp-grammarly.
 :PROPERTIES:
 :ID:       C87EAC5F-7831-469C-96FB-603397C51925
 :END:
+:LOGBOOK:
+CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
+:END:
 
 /[[https://github.com/emacs-grammarly/grammarly][grammarly]] is an API interface for [[https://www.grammarly.com/][Grammarly]]./
 
@@ -7583,7 +7591,7 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 
 #+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
 (use-package lsp-grammarly
-  :after lsp-mode keytar
+  :after lsp-mode keytar grammarly
   :demand t
 
   :config
@@ -7906,7 +7914,6 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 #+begin_src emacs-lisp :results silent
 (use-package markdown-mode
   :demand t
-  :after atomic-chrome
   :config/el-patch
   (defun markdown-insert-italic ()
     "Insert markup to make a region or word italic.
@@ -7946,6 +7953,8 @@ convert it from org-mode to markdown."
 
   :general
   ((gfm-mode-map markdown-mode-map)
+   "A-C-s-r" 'markdown-outline-previous
+   "A-C-s-f" 'markdown-outline-next
    "s-b" 'markdown-insert-bold
    "s-e" 'markdown-insert-code
    "s-i" 'markdown-insert-italic
@@ -9821,7 +9830,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
            tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")))
   ;; (setq org-agenda-clockreport-parameter-plist)
   (setq org-agenda-files (list ps/file-calendar))
-  (setq org-agenda-files-excluded (list
+  (setq ps/org-agenda-files-excluded (list
                                    ps/file-tlon-tareas-leo
                                    ps/file-tlon-tareas-fede))
 
@@ -9879,7 +9888,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
                                     (visual-line-mode -1)
                                     (toggle-truncate-lines)))
 
-  ;; this comments out the line "%%(org-bbdb-anniversaries-future 2)"
+  ;; this comments out the line "%%(org-bbdb-anniversaries-future 1)"
   ;; in `calendar.org', which is the only way I found to hide
   ;; anniversaries temporarily from the agenda
   ;; for context, see https://orgmode.org/manual/Weekly_002fdaily-agenda.html
@@ -10782,6 +10791,7 @@ slow if it has a lot of overlays."
 :ID:       51E91355-66E0-479C-B616-116EF261F930
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-08 Sat 11:32]--[2023-04-08 Sat 12:00] =>  0:28
 CLOCK: [2023-03-09 Thu 20:07]--[2023-03-09 Thu 20:19] =>  0:12
 CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 :END:
@@ -11644,6 +11654,7 @@ Pomodoro system:
 :ID:       2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-08 Sat 11:18]--[2023-04-08 Sat 11:32] =>  0:14
 CLOCK: [2023-03-09 Thu 12:35]--[2023-03-09 Thu 12:57] =>  0:22
 CLOCK: [2022-09-30 Fri 20:53]--[2022-09-30 Fri 21:21] =>  0:28
 CLOCK: [2022-06-28 Tue 20:12]--[2022-06-28 Tue 20:13] =>  0:01
@@ -11769,8 +11780,8 @@ SQL can be either the emacsql vector representation, or a string."
                                       ".org2blog.org"
                                       "wiki-notes.org" ; removing temporarily
                                       "feeds.org"
-                                      "conflicted copy"
-                                      "conflicted-copy"))
+                                      ".*conflicted copy.*"
+                                      ".*conflicted-copy.*"))
 
   ;; exclude headings in specific files and directories
   (setq org-roam-file-exclude-regexp
@@ -15093,11 +15104,9 @@ Wordtune."
     (browse-url "https://app.wordtune.com/v2/editor/"))
 
   (defun ps/org-msg-open-in-grammarly ()
-    "Save the current message to the kill ring and open it in
-Grammarly."
+    "Copy the current message and Grammarly in an external browser."
     (interactive)
-    (ps/org-msg-kill-message)
-    (browse-url "https://app.grammarly.com/ddocs/1929393566"))
+    (ps/grammarly-open-in-external-editor (ps/org-msg-kill-message)))
 
   :general
   (org-msg-edit-mode-map
@@ -15543,26 +15552,32 @@ CLOCK: [2021-05-18 Tue 18:26]--[2021-05-18 Tue 18:54] =>  0:28
 :PROPERTIES:
 :ID:       0373B505-A028-4537-871F-3CCC2E5EADB1
 :END:
+:LOGBOOK:
+CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
+:END:
 
 #+begin_src emacs-lisp :results silent
 (use-feature browse-url
   :config
-  (setq browse-url-browser-function 'browse-url-default-macosx-browser)
+  (setq browse-url-browser-function 'eww-browse-url)
   (setq browse-url-firefox-program "/Applications/Firefox.app/Contents/MacOS/firefox")
   (setq browse-url-chrome-program "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
-  (setq browse-url-handlers
-   '(("gnu\\.org"  . eww-browse-url)
-     ("protesilaos\\.com" . eww-browse-url)
-     ("orgmode\\.org" . eww-browse-url)
-     ("var/folders" . eww-browse-url) ; email
-     ;; My VPN settings apply to Firefox only (via split tunneling),
-     ;; so the websites requiring VPN access are listed below, and
-     ;; will be opened with this browser.
-     ;; [2022-10-30 Sun] Disabling until I configure split tunneling
-     ;; ("libgen" . browse-url-firefox)
-     ;; ("hathitrust\\.org" . browse-url-firefox)
-     ;; Use the default MacOS browser for all other websites
-     ("." . browse-url-default-macosx-browser)))
+  (let ((default 'browse-url-default-browser)
+        (firefox 'browse-url-firefox))
+    (dolist (regex '("doi\\.org"
+                     "effectivealtruism\\.org"
+                     "github\\.com"
+                     "gmail\\.com"
+                     "google\\.com"
+                     "grammarly\\.com"
+                     "imdb\\.com"
+                     "metaculus\\.com"
+                     "metaforecast\\.com"
+                     "youtube\\.com"))
+      (push (cons regex 'browse-url-default-browser) browse-url-handlers))
+    (dolist (regex '("economist\\.com"
+                     "ft\\.com"))
+      (push (cons regex 'browse-url-firefox) browse-url-handlers)))
 
   :general
   (mhtml-mode-map
@@ -15646,6 +15661,7 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
 :ID:       E9E3FE6F-5580-4D21-90D8-6B0E595C10F7
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-08 Sat 12:09]--[2023-04-08 Sat 12:21] =>  0:12
 CLOCK: [2021-05-18 Tue 17:41]--[2021-05-18 Tue 18:26] =>  0:45
 CLOCK: [2021-05-04 Tue 22:07]--[2021-05-04 Tue 22:25] =>  0:18
 CLOCK: [2021-05-02 Sun 21:22]--[2021-05-02 Sun 21:32] =>  0:10
@@ -15662,10 +15678,14 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
   (setq eww-header-line-format nil)
   (setq eww-download-directory ps/dir-downloads)
   (setq eww-suggest-uris
-   '(eww-links-at-point
-     thing-at-point-url-at-point))
-  (setq eww-history-limit 1000)
+        '(eww-links-at-point
+          thing-at-point-url-at-point))
+  (setq eww-history-limit 100000)
   (setq eww-browse-url-new-window-is-tab nil)
+  ;; make eww respect url handlers when following links in webpages
+  (dolist (cons browse-url-handlers)
+    (setq eww-use-browse-url
+          (concat eww-use-browse-url "\\|" (car cons))))
 
   ;; inspired by Prot
   (defun ps/rename-buffer ()
@@ -16102,6 +16122,7 @@ PREFIX determines quoting."
 :ID:       437B98FC-3667-43C4-9EF6-470E23FE7561
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-07 Fri 21:53]--[2023-04-07 Fri 22:38] =>  0:45
 CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
 :END:
 
@@ -16145,9 +16166,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine GoogleScholar
     "https://scholar.google.com/scholar?hl=en&q=%s"
     :keybinding "s")
-  (defengine GoogleTranslate
-    "https://translate.google.com/#auto/en/%s"
-    :keybinding "t")
   (defengine SciHub
     "https://sci-hub.se/%s"
     :keybinding "u")
@@ -16491,7 +16509,8 @@ template."
         (user-error "HTML page at URL has no title"))))
 
   :general
-  ("s-A-k" 'org-web-tools-insert-link-for-url))
+  (org-mode-map
+  "s-A-k" 'org-web-tools-insert-link-for-url))
 #+end_src
 
 ** request
@@ -17192,27 +17211,32 @@ CLOCK: [2023-03-28 Tue 22:32]--[2023-03-28 Tue 22:47] =>  0:15
 
 A tutorial for this undocumented package may be found [[https://github.com/andycowl/bbdb3-manual/blob/master/tutorial.rst][here]].
 
-#+begin_src emacs-lisp :tangle no
-(use-package bbdb)
+[2023-04-09 Sun 02:20] Installed with ~package-install~, since I wasn't able to build it.
+
+#+begin_src emacs-lisp
+(use-package bbdb
+  :demand t
+  :elpaca (:local-repo "/Users/pablostafforini/.config/emacs-profiles/develop/elpa/bbdb-3.2.2.2"
+                       :prebuild ())
   :init/el-patch
   ;; open URL directly, without prompting for confirmation
   (defun bbdb-browse-url (records &optional which)
-  "Brwose URLs stored in the `url' field of RECORDS.
+    "Brwose URLs stored in the `url' field of RECORDS.
 Interactively, use BBDB prefix \
 \\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'.
 Prefix WHICH specifies which URL in field `url' is used (starting from 0).
 Default is the first URL."
-  (interactive (list (bbdb-get-records "Visit (URL): ")
-                     (and current-prefix-arg
-                          (prefix-numeric-value current-prefix-arg))))
-  (unless which (setq which 0))
-  (dolist (record (bbdb-record-list records))
-    (let ((url (bbdb-record-xfield-split record 'url)))
-      (when url
-        (el-patch-swap (setq url (read-string "fetch: " (nth which url)))
-                       (setq url (nth which url)))
-        (unless (string= "" url)
-          (browse-url url))))))
+    (interactive (list (bbdb-get-records "Visit (URL): ")
+                       (and current-prefix-arg
+                            (prefix-numeric-value current-prefix-arg))))
+    (unless which (setq which 0))
+    (dolist (record (bbdb-record-list records))
+      (let ((url (bbdb-record-xfield-split record 'url)))
+        (when url
+          (el-patch-swap (setq url (read-string "fetch: " (nth which url)))
+                         (setq url (nth which url)))
+          (unless (string= "" url)
+            (browse-url url))))))
 
   :config/el-patch
   ;; do not split windows
@@ -17335,6 +17359,8 @@ then the window will be split horizontally rather than vertically."
    "M-d" nil
    "D" 'ps/bbdb-delete-field-or-record-no-confirm))
 #+end_src
+
+
 *** TODO Diagnose why elpaca can't load this
 :PROPERTIES:
 :ID:       88C73B04-2EBA-40A6-B5F4-23C92E3306B5
@@ -17421,7 +17447,7 @@ then the window will be split horizontally rather than vertically."
   :demand t
   :config
   (defun ps/tlon-meeting-with-fede ()
-  "TODO: docstring"
+    "TODO: docstring"
     (interactive)
     (ps/tlon-meeting-with
      "Fede"
@@ -17430,13 +17456,17 @@ then the window will be split horizontally rather than vertically."
      "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
 
   (defun ps/tlon-meeting-with-leo ()
-  "TODO: docstring"
+    "TODO: docstring"
     (interactive)
     (ps/tlon-meeting-with
      "Leo"
      "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
      "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-     "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
+     "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
+
+  :general
+  (markdown-mode-map
+   "A-s-k" 'ps/tlon-eawiki-insert-url))
 #+end_src
 
 ** new-init
@@ -17444,7 +17474,7 @@ then the window will be split horizontally rather than vertically."
 :ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package new-init
   :elpaca (new-init
            :host github

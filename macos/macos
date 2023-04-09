@@ -119,14 +119,14 @@ defaults write com.apple.finder NewWindowTarget -string "PfLo"
 defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/"
 echo 'Set Desktop as the default location for new Finder windows.'
 
-# Show icons for hard drives, servers, and removable media on the desktop
 defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool true
 defaults write com.apple.finder ShowHardDrivesOnDesktop -bool true
 defaults write com.apple.finder ShowMountedServersOnDesktop -bool true
 defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
+echo 'Show icons for hard drives, servers, and removable media on the desktop'
 
 defaults write com.apple.finder AppleShowAllFiles -bool true
-echo 'Finder: show hidden files by default'
+echo 'In Finder, show hidden files by default'
 
 defaults write NSGlobalDomain AppleShowAllExtensions -bool true
 echo 'In Finder, show all filename extensions'
@@ -150,8 +150,10 @@ defaults write NSGlobalDomain com.apple.springing.delay -float 0
 echo 'Remove the spring loading delay for directories'
 
 defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
+echo 'Avoid creating .DS_Store files on network volumes'
+
 defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
-echo 'Avoid creating .DS_Store files on network or USB volumes'
+echo 'Avoid creating .DS_Store files on USB volumes'
 
 # Show item info near icons on the desktop and in other icon views
 /usr/libexec/PlistBuddy -c "Set :DesktopViewSettings:IconViewSettings:showItemInfo true" ~/Library/Preferences/com.apple.finder.plist
@@ -190,6 +192,9 @@ defaults write com.apple.finder FXInfoPanesExpanded -dict \
 	OpenWith -bool true \
 	Privileges -bool true
 echo 'Expand the following File Info panes: “General”, “Open with”, and “Sharing & Permissions”'
+
+defaults write com.apple.finder CreateDesktop -bool false;killall Finder;say icons hidden
+echo 'Hide icons for hard drives, servers, and removable media on the desktop'
 
 defaults write com.apple.dock mouse-over-hilite-stack -bool true
 echo 'Enable highlight hover effect for the grid view of a stack (Dock)'
@@ -247,6 +252,9 @@ echo 'Disable the Launchpad gesture (pinch with thumb and three fingers)'
 
 find "${HOME}/Library/Application Support/Dock" -name "*-*.db" -maxdepth 1 -delete
 echo 'Reset Launchpad, but keep the desktop wallpaper intact'
+
+defaults write com.apple.dock no-bouncing -bool TRUE
+echo 'Prevent icons from bouncing'
 
 defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
 echo 'Prevent Time Machine from prompting to use new hard drives as backup volume'

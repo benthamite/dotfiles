@@ -340,6 +340,9 @@ echo 'Disable the Launchpad gesture (pinch with thumb and three fingers)'
 
 find "${HOME}/Library/Application Support/Dock" -name "*-*.db" -maxdepth 1 -delete
 echo 'Reset Launchpad, but keep the desktop wallpaper intact'
+
+defaults write com.apple.dock no-bouncing -bool TRUE
+echo 'Prevent icons from bouncing'
 #+end_src
 
 * Spotlight

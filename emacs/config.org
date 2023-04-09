@@ -17462,7 +17462,7 @@ then the window will be split horizontally rather than vertically."
 :ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package new-init
   :elpaca (new-init
            :host github

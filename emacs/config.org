@@ -16114,6 +16114,7 @@ PREFIX determines quoting."
 :ID:       437B98FC-3667-43C4-9EF6-470E23FE7561
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-07 Fri 21:53]--[2023-04-07 Fri 22:38] =>  0:45
 CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
 :END:
 
@@ -16157,9 +16158,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine GoogleScholar
     "https://scholar.google.com/scholar?hl=en&q=%s"
     :keybinding "s")
-  (defengine GoogleTranslate
-    "https://translate.google.com/#auto/en/%s"
-    :keybinding "t")
   (defengine SciHub
     "https://sci-hub.se/%s"
     :keybinding "u")
@@ -16503,7 +16501,8 @@ template."
         (user-error "HTML page at URL has no title"))))
 
   :general
-  ("s-A-k" 'org-web-tools-insert-link-for-url))
+  (org-mode-map
+  "s-A-k" 'org-web-tools-insert-link-for-url))
 #+end_src
 
 ** request

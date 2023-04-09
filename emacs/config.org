@@ -9822,7 +9822,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
            tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")))
   ;; (setq org-agenda-clockreport-parameter-plist)
   (setq org-agenda-files (list ps/file-calendar))
-  (setq org-agenda-files-excluded (list
+  (setq ps/org-agenda-files-excluded (list
                                    ps/file-tlon-tareas-leo
                                    ps/file-tlon-tareas-fede))
 
@@ -9880,7 +9880,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
                                     (visual-line-mode -1)
                                     (toggle-truncate-lines)))
 
-  ;; this comments out the line "%%(org-bbdb-anniversaries-future 2)"
+  ;; this comments out the line "%%(org-bbdb-anniversaries-future 1)"
   ;; in `calendar.org', which is the only way I found to hide
   ;; anniversaries temporarily from the agenda
   ;; for context, see https://orgmode.org/manual/Weekly_002fdaily-agenda.html

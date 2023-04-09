@@ -17448,13 +17448,17 @@ then the window will be split horizontally rather than vertically."
      "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
 
   (defun ps/tlon-meeting-with-leo ()
-  "TODO: docstring"
+    "TODO: docstring"
     (interactive)
     (ps/tlon-meeting-with
      "Leo"
      "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
      "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-     "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
+     "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
+
+  :general
+  (markdown-mode-map
+   "A-s-k" 'ps/tlon-eawiki-insert-url))
 #+end_src
 
 ** new-init

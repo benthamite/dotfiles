@@ -15096,11 +15096,9 @@ Wordtune."
     (browse-url "https://app.wordtune.com/v2/editor/"))
 
   (defun ps/org-msg-open-in-grammarly ()
-    "Save the current message to the kill ring and open it in
-Grammarly."
+    "Copy the current message and Grammarly in an external browser."
     (interactive)
-    (ps/org-msg-kill-message)
-    (browse-url "https://app.grammarly.com/ddocs/1929393566"))
+    (ps/grammarly-open-in-external-editor (ps/org-msg-kill-message)))
 
   :general
   (org-msg-edit-mode-map

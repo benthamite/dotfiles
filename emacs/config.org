@@ -1563,8 +1563,9 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 #+begin_src emacs-lisp :results silent
 (use-package modus-themes
   :elpaca (modus-themes
-             :host sourcehut
-             :repo "protesilaos/modus-themes")
+           :host sourcehut
+           :repo "protesilaos/modus-themes")
+  :after faces
   :demand t
 
   :init

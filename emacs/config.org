@@ -6799,7 +6799,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
                             ;; corfu-indexed
                             corfu-popupinfo
                             corfu-quick))
-
   :demand t
   :config
   (setq corfu-auto t)                 ;; Enable auto completion
@@ -6955,9 +6954,6 @@ CLOCK: [2021-05-21 Fri 17:13]--[2021-05-21 Fri 17:47] =>  0:34
 CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
 :END:
 
-Distinguish ~C-m~ from ~RET~ in the GUI. (Setting the Spacemacs variable ~dotspacemacs-distinguish-gui-tab~ to non-nil should fix this, but it only works with the related pair ~C-i~ and ~TAB~.)
-
-- *Display the line numbers.*
 ** help
 :PROPERTIES:
 :ID:       B4F00E3C-2682-486D-B05A-E983ACC82D09
@@ -17352,6 +17348,8 @@ then the window will be split horizontally rather than vertically."
    "M-d" nil
    "D" 'ps/bbdb-delete-field-or-record-no-confirm))
 #+end_src
+
+
 *** TODO Diagnose why elpaca can't load this
 :PROPERTIES:
 :ID:       88C73B04-2EBA-40A6-B5F4-23C92E3306B5
@@ -17438,7 +17436,7 @@ then the window will be split horizontally rather than vertically."
   :demand t
   :config
   (defun ps/tlon-meeting-with-fede ()
-  "TODO: docstring"
+    "TODO: docstring"
     (interactive)
     (ps/tlon-meeting-with
      "Fede"

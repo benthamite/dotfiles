@@ -6755,6 +6755,23 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (dired-mode-map
    "i" 'ido-find-file))
 #+end_src
+** which-key
+:PROPERTIES:
+:ID:       7781DC87-0D61-4482-91EE-6D2E1F8E122D
+:END:
+
+/[[https://github.com/justbur/emacs-which-key][which-key]] displays available keybindings in a popup./
+
+#+begin_src emacs-lisp :results silent
+(use-package which-key
+  :defer 10
+  :init
+  (which-key-mode)
+
+  :config
+  (setq which-key-idle-delay 0))
+#+end_src
+
 * completion at point
 :PROPERTIES:
 :ID:       9037BE0D-FD13-4D33-8514-BE503421774D
@@ -7110,23 +7127,6 @@ Emacs 28 has a useful builtin [[https://www.masteringemacs.org/article/emacs-bui
 (use-package elisp-demos
   :init
   (advice-add 'helpful-update :after 'elisp-demos-advice-helpful-update))
-#+end_src
-
-** which-key
-:PROPERTIES:
-:ID:       7781DC87-0D61-4482-91EE-6D2E1F8E122D
-:END:
-
-/[[https://github.com/justbur/emacs-which-key][which-key]] displays available keybindings in a popup./
-
-#+begin_src emacs-lisp :results silent
-(use-package which-key
-  :defer 10
-  :init
-  (which-key-mode)
-
-  :config
-  (setq which-key-idle-delay 0))
 #+end_src
 
 * keyboard macros

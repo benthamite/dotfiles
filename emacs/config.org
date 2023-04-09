@@ -37,7 +37,7 @@ And on this twisted love affair I wonder,
 What if ‘twas Vim had lead me astray,
 And in its dark depths my fingers lay?
 
-But emacs dear, fear not my eyes,
+But Emacs dear, fear not my eyes,
 I'll wrestle with thee 'til my demise,
 For in this hell we've built a choir,
 And in your flames, I'll redisplay desire.
@@ -186,10 +186,10 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 - Run ~bug-hunter-init-file~ (from the [[id:0C19171B-8DFA-4E06-9E17-45C1F9158C28][elisp-bug-hunter]] package) and select "automatic error detection" (~e~).
 - Run ~emacs -q~ or ~emacs --debug-init~.
 - Cut suspected sections of the org file (~org-cut-subtree~), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections, while leaving the literal org file intact.
-- Use ~git-timemachine~ to see how a suspected section of the config file compares with versions you know were working correctly.
+- Use ~magit-log-buffer-file~ or ~git-timemachine~ to explore previous versions of your config file.
 - Set ~debug-on-error~ to ~t~ to see a backtrace of an error. Or call ~toggle-debug-on-error~ interactively.
   - To determine what function is changing the value of a variable, use ~debug-on-variable-change~.
-- Use Time Machine (on MacOS) to download and try increasingly older versions, to identify the version that introduced the bug. Then diff that version with its immediate successor.
+  - To determine what function is generating a particular message, use ~debug-on-message~.
 - Bisect the init file until you locate the culprit.
   - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).
 - If Emacs becomes unresponsive, run ~pkill -USR2 Emacs~ in a terminal. Emacs will likely trigger a backtrace, which you can inspect to diagnose the issue.
@@ -507,12 +507,6 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
     (load "./elpaca-autoloads")))
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
-;; (elpaca org)
-;; (elpaca org-contrib)
-;; (eval-after-load "org"
-;; '(debug))
-(toggle-debug-on-error)
-;; (setq debug-on-message ".*Warning.*")
 #+end_src
 
 ** use-package
@@ -1569,8 +1563,9 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 #+begin_src emacs-lisp :results silent
 (use-package modus-themes
   :elpaca (modus-themes
-             :host sourcehut
-             :repo "protesilaos/modus-themes")
+           :host sourcehut
+           :repo "protesilaos/modus-themes")
+  :after faces
   :demand t
 
   :init
@@ -1662,7 +1657,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 (use-package emojify
   :config
   (emojify-set-emoji-styles '(unicode))
-  (add-hook 'after-init #'global-emojify-mode)
+  (add-hook 'elpaca-after-init-hook #'global-emojify-mode)
 
   :general
   ("H-e" 'emojify-insert-emoji))
@@ -7554,7 +7549,20 @@ This package is required by lsp-grammarly.
   :defer 25
   :config
   (setq grammarly-username ps/personal-gmail)
-  (setq grammarly-password (auth-source-pass-get 'secret (concat "chrome/grammarly.com/" ps/personal-gmail))))
+  (setq grammarly-password (auth-source-pass-get 'secret (concat "chrome/grammarly.com/" ps/personal-gmail)))
+
+  (defun ps/grammarly-open-in-external-editor (&optional text)
+    "Send TEXT to kill ring and open the external Grammarly editor."
+    (interactive)
+    (let ((text (or text
+                    (if (region-active-p) (buffer-substring (region-beginning) (region-end))
+                      (buffer-string)))))
+      (kill-new text)
+      (browse-url "https://app.grammarly.com/ddocs/1929393566")))
+
+  :general
+  ((gfm-mode-map markdown-mode-map)
+   "s-g" 'ps/grammarly-open-in-external-editor))
 #+end_src
 
 ** lsp-grammarly
@@ -7743,7 +7751,7 @@ CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
 (use-package powerthesaurus
   :config/el-patch
   (defun powerthesaurus-lookup-dwim (&optional action-type query-type)
-  "Wrapper function for general lookup commands.
+    "Wrapper function for general lookup commands.
 
 When called interactively, optional argument ACTION-TYPE corresponds to
 the prefix argument passed to this command, which is translated to an action
@@ -7754,33 +7762,32 @@ its value can either be nil or a symbol that can be possibly returned by
 The argument passed to QUERY-TYPE should be the same as in
 `powerthesaurus-lookup' or nil; in the latter case,
 the user will be prompt for a valid value."
-  (interactive "P")
-  (pcase-let ((`(,query-term ,beg ,end)
-               ;; selection is active -> look up whatever is selected
-               (if (use-region-p)
-                   (powerthesaurus--extract-query-region)
-                 ;; point is is at a word -> look it up
-                 (if (thing-at-point 'word)
-                     (powerthesaurus--extract-original-word)
-                   ;; nothing appropriate nearby -> ask the user
-                   (list nil nil nil)))))
-    (setq query-term (el-patch-swap
-                       (read-string "Term: " query-term)
-                       (or query-term
-                         (read-string "Term: " query-term)))
-          query-type (or query-type
-                         (completing-read "Query type: "
-                                          powerthesaurus-supported-query-types
-                                          nil t))
-          action-type (powerthesaurus-prefix-to-action action-type query-type))
-    (cond
-     ((eq action-type 'action-insert)
-      (when (null beg)
-        (setq beg (point) end (point))))
-     ((eq action-type 'action-display)
-      (when (or beg end)
-        (setq beg nil end nil))))
-    (funcall 'powerthesaurus-lookup query-term query-type beg end)))
+    (interactive "P")
+    (pcase-let ((`(,query-term ,beg ,end)
+                 ;; selection is active -> look up whatever is selected
+                 (if (use-region-p)
+                     (powerthesaurus--extract-query-region)
+                   ;; point is is at a word -> look it up
+                   (if (thing-at-point 'word)
+                       (powerthesaurus--extract-original-word)
+                     ;; nothing appropriate nearby -> ask the user
+                     (list nil nil nil)))))
+      (setq query-term (el-patch-swap (read-string "Term: " query-term)
+                                      (or query-term
+                                          (read-string "Term: " query-term)))
+            query-type (or query-type
+                           (completing-read "Query type: "
+                                                    powerthesaurus-supported-query-types
+                                                    nil t))
+            action-type (powerthesaurus-prefix-to-action action-type query-type))
+      (cond
+       ((eq action-type 'action-insert)
+        (when (null beg)
+          (setq beg (point) end (point))))
+       ((eq action-type 'action-display)
+        (when (or beg end)
+          (setq beg nil end nil))))
+      (funcall 'powerthesaurus-lookup query-term query-type beg end)))
 
   :general
   ("H-Y" 'powerthesaurus-lookup-dwim))
@@ -7823,7 +7830,7 @@ around point."
 :ID:       BE78F0BD-D676-4E19-838A-2E6BD4504F52
 :END:
 
-/[[https://github.com/tmalsburg/txl.el][txl]] provies direct access to DeepL's machine translation API./
+/[[https://github.com/tmalsburg/txl.el][txl]] provides direct access to DeepL's machine translation API./
 
 #+begin_src emacs-lisp
 (use-package txl
@@ -7862,7 +7869,9 @@ CLOCK: [2021-02-11 Thu 20:46]--[2021-02-11 Thu 20:54] =>  0:08
 CLOCK: [2021-02-11 Thu 19:59]--[2021-02-11 Thu 20:02] =>  0:03
 :END:
 
-/[[https://github.com/alpha22jp/atomic-chrome][atomic chrome]] lets me use Emacs to edit text from input fields in my browser. I use it in combination with [[https://ghosttext.fregante.com/][Ghost Text]]./
+/[[https://github.com/alpha22jp/atomic-chrome][atomic chrome]] enables editing of browser input fields in Emacs./
+
+I use it in combination with the [[https://ghosttext.fregante.com/][Ghost Text]] browser extension.
 
 #+begin_src emacs-lisp :results silent
 (use-package atomic-chrome
@@ -8539,6 +8548,36 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
                        "s-c" 'exit-recursive-edit))
 #+end_src
 
+** flymake
+:PROPERTIES:
+:ID:       2259FE72-2958-4507-AD6D-4CB3F9B2E676
+:END:
+
+/flymake is a universal on-the-fly syntax checker./
+
+#+begin_src emacs-lisp
+(use-feature flymake
+  ;; copied from Prot
+  :config
+  (setq flymake-fringe-indicator-position 'left-fringe)
+  (setq flymake-suppress-zero-counters t)
+  (setq flymake-start-on-flymake-mode t)
+  (setq flymake-no-changes-timeout nil)
+  (setq flymake-start-on-save-buffer t)
+  (setq flymake-proc-compilation-prevents-syntax-check t)
+  (setq flymake-wrap-around nil)
+  (setq flymake-mode-line-format
+        '("" flymake-mode-line-exception flymake-mode-line-counters))
+  (setq flymake-mode-line-counter-format
+        '(" " flymake-mode-line-error-counter
+          flymake-mode-line-warning-counter
+          flymake-mode-line-note-counter ""))
+  :general
+  (flymake-mode-map
+   "C-c f l" 'flymake-goto-next-error
+   "C-c f k" 'flymake-goto-prev-error))
+#+end_src
+
 ** lsp-mode
 :PROPERTIES:
 :ID:       E9D2E6CA-5256-4776-801F-13281BD390C9
@@ -8599,10 +8638,12 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 
 #+begin_src emacs-lisp :results silent
 (use-feature elisp-mode
+  :config
+  (add-hook 'emacs-lisp-mode-hook #'flymake-mode)
+
   :general
   (emacs-lisp-mode-map
-   "s-d" 'eval-defun
-   "A-s-d" 'edebug-defun))
+   "s-d" 'eval-defun))
 #+end_src
 
 *** TODO [#6] Learn to use all relevant sexp commands
@@ -8633,7 +8674,11 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
   :config
   ;; do not truncate print results in Edebug
   (setq edebug-print-level nil)
-  (setq edebug-print-length nil))
+  (setq edebug-print-length nil)
+
+  :general
+  (emacs-lisp-mode-map
+   "A-s-d" 'edebug-defun))
 #+end_src
 
 ** backtrace
@@ -11218,11 +11263,11 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
   :config/el-patch
   ;; name buffers more cleanly
   (defun org-src--construct-edit-buffer-name (org-buffer-name lang)
-    "Construct the buffer name for a source editing buffer.
-Format is \"*Org Src ORG-BUFFER-NAME [ LANG ]*\"."
-    (el-patch-swap
-      (concat "*Org Src " org-buffer-name "[ " lang " ]*")
-      (concat org-buffer-name " (org src)")))
+  "Construct the buffer name for a source editing buffer.
+Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
+  (el-patch-swap
+    (concat "*Org Src " org-buffer-name "[ " lang " ]*")
+    (concat org-buffer-name " (org src)")))
 
   :config
   (setq org-edit-src-content-indentation 0)
@@ -17363,76 +17408,48 @@ then the window will be split horizontally rather than vertically."
 :ID:       9D7B5C99-2380-4159-A8C8-4021CC0482DE
 :END:
 
-** Tlon
+** tlon
 :PROPERTIES:
 :ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
 :END:
 
 #+begin_src emacs-lisp :results silent
-(defun ps/tlon-meeting-with (tareas-id meetings-id pending-id)
-  ;; "[person] > Meetings > Pending for next meeting" org heading in `work-dashboard.org'
-  (ps/org-id-goto pending-id)
-  (let ((contents (ps/org-get-heading-contents)))
-    (ps/org-clear-heading-contents)
-    ;; "[person] > Meetings" org heading in `work-dashboard.org'
-    (ps/org-id-goto meetings-id)
-    (org-narrow-to-subtree)
-    (goto-char (point-max))
-    (org-insert-heading)
-    (insert "Meeting on ")
-    (ps/org-time-stamp-inactive-current-time)
-    (unless (string= contents "")
-      (insert (concat "\nTo discuss:\n" contents "\n"))))
-  (forward-line)
-  (ps/org-narrow-to-entry-and-children)
-  (ps/window-split-if-unsplit)
-  (ps/switch-to-last-window)
-  ;; "Tareas" org heading in `tareas.org'
-  (ps/org-id-goto tareas-id)
-  (ps/org-narrow-to-entry-and-children)
-  (ps/switch-to-last-window))
+(use-package tlon
+  :elpaca (tlon
+           :host github
+           :repo "tlon-team/tlon")
+  :demand t
+  :config
+  (defun ps/tlon-meeting-with-fede ()
+  "TODO: docstring"
+    (interactive)
+    (ps/tlon-meeting-with
+     "Fede"
+     "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
+     "56CBB3F8-8E75-4298-99B3-899365EB75E0"
+     "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
 
-(defun ps/tlon-meeting-with-fede ()
-  (interactive)
-  (ps/tlon-meeting-with
-   "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
-   "56CBB3F8-8E75-4298-99B3-899365EB75E0"
-   "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
+  (defun ps/tlon-meeting-with-leo ()
+  "TODO: docstring"
+    (interactive)
+    (ps/tlon-meeting-with
+     "Leo"
+     "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
+     "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
+     "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
+#+end_src
 
-(defun ps/tlon-meeting-with-leo ()
-  (interactive)
-  (ps/tlon-meeting-with
-   "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
-   "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-   "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
+** new-init
+:PROPERTIES:
+:ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
+:END:
 
-(defun ps/tlon-bae-format-file (&optional extension)
-  "Prompt the user for bibliographic information and return a file
-name based on it."
-  (let* ((lastname (read-string "Last name(s) [separated by spaces if more than one author]: "))
-         (title (read-string "Title: "))
-         (slug-lastname (ps/bibtex-asciify-string (org-hugo-slug lastname)))
-         (slug-title (ps/bibtex-asciify-string (org-hugo-slug title)))
-         (extension (or extension "md")))
-    (file-name-with-extension (concat slug-lastname "--" slug-title) extension)))
-
-(defun ps/tlon-bae-rename-file (&optional extension)
-  "Prompt the user for bibliographic information and rename file at
-point based on it."
-  (interactive)
-  (let* ((source-file-path (dired-get-filename)))
-    (rename-file
-     source-file-path
-     (file-name-concat
-      (file-name-directory source-file-path)
-      (ps/tlon-bae-format-file extension))))
-  (revert-buffer))
-
-(defun ps/tlon-bae-create-file (&optional extension)
-  "Prompt the user for bibliographic information and create a new
- file based on it in the current directory."
-  (interactive)
-  (find-file (ps/tlon-bae-format-file extension)))
+#+begin_src emacs-lisp
+(use-package new-init
+  :elpaca (new-init
+           :host github
+           :repo "tlon-team/new-init")
+  :demand t)
 #+end_src
 
 ** Keyboard Maestro

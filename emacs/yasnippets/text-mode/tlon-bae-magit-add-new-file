@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-bae-magit-add-new-file
+# key: Args out of range: "", 0, 1
+# contributor: Pablo Stafforini
+# --
+`(let ((file (save-excursion (other-window 1) (re-search-forward "new file   .*/\\(wiki--test\\).md") (match-string 1)))) (insert (format "Add %s" file)))`

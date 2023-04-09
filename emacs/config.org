@@ -15653,6 +15653,7 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
 :ID:       E9E3FE6F-5580-4D21-90D8-6B0E595C10F7
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-08 Sat 12:09]--[2023-04-08 Sat 12:21] =>  0:12
 CLOCK: [2021-05-18 Tue 17:41]--[2021-05-18 Tue 18:26] =>  0:45
 CLOCK: [2021-05-04 Tue 22:07]--[2021-05-04 Tue 22:25] =>  0:18
 CLOCK: [2021-05-02 Sun 21:22]--[2021-05-02 Sun 21:32] =>  0:10
@@ -15669,10 +15670,14 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
   (setq eww-header-line-format nil)
   (setq eww-download-directory ps/dir-downloads)
   (setq eww-suggest-uris
-   '(eww-links-at-point
-     thing-at-point-url-at-point))
-  (setq eww-history-limit 1000)
+        '(eww-links-at-point
+          thing-at-point-url-at-point))
+  (setq eww-history-limit 100000)
   (setq eww-browse-url-new-window-is-tab nil)
+  ;; make eww respect url handlers when following links in webpages
+  (dolist (cons browse-url-handlers)
+    (setq eww-use-browse-url
+          (concat eww-use-browse-url "\\|" (car cons))))
 
   ;; inspired by Prot
   (defun ps/rename-buffer ()

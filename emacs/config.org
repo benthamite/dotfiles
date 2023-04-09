@@ -17203,27 +17203,32 @@ CLOCK: [2023-03-28 Tue 22:32]--[2023-03-28 Tue 22:47] =>  0:15
 
 A tutorial for this undocumented package may be found [[https://github.com/andycowl/bbdb3-manual/blob/master/tutorial.rst][here]].
 
-#+begin_src emacs-lisp :tangle no
-(use-package bbdb)
+[2023-04-09 Sun 02:20] Installed with ~package-install~, since I wasn't able to build it.
+
+#+begin_src emacs-lisp
+(use-package bbdb
+  :demand t
+  :elpaca (:local-repo "/Users/pablostafforini/.config/emacs-profiles/develop/elpa/bbdb-3.2.2.2"
+                       :prebuild ())
   :init/el-patch
   ;; open URL directly, without prompting for confirmation
   (defun bbdb-browse-url (records &optional which)
-  "Brwose URLs stored in the `url' field of RECORDS.
+    "Brwose URLs stored in the `url' field of RECORDS.
 Interactively, use BBDB prefix \
 \\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'.
 Prefix WHICH specifies which URL in field `url' is used (starting from 0).
 Default is the first URL."
-  (interactive (list (bbdb-get-records "Visit (URL): ")
-                     (and current-prefix-arg
-                          (prefix-numeric-value current-prefix-arg))))
-  (unless which (setq which 0))
-  (dolist (record (bbdb-record-list records))
-    (let ((url (bbdb-record-xfield-split record 'url)))
-      (when url
-        (el-patch-swap (setq url (read-string "fetch: " (nth which url)))
-                       (setq url (nth which url)))
-        (unless (string= "" url)
-          (browse-url url))))))
+    (interactive (list (bbdb-get-records "Visit (URL): ")
+                       (and current-prefix-arg
+                            (prefix-numeric-value current-prefix-arg))))
+    (unless which (setq which 0))
+    (dolist (record (bbdb-record-list records))
+      (let ((url (bbdb-record-xfield-split record 'url)))
+        (when url
+          (el-patch-swap (setq url (read-string "fetch: " (nth which url)))
+                         (setq url (nth which url)))
+          (unless (string= "" url)
+            (browse-url url))))))
 
   :config/el-patch
   ;; do not split windows

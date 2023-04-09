@@ -103,7 +103,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :CUSTOM_ID: introduction
 :ID:       A7940400-DD17-4B0B-A9B2-565A207D680C
 :END:
-
 :LOGBOOK:
 CLOCK: [2022-05-29 Sun 09:25]--[2022-05-29 Sun 10:31] =>  1:13
 CLOCK: [2021-07-24 Sat 09:51]--[2021-07-24 Sat 09:58] =>  0:07
@@ -160,11 +159,20 @@ CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :ID:       720FF947-7E4D-4755-B365-B19AC0DBB4D0
 :END:
 
+*** Version 3
+:PROPERTIES:
+:ID:       DEE239CF-BC77-4888-AD69-B33D32A7DB1A
+:END:
+- move ~tlon~ functions to separate "package", handled by ~elpaca~.
+- use ~eww~ by default.
+- add ~flymake~.
+- set precedence of various packages explicitly so that ~elpaca~ doesn't throw errors.
+
 *** Version 2
 :PROPERTIES:
 :ID:       0BCC3A55-0C91-413C-A4BB-D7E4048E30F2
 :END:
-Migrated from ~straight~ to ~elpaca~.
+- Migrated from ~straight~ to ~elpaca~.
 
 ** key bindings
 :PROPERTIES:

@@ -15544,26 +15544,32 @@ CLOCK: [2021-05-18 Tue 18:26]--[2021-05-18 Tue 18:54] =>  0:28
 :PROPERTIES:
 :ID:       0373B505-A028-4537-871F-3CCC2E5EADB1
 :END:
+:LOGBOOK:
+CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
+:END:
 
 #+begin_src emacs-lisp :results silent
 (use-feature browse-url
   :config
-  (setq browse-url-browser-function 'browse-url-default-macosx-browser)
+  (setq browse-url-browser-function 'eww-browse-url)
   (setq browse-url-firefox-program "/Applications/Firefox.app/Contents/MacOS/firefox")
   (setq browse-url-chrome-program "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
-  (setq browse-url-handlers
-   '(("gnu\\.org"  . eww-browse-url)
-     ("protesilaos\\.com" . eww-browse-url)
-     ("orgmode\\.org" . eww-browse-url)
-     ("var/folders" . eww-browse-url) ; email
-     ;; My VPN settings apply to Firefox only (via split tunneling),
-     ;; so the websites requiring VPN access are listed below, and
-     ;; will be opened with this browser.
-     ;; [2022-10-30 Sun] Disabling until I configure split tunneling
-     ;; ("libgen" . browse-url-firefox)
-     ;; ("hathitrust\\.org" . browse-url-firefox)
-     ;; Use the default MacOS browser for all other websites
-     ("." . browse-url-default-macosx-browser)))
+  (let ((default 'browse-url-default-browser)
+        (firefox 'browse-url-firefox))
+    (dolist (regex '("doi\\.org"
+                     "effectivealtruism\\.org"
+                     "github\\.com"
+                     "gmail\\.com"
+                     "google\\.com"
+                     "grammarly\\.com"
+                     "imdb\\.com"
+                     "metaculus\\.com"
+                     "metaforecast\\.com"
+                     "youtube\\.com"))
+      (push (cons regex 'browse-url-default-browser) browse-url-handlers))
+    (dolist (regex '("economist\\.com"
+                     "ft\\.com"))
+      (push (cons regex 'browse-url-firefox) browse-url-handlers)))
 
   :general
   (mhtml-mode-map

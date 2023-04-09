@@ -191,6 +191,9 @@ defaults write com.apple.finder FXInfoPanesExpanded -dict \
 	Privileges -bool true
 echo 'Expand the following File Info panes: “General”, “Open with”, and “Sharing & Permissions”'
 
+defaults write com.apple.finder CreateDesktop -bool false;killall Finder;say icons hidden
+echo 'Hide icons for hard drives, servers, and removable media on the desktop'
+
 defaults write com.apple.dock mouse-over-hilite-stack -bool true
 echo 'Enable highlight hover effect for the grid view of a stack (Dock)'
 

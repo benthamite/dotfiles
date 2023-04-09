@@ -1811,9 +1811,23 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
           fancy-battery-mode-line
           " | "
           telega-mode-line-format
-          " | "
-          ;; (display-wttr-mode)
-          ))
+          " | "))
+
+  (defun ps/tab-bar-reset ()
+    "Remporary command to deal with the mysterious profliferation of clocks."
+    (interactive)
+    (setq global-mode-string
+          '(" "
+            (:eval (propertize display-time-string 'face 'ps/display-time))
+            " |  "
+            chemacs-profile-name
+            " | "
+            fancy-battery-mode-line
+            " | "
+            telega-mode-line-format
+            " | "))
+    (display-wttr-mode))
+
   (tab-bar-mode))
 #+end_src
 

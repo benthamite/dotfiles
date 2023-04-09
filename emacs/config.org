@@ -6964,17 +6964,15 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
   :demand t
   :config
   (setq help-window-select t)
+  (lossage-size 10000)
 
   (defun ps/describe-keymap-of-current-major-mode ()
     (interactive)
     (describe-keymap (current-local-map)))
 
   :general
-  ;; "<C-m>" 'describe mode
   ("C-A-k" 'describe-keymap
    "C-A-m" 'ps/describe-keymap-of-current-major-mode)
-  (help-mode-map
-   "o" 'ps/help-copy-symbol-name) ; currently not working
   (input-decode-map
    [?\C-m] [C-m]
    [?\C-i] [C-i]))

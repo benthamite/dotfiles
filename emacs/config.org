@@ -11645,6 +11645,7 @@ Pomodoro system:
 :ID:       2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-08 Sat 11:18]--[2023-04-08 Sat 11:32] =>  0:14
 CLOCK: [2023-03-09 Thu 12:35]--[2023-03-09 Thu 12:57] =>  0:22
 CLOCK: [2022-09-30 Fri 20:53]--[2022-09-30 Fri 21:21] =>  0:28
 CLOCK: [2022-06-28 Tue 20:12]--[2022-06-28 Tue 20:13] =>  0:01
@@ -11770,8 +11771,8 @@ SQL can be either the emacsql vector representation, or a string."
                                       ".org2blog.org"
                                       "wiki-notes.org" ; removing temporarily
                                       "feeds.org"
-                                      "conflicted copy"
-                                      "conflicted-copy"))
+                                      ".*conflicted copy.*"
+                                      ".*conflicted-copy.*"))
 
   ;; exclude headings in specific files and directories
   (setq org-roam-file-exclude-regexp

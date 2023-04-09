@@ -6978,20 +6978,6 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
    [?\C-i] [C-i]))
 #+end_src
 
-*** TODO [#7] Finish creating ps/help-copy-symbol-name command
-:PROPERTIES:
-:ID:       1B5C8C6A-8E8E-4ABF-9B61-64666617E240
-:Effort:   0:45
-:END:
-
-#+begin_src emacs-lisp :results silent :tangle no
-(defun ps/help-copy-symbol-name ()
-  "Get name of the symbol which the Help buffer discussses and push it to the kill ring."
-  (interactive)
-  (when (eq major-mode 'help-mode)
-    (kill-new (replace-regexp-in-string "\\(.*\\)\\( is .*\\)" "\\1" (buffer-string)))))
-#+end_src
-
 ** help-at-pt
 :PROPERTIES:
 :ID:       263F5A59-1B63-47BC-B77B-8165FBBE3E75

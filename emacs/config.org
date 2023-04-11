@@ -516,6 +516,7 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
     (load "./elpaca-autoloads")))
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
+(toggle-debug-on-error)
 #+end_src
 
 ** use-package
@@ -1766,27 +1767,27 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (ps/init-override-code-if-available
    :ps/doom-modeline
    '(
-  (setq doom-modeline-mu4e t)
-  (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
-  (setq doom-modeline-buffer-encoding nil)
-  (setq doom-modeline-irc t)
-  (setq doom-modeline-irc-buffers t)
-  (setq doom-modeline-github t)
-  (setq doom-modeline-github-interval (* 10 60))
-  (setq doom-modeline-buffer-file-name-style 'auto)
+     (setq doom-modeline-mu4e t)
+     (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
+     (setq doom-modeline-buffer-encoding nil)
+     (setq doom-modeline-irc t)
+     (setq doom-modeline-irc-buffers t)
+     (setq doom-modeline-github t)
+     (setq doom-modeline-github-interval (* 10 60))
+     (setq doom-modeline-buffer-file-name-style 'auto)
 
-  (doom-modeline-def-modeline 'main
-    '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
-    '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
+     (doom-modeline-def-modeline 'main
+       '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
+       '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
 
 
-  (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-                        (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-                        (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-                        (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-    (remove-hook (car hook-cons) (cdr hook-cons)))
+     (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
+                           (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+                           (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+                           (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+       (remove-hook (car hook-cons) (cdr hook-cons)))
 
-  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)))
+     (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))))
 #+end_src
 
 ** tab-bar
@@ -4897,7 +4898,7 @@ window depending on the number of present windows."
   '(
   (add-function :after after-focus-change-function
                 (lambda ()
-                  (set-frame-parameter nil 'fullscreen 'maximized))))
+                  (set-frame-parameter nil 'fullscreen 'maximized)))))
 
   :general
   ("H-S-SPC" 'other-frame))
@@ -9248,6 +9249,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 
 #+begin_src emacs-lisp :results silent
 (use-package org
+  :tag "release_9.5.5"
   :demand t
   :config
   (setq org-directory ps/dir-org) ; set org directory
@@ -14561,7 +14563,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
 /[[https://github.com/djcb/mu][mu4e]] is an an emacs-based e-mail client./
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/mu4e)
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/mu4e)
 (use-package mu4e
   :elpaca (:local-repo
              "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"

@@ -12650,62 +12650,6 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
       (when field
         (citar--get-value field entry))))
 
-  (defun ps/citar-search-library-genesis (key-entry)
-    "Search title of KEY-ENTRY on Library Genesis.
-
-With prefix, rebuild the cache before offering candidates."
-    (interactive (list (citar-select-ref
-                        :rebuild-cache current-prefix-arg)))
-    (let ((title (ps/citar--get-title (cdr key-entry))))
-      (if title
-          (browse-url (concat
-                       ps/library-genesis-prefix
-                       title
-                       ps/library-genesis-suffix))
-        (message "No link found for %s" (car key-entry)))))
-
-  (defun ps/citar-search-worldcat (key-entry)
-    "Search title of KEY-ENTRY on Worldcat.
-
-With prefix, rebuild the cache before offering candidates."
-    (interactive (list (citar-select-ref
-                        :rebuild-cache current-prefix-arg)))
-    (let ((title (ps/citar--get-title (cdr key-entry))))
-      (if title
-          (browse-url (concat
-                       ps/worldcat-prefix
-                       title
-                       ps/worldcat-suffix))
-        (message "No link found for %s" (car key-entry)))))
-
-  (defun ps/citar-search-internet-archive (key-entry)
-    "Search title of KEY-ENTRY on the Internet Archive.
-
-With prefix, rebuild the cache before offering candidates."
-    (interactive (list (citar-select-ref
-                        :rebuild-cache current-prefix-arg)))
-    (let ((title (ps/citar--get-title (cdr key-entry))))
-      (if title
-          (browse-url (concat
-                       ps/internet-archive-prefix
-                       title
-                       ps/internet-archive-suffix))
-        (message "No link found for %s" (car key-entry)))))
-
-  (defun ps/citar-search-amazon (key-entry)
-    "Search title of KEY-ENTRY on Amazon.
-
-With prefix, rebuild the cache before offering candidates."
-    (interactive (list (citar-select-ref
-                        :rebuild-cache current-prefix-arg)))
-    (let ((title (ps/citar--get-title (cdr key-entry))))
-      (if title
-          (browse-url (concat
-                       ps/amazon-prefix
-                       title
-                       ps/amazon-suffix))
-        (message "No link found for %s" (car key-entry)))))
-
   (defun ps/citar-open-in-ebib (citekey)
     "Open bibliographic entry associated with the CITEKEY in Ebib."
     (interactive (list (citar-select-ref)))
@@ -12713,16 +12657,31 @@ With prefix, rebuild the cache before offering candidates."
       (ebib))
     (ps/ebib-open-key citekey))
 
+  (defun ps/citar-ebib-download-dwim ()
+    "TODO: docstring"
+    (interactive)
+    (ps/citar-open-in-ebib)
+    (ps/ebib-download-dwim))
+
+  (defun ps/citar-ebib-search-dwim ()
+    "TODO: docstring"
+    (interactive)
+    (ps/citar-open-in-ebib)
+    (ps/ebib-search-dwim))
+
   (defun ps/citar-open-file-at-point ()
     "Launch citar with citekey associated with file at point."
     (interactive)
     (citar-open `(,(ps/get-stem-of-current-buffer))))
 
   :general
-  ("A-H-M-s-?" 'ps/citar-open-file-at-point)
+  ("H-/" 'citar-insert-citation
+   "A-H-M-s-?" 'ps/citar-open-file-at-point) ; i.e. H-S-/
   ((citar-map citar-citation-map)
    "c" 'embark-copy-as-kill
+   "d" 'ps/ebib-download-dwim
    "i" 'ps/citar-open-in-ebib
+   "s" 'ps/ebib-search-dwim
    "u" 'citar-open-links))
 #+end_src
 

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: yasnippet-add-new
+# key: yan
+# contributor: Pablo Stafforini
+# --
+yasnippet: add new snippet$1

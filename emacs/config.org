@@ -9220,9 +9220,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 /[[https://orgmode.org/][org-mode]] is a major mode for keeping notes, authoring documents, computational notebooks, literate programming, maintaining to-do lists, planning projects, and more./
 
 #+begin_src emacs-lisp :results silent
-(use-package org
-  :demand t
-  :config
   (setq org-directory ps/dir-org) ; set org directory
   (setq org-todo-keywords
         '((sequence "TODO(t)"
@@ -9663,7 +9660,7 @@ image."
   (telega-chat-mode-map
    "s-b" (lambda! (org-emphasize ?*))
    "s-i" (lambda! (org-emphasize ?/))
-   "s-e" (lambda! (org-emphasize ?~))))
+   "s-e" (lambda! (org-emphasize ?~)))
 #+end_src
 
 *** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
@@ -11090,7 +11087,7 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 :ID:       B1A25249-1E67-498D-8A68-0E4BDB3D0A2B
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-feature ol-bbdb
   :after org bbdb
   :after ol
@@ -14479,7 +14476,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
 /[[https://github.com/djcb/mu][mu4e]] is an an emacs-based e-mail client./
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/mu4e)
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package mu4e
   :elpaca (:local-repo
              "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
@@ -14850,7 +14847,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-feature mu4e-contrib
   :after mu4e
   :demand t)
@@ -14863,7 +14860,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 
 /[[https://github.com/iqbalansari/mu4e-alert][mu4e-alert]] supports desktop notifications and modeline display for mu4e./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package mu4e-alert
   :after mu4e
   :demand t
@@ -14888,7 +14885,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
 /[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package org-msg
   :after org mu4e
   :defer 3
@@ -17127,7 +17124,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 [2023-04-09 Sun 02:20] Installed with ~package-install~, since I wasn't able to build it.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package bbdb
   :demand t
   :elpaca (:local-repo "/Users/pablostafforini/.config/emacs-profiles/develop/elpa/bbdb-3.2.2.2"
@@ -17287,7 +17284,7 @@ then the window will be split horizontally rather than vertically."
 
 /[[https://github.com/tohojo/bbdb-vcard][bbdb-vcard]] supports import and export for BBDB./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package bbdb-vcard
   :after bbdb
   :config

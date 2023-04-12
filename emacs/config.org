@@ -382,8 +382,8 @@ The contents of this code block are tangled to the early-init.el file.
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 
-(add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bar
-(add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
+;; (add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bar
+;; (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
 
 ;; github.com/emacscollective/no-littering#native-compilation-cache
 (when (fboundp 'startup-redirect-eln-cache)
@@ -1619,7 +1619,11 @@ installed."
            (add-hook 'ns-system-appearance-change-functions
                      #'ps/modus-themes-load-theme-emacs-plus))))
 
-  (ps/modus-themes-load-theme-conditionally)
+  (ps/init-override-code-if-available
+   :ps/modus-themes-load
+   '(
+     (ps/modus-themes-load-theme-conditionally)
+     ))
 
   (setq modus-themes-common-palette-overrides
         `(
@@ -4847,7 +4851,11 @@ window depending on the number of present windows."
     (interactive)
     (ps/window-buffer-move (when (> (count-windows) 2) (winum-get-window-by-number 2))))
 
+  (ps/init-override-code-if-available
+   :ps/window-split
+   '(
      (add-hook 'elpaca-after-init-hook #'ps/window-split-if-unsplit)
+     ))
 
   :general
   ("C-H-0" 'ps/switch-to-last-window
@@ -4882,23 +4890,23 @@ window depending on the number of present windows."
 :ID:       3ADE4889-B4BE-4733-ABE3-BECCD4F9A73D
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent 
 (use-feature frame
   :demand t
   :config
   (blink-cursor-mode)
   (setq window-divider-default-right-width 1)
   (window-divider-mode)
- 
+  
   ;; When returning focus to Emacs after browsing other macOS windows,
   ;; the frame is sometimes not fully maximized. This advice makes
   ;; Emacs maximize the frame every time focus is regained.
   (ps/init-override-code-if-available
    :ps/frame-maximize
-  '(
-  (add-function :after after-focus-change-function
-                (lambda ()
-                  (set-frame-parameter nil 'fullscreen 'maximized)))))
+   '(
+     (add-function :after after-focus-change-function
+                   (lambda ()
+                     (set-frame-parameter nil 'fullscreen 'maximized)))))
 
   :general
   ("H-S-SPC" 'other-frame))
@@ -9249,7 +9257,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 
 #+begin_src emacs-lisp :results silent
 (use-package org
-  :tag "release_9.5.5"
   :demand t
   :config
   (setq org-directory ps/dir-org) ; set org directory
@@ -11119,7 +11126,7 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 :ID:       B1A25249-1E67-498D-8A68-0E4BDB3D0A2B
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/bbdb)
 (use-feature ol-bbdb
   :after org bbdb
   :after ol
@@ -17222,7 +17229,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 [2023-04-09 Sun 02:20] Installed with ~package-install~, since I wasn't able to build it.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/bbdb)
 (use-package bbdb
   :demand t
   :elpaca (:local-repo "/Users/pablostafforini/.config/emacs-profiles/develop/elpa/bbdb-3.2.2.2"
@@ -17382,7 +17389,7 @@ then the window will be split horizontally rather than vertically."
 
 /[[https://github.com/tohojo/bbdb-vcard][bbdb-vcard]] supports import and export for BBDB./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/bbdb)
 (use-package bbdb-vcard
   :after bbdb
   :config
@@ -17448,7 +17455,7 @@ then the window will be split horizontally rather than vertically."
 :ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/tlon)
 (use-package tlon
   :elpaca (tlon
            :host github

@@ -1760,18 +1760,18 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
      (setq doom-modeline-github-interval (* 10 60))
      (setq doom-modeline-buffer-file-name-style 'auto)
 
-  (doom-modeline-def-modeline 'main
-    '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
-    '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
+     (doom-modeline-def-modeline 'main
+       '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
+       '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
 
 
-  (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-                        (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-                        (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-                        (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-    (remove-hook (car hook-cons) (cdr hook-cons)))
+     (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
+                           (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+                           (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+                           (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+       (remove-hook (car hook-cons) (cdr hook-cons)))
 
-  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
+     (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))))
 #+end_src
 
 ** tab-bar
@@ -4887,14 +4887,14 @@ window depending on the number of present windows."
 :ID:       3ADE4889-B4BE-4733-ABE3-BECCD4F9A73D
 :END:
 
-#+begin_src emacs-lisp :results silent 
+#+begin_src emacs-lisp :results silent
 (use-feature frame
   :demand t
   :config
   (blink-cursor-mode)
   (setq window-divider-default-right-width 1)
   (window-divider-mode)
-  
+
   ;; When returning focus to Emacs after browsing other macOS windows,
   ;; the frame is sometimes not fully maximized. This advice makes
   ;; Emacs maximize the frame every time focus is regained.

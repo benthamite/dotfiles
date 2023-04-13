@@ -499,6 +499,7 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
     (load "./elpaca-autoloads")))
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
+;; (toggle-debug-on-error) ; uncomment when debugging
 #+end_src
 
 ** use-package

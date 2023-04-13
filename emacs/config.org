@@ -16553,17 +16553,6 @@ template."
   :defer 15)
 #+end_src
 
-** request-deferred
-:PROPERTIES:
-:ID:       1C6858A1-5E3C-4061-83BB-74B0523C670D
-:END:
-
-#+begin_src emacs-lisp
-(use-feature request-deferred
-  :after request deferred
-  :demand t)
-#+end_src
-
 ** graphql-mode
 :PROPERTIES:
 :ID:       4B9A26D9-EA9B-420B-A8B2-060AAF19D4E4
@@ -17485,16 +17474,16 @@ then the window will be split horizontally rather than vertically."
    "A-s-k" 'ps/tlon-eawiki-insert-url))
 #+end_src
 
-** new-init
+** tlon-init
 :PROPERTIES:
 :ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
 :END:
 
-#+begin_src emacs-lisp :tangle no
-(use-package new-init
-  :elpaca (new-init
+#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/tlon-init)
+(use-package tlon-init
+  :elpaca (tlon-init
            :host github
-           :repo "tlon-team/new-init")
+           :repo "tlon-team/tlon-init")
   :demand t)
 #+end_src
 

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-channel-emacs
+# key: tce
+# contributor: Pablo Stafforini
+# --
+[Tlön: Emacs] $1

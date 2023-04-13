@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-channel-docs
+# key: tcd
+# contributor: Pablo Stafforini
+# --
+[Tlön: Docs] $1

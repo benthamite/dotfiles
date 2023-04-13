@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-bae-glossary
+# key: tbg
+# contributor: Pablo Stafforini
+# --
+"$1","$2","EN","ES"

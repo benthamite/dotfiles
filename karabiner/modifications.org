@@ -1255,7 +1255,7 @@ CLOCK: [2021-06-22 Tue 11:28]--[2021-06-22 Tue 11:41] =>  0:13
          [:n :!QCTn :emacs]
          [:o :!QCTo :emacs]
          [:p :!QCTp :emacs]
-         [:q :!QCTq :emacs]
+         [:q :!QCOW9 :emacs] ; QCOq triggers ^⌘Q (lock screen)
          [:r :!QCTr :emacs]
          [:s :!QCTs :emacs]
          [:t :!QCTt :emacs]

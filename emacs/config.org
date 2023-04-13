@@ -17415,7 +17415,7 @@ And finally, the section you've all been waiting for.
 
   :general
   (markdown-mode-map
-   "A-s-k" 'ps/tlon-eawiki-insert-url))
+   "s-u" 'ps/tlon-eawiki-insert-url))
 #+end_src
 
 ** tlon-init

@@ -1,6 +1,3 @@
-:PROPERTIES:
-:ID:       7D6C2955-30C2-4FBD-B2BB-2C42E86B0C2A
-:END:
 #+TITLE:Pablo's Emacs config
 #+AUTHOR: Pablo Stafforini
 #+PROPERTY: header-args :tangle (print tlon-init-user-init-path)

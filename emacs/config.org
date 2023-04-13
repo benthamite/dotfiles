@@ -15742,14 +15742,7 @@ To be used by `eww-after-render-hook'."
     (let ((name (if (eq "" (plist-get eww-data :title))
                     (plist-get eww-data :url)
                   (plist-get eww-data :title))))
-      (rename-buffer (format "%s" (truncate-string-to-width name 14)) t)))
-
-  (defun ps/org-open-at-point-with-eww ()
-    "Open org link at point with eww."
-    (interactive)
-    (let ((browse-url-handlers nil)
-          (browse-url-browser-function #'eww-browse-url))
-      (org-open-at-point)))
+      (rename-buffer name)))
 
   (defun ps/url-to-pdf (url)
     ;; TODO: Default to eww buffer or kill-ring if content is URL.

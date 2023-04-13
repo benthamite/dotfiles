@@ -1,6 +1,9 @@
+:PROPERTIES:
+:ID:       7D6C2955-30C2-4FBD-B2BB-2C42E86B0C2A
+:END:
 #+TITLE:Pablo's Emacs config
 #+AUTHOR: Pablo Stafforini
-#+PROPERTY: header-args :tangle (print ps/init-user-init-path)
+#+PROPERTY: header-args :tangle (print tlon-init-user-init-path)
 :PROPERTIES:
 :TOC:      ignore
 :END:
@@ -358,7 +361,7 @@ Some useful config files:
 
 The contents of this code block are tangled to the early-init.el file.
 
-#+begin_src emacs-lisp :tangle (print ps/init-early-init-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-early-init-path)
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 
@@ -615,7 +618,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 :ID:       3411777E-E554-4EF3-9389-63242D4F3072
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/ns-win)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/ns-win)
 (use-feature ns-win
   :demand t
   :config
@@ -1293,7 +1296,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 :ID:       8514378A-0BA2-4A8E-971F-10C07ED4D38A
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/server)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/server)
 (use-feature server
   :demand t
   :config
@@ -1385,7 +1388,7 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 
 /[[https://gitlab.com/jabranham/mixed-pitch][mixed-pitch]] allows mixing fixed-pitch and variable-pitch fonts./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/mixed-pitch)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mixed-pitch)
 (use-package mixed-pitch
   :demand t
   :config
@@ -1528,7 +1531,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :ID:       D75F0818-F8A2-45F1-8EB5-4548BCDE86BE
 :END:
 
-#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/theme-loaddefs)
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/theme-loaddefs)
 (use-feature emacs
   :demand t
   :config
@@ -1773,7 +1776,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle  :tangle (ps/init-get-tangle-flag :ps/tab-bar)
+#+begin_src emacs-lisp :results silent :tangle  :tangle (tlon-init-get-tangle-flag :ps/tab-bar)
 (use-feature tab-bar
   ;; :after wttr-mode
   :demand t
@@ -1826,7 +1829,7 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 
 /[[https://github.com/emacsorphanage/fancy-battery][fancy-battery]] displays battery information in the modeline./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/tab-bar)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/tab-bar)
 (use-package fancy-battery
   :defer 10
   :config
@@ -3002,7 +3005,7 @@ CLOCK: [2021-03-27 Sat 18:01]--[2021-03-27 Sat 19:53] =>  1:52
 CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/outline)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/outline)
 (use-feature outline
   :demand t
 
@@ -5396,10 +5399,10 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 [2023-03-01 Wed 10:54] Check [[https://github.com/dedenbangkit/.emacs.d/blob/2cf69eb102af5a5cab7ec1d65af77e997082e17a/custom/main.el#L34][this config]] in case it helps me figure out how to avoid getting prompted for a password so frequently.
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org-gcal)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-gcal)
 (use-package org-gcal
   :elpaca (org-gcal :type git :host github :repo "kidd/org-gcal.el")
-  :after auth-source-pass org request-deferred
+  :after auth-source-pass org
   :defer 15
 
   :init
@@ -5788,7 +5791,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 
 /[[https://github.com/josegpt/display-wttr][display-wttr]] displays weather information in the modeline (or tab-bar)./
 
-#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/tab-bar)
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/tab-bar)
 (use-package display-wttr
   :defer 10
   :config
@@ -5915,7 +5918,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 :ID:       438AD8A8-0F4F-4A1D-9BC9-110906944509
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/remember)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/remember)
 (use-feature remember
   :demand t
   :init
@@ -6113,7 +6116,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 /[[https://github.com/ryuslash/git-auto-commit-mode][git-auto-commit-mode]] allows for committing and pushing automatically after each save./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/git-auto-commit-mode)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/git-auto-commit-mode)
 (use-package git-auto-commit-mode
   :config
   (setq-default gac-automatically-push-p nil)
@@ -6652,7 +6655,7 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
 
 /[[https://gitlab.com/OlMon/consult-flyspell][consult-flyspell]] integrates flyspell with consult./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-package consult-flyspell
   :after consult flyspell)
 #+end_src
@@ -6835,7 +6838,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 /[[https://codeberg.org/akib/emacs-corfu-terminal][corfu-terminal]] enables corfu popups on terminal./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/corfu-terminal)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/corfu-terminal)
 (use-package corfu-terminal
   :after corfu
   :defer 30
@@ -7329,7 +7332,7 @@ CLOCK: [2021-08-03 Tue 10:05]--[2021-08-03 Tue 10:13] =>  0:08
 CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-feature ispell
   :defer 10
   :config
@@ -7487,7 +7490,7 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
 
 /[[https://github.com/rolandwalker/flyspell-lazy][flyspell-lazy]] improves Emacs flyspell responsiveness using idle timers./
 
-#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-package flyspell-lazy
   :after flyspell
   :demand t
@@ -7502,7 +7505,7 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
 
 /[[https://github.com/d12frosted/flyspell-correct][flyspell-correct]] provides distraction-free words correction with flyspell via selected interface./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-package flyspell-correct
   :demand t
   :after flyspell)
@@ -7517,7 +7520,7 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
 
 This package is required by lsp-grammarly.
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/keytar)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/keytar)
 (use-package keytar
   :defer 10)
 #+end_src
@@ -7532,7 +7535,7 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
 
 /[[https://github.com/emacs-grammarly/grammarly][grammarly]] is an API interface for [[https://www.grammarly.com/][Grammarly]]./
 
-#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-package grammarly
   :defer 25
   :config
@@ -7569,7 +7572,7 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 
 [2022-10-06 Thu 23:35] At the moment, the premium version isn't working. The package maintainers are migrating to to a new server, which may resolve the issues I was having authenticating my account. You can check whether the premium account is being used by evaluating ~(grammarly-premium-p)~.
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-package lsp-grammarly
   :after lsp-mode keytar grammarly
   :demand t
@@ -7609,7 +7612,7 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 
 /[[https://github.com/junjizhi/aide.el][aide]] is an Emacs front end for GPT APIs like OpenAI./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/aide)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/aide)
 (use-package aide
   :elpaca (aide
              :host github
@@ -8319,7 +8322,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
 /[[https://github.com/vedang/pdf-tools][pdf-tools]] is a support library for PDF files./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/pdf-tools)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/pdf-tools)
 (use-package pdf-tools
   :defer 10
   :mode ("\\.pdf\\'" . pdf-view-mode)
@@ -8843,7 +8846,7 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
 
 /[[https://github.com/zerolfx/copilot.el][copilot]] is an unofficial Copilot plugin for Emacs./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/copilot)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/copilot)
 (use-package copilot
   :elpaca (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
   :demand t
@@ -11238,7 +11241,9 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
                       (cons "p" 'org-babel-remove-result-one-or-many)))
     (add-to-list 'org-babel-key-bindings cons))
 
-  (define-key org-mode-map (kbd "s-b") #'ps/init-build))
+  :general
+  (org-mode-map
+   "s-b" 'tlon-init-build))
 #+end_src
 
 ** org-src
@@ -11428,7 +11433,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 /[[https://github.com/org2blog/org2blog][org2blog]] lets you blog from Org mode to WordPress./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org2blog)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org2blog)
 (use-package org2blog
   :after auth-source-pass
   :config
@@ -11678,7 +11683,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
 /[[https://github.com/org-roam/][org-roam]] is a Roam replica with org-mode./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org-roam)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-roam)
 (use-package org-roam
   :after org emacsql
   :demand t
@@ -11933,7 +11938,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
 
 /[[https://github.com/org-roam/org-roam-ui][org-roam-ui]] is a graphical frontend for exploring org-roam./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org-roam)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-roam)
 (use-package org-roam-ui
   :elpaca
   (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
@@ -14479,12 +14484,12 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
 /[[https://github.com/djcb/mu][mu4e]] is an an emacs-based e-mail client./
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/mu4e)
+#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-package mu4e
   :elpaca (:local-repo
-             "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
-             :pre-build
-             ())
+           "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
+           :pre-build
+           ())
   :init
   (setq ps/mu4e-inbox-folder "/Inbox")
   (setq ps/mu4e-daily-folder "/Daily")
@@ -15410,7 +15415,7 @@ CLOCK: [2021-06-02 Wed 12:02]--[2021-06-02 Wed 12:39] =>  0:37
 
 /[[https://www.gnu.org/software/emacs/manual/html_mono/erc.html][erc]] is an IRC client for Emacs./
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/erc)
+#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :ps/erc)
 (use-feature erc
   :after auth-source-pass
   :config
@@ -16140,11 +16145,11 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
 
 /[[https://github.com/hayamiz/twittering-mode][twittering-mode]] is a Twitter client for Emacs./
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/twittering-mode)
-(defalias 'epa--decode-coding-string 'decode-coding-string) ; github.com/sfromm/emacs.d#twitter
+#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :ps/twittering-mode)
 (use-package twittering-mode
   :defer t
   :config
+  (defalias 'epa--decode-coding-string 'decode-coding-string) ; github.com/sfromm/emacs.d#twitter
   (setq twittering-use-master-password t)
   (setq twittering-icon-mode t)
   (setq twittering-use-icon-storage t)
@@ -16645,7 +16650,7 @@ CLOCK: [2022-06-22 Wed 14:50]--[2022-06-22 Wed 15:10] =>  0:20
 
 [2022-06-22 Wed 15:07] I can't make this work. Maybe related to the [[id:86EE7A94-E470-45DB-B0A5-0AE717A15353][dbus problem]]?
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/espotify)
+#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :ps/espotify)
 (use-package espotify
   :disabled
   :after auth-source-pass
@@ -17079,7 +17084,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
 /midnight runs custom processes every night./
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/midnight)
+#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :ps/midnight)
 (use-feature midnight
   :defer 600
   :config

@@ -2362,7 +2362,7 @@ CLOCK: [2021-05-29 Sat 21:12]--[2021-05-29 Sat 21:28] =>  0:16
    "C-H-M-s-A-r" 'ps/copy-word
    "C-H-M-s-A-q" 'ps/backward-copy-word
    "A-H-C-r" 'ps/delete-whole-word
-   "A-H-C-q" 'ps/copy-whole-word
+   "A-H-M-s-9" 'ps/copy-whole-word ; `.-q'
    "A-H-C-u" 'ps/kill-whole-word
    "A-H-M-r" 'transpose-words
    "A-H-M-q" 'ps/transpose-words-backward))

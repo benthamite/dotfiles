@@ -9731,7 +9731,6 @@ image."
    "s-v" 'ps/org-paste-html
    "s-A-v" 'ps/org-paste-image
    "s-y" 'org-evaluate-time-range
-   "s-A-y" 'ps/org-open-at-point-with-eww
    "s-z" 'org-edit-special
    "s-A-z" 'ps/org-export-to-ea-wiki
    "s-," 'org-priority

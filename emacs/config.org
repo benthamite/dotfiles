@@ -6095,7 +6095,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 /[[https://github.com/magit/forge][forge]] let's one work with git forges directly from magit./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/forge)
 (use-package forge
   :after magit ghub emacsql
   :demand t

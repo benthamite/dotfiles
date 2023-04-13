@@ -16944,29 +16944,6 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
 :ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
 :END:
 
-#+begin_src emacs-lisp :results silent
-;; github.com/Gleek/emacs.d/blob/761dad7e97accd6d1537a201c5d447a6be1d155c/core/core-util.el#L31
-(defun ps/random-alnum (&optional length)
-  (let ((times (or length 5))
-        (random ""))
-    (setq-local random "")
-    (dotimes (_ times)
-      (setq random (concat random (let* ((alnum "abcdefghijklmnopqrstuvwxyz0123456789")
-             (i (% (abs (random)) (length alnum))))
-                       (substring alnum i (1+ i))))))
-    random))
-
-(defun ps/string-match-in-list-p (string list-of-strings)
-  ""
-  (catch 'tag
-    (mapc
-     (lambda (-x)
-       (when (string-match (regexp-quote string) -x )
-         (throw 'tag -x)))
-     list-of-strings)
-    nil))
-#+end_src
-
 ** calc
 :PROPERTIES:
 :ID:       50FAD2F3-E501-408E-A9A2-8358FAA87C1C

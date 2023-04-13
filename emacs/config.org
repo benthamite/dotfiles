@@ -3972,7 +3972,21 @@ process in these cases."
       (diff-buffer-with-file (current-buffer))))
 
   (advice-add 'recover-this-file :after #'ps/diff-buffer-with-file)
-  (advice-add 'ps/recover-all-files :after #'ps/diff-buffer-with-file)
+
+  (defun ps/eject-external-hard-drive ()
+    "Eject external hard drive. Assumes only one external hard drive
+is connected."
+    (interactive)
+    (let ((list-external
+           (shell-command-to-string
+            "diskutil list external")))
+      (string-match
+       "/dev/disk\\([[:digit:]]\\) (external, physical):"
+       list-external)
+      (shell-command
+       (format
+        "diskutil eject disk%s"
+        (match-string 1 list-external)))))
 
   ;; disabling until we diagnose issues
   ;; (setq auto-save-visited-predicate

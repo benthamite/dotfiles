@@ -7970,14 +7970,30 @@ insert italic delimiters and place the point in between them."
   (setq markdown-disable-tooltip-prompt t)
   (setq markdown-italic-underscore 'double)
 
-  (defun ps/markdown-paste-from-org ()
-    "Take the contents of the system clipboard and use `pandoc' to
-convert it from org-mode to markdown."
+  (defun ps/markdown-org-paste-dwim ()
+    "Convert between `org-mode' and `markdown' based on current mode."
     (interactive)
     (let* ((clipboard (if (eq system-type 'darwin)
                           "pbv public.utf8-plain-text"
                         "xclip -out -selection 'clipboard' -t text/html"))
-           (pandoc (concat "pandoc --wrap=none -f org -t markdown"))
+           (source (if (eq major-mode 'org-mode) "markdown" "org"))
+           (target (if (eq source 'org-mode) "markdown" "org"))
+           (pandoc (concat "pandoc --wrap=none -f " source " -t " target))
+           (cmd (concat clipboard " | " pandoc))
+           (output (shell-command-to-string cmd))
+           ;; Not sure why Pandoc adds these double slashes; we remove them
+           (output (replace-regexp-in-string "^\\\\\\\\$" "" output))
+           (text (replace-regexp-in-string "= " "= " output)))
+      (kill-new text)
+      (yank)))
+
+  (defun ps/org-paste-from-markdown ()
+    "Convert clipboard contents from `markdown' to `org-mode'."
+    (interactive)
+    (let* ((clipboard (if (eq system-type 'darwin)
+                          "pbv public.utf8-plain-text"
+                        "xclip -out -selection 'clipboard' -t text/html"))
+           (pandoc (concat "pandoc --wrap=none -f markdown -t org"))
            (cmd (concat clipboard " | " pandoc))
            (output (shell-command-to-string cmd))
            ;; Not sure why Pandoc adds these double slashes; we remove them

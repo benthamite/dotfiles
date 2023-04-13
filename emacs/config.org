@@ -8600,6 +8600,9 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
   :demand t
   :config
   (global-prettify-symbols-mode)
+  (add-hook 'prog-mode-hook 'outline-minor-mode)
+  (add-hook 'prog-mode-hook 'hs-minor-mode)
+
   :general
   ("A-H-v" 'set-variable
    "M-d" 'toggle-debug-on-error

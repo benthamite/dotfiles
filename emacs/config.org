@@ -15581,26 +15581,57 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
   (setq browse-url-chrome-program "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
   (let ((default 'browse-url-default-browser)
         (firefox 'browse-url-firefox))
-    (dolist (regex '("doi\\.org"
+    ;; these are websites that use JS and have to be browsed
+    ;; externally. there are many sites I hardly ever use, but the
+    ;; list aspires to be exhaustive rather than representative of
+    ;; my browsing habits.
+    (dolist (regex '("airbnb\\.com"
+                     "airtable\\.com"
+                     "amazon\\."
+                     "archive\\.org"
+                     "beyondpricing\\.com"
+                     "connectedpapers\\.com"
+                     "doi\\.org"
                      "effectivealtruism\\.org"
+                     "facebook\\.com"
                      "github\\.com"
                      "gmail\\.com"
-                     "google\\.com"
+                     "goodreads\\.com"
+                     "google\\."
                      "grammarly\\.com"
+                     "hathitrust\\.org"
                      "imdb\\.com"
+                     "interactivebrokers\\.co"
+                     "libgen\\."
+                     "utoronto\\.ca"
+                     "worldcat\\.org"
+                     "mercadolibre\\."
                      "metaculus\\.com"
                      "metaforecast\\.com"
-                     "youtube\\.com"))
+                     "paxful\\.com"
+                     "rescuetime\\.com"
+                     "squarespace\\.com"
+                     "teatrocolon\\.com\\.ar"
+                     "twitter\\.com"
+                     "youtu\\.be"
+                     "youtube\\.com"
+                     "zoom\\.us"))
       (push (cons regex 'browse-url-default-browser) browse-url-handlers))
     (dolist (regex '("economist\\.com"
                      "ft\\.com"))
       (push (cons regex 'browse-url-firefox) browse-url-handlers)))
 
+  (defun ps/browse-url-of-dired-file-externally ()
+    "In Dired, open the file at point in an external browser."
+    (interactive)
+    (let ((browse-url-browser-function 'browse-url-default-browser))
+      (browse-url-of-dired-file)))
+
   :general
   (mhtml-mode-map
    "s-x" 'browse-url-of-buffer)
   (dired-mode-map
-   "e" 'browse-url-of-dired-file))
+   "e" 'ps/browse-url-of-dired-file-externally))
 #+end_src
 
 ** shr

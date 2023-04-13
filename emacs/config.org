@@ -17418,16 +17418,16 @@ And finally, the section you've all been waiting for.
    "A-s-k" 'ps/tlon-eawiki-insert-url))
 #+end_src
 
-** new-init
+** tlon-init
 :PROPERTIES:
 :ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
 :END:
 
-#+begin_src emacs-lisp :tangle no
-(use-package new-init
-  :elpaca (new-init
+#+begin_src emacs-lisp
+(use-package tlon-init
+  :elpaca (tlon-init
            :host github
-           :repo "tlon-team/new-init")
+           :repo "tlon-team/tlon-init")
   :demand t)
 #+end_src
 

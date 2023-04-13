@@ -94,7 +94,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#multimedia][multimedia]]
 - [[#passwords][passwords]]
 - [[#misc][misc]]
-- [[#personal-projects][personal projects]]
+- [[#personal][personal]]
 - [[#variables][variables]]
 :END:
 
@@ -153,26 +153,6 @@ CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
 CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
-
-** version history
-:PROPERTIES:
-:ID:       720FF947-7E4D-4755-B365-B19AC0DBB4D0
-:END:
-
-*** Version 3
-:PROPERTIES:
-:ID:       DEE239CF-BC77-4888-AD69-B33D32A7DB1A
-:END:
-- move ~tlon~ functions to separate "package", handled by ~elpaca~.
-- use ~eww~ by default.
-- add ~flymake~.
-- set precedence of various packages explicitly so that ~elpaca~ doesn't throw errors.
-
-*** Version 2
-:PROPERTIES:
-:ID:       0BCC3A55-0C91-413C-A4BB-D7E4048E30F2
-:END:
-- Migrated from ~straight~ to ~elpaca~.
 
 ** key bindings
 :PROPERTIES:
@@ -9256,9 +9236,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 /[[https://orgmode.org/][org-mode]] is a major mode for keeping notes, authoring documents, computational notebooks, literate programming, maintaining to-do lists, planning projects, and more./
 
 #+begin_src emacs-lisp :results silent
-(use-package org
-  :demand t
-  :config
   (setq org-directory ps/dir-org) ; set org directory
   (setq org-todo-keywords
         '((sequence "TODO(t)"
@@ -9699,7 +9676,7 @@ image."
   (telega-chat-mode-map
    "s-b" (lambda! (org-emphasize ?*))
    "s-i" (lambda! (org-emphasize ?/))
-   "s-e" (lambda! (org-emphasize ?~))))
+   "s-e" (lambda! (org-emphasize ?~)))
 #+end_src
 
 *** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
@@ -12686,62 +12663,6 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
       (when field
         (citar--get-value field entry))))
 
-  (defun ps/citar-search-library-genesis (key-entry)
-    "Search title of KEY-ENTRY on Library Genesis.
-
-With prefix, rebuild the cache before offering candidates."
-    (interactive (list (citar-select-ref
-                        :rebuild-cache current-prefix-arg)))
-    (let ((title (ps/citar--get-title (cdr key-entry))))
-      (if title
-          (browse-url (concat
-                       ps/library-genesis-prefix
-                       title
-                       ps/library-genesis-suffix))
-        (message "No link found for %s" (car key-entry)))))
-
-  (defun ps/citar-search-worldcat (key-entry)
-    "Search title of KEY-ENTRY on Worldcat.
-
-With prefix, rebuild the cache before offering candidates."
-    (interactive (list (citar-select-ref
-                        :rebuild-cache current-prefix-arg)))
-    (let ((title (ps/citar--get-title (cdr key-entry))))
-      (if title
-          (browse-url (concat
-                       ps/worldcat-prefix
-                       title
-                       ps/worldcat-suffix))
-        (message "No link found for %s" (car key-entry)))))
-
-  (defun ps/citar-search-internet-archive (key-entry)
-    "Search title of KEY-ENTRY on the Internet Archive.
-
-With prefix, rebuild the cache before offering candidates."
-    (interactive (list (citar-select-ref
-                        :rebuild-cache current-prefix-arg)))
-    (let ((title (ps/citar--get-title (cdr key-entry))))
-      (if title
-          (browse-url (concat
-                       ps/internet-archive-prefix
-                       title
-                       ps/internet-archive-suffix))
-        (message "No link found for %s" (car key-entry)))))
-
-  (defun ps/citar-search-amazon (key-entry)
-    "Search title of KEY-ENTRY on Amazon.
-
-With prefix, rebuild the cache before offering candidates."
-    (interactive (list (citar-select-ref
-                        :rebuild-cache current-prefix-arg)))
-    (let ((title (ps/citar--get-title (cdr key-entry))))
-      (if title
-          (browse-url (concat
-                       ps/amazon-prefix
-                       title
-                       ps/amazon-suffix))
-        (message "No link found for %s" (car key-entry)))))
-
   (defun ps/citar-open-in-ebib (citekey)
     "Open bibliographic entry associated with the CITEKEY in Ebib."
     (interactive (list (citar-select-ref)))
@@ -12749,16 +12670,31 @@ With prefix, rebuild the cache before offering candidates."
       (ebib))
     (ps/ebib-open-key citekey))
 
+  (defun ps/citar-ebib-download-dwim ()
+    "TODO: docstring"
+    (interactive)
+    (ps/citar-open-in-ebib)
+    (ps/ebib-download-dwim))
+
+  (defun ps/citar-ebib-search-dwim ()
+    "TODO: docstring"
+    (interactive)
+    (ps/citar-open-in-ebib)
+    (ps/ebib-search-dwim))
+
   (defun ps/citar-open-file-at-point ()
     "Launch citar with citekey associated with file at point."
     (interactive)
     (citar-open `(,(ps/get-stem-of-current-buffer))))
 
   :general
-  ("A-H-M-s-?" 'ps/citar-open-file-at-point)
+  ("H-/" 'citar-insert-citation
+   "A-H-M-s-?" 'ps/citar-open-file-at-point) ; i.e. H-S-/
   ((citar-map citar-citation-map)
    "c" 'embark-copy-as-kill
+   "d" 'ps/ebib-download-dwim
    "i" 'ps/citar-open-in-ebib
+   "s" 'ps/ebib-search-dwim
    "u" 'citar-open-links))
 #+end_src
 
@@ -12912,6 +12848,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-11 Tue 00:58]--[2023-04-11 Tue 01:55] =>  0:57
 CLOCK: [2023-03-27 Mon 21:29]--[2023-03-27 Mon 21:45] =>  0:16
 CLOCK: [2023-03-27 Mon 20:49]--[2023-03-27 Mon 21:14] =>  0:25
 CLOCK: [2023-03-22 Wed 13:55]--[2023-03-22 Wed 14:00] =>  0:05
@@ -13122,7 +13059,7 @@ confirmation."
        (beep))))
 
   ;; these two functions, together with the associated timers, detect
-  ;; when a database has changes and save its contents to the corresponding bib
+  ;; when a database has changed and save its contents to the corresponding bib
   ;; file
   (defun ps/ebib-auto-save-new-db ()
     "docstring"
@@ -13247,7 +13184,7 @@ error."
                   (read-string "Enter ISBN or DOI: "))))
       ;; TODO: Add support for arXiv
       (cond ((ps/doi-utils-doi-p id)
-             (ps/ebib-download-doi id))
+             (ps/ebib-search-article nil id))
             ((ps/ebib-isbn-p id)
              (ps/ebib-search-book nil id))
             (t
@@ -13464,25 +13401,6 @@ different users, as long as they have the same folder structure."
     "docstring"
     (interactive)
     (switch-to-buffer-other-window " 2:new.bib"))
-
-  ;; requires SciDownl
-  ;; https://github.com/Tishacy/SciDownl
-  (defun ps/ebib-download-doi (&optional doi)
-    "Download DOI from Sci-Hub. If DOI is not supplied, obtain it from
-the Ebib entry at point."
-    (interactive)
-    (let ((doi (or doi
-                   (ebib--execute-when
-                     (entries
-                      (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
-                     (default
-                      (beep)))))
-          (default-directory ps/dir-downloads))
-      (unless doi
-        (error "[Ebib] No DOI found in doi field"))
-      (message "Trying to download file...")
-      (async-shell-command
-       (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi))))
 
   (defun ps/ebib--extension-directories (extension)
     "Return directory associated with EXTENSION."
@@ -13770,6 +13688,25 @@ If not invoked from `ebib', prompt for search query."
     (interactive)
     (ps/ebib-search-multi field search-query ps/ebib-download-book))
 
+  ;; requires SciDownl
+  ;; https://github.com/Tishacy/SciDownl
+  (defun ps/ebib-download-doi (&optional doi)
+    "Download DOI from Sci-Hub. If DOI is not supplied, obtain it from
+the Ebib entry at point."
+    (interactive)
+    (let ((doi (or doi
+                   (ebib--execute-when
+                     (entries
+                      (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+                     (default
+                      (beep)))))
+          (default-directory ps/dir-downloads))
+      (unless doi
+        (error "[Ebib] No DOI found in doi field"))
+      (message "Trying to download file...")
+      (async-shell-command
+       (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi))))
+
   (defun ps/ebib-search-article (&optional field search-query)
     "The list of search engines is specified by the variable
 `ps/ebib-search-article'."
@@ -13798,13 +13735,6 @@ If not invoked from `ebib', prompt for search query."
             (user-error "`title' field is empty!"))
         (ps/ebib-download-book "title")))
 
-  (defun ps/ebib-search-book-by-isbn ()
-    "docstring"
-    (interactive)
-    (if (ebib-get-field-value "isbn" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (ps/ebib-search-book "isbn")
-      (user-error "`ISBN' field is empty!")))
-
   (defun ps/ebib-search-article-by-title ()
     "docstring"
     (interactive)
@@ -13828,13 +13758,6 @@ If not invoked from `ebib', prompt for search query."
       (youtube-dl id :directory ps/dir-library-media :destination key)
       (message (format "Downloading video from '%s'" (substring-no-properties id)))
       (ps/ebib--update-file-field-contents key file-name)))
-
-  (defun ps/ebib-search-article-by-doi ()
-    "docstring"
-    (interactive)
-    (if (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (ps/ebib-search-article "doi")
-      (user-error "`DOI' field is empty!")))
 
   (defun ps/ebib-sentence-case ()
     "docstring"
@@ -14025,7 +13948,6 @@ first name, and names are separated by a semicolon."
    "G" 'ps/ebib-search-goodreads
    "h" 'ps/ebib-open-html-file
    "i" 'ps/ebib-download-by-identifier
-   "I" 'ps/ebib-search-book-by-isbn
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
    "P" 'ps/ebib-open-pdf-file-externally
@@ -14941,7 +14863,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-feature mu4e-contrib
   :after mu4e
   :demand t)
@@ -14954,7 +14876,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 
 /[[https://github.com/iqbalansari/mu4e-alert][mu4e-alert]] supports desktop notifications and modeline display for mu4e./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package mu4e-alert
   :after mu4e
   :demand t
@@ -14979,7 +14901,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
 /[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package org-msg
   :after org mu4e
   :defer 3
@@ -17434,10 +17356,37 @@ then the window will be split horizontally rather than vertically."
    ";" 'tetris-move-right))
 #+end_src
 
-* personal projects
+* personal
 :PROPERTIES:
 :ID:       9D7B5C99-2380-4159-A8C8-4021CC0482DE
 :END:
+** config version history
+:PROPERTIES:
+:ID:       720FF947-7E4D-4755-B365-B19AC0DBB4D0
+:END:
+
+*** Version 4
+:PROPERTIES:
+:ID:       E3A434DB-0F28-4AA9-8A86-9487B8BF894F
+:END:
+- fix various minor issues.
+- move this section to end of file.
+- otherwise identical to version 3.
+  
+*** Version 3
+:PROPERTIES:
+:ID:       DEE239CF-BC77-4888-AD69-B33D32A7DB1A
+:END:
+- move ~tlon~ functions to separate "package", handled by ~elpaca~.
+- use ~eww~ by default.
+- add ~flymake~.
+- set precedence of various packages explicitly so that ~elpaca~ doesn't throw errors.
+
+*** Version 2
+:PROPERTIES:
+:ID:       0BCC3A55-0C91-413C-A4BB-D7E4048E30F2
+:END:
+- Migrated from ~straight~ to ~elpaca~.
 
 ** tlon
 :PROPERTIES:

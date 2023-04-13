@@ -10719,6 +10719,11 @@ present, then archive it."
    "s-A-a" 'org-archive-subtree))
 #+end_src
 
+*** TODO Align org-archive tags
+:PROPERTIES:
+:ID:       568D63EF-8C13-41CE-939A-AE996F6D13F9
+:END:
+
 *** TODO [#6] Process archives ~org/archive~
 :PROPERTIES:
 :ID:       855BC5BD-2A50-4DB8-BD91-4E0F6ECD50D6

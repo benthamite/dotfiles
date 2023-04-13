@@ -17131,13 +17131,13 @@ CLOCK: [2023-03-28 Tue 22:32]--[2023-03-28 Tue 22:47] =>  0:15
 
 A tutorial for this undocumented package may be found [[https://github.com/andycowl/bbdb3-manual/blob/master/tutorial.rst][here]].
 
-[2023-04-09 Sun 02:20] Installed with ~package-install~, since I wasn't able to build it.
+[2023-04-09 Sun 02:20] I wasn't able to build it, but I was able to install it with ~M-x package-install~, from which I created a local repo.
 
 #+begin_src emacs-lisp
 (use-package bbdb
-  :demand t
-  :elpaca (:local-repo "/Users/pablostafforini/.config/emacs-profiles/develop/elpa/bbdb-3.2.2.2"
-                       :prebuild ())
+  :elpaca (bbdb
+           :host github
+           :repo "tlon-team/bbdb")
   :init/el-patch
   ;; open URL directly, without prompting for confirmation
   (defun bbdb-browse-url (records &optional which)

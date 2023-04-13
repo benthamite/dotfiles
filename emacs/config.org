@@ -7266,6 +7266,25 @@ necessary."
    "M-n" nil))
 #+end_src
 
+** emacs-eat
+:PROPERTIES:
+:ID:       94971F2F-FF78-4088-BBDB-A95ADEDECE9B
+:END:
+
+/[[https://codeberg.org/akib/emacs-eat][emacs-eat]] is a terminal emulator./
+
+#+begin_src emacs-lisp
+(use-package eat
+  :elpaca (eat :type git
+               :host codeberg
+               :repo "akib/emacs-eat"
+               :files ("*.el" ("term" "term/*.el") "*.texi"
+                       "*.ti" ("terminfo/e" "terminfo/e/*")
+                       ("terminfo/65" "terminfo/65/*")
+                       ("integration" "integration/*")
+                       (:exclude ".dir-locals.el" "*-tests.el"))))
+#+end_src
+
 ** em-hist
 :PROPERTIES:
 :ID:       692C4FF8-FD07-4D35-A9B3-A87F0E9A1B53
@@ -7279,7 +7298,6 @@ necessary."
   (setq eshell-hist-ignoredups t)
   (setq eshell-save-history-on-exit t))
 #+end_src
-
 
 ** eshell-syntax-highlighting
 :PROPERTIES:

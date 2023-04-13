@@ -3931,7 +3931,8 @@ process in these cases."
     (interactive)
     (dolist (file (directory-files (file-name-concat ps/dir-chemacs-profiles "var/auto-save")))
       (when-let ((file-to-recover (string-replace "#" "" file)))
-        (ignore-errors (recover-file (string-replace "!" "/" file-to-recover))))))
+        (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
+        (ps/diff-buffer-with-file))))
 
   ;; `recover-this-file' notifications are easy to miss. The
   ;; function below triggers a more intrusive alert.

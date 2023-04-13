@@ -1599,7 +1599,11 @@ installed."
            (add-hook 'ns-system-appearance-change-functions
                      #'ps/modus-themes-load-theme-emacs-plus))))
 
-  (ps/modus-themes-load-theme-conditionally)
+  (tlon-init-override-code-if-available
+   :ps/modus-themes-load
+   '(
+     (ps/modus-themes-load-theme-conditionally)
+     ))
 
   (setq modus-themes-common-palette-overrides
         `(
@@ -1743,14 +1747,18 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :init
   (doom-modeline-mode)
 
-  (setq doom-modeline-mu4e t)
-  (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
-  (setq doom-modeline-buffer-encoding nil)
-  (setq doom-modeline-irc t)
-  (setq doom-modeline-irc-buffers t)
-  (setq doom-modeline-github t)
-  (setq doom-modeline-github-interval (* 10 60))
-  (setq doom-modeline-buffer-file-name-style 'auto)
+  :config
+  (tlon-init-override-code-if-available
+   :ps/doom-modeline
+   '(
+     (setq doom-modeline-mu4e t)
+     (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
+     (setq doom-modeline-buffer-encoding nil)
+     (setq doom-modeline-irc t)
+     (setq doom-modeline-irc-buffers t)
+     (setq doom-modeline-github t)
+     (setq doom-modeline-github-interval (* 10 60))
+     (setq doom-modeline-buffer-file-name-style 'auto)
 
   (doom-modeline-def-modeline 'main
     '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
@@ -1774,7 +1782,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle  :tangle (tlon-init-get-tangle-flag :ps/tab-bar)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/tab-bar)
 (use-feature tab-bar
   ;; :after wttr-mode
   :demand t
@@ -4840,7 +4848,11 @@ window depending on the number of present windows."
     (interactive)
     (ps/window-buffer-move (when (> (count-windows) 2) (winum-get-window-by-number 2))))
 
+  (tlon-init-override-code-if-available
+   :ps/window-split
+   '(
      (add-hook 'elpaca-after-init-hook #'ps/window-split-if-unsplit)
+     ))
 
   :general
   ("C-H-0" 'ps/switch-to-last-window
@@ -4875,20 +4887,23 @@ window depending on the number of present windows."
 :ID:       3ADE4889-B4BE-4733-ABE3-BECCD4F9A73D
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent 
 (use-feature frame
   :demand t
   :config
   (blink-cursor-mode)
   (setq window-divider-default-right-width 1)
   (window-divider-mode)
-
+  
   ;; When returning focus to Emacs after browsing other macOS windows,
   ;; the frame is sometimes not fully maximized. This advice makes
   ;; Emacs maximize the frame every time focus is regained.
-  (add-function :after after-focus-change-function
-                (lambda ()
-                  (set-frame-parameter nil 'fullscreen 'maximized)))
+  (tlon-init-override-code-if-available
+   :ps/frame-maximize
+   '(
+     (add-function :after after-focus-change-function
+                   (lambda ()
+                     (set-frame-parameter nil 'fullscreen 'maximized)))))
 
   :general
   ("H-S-SPC" 'other-frame))
@@ -6077,7 +6092,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 /[[https://github.com/magit/forge][forge]] let's one work with git forges directly from magit./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/forge)
 (use-package forge
   :after magit ghub emacsql
   :demand t
@@ -9299,9 +9314,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 /[[https://orgmode.org/][org-mode]] is a major mode for keeping notes, authoring documents, computational notebooks, literate programming, maintaining to-do lists, planning projects, and more./
 
 #+begin_src emacs-lisp :results silent
-(use-package org
-  :demand t
-  :config
   (setq org-directory ps/dir-org) ; set org directory
   (setq org-todo-keywords
         '((sequence "TODO(t)"
@@ -9741,7 +9753,7 @@ image."
   (telega-chat-mode-map
    "s-b" (lambda! (org-emphasize ?*))
    "s-i" (lambda! (org-emphasize ?/))
-   "s-e" (lambda! (org-emphasize ?~))))
+   "s-e" (lambda! (org-emphasize ?~)))
 #+end_src
 
 *** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
@@ -11173,7 +11185,7 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 :ID:       B1A25249-1E67-498D-8A68-0E4BDB3D0A2B
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/bbdb)
 (use-feature ol-bbdb
   :after org bbdb
   :after ol
@@ -14563,7 +14575,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
 /[[https://github.com/djcb/mu][mu4e]] is an an emacs-based e-mail client./
 
-#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :ps/mu4e)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-package mu4e
   :elpaca (:local-repo
            "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
@@ -14939,7 +14951,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-feature mu4e-contrib
   :after mu4e
   :demand t)
@@ -14952,7 +14964,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 
 /[[https://github.com/iqbalansari/mu4e-alert][mu4e-alert]] supports desktop notifications and modeline display for mu4e./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package mu4e-alert
   :after mu4e
   :demand t
@@ -14977,7 +14989,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
 /[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package org-msg
   :after org mu4e
   :defer 3
@@ -17118,7 +17130,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 [2023-04-09 Sun 02:20] I wasn't able to build it, but I was able to install it with ~M-x package-install~, from which I created a local repo.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/bbdb)
 (use-package bbdb
   :elpaca (bbdb
            :host github
@@ -17278,7 +17290,7 @@ then the window will be split horizontally rather than vertically."
 
 /[[https://github.com/tohojo/bbdb-vcard][bbdb-vcard]] supports import and export for BBDB./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/bbdb)
 (use-package bbdb-vcard
   :after bbdb
   :config
@@ -17373,7 +17385,7 @@ And finally, the section you've all been waiting for.
 :ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/tlon)
 (use-package tlon
   :elpaca (tlon
            :host github
@@ -17408,7 +17420,7 @@ And finally, the section you've all been waiting for.
 :ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/tlon-init)
 (use-package tlon-init
   :elpaca (tlon-init
            :host github

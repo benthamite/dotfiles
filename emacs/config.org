@@ -17042,28 +17042,6 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
   :commands (unpackaged/org-forward-to-entry-content))
 #+end_src
 
-** macos
-:PROPERTIES:
-:ID:       DA6E75E5-8D85-4CAF-A921-F7A3A77B0362
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defun ps/eject-external-hard-drive ()
-  "Eject external hard drive. Assumes only one external hard drive
-is connected."
-  (interactive)
-  (let ((list-external
-         (shell-command-to-string
-          "diskutil list external")))
-    (string-match
-     "/dev/disk\\([[:digit:]]\\) (external, physical):"
-     list-external)
-    (shell-command
-     (format
-      "diskutil eject disk%s"
-      (match-string 1 list-external)))))
-#+end_src
-
 ** midnight
 :PROPERTIES:
 :ID:       C6B68696-DCCC-4143-A0BC-E5EEE249AACF

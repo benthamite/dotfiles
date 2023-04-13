@@ -6101,6 +6101,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :PROPERTIES:
 :ID:       A0887865-7CAC-47E6-A894-D49F07BCBAF9
 :END:
+:LOGBOOK:
+CLOCK: [2023-04-10 Mon 14:31]--[2023-04-10 Mon 14:44] =>  0:13
+:END:
 
 /[[https://github.com/wandersoncferreira/code-review][code-review]] helps perform code reviews from Emacs./
 
@@ -8821,7 +8824,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp
 (use-package aggressive-indent
-  :defer 20
+  :defer 5
   :config
   (global-aggressive-indent-mode))
 #+end_src

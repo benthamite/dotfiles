@@ -14621,28 +14621,33 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
           ((eq mark 'unflag) (mu4e-action-retag-message msg "-\\Starred"))))
 
   (defun ps/mu4e-headers-archive ()
-    "In headers mode, archive message at point, without asking for
-confirmation."
+    "In headers mode, archive message at point.
+Do not ask for confirmation."
     (interactive)
     (mu4e-headers-mark-for-refile)
     (mu4e-mark-execute-all t))
 
   (defun ps/mu4e-view-archive ()
-    "In view mode, archive message at point, without asking for
-confirmation."
+    "In view mode, archive message at point.
+Do not ask for confirmation."
     (interactive)
     (mu4e-view-mark-for-refile)
     (mu4e-mark-execute-all t))
 
   (defun ps/mu4e-view-org-capture (&optional arg)
-    "In view mode, capture message at point with `org-capture' and,
- unless invoked with a prefix argument, archive it.
+    "In view mode, `org-capture' message at point and archive it.
+If invoked with prefix argument, capture without archiving it.
 
 If the message body contains with '[org-capture key: KEY]',
 interpret KEY as the org-capture template key."
     (interactive "P")
     (if (eq major-mode 'mu4e-view-mode)
-        (let* ((message-body (mu4e-message-field (mu4e-message-at-point) :body-txt))
+        (let* ((message-body (or (mu4e-message-field (mu4e-message-at-point) :body-txt)
+                                 ;; inexplicably, the above returns nil
+                                 ;; for a few non-empty messages; to avoid
+                                 ;; an error in these cases, we add an
+                                 ;; empty string as a second disjunct
+                                 ""))
                (key (if
                         (string-match "\\[org-capture key: \\(.*\\)\\]" message-body)
                         (match-string-no-properties 1 message-body)

@@ -16997,7 +16997,6 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 
 #+begin_src emacs-lisp :results silent
 (use-package alert
-  ;; :defer 10
   :demand t
   :config
   ;; the settings below are not working; is it because `alert-default-style' is set to `notifier'?
@@ -17009,12 +17008,12 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
     (setq alert-default-style 'notifications))
 
   ;; This function has to be loaded manually, for some reason.
-  ;; (defun alert-osx-notifier-notify (info)
-  ;;   (apply #'call-process "osascript" nil nil nil "-e"
-  ;;          (list (format "display notification %S with title %S"
-  ;;                        (alert-encode-string (plist-get info :message))
-  ;;                        (alert-encode-string (plist-get info :title)))))
-  ;;   (alert-message-notify info))
+  (defun alert-osx-notifier-notify (info)
+    (apply #'call-process "osascript" nil nil nil "-e"
+           (list (format "display notification %S with title %S"
+                         (alert-encode-string (plist-get info :message))
+                         (alert-encode-string (plist-get info :title)))))
+    (alert-message-notify info))
 
   (defun ps/alert-dismiss-osx-notification ()
     "docstring"

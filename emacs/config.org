@@ -16484,96 +16484,19 @@ template."
 :ID:       F932B1C7-4BC0-45AB-A736-3E4DC4FBA09E
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-09 Sun 19:58]--[2023-04-09 Sun 21:23] =>  1:25
 CLOCK: [2022-09-29 Thu 16:52]--[2022-09-29 Thu 18:01] =>  1:09
 CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
 :END:
 
-This section collects a few functions I created for interfacing with Mullvad, a VPN service. To use these commands, you must first run ~mullvad account login [your account number]~ in the terminal.  To find your account number, go to "settings" > "account".
+This "package" collects a few simple commands I created for interfacing with Mullvad, a VPN service. To use these commands, you must first run ~mullvad account login [your account number]~ in the terminal.  To find your account number, go to "settings" > "account".
 
 #+begin_src emacs-lisp :results silent
-(defvar ps/mullvad-servers
-  '(("London" . "gb4-wireguard")
-    ("Madrid" . "es-mad-wg-101")
-    ("Malmö" . "se1-wireguard")
-    ("Frankfurt" . "de5-wireguard")
-    ("New York" . "us276-wireguard")
-    ("São Paulo" . "br1-wireguard")
-    ("Switzerland" . "ch5-wireguard"))
-  "Specify the optimal Mullvad VPN servers for each city.")
-
-(defvar ps/mullvad-websites
-  '(("Library Genesis" . "Malmö")
-    ("HathiTrust" . "New York")
-    ("Criterion Channel" . "New York")
-    ("Pirate Bay" . "Malmö")
-    ("Wise" . "Madrid"))
-  "For each website that requires a VPN connection, specify the
-optimal server city.")
-
-(defun ps/mullvad-connect-to-server (server)
-  "Prompt the user to select from a list of servers and connection
-durations, and connect to the server for that duration.
-
-The list of servers is defined in `ps/mullvad-servers'."
-  (interactive
-   (list
-    (completing-read
-     "Select server: "
-     ps/mullvad-servers)))
-  (let* ((duration (call-interactively 'ps/mullvad-disconnect-after))
-         (server (cdr (assoc server ps/mullvad-servers)))
-         (connection (replace-regexp-in-string
-                      "Setting location constraint to \\(.*\\)\n.*\n.*" "\\1"
-                      (shell-command-to-string (format
-                                                "mullvad relay set hostname %s; mullvad connect"
-                                                server)))))
-    (if duration
-        (message (format "Connected to server %s. Disconnecting in %s minutes." connection duration))
-      (message (format "Connected to server %s." connection)))))
-
-(defun ps/mullvad-connect-to-website (website)
-  "Prompt the user to select from a list of websites and connection
-durations, set optimal VPN server for it, and connect to it for
-that duration."
-  (interactive
-   (list
-    (completing-read
-     "Select website: "
-     ps/mullvad-websites)))
-  (let* ((duration (call-interactively 'ps/mullvad-disconnect-after))
-         (city (cdr (assoc website ps/mullvad-websites)))
-         (server (cdr (assoc city ps/mullvad-servers)))
-         (connection (replace-regexp-in-string
-                      "Setting location constraint to \\(.*\\)\n.*\n.*" "\\1"
-                      (shell-command-to-string (format
-                                                "mullvad relay set hostname %s; mullvad connect"
-                                                server)))))
-    (message "Connected to Mullvad server %s." connection
-                     (when duration (message " Disconnecting in %s minute(s)." duration)))))
-
-(defun ps/mullvad-disconnect ()
-  "Disconnect from server."
-  (interactive)
-  (shell-command "mullvad disconnect")
-  (message "Disconnected from Mullvad server."))
-
-(defun ps/mullvad-disconnect-after (duration)
-  "End connection to Mullvad VPN server after DURATION minutes."
-  (interactive
-   (list (completing-read
-          "Select duration (minutes): "
-          '("1" "5" "10" "30" "60" "120" "custom" "unlimited"))))
-  (when (equal duration "custom")
-    (setq duration (read-string "Enter duration (minutes): ")))
-  (unless (equal duration "unlimited")
-    ;; If a previous timer is running, cancel it.
-    (cancel-function-timers #'ps/mullvad-disconnect)
-    ;; Now run a new timer.
-    (run-with-timer
-     (* (string-to-number duration) 60)
-     nil
-     #'ps/mullvad-disconnect)
-    duration))
+(use-package mullvad
+  :elpaca (mullvad
+           :host github
+           :repo "tlon-team/mullvad")
+  :demand t)
 #+end_src
 
 * multimedia

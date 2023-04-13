@@ -2002,10 +2002,10 @@ and generates profiling report."
       (profiler-stop))
     (setq ps/profiler-toggle (not ps/profiler-toggle)))
 
-(defun ps/profiler-report-toggle-entry-global ()
-"Expand all subentries below entry at point."
-(interactive)
-(profiler-report-toggle-entry '(4)))
+  (defun ps/profiler-report-toggle-entry-global ()
+    "Expand all subentries below entry at point."
+    (interactive)
+    (profiler-report-toggle-entry '(4)))
 
   :general
   ("A-C-p" 'ps/profiler-toggle)
@@ -2227,73 +2227,73 @@ CLOCK: [2021-04-21 Wed 21:25]--[2021-04-21 Wed 21:39] =>  0:14
 (use-feature simple
   :demand t
   :config
-(defun ps/backward-zap-to-char ()
-  (interactive)
-  (zap-to-char -1 (read-char-from-minibuffer "Zap to char: "
-                                             nil 'read-char-history)))
+  (defun ps/backward-zap-to-char ()
+    (interactive)
+    (zap-to-char -1 (read-char-from-minibuffer "Zap to char: "
+                                               nil 'read-char-history)))
 
-(defun ps/zap-copy-to-char (arg char)
-  "Copy up to and including ARGth occurrence of CHAR.
+  (defun ps/zap-copy-to-char (arg char)
+    "Copy up to and including ARGth occurrence of CHAR.
 Case is ignored if `case-fold-search' is non-nil in the current buffer.
 Goes backward if ARG is negative; error if CHAR not found.
 See also `zap-up-to-char'."
-  (interactive (list (prefix-numeric-value current-prefix-arg)
-                     (read-char-from-minibuffer "Zap to char: "
-                                                nil 'read-char-history)))
-  ;; Avoid "obsolete" warnings for translation-table-for-input.
-  (with-no-warnings
-    (if (char-table-p translation-table-for-input)
-        (setq char (or (aref translation-table-for-input char) char))))
-  (copy-region-as-kill (point) (progn
-                                 (search-forward (char-to-string char) nil nil arg)
-                                 (point))))
+    (interactive (list (prefix-numeric-value current-prefix-arg)
+                       (read-char-from-minibuffer "Zap to char: "
+                                                  nil 'read-char-history)))
+    ;; Avoid "obsolete" warnings for translation-table-for-input.
+    (with-no-warnings
+      (if (char-table-p translation-table-for-input)
+          (setq char (or (aref translation-table-for-input char) char))))
+    (copy-region-as-kill (point) (progn
+                                   (search-forward (char-to-string char) nil nil arg)
+                                   (point))))
 
-(defun ps/backward-zap-copy-to-char ()
-  (interactive)
-  (ps/zap-copy-to-char -1 (read-char-from-minibuffer "Zap to char: "
-                                                     nil 'read-char-history)))
-
-(defun ps/zap-delete-to-char (arg char)
-  "Copy up to and including ARGth occurrence of CHAR.
-Case is ignored if `case-fold-search' is non-nil in the current buffer.
-Goes backward if ARG is negative; error if CHAR not found.
-See also `zap-up-to-char'."
-  (interactive (list (prefix-numeric-value current-prefix-arg)
-                     (read-char-from-minibuffer "Zap to char: "
-                                                nil 'read-char-history)))
-  ;; Avoid "obsolete" warnings for translation-table-for-input.
-  (with-no-warnings
-    (if (char-table-p translation-table-for-input)
-        (setq char (or (aref translation-table-for-input char) char))))
-  (delete-region (point) (progn
-                           (search-forward (char-to-string char) nil nil arg)
-                           (point))))
-
-(defun ps/backward-zap-delete-to-char ()
-  (interactive)
-  (ps/zap-delete-to-char -1 (read-char-from-minibuffer "Zap to char: "
+  (defun ps/backward-zap-copy-to-char ()
+    (interactive)
+    (ps/zap-copy-to-char -1 (read-char-from-minibuffer "Zap to char: "
                                                        nil 'read-char-history)))
 
-(defun ps/transpose-chars-backward ()
-  "Interchange characters around point, moving backward one character."
-  (interactive)
-  (transpose-chars -1))
+  (defun ps/zap-delete-to-char (arg char)
+    "Copy up to and including ARGth occurrence of CHAR.
+Case is ignored if `case-fold-search' is non-nil in the current buffer.
+Goes backward if ARG is negative; error if CHAR not found.
+See also `zap-up-to-char'."
+    (interactive (list (prefix-numeric-value current-prefix-arg)
+                       (read-char-from-minibuffer "Zap to char: "
+                                                  nil 'read-char-history)))
+    ;; Avoid "obsolete" warnings for translation-table-for-input.
+    (with-no-warnings
+      (if (char-table-p translation-table-for-input)
+          (setq char (or (aref translation-table-for-input char) char))))
+    (delete-region (point) (progn
+                             (search-forward (char-to-string char) nil nil arg)
+                             (point))))
 
-:general
-( "A-H-M-d" 'transpose-chars
- "A-H-M-s" 'ps/transpose-chars-backward
- "C-H-M-s" 'delete-backward-char
- "C-H-M-d" 'delete-forward-char
- "C-H-M-t" 'just-one-space
- "C-H-M-f" 'zap-to-char
- "C-H-M-a" 'ps/backward-zap-to-char
- "A-C-H-M-S-s-f" 'ps/zap-delete-to-char
- "A-C-H-M-S-s-a" 'ps/backward-zap-delete-to-char
- "C-H-M-s-A-f" 'ps/zap-copy-to-char
- "C-H-M-s-A-a" 'ps/backward-zap-copy-to-char
- "C-H-M-=" 'overwrite-mode)
-(org-mode-map
- "C-H-M-s" 'org-delete-backward-char))
+  (defun ps/backward-zap-delete-to-char ()
+    (interactive)
+    (ps/zap-delete-to-char -1 (read-char-from-minibuffer "Zap to char: "
+                                                         nil 'read-char-history)))
+
+  (defun ps/transpose-chars-backward ()
+    "Interchange characters around point, moving backward one character."
+    (interactive)
+    (transpose-chars -1))
+
+  :general
+  ("A-H-M-d" 'transpose-chars
+   "A-H-M-s" 'ps/transpose-chars-backward
+   "C-H-M-s" 'delete-backward-char
+   "C-H-M-d" 'delete-forward-char
+   "C-H-M-t" 'just-one-space
+   "C-H-M-f" 'zap-to-char
+   "C-H-M-a" 'ps/backward-zap-to-char
+   "A-C-H-M-S-s-f" 'ps/zap-delete-to-char
+   "A-C-H-M-S-s-a" 'ps/backward-zap-delete-to-char
+   "C-H-M-s-A-f" 'ps/zap-copy-to-char
+   "C-H-M-s-A-a" 'ps/backward-zap-copy-to-char
+   "C-H-M-=" 'overwrite-mode)
+  (org-mode-map
+   "C-H-M-s" 'org-delete-backward-char))
 #+end_src
 
 ** words
@@ -8537,8 +8537,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
   (prog-mode-map
    "A-H-C-i" 'mark-defun
    "M-." 'xref-find-definitions)
-  (emacs-lisp-mode-map shell-mode-map
-                       "s-c" 'exit-recursive-edit))
+  ((emacs-lisp-mode-map shell-mode-map)
+   "s-c" 'exit-recursive-edit))
 #+end_src
 
 ** flymake
@@ -8935,8 +8935,8 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
 #+begin_src emacs-lisp
 (use-package org-ai
   :elpaca  (org-ai :type git :host github :repo "rksm/org-ai"
-                     :local-repo "org-ai"
-                     :files ("*.el" "README.md" "snippets"))
+                   :local-repo "org-ai"
+                   :files ("*.el" "README.md" "snippets"))
   :after org
   :commands org-ai-mode
   :config
@@ -17365,7 +17365,7 @@ then the window will be split horizontally rather than vertically."
 - fix various minor issues.
 - move this section to end of file.
 - otherwise identical to version 3.
-  
+
 *** Version 3
 :PROPERTIES:
 :ID:       DEE239CF-BC77-4888-AD69-B33D32A7DB1A

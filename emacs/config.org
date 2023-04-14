@@ -3186,6 +3186,9 @@ NO-TEMPLATE is non-nil."
            (car (cdr (car guessed-directories))))
       (if (and (not no-template) ps/yas-new-snippet-tlon)
           (yas-expand-snippet ps/yas-new-snippet-tlon))))
+          
+  (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
+
 
   :general
   ("C-y" 'yas-new-snippet)
@@ -4503,8 +4506,6 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
     (when (active-minibuffer-window)
       (select-frame-set-input-focus (window-frame (active-minibuffer-window)))
       (select-window (active-minibuffer-window))))
-
-  (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
 
   :general
   ("A-C-H-0" 'ps/switch-to-minibuffer-window)

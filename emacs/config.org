@@ -17216,8 +17216,8 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 #+begin_src emacs-lisp
 (use-package bbdb
   :demand t
-  :elpaca (:local-repo "/Users/pablostafforini/.config/emacs-profiles/develop/elpa/bbdb-3.2.2.2"
-                       :prebuild ())
+  :elpaca (:local-repo (concat user-emacs-directory "elpa/bbdb-3.2.2.2")
+  :prebuild ())
   :init/el-patch
   ;; open URL directly, without prompting for confirmation
   (defun bbdb-browse-url (records &optional which)

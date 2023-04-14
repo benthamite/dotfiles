@@ -5,6 +5,7 @@
 # --
 `(format-time-string "%Y-%m-%d")` Trade
     Assets:Interactive Brokers                                     $1 $2 @ $3 USD
+    Expenses:Fees                               $4 USD
     Assets:Interactive Brokers
 
 $5

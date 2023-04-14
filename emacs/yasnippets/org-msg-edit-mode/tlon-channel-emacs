@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: tlon-bae-channel
-# key: tbc
+# name: tlon-channel-emacs
+# key: tce
 # contributor: Pablo Stafforini
 # --
-[Tlön: BAE] 
+[Tlön: Emacs] $1

@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: defer-loading
-# key: def
+# name: tlon-channel-bae
+# key: tcb
 # contributor: Pablo Stafforini
 # --
-$1: defer loading
+[Tlön: BAE] $1

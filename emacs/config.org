@@ -6154,7 +6154,7 @@ CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
    "s-m" 'github-review-comment
    "s-r" 'github-review-reject
    "s-a" 'github-review-approve)
-  (magit-status-mode
+  (magit-status-mode-map
    "s-r" 'github-review-forge-pr-at-point))
 #+end_src
 

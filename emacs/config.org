@@ -3186,7 +3186,7 @@ NO-TEMPLATE is non-nil."
            (car (cdr (car guessed-directories))))
       (if (and (not no-template) ps/yas-new-snippet-tlon)
           (yas-expand-snippet ps/yas-new-snippet-tlon))))
-          
+
   (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
 
 
@@ -8415,19 +8415,19 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   (setq pdf-view-use-imagemagick nil)
   (setq pdf-view-resize-factor 1.1)
   (setq pdf-annot-default-annotation-properties
-   '((t
-      (label . ps/personal-name))
-     (text
-      (color . "#ff0000")
-      (icon . "Note"))
-     (highlight
-      (color . "LightBlue2"))
-     (underline
-      (color . "blue"))
-     (squiggly
-      (color . "orange"))
-     (strike-out
-      (color . "red"))))
+        '((t
+           (label . ps/personal-name))
+          (text
+           (color . "#ff0000")
+           (icon . "Note"))
+          (highlight
+           (color . "LightBlue2"))
+          (underline
+           (color . "blue"))
+          (squiggly
+           (color . "orange"))
+          (strike-out
+           (color . "red"))))
 
   (unless (or noninteractive (eq this-command 'pdf-tools-install))
     (pdf-tools-install))

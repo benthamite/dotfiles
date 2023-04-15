@@ -8531,8 +8531,12 @@ FILE."
       (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
       (message "Copied all text in PDF to kill ring.")))
 
-  ;; do not ask for confirmation when attempting to install
-  (advice-add 'pdf-tools-install :before-until (lambda () (pdf-tools-install t)))
+  (defun ps/pdf-tools-install-no-confirm (orig-fun &rest args)
+    "Don't ask for confirmation when installing `pdf-tools'."
+    (let ((no-query-p t))
+      (apply orig-fun args)))
+
+  (advice-add 'pdf-tools-install :around #'ps/pdf-tools-install-no-confirm)
 
   (add-hook 'pdf-tools-enabled-hook #'ps/pdf-tools-apply-theme)
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)

@@ -9342,6 +9342,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 
 #+begin_src emacs-lisp :results silent
 (use-package org
+  :demand t
   :config
   (setq org-directory ps/dir-org) ; set org directory
   (setq org-todo-keywords

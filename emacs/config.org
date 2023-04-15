@@ -17420,7 +17420,8 @@ And finally, the section you've all been waiting for.
 (use-package tlon
   :elpaca (tlon
            :host github
-           :repo "tlon-team/tlon")
+           :repo "tlon-team/tlon"
+           :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
   (defun ps/tlon-meeting-with-fede ()

@@ -9931,8 +9931,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   ;; (setq org-agenda-clockreport-parameter-plist)
   (setq org-agenda-files (list ps/file-calendar))
   (setq ps/org-agenda-files-excluded (list
-                                   ps/file-tlon-tareas-leo
-                                   ps/file-tlon-tareas-fede))
+                                      ps/file-tlon-tareas-leo
+                                      ps/file-tlon-tareas-fede))
 
   (defun ps/org-clocktable-sorter (ipos tables params)
     (setq tables (cl-sort tables (lambda (table1 table2) (> (nth 1 table1) (nth 1 table2)))))

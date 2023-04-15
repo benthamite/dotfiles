@@ -5985,6 +5985,25 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   ("A-d" 'ediff))
 #+end_src
 
+** smerge
+:PROPERTIES:
+:ID:       FE85CC7E-E2A0-4494-8D1E-A64A4C40013E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature smerge-mode
+  :general
+  (smerge-mode-map
+   "s-n" 'smerge-next
+   "s-SPC" 'smerge-next
+   "s-p" 'smerge-prev
+   "s-l" 'smerge-keep-lower
+   "s-k" 'smerge-keep-upper
+   "s-a" 'smerge-keep-all
+   "s-b" 'smerge-keep-base
+   "s-c" 'smerge-keep-current))
+#+end_src
+
 ** magit
 :PROPERTIES:
 :ID:       B662CE1B-3F94-486E-A3DE-052775035960

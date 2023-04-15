@@ -2999,6 +2999,24 @@ indent block only, else indent whole buffer."
   ("C-t" 'sort-lines))
 #+end_src
 
+** vundo
+:PROPERTIES:
+:ID:       616AD0A8-0098-4147-927E-E2A47B18A65E
+:END:
+
+/[[https://github.com/casouri/vundo][vundo]] displays the undo history as a tree./
+
+#+begin_src emacs-lisp
+(use-package vundo
+  :demand t
+  :general
+  (vundo-mode-map
+   "j" 'vundo-backward
+   ";" 'vundo-forward
+   "k" 'vundo-previous
+   "l" 'vundo-next))
+#+end_src
+
 ** outline
 :PROPERTIES:
 :ID:       286464A9-EB12-4351-A980-D9D837BDEABB

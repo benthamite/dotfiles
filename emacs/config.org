@@ -7842,46 +7842,6 @@ CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
 
 #+begin_src emacs-lisp :results silent
 (use-package powerthesaurus
-  :config/el-patch
-  (defun powerthesaurus-lookup-dwim (&optional action-type query-type)
-    "Wrapper function for general lookup commands.
-
-When called interactively, optional argument ACTION-TYPE corresponds to
-the prefix argument passed to this command, which is translated to an action
-using `powerthesaurus-prefix-to-action'.  When called programmatically,
-its value can either be nil or a symbol that can be possibly returned by
-`powerthesaurus-prefix-to-action' (e.g., `action-insert' or `action-display').
-
-The argument passed to QUERY-TYPE should be the same as in
-`powerthesaurus-lookup' or nil; in the latter case,
-the user will be prompt for a valid value."
-    (interactive "P")
-    (pcase-let ((`(,query-term ,beg ,end)
-                 ;; selection is active -> look up whatever is selected
-                 (if (use-region-p)
-                     (powerthesaurus--extract-query-region)
-                   ;; point is is at a word -> look it up
-                   (if (thing-at-point 'word)
-                       (powerthesaurus--extract-original-word)
-                     ;; nothing appropriate nearby -> ask the user
-                     (list nil nil nil)))))
-      (setq query-term (el-patch-swap (read-string "Term: " query-term)
-                                      (or query-term
-                                          (read-string "Term: " query-term)))
-            query-type (or query-type
-                           (completing-read "Query type: "
-                                                    powerthesaurus-supported-query-types
-                                                    nil t))
-            action-type (powerthesaurus-prefix-to-action action-type query-type))
-      (cond
-       ((eq action-type 'action-insert)
-        (when (null beg)
-          (setq beg (point) end (point))))
-       ((eq action-type 'action-display)
-        (when (or beg end)
-          (setq beg nil end nil))))
-      (funcall 'powerthesaurus-lookup query-term query-type beg end)))
-
   :general
   ("H-Y" 'powerthesaurus-lookup-dwim))
 #+end_src

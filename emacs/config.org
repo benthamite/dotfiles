@@ -14982,7 +14982,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
 :END:
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-feature mu4e-contrib
   :after mu4e
   :demand t)

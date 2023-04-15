@@ -17389,7 +17389,20 @@ And finally, the section you've all been waiting for.
 :END:
 - Migrated from ~straight~ to ~elpaca~.
 
-** tlon
+** tlon-init
+:PROPERTIES:
+:ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/tlon-init)
+(use-package tlon-init
+  :elpaca (tlon-init
+           :host github
+           :repo "tlon-team/tlon-init"
+           :depth nil) ; clone entire repo, not just last commit
+  :demand t)
+#+end_src
+
 :PROPERTIES:
 :ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
 :END:

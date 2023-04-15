@@ -1,0 +1,247 @@
+#+title: Leo's config
+
+* code overrides
+
+#+begin_src emacs-lisp :tangle (print tlon-init-code-overrides-path)
+(
+ (:ps/org-id-add-ids-to-headings-in-file . ((ignore)))
+ )
+#+end_src
+
+* post init
+
+#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+(when (eq system-type 'darwin) ;; mac specific settings
+  (setq mac-right-option-modifier 'meta)
+  (setq mac-command-modifier 'hyper)
+  (setq mac-option-modifier 'alt)
+  (setq mac-right-command-modifier 'super)
+  (tool-bar-mode -1)
+  (global-set-key [kp-delete] 'delete-char)   ;; sets fn-delete to be right-delete
+  (global-set-key (kbd "<home>") 'beginning-of-line)
+  (global-set-key (kbd "<end>") 'end-of-line)
+  (global-set-key (kbd "<S-right>") 'other-window)
+  (global-set-key (kbd "<A-right>") 'end-of-buffer)
+  (global-set-key (kbd "<A-left>") 'beginning-of-buffer)
+  (with-eval-after-load "org"
+    (define-key org-mode-map (kbd "<M-right>") nil)
+    (define-key org-mode-map (kbd "<M-left>") nil)
+    (define-key org-mode-map (kbd "<M-up>") nil)
+    (define-key org-mode-map (kbd "<M-down>") nil)
+    (define-key org-mode-map (kbd "<M-S-right>") nil)
+    (define-key org-mode-map (kbd "<M-S-left>") nil)
+    (define-key org-mode-map (kbd "<M-S-up>") nil)
+    (define-key org-mode-map (kbd "<M-S-down>") nil)
+    (global-set-key (kbd "<H-right>") 'org-metaright)
+    (global-set-key (kbd "<H-left>") 'org-metaleft)
+    (global-set-key (kbd "<H-up>") 'org-metaup)
+    (global-set-key (kbd "<H-down>") 'org-metadown)
+    (global-set-key (kbd "<M-right>") 'forward-word)
+    (global-set-key (kbd "<M-left>") 'backward-word)
+    ))
+(defvar ps/file-cookies (file-name-concat ps/dir-downloads "cookies.txt"))
+(defun ps/internet-archive-download-ACSM ()
+  "Download and open ACSM file from Internet Archive URL in kill
+ring.
+
+NB: You need to have previously borrowed the book for the command
+to work. The command will work even if the book was borrowed for
+one hour only."
+  (interactive)
+  (if (string-search "archive.org" (current-kill 0))
+      (progn
+	(let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
+	       (suffix "&format=pdf&redirect=1")
+	       (id (replace-regexp-in-string
+		    "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
+		    "\\2"
+		    (current-kill 0)))
+	       (url (concat prefix id suffix))
+	       (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
+	  ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
+	  ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
+	  ;; Then replace the path below with the location of the downloaded cookies file.
+	  (save-window-excursion
+	    (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
+	      (async-shell-command
+	       (format
+		"wget --load-cookies='%s' '%s' -O '%s'"
+		ps/file-cookies url acsm-file))
+	      ;; (sleep-for 2)
+	      ;; (async-shell-command
+	      ;; (format
+	      ;; "open %s"
+	      ;; "/users/cartago/downloads/book.acsm"))
+	      ))
+	  (dired ps/dir-downloads)
+	  ))
+    (user-error "You forgot to copy the URL!")))
+
+(setq telega-server-libs-prefix "/Users/cartago/source/td/tdlib")
+(setq mac-function-modifier '(:button 2))
+
+;; If Emacs doesn't find an ID, run `M-x org-id-update-id-locations'
+(setq org-capture-templates
+      `(("b" "Tlön: BAE" entry
+	 (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
+	 "** TODO %?\n" :empty-lines 1 :prepend t)
+	("r" "Tlön: RAE" entry
+	 (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
+	 "** TODO %?\n" :empty-lines 1 :prepend t)
+	("f" "Tlön: FM" entry
+	 (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+	 "** TODO %?\n" :empty-lines 1 :prepend t)
+	("d" "Tlön: LBDLH" entry
+	 (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
+	 "** TODO %?\n" :empty-lines 1 :prepend t)
+	("u" "Tlön: EAN" entry
+	 (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
+	 "** TODO %?\n" :empty-lines 1 :prepend t)
+	("h" "Tlön: HEAR" entry
+	 (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
+	 "** TODO %?\n" :empty-lines 1 :prepend t)
+	("g" "Tlön: GPE" entry
+	 (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
+	 "** TODO %?\n" :empty-lines 1 :prepend t)
+	("c" "Tlön: Core" entry
+	 (id "68f0150e-9b0d-4bab-86c0-2bf878e19d9e")
+	 "** TODO %?\n" :empty-lines 1 :prepend t)
+	("s" "To sort" entry
+	 (id "107D27EC-B193-444E-B65B-9B1AD2A7CC65")
+	 "** TODO %?\n" :empty-lines 1 :prepend t)
+	("m" "Tlön: Core: messaging" entry
+	 (id "9387B56D-2940-4FB0-91EF-92879D58659E")
+	 "** TODO %?\n" :empty-lines 1 :prepend t)
+	("e" "Tlön: Core: debugging Emacs" entry
+	 (id "8402F53C-F547-4705-B79E-24D6286D2C9E")
+	 "** TODO %?\n" :empty-lines 1 :prepend t)
+	("t" "Tlön: Core: Project t" entry
+	 (id "12645897-A06F-44DD-876D-0FFC47D0E742")
+	 "** TODO %?\n" :empty-lines 1 :prepend t)
+	))
+
+(defhydra hydra-org-work
+  (:hint nil
+	 :idle 0
+	 :color blue)
+  "Tlön dashboard"
+  ("b" (org-id-goto "49adbb3e-b542-4752-a67b-16bc2eb44624") "BAE")
+  ("r" (org-id-goto "604dbb4c-4948-492e-b1cd-84b0a1451b4a") "RAE")
+  ("f" (org-id-goto "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82") "FM")
+  ("d" (org-id-goto "0d6d7ebb-bb51-4505-9a29-68b79f8c12de") "LBDLHD")
+  ("u" (org-id-goto "8b9c313a-3630-4b77-b924-a8f7f9e52d8d") "EAN")
+  ("h" (org-id-goto "f3f14f2f-2b74-4ea7-a84f-4d9aae458201") "HEAR")
+  ("g" (org-id-goto "e9b7041f-8721-495f-b5f7-97ad83ae061c") "GPE")
+  ("c" (org-id-goto "68f0150e-9b0d-4bab-86c0-2bf878e19d9e") "Core")
+  ("s" (org-id-goto "107D27EC-B193-444E-B65B-9B1AD2A7CC65") "To sort")
+  ("m" (org-id-goto "9387B56D-2940-4FB0-91EF-92879D58659E") "Messaging")
+  ("e" (org-id-goto "8402F53C-F547-4705-B79E-24D6286D2C9E") "debugging Emacs")
+  ("t" (org-id-goto "12645897-A06F-44DD-876D-0FFC47D0E742") "Project t")
+  )
+
+
+(global-set-key (kbd "H-;") 'hydra-org-work/body)
+(put 'scroll-left 'disabled nil)
+
+
+(setq telega-server-libs-prefix "/Users/cartago/source/td/tdlib")
+
+(ps/modus-themes-load-theme-conditionally)
+
+(setq warning-minimum-level :error)
+#+end_src
+
+* tangle flags
+:PROPERTIES:
+:ID:       A4E7C5AD-1E55-4C6F-B0E5-8320D282A886
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-tangle-flags-path)
+(
+ (:ps/anki-editor . nil)
+ (:ps/copilot . nil)
+ (:ps/corfu-terminal . nil)
+ (:ps/corfu-doc-terminal . nil)
+ (:ps/erc . nil)
+ (:ps/espotify . nil)
+ (:ps/hammy . nil)
+ (:ps/keytar . nil)
+ (:ps/lsp-grammarly . t)
+ (:ps/midnight . nil)
+ (:ps/mu4e . nil)
+ (:ps/org-gcal . nil)
+ (:ps/org-roam . nil)
+ (:ps/org2blog . nil)
+ (:ps/orgmdb . nil)
+ (:ps/remember . nil)
+ (:ps/slack . nil)
+ (:ps/twittering-mode . t)
+ (:ps/vulpea . nil)
+ )
+#+end_src
+
+* variables override                                                  :crypt:
+
+-----BEGIN PGP MESSAGE-----
+
+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
+=YFVY
+-----END PGP MESSAGE-----
+
+* local variables
+# Local Variables:
+# eval: (ps/buffer-local-set-key (kbd "s-y") 'org-decrypt-entry)
+# org-crypt-key: "tlon.shared@gmail.com"
+# End:

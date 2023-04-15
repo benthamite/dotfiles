@@ -3027,21 +3027,6 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
    "A-C-s-f" 'outline-forward-same-level))
 #+end_src
 
-** ediff
-:PROPERTIES:
-:ID:       987C9066-28ED-4B5A-944C-A90681182264
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature ediff
-  :config
-  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
-  (setq ediff-split-window-function 'split-window-horizontally)
-
-  :general
-  ("A-d" 'ediff))
-#+end_src
-
 ** fill
 :PROPERTIES:
 :ID:       FC4A89FD-8A66-49A6-ADB3-7895A85CBFD0
@@ -5983,6 +5968,21 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   :config
   (setq vc-follow-symlinks t) ; don't ask for confirmation when opening symlinked file
   (setq vc-make-backup-files nil)) ; do not backup version controlled files
+#+end_src
+
+** ediff
+:PROPERTIES:
+:ID:       987C9066-28ED-4B5A-944C-A90681182264
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature ediff
+  :config
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+  (setq ediff-split-window-function 'split-window-horizontally)
+
+  :general
+  ("A-d" 'ediff))
 #+end_src
 
 ** magit

@@ -2999,6 +2999,24 @@ indent block only, else indent whole buffer."
   ("C-t" 'sort-lines))
 #+end_src
 
+** vundo
+:PROPERTIES:
+:ID:       616AD0A8-0098-4147-927E-E2A47B18A65E
+:END:
+
+/[[https://github.com/casouri/vundo][vundo]] displays the undo history as a tree./
+
+#+begin_src emacs-lisp
+(use-package vundo
+  :demand t
+  :general
+  (vundo-mode-map
+   "j" 'vundo-backward
+   ";" 'vundo-forward
+   "k" 'vundo-previous
+   "l" 'vundo-next))
+#+end_src
+
 ** outline
 :PROPERTIES:
 :ID:       286464A9-EB12-4351-A980-D9D837BDEABB
@@ -3025,21 +3043,6 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
    "<backtab>" 'outline-cycle-buffer
    "A-C-s-r" 'outline-backward-same-level
    "A-C-s-f" 'outline-forward-same-level))
-#+end_src
-
-** ediff
-:PROPERTIES:
-:ID:       987C9066-28ED-4B5A-944C-A90681182264
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature ediff
-  :config
-  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
-  (setq ediff-split-window-function 'split-window-horizontally)
-
-  :general
-  ("A-d" 'ediff))
 #+end_src
 
 ** fill
@@ -3186,6 +3189,9 @@ NO-TEMPLATE is non-nil."
            (car (cdr (car guessed-directories))))
       (if (and (not no-template) ps/yas-new-snippet-tlon)
           (yas-expand-snippet ps/yas-new-snippet-tlon))))
+
+  (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
+
 
   :general
   ("C-y" 'yas-new-snippet)
@@ -4503,8 +4509,6 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
     (when (active-minibuffer-window)
       (select-frame-set-input-focus (window-frame (active-minibuffer-window)))
       (select-window (active-minibuffer-window))))
-
-  (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
 
   :general
   ("A-C-H-0" 'ps/switch-to-minibuffer-window)
@@ -5984,6 +5988,40 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   (setq vc-make-backup-files nil)) ; do not backup version controlled files
 #+end_src
 
+** ediff
+:PROPERTIES:
+:ID:       987C9066-28ED-4B5A-944C-A90681182264
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature ediff
+  :config
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+  (setq ediff-split-window-function 'split-window-horizontally)
+
+  :general
+  ("A-d" 'ediff))
+#+end_src
+
+** smerge
+:PROPERTIES:
+:ID:       FE85CC7E-E2A0-4494-8D1E-A64A4C40013E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature smerge-mode
+  :general
+  (smerge-mode-map
+   "s-n" 'smerge-next
+   "s-SPC" 'smerge-next
+   "s-p" 'smerge-prev
+   "s-l" 'smerge-keep-lower
+   "s-k" 'smerge-keep-upper
+   "s-a" 'smerge-keep-all
+   "s-b" 'smerge-keep-base
+   "s-c" 'smerge-keep-current))
+#+end_src
+
 ** magit
 :PROPERTIES:
 :ID:       B662CE1B-3F94-486E-A3DE-052775035960
@@ -6153,7 +6191,7 @@ CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
    "s-m" 'github-review-comment
    "s-r" 'github-review-reject
    "s-a" 'github-review-approve)
-  (magit-status-mode
+  (magit-status-mode-map
    "s-r" 'github-review-forge-pr-at-point))
 #+end_src
 
@@ -7804,46 +7842,6 @@ CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
 
 #+begin_src emacs-lisp :results silent
 (use-package powerthesaurus
-  :config/el-patch
-  (defun powerthesaurus-lookup-dwim (&optional action-type query-type)
-    "Wrapper function for general lookup commands.
-
-When called interactively, optional argument ACTION-TYPE corresponds to
-the prefix argument passed to this command, which is translated to an action
-using `powerthesaurus-prefix-to-action'.  When called programmatically,
-its value can either be nil or a symbol that can be possibly returned by
-`powerthesaurus-prefix-to-action' (e.g., `action-insert' or `action-display').
-
-The argument passed to QUERY-TYPE should be the same as in
-`powerthesaurus-lookup' or nil; in the latter case,
-the user will be prompt for a valid value."
-    (interactive "P")
-    (pcase-let ((`(,query-term ,beg ,end)
-                 ;; selection is active -> look up whatever is selected
-                 (if (use-region-p)
-                     (powerthesaurus--extract-query-region)
-                   ;; point is is at a word -> look it up
-                   (if (thing-at-point 'word)
-                       (powerthesaurus--extract-original-word)
-                     ;; nothing appropriate nearby -> ask the user
-                     (list nil nil nil)))))
-      (setq query-term (el-patch-swap (read-string "Term: " query-term)
-                                      (or query-term
-                                          (read-string "Term: " query-term)))
-            query-type (or query-type
-                           (completing-read "Query type: "
-                                                    powerthesaurus-supported-query-types
-                                                    nil t))
-            action-type (powerthesaurus-prefix-to-action action-type query-type))
-      (cond
-       ((eq action-type 'action-insert)
-        (when (null beg)
-          (setq beg (point) end (point))))
-       ((eq action-type 'action-display)
-        (when (or beg end)
-          (setq beg nil end nil))))
-      (funcall 'powerthesaurus-lookup query-term query-type beg end)))
-
   :general
   ("H-Y" 'powerthesaurus-lookup-dwim))
 #+end_src
@@ -8414,19 +8412,19 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   (setq pdf-view-use-imagemagick nil)
   (setq pdf-view-resize-factor 1.1)
   (setq pdf-annot-default-annotation-properties
-   '((t
-      (label . ps/personal-name))
-     (text
-      (color . "#ff0000")
-      (icon . "Note"))
-     (highlight
-      (color . "LightBlue2"))
-     (underline
-      (color . "blue"))
-     (squiggly
-      (color . "orange"))
-     (strike-out
-      (color . "red"))))
+        '((t
+           (label . ps/personal-name))
+          (text
+           (color . "#ff0000")
+           (icon . "Note"))
+          (highlight
+           (color . "LightBlue2"))
+          (underline
+           (color . "blue"))
+          (squiggly
+           (color . "orange"))
+          (strike-out
+           (color . "red"))))
 
   (unless (or noninteractive (eq this-command 'pdf-tools-install))
     (pdf-tools-install))
@@ -8510,6 +8508,13 @@ FILE."
                                 (format "pdftotext '%s' -" (buffer-file-name))))))
       (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
       (message "Copied all text in PDF to kill ring.")))
+
+  (defun ps/pdf-tools-install-no-confirm (orig-fun &rest args)
+    "Don't ask for confirmation when installing `pdf-tools'."
+    (let ((no-query-p t))
+      (apply orig-fun args)))
+
+  (advice-add 'pdf-tools-install :around #'ps/pdf-tools-install-no-confirm)
 
   (add-hook 'pdf-tools-enabled-hook #'ps/pdf-tools-apply-theme)
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
@@ -9315,6 +9320,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 
 #+begin_src emacs-lisp :results silent
 (use-package org
+  :demand t
   :config
   (setq org-directory ps/dir-org) ; set org directory
   (setq org-todo-keywords
@@ -9903,8 +9909,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   ;; (setq org-agenda-clockreport-parameter-plist)
   (setq org-agenda-files (list ps/file-calendar))
   (setq ps/org-agenda-files-excluded (list
-                                   ps/file-tlon-tareas-leo
-                                   ps/file-tlon-tareas-fede))
+                                      ps/file-tlon-tareas-leo
+                                      ps/file-tlon-tareas-fede))
 
   (defun ps/org-clocktable-sorter (ipos tables params)
     (setq tables (cl-sort tables (lambda (table1 table2) (> (nth 1 table1) (nth 1 table2)))))
@@ -11432,6 +11438,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :config
   (setq org-tags-exclude-from-inheritance '("crypt"))
   (setq org-crypt-key ps/personal-gmail)
+  (setq org-crypt-disable-auto-save t)
 
   (org-crypt-use-before-save-magic))
 #+end_src
@@ -14953,7 +14960,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
 :END:
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-feature mu4e-contrib
   :after mu4e
   :demand t)
@@ -14966,7 +14973,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 
 /[[https://github.com/iqbalansari/mu4e-alert][mu4e-alert]] supports desktop notifications and modeline display for mu4e./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package mu4e-alert
   :after mu4e
   :demand t
@@ -14991,7 +14998,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
 /[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent
 (use-package org-msg
   :after org mu4e
   :defer 3
@@ -17382,41 +17389,6 @@ And finally, the section you've all been waiting for.
 :END:
 - Migrated from ~straight~ to ~elpaca~.
 
-** tlon
-:PROPERTIES:
-:ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
-:END:
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/tlon)
-(use-package tlon
-  :elpaca (tlon
-           :host github
-           :repo "tlon-team/tlon")
-  :demand t
-  :config
-  (defun ps/tlon-meeting-with-fede ()
-    "TODO: docstring"
-    (interactive)
-    (ps/tlon-meeting-with
-     "Fede"
-     "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
-     "56CBB3F8-8E75-4298-99B3-899365EB75E0"
-     "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
-
-  (defun ps/tlon-meeting-with-leo ()
-    "TODO: docstring"
-    (interactive)
-    (ps/tlon-meeting-with
-     "Leo"
-     "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
-     "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-     "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
-
-  :general
-  (markdown-mode-map
-   "s-u" 'ps/tlon-eawiki-insert-url))
-#+end_src
-
 ** tlon-init
 :PROPERTIES:
 :ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
@@ -17426,9 +17398,60 @@ And finally, the section you've all been waiting for.
 (use-package tlon-init
   :elpaca (tlon-init
            :host github
-           :repo "tlon-team/tlon-init")
+           :repo "tlon-team/tlon-init"
+           :depth nil) ; clone entire repo, not just last commit
   :demand t)
 #+end_src
+
+** tlon-core
+:PROPERTIES:
+:ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/tlon)
+(use-package tlon-core
+  :elpaca (tlon-core
+           :host github
+           :repo "tlon-team/tlon-core"
+           :depth nil) ; clone entire repo, not just last commit
+  :demand t
+  :config
+  (defun ps/tlon-core-meeting-with-fede ()
+    "TODO: docstring"
+    (interactive)
+    (tlon-core-meeting-with
+     "Fede"
+     "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
+     "56CBB3F8-8E75-4298-99B3-899365EB75E0"
+     "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
+
+  (defun ps/tlon-core-meeting-with-leo ()
+    "TODO: docstring"
+    (interactive)
+    (ps/tlon-meeting-with
+     "Leo"
+     "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
+     "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
+     "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
+#+end_src
+
+** tlon-bae
+:PROPERTIES:
+:ID:       5EDD6F28-3299-4D90-83E1-C7476176277D
+:END:
+
+#+begin_src emacs-lisp
+(use-package tlon-bae
+  :elpaca (tlon-bae
+           :host github
+           :repo "tlon-team/tlon-bae"
+           :depth nil) ; clone entire repo, not just last commit
+  :demand t
+  :general
+  (markdown-mode-map
+   "s-u" 'tlon-bae-eawiki-insert-url))
+#+end_src
+
 
 ** Keyboard Maestro
 :PROPERTIES:

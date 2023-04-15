@@ -11460,6 +11460,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :config
   (setq org-tags-exclude-from-inheritance '("crypt"))
   (setq org-crypt-key ps/personal-gmail)
+  (setq org-crypt-disable-auto-save t)
 
   (org-crypt-use-before-save-magic))
 #+end_src

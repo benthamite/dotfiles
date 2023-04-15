@@ -17456,7 +17456,8 @@ And finally, the section you've all been waiting for.
 (use-package tlon-init
   :elpaca (tlon-init
            :host github
-           :repo "tlon-team/tlon-init")
+           :repo "tlon-team/tlon-init"
+           :depth nil) ; clone entire repo, not just last commit
   :demand t)
 #+end_src
 

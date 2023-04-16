@@ -15672,7 +15672,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "paxful\\.com"
                      "rescuetime\\.com"
                      "squarespace\\.com"
-                     "teatrocolon\\.com\\.ar"
+                     "teatrocolon\\.org\\.ar"
                      "twitter\\.com"
                      "youtu\\.be"
                      "youtube\\.com"

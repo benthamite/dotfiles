@@ -6161,6 +6161,19 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "s-c" 'forge-post-submit))
 #+end_src
 
+** orgit-forge
+:PROPERTIES:
+:ID:       8D2CFDBF-4DD1-412C-A9F0-0D9393156A11
+:END:
+
+/[[https://github.com/magit/orgit-forge][orgit-forge]] supports ~org-mode~ links to forge ~buffers~./
+
+#+begin_src emacs-lisp
+(use-package orgit-forge
+  :after org forge
+  :demand t)
+#+end_src
+
 ** code-review
 :PROPERTIES:
 :ID:       A0887865-7CAC-47E6-A894-D49F07BCBAF9

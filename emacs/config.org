@@ -8063,7 +8063,7 @@ insert italic delimiters and place the point in between them."
    "s-e" 'markdown-insert-code
    "s-i" 'markdown-insert-italic
    "s-k" 'markdown-insert-link
-   "s-u" 'ps/tlon-bae-insert-eawiki-url
+   "s-u" 'tlon-bae-insert-eawiki-url
    "s-v") ; should convert from html, mirroring the org binding
   ((ghm-mode-map markdown-mode-map org-mode-map)
    "H-s-v" 'ps/markdown-org-paste-dwim)

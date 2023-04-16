@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-channel-tips
+# key: tct
+# contributor: Pablo Stafforini
+# --
+[Tlön: Tips] $1

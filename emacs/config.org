@@ -2910,7 +2910,6 @@ clipboard. Either way, save count to kill ring."
 
   :general
   ("A-H-c" 'ps/count-words-dwim
-   "A-H-e" 'eval-defun
    "C-A-e" 'eval-expression
    "C-e" 'eval-last-sexp
    "H-M"  'ps/exchange-point-and-mark

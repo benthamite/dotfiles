@@ -6174,6 +6174,22 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :demand t)
 #+end_src
 
+** forge-search
+:PROPERTIES:
+:ID:       1E83FDA2-3529-4189-8F5D-6B3388A45AE4
+:END:
+
+/[[https://github.com/eatse21/forge-search.el/blob/master/forge-search.el][forge-search]] supports searching through issues and pull requests within ~forge~./
+
+#+begin_src emacs-lisp
+(use-package forge-search
+  :elpaca (forge-search
+           :host github
+	   :repo "eatse21/forge-search.el")
+  :after forge
+  :demand t)
+#+end_src
+
 ** code-review
 :PROPERTIES:
 :ID:       A0887865-7CAC-47E6-A894-D49F07BCBAF9

@@ -6185,7 +6185,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 (use-package forge-search
   :elpaca (forge-search
            :host github
-	   :repo "eatse21/forge-search.el")
+           :repo "eatse21/forge-search.el")
   :after forge
   :demand t
   :general
@@ -9372,6 +9372,8 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 /[[https://orgmode.org/][org-mode]] is a major mode for keeping notes, authoring documents, computational notebooks, literate programming, maintaining to-do lists, planning projects, and more./
 
 #+begin_src emacs-lisp :results silent
+(use-package org
+  :demand t
   (setq org-directory ps/dir-org) ; set org directory
   (setq org-todo-keywords
         '((sequence "TODO(t)"
@@ -9811,7 +9813,7 @@ image."
   (telega-chat-mode-map
    "s-b" (lambda! (org-emphasize ?*))
    "s-i" (lambda! (org-emphasize ?/))
-   "s-e" (lambda! (org-emphasize ?~)))
+   "s-e" (lambda! (org-emphasize ?~))))
 #+end_src
 
 *** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created

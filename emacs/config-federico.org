@@ -1,11 +1,75 @@
 #+title: Fede's config
 
+* tangle flags
+
+#+begin_src emacs-lisp :tangle (if (eq tlon-init-extra-config-tangle-pass 1) (print tlon-init-tangle-flags-path) "no")
+(
+ (:ps/aide . nil)
+ (:ps/anki-editor . nil)
+ (:ps/auto-commit-mode . nil)
+ (:ps/bbdb . nil)
+ (:ps/copilot . nil)
+ (:ps/corfu-doc-terminal . nil)
+ (:ps/corfu-terminal . nil)
+ (:ps/erc . nil)
+ (:ps/espotify . nil)
+ (:ps/frame . t)
+ (:ps/forge . t)
+ (:ps/git-auto-commit-mode . nil)
+ (:ps/hammy . nil)
+ (:ps/keytar . nil)
+ (:ps/midnight . nil)
+ (:ps/mixed-pitch . nil)
+ (:ps/mu4e . nil)
+ (:ps/mullvad . t)
+ (:ps/ns-win . nil)
+ (:ps/org-gcal . nil)
+ (:ps/org-roam . nil)
+ (:ps/org2blog . nil)
+ (:ps/orgmdb . nil)
+ (:ps/outline . nil)
+ (:ps/pdf-tools . t)
+ (:ps/puni . nil)
+ (:ps/remember . nil)
+ (:ps/server . nil)
+ (:ps/slack . nil)
+ (:ps/spelling . nil)
+ (:ps/tlon . nil)
+ (:ps/tlon-init . t)
+ (:ps/theme-loaddefs . nil)
+ (:ps/twittering-mode . nil)
+ (:ps/vulpea . nil)
+ (:ps/window . t)
+ )
+#+end_src
+
+* variables override                                                  :crypt:
+-----BEGIN PGP MESSAGE-----
+
+hF4DrdUg0Z9+SfsSAQdAE6cHci17mXzDaBLbizn/vfoh5eypQiv4uO/0iiMaSScw
+Kdaa2JiIt+QS0TFoWXMBIviS1AE9xY9Yr1o7+V3BLgJvr8KuLrywsRg37E0uPIcV
+0ukB/tSt98i7XlgEUcUTgcIepISk0gp/1pPiG6MPy6GEeVW9SCVWXnCqh+rQIhj2
+QA9uGsvji5SsVnNlTZD2K2wnUetZLKwt0phkZ5jYfpruytRL8S8MzAdDrTF+nubW
+EpqwL+A6U46653RlgxZSP8d4En9YJ7mAMDjvr/c8I9zVg+RP7TDAaxNQJEnAUVHz
+StdXOCzmWw4FSqrQwhzPLqfCGOEYZt422b/0KjdMeQ2QzR5Ib/UlgmyPRUEML6eP
+gBZzGGZftM6Ji5rVAZnmDvifSxX3JM6iqw1QVsD/kVUUwadAl9MvGprgYO/VMEsu
+wHayOpLIfNU6YoYe6StnhxcXmUOLF2x57pkzPhQTtDLxlenOSMxcRQsxI5Uk3Bcb
+u2Fx6Kf9YCxGYk+AhfY2R0MvABWbcJQjCQDwx6oNoXUH9kQe6TgHaJS96qsuAQz2
+ODgiXVbjnmtwUnw1UypkjFBGn6yJHvyF2s5OsfqNuEn3rzhBpzUIhLjj8ZEwuQfS
+iRmLj3aN+cDf7wMobak2SnnrKku7cGJHxsJi6V9RKGaFPznsE4dqW3T0tulRTHo6
+zN6HNJZLLatrAJ6oexOmG55mxIYeidQa7HpRX0+Uz00RsiF9ULkeT5x3zw4VFv+L
+HXZKU0z1YpSJJxOGHsoayuWuUMf8fX31JkwdNdCZHKDUssACCiNDJu4a/+iwr1qn
+R7KD6wUCYOKG8D9ZG6T5otqP+tDmjUHfdVuTfucZ+0181T6oTI7IDeeLXurTN8Lf
+86eHmowkECsM0VS912QxUPst1XgqI91BVL5wXsaxT9UMbnIGDdsgkw3v/r0uQjU+
+ehfMzrCMb33uOfHx7JsI7g8KP09By+3r7jyF63iHzas01E9S4dmpenzeng3OmOdW
+riXamHpyL3276nhjtXXQUdoNsoi1kjKnPA8VsYaAyb8696ZZIko=
+=g69j
+-----END PGP MESSAGE-----
+
 * code overrides
 
-#+begin_src emacs-lisp :tangle (print tlon-init-code-overrides-path)
-((:ps/early-init-frame-maximize
-  . ((ignore)))
- (:ps/org-id-add-ids-to-headings-in-file
+#+begin_src emacs-lisp :tangle (if (eq tlon-init-extra-config-tangle-pass 2) (print tlon-init-code-overrides-path) "no")
+((:ps/org-id-add-ids-to-headings-in-file
   . ((ignore)))
  (:ps/zotra-startup
   . ((ignore)))
@@ -65,7 +129,7 @@
 
 * post init
 
-#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+#+begin_src emacs-lisp :tangle (if (eq tlon-init-extra-config-tangle-pass 2) (print tlon-init-post-init-path) "no")
 (setq inhibit-startup-screen t)
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 (message "Loading fede's custom faces:")
@@ -83,9 +147,6 @@
   ;; disable C-return or it will interfere with org
   (define-key cua-global-keymap (kbd "<C-return>") nil)
   (setq shift-select-mode t))
-
-;; sets fn-delete to be right-delete:
-;; (global-set-key [kp-delete] 'delete-char)
 
 (general-define-key
  "<kp-delete>" 'delete-char
@@ -107,7 +168,8 @@
  "<M-left>" 'backward-word
  "<M-H-SPC>" 'execute-extended-command
  "H-:" 'eval-expression
- "<M-DEL>" 'backward-kill-word
+ "<M-backspace>" 'backward-kill-word
+ "<M-delete>" 'kill-word
  "<C-delete>" nil
  "<C-left>" nil
  "<C-S-left>" nil
@@ -350,94 +412,6 @@ one hour only."
   (defun ps/org-toggle-logbook ()))
 #+end_src
 
-* tangle flags
-
-#+begin_src emacs-lisp :tangle (print tlon-init-tangle-flags-path)
-(
- (:ps/aide . nil)
- (:ps/anki-editor . nil)
- (:ps/auto-commit-mode . nil)
- (:ps/bbdb . nil)
- (:ps/copilot . nil)
- (:ps/corfu-doc-terminal . nil)
- (:ps/corfu-terminal . nil)
- (:ps/erc . nil)
- (:ps/espotify . nil)
- (:ps/frame . nil)
- (:ps/forge . t)
- (:ps/git-auto-commit-mode . nil)
- (:ps/hammy . nil)
- (:ps/keytar . nil)
- (:ps/midnight . nil)
- (:ps/mixed-pitch . nil)
- (:ps/mu4e . nil)
- (:ps/ns-win . nil)
- (:ps/org-gcal . nil)
- (:ps/org-roam . nil)
- (:ps/org2blog . nil)
- (:ps/orgmdb . nil)
- (:ps/outline . nil)
- (:ps/pdf-tools . t)
- (:ps/puni . nil)
- (:ps/remember . nil)
- (:ps/server . nil)
- (:ps/slack . nil)
- (:ps/spelling . nil)
- (:ps/tlon . nil)
- (:ps/tlon-init . t)
- (:ps/theme-loaddefs . nil)
- (:ps/twittering-mode . nil)
- (:ps/vulpea . nil)
- (:ps/window . nil)
- )
-#+end_src
-
-* variables override                                                  :crypt:
------BEGIN PGP MESSAGE-----
-
-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
-NPHqE9wNhqVzAttEPyzHJg==
-=Sa3w
------END PGP MESSAGE-----
 * local variables
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "s-y") 'org-decrypt-entry)

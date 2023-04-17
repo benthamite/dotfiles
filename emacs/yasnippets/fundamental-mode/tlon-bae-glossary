@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: defer-loading
-# key: def
+# name: tlon-bae-glossary
+# key: tbg
 # contributor: Pablo Stafforini
 # --
-$1: defer loading
+"$1","$2","EN","ES"

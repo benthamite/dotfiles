@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: defer-loading
-# key: def
+# name: tlon-channel-docs
+# key: tcd
 # contributor: Pablo Stafforini
 # --
-$1: defer loading
+[Tlön: Docs] $1

@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: defer-loading
-# key: def
+# name: browse-url-add-urls
+# key: buau
 # contributor: Pablo Stafforini
 # --
-$1: defer loading
+browse-url: add urls

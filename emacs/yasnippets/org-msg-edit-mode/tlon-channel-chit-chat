@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: tlon-chit-chat-channel
+# name: tlon-channel-chit-chat
 # key: tccc
 # contributor: Pablo Stafforini
 # --
-[Tlön: Chit-chat] 
+[Tlön: Chit-chat] $1

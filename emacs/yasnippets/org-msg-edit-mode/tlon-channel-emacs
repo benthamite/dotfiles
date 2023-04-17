@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: tlon-updates-channel
-# key: tuc
+# name: tlon-channel-emacs
+# key: tce
 # contributor: Pablo Stafforini
 # --
-[Tlön: Updates] 
+[Tlön: Emacs] $1

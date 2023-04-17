@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: tlon-bae-channel
-# key: tbc
+# name: tlon-channel-bae
+# key: tcb
 # contributor: Pablo Stafforini
 # --
-[Tlön: BAE] 
+[Tlön: BAE] $1

@@ -608,7 +608,7 @@
          [:n :!QCTn :emacs]
          [:o :!QCTo :emacs]
          [:p :!QCTp :emacs]
-         [:q :!QCTq :emacs]
+         [:q :!QCOW9 :emacs] ; QCOq triggers ^⌘Q (lock screen)
          [:r :!QCTr :emacs]
          [:s :!QCTs :emacs]
          [:t :!QCTt :emacs]

@@ -1,6 +1,6 @@
 #+TITLE:Pablo's Emacs config
 #+AUTHOR: Pablo Stafforini
-#+PROPERTY: header-args :tangle (print ps/init-user-init-path)
+#+PROPERTY: header-args :tangle (print tlon-init-user-init-path)
 :PROPERTIES:
 :TOC:      ignore
 :END:
@@ -358,7 +358,7 @@ Some useful config files:
 
 The contents of this code block are tangled to the early-init.el file.
 
-#+begin_src emacs-lisp :tangle (print ps/init-early-init-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-early-init-path)
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 
@@ -496,6 +496,7 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
     (load "./elpaca-autoloads")))
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
+;; (toggle-debug-on-error) ; uncomment when debugging
 #+end_src
 
 ** use-package
@@ -615,7 +616,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 :ID:       3411777E-E554-4EF3-9389-63242D4F3072
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/ns-win)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/ns-win)
 (use-feature ns-win
   :demand t
   :config
@@ -1293,7 +1294,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 :ID:       8514378A-0BA2-4A8E-971F-10C07ED4D38A
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/server)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/server)
 (use-feature server
   :demand t
   :config
@@ -1385,7 +1386,7 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 
 /[[https://gitlab.com/jabranham/mixed-pitch][mixed-pitch]] allows mixing fixed-pitch and variable-pitch fonts./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/mixed-pitch)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mixed-pitch)
 (use-package mixed-pitch
   :demand t
   :config
@@ -1528,7 +1529,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :ID:       D75F0818-F8A2-45F1-8EB5-4548BCDE86BE
 :END:
 
-#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/theme-loaddefs)
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/theme-loaddefs)
 (use-feature emacs
   :demand t
   :config
@@ -1598,7 +1599,11 @@ installed."
            (add-hook 'ns-system-appearance-change-functions
                      #'ps/modus-themes-load-theme-emacs-plus))))
 
-  (ps/modus-themes-load-theme-conditionally)
+  (tlon-init-override-code-if-available
+   :ps/modus-themes-load
+   '(
+     (ps/modus-themes-load-theme-conditionally)
+     ))
 
   (setq modus-themes-common-palette-overrides
         `(
@@ -1742,27 +1747,31 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :init
   (doom-modeline-mode)
 
-  (setq doom-modeline-mu4e t)
-  (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
-  (setq doom-modeline-buffer-encoding nil)
-  (setq doom-modeline-irc t)
-  (setq doom-modeline-irc-buffers t)
-  (setq doom-modeline-github t)
-  (setq doom-modeline-github-interval (* 10 60))
-  (setq doom-modeline-buffer-file-name-style 'auto)
+  :config
+  (tlon-init-override-code-if-available
+   :ps/doom-modeline
+   '(
+     (setq doom-modeline-mu4e t)
+     (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
+     (setq doom-modeline-buffer-encoding nil)
+     (setq doom-modeline-irc t)
+     (setq doom-modeline-irc-buffers t)
+     (setq doom-modeline-github t)
+     (setq doom-modeline-github-interval (* 10 60))
+     (setq doom-modeline-buffer-file-name-style 'auto)
 
-  (doom-modeline-def-modeline 'main
-    '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
-    '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
+     (doom-modeline-def-modeline 'main
+       '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
+       '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
 
 
-  (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-                        (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-                        (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-                        (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-    (remove-hook (car hook-cons) (cdr hook-cons)))
+     (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
+                           (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+                           (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+                           (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+       (remove-hook (car hook-cons) (cdr hook-cons)))
 
-  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
+     (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))))
 #+end_src
 
 ** tab-bar
@@ -1773,7 +1782,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle  :tangle (ps/init-get-tangle-flag :ps/tab-bar)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/tab-bar)
 (use-feature tab-bar
   ;; :after wttr-mode
   :demand t
@@ -1826,7 +1835,7 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 
 /[[https://github.com/emacsorphanage/fancy-battery][fancy-battery]] displays battery information in the modeline./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/tab-bar)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/tab-bar)
 (use-package fancy-battery
   :defer 10
   :config
@@ -1998,10 +2007,10 @@ and generates profiling report."
       (profiler-stop))
     (setq ps/profiler-toggle (not ps/profiler-toggle)))
 
-(defun ps/profiler-report-toggle-entry-global ()
-"Expand all subentries below entry at point."
-(interactive)
-(profiler-report-toggle-entry '(4)))
+  (defun ps/profiler-report-toggle-entry-global ()
+    "Expand all subentries below entry at point."
+    (interactive)
+    (profiler-report-toggle-entry '(4)))
 
   :general
   ("A-C-p" 'ps/profiler-toggle)
@@ -2223,73 +2232,73 @@ CLOCK: [2021-04-21 Wed 21:25]--[2021-04-21 Wed 21:39] =>  0:14
 (use-feature simple
   :demand t
   :config
-(defun ps/backward-zap-to-char ()
-  (interactive)
-  (zap-to-char -1 (read-char-from-minibuffer "Zap to char: "
-                                             nil 'read-char-history)))
+  (defun ps/backward-zap-to-char ()
+    (interactive)
+    (zap-to-char -1 (read-char-from-minibuffer "Zap to char: "
+                                               nil 'read-char-history)))
 
-(defun ps/zap-copy-to-char (arg char)
-  "Copy up to and including ARGth occurrence of CHAR.
+  (defun ps/zap-copy-to-char (arg char)
+    "Copy up to and including ARGth occurrence of CHAR.
 Case is ignored if `case-fold-search' is non-nil in the current buffer.
 Goes backward if ARG is negative; error if CHAR not found.
 See also `zap-up-to-char'."
-  (interactive (list (prefix-numeric-value current-prefix-arg)
-                     (read-char-from-minibuffer "Zap to char: "
-                                                nil 'read-char-history)))
-  ;; Avoid "obsolete" warnings for translation-table-for-input.
-  (with-no-warnings
-    (if (char-table-p translation-table-for-input)
-        (setq char (or (aref translation-table-for-input char) char))))
-  (copy-region-as-kill (point) (progn
-                                 (search-forward (char-to-string char) nil nil arg)
-                                 (point))))
+    (interactive (list (prefix-numeric-value current-prefix-arg)
+                       (read-char-from-minibuffer "Zap to char: "
+                                                  nil 'read-char-history)))
+    ;; Avoid "obsolete" warnings for translation-table-for-input.
+    (with-no-warnings
+      (if (char-table-p translation-table-for-input)
+          (setq char (or (aref translation-table-for-input char) char))))
+    (copy-region-as-kill (point) (progn
+                                   (search-forward (char-to-string char) nil nil arg)
+                                   (point))))
 
-(defun ps/backward-zap-copy-to-char ()
-  (interactive)
-  (ps/zap-copy-to-char -1 (read-char-from-minibuffer "Zap to char: "
-                                                     nil 'read-char-history)))
-
-(defun ps/zap-delete-to-char (arg char)
-  "Copy up to and including ARGth occurrence of CHAR.
-Case is ignored if `case-fold-search' is non-nil in the current buffer.
-Goes backward if ARG is negative; error if CHAR not found.
-See also `zap-up-to-char'."
-  (interactive (list (prefix-numeric-value current-prefix-arg)
-                     (read-char-from-minibuffer "Zap to char: "
-                                                nil 'read-char-history)))
-  ;; Avoid "obsolete" warnings for translation-table-for-input.
-  (with-no-warnings
-    (if (char-table-p translation-table-for-input)
-        (setq char (or (aref translation-table-for-input char) char))))
-  (delete-region (point) (progn
-                           (search-forward (char-to-string char) nil nil arg)
-                           (point))))
-
-(defun ps/backward-zap-delete-to-char ()
-  (interactive)
-  (ps/zap-delete-to-char -1 (read-char-from-minibuffer "Zap to char: "
+  (defun ps/backward-zap-copy-to-char ()
+    (interactive)
+    (ps/zap-copy-to-char -1 (read-char-from-minibuffer "Zap to char: "
                                                        nil 'read-char-history)))
 
-(defun ps/transpose-chars-backward ()
-  "Interchange characters around point, moving backward one character."
-  (interactive)
-  (transpose-chars -1))
+  (defun ps/zap-delete-to-char (arg char)
+    "Copy up to and including ARGth occurrence of CHAR.
+Case is ignored if `case-fold-search' is non-nil in the current buffer.
+Goes backward if ARG is negative; error if CHAR not found.
+See also `zap-up-to-char'."
+    (interactive (list (prefix-numeric-value current-prefix-arg)
+                       (read-char-from-minibuffer "Zap to char: "
+                                                  nil 'read-char-history)))
+    ;; Avoid "obsolete" warnings for translation-table-for-input.
+    (with-no-warnings
+      (if (char-table-p translation-table-for-input)
+          (setq char (or (aref translation-table-for-input char) char))))
+    (delete-region (point) (progn
+                             (search-forward (char-to-string char) nil nil arg)
+                             (point))))
 
-:general
-( "A-H-M-d" 'transpose-chars
- "A-H-M-s" 'ps/transpose-chars-backward
- "C-H-M-s" 'delete-backward-char
- "C-H-M-d" 'delete-forward-char
- "C-H-M-t" 'just-one-space
- "C-H-M-f" 'zap-to-char
- "C-H-M-a" 'ps/backward-zap-to-char
- "A-C-H-M-S-s-f" 'ps/zap-delete-to-char
- "A-C-H-M-S-s-a" 'ps/backward-zap-delete-to-char
- "C-H-M-s-A-f" 'ps/zap-copy-to-char
- "C-H-M-s-A-a" 'ps/backward-zap-copy-to-char
- "C-H-M-=" 'overwrite-mode)
-(org-mode-map
- "C-H-M-s" 'org-delete-backward-char))
+  (defun ps/backward-zap-delete-to-char ()
+    (interactive)
+    (ps/zap-delete-to-char -1 (read-char-from-minibuffer "Zap to char: "
+                                                         nil 'read-char-history)))
+
+  (defun ps/transpose-chars-backward ()
+    "Interchange characters around point, moving backward one character."
+    (interactive)
+    (transpose-chars -1))
+
+  :general
+  ("A-H-M-d" 'transpose-chars
+   "A-H-M-s" 'ps/transpose-chars-backward
+   "C-H-M-s" 'delete-backward-char
+   "C-H-M-d" 'delete-forward-char
+   "C-H-M-t" 'just-one-space
+   "C-H-M-f" 'zap-to-char
+   "C-H-M-a" 'ps/backward-zap-to-char
+   "A-C-H-M-S-s-f" 'ps/zap-delete-to-char
+   "A-C-H-M-S-s-a" 'ps/backward-zap-delete-to-char
+   "C-H-M-s-A-f" 'ps/zap-copy-to-char
+   "C-H-M-s-A-a" 'ps/backward-zap-copy-to-char
+   "C-H-M-=" 'overwrite-mode)
+  (org-mode-map
+   "C-H-M-s" 'org-delete-backward-char))
 #+end_src
 
 ** words
@@ -2358,7 +2367,7 @@ CLOCK: [2021-05-29 Sat 21:12]--[2021-05-29 Sat 21:28] =>  0:16
    "C-H-M-s-A-r" 'ps/copy-word
    "C-H-M-s-A-q" 'ps/backward-copy-word
    "A-H-C-r" 'ps/delete-whole-word
-   "A-H-C-q" 'ps/copy-whole-word
+   "A-H-M-s-9" 'ps/copy-whole-word ; `.-q'
    "A-H-C-u" 'ps/kill-whole-word
    "A-H-M-r" 'transpose-words
    "A-H-M-q" 'ps/transpose-words-backward))
@@ -2650,6 +2659,7 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 :ID:       B1C4776A-4DB8-42FA-A7E9-D16ABF63C7FB
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-09 Sun 19:28]--[2023-04-09 Sun 19:58] =>  0:30
 CLOCK: [2021-07-31 Sat 22:17]--[2021-07-31 Sat 22:34] =>  0:17
 :END:
 
@@ -2900,7 +2910,6 @@ clipboard. Either way, save count to kill ring."
 
   :general
   ("A-H-c" 'ps/count-words-dwim
-   "A-H-e" 'eval-defun
    "C-A-e" 'eval-expression
    "C-e" 'eval-last-sexp
    "H-M"  'ps/exchange-point-and-mark
@@ -2989,6 +2998,24 @@ indent block only, else indent whole buffer."
   ("C-t" 'sort-lines))
 #+end_src
 
+** vundo
+:PROPERTIES:
+:ID:       616AD0A8-0098-4147-927E-E2A47B18A65E
+:END:
+
+/[[https://github.com/casouri/vundo][vundo]] displays the undo history as a tree./
+
+#+begin_src emacs-lisp
+(use-package vundo
+  :demand t
+  :general
+  (vundo-mode-map
+   "j" 'vundo-backward
+   ";" 'vundo-forward
+   "k" 'vundo-previous
+   "l" 'vundo-next))
+#+end_src
+
 ** outline
 :PROPERTIES:
 :ID:       286464A9-EB12-4351-A980-D9D837BDEABB
@@ -3002,7 +3029,7 @@ CLOCK: [2021-03-27 Sat 18:01]--[2021-03-27 Sat 19:53] =>  1:52
 CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/outline)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/outline)
 (use-feature outline
   :demand t
 
@@ -3015,21 +3042,6 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
    "<backtab>" 'outline-cycle-buffer
    "A-C-s-r" 'outline-backward-same-level
    "A-C-s-f" 'outline-forward-same-level))
-#+end_src
-
-** ediff
-:PROPERTIES:
-:ID:       987C9066-28ED-4B5A-944C-A90681182264
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature ediff
-  :config
-  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
-  (setq ediff-split-window-function 'split-window-horizontally)
-
-  :general
-  ("A-d" 'ediff))
 #+end_src
 
 ** fill
@@ -3176,6 +3188,9 @@ NO-TEMPLATE is non-nil."
            (car (cdr (car guessed-directories))))
       (if (and (not no-template) ps/yas-new-snippet-tlon)
           (yas-expand-snippet ps/yas-new-snippet-tlon))))
+
+  (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
+
 
   :general
   ("C-y" 'yas-new-snippet)
@@ -3475,6 +3490,7 @@ CLOCK: [2021-04-09 Fri 11:49]--[2021-04-09 Fri 11:49] =>  0:00
 :ID:       A7E824CC-5E71-4B12-A99B-D4C09CE164FF
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-12 Wed 12:43]--[2023-04-12 Wed 12:47] =>  0:04
 CLOCK: [2023-02-22 Wed 21:58]--[2023-02-22 Wed 23:59] =>  2:01
 CLOCK: [2022-08-19 Fri 13:45]--[2022-08-19 Fri 13:47] =>  0:02
 CLOCK: [2021-07-24 Sat 21:09]--[2021-07-24 Sat 21:34] =>  0:25
@@ -3925,7 +3941,8 @@ process in these cases."
     (interactive)
     (dolist (file (directory-files (file-name-concat ps/dir-chemacs-profiles "var/auto-save")))
       (when-let ((file-to-recover (string-replace "#" "" file)))
-        (ignore-errors (recover-file (string-replace "!" "/" file-to-recover))))))
+        (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
+        (ps/diff-buffer-with-file))))
 
   ;; `recover-this-file' notifications are easy to miss. The
   ;; function below triggers a more intrusive alert.
@@ -3965,7 +3982,21 @@ process in these cases."
       (diff-buffer-with-file (current-buffer))))
 
   (advice-add 'recover-this-file :after #'ps/diff-buffer-with-file)
-  (advice-add 'ps/recover-all-files :after #'ps/diff-buffer-with-file)
+
+  (defun ps/eject-external-hard-drive ()
+    "Eject external hard drive. Assumes only one external hard drive
+is connected."
+    (interactive)
+    (let ((list-external
+           (shell-command-to-string
+            "diskutil list external")))
+      (string-match
+       "/dev/disk\\([[:digit:]]\\) (external, physical):"
+       list-external)
+      (shell-command
+       (format
+        "diskutil eject disk%s"
+        (match-string 1 list-external)))))
 
   ;; disabling until we diagnose issues
   ;; (setq auto-save-visited-predicate
@@ -3994,13 +4025,13 @@ process in these cases."
    "H-C-S-g" 'top-level
    "H-C-A-g" 'keyboard-escape-quit ; ESC ESC ESC
    "A-H-v" 'ps/internet-archive-dwim)
+  ((dired-mode-map pdf-view-mode-map)
+   "s-o" 'ps/ocr-pdf)
   ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "H-q" 'bury-buffer
    "q" 'ps/bury-buffer-switch-to-other-window)
   ((apropos-mode-map calendar-mode-map chatgpt-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
    "q" 'ps/kill-this-buffer)
-  ((dired-mode-map pdf-view-mode-map)
-   "s-o" 'ps/ocr-pdf)
   ;; We typically enter these modes to lookup some information and
   ;; then return to the previous buffer, so we set `q' to switch to
   ;; the other window, and reserve `Q' for the normal behavior
@@ -4008,7 +4039,9 @@ process in these cases."
    "Q" 'ps/kill-this-buffer
    "q" 'ps/kill-this-buffer-switch-to-other-window)
   ((telega-chat-mode-map)
-   "s-q" 'ps/kill-this-buffer))
+   "s-q" 'ps/kill-this-buffer)
+  (pdf-view-mode-map
+   "s" 'save-buffer))
 #+end_src
 
 ** f
@@ -4478,8 +4511,6 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
       (select-frame-set-input-focus (window-frame (active-minibuffer-window)))
       (select-window (active-minibuffer-window))))
 
-  (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
-
   :general
   ("A-C-H-0" 'ps/switch-to-minibuffer-window)
   ((minibuffer-mode-map)
@@ -4822,7 +4853,11 @@ window depending on the number of present windows."
     (interactive)
     (ps/window-buffer-move (when (> (count-windows) 2) (winum-get-window-by-number 2))))
 
+  (tlon-init-override-code-if-available
+   :ps/window-split
+   '(
      (add-hook 'elpaca-after-init-hook #'ps/window-split-if-unsplit)
+     ))
 
   :general
   ("C-H-0" 'ps/switch-to-last-window
@@ -4868,9 +4903,12 @@ window depending on the number of present windows."
   ;; When returning focus to Emacs after browsing other macOS windows,
   ;; the frame is sometimes not fully maximized. This advice makes
   ;; Emacs maximize the frame every time focus is regained.
-  (add-function :after after-focus-change-function
-                (lambda ()
-                  (set-frame-parameter nil 'fullscreen 'maximized)))
+  (tlon-init-override-code-if-available
+   :ps/frame-maximize
+   '(
+     (add-function :after after-focus-change-function
+                   (lambda ()
+                     (set-frame-parameter nil 'fullscreen 'maximized)))))
 
   :general
   ("H-S-SPC" 'other-frame))
@@ -5396,10 +5434,10 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 [2023-03-01 Wed 10:54] Check [[https://github.com/dedenbangkit/.emacs.d/blob/2cf69eb102af5a5cab7ec1d65af77e997082e17a/custom/main.el#L34][this config]] in case it helps me figure out how to avoid getting prompted for a password so frequently.
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org-gcal)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-gcal)
 (use-package org-gcal
   :elpaca (org-gcal :type git :host github :repo "kidd/org-gcal.el")
-  :after auth-source-pass org request-deferred
+  :after auth-source-pass org
   :defer 15
 
   :init
@@ -5788,7 +5826,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 
 /[[https://github.com/josegpt/display-wttr][display-wttr]] displays weather information in the modeline (or tab-bar)./
 
-#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/tab-bar)
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/tab-bar)
 (use-package display-wttr
   :defer 10
   :config
@@ -5915,7 +5953,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 :ID:       438AD8A8-0F4F-4A1D-9BC9-110906944509
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/remember)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/remember)
 (use-feature remember
   :demand t
   :init
@@ -5949,6 +5987,53 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   :config
   (setq vc-follow-symlinks t) ; don't ask for confirmation when opening symlinked file
   (setq vc-make-backup-files nil)) ; do not backup version controlled files
+#+end_src
+
+** ediff
+:PROPERTIES:
+:ID:       987C9066-28ED-4B5A-944C-A90681182264
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature ediff
+  :config
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+  (setq ediff-split-window-function 'split-window-horizontally)
+
+  :general
+  ("A-d" 'ediff))
+#+end_src
+
+** diff-mode
+:PROPERTIES:
+:ID:       33F1D5AA-3DA7-43EC-8ACD-0D8360445459
+:END:
+
+#+begin_src emacs-lisp
+(use-feature diff-mode
+  :demand t
+  :general
+  (diff-mode-map
+   "M-o" nil))
+#+end_src
+
+** smerge
+:PROPERTIES:
+:ID:       FE85CC7E-E2A0-4494-8D1E-A64A4C40013E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature smerge-mode
+  :general
+  (smerge-mode-map
+   "s-n" 'smerge-next
+   "s-SPC" 'smerge-next
+   "s-p" 'smerge-prev
+   "s-l" 'smerge-keep-lower
+   "s-k" 'smerge-keep-upper
+   "s-a" 'smerge-keep-all
+   "s-b" 'smerge-keep-base
+   "s-c" 'smerge-keep-current))
 #+end_src
 
 ** magit
@@ -6059,7 +6144,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 /[[https://github.com/magit/forge][forge]] let's one work with git forges directly from magit./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/forge)
 (use-package forge
   :after magit ghub emacsql
   :demand t
@@ -6076,9 +6161,51 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "s-c" 'forge-post-submit))
 #+end_src
 
+** orgit-forge
+:PROPERTIES:
+:ID:       8D2CFDBF-4DD1-412C-A9F0-0D9393156A11
+:END:
+
+/[[https://github.com/magit/orgit-forge][orgit-forge]] supports ~org-mode~ links to forge ~buffers~./
+
+#+begin_src emacs-lisp
+(use-package orgit-forge
+  :after org forge
+  :demand t)
+#+end_src
+
+** forge-search
+:PROPERTIES:
+:ID:       1E83FDA2-3529-4189-8F5D-6B3388A45AE4
+:END:
+
+/[[https://github.com/eatse21/forge-search.el/blob/master/forge-search.el][forge-search]] supports searching through issues and pull requests within ~forge~./
+
+#+begin_src emacs-lisp
+(use-package forge-search
+  :elpaca (forge-search
+           :host github
+	   :repo "eatse21/forge-search.el")
+  :after forge
+  :demand t
+  :general
+  (magit-status-mode-map
+   "N s" 'forge-search)
+  ((forge-topic-mode-map
+    forge-topic-list-mode-map
+    forge-issue-list-mode-map
+    forge-pullreq-list-mode-map
+    forge-notifications-mode-map
+    forge-repository-list-mode-map)
+   "s" 'forge-search))
+#+end_src
+
 ** code-review
 :PROPERTIES:
 :ID:       A0887865-7CAC-47E6-A894-D49F07BCBAF9
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-10 Mon 14:31]--[2023-04-10 Mon 14:44] =>  0:13
 :END:
 
 /[[https://github.com/wandersoncferreira/code-review][code-review]] helps perform code reviews from Emacs./
@@ -6098,11 +6225,27 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :PROPERTIES:
 :ID:       7AB2F3A1-F542-4F27-A576-470630DC0909
 :END:
+:LOGBOOK:
+CLOCK: [2023-04-10 Mon 16:25]--[2023-04-10 Mon 16:50] =>  0:25
+CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
+:END:
 
 /[[https://github.com/charignon/github-review][github-review]] provides Emacs support for GitHub code reviews ./
 
 #+begin_src emacs-lisp
-(use-package github-review)
+(use-package github-review
+  :after forge
+  :config
+  (setq github-review-view-comments-in-code-lines t)
+  (setq github-review-reply-inline-comments t)
+
+  :general
+  (github-review-mode-map
+   "s-m" 'github-review-comment
+   "s-r" 'github-review-reject
+   "s-a" 'github-review-approve)
+  (magit-status-mode-map
+   "s-r" 'github-review-forge-pr-at-point))
 #+end_src
 
 
@@ -6113,7 +6256,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 /[[https://github.com/ryuslash/git-auto-commit-mode][git-auto-commit-mode]] allows for committing and pushing automatically after each save./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/git-auto-commit-mode)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/git-auto-commit-mode)
 (use-package git-auto-commit-mode
   :config
   (setq-default gac-automatically-push-p nil)
@@ -6465,10 +6608,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   :demand t
   :config
   ;; replace `rg' with `rga'
-  (setq consult-ripgrep-args
-        (concat (substring consult-ripgrep-args 0 2)
-                "a"
-                (substring consult-ripgrep-args 2)))
+  (setq consult-ripgrep-args "rga --null --line-buffered --color=never --max-columns=1000 --path-separator /   --smart-case --no-heading --with-filename --line-number --search-zip")
   (setq consult-locate-args "mdfind")
   (setq consult-narrow-key "<")
   (setq consult-widen-key ">")
@@ -6652,7 +6792,7 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
 
 /[[https://gitlab.com/OlMon/consult-flyspell][consult-flyspell]] integrates flyspell with consult./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-package consult-flyspell
   :after consult flyspell)
 #+end_src
@@ -6835,7 +6975,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 /[[https://codeberg.org/akib/emacs-corfu-terminal][corfu-terminal]] enables corfu popups on terminal./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/corfu-terminal)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/corfu-terminal)
 (use-package corfu-terminal
   :after corfu
   :defer 30
@@ -7262,6 +7402,25 @@ necessary."
    "M-n" nil))
 #+end_src
 
+** emacs-eat
+:PROPERTIES:
+:ID:       94971F2F-FF78-4088-BBDB-A95ADEDECE9B
+:END:
+
+/[[https://codeberg.org/akib/emacs-eat][emacs-eat]] is a terminal emulator./
+
+#+begin_src emacs-lisp
+(use-package eat
+  :elpaca (eat :type git
+               :host codeberg
+               :repo "akib/emacs-eat"
+               :files ("*.el" ("term" "term/*.el") "*.texi"
+                       "*.ti" ("terminfo/e" "terminfo/e/*")
+                       ("terminfo/65" "terminfo/65/*")
+                       ("integration" "integration/*")
+                       (:exclude ".dir-locals.el" "*-tests.el"))))
+#+end_src
+
 ** em-hist
 :PROPERTIES:
 :ID:       692C4FF8-FD07-4D35-A9B3-A87F0E9A1B53
@@ -7275,7 +7434,6 @@ necessary."
   (setq eshell-hist-ignoredups t)
   (setq eshell-save-history-on-exit t))
 #+end_src
-
 
 ** eshell-syntax-highlighting
 :PROPERTIES:
@@ -7329,7 +7487,7 @@ CLOCK: [2021-08-03 Tue 10:05]--[2021-08-03 Tue 10:13] =>  0:08
 CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-feature ispell
   :defer 10
   :config
@@ -7487,7 +7645,7 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
 
 /[[https://github.com/rolandwalker/flyspell-lazy][flyspell-lazy]] improves Emacs flyspell responsiveness using idle timers./
 
-#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-package flyspell-lazy
   :after flyspell
   :demand t
@@ -7502,7 +7660,7 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
 
 /[[https://github.com/d12frosted/flyspell-correct][flyspell-correct]] provides distraction-free words correction with flyspell via selected interface./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-package flyspell-correct
   :demand t
   :after flyspell)
@@ -7517,7 +7675,7 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
 
 This package is required by lsp-grammarly.
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/keytar)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/keytar)
 (use-package keytar
   :defer 10)
 #+end_src
@@ -7532,7 +7690,7 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
 
 /[[https://github.com/emacs-grammarly/grammarly][grammarly]] is an API interface for [[https://www.grammarly.com/][Grammarly]]./
 
-#+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-package grammarly
   :defer 25
   :config
@@ -7569,7 +7727,7 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 
 [2022-10-06 Thu 23:35] At the moment, the premium version isn't working. The package maintainers are migrating to to a new server, which may resolve the issues I was having authenticating my account. You can check whether the premium account is being used by evaluating ~(grammarly-premium-p)~.
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-package lsp-grammarly
   :after lsp-mode keytar grammarly
   :demand t
@@ -7609,7 +7767,7 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 
 /[[https://github.com/junjizhi/aide.el][aide]] is an Emacs front end for GPT APIs like OpenAI./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/aide)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/aide)
 (use-package aide
   :elpaca (aide
              :host github
@@ -7737,46 +7895,6 @@ CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
 
 #+begin_src emacs-lisp :results silent
 (use-package powerthesaurus
-  :config/el-patch
-  (defun powerthesaurus-lookup-dwim (&optional action-type query-type)
-    "Wrapper function for general lookup commands.
-
-When called interactively, optional argument ACTION-TYPE corresponds to
-the prefix argument passed to this command, which is translated to an action
-using `powerthesaurus-prefix-to-action'.  When called programmatically,
-its value can either be nil or a symbol that can be possibly returned by
-`powerthesaurus-prefix-to-action' (e.g., `action-insert' or `action-display').
-
-The argument passed to QUERY-TYPE should be the same as in
-`powerthesaurus-lookup' or nil; in the latter case,
-the user will be prompt for a valid value."
-    (interactive "P")
-    (pcase-let ((`(,query-term ,beg ,end)
-                 ;; selection is active -> look up whatever is selected
-                 (if (use-region-p)
-                     (powerthesaurus--extract-query-region)
-                   ;; point is is at a word -> look it up
-                   (if (thing-at-point 'word)
-                       (powerthesaurus--extract-original-word)
-                     ;; nothing appropriate nearby -> ask the user
-                     (list nil nil nil)))))
-      (setq query-term (el-patch-swap (read-string "Term: " query-term)
-                                      (or query-term
-                                          (read-string "Term: " query-term)))
-            query-type (or query-type
-                           (completing-read "Query type: "
-                                                    powerthesaurus-supported-query-types
-                                                    nil t))
-            action-type (powerthesaurus-prefix-to-action action-type query-type))
-      (cond
-       ((eq action-type 'action-insert)
-        (when (null beg)
-          (setq beg (point) end (point))))
-       ((eq action-type 'action-display)
-        (when (or beg end)
-          (setq beg nil end nil))))
-      (funcall 'powerthesaurus-lookup query-term query-type beg end)))
-
   :general
   ("H-Y" 'powerthesaurus-lookup-dwim))
 #+end_src
@@ -7915,14 +8033,30 @@ insert italic delimiters and place the point in between them."
   (setq markdown-disable-tooltip-prompt t)
   (setq markdown-italic-underscore 'double)
 
-  (defun ps/markdown-paste-from-org ()
-    "Take the contents of the system clipboard and use `pandoc' to
-convert it from org-mode to markdown."
+  (defun ps/markdown-org-paste-dwim ()
+    "Convert between `org-mode' and `markdown' based on current mode."
     (interactive)
     (let* ((clipboard (if (eq system-type 'darwin)
                           "pbv public.utf8-plain-text"
                         "xclip -out -selection 'clipboard' -t text/html"))
-           (pandoc (concat "pandoc --wrap=none -f org -t markdown"))
+           (source (if (eq major-mode 'org-mode) "markdown" "org"))
+           (target (if (eq source 'org-mode) "markdown" "org"))
+           (pandoc (concat "pandoc --wrap=none -f " source " -t " target))
+           (cmd (concat clipboard " | " pandoc))
+           (output (shell-command-to-string cmd))
+           ;; Not sure why Pandoc adds these double slashes; we remove them
+           (output (replace-regexp-in-string "^\\\\\\\\$" "" output))
+           (text (replace-regexp-in-string "= " "= " output)))
+      (kill-new text)
+      (yank)))
+
+  (defun ps/org-paste-from-markdown ()
+    "Convert clipboard contents from `markdown' to `org-mode'."
+    (interactive)
+    (let* ((clipboard (if (eq system-type 'darwin)
+                          "pbv public.utf8-plain-text"
+                        "xclip -out -selection 'clipboard' -t text/html"))
+           (pandoc (concat "pandoc --wrap=none -f markdown -t org"))
            (cmd (concat clipboard " | " pandoc))
            (output (shell-command-to-string cmd))
            ;; Not sure why Pandoc adds these double slashes; we remove them
@@ -7939,7 +8073,10 @@ convert it from org-mode to markdown."
    "s-e" 'markdown-insert-code
    "s-i" 'markdown-insert-italic
    "s-k" 'markdown-insert-link
-   "s-v" 'ps/markdown-paste-from-org)
+   "s-u" 'tlon-bae-insert-eawiki-url
+   "s-v") ; should convert from html, mirroring the org binding
+  ((ghm-mode-map markdown-mode-map org-mode-map)
+   "H-s-v" 'ps/markdown-org-paste-dwim)
   (gfm-mode-map
    "s-a" 'markdown-insert-gfm-code-block
    "s-z" 'markdown-edit-code-block))
@@ -8319,7 +8456,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
 /[[https://github.com/vedang/pdf-tools][pdf-tools]] is a support library for PDF files./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/pdf-tools)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/pdf-tools)
 (use-package pdf-tools
   :defer 10
   :mode ("\\.pdf\\'" . pdf-view-mode)
@@ -8328,19 +8465,19 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   (setq pdf-view-use-imagemagick nil)
   (setq pdf-view-resize-factor 1.1)
   (setq pdf-annot-default-annotation-properties
-   '((t
-      (label . ps/personal-name))
-     (text
-      (color . "#ff0000")
-      (icon . "Note"))
-     (highlight
-      (color . "LightBlue2"))
-     (underline
-      (color . "blue"))
-     (squiggly
-      (color . "orange"))
-     (strike-out
-      (color . "red"))))
+        '((t
+           (label . ps/personal-name))
+          (text
+           (color . "#ff0000")
+           (icon . "Note"))
+          (highlight
+           (color . "LightBlue2"))
+          (underline
+           (color . "blue"))
+          (squiggly
+           (color . "orange"))
+          (strike-out
+           (color . "red"))))
 
   (unless (or noninteractive (eq this-command 'pdf-tools-install))
     (pdf-tools-install))
@@ -8424,6 +8561,13 @@ FILE."
                                 (format "pdftotext '%s' -" (buffer-file-name))))))
       (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
       (message "Copied all text in PDF to kill ring.")))
+
+  (defun ps/pdf-tools-install-no-confirm (orig-fun &rest args)
+    "Don't ask for confirmation when installing `pdf-tools'."
+    (let ((no-query-p t))
+      (apply orig-fun args)))
+
+  (advice-add 'pdf-tools-install :around #'ps/pdf-tools-install-no-confirm)
 
   (add-hook 'pdf-tools-enabled-hook #'ps/pdf-tools-apply-theme)
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
@@ -8526,6 +8670,9 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
   :demand t
   :config
   (global-prettify-symbols-mode)
+  (add-hook 'prog-mode-hook 'outline-minor-mode)
+  (add-hook 'prog-mode-hook 'hs-minor-mode)
+
   :general
   ("A-H-v" 'set-variable
    "M-d" 'toggle-debug-on-error
@@ -8533,8 +8680,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
   (prog-mode-map
    "A-H-C-i" 'mark-defun
    "M-." 'xref-find-definitions)
-  (emacs-lisp-mode-map shell-mode-map
-                       "s-c" 'exit-recursive-edit))
+  ((emacs-lisp-mode-map shell-mode-map)
+   "s-c" 'exit-recursive-edit))
 #+end_src
 
 ** flymake
@@ -8766,7 +8913,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp
 (use-package aggressive-indent
-  :defer 20
+  :defer 5
   :config
   (global-aggressive-indent-mode))
 #+end_src
@@ -8828,7 +8975,12 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
 
 #+begin_src emacs-lisp :results silent
 (use-package bicycle
-  :after outline)
+  :after outline
+  :demand t
+  :general
+  (outline-minor-mode-map
+   ("s-TAB" . bicycle-cycle)
+   ("S-TAB" . bicycle-cycle-global)))
 #+end_src
 
 * AI
@@ -8843,7 +8995,7 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
 
 /[[https://github.com/zerolfx/copilot.el][copilot]] is an unofficial Copilot plugin for Emacs./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/copilot)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/copilot)
 (use-package copilot
   :elpaca (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
   :demand t
@@ -8931,8 +9083,8 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
 #+begin_src emacs-lisp
 (use-package org-ai
   :elpaca  (org-ai :type git :host github :repo "rksm/org-ai"
-                     :local-repo "org-ai"
-                     :files ("*.el" "README.md" "snippets"))
+                   :local-repo "org-ai"
+                   :files ("*.el" "README.md" "snippets"))
   :after org
   :commands org-ai-mode
   :config
@@ -9646,7 +9798,6 @@ image."
    "s-v" 'ps/org-paste-html
    "s-A-v" 'ps/org-paste-image
    "s-y" 'org-evaluate-time-range
-   "s-A-y" 'ps/org-open-at-point-with-eww
    "s-z" 'org-edit-special
    "s-A-z" 'ps/org-export-to-ea-wiki
    "s-," 'org-priority
@@ -9808,8 +9959,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   ;; (setq org-agenda-clockreport-parameter-plist)
   (setq org-agenda-files (list ps/file-calendar))
   (setq ps/org-agenda-files-excluded (list
-                                   ps/file-tlon-tareas-leo
-                                   ps/file-tlon-tareas-fede))
+                                      ps/file-tlon-tareas-leo
+                                      ps/file-tlon-tareas-fede))
 
   (defun ps/org-clocktable-sorter (ipos tables params)
     (setq tables (cl-sort tables (lambda (table1 table2) (> (nth 1 table1) (nth 1 table2)))))
@@ -10635,6 +10786,11 @@ present, then archive it."
    "s-A-a" 'org-archive-subtree))
 #+end_src
 
+*** TODO Align org-archive tags
+:PROPERTIES:
+:ID:       568D63EF-8C13-41CE-939A-AE996F6D13F9
+:END:
+
 *** TODO [#6] Process archives ~org/archive~
 :PROPERTIES:
 :ID:       855BC5BD-2A50-4DB8-BD91-4E0F6ECD50D6
@@ -11087,7 +11243,7 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 :ID:       B1A25249-1E67-498D-8A68-0E4BDB3D0A2B
 :END:
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/bbdb)
 (use-feature ol-bbdb
   :after org bbdb
   :after ol
@@ -11235,7 +11391,9 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
                       (cons "p" 'org-babel-remove-result-one-or-many)))
     (add-to-list 'org-babel-key-bindings cons))
 
-  (define-key org-mode-map (kbd "s-b") #'ps/init-build))
+  :general
+  (org-mode-map
+   "s-b" 'tlon-init-build))
 #+end_src
 
 ** org-src
@@ -11330,6 +11488,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :config
   (setq org-tags-exclude-from-inheritance '("crypt"))
   (setq org-crypt-key ps/personal-gmail)
+  (setq org-crypt-disable-auto-save t)
 
   (org-crypt-use-before-save-magic))
 #+end_src
@@ -11425,7 +11584,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 /[[https://github.com/org2blog/org2blog][org2blog]] lets you blog from Org mode to WordPress./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org2blog)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org2blog)
 (use-package org2blog
   :after auth-source-pass
   :config
@@ -11606,6 +11765,7 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
     (setq org-pomodoro-finished-sound "/System/Library/Sounds/Blow.aiff"))
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
+  (setq org-pomodoro-format "🍅 %s")
 
   :general
   ("H-s-i" 'org-pomodoro
@@ -11675,7 +11835,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
 /[[https://github.com/org-roam/][org-roam]] is a Roam replica with org-mode./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org-roam)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-roam)
 (use-package org-roam
   :after org emacsql
   :demand t
@@ -11930,7 +12090,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
 
 /[[https://github.com/org-roam/org-roam-ui][org-roam-ui]] is a graphical frontend for exploring org-roam./
 
-#+begin_src emacs-lisp :results silent :tangle (ps/init-get-tangle-flag :ps/org-roam)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-roam)
 (use-package org-roam-ui
   :elpaca
   (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
@@ -12251,16 +12411,14 @@ ARG is the prefix argument received when calling interactively the function."
   (setq org-cite-csl-styles-dir ps/dir-csl-styles)
   (setq org-cite-csl-locales-dir ps/dir-csl-locales)
   (setq org-cite-insert-processor 'citar)
-  (setq org-cite-follow-processor 'citar) ; `org-open-at-point` integration
+  (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (setq org-cite-activate-processor 'citar) ;
   (setq org-cite-export-processors
         '((md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
           (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
           (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
           (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
-          (t csl "american-medical-association-brackets.csl"))) ; fallback
-  :general
-  ("H-/" 'org-cite-insert))
+          (t csl "american-medical-association-brackets.csl")))) ; fallback
 #+end_src
 
 *** TODO Learn how to use ~org-cite~ style and variants
@@ -14476,12 +14634,12 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
 /[[https://github.com/djcb/mu][mu4e]] is an an emacs-based e-mail client./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-package mu4e
   :elpaca (:local-repo
-             "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
-             :pre-build
-             ())
+           "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
+           :pre-build
+           ())
   :init
   (setq ps/mu4e-inbox-folder "/Inbox")
   (setq ps/mu4e-daily-folder "/Daily")
@@ -14531,28 +14689,33 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
           ((eq mark 'unflag) (mu4e-action-retag-message msg "-\\Starred"))))
 
   (defun ps/mu4e-headers-archive ()
-    "In headers mode, archive message at point, without asking for
-confirmation."
+    "In headers mode, archive message at point.
+Do not ask for confirmation."
     (interactive)
     (mu4e-headers-mark-for-refile)
     (mu4e-mark-execute-all t))
 
   (defun ps/mu4e-view-archive ()
-    "In view mode, archive message at point, without asking for
-confirmation."
+    "In view mode, archive message at point.
+Do not ask for confirmation."
     (interactive)
     (mu4e-view-mark-for-refile)
     (mu4e-mark-execute-all t))
 
   (defun ps/mu4e-view-org-capture (&optional arg)
-    "In view mode, capture message at point with `org-capture' and,
- unless invoked with a prefix argument, archive it.
+    "In view mode, `org-capture' message at point and archive it.
+If invoked with prefix argument, capture without archiving it.
 
 If the message body contains with '[org-capture key: KEY]',
 interpret KEY as the org-capture template key."
     (interactive "P")
     (if (eq major-mode 'mu4e-view-mode)
-        (let* ((message-body (mu4e-message-field (mu4e-message-at-point) :body-txt))
+        (let* ((message-body (or (mu4e-message-field (mu4e-message-at-point) :body-txt)
+                                 ;; inexplicably, the above returns nil
+                                 ;; for a few non-empty messages; to avoid
+                                 ;; an error in these cases, we add an
+                                 ;; empty string as a second disjunct
+                                 ""))
                (key (if
                         (string-match "\\[org-capture key: \\(.*\\)\\]" message-body)
                         (match-string-no-properties 1 message-body)
@@ -15407,7 +15570,7 @@ CLOCK: [2021-06-02 Wed 12:02]--[2021-06-02 Wed 12:39] =>  0:37
 
 /[[https://www.gnu.org/software/emacs/manual/html_mono/erc.html][erc]] is an IRC client for Emacs./
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/erc)
+#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :ps/erc)
 (use-feature erc
   :after auth-source-pass
   :config
@@ -15486,26 +15649,57 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
   (setq browse-url-chrome-program "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
   (let ((default 'browse-url-default-browser)
         (firefox 'browse-url-firefox))
-    (dolist (regex '("doi\\.org"
+    ;; these are websites that use JS and have to be browsed
+    ;; externally. there are many sites I hardly ever use, but the
+    ;; list aspires to be exhaustive rather than representative of
+    ;; my browsing habits.
+    (dolist (regex '("airbnb\\.com"
+                     "airtable\\.com"
+                     "amazon\\."
+                     "archive\\.org"
+                     "beyondpricing\\.com"
+                     "connectedpapers\\.com"
+                     "doi\\.org"
                      "effectivealtruism\\.org"
+                     "facebook\\.com"
                      "github\\.com"
                      "gmail\\.com"
-                     "google\\.com"
+                     "goodreads\\.com"
+                     "google\\."
                      "grammarly\\.com"
+                     "hathitrust\\.org"
                      "imdb\\.com"
+                     "interactivebrokers\\.co"
+                     "libgen\\."
+                     "utoronto\\.ca"
+                     "worldcat\\.org"
+                     "mercadolibre\\."
                      "metaculus\\.com"
                      "metaforecast\\.com"
-                     "youtube\\.com"))
+                     "paxful\\.com"
+                     "rescuetime\\.com"
+                     "squarespace\\.com"
+                     "teatrocolon\\.org\\.ar"
+                     "twitter\\.com"
+                     "youtu\\.be"
+                     "youtube\\.com"
+                     "zoom\\.us"))
       (push (cons regex 'browse-url-default-browser) browse-url-handlers))
     (dolist (regex '("economist\\.com"
                      "ft\\.com"))
       (push (cons regex 'browse-url-firefox) browse-url-handlers)))
 
+  (defun ps/browse-url-of-dired-file-externally ()
+    "In Dired, open the file at point in an external browser."
+    (interactive)
+    (let ((browse-url-browser-function 'browse-url-default-browser))
+      (browse-url-of-dired-file)))
+
   :general
   (mhtml-mode-map
    "s-x" 'browse-url-of-buffer)
   (dired-mode-map
-   "e" 'browse-url-of-dired-file))
+   "e" 'ps/browse-url-of-dired-file-externally))
 #+end_src
 
 ** shr
@@ -15616,14 +15810,7 @@ To be used by `eww-after-render-hook'."
     (let ((name (if (eq "" (plist-get eww-data :title))
                     (plist-get eww-data :url)
                   (plist-get eww-data :title))))
-      (rename-buffer (format "%s" (truncate-string-to-width name 14)) t)))
-
-  (defun ps/org-open-at-point-with-eww ()
-    "Open org link at point with eww."
-    (interactive)
-    (let ((browse-url-handlers nil)
-          (browse-url-browser-function #'eww-browse-url))
-      (org-open-at-point)))
+      (rename-buffer name)))
 
   (defun ps/url-to-pdf (url)
     ;; TODO: Default to eww buffer or kill-ring if content is URL.
@@ -16137,11 +16324,11 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
 
 /[[https://github.com/hayamiz/twittering-mode][twittering-mode]] is a Twitter client for Emacs./
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/twittering-mode)
-(defalias 'epa--decode-coding-string 'decode-coding-string) ; github.com/sfromm/emacs.d#twitter
+#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :ps/twittering-mode)
 (use-package twittering-mode
   :defer t
   :config
+  (defalias 'epa--decode-coding-string 'decode-coding-string) ; github.com/sfromm/emacs.d#twitter
   (setq twittering-use-master-password t)
   (setq twittering-icon-mode t)
   (setq twittering-use-icon-storage t)
@@ -16475,96 +16662,19 @@ template."
 :ID:       F932B1C7-4BC0-45AB-A736-3E4DC4FBA09E
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-09 Sun 19:58]--[2023-04-09 Sun 21:23] =>  1:25
 CLOCK: [2022-09-29 Thu 16:52]--[2022-09-29 Thu 18:01] =>  1:09
 CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
 :END:
 
-This section collects a few functions I created for interfacing with Mullvad, a VPN service. To use these commands, you must first run ~mullvad account login [your account number]~ in the terminal.  To find your account number, go to "settings" > "account".
+This "package" collects a few simple commands I created for interfacing with Mullvad, a VPN service. To use these commands, you must first run ~mullvad account login [your account number]~ in the terminal.  To find your account number, go to "settings" > "account".
 
 #+begin_src emacs-lisp :results silent
-(defvar ps/mullvad-servers
-  '(("London" . "gb4-wireguard")
-    ("Madrid" . "es-mad-wg-101")
-    ("Malmö" . "se1-wireguard")
-    ("Frankfurt" . "de5-wireguard")
-    ("New York" . "us276-wireguard")
-    ("São Paulo" . "br1-wireguard")
-    ("Switzerland" . "ch5-wireguard"))
-  "Specify the optimal Mullvad VPN servers for each city.")
-
-(defvar ps/mullvad-websites
-  '(("Library Genesis" . "Malmö")
-    ("HathiTrust" . "New York")
-    ("Criterion Channel" . "New York")
-    ("Pirate Bay" . "Malmö")
-    ("Wise" . "Madrid"))
-  "For each website that requires a VPN connection, specify the
-optimal server city.")
-
-(defun ps/mullvad-connect-to-server (server)
-  "Prompt the user to select from a list of servers and connection
-durations, and connect to the server for that duration.
-
-The list of servers is defined in `ps/mullvad-servers'."
-  (interactive
-   (list
-    (completing-read
-     "Select server: "
-     ps/mullvad-servers)))
-  (let* ((duration (call-interactively 'ps/mullvad-disconnect-after))
-         (server (cdr (assoc server ps/mullvad-servers)))
-         (connection (replace-regexp-in-string
-                      "Setting location constraint to \\(.*\\)\n.*\n.*" "\\1"
-                      (shell-command-to-string (format
-                                                "mullvad relay set hostname %s; mullvad connect"
-                                                server)))))
-    (if duration
-        (message (format "Connected to server %s. Disconnecting in %s minutes." connection duration))
-      (message (format "Connected to server %s." connection)))))
-
-(defun ps/mullvad-connect-to-website (website)
-  "Prompt the user to select from a list of websites and connection
-durations, set optimal VPN server for it, and connect to it for
-that duration."
-  (interactive
-   (list
-    (completing-read
-     "Select website: "
-     ps/mullvad-websites)))
-  (let* ((duration (call-interactively 'ps/mullvad-disconnect-after))
-         (city (cdr (assoc website ps/mullvad-websites)))
-         (server (cdr (assoc city ps/mullvad-servers)))
-         (connection (replace-regexp-in-string
-                      "Setting location constraint to \\(.*\\)\n.*\n.*" "\\1"
-                      (shell-command-to-string (format
-                                                "mullvad relay set hostname %s; mullvad connect"
-                                                server)))))
-    (message "Connected to Mullvad server %s." connection
-                     (when duration (message " Disconnecting in %s minute(s)." duration)))))
-
-(defun ps/mullvad-disconnect ()
-  "Disconnect from server."
-  (interactive)
-  (shell-command "mullvad disconnect")
-  (message "Disconnected from Mullvad server."))
-
-(defun ps/mullvad-disconnect-after (duration)
-  "End connection to Mullvad VPN server after DURATION minutes."
-  (interactive
-   (list (completing-read
-          "Select duration (minutes): "
-          '("1" "5" "10" "30" "60" "120" "custom" "unlimited"))))
-  (when (equal duration "custom")
-    (setq duration (read-string "Enter duration (minutes): ")))
-  (unless (equal duration "unlimited")
-    ;; If a previous timer is running, cancel it.
-    (cancel-function-timers #'ps/mullvad-disconnect)
-    ;; Now run a new timer.
-    (run-with-timer
-     (* (string-to-number duration) 60)
-     nil
-     #'ps/mullvad-disconnect)
-    duration))
+(use-package mullvad
+  :elpaca (mullvad
+           :host github
+           :repo "tlon-team/mullvad")
+  :demand t)
 #+end_src
 
 * multimedia
@@ -16642,7 +16752,7 @@ CLOCK: [2022-06-22 Wed 14:50]--[2022-06-22 Wed 15:10] =>  0:20
 
 [2022-06-22 Wed 15:07] I can't make this work. Maybe related to the [[id:86EE7A94-E470-45DB-B0A5-0AE717A15353][dbus problem]]?
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/espotify)
+#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :ps/espotify)
 (use-package espotify
   :disabled
   :after auth-source-pass
@@ -16935,29 +17045,6 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
 :ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
 :END:
 
-#+begin_src emacs-lisp :results silent
-;; github.com/Gleek/emacs.d/blob/761dad7e97accd6d1537a201c5d447a6be1d155c/core/core-util.el#L31
-(defun ps/random-alnum (&optional length)
-  (let ((times (or length 5))
-        (random ""))
-    (setq-local random "")
-    (dotimes (_ times)
-      (setq random (concat random (let* ((alnum "abcdefghijklmnopqrstuvwxyz0123456789")
-             (i (% (abs (random)) (length alnum))))
-                       (substring alnum i (1+ i))))))
-    random))
-
-(defun ps/string-match-in-list-p (string list-of-strings)
-  ""
-  (catch 'tag
-    (mapc
-     (lambda (-x)
-       (when (string-match (regexp-quote string) -x )
-         (throw 'tag -x)))
-     list-of-strings)
-    nil))
-#+end_src
-
 ** calc
 :PROPERTIES:
 :ID:       50FAD2F3-E501-408E-A9A2-8358FAA87C1C
@@ -16988,7 +17075,6 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 
 #+begin_src emacs-lisp :results silent
 (use-package alert
-  ;; :defer 10
   :demand t
   :config
   ;; the settings below are not working; is it because `alert-default-style' is set to `notifier'?
@@ -17000,12 +17086,12 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
     (setq alert-default-style 'notifications))
 
   ;; This function has to be loaded manually, for some reason.
-  ;; (defun alert-osx-notifier-notify (info)
-  ;;   (apply #'call-process "osascript" nil nil nil "-e"
-  ;;          (list (format "display notification %S with title %S"
-  ;;                        (alert-encode-string (plist-get info :message))
-  ;;                        (alert-encode-string (plist-get info :title)))))
-  ;;   (alert-message-notify info))
+  (defun alert-osx-notifier-notify (info)
+    (apply #'call-process "osascript" nil nil nil "-e"
+           (list (format "display notification %S with title %S"
+                         (alert-encode-string (plist-get info :message))
+                         (alert-encode-string (plist-get info :title)))))
+    (alert-message-notify info))
 
   (defun ps/alert-dismiss-osx-notification ()
     "docstring"
@@ -17033,28 +17119,6 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
   :commands (unpackaged/org-forward-to-entry-content))
 #+end_src
 
-** macos
-:PROPERTIES:
-:ID:       DA6E75E5-8D85-4CAF-A921-F7A3A77B0362
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defun ps/eject-external-hard-drive ()
-  "Eject external hard drive. Assumes only one external hard drive
-is connected."
-  (interactive)
-  (let ((list-external
-         (shell-command-to-string
-          "diskutil list external")))
-    (string-match
-     "/dev/disk\\([[:digit:]]\\) (external, physical):"
-     list-external)
-    (shell-command
-     (format
-      "diskutil eject disk%s"
-      (match-string 1 list-external)))))
-#+end_src
-
 ** midnight
 :PROPERTIES:
 :ID:       C6B68696-DCCC-4143-A0BC-E5EEE249AACF
@@ -17076,7 +17140,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
 /midnight runs custom processes every night./
 
-#+begin_src emacs-lisp :results silent  :tangle (ps/init-get-tangle-flag :ps/midnight)
+#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :ps/midnight)
 (use-feature midnight
   :defer 600
   :config
@@ -17112,6 +17176,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 :ID:       0537BBF6-FD95-44A5-9327-1024A3D106EB
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-09 Sun 16:40]--[2023-04-09 Sun 16:48] =>  0:08
 CLOCK: [2023-04-02 Sun 21:10]--[2023-04-02 Sun 21:19] =>  0:09
 CLOCK: [2023-03-31 Fri 15:20]--[2023-03-31 Fri 15:23] =>  0:03
 CLOCK: [2023-03-28 Tue 22:48]--[2023-03-28 Tue 23:50] =>  1:02
@@ -17122,13 +17187,13 @@ CLOCK: [2023-03-28 Tue 22:32]--[2023-03-28 Tue 22:47] =>  0:15
 
 A tutorial for this undocumented package may be found [[https://github.com/andycowl/bbdb3-manual/blob/master/tutorial.rst][here]].
 
-[2023-04-09 Sun 02:20] Installed with ~package-install~, since I wasn't able to build it.
+[2023-04-09 Sun 02:20] I wasn't able to build it, but I was able to install it with ~M-x package-install~, from which I created a local repo.
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/bbdb)
 (use-package bbdb
-  :demand t
-  :elpaca (:local-repo "/Users/pablostafforini/.config/emacs-profiles/develop/elpa/bbdb-3.2.2.2"
-                       :prebuild ())
+  :elpaca (bbdb
+           :host github
+           :repo "tlon-team/bbdb")
   :init/el-patch
   ;; open URL directly, without prompting for confirmation
   (defun bbdb-browse-url (records &optional which)
@@ -17284,7 +17349,7 @@ then the window will be split horizontally rather than vertically."
 
 /[[https://github.com/tohojo/bbdb-vcard][bbdb-vcard]] supports import and export for BBDB./
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/bbdb)
 (use-package bbdb-vcard
   :after bbdb
   :config
@@ -17330,6 +17395,8 @@ then the window will be split horizontally rather than vertically."
 :ID:       F4C5A232-7788-4240-9CE2-B6761C905786
 :END:
 
+And finally, the section you've all been waiting for.
+
 #+begin_src emacs-lisp :results silent
 (use-feature tetris
   :general
@@ -17356,7 +17423,7 @@ then the window will be split horizontally rather than vertically."
 - fix various minor issues.
 - move this section to end of file.
 - otherwise identical to version 3.
-  
+
 *** Version 3
 :PROPERTIES:
 :ID:       DEE239CF-BC77-4888-AD69-B33D32A7DB1A
@@ -17372,53 +17439,69 @@ then the window will be split horizontally rather than vertically."
 :END:
 - Migrated from ~straight~ to ~elpaca~.
 
-** tlon
+** tlon-init
+:PROPERTIES:
+:ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/tlon-init)
+(use-package tlon-init
+  :elpaca (tlon-init
+           :host github
+           :repo "tlon-team/tlon-init"
+           :depth nil) ; clone entire repo, not just last commit
+  :demand t)
+#+end_src
+
+** tlon-core
 :PROPERTIES:
 :ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
 :END:
 
-#+begin_src emacs-lisp :results silent
-(use-package tlon
-  :elpaca (tlon
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/tlon)
+(use-package tlon-core
+  :elpaca (tlon-core
            :host github
-           :repo "tlon-team/tlon")
+           :repo "tlon-team/tlon-core"
+           :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
-  (defun ps/tlon-meeting-with-fede ()
+  (defun ps/tlon-core-meeting-with-fede ()
     "TODO: docstring"
     (interactive)
-    (ps/tlon-meeting-with
+    (tlon-core-meeting-with
      "Fede"
      "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
      "56CBB3F8-8E75-4298-99B3-899365EB75E0"
      "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
 
-  (defun ps/tlon-meeting-with-leo ()
+  (defun ps/tlon-core-meeting-with-leo ()
     "TODO: docstring"
     (interactive)
     (ps/tlon-meeting-with
      "Leo"
      "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
      "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-     "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
-
-  :general
-  (markdown-mode-map
-   "A-s-k" 'ps/tlon-eawiki-insert-url))
+     "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
 #+end_src
 
-** new-init
+** tlon-bae
 :PROPERTIES:
-:ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
+:ID:       5EDD6F28-3299-4D90-83E1-C7476176277D
 :END:
 
-#+begin_src emacs-lisp :tangle no
-(use-package new-init
-  :elpaca (new-init
+#+begin_src emacs-lisp
+(use-package tlon-bae
+  :elpaca (tlon-bae
            :host github
-           :repo "tlon-team/new-init")
-  :demand t)
+           :repo "tlon-team/tlon-bae"
+           :depth nil) ; clone entire repo, not just last commit
+  :demand t
+  :general
+  (markdown-mode-map
+   "s-u" 'tlon-bae-eawiki-insert-url))
 #+end_src
+
 
 ** Keyboard Maestro
 :PROPERTIES:
@@ -17453,89 +17536,89 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 
 -----BEGIN PGP MESSAGE-----
 
-hQIMAxRs/nzf4knaAQ/+ORUPqhmE3bZWPk1DRFIbxNQxr0MNCg4zsOImveEBqMnp
-vdEMBLZDZkiwNF+da1WrEpWg/s0VZXpfufzd5+Hiew7ffaCMCsUWFZYv2kWM7jQA
-seKvanpypWzd2eoGMh+OENrmyS1R0ub6HQrEdWBjskQwaV+E7bgzrMZXXY/985Un
-bBuEzT/FCS+B0N1KnD0ectjsMgkXG2VsEL0Dnyz6ZcA+pYi2zH/IFxz5/EDU6YLH
-nD3USyYfOzBqnUS30giYwPQKkpg8xKCpYecxEkzg7ZCqB5XptMrr2fH6aPiMw6LT
-quuZqZ2kbB9KG+nHqc9KDKQKI/8cIjFD3jiQ12kLWXqSL4a13slF+WTBIbpQva5O
-PUYYpkVm8pC2sIgO78Utu0L/9qt21pf9OCLy7CuJ8xzWhH2klKK19sQotmg1sdIF
-4/jfdwts+YAZoz1FvILTRDvfmnsqAA2qhvrEBEote5PUqzPMFAbYYrxyAzJWfOSA
-oxRUmx73Ss0Qz+AuvJB+FXyftOBAdZGygFPI5ZU8KLxt8BG87xZAhJOACG8Sye3X
-ZX34kBLOULmei5771ljldXLLpMFF2+n/wc1CM7JoJuyPP3Fa5Ge1t+x0j5RtvNUV
-4l4EmNcXxlX4OHnnEABmoZcsaktsdnvkUAYu/4BEP1FVtvREw45hqrBlilB1vLnU
-6gEJAhCMzlmOho3aCVhGgYzGpKZSSvRJ8FlhWrASkCYm+8uYXnv9lr/moyxvQAjZ
-tB5LG4HbmdWi19nKWThiSHZRXZkGBJIOCN+drQdNTx4cHVtUjDQadejnDWBRbLHt
-A6LbzBoErlAOBGTehDl8PSQ3TEqLuzFHPsVpOmdZV+g2OK8vpgib2Rgiii7qrEov
-DRzCmqFyX5eUjckuW7JdxowZY2mBV7npzvEoPXz6uSjAh8U5NyvxIE8LUbkaDrCi
-oT4/SexuGPUhj2IUZQ3lUivj3HjgWvYZCt1sr0H2+o7ZiSUw0vM4B3hKnX78+mP3
-SiNKLcxvxyAfY/CpAwOAzyWZhkkPocOtGwf+e2QyNkt8LaFsuOjoTu5IIyu1C4Jh
-3VnFA4UXSBpNK8FRtmuLGNauKMZuU3UMyZeOS6NoZX5SPR2v3XWL90q0QooR5L3c
-8SfFpFFHn9tT0omXwkF+usY9Y5E+21CuXPU9ypyWH4oU2LyeqdSFiN0X5dMbdpZX
-3n5rgunPophOI5hEcDfIT1rXyIjiiIUlelFXjCQfvSqTCsTUmGETs02tAf+FVyue
-uzKtX7bsHSEwB9XiA9ywG7A8j/bKos2vXjb3AUrktOtNuRySy771uDUhw94JPj+L
-FM+AY9cTVvUkol6CigsW/qMrqxiQCaEOH3+1tCHFUfm4GpPs6BcPiSLJ+gMkZrkz
-7e+/ve72ELk37zpQXOkjvyRRtqyT9MfMEtAEcggxn+MWyXYudPT8N8a1o9b5VO7C
-DOv9zGb1zxgSaf3x28d8Bkpc9cvX6bZzBENbrq13Ih+7A3QCxEm0iSFs1o+JZNbj
-XKiHOKOtI+ewa3+rYABC+hENEVZ6DSmtwzjoXespmuReZ+WJKQlt82kr80hJTqym
-R/pg6vxfsX4lY944dO2rOBvN0vJ6sMBLaULJFZItRkxP3cGlDjij+9FyKydIL2Zc
-FTCaUe0y33Qco3e2BBw7mCdg8o6vaPadC0jMjw2WDgsWCvqI3BT8V7Z2MSo0n0S/
-APMMDeFxfI6oVHXFNq4N6RAxOM/Wdl5pl3f2uGxaH/7OSApPTheh1aFBfODU3T+j
-Vo/AN/XqfAyjoiFc0vYAtJ0p5hLV+vP7T/n4dHH6zdIOq8pP+FtAfqtmPhIs25Y5
-mkVWIn7yZUijrnl3dTzZMuSaO7WnsQ3gNiAttAXB5fOPMmC7lkLw7NS8pSZqR42F
-ulZ7eYizweGFI4aITeC24XPNYfMm7hTDOCUS58rul48OlNZd5g40c6zLyNd3kUKJ
-e7jWD4+W2pI42Cxx+24OSViwcnagGlN5x50yz/pwTB7vFTQ4EFQ1eZpVqQCSD+km
-oEO2sKhRaYG8LqkaWauNGCjqHXTCEK/ITd9yVVAUykHy6y49250HfPBFmos15SPJ
-8Qmb4KxdiC7hEH568o766fVIpXM8u+L3iHrsE9poP2/2rKM4GLFJyevb9Bza4PZP
-MDuRPBv36qQugIfJcs8ztRAk0UXdoDPPH1FYyEIOpiffJPBpEApx5UJcFbT+g9ZO
-MENIMhjPfXmth5CjuUqaE+1z40ZQozA5GJ9gh6ur1Govjufb/FI1dE1n6TTO4MAg
-ay4waFPQvkf0KgNARu+7zR1QoKq5IUZ+hhPqdR2wCHtXtp4Nm56GG7A1GIAdk/05
-GlJln+mwI0GNXwVZgiS21qpWaq92dvN0QOMP5w9JVJMeOo5Z7+eORlOM90uytQ1y
-JojhJrybRTa3hjkZ+A5iEN89+NAYPQCE9IEaRw4xhnyscQQIkleqktZixwuS1gH6
-GyH90qsojaWVLpECWbHT7XxHJ7KxNLYEDrCbJI52Qb7S9AT3+ws8k1ZzdNqgTwc9
-7dVHqVwGL7pPHFTZJKau6nPM6RnS64hQaDYCQ13mzUE7RYUygsgpiyUzsKXmS8NO
-NorRl21KddYUr5g8wEOT4tRsRiD7XIYXEqDB0eTYumQWEz+p6vjgcD25pSE4dRPp
-tx4aiGDum4+ME1RX/33ByxRHDuDscIzgant6WVjTA8irl9TnJI4KJYMNohBshU04
-17pGuG6LqXpkGZQvmw8ZT1luYVDJdmy2+kmBQOLekuAFre7IQ1niFdYtSQD9Br0d
-tAKcEd/r0makLVaq0s7rO1OFo/UcmaAtRyuYavUjFlG8VJ5sn570vmWQVExNe9lh
-VMZzx6C/3/K01zmQ9032l2AmNiDKb2Sh2qoSVQUx5EP8D6Po57jZssTd+uCt7iS+
-k98jIAhti1i03vrlU5pgZPDfRBzHbLF56+bwKld9u8SLlRdT9ZO3tw9dMwxv8jFo
-EpAjxUx3JhN512XeP+Q0gEdNodkWJICb4NrdJZ4y0ifAlgtRPRuPgir1KiuJ/KYM
-aIJFUlCilnQrRpavw9BNTv9hs+pDIGieioCjifEXM2MZ8fVos3FzTA8by38kuydX
-+dI0jB1vIB4ntDuEQbywZ7fj1jrhV1AlACgk1fF3XtZ0zDOZ8Z7YDKKUxmTsunIq
-AJn2wKZ2Guzy0aymzIWamsmAHAOo+IxtZJpQNEt25z1Qdp6Cg7e3IZCDR3go+MOs
-vr4dw2oxt4Eg5TO4m+F2ClnH7Da+yDoHIIfC45ZbaEnmnwL31ZkBDVawpxW+dVex
-k+lkT15lX5O1nriuFE1RIwHTT8cTy9QjOkVDiVyD23jVOp094rcPbW78arQ9eOAF
-7q3M3AeqVayfry2YKA0mPPX/cCXO0tUhf9G/iwtpegX5qOnnIxXTrnRV/3uuKU9r
-/53N936jY8UaSozUMM0zxIm80uIynKE7Qf6BcAP1hZ98WuZq27fuItRsz55kX75k
-Oo5jVTxDwOo9hy/w/1s9QP2LtVKBITnz3HgcIr/a3He1vj66374mD2TNCAP4SVfQ
-LRs9bTN//Z1YBQLc3gJymHjBnu8DHfRFVxfzwXtBzW3iovt+q6JIUcfz485kn9px
-NWP8Ske5SaZNOPj9jCS/YirWTzy113io8cTeHf2noMypIF4+nXlvqLPh8S06X3m8
-bi8WwwigpbxcIpESgAblClVhWeFbTiVnRXXwrnRADriqx5nRwVJKYWCgdEdvIq9G
-UdZKVt2e5LTN4DM8/ueO27iymc2ptEEDDLisLyySBd6UKmMIAAG0pFsY6bX4CUjW
-mk1N9xx92C8qh4aw4UcVIQlpbPrdLc1jVcaLd1WLpq2tlycs9CThyp9bHBjTr2LO
-TwSDabcAGf/4rubcNSX5FpNmCHLnQlfJRe9EhkR51i4Pt5T1o2OCFk8AFfft5U3W
-vfL8pw/q1bQqWJ8yijFvUuFoc+Yyt3emi2HxFUpCHV3uMSfxupYfjE25IHj6bIxs
-v51NpbaTEjlXSoZOpriY9EARJ5AboqjLTVGaaphpLsK+zp9HtPrjaYdroBkchlAK
-cXyc9Heb+3pZtQArQzQMvrgOXsCTXPYYK3ZGvJ8ncvhy8L5K3s54nVv9fmsmMLyg
-hLo7fWHtgthGVSZx+fnOXp9KUUMxMqcnjZURKJV8nHgACd4YTlFy8SvvLRv9rhKh
-la5SWxe+3Jpv9ORbLWrEW+mrllnxSxlSP7SQX54nyuFY95uw8OpWtbj0Im0JiGZg
-hXzPa5gy1Mlp2+hnZ7r/dPIB7kogGuwq/4RBL7UtuPiR+vnJzfacH52sERZY2MCn
-PvQ3KzeI9pe1geWhusCyQHKrAF7lK3Vzd60yy7Uz7THSDeQIvwMmmRSIji4oMlAu
-1PWj8BX9DGkyjMo3OEZaAYUblRiEEv9MvFGnpg7OS6Fn8l0omoqT7qXP/H7gZWid
-u7nVDhG/Ps2tLkWMQz/ma30c4oSLDGvXh9pfOi5RYZoNm80qlPrD5RaKnImuEYKO
-vh7qjcb9+eUDRc0v2LBlvnsJBrTOyK4X
-=8Ljv
+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
+=dctd
 -----END PGP MESSAGE-----
 
 
 ** local variables
 :PROPERTIES:
-:ID:       1FCD0AB8-6922-4910-AF33-5BD8FB10D633
+:ID:       7350B98F-92E4-44AB-AB99-9413C6C81E28
 :END:
-
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
+# eval: (ps/buffer-local-set-key (kbd "s-y") 'org-decrypt-entry)
 # eval: (ps/buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
 # org-crypt-key: "tlon.shared@gmail.com"

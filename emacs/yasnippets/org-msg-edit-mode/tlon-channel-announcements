@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-channel-announcements
+# key: tca
+# contributor: Pablo Stafforini
+# --
+[Tlön: Announcements] $1

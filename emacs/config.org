@@ -17627,7 +17627,7 @@ And finally, the section you've all been waiting for.
   (defun ps/tlon-core-meeting-with-leo ()
     "TODO: docstring"
     (interactive)
-    (ps/tlon-meeting-with
+    (tlon-core-meeting-with
      "Leo"
      "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
      "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
@@ -17648,7 +17648,7 @@ And finally, the section you've all been waiting for.
   :demand t
   :general
   (markdown-mode-map
-   "s-u" 'tlon-bae-eawiki-insert-url))
+   "s-u" 'tlon-bae-insert-eawiki-url))
 #+end_src
 
 

@@ -7696,6 +7696,11 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
   ("M-A-p" 'ps/ispell-toggle-language))
 #+end_src
 
+*** TODO Make Aspell use American and British English
+:PROPERTIES:
+:ID:       FF58FF80-5BEE-428C-B60C-FDD8D05AD967
+:END:
+
 ** flyspell
 :PROPERTIES:
 :ID:       78ABBC76-7474-4C1C-A9B0-E8BEC972E75E

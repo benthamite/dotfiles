@@ -6334,12 +6334,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 (use-package forge-search
   :elpaca (forge-search
            :host github
-	   :repo "eatse21/forge-search.el")
+           :repo "eatse21/forge-search.el")
   :after forge
   :demand t
-  :general
-  (magit-status-mode-map
-   "N s" 'forge-search)
   ((forge-topic-mode-map
     forge-topic-list-mode-map
     forge-issue-list-mode-map

@@ -8204,7 +8204,7 @@ insert italic delimiters and place the point in between them."
   (setq markdown-fontify-code-blocks-natively t)
   (setq markdown-command "pandoc --from markdown --to html")
   (setq markdown-disable-tooltip-prompt t)
-  (setq markdown-italic-underscore 'double)
+  (setq markdown-italic-underscore nil)
 
   (defun ps/markdown-org-paste-dwim ()
     "Convert between `org-mode' and `markdown' based on current mode."

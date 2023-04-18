@@ -6238,10 +6238,74 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
+  (setq forge-topic-list-limit '(60 . 0)) ; hide closed topics
+  ;; disabling for the time being, since I read this could be a source of problems; just run `n f f'
+  ;; (setq forge-pull-notifications t)
+
+
+  (transient-define-prefix forge-dispatch ()
+    "Dispatch a forge command."
+    [["Fetch"
+      ("f f" "all topics"             forge-pull)
+      ("f t" "one topic"              forge-pull-topic)
+      ("f n" "notifications"          forge-pull-notifications)
+      """Create"
+      ("c i" "issue"                  forge-create-issue)
+      ("c p" "pull-request"           forge-create-pullreq)
+      ("c u" "pull-request from issue" forge-create-pullreq-from-issue
+       :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
+      ("c f" "fork or remote"        forge-fork)
+      """Merge"
+      ("M  " "merge using API"        forge-merge)]
+     ["List"
+      ("l t" "topics"                 forge-list-topics)
+      ("l i" "issues"                 forge-list-issues)
+      ("l p" "pull-requests"          forge-list-pullreqs)
+      ("l n" "notifications"          forge-list-notifications)
+      ("l r" "repositories"           forge-list-repositories)
+      ("l a" "awaiting review"        forge-list-requested-reviews)
+      """Visit"
+      ("v t" "topic"                  forge-visit-topic)
+      ("v i" "issue"                  forge-visit-issue)
+      ("v p" "pull-request"           forge-visit-pullreq)
+      """Browse"
+      ("b I" "issues"                 forge-browse-issues)
+      ("b P" "pull-requests"          forge-browse-pullreqs)
+      ("b t" "topic"                  forge-browse-topic)
+      ("b i" "issue"                  forge-browse-issue)
+      ("b p" "pull-request"           forge-browse-pullreq)
+      ("b r" "remote"                 forge-browse-remote)]
+     ["Authored"
+      ("u i" "authored issues"        forge-list-authored-issues)
+      ("u p" "authored pull-requests" forge-list-authored-pullreqs)
+      """Assigned"
+      ("i i" "assigned issues"        forge-list-assigned-issues)
+      ("i p" "assigned pull-requests" forge-list-assigned-pullreqs)
+      """Owned"
+      ("o i" "owned issues"           forge-list-owned-issues)
+      ("o p" "owned pull-requests"    forge-list-owned-pullreqs)
+      """Labeled"
+      ("e i" "labeled issues"         forge-list-labeled-issues)
+      ("e p" "labeled pull-requests"  forge-list-labeled-pullreqs)]]
+    [["Configure"
+      ("a  " "add repository to database" forge-add-repository)
+      ("r  " "forge.remote"  forge-forge.remote)
+      ("t l" "forge.graphqlItemLimit" forge-forge.graphqlItemLimit
+       :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
+      ("t t" forge-toggle-display-in-status-buffer)
+      ("t c" forge-toggle-closed-visibility)]])
 
   :general
   (forge-post-mode-map
-   "s-c" 'forge-post-submit))
+   "s-c" 'forge-post-submit)
+  (forge-topic-mode-map
+   "a" 'forge-edit-topic-assignees
+   "a" 'forge-edit-topic-assignees
+   "b" 'forge-edit-topic-body
+   "l" 'forge-edit-topic-labels
+   "m" 'forge-edit-topic-milestone
+   "s" 'forge-edit-topic-state
+   "t" 'forge-edit-topic-title))
 #+end_src
 
 ** orgit-forge

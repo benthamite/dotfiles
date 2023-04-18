@@ -11678,7 +11678,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 #+begin_src emacs-lisp :results silent
 (use-feature org-crypt
   :after org
-  :defer 30
+  :demand t
   :config
   (setq org-tags-exclude-from-inheritance '("crypt"))
   (setq org-crypt-key ps/personal-gmail)
@@ -17713,7 +17713,6 @@ And finally, the section you've all been waiting for.
   (markdown-mode-map
    "s-u" 'tlon-bae-insert-eawiki-url))
 #+end_src
-
 
 ** Keyboard Maestro
 :PROPERTIES:

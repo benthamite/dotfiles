@@ -1038,10 +1038,10 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   ("s" (ps/org-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C") "slack" :column "Comms")
   ("t" (ps/org-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
   ("f" (ps/org-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "People")
-  ("F" (ps/tlon-meeting-with-fede) "fede: meeting" :column "People")
+  ("F" (tlon-core-meeting-with-fede) "fede: meeting" :column "People")
   ("H-f" (ps/org-id-goto "CE0C7638-97F1-4509-8212-5B77F4A4AF29") "fede: tareas" :column "People")
   ("l" (ps/org-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "People")
-  ("L" (ps/tlon-meeting-with-leo) "leo: meeting" :column "People")
+  ("L" (tlon-core-meeting-with-leo) "leo: meeting" :column "People")
   ("H-l" (ps/org-id-goto "76A01EAA-74BC-41FC-9050-E6BDC0D56029") "leo: tareas" :column "People")
   ("RET" (ps/org-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A"))
   )
@@ -6175,7 +6175,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
       ("<return>" "visit thing at point"     magit-visit-thing)]
      [("C-x m"    "show all key bindings"    describe-mode)
       ("C-x i"    "show Info manual"         magit-info)]])
-  
+
   :general
   ("A-g" 'magit
    "A-M-g" 'magit-clone)

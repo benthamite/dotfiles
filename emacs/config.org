@@ -14234,6 +14234,21 @@ first name, and names are separated by a semicolon."
       (default
        (beep))))
 
+  (defun ps/ebib-citar-open-notes ()
+    "Open note for the entry at point using `citar-open-notes'.
+This command replaces the native `ebib-popup-note'. The
+replacement ensures that, when a note doesn't already exist, it
+is created following the same schema as notes created with
+`citar'."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (let ((citekey (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)))
+         (when citekey
+           (citar-open-notes (list citekey)))))
+      (default
+       (beep))))
+
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
 
@@ -14244,7 +14259,7 @@ first name, and names are separated by a semicolon."
   ((ebib-entry-mode-map ebib-index-mode-map)
    "H-s" 'ebib-save-current-database
    "Q" 'ebib-quit
-   "n" 'ebib-popup-note)
+   "n" 'ps/ebib-citar-open-notes)
   (ebib-entry-mode-map
    "TAB" 'ebib-goto-next-set
    "<backtab>" 'ebib-goto-prev-set

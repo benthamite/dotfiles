@@ -6425,10 +6425,8 @@ CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
 #+begin_src emacs-lisp
 (use-package gh-notify
   :after forge
-  :elpaca nil
-  :demand t)
+  :demand t) 
 #+end_src
-
 
 ** git-auto-commit-mode
 :PROPERTIES:

@@ -1497,6 +1497,9 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
   :config
   (defun ps/faces-load-custom-faces ()
     "My custom faces, to be used in conjunction with theme."
+    (tlon-init-override-code-if-available
+     :ps/faces
+     '(
        (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
        (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
        (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
@@ -1521,7 +1524,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
        (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
        (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)
-       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))
+       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -3051,7 +3054,7 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
   :demand t
 
   :config
-    (add-hook 'prog-mode-hook #'outline-minor-mode)
+  (add-hook 'prog-mode-hook #'outline-minor-mode)
 
   :general
   ((outline-mode-map outline-minor-mode-map)
@@ -4708,12 +4711,12 @@ CLOCK: [2022-09-02 Fri 18:13]--[2022-09-02 Fri 21:20] =>  3:07
 CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/window)
 (use-feature window
   :demand t
 
   :config
-  (setq split-width-threshold 200)
+  (setq split-width-threshold ps/split-width-threshold)
   (setq split-height-threshold nil)
   ;; move point to top of buffer if `scroll-down-command' invoked when screen can scroll no further
   (setq scroll-error-top-bottom t)
@@ -4909,7 +4912,7 @@ window depending on the number of present windows."
 :ID:       3ADE4889-B4BE-4733-ABE3-BECCD4F9A73D
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/frame)
 (use-feature frame
   :demand t
   :config
@@ -6425,7 +6428,7 @@ CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
 #+begin_src emacs-lisp
 (use-package gh-notify
   :after forge
-  :demand t) 
+  :demand t)
 #+end_src
 
 ** git-auto-commit-mode
@@ -7169,7 +7172,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 /[[https://codeberg.org/akib/emacs-corfu-doc-terminal][corfu-doc-terminal]] enables corfu-doc popup on terminal./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/corfu-doc-terminal)
 (use-package corfu-doc-terminal
   :elpaca (corfu-doc-terminal :host codeberg :repo "akib/emacs-corfu-doc-terminal" :protocol ssh)
   :after corfu-terminal
@@ -8859,8 +8862,6 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
   :demand t
   :config
   (global-prettify-symbols-mode)
-  (add-hook 'prog-mode-hook 'outline-minor-mode)
-  (add-hook 'prog-mode-hook 'hs-minor-mode)
 
   :general
   ("A-H-v" 'set-variable
@@ -15217,7 +15218,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-feature mu4e-contrib
   :after mu4e
   :demand t)
@@ -15230,7 +15231,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 
 /[[https://github.com/iqbalansari/mu4e-alert][mu4e-alert]] supports desktop notifications and modeline display for mu4e./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-package mu4e-alert
   :after mu4e
   :demand t
@@ -15255,7 +15256,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
 /[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-package org-msg
   :after org mu4e
   :defer 3
@@ -15483,7 +15484,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 (use-package telega
   :defer 5
   :config
-  (setq telega-server-libs-prefix "/opt/homebrew")
+  (setq telega-server-libs-prefix ps/telega-server-libs-prefix)
   (setq telega-chat-input-markups '("org"))
   (setq telega-use-images t)
   (setq telega-emoji-font-family 'noto-emoji)
@@ -16879,7 +16880,7 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
 
 This "package" collects a few simple commands I created for interfacing with Mullvad, a VPN service. To use these commands, you must first run ~mullvad account login [your account number]~ in the terminal.  To find your account number, go to "settings" > "account".
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mullvad)
 (use-package mullvad
   :elpaca (mullvad
            :host github
@@ -17745,81 +17746,84 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 
 -----BEGIN PGP MESSAGE-----
 
-hQIMAxRs/nzf4knaAQ/+P/Jk+ZS6PJtmZ5FeGEvI4+nRqStOSEUxCzSZtbwahkXZ
-f9YNOjKjx9HA3KPTKi9E5ZiW1VpbSYcgU2PRTsNkqpPCgM7RfZovaEEAuIIOCKjM
-IexdEwimtKY8Hj6Euh+WgXdJQC9D/ScmuiWU6iLCiFPDlqu/t9HQHQfjH3YhPgN2
-VVSjPRX22fzkjaoEkCQDu1mAbiPyGuifdiuTi4w7uMw3mrKAqSHh8iOZyiqknLsM
-VVLlZT0MZq/A0HYbcSx8aaNKOu4+LW7zlv/KgI/6SzWgIegGQCBG8e6/5Z+lUm8t
-csKd6HlWumZI9Vra+tzo3tE8JHlbOE1satc17MJtogjZlwvihu3XdMkvFi1c4S9H
-PkMsrlSfvYD8/1Iyb1zVKhHQf6Xr0QAWlU4/B77nXVFi6MoWF5SHMJ6nnjTSylkm
-DEcyiGb7tjyAE7LCUo0K/MlZwxD8bHlVuIMyGF3Z5dPAfcpFnOYD1PVtBY1J+BPT
-KZ+AAyrNsWigCk1pxVVnAPtp0REmIPZ5LkP1EQRPrmPOAy2wfu0WYWwdJPBo/CZV
-oza2MtaDaY6M05huR1djsPc98jGe8o7uv9A377ZGawuyxZPxG2SVM4nDOWJC2zPS
-zNeJBIs6RAUkTD+CijaBma4CU/30J6/d/LNABJTYeZRi4CyY43RhUSxLu/pAgW7U
-6gEJAhCI7rWaU+L+49a0QKlAa8KrjGtm5HOGmZKczY1ZdK4OaUcNFJADTSpwlW7N
-nGzB9XOuXPvhvp+XjmpGmB0NNtznO9wPOMJqRE7+5rVA0ccxVctS6TW1Xaj/CyQq
-7sLpYoJ2EgJAJRO1miMx+mnX29XHgff/UdbmgUluQ7Y0Z0Bh+BT4LYBUICWIsh26
-965rbp6XbBjc77vGVJ197nPr5N+MUwBs0CTCjSCPN0QqkCOZfh+KGAF7uKPmpd60
-sfaFOYZUrv3VT/vkO4sqTT16bQ16Rg0ofvRTQRBP85PaRnt6BBPAWX4yebjLQINy
-rO7iIuWqx9I0CQESGeeRMCTWRZmA3rvEYbZSHJn7fXxP+kMfO1IBzA5+Xt/FDS3Z
-RR7XOE06fxGKlaFT+ybEWwLf57pKKdudaEplZqJ6rz5WJwvUtb+S51GYtgKO9Af+
-4z7XRm9TF888UacADIdsgF7pB+FkP69wHPSKMkJ6aSCcnd649FKWFT7+HjY1l2rT
-ZNWIISqF5Q8Zq/RJESajqdAKUAnXfxpluRDqZh4uhNIYYw9xJtILFNFufnFyiR6g
-rBtUIM7jj8PlYns1jNwnASCE67xa+eFzNlz0jXGz1xNGrdPns2TbFN4QFjtZDJm7
-2g7Gw9d+U03VpuhSTcZjs/EuS5NK0OOhb6Eyrj11Dy7QTO/El5hbcFYRdDuS2yqc
-t5GIK7NHnTtfx39qHqLpAx6bFiEfqORuY7135g4YznQvIMXldM+WjPeK9RNb/yP3
-ItVOSRTWtGNN6Vkkw17z/cqKkDDh5uryR0K7iaAMG4SrD9poxfB/h9fE01jMrWm3
-Z9fz5jEnnqkbDuROy/NY+v4WQLCyRYzERCkCjS3cbTy89la3la7MC0vIAjOViNxQ
-g8t7pjboDcYnqxGVJLX0cuCD5OLUtNERXU+oD+I69Qk1E3QiWEQoivt10EFs2W5G
-al4t5luEv/uP80lZUbNTCwECKMqD7fri5dP5IqWBN50BSKrp9IjerpLF9CtD6T9v
-wBPniNzq8w/U9HE+/+D53BGG2N//cX+Jdy4S70HPPc/bo9f0Dtqb01NxJ91HDG6l
-Q0klGwrmHeQquAIGvXSst8lJXgxkPGDWzxMN4nIr3Pvqx2g8Myc30VT2rCVLepSJ
-1sOKJtn3UXLSf7k2Faikxrw4O0LD/DvUJy+olXZtv9SEWmMeXpyFlV/ZvDf/7Uk6
-WIpUvd/29O3N5V2rFzKNAFhp8EvD/3s25/X3HMiYbzaUQz0GSg/m5YpzeEXK7oNx
-1xwYIHcCHG99/E0AwuqtNnzSBh308mWKohqSevBMnwX2weEABvpSLnOwho8fnv8U
-14UmEYAJhVf3WdotqNwKYyzq/PA1He2DO6bo9aPaJRtIS8Fjwt7RlcvREGWTKuxB
-fMZPrCJo2wI76d/BagXORIkVmBcooP5Vj8+EauixtkYj0tSd4Pq2cHhkXgg2Bd7/
-uXBXjbs5OzqM5EfejSKFlmVC0Rq9ZqXcRX5cZCBVTCRX8g/cA0kex8iPtgeRsnoW
-UexydCAJZURn5dSFo05A6yp8GjmE70iSYuyP7JGtbOujsU5c9dubjP62OGmswr6/
-BbTXR2rCaevuaGthmzg1piauvsUbkQbwkmu/vV5aWXkMK2ydWknY/aEXysV6m2Bl
-sMyZpoDnT4KKH90GeJTlmHaaL80U6p4J/ATjGH2+OWbqLixDX3Jt3o2umKsBBxgD
-4b1+LSjHAW0iQGYQWufaKhzON/bh3m0Eo+dujaCLY8vNSFFgRduZi9SkI4pJIn0e
-QaxkRkWAH/iixSyyHhbL50FsrXWxmrbfIBVYeVROX2FXMXh6Ag4/iL4PzlNI5HbB
-KvGlMgrUP1Vco0VXMm5M4zKN6w3f42D8n8fxw+UZdrcWblNGzpnqAq8Ots5js5rF
-y96gtfyw/xEKJLGK71dbQto9IYA2lEj5551woYxhvQzqws3+VDZ3I/fsJly70rJP
-OJxKDz2jiA3LeQEvS1bCIh+Bg8ij3FcXuZi8ZRS2FqQaBcK9BXp7Ny/StBK2cAW2
-hTmP+rz3R+v3il/0FHqi8/HBWTkouG00A0ydkBtmtD8UGHVq9A5USxGDSmLH6YJr
-HMnCeHZioPkx17OG/fzrDC+SbPrVOolHZVms8ktBNSzaEjBl/wA0Ta7j7RYH4Aee
-OVp02K32kPwpxn/7IcOMKRbTy1cfpRI+hxh36unl/oJi7P0DAqBrT3q9S0VZjJfi
-sKrrEwF+f+S0334IZl1Q3AxMFQepX7B9oQ+MXZIwZLUj7YM4v90PAiXdGD29Yoqf
-6OnSJ6/DR+9JDbvxpFmozU5yPKA4DHHEQecDy2T2ck9iHAxr5gO62UcdQjyxPjaA
-ARMgwP48T7PLp8wMK0gm4zUqvM2PVY76hZ++yA6WVDwWpF2QgU1oTKQidCzD58tS
-veUchNTXNa3aMEcH1MmTmuK6HQCFuQog+XCpmPU6b/J8nHGhySK8U2MtwFG53bOw
-wrpgthxSf3nZlmAdGWJ6eSX1/uIow/qAZWuoNGDn4Af1SMtuBju3vnN9Fll0S3Js
-BY2GFmy3XMLUaH8ILf6Zlm3RpXxTNbesthgUNdIUKSLmt1fEyT9UAFnEbUXmembC
-qOV9LNqgarHHlUN+fgBQ3nnMeL8v57496BEfR2mJzPvJCfxQucp/9IXXQgrLTo7e
-xYDQJMzz1SkGaFcpm6ryGihACIjpF5QC+9OtyKwCN4+2kOms2ZkKMZHmwjy/I2DN
-GwmNIrVxmwsqF8zb+lr0wErBghLg0XacOfMjk6tQZIkuUOIZVWdVJajdvzsGEfxg
-SynH2bdDvV5QIYwo7EJsISw+LVhZKDYMSK4zKZk1MRwM0kkVyM3q9TZ/VpRwfD9m
-PhAkAaOrgcjwcUw5xPRoKfzkcIfeFFP/F/TJXTMGFgARKzexugzIIISAtzkAOKJC
-jQJoyBwWIlaXWFlzmdWPuCAOBkb5Cs53tOp/uN6sEXNwgpqdAXbroV50cIbpgGLH
-GgFsbq0KDJOqiImhF9perc5K5PLSXLPAhdVDBNR0SPKfYE3EE1VkqA9fFHjoURE7
-a5vBDATXg2aMbDkiAIuhhaWPc0dTZ19V1IWIgOtuy6b02AVw/QDSFyE8wDhE5OAk
-bonGTMX1lvRpCFI0SdNmjVHc87pZh9EvAceZfHeQHQfSa1sZ4ATlOS89ArMSOQ9I
-D07rB5b+oeamLipm+buNFdOVEsXAZTSjs15lkKR3o/yShRZdzuIOyswe6xUjJ2mx
-vDh8d155tdOq5Pm9k25ONynX63ScR81ANEgaBz6+vKWGZavMdmvsnXq97WGPsXWb
-vkgxKIZ7TvScsXW58HRqynP6UCoCFWZxeQ3aKxfi9+AM9B4TwLxnrAsOnkv4jvlf
-qrb0csUMxzdZ2LDuocgYZCoi/cCvegUoGzbP01x+EhIqU7upToxFJN2BO6Ogx8Ym
-Sj4kloN8gFRYSNWBUM3mIGuD/ct5jB5DDUKn4B+FBYVCWdtI+OekZMbpGA7J7Dms
-F31ed9Enb+v61Dxy4kzGPsy87yf80KFiNc9AFmlP32VKikb6jsmg3CHfSMjJBQ0E
-lVQmCtf1MOHvMRRta64bUobQdOcWiec9+7hdUbbNelnlXPOOAzs181mvbX5Q+/An
-4sSW9g6u6IfUfPLuqYzUhYo+0SJPSHuHFwbZBPCFXHNNrCluhAf1Yroi7qljqqvm
-8cOAEaCmnSfhzxSuwbNsg33o9f6ngzZ7CV222LgC/vgldgXfuD1nxDw6sJm0dZ+X
-4YTuYVT2LD09gzxzWzt9Sm5UjGLylZ8rPejuzsexnSsMGpjuPrFHaHjxFl259LvJ
-HAVzYDFNNAhORBXtIRvrc7cGf49+ZnQcL8iz54A1iqAEbX3uQat4QJfoexyv4Fyr
-INy8AA==
-=t3qA
+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
+=MSLV
 -----END PGP MESSAGE-----
+
 
 
 ** local variables

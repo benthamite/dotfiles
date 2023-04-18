@@ -6413,6 +6413,19 @@ CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
 #+end_src
 
 
+** gh-notify
+:PROPERTIES:
+:ID:       02EE3FAE-133C-479E-B7C7-9B2BB2160DCA
+:END:
+
+#+begin_src emacs-lisp
+(use-package gh-notify
+  :after forge
+  :elpaca nil
+  :demand t)
+#+end_src
+
+
 ** git-auto-commit-mode
 :PROPERTIES:
 :ID:       FCB4DDAC-CD47-48CE-BA0F-96C0574C458A

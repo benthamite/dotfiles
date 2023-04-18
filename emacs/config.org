@@ -6358,7 +6358,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
            :repo "eatse21/forge-search.el")
   :after forge
   :demand t
-  :config
+  :general
   ((forge-topic-mode-map
     forge-topic-list-mode-map
     forge-issue-list-mode-map

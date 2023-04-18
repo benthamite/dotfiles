@@ -46,24 +46,34 @@
 * variables override                                                  :crypt:
 -----BEGIN PGP MESSAGE-----
 
-hF4DrdUg0Z9+SfsSAQdAE6cHci17mXzDaBLbizn/vfoh5eypQiv4uO/0iiMaSScw
-Kdaa2JiIt+QS0TFoWXMBIviS1AE9xY9Yr1o7+V3BLgJvr8KuLrywsRg37E0uPIcV
-0ukB/tSt98i7XlgEUcUTgcIepISk0gp/1pPiG6MPy6GEeVW9SCVWXnCqh+rQIhj2
-QA9uGsvji5SsVnNlTZD2K2wnUetZLKwt0phkZ5jYfpruytRL8S8MzAdDrTF+nubW
-EpqwL+A6U46653RlgxZSP8d4En9YJ7mAMDjvr/c8I9zVg+RP7TDAaxNQJEnAUVHz
-StdXOCzmWw4FSqrQwhzPLqfCGOEYZt422b/0KjdMeQ2QzR5Ib/UlgmyPRUEML6eP
-gBZzGGZftM6Ji5rVAZnmDvifSxX3JM6iqw1QVsD/kVUUwadAl9MvGprgYO/VMEsu
-wHayOpLIfNU6YoYe6StnhxcXmUOLF2x57pkzPhQTtDLxlenOSMxcRQsxI5Uk3Bcb
-u2Fx6Kf9YCxGYk+AhfY2R0MvABWbcJQjCQDwx6oNoXUH9kQe6TgHaJS96qsuAQz2
-ODgiXVbjnmtwUnw1UypkjFBGn6yJHvyF2s5OsfqNuEn3rzhBpzUIhLjj8ZEwuQfS
-iRmLj3aN+cDf7wMobak2SnnrKku7cGJHxsJi6V9RKGaFPznsE4dqW3T0tulRTHo6
-zN6HNJZLLatrAJ6oexOmG55mxIYeidQa7HpRX0+Uz00RsiF9ULkeT5x3zw4VFv+L
-HXZKU0z1YpSJJxOGHsoayuWuUMf8fX31JkwdNdCZHKDUssACCiNDJu4a/+iwr1qn
-R7KD6wUCYOKG8D9ZG6T5otqP+tDmjUHfdVuTfucZ+0181T6oTI7IDeeLXurTN8Lf
-86eHmowkECsM0VS912QxUPst1XgqI91BVL5wXsaxT9UMbnIGDdsgkw3v/r0uQjU+
-ehfMzrCMb33uOfHx7JsI7g8KP09By+3r7jyF63iHzas01E9S4dmpenzeng3OmOdW
-riXamHpyL3276nhjtXXQUdoNsoi1kjKnPA8VsYaAyb8696ZZIko=
-=g69j
+hQIMAxRs/nzf4knaAQ/+OsFpK9yOt9UtO/SBmCzur52g4CZeq1qnceqyCAbd8o11
+2IkX1QiHMsx32KDcONRsP24BNitkp7hKAe2EMi0H1o8pJYyo6OfvGMrpif3vISR8
+Xxxo9ON0eN8vwZ5WM04qJPH9FrEmIU6A6cTsG99DUyl9tbGXzYF5TJcnCmnIeVax
+5UMINsdaHqTIo9PNAPYfj97Ol5deYag9jQh+TP6R47OOjwPQ+5F34+sq3DzSP4B7
+rjrqR5brLT9mNeBnmomNsjj7Q4gKEE+bHEyXCquFJf3JJfjhccU0WDF3lusT76TM
+csHlIwk+B+ZjbYKXy8Um+GDnMO2WVyVcgXsNHBQ1oHo/N9qOlZNT7y+ObOQPZ0xe
+xvgKuwzYzaoCU2SPsueTkrcxAPQfAZSHvHceOcaKY8pvygOojkz+e3XN7xo0in5V
+fsupLlXNUnF2YkoHrTaQazYsPs2f9ypTx3NKURBC23/EsXkdJpoizPW3o3k29Xk6
+W8qRdwUahgdH4Dlx8GJe8seFr7M5HGIxfNF4pZIC/7CNnAyQkBhL/0f2P744OlUJ
+E77SXTravA99si4V0P+bztY5pxM126ZFSCCvDpeXCSRpNg2Uwq1K+xrnq/lFulzD
+Yqh5vSmiDW4l9FsoTRR9ZSCa/f0Z7UO+UejEqcoK+jlOKBamItov7/cUgswNofPU
+6QEJAhANMe6I9rzfSWZA00PGdPgfKd9zRqecvnVN5iaDqbKaiZgrmKKGRt4qoIJd
+Koj4qejuKoiZS9aIma5Uu4s/Do0/Owxk5kxdmTwXmy3kYWQ+6VNoGqLGsIU6zgF+
+H4jgMEZ/hqzNHKcZmBwt/DLdh2I7zazLiOmfVImId/argHBWpkyJLLwLuQjlkbId
+Ii21LZARaT6ZKGTE/PTqbdjcydjptsGt+c7Sb59wgZC/ZMLMJqreyt3gvLH6iRJy
+Tv0jR4VNUqUH6cYjvL/QxL1FZAkPPp55D//OIGttDpb+BuaawlCsWA2ocKH2gEXk
+U2fjW8aBOELIVJ4jUdAlAxHzO4ql4bFglBk1EpQ/iF+SKIOoVOAhow0g6ea4jEBm
+emGarIAOZq4RTA0K6qDJ1ZIDqh5Lo6a9LPRxv6tpTZny0nt/5n8evtwytEm/9Azl
+ywBUMGnefdWSuQx8lTq/4dGcHd10c5995uQIEt0eghwIk0CxCLUhkY/qlUESJNf/
+dPNU4b6xds1s+OBs8pHQG8vVOqo307pqQbMxb5BPR6G/+PuB01Ltf4Zbj/4pRGSN
+ouJ5aqUF0Iib0T+TXbCod5We9fL/aAIuFpUunQZQR6RNijGLAbfVz77ab6RAExhu
+ltw9shWU5VuJOxZtpR/JHo6sQCv5xYwRbkDGikuvMzmawDci+d6Q0jpRLuNtgJiu
+TNvnZuDhMFVgyF7nBAPg1P3PA7KEsuRGTLn+KlledX/xE1Vs1Kwj8JnPQ6v0DTxx
+jIJ3IFHP1AkmJtUJeyqnn5GvQCGIknuphNaPUaaRWWiZvgN+brWiHDvLje+8oLD5
+zMaglzlzBLhAZfjhL5cGOvJxuZb+OrCsCTgmQ/4Sjmb4cRuepzKeWS6wctBXYqJo
+7IQRJ/3JywyaaPNkQQobxcTMzmiLjwpbpDWkg2q4QHPSZIDQ2IkkABFe6GxXNaKw
+zZKmB8q/uUaDCYNempE4adKzuegd+80hBvKUb/A2f34stoK5vea7hJ8i
+=STqc
 -----END PGP MESSAGE-----
 
 * code overrides
@@ -147,6 +157,8 @@ riXamHpyL3276nhjtXXQUdoNsoi1kjKnPA8VsYaAyb8696ZZIko=
   ;; disable C-return or it will interfere with org
   (define-key cua-global-keymap (kbd "<C-return>") nil)
   (setq shift-select-mode t))
+
+(ps/tab-bar-reset)
 
 (general-define-key
  "<kp-delete>" 'delete-char
@@ -332,19 +344,19 @@ one hour only."
   "Dired folders"
   ("t" (hydra-dired-tlon-dropbox/body) "Tlön Dropbox" :column "Folders")
   ("g" (hydra-dired-tlon-google-drive/body) "Tlön Google Drive" :column "Folders")
-  ("w" (dired (file-name-concat ps/dir-user "www")) "Nginx www root" :column "Folders")
+  ("w" (dired (file-name-concat (getenv "HOME") "www")) "Nginx www root" :column "Folders")
   ("o" (dired ps/dir-google-drive) "Google Drive" :column "User")
   ("w" (dired ps/dir-downloads) "Downloads" :column "User")
   ("x" (dired ps/dir-dropbox) "Dropbox" :column "User")
-  ("s" (dired (file-name-concat ps/dir-user "source")) "Source" :column "Folders")
+  ("s" (dired (file-name-concat (getenv "HOME") "source")) "Source" :column "Folders")
   ("." (dired-at-point) "File at point" :column "Other")
   ("/" (dired "/") "Root" :column "Other")
   ("SPC" (dired "~/") "user" :column "User" )
   (";" (dired-jump) "Current buffer" :column "Other")
   ("H-;" (dired-jump-other-window) "Current buffer in other window" :column "Other")
   ("e" (dired ps/dir-emacs) "Emacs" :column "Config")
-  ("p" (dired (file-name-concat ps/dir-user ".config/emacs-profiles")) "Emacs profiles" :column "Config")
-  ("b" (dired (file-name-concat ps/dir-user "source/dotfiles/emacs")) "Pablo's Emacs config" :column "Config"))
+  ("p" (dired (file-name-concat (getenv "HOME") ".config/emacs-profiles")) "Emacs profiles" :column "Config")
+  ("b" (dired (file-name-concat (getenv "HOME") "source/dotfiles/emacs")) "Pablo's Emacs config" :column "Config"))
 
 
 (defhydra hydra-dired-tlon-dropbox

@@ -496,6 +496,23 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
     (load "./elpaca-autoloads")))
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
+
+;; reddit.com/r/emacs/comments/12om829/comment/jgj5wcg/
+(defun elpaca-use-package--maybe (fn &rest args)
+  "Temporarily disable `elpaca-use-package-mode' for FN with ARGS if :elpaca nil."
+  (let* ((pargs (cdr-safe args))
+         (declared (member :elpaca pargs)))
+    (if (or (cadr declared) (and (not declared) elpaca-use-package-by-default))
+        (apply fn args)
+      (setq args (cl-loop for i below (length args)
+                          for arg = (nth i args)
+                          if (eq arg :elpaca) do (cl-incf i)
+                          else collect arg))
+      (elpaca-use-package-mode -1)
+      (unwind-protect
+          (apply fn args)
+        (elpaca-use-package-mode 1)))))
+
 ;; (toggle-debug-on-error) ; uncomment when debugging
 #+end_src
 

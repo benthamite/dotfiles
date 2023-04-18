@@ -1,10 +1,10 @@
 # -*- mode: snippet -*-
-# name: mom-usd-ars-exchange
-# key: mx
+# name: mom-usd-to-ars
+# key: mua
 # contributor: Pablo Stafforini
 # --
 `(format-time-string "%Y-%m-%d")` Conversion
-    Liabilities:Mom:Consolidated             $1.00 ARS @ $2 USD
+    Liabilities:Mom:Consolidated             -$1.00 USD @ $2.00 ARS
     Liabilities:Mom:Consolidated
 
 $3

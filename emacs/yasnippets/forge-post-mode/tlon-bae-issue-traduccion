@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-bae-issue-traduccion
+# key: tbt
+# contributor: Pablo Stafforini
+# --
+Traducción: '$1'

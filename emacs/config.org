@@ -496,6 +496,23 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
     (load "./elpaca-autoloads")))
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
+
+;; reddit.com/r/emacs/comments/12om829/comment/jgj5wcg/
+(defun elpaca-use-package--maybe (fn &rest args)
+  "Temporarily disable `elpaca-use-package-mode' for FN with ARGS if :elpaca nil."
+  (let* ((pargs (cdr-safe args))
+         (declared (member :elpaca pargs)))
+    (if (or (cadr declared) (and (not declared) elpaca-use-package-by-default))
+        (apply fn args)
+      (setq args (cl-loop for i below (length args)
+                          for arg = (nth i args)
+                          if (eq arg :elpaca) do (cl-incf i)
+                          else collect arg))
+      (elpaca-use-package-mode -1)
+      (unwind-protect
+          (apply fn args)
+        (elpaca-use-package-mode 1)))))
+
 ;; (toggle-debug-on-error) ; uncomment when debugging
 #+end_src
 
@@ -1038,10 +1055,10 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   ("s" (ps/org-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C") "slack" :column "Comms")
   ("t" (ps/org-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
   ("f" (ps/org-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "People")
-  ("F" (ps/tlon-meeting-with-fede) "fede: meeting" :column "People")
+  ("F" (tlon-core-meeting-with-fede) "fede: meeting" :column "People")
   ("H-f" (ps/org-id-goto "CE0C7638-97F1-4509-8212-5B77F4A4AF29") "fede: tareas" :column "People")
   ("l" (ps/org-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "People")
-  ("L" (ps/tlon-meeting-with-leo) "leo: meeting" :column "People")
+  ("L" (tlon-core-meeting-with-leo) "leo: meeting" :column "People")
   ("H-l" (ps/org-id-goto "76A01EAA-74BC-41FC-9050-E6BDC0D56029") "leo: tareas" :column "People")
   ("RET" (ps/org-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A"))
   )
@@ -6097,10 +6114,93 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
         (browse-url (ps/magit-parse-url url))
         (message "Browsing repo %s" url))))
 
+  (transient-define-prefix magit-dispatch ()
+    "Invoke a Magit command from a list of available commands."
+    :info-manual "(magit)Top"
+    ["Transient and dwim commands"
+     ;; → bound in magit-mode-map or magit-section-mode-map
+     ;; ↓ bound below
+     [("A" "Apply"          magit-cherry-pick)
+      ;; a                  ↓
+      ("b" "Branch"         magit-branch)
+      ("B" "Bisect"         magit-bisect)
+      ("c" "Commit"         magit-commit)
+      ("C" "Clone"          magit-clone)
+      ("d" "Diff"           magit-diff)
+      ("D" "Diff (change)"  magit-diff-refresh)
+      ("e" "Ediff (dwim)"   magit-ediff-dwim)
+      ("E" "Ediff"          magit-ediff)
+      ("f" "Fetch"          magit-fetch)
+      ("F" "Pull"           magit-pull)
+      ;; g                  ↓
+      ;; G                → magit-refresh-all
+      ("h" "Help"           magit-info)
+      ("H" "Section info"   magit-describe-section :if-derived magit-mode)]
+     [("i" "Ignore"         magit-gitignore)
+      ("I" "Init"           magit-init)
+      ("j" "Jump to section"magit-status-jump  :if-mode     magit-status-mode)
+      ("j" "Display status" magit-status-quick :if-not-mode magit-status-mode)
+      ("J" "Display buffer" magit-display-repository-buffer)
+      ;; k                  ↓
+      ;; K                → magit-file-untrack
+      ("l" "Log"            magit-log)
+      ("L" "Log (change)"   magit-log-refresh)
+      ("m" "Merge"          magit-merge)
+      ("M" "Remote"         magit-remote)
+      ("n" "Forge"          forge-dispatch)
+      ;; N       reserved → forge-dispatch
+      ("o" "Submodule"      magit-submodule)
+      ("O" "Subtree"        magit-subtree)
+      ("p" "Pull"           magit-pull)
+      ;; P                → magit-section-backward
+      ;; q                → magit-mode-bury-buffer
+      ("Q" "Command"        magit-git-command)]
+     [("r" "Rebase"         magit-rebase)
+      ;; R                → magit-file-rename
+      ;; s                  ↓
+      ;; S                  ↓
+      ("t" "Tag"            magit-tag)
+      ("T" "Note"           magit-notes)
+      ;; u                  ↓
+      ;; U                  ↓
+      ;; v                  ↓
+      ("V" "Revert"         magit-revert)
+      ("w" "Apply patches"  magit-am)
+      ("W" "Format patches" magit-patch)
+      ;; x                → magit-reset-quickly
+      ("X" "Reset"          magit-reset)
+      ("y" "Show Refs"      magit-show-refs)
+      ("Y" "Cherries"       magit-cherry)
+      ("z" "Stash"          magit-stash)
+      ("Z" "Worktree"       magit-worktree)
+      ("." "Push"           magit-push)
+      ("!" "Run"            magit-run)]]
+    ["Applying changes"
+     :if-derived magit-mode
+     [("a" "Apply"          magit-apply)
+      ("v" "Reverse"        magit-reverse)
+      ("k" "Discard"        magit-discard)]
+     [("s" "Stage"          magit-stage)
+      ("u" "Unstage"        magit-unstage)]
+     [("S" "Stage all"      magit-stage-modified)
+      ("U" "Unstage all"    magit-unstage-all)]]
+    ["Essential commands"
+     :if-derived magit-mode
+     [("g" "       refresh current buffer"   magit-refresh)
+      ("q" "       bury current buffer"      magit-mode-bury-buffer)
+      ("<tab>" "   toggle section at point"  magit-section-toggle)
+      ("<return>" "visit thing at point"     magit-visit-thing)]
+     [("C-x m"    "show all key bindings"    describe-mode)
+      ("C-x i"    "show Info manual"         magit-info)]])
+
   :general
-  ("A-g" 'magit)
+  ("A-g" 'magit
+   "A-M-g" 'magit-clone)
   (magit-mode-map
-   "o" 'ps/magit-browse-repo)
+   "n" 'forge-dispatch
+   "p" 'magit-pull
+   "." 'magit-push
+   )
   (magit-status-mode-map
    "A-C-s-r" 'magit-section-backward
    "A-C-s-f" 'magit-section-forward))
@@ -6155,10 +6255,76 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
+  (setq forge-topic-list-limit '(60 . 0)) ; hide closed topics
+  ;; disabling for the time being, since I read this could be a source of problems; just run `n f f'
+  ;; (setq forge-pull-notifications t)
+
+
+  (transient-define-prefix forge-dispatch ()
+    "Dispatch a forge command."
+    [["Fetch"
+      ("f f" "all topics"             forge-pull)
+      ("f t" "one topic"              forge-pull-topic)
+      ("f n" "notifications"          forge-pull-notifications)
+      """Create"
+      ("c i" "issue"                  forge-create-issue)
+      ("c p" "pull-request"           forge-create-pullreq)
+      ("c u" "pull-request from issue" forge-create-pullreq-from-issue
+       :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
+      ("c f" "fork or remote"        forge-fork)
+      """Search"
+      ("s" "search topics & pull-requests" forge-search)
+      """Merge"
+      ("M  " "merge using API"        forge-merge)]
+     ["List"
+      ("l t" "topics"                 forge-list-topics)
+      ("l i" "issues"                 forge-list-issues)
+      ("l p" "pull-requests"          forge-list-pullreqs)
+      ("l n" "notifications"          forge-list-notifications)
+      ("l r" "repositories"           forge-list-repositories)
+      ("l a" "awaiting review"        forge-list-requested-reviews)
+      """Visit"
+      ("v t" "topic"                  forge-visit-topic)
+      ("v i" "issue"                  forge-visit-issue)
+      ("v p" "pull-request"           forge-visit-pullreq)
+      """Browse"
+      ("b I" "issues"                 forge-browse-issues)
+      ("b P" "pull-requests"          forge-browse-pullreqs)
+      ("b t" "topic"                  forge-browse-topic)
+      ("b i" "issue"                  forge-browse-issue)
+      ("b p" "pull-request"           forge-browse-pullreq)
+      ("b r" "remote"                 forge-browse-remote)]
+     ["Authored"
+      ("u i" "authored issues"        forge-list-authored-issues)
+      ("u p" "authored pull-requests" forge-list-authored-pullreqs)
+      """Assigned"
+      ("i i" "assigned issues"        forge-list-assigned-issues)
+      ("i p" "assigned pull-requests" forge-list-assigned-pullreqs)
+      """Owned"
+      ("o i" "owned issues"           forge-list-owned-issues)
+      ("o p" "owned pull-requests"    forge-list-owned-pullreqs)
+      """Labeled"
+      ("e i" "labeled issues"         forge-list-labeled-issues)
+      ("e p" "labeled pull-requests"  forge-list-labeled-pullreqs)]]
+    [["Configure"
+      ("a  " "add repository to database" forge-add-repository)
+      ("r  " "forge.remote"  forge-forge.remote)
+      ("t l" "forge.graphqlItemLimit" forge-forge.graphqlItemLimit
+       :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
+      ("t t" forge-toggle-display-in-status-buffer)
+      ("t c" forge-toggle-closed-visibility)]])
 
   :general
   (forge-post-mode-map
-   "s-c" 'forge-post-submit))
+   "s-c" 'forge-post-submit)
+  (forge-topic-mode-map
+   "a" 'forge-edit-topic-assignees
+   "a" 'forge-edit-topic-assignees
+   "b" 'forge-edit-topic-body
+   "l" 'forge-edit-topic-labels
+   "m" 'forge-edit-topic-milestone
+   "s" 'forge-edit-topic-state
+   "t" 'forge-edit-topic-title))
 #+end_src
 
 ** orgit-forge
@@ -6185,12 +6351,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 (use-package forge-search
   :elpaca (forge-search
            :host github
-	   :repo "eatse21/forge-search.el")
+           :repo "eatse21/forge-search.el")
   :after forge
   :demand t
-  :general
-  (magit-status-mode-map
-   "N s" 'forge-search)
   ((forge-topic-mode-map
     forge-topic-list-mode-map
     forge-issue-list-mode-map
@@ -7402,6 +7565,11 @@ necessary."
    "M-n" nil))
 #+end_src
 
+*** TODO Fix, then swtich to, ~eshell~
+:PROPERTIES:
+:ID:       3314BBDD-21DE-4460-9506-9EA137762771
+:END:
+
 ** emacs-eat
 :PROPERTIES:
 :ID:       94971F2F-FF78-4088-BBDB-A95ADEDECE9B
@@ -7527,6 +7695,11 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
   :general
   ("M-A-p" 'ps/ispell-toggle-language))
 #+end_src
+
+*** TODO Make Aspell use American and British English
+:PROPERTIES:
+:ID:       FF58FF80-5BEE-428C-B60C-FDD8D05AD967
+:END:
 
 ** flyspell
 :PROPERTIES:
@@ -8031,7 +8204,7 @@ insert italic delimiters and place the point in between them."
   (setq markdown-fontify-code-blocks-natively t)
   (setq markdown-command "pandoc --from markdown --to html")
   (setq markdown-disable-tooltip-prompt t)
-  (setq markdown-italic-underscore 'double)
+  (setq markdown-italic-underscore nil)
 
   (defun ps/markdown-org-paste-dwim ()
     "Convert between `org-mode' and `markdown' based on current mode."
@@ -11914,7 +12087,7 @@ SQL can be either the emacsql vector representation, or a string."
                                      ps/dir-archive))
 
   (defvar ps/org-roam-excluded-files (list
-                                      "orb-noter-template.org"
+                                      ps/file-orb-noter-template
                                       "calendar.org" ; added directly as agenda file
                                       "quotes-old.org"
                                       ".org2blog.org"
@@ -12001,7 +12174,7 @@ SQL can be either the emacsql vector representation, or a string."
              (setq tags "person")
              (setq directory ps/dir-people)))
       (let* ((name (read-from-minibuffer "Entry name: "))
-             (slug (org-hugo-slug name))
+             (slug (tlon-core-slugify name))
              (filename (concat slug ".org")))
         (when (file-exists-p filename)
           (user-error (format "File `%s' already exists." filename)))
@@ -14061,6 +14234,21 @@ first name, and names are separated by a semicolon."
       (default
        (beep))))
 
+  (defun ps/ebib-citar-open-notes ()
+    "Open note for the entry at point using `citar-open-notes'.
+This command replaces the native `ebib-popup-note'. The
+replacement ensures that, when a note doesn't already exist, it
+is created following the same schema as notes created with
+`citar'."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (let ((citekey (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)))
+         (when citekey
+           (citar-open-notes (list citekey)))))
+      (default
+       (beep))))
+
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
 
@@ -14071,7 +14259,7 @@ first name, and names are separated by a semicolon."
   ((ebib-entry-mode-map ebib-index-mode-map)
    "H-s" 'ebib-save-current-database
    "Q" 'ebib-quit
-   "n" 'ebib-popup-note)
+   "n" 'ps/ebib-citar-open-notes)
   (ebib-entry-mode-map
    "TAB" 'ebib-goto-next-set
    "<backtab>" 'ebib-goto-prev-set
@@ -15661,6 +15849,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "amazon\\."
                      "archive\\.org"
                      "beyondpricing\\.com"
+                     "bloomberg\\.com"
                      "connectedpapers\\.com"
                      "doi\\.org"
                      "effectivealtruism\\.org"
@@ -15673,7 +15862,9 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "hathitrust\\.org"
                      "imdb\\.com"
                      "interactivebrokers\\.co"
+                     "letterboxd\\.com"
                      "libgen\\."
+                     "LinkedIn\\.com"
                      "utoronto\\.ca"
                      "worldcat\\.org"
                      "mercadolibre\\."
@@ -17481,7 +17672,7 @@ And finally, the section you've all been waiting for.
   (defun ps/tlon-core-meeting-with-leo ()
     "TODO: docstring"
     (interactive)
-    (ps/tlon-meeting-with
+    (tlon-core-meeting-with
      "Leo"
      "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
      "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
@@ -17502,7 +17693,7 @@ And finally, the section you've all been waiting for.
   :demand t
   :general
   (markdown-mode-map
-   "s-u" 'tlon-bae-eawiki-insert-url))
+   "s-u" 'tlon-bae-insert-eawiki-url))
 #+end_src
 
 
@@ -17539,79 +17730,79 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 
 -----BEGIN PGP MESSAGE-----
 
-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
-=dctd
+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
+=0g8D
 -----END PGP MESSAGE-----
 
 

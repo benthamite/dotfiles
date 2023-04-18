@@ -12174,7 +12174,7 @@ SQL can be either the emacsql vector representation, or a string."
              (setq tags "person")
              (setq directory ps/dir-people)))
       (let* ((name (read-from-minibuffer "Entry name: "))
-             (slug (org-hugo-slug name))
+             (slug (tlon-core-slugify name))
              (filename (concat slug ".org")))
         (when (file-exists-p filename)
           (user-error (format "File `%s' already exists." filename)))

@@ -155,6 +155,8 @@ gxknqUC9Gr0yAiQaOvPY0PsOkmAIwE76yFNoSrQXbAhvW73zegUMnB6bF3YNFxlo
 
 #+begin_src emacs-lisp :tangle (if (eq tlon-init-extra-config-tangle-pass 2) (print tlon-init-post-init-path) "no")
 (setq inhibit-startup-screen t)
+;; remove Pablo's org-roam auto add ids
+(remove-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 (message "Loading fede's custom faces:")
 (ps/faces-load-custom-faces)

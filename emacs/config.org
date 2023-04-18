@@ -6272,28 +6272,32 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("c u" "pull-request from issue" forge-create-pullreq-from-issue
        :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
       ("c f" "fork or remote"        forge-fork)
+      """Review"
+      ("w c" "Code review at point"            code-review-forge-pr-at-point)
+      ("w g" "GitHub review at point"          github-review-forge-pr-at-point)
       """Search"
       ("s" "search topics & pull-requests" forge-search)
       """Merge"
       ("M  " "merge using API"        forge-merge)]
      ["List"
-      ("l t" "topics"                 forge-list-topics)
-      ("l i" "issues"                 forge-list-issues)
-      ("l p" "pull-requests"          forge-list-pullreqs)
-      ("l n" "notifications"          forge-list-notifications)
-      ("l r" "repositories"           forge-list-repositories)
       ("l a" "awaiting review"        forge-list-requested-reviews)
+      ("l i" "issues"                 forge-list-issues)
+      ("l n" "notifications"          forge-list-notifications)
+      ("l g" "notifications (GHub)"   gh-notify)
+      ("l p" "pull-requests"          forge-list-pullreqs)
+      ("l t" "topics"                 forge-list-topics)
+      ("l r" "repositories"           forge-list-repositories)
       """Visit"
-      ("v t" "topic"                  forge-visit-topic)
       ("v i" "issue"                  forge-visit-issue)
       ("v p" "pull-request"           forge-visit-pullreq)
+      ("v t" "topic"                  forge-visit-topic)
       """Browse"
-      ("b I" "issues"                 forge-browse-issues)
-      ("b P" "pull-requests"          forge-browse-pullreqs)
-      ("b t" "topic"                  forge-browse-topic)
       ("b i" "issue"                  forge-browse-issue)
       ("b p" "pull-request"           forge-browse-pullreq)
-      ("b r" "remote"                 forge-browse-remote)]
+      ("b r" "remote"                 forge-browse-remote)
+      ("b t" "topic"                  forge-browse-topic)
+      ("b I" "issues"                 forge-browse-issues)
+      ("b P" "pull-requests"          forge-browse-pullreqs)]
      ["Authored"
       ("u i" "authored issues"        forge-list-authored-issues)
       ("u p" "authored pull-requests" forge-list-authored-pullreqs)

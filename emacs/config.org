@@ -6272,28 +6272,32 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("c u" "pull-request from issue" forge-create-pullreq-from-issue
        :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
       ("c f" "fork or remote"        forge-fork)
+      """Review"
+      ("w c" "Code review at point"            code-review-forge-pr-at-point)
+      ("w g" "GitHub review at point"          github-review-forge-pr-at-point)
       """Search"
       ("s" "search topics & pull-requests" forge-search)
       """Merge"
       ("M  " "merge using API"        forge-merge)]
      ["List"
-      ("l t" "topics"                 forge-list-topics)
-      ("l i" "issues"                 forge-list-issues)
-      ("l p" "pull-requests"          forge-list-pullreqs)
-      ("l n" "notifications"          forge-list-notifications)
-      ("l r" "repositories"           forge-list-repositories)
       ("l a" "awaiting review"        forge-list-requested-reviews)
+      ("l i" "issues"                 forge-list-issues)
+      ("l n" "notifications"          forge-list-notifications)
+      ("l g" "notifications (GHub)"   gh-notify)
+      ("l p" "pull-requests"          forge-list-pullreqs)
+      ("l t" "topics"                 forge-list-topics)
+      ("l r" "repositories"           forge-list-repositories)
       """Visit"
-      ("v t" "topic"                  forge-visit-topic)
       ("v i" "issue"                  forge-visit-issue)
       ("v p" "pull-request"           forge-visit-pullreq)
+      ("v t" "topic"                  forge-visit-topic)
       """Browse"
-      ("b I" "issues"                 forge-browse-issues)
-      ("b P" "pull-requests"          forge-browse-pullreqs)
-      ("b t" "topic"                  forge-browse-topic)
       ("b i" "issue"                  forge-browse-issue)
       ("b p" "pull-request"           forge-browse-pullreq)
-      ("b r" "remote"                 forge-browse-remote)]
+      ("b r" "remote"                 forge-browse-remote)
+      ("b t" "topic"                  forge-browse-topic)
+      ("b I" "issues"                 forge-browse-issues)
+      ("b P" "pull-requests"          forge-browse-pullreqs)]
      ["Authored"
       ("u i" "authored issues"        forge-list-authored-issues)
       ("u p" "authored pull-requests" forge-list-authored-pullreqs)
@@ -6354,6 +6358,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
            :repo "eatse21/forge-search.el")
   :after forge
   :demand t
+  :config
   ((forge-topic-mode-map
     forge-topic-list-mode-map
     forge-issue-list-mode-map
@@ -6409,6 +6414,19 @@ CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
    "s-a" 'github-review-approve)
   (magit-status-mode-map
    "s-r" 'github-review-forge-pr-at-point))
+#+end_src
+
+
+** gh-notify
+:PROPERTIES:
+:ID:       02EE3FAE-133C-479E-B7C7-9B2BB2160DCA
+:END:
+
+#+begin_src emacs-lisp
+(use-package gh-notify
+  :after forge
+  :elpaca nil
+  :demand t)
 #+end_src
 
 
@@ -11660,7 +11678,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 #+begin_src emacs-lisp :results silent
 (use-feature org-crypt
   :after org
-  :defer 30
+  :demand t
   :config
   (setq org-tags-exclude-from-inheritance '("crypt"))
   (setq org-crypt-key ps/personal-gmail)
@@ -17696,7 +17714,6 @@ And finally, the section you've all been waiting for.
    "s-u" 'tlon-bae-insert-eawiki-url))
 #+end_src
 
-
 ** Keyboard Maestro
 :PROPERTIES:
 :ID:       1776C0C3-CEEC-4DED-B609-4DF0DF83B0C2
@@ -17720,7 +17737,7 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 
 The section below defines all the personal variables used by this file. The contents of that section are encrypted with ~org-crypt~ and tangled to a local ~variables.el~ file that isn't part of this public repository.
 
-** shared variables                                                   :crypt:
+** shared variables                                             :crypt:
 :PROPERTIES:
 :ID:       3A5E2CF3-5CC3-4804-8AEC-89BFD943E0BF
 :END:
@@ -17730,79 +17747,80 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 
 -----BEGIN PGP MESSAGE-----
 
-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
-=0g8D
+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
+INy8AA==
+=t3qA
 -----END PGP MESSAGE-----
 
 

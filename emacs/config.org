@@ -6255,6 +6255,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("c u" "pull-request from issue" forge-create-pullreq-from-issue
        :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
       ("c f" "fork or remote"        forge-fork)
+      """Search"
+      ("s" "search topics & pull-requests" forge-search)
       """Merge"
       ("M  " "merge using API"        forge-merge)]
      ["List"

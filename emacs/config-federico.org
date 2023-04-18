@@ -46,34 +46,35 @@
 * variables override                                                  :crypt:
 -----BEGIN PGP MESSAGE-----
 
-hQIMAxRs/nzf4knaAQ/+OsFpK9yOt9UtO/SBmCzur52g4CZeq1qnceqyCAbd8o11
-2IkX1QiHMsx32KDcONRsP24BNitkp7hKAe2EMi0H1o8pJYyo6OfvGMrpif3vISR8
-Xxxo9ON0eN8vwZ5WM04qJPH9FrEmIU6A6cTsG99DUyl9tbGXzYF5TJcnCmnIeVax
-5UMINsdaHqTIo9PNAPYfj97Ol5deYag9jQh+TP6R47OOjwPQ+5F34+sq3DzSP4B7
-rjrqR5brLT9mNeBnmomNsjj7Q4gKEE+bHEyXCquFJf3JJfjhccU0WDF3lusT76TM
-csHlIwk+B+ZjbYKXy8Um+GDnMO2WVyVcgXsNHBQ1oHo/N9qOlZNT7y+ObOQPZ0xe
-xvgKuwzYzaoCU2SPsueTkrcxAPQfAZSHvHceOcaKY8pvygOojkz+e3XN7xo0in5V
-fsupLlXNUnF2YkoHrTaQazYsPs2f9ypTx3NKURBC23/EsXkdJpoizPW3o3k29Xk6
-W8qRdwUahgdH4Dlx8GJe8seFr7M5HGIxfNF4pZIC/7CNnAyQkBhL/0f2P744OlUJ
-E77SXTravA99si4V0P+bztY5pxM126ZFSCCvDpeXCSRpNg2Uwq1K+xrnq/lFulzD
-Yqh5vSmiDW4l9FsoTRR9ZSCa/f0Z7UO+UejEqcoK+jlOKBamItov7/cUgswNofPU
-6QEJAhANMe6I9rzfSWZA00PGdPgfKd9zRqecvnVN5iaDqbKaiZgrmKKGRt4qoIJd
-Koj4qejuKoiZS9aIma5Uu4s/Do0/Owxk5kxdmTwXmy3kYWQ+6VNoGqLGsIU6zgF+
-H4jgMEZ/hqzNHKcZmBwt/DLdh2I7zazLiOmfVImId/argHBWpkyJLLwLuQjlkbId
-Ii21LZARaT6ZKGTE/PTqbdjcydjptsGt+c7Sb59wgZC/ZMLMJqreyt3gvLH6iRJy
-Tv0jR4VNUqUH6cYjvL/QxL1FZAkPPp55D//OIGttDpb+BuaawlCsWA2ocKH2gEXk
-U2fjW8aBOELIVJ4jUdAlAxHzO4ql4bFglBk1EpQ/iF+SKIOoVOAhow0g6ea4jEBm
-emGarIAOZq4RTA0K6qDJ1ZIDqh5Lo6a9LPRxv6tpTZny0nt/5n8evtwytEm/9Azl
-ywBUMGnefdWSuQx8lTq/4dGcHd10c5995uQIEt0eghwIk0CxCLUhkY/qlUESJNf/
-dPNU4b6xds1s+OBs8pHQG8vVOqo307pqQbMxb5BPR6G/+PuB01Ltf4Zbj/4pRGSN
-ouJ5aqUF0Iib0T+TXbCod5We9fL/aAIuFpUunQZQR6RNijGLAbfVz77ab6RAExhu
-ltw9shWU5VuJOxZtpR/JHo6sQCv5xYwRbkDGikuvMzmawDci+d6Q0jpRLuNtgJiu
-TNvnZuDhMFVgyF7nBAPg1P3PA7KEsuRGTLn+KlledX/xE1Vs1Kwj8JnPQ6v0DTxx
-jIJ3IFHP1AkmJtUJeyqnn5GvQCGIknuphNaPUaaRWWiZvgN+brWiHDvLje+8oLD5
-zMaglzlzBLhAZfjhL5cGOvJxuZb+OrCsCTgmQ/4Sjmb4cRuepzKeWS6wctBXYqJo
-7IQRJ/3JywyaaPNkQQobxcTMzmiLjwpbpDWkg2q4QHPSZIDQ2IkkABFe6GxXNaKw
-zZKmB8q/uUaDCYNempE4adKzuegd+80hBvKUb/A2f34stoK5vea7hJ8i
-=STqc
+hQIMAxRs/nzf4knaAQ/+Lw6FIR9Iq5NXdlvS9JwAKVOr1oppgtMIQySvhkhe32FQ
+3OulWXJORKEMS6bOhQhF4tyewJAMwPe6zr5PzEeVqq2/pHvTUCFYRWFLlXOOCQPK
+hM7E9HRGdQn1wz07mFTgSwMfL+i8Ls3BHFn6cdUB6vE/0yLpNZrGO+/hUBp9nn2h
+BVQO348daD6YZ5VTvuTVwZBfcteYtY8BEFoSpvnbSjSiCSPM0uEPETRm6WUrj3Pr
+rT57cKZ/TBh5vnHIwH9N96UFRcbwncmxAmo/HbdQ6ZPrgAoI6eDyY5/GRHxqTXwX
+94OmbvjVj3Pgr9W7lEJxgBwqUkrXz76DsGBqKg1inYRNiPvVF//ZveEAmyPjGHyC
+yd6hKfKg+jjVNqtje4vQOXCd0QGgc50s3S8D+6JUvjQ8Q8aezOOND3HJdUuPWYUn
+u3U51FSyxSZGlUdYuu+uPv0f7+mxq/8ZOQ1ELUPNoHakpi1ohoKN71Soz2yVrpXo
+YXuAL3cJtkIMHr9bTTCtQjDzpk3spTRnyadLe9jTnn+nApM4iFAtQwmHo+TbhuEi
+n89pFWv3nqk8m7Crn+c2vbDWWH/oRgDIJiL71T2GkToIveWr8axx/l+bgH7/19wG
+OBXIy9h4x6wXzSt2RLSWhGhfuwlumnPRRv3S1uMXKRu61aIqAX3zy8Y+NzOsa0bU
+6QEJAhC7OT1+ygiH6HLW5SKiNQYfmMCvgYN75jmk9vukooee1Jrjh+0PC0Uj2Oby
+HHnnhcW/JbJ2kNanPsvTAvxO4fkZMTGDyefZAjMzKZXskWrJ3ockyg3+O66qRURU
+Pm9mRhC518VyPrlwP1D18ML6NGFUrYp7BF4Wc0MZjV0rgFq8qIZghZNFKKDbZ2kw
+p26Bytxz9jKVPLmNnzgrMHC/99ksZzfH69fX6WXBGS4567HmG8YVJFIJXH/u1COs
+Hueo3oM1c4PdrX9dfzoHJeKlsOZXTa9sEsyOqtaaM2RYVUakzemQf0fB9EAol0pQ
+TelgWR0ruvJ1T/CVevVpqIVC4jWXVB0b9EDATCfaubIGsJeVXR21szdIrVBwyuP1
+O8EcugAF5VjLsZbTQhWGAUGR7ph7HBDI9nsi/ngxKuIPxbp9IpcyrtxY7RppWeaZ
+VbpW81QzuaEzXOaTDbfJ1N0JBQJLiRkl9PqGTxNejz09CrNEnsPY0AL6tWZYrI/C
+QVPZ3DTRuYYX1rqbSV82UzwOKhTWrPY+cOjahR+6ZaQu+OJUlHO44vzfMm43eF6K
+r+h345kxegZmbWmBXbfEXRT+/hADRqUC0GnrGvnjE11Qd24DG1iTC7ww6b8DYU5m
+0CFAhkYqAFate2o2ft3OlYJuB1pJQIg6eIVbv7wkngdewEKp2/6l6HIvCEw1MahV
+CpbydmbL7TFWyJOGuDSTjY+IHkROi2Sw//Jjr8AtQD1saF+TCPidd4HpkbIwjoS4
+nDPJUXh00bmdhQpcU+V/scDhMNY+XgeGAhGMqRK3BXetNfjo2YuvjOci+GNLRGaY
+A/ZSEPkM1KEpX2ga9wGQKouZBhQfqQBx1YCSJN8jrlQu4iR095ZXDMwvqE6od+2I
+cDHXznkwta0HPjYLQ88CExjLk+CET39yPrG9w5HB7TeZypBaKmAokbBfUvKKo6Bi
+gxknqUC9Gr0yAiQaOvPY0PsOkmAIwE76yFNoSrQXbAhvW73zegUMnB6bF3YNFxlo
+1YyqQSw=
+=zrue
 -----END PGP MESSAGE-----
 
 * code overrides
@@ -136,6 +137,19 @@ zZKmB8q/uUaDCYNempE4adKzuegd+80hBvKUb/A2f34stoK5vea7hJ8i
  (:ps/org-fold
   . ((ignore))))
 #+end_src
+
+* fede's early-init
+#+begin_src emacs-lisp :tangle (print tlon-init-early-init-path)
+;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
+(setq package-enable-at-startup nil)
+
+;; github.com/emacscollective/no-littering#native-compilation-cache
+(when (fboundp 'startup-redirect-eln-cache)
+  (startup-redirect-eln-cache
+   (file-name-concat (getenv "HOME")
+    ".config/emacs-profiles/var/eln-cache/")))
+#+end_src
+
 
 * post init
 
@@ -212,8 +226,8 @@ zZKmB8q/uUaDCYNempE4adKzuegd+80hBvKUb/A2f34stoK5vea7hJ8i
 
 (defhydra hydra-org-work
   (:hint nil
-	 :idle 0
-	 :color blue)
+         :idle 0
+         :color blue)
   "Tlön dashboard"
   ("b" (org-id-goto "33BFC41C-324A-47E1-A313-8233A36B2346") "BAE")
   ("r" (org-id-goto "87906C3B-B52B-4816-BCCA-BE3EA4B88968") "RAE")
@@ -227,33 +241,33 @@ zZKmB8q/uUaDCYNempE4adKzuegd+80hBvKUb/A2f34stoK5vea7hJ8i
   )
 (setq org-capture-templates
       `(("b" "Tlön: BAE" entry
-	 (id "33BFC41C-324A-47E1-A313-8233A36B2346")
-	 "** TODO %?\n" :prepend t)
-	("r" "Tlön: RAE" entry
-	 (id "87906C3B-B52B-4816-BCCA-BE3EA4B88968")
-	 "** TODO %?\n" :prepend t)
-	("f" "Tlön: FM" entry
-	 (id "809F6C1D-DDF7-4C6B-BB84-FFC082BE8601")
-	 "** TODO %?\n" :prepend t)
-	("d" "Tlön: LBDLH" entry
-	 (id "0079A5CD-A07B-4919-A76C-4F6E6841512D")
-	 "** TODO %?\n" :prepend t)
-	("u" "Tlön: EAN" entry
-	 (id "B168E4F1-D2E1-4D59-B88C-4CF924E82624")
-	 "** TODO %?\n" :prepend t)
-	("i" "Tlön: EAI" entry
-	 (id "715D2C4E-4BEE-4EC4-B432-720DA35C21A9")
-	 "** TODO %?\n" :prepend t)
-	("h" "Tlön: HEAR" entry
-	 (id "B157C986-D75D-4244-A522-43DCBA2F0C8E")
-	 "** TODO %?\n" :prepend t)
-	("g" "Tlön: GPE" entry
-	 (id "97F7D54F-4F4A-45A4-9616-A0B548A049BE")
-	 "** TODO %?\n" :prepend t)
-	("c" "Tlön: Core" entry
-	 (id "7EDB8441-7EFA-43CC-B3DE-5682D55BCEE1")
-	 "** TODO %?\n" :prepend t)
-	))
+         (id "33BFC41C-324A-47E1-A313-8233A36B2346")
+         "** TODO %?\n" :prepend t)
+        ("r" "Tlön: RAE" entry
+         (id "87906C3B-B52B-4816-BCCA-BE3EA4B88968")
+         "** TODO %?\n" :prepend t)
+        ("f" "Tlön: FM" entry
+         (id "809F6C1D-DDF7-4C6B-BB84-FFC082BE8601")
+         "** TODO %?\n" :prepend t)
+        ("d" "Tlön: LBDLH" entry
+         (id "0079A5CD-A07B-4919-A76C-4F6E6841512D")
+         "** TODO %?\n" :prepend t)
+        ("u" "Tlön: EAN" entry
+         (id "B168E4F1-D2E1-4D59-B88C-4CF924E82624")
+         "** TODO %?\n" :prepend t)
+        ("i" "Tlön: EAI" entry
+         (id "715D2C4E-4BEE-4EC4-B432-720DA35C21A9")
+         "** TODO %?\n" :prepend t)
+        ("h" "Tlön: HEAR" entry
+         (id "B157C986-D75D-4244-A522-43DCBA2F0C8E")
+         "** TODO %?\n" :prepend t)
+        ("g" "Tlön: GPE" entry
+         (id "97F7D54F-4F4A-45A4-9616-A0B548A049BE")
+         "** TODO %?\n" :prepend t)
+        ("c" "Tlön: Core" entry
+         (id "7EDB8441-7EFA-43CC-B3DE-5682D55BCEE1")
+         "** TODO %?\n" :prepend t)
+        ))
 
 
 (defvar ps/file-cookies (file-name-concat ps/dir-downloads "cookies.txt"))
@@ -267,71 +281,71 @@ one hour only."
   (interactive)
   (if (string-search "archive.org" (current-kill 0))
       (progn
-	(let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
-	       (suffix "&format=pdf&redirect=1")
-	       (id (replace-regexp-in-string
-		    "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
-		    "\\2"
-		    (current-kill 0)))
-	       (url (concat prefix id suffix))
-	       (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
-	  ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
-	  ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
-	  ;; Then replace the path below with the location of the downloaded cookies file.
-	  (save-window-excursion
-	    (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
-	      (async-shell-command
-	       (format
-		"wget --load-cookies='%s' '%s' -O '%s'"
-		ps/file-cookies url acsm-file))
-	      ;; (sleep-for 2)
-	      ;; (async-shell-command
-	      ;; (format
-	      ;; "open %s"
-	      ;; "/users/cartago/downloads/book.acsm"))
-	      ))
-	  (dired ps/dir-downloads)
-	  ))
+        (let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
+               (suffix "&format=pdf&redirect=1")
+               (id (replace-regexp-in-string
+                    "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
+                    "\\2"
+                    (current-kill 0)))
+               (url (concat prefix id suffix))
+               (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
+          ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
+          ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
+          ;; Then replace the path below with the location of the downloaded cookies file.
+          (save-window-excursion
+            (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
+              (async-shell-command
+               (format
+                "wget --load-cookies='%s' '%s' -O '%s'"
+                ps/file-cookies url acsm-file))
+              ;; (sleep-for 2)
+              ;; (async-shell-command
+              ;; (format
+              ;; "open %s"
+              ;; "/users/cartago/downloads/book.acsm"))
+              ))
+          (dired ps/dir-downloads)
+          ))
     (user-error "You forgot to copy the URL!")))
 
 (setq-default org-support-shift-select 'always
-	      org-replace-disputed-keys t)
+              org-replace-disputed-keys t)
 
 (setq org-agenda-custom-commands
       '(("j" "Agenda + TODOs"
-	 (
-	  (tags-todo "+fede"
-		     (;; (tags "fede")
-		      (org-agenda-sorting-strategy '(priority-down todo-state-down))
-		      (org-agenda-overriding-header "Mensajes para Fede")))
-	  (tags-todo "+pablo"
-		     (;; (tags "fede")
-		      (org-agenda-sorting-strategy '(priority-down todo-state-down))
-		      (org-agenda-overriding-header "Mensajes para Pablo")))
-	  (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Library/CloudStorage/Dropbox/tlon/fede/tareas.org\""
-		     ((org-agenda-max-entries 10)
-		      (org-agenda-sorting-strategy '(priority-down todo-state-down))
-		      (org-agenda-overriding-header "TODO - Trabajo")))
-	  (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Library/CloudStorage/Dropbox/org/todo.org\""
-		     ((org-agenda-max-entries 10)
-		      (org-agenda-sorting-strategy '(priority-down todo-state-down))
-		      (org-agenda-overriding-header "TODO - Personal")))
-	  (tags-todo "+SCHEDULED<=\"<today>\""
-		     ((org-agenda-sorting-strategy '(priority-down todo-state-down))
-		      (org-agenda-overriding-header "Scheduled for today")))
-	  (tags-todo "+DEADLINE<=\"<today>\" +DEADLINE>=\"<today -2m>\""
-		     ((org-agenda-sorting-strategy '(priority-down todo-state-down))
-		      (org-agenda-overriding-header "Upcoming deadlines")))
-	  (agenda "" ((org-agenda-span 14)))
-	  (todo "WAITING"
-		((org-agenda-overriding-header "WAITING")))
-	  (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Dropbox/tlon/fede/tareas.org\""
-		     ((org-agenda-sorting-strategy '(priority-down todo-state-down))
-		      (org-agenda-overriding-header "TODO - Trabajo - Todos")))
-	  (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Dropbox/org/todo.org\""
-		     ((org-agenda-sorting-strategy '(priority-down todo-state-down))
-		      (org-agenda-overriding-header "TODO - Personal - Todos")))
-	  ))))
+         (
+          (tags-todo "+fede"
+                     (;; (tags "fede")
+                      (org-agenda-sorting-strategy '(priority-down todo-state-down))
+                      (org-agenda-overriding-header "Mensajes para Fede")))
+          (tags-todo "+pablo"
+                     (;; (tags "fede")
+                      (org-agenda-sorting-strategy '(priority-down todo-state-down))
+                      (org-agenda-overriding-header "Mensajes para Pablo")))
+          (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Library/CloudStorage/Dropbox/tlon/fede/tareas.org\""
+                     ((org-agenda-max-entries 10)
+                      (org-agenda-sorting-strategy '(priority-down todo-state-down))
+                      (org-agenda-overriding-header "TODO - Trabajo")))
+          (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Library/CloudStorage/Dropbox/org/todo.org\""
+                     ((org-agenda-max-entries 10)
+                      (org-agenda-sorting-strategy '(priority-down todo-state-down))
+                      (org-agenda-overriding-header "TODO - Personal")))
+          (tags-todo "+SCHEDULED<=\"<today>\""
+                     ((org-agenda-sorting-strategy '(priority-down todo-state-down))
+                      (org-agenda-overriding-header "Scheduled for today")))
+          (tags-todo "+DEADLINE<=\"<today>\" +DEADLINE>=\"<today -2m>\""
+                     ((org-agenda-sorting-strategy '(priority-down todo-state-down))
+                      (org-agenda-overriding-header "Upcoming deadlines")))
+          (agenda "" ((org-agenda-span 14)))
+          (todo "WAITING"
+                ((org-agenda-overriding-header "WAITING")))
+          (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Dropbox/tlon/fede/tareas.org\""
+                     ((org-agenda-sorting-strategy '(priority-down todo-state-down))
+                      (org-agenda-overriding-header "TODO - Trabajo - Todos")))
+          (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Dropbox/org/todo.org\""
+                     ((org-agenda-sorting-strategy '(priority-down todo-state-down))
+                      (org-agenda-overriding-header "TODO - Personal - Todos")))
+          ))))
 
 
 (setq telega-server-libs-prefix "/Users/fede/source/td/tdlib")

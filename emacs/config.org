@@ -362,8 +362,8 @@ The contents of this code block are tangled to the early-init.el file.
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 
-;; (add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bar
-;; (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
+(add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bar
+(add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
 
 ;; github.com/emacscollective/no-littering#native-compilation-cache
 (when (fboundp 'startup-redirect-eln-cache)
@@ -6993,7 +6993,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 
 /[[https://codeberg.org/akib/emacs-corfu-doc-terminal][corfu-doc-terminal]] enables corfu-doc popup on terminal./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/corfu-doc-terminal)
 (use-package corfu-doc-terminal
   :elpaca (corfu-doc-terminal :host codeberg :repo "akib/emacs-corfu-doc-terminal" :protocol ssh)
   :after corfu-terminal
@@ -15016,7 +15016,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
 :END:
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-feature mu4e-contrib
   :after mu4e
   :demand t)
@@ -15029,7 +15029,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 
 /[[https://github.com/iqbalansari/mu4e-alert][mu4e-alert]] supports desktop notifications and modeline display for mu4e./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-package mu4e-alert
   :after mu4e
   :demand t
@@ -15054,7 +15054,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
 /[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-package org-msg
   :after org mu4e
   :defer 3

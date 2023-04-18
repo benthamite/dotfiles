@@ -6311,8 +6311,15 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("o i" "owned issues"           forge-list-owned-issues)
       ("o p" "owned pull-requests"    forge-list-owned-pullreqs)
       """Labeled"
-      ("e i" "labeled issues"         forge-list-labeled-issues)
-      ("e p" "labeled pull-requests"  forge-list-labeled-pullreqs)]]
+      ("d i" "labeled issues"         forge-list-labeled-issues)
+      ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)
+      """Edit"
+      ("e t" "edit title"                 forge-edit-topic-title)
+      ("e s" "edit state"                 forge-edit-topic-state)
+      ("e m" "edit milestone"             forge-edit-topic-milestone)
+      ("e l" "edit labels"                forge-edit-topic-labels)
+      ("e a" "edit assigness"             forge-edit-topic-assignees)
+      ]]
     [["Configure"
       ("a  " "add repository to database" forge-add-repository)
       ("r  " "forge.remote"  forge-forge.remote)

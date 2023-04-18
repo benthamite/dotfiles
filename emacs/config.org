@@ -7565,6 +7565,11 @@ necessary."
    "M-n" nil))
 #+end_src
 
+*** TODO Fix, then swtich to, ~eshell~
+:PROPERTIES:
+:ID:       3314BBDD-21DE-4460-9506-9EA137762771
+:END:
+
 ** emacs-eat
 :PROPERTIES:
 :ID:       94971F2F-FF78-4088-BBDB-A95ADEDECE9B

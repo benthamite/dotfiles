@@ -6097,10 +6097,93 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
         (browse-url (ps/magit-parse-url url))
         (message "Browsing repo %s" url))))
 
+  (transient-define-prefix magit-dispatch ()
+    "Invoke a Magit command from a list of available commands."
+    :info-manual "(magit)Top"
+    ["Transient and dwim commands"
+     ;; → bound in magit-mode-map or magit-section-mode-map
+     ;; ↓ bound below
+     [("A" "Apply"          magit-cherry-pick)
+      ;; a                  ↓
+      ("b" "Branch"         magit-branch)
+      ("B" "Bisect"         magit-bisect)
+      ("c" "Commit"         magit-commit)
+      ("C" "Clone"          magit-clone)
+      ("d" "Diff"           magit-diff)
+      ("D" "Diff (change)"  magit-diff-refresh)
+      ("e" "Ediff (dwim)"   magit-ediff-dwim)
+      ("E" "Ediff"          magit-ediff)
+      ("f" "Fetch"          magit-fetch)
+      ("F" "Pull"           magit-pull)
+      ;; g                  ↓
+      ;; G                → magit-refresh-all
+      ("h" "Help"           magit-info)
+      ("H" "Section info"   magit-describe-section :if-derived magit-mode)]
+     [("i" "Ignore"         magit-gitignore)
+      ("I" "Init"           magit-init)
+      ("j" "Jump to section"magit-status-jump  :if-mode     magit-status-mode)
+      ("j" "Display status" magit-status-quick :if-not-mode magit-status-mode)
+      ("J" "Display buffer" magit-display-repository-buffer)
+      ;; k                  ↓
+      ;; K                → magit-file-untrack
+      ("l" "Log"            magit-log)
+      ("L" "Log (change)"   magit-log-refresh)
+      ("m" "Merge"          magit-merge)
+      ("M" "Remote"         magit-remote)
+      ("n" "Forge"          forge-dispatch)
+      ;; N       reserved → forge-dispatch
+      ("o" "Submodule"      magit-submodule)
+      ("O" "Subtree"        magit-subtree)
+      ("p" "Pull"           magit-pull)
+      ;; P                → magit-section-backward
+      ;; q                → magit-mode-bury-buffer
+      ("Q" "Command"        magit-git-command)]
+     [("r" "Rebase"         magit-rebase)
+      ;; R                → magit-file-rename
+      ;; s                  ↓
+      ;; S                  ↓
+      ("t" "Tag"            magit-tag)
+      ("T" "Note"           magit-notes)
+      ;; u                  ↓
+      ;; U                  ↓
+      ;; v                  ↓
+      ("V" "Revert"         magit-revert)
+      ("w" "Apply patches"  magit-am)
+      ("W" "Format patches" magit-patch)
+      ;; x                → magit-reset-quickly
+      ("X" "Reset"          magit-reset)
+      ("y" "Show Refs"      magit-show-refs)
+      ("Y" "Cherries"       magit-cherry)
+      ("z" "Stash"          magit-stash)
+      ("Z" "Worktree"       magit-worktree)
+      ("." "Push"           magit-push)
+      ("!" "Run"            magit-run)]]
+    ["Applying changes"
+     :if-derived magit-mode
+     [("a" "Apply"          magit-apply)
+      ("v" "Reverse"        magit-reverse)
+      ("k" "Discard"        magit-discard)]
+     [("s" "Stage"          magit-stage)
+      ("u" "Unstage"        magit-unstage)]
+     [("S" "Stage all"      magit-stage-modified)
+      ("U" "Unstage all"    magit-unstage-all)]]
+    ["Essential commands"
+     :if-derived magit-mode
+     [("g" "       refresh current buffer"   magit-refresh)
+      ("q" "       bury current buffer"      magit-mode-bury-buffer)
+      ("<tab>" "   toggle section at point"  magit-section-toggle)
+      ("<return>" "visit thing at point"     magit-visit-thing)]
+     [("C-x m"    "show all key bindings"    describe-mode)
+      ("C-x i"    "show Info manual"         magit-info)]])
+  
   :general
-  ("A-g" 'magit)
+  ("A-g" 'magit
+   "A-M-g" 'magit-clone)
   (magit-mode-map
-   "o" 'ps/magit-browse-repo)
+   "n" 'forge-dispatch
+   "p" 'magit-pull
+   "." 'magit-push
+   )
   (magit-status-mode-map
    "A-C-s-r" 'magit-section-backward
    "A-C-s-f" 'magit-section-forward))

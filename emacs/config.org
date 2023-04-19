@@ -11732,6 +11732,19 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
    "h" 'org-habit-toggle-display-in-agenda))
 #+end_src
 
+** org-contrib
+:PROPERTIES:
+:ID:       F2DD9900-5926-4FE1-A8DC-C398CFE80378
+:END:
+
+/[[https://git.sr.ht/~bzg/org-contrib][org-contrib]] features add-ons to ~org-mode~ currently looking for maintainers./
+
+#+begin_src emacs-lisp
+(use-package org-contrib
+  :after org
+  :demand t)
+#+end_src
+
 ** org-checklist
 :PROPERTIES:
 :ID:       1ABA68C3-187B-457C-9992-4C4BBEB45C18

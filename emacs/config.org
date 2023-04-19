@@ -13022,15 +13022,20 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
     (interactive)
     (citar-open `(,(ps/get-stem-of-current-buffer))))
 
-  :general
-  ("H-/" 'citar-insert-citation
-   "A-H-M-s-?" 'ps/citar-open-file-at-point) ; i.e. H-S-/
-  ((citar-map citar-citation-map)
-   "c" 'embark-copy-as-kill
-   "d" 'ps/ebib-download-dwim
-   "i" 'ps/citar-open-in-ebib
-   "s" 'ps/ebib-search-dwim
-   "u" 'citar-open-links))
+  (tlon-init-override-code-if-available
+   :ps/citar-keybindings
+   '(
+     (general-define-key
+      "H-/" 'citar-insert-citation
+      "A-H-M-s-?" 'ps/citar-open-file-at-point ; i.e. H-S-/
+      )
+     (general-define-key
+      :keymaps '(citar-map citar-citation-map)
+      "c" 'embark-copy-as-kill
+      "d" 'ps/ebib-download-dwim
+      "i" 'ps/citar-open-in-ebib
+      "s" 'ps/ebib-search-dwim
+      "u" 'citar-open-links))))
 #+end_src
 
 *** Resources
@@ -13161,6 +13166,7 @@ in the file. Data comes from www.ebook.de."
   (delete 'orcb-check-journal org-ref-clean-bibtex-entry-hook)
   (delete 'orcb-download-pdf org-ref-clean-bibtex-entry-hook))
 #+end_src
+
 ** doi-utils
 :PROPERTIES:
 :ID:       0A568E85-C775-4894-BE59-A7DAB0F41F87

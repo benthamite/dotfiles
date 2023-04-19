@@ -46,35 +46,35 @@
 * variables override                                                  :crypt:
 -----BEGIN PGP MESSAGE-----
 
-hQIMAxRs/nzf4knaAQ/+Lw6FIR9Iq5NXdlvS9JwAKVOr1oppgtMIQySvhkhe32FQ
-3OulWXJORKEMS6bOhQhF4tyewJAMwPe6zr5PzEeVqq2/pHvTUCFYRWFLlXOOCQPK
-hM7E9HRGdQn1wz07mFTgSwMfL+i8Ls3BHFn6cdUB6vE/0yLpNZrGO+/hUBp9nn2h
-BVQO348daD6YZ5VTvuTVwZBfcteYtY8BEFoSpvnbSjSiCSPM0uEPETRm6WUrj3Pr
-rT57cKZ/TBh5vnHIwH9N96UFRcbwncmxAmo/HbdQ6ZPrgAoI6eDyY5/GRHxqTXwX
-94OmbvjVj3Pgr9W7lEJxgBwqUkrXz76DsGBqKg1inYRNiPvVF//ZveEAmyPjGHyC
-yd6hKfKg+jjVNqtje4vQOXCd0QGgc50s3S8D+6JUvjQ8Q8aezOOND3HJdUuPWYUn
-u3U51FSyxSZGlUdYuu+uPv0f7+mxq/8ZOQ1ELUPNoHakpi1ohoKN71Soz2yVrpXo
-YXuAL3cJtkIMHr9bTTCtQjDzpk3spTRnyadLe9jTnn+nApM4iFAtQwmHo+TbhuEi
-n89pFWv3nqk8m7Crn+c2vbDWWH/oRgDIJiL71T2GkToIveWr8axx/l+bgH7/19wG
-OBXIy9h4x6wXzSt2RLSWhGhfuwlumnPRRv3S1uMXKRu61aIqAX3zy8Y+NzOsa0bU
-6QEJAhC7OT1+ygiH6HLW5SKiNQYfmMCvgYN75jmk9vukooee1Jrjh+0PC0Uj2Oby
-HHnnhcW/JbJ2kNanPsvTAvxO4fkZMTGDyefZAjMzKZXskWrJ3ockyg3+O66qRURU
-Pm9mRhC518VyPrlwP1D18ML6NGFUrYp7BF4Wc0MZjV0rgFq8qIZghZNFKKDbZ2kw
-p26Bytxz9jKVPLmNnzgrMHC/99ksZzfH69fX6WXBGS4567HmG8YVJFIJXH/u1COs
-Hueo3oM1c4PdrX9dfzoHJeKlsOZXTa9sEsyOqtaaM2RYVUakzemQf0fB9EAol0pQ
-TelgWR0ruvJ1T/CVevVpqIVC4jWXVB0b9EDATCfaubIGsJeVXR21szdIrVBwyuP1
-O8EcugAF5VjLsZbTQhWGAUGR7ph7HBDI9nsi/ngxKuIPxbp9IpcyrtxY7RppWeaZ
-VbpW81QzuaEzXOaTDbfJ1N0JBQJLiRkl9PqGTxNejz09CrNEnsPY0AL6tWZYrI/C
-QVPZ3DTRuYYX1rqbSV82UzwOKhTWrPY+cOjahR+6ZaQu+OJUlHO44vzfMm43eF6K
-r+h345kxegZmbWmBXbfEXRT+/hADRqUC0GnrGvnjE11Qd24DG1iTC7ww6b8DYU5m
-0CFAhkYqAFate2o2ft3OlYJuB1pJQIg6eIVbv7wkngdewEKp2/6l6HIvCEw1MahV
-CpbydmbL7TFWyJOGuDSTjY+IHkROi2Sw//Jjr8AtQD1saF+TCPidd4HpkbIwjoS4
-nDPJUXh00bmdhQpcU+V/scDhMNY+XgeGAhGMqRK3BXetNfjo2YuvjOci+GNLRGaY
-A/ZSEPkM1KEpX2ga9wGQKouZBhQfqQBx1YCSJN8jrlQu4iR095ZXDMwvqE6od+2I
-cDHXznkwta0HPjYLQ88CExjLk+CET39yPrG9w5HB7TeZypBaKmAokbBfUvKKo6Bi
-gxknqUC9Gr0yAiQaOvPY0PsOkmAIwE76yFNoSrQXbAhvW73zegUMnB6bF3YNFxlo
-1YyqQSw=
-=zrue
+hQIMAxRs/nzf4knaAQ/8C+aG6ni8hpb4i9p0AWnL24MyaQjU0QMOF1KoGHB6S4Q4
+W9a4tMS+/c2jmTDN9OecjB84cq6Q6zpyW8gYX8mEi87Q33YDc8Gz/y5+AmG21UCf
+xN6pEmRWmcFrspmg5ICThnZ8XPn5wH7wOwOk7pxvDZhvzHZUdeHWZAPALkXZ+8hf
+2OPmcfMhN+6owjfx4mFKCQaZE7hRYY6tbRgqge8lOv/X8xceATjDzKu1b2JXxLcF
+ny6vzGlr9X/3wH/Fv3vp+UUeLWSWZfy0wcTYqOAxQdwLpKm1IITMp6Bc6GzcIQvZ
+t+eV6DUwl8Pmd4XFfq+HGaBYRCzVqrlYZ9fAGNffFQHIXrvfIQH039R3Jr+/T30t
+3q4g00gozKty4ssXTmJ+qudp3FDpmVCnG+wXlSSthgyv1MQqVScx7GT5iSvo5yU/
+rQvxfmcO7yq91AX1I4aGdna72alfR2rczNr/AQeX5Wn4xKSfH1of/G0Fd/H9dMuA
+QDGSC0IBAhk1RxGGgnyd9FFYir5IHVTcP09EIAGd0dDREjIJaRXBygozH9w6L7sN
+UUdc8UHf3SmwCkGyTaM6Ra5XbwLEI6VY+sKO5ZKd7yRnihes5B3YBoiH2nzPqBX9
+EnPH5nt4jyXsa7UmDtV36ZuGmQ2gzqEt6lNEs+8lGjR49wyAKqM+TsNIShhjKNjU
+6QEJAhAQHfhvTYpdc+aVwEkt2aNqiXWMr+0KYk+FcWKp2j/3efgRp7fLec9/NErm
+54n+ylJ53mSNpjiwvrTJxB4Diqw2dOF+VRbPp8+sufSwAdyIeD2kFczXcZ/cG4fG
+2KvNL8e10beFa7FFGAd45Lc/S8eSDR+wTobHAf0nmcbTOInQ+22woxxXSVdYMMqW
+4hVqf+U7Jx9IOrv/vVTwnD/FyPGmxnnijIUcmH04aR0/6BNTCORxjyyXdcDNM7Np
+YQ3UFWaX9t5/93Wfs4Uc7TUslThuHQfPxy9xaE49JYjp/cNJGawpNWiAuGzIn8EX
+Ml55DMiD4Cb2awlU6wah8QS0h5oinN3Oh7GTOa+cwqBmvSRFxUSg3U+NpJCyOwhu
+4Ieqb/3EzjyE2FVTzyFEeV23Rsnjg8vDgqWr7y2Umlg7nON50MCJeJuctV1OIhIH
+P1yJHMYKJ1TxNw7dSDW+7OzQDQfFQ425eU9m5RW2rz8zynYTlwD2TR0OXKXoEHsU
+OoYPnh8YqCGcdHXHMtmTdsWAPRJs1LGkst77GBvledzI+M1xyXqd2P5E/fycWkpq
+g1JLgycvYa8TMc9g4fAjNoyK281diz5eu9Lxbkvim46KY8rgoinuWXiqX6gstf+o
+LnBJskXs1ZbknV/B14+lNNBdaAXI/87D1OzAbK6TKiySwD9LvNDmMC/ccyrqzxG8
+s2mUjkggfn92kmelMj/NRkvInwoY4jR97/lXq3jG1tPjKWhgS7Fd6aRcp+giTE1N
+SNvdGKnkURFiNTnqFIpVCSIgTgwhKskuYPSn+QAYNe/5LPTDtU+zZQLeaHoHqQ8X
+htjmFvVQYzifXDRgOkXeLNnr2wD/wYW55lnEkiYPaIrwcsgE0nCcObtk1N8BXmRU
+Ahc6sQgBalgtonC+N7peaCl/DGQ5f4JAmkcvE2DjQbZeKbqgWeEfivYC4n2oB+Cu
+8KQy/11YYFDRyjcPeRX7IszSPus3jyJ0g6mDsCswlshuN2klXNhbXoirXBqFIFcy
+SoU=
+=Q+yd
 -----END PGP MESSAGE-----
 
 * code overrides
@@ -134,6 +134,7 @@ gxknqUC9Gr0yAiQaOvPY0PsOkmAIwE76yFNoSrQXbAhvW73zegUMnB6bF3YNFxlo
   . ((modus-themes-load-theme 'modus-vivendi)))
  (:ps/frame-maximize
   . ((ignore)))
+ (:ps/citar-keybindings . ((ignore)))
  (:ps/org-fold
   . ((ignore))))
 #+end_src
@@ -174,7 +175,26 @@ gxknqUC9Gr0yAiQaOvPY0PsOkmAIwE76yFNoSrQXbAhvW73zegUMnB6bF3YNFxlo
   (define-key cua-global-keymap (kbd "<C-return>") nil)
   (setq shift-select-mode t))
 
+(with-eval-after-load 'dired
+  (general-define-key
+   :keymaps 'dired-mode-map
+   "n" 'find-file))
+
+(defun ps/tab-bar-reset ()
+  "Remporary command to deal with the mysterious profliferation of clocks."
+  (interactive)
+  (setq global-mode-string
+        '(" |  "
+          chemacs-profile-name
+          " | "
+          fancy-battery-mode-line
+          " | "
+          telega-mode-line-format)))
+
+(display-wttr-mode 0)
 (ps/tab-bar-reset)
+(telega)
+(switch-to-buffer "*scratch*")
 
 (general-define-key
  "<kp-delete>" 'delete-char
@@ -361,13 +381,16 @@ one hour only."
   ("t" (hydra-dired-tlon-dropbox/body) "Tlön Dropbox" :column "Folders")
   ("g" (hydra-dired-tlon-google-drive/body) "Tlön Google Drive" :column "Folders")
   ("w" (dired (file-name-concat (getenv "HOME") "www")) "Nginx www root" :column "Folders")
+  ("h" (dired "~/") "/Users/fede" :column "User" )
+  ("n" (dired "/opt/homebrew/etc/nginx/sites-available/") "Local Nginx config" :column "Config" )
   ("o" (dired ps/dir-google-drive) "Google Drive" :column "User")
   ("w" (dired ps/dir-downloads) "Downloads" :column "User")
   ("x" (dired ps/dir-dropbox) "Dropbox" :column "User")
   ("s" (dired (file-name-concat (getenv "HOME") "source")) "Source" :column "Folders")
   ("." (dired-at-point) "File at point" :column "Other")
+  ("N" (dired "/ssh:root@tlon.team:/etc/nginx/sites-available/") "Nginx config" :column "DigitalOcean")
+  ("H" (dired "/ssh:fede@tlon.team") "/home/fede" :column "DigitalOcean")
   ("/" (dired "/") "Root" :column "Other")
-  ("SPC" (dired "~/") "user" :column "User" )
   (";" (dired-jump) "Current buffer" :column "Other")
   ("H-;" (dired-jump-other-window) "Current buffer in other window" :column "Other")
   ("e" (dired ps/dir-emacs) "Emacs" :column "Config")

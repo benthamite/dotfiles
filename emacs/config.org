@@ -17416,8 +17416,8 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 #+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/bbdb)
 (use-package bbdb
   :elpaca (bbdb
-	   :host github
-	   :repo "tlon-team/bbdb")
+           :host github
+           :repo "tlon-team/bbdb")
 
   :config
   ;; open URL directly, without prompting for confirmation
@@ -17428,16 +17428,15 @@ Interactively, use BBDB prefix \
 Prefix WHICH specifies which URL in field `url' is used (starting from 0).
 Default is the first URL."
     (interactive (list (bbdb-get-records "Visit (URL): ")
-		       (and current-prefix-arg
-			    (prefix-numeric-value current-prefix-arg))))
+                       (and current-prefix-arg
+                            (prefix-numeric-value current-prefix-arg))))
     (unless which (setq which 0))
     (dolist (record (bbdb-record-list records))
       (let ((url (bbdb-record-xfield-split record 'url)))
-	(when url
-	  (el-patch-swap (setq url (read-string "fetch: " (nth which url)))
-			 (setq url (nth which url)))
-	  (unless (string= "" url)
-	    (browse-url url))))))
+        (when url
+          (setq url (nth which url))
+          (unless (string= "" url)
+            (browse-url url))))))
 
   (advice-add 'bbdb-browse-url :override #'ps/bbdb-browse-url)
 
@@ -17454,72 +17453,63 @@ the predicate HORIZ-P is wider than the car of `bbdb-horiz-pop-up-window-size'
 then the window will be split horizontally rather than vertically."
     (let ((buffer (get-buffer bbdb-buffer-name)))
       (unless buffer
-	(error "No %s buffer to display" bbdb-buffer-name))
+        (error "No %s buffer to display" bbdb-buffer-name))
       (cond ((let ((window (get-buffer-window buffer t)))
-	       ;; We already have a BBDB window so that at most we select it
-	       (and window
-		    (or (not select) (select-window window)))))
+               ;; We already have a BBDB window so that at most we select it
+               (and window
+                    (or (not select) (select-window window)))))
 
-	    ;; try horizontal split
-	    ((and (eq bbdb-mua-pop-up 'horiz)
-		  horiz-p
-		  (>= (frame-width) (car bbdb-horiz-pop-up-window-size))
-		  (let ((window-list (window-list))
-			(b-width (cdr bbdb-horiz-pop-up-window-size))
-			(search t) s-window)
-		    (while (and (setq s-window (pop window-list))
-				(setq search (not (funcall horiz-p s-window)))))
-		    (unless (or search (<= (window-width s-window)
-					   (car bbdb-horiz-pop-up-window-size)))
-		      (condition-case nil ; `split-window' might fail
-			  (let ((window (split-window
-					 s-window
-					 (if (integerp b-width)
-					     (- (window-width s-window) b-width)
-					   (round (* (- 1 b-width) (window-width s-window))))
-					 t))) ; horizontal split
-			    (set-window-buffer window buffer)
-			    (cond (bbdb-dedicated-window
-				   (set-window-dedicated-p window bbdb-dedicated-window))
-				  ((fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
-				   (set-window-prev-buffers window nil)
-				   (display-buffer-record-window 'window window buffer)))
-			    (if select (select-window window))
-			    t)
-			(error nil))))))
+            ;; try horizontal split
+            ((and (eq bbdb-mua-pop-up 'horiz)
+                  horiz-p
+                  (>= (frame-width) (car bbdb-horiz-pop-up-window-size))
+                  (let ((window-list (window-list))
+                        (b-width (cdr bbdb-horiz-pop-up-window-size))
+                        (search t) s-window)
+                    (while (and (setq s-window (pop window-list))
+                                (setq search (not (funcall horiz-p s-window)))))
+                    (unless (or search (<= (window-width s-window)
+                                           (car bbdb-horiz-pop-up-window-size)))
+                      (condition-case nil ; `split-window' might fail
+                          (let ((window (split-window
+                                         s-window
+                                         (if (integerp b-width)
+                                             (- (window-width s-window) b-width)
+                                           (round (* (- 1 b-width) (window-width s-window))))
+                                         t))) ; horizontal split
+                            (set-window-buffer window buffer)
+                            (cond (bbdb-dedicated-window
+                                   (set-window-dedicated-p window bbdb-dedicated-window))
+                                  ((fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
+                                   (set-window-prev-buffers window nil)
+                                   (display-buffer-record-window 'window window buffer)))
+                            (if select (select-window window))
+                            t)
+                        (error nil))))))
 
-	    ((eq t bbdb-pop-up-window-size)
-	     (bbdb-pop-up-window-simple buffer select))
+            ((eq t bbdb-pop-up-window-size)
+             (bbdb-pop-up-window-simple buffer select))
 
-	    (t ;; vertical split
-	     (let* ((window (selected-window))
-		    (window-height (window-height window)))
-	       ;; find the tallest window...
-	       (mapc (lambda (w)
-		       (let ((w-height (window-height w)))
-			 (if (> w-height window-height)
-			     (setq window w window-height w-height))))
-		     (window-list))
-	       (condition-case nil
-		   (progn
-		     (unless (eql bbdb-pop-up-window-size 1.0)
-		       (el-patch-remove
-			 (setq window (split-window ; might fail
-				       window
-				       (if (integerp bbdb-pop-up-window-size)
-					   (- window-height 1 ; for mode line
-					      (max window-min-height bbdb-pop-up-window-size))
-					 (round (* (- 1 bbdb-pop-up-window-size)
-						   window-height)))))))
-		     (set-window-buffer window buffer) ; might fail
-		     (cond (bbdb-dedicated-window
-			    (set-window-dedicated-p window bbdb-dedicated-window))
-			   ((and (fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
-				 (not (eql bbdb-pop-up-window-size 1.0)))
-			    (set-window-prev-buffers window nil)
-			    (display-buffer-record-window 'window window buffer)))
-		     (if select (select-window window)))
-		 (error (bbdb-pop-up-window-simple buffer select))))))))
+            (t ;; vertical split
+             (let* ((window (selected-window))
+                    (window-height (window-height window)))
+               ;; find the tallest window...
+               (mapc (lambda (w)
+                       (let ((w-height (window-height w)))
+                         (if (> w-height window-height)
+                             (setq window w window-height w-height))))
+                     (window-list))
+               (condition-case nil
+                   (unless (eql bbdb-pop-up-window-size 1.0)
+                     (set-window-buffer window buffer)) ; might fail
+                 (cond (bbdb-dedicated-window
+                        (set-window-dedicated-p window bbdb-dedicated-window))
+                       ((and (fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
+                             (not (eql bbdb-pop-up-window-size 1.0)))
+                        (set-window-prev-buffers window nil)
+                        (display-buffer-record-window 'window window buffer)))
+                 (if select (select-window window)))
+               (error (bbdb-pop-up-window-simple buffer select)))))))
 
   (advice-add 'bbdb-pop-up-window :override #'ps/bbdb-pop-up-window)
 
@@ -17540,11 +17530,11 @@ then the window will be split horizontally rather than vertically."
     (bbdb-editable)
     (let ((record (bbdb-empty-record)))
       (let (name)
-	(bbdb-error-retry
-	 (setq name (bbdb-read-name first-and-last))
-	 (bbdb-check-name name))
-	(setf (bbdb-record-firstname record) (car name))
-	(setf (bbdb-record-lastname record) (cdr name)))
+        (bbdb-error-retry
+         (setq name (bbdb-read-name first-and-last))
+         (bbdb-check-name name))
+        (setf (bbdb-record-firstname record) (car name))
+        (setf (bbdb-record-lastname record) (cdr name)))
       record))
 
   (defun ps/bbdb-delete-field-or-record-no-confirm ()

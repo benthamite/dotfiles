@@ -11759,9 +11759,8 @@ Allows reset of checkboxes in recurring tasks. This works only on headings that 
 
 #+begin_src emacs-lisp :results silent
 (use-feature org-checklist
-  :after org
-  :defer 30
-  :elpaca org-contrib)
+  :after org-contrib
+  :demand t)
 #+end_src
 
 ** org-analyzer

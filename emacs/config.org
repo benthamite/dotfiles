@@ -1258,8 +1258,8 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 (use-feature warnings
   :demand t
   :config
-  (dolist (element '(comp
-                     yasnippet backquote-change))
+  (dolist (element '((yasnippet backquote-change)
+                     (cons)))
     (add-to-list 'warning-suppress-types element)))
 #+end_src
 

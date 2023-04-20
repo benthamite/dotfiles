@@ -6467,6 +6467,8 @@ CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
 :ID:       02EE3FAE-133C-479E-B7C7-9B2BB2160DCA
 :END:
 
+/[[https://github.com/anticomputer/gh-notify][gh-notify]] is a veneer for the Magit/Forge GitHub porcelain./
+
 #+begin_src emacs-lisp
 (use-package gh-notify
   :after forge

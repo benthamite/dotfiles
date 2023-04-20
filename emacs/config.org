@@ -6349,12 +6349,44 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       8D2CFDBF-4DD1-412C-A9F0-0D9393156A11
 :END:
 
-/[[https://github.com/magit/orgit-forge][orgit-forge]] supports ~org-mode~ links to forge ~buffers~./
+/[[https://github.com/magit/orgit-forge][orgit-forge]] supports ~org-mode~ links to ~forge~ buffers./
 
 #+begin_src emacs-lisp
 (use-package orgit-forge
   :after org forge
-  :demand t)
+  :demand t
+  :config
+  (defun ps/orgit-store-link (_arg)
+    "Like `org-store-link' but store links to all selected commits, if any."
+    (interactive "P")
+    (if-let ((sections (magit-region-sections 'commit)))
+        (save-excursion
+          (dolist (section sections)
+            (goto-char (oref section start))
+            (set-mark (point))
+            (activate-mark)
+            (call-interactively #'org-store-link))
+          (deactivate-mark))
+      (save-window-excursion
+        (let ((topic (forge-topic-at-point)))
+          (cond ((forge-pullreq-p topic)
+                 (forge-visit-pullreq topic))
+                ((forge-issue-p topic)
+                 (forge-visit-issue topic)))
+          (call-interactively #'org-store-link)))))
+
+  (advice-add 'orgit-store-link :override #'ps/orgit-store-link)
+
+  (defun ps/orgit-capture ()
+    "Capture a new Magit/Forge task."
+    (interactive)
+    (orgit-store-link nil)
+    (org-capture nil "tbT"))
+
+  :general
+  ((forge-topic-mode-map
+    magit-status-mode-map)
+   "," 'ps/orgit-capture))
 #+end_src
 
 ** forge-search

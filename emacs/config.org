@@ -12632,10 +12632,10 @@ ARG is the prefix argument received when calling interactively the function."
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (setq org-cite-activate-processor 'citar) ;
   (setq org-cite-export-processors
-        '((md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
-          (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
-          (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
-          (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
+        '((md csl "effective-altruism-wiki-org-mode.csl" "effective-altruism-wiki-org-mode.csl")      ; Footnote reliant
+          (latex csl "effective-altruism-wiki-org-mode.csl" "effective-altruism-wiki-org-mode.csl")   ; For philosophy
+          (odt csl "effective-altruism-wiki-org-mode.csl" "effective-altruism-wiki-org-mode.csl")     ; Footnote reliant
+          (docx csl "effective-altruism-wiki-org-mode.csl" "effective-altruism-wiki-org-mode.csl")    ; Footnote reliant
           (t csl "american-medical-association-brackets.csl")))) ; fallback
 #+end_src
 

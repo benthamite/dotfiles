@@ -16066,7 +16066,8 @@ To be used by `eww-after-render-hook'."
         url))))
 
   (defvar ps/eww-readable-exceptions
-    '("protesilaos\\.com"))
+    '("protesilaos\\.com"
+      "git\\.sr\\.ht"))
 
   (defun ps/eww-readable-autoview ()
     "Automatically view the main 'readable' parts of the current web

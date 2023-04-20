@@ -6279,9 +6279,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("w c" "Code review at point"            code-review-forge-pr-at-point)
       ("w g" "GitHub review at point"          github-review-forge-pr-at-point)
       """Search"
-      ("s" "search topics & pull-requests" forge-search)
-      """Merge"
-      ("M  " "merge using API"        forge-merge)]
+      ("s" "search topics & pull requests" forge-search)
+      """Capture"
+      ("," "capture topic or pull request" ps/orgit-capture)]
      ["List"
       ("l a" "awaiting review"        forge-list-requested-reviews)
       ("l i" "issues"                 forge-list-issues)

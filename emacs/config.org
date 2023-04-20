@@ -15971,7 +15971,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "github\\.com"
                      "gmail\\.com"
                      "goodreads\\.com"
-                     "google\\."
+                     "google\\.com"
                      "grammarly\\.com"
                      "hathitrust\\.org"
                      "imdb\\.com"

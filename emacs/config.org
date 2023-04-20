@@ -8244,15 +8244,21 @@ insert italic delimiters and place the point in between them."
     (let* ((clipboard (if (eq system-type 'darwin)
                           "pbv public.utf8-plain-text"
                         "xclip -out -selection 'clipboard' -t text/html"))
-           (source (if (eq major-mode 'org-mode) "markdown" "org"))
-           (target (if (eq source 'org-mode) "markdown" "org"))
+           (source (pcase major-mode
+                     ('markdown-mode "org")
+                     ('org-mode "markdown")
+                     (_ (user-error "Not in `org-mode' or `markdown-mode'"))))
+           (target (pcase major-mode
+                     ('markdown-mode "markdown")
+                     ('org-mode "org")
+                     (_ (user-error "Not in `org-mode' or `markdown-mode'"))))
            (pandoc (concat "pandoc --wrap=none -f " source " -t " target))
            (cmd (concat clipboard " | " pandoc))
            (output (shell-command-to-string cmd))
            ;; Not sure why Pandoc adds these double slashes; we remove them
            (output (replace-regexp-in-string "^\\\\\\\\$" "" output))
-           (text (replace-regexp-in-string "= " "= " output)))
-      (kill-new text)
+           (output (replace-regexp-in-string "= " "= " output)))
+      (kill-new output)
       (yank)))
 
   (defun ps/org-paste-from-markdown ()

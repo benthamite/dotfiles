@@ -10454,6 +10454,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tbt" "Tlön: BAE: Translate article " entry
            (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
            "** TODO [#5] Translate '%?' \n" :empty-lines 1 :prepend t)
+          ("tbT" "Tlön: BAE: Process topic (via org-capture)" entry
+           (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
+           "** TODO [#5] %(ps/org-store-link-nth 0) \n" :empty-lines 1 :prepend t)
           ("tbA" "Tlön: BAE: [via email] Revise article translation and Leo's revision" entry
            (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
            "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)

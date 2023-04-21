@@ -6259,7 +6259,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
-  (setq forge-topic-list-limit '(60 . 0)) ; hide closed topics
+  (setq forge-topic-list-limit '(500 . 0)) ; hide closed topics
   ;; disabling for the time being, since I read this could be a source of problems; just run `n f f'
   ;; (setq forge-pull-notifications t)
 
@@ -6320,7 +6320,12 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("e m" "edit milestone"             forge-edit-topic-milestone)
       ("e l" "edit labels"                forge-edit-topic-labels)
       ("e a" "edit assigness"             forge-edit-topic-assignees)
-      ]]
+      ]
+     ["Process"
+      ("p t" "awaiting translation by Leo"  tlon-bae-label-awaiting-translation-and-assign-to-leo)
+      ("p r" "awaiting revision by Pablo"  tlon-bae-label-awaiting-revision-and-assign-to-pablo)
+      ("p w" "awaiting reviewing by Leo"  tlon-bae-label-awaiting-reviewing-and-assign-to-leo)
+      ("p p" "awaiting publication by Fede"  tlon-bae-label-awaiting-publication-and-assign-to-fede)]]
     [["Configure"
       ("a  " "add repository to database" forge-add-repository)
       ("r  " "forge.remote"  forge-forge.remote)
@@ -6332,6 +6337,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :general
   (forge-post-mode-map
    "s-c" 'forge-post-submit)
+  ((forge-issue-list-mode-map
+    forge-pullreq-list-mode-map)
+   "," 'ps/orgit-capture)
   (forge-topic-mode-map
    "a" 'forge-edit-topic-assignees
    "a" 'forge-edit-topic-assignees

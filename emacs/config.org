@@ -6322,10 +6322,11 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("e a" "edit assigness"             forge-edit-topic-assignees)
       ]
      ["Process"
+      ("p p" "awaiting processing by Pablo"  tlon-bae-label-awaiting-processing-and-assign-to-pablo)
       ("p t" "awaiting translation by Leo"  tlon-bae-label-awaiting-translation-and-assign-to-leo)
       ("p r" "awaiting revision by Pablo"  tlon-bae-label-awaiting-revision-and-assign-to-pablo)
       ("p w" "awaiting reviewing by Leo"  tlon-bae-label-awaiting-reviewing-and-assign-to-leo)
-      ("p p" "awaiting publication by Fede"  tlon-bae-label-awaiting-publication-and-assign-to-fede)]]
+      ("p u" "awaiting publication by Fede"  tlon-bae-label-awaiting-publication-and-assign-to-fede)]]
     [["Configure"
       ("a  " "add repository to database" forge-add-repository)
       ("r  " "forge.remote"  forge-forge.remote)

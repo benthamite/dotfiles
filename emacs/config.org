@@ -1258,8 +1258,8 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 (use-feature warnings
   :demand t
   :config
-  (dolist (element '(comp
-                     yasnippet backquote-change))
+  (dolist (element '((yasnippet backquote-change)
+                     (cons)))
     (add-to-list 'warning-suppress-types element)))
 #+end_src
 
@@ -6205,8 +6205,8 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
    "." 'magit-push
    )
   (magit-status-mode-map
-   "A-C-s-r" 'magit-section-backward
-   "A-C-s-f" 'magit-section-forward))
+   "A-C-s-r" 'magit-section-backward-sibling
+   "A-C-s-f" 'magit-section-forward-sibling))
 #+end_src
 
 
@@ -6238,6 +6238,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 :ID:       F6F60AE4-9FEA-4179-922C-CC649BC752A4
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-19 Wed 17:59]--[2023-04-19 Wed 18:48] =>  0:49
 CLOCK: [2022-06-25 Sat 15:55]--[2022-06-25 Sat 16:30] =>  0:35
 CLOCK: [2021-12-21 Tue 20:20]--[2021-12-21 Tue 20:27] =>  0:07
 CLOCK: [2021-07-19 Mon 16:11]--[2021-07-19 Mon 16:39] =>  0:28
@@ -6258,7 +6259,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
-  (setq forge-topic-list-limit '(60 . 0)) ; hide closed topics
+  (setq forge-topic-list-limit '(500 . 0)) ; hide closed topics
   ;; disabling for the time being, since I read this could be a source of problems; just run `n f f'
   ;; (setq forge-pull-notifications t)
 
@@ -6279,9 +6280,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("w c" "Code review at point"            code-review-forge-pr-at-point)
       ("w g" "GitHub review at point"          github-review-forge-pr-at-point)
       """Search"
-      ("s" "search topics & pull-requests" forge-search)
-      """Merge"
-      ("M  " "merge using API"        forge-merge)]
+      ("s" "search topics & pull requests" forge-search)
+      """Capture"
+      ("," "capture topic or pull request" ps/orgit-capture)]
      ["List"
       ("l a" "awaiting review"        forge-list-requested-reviews)
       ("l i" "issues"                 forge-list-issues)
@@ -6319,7 +6320,13 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("e m" "edit milestone"             forge-edit-topic-milestone)
       ("e l" "edit labels"                forge-edit-topic-labels)
       ("e a" "edit assigness"             forge-edit-topic-assignees)
-      ]]
+      ]
+     ["Process"
+      ("p p" "awaiting processing by Pablo"  tlon-bae-label-awaiting-processing-and-assign-to-pablo)
+      ("p t" "awaiting translation by Leo"  tlon-bae-label-awaiting-translation-and-assign-to-leo)
+      ("p r" "awaiting revision by Pablo"  tlon-bae-label-awaiting-revision-and-assign-to-pablo)
+      ("p w" "awaiting reviewing by Leo"  tlon-bae-label-awaiting-reviewing-and-assign-to-leo)
+      ("p u" "awaiting publication by Fede"  tlon-bae-label-awaiting-publication-and-assign-to-fede)]]
     [["Configure"
       ("a  " "add repository to database" forge-add-repository)
       ("r  " "forge.remote"  forge-forge.remote)
@@ -6331,6 +6338,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :general
   (forge-post-mode-map
    "s-c" 'forge-post-submit)
+  ((forge-issue-list-mode-map
+    forge-pullreq-list-mode-map)
+   "," 'ps/orgit-capture)
   (forge-topic-mode-map
    "a" 'forge-edit-topic-assignees
    "a" 'forge-edit-topic-assignees
@@ -6338,7 +6348,10 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "l" 'forge-edit-topic-labels
    "m" 'forge-edit-topic-milestone
    "s" 'forge-edit-topic-state
-   "t" 'forge-edit-topic-title))
+   "t" 'forge-edit-topic-title
+   "e" 'forge-edit-post
+   "p" 'forge-create-post
+   "r" 'forge-create-post))
 #+end_src
 
 ** orgit-forge
@@ -6346,12 +6359,44 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       8D2CFDBF-4DD1-412C-A9F0-0D9393156A11
 :END:
 
-/[[https://github.com/magit/orgit-forge][orgit-forge]] supports ~org-mode~ links to forge ~buffers~./
+/[[https://github.com/magit/orgit-forge][orgit-forge]] supports ~org-mode~ links to ~forge~ buffers./
 
 #+begin_src emacs-lisp
 (use-package orgit-forge
   :after org forge
-  :demand t)
+  :demand t
+  :config
+  (defun ps/orgit-store-link (_arg)
+    "Like `org-store-link' but store links to all selected commits, if any."
+    (interactive "P")
+    (if-let ((sections (magit-region-sections 'commit)))
+        (save-excursion
+          (dolist (section sections)
+            (goto-char (oref section start))
+            (set-mark (point))
+            (activate-mark)
+            (call-interactively #'org-store-link))
+          (deactivate-mark))
+      (save-window-excursion
+        (let ((topic (forge-topic-at-point)))
+          (cond ((forge-pullreq-p topic)
+                 (forge-visit-pullreq topic))
+                ((forge-issue-p topic)
+                 (forge-visit-issue topic)))
+          (call-interactively #'org-store-link)))))
+
+  (advice-add 'orgit-store-link :override #'ps/orgit-store-link)
+
+  (defun ps/orgit-capture ()
+    "Capture a new Magit/Forge task."
+    (interactive)
+    (orgit-store-link nil)
+    (org-capture nil "tbT"))
+
+  :general
+  ((forge-topic-mode-map
+    magit-status-mode-map)
+   "," 'ps/orgit-capture))
 #+end_src
 
 ** forge-search
@@ -6431,6 +6476,8 @@ CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
 :PROPERTIES:
 :ID:       02EE3FAE-133C-479E-B7C7-9B2BB2160DCA
 :END:
+
+/[[https://github.com/anticomputer/gh-notify][gh-notify]] is a veneer for the Magit/Forge GitHub porcelain./
 
 #+begin_src emacs-lisp
 (use-package gh-notify
@@ -7896,14 +7943,17 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
   (setq grammarly-username ps/personal-gmail)
   (setq grammarly-password (auth-source-pass-get 'secret (concat "chrome/grammarly.com/" ps/personal-gmail)))
 
-  (defun ps/grammarly-open-in-external-editor (&optional text)
+  (defun ps/grammarly-open-in-external-editor ()
     "Send TEXT to kill ring and open the external Grammarly editor."
     (interactive)
-    (let ((text (or text
-                    (if (region-active-p) (buffer-substring (region-beginning) (region-end))
-                      (buffer-string)))))
-      (kill-new text)
-      (browse-url "https://app.grammarly.com/ddocs/1929393566")))
+    (save-restriction
+      (widen)
+      (let ((buffer (current-buffer)))
+        (with-temp-buffer
+          (insert-buffer-substring buffer)
+          (unfill-region (point-min) (point-max))
+          (kill-ring-save (point-min) (point-max))
+          (browse-url "https://app.grammarly.com/ddocs/1929393566")))))
 
   :general
   ((gfm-mode-map markdown-mode-map)
@@ -8238,15 +8288,21 @@ insert italic delimiters and place the point in between them."
     (let* ((clipboard (if (eq system-type 'darwin)
                           "pbv public.utf8-plain-text"
                         "xclip -out -selection 'clipboard' -t text/html"))
-           (source (if (eq major-mode 'org-mode) "markdown" "org"))
-           (target (if (eq source 'org-mode) "markdown" "org"))
+           (source (pcase major-mode
+                     ('markdown-mode "org")
+                     ('org-mode "markdown")
+                     (_ (user-error "Not in `org-mode' or `markdown-mode'"))))
+           (target (pcase major-mode
+                     ('markdown-mode "markdown")
+                     ('org-mode "org")
+                     (_ (user-error "Not in `org-mode' or `markdown-mode'"))))
            (pandoc (concat "pandoc --wrap=none -f " source " -t " target))
            (cmd (concat clipboard " | " pandoc))
            (output (shell-command-to-string cmd))
            ;; Not sure why Pandoc adds these double slashes; we remove them
            (output (replace-regexp-in-string "^\\\\\\\\$" "" output))
-           (text (replace-regexp-in-string "= " "= " output)))
-      (kill-new text)
+           (output (replace-regexp-in-string "= " "= " output)))
+      (kill-new output)
       (yank)))
 
   (defun ps/org-paste-from-markdown ()
@@ -9291,6 +9347,25 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
   (add-hook 'org-mode-hook #'org-ai-mode)
   (org-ai-install-yasnippets)
   (require 'org-ai-talk))
+#+end_src
+
+** chatgpt-shell
+:PROPERTIES:
+:ID:       D7ABE618-621C-47EA-8D1C-54C15B9C4486
+:END:
+
+/[[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]] provides shell support fort GPT./
+
+#+begin_src emacs-lisp
+(use-package chatgpt-shell
+  :elpaca (chatgpt-shell
+           :host github
+           :repo "xenodium/chatgpt-shell")
+  :commands chatgpt-shell
+  :config
+  ;; if you are using the "pass" password manager
+  (setq chatgpt-shell-openai-key (auth-source-pass-get "key" "tlon/core/openai.com"))
+  (setq chatgpt-shell-model-version "gpt-4"))
 #+end_src
 
 ** whisper
@@ -10388,6 +10463,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tbt" "Tlön: BAE: Translate article " entry
            (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
            "** TODO [#5] Translate '%?' \n" :empty-lines 1 :prepend t)
+          ("tbT" "Tlön: BAE: Process topic (via org-capture)" entry
+           (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
+           "** TODO [#5] %(ps/org-store-link-nth 0) \n" :empty-lines 1 :prepend t)
           ("tbA" "Tlön: BAE: [via email] Revise article translation and Leo's revision" entry
            (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
            "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
@@ -11427,6 +11505,15 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 (use-feature ol
   :after org
   :demand t
+  :config
+  (defun ps/org-store-link-nth (&optional n)
+    "Return Nth last stored link in `org-stored-links'."
+    (let ((n (or n 1)))
+      (car (nth n org-stored-links)))
+    (format "[[%s][%s]]"
+            (car (nth n org-stored-links))
+            (cadr (nth n org-stored-links))))
+
   :general
   ("H-L" 'org-store-link)
   (org-mode-map
@@ -11726,6 +11813,19 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
    "h" 'org-habit-toggle-display-in-agenda))
 #+end_src
 
+** org-contrib
+:PROPERTIES:
+:ID:       F2DD9900-5926-4FE1-A8DC-C398CFE80378
+:END:
+
+/[[https://git.sr.ht/~bzg/org-contrib][org-contrib]] features add-ons to ~org-mode~ currently looking for maintainers./
+
+#+begin_src emacs-lisp
+(use-package org-contrib
+  :after org
+  :demand t)
+#+end_src
+
 ** org-checklist
 :PROPERTIES:
 :ID:       1ABA68C3-187B-457C-9992-4C4BBEB45C18
@@ -11740,9 +11840,8 @@ Allows reset of checkboxes in recurring tasks. This works only on headings that 
 
 #+begin_src emacs-lisp :results silent
 (use-feature org-checklist
-  :after org
-  :defer 30
-  :elpaca org-contrib)
+  :after org-contrib
+  :demand t)
 #+end_src
 
 ** org-analyzer
@@ -12614,10 +12713,10 @@ ARG is the prefix argument received when calling interactively the function."
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (setq org-cite-activate-processor 'citar) ;
   (setq org-cite-export-processors
-        '((md csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")      ; Footnote reliant
-          (latex csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")   ; For philosophy
-          (odt csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")     ; Footnote reliant
-          (docx csl "effective-altruism-wiki-markdown.csl" "effective-altruism-wiki-markdown.csl")    ; Footnote reliant
+        '((md csl "effective-altruism-wiki-org-mode.csl" "effective-altruism-wiki-org-mode.csl")      ; Footnote reliant
+          (latex csl "effective-altruism-wiki-org-mode.csl" "effective-altruism-wiki-org-mode.csl")   ; For philosophy
+          (odt csl "effective-altruism-wiki-org-mode.csl" "effective-altruism-wiki-org-mode.csl")     ; Footnote reliant
+          (docx csl "effective-altruism-wiki-org-mode.csl" "effective-altruism-wiki-org-mode.csl")    ; Footnote reliant
           (t csl "american-medical-association-brackets.csl")))) ; fallback
 #+end_src
 
@@ -15881,7 +15980,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "github\\.com"
                      "gmail\\.com"
                      "goodreads\\.com"
-                     "google\\."
+                     "google\\.com"
                      "grammarly\\.com"
                      "hathitrust\\.org"
                      "imdb\\.com"
@@ -15897,6 +15996,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "paxful\\.com"
                      "rescuetime\\.com"
                      "squarespace\\.com"
+                     "stafforini\\.com"
                      "teatrocolon\\.org\\.ar"
                      "twitter\\.com"
                      "youtu\\.be"
@@ -16047,7 +16147,8 @@ To be used by `eww-after-render-hook'."
         url))))
 
   (defvar ps/eww-readable-exceptions
-    '("protesilaos\\.com"))
+    '("protesilaos\\.com"
+      "git\\.sr\\.ht"))
 
   (defun ps/eww-readable-autoview ()
     "Automatically view the main 'readable' parts of the current web
@@ -17410,8 +17511,8 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 #+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/bbdb)
 (use-package bbdb
   :elpaca (bbdb
-	   :host github
-	   :repo "tlon-team/bbdb")
+           :host github
+           :repo "tlon-team/bbdb")
 
   :config
   ;; open URL directly, without prompting for confirmation
@@ -17422,16 +17523,15 @@ Interactively, use BBDB prefix \
 Prefix WHICH specifies which URL in field `url' is used (starting from 0).
 Default is the first URL."
     (interactive (list (bbdb-get-records "Visit (URL): ")
-		       (and current-prefix-arg
-			    (prefix-numeric-value current-prefix-arg))))
+                       (and current-prefix-arg
+                            (prefix-numeric-value current-prefix-arg))))
     (unless which (setq which 0))
     (dolist (record (bbdb-record-list records))
       (let ((url (bbdb-record-xfield-split record 'url)))
-	(when url
-	  (el-patch-swap (setq url (read-string "fetch: " (nth which url)))
-			 (setq url (nth which url)))
-	  (unless (string= "" url)
-	    (browse-url url))))))
+        (when url
+          (setq url (nth which url))
+          (unless (string= "" url)
+            (browse-url url))))))
 
   (advice-add 'bbdb-browse-url :override #'ps/bbdb-browse-url)
 
@@ -17448,72 +17548,63 @@ the predicate HORIZ-P is wider than the car of `bbdb-horiz-pop-up-window-size'
 then the window will be split horizontally rather than vertically."
     (let ((buffer (get-buffer bbdb-buffer-name)))
       (unless buffer
-	(error "No %s buffer to display" bbdb-buffer-name))
+        (error "No %s buffer to display" bbdb-buffer-name))
       (cond ((let ((window (get-buffer-window buffer t)))
-	       ;; We already have a BBDB window so that at most we select it
-	       (and window
-		    (or (not select) (select-window window)))))
+               ;; We already have a BBDB window so that at most we select it
+               (and window
+                    (or (not select) (select-window window)))))
 
-	    ;; try horizontal split
-	    ((and (eq bbdb-mua-pop-up 'horiz)
-		  horiz-p
-		  (>= (frame-width) (car bbdb-horiz-pop-up-window-size))
-		  (let ((window-list (window-list))
-			(b-width (cdr bbdb-horiz-pop-up-window-size))
-			(search t) s-window)
-		    (while (and (setq s-window (pop window-list))
-				(setq search (not (funcall horiz-p s-window)))))
-		    (unless (or search (<= (window-width s-window)
-					   (car bbdb-horiz-pop-up-window-size)))
-		      (condition-case nil ; `split-window' might fail
-			  (let ((window (split-window
-					 s-window
-					 (if (integerp b-width)
-					     (- (window-width s-window) b-width)
-					   (round (* (- 1 b-width) (window-width s-window))))
-					 t))) ; horizontal split
-			    (set-window-buffer window buffer)
-			    (cond (bbdb-dedicated-window
-				   (set-window-dedicated-p window bbdb-dedicated-window))
-				  ((fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
-				   (set-window-prev-buffers window nil)
-				   (display-buffer-record-window 'window window buffer)))
-			    (if select (select-window window))
-			    t)
-			(error nil))))))
+            ;; try horizontal split
+            ((and (eq bbdb-mua-pop-up 'horiz)
+                  horiz-p
+                  (>= (frame-width) (car bbdb-horiz-pop-up-window-size))
+                  (let ((window-list (window-list))
+                        (b-width (cdr bbdb-horiz-pop-up-window-size))
+                        (search t) s-window)
+                    (while (and (setq s-window (pop window-list))
+                                (setq search (not (funcall horiz-p s-window)))))
+                    (unless (or search (<= (window-width s-window)
+                                           (car bbdb-horiz-pop-up-window-size)))
+                      (condition-case nil ; `split-window' might fail
+                          (let ((window (split-window
+                                         s-window
+                                         (if (integerp b-width)
+                                             (- (window-width s-window) b-width)
+                                           (round (* (- 1 b-width) (window-width s-window))))
+                                         t))) ; horizontal split
+                            (set-window-buffer window buffer)
+                            (cond (bbdb-dedicated-window
+                                   (set-window-dedicated-p window bbdb-dedicated-window))
+                                  ((fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
+                                   (set-window-prev-buffers window nil)
+                                   (display-buffer-record-window 'window window buffer)))
+                            (if select (select-window window))
+                            t)
+                        (error nil))))))
 
-	    ((eq t bbdb-pop-up-window-size)
-	     (bbdb-pop-up-window-simple buffer select))
+            ((eq t bbdb-pop-up-window-size)
+             (bbdb-pop-up-window-simple buffer select))
 
-	    (t ;; vertical split
-	     (let* ((window (selected-window))
-		    (window-height (window-height window)))
-	       ;; find the tallest window...
-	       (mapc (lambda (w)
-		       (let ((w-height (window-height w)))
-			 (if (> w-height window-height)
-			     (setq window w window-height w-height))))
-		     (window-list))
-	       (condition-case nil
-		   (progn
-		     (unless (eql bbdb-pop-up-window-size 1.0)
-		       (el-patch-remove
-			 (setq window (split-window ; might fail
-				       window
-				       (if (integerp bbdb-pop-up-window-size)
-					   (- window-height 1 ; for mode line
-					      (max window-min-height bbdb-pop-up-window-size))
-					 (round (* (- 1 bbdb-pop-up-window-size)
-						   window-height)))))))
-		     (set-window-buffer window buffer) ; might fail
-		     (cond (bbdb-dedicated-window
-			    (set-window-dedicated-p window bbdb-dedicated-window))
-			   ((and (fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
-				 (not (eql bbdb-pop-up-window-size 1.0)))
-			    (set-window-prev-buffers window nil)
-			    (display-buffer-record-window 'window window buffer)))
-		     (if select (select-window window)))
-		 (error (bbdb-pop-up-window-simple buffer select))))))))
+            (t ;; vertical split
+             (let* ((window (selected-window))
+                    (window-height (window-height window)))
+               ;; find the tallest window...
+               (mapc (lambda (w)
+                       (let ((w-height (window-height w)))
+                         (if (> w-height window-height)
+                             (setq window w window-height w-height))))
+                     (window-list))
+               (condition-case nil
+                   (unless (eql bbdb-pop-up-window-size 1.0)
+                     (set-window-buffer window buffer)) ; might fail
+                 (cond (bbdb-dedicated-window
+                        (set-window-dedicated-p window bbdb-dedicated-window))
+                       ((and (fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
+                             (not (eql bbdb-pop-up-window-size 1.0)))
+                        (set-window-prev-buffers window nil)
+                        (display-buffer-record-window 'window window buffer)))
+                 (if select (select-window window)))
+               (error (bbdb-pop-up-window-simple buffer select)))))))
 
   (advice-add 'bbdb-pop-up-window :override #'ps/bbdb-pop-up-window)
 
@@ -17534,11 +17625,11 @@ then the window will be split horizontally rather than vertically."
     (bbdb-editable)
     (let ((record (bbdb-empty-record)))
       (let (name)
-	(bbdb-error-retry
-	 (setq name (bbdb-read-name first-and-last))
-	 (bbdb-check-name name))
-	(setf (bbdb-record-firstname record) (car name))
-	(setf (bbdb-record-lastname record) (cdr name)))
+        (bbdb-error-retry
+         (setq name (bbdb-read-name first-and-last))
+         (bbdb-check-name name))
+        (setf (bbdb-record-firstname record) (car name))
+        (setf (bbdb-record-lastname record) (cdr name)))
       record))
 
   (defun ps/bbdb-delete-field-or-record-no-confirm ()

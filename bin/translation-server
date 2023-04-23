@@ -1,0 +1,4 @@
+#! /bin/bash
+cd ~/source/translation-server
+nvm use 16
+npm start

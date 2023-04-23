@@ -1,4 +1,0 @@
-#! /bin/bash
-cd ~/Dropbox/source/translation-server
-nvm use 16
-npm start

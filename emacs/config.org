@@ -3278,6 +3278,29 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
   ("M-/" 'comment-line))
 #+end_src
 
+** skeleton
+:PROPERTIES:
+:ID:       FCF33E87-02CA-4244-9220-D7E6CEE7F7EF
+:END:
+
+#+begin_src emacs-lisp
+(use-feature skeleton
+  :demand t
+  :config
+  (setq skeleton-pair t)
+
+  :general
+  ("[" 'skeleton-pair-insert-maybe
+   "{" 'skeleton-pair-insert-maybe
+   "(" 'skeleton-pair-insert-maybe
+   "\"" 'skeleton-pair-insert-maybe)
+  ((org-mode-map telega-chat-mode-map)
+   "~" 'skeleton-pair-insert-maybe)
+  (markdown-mode-map
+   "`" 'skeleton-pair-insert-maybe
+   "*" 'skeleton-pair-insert-maybe))
+#+end_src
+
 ** multiple-cursors
 :PROPERTIES:
 :ID:       E3F6EB63-D6C1-474C-9129-B6424852EEC8

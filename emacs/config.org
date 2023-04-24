@@ -14411,6 +14411,23 @@ is created following the same schema as notes created with
       (default
        (beep))))
 
+  (defun ps/ebib-move-titleaddon-to-journaltitle ()
+    "Move contents of field `titleaddon' to `journaltitle'.
+When items are imported with the Zotero translation server, the
+online publication venue is recorded in the `titleaddon' field.
+The correct Biblatex field for this information is
+`journaltitle', so we move it there."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (when-let* ((field "titleaddon")
+                   (key (ebib--get-key-at-point))
+                   (content (ebib-get-field-value field key ebib--cur-db t t)))
+         (ebib-set-field-value "journaltitle" content key ebib--cur-db nil 'unbraced)
+         (ebib-delete-field-contents field t)))
+      (default
+       (beep))))
+
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
 

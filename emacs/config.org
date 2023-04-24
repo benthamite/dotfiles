@@ -1892,7 +1892,7 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 #+begin_src emacs-lisp :results silent
 (use-package all-the-icons-completion
   :demand t
-  :after (all-the-icons marginalia vertico)
+  :after all-the-icons marginalia vertico
   :config
   (all-the-icons-completion-mode)
 
@@ -4342,7 +4342,7 @@ CLOCK: [2022-07-17 Sun 10:49]--[2022-07-17 Sun 11:13] =>  0:24
 #+begin_src emacs-lisp :results silent
 (use-package all-the-icons-dired
   :defer 5
-  :after (all-the-icons dired)
+  :after all-the-icons dired
   :config
   (setq all-the-icons-dired-monochrome nil)
 
@@ -7029,7 +7029,8 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
 
 #+begin_src emacs-lisp :results silent
 (use-package consult-yasnippet
-  :after (consult yasnippet)
+  :after consult yasnippet
+  :demand t
   :general
   ("A-C-y" 'consult-yasnippet))
 #+end_src

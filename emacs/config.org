@@ -11945,13 +11945,26 @@ an org drawer."
     (interactive)
     (while (re-search-forward "^\\* .*?:\\(.*\\):
 ")
-    (let ((tags (string-join
-                 (split-string
-                  (substring-no-properties
-                   (match-string 1))
-                  ":")
-                 ", ")))
-      (org-set-property "POSG_TAGS" tags))))
+      (let ((tags (string-join
+                   (split-string
+                    (substring-no-properties
+                     (match-string 1))
+                    ":")
+                   ", ")))
+        (org-set-property "POSG_TAGS" tags))))
+
+  ;; setting `org2blog/wp-confirm-post' to t asks for confirmation
+  ;; before publication, but I want to be asked only when the
+  ;; publication (i.e. post or page) lacks an ID
+  (defun ps/org2blog-subtree-publish-save (orig-fun &rest args)
+    "Ask for confirmation only when publication lacks an ID."
+    (if (cdr (assoc "post-id" (org2blog--export-as-post t)))
+        (apply orig-fun args)
+      (when (y-or-n-p "Post has no ID. Proceed anyway? ")
+        (apply orig-fun args))))
+
+  (advice-add 'org2blog-subtree-post-save :around #'ps/org2blog-subtree-post-save)
+  (advice-add 'org2blog-subtree-page-save :around #'ps/org2blog-subtree-post-save)
 
   :general
   ("A-o" 'org2blog-user-interface))

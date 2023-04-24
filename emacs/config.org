@@ -2309,7 +2309,7 @@ See also `zap-up-to-char'."
    "A-H-M-s" 'ps/transpose-chars-backward
    "C-H-M-s" 'delete-backward-char
    "C-H-M-d" 'delete-forward-char
-   "C-H-M-t" 'just-one-space
+   "C-H-M-t" 'cycle-space
    "C-H-M-f" 'zap-to-char
    "C-H-M-a" 'ps/backward-zap-to-char
    "A-C-H-M-S-s-f" 'ps/zap-delete-to-char

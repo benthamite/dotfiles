@@ -16655,6 +16655,9 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine SciHub
     "https://sci-hub.se/%s"
     :keybinding "u")
+  (defengine StanfordEncyclopediaofPhilosophy
+    "https://plato.stanford.edu/search/searcher.py?query=%s"
+    :keybinding "t")
   (defengine Wikipedia
     "http://www.wikipedia.org/search-redirect.php?language=en&go=Go&search=%s"
     :keybinding "w")

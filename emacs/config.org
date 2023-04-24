@@ -1259,6 +1259,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   :demand t
   :config
   (dolist (element '((yasnippet backquote-change)
+                     (org-element-cache)
                      (cons)))
     (add-to-list 'warning-suppress-types element)))
 #+end_src

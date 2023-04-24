@@ -9349,25 +9349,6 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
   (require 'org-ai-talk))
 #+end_src
 
-** chatgpt-shell
-:PROPERTIES:
-:ID:       D7ABE618-621C-47EA-8D1C-54C15B9C4486
-:END:
-
-/[[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]] provides shell support fort GPT./
-
-#+begin_src emacs-lisp
-(use-package chatgpt-shell
-  :elpaca (chatgpt-shell
-           :host github
-           :repo "xenodium/chatgpt-shell")
-  :commands chatgpt-shell
-  :config
-  ;; if you are using the "pass" password manager
-  (setq chatgpt-shell-openai-key (auth-source-pass-get "key" "tlon/core/openai.com"))
-  (setq chatgpt-shell-model-version "gpt-4"))
-#+end_src
-
 ** whisper
 :PROPERTIES:
 :ID:       19FF2502-D4A0-41CC-8F72-E1CF1D960304

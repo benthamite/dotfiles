@@ -4532,7 +4532,6 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
    "F" 'peep-dired))
 #+end_src
 
-
 ** minibuffer
 :PROPERTIES:
 :ID:       40F49ECD-7225-4AD2-9E07-16C5A5857FFF
@@ -5745,7 +5744,6 @@ associated Google Calendar event in a browser."
              id))))))
     (user-error "No id found."))
 
-
   ;; (advice-add 'org-gcal-sync :before (lambda () (setq message-log-max 10000)))
   ;; (advice-add 'org-gcal-sync-buffer :before (lambda () (setq message-log-max 10000)))
 
@@ -6226,8 +6224,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   (magit-mode-map
    "n" 'forge-dispatch
    "p" 'magit-pull
-   "." 'magit-push
-   )
+   "." 'magit-push)
   (magit-status-mode-map
    "A-C-s-r" 'magit-section-backward-sibling
    "A-C-s-f" 'magit-section-forward-sibling))
@@ -11917,26 +11914,26 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   :after auth-source-pass
   :config
   (setq org2blog/wp-blog-alist
-   `(("Pablo's website"
-      :url "https://www.stafforini.com/xmlrpc.php"
-      :username ,(auth-source-pass-get "user" "chrome/stafforini.com/wp-admin/admin")
-      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/wp-admin/admin"))
-     ("Pablo's miscellany"
-      :url "https://www.stafforini.com/blog/xmlrpc.php"
-      :username ,(auth-source-pass-get "user" "chrome/stafforini.com/blog/wp-admin/admin")
-      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/blog/wp-admin/admin"))
-     ("notatu dignum"
-      :url "https://www.stafforini.com/quotes/xmlrpc.php"
-      :username ,(auth-source-pass-get "user" "chrome/stafforini.com/quotes/wp-admin/admin")
-      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/quotes/wp-admin/admin"))
-     ("Puro compás"
-      :url "https://www.stafforini.com/tango/xmlrpc.php"
-      :username ,(auth-source-pass-get "user" "chrome/stafforini.com/tango/wp-admin/admin")
-      :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/tango/wp-admin/admin"))
-      ("EA Quotes"
-      :url "https://eaquotes.net/xmlrpc.php"
-      :username ,(auth-source-pass-get "user" "tlon/EAQUOTES/eaquotes.net/wp_admin@eaquotes.net")
-      :password ,(auth-source-pass-get 'secret "tlon/EAQUOTES/eaquotes.net/wp_admin@eaquotes.net"))))
+        `(("Pablo's website"
+           :url "https://www.stafforini.com/xmlrpc.php"
+           :username ,(auth-source-pass-get "user" "chrome/stafforini.com/wp-admin/admin")
+           :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/wp-admin/admin"))
+          ("Pablo's miscellany"
+           :url "https://www.stafforini.com/blog/xmlrpc.php"
+           :username ,(auth-source-pass-get "user" "chrome/stafforini.com/blog/wp-admin/admin")
+           :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/blog/wp-admin/admin"))
+          ("notatu dignum"
+           :url "https://www.stafforini.com/quotes/xmlrpc.php"
+           :username ,(auth-source-pass-get "user" "chrome/stafforini.com/quotes/wp-admin/admin")
+           :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/quotes/wp-admin/admin"))
+          ("Puro compás"
+           :url "https://www.stafforini.com/tango/xmlrpc.php"
+           :username ,(auth-source-pass-get "user" "chrome/stafforini.com/tango/wp-admin/admin")
+           :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/tango/wp-admin/admin"))
+          ("EA Quotes"
+           :url "https://eaquotes.net/xmlrpc.php"
+           :username ,(auth-source-pass-get "user" "tlon/EAQUOTES/eaquotes.net/wp_admin@eaquotes.net")
+           :password ,(auth-source-pass-get 'secret "tlon/EAQUOTES/eaquotes.net/wp_admin@eaquotes.net"))))
 
   (setq org2blog/wp-show-post-in-browser 'show)
   (setq org2blog/wp-track-posts (list ps/file-org2blog "Posts"))

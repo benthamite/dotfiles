@@ -16616,7 +16616,9 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
 (use-package engine-mode
   :init
   (engine-mode)
+
   :config
+  (setq engine/browser-function browse-url-browser-function)
   (defengine Amazon
     "https://www.amazon.com/s?k=%s"
     :keybinding "a")

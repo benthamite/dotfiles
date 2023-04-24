@@ -6250,7 +6250,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/forge)
 (use-package forge
-  :after magit ghub emacsql
+  :after magit ghub emacsql auth-source-pass
   :demand t
   :init
   (if (version<= emacs-version "29.0")

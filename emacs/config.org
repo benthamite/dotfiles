@@ -12364,9 +12364,9 @@ SQL can be either the emacsql vector representation, or a string."
 
   :general
   ("A-H-n" 'ps/org-roam-new-note
-   "H-j" 'org-roam-node-find
-   "H-i" 'org-roam-node-insert)
+   "H-j" 'org-roam-node-find)
   (org-mode-map
+   "s-i" 'org-roam-node-insert
    "s-r" 'org-roam-buffer-toggle))
 #+end_src
 

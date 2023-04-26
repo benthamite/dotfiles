@@ -6349,7 +6349,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("p r" "awaiting revision by Pablo"  tlon-bae-label-awaiting-revision-and-assign-to-pablo)
       ("p v" "awaiting review by Leo"  tlon-bae-label-awaiting-review-and-assign-to-leo)
       ("p w" "awaiting rewrite by Pablo"  tlon-bae-label-awaiting-rewrite-and-assign-to-pablo)
-      ("p u" "awaiting publication by Fede"  tlon-bae-label-awaiting-publication-and-assign-to-fede)]]
+      ("p u" "awaiting publication by Fede"  tlon-bae-label-awaiting-publication)]]
     [["Configure"
       ("a  " "add repository to database" forge-add-repository)
       ("r  " "forge.remote"  forge-forge.remote)

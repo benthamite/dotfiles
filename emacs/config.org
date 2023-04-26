@@ -10898,6 +10898,7 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
   :general
   ("A-H-j" 'org-clock-goto
    "A-H-x" 'org-clock-cancel
+   "H-i" 'org-clock-in
    "H-o" 'org-clock-out)
   (org-mode-map
    "s-i" 'org-clock-in

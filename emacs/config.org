@@ -6303,10 +6303,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
-  (setq forge-topic-list-limit '(500 . 0)) ; hide closed topics
-  ;; disabling for the time being, since I read this could be a source of problems; just run `n f f'
-  ;; (setq forge-pull-notifications t)
-
+  (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
 
   (transient-define-prefix forge-dispatch ()
     "Dispatch a forge command."
@@ -6325,6 +6322,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("w g" "GitHub review at point"          github-review-forge-pr-at-point)
       """Search"
       ("s" "search topics & pull requests" forge-search)
+      """Toggle"
+      (";" "Show/hide closed topics" forge-toggle-closed-visibility)
       """Capture"
       ("," "capture topic or pull request" ps/orgit-capture)]
      ["List"

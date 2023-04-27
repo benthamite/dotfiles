@@ -1806,7 +1806,6 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/tab-bar)
 (use-feature tab-bar
-  ;; :after wttr-mode
   :demand t
   :config
   (setq tab-bar-format '(tab-bar-align-right
@@ -1833,7 +1832,7 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
           " | "))
 
   (defun ps/tab-bar-reset ()
-    "Remporary command to deal with the mysterious profliferation of clocks."
+    "Temporary command to handle mysterious proliferation of clocks."
     (interactive)
     (setq global-mode-string
           '(" "
@@ -1846,6 +1845,15 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
             telega-mode-line-format
             " | "))
     (display-wttr-mode))
+
+  (defun ps/tab-bar-reset-unless-clock ()
+    "Reset the tab-bar when org-clock isn't running.
+The condition is included to prevent the currently clocked task
+from disappearing when the tab-bar is reset."
+    (unless org-clock-current-task
+      (ps/tab-bar-reset)))
+
+  (run-with-idle-timer 300 t #'ps/tab-bar-reset-unless-clock)
 
   (tab-bar-mode))
 #+end_src

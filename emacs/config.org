@@ -7484,8 +7484,8 @@ buffer displays and push it to the kill ring."
   :demand t
   :general
   (Info-mode-map
-   "j" 'Info-prev
-   ";" 'Info-next))
+   "j" 'Info-backward-node
+   ";" 'Info-forward-node))
 #+end_src
 
 ** man

@@ -13359,6 +13359,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-21 Fri 20:39]--[2023-04-21 Fri 20:42] =>  0:03
 CLOCK: [2023-04-11 Tue 00:58]--[2023-04-11 Tue 01:55] =>  0:57
 CLOCK: [2023-03-27 Mon 21:29]--[2023-03-27 Mon 21:45] =>  0:16
 CLOCK: [2023-03-27 Mon 20:49]--[2023-03-27 Mon 21:14] =>  0:25
@@ -14308,10 +14309,12 @@ the Ebib entry at point."
     "Open the entry for KEY in Ebib."
     (ebib--execute-when
       (entries
-       (let ((file))
-         (if (member key (ebib-db-list-keys (nth 0 ebib--databases)))
-             (setq file ps/file-bibliography-new)
-           (setq file ps/file-bibliography-old))
+       (let ((file (cond ((member key (ebib-db-list-keys (nth 0 ebib--databases)))
+                          ps/file-bibliography-new)
+                         ((member key (ebib-db-list-keys (nth 1 ebib--databases)))
+                          file ps/file-bibliography-old)
+                         (t
+                          (ebib--error "Key not found in any database")))))
          (ebib file key)
          (ebib--pop-to-buffer (ebib--buffer 'entry))))
       (default

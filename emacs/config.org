@@ -3123,8 +3123,12 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
   :config
   (setq save-abbrevs 'silently)
   (setq abbrev-file-name (file-name-concat ps/dir-abbrev "abbrev_defs"))
-
-  (setq-default abbrev-mode t))
+  (setq abbrev-suggest t)
+  (setq abbrev-suggest-hint-threshold 0)
+  (setq-default abbrev-mode t)
+  ;; do not look up abbrevs with case folding; e.g. `EA' will not expand an `ea' abbrev
+  (abbrev-table-put global-abbrev-table :case-fixed t)
+  (abbrev-table-put text-mode-abbrev-table :case-fixed t))
 #+end_src
 
 ** yasnippet

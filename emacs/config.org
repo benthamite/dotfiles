@@ -7998,13 +7998,12 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
     "Send TEXT to kill ring and open the external Grammarly editor."
     (interactive)
     (save-restriction
-      (widen)
-      (let ((buffer (current-buffer)))
-        (with-temp-buffer
-          (insert-buffer-substring buffer)
-          (unfill-region (point-min) (point-max))
-          (kill-ring-save (point-min) (point-max))
-          (browse-url "https://app.grammarly.com/ddocs/1929393566")))))
+      (save-excursion
+        (widen)
+        (unfill-region (point-min) (point-max))
+        (kill-ring-save (point-min) (point-max))
+        (fill-region (point-min) (point-max))
+        (browse-url "https://app.grammarly.com/ddocs/1929393566"))))
 
   :general
   ((gfm-mode-map markdown-mode-map)

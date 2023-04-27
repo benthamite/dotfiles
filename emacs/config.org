@@ -6516,11 +6516,8 @@ CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
   (github-review-mode-map
    "s-m" 'github-review-comment
    "s-r" 'github-review-reject
-   "s-a" 'github-review-approve)
-  (magit-status-mode-map
-   "s-r" 'github-review-forge-pr-at-point))
+   "s-a" 'github-review-approve))
 #+end_src
-
 
 ** gh-notify
 :PROPERTIES:

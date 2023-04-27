@@ -13142,7 +13142,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
          :host github
          :repo "emacs-citar/citar"
          :includes (citar-org))
-  :after oc vertico embark marginalia all-the-icons
+  :after oc vertico embark marginalia
   :demand t
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))

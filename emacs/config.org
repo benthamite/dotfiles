@@ -814,6 +814,7 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
  "H-M-s-." (lambda! (ps/visit-file-or-switch-to-buffer ps/file-inbox-mobile))
  "H-M-s-," (lambda! (ps/visit-file-or-switch-to-buffer ps/file-inbox-desktop))
  "H-M-s-a" (lambda! (ps/org-agenda-switch-to-agenda-current-day))
+ "H-M-s-b" (lambda! (ps/visit-file-or-switch-to-buffer ps/dir-tlon-biblioteca-altruismo-eficaz))
  "H-M-s-c" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-config))
  "H-M-s-d" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-tlon-docs))
  "H-M-s-h" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-tlon-ledger))

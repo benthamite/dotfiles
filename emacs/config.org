@@ -6414,7 +6414,12 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
     "Capture a new Magit/Forge task."
     (interactive)
     (orgit-store-link nil)
-    (org-capture nil "tbT"))
+    (let* ((org-link (ps/org-nth-stored-link 0))
+           (label (tlon-bae-forge-get-label-at-point))
+           (action (alist-get label tlon-bae-label-actions nil nil #'string=))
+           (binding (upcase (alist-get label tlon-bae-label-bindings nil nil #'string=))))
+      (kill-new (format "%s %s" action org-link))
+      (org-capture nil (concat "tb" binding))))
 
   :general
   ((forge-topic-mode-map

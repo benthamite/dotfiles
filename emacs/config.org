@@ -6138,13 +6138,6 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
       (progn
         (browse-url (ps/magit-parse-url url))
         (message "Browsing repo %s" url))))
-  (defun ps/magit-status-repo (repo)
-    (let ((buffer-name (concat "magit: "
-			       (directory-file-name (file-name-nondirectory repo)))))
-      (unless (get-buffer buffer-name)
-	(let ((default-directory ps/dir-tlon-biblioteca-altruismo-eficaz))
-	  (magit-status)))
-      (switch-to-buffer buffer-name)))
 
   (transient-define-prefix magit-dispatch ()
     "Invoke a Magit command from a list of available commands."

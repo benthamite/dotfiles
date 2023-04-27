@@ -11563,7 +11563,7 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
   :after org
   :demand t
   :config
-  (defun ps/org-store-link-nth (&optional n)
+  (defun ps/org-nth-stored-link (&optional n)
     "Return Nth last stored link in `org-stored-links'."
     (let ((n (or n 1)))
       (car (nth n org-stored-links)))

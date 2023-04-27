@@ -129,28 +129,28 @@ one hour only."
          "** TODO %?\n" :empty-lines 1 :prepend t)
 	("tb" "tlon: bae")
 	("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
-         (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
+         (id "63513494-AB03-4B21-ABD6-8EB3073A7973")
          "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
         ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
-         (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
+         (id "E02FC35D-DE88-4848-8EC2-AD82A2F32827")
          "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
         ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
-         (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
+         (id "51A1AD3A-5D03-48D1-A52F-AF43528FFA27")
          "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
         ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
          (id "E3205CCE-70EB-4CD8-B276-6C391409FB40")
          "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
         ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
-         (id "E3205CCE-70EB-4CD8-B276-6C391409FB40")
+         (id "7480E01B-31CF-477D-8E49-FC71F8AA11A1")
          "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
         ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
          (id "E3205CCE-70EB-4CD8-B276-6C391409FB40")
          "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
         ("tbI" "Tlön: BAE: Import topic (via org-capture)" entry
-         (id "E3205CCE-70EB-4CD8-B276-6C391409FB40")
+         (id "18A94B9A-E256-4684-A36C-ED26FCE1AD08")
          "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
         ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
-         (id "8DFD24AB-A5A1-49D9-BB5D-50D59DFD150F")
+         (id "7CCD6226-DB0A-4742-9277-955FCB276137")
          "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
         ))
 

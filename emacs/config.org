@@ -7006,7 +7006,7 @@ By default, all agenda entries are offered. MATCH is as in
    "H-r" 'consult-history
    "H-V" 'consult-yank-pop
    "H-f" 'ps/consult-locate-file-current
-   "H-f" 'ps/consult-locate-file-home
+   "H-F" 'ps/consult-locate-file-home
    "A-H-f" 'ps/consult-locate-file-anywhere
    "H-k" 'ps/consult-locate-current
    "H-K" 'ps/consult-locate-home

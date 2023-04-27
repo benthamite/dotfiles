@@ -17962,7 +17962,9 @@ And finally, the section you've all been waiting for.
   :demand t
   :general
   (markdown-mode-map
-   "s-u" 'tlon-bae-insert-eawiki-url))
+   "s-u" 'tlon-bae-insert-eawiki-url)
+  (magit-status-mode-map
+   "s-r" 'tlon-bae-commit-when-slug-at-point))
 #+end_src
 
 ** Keyboard Maestro

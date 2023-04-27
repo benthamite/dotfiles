@@ -4055,6 +4055,16 @@ is connected."
         "diskutil eject disk%s"
         (match-string 1 list-external)))))
 
+   ;; camdez.com/blog/2013/11/14/emacs-show-buffer-file-name/
+  (defun ps/show-and-copy-buffer-filename ()
+    "Show and copy the full path to the current file in the minibuffer."
+    (interactive)
+    ;; list-buffers-directory is the variable set in dired buffers
+    (let ((file-name (or (buffer-file-name) list-buffers-directory)))
+      (if file-name
+          (message (kill-new file-name))
+        (user-error "Buffer not visiting a file"))))
+
   ;; disabling until we diagnose issues
   ;; (setq auto-save-visited-predicate
   ;;  (lambda () (string-match "tareas.org" buffer-file-name)))

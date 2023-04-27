@@ -27,3 +27,5 @@ export PATH=$GOPATH/bin:$PATH
 # export DBUS_LAUNCHD_SESSION_BUS_SOCKET=unix:path=/private/tmp/com.apple.launchd.RMRy2cvIPn/unix_domain_listener
 # export DBUS_SESSION_BUS_ADDRESS="launchd:env=DBUS_LAUNCHD_SESSION_BUS_SOCKET"
 . "$HOME/.cargo/env"
+# emms-print-metadata binary
+export PATH="/Users/pablostafforini/source/emms/src:$PATH"

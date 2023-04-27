@@ -6138,6 +6138,13 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
       (progn
         (browse-url (ps/magit-parse-url url))
         (message "Browsing repo %s" url))))
+  (defun ps/magit-status-repo (repo)
+    (let ((buffer-name (concat "magit: "
+			       (directory-file-name (file-name-nondirectory repo)))))
+      (unless (get-buffer buffer-name)
+	(let ((default-directory ps/dir-tlon-biblioteca-altruismo-eficaz))
+	  (magit-status)))
+      (switch-to-buffer buffer-name)))
 
   (transient-define-prefix magit-dispatch ()
     "Invoke a Magit command from a list of available commands."
@@ -6349,7 +6356,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("p r" "awaiting revision by Pablo"  tlon-bae-label-awaiting-revision-and-assign-to-pablo)
       ("p v" "awaiting review by Leo"  tlon-bae-label-awaiting-review-and-assign-to-leo)
       ("p w" "awaiting rewrite by Pablo"  tlon-bae-label-awaiting-rewrite-and-assign-to-pablo)
-      ("p u" "awaiting publication by Fede"  tlon-bae-label-awaiting-publication-and-assign-to-fede)]]
+      ("p u" "awaiting publication by Fede"  tlon-bae-label-awaiting-publication)]]
     [["Configure"
       ("a  " "add repository to database" forge-add-repository)
       ("r  " "forge.remote"  forge-forge.remote)
@@ -10898,10 +10905,9 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
   :general
   ("A-H-j" 'org-clock-goto
    "A-H-x" 'org-clock-cancel
+   "H-i" 'org-clock-in
    "H-o" 'org-clock-out)
   (org-mode-map
-   "s-i" 'org-clock-in
-   "s-o" 'org-clock-out
    "s-A-n" 'ps/org-new-clock-entry-today
    "s--" 'ps/org-time-stamp-active-current-time
    "s-A--" 'ps/org-time-stamp-active-current-date
@@ -12363,9 +12369,9 @@ SQL can be either the emacsql vector representation, or a string."
 
   :general
   ("A-H-n" 'ps/org-roam-new-note
-   "H-j" 'org-roam-node-find
-   "H-i" 'org-roam-node-insert)
+   "H-j" 'org-roam-node-find)
   (org-mode-map
+   "s-i" 'org-roam-node-insert
    "s-r" 'org-roam-buffer-toggle))
 #+end_src
 

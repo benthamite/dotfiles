@@ -48,7 +48,7 @@
   )
 (with-eval-after-load "markdown-mode"
   (define-key markdown-mode-map (kbd "s-u") 'tlon-bae-insert-eawiki-url))
-  (defvar ps/file-cookies (file-name-concat ps/dir-downloads "cookies.txt"))
+(defvar ps/file-cookies (file-name-concat ps/dir-downloads "cookies.txt"))
 (defun ps/internet-archive-download-ACSM ()
   "Download and open ACSM file from Internet Archive URL in kill
 ring.
@@ -59,31 +59,31 @@ one hour only."
   (interactive)
   (if (string-search "archive.org" (current-kill 0))
       (progn
-	(let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
-	       (suffix "&format=pdf&redirect=1")
-	       (id (replace-regexp-in-string
-		    "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
-		    "\\2"
-		    (current-kill 0)))
-	       (url (concat prefix id suffix))
-	       (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
-	  ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
-	  ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
-	  ;; Then replace the path below with the location of the downloaded cookies file.
-	  (save-window-excursion
-	    (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
-	      (async-shell-command
-	       (format
-		"wget --load-cookies='%s' '%s' -O '%s'"
-		ps/file-cookies url acsm-file))
-	      ;; (sleep-for 2)
-	      ;; (async-shell-command
-	      ;; (format
-	      ;; "open %s"
-	      ;; "/users/cartago/downloads/book.acsm"))
-	      ))
-	  (dired ps/dir-downloads)
-	  ))
+        (let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
+               (suffix "&format=pdf&redirect=1")
+               (id (replace-regexp-in-string
+                    "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
+                    "\\2"
+                    (current-kill 0)))
+               (url (concat prefix id suffix))
+               (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
+          ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
+          ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
+          ;; Then replace the path below with the location of the downloaded cookies file.
+          (save-window-excursion
+            (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
+              (async-shell-command
+               (format
+                "wget --load-cookies='%s' '%s' -O '%s'"
+                ps/file-cookies url acsm-file))
+              ;; (sleep-for 2)
+              ;; (async-shell-command
+              ;; (format
+              ;; "open %s"
+              ;; "/users/cartago/downloads/book.acsm"))
+              ))
+          (dired ps/dir-downloads)
+          ))
     (user-error "You forgot to copy the URL!")))
 
 (setq telega-server-libs-prefix "/Users/cartago/source/td/tdlib")
@@ -92,47 +92,72 @@ one hour only."
 ;; If Emacs doesn't find an ID, run `M-x org-id-update-id-locations'
 (setq org-capture-templates
       `(("b" "Tlön: BAE" entry
-	 (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
-	 "** TODO %?\n" :empty-lines 1 :prepend t)
-	("r" "Tlön: RAE" entry
-	 (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
-	 "** TODO %?\n" :empty-lines 1 :prepend t)
-	("f" "Tlön: FM" entry
-	 (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-	 "** TODO %?\n" :empty-lines 1 :prepend t)
-	("d" "Tlön: LBDLH" entry
-	 (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
-	 "** TODO %?\n" :empty-lines 1 :prepend t)
-	("u" "Tlön: EAN" entry
-	 (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
-	 "** TODO %?\n" :empty-lines 1 :prepend t)
-	("h" "Tlön: HEAR" entry
-	 (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
-	 "** TODO %?\n" :empty-lines 1 :prepend t)
-	("g" "Tlön: GPE" entry
-	 (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
-	 "** TODO %?\n" :empty-lines 1 :prepend t)
-	("c" "Tlön: Core" entry
-	 (id "68f0150e-9b0d-4bab-86c0-2bf878e19d9e")
-	 "** TODO %?\n" :empty-lines 1 :prepend t)
-	("s" "To sort" entry
-	 (id "107D27EC-B193-444E-B65B-9B1AD2A7CC65")
-	 "** TODO %?\n" :empty-lines 1 :prepend t)
-	("m" "Tlön: Core: messaging" entry
-	 (id "9387B56D-2940-4FB0-91EF-92879D58659E")
-	 "** TODO %?\n" :empty-lines 1 :prepend t)
-	("e" "Tlön: Core: debugging Emacs" entry
-	 (id "8402F53C-F547-4705-B79E-24D6286D2C9E")
-	 "** TODO %?\n" :empty-lines 1 :prepend t)
-	("t" "Tlön: Core: Project t" entry
-	 (id "12645897-A06F-44DD-876D-0FFC47D0E742")
-	 "** TODO %?\n" :empty-lines 1 :prepend t)
-	))
+         (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
+         "** TODO %?\n" :empty-lines 1 :prepend t)
+        ("r" "Tlön: RAE" entry
+         (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
+         "** TODO %?\n" :empty-lines 1 :prepend t)
+        ("f" "Tlön: FM" entry
+         (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+         "** TODO %?\n" :empty-lines 1 :prepend t)
+        ("d" "Tlön: LBDLH" entry
+         (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
+         "** TODO %?\n" :empty-lines 1 :prepend t)
+        ("u" "Tlön: EAN" entry
+         (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
+         "** TODO %?\n" :empty-lines 1 :prepend t)
+        ("h" "Tlön: HEAR" entry
+         (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
+         "** TODO %?\n" :empty-lines 1 :prepend t)
+        ("g" "Tlön: GPE" entry
+         (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
+         "** TODO %?\n" :empty-lines 1 :prepend t)
+        ("c" "Tlön: Core" entry
+         (id "68f0150e-9b0d-4bab-86c0-2bf878e19d9e")
+         "** TODO %?\n" :empty-lines 1 :prepend t)
+        ("s" "To sort" entry
+         (id "107D27EC-B193-444E-B65B-9B1AD2A7CC65")
+         "** TODO %?\n" :empty-lines 1 :prepend t)
+        ("m" "Tlön: Core: messaging" entry
+         (id "9387B56D-2940-4FB0-91EF-92879D58659E")
+         "** TODO %?\n" :empty-lines 1 :prepend t)
+        ("e" "Tlön: Core: debugging Emacs" entry
+         (id "8402F53C-F547-4705-B79E-24D6286D2C9E")
+         "** TODO %?\n" :empty-lines 1 :prepend t)
+        ("t" "Tlön: Core: Project t" entry
+         (id "12645897-A06F-44DD-876D-0FFC47D0E742")
+         "** TODO %?\n" :empty-lines 1 :prepend t)
+	("tb" "tlon: bae")
+	("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
+         (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
+         "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+        ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
+         (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
+         "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+        ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
+         (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
+         "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+        ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
+         (id "E3205CCE-70EB-4CD8-B276-6C391409FB40")
+         "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+        ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
+         (id "E3205CCE-70EB-4CD8-B276-6C391409FB40")
+         "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+        ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
+         (id "E3205CCE-70EB-4CD8-B276-6C391409FB40")
+         "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+        ("tbI" "Tlön: BAE: Import topic (via org-capture)" entry
+         (id "E3205CCE-70EB-4CD8-B276-6C391409FB40")
+         "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+        ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
+         (id "8DFD24AB-A5A1-49D9-BB5D-50D59DFD150F")
+         "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
+        ))
 
 (defhydra hydra-org-work
   (:hint nil
-	 :idle 0
-	 :color blue)
+         :idle 0
+         :color blue)
   "Tlön dashboard"
   ("b" (org-id-goto "49adbb3e-b542-4752-a67b-16bc2eb44624") "BAE")
   ("r" (org-id-goto "604dbb4c-4948-492e-b1cd-84b0a1451b4a") "RAE")

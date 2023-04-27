@@ -16075,6 +16075,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "letterboxd\\.com"
                      "libgen\\."
                      "LinkedIn\\.com"
+                     "loc\\.gov"
                      "utoronto\\.ca"
                      "worldcat\\.org"
                      "mercadolibre\\."
@@ -16086,6 +16087,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "stafforini\\.com"
                      "teatrocolon\\.org\\.ar"
                      "twitter\\.com"
+                     "wetransfer\\.com"
                      "youtu\\.be"
                      "youtube\\.com"
                      "zoom\\.us"))

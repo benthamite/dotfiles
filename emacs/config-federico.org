@@ -8,6 +8,7 @@
  (:ps/anki-editor . nil)
  (:ps/auto-commit-mode . nil)
  (:ps/bbdb . nil)
+ (:ps/browse-url . nil)
  (:ps/copilot . nil)
  (:ps/corfu-doc-terminal . nil)
  (:ps/corfu-terminal . nil)
@@ -87,6 +88,7 @@ SoU=
  (:ps/faces
   . ((set-face-attribute 'default nil :family ps/face-fixed-pitch :height 150)
      (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.0)
+     (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.0)
      (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family ps/face-fixed-pitch :height 0.8)
      (set-face-attribute 'org-property-value nil :family ps/face-fixed-pitch :height 0.9)
      (set-face-attribute 'org-todo nil :family ps/face-fixed-pitch :height 1.0)
@@ -108,7 +110,7 @@ SoU=
      (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.9)
      (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
      (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1.0)
-     (set-face-attribute 'org-quote nil :family ps/face-fixed-pitch :height 1.0)
+     (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.0)
      (message "Loaded fede's override for faces")))
  (:ps/doom-modeline
   . ((setq doom-modeline-time nil)
@@ -151,10 +153,11 @@ SoU=
     ".config/emacs-profiles/var/eln-cache/")))
 #+end_src
 
-
 * post init
 
 #+begin_src emacs-lisp :tangle (if (eq tlon-init-extra-config-tangle-pass 2) (print tlon-init-post-init-path) "no")
+(use-package nginx-mode :demand t)
+
 (setq inhibit-startup-screen t)
 ;; remove Pablo's org-roam auto add ids
 (remove-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)
@@ -162,6 +165,12 @@ SoU=
 (message "Loading fede's custom faces:")
 (ps/faces-load-custom-faces)
 (recentf-mode)
+(global-unset-key (kbd "C--"))
+(general-unbind "C--")
+(setq global-mark-ring-max 100)
+(setq local-mark-ring-max 100)
+(setq make-backup-files nil)
+
 (when (eq system-type 'darwin) ;; mac specific settings
   (setq mac-right-option-modifier 'alt)
   (setq mac-command-modifier 'hyper)
@@ -180,21 +189,22 @@ SoU=
    :keymaps 'dired-mode-map
    "n" 'find-file))
 
-(defun ps/tab-bar-reset ()
-  "Remporary command to deal with the mysterious profliferation of clocks."
-  (interactive)
-  (setq global-mode-string
-        '(" |  "
-          chemacs-profile-name
-          " | "
-          fancy-battery-mode-line
-          " | "
-          telega-mode-line-format)))
+;; (defun ps/tab-bar-reset ()
+;;   "Remporary command to deal with the mysterious profliferation of clocks."
+;;   (interactive)
+;;   (setq global-mode-string
+;;         '(" |  "
+;;           chemacs-profile-name
+;;           " | "
+;;           fancy-battery-mode-line
+;;           " | "
+;;           telega-mode-line-format)))
 
 (display-wttr-mode 0)
 (ps/tab-bar-reset)
 (telega)
 (switch-to-buffer "*scratch*")
+(setq consult-preview-key nil)
 
 (general-define-key
  "<kp-delete>" 'delete-char
@@ -218,6 +228,8 @@ SoU=
  "H-:" 'eval-expression
  "<M-backspace>" 'backward-kill-word
  "<M-delete>" 'kill-word
+ "C--" 'back-button-global-backward
+ "C-_" 'back-button-global-forward
  "<C-delete>" nil
  "<C-left>" nil
  "<C-S-left>" nil
@@ -389,7 +401,7 @@ one hour only."
   ("s" (dired (file-name-concat (getenv "HOME") "source")) "Source" :column "Folders")
   ("." (dired-at-point) "File at point" :column "Other")
   ("N" (dired "/ssh:root@tlon.team:/etc/nginx/sites-available/") "Nginx config" :column "DigitalOcean")
-  ("H" (dired "/ssh:fede@tlon.team") "/home/fede" :column "DigitalOcean")
+  ("H" (dired "/ssh:fede@tlon.team:/home/fede") "/home/fede" :column "DigitalOcean")
   ("/" (dired "/") "Root" :column "Other")
   (";" (dired-jump) "Current buffer" :column "Other")
   ("H-;" (dired-jump-other-window) "Current buffer in other window" :column "Other")
@@ -450,6 +462,7 @@ one hour only."
 (setq org-agenda-files '("/Users/fede/Library/CloudStorage/Dropbox/tlon/fede/tareas.org" "/Users/fede/Library/CloudStorage/Dropbox/org/todo.org"))
 (setq org-agenda-files-excluded nil)
 (scroll-bar-mode -1)
+(setq consult-preview-key nil)
 (use-feature org-fold
   :demand t
   :config

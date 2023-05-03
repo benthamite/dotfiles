@@ -6117,7 +6117,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
 #+begin_src emacs-lisp :results silent
 (use-package magit
-  :defer 15
+  :defer 5
   :config
   (setq magit-commit-ask-to-stage 'stage)
 
@@ -6516,11 +6516,8 @@ CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
   (github-review-mode-map
    "s-m" 'github-review-comment
    "s-r" 'github-review-reject
-   "s-a" 'github-review-approve)
-  (magit-status-mode-map
-   "s-r" 'github-review-forge-pr-at-point))
+   "s-a" 'github-review-approve))
 #+end_src
-
 
 ** gh-notify
 :PROPERTIES:
@@ -13359,6 +13356,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-21 Fri 20:39]--[2023-04-21 Fri 20:42] =>  0:03
 CLOCK: [2023-04-11 Tue 00:58]--[2023-04-11 Tue 01:55] =>  0:57
 CLOCK: [2023-03-27 Mon 21:29]--[2023-03-27 Mon 21:45] =>  0:16
 CLOCK: [2023-03-27 Mon 20:49]--[2023-03-27 Mon 21:14] =>  0:25
@@ -14308,10 +14306,12 @@ the Ebib entry at point."
     "Open the entry for KEY in Ebib."
     (ebib--execute-when
       (entries
-       (let ((file))
-         (if (member key (ebib-db-list-keys (nth 0 ebib--databases)))
-             (setq file ps/file-bibliography-new)
-           (setq file ps/file-bibliography-old))
+       (let ((file (cond ((member key (ebib-db-list-keys (nth 0 ebib--databases)))
+                          ps/file-bibliography-new)
+                         ((member key (ebib-db-list-keys (nth 1 ebib--databases)))
+                          file ps/file-bibliography-old)
+                         (t
+                          (ebib--error "Key not found in any database")))))
          (ebib file key)
          (ebib--pop-to-buffer (ebib--buffer 'entry))))
       (default
@@ -16075,6 +16075,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "letterboxd\\.com"
                      "libgen\\."
                      "LinkedIn\\.com"
+                     "loc\\.gov"
                      "utoronto\\.ca"
                      "worldcat\\.org"
                      "mercadolibre\\."
@@ -16086,6 +16087,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "stafforini\\.com"
                      "teatrocolon\\.org\\.ar"
                      "twitter\\.com"
+                     "wetransfer\\.com"
                      "youtu\\.be"
                      "youtube\\.com"
                      "zoom\\.us"))
@@ -17093,6 +17095,60 @@ This "package" collects a few simple commands I created for interfacing with Mul
 :ID:       358E28B5-0274-43A0-AE9C-AA004B4775E5
 :END:
 
+** EMMS
+:PROPERTIES:
+:ID:       3B176388-5D13-478F-8E13-9C8C93AB9D10
+:END:
+:LOGBOOK:
+CLOCK: [2022-09-05 Mon 12:18]--[2022-09-05 Mon 13:11] =>  0:53
+CLOCK: [2022-09-05 Mon 12:09]--[2022-09-05 Mon 12:12] =>  0:03
+CLOCK: [2021-05-04 Tue 21:41]--[2021-05-04 Tue 21:56] =>  0:15
+:END:
+
+/[[https://www.gnu.org/software/emms/][EMMS]] (Emacs MultiMedia System) is media player software for Emacs./
+
+EMMS is not powerful enough for my use case (tango DJ with a collection of over 70,000 tracks). But I'm exploring whether I can use it for specific purposes, such as batch-tagging.
+
+#+begin_src emacs-lisp :results silent
+(use-package emms
+  :demand t
+  :config
+  (require 'emms-setup)
+  (require 'emms-player-simple)
+  (require 'emms-source-file)
+  (require 'emms-source-playlist)
+  (require 'emms-info-native)
+  ;; emms-print-metadata binary must be present; see emacs.stackexchange.com/a/22431/32089
+  (require 'emms-info-libtag)
+  (require 'emms-mode-line)
+  (require 'emms-mode-line-icon)
+  (require 'emms-playing-time)
+
+  (setq emms-player-list '(emms-player-mpv))
+  (setq emms-source-file-default-directory ps/dir-music-tango)
+  (setq emms-playlist-buffer-name "*Music*")
+  (setq emms-info-functions '(emms-info-libtag)) ; make sure libtag is the only thing delivering metadata
+  ;; ~1 order of magnitude fzaster; requires GNU find: `brew install findutils'
+  (setq emms-source-file-directory-tree-function 'emms-source-file-directory-tree-find)
+
+  (emms-all)
+  (emms-default-players)
+  (add-to-list 'emms-info-functions 'emms-info-libtag)
+  (emms-mode-line-mode)
+  (emms-playing-time 1))
+#+end_src
+
+[2021-05-04 Tue 22:22] ~emms-print-metadata~ needs to be installed manually. I followed [[https://hack.org/mc/blog/emms.html][this]], installed the three dependencies via brew but wasn't able to complete the instructions. The ~emms~ directory is currently located in the user path.
+
+[2022-09-05 Mon 13:08] I think the key question is whether I can create "smart" playlists or reproduce that functionality in some way, i.e. generate lists of tracks based on metadata (such as all tracks recorded in 1927).
+
+*** resources
+:PROPERTIES:
+:ID:       C043F6EF-C922-4803-8361-E94ACE1C60F0
+:END:
+
+[[https://sqrtminusone.xyz/posts/2021-09-07-emms/][My EMMS and elfeed setup]]
+
 ** mpv
 :PROPERTIES:
 :ID:       8D75E528-AA79-4512-B4A9-6EB7A56F9026
@@ -17903,7 +17959,9 @@ And finally, the section you've all been waiting for.
   :demand t
   :general
   (markdown-mode-map
-   "s-u" 'tlon-bae-insert-eawiki-url))
+   "s-u" 'tlon-bae-insert-eawiki-url)
+  (magit-status-mode-map
+   "s-r" 'tlon-bae-commit-when-slug-at-point))
 #+end_src
 
 ** Keyboard Maestro
@@ -17939,82 +17997,83 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 
 -----BEGIN PGP MESSAGE-----
 
-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
-=MSLV
+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
+4EqKCz9Q3I9lRgoyIAMb
+=RqLb
 -----END PGP MESSAGE-----
 
 

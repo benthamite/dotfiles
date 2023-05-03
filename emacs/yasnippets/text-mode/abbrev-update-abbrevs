@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: abbrev-update-abbrevs
+# key: aua
+# contributor: Pablo Stafforini
+# --
+abbrev: update abbrevs

@@ -144,7 +144,7 @@ one hour only."
          (id "7480E01B-31CF-477D-8E49-FC71F8AA11A1")
          "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
         ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
-         (id "E3205CCE-70EB-4CD8-B276-6C391409FB40")
+         (id "0805A30F-2F57-483B-8B7B-4F1755B195B1")
          "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
         ("tbI" "Tlön: BAE: Import topic (via org-capture)" entry
          (id "18A94B9A-E256-4684-A36C-ED26FCE1AD08")

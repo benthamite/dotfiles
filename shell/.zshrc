@@ -1,13 +1,14 @@
-export PS1="%~ $ "
-
-# Enable NVM
-# export NVM_DIR=/usr/share/nvm
-# [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-# source /usr/share/nvm/init-nvm.sh
-export NVM_DIR=~/.nvm
+# node
 source $(brew --prefix nvm)/nvm.sh
 
-alias emacsgui='/opt/homebrew/Cellar/emacs-mac/emacs-28.2-mac-9.1/Emacs.app/Contents/MacOS/Emacs'
+export NVM_DIR="$HOME/.nvm"
+# This loads nvm
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
+# This loads nvm bash_completion
+[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
+
+# python
+alias python="python3"
 
 mkvenv() {
     CURR_VENV=$(basename "$(pwd)")
@@ -18,14 +19,17 @@ mkvenv() {
     pip install --upgrade setuptools wheel
 }
 
-GPG_TTY=$(tty)
-export GPG_TTY
-
 # Enable pyenv (github.com/pyenv/pyenv#set-up-your-shell-environment-for-pyenv)
 export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
-# codeberg.org/akib/emacs-eat#headline-1
-[ -n "$EAT_SHELL_INTEGRATION_DIR" ] && \
-    source "$EAT_SHELL_INTEGRATION_DIR/zsh"
+# gpg
+GPG_TTY=$(tty)
+export GPG_TTY
+
+# goku
+export GOKU_EDN_CONFIG_FILE="/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/karabiner/karabiner.edn"
+
+# emms
+export PATH="/Users/pablostafforini/source/emms/src:$PATH" # emms-print-metadata binary

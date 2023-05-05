@@ -6279,7 +6279,7 @@ heading."
   (setq org-gcal-notify-p nil)
   (setq org-gcal-auto-archive nil)
   (setq org-gcal-up-days 1)
-  (setq org-gcal-down-days 3)
+  (setq org-gcal-down-days 7)
 
   (defun ps/org-gcal-open-at-point ()
     "Get entry id of `org-gcal' entry at point and open the

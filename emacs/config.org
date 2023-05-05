@@ -12629,7 +12629,20 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   (setq org-crypt-key ps/personal-gmail)
   (setq org-crypt-disable-auto-save t)
 
-  (org-crypt-use-before-save-magic))
+  (defun ps/org-crypt-dwim ()
+    "Decrypt entry unles in clock, then evaluate time range."
+    (interactive)
+    (if (derived-mode-p 'org-mode)
+        (pcase (org-element-type (org-element-context))
+          ('clock (org-evaluate-time-range))
+          (_ (org-decrypt-entry)))
+      (user-error "Not in org-mode")))
+
+  (org-crypt-use-before-save-magic)
+
+  :general
+  (org-mode-map
+   "s-y" 'ps/org-crypt-dwim))
 #+end_src
 
 ** org-lint

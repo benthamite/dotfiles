@@ -12804,8 +12804,8 @@ an org drawer."
       (when (y-or-n-p "Post has no ID. Proceed anyway? ")
         (apply orig-fun args))))
 
-  (advice-add 'org2blog-subtree-post-save :around #'ps/org2blog-subtree-post-save)
-  (advice-add 'org2blog-subtree-page-save :around #'ps/org2blog-subtree-post-save)
+  (advice-add 'org2blog-subtree-post-save :around #'ps/org2blog-subtree-publish-save)
+  (advice-add 'org2blog-subtree-page-save :around #'ps/org2blog-subtree-publish-save)
 
   :general
   ("A-o" 'org2blog-user-interface))

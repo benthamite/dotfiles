@@ -18336,13 +18336,6 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
 
 - Also check [[https://git.sr.ht/~sirn/dotfiles/tree/85b9d5249712e3c35e6140083be1629be1d2b643/etc/emacs/packages/editor-auth.el][~sirn/dotfiles: etc/emacs/packages/editor-auth.el - sourcehut git]]
 
-** pass-otp
-:PROPERTIES:
-:ID:       A9670B03-7C37-47F8-8B3C-8ACFBBA53081
-:END:
-
-[[https://github.com/tadfisher/pass-otp][GitHub - tadfisher/pass-otp: A pass extension for managing one-time-password (OTP) tokens]]
-
 * misc
 :PROPERTIES:
 :ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53

@@ -14012,6 +14012,14 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
     (interactive)
     (citar-open `(,(ps/get-stem-of-current-buffer))))
 
+  (defun ps/citar-update-old-bibliography ()
+    "Update bibliography."
+    (interactive)
+    (citar-cache--update-bibliography
+     (citar-cache--get-bibliography ps/file-bibliography-old)))
+
+  (run-with-idle-timer (* 60 60) nil #'ps/citar-update-old-bibliography)
+
   :general
   ("H-/" 'citar-insert-citation
    "A-H-M-s-?" 'ps/citar-open-file-at-point) ; i.e. H-S-/

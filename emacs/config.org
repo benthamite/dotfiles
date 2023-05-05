@@ -17350,7 +17350,7 @@ poorly-designed websites."
       ;; (global-writeroom-mode 1)
       ))
 
-  ;; Not working
+  ;; This only works in Firefox due to a Chrome limitation
   ;; xenodium.com/open-emacs-elfeed-links-in-background/
   (defun ps/elfeed-search-browse-background-url ()
     "Open current `elfeed' entry (or region entries) in browser without losing focus."

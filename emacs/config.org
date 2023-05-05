@@ -731,7 +731,7 @@ Some useful config files:
 :ID:       F59230DF-14ED-44FF-B54B-4A6758C12D99
 :END:
 
-The contents of this code block are tangled to the early-init.el file.
+The contents of this code block are tangled to the ~early-init.el~ file.
 
 #+begin_src emacs-lisp :tangle (print tlon-init-early-init-path)
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
@@ -1821,6 +1821,9 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 ** org-modern
 :PROPERTIES:
 :ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 :END:
 
 /[[https://github.com/minad/org-modern][org-modern]] prettifies org mode./
@@ -5837,8 +5840,8 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
         ;; github.com/alphapapa/pocket-reader.el/blob/master/pocket-reader.el
         (let ((url (or (get-text-property (point) 'w3m-href-anchor)
                        (unless (bolp)l
-                         (save-excursion
-                           (get-text-property (1- (point)) 'w3m-href-anchor)))
+                               (save-excursion
+                                 (get-text-property (1- (point)) 'w3m-href-anchor)))
                        (unless (eolp)
                          (save-excursion
                            (get-text-property (1+ (point)) 'w3m-href-anchor)))
@@ -10630,9 +10633,8 @@ Excludes the heading itself and any child subtrees."
     (let ((contents (ps/org-get-heading-contents)))
       (if (string= contents "")
           (message "Heading is empty.")
-        (message "Copied: %s" contents)
+        (message "Copied heading")
         (kill-new contents))))
-
 
   (defun ps/org-copy-heading-name ()
     (interactive)
@@ -17364,7 +17366,6 @@ poorly-designed websites."
       (unless (or elfeed-search-remain-on-entry (use-region-p))
         (forward-line))))
 
-
   (defun ps/show-elfeed (buffer)
     (with-current-buffer buffer
       (setq buffer-read-only nil)
@@ -18000,7 +18001,6 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 :PROPERTIES:
 :ID:       26EEEF20-5CDC-4855-A03D-AFEBB784D637
 :END:
-
 
 /[[https://gitlab.com/tuedachu/ytdl][ytd]] is an Emacs interface for [[https://youtube-dl.org/][youtube-dl]]./
 

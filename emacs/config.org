@@ -18196,7 +18196,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
   (eval-when-compile
     (defvar auth-sources))
   :config
-  (setq auth-source-debug t) ; uncomment for debugging
+  (setq auth-source-debug nil) ; set to t for debugging
   (setq auth-sources '(macos-keychain-internet macos-keychain-generic)))
 #+end_src
 

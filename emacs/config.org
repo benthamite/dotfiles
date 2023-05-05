@@ -6833,9 +6833,16 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       (setq forge-database-connector 'sqlite)
     (setq forge-database-connector 'sqlite-builtin))
 
+  (run-with-idle-timer 600 t #'ps/forge-pull-notifications-silently)
+
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
+
+  (defun ps/forge-pull-notifications-silently ()
+    (let ((inhibit-message t)
+          (default-directory ps/dir-tlon-biblioteca-altruismo-eficaz))
+      (forge-pull-notifications)))
 
   (transient-define-prefix forge-dispatch ()
     "Dispatch a forge command."

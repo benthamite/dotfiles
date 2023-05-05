@@ -14364,6 +14364,8 @@ The FORCE argument is used as in `ebib-save-current-database'."
                              ("Author/Editor" 25 t)
                              ("Year" 4 t)
                              ("Title" 50 t)))
+  (setq ebib-extra-fields '((biblatex "crossref" "xdata" "annotation" "abstract" "keywords" "file" "journal" "rating" "timestamp")
+                            (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
   (setq ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "urldate" "venue" "version" "volumes" "year"))
 
   (defun ps/ebib-open-or-switch ()

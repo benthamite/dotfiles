@@ -7535,7 +7535,7 @@ By default, all agenda entries are offered. MATCH is as in
   ("A-C-l" 'consult-line
    "C-f" 'consult-find
    "H-b" 'consult-buffer
-   "H-I" 'consult-info
+   "A-H-i" 'consult-info
    "H-r" 'consult-history
    "H-V" 'consult-yank-pop
    "H-f" 'ps/consult-locate-file-current
@@ -7548,7 +7548,7 @@ By default, all agenda entries are offered. MATCH is as in
    "H-P" 'ps/consult-ripgrep-home
    "A-H-p" 'ps/consult-ripgrep-anywhere)
   (org-mode-map
-   "s-j" 'consult-org-heading)
+   "s-j" 'ps/consult-org-heading)
   ((elfeed-show-mode-map eww-mode-map prog-mode-map)
    "s-j" 'consult-imenu))
 #+end_src

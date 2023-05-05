@@ -12942,10 +12942,11 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
     (setq org-pomodoro-finished-sound "/System/Library/Sounds/Blow.aiff"))
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
-  (setq org-pomodoro-format "🍅 %s")
+  (setq org-pomodoro-format (concat "🍅 %s "
+                                    (format "[%s]"(number-to-string org-pomodoro-count))))
 
   :general
-  ("H-s-i" 'org-pomodoro
+  ("H-I" 'org-pomodoro
    "A-s-e" 'org-pomodoro-extend-last-clock)
   (org-agenda-mode-map
    "I" 'org-pomodoro))

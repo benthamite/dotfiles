@@ -7117,6 +7117,16 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
     (kill-new (buffer-substring (point) isearch-other-end))
     (isearch-done))
 
+  ;; reddit.com/r/emacs/comments/8aepnk/comment/dwybodv
+  (defun ps/isearch-yank-kill-literally ()
+    "Pull string from kill ring into search string literally."
+    (interactive)
+    (setq isearch-yank-flag t)
+    (let ((string (current-kill 0)))
+      (isearch-process-search-string
+       string
+       (mapconcat 'isearch-text-char-description string ""))))
+
   (add-hook 'isearch-mode-end-hook #'recenter-top-bottom)
 
   (defadvice

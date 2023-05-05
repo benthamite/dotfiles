@@ -3104,7 +3104,27 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 :ID:       9C2CB01F-9F9A-4E92-9722-4EEB3A603BE3
 :END:
 
-Create function that copies the element at point. Possible elements include sexp, url, subtree, code block.
+#+begin_src emacs-lisp
+(use-feature org
+  :after org
+  :elpaca nil
+  :config
+  (defun ps/org-copy-dwim ()
+    "Copy the contents of the org element at point."
+    (interactive)
+    (if (derived-mode-p 'org-mode)
+        (pcase (org-element-type (org-element-context))
+          ('headline (ps/org-copy-heading-name))
+          ('paragraph (ps/org-copy-heading-contents))
+          ('block (ps/org-copy-block))
+          ('table-cell (ps/org-copy-table-cell))
+          (_ (user-error "I don't know what to copy")))
+      (user-error "Not in org-mode")))
+
+  :general
+  (org-mode-map
+   "A-C-H-t" 'ps/org-copy-dwim))
+#+end_src
 
 ** region
 :PROPERTIES:

@@ -3515,14 +3515,15 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 :PROPERTIES:
 :ID:       2D69896F-CF17-4D0C-BEFE-E7C473FB1C2B
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature abbrev
   :demand t
   :config
   (setq save-abbrevs 'silently)
   (setq abbrev-file-name (file-name-concat ps/dir-abbrev "abbrev_defs"))
-  (setq abbrev-suggest t)
-  (setq abbrev-suggest-hint-threshold 0)
+  ;; (setq abbrev-suggest t)
+  ;; (setq abbrev-suggest-hint-threshold 0)
   (setq-default abbrev-mode t)
   ;; do not look up abbrevs with case folding; e.g. `EA' will not expand an `ea' abbrev
   (abbrev-table-put global-abbrev-table :case-fixed t)

@@ -9132,8 +9132,21 @@ insert italic delimiters and place the point in between them."
       (kill-new text)
       (yank)))
 
+  (defun ps/markdown-copy-section ()
+    "Copy the current section to the clipboard."
+    (interactive)
+    (let ((beg (save-excursion
+                 (markdown-outline-previous)
+                 (forward-line)
+                 (point)))
+          (end (save-excursion
+                 (markdown-outline-next)
+                 (point))))
+      (copy-region-as-kill beg end)))
+
   :general
   ((gfm-mode-map markdown-mode-map)
+  "A-C-H-t" 'ps/markdown-copy-section
    "A-C-s-r" 'markdown-outline-previous
    "A-C-s-f" 'markdown-outline-next
    "s-b" 'markdown-insert-bold

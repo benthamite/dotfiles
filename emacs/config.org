@@ -13146,9 +13146,6 @@ SQL can be either the emacsql vector representation, or a string."
               nil
             t)))
 
-  (advice-add 'org-roam-node-find :before #'widen)
-  (advice-add 'org-roam-node-find :after #'ps/org-narrow-to-entry-and-children)
-
   (defun ps/org-roam-remove-file-level-properties ()
     "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
     (when (string= "r" (plist-get org-capture-plist :key))
@@ -13189,6 +13186,14 @@ SQL can be either the emacsql vector representation, or a string."
         (ps/org-narrow-to-entry-and-children)
         (goto-char (point-max)))))
 
+  (defun ps/org-roam-node-find ()
+    "Find and open an Org-roam node by its title or alias."
+    (interactive)
+    (widen)
+    (ps/org-fold-show-all-headings)
+    (org-roam-node-find)
+    (recenter 1))
+
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
   ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
 
@@ -13203,7 +13208,7 @@ SQL can be either the emacsql vector representation, or a string."
 
   :general
   ("A-H-n" 'ps/org-roam-new-note
-   "H-j" 'org-roam-node-find)
+   "H-j" 'ps/org-roam-node-find)
   (org-mode-map
    "s-i" 'org-roam-node-insert
    "s-r" 'org-roam-buffer-toggle))

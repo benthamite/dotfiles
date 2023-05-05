@@ -13859,6 +13859,11 @@ Version 2015-06-08"
    "A-C-s-f" 'bibtex-next-entry))
 #+end_src
 
+*** TODO Move ratings from org headings to bibtex
+:PROPERTIES:
+:ID:       18A96B99-EAD2-4C1E-94C2-619903A52898
+:END:
+
 *** TODO Why bibtex generates a key starting with 'Boer' when the last name is deBoer?
 :PROPERTIES:
 :ID:       2FB7CCAA-E1FE-4B93-B441-DB9E8437233F
@@ -14181,6 +14186,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-30 Sun 18:51]--[2023-04-30 Sun 18:57] =>  0:06
 CLOCK: [2023-04-21 Fri 20:39]--[2023-04-21 Fri 20:42] =>  0:03
 CLOCK: [2023-04-11 Tue 00:58]--[2023-04-11 Tue 01:55] =>  0:57
 CLOCK: [2023-03-27 Mon 21:29]--[2023-03-27 Mon 21:45] =>  0:16

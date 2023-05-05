@@ -18787,10 +18787,13 @@ And finally, the section you've all been waiting for.
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :general
+  (forge-topic-mode-map
+   "'" 'tlon-bae-open-forge-file)
   (markdown-mode-map
-   "s-u" 'tlon-bae-insert-eawiki-url)
+   "s-u" 'tlon-bae-insert-tag-url)
   (magit-status-mode-map
-   "s-r" 'tlon-bae-commit-when-slug-at-point))
+   "s-r" 'tlon-bae-commit-when-slug-at-point
+   "'" 'tlon-bae-open-forge-file))
 #+end_src
 
 ** Keyboard Maestro

@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: ledger-smart-fit-gym
+# key: lsfg
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Smart Fit
+    Expenses:Health:Gym                    $1.00 ARS ; monthly gym subscription
+    Liabilities:Mom:Extension

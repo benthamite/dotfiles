@@ -18453,7 +18453,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
   ;; note that the hooks appear in reverse order of execution
   (dolist (function #'(el-patch-validate-all
-                       org-gcal-sync
+                       ;; org-gcal-sync
                        ps/org-id-update-id-locations
                        org-roam-db-sync
                        ps/pass-git-sync

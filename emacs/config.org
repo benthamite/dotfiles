@@ -17975,10 +17975,6 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
   (emms-playing-time 1))
 #+end_src
 
-[2021-05-04 Tue 22:22] ~emms-print-metadata~ needs to be installed manually. I followed [[https://hack.org/mc/blog/emms.html][this]], installed the three dependencies via brew but wasn't able to complete the instructions. The ~emms~ directory is currently located in the user path.
-
-[2022-09-05 Mon 13:08] I think the key question is whether I can create "smart" playlists or reproduce that functionality in some way, i.e. generate lists of tracks based on metadata (such as all tracks recorded in 1927).
-
 *** resources
 :PROPERTIES:
 :ID:       C043F6EF-C922-4803-8361-E94ACE1C60F0

@@ -8588,24 +8588,6 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 
 [2023-01-28 Sat] I followed the instructions but couldn't make it work.
 
-** aide
-:PROPERTIES:
-:ID:       5BCD6E4D-0264-4CB6-A0D8-0A6225A671B6
-:END:
-
-/[[https://github.com/junjizhi/aide.el][aide]] is an Emacs front end for GPT APIs like OpenAI./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/aide)
-(use-package aide
-  :elpaca (aide
-             :host github
-             :repo "junjizhi/aide.el")
-  :after request
-  :commands aide-openai-complete-region
-  :config
-  (setq openai-api-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
-#+end_src
-
 ** languagetool
 :PROPERTIES:
 :ID:       9666F3AD-4637-4B0B-895E-8F1F030C7AD9

@@ -17405,7 +17405,7 @@ poorly-designed websites."
    "w" 'ps/elfeed-toggle-wiki-entries)
   (elfeed-show-mode-map
    "S-<return>" 'eww-follow-link
-   "<return>" (lambda! (eww-follow-link '(4)))
+   "<return>" 'eww-follow-link
    "<tab>" (lambda! (elfeed-show-next-link) (recenter))
    "b" nil
    "q" 'elfeed

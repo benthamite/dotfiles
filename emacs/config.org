@@ -5876,8 +5876,8 @@ and start clock."
   :general
   ((eww-mode-map elfeed-show-mode-map)
    "f" 'ace-link-eww
-   "F" 'ps/ace-link-eww-externally
-   "s-f" 'ps/ace-link-eww-new-buffer)
+   "F" 'ps/ace-link-eww-new-buffer
+   "s-f" 'ps/ace-link-eww-externally)
   ((help-mode-map helpful-mode-map elisp-refs-mode-map)
    "f" 'ace-link-help)
   ((Info-mode-map)

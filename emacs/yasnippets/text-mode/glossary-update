@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: glossary-update
+# key: gu
+# contributor: Pablo Stafforini
+# --
+Glossary: update translation of "$1"

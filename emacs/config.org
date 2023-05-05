@@ -49,7 +49,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
 
 * table of contents
 :PROPERTIES:
-:TOC:      :include all :depth 2 :force ((nothing)) :ignore ((nothing)) :local ((nothing))
+:TOC:      :include all :depth 3 :force ((nothing)) :ignore ((nothing)) :local ((nothing))
 :ID:       536D7BF2-AA0D-43D7-8865-601DFB6BB8E6
 :END:
 :LOGBOOK:

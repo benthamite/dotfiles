@@ -6852,12 +6852,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       """Review"
       ("w c" "Code review at point"            code-review-forge-pr-at-point)
       ("w g" "GitHub review at point"          github-review-forge-pr-at-point)
-      """Search"
-      ("s" "search topics & pull requests" forge-search)
-      """Toggle"
-      (";" "Show/hide closed topics" forge-toggle-closed-visibility)
-      """Capture"
-      ("," "capture topic or pull request" ps/orgit-capture)]
+      ]
      ["List"
       ("l a" "awaiting review"        forge-list-requested-reviews)
       ("l i" "issues"                 forge-list-issues)
@@ -6866,51 +6861,45 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("l p" "pull-requests"          forge-list-pullreqs)
       ("l t" "topics"                 forge-list-topics)
       ("l r" "repositories"           forge-list-repositories)
-      """Visit"
-      ("v i" "issue"                  forge-visit-issue)
-      ("v p" "pull-request"           forge-visit-pullreq)
-      ("v t" "topic"                  forge-visit-topic)
-      """Browse"
-      ("b i" "issue"                  forge-browse-issue)
-      ("b p" "pull-request"           forge-browse-pullreq)
-      ("b r" "remote"                 forge-browse-remote)
-      ("b t" "topic"                  forge-browse-topic)
-      ("b I" "issues"                 forge-browse-issues)
-      ("b P" "pull-requests"          forge-browse-pullreqs)]
-     ["Authored"
-      ("u i" "authored issues"        forge-list-authored-issues)
-      ("u p" "authored pull-requests" forge-list-authored-pullreqs)
-      """Assigned"
-      ("i i" "assigned issues"        forge-list-assigned-issues)
-      ("i p" "assigned pull-requests" forge-list-assigned-pullreqs)
-      """Owned"
-      ("o i" "owned issues"           forge-list-owned-issues)
-      ("o p" "owned pull-requests"    forge-list-owned-pullreqs)
-      """Labeled"
-      ("d i" "labeled issues"         forge-list-labeled-issues)
-      ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)
       """Edit"
       ("e t" "edit title"                 forge-edit-topic-title)
       ("e s" "edit state"                 forge-edit-topic-state)
       ("e m" "edit milestone"             forge-edit-topic-milestone)
       ("e l" "edit labels"                forge-edit-topic-labels)
-      ("e a" "edit assigness"             forge-edit-topic-assignees)
       ]
-     ["Process"
-      ("p p" "awaiting processing by Pablo"  tlon-bae-label-awaiting-processing-and-assign-to-pablo)
-      ("p p" "awaiting importing by Pablo"  tlon-bae-label-awaiting-import-and-assign-to-pablo)
-      ("p t" "awaiting translation by Leo"  tlon-bae-label-awaiting-translation-and-assign-to-leo)
-      ("p r" "awaiting revision by Pablo"  tlon-bae-label-awaiting-revision-and-assign-to-pablo)
-      ("p v" "awaiting review by Leo"  tlon-bae-label-awaiting-review-and-assign-to-leo)
-      ("p w" "awaiting rewrite by Pablo"  tlon-bae-label-awaiting-rewrite-and-assign-to-pablo)
-      ("p u" "awaiting publication by Fede"  tlon-bae-label-awaiting-publication)]]
-    [["Configure"
-      ("a  " "add repository to database" forge-add-repository)
-      ("r  " "forge.remote"  forge-forge.remote)
-      ("t l" "forge.graphqlItemLimit" forge-forge.graphqlItemLimit
-       :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
-      ("t t" forge-toggle-display-in-status-buffer)
-      ("t c" forge-toggle-closed-visibility)]])
+     ["Browse"
+      ("b i" "issue"                  forge-browse-issue)
+      ("b p" "pull-request"           forge-browse-pullreq)
+      ("b r" "remote"                 forge-browse-remote)
+      ("b t" "topic"                  forge-browse-topic)
+      ("b I" "issues"                 forge-browse-issues)
+      ("b P" "pull-requests"          forge-browse-pullreqs)
+      """Visit"
+      ("v i" "issue"                  forge-visit-issue)
+      ("v p" "pull-request"           forge-visit-pullreq)
+      ("v t" "topic"                  forge-visit-topic)
+      ]
+     ["Authored"
+      ("u i" "authored issues"        forge-list-authored-issues)
+      ("u p" "authored pull-requests" forge-list-authored-pullreqs)
+      """Owned"
+      ("o i" "owned issues"           forge-list-owned-issues)
+      ("o p" "owned pull-requests"    forge-list-owned-pullreqs)]
+     ["Assigned"
+      ("i i" "assigned issues"        forge-list-assigned-issues)
+      ("i p" "assigned pull-requests" forge-list-assigned-pullreqs)
+      """Labeled"
+      ("d i" "labeled issues"         forge-list-labeled-issues)
+      ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)
+      ("e a" "edit assigness"             forge-edit-topic-assignees)]
+     ["Misc"
+      ("," "capture topic" ps/orgit-capture)
+      ("s" "search topics" forge-search)
+      ("'" "open associated file" forge-search)
+      (";" "Show/hide closed topics" forge-toggle-closed-visibility)
+      ]
+     ]
+    )
 
   :general
   (forge-post-mode-map

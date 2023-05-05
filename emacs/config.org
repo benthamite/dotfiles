@@ -12935,7 +12935,6 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 #+begin_src emacs-lisp :results silent
 (use-package org-pomodoro
   :after org
-  :defer 30
   :config
   (setq org-pomodoro-length 25)
   (setq org-pomodoro-short-break-length (- 30 org-pomodoro-length))

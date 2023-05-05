@@ -9,6 +9,26 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** aide
+:PROPERTIES:
+:ID:       5BCD6E4D-0264-4CB6-A0D8-0A6225A671B6
+:END:
+
+/[[https://github.com/junjizhi/aide.el][aide]] is an Emacs front end for GPT APIs like OpenAI./
+
+[2023-04-29 Sat 17:03] I have no need for this package given that I'm already using several other GTP-4 packages.
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/aide)
+(use-package aide
+  :elpaca (aide
+             :host github
+             :repo "junjizhi/aide.el")
+  :after request
+  :commands aide-openai-complete-region
+  :config
+  (setq openai-api-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
+#+end_src
+
 ** cape-yasnippet
 :PROPERTIES:
 :ID:       E1783BB4-D7BD-4264-B490-5E2F903CCCA7

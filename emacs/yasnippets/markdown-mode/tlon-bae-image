@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-bae-image
+# key: tbi
+# contributor: Pablo Stafforini
+# --
+![](../media/`(file-name-concat (file-name-base (buffer-file-name)))`/$1)

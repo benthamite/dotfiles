@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-bae-wikipedia-books-spanish
+# key: tbwbs
+# contributor: Pablo Stafforini
+# --
+https://es.wikipedia.org/wiki/Especial:FuentesDeLibros/$1

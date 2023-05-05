@@ -49,7 +49,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
 
 * table of contents
 :PROPERTIES:
-:TOC:      :include all :depth 2 :force ((nothing)) :ignore ((nothing)) :local ((nothing))
+:TOC:      :include all :depth 3 :force ((nothing)) :ignore ((nothing)) :local ((nothing))
 :ID:       536D7BF2-AA0D-43D7-8865-601DFB6BB8E6
 :END:
 :LOGBOOK:
@@ -318,6 +318,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#clojure][clojure]]
   - [[#python][python]]
   - [[#applescript-mode][applescript-mode]]
+  - [[#csv-mode][csv-mode]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent][aggressive-indent]]
   - [[#elpy][elpy]]
@@ -730,7 +731,7 @@ Some useful config files:
 :ID:       F59230DF-14ED-44FF-B54B-4A6758C12D99
 :END:
 
-The contents of this code block are tangled to the early-init.el file.
+The contents of this code block are tangled to the ~early-init.el~ file.
 
 #+begin_src emacs-lisp :tangle (print tlon-init-early-init-path)
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
@@ -835,7 +836,7 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
 :END:
 
 #+begin_src emacs-lisp
-(defvar elpaca-installer-version 0.3)
+(defvar elpaca-installer-version 0.4)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -1045,6 +1046,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 :ID:       31238246-249F-42E8-BE80-06DB327259FD
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-30 Sun 09:16]--[2023-04-30 Sun 09:34] =>  0:18
 CLOCK: [2021-06-30 Wed 14:24]--[2021-06-30 Wed 15:25] =>  1:01
 CLOCK: [2021-06-29 Tue 16:17]--[2021-06-29 Tue 17:44] =>  1:27
 CLOCK: [2021-02-06 Sat 22:29]--[2021-02-06 Sat 22:52] =>  0:23
@@ -1054,12 +1056,17 @@ CLOCK: [2021-02-05 Fri 19:09]--[2021-02-05 Fri 19:14] =>  0:05
 
 /[[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] makes Emacs use the $PATH set up by the user's shell./
 
+[2023-04-30 Sun 10:14] This shouldn't be needed if Emacs is launched from the Terminal, as I do. Disabling for the time being; will remove if noticed no issues.
+
 #+begin_src emacs-lisp :results silent
 (use-package exec-path-from-shell
-  :defer 5
-  :config
+  :disabled
+  :if (eq system-type 'darwin)
+  :init
   (dolist (var '("NVM_DIR"))
     (add-to-list 'exec-path-from-shell-variables var))
+
+  :config
   (exec-path-from-shell-initialize))
 #+end_src
 
@@ -1431,10 +1438,10 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   ("t" (ps/org-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
   ("f" (ps/org-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "People")
   ("F" (tlon-core-meeting-with-fede) "fede: meeting" :column "People")
-  ("H-f" (ps/org-id-goto "CE0C7638-97F1-4509-8212-5B77F4A4AF29") "fede: tareas" :column "People")
+  ("H-f" (ps/org-id-goto "EB5FC062-E46F-4C1F-930F-F2CC710F852D") "fede: tareas" :column "People")
   ("l" (ps/org-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "People")
   ("L" (tlon-core-meeting-with-leo) "leo: meeting" :column "People")
-  ("H-l" (ps/org-id-goto "76A01EAA-74BC-41FC-9050-E6BDC0D56029") "leo: tareas" :column "People")
+  ("H-l" (ps/org-id-goto "E5777AB0-DC81-40CB-8D03-77D6F111AA2E") "leo: tareas" :column "People")
   ("RET" (ps/org-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A"))
   )
 
@@ -1815,6 +1822,9 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 :PROPERTIES:
 :ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
 :END:
+:LOGBOOK:
+CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
+:END:
 
 /[[https://github.com/minad/org-modern][org-modern]] prettifies org mode./
 
@@ -2128,6 +2138,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 :ID:       C3D90EBC-EB70-440E-9718-A2832FF9F077
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-28 Fri 13:05]--[2023-04-28 Fri 13:12] =>  0:07
 CLOCK: [2023-03-27 Mon 21:53]--[2023-03-27 Mon 22:01] =>  0:08
 CLOCK: [2021-06-02 Wed 21:16]--[2021-06-02 Wed 21:32] =>  0:16
 CLOCK: [2021-06-02 Wed 18:04]--[2021-06-02 Wed 18:07] =>  0:03
@@ -2147,13 +2158,11 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (tlon-init-override-code-if-available
    :ps/doom-modeline
    '(
-     (setq doom-modeline-mu4e t)
+     (setq doom-modeline-mu4e nil) ; avoid distractions
      (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
      (setq doom-modeline-buffer-encoding nil)
      (setq doom-modeline-irc t)
      (setq doom-modeline-irc-buffers t)
-     (setq doom-modeline-github t)
-     (setq doom-modeline-github-interval (* 10 60))
      (setq doom-modeline-buffer-file-name-style 'auto)
 
      (doom-modeline-def-modeline 'main
@@ -2165,9 +2174,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
                            (display-battery-mode-hook . doom-modeline-override-battery-modeline)
                            (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
                            (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-       (remove-hook (car hook-cons) (cdr hook-cons)))
-
-     (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))))
+       (remove-hook (car hook-cons) (cdr hook-cons))))))
 #+end_src
 
 ** tab-bar
@@ -3100,7 +3107,27 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 :ID:       9C2CB01F-9F9A-4E92-9722-4EEB3A603BE3
 :END:
 
-Create function that copies the element at point. Possible elements include sexp, url, subtree, code block.
+#+begin_src emacs-lisp
+(use-feature org
+  :after org
+  :elpaca nil
+  :config
+  (defun ps/org-copy-dwim ()
+    "Copy the contents of the org element at point."
+    (interactive)
+    (if (derived-mode-p 'org-mode)
+        (pcase (org-element-type (org-element-context))
+          ('headline (ps/org-copy-heading-name))
+          ('paragraph (ps/org-copy-heading-contents))
+          ('block (ps/org-copy-block))
+          ('table-cell (ps/org-copy-table-cell))
+          (_ (user-error "I don't know what to copy")))
+      (user-error "Not in org-mode")))
+
+  :general
+  (org-mode-map
+   "A-C-H-t" 'ps/org-copy-dwim))
+#+end_src
 
 ** region
 :PROPERTIES:
@@ -3287,15 +3314,15 @@ with the current major mode."
     (if visible-mode
         (progn
           (visible-mode -1)
+          (org-modern-mode)
           (org-display-inline-images)
           (ps/org-hide-properties)
-          (ps/org-hide-logbook)
-          (org-modern-mode))
+          (ps/org-hide-logbook))
+      (org-modern-mode -1)
       (visible-mode)
       (org-remove-inline-images)
       (ps/org-show-properties)
-      (ps/org-show-logbook)
-      (org-modern-mode -1)))
+      (ps/org-show-logbook)))
 
   (defun ps/count-words-dwim ()
     "Count the number of words in region, if active, otherwise in
@@ -3491,19 +3518,153 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 :PROPERTIES:
 :ID:       2D69896F-CF17-4D0C-BEFE-E7C473FB1C2B
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature abbrev
   :demand t
   :config
   (setq save-abbrevs 'silently)
   (setq abbrev-file-name (file-name-concat ps/dir-abbrev "abbrev_defs"))
-  (setq abbrev-suggest t)
-  (setq abbrev-suggest-hint-threshold 0)
+  ;; (setq abbrev-suggest t)
+  ;; (setq abbrev-suggest-hint-threshold 0)
   (setq-default abbrev-mode t)
   ;; do not look up abbrevs with case folding; e.g. `EA' will not expand an `ea' abbrev
   (abbrev-table-put global-abbrev-table :case-fixed t)
   (abbrev-table-put text-mode-abbrev-table :case-fixed t))
 #+end_src
+
+*** TODO Make abbrevs local
+:PROPERTIES:
+:ID:       D54BEE93-6514-46A0-879F-9F93381CE41B
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-24 Mon 08:58]--[2023-04-24 Mon 09:20] =>  0:22
+:END:
+To remove an abbrev definition, give a negative argument to the abbrev definition command: C-u - C-x a g or C-u - C-x a l. The former removes a global definition, while the latter removes a mode-specific definition. M-x kill-all-abbrevs removes all abbrev definitions, both global and local.
+
+"ab"	       0    "about"
+"al"	       0    "all"
+"ao"	       0    "also"
+"apr"	       0    "April"
+"ar"	       0    "after"
+"atb"	       4    "All the best,"
+"aug"	       0    "August"
+"ay"	       0    "any"
+"bc"	       0    "because"
+"bca"	       0    "became"
+"bf"	       0    "before"
+"bn"	       3    "been"
+"bng"	       0    "being"
+"bo"	       0    "both"
+"bu"	       0    "but"
+"bw"	       0    "between"
+"ca"	       0    "can"
+"ci"	       0    "city"
+"cion"	       0    "citation"
+"cld"	       1    "called"
+"cou"	       1    "could"
+"dd"	       1    "did"
+"dec"	       0    "December"
+"dft"	       0    "different"
+"dir"	       2    "directory"
+"dirn"	       0    "direction"
+"dirns"	       0    "directions"
+"dirs"	       0    "directories"
+"dng"	       1    "during"
+"ea"	       1    "effective altruism"
+"exa"	       0    "example"
+"ey"	       0    "early"
+"feb"	       0    "February"
+"fem"	       0    "female"
+"fi"	       0    "first"
+"fo"	       0    "for"
+"fr"	       0    "from"
+"fri"	       1    "Friday"
+"gge"	       0    "George"
+"ha"	       0    "have"
+"hm"	       0    "him"
+"hr"	       0    "her"
+"hv"	       2    "have"
+"hw"	       2    "how"
+"jan"	       1    "January"
+"jul"	       0    "July"
+"jun"	       0    "June"
+"kn"	       0    "know"
+"knn"	       0    "known"
+"lge"	       0    "large"
+"ltr"	       0    "later"
+"lws"	       0    "laws"
+"mai"	       0    "main"
+"mar"	       0    "March"
+"md"	       6    "made"
+"mo"	       0    "more"
+"mon"	       1    "Monday"
+"mt"	       0    "most"
+"nname"	       2    "Pablo Stafforini"
+"nov"	       0    "November"
+"num"	       0    "number"
+"nw"	       0    "new"
+"ny"	       0    "many"
+"oct"	       0    "October"
+"oft"	       0    "often"
+"op"	       0    "operation"
+"or"	       12   "over"
+"ot"	       1    "other"
+"ou"	       0    "out"
+"oy"	       0    "only"
+"pol"	       0    "police"
+"ppl"	       0    "people"
+"pt"	       0    "part"
+"rusn"	       0    "Russian"
+"sa"	       0    "same"
+"sat"	       0    "Saturday"
+"sep"	       0    "September"
+"sev"	       0    "several"
+"so"	       2    "some"
+"su"	       2    "such"
+"sund"	       0    "Sunday"
+"sys"	       0    "system"
+"temp"	       2    "temperature"
+"th"	       0    "the"
+"tha"	       0    "than"
+"thi"	       0    "this"
+"thr"	       0    "three"
+"thru"	       0    "through"
+"thu"	       0    "Thursday"
+"ti"	       1    "time"
+"tir"	       0    "their"
+"tm"	       1    "them"
+"tre"	       0    "there"
+"tt"	       0    "that"
+"tue"	       0    "Tuesday"
+"tw"	       0    "two"
+"ud"	       0    "used"
+"und"	       0    "under"
+"vy"	       0    "very"
+"wd"	       0    "would"
+"wed"	       0    "Wednesday"
+"wel"	       0    "well"
+"wer"	       0    "were"
+"whe"	       0    "where"
+"whi"	       0    "which"
+"whil"	       0    "while"
+"whn"	       0    "when"
+"wi"	       1    "with"
+"wl"	       1    "will"
+"wrk"	       0    "work"
+"xan"	       0    "Christian"
+"xany"	       0    "Christianity"
+"yr"	       0    "year"
+"yu"	       1    "you"
+"––"	       0    "—"
+
+*** TODO Set up Emacs abbrevs
+:PROPERTIES:
+:ID:       A0B65562-6C61-4212-98B5-4FE8FB60E78F
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-22 Sat 17:23]--[2023-04-22 Sat 17:57] =>  0:34
+:END:
 
 ** yasnippet
 :PROPERTIES:
@@ -5679,8 +5840,8 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
         ;; github.com/alphapapa/pocket-reader.el/blob/master/pocket-reader.el
         (let ((url (or (get-text-property (point) 'w3m-href-anchor)
                        (unless (bolp)l
-                         (save-excursion
-                           (get-text-property (1- (point)) 'w3m-href-anchor)))
+                               (save-excursion
+                                 (get-text-property (1- (point)) 'w3m-href-anchor)))
                        (unless (eolp)
                          (save-excursion
                            (get-text-property (1+ (point)) 'w3m-href-anchor)))
@@ -5718,8 +5879,8 @@ and start clock."
   :general
   ((eww-mode-map elfeed-show-mode-map)
    "f" 'ace-link-eww
-   "F" 'ps/ace-link-eww-externally
-   "s-f" 'ps/ace-link-eww-new-buffer)
+   "F" 'ps/ace-link-eww-new-buffer
+   "s-f" 'ps/ace-link-eww-externally)
   ((help-mode-map helpful-mode-map elisp-refs-mode-map)
    "f" 'ace-link-help)
   ((Info-mode-map)
@@ -6121,7 +6282,7 @@ heading."
   (setq org-gcal-notify-p nil)
   (setq org-gcal-auto-archive nil)
   (setq org-gcal-up-days 1)
-  (setq org-gcal-down-days 3)
+  (setq org-gcal-down-days 7)
 
   (defun ps/org-gcal-open-at-point ()
     "Get entry id of `org-gcal' entry at point and open the
@@ -6494,6 +6655,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :defer 5
   :config
   (setq magit-commit-ask-to-stage 'stage)
+  (setq magit-diff-refine-hunk 'all) ; show word-granularity differences in all diff hunks
 
   (add-to-list 'magit-no-confirm 'stage-all-changes)
 
@@ -6675,9 +6837,16 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       (setq forge-database-connector 'sqlite)
     (setq forge-database-connector 'sqlite-builtin))
 
+  (run-with-idle-timer 600 t #'ps/forge-pull-notifications-silently)
+
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
+
+  (defun ps/forge-pull-notifications-silently ()
+    (let ((inhibit-message t)
+          (default-directory ps/dir-tlon-biblioteca-altruismo-eficaz))
+      (forge-pull-notifications)))
 
   (transient-define-prefix forge-dispatch ()
     "Dispatch a forge command."
@@ -6694,12 +6863,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       """Review"
       ("w c" "Code review at point"            code-review-forge-pr-at-point)
       ("w g" "GitHub review at point"          github-review-forge-pr-at-point)
-      """Search"
-      ("s" "search topics & pull requests" forge-search)
-      """Toggle"
-      (";" "Show/hide closed topics" forge-toggle-closed-visibility)
-      """Capture"
-      ("," "capture topic or pull request" ps/orgit-capture)]
+      ]
      ["List"
       ("l a" "awaiting review"        forge-list-requested-reviews)
       ("l i" "issues"                 forge-list-issues)
@@ -6708,51 +6872,45 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("l p" "pull-requests"          forge-list-pullreqs)
       ("l t" "topics"                 forge-list-topics)
       ("l r" "repositories"           forge-list-repositories)
-      """Visit"
-      ("v i" "issue"                  forge-visit-issue)
-      ("v p" "pull-request"           forge-visit-pullreq)
-      ("v t" "topic"                  forge-visit-topic)
-      """Browse"
-      ("b i" "issue"                  forge-browse-issue)
-      ("b p" "pull-request"           forge-browse-pullreq)
-      ("b r" "remote"                 forge-browse-remote)
-      ("b t" "topic"                  forge-browse-topic)
-      ("b I" "issues"                 forge-browse-issues)
-      ("b P" "pull-requests"          forge-browse-pullreqs)]
-     ["Authored"
-      ("u i" "authored issues"        forge-list-authored-issues)
-      ("u p" "authored pull-requests" forge-list-authored-pullreqs)
-      """Assigned"
-      ("i i" "assigned issues"        forge-list-assigned-issues)
-      ("i p" "assigned pull-requests" forge-list-assigned-pullreqs)
-      """Owned"
-      ("o i" "owned issues"           forge-list-owned-issues)
-      ("o p" "owned pull-requests"    forge-list-owned-pullreqs)
-      """Labeled"
-      ("d i" "labeled issues"         forge-list-labeled-issues)
-      ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)
       """Edit"
       ("e t" "edit title"                 forge-edit-topic-title)
       ("e s" "edit state"                 forge-edit-topic-state)
       ("e m" "edit milestone"             forge-edit-topic-milestone)
       ("e l" "edit labels"                forge-edit-topic-labels)
-      ("e a" "edit assigness"             forge-edit-topic-assignees)
       ]
-     ["Process"
-      ("p p" "awaiting processing by Pablo"  tlon-bae-label-awaiting-processing-and-assign-to-pablo)
-      ("p p" "awaiting importing by Pablo"  tlon-bae-label-awaiting-import-and-assign-to-pablo)
-      ("p t" "awaiting translation by Leo"  tlon-bae-label-awaiting-translation-and-assign-to-leo)
-      ("p r" "awaiting revision by Pablo"  tlon-bae-label-awaiting-revision-and-assign-to-pablo)
-      ("p v" "awaiting review by Leo"  tlon-bae-label-awaiting-review-and-assign-to-leo)
-      ("p w" "awaiting rewrite by Pablo"  tlon-bae-label-awaiting-rewrite-and-assign-to-pablo)
-      ("p u" "awaiting publication by Fede"  tlon-bae-label-awaiting-publication)]]
-    [["Configure"
-      ("a  " "add repository to database" forge-add-repository)
-      ("r  " "forge.remote"  forge-forge.remote)
-      ("t l" "forge.graphqlItemLimit" forge-forge.graphqlItemLimit
-       :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
-      ("t t" forge-toggle-display-in-status-buffer)
-      ("t c" forge-toggle-closed-visibility)]])
+     ["Browse"
+      ("b i" "issue"                  forge-browse-issue)
+      ("b p" "pull-request"           forge-browse-pullreq)
+      ("b r" "remote"                 forge-browse-remote)
+      ("b t" "topic"                  forge-browse-topic)
+      ("b I" "issues"                 forge-browse-issues)
+      ("b P" "pull-requests"          forge-browse-pullreqs)
+      """Visit"
+      ("v i" "issue"                  forge-visit-issue)
+      ("v p" "pull-request"           forge-visit-pullreq)
+      ("v t" "topic"                  forge-visit-topic)
+      ]
+     ["Authored"
+      ("u i" "authored issues"        forge-list-authored-issues)
+      ("u p" "authored pull-requests" forge-list-authored-pullreqs)
+      """Owned"
+      ("o i" "owned issues"           forge-list-owned-issues)
+      ("o p" "owned pull-requests"    forge-list-owned-pullreqs)]
+     ["Assigned"
+      ("i i" "assigned issues"        forge-list-assigned-issues)
+      ("i p" "assigned pull-requests" forge-list-assigned-pullreqs)
+      """Labeled"
+      ("d i" "labeled issues"         forge-list-labeled-issues)
+      ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)
+      ("e a" "edit assigness"             forge-edit-topic-assignees)]
+     ["Misc"
+      ("," "capture topic" ps/orgit-capture)
+      ("s" "search topics" forge-search)
+      ("'" "open associated file" forge-search)
+      (";" "Show/hide closed topics" forge-toggle-closed-visibility)
+      ]
+     ]
+    )
 
   :general
   (forge-post-mode-map
@@ -6809,13 +6967,18 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (defun ps/orgit-capture ()
     "Capture a new Magit/Forge task."
     (interactive)
-    (orgit-store-link nil)
-    (let* ((org-link (ps/org-nth-stored-link 0))
-           (label (tlon-bae-forge-get-label-at-point))
-           (action (alist-get label tlon-bae-label-actions nil nil #'string=))
-           (binding (upcase (alist-get label tlon-bae-label-bindings nil nil #'string=))))
-      (kill-new (format "%s %s" action org-link))
-      (org-capture nil (concat "tb" binding))))
+    (let ((topic-assignee (alist-get
+                           (tlon-bae-forge-get-assignee-at-point)
+                           tlon-bae-users nil nil 'string=)))
+      (unless (string= user-full-name topic-assignee)
+        (user-error "You are not the assignee of this task. The assignee is %s" topic-assignee))
+      (orgit-store-link nil)
+      (let* ((org-link (ps/org-nth-stored-link 0))
+             (label (tlon-bae-forge-get-label-at-point))
+             (action (alist-get label tlon-bae-label-actions nil nil #'string=))
+             (binding (upcase (alist-get label tlon-bae-label-bindings nil nil #'string=))))
+        (kill-new (format "%s %s" action org-link))
+        (org-capture nil (concat "tb" binding)))))
 
   :general
   ((forge-topic-mode-map
@@ -6965,6 +7128,16 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
     (kill-new (buffer-substring (point) isearch-other-end))
     (isearch-done))
 
+  ;; reddit.com/r/emacs/comments/8aepnk/comment/dwybodv
+  (defun ps/isearch-yank-kill-literally ()
+    "Pull string from kill ring into search string literally."
+    (interactive)
+    (setq isearch-yank-flag t)
+    (let ((string (current-kill 0)))
+      (isearch-process-search-string
+       string
+       (mapconcat 'isearch-text-char-description string ""))))
+
   (add-hook 'isearch-mode-end-hook #'recenter-top-bottom)
 
   (defadvice
@@ -7003,6 +7176,7 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
    "C-o" 'isearch-occur
    "C-p" 'isearch-highlight-regexp
    "C-v" 'isearch-yank-kill
+   "A-C-v" 'ps/isearch-yank-kill-literally
    "C-y" 'isearch-forward-symbol-at-point
    "H-c" 'ps/isearch-copy-match
    "M-k" 'isearch-ring-retreat
@@ -7373,7 +7547,7 @@ By default, all agenda entries are offered. MATCH is as in
   ("A-C-l" 'consult-line
    "C-f" 'consult-find
    "H-b" 'consult-buffer
-   "H-I" 'consult-info
+   "A-H-i" 'consult-info
    "H-r" 'consult-history
    "H-V" 'consult-yank-pop
    "H-f" 'ps/consult-locate-file-current
@@ -7386,7 +7560,7 @@ By default, all agenda entries are offered. MATCH is as in
    "H-P" 'ps/consult-ripgrep-home
    "A-H-p" 'ps/consult-ripgrep-anywhere)
   (org-mode-map
-   "s-j" 'consult-org-heading)
+   "s-j" 'ps/consult-org-heading)
   ((elfeed-show-mode-map eww-mode-map prog-mode-map)
    "s-j" 'consult-imenu))
 #+end_src
@@ -8430,24 +8604,6 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
 
 [2023-01-28 Sat] I followed the instructions but couldn't make it work.
 
-** aide
-:PROPERTIES:
-:ID:       5BCD6E4D-0264-4CB6-A0D8-0A6225A671B6
-:END:
-
-/[[https://github.com/junjizhi/aide.el][aide]] is an Emacs front end for GPT APIs like OpenAI./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/aide)
-(use-package aide
-  :elpaca (aide
-             :host github
-             :repo "junjizhi/aide.el")
-  :after request
-  :commands aide-openai-complete-region
-  :config
-  (setq openai-api-key (auth-source-pass-get 'secret "auth-sources/openai.com")))
-#+end_src
-
 ** languagetool
 :PROPERTIES:
 :ID:       9666F3AD-4637-4B0B-895E-8F1F030C7AD9
@@ -8543,6 +8699,7 @@ CLOCK: [2021-04-03 Sat 18:49]--[2021-04-03 Sat 18:54] =>  0:05
 :ID:       4B44B3FE-6553-4BA0-98B9-5C0ECFE0C913
 :END:
 :LOGBOOK:
+CLOCK: [2023-05-03 Wed 17:35]--[2023-05-03 Wed 18:14] =>  0:39
 CLOCK: [2021-11-19 Fri 12:35]--[2021-11-19 Fri 12:59] =>  0:24
 CLOCK: [2021-11-18 Thu 11:35]--[2021-11-18 Thu 12:05] =>  0:30
 CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
@@ -8555,6 +8712,252 @@ CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
 - https://github.com/shawcm/goldendict-emacs
   crashes Goldendict
 - https://www.reddit.com/r/emacs/comments/dm1x5c/offline_dictionary_lookup/?utm_source=amp&utm_medium=&utm_content=post_body
+
+Update on ~gdcv~: I spent 45 minutes with GPT-4 trying to make it work, but I failed. Here's the conversation, for future reference:
+
+#+begin_ai
+[SYS]: You are a helpful assistant.
+
+[ME]: I'm trying to install a program found in https://github.com/konstare/gdcv. I made sure I have the requirements and followed the instructions:
+
+```
+git clone https://github.com/konstare/gdcv
+cd gdcv
+make gdcv
+```
+
+However, after running `make gdcv`, I get the message `make: `gdcv' is up to date.` and no binary is created. What's going on?
+
+[AI]: It seems like there might be an issue related to the "Makefile" in the repository. In this case, you can try to compile the program manually.
+
+First, ensure that the required dependencies are installed:
+
+- SDL2
+- SDL2_ttf
+- SDL2_image
+- pkg-config
+
+Then, open a terminal and navigate (`cd`) to the "gdcv" directory.
+
+Next, you can directly compile the source code using the following command:
+
+```
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/main.c
+```
+
+This will create a binary file called "gdcv," which you can then run using:
+
+```
+./gdcv
+```
+
+Please note that this is appropriate for a Linux environment. If you use a different platform, the process might be slightly different, and you may need to modify the compile command accordingly.
+
+[ME]: Thanks. How do I ensure that those dependencies are installed? Should they be listed in `brew list`?
+
+[AI]: Yes, you can use Homebrew to install and manage these dependencies if you are using macOS.
+
+First, make sure Homebrew is installed on your machine. If not, you can install it with the following command:
+
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+To install the required dependencies using Homebrew, run the following commands:
+
+
+#`
+brew+end_ai
+_image
+brew install sdl2_ttf
+brew install pkg-config
+```
+
+After successfully installing the dependencies, you can check if they are installed and listed using:
+
+```
+brew list | egrep "sdl2|sdl2_image|sdl2_ttf|pkg that match the specified names. If the required dependencies are installed correctly, you should see `sdl2`, `sdl2_image`, `sdl2_ttf`, and `pkg-config` in the output.
+
+[ME]: Thanis. When I follow the compilation instructions (i.e. when I run `gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/main.c` after insuring I have all the dependencies), I get the following error:
+
+```
+clang: error: no such file or directory: 'src/main.c'
+```
+
+
+[AI]: Apologies for the confusion earlier. It seems the file structure of the "gdcv" repository does not follow the expected format. I have looked into the repository, and it appears the main source file is located in "src/gdcv.c" instead of "src/main.c".
+
+Please run the following modified command to compile the program:
+
+```bash
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/gdcv.c
+```
+
+After running this command, you should see the "gdcv" binary created. You can run it by typing:
+
+```bash
+./gdcv
+```
+
+[ME]: I now get the following error:
+
+```
+gdcv.c:3:10: fatal error: 'argp.h' file not found
+#include <argp.h> //argp
+^~~~~~~~
+1 error generated.
+```
+
+[AI]: I apologize for the oversight. The error indicates that the "argp.h" header file is missing. This file is part of the GNU C library, which is not included in macOS by default.
+
+You can install the "argp-standalone" package using Homebrew and update the compilation command to include the new header and library paths:
+
+1. Install argp-standalone using Homebrew:
+
+```bash
+brew install argp-standalone
+```
+
+2. Now modify the compilation command to include the header and library paths:
+
+```bash
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
+```
+
+Please let me know if this resolves your issue, and you are able to compile and run the "gdcv" program.
+
+[ME]: Now I get this error:
+
+```
+gdcv.c:4:10: fatal error: 'error.h' file not found
+#include <error.h> //argp
+^~~~~~~~~
+1 error generated.
+```
+
+[AI]: I apologize for the inconvenience. It seems that "error.h" is another header file that is part of the GNU C Library which is not present in the default macOS libraries.
+
+To work around this, you can create your custom "error.h" file in the "gdcv" folder with the essential parts needed to compile the program. Create a new file called "error.h" in the "gdcv" folder and add the following lines:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+void error(int status, int errnum, const char *format, ...);
+```
+
+Now, add a custom implementation of the 'error' function in "src/gdcv.c" before the "main" function:
+
+```c
+#include <stdarg.h> // For va_start, va_end
+
+void error(int status, int errnum, const char *format, ...)
+{
+va_list args;
+fprintf(stderr, "ERROR: ");
+va_start(args, format);
+vfprintf(stderr, format, args);
+va_end(args);
+
+if (errnum != 0)
+{
+fprintf(stderr, ": %s", strerror(errnum));
+}
+fprintf(stderr, "\n");
+
+if (status != 0)
+{
+exit(status);
+}
+}
+```
+
+Finally, update your compilation command to include the local directory for the header file search:
+
+```bash
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I. -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
+```
+
+This should allow you to compile "gdcv" without errors. Please let me know if you still encounter any issues.
+
+[ME]: Can you clarify where in the file should I add the custom implementation of the 'error' function?
+
+[AI]: Sure, I'll clarify that for you.
+
+In the "src/gdcv.c" file, you should add the custom implementation of the 'error' function right after the inclusion of the header files and before the main function.
+
+Here is a modified snippet from the "src/gdcv.c" file with the 'error' function added in the appropriate location:
+
+```c
+#include <argp.h>
+#include <error.h>
+#include <stdlib.h>
+#include <string.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+
+/* Add this custom 'error' function implementation right after the includes */
+#include <stdarg.h> // For va_start, va_end
+
+void error(int status, int errnum, const char *format, ...)
+{
+va_list args;
+fprintf(stderr, "ERROR: ");
+va_start(args, format);
+vfprintf(stderr, format, args);
+va_end(args);
+
+if (errnum != 0)
+{
+fprintf(stderr, ": %s", strerror(errnum));
+}
+fprintf(stderr, "\n");
+
+if (status != 0)
+{
+exit(status);
+}
+}
+
+/* Existing main function and other code */
+int main(int argc, char **argv)
+{
+// Rest of the code
+}
+```
+
+Make sure to save the changes to the "src/gdcv.c" file and then proceed with the compilation using the command shared in the previous response. This should enable you to compile the "gdcv" program without encountering the "error.h" issue.
+
+[ME]: Unfortunately, after following those steps I still get this error:
+
+```
+gdcv.c:4:10: fatal error: 'error.h' file not found
+#include <error.h> //argp
+^~~~~~~~~
+1 error generated.
+```
+
+[AI]: I apologize for the confusion in my previous messages. I realize now that there's a mistake in the custom solution I provided.
+
+Instead of creating a custom `error.h` file, you should remove the `#include <error.h>` line from the `src/gdcv.c` file since we have added the custom `error` function implementation directly into `src/gdcv.c`.
+
+Please follow these steps:
+
+1. Remove the `#include <error.h>` line from `src/gdcv.c`.
+
+2. Ensure that the custom `error` function implementation is present in `src/gdcv.c` as previously mentioned.
+
+3. Compile the program using the command I provided earlier:
+
+```bash
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I. -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
+```
+
+These changes should resolve the error and successfully compile the "gdcv" program. Please let me know if you have any further issues, and I'll be happy to assist you.
+
+[ME]:
+#+end_ai
+
 
 ** powerthesaurus
 :PROPERTIES:
@@ -8741,8 +9144,21 @@ insert italic delimiters and place the point in between them."
       (kill-new text)
       (yank)))
 
+  (defun ps/markdown-copy-section ()
+    "Copy the current section to the clipboard."
+    (interactive)
+    (let ((beg (save-excursion
+                 (markdown-outline-previous)
+                 (forward-line)
+                 (point)))
+          (end (save-excursion
+                 (markdown-outline-next)
+                 (point))))
+      (copy-region-as-kill beg end)))
+
   :general
   ((gfm-mode-map markdown-mode-map)
+  "A-C-H-t" 'ps/markdown-copy-section
    "A-C-s-r" 'markdown-outline-previous
    "A-C-s-f" 'markdown-outline-next
    "s-b" 'markdown-insert-bold
@@ -9561,6 +9977,18 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 (use-package applescript-mode)
 #+end_src
 
+** csv-mode
+:PROPERTIES:
+:ID:       44D557E4-026E-425C-B1C9-B26F4B6197E4
+:END:
+
+/[[https://elpa.gnu.org/packages/csv-mode.html][csv-mode]] is a major mode for editing comma-separated values./
+
+#+begin_src emacs-lisp
+(use-package csv-mode
+  :demand t)
+#+end_src
+
 ** hideshow
 :PROPERTIES:
 :ID:       8E6459FA-9978-42F8-9DAC-C4D7FB385F97
@@ -10206,9 +10634,8 @@ Excludes the heading itself and any child subtrees."
     (let ((contents (ps/org-get-heading-contents)))
       (if (string= contents "")
           (message "Heading is empty.")
-        (message "Copied: %s" contents)
+        (message "Copied heading")
         (kill-new contents))))
-
 
   (defun ps/org-copy-heading-name ()
     (interactive)
@@ -12150,6 +12577,7 @@ Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
 (use-feature org-table
   :after org
   :demand t
+
   :config
   (defun ps/org-table-copy-cell ()
     (interactive)
@@ -12205,7 +12633,20 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   (setq org-crypt-key ps/personal-gmail)
   (setq org-crypt-disable-auto-save t)
 
-  (org-crypt-use-before-save-magic))
+  (defun ps/org-crypt-dwim ()
+    "Decrypt entry unles in clock, then evaluate time range."
+    (interactive)
+    (if (derived-mode-p 'org-mode)
+        (pcase (org-element-type (org-element-context))
+          ('clock (org-evaluate-time-range))
+          (_ (org-decrypt-entry)))
+      (user-error "Not in org-mode")))
+
+  (org-crypt-use-before-save-magic)
+
+  :general
+  (org-mode-map
+   "s-y" 'ps/org-crypt-dwim))
 #+end_src
 
 ** org-lint
@@ -12365,8 +12806,8 @@ an org drawer."
       (when (y-or-n-p "Post has no ID. Proceed anyway? ")
         (apply orig-fun args))))
 
-  (advice-add 'org2blog-subtree-post-save :around #'ps/org2blog-subtree-post-save)
-  (advice-add 'org2blog-subtree-page-save :around #'ps/org2blog-subtree-post-save)
+  (advice-add 'org2blog-subtree-post-save :around #'ps/org2blog-subtree-publish-save)
+  (advice-add 'org2blog-subtree-page-save :around #'ps/org2blog-subtree-publish-save)
 
   :general
   ("A-o" 'org2blog-user-interface))
@@ -12496,7 +12937,6 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 #+begin_src emacs-lisp :results silent
 (use-package org-pomodoro
   :after org
-  :defer 30
   :config
   (setq org-pomodoro-length 25)
   (setq org-pomodoro-short-break-length (- 30 org-pomodoro-length))
@@ -12505,10 +12945,11 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
     (setq org-pomodoro-finished-sound "/System/Library/Sounds/Blow.aiff"))
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
-  (setq org-pomodoro-format "🍅 %s")
+  (setq org-pomodoro-format (concat "🍅 %s "
+                                    (format "[%s]"(number-to-string org-pomodoro-count))))
 
   :general
-  ("H-s-i" 'org-pomodoro
+  ("H-I" 'org-pomodoro
    "A-s-e" 'org-pomodoro-extend-last-clock)
   (org-agenda-mode-map
    "I" 'org-pomodoro))
@@ -12708,9 +13149,6 @@ SQL can be either the emacsql vector representation, or a string."
               nil
             t)))
 
-  (advice-add 'org-roam-node-find :before #'widen)
-  (advice-add 'org-roam-node-find :after #'ps/org-narrow-to-entry-and-children)
-
   (defun ps/org-roam-remove-file-level-properties ()
     "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
     (when (string= "r" (plist-get org-capture-plist :key))
@@ -12751,6 +13189,14 @@ SQL can be either the emacsql vector representation, or a string."
         (ps/org-narrow-to-entry-and-children)
         (goto-char (point-max)))))
 
+  (defun ps/org-roam-node-find ()
+    "Find and open an Org-roam node by its title or alias."
+    (interactive)
+    (widen)
+    (ps/org-fold-show-all-headings)
+    (org-roam-node-find)
+    (recenter 1))
+
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
   ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
 
@@ -12765,7 +13211,7 @@ SQL can be either the emacsql vector representation, or a string."
 
   :general
   ("A-H-n" 'ps/org-roam-new-note
-   "H-j" 'org-roam-node-find)
+   "H-j" 'ps/org-roam-node-find)
   (org-mode-map
    "s-i" 'org-roam-node-insert
    "s-r" 'org-roam-buffer-toggle))
@@ -13416,6 +13862,11 @@ Version 2015-06-08"
    "A-C-s-f" 'bibtex-next-entry))
 #+end_src
 
+*** TODO Move ratings from org headings to bibtex
+:PROPERTIES:
+:ID:       18A96B99-EAD2-4C1E-94C2-619903A52898
+:END:
+
 *** TODO Why bibtex generates a key starting with 'Boer' when the last name is deBoer?
 :PROPERTIES:
 :ID:       2FB7CCAA-E1FE-4B93-B441-DB9E8437233F
@@ -13568,6 +14019,14 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
     "Launch citar with citekey associated with file at point."
     (interactive)
     (citar-open `(,(ps/get-stem-of-current-buffer))))
+
+  (defun ps/citar-update-old-bibliography ()
+    "Update bibliography."
+    (interactive)
+    (citar-cache--update-bibliography
+     (citar-cache--get-bibliography ps/file-bibliography-old)))
+
+  (run-with-idle-timer (* 60 60) nil #'ps/citar-update-old-bibliography)
 
   :general
   ("H-/" 'citar-insert-citation
@@ -13730,6 +14189,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-30 Sun 18:51]--[2023-04-30 Sun 18:57] =>  0:06
 CLOCK: [2023-04-21 Fri 20:39]--[2023-04-21 Fri 20:42] =>  0:03
 CLOCK: [2023-04-11 Tue 00:58]--[2023-04-11 Tue 01:55] =>  0:57
 CLOCK: [2023-03-27 Mon 21:29]--[2023-03-27 Mon 21:45] =>  0:16
@@ -13913,6 +14373,8 @@ The FORCE argument is used as in `ebib-save-current-database'."
                              ("Author/Editor" 25 t)
                              ("Year" 4 t)
                              ("Title" 50 t)))
+  (setq ebib-extra-fields '((biblatex "crossref" "xdata" "annotation" "abstract" "keywords" "file" "journal" "rating" "timestamp")
+                            (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
   (setq ebib-hidden-fields '("addendum" "afterword" "annotator" "archiveprefix" "bookauthor" "booksubtitle" "booktitleaddon" "chapter" "commentator" "edition" "editora" "editorb" "editorc" "eid" "eprint" "eprintclass" "eprinttype" "eventdate" "eventtitle" "foreword" "holder" "howpublished" "introduction" "isrn" "issn" "issue" "issuesubtitle" "issuetitle" "issuetitleaddon" "journaltitleadddon" "journalsubtitle" "language" "location" "mainsubtitle" "maintitle" "maintitleaddon" "month" "origlanguage" "pagetotal" "part" "primaryclass" "remark" "subtitle" "urldate" "venue" "version" "volumes" "year"))
 
   (defun ps/ebib-open-or-switch ()
@@ -16439,11 +16901,13 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "effectivealtruism\\.org"
                      "facebook\\.com"
                      "github\\.com"
+                     "gitguardian\\.com"
                      "gmail\\.com"
                      "goodreads\\.com"
                      "google\\.com"
                      "grammarly\\.com"
                      "hathitrust\\.org"
+                     "igmchicago\\.org"
                      "imdb\\.com"
                      "interactivebrokers\\.co"
                      "letterboxd\\.com"
@@ -16457,6 +16921,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "metaforecast\\.com"
                      "paxful\\.com"
                      "rescuetime\\.com"
+                     "slack\\.com"
                      "squarespace\\.com"
                      "stafforini\\.com"
                      "teatrocolon\\.org\\.ar"
@@ -16886,7 +17351,7 @@ poorly-designed websites."
       ;; (global-writeroom-mode 1)
       ))
 
-  ;; Not working
+  ;; This only works in Firefox due to a Chrome limitation
   ;; xenodium.com/open-emacs-elfeed-links-in-background/
   (defun ps/elfeed-search-browse-background-url ()
     "Open current `elfeed' entry (or region entries) in browser without losing focus."
@@ -16901,7 +17366,6 @@ poorly-designed websites."
             entries)
       (unless (or elfeed-search-remain-on-entry (use-region-p))
         (forward-line))))
-
 
   (defun ps/show-elfeed (buffer)
     (with-current-buffer buffer
@@ -16942,7 +17406,7 @@ poorly-designed websites."
    "w" 'ps/elfeed-toggle-wiki-entries)
   (elfeed-show-mode-map
    "S-<return>" 'eww-follow-link
-   "<return>" (lambda! (eww-follow-link '(4)))
+   "<return>" 'eww-follow-link
    "<tab>" (lambda! (elfeed-show-next-link) (recenter))
    "b" nil
    "q" 'elfeed
@@ -17512,10 +17976,6 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
   (emms-playing-time 1))
 #+end_src
 
-[2021-05-04 Tue 22:22] ~emms-print-metadata~ needs to be installed manually. I followed [[https://hack.org/mc/blog/emms.html][this]], installed the three dependencies via brew but wasn't able to complete the instructions. The ~emms~ directory is currently located in the user path.
-
-[2022-09-05 Mon 13:08] I think the key question is whether I can create "smart" playlists or reproduce that functionality in some way, i.e. generate lists of tracks based on metadata (such as all tracks recorded in 1927).
-
 *** resources
 :PROPERTIES:
 :ID:       C043F6EF-C922-4803-8361-E94ACE1C60F0
@@ -17538,7 +17998,6 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 :PROPERTIES:
 :ID:       26EEEF20-5CDC-4855-A03D-AFEBB784D637
 :END:
-
 
 /[[https://gitlab.com/tuedachu/ytdl][ytd]] is an Emacs interface for [[https://youtube-dl.org/][youtube-dl]]./
 
@@ -17734,7 +18193,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
   (eval-when-compile
     (defvar auth-sources))
   :config
-  (setq auth-source-debug t) ; uncomment for debugging
+  (setq auth-source-debug nil) ; set to t for debugging
   (setq auth-sources '(macos-keychain-internet macos-keychain-generic)))
 #+end_src
 
@@ -17874,13 +18333,6 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
 
 - Also check [[https://git.sr.ht/~sirn/dotfiles/tree/85b9d5249712e3c35e6140083be1629be1d2b643/etc/emacs/packages/editor-auth.el][~sirn/dotfiles: etc/emacs/packages/editor-auth.el - sourcehut git]]
 
-** pass-otp
-:PROPERTIES:
-:ID:       A9670B03-7C37-47F8-8B3C-8ACFBBA53081
-:END:
-
-[[https://github.com/tadfisher/pass-otp][GitHub - tadfisher/pass-otp: A pass extension for managing one-time-password (OTP) tokens]]
-
 * misc
 :PROPERTIES:
 :ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
@@ -17998,7 +18450,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
   ;; note that the hooks appear in reverse order of execution
   (dolist (function #'(el-patch-validate-all
-                       org-gcal-sync
+                       ;; org-gcal-sync
                        ps/org-id-update-id-locations
                        org-roam-db-sync
                        ps/pass-git-sync
@@ -18332,10 +18784,13 @@ And finally, the section you've all been waiting for.
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :general
+  (forge-topic-mode-map
+   "'" 'tlon-bae-open-forge-file)
   (markdown-mode-map
-   "s-u" 'tlon-bae-insert-eawiki-url)
+   "s-u" 'tlon-bae-insert-tag-url)
   (magit-status-mode-map
-   "s-r" 'tlon-bae-commit-when-slug-at-point))
+   "s-r" 'tlon-bae-commit-when-slug-at-point
+   "'" 'tlon-bae-open-forge-file))
 #+end_src
 
 ** Keyboard Maestro
@@ -18458,7 +18913,6 @@ CAjIFu2jEMwsqq4lQchtZJOubjkcZFRjwsu8tPZen+NNa5wn74QkQpNHo/4URLhD
 :END:
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
-# eval: (ps/buffer-local-set-key (kbd "s-y") 'org-decrypt-entry)
 # eval: (ps/buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
 # org-crypt-key: "tlon.shared@gmail.com"

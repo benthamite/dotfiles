@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: tlon-worldsaround
-# key: @w
+# name: glossary-add
+# key: ga
 # contributor: Pablo Stafforini
 # --
-@worldsaround
+Glossary: add "$1"

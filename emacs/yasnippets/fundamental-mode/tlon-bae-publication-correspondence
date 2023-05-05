@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-bae-publication-correspondence
+# key: tbpc
+# contributor: Pablo Stafforini
+# --
+${1:original work}	${2:Spanish translation}

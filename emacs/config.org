@@ -18749,9 +18749,13 @@ And finally, the section you've all been waiting for.
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :general
+  ("H-r" 'tlon-bae-dispatch) 
   (forge-topic-mode-map
    "'" 'tlon-bae-open-forge-file)
+   (github-review-mode-map
+   "s-c" 'tlon-bae-submit-comment-revisions)
   (markdown-mode-map
+  "s-c" 'tlon-bae-finalize-revision
    "s-u" 'tlon-bae-insert-tag-url)
   (magit-status-mode-map
    "s-r" 'tlon-bae-commit-when-slug-at-point

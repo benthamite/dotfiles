@@ -14078,6 +14078,12 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
       "u" 'citar-open-links))))
 #+end_src
 
+*** TODO Tweak note creation function so that it adds a tag with the work type
+:PROPERTIES:
+:ID:       FB459DDE-BFDD-4740-9FFA-7AFFB74A38D1
+:END:
+Having headings tagged with the type of work they are notes of allows me to query the org-roam db specifically for notes of a particular type.
+
 *** Resources
 :PROPERTIES:
 :ID:       EAB0E32B-129C-4980-A06B-94B4C25966E2
@@ -15386,10 +15392,14 @@ The macro below generates the commands correcty. But attempting to define key bi
 :ID:       33D8549E-7DD8-4E4B-A690-0E6D29A8CA60
 :END:
 
+*** TODO Decide exhaustive list of work types
 :PROPERTIES:
+:ID:       9837CC84-AE98-4749-A16B-86EF995D4531
 :END:
 
+*** TODO Modify my custom ebib formulas so that they use native uniquify
 :PROPERTIES:
+:ID:       BA7B5845-B148-43B6-BE50-C1CBF89478BB
 :END:
 
 *** TODO [#5] Fix ebib issues Leo reported

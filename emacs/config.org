@@ -7504,7 +7504,7 @@ By default, all agenda entries are offered. MATCH is as in
    "C-f" 'consult-find
    "H-b" 'consult-buffer
    "A-H-i" 'consult-info
-   "H-r" 'consult-history
+   "H-R" 'consult-history
    "H-V" 'consult-yank-pop
    "H-f" 'ps/consult-locate-file-current
    "H-F" 'ps/consult-locate-file-home

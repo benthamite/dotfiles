@@ -1,4 +1,13 @@
 ;;-*-coding: utf-8;-*-
+(define-abbrev-table 'global-abbrev-table
+  '(
+    ("atb" "All the best" nil :count 1)
+    ("ty" "thank you" nil :count 1)
+    ("xxx" "×" nil :count 1)
+    ("¡¿" "⸘" nil :count 0)
+    ("¿¡" "⸘" nil :count 0)
+   ))
+
 (define-abbrev-table 'text-mode-abbrev-table
   '(
     ("abandonned" "abandoned" nil :count 2)

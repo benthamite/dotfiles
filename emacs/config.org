@@ -11652,11 +11652,10 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
   (defun ps/org-jump-to-latest-clock-entry ()
     "Jump to most recent clock entry for org heading at point."
     (interactive)
+    (visible-mode)
+    (ps/org-show-logbook)
     (org-back-to-heading)
-    (isearch-forward nil t)
-    (isearch-yank-string "CLOCK: ")
-    (isearch-exit)
-    (org-beginning-of-line))
+    (re-search-forward "CLOCK: \\[\\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\) \\([A-Za-z]\\{3\\}\\) \\([0-9]\\{2\\}:\\)" nil t))
 
   (defun ps/org-clock-report (start-date end-date)
     "Generate an org clock report for the period between START-DATE and END-DATE."

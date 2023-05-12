@@ -974,28 +974,32 @@ Maybe use in in conjunction with the right command?
 :PROPERTIES:
 :ID:       B3028ED3-0E12-4CA5-AC14-B89DECB5C7D8
 :END:
+:LOGBOOK:
+CLOCK: [2023-04-30 Sun 11:59]--[2023-04-30 Sun 12:07] =>  0:08
+:END:
 #+begin_src clojure
 {:des "q-mode (apps)"
  :rules [:q-mode
-         [:d [:km "Activate: Discord"]]
-         [:e [:km "Activate: Emacs"]]
-         [:f [:km "Activate: Finder"]]
-         [:g [:km "Activate: Goldendict"]]
-         [:h [:km "Activate: Chrome"]]
-         [:i [:km "Activate: Anki"]]
-         [:m [:km "Activate: Media Center"]]
-         [:k [:km "Activate: Keyboard Maestro"]]
-         [:l [:km "Activate: Calendar"]]
-         [:o [:km "Activate: Zotero"]]
-         [:p [:km "Activate: Preview"]]
-         [:r [:km "Activate: Karabiner-Elements"]]
-         [:s [:km "Activate: Slack"]]
-         [:t [:km "Activate: Terminal"]]
-         [:u [:km "Activate: QBittorrent"]]
-         [:v [:km "Activate: VLC"]]
-         [:w [:km "Activate: HoudahSpot"]]
-         [:x [:km "Activate: Firefox"]]
-         [:y [:km "Activate: Spotify"]]
+         [:b [:km "Activate: qBitTorrent (b)="]]
+         [:d [:km "Activate: Discord (d)"]]
+         [:e [:km "Activate: Emacs (e)"]]
+         [:f [:km "Activate: Firefox (f)"]]
+         [:g [:km "Activate: Goldendict (g)"]]
+         [:h [:km "Activate: Chrome (h)"]]
+         [:i [:km "Activate: Anki (i)"]]
+         [:k [:km "Activate: Keyboard Maestro (k)"]]
+         [:l [:km "Activate: DeepL (l)"]]
+         [:m [:km "Activate: Media Center (m)"]]
+         [:n [:km "Activate: Transmission (n)"]]
+         [:o [:km "Activate: Zoom (o)"]]
+         [:p [:km "Activate: Preview (p)"]]
+         [:r [:km "Activate: Karabiner-Elements (r)"]]
+         [:s [:km "Activate: Slack (s)"]]
+         [:t [:km "Activate: Terminal (t)"]]
+         [:v [:km "Activate: mvp (v)"]]
+         [:w [:km "Activate: HoudahSpot (w)"]]
+         [:x [:km "Activate: Signal (x)"]]
+         [:y [:km "Activate: Spotify (y)"]]
          ]}
 #+end_src
 

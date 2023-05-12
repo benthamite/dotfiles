@@ -285,7 +285,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#text-mode][text-mode]]
   - [[#with-editor][with-editor]]
   - [[#latex-mode][latex-mode]]
-  - [[#dictionary][dictionary]]
   - [[#osx-dictionary][osx-dictionary]]
   - [[#goldendict][goldendict]]
   - [[#powerthesaurus][powerthesaurus]]
@@ -8614,20 +8613,6 @@ To check: https://github.com/PillFall/languagetool.el
 :ID:       D4EBFE04-FEB0-46B4-AF58-BAFCD52BAA87
 :END:
 [cite:@Jenner2021EmacsAmazingLaTeX]
-
-** dictionary
-:PROPERTIES:
-:ID:       64B69D26-CE6D-4FFD-8218-799A6159ED42
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-02 Mon 21:38]--[2021-08-02 Mon 22:09] =>  0:31
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature dictionary
-  :config
-  (setq dictionary-server "dict.org"))
-#+end_src
 
 ** osx-dictionary
 :PROPERTIES:

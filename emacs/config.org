@@ -14229,6 +14229,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-05-07 Sun 11:35]--[2023-05-07 Sun 12:45] =>  1:10
 CLOCK: [2023-04-30 Sun 18:51]--[2023-04-30 Sun 18:57] =>  0:06
 CLOCK: [2023-04-21 Fri 20:39]--[2023-04-21 Fri 20:42] =>  0:03
 CLOCK: [2023-04-11 Tue 00:58]--[2023-04-11 Tue 01:55] =>  0:57
@@ -14761,13 +14762,15 @@ corresponding entry key."
       (default
        (beep))))
 
-  (defun ps/ebib--rename-and-abbreviate-file (directory key extension)
+  (defun ps/ebib--rename-and-abbreviate-file (directory key &optional extension)
     "We abbreviate the filename so that it works when invoked by
 different users, as long as they have the same folder structure."
     (file-name-concat
      (abbreviate-file-name
       directory)
-     (file-name-with-extension key extension)))
+     (if extension
+         (file-name-with-extension key extension)
+       key)))
 
   (defun ps/ebib-valid-key-p (&optional key)
     "docstring"
@@ -14901,112 +14904,61 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       "https://www.goodreads.com/search?q="
       ""))
 
-  (defvar ps/ebib-search-book
+  (defvar ps/ebib-search-book-functions
     '(ps/ebib-search-goodreads
       ps/ebib-search-hathitrust
       ps/ebib-search-internet-archive
       ps/ebib-search-university-of-toronto
       ps/ebib-search-library-genesis
-      ps/ebib-search-amazon))
+      ps/ebib-search-amazon)
+    "List of functions that search for books.")
 
-  (defvar ps/ebib-download-book
+  (defvar ps/ebib-download-book-functions
     '(ps/ebib-search-hathitrust
       ps/ebib-search-internet-archive
       ps/ebib-search-university-of-toronto
-      ps/ebib-search-library-genesis))
+      ps/ebib-search-library-genesis)
+    "List of functions that download books.")
 
-  (defvar ps/ebib-search-article
+  (defvar ps/ebib-search-article-functions
     '(ps/ebib-search-connected-papers
-      ps/ebib-search-google-scholar))
+      ps/ebib-search-google-scholar)
+    "List of functions that search for articles.")
 
-  (defun ps/ebib-search-internet-archive (&optional field search-query)
-    "Run a search on the Internet Archive."
-    (interactive)
-    (ps/ebib-search
-     ps/internet-archive
-     field
-     search-query))
+  (defvar ps/ebib-search-engines '()
+    "List of search engine symbols. Used by the
+ `ps/define-ebib-search-commands' macro.")
 
-  (defun ps/ebib-search-google-scholar (&optional field search-query)
-    "Run a search on Google Scholar."
-    (interactive)
-    (ps/ebib-search
-     ps/google-scholar
-     field
-     search-query))
+  (dolist (engine (delete-dups (append ps/ebib-search-book-functions
+                                       ps/ebib-search-article-functions
+                                       ps/ebib-download-book-functions)))
+    (let* ((engine-name (symbol-name engine))
+           (engine-symbol (intern (replace-regexp-in-string "ps/ebib-search-" "" engine-name))))
+      (add-to-list 'ps/ebib-search-engines engine-symbol)))
 
-  (defun ps/ebib-search-wikipedia (&optional field search-query)
-    "Run a search on Wikipedia."
-    (interactive)
-    (ps/ebib-search
-     ps/wikipedia
-     field
-     search-query))
+  (defmacro ps/define-ebib-search-commands ()
+  "Generate search commands for each search engine listed in `ps/ebib-search-engines'."
+    `(progn
+       ,@(mapcar (lambda (search-name)
+                   `(defun ,(intern (concat "ps/ebib-search-" (symbol-name search-name))) (&optional field search-query)
+                      ,(format "Run aw search on %s." (capitalize (replace-regexp-in-string "-" " " (symbol-name search-name))))
+                      (interactive)
+                      (ps/ebib-search
+                       ,(intern (concat "ps/" (symbol-name search-name)))
+                       field
+                       search-query)))
+                 ps/ebib-search-engines)))
 
-  (defun ps/ebib-search-connected-papers (&optional field search-query)
-    "Run a search on Connected Papers."
-    (interactive)
-    (ps/ebib-search
-     ps/connected-papers
-     field
-     search-query))
-
-  (defun ps/ebib-search-library-genesis (&optional field search-query)
-    "Run a search on Library Genesis."
-    (interactive)
-    (ps/ebib-search
-     ps/library-genesis
-     field
-     search-query))
-
-  (defun ps/ebib-search-amazon (&optional field search-query)
-    "Run a search on Amazon."
-    (interactive)
-    (ps/ebib-search
-     ps/amazon
-     field
-     search-query))
-
-  (defun ps/ebib-search-university-of-toronto (&optional field search-query)
-    "Run a search on the University of Toronto Libraries."
-    (interactive)
-    (ps/ebib-search
-     ps/university-of-toronto
-     field
-     search-query))
-
-  (defun ps/ebib-search-hathitrust (&optional field search-query)
-    "Run a search on HathiTrust."
-    (interactive)
-    (ps/ebib-search
-     ps/hathitrust
-     field
-     search-query))
-
-  (defun ps/ebib-search-goodreads (&optional field search-query)
-    "Run a search on Goodreads."
-    (interactive)
-    (ps/ebib-search
-     ps/goodreads
-     field
-     search-query))
-
-  (defun ps/ebib-search-worldcat (&optional field search-query)
-    "Run a search on Worldcat."
-    (interactive)
-    (ps/ebib-search
-     ps/worldcat
-     field
-     search-query))
+  (ps/define-ebib-search-commands)
 
   (defun ps/ebib-search (search-engine &optional field search-query)
     "Run a search with SEARCH-ENGINE.
 
-If invoked from `ebib', search for the value of FIELD. If no
-FIELD is given, use the identifier if available, unless point is
-in 'title' field, otherwise the field at point.
+  If invoked from `ebib', search for the value of FIELD. If no
+  FIELD is given, use the identifier if available, unless point is
+  in 'title' field, otherwise the field at point.
 
-If not invoked from `ebib', prompt for search query."
+  If not invoked from `ebib', prompt for search query."
     (let* ((name (nth 0 search-engine))
            (prefix (nth 1 search-engine))
            (suffix (nth 2 search-engine))
@@ -15057,92 +15009,126 @@ If not invoked from `ebib', prompt for search query."
 
   (defun ps/ebib-search-book (&optional field search-query)
     "The list of search engines is specified by the variable
-`ps/ebib-search-book'."
+  `ps/ebib-search-book-functions'."
     (interactive)
-    (ps/ebib-search-multi field search-query ps/ebib-search-book))
+    (ps/ebib-search-multi field search-query ps/ebib-search-book-functions))
 
   (defun ps/ebib-download-book (&optional field search-query)
     "The list of search engines is specified by the variable
-`ps/ebib-download-book'."
+  `ps/ebib-download-book-functions'."
     (interactive)
-    (ps/ebib-search-multi field search-query ps/ebib-download-book))
+    (ps/ebib-search-multi field search-query ps/ebib-download-book-functions))
 
   (defun ps/ebib-download-isbn (&optional field search-query)
     "The list of search engines is specified by the variable
-`ps/ebib-download-isbn'."
+  `ps/ebib-download-isbn'."
     (interactive)
-    (ps/ebib-search-multi field search-query ps/ebib-download-book))
+    (ps/ebib-search-multi field search-query ps/ebib-download-book-functions))
 
-  ;; requires SciDownl
-  ;; https://github.com/Tishacy/SciDownl
   (defun ps/ebib-download-doi (&optional doi)
     "Download DOI from Sci-Hub. If DOI is not supplied, obtain it from
-the Ebib entry at point."
+  the Ebib entry at point."
     (interactive)
-    (let ((doi (or doi
-                   (ebib--execute-when
-                     (entries
-                      (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
-                     (default
-                      (beep)))))
-          (default-directory ps/dir-downloads))
-      (unless doi
-        (error "[Ebib] No DOI found in doi field"))
-      (message "Trying to download file...")
-      (async-shell-command
-       (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi))))
+    (unless (executable-find "scidownl")
+      (error "Please install scidownl (https://github.com/Tishacy/SciDownl)"))
+    (ebib--execute-when
+      (entries
+       (let ((doi (or doi
+                      (ebib--execute-when
+                        (entries
+                         (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+                        (default
+                         (beep)))))
+             (default-directory ps/dir-downloads))
+         (unless doi
+           (error "[Ebib] No DOI found in doi field"))
+         (message "Trying to download file...")
+         (async-shell-command
+          (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi))))
+      (default
+       (beep))))
 
   (defun ps/ebib-search-article (&optional field search-query)
     "The list of search engines is specified by the variable
-`ps/ebib-search-article'."
+  `ps/ebib-search-article-functions'."
     (interactive)
-    (ps/ebib-search-multi field search-query ps/ebib-search-article))
+    (ebib--execute-when
+      (entries
+       (ps/ebib-search-multi field search-query ps/ebib-search-article-functions))
+      (default
+       (beep))))
 
   (defun ps/ebib-download-article (&optional field search-query)
     "The list of search engines is specified by the variable
-`ps/ebib-download-article'."
+  `ps/ebib-download-article'."
     (interactive)
-    (ps/ebib-search-multi field search-query ps/ebib-search-article))
+    (ebib--execute-when
+      (entries
+       (ps/ebib-search-multi field search-query ps/ebib-search-article-functions))
+      (default
+       (beep))))
 
   (defun ps/ebib-search-book-by-title ()
-    "docstring"
+    "Search book by title."
     (interactive)
-    (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (user-error "`title' field is empty!"))
-        (ps/ebib-search-book "title")))
+    (ebib--execute-when
+      (entries
+       (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+               (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+               (user-error "`title' field is empty!"))
+           (ps/ebib-search-book "title")))
+      (default
+       (beep))))
 
   (defun ps/ebib-download-book-by-title ()
-    "docstring"
+    "Download book by title."
     (interactive)
-    (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (user-error "`title' field is empty!"))
-        (ps/ebib-download-book "title")))
+    (ebib--execute-when
+      (entries
+       (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+               (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+               (user-error "`title' field is empty!"))
+           (ps/ebib-download-book "title")))
+      (default
+       (beep))))
 
   (defun ps/ebib-search-article-by-title ()
-    "docstring"
+    "Search article by title."
     (interactive)
-    (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (user-error "`title' field is empty!")
-      (ps/ebib-search-article "title")))
+    (ebib--execute-when
+      (entries
+       (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+           (user-error "`title' field is empty!")
+         (ps/ebib-search-article "title")))
+      (default
+       (beep))))
 
   (defun ps/ebib-download-article-by-title ()
-    "docstring"
+    "Download article by title."
     (interactive)
-    (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (user-error "`title' field is empty!")
-      (ps/ebib-download-article "title")))
+    (ebib--execute-when
+      (entries
+       (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+           (user-error "`title' field is empty!")
+         (ps/ebib-download-article "title")))
+      (default
+       (beep))))
 
   (defun ps/ebib-download-video (id)
-    ""
-    (let* ((key (ebib--get-key-at-point))
-           (file-name
-            (ps/ebib--rename-and-abbreviate-file
-             ps/dir-library-media key "webm")))
-      (youtube-dl id :directory ps/dir-library-media :destination key)
-      (message (format "Downloading video from '%s'" (substring-no-properties id)))
-      (ps/ebib--update-file-field-contents key file-name)))
+    "Download video with id ID using `yt-dlp'."
+    (unless (executable-find "yt-dlp")
+      (user-error "Please install `yt-dlp'"))
+    (ebib--execute-when
+      (entries
+       (let* ((key (ebib--get-key-at-point))
+              (file-name
+               (ps/ebib--rename-and-abbreviate-file
+                ps/dir-library-media key "webm")))
+         (async-shell-command (format "yt-dlp --output '%s' '%s'" file-name id))
+         (message (format "Downloading video from '%s'" (substring-no-properties id)))
+         (ps/ebib--update-file-field-contents key file-name)))
+      (default
+       (beep))))
 
   (defun ps/ebib-sentence-case ()
     "docstring"
@@ -15195,7 +15181,7 @@ the Ebib entry at point."
 
   (defun ps/ebib-fix-authors ()
     "Rearrange the name of each author so that last name comes before
-first name, and names are separated by a semicolon."
+  first name, and names are separated by a semicolon."
     (interactive)
     (ebib--execute-when
       (entries

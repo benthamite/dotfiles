@@ -18713,33 +18713,6 @@ And finally, the section you've all been waiting for.
 :PROPERTIES:
 :ID:       9D7B5C99-2380-4159-A8C8-4021CC0482DE
 :END:
-** config version history
-:PROPERTIES:
-:ID:       720FF947-7E4D-4755-B365-B19AC0DBB4D0
-:END:
-
-*** Version 4
-:PROPERTIES:
-:ID:       E3A434DB-0F28-4AA9-8A86-9487B8BF894F
-:END:
-- fix various minor issues.
-- move this section to end of file.
-- otherwise identical to version 3.
-
-*** Version 3
-:PROPERTIES:
-:ID:       DEE239CF-BC77-4888-AD69-B33D32A7DB1A
-:END:
-- move ~tlon~ functions to separate "package", handled by ~elpaca~.
-- use ~eww~ by default.
-- add ~flymake~.
-- set precedence of various packages explicitly so that ~elpaca~ doesn't throw errors.
-
-*** Version 2
-:PROPERTIES:
-:ID:       0BCC3A55-0C91-413C-A4BB-D7E4048E30F2
-:END:
-- Migrated from ~straight~ to ~elpaca~.
 
 ** tlon-init
 :PROPERTIES:

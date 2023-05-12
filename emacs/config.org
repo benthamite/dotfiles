@@ -10146,7 +10146,7 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
   :elpaca  (org-ai :type git :host github :repo "rksm/org-ai"
                    :local-repo "org-ai"
                    :files ("*.el" "README.md" "snippets"))
-  :after org
+  :after org yasnippet
   :commands org-ai-mode
   :config
   (setq org-ai-openai-api-token (auth-source-pass-get "key" "tlon/core/openai.com"))

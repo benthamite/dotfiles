@@ -8194,6 +8194,11 @@ necessary."
    "M-n" nil))
 #+end_src
 
+*** TODO [#5] Figure out why env variables differ between shell and eshell
+:PROPERTIES:
+:ID:       E57974CA-1CC6-45B7-A1D3-359C1C025E92
+:END:
+e.g. ~nvm~ isn't recognized by eshell
 *** TODO Fix, then swtich to, ~eshell~
 :PROPERTIES:
 :ID:       3314BBDD-21DE-4460-9506-9EA137762771

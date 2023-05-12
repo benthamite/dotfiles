@@ -1047,6 +1047,7 @@ CLOCK: [2021-10-05 Tue 12:20]--[2021-10-05 Tue 13:11] =>  0:51
 CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :END:
 
+
 /[[https://github.com/raxod502/el-patch][el-patch]] customizes the behavior of Emacs Lisp functions and be notified when a function so customized changes./
 
 #+begin_src emacs-lisp :results silent
@@ -1091,13 +1092,13 @@ of the heading at point."
    "M-t" 'hydra-straight/body
    "M-y" 'hydra-yasnippet/body))
 (elpaca-wait)
-
 #+end_src
 
 *** resources
 :PROPERTIES:
 :ID:       A6CE7CD9-B940-4221-9BE4-2BF0776D7637
 :END:
+
 https://oremacs.com/2015/02/04/pre-hydra-post/
 https://sriramkswamy.github.io/dotemacs/#orgheadline141
 
@@ -8913,10 +8914,10 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
 (use-package reverso
   :elpaca (reverso
            :host github
-	   :repo "SqrtMinusOne/reverso.el")
+           :repo "SqrtMinusOne/reverso.el")
   :config
   (setq reverso-languages '(english french german italian portuguese spanish))
-  
+
   :general
   ("H-Y" 'reverso))
 #+end_src

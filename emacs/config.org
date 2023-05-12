@@ -8962,16 +8962,6 @@ CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
 :END:
 
 #+begin_src emacs-lisp :results silent
-(defun ps/goldendict-search-input (arg)
-  "If there is a word at point or an active selection, look it up
-in GoldenDict, else prompt user for input. If invoked with prefix
-argument, always force prompt."
-  (interactive "P")
-  (let ((string (ps/goldendict-region-or-word)))
-    (if (and string (not arg)) (kill-new string)
-      (kill-new (read-string "Expression: ")))
-    (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"D4404D73-FF1D-4DF6-8107-7AB050C28C9F\"'")))
-
 (defun ps/goldendict-region-or-word ()
   "Return region or word around point.
 If `mark-active' on, return region string. Otherwise return word
@@ -8980,6 +8970,18 @@ around point."
       (buffer-substring-no-properties (region-beginning)
                                       (region-end))
     (thing-at-point 'word)))
+
+(defun ps/goldendict-search-input (arg)
+  "If there is a word at point or an active selection, look it up
+in GoldenDict, else prompt user for input. If invoked with prefix
+argument, always force prompt."
+  (interactive "P")
+  (let ((string (ps/goldendict-region-or-word)))
+    (if (and string (not arg))
+	(kill-new string)
+      (kill-new (read-string "Expression: ")))
+    ;; KM macro name: "Goldendict: lookup text in clipboard"
+    (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"D4404D73-FF1D-4DF6-8107-7AB050C28C9F\"'")))
 
 (general-define-key
  "A-y" 'ps/goldendict-search-input)

@@ -291,7 +291,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict][goldendict]]
   - [[#txl][txl]]
-  - [[#reverso][reverso]]
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown][markdown]]
   - [[#edit-indirect][edit-indirect]]
@@ -8931,6 +8930,29 @@ These changes should resolve the error and successfully compile the "gdcv" progr
   ("H-Y" 'powerthesaurus-lookup-dwim))
 #+end_src
 
+** reverso
+:PROPERTIES:
+:ID:       F3063A73-ED50-42BD-8ABD-8D7FC68758FD
+:END:
+:LOGBOOK:
+CLOCK: [2023-05-11 Thu 20:24]--[2023-05-11 Thu 20:27] =>  0:03
+CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
+:END:
+
+/[[https://github.com/SqrtMinusOne/reverso.el][reverso]] is an Emacs client for [[https://www.reverso.net/][reverso]]./
+
+#+begin_src emacs-lisp
+(use-package reverso
+  :elpaca (reverso
+           :host github
+	   :repo "SqrtMinusOne/reverso.el")
+  :config
+  (setq reverso-languages '(english french german italian portuguese spanish))
+  
+  :general
+  ("H-Y" 'reverso))
+#+end_src
+
 ** goldendict
 :PROPERTIES:
 :ID:       F2FFB5E0-060B-4A31-B2D2-4DF03ABC62B5
@@ -8985,16 +9007,6 @@ around point."
    "RET" 'txl-accept-translation
    "q" 'txl-dismiss-translation))
 #+end_src
-
-** reverso
-:PROPERTIES:
-:ID:       F3063A73-ED50-42BD-8ABD-8D7FC68758FD
-:END:
-:LOGBOOK:
-CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
-:END:
-
-https://github.com/SqrtMinusOne/reverso.el
 
 ** atomic-chrome
 :PROPERTIES:

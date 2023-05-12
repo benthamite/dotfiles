@@ -18014,8 +18014,11 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 :PROPERTIES:
 :ID:       26EEEF20-5CDC-4855-A03D-AFEBB784D637
 :END:
+:LOGBOOK:
+CLOCK: [2023-05-07 Sun 10:53]--[2023-05-07 Sun 11:27] =>  0:34
+:END:
 
-/[[https://gitlab.com/tuedachu/ytdl][ytd]] is an Emacs interface for [[https://youtube-dl.org/][youtube-dl]]./
+/[[https://gitlab.com/tuedachu/ytdl][ytdl]] is an Emacs interface for [[https://youtube-dl.org/][youtube-dl]]./
 
 Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dlp]], a ~youtube-dl~ fork.
 

@@ -7496,7 +7496,6 @@ By default, all agenda entries are offered. MATCH is as in
       :state (consult--file-preview)
       :history 'file-name-history)))
 
-  ;; (advice-remove 'consult-org-heading #'widen)
   ;; (advice-remove 'consult-org-heading #'ps/org-cycle-content)
   ;; (advice-add 'consult-org-agenda :after #'ps/org-narrow-to-entry-and-children)
 

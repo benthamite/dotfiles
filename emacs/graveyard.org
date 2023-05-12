@@ -9,6 +9,22 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** dictionary
+:PROPERTIES:
+:ID:       64B69D26-CE6D-4FFD-8218-799A6159ED42
+:END:
+:LOGBOOK:
+CLOCK: [2021-08-02 Mon 21:38]--[2021-08-02 Mon 22:09] =>  0:31
+:END:
+
+[2023-05-11 Thu 20:14] Replaced by powerthesaurus.
+
+#+begin_src emacs-lisp :results silent
+(use-feature dictionary
+  :config
+  (setq dictionary-server "dict.org"))
+#+end_src
+
 ** aide
 :PROPERTIES:
 :ID:       5BCD6E4D-0264-4CB6-A0D8-0A6225A671B6

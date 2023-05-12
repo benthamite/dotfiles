@@ -17459,7 +17459,9 @@ CLOCK: [2021-05-22 Sat 21:42]--[2021-05-22 Sat 21:50] =>  0:08
 
 /[[https://github.com/Malabarba/emacs-google-this][google-this]] is a set of emacs functions and bindings to google under point./
 
-#+begin_src emacs-lisp :results silent
+[2023-05-09 Tue 10:07] Replacing with ~engine-mode~
+
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package google-this
   :config/el-patch
   ;; Tweak original function to offer contents of kill ring if there
@@ -17541,13 +17543,16 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine StanfordEncyclopediaofPhilosophy
     "https://plato.stanford.edu/search/searcher.py?query=%s"
     :keybinding "t")
-  (defengine Wikipedia
-    "http://www.wikipedia.org/search-redirect.php?language=en&go=Go&search=%s"
-    :keybinding "w")
+  (defengine Wikipedia-English
+    "https://en.wikipedia.org/w/index.php?search=%s"
+    :keybinding "H-w H-w")
+    (defengine Wikipedia-Spanish
+    "https://es.wikipedia.org/w/index.php?search=%s"
+    :keybinding "H-w H-e")
   (defengine YouTube
     "http://www.youtube.com/results?search_query=%s"
     :keybinding "y")
-  (engine/set-keymap-prefix (kbd "A-H-g")))
+  (engine/set-keymap-prefix (kbd "H-g")))
 #+end_src
 
 ** osm

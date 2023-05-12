@@ -12926,6 +12926,7 @@ Pomodoro system:
 :ID:       2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17
 :END:
 :LOGBOOK:
+CLOCK: [2023-05-08 Mon 11:11]--[2023-05-08 Mon 12:20] =>  1:09
 CLOCK: [2023-04-08 Sat 11:18]--[2023-04-08 Sat 11:32] =>  0:14
 CLOCK: [2023-03-09 Thu 12:35]--[2023-03-09 Thu 12:57] =>  0:22
 CLOCK: [2022-09-30 Fri 20:53]--[2022-09-30 Fri 21:21] =>  0:28
@@ -13154,6 +13155,84 @@ SQL can be either the emacsql vector representation, or a string."
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
   ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
 
+  (defun ps/org-roam-node-find-special (&optional arg)
+    "Return a list of selected headings sorted by priority.
+The selection includes all headings with a priority and either no
+todo status or the todo status TODO, and excludes all headings
+with a date (scheduled or deadline). With a prefix argument,
+prompt the user to select from a unique list of tags and further
+restrict the selection to headings with that tag."
+    (interactive "P")
+    (let* ((selection (when arg
+                        (ps/org-roam-node-select-tag)))
+           (headings-with-priority
+            (if selection
+                (org-roam-db-query `[:select [id file title priority]
+                                             :from nodes
+                                             :left-join tags
+                                             :on (= nodes:id tags:node-id)
+                                             :where (and
+                                                     (= tags:tag ,selection)
+                                                     (notnull nodes:priority)
+                                                     ;; how do I avoid the double negation?
+                                                     (not (notnull nodes:scheduled))
+                                                     (not (notnull nodes:deadline))
+                                                     (or
+                                                      (= nodes:todo "TODO")
+                                                      (not (notnull nodes:todo))))
+                                             :order-by (asc nodes:priority)])
+              (org-roam-db-query `[:select [id file title priority]
+                                           :from nodes
+                                           :left-join tags
+                                           :on (= nodes:id tags:node-id)
+                                           :where (and
+                                                   (notnull nodes:priority)
+                                                   ;; how do I avoid the double negation?
+                                                   (not (notnull nodes:scheduled))
+                                                   (not (notnull nodes:deadline))
+                                                   (or
+                                                    (= nodes:todo "TODO")
+                                                    (not (notnull nodes:todo))))
+                                           :order-by (asc nodes:priority)])))
+           (result '()))
+      (dolist (record headings-with-priority)
+        (let* ((id (nth 0 record))
+               (file (nth 1 record))
+               (title (nth 2 record))
+               (priority (nth 3 record))
+               (formatted-priority (if priority
+                                       (format "[#%c] " priority)
+                                     ""))
+               (formatted-heading (concat formatted-priority title)))
+          (push (cons formatted-heading `(lambda ()
+                                           (org-id-goto ,id)))
+                result)))
+      (if result
+          (let* ((candidates (reverse result))
+                 (selection (consult--read
+                             candidates
+                             :prompt "Jump to heading: "
+                             :category 'jump
+                             :history t
+                             :require-match t
+                             :sort nil))
+                 (action (cdr (assoc selection candidates))))
+            (funcall action))
+        (message "No headings with priority found."))))
+
+  (defun ps/org-roam-node-select-tag ()
+    "Prompt for tag selection from list of org tags."
+    (interactive)
+    (let* ((query-result (org-roam-db-query [:select :distinct [tag] :from tags]))
+           (tag-candidates (mapcar #'car query-result))
+           (selected-tag (consult--read tag-candidates
+                                        :prompt "Select a tag: "
+                                        :history 'org-roam-tag-history
+                                        :sort t
+                                        :require-match t)))
+      (message "Selected tag: %s" selected-tag)
+      selected-tag))
+
   ;; include transcluded links in `org-roam' backlinks
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
 
@@ -13165,7 +13244,8 @@ SQL can be either the emacsql vector representation, or a string."
 
   :general
   ("A-H-n" 'ps/org-roam-new-note
-   "H-j" 'ps/org-roam-node-find)
+   "H-j" 'ps/org-roam-node-find
+   "H-J" 'ps/org-roam-node-find-special)
   (org-mode-map
    "s-i" 'org-roam-node-insert
    "s-r" 'org-roam-buffer-toggle))

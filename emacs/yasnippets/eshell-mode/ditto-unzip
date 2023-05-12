@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: ditto-unzip
+# key: du
+# contributor: Pablo Stafforini
+# --
+ditto -V -x -k '`(current-kill 0)`' '`(file-name-sans-extension (current-kill 0))`'

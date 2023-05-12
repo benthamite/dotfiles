@@ -25,6 +25,25 @@ CLOCK: [2021-08-02 Mon 21:38]--[2021-08-02 Mon 22:09] =>  0:31
   (setq dictionary-server "dict.org"))
 #+end_src
 
+** osx-dictionary
+:PROPERTIES:
+:ID:       BE7CC99E-B42E-4DAF-B60D-2246CB188379
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-25 Fri 21:40]--[2021-06-25 Fri 21:41] =>  0:01
+CLOCK: [2021-04-03 Sat 18:49]--[2021-04-03 Sat 18:54] =>  0:05
+:END:
+
+/[[https://github.com/xuchunyang/osx-dictionary.el][osx-dictionary]] is a Mac OS X Dictionary.app interface for Emacs./
+
+[2023-05-11 Thu 20:14] Replaced by powerthesaurus.
+
+#+begin_src emacs-lisp :results silent
+(use-package osx-dictionary
+  :general
+  ("H-y" 'osx-dictionary-search-input))
+#+end_src
+
 ** aide
 :PROPERTIES:
 :ID:       5BCD6E4D-0264-4CB6-A0D8-0A6225A671B6

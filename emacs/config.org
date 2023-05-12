@@ -285,7 +285,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#text-mode][text-mode]]
   - [[#with-editor][with-editor]]
   - [[#latex-mode][latex-mode]]
-  - [[#osx-dictionary][osx-dictionary]]
   - [[#goldendict][goldendict]]
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict][goldendict]]
@@ -8613,23 +8612,6 @@ To check: https://github.com/PillFall/languagetool.el
 :ID:       D4EBFE04-FEB0-46B4-AF58-BAFCD52BAA87
 :END:
 [cite:@Jenner2021EmacsAmazingLaTeX]
-
-** osx-dictionary
-:PROPERTIES:
-:ID:       BE7CC99E-B42E-4DAF-B60D-2246CB188379
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-25 Fri 21:40]--[2021-06-25 Fri 21:41] =>  0:01
-CLOCK: [2021-04-03 Sat 18:49]--[2021-04-03 Sat 18:54] =>  0:05
-:END:
-
-/[[https://github.com/xuchunyang/osx-dictionary.el][osx-dictionary]] is a Mac OS X Dictionary.app interface for Emacs./
-
-#+begin_src emacs-lisp :results silent
-(use-package osx-dictionary
-  :general
-  ("H-y" 'osx-dictionary-search-input))
-#+end_src
 
 ** goldendict
 :PROPERTIES:

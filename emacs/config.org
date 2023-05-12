@@ -12534,14 +12534,13 @@ Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
 
   :config
   (defun ps/org-table-copy-cell ()
-    (interactive)
+    "Copy the contents of the current table cell."
     (when (org-at-table-p)
       (kill-new
        (string-trim
         (substring-no-properties (org-table-get-field))))))
 
   :general
-  ("H-s-c" 'ps/org-table-copy-cell)
   (org-table-fedit-map
    "s-c" 'org-table-fedit-finish))
 #+end_src

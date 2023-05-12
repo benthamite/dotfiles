@@ -460,7 +460,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#custom][custom]]
   - [[#tetris][tetris]]
 - [[#personal][personal]]
-  - [[#config-version-history][config version history]]
   - [[#tlon-init][tlon-init]]
   - [[#tlon-core][tlon-core]]
   - [[#tlon-bae][tlon-bae]]

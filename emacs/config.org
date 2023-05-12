@@ -8922,12 +8922,12 @@ These changes should resolve the error and successfully compile the "gdcv" progr
 :ID:       81CC0280-A8A5-4C8F-BF05-D324EB917DCD
 :END:
 
-/[[https://github.com/SavchenkoValeriy/emacs-powerthesaurus][powerthesaurus]] integrates Emacs with [[https://www.powerthesaurus.org/][power thesaurus]]./
+/[[https://github.com/SavchenkoValeriy/emacs-powerthesaurus][powerthesaurus]] is an Emacs client for [[https://www.powerthesaurus.org/][power thesaurus]]./
 
 #+begin_src emacs-lisp :results silent
 (use-package powerthesaurus
   :general
-  ("H-Y" 'powerthesaurus-lookup-dwim))
+  ("H-y" 'powerthesaurus-transient))
 #+end_src
 
 ** reverso

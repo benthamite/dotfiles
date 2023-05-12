@@ -6795,7 +6795,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       (setq forge-database-connector 'sqlite)
     (setq forge-database-connector 'sqlite-builtin))
 
-  (run-with-idle-timer 600 t #'ps/forge-pull-notifications-silently)
+  ;; (run-with-idle-timer 600 t #'ps/forge-pull-notifications-silently)
 
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))

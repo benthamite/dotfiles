@@ -10841,8 +10841,6 @@ image."
    "s-e" 'org-set-effort
    "s-f" 'org-insert-todo-subheading
    "s-A-f" 'ps/org-insert-todo-subheading-after-body
-   "s-h" 'ps/org-copy-heading-name
-   "s-A-h" 'ps/org-copy-heading-contents
    "s-p" 'org-time-stamp-inactive
    "s-A-p" 'org-time-stamp
    "s-q" 'org-set-tags-command

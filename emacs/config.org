@@ -929,9 +929,9 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 
 (elpaca-wait)
 
-(setq use-package-verbose t)                ; setting back to nil (default) as it was producing too much output
-(setq use-package-compute-statistics t)       ; compute stats
-(setq use-package-always-ensure nil)          ; essential for `straight'
+(setq use-package-verbose t)
+(setq use-package-compute-statistics t)
+(setq use-package-always-ensure nil)
 (setq use-package-always-defer t)
 (setq use-package-hook-name-suffix nil)       ; use real name for hooks, i.e. do not omit the `-hook' bit
 (setq use-package-minimum-reported-time 0.1) ; report if loading a package takes longer than 100 ms
@@ -8953,7 +8953,7 @@ argument, always force prompt."
   (interactive "P")
   (let ((string (ps/goldendict-region-or-word)))
     (if (and string (not arg))
-	(kill-new string)
+        (kill-new string)
       (kill-new (read-string "Expression: ")))
     ;; KM macro name: "Goldendict: lookup text in clipboard"
     (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"D4404D73-FF1D-4DF6-8107-7AB050C28C9F\"'")))
@@ -16118,7 +16118,7 @@ it, without asking for confirmation."
     (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.15))
 
   ;; this function seems to have been introduced after 1.6.11;
-  ;; since `org-msg' requires, we load it here
+  ;; since `org-msg' requires it, we load it here
   (defun mu4e-message-readable-path (&optional msg)
     "Get a readable path to MSG or raise an error.
 If MSG is nil, use `mu4e-message-at-point'."

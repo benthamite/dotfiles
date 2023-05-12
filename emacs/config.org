@@ -17966,7 +17966,6 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 
 #+begin_src emacs-lisp :results silent
 (use-package emms
-  :demand t
   :config
   (require 'emms-setup)
   (require 'emms-player-simple)

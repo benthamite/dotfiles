@@ -6878,11 +6878,10 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "," 'ps/orgit-capture)
   (forge-topic-mode-map
    "a" 'forge-edit-topic-assignees
-   "a" 'forge-edit-topic-assignees
    "b" 'forge-edit-topic-body
    "l" 'forge-edit-topic-labels
    "m" 'forge-edit-topic-milestone
-   "s" 'forge-edit-topic-state
+   "x" 'forge-edit-topic-state
    "t" 'forge-edit-topic-title
    "e" 'forge-edit-post
    "p" 'forge-create-post

@@ -11465,54 +11465,57 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
         (ps/org-copy-heading-contents))
       (insert (current-kill 0)))))
 
-  (defun ps/org-capture-before-finalize-hook-behavior ()
-    "Define behavior of `org-capture-before-finalize-hook'
-conditional on active capture template."
-    (cond
-     ((string= "g" (plist-get org-capture-plist :key))
-      (ledger-post-align-xact (point)))
-     ((string= "l" (plist-get org-capture-plist :key))
-      (org-align-all-tags)
-      (ispell-change-dictionary "english"))
-     ((string= "la" (plist-get org-capture-plist :key))
-      (save-window-excursion
-        (ps/switch-to-alternate-buffer)
-        (ps/org-jump-to-first-heading)
-        (widen)
-        (org-narrow-to-subtree)
-        (let ((org-use-tag-inheritance))
-          (org-roam-tag-remove '("unprocessed" "empty" "leo" "unpublished"))
-          (org-roam-tag-add '("leo")))
-        (ps/show-buffer-name))
-      (goto-char 0)
-      (search-forward "Procesar ")
-      (insert (format "~%s~" (current-kill 0))))
-     ((string= "le" (plist-get org-capture-plist :key))
-      (save-window-excursion
-        (ps/switch-to-alternate-buffer)
-        (ps/show-buffer-name))
-      (goto-char 0)
-      (search-forward "Renombrar ")
-      (insert (concat "~" (current-kill 0) "~ ")))
-     ;; Add link to open Slack message externally.
-     ((string= "s" (plist-get org-capture-plist :key))
-      (org-narrow-to-subtree)
-      (let ((url (s-replace-regexp
-                  "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
-                  "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
-                  (plist-get org-store-link-plist :link))))
-        (goto-char (point-max))
-        (insert (format "[[%s][external link]]" url))))
-     ((string= "tmt" (plist-get org-capture-plist :key))
-      (org-web-tools-insert-link-for-url (current-kill 0)))
-     ((string= "v" (plist-get org-capture-plist :key))
-      (org-do-demote))
-     ((string= "y" (plist-get org-capture-plist :key))
-      (youtube-dl (current-kill 0) :directory ps/dir-downloads :destination (org-hugo-slug (ps/org-web-tools--org-title-for-url))))))
+  (defun ps/org-capture-before-finalize-hook-function ()
+    "Define behavior of `org-capture-before-finalize-hook'."
+    (pcase (plist-get org-capture-plist :key)
+      ("g"
+       (org-narrow-to-subtree)
+       (forward-line)
+       (forward-line)
+       (ps/yasnippet-expand-by-key "ai")
+       (message "finished"))
+      ("l"
+       (org-align-all-tags)
+       (ispell-change-dictionary "english"))
+      ("la"
+       (save-window-excursion
+         (ps/switch-to-alternate-buffer)
+         (ps/org-jump-to-first-heading)
+         (widen)
+         (org-narrow-to-subtree)
+         (let ((org-use-tag-inheritance))
+           (org-roam-tag-remove '("unprocessed" "empty" "leo" "unpublished"))
+           (org-roam-tag-add '("leo")))
+         (ps/show-buffer-name))
+       (goto-char 0)
+       (search-forward "Procesar ")
+       (insert (format "~%s~" (current-kill 0))))
+      ("le"
+       (save-window-excursion
+         (ps/switch-to-alternate-buffer)
+         (ps/show-buffer-name))
+       (goto-char 0)
+       (search-forward "Renombrar ")
+       (insert (concat "~" (current-kill 0) "~ ")))
+      ;; Add link to open Slack message externally.
+      ("s"
+       (org-narrow-to-subtree)
+       (let ((url (s-replace-regexp
+                   "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
+                   "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
+                   (plist-get org-store-link-plist :link))))
+         (goto-char (point-max))
+         (insert (format "[[%s][external link]]" url))))
+      ("tmt"
+       (org-web-tools-insert-link-for-url (current-kill 0)))
+      ("v"
+       (org-do-demote))
+      ("y"
+       (youtube-dl (current-kill 0) :directory ps/dir-downloads :destination (org-hugo-slug (ps/org-web-tools--org-title-for-url))))))
 
   (add-hook 'org-capture-mode-hook #'ps/org-capture-hydra-notes-hook)
-  (add-hook 'org-capture-before-finalize-hook #'ps/org-capture-before-finalize-hook-behavior)
-  (add-hook 'org-capture-before-prepare-hook #'ps/org-capture-prepare-finalize-hook-behavior)
+  (add-hook 'org-capture-before-finalize-hook #'ps/org-capture-before-finalize-hook-function)
+  (add-hook 'org-capture-before-prepare-hook #'ps/org-capture-prepare-finalize-hook-function)
 
   :general
   ("H-t" 'org-capture

@@ -44,6 +44,41 @@ CLOCK: [2021-04-03 Sat 18:49]--[2021-04-03 Sat 18:54] =>  0:05
   ("H-y" 'osx-dictionary-search-input))
 #+end_src
 
+** exec-path-from-shell
+:PROPERTIES:
+:ID:       31238246-249F-42E8-BE80-06DB327259FD
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-30 Sun 09:16]--[2023-04-30 Sun 09:34] =>  0:18
+CLOCK: [2021-06-30 Wed 14:24]--[2021-06-30 Wed 15:25] =>  1:01
+CLOCK: [2021-06-29 Tue 16:17]--[2021-06-29 Tue 17:44] =>  1:27
+CLOCK: [2021-02-06 Sat 22:29]--[2021-02-06 Sat 22:52] =>  0:23
+CLOCK: [2021-02-05 Fri 18:46]--[2021-02-05 Fri 19:00] =>  0:14
+CLOCK: [2021-02-05 Fri 19:09]--[2021-02-05 Fri 19:14] =>  0:05
+:END:
+
+/[[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] makes Emacs use the $PATH set up by the user's shell./
+
+[2023-04-30 Sun 10:14] This shouldn't be needed if Emacs is launched from the Terminal, as I do. Disabling for the time being; will remove if noticed no issues.
+
+#+begin_src emacs-lisp :results silent
+(use-package exec-path-from-shell
+  :disabled
+  :if (eq system-type 'darwin)
+  :init
+  (dolist (var '("NVM_DIR"))
+    (add-to-list 'exec-path-from-shell-variables var))
+
+  :config
+  (exec-path-from-shell-initialize))
+#+end_src
+
+*** resources
+:PROPERTIES:
+:ID:       23633754-5D4D-4473-8E61-B700551AC7C5
+:END:
+[[https://blog.flowblok.id.au/2013-02/shell-startup-scripts.html][Shell startup scripts — flowblok’s blog]]
+
 ** aide
 :PROPERTIES:
 :ID:       5BCD6E4D-0264-4CB6-A0D8-0A6225A671B6

@@ -11164,6 +11164,7 @@ Posted a question to [[https://emacs.stackexchange.com/questions/66343/in-org-ag
 :ID:       14F93A83-0BE7-42E3-891E-F6806192296B
 :END:
 :LOGBOOK:
+CLOCK: [2023-05-10 Wed 07:50]--[2023-05-10 Wed 08:14] =>  0:24
 CLOCK: [2022-06-13 Mon 14:45]--[2022-06-13 Mon 15:00] =>  0:15
 CLOCK: [2022-06-11 Sat 13:40]--[2022-06-11 Sat 14:03] =>  0:23
 CLOCK: [2022-06-11 Sat 13:19]--[2022-06-11 Sat 13:25] =>  0:06
@@ -11217,11 +11218,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("e" "Email" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
-          ("g" "Ledger" plain (file ps/file-ledger)
-           "" :empty-lines 1)
-          ;; ("m" "To discuss in meeting with Leo" plain
-          ;; (id "3AAD2510-0522-4598-9182-50E97504EAF6")
-          ;; "- [ ] %?" :empty-lines 1)
+          ("g" "GPT-4" entry
+           (id "FDF39DE4-293F-47B5-9D6D-AA4D68F99CF5")
+           "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
           ("n" "Telegram" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
@@ -11303,8 +11302,8 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            "** TODO [#5] Review transcript of conversation with %? \n" :empty-lines 1 :prepend t)
           ("tg" "Tlön: GPE")
           ("tgg" "Tlön: GPE: Generic " entry
-           (id "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
+           (id "022CAD09-9F99-4812-BAA3-F52BCF95ACC6")
+           "** TODO [#6] %? \n" :empty-lines 1 :prepend t :immediate-finish t)
           ("th" "Tlön: HEAR")
           ("thh" "Tlön: HEAR: Generic " entry
            (id "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2")

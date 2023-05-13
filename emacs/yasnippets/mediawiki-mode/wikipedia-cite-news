@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wikipedia-cite-news
 # key: wcn
+# contributor: Pablo Stafforini
 # --
 {{cite news | last = $1 | first = $2 | title = $3 | newspaper = $4 | date = $5 | url = $6 | access-date = `(let ((ps/date-specifier "%B %e, %Y")) (format-time-string "%Y-%m-%d"))`}}

@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wikipedia-bold
 # key: wb
+# contributor: Pablo Stafforini
 # --
 '''$1'''

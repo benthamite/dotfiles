@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wikipedia-wikilink
 # key: wwl
+# contributor: Pablo Stafforini
 # --
 [[$1]]

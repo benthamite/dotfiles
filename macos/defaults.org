@@ -184,6 +184,9 @@ echo 'Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)'
 
 defaults write com.apple.screencapture disable-shadow -bool true
 echo 'Disable screenshot shadow effect'
+
+sysadminctl -screenLock 5 -password -
+echo 'Require a password after screen saver begins or display is turned off for 5 seconds'
 #+end_src
 
 * Finder

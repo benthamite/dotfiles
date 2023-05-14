@@ -15671,8 +15671,10 @@ or specify any other coding system (and risk losing\n\
   (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
 
   :general
+  ("C-H-M-S-z" 'zotra-add-entry-from-url) ; triggered by KM macro
   (ebib-index-mode-map
-   "i" 'zotra-add-entry-from-search))
+   "i" 'zotra-add-entry-from-search
+   "u" 'zotra-add-entry-from-url))
 #+end_src
 
 *** WAITING Launch zotra outside emacs

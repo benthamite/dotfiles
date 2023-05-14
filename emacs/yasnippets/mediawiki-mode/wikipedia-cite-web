@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wikipedia-cite-web
 # key: wcw
+# contributor: Pablo Stafforini
 # --
 {{cite web | url = $1 | title = $2 | last = $3 | first = $4 | date = $5 | website = $6 | access-date = `(let ((ps/date-specifier "%B %e, %Y")) (format-time-string "%Y-%m-%d"))`}}

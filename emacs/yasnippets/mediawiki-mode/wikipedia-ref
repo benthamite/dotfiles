@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wikipedia-ref
 # key: wr
+# contributor: Pablo Stafforini
 # --
 <ref>$1</ref>

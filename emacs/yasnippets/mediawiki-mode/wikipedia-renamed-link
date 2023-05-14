@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wikipedia-renamed-link
 # key: wrl
+# contributor: Pablo Stafforini
 # --
 [[${1:target}|${2:displayed}]]

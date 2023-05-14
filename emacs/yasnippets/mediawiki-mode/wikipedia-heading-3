@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wikipedia-heading-3
 # key: wh3
+# contributor: Pablo Stafforini
 # --
 ===$1===

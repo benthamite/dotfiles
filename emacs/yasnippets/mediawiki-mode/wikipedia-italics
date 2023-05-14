@@ -1,5 +1,6 @@
 # -*- mode: snippet -*-
 # name: wikipedia-italics
 # key: wi
+# contributor: Pablo Stafforini
 # --
 ''$1''

@@ -1,6 +1,7 @@
 # -*- mode: snippet -*-
 # name: wikipedia-blockquote
 # key: wbq
+# contributor: Pablo Stafforini
 # --
 <blockquote>
 $1

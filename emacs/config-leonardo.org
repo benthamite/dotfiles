@@ -152,7 +152,10 @@ one hour only."
         ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
          (id "7CCD6226-DB0A-4742-9277-955FCB276137")
          "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
-        ))
+        ("p" "GPT-4" entry
+         (id "AEBE6FAC-FB81-4325-9D0A-40A7758B7DDC")
+         "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
+	))
 
 (defhydra hydra-org-work
   (:hint nil

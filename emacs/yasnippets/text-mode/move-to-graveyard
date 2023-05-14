@@ -3,4 +3,4 @@
 # key: mtg
 # contributor: Pablo Stafforini
 # --
-move to graveyard
+$1: move to graveyard

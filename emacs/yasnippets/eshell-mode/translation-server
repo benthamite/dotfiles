@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: translation-server
+# key: ts
+# contributor: Pablo Stafforini
+# --
+cd ~/source/translation-server; npm start

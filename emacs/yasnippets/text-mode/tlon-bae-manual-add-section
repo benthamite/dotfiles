@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-bae-manual-add-section
+# key: tbmas
+# contributor: Pablo Stafforini
+# --
+Manual: add "$1" section

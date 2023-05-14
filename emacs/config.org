@@ -285,13 +285,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#text-mode][text-mode]]
   - [[#with-editor][with-editor]]
   - [[#latex-mode][latex-mode]]
-  - [[#dictionary][dictionary]]
-  - [[#osx-dictionary][osx-dictionary]]
   - [[#goldendict][goldendict]]
   - [[#powerthesaurus][powerthesaurus]]
+  - [[#reverso][reverso]]
   - [[#goldendict][goldendict]]
   - [[#txl][txl]]
-  - [[#reverso][reverso]]
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown][markdown]]
   - [[#edit-indirect][edit-indirect]]
@@ -462,7 +460,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#custom][custom]]
   - [[#tetris][tetris]]
 - [[#personal][personal]]
-  - [[#config-version-history][config version history]]
   - [[#tlon-init][tlon-init]]
   - [[#tlon-core][tlon-core]]
   - [[#tlon-bae][tlon-bae]]
@@ -932,9 +929,9 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 
 (elpaca-wait)
 
-(setq use-package-verbose t)                ; setting back to nil (default) as it was producing too much output
-(setq use-package-compute-statistics t)       ; compute stats
-(setq use-package-always-ensure nil)          ; essential for `straight'
+(setq use-package-verbose t)
+(setq use-package-compute-statistics t)
+(setq use-package-always-ensure nil)
 (setq use-package-always-defer t)
 (setq use-package-hook-name-suffix nil)       ; use real name for hooks, i.e. do not omit the `-hook' bit
 (setq use-package-minimum-reported-time 0.1) ; report if loading a package takes longer than 100 ms
@@ -1049,6 +1046,7 @@ CLOCK: [2021-10-05 Tue 12:20]--[2021-10-05 Tue 13:11] =>  0:51
 CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :END:
 
+
 /[[https://github.com/raxod502/el-patch][el-patch]] customizes the behavior of Emacs Lisp functions and be notified when a function so customized changes./
 
 #+begin_src emacs-lisp :results silent
@@ -1093,13 +1091,13 @@ of the heading at point."
    "M-t" 'hydra-straight/body
    "M-y" 'hydra-yasnippet/body))
 (elpaca-wait)
-
 #+end_src
 
 *** resources
 :PROPERTIES:
 :ID:       A6CE7CD9-B940-4221-9BE4-2BF0776D7637
 :END:
+
 https://oremacs.com/2015/02/04/pre-hydra-post/
 https://sriramkswamy.github.io/dotemacs/#orgheadline141
 
@@ -1378,30 +1376,30 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   ;; ("c" (ps/org-id-goto "") "")
   ("r" (ps/org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Main")
   ("b" (ps/org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAE" :column "Main")
-  ("m" (ps/org-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Main")
   ("d" (ps/org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Main")
   ("n" (ps/org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Main")
-  ("i" (ps/org-id-goto "6C7F53ED-B43E-401D-BEEA-DB38CAE367FD") "EAI" :column "Main")
+  ("i" (ps/org-id-goto "6C7F53ED-B43E-401D-BEEA-DB38CAE367FD") "EAI" :column "Other")
   ("w" (ps/org-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
   ("v" (ps/org-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87") "Samotsvety" :column "Other")
   ("x" (ps/org-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99") "Misc" :column "Other")
   ("a" (ps/org-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD") "EA Archive" :column "Someday")
   ("a" (ps/org-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110") "EA Nomad" :column "Someday")
   ("h" (ps/org-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2") "HEAR" :column "On hold")
-  ("g" (ps/org-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1") "GPE" :column "On hold")
+  ("" (ps/org-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Done")
+  ("" (ps/org-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1") "GPE" :column "Done")
   ("" (ps/org-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F") "LP" :column "Done")
   ("" (ps/org-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A") "RCGs" :column "Done")
   ("" (ps/org-id-goto "AE8F5AD4-B85A-4EE2-8A94-AA7B2AFF3E7F") "Regranting" :column "Done")
   ("e" (ps/org-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5") "email" :column "Comms")
   ("s" (ps/org-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C") "slack" :column "Comms")
   ("t" (ps/org-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
-  ("f" (ps/org-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "People")
-  ("F" (tlon-core-meeting-with-fede) "fede: meeting" :column "People")
-  ("H-f" (ps/org-id-goto "EB5FC062-E46F-4C1F-930F-F2CC710F852D") "fede: tareas" :column "People")
-  ("l" (ps/org-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "People")
-  ("L" (tlon-core-meeting-with-leo) "leo: meeting" :column "People")
-  ("H-l" (ps/org-id-goto "E5777AB0-DC81-40CB-8D03-77D6F111AA2E") "leo: tareas" :column "People")
-  ("RET" (ps/org-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A"))
+  ("f" (ps/org-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "Fede")
+  ("F" (tlon-core-meeting-with-fede) "fede: meeting" :column "Fede")
+  ("H-f" (ps/org-id-goto "EB5FC062-E46F-4C1F-930F-F2CC710F852D") "fede: tareas" :column "Fede")
+  ("l" (ps/org-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "Leo")
+  ("L" (tlon-core-meeting-with-leo) "leo: meeting" :column "Leo")
+  ("H-l" (ps/org-id-goto "E5777AB0-DC81-40CB-8D03-77D6F111AA2E") "leo: tareas" :column "Leo")
+  ("RET" (ps/org-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A") "Home" :column "")
   )
 
 (defhydra hydra-org-work-with-clock
@@ -6796,7 +6794,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       (setq forge-database-connector 'sqlite)
     (setq forge-database-connector 'sqlite-builtin))
 
-  (run-with-idle-timer 600 t #'ps/forge-pull-notifications-silently)
+  ;; (run-with-idle-timer 600 t #'ps/forge-pull-notifications-silently)
 
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
@@ -6879,11 +6877,10 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "," 'ps/orgit-capture)
   (forge-topic-mode-map
    "a" 'forge-edit-topic-assignees
-   "a" 'forge-edit-topic-assignees
    "b" 'forge-edit-topic-body
    "l" 'forge-edit-topic-labels
    "m" 'forge-edit-topic-milestone
-   "s" 'forge-edit-topic-state
+   "x" 'forge-edit-topic-state
    "t" 'forge-edit-topic-title
    "e" 'forge-edit-post
    "p" 'forge-create-post
@@ -7498,7 +7495,6 @@ By default, all agenda entries are offered. MATCH is as in
       :state (consult--file-preview)
       :history 'file-name-history)))
 
-  ;; (advice-remove 'consult-org-heading #'widen)
   ;; (advice-remove 'consult-org-heading #'ps/org-cycle-content)
   ;; (advice-add 'consult-org-agenda :after #'ps/org-narrow-to-entry-and-children)
 
@@ -7507,7 +7503,7 @@ By default, all agenda entries are offered. MATCH is as in
    "C-f" 'consult-find
    "H-b" 'consult-buffer
    "A-H-i" 'consult-info
-   "H-r" 'consult-history
+   "H-R" 'consult-history
    "H-V" 'consult-yank-pop
    "H-f" 'ps/consult-locate-file-current
    "H-F" 'ps/consult-locate-file-home
@@ -8107,23 +8103,27 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
       (async-shell-command "brew update; brew upgrade --greedy; brew cleanup; brew doctor")
       (message "Update process finished.")))
 
-  (defun ps/shell-in-current-directory (&optional shell)
-    "Open a shell in the current directory, creating one if
-necessary."
+  (defun ps/bluetooth-device-dwim (MAC &optional name)
+    "Connect or disconnect to a bluetooth device NAME in address MAC."
+    (interactive "sMAC address: ")
+    (let ((app "blueutil"))
+      (unless (executable-find app)
+        (user-error "Please install %s (https://github.com/toy/blueutil)" app))
+      (let* ((output (shell-command-to-string (format "%s --info %s" app MAC)))
+             (status (progn
+                       (string-match (concat "address: " MAC ", \\([a-z]+\\)") output)
+                       (match-string 1 output)))
+             (action (if (string= status "connected")
+                         "disconnect"
+                       "connect")))
+        (shell-command (format "%s --%s %s" app action MAC))
+        (message "%s: %sed" (or name MAC) action))))
+
+  (defun ps/airpods-max-dwim ()
+    "Connect or disconnect to AirPods Max"
     (interactive)
-    (let* ((shell (or shell
-                      'shell))
-           (shell-mode (intern (concat (symbol-name shell) "-mode")))
-           (current-directory default-directory)
-           (found))
-      (dolist (buffer (buffer-list (current-buffer)))
-        (with-current-buffer buffer
-          (when (and (eq major-mode 'shell-mode)
-                     (equal current-directory default-directory))
-            (setq found buffer))))
-      (if found
-          (switch-to-buffer found)
-        (funcall shell (generate-new-buffer-name (format "*%s*" shell))))))
+    (ps/bluetooth-device-dwim "90-9c-4a-dd-af-52" "AirPods Max"))
+
 
   :general
   ("A-s" 'ps/shell-in-current-directory)
@@ -8179,7 +8179,7 @@ necessary."
     (ps/shell-in-current-directory 'eshell))
 
   :general
-  ("A-e" 'ps/eshell-in-current-directory)
+  ("A-e" 'eshell)
   (eshell-mode-map
    "C-H-M-z" 'eshell-kill-input
    "A-C-s-m" 'eshell-bol
@@ -8193,6 +8193,11 @@ necessary."
    "M-n" nil))
 #+end_src
 
+*** TODO [#5] Figure out why env variables differ between shell and eshell
+:PROPERTIES:
+:ID:       E57974CA-1CC6-45B7-A1D3-359C1C025E92
+:END:
+e.g. ~nvm~ isn't recognized by eshell
 *** TODO Fix, then swtich to, ~eshell~
 :PROPERTIES:
 :ID:       3314BBDD-21DE-4460-9506-9EA137762771
@@ -8616,37 +8621,6 @@ To check: https://github.com/PillFall/languagetool.el
 :END:
 [cite:@Jenner2021EmacsAmazingLaTeX]
 
-** dictionary
-:PROPERTIES:
-:ID:       64B69D26-CE6D-4FFD-8218-799A6159ED42
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-02 Mon 21:38]--[2021-08-02 Mon 22:09] =>  0:31
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature dictionary
-  :config
-  (setq dictionary-server "dict.org"))
-#+end_src
-
-** osx-dictionary
-:PROPERTIES:
-:ID:       BE7CC99E-B42E-4DAF-B60D-2246CB188379
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-25 Fri 21:40]--[2021-06-25 Fri 21:41] =>  0:01
-CLOCK: [2021-04-03 Sat 18:49]--[2021-04-03 Sat 18:54] =>  0:05
-:END:
-
-/[[https://github.com/xuchunyang/osx-dictionary.el][osx-dictionary]] is a Mac OS X Dictionary.app interface for Emacs./
-
-#+begin_src emacs-lisp :results silent
-(use-package osx-dictionary
-  :general
-  ("H-y" 'osx-dictionary-search-input))
-#+end_src
-
 ** goldendict
 :PROPERTIES:
 :ID:       32143368-5DE3-44F5-A35B-05F157DEC2A5
@@ -8923,12 +8897,35 @@ These changes should resolve the error and successfully compile the "gdcv" progr
 :ID:       81CC0280-A8A5-4C8F-BF05-D324EB917DCD
 :END:
 
-/[[https://github.com/SavchenkoValeriy/emacs-powerthesaurus][powerthesaurus]] integrates Emacs with [[https://www.powerthesaurus.org/][power thesaurus]]./
+/[[https://github.com/SavchenkoValeriy/emacs-powerthesaurus][powerthesaurus]] is an Emacs client for [[https://www.powerthesaurus.org/][power thesaurus]]./
 
 #+begin_src emacs-lisp :results silent
 (use-package powerthesaurus
   :general
-  ("H-Y" 'powerthesaurus-lookup-dwim))
+  ("H-y" 'powerthesaurus-transient))
+#+end_src
+
+** reverso
+:PROPERTIES:
+:ID:       F3063A73-ED50-42BD-8ABD-8D7FC68758FD
+:END:
+:LOGBOOK:
+CLOCK: [2023-05-11 Thu 20:24]--[2023-05-11 Thu 20:27] =>  0:03
+CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
+:END:
+
+/[[https://github.com/SqrtMinusOne/reverso.el][reverso]] is an Emacs client for [[https://www.reverso.net/][reverso]]./
+
+#+begin_src emacs-lisp
+(use-package reverso
+  :elpaca (reverso
+           :host github
+           :repo "SqrtMinusOne/reverso.el")
+  :config
+  (setq reverso-languages '(english french german italian portuguese spanish))
+
+  :general
+  ("H-Y" 'reverso))
 #+end_src
 
 ** goldendict
@@ -8940,16 +8937,6 @@ CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
 :END:
 
 #+begin_src emacs-lisp :results silent
-(defun ps/goldendict-search-input (arg)
-  "If there is a word at point or an active selection, look it up
-in GoldenDict, else prompt user for input. If invoked with prefix
-argument, always force prompt."
-  (interactive "P")
-  (let ((string (ps/goldendict-region-or-word)))
-    (if (and string (not arg)) (kill-new string)
-      (kill-new (read-string "Expression: ")))
-    (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"D4404D73-FF1D-4DF6-8107-7AB050C28C9F\"'")))
-
 (defun ps/goldendict-region-or-word ()
   "Return region or word around point.
 If `mark-active' on, return region string. Otherwise return word
@@ -8958,6 +8945,18 @@ around point."
       (buffer-substring-no-properties (region-beginning)
                                       (region-end))
     (thing-at-point 'word)))
+
+(defun ps/goldendict-search-input (arg)
+  "If there is a word at point or an active selection, look it up
+in GoldenDict, else prompt user for input. If invoked with prefix
+argument, always force prompt."
+  (interactive "P")
+  (let ((string (ps/goldendict-region-or-word)))
+    (if (and string (not arg))
+        (kill-new string)
+      (kill-new (read-string "Expression: ")))
+    ;; KM macro name: "Goldendict: lookup text in clipboard"
+    (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"D4404D73-FF1D-4DF6-8107-7AB050C28C9F\"'")))
 
 (general-define-key
  "A-y" 'ps/goldendict-search-input)
@@ -8985,16 +8984,6 @@ around point."
    "RET" 'txl-accept-translation
    "q" 'txl-dismiss-translation))
 #+end_src
-
-** reverso
-:PROPERTIES:
-:ID:       F3063A73-ED50-42BD-8ABD-8D7FC68758FD
-:END:
-:LOGBOOK:
-CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
-:END:
-
-https://github.com/SqrtMinusOne/reverso.el
 
 ** atomic-chrome
 :PROPERTIES:
@@ -9461,6 +9450,7 @@ otherwise the whole buffer."
 :PROPERTIES:
 :ID:       E235F4DC-677D-4143-A679-66FCBC310101
 :END:
+
 *** TODO [#6] Consider replacing ~commodities.py~ with Elisp alternative
 :PROPERTIES:
 :ID:       303E3552-2FD9-41A9-A6E6-C26110E61282
@@ -10146,7 +10136,7 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
   :elpaca  (org-ai :type git :host github :repo "rksm/org-ai"
                    :local-repo "org-ai"
                    :files ("*.el" "README.md" "snippets"))
-  :after org
+  :after org yasnippet
   :commands org-ai-mode
   :config
   (setq org-ai-openai-api-token (auth-source-pass-get "key" "tlon/core/openai.com"))
@@ -10492,7 +10482,9 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
           ("s" . "src")
           ("se" . "src emacs-lisp")
           ("sj" . "src clojure")
+          ("sm" . "src markdown")
           ("sp" . "src python")
+          ("sq" . "src sql")
           ("ss" . "src shell")
           ("v" . "verse")
           ("w" . "WP")))
@@ -10849,8 +10841,6 @@ image."
    "s-e" 'org-set-effort
    "s-f" 'org-insert-todo-subheading
    "s-A-f" 'ps/org-insert-todo-subheading-after-body
-   "s-h" 'ps/org-copy-heading-name
-   "s-A-h" 'ps/org-copy-heading-contents
    "s-p" 'org-time-stamp-inactive
    "s-A-p" 'org-time-stamp
    "s-q" 'org-set-tags-command
@@ -11171,6 +11161,7 @@ Posted a question to [[https://emacs.stackexchange.com/questions/66343/in-org-ag
 :ID:       14F93A83-0BE7-42E3-891E-F6806192296B
 :END:
 :LOGBOOK:
+CLOCK: [2023-05-10 Wed 07:50]--[2023-05-10 Wed 08:14] =>  0:24
 CLOCK: [2022-06-13 Mon 14:45]--[2022-06-13 Mon 15:00] =>  0:15
 CLOCK: [2022-06-11 Sat 13:40]--[2022-06-11 Sat 14:03] =>  0:23
 CLOCK: [2022-06-11 Sat 13:19]--[2022-06-11 Sat 13:25] =>  0:06
@@ -11224,11 +11215,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("e" "Email" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
-          ("g" "Ledger" plain (file ps/file-ledger)
-           "" :empty-lines 1)
-          ;; ("m" "To discuss in meeting with Leo" plain
-          ;; (id "3AAD2510-0522-4598-9182-50E97504EAF6")
-          ;; "- [ ] %?" :empty-lines 1)
+          ("g" "GPT-4" entry
+           (id "FDF39DE4-293F-47B5-9D6D-AA4D68F99CF5")
+           "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
           ("n" "Telegram" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
@@ -11310,8 +11299,8 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            "** TODO [#5] Review transcript of conversation with %? \n" :empty-lines 1 :prepend t)
           ("tg" "Tlön: GPE")
           ("tgg" "Tlön: GPE: Generic " entry
-           (id "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
+           (id "022CAD09-9F99-4812-BAA3-F52BCF95ACC6")
+           "** TODO [#6] %? \n" :empty-lines 1 :prepend t :immediate-finish t)
           ("th" "Tlön: HEAR")
           ("thh" "Tlön: HEAR: Generic " entry
            (id "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2")
@@ -11473,54 +11462,57 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
         (ps/org-copy-heading-contents))
       (insert (current-kill 0)))))
 
-  (defun ps/org-capture-before-finalize-hook-behavior ()
-    "Define behavior of `org-capture-before-finalize-hook'
-conditional on active capture template."
-    (cond
-     ((string= "g" (plist-get org-capture-plist :key))
-      (ledger-post-align-xact (point)))
-     ((string= "l" (plist-get org-capture-plist :key))
-      (org-align-all-tags)
-      (ispell-change-dictionary "english"))
-     ((string= "la" (plist-get org-capture-plist :key))
-      (save-window-excursion
-        (ps/switch-to-alternate-buffer)
-        (ps/org-jump-to-first-heading)
-        (widen)
-        (org-narrow-to-subtree)
-        (let ((org-use-tag-inheritance))
-          (org-roam-tag-remove '("unprocessed" "empty" "leo" "unpublished"))
-          (org-roam-tag-add '("leo")))
-        (ps/show-buffer-name))
-      (goto-char 0)
-      (search-forward "Procesar ")
-      (insert (format "~%s~" (current-kill 0))))
-     ((string= "le" (plist-get org-capture-plist :key))
-      (save-window-excursion
-        (ps/switch-to-alternate-buffer)
-        (ps/show-buffer-name))
-      (goto-char 0)
-      (search-forward "Renombrar ")
-      (insert (concat "~" (current-kill 0) "~ ")))
-     ;; Add link to open Slack message externally.
-     ((string= "s" (plist-get org-capture-plist :key))
-      (org-narrow-to-subtree)
-      (let ((url (s-replace-regexp
-                  "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
-                  "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
-                  (plist-get org-store-link-plist :link))))
-        (goto-char (point-max))
-        (insert (format "[[%s][external link]]" url))))
-     ((string= "tmt" (plist-get org-capture-plist :key))
-      (org-web-tools-insert-link-for-url (current-kill 0)))
-     ((string= "v" (plist-get org-capture-plist :key))
-      (org-do-demote))
-     ((string= "y" (plist-get org-capture-plist :key))
-      (youtube-dl (current-kill 0) :directory ps/dir-downloads :destination (org-hugo-slug (ps/org-web-tools--org-title-for-url))))))
+  (defun ps/org-capture-before-finalize-hook-function ()
+    "Define behavior of `org-capture-before-finalize-hook'."
+    (pcase (plist-get org-capture-plist :key)
+      ("g"
+       (org-narrow-to-subtree)
+       (forward-line)
+       (forward-line)
+       (ps/yasnippet-expand-by-key "ai")
+       (message "finished"))
+      ("l"
+       (org-align-all-tags)
+       (ispell-change-dictionary "english"))
+      ("la"
+       (save-window-excursion
+         (ps/switch-to-alternate-buffer)
+         (ps/org-jump-to-first-heading)
+         (widen)
+         (org-narrow-to-subtree)
+         (let ((org-use-tag-inheritance))
+           (org-roam-tag-remove '("unprocessed" "empty" "leo" "unpublished"))
+           (org-roam-tag-add '("leo")))
+         (ps/show-buffer-name))
+       (goto-char 0)
+       (search-forward "Procesar ")
+       (insert (format "~%s~" (current-kill 0))))
+      ("le"
+       (save-window-excursion
+         (ps/switch-to-alternate-buffer)
+         (ps/show-buffer-name))
+       (goto-char 0)
+       (search-forward "Renombrar ")
+       (insert (concat "~" (current-kill 0) "~ ")))
+      ;; Add link to open Slack message externally.
+      ("s"
+       (org-narrow-to-subtree)
+       (let ((url (s-replace-regexp
+                   "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
+                   "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
+                   (plist-get org-store-link-plist :link))))
+         (goto-char (point-max))
+         (insert (format "[[%s][external link]]" url))))
+      ("tmt"
+       (org-web-tools-insert-link-for-url (current-kill 0)))
+      ("v"
+       (org-do-demote))
+      ("y"
+       (youtube-dl (current-kill 0) :directory ps/dir-downloads :destination (org-hugo-slug (ps/org-web-tools--org-title-for-url))))))
 
   (add-hook 'org-capture-mode-hook #'ps/org-capture-hydra-notes-hook)
-  (add-hook 'org-capture-before-finalize-hook #'ps/org-capture-before-finalize-hook-behavior)
-  (add-hook 'org-capture-before-prepare-hook #'ps/org-capture-prepare-finalize-hook-behavior)
+  (add-hook 'org-capture-before-finalize-hook #'ps/org-capture-before-finalize-hook-function)
+  (add-hook 'org-capture-before-prepare-hook #'ps/org-capture-prepare-finalize-hook-function)
 
   :general
   ("H-t" 'org-capture
@@ -11660,11 +11652,10 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
   (defun ps/org-jump-to-latest-clock-entry ()
     "Jump to most recent clock entry for org heading at point."
     (interactive)
+    (visible-mode)
+    (ps/org-show-logbook)
     (org-back-to-heading)
-    (isearch-forward nil t)
-    (isearch-yank-string "CLOCK: ")
-    (isearch-exit)
-    (org-beginning-of-line))
+    (re-search-forward "CLOCK: \\[\\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\) \\([A-Za-z]\\{3\\}\\) \\([0-9]\\{2\\}:\\)" nil t))
 
   (defun ps/org-clock-report (start-date end-date)
     "Generate an org clock report for the period between START-DATE and END-DATE."
@@ -12539,14 +12530,13 @@ Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
 
   :config
   (defun ps/org-table-copy-cell ()
-    (interactive)
+    "Copy the contents of the current table cell."
     (when (org-at-table-p)
       (kill-new
        (string-trim
         (substring-no-properties (org-table-get-field))))))
 
   :general
-  ("H-s-c" 'ps/org-table-copy-cell)
   (org-table-fedit-map
    "s-c" 'org-table-fedit-finish))
 #+end_src
@@ -12577,6 +12567,7 @@ Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
 :ID:       3C8E083B-55A1-4B55-A30A-BD9C4BE1D1D0
 :END:
 :LOGBOOK:
+CLOCK: [2023-04-30 Sun 11:40]--[2023-04-30 Sun 11:48] =>  0:08
 CLOCK: [2023-04-02 Sun 21:19]--[2023-04-02 Sun 21:22] =>  0:03
 CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 :END:
@@ -12931,6 +12922,7 @@ Pomodoro system:
 :ID:       2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17
 :END:
 :LOGBOOK:
+CLOCK: [2023-05-08 Mon 11:11]--[2023-05-08 Mon 12:20] =>  1:09
 CLOCK: [2023-04-08 Sat 11:18]--[2023-04-08 Sat 11:32] =>  0:14
 CLOCK: [2023-03-09 Thu 12:35]--[2023-03-09 Thu 12:57] =>  0:22
 CLOCK: [2022-09-30 Fri 20:53]--[2022-09-30 Fri 21:21] =>  0:28
@@ -13159,6 +13151,84 @@ SQL can be either the emacsql vector representation, or a string."
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
   ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
 
+  (defun ps/org-roam-node-find-special (&optional arg)
+    "Return a list of selected headings sorted by priority.
+The selection includes all headings with a priority and either no
+todo status or the todo status TODO, and excludes all headings
+with a date (scheduled or deadline). With a prefix argument,
+prompt the user to select from a unique list of tags and further
+restrict the selection to headings with that tag."
+    (interactive "P")
+    (let* ((selection (when arg
+                        (ps/org-roam-node-select-tag)))
+           (headings-with-priority
+            (if selection
+                (org-roam-db-query `[:select [id file title priority]
+                                             :from nodes
+                                             :left-join tags
+                                             :on (= nodes:id tags:node-id)
+                                             :where (and
+                                                     (= tags:tag ,selection)
+                                                     (notnull nodes:priority)
+                                                     ;; how do I avoid the double negation?
+                                                     (not (notnull nodes:scheduled))
+                                                     (not (notnull nodes:deadline))
+                                                     (or
+                                                      (= nodes:todo "TODO")
+                                                      (not (notnull nodes:todo))))
+                                             :order-by (asc nodes:priority)])
+              (org-roam-db-query `[:select [id file title priority]
+                                           :from nodes
+                                           :left-join tags
+                                           :on (= nodes:id tags:node-id)
+                                           :where (and
+                                                   (notnull nodes:priority)
+                                                   ;; how do I avoid the double negation?
+                                                   (not (notnull nodes:scheduled))
+                                                   (not (notnull nodes:deadline))
+                                                   (or
+                                                    (= nodes:todo "TODO")
+                                                    (not (notnull nodes:todo))))
+                                           :order-by (asc nodes:priority)])))
+           (result '()))
+      (dolist (record headings-with-priority)
+        (let* ((id (nth 0 record))
+               (file (nth 1 record))
+               (title (nth 2 record))
+               (priority (nth 3 record))
+               (formatted-priority (if priority
+                                       (format "[#%c] " priority)
+                                     ""))
+               (formatted-heading (concat formatted-priority title)))
+          (push (cons formatted-heading `(lambda ()
+                                           (org-id-goto ,id)))
+                result)))
+      (if result
+          (let* ((candidates (reverse result))
+                 (selection (consult--read
+                             candidates
+                             :prompt "Jump to heading: "
+                             :category 'jump
+                             :history t
+                             :require-match t
+                             :sort nil))
+                 (action (cdr (assoc selection candidates))))
+            (funcall action))
+        (message "No headings with priority found."))))
+
+  (defun ps/org-roam-node-select-tag ()
+    "Prompt for tag selection from list of org tags."
+    (interactive)
+    (let* ((query-result (org-roam-db-query [:select :distinct [tag] :from tags]))
+           (tag-candidates (mapcar #'car query-result))
+           (selected-tag (consult--read tag-candidates
+                                        :prompt "Select a tag: "
+                                        :history 'org-roam-tag-history
+                                        :sort t
+                                        :require-match t)))
+      (message "Selected tag: %s" selected-tag)
+      selected-tag))
+
   ;; include transcluded links in `org-roam' backlinks
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
 
@@ -13170,7 +13240,8 @@ SQL can be either the emacsql vector representation, or a string."
 
   :general
   ("A-H-n" 'ps/org-roam-new-note
-   "H-j" 'ps/org-roam-node-find)
+   "H-j" 'ps/org-roam-node-find
+   "H-J" 'ps/org-roam-node-find-special)
   (org-mode-map
    "s-i" 'org-roam-node-insert
    "s-r" 'org-roam-buffer-toggle))
@@ -14003,6 +14074,12 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
       "u" 'citar-open-links))))
 #+end_src
 
+*** TODO Tweak note creation function so that it adds a tag with the work type
+:PROPERTIES:
+:ID:       FB459DDE-BFDD-4740-9FFA-7AFFB74A38D1
+:END:
+Having headings tagged with the type of work they are notes of allows me to query the org-roam db specifically for notes of a particular type.
+
 *** Resources
 :PROPERTIES:
 :ID:       EAB0E32B-129C-4980-A06B-94B4C25966E2
@@ -14154,6 +14231,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-05-07 Sun 11:35]--[2023-05-07 Sun 12:45] =>  1:10
 CLOCK: [2023-04-30 Sun 18:51]--[2023-04-30 Sun 18:57] =>  0:06
 CLOCK: [2023-04-21 Fri 20:39]--[2023-04-21 Fri 20:42] =>  0:03
 CLOCK: [2023-04-11 Tue 00:58]--[2023-04-11 Tue 01:55] =>  0:57
@@ -14686,13 +14764,15 @@ corresponding entry key."
       (default
        (beep))))
 
-  (defun ps/ebib--rename-and-abbreviate-file (directory key extension)
+  (defun ps/ebib--rename-and-abbreviate-file (directory key &optional extension)
     "We abbreviate the filename so that it works when invoked by
 different users, as long as they have the same folder structure."
     (file-name-concat
      (abbreviate-file-name
       directory)
-     (file-name-with-extension key extension)))
+     (if extension
+         (file-name-with-extension key extension)
+       key)))
 
   (defun ps/ebib-valid-key-p (&optional key)
     "docstring"
@@ -14826,112 +14906,61 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       "https://www.goodreads.com/search?q="
       ""))
 
-  (defvar ps/ebib-search-book
+  (defvar ps/ebib-search-book-functions
     '(ps/ebib-search-goodreads
       ps/ebib-search-hathitrust
       ps/ebib-search-internet-archive
       ps/ebib-search-university-of-toronto
       ps/ebib-search-library-genesis
-      ps/ebib-search-amazon))
+      ps/ebib-search-amazon)
+    "List of functions that search for books.")
 
-  (defvar ps/ebib-download-book
+  (defvar ps/ebib-download-book-functions
     '(ps/ebib-search-hathitrust
       ps/ebib-search-internet-archive
       ps/ebib-search-university-of-toronto
-      ps/ebib-search-library-genesis))
+      ps/ebib-search-library-genesis)
+    "List of functions that download books.")
 
-  (defvar ps/ebib-search-article
+  (defvar ps/ebib-search-article-functions
     '(ps/ebib-search-connected-papers
-      ps/ebib-search-google-scholar))
+      ps/ebib-search-google-scholar)
+    "List of functions that search for articles.")
 
-  (defun ps/ebib-search-internet-archive (&optional field search-query)
-    "Run a search on the Internet Archive."
-    (interactive)
-    (ps/ebib-search
-     ps/internet-archive
-     field
-     search-query))
+  (defvar ps/ebib-search-engines '()
+    "List of search engine symbols. Used by the
+ `ps/define-ebib-search-commands' macro.")
 
-  (defun ps/ebib-search-google-scholar (&optional field search-query)
-    "Run a search on Google Scholar."
-    (interactive)
-    (ps/ebib-search
-     ps/google-scholar
-     field
-     search-query))
+  (dolist (engine (delete-dups (append ps/ebib-search-book-functions
+                                       ps/ebib-search-article-functions
+                                       ps/ebib-download-book-functions)))
+    (let* ((engine-name (symbol-name engine))
+           (engine-symbol (intern (replace-regexp-in-string "ps/ebib-search-" "" engine-name))))
+      (add-to-list 'ps/ebib-search-engines engine-symbol)))
 
-  (defun ps/ebib-search-wikipedia (&optional field search-query)
-    "Run a search on Wikipedia."
-    (interactive)
-    (ps/ebib-search
-     ps/wikipedia
-     field
-     search-query))
+  (defmacro ps/define-ebib-search-commands ()
+  "Generate search commands for each search engine listed in `ps/ebib-search-engines'."
+    `(progn
+       ,@(mapcar (lambda (search-name)
+                   `(defun ,(intern (concat "ps/ebib-search-" (symbol-name search-name))) (&optional field search-query)
+                      ,(format "Run aw search on %s." (capitalize (replace-regexp-in-string "-" " " (symbol-name search-name))))
+                      (interactive)
+                      (ps/ebib-search
+                       ,(intern (concat "ps/" (symbol-name search-name)))
+                       field
+                       search-query)))
+                 ps/ebib-search-engines)))
 
-  (defun ps/ebib-search-connected-papers (&optional field search-query)
-    "Run a search on Connected Papers."
-    (interactive)
-    (ps/ebib-search
-     ps/connected-papers
-     field
-     search-query))
-
-  (defun ps/ebib-search-library-genesis (&optional field search-query)
-    "Run a search on Library Genesis."
-    (interactive)
-    (ps/ebib-search
-     ps/library-genesis
-     field
-     search-query))
-
-  (defun ps/ebib-search-amazon (&optional field search-query)
-    "Run a search on Amazon."
-    (interactive)
-    (ps/ebib-search
-     ps/amazon
-     field
-     search-query))
-
-  (defun ps/ebib-search-university-of-toronto (&optional field search-query)
-    "Run a search on the University of Toronto Libraries."
-    (interactive)
-    (ps/ebib-search
-     ps/university-of-toronto
-     field
-     search-query))
-
-  (defun ps/ebib-search-hathitrust (&optional field search-query)
-    "Run a search on HathiTrust."
-    (interactive)
-    (ps/ebib-search
-     ps/hathitrust
-     field
-     search-query))
-
-  (defun ps/ebib-search-goodreads (&optional field search-query)
-    "Run a search on Goodreads."
-    (interactive)
-    (ps/ebib-search
-     ps/goodreads
-     field
-     search-query))
-
-  (defun ps/ebib-search-worldcat (&optional field search-query)
-    "Run a search on Worldcat."
-    (interactive)
-    (ps/ebib-search
-     ps/worldcat
-     field
-     search-query))
+  (ps/define-ebib-search-commands)
 
   (defun ps/ebib-search (search-engine &optional field search-query)
     "Run a search with SEARCH-ENGINE.
 
-If invoked from `ebib', search for the value of FIELD. If no
-FIELD is given, use the identifier if available, unless point is
-in 'title' field, otherwise the field at point.
+  If invoked from `ebib', search for the value of FIELD. If no
+  FIELD is given, use the identifier if available, unless point is
+  in 'title' field, otherwise the field at point.
 
-If not invoked from `ebib', prompt for search query."
+  If not invoked from `ebib', prompt for search query."
     (let* ((name (nth 0 search-engine))
            (prefix (nth 1 search-engine))
            (suffix (nth 2 search-engine))
@@ -14982,92 +15011,126 @@ If not invoked from `ebib', prompt for search query."
 
   (defun ps/ebib-search-book (&optional field search-query)
     "The list of search engines is specified by the variable
-`ps/ebib-search-book'."
+  `ps/ebib-search-book-functions'."
     (interactive)
-    (ps/ebib-search-multi field search-query ps/ebib-search-book))
+    (ps/ebib-search-multi field search-query ps/ebib-search-book-functions))
 
   (defun ps/ebib-download-book (&optional field search-query)
     "The list of search engines is specified by the variable
-`ps/ebib-download-book'."
+  `ps/ebib-download-book-functions'."
     (interactive)
-    (ps/ebib-search-multi field search-query ps/ebib-download-book))
+    (ps/ebib-search-multi field search-query ps/ebib-download-book-functions))
 
   (defun ps/ebib-download-isbn (&optional field search-query)
     "The list of search engines is specified by the variable
-`ps/ebib-download-isbn'."
+  `ps/ebib-download-isbn'."
     (interactive)
-    (ps/ebib-search-multi field search-query ps/ebib-download-book))
+    (ps/ebib-search-multi field search-query ps/ebib-download-book-functions))
 
-  ;; requires SciDownl
-  ;; https://github.com/Tishacy/SciDownl
   (defun ps/ebib-download-doi (&optional doi)
     "Download DOI from Sci-Hub. If DOI is not supplied, obtain it from
-the Ebib entry at point."
+  the Ebib entry at point."
     (interactive)
-    (let ((doi (or doi
-                   (ebib--execute-when
-                     (entries
-                      (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
-                     (default
-                      (beep)))))
-          (default-directory ps/dir-downloads))
-      (unless doi
-        (error "[Ebib] No DOI found in doi field"))
-      (message "Trying to download file...")
-      (async-shell-command
-       (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi))))
+    (unless (executable-find "scidownl")
+      (error "Please install scidownl (https://github.com/Tishacy/SciDownl)"))
+    (ebib--execute-when
+      (entries
+       (let ((doi (or doi
+                      (ebib--execute-when
+                        (entries
+                         (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+                        (default
+                         (beep)))))
+             (default-directory ps/dir-downloads))
+         (unless doi
+           (error "[Ebib] No DOI found in doi field"))
+         (message "Trying to download file...")
+         (async-shell-command
+          (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi))))
+      (default
+       (beep))))
 
   (defun ps/ebib-search-article (&optional field search-query)
     "The list of search engines is specified by the variable
-`ps/ebib-search-article'."
+  `ps/ebib-search-article-functions'."
     (interactive)
-    (ps/ebib-search-multi field search-query ps/ebib-search-article))
+    (ebib--execute-when
+      (entries
+       (ps/ebib-search-multi field search-query ps/ebib-search-article-functions))
+      (default
+       (beep))))
 
   (defun ps/ebib-download-article (&optional field search-query)
     "The list of search engines is specified by the variable
-`ps/ebib-download-article'."
+  `ps/ebib-download-article'."
     (interactive)
-    (ps/ebib-search-multi field search-query ps/ebib-search-article))
+    (ebib--execute-when
+      (entries
+       (ps/ebib-search-multi field search-query ps/ebib-search-article-functions))
+      (default
+       (beep))))
 
   (defun ps/ebib-search-book-by-title ()
-    "docstring"
+    "Search book by title."
     (interactive)
-    (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (user-error "`title' field is empty!"))
-        (ps/ebib-search-book "title")))
+    (ebib--execute-when
+      (entries
+       (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+               (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+               (user-error "`title' field is empty!"))
+           (ps/ebib-search-book "title")))
+      (default
+       (beep))))
 
   (defun ps/ebib-download-book-by-title ()
-    "docstring"
+    "Download book by title."
     (interactive)
-    (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-            (user-error "`title' field is empty!"))
-        (ps/ebib-download-book "title")))
+    (ebib--execute-when
+      (entries
+       (if (or (ebib-get-field-value "booktitle" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+               (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+               (user-error "`title' field is empty!"))
+           (ps/ebib-download-book "title")))
+      (default
+       (beep))))
 
   (defun ps/ebib-search-article-by-title ()
-    "docstring"
+    "Search article by title."
     (interactive)
-    (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (user-error "`title' field is empty!")
-      (ps/ebib-search-article "title")))
+    (ebib--execute-when
+      (entries
+       (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+           (user-error "`title' field is empty!")
+         (ps/ebib-search-article "title")))
+      (default
+       (beep))))
 
   (defun ps/ebib-download-article-by-title ()
-    "docstring"
+    "Download article by title."
     (interactive)
-    (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
-        (user-error "`title' field is empty!")
-      (ps/ebib-download-article "title")))
+    (ebib--execute-when
+      (entries
+       (if (ebib-get-field-value "article" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+           (user-error "`title' field is empty!")
+         (ps/ebib-download-article "title")))
+      (default
+       (beep))))
 
   (defun ps/ebib-download-video (id)
-    ""
-    (let* ((key (ebib--get-key-at-point))
-           (file-name
-            (ps/ebib--rename-and-abbreviate-file
-             ps/dir-library-media key "webm")))
-      (youtube-dl id :directory ps/dir-library-media :destination key)
-      (message (format "Downloading video from '%s'" (substring-no-properties id)))
-      (ps/ebib--update-file-field-contents key file-name)))
+    "Download video with id ID using `yt-dlp'."
+    (unless (executable-find "yt-dlp")
+      (user-error "Please install `yt-dlp'"))
+    (ebib--execute-when
+      (entries
+       (let* ((key (ebib--get-key-at-point))
+              (file-name
+               (ps/ebib--rename-and-abbreviate-file
+                ps/dir-library-media key "webm")))
+         (async-shell-command (format "yt-dlp --output '%s' '%s'" file-name id))
+         (message (format "Downloading video from '%s'" (substring-no-properties id)))
+         (ps/ebib--update-file-field-contents key file-name)))
+      (default
+       (beep))))
 
   (defun ps/ebib-sentence-case ()
     "docstring"
@@ -15120,7 +15183,7 @@ the Ebib entry at point."
 
   (defun ps/ebib-fix-authors ()
     "Rearrange the name of each author so that last name comes before
-first name, and names are separated by a semicolon."
+  first name, and names are separated by a semicolon."
     (interactive)
     (ebib--execute-when
       (entries
@@ -15320,37 +15383,20 @@ The correct Biblatex field for this information is
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
-*** TODO Add visible rating field to ebib
-:PROPERTIES:
-:ID:       311387B3-2CCB-4F40-87EB-7558F2C007BD
-:END:
-
-*** TODO Why does ebib not reload the db?
-:PROPERTIES:
-:ID:       7DA329F1-B179-4B86-8FB9-D37D43FD9B62
-:END:
-I think it's actually reloading but the buffer doesn't refresh.
-
 *** TODO Decide how ebib should deal with multi-volume works
 :PROPERTIES:
 :ID:       33D8549E-7DD8-4E4B-A690-0E6D29A8CA60
+:END:
+
+*** TODO Decide exhaustive list of work types
+:PROPERTIES:
+:ID:       9837CC84-AE98-4749-A16B-86EF995D4531
 :END:
 
 *** TODO Modify my custom ebib formulas so that they use native uniquify
 :PROPERTIES:
 :ID:       BA7B5845-B148-43B6-BE50-C1CBF89478BB
 :END:
-
-*** TODO [#6] Add imdb movies to ebib
-:PROPERTIES:
-:ID:       B801240B-B0F4-46EB-859F-9755ECCFB3DF
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-15 Wed 19:07]--[2023-03-15 Wed 20:22] =>  1:15
-:END:
-- First export them to csv.
-- Then convert the csv to bibtex
-  https://www.google.com/search?q=csv+to+bibtex&oq=csv+to+bib&aqs=chrome.0.0i512j69i57j0i512l2j0i22i30j0i10i22i30l5.7911j0j9&sourceid=chrome&ie=UTF-8
 
 *** TODO [#5] Fix ebib issues Leo reported
 :PROPERTIES:
@@ -15362,11 +15408,6 @@ EA Survey 2018 / 2019
 Wildeford 2018 EA Survey
 comienzan con las mismas palabras
 por qué ebib no recarga
-*** TODO [#6] Figure out difference between ~date~ and ~urldate~ bibtex fields
-:PROPERTIES:
-:ID:       7B7EA121-F1C0-4EAD-99F5-AAF4162DFDE9
-:END:
-
 *** resources
 :PROPERTIES:
 :ID:       A05D6298-646A-4E47-B3B2-07A14EABCEC5
@@ -15630,8 +15671,10 @@ or specify any other coding system (and risk losing\n\
   (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
 
   :general
+  ("C-H-M-S-z" 'zotra-add-entry-from-url) ; triggered by KM macro
   (ebib-index-mode-map
-   "i" 'zotra-add-entry-from-search))
+   "i" 'zotra-add-entry-from-search
+   "u" 'zotra-add-entry-from-url))
 #+end_src
 
 *** WAITING Launch zotra outside emacs
@@ -16074,7 +16117,7 @@ it, without asking for confirmation."
     (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.15))
 
   ;; this function seems to have been introduced after 1.6.11;
-  ;; since `org-msg' requires, we load it here
+  ;; since `org-msg' requires it, we load it here
   (defun mu4e-message-readable-path (&optional msg)
     "Get a readable path to MSG or raise an error.
 If MSG is nil, use `mu4e-message-at-point'."
@@ -16878,6 +16921,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "letterboxd\\.com"
                      "libgen\\."
                      "LinkedIn\\.com"
+                     "list-manage\\.com"
                      "loc\\.gov"
                      "utoronto\\.ca"
                      "worldcat\\.org"
@@ -16885,6 +16929,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "metaculus\\.com"
                      "metaforecast\\.com"
                      "paxful\\.com"
+                     "qualtrics\\.com"
                      "rescuetime\\.com"
                      "slack\\.com"
                      "squarespace\\.com"
@@ -17412,7 +17457,9 @@ CLOCK: [2021-05-22 Sat 21:42]--[2021-05-22 Sat 21:50] =>  0:08
 
 /[[https://github.com/Malabarba/emacs-google-this][google-this]] is a set of emacs functions and bindings to google under point./
 
-#+begin_src emacs-lisp :results silent
+[2023-05-09 Tue 10:07] Replacing with ~engine-mode~
+
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package google-this
   :config/el-patch
   ;; Tweak original function to offer contents of kill ring if there
@@ -17494,13 +17541,16 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine StanfordEncyclopediaofPhilosophy
     "https://plato.stanford.edu/search/searcher.py?query=%s"
     :keybinding "t")
-  (defengine Wikipedia
-    "http://www.wikipedia.org/search-redirect.php?language=en&go=Go&search=%s"
-    :keybinding "w")
+  (defengine Wikipedia-English
+    "https://en.wikipedia.org/w/index.php?search=%s"
+    :keybinding "H-w H-w")
+    (defengine Wikipedia-Spanish
+    "https://es.wikipedia.org/w/index.php?search=%s"
+    :keybinding "H-w H-e")
   (defengine YouTube
     "http://www.youtube.com/results?search_query=%s"
     :keybinding "y")
-  (engine/set-keymap-prefix (kbd "A-H-g")))
+  (engine/set-keymap-prefix (kbd "H-g")))
 #+end_src
 
 ** osm
@@ -17914,7 +17964,6 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 
 #+begin_src emacs-lisp :results silent
 (use-package emms
-  :demand t
   :config
   (require 'emms-setup)
   (require 'emms-player-simple)
@@ -17963,8 +18012,11 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 :PROPERTIES:
 :ID:       26EEEF20-5CDC-4855-A03D-AFEBB784D637
 :END:
+:LOGBOOK:
+CLOCK: [2023-05-07 Sun 10:53]--[2023-05-07 Sun 11:27] =>  0:34
+:END:
 
-/[[https://gitlab.com/tuedachu/ytdl][ytd]] is an Emacs interface for [[https://youtube-dl.org/][youtube-dl]]./
+/[[https://gitlab.com/tuedachu/ytdl][ytdl]] is an Emacs interface for [[https://youtube-dl.org/][youtube-dl]]./
 
 Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dlp]], a ~youtube-dl~ fork.
 
@@ -18662,33 +18714,6 @@ And finally, the section you've all been waiting for.
 :PROPERTIES:
 :ID:       9D7B5C99-2380-4159-A8C8-4021CC0482DE
 :END:
-** config version history
-:PROPERTIES:
-:ID:       720FF947-7E4D-4755-B365-B19AC0DBB4D0
-:END:
-
-*** Version 4
-:PROPERTIES:
-:ID:       E3A434DB-0F28-4AA9-8A86-9487B8BF894F
-:END:
-- fix various minor issues.
-- move this section to end of file.
-- otherwise identical to version 3.
-
-*** Version 3
-:PROPERTIES:
-:ID:       DEE239CF-BC77-4888-AD69-B33D32A7DB1A
-:END:
-- move ~tlon~ functions to separate "package", handled by ~elpaca~.
-- use ~eww~ by default.
-- add ~flymake~.
-- set precedence of various packages explicitly so that ~elpaca~ doesn't throw errors.
-
-*** Version 2
-:PROPERTIES:
-:ID:       0BCC3A55-0C91-413C-A4BB-D7E4048E30F2
-:END:
-- Migrated from ~straight~ to ~elpaca~.
 
 ** tlon-init
 :PROPERTIES:
@@ -18783,9 +18808,9 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 :ID:       5A96B05D-52BD-4648-B0D6-1E0B6C49DB37
 :END:
 
-The section below defines all the personal variables used by this file. The contents of that section are encrypted with ~org-crypt~ and tangled to a local ~variables.el~ file that isn't part of this public repository.
+The section below defines all the personal variables used by this file.
 
-** shared variables                                             :crypt:
+** shared variables
 :PROPERTIES:
 :ID:       3A5E2CF3-5CC3-4804-8AEC-89BFD943E0BF
 :END:
@@ -18793,92 +18818,224 @@ The section below defines all the personal variables used by this file. The cont
 CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 :END:
 
------BEGIN PGP MESSAGE-----
+#+begin_src emacs-lisp :tangle (print tlon-init-variables-path)
+(
+ (ps/personal-name . "Pablo Stafforini")
+ (ps/personal-gmail-unus . "pablo.staff") ; will this protect against spammers?
+ (ps/personal-gmail-duo . "orini@gmail.com")
+ (ps/personal-gmail . (concat ps/personal-gmail-unus ps/personal-gmail-duo))
+ (ps/personal-email-εἷς . "pablo@staff")
+ (ps/personal-email-δῠ́ο . "orini.com")
+ (ps/personal-email . (concat ps/personal-email-εἷς ps/personal-email-δῠ́ο))
+ (ps/tlon-email-एकम् . "tlon.sh")
+ (ps/tlon-email-द्वे . "ared@gmail.com")
+ (ps/tlon-email (concat ps/tlon-email-एकम् ps/tlon-email-द्वे))
+ (ps/personal-phone . "+1 4246668293")
+ (ps/dir-root . "/")
+ (ps/dir-system-apps . "/Applications/")
+ (ps/dir-user . (getenv "HOME"))
+ (ps/dir-dropbox . (file-name-concat ps/dir-user "Library/CloudStorage/Dropbox/"))
+ (ps/dir-downloads . (file-name-concat ps/dir-user "Downloads/"))
+ (ps/dir-emacs . user-emacs-directory)
+ (ps/dir-google-drive . (file-name-concat ps/dir-user "Google Drive/"))
+ (ps/dir-music . (file-name-concat ps/dir-google-drive "music/"))
+ (ps/dir-movies . (file-name-concat ps/dir-user "movies/"))
+ (ps/dir-finance . (file-name-concat ps/dir-google-drive "finance/"))
+ (ps/dir-audiobooks . (file-name-concat ps/dir-google-drive "audiobooks/"))
+ (ps/dir-music-tango . (file-name-concat ps/dir-music "tango/"))
+ (ps/dir-music-popular . (file-name-concat ps/dir-music "popular/"))
+ (ps/dir-music-classical . (file-name-concat ps/dir-music "classical/"))
+ (ps/dir-music-to-sort . (file-name-concat ps/dir-music "to sort/"))
+ (ps/dir-anki . (file-name-concat ps/dir-dropbox "anki/"))
+ (ps/dir-archive . (file-name-concat ps/dir-dropbox "archive/"))
+ (ps/dir-inactive . (file-name-concat ps/dir-dropbox "inactive/"))
+ (ps/dir-bibliography . (file-name-concat ps/dir-dropbox "bibliography/"))
+ (ps/dir-csl-styles . (file-name-concat ps/dir-bibliography "styles/"))
+ (ps/dir-csl-locales . (file-name-concat ps/dir-bibliography "locales/"))
+ (ps/dir-blog . (file-name-concat ps/dir-dropbox "blog/"))
+ (ps/dir-journal . (file-name-concat ps/dir-dropbox "journal/"))
+ (ps/dir-wiki . (file-name-concat ps/dir-dropbox "wiki/"))
+ (ps/dir-wiki-entries . (file-name-concat ps/dir-wiki "entries/"))
+ (ps/dir-wiki-references . (file-name-concat ps/dir-wiki "references/"))
+ (ps/dir-dotfiles . (file-name-concat ps/dir-dropbox "dotfiles/"))
+ (ps/dir-dotemacs . (file-name-concat ps/dir-dotfiles "emacs/"))
+ (ps/dir-karabiner . (file-name-concat ps/dir-dotfiles "karabiner/"))
+ (ps/dir-bibliographic-notes . (file-name-concat ps/dir-dropbox "bibliographic-notes/"))
+ (ps/dir-yasnippets . (file-name-concat ps/dir-dotemacs "yasnippets/"))
+ (ps/dir-yasnippets-private . (file-name-concat ps/dir-dotemacs "yasnippets-private/"))
+ (ps/dir-abbrev . (file-name-concat ps/dir-dotemacs "abbrev/"))
+ (ps/dir-private . (file-name-concat ps/dir-dotfiles "private/"))
+ (ps/dir-ledger . (file-name-concat ps/dir-dropbox "ledger/"))
+ (ps/dir-notes . (file-name-concat ps/dir-dropbox "notes/"))
+ (ps/dir-people . (file-name-concat ps/dir-dropbox "people/"))
+ (ps/dir-android . (file-name-concat ps/dir-dropbox "android/"))
+ (ps/dir-bbdb . (file-name-concat ps/dir-dropbox "bbdb/"))
+ (ps/dir-ade . (file-name-concat ps/dir-user "Documents/Digital Editions/"))
+ (ps/dir-library-pdf . (file-name-concat ps/dir-google-drive "library-pdf/"))
+ (ps/dir-library-html . (file-name-concat ps/dir-google-drive "library-html/"))
+ (ps/dir-library-media . (file-name-concat ps/dir-google-drive "library-media/"))
+ (ps/dir-emacs-var . (file-name-concat ps/dir-emacs "var/"))
+ (ps/dir-source . (file-name-concat ps/dir-user "source/"))
+ (ps/dir-translation-server . (file-name-concat ps/dir-source "translation-server/"))
+ (ps/dir-PW . (file-name-concat ps/dir-dropbox "PW/"))
+ (ps/dir-org-clock-reports . ps/dir-dropbox-tlon-pablo)
+ (ps/dir-google-drive-tlon . (file-name-concat ps/dir-google-drive "tlon/"))
+ (ps/dir-google-drive-tlon-leo . (file-name-concat ps/dir-google-drive-tlon "leo/"))
+ (ps/dir-google-drive-tlon-BAE . (file-name-concat ps/dir-google-drive-tlon "BAE/"))
+ (ps/dir-google-drive-tlon-EAN . (file-name-concat ps/dir-google-drive-tlon "EAN/"))
+ (ps/dir-google-drive-tlon-FM . (file-name-concat ps/dir-google-drive-tlon "FM/"))
+ (ps/dir-google-drive-tlon-GPE . (file-name-concat ps/dir-google-drive-tlon "GPE/"))
+ (ps/dir-google-drive-tlon-HEAR . (file-name-concat ps/dir-google-drive-tlon "HEAR/"))
+ (ps/dir-google-drive-tlon-LBDLH . (file-name-concat ps/dir-google-drive-tlon "LBDLH/"))
+ (ps/dir-google-drive-tlon-LP . (file-name-concat ps/dir-google-drive-tlon "LP/"))
+ (ps/dir-google-drive-tlon-RAE . (file-name-concat ps/dir-google-drive-tlon "RAE/"))
+ (ps/dir-google-drive-tlon-RCG . (file-name-concat ps/dir-google-drive-tlon "RCG/"))
+ (ps/dir-dropbox-tlon . (file-name-concat ps/dir-dropbox "tlon/"))
+ (ps/dir-google-drive-tlon-core . (file-name-concat ps/dir-google-drive-tlon "core/"))
+ (ps/dir-google-drive-tlon-fede . (file-name-concat ps/dir-google-drive-tlon "fede/"))
+ (ps/dir-dropbox-tlon-core . (file-name-concat ps/dir-dropbox-tlon "core/"))
+ (ps/dir-dropbox-tlon-leo . (file-name-concat ps/dir-dropbox-tlon "leo/"))
+ (ps/dir-dropbox-tlon-fede . (file-name-concat ps/dir-dropbox-tlon "fede/"))
+ (ps/dir-dropbox-tlon-pablo . (file-name-concat ps/dir-dropbox-tlon "pablo/"))
+ (ps/dir-dropbox-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-core "ledger/"))
+ (ps/dir-dropbox-tlon-pass . (file-name-concat ps/dir-dropbox-tlon-core "pass/"))
+ (ps/dir-dropbox-tlon-BAE . (file-name-concat ps/dir-dropbox-tlon "BAE/"))
+ (ps/dir-dropbox-tlon-EAN . (file-name-concat ps/dir-dropbox-tlon "EAN/"))
+ (ps/dir-dropbox-tlon-FM . (file-name-concat ps/dir-dropbox-tlon "FM/"))
+ (ps/dir-dropbox-tlon-GPE . (file-name-concat ps/dir-dropbox-tlon "GPE/"))
+ (ps/dir-dropbox-tlon-HEAR . (file-name-concat ps/dir-dropbox-tlon "HEAR/"))
+ (ps/dir-dropbox-tlon-LBDLH . (file-name-concat ps/dir-dropbox-tlon "LBDLH/"))
+ (ps/dir-dropbox-tlon-LP . (file-name-concat ps/dir-dropbox-tlon "LP/"))
+ (ps/dir-dropbox-tlon-RAE . (file-name-concat ps/dir-dropbox-tlon "RAE/"))
+ (ps/dir-dropbox-tlon-RCG . (file-name-concat ps/dir-dropbox-tlon "RCG/"))
+ (ps/dir-repos . (file-name-concat ps/dir-dropbox "repos/"))
+ (ps/dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat ps/dir-repos "biblioteca-altruismo-eficaz/"))
+ (ps/dir-emacs-local . (file-name-concat ps/dir-emacs "local/"))
+ (ps/dir-chemacs-profiles . (file-name-concat ps/dir-user ".config/emacs-profiles/"))
+ (ps/dir-org .  ps/dir-dropbox)
+ (ps/dir-org-roam .  ps/dir-org)
+ (ps/dir-org-images . (file-name-concat ps/dir-google-drive "Pictures/org/"))
+ (ps/dir-websites . (file-name-concat ps/dir-dropbox "websites/"))
+ (ps/dir-calibre . (file-name-concat ps/dir-user "Calibre Library/"))
+ (ps/dir-all-repos . (list ps/dir-android
+                           ps/dir-bibliography
+                           ps/dir-bibliographic-notes
+                           ps/dir-journal
+                           ps/dir-notes
+                           ps/dir-people))
+ (ps/file-notes . (file-name-concat ps/dir-notes "notes.org"))
+ (ps/file-inbox-desktop . (file-name-concat ps/dir-android "inbox-desktop.org"))
+ (ps/file-inbox-mobile . (file-name-concat ps/dir-android "inbox-mobile.org"))
+ (ps/file-calendar . (file-name-concat ps/dir-android "calendar.org"))
+ (ps/file-feeds-pablo . (file-name-concat ps/dir-notes "feeds.org"))
+ (ps/file-tlon-feeds . (file-name-concat ps/dir-dropbox-tlon-core "feeds.org"))
+ (ps/file-anki . (file-name-concat ps/dir-anki "main.org"))
+ (ps/file-init . (file-name-concat ps/dir-dotemacs "init.el"))
+ (ps/file-config . (file-name-concat ps/dir-dotemacs "config.org"))
+ (ps/file-karabiner . (file-name-concat ps/dir-karabiner "modifications.org"))
+ (ps/file-karabiner-edn . (file-name-concat ps/dir-karabiner "karabiner.edn"))
+ (ps/file-bibliography . (file-name-concat ps/dir-bibliography "bibliography.bib"))
+ (ps/file-bibliography-old . (file-name-concat ps/dir-bibliography "old.bib"))
+ (ps/file-bibliography-new . (file-name-concat ps/dir-bibliography "new.bib"))
+ (ps/file-bibliography-films . (file-name-concat ps/dir-bibliography "films.bib"))
+ (ps/file-bibliography-emacs . (file-name-concat ps/dir-bibliography "emacs.bib"))
+ (ps/file-wiki-notes . (file-name-concat ps/dir-wiki "wiki-notes.org"))
+ (ps/file-wiki-published . (file-name-concat ps/dir-wiki "wiki-published.org"))
+ (ps/file-wiki-help . (file-name-concat ps/dir-wiki "wiki-help.org"))
+ (ps/file-library . (file-name-concat ps/dir-notes "library.org"))
+ (ps/file-quotes . (file-name-concat ps/dir-blog "quotes.org"))
+ (ps/file-films . (file-name-concat ps/dir-notes "films.org"))
+ (ps/file-tlon-tareas-leo . (file-name-concat ps/dir-dropbox-tlon-leo "tareas.org"))
+ (ps/file-tlon-tareas-fede . (file-name-concat ps/dir-dropbox-tlon-fede "tareas.org"))
+ (ps/file-org2blog . (file-name-concat ps/dir-websites ".org2blog.org"))
+ (ps/file-straight-profile . (file-name-concat ps/dir-dotemacs "straight-profile.el"))
+ (ps/file-orb-noter-template . (file-name-concat ps/dir-bibliography "orb-noter-template.org"))
+ (ps/file-orb-capture-template . (file-name-concat ps/dir-bibliographic-notes "${citekey}.org"))
+ (ps/file-bookmarks . (file-name-concat ps/dir-dropbox "bookmarks"))
+ (ps/file-variables . (file-name-concat ps/dir-dotemacs "variables.el"))
+ (ps/file-ledger . (file-name-concat ps/dir-ledger "journal.ledger"))
+ (ps/file-ledger-db . (file-name-concat ps/dir-ledger ".pricedb"))
+ (ps/file-metaculus . (file-name-concat ps/dir-notes "metaculus.org"))
+ (ps/file-gpe . (file-name-concat ps/dir-notes "global-priorities-encyclopedia.org"))
+ (ps/file-fm . (file-name-concat ps/dir-notes "future-matters.org"))
+ (ps/file-ffrp . (file-name-concat ps/dir-notes "future-fund-regranting-program.org"))
+ (ps/file-rcg . (file-name-concat ps/dir-notes "riesgos-catastróficos-globales.org"))
+ (ps/file-ean . (file-name-concat ps/dir-notes "ea.news.org"))
+ (ps/file-cookies . (file-name-concat ps/dir-google-drive "Apps/Chrome/cookies.txt"))
+ (ps/file-work . (file-name-concat ps/dir-notes "work-dashboard.org"))
+ (ps/file-tlon-ledger-schedule-file . (file-name-concat ps/dir-dropbox-tlon-ledger "ledger-schedule.ledger"))
+ (ps/file-tlon-docs . (file-name-concat ps/dir-dropbox-tlon "docs.org"))
+ (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
+ (ps/face-fixed-pitch . "Source Code Pro")
+ (ps/face-fixed-pitch-size .  115)
+ (ps/face-variable-pitch . "Source Serif Pro")
+ (ps/monitor-type . (cdr (assoc 'name (frame-monitor-attributes))))
+ (ps/ledger-active-currencies . '("USD" "EUR" "GBP" "MXN" "ARS"))
+ (ps/frame-width-threshold .  350)
+ (ps/new-empty-buffer-major-mode . 'org-mode)
+ (ps/forge-owned-accounts . "benthamite")
+ (ps/personal-signature . "
 
-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
-4EqKCz9Q3I9lRgoyIAMb
-=RqLb
------END PGP MESSAGE-----
+,#+begin_signature
+--
+,*Pablo*
+,#+end_signature")
+ (ps/location-name . "Ciudad de Buenos Aires, Argentina")
+ (ps/display-wttr-locations . '("Buenos Aires"))
+ (ps/location-latitude . -34.58194921101665)
+ (ps/location-longitude . -58.41290172678564)
 
+ ;; Threshold for auto splitting the window sideways, in columns
+ (ps/split-width-threshold . 200)
 
+ ;; Telega server libs prefix: depends on how tldib is installed:
+ ;; using brew --HEAD or compiling it from source
+ (ps/telega-server-libs-prefix . "/opt/homebrew")
+
+ (ps/org-agenda-files . `(,ps/file-calendar))
+ ;; I have to exclude these files because otherwise extraneous
+ ;; information shows up in my agenda, such as TODOs and time
+ ;; logs. These files lack the `property' tag but the may still
+ ;; otherwise be included if they have been modified recently
+ ;; (see the function `vulpea-agenda-files-update')
+ (ps/org-agenda-files-excluded . `(,ps/file-tlon-tareas-leo ,ps/file-tlon-tareas-fede))
+
+ (ps/init-location . (file-name-concat
+                      (or (catch 'default-path
+                            (dolist (profile chemacs-profiles)
+                              (when (string= (car profile) "default")
+                                (throw 'default-path (cdadr profile)))))
+                          "~/.config/emacs-profiles/develop/")
+                      "init-pablo.el"))
+ ;; "Target location of `init-pablo.el' file to be tangled upon invocation of `org-babel-tangle'. Defaults to the path associated with the default Chemacs profile, when such a profile is defined, else to '~/.config/emacs-profiles/develop/'. A different path may be set manually via `ps/init-configure-tangle-options'."
+
+ (ps/early-init-location . (file-name-concat
+                            (or (catch 'default-path
+                                  (dolist (profile chemacs-profiles)
+                                    (when (string= (car profile) "default")
+                                      (throw 'default-path (cdadr profile)))))
+                                "~/.config/emacs-profiles/develop/")
+                            "early-init.el"))
+ ;; "Target location of `early-init.el' file to be tangled upon invocation of `org-babel-tangle'. Defaults to the path associated with the default Chemacs profile, when such a profile is defined, else to '~/.config/emacs-profiles/develop/'. A different path may be set manually via `ps/init-configure-tangle-options'.")
+
+ (ps/init-target-locations . (let (target-directories)
+                               (dolist (chemacs-profile chemacs-profiles target-directories)
+                                 (push
+                                  (cons
+                                   (car chemacs-profile)
+                                   (file-name-concat (cdadr chemacs-profile) "init-pablo.el"))
+                                  target-directories))))
+ ;; "Alist of Chemacs profiles and associated locations for the `init-pablo.el' and `early-init-pablo.el' files to be passed to `ps/init-configure-tangle-options'.")
+
+ (ps/init-tangle-flags-filename-sans-directory . "tangle-flags-pablo.el")
+
+ (ps/init-dir . "/Users/pablostafforini/.config/emacs-profiles/develop/")
+ )
+#+end_src
 
 ** local variables
 :PROPERTIES:
-:ID:       7350B98F-92E4-44AB-AB99-9413C6C81E28
+:ID:       1D879FA3-48B7-4C76-9EE0-8514F9E85A4E
 :END:
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)

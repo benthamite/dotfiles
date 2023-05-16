@@ -393,7 +393,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-ref][org-ref]]
   - [[#doi-utils][doi-utils]]
   - [[#ebib][ebib]]
-  - [[#biblio][biblio]]
   - [[#persid][persid]]
   - [[#zotra][zotra]]
 - [[#email][email]]
@@ -15414,27 +15413,6 @@ por qué ebib no recarga
 :END:
 
 [[https://juanjose.garciaripoll.com/blog/ebib-biblio-interface/index.html][eBib-Biblio interface, aka. Mendeley for Emacs]]
-
-** biblio
-:PROPERTIES:
-:ID:       4EDDE179-9DE5-4F31-9FB4-17A5B68F6557
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-16 Sat 15:22]--[2022-07-16 Sat 15:26] =>  0:04
-CLOCK: [2022-07-16 Sat 15:17]--[2022-07-16 Sat 15:18] =>  0:01
-:END:
-
-/[[https://github.com/cpitclaudel/biblio.el][biblio]] is a package to browse and import bibliographic references from CrossRef, DBLP, HAL, arXiv, Dissemin, and doi.org./
-
-#+begin_src emacs-lisp :results silent
-(use-package biblio
-  :defer 15
-  :config
-  (defvar ps/biblio-arxiv-regexp "\\([[:digit:]]\\{4\\}\\.[[:digit:]]\\{4,5\\}\\)")
-  (defun ps/biblio-arxiv-id-p (string)
-    "Return `t' if string has the form of an arXiv ID."
-    (string-match ps/biblio-arxiv-regexp string)))
-#+end_src
 
 ** persid
 :PROPERTIES:

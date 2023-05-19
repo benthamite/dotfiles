@@ -10325,39 +10325,25 @@ Excludes the heading itself and any child subtrees."
 in current subtree."
     (interactive)
     (if (use-region-p)
-	(funcall-interactively #'count-words-region (region-beginning) (region-end))
+        (funcall-interactively #'count-words-region (region-beginning) (region-end))
       (org-with-wide-buffer
        (cl-loop for (lines words characters)
-		in (org-map-entries
-		    (lambda ()
-		      (unpackaged/org-forward-to-entry-content 'unsafe)
-		      (let ((end (org-entry-end-position)))
-			(list (count-lines (point) end)
-			      (count-words (point) end)
-			      (- end (point)))))
-		    nil 'tree)
-		sum lines into total-lines
-		sum words into total-words
-		sum characters into total-characters
-		finally return (let ((message (format "Subtree \"%s\" has %s lines, %s words, and %s characters."
-						      (org-get-heading t t) total-lines total-words total-characters)))
-				 (kill-new (number-to-string total-words))
-				 (message message)
-				 message)))))
-
-  ;; Note that there exists `org-back-to-heading', possibly making the below redundant or inferior
-  (defun ps/org-jump-to-beginning-of-heading ()
-    "Move to the beginning of heading at point."
-    (interactive)
-    (if visual-line-mode
-	(progn
-	  (visual-line-mode -1)
-	  (setq visual-line-mode-toggle t)))
-    (when (org-at-heading-p)
-      (next-line))
-    (org-previous-visible-heading 1)
-    (if visual-line-mode-toggle
-	(visual-line-mode)))
+                in (org-map-entries
+                    (lambda ()
+                      (unpackaged/org-forward-to-entry-content 'unsafe)
+                      (let ((end (org-entry-end-position)))
+                        (list (count-lines (point) end)
+                              (count-words (point) end)
+                              (- end (point)))))
+                    nil 'tree)
+                sum lines into total-lines
+                sum words into total-words
+                sum characters into total-characters
+                finally return (let ((message (format "Subtree \"%s\" has %s lines, %s words, and %s characters."
+                                                      (org-get-heading t t) total-lines total-words total-characters)))
+                                 (kill-new (number-to-string total-words))
+                                 (message message)
+                                 message)))))
 
   (defun ps/org-jump-to-first-heading ()
     "Move point to the beginning of the first org heading in the

@@ -1550,28 +1550,6 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("'" (hydra-dired/body) "back"))
 #+end_src
 
-*** org ratings
-:PROPERTIES:
-:ID:       F6AA197E-73A7-4688-986F-4A1D583BBA99
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-org-rating
-  (:exit t
-         :idle 0.5)
-  "Org ratings"
-  ("1" (org-set-property "RATING" "1") "1")
-  ("2" (org-set-property "RATING" "2") "2")
-  ("3" (org-set-property "RATING" "3") "3")
-  ("4" (org-set-property "RATING" "4") "4")
-  ("5" (org-set-property "RATING" "5") "5")
-  ("6" (org-set-property "RATING" "6") "6")
-  ("7" (org-set-property "RATING" "7") "7")
-  ("8" (org-set-property "RATING" "8") "8")
-  ("9" (org-set-property "RATING" "9") "9")
-  ("0" (org-set-property "RATING" "10") "10"))
-#+end_src
-
 ** warnings
 :PROPERTIES:
 :ID:       C8FB5BC6-6895-4D63-86A8-E49D6BB3001C

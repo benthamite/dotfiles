@@ -10380,7 +10380,6 @@ image."
    "A-C-s-z" 'org-end-of-line ; karabiner maps `/' to `z'; otherwise I can't trigger the command while holding `shift'
    "A-C-s-r" 'org-previous-visible-heading
    "A-C-s-f" 'org-next-visible-heading
-   "A-C-s-n" 'ps/org-jump-to-beginning-of-heading ; move to beginning of heading
    "A-C-s-M-m" 'org-previous-block
    "A-C-s-M-/" 'org-next-block
    "A-H-M-t" 'org-transpose-element

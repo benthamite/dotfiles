@@ -2298,12 +2298,8 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 (use-feature jit-lock
   :defer 10
   :config
-  ;; I had to hand-code the value because `(*
-  ;; (window-max-chars-per-line) (window-body-height))' evaluated on
-  ;; startup outputs a value much lower than when the expression is
-  ;; evaluated manually (~2500 vs. ~12000), not sure why.
-  ;;
-  (setq jit-lock-chunk-size 120000)) ; emacs.stackexchange.com/a/72439/32089
+  (setq jit-lock-chunk-size
+        (* (window-max-chars-per-line) (window-body-height) 10))) ; emacs.stackexchange.com/a/72439/32089
 #+end_src
 
 * performance

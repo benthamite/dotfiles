@@ -4460,6 +4460,7 @@ option."
       (dired-do-delete arg)))
 
   ;; emacs.stackexchange.com/a/60663/32089
+  ;; consider binding this to something
   (defun ps/dired-duplicate-this-file ()
     "Duplicate file at point."
     (interactive)
@@ -4476,6 +4477,7 @@ option."
 
   (add-hook 'dired-mode-hook #'dired-hide-details-mode) ; hide details by default
 
+  ;; consider binding this to something
   (defun ps/dired-convert-image-to-pdf ()
     "Convert image at point to PDF."
     (interactive)

@@ -7832,7 +7832,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
    "M-k" 'eshell-previous-matching-input-from-input
    "M-l" 'eshell-next-matching-input-from-input
    "s-l" 'eshell/clear
-   "s-c" 'ps/eshell-open-cwd-on-dired
    "s-d" 'eshell-send-eof-to-process
    "H-n" 'ps/eshell-new-session
    "M-p" nil

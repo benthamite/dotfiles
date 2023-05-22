@@ -13815,8 +13815,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
     (ebib))
 
   (defun ps/ebib-reload-current-database-no-confirm ()
-    "Reload the current database from disk, without asking for
-confirmation."
+    "Reload the current database from disk, without confirmation."
     (interactive)
     (ebib--execute-when
       (entries
@@ -13851,7 +13850,7 @@ confirmation."
 
   (run-with-idle-timer 60 nil #'ps/ebib-auto-save-old-db)
 
-  ;; these two functions, in turn, detect when a bib file has changed
+  ;; these two function calls, in turn, detect when a bib file has changed
   ;; and reload the corresponding database
   (file-notify-add-watch
    ps/file-bibliography-new
@@ -13912,6 +13911,7 @@ confirmation."
         (ebib--redisplay-index-item field)
         (ebib-save-current-database t))))
 
+   ;; TODO: refactor the two commands below into a single command
   (defun ps/ebib-download-by-identifier (&optional id)
     "docstring"
     (interactive)
@@ -13971,16 +13971,14 @@ confirmation."
              (ps/ebib-download-by-identifier)))))
 
   (defun ps/ebib-search-dwim ()
-    "If field at point is 'title', run a search with its value; otherwise use identifier.
-
-  The list of websites for the search query is defined by the variable `ps/ebib-search-book'"
+    "If field at point is 'title', run a search with its value, else use identifier.
+  The list of websites for the search query is defined by the
+  variable `ps/ebib-search-book'"
     (interactive)
     (ps/ebib--search-or-download-dwim 'search))
 
   (defun ps/ebib-download-dwim ()
-    "If field at point is 'title', run a search with its value;
-otherwise use identifier.
-
+    "If field at point is 'title', run a search with its value, else use identifier.
 The list of websites for the search query is defined by the
   variable `ps/ebib-download-book'"
     (interactive)
@@ -14044,9 +14042,9 @@ exists."
       (kill-buffer html-buffer)))
 
   (defun ps/ebib-open-file-dwim ()
-    "Open file in entry at point. If the entry contains more than one
-file, use the preference ordering defined in
-`ps/ebib-valid-file-extensions'."
+    "Open file in entry at point.
+If the entry contains more than one file, use the preference
+ordering defined in `ps/ebib-valid-file-extensions'."
     (interactive)
     (if-let ((extension
               (catch 'tag
@@ -14059,8 +14057,7 @@ file, use the preference ordering defined in
       (user-error "No file found.")))
 
   (defun ps/ebib-validate-file-stem ()
-    "If entry at point has attachments, check that the stem of
-each of the attached files is the entry's unique key."
+    "Check that stem of each attached file equals entry's unique key."
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
       (when
           (catch 'tag
@@ -14071,7 +14068,7 @@ each of the attached files is the entry's unique key."
                  (throw 'tag file)))
              (ebib--split-files files))
             nil)
-        (user-error "Invalid file stem."))))
+        (user-error "Invalid file stem"))))
 
   (defun ps/ebib-rename-files ()
     "Rename files in entry at point so that the file stems match the
@@ -14085,7 +14082,7 @@ corresponding entry key."
                           (ebib-get-field-value field key ebib--cur-db t t)
                           ";")))
          (unless (ps/ebib-valid-key-p key)
-           (user-error "Entry has an invalid key; pleasse regenerate it."))
+           (user-error "Entry has an invalid key; pleasse regenerate it"))
          (when file-list
            (ebib-delete-field-contents field t)
            (dolist (filename file-list)
@@ -14106,9 +14103,9 @@ corresponding entry key."
       (default
        (beep))))
 
+  ;; We abbreviate the filename so that it works when invoked by my collaborators
   (defun ps/ebib--rename-and-abbreviate-file (directory key &optional extension)
-    "We abbreviate the filename so that it works when invoked by
-different users, as long as they have the same folder structure."
+    "docstring"
     (file-name-concat
      (abbreviate-file-name
       directory)
@@ -14270,7 +14267,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       (add-to-list 'ps/ebib-search-engines engine-symbol)))
 
   (defmacro ps/define-ebib-search-commands ()
-  "Generate search commands for each search engine listed in `ps/ebib-search-engines'."
+    "Generate search commands for each search engine listed in `ps/ebib-search-engines'."
     `(progn
        ,@(mapcar (lambda (search-name)
                    `(defun ,(intern (concat "ps/ebib-search-" (symbol-name search-name))) (&optional field search-query)

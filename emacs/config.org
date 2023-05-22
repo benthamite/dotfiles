@@ -13361,12 +13361,9 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
   (setq orb-roam-ref-format 'org-cite)
   (setq orb-insert-interface 'citar-open-notes)
   (setq orb-note-actions-interface 'default)
-  (setq orb-preformat-keywords
-   '("citekey" "title" "url" "author" "author-or-editor" "keywords" "file"))
-  (setq orb-process-file-keyword t)
   (setq orb-attached-file-extensions '("pdf"))
-
-  (add-to-list 'orb-preformat-keywords "year")
+  (dolist (keyword '("year" "title" "url" "keywords"))
+    (add-to-list 'orb-preformat-keywords keyword))
   (org-roam-bibtex-mode))
 #+end_src
 

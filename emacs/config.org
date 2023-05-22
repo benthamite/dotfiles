@@ -949,7 +949,7 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 
 * foundational
 :PROPERTIES:
-:ID:       25915A25-30F2-4A58-86FD-E27438D269B6
+:ID:       B2CADEA2-F8B7-4E8E-8FB0-D6B59658933D
 :END:
 
 ** general
@@ -2044,6 +2044,8 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 :PROPERTIES:
 :ID:       E39A1AC5-7BF7-4995-B116-BB6323C7605F
 :END:
+
+
 #+begin_src emacs-lisp :results silent
 (use-feature paren
   :demand t
@@ -2274,6 +2276,10 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 
 ** hl-line
 :PROPERTIES:
+:ID:       EBCFE2FC-27B4-4C30-9D2A-A841B34271F7
+:END:
+
+:PROPERTIES:
 :ID:       2793C213-5A36-4DAB-9217-DA1BBE257E09
 :END:
 #+begin_src emacs-lisp :results silent
@@ -2396,6 +2402,7 @@ and generates profiling report."
 :PROPERTIES:
 :ID:       1EA302FA-D0A2-470C-82C2-47FCA4E04FAF
 :END:
+
 Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][Prot]].
 
 #+begin_src emacs-lisp :results silent
@@ -2403,9 +2410,9 @@ Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c
   :demand t
   :config
   (setq bidi-display-reordering nil)
+  (setq bidi-inhibit-bpa t)
   (setq inhibit-compacting-font-caches t)
   (setq redisplay-skip-fontification-on-input t)
-  (setq bidi-inhibit-bpa t)
   ;; emacs-lsp.github.io/lsp-mode/page/performance/
   (setq read-process-output-max (* 1024 1024)) ; 1mb.
   (setq-default bidi-paragraph-direction 'left-to-right))
@@ -2426,6 +2433,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :PROPERTIES:
 :ID:       3493B00B-C36E-406F-B681-F145FD1684B2
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature simple
   :demand t
@@ -2438,6 +2446,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :PROPERTIES:
 :ID:       73DC1518-87FD-48D7-9EE5-C863126905AD
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature simple
   :demand t
@@ -2470,6 +2479,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :PROPERTIES:
 :ID:       E10CAF75-4C0C-4910-856F-39707E30A565
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature emacs
   :demand t
@@ -2789,6 +2799,7 @@ between the two."
  "A-H-M-v" 'transpose-lines
  "A-H-M-z" 'ps/transpose-lines-backward))
 #+end_src
+
 ** sentences
 :PROPERTIES:
 :ID:       CEEDCAFA-4527-401D-A262-C80871AD49E8
@@ -3559,6 +3570,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 :PROPERTIES:
 :ID:       06396799-A9FB-4417-AAE3-3654BC901B93
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature hippie-exp
   :config
@@ -3736,10 +3748,12 @@ CLOCK: [2021-04-05 Mon 15:34]--[2021-04-05 Mon 15:35] =>  0:01
 :PROPERTIES:
 :ID:       893A2A5B-707A-4C9A-9E25-414DC663F2CD
 :END:
+
 :LOGBOOK:
 CLOCK: [2021-07-30 Fri 21:35]--[2021-07-30 Fri 22:18] =>  0:43
 CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature register
   :demand t
@@ -3782,10 +3796,12 @@ _a_pend       |_k_macro      |r_e_store                    "
   :general
   ("C-r" 'hydra-register/body))
 #+end_src
+
 ** bookmarks
 :PROPERTIES:
 :ID:       943D5DC0-7F0E-449C-8D21-089E051F1027
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature bookmark
   :demand t
@@ -3844,7 +3860,6 @@ CLOCK: [2021-07-24 Sat 20:41]--[2021-07-24 Sat 20:46] =>  0:05
 CLOCK: [2021-07-01 Thu 20:45]--[2021-07-01 Thu 20:55] =>  0:10
 CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 :END:
-
 
 #+begin_src emacs-lisp :results silent
 (use-feature files
@@ -4283,7 +4298,7 @@ process in these cases."
   ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "H-q" 'bury-buffer
    "q" 'ps/bury-buffer-switch-to-other-window)
-  ((apropos-mode-map calendar-mode-map chatgpt-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
+  ((apropos-mode-map calendar-mode-map chatgpt-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map mu4e-headers-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
    "q" 'ps/kill-this-buffer)
   ;; We typically enter these modes to lookup some information and
   ;; then return to the previous buffer, so we set `q' to switch to
@@ -4586,7 +4601,7 @@ CLOCK: [2022-07-17 Sun 10:49]--[2022-07-17 Sun 11:13] =>  0:24
 :ID:       8AD56019-FF0A-407F-B610-F9F2F4DE1B90
 :END:
 
-The code block below, based on [[https://www.djcbsoftware.nl/code/mu/mu4e/Attaching-files-with-dired.html][this]], lets you attach files with ~mu4e~ directly from a Dired buffer.
+The code block below, based on [[https://www.djcbsoftware.nl/code/mu/mu4e/Attaching-files-with-dired.html][this]], enables ~mu4e~ file attachment directly from a Dired buffer.
 
 #+begin_src emacs-lisp :results silent
 (use-feature gnus-dired
@@ -4677,6 +4692,7 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
   :config
   (advice-add 'dired-subtree-toggle :after (lambda () (dired-omit-mode) (dired-omit-mode)))
   (advice-add 'dired-subtree-cycle :after (lambda () (dired-omit-mode) (dired-omit-mode)))
+
   :general
   (dired-mode-map
    "<tab>" 'dired-subtree-toggle
@@ -6000,6 +6016,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 
   (display-time-mode)
 
+  ;; used by various ledger snippets
   (defun ps/time-last-day-of-last-month ()
     "Insert the last day of the most recent month."
     (interactive)
@@ -7117,7 +7134,7 @@ buffer are offered."
     (consult-org-heading)
     (recenter 1))
 
-    ;; (advice-remove 'consult-org-heading #'ps/org-cycle-content)
+  ;; (advice-remove 'consult-org-heading #'ps/org-cycle-content)
   ;; (advice-add 'consult-org-agenda :after #'ps/org-narrow-to-entry-and-children)
 
   :general
@@ -7318,7 +7335,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 |---------+-----------------------------|
 | [[id:35370B0F-9EBD-433F-B59C-576EE8A69772][corfu]]   | completion at point UI      |
 | [[id:5A103245-9DC3-4D95-96D7-2161F6CCD0B1][cape]]    | completion at point backend |
-
 
 ** corfu
 :PROPERTIES:
@@ -10162,7 +10178,7 @@ description)."
       (isearch-forward-regexp nil 1) ; isearch+
       (ps/isearch-yank-unquoted-string "^\*+ ")))
 
-  ;; from http://emacs.stackexchange.com/a/10714/32089
+  ;; emacs.stackexchange.com/a/10714/32089
   (defun ps/org-remove-link ()
     "Replace an org link by its description or, if empty, its
 address."
@@ -10257,10 +10273,10 @@ link, call `org-open-at-point' and set
 `browse-url-browser-function' to `eww-browse-url'"
     (interactive "P")
     (let ((browse-url-browser-function 'eww-browse-url)
-	  (browse-url-handlers nil))
+          (browse-url-handlers nil))
       (org-open-at-point)))
 
-      ;; currently not bound; consider deleting if unused
+  ;; currently not bound; consider deleting if unused
   (defun ps/backward-org-transpose-element ()
     "Transpose current and previous elements, keeping blank lines between.
 Point is moved after both elements."
@@ -10332,26 +10348,26 @@ image."
     "Count the number of lines in the string S that contain the regular expression EXP."
     (let ((count 0))
       (mapc (lambda (line)
-	      (when (string-match-p exp line)
-		(setq count (+ 1 count))))
-	    (split-string s "\n"))
+              (when (string-match-p exp line)
+                (setq count (+ 1 count))))
+            (split-string s "\n"))
       count))
 
   (defun ps/org-productivity-of-the-day ()
     (seq-reduce
      (lambda (acc it)
        (let* ((folder (file-name-directory it))
-	      (file (file-name-nondirectory it))
-	      (base-cmd (concat "cd "
-				folder
-				"; git log --since=midnight -p "
-				file
-				"| grep TODO"))
-	      (changed (shell-command-to-string base-cmd))
-	      (added (count-lines-with-expression changed "^\\+"))
-	      (removed (count-lines-with-expression changed "^\\-")))
-	 (cons (+ (car acc) added)
-	       (- (cdr acc) removed))))
+              (file (file-name-nondirectory it))
+              (base-cmd (concat "cd "
+                                folder
+                                "; git log --since=midnight -p "
+                                file
+                                "| grep TODO"))
+              (changed (shell-command-to-string base-cmd))
+              (added (count-lines-with-expression changed "^\\+"))
+              (removed (count-lines-with-expression changed "^\\-")))
+         (cons (+ (car acc) added)
+               (- (cdr acc) removed))))
      org-agenda-files
      '(0 . 0)))
 
@@ -10815,7 +10831,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
            "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
           ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
-           (id "8DFD24AB-A5A1-49D9-BB5D-50D59DFD150F")
+           (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
            "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
           ("tbA" "Tlön: BAE: [via email] Revise article translation and Leo's revision" entry
            (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
@@ -10872,7 +10888,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
           ("tt" "Tlön: Core")
           ("ttt" "Tlön: Core: Generic " entry
-           (id "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")
+           (id "77A450DE-5867-423E-A251-7E92BF1617FC")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
           ("tte" "Tlön: Core: Emacs")
           ("ttee" "Tlön: Core: Emacs: Generic " entry
@@ -11657,9 +11673,9 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
     (let ((source-buffer (current-buffer)))
       (org-refile)
       (save-window-excursion
-      (save-excursion
-        (org-refile '(16))
-        (org-archive-to-archive-sibling)))))
+        (save-excursion
+          (org-refile '(16))
+          (org-archive-to-archive-sibling)))))
 
   ;; Inspired by emacs.stackexchange.com/q/8045/32089
   (defun ps/org-refile-to (file heading)
@@ -11803,7 +11819,6 @@ CLOCK: [2022-07-16 Sat 21:15]--[2022-07-17 Sun 10:49] => 13:34
 :END:
 
 [[https://www.orgroam.com/manual.html#Mac-OS][This section of the org-roam manual]] describes how to set up ~org-protocol~ on macOS. Note that [[https://bitbucket.org/mituharu/emacs-mac/][emacs-mac]] supports ~org-protocol~ out of the box and doesn't require turning on the Emacs server.
-
 
 #+begin_src emacs-lisp :results silent
 (use-feature org-protocol
@@ -12491,7 +12506,7 @@ SQL can be either the emacsql vector representation, or a string."
                     ps/org-roam-excluded-dirs
                     ps/org-roam-excluded-files)
                    (regexp-opt result))
-            (push (if (f-directory-p dir-or-file)
+            (push (if (file-directory-p dir-or-file)
                       (file-relative-name dir-or-file ps/dir-org-roam)
                     dir-or-file)
                   result))))
@@ -14131,7 +14146,6 @@ different users, as long as they have the same folder structure."
 
   (defun ps/ebib-attach-file (&optional most-recent)
     "Prompt the user for a file to attach to the current entry.
-
 If MOST-RECENT is non-nil, attach the most recent file instead."
     (interactive)
     (ebib--execute-when
@@ -14703,6 +14717,7 @@ To check out.
 :ID:       815B8CEA-D36D-4E47-B728-D86FEFB736DF
 :END:
 :LOGBOOK:
+CLOCK: [2023-05-14 Sun 19:59]--[2023-05-14 Sun 20:02] =>  0:03
 CLOCK: [2023-03-09 Thu 19:19]--[2023-03-09 Thu 19:56] =>  0:37
 CLOCK: [2022-08-31 Wed 16:37]--[2022-08-31 Wed 17:37] =>  1:00
 CLOCK: [2022-08-31 Wed 14:05]--[2022-08-31 Wed 14:17] =>  0:12
@@ -15194,6 +15209,7 @@ string."
   (setq mu4e-sent-messages-behavior 'delete) ; Gmail already keeps a copy
   (setq mu4e-view-show-addresses t)
   (setq mu4e-view-show-images t)
+
   ;; performance improvements
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
@@ -15225,7 +15241,7 @@ Do not ask for confirmation."
     "In view mode, `org-capture' message at point and archive it.
 If invoked with prefix argument, capture without archiving it.
 
-If the message body contains with '[org-capture key: KEY]',
+If the message body contains with '[org-capture : KEY]',
 interpret KEY as the org-capture template key."
     (interactive "P")
     (if (eq major-mode 'mu4e-view-mode)
@@ -16271,7 +16287,7 @@ page for all websites except those in `ps/eww-readable-exceptions'."
 
   (defun ps/open-eww-with-recent-kill-ring (&optional arg)
     "Open current EWW with most recent item in kill ring.
-If prefix arg is passed, then open in new EWW buffer."
+    If prefix arg is passed, then open in new EWW buffer."
     (interactive "P")
     (if arg
         (with-current-buffer
@@ -17697,14 +17713,14 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
   :defer 10
   :config/el-patch
   (defun pass-quit ()
-  "Kill the buffer quitting the window."
-  (interactive)
-  (when (el-patch-swap (y-or-n-p "Kill all pass entry buffers? ") t)
-    (dolist (buf (buffer-list))
-      (with-current-buffer buf
-        (when (eq major-mode 'pass-view-mode)
-          (kill-buffer buf)))))
-  (quit-window t))
+    "Kill the buffer quitting the window."
+    (interactive)
+    (when (el-patch-swap (y-or-n-p "Kill all pass entry buffers? ") t)
+      (dolist (buf (buffer-list))
+        (with-current-buffer buf
+          (when (eq major-mode 'pass-view-mode)
+            (kill-buffer buf)))))
+    (quit-window t))
 
   :config
   (defun ps/pass-open-at-point ()
@@ -17905,9 +17921,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                        ps/ledger-update-commodities
                        ps/ledger-update-coin-prices
                        clean-buffer-list
-                       ps/save-all-buffers
-                       ;; straight-prune-build
-                       ))
+                       ps/save-all-buffers))
     (add-hook 'midnight-hook function)))
 #+end_src
 
@@ -18204,7 +18218,7 @@ And finally, the section you've all been waiting for.
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :general
-  ("H-r" 'tlon-bae-dispatch) 
+  ("H-r" 'tlon-bae-dispatch)
   (forge-topic-mode-map
    "'" 'tlon-bae-open-forge-file)
    (github-review-mode-map
@@ -18230,7 +18244,7 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
  "C-H-M-S-g" 'orgmdb-fill-movie-properties
  "C-H-M-S-n" 'ps/create-new-wiki-entry
  ;; "C-H-M-S-i" 'ps/org-switch-to-id ; delete
- "C-H-M-S-w" 'ps/org-wiki-add-datestamp-to-heading-from-clipboard)
+ "C-H-M-S-w" 'eww)
 #+end_src
 
 * variables

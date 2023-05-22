@@ -14716,7 +14716,6 @@ To run translation server,
 
 #+begin_src bash :tangle no
 cd ~/source/translation-server
-nvm use 14
 npm start
 #+end_src
 
@@ -14725,8 +14724,8 @@ I experimented with setting the value of ~zotra-backend~ to each of the three av
 #+begin_src emacs-lisp :results silent
 (use-package zotra
   :elpaca (zotra
-             :host github
-             :repo "mpedramfar/zotra")
+           :host github
+           :repo "mpedramfar/zotra")
   :defer 15
 
   :config
@@ -14923,11 +14922,24 @@ or specify any other coding system (and risk losing\n\
 
   (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
 
+  (defun ps/zotra-add-from-eww ()
+    "Add web page at point.
+Also, save the web page as PDF and HTML."
+    (interactive)
+    (unless ebib--cur-db
+      (ebib))
+    (let ((url (eww-current-url)))
+      (zotra-add-entry-from-url url)
+      (ps/eww-url-to-pdf url)
+      (ps/eww-url-to-html url)))
+
   :general
   ("C-H-M-S-z" 'zotra-add-entry-from-url) ; triggered by KM macro
   (ebib-index-mode-map
    "i" 'zotra-add-entry-from-search
-   "u" 'zotra-add-entry-from-url))
+   "u" 'zotra-add-entry-from-url)
+  (eww-mode-map
+   "i" 'ps/zotra-add-from-eww))
 #+end_src
 
 *** WAITING Launch zotra outside emacs

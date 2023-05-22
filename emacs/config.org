@@ -5624,6 +5624,7 @@ with the specified date."
 :END:
 
 :LOGBOOK:
+CLOCK: [2023-05-20 Sat 08:56]--[2023-05-20 Sat 09:40] =>  0:44
 CLOCK: [2023-03-28 Tue 13:25]--[2023-03-28 Tue 13:28] =>  0:03
 CLOCK: [2022-07-15 Fri 11:10]--[2022-07-15 Fri 11:19] =>  0:09
 CLOCK: [2022-07-11 Mon 15:51]--[2022-07-11 Mon 16:17] =>  0:26
@@ -17897,7 +17898,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
   ;; note that the hooks appear in reverse order of execution
   (dolist (function #'(el-patch-validate-all
-                       ;; org-gcal-sync
+                       org-gcal-sync
                        ps/org-id-update-id-locations
                        org-roam-db-sync
                        ps/pass-git-sync

@@ -14176,8 +14176,9 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
              ;; open the pdf to make sure it displays the web page correctly
              (ps/ebib-open-pdf-file)
              ;; ocr the pdf if necessary
-             (let ((expanded-file-name (expand-file-name file-name)))
-               (ps/ocr-pdf (format "'%s' '%s'" expanded-file-name expanded-file-name)))))))
+             ;; (let ((expanded-file-name (expand-file-name file-name)))
+             ;; (ps/ocr-pdf (format "'%s' '%s'" expanded-file-name expanded-file-name)))
+             ))))
       (default
        (beep))))
 

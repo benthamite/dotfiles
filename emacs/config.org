@@ -7709,27 +7709,53 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
       (async-shell-command "brew update; brew upgrade --greedy; brew cleanup; brew doctor")
       (message "Update process finished.")))
 
-  (defun ps/bluetooth-device-dwim (MAC &optional name)
-    "Connect or disconnect to a bluetooth device NAME in address MAC."
+  (defun ps/bluetooth-device-dwim (MAC &optional name disconnect)
+    "Connect or disconnect to a bluetooth device NAME in address MAC.
+If DISCONNECT is non-nil, always disconnect."
     (interactive "sMAC address: ")
     (let ((app "blueutil"))
       (unless (executable-find app)
         (user-error "Please install %s (https://github.com/toy/blueutil)" app))
       (let* ((output (shell-command-to-string (format "%s --info %s" app MAC)))
              (status (progn
-                       (string-match (concat "address: " MAC ", \\([a-z]+\\)") output)
+                       (string-match (format "address: %s, \\([a-z]+\\)" MAC) output)
                        (match-string 1 output)))
-             (action (if (string= status "connected")
+             (action (if (or disconnect (string= status "connected"))
                          "disconnect"
                        "connect")))
         (shell-command (format "%s --%s %s" app action MAC))
         (message "%s: %sed" (or name MAC) action))))
 
-  (defun ps/airpods-max-dwim ()
-    "Connect or disconnect to AirPods Max"
+  (defun ps/airpods-max-dwim (&optional disconnect)
+    "Connect or disconnect to AirPods Max.
+If DISCONNECT is non-nil, always disconnect."
     (interactive)
-    (ps/bluetooth-device-dwim "90-9c-4a-dd-af-52" "AirPods Max"))
+    (ps/bluetooth-device-dwim "90-9c-4a-dd-af-52" "AirPods Max" disconnect))
 
+  (defun ps/macos-sleep ()
+    "Put the system to sleep."
+    (interactive)
+    (message "Disconnecting devices...")
+    (ps/airpods-max-dwim 'disconnect)
+    (ps/eject-external-hard-drive)
+    (shell-command "osascript -e 'tell application \"Finder\" to sleep'"))
+
+  (defun ps/eject-external-hard-drive ()
+    "Eject external hard drive.
+Assumes only one external hard drive is connected."
+    (interactive)
+    (let ((list-external
+           (shell-command-to-string
+            "diskutil list external")))
+      (string-match
+       "/dev/disk\\([[:digit:]]\\) (external, physical):"
+       list-external)
+      (if-let ((match (match-string 1 list-external)))
+          (shell-command
+           (format
+            "diskutil eject disk%s"
+            match))
+        (message "No external hard drives found."))))
 
   :general
   ("A-s" 'ps/shell-in-current-directory)

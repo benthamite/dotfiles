@@ -16336,8 +16336,9 @@ To be used by `eww-after-render-hook'."
                      (url-fullness url)))
       (eww-browse-url (url-recreate-url new-url))))
 
-  (add-hook 'eww-after-render-hook #'ps/rename-buffer)
-  (add-hook 'eww-after-render-hook #'ps/eww-readable-autoview)
+  (dolist (function #'(ps/rename-buffer
+                       ps/eww-readable-autoview))
+    (add-hook 'eww-after-render-hook function))
 
   :general
   ("A-w" 'eww)
@@ -16351,9 +16352,9 @@ To be used by `eww-after-render-hook'."
    "g e" 'ps/eww-edit-current-url
    "g u" 'ps/eww-go-up-url-hierarchy
    "g U" 'ps/eww-go-to-root-url-hierarchy
-   "p" 'ps/open-eww-with-recent-kill-ring
+   ;; "p" 'ps/open-eww-with-recent-kill-ring
    "o" 'eww-toggle-fonts
-   "p" 'ps/eww-pdf-of-current-webpage
+   "p" 'ps/eww-url-to-pdf
    ":" (lambda! (eww-follow-link '(4)))
    "x" 'eww-browse-with-external-browser))
 #+end_src

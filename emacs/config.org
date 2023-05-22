@@ -7048,7 +7048,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   :demand t
   :config
   ;; replace `rg' with `rga'
-  (setq consult-ripgrep-args "rga --null --line-buffered --color=never --max-columns=1000 --path-separator /   --smart-case --no-heading --with-filename --line-number --search-zip")
+  (setq consult-ripgrep-args "rga --null --line-buffered --color=never --max-columns=1000 --path-separator /   --smart-case --no-heading --with-filename --line-number --search-zip --multiline --multiline-dotall")
   (setq consult-locate-args "mdfind")
   (setq consult-narrow-key "<")
   (setq consult-widen-key ">")

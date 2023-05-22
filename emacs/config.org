@@ -13913,15 +13913,15 @@ confirmation."
                   (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
                   (read-string "Enter ISBN or DOI: "))))
       ;; TODO: Add support for arXiv
-      (cond ((ps/doi-utils-doi-p id)
-             (ps/ebib-download-doi id))
-            ((ps/ebib-isbn-p id)
-             (ps/ebib-download-book nil id))
-            ((ps/ebib-video-p id)
-             (ps/ebib-download-video id))
-            (t
-             (user-error "Identifier does not appear to be an ISBN or DOI.")))))
-
+      (pcase id
+        (ps/doi-utils-doi-p
+         (ps/ebib-download-doi id))
+        (ps/ebib-isbn-p
+         (ps/ebib-download-book nil id))
+        (ps/ebib-video-p
+         (ps/ebib-download-video id))
+        (_
+         (user-error "Identifier does not appear to be an ISBN or DOI")))))
 
   (defun ps/ebib-search-by-identifier (&optional id)
     "docstring"
@@ -14515,13 +14515,14 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     (ebib--execute-when
       (entries
        (let ((order 'ascend))
-         (cond ((eq ps/ebib-sort-toggle 'Timestamp)
-                (setq ps/ebib-sort-toggle 'Author))
-               ((eq ps/ebib-sort-toggle 'Author)
-                (setq ps/ebib-sort-toggle 'Title))
-               ((eq ps/ebib-sort-toggle 'Title)
-                (setq ps/ebib-sort-toggle 'Timestamp)
-                (setq order 'descend)))
+         (pcase ps/ebib-sort-toggle
+           ('Timestamp
+            (setq ps/ebib-sort-toggle 'Author))
+           ('Author
+            (setq ps/ebib-sort-toggle 'Title))
+           ('Title
+            (setq ps/ebib-sort-toggle 'Timestamp)
+            (setq order 'descend)))
          (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
          (goto-char (point-min))
          (message (format "Sorting by %s" ps/ebib-sort-toggle))))

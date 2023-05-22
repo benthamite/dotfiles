@@ -4113,13 +4113,15 @@ or are no longer readable will be killed."
         (error "Buffer not visiting a file"))))
 
   ;; On MacOS, `DS_Store' files can interfere with this command.
-  ;; Disable their creation with
-  ;; `defaults write com.apple.desktopservices DSDontWriteNetworkStores true'
   (defun ps/newest-file (path)
-    "Get latest file (including directory) in PATH."
+    "Get latest file in PATH, excluding `.DS_Store` and `.localized` files."
     (car
      (seq-find
-      #'(lambda (x) (not (nth 1 x))) ; non-directory
+      #'(lambda (x)
+          (let ((file-name (file-name-nondirectory (car x))))
+            (and (not (nth 1 x)) ; non-directory
+                 (not (string= file-name ".DS_Store"))
+                 (not (string= file-name ".localized")))))
       (sort
        (directory-files-and-attributes path 'full nil t)
        #'(lambda (x y) (time-less-p (nth 5 y) (nth 5 x)))))))

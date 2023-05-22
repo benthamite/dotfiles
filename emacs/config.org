@@ -103,9 +103,9 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#fancy-battery][fancy-battery]]
   - [[#all-the-icons][all-the-icons]]
   - [[#all-the-icons-completion][all-the-icons-completion]]
-  - [[#menu-bar-mode][menu-bar-mode]]
-  - [[#tool-bar-mode][tool-bar-mode]]
-  - [[#scroll-bar-mode][scroll-bar-mode]]
+  - [[#menu-bar][menu-bar]]
+  - [[#tool-bar][tool-bar]]
+  - [[#scroll-bar][scroll-bar]]
   - [[#delsel][delsel]]
   - [[#hl-line][hl-line]]
   - [[#jit-lock][jit-lock]]
@@ -2208,7 +2208,7 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
   (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
 #+end_src
 
-** menu-bar-mode
+** menu-bar
 :PROPERTIES:
 :ID:       08F1FCC3-7287-43B6-B455-C2D4377848E7
 :END:
@@ -2220,7 +2220,7 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
   (menu-bar-mode -1))
 #+end_src
 
-** tool-bar-mode
+** tool-bar
 :PROPERTIES:
 :ID:       EBE7677A-4C70-4312-816A-E9F8E5999078
 :END:
@@ -2232,7 +2232,7 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
   (tool-bar-mode -1))
 #+end_src
 
-** scroll-bar-mode
+** scroll-bar
 :PROPERTIES:
 :ID:       0AE186DB-0FC3-4B1B-B38E-7597B97A8DBA
 :END:

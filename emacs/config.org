@@ -13780,6 +13780,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
   (setq ebib-preload-bib-files org-cite-global-bibliography)
   (setq ebib-notes-directory ps/dir-bibliographic-notes)
   (setq ebib-notes-use-org-capture t)
+  (setq ebib-notes-display-max-lines 9999)
   (setq ebib-filename-separator ";")
   (setq ebib-file-associations nil) ; do not open any file types externally
   (setq ebib-layout 'index-only)

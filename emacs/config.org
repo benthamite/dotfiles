@@ -2983,16 +2983,6 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
    "A-H-M-a" 'ps/transpose-sexps-backward))
 #+end_src
 
-*** TODO [#5] Check mark-sexp-at-point by Tony alon
-:PROPERTIES:
-:Effort:   0:25
-:ID:       B1C4776A-4DB8-42FA-A7E9-D16ABF63C7FB
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-09 Sun 19:28]--[2023-04-09 Sun 19:58] =>  0:30
-CLOCK: [2021-07-31 Sat 22:17]--[2021-07-31 Sat 22:34] =>  0:17
-:END:
-
 ** headings
 :PROPERTIES:
 :ID:       77FA2148-0D0D-459B-8F5F-D63B2E8BEB28
@@ -3091,7 +3081,6 @@ The following function, adapted from [[https://stackoverflow.com/a/8956311/44794
 :PROPERTIES:
 :ID:       ECC26808-6B27-4CD8-AF52-570B877A6F26
 :END:
-
 
 #+begin_src emacs-lisp :results silent
 ;; github.com/typester/emacs/blob/master/lisp/url/url-util.el
@@ -3274,6 +3263,7 @@ clipboard. Either way, save count to kill ring."
 :PROPERTIES:
 :ID:       000730A4-2F70-4842-BD3E-2B843875D6EB
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature repeat
   :demand t
@@ -3286,6 +3276,7 @@ clipboard. Either way, save count to kill ring."
 :PROPERTIES:
 :ID:       796E696E-E797-4EDF-B4AC-2436507A1EFC
 :END:
+
 #+begin_src emacs-lisp :results silent
 (use-feature view
   :demand t
@@ -3456,122 +3447,6 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 CLOCK: [2023-04-24 Mon 08:58]--[2023-04-24 Mon 09:20] =>  0:22
 :END:
 To remove an abbrev definition, give a negative argument to the abbrev definition command: C-u - C-x a g or C-u - C-x a l. The former removes a global definition, while the latter removes a mode-specific definition. M-x kill-all-abbrevs removes all abbrev definitions, both global and local.
-
-"ab"	       0    "about"
-"al"	       0    "all"
-"ao"	       0    "also"
-"apr"	       0    "April"
-"ar"	       0    "after"
-"atb"	       4    "All the best,"
-"aug"	       0    "August"
-"ay"	       0    "any"
-"bc"	       0    "because"
-"bca"	       0    "became"
-"bf"	       0    "before"
-"bn"	       3    "been"
-"bng"	       0    "being"
-"bo"	       0    "both"
-"bu"	       0    "but"
-"bw"	       0    "between"
-"ca"	       0    "can"
-"ci"	       0    "city"
-"cion"	       0    "citation"
-"cld"	       1    "called"
-"cou"	       1    "could"
-"dd"	       1    "did"
-"dec"	       0    "December"
-"dft"	       0    "different"
-"dir"	       2    "directory"
-"dirn"	       0    "direction"
-"dirns"	       0    "directions"
-"dirs"	       0    "directories"
-"dng"	       1    "during"
-"ea"	       1    "effective altruism"
-"exa"	       0    "example"
-"ey"	       0    "early"
-"feb"	       0    "February"
-"fem"	       0    "female"
-"fi"	       0    "first"
-"fo"	       0    "for"
-"fr"	       0    "from"
-"fri"	       1    "Friday"
-"gge"	       0    "George"
-"ha"	       0    "have"
-"hm"	       0    "him"
-"hr"	       0    "her"
-"hv"	       2    "have"
-"hw"	       2    "how"
-"jan"	       1    "January"
-"jul"	       0    "July"
-"jun"	       0    "June"
-"kn"	       0    "know"
-"knn"	       0    "known"
-"lge"	       0    "large"
-"ltr"	       0    "later"
-"lws"	       0    "laws"
-"mai"	       0    "main"
-"mar"	       0    "March"
-"md"	       6    "made"
-"mo"	       0    "more"
-"mon"	       1    "Monday"
-"mt"	       0    "most"
-"nname"	       2    "Pablo Stafforini"
-"nov"	       0    "November"
-"num"	       0    "number"
-"nw"	       0    "new"
-"ny"	       0    "many"
-"oct"	       0    "October"
-"oft"	       0    "often"
-"op"	       0    "operation"
-"or"	       12   "over"
-"ot"	       1    "other"
-"ou"	       0    "out"
-"oy"	       0    "only"
-"pol"	       0    "police"
-"ppl"	       0    "people"
-"pt"	       0    "part"
-"rusn"	       0    "Russian"
-"sa"	       0    "same"
-"sat"	       0    "Saturday"
-"sep"	       0    "September"
-"sev"	       0    "several"
-"so"	       2    "some"
-"su"	       2    "such"
-"sund"	       0    "Sunday"
-"sys"	       0    "system"
-"temp"	       2    "temperature"
-"th"	       0    "the"
-"tha"	       0    "than"
-"thi"	       0    "this"
-"thr"	       0    "three"
-"thru"	       0    "through"
-"thu"	       0    "Thursday"
-"ti"	       1    "time"
-"tir"	       0    "their"
-"tm"	       1    "them"
-"tre"	       0    "there"
-"tt"	       0    "that"
-"tue"	       0    "Tuesday"
-"tw"	       0    "two"
-"ud"	       0    "used"
-"und"	       0    "under"
-"vy"	       0    "very"
-"wd"	       0    "would"
-"wed"	       0    "Wednesday"
-"wel"	       0    "well"
-"wer"	       0    "were"
-"whe"	       0    "where"
-"whi"	       0    "which"
-"whil"	       0    "while"
-"whn"	       0    "when"
-"wi"	       1    "with"
-"wl"	       1    "will"
-"wrk"	       0    "work"
-"xan"	       0    "Christian"
-"xany"	       0    "Christianity"
-"yr"	       0    "year"
-"yu"	       1    "you"
-"––"	       0    "—"
 
 *** TODO Set up Emacs abbrevs
 :PROPERTIES:

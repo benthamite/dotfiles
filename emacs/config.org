@@ -13433,7 +13433,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
     (citar-cache--update-bibliography
      (citar-cache--get-bibliography ps/file-bibliography-old)))
 
-  (run-with-idle-timer (* 60 60) nil #'ps/citar-update-old-bibliography)
+  (run-with-idle-timer (* 15 60) nil #'ps/citar-update-old-bibliography)
 
   (tlon-init-override-code-if-available
    :ps/citar-keybindings

@@ -16232,33 +16232,59 @@ To be used by `eww-after-render-hook'."
                   (plist-get eww-data :title))))
       (rename-buffer name)))
 
-  (defun ps/url-to-pdf (url)
-    ;; TODO: Default to eww buffer or kill-ring if content is URL.
+  (defun ps/eww-url-to-pdf (&optional url)
     "Generate PDF of URL."
-    (interactive "MUrl: ")
-    (let* ((title (ps/org-web-tools--org-title-for-url url))
+    (interactive)
+    (let* ((url (or url
+                    (when (eq major-mode 'eww-mode)
+                      (eww-current-url))
+                    (read-string "URL: ")))
+           (title (ps/org-web-tools--org-title-for-url url))
            (slug (org-hugo-slug title))
            (file-name (file-name-with-extension slug ".pdf"))
-           (output-file (file-name-concat ps/dir-downloads file-name))
-           (shell-command-buffer-name-async title))
+           (output-file (file-name-concat ps/dir-downloads file-name)))
       (async-shell-command
        (format
-        "'%s' --headless --print-to-pdf-no-header --print-to-pdf='%s' %s"
+        "'%s' --headless --no-pdf-header --print-to-pdf='%s' %s"
         browse-url-chrome-program
         output-file
         url))))
 
+  (defun ps/eww-url-to-html (&optional url)
+    "Generate HTML of URL."
+    (interactive)
+    (let* ((url (or url
+                    (when (eq major-mode 'eww-mode)
+                      (eww-current-url))
+                    (read-string "URL: ")))
+           (title (ps/org-web-tools--org-title-for-url url))
+           (slug (org-hugo-slug title))
+           (file-name (file-name-with-extension slug ".html"))
+           (output-file (file-name-concat ps/dir-downloads file-name)))
+      (async-shell-command
+       (format
+        "'%s' --headless --dump-dom '%s' > %s"
+        browse-url-chrome-program
+        url
+        output-file))))
+
   (defvar ps/eww-readable-exceptions
     '("protesilaos\\.com"
-      "git\\.sr\\.ht"))
+      "wikipedia\\.org"
+      "git\\.sr\\.ht")
+    "List of URLs for which `eww-readable' should not be used by default.")
 
   (defun ps/eww-readable-autoview ()
-    "Automatically view the main 'readable' parts of the current web
-page for all websites except those in `ps/eww-readable-exceptions'."
-    (let ((current-url (eww-current-url)))
-      (dolist (url ps/eww-readable-exceptions)
-        (unless (string-match-p (concat "^\\(?:https?://\\)?\\(?:www\\.\\)?" url) current-url)
-          (eww-readable)))))
+    "Display the 'readable' parts of the current web page by default.
+    The exceptions are listed in `ps/eww-readable-exceptions'."
+    (let* ((current-url (eww-current-url))
+           (exception
+            (catch 'exception
+              (dolist (url ps/eww-readable-exceptions)
+                (when (string-match-p url current-url)
+                  (throw 'exception t))))))
+      (unless exception
+        (eww-readable))))
 
   ;; The following four commands copied from
   ;; github.com/gopar/.emacs.d#eww

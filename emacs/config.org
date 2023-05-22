@@ -14587,9 +14587,8 @@ is created following the same schema as notes created with
     (interactive)
     (ebib--execute-when
       (entries
-       (let ((citekey (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)))
-         (when citekey
-           (citar-open-notes (list citekey)))))
+       (when-let ((citekey (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)))
+         (citar-open-notes (list citekey))))
       (default
        (beep))))
 

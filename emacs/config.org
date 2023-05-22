@@ -18041,7 +18041,8 @@ then the window will be split horizontally rather than vertically."
     (bbdb-display-records (list record)))
 
   (defun ps/bbdb-read-record-quick (&optional first-and-last)
-    "Read and return a new BBDB record. To be used with `ps/bbdb-create-quick'."
+    "Read and return a new BBDB record.
+ To be used with `ps/bbdb-create-quick'."
     (bbdb-editable)
     (let ((record (bbdb-empty-record)))
       (let (name)
@@ -18062,7 +18063,8 @@ then the window will be split horizontally rather than vertically."
   (bbdb-mode-map
    "A-C-s-r" 'bbdb-prev-record
    "A-C-s-f" 'bbdb-next-record
-   "c" 'ps/bbdb-create-quick
+   "n" 'ps/bbdb-create-quick
+   "c" 'bbdb-copy-fields-as-kill
    "C-k" nil
    "M-d" nil
    "D" 'ps/bbdb-delete-field-or-record-no-confirm))

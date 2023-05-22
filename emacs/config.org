@@ -16636,6 +16636,7 @@ PREFIX determines quoting."
 :ID:       437B98FC-3667-43C4-9EF6-470E23FE7561
 :END:
 :LOGBOOK:
+CLOCK: [2023-05-14 Sun 18:09]--[2023-05-14 Sun 19:59] =>  1:50
 CLOCK: [2023-04-07 Fri 21:53]--[2023-04-07 Fri 22:38] =>  0:45
 CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
 :END:
@@ -16649,56 +16650,361 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
 
   :config
   (setq engine/browser-function browse-url-browser-function)
-  (defengine Amazon
-    "https://www.amazon.com/s?k=%s"
-    :keybinding "a")
+
+  (defun ps/engine-mode-import-from-chrome (csv-file-path)
+    "Import csv file exported from Chrome.
+To export Chrome search engines, see
+https://superuser.com/a/1350144/387888."
+    (with-temp-buffer
+      (insert-file-contents csv-file-path)
+      (goto-char (point-min))
+      (while (not (eobp))
+        (let* ((line (buffer-substring-no-properties (line-beginning-position)
+                                                     (line-end-position)))
+               (split-line (split-string line ","))
+               (raw-engine-name (car split-line))
+               (engine-name (replace-regexp-in-string " " ""
+                                                      (replace-regexp-in-string "\"" "" raw-engine-name)))
+               (keybinding (cadr split-line))
+               (url (caddr split-line)))
+          (message "(defengine %s\n    \"%s\"\n    :keybinding \"%s\")"
+                   engine-name url keybinding))
+        (forward-line))))
+
+  (defengine AllMusic
+    "http://www.allmusic.com/search/all/%s"
+    :keybinding "a m")
+  (defengine Alignment-Forum
+    "https://www.alignmentforum.org/search?query=%s"
+    :keybinding "a f")
+  (defengine AlternativeTo
+    "http://alternativeto.net/SearchResult.aspx?profile=all&search=%s"
+    :keybinding "a t")
+  (defengine Amazon-DE
+    "http://www.amazon.de/s?k=%s"
+    :keybinding "a d")
+  (defengine Amazon-ES
+    "http://www.amazon.es/s?k=%s"
+    :keybinding "a e")
+  (defengine Amazon-FR
+    "https://www.amazon.fr/s?k=%s"
+    :keybinding "a f")
+  (defengine Amazon-IT
+    "https://www.amazon.it/s?k=%s"
+    :keybinding "a i")
+  (defengine Amazon-MX
+    "https://www.amazon.com.mx/s?k=%s"
+    :keybinding "a x")
+  (defengine Amazon-UK
+    "http://www.amazon.co.uk/s?k=%s"
+    :keybinding "a k")
+  (defengine Amazon-US
+    "http://www.amazon.com/s?k=%s"
+    :keybinding "a a")
+  (defengine AnkiWeb
+    "https://ankiweb.net/shared/decks/%s"
+    :keybinding "a w")
+  (defengine AstralCodexTen
+    "https://substack.com/search/%s?focusedPublicationId=89120"
+    :keybinding "a c"
+    ;; individual Substack posts render nicely in eww, but for other pages we need a modern browser
+    :browser 'browse-url-default-browser)
+  (defengine Audible
+    "https://www.audible.com/search/ref=a_hp_tseft?advsearchKeywords=%s&filterby=field-keywords&x=13&y=11"
+    :keybinding "a u")
+  (defengine AudioBookBay
+    "https://audiobookbay.se/?s=%s"
+    :keybinding "a b")
+  (defengine EABlogs
+    "https://cse.google.com/cse?cx=013594344773078830993:k3igzr2se6y&q=%s"
+    :keybinding "b b")
+  (defengine Bing
+    "https://www.bing.com/search?q=%s&PC=U316&FORM=CHROMN"
+    :keybinding "b i")
+  (defengine Blackwells
+    "http://bookshop.blackwell.co.uk/bookshop/search/?keyword=%s"
+    :keybinding "b l")
+  (defengine BookFinder
+    "http://www.bookfinder.com/search/?keywords=%s&st=xl&ac=qr&src=opensearch"
+    :keybinding "b f")
   (defengine MercadoLibre
-    "https://listado.mercadolibre.com.ar/%s"
-    :keybinding "c")
+    "https://listado.mercadolibre.com.ar/%s#D[A:qwer]"
+    :keybinding "c c")
+  (defengine CRSocietyForums
+    "https://www.crsociety.org/search/?q=%s"
+    :keybinding "c r")
+  (defengine Calendly
+    "https://calendly.com/app/login?email=%s&lang=en"
+    :keybinding "c l")
+  (defengine ChromeExtensions
+    "https://chrome.google.com/webstore/search/%s?_category=extensions"
+    :keybinding "c e")
+  (defengine Crossref
+    "https://search.crossref.org/?q=%s"
+    :keybinding "c r")
+  (defengine DOI
+    "https://doi.org/%s"
+    :keybinding "d o")
+  (defengine DuckDuckGo
+    "https://duckduckgo.com/?q=%s"
+    :keybinding "d d")
   (defengine EAForum
-    "https://forum.effectivealtruism.org/search?terms=%s"
-    :keybinding "f")
+    "https://www.google.com/search?q=%s+site:forum.effectivealtruism.org"
+    :keybinding "f f")
+  (defengine Ebay-UK
+    "https://www.ebay.co.uk/sch/i.html?_from=R40&_trksid=p2380057.m570.l1313&_nkw=%s&_sacat=0"
+    :keybinding "e k")
+  (defengine Ebay-US
+    "https://www.ebay.com/sch/i.html?_from=R40&_trksid=p2380057.m570.l1313&_nkw=%s&_sacat=0"
+    :keybinding "e b")
+  (defengine Ebay-DE
+    "https://www.ebay.de/sch/i.html?_from=R40&_trksid=p2380057.m570.l1313&_nkw=%s&_sacat=0"
+    :keybinding "e d")
+  (defengine Flickr
+    "http://www.flickr.com/search/?q=%s"
+    :keybinding "f l")
+    (defengine Financial-Times
+    "https://www.ft.com/search?q=%s"
+    :keybinding "f t")
   (defengine GitHub
-    "https://github.com/search?q=%s&type=Code"
-    :keybinding "g")
+    "https://github.com/search?q=%s&type=codeu"
+    :keybinding "g h")
+  (defengine GiveWell
+    "https://www.givewell.org/search/ss360/%s"
+    :keybinding "g w")
+  (defengine Goodreads
+    "http://www.goodreads.com/search/search?search_type=books&search[query]=%s"
+    :keybinding "g r")
+  (defengine Google
+    "https://www.google.com/search?q=%s"
+    :keybinding "g g")
+  (defengine Google-Books
+    "https://www.google.com/search?q=%s&btnG=Search+Books&tbm=bks&tbo=1&gws_rd=ssl"
+    :keybinding "g k")
+  (defengine Google-Custom-Search
+    "https://cse.google.com/cse?cx=013594344773078830993:bg9mrnfwe30&q=%s"
+    :keybinding "g c")
+  (defengine Google-Domains
+    "https://domains.google.com/registrar?s=%s&hl=en"
+    :keybinding "g d")
+  (defengine Google-Drive
+    "https://drive.google.com/drive/u/0/search?q=%s"
+    :keybinding "g d")
+  (defengine Google-Images
+    "https://www.google.com/search?tbm=isch&source=hp&biw=1920&bih=1006&ei=2PlgWp_OEcHF6QTo2b2ACQ&q=%s"
+    :keybinding "g i")
+  (defengine Google-Maps
+    "https://www.google.com/maps/search/%s"
+    :keybinding "g m")
+  (defengine Google-News
+    "https://news.google.com/search?q=%s"
+    :keybinding "g n")
+  (defengine Google-Photos
+    "https://photos.google.com/search/%s"
+    :keybinding "g p")
+  (defengine Google-Play
+    "https://play.google.com/store/search?q=%s"
+    :keybinding "g y")
+  (defengine Google-Podcasts
+    "https://podcasts.google.com/?q=%s"
+    :keybinding "g o")
+  (defengine Google-Scholar
+    "https://scholar.google.com/scholar?hl=en&as_sdt=1%2C5&q=%s&btnG="
+    :keybinding "s s")
+  (defengine Google-Translate
+    "https://translate.google.com/#auto/en/%s"
+    :keybinding "g t")
+  (defengine Google-Trends
+    "http://www.google.com/trends/explore#q=%s"
+    :keybinding "g e")
+  (defengine Google-Video
+    "https://www.google.com/search?q=%s&tbm=vid"
+    :keybinding "g v")
+  (defengine GoDaddy
+    "https://www.godaddy.com/domainsearch/find?checkAvail=1&domainToCheck=%s"
+    :keybinding "g d")
+  (defengine Gwern
+    "https://www.google.com/search?q=%s+site:gwern.net"
+    :keybinding "g w")
   (defengine IMDb
-    "http://www.imdb.com/find?s=all;q=%s"
-    :keybinding "i")
-  (defengine LibGen
+    "https://www.imdb.com/find/?q=%s"
+    :keybinding "i i")
+  (defengine IMDb-Actor
+    "http://www.imdb.com/filmosearch?explore=title_type&role=%s&ref_=filmo_ref_job_typ&sort=user_rating"
+    :keybinding "i a")
+  (defengine IMDb-Director
+    "http://www.imdb.com/filmosearch?explore=title_type&role=%s&ref_=filmo_ref_job_typ&sort=user_rating"
+    :keybinding "i d")
+  (defengine IMDb-Composer
+    "http://www.imdb.com/filmosearch?explore=title_type&role=%s&ref_=filmo_ref_job_typ&sort=user_rating"
+    :keybinding "i c")
+  (defengine Internet-Archive
+    "https://archive.org/search.php?query=%s"
+    :keybinding "v v")
+  (defengine JustWatch
+    "https://www.justwatch.com/us/search?q=%s"
+    :keybinding "j w")
+  (defengine KAYAK
+    "https://www.kayak.co.uk/sherlock/opensearch/search?q=%s"
+    :keybinding "k k")
+  (defengine Keyboard-Maestro
+    "https://forum.keyboardmaestro.com/search?q=%s"
+    :keybinding "k m")
+  (defengine Lastfm
+    "http://www.last.fm/search?q=%s"
+    :keybinding "f m")
+  (defengine LessWrong
+    "https://www.google.com/search?q=%s+site:lesswrong.com"
+    :keybinding "l w")
+  (defengine LessWrongWiki
+    "https://wiki.lesswrong.com/index.php?title=Special:Search&search=%s"
+    :keybinding "l i")
+  (defengine LibraryGenesis
     "http://libgen.li/index.php?req=%s"
-    :keybinding "l")
+    :keybinding "l l")
+  (defengine Librivox
+    "https://librivox.org/search?q=%s&search_form=advanced"
+    :keybinding "l v")
+  (defengine LinkedIn
+    "http://www.linkedin.com/vsearch/f?type=all&keywords=%s&orig=GLHD&rsid=&pageKey=member-home&search=Search"
+    :keybinding "i n")
+  (defengine Linguee
+    "https://www.linguee.com/english-spanish/search?source=auto&query=%s"
+    :keybinding "l i")
+  (defengine Marginal-Revolution
+    "https://www.google.com/search?ei=MDueW4SzN5H8gAau5I0Y&q=%s+site:marginalrevolution.com"
+    :keybinding "m r")
+  (defengine MediaCenter
+    "https://www.google.com/search?q=%s+site:yabb.jriver.com"
+    :keybinding "m c")
+  (defengine Medium
+    "https://medium.com/search?q=%s&ref=opensearch"
+    :keybinding "m d")
+  (defengine Melpa
+    "https://melpa.org/#/?q=%s"
+    :keybinding "m p")
+  (defengine MetaFilter
+    "https://www.metafilter.com/contribute/search.mefi?site=mefi&q=%s"
+    :keybinding "m f")
+  (defengine Metaculus
+    "https://www.metaculus.com/questions/?order_by=-activity&search=%s"
+    :keybinding "m e")
   (defengine Metaforecast
     "https://metaforecast.org/?query=%s"
-    :keybinding "m")
-  (defengine EffectiveAltruismNews
-    "https://cse.google.com/cse?cx=013594344773078830993:k3igzr2se6y&q=%s"
-    :keybinding "n")
-  (defengine GoogleMaps
-    "https://www.google.com/maps?q=%s"
-    :keybinding "p")
+    :keybinding "m m")
+  (defengine Movielens
+    "https://movielens.org/explore?q=%s"
+    :keybinding "m l")
+  (defengine Netflix
+    "https://www.netflix.com/search?q=%s"
+    :keybinding "n n")
+  (defengine New-York-Times
+    "https://www.nytimes.com/search?query=%s"
+    :keybinding "n y")
+  (defengine Notatu-Dignum
+    "http://www.stafforini.com/quotes/index.php?s=%s"
+    :keybinding "q q")
+  (defengine OddsChecker
+    "https://www.oddschecker.com/search?query=%s"
+    :keybinding "o c")
+  (defengine Open-Philanthropy
+    "https://www.google.com/search?q=%s+site:openphilanthropy.org"
+    :keybinding "o p")
+  (defengine Overcoming-Bias
+    "https://substack.com/search/%s?focusedPublicationId=1245641"
+    :keybinding "o b"
+    :browser 'browse-url-default-browser)
+  (defengine OxfordReference
+    "https://www-oxfordreference-com.myaccess.library.utoronto.ca/search?btog=chap&q0=%22%s%22"
+    :keybinding "o r")
+  (defengine OxfordReferenceDOI
+    "https://www-oxfordreference-com.myaccess.library.utoronto.ca/view/%s"
+    :keybinding "o d")
+  (defengine PhilPapers
+    "http://philpapers.org/s/%s"
+    :keybinding "p p")
   (defengine Reddit
-    "https://www.reddit.com/search?q=%s"
-    :keybinding "r")
-  (defengine GoogleScholar
-    "https://scholar.google.com/scholar?hl=en&q=%s"
-    :keybinding "s")
-  (defengine SciHub
+    "https://www.reddit.com/search?q=%s&utm_source=opensearch"
+    :keybinding "r r")
+  (defengine ReducingSuffering
+    "http://reducing-suffering.org/?s=%s"
+    :keybinding "r s")
+  (defengine Reference
+    "https://cse.google.com/cse?cx=013594344773078830993:bg9mrnfwe30&q=%s"
+    :keybinding "r f")
+  (defengine sci-hub
     "https://sci-hub.se/%s"
-    :keybinding "u")
-  (defengine StanfordEncyclopediaofPhilosophy
+    :keybinding "u u")
+  (defengine ScienceDirectencyclopedias
+    "https://www.sciencedirect.com/search?qs=%s&articleTypes=EN"
+    :keybinding "s e")
+  (defengine SlateStarCodex
+    "http://slatestarcodex.com/?s=%s"
+    :keybinding "s c")
+  (defengine StackSnippet
+    "http://www.stacksnippet.com/#gsc.tab=0&gsc.q=%s"
+    :keybinding "s n")
+  (defengine Stanford-Encyclopedia-of-Philosophy
     "https://plato.stanford.edu/search/searcher.py?query=%s"
-    :keybinding "t")
+    :keybinding "s p")
+  (defengine Tango-DJ
+    "http://www.tango-dj.at/database/?tango-db-search=%s&search=Search"
+    :keybinding "d j")
+  (defengine TangoDJ-Yahoo-Group
+    "http://groups.yahoo.com/group/TangoDJ/msearch?query=%s&submit=Search&charset=ISO-8859-1"
+    :keybinding "t y")
+  (defengine TasteDive
+    "https://tastedive.com/like/%s"
+    :keybinding "t d")
+  (defengine ThreadReader
+    "https://threadreaderapp.com/search?q=%s"
+    :keybinding "t r")
+  (defengine Twitter
+    "https://twitter.com/search?q=%s&src=typed_query"
+    :keybinding "t w")
+  (defengine Vimeo
+    "http://vimeo.com/search?q=%s"
+    :keybinding "v m")
+  (defengine WaybackMachine
+    "http://web.archive.org/web/*/%s"
+    :keybinding "w b")
+  (defengine Wikipedia-Deutsch
+    "https://de.wikipedia.org/w/index.php?title=Spezial:Suche&search=%s"
+    :keybinding "w d")
   (defengine Wikipedia-English
-    "https://en.wikipedia.org/w/index.php?search=%s"
-    :keybinding "H-w H-w")
-    (defengine Wikipedia-Spanish
-    "https://es.wikipedia.org/w/index.php?search=%s"
-    :keybinding "H-w H-e")
+    "http://en.wikipedia.org/w/index.php?title=Special:Search&profile=default&search=%s&fulltext=Search"
+    :keybinding "w w")
+  (defengine Wikipedia-French
+    "http://fr.wikipedia.org/w/index.php?title=Spécial:Recherche&search=%s"
+    :keybinding "w f")
+  (defengine Wikipedia-Italiano
+    "http://it.wikipedia.org/w/index.php?title=Speciale:Ricerca&search=%s"
+    :keybinding "w i")
+  (defengine Wikipedia-Spanish
+    "https://es.wikipedia.org/w/index.php?search=%s&title=Especial:Buscar&ns0=1&ns11=1&ns100=1"
+    :keybinding "w e")
+  (defengine Wikipedia-Swedish
+    "http://sv.wikipedia.org/w/index.php?title=Special:S%C3%B6k&search=%s"
+    :keybinding "w s")
+  (defengine Wirecutter
+    "https://thewirecutter.com/search/?s=%s"
+    :keybinding "w t")
+  (defengine WorldCat
+    "http://www.worldcat.org/search?q=%s&qt=results_page"
+    :keybinding "w c")
+  (defengine YahooFinance
+    "https://finance.yahoo.com/company/%s"
+    :keybinding "y f")
   (defengine YouTube
-    "http://www.youtube.com/results?search_query=%s"
-    :keybinding "y")
+    "https://www.youtube.com/results?search_query=%s"
+    :keybinding "y t")
+  (defengine YouTubemovies
+    "https://www.youtube.com/results?lclk=long&filters=hd%2Clong&search_query=%s"
+    :keybinding "y m")
+
   (engine/set-keymap-prefix (kbd "H-g")))
 #+end_src
+
 
 ** osm
 :PROPERTIES:

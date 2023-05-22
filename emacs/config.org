@@ -15119,12 +15119,33 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-package mu4e
   :elpaca (:local-repo
-           "/opt/homebrew/Cellar/mu/1.6.11/share/emacs/site-lisp/mu/mu4e"
+           "/opt/homebrew/Cellar/mu/1.10.3/share/emacs/site-lisp/mu/mu4e"
            :pre-build
            ())
+  :demand t
   :init
   (setq ps/mu4e-inbox-folder "/Inbox")
   (setq ps/mu4e-daily-folder "/Daily")
+
+  :config/el-patch
+  ;; do not prompt for an URL number when there is only one URL
+  (defun mu4e--view-get-urls-num (prompt &optional multi)
+    "Ask the user with PROMPT for an URL number for MSG.
+The number is [1..n] for URLs \[0..(n-1)] in the message. If
+MULTI is nil, return the number for the URL; otherwise (MULTI is
+non-nil), accept ranges of URL numbers, as per
+`mu4e-split-ranges-to-numbers', and return the corresponding
+string."
+    (let* ((count (hash-table-count mu4e--view-link-map)) (def))
+      (when (zerop count) (mu4e-error "No links for this message"))
+      (if (not multi)
+          (if (= count 1)
+              (el-patch-swap (read-number (mu4e-format "%s: " prompt) 1) 1)
+            (read-number (mu4e-format "%s (1-%d): " prompt count)))
+        (progn
+          (setq def (if (= count 1) "1" (format "1-%d" count)))
+          (read-string (mu4e-format "%s (default %s): " prompt def)
+                       nil nil def)))))
 
   :config
   ;; (mu4e-debug t) ; uncomment when debugging

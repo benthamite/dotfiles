@@ -3638,29 +3638,8 @@ CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:18] =>  0:01
 
 #+begin_src emacs-lisp :results silent
 (use-package crux
-  :config
-  ;; Modified version of `crux-smart-open-line' to handle cases when
-  ;; command is invoked on an org heading, which results in an
-  ;; invisible new line.
-  (defun ps/crux-smart-open-line (arg)
-    "Insert an empty line after the current line.
-Position the cursor at its beginning, according to the current mode.
-
-With a prefix ARG open line above the current line."
-    (interactive "P")
-    (ps/visible-mode-enhanced)
-    (if arg
-        (crux-smart-open-line-above)
-      (move-end-of-line nil)
-      (when (or (org-at-heading-p) (org-at-drawer-p) (org-at-timestamp-p))
-        (org-end-of-meta-data t)
-        (when (eq org-cycle-subtree-status 'folded)
-          (show-subtree)))
-      (newline-and-indent))
-    (ps/visible-mode-enhanced))
-
   :general
-  ("M-l" 'ps/crux-smart-open-line
+  ("M-l" 'crux-smart-open-line
    "M-A-l" (lambda! (ps/crux-smart-open-line t))
    "A-H-l" 'crux-duplicate-current-line-or-region))
 #+end_src

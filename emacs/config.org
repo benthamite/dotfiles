@@ -5447,26 +5447,23 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 #+begin_src emacs-lisp :results silent
 (use-package ace-link
   :config
-  (defun ps/ace-link-w3m-externally ()
-    "Open a visible link in a `w3m-mode' buffer externally."
+  (defun ps/ace-link-w3m-with-browse-url ()
+    "Open a visible link with `browse-url'.
+The method used to open the url is determined by the variables
+`browse-url-browser-function', `browse-url-handlers,' and
+`browse-url-default-handlers'."
     (interactive)
+    (require 'w3m)
     (let ((pt (avy-with ace-link-w3m
                 (avy-process
                  (mapcar #'cdr (ace-link--w3m-collect))
                  (avy--style-fn avy-style)))))
-      (when (numberp pt)
-        (goto-char pt)
-        ;; not sure why this elaborate disjunction is needed; adapted from
-        ;; github.com/alphapapa/pocket-reader.el/blob/master/pocket-reader.el
-        (let ((url (or (get-text-property (point) 'w3m-href-anchor)
-                       (unless (bolp)l
-                               (save-excursion
-                                 (get-text-property (1- (point)) 'w3m-href-anchor)))
-                       (unless (eolp)
-                         (save-excursion
-                           (get-text-property (1+ (point)) 'w3m-href-anchor)))
-                       (thing-at-point-url-at-point))))
-          (w3m-view-url-with-browse-url url)))))
+      (ps/ace-link--w3m-action-with-browse-url pt)))
+
+  (defun ps/ace-link--w3m-action-with-browse-url (pt)
+    (when (numberp pt)
+      (goto-char pt)
+      (call-interactively #'w3m-view-url-with-browse-url)))
 
   (defun ps/ace-link-org-agenda-clock-in ()
     "Open a visible link in an `org-mode-agenda' buffer
@@ -5508,8 +5505,7 @@ and start clock."
   ((Man-mode-map woman-mode-map)
    "f" 'ace-link-woman)
   (mu4e-view-mode-map
-   "f" 'ps/ace-link-w3m-in-eww
-   "F" 'ps/ace-link-w3m-externally)
+   "f" 'ps/ace-link-w3m-with-browse-url)
   (org-agenda-mode-map
    "f" 'ace-link-org-agenda
    "s-f" 'ps/ace-link-org-agenda-clock-in)

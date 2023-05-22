@@ -13287,6 +13287,10 @@ Version 2015-06-08"
    "A-C-s-f" 'bibtex-next-entry))
 #+end_src
 
+*** TODO Define ~bibtex-autokey-get-year~ via elpatch
+:PROPERTIES:
+:ID:       B2291EF5-8546-4C47-AC33-C8DBD70E1BAA
+:END:
 *** TODO Move ratings from org headings to bibtex
 :PROPERTIES:
 :ID:       18A96B99-EAD2-4C1E-94C2-619903A52898
@@ -13585,7 +13589,10 @@ in the file. Data comes from www.ebook.de."
   (delete 'orcb-check-journal org-ref-clean-bibtex-entry-hook)
   (delete 'orcb-download-pdf org-ref-clean-bibtex-entry-hook))
 #+end_src
-
+*** TODO Define ~isbn-to-bibtex~ via elpatch
+:PROPERTIES:
+:ID:       A3B5FC74-45C6-475C-8D31-B8355F12747C
+:END:
 ** doi-utils
 :PROPERTIES:
 :ID:       0A568E85-C775-4894-BE59-A7DAB0F41F87

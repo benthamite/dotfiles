@@ -4171,7 +4171,7 @@ or are no longer readable will be killed."
   (defun ps/get-stem-of-current-buffer ()
     "Return the stem of the current buffer."
     (when-let ((file-name buffer-file-name))
-      (file-name-sans-extension (file-name-nondirectory file-name))))
+      (file-name-base file-name)))
 
   (defun ps/bollp ()
     "Return t if point is at the beginning of the last line."
@@ -14016,7 +14016,7 @@ each of the attached files is the entry's unique key."
           (catch 'tag
             (mapc
              (lambda (file)
-               (unless (equal (file-name-nondirectory (file-name-sans-extension file))
+               (unless (equal (file-name-base file)
                               (ebib--get-key-at-point))
                  (throw 'tag file)))
              (ebib--split-files files))
@@ -14039,7 +14039,7 @@ corresponding entry key."
          (when file-list
            (ebib-delete-field-contents field t)
            (dolist (filename file-list)
-             (let ((stem (file-name-sans-extension (file-name-nondirectory filename)))
+             (let ((stem (file-name-base filename))
                    (extension (file-name-extension filename)))
                (unless (equal stem key)
                  (let ((new-filename

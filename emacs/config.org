@@ -6845,6 +6845,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 #+begin_src emacs-lisp :results silent
 (use-package rg
+  :defer 15
   :config
   (setq rg-executable "rg")
   (setq rg-command-line-flags '("--multiline"))

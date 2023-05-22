@@ -17508,6 +17508,14 @@ to the clipboard."
     ;; (shell-command "pass git config pull.rebase false")
     (shell-command "pass git pull; pass git push"))
 
+  (defun ps/pass-insert-generated-no-symbols ()
+    "Insert an entry to the password-store without symbols.
+Use a generated password instead of reading the password from
+user input."
+    (interactive)
+    (call-interactively #'password-store-generate-no-symbols)
+    (pass-update-buffer))
+
   :general
   ("A-H-o" 'pass)
   (pass-mode-map
@@ -17516,6 +17524,7 @@ to the clipboard."
    "<return>" 'ps/pass-edit
    "SPC" 'ps/pass-open-at-point
    "e" 'ps/pass-edit
+   "I" 'ps/pass-insert-generated-no-symbols
    "y" 'ps/pass-git-sync)
   (pass-view-mode-map
    "s-c" 'pass-view-toggle-password

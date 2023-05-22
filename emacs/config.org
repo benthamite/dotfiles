@@ -14669,6 +14669,11 @@ The correct Biblatex field for this information is
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
+*** TODO Ebib: Add new websites to 'journal' field
+:PROPERTIES:
+:ID:       3CF3C58F-4EF5-42EF-92DA-5AA33C726DFA
+:END:
+
 *** TODO Decide how ebib should deal with multi-volume works
 :PROPERTIES:
 :ID:       33D8549E-7DD8-4E4B-A690-0E6D29A8CA60

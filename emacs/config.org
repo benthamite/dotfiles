@@ -16398,8 +16398,10 @@ CLOCK: [2021-03-29 Mon 21:25]--[2021-03-29 Mon 21:41] =>  0:16
   (w3m-minor-mode-map
    "<left>" 'left-char
    "<right>" 'right-char)
-  ((w3m-mode-map mu4e-view-mode-map)
-   "s-<return>" 'w3m-view-url-with-browse-url))
+  (w3m-mode-map
+   "s-<return>" 'w3m-view-url-with-browse-url)
+  (mu4e-view-mode-map
+   "<return>" 'w3m-view-url-with-browse-url))
 #+end_src
 
 ** elfeed

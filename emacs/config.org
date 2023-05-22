@@ -18417,7 +18417,7 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-tlon-ledger-schedule-file . (file-name-concat ps/dir-dropbox-tlon-ledger "ledger-schedule.ledger"))
  (ps/file-tlon-docs . (file-name-concat ps/dir-dropbox-tlon "docs.org"))
  (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
- (ps/face-fixed-pitch . "Source Code Pro")
+ (ps/face-fixed-pitch . "SauceCodePro Nerd Font")
  (ps/face-fixed-pitch-size .  115)
  (ps/face-variable-pitch . "Source Serif Pro")
  (ps/monitor-type . (cdr (assoc 'name (frame-monitor-attributes))))

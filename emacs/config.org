@@ -4490,7 +4490,7 @@ option."
    ";" 'dired-do-rename
    "-" 'dired-hide-details-mode
    "." 'dired-find-alternate-file
-   "'" 'ps/dired-copy-filename-as-kill-absolute
+   "'" 'dired-du-mode
    "H-." 'ps/dired-dotfiles-toggle
    "c" 'ps/dired-copy-filename-as-kill-absolute
    "C" 'dired-do-copy
@@ -4727,15 +4727,10 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 
 #+begin_src emacs-lisp :results silent
 (use-package dired-du
+  :after dired
+  :defer 10
   :config
-  (defun ps/dired-du-toggle ()
-    "Toggle `dired-du-mode' depending on state of
-`dired-hide-details-mode'."
-    (if dired-hide-details-mode
-        (dired-du-mode -1)
-      (dired-du-mode)))
-  (advice-add 'dired-hide-details-mode :after 'ps/dired-du-toggle)
-  )
+  (setq dired-du-size-format 'comma))
 #+end_src
 
 ** peep-dired

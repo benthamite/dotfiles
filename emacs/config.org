@@ -8146,20 +8146,14 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
   (setq grammarly-username ps/personal-gmail)
   (setq grammarly-password (auth-source-pass-get 'secret (concat "chrome/grammarly.com/" ps/personal-gmail)))
 
-  (defun ps/grammarly-open-in-external-editor ()
-    "Send TEXT to kill ring and open the external Grammarly editor."
+  (defun ps/grammarly-open-external-editor ()
+    "Open Grammarly's external editor."
     (interactive)
-    (save-restriction
-      (save-excursion
-        (widen)
-        (unfill-region (point-min) (point-max))
-        (kill-ring-save (point-min) (point-max))
-        (fill-region (point-min) (point-max))
-        (browse-url "https://app.grammarly.com/ddocs/1929393566"))))
+    (browse-url "https://app.grammarly.com/ddocs/1929393566"))
 
   :general
   ((gfm-mode-map markdown-mode-map)
-   "s-g" 'ps/grammarly-open-in-external-editor))
+   "s-g" 'ps/grammarly-open-external-editor))
 #+end_src
 
 ** lsp-grammarly

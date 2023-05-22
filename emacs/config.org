@@ -10492,6 +10492,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
         (ps/org-agenda-toggle-anniversaries t)
         (org-agenda nil "a"))))
 
+  (run-with-idle-timer (* 10 60) nil #'ps/org-agenda-switch-to-agenda-current-day)
+
   (setq org-agenda-hide-tags-regexp "project")
 
   (defun ps/org-agenda-goto-and-start-clock ()

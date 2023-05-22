@@ -103,6 +103,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#fancy-battery][fancy-battery]]
   - [[#all-the-icons][all-the-icons]]
   - [[#all-the-icons-completion][all-the-icons-completion]]
+  - [[#nerd-icons][nerd-icons]]
   - [[#menu-bar][menu-bar]]
   - [[#tool-bar][tool-bar]]
   - [[#scroll-bar][scroll-bar]]
@@ -2206,6 +2207,21 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
   (all-the-icons-completion-mode)
 
   (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
+#+end_src
+
+** nerd-icons
+:PROPERTIES:
+:ID:       0C470436-3327-4B81-89DA-005449893FF4
+:END:
+
+/[[https://github.com/rainstormstudio/nerd-icons.el][nerd-icons]] is a library for [[https://github.com/ryanoasis/nerd-fonts][Nerd Font]] icons inside Emacs./
+
+#+begin_src emacs-lisp
+(use-package nerd-icons
+  :demand t
+  :config
+  (setq nerd-icons-font-family "SauceCodePro Nerd Font")
+  )
 #+end_src
 
 ** menu-bar

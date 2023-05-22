@@ -15535,7 +15535,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-package org-msg
   :after org mu4e
-  :defer 3
+  :demand t
   :config
   (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t")
   (setq org-msg-startup "hidestars indent inlineimages")
@@ -15637,32 +15637,30 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
   (defun ps/org-msg-kill-message ()
     "Save the current message to the kill ring."
     (interactive)
-    (goto-char (org-msg-start))
-    (re-search-forward "^:END:\n")
-    (let ((beg (point)))
-      (goto-char (org-msg-end))
-      (search-backward "#+begin_signature" nil t)
-      (kill-region beg (point))))
+    (unless (eq major-mode 'org-msg-edit-mode)
+      (user-error "Not in org-msg-edit-mode"))
+    (save-excursion
+      (goto-char (org-msg-start))
+      (re-search-forward "^:END:\n")
+      (let ((beg (point)))
+        (goto-char (org-msg-end))
+        (search-backward "#+begin_signature" nil t)
+        (kill-region beg (point)))))
 
-  (defun ps/org-msg-open-in-wordtune ()
-    "Save the current message to the kill ring and open it in
-Wordtune."
+  ;; currently, grammarly isn't working reliably in Emacs, so we use the
+  ;; external editor instead
+  (defun ps/org-msg-open-in-grammarly ()
+    "Copy the current message in Grammarly's external editor."
     (interactive)
     (ps/org-msg-kill-message)
-    (browse-url "https://app.wordtune.com/v2/editor/"))
-
-  (defun ps/org-msg-open-in-grammarly ()
-    "Copy the current message and Grammarly in an external browser."
-    (interactive)
-    (ps/grammarly-open-in-external-editor (ps/org-msg-kill-message)))
+    (ps/grammarly-open-external-editor))
 
   :general
   (org-msg-edit-mode-map
    "s-a" 'org-msg-attach
    "s-b" 'org-msg-goto-body
    "s-g" 'ps/org-msg-open-in-grammarly
-   "s-x" 'ps/org-msg-kill-message
-   "s-w" 'ps/org-msg-open-in-wordtune)
+   "s-x" 'ps/org-msg-kill-message)
   (org-mode-map
    "A-s-g" 'ps/org-msg-grammarly))
 #+end_src

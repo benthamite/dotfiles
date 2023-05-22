@@ -17324,9 +17324,9 @@ clipboard or kill-ring"
     (org-web-tools--org-link-for-url (org-web-tools--get-first-url)))
 
   (cl-defun ps/org-web-tools--org-title-for-url (&optional (url (org-web-tools--get-first-url)))
-    "Return title of HTML page at URL. If URL is not given, look for
-first URL in `kill-ring'. If page at URL has no title, return
-URL."
+    "Return title of HTML page at URL.
+ If URL is not given, look for first URL in `kill-ring'. If page
+at URL has no title, return URL."
     (let* ((html (org-web-tools--get-url url))
            (title (org-web-tools--html-title html)))
       (if title
@@ -17335,8 +17335,8 @@ URL."
         url)))
 
   (defun ps/org-web-tools--youtube-dl (url)
-    "Create org link to local copy of YouTube video downloaded from
-URL. To be used in conjunction with associated `org-capture'
+    "Create org link to local copy of YouTube video downloaded from URL.
+ To be used in conjunction with associated `org-capture'
 template."
     (let* ((html (org-web-tools--get-url url))
            (title (org-web-tools--html-title html))

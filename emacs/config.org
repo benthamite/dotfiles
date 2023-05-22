@@ -16114,6 +16114,8 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
   :general
   (mhtml-mode-map
    "s-x" 'browse-url-of-buffer)
+  (telega-chat-mode-map
+   "s-<return>" 'browse-url-at-point)
   (dired-mode-map
    "e" 'ps/browse-url-of-dired-file-externally))
 #+end_src

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: qbittorrent-update-config
+# key: quc
+# contributor: Pablo Stafforini
+# --
+qBittorrent: update config

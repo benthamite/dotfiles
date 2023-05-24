@@ -18138,7 +18138,7 @@ then the window will be split horizontally rather than vertically."
       (if keycast-mode
           (add-hook 'pre-command-hook 'keycast--update t)
         (remove-hook 'pre-command-hook 'keycast--update)))
-    (add-to-list 'global-mode-string '("" mode-line-keycast))))
+    (add-to-list 'global-mode-string '("" keycast-mode-line))))
 #+end_src
 
 ** custom

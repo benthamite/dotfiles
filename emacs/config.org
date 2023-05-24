@@ -170,6 +170,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dired-async][dired-async]]
   - [[#image-dired][image-dired]]
   - [[#all-the-icons-dired][all-the-icons-dired]]
+  - [[#nerd-icons-dired][nerd-icons-dired]]
   - [[#wdired][wdired]]
   - [[#gnus-dired][gnus-dired]]
   - [[#dired-x][dired-x]]
@@ -4575,6 +4576,22 @@ CLOCK: [2022-07-17 Sun 10:49]--[2022-07-17 Sun 11:13] =>  0:24
       (all-the-icons-dired-mode -1)))
 
   (add-hook 'dired-mode-hook #'ps/all-the-icons-dired-mode-activate))
+#+end_src
+
+** nerd-icons-dired
+:PROPERTIES:
+:ID:       C3F3F430-4DAE-4C77-907A-84B385CC3CCB
+:END:
+
+/[[https://github.com/rainstormstudio/nerd-icons-dired][nerd-icons-dired]] adds Dired support to nerd-icons./
+
+[2023-05-23 Tue 11:50] The fonts appeared in a truncated fashion, so I'm disabling for the time being and will continue to use ~all-the-icons~.
+
+#+begin_src emacs-lisp
+(use-package nerd-icons-dired
+  :disabled
+  :config
+  (add-hook 'dired-mode-hook #'nerd-icons-dired-mode))
 #+end_src
 
 ** wdired

@@ -9,6 +9,24 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** rg
+:PROPERTIES:
+:ID:       A75847C6-5259-46DD-8D03-4EE3314E86E6
+:END:
+
+/[[https://github.com/dajva/rg.el][rg]] is a search tool based on ripgrep./
+
+[2023-05-23 Tue 12:03] Replaced by ~consult-ripgrep~.
+
+#+begin_src emacs-lisp :results silent
+(use-package rg
+  :defer 15
+  :config
+  (setq rg-executable "rg")
+  (setq rg-command-line-flags '("--multiline"))
+  (setq rg-group-result t))
+#+end_src
+
 ** biblio
 :PROPERTIES:
 :ID:       4EDDE179-9DE5-4F31-9FB4-17A5B68F6557

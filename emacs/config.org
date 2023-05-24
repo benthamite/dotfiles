@@ -13908,7 +13908,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
         (ebib--redisplay-index-item field)
         (ebib-save-current-database t))))
 
-   ;; TODO: refactor the two commands below into a single command
+  ;; TODO: refactor the two commands below into a single command
   (defun ps/ebib-download-by-identifier (&optional id)
     "docstring"
     (interactive)

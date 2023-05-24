@@ -228,7 +228,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#isearch][isearch]]
   - [[#replace][replace]]
   - [[#substitute][substitute]]
-  - [[#rg][rg]]
   - [[#visual-regexp][visual-regexp]]
   - [[#visual-regexp-steroids][visual-regexp-steroids]]
   - [[#imenu][imenu]]
@@ -6852,24 +6851,6 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :general
   (isearch-mode-map
    "C-t" 'substitute-target-in-buffer))
-#+end_src
-
-** rg
-:PROPERTIES:
-:ID:       A75847C6-5259-46DD-8D03-4EE3314E86E6
-:END:
-
-/[[https://github.com/dajva/rg.el][rg]] is a search tool based on ripgrep./
-
-[2023-01-14 Sat] I mostly use ~consult-ripgrep~; however, that command currently can't handle multiline searches, whereas ~rg~ can.
-
-#+begin_src emacs-lisp :results silent
-(use-package rg
-  :defer 15
-  :config
-  (setq rg-executable "rg")
-  (setq rg-command-line-flags '("--multiline"))
-  (setq rg-group-result t))
 #+end_src
 
 ** visual-regexp

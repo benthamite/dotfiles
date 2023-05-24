@@ -16091,6 +16091,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "paxful\\.com"
                      "qualtrics\\.com"
                      "rescuetime\\.com"
+                     "savvycal\\.com"
                      "slack\\.com"
                      "squarespace\\.com"
                      "stafforini\\.com"

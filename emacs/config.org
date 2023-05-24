@@ -14780,6 +14780,8 @@ I experimented with setting the value of ~zotra-backend~ to each of the three av
     (ps/ebib-reload-current-database-no-confirm)
     (let ((citekey (ps/bibtex-get-key)))
       (ebib ps/file-bibliography-new citekey)
+      (ebib--index-sort "Timestamp" 'descend)
+      (goto-char (point-min))
       (ps/ebib-open-key citekey)))
 
   (defun ps/select-safe-coding-system-interactively (from to codings unsafe

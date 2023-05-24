@@ -18125,11 +18125,12 @@ then the window will be split horizontally rather than vertically."
 :ID:       8D51F4B0-7443-420B-919F-7AA9B0EC0CE9
 :END:
 
-/[[https://github.com/tarsius/keycast/tree/a12ef1fb480b56c34c92f48fc7f7aa8a1d7c4c4b][keycast]] shows the current command and its key in the mode line./
+/[[https://github.com/tarsius/keycast][keycast]] shows the current command and its key in the mode line./
 
 #+begin_src emacs-lisp :results silent
 (use-package keycast
   :config
+  ;; support for doom modeline (github.com/tarsius/keycast/issues/7)
   (with-eval-after-load 'keycast
     (define-minor-mode keycast-mode
       "Show current command and its key binding in the mode line."

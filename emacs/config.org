@@ -14512,11 +14512,11 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
   (defun ps/ebib-sort-toggle ()
     "Toggle between sorting by timestamp, author, and title."
     (interactive)
-    (unless (string= (ebib-db-get-filename ebib--cur-db) ps/file-bibliography-new)
-      (user-error (format "Due to performane issues, this command only works on database `%s'"
-                          (file-name-nondirectory ps/file-bibliography-new))))
     (ebib--execute-when
       (entries
+       (unless (string= (ebib-db-get-filename ebib--cur-db) ps/file-bibliography-new)
+         (user-error (format "Due to performane issues, this command only works on database `%s'"
+                             (file-name-nondirectory ps/file-bibliography-new))))
        (let ((order 'ascend))
          (pcase ps/ebib-sort-toggle
            ('Timestamp

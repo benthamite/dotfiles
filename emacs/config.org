@@ -16356,6 +16356,12 @@ To be used by `eww-after-render-hook'."
                        ps/eww-readable-autoview))
     (add-hook 'eww-after-render-hook function))
 
+  (defun ps/eww-url-full-capture ()
+    "Add current URL to bibfile and generate associated PDF and HTML files."
+    (interactive)
+    (when (eq major-mode 'eww-mode)
+      (ps/zotra-url-full-capture (eww-current-url))))
+
   :general
   ("A-w" 'eww)
   (eww-mode-map
@@ -16368,11 +16374,13 @@ To be used by `eww-after-render-hook'."
    "g e" 'ps/eww-edit-current-url
    "g u" 'ps/eww-go-up-url-hierarchy
    "g U" 'ps/eww-go-to-root-url-hierarchy
+   "h" 'ps/eww-url-to-html
    ;; "p" 'ps/open-eww-with-recent-kill-ring
    "o" 'eww-toggle-fonts
    "p" 'ps/eww-url-to-pdf
    ":" (lambda! (eww-follow-link '(4)))
-   "x" 'eww-browse-with-external-browser))
+   "x" 'eww-browse-with-external-browser
+   "z" 'ps/eww-url-full-capture))
 #+end_src
 
 *** TODO [#5] Integrate eww Chrome, Firefox history

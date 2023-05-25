@@ -14936,24 +14936,26 @@ or specify any other coding system (and risk losing\n\
 
   (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
 
-  (defun ps/zotra-add-from-eww ()
-    "Add web page at point.
-Also, save the web page as PDF and HTML."
-    (interactive)
-    (unless ebib--cur-db
-      (ebib))
-    (let ((url (eww-current-url)))
-      (zotra-add-entry-from-url url)
-      (ps/eww-url-to-pdf url)
-      (ps/eww-url-to-html url)))
+  (defun ps/zotra-url-full-capture (&optional url)
+  "Add URL to bibfile and generate associated PDF and HTML files."
+  (interactive)
+  (unless ebib--cur-db
+    (ebib))
+  (let ((url (or url
+                 (read-string "URL: " (current-kill 0)))))
+    (zotra-add-entry-from-url url)
+    (require 'org-web-tools)
+    (ps/eww-url-to-pdf url)
+    (ps/eww-url-to-html url)))
 
   :general
   ("C-H-M-S-z" 'zotra-add-entry-from-url) ; triggered by KM macro
   (ebib-index-mode-map
    "i" 'zotra-add-entry-from-search
-   "u" 'zotra-add-entry-from-url)
+   "u" 'zotra-add-entry-from-url
+   "z" 'ps/zotra-url-full-capture)
   (eww-mode-map
-   "i" 'ps/zotra-add-from-eww))
+   "z" 'ps/zotra-url-full-capture))
 #+end_src
 
 *** WAITING Launch zotra outside emacs

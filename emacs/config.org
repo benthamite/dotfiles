@@ -1060,13 +1060,13 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :PROPERTIES:
 :ID:       00E7E217-E02E-489B-968D-E49431FD5ECC
 :END:
-
 :LOGBOOK:
 CLOCK: [2022-07-15 Fri 11:19]--[2022-07-15 Fri 12:01] =>  0:42
 CLOCK: [2021-07-23 Fri 12:19]--[2021-07-23 Fri 12:36] =>  0:17
 CLOCK: [2021-06-25 Fri 21:36]--[2021-06-25 Fri 21:37] =>  0:01
 CLOCK: [2021-03-30 Tue 08:50]--[2021-03-30 Tue 09:02] =>  0:12
 :END:
+
 /[[https://github.com/abo-abo/hydra][hydra]] makes Emacs bindings that stick around./
 
 #+begin_src emacs-lisp :results silent
@@ -3658,7 +3658,7 @@ CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:18] =>  0:01
 (use-package crux
   :general
   ("M-l" 'crux-smart-open-line
-   "M-A-l" (lambda! (ps/crux-smart-open-line t))
+   "M-A-l" (lambda! (crux-smart-open-line t)) ; open line above
    "A-H-l" 'crux-duplicate-current-line-or-region))
 #+end_src
 

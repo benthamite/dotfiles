@@ -14038,6 +14038,10 @@ exists."
       (browse-url-of-buffer)
       (kill-buffer html-buffer)))
 
+  (defvar ps/ebib-valid-file-extensions
+    '("pdf" "html" "webm" "flac" "mp3")
+    "List of valid file extensions for `ps/ebib-open-file-dwim'.")
+
   (defun ps/ebib-open-file-dwim ()
     "Open file in entry at point.
 If the entry contains more than one file, use the preference

@@ -3,7 +3,7 @@
 # key: mcash
 # contributor: Pablo Stafforini
 # --
-`(ps/yasnippet-expand-by-key "ldlm")` $1
+`(ps/time-last-day-of-last-month)` $1
     Expenses:$3   $2.00 ARS
     Liabilities:Mom:Cash
 

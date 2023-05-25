@@ -9,6 +9,65 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** rg
+:PROPERTIES:
+:ID:       A75847C6-5259-46DD-8D03-4EE3314E86E6
+:END:
+
+/[[https://github.com/dajva/rg.el][rg]] is a search tool based on ripgrep./
+
+[2023-05-23 Tue 12:03] Replaced by ~consult-ripgrep~.
+
+#+begin_src emacs-lisp :results silent
+(use-package rg
+  :defer 15
+  :config
+  (setq rg-executable "rg")
+  (setq rg-command-line-flags '("--multiline"))
+  (setq rg-group-result t))
+#+end_src
+
+** biblio
+:PROPERTIES:
+:ID:       4EDDE179-9DE5-4F31-9FB4-17A5B68F6557
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-16 Sat 15:22]--[2022-07-16 Sat 15:26] =>  0:04
+CLOCK: [2022-07-16 Sat 15:17]--[2022-07-16 Sat 15:18] =>  0:01
+:END:
+
+/[[https://github.com/cpitclaudel/biblio.el][biblio]] is a package to browse and import bibliographic references from CrossRef, DBLP, HAL, arXiv, Dissemin, and doi.org./
+
+[2023-05-16 Tue 19:46] Not needed.
+
+#+begin_src emacs-lisp :results silent
+(use-package biblio
+  :defer 15
+  :config
+  (defvar ps/biblio-arxiv-regexp "\\([[:digit:]]\\{4\\}\\.[[:digit:]]\\{4,5\\}\\)")
+  (defun ps/biblio-arxiv-id-p (string)
+    "Return `t' if string has the form of an arXiv ID."
+    (string-match ps/biblio-arxiv-regexp string)))
+#+end_src
+
+** dirvish
+:PROPERTIES:
+:ID:       174FB591-3A37-48B9-8EF1-CF1B2AB39F6D
+:END:
+:LOGBOOK:
+CLOCK: [2023-05-14 Sun 09:32]--[2023-05-14 Sun 09:49]--[2023-05-14 Sun 09:53] =>  0:17
+:END:
+
+/[[https://github.com/alexluigit/dirvish][dirvish]] is an improved version of dired./
+
+[2023-05-14 Sun 09:49] I tried it briefly but found it buggy and mostly unnecessary.
+
+#+begin_src emacs-lisp
+(use-package dirvish
+  :demand t
+  (dirvish-override-dired-mode -1))
+#+end_src
+
 ** dictionary
 :PROPERTIES:
 :ID:       64B69D26-CE6D-4FFD-8218-799A6159ED42

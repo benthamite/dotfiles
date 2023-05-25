@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: brew-install-from-file
+# key: biff
+# contributor: Pablo Stafforini
+# --
+HOMEBREW_NO_INSTALL_CLEANUP=TRUE brew install -s $1.rb; brew pin $1

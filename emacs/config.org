@@ -6573,26 +6573,10 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   (advice-add 'orgit-store-link :override #'ps/orgit-store-link)
 
-  (defun ps/orgit-capture ()
-    "Capture a new Magit/Forge task."
-    (interactive)
-    (let ((topic-assignee (alist-get
-                           (tlon-bae-forge-get-assignee-at-point)
-                           tlon-bae-users nil nil 'string=)))
-      (unless (string= user-full-name topic-assignee)
-        (user-error "You are not the assignee of this task. The assignee is %s" topic-assignee))
-      (orgit-store-link nil)
-      (let* ((org-link (ps/org-nth-stored-link 0))
-             (label (tlon-bae-forge-get-label-at-point))
-             (action (alist-get label tlon-bae-label-actions nil nil #'string=))
-             (binding (upcase (alist-get label tlon-bae-label-bindings nil nil #'string=))))
-        (kill-new (format "%s %s" action org-link))
-        (org-capture nil (concat "tb" binding)))))
-
   :general
   ((forge-topic-mode-map
     magit-status-mode-map)
-   "," 'ps/orgit-capture))
+   "," 'tlon-bae-orgit-capture))
 #+end_src
 
 ** forge-search

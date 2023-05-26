@@ -94,7 +94,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#theme-loaddefs][theme-loaddefs]]
   - [[#modus-themes][modus-themes]]
   - [[#highlight-parentheses][highlight-parentheses]]
-  - [[#emojify][emojify]]
   - [[#lin][lin]]
   - [[#image][image]]
   - [[#paren][paren]]
@@ -1968,21 +1967,10 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   (add-hook 'minibuffer-setup-hook #'highlight-parentheses-minibuffer-setup))
 #+end_src
 
-** emojify
 :PROPERTIES:
-:ID:       92919C07-A782-4079-AE20-75B248D34A13
 :END:
 
-/[[https://github.com/iqbalansari/emacs-emojify][emojify]] displays emojis in Emacs./
-
-#+begin_src emacs-lisp :results silent
-(use-package emojify
-  :config
-  (emojify-set-emoji-styles '(unicode))
-  (add-hook 'elpaca-after-init-hook #'global-emojify-mode)
-
   :general
-  ("H-e" 'emojify-insert-emoji))
 #+end_src
 
 ** lin

@@ -15496,8 +15496,6 @@ https://mu-discuss.narkive.com/mxM4AVIW/how-to-debug-non-zero-exit-code
 
 If you encounter problems with mu and Straight, see [[https://github.com/raxod502/straight.el/issues/491#issuecomment-760150634][this thread]].
 
-[2022-07-11 Mon 23:58] Note: ~mu~ is now pinned in ~brew~ (~brew pin mu~) to version 1.6.11. The most recent version (1.8.5) wasn't working well with [[id:DADEABFE-0E73-4E8F-9973-771FFEF55B60][org-msg]] (see [[https://github.com/jeremy-compostella/org-msg/issues/153][this issue]] and [[https://groups.google.com/g/mu-discuss/c/V1WxQzglkZA/m/Av9vJ_BkAgAJ][this thread]]). Once the issue is resolved, unpin it and upgrade to the latest version.
-
 ** mu4e-contrib
 :PROPERTIES:
 :ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E

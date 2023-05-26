@@ -94,6 +94,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#theme-loaddefs][theme-loaddefs]]
   - [[#modus-themes][modus-themes]]
   - [[#highlight-parentheses][highlight-parentheses]]
+  - [[#emoji][emoji]]
   - [[#lin][lin]]
   - [[#image][image]]
   - [[#paren][paren]]
@@ -1967,10 +1968,15 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   (add-hook 'minibuffer-setup-hook #'highlight-parentheses-minibuffer-setup))
 #+end_src
 
+** emoji
 :PROPERTIES:
+:ID:       6B52C1E5-898C-48C6-AB4C-4BFDE8C5A0B5
 :END:
 
+#+begin_src emacs-lisp
+(use-feature emoji
   :general
+  ("H-e" 'emoji-insert))
 #+end_src
 
 ** lin

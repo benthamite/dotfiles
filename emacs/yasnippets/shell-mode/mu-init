@@ -3,4 +3,4 @@
 # key: mi
 # contributor: Pablo Stafforini
 # --
-mu init --maildir=~/Mail --my-address=pablo@stafforini.com --my-address=pablo.stafforini@gmail.com
+cd ~; mu init --maildir=/Mail --my-address=pablo@stafforini.com --my-address=pablo.stafforini@gmail.com

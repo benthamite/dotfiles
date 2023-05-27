@@ -13154,8 +13154,8 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
                ("date" nil nil 1) ("year" nil nil -1)
                ("doi" nil nil 2) ("url" nil nil 2))
               nil
-              (("subtitle") ("titleaddon") ("language") ("version") ("note")
-               ("organization") ("month") ("addendum")
+              (("subtitle") ("language") ("version") ("note")
+               ("organization") ("month")
                ("pubstate") ("eprintclass" nil nil 4) ("primaryclass" nil nil -4)
                ("eprinttype" nil nil 5) ("archiveprefix" nil nil -5) ("urldate"))))
 
@@ -13168,7 +13168,6 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
            ("url" nil nil 2))
           nil
           (("subtitle")
-           ("titleaddon")
            ("language")
            ("version")
            ("note")
@@ -13191,7 +13190,6 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
           nil
           (("abstract")
            ("keywords")
-           ("titleaddon")
            ("language")
            ("version")
            ("rating")
@@ -13275,6 +13273,20 @@ Version 2015-06-08"
         (if (re-search-forward "@\\w+{\\([^,]+\\),")
             (match-string-no-properties 1)
           (user-error "Not on a BibTeX entry")))))
+
+  (defun ps/bibtex-convert-titleaddon-to-journaltitle ()
+    "Convert field `titleaddon' to `journaltitle' in entry at point.
+When items are imported with the Zotero translation server, the
+online publication venue is recorded in the `titleaddon' field.
+The correct Biblatex field for this information is
+`journaltitle', so we move it there."
+    (save-excursion
+      (save-restriction
+        (bibtex-narrow-to-entry)
+        (bibtex-beginning-of-entry)
+        (when (bibtex-autokey-get-field "titleaddon")
+          (while (re-search-forward "titleaddon = " nil t)
+            (replace-match "journaltitle = " nil nil))))))
 
   :general
   (bibtex-mode-map
@@ -13798,15 +13810,15 @@ The FORCE argument is used as in `ebib-save-current-database'."
                              ("Year" 4 t)
                              ("Title" 50 t)))
   (setq ebib-extra-fields
-	'((biblatex "abstract" "keywords" "translation" "file" "timestamp" "rating")
-	  (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
+        '((biblatex "abstract" "keywords" "translation" "file" "timestamp" "rating")
+          (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
 
   ;; unhide some fields
   (setq ebib-hidden-fields
-	(cl-remove-if
-	 (lambda (el)
-	   (member el '("edition" "isbn" "timestamp" "titleaddon" "translator")))
-	 ebib-hidden-fields))
+        (cl-remove-if
+         (lambda (el)
+           (member el '("edition" "isbn" "timestamp" "titleaddon" "translator")))
+         ebib-hidden-fields))
 
   ;; hide others
   (add-to-list 'ebib-hidden-fields "year")
@@ -14605,23 +14617,6 @@ is created following the same schema as notes created with
       (default
        (beep))))
 
-  (defun ps/ebib-move-titleaddon-to-journaltitle ()
-    "Move contents of field `titleaddon' to `journaltitle'.
-When items are imported with the Zotero translation server, the
-online publication venue is recorded in the `titleaddon' field.
-The correct Biblatex field for this information is
-`journaltitle', so we move it there."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (when-let* ((field "titleaddon")
-                   (key (ebib--get-key-at-point))
-                   (content (ebib-get-field-value field key ebib--cur-db t t)))
-         (ebib-set-field-value "journaltitle" content key ebib--cur-db nil 'unbraced)
-         (ebib-delete-field-contents field t)))
-      (default
-       (beep))))
-
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
 
@@ -14777,7 +14772,8 @@ I experimented with setting the value of ~zotra-backend~ to each of the three av
           (bibtex-beginning-of-entry)
           (goto-char (point-max))
           (when (not (looking-at "^")) (insert "\n"))
-          (advice-add 'select-safe-coding-system-interactively :override #'ps/select-safe-coding-system-interactively)
+          (advice-add 'select-safe-coding-system-interactively
+                      :override #'ps/select-safe-coding-system-interactively)
           (save-buffer)
           (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
           (run-hooks 'zotra-after-add-entry-hook)))))
@@ -14786,6 +14782,7 @@ I experimented with setting the value of ~zotra-backend~ to each of the three av
     "Function to trigger with `zotra-after-add-entry-hook'."
     (revert-buffer nil t)
     (goto-char (point-max))
+    (ps/bibtex-convert-titleaddon-to-journaltitle)
     (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
@@ -14946,16 +14943,16 @@ or specify any other coding system (and risk losing\n\
   (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
 
   (defun ps/zotra-url-full-capture (&optional url)
-  "Add URL to bibfile and generate associated PDF and HTML files."
-  (interactive)
-  (unless ebib--cur-db
-    (ebib))
-  (let ((url (or url
-                 (read-string "URL: " (current-kill 0)))))
-    (zotra-add-entry-from-url url)
-    (require 'org-web-tools)
-    (ps/eww-url-to-pdf url)
-    (ps/eww-url-to-html url)))
+    "Add URL to bibfile and generate associated PDF and HTML files."
+    (interactive)
+    (unless ebib--cur-db
+      (ebib))
+    (let ((url (or url
+                   (read-string "URL: " (current-kill 0)))))
+      (zotra-add-entry-from-url url)
+      (require 'org-web-tools)
+      (ps/eww-url-to-pdf url)
+      (ps/eww-url-to-html url)))
 
   :general
   ("C-H-M-S-z" 'zotra-add-entry-from-url) ; triggered by KM macro

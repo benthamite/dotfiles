@@ -6531,9 +6531,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :general
   (forge-post-mode-map
    "s-c" 'forge-post-submit)
-  ((forge-issue-list-mode-map
-    forge-pullreq-list-mode-map)
-   "," 'ps/orgit-capture)
   (forge-topic-mode-map
    "a" 'forge-edit-topic-assignees
    "b" 'forge-edit-topic-body
@@ -6577,12 +6574,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
                  (forge-visit-issue topic)))
           (call-interactively #'org-store-link)))))
 
-  (advice-add 'orgit-store-link :override #'ps/orgit-store-link)
-
-  :general
-  ((forge-topic-mode-map
-    magit-status-mode-map)
-   "," 'tlon-bae-orgit-capture))
+  (advice-add 'orgit-store-link :override #'ps/orgit-store-link))
 #+end_src
 
 ** forge-search
@@ -8707,7 +8699,6 @@ insert italic delimiters and place the point in between them."
    "s-e" 'markdown-insert-code
    "s-i" 'markdown-insert-italic
    "s-k" 'markdown-insert-link
-   "s-u" 'tlon-bae-insert-eawiki-url
    "s-v") ; should convert from html, mirroring the org binding
   ((ghm-mode-map markdown-mode-map org-mode-map)
    "H-s-v" 'ps/markdown-org-paste-dwim)
@@ -18249,16 +18240,22 @@ And finally, the section you've all been waiting for.
   :demand t
   :general
   ("H-r" 'tlon-bae-dispatch)
-  (forge-topic-mode-map
-   "'" 'tlon-bae-open-forge-file)
-   (github-review-mode-map
-   "s-c" 'tlon-bae-submit-comment-revisions)
-  (markdown-mode-map
-  "s-c" 'tlon-bae-finalize-revision
-   "s-u" 'tlon-bae-insert-tag-url)
+  ((forge-topic-mode-map
+    forge-issue-list-mode-map
+    forge-pullreq-list-mode-map
+    magit-status-mode-map)
+   "," 'tlon-bae-orgit-capture)
   (magit-status-mode-map
-   "s-r" 'tlon-bae-commit-when-slug-at-point
-   "'" 'tlon-bae-open-forge-file))
+   "s-r" 'tlon-bae-commit-when-slug-at-point)
+  ((forge-topic-mode-map magit-status-mode-map)
+   "'" 'tlon-bae-open-forge-file)
+  ((gfm-mode-map markdown-mode-map)
+   "s-u" 'tlon-bae-insert-eawiki-url)
+  (markdown-mode-map
+   "s-c" 'tlon-bae-finalize-revision
+   "s-u" 'tlon-bae-insert-tag-url)
+  (github-review-mode-map
+   "s-c" 'tlon-bae-submit-comment-revisions))
 #+end_src
 
 ** Keyboard Maestro

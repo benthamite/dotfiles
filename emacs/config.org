@@ -14727,15 +14727,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
 /[[https://github.com/mpedramfar/zotra][zotra]] provides functions to get bibliographic information from a URL via [[https://www.zotero.org/support/translators][Zotero translators]], but without relying on the Zotero client./
 
-To run translation server,
-
-#+begin_src bash :tangle no
-cd ~/source/translation-server
-npm start
-#+end_src
-
-I experimented with setting the value of ~zotra-backend~ to each of the three available values, but only ~translation-server~ works reliably.
-
 #+begin_src emacs-lisp :results silent
 (use-package zotra
   :elpaca (zotra
@@ -14750,8 +14741,40 @@ I experimented with setting the value of ~zotra-backend~ to each of the three av
   (setq zotra-default-entry-format "biblatex")
   (setq zotra-after-add-entry-hook nil)
   (setq zotra-download-attachment-default-directory ps/dir-downloads)
+  ;; I experimented with setting the value of `zotra-backend' to each of
+  ;; the three available values, but only `translation-server' works
+  ;; reliably.
   (setq zotra-backend 'translation-server)
   (setq zotra-cli-command (file-name-concat ps/dir-dropbox "source/zotra-cli/bin/index.js"))
+
+  (defun ps/zotra-url-full-capture (&optional url)
+    "Add URL to bibfile and generate associated PDF and HTML files."
+    (interactive)
+    (unless ebib--cur-db
+      (ebib))
+    (let ((url (or url
+                   (read-string "URL: " (current-kill 0)))))
+      (zotra-add-entry-from-url url)
+      (ps/eww-url-to-pdf url)
+      (ps/eww-url-to-html url)))
+
+  (defun ps/zotra-after-add-entry-hook-function ()
+    "Function to trigger with `zotra-after-add-entry-hook'."
+    (revert-buffer nil t)
+    (goto-char (point-max))
+    (ps/bibtex-convert-titleaddon-to-journaltitle)
+    (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
+    (bibtex-clean-entry)
+    (org-ref-clean-bibtex-entry)
+    (save-buffer)
+    (ps/ebib-reload-current-database-no-confirm)
+    (let ((citekey (ps/bibtex-get-key)))
+      (ebib ps/file-bibliography-new citekey)
+      (ebib--index-sort "Timestamp" 'descend)
+      (goto-char (point-min))
+      (ps/ebib-open-key citekey)))
+
+  (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
 
   (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
     (let ((bibfile
@@ -14777,21 +14800,9 @@ I experimented with setting the value of ~zotra-backend~ to each of the three av
           (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
           (run-hooks 'zotra-after-add-entry-hook)))))
 
-  (defun ps/zotra-after-add-entry-hook-function ()
-    "Function to trigger with `zotra-after-add-entry-hook'."
-    (revert-buffer nil t)
-    (goto-char (point-max))
-    (ps/bibtex-convert-titleaddon-to-journaltitle)
-    (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
-    (bibtex-clean-entry)
-    (org-ref-clean-bibtex-entry)
-    (save-buffer)
-    (ps/ebib-reload-current-database-no-confirm)
-    (let ((citekey (ps/bibtex-get-key)))
-      (ebib ps/file-bibliography-new citekey)
-      (ebib--index-sort "Timestamp" 'descend)
-      (goto-char (point-min))
-      (ps/ebib-open-key citekey)))
+  ;; Ugly hack to fix encoding issues.
+  ;; TODO: Fix this properly.
+  (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)
 
   (defun ps/select-safe-coding-system-interactively (from to codings unsafe
                                                           &optional rejected default)
@@ -14934,24 +14945,6 @@ or specify any other coding system (and risk losing\n\
       (kill-buffer "*Warning*")
       (set-window-configuration window-configuration)
       coding-system))
-
-  ;; Ugly hack to fix encoding issues.
-  ;; TODO: Fix this properly.
-  (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)
-
-  (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
-
-  (defun ps/zotra-url-full-capture (&optional url)
-    "Add URL to bibfile and generate associated PDF and HTML files."
-    (interactive)
-    (unless ebib--cur-db
-      (ebib))
-    (let ((url (or url
-                   (read-string "URL: " (current-kill 0)))))
-      (zotra-add-entry-from-url url)
-      (require 'org-web-tools)
-      (ps/eww-url-to-pdf url)
-      (ps/eww-url-to-html url)))
 
   :general
   ("C-H-M-S-z" 'zotra-add-entry-from-url) ; triggered by KM macro

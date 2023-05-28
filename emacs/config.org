@@ -16238,6 +16238,7 @@ To be used by `eww-after-render-hook'."
   (defun ps/eww-url-to-pdf (&optional url)
     "Generate PDF of URL."
     (interactive)
+    (require 'org-web-tools)
     (let* ((url (or url
                     (when (eq major-mode 'eww-mode)
                       (eww-current-url))
@@ -16256,6 +16257,7 @@ To be used by `eww-after-render-hook'."
   (defun ps/eww-url-to-html (&optional url)
     "Generate HTML of URL."
     (interactive)
+    (require 'org-web-tools)
     (let* ((url (or url
                     (when (eq major-mode 'eww-mode)
                       (eww-current-url))

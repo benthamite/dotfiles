@@ -3,4 +3,4 @@
 # key: r
 # contributor: Pablo Stafforini
 # --
-Revise `(ps/tlon-bae-magit-get-filename)`
+Revise `(tlon-bae-magit-get-filename)`

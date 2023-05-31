@@ -9,6 +9,25 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** emojify
+:PROPERTIES:
+:ID:       92919C07-A782-4079-AE20-75B248D34A13
+:END:
+
+/[[https://github.com/iqbalansari/emacs-emojify][emojify]] displays emojis in Emacs./
+
+[2023-05-26 Fri 07:31] Moving to graveyard. Replaced by built-in emoji support in Emacs 29.
+
+#+begin_src emacs-lisp :results silent
+(use-package emojify
+  :config
+  (emojify-set-emoji-styles '(unicode))
+  (add-hook 'elpaca-after-init-hook #'global-emojify-mode)
+
+  :general
+  ("H-e" 'emojify-insert-emoji))
+#+end_src
+
 ** rg
 :PROPERTIES:
 :ID:       A75847C6-5259-46DD-8D03-4EE3314E86E6

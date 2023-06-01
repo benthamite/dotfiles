@@ -14353,16 +14353,17 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
            (engine-symbol (intern (replace-regexp-in-string "ps/ebib-search-" "" engine-name))))
       (add-to-list 'ps/ebib-search-engines engine-symbol)))
 
-    ;;; search functions
+   ;;; search functions
   (defmacro ps/ebib-generate-search-commands ()
     "Generate search commands for each search engine listed in `ps/ebib-search-engines'."
     `(progn
-       ,@(mapcar (lambda (search-name)
-                   `(defun ,(intern (concat "ps/ebib-search-" (symbol-name search-name))) (&optional field)
-                      ,(format "Run a search on %s." (capitalize (replace-regexp-in-string "-" " " (symbol-name search-name))))
-                      (interactive)
+       ,@(mapcar (lambda (engine)
+                   `(defun ,(intern (concat "ps/ebib-search-" (symbol-name engine))) (&optional query)
+                      ,(let ((name (capitalize (replace-regexp-in-string "-" " " (symbol-name engine)))))
+                         (format "Run a search on %s." name)
+                         `(interactive ,(format "sSearch %s: " name)))
                       (ps/ebib-search
-                       ,(intern (concat "ps/" (symbol-name search-name)))
+                       ,(intern (concat "ps/ebib-" (symbol-name engine)))
                        query)))
                  ps/ebib-search-engines)))
 

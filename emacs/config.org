@@ -14676,10 +14676,7 @@ The list of article download functions is specified by
          (save-window-excursion
            (find-file zotra-default-bibliography)
            (goto-char (point-max))
-           (ebib--format-entry key ebib--cur-db)
-           (bibtex-narrow-to-entry)
-           (goto-char (point-min))
-           (replace-regexp "^\\(@.*{.*\\)," "\\1-dup,")
+           (ebib--format-entry key ebib--cur-db t)
            (save-buffer))
          (ebib-switch-to-database-nth 1)
          (ps/ebib-reload-current-database-no-confirm)))

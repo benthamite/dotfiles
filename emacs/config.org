@@ -13997,39 +13997,13 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
                                 lowercase)))
     "Entry types for articles and article-like entities, in both lowercase and sentence case.")
 
-  (defun ps/ebib--search-or-download-dwim (action)
-    "Perform ACTION on the current entry, depending on field at point.
-If point is on field `title', perform ACTION based on its value.
-Else perform ACTION based on the value of its identifier (`doi'
-or `isbn')."
-    (let ((subtype (ebib-get-field-value "=type=" (ebib--get-key-at-point)
-                                         ebib--cur-db)))
-      (let* ((type (cond
-                    ((member subtype ps/ebib-book-like-entry-types)
-                     "book")
-                    ((member subtype ps/ebib-article-like-entry-types)
-                     "article")
-                    (t
-                     (user-error "Entry type `%s' not supported" subtype))))
-             (query (if (string= (ebib--current-field) "title")
-                        "title"
-                      "identifier"))
-             (fun (intern (format "ps/ebib-%s-%s-by-%s" action type query))))
-        (funcall fun))))
-
-  (defun ps/ebib-search-dwim ()
-    "If field at point is 'title', run a search with its value, else use identifier.
-    The list of websites for the search query is defined by the
-    variable `ps/ebib-search-book'"
-    (interactive)
-    (ps/ebib--search-or-download-dwim 'search))
-
-  (defun ps/ebib-download-dwim ()
-    "If field at point is 'title', run a search with its value, else use identifier.
-    The list of websites for the search query is defined by the
-    variable `ps/ebib-download-book'"
-    (interactive)
-    (ps/ebib--search-or-download-dwim 'download))
+  (defvar ps/ebib-film-like-entry-types
+    (let ((lowercase '("movie" "video")))
+      (append lowercase (mapcar (lambda (entry)
+                                  (concat (upcase (substring entry 0 1))
+                                          (substring entry 1)))
+                                lowercase)))
+    "Entry types for articles and article-like entities, in both lowercase and sentence case.")
 
   (defun ps/ebib-get-file (extension)
     "docstring"
@@ -14311,12 +14285,23 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     ps/ebib-search-article-functions
     "List of functions that download articles.")
 
+  (defvar ps/ebib-search-film-functions
+    '(ps/ebib-search-imdb
+      ps/ebib-search-letterboxd
+      ps/ebib-search-metacritic)
+    "List of functions that search for films.")
+
+  (defvar ps/ebib-download-film-functions
+    ps/ebib-search-film-functions
+    "List of functions that search for films.")
+
   (defvar ps/ebib-search-engines '()
     "List of search engine symbols. Used by the
  `ps/define-ebib-search-commands' macro.")
 
   (dolist (engine (delete-dups (append ps/ebib-search-book-functions
                                        ps/ebib-search-article-functions
+                                       ps/ebib-search-film-functions
                                        ps/ebib-download-book-functions)))
     (let* ((engine-name (symbol-name engine))
            (engine-symbol (intern (replace-regexp-in-string "ps/ebib-search-" "" engine-name))))
@@ -14402,6 +14387,25 @@ The list of article search functions is specified by
       (default
        (beep))))
 
+  (defun ps/ebib-search-film (query)
+    "Search for QUERY with the relevant film search functions.
+The list of film search functions is specified by
+`ps/ebib-search-film-functions'."
+    (ps/ebib--search-multi query ps/ebib-search-film-functions))
+
+  (defun ps/ebib-search-film-by-title ()
+    "Search for the film's title with the relevant film search functions.
+The list of film search functions is specified by
+`ps/ebib-search-film-functions'."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (if-let ((title (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+           (ps/ebib-search-film title)
+         (user-error "Title field is empty")))
+      (default
+       (beep))))
+
   (defun ps/ebib-search-by-identifier ()
     "Search for a book or article by the ISBN or DOI of the entry at point."
     (interactive)
@@ -14477,6 +14481,11 @@ The list of article download functions is specified by
 
   (defalias 'ps/ebib-download-book-by-identifier 'ps/ebib-download-by-identifier)
   (defalias 'ps/ebib-download-article-by-identifier 'ps/ebib-download-by-identifier)
+  ;; all we want is to search for a film, and there is no film
+  ;; identifier, so we map all functions to
+  ;; `ps/ebib-search-film-by-title'
+  (defalias 'ps/ebib-download-film-by-title 'ps/ebib-search-film-by-title)
+  (defalias 'ps/ebib-download-film-by-identifier 'ps/ebib-search-film-by-title)
 
   (defun ps/ebib-download-video (id)
     "Download video with id ID using `yt-dlp'."

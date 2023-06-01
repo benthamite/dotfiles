@@ -10755,26 +10755,29 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tbt" "Tlön: BAE: Translate article " entry
            (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
            "** TODO [#5] Translate '%?' \n" :empty-lines 1 :prepend t :jump-to-captured t)
+          ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
+           (id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
+           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
           ("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
-           (id "46DC965C-94D6-461A-876A-1B6D9771CA2C")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
-           (id "925A7132-BB1B-4CF4-8F33-34AF4B5AFFC1")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
-           (id "69E46758-75EE-488F-BE88-2E897FAAEF5C")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
-           (id "87996ABF-D31A-414E-81B8-604454533DB1")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
-           (id "F3EEE431-358D-4A72-A2B9-52E7AD50FBE7")
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
            "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
           ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
-           (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
            "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbI" "Tlön: BAE: Import topic (via org-capture)" entry
-           (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
+          ("tbC" "Tlön: BAE: Check topic (via org-capture)" entry
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
+           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+          ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
+           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+          ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
+           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+          ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
+           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+          ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
            "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
           ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")

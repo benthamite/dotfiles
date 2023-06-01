@@ -4041,12 +4041,11 @@ those visiting any of the EXCLUDED-FILES."
 ACSM file is present in `ps/dir-downloads'."
     (interactive)
     (if (member "book.acsm" (directory-files ps/dir-downloads))
-        (ps/internet-archive-convert-ACSM)
-      (ps/internet-archive-download-ACSM)))
+        (ps/internet-archive-convert)
+      (ps/internet-archive-download)))
 
-  (defun ps/internet-archive-download-ACSM ()
-    "Download and open ACSM file from Internet Archive URL in kill
-ring.
+  (defun ps/internet-archive-download ()
+    "Download and open ACSM file from Internet Archive URL in kill ring.
 
 NB: You need to have previously borrowed the book for the command
 to work. The command will work even if the book was borrowed for
@@ -4072,7 +4071,7 @@ one hour only."
           (message "ACSM file downloaded successfully."))
       (user-error "You forgot to copy the URL!")))
 
-  (defun ps/internet-archive-convert-ACSM ()
+  (defun ps/internet-archive-convert ()
     "Convert ACSM file to PDF."
     (let* ((adobe-file
             ;; stackoverflow.com/a/30887300/4479455
@@ -4082,7 +4081,7 @@ one hour only."
            (id (replace-regexp-in-string "\\(\\(\\(
 \\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
            (calibre-file (car (directory-files-recursively ps/dir-calibre "\\.pdf$" t)))
-           ;; Should match filename used in `ps/internet-archive-download-ACSM'
+           ;; Should match filename used in `ps/internet-archive-download'
            (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
       (rename-file calibre-file (file-name-as-directory ps/dir-downloads))
       (shell-command (format "calibredb remove %s" id))

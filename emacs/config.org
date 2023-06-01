@@ -13202,6 +13202,31 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
            ("urldate")))
            bibtex-biblatex-entry-alist)
 
+    ;; Add custom 'TVepisode' entry type
+  (push '("tvepisode" "tvepisode"
+          (("author" nil nil 0)
+           ("title")
+           ("date" nil nil 1)
+           ("year" nil nil -1)
+           ("url" nil nil 2))
+          nil
+          (("abstract")
+           ("keywords")
+           ("language")
+           ("version")
+           ("rating")
+           ("note")
+           ("organization")
+           ("month")
+           ("addendum")
+           ("pubstate")
+           ("eprintclass" nil nil 4)
+           ("primaryclass" nil nil -4)
+           ("eprinttype" nil nil 5)
+           ("archiveprefix" nil nil -5)
+           ("urldate")))
+           bibtex-biblatex-entry-alist)
+
   ;; Copied from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
   (defun ps/bibtex-asciify-text (&optional Begin End)
     "Remove accents in some letters. e.g. café → cafe.

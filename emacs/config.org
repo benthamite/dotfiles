@@ -13949,24 +13949,21 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
 
   (run-with-idle-timer 60 nil #'ps/ebib-auto-save-old-db)
 
-  ;; these two function calls, in turn, detect when a bib file has changed
-  ;; and reload the corresponding database
-  (file-notify-add-watch
-   ps/file-bibliography-new
-   '(change attribute-change)
-   (lambda (event)
-     (ps/ebib-reload-current-database-no-confirm)))
   (defvar ps/ebib-bibliographies-numbered `((0 . ,ps/file-bibliography-new)
                                             (1 . ,ps/file-bibliography-old))
     "Alist of Ebib database numbers and associated bibliography files.")
 
-  (file-notify-add-watch
-   ps/file-bibliography-old
-   '(change attribute-change)
-   (lambda (event)
-     (ps/ebib-reload-current-database-no-confirm)))
   (defvar ps/ebib-bibliographies (mapcar #'cdr ps/ebib-bibliographies-numbered)
     "List of bibliography files.")
+
+  ;; detect when a bib file has changed and reload the corresponding
+  ;; database
+  (dolist (bib ps/ebib-bibliographies)
+    (file-notify-add-watch
+     bib
+     '(change attribute-change)
+     (lambda (event)
+       (ps/ebib-reload-current-database-no-confirm))))
 
   (defvar ps/ebib-isbn-p
     "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")

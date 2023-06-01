@@ -16243,7 +16243,7 @@ To be used by `eww-after-render-hook'."
     (let ((name (if (eq "" (plist-get eww-data :title))
                     (plist-get eww-data :url)
                   (plist-get eww-data :title))))
-      (rename-buffer name)))
+      (rename-buffer (concat name " — eww"))))
 
   (defun ps/eww-url-to-pdf (&optional url)
     "Generate PDF of URL."

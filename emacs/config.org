@@ -14334,6 +14334,35 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     (dolist (fun functions)
       (funcall fun query)))
 
+  (defun ps/ebib-search-dwim ()
+    "If field at point is 'title', run a search with its value, else use identifier.
+    The list of websites for the search query is defined by the
+    variable `ps/ebib-search-book'"
+    (interactive)
+    (ps/ebib--search-or-download-dwim 'search))
+
+  (defun ps/ebib--search-or-download-dwim (action)
+    "Perform ACTION on the current entry, depending on field at point.
+If point is on field `title', perform ACTION based on its value.
+Else perform ACTION based on the value of its identifier (`doi'
+or `isbn')."
+    (let ((subtype (ebib-get-field-value "=type=" (ebib--get-key-at-point)
+                                         ebib--cur-db)))
+      (let* ((type (cond
+                    ((member subtype ps/ebib-book-like-entry-types)
+                     "book")
+                    ((member subtype ps/ebib-article-like-entry-types)
+                     "article")
+                    ((member subtype ps/ebib-film-like-entry-types)
+                     "film")
+                    (t
+                     (user-error "Entry type `%s' not supported" subtype))))
+             (query (if (string= (ebib--current-field) "title")
+                        "title"
+                      "identifier"))
+             (fun (intern (format "ps/ebib-%s-%s-by-%s" action type query))))
+        (funcall fun))))
+
   (defun ps/ebib-search-book (query)
     "Search for QUERY with the relevant book search functions.
 The list of book search functions is specified by

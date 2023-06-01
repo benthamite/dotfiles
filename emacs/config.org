@@ -14422,8 +14422,17 @@ The list of film search functions is specified by
 
   (defalias 'ps/ebib-search-book-by-identifier 'ps/ebib-search-by-identifier)
   (defalias 'ps/ebib-search-article-by-identifier 'ps/ebib-search-by-identifier)
+  ;; no film identifier; we just search for it
+  (defalias 'ps/ebib-search-film-by-identifier 'ps/ebib-search-film-by-title)
 
   ;;; download functions
+  (defun ps/ebib-download-dwim ()
+    "If field at point is 'title', run a search with its value, else use identifier.
+    The list of websites for the search query is defined by the
+    variable `ps/ebib-download-book'"
+    (interactive)
+    (ps/ebib--search-or-download-dwim 'download))
+
   (defun ps/ebib-download-book (query)
     "Search for QUERY with the relevant book download functions.
 The list of book download functions is specified by

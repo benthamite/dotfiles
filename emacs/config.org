@@ -14436,8 +14436,6 @@ The list of book search functions is specified by
     (interactive)
     (ebib--execute-when
       (entries
-       ;; getting the value of the title field is slightly more involved
-       ;; because two different fields may contain this value
        (if-let ((title (ps/ebib--get-title-at-point)))
            (ps/ebib-search-book title)
          (user-error "Title field is empty")))
@@ -14626,14 +14624,14 @@ The list of article download functions is specified by
     "Open the entry for KEY in Ebib."
     (ebib--execute-when
       (entries
-       (let ((file (cond ((member key (ebib-db-list-keys (nth 0 ebib--databases)))
-                          ps/file-bibliography-new)
-                         ((member key (ebib-db-list-keys (nth 1 ebib--databases)))
-                          file ps/file-bibliography-old)
-                         (t
-                          (ebib--error "Key not found in any database")))))
-         (ebib file key)
-         (ebib--pop-to-buffer (ebib--buffer 'entry))))
+       (let (file)
+         (dotimes (i 2)
+           (when (member key (ebib-db-list-keys (nth i ebib--databases)))
+             (setq file (alist-get i ps/ebib-bibliographies-numbered))))
+         (if file
+             (ebib file key)
+           (ebib--error "Key not found in any database")))
+       (ebib--pop-to-buffer (ebib--buffer 'entry)))
       (default
        (ebib--error "No database is loaded"))))
 

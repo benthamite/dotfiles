@@ -14112,20 +14112,6 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
           (concat "ps/ebib-open-" extension "-file")))
       (user-error "No file found")))
 
-  (defun ps/ebib-validate-file-stem ()
-    "Check that stem of each attached file equals entry's unique key."
-    (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
-      (when
-          (catch 'tag
-            (mapc
-             (lambda (file)
-               (unless (equal (file-name-base file)
-                              (ebib--get-key-at-point))
-                 (throw 'tag file)))
-             (ebib--split-files files))
-            nil)
-        (user-error "Invalid file stem"))))
-
   (defun ps/ebib-rename-files ()
     "Rename files in entry at point so that the file stems match the
     corresponding entry key."
@@ -14158,6 +14144,20 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
       ;; (ebib-save-current-database nil))))
       (default
        (beep))))
+
+  (defun ps/ebib-validate-file-stem ()
+    "Check that stem of each attached file equals entry's unique key."
+    (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
+      (when (catch 'tag
+              (mapc
+               (lambda (file)
+                 (unless (equal
+                          (file-name-base file)
+                          (ebib--get-key-at-point))
+                   (throw 'tag file)))
+               (ebib--split-files files))
+              nil)
+        (user-error "Invalid file stem"))))
 
   ;; We abbreviate the filename so that it works when invoked by my collaborators
   (defun ps/ebib--rename-and-abbreviate-file (directory key &optional extension)
@@ -14241,55 +14241,70 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       (default
        (beep))))
 
-  (defvar ps/library-genesis
+  (defvar ps/ebib-library-genesis
     '("Library Genesis"
       "https://libgen.lc/index.php?req="
       "&phrase=1&view=simple&column=def&sort=extension&sortmode=DESC"))
 
-  (defvar ps/amazon
+  (defvar ps/ebib-amazon
     '("Amazon"
       "https://smile.amazon.com/s?k="
       "&i=stripbooks"))
 
-  (defvar ps/worldcat
+  (defvar ps/ebib-worldcat
     '("Worldcat"
       "https://www.worldcat.org/search?q="
       "&itemType=book&limit=50&offset=1"))
 
-  (defvar ps/internet-archive
+  (defvar ps/ebib-internet-archive
     '("Internet Archive"
       "https://archive.org/search.php?query="
       ""))
 
-  (defvar ps/university-of-toronto
+  (defvar ps/ebib-university-of-toronto
     '("University of Toronto"
       "https://librarysearch.library.utoronto.ca/discovery/search?query=any,contains,"
       "&tab=Everything&search_scope=UTL_AND_CI&vid=01UTORONTO_INST:UTORONTO&offset=0"))
 
-  (defvar ps/hathitrust
+  (defvar ps/ebib-hathitrust
     '("HathiTrust"
       "https://babel.hathitrust.org/cgi/ls?q1="
       "&field1=ocr;a=srchls;lmt=ft;sz=100"))
 
-  (defvar ps/connected-papers
+  (defvar ps/ebib-connected-papers
     '("Connected Papers"
       "https://www.connectedpapers.com/search?q="
       ""))
 
-  (defvar ps/google-scholar
+  (defvar ps/ebib-google-scholar
     '("Google Scholar"
       "https://scholar.google.com/scholar?q="
       ""))
 
-  (defvar ps/wikipedia
+  (defvar ps/ebib-wikipedia
     '("Google Scholar"
       "http://en.wikipedia.org/w/index.php?title=Special%3ASearch&profile=default&search="
       "&fulltext=Search"))
 
-  (defvar ps/goodreads
+  (defvar ps/ebib-goodreads
     '("Goodreads"
       "https://www.goodreads.com/search?q="
       ""))
+
+  (defvar ps/ebib-imdb
+    '("IMDB"
+      "https://www.imdb.com/find/?q="
+      ""))
+
+  (defvar ps/ebib-letterboxd
+    '("Letterboxd"
+      "https://letterboxd.com/search/"
+      ""))
+
+  (defvar ps/ebib-metacritic
+    '("Metacritic"
+      "https://www.metacritic.com/search/all/"
+      "/results"))
 
   (defvar ps/ebib-search-book-functions
     '(ps/ebib-search-goodreads

@@ -420,6 +420,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#shr][shr]]
   - [[#shr-tag-pre-highlight][shr-tag-pre-highlight]]
   - [[#shr-heading][shr-heading]]
+  - [[#url-parse][url-parse]]
   - [[#eww][eww]]
   - [[#w3m][w3m]]
   - [[#elfeed][elfeed]]
@@ -16184,6 +16185,21 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
   ((elfeed-show-mode-map eww-mode-map mu4e-view-mode-map)
    "A-C-s-r" 'shr-heading-previous
    "A-C-s-f" 'shr-heading-next))
+#+end_src
+
+** url-parse
+:PROPERTIES:
+:ID:       17C81535-988C-4B9F-B4A1-D0E5443768CA
+:END:
+
+#+begin_src emacs-lisp
+(use-feature url-parse
+  :demand t
+  :config
+  (defun ps/string-is-url-p (str)
+    "Check if STR is a valid URL."
+    (let ((url (url-generic-parse-url str)))
+      (and (url-type url) (url-host url)))))
 #+end_src
 
 ** eww

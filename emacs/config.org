@@ -420,6 +420,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#shr][shr]]
   - [[#shr-tag-pre-highlight][shr-tag-pre-highlight]]
   - [[#shr-heading][shr-heading]]
+  - [[#url-parse][url-parse]]
   - [[#eww][eww]]
   - [[#w3m][w3m]]
   - [[#elfeed][elfeed]]
@@ -1816,7 +1817,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
        (set-face-attribute 'org-document-title nil :family ps/face-fixed-pitch :height 1.0)
        (set-face-attribute 'org-special-keyword nil :family ps/face-fixed-pitch :height 0.8)
        (set-face-attribute 'org-tag nil :family ps/face-fixed-pitch :height 0.9)
-       (set-face-attribute 'org-code nil :family ps/face-fixed-pitch :height 1.1)
+       (set-face-attribute 'org-code nil :family ps/face-fixed-pitch :height 1.2)
        (set-face-attribute 'org-level-1 nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-level-2 nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-level-3 nil :family ps/face-fixed-pitch :height 0.9)
@@ -4040,12 +4041,11 @@ those visiting any of the EXCLUDED-FILES."
 ACSM file is present in `ps/dir-downloads'."
     (interactive)
     (if (member "book.acsm" (directory-files ps/dir-downloads))
-        (ps/internet-archive-convert-ACSM)
-      (ps/internet-archive-download-ACSM)))
+        (ps/internet-archive-convert)
+      (ps/internet-archive-download)))
 
-  (defun ps/internet-archive-download-ACSM ()
-    "Download and open ACSM file from Internet Archive URL in kill
-ring.
+  (defun ps/internet-archive-download ()
+    "Download and open ACSM file from Internet Archive URL in kill ring.
 
 NB: You need to have previously borrowed the book for the command
 to work. The command will work even if the book was borrowed for
@@ -4071,7 +4071,7 @@ one hour only."
           (message "ACSM file downloaded successfully."))
       (user-error "You forgot to copy the URL!")))
 
-  (defun ps/internet-archive-convert-ACSM ()
+  (defun ps/internet-archive-convert ()
     "Convert ACSM file to PDF."
     (let* ((adobe-file
             ;; stackoverflow.com/a/30887300/4479455
@@ -4081,7 +4081,7 @@ one hour only."
            (id (replace-regexp-in-string "\\(\\(\\(
 \\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
            (calibre-file (car (directory-files-recursively ps/dir-calibre "\\.pdf$" t)))
-           ;; Should match filename used in `ps/internet-archive-download-ACSM'
+           ;; Should match filename used in `ps/internet-archive-download'
            (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
       (rename-file calibre-file (file-name-as-directory ps/dir-downloads))
       (shell-command (format "calibredb remove %s" id))
@@ -4282,6 +4282,8 @@ process in these cases."
   ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "H-q" 'bury-buffer
    "q" 'ps/bury-buffer-switch-to-other-window)
+  (ebib-entry-mode-map
+   "v" 'ps/internet-archive-dwim)
   ((apropos-mode-map calendar-mode-map chatgpt-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map mu4e-headers-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
    "q" 'ps/kill-this-buffer)
   ;; We typically enter these modes to lookup some information and
@@ -10755,26 +10757,29 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tbt" "Tlön: BAE: Translate article " entry
            (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
            "** TODO [#5] Translate '%?' \n" :empty-lines 1 :prepend t :jump-to-captured t)
+          ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
+           (id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
+           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
           ("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
-           (id "46DC965C-94D6-461A-876A-1B6D9771CA2C")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
-           (id "925A7132-BB1B-4CF4-8F33-34AF4B5AFFC1")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
-           (id "69E46758-75EE-488F-BE88-2E897FAAEF5C")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
-           (id "87996ABF-D31A-414E-81B8-604454533DB1")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
-           (id "F3EEE431-358D-4A72-A2B9-52E7AD50FBE7")
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
            "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
           ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
-           (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
            "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbI" "Tlön: BAE: Import topic (via org-capture)" entry
-           (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
+          ("tbC" "Tlön: BAE: Check topic (via org-capture)" entry
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
+           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+          ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
+           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+          ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
+           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+          ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
+           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+          ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
+           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
            "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
           ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
@@ -11607,7 +11612,7 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
                                      (org-refile-cache-clear)
                                      (org-refile-get-targets)))
 
-  (defun ps/org-refile-latest ()
+  (defun ps/org-refile-goto-latest ()
     "Jump to the most recently refiled item."
     (interactive)
     (widen)
@@ -11635,7 +11640,7 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
   (org-mode-map
    "s-w" 'org-refile
    "H-s-w" 'ps/org-refile-and-archive
-   "s-A-w" 'ps/org-refile-latest))
+   "s-A-w" 'ps/org-refile-goto-latest))
 #+end_src
 
 ** org-keys
@@ -13199,6 +13204,31 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
            ("urldate")))
            bibtex-biblatex-entry-alist)
 
+    ;; Add custom 'TVepisode' entry type
+  (push '("tvepisode" "tvepisode"
+          (("author" nil nil 0)
+           ("title")
+           ("date" nil nil 1)
+           ("year" nil nil -1)
+           ("url" nil nil 2))
+          nil
+          (("abstract")
+           ("keywords")
+           ("language")
+           ("version")
+           ("rating")
+           ("note")
+           ("organization")
+           ("month")
+           ("addendum")
+           ("pubstate")
+           ("eprintclass" nil nil 4)
+           ("primaryclass" nil nil -4)
+           ("eprinttype" nil nil 5)
+           ("archiveprefix" nil nil -5)
+           ("urldate")))
+           bibtex-biblatex-entry-alist)
+
   ;; Copied from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
   (defun ps/bibtex-asciify-text (&optional Begin End)
     "Remove accents in some letters. e.g. café → cafe.
@@ -13619,7 +13649,7 @@ in the file. Data comes from www.ebook.de."
     (let ((default-directory ps/dir-downloads))
       (message "Trying to download file...")
       (async-shell-command
-       (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi))))
+       (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi)))))
 #+end_src
 
 ** ebib
@@ -13919,19 +13949,21 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
 
   (run-with-idle-timer 60 nil #'ps/ebib-auto-save-old-db)
 
-  ;; these two function calls, in turn, detect when a bib file has changed
-  ;; and reload the corresponding database
-  (file-notify-add-watch
-   ps/file-bibliography-new
-   '(change attribute-change)
-   (lambda (event)
-     (ps/ebib-reload-current-database-no-confirm)))
+  (defvar ps/ebib-bibliographies-numbered `((0 . ,ps/file-bibliography-new)
+                                            (1 . ,ps/file-bibliography-old))
+    "Alist of Ebib database numbers and associated bibliography files.")
 
-  (file-notify-add-watch
-   ps/file-bibliography-old
-   '(change attribute-change)
-   (lambda (event)
-     (ps/ebib-reload-current-database-no-confirm)))
+  (defvar ps/ebib-bibliographies (mapcar #'cdr ps/ebib-bibliographies-numbered)
+    "List of bibliography files.")
+
+  ;; detect when a bib file has changed and reload the corresponding
+  ;; database
+  (dolist (bib ps/ebib-bibliographies)
+    (file-notify-add-watch
+     bib
+     '(change attribute-change)
+     (lambda (event)
+       (ps/ebib-reload-current-database-no-confirm))))
 
   (defvar ps/ebib-isbn-p
     "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
@@ -13996,39 +14028,13 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
                                 lowercase)))
     "Entry types for articles and article-like entities, in both lowercase and sentence case.")
 
-  (defun ps/ebib--search-or-download-dwim (action)
-    "Perform ACTION on the current entry, depending on field at point.
-If point is on field `title', perform ACTION based on its value.
-Else perform ACTION based on the value of its identifier (`doi'
-or `isbn')."
-    (let ((subtype (ebib-get-field-value "=type=" (ebib--get-key-at-point)
-                                         ebib--cur-db)))
-      (let* ((type (cond
-                    ((member subtype ps/ebib-book-like-entry-types)
-                     "book")
-                    ((member subtype ps/ebib-article-like-entry-types)
-                     "article")
-                    (t
-                     (user-error "Entry type `%s' not supported" subtype))))
-             (query (if (string= (ebib--current-field) "title")
-                        "title"
-                      "identifier"))
-             (fun (intern (format "ps/ebib-%s-%s-by-%s" action type query))))
-        (funcall fun))))
-
-  (defun ps/ebib-search-dwim ()
-    "If field at point is 'title', run a search with its value, else use identifier.
-    The list of websites for the search query is defined by the
-    variable `ps/ebib-search-book'"
-    (interactive)
-    (ps/ebib--search-or-download-dwim 'search))
-
-  (defun ps/ebib-download-dwim ()
-    "If field at point is 'title', run a search with its value, else use identifier.
-    The list of websites for the search query is defined by the
-    variable `ps/ebib-download-book'"
-    (interactive)
-    (ps/ebib--search-or-download-dwim 'download))
+  (defvar ps/ebib-film-like-entry-types
+    (let ((lowercase '("movie" "video")))
+      (append lowercase (mapcar (lambda (entry)
+                                  (concat (upcase (substring entry 0 1))
+                                          (substring entry 1)))
+                                lowercase)))
+    "Entry types for articles and article-like entities, in both lowercase and sentence case.")
 
   (defun ps/ebib-get-file (extension)
     "docstring"
@@ -14106,20 +14112,6 @@ or `isbn')."
           (concat "ps/ebib-open-" extension "-file")))
       (user-error "No file found")))
 
-  (defun ps/ebib-validate-file-stem ()
-    "Check that stem of each attached file equals entry's unique key."
-    (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
-      (when
-          (catch 'tag
-            (mapc
-             (lambda (file)
-               (unless (equal (file-name-base file)
-                              (ebib--get-key-at-point))
-                 (throw 'tag file)))
-             (ebib--split-files files))
-            nil)
-        (user-error "Invalid file stem"))))
-
   (defun ps/ebib-rename-files ()
     "Rename files in entry at point so that the file stems match the
     corresponding entry key."
@@ -14152,6 +14144,20 @@ or `isbn')."
       ;; (ebib-save-current-database nil))))
       (default
        (beep))))
+
+  (defun ps/ebib-validate-file-stem ()
+    "Check that stem of each attached file equals entry's unique key."
+    (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
+      (when (catch 'tag
+              (mapc
+               (lambda (file)
+                 (unless (equal
+                          (file-name-base file)
+                          (ebib--get-key-at-point))
+                   (throw 'tag file)))
+               (ebib--split-files files))
+              nil)
+        (user-error "Invalid file stem"))))
 
   ;; We abbreviate the filename so that it works when invoked by my collaborators
   (defun ps/ebib--rename-and-abbreviate-file (directory key &optional extension)
@@ -14235,55 +14241,70 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       (default
        (beep))))
 
-  (defvar ps/library-genesis
+  (defvar ps/ebib-library-genesis
     '("Library Genesis"
       "https://libgen.lc/index.php?req="
       "&phrase=1&view=simple&column=def&sort=extension&sortmode=DESC"))
 
-  (defvar ps/amazon
+  (defvar ps/ebib-amazon
     '("Amazon"
       "https://smile.amazon.com/s?k="
       "&i=stripbooks"))
 
-  (defvar ps/worldcat
+  (defvar ps/ebib-worldcat
     '("Worldcat"
       "https://www.worldcat.org/search?q="
       "&itemType=book&limit=50&offset=1"))
 
-  (defvar ps/internet-archive
+  (defvar ps/ebib-internet-archive
     '("Internet Archive"
       "https://archive.org/search.php?query="
       ""))
 
-  (defvar ps/university-of-toronto
+  (defvar ps/ebib-university-of-toronto
     '("University of Toronto"
       "https://librarysearch.library.utoronto.ca/discovery/search?query=any,contains,"
       "&tab=Everything&search_scope=UTL_AND_CI&vid=01UTORONTO_INST:UTORONTO&offset=0"))
 
-  (defvar ps/hathitrust
+  (defvar ps/ebib-hathitrust
     '("HathiTrust"
       "https://babel.hathitrust.org/cgi/ls?q1="
       "&field1=ocr;a=srchls;lmt=ft;sz=100"))
 
-  (defvar ps/connected-papers
+  (defvar ps/ebib-connected-papers
     '("Connected Papers"
       "https://www.connectedpapers.com/search?q="
       ""))
 
-  (defvar ps/google-scholar
+  (defvar ps/ebib-google-scholar
     '("Google Scholar"
       "https://scholar.google.com/scholar?q="
       ""))
 
-  (defvar ps/wikipedia
+  (defvar ps/ebib-wikipedia
     '("Google Scholar"
       "http://en.wikipedia.org/w/index.php?title=Special%3ASearch&profile=default&search="
       "&fulltext=Search"))
 
-  (defvar ps/goodreads
+  (defvar ps/ebib-goodreads
     '("Goodreads"
       "https://www.goodreads.com/search?q="
       ""))
+
+  (defvar ps/ebib-imdb
+    '("IMDB"
+      "https://www.imdb.com/find/?q="
+      ""))
+
+  (defvar ps/ebib-letterboxd
+    '("Letterboxd"
+      "https://letterboxd.com/search/"
+      ""))
+
+  (defvar ps/ebib-metacritic
+    '("Metacritic"
+      "https://www.metacritic.com/search/all/"
+      "/results"))
 
   (defvar ps/ebib-search-book-functions
     '(ps/ebib-search-goodreads
@@ -14310,27 +14331,39 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     ps/ebib-search-article-functions
     "List of functions that download articles.")
 
+  (defvar ps/ebib-search-film-functions
+    '(ps/ebib-search-imdb
+      ps/ebib-search-letterboxd
+      ps/ebib-search-metacritic)
+    "List of functions that search for films.")
+
+  (defvar ps/ebib-download-film-functions
+    ps/ebib-search-film-functions
+    "List of functions that search for films.")
+
   (defvar ps/ebib-search-engines '()
     "List of search engine symbols. Used by the
  `ps/define-ebib-search-commands' macro.")
 
   (dolist (engine (delete-dups (append ps/ebib-search-book-functions
                                        ps/ebib-search-article-functions
+                                       ps/ebib-search-film-functions
                                        ps/ebib-download-book-functions)))
     (let* ((engine-name (symbol-name engine))
            (engine-symbol (intern (replace-regexp-in-string "ps/ebib-search-" "" engine-name))))
       (add-to-list 'ps/ebib-search-engines engine-symbol)))
 
-    ;;; search functions
+   ;;; search functions
   (defmacro ps/ebib-generate-search-commands ()
     "Generate search commands for each search engine listed in `ps/ebib-search-engines'."
     `(progn
-       ,@(mapcar (lambda (search-name)
-                   `(defun ,(intern (concat "ps/ebib-search-" (symbol-name search-name))) (&optional field)
-                      ,(format "Run a search on %s." (capitalize (replace-regexp-in-string "-" " " (symbol-name search-name))))
-                      (interactive)
+       ,@(mapcar (lambda (engine)
+                   `(defun ,(intern (concat "ps/ebib-search-" (symbol-name engine))) (&optional query)
+                      ,(let ((name (capitalize (replace-regexp-in-string "-" " " (symbol-name engine)))))
+                         (format "Run a search on %s." name)
+                         `(interactive ,(format "sSearch %s: " name)))
                       (ps/ebib-search
-                       ,(intern (concat "ps/" (symbol-name search-name)))
+                       ,(intern (concat "ps/ebib-" (symbol-name engine)))
                        query)))
                  ps/ebib-search-engines)))
 
@@ -14347,6 +14380,35 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     "Search for QUERY with each function in FUNCTIONS."
     (dolist (fun functions)
       (funcall fun query)))
+
+  (defun ps/ebib-search-dwim ()
+    "If field at point is 'title', run a search with its value, else use identifier.
+    The list of websites for the search query is defined by the
+    variable `ps/ebib-search-book'"
+    (interactive)
+    (ps/ebib--search-or-download-dwim 'search))
+
+  (defun ps/ebib--search-or-download-dwim (action)
+    "Perform ACTION on the current entry, depending on field at point.
+If point is on field `title', perform ACTION based on its value.
+Else perform ACTION based on the value of its identifier (`doi'
+or `isbn')."
+    (let ((subtype (ebib-get-field-value "=type=" (ebib--get-key-at-point)
+                                         ebib--cur-db)))
+      (let* ((type (cond
+                    ((member subtype ps/ebib-book-like-entry-types)
+                     "book")
+                    ((member subtype ps/ebib-article-like-entry-types)
+                     "article")
+                    ((member subtype ps/ebib-film-like-entry-types)
+                     "film")
+                    (t
+                     (user-error "Entry type `%s' not supported" subtype))))
+             (query (if (string= (ebib--current-field) "title")
+                        "title"
+                      "identifier"))
+             (fun (intern (format "ps/ebib-%s-%s-by-%s" action type query))))
+        (funcall fun))))
 
   (defun ps/ebib-search-book (query)
     "Search for QUERY with the relevant book search functions.
@@ -14374,8 +14436,6 @@ The list of book search functions is specified by
     (interactive)
     (ebib--execute-when
       (entries
-       ;; getting the value of the title field is slightly more involved
-       ;; because two different fields may contain this value
        (if-let ((title (ps/ebib--get-title-at-point)))
            (ps/ebib-search-book title)
          (user-error "Title field is empty")))
@@ -14401,6 +14461,25 @@ The list of article search functions is specified by
       (default
        (beep))))
 
+  (defun ps/ebib-search-film (query)
+    "Search for QUERY with the relevant film search functions.
+The list of film search functions is specified by
+`ps/ebib-search-film-functions'."
+    (ps/ebib--search-multi query ps/ebib-search-film-functions))
+
+  (defun ps/ebib-search-film-by-title ()
+    "Search for the film's title with the relevant film search functions.
+The list of film search functions is specified by
+`ps/ebib-search-film-functions'."
+    (interactive)
+    (ebib--execute-when
+      (entries
+       (if-let ((title (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+           (ps/ebib-search-film title)
+         (user-error "Title field is empty")))
+      (default
+       (beep))))
+
   (defun ps/ebib-search-by-identifier ()
     "Search for a book or article by the ISBN or DOI of the entry at point."
     (interactive)
@@ -14417,8 +14496,17 @@ The list of article search functions is specified by
 
   (defalias 'ps/ebib-search-book-by-identifier 'ps/ebib-search-by-identifier)
   (defalias 'ps/ebib-search-article-by-identifier 'ps/ebib-search-by-identifier)
+  ;; no film identifier; we just search for it
+  (defalias 'ps/ebib-search-film-by-identifier 'ps/ebib-search-film-by-title)
 
   ;;; download functions
+  (defun ps/ebib-download-dwim ()
+    "If field at point is 'title', run a search with its value, else use identifier.
+    The list of websites for the search query is defined by the
+    variable `ps/ebib-download-book'"
+    (interactive)
+    (ps/ebib--search-or-download-dwim 'download))
+
   (defun ps/ebib-download-book (query)
     "Search for QUERY with the relevant book download functions.
 The list of book download functions is specified by
@@ -14476,6 +14564,11 @@ The list of article download functions is specified by
 
   (defalias 'ps/ebib-download-book-by-identifier 'ps/ebib-download-by-identifier)
   (defalias 'ps/ebib-download-article-by-identifier 'ps/ebib-download-by-identifier)
+  ;; all we want is to search for a film, and there is no film
+  ;; identifier, so we map all functions to
+  ;; `ps/ebib-search-film-by-title'
+  (defalias 'ps/ebib-download-film-by-title 'ps/ebib-search-film-by-title)
+  (defalias 'ps/ebib-download-film-by-identifier 'ps/ebib-search-film-by-title)
 
   (defun ps/ebib-download-video (id)
     "Download video with id ID using `yt-dlp'."
@@ -14531,14 +14624,14 @@ The list of article download functions is specified by
     "Open the entry for KEY in Ebib."
     (ebib--execute-when
       (entries
-       (let ((file (cond ((member key (ebib-db-list-keys (nth 0 ebib--databases)))
-                          ps/file-bibliography-new)
-                         ((member key (ebib-db-list-keys (nth 1 ebib--databases)))
-                          file ps/file-bibliography-old)
-                         (t
-                          (ebib--error "Key not found in any database")))))
-         (ebib file key)
-         (ebib--pop-to-buffer (ebib--buffer 'entry))))
+       (let (file)
+         (dotimes (i 2)
+           (when (member key (ebib-db-list-keys (nth i ebib--databases)))
+             (setq file (alist-get i ps/ebib-bibliographies-numbered))))
+         (if file
+             (ebib file key)
+           (ebib--error "Key not found in any database")))
+       (ebib--pop-to-buffer (ebib--buffer 'entry)))
       (default
        (ebib--error "No database is loaded"))))
 
@@ -14583,10 +14676,7 @@ The list of article download functions is specified by
          (save-window-excursion
            (find-file zotra-default-bibliography)
            (goto-char (point-max))
-           (ebib--format-entry key ebib--cur-db)
-           (bibtex-narrow-to-entry)
-           (goto-char (point-min))
-           (replace-regexp "^\\(@.*{.*\\)," "\\1-dup,")
+           (ebib--format-entry key ebib--cur-db t)
            (save-buffer))
          (ebib-switch-to-database-nth 1)
          (ps/ebib-reload-current-database-no-confirm)))
@@ -14646,7 +14736,6 @@ is created following the same schema as notes created with
    "s" 'ps/ebib-search-dwim
    "t" 'ps/ebib-search-book-dwim
    "u" 'ebib-browse-url
-   "v" 'ps/ebib-open-webm-file
    "V" 'ps/ebib-search-internet-archive
    "w" 'ps/ebib-search-worldcat
    "W" 'ps/ebib-search-wikipedia
@@ -16070,6 +16159,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "igmchicago\\.org"
                      "imdb\\.com"
                      "interactivebrokers\\.co"
+                     "jit\\.si"
                      "keyboardmaestro\\.com"
                      "letterboxd\\.com"
                      "libgen\\."
@@ -16085,6 +16175,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "qualtrics\\.com"
                      "rescuetime\\.com"
                      "savvycal\\.com"
+                     "skyscanner\\.net"
                      "slack\\.com"
                      "squarespace\\.com"
                      "stafforini\\.com"
@@ -16092,6 +16183,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "twitter\\.com"
                      "utoronto\\.ca"
                      "worldcat\\.org"
+                     "we\\.tl"
                      "wetransfer\\.com"
                      "youtu\\.be"
                      "youtube\\.com"
@@ -16186,6 +16278,21 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
    "A-C-s-f" 'shr-heading-next))
 #+end_src
 
+** url-parse
+:PROPERTIES:
+:ID:       17C81535-988C-4B9F-B4A1-D0E5443768CA
+:END:
+
+#+begin_src emacs-lisp
+(use-feature url-parse
+  :demand t
+  :config
+  (defun ps/string-is-url-p (str)
+    "Check if STR is a valid URL."
+    (let ((url (url-generic-parse-url str)))
+      (and (url-type url) (url-host url)))))
+#+end_src
+
 ** eww
 :PROPERTIES:
 :ID:       E9E3FE6F-5580-4D21-90D8-6B0E595C10F7
@@ -16224,7 +16331,7 @@ To be used by `eww-after-render-hook'."
     (let ((name (if (eq "" (plist-get eww-data :title))
                     (plist-get eww-data :url)
                   (plist-get eww-data :title))))
-      (rename-buffer name)))
+      (rename-buffer (concat name " — eww"))))
 
   (defun ps/eww-url-to-pdf (&optional url)
     "Generate PDF of URL."
@@ -18381,6 +18488,7 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/dir-dropbox-tlon-RCG . (file-name-concat ps/dir-dropbox-tlon "RCG/"))
  (ps/dir-repos . (file-name-concat ps/dir-dropbox "repos/"))
  (ps/dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat ps/dir-repos "biblioteca-altruismo-eficaz/"))
+ (ps/dir-tlon-docs . (file-name-concat ps/dir-repos "tlon-docs/"))
  (ps/dir-emacs-local . (file-name-concat ps/dir-emacs "local/"))
  (ps/dir-chemacs-profiles . (file-name-concat ps/dir-user ".config/emacs-profiles/"))
  (ps/dir-org .  ps/dir-dropbox)
@@ -18435,7 +18543,9 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-cookies . (file-name-concat ps/dir-google-drive "Apps/Chrome/cookies.txt"))
  (ps/file-work . (file-name-concat ps/dir-notes "work-dashboard.org"))
  (ps/file-tlon-ledger-schedule-file . (file-name-concat ps/dir-dropbox-tlon-ledger "ledger-schedule.ledger"))
- (ps/file-tlon-docs . (file-name-concat ps/dir-dropbox-tlon "docs.org"))
+ (ps/file-tlon-bae . (file-name-concat ps/dir-notes "biblioteca-altruismo-eficaz.org"))
+ (ps/file-tlon-docs-core . (file-name-concat ps/dir-tlon-docs "core.org"))
+ (ps/file-tlon-docs-bae . (file-name-concat ps/dir-tlon-docs "BAE.org"))
  (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
  (ps/face-fixed-pitch . "SauceCodePro Nerd Font")
  (ps/face-fixed-pitch-size .  115)

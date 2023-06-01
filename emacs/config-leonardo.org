@@ -219,68 +219,160 @@ one hour only."
  )
 #+end_src
 
-* variables override                                                  :crypt:
+* variables override
 :PROPERTIES:
 :ID:       0B85812B-1620-4F40-A5BA-534626B6B112
 :END:
 
------BEGIN PGP MESSAGE-----
+#+begin_src emacs-lisp :tangle (print tlon-init-variables-override-path)
+(
+ (ps/personal-name . "Leonardo Picón")
+ (ps/personal-gmail . "leonardodecartago@gmail.com")
+ (ps/personal-email . "")
+ (ps/personal-phone . "‭+34 635 304 503‬")
+ (ps/personal-gpe-email . "leo@globalprioritiesencyclopedia.org")
+ (ps/dir-root . (file-name-as-directory (expand-file-name "/")))
+ (ps/dir-system-apps . (file-name-concat ps/dir-root "Applications/"))
+ (ps/dir-user . (file-name-concat ps/dir-root "Users/cartago/"))
+ (ps/dir-dropbox . (file-name-concat ps/dir-user "Library/CloudStorage/Dropbox/"))
+ (ps/dir-google-drive . (file-name-concat ps/dir-user "Google Drive/"))
+ (ps/dir-downloads . (file-name-concat ps/dir-user "Downloads/"))
+ (ps/dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat ps/dir-user "source/biblioteca-altruismo-eficaz/"))
+ (ps/dir-emacs .   user-emacs-directory)
+ (ps/dir-google-drive . (file-name-concat ps/dir-user "google drive/"))
+ (ps/dir-music . (file-name-concat ps/dir-google-drive "music/"))
+ (ps/dir-movies . (file-name-concat ps/dir-user "movies/"))
+ (ps/dir-finance . (file-name-concat ps/dir-google-drive "finance/"))
+ (ps/dir-audiobooks . (file-name-concat ps/dir-google-drive "audiobooks/"))
+ (ps/dir-music-tango . (file-name-concat ps/dir-music "tango/"))
+ (ps/dir-music-popular . (file-name-concat ps/dir-music "popular/"))
+ (ps/dir-music-classical . (file-name-concat ps/dir-music "classical/"))
+ (ps/dir-music-to-sort . (file-name-concat ps/dir-music "to sort/"))
+ (ps/dir-anki . "")
+ (ps/dir-archive . "")
+ (ps/dir-inactive . "")
+ (ps/dir-bibliography . (file-name-concat ps/dir-dropbox "bibliography/"))
+ (ps/dir-csl-styles . (file-name-concat ps/dir-bibliography "styles/"))
+ (ps/dir-csl-locales . (file-name-concat ps/dir-bibliography "locales/"))
+ (ps/dir-blog . "")
+ (ps/dir-journal . "")
+ (ps/dir-wiki . "")
+ (ps/dir-wiki-entries . "")
+ (ps/dir-wiki-references . "")
+ (ps/dir-dotfiles . (file-name-concat ps/dir-user "source/dotfiles/"))
+ (ps/dir-dotemacs . (file-name-concat ps/dir-user "source/dotfiles/emacs/"))
+ (ps/dir-karabiner . "")
+ (ps/dir-bibliographic-notes .   (file-name-concat ps/dir-dropbox "bibliographic-notes/"))
+ (ps/dir-yasnippets . (file-name-concat ps/dir-dotemacs "yasnippets/"))
+ (ps/dir-abbrev . (file-name-concat ps/dir-dotemacs "abbrev/"))
+ (ps/dir-private . (file-name-concat ps/dir-dropbox "private/"))
+ (ps/dir-ledger . (file-name-concat ps/dir-dropbox "ledger/"))
+ (ps/dir-notes . "")
+ (ps/dir-people . "")
+ (ps/dir-android . "")
+ (ps/dir-ade . (file-name-concat ps/dir-user "Documents/Digital Editions/"))
+ (ps/dir-library-pdf . (file-name-concat ps/dir-google-drive "library-pdf/"))
+ (ps/dir-library-html . (file-name-concat ps/dir-google-drive "library-html/"))
+ (ps/dir-library-media . (file-name-concat ps/dir-google-drive "library-media/"))
+ (ps/dir-emacs-var . (file-name-concat ps/dir-emacs "var/"))
+ (ps/dir-source . (file-name-concat ps/dir-user "source"))
+ (ps/dir-translation-server . (file-name-concat ps/dir-source "translation-server/"))
+ (ps/dir-PW . "")
+ (ps/dir-google-drive-tlon . (file-name-concat ps/dir-google-drive "tlon/"))
+ (ps/dir-google-drive-tlon-BAE . (file-name-concat ps/dir-google-drive-tlon "BAE/"))
+ (ps/dir-google-drive-tlon-EAN . (file-name-concat ps/dir-google-drive-tlon "EAN/"))
+ (ps/dir-google-drive-tlon-FM . (file-name-concat ps/dir-google-drive-tlon "FM/"))
+ (ps/dir-google-drive-tlon-GPE . (file-name-concat ps/dir-google-drive-tlon "GPE/"))
+ (ps/dir-google-drive-tlon-HEAR . (file-name-concat ps/dir-google-drive-tlon "HEAR/"))
+ (ps/dir-google-drive-tlon-LBDLH . (file-name-concat ps/dir-google-drive-tlon "LBDLH/"))
+ (ps/dir-google-drive-tlon-LP . (file-name-concat ps/dir-google-drive-tlon "LP/"))
+ (ps/dir-google-drive-tlon-RAE . (file-name-concat ps/dir-google-drive-tlon "RAE/"))
+ (ps/dir-google-drive-tlon-RCG . (file-name-concat ps/dir-google-drive-tlon "RCG/"))
+ (ps/dir-dropbox-tlon . (file-name-concat ps/dir-dropbox "tlon/"))
+ (ps/dir-google-drive-tlon-core . (file-name-concat ps/dir-google-drive-tlon "core/"))
+ (ps/dir-google-drive-tlon-fede . (file-name-concat ps/dir-google-drive-tlon "fede/"))
+ (ps/dir-google-drive-tlon-leo . (file-name-concat ps/dir-google-drive-tlon "leo/"))
+ (ps/dir-dropbox-tlon-core . (file-name-concat ps/dir-dropbox-tlon "core/"))
+ (ps/dir-dropbox-tlon-leo . (file-name-concat ps/dir-dropbox-tlon "leo/"))
+ (ps/dir-dropbox-tlon-fede . (file-name-concat ps/dir-dropbox-tlon "fede/"))
+ (ps/dir-dropbox-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-core "ledger/"))
+ (ps/dir-dropbox-tlon-pass . (file-name-concat ps/dir-dropbox-tlon-core "pass/"))
+ (ps/dir-dropbox-tlon-BAE . (file-name-concat ps/dir-dropbox-tlon "BAE/"))
+ (ps/dir-dropbox-tlon-EAN . (file-name-concat ps/dir-dropbox-tlon "EAN/"))
+ (ps/dir-dropbox-tlon-FM . (file-name-concat ps/dir-dropbox-tlon "FM/"))
+ (ps/dir-dropbox-tlon-GPE . (file-name-concat ps/dir-dropbox-tlon "GPE/"))
+ (ps/dir-dropbox-tlon-HEAR . (file-name-concat ps/dir-dropbox-tlon "HEAR/"))
+ (ps/dir-dropbox-tlon-LBDLH . (file-name-concat ps/dir-dropbox-tlon "LBDLH/"))
+ (ps/dir-dropbox-tlon-LP . (file-name-concat ps/dir-dropbox-tlon "LP/"))
+ (ps/dir-dropbox-tlon-RAE . (file-name-concat ps/dir-dropbox-tlon "RAE/"))
+ (ps/dir-dropbox-tlon-RCG . (file-name-concat ps/dir-dropbox-tlon "RCG/"))
+ (ps/dir-emacs-local . (file-name-concat ps/dir-emacs "local/"))
+ (ps/dir-org .   ps/dir-dropbox-tlon-leo)
+ (ps/dir-org-roam . "")
+ (ps/dir-org-images . "")
+ (ps/dir-websites . "")
+ (ps/dir-calibre . (file-name-concat ps/dir-downloads "Calibre/"))
+ (ps/dir-all-repos . ps/dir-people)
+ (ps/file-notes . (file-name-concat ps/dir-org "notes.org"))
+ (ps/file-inbox-desktop . (file-name-concat ps/dir-android "inbox-desktop.org"))
+ (ps/file-inbox-mobile . (file-name-concat ps/dir-android "inbox-mobile.org"))
+ (ps/file-calendar . (file-name-concat ps/dir-android "calendar.org"))
+ (ps/file-feeds-pablo . "")
+ (ps/file-tlon-feeds . (file-name-concat ps/dir-dropbox-tlon-core "feeds.org"))
+ (ps/file-anki . "")
+ (ps/file-init . (file-name-concat ps/dir-dotemacs "init.el"))
+ (ps/file-config . (file-name-concat ps/dir-dotemacs "config.org"))
+ (ps/file-karabiner . "")
+ (ps/file-karabiner-edn . "")
+ (ps/file-bibliography . (file-name-concat ps/dir-bibliography "old.bib"))
+ (ps/file-bibliography-old . (file-name-concat ps/dir-bibliography "old.bib"))
+ (ps/file-bibliography-new . (file-name-concat ps/dir-bibliography "new.bib"))
+ (ps/file-bibliography-emacs . (file-name-concat ps/dir-bibliography "emacs.bib"))
+ (ps/file-wiki-notes . (file-name-concat ps/dir-wiki "wiki-notes.org"))
+ (ps/file-wiki-published . (file-name-concat ps/dir-wiki "wiki-published.org"))
+ (ps/file-wiki-help . (file-name-concat ps/dir-wiki "wiki-help.org"))
+ (ps/file-library . (file-name-concat ps/dir-notes "library.org"))
+ (ps/file-quotes . (file-name-concat ps/dir-blog "quotes.org"))
+ (ps/file-films . (file-name-concat ps/dir-notes "films.org"))
+ (ps/file-tlon-tareas-leo . (file-name-concat ps/dir-dropbox-tlon-leo "tareas.org"))
+ (ps/file-tlon-tareas-fede . (file-name-concat ps/dir-dropbox-tlon-fede "tareas.org"))
+ (ps/file-org2blog . (file-name-concat ps/dir-blog ".org2blog.org"))
+ (ps/file-straight-profile . "")
+ (ps/file-orb-noter-template . (file-name-concat ps/dir-bibliography "orb-noter-template.org"))
+ (ps/file-orb-capture-template . (file-name-concat ps/dir-bibliographic-notes "${citekey}.org"))
+ (ps/file-bookmarks . (file-name-concat ps/dir-dropbox "bookmarks"))
+ (ps/file-variables . (file-name-concat ps/dir-dotemacs "variables.el"))
+ (ps/file-ledger . (file-name-concat ps/dir-dropbox-tlon-leo "journal.ledger"))
+ (ps/file-ledger-db . (file-name-concat ps/dir-ledger ".pricedb"))
+ (ps/file-metaculus . (file-name-concat ps/dir-notes "metaculus.org"))
+ (ps/file-gpe . (file-name-concat ps/dir-notes "global-priorities-encyclopedia.org"))
+ (ps/file-fm . (file-name-concat ps/dir-notes "future-matters.org"))
+ (ps/file-ffrp . (file-name-concat ps/dir-notes "future-fund-regranting-program.org"))
+ (ps/file-rcg . (file-name-concat ps/dir-notes "riesgos-catastróficos-globales.org"))
+ (ps/file-ean . (file-name-concat ps/dir-notes "ea.news.org"))
+ (ps/file-cookies . "/Users/cartago/downloads/cookies.txt")
+ (ps/file-work . (file-name-concat ps/dir-notes "work-dashboard.org"))
+ (ps/file-tlon-ledger-schedule-file . (file-name-concat ps/dir-dropbox-tlon-ledger "ledger-schedule.ledger"))
+ (ps/file-tlon-docs . (file-name-concat ps/dir-dropbox-tlon "docs.org"))
+ (ps/file-tlon-docs-bae . (file-name-concat ps/dir-dropbox-tlon "bae.org"))
+ (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
+ (ps/file-tlon-bae . ps/file-tlon-tareas-leo)
+ (ps/face-fixed-pitch . "Source Code Pro")
+ (ps/face-variable-pitch . "Source Serif Pro")
+ (ps/monitor-type . (cdr (assoc 'name (frame-monitor-attributes))))
+ (ps/ledger-active-currencies . '("USD" "EUR" "GBP" "MXN" "ARS"))
+ (ps/frame-width-threshold .    350)
+ (ps/new-empty-buffer-major-mode . 'org-mode)
+ (ps/forge-owned-accounts . "worldsaround")
+ (ps/personal-signature . "
 
-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
-=jnhG
------END PGP MESSAGE-----
+,#+begin_signature
+--
+,*Leo*
+,#+end_signature")
+ )
+#+end_src
+
 
 * local variables
 :PROPERTIES:

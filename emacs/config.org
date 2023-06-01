@@ -11610,7 +11610,7 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
                                      (org-refile-cache-clear)
                                      (org-refile-get-targets)))
 
-  (defun ps/org-refile-latest ()
+  (defun ps/org-refile-goto-latest ()
     "Jump to the most recently refiled item."
     (interactive)
     (widen)
@@ -11638,7 +11638,7 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
   (org-mode-map
    "s-w" 'org-refile
    "H-s-w" 'ps/org-refile-and-archive
-   "s-A-w" 'ps/org-refile-latest))
+   "s-A-w" 'ps/org-refile-goto-latest))
 #+end_src
 
 ** org-keys

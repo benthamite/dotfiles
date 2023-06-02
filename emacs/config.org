@@ -16349,7 +16349,7 @@ To be used by `eww-after-render-hook'."
            (output-file (file-name-concat ps/dir-downloads file-name)))
       (async-shell-command
        (format
-        "'%s' --headless --no-pdf-header --print-to-pdf='%s' %s"
+        "'%s' --print-to-pdf-no-header --headless --print-to-pdf='%s' %s"
         browse-url-chrome-program
         output-file
         url))))

@@ -16166,6 +16166,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "LinkedIn\\.com"
                      "list-manage\\.com"
                      "loc\\.gov"
+                     "mailist-manage\\.eu"
                      "metafilter\\.com"
                      "mercadopago\\.com"
                      "mercadolibre\\.com"
@@ -16175,6 +16176,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "qualtrics\\.com"
                      "rescuetime\\.com"
                      "savvycal\\.com"
+                     "skyscanner\\.com"
                      "skyscanner\\.net"
                      "slack\\.com"
                      "squarespace\\.com"
@@ -16347,7 +16349,7 @@ To be used by `eww-after-render-hook'."
            (output-file (file-name-concat ps/dir-downloads file-name)))
       (async-shell-command
        (format
-        "'%s' --headless --no-pdf-header --print-to-pdf='%s' %s"
+        "'%s' --print-to-pdf-no-header --headless --print-to-pdf='%s' %s"
         browse-url-chrome-program
         output-file
         url))))
@@ -18356,9 +18358,12 @@ And finally, the section you've all been waiting for.
    "s-r" 'tlon-bae-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
    "'" 'tlon-bae-open-forge-file)
+   ((gfm-mode-map markdown-mode-map eww-mode-map)
+   "H-," 'tlon-bae-read-backward
+   "H-." 'tlon-bae-read-forward
+   "H-/" 'tlon-bae-read-target-start-or-stop)
   ((gfm-mode-map markdown-mode-map)
-   "s-u" 'tlon-bae-insert-eawiki-url)
-  (markdown-mode-map
+   "s-u" 'tlon-bae-insert-eawiki-url
    "s-c" 'tlon-bae-finalize-revision
    "s-u" 'tlon-bae-insert-tag-url)
   (github-review-mode-map

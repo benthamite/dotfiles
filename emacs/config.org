@@ -18358,9 +18358,12 @@ And finally, the section you've all been waiting for.
    "s-r" 'tlon-bae-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
    "'" 'tlon-bae-open-forge-file)
+   ((gfm-mode-map markdown-mode-map eww-mode-map)
+   "H-," 'tlon-bae-read-backward
+   "H-." 'tlon-bae-read-forward
+   "H-/" 'tlon-bae-read-target-start-or-stop)
   ((gfm-mode-map markdown-mode-map)
-   "s-u" 'tlon-bae-insert-eawiki-url)
-  (markdown-mode-map
+   "s-u" 'tlon-bae-insert-eawiki-url
    "s-c" 'tlon-bae-finalize-revision
    "s-u" 'tlon-bae-insert-tag-url)
   (github-review-mode-map

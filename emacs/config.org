@@ -13918,17 +13918,16 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
     (interactive)
     (ebib--execute-when
       (entries
-       (let ((buf (current-buffer)))
-         (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-         (ebib--reload-database ebib--cur-db)
-         (ebib--set-modified nil ebib--cur-db)
-         ;; This is the line that causes point to disappear, but
-         ;; disabling it seems harmless.
-         ;; (ebib--update-buffers)
-         (message "Database reloaded")))
+       (unless (and (ebib-db-modified-p ebib--cur-db)
+		    (not (yes-or-no-p "Database modified.  Really reload from file? ")))
+	 (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+	 (ebib--reload-database ebib--cur-db)
+	 (ebib--set-modified nil ebib--cur-db)
+	 (ebib--update-buffers)
+	 (message "Database reloaded")))
       (default
        (beep))))
-
+  
   ;; these two functions, together with the associated timers, detect
   ;; when a database has changed and save its contents to the corresponding bib
   ;; file

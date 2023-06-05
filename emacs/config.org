@@ -13918,17 +13918,16 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
     (interactive)
     (ebib--execute-when
       (entries
-       (let ((buf (current-buffer)))
-         (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-         (ebib--reload-database ebib--cur-db)
-         (ebib--set-modified nil ebib--cur-db)
-         ;; This is the line that causes point to disappear, but
-         ;; disabling it seems harmless.
-         ;; (ebib--update-buffers)
-         (message "Database reloaded")))
+       (unless (and (ebib-db-modified-p ebib--cur-db)
+		    (not (yes-or-no-p "Database modified.  Really reload from file? ")))
+	 (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+	 (ebib--reload-database ebib--cur-db)
+	 (ebib--set-modified nil ebib--cur-db)
+	 (ebib--update-buffers)
+	 (message "Database reloaded")))
       (default
        (beep))))
-
+  
   ;; these two functions, together with the associated timers, detect
   ;; when a database has changed and save its contents to the corresponding bib
   ;; file
@@ -13949,21 +13948,27 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
 
   (run-with-idle-timer 60 nil #'ps/ebib-auto-save-old-db)
 
+  ;; these two function calls, in turn, detect when a bib file has changed
+  ;; and reload the corresponding database
+  (file-notify-add-watch
+   ps/file-bibliography-new
+   '(change attribute-change)
+   (lambda (event)
+     (message "reloading database")
+     (ps/ebib-reload-current-database-no-confirm)))
+  
+  (file-notify-add-watch
+   ps/file-bibliography-old
+   '(change attribute-change)
+   (lambda (event)
+     (ps/ebib-reload-current-database-no-confirm)))
+
   (defvar ps/ebib-bibliographies-numbered `((0 . ,ps/file-bibliography-new)
                                             (1 . ,ps/file-bibliography-old))
     "Alist of Ebib database numbers and associated bibliography files.")
-
+  
   (defvar ps/ebib-bibliographies (mapcar #'cdr ps/ebib-bibliographies-numbered)
     "List of bibliography files.")
-
-  ;; detect when a bib file has changed and reload the corresponding
-  ;; database
-  (dolist (bib ps/ebib-bibliographies)
-    (file-notify-add-watch
-     bib
-     '(change attribute-change)
-     (lambda (event)
-       (ps/ebib-reload-current-database-no-confirm))))
 
   (defvar ps/ebib-isbn-p
     "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")

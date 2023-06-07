@@ -3767,9 +3767,6 @@ _a_pend       |_k_macro      |r_e_store                    "
     ;; position
     ("o" point-to-register)
     ("j" jump-to-register)
-    ;; undo
-    ("u" undo-tree-save-state-to-register)
-    ("e" undo-tree-restore-state-from-register)
     ;; windows
     ("w" window-configuration-to-register)
     ("f" frame-configuration-to-register)
@@ -11716,7 +11713,7 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
      ("i" . (org-clock-in))
      ("o" . (org-clock-out))
      ("Regular editing")
-     ("z" . (undo-tree-undo))
+     ("z" . (undo-only))
      ("X" . (org-cut-subtree)) ; capital 'X' to prevent accidents
      ("c" . (org-copy-subtree))
      ("v" . (org-yank))

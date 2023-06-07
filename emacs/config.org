@@ -18458,15 +18458,15 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 #+begin_src emacs-lisp :tangle (print tlon-init-variables-path)
 (
  (ps/personal-name . "Pablo Stafforini")
- (ps/personal-gmail-unus . "pablo.staff") ; will this protect against spammers?
- (ps/personal-gmail-duo . "orini@gmail.com")
- (ps/personal-gmail . (concat ps/personal-gmail-unus ps/personal-gmail-duo))
- (ps/personal-email-εἷς . "pablo@staff")
+ (ps/personal-gmail-unus . "pablo.staff") ; will this protect against spammers? :P
  (ps/personal-email-δῠ́ο . "orini.com")
- (ps/personal-email . (concat ps/personal-email-εἷς ps/personal-email-δῠ́ο))
- (ps/tlon-email-एकम् . "tlon.sh")
  (ps/tlon-email-द्वे . "ared@gmail.com")
- (ps/tlon-email (concat ps/tlon-email-एकम् ps/tlon-email-द्वे))
+ (ps/personal-gmail-duo . "orini@gmail.com")
+ (ps/tlon-email-एकम् . "tlon.sh")
+ (ps/personal-email-εἷς . "pablo@staff")
+ (ps/personal-gmail . (concat ps/personal-gmail-unus ps/personal-gmail-duo))
+ (ps/personal-email . (concat ps/personal-email-εἷς ps/personal-email-δῠ́ο))
+ (ps/tlon-email . (concat ps/tlon-email-एकम् ps/tlon-email-द्वे))
  (ps/personal-phone . "+1 4246668293")
  (ps/dir-root . "/")
  (ps/dir-system-apps . "/Applications/")

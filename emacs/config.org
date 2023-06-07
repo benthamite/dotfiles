@@ -13887,6 +13887,28 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
           (remhash key (ebib-db-val 'entries db)))
         key)))
 
+  ;; tweak original function so that when field contains a file,
+  ;; the absolute file path value is copied
+  (defun ebib-copy-field-contents (field)
+    "Copy the contents of FIELD to the kill ring.
+If the field contains a value from a cross-referenced entry, that
+value is copied to the kill ring."
+    (unless (or (not field)
+                (string= field "=type="))
+      (el-patch-swap (let ((contents (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+                       (if (stringp contents)
+                           (progn (kill-new contents)
+                                  (message "Field contents copied."))
+                         (error "Cannot copy an empty field")))
+                     (let* ((raw-contents (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+                            (contents (if (f-file-p raw-contents)
+                                          (file-truename raw-contents)
+                                        raw-contents)))
+                       (if (stringp contents)
+                           (progn (kill-new contents)
+                                  (message "Field contents copied."))
+                         (user-error "Cannot copy an empty field"))))))
+
   :config
   (setq ebib-preload-bib-files org-cite-global-bibliography)
   (setq ebib-notes-directory ps/dir-bibliographic-notes)

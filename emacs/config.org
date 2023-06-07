@@ -16965,10 +16965,13 @@ https://superuser.com/a/1350144/387888."
   (defengine Ebay-DE
     "https://www.ebay.de/sch/i.html?_from=R40&_trksid=p2380057.m570.l1313&_nkw=%s&_sacat=0"
     :keybinding "e d")
+  (defengine Fundeu
+    "https://cse.google.com/cse?cx=005053095451413799011:alg8dd3pluq&q=%s"
+    :keybinding "f f")
   (defengine Flickr
     "http://www.flickr.com/search/?q=%s"
     :keybinding "f l")
-    (defengine Financial-Times
+  (defengine Financial-Times
     "https://www.ft.com/search?q=%s"
     :keybinding "f t")
   (defengine GitHub

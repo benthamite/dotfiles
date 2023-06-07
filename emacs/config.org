@@ -14075,6 +14075,12 @@ value is copied to the kill ring."
                                 lowercase)))
     "Entry types for articles and article-like entities, in both lowercase and sentence case.")
 
+  (defun ps/ebib-copy-current-field-contents ()
+    "Copy the contents of the current field to the kill ring.
+If the field contains a value from a cross-referenced entry, that
+value is copied to the kill ring."
+    (interactive)
+    (ebib-copy-field-contents (ebib--current-field)))
   (defun ps/ebib-get-file (extension)
     "docstring"
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))

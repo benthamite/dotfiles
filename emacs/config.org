@@ -293,6 +293,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#txl][txl]]
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown][markdown]]
+  - [[#grip-mode][grip-mode]]
   - [[#edit-indirect][edit-indirect]]
   - [[#mediawiki-el][mediawiki-el]]
   - [[#gdrive][gdrive]]
@@ -8707,6 +8708,20 @@ insert italic delimiters and place the point in between them."
   (gfm-mode-map
    "s-a" 'markdown-insert-gfm-code-block
    "s-z" 'markdown-edit-code-block))
+#+end_src
+
+** grip-mode
+:PROPERTIES:
+:ID:       5F437CCD-14C3-4120-B77E-3E1C7C891819
+:END:
+
+/[[https://github.com/seagle0128/grip-mode][grip-mode]] provides org-mode and Github-flavored Markdown preview using grip./
+
+#+begin_src emacs-lisp
+(use-package grip-mode
+  :general
+  ((gfm-mode-map markdown-mode-map)
+   "s-w" 'grip-mode))
 #+end_src
 
 ** edit-indirect

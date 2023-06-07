@@ -17304,19 +17304,24 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
     (setq twittering-timeline-data-table (make-hash-table :test 'equal))
     (twit))
 
+    ;; TODO: create macro for this
   (defun ps/twittering-ea-news ()
-    "Start a `twittering-mode' session with the `ea_dot_news'
-account."
+    "Start a `twittering-mode' session with the `ea_dot_news' account."
     (interactive)
     (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-ea-news.gpg"))
     (auth-source-pass-get 'secret "auth-sources/twitter/ea_dot_news")
     (ps/twittering-reload))
 
   (defun ps/twittering-future-matters ()
-    "Start a `twittering-mode' session with the `futurematters_'
-account."
+    "Start a `twittering-mode' session with the `futurematters_' account."
     (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-future-matters.gpg"))
     (auth-source-pass-get 'secret "auth-sources/twitter/futurematters_")
+    (ps/twittering-reload))
+
+(defun ps/twittering-anonymous ()
+    "Start a `twittering-mode' session with anonymous account."
+    (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-anonymous.gpg"))
+    (auth-source-pass-get 'secret "auth-sources/twitter/anonymous")
     (ps/twittering-reload))
 
   (defun ps/twittering-mode-get-uri ()

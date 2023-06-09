@@ -3750,8 +3750,8 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 _c_opy        |_n_umber      |p_o_int
 _i_nsert      |incremen_t_   |_j_ump        |   _f_rame    | _l_ist
 ------------^^+------------^^+------------^^+  frame_s_et  + _v_iew       ||_q_uit||
-_p_repend     |_r_ectangle   |_u_ndo        |   _w_indow   | _h_elm
-_a_pend       |_k_macro      |r_e_store                    "
+_p_repend     |_r_ectangle   |        |   _w_indow   | _h_elm
+_a_pend       |_k_macro      |                    "
     ;; text
     ("c" copy-to-register)
     ("i" insert-register)

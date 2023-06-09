@@ -4039,7 +4039,7 @@ those visiting any of the EXCLUDED-FILES."
     "Convert or download ACSM file, depending on whether or not an
 ACSM file is present in `ps/dir-downloads'."
     (interactive)
-    (if (member "book.acsm" (directory-files ps/dir-downloads))
+    (if (member "URLLink.acsm" (directory-files ps/dir-downloads))
         (ps/internet-archive-convert)
       (ps/internet-archive-download)))
 
@@ -4057,17 +4057,23 @@ one hour only."
                     "\\2"
                     (current-kill 0)))
                (url (concat prefix id suffix))
-               (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
+               (acsm-file (file-name-concat ps/dir-downloads "URLLink.acsm")))
           ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
           ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
           ;; Then replace the path below with the location of the downloaded cookies file.
-          (save-window-excursion
-            (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
-              (async-shell-command
-               (format
-                "wget --load-cookies='%s' '%s' -O '%s'; open %s"
-                ps/file-cookies url acsm-file acsm-file))))
-          (message "ACSM file downloaded successfully."))
+
+          ;; 2023-06-08 Currently not working, I think due to authentication issues.
+          ;; So copying the URL to kill ring instead.
+          ;; (save-window-excursion
+          ;; (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
+          ;; (async-shell-command
+          ;; (format
+          ;; "wget --load-cookies='%s' '%s' -O '%s'; open %s"
+          ;; ps/file-cookies url acsm-file acsm-file))))
+          ;; (message "ACSM file downloaded successfully.")
+          (kill-new url)
+          (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Then run `ps/internet-archive-dwim' to convert it.")
+          )
       (user-error "You forgot to copy the URL!")))
 
   (defun ps/internet-archive-convert ()

@@ -16677,6 +16677,12 @@ poorly-designed websites."
       (unless (or elfeed-search-remain-on-entry (use-region-p))
         (forward-line))))
 
+  (defun ps/elfeed-url-full-capture ()
+    "Add current URL to bibfile and generate associated PDF and HTML files."
+    (interactive)
+    (when (eq major-mode 'elfeed-show-mode)
+      (ps/zotra-url-full-capture (elfeed-entry-link elfeed-show-entry))))
+
   (defun ps/show-elfeed (buffer)
     (with-current-buffer buffer
       (setq buffer-read-only nil)
@@ -16725,7 +16731,8 @@ poorly-designed websites."
    ";W" 'elfeed-show-prev
    "v" 'ps/elfeed-show-visit-in-eww
    "w" 'ps/elfeed-kill-link-url-of-entry
-   "x" 'elfeed-show-visit))
+   "x" 'elfeed-show-visit
+   "z" 'ps/elfeed-url-full-capture))
 #+end_src
 
 ** elfeed-org

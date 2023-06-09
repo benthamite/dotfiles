@@ -8691,13 +8691,14 @@ insert italic delimiters and place the point in between them."
 
   :general
   ((gfm-mode-map markdown-mode-map)
-  "A-C-H-t" 'ps/markdown-copy-section
+   "A-C-H-t" 'ps/markdown-copy-section
    "A-C-s-r" 'markdown-outline-previous
    "A-C-s-f" 'markdown-outline-next
    "s-b" 'markdown-insert-bold
    "s-e" 'markdown-insert-code
    "s-i" 'markdown-insert-italic
    "s-k" 'markdown-insert-link
+   "s-p" 'markdown-preview
    "s-v") ; should convert from html, mirroring the org binding
   ((ghm-mode-map markdown-mode-map org-mode-map)
    "H-s-v" 'ps/markdown-org-paste-dwim)

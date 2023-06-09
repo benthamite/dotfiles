@@ -13649,7 +13649,7 @@ in the file. Data comes from www.ebook.de."
     (let ((default-directory ps/dir-downloads))
       (message "Trying to download file...")
       (async-shell-command
-       (format "/Users/pablostafforini/.pyenv/shims/scidownl download --doi %s" doi)))))
+       (format "~/.pyenv/shims/scidownl download --doi %s" doi)))))
 #+end_src
 
 ** ebib
@@ -14711,6 +14711,7 @@ is created following the same schema as notes created with
    "s-c" 'ebib-quit-multiline-buffer-and-save)
   ((ebib-entry-mode-map ebib-index-mode-map)
    "H-s" 'ebib-save-current-database
+   "K" 'ebib-copy-key-as-kill
    "Q" 'ebib-quit
    "n" 'ps/ebib-citar-open-notes)
   (ebib-entry-mode-map

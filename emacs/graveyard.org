@@ -9,6 +9,23 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** gptai
+:PROPERTIES:
+:ID:       BEB02F5A-AE8E-40BF-B8A7-93A6A5B7D88A
+:END:
+
+[2023-06-07 Wed 22:11] Replaced with gptel.
+
+#+begin_src emacs-lisp
+(use-package gptai
+  :demand t
+  :config
+  (setq gptai-model "gpt-4") 
+  (setq gptai-username (auth-source-pass-get "username" "tlon/core/openai.com"))
+  (setq gptai-api-key (auth-source-pass-get "key" "tlon/core/openai.com"))
+  )
+#+end_src
+
 ** openai
 :PROPERTIES:
 :ID:       822430F1-51B8-4754-80B0-EC17DD931CB5

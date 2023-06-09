@@ -463,6 +463,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#tlon-init][tlon-init]]
   - [[#tlon-core][tlon-core]]
   - [[#tlon-bae][tlon-bae]]
+  - [[#tlon-biblio][tlon-biblio]]
   - [[#keyboard-maestro][Keyboard Maestro]]
 - [[#variables][variables]]
   - [[#shared-variables][shared variables]]
@@ -18376,6 +18377,19 @@ And finally, the section you've all been waiting for.
    "s-c" 'tlon-bae-submit-comment-revisions))
 #+end_src
 
+** tlon-biblio
+:PROPERTIES:
+:ID:       D3DE21CB-388A-48A0-A7EB-E79DD48D5E81
+:END:
+
+#+begin_src emacs-lisp
+(use-package tlon-biblio
+  :elpaca (tlon-biblio
+           :host github
+           :repo "tlon-team/tlon-biblio"
+           :depth nil) ; clone entire repo, not just last commit
+  :demand t)
+#+end_src
 ** Keyboard Maestro
 :PROPERTIES:
 :ID:       1776C0C3-CEEC-4DED-B609-4DF0DF83B0C2

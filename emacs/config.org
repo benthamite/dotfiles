@@ -4255,17 +4255,19 @@ process in these cases."
 
   (advice-add 'recover-this-file :after #'ps/diff-buffer-with-file)
 
-  ;; disabling until we diagnose issues
-  ;; (setq auto-save-visited-predicate
-  ;;  (lambda () (string-match "tareas.org" buffer-file-name)))
-  ;; (setq auto-save-visited-interval 5)
-  ;; (auto-save-visited-mode)
+  (defun ps/copy-path-of-current-buffer ()
+    "Copy the path of the current buffer to the kill ring."
+    (interactive)
+    (let ((path (buffer-file-name)))
+      (kill-new path)
+      (message "Copied `%s'" path)))
 
   (add-hook 'find-file-hook #'ps/auto-save-alert)
   ;; (add-hook 'kill-buffer-query-functions #'ps/auto-save-persist)
 
   :general
   ("M--" 'not-modified
+   "M-;" 'ps/copy-path-of-current-buffer
    "M-b" 'ps/save-and-revert-buffer
    "M-e" 'ps/eval-region-or-buffer
    "H-q" 'ps/kill-this-buffer

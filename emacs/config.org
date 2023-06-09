@@ -15025,8 +15025,6 @@ or specify any other coding system (and risk losing\n\
   (ebib-index-mode-map
    "i" 'zotra-add-entry-from-search
    "u" 'zotra-add-entry-from-url
-   "z" 'ps/zotra-url-full-capture)
-  (eww-mode-map
    "z" 'ps/zotra-url-full-capture))
 #+end_src
 

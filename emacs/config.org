@@ -13941,7 +13941,9 @@ value is copied to the kill ring."
          (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
          (ebib--reload-database ebib--cur-db)
          (ebib--set-modified nil ebib--cur-db)
-         (ebib--update-buffers)
+         ;; This is the line that causes point to disappear, but
+         ;; disabling it seems harmless.
+         ;; (ebib--update-buffers)
          (message "Database reloaded")))
       (default
        (beep))))

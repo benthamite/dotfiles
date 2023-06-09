@@ -3230,11 +3230,13 @@ with the current major mode."
     (if visible-mode
         (progn
           (visible-mode -1)
-          (org-modern-mode)
+          (unless (eq major-mode 'org-agenda-mode)
+            (org-modern-mode))
           (org-display-inline-images)
           (ps/org-hide-properties)
           (ps/org-hide-logbook))
-      (org-modern-mode -1)
+      (unless (eq major-mode 'org-agenda-mode)
+        (org-modern-mode -1))
       (visible-mode)
       (org-remove-inline-images)
       (ps/org-show-properties)

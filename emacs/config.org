@@ -17228,10 +17228,10 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
     "docstring"
     (interactive
      (list
-      (completing-read "Select account: " '("EA News" "Future Matters" "GPE"))))
+      (completing-read "Select account: " '("EA News" "Future Matters" "anonymous"))))
     (cond ((string= arg "EA News") (ps/twittering-ea-news))
           ((string= arg "Future Matters") (ps/twittering-future-matters))
-          ((string= arg "GPE") (ps/twittering-gpe))))
+          ((string= arg "anonymous") (ps/twittering-anonymous))))
 
   (defface twitter-divider
     '((((background dark))  (:underline (:color "#141519")))

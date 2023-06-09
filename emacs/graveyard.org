@@ -44,6 +44,33 @@ CLOCK: [2023-03-17 Fri 21:54]--[2023-03-17 Fri 22:24] =>  0:30
   :config
   (setq openai-key (auth-source-pass-get "key" "tlon/core/openai.com")))
 #+end_src
+
+** chatgpt
+:PROPERTIES:
+:ID:       2D5B778F-E663-4569-8104-77E6D986FA90
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-21 Tue 22:51]--[2023-03-21 Tue 23:01] =>  0:10
+CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
+:END:
+
+/[[https://github.com/emacs-openai/chatgpt][chatgpt]] supports prompting GPT from within Emacs./
+
+[2023-06-07 Wed 21:57] Replacing it with ~org-ai~.
+
+#+begin_src emacs-lisp
+(use-package chatgpt
+  :elpaca (chatgpt
+             :host github
+             :repo "emacs-openai/chatgpt")
+  :config
+  (setq chatgpt-model "gpt-4")
+  (setq chatgpt-input-method 'minibuffer)
+  (setq chatgpt-animate-text nil)
+
+  :general
+  ("A-C-g" 'chatgpt))
+#+end_src
 ** emojify
 :PROPERTIES:
 :ID:       92919C07-A782-4079-AE20-75B248D34A13

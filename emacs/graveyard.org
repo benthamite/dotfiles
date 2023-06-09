@@ -9,6 +9,24 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** openai
+:PROPERTIES:
+:ID:       822430F1-51B8-4754-80B0-EC17DD931CB5
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-17 Fri 21:54]--[2023-03-17 Fri 22:24] =>  0:30
+:END:
+
+/[[https://github.com/emacs-openai/openai][openai]] is an Elisp library for the OpenAI API./
+
+#+begin_src emacs-lisp
+(use-package openai
+  :elpaca (openai
+             :host github
+             :repo "emacs-openai/openai")
+  :config
+  (setq openai-key (auth-source-pass-get "key" "tlon/core/openai.com")))
+#+end_src
 ** emojify
 :PROPERTIES:
 :ID:       92919C07-A782-4079-AE20-75B248D34A13

@@ -325,7 +325,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#bicycle][bicycle]]
 - [[#ai][AI]]
   - [[#copilot][copilot]]
-  - [[#openai][openai]]
   - [[#chatgpt][chatgpt]]
   - [[#codegpt][codegpt]]
   - [[#gptel][gptel]]
@@ -9663,24 +9662,6 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
    "A-M-<tab>" 'copilot-accept-completion-by-line))
 #+end_src
 
-** openai
-:PROPERTIES:
-:ID:       822430F1-51B8-4754-80B0-EC17DD931CB5
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-17 Fri 21:54]--[2023-03-17 Fri 22:24] =>  0:30
-:END:
-
-/[[https://github.com/emacs-openai/openai][openai]] is an Elisp library for the OpenAI API./
-
-#+begin_src emacs-lisp
-(use-package openai
-  :elpaca (openai
-             :host github
-             :repo "emacs-openai/openai")
-  :config
-  (setq openai-key (auth-source-pass-get "key" "tlon/core/openai.com")))
-#+end_src
 
 ** chatgpt
 :PROPERTIES:

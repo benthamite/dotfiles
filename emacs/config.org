@@ -13901,15 +13901,15 @@ value is copied to the kill ring."
     (ebib--execute-when
       (entries
        (unless (and (ebib-db-modified-p ebib--cur-db)
-		    (not (yes-or-no-p "Database modified.  Really reload from file? ")))
-	 (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-	 (ebib--reload-database ebib--cur-db)
-	 (ebib--set-modified nil ebib--cur-db)
-	 (ebib--update-buffers)
-	 (message "Database reloaded")))
+                    (not (yes-or-no-p "Database modified.  Really reload from file? ")))
+         (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+         (ebib--reload-database ebib--cur-db)
+         (ebib--set-modified nil ebib--cur-db)
+         (ebib--update-buffers)
+         (message "Database reloaded")))
       (default
        (beep))))
-  
+
   ;; these two functions, together with the associated timers, detect
   ;; when a database has changed and save its contents to the corresponding bib
   ;; file
@@ -13938,7 +13938,7 @@ value is copied to the kill ring."
    (lambda (event)
      (message "reloading database")
      (ps/ebib-reload-current-database-no-confirm)))
-  
+
   (file-notify-add-watch
    ps/file-bibliography-old
    '(change attribute-change)
@@ -13948,7 +13948,7 @@ value is copied to the kill ring."
   (defvar ps/ebib-bibliographies-numbered `((0 . ,ps/file-bibliography-new)
                                             (1 . ,ps/file-bibliography-old))
     "Alist of Ebib database numbers and associated bibliography files.")
-  
+
   (defvar ps/ebib-bibliographies (mapcar #'cdr ps/ebib-bibliographies-numbered)
     "List of bibliography files.")
 

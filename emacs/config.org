@@ -328,6 +328,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#openai][openai]]
   - [[#chatgpt][chatgpt]]
   - [[#codegpt][codegpt]]
+  - [[#gptel][gptel]]
   - [[#org-ai][org-ai]]
   - [[#whisper][whisper]]
   - [[#pen][pen]]
@@ -9707,11 +9708,14 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
 #+end_src
 
 ** codegpt
+** gptel
 :PROPERTIES:
 :ID:       5008C40C-EC84-4817-9BE6-92996986D25E
+:ID:       B84D396B-D1FD-4718-9002-58DEB1BB85E1
 :END:
 
 /[[https://github.com/emacs-openai/codegpt#-using-chatgpt][codegpt]]  is a completion interface for GPT./
+/[[https://github.com/karthink/gptel][gptel]] is a ChatGPT client for Emacs./
 
 #+begin_src emacs-lisp
 (use-package codegpt
@@ -9719,8 +9723,12 @@ CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
              :host github
              :repo "emacs-openai/codegpt")
   :after openai
+(use-package gptel
+  :demand t
   :config
   (setq codegpt-model "text-davinci-003"))
+  (setq gptel-api-key (auth-source-pass-get "key" "tlon/core/openai.com"))
+  (setq gptel-model "gpt-4"))
 #+end_src
 
 ** org-ai

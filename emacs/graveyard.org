@@ -9,6 +9,88 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** gptai
+:PROPERTIES:
+:ID:       BEB02F5A-AE8E-40BF-B8A7-93A6A5B7D88A
+:END:
+
+[2023-06-07 Wed 22:11] Replaced with gptel.
+
+#+begin_src emacs-lisp
+(use-package gptai
+  :demand t
+  :config
+  (setq gptai-model "gpt-4") 
+  (setq gptai-username (auth-source-pass-get "username" "tlon/core/openai.com"))
+  (setq gptai-api-key (auth-source-pass-get "key" "tlon/core/openai.com"))
+  )
+#+end_src
+
+** openai
+:PROPERTIES:
+:ID:       822430F1-51B8-4754-80B0-EC17DD931CB5
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-17 Fri 21:54]--[2023-03-17 Fri 22:24] =>  0:30
+:END:
+
+/[[https://github.com/emacs-openai/openai][openai]] is an Elisp library for the OpenAI API./
+
+#+begin_src emacs-lisp
+(use-package openai
+  :elpaca (openai
+             :host github
+             :repo "emacs-openai/openai")
+  :config
+  (setq openai-key (auth-source-pass-get "key" "tlon/core/openai.com")))
+#+end_src
+
+** chatgpt
+:PROPERTIES:
+:ID:       2D5B778F-E663-4569-8104-77E6D986FA90
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-21 Tue 22:51]--[2023-03-21 Tue 23:01] =>  0:10
+CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
+:END:
+
+/[[https://github.com/emacs-openai/chatgpt][chatgpt]] supports prompting GPT from within Emacs./
+
+[2023-06-07 Wed 21:57] Replacing it with ~org-ai~.
+
+#+begin_src emacs-lisp
+(use-package chatgpt
+  :elpaca (chatgpt
+             :host github
+             :repo "emacs-openai/chatgpt")
+  :config
+  (setq chatgpt-model "gpt-4")
+  (setq chatgpt-input-method 'minibuffer)
+  (setq chatgpt-animate-text nil)
+
+  :general
+  ("A-C-g" 'chatgpt))
+#+end_src
+
+** codegpt
+:PROPERTIES:
+:ID:       5008C40C-EC84-4817-9BE6-92996986D25E
+:END:
+
+/[[https://github.com/emacs-openai/codegpt#-using-chatgpt][codegpt]]  is a completion interface for GPT./
+
+[2023-06-07 Wed 21:57] Replacing it with ~org-ai~.
+
+#+begin_src emacs-lisp
+(use-package codegpt
+  :elpaca (codegpt
+             :host github
+             :repo "emacs-openai/codegpt")
+  :after openai
+  :config
+  (setq codegpt-model "text-davinci-003"))
+#+end_src
+
 ** emojify
 :PROPERTIES:
 :ID:       92919C07-A782-4079-AE20-75B248D34A13

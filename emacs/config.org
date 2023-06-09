@@ -11466,7 +11466,7 @@ not already have one."
                             ps/file-tlon-tareas-fede))
 
   (defun ps/org-id-update-id-locations ()
-  "Scan relevant files for IDs.
+    "Scan relevant files for IDs.
 
 Store the relation between files and corresponding IDs. This will
 scan all agenda files, all associated archives, all open Org
@@ -18365,7 +18365,7 @@ And finally, the section you've all been waiting for.
    "s-r" 'tlon-bae-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
    "'" 'tlon-bae-open-forge-file)
-   ((gfm-mode-map markdown-mode-map eww-mode-map)
+  ((gfm-mode-map markdown-mode-map eww-mode-map)
    "H-," 'tlon-bae-read-backward
    "H-." 'tlon-bae-read-forward
    "H-/" 'tlon-bae-read-target-start-or-stop)

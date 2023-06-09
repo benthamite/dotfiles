@@ -11445,22 +11445,23 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
   (defun ps/org-id-auto-add-ids-to-headings-in-file ()
     "Add ID properties to all headings in the current file which do
 not already have one."
-     (when (and (eq major-mode 'org-mode)
-                (string-match ps/dir-org (buffer-file-name))
-                (eq buffer-read-only nil))
-       (unless
-           (or
-            ;; exclude directories
-            (member (file-name-directory (buffer-file-name))
-                    ps/org-id-auto-add-excluded-directories)
-            ;; exclude files
-            (member (buffer-file-name)
-                    ps/org-id-auto-add-excluded-files)
-            (member (org-get-heading)
-                    '("Local variables"
-                      "COMMENT Local variables"
-                      "TODO Local variables")))
-         (org-map-entries 'org-id-get-create))))
+    (when-let ((file (buffer-file-name)))
+      (when (and (eq major-mode 'org-mode)
+                 (string-match ps/dir-org file)
+                 (eq buffer-read-only nil))
+        (unless
+            (or
+             ;; exclude directories
+             (member (file-name-directory (buffer-file-name))
+                     ps/org-id-auto-add-excluded-directories)
+             ;; exclude files
+             (member (buffer-file-name)
+                     ps/org-id-auto-add-excluded-files)
+             (member (org-get-heading)
+                     '("Local variables"
+                       "COMMENT Local variables"
+                       "TODO Local variables")))
+          (org-map-entries 'org-id-get-create)))))
 
   :config
   (setq org-id-link-to-org-use-id t)

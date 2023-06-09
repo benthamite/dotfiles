@@ -293,6 +293,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#txl][txl]]
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown][markdown]]
+  - [[#grip-mode][grip-mode]]
   - [[#edit-indirect][edit-indirect]]
   - [[#mediawiki-el][mediawiki-el]]
   - [[#gdrive][gdrive]]
@@ -324,9 +325,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#bicycle][bicycle]]
 - [[#ai][AI]]
   - [[#copilot][copilot]]
-  - [[#openai][openai]]
-  - [[#chatgpt][chatgpt]]
-  - [[#codegpt][codegpt]]
+  - [[#gptel][gptel]]
   - [[#org-ai][org-ai]]
   - [[#whisper][whisper]]
   - [[#pen][pen]]
@@ -464,6 +463,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#tlon-init][tlon-init]]
   - [[#tlon-core][tlon-core]]
   - [[#tlon-bae][tlon-bae]]
+  - [[#tlon-biblio][tlon-biblio]]
   - [[#keyboard-maestro][Keyboard Maestro]]
 - [[#variables][variables]]
   - [[#shared-variables][shared variables]]
@@ -1077,7 +1077,7 @@ CLOCK: [2021-03-30 Tue 08:50]--[2021-03-30 Tue 09:02] =>  0:12
   :general
   ("H-d" 'hydra-dired/body
    "H-l" 'hydra-org-notes/body
-   "H-o" 'hydra-major-modes/body
+   "H-O" 'hydra-major-modes/body
    "M-t" 'hydra-straight/body
    "M-y" 'hydra-yasnippet/body))
 (elpaca-wait)
@@ -3766,9 +3766,6 @@ _a_pend       |_k_macro      |r_e_store                    "
     ;; position
     ("o" point-to-register)
     ("j" jump-to-register)
-    ;; undo
-    ("u" undo-tree-save-state-to-register)
-    ("e" undo-tree-restore-state-from-register)
     ;; windows
     ("w" window-configuration-to-register)
     ("f" frame-configuration-to-register)
@@ -8709,6 +8706,20 @@ insert italic delimiters and place the point in between them."
    "s-z" 'markdown-edit-code-block))
 #+end_src
 
+** grip-mode
+:PROPERTIES:
+:ID:       5F437CCD-14C3-4120-B77E-3E1C7C891819
+:END:
+
+/[[https://github.com/seagle0128/grip-mode][grip-mode]] provides org-mode and Github-flavored Markdown preview using grip./
+
+#+begin_src emacs-lisp
+(use-package grip-mode
+  :general
+  ((gfm-mode-map markdown-mode-map)
+   "s-w" 'grip-mode))
+#+end_src
+
 ** edit-indirect
 :PROPERTIES:
 :ID:       5660F943-C895-4847-A538-0FA11445420C
@@ -9650,65 +9661,19 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
    "A-M-<tab>" 'copilot-accept-completion-by-line))
 #+end_src
 
-** openai
+** gptel
 :PROPERTIES:
-:ID:       822430F1-51B8-4754-80B0-EC17DD931CB5
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-17 Fri 21:54]--[2023-03-17 Fri 22:24] =>  0:30
+:ID:       B84D396B-D1FD-4718-9002-58DEB1BB85E1
 :END:
 
-/[[https://github.com/emacs-openai/openai][openai]] is an Elisp library for the OpenAI API./
+/[[https://github.com/karthink/gptel][gptel]] is a ChatGPT client for Emacs./
 
 #+begin_src emacs-lisp
-(use-package openai
-  :elpaca (openai
-             :host github
-             :repo "emacs-openai/openai")
+(use-package gptel
+  :demand t
   :config
-  (setq openai-key (auth-source-pass-get "key" "tlon/core/openai.com")))
-#+end_src
-
-** chatgpt
-:PROPERTIES:
-:ID:       2D5B778F-E663-4569-8104-77E6D986FA90
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-21 Tue 22:51]--[2023-03-21 Tue 23:01] =>  0:10
-CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
-:END:
-
-/[[https://github.com/emacs-openai/chatgpt][chatgpt]] supports prompting GPT from within Emacs./
-
-#+begin_src emacs-lisp
-(use-package chatgpt
-  :elpaca (chatgpt
-             :host github
-             :repo "emacs-openai/chatgpt")
-  :config
-  (setq chatgpt-model "gpt-4")
-  (setq chatgpt-input-method 'minibuffer)
-  (setq chatgpt-animate-text nil)
-
-  :general
-  ("A-C-g" 'chatgpt))
-#+end_src
-
-** codegpt
-:PROPERTIES:
-:ID:       5008C40C-EC84-4817-9BE6-92996986D25E
-:END:
-
-/[[https://github.com/emacs-openai/codegpt#-using-chatgpt][codegpt]]  is a completion interface for GPT./
-
-#+begin_src emacs-lisp
-(use-package codegpt
-  :elpaca (codegpt
-             :host github
-             :repo "emacs-openai/codegpt")
-  :after openai
-  :config
-  (setq codegpt-model "text-davinci-003"))
+  (setq gptel-api-key (auth-source-pass-get "key" "tlon/core/openai.com"))
+  (setq gptel-model "gpt-4"))
 #+end_src
 
 ** org-ai
@@ -11701,7 +11666,7 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
      ("i" . (org-clock-in))
      ("o" . (org-clock-out))
      ("Regular editing")
-     ("z" . (undo-tree-undo))
+     ("z" . (undo-only))
      ("X" . (org-cut-subtree)) ; capital 'X' to prevent accidents
      ("c" . (org-copy-subtree))
      ("v" . (org-yank))
@@ -13872,6 +13837,28 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
           (remhash key (ebib-db-val 'entries db)))
         key)))
 
+  ;; tweak original function so that when field contains a file,
+  ;; the absolute file path value is copied
+  (defun ebib-copy-field-contents (field)
+    "Copy the contents of FIELD to the kill ring.
+If the field contains a value from a cross-referenced entry, that
+value is copied to the kill ring."
+    (unless (or (not field)
+                (string= field "=type="))
+      (el-patch-swap (let ((contents (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+                       (if (stringp contents)
+                           (progn (kill-new contents)
+                                  (message "Field contents copied."))
+                         (error "Cannot copy an empty field")))
+                     (let* ((raw-contents (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+                            (contents (if (f-file-p raw-contents)
+                                          (file-truename raw-contents)
+                                        raw-contents)))
+                       (if (stringp contents)
+                           (progn (kill-new contents)
+                                  (message "Field contents copied."))
+                         (user-error "Cannot copy an empty field"))))))
+
   :config
   (setq ebib-preload-bib-files org-cite-global-bibliography)
   (setq ebib-notes-directory ps/dir-bibliographic-notes)
@@ -14041,6 +14028,12 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
                                 lowercase)))
     "Entry types for articles and article-like entities, in both lowercase and sentence case.")
 
+  (defun ps/ebib-copy-current-field-contents ()
+    "Copy the contents of the current field to the kill ring.
+If the field contains a value from a cross-referenced entry, that
+value is copied to the kill ring."
+    (interactive)
+    (ebib-copy-field-contents (ebib--current-field)))
   (defun ps/ebib-get-file (extension)
     "docstring"
     (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
@@ -16925,10 +16918,13 @@ https://superuser.com/a/1350144/387888."
   (defengine Ebay-DE
     "https://www.ebay.de/sch/i.html?_from=R40&_trksid=p2380057.m570.l1313&_nkw=%s&_sacat=0"
     :keybinding "e d")
+  (defengine Fundeu
+    "https://cse.google.com/cse?cx=005053095451413799011:alg8dd3pluq&q=%s"
+    :keybinding "f f")
   (defengine Flickr
     "http://www.flickr.com/search/?q=%s"
     :keybinding "f l")
-    (defengine Financial-Times
+  (defengine Financial-Times
     "https://www.ft.com/search?q=%s"
     :keybinding "f t")
   (defengine GitHub
@@ -17261,19 +17257,24 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
     (setq twittering-timeline-data-table (make-hash-table :test 'equal))
     (twit))
 
+    ;; TODO: create macro for this
   (defun ps/twittering-ea-news ()
-    "Start a `twittering-mode' session with the `ea_dot_news'
-account."
+    "Start a `twittering-mode' session with the `ea_dot_news' account."
     (interactive)
     (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-ea-news.gpg"))
     (auth-source-pass-get 'secret "auth-sources/twitter/ea_dot_news")
     (ps/twittering-reload))
 
   (defun ps/twittering-future-matters ()
-    "Start a `twittering-mode' session with the `futurematters_'
-account."
+    "Start a `twittering-mode' session with the `futurematters_' account."
     (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-future-matters.gpg"))
     (auth-source-pass-get 'secret "auth-sources/twitter/futurematters_")
+    (ps/twittering-reload))
+
+(defun ps/twittering-anonymous ()
+    "Start a `twittering-mode' session with anonymous account."
+    (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-anonymous.gpg"))
+    (auth-source-pass-get 'secret "auth-sources/twitter/anonymous")
     (ps/twittering-reload))
 
   (defun ps/twittering-mode-get-uri ()
@@ -18376,6 +18377,19 @@ And finally, the section you've all been waiting for.
    "s-c" 'tlon-bae-submit-comment-revisions))
 #+end_src
 
+** tlon-biblio
+:PROPERTIES:
+:ID:       D3DE21CB-388A-48A0-A7EB-E79DD48D5E81
+:END:
+
+#+begin_src emacs-lisp
+(use-package tlon-biblio
+  :elpaca (tlon-biblio
+           :host github
+           :repo "tlon-team/tlon-biblio"
+           :depth nil) ; clone entire repo, not just last commit
+  :demand t)
+#+end_src
 ** Keyboard Maestro
 :PROPERTIES:
 :ID:       1776C0C3-CEEC-4DED-B609-4DF0DF83B0C2
@@ -18410,15 +18424,15 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 #+begin_src emacs-lisp :tangle (print tlon-init-variables-path)
 (
  (ps/personal-name . "Pablo Stafforini")
- (ps/personal-gmail-unus . "pablo.staff") ; will this protect against spammers?
- (ps/personal-gmail-duo . "orini@gmail.com")
- (ps/personal-gmail . (concat ps/personal-gmail-unus ps/personal-gmail-duo))
- (ps/personal-email-εἷς . "pablo@staff")
+ (ps/personal-gmail-unus . "pablo.staff") ; will this protect against spammers? :P
  (ps/personal-email-δῠ́ο . "orini.com")
- (ps/personal-email . (concat ps/personal-email-εἷς ps/personal-email-δῠ́ο))
- (ps/tlon-email-एकम् . "tlon.sh")
  (ps/tlon-email-द्वे . "ared@gmail.com")
- (ps/tlon-email (concat ps/tlon-email-एकम् ps/tlon-email-द्वे))
+ (ps/personal-gmail-duo . "orini@gmail.com")
+ (ps/tlon-email-एकम् . "tlon.sh")
+ (ps/personal-email-εἷς . "pablo@staff")
+ (ps/personal-gmail . (concat ps/personal-gmail-unus ps/personal-gmail-duo))
+ (ps/personal-email . (concat ps/personal-email-εἷς ps/personal-email-δῠ́ο))
+ (ps/tlon-email . (concat ps/tlon-email-एकम् ps/tlon-email-द्वे))
  (ps/personal-phone . "+1 4246668293")
  (ps/dir-root . "/")
  (ps/dir-system-apps . "/Applications/")

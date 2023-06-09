@@ -325,7 +325,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#bicycle][bicycle]]
 - [[#ai][AI]]
   - [[#copilot][copilot]]
-  - [[#chatgpt][chatgpt]]
   - [[#codegpt][codegpt]]
   - [[#gptel][gptel]]
   - [[#org-ai][org-ai]]
@@ -9660,32 +9659,6 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
   (copilot-mode-map
    "M-<tab>" 'copilot-accept-completion
    "A-M-<tab>" 'copilot-accept-completion-by-line))
-#+end_src
-
-
-** chatgpt
-:PROPERTIES:
-:ID:       2D5B778F-E663-4569-8104-77E6D986FA90
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-21 Tue 22:51]--[2023-03-21 Tue 23:01] =>  0:10
-CLOCK: [2023-03-21 Tue 13:10]--[2023-03-21 Tue 13:27] =>  0:17
-:END:
-
-/[[https://github.com/emacs-openai/chatgpt][chatgpt]] supports prompting GPT from within Emacs./
-
-#+begin_src emacs-lisp
-(use-package chatgpt
-  :elpaca (chatgpt
-             :host github
-             :repo "emacs-openai/chatgpt")
-  :config
-  (setq chatgpt-model "gpt-4")
-  (setq chatgpt-input-method 'minibuffer)
-  (setq chatgpt-animate-text nil)
-
-  :general
-  ("A-C-g" 'chatgpt))
 #+end_src
 
 ** codegpt

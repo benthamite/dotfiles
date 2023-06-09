@@ -9629,6 +9629,8 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
 :ID:       9846A789-9972-438B-9B6F-FE6BBBD3020E
 :END:
 
+There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/item?id=35254389][here]] for a partial list.
+
 ** copilot
 :PROPERTIES:
 :ID:       2064FE34-0301-4E33-AB51-FE4921CA0E16

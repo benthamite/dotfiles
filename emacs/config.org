@@ -176,7 +176,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dired-x][dired-x]]
   - [[#dired-hacks][dired-hacks]]
   - [[#dired-quick-sort][dired-quick-sort]]
-  - [[#dired-du][dired-du]]
   - [[#peep-dired][peep-dired]]
   - [[#minibuffer][minibuffer]]
   - [[#ibuffer][ibuffer]]
@@ -3230,11 +3229,13 @@ with the current major mode."
     (if visible-mode
         (progn
           (visible-mode -1)
-          (org-modern-mode)
+          (unless (eq major-mode 'org-agenda-mode)
+            (org-modern-mode))
           (org-display-inline-images)
           (ps/org-hide-properties)
           (ps/org-hide-logbook))
-      (org-modern-mode -1)
+      (unless (eq major-mode 'org-agenda-mode)
+        (org-modern-mode -1))
       (visible-mode)
       (org-remove-inline-images)
       (ps/org-show-properties)
@@ -4037,7 +4038,7 @@ those visiting any of the EXCLUDED-FILES."
     "Convert or download ACSM file, depending on whether or not an
 ACSM file is present in `ps/dir-downloads'."
     (interactive)
-    (if (member "book.acsm" (directory-files ps/dir-downloads))
+    (if (member "URLLink.acsm" (directory-files ps/dir-downloads))
         (ps/internet-archive-convert)
       (ps/internet-archive-download)))
 
@@ -4055,17 +4056,23 @@ one hour only."
                     "\\2"
                     (current-kill 0)))
                (url (concat prefix id suffix))
-               (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
+               (acsm-file (file-name-concat ps/dir-downloads "URLLink.acsm")))
           ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
           ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
           ;; Then replace the path below with the location of the downloaded cookies file.
-          (save-window-excursion
-            (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
-              (async-shell-command
-               (format
-                "wget --load-cookies='%s' '%s' -O '%s'; open %s"
-                ps/file-cookies url acsm-file acsm-file))))
-          (message "ACSM file downloaded successfully."))
+
+          ;; 2023-06-08 Currently not working, I think due to authentication issues.
+          ;; So copying the URL to kill ring instead.
+          ;; (save-window-excursion
+          ;; (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
+          ;; (async-shell-command
+          ;; (format
+          ;; "wget --load-cookies='%s' '%s' -O '%s'; open %s"
+          ;; ps/file-cookies url acsm-file acsm-file))))
+          ;; (message "ACSM file downloaded successfully.")
+          (kill-new url)
+          (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Then run `ps/internet-archive-dwim' to convert it.")
+          )
       (user-error "You forgot to copy the URL!")))
 
   (defun ps/internet-archive-convert ()
@@ -4247,17 +4254,19 @@ process in these cases."
 
   (advice-add 'recover-this-file :after #'ps/diff-buffer-with-file)
 
-  ;; disabling until we diagnose issues
-  ;; (setq auto-save-visited-predicate
-  ;;  (lambda () (string-match "tareas.org" buffer-file-name)))
-  ;; (setq auto-save-visited-interval 5)
-  ;; (auto-save-visited-mode)
+  (defun ps/copy-path-of-current-buffer ()
+    "Copy the path of the current buffer to the kill ring."
+    (interactive)
+    (let ((path (buffer-file-name)))
+      (kill-new path)
+      (message "Copied `%s'" path)))
 
   (add-hook 'find-file-hook #'ps/auto-save-alert)
   ;; (add-hook 'kill-buffer-query-functions #'ps/auto-save-persist)
 
   :general
   ("M--" 'not-modified
+   "M-;" 'ps/copy-path-of-current-buffer
    "M-b" 'ps/save-and-revert-buffer
    "M-e" 'ps/eval-region-or-buffer
    "H-q" 'ps/kill-this-buffer
@@ -4720,30 +4729,12 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
    "T" 'hydra-dired-quick-sort/body))
 #+end_src
 
-** dired-du
-:PROPERTIES:
-:ID:       22FCD9F4-A3EE-4605-BDB0-E90FC8471B21
-:END:
-
-:LOGBOOK:
-CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
-:END:
-/[[https://github.com/calancha/dired-du][dired-du]] displays the recursive size of directories in Dired./
-
-#+begin_src emacs-lisp :results silent
-(use-package dired-du
-  :after dired
-  :defer 10
-  :config
-  (setq dired-du-size-format 'comma))
-#+end_src
-
 ** peep-dired
 :PROPERTIES:
 :ID:       B0502885-D248-47E7-BE4F-54F597EBD390
 :END:
 
-/[[https://github.com/asok/peep-dired][peep-dired]] supports browing file contents in other window while browsing directory in dired./
+/[[https://github.com/asok/peep-dired][peep-dired]] supports browsing file contents in other window while browsing directory in dired./
 
 #+begin_src emacs-lisp
 (use-package peep-dired
@@ -6695,7 +6686,7 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 (use-feature isearch
   :config
   (setq search-default-mode #'char-fold-to-regexp)
-  (setq search-whitespace-regexp ".*?")
+  (setq search-whitespace-regexp "[ \\t\\r\\n]+")
   (setq isearch-lax-whitespace t)
   (setq isearch-regexp-lax-whitespace nil)
   (setq isearch-yank-on-move t)
@@ -8691,13 +8682,14 @@ insert italic delimiters and place the point in between them."
 
   :general
   ((gfm-mode-map markdown-mode-map)
-  "A-C-H-t" 'ps/markdown-copy-section
+   "A-C-H-t" 'ps/markdown-copy-section
    "A-C-s-r" 'markdown-outline-previous
    "A-C-s-f" 'markdown-outline-next
    "s-b" 'markdown-insert-bold
    "s-e" 'markdown-insert-code
    "s-i" 'markdown-insert-italic
    "s-k" 'markdown-insert-link
+   "s-p" 'markdown-preview
    "s-v") ; should convert from html, mirroring the org binding
   ((ghm-mode-map markdown-mode-map org-mode-map)
    "H-s-v" 'ps/markdown-org-paste-dwim)
@@ -9636,6 +9628,8 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
 :PROPERTIES:
 :ID:       9846A789-9972-438B-9B6F-FE6BBBD3020E
 :END:
+
+There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/item?id=35254389][here]] for a partial list.
 
 ** copilot
 :PROPERTIES:
@@ -10838,7 +10832,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
            "** TODO [#5] Add to translations Airtable :leo:\n%c" :empty-lines 1 :prepend t)
           ("tlbb" "Tlön: Leo: BAE: Generic BAE task" entry
-           (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
+           (id "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29")
            "** TODO [#5] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tli" "Tlön: Leo: EAI")
           ("tlii" "Tlön: Leo: EAI: Generic EAI task" entry
@@ -11444,22 +11438,23 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
   (defun ps/org-id-auto-add-ids-to-headings-in-file ()
     "Add ID properties to all headings in the current file which do
 not already have one."
-     (when (and (eq major-mode 'org-mode)
-                (string-match ps/dir-org (buffer-file-name))
-                (eq buffer-read-only nil))
-       (unless
-           (or
-            ;; exclude directories
-            (member (file-name-directory (buffer-file-name))
-                    ps/org-id-auto-add-excluded-directories)
-            ;; exclude files
-            (member (buffer-file-name)
-                    ps/org-id-auto-add-excluded-files)
-            (member (org-get-heading)
-                    '("Local variables"
-                      "COMMENT Local variables"
-                      "TODO Local variables")))
-         (org-map-entries 'org-id-get-create))))
+    (when-let ((file (buffer-file-name)))
+      (when (and (eq major-mode 'org-mode)
+                 (string-match ps/dir-org file)
+                 (eq buffer-read-only nil))
+        (unless
+            (or
+             ;; exclude directories
+             (member (file-name-directory (buffer-file-name))
+                     ps/org-id-auto-add-excluded-directories)
+             ;; exclude files
+             (member (buffer-file-name)
+                     ps/org-id-auto-add-excluded-files)
+             (member (org-get-heading)
+                     '("Local variables"
+                       "COMMENT Local variables"
+                       "TODO Local variables")))
+          (org-map-entries 'org-id-get-create)))))
 
   :config
   (setq org-id-link-to-org-use-id t)
@@ -11471,7 +11466,7 @@ not already have one."
                             ps/file-tlon-tareas-fede))
 
   (defun ps/org-id-update-id-locations ()
-  "Scan relevant files for IDs.
+    "Scan relevant files for IDs.
 
 Store the relation between files and corresponding IDs. This will
 scan all agenda files, all associated archives, all open Org
@@ -13906,15 +13901,15 @@ value is copied to the kill ring."
     (ebib--execute-when
       (entries
        (unless (and (ebib-db-modified-p ebib--cur-db)
-		    (not (yes-or-no-p "Database modified.  Really reload from file? ")))
-	 (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-	 (ebib--reload-database ebib--cur-db)
-	 (ebib--set-modified nil ebib--cur-db)
-	 (ebib--update-buffers)
-	 (message "Database reloaded")))
+                    (not (yes-or-no-p "Database modified.  Really reload from file? ")))
+         (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+         (ebib--reload-database ebib--cur-db)
+         (ebib--set-modified nil ebib--cur-db)
+         (ebib--update-buffers)
+         (message "Database reloaded")))
       (default
        (beep))))
-  
+
   ;; these two functions, together with the associated timers, detect
   ;; when a database has changed and save its contents to the corresponding bib
   ;; file
@@ -13943,7 +13938,7 @@ value is copied to the kill ring."
    (lambda (event)
      (message "reloading database")
      (ps/ebib-reload-current-database-no-confirm)))
-  
+
   (file-notify-add-watch
    ps/file-bibliography-old
    '(change attribute-change)
@@ -13953,7 +13948,7 @@ value is copied to the kill ring."
   (defvar ps/ebib-bibliographies-numbered `((0 . ,ps/file-bibliography-new)
                                             (1 . ,ps/file-bibliography-old))
     "Alist of Ebib database numbers and associated bibliography files.")
-  
+
   (defvar ps/ebib-bibliographies (mapcar #'cdr ps/ebib-bibliographies-numbered)
     "List of bibliography files.")
 
@@ -15030,8 +15025,6 @@ or specify any other coding system (and risk losing\n\
   (ebib-index-mode-map
    "i" 'zotra-add-entry-from-search
    "u" 'zotra-add-entry-from-url
-   "z" 'ps/zotra-url-full-capture)
-  (eww-mode-map
    "z" 'ps/zotra-url-full-capture))
 #+end_src
 
@@ -16173,6 +16166,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "metaforecast\\.com"
                      "paxful\\.com"
                      "qualtrics\\.com"
+                     "quora\\.com"
                      "rescuetime\\.com"
                      "savvycal\\.com"
                      "skyscanner\\.com"
@@ -16682,6 +16676,12 @@ poorly-designed websites."
       (unless (or elfeed-search-remain-on-entry (use-region-p))
         (forward-line))))
 
+  (defun ps/elfeed-url-full-capture ()
+    "Add current URL to bibfile and generate associated PDF and HTML files."
+    (interactive)
+    (when (eq major-mode 'elfeed-show-mode)
+      (ps/zotra-url-full-capture (elfeed-entry-link elfeed-show-entry))))
+
   (defun ps/show-elfeed (buffer)
     (with-current-buffer buffer
       (setq buffer-read-only nil)
@@ -16730,7 +16730,8 @@ poorly-designed websites."
    ";W" 'elfeed-show-prev
    "v" 'ps/elfeed-show-visit-in-eww
    "w" 'ps/elfeed-kill-link-url-of-entry
-   "x" 'elfeed-show-visit))
+   "x" 'elfeed-show-visit
+   "z" 'ps/elfeed-url-full-capture))
 #+end_src
 
 ** elfeed-org
@@ -17227,10 +17228,10 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
     "docstring"
     (interactive
      (list
-      (completing-read "Select account: " '("EA News" "Future Matters" "GPE"))))
+      (completing-read "Select account: " '("EA News" "Future Matters" "anonymous"))))
     (cond ((string= arg "EA News") (ps/twittering-ea-news))
           ((string= arg "Future Matters") (ps/twittering-future-matters))
-          ((string= arg "GPE") (ps/twittering-gpe))))
+          ((string= arg "anonymous") (ps/twittering-anonymous))))
 
   (defface twitter-divider
     '((((background dark))  (:underline (:color "#141519")))
@@ -18365,7 +18366,7 @@ And finally, the section you've all been waiting for.
    "s-r" 'tlon-bae-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
    "'" 'tlon-bae-open-forge-file)
-   ((gfm-mode-map markdown-mode-map eww-mode-map)
+  ((gfm-mode-map markdown-mode-map eww-mode-map)
    "H-," 'tlon-bae-read-backward
    "H-." 'tlon-bae-read-forward
    "H-/" 'tlon-bae-read-target-start-or-stop)

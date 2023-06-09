@@ -1077,7 +1077,7 @@ CLOCK: [2021-03-30 Tue 08:50]--[2021-03-30 Tue 09:02] =>  0:12
   :general
   ("H-d" 'hydra-dired/body
    "H-l" 'hydra-org-notes/body
-   "H-o" 'hydra-major-modes/body
+   "H-O" 'hydra-major-modes/body
    "M-t" 'hydra-straight/body
    "M-y" 'hydra-yasnippet/body))
 (elpaca-wait)

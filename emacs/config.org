@@ -14704,6 +14704,7 @@ is created following the same schema as notes created with
    "H-s" 'ebib-save-current-database
    "K" 'ebib-copy-key-as-kill
    "Q" 'ebib-quit
+   "d" 'ps/ebib-duplicate-entry
    "n" 'ps/ebib-citar-open-notes)
   (ebib-entry-mode-map
    "TAB" 'ebib-goto-next-set
@@ -14720,7 +14721,6 @@ is created following the same schema as notes created with
    "b" 'ps/ebib-open-current-bibtex-file
    "c" 'ebib-copy-current-field-contents
    "D" 'ebib-delete-current-field-contents
-   "d" 'ps/ebib-download-dwim
    "E" 'ebib-edit-keyname
    "g" 'ps/ebib-search-library-genesis
    "G" 'ps/ebib-search-goodreads
@@ -14734,7 +14734,7 @@ is created following the same schema as notes created with
    "t" 'ps/ebib-search-book-dwim
    "u" 'ebib-browse-url
    "V" 'ps/ebib-search-internet-archive
-   "w" 'ps/ebib-search-worldcat
+   "w" 'ps/ebib-download-dwim
    "W" 'ps/ebib-search-wikipedia
    "x" 'ps/ebib-search-university-of-toronto
    "y" 'ps/ebib-search-hathitrust
@@ -14744,7 +14744,6 @@ is created following the same schema as notes created with
   (ebib-index-mode-map
    "<return>" 'ebib-edit-entry
    "A-C-s-SPC" 'ps/ebib-end-of-index-buffer
-   "d" 'ps/ebib-duplicate-entry
    "D" 'ebib-delete-entry
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry

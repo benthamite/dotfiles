@@ -152,7 +152,7 @@ one hour only."
 		     (id "7CCD6226-DB0A-4742-9277-955FCB276137")
 		     "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
 		    ("p" "GPT-4" entry
-		     (id "AEBE6FAC-FB81-4325-9D0A-40A7758B7DDC")
+		     (id "FDF39DE4-293F-47B5-9D6D-AA4D68F99CF5")
 		     "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)))
   (add-to-list 'org-capture-templates template))
 

@@ -14626,11 +14626,14 @@ The list of article download functions is specified by
       (default
        (beep))))
 
-  (defun ps/ebib-open-current-bibtex-file ()
-    "Open bibtex file associated with the current entry."
+  (defun ps/ebib-open-entry-in-bibtex-file ()
+    "Open the bibtex file associated with the current entry and move point to its key."
     (interactive)
-    (when-let ((file (ebib-db-get-filename ebib--cur-db)))
-      (find-file file)))
+    (when-let ((file (ebib-db-get-filename ebib--cur-db))
+               (key (ebib--get-key-at-point)))
+      (find-file file)
+      (goto-char (point-min))
+      (re-search-forward key)))
 
   (defun ps/ebib-open-key (key)
     "Open the entry for KEY in Ebib."
@@ -14734,7 +14737,7 @@ is created following the same schema as notes created with
    "?" 'ps/ebib-attach-file
    "a" 'ps/ebib-search-amazon
    "A" 'ebib-add-field
-   "b" 'ps/ebib-open-current-bibtex-file
+   "b" 'ps/ebib-open-entry-in-bibtex-file
    "c" 'ebib-copy-current-field-contents
    "D" 'ebib-delete-current-field-contents
    "E" 'ebib-edit-keyname

@@ -13905,7 +13905,7 @@ value is copied to the kill ring."
    '(change attribute-change)
    (lambda (event)
      (ps/ebib-reload-current-database-no-confirm)))
-  
+
   :config
   (setq ebib-preload-bib-files org-cite-global-bibliography)
   (setq ebib-notes-directory ps/dir-bibliographic-notes)
@@ -14683,18 +14683,32 @@ The list of article download functions is specified by
       (forward-line -1)))
 
   (defun ps/ebib-duplicate-entry ()
-    "Duplicate the entry at point."
+    "Duplicate the current entry."
     (interactive)
     (ebib--execute-when
       (entries
-       (let ((key (ebib--get-key-at-point)))
-         (save-window-excursion
-           (find-file zotra-default-bibliography)
+       (let* ((key (ebib--get-key-at-point))
+              (new-key (if ebib-uniquify-keys
+                           (ebib-db-uniquify-key (ebib--get-key-at-point) ebib--cur-db)
+                         key))
+              entry)
+         (with-temp-buffer
+           (ebib--format-entry key ebib--cur-db)
+           (goto-char (point-min))
+           (while (re-search-forward (concat "\\(^@[[:alpha:]]*?{\\)" (regexp-quote key) ",") nil t)
+             (replace-match (concat "\\1" new-key ",")))
+           (setq entry (buffer-substring-no-properties (point-min) (point-max))))
+         (with-current-buffer (find-file-noselect zotra-default-bibliography)
+           (widen)
            (goto-char (point-max))
-           (ebib--format-entry key ebib--cur-db t)
-           (save-buffer))
-         (ebib-switch-to-database-nth 1)
-         (ps/ebib-reload-current-database-no-confirm)))
+           (insert entry)
+           (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
+           (save-buffer)
+           (ps/ebib-reload-current-database-no-confirm)
+      (ebib ps/file-bibliography-new new-key)
+      (ebib--index-sort "Timestamp" 'descend)
+      (goto-char (point-min))
+      (ps/ebib-open-key citekey))))
       (default
        (beep))))
 

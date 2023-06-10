@@ -18372,7 +18372,7 @@ And finally, the section you've all been waiting for.
   ((gfm-mode-map markdown-mode-map eww-mode-map)
    "H-," 'tlon-bae-read-backward
    "H-." 'tlon-bae-read-forward
-   "H-/" 'tlon-bae-read-target-start-or-stop)
+   "H-;" 'tlon-bae-read-target-start-or-stop)
   ((gfm-mode-map markdown-mode-map)
    "s-u" 'tlon-bae-insert-eawiki-url
    "s-c" 'tlon-bae-finalize-revision

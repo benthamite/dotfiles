@@ -13654,7 +13654,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 #+begin_src emacs-lisp :results silent
 (use-package ebib
-  :defer 5
+  :demand t
   :config/el-patch
   ;; tweak original function to prevent unnecessary vertical window splits
   (defun ebib--setup-windows ()
@@ -13854,6 +13854,42 @@ value is copied to the kill ring."
                                   (message "Field contents copied."))
                          (user-error "Cannot copy an empty field"))))))
 
+  :init
+  ;; these two functions, together with the associated timers, detect
+  ;; when a database has changed and save its contents to the corresponding bib
+  ;; file
+  (defun ps/ebib-auto-save-new-db ()
+    "docstring"
+    (when (ebib-db-modified-p (car ebib--databases))
+      (ebib-save-current-database '(16)))
+    (run-with-timer 10 nil #'ps/ebib-auto-save-new-db))
+
+  (run-with-timer 10 nil #'ps/ebib-auto-save-new-db)
+
+  (defun ps/ebib-auto-save-old-db ()
+    "docstring"
+    (when (ebib-db-modified-p (cadr ebib--databases))
+      (ebib-save-current-database '(16))
+      (cancel-function-timers #'ps/ebib-auto-save-old-db)
+      (run-with-idle-timer 60 nil #'ps/ebib-auto-save-old-db)))
+
+  (run-with-idle-timer 60 nil #'ps/ebib-auto-save-old-db)
+
+  ;; these two function calls, in turn, detect when a bib file has changed
+  ;; and reload the corresponding database
+  (file-notify-add-watch
+   ps/file-bibliography-new
+   '(change attribute-change)
+   (lambda (event)
+     (message "reloading database")
+     (ps/ebib-reload-current-database-no-confirm)))
+
+  (file-notify-add-watch
+   ps/file-bibliography-old
+   '(change attribute-change)
+   (lambda (event)
+     (ps/ebib-reload-current-database-no-confirm)))
+  
   :config
   (setq ebib-preload-bib-files org-cite-global-bibliography)
   (setq ebib-notes-directory ps/dir-bibliographic-notes)
@@ -13905,45 +13941,12 @@ value is copied to the kill ring."
          (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
          (ebib--reload-database ebib--cur-db)
          (ebib--set-modified nil ebib--cur-db)
-         (ebib--update-buffers)
+         ;; This is the line that causes point to disappear, but
+         ;; disabling it seems harmless.
+         ;; (ebib--update-buffers)
          (message "Database reloaded")))
       (default
        (beep))))
-
-  ;; these two functions, together with the associated timers, detect
-  ;; when a database has changed and save its contents to the corresponding bib
-  ;; file
-  (defun ps/ebib-auto-save-new-db ()
-    "docstring"
-    (when (ebib-db-modified-p (car ebib--databases))
-      (ebib-save-current-database '(16)))
-    (run-with-timer 10 nil #'ps/ebib-auto-save-new-db))
-
-  (run-with-timer 10 nil #'ps/ebib-auto-save-new-db)
-
-  (defun ps/ebib-auto-save-old-db ()
-    "docstring"
-    (when (ebib-db-modified-p (cadr ebib--databases))
-      (ebib-save-current-database '(16))
-      (cancel-function-timers #'ps/ebib-auto-save-old-db)
-      (run-with-idle-timer 60 nil #'ps/ebib-auto-save-old-db)))
-
-  (run-with-idle-timer 60 nil #'ps/ebib-auto-save-old-db)
-
-  ;; these two function calls, in turn, detect when a bib file has changed
-  ;; and reload the corresponding database
-  (file-notify-add-watch
-   ps/file-bibliography-new
-   '(change attribute-change)
-   (lambda (event)
-     (message "reloading database")
-     (ps/ebib-reload-current-database-no-confirm)))
-
-  (file-notify-add-watch
-   ps/file-bibliography-old
-   '(change attribute-change)
-   (lambda (event)
-     (ps/ebib-reload-current-database-no-confirm)))
 
   (defvar ps/ebib-bibliographies-numbered `((0 . ,ps/file-bibliography-new)
                                             (1 . ,ps/file-bibliography-old))

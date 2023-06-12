@@ -14111,7 +14111,7 @@ value is copied to the kill ring."
       (kill-buffer html-buffer)))
 
   (defvar ps/ebib-valid-file-extensions
-    '("pdf" "html" "webm" "flac" "mp3")
+    '("pdf" "html" "webm" "flac" "mp3" "md")
     "List of valid file extensions for `ps/ebib-open-file-dwim'.")
 
   (defun ps/ebib-open-file-dwim ()
@@ -14200,6 +14200,10 @@ value is copied to the kill ring."
            ps/dir-library-pdf)
           ((string= extension "html")
            ps/dir-library-html)
+          ((string= extension "md")
+           (file-name-concat
+            ps/dir-tlon-biblioteca-altruismo-eficaz
+            "translations/posts/"))
           ((or (string= extension "webm")
                (string= extension "mp3")
                (string= extension "flac"))

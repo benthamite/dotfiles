@@ -13867,42 +13867,6 @@ value is copied to the kill ring."
                                   (message "Field contents copied."))
                          (user-error "Cannot copy an empty field"))))))
 
-  :init
-  ;; these two functions, together with the associated timers, detect
-  ;; when a database has changed and save its contents to the corresponding bib
-  ;; file
-  (defun ps/ebib-auto-save-new-db ()
-    "docstring"
-    (when (ebib-db-modified-p (car ebib--databases))
-      (ebib-save-current-database '(16)))
-    (run-with-timer 10 nil #'ps/ebib-auto-save-new-db))
-
-  (run-with-timer 10 nil #'ps/ebib-auto-save-new-db)
-
-  (defun ps/ebib-auto-save-old-db ()
-    "docstring"
-    (when (ebib-db-modified-p (cadr ebib--databases))
-      (ebib-save-current-database '(16))
-      (cancel-function-timers #'ps/ebib-auto-save-old-db)
-      (run-with-idle-timer 60 nil #'ps/ebib-auto-save-old-db)))
-
-  (run-with-idle-timer 60 nil #'ps/ebib-auto-save-old-db)
-
-  ;; these two function calls, in turn, detect when a bib file has changed
-  ;; and reload the corresponding database
-  (file-notify-add-watch
-   ps/file-bibliography-new
-   '(change attribute-change)
-   (lambda (event)
-     (message "reloading database")
-     (ps/ebib-reload-current-database-no-confirm)))
-
-  (file-notify-add-watch
-   ps/file-bibliography-old
-   '(change attribute-change)
-   (lambda (event)
-     (ps/ebib-reload-current-database-no-confirm)))
-
   :config
   (setq ebib-preload-bib-files org-cite-global-bibliography)
   (setq ebib-notes-directory ps/dir-bibliographic-notes)
@@ -13944,19 +13908,16 @@ value is copied to the kill ring."
       (winum-select-window-2))
     (ebib))
 
-  (defun ps/ebib-reload-current-database-no-confirm ()
-    "Reload the current database from disk, without confirmation."
+  (defun ps/ebib-reload-database-no-confirm (db)
+    "Reload the database DB from disk, without asking for confirmation."
     (interactive)
     (ebib--execute-when
       (entries
-       (unless (and (ebib-db-modified-p ebib--cur-db)
+       (unless (and (ebib-db-modified-p db)
                     (not (yes-or-no-p "Database modified.  Really reload from file? ")))
-         (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-         (ebib--reload-database ebib--cur-db)
-         (ebib--set-modified nil ebib--cur-db)
-         ;; This is the line that causes point to disappear, but
-         ;; disabling it seems harmless.
-         ;; (ebib--update-buffers)
+         (ebib-db-set-current-entry-key (ebib--get-key-at-point) db)
+         (ebib--reload-database db)
+         (ebib--set-modified nil db)
          (message "Database reloaded")))
       (default
        (beep))))
@@ -14077,7 +14038,7 @@ value is copied to the kill ring."
     (interactive)
     (ps/ebib-open-file "pdf"))
 
-    (defun ps/ebib-open-md-file ()
+  (defun ps/ebib-open-md-file ()
     "Open `md' file in entry at point, if it (uniquely) exists."
     (interactive)
     (ps/ebib-open-file "md"))
@@ -14710,7 +14671,7 @@ The list of article download functions is specified by
            (insert entry)
            (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
            (save-buffer)
-           (ps/ebib-reload-current-database-no-confirm)
+           (ps/ebib-reload-database-no-confirm ebib--cur-db)
            (ebib ps/file-bibliography-new new-key)
            (ebib--index-sort "Timestamp" 'descend)
            (goto-char (point-min))
@@ -14731,6 +14692,27 @@ is created following the same schema as notes created with
          (citar-open-notes (list citekey))))
       (default
        (beep))))
+
+  (defun ps/ebib-auto-save-databases ()
+    "Check if any Ebib database has been modified and save it to its file if so."
+    (dolist (db ebib--databases)
+      (when (ebib-db-modified-p db)
+        (ebib--save-database db '(16))))
+    (run-with-timer 10 nil #'ps/ebib-auto-save-databases))
+
+  (run-with-timer 10 nil #'ps/ebib-auto-save-databases)
+
+  (defun ps/ebib-auto-reload-databases ()
+    "Check if any db file has been modified and reloads the associated Ebib database if so."
+    (dolist (db ebib--databases)
+      (file-notify-add-watch
+       (ebib-db-get-filename db)
+       '(change attribute-change)
+       (lambda (event)
+         (message "reloading database")
+         (ps/ebib-reload-database-no-confirm db)))))
+
+  (run-with-timer 10 nil #'ps/ebib-auto-reload-databases)
 
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
@@ -14882,7 +14864,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
     (save-buffer)
-    (ps/ebib-reload-current-database-no-confirm)
+    (ps/ebib-reload-database-no-confirm ebib--cur-db)
     (let ((citekey (ps/bibtex-get-key)))
       (ebib ps/file-bibliography-new citekey)
       (ebib--index-sort "Timestamp" 'descend)

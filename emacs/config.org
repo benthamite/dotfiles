@@ -12967,8 +12967,7 @@ ARG is the prefix argument received when calling interactively the function."
   (setq org-cite-global-bibliography (list ps/file-bibliography-new
                                            ps/file-bibliography-old
                                            ps/file-tlon-bibliography-new
-                                           ps/file-tlon-bibliography-old
-                                           ps/file-bibliography-films))
+                                           ps/file-tlon-bibliography-old))
   (setq org-cite-csl-styles-dir ps/dir-csl-styles)
   (setq org-cite-csl-locales-dir ps/dir-csl-locales)
   (setq org-cite-insert-processor 'citar)

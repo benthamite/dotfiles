@@ -12250,16 +12250,14 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
     "Is invoked when a pomodoro was killed.
 This may send a notification, play a sound and adds log."
     (org-pomodoro-reset)
-    (el-patch-swap
-      (org-pomodoro-notify "Pomodoro killed." "One does not simply kill a pomodoro!")
-      (org-pomodoro-notify "Pomodoro killed."))
+    (org-pomodoro-notify "Pomodoro killed." (el-patch-swap "One does not simply kill a pomodoro!" ""))
     (org-pomodoro-maybe-play-sound :killed)
     (when (org-clocking-p)
       (if org-pomodoro-keep-killed-pomodoro-time
           (org-clock-out nil t)
-	(org-clock-cancel)))
+        (org-clock-cancel)))
     (run-hooks 'org-pomodoro-killed-hook))
-  
+
   :config
   (setq org-pomodoro-length 25)
   (setq org-pomodoro-short-break-length (- 30 org-pomodoro-length))

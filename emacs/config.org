@@ -14714,10 +14714,10 @@ The list of article download functions is specified by
            (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
            (save-buffer)
            (ps/ebib-reload-current-database-no-confirm)
-      (ebib ps/file-bibliography-new new-key)
-      (ebib--index-sort "Timestamp" 'descend)
-      (goto-char (point-min))
-      (ps/ebib-open-key citekey))))
+           (ebib ps/file-bibliography-new new-key)
+           (ebib--index-sort "Timestamp" 'descend)
+           (goto-char (point-min))
+           (ps/ebib-open-key new-key))))
       (default
        (beep))))
 

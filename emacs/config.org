@@ -9666,7 +9666,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 (use-package gptel
   :demand t
   :config
-  (setq gptel-api-key (auth-source-pass-get "key" "tlon/core/openai.com"))
+  (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" ps/tlon-email)))
   (setq gptel-model "gpt-4"))
 #+end_src
 
@@ -9685,7 +9685,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :after org yasnippet
   :commands org-ai-mode
   :config
-  (setq org-ai-openai-api-token (auth-source-pass-get "key" "tlon/core/openai.com"))
+  (setq org-ai-openai-api-token (auth-source-pass-get "key" (concat "tlon/core/openai.com/" ps/tlon-email)))
   (setq org-ai-default-chat-model "gpt-4")
   (setq org-ai-talk-say-words-per-minute 210)
   (add-hook 'org-mode-hook #'org-ai-mode)
@@ -12244,6 +12244,20 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 #+begin_src emacs-lisp :results silent
 (use-package org-pomodoro
   :after org
+  :config/el-patch
+  ;; remove silly lecture about killing pomodoros
+  (defun org-pomodoro-killed ()
+    "Is invoked when a pomodoro was killed.
+This may send a notification, play a sound and adds log."
+    (org-pomodoro-reset)
+    (org-pomodoro-notify "Pomodoro killed." (el-patch-swap "One does not simply kill a pomodoro!" ""))
+    (org-pomodoro-maybe-play-sound :killed)
+    (when (org-clocking-p)
+      (if org-pomodoro-keep-killed-pomodoro-time
+          (org-clock-out nil t)
+        (org-clock-cancel)))
+    (run-hooks 'org-pomodoro-killed-hook))
+
   :config
   (setq org-pomodoro-length 25)
   (setq org-pomodoro-short-break-length (- 30 org-pomodoro-length))
@@ -12952,6 +12966,8 @@ ARG is the prefix argument received when calling interactively the function."
   :config
   (setq org-cite-global-bibliography (list ps/file-bibliography-new
                                            ps/file-bibliography-old
+                                           ps/file-tlon-bibliography-new
+                                           ps/file-tlon-bibliography-old
                                            ps/file-bibliography-films))
   (setq org-cite-csl-styles-dir ps/dir-csl-styles)
   (setq org-cite-csl-locales-dir ps/dir-csl-locales)
@@ -13889,7 +13905,7 @@ value is copied to the kill ring."
    '(change attribute-change)
    (lambda (event)
      (ps/ebib-reload-current-database-no-confirm)))
-  
+
   :config
   (setq ebib-preload-bib-files org-cite-global-bibliography)
   (setq ebib-notes-directory ps/dir-bibliographic-notes)
@@ -14064,6 +14080,11 @@ value is copied to the kill ring."
     (interactive)
     (ps/ebib-open-file "pdf"))
 
+    (defun ps/ebib-open-md-file ()
+    "Open `md' file in entry at point, if it (uniquely) exists."
+    (interactive)
+    (ps/ebib-open-file "md"))
+
   (defun ps/ebib-open-pdf-file-externally ()
     "Open `pdf' file in entry at point, if it (uniquely) exists."
     (interactive)
@@ -14090,7 +14111,7 @@ value is copied to the kill ring."
       (kill-buffer html-buffer)))
 
   (defvar ps/ebib-valid-file-extensions
-    '("pdf" "html" "webm" "flac" "mp3")
+    '("pdf" "html" "webm" "flac" "mp3" "md")
     "List of valid file extensions for `ps/ebib-open-file-dwim'.")
 
   (defun ps/ebib-open-file-dwim ()
@@ -14179,6 +14200,10 @@ value is copied to the kill ring."
            ps/dir-library-pdf)
           ((string= extension "html")
            ps/dir-library-html)
+          ((string= extension "md")
+           (file-name-concat
+            ps/dir-tlon-biblioteca-altruismo-eficaz
+            "translations/posts/"))
           ((or (string= extension "webm")
                (string= extension "mp3")
                (string= extension "flac"))
@@ -14610,11 +14635,14 @@ The list of article download functions is specified by
       (default
        (beep))))
 
-  (defun ps/ebib-open-current-bibtex-file ()
-    "Open bibtex file associated with the current entry."
+  (defun ps/ebib-open-entry-in-bibtex-file ()
+    "Open the bibtex file associated with the current entry and move point to its key."
     (interactive)
-    (when-let ((file (ebib-db-get-filename ebib--cur-db)))
-      (find-file file)))
+    (when-let ((file (ebib-db-get-filename ebib--cur-db))
+               (key (ebib--get-key-at-point)))
+      (find-file file)
+      (goto-char (point-min))
+      (re-search-forward key)))
 
   (defun ps/ebib-open-key (key)
     "Open the entry for KEY in Ebib."
@@ -14664,18 +14692,32 @@ The list of article download functions is specified by
       (forward-line -1)))
 
   (defun ps/ebib-duplicate-entry ()
-    "Duplicate the entry at point."
+    "Duplicate the current entry."
     (interactive)
     (ebib--execute-when
       (entries
-       (let ((key (ebib--get-key-at-point)))
-         (save-window-excursion
-           (find-file zotra-default-bibliography)
+       (let* ((key (ebib--get-key-at-point))
+              (new-key (if ebib-uniquify-keys
+                           (ebib-db-uniquify-key (ebib--get-key-at-point) ebib--cur-db)
+                         key))
+              entry)
+         (with-temp-buffer
+           (ebib--format-entry key ebib--cur-db)
+           (goto-char (point-min))
+           (while (re-search-forward (concat "\\(^@[[:alpha:]]*?{\\)" (regexp-quote key) ",") nil t)
+             (replace-match (concat "\\1" new-key ",")))
+           (setq entry (buffer-substring-no-properties (point-min) (point-max))))
+         (with-current-buffer (find-file-noselect zotra-default-bibliography)
+           (widen)
            (goto-char (point-max))
-           (ebib--format-entry key ebib--cur-db t)
-           (save-buffer))
-         (ebib-switch-to-database-nth 1)
-         (ps/ebib-reload-current-database-no-confirm)))
+           (insert entry)
+           (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
+           (save-buffer)
+           (ps/ebib-reload-current-database-no-confirm)
+           (ebib ps/file-bibliography-new new-key)
+           (ebib--index-sort "Timestamp" 'descend)
+           (goto-char (point-min))
+           (ps/ebib-open-key new-key))))
       (default
        (beep))))
 
@@ -14704,6 +14746,7 @@ is created following the same schema as notes created with
    "H-s" 'ebib-save-current-database
    "K" 'ebib-copy-key-as-kill
    "Q" 'ebib-quit
+   "d" 'ps/ebib-duplicate-entry
    "n" 'ps/ebib-citar-open-notes)
   (ebib-entry-mode-map
    "TAB" 'ebib-goto-next-set
@@ -14717,10 +14760,9 @@ is created following the same schema as notes created with
    "?" 'ps/ebib-attach-file
    "a" 'ps/ebib-search-amazon
    "A" 'ebib-add-field
-   "b" 'ps/ebib-open-current-bibtex-file
+   "b" 'ps/ebib-open-entry-in-bibtex-file
    "c" 'ebib-copy-current-field-contents
    "D" 'ebib-delete-current-field-contents
-   "d" 'ps/ebib-download-dwim
    "E" 'ebib-edit-keyname
    "g" 'ps/ebib-search-library-genesis
    "G" 'ps/ebib-search-goodreads
@@ -14734,7 +14776,7 @@ is created following the same schema as notes created with
    "t" 'ps/ebib-search-book-dwim
    "u" 'ebib-browse-url
    "V" 'ps/ebib-search-internet-archive
-   "w" 'ps/ebib-search-worldcat
+   "w" 'ps/ebib-download-dwim
    "W" 'ps/ebib-search-wikipedia
    "x" 'ps/ebib-search-university-of-toronto
    "y" 'ps/ebib-search-hathitrust
@@ -14744,7 +14786,6 @@ is created following the same schema as notes created with
   (ebib-index-mode-map
    "<return>" 'ebib-edit-entry
    "A-C-s-SPC" 'ps/ebib-end-of-index-buffer
-   "d" 'ps/ebib-duplicate-entry
    "D" 'ebib-delete-entry
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry
@@ -18372,7 +18413,7 @@ And finally, the section you've all been waiting for.
   ((gfm-mode-map markdown-mode-map eww-mode-map)
    "H-," 'tlon-bae-read-backward
    "H-." 'tlon-bae-read-forward
-   "H-/" 'tlon-bae-read-target-start-or-stop)
+   "H-;" 'tlon-bae-read-target-start-or-stop)
   ((gfm-mode-map markdown-mode-map)
    "s-u" 'tlon-bae-insert-eawiki-url
    "s-c" 'tlon-bae-finalize-revision
@@ -18517,6 +18558,8 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/dir-dropbox-tlon-RCG . (file-name-concat ps/dir-dropbox-tlon "RCG/"))
  (ps/dir-repos . (file-name-concat ps/dir-dropbox "repos/"))
  (ps/dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat ps/dir-repos "biblioteca-altruismo-eficaz/"))
+ (ps/file-tlon-bibliography-old . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/old.bib"))
+ (ps/file-tlon-bibliography-new . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/new.bib"))
  (ps/dir-tlon-docs . (file-name-concat ps/dir-repos "tlon-docs/"))
  (ps/dir-emacs-local . (file-name-concat ps/dir-emacs "local/"))
  (ps/dir-chemacs-profiles . (file-name-concat ps/dir-user ".config/emacs-profiles/"))

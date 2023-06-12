@@ -13773,14 +13773,12 @@ The FORCE argument is used as in `ebib-save-current-database'."
        (when (or (and (ebib-db-modified-p ebib--cur-db)
                       (yes-or-no-p "Database modified.  Really reload from file? "))
                  (y-or-n-p "Reload current database from file? "))
-         (el-patch-remove
-           (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-           (ebib--reload-database ebib--cur-db)
-           (ebib--set-modified nil ebib--cur-db)
-           (ebib--update-buffers)
-           (message "Database reloaded"))
-         (el-patch-add
-           (ps/ebib-reload-current-database-no-confirm))))
+         (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+         (ebib--reload-database ebib--cur-db)
+         (ebib--set-modified nil ebib--cur-db)
+         ;; this causes point to disappear, so we remove it
+         (el-patch-remove (ebib--update-buffers))
+         (message "Database reloaded")))
       (default
        (beep))))
 

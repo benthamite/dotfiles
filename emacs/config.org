@@ -12968,6 +12968,8 @@ ARG is the prefix argument received when calling interactively the function."
   :config
   (setq org-cite-global-bibliography (list ps/file-bibliography-new
                                            ps/file-bibliography-old
+                                           ps/file-tlon-bibliography-new
+                                           ps/file-tlon-bibliography-old
                                            ps/file-bibliography-films))
   (setq org-cite-csl-styles-dir ps/dir-csl-styles)
   (setq org-cite-csl-locales-dir ps/dir-csl-locales)
@@ -18549,6 +18551,8 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/dir-dropbox-tlon-RCG . (file-name-concat ps/dir-dropbox-tlon "RCG/"))
  (ps/dir-repos . (file-name-concat ps/dir-dropbox "repos/"))
  (ps/dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat ps/dir-repos "biblioteca-altruismo-eficaz/"))
+ (ps/file-tlon-bibliography-old . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/old.bib"))
+ (ps/file-tlon-bibliography-new . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/new.bib"))
  (ps/dir-tlon-docs . (file-name-concat ps/dir-repos "tlon-docs/"))
  (ps/dir-emacs-local . (file-name-concat ps/dir-emacs "local/"))
  (ps/dir-chemacs-profiles . (file-name-concat ps/dir-user ".config/emacs-profiles/"))

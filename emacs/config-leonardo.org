@@ -156,6 +156,17 @@ one hour only."
 		     "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)))
   (add-to-list 'org-capture-templates template))
 
+(defun ps/org-capture-before-finalize-hook-function ()
+  "Define behavior of `org-capture-before-finalize-hook'."
+  (pcase (plist-get org-capture-plist :key)
+    ("p"
+     (org-ai-mode)
+     (org-narrow-to-subtree)
+     (forward-line)
+     (forward-line)
+     (ps/yasnippet-expand-by-key "ai")
+     (message "finished"))))  
+  
 (defhydra hydra-org-work
   (:hint nil
          :idle 0

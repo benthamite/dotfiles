@@ -14080,6 +14080,11 @@ value is copied to the kill ring."
     (interactive)
     (ps/ebib-open-file "pdf"))
 
+    (defun ps/ebib-open-md-file ()
+    "Open `md' file in entry at point, if it (uniquely) exists."
+    (interactive)
+    (ps/ebib-open-file "md"))
+
   (defun ps/ebib-open-pdf-file-externally ()
     "Open `pdf' file in entry at point, if it (uniquely) exists."
     (interactive)

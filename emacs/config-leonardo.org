@@ -153,6 +153,17 @@ one hour only."
                      "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)))
   (add-to-list 'org-capture-templates template))
 
+(defun ps/org-capture-before-finalize-hook-function ()
+  "Define behavior of `org-capture-before-finalize-hook'."
+  (pcase (plist-get org-capture-plist :key)
+    ("p"
+     (org-ai-mode)
+     (org-narrow-to-subtree)
+     (forward-line)
+     (forward-line)
+     (ps/yasnippet-expand-by-key "ai")
+     (message "finished"))))  
+  
 (defhydra hydra-org-work
   (:hint nil
          :idle 0
@@ -181,7 +192,8 @@ one hour only."
 
 (ps/modus-themes-load-theme-conditionally)
 
-(setq ps/dir-tlon-biblioteca-altruismo-eficaz (file-name-concat ps/dir-user "source/biblioteca-altruismo-eficaz/"))
+(setq org-cite-global-bibliography (list ps/file-tlon-bibliography-new
+      ps/file-tlon-bibliography-old))
 
 (setq warning-minimum-level :error)
 #+end_src

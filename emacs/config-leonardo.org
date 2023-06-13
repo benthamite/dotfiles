@@ -192,18 +192,7 @@ one hour only."
 
 (ps/modus-themes-load-theme-conditionally)
 
-(setq org-cite-global-bibliography (list ps/file-tlon-bibliography-new
-					 ps/file-tlon-bibliography-old))
-
-(setq ebib-preload-bib-files org-cite-global-bibliography)
-
-(defvar ps/ebib-bibliographies-numbered `((0 . ,ps/file-tlon-bibliography-new )
-                                            (1 . ,ps/file-tlon-bibliography-old))
-    "Alist of Ebib database numbers and associated bibliography files.")
-
 (setq warning-minimum-level :error)
-
-
 #+end_src
 
 * tangle flags
@@ -376,6 +365,7 @@ one hour only."
  (ps/file-tlon-bae . ps/file-tlon-tareas-leo)
  (ps/face-fixed-pitch . "Source Code Pro")
  (ps/face-variable-pitch . "Source Serif Pro")
+ (ps/all-bibliography-files . ps/tlon-bibliography-files)
  (ps/monitor-type . (cdr (assoc 'name (frame-monitor-attributes))))
  (ps/ledger-active-currencies . '("USD" "EUR" "GBP" "MXN" "ARS"))
  (ps/frame-width-threshold .    350)

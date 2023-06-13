@@ -193,9 +193,17 @@ one hour only."
 (ps/modus-themes-load-theme-conditionally)
 
 (setq org-cite-global-bibliography (list ps/file-tlon-bibliography-new
-      ps/file-tlon-bibliography-old))
+					 ps/file-tlon-bibliography-old))
+
+(setq ebib-preload-bib-files org-cite-global-bibliography)
+
+(defvar ps/ebib-bibliographies-numbered `((0 . ,ps/file-tlon-bibliography-new )
+                                            (1 . ,ps/file-tlon-bibliography-old))
+    "Alist of Ebib database numbers and associated bibliography files.")
 
 (setq warning-minimum-level :error)
+
+
 #+end_src
 
 * tangle flags

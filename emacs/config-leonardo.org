@@ -195,7 +195,8 @@ one hour only."
 
 (ps/modus-themes-load-theme-conditionally)
 
-(setq ps/dir-tlon-biblioteca-altruismo-eficaz (file-name-concat ps/dir-user "source/biblioteca-altruismo-eficaz/"))
+(setq org-cite-global-bibliography (list ps/file-tlon-bibliography-new
+      ps/file-tlon-bibliography-old))
 
 (setq warning-minimum-level :error)
 #+end_src

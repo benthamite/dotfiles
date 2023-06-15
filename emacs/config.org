@@ -1478,7 +1478,7 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   (:exit t)
   "Dired folders"
   ("a" (hydra-dired-google-drive/body) "apps")
-  ("b" (dired ps/dir-bibliography) "bibliography")
+  ("b" (dired ps/dir-personal-bibliography) "bibliography")
   ("d" (dired ps/dir-dotfiles) "dotfiles")
   ("e" (dired ps/dir-emacs) "Emacs")
   ("i" (dired ps/dir-anki) "Anki")
@@ -6214,6 +6214,19 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   (setq ediff-window-setup-function 'ediff-setup-windows-plain)
   (setq ediff-split-window-function 'split-window-horizontally)
 
+  ;; copied from emacs.stackexchange.com/a/51548/32089
+  (defun ps/ediff-toggle-word-mode ()
+    "Toggle between linewise and wordwise comparisons."
+    (interactive)
+    (setq ediff-word-mode (not ediff-word-mode))
+    (ediff-update-diffs))
+
+  (add-hook 'ediff-startup-hook #'ps/ediff-startup-hook)
+
+  (defun ps/ediff-startup-hook ()
+    "Custom `ediff-startup-hook' behaviours."
+    (ps/ediff-toggle-word-mode))
+
   :general
   ("A-d" 'ediff))
 #+end_src
@@ -6802,6 +6815,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :elpaca (substitute
              :host sourcehut
              :repo "protesilaos/substitute")
+  :demand t
   :general
   (isearch-mode-map
    "C-t" 'substitute-target-in-buffer))
@@ -12964,18 +12978,33 @@ ARG is the prefix argument received when calling interactively the function."
            ))))))
 
   :config
-  (setq org-cite-global-bibliography ps/all-bibliography-files)
-  (setq org-cite-csl-styles-dir ps/dir-csl-styles)
-  (setq org-cite-csl-locales-dir ps/dir-csl-locales)
+  (setq org-cite-global-bibliography ps/tlon-bibliography-files)
+  (setq org-cite-csl-styles-dir ps/dir-personal-csl-styles)
+  (setq org-cite-csl-locales-dir ps/dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (setq org-cite-activate-processor 'citar) ;
   (setq org-cite-export-processors
-        '((md csl "effective-altruism-wiki-org-mode.csl" "effective-altruism-wiki-org-mode.csl")      ; Footnote reliant
-          (latex csl "effective-altruism-wiki-org-mode.csl" "effective-altruism-wiki-org-mode.csl")   ; For philosophy
-          (odt csl "effective-altruism-wiki-org-mode.csl" "effective-altruism-wiki-org-mode.csl")     ; Footnote reliant
-          (docx csl "effective-altruism-wiki-org-mode.csl" "effective-altruism-wiki-org-mode.csl")    ; Footnote reliant
-          (t csl "american-medical-association-brackets.csl")))) ; fallback
+        '((t . (csl "biblioteca-altruismo-eficaz.csl"))))
+
+  (defvar ps/org-cite-bibliography-variables '(org-cite-global-bibliography
+                                               bibtex-completion-bibliography
+                                               citar-bibliography
+                                               ebib-preload-bib-files)
+    "List of variables that store the location of bibliography files.")
+
+  (defun ps/org-cite-toggle-databases ()
+    "Docstring."
+    (interactive)
+    (let ((bib (if (eq org-cite-global-bibliography ps/personal-bibliography-files)
+                   ps/tlon-bibliography-files
+                 ps/personal-bibliography-files)))
+      (dolist (var ps/org-cite-bibliography-variables)
+        (set var bib))
+      (message "Bibliography files set to `%s'" bib))
+    (when ebib--cur-db
+      (ebib-quit)
+      (ebib))))
 #+end_src
 
 *** TODO Learn how to use ~org-cite~ style and variants
@@ -13055,7 +13084,7 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
 
 #+begin_src emacs-lisp :results silent
 (use-package citeproc
-  :defer 10)
+  :demand t)
 #+end_src
 
 ** bibtex
@@ -13339,7 +13368,7 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
   :defer 5
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)
-  (setq bibtex-completion-bibliography ps/all-bibliography-files)
+  (setq bibtex-completion-bibliography ps/tlon-bibliography-files)
   (setq bibtex-completion-notes-path ps/dir-bibliographic-notes)
   (setq bibtex-completion-pdf-field "file")
   (setq bibtex-dialect 'biblatex))
@@ -13402,7 +13431,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   :demand t
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))
-  (setq citar-bibliography ps/all-bibliography-files)
+  (setq citar-bibliography ps/tlon-bibliography-files)
   (setq citar-notes-paths `(,ps/dir-bibliographic-notes))
   (setq citar-at-point-function 'embark-act)
   (setq citar-symbols
@@ -13440,13 +13469,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
     "Update `old.bib' bibliography."
     (interactive)
     (citar-cache--update-bibliography
-     (citar-cache--get-bibliography ps/file-bibliography-old)))
-
-  (defun ps/citar-update-tlon-old-bibliography ()
-    "Update tlon `old.bib' bibliography."
-    (interactive)
-    (citar-cache--update-bibliography
-     (citar-cache--get-bibliography ps/file-tlon-bibliography-old)))
+     (citar-cache--get-bibliography (cadr citar-bibliography))))
 
   (run-with-idle-timer (* 15 60) nil #'ps/citar-update-old-bibliography)
 
@@ -13871,7 +13894,7 @@ value is copied to the kill ring."
                          (user-error "Cannot copy an empty field"))))))
 
   :config
-  (setq ebib-preload-bib-files ps/all-bibliography-files)
+  (setq ebib-preload-bib-files ps/tlon-bibliography-files)
   (setq ebib-notes-directory ps/dir-bibliographic-notes)
   (setq ebib-notes-use-org-capture t)
   (setq ebib-notes-display-max-lines 9999)
@@ -13889,7 +13912,7 @@ value is copied to the kill ring."
                              ("Year" 4 t)
                              ("Title" 50 t)))
   (setq ebib-extra-fields
-        '((biblatex "abstract" "keywords" "translation" "file" "timestamp" "rating")
+        '((biblatex "abstract" "keywords" "langid" "translation" "file" "timestamp" "rating")
           (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
 
   ;; unhide some fields
@@ -14605,7 +14628,7 @@ The list of article download functions is specified by
        (let (file)
          (dotimes (i (length ebib--databases))
            (when (member key (ebib-db-list-keys (nth i ebib--databases)))
-             (setq file (nth i ps/all-bibliography-files))))
+             (setq file (nth i ebib-preload-bib-files))))
          (if file
              (ebib file key)
            (ebib--error "Key not found in any database")))
@@ -14620,22 +14643,23 @@ The list of article download functions is specified by
     (interactive)
     (ebib--execute-when
       (entries
-       (unless (or (string= (ebib-db-get-filename ebib--cur-db) ps/file-bibliography-new)
-		   (string= (ebib-db-get-filename ebib--cur-db) ps/file-tlon-bibliography-new))
-	 (user-error (format "Due to performane issues, this command only works on database `%s'"
-                             (file-name-nondirectory ps/file-bibliography-new))))
-       (let ((order 'ascend))
-	 (pcase ps/ebib-sort-toggle
-           ('Timestamp
-            (setq ps/ebib-sort-toggle 'Author))
-           ('Author
-            (setq ps/ebib-sort-toggle 'Title))
-           ('Title
-            (setq ps/ebib-sort-toggle 'Timestamp)
-            (setq order 'descend)))
-	 (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
-	 (goto-char (point-min))
-	 (message (format "Sorting by %s" ps/ebib-sort-toggle))))
+       (let ((new-bibliography (file-name-nondirectory (car ebib-preload-bib-files))))
+         (unless (string= (file-name-nondirectory (ebib-db-get-filename ebib--cur-db))
+                          new-bibliography)
+           (user-error (format "Due to performane issues, this command only works on database `%s'"
+                               new-bibliography)))
+         (let ((order 'ascend))
+           (pcase ps/ebib-sort-toggle
+             ('Timestamp
+              (setq ps/ebib-sort-toggle 'Author))
+             ('Author
+              (setq ps/ebib-sort-toggle 'Title))
+             ('Title
+              (setq ps/ebib-sort-toggle 'Timestamp)
+              (setq order 'descend)))
+           (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
+           (goto-char (point-min))
+           (message (format "Sorting by %s" ps/ebib-sort-toggle)))))
       (default
        (beep))))
 
@@ -14709,7 +14733,7 @@ is created following the same schema as notes created with
          (message "reloading database")
          (ps/ebib-reload-database-no-confirm db)))))
 
-  (run-with-timer 10 nil #'ps/ebib-auto-reload-databases)
+  (advice-add 'ebib :after #'ps/ebib-auto-reload-databases)
 
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
@@ -14831,7 +14855,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :config
   (setq zotra-use-curl nil)
   (setq zotra-url-retrieve-timeout 10)
-  (setq zotra-default-bibliography ps/file-bibliography-new)
+  (setq zotra-default-bibliography (car org-cite-global-bibliography))
   (setq zotra-default-entry-format "biblatex")
   (setq zotra-after-add-entry-hook nil)
   (setq zotra-download-attachment-default-directory ps/dir-downloads)
@@ -14863,7 +14887,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (save-buffer)
     (ps/ebib-reload-database-no-confirm ebib--cur-db)
     (let ((citekey (ps/bibtex-get-key)))
-      (ebib ps/file-bibliography-new citekey)
+      (ebib zotra-default-bibliography citekey)
       (ebib--index-sort "Timestamp" 'descend)
       (goto-char (point-min))
       (ps/ebib-open-key citekey)))
@@ -18473,9 +18497,9 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/dir-anki . (file-name-concat ps/dir-dropbox "anki/"))
  (ps/dir-archive . (file-name-concat ps/dir-dropbox "archive/"))
  (ps/dir-inactive . (file-name-concat ps/dir-dropbox "inactive/"))
- (ps/dir-bibliography . (file-name-concat ps/dir-dropbox "bibliography/"))
- (ps/dir-csl-styles . (file-name-concat ps/dir-bibliography "styles/"))
- (ps/dir-csl-locales . (file-name-concat ps/dir-bibliography "locales/"))
+ (ps/dir-personal-bibliography . (file-name-concat ps/dir-dropbox "bibliography/"))
+ (ps/dir-personal-csl-styles . (file-name-concat ps/dir-personal-bibliography "styles/"))
+ (ps/dir-personal-csl-locales . (file-name-concat ps/dir-personal-bibliography "locales/"))
  (ps/dir-blog . (file-name-concat ps/dir-dropbox "blog/"))
  (ps/dir-journal . (file-name-concat ps/dir-dropbox "journal/"))
  (ps/dir-wiki . (file-name-concat ps/dir-dropbox "wiki/"))
@@ -18543,7 +18567,7 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/dir-websites . (file-name-concat ps/dir-dropbox "websites/"))
  (ps/dir-calibre . (file-name-concat ps/dir-user "Calibre Library/"))
  (ps/dir-all-repos . (list ps/dir-android
-                           ps/dir-bibliography
+                           ps/dir-personal-bibliography
                            ps/dir-bibliographic-notes
                            ps/dir-journal
                            ps/dir-notes
@@ -18559,8 +18583,8 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-config . (file-name-concat ps/dir-dotemacs "config.org"))
  (ps/file-karabiner . (file-name-concat ps/dir-karabiner "modifications.org"))
  (ps/file-karabiner-edn . (file-name-concat ps/dir-karabiner "karabiner.edn"))
- (ps/file-bibliography-old . (file-name-concat ps/dir-bibliography "old.bib"))
- (ps/file-bibliography-new . (file-name-concat ps/dir-bibliography "new.bib"))
+ (ps/file-personal-bibliography-old . (file-name-concat ps/dir-personal-bibliography "old.bib"))
+ (ps/file-personal-bibliography-new . (file-name-concat ps/dir-personal-bibliography "new.bib"))
  (ps/file-tlon-bibliography-old . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/old.bib"))
  (ps/file-tlon-bibliography-new . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/new.bib"))
  (ps/file-wiki-notes . (file-name-concat ps/dir-wiki "wiki-notes.org"))
@@ -18573,7 +18597,7 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-tlon-tareas-fede . (file-name-concat ps/dir-dropbox-tlon-fede "tareas.org"))
  (ps/file-org2blog . (file-name-concat ps/dir-websites ".org2blog.org"))
  (ps/file-straight-profile . (file-name-concat ps/dir-dotemacs "straight-profile.el"))
- (ps/file-orb-noter-template . (file-name-concat ps/dir-bibliography "orb-noter-template.org"))
+ (ps/file-orb-noter-template . (file-name-concat ps/dir-personal-bibliography "orb-noter-template.org"))
  (ps/file-orb-capture-template . (file-name-concat ps/dir-bibliographic-notes "${citekey}.org"))
  (ps/file-bookmarks . (file-name-concat ps/dir-dropbox "bookmarks"))
  (ps/file-variables . (file-name-concat ps/dir-dotemacs "variables.el"))
@@ -18592,7 +18616,7 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-tlon-docs-core . (file-name-concat ps/dir-tlon-docs "core.org"))
  (ps/file-tlon-docs-bae . (file-name-concat ps/dir-tlon-docs "BAE.org"))
  (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
- (ps/personal-bibliography-files . (list ps/file-bibliography-new ps/file-bibliography-old))
+ (ps/personal-bibliography-files . (list ps/file-personal-bibliography-new ps/file-personal-bibliography-old))
  (ps/tlon-bibliography-files . (list ps/file-tlon-bibliography-new ps/file-tlon-bibliography-old))
  (ps/all-bibliography-files . (append ps/personal-bibliography-files ps/tlon-bibliography-files))
  (ps/face-fixed-pitch . "SauceCodePro Nerd Font")

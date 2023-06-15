@@ -13912,7 +13912,7 @@ value is copied to the kill ring."
                              ("Year" 4 t)
                              ("Title" 50 t)))
   (setq ebib-extra-fields
-        '((biblatex "abstract" "keywords" "translation" "file" "timestamp" "rating")
+        '((biblatex "abstract" "keywords" "langid" "translation" "file" "timestamp" "rating")
           (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
 
   ;; unhide some fields

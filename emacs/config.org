@@ -13519,6 +13519,14 @@ citation styles. See specific functions for more detail."
       (ebib))
     (ps/ebib-open-key citekey))
 
+  (defun ps/citar-goto-bibtex-entry (citekey)
+    "Goto the bibliographic entry associated with the CITEKEY in the bibtex file."
+    (interactive (list (citar-select-ref)))
+    (let ((file (ps/ebib-get-file-of-key citekey)))
+      (find-file file)
+      (goto-char (point-min))
+      (re-search-forward (format "@.*?{%s" citekey))))
+
   (defun ps/citar-open-file-at-point ()
     "Launch citar with citekey associated with file at point."
     (interactive)
@@ -13541,6 +13549,7 @@ citation styles. See specific functions for more detail."
       )
      (general-define-key
       :keymaps '(citar-map citar-citation-map)
+      "b" 'ps/citar-goto-bibtex-entry
       "c" 'embark-copy-as-kill
       "d" 'ps/ebib-download-dwim
       "i" 'ps/citar-open-in-ebib

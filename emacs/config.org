@@ -5937,6 +5937,14 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   (org-mode-map
    "s-g" 'hydra-org-gcal/body))
 #+end_src
+*** TODO Set asymmetric key to minimize password prompts
+SCHEDULED: <2023-06-16 Fri>
+:PROPERTIES:
+:ID:       063A663C-1865-4451-80A8-0BD3B188FBA2
+:END:
+As described here:
+
+https://github.com/kidd/org-gcal.el/pull/239/files
 
 ** calfw
 :PROPERTIES:

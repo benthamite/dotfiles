@@ -9,6 +9,41 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** corfu-doc-terminal
+:PROPERTIES:
+:ID:       731DF77F-1269-4E04-90A5-DA2BB9446665
+:END:
+
+/[[https://codeberg.org/akib/emacs-corfu-doc-terminal][corfu-doc-terminal]] enables corfu-doc popup on terminal./
+
+[2023-06-16 Fri 10:34] Removing, due to hard-to-diagnose errors.
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/corfu-doc-terminal)
+(use-package corfu-doc-terminal
+  :elpaca (corfu-doc-terminal :type git :repo "https://codeberg.org/akib/emacs-corfu-doc-terminal.git")
+  :after corfu-terminal
+  :demand t
+  :config
+  (corfu-doc-terminal-mode))
+#+end_src
+
+** corfu-terminal
+:PROPERTIES:
+:ID:       6B55F343-3A3E-42CE-9353-6630DC7C4F46
+:END:
+
+/[[https://codeberg.org/akib/emacs-corfu-terminal][corfu-terminal]] enables corfu popups on terminal./
+
+[2023-06-16 Fri 10:34] Removing, due to hard-to-diagnose errors.
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/corfu-terminal)
+(use-package corfu-terminal
+  :after corfu
+  :defer 30
+  :config
+  (corfu-terminal-mode))
+#+end_src
+
 ** dired-du
 :PROPERTIES:
 :ID:       22FCD9F4-A3EE-4605-BDB0-E90FC8471B21

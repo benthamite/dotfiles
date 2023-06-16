@@ -14703,20 +14703,20 @@ The list of article download functions is specified by
       (goto-char (point-min))
       (re-search-forward key)))
 
+  (defun ps/ebib-get-file-of-key (key)
+    "Return the bibliographic file in which the entry with KEY is found."
+    (let ((file (catch 'found
+                  (dotimes (i (length ebib--databases))
+                    (when (member key (ebib-db-list-keys (nth i ebib--databases)))
+                      (throw 'found
+                             (ebib-db-get-filename (nth i ebib--databases))))))))
+      (message file)))
+
   (defun ps/ebib-open-key (key)
     "Open the entry for KEY in Ebib."
-    (ebib--execute-when
-      (entries
-       (let (file)
-         (dotimes (i (length ebib--databases))
-           (when (member key (ebib-db-list-keys (nth i ebib--databases)))
-             (setq file (nth i ebib-preload-bib-files))))
-         (if file
-             (ebib file key)
-           (ebib--error "Key not found in any database")))
-       (ebib--pop-to-buffer (ebib--buffer 'entry)))
-      (default
-       (ebib--error "No database is loaded"))))
+    (if-let ((file (ps/ebib-get-file-of-key key)))
+        (ebib file key)
+      (ebib--error "Key not found in any database")))
 
   (defvar ps/ebib-sort-toggle 'Title)
 

@@ -16708,19 +16708,6 @@ CLOCK: [2021-04-08 Thu 21:19]--[2021-04-08 Thu 21:50] =>  0:31
 
 /[[https://github.com/skeeto/elfeed][elfeed]] is a web feeds client./
 
-| key   | command                          | behavior                      |
-|-------+----------------------------------+-------------------------------|
-| RET   | ~eww-follow-link '(4)~             | open link at point in Chrome  |
-| S-RET | ~eww-follow-link~                  | open link at point in eww     |
-| x     | ~elfeed-show-visit~                | open link of buffer in Chrome |
-| v     | ~ps/elfeed-show-visit-in-eww~      | open link of buffer in eww    |
-| c     | ~elfeed-kill-link-url-at-point~    | copy link at point            |
-| w     | ~ps/elfeed-kill-link-url-of-entry~ | copy link of buffer           |
-| f     | ~ace-link-eww '(4)~                | open link selected in Chrome  |
-| F     | ~ace-link-eww~                     | open link selected in eww     |
-
-These key bindings produce the same behavior in eww.
-
 If the lines are breaking at the wrong places, set ~shr-width~ to the right value.
 
 Check [[https://www.reddit.com/r/emacs/comments/gpoaaa/updating_elfeed_using_seperate_emacs_process/][this]].
@@ -16889,6 +16876,25 @@ poorly-designed websites."
    "x" 'elfeed-show-visit
    "z" 'ps/elfeed-url-full-capture))
 #+end_src
+
+*** TODO Revise key bindings
+:PROPERTIES:
+:ID:       2CDFD8A4-5D9B-4300-A5B2-D621146F8B3F
+:END:
+This is what I have, but no longer reflects my workflow:
+
+| key   | command                          | behavior                      |
+|-------+----------------------------------+-------------------------------|
+| RET   | ~eww-follow-link '(4)~             | open link at point in Chrome  |
+| S-RET | ~eww-follow-link~                  | open link at point in eww     |
+| x     | ~elfeed-show-visit~                | open link of buffer in Chrome |
+| v     | ~ps/elfeed-show-visit-in-eww~      | open link of buffer in eww    |
+| c     | ~elfeed-kill-link-url-at-point~    | copy link at point            |
+| w     | ~ps/elfeed-kill-link-url-of-entry~ | copy link of buffer           |
+| f     | ~ace-link-eww '(4)~                | open link selected in Chrome  |
+| F     | ~ace-link-eww~                     | open link selected in eww     |
+
+These key bindings produce the same behavior in eww.
 
 ** elfeed-org
 :PROPERTIES:

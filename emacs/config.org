@@ -10682,8 +10682,12 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("e" "Email" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
-          ("g" "GPT-4" entry
-           (id "FDF39DE4-293F-47B5-9D6D-AA4D68F99CF5")
+          ("g" "GPT")
+          ("gg" "GPT-4" entry
+           (id "9FF746E2-06DE-4E03-B536-5DC65A4023F8")
+           "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
+          ("gd" "DALL-E" entry
+           (id "15B74595-50DC-40A6-8FDC-B8DB8AA4DFAB")
            "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
           ("n" "Telegram" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
@@ -10925,12 +10929,19 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
   (defun ps/org-capture-before-finalize-hook-function ()
     "Define behavior of `org-capture-before-finalize-hook'."
     (pcase (plist-get org-capture-plist :key)
-      ("g"
+      ("gg"
        (org-ai-mode)
        (org-narrow-to-subtree)
        (forward-line)
        (forward-line)
        (ps/yasnippet-expand-by-key "ai")
+       (message "finished"))
+       ("gd"
+       (org-ai-mode)
+       (org-narrow-to-subtree)
+       (forward-line)
+       (forward-line)
+       (ps/yasnippet-expand-by-key "aii")
        (message "finished"))
       ("l"
        (org-align-all-tags)

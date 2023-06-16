@@ -9653,7 +9653,6 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 
 #+begin_src emacs-lisp
 (use-package gptel
-  :demand t
   :config
   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" ps/tlon-email)))
   (setq gptel-model "gpt-4"))

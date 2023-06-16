@@ -3499,7 +3499,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 
 #+begin_src emacs-lisp :results silent
 (use-package yasnippet
-  :defer 5
+  :demand t
   :config
   (setq yas-snippet-dirs (list ps/dir-yasnippets
                                ps/dir-yasnippets-private

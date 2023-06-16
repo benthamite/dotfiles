@@ -13457,7 +13457,7 @@ citation styles. See specific functions for more detail."
 
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))
-  (setq citar-bibliography ps/tlon-bibliography-files)
+  (setq citar-bibliography ps/all-bibliography-files)
   (setq citar-notes-paths `(,ps/dir-bibliographic-notes))
   (setq citar-at-point-function 'embark-act)
   (setq citar-symbols

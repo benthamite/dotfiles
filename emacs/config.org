@@ -12985,11 +12985,6 @@ ARG is the prefix argument received when calling interactively the function."
 :END:
 https://www.youtube.com/watch?v=48fIhQ9ozH4
 
-*** TODO Learn how to use ~org-cite~ locators
-:PROPERTIES:
-:ID:       16071EF9-A033-416E-B61D-FE61297D2EE3
-:END:
-https://blog.tecosaur.com/tmio/2021-07-31-citations.html#cite-syntax
 *** Resources
 :PROPERTIES:
 :ID:       8EA82227-F7EF-4C46-B40C-C5DE40F13130

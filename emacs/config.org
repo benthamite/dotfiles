@@ -14805,10 +14805,20 @@ is created following the same schema as notes created with
          (message "reloading database")
          (ps/ebib-reload-database-no-confirm db)))))
 
-  (advice-add 'ebib :after #'ps/ebib-auto-reload-databases)
+  ;; (advice-add 'ebib :after #'ps/ebib-auto-reload-databases)
 
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
+
+  (defvar ps/ebib-db-numbers
+    `((,ps/file-personal-bibliography-new . 1)
+      (,ps/file-personal-bibliography-old . 2)
+      (,ps/file-tlon-bibliography-new . 3)
+      (,ps/file-tlon-bibliography-old . 4)))
+
+  (defun ps/ebib-get-db-number (file)
+    "Get database number for FILE."
+    (cdr (assoc file ps/ebib-db-numbers)))
 
   :general
   ("A-i" 'ps/ebib-open-or-switch)

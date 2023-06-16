@@ -13283,6 +13283,21 @@ The correct Biblatex field for this information is
           (while (re-search-forward "titleaddon = " nil t)
             (replace-match "journaltitle = " nil nil))))))
 
+  (defun ps/bibtex-move-entry-to-tlon ()
+    "Move the current BibTeX entry to the tlon `new.bib' file."
+    (interactive)
+    (let ((file ps/file-tlon-bibliography-new))
+      (when (string= (buffer-file-name) file)
+        (user-error "You are already visiting `%s'!" file))
+      (when-let ((key (ps/bibtex-get-key)))
+        (bibtex-kill-entry)
+        (with-current-buffer (find-file-noselect file)
+          (widen)
+          (goto-char (point-max))
+          (newline)
+          (bibtex-yank))
+        (message "Moved entry %s to %s" key file))))
+
   :general
   (bibtex-mode-map
    "A-C-H-x" 'bibtex-copy-entry-as-kill

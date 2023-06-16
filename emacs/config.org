@@ -247,8 +247,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#which-key][which-key]]
 - [[#completion-at-point][completion at point]]
   - [[#corfu][corfu]]
-  - [[#corfu-terminal][corfu-terminal]]
-  - [[#corfu-doc-terminal][corfu-doc-terminal]]
   - [[#kind-icon][kind-icon]]
   - [[#cape][cape]]
   - [[#org-block-cafp][org-block-cafp]]
@@ -3501,7 +3499,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 
 #+begin_src emacs-lisp :results silent
 (use-package yasnippet
-  :defer 5
+  :demand t
   :config
   (setq yas-snippet-dirs (list ps/dir-yasnippets
                                ps/dir-yasnippets-private
@@ -5939,6 +5937,14 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   (org-mode-map
    "s-g" 'hydra-org-gcal/body))
 #+end_src
+*** TODO Set asymmetric key to minimize password prompts
+SCHEDULED: <2023-06-16 Fri>
+:PROPERTIES:
+:ID:       063A663C-1865-4451-80A8-0BD3B188FBA2
+:END:
+As described here:
+
+https://github.com/kidd/org-gcal.el/pull/239/files
 
 ** calfw
 :PROPERTIES:
@@ -7348,37 +7354,6 @@ Useful for prompts such as `eval-expression' and `shell-command'."
    "M-m" 'ps/corfu-move-to-minibuffer
    "<return>" 'corfu-complete
    "RET" 'corfu-complete))
-#+end_src
-
-** corfu-terminal
-:PROPERTIES:
-:ID:       6B55F343-3A3E-42CE-9353-6630DC7C4F46
-:END:
-
-/[[https://codeberg.org/akib/emacs-corfu-terminal][corfu-terminal]] enables corfu popups on terminal./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/corfu-terminal)
-(use-package corfu-terminal
-  :after corfu
-  :defer 30
-  :config
-  (corfu-terminal-mode))
-#+end_src
-
-** corfu-doc-terminal
-:PROPERTIES:
-:ID:       731DF77F-1269-4E04-90A5-DA2BB9446665
-:END:
-
-/[[https://codeberg.org/akib/emacs-corfu-doc-terminal][corfu-doc-terminal]] enables corfu-doc popup on terminal./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/corfu-doc-terminal)
-(use-package corfu-doc-terminal
-  :elpaca (corfu-doc-terminal :type git :repo "https://codeberg.org/akib/emacs-corfu-doc-terminal.git")
-  :after corfu-terminal
-  :demand t
-  :config
-  (corfu-doc-terminal-mode))
 #+end_src
 
 ** kind-icon
@@ -9678,7 +9653,6 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 
 #+begin_src emacs-lisp
 (use-package gptel
-  :demand t
   :config
   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" ps/tlon-email)))
   (setq gptel-model "gpt-4"))
@@ -9702,6 +9676,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   (setq org-ai-openai-api-token (auth-source-pass-get "key" (concat "tlon/core/openai.com/" ps/tlon-email)))
   (setq org-ai-default-chat-model "gpt-4")
   (setq org-ai-talk-say-words-per-minute 210)
+  (setq org-ai-image-directory ps/dir-org-images)
   (add-hook 'org-mode-hook #'org-ai-mode)
   (org-ai-install-yasnippets)
   (require 'org-ai-talk))
@@ -10608,6 +10583,11 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "y" 'org-agenda-day-view
    "z" 'org-agenda-undo))
 #+end_src
+*** TODO Make org-agenda birthdays visible via midnight
+:PROPERTIES:
+:ID:       F42FBE14-DFB3-45D0-BE2F-13D6A57F071F
+:END:
+
 *** TODO Configure org-agenda log checks
 :PROPERTIES:
 :ID:       9FE214C2-609D-4055-91A7-EB4EEAE26348
@@ -10702,8 +10682,12 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("e" "Email" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
-          ("g" "GPT-4" entry
-           (id "FDF39DE4-293F-47B5-9D6D-AA4D68F99CF5")
+          ("g" "GPT")
+          ("gg" "GPT-4" entry
+           (id "9FF746E2-06DE-4E03-B536-5DC65A4023F8")
+           "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
+          ("gd" "DALL-E" entry
+           (id "15B74595-50DC-40A6-8FDC-B8DB8AA4DFAB")
            "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
           ("n" "Telegram" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
@@ -10945,12 +10929,19 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
   (defun ps/org-capture-before-finalize-hook-function ()
     "Define behavior of `org-capture-before-finalize-hook'."
     (pcase (plist-get org-capture-plist :key)
-      ("g"
+      ("gg"
        (org-ai-mode)
        (org-narrow-to-subtree)
        (forward-line)
        (forward-line)
        (ps/yasnippet-expand-by-key "ai")
+       (message "finished"))
+       ("gd"
+       (org-ai-mode)
+       (org-narrow-to-subtree)
+       (forward-line)
+       (forward-line)
+       (ps/yasnippet-expand-by-key "aii")
        (message "finished"))
       ("l"
        (org-align-all-tags)
@@ -12978,33 +12969,14 @@ ARG is the prefix argument received when calling interactively the function."
            ))))))
 
   :config
-  (setq org-cite-global-bibliography ps/tlon-bibliography-files)
+  (setq org-cite-global-bibliography ps/all-bibliography-files)
   (setq org-cite-csl-styles-dir ps/dir-personal-csl-styles)
   (setq org-cite-csl-locales-dir ps/dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (setq org-cite-activate-processor 'citar) ;
   (setq org-cite-export-processors
-        '((t . (csl "biblioteca-altruismo-eficaz.csl"))))
-
-  (defvar ps/org-cite-bibliography-variables '(org-cite-global-bibliography
-                                               bibtex-completion-bibliography
-                                               citar-bibliography
-                                               ebib-preload-bib-files)
-    "List of variables that store the location of bibliography files.")
-
-  (defun ps/org-cite-toggle-databases ()
-    "Docstring."
-    (interactive)
-    (let ((bib (if (eq org-cite-global-bibliography ps/personal-bibliography-files)
-                   ps/tlon-bibliography-files
-                 ps/personal-bibliography-files)))
-      (dolist (var ps/org-cite-bibliography-variables)
-        (set var bib))
-      (message "Bibliography files set to `%s'" bib))
-    (when ebib--cur-db
-      (ebib-quit)
-      (ebib))))
+        '((t . (csl "biblioteca-altruismo-eficaz.csl")))))
 #+end_src
 
 *** TODO Learn how to use ~org-cite~ style and variants
@@ -13013,11 +12985,6 @@ ARG is the prefix argument received when calling interactively the function."
 :END:
 https://www.youtube.com/watch?v=48fIhQ9ozH4
 
-*** TODO Learn how to use ~org-cite~ locators
-:PROPERTIES:
-:ID:       16071EF9-A033-416E-B61D-FE61297D2EE3
-:END:
-https://blog.tecosaur.com/tmio/2021-07-31-citations.html#cite-syntax
 *** Resources
 :PROPERTIES:
 :ID:       8EA82227-F7EF-4C46-B40C-C5DE40F13130
@@ -13119,6 +13086,8 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   :config
   ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
   ;; retorque.re/zotero-better-bibtex/citing/
+  (setq bibtex-files ps/all-bibliography-files)
+  (setq bibtex-search-entry-globally t)
   (setq bibtex-autokey-names 1)
   (setq bibtex-autokey-name-case-convert 'capitalize)
   (setq bibtex-autokey-year-length 4)
@@ -13178,7 +13147,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
            ("eprinttype" nil nil 5)
            ("archiveprefix" nil nil -5)
            ("urldate")))
-           bibtex-biblatex-entry-alist)
+        bibtex-biblatex-entry-alist)
 
   ;; Add custom 'Movie' entry type
   (push '("Movie" "Film"
@@ -13203,9 +13172,9 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
            ("eprinttype" nil nil 5)
            ("archiveprefix" nil nil -5)
            ("urldate")))
-           bibtex-biblatex-entry-alist)
+        bibtex-biblatex-entry-alist)
 
-    ;; Add custom 'TVepisode' entry type
+  ;; Add custom 'TVepisode' entry type
   (push '("tvepisode" "tvepisode"
           (("author" nil nil 0)
            ("title")
@@ -13228,7 +13197,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
            ("eprinttype" nil nil 5)
            ("archiveprefix" nil nil -5)
            ("urldate")))
-           bibtex-biblatex-entry-alist)
+        bibtex-biblatex-entry-alist)
 
   ;; Copied from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
   (defun ps/bibtex-asciify-text (&optional Begin End)
@@ -13314,8 +13283,41 @@ The correct Biblatex field for this information is
           (while (re-search-forward "titleaddon = " nil t)
             (replace-match "journaltitle = " nil nil))))))
 
+  (defun ps/bibtex-move-entry-to-tlon ()
+    "Move the current BibTeX entry to the tlon `new.bib' file."
+    (interactive)
+    (let ((file ps/file-tlon-bibliography-new))
+      (when (string= (buffer-file-name) file)
+        (user-error "You are already visiting `%s'!" file))
+      (when-let ((key (ps/bibtex-get-key)))
+        (bibtex-kill-entry)
+        (with-current-buffer (find-file-noselect file)
+          (widen)
+          (goto-char (point-max))
+          (newline)
+          (bibtex-yank))
+        (message "Moved entry %s to %s" key file))))
+
+  (defun ps/bibtex-open-in-ebib ()
+    "Open the current BibTeX entry in Ebib."
+    (interactive)
+    (let ((file (buffer-file-name))
+          (key (ps/bibtex-get-key)))
+      (save-buffer)
+      ;; If ebib is already open, we reload the database to insure it
+      ;; reflects the current entry state.
+      (when ebib--cur-db
+        (ebib-switch-to-database-nth (ps/ebib-get-db-number file))
+        (ps/ebib-reload-database-no-confirm ebib--cur-db))
+      (ebib file key)))
+
   :general
   (bibtex-mode-map
+   "s-x" 'bibtex-kill-entry
+   "s-c" 'bibtex-copy-entry-as-kill
+   "s-v" 'bibtex-yank
+   "s-t" 'ps/bibtex-move-entry-to-tlon
+   "s-i" 'ps/bibtex-open-in-ebib
    "A-C-H-x" 'bibtex-copy-entry-as-kill
    "A-C-H-c" 'bibtex-kill-entry
    "A-C-H-a" 'bibtex-copy-field-as-kill
@@ -13328,6 +13330,7 @@ The correct Biblatex field for this information is
 :PROPERTIES:
 :ID:       B2291EF5-8546-4C47-AC33-C8DBD70E1BAA
 :END:
+
 *** TODO Move ratings from org headings to bibtex
 :PROPERTIES:
 :ID:       18A96B99-EAD2-4C1E-94C2-619903A52898
@@ -13368,7 +13371,7 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
   :defer 5
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)
-  (setq bibtex-completion-bibliography ps/tlon-bibliography-files)
+  (setq bibtex-completion-bibliography ps/all-bibliography-files)
   (setq bibtex-completion-notes-path ps/dir-bibliographic-notes)
   (setq bibtex-completion-pdf-field "file")
   (setq bibtex-dialect 'biblatex))
@@ -13429,17 +13432,72 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
          :includes (citar-org))
   :after oc vertico embark marginalia
   :demand t
+  :config/el-patch
+  ;; Remove conditional to allow invocation
+  ;; in any mode. Even if inserting a citation is not allowed, one may
+  ;; want to invoke the command to trigger contextual actions via
+  ;; `embark'.
+  (defun citar-insert-citation (citekeys &optional arg)
+    "Insert citation for the CITEKEYS.
+
+Prefix ARG is passed to the mode-specific insertion function. It
+should invert the default behaviour for that mode with respect to
+citation styles. See specific functions for more detail."
+    (interactive
+     (el-patch-swap
+       (if (citar--get-major-mode-function 'insert-citation)
+           (list (citar-select-refs) current-prefix-arg)
+         (error "Citation insertion is not supported for %s" major-mode))
+       (list (citar-select-refs) current-prefix-arg)))
+    (citar--major-mode-function
+     'insert-citation
+     #'ignore
+     citekeys
+     arg))
+
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))
-  (setq citar-bibliography ps/tlon-bibliography-files)
+  (setq citar-bibliography ps/all-bibliography-files)
   (setq citar-notes-paths `(,ps/dir-bibliographic-notes))
   (setq citar-at-point-function 'embark-act)
-  (setq citar-symbols
-        `((file ,(all-the-icons-faicon "file-o" :face 'all-the-icons-green :v-adjust -0.1) . " ")
-          (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
-          (link ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01) . " ")))
   (setq citar-symbol-separator "  ")
   (setq citar-format-reference-function 'citar-citeproc-format-reference)
+
+  (defvar citar-indicator-files-icons
+    (citar-indicator-create
+     :symbol (all-the-icons-faicon
+              "file-o"
+              :face 'all-the-icons-green
+              :v-adjust -0.1)
+     :function #'citar-has-files
+     :padding "  " ; need this because the default padding is too low for these icons
+     :tag "has:files"))
+
+  (defvar citar-indicator-links-icons
+    (citar-indicator-create
+     :symbol (all-the-icons-octicon
+              "link"
+              :face 'all-the-icons-orange
+              :v-adjust 0.01)
+     :function #'citar-has-links
+     :padding "  "
+     :tag "has:links"))
+
+  (defvar citar-indicator-notes-icons
+    (citar-indicator-create
+     :symbol (all-the-icons-material
+              "speaker_notes"
+              :face 'all-the-icons-blue
+              :v-adjust -0.3)
+     :function #'citar-has-notes
+     :padding "  "
+     :tag "has:notes"))
+
+  ;; https://github.com/emacs-citar/citar/wiki/Indicators
+  (setq citar-indicators
+        (list citar-indicator-files-icons
+              citar-indicator-links-icons
+              citar-indicator-notes-icons))
 
   (require 'citar-org-roam)
   (citar-register-notes-source
@@ -13658,6 +13716,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-06-16 Fri 12:47]--[2023-06-16 Fri 13:11] =>  0:24
 CLOCK: [2023-05-28 Sun 09:26]--[2023-05-28 Sun 13:21] =>  3:55
 CLOCK: [2023-05-07 Sun 11:35]--[2023-05-07 Sun 12:45] =>  1:10
 CLOCK: [2023-04-30 Sun 18:51]--[2023-04-30 Sun 18:57] =>  0:06
@@ -13894,7 +13953,7 @@ value is copied to the kill ring."
                          (user-error "Cannot copy an empty field"))))))
 
   :config
-  (setq ebib-preload-bib-files ps/tlon-bibliography-files)
+  (setq ebib-preload-bib-files ps/all-bibliography-files)
   (setq ebib-notes-directory ps/dir-bibliographic-notes)
   (setq ebib-notes-use-org-capture t)
   (setq ebib-notes-display-max-lines 9999)
@@ -13912,7 +13971,7 @@ value is copied to the kill ring."
                              ("Year" 4 t)
                              ("Title" 50 t)))
   (setq ebib-extra-fields
-        '((biblatex "abstract" "keywords" "langid" "translation" "file" "timestamp" "rating")
+        '((biblatex "abstract" "keywords" "langid" "translation" "narrator" "file" "timestamp" "rating")
           (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
 
   ;; unhide some fields
@@ -14289,6 +14348,16 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       "https://www.goodreads.com/search?q="
       ""))
 
+  (defvar ps/ebib-audible
+    '("Audible"
+      "https://www.audible.com/search?keywords="
+      ""))
+
+  (defvar ps/ebib-audiobookbay
+    '("Audiobook Bay"
+      "https://theaudiobookbay.se/?s="
+      "&tt=1"))
+
   (defvar ps/ebib-imdb
     '("IMDB"
       "https://www.imdb.com/find/?q="
@@ -14314,10 +14383,13 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     "List of functions that search for books.")
 
   (defvar ps/ebib-download-book-functions
-    '(ps/ebib-search-hathitrust
+    '(
+      ;; ps/ebib-search-hathitrust
       ps/ebib-search-internet-archive
-      ps/ebib-search-university-of-toronto
-      ps/ebib-search-library-genesis)
+      ;; ps/ebib-search-university-of-toronto
+      ps/ebib-search-library-genesis
+      ps/ebib-search-audible
+      ps/ebib-search-audiobookbay)
     "List of functions that download books.")
 
   (defvar ps/ebib-search-article-functions
@@ -14326,7 +14398,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     "List of functions that search for articles.")
 
   (defvar ps/ebib-download-article-functions
-    ps/ebib-search-article-functions
+    '(ps/ebib-search-article-functions)
     "List of functions that download articles.")
 
   (defvar ps/ebib-search-film-functions
@@ -14733,10 +14805,20 @@ is created following the same schema as notes created with
          (message "reloading database")
          (ps/ebib-reload-database-no-confirm db)))))
 
-  (advice-add 'ebib :after #'ps/ebib-auto-reload-databases)
+  ;; (advice-add 'ebib :after #'ps/ebib-auto-reload-databases)
 
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
+
+  (defvar ps/ebib-db-numbers
+    `((,ps/file-personal-bibliography-new . 1)
+      (,ps/file-personal-bibliography-old . 2)
+      (,ps/file-tlon-bibliography-new . 3)
+      (,ps/file-tlon-bibliography-old . 4)))
+
+  (defun ps/ebib-get-db-number (file)
+    "Get database number for FILE."
+    (cdr (assoc file ps/ebib-db-numbers)))
 
   :general
   ("A-i" 'ps/ebib-open-or-switch)
@@ -14793,6 +14875,20 @@ is created following the same schema as notes created with
 #+end_src
 
 The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
+
+*** TODO Create functions to interact with Letterboxd, IMDb, Metacritic and Rotten Tomatoes
+:PROPERTIES:
+:ID:       3ACB9BC0-8010-4CB6-9CA8-3BC78EA5E029
+:END:
+:LOGBOOK:
+CLOCK: [2023-06-13 Tue 06:46]--[2023-06-13 Tue 07:43] =>  0:57
+CLOCK: [2023-06-12 Mon 20:48]--[2023-06-12 Mon 21:25] =>  0:37
+CLOCK: [2023-06-12 Mon 10:36]--[2023-06-12 Mon 10:40] =>  0:04
+:END:
+*** TODO Ebib: make 'title' field single-line
+:PROPERTIES:
+:ID:       24813D4B-598A-4BCB-8488-281D16D7C56A
+:END:
 
 *** TODO Ebib: Add new websites to 'journal' field
 :PROPERTIES:
@@ -14855,7 +14951,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :config
   (setq zotra-use-curl nil)
   (setq zotra-url-retrieve-timeout 10)
-  (setq zotra-default-bibliography (car org-cite-global-bibliography))
   (setq zotra-default-entry-format "biblatex")
   (setq zotra-after-add-entry-hook nil)
   (setq zotra-download-attachment-default-directory ps/dir-downloads)
@@ -14864,6 +14959,17 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   ;; reliably.
   (setq zotra-backend 'translation-server)
   (setq zotra-cli-command (file-name-concat ps/dir-dropbox "source/zotra-cli/bin/index.js"))
+
+  (defvar ps/zotra-most-recent-bibliography-file nil
+    "The most recent bibliography file to which an entry was added.")
+
+  (defun ps/zotra-add-entry-set-bibfile (orig-fun url-or-identifier &optional bibfile entry-format)
+    "Advice to set `org-cite-global-bibliography' before Zotra add commands."
+    (setq ps/zotra-most-recent-bibliography-file
+          (completing-read "Bibfile" (list
+                                      (car ps/personal-bibliography-files)
+                                      (car ps/tlon-bibliography-files))))
+    (funcall orig-fun url-or-identifier ps/zotra-most-recent-bibliography-file entry-format))
 
   (defun ps/zotra-url-full-capture (&optional url)
     "Add URL to bibfile and generate associated PDF and HTML files."
@@ -14876,6 +14982,9 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
       (ps/eww-url-to-pdf url)
       (ps/eww-url-to-html url)))
 
+  (advice-add 'zotra-add-entry-from-url :around #'ps/zotra-add-entry-set-bibfile)
+  (advice-add 'zotra-add-entry-from-search :around #'ps/zotra-add-entry-set-bibfile)
+
   (defun ps/zotra-after-add-entry-hook-function ()
     "Function to trigger with `zotra-after-add-entry-hook'."
     (revert-buffer nil t)
@@ -14885,9 +14994,11 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
     (save-buffer)
-    (ps/ebib-reload-database-no-confirm ebib--cur-db)
+    (ebib-switch-to-database-nth (ps/ebib-get-db-number ps/zotra-most-recent-bibliography-file))
     (let ((citekey (ps/bibtex-get-key)))
-      (ebib zotra-default-bibliography citekey)
+      (ps/ebib-reload-database-no-confirm ebib--cur-db)
+      (ebib--update-buffers)
+      (ebib ps/zotra-most-recent-bibliography-file citekey)
       (ebib--index-sort "Timestamp" 'descend)
       (goto-char (point-min))
       (ps/ebib-open-key citekey)))
@@ -16178,6 +16289,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "amazon\\."
                      "archive\\.org"
                      "audible\\.com"
+                     "audiobookbay"
                      "beyondpricing\\.com"
                      "bloomberg\\.com"
                      "connectedpapers\\.com"
@@ -16596,19 +16708,6 @@ CLOCK: [2021-04-08 Thu 21:19]--[2021-04-08 Thu 21:50] =>  0:31
 
 /[[https://github.com/skeeto/elfeed][elfeed]] is a web feeds client./
 
-| key   | command                          | behavior                      |
-|-------+----------------------------------+-------------------------------|
-| RET   | ~eww-follow-link '(4)~             | open link at point in Chrome  |
-| S-RET | ~eww-follow-link~                  | open link at point in eww     |
-| x     | ~elfeed-show-visit~                | open link of buffer in Chrome |
-| v     | ~ps/elfeed-show-visit-in-eww~      | open link of buffer in eww    |
-| c     | ~elfeed-kill-link-url-at-point~    | copy link at point            |
-| w     | ~ps/elfeed-kill-link-url-of-entry~ | copy link of buffer           |
-| f     | ~ace-link-eww '(4)~                | open link selected in Chrome  |
-| F     | ~ace-link-eww~                     | open link selected in eww     |
-
-These key bindings produce the same behavior in eww.
-
 If the lines are breaking at the wrong places, set ~shr-width~ to the right value.
 
 Check [[https://www.reddit.com/r/emacs/comments/gpoaaa/updating_elfeed_using_seperate_emacs_process/][this]].
@@ -16777,6 +16876,25 @@ poorly-designed websites."
    "x" 'elfeed-show-visit
    "z" 'ps/elfeed-url-full-capture))
 #+end_src
+
+*** TODO Revise key bindings
+:PROPERTIES:
+:ID:       2CDFD8A4-5D9B-4300-A5B2-D621146F8B3F
+:END:
+This is what I have, but no longer reflects my workflow:
+
+| key   | command                          | behavior                      |
+|-------+----------------------------------+-------------------------------|
+| RET   | ~eww-follow-link '(4)~             | open link at point in Chrome  |
+| S-RET | ~eww-follow-link~                  | open link at point in eww     |
+| x     | ~elfeed-show-visit~                | open link of buffer in Chrome |
+| v     | ~ps/elfeed-show-visit-in-eww~      | open link of buffer in eww    |
+| c     | ~elfeed-kill-link-url-at-point~    | copy link at point            |
+| w     | ~ps/elfeed-kill-link-url-of-entry~ | copy link of buffer           |
+| f     | ~ace-link-eww '(4)~                | open link selected in Chrome  |
+| F     | ~ace-link-eww~                     | open link selected in eww     |
+
+These key bindings produce the same behavior in eww.
 
 ** elfeed-org
 :PROPERTIES:

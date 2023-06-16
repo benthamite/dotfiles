@@ -13371,7 +13371,7 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
   :defer 5
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)
-  (setq bibtex-completion-bibliography ps/tlon-bibliography-files)
+  (setq bibtex-completion-bibliography ps/all-bibliography-files)
   (setq bibtex-completion-notes-path ps/dir-bibliographic-notes)
   (setq bibtex-completion-pdf-field "file")
   (setq bibtex-dialect 'biblatex))

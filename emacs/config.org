@@ -13309,7 +13309,8 @@ The correct Biblatex field for this information is
       (when ebib--cur-db
         (ebib-switch-to-database-nth (ps/ebib-get-db-number file))
         (ps/ebib-reload-database-no-confirm ebib--cur-db))
-      (ebib file key)))
+      (ebib file key)
+      (ebib--pop-to-buffer (ebib--buffer 'entry))))
 
   :general
   (bibtex-mode-map

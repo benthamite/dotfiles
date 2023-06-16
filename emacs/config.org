@@ -13086,6 +13086,8 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   :config
   ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
   ;; retorque.re/zotero-better-bibtex/citing/
+  (setq bibtex-files ps/all-bibliography-files)
+  (setq bibtex-search-entry-globally t)
   (setq bibtex-autokey-names 1)
   (setq bibtex-autokey-name-case-convert 'capitalize)
   (setq bibtex-autokey-year-length 4)
@@ -13145,7 +13147,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
            ("eprinttype" nil nil 5)
            ("archiveprefix" nil nil -5)
            ("urldate")))
-           bibtex-biblatex-entry-alist)
+        bibtex-biblatex-entry-alist)
 
   ;; Add custom 'Movie' entry type
   (push '("Movie" "Film"
@@ -13170,9 +13172,9 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
            ("eprinttype" nil nil 5)
            ("archiveprefix" nil nil -5)
            ("urldate")))
-           bibtex-biblatex-entry-alist)
+        bibtex-biblatex-entry-alist)
 
-    ;; Add custom 'TVepisode' entry type
+  ;; Add custom 'TVepisode' entry type
   (push '("tvepisode" "tvepisode"
           (("author" nil nil 0)
            ("title")
@@ -13195,7 +13197,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
            ("eprinttype" nil nil 5)
            ("archiveprefix" nil nil -5)
            ("urldate")))
-           bibtex-biblatex-entry-alist)
+        bibtex-biblatex-entry-alist)
 
   ;; Copied from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
   (defun ps/bibtex-asciify-text (&optional Begin End)

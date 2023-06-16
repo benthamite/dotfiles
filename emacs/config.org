@@ -12969,33 +12969,14 @@ ARG is the prefix argument received when calling interactively the function."
            ))))))
 
   :config
-  (setq org-cite-global-bibliography ps/tlon-bibliography-files)
+  (setq org-cite-global-bibliography ps/all-bibliography-files)
   (setq org-cite-csl-styles-dir ps/dir-personal-csl-styles)
   (setq org-cite-csl-locales-dir ps/dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (setq org-cite-activate-processor 'citar) ;
   (setq org-cite-export-processors
-        '((t . (csl "biblioteca-altruismo-eficaz.csl"))))
-
-  (defvar ps/org-cite-bibliography-variables '(org-cite-global-bibliography
-                                               bibtex-completion-bibliography
-                                               citar-bibliography
-                                               ebib-preload-bib-files)
-    "List of variables that store the location of bibliography files.")
-
-  (defun ps/org-cite-toggle-databases ()
-    "Docstring."
-    (interactive)
-    (let ((bib (if (eq org-cite-global-bibliography ps/personal-bibliography-files)
-                   ps/tlon-bibliography-files
-                 ps/personal-bibliography-files)))
-      (dolist (var ps/org-cite-bibliography-variables)
-        (set var bib))
-      (message "Bibliography files set to `%s'" bib))
-    (when ebib--cur-db
-      (ebib-quit)
-      (ebib))))
+        '((t . (csl "biblioteca-altruismo-eficaz.csl")))))
 #+end_src
 
 *** TODO Learn how to use ~org-cite~ style and variants

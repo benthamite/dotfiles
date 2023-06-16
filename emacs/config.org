@@ -13298,6 +13298,19 @@ The correct Biblatex field for this information is
           (bibtex-yank))
         (message "Moved entry %s to %s" key file))))
 
+  (defun ps/bibtex-open-in-ebib ()
+    "Open the current BibTeX entry in Ebib."
+    (interactive)
+    (let ((file (buffer-file-name))
+          (key (ps/bibtex-get-key)))
+      (save-buffer)
+      ;; If ebib is already open, we reload the database to insure it
+      ;; reflects the current entry state.
+      (when ebib--cur-db
+        (ebib-switch-to-database-nth (ps/ebib-get-db-number file))
+        (ps/ebib-reload-database-no-confirm ebib--cur-db))
+      (ebib file key)))
+
   :general
   (bibtex-mode-map
    "A-C-H-x" 'bibtex-copy-entry-as-kill

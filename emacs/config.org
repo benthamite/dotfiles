@@ -13309,7 +13309,8 @@ The correct Biblatex field for this information is
       (when ebib--cur-db
         (ebib-switch-to-database-nth (ps/ebib-get-db-number file))
         (ps/ebib-reload-database-no-confirm ebib--cur-db))
-      (ebib file key)))
+      (ebib file key)
+      (ebib--pop-to-buffer (ebib--buffer 'entry))))
 
   :general
   (bibtex-mode-map
@@ -13518,6 +13519,14 @@ citation styles. See specific functions for more detail."
       (ebib))
     (ps/ebib-open-key citekey))
 
+  (defun ps/citar-goto-bibtex-entry (citekey)
+    "Goto the bibliographic entry associated with the CITEKEY in the bibtex file."
+    (interactive (list (citar-select-ref)))
+    (let ((file (ps/ebib-get-file-of-key citekey)))
+      (find-file file)
+      (goto-char (point-min))
+      (re-search-forward (format "@.*?{%s" citekey))))
+
   (defun ps/citar-open-file-at-point ()
     "Launch citar with citekey associated with file at point."
     (interactive)
@@ -13540,6 +13549,7 @@ citation styles. See specific functions for more detail."
       )
      (general-define-key
       :keymaps '(citar-map citar-citation-map)
+      "b" 'ps/citar-goto-bibtex-entry
       "c" 'embark-copy-as-kill
       "d" 'ps/ebib-download-dwim
       "i" 'ps/citar-open-in-ebib
@@ -14693,20 +14703,20 @@ The list of article download functions is specified by
       (goto-char (point-min))
       (re-search-forward key)))
 
+  (defun ps/ebib-get-file-of-key (key)
+    "Return the bibliographic file in which the entry with KEY is found."
+    (let ((file (catch 'found
+                  (dotimes (i (length ebib--databases))
+                    (when (member key (ebib-db-list-keys (nth i ebib--databases)))
+                      (throw 'found
+                             (ebib-db-get-filename (nth i ebib--databases))))))))
+      (message file)))
+
   (defun ps/ebib-open-key (key)
     "Open the entry for KEY in Ebib."
-    (ebib--execute-when
-      (entries
-       (let (file)
-         (dotimes (i (length ebib--databases))
-           (when (member key (ebib-db-list-keys (nth i ebib--databases)))
-             (setq file (nth i ebib-preload-bib-files))))
-         (if file
-             (ebib file key)
-           (ebib--error "Key not found in any database")))
-       (ebib--pop-to-buffer (ebib--buffer 'entry)))
-      (default
-       (ebib--error "No database is loaded"))))
+    (if-let ((file (ps/ebib-get-file-of-key key)))
+        (ebib file key)
+      (ebib--error "Key not found in any database")))
 
   (defvar ps/ebib-sort-toggle 'Title)
 
@@ -14820,6 +14830,24 @@ is created following the same schema as notes created with
     "Get database number for FILE."
     (cdr (assoc file ps/ebib-db-numbers)))
 
+  (defvar ps/ebib-existing-authors nil
+    "List of all authors in the current database.")
+
+  (defun ps/ebib-create-list-of-existing-authors ()
+    "Create a list of all authors in the current database."
+    (setq ps/ebib-existing-authors (ebib--create-author/editor-collection)))
+
+  (add-hook 'ebib-add-entry #'ps/ebib-create-list-of-existing-authors)
+
+  (defun ps/ebib-check-author-exists ()
+    "Check if the author of the given entry exists in the current database."
+    (interactive)
+    (let* ((db ebib--cur-db)
+           (key (ebib--db-get-current-entry-key db))
+           (author-to-check (ebib-get-field-value "author" key db 'noerror t)))
+      (if (member author-to-check ps/ebib-existing-authors)
+          (message "Author found in the database!")
+        (message "Warning: Author not found in the database!"))))
   :general
   ("A-i" 'ps/ebib-open-or-switch)
   (ebib-multiline-mode-map
@@ -14880,11 +14908,13 @@ The macro below generates the commands correcty. But attempting to define key bi
 :PROPERTIES:
 :ID:       3ACB9BC0-8010-4CB6-9CA8-3BC78EA5E029
 :END:
+
 :LOGBOOK:
 CLOCK: [2023-06-13 Tue 06:46]--[2023-06-13 Tue 07:43] =>  0:57
 CLOCK: [2023-06-12 Mon 20:48]--[2023-06-12 Mon 21:25] =>  0:37
 CLOCK: [2023-06-12 Mon 10:36]--[2023-06-12 Mon 10:40] =>  0:04
 :END:
+
 *** TODO Ebib: make 'title' field single-line
 :PROPERTIES:
 :ID:       24813D4B-598A-4BCB-8488-281D16D7C56A

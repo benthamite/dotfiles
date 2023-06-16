@@ -14951,7 +14951,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :config
   (setq zotra-use-curl nil)
   (setq zotra-url-retrieve-timeout 10)
-  (setq zotra-default-bibliography (car org-cite-global-bibliography))
   (setq zotra-default-entry-format "biblatex")
   (setq zotra-after-add-entry-hook nil)
   (setq zotra-download-attachment-default-directory ps/dir-downloads)
@@ -14960,6 +14959,17 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   ;; reliably.
   (setq zotra-backend 'translation-server)
   (setq zotra-cli-command (file-name-concat ps/dir-dropbox "source/zotra-cli/bin/index.js"))
+
+  (defvar ps/zotra-most-recent-bibliography-file nil
+    "The most recent bibliography file to which an entry was added.")
+
+  (defun ps/zotra-add-entry-set-bibfile (orig-fun url-or-identifier &optional bibfile entry-format)
+    "Advice to set `org-cite-global-bibliography' before Zotra add commands."
+    (setq ps/zotra-most-recent-bibliography-file
+          (completing-read "Bibfile" (list
+                                      (car ps/personal-bibliography-files)
+                                      (car ps/tlon-bibliography-files))))
+    (funcall orig-fun url-or-identifier ps/zotra-most-recent-bibliography-file entry-format))
 
   (defun ps/zotra-url-full-capture (&optional url)
     "Add URL to bibfile and generate associated PDF and HTML files."
@@ -14972,6 +14982,9 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
       (ps/eww-url-to-pdf url)
       (ps/eww-url-to-html url)))
 
+  (advice-add 'zotra-add-entry-from-url :around #'ps/zotra-add-entry-set-bibfile)
+  (advice-add 'zotra-add-entry-from-search :around #'ps/zotra-add-entry-set-bibfile)
+
   (defun ps/zotra-after-add-entry-hook-function ()
     "Function to trigger with `zotra-after-add-entry-hook'."
     (revert-buffer nil t)
@@ -14981,9 +14994,11 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
     (save-buffer)
-    (ps/ebib-reload-database-no-confirm ebib--cur-db)
+    (ebib-switch-to-database-nth (ps/ebib-get-db-number ps/zotra-most-recent-bibliography-file))
     (let ((citekey (ps/bibtex-get-key)))
-      (ebib zotra-default-bibliography citekey)
+      (ps/ebib-reload-database-no-confirm ebib--cur-db)
+      (ebib--update-buffers)
+      (ebib ps/zotra-most-recent-bibliography-file citekey)
       (ebib--index-sort "Timestamp" 'descend)
       (goto-char (point-min))
       (ps/ebib-open-key citekey)))

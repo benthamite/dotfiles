@@ -9676,6 +9676,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   (setq org-ai-openai-api-token (auth-source-pass-get "key" (concat "tlon/core/openai.com/" ps/tlon-email)))
   (setq org-ai-default-chat-model "gpt-4")
   (setq org-ai-talk-say-words-per-minute 210)
+  (setq org-ai-image-directory ps/dir-org-images)
   (add-hook 'org-mode-hook #'org-ai-mode)
   (org-ai-install-yasnippets)
   (require 'org-ai-talk))

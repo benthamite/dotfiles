@@ -13460,12 +13460,44 @@ citation styles. See specific functions for more detail."
   (setq citar-bibliography ps/all-bibliography-files)
   (setq citar-notes-paths `(,ps/dir-bibliographic-notes))
   (setq citar-at-point-function 'embark-act)
-  (setq citar-symbols
-        `((file ,(all-the-icons-faicon "file-o" :face 'all-the-icons-green :v-adjust -0.1) . " ")
-          (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
-          (link ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01) . " ")))
   (setq citar-symbol-separator "  ")
   (setq citar-format-reference-function 'citar-citeproc-format-reference)
+
+  (defvar citar-indicator-files-icons
+    (citar-indicator-create
+     :symbol (all-the-icons-faicon
+              "file-o"
+              :face 'all-the-icons-green
+              :v-adjust -0.1)
+     :function #'citar-has-files
+     :padding "  " ; need this because the default padding is too low for these icons
+     :tag "has:files"))
+
+  (defvar citar-indicator-links-icons
+    (citar-indicator-create
+     :symbol (all-the-icons-octicon
+              "link"
+              :face 'all-the-icons-orange
+              :v-adjust 0.01)
+     :function #'citar-has-links
+     :padding "  "
+     :tag "has:links"))
+
+  (defvar citar-indicator-notes-icons
+    (citar-indicator-create
+     :symbol (all-the-icons-material
+              "speaker_notes"
+              :face 'all-the-icons-blue
+              :v-adjust -0.3)
+     :function #'citar-has-notes
+     :padding "  "
+     :tag "has:notes"))
+
+  ;; https://github.com/emacs-citar/citar/wiki/Indicators
+  (setq citar-indicators
+        (list citar-indicator-files-icons
+              citar-indicator-links-icons
+              citar-indicator-notes-icons))
 
   (require 'citar-org-roam)
   (citar-register-notes-source

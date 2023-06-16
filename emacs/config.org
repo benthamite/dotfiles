@@ -13716,6 +13716,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-06-16 Fri 12:47]--[2023-06-16 Fri 13:11] =>  0:24
 CLOCK: [2023-05-28 Sun 09:26]--[2023-05-28 Sun 13:21] =>  3:55
 CLOCK: [2023-05-07 Sun 11:35]--[2023-05-07 Sun 12:45] =>  1:10
 CLOCK: [2023-04-30 Sun 18:51]--[2023-04-30 Sun 18:57] =>  0:06
@@ -13952,7 +13953,7 @@ value is copied to the kill ring."
                          (user-error "Cannot copy an empty field"))))))
 
   :config
-  (setq ebib-preload-bib-files ps/tlon-bibliography-files)
+  (setq ebib-preload-bib-files ps/all-bibliography-files)
   (setq ebib-notes-directory ps/dir-bibliographic-notes)
   (setq ebib-notes-use-org-capture t)
   (setq ebib-notes-display-max-lines 9999)

@@ -14348,6 +14348,16 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       "https://www.goodreads.com/search?q="
       ""))
 
+  (defvar ps/ebib-audible
+    '("Audible"
+      "https://www.audible.com/search?keywords="
+      ""))
+
+  (defvar ps/ebib-audiobookbay
+    '("Audiobook Bay"
+      "https://theaudiobookbay.se/?s="
+      "&tt=1"))
+
   (defvar ps/ebib-imdb
     '("IMDB"
       "https://www.imdb.com/find/?q="
@@ -14373,10 +14383,13 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     "List of functions that search for books.")
 
   (defvar ps/ebib-download-book-functions
-    '(ps/ebib-search-hathitrust
+    '(
+      ;; ps/ebib-search-hathitrust
       ps/ebib-search-internet-archive
-      ps/ebib-search-university-of-toronto
-      ps/ebib-search-library-genesis)
+      ;; ps/ebib-search-university-of-toronto
+      ps/ebib-search-library-genesis
+      ps/ebib-search-audible
+      ps/ebib-search-audiobookbay)
     "List of functions that download books.")
 
   (defvar ps/ebib-search-article-functions
@@ -14385,7 +14398,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     "List of functions that search for articles.")
 
   (defvar ps/ebib-download-article-functions
-    ps/ebib-search-article-functions
+    '(ps/ebib-search-article-functions)
     "List of functions that download articles.")
 
   (defvar ps/ebib-search-film-functions

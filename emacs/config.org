@@ -14886,9 +14886,9 @@ is created following the same schema as notes created with
     (dolist (db ebib--databases)
       (when (ebib-db-modified-p db)
         (ebib--save-database db '(16))))
-    (run-with-timer 10 nil #'ps/ebib-auto-save-databases))
+    (run-with-idle-timer (* 10 60) nil #'ps/ebib-auto-save-databases))
 
-  (run-with-timer 10 nil #'ps/ebib-auto-save-databases)
+  (run-with-idle-timer (* 10 60) nil #'ps/ebib-auto-save-databases)
 
   (defun ps/ebib-auto-reload-databases ()
     "Check if any db file has been modified and reloads the associated Ebib database if so."

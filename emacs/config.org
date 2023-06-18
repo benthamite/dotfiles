@@ -13800,6 +13800,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-06-18 Sun 08:34]--[2023-06-18 Sun 09:19] =>  0:45
 CLOCK: [2023-06-16 Fri 12:47]--[2023-06-16 Fri 13:11] =>  0:24
 CLOCK: [2023-05-28 Sun 09:26]--[2023-05-28 Sun 13:21] =>  3:55
 CLOCK: [2023-05-07 Sun 11:35]--[2023-05-07 Sun 12:45] =>  1:10
@@ -13944,8 +13945,9 @@ The FORCE argument is used as in `ebib-save-current-database'."
          (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
          (ebib--reload-database ebib--cur-db)
          (ebib--set-modified nil ebib--cur-db)
-         ;; this causes point to disappear, so we remove it
-         (el-patch-remove (ebib--update-buffers))
+         ;; make point not disappear
+         (el-patch-swap (ebib--update-buffers)
+                        (save-window-excursion (ebib--update-buffers)))
          (message "Database reloaded")))
       (default
        (beep))))

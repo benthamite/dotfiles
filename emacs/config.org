@@ -13295,7 +13295,9 @@ The correct Biblatex field for this information is
           (widen)
           (goto-char (point-max))
           (newline)
-          (bibtex-yank))
+          (bibtex-yank)
+          (ps/bibtex-add-or-update-field "database" "Tlön")
+          (save-buffer))
         (message "Moved entry %s to %s" key file))))
 
   (defun ps/bibtex-open-in-ebib ()
@@ -13311,6 +13313,32 @@ The correct Biblatex field for this information is
         (ps/ebib-reload-database-no-confirm ebib--cur-db))
       (ebib file key)
       (ebib--pop-to-buffer (ebib--buffer 'entry))))
+
+  (defun ps/bibtex-add-or-update-field (field value)
+    "Add or update FIELD with VALUE in the current BibTeX entry."
+    ;; Check if FIELD exists
+    (unless (bibtex-search-forward-field field)
+      (bibtex-beginning-of-entry)
+      (bibtex-make-field field t t))
+    ;; Update the value of FIELD
+    (let ((field-content (bibtex-autokey-get-field field)))
+      (when field-content
+        (bibtex-set-field field value))))
+
+  (defun ps/bibtex-add-database-field (file)
+    "Iterate over each entry in FILE and add/update the 'database' field.
+Adds the field 'database' to every entry if it doesn't have it
+and sets the value of the field for all entries to 'Tlön'."
+    (interactive "fBibTeX file: ")
+    (with-current-buffer (find-file-noselect file)
+      (save-excursion
+        (bibtex-map-entries
+         (lambda (_key start _end)
+           (save-excursion
+             (goto-char start)
+             (ps/bibtex-add-or-update-field "database" "Tlön")))))
+      ;; Save the updated entries to the file
+      (save-buffer)))
 
   :general
   (bibtex-mode-map

@@ -14156,7 +14156,7 @@ value is copied to the kill ring."
     "Entry types for articles and article-like entities, in both lowercase and sentence case.")
 
   (defvar ps/ebib-film-like-entry-types
-    (let ((lowercase '("movie" "video")))
+    (let ((lowercase '("movie" "video" "tvepisode")))
       (append lowercase (mapcar (lambda (entry)
                                   (concat (upcase (substring entry 0 1))
                                           (substring entry 1)))
@@ -14450,7 +14450,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
 
   (defvar ps/ebib-letterboxd
     '("Letterboxd"
-      "https://letterboxd.com/search/"
+      "https://letterboxd.com/search/films/"
       ""))
 
   (defvar ps/ebib-metacritic
@@ -14985,6 +14985,7 @@ The macro below generates the commands correcty. But attempting to define key bi
 :END:
 
 :LOGBOOK:
+CLOCK: [2023-06-16 Fri 16:53]--[2023-06-16 Fri 17:02] =>  0:09
 CLOCK: [2023-06-13 Tue 06:46]--[2023-06-13 Tue 07:43] =>  0:57
 CLOCK: [2023-06-12 Mon 20:48]--[2023-06-12 Mon 21:25] =>  0:37
 CLOCK: [2023-06-12 Mon 10:36]--[2023-06-12 Mon 10:40] =>  0:04

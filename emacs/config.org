@@ -14987,7 +14987,7 @@ is created following the same schema as notes created with
    "s" 'ps/ebib-sort-toggle))
 #+end_src
 
-The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
+The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
 *** TODO Create functions to interact with Letterboxd, IMDb, Metacritic and Rotten Tomatoes
 :PROPERTIES:

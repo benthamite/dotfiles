@@ -4069,7 +4069,7 @@ one hour only."
           ;; ps/file-cookies url acsm-file acsm-file))))
           ;; (message "ACSM file downloaded successfully.")
           (kill-new url)
-          (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Then run `ps/internet-archive-dwim' to convert it.")
+          (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Open it and then run `ps/internet-archive-dwim' to convert it.")
           )
       (user-error "You forgot to copy the URL!")))
 

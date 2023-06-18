@@ -13342,11 +13342,12 @@ and sets the value of the field for all entries to 'Tlön'."
 
   :general
   (bibtex-mode-map
-   "s-x" 'bibtex-kill-entry
+   "s-a" 'bibtex-set-field
    "s-c" 'bibtex-copy-entry-as-kill
-   "s-v" 'bibtex-yank
-   "s-t" 'ps/bibtex-move-entry-to-tlon
    "s-i" 'ps/bibtex-open-in-ebib
+   "s-t" 'ps/bibtex-move-entry-to-tlon
+   "s-v" 'bibtex-yank
+   "s-x" 'bibtex-kill-entry
    "A-C-H-x" 'bibtex-copy-entry-as-kill
    "A-C-H-c" 'bibtex-kill-entry
    "A-C-H-a" 'bibtex-copy-field-as-kill

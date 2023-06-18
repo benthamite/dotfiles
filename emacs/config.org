@@ -13485,6 +13485,37 @@ citation styles. See specific functions for more detail."
      citekeys
      arg))
 
+  ;; do not insert `prenote' and `postnote'
+  (defun citar-markdown-insert-citation (keys &optional invert-prompt)
+    "Insert a pandoc-style citation consisting of KEYS.
+
+If the point is inside a citation, add new keys after the current
+key.
+
+If point is immediately after the opening \[, add new keys
+to the beginning of the citation.
+
+If INVERT-PROMPT is non-nil, invert the meaning of
+`citar-markdown-prompt-for-extra-arguments'."
+    (let* ((citation (citar-markdown-citation-at-point))
+           (keys (if citation (seq-difference keys (car citation)) keys))
+           (keyconcat (mapconcat (lambda (k) (concat "@" k)) keys "; "))
+           (prompt (xor invert-prompt citar-markdown-prompt-for-extra-arguments)))
+      (when keys
+        (if (or (not citation)
+                (= (point) (cadr citation))
+                (= (point) (cddr citation)))
+            (let* ((prenote (when prompt (read-from-minibuffer "Prenote: ")))
+                   (postnote (when prompt (read-from-minibuffer "Postnote: ")))
+                   (prenote (if (string= "" prenote)  "" (concat prenote " ")))
+                   (postnote (if (string= "" postnote) "" (concat ", " postnote))))
+              (insert (el-patch-swap (format "[%s%s%s]" prenote keyconcat postnote)
+                                     (format "[%s]" keyconcat))))
+          (if (= (point) (1+ (cadr citation)))
+              (save-excursion (insert keyconcat "; "))
+            (skip-chars-forward "^;]" (cddr citation))
+            (insert "; " keyconcat))))))
+
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))
   (setq citar-bibliography ps/all-bibliography-files)
@@ -13492,6 +13523,7 @@ citation styles. See specific functions for more detail."
   (setq citar-at-point-function 'embark-act)
   (setq citar-symbol-separator "  ")
   (setq citar-format-reference-function 'citar-citeproc-format-reference)
+  (setq citar-markdown-prompt-for-extra-arguments nil)
 
   (defvar citar-indicator-files-icons
     (citar-indicator-create

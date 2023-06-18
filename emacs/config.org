@@ -13580,6 +13580,13 @@ If INVERT-PROMPT is non-nil, invert the meaning of
       (ebib))
     (ps/ebib-open-key citekey))
 
+  (defun ps/citar-move-entry-to-tlon (citekey)
+    "Move bibliographic entry associated with the CITEKEY to the Tlön bibliography."
+    (interactive (list (citar-select-ref)))
+    (save-window-excursion
+      (ps/citar-goto-bibtex-entry citekey)
+      (ps/bibtex-move-entry-to-tlon)))
+
   (defun ps/citar-goto-bibtex-entry (citekey)
     "Goto the bibliographic entry associated with the CITEKEY in the bibtex file."
     (interactive (list (citar-select-ref)))
@@ -13615,6 +13622,7 @@ If INVERT-PROMPT is non-nil, invert the meaning of
       "d" 'ps/ebib-download-dwim
       "i" 'ps/citar-open-in-ebib
       "s" 'ps/ebib-search-dwim
+      "t" 'ps/citar-move-entry-to-tlon
       "u" 'citar-open-links))))
 #+end_src
 

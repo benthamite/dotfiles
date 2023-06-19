@@ -13291,6 +13291,7 @@ The correct Biblatex field for this information is
         (user-error "You are already visiting `%s'!" file))
       (when-let ((key (ps/bibtex-get-key)))
         (bibtex-kill-entry)
+	(save-buffer)
         (with-current-buffer (find-file-noselect file)
           (widen)
           (goto-char (point-max))

@@ -14933,12 +14933,12 @@ is created following the same schema as notes created with
     (dolist (db ebib--databases)
       (when (ebib-db-modified-p db)
         (ebib--save-database db '(16))))
-    (run-with-idle-timer (* 10 60) nil #'ps/ebib-auto-save-databases))
+    (run-with-timer 10 nil #'ps/ebib-auto-save-databases))
 
-  (run-with-idle-timer (* 10 60) nil #'ps/ebib-auto-save-databases)
+  (run-with-timer 10 nil #'ps/ebib-auto-save-databases)
 
   (defun ps/ebib-auto-reload-databases ()
-    "Check if any db file has been modified and reloads the associated Ebib database if so."
+    "Check if any db file has been modified and reload the associated Ebib database if so."
     (dolist (db ebib--databases)
       (file-notify-add-watch
        (ebib-db-get-filename db)
@@ -14947,7 +14947,7 @@ is created following the same schema as notes created with
          (message "reloading database")
          (ps/ebib-reload-database-no-confirm db)))))
 
-  ;; (advice-add 'ebib :after #'ps/ebib-auto-reload-databases)
+  (advice-add 'ebib-init :after #'ps/ebib-auto-reload-databases)
 
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)

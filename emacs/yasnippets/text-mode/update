@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: update
+# key: u
+# contributor: Pablo Stafforini
+# --
+Update `(tlon-bae-magit-get-filename)`

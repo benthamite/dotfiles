@@ -13643,6 +13643,7 @@ If INVERT-PROMPT is non-nil, invert the meaning of
     (interactive (list (citar-select-ref)))
     (let ((file (ps/ebib-get-file-of-key citekey)))
       (find-file file)
+      (widen)
       (goto-char (point-min))
       (re-search-forward (format "@.*?{%s" citekey))))
 

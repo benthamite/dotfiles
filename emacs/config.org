@@ -16673,10 +16673,11 @@ To be used by `eww-after-render-hook'."
   (defun ps/eww-url-to-pdf (&optional url)
     "Generate PDF of URL."
     (interactive)
-    (require 'org-web-tools)
     (let* ((url (or url
                     (when (eq major-mode 'eww-mode)
                       (eww-current-url))
+                    (when (eq major-mode 'ebib-entry-mode)
+                      (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
                     (read-string "URL: ")))
            (title (ps/org-web-tools--org-title-for-url url))
            (slug (org-hugo-slug title))
@@ -16696,6 +16697,8 @@ To be used by `eww-after-render-hook'."
     (let* ((url (or url
                     (when (eq major-mode 'eww-mode)
                       (eww-current-url))
+                    (when (eq major-mode 'ebib-entry-mode)
+                      (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
                     (read-string "URL: ")))
            (title (ps/org-web-tools--org-title-for-url url))
            (slug (org-hugo-slug title))

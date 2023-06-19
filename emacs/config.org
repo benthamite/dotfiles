@@ -14846,9 +14846,9 @@ The list of article download functions is specified by
 
   (defun ps/ebib-open-key (key)
     "Open the entry for KEY in Ebib."
-    (if-let ((file (ps/ebib-get-file-of-key key)))
-        (ebib file key)
-      (ebib--error "Key not found in any database")))
+    (when-let ((file (ps/ebib-get-file-of-key key)))
+      (ebib file key)
+      (ebib-edit-entry)))
 
   (defvar ps/ebib-sort-toggle 'Title)
 

@@ -13291,6 +13291,7 @@ The correct Biblatex field for this information is
         (user-error "You are already visiting `%s'!" file))
       (when-let ((key (ps/bibtex-get-key)))
         (bibtex-kill-entry)
+	(save-buffer)
         (with-current-buffer (find-file-noselect file)
           (widen)
           (goto-char (point-max))
@@ -13399,6 +13400,51 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
 #+begin_src emacs-lisp :results silent
 (use-package bibtex-completion
   :defer 5
+  :config/el-patch
+  ;; disable file watchers
+  (defun bibtex-completion-init ()
+    "Check that the files and directories specified by the user actually exist.
+Also sets `bibtex-completion-display-formats-internal'."
+
+    ;; Remove current watch-descriptors for bibliography files:
+    (mapc (lambda (watch-descriptor)
+            (file-notify-rm-watch watch-descriptor))
+          bibtex-completion-file-watch-descriptors)
+    (setq bibtex-completion-file-watch-descriptors nil)
+
+    ;; Check that all specified bibliography files exist and add file
+    ;; watches for automatic reloading of the bibliography when a file
+    ;; is changed:
+    (el-patch-remove (mapc (lambda (file)
+			     (if (f-file? file)
+				 (let ((watch-descriptor
+					(file-notify-add-watch file
+							       '(change)
+							       (lambda (event) (bibtex-completion-candidates)))))
+				   (setq bibtex-completion-file-watch-descriptors
+					 (cons watch-descriptor bibtex-completion-file-watch-descriptors)))
+			       (user-error "Bibliography file %s could not be found" file)))
+			   (bibtex-completion-normalize-bibliography)))
+
+    ;; Pre-calculate minimal widths needed by the format strings for
+    ;; various entry types:
+    (setq bibtex-completion-display-formats-internal
+          (mapcar (lambda (format)
+                    (let* ((format-string (cdr format))
+                           (fields-width 0)
+                           (string-width
+                            (string-width
+                             (s-format format-string
+                                       (lambda (field)
+					 (setq fields-width
+                                               (+ fields-width
+                                                  (string-to-number
+                                                   (or (cadr (split-string field ":"))
+                                                       ""))))
+					 "")))))
+                      (-cons* (car format) format-string (+ fields-width string-width))))
+                  bibtex-completion-display-formats)))
+  
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)
   (setq bibtex-completion-bibliography ps/all-bibliography-files)
@@ -13462,7 +13508,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
          :includes (citar-org))
   :after oc vertico embark marginalia
   :demand t
-  :config/el-patch
+  :init/el-patch
   ;; Remove conditional to allow invocation
   ;; in any mode. Even if inserting a citation is not allowed, one may
   ;; want to invoke the command to trigger contextual actions via
@@ -13597,6 +13643,7 @@ If INVERT-PROMPT is non-nil, invert the meaning of
     (interactive (list (citar-select-ref)))
     (let ((file (ps/ebib-get-file-of-key citekey)))
       (find-file file)
+      (widen)
       (goto-char (point-min))
       (re-search-forward (format "@.*?{%s" citekey))))
 
@@ -14057,7 +14104,7 @@ value is copied to the kill ring."
                              ("Year" 4 t)
                              ("Title" 50 t)))
   (setq ebib-extra-fields
-        '((biblatex "abstract" "keywords" "langid" "translation" "narrator" "file" "timestamp" "rating")
+        '((biblatex "abstract" "keywords" "langid" "translation" "narrator" "file" "timestamp" "rating" "=key=")
           (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
 
   ;; unhide some fields
@@ -14799,9 +14846,9 @@ The list of article download functions is specified by
 
   (defun ps/ebib-open-key (key)
     "Open the entry for KEY in Ebib."
-    (if-let ((file (ps/ebib-get-file-of-key key)))
-        (ebib file key)
-      (ebib--error "Key not found in any database")))
+    (when-let ((file (ps/ebib-get-file-of-key key)))
+      (ebib file key)
+      (ebib-edit-entry)))
 
   (defvar ps/ebib-sort-toggle 'Title)
 
@@ -14886,12 +14933,12 @@ is created following the same schema as notes created with
     (dolist (db ebib--databases)
       (when (ebib-db-modified-p db)
         (ebib--save-database db '(16))))
-    (run-with-idle-timer (* 10 60) nil #'ps/ebib-auto-save-databases))
+    (run-with-timer 10 nil #'ps/ebib-auto-save-databases))
 
-  (run-with-idle-timer (* 10 60) nil #'ps/ebib-auto-save-databases)
+  (run-with-timer 10 nil #'ps/ebib-auto-save-databases)
 
   (defun ps/ebib-auto-reload-databases ()
-    "Check if any db file has been modified and reloads the associated Ebib database if so."
+    "Check if any db file has been modified and reload the associated Ebib database if so."
     (dolist (db ebib--databases)
       (file-notify-add-watch
        (ebib-db-get-filename db)
@@ -14900,7 +14947,7 @@ is created following the same schema as notes created with
          (message "reloading database")
          (ps/ebib-reload-database-no-confirm db)))))
 
-  ;; (advice-add 'ebib :after #'ps/ebib-auto-reload-databases)
+  (advice-add 'ebib-init :after #'ps/ebib-auto-reload-databases)
 
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
@@ -14933,6 +14980,29 @@ is created following the same schema as notes created with
       (if (member author-to-check ps/ebib-existing-authors)
           (message "Author found in the database!")
         (message "Warning: Author not found in the database!"))))
+
+  (defun ps/ebib-set-rating (&optional rating)
+    "Set rating of current entry to RATING.
+If applicable, open external website to set rating there as well."
+    (interactive)
+    (let ((rating (ps/ebib-choose-rating))
+	  (supertype (ps/ebib-get-supertype))
+	  (query (ps/ebib-get-query-field)))
+      (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db)
+      (pcase supertype
+	(`book (ps/ebib-set-goodreads-rating query rating))
+	(`film (ps/ebib-set-arxiv-rating query rating))
+	(_ (message "No rating website for supertype %s" supertype)))))
+
+  (defun ps/ebib-choose-rating ()
+    (interactive)
+    "Prompt for a rating from 1 to 10 and return the choice."
+    (let* ((ratings '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?0))
+	   (rating (char-to-string (read-char-choice "Rating (1–10): " ratings)))))
+    (when (eq rating ?0)
+      (setq rating "10"))
+    rating)
+  
   :general
   ("A-i" 'ps/ebib-open-or-switch)
   (ebib-multiline-mode-map
@@ -16603,10 +16673,11 @@ To be used by `eww-after-render-hook'."
   (defun ps/eww-url-to-pdf (&optional url)
     "Generate PDF of URL."
     (interactive)
-    (require 'org-web-tools)
     (let* ((url (or url
                     (when (eq major-mode 'eww-mode)
                       (eww-current-url))
+                    (when (eq major-mode 'ebib-entry-mode)
+                      (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
                     (read-string "URL: ")))
            (title (ps/org-web-tools--org-title-for-url url))
            (slug (org-hugo-slug title))
@@ -16626,6 +16697,8 @@ To be used by `eww-after-render-hook'."
     (let* ((url (or url
                     (when (eq major-mode 'eww-mode)
                       (eww-current-url))
+                    (when (eq major-mode 'ebib-entry-mode)
+                      (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
                     (read-string "URL: ")))
            (title (ps/org-web-tools--org-title-for-url url))
            (slug (org-hugo-slug title))

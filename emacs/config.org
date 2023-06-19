@@ -13508,7 +13508,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
          :includes (citar-org))
   :after oc vertico embark marginalia
   :demand t
-  :config/el-patch
+  :init/el-patch
   ;; Remove conditional to allow invocation
   ;; in any mode. Even if inserting a citation is not allowed, one may
   ;; want to invoke the command to trigger contextual actions via

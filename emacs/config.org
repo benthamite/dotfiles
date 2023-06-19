@@ -4069,7 +4069,7 @@ one hour only."
           ;; ps/file-cookies url acsm-file acsm-file))))
           ;; (message "ACSM file downloaded successfully.")
           (kill-new url)
-          (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Then run `ps/internet-archive-dwim' to convert it.")
+          (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Open it and then run `ps/internet-archive-dwim' to convert it.")
           )
       (user-error "You forgot to copy the URL!")))
 
@@ -13295,7 +13295,9 @@ The correct Biblatex field for this information is
           (widen)
           (goto-char (point-max))
           (newline)
-          (bibtex-yank))
+          (bibtex-yank)
+          (ps/bibtex-add-or-update-field "database" "Tlön")
+          (save-buffer))
         (message "Moved entry %s to %s" key file))))
 
   (defun ps/bibtex-open-in-ebib ()
@@ -13312,13 +13314,40 @@ The correct Biblatex field for this information is
       (ebib file key)
       (ebib--pop-to-buffer (ebib--buffer 'entry))))
 
+  (defun ps/bibtex-add-or-update-field (field value)
+    "Add or update FIELD with VALUE in the current BibTeX entry."
+    ;; Check if FIELD exists
+    (unless (bibtex-search-forward-field field)
+      (bibtex-beginning-of-entry)
+      (bibtex-make-field field t t))
+    ;; Update the value of FIELD
+    (let ((field-content (bibtex-autokey-get-field field)))
+      (when field-content
+        (bibtex-set-field field value))))
+
+  (defun ps/bibtex-add-database-field (file)
+    "Iterate over each entry in FILE and add/update the 'database' field.
+Adds the field 'database' to every entry if it doesn't have it
+and sets the value of the field for all entries to 'Tlön'."
+    (interactive "fBibTeX file: ")
+    (with-current-buffer (find-file-noselect file)
+      (save-excursion
+        (bibtex-map-entries
+         (lambda (_key start _end)
+           (save-excursion
+             (goto-char start)
+             (ps/bibtex-add-or-update-field "database" "Tlön")))))
+      ;; Save the updated entries to the file
+      (save-buffer)))
+
   :general
   (bibtex-mode-map
-   "s-x" 'bibtex-kill-entry
+   "s-a" 'bibtex-set-field
    "s-c" 'bibtex-copy-entry-as-kill
-   "s-v" 'bibtex-yank
-   "s-t" 'ps/bibtex-move-entry-to-tlon
    "s-i" 'ps/bibtex-open-in-ebib
+   "s-t" 'ps/bibtex-move-entry-to-tlon
+   "s-v" 'bibtex-yank
+   "s-x" 'bibtex-kill-entry
    "A-C-H-x" 'bibtex-copy-entry-as-kill
    "A-C-H-c" 'bibtex-kill-entry
    "A-C-H-a" 'bibtex-copy-field-as-kill
@@ -13456,6 +13485,37 @@ citation styles. See specific functions for more detail."
      citekeys
      arg))
 
+  ;; do not insert `prenote' and `postnote'
+  (defun citar-markdown-insert-citation (keys &optional invert-prompt)
+    "Insert a pandoc-style citation consisting of KEYS.
+
+If the point is inside a citation, add new keys after the current
+key.
+
+If point is immediately after the opening \[, add new keys
+to the beginning of the citation.
+
+If INVERT-PROMPT is non-nil, invert the meaning of
+`citar-markdown-prompt-for-extra-arguments'."
+    (let* ((citation (citar-markdown-citation-at-point))
+           (keys (if citation (seq-difference keys (car citation)) keys))
+           (keyconcat (mapconcat (lambda (k) (concat "@" k)) keys "; "))
+           (prompt (xor invert-prompt citar-markdown-prompt-for-extra-arguments)))
+      (when keys
+        (if (or (not citation)
+                (= (point) (cadr citation))
+                (= (point) (cddr citation)))
+            (let* ((prenote (when prompt (read-from-minibuffer "Prenote: ")))
+                   (postnote (when prompt (read-from-minibuffer "Postnote: ")))
+                   (prenote (if (string= "" prenote)  "" (concat prenote " ")))
+                   (postnote (if (string= "" postnote) "" (concat ", " postnote))))
+              (insert (el-patch-swap (format "[%s%s%s]" prenote keyconcat postnote)
+                                     (format "[%s]" keyconcat))))
+          (if (= (point) (1+ (cadr citation)))
+              (save-excursion (insert keyconcat "; "))
+            (skip-chars-forward "^;]" (cddr citation))
+            (insert "; " keyconcat))))))
+
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))
   (setq citar-bibliography ps/all-bibliography-files)
@@ -13463,6 +13523,12 @@ citation styles. See specific functions for more detail."
   (setq citar-at-point-function 'embark-act)
   (setq citar-symbol-separator "  ")
   (setq citar-format-reference-function 'citar-citeproc-format-reference)
+  (setq citar-markdown-prompt-for-extra-arguments nil)
+
+  (setq citar-templates '((main . "${author editor:30%sn}     ${date year issued:4}     ${title:48} ${database:10}")
+                          (suffix . "          ${=key= id:15}    ${=type=:12}")
+                          (preview . "${author editor:%etal} (${year issued date}) ${title}, ${journal journaltitle publisher container-title collection-title}.\n")
+                          (note . "Notes on ${author editor:%etal}, ${title}")))
 
   (defvar citar-indicator-files-icons
     (citar-indicator-create
@@ -13519,6 +13585,13 @@ citation styles. See specific functions for more detail."
       (ebib))
     (ps/ebib-open-key citekey))
 
+  (defun ps/citar-move-entry-to-tlon (citekey)
+    "Move bibliographic entry associated with the CITEKEY to the Tlön bibliography."
+    (interactive (list (citar-select-ref)))
+    (save-window-excursion
+      (ps/citar-goto-bibtex-entry citekey)
+      (ps/bibtex-move-entry-to-tlon)))
+
   (defun ps/citar-goto-bibtex-entry (citekey)
     "Goto the bibliographic entry associated with the CITEKEY in the bibtex file."
     (interactive (list (citar-select-ref)))
@@ -13554,6 +13627,7 @@ citation styles. See specific functions for more detail."
       "d" 'ps/ebib-download-dwim
       "i" 'ps/citar-open-in-ebib
       "s" 'ps/ebib-search-dwim
+      "t" 'ps/citar-move-entry-to-tlon
       "u" 'citar-open-links))))
 #+end_src
 
@@ -13726,6 +13800,7 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-06-18 Sun 08:34]--[2023-06-18 Sun 09:19] =>  0:45
 CLOCK: [2023-06-16 Fri 12:47]--[2023-06-16 Fri 13:11] =>  0:24
 CLOCK: [2023-05-28 Sun 09:26]--[2023-05-28 Sun 13:21] =>  3:55
 CLOCK: [2023-05-07 Sun 11:35]--[2023-05-07 Sun 12:45] =>  1:10
@@ -13870,8 +13945,9 @@ The FORCE argument is used as in `ebib-save-current-database'."
          (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
          (ebib--reload-database ebib--cur-db)
          (ebib--set-modified nil ebib--cur-db)
-         ;; this causes point to disappear, so we remove it
-         (el-patch-remove (ebib--update-buffers))
+         ;; make point not disappear
+         (el-patch-swap (ebib--update-buffers)
+                        (save-window-excursion (ebib--update-buffers)))
          (message "Database reloaded")))
       (default
        (beep))))
@@ -14005,7 +14081,6 @@ value is copied to the kill ring."
 
   (defun ps/ebib-reload-database-no-confirm (db)
     "Reload the database DB from disk, without asking for confirmation."
-    (interactive)
     (ebib--execute-when
       (entries
        (unless (and (ebib-db-modified-p db)
@@ -14081,7 +14156,7 @@ value is copied to the kill ring."
     "Entry types for articles and article-like entities, in both lowercase and sentence case.")
 
   (defvar ps/ebib-film-like-entry-types
-    (let ((lowercase '("movie" "video")))
+    (let ((lowercase '("movie" "video" "tvepisode")))
       (append lowercase (mapcar (lambda (entry)
                                   (concat (upcase (substring entry 0 1))
                                           (substring entry 1)))
@@ -14375,7 +14450,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
 
   (defvar ps/ebib-letterboxd
     '("Letterboxd"
-      "https://letterboxd.com/search/"
+      "https://letterboxd.com/search/films/"
       ""))
 
   (defvar ps/ebib-metacritic
@@ -14468,27 +14543,37 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     (interactive)
     (ps/ebib--search-or-download-dwim 'search))
 
+  (defun ps/ebib-get-supertype ()
+    "Return the supertype of the current entry."
+    (let* ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point)
+                                       ebib--cur-db))
+           (supertype (cond
+                       ((member type ps/ebib-book-like-entry-types)
+                        "book")
+                       ((member type ps/ebib-article-like-entry-types)
+                        "article")
+                       ((member type ps/ebib-film-like-entry-types)
+                        "film")
+                       (t
+                        (user-error "Entry type `%s' not supported" type)))))
+      supertype))
+
+  (defun ps/ebib-get-query-field ()
+    "Return the field based on whose value the search query will be run.."
+    (let ((query (if (string= (ebib--current-field) "title")
+                     "title"
+                   "identifier")))
+      query))
+
   (defun ps/ebib--search-or-download-dwim (action)
-    "Perform ACTION on the current entry, depending on field at point.
+    "Perform ACTION (search or download) on the current entry, depending on field at point.
 If point is on field `title', perform ACTION based on its value.
 Else perform ACTION based on the value of its identifier (`doi'
 or `isbn')."
-    (let ((subtype (ebib-get-field-value "=type=" (ebib--get-key-at-point)
-                                         ebib--cur-db)))
-      (let* ((type (cond
-                    ((member subtype ps/ebib-book-like-entry-types)
-                     "book")
-                    ((member subtype ps/ebib-article-like-entry-types)
-                     "article")
-                    ((member subtype ps/ebib-film-like-entry-types)
-                     "film")
-                    (t
-                     (user-error "Entry type `%s' not supported" subtype))))
-             (query (if (string= (ebib--current-field) "title")
-                        "title"
-                      "identifier"))
-             (fun (intern (format "ps/ebib-%s-%s-by-%s" action type query))))
-        (funcall fun))))
+    (let* ((supertype (ps/ebib-get-supertype))
+           (query (ps/ebib-get-query-field))
+           (fun (intern (format "ps/ebib-%s-%s-by-%s" action supertype query))))
+      (funcall fun)))
 
   (defun ps/ebib-search-book (query)
     "Search for QUERY with the relevant book search functions.
@@ -14801,9 +14886,9 @@ is created following the same schema as notes created with
     (dolist (db ebib--databases)
       (when (ebib-db-modified-p db)
         (ebib--save-database db '(16))))
-    (run-with-timer 10 nil #'ps/ebib-auto-save-databases))
+    (run-with-idle-timer (* 10 60) nil #'ps/ebib-auto-save-databases))
 
-  (run-with-timer 10 nil #'ps/ebib-auto-save-databases)
+  (run-with-idle-timer (* 10 60) nil #'ps/ebib-auto-save-databases)
 
   (defun ps/ebib-auto-reload-databases ()
     "Check if any db file has been modified and reloads the associated Ebib database if so."
@@ -14902,7 +14987,7 @@ is created following the same schema as notes created with
    "s" 'ps/ebib-sort-toggle))
 #+end_src
 
-The macro below generates the commands correcty. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
+The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
 *** TODO Create functions to interact with Letterboxd, IMDb, Metacritic and Rotten Tomatoes
 :PROPERTIES:
@@ -14910,6 +14995,7 @@ The macro below generates the commands correcty. But attempting to define key bi
 :END:
 
 :LOGBOOK:
+CLOCK: [2023-06-16 Fri 16:53]--[2023-06-16 Fri 17:02] =>  0:09
 CLOCK: [2023-06-13 Tue 06:46]--[2023-06-13 Tue 07:43] =>  0:57
 CLOCK: [2023-06-12 Mon 20:48]--[2023-06-12 Mon 21:25] =>  0:37
 CLOCK: [2023-06-12 Mon 10:36]--[2023-06-12 Mon 10:40] =>  0:04
@@ -18735,6 +18821,8 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-personal-bibliography-new . (file-name-concat ps/dir-personal-bibliography "new.bib"))
  (ps/file-tlon-bibliography-old . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/old.bib"))
  (ps/file-tlon-bibliography-new . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/new.bib"))
+ (ps/file-tlon-bibliography-finished . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/finished.bib"))
+ (ps/file-tlon-bibliography-pending . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/pending.bib"))
  (ps/file-wiki-notes . (file-name-concat ps/dir-wiki "wiki-notes.org"))
  (ps/file-wiki-published . (file-name-concat ps/dir-wiki "wiki-published.org"))
  (ps/file-wiki-help . (file-name-concat ps/dir-wiki "wiki-help.org"))
@@ -18765,7 +18853,10 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-tlon-docs-bae . (file-name-concat ps/dir-tlon-docs "BAE.org"))
  (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
  (ps/personal-bibliography-files . (list ps/file-personal-bibliography-new ps/file-personal-bibliography-old))
- (ps/tlon-bibliography-files . (list ps/file-tlon-bibliography-new ps/file-tlon-bibliography-old))
+ (ps/tlon-bibliography-files . (list ps/file-tlon-bibliography-new
+                                     ps/file-tlon-bibliography-old
+                                     ps/file-tlon-bibliography-finished
+                                     ps/file-tlon-bibliography-pending))
  (ps/all-bibliography-files . (append ps/personal-bibliography-files ps/tlon-bibliography-files))
  (ps/face-fixed-pitch . "SauceCodePro Nerd Font")
  (ps/face-fixed-pitch-size .  115)

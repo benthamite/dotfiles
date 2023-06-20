@@ -6843,8 +6843,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
              :repo "protesilaos/substitute")
   :demand t
   :general
-  (isearch-mode-map
-   "C-t" 'substitute-target-in-buffer))
+   ("A-H-s" 'substitute-target-in-buffer))
 #+end_src
 
 ** visual-regexp

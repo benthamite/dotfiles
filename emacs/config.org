@@ -5962,7 +5962,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
    "s-g" 'hydra-org-gcal/body))
 #+end_src
 *** TODO Set asymmetric key to minimize password prompts
-SCHEDULED: <2023-06-16 Fri>
+SCHEDULED: <2023-06-20 Tue>
 :PROPERTIES:
 :ID:       063A663C-1865-4451-80A8-0BD3B188FBA2
 :END:
@@ -13441,15 +13441,15 @@ Also sets `bibtex-completion-display-formats-internal'."
     ;; watches for automatic reloading of the bibliography when a file
     ;; is changed:
     (el-patch-remove (mapc (lambda (file)
-			     (if (f-file? file)
-				 (let ((watch-descriptor
-					(file-notify-add-watch file
-							       '(change)
-							       (lambda (event) (bibtex-completion-candidates)))))
-				   (setq bibtex-completion-file-watch-descriptors
-					 (cons watch-descriptor bibtex-completion-file-watch-descriptors)))
-			       (user-error "Bibliography file %s could not be found" file)))
-			   (bibtex-completion-normalize-bibliography)))
+                             (if (f-file? file)
+                                 (let ((watch-descriptor
+                                        (file-notify-add-watch file
+                                                               '(change)
+                                                               (lambda (event) (bibtex-completion-candidates)))))
+                                   (setq bibtex-completion-file-watch-descriptors
+                                         (cons watch-descriptor bibtex-completion-file-watch-descriptors)))
+                               (user-error "Bibliography file %s could not be found" file)))
+                           (bibtex-completion-normalize-bibliography)))
 
     ;; Pre-calculate minimal widths needed by the format strings for
     ;; various entry types:
@@ -13461,15 +13461,15 @@ Also sets `bibtex-completion-display-formats-internal'."
                             (string-width
                              (s-format format-string
                                        (lambda (field)
-					 (setq fields-width
+                                         (setq fields-width
                                                (+ fields-width
                                                   (string-to-number
                                                    (or (cadr (split-string field ":"))
                                                        ""))))
-					 "")))))
+                                         "")))))
                       (-cons* (car format) format-string (+ fields-width string-width))))
                   bibtex-completion-display-formats)))
-  
+
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)
   (setq bibtex-completion-bibliography ps/all-bibliography-files)
@@ -13533,6 +13533,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
          :includes (citar-org))
   :after oc vertico embark marginalia
   :demand t
+
   :init/el-patch
   ;; Remove conditional to allow invocation
   ;; in any mode. Even if inserting a citation is not allowed, one may

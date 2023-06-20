@@ -15045,6 +15045,16 @@ If applicable, open external website to set rating there as well."
       (setq rating "10"))
     rating)
   
+
+  (defun ps/ebib-move-entry-to-tlon ()
+    "Move bibliographic entry associated with the key at point to the Tlön bibliography."
+    (interactive)
+    (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
+      (ps/citar-goto-bibtex-entry key)
+      (ps/bibtex-move-entry-to-tlon)
+      (ebib ps/file-tlon-bibliography-new key)
+      (ps/ebib-open-key key)))
+
   :general
   ("A-i" 'ps/ebib-open-or-switch)
   (ebib-multiline-mode-map

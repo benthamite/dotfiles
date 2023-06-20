@@ -15028,23 +15028,22 @@ The list of files to be watched is defined in `ps/ebib-auto-save-files'."
 If applicable, open external website to set rating there as well."
     (interactive)
     (let ((rating (ps/ebib-choose-rating))
-	  (supertype (ps/ebib-get-supertype))
-	  (query (ps/ebib-get-query-field)))
+          (supertype (ps/ebib-get-supertype))
+          (query (ps/ebib-get-query-field)))
       (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db)
       (pcase supertype
-	(`book (ps/ebib-set-goodreads-rating query rating))
-	(`film (ps/ebib-set-arxiv-rating query rating))
-	(_ (message "No rating website for supertype %s" supertype)))))
+        (`book (ps/ebib-set-goodreads-rating query rating))
+        (`film (ps/ebib-set-arxiv-rating query rating))
+        (_ (message "No rating website for supertype %s" supertype)))))
 
   (defun ps/ebib-choose-rating ()
     (interactive)
     "Prompt for a rating from 1 to 10 and return the choice."
     (let* ((ratings '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?0))
-	   (rating (char-to-string (read-char-choice "Rating (1–10): " ratings)))))
+           (rating (char-to-string (read-char-choice "Rating (1–10): " ratings)))))
     (when (eq rating ?0)
       (setq rating "10"))
     rating)
-  
 
   (defun ps/ebib-move-entry-to-tlon ()
     "Move bibliographic entry associated with the key at point to the Tlön bibliography."

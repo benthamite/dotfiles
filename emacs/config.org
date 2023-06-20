@@ -14953,24 +14953,38 @@ is created following the same schema as notes created with
       (default
        (beep))))
 
-  (defun ps/ebib-auto-save-databases ()
-    "Check if any Ebib database has been modified and save it to its file if so."
-    (dolist (db ebib--databases)
-      (when (ebib-db-modified-p db)
-        (ebib--save-database db '(16))))
-    (run-with-timer 10 nil #'ps/ebib-auto-save-databases))
+  (defvar ps/ebib-auto-save-files
+    (list ps/file-personal-bibliography-new
+          ps/file-tlon-bibliography-new
+          ps/file-tlon-bibliography-finished
+          ps/file-tlon-bibliography-pending)
+    "List of database files that should be auto-saved.
+The big files containing the 'old' bibliographic entries are excluded.")
 
-  (run-with-timer 10 nil #'ps/ebib-auto-save-databases)
+  (defun ps/ebib-auto-save-databases ()
+    "Check if any Ebib database has been modified and save it to its file if so.
+The list of files to be watched is defined in `ps/ebib-auto-save-files'."
+    (dolist (db ebib--databases)
+      (let ((db-file (ebib-db-get-filename db)))
+        (when (and (member db-file ps/ebib-auto-save-files)
+                   (ebib-db-modified-p db))
+          (ebib--save-database db '(16)))))
+    (run-with-timer 1 nil #'ps/ebib-auto-save-databases))
+
+  (run-with-timer 1 nil #'ps/ebib-auto-save-databases)
 
   (defun ps/ebib-auto-reload-databases ()
-    "Check if any db file has been modified and reload the associated Ebib database if so."
+    "Check if any db file has been modified and reload the associated Ebib database if so.
+The list of files to be watched is defined in `ps/ebib-auto-save-files'."
     (dolist (db ebib--databases)
-      (file-notify-add-watch
-       (ebib-db-get-filename db)
-       '(change attribute-change)
-       (lambda (event)
-         (message "reloading database")
-         (ps/ebib-reload-database-no-confirm db)))))
+      (let ((db-file (ebib-db-get-filename db)))
+        (when (member db-file ps/ebib-auto-save-files)
+          (file-notify-add-watch
+           db-file
+           '(change attribute-change)
+           (lambda (event)
+             (message "reloading database")
+             (ps/ebib-reload-database-no-confirm db)))))))
 
   (advice-add 'ebib-init :after #'ps/ebib-auto-reload-databases)
 
@@ -14981,7 +14995,10 @@ is created following the same schema as notes created with
     `((,ps/file-personal-bibliography-new . 1)
       (,ps/file-personal-bibliography-old . 2)
       (,ps/file-tlon-bibliography-new . 3)
-      (,ps/file-tlon-bibliography-old . 4)))
+      (,ps/file-tlon-bibliography-old . 4)
+      (,ps/file-tlon-bibliography-finished . 5)
+      (,ps/file-tlon-bibliography-pending . 6))
+    "Association list of database files and their numbers.")
 
   (defun ps/ebib-get-db-number (file)
     "Get database number for FILE."

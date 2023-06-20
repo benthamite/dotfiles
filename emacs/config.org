@@ -83,6 +83,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#server][server]]
   - [[#async][async]]
   - [[#emacsql][emacsql]]
+  - [[#prot-common][prot-common]]
   - [[#misc][misc.]]
 - [[#display][display]]
   - [[#mixed-pitch][mixed-pitch]]
@@ -418,6 +419,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#shr-heading][shr-heading]]
   - [[#url-parse][url-parse]]
   - [[#eww][eww]]
+  - [[#prot-eww][prot-eww]]
   - [[#w3m][w3m]]
   - [[#elfeed][elfeed]]
   - [[#elfeed-org][elfeed-org]]
@@ -1642,6 +1644,28 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 
 #+begin_src emacs-lisp
 (use-package emacsql
+  :demand t)
+#+end_src
+
+** prot-common
+:PROPERTIES:
+:ID:       300DFB2C-878E-4F21-833C-327C9DFDC01B
+:END:
+
+/[[https://git.sr.ht/~protesilaos/dotfiles/tree/master/item/emacs/%2Eemacs.d/prot-lisp/prot-common.el][prot-common]] is a set of functions used by Protesilaos Stavrou's unreleased "packages"./
+
+Note Prot's clarification:
+
+#+begin_quote
+Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
+#+end_quote
+
+#+begin_src emacs-lisp
+(use-package prot-common
+  :elpaca (prot-common
+           :host sourcehut
+           :repo "protesilaos/dotfiles"
+           :files ("emacs/.emacs.d/prot-lisp/prot-common.el"))
   :demand t)
 #+end_src
 
@@ -5938,7 +5962,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
    "s-g" 'hydra-org-gcal/body))
 #+end_src
 *** TODO Set asymmetric key to minimize password prompts
-SCHEDULED: <2023-06-16 Fri>
+SCHEDULED: <2023-06-20 Tue>
 :PROPERTIES:
 :ID:       063A663C-1865-4451-80A8-0BD3B188FBA2
 :END:
@@ -6227,11 +6251,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
     (setq ediff-word-mode (not ediff-word-mode))
     (ediff-update-diffs))
 
-  (add-hook 'ediff-startup-hook #'ps/ediff-startup-hook)
-
-  (defun ps/ediff-startup-hook ()
-    "Custom `ediff-startup-hook' behaviours."
-    (ps/ediff-toggle-word-mode))
+  (add-hook 'ediff-startup-hook #'ps/ediff-toggle-word-mode)
 
   :general
   ("A-d" 'ediff))
@@ -6823,8 +6843,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
              :repo "protesilaos/substitute")
   :demand t
   :general
-  (isearch-mode-map
-   "C-t" 'substitute-target-in-buffer))
+   ("A-H-s" 'substitute-target-in-buffer))
 #+end_src
 
 ** visual-regexp
@@ -6986,7 +7005,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
 
 #+begin_src emacs-lisp :results silent
 (use-package embark
-  :defer 8
+  :demand t
   :config
 
   (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
@@ -12969,7 +12988,7 @@ ARG is the prefix argument received when calling interactively the function."
            ))))))
 
   :config
-  (setq org-cite-global-bibliography ps/all-bibliography-files)
+  ;; (setq org-cite-global-bibliography ps/all-bibliography-files)
   (setq org-cite-csl-styles-dir ps/dir-personal-csl-styles)
   (setq org-cite-csl-locales-dir ps/dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
@@ -13291,7 +13310,7 @@ The correct Biblatex field for this information is
         (user-error "You are already visiting `%s'!" file))
       (when-let ((key (ps/bibtex-get-key)))
         (bibtex-kill-entry)
-	(save-buffer)
+        (save-buffer)
         (with-current-buffer (find-file-noselect file)
           (widen)
           (goto-char (point-max))
@@ -13340,6 +13359,12 @@ and sets the value of the field for all entries to 'Tlön'."
              (ps/bibtex-add-or-update-field "database" "Tlön")))))
       ;; Save the updated entries to the file
       (save-buffer)))
+
+  (defun ps/bibtex-auto-add-database-field ()
+    "Run `ps/bibtex-add-database-field' every time `new.bib' is saved."
+    (let ((file ps/file-tlon-bibliography-new))
+      (when (string= (buffer-file-name) file)
+        (ps/bibtex-add-database-field file))))
 
   :general
   (bibtex-mode-map
@@ -13416,15 +13441,15 @@ Also sets `bibtex-completion-display-formats-internal'."
     ;; watches for automatic reloading of the bibliography when a file
     ;; is changed:
     (el-patch-remove (mapc (lambda (file)
-			     (if (f-file? file)
-				 (let ((watch-descriptor
-					(file-notify-add-watch file
-							       '(change)
-							       (lambda (event) (bibtex-completion-candidates)))))
-				   (setq bibtex-completion-file-watch-descriptors
-					 (cons watch-descriptor bibtex-completion-file-watch-descriptors)))
-			       (user-error "Bibliography file %s could not be found" file)))
-			   (bibtex-completion-normalize-bibliography)))
+                             (if (f-file? file)
+                                 (let ((watch-descriptor
+                                        (file-notify-add-watch file
+                                                               '(change)
+                                                               (lambda (event) (bibtex-completion-candidates)))))
+                                   (setq bibtex-completion-file-watch-descriptors
+                                         (cons watch-descriptor bibtex-completion-file-watch-descriptors)))
+                               (user-error "Bibliography file %s could not be found" file)))
+                           (bibtex-completion-normalize-bibliography)))
 
     ;; Pre-calculate minimal widths needed by the format strings for
     ;; various entry types:
@@ -13436,15 +13461,15 @@ Also sets `bibtex-completion-display-formats-internal'."
                             (string-width
                              (s-format format-string
                                        (lambda (field)
-					 (setq fields-width
+                                         (setq fields-width
                                                (+ fields-width
                                                   (string-to-number
                                                    (or (cadr (split-string field ":"))
                                                        ""))))
-					 "")))))
+                                         "")))))
                       (-cons* (car format) format-string (+ fields-width string-width))))
                   bibtex-completion-display-formats)))
-  
+
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)
   (setq bibtex-completion-bibliography ps/all-bibliography-files)
@@ -13508,6 +13533,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
          :includes (citar-org))
   :after oc vertico embark marginalia
   :demand t
+
   :init/el-patch
   ;; Remove conditional to allow invocation
   ;; in any mode. Even if inserting a citation is not allowed, one may
@@ -14928,24 +14954,38 @@ is created following the same schema as notes created with
       (default
        (beep))))
 
-  (defun ps/ebib-auto-save-databases ()
-    "Check if any Ebib database has been modified and save it to its file if so."
-    (dolist (db ebib--databases)
-      (when (ebib-db-modified-p db)
-        (ebib--save-database db '(16))))
-    (run-with-timer 10 nil #'ps/ebib-auto-save-databases))
+  (defvar ps/ebib-auto-save-files
+    (list ps/file-personal-bibliography-new
+          ps/file-tlon-bibliography-new
+          ps/file-tlon-bibliography-finished
+          ps/file-tlon-bibliography-pending)
+    "List of database files that should be auto-saved.
+The big files containing the 'old' bibliographic entries are excluded.")
 
-  (run-with-timer 10 nil #'ps/ebib-auto-save-databases)
+  (defun ps/ebib-auto-save-databases ()
+    "Check if any Ebib database has been modified and save it to its file if so.
+The list of files to be watched is defined in `ps/ebib-auto-save-files'."
+    (dolist (db ebib--databases)
+      (let ((db-file (ebib-db-get-filename db)))
+        (when (and (member db-file ps/ebib-auto-save-files)
+                   (ebib-db-modified-p db))
+          (ebib--save-database db '(16)))))
+    (run-with-timer 1 nil #'ps/ebib-auto-save-databases))
+
+  (run-with-timer 1 nil #'ps/ebib-auto-save-databases)
 
   (defun ps/ebib-auto-reload-databases ()
-    "Check if any db file has been modified and reload the associated Ebib database if so."
+    "Check if any db file has been modified and reload the associated Ebib database if so.
+The list of files to be watched is defined in `ps/ebib-auto-save-files'."
     (dolist (db ebib--databases)
-      (file-notify-add-watch
-       (ebib-db-get-filename db)
-       '(change attribute-change)
-       (lambda (event)
-         (message "reloading database")
-         (ps/ebib-reload-database-no-confirm db)))))
+      (let ((db-file (ebib-db-get-filename db)))
+        (when (member db-file ps/ebib-auto-save-files)
+          (file-notify-add-watch
+           db-file
+           '(change attribute-change)
+           (lambda (event)
+             (message "reloading database")
+             (ps/ebib-reload-database-no-confirm db)))))))
 
   (advice-add 'ebib-init :after #'ps/ebib-auto-reload-databases)
 
@@ -14956,7 +14996,10 @@ is created following the same schema as notes created with
     `((,ps/file-personal-bibliography-new . 1)
       (,ps/file-personal-bibliography-old . 2)
       (,ps/file-tlon-bibliography-new . 3)
-      (,ps/file-tlon-bibliography-old . 4)))
+      (,ps/file-tlon-bibliography-old . 4)
+      (,ps/file-tlon-bibliography-finished . 5)
+      (,ps/file-tlon-bibliography-pending . 6))
+    "Association list of database files and their numbers.")
 
   (defun ps/ebib-get-db-number (file)
     "Get database number for FILE."
@@ -14986,23 +15029,32 @@ is created following the same schema as notes created with
 If applicable, open external website to set rating there as well."
     (interactive)
     (let ((rating (ps/ebib-choose-rating))
-	  (supertype (ps/ebib-get-supertype))
-	  (query (ps/ebib-get-query-field)))
+          (supertype (ps/ebib-get-supertype))
+          (query (ps/ebib-get-query-field)))
       (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db)
       (pcase supertype
-	(`book (ps/ebib-set-goodreads-rating query rating))
-	(`film (ps/ebib-set-arxiv-rating query rating))
-	(_ (message "No rating website for supertype %s" supertype)))))
+        (`book (ps/ebib-set-goodreads-rating query rating))
+        (`film (ps/ebib-set-arxiv-rating query rating))
+        (_ (message "No rating website for supertype %s" supertype)))))
 
   (defun ps/ebib-choose-rating ()
     (interactive)
     "Prompt for a rating from 1 to 10 and return the choice."
     (let* ((ratings '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?0))
-	   (rating (char-to-string (read-char-choice "Rating (1–10): " ratings)))))
+           (rating (char-to-string (read-char-choice "Rating (1–10): " ratings)))))
     (when (eq rating ?0)
       (setq rating "10"))
     rating)
-  
+
+  (defun ps/ebib-move-entry-to-tlon ()
+    "Move bibliographic entry associated with the key at point to the Tlön bibliography."
+    (interactive)
+    (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
+      (ps/citar-goto-bibtex-entry key)
+      (ps/bibtex-move-entry-to-tlon)
+      (ebib ps/file-tlon-bibliography-new key)
+      (ps/ebib-open-key key)))
+
   :general
   ("A-i" 'ps/ebib-open-or-switch)
   (ebib-multiline-mode-map
@@ -15054,7 +15106,8 @@ If applicable, open external website to set rating there as well."
    "D" 'ebib-delete-entry
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry
-   "s" 'ps/ebib-sort-toggle))
+   "s" 'ps/ebib-sort-toggle
+   "s-t" 'ps/ebib-move-entry-to-tlon))
 #+end_src
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
@@ -16478,6 +16531,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "audiobookbay"
                      "beyondpricing\\.com"
                      "bloomberg\\.com"
+                     "calendly\\.com"
                      "connectedpapers\\.com"
                      "doi\\.org"
                      "dropbox\\.com"
@@ -16661,15 +16715,6 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
     (setq eww-use-browse-url
           (concat eww-use-browse-url "\\|" (car cons))))
 
-  ;; inspired by Prot
-  (defun ps/rename-buffer ()
-    "Rename EWW buffer using page title or URL.
-To be used by `eww-after-render-hook'."
-    (let ((name (if (eq "" (plist-get eww-data :title))
-                    (plist-get eww-data :url)
-                  (plist-get eww-data :title))))
-      (rename-buffer (concat name " — eww"))))
-
   (defun ps/eww-url-to-pdf (&optional url)
     "Generate PDF of URL."
     (interactive)
@@ -16700,7 +16745,7 @@ To be used by `eww-after-render-hook'."
                     (when (eq major-mode 'ebib-entry-mode)
                       (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
                     (read-string "URL: ")))
-           (title (ps/org-web-tools--org-title-for-url url))
+           (title (plist-get eww-data :title))
            (slug (org-hugo-slug title))
            (file-name (file-name-with-extension slug ".html"))
            (output-file (file-name-concat ps/dir-downloads file-name)))
@@ -16719,7 +16764,7 @@ To be used by `eww-after-render-hook'."
 
   (defun ps/eww-readable-autoview ()
     "Display the 'readable' parts of the current web page by default.
-    The exceptions are listed in `ps/eww-readable-exceptions'."
+  The exceptions are listed in `ps/eww-readable-exceptions'."
     (let* ((current-url (eww-current-url))
            (exception
             (catch 'exception
@@ -16728,6 +16773,8 @@ To be used by `eww-after-render-hook'."
                   (throw 'exception t))))))
       (unless exception
         (eww-readable))))
+
+  (add-hook 'eww-after-render-hook #'ps/eww-readable-autoview)
 
   ;; The following four commands copied from
   ;; github.com/gopar/.emacs.d#eww
@@ -16788,10 +16835,6 @@ To be used by `eww-after-render-hook'."
                      (url-fullness url)))
       (eww-browse-url (url-recreate-url new-url))))
 
-  (dolist (function #'(ps/rename-buffer
-                       ps/eww-readable-autoview))
-    (add-hook 'eww-after-render-hook function))
-
   (defun ps/eww-url-full-capture ()
     "Add current URL to bibfile and generate associated PDF and HTML files."
     (interactive)
@@ -16839,6 +16882,32 @@ CLOCK: [2022-07-25 Mon 13:51]--[2022-07-25 Mon 14:01] =>  0:10
 CLOCK: [2022-07-19 Tue 21:36]--[2022-07-19 Tue 22:31] =>  0:55
 CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 :END:
+
+** prot-eww
+:PROPERTIES:
+:ID:       C83AED09-FA8C-46CE-91E0-13A7D49D7B8A
+:END:
+
+/[[https://git.sr.ht/~protesilaos/dotfiles/tree/master/item/emacs/%2Eemacs.d/prot-lisp/prot-eww.el][prot-eww]] is a set of eww extensions from Protesilaos Stavrou's personal configuration./
+
+Note Prot's clarification:
+
+#+begin_quote
+Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
+#+end_quote
+
+#+begin_src emacs-lisp
+(use-package prot-eww
+  :elpaca (prot-eww
+           :host sourcehut
+           :repo "protesilaos/dotfiles"
+           :files ("emacs/.emacs.d/prot-lisp/prot-eww.el"))
+  :after eww prot-common
+  :demand t
+  :config
+
+ )
+#+end_src
 
 ** w3m
 :PROPERTIES:
@@ -18740,8 +18809,12 @@ And finally, the section you've all been waiting for.
            :host github
            :repo "tlon-team/tlon-biblio"
            :depth nil) ; clone entire repo, not just last commit
-  :demand t)
+  :demand t
+  :general
+  (ebib-index-mode-map
+   "t" 'tlon-biblio-zotra-add-entry-from-title))
 #+end_src
+
 ** Keyboard Maestro
 :PROPERTIES:
 :ID:       1776C0C3-CEEC-4DED-B609-4DF0DF83B0C2

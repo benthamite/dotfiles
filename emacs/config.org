@@ -16764,7 +16764,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
 
   (defun ps/eww-readable-autoview ()
     "Display the 'readable' parts of the current web page by default.
-    The exceptions are listed in `ps/eww-readable-exceptions'."
+  The exceptions are listed in `ps/eww-readable-exceptions'."
     (let* ((current-url (eww-current-url))
            (exception
             (catch 'exception
@@ -16773,6 +16773,8 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
                   (throw 'exception t))))))
       (unless exception
         (eww-readable))))
+
+  (add-hook 'eww-after-render-hook #'ps/eww-readable-autoview)
 
   ;; The following four commands copied from
   ;; github.com/gopar/.emacs.d#eww
@@ -16832,10 +16834,6 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
                      nil
                      (url-fullness url)))
       (eww-browse-url (url-recreate-url new-url))))
-
-  (dolist (function #'(ps/rename-buffer
-                       ps/eww-readable-autoview))
-    (add-hook 'eww-after-render-hook function))
 
   (defun ps/eww-url-full-capture ()
     "Add current URL to bibfile and generate associated PDF and HTML files."

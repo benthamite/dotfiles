@@ -419,6 +419,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#shr-heading][shr-heading]]
   - [[#url-parse][url-parse]]
   - [[#eww][eww]]
+  - [[#prot-eww][prot-eww]]
   - [[#w3m][w3m]]
   - [[#elfeed][elfeed]]
   - [[#elfeed-org][elfeed-org]]
@@ -16684,15 +16685,6 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
     (setq eww-use-browse-url
           (concat eww-use-browse-url "\\|" (car cons))))
 
-  ;; inspired by Prot
-  (defun ps/rename-buffer ()
-    "Rename EWW buffer using page title or URL.
-To be used by `eww-after-render-hook'."
-    (let ((name (if (eq "" (plist-get eww-data :title))
-                    (plist-get eww-data :url)
-                  (plist-get eww-data :title))))
-      (rename-buffer (concat name " — eww"))))
-
   (defun ps/eww-url-to-pdf (&optional url)
     "Generate PDF of URL."
     (interactive)
@@ -16862,6 +16854,32 @@ CLOCK: [2022-07-25 Mon 13:51]--[2022-07-25 Mon 14:01] =>  0:10
 CLOCK: [2022-07-19 Tue 21:36]--[2022-07-19 Tue 22:31] =>  0:55
 CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 :END:
+
+** prot-eww
+:PROPERTIES:
+:ID:       C83AED09-FA8C-46CE-91E0-13A7D49D7B8A
+:END:
+
+/[[https://git.sr.ht/~protesilaos/dotfiles/tree/master/item/emacs/%2Eemacs.d/prot-lisp/prot-eww.el][prot-eww]] is a set of eww extensions from Protesilaos Stavrou's personal configuration./
+
+Note Prot's clarification:
+
+#+begin_quote
+Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
+#+end_quote
+
+#+begin_src emacs-lisp
+(use-package prot-eww
+  :elpaca (prot-eww
+           :host sourcehut
+           :repo "protesilaos/dotfiles"
+           :files ("emacs/.emacs.d/prot-lisp/prot-eww.el"))
+  :after eww prot-common
+  :demand t
+  :config
+
+ )
+#+end_src
 
 ** w3m
 :PROPERTIES:

@@ -15105,7 +15105,8 @@ If applicable, open external website to set rating there as well."
    "D" 'ebib-delete-entry
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry
-   "s" 'ps/ebib-sort-toggle))
+   "s" 'ps/ebib-sort-toggle
+   "s-t" 'ps/ebib-move-entry-to-tlon))
 #+end_src
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.

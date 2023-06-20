@@ -16745,7 +16745,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
                     (when (eq major-mode 'ebib-entry-mode)
                       (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
                     (read-string "URL: ")))
-           (title (ps/org-web-tools--org-title-for-url url))
+           (title (plist-get eww-data :title))
            (slug (org-hugo-slug title))
            (file-name (file-name-with-extension slug ".html"))
            (output-file (file-name-concat ps/dir-downloads file-name)))

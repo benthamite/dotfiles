@@ -12988,7 +12988,7 @@ ARG is the prefix argument received when calling interactively the function."
            ))))))
 
   :config
-  (setq org-cite-global-bibliography ps/all-bibliography-files)
+  ;; (setq org-cite-global-bibliography ps/all-bibliography-files)
   (setq org-cite-csl-styles-dir ps/dir-personal-csl-styles)
   (setq org-cite-csl-locales-dir ps/dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)

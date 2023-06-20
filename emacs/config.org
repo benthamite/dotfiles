@@ -83,6 +83,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#server][server]]
   - [[#async][async]]
   - [[#emacsql][emacsql]]
+  - [[#prot-common][prot-common]]
   - [[#misc][misc.]]
 - [[#display][display]]
   - [[#mixed-pitch][mixed-pitch]]
@@ -1642,6 +1643,28 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 
 #+begin_src emacs-lisp
 (use-package emacsql
+  :demand t)
+#+end_src
+
+** prot-common
+:PROPERTIES:
+:ID:       300DFB2C-878E-4F21-833C-327C9DFDC01B
+:END:
+
+/[[https://git.sr.ht/~protesilaos/dotfiles/tree/master/item/emacs/%2Eemacs.d/prot-lisp/prot-common.el][prot-common]] is a set of functions used by Protesilaos Stavrou's unreleased "packages"./
+
+Note Prot's clarification:
+
+#+begin_quote
+Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
+#+end_quote
+
+#+begin_src emacs-lisp
+(use-package prot-common
+  :elpaca (prot-common
+           :host sourcehut
+           :repo "protesilaos/dotfiles"
+           :files ("emacs/.emacs.d/prot-lisp/prot-common.el"))
   :demand t)
 #+end_src
 

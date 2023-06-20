@@ -18808,8 +18808,12 @@ And finally, the section you've all been waiting for.
            :host github
            :repo "tlon-team/tlon-biblio"
            :depth nil) ; clone entire repo, not just last commit
-  :demand t)
+  :demand t
+  :general
+  (ebib-index-mode-map
+   "t" 'tlon-biblio-zotra-add-entry-from-title))
 #+end_src
+
 ** Keyboard Maestro
 :PROPERTIES:
 :ID:       1776C0C3-CEEC-4DED-B609-4DF0DF83B0C2

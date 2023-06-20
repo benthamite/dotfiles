@@ -7017,7 +7017,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
   (embark-yasnippet-completion-actions
   "d" 'consult-yasnippet-visit-snippet-file)
   ("C-;" 'embark-act
-   "A-C-;" 'embark-dwim
+   "A-C-;" 'embark-act-all
    "C-h B" 'embark-bindings))
 #+end_src
 

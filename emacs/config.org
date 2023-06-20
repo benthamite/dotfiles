@@ -13360,6 +13360,12 @@ and sets the value of the field for all entries to 'Tlön'."
       ;; Save the updated entries to the file
       (save-buffer)))
 
+  (defun ps/bibtex-auto-add-database-field ()
+    "Run `ps/bibtex-add-database-field' every time `new.bib' is saved."
+    (let ((file ps/file-tlon-bibliography-new))
+      (when (string= (buffer-file-name) file)
+        (ps/bibtex-add-database-field file))))
+
   :general
   (bibtex-mode-map
    "s-a" 'bibtex-set-field

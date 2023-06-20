@@ -6251,11 +6251,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
     (setq ediff-word-mode (not ediff-word-mode))
     (ediff-update-diffs))
 
-  (add-hook 'ediff-startup-hook #'ps/ediff-startup-hook)
-
-  (defun ps/ediff-startup-hook ()
-    "Custom `ediff-startup-hook' behaviours."
-    (ps/ediff-toggle-word-mode))
+  (add-hook 'ediff-startup-hook #'ps/ediff-toggle-word-mode)
 
   :general
   ("A-d" 'ediff))

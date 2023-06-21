@@ -315,6 +315,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#clojure][clojure]]
   - [[#python][python]]
   - [[#applescript-mode][applescript-mode]]
+  - [[#json-mode][json-mode]]
   - [[#csv-mode][csv-mode]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent][aggressive-indent]]
@@ -9522,6 +9523,26 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp :results silent
 (use-package applescript-mode)
+#+end_src
+
+** json-mode
+:PROPERTIES:
+:ID:       7B4A0E63-4509-4BC0-AE08-08F517911959
+:END:
+
+#+begin_src emacs-lisp
+(use-package json-mode
+  :demand t)
+#+end_src
+
+** flymake-json
+:PROPERTIES:
+:ID:       DA345E42-66A9-411B-AEDD-B087EA7267A7
+:END:
+
+#+begin_src emacs-lisp
+(use-package flymake-json
+  :demand t)
 #+end_src
 
 ** csv-mode

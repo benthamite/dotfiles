@@ -13326,7 +13326,7 @@ The correct Biblatex field for this information is
   (defun ps/bibtex-move-entry-to-tlon ()
     "Move the current BibTeX entry to the tlon `new.bib' file."
     (interactive)
-    (let ((file ps/file-tlon-bibliography-new))
+    (let ((file ps/file-tlon-bibliography-fluid))
       (when (string= (buffer-file-name) file)
         (user-error "You are already visiting `%s'!" file))
       (when-let ((key (ps/bibtex-get-key)))
@@ -13382,7 +13382,7 @@ and sets the value of the field for all entries to 'Tlön'."
 
   (defun ps/bibtex-auto-add-database-field ()
     "Run `ps/bibtex-add-database-field' every time `new.bib' is saved."
-    (let ((file ps/file-tlon-bibliography-new))
+    (let ((file ps/file-tlon-bibliography-fluid))
       (when (string= (buffer-file-name) file)
         (ps/bibtex-add-database-field file))))
 
@@ -14976,7 +14976,7 @@ is created following the same schema as notes created with
 
   (defvar ps/ebib-auto-save-files
     (list ps/file-personal-bibliography-new
-          ps/file-tlon-bibliography-new
+          ps/file-tlon-bibliography-fluid
           ps/file-tlon-bibliography-finished
           ps/file-tlon-bibliography-pending)
     "List of database files that should be auto-saved.
@@ -15015,10 +15015,11 @@ The list of files to be watched is defined in `ps/ebib-auto-save-files'."
   (defvar ps/ebib-db-numbers
     `((,ps/file-personal-bibliography-new . 1)
       (,ps/file-personal-bibliography-old . 2)
-      (,ps/file-tlon-bibliography-new . 3)
-      (,ps/file-tlon-bibliography-old . 4)
+      (,ps/file-tlon-bibliography-fluid . 3)
+      (,ps/file-tlon-bibliography-stable . 4)
       (,ps/file-tlon-bibliography-finished . 5)
-      (,ps/file-tlon-bibliography-pending . 6))
+      (,ps/file-tlon-bibliography-pending . 6)
+      (,ps/file-tlon-bibliography-originals . 6))
     "Association list of database files and their numbers.")
 
   (defun ps/ebib-get-db-number (file)
@@ -15072,7 +15073,7 @@ If applicable, open external website to set rating there as well."
     (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
       (ps/citar-goto-bibtex-entry key)
       (ps/bibtex-move-entry-to-tlon)
-      (ebib ps/file-tlon-bibliography-new key)
+      (ebib ps/file-tlon-bibliography-fluid key)
       (ps/ebib-open-key key)))
 
   :general
@@ -18985,10 +18986,11 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-karabiner-edn . (file-name-concat ps/dir-karabiner "karabiner.edn"))
  (ps/file-personal-bibliography-old . (file-name-concat ps/dir-personal-bibliography "old.bib"))
  (ps/file-personal-bibliography-new . (file-name-concat ps/dir-personal-bibliography "new.bib"))
- (ps/file-tlon-bibliography-old . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/old.bib"))
- (ps/file-tlon-bibliography-new . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/new.bib"))
- (ps/file-tlon-bibliography-finished . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/finished.bib"))
- (ps/file-tlon-bibliography-pending . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/pending.bib"))
+ (ps/file-tlon-bibliography-stable . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/citations-stable.bib"))
+ (ps/file-tlon-bibliography-fluid . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/citations-fluid.bib"))
+ (ps/file-tlon-bibliography-finished . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/translations-finished.bib"))
+ (ps/file-tlon-bibliography-pending . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/translations-pending.bib"))
+ (ps/file-tlon-bibliography-originals . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/originals.bib"))
  (ps/file-wiki-notes . (file-name-concat ps/dir-wiki "wiki-notes.org"))
  (ps/file-wiki-published . (file-name-concat ps/dir-wiki "wiki-published.org"))
  (ps/file-wiki-help . (file-name-concat ps/dir-wiki "wiki-help.org"))
@@ -19019,10 +19021,11 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-tlon-docs-bae . (file-name-concat ps/dir-tlon-docs "BAE.org"))
  (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
  (ps/personal-bibliography-files . (list ps/file-personal-bibliography-new ps/file-personal-bibliography-old))
- (ps/tlon-bibliography-files . (list ps/file-tlon-bibliography-new
-                                     ps/file-tlon-bibliography-old
+ (ps/tlon-bibliography-files . (list ps/file-tlon-bibliography-fluid
+                                     ps/file-tlon-bibliography-stable
                                      ps/file-tlon-bibliography-finished
-                                     ps/file-tlon-bibliography-pending))
+                                     ps/file-tlon-bibliography-pending
+                                     ps/file-tlon-bibliography-originals))
  (ps/all-bibliography-files . (append ps/personal-bibliography-files ps/tlon-bibliography-files))
  (ps/face-fixed-pitch . "SauceCodePro Nerd Font")
  (ps/face-fixed-pitch-size .  115)

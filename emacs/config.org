@@ -4096,7 +4096,7 @@ one hour only."
           ;; ps/file-cookies url acsm-file acsm-file))))
           ;; (message "ACSM file downloaded successfully.")
           (kill-new url)
-          (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Open it and then run `ps/internet-archive-dwim' to convert it.")
+          (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Open it manually and then run `ps/internet-archive-dwim' to convert it.")
           )
       (user-error "You forgot to copy the URL!")))
 
@@ -13947,7 +13947,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   :after oc vertico embark marginalia
   :demand t
 
-  :init/el-patch
+  :config/el-patch
   ;; Remove conditional to allow invocation
   ;; in any mode. Even if inserting a citation is not allowed, one may
   ;; want to invoke the command to trigger contextual actions via
@@ -14257,7 +14257,7 @@ in the file. Data comes from www.ebook.de."
 :END:
 ** doi-utils
 :PROPERTIES:
-:ID:       0A568E85-C775-4894-BE59-A7DAB0F41F87
+:ID:       626B4AD0-054C-4A28-AD5B-E66CA47403ED
 :END:
 
 /[[https://github.com/jkitchin/org-ref/blob/master/doi-utils.el][doi-utils]] is a set of DOI utilities for making bibtex entries. It is part of [[id:1FC5528A-9F5A-4A9D-B168-5A1F51110455][org-ref]]./

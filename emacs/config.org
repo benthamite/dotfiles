@@ -9525,7 +9525,45 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp
 (use-package json-mode
-  :demand t)
+  :demand t
+  :config
+  ;; copied from emacs.stackexchange.com/a/24945/32089
+  (defun ps/json-mode-validate (&optional not-json-p)
+    "Validate buffer or select region as JSON.
+If NOT-JSON-P is not nil, validate as Javascript expression
+instead of JSON."
+    (interactive "P")
+    (let* ((json-exp (if (region-active-p) (buffer-substring-no-properties (region-beginning) (region-end))
+                       (buffer-substring-no-properties (point-min) (point-max))))
+           (jsbuf-offet (if not-json-p 0 (length "var a=")))
+           errs
+           first-err
+           (first-err-pos (if (region-active-p) (region-beginning) 0)))
+      (unless not-json-p
+        (setq json-exp (format "var a=%s;"  json-exp)))
+      (with-temp-buffer
+        (insert json-exp)
+        (unless (featurep 'js2-mode)
+          (require 'js2-mode))
+        (js2-parse)
+        (setq errs (js2-errors))
+        (cond
+         ((not errs)
+          (message "NO error found. Good job!"))
+         (t
+          ;; yes, first error in buffer is the last element in errs
+          (setq first-err (car (last errs)))
+          (setq first-err-pos (+ first-err-pos (- (cadr first-err) jsbuf-offet)))
+          (message "%d error(s), first at buffer position %d: %s"
+                   (length errs)
+                   first-err-pos
+                   (js2-get-msg (caar first-err))))))
+      (if first-err (goto-char first-err-pos))))
+
+  (add-hook 'find-file-hook
+            (lambda ()
+              (when (equal buffer-file-name ps/file-tlon-bae-contacts)
+                (add-hook 'after-save-hook #'ps/json-mode-validate nil t)))))
 #+end_src
 
 ** flymake-json

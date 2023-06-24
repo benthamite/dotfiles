@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: tlon-new-contact
+# key: tnc
+# contributor: Pablo Stafforini
+# --
+    {
+    "name": "$1",
+    "email": "$2",
+    "url": "$3",
+    "gender": "${4:$$(yas-completing-read "Gender: " '("male" "female" "not applicable"))}",
+    "entity": "${5:$$(yas-completing-read "Entity: " '("living person" "deceased person" "non-person"))}",
+    "universal consent": "${6:$$(yas-completing-read "Consent: " '("yes" "no" "waiting" "not contacted"))}",
+    "notes": "$7"
+}

@@ -17763,7 +17763,7 @@ https://superuser.com/a/1350144/387888."
     "https://www.ft.com/search?q=%s"
     :keybinding "f t")
   (defengine GitHub
-    "https://github.com/search?q=%s&type=codeu"
+    "https://github.com/search?q=%s&type=code"
     :keybinding "g h")
   (defengine GiveWell
     "https://www.givewell.org/search/ss360/%s"

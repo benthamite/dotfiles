@@ -316,7 +316,9 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#python][python]]
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
+  - [[#flymake-json][flymake-json]]
   - [[#csv-mode][csv-mode]]
+  - [[#js2-mode][js2-mode]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent][aggressive-indent]]
   - [[#elpy][elpy]]
@@ -9554,6 +9556,18 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp
 (use-package csv-mode
+  :demand t)
+#+end_src
+
+** js2-mode
+:PROPERTIES:
+:ID:       14639C64-720D-4105-B31B-3A84A447D19F
+:END:
+
+/[[https://github.com/mooz/js2-mode][js2-mode]] is a Javascript editing mode for Emacs./
+
+#+begin_src emacs-lisp
+(use-package js2-mode
   :demand t)
 #+end_src
 

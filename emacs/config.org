@@ -15296,23 +15296,18 @@ The list of article download functions is specified by
     (interactive)
     (ebib--execute-when
       (entries
-       (let ((new-bibliography (file-name-nondirectory (car ebib-preload-bib-files))))
-         (unless (string= (file-name-nondirectory (ebib-db-get-filename ebib--cur-db))
-                          new-bibliography)
-           (user-error (format "Due to performane issues, this command only works on database `%s'"
-                               new-bibliography)))
-         (let ((order 'ascend))
-           (pcase ps/ebib-sort-toggle
-             ('Timestamp
-              (setq ps/ebib-sort-toggle 'Author))
-             ('Author
-              (setq ps/ebib-sort-toggle 'Title))
-             ('Title
-              (setq ps/ebib-sort-toggle 'Timestamp)
-              (setq order 'descend)))
-           (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
-           (goto-char (point-min))
-           (message (format "Sorting by %s" ps/ebib-sort-toggle)))))
+       (let ((order 'ascend))
+         (pcase ps/ebib-sort-toggle
+           ('Timestamp
+            (setq ps/ebib-sort-toggle 'Author))
+           ('Author
+            (setq ps/ebib-sort-toggle 'Title))
+           ('Title
+            (setq ps/ebib-sort-toggle 'Timestamp)
+            (setq order 'descend)))
+         (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
+         (goto-char (point-min))
+         (message (format "Sorting by %s" ps/ebib-sort-toggle))))
       (default
        (beep))))
 

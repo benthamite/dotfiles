@@ -12709,8 +12709,9 @@ restrict the selection to headings with that tag."
   ("A-H-n" 'ps/org-roam-new-note
    "H-j" 'ps/org-roam-node-find
    "H-J" 'ps/org-roam-node-find-special)
+  ((org-mode-map minibuffer-mode-map)
+   "s-i" 'org-roam-node-insert)
   (org-mode-map
-   "s-i" 'org-roam-node-insert
    "s-r" 'org-roam-buffer-toggle))
 #+end_src
 

@@ -14010,7 +14010,7 @@ If INVERT-PROMPT is non-nil, invert the meaning of
   (setq citar-format-reference-function 'citar-citeproc-format-reference)
   (setq citar-markdown-prompt-for-extra-arguments nil)
 
-  (setq citar-templates '((main . "${author editor:30%sn}     ${date year issued:4}     ${title:48} ${database:10}")
+  (setq citar-templates '((main . "${author editor:30%sn}   ${date year issued:4}   ${title:48}   ${database:10}")
                           (suffix . "          ${=key= id:15}    ${=type=:12}")
                           (preview . "${author editor:%etal} (${year issued date}) ${title}, ${journal journaltitle publisher container-title collection-title}.\n")
                           (note . "Notes on ${author editor:%etal}, ${title}")))

@@ -8,7 +8,7 @@ source "/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/shell/.zshe
 
 export PATH="/opt/homebrew/opt/node/bin:$PATH"
 
-export PATH="$HOME/bin:$PATH"
+export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 
 # https://stackoverflow.com/a/49711594/4479455
 export PATH="/opt/homebrew/opt/python@3.11/libexec/bin:$PATH"

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: pdf-to-md
+# key: ptm
+# contributor: Pablo Stafforini
+# comments: poor results. e.g. doesn't even respect paragraph breaks; also requires the input file to be in a dedicated folder
+# --
+/Users/pablostafforini/source/pdf2md/lib/pdf2md-cli.js --inputFolderPath=`(current-kill 0)` --outputFolderPath=`(file-name-with-extension (file-name-sans-extension (current-kill 0)) "md")`

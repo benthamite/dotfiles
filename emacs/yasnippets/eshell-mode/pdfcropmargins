@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: pdfcropmargins
+# key: pcm
+# contributor: Pablo Stafforini
+# --
+pdfcropmargins '`(current-kill 0)`' -o '`(file-name-concat ps/dir-downloads (file-name-with-extension (concat (file-name-base (current-kill 0)) "-cropped") "pdf"))`' -gui

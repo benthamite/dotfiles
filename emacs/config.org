@@ -316,7 +316,9 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#python][python]]
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
+  - [[#flymake-json][flymake-json]]
   - [[#csv-mode][csv-mode]]
+  - [[#js2-mode][js2-mode]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent][aggressive-indent]]
   - [[#elpy][elpy]]
@@ -4094,7 +4096,7 @@ one hour only."
           ;; ps/file-cookies url acsm-file acsm-file))))
           ;; (message "ACSM file downloaded successfully.")
           (kill-new url)
-          (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Open it and then run `ps/internet-archive-dwim' to convert it.")
+          (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Open it manually and then run `ps/internet-archive-dwim' to convert it.")
           )
       (user-error "You forgot to copy the URL!")))
 
@@ -5962,15 +5964,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   (org-mode-map
    "s-g" 'hydra-org-gcal/body))
 #+end_src
-*** TODO Set asymmetric key to minimize password prompts
-SCHEDULED: <2023-06-20 Tue>
-:PROPERTIES:
-:ID:       063A663C-1865-4451-80A8-0BD3B188FBA2
-:END:
-As described here:
-
-https://github.com/kidd/org-gcal.el/pull/239/files
-
 ** calfw
 :PROPERTIES:
 :ID:       05F8BF13-CF3A-43D7-8959-D19E0C7EB092
@@ -6570,7 +6563,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "t" 'forge-edit-topic-title
    "e" 'forge-edit-post
    "p" 'forge-create-post
-   "r" 'forge-create-post))
+   "r" 'forge-create-post)
+  (magit-status-mode-map
+   "s-x" 'forge-remove-topic-locally))
 #+end_src
 
 ** orgit-forge
@@ -7668,10 +7663,7 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 (use-feature simple
   :demand t
   :config
-  (setq async-shell-command-buffer 'new-buffer) ; don't ask for confirmation before running command in a new buffer
-
-  :general
-  ("C-A-s" 'shell-command))
+  (setq async-shell-command-buffer 'new-buffer)) ; don't ask for confirmation before running command in a new buffer
 #+end_src
 
 ** shell
@@ -9532,7 +9524,45 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp
 (use-package json-mode
-  :demand t)
+  :demand t
+  :config
+  ;; copied from emacs.stackexchange.com/a/24945/32089
+  (defun ps/json-mode-validate (&optional not-json-p)
+    "Validate buffer or select region as JSON.
+If NOT-JSON-P is not nil, validate as Javascript expression
+instead of JSON."
+    (interactive "P")
+    (let* ((json-exp (if (region-active-p) (buffer-substring-no-properties (region-beginning) (region-end))
+                       (buffer-substring-no-properties (point-min) (point-max))))
+           (jsbuf-offet (if not-json-p 0 (length "var a=")))
+           errs
+           first-err
+           (first-err-pos (if (region-active-p) (region-beginning) 0)))
+      (unless not-json-p
+        (setq json-exp (format "var a=%s;"  json-exp)))
+      (with-temp-buffer
+        (insert json-exp)
+        (unless (featurep 'js2-mode)
+          (require 'js2-mode))
+        (js2-parse)
+        (setq errs (js2-errors))
+        (cond
+         ((not errs)
+          (message "NO error found. Good job!"))
+         (t
+          ;; yes, first error in buffer is the last element in errs
+          (setq first-err (car (last errs)))
+          (setq first-err-pos (+ first-err-pos (- (cadr first-err) jsbuf-offet)))
+          (message "%d error(s), first at buffer position %d: %s"
+                   (length errs)
+                   first-err-pos
+                   (js2-get-msg (caar first-err))))))
+      (if first-err (goto-char first-err-pos))))
+
+  (add-hook 'find-file-hook
+            (lambda ()
+              (when (equal buffer-file-name ps/file-tlon-bae-contacts)
+                (add-hook 'after-save-hook #'ps/json-mode-validate nil t)))))
 #+end_src
 
 ** flymake-json
@@ -9554,6 +9584,18 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp
 (use-package csv-mode
+  :demand t)
+#+end_src
+
+** js2-mode
+:PROPERTIES:
+:ID:       14639C64-720D-4105-B31B-3A84A447D19F
+:END:
+
+/[[https://github.com/mooz/js2-mode][js2-mode]] is a Javascript editing mode for Emacs./
+
+#+begin_src emacs-lisp
+(use-package js2-mode
   :demand t)
 #+end_src
 
@@ -12666,8 +12708,9 @@ restrict the selection to headings with that tag."
   ("A-H-n" 'ps/org-roam-new-note
    "H-j" 'ps/org-roam-node-find
    "H-J" 'ps/org-roam-node-find-special)
+  ((org-mode-map minibuffer-mode-map)
+   "s-i" 'org-roam-node-insert)
   (org-mode-map
-   "s-i" 'org-roam-node-insert
    "s-r" 'org-roam-buffer-toggle))
 #+end_src
 
@@ -13123,6 +13166,344 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
                      (user-error "Year or date field `%s' invalid" str))))
       (substring year (max 0 (- (length year) bibtex-autokey-year-length)))))
 
+  ;; make `page-dashes' add an extra dash if missing, rather than remove it
+  (defun bibtex-format-entry ()
+    "Helper function for `bibtex-clean-entry'.
+Formats current entry according to variable `bibtex-entry-format'."
+    ;; initialize `bibtex-field-braces-opt' if necessary
+    (if (and bibtex-field-braces-alist (not bibtex-field-braces-opt))
+        (setq bibtex-field-braces-opt
+              (bibtex-field-re-init bibtex-field-braces-alist 'braces)))
+    ;; initialize `bibtex-field-strings-opt' if necessary
+    (if (and bibtex-field-strings-alist (not bibtex-field-strings-opt))
+        (setq bibtex-field-strings-opt
+              (bibtex-field-re-init bibtex-field-strings-alist 'strings)))
+
+    (let ((case-fold-search t)
+          (format (if (eq bibtex-entry-format t)
+                      '(realign opts-or-alts required-fields numerical-fields
+                                page-dashes whitespace inherit-booktitle
+                                last-comma delimiters unify-case braces
+                                strings sort-fields)
+                    bibtex-entry-format))
+          (left-delim-re (regexp-quote (bibtex-field-left-delimiter)))
+          bounds crossref-key req-field-list opt-field-list
+          default-field-list field-list
+          num-alt alt-fields idx error-field-name)
+      (unwind-protect
+          ;; formatting (undone if error occurs)
+          (atomic-change-group
+            (save-excursion
+              (save-restriction
+                (bibtex-narrow-to-entry)
+
+                ;; There are more elegant high-level functions for several tasks
+                ;; done by `bibtex-format-entry'.  However, they contain some
+                ;; redundancy compared with what we need to do anyway.
+                ;; So for speed-up we avoid using them.
+                ;; (`bibtex-format-entry' is called often by `bibtex-reformat'.)
+
+                ;; identify entry type
+                (goto-char (point-min))
+                (or (re-search-forward bibtex-entry-type nil t)
+                    (user-error "Not inside a BibTeX entry"))
+                (let* ((beg-type (1+ (match-beginning 0)))
+                       (end-type (match-end 0))
+                       (entry-list (assoc-string (buffer-substring-no-properties
+                                                  beg-type end-type)
+                                                 bibtex-entry-alist t)))
+
+                  ;; unify case of entry type
+                  (when (memq 'unify-case format)
+                    (delete-region beg-type end-type)
+                    (insert (funcall bibtex-unify-case-function (car entry-list))))
+
+                  ;; update left entry delimiter
+                  (when (memq 'delimiters format)
+                    (goto-char end-type)
+                    (skip-chars-forward " \t\n")
+                    (delete-char 1)
+                    (insert (bibtex-entry-left-delimiter)))
+
+                  ;; Do we have a crossref key?
+                  (goto-char (point-min))
+                  (if (setq bounds (bibtex-search-forward-field
+                                    "\\(OPT\\)?crossref"))
+                      (let ((text (bibtex-text-in-field-bounds bounds t)))
+                        (unless (equal "" text)
+                          (setq crossref-key text))))
+
+                  ;; list of required fields appropriate for an entry with
+                  ;; or without crossref key.
+                  (setq req-field-list (append (nth 2 entry-list)
+                                               (unless crossref-key
+                                                 (nth 3 entry-list)))
+                        opt-field-list (append (if crossref-key
+                                                   (nth 3 entry-list))
+                                               (nth 4 entry-list)
+                                               bibtex-user-optional-fields)
+                        ;; default list of fields that may appear in this entry
+                        default-field-list (append req-field-list opt-field-list)
+                        ;; number of ALT fields we may find
+                        num-alt (let ((n 0))
+                                  (mapc (lambda (x)
+                                          (if (nth 3 x)
+                                              (setq n (max n (abs (nth 3 x))))))
+                                        default-field-list)
+                                  (1+ n))
+                        ;; ALT fields of respective groups
+                        alt-fields (make-vector num-alt nil))
+
+                  (when (memq 'sort-fields format)
+                    (goto-char (point-min))
+                    (let ((beg-fields (save-excursion (bibtex-beginning-first-field)))
+                          (fields-alist (bibtex-parse-entry
+                                         nil (not (memq 'opts-or-alts format))))
+                          bibtex-help-message elt)
+                      (delete-region beg-fields (point))
+                      (dolist (field default-field-list)
+                        (when (setq elt (assoc-string (car field) fields-alist t))
+                          (setq fields-alist (delete elt fields-alist))
+                          (bibtex-make-field (list (car elt) nil (cdr elt)) nil nil t)))
+                      (dolist (field fields-alist)
+                        (unless (member (car field) '("=key=" "=type="))
+                          (bibtex-make-field (list (car field) nil (cdr field)) nil nil t))))))
+
+                ;; process all fields
+                (bibtex-beginning-first-field (point-min))
+                (while (setq bounds (bibtex-parse-field))
+                  (let* ((beg-field (copy-marker (bibtex-start-of-field bounds)))
+                         (end-field (copy-marker (bibtex-end-of-field bounds) t))
+                         (beg-name  (copy-marker (bibtex-start-of-name-in-field bounds)))
+                         (end-name  (copy-marker (bibtex-end-of-name-in-field bounds)))
+                         (beg-text  (copy-marker (bibtex-start-of-text-in-field bounds)))
+                         (end-text  (copy-marker (bibtex-end-of-text-in-field bounds) t))
+                         (empty-field (equal "" (bibtex-text-in-field-bounds bounds t)))
+                         (field-name (buffer-substring-no-properties beg-name end-name))
+                         (opt-alt   (and (memq 'opts-or-alts format)
+                                         (string-match "\\`\\(OPT\\|ALT\\)" field-name)
+                                         (not (and bibtex-no-opt-remove-re
+                                                   (string-match bibtex-no-opt-remove-re
+                                                                 field-name)))))
+                         deleted)
+                    (if opt-alt (setq field-name (substring field-name 3)))
+
+                    ;; keep track of alternatives
+                    (if (and (not empty-field)
+                             (setq idx (nth 3 (assoc-string field-name default-field-list t))))
+                        (bibtex-vec-push alt-fields (abs idx) field-name))
+
+                    (if (memq 'opts-or-alts format)
+                        ;; delete empty optional and alternative fields
+                        ;; (but keep empty required fields)
+                        (cond ((and empty-field
+                                    (or opt-alt
+                                        (let ((field (assoc-string
+                                                      field-name req-field-list t)))
+                                          (or (not field) ; OPT field
+                                              (nth 3 field))))) ; ALT field
+                               (delete-region beg-field end-field)
+                               (setq deleted t))
+                              ;; otherwise nonempty field: delete "OPT" or "ALT"
+                              (opt-alt
+                               (goto-char beg-name)
+                               (delete-char 3))))
+
+                    (unless deleted
+                      (push field-name field-list)
+
+                      ;; Remove whitespace at beginning and end of field.
+                      ;; We do not look at individual parts of the field
+                      ;; as {foo } # bar # { baz} is a fine field.
+                      (when (memq 'whitespace format)
+                        (goto-char beg-text)
+                        (if (looking-at "\\([{\"]\\)[ \t\n]+")
+                            (replace-match "\\1"))
+                        (goto-char end-text)
+                        (if (looking-back "[ \t\n]+\\([}\"]\\)" beg-text t)
+                            (replace-match "\\1")))
+
+                      ;; remove delimiters from purely numerical fields
+                      (when (and (memq 'numerical-fields format)
+                                 (progn (goto-char beg-text)
+                                        (looking-at "\"[0-9]+\"\\|{[0-9]+}")))
+                        (goto-char end-text)
+                        (delete-char -1)
+                        (goto-char beg-text)
+                        (delete-char 1))
+
+                      ;; update delimiters
+                      (when (memq 'delimiters format)
+                        (goto-char beg-text)
+                        ;; simplified from `bibtex-parse-field-text', as we
+                        ;; already checked that the field format is correct
+                        (while (< (point) end-text)
+                          (if (looking-at bibtex-field-const)
+                              (goto-char (match-end 0))
+                            (let ((boundaries (bibtex-parse-field-string)))
+                              (if (looking-at left-delim-re)
+                                  (goto-char (cdr boundaries))
+                                (delete-char 1)
+                                (insert (bibtex-field-left-delimiter))
+                                (goto-char (1- (cdr boundaries)))
+                                (delete-char 1)
+                                (insert (bibtex-field-right-delimiter)))))
+                          (if (looking-at "[ \t\n]*#[ \t\n]*")
+                              (goto-char (match-end 0)))))
+
+                      ;; update page dashes
+                      (if (and (memq 'page-dashes format)
+                               (string-equal-ignore-case field-name "pages")
+                               (progn (goto-char beg-text)
+                                      (looking-at
+
+                                       "\\([\"{][0-9]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+[\"}]\\)")))
+                          (replace-match "\\1--\\2"))
+
+                      ;; enclose field text by braces according to
+                      ;; `bibtex-field-braces-alist'.
+                      (let (case-fold-search temp) ; Case-sensitive search
+                        (when (and (memq 'braces format)
+                                   (setq temp (cdr (assoc-string field-name
+                                                                 bibtex-field-braces-opt t))))
+                          (goto-char beg-text)
+                          (while (re-search-forward temp end-text t)
+                            (let ((beg (match-beginning 0))
+                                  (bounds (bibtex-find-text-internal nil t)))
+                              (unless (or (nth 4 bounds) ; string constant
+                                          ;; match already surrounded by braces
+                                          ;; (braces are inside field delimiters)
+                                          (and (< (point) (1- (nth 2 bounds)))
+                                               (< (1+ (nth 1 bounds)) beg)
+                                               (looking-at "}")
+                                               (save-excursion (goto-char (1- beg))
+                                                               (looking-at "{"))))
+                                (insert "}")
+                                (goto-char beg)
+                                (insert "{")))))
+
+                        ;; replace field text by BibTeX string constants
+                        ;; according to `bibtex-field-strings-alist'.
+                        (when (and (memq 'strings format)
+                                   (setq temp (cdr (assoc-string field-name
+                                                                 bibtex-field-strings-opt t))))
+                          (goto-char beg-text)
+                          (dolist (re temp)
+                            (while (re-search-forward (car re) end-text t)
+                              (let ((bounds (save-match-data
+                                              (bibtex-find-text-internal nil t))))
+                                (unless (nth 4 bounds)
+                                  ;; if match not at right subfield boundary...
+                                  (if (< (match-end 0) (1- (nth 2 bounds)))
+                                      (insert " # " (bibtex-field-left-delimiter))
+                                    (delete-char 1))
+                                  (replace-match (cdr re))
+                                  (goto-char (match-beginning 0))
+                                  ;; if match not at left subfield boundary...
+                                  (if (< (1+ (nth 1 bounds)) (match-beginning 0))
+                                      (insert (bibtex-field-right-delimiter) " # ")
+                                    (delete-char -1))))))))
+
+                      ;; use book title of crossref'd entry
+                      (if (and (memq 'inherit-booktitle format)
+                               empty-field
+                               (string-equal-ignore-case field-name "booktitle")
+                               crossref-key)
+                          (let ((title (save-excursion
+                                         (save-restriction
+                                           (widen)
+                                           (if (bibtex-search-entry crossref-key t)
+                                               (bibtex-text-in-field "title"))))))
+                            (when title
+                              (setq empty-field nil)
+                              (goto-char (1+ beg-text))
+                              (insert title))))
+
+                      ;; if empty field is a required field, complain
+                      (when (and empty-field
+                                 (memq 'required-fields format)
+                                 (assoc-string field-name req-field-list t))
+                        (setq error-field-name field-name)
+                        (user-error "Mandatory field `%s' is empty" field-name))
+
+                      ;; unify case of field name
+                      (when (memq 'unify-case format)
+                        (let ((fname (car (assoc-string field-name
+                                                        default-field-list t)))
+                              (curname (buffer-substring beg-name end-name)))
+                          (delete-region beg-name end-name)
+                          (goto-char beg-name)
+                          (insert (funcall bibtex-unify-case-function
+                                           (or fname curname)))))
+
+                      ;; update point
+                      (goto-char end-field))))
+
+                ;; check whether all required fields are present
+                (when (memq 'required-fields format)
+                  (let ((alt-expect (make-vector num-alt nil)))
+                    (dolist (fname req-field-list)
+                      (cond ((nth 3 fname)
+                             ;; t if required field has alternative flag
+                             (setq idx (abs (nth 3 fname)))
+                             (bibtex-vec-push alt-expect idx (car fname)))
+                            ((not (member-ignore-case (car fname) field-list))
+                             (setq error-field-name (car fname))
+                             (user-error "Mandatory field `%s' is missing"
+                                         (car fname)))))
+                    (dotimes (idx num-alt)
+                      (cond ((and (aref alt-expect idx)
+                                  (not (aref alt-fields idx)))
+                             (setq error-field-name
+                                   (car (last (aref alt-fields idx))))
+                             (user-error "Alternative mandatory fields `%s' are missing"
+                                         (mapconcat 'identity
+                                                    (reverse
+                                                     (aref alt-expect idx))
+                                                    ", ")))
+                            ((nth 1 (aref alt-fields idx))
+                             (setq error-field-name
+                                   (car (last (aref alt-fields idx))))
+                             (user-error "Fields `%s' are alternatives"
+                                         (mapconcat 'identity
+                                                    (reverse
+                                                     (aref alt-fields idx))
+                                                    ", ")))))))
+
+                ;; update comma after last field
+                (if (memq 'last-comma format)
+                    (cond ((and bibtex-comma-after-last-field
+                                (not (looking-at ",")))
+                           (insert ","))
+                          ((and (not bibtex-comma-after-last-field)
+                                (looking-at ","))
+                           (delete-char 1))))
+
+                ;; update right entry delimiter
+                (if (looking-at ",")
+                    (forward-char))
+                (when (memq 'delimiters format)
+                  (skip-chars-forward " \t\n")
+                  (delete-char 1)
+                  (insert (bibtex-entry-right-delimiter)))
+
+                ;; realign and fill entry
+                (if (memq 'realign format)
+                    (bibtex-fill-entry)))))
+
+        ;; Unwindform: move point to location where error occurred if possible
+        (if error-field-name
+            (let (bounds)
+              (when (save-excursion
+                      (bibtex-beginning-of-entry)
+                      (setq bounds
+                            (bibtex-search-forward-field
+                             ;; If we use the crossref field, a required field
+                             ;; can have the OPT prefix
+                             (concat "\\(OPT\\|ALT\\)?" error-field-name) t)))
+                (goto-char (bibtex-start-of-text-in-field bounds))
+                (bibtex-find-text)))))))
+
   :config
   ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
   ;; retorque.re/zotero-better-bibtex/citing/
@@ -13142,7 +13523,8 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (setq bibtex-autokey-preserve-case t)
   ;; Remove accents
   (setq bibtex-autokey-before-presentation-function 'ps/bibtex-asciify-string)
-  (setq bibtex-entry-format '(opts-or-alts numerical-fields realign))
+  ;; check tweaked version of `bibtex-format-entry' above
+  (setq bibtex-entry-format '(opts-or-alts-fields last-comma delimiters page-dashes))
 
   (defun ps/ebib-replace-element-by-name (list target-name new-element)
     "Replace the element in LIST whose name matches TARGET-NAME with NEW-ELEMENT."
@@ -13386,6 +13768,16 @@ and sets the value of the field for all entries to 'Tlön'."
       (when (string= (buffer-file-name) file)
         (ps/bibtex-add-database-field file))))
 
+  (defun ps/bibtex-auto-clean-entry ()
+    ""
+    (remove-hook 'after-save-hook 'ps/bibtex-auto-clean-entry t)
+    (bibtex-clean-entry)
+    (save-buffer)
+    (add-hook 'after-save-hook 'ps/bibtex-auto-clean-entry nil t))
+
+  (add-hook 'bibtex-mode-hook
+            (lambda ()
+              (add-hook 'after-save-hook 'ps/bibtex-auto-clean-entry nil t)))
   :general
   (bibtex-mode-map
    "s-a" 'bibtex-set-field
@@ -13554,7 +13946,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   :after oc vertico embark marginalia
   :demand t
 
-  :init/el-patch
+  :config/el-patch
   ;; Remove conditional to allow invocation
   ;; in any mode. Even if inserting a citation is not allowed, one may
   ;; want to invoke the command to trigger contextual actions via
@@ -13617,7 +14009,7 @@ If INVERT-PROMPT is non-nil, invert the meaning of
   (setq citar-format-reference-function 'citar-citeproc-format-reference)
   (setq citar-markdown-prompt-for-extra-arguments nil)
 
-  (setq citar-templates '((main . "${author editor:30%sn}     ${date year issued:4}     ${title:48} ${database:10}")
+  (setq citar-templates '((main . "${author editor:30%sn}   ${date year issued:4}   ${title:48}   ${database:10}")
                           (suffix . "          ${=key= id:15}    ${=type=:12}")
                           (preview . "${author editor:%etal} (${year issued date}) ${title}, ${journal journaltitle publisher container-title collection-title}.\n")
                           (note . "Notes on ${author editor:%etal}, ${title}")))
@@ -13864,7 +14256,7 @@ in the file. Data comes from www.ebook.de."
 :END:
 ** doi-utils
 :PROPERTIES:
-:ID:       0A568E85-C775-4894-BE59-A7DAB0F41F87
+:ID:       626B4AD0-054C-4A28-AD5B-E66CA47403ED
 :END:
 
 /[[https://github.com/jkitchin/org-ref/blob/master/doi-utils.el][doi-utils]] is a set of DOI utilities for making bibtex entries. It is part of [[id:1FC5528A-9F5A-4A9D-B168-5A1F51110455][org-ref]]./
@@ -14150,7 +14542,7 @@ value is copied to the kill ring."
                              ("Year" 4 t)
                              ("Title" 50 t)))
   (setq ebib-extra-fields
-        '((biblatex "abstract" "keywords" "langid" "translation" "narrator" "file" "timestamp" "rating" "=key=")
+        '((biblatex "abstract" "keywords" "langid" "translation" "narrator" "file" "timestamp" "rating" "crossref" "=key=")
           (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
 
   ;; unhide some fields
@@ -14903,23 +15295,18 @@ The list of article download functions is specified by
     (interactive)
     (ebib--execute-when
       (entries
-       (let ((new-bibliography (file-name-nondirectory (car ebib-preload-bib-files))))
-         (unless (string= (file-name-nondirectory (ebib-db-get-filename ebib--cur-db))
-                          new-bibliography)
-           (user-error (format "Due to performane issues, this command only works on database `%s'"
-                               new-bibliography)))
-         (let ((order 'ascend))
-           (pcase ps/ebib-sort-toggle
-             ('Timestamp
-              (setq ps/ebib-sort-toggle 'Author))
-             ('Author
-              (setq ps/ebib-sort-toggle 'Title))
-             ('Title
-              (setq ps/ebib-sort-toggle 'Timestamp)
-              (setq order 'descend)))
-           (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
-           (goto-char (point-min))
-           (message (format "Sorting by %s" ps/ebib-sort-toggle)))))
+       (let ((order 'ascend))
+         (pcase ps/ebib-sort-toggle
+           ('Timestamp
+            (setq ps/ebib-sort-toggle 'Author))
+           ('Author
+            (setq ps/ebib-sort-toggle 'Title))
+           ('Title
+            (setq ps/ebib-sort-toggle 'Timestamp)
+            (setq order 'descend)))
+         (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
+         (goto-char (point-min))
+         (message (format "Sorting by %s" ps/ebib-sort-toggle))))
       (default
        (beep))))
 
@@ -16597,6 +16984,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "worldcat\\.org"
                      "we\\.tl"
                      "wetransfer\\.com"
+                     "worldcat\\.org"
                      "youtu\\.be"
                      "youtube\\.com"
                      "zoom\\.us"))
@@ -16766,7 +17154,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
                     (when (eq major-mode 'ebib-entry-mode)
                       (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
                     (read-string "URL: ")))
-           (title (plist-get eww-data :title))
+           (title (ps/org-web-tools--org-title-for-url url))
            (slug (org-hugo-slug title))
            (file-name (file-name-with-extension slug ".html"))
            (output-file (file-name-concat ps/dir-downloads file-name)))
@@ -17370,7 +17758,7 @@ https://superuser.com/a/1350144/387888."
     "https://www.ft.com/search?q=%s"
     :keybinding "f t")
   (defengine GitHub
-    "https://github.com/search?q=%s&type=codeu"
+    "https://github.com/search?q=%s&type=code"
     :keybinding "g h")
   (defengine GiveWell
     "https://www.givewell.org/search/ss360/%s"
@@ -18991,6 +19379,7 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-tlon-bibliography-finished . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/translations-finished.bib"))
  (ps/file-tlon-bibliography-pending . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/translations-pending.bib"))
  (ps/file-tlon-bibliography-originals . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/originals.bib"))
+ (ps/file-tlon-bae-contacts . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/contacts.json"))
  (ps/file-wiki-notes . (file-name-concat ps/dir-wiki "wiki-notes.org"))
  (ps/file-wiki-published . (file-name-concat ps/dir-wiki "wiki-published.org"))
  (ps/file-wiki-help . (file-name-concat ps/dir-wiki "wiki-help.org"))

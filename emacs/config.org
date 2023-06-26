@@ -13533,7 +13533,7 @@ Formats current entry according to variable `bibtex-entry-format'."
   ;; Remove accents
   (setq bibtex-autokey-before-presentation-function 'ps/bibtex-asciify-string)
   ;; check tweaked version of `bibtex-format-entry' above
-  (setq bibtex-entry-format '(opts-or-alts-fields last-comma delimiters page-dashes))
+  (setq bibtex-entry-format '(opts-or-alts-fields last-comma delimiters page-dashes realign))
 
   (defun ps/ebib-replace-element-by-name (list target-name new-element)
     "Replace the element in LIST whose name matches TARGET-NAME with NEW-ELEMENT."

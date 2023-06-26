@@ -13779,8 +13779,11 @@ and sets the value of the field for all entries to 'Tlön'."
         (ps/bibtex-add-database-field file))))
 
   (defun ps/bibtex-auto-clean-entry ()
-    ""
+    "Clean up bibtex entry at poiint upon saving."
     (remove-hook 'after-save-hook 'ps/bibtex-auto-clean-entry t)
+    (when (string= (file-name-directory (buffer-file-name))
+                   (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/"))
+      (ps/bibtex-add-or-update-field "database" "Tlön"))
     (bibtex-clean-entry)
     (save-buffer)
     (add-hook 'after-save-hook 'ps/bibtex-auto-clean-entry nil t))

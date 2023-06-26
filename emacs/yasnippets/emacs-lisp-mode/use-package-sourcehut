@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: use-package-sourcehut
+# key: ups
+# contributor: Pablo Stafforini
+# --
+(use-package $1
+  :elpaca ($1
+             :host sourcehut
+             :repo "$2/$1")
+  :$0)

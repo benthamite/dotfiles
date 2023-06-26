@@ -835,7 +835,7 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
 :END:
 
 #+begin_src emacs-lisp
-(defvar elpaca-installer-version 0.4)
+(defvar elpaca-installer-version 0.5)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -9201,6 +9201,14 @@ FILE."
 
   (advice-add 'pdf-tools-install :around #'ps/pdf-tools-install-no-confirm)
 
+  (defun ps/pdf-tools-delete ()
+    "Delete current PDF."
+    (interactive)
+    (let ((file (buffer-file-name)))
+      (when (yes-or-no-p (format "Delete %s?" file))
+	(delete-file file)
+	(kill-buffer))))
+
   (add-hook 'pdf-tools-enabled-hook #'ps/pdf-tools-apply-theme)
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
   (add-hook 'pdf-tools-enabled-hook #'sow-mode)
@@ -9210,6 +9218,7 @@ FILE."
    "a" 'ps/pdf-tools-copy-all-text
    "c" 'ps/pdf-count-words
    "C" 'ps/pdf-tools-clear-page-selection
+   "D" 'ps/pdf-tools-delete
    "e" 'pdf-annot-add-highlight-markup-annotation
    "h" 'pdf-annot-add-highlight-markup-annotation
    "j" 'pdf-view-goto-page
@@ -13524,7 +13533,7 @@ Formats current entry according to variable `bibtex-entry-format'."
   ;; Remove accents
   (setq bibtex-autokey-before-presentation-function 'ps/bibtex-asciify-string)
   ;; check tweaked version of `bibtex-format-entry' above
-  (setq bibtex-entry-format '(opts-or-alts-fields last-comma delimiters page-dashes))
+  (setq bibtex-entry-format '(opts-or-alts-fields last-comma delimiters page-dashes realign))
 
   (defun ps/ebib-replace-element-by-name (list target-name new-element)
     "Replace the element in LIST whose name matches TARGET-NAME with NEW-ELEMENT."
@@ -13738,6 +13747,7 @@ The correct Biblatex field for this information is
 
   (defun ps/bibtex-add-or-update-field (field value)
     "Add or update FIELD with VALUE in the current BibTeX entry."
+    (bibtex-beginning-of-entry)
     ;; Check if FIELD exists
     (unless (bibtex-search-forward-field field)
       (bibtex-beginning-of-entry)
@@ -13769,8 +13779,11 @@ and sets the value of the field for all entries to 'Tlön'."
         (ps/bibtex-add-database-field file))))
 
   (defun ps/bibtex-auto-clean-entry ()
-    ""
+    "Clean up bibtex entry at poiint upon saving."
     (remove-hook 'after-save-hook 'ps/bibtex-auto-clean-entry t)
+    (when (string= (file-name-directory (buffer-file-name))
+                   (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/"))
+      (ps/bibtex-add-or-update-field "database" "Tlön"))
     (bibtex-clean-entry)
     (save-buffer)
     (add-hook 'after-save-hook 'ps/bibtex-auto-clean-entry nil t))

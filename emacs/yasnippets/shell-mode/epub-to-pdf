@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: ebook-convert
-# key: ec
+# name: epub-to-pdf
+# key: etp
 # contributor: Pablo Stafforini
 # --
 ebook-convert "`(current-kill 0)`" "`(file-name-with-extension (file-name-sans-extension (current-kill 0)) "pdf")`"

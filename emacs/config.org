@@ -15467,6 +15467,22 @@ If applicable, open external website to set rating there as well."
       (setq rating "10"))
     rating)
 
+  (defun ps/ebib-no-translation-found ()
+    "Log a note indicating that no translation for this work was found."
+    (interactive)
+    (let ((key (ebib--get-key-at-point))
+          (db ebib--cur-db))
+      (when (ebib-get-field-value "note" key db 'noerror t)
+        (user-error "Note field is not empty."))
+      (ebib-set-field-value "note"
+                            (format "No translation found on %s." (format-time-string "%Y-%m-%d"))
+                            key db)
+      (ebib--update-entry-buffer)
+      (set-buffer-modified-p nil)
+      (ebib--set-modified t db t (seq-filter (lambda (dependent)
+                                               (ebib-db-has-key key dependent))
+                                             (ebib--list-dependents db)))))
+
   (defun ps/ebib-move-entry-to-tlon ()
     "Move bibliographic entry associated with the key at point to the Tlön bibliography."
     (interactive)
@@ -15512,6 +15528,7 @@ If applicable, open external website to set rating there as well."
    "r" 'ps/ebib-rename-files
    "s" 'ps/ebib-search-dwim
    "t" 'ps/ebib-search-book-dwim
+   "T" 'ps/ebib-no-translation-found
    "u" 'ebib-browse-url
    "V" 'ps/ebib-search-internet-archive
    "w" 'ps/ebib-download-dwim

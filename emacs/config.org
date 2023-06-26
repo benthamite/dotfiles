@@ -9201,6 +9201,14 @@ FILE."
 
   (advice-add 'pdf-tools-install :around #'ps/pdf-tools-install-no-confirm)
 
+  (defun ps/pdf-tools-delete ()
+    "Delete current PDF."
+    (interactive)
+    (let ((file (buffer-file-name)))
+      (when (yes-or-no-p (format "Delete %s?" file))
+	(delete-file file)
+	(kill-buffer))))
+
   (add-hook 'pdf-tools-enabled-hook #'ps/pdf-tools-apply-theme)
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
   (add-hook 'pdf-tools-enabled-hook #'sow-mode)
@@ -9210,6 +9218,7 @@ FILE."
    "a" 'ps/pdf-tools-copy-all-text
    "c" 'ps/pdf-count-words
    "C" 'ps/pdf-tools-clear-page-selection
+   "D" 'ps/pdf-tools-delete
    "e" 'pdf-annot-add-highlight-markup-annotation
    "h" 'pdf-annot-add-highlight-markup-annotation
    "j" 'pdf-view-goto-page

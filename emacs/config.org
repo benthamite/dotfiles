@@ -13747,6 +13747,7 @@ The correct Biblatex field for this information is
 
   (defun ps/bibtex-add-or-update-field (field value)
     "Add or update FIELD with VALUE in the current BibTeX entry."
+    (bibtex-beginning-of-entry)
     ;; Check if FIELD exists
     (unless (bibtex-search-forward-field field)
       (bibtex-beginning-of-entry)

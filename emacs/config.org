@@ -180,7 +180,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#peep-dired][peep-dired]]
   - [[#minibuffer][minibuffer]]
   - [[#ibuffer][ibuffer]]
-  - [[#filenotify][filenotify]]
   - [[#uniquify][uniquify]]
   - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
   - [[#tramp][tramp]]
@@ -4809,27 +4808,6 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
   :general
   (ibuffer-mode-map
    "k" 'ibuffer-do-delete))
-#+end_src
-
-** filenotify
-:PROPERTIES:
-:ID:       4237BEA2-6E35-423E-96A9-C10AE1458366
-:END:
-
-/[[https://www.gnu.org/software/emacs/manual/html_node/elisp/File-Notifications.html][filenotify]] is a library that provides a unified interface for watching of filesystems for changes of files./
-
-#+begin_src emacs-lisp :results silent
-(use-feature filenotify
-  :demand t
-  :config
-  ;; Copied from lists.gnu.org/archive/html/emacs-devel/2021-10/msg01206.html
-  (defun ps/file-notify-rm-all-watches ()
-    "Remove all existing file notification watches from Emacs."
-    (interactive)
-    (maphash
-     (lambda (key _value)
-       (file-notify-rm-watch key))
-     file-notify-descriptors)))
 #+end_src
 
 ** uniquify

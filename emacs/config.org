@@ -6959,6 +6959,9 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
 
   (vertico-multiform-mode)
 
+  ;; youtu.be/L_4pLN0gXGI?t=779
+  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
+
   :general
   (vertico-map
    "<C-i>" 'vertico-exit

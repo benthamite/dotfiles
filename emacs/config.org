@@ -15358,6 +15358,7 @@ is created following the same schema as notes created with
   (defvar ps/ebib-auto-save-files
     (list ps/file-personal-bibliography-new
           ps/file-tlon-bibliography-fluid
+          ps/file-tlon-bibliography-originals
           ps/file-tlon-bibliography-finished
           ps/file-tlon-bibliography-pending)
     "List of database files that should be auto-saved.
@@ -15463,6 +15464,31 @@ If applicable, open external website to set rating there as well."
       (ebib--set-modified t db t (seq-filter (lambda (dependent)
                                                (ebib-db-has-key key dependent))
                                              (ebib--list-dependents db)))))
+
+  (defun ps/ebib-create-translation-entry (&optional title)
+    "Create an entry for the translation of the current entry."
+    (interactive)
+    (let* ((key (ebib--get-key-at-point))
+           (db ebib--cur-db)
+           (author (ebib-get-field-value "author" key db nil t))
+           (new-db-num (ps/ebib-get-db-number ps/file-tlon-bibliography-pending))
+           (title (or title (read-string "Title: ")))
+           (date "2023")
+           (translator "Tlön")
+           (translation key))
+      (ebib-switch-to-database-nth new-db-num)
+      (ebib-add-entry)
+      (let ((new-key (ebib--get-key-at-point))
+            (new-db ebib--cur-db))
+        (dolist (field '(author title date translator translation))
+          (ebib-set-field-value (symbol-name field) (symbol-value field) new-key new-db))
+        (ebib--update-entry-buffer)
+        (ebib-generate-autokey)
+        (ebib-add-keywords-to-entry)
+        (set-buffer-modified-p nil)
+        (ebib--set-modified t db t (seq-filter (lambda (dependent)
+                                                 (ebib-db-has-key key dependent))
+                                               (ebib--list-dependents db))))))
 
   (defun ps/ebib-move-entry-to-tlon ()
     "Move bibliographic entry associated with the key at point to the Tlön bibliography."

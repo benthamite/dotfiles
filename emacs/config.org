@@ -16071,10 +16071,12 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-package mu4e
-  :elpaca (:local-repo
-           "/opt/homebrew/Cellar/mu/1.10.3/share/emacs/site-lisp/mu/mu4e"
-           :pre-build
-           ())
+  :elpaca (mu4e :host github
+                :files ("mu4e/*.el" "build/mu4e/mu4e-meta.el" "build/mu4e/mu4e-config.el" "build/mu4e/mu4e.info")
+                :repo "djcb/mu"
+                :main "mu4e/mu4e.el"
+                :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
+                :build (:not elpaca--compile-info))
   :demand t
   :init
   (setq ps/mu4e-inbox-folder "/Inbox")

@@ -15046,7 +15046,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     The list of websites for the search query is defined by the
     variable `ps/ebib-search-book'"
     (interactive)
-    (ps/ebib--search-or-download-dwim 'search))
+    (ps/ebib--search-or-download 'search))
 
   (defun ps/ebib-get-supertype ()
     "Return the supertype of the current entry."
@@ -15070,7 +15070,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
                    "identifier")))
       query))
 
-  (defun ps/ebib--search-or-download-dwim (action)
+  (defun ps/ebib--search-or-download (action)
     "Perform ACTION (search or download) on the current entry, depending on field at point.
 If point is on field `title', perform ACTION based on its value.
 Else perform ACTION based on the value of its identifier (`doi'
@@ -15175,7 +15175,7 @@ The list of film search functions is specified by
     The list of websites for the search query is defined by the
     variable `ps/ebib-download-book'"
     (interactive)
-    (ps/ebib--search-or-download-dwim 'download))
+    (ps/ebib--search-or-download 'download))
 
   (defun ps/ebib-download-book (query)
     "Search for QUERY with the relevant book download functions.

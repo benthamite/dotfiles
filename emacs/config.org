@@ -15289,8 +15289,7 @@ The list of article download functions is specified by
     (when-let ((file (ebib-db-get-filename ebib--cur-db))
                (key (ebib--get-key-at-point)))
       (find-file file)
-      (goto-char (point-min))
-      (re-search-forward key)))
+      (bibtex-find-entry key)))
 
   (defun ps/ebib-get-file-of-key (key)
     "Return the bibliographic file in which the entry with KEY is found."

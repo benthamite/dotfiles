@@ -15526,6 +15526,11 @@ If applicable, open external website to set rating there as well."
       (ebib ps/file-tlon-bibliography-fluid key)
       (ps/ebib-open-key key)))
 
+  (defun ps/ebib-get-field-value (field)
+    "Get the value of FIELD for the entry at point."
+    (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
+      (ebib-get-field-value field key ebib--cur-db t t)))
+
   :general
   ("A-i" 'ps/ebib-open-or-switch)
   (ebib-multiline-mode-map

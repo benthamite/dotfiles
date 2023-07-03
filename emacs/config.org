@@ -15555,13 +15555,13 @@ If applicable, open external website to set rating there as well."
    "g" 'ps/ebib-search-library-genesis
    "G" 'ps/ebib-search-goodreads
    "h" 'ps/ebib-open-html-file
+   "H" 'ps/ebib-open-html-file-externally
    "i" 'ps/ebib-download-by-identifier
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
    "P" 'ps/ebib-open-pdf-file-externally
    "r" 'ps/ebib-rename-files
    "s" 'ps/ebib-search-dwim
-   "t" 'ps/ebib-search-book-dwim
    "T" 'ps/ebib-no-translation-found
    "u" 'ebib-browse-url
    "V" 'ps/ebib-search-internet-archive

@@ -13695,22 +13695,41 @@ The correct Biblatex field for this information is
           (while (re-search-forward "titleaddon = " nil t)
             (replace-match "journaltitle = " nil nil))))))
 
-  (defun ps/bibtex-move-entry-to-tlon ()
-    "Move the current BibTeX entry to the tlon `new.bib' file."
-    (interactive)
-    (let ((file ps/file-tlon-bibliography-fluid))
-      (when (string= (buffer-file-name) file)
-        (user-error "You are already visiting `%s'!" file))
-      (when-let ((key (ps/bibtex-get-key)))
+  (defun ps/bibtex-move-entry (key target)
+    "Move entry with KEY to TARGET bibliography file."
+    (let ((source (ps/ebib-get-file-of-key key)))
+      (when (string= source target)
+        (user-error "`%s' is already in `%s'!" key target))
+      (with-current-buffer (find-file-noselect source)
+        (bibtex-find-entry key)
         (bibtex-kill-entry)
-        (with-current-buffer (find-file-noselect file)
-          (widen)
-          (goto-char (point-max))
-          (newline)
-          (bibtex-yank)
-          (ps/bibtex-add-or-update-field "database" "Tlön")
-          (save-buffer))
-        (message "Moved entry %s to %s" key file))))
+        (save-buffer))
+      (with-current-buffer (find-file-noselect target)
+        (widen)
+        (goto-char (point-max))
+        (bibtex-yank)
+        (save-buffer))
+      (message "Moved entry %s to %s" key target)))
+
+  (defun ps/bibtex-move-entry-to-finished (&optional key)
+    "Move entry with KEY to `finished.bib'.
+If KEY is nil, use the key of the entry at point."
+    (interactive)
+    (let ((key (or key (ps/bibtex-get-key))))
+      (ps/bibtex-move-entry key ps/file-tlon-bibliography-finished)))
+
+  (defun ps/bibtex-move-entry-to-tlon (&optional key)
+    "Move entry with KEY to `citations-fluid.bib' and set `database' field to `Tlön'.
+If KEY is nil, use the key of the entry at point."
+    (interactive)
+    (let ((key (or key (ps/bibtex-get-key)))
+          (target ps/file-tlon-bibliography-fluid))
+      (ps/bibtex-move-entry key target)
+      (with-current-buffer (find-file-noselect target)
+        (widen)
+        (bibtex-find-entry key)
+        (ps/bibtex-add-or-update-field "database" "Tlön")
+        (save-buffer))))
 
   (defun ps/bibtex-open-in-ebib ()
     "Open the current BibTeX entry in Ebib."

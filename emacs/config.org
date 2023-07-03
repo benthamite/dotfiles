@@ -19269,8 +19269,7 @@ And finally, the section you've all been waiting for.
    "H-." 'tlon-bae-read-forward
    "H-;" 'tlon-bae-read-target-start-or-stop)
   ((gfm-mode-map markdown-mode-map)
-   "s-u" 'tlon-bae-insert-eawiki-url
-   "s-c" 'tlon-bae-finalize-revision
+   "s-c" 'tlon-bae-copy-dwim
    "s-u" 'tlon-bae-insert-tag-url)
   (github-review-mode-map
    "s-c" 'tlon-bae-submit-comment-revisions))

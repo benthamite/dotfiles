@@ -9187,8 +9187,8 @@ FILE."
     (interactive)
     (let ((file (buffer-file-name)))
       (when (yes-or-no-p (format "Delete %s?" file))
-	(delete-file file)
-	(kill-buffer))))
+        (delete-file file)
+        (kill-buffer))))
 
   (add-hook 'pdf-tools-enabled-hook #'ps/pdf-tools-apply-theme)
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
@@ -14707,7 +14707,7 @@ value is copied to the kill ring."
     (ps/ebib-open-file "md"))
 
   (defun ps/ebib-open-pdf-file-externally ()
-    "Open `pdf' file in entry at point, if it (uniquely) exists."
+    "Open `pdf' file in entry at point externally, if it (uniquely) exists."
     (interactive)
     (ps/ebib-open-file-externally "pdf"))
 

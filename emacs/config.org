@@ -14973,9 +14973,8 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     "List of functions that search for books.")
 
   (defvar ps/ebib-download-book-functions
-    '(
+    '(ps/ebib-search-internet-archive
       ;; ps/ebib-search-hathitrust
-      ps/ebib-search-internet-archive
       ;; ps/ebib-search-university-of-toronto
       ps/ebib-search-library-genesis
       ps/ebib-search-audible
@@ -15003,7 +15002,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
 
   (defvar ps/ebib-search-engines '()
     "List of search engine symbols. Used by the
- `ps/define-ebib-search-commands' macro.")
+ `ps/ebib-generate-search-commands' macro.")
 
   (dolist (engine (delete-dups (append ps/ebib-search-book-functions
                                        ps/ebib-search-article-functions
@@ -15064,7 +15063,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       supertype))
 
   (defun ps/ebib-get-query-field ()
-    "Return the field based on whose value the search query will be run.."
+    "Return the field based on whose value the search query will be run."
     (let ((query (if (string= (ebib--current-field) "title")
                      "title"
                    "identifier")))

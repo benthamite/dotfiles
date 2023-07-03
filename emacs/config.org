@@ -14731,6 +14731,11 @@ value is copied to the kill ring."
       (browse-url-of-buffer)
       (kill-buffer html-buffer)))
 
+  (defun ps/ebib-open-html-file-externally ()
+    "Open `html' file in entry at point externally, if it (uniquely) exists."
+    (interactive)
+    (ps/ebib-open-file-externally "html"))
+
   (defvar ps/ebib-valid-file-extensions
     '("pdf" "html" "webm" "flac" "mp3" "md")
     "List of valid file extensions for `ps/ebib-open-file-dwim'.")

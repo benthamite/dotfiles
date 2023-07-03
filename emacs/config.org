@@ -17344,7 +17344,10 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
    "p" 'ps/eww-url-to-pdf
    ":" (lambda! (eww-follow-link '(4)))
    "x" 'eww-browse-with-external-browser
-   "z" 'ps/eww-url-full-capture))
+   "z" 'ps/eww-url-full-capture)
+  (ebib-entry-mode-map
+   "s-h" 'ps/eww-url-to-html
+   "s-p" 'ps/eww-url-to-pdf))
 #+end_src
 
 *** TODO [#5] Integrate eww Chrome, Firefox history

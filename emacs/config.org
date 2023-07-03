@@ -15406,7 +15406,7 @@ The list of files to be watched is defined in `ps/ebib-auto-save-files'."
     (dolist (db ebib--databases)
       (let ((db-file (ebib-db-get-filename db)))
         (when (member db-file ps/ebib-auto-save-files)
-          (file-notify-rm-all-watches)
+          ;; (file-notify-rm-all-watches)
           (file-notify-add-watch
            db-file
            '(change attribute-change)

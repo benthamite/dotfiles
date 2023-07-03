@@ -180,7 +180,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#peep-dired][peep-dired]]
   - [[#minibuffer][minibuffer]]
   - [[#ibuffer][ibuffer]]
-  - [[#filenotify][filenotify]]
   - [[#uniquify][uniquify]]
   - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
   - [[#tramp][tramp]]
@@ -4811,27 +4810,6 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
    "k" 'ibuffer-do-delete))
 #+end_src
 
-** filenotify
-:PROPERTIES:
-:ID:       4237BEA2-6E35-423E-96A9-C10AE1458366
-:END:
-
-/[[https://www.gnu.org/software/emacs/manual/html_node/elisp/File-Notifications.html][filenotify]] is a library that provides a unified interface for watching of filesystems for changes of files./
-
-#+begin_src emacs-lisp :results silent
-(use-feature filenotify
-  :demand t
-  :config
-  ;; Copied from lists.gnu.org/archive/html/emacs-devel/2021-10/msg01206.html
-  (defun ps/file-notify-rm-all-watches ()
-    "Remove all existing file notification watches from Emacs."
-    (interactive)
-    (maphash
-     (lambda (key _value)
-       (file-notify-rm-watch key))
-     file-notify-descriptors)))
-#+end_src
-
 ** uniquify
 :PROPERTIES:
 :ID:       295BE204-62D9-4003-AFB0-06F6D817AE4C
@@ -6980,6 +6958,9 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
   ;; (setq vertico-quick2 avy-keys)
 
   (vertico-multiform-mode)
+
+  ;; youtu.be/L_4pLN0gXGI?t=779
+  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
 
   :general
   (vertico-map
@@ -9206,8 +9187,8 @@ FILE."
     (interactive)
     (let ((file (buffer-file-name)))
       (when (yes-or-no-p (format "Delete %s?" file))
-	(delete-file file)
-	(kill-buffer))))
+        (delete-file file)
+        (kill-buffer))))
 
   (add-hook 'pdf-tools-enabled-hook #'ps/pdf-tools-apply-theme)
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
@@ -13533,7 +13514,7 @@ Formats current entry according to variable `bibtex-entry-format'."
   ;; Remove accents
   (setq bibtex-autokey-before-presentation-function 'ps/bibtex-asciify-string)
   ;; check tweaked version of `bibtex-format-entry' above
-  (setq bibtex-entry-format '(opts-or-alts-fields last-comma delimiters page-dashes realign))
+  (setq bibtex-entry-format '(opts-or-alts-fields last-comma delimiters page-dashes))
 
   (defun ps/ebib-replace-element-by-name (list target-name new-element)
     "Replace the element in LIST whose name matches TARGET-NAME with NEW-ELEMENT."
@@ -13714,22 +13695,43 @@ The correct Biblatex field for this information is
           (while (re-search-forward "titleaddon = " nil t)
             (replace-match "journaltitle = " nil nil))))))
 
-  (defun ps/bibtex-move-entry-to-tlon ()
-    "Move the current BibTeX entry to the tlon `new.bib' file."
+  (defun ps/bibtex-move-entry (key target)
+  "Move entry with KEY to TARGET bibliography file."
+  (unless ebib--cur-db
+    (user-error "Ebib does not seem to be open; please open it first"))
+  (let ((source (ps/ebib-get-file-of-key key)))
+    (when (string= source target)
+      (user-error "`%s' is already in `%s'!" key target))
+    (with-current-buffer (find-file-noselect source)
+      (bibtex-find-entry key)
+      (bibtex-kill-entry)
+      (save-buffer))
+    (with-current-buffer (find-file-noselect target)
+      (widen)
+      (goto-char (point-max))
+      (bibtex-yank)
+      (save-buffer))
+    (message "Moved entry %s to %s" key target)))
+
+  (defun ps/bibtex-move-entry-to-finished (&optional key)
+    "Move entry with KEY to `finished.bib'.
+If KEY is nil, use the key of the entry at point."
     (interactive)
-    (let ((file ps/file-tlon-bibliography-fluid))
-      (when (string= (buffer-file-name) file)
-        (user-error "You are already visiting `%s'!" file))
-      (when-let ((key (ps/bibtex-get-key)))
-        (bibtex-kill-entry)
-        (with-current-buffer (find-file-noselect file)
-          (widen)
-          (goto-char (point-max))
-          (newline)
-          (bibtex-yank)
-          (ps/bibtex-add-or-update-field "database" "Tlön")
-          (save-buffer))
-        (message "Moved entry %s to %s" key file))))
+    (let ((key (or key (ps/bibtex-get-key))))
+      (ps/bibtex-move-entry key ps/file-tlon-bibliography-finished)))
+
+  (defun ps/bibtex-move-entry-to-tlon (&optional key)
+    "Move entry with KEY to `citations-fluid.bib' and set `database' field to `Tlön'.
+If KEY is nil, use the key of the entry at point."
+    (interactive)
+    (let ((key (or key (ps/bibtex-get-key)))
+          (target ps/file-tlon-bibliography-fluid))
+      (ps/bibtex-move-entry key target)
+      (with-current-buffer (find-file-noselect target)
+        (widen)
+        (bibtex-find-entry key)
+        (ps/bibtex-add-or-update-field "database" "Tlön")
+        (save-buffer))))
 
   (defun ps/bibtex-open-in-ebib ()
     "Open the current BibTeX entry in Ebib."
@@ -14557,6 +14559,8 @@ value is copied to the kill ring."
   (setq ebib-extra-fields
         '((biblatex "abstract" "keywords" "langid" "translation" "narrator" "file" "timestamp" "rating" "crossref" "=key=")
           (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
+  (setq ebib-keywords (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc" "tags.txt"))
+  (setq ebib-keywords-use-only-file t)
 
   ;; unhide some fields
   (setq ebib-hidden-fields
@@ -14705,7 +14709,7 @@ value is copied to the kill ring."
     (ps/ebib-open-file "md"))
 
   (defun ps/ebib-open-pdf-file-externally ()
-    "Open `pdf' file in entry at point, if it (uniquely) exists."
+    "Open `pdf' file in entry at point externally, if it (uniquely) exists."
     (interactive)
     (ps/ebib-open-file-externally "pdf"))
 
@@ -14728,6 +14732,11 @@ value is copied to the kill ring."
           (browse-url-browser-function #'eww-browse-url))
       (browse-url-of-buffer)
       (kill-buffer html-buffer)))
+
+  (defun ps/ebib-open-html-file-externally ()
+    "Open `html' file in entry at point externally, if it (uniquely) exists."
+    (interactive)
+    (ps/ebib-open-file-externally "html"))
 
   (defvar ps/ebib-valid-file-extensions
     '("pdf" "html" "webm" "flac" "mp3" "md")
@@ -14966,9 +14975,8 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     "List of functions that search for books.")
 
   (defvar ps/ebib-download-book-functions
-    '(
+    '(ps/ebib-search-internet-archive
       ;; ps/ebib-search-hathitrust
-      ps/ebib-search-internet-archive
       ;; ps/ebib-search-university-of-toronto
       ps/ebib-search-library-genesis
       ps/ebib-search-audible
@@ -14996,7 +15004,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
 
   (defvar ps/ebib-search-engines '()
     "List of search engine symbols. Used by the
- `ps/define-ebib-search-commands' macro.")
+ `ps/ebib-generate-search-commands' macro.")
 
   (dolist (engine (delete-dups (append ps/ebib-search-book-functions
                                        ps/ebib-search-article-functions
@@ -15039,7 +15047,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     The list of websites for the search query is defined by the
     variable `ps/ebib-search-book'"
     (interactive)
-    (ps/ebib--search-or-download-dwim 'search))
+    (ps/ebib--search-or-download 'search))
 
   (defun ps/ebib-get-supertype ()
     "Return the supertype of the current entry."
@@ -15057,13 +15065,13 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       supertype))
 
   (defun ps/ebib-get-query-field ()
-    "Return the field based on whose value the search query will be run.."
+    "Return the field based on whose value the search query will be run."
     (let ((query (if (string= (ebib--current-field) "title")
                      "title"
                    "identifier")))
       query))
 
-  (defun ps/ebib--search-or-download-dwim (action)
+  (defun ps/ebib--search-or-download (action)
     "Perform ACTION (search or download) on the current entry, depending on field at point.
 If point is on field `title', perform ACTION based on its value.
 Else perform ACTION based on the value of its identifier (`doi'
@@ -15168,7 +15176,7 @@ The list of film search functions is specified by
     The list of websites for the search query is defined by the
     variable `ps/ebib-download-book'"
     (interactive)
-    (ps/ebib--search-or-download-dwim 'download))
+    (ps/ebib--search-or-download 'download))
 
   (defun ps/ebib-download-book (query)
     "Search for QUERY with the relevant book download functions.
@@ -15283,8 +15291,7 @@ The list of article download functions is specified by
     (when-let ((file (ebib-db-get-filename ebib--cur-db))
                (key (ebib--get-key-at-point)))
       (find-file file)
-      (goto-char (point-min))
-      (re-search-forward key)))
+      (bibtex-find-entry key)))
 
   (defun ps/ebib-get-file-of-key (key)
     "Return the bibliographic file in which the entry with KEY is found."
@@ -15377,6 +15384,7 @@ is created following the same schema as notes created with
   (defvar ps/ebib-auto-save-files
     (list ps/file-personal-bibliography-new
           ps/file-tlon-bibliography-fluid
+          ps/file-tlon-bibliography-originals
           ps/file-tlon-bibliography-finished
           ps/file-tlon-bibliography-pending)
     "List of database files that should be auto-saved.
@@ -15400,6 +15408,7 @@ The list of files to be watched is defined in `ps/ebib-auto-save-files'."
     (dolist (db ebib--databases)
       (let ((db-file (ebib-db-get-filename db)))
         (when (member db-file ps/ebib-auto-save-files)
+          ;; (file-notify-rm-all-watches)
           (file-notify-add-watch
            db-file
            '(change attribute-change)
@@ -15467,6 +15476,49 @@ If applicable, open external website to set rating there as well."
       (setq rating "10"))
     rating)
 
+  (defun ps/ebib-no-translation-found ()
+    "Log a note indicating that no translation for this work was found."
+    (interactive)
+    (let ((key (ebib--get-key-at-point))
+          (db ebib--cur-db))
+      (when (ebib-get-field-value "note" key db 'noerror t)
+        (user-error "Note field is not empty."))
+      (ebib-set-field-value "note"
+                            (format "No translation found on %s." (format-time-string "%Y-%m-%d"))
+                            key db)
+      (ebib--update-entry-buffer)
+      (set-buffer-modified-p nil)
+      (ebib--set-modified t db t (seq-filter (lambda (dependent)
+                                               (ebib-db-has-key key dependent))
+                                             (ebib--list-dependents db)))))
+
+  (defun ps/ebib-create-translation-entry (&optional title)
+    "Create an entry for the translation of the current entry."
+    (interactive)
+    (let* ((key (ebib--get-key-at-point))
+           (db ebib--cur-db)
+           (new-db-num (ps/ebib-get-db-number ps/file-tlon-bibliography-pending))
+           (author (ebib-get-field-value "author" key db nil t))
+           (title (or title (read-string "Title: ")))
+           (date "2023")
+           (journaltitle "Biblioteca Altruismo Eficaz")
+           (translator "Tlön")
+           (translation key)
+           (langid "spanish")
+           (keywords (ebib--edit-separated-values-field field '(,field) nil)))
+      (ebib-switch-to-database-nth new-db-num)
+      (ebib-add-entry)
+      (let ((new-key (ebib--get-key-at-point))
+            (new-db ebib--cur-db))
+        (dolist (field '(author title date journaltitle translator translation langid keywords))
+          (ebib-set-field-value (symbol-name field) (symbol-value field) new-key new-db)))
+      (ebib--update-entry-buffer))
+    (ebib-generate-autokey)
+    (set-buffer-modified-p nil)
+    (ebib--set-modified t db t (seq-filter (lambda (dependent)
+                                             (ebib-db-has-key key dependent))
+                                           (ebib--list-dependents db))))
+
   (defun ps/ebib-move-entry-to-tlon ()
     "Move bibliographic entry associated with the key at point to the Tlön bibliography."
     (interactive)
@@ -15475,6 +15527,11 @@ If applicable, open external website to set rating there as well."
       (ps/bibtex-move-entry-to-tlon)
       (ebib ps/file-tlon-bibliography-fluid key)
       (ps/ebib-open-key key)))
+
+  (defun ps/ebib-get-field-value (field)
+    "Get the value of FIELD for the entry at point."
+    (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
+      (ebib-get-field-value field key ebib--cur-db t t)))
 
   :general
   ("A-i" 'ps/ebib-open-or-switch)
@@ -15505,13 +15562,14 @@ If applicable, open external website to set rating there as well."
    "g" 'ps/ebib-search-library-genesis
    "G" 'ps/ebib-search-goodreads
    "h" 'ps/ebib-open-html-file
+   "H" 'ps/ebib-open-html-file-externally
    "i" 'ps/ebib-download-by-identifier
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
    "P" 'ps/ebib-open-pdf-file-externally
    "r" 'ps/ebib-rename-files
    "s" 'ps/ebib-search-dwim
-   "t" 'ps/ebib-search-book-dwim
+   "T" 'ps/ebib-no-translation-found
    "u" 'ebib-browse-url
    "V" 'ps/ebib-search-internet-archive
    "w" 'ps/ebib-download-dwim
@@ -15627,8 +15685,10 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     "Advice to set `org-cite-global-bibliography' before Zotra add commands."
     (setq ps/zotra-most-recent-bibliography-file
           (completing-read "Bibfile" (list
-                                      (car ps/personal-bibliography-files)
-                                      (car ps/tlon-bibliography-files))))
+                                      ps/file-tlon-bibliography-fluid
+                                      ps/file-tlon-bibliography-pending
+                                      ps/file-tlon-bibliography-originals
+                                      ps/file-personal-bibliography-new)))
     (funcall orig-fun url-or-identifier ps/zotra-most-recent-bibliography-file entry-format))
 
   (defun ps/zotra-url-full-capture (&optional url)
@@ -16047,10 +16107,12 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/mu4e)
 (use-package mu4e
-  :elpaca (:local-repo
-           "/opt/homebrew/Cellar/mu/1.10.3/share/emacs/site-lisp/mu/mu4e"
-           :pre-build
-           ())
+  :elpaca (mu4e :host github
+                :files ("mu4e/*.el" "build/mu4e/mu4e-meta.el" "build/mu4e/mu4e-config.el" "build/mu4e/mu4e.info")
+                :repo "djcb/mu"
+                :main "mu4e/mu4e.el"
+                :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
+                :build (:not elpaca--compile-info))
   :demand t
   :init
   (setq ps/mu4e-inbox-folder "/Inbox")
@@ -16975,7 +17037,9 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "LinkedIn\\.com"
                      "list-manage\\.com"
                      "loc\\.gov"
+                     "maps\\."
                      "mailist-manage\\.eu"
+                     "metacritic\\.com"
                      "metafilter\\.com"
                      "mercadopago\\.com"
                      "mercadolibre\\.com"
@@ -17181,6 +17245,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
   (defvar ps/eww-readable-exceptions
     '("protesilaos\\.com"
       "wikipedia\\.org"
+      "gwern\\.net"
       "git\\.sr\\.ht")
     "List of URLs for which `eww-readable' should not be used by default.")
 
@@ -17281,7 +17346,10 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
    "p" 'ps/eww-url-to-pdf
    ":" (lambda! (eww-follow-link '(4)))
    "x" 'eww-browse-with-external-browser
-   "z" 'ps/eww-url-full-capture))
+   "z" 'ps/eww-url-full-capture)
+  (ebib-entry-mode-map
+   "s-h" 'ps/eww-url-to-html
+   "s-p" 'ps/eww-url-to-pdf))
 #+end_src
 
 *** TODO [#5] Integrate eww Chrome, Firefox history
@@ -19213,8 +19281,7 @@ And finally, the section you've all been waiting for.
    "H-." 'tlon-bae-read-forward
    "H-;" 'tlon-bae-read-target-start-or-stop)
   ((gfm-mode-map markdown-mode-map)
-   "s-u" 'tlon-bae-insert-eawiki-url
-   "s-c" 'tlon-bae-finalize-revision
+   "s-c" 'tlon-bae-copy-dwim
    "s-u" 'tlon-bae-insert-tag-url)
   (github-review-mode-map
    "s-c" 'tlon-bae-submit-comment-revisions))

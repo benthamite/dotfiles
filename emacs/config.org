@@ -14929,6 +14929,11 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       "https://librarysearch.library.utoronto.ca/discovery/search?query=any,contains,"
       "&tab=Everything&search_scope=UTL_AND_CI&vid=01UTORONTO_INST:UTORONTO&offset=0"))
 
+  (defvar ps/ebib-university-of-california-berkeley
+    '("University of California, Berkeley"
+      "https://search.library.berkeley.edu/discovery/search?query=any,contains,"
+      "&tab=Default_UCLibrarySearch&search_scope=DN_and_CI&vid=01UCS_BER:UCB&offset=0"))
+
   (defvar ps/ebib-hathitrust
     '("HathiTrust"
       "https://babel.hathitrust.org/cgi/ls?q1="
@@ -14990,11 +14995,12 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
 
   (defvar ps/ebib-download-book-functions
     '(ps/ebib-search-internet-archive
-      ;; ps/ebib-search-hathitrust
-      ;; ps/ebib-search-university-of-toronto
+      ps/ebib-search-hathitrust
+      ps/ebib-search-university-of-california-berkeley
       ps/ebib-search-library-genesis
-      ps/ebib-search-audible
-      ps/ebib-search-audiobookbay)
+      ;; ps/ebib-search-audible
+      ;; ps/ebib-search-audiobookbay
+      )
     "List of functions that download books.")
 
   (defvar ps/ebib-search-article-functions

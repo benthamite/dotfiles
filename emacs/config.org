@@ -13697,22 +13697,22 @@ The correct Biblatex field for this information is
             (replace-match "journaltitle = " nil nil))))))
 
   (defun ps/bibtex-move-entry (key target)
-  "Move entry with KEY to TARGET bibliography file."
-  (unless ebib--cur-db
-    (user-error "Ebib does not seem to be open; please open it first"))
-  (let ((source (ps/ebib-get-file-of-key key)))
-    (when (string= source target)
-      (user-error "`%s' is already in `%s'!" key target))
-    (with-current-buffer (find-file-noselect source)
-      (bibtex-find-entry key)
-      (bibtex-kill-entry)
-      (save-buffer))
-    (with-current-buffer (find-file-noselect target)
-      (widen)
-      (goto-char (point-max))
-      (bibtex-yank)
-      (save-buffer))
-    (message "Moved entry %s to %s" key target)))
+    "Move entry with KEY to TARGET bibliography file."
+    (unless ebib--cur-db
+      (user-error "Ebib does not seem to be open; please open it first"))
+    (let ((source (ps/ebib-get-file-of-key key)))
+      (when (string= source target)
+        (user-error "`%s' is already in `%s'!" key target))
+      (with-current-buffer (find-file-noselect source)
+        (bibtex-find-entry key)
+        (bibtex-kill-entry)
+        (save-buffer))
+      (with-current-buffer (find-file-noselect target)
+        (widen)
+        (goto-char (point-max))
+        (bibtex-yank)
+        (save-buffer))
+      (message "Moved entry %s to %s" key target)))
 
   (defun ps/bibtex-move-entry-to-finished (&optional key)
     "Move entry with KEY to `finished.bib'.

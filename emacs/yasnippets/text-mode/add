@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: add
+# key: a
+# contributor: Pablo Stafforini
+# --
+Add `(tlon-bae-magit-get-filename)`

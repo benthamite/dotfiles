@@ -237,6 +237,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#embark][embark]]
   - [[#consult][consult]]
   - [[#consult-dir][consult-dir]]
+  - [[#consult-gh][consult-gh]]
   - [[#consult-yasnippet][consult-yasnippet]]
   - [[#consult-spotify][consult-spotify]]
   - [[#consult-flyspell][consult-flyspell]]
@@ -387,6 +388,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#bibtex-completion][bibtex-completion]]
   - [[#org-roam-bibtex][org-roam-bibtex]]
   - [[#citar][citar]]
+  - [[#citar-markdown][citar-markdown]]
   - [[#citar-citeproc][citar-citeproc]]
   - [[#citar-embark][citar-embark]]
   - [[#citar-org-roam][citar-org-roam]]
@@ -7139,6 +7141,27 @@ buffer are offered."
   ("H-B" 'consult-dir))
 #+end_src
 
+** consult-gh
+:PROPERTIES:
+:ID:       117CEC74-9092-4EE7-BFD3-F34D71F1313C
+:END:
+:LOGBOOK:
+CLOCK: [2023-07-05 Wed 09:34]
+:END:
+
+/[[https://github.com/armindarvish/consult-gh][consult-gh]] provides an interface to interact with GitHub repositories./
+
+#+begin_src emacs-lisp
+(use-package consult-gh
+  :elpaca (consult-gh
+           :host github
+	   :repo "armindarvish/consult-gh")
+  :after consult forge
+  :demand t
+  :config
+  (setq consult-gh-issues-state-to-show "all"))
+#+end_src
+
 ** consult-yasnippet
 :PROPERTIES:
 :ID:       437A790A-467F-46CB-9EE3-25AA91D43D89
@@ -13696,22 +13719,22 @@ The correct Biblatex field for this information is
             (replace-match "journaltitle = " nil nil))))))
 
   (defun ps/bibtex-move-entry (key target)
-  "Move entry with KEY to TARGET bibliography file."
-  (unless ebib--cur-db
-    (user-error "Ebib does not seem to be open; please open it first"))
-  (let ((source (ps/ebib-get-file-of-key key)))
-    (when (string= source target)
-      (user-error "`%s' is already in `%s'!" key target))
-    (with-current-buffer (find-file-noselect source)
-      (bibtex-find-entry key)
-      (bibtex-kill-entry)
-      (save-buffer))
-    (with-current-buffer (find-file-noselect target)
-      (widen)
-      (goto-char (point-max))
-      (bibtex-yank)
-      (save-buffer))
-    (message "Moved entry %s to %s" key target)))
+    "Move entry with KEY to TARGET bibliography file."
+    (unless ebib--cur-db
+      (user-error "Ebib does not seem to be open; please open it first"))
+    (let ((source (ps/ebib-get-file-of-key key)))
+      (when (string= source target)
+        (user-error "`%s' is already in `%s'!" key target))
+      (with-current-buffer (find-file-noselect source)
+        (bibtex-find-entry key)
+        (bibtex-kill-entry)
+        (save-buffer))
+      (with-current-buffer (find-file-noselect target)
+        (widen)
+        (goto-char (point-max))
+        (bibtex-yank)
+        (save-buffer))
+      (message "Moved entry %s to %s" key target)))
 
   (defun ps/bibtex-move-entry-to-finished (&optional key)
     "Move entry with KEY to `finished.bib'.
@@ -13940,6 +13963,7 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
 :ID:       67AB4C5F-2425-4D31-9590-9D13790B4C97
 :END:
 :LOGBOOK:
+CLOCK: [2023-07-05 Wed 08:11]--[2023-07-05 Wed 08:27] =>  0:16
 CLOCK: [2022-10-04 Tue 22:47]--[2022-10-05 Wed 01:01] =>  2:14
 CLOCK: [2022-10-03 Mon 19:15]--[2022-10-03 Mon 19:53] =>  0:38
 CLOCK: [2022-08-30 Tue 15:09]--[2022-08-30 Tue 15:15] =>  0:06
@@ -13983,37 +14007,6 @@ citation styles. See specific functions for more detail."
      #'ignore
      citekeys
      arg))
-
-  ;; do not insert `prenote' and `postnote'
-  (defun citar-markdown-insert-citation (keys &optional invert-prompt)
-    "Insert a pandoc-style citation consisting of KEYS.
-
-If the point is inside a citation, add new keys after the current
-key.
-
-If point is immediately after the opening \[, add new keys
-to the beginning of the citation.
-
-If INVERT-PROMPT is non-nil, invert the meaning of
-`citar-markdown-prompt-for-extra-arguments'."
-    (let* ((citation (citar-markdown-citation-at-point))
-           (keys (if citation (seq-difference keys (car citation)) keys))
-           (keyconcat (mapconcat (lambda (k) (concat "@" k)) keys "; "))
-           (prompt (xor invert-prompt citar-markdown-prompt-for-extra-arguments)))
-      (when keys
-        (if (or (not citation)
-                (= (point) (cadr citation))
-                (= (point) (cddr citation)))
-            (let* ((prenote (when prompt (read-from-minibuffer "Prenote: ")))
-                   (postnote (when prompt (read-from-minibuffer "Postnote: ")))
-                   (prenote (if (string= "" prenote)  "" (concat prenote " ")))
-                   (postnote (if (string= "" postnote) "" (concat ", " postnote))))
-              (insert (el-patch-swap (format "[%s%s%s]" prenote keyconcat postnote)
-                                     (format "[%s]" keyconcat))))
-          (if (= (point) (1+ (cadr citation)))
-              (save-excursion (insert keyconcat "; "))
-            (skip-chars-forward "^;]" (cddr citation))
-            (insert "; " keyconcat))))))
 
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))
@@ -14143,6 +14136,49 @@ Having headings tagged with the type of work they are notes of allows me to quer
 :END:
 
 [cite:@Balintona2022CitationsOrgmodeOrgcite]
+
+** citar-markdown
+:PROPERTIES:
+:ID:       2FC2BA1E-95AD-4264-A452-A5300C29FF3A
+:END:
+
+#+begin_src emacs-lisp
+(use-feature citar-markdown
+  :after citar
+  :demand t
+
+  :init/el-patch
+  ;; do not insert `prenote' and `postnote'
+  (defun citar-markdown-insert-citation (keys &optional invert-prompt)
+    "Insert a pandoc-style citation consisting of KEYS.
+
+If the point is inside a citation, add new keys after the current
+key.
+
+If point is immediately after the opening \[, add new keys
+to the beginning of the citation.
+
+If INVERT-PROMPT is non-nil, invert the meaning of
+`citar-markdown-prompt-for-extra-arguments'."
+    (let* ((citation (citar-markdown-citation-at-point))
+           (keys (if citation (seq-difference keys (car citation)) keys))
+           (keyconcat (mapconcat (lambda (k) (concat "@" k)) keys "; "))
+           (prompt (xor invert-prompt citar-markdown-prompt-for-extra-arguments)))
+      (when keys
+        (if (or (not citation)
+                (= (point) (cadr citation))
+                (= (point) (cddr citation)))
+            (let* ((prenote (when prompt (read-from-minibuffer "Prenote: ")))
+                   (postnote (when prompt (read-from-minibuffer "Postnote: ")))
+                   (prenote (if (string= "" prenote)  "" (concat prenote " ")))
+                   (postnote (if (string= "" postnote) "" (concat ", " postnote))))
+              (insert (el-patch-swap (format "[%s%s%s]" prenote keyconcat postnote)
+                                     (format "[%s]" keyconcat))))
+          (if (= (point) (1+ (cadr citation)))
+              (save-excursion (insert keyconcat "; "))
+            (skip-chars-forward "^;]" (cddr citation))
+            (insert "; " keyconcat)))))))
+#+end_src
 
 ** citar-citeproc
 :PROPERTIES:
@@ -14915,6 +14951,11 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       "https://librarysearch.library.utoronto.ca/discovery/search?query=any,contains,"
       "&tab=Everything&search_scope=UTL_AND_CI&vid=01UTORONTO_INST:UTORONTO&offset=0"))
 
+  (defvar ps/ebib-university-of-california-berkeley
+    '("University of California, Berkeley"
+      "https://search.library.berkeley.edu/discovery/search?query=any,contains,"
+      "&tab=Default_UCLibrarySearch&search_scope=DN_and_CI&vid=01UCS_BER:UCB&offset=0"))
+
   (defvar ps/ebib-hathitrust
     '("HathiTrust"
       "https://babel.hathitrust.org/cgi/ls?q1="
@@ -14976,11 +15017,12 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
 
   (defvar ps/ebib-download-book-functions
     '(ps/ebib-search-internet-archive
-      ;; ps/ebib-search-hathitrust
-      ;; ps/ebib-search-university-of-toronto
+      ps/ebib-search-hathitrust
+      ps/ebib-search-university-of-california-berkeley
       ps/ebib-search-library-genesis
-      ps/ebib-search-audible
-      ps/ebib-search-audiobookbay)
+      ;; ps/ebib-search-audible
+      ;; ps/ebib-search-audiobookbay
+      )
     "List of functions that download books.")
 
   (defvar ps/ebib-search-article-functions
@@ -17012,6 +17054,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "archive\\.org"
                      "audible\\.com"
                      "audiobookbay"
+                     "berkeley\\.edu"
                      "beyondpricing\\.com"
                      "bloomberg\\.com"
                      "calendly\\.com"

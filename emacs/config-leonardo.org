@@ -124,6 +124,9 @@ one hour only."
                      (id "12645897-A06F-44DD-876D-0FFC47D0E742")
                      "** TODO %?\n" :empty-lines 1 :prepend t)
                     ("tb" "tlon: bae")
+                    ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
                     ("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
                      (id "63513494-AB03-4B21-ABD6-8EB3073A7973")
                      "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)

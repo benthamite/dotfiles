@@ -8692,6 +8692,7 @@ insert italic delimiters and place the point in between them."
    "A-C-s-f" 'markdown-outline-next
    "s-b" 'markdown-insert-bold
    "s-e" 'markdown-insert-code
+   "s-f" 'markdown-insert-footnote
    "s-i" 'markdown-insert-italic
    "s-k" 'markdown-insert-link
    "s-p" 'markdown-preview

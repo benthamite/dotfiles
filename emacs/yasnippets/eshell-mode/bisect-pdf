@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: bisect-pdf
+# key: bp
+# contributor: Pablo Stafforini
+# --
+mutool poster -x 2 '`(current-kill 0)`' '`(current-kill 0)`'

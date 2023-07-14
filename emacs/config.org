@@ -15814,14 +15814,6 @@ buffer between `\342\200\200' and `\342\200\279'."
    "z" 'ps/zotra-url-full-capture))
 #+end_src
 
-*** WAITING Launch zotra outside emacs
-:PROPERTIES:
-:ID:       00F3FD0E-44A4-41D6-935D-1E441B823E9D
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-06 Mon 13:45]--[2023-03-06 Mon 13:50] =>  0:05
-:END:
-
 * email
 :PROPERTIES:
 :ID:       2CF6D256-143D-4F3E-8383-36CB090FC4F2

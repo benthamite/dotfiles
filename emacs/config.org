@@ -5943,6 +5943,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   (org-mode-map
    "s-g" 'hydra-org-gcal/body))
 #+end_src
+
 ** calfw
 :PROPERTIES:
 :ID:       05F8BF13-CF3A-43D7-8959-D19E0C7EB092
@@ -7155,7 +7156,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 (use-package consult-gh
   :elpaca (consult-gh
            :host github
-	   :repo "armindarvish/consult-gh")
+           :repo "armindarvish/consult-gh")
   :after consult forge
   :demand t
   :config
@@ -14157,49 +14158,6 @@ Having headings tagged with the type of work they are notes of allows me to quer
 
 [cite:@Balintona2022CitationsOrgmodeOrgcite]
 
-** citar-markdown
-:PROPERTIES:
-:ID:       2FC2BA1E-95AD-4264-A452-A5300C29FF3A
-:END:
-
-#+begin_src emacs-lisp
-(use-feature citar-markdown
-  :after citar
-  :demand t
-
-  :init/el-patch
-  ;; do not insert `prenote' and `postnote'
-  (defun citar-markdown-insert-citation (keys &optional invert-prompt)
-    "Insert a pandoc-style citation consisting of KEYS.
-
-If the point is inside a citation, add new keys after the current
-key.
-
-If point is immediately after the opening \[, add new keys
-to the beginning of the citation.
-
-If INVERT-PROMPT is non-nil, invert the meaning of
-`citar-markdown-prompt-for-extra-arguments'."
-    (let* ((citation (citar-markdown-citation-at-point))
-           (keys (if citation (seq-difference keys (car citation)) keys))
-           (keyconcat (mapconcat (lambda (k) (concat "@" k)) keys "; "))
-           (prompt (xor invert-prompt citar-markdown-prompt-for-extra-arguments)))
-      (when keys
-        (if (or (not citation)
-                (= (point) (cadr citation))
-                (= (point) (cddr citation)))
-            (let* ((prenote (when prompt (read-from-minibuffer "Prenote: ")))
-                   (postnote (when prompt (read-from-minibuffer "Postnote: ")))
-                   (prenote (if (string= "" prenote)  "" (concat prenote " ")))
-                   (postnote (if (string= "" postnote) "" (concat ", " postnote))))
-              (insert (el-patch-swap (format "[%s%s%s]" prenote keyconcat postnote)
-                                     (format "[%s]" keyconcat))))
-          (if (= (point) (1+ (cadr citation)))
-              (save-excursion (insert keyconcat "; "))
-            (skip-chars-forward "^;]" (cddr citation))
-            (insert "; " keyconcat)))))))
-#+end_src
-
 ** citar-citeproc
 :PROPERTIES:
 :ID:       8CE6DBC7-E180-4E6D-B6E2-8D1E2756E765
@@ -19033,7 +18991,6 @@ then the window will be split horizontally rather than vertically."
    "M-d" nil
    "D" 'ps/bbdb-delete-field-or-record-no-confirm))
 #+end_src
-
 
 *** TODO Diagnose why elpaca can't load this
 :PROPERTIES:

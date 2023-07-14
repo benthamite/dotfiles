@@ -13775,7 +13775,8 @@ entry at point."
         (widen)
         (bibtex-find-entry key)
         (ps/bibtex-add-or-update-field "database" "Tlön")
-        (save-buffer))))
+        (save-buffer))
+      (kill-new key)))
 
   (defun ps/bibtex-open-in-ebib ()
     "Open the current BibTeX entry in Ebib."

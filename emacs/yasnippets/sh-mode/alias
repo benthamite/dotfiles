@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: alias
+# key: alias
+# contributor: Pablo Stafforini
+# --
+alias $1="$2"

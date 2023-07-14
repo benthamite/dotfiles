@@ -5210,8 +5210,7 @@ CLOCK: [2021-10-03 Sun 18:45]--[2021-12-30 Thu 12:11] => 2105:26
   (remove-hook 'minibuffer-setup-hook 'winner-save-unconditionally)
 
   :general
-  ("H-A-w" 'winner-undo
-   "H-A-W" 'winner-redo))
+  ("H-W" 'winner-undo))
 #+end_src
 
 ** avy

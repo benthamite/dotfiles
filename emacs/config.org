@@ -14570,7 +14570,6 @@ value is copied to the kill ring."
         '((biblatex "abstract" "keywords" "langid" "translation" "narrator" "file" "timestamp" "rating" "crossref" "=key=")
           (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
   (setq ebib-keywords (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc" "tags.txt"))
-  (setq ebib-keywords-use-only-file t)
 
   ;; unhide some fields
   (setq ebib-hidden-fields

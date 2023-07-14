@@ -5109,8 +5109,6 @@ window depending on the number of present windows."
   ("C-H-0" 'ps/switch-to-last-window
    "C-w" 'ps/narrow-or-widen-dwim
    "H-w" 'delete-window
-   "H-W" 'delete-other-windows
-   "M-A-q" 'delete-frame
    "s-A-," 'ps/split-emacs-chrome-sideways
    "M-–" 'ps/window-buffer-move-dwim ; `emacs-mac'
    "M--" 'ps/window-buffer-move-dwim ; `emacs-plus'

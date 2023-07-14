@@ -14560,7 +14560,6 @@ value is copied to the kill ring."
   (setq ebib-bibtex-dialect 'biblatex)
   (setq ebib-use-timestamp t)
   (setq ebib-timestamp-format "%Y-%m-%d %T (%Z)")
-  (setq ebib-save-xrefs-first nil)
   (setq ebib-default-entry-type "online")
   (setq ebib-uniquify-keys t)
   (setq ebib-index-columns '(("Entry Key" 30 t)

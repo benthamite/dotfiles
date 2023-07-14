@@ -13696,12 +13696,12 @@ Version 2018-11-12 2021-09-17"
                (replace-match (elt $pair 1))))
            $charMap)))))
 
-  (defun ps/bibtex-asciify-string (String)
+  (defun ps/bibtex-asciify-string (string)
     "Returns a new string. e.g. café → cafe.
 See `xah-asciify-text'
 Version 2015-06-08"
     (with-temp-buffer
-      (insert String)
+      (insert string)
       (ps/bibtex-asciify-text (point-min) (point-max))
       (buffer-string)))
 

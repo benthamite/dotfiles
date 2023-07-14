@@ -13064,17 +13064,13 @@ ARG is the prefix argument received when calling interactively the function."
         (let ((context (org-element-context))
               (insert (org-cite-processor-insert (org-cite-get-processor name))))
           (cond
-           ((memq (org-element-type context) '(citation citation-reference))
+           ((org-element-type-p context '(citation citation-reference))
             (funcall insert context arg))
            (el-patch-remove
              ((org-cite--allowed-p context)
               (funcall insert nil arg)))
-           (el-patch-swap
-             (t
-              (user-error "Cannot insert a citation here"))
-             (t
-              (funcall insert nil arg)))
-           ))))))
+           (t
+            (el-patch-swap (user-error "Cannot insert a citation here") (funcall insert nil arg)))))))))
 
   :config
   ;; (setq org-cite-global-bibliography ps/all-bibliography-files)

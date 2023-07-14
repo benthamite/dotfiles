@@ -19076,6 +19076,15 @@ then the window will be split horizontally rather than vertically."
     (add-to-list 'global-mode-string '("" keycast-mode-line))))
 #+end_src
 
+** activity-watch
+
+#+begin_src emacs-lisp
+(use-package activity-watch-mode
+  :demand t
+  :config
+  (global-activity-watch-mode))
+#+end_src
+
 ** custom
 :PROPERTIES:
 :ID:       7C328D33-DCFE-4E47-8B58-7C27E7F7C1DB

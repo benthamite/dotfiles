@@ -13377,9 +13377,9 @@ Formats current entry according to variable `bibtex-entry-format'."
                                (string-equal-ignore-case field-name "pages")
                                (progn (goto-char beg-text)
                                       (looking-at
-
-                                       "\\([\"{][0-9]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+[\"}]\\)")))
-                          (replace-match "\\1--\\2"))
+                                       (el-patch-swap "\\([\"{][0-9]+\\)[ \t\n]*--?[ \t\n]*\\([0-9]+[\"}]\\)"
+                                                      "\\([\"{][0-9]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+[\"}]\\)"))))
+                          (replace-match (el-patch-swap "\\1-\\2" "\\1--\\2")))
 
                       ;; enclose field text by braces according to
                       ;; `bibtex-field-braces-alist'.

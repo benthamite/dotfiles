@@ -11778,7 +11778,7 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
      ("v" . (org-yank))
      ("Other")
      ("f" . (ace-link-org))
-     ("a" . (org-open-at-point nil))
+     ("a" . (org-archive-to-archive-sibling))
      ("I" . (org-id-copy))
      ("p" . (org-priority))
      ("u" . (org-speed-command-help))

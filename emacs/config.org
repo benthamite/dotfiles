@@ -5157,7 +5157,9 @@ window depending on the number of present windows."
                      (set-frame-parameter nil 'fullscreen 'maximized)))))
 
   :general
-  ("H-S-SPC" 'other-frame))
+  ("A-H-SPC" 'other-frame)
+  ("A-H-n" 'make-frame)
+  ("A-H-w" 'delete-frame))
 #+end_src
 
 ** winum

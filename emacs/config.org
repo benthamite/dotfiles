@@ -13729,6 +13729,15 @@ The correct Biblatex field for this information is
           (while (re-search-forward "titleaddon = " nil t)
             (replace-match "journaltitle = " nil nil))))))
 
+  (defun ps/bibtex-kill-field (field)
+    "Kill FIELD in bibtex entry at point."
+    (save-excursion
+      (bibtex-narrow-to-entry)
+      (bibtex-beginning-of-entry)
+      (when-let ((pos (cadr (bibtex-search-forward-field field t))))
+        (goto-char pos)
+        (bibtex-kill-field))))
+
   (defun ps/bibtex-move-entry (key target)
     "Move entry with KEY to TARGET bibliography file."
     (unless ebib--cur-db

@@ -7689,28 +7689,38 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
       (async-shell-command "brew update; brew upgrade --greedy; brew cleanup; brew doctor")
       (message "Update process finished.")))
 
-  (defun ps/bluetooth-device-dwim (MAC &optional name disconnect)
-    "Connect or disconnect to a bluetooth device NAME in address MAC.
-If DISCONNECT is non-nil, always disconnect."
-    (interactive "sMAC address: ")
-    (let ((app "blueutil"))
-      (unless (executable-find app)
-        (user-error "Please install %s (https://github.com/toy/blueutil)" app))
-      (let* ((output (shell-command-to-string (format "%s --info %s" app MAC)))
-             (status (progn
-                       (string-match (format "address: %s, \\([a-z]+\\)" MAC) output)
-                       (match-string 1 output)))
-             (action (if (or disconnect (string= status "connected"))
-                         "disconnect"
-                       "connect")))
-        (shell-command (format "%s --%s %s" app action MAC))
-        (message "%s: %sed" (or name MAC) action))))
+  (defun ps/macos-bluetooth-device-dwim (MAC &optional device action)
+  "Connect to DEVICE in MAC address if disconnected, and vice versa.
+If ACTION is \"connect\" or \"disconnect\", do nothing if already
+connected or disconnected, respectively."
+  (let ((app "blueutil"))
+    (unless (executable-find app)
+      (user-error "Please install %s (https://github.com/toy/blueutil)" app))
+    (let* ((status (ps/macos-bluetooth-device-status MAC))
+           (action (or action (pcase status
+                                ("connected" "disconnect")
+                                ("not connected" "connect")
+                                (_ (user-error "Unknown status: %s" status)))))
+           (device (or device MAC)))
+      (when (y-or-n-p (format "%s is currently %s. %s? "
+                              device status action))
+        (pcase (shell-command-to-string (format "%s --%s %s" app action MAC))
+          ("" (message "%s: %sed" device action))
+          (_ (user-error "Failed to %s %s" action device)))))))
 
-  (defun ps/airpods-max-dwim (&optional disconnect)
-    "Connect or disconnect to AirPods Max.
-If DISCONNECT is non-nil, always disconnect."
+  (defun ps/macos-bluetooth-device-status (MAC)
+    "Return the connection status of bluetooth device in address MAC."
+    (let* ((app "blueutil")
+           (output (shell-command-to-string (format "%s --info %s" app MAC))))
+      (string-match (format "address: %s, \\([a-z ]*connected\\)" MAC) output)
+      (match-string 1 output)))
+
+  (defun ps/macos-airpods-max-dwim (&optional action)
+    "Connect to AirPods Max if disconnected, and vice versa.
+If ACTION is \"connect\" or \"disconnect\", do nothing if already
+connected or disconnected, respectively."
     (interactive)
-    (ps/bluetooth-device-dwim "90-9c-4a-dd-af-52" "AirPods Max" disconnect))
+    (ps/macos-bluetooth-device-dwim "90-9c-4a-dd-af-52" "AirPods Max" action))
 
   (defun ps/macos-sleep ()
     "Put the system to sleep."

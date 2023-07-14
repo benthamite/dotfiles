@@ -6536,6 +6536,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (forge-topic-mode-map
    "a" 'forge-edit-topic-assignees
    "b" 'forge-edit-topic-body
+   "d" 'forge-delete-comment
    "l" 'forge-edit-topic-labels
    "m" 'forge-edit-topic-milestone
    "x" 'forge-edit-topic-state

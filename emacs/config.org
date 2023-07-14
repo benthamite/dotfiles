@@ -15696,7 +15696,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   ;; the three available values, but only `translation-server' works
   ;; reliably.
   (setq zotra-backend 'translation-server)
-  (setq zotra-cli-command (file-name-concat ps/dir-dropbox "source/zotra-cli/bin/index.js"))
+  (setq zotra-cli-command `("node" ,(file-name-concat ps/dir-dropbox "source/zotra-cli/bin/index.js")))
 
   (defvar ps/zotra-most-recent-bibliography-file nil
     "The most recent bibliography file to which an entry was added.")

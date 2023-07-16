@@ -14535,12 +14535,12 @@ If the field contains a value from a cross-referenced entry, that
 value is copied to the kill ring."
     (unless (or (not field)
                 (string= field "=type="))
-      (el-patch-swap (let ((contents (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+      (el-patch-swap (let ((contents (ps/ebib-get-field-value field)))
                        (if (stringp contents)
                            (progn (kill-new contents)
                                   (message "Field contents copied."))
                          (error "Cannot copy an empty field")))
-                     (let* ((raw-contents (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+                     (let* ((raw-contents (ps/ebib-get-field-value field))
                             (contents (if (f-file-p raw-contents)
                                           (file-truename raw-contents)
                                         raw-contents)))
@@ -14613,13 +14613,7 @@ value is copied to the kill ring."
   (defun ps/ebib-get-isbn ()
     "Return ISBN for the current entry, if it exists."
     (when-let ((isbn
-                (ebib-get-field-value
-                 "isbn"
-                 (ebib--get-key-at-point)
-                 ebib--cur-db
-                 'noerror
-                 'unbraced
-                 'xref)))
+                ps/ebib-get-field-value "isbn"))
       (car (split-string
             (s-replace "-"
                        ""
@@ -14637,7 +14631,7 @@ value is copied to the kill ring."
   (defun ps/ebib--update-file-field-contents (key file-name)
     "docstring"
     (let* ((field "file")
-           (file-field-contents (ebib-get-field-value field key ebib--cur-db t t)))
+           (file-field-contents (ps/ebib-get-field-value field)))
       (unless (and
                file-field-contents
                (catch 'file-exists
@@ -14682,7 +14676,7 @@ value is copied to the kill ring."
     (ebib-copy-field-contents (ebib--current-field)))
   (defun ps/ebib-get-file (extension)
     "docstring"
-    (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
+    (when-let ((files (ps/ebib-get-field-value "file")))
       (catch 'tag
         (mapc
          (lambda (file)
@@ -14775,7 +14769,7 @@ value is copied to the kill ring."
        (let* ((field "file")
               (key (ebib--get-key-at-point))
               (file-list (split-string
-                          (ebib-get-field-value field key ebib--cur-db t t)
+                          (ps/ebib-get-field-value field)
                           ";")))
          (unless (ps/ebib-valid-key-p key)
            (user-error "Entry has an invalid key; pleasse regenerate it"))
@@ -14801,7 +14795,7 @@ value is copied to the kill ring."
 
   (defun ps/ebib-validate-file-stem ()
     "Check that stem of each attached file equals entry's unique key."
-    (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
+    (when-let ((files (ps/ebib-get-field-value "file")))
       (when (catch 'tag
               (mapc
                (lambda (file)
@@ -14993,9 +14987,8 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       ps/ebib-search-hathitrust
       ps/ebib-search-university-of-california-berkeley
       ps/ebib-search-library-genesis
-      ;; ps/ebib-search-audible
-      ;; ps/ebib-search-audiobookbay
-      )
+      ps/ebib-search-audible
+      ps/ebib-search-audiobookbay)
     "List of functions that download books.")
 
   (defvar ps/ebib-search-article-functions
@@ -15066,8 +15059,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
 
   (defun ps/ebib-get-supertype ()
     "Return the supertype of the current entry."
-    (let* ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point)
-                                       ebib--cur-db))
+    (let* ((type (ps/ebib-get-field-value "=type="))
            (supertype (cond
                        ((member type ps/ebib-book-like-entry-types)
                         "book")
@@ -15110,8 +15102,7 @@ The list of book search functions is specified by
     (let ((title (catch 'found
                    (dolist (field '("title" "booktitle"))
                      (when-let ((title
-                                 (ebib-get-field-value
-                                  field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+                                 (ps/ebib-get-field-value field)))
                        (throw 'found title))))))
       title))
 
@@ -15141,7 +15132,7 @@ The list of article search functions is specified by
     (interactive)
     (ebib--execute-when
       (entries
-       (if-let ((title (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+       (if-let ((title (ps/ebib-get-field-value "title")))
            (ps/ebib-search-article title)
          (user-error "Title field is empty")))
       (default
@@ -15160,7 +15151,7 @@ The list of film search functions is specified by
     (interactive)
     (ebib--execute-when
       (entries
-       (if-let ((title (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+       (if-let ((title (ps/ebib-get-field-value "title")))
            (ps/ebib-search-film title)
          (user-error "Title field is empty")))
       (default
@@ -15171,7 +15162,7 @@ The list of film search functions is specified by
     (interactive)
     ;; TODO: Add support for arXiv
     (let ((id (or (ps/ebib-get-isbn)
-                  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+                  (ps/ebib-get-field-value "doi")
                   (read-string "Enter ISBN or DOI: "))))
       (cond ((ps/ebib-isbn-p id)
              (ps/ebib-search-book id))
@@ -15225,7 +15216,7 @@ The list of article download functions is specified by
     (interactive)
     (ebib--execute-when
       (entries
-       (if-let ((title (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+       (if-let ((title (ps/ebib-get-field-value "title")))
            (ps/ebib-download-article title)
          (user-error "Title field is empty")))
       (default
@@ -15236,7 +15227,7 @@ The list of article download functions is specified by
     ;; TODO: Add support for arXiv
     (interactive)
     (let ((id (or (ps/ebib-get-isbn)
-                  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+                  (ps/ebib-get-field-value "doi")
                   (read-string "Enter ISBN or DOI: "))))
       (cond ((ps/doi-utils-doi-p id)
              (ps/doi-utils-doi-download id))
@@ -15278,7 +15269,7 @@ The list of article download functions is specified by
     (ebib--execute-when
       (entries
        (let* ((field (ebib--current-field))
-              (value (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+              (value (ps/ebib-get-field-value field))
               (words (split-string value)))
          (setq words (mapcar
                       (lambda (word)
@@ -15464,7 +15455,7 @@ The list of files to be watched is defined in `ps/ebib-auto-save-files'."
     (interactive)
     (let* ((db ebib--cur-db)
            (key (ebib--db-get-current-entry-key db))
-           (author-to-check (ebib-get-field-value "author" key db 'noerror t)))
+           (author-to-check (ps/ebib-get-field-value "author")))
       (if (member author-to-check ps/ebib-existing-authors)
           (message "Author found in the database!")
         (message "Warning: Author not found in the database!"))))
@@ -15496,7 +15487,7 @@ If applicable, open external website to set rating there as well."
     (interactive)
     (let ((key (ebib--get-key-at-point))
           (db ebib--cur-db))
-      (when (ebib-get-field-value "note" key db 'noerror t)
+      (when (ps/ebib-get-field-value "note")
         (user-error "Note field is not empty."))
       (ebib-set-field-value "note"
                             (format "No translation found on %s." (format-time-string "%Y-%m-%d"))
@@ -15513,7 +15504,7 @@ If applicable, open external website to set rating there as well."
     (let* ((key (ebib--get-key-at-point))
            (db ebib--cur-db)
            (new-db-num (ps/ebib-get-db-number ps/file-tlon-bibliography-pending))
-           (author (ebib-get-field-value "author" key db nil t))
+           (author (ps/ebib-get-field-value "author"))
            (title (or title (read-string "Title: ")))
            (date "2023")
            (journaltitle "Biblioteca Altruismo Eficaz")
@@ -15544,9 +15535,11 @@ If applicable, open external website to set rating there as well."
       (ps/ebib-open-key key)))
 
   (defun ps/ebib-get-field-value (field)
-    "Get the value of FIELD for the entry at point."
+    "Get the value of FIELD for the entry at point.
+Convenience function that calls `ebib-get-field-value' with
+sensible defaults."
     (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
-      (ebib-get-field-value field key ebib--cur-db t t)))
+      (ebib-get-field-value field key ebib--cur-db t t t)))
 
   :general
   ("A-i" 'ps/ebib-open-or-switch)

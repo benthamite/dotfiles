@@ -15552,6 +15552,35 @@ sensible defaults."
     (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
       (ebib-get-field-value field key ebib--cur-db t t t)))
 
+  (defun ps/ebib-get-id ()
+    "Get the ID of the entry at point using `tlon-biblio'."
+    (let ((title (ps/ebib-get-field-value "title"))
+          (author (ps/ebib-get-field-value "author")))
+      (pcase (ps/ebib-get-supertype)
+        ("book" (tlon-biblio-search-isbndb (concat title " " author)))
+        ("article" (tlon-biblio-search-crossref title author))
+        ("film" (concat "https://www.imdb.com/title/" (tlon-biblio-search-imdb
+                                                       (tlon-biblio-translate-title-to-english title)))))))
+
+  (defun ps/ebib-set-id (&optional id)
+    "Add an ID to the current entry, if missing."
+    (interactive)
+    (let ((key (ebib--get-key-at-point))
+          (db ebib--cur-db)
+          (field (pcase (ps/ebib-get-supertype)
+                   ("book" "isbn")
+                   ("article" "doi")
+                   ("film" "url")))
+          (id (or id (ps/ebib-get-id))))
+      (when (ps/ebib-get-field-value field)
+        (user-error "ID field is not empty."))
+      (ebib-set-field-value field id key db)
+      (ebib--update-entry-buffer)
+      (set-buffer-modified-p nil)
+      (ebib--set-modified t db t (seq-filter (lambda (dependent)
+                                               (ebib-db-has-key key dependent))
+                                             (ebib--list-dependents db)))))
+
   :general
   ("A-i" 'ps/ebib-open-or-switch)
   (ebib-multiline-mode-map
@@ -15583,6 +15612,7 @@ sensible defaults."
    "h" 'ps/ebib-open-html-file
    "H" 'ps/ebib-open-html-file-externally
    "i" 'ps/ebib-download-by-identifier
+   "I" 'ps/ebib-set-id
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
    "P" 'ps/ebib-open-pdf-file-externally

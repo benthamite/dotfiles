@@ -8235,6 +8235,15 @@ To check: https://github.com/PillFall/languagetool.el
    "C-c C-c" 'with-editor-finish))
 #+end_src
 
+** typo
+
+#+begin_src emacs-lisp
+(use-package typo
+  :demand t
+  :config
+  (add-hook ’markdown-mode-hook 'typo-mode))
+#+end_src
+
 ** latex-mode
 :PROPERTIES:
 :ID:       AFE18032-EE9C-4D48-9EBA-FE01252467E1

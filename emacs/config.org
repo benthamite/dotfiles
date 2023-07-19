@@ -6310,13 +6310,24 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
   ;; gist.github.com/dotemacs/9a0433341e75e01461c9
   (defun ps/magit-parse-url (url)
-    "convert a git remote location as a HTTP URL"
+    "Convert a git remote location as a HTTP URL"
     (if (string-match "^http" url)
         url
       (replace-regexp-in-string "\\(.*\\)@\\(.*\\):\\(.*\\)\\(\\.git?\\)"
                                 "https://\\2/\\3"
                                 url)))
 
+  (defun ps/magit-move-point-to-start ()
+    (run-at-time 0.3 nil '(lambda () (goto-char (point-min)))))
+
+  (add-hook 'git-commit-setup-hook 'ps/magit-move-point-to-start)
+
+  (dolist (hook '(magit-status-mode-hook
+		  magit-diff-mode-hook))
+    (add-hook hook
+              (lambda ()
+		(setq truncate-lines nil))))
+  
   (transient-define-prefix magit-dispatch ()
     "Invoke a Magit command from a list of available commands."
     :info-manual "(magit)Top"

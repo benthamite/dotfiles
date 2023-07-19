@@ -8222,9 +8222,16 @@ To check: https://github.com/PillFall/languagetool.el
 
 #+begin_src emacs-lisp :results silent
 (use-feature with-editor
+  :config
+  (defun ps/with-editor-finish-and-push ()
+    (interactive)
+    (with-editor-finish nil)
+    (call-interactively #'magit-push-current-to-pushremote))
+
   :general
   ("s-c" 'with-editor-finish
    "s-k" 'with-editor-abort
+   "s-p" 'ps/with-editor-finish-and-push
    "C-c C-c" 'with-editor-finish))
 #+end_src
 

@@ -15477,21 +15477,28 @@ If applicable, open external website to set rating there as well."
     (interactive)
     (let ((rating (ps/ebib-choose-rating))
           (supertype (ps/ebib-get-supertype))
-          (query (ps/ebib-get-query-field)))
-      (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db)
+          (title (ps/ebib-get-field-value "title"))
+          (query (ps/ebib-get-query-field))
+          (key (ebib--get-key-at-point))
+          (db ebib--cur-db))
+      ;; TODO: open rating websites based on supertype
       (pcase supertype
-        (`book (ps/ebib-set-goodreads-rating query rating))
-        (`film (ps/ebib-set-arxiv-rating query rating))
-        (_ (message "No rating website for supertype %s" supertype)))))
+        ("book" (ps/ebib-search-goodreads title))
+        ("film" (ps/ebib-search-imdb title) (ps/ebib-search-letterboxd title)))
+      (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db 'overwrite)
+      (ebib--update-entry-buffer)
+      (set-buffer-modified-p nil)
+      (ebib--set-modified t db t (seq-filter (lambda (dependent)
+                                               (ebib-db-has-key key dependent))
+                                             (ebib--list-dependents db)))))
 
   (defun ps/ebib-choose-rating ()
-    (interactive)
     "Prompt for a rating from 1 to 10 and return the choice."
     (let* ((ratings '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?0))
-           (rating (char-to-string (read-char-choice "Rating (1–10): " ratings)))))
-    (when (eq rating ?0)
-      (setq rating "10"))
-    rating)
+           (rating (char-to-string (read-char-choice "Rating (1–10): " ratings))))
+      (when (string= rating "0")
+        (setq rating "10"))
+      rating))
 
   (defun ps/ebib-no-translation-found ()
     "Log a note indicating that no translation for this work was found."
@@ -15616,7 +15623,8 @@ sensible defaults."
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
    "P" 'ps/ebib-open-pdf-file-externally
-   "r" 'ps/ebib-rename-files
+   "r" 'ps/ebib-set-rating
+   "R" 'ps/ebib-rename-files
    "s" 'ps/ebib-search-dwim
    "T" 'ps/ebib-no-translation-found
    "u" 'ebib-browse-url

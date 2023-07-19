@@ -11818,6 +11818,30 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
             (car (nth n org-stored-links))
             (cadr (nth n org-stored-links))))
 
+  (defun ps/org-sort-links (separator)
+    "Sort list of links in current subtree separated by SEPARATOR."
+    (interactive)
+    (save-restriction
+      (save-excursion
+        (org-narrow-to-subtree)
+        (let* ((element (concat "]]" separator "[["))
+               (patterns `((,element . "]]\n[[")
+                           ("[[id:" . "- [[id:"))))
+          (dolist (pattern patterns)
+            (goto-char (point-min))
+            (while (re-search-forward (regexp-quote (car pattern)) nil t)
+              (replace-match (cdr pattern))))
+          (org-sort-list nil ?a)
+          (dolist (pattern (reverse patterns))
+            (goto-char (point-min))
+            (while (re-search-forward (regexp-quote (cdr pattern)) nil t)
+              (replace-match (car pattern))))))))
+
+  (defun ps/org-sort-keywords ()
+    "Sort pipe-separated keywords in current subtree."
+    (interactive)
+    (ps/org-sort-links " | "))
+
   :general
   ("H-L" 'org-store-link)
   (org-mode-map

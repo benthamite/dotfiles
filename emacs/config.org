@@ -8707,6 +8707,26 @@ insert italic delimiters and place the point in between them."
                  (point))))
       (copy-region-as-kill beg end)))
 
+  (defun ps/markdown--delete-link ()
+    "Delete link at point and return its name."
+    (when-let* ((link (markdown-link-at-pos (point)))
+                (begins (car link))
+                (ends (cadr link))
+                (name (nth 1 (cdr link))))
+      (delete-region begins ends)
+      name))
+
+  (defun ps/markdown-remove-url-in-link (arg)
+    "Remove the markdown link at point and keep the description.
+With prefix argument, prompt for the URL to use."
+    (interactive "P")
+    (when (markdown-inside-link-p)
+      (save-excursion
+        (let* ((name (ps/markdown--delete-link)))
+          (if arg
+              (insert (format "[%s](%s)" name (read-string "URL: ")))
+            (insert name))))))
+
   :general
   ((gfm-mode-map markdown-mode-map)
    "A-C-H-t" 'ps/markdown-copy-section
@@ -8718,6 +8738,7 @@ insert italic delimiters and place the point in between them."
    "s-i" 'markdown-insert-italic
    "s-k" 'markdown-insert-link
    "s-p" 'markdown-preview
+   "s-r" 'ps/markdown-remove-url-in-link
    "s-v") ; should convert from html, mirroring the org binding
   ((ghm-mode-map markdown-mode-map org-mode-map)
    "H-s-v" 'ps/markdown-org-paste-dwim)

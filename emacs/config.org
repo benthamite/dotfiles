@@ -14990,7 +14990,6 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     '(ps/ebib-search-goodreads
       ps/ebib-search-hathitrust
       ps/ebib-search-internet-archive
-      ps/ebib-search-university-of-toronto
       ps/ebib-search-library-genesis
       ps/ebib-search-amazon)
     "List of functions that search for books.")

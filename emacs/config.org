@@ -15312,6 +15312,8 @@ The list of article download functions is specified by
 
   (defun ps/ebib-get-file-of-key (key)
     "Return the bibliographic file in which the entry with KEY is found."
+    (unless ebib--databases
+      (user-error "Please launch Ebib first"))
     (let ((file (catch 'found
                   (dotimes (i (length ebib--databases))
                     (when (member key (ebib-db-list-keys (nth i ebib--databases)))

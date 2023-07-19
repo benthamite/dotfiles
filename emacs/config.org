@@ -15077,9 +15077,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
                        ((member type ps/ebib-article-like-entry-types)
                         "article")
                        ((member type ps/ebib-film-like-entry-types)
-                        "film")
-                       (t
-                        (user-error "Entry type `%s' not supported" type)))))
+                        "film"))))
       supertype))
 
   (defun ps/ebib-get-query-field ()

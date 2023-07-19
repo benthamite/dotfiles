@@ -5109,8 +5109,6 @@ window depending on the number of present windows."
   ("C-H-0" 'ps/switch-to-last-window
    "C-w" 'ps/narrow-or-widen-dwim
    "H-w" 'delete-window
-   "H-W" 'delete-other-windows
-   "M-A-q" 'delete-frame
    "s-A-," 'ps/split-emacs-chrome-sideways
    "M-–" 'ps/window-buffer-move-dwim ; `emacs-mac'
    "M--" 'ps/window-buffer-move-dwim ; `emacs-plus'
@@ -5157,7 +5155,9 @@ window depending on the number of present windows."
                      (set-frame-parameter nil 'fullscreen 'maximized)))))
 
   :general
-  ("H-S-SPC" 'other-frame))
+  ("A-H-SPC" 'other-frame)
+  ("A-H-n" 'make-frame)
+  ("A-H-w" 'delete-frame))
 #+end_src
 
 ** winum
@@ -5210,8 +5210,7 @@ CLOCK: [2021-10-03 Sun 18:45]--[2021-12-30 Thu 12:11] => 2105:26
   (remove-hook 'minibuffer-setup-hook 'winner-save-unconditionally)
 
   :general
-  ("H-A-w" 'winner-undo
-   "H-A-W" 'winner-redo))
+  ("H-W" 'winner-undo))
 #+end_src
 
 ** avy
@@ -5944,6 +5943,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   (org-mode-map
    "s-g" 'hydra-org-gcal/body))
 #+end_src
+
 ** calfw
 :PROPERTIES:
 :ID:       05F8BF13-CF3A-43D7-8959-D19E0C7EB092
@@ -6310,12 +6310,23 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
   ;; gist.github.com/dotemacs/9a0433341e75e01461c9
   (defun ps/magit-parse-url (url)
-    "convert a git remote location as a HTTP URL"
+    "Convert a git remote location as a HTTP URL"
     (if (string-match "^http" url)
         url
       (replace-regexp-in-string "\\(.*\\)@\\(.*\\):\\(.*\\)\\(\\.git?\\)"
                                 "https://\\2/\\3"
                                 url)))
+
+  (defun ps/magit-move-point-to-start ()
+    (run-at-time 0.3 nil '(lambda () (goto-char (point-min)))))
+
+  (add-hook 'git-commit-setup-hook 'ps/magit-move-point-to-start)
+
+  (dolist (hook '(magit-status-mode-hook
+                  magit-diff-mode-hook))
+    (add-hook hook
+              (lambda ()
+                (setq truncate-lines nil))))
 
   (transient-define-prefix magit-dispatch ()
     "Invoke a Magit command from a list of available commands."
@@ -6537,6 +6548,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (forge-topic-mode-map
    "a" 'forge-edit-topic-assignees
    "b" 'forge-edit-topic-body
+   "d" 'forge-delete-comment
    "l" 'forge-edit-topic-labels
    "m" 'forge-edit-topic-milestone
    "x" 'forge-edit-topic-state
@@ -7020,8 +7032,6 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 (use-package consult
   :demand t
   :config
-  ;; replace `rg' with `rga'
-  (setq consult-ripgrep-args "rga --null --line-buffered --color=never --max-columns=1000 --path-separator /   --smart-case --no-heading --with-filename --line-number --search-zip --multiline --multiline-dotall")
   (setq consult-locate-args "mdfind")
   (setq consult-narrow-key "<")
   (setq consult-widen-key ">")
@@ -7155,7 +7165,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 (use-package consult-gh
   :elpaca (consult-gh
            :host github
-	   :repo "armindarvish/consult-gh")
+           :repo "armindarvish/consult-gh")
   :after consult forge
   :demand t
   :config
@@ -7689,28 +7699,38 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
       (async-shell-command "brew update; brew upgrade --greedy; brew cleanup; brew doctor")
       (message "Update process finished.")))
 
-  (defun ps/bluetooth-device-dwim (MAC &optional name disconnect)
-    "Connect or disconnect to a bluetooth device NAME in address MAC.
-If DISCONNECT is non-nil, always disconnect."
-    (interactive "sMAC address: ")
-    (let ((app "blueutil"))
-      (unless (executable-find app)
-        (user-error "Please install %s (https://github.com/toy/blueutil)" app))
-      (let* ((output (shell-command-to-string (format "%s --info %s" app MAC)))
-             (status (progn
-                       (string-match (format "address: %s, \\([a-z]+\\)" MAC) output)
-                       (match-string 1 output)))
-             (action (if (or disconnect (string= status "connected"))
-                         "disconnect"
-                       "connect")))
-        (shell-command (format "%s --%s %s" app action MAC))
-        (message "%s: %sed" (or name MAC) action))))
+  (defun ps/macos-bluetooth-device-dwim (MAC &optional device action)
+  "Connect to DEVICE in MAC address if disconnected, and vice versa.
+If ACTION is \"connect\" or \"disconnect\", do nothing if already
+connected or disconnected, respectively."
+  (let ((app "blueutil"))
+    (unless (executable-find app)
+      (user-error "Please install %s (https://github.com/toy/blueutil)" app))
+    (let* ((status (ps/macos-bluetooth-device-status MAC))
+           (action (or action (pcase status
+                                ("connected" "disconnect")
+                                ("not connected" "connect")
+                                (_ (user-error "Unknown status: %s" status)))))
+           (device (or device MAC)))
+      (when (y-or-n-p (format "%s is currently %s. %s? "
+                              device status action))
+        (pcase (shell-command-to-string (format "%s --%s %s" app action MAC))
+          ("" (message "%s: %sed" device action))
+          (_ (user-error "Failed to %s %s" action device)))))))
 
-  (defun ps/airpods-max-dwim (&optional disconnect)
-    "Connect or disconnect to AirPods Max.
-If DISCONNECT is non-nil, always disconnect."
+  (defun ps/macos-bluetooth-device-status (MAC)
+    "Return the connection status of bluetooth device in address MAC."
+    (let* ((app "blueutil")
+           (output (shell-command-to-string (format "%s --info %s" app MAC))))
+      (string-match (format "address: %s, \\([a-z ]*connected\\)" MAC) output)
+      (match-string 1 output)))
+
+  (defun ps/macos-airpods-max-dwim (&optional action)
+    "Connect to AirPods Max if disconnected, and vice versa.
+If ACTION is \"connect\" or \"disconnect\", do nothing if already
+connected or disconnected, respectively."
     (interactive)
-    (ps/bluetooth-device-dwim "90-9c-4a-dd-af-52" "AirPods Max" disconnect))
+    (ps/macos-bluetooth-device-dwim "90-9c-4a-dd-af-52" "AirPods Max" action))
 
   (defun ps/macos-sleep ()
     "Put the system to sleep."
@@ -8200,10 +8220,26 @@ To check: https://github.com/PillFall/languagetool.el
 
 #+begin_src emacs-lisp :results silent
 (use-feature with-editor
+  :config
+  (defun ps/with-editor-finish-and-push ()
+    (interactive)
+    (with-editor-finish nil)
+    (call-interactively #'magit-push-current-to-pushremote))
+
   :general
   ("s-c" 'with-editor-finish
    "s-k" 'with-editor-abort
+   "s-p" 'ps/with-editor-finish-and-push
    "C-c C-c" 'with-editor-finish))
+#+end_src
+
+** typo
+
+#+begin_src emacs-lisp
+(use-package typo
+  :disabled
+  :config
+  (add-hook ’markdown-mode-hook 'typo-mode))
 #+end_src
 
 ** latex-mode
@@ -8685,6 +8721,26 @@ insert italic delimiters and place the point in between them."
                  (point))))
       (copy-region-as-kill beg end)))
 
+  (defun ps/markdown--delete-link ()
+    "Delete link at point and return its name."
+    (when-let* ((link (markdown-link-at-pos (point)))
+                (begins (car link))
+                (ends (cadr link))
+                (name (nth 1 (cdr link))))
+      (delete-region begins ends)
+      name))
+
+  (defun ps/markdown-remove-url-in-link (arg)
+    "Remove the markdown link at point and keep the description.
+With prefix argument, prompt for the URL to use."
+    (interactive "P")
+    (when (markdown-inside-link-p)
+      (save-excursion
+        (let* ((name (ps/markdown--delete-link)))
+          (if arg
+              (insert (format "[%s](%s)" name (read-string "URL: ")))
+            (insert name))))))
+
   :general
   ((gfm-mode-map markdown-mode-map)
    "A-C-H-t" 'ps/markdown-copy-section
@@ -8696,6 +8752,7 @@ insert italic delimiters and place the point in between them."
    "s-i" 'markdown-insert-italic
    "s-k" 'markdown-insert-link
    "s-p" 'markdown-preview
+   "s-r" 'ps/markdown-remove-url-in-link
    "s-v") ; should convert from html, mirroring the org binding
   ((ghm-mode-map markdown-mode-map org-mode-map)
    "H-s-v" 'ps/markdown-org-paste-dwim)
@@ -9214,6 +9271,16 @@ FILE."
         (delete-file file)
         (kill-buffer))))
 
+  (defun ps/pdf-annot-add-highlight-markup-annotation (list-of-edges
+                                                       &optional color property-alist)
+    "Like `pdf-annot-add-highlight-markup-annotation', but copy the region."
+    (interactive (list (pdf-view-active-region)))
+    (let* ((txt (pdf-view-active-region-text)))
+      (pdf-annot-add-markup-annotation list-of-edges 'highlight color property-alist)
+      (pdf-view-deactivate-region)
+      (kill-new (mapconcat 'identity txt "\n"))))
+
+
   (add-hook 'pdf-tools-enabled-hook #'ps/pdf-tools-apply-theme)
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
   (add-hook 'pdf-tools-enabled-hook #'sow-mode)
@@ -9225,7 +9292,7 @@ FILE."
    "C" 'ps/pdf-tools-clear-page-selection
    "D" 'ps/pdf-tools-delete
    "e" 'pdf-annot-add-highlight-markup-annotation
-   "h" 'pdf-annot-add-highlight-markup-annotation
+   "h" 'ps/pdf-annot-add-highlight-markup-annotation
    "j" 'pdf-view-goto-page
    "k" 'pdf-view-previous-line-or-previous-page
    "l" 'pdf-view-next-line-or-next-page
@@ -9776,6 +9843,16 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   (add-hook 'org-mode-hook #'org-ai-mode)
   (org-ai-install-yasnippets)
   (require 'org-ai-talk))
+#+end_src
+
+** gpt-commit
+
+#+begin_src emacs-lisp
+(use-package gpt-commit
+  :defer 5
+  :config
+  (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" ps/tlon-email)))
+  (setq gpt-commit-model-name "gpt-4"))
 #+end_src
 
 ** whisper
@@ -11768,7 +11845,7 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
      ("v" . (org-yank))
      ("Other")
      ("f" . (ace-link-org))
-     ("a" . (org-open-at-point nil))
+     ("a" . (org-archive-to-archive-sibling))
      ("I" . (org-id-copy))
      ("p" . (org-priority))
      ("u" . (org-speed-command-help))
@@ -11795,6 +11872,30 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
     (format "[[%s][%s]]"
             (car (nth n org-stored-links))
             (cadr (nth n org-stored-links))))
+
+  (defun ps/org-sort-links (separator)
+    "Sort list of links in current subtree separated by SEPARATOR."
+    (interactive)
+    (save-restriction
+      (save-excursion
+        (org-narrow-to-subtree)
+        (let* ((element (concat "]]" separator "[["))
+               (patterns `((,element . "]]\n[[")
+                           ("[[id:" . "- [[id:"))))
+          (dolist (pattern patterns)
+            (goto-char (point-min))
+            (while (re-search-forward (regexp-quote (car pattern)) nil t)
+              (replace-match (cdr pattern))))
+          (org-sort-list nil ?a)
+          (dolist (pattern (reverse patterns))
+            (goto-char (point-min))
+            (while (re-search-forward (regexp-quote (cdr pattern)) nil t)
+              (replace-match (car pattern))))))))
+
+  (defun ps/org-sort-keywords ()
+    "Sort pipe-separated keywords in current subtree."
+    (interactive)
+    (ps/org-sort-links " | "))
 
   :general
   ("H-L" 'org-store-link)
@@ -13053,17 +13154,13 @@ ARG is the prefix argument received when calling interactively the function."
         (let ((context (org-element-context))
               (insert (org-cite-processor-insert (org-cite-get-processor name))))
           (cond
-           ((memq (org-element-type context) '(citation citation-reference))
+           ((org-element-type-p context '(citation citation-reference))
             (funcall insert context arg))
            (el-patch-remove
              ((org-cite--allowed-p context)
               (funcall insert nil arg)))
-           (el-patch-swap
-             (t
-              (user-error "Cannot insert a citation here"))
-             (t
-              (funcall insert nil arg)))
-           ))))))
+           (t
+            (el-patch-swap (user-error "Cannot insert a citation here") (funcall insert nil arg)))))))))
 
   :config
   ;; (setq org-cite-global-bibliography ps/all-bibliography-files)
@@ -13370,9 +13467,9 @@ Formats current entry according to variable `bibtex-entry-format'."
                                (string-equal-ignore-case field-name "pages")
                                (progn (goto-char beg-text)
                                       (looking-at
-
-                                       "\\([\"{][0-9]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+[\"}]\\)")))
-                          (replace-match "\\1--\\2"))
+                                       (el-patch-swap "\\([\"{][0-9]+\\)[ \t\n]*--?[ \t\n]*\\([0-9]+[\"}]\\)"
+                                                      "\\([\"{][0-9]+\\)[ \t\n]*-?[ \t\n]*\\([0-9]+[\"}]\\)"))))
+                          (replace-match (el-patch-swap "\\1-\\2" "\\1--\\2")))
 
                       ;; enclose field text by braces according to
                       ;; `bibtex-field-braces-alist'.
@@ -13686,12 +13783,12 @@ Version 2018-11-12 2021-09-17"
                (replace-match (elt $pair 1))))
            $charMap)))))
 
-  (defun ps/bibtex-asciify-string (String)
+  (defun ps/bibtex-asciify-string (string)
     "Returns a new string. e.g. café → cafe.
 See `xah-asciify-text'
 Version 2015-06-08"
     (with-temp-buffer
-      (insert String)
+      (insert string)
       (ps/bibtex-asciify-text (point-min) (point-max))
       (buffer-string)))
 
@@ -13719,6 +13816,15 @@ The correct Biblatex field for this information is
           (while (re-search-forward "titleaddon = " nil t)
             (replace-match "journaltitle = " nil nil))))))
 
+  (defun ps/bibtex-kill-field (field)
+    "Kill FIELD in bibtex entry at point."
+    (save-excursion
+      (bibtex-narrow-to-entry)
+      (bibtex-beginning-of-entry)
+      (when-let ((pos (cadr (bibtex-search-forward-field field t))))
+        (goto-char pos)
+        (bibtex-kill-field))))
+
   (defun ps/bibtex-move-entry (key target)
     "Move entry with KEY to TARGET bibliography file."
     (unless ebib--cur-db
@@ -13744,8 +13850,9 @@ If KEY is nil, use the key of the entry at point."
       (ps/bibtex-move-entry key ps/file-tlon-bibliography-finished)))
 
   (defun ps/bibtex-move-entry-to-tlon (&optional key)
-    "Move entry with KEY to `citations-fluid.bib' and set `database' field to `Tlön'.
-If KEY is nil, use the key of the entry at point."
+    "Move entry with KEY to `citations-fluid.bib' and insert it in the current buffer.
+Save citekey to kill-ring. If KEY is nil, use the key of the
+entry at point."
     (interactive)
     (let ((key (or key (ps/bibtex-get-key)))
           (target ps/file-tlon-bibliography-fluid))
@@ -13754,7 +13861,8 @@ If KEY is nil, use the key of the entry at point."
         (widen)
         (bibtex-find-entry key)
         (ps/bibtex-add-or-update-field "database" "Tlön")
-        (save-buffer))))
+        (save-buffer))
+      (kill-new key)))
 
   (defun ps/bibtex-open-in-ebib ()
     "Open the current BibTeX entry in Ebib."
@@ -14137,49 +14245,6 @@ Having headings tagged with the type of work they are notes of allows me to quer
 
 [cite:@Balintona2022CitationsOrgmodeOrgcite]
 
-** citar-markdown
-:PROPERTIES:
-:ID:       2FC2BA1E-95AD-4264-A452-A5300C29FF3A
-:END:
-
-#+begin_src emacs-lisp
-(use-feature citar-markdown
-  :after citar
-  :demand t
-
-  :init/el-patch
-  ;; do not insert `prenote' and `postnote'
-  (defun citar-markdown-insert-citation (keys &optional invert-prompt)
-    "Insert a pandoc-style citation consisting of KEYS.
-
-If the point is inside a citation, add new keys after the current
-key.
-
-If point is immediately after the opening \[, add new keys
-to the beginning of the citation.
-
-If INVERT-PROMPT is non-nil, invert the meaning of
-`citar-markdown-prompt-for-extra-arguments'."
-    (let* ((citation (citar-markdown-citation-at-point))
-           (keys (if citation (seq-difference keys (car citation)) keys))
-           (keyconcat (mapconcat (lambda (k) (concat "@" k)) keys "; "))
-           (prompt (xor invert-prompt citar-markdown-prompt-for-extra-arguments)))
-      (when keys
-        (if (or (not citation)
-                (= (point) (cadr citation))
-                (= (point) (cddr citation)))
-            (let* ((prenote (when prompt (read-from-minibuffer "Prenote: ")))
-                   (postnote (when prompt (read-from-minibuffer "Postnote: ")))
-                   (prenote (if (string= "" prenote)  "" (concat prenote " ")))
-                   (postnote (if (string= "" postnote) "" (concat ", " postnote))))
-              (insert (el-patch-swap (format "[%s%s%s]" prenote keyconcat postnote)
-                                     (format "[%s]" keyconcat))))
-          (if (= (point) (1+ (cadr citation)))
-              (save-excursion (insert keyconcat "; "))
-            (skip-chars-forward "^;]" (cddr citation))
-            (insert "; " keyconcat)))))))
-#+end_src
-
 ** citar-citeproc
 :PROPERTIES:
 :ID:       8CE6DBC7-E180-4E6D-B6E2-8D1E2756E765
@@ -14336,6 +14401,8 @@ in the file. Data comes from www.ebook.de."
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
 :LOGBOOK:
+CLOCK: [2023-07-18 Tue 21:20]--[2023-07-18 Tue 21:39] =>  0:19
+CLOCK: [2023-07-18 Tue 08:25]--[2023-07-18 Tue 08:56] =>  0:31
 CLOCK: [2023-06-18 Sun 08:34]--[2023-06-18 Sun 09:19] =>  0:45
 CLOCK: [2023-06-16 Fri 12:47]--[2023-06-16 Fri 13:11] =>  0:24
 CLOCK: [2023-05-28 Sun 09:26]--[2023-05-28 Sun 13:21] =>  3:55
@@ -14560,12 +14627,12 @@ If the field contains a value from a cross-referenced entry, that
 value is copied to the kill ring."
     (unless (or (not field)
                 (string= field "=type="))
-      (el-patch-swap (let ((contents (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+      (el-patch-swap (let ((contents (ps/ebib-get-field-value field)))
                        (if (stringp contents)
                            (progn (kill-new contents)
                                   (message "Field contents copied."))
                          (error "Cannot copy an empty field")))
-                     (let* ((raw-contents (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+                     (let* ((raw-contents (ps/ebib-get-field-value field))
                             (contents (if (f-file-p raw-contents)
                                           (file-truename raw-contents)
                                         raw-contents)))
@@ -14585,7 +14652,6 @@ value is copied to the kill ring."
   (setq ebib-bibtex-dialect 'biblatex)
   (setq ebib-use-timestamp t)
   (setq ebib-timestamp-format "%Y-%m-%d %T (%Z)")
-  (setq ebib-save-xrefs-first nil)
   (setq ebib-default-entry-type "online")
   (setq ebib-uniquify-keys t)
   (setq ebib-index-columns '(("Entry Key" 30 t)
@@ -14596,7 +14662,6 @@ value is copied to the kill ring."
         '((biblatex "abstract" "keywords" "langid" "translation" "narrator" "file" "timestamp" "rating" "crossref" "=key=")
           (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
   (setq ebib-keywords (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc" "tags.txt"))
-  (setq ebib-keywords-use-only-file t)
 
   ;; unhide some fields
   (setq ebib-hidden-fields
@@ -14640,13 +14705,7 @@ value is copied to the kill ring."
   (defun ps/ebib-get-isbn ()
     "Return ISBN for the current entry, if it exists."
     (when-let ((isbn
-                (ebib-get-field-value
-                 "isbn"
-                 (ebib--get-key-at-point)
-                 ebib--cur-db
-                 'noerror
-                 'unbraced
-                 'xref)))
+                (ps/ebib-get-field-value "isbn")))
       (car (split-string
             (s-replace "-"
                        ""
@@ -14664,7 +14723,7 @@ value is copied to the kill ring."
   (defun ps/ebib--update-file-field-contents (key file-name)
     "docstring"
     (let* ((field "file")
-           (file-field-contents (ebib-get-field-value field key ebib--cur-db t t)))
+           (file-field-contents (ps/ebib-get-field-value field)))
       (unless (and
                file-field-contents
                (catch 'file-exists
@@ -14709,7 +14768,7 @@ value is copied to the kill ring."
     (ebib-copy-field-contents (ebib--current-field)))
   (defun ps/ebib-get-file (extension)
     "docstring"
-    (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
+    (when-let ((files (ps/ebib-get-field-value "file")))
       (catch 'tag
         (mapc
          (lambda (file)
@@ -14802,7 +14861,7 @@ value is copied to the kill ring."
        (let* ((field "file")
               (key (ebib--get-key-at-point))
               (file-list (split-string
-                          (ebib-get-field-value field key ebib--cur-db t t)
+                          (ps/ebib-get-field-value field)
                           ";")))
          (unless (ps/ebib-valid-key-p key)
            (user-error "Entry has an invalid key; pleasse regenerate it"))
@@ -14828,7 +14887,7 @@ value is copied to the kill ring."
 
   (defun ps/ebib-validate-file-stem ()
     "Check that stem of each attached file equals entry's unique key."
-    (when-let ((files (ebib-get-field-value "file" (ebib--get-key-at-point) ebib--cur-db t t)))
+    (when-let ((files (ps/ebib-get-field-value "file")))
       (when (catch 'tag
               (mapc
                (lambda (file)
@@ -15010,7 +15069,6 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     '(ps/ebib-search-goodreads
       ps/ebib-search-hathitrust
       ps/ebib-search-internet-archive
-      ps/ebib-search-university-of-toronto
       ps/ebib-search-library-genesis
       ps/ebib-search-amazon)
     "List of functions that search for books.")
@@ -15020,9 +15078,8 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       ps/ebib-search-hathitrust
       ps/ebib-search-university-of-california-berkeley
       ps/ebib-search-library-genesis
-      ;; ps/ebib-search-audible
-      ;; ps/ebib-search-audiobookbay
-      )
+      ps/ebib-search-audible
+      ps/ebib-search-audiobookbay)
     "List of functions that download books.")
 
   (defvar ps/ebib-search-article-functions
@@ -15093,17 +15150,14 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
 
   (defun ps/ebib-get-supertype ()
     "Return the supertype of the current entry."
-    (let* ((type (ebib-get-field-value "=type=" (ebib--get-key-at-point)
-                                       ebib--cur-db))
+    (let* ((type (ps/ebib-get-field-value "=type="))
            (supertype (cond
                        ((member type ps/ebib-book-like-entry-types)
                         "book")
                        ((member type ps/ebib-article-like-entry-types)
                         "article")
                        ((member type ps/ebib-film-like-entry-types)
-                        "film")
-                       (t
-                        (user-error "Entry type `%s' not supported" type)))))
+                        "film"))))
       supertype))
 
   (defun ps/ebib-get-query-field ()
@@ -15137,8 +15191,7 @@ The list of book search functions is specified by
     (let ((title (catch 'found
                    (dolist (field '("title" "booktitle"))
                      (when-let ((title
-                                 (ebib-get-field-value
-                                  field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+                                 (ps/ebib-get-field-value field)))
                        (throw 'found title))))))
       title))
 
@@ -15168,7 +15221,7 @@ The list of article search functions is specified by
     (interactive)
     (ebib--execute-when
       (entries
-       (if-let ((title (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+       (if-let ((title (ps/ebib-get-field-value "title")))
            (ps/ebib-search-article title)
          (user-error "Title field is empty")))
       (default
@@ -15187,7 +15240,7 @@ The list of film search functions is specified by
     (interactive)
     (ebib--execute-when
       (entries
-       (if-let ((title (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+       (if-let ((title (ps/ebib-get-field-value "title")))
            (ps/ebib-search-film title)
          (user-error "Title field is empty")))
       (default
@@ -15198,7 +15251,7 @@ The list of film search functions is specified by
     (interactive)
     ;; TODO: Add support for arXiv
     (let ((id (or (ps/ebib-get-isbn)
-                  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+                  (ps/ebib-get-field-value "doi")
                   (read-string "Enter ISBN or DOI: "))))
       (cond ((ps/ebib-isbn-p id)
              (ps/ebib-search-book id))
@@ -15252,7 +15305,7 @@ The list of article download functions is specified by
     (interactive)
     (ebib--execute-when
       (entries
-       (if-let ((title (ebib-get-field-value "title" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
+       (if-let ((title (ps/ebib-get-field-value "title")))
            (ps/ebib-download-article title)
          (user-error "Title field is empty")))
       (default
@@ -15263,7 +15316,7 @@ The list of article download functions is specified by
     ;; TODO: Add support for arXiv
     (interactive)
     (let ((id (or (ps/ebib-get-isbn)
-                  (ebib-get-field-value "doi" (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)
+                  (ps/ebib-get-field-value "doi")
                   (read-string "Enter ISBN or DOI: "))))
       (cond ((ps/doi-utils-doi-p id)
              (ps/doi-utils-doi-download id))
@@ -15305,7 +15358,7 @@ The list of article download functions is specified by
     (ebib--execute-when
       (entries
        (let* ((field (ebib--current-field))
-              (value (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref))
+              (value (ps/ebib-get-field-value field))
               (words (split-string value)))
          (setq words (mapcar
                       (lambda (word)
@@ -15337,6 +15390,8 @@ The list of article download functions is specified by
 
   (defun ps/ebib-get-file-of-key (key)
     "Return the bibliographic file in which the entry with KEY is found."
+    (unless ebib--databases
+      (user-error "Please launch Ebib first"))
     (let ((file (catch 'found
                   (dotimes (i (length ebib--databases))
                     (when (member key (ebib-db-list-keys (nth i ebib--databases)))
@@ -15491,7 +15546,7 @@ The list of files to be watched is defined in `ps/ebib-auto-save-files'."
     (interactive)
     (let* ((db ebib--cur-db)
            (key (ebib--db-get-current-entry-key db))
-           (author-to-check (ebib-get-field-value "author" key db 'noerror t)))
+           (author-to-check (ps/ebib-get-field-value "author")))
       (if (member author-to-check ps/ebib-existing-authors)
           (message "Author found in the database!")
         (message "Warning: Author not found in the database!"))))
@@ -15502,28 +15557,35 @@ If applicable, open external website to set rating there as well."
     (interactive)
     (let ((rating (ps/ebib-choose-rating))
           (supertype (ps/ebib-get-supertype))
-          (query (ps/ebib-get-query-field)))
-      (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db)
+          (title (ps/ebib-get-field-value "title"))
+          (query (ps/ebib-get-query-field))
+          (key (ebib--get-key-at-point))
+          (db ebib--cur-db))
+      ;; TODO: open rating websites based on supertype
       (pcase supertype
-        (`book (ps/ebib-set-goodreads-rating query rating))
-        (`film (ps/ebib-set-arxiv-rating query rating))
-        (_ (message "No rating website for supertype %s" supertype)))))
+        ("book" (ps/ebib-search-goodreads title))
+        ("film" (ps/ebib-search-imdb title) (ps/ebib-search-letterboxd title)))
+      (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db 'overwrite)
+      (ebib--update-entry-buffer)
+      (set-buffer-modified-p nil)
+      (ebib--set-modified t db t (seq-filter (lambda (dependent)
+                                               (ebib-db-has-key key dependent))
+                                             (ebib--list-dependents db)))))
 
   (defun ps/ebib-choose-rating ()
-    (interactive)
     "Prompt for a rating from 1 to 10 and return the choice."
     (let* ((ratings '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?0))
-           (rating (char-to-string (read-char-choice "Rating (1–10): " ratings)))))
-    (when (eq rating ?0)
-      (setq rating "10"))
-    rating)
+           (rating (char-to-string (read-char-choice "Rating (1–10): " ratings))))
+      (when (string= rating "0")
+        (setq rating "10"))
+      rating))
 
   (defun ps/ebib-no-translation-found ()
     "Log a note indicating that no translation for this work was found."
     (interactive)
     (let ((key (ebib--get-key-at-point))
           (db ebib--cur-db))
-      (when (ebib-get-field-value "note" key db 'noerror t)
+      (when (ps/ebib-get-field-value "note")
         (user-error "Note field is not empty."))
       (ebib-set-field-value "note"
                             (format "No translation found on %s." (format-time-string "%Y-%m-%d"))
@@ -15540,7 +15602,7 @@ If applicable, open external website to set rating there as well."
     (let* ((key (ebib--get-key-at-point))
            (db ebib--cur-db)
            (new-db-num (ps/ebib-get-db-number ps/file-tlon-bibliography-pending))
-           (author (ebib-get-field-value "author" key db nil t))
+           (author (ps/ebib-get-field-value "author"))
            (title (or title (read-string "Title: ")))
            (date "2023")
            (journaltitle "Biblioteca Altruismo Eficaz")
@@ -15571,9 +15633,40 @@ If applicable, open external website to set rating there as well."
       (ps/ebib-open-key key)))
 
   (defun ps/ebib-get-field-value (field)
-    "Get the value of FIELD for the entry at point."
+    "Get the value of FIELD for the entry at point.
+Convenience function that calls `ebib-get-field-value' with
+sensible defaults."
     (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
-      (ebib-get-field-value field key ebib--cur-db t t)))
+      (ebib-get-field-value field key ebib--cur-db t t t)))
+
+  (defun ps/ebib-get-id ()
+    "Get the ID of the entry at point using `tlon-biblio'."
+    (let ((title (ps/ebib-get-field-value "title"))
+          (author (ps/ebib-get-field-value "author")))
+      (pcase (ps/ebib-get-supertype)
+        ("book" (tlon-biblio-search-isbndb (concat title " " author)))
+        ("article" (tlon-biblio-search-crossref title author))
+        ("film" (concat "https://www.imdb.com/title/" (tlon-biblio-search-imdb
+                                                       (tlon-biblio-translate-title-to-english title)))))))
+
+  (defun ps/ebib-set-id (&optional id)
+    "Add an ID to the current entry, if missing."
+    (interactive)
+    (let ((key (ebib--get-key-at-point))
+          (db ebib--cur-db)
+          (field (pcase (ps/ebib-get-supertype)
+                   ("book" "isbn")
+                   ("article" "doi")
+                   ("film" "url")))
+          (id (or id (ps/ebib-get-id))))
+      (when (ps/ebib-get-field-value field)
+        (user-error "ID field is not empty."))
+      (ebib-set-field-value field id key db)
+      (ebib--update-entry-buffer)
+      (set-buffer-modified-p nil)
+      (ebib--set-modified t db t (seq-filter (lambda (dependent)
+                                               (ebib-db-has-key key dependent))
+                                             (ebib--list-dependents db)))))
 
   :general
   ("A-i" 'ps/ebib-open-or-switch)
@@ -15606,10 +15699,12 @@ If applicable, open external website to set rating there as well."
    "h" 'ps/ebib-open-html-file
    "H" 'ps/ebib-open-html-file-externally
    "i" 'ps/ebib-download-by-identifier
+   "I" 'ps/ebib-set-id
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
    "P" 'ps/ebib-open-pdf-file-externally
-   "r" 'ps/ebib-rename-files
+   "r" 'ps/ebib-set-rating
+   "R" 'ps/ebib-rename-files
    "s" 'ps/ebib-search-dwim
    "T" 'ps/ebib-no-translation-found
    "u" 'ebib-browse-url
@@ -15632,18 +15727,6 @@ If applicable, open external website to set rating there as well."
 #+end_src
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
-
-*** TODO Create functions to interact with Letterboxd, IMDb, Metacritic and Rotten Tomatoes
-:PROPERTIES:
-:ID:       3ACB9BC0-8010-4CB6-9CA8-3BC78EA5E029
-:END:
-
-:LOGBOOK:
-CLOCK: [2023-06-16 Fri 16:53]--[2023-06-16 Fri 17:02] =>  0:09
-CLOCK: [2023-06-13 Tue 06:46]--[2023-06-13 Tue 07:43] =>  0:57
-CLOCK: [2023-06-12 Mon 20:48]--[2023-06-12 Mon 21:25] =>  0:37
-CLOCK: [2023-06-12 Mon 10:36]--[2023-06-12 Mon 10:40] =>  0:04
-:END:
 
 *** TODO Ebib: make 'title' field single-line
 :PROPERTIES:
@@ -15718,7 +15801,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   ;; the three available values, but only `translation-server' works
   ;; reliably.
   (setq zotra-backend 'translation-server)
-  (setq zotra-cli-command (file-name-concat ps/dir-dropbox "source/zotra-cli/bin/index.js"))
+  (setq zotra-cli-command `("node" ,(file-name-concat ps/dir-dropbox "source/zotra-cli/bin/index.js")))
 
   (defvar ps/zotra-most-recent-bibliography-file nil
     "The most recent bibliography file to which an entry was added.")
@@ -15749,12 +15832,14 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
   (defun ps/zotra-after-add-entry-hook-function ()
     "Function to trigger with `zotra-after-add-entry-hook'."
-    (revert-buffer nil t)
+    ;; (revert-buffer nil t)
     (goto-char (point-max))
     (ps/bibtex-convert-titleaddon-to-journaltitle)
     (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
+    (ps/bibtex-kill-field "keywords")
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
+    (ps/zotra-fix-octal-sequences)
     (save-buffer)
     (ebib-switch-to-database-nth (ps/ebib-get-db-number ps/zotra-most-recent-bibliography-file))
     (let ((citekey (ps/bibtex-get-key)))
@@ -15767,175 +15852,24 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
   (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
 
-  (defun ps/zotra-add-entry (url-or-search-string &optional is-search bibfile entry-format)
-    (let ((bibfile
-           (or bibfile zotra-default-bibliography
-               (completing-read
-                "Bibfile: "
-                (append (directory-files "." t ".*\\.bib$")
-                        (org-cite-list-bibliography-files))))))
-      (find-file bibfile)
-      (widen)
-      (goto-char (point-max))
-      (when (not (looking-at "^")) (insert "\n"))
-      (insert (zotra-get-entry url-or-search-string is-search entry-format))
-      (save-excursion
-        (save-restriction
-          (bibtex-narrow-to-entry)
-          (bibtex-beginning-of-entry)
-          (goto-char (point-max))
-          (when (not (looking-at "^")) (insert "\n"))
-          (advice-add 'select-safe-coding-system-interactively
-                      :override #'ps/select-safe-coding-system-interactively)
-          (save-buffer)
-          (advice-remove 'select-safe-coding-system-interactively #'ps/select-safe-coding-system-interactively)
-          (run-hooks 'zotra-after-add-entry-hook)))))
-
-  ;; Ugly hack to fix encoding issues.
-  ;; TODO: Fix this properly.
-  (advice-add 'zotra-add-entry :override #'ps/zotra-add-entry)
-
-  (defun ps/select-safe-coding-system-interactively (from to codings unsafe
-                                                          &optional rejected default)
-    "Select interactively a coding system for the region FROM ... TO.
-FROM can be a string, as in `write-region'.
-CODINGS is the list of base coding systems known to be safe for this region,
-  typically obtained with `find-coding-systems-region'.
-UNSAFE is a list of coding systems known to be unsafe for this region.
-REJECTED is a list of coding systems which were safe but for some reason
-  were not recommended in the particular context.
-DEFAULT is the coding system to use by default in the query."
-    ;; At first, if some defaults are unsafe, record at most 11
-    ;; problematic characters and their positions for them by turning
-    ;;	(CODING ...)
-    ;; into
-    ;;	((CODING (POS . CHAR) (POS . CHAR) ...) ...)
-    (if unsafe
-        (setq unsafe
-              (mapcar (lambda (coding)
-                        (cons coding
-                              (if (stringp from)
-                                  (mapcar (lambda (pos)
-                                            (cons pos (aref from pos)))
-                                          (unencodable-char-position
-                                           0 (length from) coding
-                                           11 from))
-                                (mapcar (lambda (pos)
-                                          (cons pos (char-after pos)))
-                                        (unencodable-char-position
-                                         from to coding 11)))))
-                      unsafe)))
-
-    (setq codings (sanitize-coding-system-list codings))
-
-    (let ((window-configuration (current-window-configuration))
-          (bufname (buffer-name))
-          coding-system)
-      (save-excursion
-        ;; If some defaults are unsafe, make sure the offending
-        ;; buffer is displayed.
-        (when (and unsafe (not (stringp from)))
-          (pop-to-buffer bufname)
-          (goto-char (apply #'min (mapcar (lambda (x) (or (car (cadr x)) (point-max)))
-                                          unsafe))))
-        ;; Then ask users to select one from CODINGS while showing
-        ;; the reason why none of the defaults are not used.
-        (with-output-to-temp-buffer "*Warning*"
-          (with-current-buffer standard-output
-            (if (and (null rejected) (null unsafe))
-                (insert "No default coding systems to try for "
-                        (if (stringp from)
-                            (format "string \"%s\"." from)
-                          (format-message "buffer `%s'." bufname)))
-              (insert
-               "These default coding systems were tried to encode"
-               (if (stringp from)
-                   (concat " \"" (if (> (length from) 10)
-                                     (concat (substring from 0 10) "...\"")
-                                   (concat from "\"")))
-                 (format-message
-                  " the following\nproblematic characters in the buffer `%s'"
-                  bufname))
-               ":\n")
-              (select-safe-coding-system--format-list unsafe)
-              (when rejected
-                (insert "These safely encode the text in the buffer,
-but are not recommended for encoding text in this context,
-e.g., for sending an email message.\n ")
-                (dolist (x rejected)
-                  (princ " ") (princ x))
-                (insert "\n"))
-              (when unsafe
-                (insert (if rejected "The other coding systems"
-                          "However, each of them")
-                        (substitute-command-keys
-                         " encountered characters it couldn't encode:\n"))
-                (dolist (coding unsafe)
-                  (insert (format "  %s cannot encode these:" (car coding)))
-                  (let ((i 0)
-                        (func1
-                         (lambda (bufname pos)
-                           (when (buffer-live-p (get-buffer bufname))
-                             (pop-to-buffer bufname)
-                             (goto-char pos))))
-                        (func2
-                         (lambda (bufname pos coding)
-                           (when (buffer-live-p (get-buffer bufname))
-                             (pop-to-buffer bufname)
-                             (if (< (point) pos)
-                                 (goto-char pos)
-                               (forward-char 1)
-                               (search-unencodable-char coding)
-                               (forward-char -1))))))
-                    (dolist (elt (cdr coding))
-                      (insert " ")
-                      (if (stringp from)
-                          (insert (if (< i 10) (cdr elt) "..."))
-                        (if (< i 10)
-                            (insert-text-button
-                             (cdr elt)
-                             :type 'help-xref
-                             'face 'link
-                             'help-echo
-                             "mouse-2, RET: jump to this character"
-                             'help-function func1
-                             'help-args (list bufname (car elt)))
-                          (insert-text-button
-                           "..."
-                           :type 'help-xref
-                           'face 'link
-                           'help-echo
-                           "mouse-2, RET: next unencodable character"
-                           'help-function func2
-                           'help-args (list bufname (car elt)
-                                            (car coding)))))
-                      (setq i (1+ i))))
-                  (insert "\n"))
-                (insert (substitute-command-keys "\
-
-Click on a character (or switch to this window by `\\[other-window]'\n\
-and select the characters by RET) to jump to the place it appears,\n\
-where `\\[universal-argument] \\[what-cursor-position]' will give information about it.\n"))))
-            (insert (substitute-command-keys "\nSelect \
-one of the safe coding systems listed below,\n\
-or cancel the writing with \\[keyboard-quit] and edit the buffer\n\
-   to remove or modify the problematic characters,\n\
-or specify any other coding system (and risk losing\n\
-   the problematic characters).\n\n"))
-            (let ((pos (point))
-                  (fill-prefix "  "))
-              (dolist (x codings)
-                (princ "  ") (princ x))
-              (insert "\n")
-              (fill-region-as-paragraph pos (point)))))
-
-        ;; Read a coding system.
-        (setq coding-system 'utf-8)
-        (setq last-coding-system-specified coding-system))
-
-      (kill-buffer "*Warning*")
-      (set-window-configuration window-configuration)
-      coding-system))
+  ;; Remarkably, this is needed because Emacs can't decode certain octal
+  ;; sequences in Zotero-imported bibtex entries
+  (defun ps/zotra-fix-octal-sequences ()
+    "Replace octal sequences with corresponding characters.
+This function will replace all octal sequences in the current
+buffer between `\342\200\200' and `\342\200\279'."
+    (save-excursion
+      (dotimes (i 79)
+        (let* ((octal (read (format "\"\\342\\200\\%o\"" (+ #o200 i))))
+               (char (decode-coding-string octal 'utf-8)))
+          (goto-char (point-min))
+          (while (search-forward octal nil t)
+            (replace-match char)))
+        (let* ((octal (read (format "\"\\303\\%o\"" (+ #o200 i))))
+               (char (decode-coding-string octal 'utf-8)))
+          (goto-char (point-min))
+          (while (search-forward octal nil t)
+            (replace-match char))))))
 
   :general
   ("C-H-M-S-z" 'zotra-add-entry-from-url) ; triggered by KM macro
@@ -15944,14 +15878,6 @@ or specify any other coding system (and risk losing\n\
    "u" 'zotra-add-entry-from-url
    "z" 'ps/zotra-url-full-capture))
 #+end_src
-
-*** WAITING Launch zotra outside emacs
-:PROPERTIES:
-:ID:       00F3FD0E-44A4-41D6-935D-1E441B823E9D
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-06 Mon 13:45]--[2023-03-06 Mon 13:50] =>  0:05
-:END:
 
 * email
 :PROPERTIES:
@@ -19173,7 +19099,6 @@ then the window will be split horizontally rather than vertically."
    "D" 'ps/bbdb-delete-field-or-record-no-confirm))
 #+end_src
 
-
 *** TODO Diagnose why elpaca can't load this
 :PROPERTIES:
 :ID:       88C73B04-2EBA-40A6-B5F4-23C92E3306B5
@@ -19213,6 +19138,15 @@ then the window will be split horizontally rather than vertically."
           (add-hook 'pre-command-hook 'keycast--update t)
         (remove-hook 'pre-command-hook 'keycast--update)))
     (add-to-list 'global-mode-string '("" keycast-mode-line))))
+#+end_src
+
+** activity-watch
+
+#+begin_src emacs-lisp
+(use-package activity-watch-mode
+  :demand t
+  :config
+  (global-activity-watch-mode))
 #+end_src
 
 ** custom
@@ -19310,6 +19244,8 @@ And finally, the section you've all been waiting for.
   :demand t
   :general
   ("H-r" 'tlon-bae-dispatch)
+  (markdown-mode-map
+   "s-t" 'tlon-bae-insert-cite-tag)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
@@ -19325,7 +19261,7 @@ And finally, the section you've all been waiting for.
    "H-;" 'tlon-bae-read-target-start-or-stop)
   ((gfm-mode-map markdown-mode-map)
    "s-c" 'tlon-bae-copy-dwim
-   "s-u" 'tlon-bae-insert-tag-url)
+   "s-u" 'tlon-bae-insert-tag)
   (github-review-mode-map
    "s-c" 'tlon-bae-submit-comment-revisions))
 #+end_src
@@ -19607,9 +19543,6 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 #+end_src
 
 ** local variables
-:PROPERTIES:
-:ID:       1D879FA3-48B7-4C76-9EE0-8514F9E85A4E
-:END:
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
 # eval: (ps/buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)

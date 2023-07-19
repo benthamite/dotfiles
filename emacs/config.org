@@ -19209,6 +19209,8 @@ And finally, the section you've all been waiting for.
   :demand t
   :general
   ("H-r" 'tlon-bae-dispatch)
+  (markdown-mode-map
+   "s-t" 'tlon-bae-insert-cite-tag)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map

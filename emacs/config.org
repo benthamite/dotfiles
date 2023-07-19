@@ -6323,11 +6323,11 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   (add-hook 'git-commit-setup-hook 'ps/magit-move-point-to-start)
 
   (dolist (hook '(magit-status-mode-hook
-		  magit-diff-mode-hook))
+                  magit-diff-mode-hook))
     (add-hook hook
               (lambda ()
-		(setq truncate-lines nil))))
-  
+                (setq truncate-lines nil))))
+
   (transient-define-prefix magit-dispatch ()
     "Invoke a Magit command from a list of available commands."
     :info-manual "(magit)Top"
@@ -19545,9 +19545,6 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 #+end_src
 
 ** local variables
-:PROPERTIES:
-:ID:       1D879FA3-48B7-4C76-9EE0-8514F9E85A4E
-:END:
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
 # eval: (ps/buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)

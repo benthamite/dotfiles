@@ -9236,6 +9236,16 @@ FILE."
         (delete-file file)
         (kill-buffer))))
 
+  (defun ps/pdf-annot-add-highlight-markup-annotation (list-of-edges
+                                                       &optional color property-alist)
+    "Like `pdf-annot-add-highlight-markup-annotation', but copy the region."
+    (interactive (list (pdf-view-active-region)))
+    (let* ((txt (pdf-view-active-region-text)))
+      (pdf-annot-add-markup-annotation list-of-edges 'highlight color property-alist)
+      (pdf-view-deactivate-region)
+      (kill-new (mapconcat 'identity txt "\n"))))
+
+
   (add-hook 'pdf-tools-enabled-hook #'ps/pdf-tools-apply-theme)
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
   (add-hook 'pdf-tools-enabled-hook #'sow-mode)
@@ -9247,7 +9257,7 @@ FILE."
    "C" 'ps/pdf-tools-clear-page-selection
    "D" 'ps/pdf-tools-delete
    "e" 'pdf-annot-add-highlight-markup-annotation
-   "h" 'pdf-annot-add-highlight-markup-annotation
+   "h" 'ps/pdf-annot-add-highlight-markup-annotation
    "j" 'pdf-view-goto-page
    "k" 'pdf-view-previous-line-or-previous-page
    "l" 'pdf-view-next-line-or-next-page

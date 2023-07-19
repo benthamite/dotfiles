@@ -9800,6 +9800,16 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   (require 'org-ai-talk))
 #+end_src
 
+** gpt-commit
+
+#+begin_src emacs-lisp
+(use-package gpt-commit
+  :defer 5
+  :config
+  (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" ps/tlon-email)))
+  (setq gpt-commit-model-name "gpt-4"))
+#+end_src
+
 ** whisper
 :PROPERTIES:
 :ID:       19FF2502-D4A0-41CC-8F72-E1CF1D960304

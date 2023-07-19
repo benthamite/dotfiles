@@ -15610,18 +15610,6 @@ sensible defaults."
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
-*** TODO Create functions to interact with Letterboxd, IMDb, Metacritic and Rotten Tomatoes
-:PROPERTIES:
-:ID:       3ACB9BC0-8010-4CB6-9CA8-3BC78EA5E029
-:END:
-
-:LOGBOOK:
-CLOCK: [2023-06-16 Fri 16:53]--[2023-06-16 Fri 17:02] =>  0:09
-CLOCK: [2023-06-13 Tue 06:46]--[2023-06-13 Tue 07:43] =>  0:57
-CLOCK: [2023-06-12 Mon 20:48]--[2023-06-12 Mon 21:25] =>  0:37
-CLOCK: [2023-06-12 Mon 10:36]--[2023-06-12 Mon 10:40] =>  0:04
-:END:
-
 *** TODO Ebib: make 'title' field single-line
 :PROPERTIES:
 :ID:       24813D4B-598A-4BCB-8488-281D16D7C56A

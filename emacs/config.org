@@ -14139,13 +14139,15 @@ citation styles. See specific functions for more detail."
       (ps/bibtex-move-entry-to-tlon)))
 
   (defun ps/citar-goto-bibtex-entry (citekey)
-    "Goto the bibliographic entry associated with the CITEKEY in the bibtex file."
-    (interactive (list (citar-select-ref)))
-    (let ((file (ps/ebib-get-file-of-key citekey)))
-      (find-file file)
-      (widen)
-      (goto-char (point-min))
-      (re-search-forward (format "@.*?{%s" citekey))))
+  "Goto the bibliographic entry associated with the CITEKEY in the bibtex file."
+  (interactive (list (citar-select-ref)))
+  (if-let ((file (ps/ebib-get-file-of-key citekey)))
+      (progn
+        (find-file file)
+        (widen)
+        (goto-char (point-min))
+        (re-search-forward (format "@.*?{%s" citekey)))
+    (user-error "No entry found for %s" citekey)))
 
   (defun ps/citar-open-file-at-point ()
     "Launch citar with citekey associated with file at point."

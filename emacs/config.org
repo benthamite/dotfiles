@@ -7910,9 +7910,15 @@ e.g. ~nvm~ isn't recognized by eshell
 - You can also use AppleSpell, the spell checker than comes with MacOS. To do this you need to install Enchant and configure it by following [[http://www.lonecpluspluscoder.com/2021/02/01/setting-up-enchant-for-use-with-flyspell-mode-on-macos/][Timo Geusch]]'s simple instructions. I experienced some performance issues, and I was also unable to make flyspell add words to the AppleSpell dictionary.
 - [[https://www.reddit.com/r/emacs/comments/fxs92h/spell_checkers_in_emacs_in_2020/][This Reddit post]] discusses the existing alternatives.
 
+** jinx
 
+#+begin_src emacs-lisp
+(use-package jinx
   :demand t
   :config
+  (add-to-list 'vertico-multiform-categories
+             '(jinx grid (vertico-grid-annotate . 20)))
+  )
 #+end_src
 
 ** keytar

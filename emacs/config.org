@@ -10140,6 +10140,18 @@ address."
       (org-insert-todo-heading nil t)
       (org-do-demote)))
 
+  (defun ps/org-insert-subheading ()
+    "Insert an org subheading at the end of the current subtree.
+If the subtree contains other subheadings, insert it above them."
+    (interactive)
+    (save-restriction
+      (org-narrow-to-subtree)
+      (outline-next-visible-heading 1)
+      (left-char)
+      (newline)
+      (org-insert-heading)
+      (org-do-demote)))
+
   ;; Adapted from hungyi.net/posts/org-mode-subtree-contents
   (defun ps/org-get-heading-contents ()
     "Get the content text of the heading at point and add it to the `kill-ring'.

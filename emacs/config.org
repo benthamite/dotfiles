@@ -1832,7 +1832,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
     (tlon-init-override-code-if-available
      :ps/faces
      '(
-       (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 115)
+       (set-face-attribute 'default nil :family ps/face-fixed-pitch :height 120)
        (set-face-attribute 'fixed-pitch nil :family ps/face-fixed-pitch :height 1.1)
        (set-face-attribute 'variable-pitch nil :family ps/face-variable-pitch :height 1.4)
        (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family ps/face-fixed-pitch :height 0.8)

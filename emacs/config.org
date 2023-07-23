@@ -15693,14 +15693,14 @@ sensible defaults."
    "o" 'ps/ebib-search-connected-papers
    "p" 'ps/ebib-open-pdf-file
    "P" 'ps/ebib-open-pdf-file-externally
-   "r" 'ps/ebib-set-rating
-   "R" 'ps/ebib-rename-files
+   "R" 'ps/ebib-set-rating
+   "s-r" 'ps/ebib-rename-files
    "s" 'ps/ebib-search-dwim
    "T" 'ps/ebib-no-translation-found
    "u" 'ebib-browse-url
    "V" 'ps/ebib-search-internet-archive
    "w" 'ps/ebib-download-dwim
-   "W" 'ps/ebib-search-wikipedia
+   "W" 'ps/ebib-import-keywords
    "x" 'ps/ebib-search-university-of-toronto
    "y" 'ps/ebib-search-hathitrust
    "z" 'ps/ebib-search-google-scholar

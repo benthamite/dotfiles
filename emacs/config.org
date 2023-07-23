@@ -15858,21 +15858,17 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   ;; Remarkably, this is needed because Emacs can't decode certain octal
   ;; sequences in Zotero-imported bibtex entries
   (defun ps/zotra-fix-octal-sequences ()
-    "Replace octal sequences with corresponding characters.
-This function will replace all octal sequences in the current
-buffer between `\342\200\200' and `\342\200\279'."
+    "Replace octal sequences with corresponding characters."
     (save-excursion
       (dotimes (i 79)
-        (let* ((octal (read (format "\"\\342\\200\\%o\"" (+ #o200 i))))
-               (char (decode-coding-string octal 'utf-8)))
-          (goto-char (point-min))
-          (while (search-forward octal nil t)
-            (replace-match char)))
-        (let* ((octal (read (format "\"\\303\\%o\"" (+ #o200 i))))
-               (char (decode-coding-string octal 'utf-8)))
-          (goto-char (point-min))
-          (while (search-forward octal nil t)
-            (replace-match char))))))
+        (dolist  (pattern '("\"\\302\\%o\""
+                            "\"\\303\\%o\""
+                            "\"\\342\\200\\%o\""))
+          (let* ((octal (read (format pattern (+ #o200 i))))
+                 (char (decode-coding-string octal 'utf-8)))
+            (goto-char (point-min))
+            (while (search-forward octal nil t)
+              (replace-match char)))))))
 
   :general
   ("C-H-M-S-z" 'zotra-add-entry-from-url) ; triggered by KM macro

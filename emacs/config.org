@@ -18323,7 +18323,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 
 #+begin_src emacs-lisp :results silent
 (use-package org-web-tools
-  :defer 30
+  :defer 10
   :commands ps/org-web-tools--youtube-dl
   :config
   ;; This function slightly tweaks `org-web-tools-insert-link-for-url'

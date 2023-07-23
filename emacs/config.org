@@ -10767,6 +10767,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tbt" "Tlön: BAE: Translate article " entry
            (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
            "** TODO [#5] Translate '%?' \n" :empty-lines 1 :prepend t :jump-to-captured t)
+          ("tbw" "Tlön: BAE: Website " entry
+           (id "6171D3E2-8BC4-41E5-9C8A-E808DC4DD9D3")
+           "** TODO [#5] %? \n" :empty-lines 1 :prepend t :jump-to-captured t)
           ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
            (id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
            "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
@@ -10962,7 +10965,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            "* %(ps/org-web-tools--youtube-dl (current-kill 0))\n[[%c][YouTube link]]" :empty-lines 1 :prepend t :immediate-finish t)
           ;; github.com/alphapapa/org-protocol-capture-html#org-capture-template
           ("w" "Web site" entry
-           (file ps/file-downloadsk)
+           (file ps/file-downloads)
            "* %a :website:\n\n%U %?\n\n%:initial")))
   ;; ("w" "Film watchlist" entry
   ;; (id "E821F19E-C619-4895-A084-54D0A2772BAE")
@@ -10989,7 +10992,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
        (forward-line)
        (ps/yasnippet-expand-by-key "ai")
        (message "finished"))
-       ("gd"
+      ("gd"
        (org-ai-mode)
        (org-narrow-to-subtree)
        (forward-line)

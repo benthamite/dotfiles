@@ -15584,7 +15584,7 @@ If applicable, open external website to set rating there as well."
     "Get the value of FIELD for the entry at point.
 Convenience function that calls `ebib-get-field-value' with
 sensible defaults."
-    (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
+    (let ((key (ebib--get-key-at-point)))
       (ebib-get-field-value field key ebib--cur-db t t t)))
 
   (defun ps/ebib-get-id-or-url ()

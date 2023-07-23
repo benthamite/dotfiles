@@ -15587,8 +15587,8 @@ sensible defaults."
     (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
       (ebib-get-field-value field key ebib--cur-db t t t)))
 
-  (defun ps/ebib-get-id ()
-    "Get the ID of the entry at point using `tlon-biblio'."
+  (defun ps/ebib-get-id-or-url ()
+    "Get the ID or URL of the entry at point using `tlon-biblio'."
     (let ((title (ps/ebib-get-field-value "title"))
           (author (ps/ebib-get-field-value "author")))
       (pcase (ps/ebib-get-supertype)
@@ -15606,7 +15606,7 @@ sensible defaults."
                    ("book" "isbn")
                    ("article" "doi")
                    ("film" "url")))
-          (id (or id (ps/ebib-get-id))))
+          (id (or id (ps/ebib-get-id-or-url))))
       (when (ps/ebib-get-field-value field)
         (user-error "ID field is not empty."))
       (ebib-set-field-value field id key db)

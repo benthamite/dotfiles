@@ -8581,6 +8581,33 @@ With prefix argument, prompt for the URL to use."
               (insert (format "[%s](%s)" name (read-string "URL: ")))
             (insert name))))))
 
+  (defun ps/markdown-sort-elements-in-paragraph (separator)
+    "Sort alphabetically the elements in the current paragraph."
+    (interactive)
+    (save-excursion
+      ;; Get paragraph boundaries
+      (let* ((para-start (progn (backward-paragraph)
+                                (skip-chars-forward "\n\t ") (point)))
+             (para-end (progn (end-of-paragraph-text)
+                              (point)))
+             ;; Get paragraph text, separate the links
+             (para-text (buffer-substring-no-properties para-start para-end))
+             (link-list (split-string para-text separator))
+             ;; Trim and sort the links
+             (sorted-links (sort (mapcar 'string-trim link-list)
+                                 'string<)))
+        ;; Clear the current paragraph
+        (delete-region para-start para-end)
+        ;; Replace it with sorted links
+        (goto-char para-start)
+        (insert (mapconcat 'identity sorted-links separator)))))
+
+  (defun ps/markdown-sort-links-in-paragraphs ()
+    "Sort the links in the current paragraph alpabetically.
+Assumes that the links are separated by ` • '"
+    (interactive)
+    (ps/markdown-sort-elements-in-paragraph " • "))
+
   :general
   ((gfm-mode-map markdown-mode-map)
    "A-C-H-t" 'ps/markdown-copy-section
@@ -8593,6 +8620,7 @@ With prefix argument, prompt for the URL to use."
    "s-k" 'markdown-insert-link
    "s-p" 'markdown-preview
    "s-r" 'ps/markdown-remove-url-in-link
+   "s-s" 'ps/markdown-sort-links-in-paragraphs
    "s-v") ; should convert from html, mirroring the org binding
   ((ghm-mode-map markdown-mode-map org-mode-map)
    "H-s-v" 'ps/markdown-org-paste-dwim)

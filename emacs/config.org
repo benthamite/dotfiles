@@ -11776,9 +11776,26 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
               (replace-match (car pattern))))))))
 
   (defun ps/org-sort-keywords ()
-    "Sort pipe-separated keywords in current subtree."
+    "Sort bullet-separated keywords in current subtree."
     (interactive)
-    (ps/org-sort-links " | "))
+    (ps/org-sort-links " • "))
+
+  (defun ps/org-linkify-elements (strings &optional separator)
+    "For each string in STRINGS, return its link if node is found, else the string itself.
+The elements are returned as a string separated by SEPARATOR. If
+SEPARATOR is nil, use ' • '."
+    (let ((nodes (org-roam-node-list)))
+      (string-join
+       (mapcar (lambda (x)
+                 (let* ((node (seq-find (lambda (n)
+                                          (string-equal (downcase (org-roam-node-title n)) (downcase x)))
+                                        nodes))
+                        (nodetitle (if node (org-roam-node-title node))))
+                   (if node
+                       (format "[[%s][%s]]" (org-roam-node-id node) nodetitle)
+                     x)))
+               strings)
+       (or separator " • "))))
 
   :general
   ("H-L" 'org-store-link)

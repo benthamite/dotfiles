@@ -3282,6 +3282,17 @@ clipboard. Either way, save count to kill ring."
           (let ((clipboard-count (kill-new (format "%d" (count-words-region (point-min) (point-max))))))
             (message "Clipboard has %d words" (count-words-region (point-min) (point-max))))))))
 
+  (defun ps/visual-line-mode-enhanced ()
+    "Toggle `visual-line-mode' handling `truncate-lines'."
+    (interactive)
+    (if visual-line-mode
+        (progn
+          (visual-line-mode -1)
+          (setq truncate-lines t))
+      (visual-line-mode)
+      (setq truncate-lines nil)))
+
+
   :general
   ("A-H-c" 'ps/count-words-dwim
    "C-A-e" 'eval-expression
@@ -3289,7 +3300,7 @@ clipboard. Either way, save count to kill ring."
    "H-M"  'ps/exchange-point-and-mark
    "H-m" 'set-mark-command
    "H-Z" 'undo-redo
-   "M-A-i" 'visual-line-mode
+   "M-A-i" 'ps/visual-line-mode-enhanced
    "M-o" 'downcase-dwim
    "M-q" 'save-buffers-kill-terminal
    "M-u" 'capitalize-dwim
@@ -8205,7 +8216,7 @@ To check: https://github.com/PillFall/languagetool.el
 (use-feature text-mode
   :demand t
   :config
-  (add-hook 'text-mode-hook #'visual-line-mode))
+  (add-hook 'text-mode-hook #'ps/visual-line-mode-enhanced))
 #+end_src
 
 *** TODO [#6] Define ~text-mode-hook~ and ~prog-mode-hook~

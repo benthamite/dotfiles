@@ -15616,6 +15616,48 @@ sensible defaults."
                                                (ebib-db-has-key key dependent))
                                              (ebib--list-dependents db)))))
 
+  (defun ps/ebib-import-field (field)
+    (unless (eq major-mode 'ebib-entry-mode)
+      (error "Not in `ebib-entry-mode'"))
+    (if-let ((id (ps/ebib-get-id-or-url)))
+        (let ((entry (zotra-get-entry id))
+              value)
+          (with-temp-buffer (insert entry)
+                            (setq value (bibtex-autokey-get-field field)))
+          (when (string-empty-p value)
+            (user-error "Query returned no field `%s' for the current entry" field))
+          (let ((key (ebib--get-key-at-point)))
+            (ebib-set-field-value field value key ebib--cur-db 'overwrite)
+            (ebib--update-entry-buffer)
+            (set-buffer-modified-p nil)
+            (ebib--set-modified t ebib--cur-db t (seq-filter (lambda (dependent)
+                                                               (ebib-db-has-key key dependent))
+                                                             (ebib--list-dependents ebib--cur-db)))))
+      (user-error "No ID found for the current entry")))
+
+  (defun ps/ebib-import-keywords ()
+    "Import keywords for the current entry and put them in the associated org file."
+    (interactive)
+    (ps/ebib-import-field "keywords"))
+
+  (defun ps/ebib-export-keywords ()
+    "Export keywords in current entry to its associated note file."
+    (interactive)
+    (when-let* ((key (ebib--get-key-at-point))
+                (field "keywords")
+                (keywords (ps/org-linkify-elements
+                           (split-string (ps/ebib-get-field-value field) ", "))))
+      (ebib-db-remove-field-value field key ebib--cur-db)
+      (ebib--redisplay-field field)
+      (ebib--redisplay-index-item field)
+      (ebib--set-modified t ebib--cur-db (seq-filter (lambda (dependent)
+                                                       (ebib-db-has-key key dependent))
+                                                     (ebib--list-dependents ebib--cur-db)))
+      (ps/ebib-citar-open-notes)
+      (ps/org-insert-subheading)
+      (insert (concat field "\n" keywords))
+      (ps/org-sort-keywords)))
+
   :general
   ("A-i" 'ps/ebib-open-or-switch)
   (ebib-multiline-mode-map

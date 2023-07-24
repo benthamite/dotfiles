@@ -15622,7 +15622,8 @@ sensible defaults."
         ("book" (tlon-biblio-search-isbndb (concat title " " author)))
         ("article" (tlon-biblio-search-crossref title author))
         ("film" (concat "https://www.imdb.com/title/" (tlon-biblio-search-imdb
-                                                       (tlon-biblio-translate-title-to-english title)))))))
+                                                       (tlon-biblio-translate-title-to-english title))))
+        (_ (ps/ebib-get-field-value "url")))))
 
   (defun ps/ebib-set-id (&optional id)
     "Add an ID to the current entry, if missing."

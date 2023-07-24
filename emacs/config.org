@@ -12084,6 +12084,17 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
    "s-y" 'ps/org-crypt-dwim))
 #+end_src
 
+** org-element
+
+#+begin_src emacs-lisp
+(use-feature org-element
+  :after org
+  :demand t
+  :config
+  ;; temporarily disable cache to avoid `org-element-cache' errors
+  (setq org-element-use-cache nil))
+#+end_src
+
 ** org-lint
 :PROPERTIES:
 :ID:       43E5754F-7EB8-4FB7-8A92-B57D8BA2AF81

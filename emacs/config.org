@@ -7903,13 +7903,6 @@ e.g. ~nvm~ isn't recognized by eshell
 :ID:       CC425FA6-7E2B-45EC-82DD-6D4402C3BE5C
 :END:
 
-- ispell is a spell-checking interface.
-- flyspell is an ispell enhancement, providing spell-checking on the fly.
-- both ispell and flyspell require a dictionary to work. aspell and hunspell are two such dictionaries. They don't come with MacOS and need to be installed separately (e.g. ~brew install aspell~).
-  - from a cursory search, it appears that aspell is better than hunspell. however, I haven't done any systematic research.
-- You can also use AppleSpell, the spell checker than comes with MacOS. To do this you need to install Enchant and configure it by following [[http://www.lonecpluspluscoder.com/2021/02/01/setting-up-enchant-for-use-with-flyspell-mode-on-macos/][Timo Geusch]]'s simple instructions. I experienced some performance issues, and I was also unable to make flyspell add words to the AppleSpell dictionary.
-- [[https://www.reddit.com/r/emacs/comments/fxs92h/spell_checkers_in_emacs_in_2020/][This Reddit post]] discusses the existing alternatives.
-
 ** jinx
 
 /[[https://github.com/minad/jinx][jinx]] is a just-in-time spell-checker for Emacs./

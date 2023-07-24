@@ -9647,7 +9647,9 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
 
 /[[https://github.com/tarsius/bicycle][bicycle]] provides commands for cycling the visibility of outline sections and code blocks./
 
-#+begin_src emacs-lisp :results silent
+[2023-07-22 Sat] Disabling to test whether I need it.
+
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package bicycle
   :after outline
   :demand t

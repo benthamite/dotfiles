@@ -7912,11 +7912,14 @@ e.g. ~nvm~ isn't recognized by eshell
 
 ** jinx
 
+/[[https://github.com/minad/jinx][jinx]] is a just-in-time spell-checker for Emacs./
+
 #+begin_src emacs-lisp
 (use-package jinx
   :demand t
   :config
-  (setq jinx-languages "en es")
+  (setq jinx-languages "en")
+  
   (add-to-list 'vertico-multiform-categories
                '(jinx grid (vertico-grid-annotate . 20)))
 

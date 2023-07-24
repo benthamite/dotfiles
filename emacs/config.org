@@ -8098,17 +8098,18 @@ To check: https://github.com/PillFall/languagetool.el
   (defun ps/typo-mode-enable-conditionally ()
     "Activate minor-mode in relevant text modes."
     (if (or (and (eq major-mode 'org-mode)
-                 (not (org-in-src-block-p)))
-            (eq major-mode 'markdown-mode)
-            (eq major-mode 'org-msg-edit-mode)
-            (eq major-mode 'outline-mode)
-            (eq major-mode 'telega-chat-mode))
-        (typo-mode)
+		 (not (org-in-src-block-p)))
+	    (catch 'found
+	      (dolist (mode '(markdown-mode
+			      org-msg-edit-mode
+			      outline-mode
+			      telega-chat-mode))
+		(when (eq major-mode mode)
+		  (throw 'found t)))))
+	(typo-mode)
       (typo-mode -1)))
 
-  (add-hook 'post-command-hook #'ps/typo-mode-enable-conditionally)
-  ;; (add-hook 'text-mode-hook #'typo-mode)
-  )
+  (add-hook 'post-command-hook #'ps/typo-mode-enable-conditionally))
 #+end_src
 
 ** latex-mode

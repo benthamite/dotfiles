@@ -8649,6 +8649,7 @@ Assumes that the links are separated by ` • '"
    "A-C-H-t" 'ps/markdown-copy-section
    "A-C-s-r" 'markdown-outline-previous
    "A-C-s-f" 'markdown-outline-next
+   "M-p" nil
    "s-b" 'markdown-insert-bold
    "s-e" 'markdown-insert-code
    "s-f" 'markdown-insert-footnote

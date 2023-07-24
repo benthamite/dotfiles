@@ -14604,7 +14604,7 @@ If the field contains a value from a cross-referenced entry, that
 value is copied to the kill ring."
     (unless (or (not field)
                 (string= field "=type="))
-      (el-patch-swap (let ((contents (ps/ebib-get-field-value field)))
+      (el-patch-swap (let ((contents (ebib-get-field-value field (ebib--get-key-at-point) ebib--cur-db 'noerror 'unbraced 'xref)))
                        (if (stringp contents)
                            (progn (kill-new contents)
                                   (message "Field contents copied."))

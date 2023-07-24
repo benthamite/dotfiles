@@ -7931,7 +7931,8 @@ e.g. ~nvm~ isn't recognized by eshell
     (message "Jinx language set to `%s'" jinx-languages))
 
   :general
-  ("A-M-p" 'ps/jinx-toggle-languages))
+  ("M-p" 'jinx-correct
+   "A-M-p" 'ps/jinx-toggle-languages))
 #+end_src
 
 ** keytar

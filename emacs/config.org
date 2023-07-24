@@ -15672,8 +15672,14 @@ sensible defaults."
     (interactive)
     (when-let* ((key (ebib--get-key-at-point))
                 (field "keywords")
+                ;; unfill field contents
+                (keywords-raw (replace-regexp-in-string
+                               ",\n                  "
+                               ", "
+                               (ps/ebib-get-field-value field)))
+                ;; turn into bullet-separated links
                 (keywords (ps/org-linkify-elements
-                           (split-string (ps/ebib-get-field-value field) ", "))))
+                           (split-string keywords-raw ", "))))
       (ebib-db-remove-field-value field key ebib--cur-db)
       (ebib--redisplay-field field)
       (ebib--redisplay-index-item field)

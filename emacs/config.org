@@ -7926,7 +7926,7 @@ e.g. ~nvm~ isn't recognized by eshell
         (setq jinx-languages "es")
       (setq jinx-languages "en"))
     (dotimes (i 2)
-      (global-jinx-mode 'toggle))
+      (jinx-mode 'toggle))
     (message "Jinx language set to `%s'" jinx-languages))
 
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation

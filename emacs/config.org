@@ -11771,22 +11771,25 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 
   (defun ps/org-sort-links (separator)
     "Sort list of links in current subtree separated by SEPARATOR."
-    (interactive)
-    (save-restriction
-      (save-excursion
-        (org-narrow-to-subtree)
-        (let* ((element (concat "]]" separator "[["))
-               (patterns `((,element . "]]\n[[")
-                           ("[[id:" . "- [[id:"))))
-          (dolist (pattern patterns)
-            (goto-char (point-min))
-            (while (re-search-forward (regexp-quote (car pattern)) nil t)
-              (replace-match (cdr pattern))))
-          (org-sort-list nil ?a)
-          (dolist (pattern (reverse patterns))
-            (goto-char (point-min))
-            (while (re-search-forward (regexp-quote (cdr pattern)) nil t)
-              (replace-match (car pattern))))))))
+    (interactive "sEnter separator: ")
+    (save-excursion
+      (let* ((bounds (bounds-of-thing-at-point 'paragraph))
+             (raw-text (buffer-substring-no-properties (car bounds) (cdr bounds)))
+             (elements (split-string raw-text separator t))
+             sorted-elements)
+        (with-temp-buffer
+          (org-mode)
+          (dolist (el (reverse elements))
+            (insert "- " el "\n"))
+          ;; Since `org-sort-list` sorts from point to the end of the list,
+          ;; go to the beginning of the temp buffer
+          (goto-char (point-min))
+          (org-sort-list nil ?a nil #'downcase)
+          ;; Then gather the sorted elements back
+          (setq sorted-elements (s-replace "- " "" (buffer-string))))
+        ;; Update the original paragraph
+        (delete-region (car bounds) (cdr bounds))
+        (insert (string-join (split-string sorted-elements "\n" t) separator)))))
 
   (defun ps/org-sort-keywords ()
     "Sort bullet-separated keywords in current subtree."

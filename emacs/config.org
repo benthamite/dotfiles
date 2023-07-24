@@ -7950,6 +7950,9 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 
 
   :general
+  ((jinx-correct-map jinx-overlay-map jinx-repeat-map)
+   "M-k" 'jinx-previous
+   "M-l" 'jinx-next)
   ("M-p" 'jinx-correct
    "A-M-p" 'ps/jinx-toggle-languages))
 #+end_src

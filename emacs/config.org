@@ -7930,11 +7930,24 @@ e.g. ~nvm~ isn't recognized by eshell
     "Toggle between English and Spanish for spell-checking."
     (interactive)
     (if (string= jinx-languages "en")
-	(setq jinx-languages "es")
+        (setq jinx-languages "es")
       (setq jinx-languages "en"))
     (dotimes (i 2)
       (global-jinx-mode 'toggle))
     (message "Jinx language set to `%s'" jinx-languages))
+
+  ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
+  (defun ps/jinx--add-to-abbrev (overlay word)
+    "Add abbreviation to `global-abbrev-table'.
+The misspelled word is taken from OVERLAY.  WORD is the corrected word."
+    (let ((abbrev (buffer-substring-no-properties
+                   (overlay-start overlay)
+                   (overlay-end overlay))))
+      (message "Abbrev: %s -> %s" abbrev word)
+      (define-abbrev global-abbrev-table abbrev word)))
+
+  (advice-add 'jinx--correct-replace :before #'ps/jinx--add-to-abbrev)
+
 
   :general
   ("M-p" 'jinx-correct

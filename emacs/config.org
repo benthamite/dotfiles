@@ -15561,7 +15561,7 @@ If applicable, open external website to set rating there as well."
     (let ((key (ebib--get-key-at-point))
           (db ebib--cur-db))
       (when (ps/ebib-get-field-value "note")
-        (user-error "Note field is not empty."))
+        (user-error "Note field is not empty"))
       (ebib-set-field-value "note"
                             (format "No translation found on %s." (format-time-string "%Y-%m-%d"))
                             key db)

@@ -128,25 +128,28 @@ one hour only."
                      (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
                      "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
                     ("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
-                     (id "63513494-AB03-4B21-ABD6-8EB3073A7973")
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                    ("tbC" "Tlön: BAE: Check topic (via org-capture)" entry
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
                      "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
                     ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
-                     (id "E02FC35D-DE88-4848-8EC2-AD82A2F32827")
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
                      "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
                     ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
-                     (id "51A1AD3A-5D03-48D1-A52F-AF43528FFA27")
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
                      "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
                     ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
-                     (id "E3205CCE-70EB-4CD8-B276-6C391409FB40")
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
                      "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
                     ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
-                     (id "7480E01B-31CF-477D-8E49-FC71F8AA11A1")
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
                      "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
                     ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
-                     (id "0805A30F-2F57-483B-8B7B-4F1755B195B1")
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
                      "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
                     ("tbI" "Tlön: BAE: Import topic (via org-capture)" entry
-                     (id "18A94B9A-E256-4684-A36C-ED26FCE1AD08")
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
                      "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
                     ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
                      (id "7CCD6226-DB0A-4742-9277-955FCB276137")
@@ -165,8 +168,8 @@ one hour only."
      (forward-line)
      (forward-line)
      (ps/yasnippet-expand-by-key "ai")
-     (message "finished"))))  
-  
+     (message "finished"))))
+
 (defhydra hydra-org-work
   (:hint nil
          :idle 0

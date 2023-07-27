@@ -7931,16 +7931,15 @@ e.g. ~nvm~ isn't recognized by eshell
 
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
   (defun ps/jinx--add-to-abbrev (overlay word)
-    "Add abbreviation to `global-abbrev-table'.
+    "Add abbreviation to `text-mode-abbrev-table'.
 The misspelled word is taken from OVERLAY.  WORD is the corrected word."
     (let ((abbrev (buffer-substring-no-properties
                    (overlay-start overlay)
                    (overlay-end overlay))))
       (message "Abbrev: %s -> %s" abbrev word)
-      (define-abbrev global-abbrev-table abbrev word)))
+      (define-abbrev text-mode-abbrev-table abbrev word)))
 
   (advice-add 'jinx--correct-replace :before #'ps/jinx--add-to-abbrev)
-
 
   :general
   ((jinx-correct-map jinx-overlay-map jinx-repeat-map)

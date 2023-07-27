@@ -5039,9 +5039,9 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
           (t (narrow-to-defun))))
 
   (defun ps/window-split-if-unsplit ()
-    "Split windows when frame is unsplit. Split in three windows if
-`frame-width' is greater than `ps/frame-width-threshold',
-otherwise in two windows."
+    "Split windows when frame is unsplit.
+Split in three windows if `frame-width' is greater than
+`ps/frame-width-threshold', otherwise in two windows."
     (interactive)
     (when (= (length (window-list)) 1)
       (split-window-right))

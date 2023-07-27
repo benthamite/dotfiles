@@ -5039,9 +5039,9 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
           (t (narrow-to-defun))))
 
   (defun ps/window-split-if-unsplit ()
-    "Split windows when frame is unsplit. Split in three windows if
-`frame-width' is greater than `ps/frame-width-threshold',
-otherwise in two windows."
+    "Split windows when frame is unsplit.
+Split in three windows if `frame-width' is greater than
+`ps/frame-width-threshold', otherwise in two windows."
     (interactive)
     (when (= (length (window-list)) 1)
       (split-window-right))
@@ -6478,16 +6478,15 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       (setq forge-database-connector 'sqlite)
     (setq forge-database-connector 'sqlite-builtin))
 
-  ;; (run-with-idle-timer 600 t #'ps/forge-pull-notifications-silently)
-
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
 
-  (defun ps/forge-pull-notifications-silently ()
-    (let ((inhibit-message t)
-          (default-directory ps/dir-tlon-biblioteca-altruismo-eficaz))
-      (forge-pull-notifications)))
+  (defun ps/forge-pull-topics-and-notifications ()
+    (dolist (repo '(ps/dir-tlon-biblioteca-altruismo-eficaz))
+      (let ((defult-directory repo))
+        (forge-pull)
+        (forge-pull-notifications))))
 
   (transient-define-prefix forge-dispatch ()
     "Dispatch a forge command."
@@ -7912,7 +7911,7 @@ e.g. ~nvm~ isn't recognized by eshell
   :demand t
   :config
   (setq jinx-languages "en")
-  
+
   (add-to-list 'vertico-multiform-categories
                '(jinx grid (vertico-grid-annotate . 20)))
 
@@ -7931,16 +7930,15 @@ e.g. ~nvm~ isn't recognized by eshell
 
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
   (defun ps/jinx--add-to-abbrev (overlay word)
-    "Add abbreviation to `global-abbrev-table'.
+    "Add abbreviation to `text-mode-abbrev-table'.
 The misspelled word is taken from OVERLAY.  WORD is the corrected word."
     (let ((abbrev (buffer-substring-no-properties
                    (overlay-start overlay)
                    (overlay-end overlay))))
       (message "Abbrev: %s -> %s" abbrev word)
-      (define-abbrev global-abbrev-table abbrev word)))
+      (define-abbrev text-mode-abbrev-table abbrev word)))
 
   (advice-add 'jinx--correct-replace :before #'ps/jinx--add-to-abbrev)
-
 
   :general
   ((jinx-correct-map jinx-overlay-map jinx-repeat-map)
@@ -8015,6 +8013,7 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
   :config
   (setq lsp-grammarly-suggestions-split-infinitive nil)
   (setq lsp-grammarly-suggestions-preposition-at-the-end-of-sentence nil)
+  ;; 🙄
   (setq lsp-grammarly-suggestions-possibly-biased-language-age-related nil)
   (setq lsp-grammarly-suggestions-possibly-biased-language-disability-related nil)
   (setq lsp-grammarly-suggestions-possibly-biased-language-family-related nil)
@@ -8098,15 +8097,15 @@ To check: https://github.com/PillFall/languagetool.el
   (defun ps/typo-mode-enable-conditionally ()
     "Activate minor-mode in relevant text modes."
     (if (or (and (eq major-mode 'org-mode)
-		 (not (org-in-src-block-p)))
-	    (catch 'found
-	      (dolist (mode '(markdown-mode
-			      org-msg-edit-mode
-			      outline-mode
-			      telega-chat-mode))
-		(when (eq major-mode mode)
-		  (throw 'found t)))))
-	(typo-mode)
+                 (not (org-in-src-block-p)))
+            (catch 'found
+              (dolist (mode '(markdown-mode
+                              org-msg-edit-mode
+                              outline-mode
+                              telega-chat-mode))
+                (when (eq major-mode mode)
+                  (throw 'found t)))))
+        (typo-mode)
       (typo-mode -1)))
 
   (add-hook 'post-command-hook #'ps/typo-mode-enable-conditionally))
@@ -12157,7 +12156,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :demand t
   :config
   ;; temporarily disable cache to avoid `org-element-cache' errors
-  (setq org-element-use-cache nil))
+  (setq org-element-use-cache t))
 #+end_src
 
 ** org-lint
@@ -15521,10 +15520,7 @@ is created following the same schema as notes created with
 
   (defvar ps/ebib-auto-save-files
     (list ps/file-personal-bibliography-new
-          ps/file-tlon-bibliography-fluid
-          ps/file-tlon-bibliography-originals
-          ps/file-tlon-bibliography-finished
-          ps/file-tlon-bibliography-pending)
+          ps/file-tlon-bibliography-fluid)
     "List of database files that should be auto-saved.
 The big files containing the 'old' bibliographic entries are excluded.")
 
@@ -15563,10 +15559,7 @@ The list of files to be watched is defined in `ps/ebib-auto-save-files'."
     `((,ps/file-personal-bibliography-new . 1)
       (,ps/file-personal-bibliography-old . 2)
       (,ps/file-tlon-bibliography-fluid . 3)
-      (,ps/file-tlon-bibliography-stable . 4)
-      (,ps/file-tlon-bibliography-finished . 5)
-      (,ps/file-tlon-bibliography-pending . 6)
-      (,ps/file-tlon-bibliography-originals . 6))
+      (,ps/file-tlon-bibliography-stable . 4))
     "Association list of database files and their numbers.")
 
   (defun ps/ebib-get-db-number (file)
@@ -15901,8 +15894,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (setq ps/zotra-most-recent-bibliography-file
           (completing-read "Bibfile" (list
                                       ps/file-tlon-bibliography-fluid
-                                      ps/file-tlon-bibliography-pending
-                                      ps/file-tlon-bibliography-originals
                                       ps/file-personal-bibliography-new)))
     (funcall orig-fun url-or-identifier ps/zotra-most-recent-bibliography-file entry-format))
 
@@ -16076,6 +16067,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 
 [[https://turkja.fi/posts/emacs-and-smtp/][Emacs and SMTP with gmail | Jarkko Turkulainen]]
 https://gist.github.com/loziju/66d3f024e102704ff5222e54a4bfd50e
+
 ** mml
 :PROPERTIES:
 :ID:       2A87061B-BE45-443B-AB2C-893A69C20003
@@ -17088,6 +17080,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "doi\\.org"
                      "dropbox\\.com"
                      "effectivealtruism\\.org"
+                     "etsy\\.com"
                      "facebook\\.com"
                      "github\\.com"
                      "gitguardian\\.com"
@@ -18994,6 +18987,7 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 :ID:       C6B68696-DCCC-4143-A0BC-E5EEE249AACF
 :END:
 :LOGBOOK:
+CLOCK: [2023-07-27 Thu 09:42]--[2023-07-27 Thu 09:48] =>  0:06
 CLOCK: [2022-08-29 Mon 16:53]--[2022-08-29 Mon 17:06] =>  0:13
 CLOCK: [2022-07-15 Fri 10:10]--[2022-07-15 Fri 11:10] =>  1:00
 CLOCK: [2022-07-13 Wed 10:43]--[2022-07-13 Wed 10:56] =>  0:13
@@ -19031,6 +19025,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                        ps/org-id-update-id-locations
                        org-roam-db-sync
                        ps/pass-git-sync
+                       ps/forge-pull-topics-and-notifications
                        ps/magit-stage-commit-and-push-all-repos
                        ps/ledger-update-commodities
                        ps/ledger-update-coin-prices
@@ -19570,10 +19565,7 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
  (ps/personal-bibliography-files . (list ps/file-personal-bibliography-new ps/file-personal-bibliography-old))
  (ps/tlon-bibliography-files . (list ps/file-tlon-bibliography-fluid
-                                     ps/file-tlon-bibliography-stable
-                                     ps/file-tlon-bibliography-finished
-                                     ps/file-tlon-bibliography-pending
-                                     ps/file-tlon-bibliography-originals))
+                                     ps/file-tlon-bibliography-stable))
  (ps/all-bibliography-files . (append ps/personal-bibliography-files ps/tlon-bibliography-files))
  (ps/face-fixed-pitch . "SauceCodePro Nerd Font")
  (ps/face-fixed-pitch-size .  115)

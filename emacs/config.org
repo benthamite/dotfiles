@@ -16067,6 +16067,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 
 [[https://turkja.fi/posts/emacs-and-smtp/][Emacs and SMTP with gmail | Jarkko Turkulainen]]
 https://gist.github.com/loziju/66d3f024e102704ff5222e54a4bfd50e
+
 ** mml
 :PROPERTIES:
 :ID:       2A87061B-BE45-443B-AB2C-893A69C20003
@@ -17079,6 +17080,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "doi\\.org"
                      "dropbox\\.com"
                      "effectivealtruism\\.org"
+                     "etsy\\.com"
                      "facebook\\.com"
                      "github\\.com"
                      "gitguardian\\.com"

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: enchant-update-dictionaries
+# key: eud
+# contributor: Pablo Stafforini
+# --
+enchant: update dictionaries

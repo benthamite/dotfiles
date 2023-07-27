@@ -8013,6 +8013,7 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
   :config
   (setq lsp-grammarly-suggestions-split-infinitive nil)
   (setq lsp-grammarly-suggestions-preposition-at-the-end-of-sentence nil)
+  ;; 🙄
   (setq lsp-grammarly-suggestions-possibly-biased-language-age-related nil)
   (setq lsp-grammarly-suggestions-possibly-biased-language-disability-related nil)
   (setq lsp-grammarly-suggestions-possibly-biased-language-family-related nil)
@@ -12155,7 +12156,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :demand t
   :config
   ;; temporarily disable cache to avoid `org-element-cache' errors
-  (setq org-element-use-cache nil))
+  (setq org-element-use-cache t))
 #+end_src
 
 ** org-lint

@@ -8520,7 +8520,7 @@ I use it in combination with the [[https://ghosttext.fregante.com/][Ghost Text]]
    "s-c" 'atomic-chrome-close-current-buffer))
 #+end_src
 
-** markdown
+** markdown-mode
 :PROPERTIES:
 :ID:       3E05C5A3-B0E2-4800-B497-5AA1F6B39116
 :END:

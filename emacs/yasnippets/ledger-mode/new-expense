@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: new-expense
+# key: ne
+# contributor: Pablo Stafforini
+# --
+Expenses:${5:account}  ${2:amount} ${3:$$(yas-completing-read "Currency: " ps/ledger-active-currencies)} ; ${4:details}
+    $0

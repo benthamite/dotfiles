@@ -1,8 +1,0 @@
-# -*- mode: snippet -*-
-# name: ledger-salary
-# key: ls
-# contributor: Pablo Stafforini
-# --
-`(ps/time-last-day-of-last-month)` Tlon
-    Income:Salary                          -5,416.67 USD ; salary for the month of 
-    Liabilities:Tlon

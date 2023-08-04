@@ -4,8 +4,7 @@
     ("!?" "‽" nil :count 0)
     ("?!" "‽" nil :count 0)
     ("Ziplock" "Ziploc" nil :count 0)
-    ("also" "algo" nil :count 0)
-    ("atb" "All the best" nil :count 6)
+    ("atb" "All the best" nil :count 7)
     ("espeíficcamente" "específicamente" nil :count 0)
     ("ty" "thank you" nil :count 1)
     ("xxx" "×" nil :count 1)
@@ -15,6 +14,7 @@
 
 (define-abbrev-table 'text-mode-abbrev-table
   '(
+    ("Howver" "However" nil :count 0)
     ("abandonned" "abandoned" nil :count 2)
     ("abbout" "about" nil :count 1)
     ("aberation" "aberration" nil :count 1)
@@ -178,6 +178,7 @@
     ("adviced" "advised" nil :count 1)
     ("aeriel" "aerial" nil :count 1)
     ("aeriels" "aerials" nil :count 1)
+    ("aeropress" "AeroPress" nil :count 0)
     ("afair" "affair" nil :count 1)
     ("afficianados" "aficionados" nil :count 1)
     ("afficionado" "aficionado" nil :count 1)
@@ -1251,7 +1252,7 @@
     ("dicovery" "discovery" nil :count 1)
     ("dictionarys" "dictionaries" nil :count 1)
     ("dicussed" "discussed" nil :count 1)
-    ("didnt" "didn't" nil :count 1)
+    ("didnt" "didn't" nil :count 2)
     ("diea" "idea" nil :count 1)
     ("dieing" "dying" nil :count 1)
     ("dieties" "deities" nil :count 1)

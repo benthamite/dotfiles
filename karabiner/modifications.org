@@ -1381,7 +1381,6 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
 - [[https://gist.github.com/kaushikgopal/ff7a92bbc887e59699c804b59074a126][Kaushik Gopal]]
 - [[https://github.com/kiinoda/goku][kiinoda]]
 - [[https://github.com/narze/dotfiles/blob/987afd479b39fdcfb7f770e60b6c457538c96ec1/chezmoi/private_dot_config/karabiner.edn#L4][narze]]
-- [[https://github.com/search?q=path%3A**%2Fkarabiner.edn&type=code][List of all karabiner.edn files on Github]]
 
 *** Meta
 :PROPERTIES:
@@ -1392,7 +1391,8 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
 :ID:       DF91FEC7-7B8B-487F-BCA1-1FE4EE948B01
 :END:
 - [[https://wiki.nikitavoloboev.xyz/macos/macos-apps/karabiner][Nikita Voloboek's master list of Karabiner links]]
-
+- [[https://github.com/search?q=path%3A**%2Fkarabiner.edn&type=code][List of all karabiner.edn files on Github]]
+ 
 ** II — List of keys
 :PROPERTIES:
 :ID:       9498E73F-0ED9-45B5-8B5C-8033F444B27F

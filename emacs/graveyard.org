@@ -9,6 +9,22 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** pen
+:PROPERTIES:
+:ID:       DEEF7EF7-E79C-427B-9E1D-86D22FC2056E
+:END:
+
+I'm reasonably satisfied with the other AI packages I'm using so I don't see much need for installing this one, especially given the complexity of the configuration.
+
+*** CANCELLED [#5] Check out pen.el
+CLOSED: [2023-08-07 Mon 15:29]
+:PROPERTIES:
+:ID:       2743B1F0-CCA8-4F48-8DC4-EF93E1A4607F
+:END:
+
+https://github.com/mullikine/pen.el
+Disscussion [[https://www.reddit.com/r/emacs/comments/zhwhww/comment/izp8rxy/?utm_source=reddit&utm_medium=web2x&context=3][here]].
+
 ** typo
 :PROPERTIES:
 :ID:       91B4CAB7-76CD-4E56-9D5C-ECBBBDB04A04

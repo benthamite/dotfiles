@@ -12578,7 +12578,10 @@ SQL can be either the emacsql vector representation, or a string."
   (defvar ps/org-roam-excluded-dirs (list
                                      ps/dir-anki
                                      ps/dir-inactive
-                                     ps/dir-archive))
+                                     ps/dir-archive
+                                     ps/dir-dropbox-tlon-leo
+                                     ps/dir-dropbox-tlon-fede
+                                     ))
 
   (defvar ps/org-roam-excluded-files (list
                                       ps/file-orb-noter-template

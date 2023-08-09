@@ -8615,6 +8615,7 @@ Assumes that the links are separated by ` • '"
   (defun ps/markdown-insert-locator ()
     "Insert locator in Markdown citation at point."
     (interactive)
+    (require 'citar-markdown)
     (unless (thing-at-point-looking-at citar-markdown-citation-key-regexp)
       (user-error "Not in a citation"))
     (let* ((locators '(("book" . "bk.")

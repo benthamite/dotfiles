@@ -15917,6 +15917,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
       (dotimes (i 79)
         (dolist  (pattern '("\"\\302\\%o\""
                             "\"\\303\\%o\""
+                            "\"\\314\\%o\""
                             "\"\\342\\200\\%o\""))
           (let* ((octal (read (format pattern (+ #o200 i))))
                  (char (decode-coding-string octal 'utf-8)))

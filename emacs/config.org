@@ -2375,7 +2375,7 @@ and generates profiling report."
     (profiler-report-toggle-entry '(4)))
 
   :general
-  ("A-C-p" 'ps/profiler-toggle)
+  ("C-H-p" 'ps/profiler-toggle)
   (profiler-report-mode-map
    "<backtab>" 'ps/profiler-report-toggle-entry-global))
 #+end_src
@@ -2534,8 +2534,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 (use-feature simple
   :demand t
   :general
-  ("A-C-s-<tab>" 'beginning-of-buffer
-   "A-C-s-SPC" 'end-of-buffer))
+  ("A-C-s-SPC" 'beginning-of-buffer
+   "A-C-s-<tab>" 'end-of-buffer))
 #+end_src
 
 * text manipulation
@@ -5166,9 +5166,9 @@ window depending on the number of present windows."
                      (set-frame-parameter nil 'fullscreen 'maximized)))))
 
   :general
-  ("A-H-SPC" 'other-frame)
-  ("A-H-n" 'make-frame)
-  ("A-H-w" 'delete-frame))
+  ("H-M-<tab>" 'other-frame) ; M-S-TAB
+  ("M-N" 'make-frame)
+  ("M-W" 'delete-frame))
 #+end_src
 
 ** winum
@@ -5594,7 +5594,7 @@ with the specified date."
 
   :general
   ("C-d" 'calendar
-   "A-s-=" 'ps/insert-date
+   "M-s-=" 'ps/insert-date
    "s-=" "C-u A-s-=")
   (calendar-mode-map
    "H-m" 'calendar-set-mark
@@ -6824,6 +6824,8 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
   :general
   (isearch-mode-map
+   "C-H-a" 'query-replace
+   "C-H-s" 'query-replace-regexp))
 #+end_src
 
 ** substitute
@@ -6873,8 +6875,8 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
   :general
   (isearch-mode-map
-   "A-C-s" 'vr/isearch-forward
-   "A-C-r" 'vr/isearch-backward))
+   "C-H-s" 'vr/isearch-forward
+   "C-H-r" 'vr/isearch-backward))
 #+end_src
 
 ** imenu
@@ -7017,7 +7019,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
   (embark-yasnippet-completion-actions
   "d" 'consult-yasnippet-visit-snippet-file)
   ("C-;" 'embark-act
-   "A-C-;" 'embark-act-all
+   "C-H-;" 'embark-act-all
    "C-h B" 'embark-bindings))
 #+end_src
 
@@ -7118,7 +7120,7 @@ buffer are offered."
   ;; (advice-add 'consult-org-agenda :after #'ps/org-narrow-to-entry-and-children)
 
   :general
-  ("A-C-l" 'consult-line
+  ("C-H-l" 'consult-line
    "C-f" 'consult-find
    "H-b" 'consult-buffer
    "A-H-i" 'consult-info
@@ -7196,7 +7198,7 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
   :after consult yasnippet
   :demand t
   :general
-  ("A-C-y" 'consult-yasnippet))
+  ("C-H-y" 'consult-yasnippet))
 #+end_src
 
 ** consult-spotify
@@ -8983,16 +8985,16 @@ otherwise the whole buffer."
    "s-SPC" 'ps/ledger-new-entry-below
    "s-=" 'ledger-reconcile
    "s-a" 'ledger-add-transaction
-   "A-s-a" 'ps/ledger-report-account
+   "M-s-a" 'ps/ledger-report-account
    "s-b" 'ledger-post-edit-amount
-   "A-s-b" 'ps/ledger-decrease-date-of-transaction-at-point-by-one-day
+   "M-s-b" 'ps/ledger-decrease-date-of-transaction-at-point-by-one-day
    "s-c" 'ps/ledger-align-and-next
-   "A-s-c" 'ps/ledger-copy-transaction-at-point
+   "M-s-c" 'ps/ledger-copy-transaction-at-point
    "s-d" 'ledger-delete-current-transaction
    "s-e" 'ps/ledger-toggle-current-transaction-and-next
-   "A-s-e" 'ledger-toggle-current-transaction
+   "M-s-e" 'ledger-toggle-current-transaction
    "s-f" 'ledger-occur
-   "A-s-f" 'ps/ledger-increase-date-of-transaction-at-point-by-one-day
+   "M-s-f" 'ps/ledger-increase-date-of-transaction-at-point-by-one-day
    "s-g" 'ledger-report-goto
    "s-i" 'ledger-insert-effective-date
    "s-y" 'ledger-copy-transaction-at-point
@@ -9000,16 +9002,16 @@ otherwise the whole buffer."
    "s-l" 'ledger-display-ledger-stats
    "s-o" 'ledger-report-edit-report
    "s-p" 'ledger-display-balance-at-point
-   "A-s-p" 'ps/ledger-report-payee
+   "M-s-p" 'ps/ledger-report-payee
    "s-q" 'ledger-post-align-dwim
    "s-r" 'ledger-report
    "s-s" 'ledger-report-save
    "s-t" 'ps/ledger-sort-region-or-buffer
-   "A-s-t" 'ps/ledger-sort-region-or-buffer-reversed
+   "M-s-t" 'ps/ledger-sort-region-or-buffer-reversed
    "s-u" 'ledger-schedule-upcoming
-   "A-s-u" 'ps/ledger-report-net-worth-USD
+   "M-s-u" 'ps/ledger-report-net-worth-USD
    "s-v" 'ledger-copy-transaction-at-point
-   "A-s-w" 'ps/ledger-report-net-worth
+   "M-s-w" 'ps/ledger-report-net-worth
    "s-x" 'ledger-fully-complete-xact
    "s-z" 'ledger-report-redo
    "A-C-s-r" 'ledger-navigate-prev-xact-or-directive
@@ -9209,8 +9211,9 @@ FILE."
   :general
   ((pdf-view-mode-map pdf-annot-minor-mode-map pdf-history-minor-mode-map)
    "a" 'ps/pdf-tools-copy-all-text
-   "c" 'ps/pdf-count-words
-   "C" 'ps/pdf-tools-clear-page-selection
+   "c" 'ps/pdf-tools-copy-dwim
+   "C" 'ps/pdf-count-words
+   "s-c" 'ps/pdf-tools-clear-page-selection
    "D" 'ps/pdf-tools-delete
    "e" 'pdf-annot-add-highlight-markup-annotation
    "h" 'ps/pdf-annot-add-highlight-markup-annotation
@@ -9311,7 +9314,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
    "A-M-d" 'toggle-debug-on-quit)
   (prog-mode-map
    "A-H-C-i" 'mark-defun
-   "M-." 'xref-find-definitions)
+   "M-." 'xref-find-definitions
+   "s-f" 'consult-flymake)
   ((emacs-lisp-mode-map shell-mode-map)
    "s-c" 'exit-recursive-edit))
 #+end_src
@@ -9411,7 +9415,9 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 
   :general
   (emacs-lisp-mode-map
-   "s-d" 'eval-defun))
+   "s-d" 'eval-defun
+   "s-i" (lambda! (eval-defun t)) ; instrument defun
+   ))
 #+end_src
 
 *** TODO [#6] Learn to use all relevant sexp commands
@@ -9446,7 +9452,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 
   :general
   (emacs-lisp-mode-map
-   "A-s-d" 'edebug-defun))
+   "M-s-d" 'edebug-defun))
 #+end_src
 
 ** backtrace
@@ -9770,6 +9776,9 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 #+end_src
 
 ** gpt-commit
+:PROPERTIES:
+:ID:       735CC302-C86D-4886-A78B-8EF89171086C
+:END:
 
 #+begin_src emacs-lisp
 (use-package gpt-commit
@@ -10651,7 +10660,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   ("C-<escape>" 'org-agenda)
   (org-agenda-mode-map
    "RET" 'ps/org-agenda-switch-to-dwim
-   "'" 'ps/org-agenda-done-and-next
+   "/" 'ps/org-agenda-done-and-next
+   "?" 'org-agenda-filter
    ";" 'org-agenda-later
    "\"" 'ps/org-agenda-postpone-and-next
    "C-b" 'org-agenda-tree-to-indirect-buffer
@@ -11228,10 +11238,10 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
    "H-o" 'org-clock-out)
   (org-mode-map
    "s-A-n" 'ps/org-new-clock-entry-today
-   "s--" 'ps/org-time-stamp-active-current-time
-   "s-A--" 'ps/org-time-stamp-active-current-date
-   "s-=" 'ps/org-time-stamp-inactive-current-time
-   "s-A-=" 'ps/org-time-stamp-inactive-current-date))
+   "s-." 'ps/org-time-stamp-active-current-time
+   "s-A-." 'ps/org-time-stamp-active-current-date
+   "s-/" 'ps/org-time-stamp-inactive-current-time
+   "s-A-/" 'ps/org-time-stamp-inactive-current-date))
 #+end_src
 
 ** org-clock-convenience
@@ -11390,7 +11400,7 @@ CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
   (setq org-archive-location (expand-file-name "%s_archive.org::" ps/dir-archive))
 
   :general
-  ("A-s-d" 'ps/org-mark-as-done-for-good-and-archive)
+  ("M-s-d" 'ps/org-mark-as-done-for-good-and-archive)
   (org-mode-map
    "s-a" 'org-archive-to-archive-sibling))
 #+end_src
@@ -11838,7 +11848,7 @@ SEPARATOR is nil, use ' • '."
                                         nodes))
                         (nodetitle (if node (org-roam-node-title node))))
                    (if node
-                       (format "[[%s][%s]]" (org-roam-node-id node) nodetitle)
+                       (format "[[id:%s][%s]]" (org-roam-node-id node) nodetitle)
                      x)))
                strings)
        (or separator " • "))))
@@ -12115,6 +12125,9 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 #+end_src
 
 ** org-element
+:PROPERTIES:
+:ID:       79B7B36E-D824-4D67-BBAC-E4E4D8FA628F
+:END:
 
 #+begin_src emacs-lisp
 (use-feature org-element
@@ -12438,7 +12451,7 @@ count is updated."
 
   :general
   ("H-I" 'org-pomodoro
-   "A-s-e" 'org-pomodoro-extend-last-clock)
+   "M-s-e" 'org-pomodoro-extend-last-clock)
   (org-agenda-mode-map
    "I" 'org-pomodoro))
 #+end_src
@@ -12939,7 +12952,7 @@ I use this package to define a dynamic agenda, as explained and illustrated [[d1
   (defvar ps/vulpea-excluded-files (list
                                     ps/file-tlon-tareas-leo
                                     ps/file-tlon-tareas-fede)
-    "files to exclude from list of projects")
+    "Files to exclude from list of projects")
 
   (defun ps/vulpea-project-p ()
     "Return non-nil if current buffer has a TODO, a schedule or a deadline.
@@ -12961,7 +12974,7 @@ tasks."
           'headline
         (lambda (headline)
 
-        (or
+          (or
            (eq (org-element-property :todo-type headline)
                'todo)
            (org-element-property :scheduled headline)
@@ -15894,9 +15907,10 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (ps/zotra-fix-octal-sequences)
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
-    (save-buffer)
+    ;; (save-buffer)
     (ebib-switch-to-database-nth (ps/ebib-get-db-number ps/zotra-most-recent-bibliography-file))
     (let ((citekey (ps/bibtex-get-key)))
+      (ps/ebib-open-or-switch)
       (ps/ebib-reload-database-no-confirm ebib--cur-db)
       (ebib--update-buffers)
       (ebib ps/zotra-most-recent-bibliography-file citekey)
@@ -16641,7 +16655,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
    "s-g" 'ps/org-msg-open-in-grammarly
    "s-x" 'ps/org-msg-kill-message)
   (org-mode-map
-   "A-s-g" 'ps/org-msg-grammarly))
+   "M-s-g" 'ps/org-msg-grammarly))
 #+end_src
 
 *** TODO [#5] Figure out how to make ~org-msg~ preserve formatting of quoted emails
@@ -16823,7 +16837,7 @@ into a task for Leo."
    ;; active and `<return>' triggers `newline' rather than
    ;; `push-button'. this seems to be a bug. as a workaround, we also
    ;; bind `push-button' to `M-<return>' in `telega-chat-mode-map'.
-   "M-<return>" 'push-button
+   "s-<return>" 'push-button
    "s-," 'telega-chatbuf-goto-pinned-message
    "s-a" 'telega-chatbuf-attach
    "s-c" 'telega-mnz-chatbuf-attach-code
@@ -16834,12 +16848,12 @@ into a task for Leo."
    "s-s" 'telega-chatbuf-filter-search
    "s-t" 'telega-sticker-choose-favorite-or-recent
    "s-v" 'ps/org-paste-html
-   "A-s-v" 'telega-chatbuf-attach-clipboard
+   "M-s-v" 'telega-chatbuf-attach-clipboard
    "s-z" 'telega-mnz-chatbuf-attach-code
-   "A-s-e" 'telega-chatbuf-edit-prev
-   "A-s-s" 'ps/telega-chatbuf-attach-most-recent-screenshot
-   "A-s-t" 'ps/telega-chatbuf-attach-most-recent-file
-   "A-s-v" 'telega-chatbuf-attach-clipboard
+   "M-s-e" 'telega-chatbuf-edit-prev
+   "M-s-s" 'ps/telega-chatbuf-attach-most-recent-screenshot
+   "M-s-t" 'ps/telega-chatbuf-attach-most-recent-file
+   "M-s-v" 'telega-chatbuf-attach-clipboard
    "" 'telega-chatbuf-attach-voice-note)
   (telega-msg-button-map
    "<return>" 'push-button
@@ -16866,7 +16880,7 @@ into a task for Leo."
   (telega-webpage-mode-map
    "x" 'telega-webpage-browse-url)
   (dired-mode-map
-   "A-s-a" 'ps/telega-dired-attach-send))
+   "M-s-a" 'ps/telega-dired-attach-send))
 #+end_src
 
 ** telega-mnz
@@ -18700,7 +18714,7 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
   (setq read-aloud-engine "say")
 
   :general
-  ("A-C-r" 'read-aloud-this)) ; remember that `A-C-d' starts/stops dictation
+  ("C-H-r" 'read-aloud-this)) ; remember that `A-C-d' starts/stops dictation
 #+end_src
 
 * passwords
@@ -19208,6 +19222,9 @@ then the window will be split horizontally rather than vertically."
 #+end_src
 
 ** activity-watch
+:PROPERTIES:
+:ID:       809139BE-A8AF-40A7-BF1A-899839313729
+:END:
 
 #+begin_src emacs-lisp
 (use-package activity-watch-mode

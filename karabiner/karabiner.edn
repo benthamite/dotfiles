@@ -329,7 +329,7 @@
 {:des "f-mode (special chars)"
  :rules [:f-mode
          [:b :•]
-         [:d :•]
+         [:d :ð]
          [:i :¡]
          [:o :ø]
          [:q :œ]

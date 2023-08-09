@@ -19283,7 +19283,11 @@ And finally, the section you've all been waiting for.
      "Leo"
      "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
      "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-     "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
+     "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
+
+  :general
+  (markdown-mode-map
+   "s-y" 'tlon-core-slugify-clipboard))
 #+end_src
 
 ** tlon-bae

@@ -7902,6 +7902,9 @@ e.g. ~nvm~ isn't recognized by eshell
 :END:
 
 ** jinx
+:PROPERTIES:
+:ID:       23D402FB-7C7D-454B-9895-B147F0C9950D
+:END:
 
 /[[https://github.com/minad/jinx][jinx]] is a just-in-time spell-checker for Emacs./
 
@@ -7916,16 +7919,6 @@ e.g. ~nvm~ isn't recognized by eshell
 
   (dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
     (add-hook hook #'jinx-mode))
-
-  (defun ps/jinx-toggle-languages ()
-    "Toggle between English and Spanish for spell-checking."
-    (interactive)
-    (if (string= jinx-languages "en")
-        (setq jinx-languages "es")
-      (setq jinx-languages "en"))
-    (dotimes (i 2)
-      (jinx-mode 'toggle))
-    (message "Jinx language set to `%s'" jinx-languages))
 
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
   (defun ps/jinx--add-to-abbrev (overlay word)
@@ -7944,8 +7937,14 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
    "M-k" 'jinx-previous
    "M-l" 'jinx-next)
   ("M-p" 'jinx-correct
-   "A-M-p" 'ps/jinx-toggle-languages))
+   "A-M-p" 'jinx-languages))
 #+end_src
+
+*** DONE Customize jinx
+CLOSED: [2023-08-01 Tue 23:55]
+:PROPERTIES:
+:ID:       FA428776-C22B-4E98-B67D-79DD189A5D08
+:END:
 
 ** keytar
 :PROPERTIES:

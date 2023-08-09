@@ -9,6 +9,31 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** typo
+:PROPERTIES:
+:ID:       91B4CAB7-76CD-4E56-9D5C-ECBBBDB04A04
+:END:
+
+#+begin_src emacs-lisp
+(use-package typo
+  :demand t
+  :config
+  (defun ps/typo-mode-enable-conditionally ()
+    "Activate minor-mode in relevant text modes."
+    (if (or (and (eq major-mode 'org-mode)
+                 (not (org-in-src-block-p)))
+            (catch 'found
+              (dolist (mode '(markdown-mode
+                              org-msg-edit-mode
+                              outline-mode
+                              telega-chat-mode))
+                (when (eq major-mode mode)
+                  (throw 'found t)))))
+        (typo-mode)
+      (typo-mode -1)))
+
+  (add-hook 'post-command-hook #'ps/typo-mode-enable-conditionally))
+#+end_src
 ** flyspell-correct
 :PROPERTIES:
 :ID:       5E8AA3D3-68AE-407E-B662-524B8B0AAD43

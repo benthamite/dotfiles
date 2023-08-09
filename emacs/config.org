@@ -8087,29 +8087,6 @@ To check: https://github.com/PillFall/languagetool.el
    "C-c C-c" 'with-editor-finish))
 #+end_src
 
-** typo
-
-#+begin_src emacs-lisp
-(use-package typo
-  :demand t
-  :config
-  (defun ps/typo-mode-enable-conditionally ()
-    "Activate minor-mode in relevant text modes."
-    (if (or (and (eq major-mode 'org-mode)
-                 (not (org-in-src-block-p)))
-            (catch 'found
-              (dolist (mode '(markdown-mode
-                              org-msg-edit-mode
-                              outline-mode
-                              telega-chat-mode))
-                (when (eq major-mode mode)
-                  (throw 'found t)))))
-        (typo-mode)
-      (typo-mode -1)))
-
-  (add-hook 'post-command-hook #'ps/typo-mode-enable-conditionally))
-#+end_src
-
 ** latex-mode
 :PROPERTIES:
 :ID:       AFE18032-EE9C-4D48-9EBA-FE01252467E1

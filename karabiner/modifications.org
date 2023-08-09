@@ -24,7 +24,6 @@ CLOCK: [2021-02-28 Sun 19:56]--[2021-02-28 Sun 20:00] =>  0:04
 :CONTENTS:
 - [[#introduction][Introduction]]
   - [[#table-of-contents][Table of contents]]
-  - [[#my-keyboard-layout][My keyboard layout]]
 - [[#profiles][Profiles]]
   - [[#alone][alone]]
   - [[#held][held]]
@@ -72,11 +71,6 @@ CLOCK: [2021-02-28 Sun 19:56]--[2021-02-28 Sun 20:00] =>  0:04
   - [[#list-of-keys][List of keys]]
   - [[#letter-frequencies][Letter frequencies]]
 - [[#local-variables][Local variables]]
-:END:
-
-** My keyboard layout
-:PROPERTIES:
-:ID:       AF1A3C4B-E237-41B4-BFD8-0BC0C0200D9A
 :END:
 
 * Profiles

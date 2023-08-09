@@ -717,7 +717,7 @@ Some useful config files:
 - [[https://github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org][Gonçalo Santos]]. Author of ~org-noter~.
 - [[https://github.com/tonyaldon/emacs.d/blob/master/init.el][Tony Aldon]]. Has some slick [[https://www.youtube.com/channel/UCQCrbWOFRmFYqoeou0Qv3Kg][videos]] on ~org-table~. Optimized key bindings.
 - [[https://github.com/progfolio/.emacs.d/blob/master/init.org][Nicholas Vollmer]]. Maitantainer of ~elpaca~. I copied his ~org-habits~ config. Haven't yet looked at the rest but looks like there's plenty of valuable material.
-- [[https://github.com/yantar92/emacs-config/blob/master/config.org#helm-org-ql][emacs-config/config.org at master · yantar92/emacs-config · GitHub]]. Focus on knowledge management with org. Lots of good stuff.
+- [[https://github.com/yantar92/emacs-config/blob/master/config.org][emacs-config/config.org at master · yantar92/emacs-config · GitHub]]. Focus on knowledge management with org. Lots of good stuff.
 - [[https://github.com/xenodium/dotsies/blob/main/dots.org][Álvaro Ramírez]]. Also users Karabiner.
 - [[https://github.com/karthink/.emacs.d][Karthik Chikmagalur]]. Has excellent blog posts on ~avy~, ~eshell~, ~re-builder~, etc.
 - [[https://github.com/iqbalansari/dotEmacs][Iqbal Ansari]].

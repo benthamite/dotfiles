@@ -550,7 +550,7 @@ The spacebar triggers ~control~ when held and toggles between apps when tapped. 
 :ID:       EE9EC966-6B9E-4C10-AB37-2D932D4426A0
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src clojure
 {:des "Emacs: right_command + left_command → A-H- (held) "
 :rules [
         [[:right_command :left_command] :A-H- :emacs {:alone {:modi :A- :key :spacebar}}]

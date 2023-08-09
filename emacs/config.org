@@ -6794,7 +6794,7 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
    "C-o" 'isearch-occur
    "C-p" 'isearch-highlight-regexp
    "C-v" 'isearch-yank-kill
-   "A-C-v" 'ps/isearch-yank-kill-literally
+   "C-H-v" 'ps/isearch-yank-kill-literally
    "C-y" 'isearch-forward-symbol-at-point
    "H-c" 'ps/isearch-copy-match
    "M-k" 'isearch-ring-retreat
@@ -6824,7 +6824,6 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
   :general
   (isearch-mode-map
-   "A-C-e" 'query-replace-regexp))
 #+end_src
 
 ** substitute
@@ -17157,14 +17156,14 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
 
 #+begin_src emacs-lisp :results silent
 (use-feature shr
-  :defer 15
+  :demand t
   :config
   (setq shr-bullet "• ")
   (setq shr-use-colors nil)
   (setq shr-use-fonts t)
   (setq shr-image-animate nil)
   (setq shr-width nil)
-  (setq shr-max-width 120)
+  (setq shr-max-width 100)
   (setq shr-discard-aria-hidden t)
   (setq shr-cookie-policy t)
 

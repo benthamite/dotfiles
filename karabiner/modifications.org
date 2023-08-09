@@ -63,13 +63,13 @@ CLOCK: [2021-02-28 Sun 19:56]--[2021-02-28 Sun 20:00] =>  0:04
     - [[#semicolon-mode][semicolon-mode]]
     - [[#slash-mode][slash-mode]]
     - [[#end][end]]
-- [[#appendix][Appendix]]
-  - [[#useful-links][Useful links]]
+- [[#appendices][Appendices]]
+  - [[#i--useful-links][I — Useful links]]
     - [[#tutorials][Tutorials]]
     - [[#configuration-files][Configuration files]]
-    - [[#misc][Misc]]
-  - [[#list-of-keys][List of keys]]
-  - [[#letter-frequencies][Letter frequencies]]
+    - [[#meta][Meta]]
+  - [[#ii--list-of-keys][II — List of keys]]
+  - [[#iii--letter-frequencies][III — Letter frequencies]]
 - [[#local-variables][Local variables]]
 :END:
 
@@ -236,7 +236,7 @@ CLOCK: [2021-07-16 Fri 21:54]--[2021-07-16 Fri 22:04] =>  0:10
       :ogonek {:key :!Em}
       :tilde_accent {:key :!En}
 
-      ;; "foreign" chars
+      ;; "foreign" chars etc
       :ø {:key :!Eo}
       :œ {:key :!Eq}
       :ß {:key :!Es}
@@ -1345,12 +1345,12 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
 ]}
 #+end_src
 
-* Appendix
+* Appendices
 :PROPERTIES:
 :ID:       C12143F1-B67F-444C-BC27-94B666A7BE04
 :END:
 
-** Useful links
+** I — Useful links
 :PROPERTIES:
 :ID:       23F111F1-39B1-43A5-BDC0-61DFD1B7C2DF
 :END:
@@ -1383,7 +1383,7 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
 - [[https://github.com/narze/dotfiles/blob/987afd479b39fdcfb7f770e60b6c457538c96ec1/chezmoi/private_dot_config/karabiner.edn#L4][narze]]
 - [[https://github.com/search?q=path%3A**%2Fkarabiner.edn&type=code][List of all karabiner.edn files on Github]]
 
-*** Misc
+*** Meta
 :PROPERTIES:
 :ID:       1E55E2E6-A878-4FCB-90A9-C43085D90AF6
 :END:
@@ -1393,7 +1393,7 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
 :END:
 - [[https://wiki.nikitavoloboev.xyz/macos/macos-apps/karabiner][Nikita Voloboek's master list of Karabiner links]]
 
-** List of keys
+** II — List of keys
 :PROPERTIES:
 :ID:       9498E73F-0ED9-45B5-8B5C-8033F444B27F
 :END:
@@ -1401,7 +1401,7 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
 :PROPERTIES:
 :ID:       9E6D443F-89E5-4F9B-94B8-437C3FFA676A
 :END:
-[[https://github.com/pqrs-org/Karabiner-Elements/issues/925#issuecomment-323984568][Source]]
+Souce: [[https://github.com/pqrs-org/Karabiner-Elements/issues/925#issuecomment-323984568][GitHub]]
 
 - category: Modifier keys
 - name: caps_lock
@@ -1731,7 +1731,7 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
 - name: volume_up
   label: volume_up (equal tovolume_increment`)
 
-** Letter frequencies
+** III — Letter frequencies
 :PROPERTIES:
 :ID:       0EAAC3EF-7D66-4CF5-ABF0-D561430D7B98
 :END:

@@ -17454,10 +17454,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
            :repo "protesilaos/dotfiles"
            :files ("emacs/.emacs.d/prot-lisp/prot-eww.el"))
   :after eww prot-common
-  :demand t
-  :config
-
- )
+  :demand t)
 #+end_src
 
 ** w3m

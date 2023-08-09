@@ -8,9 +8,152 @@
 
 :delay   300
 
-:sim   200
+:sim   150
 
 :simlayer-threshold 250}} ; default
+
+:tos {
+      ;; macOS
+      :⇧ {:key :left_shift}
+      :⌘ {:key :left_command}
+      :⌥ {:key :left_option}
+      :⌃ {:key :left_control}
+      :🌐 {:key :fn}
+      :⌘⌃ {:key :Cleft_control}
+
+      ;; Emacs
+      :S- {:key :left_shift} ; S
+      :A- {:key :right_command} ; Q
+      :C- {:key :left_control} ; T
+      :H- {:key :left_command} ; C
+      :M- {:key :left_option} ; O
+      :s- {:key :right_control} ; W
+      :A-C- {:key :!Qleft_control}
+      :A-H- {:key :!Qleft_command}
+      :A-M- {:key :!Qleft_option}
+      :A-s- {:key :!Qright_control}
+
+      ;; symbols
+      :exclamation_mark {:key :!S1}
+      :at_sign {:key :!S2}
+      :number_sign {:key :!S3}
+      :dollar_sign {:key :!S4}
+      :percent_sign {:key :!S5}
+      :caret {:key :!S6}
+      :ampersand {:key :!S7}
+      :asterisk {:key :!S8}
+      :open_parenthesis {:key :!S9}
+      :close_parenthesis {:key :!S0}
+      :underscore {:key :!Shyphen}
+      :plus_sign {:key :!Sequal_sign}
+      :open_brace {:key :!Sopen_bracket}
+      :close_brace {:key :!Sclose_bracket}
+      :vertical_bar {:key :!Sbackslash}
+      :double_quote {:key :!Squote}
+      :open_double_quote {:key :!Eopen_bracket}
+      :close_double_quote {:key :!SEopen_bracket}
+      :open_single_quote {:key :!Eclose_bracket}
+      :close_single_quote {:key :!SEclose_bracket}
+      :tilde {:key :!Sgrave_accent_and_tilde}
+      :ellipsis {:key :!Esemicolon}
+      :en_dash {:key :!Ehyphen}
+      :em_dash {:key :!SEhyphen}
+
+      ;; diacritics
+      :overdot {:key :!Ew}
+      :underdot {:key :!Ex}
+      :accute_accent {:key :!Ee}
+      :double_acute_accent {:key :!Ej}
+      :grave_accent {:key :!Egrave_accent_and_tilde}
+      :umlaut {:key :!Eu}
+      :undercomma {:key :!Ep}
+      :underbar {:key :!Eh}
+      :macron {:key :!Ea}
+      :breve {:key :!Eb}
+      :hook {:key :!Ez}
+      :horn {:key :!Ei}
+      :circumflex {:key :!E6}
+      :cedilla {:key :!Ec}
+      :overring {:key :!Ek}
+      :stroke {:key :!El}
+      :caron {:key :!Ev}
+      :ogonek {:key :!Em}
+      :tilde_accent {:key :!En}
+
+      ;; "foreign" chars
+      :ø {:key :!Eo}
+      :œ {:key :!Eq}
+      :ß {:key :!Es}
+      :ð {:key :!Ed}
+      :þ {:key :!Et}
+      :¡ {:key :!E1}
+      :¿ {:key :!ESslash}
+      :« {:key :!Ebackslash}
+      :» {:key :!SEbackslash}
+      :• {:key :!O8}
+
+      ;; math
+      := {:key :equal_sign}
+      :+ {:key :!Sequal_sign}
+      :≠ {:key :!Eequal_sign}
+      :÷ {:key :!Eslash}
+      :± {:key :!ESequal_sign}
+      :≤ {:key :!Ecomma}
+      :≥ {:key :!Eperiod}
+      }
+
+:modifiers {
+            ;; macOS
+            :⇧ [:left_shift]
+            :⌘ [:left_command]
+            :⌥ [:left_option]
+            :⌃ [:left_control]
+            :⇧⌘ [:left_shift :left_command]
+            :⇧⌥ [:left_shift :left_option]
+            :⇧⌃ [:left_shift :left_control]
+            :⌘⌥ [:left_command :left_option]
+            :⌘⌃ [:left_command :left_control]
+            :⌥⌃ [:left_option :left_control]
+            :⇧⌘⌥ [:left_shift :left_command :left_option]
+            :⇧⌘⌃ [:left_shift :left_command :left_control]
+            :⇧⌥⌃ [:left_shift :left_option :left_control]
+            :⌘⌥⌃ [:left_command :left_option :left_control]
+            :⇧⌘⌥⌃ [:left_shift :left_command :left_option :left_control]
+
+            ;; Emacs
+            :S- [:left_shift]
+            :A- [:right_command]
+            :C- [:left_control]
+            :H- [:left_command]
+            :M- [:left_option]
+            :s- [:right_control]
+            :A-C- [:right_command :left_control]
+            :A-H- [:right_command :left_command]
+            :A-M- [:right_command :left_option]
+            :A-s- [:right_command :right_control]
+            :C-H- [:left_control :left_command]
+            :C-M- [:left_control :left_option]
+            :C-s- [:left_control :right_control]
+            :H-M- [:left_command :left_option]
+            :H-s- [:left_command :right_control]
+            :M-s- [:left_option :right_control]
+            :A-C-H- [:right_command :left_control :left_command]
+            :A-C-M- [:right_command :left_control :left_option]
+            :A-C-s- [:right_command :left_control :right_control]
+            :A-H-M- [:right_command :left_command :left_option]
+            :A-H-s- [:right_command :left_command :right_control]
+            :A-M-s- [:right_command :left_option :right_control]
+            :C-H-M- [:left_control :left_command :left_option]
+            :C-H-s- [:left_control :left_command :right_control]
+            :C-M-s- [:left_control :left_option :right_control]
+            :H-M-s- [:left_command :left_option :right_control]
+            :A-C-H-M- [:right_command :left_control :left_command :left_option]
+            :A-C-H-s- [:right_command :left_control :left_command :right_control]
+            :A-C-M-s- [:right_control :left_control :right_command :left_option]
+            :A-H-M-s- [:right_command :left_command :left_option :right_control]
+            :C-H-M-s- [:left_control :left_command :left_option :right_control]
+            :A-C-H-M-s- [:left_control :left_command :left_option :right_control :right_command]
+            }
 
 :applications {
                :emacs ["org.gnu.Emacs"]
@@ -20,26 +163,31 @@
                }
 
 :devices {
-         :moonlander [{:vendor_id 12951}]
+         :corne [{:vendor_id 7504}]
          :kinesis [{:vendor_id 10730}]
+         :moonlander [{:vendor_id 12951}]
          }
 
 :layers {
-         :quote-mode {:key :quote :condi :chrome} ; site-specific macros (Chrome)
+         :k-mode {:key :quote :condi :chrome}
          }
 
 :simlayers {
-            :launch_mode {:key :f24}
-            :j-mode {:key :j} ; killing
-            :l-mode {:key :l} ; org headings
-            :p-mode {:key :p} ; media/mouse
-            :q-mode {:key :q} ; apps
-            :x-mode {:key :x} ; avy
-            :z-mode {:key :z} ; movement
-            :comma-mode {:key :comma} ; transposition
-            :period-mode {:key :period} ; buffers
-            :semicolon-mode {:key :semicolon} ; numbers and symbols
-            :slash-mode {:key :slash} ; files (Emacs) | app-specific macros (outside Emacs)
+            :b-mode {:key :b}
+            :f-mode {:key :f}
+            :j-mode {:key :j}
+            :k-mode {:key :k}
+            :l-mode {:key :l :condi :emacs}
+            :m-mode {:key :m}
+            :p-mode {:key :p}
+            :q-mode {:key :q}
+            :v-mode {:key :v}
+            :x-mode {:key :x :condi :emacs}
+            :z-mode {:key :z}
+            :comma-mode {:key :comma :condi :emacs}
+            :period-mode {:key :period}
+            :semicolon-mode {:key :semicolon}
+            :slash-mode {:key :slash}
             }
 
 :templates {:alfred "osascript -e 'tell application \"Alfred 4\" to run trigger \"%s\" in workflow \"%s\" with argument \"%s\"'"
@@ -49,372 +197,119 @@
 
 :main [
 
-{:des "On Emacs: diacritics if pressed in succession, otherwise hyper-super modifier"
- :rules [:emacs
-         [:backslash :!Cright_control [:!blocked] {:alone ["ctrl" 1] :delayed {:invoked ["ctrl" 0]}}]
-         :ctrl
-         [:a :!Ea nil {:afterup ["ctrl" 0]}]
-         [:b :!Eb nil {:afterup ["ctrl" 0]}]
-         [:c :!Ec nil {:afterup ["ctrl" 0]}]
-         [:d :!Ed nil {:afterup ["ctrl" 0]}]
-         [:e :!Ee nil {:afterup ["ctrl" 0]}]
-         [:f :!Ef nil {:afterup ["ctrl" 0]}]
-         [:g :!Eg nil {:afterup ["ctrl" 0]}]
-         [:h :!Eh nil {:afterup ["ctrl" 0]}]
-         [:i :!Ei nil {:afterup ["ctrl" 0]}]
-         [:j :!Ej nil {:afterup ["ctrl" 0]}]
-         [:k :!Ek nil {:afterup ["ctrl" 0]}]
-         [:l :!El nil {:afterup ["ctrl" 0]}]
-         [:m :!Em nil {:afterup ["ctrl" 0]}]
-         [:n :!En nil {:afterup ["ctrl" 0]}]
-         [:o :!Eo nil {:afterup ["ctrl" 0]}]
-         [:p :!Ep nil {:afterup ["ctrl" 0]}]
-         [:q :!Eq nil {:afterup ["ctrl" 0]}]
-         [:r :!Er nil {:afterup ["ctrl" 0]}]
-         [:s :!Es nil {:afterup ["ctrl" 0]}]
-         [:t :!Et nil {:afterup ["ctrl" 0]}]
-         [:u :!Eu nil {:afterup ["ctrl" 0]}]
-         [:v :!Ev nil {:afterup ["ctrl" 0]}]
-         [:w :!Ew nil {:afterup ["ctrl" 0]}]
-         [:x :!Ex nil {:afterup ["ctrl" 0]}]
-         [:y :!Ey nil {:afterup ["ctrl" 0]}]
-         [:z :!Ez nil {:afterup ["ctrl" 0]}]
-         [:0 :!E0 nil {:afterup ["ctrl" 0]}]
-         [:1 :!E1 nil {:afterup ["ctrl" 0]}] ; ¡
-         [:2 :!E2 nil {:afterup ["ctrl" 0]}]
-         [:3 :!E3 nil {:afterup ["ctrl" 0]}]
-         [:4 :!E4 nil {:afterup ["ctrl" 0]}]
-         [:5 :!E5 nil {:afterup ["ctrl" 0]}]
-         [:6 :!E6 nil {:afterup ["ctrl" 0]}]
-         [:7 :!E7 nil {:afterup ["ctrl" 0]}]
-         [:8 :!E8 nil {:afterup ["ctrl" 0]}]
-         [:9 :!E9 nil {:afterup ["ctrl" 0]}]
-         [:slash :!SEslash nil {:afterup ["ctrl" 0]}] ; ¿
-         ]
- }
-
-{:des "caps_lock → C-g (alone) | left_option (held)"
+{:des "Disable caps_lock"
  :rules [
-         [:##caps_lock :left_option :emacs {:alone :!Tg}]
+         [:caps_lock :vk_none]
          ]}
 
-{:des "outside Emacs, caps → escape (alone) | left_option (held)"
+{:des "Emacs: left_control → C-g (alone) M- (held)"
  :rules [
-         [:##caps_lock :left_option nil {:alone :escape}]
+         [:!Ch {:modi :A-H-M-s- :key :h} :emacs] ; circumvent macOS ⌘h
+         [:!CQh {:modi :A-C-H-s- :key :h} :emacs] ; circumvent macOS ⌘⌥h
+         [:##left_control :M- [:!steam :emacs] {:alone {:modi :C- :key :g}}]
          ]}
 
-{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
+{:des "Outside Emacs: left_control → escape (alone) | 🌐 (held)"
  :rules [
-         [:##delete_forward :left_shift [:moonlander :kinesis] {:alone :!CT0}]
+         [:##left_control :🌐 [:!steam :!emacs] {:alone :escape}]
          ]}
 
-{:des "delete_or_backspace → return_or_enter (alone) | left_command (held)"
+{:des "Emacs: left_option → toggle tabs/windows (alone) | S- (held)"
  :rules [
-         [:##delete_or_backspace :left_command [:moonlander :kinesis] {:alone :return_or_enter}]
+         [:##left_option :S- :emacs {:alone :return_or_enter}]
          ]}
 
-{:des "on Emacs, equal_sign → equal_sign (alone) | Alt (held)"
+{:des "Outside Emacs: left_option → toggle tabs/windows (alone) | ⇧ (held)"
  :rules [
-         [:##equal_sign :right_command [:moonlander :emacs] {:alone :equal_sign}]
+         [:##left_option :⇧ :!emacs {:alone :return_or_enter}]
          ]}
 
-{:des "outside Emacs, equal_sign → equal_sign (alone) | left_shift + left_option (held)"
+{:des "Emacs: left_command → other window (alone) | H- (held)"
  :rules [
-         [:##equal_sign :!Sleft_option :moonlander  {:alone :equal_sign}]
+         [:##left_command :H- :emacs {:alone {:modi :C-H- :key :0}}]
          ]}
 
-{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
+{:des "Outsie Emacs: left_command → other tab (alone) | ⌘ (held)"
  :rules [
-         [:##left_command :left_command [:!moonlander :!steam] {:alone :return_or_enter}]
+         [:##left_command :⌘ :!emacs {:alone {:modi :⌘⌃ :key :0}}]
          ]}
 
-{:des "on Emacs, left_control → command + tab (alone) | left_command (held)"
+{:des "Emacs: spacebar → C- (held) | ⌘tab (alone)"
  :rules [
-          [:!Ch :!QCOWh :emacs] ; circunvent macOS command + h
-          [:!CQh :!QTCWh :emacs] ; circunvent macOS command + option + h
-         [:##left_control :!Qleft_command [:!steam :emacs] {:alone :!Ctab}]
+         [:!Cspacebar {:modi :A-H-M-s- :key :spacebar} :emacs] ; ps/switch-to-alternate-buffer
+         [:##spacebar :C- :emacs {:alone {:modi :⌘ :key :tab}}]
          ]}
 
-{:des "outside Emacs, left_control → command + tab (alone) | left_option + left_command (held)"
+{:des "Outside Emacs: spacebar → ⌃ (held) | ⌘tab (alone)"
  :rules [
-         [:##left_control :!Oleft_command [:!steam :!emacs] {:alone :!Ctab}]
+         [:!Cspacebar {:modi :⌘ :key :grave_accent_and_tilde} :!emacs] ; move focus to next window
+         [:##spacebar :⌃ :!emacs {:alone {:modi :⌘ :key :tab}}]
          ]}
 
-{:des "delete_forward → toggle tabs (alone) | left_shift (held)"
+{:des "Emacs: right_command + left_command → A-H- (held) "
+:rules [
+        [[:right_command :left_command] :A-H- :emacs {:alone {:modi :A- :key :spacebar}}]
+        ]}
+
+{:des "Emacs: right_command + left_shift → A-"
+:rules [
+        [[:right_command :left_option] :A- :emacs]
+        ]}
+
+{:des "Emacs: right_command + spacebar → A-C-"
+:rules [
+        [[:right_command :spacebar] :A-C- :emacs]
+        ]}
+
+{:des "Emacs: right_command + left_control → A-M-"
+:rules [
+        [[:right_command :left_control] :A-M- :emacs]
+        ]}
+
+{:des "Emacs: right_command + right_option → A-s-"
+:rules [
+        [[:right_command :right_option] :A-s- :emacs]
+        ]}
+
+{:des "Emacs: right_command → spacebar"
  :rules [
-         [:##left_option :left_shift :!moonlander {:alone :!CT0}]
+         [:##right_command :spacebar :emacs]
          ]}
 
-{:des "on Emacs, left_shift → right_command (alone) | hyphen (held)"
+{:des "Outside Emacs: right_command → spacebar"
  :rules [
-         [:##left_shift :!Oright_command :emacs {:alone :hyphen}]
+         [:##right_command :spacebar :!emacs]
          ]}
 
-{:des "outside Emacs, left_shift → Option + control (alone) | hyphen (held)"
+{:des "Emacs: right_option → other window (alone) | s- (held)"
  :rules [
-         [:##left_shift :!Oleft_control nil {:alone :hyphen}]
+         [:##right_option :s- :emacs {:alone :tab}]
          ]}
 
-{:des "on Emacs, quote → quote (alone) | super (held)"
+{:des "outside Emacs: right_option → other window (alone) | ⌥ (held)"
  :rules [
-         [:##quote :right_control [:moonlander :kinesis :emacs] {:alone :quote}]
+         [:##right_option :⌥ :!emacs {:alone :tab}]
          ]}
 
-{:des "on Emacs, return_or_enter → quote (alone) | super (held)"
- :rules [
-         [:##quote :right_control [:!moonlander :!kinesis :emacs] {:alone :quote}]
-         ]}
-
-{:des "tab → return_or_enter (alone) | left_control (held)"
- :rules [
-         [:##return_or_enter :left_control :kinesis {:alone :tab}]
-         ]}
-
-{:des "spacebar → tab (alone) | left_control (held)"
- :rules [
-         [:##right_command :left_control :!moonlander {:alone :tab}]
-         ]}
-
-{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
- :rules [
-         [:##right_control :!Tright_command [:moonlander :kinesis :emacs] {:alone :f18}]
-         ]}
-
-{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
- :rules [
-         [:##right_control :!Qright_control [:moonlander :kinesis] {:alone :f18}]
-         ]}
-
-{:des "on Emacs, right_control → toggle Emacs/Chrome (alone) | Control + Alt (held)"
- :rules [
-         [:##right_option :!Tright_command [:!moonlander :emacs] {:alone :f18}]
-         ]}
-
-{:des "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)"
- :rules [
-         [:##right_option :!Qright_control :!moonlander {:alone :f18}]
-         ]}
-
-{:des "on Emacs, right_shift → en dash (alone) | Super + Alt (held)"
- :rules [
-         [:right_shift :!Wright_command :emacs {:alone :!Ehyphen}]
-         ]}
-
-{:des "outside Emacs, right_shift → en dash (alone) | right_option + right_control (held)"
- :rules [
-         [:##right_shift :!Wright_option nil {:alone :!Ehyphen}]
-         ]}
-
-{:des "on Emacs, equal_sign → equal_sign (alone) | Alt (held)"
- :rules [
-         [:##tab :right_command [:!moonlander :emacs] {:alone :equal_sign}]
-         ]}
-
-{:des "outside Emacs, equal_sign → equal_sign (alone) | left_shift + left_option (held)"
- :rules [
-         [:##tab :!Sleft_option :!moonlander  {:alone :equal_sign}]
-         ]}
-
-{:des "tab → tab (alone) | left_control (held)"
- :rules [
-         [:##tab :left_control :moonlander {:alone :tab}]
-         ]}
-
-{:des "on Emacs, tab → equal_sign (alone) | Alt (held)"
- :rules [
-         [:##tab :right_command [:kinesis :emacs] {:alone :equal_sign}]
-         ]}
-
-{:des "outside Emacs, tab → equal_sign (alone) | left_shift + left_option (held)"
- :rules [
-         [:##tab :!Sleft_option :kinesis  {:alone :equal_sign}]
-         ]}
-
-{:des "On Emacs, command + space → trigger different events on Emacs and elsewhere"
- :rules [
-         [:!Cspacebar :!QCOWspacebar :emacs]
-         ]}
-
-{:des "On Emacs, disable OSX behavior of command + ?"
- :rules [
-         [:!CSslash :!QCOWSslash :emacs]
-         ]}
-
-{:des "On Emacs, disable OSX behavior of command + Q"
- :rules [
-         [:!CSq :!QCOWq :emacs]
-         ]}
-
-{:des "On Emacs, C-g → C-ESC"
- :rules [
-         [:!Tg :!Tescape :emacs]
-         ]}
-
-{:des "j-mode (deletion)"
- :rules [:j-mode
-         [:a :!TCOa :emacs]
-         [:!Wa :!TCOWa :emacs]
-         [:!WQa :!TCOWQa :emacs]
-         [:s :!TCOs :emacs]
-         [:s :delete_or_backspace]
-         [:d :!TCOd :emacs]
-         [:d :delete_forward]
-         [:f :!TCOf :emacs]
-         [:!Wf :!TCOWf :emacs]
-         [:!WQf :!TCOWQf :emacs]
-         [:q :!TCOq :emacs]
-         [:!Wq :!TCOWq :emacs]
-         [:!WQq :!TCOWQq :emacs]
-         [:q :!Odelete_or_backspace]
-         [:w :!TCOw :emacs]
-         [:!Ww :!TCOWw :emacs]
-         [:!WQw :!TCOWQw :emacs]
-         [:w :!Cdelete_or_backspace]
-         [:e :!TCOe :emacs]
-         [:!We :!TCOWe :emacs]
-         [:!WQe :!TCOWQe :emacs]
-         [:e :!Tk]
-         [:r :!TCOr :emacs]
-         [:!Wr :!TCOWr :emacs]
-         [:!WQr :!TCOWQr :emacs]
-         [:r :!Odelete_forward]
-         [:z :!TCOz :emacs]
-         [:!Wz :!WTCOz :emacs]
-         [:!WQz :!WQTCOz :emacs]
-         [:z :!Cdelete_or_backspace]
-         [:x :!TCOx :emacs]
-         [:!Wx :!TCOWx :emacs]
-         [:!WQx :!TCOWQx :emacs]
-         [:x :!COleft_arrow]
-         [:c :!TCOc :emacs]
-         [:!Wc :!TCOWc :emacs]
-         [:!WQc :!TCOWQc :emacs]
-         [:c :!COright_arrow]
-         [:v :!TCOv :emacs]
-         [:!Wv :!TCOWv :emacs]
-         [:!WQv :!TCOWQv :emacs]
-         [:v :!Cdelete_forward]
-         [:b :!TCOb :emacs]
-         [:t :!TCOt :emacs]
-         [:t :home]
-         [:g :!TCOg :emacs]
-         [:g :end]
-         [:!Wd :!TCOWd :emacs]
-         [:!Ws :!TCOWs :emacs]
-         [:equal_sign :!TCOequal_sign :emacs]
-         [:caps_lock [:left_arrow :right_arrow] :emacs]
-         ]}
-
-{:des "Command-j (copy)"
- :rules [
-         [:!Cj [ "my-layer-mode"  1] nil {:afterup ["my-layer-mode" 0] :alone :!Cj}]
-         :my-layer-mode
-         [:##a :!TCOWQa :emacs]
-         [:##b :!TCOWQb :emacs]
-         [:##c :!TCOWQc :emacs]
-         [:##d :!TCOWQd :emacs]
-         [:##e :!TCOWQe :emacs]
-         [:##f :!TCOWQf :emacs]
-         [:##g :!TCOWQg :emacs]
-         [:##h :!TCOWQh :emacs]
-         [:##i :!TCOWQi :emacs]
-         [:##k :!TCOWQk :emacs]
-         [:##l :!TCOWQl :emacs]
-         [:##m :!TCOWQm :emacs]
-         [:##n :!TCOWQn :emacs]
-         [:##o :!TCOWQo :emacs]
-         [:##p :!TCOWQp :emacs]
-         [:##q :!TCOWQq :emacs]
-         [:##r :!TCOWQr :emacs]
-         [:##s :!TCOWQs :emacs]
-         [:##t :!TCOWQt :emacs]
-         [:##u :!TCOWQu :emacs]
-         [:##v :!TCOWQv :emacs]
-         [:##w :!TCOWQw :emacs]
-         [:##x :!TCOWQx :emacs]
-         [:##y :!TCOWQy :emacs]
-         [:##z :!TCOWQz :emacs]
-         ]}
-
-{:des "Comand-shift-j (delete)"
- :rules [
-         [:!CSj [ "my-layer-mode"  1] nil {:afterup ["my-layer-mode" 0] :alone :!CSj}]
-         :my-layer-mode
-         [:##a :!QTCOa :emacs]
-         [:##b :!QTCOb :emacs]
-         [:##c :!QTCOc :emacs]
-         [:##d :!QTCOd :emacs]
-         [:##e :!QTCOe :emacs]
-         [:##f :!QTCOf :emacs]
-         [:##g :!QTCOg :emacs]
-         [:##h :!QTCOh :emacs]
-         [:##i :!QTCOi :emacs]
-         [:##k :!QTCOk :emacs]
-         [:##l :!QTCOl :emacs]
-         [:##m :!QTCOm :emacs]
-         [:##n :!QTCOn :emacs]
-         [:##o :!QTCOo :emacs]
-         [:##p :!QTCOp :emacs]
-         [:##q :!QTCOq :emacs]
-         [:##r :!QTCOr :emacs]
-         [:##s :!QTCOs :emacs]
-         [:##t :!QTCOt :emacs]
-         [:##u :!QTCOu :emacs]
-         [:##v :!QTCOv :emacs]
-         [:##w :!QTCOw :emacs]
-         [:##x :!QTCOx :emacs]
-         [:##y :!QTCOy :emacs]
-         [:##z :!QTCOz :emacs]
-         ]}
-
-{:des "l-mode (deletion)"
- :rules [:l-mode
-         [:a :!TCOWa :emacs]
-         [:b :!TCOWb :emacs]
-         [:c :!TCOWc :emacs]
-         [:d :!TCOWd :emacs]
-         [:e :!TCOWe :emacs]
-         [:f :!TCOWf :emacs]
-         [:g :!TCOWg :emacs]
-         [:h :!TCOWh :emacs]
-         [:i :!TCOWi :emacs]
-         [:j :!TCOWj :emacs]
-         [:m :!TCOWm :emacs]
-         [:n :!TCOWn :emacs]
-         [:o :!TCOWo :emacs]
-         [:p :!TCOWp :emacs]
-         [:q :!TCOWq :emacs]
-         [:r :!TCOWr :emacs]
-         [:s :!TCOWs :emacs]
-         [:t :!TCOWt :emacs]
-         [:u :!TCOWu :emacs]
-         [:v :!TCOWv :emacs]
-         [:w :!TCOWw :emacs]
-         [:z :!TCOWz :emacs]
-         [:x :!TCOWx :emacs]
-         [:y :!TCOWy :emacs]
-         [:period :!TCOWperiod :emacs]
-         ]}
-
-{:des "p-mode (media controls)"
- :rules [:p-mode
+{:des "b-mode (media controls)"
+ :rules [:b-mode
          ;; [: :display_brightness_increment]
          ;; [: :launchpad]
          ;; [: :mission_control]
          [:a {:mkey {:x -1500}}]
-         [:b :!CS5] ; Screenshot and recording options
-         [:c :!CS4] ; Save picture of selected area to a file
+         ;; [:b {:modi :⇧⌘ :key :5}] ; Screenshot and recording options
+         [:c {:modi :⇧⌘ :key :4}] ; Save picture of selected area to a file
          [:d {:mkey {:y 1500}}]
          [:e {:mkey {:y 4500}}]
          [:f {:mkey {:x 1500}}]
-         [:g :!QWERg] ; Rectangle, half right
-         [:h :!QWERh] ; Rectangle, center
+         [:g {:modi :⇧⌘⌥⌃ :key :g}] ; Rectangle, half right
+         [:h {:modi :⇧⌘⌥⌃ :key :h}] ; Rectangle, center
          [:i [:km "Use Play to control Spotify not shitty Apple Music"]]
          [:j :volume_decrement]
          [:k :mute]
          [:l :fastforward]
-         [:m :!CTS0] ; dictation
-         [:n :!CTS1] ; read aloud
+         [:m {:modi :⇧⌘⌃ :key :0}] ; dictation
+         [:n {:modi :⇧⌘⌃ :key :1}] ; read aloud
          [:o :rewind]
          [:q {:mkey {:x -4500}}]
          [:r {:mkey {:x 4500}}]
@@ -422,15 +317,184 @@
          ;; [:return_or_enter :!QWERreturn_or_enter] ; doesn't work
          [:spacebar :button1]
          [:tab :button2]
-         [:t :!QWERt] ; Recntangle, center
+         [:t {:modi :⇧⌘⌥⌃ :key :t}] ; Recntangle, center
          [:u :volume_increment] ;
-         [:v :!CTS4] ; Copy picture of selected area to the clipboard
+         [:v {:modi :⇧⌘⌃ :key :4}] ; Copy picture of selected area to the clipboard
          [:w {:mkey {:y -4500}}]
-         [:x :!CTS3] ; Copy picture of screen to the clipboard
-         [:y :!QWERy] ; Rectangle, maximize
-         [:z :!CS3] ; Save picture of screen as a file
-         [:comma :!QWERperiod] ; 
+         [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
+         [:y {:modi :⇧⌘⌥⌃ :key :y}] ; Rectangle, maximize
+         [:z {:modi :⇧⌘ :key :3}] ; Save picture of screen as a file
          ]}
+
+{:des "f-mode (special chars)"
+ :rules [:f-mode
+         [:b :•]
+         [:d :•]
+         [:i :¡]
+         [:o :ø]
+         [:q :œ]
+         [:s :ß]
+         [:t :þ]
+         [:slash :¿]
+         [:comma :«]
+         [:period :»]
+         [:e :ellipsis]
+         ]
+ }
+
+{:des "j-mode (deletion)"
+ :rules [:j-mode
+         [:a {:modi :C-H-M- :key :a} :emacs]
+         [:!Wa {:modi :C-H-M-s- :key :a} :emacs]
+         [:!WQa {:modi :A-C-H-M-s- :key :a} :emacs]
+         [:s {:modi :C-H-M- :key :s} :emacs]
+         [:s :delete_or_backspace :!emacs]
+         [:d {:modi :C-H-M- :key :d} :emacs]
+         [:d :delete_forward :!emacs]
+         [:f {:modi :C-H-M- :key :f} :emacs]
+         [:!Wf {:modi :C-H-M-s- :key :f} :emacs]
+         [:!WQf {:modi :A-C-H-M-s- :key :f} :emacs]
+         [:q {:modi :C-H-M- :key :q} :emacs]
+         [:!Wq {:modi :C-H-M-s- :key :q} :emacs]
+         [:!WQq {:modi :A-C-H-M-s- :key :q} :emacs]
+         [:q {:modi :⌥ :key :delete_or_backspace} :!emacs]
+         [:w {:modi :C-H-M- :key :w} :emacs]
+         [:!Ww {:modi :C-H-M-s- :key :w} :emacs]
+         [:!WQw {:modi :A-C-H-M-s- :key :w} :emacs]
+         [:w {:modi :⌘ :key :delete_or_backspace} :!emacs]
+         [:e {:modi :C-H-M- :key :e} :emacs]
+         [:!We {:modi :C-H-M-s- :key :e} :emacs]
+         [:!WQe {:modi :A-C-H-M-s- :key :e} :emacs]
+         [:e {:modi :⌃ :key :k} :!emacs]
+         [:r {:modi :C-H-M- :key :r} :emacs]
+         [:!Wr {:modi :C-H-M-s- :key :r} :emacs]
+         [:!WQr {:modi :A-C-H-M-s- :key :r} :emacs]
+         [:r {:modi :⌥ :key :delete_forward} :!emacs]
+         [:z {:modi :C-H-M- :key :z} :emacs]
+         [:!Wz {:modi :C-H-M-s- :key :z} :emacs]
+         [:!WQz {:modi :A-C-H-M-s- :key :z} :emacs]
+         [:z {:modi :⌘ :key :delete_or_backspace} :!emacs]
+         [:x {:modi :C-H-M- :key :x} :emacs]
+         [:!Wx {:modi :C-H-M-s- :key :x} :emacs]
+         [:!WQx {:modi :A-C-H-M-s- :key :x} :emacs]
+         [:x {:modi :⌘⌥ :key :left_arrow} :!emacs]
+         [:c {:modi :C-H-M- :key :c} :emacs]
+         [:!Wc {:modi :C-H-M-s- :key :c} :emacs]
+         [:!WQc {:modi :A-C-H-M-s- :key :c} :emacs]
+         [:c {:modi :⌘⌥ :key :right_arrow} :!emacs]
+         [:v {:modi :C-H-M- :key :v} :emacs]
+         [:!Wv {:modi :C-H-M-s- :key :v} :emacs]
+         [:!WQv {:modi :A-C-H-M-s- :key :v} :emacs]
+         [:v {:modi :⌘ :key :delete_forward} :!emacs]
+         [:b {:modi :C-H-M- :key :b} :emacs]
+         [:t {:modi :C-H-M- :key :t} :emacs]
+         [:t :home :!emacs]
+         [:g {:modi :C-H-M- :key :g} :emacs]
+         [:g :end :!emacs]
+         [:!Wd {:modi :C-H-M-s- :key :d} :emacs]
+         [:!Ws {:modi :C-H-M-s- :key :s} :emacs]
+         ]}
+
+{:des "k-mode (website-specific)"
+ :rules [:quote-mode
+         [:a [:km "Local website a"]]
+         [:b [:km "Local website b"]]
+         [:c [:km "Local website c"]]
+         [:d [:km "Local website d"]]
+         [:e [:km "Local website e"]]
+         [:f [:km "Local website f"]]
+         [:g [:km "Local website g"]]
+         [:h [:km "Local website h"]]
+         [:i [:km "Local website i"]]
+         [:j [:km "Local website j"]]
+         [:l [:km "Local website l"]]
+         [:!Sl [:km "Local website Sl"]]
+         [:!Cl [:km "Local website Cl"]]
+         [:!CSl [:km "Local website CSl"]]
+         [:m [:km "Local website m"]]
+         [:n [:km "Local website n"]]
+         [:o [:km "Local website o"]]
+         [:p [:km "Local website p"]]
+         [:r [:km "Local website r"]]
+         [:s [:km "Local website s"]]
+         [:t [:km "Local website t"]]
+         [:u [:km "Local website u"]]
+         [:y [:km "Local website y"]]
+         [:z [:km "Local website z"]]
+         [:x [:km "Local website x"]]
+         [:v [:km "Local website v"]]
+         [:w [:km "Local website w"]]
+         [:semicolon [:km "Local website semicolon"]]
+         [:comma [:km "Local website comma"]]
+         [:period [:km "Local website period"]]
+         [:slash [:km "Local website slash"]]
+         [:return_or_enter [:km "Local website return_or_enter"]]
+         ;; [:spacebar [:km "Local website spacebar"]]
+         ]}
+
+{:des "l-mode (org headings)"
+ :rules [:l-mode
+         [:a {:modi :C-H-M-s- :key :a}]
+         [:b {:modi :C-H-M-s- :key :b}]
+         [:c {:modi :C-H-M-s- :key :c}]
+         [:d {:modi :C-H-M-s- :key :d}]
+         [:e {:modi :C-H-M-s- :key :e}]
+         [:f {:modi :C-H-M-s- :key :f}]
+         [:g {:modi :C-H-M-s- :key :g}]
+         [:h {:modi :C-H-M-s- :key :h}]
+         [:i {:modi :C-H-M-s- :key :i}]
+         [:j {:modi :C-H-M-s- :key :j}]
+         [:m {:modi :C-H-M-s- :key :m}]
+         [:n {:modi :C-H-M-s- :key :n}]
+         [:o {:modi :C-H-M-s- :key :o}]
+         [:p {:modi :C-H-M-s- :key :p}]
+         [:q {:modi :C-H-M-s- :key :q}]
+         [:r {:modi :C-H-M-s- :key :r}]
+         [:s {:modi :C-H-M-s- :key :s}]
+         [:t {:modi :C-H-M-s- :key :t}]
+         [:u {:modi :C-H-M-s- :key :u}]
+         [:v {:modi :C-H-M-s- :key :v}]
+         [:w {:modi :C-H-M-s- :key :w}]
+         [:z {:modi :C-H-M-s- :key :z}]
+         [:x {:modi :C-H-M-s- :key :x}]
+         [:y {:modi :C-H-M-s- :key :y}]
+         [:period {:modi :C-H-M-s- :key :period}]
+         ]}
+
+{:des "m-mode (math symbols)"
+ :rules [:m-mode
+         [:e :=]
+         [:p :+]
+         [:q :≠]
+         [:d :÷]
+         [:o :±]
+         [:comma :≤]
+         [:period :≥]
+         ]}
+
+{:des "p-mode (diacritics)"
+ :rules [:p-mode
+         [:a :macron]
+         [:b :breve]
+         [:c :cedilla]
+         [:e :accute_accent]
+         [:g :undercomma]
+         [:h :underbar]
+         [:i :horn]
+         [:j :double_acute_accent]
+         [:k :overring]
+         [:l :stroke]
+         [:m :ogonek]
+         [:n :tilde_accent]
+         [:r :grave_accent]
+         [:u :umlaut]
+         [:v :caron]
+         [:w :underdot]
+         [:x :overdot]
+         [:y :circumflex]
+         [:z :hook]
+         ]
+ }
 
 {:des "q-mode (apps)"
  :rules [:q-mode
@@ -444,51 +508,79 @@
          [:k [:km "Activate: Keyboard Maestro (k)"]]
          [:l [:km "Activate: DeepL (l)"]]
          [:m [:km "Activate: Media Center (m)"]]
-         [:n [:km "Activate: Transmission (n)"]]
          [:o [:km "Activate: Zoom (o)"]]
          [:p [:km "Activate: Preview (p)"]]
          [:r [:km "Activate: Karabiner-Elements (r)"]]
          [:s [:km "Activate: Slack (s)"]]
          [:t [:km "Activate: Terminal (t)"]]
-         [:v [:km "Activate: mvp (v)"]]
+         [:u [:km "Activate: Revolut (u)"]]
+         [:v [:km "Activate: mpv (v)"]]
          [:w [:km "Activate: HoudahSpot (w)"]]
          [:x [:km "Activate: Signal (x)"]]
          [:y [:km "Activate: Spotify (y)"]]
          ]}
 
+{:des "v-mode (numbers)"
+ :rules [:v-mode
+         [:i :8]
+         [:##i :##8]
+         [:j :4]
+         [:##j :4]
+         [:k :5]
+         [:##k :5]
+         [:l :6]
+         [:##l :6]
+         [:m :1]
+         [:##m :1]
+         [:o :9]
+         [:##o :9]
+         [:u :7]
+         [:##u :7]
+         [:comma :2]
+         [:##comma :2]
+         [:period :3]
+         [:##period :3]
+         [:p :0]
+         [:##p :0]
+         [:semicolon :period]
+         [:##semicolon :period]
+         ]
+ }
+
 {:des "x-mode (avy)"
  :rules [:x-mode
-         [:a :!TCWa :emacs]
-         [:b :!TCWb :emacs]
-         [:c :!TCWc :emacs]
-         [:d :!TCWd :emacs]
-         [:e :!TCWe :emacs]
-         [:f :!TCWf :emacs]
-         [:g :!TCWg :emacs]
-         [:h :!TCWh :emacs]
-         [:i :!TCWi :emacs]
-         [:j :!TCWj :emacs]
-         [:k :!TCWk :emacs]
-         [:l :!TCWl :emacs]
-         [:m :!TCWm :emacs]
-         [:n :!TCWn :emacs]
-         [:o :!TCWo :emacs]
-         [:p :!TCWp :emacs]
-         [:q :!TCWq :emacs]
-         [:r :!TCWr :emacs]
-         [:s :!TCWs :emacs]
-         [:t :!TCWt :emacs]
-         [:u :!TCWu :emacs]
-         [:v :!TCWv :emacs]
-         [:w :!TCWw :emacs]
-         [:z :!TCWz :emacs]
-         [:y :!TCWy :emacs]
-         [:period :!TCWperiod :emacs]
-         [:return_or_enter :!TCWreturn_or_enter :emacs]
-         [:semicolon :!TCWsemicolon :emacs]
-         [:comma :!TCWcomma :emacs]
-         [:slash :!TCWslash :emacs]
-         [:spacebar :!TCWspacebar :emacs]
+         [:a [{:modi :C-H-s- :key :a}]]
+         [:b [{:modi :C-H-s- :key :b}]]
+         [:c [{:modi :C-H-s- :key :c}]]
+         [:d [{:modi :C-H-s- :key :d}]]
+         [:e [{:modi :C-H-s- :key :e}]]
+         [:f [{:modi :C-H-s- :key :f}]]
+         [:g [{:modi :C-H-s- :key :g}]]
+         [:h [{:modi :C-H-s- :key :h}]]
+         [:i [{:modi :C-H-s- :key :i}]]
+         [:j [{:modi :C-H-s- :key :j}]]
+         [:k [{:modi :C-H-s- :key :k}]]
+         [:l [{:modi :C-H-s- :key :l}]]
+         [:m [{:modi :C-H-s- :key :m}]]
+         [:n [{:modi :C-H-s- :key :n}]]
+         [:o [{:modi :C-H-s- :key :o}]]
+         [:p [{:modi :C-H-s- :key :p}]]
+         [:q [{:modi :C-H-s- :key :q}]]
+         [:r [{:modi :C-H-s- :key :r}]]
+         [:s [{:modi :C-H-s- :key :s}]]
+         [:t [{:modi :C-H-s- :key :t}]]
+         [:u [{:modi :C-H-s- :key :u}]]
+         [:v [{:modi :C-H-s- :key :v}]]
+         [:w [{:modi :C-H-s- :key :w}]]
+         [:y [{:modi :C-H-s- :key :y}]]
+         [:z [{:modi :C-H-s- :key :z}]]
+         [:semicolon [{:modi :C-H-s- :key :semicolon}]]
+         [:comma [{:modi :C-H-s- :key :comma}]]
+         [:period [{:modi :C-H-s- :key :period}]]
+         [:slash [{:modi :C-H-s- :key :slash}]]
+         [:spacebar [{:modi :C-H-s- :key :spacebar}]]
+         [:return_or_enter [{:modi :C-H-s- :key :return_or_enter}]]
+         [:tab [{:modi :C-H-s- :key :tab}]]
          ]}
 
 {:des "z-mode (navigation)"
@@ -540,20 +632,20 @@
          [:g :!WTQg :emacs]
          [:right_command :!WTQtab :emacs :!moonlander]
          [:tab :!WTQtab :emacs]
-         [:##right_command :home :!moonlander]
+         [:##right_command :end :!moonlander]
          [:##tab :home :moonlander]
          [:##return_or_enter :home :kinesis]
          [:spacebar :!WTQspacebar :emacs]
-         [:##spacebar :end]
+         [:##spacebar :home]
          [:x :!WTQx]
          [:c :!WTQc]
          [:r [:!TCp :!TCh] :chrome] ; Google Docs previous heading
          [:r :!WTQr :emacs]
-         [:f [:!TCn :!TCh] :chrome] ; Google Docs previous heading
+         [:f [:!TCn :!TCh] :chrome] ; Google Docs next heading
          [:f :!WTQf]
          [:e :!WTQe :emacs]
          [:e [:km "Change selection to title case"] :!emacs]
-         [:d :!QCOWd :emacs] ; WTQ intercepted by OSX
+         [:d {:modi :A-H-M-s- :key :d} :emacs] ; WTQ intercepted by OSX
          [:d [:km "Change selection to sentence case"] :!emacs]
          [:w :!WTQw :emacs]
          [:w [:km "Remove hyphens from selection"] :!emacs]
@@ -563,331 +655,138 @@
 
 {:des "comma-mode (transposition)"
  :rules [:comma-mode
-         [:a :!QCOa :emacs]
-         [:b :!QCOb :emacs]
-         [:c :!QCOc :emacs]
-         [:d :!QCOd :emacs]
-         [:e :!QCOe :emacs]
-         [:f :!QCOf :emacs]
-         [:g :!QCOg :emacs]
-         [:h :!QCOh :emacs]
-         [:i :!QCOi :emacs]
-         [:j :!QCOj :emacs]
-         [:l :!QCOl :emacs]
-         [:n :!QCOn :emacs]
-         [:o :!QCOo :emacs]
-         [:p :!QCOp :emacs]
-         [:q :!QCOq :emacs]
-         [:r :!QCOr :emacs]
-         [:s :!QCOs :emacs]
-         [:t :!QCOt :emacs]
-         [:u :!QCOu :emacs]
-         [:v :!QCOv :emacs]
-         [:w :!QCOw :emacs]
-         [:z :!QCOz :emacs]
-         [:x :!QCOx :emacs]
-         [:y :!QCOy :emacs]
-         [:period :!QCOperiod :emacs]
-         [:slash :!QCOslash :emacs]
+         [:a {:modi :A-H-M- :key :a}]
+         [:b {:modi :A-H-M- :key :b}]
+         [:c {:modi :A-H-M- :key :c}]
+         [:d {:modi :A-H-M- :key :d}]
+         [:e {:modi :A-H-M- :key :e}]
+         [:f {:modi :A-H-M- :key :f}]
+         [:g {:modi :A-H-M- :key :g}]
+         [:h {:modi :A-H-M- :key :h}]
+         [:i {:modi :A-H-M- :key :i}]
+         [:j {:modi :A-H-M- :key :j}]
+         [:l {:modi :A-H-M- :key :l}]
+         [:n {:modi :A-H-M- :key :n}]
+         [:o {:modi :A-H-M- :key :o}]
+         [:p {:modi :A-H-M- :key :p}]
+         [:q {:modi :A-H-M- :key :q}]
+         [:r {:modi :A-H-M- :key :r}]
+         [:s {:modi :A-H-M- :key :s}]
+         [:t {:modi :A-H-M- :key :t}]
+         [:u {:modi :A-H-M- :key :u}]
+         [:v {:modi :A-H-M- :key :v}]
+         [:w {:modi :A-H-M- :key :w}]
+         [:x {:modi :A-H-M- :key :x}]
+         [:y {:modi :A-H-M- :key :y}]
+         [:z {:modi :A-H-M- :key :z}]
+         [:semicolon {:modi :A-H-M- :key :semicolon}]
+         [:period {:modi :A-H-M- :key :period}]
+         [:slash {:modi :A-H-M- :key :slash}]
+         [:spacebar {:modi :A-H-M- :key :spacebar}]
+         [:return_or_enter {:modi :A-H-M- :key :return_or_enter}]
+         [:tab {:modi :A-H-M- :key :tab}]
          ]}
 
 {:des "period-mode (manipulation)"
  :rules [:period-mode
-         [:a :!QCTa :emacs]
-         [:b :!QCTb :emacs]
-         [:c :!QCTc :emacs]
-         [:d :!QCTd :emacs]
-         [:e :!QCTe :emacs]
-         [:f :!QCTf :emacs]
-         [:g :!QCTg :emacs]
-         [:h :!QCTh :emacs]
-         [:i :!QCTi :emacs]
-         [:j :!QCTj :emacs]
-         [:k :!QCTk :emacs]
-         [:l :!QCTl :emacs]
-         [:m :!QCTm :emacs]
-         [:n :!QCTn :emacs]
-         [:o :!QCTo :emacs]
-         [:p :!QCTp :emacs]
-         [:q :!QCOW9 :emacs] ; QCOq triggers ^⌘Q (lock screen)
-         [:r :!QCTr :emacs]
-         [:s :!QCTs :emacs]
-         [:t :!QCTt :emacs]
-         [:u :!QCTu :emacs]
-         [:v :!QCTv :emacs]
-         [:w :!QCTw :emacs]
-         [:x :!QCTx :emacs]
-         [:y :!QCTy :emacs]
-         [:z :!QCTz :emacs]
-         [:comma :!QCTcomma :emacs]
-         [:slash :!QCTslash :emacs]
-         [:spacebar :!QCTspacebar :emacs]
+         [:a {:modi :A-C-H- :key :a}]
+         [:b {:modi :A-C-H- :key :b}]
+         [:c {:modi :A-C-H- :key :c}]
+         [:d {:modi :A-C-H- :key :d}]
+         [:e {:modi :A-C-H- :key :e}]
+         [:f {:modi :A-C-H- :key :f}]
+         [:g {:modi :A-C-H- :key :g}]
+         [:h {:modi :A-C-H- :key :h}]
+         [:i {:modi :A-C-H- :key :i}]
+         [:j {:modi :A-C-H- :key :j}]
+         [:k {:modi :A-C-H- :key :k}]
+         [:l {:modi :A-C-H- :key :l}]
+         [:m {:modi :A-C-H- :key :m}]
+         [:n {:modi :A-C-H- :key :n}]
+         [:o {:modi :A-C-H- :key :o}]
+         [:p {:modi :A-C-H- :key :p}]
+         [:q {:modi :A-H-M-s- :key :9}] ; QCOq triggers ⌘⌃Q (lock screen)
+         [:r {:modi :A-C-H- :key :r}]
+         [:s {:modi :A-C-H- :key :s}]
+         [:t {:modi :A-C-H- :key :t}]
+         [:u {:modi :A-C-H- :key :u}]
+         [:v {:modi :A-C-H- :key :v}]
+         [:w {:modi :A-C-H- :key :w}]
+         [:x {:modi :A-C-H- :key :x}]
+         [:y {:modi :A-C-H- :key :y}]
+         [:z {:modi :A-C-H- :key :z}]
+         [:semicolon {:modi :A-C-H- :key :semicolon}]
+         [:comma {:modi :A-C-H- :key :comma}]
+         [:slash {:modi :A-C-H- :key :slash}]
+         [:spacebar {:modi :A-C-H- :key :spacebar}]
+         [:return_or_enter {:modi :A-C-H- :key :return_or_enter}]
          ]}
 
-{:des "quote-mode (website-specific)"
- :rules [:quote-mode
-         [:1 [:km "Local website 1"]]
-         [:2 [:km "Local website 2"]]
-         [:3 [:km "Local website 3"]]
-         [:4 [:km "Local website 4"]]
-         [:5 [:km "Local website 5"]]
-         [:6 [:km "Local website 6"]]
-         [:7 [:km "Local website 7"]]
-         [:8 [:km "Local website 8"]]
-         [:9 [:km "Local website 9"]]
-         [:0 [:km "Local website 0"]]
-         [:a [:km "Local website a"]]
-         [:b [:km "Local website b"]]
-         [:c [:km "Local website c"]]
-         [:d [:km "Local website d"]]
-         [:e [:km "Local website e"]]
-         [:f [:km "Local website f"]]
-         [:g [:km "Local website g"]]
-         [:h [:km "Local website h"]]
-         [:i [:km "Local website i"]]
-         [:j [:km "Local website j"]]
-         [:k [:km "Local website k"]]
-         [:l [:km "Local website l"]]
-         [:!Sl [:km "Local website Sl"]]
-         [:!Cl [:km "Local website Cl"]]
-         [:!CSl [:km "Local website CSl"]]
-         [:m [:km "Local website m"]]
-         [:n [:km "Local website n"]]
-         [:o [:km "Local website o"]]
-         [:p [:km "Local website p"]]
-         [:r [:km "Local website r"]]
-         [:s [:km "Local website s"]]
-         [:t [:km "Local website t"]]
-         [:u [:km "Local website u"]]
-         [:y [:km "Local website y"]]
-         [:z [:km "Local website z"]]
-         [:x [:km "Local website x"]]
-         [:v [:km "Local website v"]]
-         [:w [:km "Local website w"]]
-         [:semicolon [:km "Local website semicolon"]]
-         [:comma [:km "Local website comma"]]
-         [:period [:km "Local website period"]]
-         [:slash [:km "Local website slash"]]
-         [:return_or_enter [:km "Local website return_or_enter"]]
-                                        ; [:spacebar [:km "Local website spacebar"]]
-         ]}
-
-{:des "semicolon (numbers and symbols)"
+{:des "semicolon (symbols)"
  :rules [:semicolon-mode
-         ;; [:grave_accent_and_tilde :]
-         [:##1 :!Ff1]
-         [:##2 :!Ff2]
-         [:##3 :!Ff3]
-         [:##4 :!Ff4]
-         [:##5 :!Ff5]
-         [:##6 :!Ff6]
-         [:##7 :!Ff7]
-         [:##8 :!Ff8]
-         [:##9 :!Ff9]
-         [:##0 :!Ff10]
-         ;; [:hyphen :]
-         ;; [:equal_sign :]
-         ;; [:open_bracket :]
-         ;; [:close_bracket :]
-         ;; [:backslash :]
-         [:##a :!S5]
+         [:##a :percent_sign]
          [:##b :grave_accent_and_tilde]
          [:##c :open_bracket]
-         [:##d :!S0]
-         [:##e :!S3]
-         [:##f :!S8]
-         [:##g :!S6]
-         [:##h :!S7]
-         [:##i :8]
-         [:##j :4]
-         [:##k :5]
-         [:##l :6]
-         [:##m :1]
-         [:##n :!Sgrave_accent_and_tilde]
-         [:##o :9]
-         [:##p :0]
-         [:##q :!S1]
-         [:##r :!S4]
-         [:##s :!S9]
+         [:##d :close_parenthesis]
+         [:##e :number_sign]
+         [:##f :asterisk]
+         [:##g :caret]
+         [:##h :ampersand]
+         [:##i :open_single_quote]
+         [:##j :double_quote]
+         [:##k :open_double_quote]
+         [:##l :close_double_quote]
+         [:##m :hyphen]
+         [:##n :tilde]
+         [:##o :close_single_quote]
+         [:##q :exclamation_mark]
+         [:##r :dollar_sign]
+         [:##s :open_parenthesis]
          [:##t :backslash]
-         [:##u :7]
+         [:##u :quote]
          [:##v :close_bracket]
-         [:##w :!S2]
-         [:##x :!Sclose_bracket]
-         [:##y :!Sbackslash]
-         [:##z :!Sopen_bracket]
-         ;; [:semicolon :]
-         ;; [:quote :]
-         [:##comma :2]
-         [:##period :3]
-         ;; [:slash :]
-         [:##spacebar :##0]
-         [:!Sd :!Ebackslash]
-         [:#SRf :!SEbackslash]
+         [:##w :at_sign]
+         [:##x :close_brace]
+         [:##y :vertical_bar]
+         [:##z :open_brace]
+         [:##comma :en_dash]
+         [:##period :em_dash]
+         [:##right_command :underscore]
+         ;; [:!Sd :!Ebackslash] ; not sure what these two lines do
+         ;; [:#SRf :!SEbackslash]
          ]}
 
-{:des "Command-semicolon (numbers and symbols)"
- :rules [
-         [:!Csemicolon [ "my-layer-mode"  1] nil {:afterup ["my-layer-mode" 0] :alone :!Csemicolon}]
-         :my-layer-mode
-         ;; [:grave_accent_and_tilde :]
-         [:##1 :!CFf1]
-         [:##2 :!CFf2]
-         [:##3 :!CFf3]
-         [:##4 :!CFf4]
-         [:##5 :!CFf5]
-         [:##6 :!CFf6]
-         [:##7 :!CFf7]
-         [:##8 :!CFf8]
-         [:##9 :!CFf9]
-         [:##0 :!CFf10]
-         ;; [:hyphen :]
-         ;; [:equal_sign :]
-         ;; [:open_bracket :]
-         ;; [:close_bracket :]
-         ;; [:backslash :]
-         [:##a :!CS5]
-         [:##b :!Cgrave_accent_and_tilde]
-         [:##c :!Copen_bracket]
-         [:##d :!CS0]
-         [:##e :!CS3]
-         [:##f :!CS8]
-         [:##g :!CS6]
-         [:##h :!CS7]
-         [:##i :!CC8]
-         [:##j :!C4]
-         [:##k :!C5]
-         [:##l :!C6]
-         [:##m :!C1]
-         [:##n :!CSgrave_accent_and_tilde]
-         [:##o :!C9]
-         [:##p :!C0]
-         [:##q :!CS1]
-         [:##r :!CS4]
-         [:##s :!CS9]
-         [:##t :!Cbackslash]
-         [:##u :!C7]
-         [:##v :!Cclose_bracket]
-         [:##w :!CS2]
-         [:##x :!CSclose_bracket]
-         [:##y :!CSbackslash]
-         [:##z :!CSopen_bracket]
-         ;; [:semicolon :]
-         ;; [:quote :]
-         [:##comma :!C2]
-         [:##period :!C3]
-         ;; [:slash :]
-         [:##spacebar :!C0]
-         [:!Sd :!CEbackslash]
-         [:#SRf :!CSEbackslash]
-         ]}
-
-{:des "Option-semicolon (numbers and symbols)"
- :rules [
-         [:!Osemicolon [ "my-layer2-mode"  1] nil {:afterup ["my-layer2-mode" 0] :alone :!Osemicolon}]
-         :my-layer2-mode
-         ;; [:grave_accent_and_tilde :]
-         [:##1 :!OFf1]
-         [:##2 :!OFf2]
-         [:##3 :!OFf3]
-         [:##4 :!OFf4]
-         [:##5 :!OFf5]
-         [:##6 :!OFf6]
-         [:##7 :!OFf7]
-         [:##8 :!OFf8]
-         [:##9 :!OFf9]
-         [:##0 :!OFf10]
-         ;; [:hyphen :]
-         ;; [:equal_sign :]
-         ;; [:open_bracket :]
-         ;; [:close_bracket :]
-         ;; [:backslash :]
-         [:##a :!OS5]
-         [:##b :!Ograve_accent_and_tilde]
-         [:##c :!Oopen_bracket]
-         [:##d :!OS0]
-         [:##e :!OS3]
-         [:##f :!OS8]
-         [:##g :!OS6]
-         [:##h :!OS7]
-         [:##i :!OC8]
-         [:##j :!O4]
-         [:##k :!O5]
-         [:##l :!O6]
-         [:##m :!O1]
-         [:##n :!OSgrave_accent_and_tilde]
-         [:##o :!O9]
-         [:##p :!O0]
-         [:##q :!OS1]
-         [:##r :!OS4]
-         [:##s :!OS9]
-         [:##t :!Obackslash]
-         [:##u :!O7]
-         [:##v :!Oclose_bracket]
-         [:##w :!OS2]
-         [:##x :!OSclose_bracket]
-         [:##y :!OSbackslash]
-         [:##z :!OSopen_bracket]
-         ;; [:semicolon :]
-         ;; [:quote :]
-         [:##comma :!O2]
-         [:##period :!O3]
-         ;; [:slash :]
-         [:##spacebar :!O0]
-         [:!Sd :!OEbackslash]
-         [:#SRf :!OSEbackslash]
-         ]}
-
+;; TODO: split into two sections (Emacs/Outside Emacs)
 {:des "slash simlyaer → files (Emacs) | app-specific macros (outside Emacs)"
  :rules [:slash-mode
-         [:a :!COWa :emacs]
-         [:b :!COWb :emacs]
-         [:c :!COWc :emacs]
-         [:d :!COWd :emacs]
-         [:e :!COWe :emacs]
-         [:f :!COWf :emacs]
-         [:g :!COWg :emacs]
-         [:h :!COWh :emacs]
-         [:i :!COWi :emacs]
-         [:j :!COWj :emacs]
-         [:k :!COWk :emacs]
-         [:l :!COWl :emacs]
-         [:m :!COWm :emacs]
-         [:n :!COWn :emacs]
-         [:o :!COWo :emacs]
-         [:p :!COWp :emacs]
-         [:q :!COWq :emacs]
-         [:r :!COWr :emacs]
-         [:s :!COWs :emacs]
-         [:t :!COWt :emacs]
-         [:u :!COWu :emacs]
-         [:v :!COWv :emacs]
-         [:w :!COWw :emacs]
-         [:x :!COWx :emacs]
-         [:y :!COWy :emacs]
-         [:z :!COWz :emacs]
-         [:period :!COWperiod :emacs]
-         [:comma :!COWcomma :emacs]
-         ;; [:a [:km ""]]
-         ;; [:b [:km ""]]
-         ;; [:c [:km ""]]
-         ;; [:d [:km ""]]
-         ;; [:e [:km ""]]
-         ;; [:f [:km ""]]
-         ;; [:g [:km ""]]
-         ;; [:h [:km ""]]
-         ;; [:m [:km ""]]
-         ;; [:n [:km ""]]
-         ;; [:r [:km ""]]
-         ;; [:u [:km ""]]
-         ;; [:y [:km ""]]
-         ;; [:z [:km ""]]
-         ;; [:x [:km ""]]
-         ;; [:v [:km ""]]
-         ;; [:semicolon [:km ""]]
-         ;; [:quote [:km ""]]
-         ;; [:slash [:km ""]]
-         ;; [:spacebar [:km ""]]
+         [:a {:modi :H-M-s- :key :a}]
+         [:b {:modi :H-M-s- :key :b}]
+         [:c {:modi :H-M-s- :key :c}]
+         [:d {:modi :H-M-s- :key :d}]
+         [:e {:modi :H-M-s- :key :e}]
+         [:f {:modi :H-M-s- :key :f}]
+         [:g {:modi :H-M-s- :key :g}]
+         [:h {:modi :H-M-s- :key :h}]
+         [:i {:modi :H-M-s- :key :i}]
+         [:j {:modi :H-M-s- :key :j}]
+         [:k {:modi :H-M-s- :key :k}]
+         [:l {:modi :H-M-s- :key :l}]
+         [:m {:modi :H-M-s- :key :m}]
+         [:n {:modi :H-M-s- :key :n}]
+         [:o {:modi :H-M-s- :key :o}]
+         [:p {:modi :H-M-s- :key :p}]
+         [:q {:modi :H-M-s- :key :q}]
+         [:r {:modi :H-M-s- :key :r}]
+         [:s {:modi :H-M-s- :key :s}]
+         [:t {:modi :H-M-s- :key :t}]
+         [:u {:modi :H-M-s- :key :u}]
+         [:v {:modi :H-M-s- :key :v}]
+         [:w {:modi :H-M-s- :key :w}]
+         [:x {:modi :H-M-s- :key :x}]
+         [:y {:modi :H-M-s- :key :y}]
+         [:z {:modi :H-M-s- :key :z}]
+         [:period {:modi :H-M-s- :key :period}]
+         [:comma {:modi :H-M-s- :key :comma}]
          [:a [:km "Local app a"] :!emacs]
          [:b [:km "Local app b"] :!emacs]
          [:c [:km "Local app c"] :!emacs]
@@ -925,13 +824,10 @@
          [:8 [:km "Local app 8"] :!emacs]
          [:9 [:km "Local app 9"] :!emacs]
          [:semicolon [:km "Local app semicolon"] :!emacs]
-         [:quote [:km "Local app quote"] :!emacs]
          [:comma [:km "Local app comma"] :!emacs]
          [:period [:km "Local app period"] :!emacs]
          [:return_or_enter [:km "Local app return_or_enter"] :!emacs]
          [:spacebar [:km "Local app spacebar"] :!emacs]
-         [:escape [:km "Local app escape"] :!emacs]
-         [:hyphen [:km "Local app hyphen"] :!emacs]
          ]}
 
 ]}

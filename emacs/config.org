@@ -15889,13 +15889,13 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (defvar ps/zotra-most-recent-bibliography-file nil
     "The most recent bibliography file to which an entry was added.")
 
-  (defun ps/zotra-add-entry-set-bibfile (orig-fun url-or-identifier &optional bibfile entry-format)
+  (defun ps/zotra-add-entry-set-bibfile (orig-fun &optional url entry-format bibfile)
     "Advice to set `org-cite-global-bibliography' before Zotra add commands."
     (setq ps/zotra-most-recent-bibliography-file
           (completing-read "Bibfile" (list
                                       ps/file-tlon-bibliography-fluid
                                       ps/file-personal-bibliography-new)))
-    (funcall orig-fun url-or-identifier ps/zotra-most-recent-bibliography-file entry-format))
+    (funcall orig-fun url entry-format ps/zotra-most-recent-bibliography-file))
 
   (defun ps/zotra-url-full-capture (&optional url)
     "Add URL to bibfile and generate associated PDF and HTML files."

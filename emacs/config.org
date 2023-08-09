@@ -15602,7 +15602,7 @@ If applicable, open external website to set rating there as well."
     (interactive)
     (let* ((key (ebib--get-key-at-point))
            (db ebib--cur-db)
-           (new-db-num (ps/ebib-get-db-number ps/file-tlon-bibliography-pending))
+           (new-db-num (ps/ebib-get-db-number ps/file-tlon-bibliography-fluid))
            (author (ps/ebib-get-field-value "author"))
            (title (or title (read-string "Title: ")))
            (date "2023")

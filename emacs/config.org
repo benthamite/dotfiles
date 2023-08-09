@@ -9167,11 +9167,13 @@ FILE."
        (format "pdftotext '%s' - | wc -w" (buffer-file-name)))))
     (message (format "This PDF has %s words." (current-kill 0))))
 
-  (defun ps/pdf-tools-copy-all-text ()
-    "Copy all text in current PDF to kill ring."
+  (defun ps/pdf-tools-copy-dwim ()
+    "Copy PDF to kill ring, or region if selected."
     (interactive)
-    (let ((string (string-trim (shell-command-to-string
-                                (format "pdftotext '%s' -" (buffer-file-name))))))
+    (if (region-active-p)
+        (pdf-view-kill-ring-save)
+      (let ((string (string-trim (shell-command-to-string
+                                  (format "pdftotext '%s' -" (buffer-file-name)))))))
       (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
       (message "Copied all text in PDF to kill ring.")))
 

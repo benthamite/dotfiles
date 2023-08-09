@@ -14872,8 +14872,7 @@ value is copied to the kill ring."
               (file-list (split-string
                           (ps/ebib-get-field-value field)
                           ";")))
-         (unless (ps/ebib-valid-key-p key)
-           (user-error "Entry has an invalid key; pleasse regenerate it"))
+         (ps/ebib-valid-key-p key)
          (when file-list
            (ebib-delete-field-contents field t)
            (dolist (filename file-list)
@@ -14919,12 +14918,12 @@ value is copied to the kill ring."
        key)))
 
   (defun ps/ebib-valid-key-p (&optional key)
-    "docstring"
-    (let ((key (or key
-                   (ebib--get-key-at-point))))
-      (string-match
-       "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
-       key)))
+    "Check that KEY is a valid entry key; if not, throw an error."
+    (setq key (or key (ebib--get-key-at-point)))
+    (unless (string-match
+             "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
+             key)
+      (user-error "Ebib entry has an invalid key; please regenerate it")))
 
   (defun ps/ebib--extension-directories (extension)
     "Return directory associated with EXTENSION."
@@ -14950,8 +14949,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     (ebib--execute-when
       (entries
        (let ((key (ebib--get-key-at-point)))
-         (unless (ps/ebib-valid-key-p key)
-           (user-error "Entry has an invalid key; pleasse regenerate it"))
+         (ps/ebib-valid-key-p key)
          (let* ((field "file")
                 (file-to-attach
                  (if most-recent

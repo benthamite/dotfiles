@@ -15779,6 +15779,11 @@ sensible defaults."
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
+*** TODO Tweak ebib film command so that it directly opens Letterboxd page with IMDb ID
+:PROPERTIES:
+:ID:       C1D156F5-A78E-4588-9888-1816044CAC05
+:END:
+
 *** TODO Ebib: make 'title' field single-line
 :PROPERTIES:
 :ID:       24813D4B-598A-4BCB-8488-281D16D7C56A

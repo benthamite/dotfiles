@@ -17978,7 +17978,7 @@ https://superuser.com/a/1350144/387888."
     "https://www.linguee.com/english-spanish/search?source=auto&query=%s"
     :keybinding "l i")
   (defengine Marginal-Revolution
-    "https://www.google.com/search?ei=MDueW4SzN5H8gAau5I0Y&q=%s+site:marginalrevolution.com"
+    "https://marginalrevolution.com/?s=%s"
     :keybinding "m r")
   (defengine MediaCenter
     "https://www.google.com/search?q=%s+site:yabb.jriver.com"

@@ -15702,8 +15702,8 @@ sensible defaults."
                 (field "keywords")
                 ;; unfill field contents
                 (keywords-raw (replace-regexp-in-string
-                               ",\n                  "
-                               ", "
+                               "\n                  "
+                               " "
                                (ps/ebib-get-field-value field)))
                 ;; turn into bullet-separated links
                 (keywords (ps/org-linkify-elements

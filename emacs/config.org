@@ -19557,10 +19557,10 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 --
 ,*Pablo*
 ,#+end_signature")
- (ps/location-name . "Ciudad de Buenos Aires, Argentina")
- (ps/display-wttr-locations . '("Buenos Aires"))
- (ps/location-latitude . -34.58194921101665)
- (ps/location-longitude . -58.41290172678564)
+ (ps/location-name . "Madrid, Spain")
+ (ps/display-wttr-locations . '("Madrid"))
+ (ps/location-latitude . 40.4168)
+ (ps/location-longitude . 3.7038)
 
  ;; Threshold for auto splitting the window sideways, in columns
  (ps/split-width-threshold . 200)

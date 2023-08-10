@@ -272,10 +272,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#eshell-syntax-highlighting][eshell-syntax-highlighting]]
   - [[#dwim-shell-command][dwim-shell-command]]
 - [[#spelling--grammar][spelling & grammar]]
-  - [[#ispell][ispell]]
-  - [[#flyspell][flyspell]]
-  - [[#flyspell-lazy][flyspell-lazy]]
-  - [[#flyspell-correct][flyspell-correct]]
+  - [[#jinx][jinx]]
   - [[#keytar][keytar]]
   - [[#grammarly][grammarly]]
   - [[#lsp-grammarly][lsp-grammarly]]
@@ -290,7 +287,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#goldendict][goldendict]]
   - [[#txl][txl]]
   - [[#atomic-chrome][atomic-chrome]]
-  - [[#markdown][markdown]]
+  - [[#markdown-mode][markdown-mode]]
   - [[#grip-mode][grip-mode]]
   - [[#edit-indirect][edit-indirect]]
   - [[#mediawiki-el][mediawiki-el]]
@@ -328,8 +325,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#copilot][copilot]]
   - [[#gptel][gptel]]
   - [[#org-ai][org-ai]]
+  - [[#gpt-commit][gpt-commit]]
   - [[#whisper][whisper]]
-  - [[#pen][pen]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
   - [[#org-agenda][org-agenda]]
@@ -357,6 +354,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-table][org-table]]
   - [[#orgtbl-edit][orgtbl-edit]]
   - [[#org-crypt][org-crypt]]
+  - [[#org-element][org-element]]
   - [[#org-lint][org-lint]]
   - [[#org-habit][org-habit]]
   - [[#org-contrib][org-contrib]]
@@ -388,7 +386,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#bibtex-completion][bibtex-completion]]
   - [[#org-roam-bibtex][org-roam-bibtex]]
   - [[#citar][citar]]
-  - [[#citar-markdown][citar-markdown]]
   - [[#citar-citeproc][citar-citeproc]]
   - [[#citar-embark][citar-embark]]
   - [[#citar-org-roam][citar-org-roam]]
@@ -460,6 +457,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#bbdb][bbdb]]
   - [[#bbdb-vcard][bbdb-vcard]]
   - [[#keycast][keycast]]
+  - [[#activity-watch][activity-watch]]
   - [[#custom][custom]]
   - [[#tetris][tetris]]
 - [[#personal][personal]]
@@ -719,7 +717,7 @@ Some useful config files:
 - [[https://github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org][Gonçalo Santos]]. Author of ~org-noter~.
 - [[https://github.com/tonyaldon/emacs.d/blob/master/init.el][Tony Aldon]]. Has some slick [[https://www.youtube.com/channel/UCQCrbWOFRmFYqoeou0Qv3Kg][videos]] on ~org-table~. Optimized key bindings.
 - [[https://github.com/progfolio/.emacs.d/blob/master/init.org][Nicholas Vollmer]]. Maitantainer of ~elpaca~. I copied his ~org-habits~ config. Haven't yet looked at the rest but looks like there's plenty of valuable material.
-- [[https://github.com/yantar92/emacs-config/blob/master/config.org#helm-org-ql][emacs-config/config.org at master · yantar92/emacs-config · GitHub]]. Focus on knowledge management with org. Lots of good stuff.
+- [[https://github.com/yantar92/emacs-config/blob/master/config.org][emacs-config/config.org at master · yantar92/emacs-config · GitHub]]. Focus on knowledge management with org. Lots of good stuff.
 - [[https://github.com/xenodium/dotsies/blob/main/dots.org][Álvaro Ramírez]]. Also users Karabiner.
 - [[https://github.com/karthink/.emacs.d][Karthik Chikmagalur]]. Has excellent blog posts on ~avy~, ~eshell~, ~re-builder~, etc.
 - [[https://github.com/iqbalansari/dotEmacs][Iqbal Ansari]].
@@ -1034,6 +1032,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
   (unless (version< emacs-version "29.0")
     (let ((map key-translation-map))
+      (keymap-unset map "A-SPC")
       (keymap-unset map "A-c")
       (keymap-unset map "A-o")
       (keymap-unset map "A-u")
@@ -2106,6 +2105,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
      (setq doom-modeline-irc t)
      (setq doom-modeline-irc-buffers t)
      (setq doom-modeline-buffer-file-name-style 'auto)
+     (setq doom-modeline-enable-word-count t)
 
      (doom-modeline-def-modeline 'main
        '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
@@ -2375,7 +2375,7 @@ and generates profiling report."
     (profiler-report-toggle-entry '(4)))
 
   :general
-  ("A-C-p" 'ps/profiler-toggle)
+  ("C-H-p" 'ps/profiler-toggle)
   (profiler-report-mode-map
    "<backtab>" 'ps/profiler-report-toggle-entry-global))
 #+end_src
@@ -2534,8 +2534,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 (use-feature simple
   :demand t
   :general
-  ("A-C-s-<tab>" 'beginning-of-buffer
-   "A-C-s-SPC" 'end-of-buffer))
+  ("A-C-s-SPC" 'beginning-of-buffer
+   "A-C-s-<tab>" 'end-of-buffer))
 #+end_src
 
 * text manipulation
@@ -5166,9 +5166,9 @@ window depending on the number of present windows."
                      (set-frame-parameter nil 'fullscreen 'maximized)))))
 
   :general
-  ("A-H-SPC" 'other-frame)
-  ("A-H-n" 'make-frame)
-  ("A-H-w" 'delete-frame))
+  ("H-M-<tab>" 'other-frame) ; M-S-TAB
+  ("M-N" 'make-frame)
+  ("M-W" 'delete-frame))
 #+end_src
 
 ** winum
@@ -5594,7 +5594,7 @@ with the specified date."
 
   :general
   ("C-d" 'calendar
-   "A-s-=" 'ps/insert-date
+   "M-s-=" 'ps/insert-date
    "s-=" "C-u A-s-=")
   (calendar-mode-map
    "H-m" 'calendar-set-mark
@@ -6794,7 +6794,7 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
    "C-o" 'isearch-occur
    "C-p" 'isearch-highlight-regexp
    "C-v" 'isearch-yank-kill
-   "A-C-v" 'ps/isearch-yank-kill-literally
+   "C-H-v" 'ps/isearch-yank-kill-literally
    "C-y" 'isearch-forward-symbol-at-point
    "H-c" 'ps/isearch-copy-match
    "M-k" 'isearch-ring-retreat
@@ -6824,7 +6824,8 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
   :general
   (isearch-mode-map
-   "A-C-e" 'query-replace-regexp))
+   "C-H-a" 'query-replace
+   "C-H-s" 'query-replace-regexp))
 #+end_src
 
 ** substitute
@@ -6874,8 +6875,8 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
   :general
   (isearch-mode-map
-   "A-C-s" 'vr/isearch-forward
-   "A-C-r" 'vr/isearch-backward))
+   "C-H-s" 'vr/isearch-forward
+   "C-H-r" 'vr/isearch-backward))
 #+end_src
 
 ** imenu
@@ -7018,7 +7019,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
   (embark-yasnippet-completion-actions
   "d" 'consult-yasnippet-visit-snippet-file)
   ("C-;" 'embark-act
-   "A-C-;" 'embark-act-all
+   "C-H-;" 'embark-act-all
    "C-h B" 'embark-bindings))
 #+end_src
 
@@ -7119,7 +7120,7 @@ buffer are offered."
   ;; (advice-add 'consult-org-agenda :after #'ps/org-narrow-to-entry-and-children)
 
   :general
-  ("A-C-l" 'consult-line
+  ("C-H-l" 'consult-line
    "C-f" 'consult-find
    "H-b" 'consult-buffer
    "A-H-i" 'consult-info
@@ -7197,7 +7198,7 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
   :after consult yasnippet
   :demand t
   :general
-  ("A-C-y" 'consult-yasnippet))
+  ("C-H-y" 'consult-yasnippet))
 #+end_src
 
 ** consult-spotify
@@ -7903,6 +7904,9 @@ e.g. ~nvm~ isn't recognized by eshell
 :END:
 
 ** jinx
+:PROPERTIES:
+:ID:       23D402FB-7C7D-454B-9895-B147F0C9950D
+:END:
 
 /[[https://github.com/minad/jinx][jinx]] is a just-in-time spell-checker for Emacs./
 
@@ -7917,16 +7921,6 @@ e.g. ~nvm~ isn't recognized by eshell
 
   (dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
     (add-hook hook #'jinx-mode))
-
-  (defun ps/jinx-toggle-languages ()
-    "Toggle between English and Spanish for spell-checking."
-    (interactive)
-    (if (string= jinx-languages "en")
-        (setq jinx-languages "es")
-      (setq jinx-languages "en"))
-    (dotimes (i 2)
-      (jinx-mode 'toggle))
-    (message "Jinx language set to `%s'" jinx-languages))
 
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
   (defun ps/jinx--add-to-abbrev (overlay word)
@@ -7945,8 +7939,14 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
    "M-k" 'jinx-previous
    "M-l" 'jinx-next)
   ("M-p" 'jinx-correct
-   "A-M-p" 'ps/jinx-toggle-languages))
+   "A-M-p" 'jinx-languages))
 #+end_src
+
+*** DONE Customize jinx
+CLOSED: [2023-08-01 Tue 23:55]
+:PROPERTIES:
+:ID:       FA428776-C22B-4E98-B67D-79DD189A5D08
+:END:
 
 ** keytar
 :PROPERTIES:
@@ -8086,29 +8086,6 @@ To check: https://github.com/PillFall/languagetool.el
    "s-k" 'with-editor-abort
    "s-p" 'ps/with-editor-finish-and-push
    "C-c C-c" 'with-editor-finish))
-#+end_src
-
-** typo
-
-#+begin_src emacs-lisp
-(use-package typo
-  :demand t
-  :config
-  (defun ps/typo-mode-enable-conditionally ()
-    "Activate minor-mode in relevant text modes."
-    (if (or (and (eq major-mode 'org-mode)
-                 (not (org-in-src-block-p)))
-            (catch 'found
-              (dolist (mode '(markdown-mode
-                              org-msg-edit-mode
-                              outline-mode
-                              telega-chat-mode))
-                (when (eq major-mode mode)
-                  (throw 'found t)))))
-        (typo-mode)
-      (typo-mode -1)))
-
-  (add-hook 'post-command-hook #'ps/typo-mode-enable-conditionally))
 #+end_src
 
 ** latex-mode
@@ -8640,6 +8617,7 @@ Assumes that the links are separated by ` • '"
   (defun ps/markdown-insert-locator ()
     "Insert locator in Markdown citation at point."
     (interactive)
+    (require 'citar-markdown)
     (unless (thing-at-point-looking-at citar-markdown-citation-key-regexp)
       (user-error "Not in a citation"))
     (let* ((locators '(("book" . "bk.")
@@ -9007,16 +8985,16 @@ otherwise the whole buffer."
    "s-SPC" 'ps/ledger-new-entry-below
    "s-=" 'ledger-reconcile
    "s-a" 'ledger-add-transaction
-   "A-s-a" 'ps/ledger-report-account
+   "M-s-a" 'ps/ledger-report-account
    "s-b" 'ledger-post-edit-amount
-   "A-s-b" 'ps/ledger-decrease-date-of-transaction-at-point-by-one-day
+   "M-s-b" 'ps/ledger-decrease-date-of-transaction-at-point-by-one-day
    "s-c" 'ps/ledger-align-and-next
-   "A-s-c" 'ps/ledger-copy-transaction-at-point
+   "M-s-c" 'ps/ledger-copy-transaction-at-point
    "s-d" 'ledger-delete-current-transaction
    "s-e" 'ps/ledger-toggle-current-transaction-and-next
-   "A-s-e" 'ledger-toggle-current-transaction
+   "M-s-e" 'ledger-toggle-current-transaction
    "s-f" 'ledger-occur
-   "A-s-f" 'ps/ledger-increase-date-of-transaction-at-point-by-one-day
+   "M-s-f" 'ps/ledger-increase-date-of-transaction-at-point-by-one-day
    "s-g" 'ledger-report-goto
    "s-i" 'ledger-insert-effective-date
    "s-y" 'ledger-copy-transaction-at-point
@@ -9024,16 +9002,16 @@ otherwise the whole buffer."
    "s-l" 'ledger-display-ledger-stats
    "s-o" 'ledger-report-edit-report
    "s-p" 'ledger-display-balance-at-point
-   "A-s-p" 'ps/ledger-report-payee
+   "M-s-p" 'ps/ledger-report-payee
    "s-q" 'ledger-post-align-dwim
    "s-r" 'ledger-report
    "s-s" 'ledger-report-save
    "s-t" 'ps/ledger-sort-region-or-buffer
-   "A-s-t" 'ps/ledger-sort-region-or-buffer-reversed
+   "M-s-t" 'ps/ledger-sort-region-or-buffer-reversed
    "s-u" 'ledger-schedule-upcoming
-   "A-s-u" 'ps/ledger-report-net-worth-USD
+   "M-s-u" 'ps/ledger-report-net-worth-USD
    "s-v" 'ledger-copy-transaction-at-point
-   "A-s-w" 'ps/ledger-report-net-worth
+   "M-s-w" 'ps/ledger-report-net-worth
    "s-x" 'ledger-fully-complete-xact
    "s-z" 'ledger-report-redo
    "A-C-s-r" 'ledger-navigate-prev-xact-or-directive
@@ -9191,11 +9169,13 @@ FILE."
        (format "pdftotext '%s' - | wc -w" (buffer-file-name)))))
     (message (format "This PDF has %s words." (current-kill 0))))
 
-  (defun ps/pdf-tools-copy-all-text ()
-    "Copy all text in current PDF to kill ring."
+  (defun ps/pdf-tools-copy-dwim ()
+    "Copy PDF to kill ring, or region if selected."
     (interactive)
-    (let ((string (string-trim (shell-command-to-string
-                                (format "pdftotext '%s' -" (buffer-file-name))))))
+    (if (region-active-p)
+        (pdf-view-kill-ring-save)
+      (let ((string (string-trim (shell-command-to-string
+                                  (format "pdftotext '%s' -" (buffer-file-name)))))))
       (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
       (message "Copied all text in PDF to kill ring.")))
 
@@ -9231,8 +9211,9 @@ FILE."
   :general
   ((pdf-view-mode-map pdf-annot-minor-mode-map pdf-history-minor-mode-map)
    "a" 'ps/pdf-tools-copy-all-text
-   "c" 'ps/pdf-count-words
-   "C" 'ps/pdf-tools-clear-page-selection
+   "c" 'ps/pdf-tools-copy-dwim
+   "C" 'ps/pdf-count-words
+   "s-c" 'ps/pdf-tools-clear-page-selection
    "D" 'ps/pdf-tools-delete
    "e" 'pdf-annot-add-highlight-markup-annotation
    "h" 'ps/pdf-annot-add-highlight-markup-annotation
@@ -9333,7 +9314,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
    "A-M-d" 'toggle-debug-on-quit)
   (prog-mode-map
    "A-H-C-i" 'mark-defun
-   "M-." 'xref-find-definitions)
+   "M-." 'xref-find-definitions
+   "s-f" 'consult-flymake)
   ((emacs-lisp-mode-map shell-mode-map)
    "s-c" 'exit-recursive-edit))
 #+end_src
@@ -9433,7 +9415,9 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 
   :general
   (emacs-lisp-mode-map
-   "s-d" 'eval-defun))
+   "s-d" 'eval-defun
+   "s-i" (lambda! (eval-defun t)) ; instrument defun
+   ))
 #+end_src
 
 *** TODO [#6] Learn to use all relevant sexp commands
@@ -9468,7 +9452,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 
   :general
   (emacs-lisp-mode-map
-   "A-s-d" 'edebug-defun))
+   "M-s-d" 'edebug-defun))
 #+end_src
 
 ** backtrace
@@ -9783,6 +9767,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :config
   (setq org-ai-openai-api-token (auth-source-pass-get "key" (concat "tlon/core/openai.com/" ps/tlon-email)))
   (setq org-ai-default-chat-model "gpt-4")
+  (setq org-ai-default-chat-system-prompt "You are a helpful and competent assistant. Please omit any disclaimers")
   (setq org-ai-talk-say-words-per-minute 210)
   (setq org-ai-image-directory ps/dir-org-images)
   (add-hook 'org-mode-hook #'org-ai-mode)
@@ -9791,6 +9776,9 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 #+end_src
 
 ** gpt-commit
+:PROPERTIES:
+:ID:       735CC302-C86D-4886-A78B-8EF89171086C
+:END:
 
 #+begin_src emacs-lisp
 (use-package gpt-commit
@@ -9817,19 +9805,6 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   (setq whisper-install-directory no-littering-var-directory)
   (setq whisper--ffmpeg-input-device ":0"))
 #+end_src
-
-** pen
-:PROPERTIES:
-:ID:       DEEF7EF7-E79C-427B-9E1D-86D22FC2056E
-:END:
-
-*** TODO [#5] Check out pen.el
-:PROPERTIES:
-:ID:       2743B1F0-CCA8-4F48-8DC4-EF93E1A4607F
-:END:
-
-https://github.com/mullikine/pen.el
-Disscussion [[https://www.reddit.com/r/emacs/comments/zhwhww/comment/izp8rxy/?utm_source=reddit&utm_medium=web2x&context=3][here]].
 
 * org-mode
 :PROPERTIES:
@@ -10685,7 +10660,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   ("C-<escape>" 'org-agenda)
   (org-agenda-mode-map
    "RET" 'ps/org-agenda-switch-to-dwim
-   "'" 'ps/org-agenda-done-and-next
+   "/" 'ps/org-agenda-done-and-next
+   "?" 'org-agenda-filter
    ";" 'org-agenda-later
    "\"" 'ps/org-agenda-postpone-and-next
    "C-b" 'org-agenda-tree-to-indirect-buffer
@@ -11262,10 +11238,10 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
    "H-o" 'org-clock-out)
   (org-mode-map
    "s-A-n" 'ps/org-new-clock-entry-today
-   "s--" 'ps/org-time-stamp-active-current-time
-   "s-A--" 'ps/org-time-stamp-active-current-date
-   "s-=" 'ps/org-time-stamp-inactive-current-time
-   "s-A-=" 'ps/org-time-stamp-inactive-current-date))
+   "s-." 'ps/org-time-stamp-active-current-time
+   "s-A-." 'ps/org-time-stamp-active-current-date
+   "s-/" 'ps/org-time-stamp-inactive-current-time
+   "s-A-/" 'ps/org-time-stamp-inactive-current-date))
 #+end_src
 
 ** org-clock-convenience
@@ -11424,7 +11400,7 @@ CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
   (setq org-archive-location (expand-file-name "%s_archive.org::" ps/dir-archive))
 
   :general
-  ("A-s-d" 'ps/org-mark-as-done-for-good-and-archive)
+  ("M-s-d" 'ps/org-mark-as-done-for-good-and-archive)
   (org-mode-map
    "s-a" 'org-archive-to-archive-sibling))
 #+end_src
@@ -11872,7 +11848,7 @@ SEPARATOR is nil, use ' • '."
                                         nodes))
                         (nodetitle (if node (org-roam-node-title node))))
                    (if node
-                       (format "[[%s][%s]]" (org-roam-node-id node) nodetitle)
+                       (format "[[id:%s][%s]]" (org-roam-node-id node) nodetitle)
                      x)))
                strings)
        (or separator " • "))))
@@ -12149,6 +12125,9 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 #+end_src
 
 ** org-element
+:PROPERTIES:
+:ID:       79B7B36E-D824-4D67-BBAC-E4E4D8FA628F
+:END:
 
 #+begin_src emacs-lisp
 (use-feature org-element
@@ -12472,7 +12451,7 @@ count is updated."
 
   :general
   ("H-I" 'org-pomodoro
-   "A-s-e" 'org-pomodoro-extend-last-clock)
+   "M-s-e" 'org-pomodoro-extend-last-clock)
   (org-agenda-mode-map
    "I" 'org-pomodoro))
 #+end_src
@@ -12612,7 +12591,10 @@ SQL can be either the emacsql vector representation, or a string."
   (defvar ps/org-roam-excluded-dirs (list
                                      ps/dir-anki
                                      ps/dir-inactive
-                                     ps/dir-archive))
+                                     ps/dir-archive
+                                     ps/dir-dropbox-tlon-leo
+                                     ps/dir-dropbox-tlon-fede
+                                     ))
 
   (defvar ps/org-roam-excluded-files (list
                                       ps/file-orb-noter-template
@@ -12970,7 +12952,7 @@ I use this package to define a dynamic agenda, as explained and illustrated [[d1
   (defvar ps/vulpea-excluded-files (list
                                     ps/file-tlon-tareas-leo
                                     ps/file-tlon-tareas-fede)
-    "files to exclude from list of projects")
+    "Files to exclude from list of projects")
 
   (defun ps/vulpea-project-p ()
     "Return non-nil if current buffer has a TODO, a schedule or a deadline.
@@ -12992,7 +12974,7 @@ tasks."
           'headline
         (lambda (headline)
 
-        (or
+          (or
            (eq (org-element-property :todo-type headline)
                'todo)
            (org-element-property :scheduled headline)
@@ -14699,7 +14681,7 @@ value is copied to the kill ring."
                              ("Year" 4 t)
                              ("Title" 50 t)))
   (setq ebib-extra-fields
-        '((biblatex "abstract" "keywords" "langid" "translation" "narrator" "file" "timestamp" "rating" "crossref" "=key=")
+        '((biblatex "abstract" "keywords" "origdate" "langid" "translation" "narrator" "file" "timestamp" "rating" "crossref" "=key=")
           (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
   (setq ebib-keywords (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc" "tags.txt"))
 
@@ -14903,8 +14885,7 @@ value is copied to the kill ring."
               (file-list (split-string
                           (ps/ebib-get-field-value field)
                           ";")))
-         (unless (ps/ebib-valid-key-p key)
-           (user-error "Entry has an invalid key; pleasse regenerate it"))
+         (ps/ebib-valid-key-p key)
          (when file-list
            (ebib-delete-field-contents field t)
            (dolist (filename file-list)
@@ -14950,12 +14931,12 @@ value is copied to the kill ring."
        key)))
 
   (defun ps/ebib-valid-key-p (&optional key)
-    "docstring"
-    (let ((key (or key
-                   (ebib--get-key-at-point))))
-      (string-match
-       "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
-       key)))
+    "Check that KEY is a valid entry key; if not, throw an error."
+    (setq key (or key (ebib--get-key-at-point)))
+    (unless (string-match
+             "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
+             key)
+      (user-error "Ebib entry has an invalid key; please regenerate it")))
 
   (defun ps/ebib--extension-directories (extension)
     "Return directory associated with EXTENSION."
@@ -14981,8 +14962,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
     (ebib--execute-when
       (entries
        (let ((key (ebib--get-key-at-point)))
-         (unless (ps/ebib-valid-key-p key)
-           (user-error "Entry has an invalid key; pleasse regenerate it"))
+         (ps/ebib-valid-key-p key)
          (let* ((field "file")
                 (file-to-attach
                  (if most-recent
@@ -15635,7 +15615,7 @@ If applicable, open external website to set rating there as well."
     (interactive)
     (let* ((key (ebib--get-key-at-point))
            (db ebib--cur-db)
-           (new-db-num (ps/ebib-get-db-number ps/file-tlon-bibliography-pending))
+           (new-db-num (ps/ebib-get-db-number ps/file-tlon-bibliography-fluid))
            (author (ps/ebib-get-field-value "author"))
            (title (or title (read-string "Title: ")))
            (date "2023")
@@ -15643,12 +15623,13 @@ If applicable, open external website to set rating there as well."
            (translator "Tlön")
            (translation key)
            (langid "spanish")
-           (keywords (ebib--edit-separated-values-field field '(,field) nil)))
+           ;; (keywords (ebib--edit-separated-values-field field '(,field) nil))
+           )
       (ebib-switch-to-database-nth new-db-num)
       (ebib-add-entry)
       (let ((new-key (ebib--get-key-at-point))
             (new-db ebib--cur-db))
-        (dolist (field '(author title date journaltitle translator translation langid keywords))
+        (dolist (field '(author title date journaltitle translator translation langid))
           (ebib-set-field-value (symbol-name field) (symbol-value field) new-key new-db)))
       (ebib--update-entry-buffer))
     (ebib-generate-autokey)
@@ -15734,8 +15715,8 @@ sensible defaults."
                 (field "keywords")
                 ;; unfill field contents
                 (keywords-raw (replace-regexp-in-string
-                               ",\n                  "
-                               ", "
+                               "\n                  "
+                               " "
                                (ps/ebib-get-field-value field)))
                 ;; turn into bullet-separated links
                 (keywords (ps/org-linkify-elements
@@ -15810,6 +15791,11 @@ sensible defaults."
 #+end_src
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
+
+*** TODO Tweak ebib film command so that it directly opens Letterboxd page with IMDb ID
+:PROPERTIES:
+:ID:       C1D156F5-A78E-4588-9888-1816044CAC05
+:END:
 
 *** TODO Ebib: make 'title' field single-line
 :PROPERTIES:
@@ -15889,13 +15875,13 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (defvar ps/zotra-most-recent-bibliography-file nil
     "The most recent bibliography file to which an entry was added.")
 
-  (defun ps/zotra-add-entry-set-bibfile (orig-fun url-or-identifier &optional bibfile entry-format)
+  (defun ps/zotra-add-entry-set-bibfile (orig-fun &optional url entry-format bibfile)
     "Advice to set `org-cite-global-bibliography' before Zotra add commands."
     (setq ps/zotra-most-recent-bibliography-file
           (completing-read "Bibfile" (list
                                       ps/file-tlon-bibliography-fluid
                                       ps/file-personal-bibliography-new)))
-    (funcall orig-fun url-or-identifier ps/zotra-most-recent-bibliography-file entry-format))
+    (funcall orig-fun url entry-format ps/zotra-most-recent-bibliography-file))
 
   (defun ps/zotra-url-full-capture (&optional url)
     "Add URL to bibfile and generate associated PDF and HTML files."
@@ -15921,9 +15907,10 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (ps/zotra-fix-octal-sequences)
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
-    (save-buffer)
+    ;; (save-buffer)
     (ebib-switch-to-database-nth (ps/ebib-get-db-number ps/zotra-most-recent-bibliography-file))
     (let ((citekey (ps/bibtex-get-key)))
+      (ps/ebib-open-or-switch)
       (ps/ebib-reload-database-no-confirm ebib--cur-db)
       (ebib--update-buffers)
       (ebib ps/zotra-most-recent-bibliography-file citekey)
@@ -15954,6 +15941,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
       (dotimes (i 79)
         (dolist  (pattern '("\"\\302\\%o\""
                             "\"\\303\\%o\""
+                            "\"\\314\\%o\""
                             "\"\\342\\200\\%o\""))
           (let* ((octal (read (format pattern (+ #o200 i))))
                  (char (decode-coding-string octal 'utf-8)))
@@ -16667,7 +16655,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
    "s-g" 'ps/org-msg-open-in-grammarly
    "s-x" 'ps/org-msg-kill-message)
   (org-mode-map
-   "A-s-g" 'ps/org-msg-grammarly))
+   "M-s-g" 'ps/org-msg-grammarly))
 #+end_src
 
 *** TODO [#5] Figure out how to make ~org-msg~ preserve formatting of quoted emails
@@ -16849,7 +16837,7 @@ into a task for Leo."
    ;; active and `<return>' triggers `newline' rather than
    ;; `push-button'. this seems to be a bug. as a workaround, we also
    ;; bind `push-button' to `M-<return>' in `telega-chat-mode-map'.
-   "M-<return>" 'push-button
+   "s-<return>" 'push-button
    "s-," 'telega-chatbuf-goto-pinned-message
    "s-a" 'telega-chatbuf-attach
    "s-c" 'telega-mnz-chatbuf-attach-code
@@ -16860,12 +16848,12 @@ into a task for Leo."
    "s-s" 'telega-chatbuf-filter-search
    "s-t" 'telega-sticker-choose-favorite-or-recent
    "s-v" 'ps/org-paste-html
-   "A-s-v" 'telega-chatbuf-attach-clipboard
+   "M-s-v" 'telega-chatbuf-attach-clipboard
    "s-z" 'telega-mnz-chatbuf-attach-code
-   "A-s-e" 'telega-chatbuf-edit-prev
-   "A-s-s" 'ps/telega-chatbuf-attach-most-recent-screenshot
-   "A-s-t" 'ps/telega-chatbuf-attach-most-recent-file
-   "A-s-v" 'telega-chatbuf-attach-clipboard
+   "M-s-e" 'telega-chatbuf-edit-prev
+   "M-s-s" 'ps/telega-chatbuf-attach-most-recent-screenshot
+   "M-s-t" 'ps/telega-chatbuf-attach-most-recent-file
+   "M-s-v" 'telega-chatbuf-attach-clipboard
    "" 'telega-chatbuf-attach-voice-note)
   (telega-msg-button-map
    "<return>" 'push-button
@@ -16892,7 +16880,7 @@ into a task for Leo."
   (telega-webpage-mode-map
    "x" 'telega-webpage-browse-url)
   (dired-mode-map
-   "A-s-a" 'ps/telega-dired-attach-send))
+   "M-s-a" 'ps/telega-dired-attach-send))
 #+end_src
 
 ** telega-mnz
@@ -17076,6 +17064,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "beyondpricing\\.com"
                      "bloomberg\\.com"
                      "calendly\\.com"
+                     "kentclarkcenter\\.org"
                      "connectedpapers\\.com"
                      "doi\\.org"
                      "dropbox\\.com"
@@ -17157,14 +17146,14 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
 
 #+begin_src emacs-lisp :results silent
 (use-feature shr
-  :defer 15
+  :demand t
   :config
   (setq shr-bullet "• ")
   (setq shr-use-colors nil)
   (setq shr-use-fonts t)
   (setq shr-image-animate nil)
   (setq shr-width nil)
-  (setq shr-max-width 120)
+  (setq shr-max-width 100)
   (setq shr-discard-aria-hidden t)
   (setq shr-cookie-policy t)
 
@@ -17455,10 +17444,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
            :repo "protesilaos/dotfiles"
            :files ("emacs/.emacs.d/prot-lisp/prot-eww.el"))
   :after eww prot-common
-  :demand t
-  :config
-
- )
+  :demand t)
 #+end_src
 
 ** w3m
@@ -18006,7 +17992,7 @@ https://superuser.com/a/1350144/387888."
     "https://www.linguee.com/english-spanish/search?source=auto&query=%s"
     :keybinding "l i")
   (defengine Marginal-Revolution
-    "https://www.google.com/search?ei=MDueW4SzN5H8gAau5I0Y&q=%s+site:marginalrevolution.com"
+    "https://marginalrevolution.com/?s=%s"
     :keybinding "m r")
   (defengine MediaCenter
     "https://www.google.com/search?q=%s+site:yabb.jriver.com"
@@ -18728,7 +18714,7 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
   (setq read-aloud-engine "say")
 
   :general
-  ("A-C-r" 'read-aloud-this)) ; remember that `A-C-d' starts/stops dictation
+  ("C-H-r" 'read-aloud-this)) ; remember that `A-C-d' starts/stops dictation
 #+end_src
 
 * passwords
@@ -19236,6 +19222,9 @@ then the window will be split horizontally rather than vertically."
 #+end_src
 
 ** activity-watch
+:PROPERTIES:
+:ID:       809139BE-A8AF-40A7-BF1A-899839313729
+:END:
 
 #+begin_src emacs-lisp
 (use-package activity-watch-mode
@@ -19322,7 +19311,11 @@ And finally, the section you've all been waiting for.
      "Leo"
      "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
      "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-     "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
+     "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
+
+  :general
+  (markdown-mode-map
+   "s-y" 'tlon-core-slugify-clipboard))
 #+end_src
 
 ** tlon-bae
@@ -19581,10 +19574,10 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 --
 ,*Pablo*
 ,#+end_signature")
- (ps/location-name . "Ciudad de Buenos Aires, Argentina")
- (ps/display-wttr-locations . '("Buenos Aires"))
- (ps/location-latitude . -34.58194921101665)
- (ps/location-longitude . -58.41290172678564)
+ (ps/location-name . "Madrid, Spain")
+ (ps/display-wttr-locations . '("Madrid"))
+ (ps/location-latitude . 40.4168)
+ (ps/location-longitude . 3.7038)
 
  ;; Threshold for auto splitting the window sideways, in columns
  (ps/split-width-threshold . 200)

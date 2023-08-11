@@ -7942,12 +7942,6 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
    "A-M-p" 'jinx-languages))
 #+end_src
 
-*** DONE Customize jinx
-CLOSED: [2023-08-01 Tue 23:55]
-:PROPERTIES:
-:ID:       FA428776-C22B-4E98-B67D-79DD189A5D08
-:END:
-
 ** keytar
 :PROPERTIES:
 :ID:       773AD672-8356-4097-990D-96BD160DAD40

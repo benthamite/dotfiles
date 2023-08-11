@@ -14,7 +14,7 @@
 
 (define-abbrev-table 'text-mode-abbrev-table
   '(
-    ("Github" "GitHub" nil :count 1)
+    ("Github" "GitHub" nil :count 2)
     ("Howver" "However" nil :count 0)
     ("abandonned" "abandoned" nil :count 2)
     ("abbout" "about" nil :count 1)
@@ -394,6 +394,7 @@
     ("aranged" "arranged" nil :count 1)
     ("arangement" "arrangement" nil :count 1)
     ("arbitarily" "arbitrarily" nil :count 1)
+    ("arbitario" "arbitrario" nil :count 0)
     ("arbitary" "arbitrary" nil :count 1)
     ("archaelogical" "archaeological" nil :count 1)
     ("archaelogists" "archaeologists" nil :count 1)
@@ -858,6 +859,7 @@
     ("comdemnation" "condemnation" nil :count 1)
     ("comemmorates" "commemorates" nil :count 1)
     ("comemoretion" "commemoration" nil :count 1)
+    ("comensurabilidad" "conmensurabilidad" nil :count 0)
     ("comision" "commission" nil :count 1)
     ("comisioned" "commissioned" nil :count 1)
     ("comisioner" "commissioner" nil :count 1)
@@ -1781,7 +1783,7 @@
     ("geometricians" "geometers" nil :count 1)
     ("gerat" "great" nil :count 1)
     ("ghandi" "Gandhi" nil :count 1)
-    ("github" "GitHub" nil :count 1)
+    ("github" "GitHub" nil :count 3)
     ("gitlab" "GitLab" nil :count 1)
     ("glamourous" "glamorous" nil :count 1)
     ("glight" "flight" nil :count 1)

@@ -9780,6 +9780,8 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 :ID:       735CC302-C86D-4886-A78B-8EF89171086C
 :END:
 
+/[[https://github.com/ywkim/gpt-commit][gpt-commit]] generates conventional commit messages using GPT./
+
 #+begin_src emacs-lisp
 (use-package gpt-commit
   :defer 5

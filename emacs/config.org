@@ -19623,9 +19623,13 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 #+end_src
 
 ** local variables
+:PROPERTIES:
+:ID:       4FB9C92B-B39E-4C3D-B9AE-A3342A6F1695
+:END:
 # Local Variables:
 # eval: (ps/buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
 # eval: (ps/buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
 # org-crypt-key: "tlon.shared@gmail.com"
+# doom-modeline-enable-word-count: nil
 # End:

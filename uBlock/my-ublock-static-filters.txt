@@ -13,3 +13,20 @@ www.imdb.com##.ipc-sub-grid-item--span-4.ipc-sub-grid-item.imdb-editorial-single
 www.imdb.com##.litwql.sc-28d6a406-6.ipc-page-section--base.ipc-page-section
 www.imdb.com##.ipc-page-grid__item--span-1.ipc-page-grid__item.bduFjF.sc-f2e21260-0 > .ipc-page-section--base.ipc-page-section
 
+! 2023-03-25 https://www.themarginalian.org
+www.themarginalian.org###bottom_donation
+www.themarginalian.org##.options
+www.themarginalian.org##.loving
+
+! 2023-04-30 https://medium.com
+||accounts.google.com/gsi/iframe/select?client_id=216296035834-k1k6qe060s2tp2a2jam4ljdcms00sttg.apps.googleusercontent.com&ux_mode=popup&ui_mode=card&as=mq16D%2Fq5lhAmh9oviB%2Fmjg&channel_id=4ab8cfa0acc79d9196ee50a1291e8f75f7ff558e6a7beed88109e584da4ee065&origin=https%3A%2F%2Fmedium.com$subdocument
+
+! 2023-06-29 https://www.imdb.com
+www.imdb.com##section.ipc-page-grid__item--span-3.ipc-page-grid__item.ipc-page-section--baseAlt.ipc-page-section:nth-of-type(4)
+www.imdb.com##section.ipc-page-grid__item--span-3.ipc-page-grid__item.ipc-page-section--baseAlt.ipc-page-section:nth-of-type(2)
+
+! 2023-08-05 https://leiterreports.typepad.com
+leiterreports.typepad.com###paid_advertisements
+leiterreports.typepad.com###paid_advertisements_
+leiterreports.typepad.com###advertise_on_lr
+

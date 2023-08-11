@@ -463,7 +463,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#personal][personal]]
   - [[#tlon-init][tlon-init]]
   - [[#tlon-core][tlon-core]]
-  - [[#tlon-bae][tlon-bae]]
+  - [[#tlon-babel][tlon-babel]]
   - [[#tlon-biblio][tlon-biblio]]
   - [[#keyboard-maestro][Keyboard Maestro]]
 - [[#variables][variables]]
@@ -1144,7 +1144,7 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
  "H-M-s-." (lambda! (ps/visit-file-or-switch-to-buffer ps/file-inbox-mobile))
  "H-M-s-," (lambda! (ps/visit-file-or-switch-to-buffer ps/file-inbox-desktop))
  "H-M-s-a" (lambda! (ps/org-agenda-switch-to-agenda-current-day))
- "H-M-s-b" (lambda! (ps/visit-file-or-switch-to-buffer ps/dir-tlon-biblioteca-altruismo-eficaz))
+ "H-M-s-b" (lambda! (ps/visit-file-or-switch-to-buffer ps/dir-tlon-babel))
  "H-M-s-c" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-config))
  "H-M-s-d" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-tlon-docs))
  "H-M-s-h" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-tlon-ledger))
@@ -6483,7 +6483,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
 
   (defun ps/forge-pull-topics-and-notifications ()
-    (dolist (repo '(ps/dir-tlon-biblioteca-altruismo-eficaz))
+    (dolist (repo '(ps/dir-tlon-babel))
       (let ((defult-directory repo))
         (forge-pull)
         (forge-pull-notifications))))
@@ -6544,7 +6544,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)
       ("e a" "edit assigness"             forge-edit-topic-assignees)]
      ["Misc"
-      ("," "capture topic" tlon-bae-orgit-capture)
+      ("," "capture topic" tlon-babel-orgit-capture)
       ("s" "search topics" forge-search)
       ("'" "open associated file" forge-search)
       (";" "Show/hide closed topics" forge-toggle-closed-visibility)
@@ -9569,7 +9569,7 @@ instead of JSON."
 
   (add-hook 'find-file-hook
             (lambda ()
-              (when (equal buffer-file-name ps/file-tlon-bae-contacts)
+              (when (equal buffer-file-name tlon-babel-file-contacts)
                 (add-hook 'after-save-hook #'ps/json-mode-validate nil t)))))
 #+end_src
 
@@ -13875,7 +13875,7 @@ Save citekey to kill-ring. If KEY is nil, use the key of the
 entry at point."
     (interactive)
     (let ((key (or key (ps/bibtex-get-key)))
-          (target ps/file-tlon-bibliography-fluid))
+          (target tlon-babel-file-fluid))
       (ps/bibtex-move-entry key target)
       (with-current-buffer (find-file-noselect target)
         (widen)
@@ -13927,7 +13927,7 @@ and sets the value of the field for all entries to 'Tlön'."
 
   (defun ps/bibtex-auto-add-database-field ()
     "Run `ps/bibtex-add-database-field' every time `new.bib' is saved."
-    (let ((file ps/file-tlon-bibliography-fluid))
+    (let ((file tlon-babel-file-fluid))
       (when (string= (buffer-file-name) file)
         (ps/bibtex-add-database-field file))))
 
@@ -13935,7 +13935,7 @@ and sets the value of the field for all entries to 'Tlön'."
     "Clean up bibtex entry at poiint upon saving."
     (remove-hook 'after-save-hook 'ps/bibtex-auto-clean-entry t)
     (when (string= (file-name-directory (buffer-file-name))
-                   (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/"))
+                   )
       (ps/bibtex-add-or-update-field "database" "Tlön"))
     (bibtex-clean-entry)
     (save-buffer)
@@ -14683,7 +14683,8 @@ value is copied to the kill ring."
   (setq ebib-extra-fields
         '((biblatex "abstract" "keywords" "origdate" "langid" "translation" "narrator" "file" "timestamp" "rating" "crossref" "=key=")
           (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
-  (setq ebib-keywords (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc" "tags.txt"))
+  (setq ebib-keywords tlon-babel-file-tags)
+  (setq ebib-keywords-add-new-to-canonical nil)
 
   ;; unhide some fields
   (setq ebib-hidden-fields
@@ -14946,7 +14947,7 @@ value is copied to the kill ring."
            ps/dir-library-html)
           ((string= extension "md")
            (file-name-concat
-            ps/dir-tlon-biblioteca-altruismo-eficaz
+            ps/dir-tlon-babel
             "translations/posts/"))
           ((or (string= extension "webm")
                (string= extension "mp3")
@@ -15500,7 +15501,7 @@ is created following the same schema as notes created with
 
   (defvar ps/ebib-auto-save-files
     (list ps/file-personal-bibliography-new
-          ps/file-tlon-bibliography-fluid)
+          tlon-babel-file-fluid)
     "List of database files that should be auto-saved.
 The big files containing the 'old' bibliographic entries are excluded.")
 
@@ -15538,8 +15539,8 @@ The list of files to be watched is defined in `ps/ebib-auto-save-files'."
   (defvar ps/ebib-db-numbers
     `((,ps/file-personal-bibliography-new . 1)
       (,ps/file-personal-bibliography-old . 2)
-      (,ps/file-tlon-bibliography-fluid . 3)
-      (,ps/file-tlon-bibliography-stable . 4))
+      (,tlon-babel-file-fluid . 3)
+      (,tlon-babel-file-stable . 4))
     "Association list of database files and their numbers.")
 
   (defun ps/ebib-get-db-number (file)
@@ -15615,7 +15616,7 @@ If applicable, open external website to set rating there as well."
     (interactive)
     (let* ((key (ebib--get-key-at-point))
            (db ebib--cur-db)
-           (new-db-num (ps/ebib-get-db-number ps/file-tlon-bibliography-fluid))
+           (new-db-num (ps/ebib-get-db-number tlon-babel-file-fluid))
            (author (ps/ebib-get-field-value "author"))
            (title (or title (read-string "Title: ")))
            (date "2023")
@@ -15644,7 +15645,7 @@ If applicable, open external website to set rating there as well."
     (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
       (ps/citar-goto-bibtex-entry key)
       (ps/bibtex-move-entry-to-tlon)
-      (ebib ps/file-tlon-bibliography-fluid key)
+      (ebib tlon-babel-file-fluid key)
       (ps/ebib-open-key key)))
 
   (defun ps/ebib-get-field-value (field)
@@ -15879,7 +15880,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     "Advice to set `org-cite-global-bibliography' before Zotra add commands."
     (setq ps/zotra-most-recent-bibliography-file
           (completing-read "Bibfile" (list
-                                      ps/file-tlon-bibliography-fluid
+                                      tlon-babel-file-fluid
                                       ps/file-personal-bibliography-new)))
     (funcall orig-fun url entry-format ps/zotra-most-recent-bibliography-file))
 
@@ -19318,40 +19319,40 @@ And finally, the section you've all been waiting for.
    "s-y" 'tlon-core-slugify-clipboard))
 #+end_src
 
-** tlon-bae
+** tlon-babel
 :PROPERTIES:
 :ID:       5EDD6F28-3299-4D90-83E1-C7476176277D
 :END:
 
 #+begin_src emacs-lisp
-(use-package tlon-bae
-  :elpaca (tlon-bae
+(use-package tlon-babel
+  :elpaca (tlon-babel
            :host github
-           :repo "tlon-team/tlon-bae"
+           :repo "tlon-team/tlon-babel"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :general
-  ("H-r" 'tlon-bae-dispatch)
+  ("H-r" 'tlon-babel-dispatch)
   (markdown-mode-map
-   "s-t" 'tlon-bae-insert-cite-tag)
+   "s-t" 'tlon-babel-insert-cite-tag)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
     magit-status-mode-map)
-   "," 'tlon-bae-orgit-capture)
+   "," 'tlon-babel-orgit-capture)
   (magit-status-mode-map
-   "s-r" 'tlon-bae-commit-when-slug-at-point)
+   "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
-   "'" 'tlon-bae-open-forge-file)
+   "'" 'tlon-babel-open-forge-file)
   ((gfm-mode-map markdown-mode-map eww-mode-map)
-   "H-," 'tlon-bae-read-backward
-   "H-." 'tlon-bae-read-forward
-   "H-;" 'tlon-bae-read-target-start-or-stop)
+   "H-," 'tlon-babel-read-backward
+   "H-." 'tlon-babel-read-forward
+   "H-;" 'tlon-babel-read-target-start-or-stop)
   ((gfm-mode-map markdown-mode-map)
-   "s-c" 'tlon-bae-copy-dwim
-   "s-u" 'tlon-bae-insert-tag)
+   "s-c" 'tlon-babel-copy-dwim
+   "s-u" 'tlon-babel-insert-tag)
   (github-review-mode-map
-   "s-c" 'tlon-bae-submit-comment-revisions))
+   "s-c" 'tlon-babel-submit-comment-revisions)) 
 #+end_src
 
 ** tlon-biblio
@@ -19493,7 +19494,7 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/dir-dropbox-tlon-RAE . (file-name-concat ps/dir-dropbox-tlon "RAE/"))
  (ps/dir-dropbox-tlon-RCG . (file-name-concat ps/dir-dropbox-tlon "RCG/"))
  (ps/dir-repos . (file-name-concat ps/dir-dropbox "repos/"))
- (ps/dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat ps/dir-repos "biblioteca-altruismo-eficaz/"))
+ (ps/dir-tlon-babel . (file-name-concat ps/dir-repos "babel/"))
  (ps/dir-tlon-docs . (file-name-concat ps/dir-repos "tlon-docs/"))
  (ps/dir-emacs-local . (file-name-concat ps/dir-emacs "local/"))
  (ps/dir-chemacs-profiles . (file-name-concat ps/dir-user ".config/emacs-profiles/"))
@@ -19521,12 +19522,6 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-karabiner-edn . (file-name-concat ps/dir-karabiner "karabiner.edn"))
  (ps/file-personal-bibliography-old . (file-name-concat ps/dir-personal-bibliography "old.bib"))
  (ps/file-personal-bibliography-new . (file-name-concat ps/dir-personal-bibliography "new.bib"))
- (ps/file-tlon-bibliography-stable . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/citations-stable.bib"))
- (ps/file-tlon-bibliography-fluid . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/citations-fluid.bib"))
- (ps/file-tlon-bibliography-finished . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/translations-finished.bib"))
- (ps/file-tlon-bibliography-pending . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/translations-pending.bib"))
- (ps/file-tlon-bibliography-originals . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/originals.bib"))
- (ps/file-tlon-bae-contacts . (file-name-concat ps/dir-tlon-biblioteca-altruismo-eficaz "etc/contacts.json"))
  (ps/file-wiki-notes . (file-name-concat ps/dir-wiki "wiki-notes.org"))
  (ps/file-wiki-published . (file-name-concat ps/dir-wiki "wiki-published.org"))
  (ps/file-wiki-help . (file-name-concat ps/dir-wiki "wiki-help.org"))
@@ -19553,12 +19548,10 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-work . (file-name-concat ps/dir-notes "work-dashboard.org"))
  (ps/file-tlon-ledger-schedule-file . (file-name-concat ps/dir-dropbox-tlon-ledger "ledger-schedule.ledger"))
  (ps/file-tlon-bae . (file-name-concat ps/dir-notes "biblioteca-altruismo-eficaz.org"))
- (ps/file-tlon-docs-core . (file-name-concat ps/dir-tlon-docs "core.org"))
- (ps/file-tlon-docs-bae . (file-name-concat ps/dir-tlon-docs "BAE.org"))
  (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
  (ps/personal-bibliography-files . (list ps/file-personal-bibliography-new ps/file-personal-bibliography-old))
- (ps/tlon-bibliography-files . (list ps/file-tlon-bibliography-fluid
-                                     ps/file-tlon-bibliography-stable))
+ (ps/tlon-bibliography-files . (list tlon-babel-file-fluid
+                                     tlon-babel-file-stable))
  (ps/all-bibliography-files . (append ps/personal-bibliography-files ps/tlon-bibliography-files))
  (ps/face-fixed-pitch . "SauceCodePro Nerd Font")
  (ps/face-fixed-pitch-size .  115)

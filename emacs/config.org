@@ -19547,8 +19547,8 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/personal-bibliography-files . (list ps/file-personal-bibliography-new ps/file-personal-bibliography-old))
  ;; TODO: define this properly
  (ps/tlon-bibliography-files . (list
-				(expand-file-name "~/Library/CloudStorage/Dropbox/repos/babel/bib/fluid.bib")
-				(expand-file-name "~/Library/CloudStorage/Dropbox/repos/babel/bib/stable.bib")))
+				(expand-file-name "~/Library/CloudStorage/Dropbox/repos/babel/refs/fluid.bib")
+				(expand-file-name "~/Library/CloudStorage/Dropbox/repos/babel/refs/stable.bib")))
  (ps/all-bibliography-files . (append ps/personal-bibliography-files ps/tlon-bibliography-files))
  (ps/face-fixed-pitch . "SauceCodePro Nerd Font")
  (ps/face-fixed-pitch-size .  115)

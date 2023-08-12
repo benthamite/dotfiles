@@ -14461,6 +14461,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 #+begin_src emacs-lisp :results silent
 (use-package ebib
   :demand t
+  :after tlon-babel
   :config/el-patch
   ;; tweak original function to prevent unnecessary vertical window splits
   (defun ebib--setup-windows ()
@@ -19348,7 +19349,7 @@ And finally, the section you've all been waiting for.
    "s-c" 'tlon-babel-copy-dwim
    "s-u" 'tlon-babel-insert-tag)
   (github-review-mode-map
-   "s-c" 'tlon-babel-submit-comment-revisions)) 
+   "s-c" 'tlon-babel-submit-comment-revisions))
 #+end_src
 
 ** tlon-biblio
@@ -19411,7 +19412,6 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/personal-gmail . (concat ps/personal-gmail-unus ps/personal-gmail-duo))
  (ps/personal-email . (concat ps/personal-email-εἷς ps/personal-email-δῠ́ο))
  (ps/tlon-email . (concat ps/tlon-email-एकम् ps/tlon-email-द्वे))
- (ps/personal-phone . "+1 4246668293")
  (ps/dir-root . "/")
  (ps/dir-system-apps . "/Applications/")
  (ps/dir-user . (getenv "HOME"))
@@ -19531,14 +19531,13 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-orb-noter-template . (file-name-concat ps/dir-personal-bibliography "orb-noter-template.org"))
  (ps/file-orb-capture-template . (file-name-concat ps/dir-bibliographic-notes "${citekey}.org"))
  (ps/file-bookmarks . (file-name-concat ps/dir-dropbox "bookmarks"))
- (ps/file-variables . (file-name-concat ps/dir-dotemacs "variables.el"))
  (ps/file-ledger . (file-name-concat ps/dir-ledger "journal.ledger"))
  (ps/file-ledger-db . (file-name-concat ps/dir-ledger ".pricedb"))
  (ps/file-metaculus . (file-name-concat ps/dir-notes "metaculus.org"))
  (ps/file-gpe . (file-name-concat ps/dir-notes "global-priorities-encyclopedia.org"))
  (ps/file-fm . (file-name-concat ps/dir-notes "future-matters.org"))
  (ps/file-ffrp . (file-name-concat ps/dir-notes "future-fund-regranting-program.org"))
- (ps/file-rcg . (file-name-concat ps/dir-notes "riesgos-catastróficos-globales.org"))
+ (ps/file-rcg . (file-name-concat ps/dir-notes "riesgos-catastroficos-globales.org"))
  (ps/file-ean . (file-name-concat ps/dir-notes "ea.news.org"))
  (ps/file-cookies . (file-name-concat ps/dir-google-drive "Apps/Chrome/cookies.txt"))
  (ps/file-work . (file-name-concat ps/dir-notes "work-dashboard.org"))
@@ -19546,8 +19545,9 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-tlon-bae . (file-name-concat ps/dir-notes "biblioteca-altruismo-eficaz.org"))
  (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
  (ps/personal-bibliography-files . (list ps/file-personal-bibliography-new ps/file-personal-bibliography-old))
- (ps/tlon-bibliography-files . (list tlon-babel-file-fluid
-                                     tlon-babel-file-stable))
+ (ps/tlon-bibliography-files . (list
+				"/Users/pablostafforini/Library/CloudStorage/Dropbox/repos/babel/bib/fluid.bib"
+				"/Users/pablostafforini/Library/CloudStorage/Dropbox/repos/babel/bib/stable.bib"))
  (ps/all-bibliography-files . (append ps/personal-bibliography-files ps/tlon-bibliography-files))
  (ps/face-fixed-pitch . "SauceCodePro Nerd Font")
  (ps/face-fixed-pitch-size .  115)

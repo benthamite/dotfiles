@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: delete key
+# key: ll
+# contributor: Pablo Stafforini
+# --
+Delete `(tlon-babel-get-commit-key)`

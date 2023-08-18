@@ -10685,6 +10685,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 :END:
 
 Similar to Google Calendar.
+
 *** SOMEDAY [#4] Show agenda task in different color if it recurs
 :PROPERTIES:
 :Effort:   0:45
@@ -10781,6 +10782,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tb" "Tlön: BAE")
           ("tbb" "Tlön: BAE: Generic " entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
+           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
+           ("tbd" "Tlön: BAE: Docs " entry
+           (id "49A79F81-8920-43FF-B1C7-B02F0962B30F")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
           ("tbi" "Tlön: BAE: Import " entry
            (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")

@@ -6989,6 +6989,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
 (use-package embark
   :demand t
   :config
+  (setq embark-confirm-act-all nil)
 
   (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
 

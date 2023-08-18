@@ -220,7 +220,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#forge][forge]]
   - [[#orgit-forge][orgit-forge]]
   - [[#forge-search][forge-search]]
-  - [[#code-review][code-review]]
   - [[#github-review][github-review]]
   - [[#gh-notify][gh-notify]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
@@ -6516,7 +6515,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
        :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
       ("c f" "fork or remote"        forge-fork)
       """Review"
-      ("w c" "Code review at point"            code-review-forge-pr-at-point)
       ("w g" "GitHub review at point"          github-review-forge-pr-at-point)
       ]
      ["List"
@@ -6643,26 +6641,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "s" 'forge-search))
 #+end_src
 
-** code-review
-:PROPERTIES:
-:ID:       A0887865-7CAC-47E6-A894-D49F07BCBAF9
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-10 Mon 14:31]--[2023-04-10 Mon 14:44] =>  0:13
-:END:
-
-/[[https://github.com/wandersoncferreira/code-review][code-review]] helps perform code reviews from Emacs./
-
-#+begin_src emacs-lisp :results silent
-(use-package code-review
-  :after magit forge emojify
-  :demand t
-  :config
-  (setq code-review-fill-column 80)
-  (setq code-review-auth-login-marker 'forge)
-
-  (add-hook 'code-review-mode-hook #'emojify-mode))
-#+end_src
 
 ** github-review
 :PROPERTIES:

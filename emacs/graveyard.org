@@ -8,6 +8,27 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** bicycle
+:PROPERTIES:
+:ID:       0AF1245D-2786-40B9-9176-783B9B9397AD
+:END:
+
+/[[https://github.com/tarsius/bicycle][bicycle]] provides commands for cycling the visibility of outline sections and code blocks./
+
+[2023-07-22 Sat] Disabling to test whether I need it.
+
+[2023-08-16 Wed] Not using it.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package bicycle
+  :after outline
+  :demand t
+  :general
+  (outline-minor-mode-map
+   ("s-TAB" . bicycle-cycle)
+   ("S-TAB" . bicycle-cycle-global)))
+#+end_src
+
 ** github-review
 :PROPERTIES:
 :ID:       7AB2F3A1-F542-4F27-A576-470630DC0909

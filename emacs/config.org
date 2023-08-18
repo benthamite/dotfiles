@@ -7691,24 +7691,25 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
       (async-shell-command "brew update; brew upgrade --greedy; brew cleanup; brew doctor")
       (message "Update process finished.")))
 
+  ;; run `blueutil --connected' to see connected devices
   (defun ps/macos-bluetooth-device-dwim (MAC &optional device action)
-  "Connect to DEVICE in MAC address if disconnected, and vice versa.
+    "Connect to DEVICE in MAC address if disconnected, and vice versa.
 If ACTION is \"connect\" or \"disconnect\", do nothing if already
 connected or disconnected, respectively."
-  (let ((app "blueutil"))
-    (unless (executable-find app)
-      (user-error "Please install %s (https://github.com/toy/blueutil)" app))
-    (let* ((status (ps/macos-bluetooth-device-status MAC))
-           (action (or action (pcase status
-                                ("connected" "disconnect")
-                                ("not connected" "connect")
-                                (_ (user-error "Unknown status: %s" status)))))
-           (device (or device MAC)))
-      (when (y-or-n-p (format "%s is currently %s. %s? "
-                              device status action))
-        (pcase (shell-command-to-string (format "%s --%s %s" app action MAC))
-          ("" (message "%s: %sed" device action))
-          (_ (user-error "Failed to %s %s" action device)))))))
+    (let ((app "blueutil"))
+      (unless (executable-find app)
+        (user-error "Please install %s (https://github.com/toy/blueutil)" app))
+      (let* ((status (ps/macos-bluetooth-device-status MAC))
+             (action (or action (pcase status
+                                  ("connected" "disconnect")
+                                  ("not connected" "connect")
+                                  (_ (user-error "Unknown status: %s" status)))))
+             (device (or device MAC)))
+        (when (y-or-n-p (format "%s is currently %s. %s? "
+                                device status action))
+          (pcase (shell-command-to-string (format "%s --%s %s" app action MAC))
+            ("" (message "%s: %sed" device action))
+            (_ (user-error "Failed to %s %s" action device)))))))
 
   (defun ps/macos-bluetooth-device-status (MAC)
     "Return the connection status of bluetooth device in address MAC."
@@ -7724,12 +7725,19 @@ connected or disconnected, respectively."
     (interactive)
     (ps/macos-bluetooth-device-dwim "90-9c-4a-dd-af-52" "AirPods Max" action))
 
+  (defun ps/macos-sony-wh1000xm5-dwim (&optional action)
+    "Connect to Sonny if disconnected, and vice versa.
+If ACTION is \"connect\" or \"disconnect\", do nothing if already
+connected or disconnected, respectively."
+    (interactive)
+    (ps/macos-bluetooth-device-dwim "ac-80-0a-37-41-1e" "Sonny WH-1000XM5" action))
+
   (defun ps/macos-sleep ()
     "Put the system to sleep."
     (interactive)
-    (message "Disconnecting devices...")
-    (ps/airpods-max-dwim 'disconnect)
-    (ps/eject-external-hard-drive)
+    ;; (message "Disconnecting devices...")
+    ;; (ps/airpods-max-dwim 'disconnect)
+    ;; (ps/eject-external-hard-drive)
     (shell-command "osascript -e 'tell application \"Finder\" to sleep'"))
 
   (defun ps/eject-external-hard-drive ()

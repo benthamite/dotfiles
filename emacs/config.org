@@ -15658,11 +15658,13 @@ Fetching is done using `tlon-biblio'."
                                                (ebib-db-has-key key dependent))
                                              (ebib--list-dependents db)))))
 
-  (defun ps/ebib-import-field (field)
+  (defun ps/ebib-fetch-field-value (field)
+    "Fetch the value of FIELD for the entry at point.
+Fetching is done using `tlon-biblio'."
     (unless (eq major-mode 'ebib-entry-mode)
       (error "Not in `ebib-entry-mode'"))
-    (if-let ((id (ps/ebib-get-id-or-url)))
-        (let ((entry (zotra-get-entry id))
+    (if-let ((id (ps/ebib-get-or-fetch-id-or-url)))
+        (let ((entry (zotra-get-entry id (not (ps/string-is-url-p id))))
               value)
           (with-temp-buffer (insert entry)
                             (setq value (bibtex-autokey-get-field field)))

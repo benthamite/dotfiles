@@ -8572,7 +8572,6 @@ With prefix argument, prompt for the URL to use."
 
   (defun ps/markdown-sort-elements-in-paragraph (separator)
     "Sort alphabetically the elements in the current paragraph."
-    (interactive)
     (save-excursion
       ;; Get paragraph boundaries
       (let* ((para-start (progn (backward-paragraph)

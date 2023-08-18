@@ -9296,7 +9296,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
    "A-M-d" 'toggle-debug-on-quit)
   (prog-mode-map
    "A-H-C-i" 'mark-defun
-   "M-." 'xref-find-definitions
+   "s-e" 'xref-find-definitions
    "s-f" 'consult-flymake)
   ((emacs-lisp-mode-map shell-mode-map)
    "s-c" 'exit-recursive-edit))

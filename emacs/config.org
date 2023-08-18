@@ -12795,29 +12795,6 @@ https://github.com/hieutkt/.doom.d/blob/master/config.el#L690-L742
 
 https://commonplace.doubleloop.net/adding-timestamps-to-org-roam-notes
 
-*** TODO [#4] Figure out how to search for files with a particular tag with ~org-roam~
-:PROPERTIES:
-:ID:       C4B5F6B8-9E88-43E0-ACA3-43954D2BA254
-:Effort:   0:30
-:END:
-
-*** TODO [#5] Make ~org-roam-node-insert~ show full path
-:PROPERTIES:
-:ID:       D25E187C-C351-48D6-B617-0A6A0DF0869F
-:Effort:   0:30
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-15 Fri 17:03]--[2022-07-15 Fri 17:33] =>  0:30
-:END:
-
-*** TODO [#4] Diagnose issue with idle timer
-:PROPERTIES:
-:Effort:   1:00
-:ID:       C6B17ACE-E5CB-4997-97D7-8ACAA33E7895
-:END:
-
-Run org-roam with minimal config and see if the problem with idle times persist
-
 *** TODO [#5] Investigate if org-roam has a way to resolve links when exporting
 :PROPERTIES:
 :Effort:   0:30

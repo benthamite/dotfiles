@@ -320,7 +320,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#aggressive-indent][aggressive-indent]]
   - [[#elpy][elpy]]
   - [[#eldoc][eldoc]]
-  - [[#bicycle][bicycle]]
 - [[#ai][AI]]
   - [[#copilot][copilot]]
   - [[#gptel][gptel]]
@@ -9671,25 +9670,6 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
             (concat "  |  " (propertize oneline 'face 'italic))))))
 
   (global-eldoc-mode))
-#+end_src
-
-** bicycle
-:PROPERTIES:
-:ID:       0AF1245D-2786-40B9-9176-783B9B9397AD
-:END:
-
-/[[https://github.com/tarsius/bicycle][bicycle]] provides commands for cycling the visibility of outline sections and code blocks./
-
-[2023-07-22 Sat] Disabling to test whether I need it.
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package bicycle
-  :after outline
-  :demand t
-  :general
-  (outline-minor-mode-map
-   ("s-TAB" . bicycle-cycle)
-   ("S-TAB" . bicycle-cycle-global)))
 #+end_src
 
 * AI

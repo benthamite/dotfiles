@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: update (key)
+# key: U
+# contributor: Pablo Stafforini
+# --
+Update `(file-name-nondirectory (tlon-babel-magit-get-commit-file))`

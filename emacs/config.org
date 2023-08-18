@@ -363,6 +363,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-make-toc][org-make-toc]]
   - [[#org2blog][org2blog]]
   - [[#org-journal][org-journal]]
+  - [[#org-contacts][org-contacts]]
   - [[#org-autosort][org-autosort]]
   - [[#ox-clip][ox-clip]]
   - [[#org-mime][org-mime]]
@@ -12314,6 +12315,21 @@ an org drawer."
 :PROPERTIES:
 :ID:       67333293-EE6D-4936-8C88-07F5AE193B81
 :END:
+
+** org-contacts
+:PROPERTIES:
+:ID:       63430292-5227-42B5-ABDC-4630C719E9D1
+:END:
+
+/[[https://repo.or.cz/org-contacts.git][org-contacts]] is a contacts management system for Org Mode./
+
+#+begin_src emacs-lisp
+(use-package org-contacts
+  :after org
+  :demand t
+  :config
+  (setq org-contacts-files '("/Users/pablostafforini/Library/CloudStorage/Dropbox/repos/babel/etc/contacts.org")))
+#+end_src
 
 ** org-autosort
 :PROPERTIES:

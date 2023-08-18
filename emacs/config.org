@@ -15625,6 +15625,11 @@ sensible defaults."
                                                        (tlon-biblio-translate-title-to-english title))))
         (_ (ps/ebib-get-field-value "url")))))
 
+  (defun ps/ebib-get-or-fetch-id-or-url ()
+    "Get the ID or URL of the entry at point, or fetch it if missing."
+    (or (ps/ebib-get-id-or-url)
+        (ps/ebib-fetch-id-or-url)))
+
   (defun ps/ebib-set-id (&optional id)
     "Add an ID to the current entry, if missing."
     (interactive)
@@ -15634,7 +15639,7 @@ sensible defaults."
                    ("book" "isbn")
                    ("article" "doi")
                    ("film" "url")))
-          (id (or id (ps/ebib-get-id-or-url))))
+          (id (or id (ps/ebib-fetch-id-or-url))))
       (when (ps/ebib-get-field-value field)
         (user-error "ID field is not empty."))
       (ebib-set-field-value field id key db)

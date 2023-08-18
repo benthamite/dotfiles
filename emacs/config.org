@@ -11758,6 +11758,10 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 
 ** ol
 :PROPERTIES:
+:ID:       6BA48DB9-1861-40A3-9811-1B5D9F0E350E
+:END:
+
+:PROPERTIES:
 :ID:       9C00589B-C296-48BA-BD7A-B50992624AB0
 :END:
 #+begin_src emacs-lisp :results silent
@@ -14640,8 +14644,6 @@ value is copied to the kill ring."
   (setq ebib-extra-fields
         '((biblatex "abstract" "keywords" "origdate" "langid" "translation" "narrator" "file" "timestamp" "rating" "crossref" "=key=")
           (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
-  (setq ebib-keywords tlon-babel-file-tags)
-  (setq ebib-keywords-add-new-to-canonical nil)
 
   ;; unhide some fields
   (setq ebib-hidden-fields

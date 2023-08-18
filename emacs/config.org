@@ -10667,17 +10667,10 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "y" 'org-agenda-day-view
    "z" 'org-agenda-undo))
 #+end_src
+
 *** TODO Make org-agenda birthdays visible via midnight
 :PROPERTIES:
 :ID:       F42FBE14-DFB3-45D0-BE2F-13D6A57F071F
-:END:
-
-*** TODO Configure org-agenda log checks
-:PROPERTIES:
-:ID:       9FE214C2-609D-4055-91A7-EB4EEAE26348
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-18 Sat 11:30]--[2023-03-18 Sat 11:55] =>  0:25
 :END:
 
 *** TODO [#6] align tags
@@ -11393,17 +11386,6 @@ CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
 :ID:       855BC5BD-2A50-4DB8-BD91-4E0F6ECD50D6
 :Effort:   1:00
 :END:
-
-*** TODO [#4] Move archives to external file, preserving structure
-:PROPERTIES:
-:ID:       DF8001AB-5B1E-4B6D-A3E5-BAEFDB041171
-:Effort:   2:00
-:END:
-:LOGBOOK:
-CLOCK: [2023-02-15 Wed 05:58]--[2023-02-15 Wed 06:33] =>  0:35
-:END:
-
-I think Munilo Pereira had a package that allowed for this.
 
 ** org-archive-hierarchically
 :PROPERTIES:

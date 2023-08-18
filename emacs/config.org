@@ -220,7 +220,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#forge][forge]]
   - [[#orgit-forge][orgit-forge]]
   - [[#forge-search][forge-search]]
-  - [[#github-review][github-review]]
   - [[#gh-notify][gh-notify]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#search--replace][search & replace]]
@@ -6514,8 +6513,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("c u" "pull-request from issue" forge-create-pullreq-from-issue
        :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
       ("c f" "fork or remote"        forge-fork)
-      """Review"
-      ("w g" "GitHub review at point"          github-review-forge-pr-at-point)
       ]
      ["List"
       ("l a" "awaiting review"        forge-list-requested-reviews)
@@ -6639,32 +6636,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
     forge-notifications-mode-map
     forge-repository-list-mode-map)
    "s" 'forge-search))
-#+end_src
-
-
-** github-review
-:PROPERTIES:
-:ID:       7AB2F3A1-F542-4F27-A576-470630DC0909
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-10 Mon 16:25]--[2023-04-10 Mon 16:50] =>  0:25
-CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
-:END:
-
-/[[https://github.com/charignon/github-review][github-review]] provides Emacs support for GitHub code reviews ./
-
-#+begin_src emacs-lisp
-(use-package github-review
-  :after forge
-  :config
-  (setq github-review-view-comments-in-code-lines t)
-  (setq github-review-reply-inline-comments t)
-
-  :general
-  (github-review-mode-map
-   "s-m" 'github-review-comment
-   "s-r" 'github-review-reject
-   "s-a" 'github-review-approve))
 #+end_src
 
 ** gh-notify

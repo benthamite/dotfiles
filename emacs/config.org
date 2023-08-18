@@ -302,7 +302,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#flymake][flymake]]
   - [[#lsp-mode][lsp-mode]]
   - [[#lsp-ui][lsp-ui]]
-  - [[#dumb-jump][dumb-jump]]
   - [[#elisp-mode][elisp-mode]]
   - [[#debug][debug]]
   - [[#edebug][edebug]]
@@ -9348,17 +9347,6 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
   :demand t
   :config
   (setq lsp-ui-doc-show-with-cursor t)) ; move the cursor over a symbol to show its documentation
-#+end_src
-
-** dumb-jump
-:PROPERTIES:
-:ID:       BF9AD57C-A2BC-450B-8EAE-0FAAC951A52D
-:END:
-
-/[[https://github.com/jacktasia/dumb-jump][dumb-jump]] is a "jump to definition" package for 50+ languages./
-
-#+begin_src emacs-lisp :results silent
-(use-package dumb-jump)
 #+end_src
 
 ** elisp-mode

@@ -34,6 +34,7 @@ CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
    "s-r" 'github-review-reject
    "s-a" 'github-review-approve))
 #+end_src
+
 ** code-review
 :PROPERTIES:
 :ID:       A0887865-7CAC-47E6-A894-D49F07BCBAF9
@@ -57,6 +58,18 @@ CLOCK: [2023-04-10 Mon 14:31]--[2023-04-10 Mon 14:44] =>  0:13
   (add-hook 'code-review-mode-hook #'emojify-mode))
 #+end_src
 
+** dumb-jump
+:PROPERTIES:
+:ID:       BF9AD57C-A2BC-450B-8EAE-0FAAC951A52D
+:END:
+
+/[[https://github.com/jacktasia/dumb-jump][dumb-jump]] is a "jump to definition" package for 50+ languages./
+
+~dumb-jump-go~, which seems like the only command I’d use, has been superseded by ~xref-find-definitions~.
+
+#+begin_src emacs-lisp :results silent
+(use-package dumb-jump)
+#+end_src
 
 ** pen
 :PROPERTIES:

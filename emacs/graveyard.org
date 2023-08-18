@@ -8,6 +8,89 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** bicycle
+:PROPERTIES:
+:ID:       0AF1245D-2786-40B9-9176-783B9B9397AD
+:END:
+
+/[[https://github.com/tarsius/bicycle][bicycle]] provides commands for cycling the visibility of outline sections and code blocks./
+
+[2023-07-22 Sat] Disabling to test whether I need it.
+
+[2023-08-16 Wed] Not using it.
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package bicycle
+  :after outline
+  :demand t
+  :general
+  (outline-minor-mode-map
+   ("s-TAB" . bicycle-cycle)
+   ("S-TAB" . bicycle-cycle-global)))
+#+end_src
+
+** github-review
+:PROPERTIES:
+:ID:       7AB2F3A1-F542-4F27-A576-470630DC0909
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-10 Mon 16:25]--[2023-04-10 Mon 16:50] =>  0:25
+CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
+:END:
+
+/[[https://github.com/charignon/github-review][github-review]] provides Emacs support for GitHub code reviews ./
+
+<2023-08-12 Sat> No longer using.
+
+#+begin_src emacs-lisp
+(use-package github-review
+  :after forge
+  :config
+  (setq github-review-view-comments-in-code-lines t)
+  (setq github-review-reply-inline-comments t)
+
+  :general
+  (github-review-mode-map
+   "s-m" 'github-review-comment
+   "s-r" 'github-review-reject
+   "s-a" 'github-review-approve))
+#+end_src
+
+** code-review
+:PROPERTIES:
+:ID:       A0887865-7CAC-47E6-A894-D49F07BCBAF9
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-10 Mon 14:31]--[2023-04-10 Mon 14:44] =>  0:13
+:END:
+
+/[[https://github.com/wandersoncferreira/code-review][code-review]] helps perform code reviews from Emacs./
+
+<2023-08-12 Sat> No longer using.
+
+#+begin_src emacs-lisp :results silent
+(use-package code-review
+  :after magit forge emojify
+  :demand t
+  :config
+  (setq code-review-fill-column 80)
+  (setq code-review-auth-login-marker 'forge)
+
+  (add-hook 'code-review-mode-hook #'emojify-mode))
+#+end_src
+
+** dumb-jump
+:PROPERTIES:
+:ID:       BF9AD57C-A2BC-450B-8EAE-0FAAC951A52D
+:END:
+
+/[[https://github.com/jacktasia/dumb-jump][dumb-jump]] is a "jump to definition" package for 50+ languages./
+
+~dumb-jump-go~, which seems like the only command I’d use, has been superseded by ~xref-find-definitions~.
+
+#+begin_src emacs-lisp :results silent
+(use-package dumb-jump)
+#+end_src
 
 ** pen
 :PROPERTIES:

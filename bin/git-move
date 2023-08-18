@@ -1,0 +1,12 @@
+#! /bin/bash
+# Usage:
+# ./git-move path/to/file/or/dir path/to/destination/repo
+echo "creating patch for path ${1}"
+git log --name-only --pretty="format:" --follow  "${1}" \
+ | sort -u | \
+ xargs git log --pretty=email --patch-with-stat --reverse --full-index --binary -m --first-parent -- > "${2}/_patch_" \
+&& echo "moving to destination repo at ${2}" \
+&& cd "${2}" \
+&& echo "applying patch" \
+&& git am --committer-date-is-author-date < _patch_ \
+&& echo "OK"

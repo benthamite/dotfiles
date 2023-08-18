@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: update key
+# key: uu
+# contributor: Pablo Stafforini
+# --
+Update `(tlon-babel-get-commit-key)`

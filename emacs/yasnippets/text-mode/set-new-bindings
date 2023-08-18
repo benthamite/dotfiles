@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: add
-# key: a
+# name: set-new-bindings
+# key: snb
 # contributor: Pablo Stafforini
 # --
-Add `(tlon-babel-magit-get-filename)`
+$1: set new bindings

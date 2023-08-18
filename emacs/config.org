@@ -15615,7 +15615,16 @@ sensible defaults."
       (ebib-get-field-value field key ebib--cur-db t t t)))
 
   (defun ps/ebib-get-id-or-url ()
-    "Get the ID or URL of the entry at point using `tlon-biblio'."
+    "Get the ID or URL of the entry at point."
+    (when-let ((id-or-url (catch 'found
+                            (dolist (field '("doi" "isbn" "url"))
+                              (when-let ((value (ps/ebib-get-field-value field)))
+                                (throw 'found value))))))
+      id-or-url))
+
+  (defun ps/ebib-fetch-id-or-url ()
+    "Fetch the ID or URL of the entry at point.
+Fetching is done using `tlon-biblio'."
     (let ((title (ps/ebib-get-field-value "title"))
           (author (ps/ebib-get-field-value "author")))
       (pcase (ps/ebib-get-supertype)

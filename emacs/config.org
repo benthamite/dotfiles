@@ -3013,9 +3013,10 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
    "A-C-H-M-S-s-a" 'ps/backward-delete-sexp
    "C-H-M-s-A-f" 'ps/copy-sexp
    "C-H-M-s-A-a" 'ps/backward-copy-sexp
-   "A-H-C-a" 'ps/copy-whole-sexp
-   "A-H-C-f" 'ps/delete-whole-sexp
-   "A-H-C-j" 'ps/kill-whole-sexp
+   "A-C-H-a" 'ps/copy-whole-sexp
+   "A-C-H-f" 'ps/delete-whole-sexp
+   ;; "A-C-H-j" 'ps/kill-whole-sexp
+   ;; now binding A-C-H-j to puni-mark-sexp-at-point
    "A-H-M-f" 'transpose-sexps
    "A-H-M-a" 'ps/transpose-sexps-backward))
 #+end_src

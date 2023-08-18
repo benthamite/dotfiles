@@ -6789,8 +6789,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   (setq query-replace-from-history-variable 'regexp-search-ring)
 
   :general
-  (isearch-mode-map
-   "C-H-a" 'query-replace
+  ("C-H-a" 'query-replace
    "C-H-s" 'query-replace-regexp))
 #+end_src
 

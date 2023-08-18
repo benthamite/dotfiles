@@ -180,6 +180,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#peep-dired][peep-dired]]
   - [[#minibuffer][minibuffer]]
   - [[#ibuffer][ibuffer]]
+  - [[#executable][executable]]
   - [[#uniquify][uniquify]]
   - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
   - [[#tramp][tramp]]
@@ -4821,6 +4822,20 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
   :general
   (ibuffer-mode-map
    "k" 'ibuffer-do-delete))
+#+end_src
+
+** executable
+:PROPERTIES:
+:ID:       0838A480-2BBF-4AAE-8DC0-FBED8D7E9B9E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature executable
+  :demand t
+  :config
+  ;; masteringemacs.org/article/script-files-executable-automatically
+  (add-hook 'after-save-hook
+  'executable-make-buffer-file-executable-if-script-p))
 #+end_src
 
 ** uniquify

@@ -8407,17 +8407,17 @@ around point."
                                       (region-end))
     (thing-at-point 'word)))
 
-(defun ps/goldendict-search-input (arg)
-  "If there is a word at point or an active selection, look it up
-in GoldenDict, else prompt user for input. If invoked with prefix
-argument, always force prompt."
-  (interactive "P")
-  (let ((string (ps/goldendict-region-or-word)))
-    (if (and string (not arg))
-        (kill-new string)
-      (kill-new (read-string "Expression: ")))
-    ;; KM macro name: "Goldendict: lookup text in clipboard"
-    (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"D4404D73-FF1D-4DF6-8107-7AB050C28C9F\"'")))
+(defun ps/goldendict-search-input (input &optional arg)
+  "Run an external search for INPUT in GoldenDict.
+If there is a word at point or an active selection, look it up,
+else prompt user for input. If invoked with prefix
+argument (ARG), always force prompt."
+  (interactive (list (ps/goldendict-region-or-word) current-prefix-arg))
+  (if (and input (not arg))
+      (kill-new input)
+    (kill-new (read-string "Expression: ")))
+  ;; KM macro name: "Goldendict: lookup text in clipboard"
+  (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"D4404D73-FF1D-4DF6-8107-7AB050C28C9F\"'"))
 
 (general-define-key
  "A-y" 'ps/goldendict-search-input)

@@ -6807,7 +6807,8 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
              :repo "protesilaos/substitute")
   :demand t
   :general
-   ("A-H-s" 'substitute-target-in-buffer))
+   ("A-H-s" 'substitute-target-in-buffer
+   "C-u A-H-s" 'substitute-target-in-defun))
 #+end_src
 
 ** visual-regexp

@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: delete
-# key: d
-# contributor: Pablo Stafforini
-# --
-Delete `(tlon-babel-magit-get-filename)`

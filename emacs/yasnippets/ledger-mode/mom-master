@@ -2,9 +2,7 @@
 # name: mom-master
 # key: master
 # contributor: Pablo Stafforini
-# `(format-time-string "%Y-%m-%d")` $1
-`(ps/yasnippet-expand-by-key "ldlm")`
-2022-04-22 $1
+`(ps/time-last-day-of-last-month)` $1
     Expenses:$3  $2.00 ARS
     Liabilities:Mom:Master
 

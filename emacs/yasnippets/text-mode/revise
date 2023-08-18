@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: revise
-# key: r
-# contributor: Pablo Stafforini
-# --
-Revise `(tlon-babel-magit-get-filename)`

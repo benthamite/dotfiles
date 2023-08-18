@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: revisekey
+# key: rr
+# contributor: Pablo Stafforini
+# --
+Revise `(tlon-babel-get-commit-key)`

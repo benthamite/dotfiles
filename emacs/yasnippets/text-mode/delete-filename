@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: delete filename
+# key: d
+# contributor: Pablo Stafforini
+# --
+Delete `(file-name-nondirectory (tlon-babel-magit-get-commit-file))`

@@ -180,6 +180,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#peep-dired][peep-dired]]
   - [[#minibuffer][minibuffer]]
   - [[#ibuffer][ibuffer]]
+  - [[#executable][executable]]
   - [[#uniquify][uniquify]]
   - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
   - [[#tramp][tramp]]
@@ -219,8 +220,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#forge][forge]]
   - [[#orgit-forge][orgit-forge]]
   - [[#forge-search][forge-search]]
-  - [[#code-review][code-review]]
-  - [[#github-review][github-review]]
   - [[#gh-notify][gh-notify]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#search--replace][search & replace]]
@@ -232,6 +231,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#imenu][imenu]]
   - [[#pcre2el][pcre2el]]
   - [[#wgrep][wgrep]]
+  - [[#elgrep][elgrep]]
 - [[#minibuffer-completion][minibuffer completion]]
   - [[#vertico][vertico]]
   - [[#embark][embark]]
@@ -303,7 +303,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#flymake][flymake]]
   - [[#lsp-mode][lsp-mode]]
   - [[#lsp-ui][lsp-ui]]
-  - [[#dumb-jump][dumb-jump]]
   - [[#elisp-mode][elisp-mode]]
   - [[#debug][debug]]
   - [[#edebug][edebug]]
@@ -316,11 +315,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#flymake-json][flymake-json]]
   - [[#csv-mode][csv-mode]]
   - [[#js2-mode][js2-mode]]
+  - [[#puni][puni]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent][aggressive-indent]]
   - [[#elpy][elpy]]
   - [[#eldoc][eldoc]]
-  - [[#bicycle][bicycle]]
 - [[#ai][AI]]
   - [[#copilot][copilot]]
   - [[#gptel][gptel]]
@@ -363,6 +362,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-make-toc][org-make-toc]]
   - [[#org2blog][org2blog]]
   - [[#org-journal][org-journal]]
+  - [[#org-contacts][org-contacts]]
   - [[#org-autosort][org-autosort]]
   - [[#ox-clip][ox-clip]]
   - [[#org-mime][org-mime]]
@@ -3013,9 +3013,10 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
    "A-C-H-M-S-s-a" 'ps/backward-delete-sexp
    "C-H-M-s-A-f" 'ps/copy-sexp
    "C-H-M-s-A-a" 'ps/backward-copy-sexp
-   "A-H-C-a" 'ps/copy-whole-sexp
-   "A-H-C-f" 'ps/delete-whole-sexp
-   "A-H-C-j" 'ps/kill-whole-sexp
+   "A-C-H-a" 'ps/copy-whole-sexp
+   "A-C-H-f" 'ps/delete-whole-sexp
+   ;; "A-C-H-j" 'ps/kill-whole-sexp
+   ;; now binding A-C-H-j to puni-mark-sexp-at-point
    "A-H-M-f" 'transpose-sexps
    "A-H-M-a" 'ps/transpose-sexps-backward))
 #+end_src
@@ -4823,6 +4824,20 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
    "k" 'ibuffer-do-delete))
 #+end_src
 
+** executable
+:PROPERTIES:
+:ID:       0838A480-2BBF-4AAE-8DC0-FBED8D7E9B9E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature executable
+  :demand t
+  :config
+  ;; masteringemacs.org/article/script-files-executable-automatically
+  (add-hook 'after-save-hook
+  'executable-make-buffer-file-executable-if-script-p))
+#+end_src
+
 ** uniquify
 :PROPERTIES:
 :ID:       295BE204-62D9-4003-AFB0-06F6D817AE4C
@@ -6500,9 +6515,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("c u" "pull-request from issue" forge-create-pullreq-from-issue
        :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
       ("c f" "fork or remote"        forge-fork)
-      """Review"
-      ("w c" "Code review at point"            code-review-forge-pr-at-point)
-      ("w g" "GitHub review at point"          github-review-forge-pr-at-point)
       ]
      ["List"
       ("l a" "awaiting review"        forge-list-requested-reviews)
@@ -6626,52 +6638,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
     forge-notifications-mode-map
     forge-repository-list-mode-map)
    "s" 'forge-search))
-#+end_src
-
-** code-review
-:PROPERTIES:
-:ID:       A0887865-7CAC-47E6-A894-D49F07BCBAF9
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-10 Mon 14:31]--[2023-04-10 Mon 14:44] =>  0:13
-:END:
-
-/[[https://github.com/wandersoncferreira/code-review][code-review]] helps perform code reviews from Emacs./
-
-#+begin_src emacs-lisp :results silent
-(use-package code-review
-  :after magit forge emojify
-  :demand t
-  :config
-  (setq code-review-fill-column 80)
-  (setq code-review-auth-login-marker 'forge)
-
-  (add-hook 'code-review-mode-hook #'emojify-mode))
-#+end_src
-
-** github-review
-:PROPERTIES:
-:ID:       7AB2F3A1-F542-4F27-A576-470630DC0909
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-10 Mon 16:25]--[2023-04-10 Mon 16:50] =>  0:25
-CLOCK: [2023-04-10 Mon 14:44]--[2023-04-10 Mon 14:49] =>  0:05
-:END:
-
-/[[https://github.com/charignon/github-review][github-review]] provides Emacs support for GitHub code reviews ./
-
-#+begin_src emacs-lisp
-(use-package github-review
-  :after forge
-  :config
-  (setq github-review-view-comments-in-code-lines t)
-  (setq github-review-reply-inline-comments t)
-
-  :general
-  (github-review-mode-map
-   "s-m" 'github-review-comment
-   "s-r" 'github-review-reject
-   "s-a" 'github-review-approve))
 #+end_src
 
 ** gh-notify
@@ -6823,8 +6789,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   (setq query-replace-from-history-variable 'regexp-search-ring)
 
   :general
-  (isearch-mode-map
-   "C-H-a" 'query-replace
+  ("C-H-a" 'query-replace
    "C-H-s" 'query-replace-regexp))
 #+end_src
 
@@ -6842,7 +6807,8 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
              :repo "protesilaos/substitute")
   :demand t
   :general
-   ("A-H-s" 'substitute-target-in-buffer))
+   ("A-H-s" 'substitute-target-in-buffer
+   "C-u A-H-s" 'substitute-target-in-defun))
 #+end_src
 
 ** visual-regexp
@@ -6919,6 +6885,20 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :general
   (wgrep-mode-map
    "s-c" 'wgrep-finish-edit))
+#+end_src
+
+** elgrep
+:PROPERTIES:
+:ID:       783E764B-7E5D-4CFB-9DE7-D87C5BF51518
+:END:
+
+/[[https://github.com/TobiasZawada/elgrep][elgrep]] is an Emacs implementation of grep that requires no external dependencies./
+
+#+begin_src emacs-lisp
+(use-package elgrep
+  :demand t
+  :general
+  ("A-C-p" 'elgrep))
 #+end_src
 
 * minibuffer completion
@@ -7009,6 +6989,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
 (use-package embark
   :demand t
   :config
+  (setq embark-confirm-act-all nil)
 
   (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
 
@@ -7710,24 +7691,25 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
       (async-shell-command "brew update; brew upgrade --greedy; brew cleanup; brew doctor")
       (message "Update process finished.")))
 
+  ;; run `blueutil --connected' to see connected devices
   (defun ps/macos-bluetooth-device-dwim (MAC &optional device action)
-  "Connect to DEVICE in MAC address if disconnected, and vice versa.
+    "Connect to DEVICE in MAC address if disconnected, and vice versa.
 If ACTION is \"connect\" or \"disconnect\", do nothing if already
 connected or disconnected, respectively."
-  (let ((app "blueutil"))
-    (unless (executable-find app)
-      (user-error "Please install %s (https://github.com/toy/blueutil)" app))
-    (let* ((status (ps/macos-bluetooth-device-status MAC))
-           (action (or action (pcase status
-                                ("connected" "disconnect")
-                                ("not connected" "connect")
-                                (_ (user-error "Unknown status: %s" status)))))
-           (device (or device MAC)))
-      (when (y-or-n-p (format "%s is currently %s. %s? "
-                              device status action))
-        (pcase (shell-command-to-string (format "%s --%s %s" app action MAC))
-          ("" (message "%s: %sed" device action))
-          (_ (user-error "Failed to %s %s" action device)))))))
+    (let ((app "blueutil"))
+      (unless (executable-find app)
+        (user-error "Please install %s (https://github.com/toy/blueutil)" app))
+      (let* ((status (ps/macos-bluetooth-device-status MAC))
+             (action (or action (pcase status
+                                  ("connected" "disconnect")
+                                  ("not connected" "connect")
+                                  (_ (user-error "Unknown status: %s" status)))))
+             (device (or device MAC)))
+        (when (y-or-n-p (format "%s is currently %s. %s? "
+                                device status action))
+          (pcase (shell-command-to-string (format "%s --%s %s" app action MAC))
+            ("" (message "%s: %sed" device action))
+            (_ (user-error "Failed to %s %s" action device)))))))
 
   (defun ps/macos-bluetooth-device-status (MAC)
     "Return the connection status of bluetooth device in address MAC."
@@ -7743,12 +7725,19 @@ connected or disconnected, respectively."
     (interactive)
     (ps/macos-bluetooth-device-dwim "90-9c-4a-dd-af-52" "AirPods Max" action))
 
+  (defun ps/macos-sony-wh1000xm5-dwim (&optional action)
+    "Connect to Sonny if disconnected, and vice versa.
+If ACTION is \"connect\" or \"disconnect\", do nothing if already
+connected or disconnected, respectively."
+    (interactive)
+    (ps/macos-bluetooth-device-dwim "ac-80-0a-37-41-1e" "Sonny WH-1000XM5" action))
+
   (defun ps/macos-sleep ()
     "Put the system to sleep."
     (interactive)
-    (message "Disconnecting devices...")
-    (ps/airpods-max-dwim 'disconnect)
-    (ps/eject-external-hard-drive)
+    ;; (message "Disconnecting devices...")
+    ;; (ps/airpods-max-dwim 'disconnect)
+    ;; (ps/eject-external-hard-drive)
     (shell-command "osascript -e 'tell application \"Finder\" to sleep'"))
 
   (defun ps/eject-external-hard-drive ()
@@ -8418,17 +8407,17 @@ around point."
                                       (region-end))
     (thing-at-point 'word)))
 
-(defun ps/goldendict-search-input (arg)
-  "If there is a word at point or an active selection, look it up
-in GoldenDict, else prompt user for input. If invoked with prefix
-argument, always force prompt."
-  (interactive "P")
-  (let ((string (ps/goldendict-region-or-word)))
-    (if (and string (not arg))
-        (kill-new string)
-      (kill-new (read-string "Expression: ")))
-    ;; KM macro name: "Goldendict: lookup text in clipboard"
-    (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"D4404D73-FF1D-4DF6-8107-7AB050C28C9F\"'")))
+(defun ps/goldendict-search-input (input &optional arg)
+  "Run an external search for INPUT in GoldenDict.
+If there is a word at point or an active selection, look it up,
+else prompt user for input. If invoked with prefix
+argument (ARG), always force prompt."
+  (interactive (list (ps/goldendict-region-or-word) current-prefix-arg))
+  (if (and input (not arg))
+      (kill-new input)
+    (kill-new (read-string "Expression: ")))
+  ;; KM macro name: "Goldendict: lookup text in clipboard"
+  (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"D4404D73-FF1D-4DF6-8107-7AB050C28C9F\"'"))
 
 (general-define-key
  "A-y" 'ps/goldendict-search-input)
@@ -8583,7 +8572,6 @@ With prefix argument, prompt for the URL to use."
 
   (defun ps/markdown-sort-elements-in-paragraph (separator)
     "Sort alphabetically the elements in the current paragraph."
-    (interactive)
     (save-excursion
       ;; Get paragraph boundaries
       (let* ((para-start (progn (backward-paragraph)
@@ -9308,7 +9296,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
    "A-M-d" 'toggle-debug-on-quit)
   (prog-mode-map
    "A-H-C-i" 'mark-defun
-   "M-." 'xref-find-definitions
+   "s-e" 'xref-find-definitions
    "s-f" 'consult-flymake)
   ((emacs-lisp-mode-map shell-mode-map)
    "s-c" 'exit-recursive-edit))
@@ -9384,17 +9372,6 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
   :demand t
   :config
   (setq lsp-ui-doc-show-with-cursor t)) ; move the cursor over a symbol to show its documentation
-#+end_src
-
-** dumb-jump
-:PROPERTIES:
-:ID:       BF9AD57C-A2BC-450B-8EAE-0FAAC951A52D
-:END:
-
-/[[https://github.com/jacktasia/dumb-jump][dumb-jump]] is a "jump to definition" package for 50+ languages./
-
-#+begin_src emacs-lisp :results silent
-(use-package dumb-jump)
 #+end_src
 
 ** elisp-mode
@@ -9601,6 +9578,30 @@ instead of JSON."
   :demand t)
 #+end_src
 
+** puni
+:PROPERTIES:
+:ID:       27705B8C-C2F7-4BE1-9510-8BE0993EAB4A
+:END:
+:LOGBOOK:
+CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
+:END:
+
+#+begin_src emacs-lisp
+(use-package puni
+  :general
+  (prog-mode-map
+   "C-H-M-r" 'puni-forward-kill-word
+   "C-H-M-q" 'puni-backward-kill-word
+   "C-H-M-v" 'puni-kill-line
+   "C-H-M-z" 'puni-backward-kill-line
+   "A-C-s-d" 'puni-forward-sexp
+   "A-C-s-e" 'puni-backward-sexp
+   "A-C-s-r" 'puni-beginning-of-sexp
+   "A-C-s-f" 'puni-end-of-sexp
+   "A-C-H-j" 'puni-mark-sexp-at-point
+   "A-C-H-k" 'puni-mark-sexp-around-point))
+#+end_src
+
 ** hideshow
 :PROPERTIES:
 :ID:       8E6459FA-9978-42F8-9DAC-C4D7FB385F97
@@ -9678,25 +9679,6 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
             (concat "  |  " (propertize oneline 'face 'italic))))))
 
   (global-eldoc-mode))
-#+end_src
-
-** bicycle
-:PROPERTIES:
-:ID:       0AF1245D-2786-40B9-9176-783B9B9397AD
-:END:
-
-/[[https://github.com/tarsius/bicycle][bicycle]] provides commands for cycling the visibility of outline sections and code blocks./
-
-[2023-07-22 Sat] Disabling to test whether I need it.
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package bicycle
-  :after outline
-  :demand t
-  :general
-  (outline-minor-mode-map
-   ("s-TAB" . bicycle-cycle)
-   ("S-TAB" . bicycle-cycle-global)))
 #+end_src
 
 * AI
@@ -10685,17 +10667,10 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "y" 'org-agenda-day-view
    "z" 'org-agenda-undo))
 #+end_src
+
 *** TODO Make org-agenda birthdays visible via midnight
 :PROPERTIES:
 :ID:       F42FBE14-DFB3-45D0-BE2F-13D6A57F071F
-:END:
-
-*** TODO Configure org-agenda log checks
-:PROPERTIES:
-:ID:       9FE214C2-609D-4055-91A7-EB4EEAE26348
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-18 Sat 11:30]--[2023-03-18 Sat 11:55] =>  0:25
 :END:
 
 *** TODO [#6] align tags
@@ -10710,6 +10685,7 @@ CLOCK: [2023-03-18 Sat 11:30]--[2023-03-18 Sat 11:55] =>  0:25
 :END:
 
 Similar to Google Calendar.
+
 *** SOMEDAY [#4] Show agenda task in different color if it recurs
 :PROPERTIES:
 :Effort:   0:45
@@ -10806,6 +10782,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tb" "Tlön: BAE")
           ("tbb" "Tlön: BAE: Generic " entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
+           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
+           ("tbd" "Tlön: BAE: Docs " entry
+           (id "49A79F81-8920-43FF-B1C7-B02F0962B30F")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
           ("tbi" "Tlön: BAE: Import " entry
            (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
@@ -11412,17 +11391,6 @@ CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
 :Effort:   1:00
 :END:
 
-*** TODO [#4] Move archives to external file, preserving structure
-:PROPERTIES:
-:ID:       DF8001AB-5B1E-4B6D-A3E5-BAEFDB041171
-:Effort:   2:00
-:END:
-:LOGBOOK:
-CLOCK: [2023-02-15 Wed 05:58]--[2023-02-15 Wed 06:33] =>  0:35
-:END:
-
-I think Munilo Pereira had a package that allowed for this.
-
 ** org-archive-hierarchically
 :PROPERTIES:
 :ID:       27C3C7F9-C040-4844-AC5A-762BBC26C18F
@@ -11789,6 +11757,10 @@ Set custom speed commands.
 I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), so I can't hit ~C-TAB~, to which ~org-force-cycle-archived~ is bound. Since this is a command I very rarely execute, I don't want to waste a key chord by rebinding the function to it. Instead, I set a custom speed command that lets me call that function with ~c~ (which replaces the default speed key binding for ~org-cycle~).
 
 ** ol
+:PROPERTIES:
+:ID:       6BA48DB9-1861-40A3-9811-1B5D9F0E350E
+:END:
+
 :PROPERTIES:
 :ID:       9C00589B-C296-48BA-BD7A-B50992624AB0
 :END:
@@ -12323,6 +12295,21 @@ an org drawer."
 :ID:       67333293-EE6D-4936-8C88-07F5AE193B81
 :END:
 
+** org-contacts
+:PROPERTIES:
+:ID:       63430292-5227-42B5-ABDC-4630C719E9D1
+:END:
+
+/[[https://repo.or.cz/org-contacts.git][org-contacts]] is a contacts management system for Org Mode./
+
+#+begin_src emacs-lisp
+(use-package org-contacts
+  :after org
+  :demand t
+  :config
+  (setq org-contacts-files '("/Users/pablostafforini/Library/CloudStorage/Dropbox/repos/babel/etc/contacts.org")))
+#+end_src
+
 ** org-autosort
 :PROPERTIES:
 :ID:       1BC53647-A492-4EA3-A9A5-352C71119629
@@ -12815,29 +12802,6 @@ https://github.com/hieutkt/.doom.d/blob/master/config.el#L690-L742
 :END:
 
 https://commonplace.doubleloop.net/adding-timestamps-to-org-roam-notes
-
-*** TODO [#4] Figure out how to search for files with a particular tag with ~org-roam~
-:PROPERTIES:
-:ID:       C4B5F6B8-9E88-43E0-ACA3-43954D2BA254
-:Effort:   0:30
-:END:
-
-*** TODO [#5] Make ~org-roam-node-insert~ show full path
-:PROPERTIES:
-:ID:       D25E187C-C351-48D6-B617-0A6A0DF0869F
-:Effort:   0:30
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-15 Fri 17:03]--[2022-07-15 Fri 17:33] =>  0:30
-:END:
-
-*** TODO [#4] Diagnose issue with idle timer
-:PROPERTIES:
-:Effort:   1:00
-:ID:       C6B17ACE-E5CB-4997-97D7-8ACAA33E7895
-:END:
-
-Run org-roam with minimal config and see if the problem with idle times persist
 
 *** TODO [#5] Investigate if org-roam has a way to resolve links when exporting
 :PROPERTIES:
@@ -14680,8 +14644,6 @@ value is copied to the kill ring."
   (setq ebib-extra-fields
         '((biblatex "abstract" "keywords" "origdate" "langid" "translation" "narrator" "file" "timestamp" "rating" "crossref" "=key=")
           (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
-  (setq ebib-keywords tlon-babel-file-tags)
-  (setq ebib-keywords-add-new-to-canonical nil)
 
   ;; unhide some fields
   (setq ebib-hidden-fields
@@ -15653,7 +15615,16 @@ sensible defaults."
       (ebib-get-field-value field key ebib--cur-db t t t)))
 
   (defun ps/ebib-get-id-or-url ()
-    "Get the ID or URL of the entry at point using `tlon-biblio'."
+    "Get the ID or URL of the entry at point."
+    (when-let ((id-or-url (catch 'found
+                            (dolist (field '("doi" "isbn" "url"))
+                              (when-let ((value (ps/ebib-get-field-value field)))
+                                (throw 'found value))))))
+      id-or-url))
+
+  (defun ps/ebib-fetch-id-or-url ()
+    "Fetch the ID or URL of the entry at point.
+Fetching is done using `tlon-biblio'."
     (let ((title (ps/ebib-get-field-value "title"))
           (author (ps/ebib-get-field-value "author")))
       (pcase (ps/ebib-get-supertype)
@@ -15662,6 +15633,11 @@ sensible defaults."
         ("film" (concat "https://www.imdb.com/title/" (tlon-biblio-search-imdb
                                                        (tlon-biblio-translate-title-to-english title))))
         (_ (ps/ebib-get-field-value "url")))))
+
+  (defun ps/ebib-get-or-fetch-id-or-url ()
+    "Get the ID or URL of the entry at point, or fetch it if missing."
+    (or (ps/ebib-get-id-or-url)
+        (ps/ebib-fetch-id-or-url)))
 
   (defun ps/ebib-set-id (&optional id)
     "Add an ID to the current entry, if missing."
@@ -15672,7 +15648,7 @@ sensible defaults."
                    ("book" "isbn")
                    ("article" "doi")
                    ("film" "url")))
-          (id (or id (ps/ebib-get-id-or-url))))
+          (id (or id (ps/ebib-fetch-id-or-url))))
       (when (ps/ebib-get-field-value field)
         (user-error "ID field is not empty."))
       (ebib-set-field-value field id key db)
@@ -15682,11 +15658,13 @@ sensible defaults."
                                                (ebib-db-has-key key dependent))
                                              (ebib--list-dependents db)))))
 
-  (defun ps/ebib-import-field (field)
+  (defun ps/ebib-fetch-field-value (field)
+    "Fetch the value of FIELD for the entry at point.
+Fetching is done using `tlon-biblio'."
     (unless (eq major-mode 'ebib-entry-mode)
       (error "Not in `ebib-entry-mode'"))
-    (if-let ((id (ps/ebib-get-id-or-url)))
-        (let ((entry (zotra-get-entry id))
+    (if-let ((id (ps/ebib-get-or-fetch-id-or-url)))
+        (let ((entry (zotra-get-entry id (not (ps/string-is-url-p id))))
               value)
           (with-temp-buffer (insert entry)
                             (setq value (bibtex-autokey-get-field field)))
@@ -15701,13 +15679,22 @@ sensible defaults."
                                                              (ebib--list-dependents ebib--cur-db)))))
       (user-error "No ID found for the current entry")))
 
-  (defun ps/ebib-import-keywords ()
-    "Import keywords for the current entry and put them in the associated org file."
+  (defun ps/ebib-fetch-abstract ()
+    "Fetch the abstract of the entry at point."
     (interactive)
-    (ps/ebib-import-field "keywords"))
+    (let ((abstract (ps/ebib-get-field-value "abstract")))
+      (when (or
+             (not abstract)
+             (y-or-n-p "Abstract already exists. Overwrite?"))
+        (ps/ebib-fetch-field-value "abstract"))))
+
+  (defun ps/ebib-fetch-keywords ()
+    "Fetch keywords for the entry at point and put them in the associated org file."
+    (interactive)
+    (ps/ebib-fetch-field-value "keywords"))
 
   (defun ps/ebib-export-keywords ()
-    "Export keywords in current entry to its associated note file."
+    "Export keywords in entry at point to its associated note file."
     (interactive)
     (when-let* ((key (ebib--get-key-at-point))
                 (field "keywords")
@@ -15772,7 +15759,7 @@ sensible defaults."
    "u" 'ebib-browse-url
    "V" 'ps/ebib-search-internet-archive
    "w" 'ps/ebib-download-dwim
-   "W" 'ps/ebib-import-keywords
+   "W" 'ps/ebib-fetch-keywords
    "x" 'ps/ebib-search-university-of-toronto
    "y" 'ps/ebib-search-hathitrust
    "z" 'ps/ebib-search-google-scholar
@@ -19542,13 +19529,13 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-cookies . (file-name-concat ps/dir-google-drive "Apps/Chrome/cookies.txt"))
  (ps/file-work . (file-name-concat ps/dir-notes "work-dashboard.org"))
  (ps/file-tlon-ledger-schedule-file . (file-name-concat ps/dir-dropbox-tlon-ledger "ledger-schedule.ledger"))
- (ps/file-tlon-bae . (file-name-concat ps/dir-notes "biblioteca-altruismo-eficaz.org"))
+ (ps/file-tlon-babel . (file-name-concat ps/dir-notes "babel.org"))
  (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
  (ps/personal-bibliography-files . (list ps/file-personal-bibliography-new ps/file-personal-bibliography-old))
  ;; TODO: define this properly
  (ps/tlon-bibliography-files . (list
-				(expand-file-name "~/Library/CloudStorage/Dropbox/repos/babel/refs/fluid.bib")
-				(expand-file-name "~/Library/CloudStorage/Dropbox/repos/babel/refs/stable.bib")))
+                                (expand-file-name "~/Library/CloudStorage/Dropbox/repos/babel/refs/fluid.bib")
+                                (expand-file-name "~/Library/CloudStorage/Dropbox/repos/babel/refs/stable.bib")))
  (ps/all-bibliography-files . (append ps/personal-bibliography-files ps/tlon-bibliography-files))
  (ps/face-fixed-pitch . "SauceCodePro Nerd Font")
  (ps/face-fixed-pitch-size .  115)

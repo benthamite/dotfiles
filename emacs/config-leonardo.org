@@ -364,7 +364,7 @@ one hour only."
  (ps/file-tlon-docs-bae . (file-name-concat ps/dir-tlon-docs "bae.org"))
  (ps/file-tlon-docs-core . (file-name-concat ps/dir-tlon-docs "core.org"))
  (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
- (ps/file-tlon-bae . ps/file-tlon-tareas-leo)
+ (ps/file-tlon-babel . ps/file-tlon-tareas-leo)
  (ps/face-fixed-pitch . "Source Code Pro")
  (ps/face-variable-pitch . "Source Serif Pro")
  (ps/monitor-type . (cdr (assoc 'name (frame-monitor-attributes))))

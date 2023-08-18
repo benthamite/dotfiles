@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: set-new-bindings
+# key: snb
+# contributor: Pablo Stafforini
+# --
+$1: set new bindings

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: add key
+# key: aa
+# contributor: Pablo Stafforini
+# --
+Add `(tlon-babel-get-commit-key)`

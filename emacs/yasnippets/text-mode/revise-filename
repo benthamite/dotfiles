@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: revise filename
+# key: r
+# contributor: Pablo Stafforini
+# --
+Revise `(file-name-nondirectory (tlon-babel-magit-get-commit-file))`

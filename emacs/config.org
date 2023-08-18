@@ -15679,13 +15679,22 @@ Fetching is done using `tlon-biblio'."
                                                              (ebib--list-dependents ebib--cur-db)))))
       (user-error "No ID found for the current entry")))
 
-  (defun ps/ebib-import-keywords ()
-    "Import keywords for the current entry and put them in the associated org file."
+  (defun ps/ebib-fetch-abstract ()
+    "Fetch the abstract of the entry at point."
     (interactive)
-    (ps/ebib-import-field "keywords"))
+    (let ((abstract (ps/ebib-get-field-value "abstract")))
+      (when (or
+             (not abstract)
+             (y-or-n-p "Abstract already exists. Overwrite?"))
+        (ps/ebib-fetch-field-value "abstract"))))
+
+  (defun ps/ebib-fetch-keywords ()
+    "Fetch keywords for the entry at point and put them in the associated org file."
+    (interactive)
+    (ps/ebib-fetch-field-value "keywords"))
 
   (defun ps/ebib-export-keywords ()
-    "Export keywords in current entry to its associated note file."
+    "Export keywords in entry at point to its associated note file."
     (interactive)
     (when-let* ((key (ebib--get-key-at-point))
                 (field "keywords")
@@ -15750,7 +15759,7 @@ Fetching is done using `tlon-biblio'."
    "u" 'ebib-browse-url
    "V" 'ps/ebib-search-internet-archive
    "w" 'ps/ebib-download-dwim
-   "W" 'ps/ebib-import-keywords
+   "W" 'ps/ebib-fetch-keywords
    "x" 'ps/ebib-search-university-of-toronto
    "y" 'ps/ebib-search-hathitrust
    "z" 'ps/ebib-search-google-scholar

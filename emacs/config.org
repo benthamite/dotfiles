@@ -83,6 +83,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#server][server]]
   - [[#async][async]]
   - [[#emacsql][emacsql]]
+  - [[#prot-simple][prot-simple]]
   - [[#prot-common][prot-common]]
   - [[#misc][misc.]]
 - [[#display][display]]
@@ -1649,6 +1650,35 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 #+begin_src emacs-lisp
 (use-package emacsql
   :demand t)
+#+end_src
+
+** prot-simple
+:PROPERTIES:
+:ID:       6C67743E-7250-4BC5-B496-2D969EF2D015
+:END:
+
+/[[https://git.sr.ht/~protesilaos/dotfiles/tree/master/item/emacs/%2Eemacs.d/prot-lisp/prot-simple.el][prot-simple]] is a set of common commands used by Protesilaos Stavrou's unreleased "packages"./
+
+Note Prot's clarification:
+
+#+begin_quote
+Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
+#+end_quote
+
+
+#+begin_src emacs-lisp
+(use-package prot-simple
+  :elpaca (prot-simple
+           :host sourcehut
+           :repo "protesilaos/dotfiles"
+           :files ("emacs/.emacs.d/prot-lisp/prot-simple.el"))
+  :demand t
+  :config
+  (setq prot-simple-date-specifier "%F")
+  (setq prot-simple-time-specifier "%R %z")
+
+  :general
+  ("M-s-=" 'prot-simple-insert-date))
 #+end_src
 
 ** prot-common

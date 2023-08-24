@@ -3931,11 +3931,8 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (setq enable-local-variables :all)
   (setq insert-directory-program "/opt/homebrew/bin/gls") ; use coreutils to avoid 'listing directory failed' error
   (setq auto-save-no-message t) ; don't emit message when auto-saving
-  (setq backup-by-copying t) ; don't clobber symlink
-  (setq kept-new-versions 100) ; keep 100 latest versions
-  (setq kept-old-versions 10) ; keep 10 earliest versions
   (setq delete-old-versions t) ; don't ask about deleting old versions
-  (setq version-control t) ; number backups
+  (setq version-control 'never) ; number backups
 
   (add-to-list 'auto-mode-alist '("\\.mdx\\'" . markdown-mode))
 

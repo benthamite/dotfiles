@@ -237,6 +237,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#embark][embark]]
   - [[#consult][consult]]
   - [[#consult-dir][consult-dir]]
+  - [[#consult-git-log-grep][consult-git-log-grep]]
   - [[#consult-gh][consult-gh]]
   - [[#consult-yasnippet][consult-yasnippet]]
   - [[#consult-spotify][consult-spotify]]
@@ -7141,6 +7142,16 @@ buffer are offered."
 
   :general
   ("H-B" 'consult-dir))
+#+end_src
+
+** consult-git-log-grep
+:PROPERTIES:
+:ID:       BA613BB1-A3CF-4C47-973A-6B54091B3C0E
+:END:
+
+#+begin_src emacs-lisp
+(use-package consult-git-log-grep
+  :demand t)
 #+end_src
 
 ** consult-gh

@@ -6806,12 +6806,13 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 #+begin_src emacs-lisp
 (use-package substitute
   :elpaca (substitute
-             :host sourcehut
-             :repo "protesilaos/substitute")
+           :host sourcehut
+           :repo "protesilaos/substitute")
   :demand t
   :general
-   ("A-H-s" 'substitute-target-in-buffer
-   "C-u A-H-s" 'substitute-target-in-defun))
+  ("A-H-b" 'substitute-target-in-buffer)
+  (prog-mode-map
+   "A-H-d" 'substitute-target-in-defun))
 #+end_src
 
 ** visual-regexp

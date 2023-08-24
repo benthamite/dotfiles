@@ -13892,18 +13892,13 @@ and sets the value of the field for all entries to 'Tlön'."
         (ps/bibtex-add-database-field file))))
 
   (defun ps/bibtex-auto-clean-entry ()
-    "Clean up bibtex entry at poiint upon saving."
-    (remove-hook 'after-save-hook 'ps/bibtex-auto-clean-entry t)
-    (when (string= (file-name-directory (buffer-file-name))
-                   )
-      (ps/bibtex-add-or-update-field "database" "Tlön"))
-    (bibtex-clean-entry)
-    (save-buffer)
-    (add-hook 'after-save-hook 'ps/bibtex-auto-clean-entry nil t))
+    "Clean up bibtex entry at point upon saving."
+    (let ((after-save-hook nil))
+      (ps/bibtex-add-or-update-field "database" "Tlön")
+      (tlon-babel-add-lang-id-to-entry)
+      (bibtex-clean-entry)
+      (save-buffer)))
 
-  (add-hook 'bibtex-mode-hook
-            (lambda ()
-              (add-hook 'after-save-hook 'ps/bibtex-auto-clean-entry nil t)))
   :general
   (bibtex-mode-map
    "s-a" 'bibtex-set-field

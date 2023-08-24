@@ -14965,6 +14965,9 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       (default
        (beep))))
 
+  (defvar ps/ebib-download-use-vpn nil
+    "Whether to use a VPN when downloading content.")
+
   (defvar ps/ebib-library-genesis
     '("Library Genesis"
       "https://libgen.lc/index.php?req="
@@ -15116,9 +15119,14 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
            (query (url-hexify-string query)))
       (browse-url (concat prefix query suffix))))
 
+  (setq ps/ebib-download-use-vpn t)
+
   (defun ps/ebib--search-multi (query functions)
     "Search for QUERY with each function in FUNCTIONS."
     (dolist (fun functions)
+      (when (and ps/ebib-download-use-vpn
+                 (string-match "-download-" (symbol-name fun)))
+        (mullvad-connect-to-website "Library Genesis" 5))
       (funcall fun query)))
 
   (defun ps/ebib-search-dwim ()

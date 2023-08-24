@@ -5611,36 +5611,8 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   ;; right-click on your location, and select the coordinates.
   ;; You should then set these values in YOUR VARIABLES file
 
-  ;; Adapted from Prot
-  (defcustom ps/date-specifier "%F"
-    "Date specifier for `format-time-string'.
-Used by `ps/insert-date'."
-    :type 'string)
-
-  (defcustom ps/time-specifier "%R %z"
-    "Time specifier for `format-time-string'.
-Used by `ps/insert-date'."
-    :type 'string)
-
-  (defun ps/insert-date (&optional arg)
-    "Insert the current date as `ps/date-specifier'.
-
-With optional prefix ARG (\\[universal-argument]) also append the
-current time understood as `ps/time-specifier'.
-
-When region is active, delete the highlighted text and replace it
-with the specified date."
-    (interactive "P")
-    (let* ((date ps/date-specifier)
-           (time ps/time-specifier)
-           (format (if arg (format "%s %s" date time) date)))
-      (when (use-region-p)
-        (delete-region (region-beginning) (region-end)))
-      (insert (format-time-string format))))
-
   :general
   ("C-d" 'calendar
-   "M-s-=" 'ps/insert-date
    "s-=" "C-u A-s-=")
   (calendar-mode-map
    "H-m" 'calendar-set-mark

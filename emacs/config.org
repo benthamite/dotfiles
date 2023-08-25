@@ -7917,6 +7917,8 @@ e.g. ~nvm~ isn't recognized by eshell
 (use-package jinx
   :demand t
   :config
+  (setq jinx-languages "en")
+  
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
   (defun ps/jinx--add-to-abbrev (overlay word)
     "Add abbreviation to `text-mode-abbrev-table'.

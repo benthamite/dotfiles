@@ -83,6 +83,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#server][server]]
   - [[#async][async]]
   - [[#emacsql][emacsql]]
+  - [[#prot-simple][prot-simple]]
   - [[#prot-common][prot-common]]
   - [[#misc][misc.]]
 - [[#display][display]]
@@ -237,6 +238,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#embark][embark]]
   - [[#consult][consult]]
   - [[#consult-dir][consult-dir]]
+  - [[#consult-git-log-grep][consult-git-log-grep]]
   - [[#consult-gh][consult-gh]]
   - [[#consult-yasnippet][consult-yasnippet]]
   - [[#consult-spotify][consult-spotify]]
@@ -1648,6 +1650,35 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 #+begin_src emacs-lisp
 (use-package emacsql
   :demand t)
+#+end_src
+
+** prot-simple
+:PROPERTIES:
+:ID:       6C67743E-7250-4BC5-B496-2D969EF2D015
+:END:
+
+/[[https://git.sr.ht/~protesilaos/dotfiles/tree/master/item/emacs/%2Eemacs.d/prot-lisp/prot-simple.el][prot-simple]] is a set of common commands used by Protesilaos Stavrou's unreleased "packages"./
+
+Note Prot's clarification:
+
+#+begin_quote
+Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
+#+end_quote
+
+
+#+begin_src emacs-lisp
+(use-package prot-simple
+  :elpaca (prot-simple
+           :host sourcehut
+           :repo "protesilaos/dotfiles"
+           :files ("emacs/.emacs.d/prot-lisp/prot-simple.el"))
+  :demand t
+  :config
+  (setq prot-simple-date-specifier "%F")
+  (setq prot-simple-time-specifier "%R %z")
+
+  :general
+  ("M-s-=" 'prot-simple-insert-date))
 #+end_src
 
 ** prot-common
@@ -3396,6 +3427,9 @@ indent block only, else indent whole buffer."
 #+begin_src emacs-lisp
 (use-package vundo
   :demand t
+  :config
+  (setq undo-limit 1600000)
+
   :general
   (vundo-mode-map
    "j" 'vundo-backward
@@ -3897,11 +3931,8 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (setq enable-local-variables :all)
   (setq insert-directory-program "/opt/homebrew/bin/gls") ; use coreutils to avoid 'listing directory failed' error
   (setq auto-save-no-message t) ; don't emit message when auto-saving
-  (setq backup-by-copying t) ; don't clobber symlink
-  (setq kept-new-versions 100) ; keep 100 latest versions
-  (setq kept-old-versions 10) ; keep 10 earliest versions
   (setq delete-old-versions t) ; don't ask about deleting old versions
-  (setq version-control t) ; number backups
+  (setq version-control 'never) ; number backups
 
   (add-to-list 'auto-mode-alist '("\\.mdx\\'" . markdown-mode))
 
@@ -5580,36 +5611,8 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   ;; right-click on your location, and select the coordinates.
   ;; You should then set these values in YOUR VARIABLES file
 
-  ;; Adapted from Prot
-  (defcustom ps/date-specifier "%F"
-    "Date specifier for `format-time-string'.
-Used by `ps/insert-date'."
-    :type 'string)
-
-  (defcustom ps/time-specifier "%R %z"
-    "Time specifier for `format-time-string'.
-Used by `ps/insert-date'."
-    :type 'string)
-
-  (defun ps/insert-date (&optional arg)
-    "Insert the current date as `ps/date-specifier'.
-
-With optional prefix ARG (\\[universal-argument]) also append the
-current time understood as `ps/time-specifier'.
-
-When region is active, delete the highlighted text and replace it
-with the specified date."
-    (interactive "P")
-    (let* ((date ps/date-specifier)
-           (time ps/time-specifier)
-           (format (if arg (format "%s %s" date time) date)))
-      (when (use-region-p)
-        (delete-region (region-beginning) (region-end)))
-      (insert (format-time-string format))))
-
   :general
   ("C-d" 'calendar
-   "M-s-=" 'ps/insert-date
    "s-=" "C-u A-s-=")
   (calendar-mode-map
    "H-m" 'calendar-set-mark
@@ -6803,12 +6806,13 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 #+begin_src emacs-lisp
 (use-package substitute
   :elpaca (substitute
-             :host sourcehut
-             :repo "protesilaos/substitute")
+           :host sourcehut
+           :repo "protesilaos/substitute")
   :demand t
   :general
-   ("A-H-s" 'substitute-target-in-buffer
-   "C-u A-H-s" 'substitute-target-in-defun))
+  ("A-H-b" 'substitute-target-in-buffer)
+  (prog-mode-map
+   "A-H-d" 'substitute-target-in-defun))
 #+end_src
 
 ** visual-regexp
@@ -7141,6 +7145,16 @@ buffer are offered."
 
   :general
   ("H-B" 'consult-dir))
+#+end_src
+
+** consult-git-log-grep
+:PROPERTIES:
+:ID:       BA613BB1-A3CF-4C47-973A-6B54091B3C0E
+:END:
+
+#+begin_src emacs-lisp
+(use-package consult-git-log-grep
+  :demand t)
 #+end_src
 
 ** consult-gh
@@ -7897,20 +7911,14 @@ e.g. ~nvm~ isn't recognized by eshell
 :ID:       23D402FB-7C7D-454B-9895-B147F0C9950D
 :END:
 
-/[[https://github.com/minad/jinx][jinx]] is a just-in-time spell-checker for Emacs./
+/[[https://github.com/minad/jinx][jinx]] is a highly performant spell-checker for Emacs./
 
 #+begin_src emacs-lisp
 (use-package jinx
   :demand t
   :config
   (setq jinx-languages "en")
-
-  (add-to-list 'vertico-multiform-categories
-               '(jinx grid (vertico-grid-annotate . 20)))
-
-  (dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
-    (add-hook hook #'jinx-mode))
-
+  
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
   (defun ps/jinx--add-to-abbrev (overlay word)
     "Add abbreviation to `text-mode-abbrev-table'.
@@ -7922,6 +7930,12 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
       (define-abbrev text-mode-abbrev-table abbrev word)))
 
   (advice-add 'jinx--correct-replace :before #'ps/jinx--add-to-abbrev)
+
+  (add-to-list 'vertico-multiform-categories
+               '(jinx grid (vertico-grid-annotate . 20)))
+
+  (dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
+    (add-hook hook #'jinx-mode))
 
   :general
   ((jinx-correct-map jinx-overlay-map jinx-repeat-map)
@@ -8569,32 +8583,6 @@ With prefix argument, prompt for the URL to use."
           (if arg
               (insert (format "[%s](%s)" name (read-string "URL: ")))
             (insert name))))))
-
-  (defun ps/markdown-sort-elements-in-paragraph (separator)
-    "Sort alphabetically the elements in the current paragraph."
-    (save-excursion
-      ;; Get paragraph boundaries
-      (let* ((para-start (progn (backward-paragraph)
-                                (skip-chars-forward "\n\t ") (point)))
-             (para-end (progn (end-of-paragraph-text)
-                              (point)))
-             ;; Get paragraph text, separate the links
-             (para-text (buffer-substring-no-properties para-start para-end))
-             (link-list (split-string para-text separator))
-             ;; Trim and sort the links
-             (sorted-links (sort (mapcar 'string-trim link-list)
-                                 'string<)))
-        ;; Clear the current paragraph
-        (delete-region para-start para-end)
-        ;; Replace it with sorted links
-        (goto-char para-start)
-        (insert (mapconcat 'identity sorted-links separator)))))
-
-  (defun ps/markdown-sort-links-in-paragraphs ()
-    "Sort the links in the current paragraph alpabetically.
-Assumes that the links are separated by ` • '"
-    (interactive)
-    (ps/markdown-sort-elements-in-paragraph " • "))
 
   (defun ps/markdown-insert-locator ()
     "Insert locator in Markdown citation at point."
@@ -13892,18 +13880,13 @@ and sets the value of the field for all entries to 'Tlön'."
         (ps/bibtex-add-database-field file))))
 
   (defun ps/bibtex-auto-clean-entry ()
-    "Clean up bibtex entry at poiint upon saving."
-    (remove-hook 'after-save-hook 'ps/bibtex-auto-clean-entry t)
-    (when (string= (file-name-directory (buffer-file-name))
-                   )
-      (ps/bibtex-add-or-update-field "database" "Tlön"))
-    (bibtex-clean-entry)
-    (save-buffer)
-    (add-hook 'after-save-hook 'ps/bibtex-auto-clean-entry nil t))
+    "Clean up bibtex entry at point upon saving."
+    (let ((after-save-hook nil))
+      (ps/bibtex-add-or-update-field "database" "Tlön")
+      (tlon-babel-add-lang-id-to-entry)
+      (bibtex-clean-entry)
+      (save-buffer)))
 
-  (add-hook 'bibtex-mode-hook
-            (lambda ()
-              (add-hook 'after-save-hook 'ps/bibtex-auto-clean-entry nil t)))
   :general
   (bibtex-mode-map
    "s-a" 'bibtex-set-field
@@ -14965,6 +14948,9 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
       (default
        (beep))))
 
+  (defvar ps/ebib-download-use-vpn nil
+    "Whether to use a VPN when downloading content.")
+
   (defvar ps/ebib-library-genesis
     '("Library Genesis"
       "https://libgen.lc/index.php?req="
@@ -15116,9 +15102,14 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
            (query (url-hexify-string query)))
       (browse-url (concat prefix query suffix))))
 
+  (setq ps/ebib-download-use-vpn t)
+
   (defun ps/ebib--search-multi (query functions)
     "Search for QUERY with each function in FUNCTIONS."
     (dolist (fun functions)
+      (when (and ps/ebib-download-use-vpn
+                 (string-match "-download-" (symbol-name fun)))
+        (mullvad-connect-to-website "Library Genesis" 5))
       (funcall fun query)))
 
   (defun ps/ebib-search-dwim ()
@@ -17040,6 +17031,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
     ;; my browsing habits.
     (dolist (regex '("airbnb\\.com"
                      "airtable\\.com"
+                     "airwander\\.com"
                      "alignmentforum\\.com"
                      "amazon\\."
                      "archive\\.org"
@@ -17047,9 +17039,10 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "audiobookbay"
                      "berkeley\\.edu"
                      "beyondpricing\\.com"
+                     "dhl\\."
                      "bloomberg\\.com"
                      "calendly\\.com"
-                     "kentclarkcenter\\.org"
+                     "cleverlayover\\.com"
                      "connectedpapers\\.com"
                      "doi\\.org"
                      "dropbox\\.com"
@@ -17067,6 +17060,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
                      "imdb\\.com"
                      "interactivebrokers\\.co"
                      "jit\\.si"
+                     "kentclarkcenter\\.org"
                      "keyboardmaestro\\.com"
                      "letterboxd\\.com"
                      "libgen\\."
@@ -19333,8 +19327,9 @@ And finally, the section you've all been waiting for.
    "H-." 'tlon-babel-read-forward
    "H-;" 'tlon-babel-read-target-start-or-stop)
   ((gfm-mode-map markdown-mode-map)
+   "A-s-e" 'tlon-babel-yaml-edit-field
    "s-c" 'tlon-babel-copy-dwim
-   "s-u" 'tlon-babel-insert-tag)
+   "s-u" 'tlon-babel-markdown-insert-tag)
   (github-review-mode-map
    "s-c" 'tlon-babel-submit-comment-revisions))
 #+end_src
@@ -19390,15 +19385,9 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 #+begin_src emacs-lisp :tangle (print tlon-init-variables-path)
 (
  (ps/personal-name . "Pablo Stafforini")
- (ps/personal-gmail-unus . "pablo.staff") ; will this protect against spammers? :P
- (ps/personal-email-δῠ́ο . "orini.com")
- (ps/tlon-email-द्वे . "ared@gmail.com")
- (ps/personal-gmail-duo . "orini@gmail.com")
- (ps/tlon-email-एकम् . "tlon.sh")
- (ps/personal-email-εἷς . "pablo@staff")
- (ps/personal-gmail . (concat ps/personal-gmail-unus ps/personal-gmail-duo))
- (ps/personal-email . (concat ps/personal-email-εἷς ps/personal-email-δῠ́ο))
- (ps/tlon-email . (concat ps/tlon-email-एकम् ps/tlon-email-द्वे))
+ (ps/personal-gmail . (getenv "PERSONAL_GMAIL"))
+ (ps/personal-email . (getenv "PERSONAL_EMAIL"))
+ (ps/tlon-email . (getenv "TLON_EMAIL"))
  (ps/dir-root . "/")
  (ps/dir-system-apps . "/Applications/")
  (ps/dir-user . (getenv "HOME"))

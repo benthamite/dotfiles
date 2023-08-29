@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: goku-des
+# key: gd
+# contributor: Pablo Stafforini
+# --
+{:des "$1"
+ :rules [
+         [:$2 :$3 :$4]
+         ]}
+$0	 

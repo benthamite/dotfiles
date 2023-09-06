@@ -316,7 +316,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#python][python]]
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
-  - [[#flymake-json][flymake-json]]
   - [[#csv-mode][csv-mode]]
   - [[#js2-mode][js2-mode]]
   - [[#puni][puni]]
@@ -9592,16 +9591,6 @@ instead of JSON."
             (lambda ()
               (when (equal buffer-file-name tlon-babel-file-contacts)
                 (add-hook 'after-save-hook #'ps/json-mode-validate nil t)))))
-#+end_src
-
-** flymake-json
-:PROPERTIES:
-:ID:       DA345E42-66A9-411B-AEDD-B087EA7267A7
-:END:
-
-#+begin_src emacs-lisp
-(use-package flymake-json
-  :demand t)
 #+end_src
 
 ** csv-mode

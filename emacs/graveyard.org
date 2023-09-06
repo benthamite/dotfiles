@@ -8,6 +8,18 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** flymake-json
+:PROPERTIES:
+:ID:       DA345E42-66A9-411B-AEDD-B087EA7267A7
+:END:
+
+[2023-08-26 Sat] No longer using ~flymake~.
+
+#+begin_src emacs-lisp
+(use-package flymake-json
+  :demand t)
+#+end_src
+
 ** flymake
 :PROPERTIES:
 :ID:       2259FE72-2958-4507-AD6D-4CB3F9B2E676

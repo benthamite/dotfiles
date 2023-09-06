@@ -8502,8 +8502,8 @@ argument (ARG), always force prompt."
              :host github
              :repo "tmalsburg/txl.el")
   :config
-  (setq txl-languages '(ES . EN-US))
-  (setq txl-deepl-api-key (auth-source-pass-get "api" (concat "chrome/deepl.com/" ps/personal-email)))
+  (setq txl-languages '(EN-US . ES))
+  (setq txl-deepl-api-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)))
 
   :general
   ("A-H-y" 'txl-translate-region-or-paragraph)

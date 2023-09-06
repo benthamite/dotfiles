@@ -18435,6 +18435,7 @@ And finally, the section you've all been waiting for.
            :host github
            :repo "tlon-team/tlon-biblio"
            :depth nil) ; clone entire repo, not just last commit
+  :after ebib zotra
   :demand t
   :general
   (ebib-index-mode-map

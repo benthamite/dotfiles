@@ -1829,7 +1829,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
   :demand t
   :after org
   :config
-  (setq org-modern-table nil)
+  (setq org-modern-table nil) ; doesn’t work well with variable-pitch: github.com/minad/org-modern/issues/99
   (setq org-modern-statistics nil)
   (setq org-modern-star '("◉" "◉" "◉" "◉" "◉"))
   (setq org-modern-list '((42 . "○")

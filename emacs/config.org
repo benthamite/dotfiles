@@ -7186,7 +7186,6 @@ buffer are offered."
    "A-H-i" 'consult-info
    "H-R" 'consult-history
    "H-V" 'consult-yank-pop
-   "H-f" 'ps/consult-locate-file-current
    "H-F" 'ps/consult-locate-file-home
    "A-H-f" 'ps/consult-locate-file-anywhere
    "H-k" 'ps/consult-locate-current

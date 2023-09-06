@@ -310,6 +310,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#lsp-mode][lsp-mode]]
   - [[#lsp-ui][lsp-ui]]
   - [[#elisp-mode][elisp-mode]]
+  - [[#s][s]]
   - [[#debug][debug]]
   - [[#edebug][edebug]]
   - [[#backtrace][backtrace]]
@@ -9488,6 +9489,18 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 :ID:       89FDC8BC-DD5B-4616-8E73-37EDD9C088C1
 :END:
 Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-customary-to-put-many-closing-parentheses-on-one-line-in-lisp-based-la][here]].
+
+** s
+:PROPERTIES:
+:ID:       127B298B-BD3E-42BD-8032-D20B29075DA0
+:END:
+
+/[[https://github.com/magnars/s.el][s]] is a string manipulation library./
+
+#+begin_src emacs-lisp
+(use-package s
+  :demand t)
+#+end_src
 
 ** debug
 :PROPERTIES:

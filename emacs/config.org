@@ -13772,7 +13772,7 @@ Formats current entry according to variable `bibtex-entry-format'."
     list)
 
   ;; Replace 'online' entry type
-  (ps/ebib-replace-element-by-name
+  (ps/bibtex-replace-element-by-name
    bibtex-biblatex-entry-alist
    "Online" '("Online" "Online Resource"
               (("author" nil nil 0) ("title") ("journaltitle" nil nil 3)

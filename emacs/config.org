@@ -317,6 +317,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#macrostep][macrostep]]
   - [[#clojure][clojure]]
   - [[#python][python]]
+  - [[#emacs-ipython-notebook][emacs-ipython-notebook]]
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
   - [[#csv-mode][csv-mode]]
@@ -9587,6 +9588,19 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
    "s-s" 'python-shell-send-string
    "s-r" 'python-shell-send-region
    "s-e" 'python-shell-send-statement))
+#+end_src
+
+** emacs-ipython-notebook
+:PROPERTIES:
+:ID:       3F0CEFB0-2983-4659-AB1F-6936AD8BF0FC
+:END:
+
+/[[https://github.com/millejoh/emacs-ipython-notebook][emacs-ipython-notebook]] is a Jupyter notebook client in Emacs./
+
+This needs to be configured.
+
+#+begin_src emacs-lisp
+(use-package ein)
 #+end_src
 
 ** applescript-mode

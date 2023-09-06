@@ -1062,7 +1062,6 @@ CLOCK: [2021-10-05 Tue 12:20]--[2021-10-05 Tue 13:11] =>  0:51
 CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :END:
 
-
 /[[https://github.com/raxod502/el-patch][el-patch]] customizes the behavior of Emacs Lisp functions and be notified when a function so customized changes./
 
 #+begin_src emacs-lisp :results silent
@@ -1090,11 +1089,10 @@ CLOCK: [2021-03-30 Tue 08:50]--[2021-03-30 Tue 09:02] =>  0:12
   :demand t
 
   :general
-  ("H-d" 'hydra-dired/body
+  ("H-d" 'hydra-dirs/body
+   "H-f" 'hydra-files/body
    "H-l" 'hydra-org-notes/body
-   "H-O" 'hydra-major-modes/body
-   "M-t" 'hydra-straight/body
-   "M-y" 'hydra-yasnippet/body))
+   "H-O" 'hydra-major-modes/body))
 (elpaca-wait)
 #+end_src
 
@@ -1153,25 +1151,36 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
 :END:
 
 #+begin_src emacs-lisp :results silent
-(general-define-key
- "H-M-s-." (lambda! (ps/visit-file-or-switch-to-buffer ps/file-inbox-mobile))
- "H-M-s-," (lambda! (ps/visit-file-or-switch-to-buffer ps/file-inbox-desktop))
- "H-M-s-a" (lambda! (ps/org-agenda-switch-to-agenda-current-day))
- "H-M-s-b" (lambda! (ps/visit-file-or-switch-to-buffer ps/dir-tlon-babel))
- "H-M-s-c" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-config))
- "H-M-s-d" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-tlon-docs))
- "H-M-s-h" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-tlon-ledger))
- "H-M-s-i" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-anki))
- "H-M-s-j" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-ledger))
- "H-M-s-k" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-karabiner))
- "H-M-s-m" 'view-echo-area-messages
- "H-M-s-o" (lambda! (switch-to-buffer "*notes*"))
- "H-M-s-q" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-quotes))
- "H-M-s-r" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-calendar))
- "H-M-s-s" (lambda! (switch-to-buffer "*scratch*"))
- "H-M-s-v" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-films))
- "H-M-s-w" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-work))
- "H-M-s-z" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-variables)))
+(defhydra hydra-files
+  (:exit t)
+  "Buffers"
+  ("." (find-file ps/file-inbox-mobile) "inbox-mobile")
+  ("," (find-file ps/file-inbox-desktop) "inbox-desktop")
+  ("a" (ps/org-agenda-switch-to-agenda-current-day) "agenda")
+  ("c" (find-file ps/file-config) "config")
+  ("d" (find-file ps/file-tlon-docs) "tlon-docs")
+  ("h" (find-file ps/file-tlon-ledger) "tlon-ledger")
+  ("i" (find-file ps/file-anki) "anki")
+  ("j" (find-file ps/file-ledger) "ledger")
+  ("k" (find-file ps/file-karabiner) "karabiner")
+  ("o" (switch-to-buffer "*notes*") "notes")
+  ("p" (hydra-files-packages/body) "packages")
+  ("q" (find-file ps/file-quotes) "quotes")
+  ("r" (find-file ps/file-calendar) "calendar")
+  ("s" (switch-to-buffer "*scratch*") "scratch")
+  ("v" (find-file ps/file-films) "films")
+  ("w" (find-file ps/file-work) "work")
+  ("z" (find-file ps/file-variables) "variables"))
+
+(defhydra hydra-files-packages
+  (:exit t)
+  ""
+  ("b" (ps/elpaca-package-repo-dir "tlon-babel") "tlon-babel" :column "packages")
+  ("c" (ps/elpaca-package-repo-dir "tlon-core") "tlon-core" :column "packages")
+  ("l" (ps/elpaca-package-repo-dir "tlon-biblio") "tlon-biblio" :column "packages")
+  ("i" (ps/elpaca-package-repo-dir "tlon-init") "tlon-init" :column "packages")
+  ("e" (ps/elpaca-package-repo-dir "tlon-ebib") "tlon-ebib" :column "packages")
+  ("m" (ps/elpaca-package-repo-dir "mullvad") "mullvad" :column "packages"))
 #+end_src
 
 *** org headings
@@ -1266,7 +1275,7 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   ("H-TAB" (ps/org-id-notes-with-clock "TAB"))
   )
 
-(defhydra hydra-dired-tlon
+(defhydra hydra-dirs-tlon
   (:exit t)
   "Org Headings: Tlön"
   ("d" (ps/org-id-goto "") "LBDLH")
@@ -1485,43 +1494,42 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 :PROPERTIES:
 :ID:       8AD794CB-0A81-4D36-BEAC-0F85F3B34831
 :END:
+:LOGBOOK:
+CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:36] =>  0:31
+:END:
 
 :PROPERTIES:
 :ID:       D71128ED-F3CC-43E1-8C8F-8938BDE9DE16
 :END:
 #+begin_src emacs-lisp :results silent
-(defhydra hydra-dired
+(defhydra hydra-dirs
   (:exit t)
   "Dired folders"
-  ("a" (hydra-dired-google-drive/body) "apps")
+  ("a" (hydra-dirs-google-drive/body) "apps")
   ("b" (dired ps/dir-personal-bibliography) "bibliography")
   ("d" (dired ps/dir-dotfiles) "dotfiles")
   ("e" (dired ps/dir-emacs) "Emacs")
   ("i" (dired ps/dir-anki) "Anki")
   ("j" (dired ps/dir-health) "Health")
-  ("k" (dired ps/dir-PW) "PW")
-  ("m" (hydra-dired-music/body) "Music")
+  ("m" (hydra-dirs-music/body) "Music")
   ("n" (dired ps/dir-notes) "Notes")
   ("o" (dired ps/dir-google-drive) "Google Drive")
-  ("p" (dired ps/dir-people) "people")
-  ;; ("q" (dired ps/dir-youtube))
-  ("t" (hydra-dired-tlon/body) "Tlön")
-  ("H-t" (hydra-dired-tlon/body) "Tlön")
+  ("p" (dired ps/dir-people) "People")
+  ("t" (hydra-dirs-tlon/body) "Tlön")
+  ("H-t" (hydra-dirs-tlon/body) "Tlön")
   ("U" (dired ps/dir-audiobooks) "Audiobooks")
   ("v" (dired ps/dir-movies) "movies")
   ("w" (dired ps/dir-downloads) "downloads")
   ("x" (dired ps/dir-dropbox) "Dropbox")
   ("y" (dired ps/dir-library-pdf) "Library: PDF")
   ("z" (dired ps/dir-library-html) "Library: HTML")
-  ;; ("'" (dired ps/dir-) "")
-  ;; ("-" (dired ) "")
   ("." (dired-at-point) "File at point")
   ("/" (dired "/") "Root")
   ("SPC" (dired "~/") "user")
   (";" (dired-jump) "Current buffer")
   ("H-;" (dired-jump-other-window) "Current buffer in other window"))
 
-(defhydra hydra-dired-tlon
+(defhydra hydra-dirs-tlon
   (:exit t)
   "Dired folders: Tlön"
   ("b" (dired ps/dir-dropbox-tlon-BAE) "Dropbox: BAE" :column "Dropbox")
@@ -1549,22 +1557,23 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("l" (dired ps/dir-dropbox-tlon-leo) "Dropbox: leo" :column "Dropbox")
   ("H-l" (dired ps/dir-google-drive-tlon-leo) "Google Drive: leo" :column "Google Drive"))
 
-(defhydra hydra-dired-google-drive
+(defhydra hydra-dirs-google-drive
   (:exit t)
   "Dired folders: apps"
   ;; TODO: parametrize
   ("i" (dired "~/Google Drive/Apps/Anki") "Anki")
   ("c" (dired "~/Google Drive/Apps/Emacs") "Emacs")
   ("m" (dired "~/Google Drive/Apps/Keyboard Maestro") "Keyboard Maestro")
-  ("'" (hydra-dired/body) "back"))
-(defhydra hydra-dired-music
+  ("'" (hydra-dirs/body) "back"))
+
+(defhydra hydra-dirs-music
   (:exit t)
   "Dired folders: music"
   ("c" (dired ps/dir-music-classical) "classical")
   ("p" (dired ps/dir-music-popular) "popular")
   ("t" (dired ps/dir-music-tango) "tango")
   ("s" (dired ps/dir-music-to-sort) "to sort")
-  ("'" (hydra-dired/body) "back"))
+  ("'" (hydra-dirs/body) "back"))
 #+end_src
 
 ** warnings
@@ -4836,7 +4845,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
   ;; (dired-quick-sort-setup)
   :general
   (dired-mode-map
-   "T" 'hydra-dired-quick-sort/body))
+   "T" 'hydra-dirs-quick-sort/body))
 #+end_src
 
 ** peep-dired

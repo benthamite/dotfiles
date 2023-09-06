@@ -12073,7 +12073,7 @@ Hugo should be able to export ~org-cite~ citations.
 
 #+begin_src emacs-lisp :results silent
 (use-package ox-hugo
-  :after org)
+  :after ox)
 #+end_src
 
 ** ox-pandoc

@@ -4081,7 +4081,6 @@ as the current buffer."
 
   (defun ps/org-widen-and-reveal ()
     "Widen and reveal subtree."
-    (interactive)
     (widen)
     (org-reveal nil))
 

@@ -1139,11 +1139,13 @@ CLOCK: [2021-04-22 Thu 17:57]--[2021-04-22 Thu 18:21] =>  0:24
   ("y" (ps/switch-to-most-recent-buffer-in-mode 'python-mode) "Python"))
 #+end_src
 
-*** files
+*** buffers
 :PROPERTIES:
 :ID:       39E06A29-2AEC-4EB4-A0D0-7E1A64832B18
 :END:
 :LOGBOOK:
+CLOCK: [2023-08-27 Sun 15:36]--[2023-08-27 Sun 16:10] =>  0:34
+CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:05] =>  0:00
 CLOCK: [2022-10-01 Sat 18:06]--[2022-10-01 Sat 18:14] =>  0:08
 CLOCK: [2021-07-13 Tue 18:20]--[2021-07-13 Tue 18:57] =>  0:37
 CLOCK: [2021-03-31 Wed 11:21]--[2021-03-31 Wed 11:35] =>  0:14
@@ -1752,7 +1754,9 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
   (prefer-coding-system 'utf-8)
   (set-default-coding-systems 'utf-8)
   (set-terminal-coding-system 'utf-8)
-  (set-keyboard-coding-system 'utf-8))
+  (set-keyboard-coding-system 'utf-8)
+
+  (define-key input-decode-map (kbd "M-8") "•"))
 #+end_src
 
 * display
@@ -1902,9 +1906,9 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
        (set-face-attribute 'org-level-7 nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-level-8 nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-date nil :family ps/face-fixed-pitch :height 0.8)
-       (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
-       (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
-       (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
+      (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
+      (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
+      (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)
        (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))))
 #+end_src
@@ -3314,6 +3318,7 @@ with the current major mode."
           (ps/org-hide-logbook))
       (unless (eq major-mode 'org-agenda-mode)
         (org-modern-mode -1))
+
       (visible-mode)
       (org-remove-inline-images)
       (ps/org-show-properties)
@@ -3640,7 +3645,6 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   (defvar ps/yas-new-snippet-tlon "# -*- mode: snippet -*-\n# name: tlon-${1:name-of-snippet}\n# key: t${2:shortcut}\n#contributor: ${3: \n# --\n$0\\`(ps/insert-date)\\` \\$1\n	${4:account1}:\\$5  \\$2.00 \\${3:$$(yas-completing-read \"Currency: \" ps/ledger-active-currencies)} ; \\$4\n	${4:account2}:")
 
   (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
-
 
   :general
   ("C-y" 'yas-new-snippet)
@@ -5111,7 +5115,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
       (select-window last-window)))
 
   ;; Modified from endlessparentheses.com/emacs-narrow-or-widen-dwim.html
-  (defun ps/narrow-or-widen-dwim ()
+   (defun ps/narrow-or-widen-dwim ()
     "Widen if buffer is narrowed, narrow-dwim otherwise.
   Dwim means: region, org-src-block, org-subtree, ledger
   transaction, or defun, whichever applies first. Narrowing to
@@ -7414,7 +7418,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (setq corfu-popupinfo-delay 0)
 
   ;; Adapted from Prot
-  ;; protesilaos.com/emacs/dotemacs#h:675ebef4-d74d-41af-808d-f9579c2a5ec4
   (defun ps/corfu-enable-always-in-minibuffer ()
     "Enable Corfu in the minibuffer if Vertico is not active.
 Useful for prompts such as `eval-expression' and `shell-command'."
@@ -7970,7 +7973,7 @@ e.g. ~nvm~ isn't recognized by eshell
   :demand t
   :config
   (setq jinx-languages "en")
-  
+
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
   (defun ps/jinx--add-to-abbrev (overlay word)
     "Add abbreviation to `text-mode-abbrev-table'.
@@ -8732,8 +8735,8 @@ With prefix argument, prompt for the URL to use."
            (selection (completing-read "Locator: " locators nil t)))
       (goto-char (cdr (bounds-of-thing-at-point 'symbol)))
       (when (string= "," (thing-at-point 'char))
-	(re-search-forward ", [[:alpha:]]*?\\. " nil t)
-	(replace-match ""))
+        (re-search-forward ", [[:alpha:]]*?\\. " nil t)
+        (replace-match ""))
       (insert (format ", %s " (alist-get selection locators "" "" 'string=)))))
 
   :general
@@ -10532,6 +10535,7 @@ image."
    "s-b" (lambda! (org-emphasize ?*))
    "s-i" (lambda! (org-emphasize ?/))
    "s-e" (lambda! (org-emphasize ?~))))
+
 #+end_src
 
 *** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
@@ -10753,8 +10757,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
       (if (looking-at "%%")
           (unless just-enable
             (delete-line))
-        (insert "%%(org-bbdb-anniversaries-future 1)
-")))
+        (insert "%%(org-bbdb-anniversaries-future 1)\n")))
     (unless just-enable
       (org-agenda-redo)))
 
@@ -12226,7 +12229,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :after org
   :demand t
   :config
-  ;; temporarily disable cache to avoid `org-element-cache' errors
+  ;; set to nil to temporarily disable cache to avoid `org-element-cache' errors
   (setq org-element-use-cache t))
 #+end_src
 
@@ -15027,14 +15030,14 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
 
   (defun ps/zotra-add-entry-dwim (url-or-identifier &optional bibfile entry-format)
-  "Get citation entry for URL or identifier."
-  (interactive
-   (list (read-string
-          "search URL or identifier (DOI, ISBN, PMID, arXiv ID): "
-          (ignore-errors (current-kill 0 t)))))
-  (if (ffap-url-p url-or-identifier)
-      (zotra-add-entry-from-url url-or-identifier bibfile entry-format)
-    (zotra-add-entry-from-search url-or-identifier bibfile entry-format)))
+    "Get citation entry for URL or identifier."
+    (interactive
+     (list (read-string
+            "search URL or identifier (DOI, ISBN, PMID, arXiv ID): "
+            (ignore-errors (current-kill 0 t)))))
+    (if (ffap-url-p url-or-identifier)
+        (zotra-add-entry-from-url url-or-identifier bibfile entry-format)
+      (zotra-add-entry-from-search url-or-identifier bibfile entry-format)))
 
   ;; Remarkably, this is needed because Emacs can't decode certain octal
   ;; sequences in Zotero-imported bibtex entries
@@ -17862,7 +17865,7 @@ CLOCK: [2021-04-11 Sun 12:14]--[2021-04-11 Sun 12:28] =>  0:14
 CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 :END:
 
-/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for password-store./
+/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://en.wikipedia.org/wiki/Pass_(software)][pass]]./
 
 #+begin_src emacs-lisp :results silent
 (use-package pass
@@ -17949,8 +17952,6 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 #+end_src
 
 Note: to work, entries must conform to the pattern ~auth-sources/host~.
-
-- Also check [[https://git.sr.ht/~sirn/dotfiles/tree/85b9d5249712e3c35e6140083be1629be1d2b643/etc/emacs/packages/editor-auth.el][~sirn/dotfiles: etc/emacs/packages/editor-auth.el - sourcehut git]]
 
 * misc
 :PROPERTIES:

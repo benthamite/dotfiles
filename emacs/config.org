@@ -4377,10 +4377,10 @@ process in these cases."
 
   (advice-add 'recover-this-file :after #'ps/diff-buffer-with-file)
 
-  (defun ps/copy-path-of-current-buffer ()
+  (defun ps/copy-current-path ()
     "Copy the path of the current buffer to the kill ring."
     (interactive)
-    (let ((path (buffer-file-name)))
+    (let ((path (or (buffer-file-name) default-directory)))
       (kill-new path)
       (message "Copied `%s'" path)))
 
@@ -4389,7 +4389,7 @@ process in these cases."
 
   :general
   ("M--" 'not-modified
-   "M-;" 'ps/copy-path-of-current-buffer
+   "M-;" 'ps/copy-current-path
    "M-b" 'ps/save-and-revert-buffer
    "M-e" 'ps/eval-region-or-buffer
    "H-q" 'ps/kill-this-buffer

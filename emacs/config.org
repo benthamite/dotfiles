@@ -16156,82 +16156,39 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
     ;; externally. there are many sites I hardly ever use, but the
     ;; list aspires to be exhaustive rather than representative of
     ;; my browsing habits.
-    (dolist (regex '("airbnb\\.com"
-                     "airtable\\.com"
-                     "airwander\\.com"
-                     "alignmentforum\\.com"
-                     "amazon\\."
-                     "archive\\.org"
-                     "audible\\.com"
-                     "audiobookbay"
-                     "berkeley\\.edu"
-                     "beyondpricing\\.com"
-                     "dhl\\."
-                     "bloomberg\\.com"
-                     "calendly\\.com"
-                     "cleverlayover\\.com"
-                     "connectedpapers\\.com"
-                     "doi\\.org"
-                     "dropbox\\.com"
-                     "effectivealtruism\\.org"
-                     "etsy\\.com"
-                     "facebook\\.com"
-                     "github\\.com"
-                     "gitguardian\\.com"
-                     "gmail\\.com"
-                     "goodreads\\.com"
-                     "google\\.com"
-                     "grammarly\\.com"
-                     "hathitrust\\.org"
-                     "igmchicago\\.org"
-                     "imdb\\.com"
-                     "interactivebrokers\\.co"
-                     "jit\\.si"
-                     "kentclarkcenter\\.org"
-                     "keyboardmaestro\\.com"
-                     "letterboxd\\.com"
-                     "libgen\\."
-                     "LinkedIn\\.com"
-                     "list-manage\\.com"
-                     "loc\\.gov"
-                     "maps\\."
-                     "mailist-manage\\.eu"
-                     "metacritic\\.com"
-                     "metafilter\\.com"
-                     "mercadopago\\.com"
-                     "mercadolibre\\.com"
-                     "metaculus\\.com"
-                     "metaforecast\\.com"
-                     "paxful\\.com"
-                     "qualtrics\\.com"
-                     "quora\\.com"
-                     "rescuetime\\.com"
-                     "savvycal\\.com"
-                     "skyscanner\\.com"
-                     "skyscanner\\.net"
-                     "slack\\.com"
-                     "squarespace\\.com"
-                     "stafforini\\.com"
-                     "teatrocolon\\.org\\.ar"
-                     "twitter\\.com"
-                     "utoronto\\.ca"
-                     "worldcat\\.org"
-                     "we\\.tl"
-                     "wetransfer\\.com"
-                     "worldcat\\.org"
-                     "youtu\\.be"
-                     "youtube\\.com"
-                     "zoom\\.us"))
-      (push (cons regex 'browse-url-default-browser) browse-url-handlers))
-    (dolist (regex '("economist\\.com"
-                     "ft\\.com"))
-      (push (cons regex 'browse-url-firefox) browse-url-handlers)))
+    (dolist (url (s-split "\n" (f-read ps/file-urls-open-externally-default) t))
+      (push (cons (regexp-quote url) 'browse-url-default-browser) browse-url-handlers))
+    (dolist (url (s-split "\n" (f-read ps/file-urls-open-externally-firefox) t))
+      (push (cons (regexp-quote url) 'browse-url-firefox) browse-url-handlers)))
 
   (defun ps/browse-url-of-dired-file-externally ()
     "In Dired, open the file at point in an external browser."
     (interactive)
     (let ((browse-url-browser-function 'browse-url-default-browser))
       (browse-url-of-dired-file)))
+
+  (defun ps/browse-url-add-domain-to-open-externally (arg)
+    "Prompt for a URL and add its domain to the list of URLs to open externally.
+If buffer is visiting a URL or if there is a URL in the kill ring,
+use its domain as the initial prompt input.
+
+With prefix argument, add the domain to the list of URLs to open
+in Firefox."
+    (interactive "P")
+    (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
+           (domain (when url (url-domain (url-generic-parse-url url))))
+           (file (if arg
+                     ps/file-urls-open-externally-firefox
+                   ps/file-urls-open-externally-default))
+           (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
+      (with-current-buffer (find-file-noselect file)
+        (goto-char (point-max))
+        (insert (format "\n%s" selection))
+        (goto-char (point-min))
+        (flush-lines "^$")
+        (delete-duplicate-lines (point-min) (point-max))
+        (sort-lines nil (point-min) (point-max))
+        (save-buffer))))
 
   :general
   (mhtml-mode-map
@@ -18647,6 +18604,8 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-tlon-ledger-schedule-file . (file-name-concat ps/dir-dropbox-tlon-ledger "ledger-schedule.ledger"))
  (ps/file-tlon-babel . (file-name-concat ps/dir-notes "babel.org"))
  (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
+ (ps/file-urls-open-externally-default . (file-name-concat ps/dir-dotemacs "etc/urls-default.txt"))
+ (ps/file-urls-open-externally-firefox . (file-name-concat ps/dir-dotemacs "etc/urls-firefox.txt"))
  (ps/personal-bibliography-files . (list ps/file-personal-bibliography-new ps/file-personal-bibliography-old))
  ;; TODO: define this properly
  (ps/tlon-bibliography-files . (list

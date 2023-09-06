@@ -5532,8 +5532,7 @@ needs to be included as an element in the list defined by
   (advice-add 'writeroom-mode :before (lambda (&rest args) (setq writeroom-width (window-total-width))))
 
   :general
-  ("M-'" 'writeroom-mode
-   "M-A-'" 'global-writeroom-mode))
+  ("H-u" 'writeroom-mode))
 #+end_src
 
 ** ace-link

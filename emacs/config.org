@@ -3987,6 +3987,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (setq insert-directory-program "/opt/homebrew/bin/gls") ; use coreutils to avoid 'listing directory failed' error
   (setq auto-save-no-message t) ; don't emit message when auto-saving
   (setq delete-old-versions t) ; don't ask about deleting old versions
+  (setq make-backup-files nil)
   (setq version-control 'never) ; number backups
 
   (add-to-list 'auto-mode-alist '("\\.mdx\\'" . markdown-mode))

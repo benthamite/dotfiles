@@ -4052,13 +4052,6 @@ as the current buffer."
     (save-some-buffers
      `(4)))
 
-  (defun ps/visit-file-or-switch-to-buffer (thing)
-    "Visit file or switch to corresponding file-visiting buffer."
-    (interactive)
-    (if (get-buffer thing)
-        (switch-to-buffer thing)
-      (find-file thing)))
-
   (defun ps/org-show-subtree-hide-drawers ()
     (outline-hide-subtree)
     (org-show-entry)

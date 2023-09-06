@@ -9854,7 +9854,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :general
   (copilot-mode-map
    "M-<tab>" 'copilot-accept-completion
-   "A-M-<tab>" 'copilot-accept-completion-by-line))
+   "M-S-<tab>" 'copilot-accept-completion-by-line))
 #+end_src
 
 ** gptel

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: mas-informacion
+# key: mi
+# contributor: Pablo Stafforini
+# --
+## Más información
+$1

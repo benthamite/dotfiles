@@ -397,6 +397,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-ref][org-ref]]
   - [[#doi-utils][doi-utils]]
   - [[#ebib][ebib]]
+  - [[#tlon-ebib][tlon-ebib]]
   - [[#persid][persid]]
   - [[#zotra][zotra]]
 - [[#email][email]]
@@ -13889,7 +13890,7 @@ The correct Biblatex field for this information is
     "Move entry with KEY to TARGET bibliography file."
     (unless ebib--cur-db
       (user-error "Ebib does not seem to be open; please open it first"))
-    (let ((source (ps/ebib-get-file-of-key key)))
+    (let ((source (tlon-ebib-get-file-of-key key)))
       (when (string= source target)
         (user-error "`%s' is already in `%s'!" key target))
       (with-current-buffer (find-file-noselect source)
@@ -13933,8 +13934,8 @@ entry at point."
       ;; If ebib is already open, we reload the database to insure it
       ;; reflects the current entry state.
       (when ebib--cur-db
-        (ebib-switch-to-database-nth (ps/ebib-get-db-number file))
-        (ps/ebib-reload-database-no-confirm ebib--cur-db))
+        (ebib-switch-to-database-nth (tlon-ebib-get-db-number file))
+        (tlon-ebib-reload-database-no-confirm ebib--cur-db))
       (ebib file key)
       (ebib--pop-to-buffer (ebib--buffer 'entry))))
 
@@ -14238,7 +14239,7 @@ citation styles. See specific functions for more detail."
     (interactive (list (citar-select-ref)))
     (unless (get-buffer "*ebib*")
       (ebib))
-    (ps/ebib-open-key citekey))
+    (tlon-ebib-open-key citekey))
 
   (defun ps/citar-move-entry-to-tlon (citekey)
     "Move bibliographic entry associated with the CITEKEY to the Tlön bibliography."
@@ -14250,7 +14251,7 @@ citation styles. See specific functions for more detail."
   (defun ps/citar-goto-bibtex-entry (citekey)
   "Goto the bibliographic entry associated with the CITEKEY in the bibtex file."
   (interactive (list (citar-select-ref)))
-  (if-let ((file (ps/ebib-get-file-of-key citekey)))
+  (if-let ((file (tlon-ebib-get-file-of-key citekey)))
       (progn
         (find-file file)
         (widen)
@@ -14282,12 +14283,20 @@ citation styles. See specific functions for more detail."
       :keymaps '(citar-map citar-citation-map)
       "b" 'ps/citar-goto-bibtex-entry
       "c" 'embark-copy-as-kill
-      "d" 'ps/ebib-download-dwim
+      "d" 'tlon-ebib-download-dwim
       "i" 'ps/citar-open-in-ebib
-      "s" 'ps/ebib-search-dwim
+      "s" 'tlon-ebib-search-dwim
       "t" 'ps/citar-move-entry-to-tlon
       "u" 'citar-open-links))))
 #+end_src
+
+*** TODO Answer bdarcus
+:PROPERTIES:
+:ID:       28ED2F37-EE78-4660-BC8A-46B7D9113593
+:END:
+:LOGBOOK:
+CLOCK: [2023-08-29 Tue 15:30]--[2023-08-29 Tue 16:34] =>  1:04
+:END:
 
 *** TODO Tweak note creation function so that it adds a tag with the work type
 :PROPERTIES:
@@ -14499,8 +14508,9 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 #+begin_src emacs-lisp :results silent
 (use-package ebib
-  :demand t
   :after tlon-babel
+  :demand t
+  ;; :after tlon-babel
   :config/el-patch
   ;; tweak original function to prevent unnecessary vertical window splits
   (defun ebib--setup-windows ()
@@ -14690,7 +14700,7 @@ value is copied to the kill ring."
                            (progn (kill-new contents)
                                   (message "Field contents copied."))
                          (error "Cannot copy an empty field")))
-                     (let* ((raw-contents (ps/ebib-get-field-value field))
+                     (let* ((raw-contents (tlon-ebib-get-field-value field))
                             (contents (if (f-file-p raw-contents)
                                           (file-truename raw-contents)
                                         raw-contents)))
@@ -14730,1135 +14740,49 @@ value is copied to the kill ring."
   ;; hide others
   (add-to-list 'ebib-hidden-fields "year")
 
-  (defun ps/ebib-open-or-switch ()
-    "Open ebib in the right window or switch to it if already open."
-    (interactive)
-    (ps/window-split-if-unsplit)
-    (if (> (frame-width) ps/frame-width-threshold)
-        (winum-select-window-3)
-      (winum-select-window-2))
-    (ebib))
-
-  (defun ps/ebib-reload-database-no-confirm (db)
-    "Reload the database DB from disk, without asking for confirmation."
-    (ebib--execute-when
-      (entries
-       (unless (and (ebib-db-modified-p db)
-                    (not (yes-or-no-p "Database modified.  Really reload from file? ")))
-         (ebib-db-set-current-entry-key (ebib--get-key-at-point) db)
-         (ebib--reload-database db)
-         (ebib--set-modified nil db)
-         (message "Database reloaded")))
-      (default
-       (beep))))
-
-  (defvar ps/ebib-isbn-p
-    "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
-
-  (defun ps/ebib-isbn-p (string)
-    "Return t if string looks like an ISBN."
-    (string-match ps/ebib-isbn-p string))
-
-  (defun ps/ebib-get-isbn ()
-    "Return ISBN for the current entry, if it exists."
-    (when-let ((isbn
-                (ps/ebib-get-field-value "isbn")))
-      (car (split-string
-            (s-replace "-"
-                       ""
-                       (substring-no-properties
-                        isbn))
-            " "))))
-
-  (defun ps/ebib-video-p (string)
-    "Return t if string looks like a video URL."
-    ;; TODO: Add more video sites
-    (string-match
-     "https?://\\(www\\.\\)?\\(youtube\\.com/watch\\?v=\\|youtu.be/\\)\\([a-zA-Z0-9_-]+\\)"
-     string))
-
-  (defun ps/ebib--update-file-field-contents (key file-name)
-    "docstring"
-    (let* ((field "file")
-           (file-field-contents (ps/ebib-get-field-value field)))
-      (unless (and
-               file-field-contents
-               (catch 'file-exists
-                 (dolist (file (ebib--split-files file-field-contents))
-                   (when (string= file file-name)
-                     (throw 'file-exists file)))))
-        (ebib-set-field-value field file-name key ebib--cur-db ";")
-        (ebib--store-multiline-text (current-buffer))
-        (ebib--redisplay-field field)
-        (ebib--redisplay-index-item field)
-        (ebib-save-current-database t))))
-
-  (defvar ps/ebib-book-like-entry-types
-    (let ((lowercase '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook")))
-      (append lowercase (mapcar (lambda (entry)
-                                  (concat (upcase (substring entry 0 1))
-                                          (substring entry 1)))
-                                lowercase)))
-    "Entry types for books and book-like entities, in both lowercase and sentence case.")
-
-  (defvar ps/ebib-article-like-entry-types
-    (let ((lowercase '("article")))
-      (append lowercase (mapcar (lambda (entry)
-                                  (concat (upcase (substring entry 0 1))
-                                          (substring entry 1)))
-                                lowercase)))
-    "Entry types for articles and article-like entities, in both lowercase and sentence case.")
-
-  (defvar ps/ebib-film-like-entry-types
-    (let ((lowercase '("movie" "video" "tvepisode")))
-      (append lowercase (mapcar (lambda (entry)
-                                  (concat (upcase (substring entry 0 1))
-                                          (substring entry 1)))
-                                lowercase)))
-    "Entry types for articles and article-like entities, in both lowercase and sentence case.")
-
-  (defun ps/ebib-copy-current-field-contents ()
-    "Copy the contents of the current field to the kill ring.
-If the field contains a value from a cross-referenced entry, that
-value is copied to the kill ring."
-    (interactive)
-    (ebib-copy-field-contents (ebib--current-field)))
-  (defun ps/ebib-get-file (extension)
-    "docstring"
-    (when-let ((files (ps/ebib-get-field-value "file")))
-      (catch 'tag
-        (mapc
-         (lambda (file)
-           (when (equal (file-name-extension file) extension)
-             (throw 'tag file)))
-         (ebib--split-files files))
-        nil)))
-
-  (defun ps/ebib-open-file (extension)
-    "Open file with EXTENSION in entry at point, if it (uniquely)
-    exists."
-    (interactive)
-    (if-let ((file-name (ps/ebib-get-file extension)))
-        (find-file file-name)
-      (user-error (format "No (unique) `%s' file found" extension))))
-
-  (defun ps/ebib-open-file-externally (extension)
-    "Open file with EXTENSION in entry at point, if it (uniquely)
-    exists."
-    (interactive)
-    (if-let ((file-name (expand-file-name (ps/ebib-get-file extension))))
-        (shell-command (format "open '%s'" file-name))
-      (user-error (format "No (unique) `%s' file found" extension))))
-
-  (defun ps/ebib-open-pdf-file ()
-    "Open `pdf' file in entry at point, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file "pdf"))
-
-  (defun ps/ebib-open-md-file ()
-    "Open `md' file in entry at point, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file "md"))
-
-  (defun ps/ebib-open-pdf-file-externally ()
-    "Open `pdf' file in entry at point externally, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file-externally "pdf"))
-
-  (defun ps/ebib-open-webm-file ()
-    "Open `webm' file in entry at point, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file-externally "webm"))
-
-  (defun ps/ebib-open-mp3-file ()
-    "Open `webm' file in entry at point, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file-externally "mp3"))
-
-  (defun ps/ebib-open-html-file ()
-    "Open `html' file in entry at point, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file "html")
-    (let ((html-buffer (buffer-name))
-          (browse-url-handlers nil)
-          (browse-url-browser-function #'eww-browse-url))
-      (browse-url-of-buffer)
-      (kill-buffer html-buffer)))
-
-  (defun ps/ebib-open-html-file-externally ()
-    "Open `html' file in entry at point externally, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file-externally "html"))
-
-  (defvar ps/ebib-valid-file-extensions
-    '("pdf" "html" "webm" "flac" "mp3" "md")
-    "List of valid file extensions for `ps/ebib-open-file-dwim'.")
-
-  (defun ps/ebib-open-file-dwim ()
-    "Open file in entry at point.
-    If the entry contains more than one file, use the preference
-    ordering defined in `ps/ebib-valid-file-extensions'."
-    (interactive)
-    (if-let ((extension
-              (catch 'tag
-                (dolist (extension ps/ebib-valid-file-extensions)
-                  (when (ps/ebib-get-file extension)
-                    (throw 'tag extension))))))
-        (call-interactively
-         (intern
-          (concat "ps/ebib-open-" extension "-file")))
-      (user-error "No file found")))
-
-  (defun ps/ebib-rename-files ()
-    "Rename files in entry at point so that the file stems match the
-    corresponding entry key."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (let* ((field "file")
-              (key (ebib--get-key-at-point))
-              (file-list (split-string
-                          (ps/ebib-get-field-value field)
-                          ";")))
-         (ps/ebib-valid-key-p key)
-         (when file-list
-           (ebib-delete-field-contents field t)
-           (dolist (filename file-list)
-             (let ((stem (file-name-base filename))
-                   (extension (file-name-extension filename)))
-               (unless (equal stem key)
-                 (let ((new-filename
-                        (ps/ebib--rename-and-abbreviate-file
-                         (ps/ebib--extension-directories extension)
-                         key
-                         extension)))
-                   (rename-file filename new-filename)
-                   (setq filename new-filename)))
-               (ebib-set-field-value field filename key ebib--cur-db ";")))
-           (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field))))
-      ;; (ebib-save-current-database nil))))
-      (default
-       (beep))))
-
-  (defun ps/ebib-validate-file-stem ()
-    "Check that stem of each attached file equals entry's unique key."
-    (when-let ((files (ps/ebib-get-field-value "file")))
-      (when (catch 'tag
-              (mapc
-               (lambda (file)
-                 (unless (equal
-                          (file-name-base file)
-                          (ebib--get-key-at-point))
-                   (throw 'tag file)))
-               (ebib--split-files files))
-              nil)
-        (user-error "Invalid file stem"))))
-
-  ;; We abbreviate the filename so that it works when invoked by my collaborators
-  (defun ps/ebib--rename-and-abbreviate-file (directory key &optional extension)
-    "docstring"
-    (file-name-concat
-     (abbreviate-file-name
-      directory)
-     (if extension
-         (file-name-with-extension key extension)
-       key)))
-
-  (defun ps/ebib-valid-key-p (&optional key)
-    "Check that KEY is a valid entry key; if not, throw an error."
-    (setq key (or key (ebib--get-key-at-point)))
-    (unless (string-match
-             "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
-             key)
-      (user-error "Ebib entry has an invalid key; please regenerate it")))
-
-  (defun ps/ebib--extension-directories (extension)
-    "Return directory associated with EXTENSION."
-    (cond ((string= extension "pdf")
-           ps/dir-library-pdf)
-          ((string= extension "html")
-           ps/dir-library-html)
-          ((string= extension "md")
-           (file-name-concat
-            ps/dir-tlon-babel
-            "translations/posts/"))
-          ((or (string= extension "webm")
-               (string= extension "mp3")
-               (string= extension "flac"))
-           ps/dir-library-media)
-          (t
-           (user-error "Invalid file extension"))))
-
-  (defun ps/ebib-attach-file (&optional most-recent)
-    "Prompt the user for a file to attach to the current entry.
-If MOST-RECENT is non-nil, attach the most recent file instead."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (let ((key (ebib--get-key-at-point)))
-         (ps/ebib-valid-key-p key)
-         (let* ((field "file")
-                (file-to-attach
-                 (if most-recent
-                     (ps/newest-file ps/dir-downloads)
-                   (let ((initial-folder
-                          (completing-read "Select folder: "
-                                           (list
-                                            ps/dir-downloads
-                                            ps/dir-library-html
-                                            ps/dir-library-pdf
-                                            ps/dir-library-media))))
-                     (read-file-name
-                      "File to attach: "
-                      ;; Use key as default selection if key-based file exists
-                      ;; else default to `initial-folder'
-                      (if (catch 'found
-                            (dolist (extension ps/ebib-valid-file-extensions)
-                              (when (f-file-p (file-name-concat
-                                               initial-folder
-                                               (file-name-with-extension key extension)))
-                                (throw 'found extension))))
-                          (file-name-concat initial-folder key)
-                        initial-folder)))))
-                (extension (file-name-extension file-to-attach))
-                (destination-folder
-                 (ps/ebib--extension-directories extension))
-                (file-name (ps/ebib--rename-and-abbreviate-file
-                            destination-folder key extension)))
-           (when (or (not (f-file-p file-name))
-                     (y-or-n-p "File exists. Overwrite? "))
-             (rename-file file-to-attach file-name t))
-           (ps/ebib--update-file-field-contents key file-name)
-           (when (string= (file-name-extension file-name) "pdf")
-             ;; open the pdf to make sure it displays the web page correctly
-             (ps/ebib-open-pdf-file)
-             ;; ocr the pdf if necessary
-             ;; (let ((expanded-file-name (expand-file-name file-name)))
-             ;; (ps/ocr-pdf (format "'%s' '%s'" expanded-file-name expanded-file-name)))
-             ))))
-      (default
-       (beep))))
-
-  (defvar ps/ebib-download-use-vpn nil
-    "Whether to use a VPN when downloading content.")
-
-  (defvar ps/ebib-library-genesis
-    '("Library Genesis"
-      "https://libgen.lc/index.php?req="
-      "&phrase=1&view=simple&column=def&sort=extension&sortmode=DESC"))
-
-  (defvar ps/ebib-amazon
-    '("Amazon"
-      "https://smile.amazon.com/s?k="
-      "&i=stripbooks"))
-
-  (defvar ps/ebib-worldcat
-    '("Worldcat"
-      "https://www.worldcat.org/search?q="
-      "&itemType=book&limit=50&offset=1"))
-
-  (defvar ps/ebib-internet-archive
-    '("Internet Archive"
-      "https://archive.org/search.php?query="
-      ""))
-
-  (defvar ps/ebib-university-of-toronto
-    '("University of Toronto"
-      "https://librarysearch.library.utoronto.ca/discovery/search?query=any,contains,"
-      "&tab=Everything&search_scope=UTL_AND_CI&vid=01UTORONTO_INST:UTORONTO&offset=0"))
-
-  (defvar ps/ebib-university-of-california-berkeley
-    '("University of California, Berkeley"
-      "https://search.library.berkeley.edu/discovery/search?query=any,contains,"
-      "&tab=Default_UCLibrarySearch&search_scope=DN_and_CI&vid=01UCS_BER:UCB&offset=0"))
-
-  (defvar ps/ebib-hathitrust
-    '("HathiTrust"
-      "https://babel.hathitrust.org/cgi/ls?q1="
-      "&field1=ocr;a=srchls;lmt=ft;sz=100"))
-
-  (defvar ps/ebib-connected-papers
-    '("Connected Papers"
-      "https://www.connectedpapers.com/search?q="
-      ""))
-
-  (defvar ps/ebib-google-scholar
-    '("Google Scholar"
-      "https://scholar.google.com/scholar?q="
-      ""))
-
-  (defvar ps/ebib-wikipedia
-    '("Google Scholar"
-      "http://en.wikipedia.org/w/index.php?title=Special%3ASearch&profile=default&search="
-      "&fulltext=Search"))
-
-  (defvar ps/ebib-goodreads
-    '("Goodreads"
-      "https://www.goodreads.com/search?q="
-      ""))
-
-  (defvar ps/ebib-audible
-    '("Audible"
-      "https://www.audible.com/search?keywords="
-      ""))
-
-  (defvar ps/ebib-audiobookbay
-    '("Audiobook Bay"
-      "https://theaudiobookbay.se/?s="
-      "&tt=1"))
-
-  (defvar ps/ebib-imdb
-    '("IMDB"
-      "https://www.imdb.com/find/?q="
-      ""))
-
-  (defvar ps/ebib-letterboxd
-    '("Letterboxd"
-      "https://letterboxd.com/search/films/"
-      ""))
-
-  (defvar ps/ebib-metacritic
-    '("Metacritic"
-      "https://www.metacritic.com/search/all/"
-      "/results"))
-
-  (defvar ps/ebib-search-book-functions
-    '(ps/ebib-search-goodreads
-      ps/ebib-search-hathitrust
-      ps/ebib-search-internet-archive
-      ps/ebib-search-library-genesis
-      ps/ebib-search-amazon)
-    "List of functions that search for books.")
-
-  (defvar ps/ebib-download-book-functions
-    '(ps/ebib-search-internet-archive
-      ps/ebib-search-hathitrust
-      ps/ebib-search-university-of-california-berkeley
-      ps/ebib-search-library-genesis
-      ps/ebib-search-audible
-      ps/ebib-search-audiobookbay)
-    "List of functions that download books.")
-
-  (defvar ps/ebib-search-article-functions
-    '(ps/ebib-search-connected-papers
-      ps/ebib-search-google-scholar)
-    "List of functions that search for articles.")
-
-  (defvar ps/ebib-download-article-functions
-    '(ps/ebib-search-article-functions)
-    "List of functions that download articles.")
-
-  (defvar ps/ebib-search-film-functions
-    '(ps/ebib-search-imdb
-      ps/ebib-search-letterboxd
-      ps/ebib-search-metacritic)
-    "List of functions that search for films.")
-
-  (defvar ps/ebib-download-film-functions
-    ps/ebib-search-film-functions
-    "List of functions that search for films.")
-
-  (defvar ps/ebib-search-engines '()
-    "List of search engine symbols. Used by the
- `ps/ebib-generate-search-commands' macro.")
-
-  (dolist (engine (delete-dups (append ps/ebib-search-book-functions
-                                       ps/ebib-search-article-functions
-                                       ps/ebib-search-film-functions
-                                       ps/ebib-download-book-functions)))
-    (let* ((engine-name (symbol-name engine))
-           (engine-symbol (intern (replace-regexp-in-string "ps/ebib-search-" "" engine-name))))
-      (add-to-list 'ps/ebib-search-engines engine-symbol)))
-
-   ;;; search functions
-  (defmacro ps/ebib-generate-search-commands ()
-    "Generate search commands for each search engine listed in `ps/ebib-search-engines'."
-    `(progn
-       ,@(mapcar (lambda (engine)
-                   `(defun ,(intern (concat "ps/ebib-search-" (symbol-name engine))) (&optional query)
-                      ,(let ((name (capitalize (replace-regexp-in-string "-" " " (symbol-name engine)))))
-                         (format "Run a search on %s." name)
-                         `(interactive ,(format "sSearch %s: " name)))
-                      (ps/ebib-search
-                       ,(intern (concat "ps/ebib-" (symbol-name engine)))
-                       query)))
-                 ps/ebib-search-engines)))
-
-  (ps/ebib-generate-search-commands)
-
-  (defun ps/ebib-search (search-engine query)
-    "Search for QUERY with SEARCH-ENGINE."
-    (let* ((prefix (nth 1 search-engine))
-           (suffix (nth 2 search-engine))
-           (query (url-hexify-string query)))
-      (browse-url (concat prefix query suffix))))
-
-  (setq ps/ebib-download-use-vpn t)
-
-  (defun ps/ebib--search-multi (query functions)
-    "Search for QUERY with each function in FUNCTIONS."
-    (dolist (fun functions)
-      (when (and ps/ebib-download-use-vpn
-                 (string-match "-download-" (symbol-name fun)))
-        (mullvad-connect-to-website "Library Genesis" 5))
-      (funcall fun query)))
-
-  (defun ps/ebib-search-dwim ()
-    "If field at point is 'title', run a search with its value, else use identifier.
-    The list of websites for the search query is defined by the
-    variable `ps/ebib-search-book'"
-    (interactive)
-    (ps/ebib--search-or-download 'search))
-
-  (defun ps/ebib-get-supertype ()
-    "Return the supertype of the current entry."
-    (let* ((type (ps/ebib-get-field-value "=type="))
-           (supertype (cond
-                       ((member type ps/ebib-book-like-entry-types)
-                        "book")
-                       ((member type ps/ebib-article-like-entry-types)
-                        "article")
-                       ((member type ps/ebib-film-like-entry-types)
-                        "film"))))
-      supertype))
-
-  (defun ps/ebib-get-query-field ()
-    "Return the field based on whose value the search query will be run."
-    (let ((query (if (string= (ebib--current-field) "title")
-                     "title"
-                   "identifier")))
-      query))
-
-  (defun ps/ebib--search-or-download (action)
-    "Perform ACTION (search or download) on the current entry, depending on field at point.
-If point is on field `title', perform ACTION based on its value.
-Else perform ACTION based on the value of its identifier (`doi'
-or `isbn')."
-    (let* ((supertype (ps/ebib-get-supertype))
-           (query (ps/ebib-get-query-field))
-           (fun (intern (format "ps/ebib-%s-%s-by-%s" action supertype query))))
-      (funcall fun)))
-
-  (defun ps/ebib-search-book (query)
-    "Search for QUERY with the relevant book search functions.
-The list of book search functions is specified by
-`ps/ebib-search-book-functions'."
-    (ps/ebib--search-multi query ps/ebib-search-book-functions))
-
-  ;; getting the value of the book title field is slightly more involved
-  ;; because two different fields may contain this value. so we create a
-  ;; special function
-  (defun ps/ebib--get-title-at-point ()
-    "Get the title of the entry at point."
-    (let ((title (catch 'found
-                   (dolist (field '("title" "booktitle"))
-                     (when-let ((title
-                                 (ps/ebib-get-field-value field)))
-                       (throw 'found title))))))
-      title))
-
-  (defun ps/ebib-search-book-by-title ()
-    "Search for the book's title with the relevant book search functions.
-The list of book search functions is specified by
-`ps/ebib-search-book-functions'."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (if-let ((title (ps/ebib--get-title-at-point)))
-           (ps/ebib-search-book title)
-         (user-error "Title field is empty")))
-      (default
-       (beep))))
-
-  (defun ps/ebib-search-article (query)
-    "Search for QUERY with the relevant article search functions.
-The list of article search functions is specified by
-`ps/ebib-search-article-functions'."
-    (ps/ebib--search-multi query ps/ebib-search-article-functions))
-
-  (defun ps/ebib-search-article-by-title ()
-    "Search for the article's title with the relevant article search functions.
-The list of article search functions is specified by
-`ps/ebib-search-article-functions'."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (if-let ((title (ps/ebib-get-field-value "title")))
-           (ps/ebib-search-article title)
-         (user-error "Title field is empty")))
-      (default
-       (beep))))
-
-  (defun ps/ebib-search-film (query)
-    "Search for QUERY with the relevant film search functions.
-The list of film search functions is specified by
-`ps/ebib-search-film-functions'."
-    (ps/ebib--search-multi query ps/ebib-search-film-functions))
-
-  (defun ps/ebib-search-film-by-title ()
-    "Search for the film's title with the relevant film search functions.
-The list of film search functions is specified by
-`ps/ebib-search-film-functions'."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (if-let ((title (ps/ebib-get-field-value "title")))
-           (ps/ebib-search-film title)
-         (user-error "Title field is empty")))
-      (default
-       (beep))))
-
-  (defun ps/ebib-search-by-identifier ()
-    "Search for a book or article by the ISBN or DOI of the entry at point."
-    (interactive)
-    ;; TODO: Add support for arXiv
-    (let ((id (or (ps/ebib-get-isbn)
-                  (ps/ebib-get-field-value "doi")
-                  (read-string "Enter ISBN or DOI: "))))
-      (cond ((ps/ebib-isbn-p id)
-             (ps/ebib-search-book id))
-            ((ps/doi-utils-doi-p id)
-             (ps/ebib-search-article id))
-            (t
-             (user-error "Identifier does not appear to be an ISBN or DOI")))))
-
-  (defalias 'ps/ebib-search-book-by-identifier 'ps/ebib-search-by-identifier)
-  (defalias 'ps/ebib-search-article-by-identifier 'ps/ebib-search-by-identifier)
-  ;; no film identifier; we just search for it
-  (defalias 'ps/ebib-search-film-by-identifier 'ps/ebib-search-film-by-title)
-
-  ;;; download functions
-  (defun ps/ebib-download-dwim ()
-    "If field at point is 'title', run a search with its value, else use identifier.
-    The list of websites for the search query is defined by the
-    variable `ps/ebib-download-book'"
-    (interactive)
-    (ps/ebib--search-or-download 'download))
-
-  (defun ps/ebib-download-book (query)
-    "Search for QUERY with the relevant book download functions.
-The list of book download functions is specified by
-`ps/ebib-download-book-functions'."
-    (ps/ebib--search-multi query ps/ebib-download-book-functions))
-
-  (defun ps/ebib-download-book-by-title ()
-    "Search for the book's title with the relevant book download functions.
-The list of book download functions is specified by
-`ps/ebib-download-book-functions'."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (if-let ((title (ps/ebib--get-title-at-point)))
-           (ps/ebib-download-book title)
-         (user-error "Title field is empty")))
-      (default
-       (beep))))
-
-  (defun ps/ebib-download-article (query)
-    "Search for QUERY with the relevant article download functions.
-The list of article download functions is specified by
-`ps/ebib-download-article-functions'."
-    (ps/ebib--search-multi query ps/ebib-download-article-functions))
-
-  (defun ps/ebib-download-article-by-title ()
-    "Search for the article's title with the relevant article download functions.
-The list of article download functions is specified by
-`ps/ebib-download-article-functions'."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (if-let ((title (ps/ebib-get-field-value "title")))
-           (ps/ebib-download-article title)
-         (user-error "Title field is empty")))
-      (default
-       (beep))))
-
-  (defun ps/ebib-download-by-identifier ()
-    "Download a book or article based on the ISBN or DOI of the entry at point."
-    ;; TODO: Add support for arXiv
-    (interactive)
-    (let ((id (or (ps/ebib-get-isbn)
-                  (ps/ebib-get-field-value "doi")
-                  (read-string "Enter ISBN or DOI: "))))
-      (cond ((ps/doi-utils-doi-p id)
-             (ps/doi-utils-doi-download id))
-            ;; there is now way (to my knowledge) of directly
-            ;; downloading a book from its ISBN, so we search for it
-            ;; instead
-            ((ps/ebib-isbn-p id)
-             (ps/ebib-download-book id))
-            (t
-             (user-error "Identifier does not appear to be an ISBN or DOI")))))
-
-  (defalias 'ps/ebib-download-book-by-identifier 'ps/ebib-download-by-identifier)
-  (defalias 'ps/ebib-download-article-by-identifier 'ps/ebib-download-by-identifier)
-  ;; all we want is to search for a film, and there is no film
-  ;; identifier, so we map all functions to
-  ;; `ps/ebib-search-film-by-title'
-  (defalias 'ps/ebib-download-film-by-title 'ps/ebib-search-film-by-title)
-  (defalias 'ps/ebib-download-film-by-identifier 'ps/ebib-search-film-by-title)
-
-  (defun ps/ebib-download-video (id)
-    "Download video with id ID using `yt-dlp'."
-    (unless (executable-find "yt-dlp")
-      (user-error "Please install `yt-dlp'"))
-    (ebib--execute-when
-      (entries
-       (let* ((key (ebib--get-key-at-point))
-              (file-name
-               (ps/ebib--rename-and-abbreviate-file
-                ps/dir-library-media key "webm")))
-         (async-shell-command (format "yt-dlp --output '%s' '%s'" file-name id))
-         (message (format "Downloading video from '%s'" (substring-no-properties id)))
-         (ps/ebib--update-file-field-contents key file-name)))
-      (default
-       (beep))))
-
-  (defun ps/ebib-sentence-case ()
-    "docstring"
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (let* ((field (ebib--current-field))
-              (value (ps/ebib-get-field-value field))
-              (words (split-string value)))
-         (setq words (mapcar
-                      (lambda (word)
-                        (if
-                            ;; match words containing {} or \ which are probably
-                            ;; LaTeX or protected words
-                            (string-match "\\$\\|{\\|}\\|\\\\" word)
-                            word
-                          (s-downcase word)))
-                      words))
-         ;; capitalize first word
-         (setf (car words) (s-capitalize (car words)))
-         (setq value (mapconcat 'identity words " "))
-         (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite 'unbraced)
-         (ebib--store-multiline-text (current-buffer))
-         (ebib--redisplay-field field)
-         (ebib--redisplay-index-item field)
-         (ebib-save-current-database nil)))
-      (default
-       (beep))))
-
-  (defun ps/ebib-open-entry-in-bibtex-file ()
-    "Open the bibtex file associated with the current entry and move point to its key."
-    (interactive)
-    (when-let ((file (ebib-db-get-filename ebib--cur-db))
-               (key (ebib--get-key-at-point)))
-      (find-file file)
-      (bibtex-find-entry key)))
-
-  (defun ps/ebib-get-file-of-key (key)
-    "Return the bibliographic file in which the entry with KEY is found."
-    (unless ebib--databases
-      (user-error "Please launch Ebib first"))
-    (let ((file (catch 'found
-                  (dotimes (i (length ebib--databases))
-                    (when (member key (ebib-db-list-keys (nth i ebib--databases)))
-                      (throw 'found
-                             (ebib-db-get-filename (nth i ebib--databases))))))))
-      (message file)))
-
-  (defun ps/ebib-open-key (key)
-    "Open the entry for KEY in Ebib."
-    (when-let ((file (ps/ebib-get-file-of-key key)))
-      (ebib file key)
-      (ebib-edit-entry)))
-
-  (defvar ps/ebib-sort-toggle 'Title)
-
-  (defun ps/ebib-sort-toggle ()
-    "Toggle between sorting by timestamp, author, and title."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (let ((order 'ascend))
-         (pcase ps/ebib-sort-toggle
-           ('Timestamp
-            (setq ps/ebib-sort-toggle 'Author))
-           ('Author
-            (setq ps/ebib-sort-toggle 'Title))
-           ('Title
-            (setq ps/ebib-sort-toggle 'Timestamp)
-            (setq order 'descend)))
-         (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
-         (goto-char (point-min))
-         (message (format "Sorting by %s" ps/ebib-sort-toggle))))
-      (default
-       (beep))))
-
-  (defun ps/ebib-end-of-index-buffer ()
-    "Move to the end of the index buffer."
-    (interactive)
-    (when (equal major-mode 'ebib-index-mode)
-      (goto-char (point-max))
-      (forward-line -1)))
-
-  (defun ps/ebib-duplicate-entry ()
-    "Duplicate the current entry."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (let* ((key (ebib--get-key-at-point))
-              (new-key (if ebib-uniquify-keys
-                           (ebib-db-uniquify-key (ebib--get-key-at-point) ebib--cur-db)
-                         key))
-              entry)
-         (with-temp-buffer
-           (ebib--format-entry key ebib--cur-db)
-           (goto-char (point-min))
-           (while (re-search-forward (concat "\\(^@[[:alpha:]]*?{\\)" (regexp-quote key) ",") nil t)
-             (replace-match (concat "\\1" new-key ",")))
-           (setq entry (buffer-substring-no-properties (point-min) (point-max))))
-         (with-current-buffer (find-file-noselect zotra-default-bibliography)
-           (widen)
-           (goto-char (point-max))
-           (insert entry)
-           (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
-           (save-buffer)
-           (ps/ebib-reload-database-no-confirm ebib--cur-db)
-           (ebib zotra-default-bibliography new-key)
-           (ebib--index-sort "Timestamp" 'descend)
-           (goto-char (point-min))
-           (ps/ebib-open-key new-key))))
-      (default
-       (beep))))
-
-  (defun ps/ebib-citar-open-notes ()
-    "Open note for the entry at point using `citar-open-notes'.
-This command replaces the native `ebib-popup-note'. The
-replacement ensures that, when a note doesn't already exist, it
-is created following the same schema as notes created with
-`citar'."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (when-let ((citekey (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)))
-         (citar-open-notes (list citekey))))
-      (default
-       (beep))))
-
-  (defvar ps/ebib-auto-save-files
-    (list ps/file-personal-bibliography-new
-          tlon-babel-file-fluid)
-    "List of database files that should be auto-saved.
-The big files containing the 'old' bibliographic entries are excluded.")
-
-  (defun ps/ebib-auto-save-databases ()
-    "Check if any Ebib database has been modified and save it to its file if so.
-The list of files to be watched is defined in `ps/ebib-auto-save-files'."
-    (dolist (db ebib--databases)
-      (let ((db-file (ebib-db-get-filename db)))
-        (when (and (member db-file ps/ebib-auto-save-files)
-                   (ebib-db-modified-p db))
-          (ebib--save-database db '(16)))))
-    (run-with-timer 1 nil #'ps/ebib-auto-save-databases))
-
-  (run-with-timer 1 nil #'ps/ebib-auto-save-databases)
-
-  (defun ps/ebib-auto-reload-databases ()
-    "Check if any db file has been modified and reload the associated Ebib database if so.
-The list of files to be watched is defined in `ps/ebib-auto-save-files'."
-    (dolist (db ebib--databases)
-      (let ((db-file (ebib-db-get-filename db)))
-        (when (member db-file ps/ebib-auto-save-files)
-          ;; (file-notify-rm-all-watches)
-          (file-notify-add-watch
-           db-file
-           '(change attribute-change)
-           (lambda (event)
-             (message "reloading database")
-             (ps/ebib-reload-database-no-confirm db)))))))
-
-  (advice-add 'ebib-init :after #'ps/ebib-auto-reload-databases)
-
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
+
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
 
-  (defvar ps/ebib-db-numbers
-    `((,ps/file-personal-bibliography-new . 1)
-      (,ps/file-personal-bibliography-old . 2)
-      (,tlon-babel-file-fluid . 3)
-      (,tlon-babel-file-stable . 4))
-    "Association list of database files and their numbers.")
-
-  (defun ps/ebib-get-db-number (file)
-    "Get database number for FILE."
-    (cdr (assoc file ps/ebib-db-numbers)))
-
-  (defvar ps/ebib-existing-authors nil
-    "List of all authors in the current database.")
-
-  (defun ps/ebib-create-list-of-existing-authors ()
-    "Create a list of all authors in the current database."
-    (setq ps/ebib-existing-authors (ebib--create-author/editor-collection)))
-
-  (add-hook 'ebib-add-entry #'ps/ebib-create-list-of-existing-authors)
-
-  (defun ps/ebib-check-author-exists ()
-    "Check if the author of the given entry exists in the current database."
-    (interactive)
-    (let* ((db ebib--cur-db)
-           (key (ebib--db-get-current-entry-key db))
-           (author-to-check (ps/ebib-get-field-value "author")))
-      (if (member author-to-check ps/ebib-existing-authors)
-          (message "Author found in the database!")
-        (message "Warning: Author not found in the database!"))))
-
-  (defun ps/ebib-set-rating (&optional rating)
-    "Set rating of current entry to RATING.
-If applicable, open external website to set rating there as well."
-    (interactive)
-    (let ((rating (ps/ebib-choose-rating))
-          (supertype (ps/ebib-get-supertype))
-          (title (ps/ebib-get-field-value "title"))
-          (query (ps/ebib-get-query-field))
-          (key (ebib--get-key-at-point))
-          (db ebib--cur-db))
-      ;; TODO: open rating websites based on supertype
-      (pcase supertype
-        ("book" (ps/ebib-search-goodreads title))
-        ("film" (ps/ebib-search-imdb title) (ps/ebib-search-letterboxd title)))
-      (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db 'overwrite)
-      (ebib--update-entry-buffer)
-      (set-buffer-modified-p nil)
-      (ebib--set-modified t db t (seq-filter (lambda (dependent)
-                                               (ebib-db-has-key key dependent))
-                                             (ebib--list-dependents db)))))
-
-  (defun ps/ebib-choose-rating ()
-    "Prompt for a rating from 1 to 10 and return the choice."
-    (let* ((ratings '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?0))
-           (rating (char-to-string (read-char-choice "Rating (1–10): " ratings))))
-      (when (string= rating "0")
-        (setq rating "10"))
-      rating))
-
-  (defun ps/ebib-no-translation-found ()
-    "Log a note indicating that no translation for this work was found."
-    (interactive)
-    (let ((key (ebib--get-key-at-point))
-          (db ebib--cur-db))
-      (when (ps/ebib-get-field-value "note")
-        (user-error "Note field is not empty"))
-      (ebib-set-field-value "note"
-                            (format "No translation found on %s." (format-time-string "%Y-%m-%d"))
-                            key db)
-      (ebib--update-entry-buffer)
-      (set-buffer-modified-p nil)
-      (ebib--set-modified t db t (seq-filter (lambda (dependent)
-                                               (ebib-db-has-key key dependent))
-                                             (ebib--list-dependents db)))))
-
-  (defun ps/ebib-create-translation-entry (&optional title)
-    "Create an entry for the translation of the current entry."
-    (interactive)
-    (let* ((key (ebib--get-key-at-point))
-           (db ebib--cur-db)
-           (new-db-num (ps/ebib-get-db-number tlon-babel-file-fluid))
-           (author (ps/ebib-get-field-value "author"))
-           (title (or title (read-string "Title: ")))
-           (date "2023")
-           (journaltitle "Biblioteca Altruismo Eficaz")
-           (translator "Tlön")
-           (translation key)
-           (langid "spanish")
-           ;; (keywords (ebib--edit-separated-values-field field '(,field) nil))
-           )
-      (ebib-switch-to-database-nth new-db-num)
-      (ebib-add-entry)
-      (let ((new-key (ebib--get-key-at-point))
-            (new-db ebib--cur-db))
-        (dolist (field '(author title date journaltitle translator translation langid))
-          (ebib-set-field-value (symbol-name field) (symbol-value field) new-key new-db)))
-      (ebib--update-entry-buffer))
-    (ebib-generate-autokey)
-    (set-buffer-modified-p nil)
-    (ebib--set-modified t db t (seq-filter (lambda (dependent)
-                                             (ebib-db-has-key key dependent))
-                                           (ebib--list-dependents db))))
-
-  (defun ps/ebib-move-entry-to-tlon ()
-    "Move bibliographic entry associated with the key at point to the Tlön bibliography."
-    (interactive)
-    (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
-      (ps/citar-goto-bibtex-entry key)
-      (ps/bibtex-move-entry-to-tlon)
-      (ebib tlon-babel-file-fluid key)
-      (ps/ebib-open-key key)))
-
-  (defun ps/ebib-get-field-value (field)
-    "Get the value of FIELD for the entry at point.
-Convenience function that calls `ebib-get-field-value' with
-sensible defaults."
-    (let ((key (ebib--get-key-at-point)))
-      (ebib-get-field-value field key ebib--cur-db t t t)))
-
-  (defun ps/ebib-get-id-or-url ()
-    "Get the ID or URL of the entry at point."
-    (when-let ((id-or-url (catch 'found
-                            (dolist (field '("doi" "isbn" "url"))
-                              (when-let ((value (ps/ebib-get-field-value field)))
-                                (throw 'found value))))))
-      id-or-url))
-
-  (defun ps/ebib-fetch-id-or-url ()
-    "Fetch the ID or URL of the entry at point.
-Fetching is done using `tlon-biblio'."
-    (let ((title (ps/ebib-get-field-value "title"))
-          (author (ps/ebib-get-field-value "author")))
-      (pcase (ps/ebib-get-supertype)
-        ("book" (tlon-biblio-search-isbndb (concat title " " author)))
-        ("article" (tlon-biblio-search-crossref title author))
-        ("film" (concat "https://www.imdb.com/title/" (tlon-biblio-search-imdb
-                                                       (tlon-biblio-translate-title-to-english title))))
-        (_ (ps/ebib-get-field-value "url")))))
-
-  (defun ps/ebib-get-or-fetch-id-or-url ()
-    "Get the ID or URL of the entry at point, or fetch it if missing."
-    (or (ps/ebib-get-id-or-url)
-        (ps/ebib-fetch-id-or-url)))
-
-  (defun ps/ebib-set-id (&optional id)
-    "Add an ID to the current entry, if missing."
-    (interactive)
-    (let ((key (ebib--get-key-at-point))
-          (db ebib--cur-db)
-          (field (pcase (ps/ebib-get-supertype)
-                   ("book" "isbn")
-                   ("article" "doi")
-                   ("film" "url")))
-          (id (or id (ps/ebib-fetch-id-or-url))))
-      (when (ps/ebib-get-field-value field)
-        (user-error "ID field is not empty."))
-      (ebib-set-field-value field id key db)
-      (ebib--update-entry-buffer)
-      (set-buffer-modified-p nil)
-      (ebib--set-modified t db t (seq-filter (lambda (dependent)
-                                               (ebib-db-has-key key dependent))
-                                             (ebib--list-dependents db)))))
-
-  (defun ps/ebib-fetch-field-value (field)
-    "Fetch the value of FIELD for the entry at point.
-Fetching is done using `tlon-biblio'."
-    (unless (eq major-mode 'ebib-entry-mode)
-      (error "Not in `ebib-entry-mode'"))
-    (if-let ((id (ps/ebib-get-or-fetch-id-or-url)))
-        (let ((entry (zotra-get-entry id (not (ps/string-is-url-p id))))
-              value)
-          (with-temp-buffer (insert entry)
-                            (setq value (bibtex-autokey-get-field field)))
-          (when (string-empty-p value)
-            (user-error "Query returned no field `%s' for the current entry" field))
-          (let ((key (ebib--get-key-at-point)))
-            (ebib-set-field-value field value key ebib--cur-db 'overwrite)
-            (ebib--update-entry-buffer)
-            (set-buffer-modified-p nil)
-            (ebib--set-modified t ebib--cur-db t (seq-filter (lambda (dependent)
-                                                               (ebib-db-has-key key dependent))
-                                                             (ebib--list-dependents ebib--cur-db)))))
-      (user-error "No ID found for the current entry")))
-
-  (defun ps/ebib-fetch-abstract ()
-    "Fetch the abstract of the entry at point."
-    (interactive)
-    (let ((abstract (ps/ebib-get-field-value "abstract")))
-      (when (or
-             (not abstract)
-             (y-or-n-p "Abstract already exists. Overwrite?"))
-        (ps/ebib-fetch-field-value "abstract"))))
-
-  (defun ps/ebib-fetch-keywords ()
-    "Fetch keywords for the entry at point and put them in the associated org file."
-    (interactive)
-    (ps/ebib-fetch-field-value "keywords"))
-
-  (defun ps/ebib-export-keywords ()
-    "Export keywords in entry at point to its associated note file."
-    (interactive)
-    (when-let* ((key (ebib--get-key-at-point))
-                (field "keywords")
-                ;; unfill field contents
-                (keywords-raw (replace-regexp-in-string
-                               "\n                  "
-                               " "
-                               (ps/ebib-get-field-value field)))
-                ;; turn into bullet-separated links
-                (keywords (ps/org-linkify-elements
-                           (split-string keywords-raw ", "))))
-      (ebib-db-remove-field-value field key ebib--cur-db)
-      (ebib--redisplay-field field)
-      (ebib--redisplay-index-item field)
-      (ebib--set-modified t ebib--cur-db (seq-filter (lambda (dependent)
-                                                       (ebib-db-has-key key dependent))
-                                                     (ebib--list-dependents ebib--cur-db)))
-      (ps/ebib-citar-open-notes)
-      (ps/org-insert-subheading)
-      (insert (concat field "\n" keywords))
-      (ps/org-sort-keywords)))
+  (add-hook 'ebib-add-entry #'tlon-ebib-create-list-of-existing-authors)
 
   :general
-  ("A-i" 'ps/ebib-open-or-switch)
   (ebib-multiline-mode-map
    "s-c" 'ebib-quit-multiline-buffer-and-save)
   ((ebib-entry-mode-map ebib-index-mode-map)
    "H-s" 'ebib-save-current-database
    "K" 'ebib-copy-key-as-kill
-   "Q" 'ebib-quit
-   "d" 'ps/ebib-duplicate-entry
-   "n" 'ps/ebib-citar-open-notes)
+   "Q" 'ebib-quit)
   (ebib-entry-mode-map
    "TAB" 'ebib-goto-next-set
    "<backtab>" 'ebib-goto-prev-set
-   "SPC" 'ps/ebib-open-file-dwim
    "H-s" 'ebib-save-current-database
    "!" 'ebib-generate-autokey
-   "," 'ps/ebib-title-case
-   "." 'ps/ebib-sentence-case
-   "/" (lambda! (ps/ebib-attach-file t))
-   "?" 'ps/ebib-attach-file
-   "a" 'ps/ebib-search-amazon
+   "/" (lambda! (tlon-ebib-attach-file t))
    "A" 'ebib-add-field
-   "b" 'ps/ebib-open-entry-in-bibtex-file
    "c" 'ebib-copy-current-field-contents
    "D" 'ebib-delete-current-field-contents
    "E" 'ebib-edit-keyname
-   "g" 'ps/ebib-search-library-genesis
-   "G" 'ps/ebib-search-goodreads
-   "h" 'ps/ebib-open-html-file
-   "H" 'ps/ebib-open-html-file-externally
-   "i" 'ps/ebib-download-by-identifier
-   "I" 'ps/ebib-set-id
-   "o" 'ps/ebib-search-connected-papers
-   "p" 'ps/ebib-open-pdf-file
-   "P" 'ps/ebib-open-pdf-file-externally
-   "R" 'ps/ebib-set-rating
-   "s-r" 'ps/ebib-rename-files
-   "s" 'ps/ebib-search-dwim
-   "T" 'ps/ebib-no-translation-found
    "u" 'ebib-browse-url
-   "V" 'ps/ebib-search-internet-archive
-   "w" 'ps/ebib-download-dwim
-   "W" 'ps/ebib-fetch-keywords
-   "x" 'ps/ebib-search-university-of-toronto
-   "y" 'ps/ebib-search-hathitrust
-   "z" 'ps/ebib-search-google-scholar
    "1" (lambda! (ebib-view-file-in-field 1))
    "2" (lambda! (ebib-view-file-in-field 2)))
   (ebib-index-mode-map
    "<return>" 'ebib-edit-entry
-   "A-C-s-SPC" 'ps/ebib-end-of-index-buffer
    "D" 'ebib-delete-entry
    "k" 'ebib-prev-entry
-   "l" 'ebib-next-entry
-   "s" 'ps/ebib-sort-toggle
-   "s-t" 'ps/ebib-move-entry-to-tlon))
+   "l" 'ebib-next-entry))
 #+end_src
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
+
+*** DONE Move ebib to separate package
+CLOSED: [2023-08-28 Mon 12:41]
+:PROPERTIES:
+:ID:       1AAE6992-78F2-42CF-839B-2C6D6D5437ED
+:END:
+:LOGBOOK:
+CLOCK: [2023-08-27 Sun 12:18]--[2023-08-27 Sun 13:48] =>  1:30
+:END:
 
 *** TODO Tweak ebib film command so that it directly opens Letterboxd page with IMDb ID
 :PROPERTIES:
@@ -15896,6 +14820,74 @@ The macro below generates the commands correctly. But attempting to define key b
 :END:
 
 [[https://juanjose.garciaripoll.com/blog/ebib-biblio-interface/index.html][eBib-Biblio interface, aka. Mendeley for Emacs]]
+
+** tlon-ebib
+:PROPERTIES:
+:ID:       9E86F42E-2F41-4BB7-ABC5-1C929DBD5C06
+:END:
+
+#+begin_src emacs-lisp
+(use-package tlon-ebib
+  :elpaca (tlon-ebib
+           :host github
+           :repo "tlon-team/tlon-ebib"
+           :depth nil) ; clone entire repo, not just last commit
+  :after ebib tlon-babel
+  :demand t
+  :config
+  (setq tlon-ebib-download-use-vpn t)
+
+  (setq tlon-ebib-db-numbers
+        `((,ps/file-personal-bibliography-new . 1)
+          (,ps/file-personal-bibliography-old . 2)
+          (,tlon-babel-file-fluid . 3)
+          (,tlon-babel-file-stable . 4)))
+
+  (setq tlon-ebib-auto-save-files
+        (list ps/file-personal-bibliography-new
+              tlon-babel-file-fluid))
+
+  (advice-add 'ebib-init :after #'tlon-ebib-auto-reload-databases)
+
+  :general
+  ("A-i" 'tlon-ebib-open-or-switch)
+  ((ebib-entry-mode-map ebib-index-mode-map)
+   "d" 'tlon-ebib-duplicate-entry
+   "n" 'tlon-ebib-citar-open-notes)
+  (ebib-entry-mode-map
+   "SPC" 'tlon-ebib-open-file-dwim
+   "," 'tlon-ebib-title-case
+   "." 'tlon-ebib-sentence-case
+   "/" (lambda! (tlon-ebib-attach-file t))
+   "?" 'tlon-ebib-attach-file
+   "a" 'tlon-ebib-search-amazon
+   "b" 'tlon-ebib-open-entry-in-bibtex-file
+   "g" 'tlon-ebib-search-library-genesis
+   "G" 'tlon-ebib-search-goodreads
+   "h" 'tlon-ebib-open-html-file
+   "H" 'tlon-ebib-open-html-file-externally
+   "i" 'tlon-ebib-download-by-identifier
+   "I" 'tlon-ebib-set-id
+   "o" 'tlon-ebib-search-connected-papers
+   "p" 'tlon-ebib-open-pdf-file
+   "P" 'tlon-ebib-open-pdf-file-externally
+   "R" 'tlon-ebib-set-rating
+   "s-r" 'tlon-ebib-rename-files
+   "s" 'tlon-ebib-search-dwim
+   "T" 'tlon-ebib-no-translation-found
+   "V" 'tlon-ebib-search-internet-archive
+   "w" 'tlon-ebib-download-dwim
+   "W" 'tlon-ebib-fetch-keywords
+   "x" 'tlon-ebib-search-university-of-toronto
+   "y" 'tlon-ebib-search-hathitrust
+   "z" 'tlon-ebib-search-google-scholar
+   "1" (lambda! (ebib-view-file-in-field 1))
+   "2" (lambda! (ebib-view-file-in-field 2)))
+  (ebib-index-mode-map
+   "A-C-s-SPC" 'tlon-ebib-end-of-index-buffer
+   "s" 'tlon-ebib-sort-toggle
+   "s-t" 'tlon-ebib-move-entry-to-tlon))
+#+end_src
 
 ** persid
 :PROPERTIES:
@@ -15976,15 +14968,15 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
     ;; (save-buffer)
-    (ebib-switch-to-database-nth (ps/ebib-get-db-number ps/zotra-most-recent-bibliography-file))
+    (ebib-switch-to-database-nth (tlon-ebib-get-db-number ps/zotra-most-recent-bibliography-file))
     (let ((citekey (ps/bibtex-get-key)))
-      (ps/ebib-open-or-switch)
-      (ps/ebib-reload-database-no-confirm ebib--cur-db)
+      (tlon-ebib-open-or-switch)
+      (tlon-ebib-reload-database-no-confirm ebib--cur-db)
       (ebib--update-buffers)
       (ebib ps/zotra-most-recent-bibliography-file citekey)
       (ebib--index-sort "Timestamp" 'descend)
       (goto-char (point-min))
-      (ps/ebib-open-key citekey)
+      (tlon-ebib-open-key citekey)
       ;; we add this so that the latest entry is sorted in the bibtex
       ;; file, instead of remaining at the end of it
       (ebib-save-current-database t)))

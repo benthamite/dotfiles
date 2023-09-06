@@ -10532,7 +10532,7 @@ image."
    "s-p" 'org-time-stamp-inactive
    "s-A-p" 'org-time-stamp
    "s-q" 'org-set-tags-command
-   "s-A-s" 'org-schedule
+   "s-s" 'org-schedule
    ;; "s-A-s" 'ps/org-isearch-visible-org-heading
    "s-t" 'org-todo
    "s-A-t" 'org-sort

@@ -15916,21 +15916,16 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
     (org-store-link nil)
     (org-capture nil "n"))
 
-  (defun ps/telega-chat-org-capture-leo ()
-    "Capture chat message at point with `org-capture' and turn it
-into a task for Leo."
-    (interactive)
-    (telega-msg-copy-text (telega-msg-at (point)))
-    (org-capture nil "lt"))
-
-  (defun ps/telega-filters-push-archive ()
+  (defun ps/telega-view-archive ()
     "Set active filters list to `archive'."
     (interactive)
+    (telega-filters-reset)
     (telega-filters-push '(archive)))
 
-  (defun ps/telega-filters-push-main ()
+  (defun ps/telega-view-main ()
     "Set active filters list to `main'."
     (interactive)
+    (telega-filters-reset)
     (telega-filters-push '(main)))
 
   (telega-mode-line-mode)

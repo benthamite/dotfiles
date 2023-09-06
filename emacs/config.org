@@ -15946,8 +15946,8 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
    ;; if point is on a URL, `telega-msg-button-map' ceases to be
    ;; active and `<return>' triggers `newline' rather than
    ;; `push-button'. this seems to be a bug. as a workaround, we also
-   ;; bind `push-button' to `M-<return>' in `telega-chat-mode-map'.
-   "s-<return>" 'push-button
+   ;; bind `push-button' to `s-<return>' in `telega-chat-mode-map'.
+   "s-<return>" (lambda! (push-button))
    "s-," 'telega-chatbuf-goto-pinned-message
    "s-a" 'telega-chatbuf-attach
    "s-c" 'telega-mnz-chatbuf-attach-code
@@ -15966,7 +15966,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
    "M-s-v" 'telega-chatbuf-attach-clipboard
    "" 'telega-chatbuf-attach-voice-note)
   (telega-msg-button-map
-   "<return>" 'push-button
+   "<return>" (lambda! (push-button))
    "." 'ps/telega-docs-change-open
    "," 'telega-chatbuf-goto-pinned-message
    "a" (lambda! (end-of-buffer) (ps/kill-this-buffer))
@@ -15985,8 +15985,8 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
    "a" 'telega-chat-toggle-archive
    "m" 'telega-chat-toggle-muted)
   (telega-root-view-map
-   "a" 'ps/telega-filters-push-archive
-   "m" 'ps/telega-filters-push-main)
+   "a" 'ps/telega-view-archive
+   "m" 'ps/telega-view-main)
   (telega-webpage-mode-map
    "x" 'telega-webpage-browse-url)
   (dired-mode-map

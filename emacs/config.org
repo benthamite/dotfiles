@@ -16153,6 +16153,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/browse-url)
 (use-feature browse-url
+  :after f s
   :config
   (setq browse-url-browser-function 'eww-browse-url)
   (setq browse-url-firefox-program "/Applications/Firefox.app/Contents/MacOS/firefox")

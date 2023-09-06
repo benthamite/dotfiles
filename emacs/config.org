@@ -3482,8 +3482,10 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
   ((outline-mode-map outline-minor-mode-map)
    "TAB" 'outline-cycle
    "<backtab>" 'outline-cycle-buffer
-   "A-C-s-r" 'outline-backward-same-level
-   "A-C-s-f" 'outline-forward-same-level))
+   "A-C-s-r" 'outline-previous-heading
+   "A-C-s-f" 'outline-next-heading))
+#+end_src
+
 ** outshine
 :PROPERTIES:
 :ID:       7103E713-B985-465E-BC75-F73A096EB4EF

@@ -15874,11 +15874,12 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   (setq telega-completing-read-function 'completing-read)
 
   (defun ps/telega-switch-to ()
-    "Switch to the most recent telega buffer, if one exists, else
- start telega. Always display telega buffers in the rightmost
- window. Repeated invocations of the command will move point from
- the middle of the chatbuf to the end of it, then to the root
- buffer, then to the beginning of it if not already there."
+    "Switch to the most recent telega buffer, if one exists, else start telega.
+ Repeated invocations of the command will move point from the
+ middle of the chat buffer to the end of it, then to the root
+ buffer, then to the beginning of it if not already there. A
+ similar sequence of events will be triggered if point is in an
+ archive buffer."
     (interactive)
     (let* ((telega-buffer-root "*Telega Root*")
            (telega-buffer
@@ -15887,39 +15888,27 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
                 (when (with-current-buffer buffer
                         (member major-mode '(telega-root-mode telega-chat-mode)))
                   (throw 'tag (buffer-name buffer))))))
-           (current-buffer (current-buffer))
-           (telega-buffer-is-current (string= (buffer-name current-buffer) telega-buffer)))
-      (if telega-buffer
-          (if telega-buffer-is-current
-              (if (string> telega-buffer telega-buffer-root)
-                  (if (ps/bollp)
-                      (progn
-                        (kill-buffer)
-                        (switch-to-buffer telega-buffer-root))
-                    (end-of-buffer))
-                (beginning-of-buffer)
-                (forward-line 4)) ; one extra to move past pinned message
-            (switch-to-buffer telega-buffer))
+           (telega-buffer-is-current (string= (buffer-name (current-buffer)) telega-buffer)))
+      (cond
+       ((not telega-buffer)
         (telega))
-      (let ((telega-buffer (current-buffer)))
-        (ps/window-split-if-unsplit)
-        (if (> (frame-width) ps/frame-width-threshold)
-            (winum-select-window-3)
-          (winum-select-window-2))
-        (let ((rightmost-window (selected-window))
-              (other-window (previous-window)))
-          ;; When the command is invoked from a Telega buffer which
-          ;; isn't on the rightmost window, we display on that window
-          ;; the most recent non-telega buffer.
-          (when telega-buffer-is-current
-            (setq current-buffer
-                  (catch 'tag
-                    (dolist (buffer (buffer-list))
-                      (unless (with-current-buffer buffer
-                                (member major-mode '(telega-root-mode telega-chat-mode)))
-                        (throw 'tag buffer))))))
-          (set-window-buffer (selected-window) telega-buffer)
-          (set-window-buffer other-window current-buffer)))))
+       ((not telega-buffer-is-current)
+        (switch-to-buffer telega-buffer))
+       ;; if currently in chatbuf, move to end, else back to main
+       ((not (string= telega-buffer-root telega-buffer))
+        (if (not (eobp))
+            (goto-char (point-max))
+          (kill-buffer)
+          (switch-to-buffer telega-buffer-root)))
+       ;; if currently in archive, move to beg, else back to main
+       ((eq (car (telega-filter-active)) 'archive)
+        (if (eq (count-lines (point-min) (point)) 3)
+            (telega-filters-reset)
+          (beginning-of-buffer)
+          (forward-line 3)))
+       ((not (eq (count-lines (point-min) (point)) 4))
+        (beginning-of-buffer)
+        (forward-line 4)))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."

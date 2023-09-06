@@ -13979,6 +13979,7 @@ If KEY is nil, use the key of the entry at point."
 Save citekey to kill-ring. If KEY is nil, use the key of the
 entry at point."
     (interactive)
+    (require 'tlon-babel)
     (let ((key (or key (ps/bibtex-get-key)))
           (target tlon-babel-file-fluid))
       (ps/bibtex-move-entry key target)

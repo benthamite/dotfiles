@@ -151,6 +151,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#abbrev][abbrev]]
   - [[#yasnippet][yasnippet]]
   - [[#yasnippet-snippets][yasnippet-snippets]]
+  - [[#doom-snippets][doom-snippets]]
   - [[#hippie-expand][hippie-expand]]
   - [[#expand-region][expand-region]]
   - [[#newcomment][newcomment]]
@@ -3591,7 +3592,9 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   :config
   (setq yas-snippet-dirs (list ps/dir-yasnippets
                                ps/dir-yasnippets-private
-                               (file-name-concat user-emacs-directory "elpaca/builds/yasnippet-snippets/snippets")))
+                               (file-name-concat elpaca-builds-directory "yasnippet-snippets/snippets/")
+                               (file-name-concat elpaca-builds-directory "doom-snippets/")))
+
   (setq yas-triggers-in-field t) ; allow stacked expansions
 
   (yas-global-mode)
@@ -3637,6 +3640,21 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   :after yasnippet
   :demand t)
 #+end_src
+
+** doom-snippets
+:PROPERTIES:
+:ID:       F0017D7B-DEBD-460B-8DF6-1134ECF42A7A
+:END:
+
+/[[https://github.com/doomemacs/snippets][doom-snippets]] is another snippet library./
+
+#+begin_src emacs-lisp
+(use-package doom-snippets
+  :elpaca (doom-snippets :type git :host github :repo "doomemacs/snippets" :files ("*.el" "*"))
+  :after yasnippet
+  :demand t)
+#+end_src
+
 
 ** hippie-expand
 :PROPERTIES:

@@ -290,6 +290,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#reverso][reverso]]
   - [[#goldendict][goldendict]]
   - [[#txl][txl]]
+  - [[#go-translate][go-translate]]
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown-mode][markdown-mode]]
   - [[#grip-mode][grip-mode]]
@@ -8490,6 +8491,61 @@ argument (ARG), always force prompt."
   (txl-edit-translation-mode-map
    "RET" 'txl-accept-translation
    "q" 'txl-dismiss-translation))
+#+end_src
+
+** go-translate
+:PROPERTIES:
+:ID:       543F613A-F3B8-426C-8505-48782483FBEC
+:END:
+
+/[[https://github.com/lorniu/go-translate][go-translate]] is an Emacs translator that supports multiple translation engines./
+
+Needs to be configured.
+
+#+begin_src emacs-lisp :tangle no
+(use-package go-translate
+  :demand t
+  :config
+  (setq gts-translate-list '(("en" "es")))
+  (setq gts-default-translator
+        (gts-translator
+
+         :picker ; used to pick source text, from, to. choose one.
+
+         ;;(gts-noprompt-picker)
+         ;;(gts-noprompt-picker :texter (gts-whole-buffer-texter))
+         (gts-prompt-picker)
+         ;;(gts-prompt-picker :single t)
+         ;;(gts-prompt-picker :texter (gts-current-or-selection-texter) :single t)
+
+         :engines ; engines, one or more. Provide a parser to give different output.
+
+         (list
+          ;; (gts-bing-engine)
+          ;;(gts-google-engine)
+          ;;(gts-google-rpc-engine)
+          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)) :pro t)
+          ;; (gts-google-engine :parser (gts-google-summary-parser))
+          ;;(gts-google-engine :parser (gts-google-parser))
+          ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")
+          ;; (gts-google-rpc-engine :parser (gts-google-rpc-parser) :url "https://translate.google.com")
+          )
+
+         :render ; render, only one, used to consumer the output result. Install posframe yourself when use gts-posframe-xxx
+
+         ;; (gts-buffer-render)
+         ;;(gts-posframe-pop-render)
+         ;;(gts-posframe-pop-render :backcolor "#333333" :forecolor "#ffffff")
+         ;; (gts-posframe-pin-render)
+         ;;(gts-posframe-pin-render :position (cons 1200 20))
+         ;;(gts-posframe-pin-render :width 80 :height 25 :position (cons 1000 20) :forecolor "#ffffff" :backcolor "#111111")
+         (gts-kill-ring-render)
+
+         :splitter ; optional, used to split text into several parts, and the translation result will be a list.
+
+         (gts-paragraph-splitter)
+         ))
+  )
 #+end_src
 
 ** atomic-chrome

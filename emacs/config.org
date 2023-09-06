@@ -894,6 +894,11 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
           (apply fn args)
         (elpaca-use-package-mode 1)))))
 
+(defun ps/elpaca-package-repo-dir (package-name)
+  "Return the directory of the PACKAGE-NAME package in the elpaca repository."
+  (let ((file (file-name-concat elpaca-repos-directory package-name (file-name-with-extension package-name "el"))))
+  (find-file file)))
+
 ;; (toggle-debug-on-error) ; uncomment when debugging
 #+end_src
 

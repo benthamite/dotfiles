@@ -4433,7 +4433,8 @@ process in these cases."
 /[[https://github.com/rejeep/f.el][f]] is a modern API for working with files and directories in Emacs./
 
 #+begin_src emacs-lisp :results silent
-(use-package f)
+(use-package f
+  :demand t)
 #+end_src
 
 ** locate

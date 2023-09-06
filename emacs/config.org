@@ -11644,73 +11644,74 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 :END:
 
 #+begin_src emacs-lisp :results silent
-(use-feature org-id
-  :after org
-  :demand t
-  :init
-  ;; stackoverflow.com/a/16247032/4479455
-  (defvar ps/org-id-auto-add-excluded-directories
-    (list ps/dir-dropbox-tlon-fede
-          ps/dir-dropbox-tlon-leo)
-    "Directories containing files to exclude from `ps/org-id-auto-add-ids-to-headings-in-file'")
+  (use-feature org-id
+    :after org
+    :demand t
+    :init
+    ;; stackoverflow.com/a/16247032/4479455
+    (defvar ps/org-id-auto-add-excluded-directories
+      (list ps/dir-dropbox-tlon-fede
+            ps/dir-dropbox-tlon-leo)
+      "Directories containing files to exclude from `ps/org-id-auto-add-ids-to-headings-in-file'")
 
-  (defvar ps/org-id-auto-add-excluded-files
-    (list ps/file-orb-noter-template)
-    "Files to exclude from `ps/org-id-auto-add-ids-to-headings-in-file'")
+    (defvar ps/org-id-auto-add-excluded-files
+      (list ps/file-orb-noter-template)
+      "Files to exclude from `ps/org-id-auto-add-ids-to-headings-in-file'")
 
-  (defun ps/org-id-auto-add-ids-to-headings-in-file ()
-    "Add ID properties to all headings in the current file which do
-not already have one."
-    (when-let ((file (buffer-file-name)))
-      (when (and (eq major-mode 'org-mode)
-                 (string-match ps/dir-org file)
-                 (eq buffer-read-only nil))
-        (unless
-            (or
-             ;; exclude directories
-             (member (file-name-directory (buffer-file-name))
-                     ps/org-id-auto-add-excluded-directories)
-             ;; exclude files
-             (member (buffer-file-name)
-                     ps/org-id-auto-add-excluded-files)
-             (member (org-get-heading)
-                     '("Local variables"
-                       "COMMENT Local variables"
-                       "TODO Local variables")))
-          (org-map-entries 'org-id-get-create)))))
+    (defun ps/org-id-auto-add-ids-to-headings-in-file ()
+      "Add ID properties to all headings in the current file which do
+  not already have one."
+      (when-let ((file (buffer-file-name)))
+        (when (and (eq major-mode 'org-mode)
+                   (string-match ps/dir-org file)
+                   (eq buffer-read-only nil))
+          (unless
+              (or
+               ;; exclude directories
+               (member (file-name-directory (buffer-file-name))
+                       ps/org-id-auto-add-excluded-directories)
+               ;; exclude files
+               (member (buffer-file-name)
+                       ps/org-id-auto-add-excluded-files)
+               (member (org-get-heading)
+                       '("Local variables"
+                         "COMMENT Local variables"
+                         "TODO Local variables")))
+            (org-map-entries 'org-id-get-create)))))
 
-  :config
-  (setq org-id-link-to-org-use-id t)
-  ;; I want these files to be searched for IDs, so that I can use
-  ;; org-capture templates with them, but do not want them to be part
-  ;; of org-agenda or org-roam.
-  (setq org-id-extra-files (list
-                            ps/file-tlon-tareas-leo
-                            ps/file-tlon-tareas-fede))
+    :config
+    (setq org-id-link-to-org-use-id t)
+    ;; I want these files to be searched for IDs, so that I can use
+    ;; org-capture templates with them, but do not want them to be part
+    ;; of org-agenda or org-roam.
+    (setq org-id-extra-files (list
+                              ps/file-tlon-tareas-leo
+                              ps/file-tlon-tareas-fede))
 
-  (defun ps/org-id-update-id-locations ()
-    "Scan relevant files for IDs.
+    (defun ps/org-id-update-id-locations ()
+      "Scan relevant files for IDs.
 
-Store the relation between files and corresponding IDs. This will
-scan all agenda files, all associated archives, all open Org
-files, recursively all files in `org-directory', and all files in
-`org-id-extra-files'."
-    (interactive)
-    (org-id-update-id-locations
-     (directory-files-recursively org-directory ".org$\\|.org.gpg$")))
+  Store the relation between files and corresponding IDs. This will
+  scan all agenda files, all associated archives, all open Org
+  files, recursively all files in `org-directory', and all files in
+  `org-id-extra-files'."
+      (interactive)
+      (org-id-update-id-locations
+       (directory-files-recursively org-directory ".org$\\|.org.gpg$")))
 
-  (defun ps/org-id-goto (id &optional arg)
-    "Open ID even if narrowed."
-    (dotimes (i 2)
-      (ps/org-widen-and-reveal)
-      (org-id-goto id)))
+    (defun ps/org-id-goto (id &optional arg)
+      "Open ID even if narrowed."
+      (dotimes (i 2)
+        (ps/org-widen-and-reveal)
+        (sleep-for 0.05)
+        (org-id-goto id)))
 
-  (add-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)
+    (add-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)
 
-  :general
-  (org-mode-map
-   "s-A-i" 'org-id-copy
-   "s-A-u" 'ps/org-id-update-id-locations))
+    :general
+    (org-mode-map
+     "s-A-i" 'org-id-copy
+     "s-A-u" 'ps/org-id-update-id-locations))
 #+end_src
 
 ** org-list

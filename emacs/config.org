@@ -145,11 +145,13 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#sort][sort]]
   - [[#vundo][vundo]]
   - [[#outline][outline]]
+  - [[#outshine][outshine]]
   - [[#fill][fill]]
   - [[#unfill][unfill]]
   - [[#abbrev][abbrev]]
   - [[#yasnippet][yasnippet]]
   - [[#yasnippet-snippets][yasnippet-snippets]]
+  - [[#doom-snippets][doom-snippets]]
   - [[#hippie-expand][hippie-expand]]
   - [[#expand-region][expand-region]]
   - [[#newcomment][newcomment]]
@@ -288,6 +290,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#reverso][reverso]]
   - [[#goldendict][goldendict]]
   - [[#txl][txl]]
+  - [[#go-translate][go-translate]]
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown-mode][markdown-mode]]
   - [[#grip-mode][grip-mode]]
@@ -302,19 +305,21 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-pdftools][org-pdftools]]
   - [[#org-noter-pdftools][org-noter-pdftools]]
 - [[#prog-mode][prog-mode]]
-  - [[#flymake][flymake]]
+  - [[#flycheck][flycheck]]
+  - [[#consult-flycheck][consult-flycheck]]
   - [[#lsp-mode][lsp-mode]]
   - [[#lsp-ui][lsp-ui]]
   - [[#elisp-mode][elisp-mode]]
+  - [[#s][s]]
   - [[#debug][debug]]
   - [[#edebug][edebug]]
   - [[#backtrace][backtrace]]
   - [[#macrostep][macrostep]]
   - [[#clojure][clojure]]
   - [[#python][python]]
+  - [[#emacs-ipython-notebook][emacs-ipython-notebook]]
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
-  - [[#flymake-json][flymake-json]]
   - [[#csv-mode][csv-mode]]
   - [[#js2-mode][js2-mode]]
   - [[#puni][puni]]
@@ -394,6 +399,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-ref][org-ref]]
   - [[#doi-utils][doi-utils]]
   - [[#ebib][ebib]]
+  - [[#tlon-ebib][tlon-ebib]]
   - [[#persid][persid]]
   - [[#zotra][zotra]]
 - [[#email][email]]
@@ -888,6 +894,11 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
           (apply fn args)
         (elpaca-use-package-mode 1)))))
 
+(defun ps/elpaca-package-repo-dir (package-name)
+  "Return the directory of the PACKAGE-NAME package in the elpaca repository."
+  (let ((file (file-name-concat elpaca-repos-directory package-name (file-name-with-extension package-name "el"))))
+  (find-file file)))
+
 ;; (toggle-debug-on-error) ; uncomment when debugging
 #+end_src
 
@@ -1051,7 +1062,6 @@ CLOCK: [2021-10-05 Tue 12:20]--[2021-10-05 Tue 13:11] =>  0:51
 CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :END:
 
-
 /[[https://github.com/raxod502/el-patch][el-patch]] customizes the behavior of Emacs Lisp functions and be notified when a function so customized changes./
 
 #+begin_src emacs-lisp :results silent
@@ -1079,11 +1089,10 @@ CLOCK: [2021-03-30 Tue 08:50]--[2021-03-30 Tue 09:02] =>  0:12
   :demand t
 
   :general
-  ("H-d" 'hydra-dired/body
+  ("H-d" 'hydra-dirs/body
+   "H-f" 'hydra-files/body
    "H-l" 'hydra-org-notes/body
-   "H-O" 'hydra-major-modes/body
-   "M-t" 'hydra-straight/body
-   "M-y" 'hydra-yasnippet/body))
+   "H-O" 'hydra-major-modes/body))
 (elpaca-wait)
 #+end_src
 
@@ -1130,11 +1139,13 @@ CLOCK: [2021-04-22 Thu 17:57]--[2021-04-22 Thu 18:21] =>  0:24
   ("y" (ps/switch-to-most-recent-buffer-in-mode 'python-mode) "Python"))
 #+end_src
 
-*** files
+*** buffers
 :PROPERTIES:
 :ID:       39E06A29-2AEC-4EB4-A0D0-7E1A64832B18
 :END:
 :LOGBOOK:
+CLOCK: [2023-08-27 Sun 15:36]--[2023-08-27 Sun 16:10] =>  0:34
+CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:05] =>  0:00
 CLOCK: [2022-10-01 Sat 18:06]--[2022-10-01 Sat 18:14] =>  0:08
 CLOCK: [2021-07-13 Tue 18:20]--[2021-07-13 Tue 18:57] =>  0:37
 CLOCK: [2021-03-31 Wed 11:21]--[2021-03-31 Wed 11:35] =>  0:14
@@ -1142,25 +1153,36 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
 :END:
 
 #+begin_src emacs-lisp :results silent
-(general-define-key
- "H-M-s-." (lambda! (ps/visit-file-or-switch-to-buffer ps/file-inbox-mobile))
- "H-M-s-," (lambda! (ps/visit-file-or-switch-to-buffer ps/file-inbox-desktop))
- "H-M-s-a" (lambda! (ps/org-agenda-switch-to-agenda-current-day))
- "H-M-s-b" (lambda! (ps/visit-file-or-switch-to-buffer ps/dir-tlon-babel))
- "H-M-s-c" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-config))
- "H-M-s-d" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-tlon-docs))
- "H-M-s-h" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-tlon-ledger))
- "H-M-s-i" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-anki))
- "H-M-s-j" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-ledger))
- "H-M-s-k" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-karabiner))
- "H-M-s-m" 'view-echo-area-messages
- "H-M-s-o" (lambda! (switch-to-buffer "*notes*"))
- "H-M-s-q" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-quotes))
- "H-M-s-r" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-calendar))
- "H-M-s-s" (lambda! (switch-to-buffer "*scratch*"))
- "H-M-s-v" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-films))
- "H-M-s-w" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-work))
- "H-M-s-z" (lambda! (ps/visit-file-or-switch-to-buffer ps/file-variables)))
+(defhydra hydra-files
+  (:exit t)
+  "Buffers"
+  ("." (find-file ps/file-inbox-mobile) "inbox-mobile")
+  ("," (find-file ps/file-inbox-desktop) "inbox-desktop")
+  ("a" (ps/org-agenda-switch-to-agenda-current-day) "agenda")
+  ("c" (find-file ps/file-config) "config")
+  ("d" (find-file ps/file-tlon-docs) "tlon-docs")
+  ("h" (find-file ps/file-tlon-ledger) "tlon-ledger")
+  ("i" (find-file ps/file-anki) "anki")
+  ("j" (find-file ps/file-ledger) "ledger")
+  ("k" (find-file ps/file-karabiner) "karabiner")
+  ("o" (switch-to-buffer "*notes*") "notes")
+  ("p" (hydra-files-packages/body) "packages")
+  ("q" (find-file ps/file-quotes) "quotes")
+  ("r" (find-file ps/file-calendar) "calendar")
+  ("s" (switch-to-buffer "*scratch*") "scratch")
+  ("v" (find-file ps/file-films) "films")
+  ("w" (find-file ps/file-work) "work")
+  ("z" (find-file ps/file-variables) "variables"))
+
+(defhydra hydra-files-packages
+  (:exit t)
+  ""
+  ("b" (ps/elpaca-package-repo-dir "tlon-babel") "tlon-babel" :column "packages")
+  ("c" (ps/elpaca-package-repo-dir "tlon-core") "tlon-core" :column "packages")
+  ("l" (ps/elpaca-package-repo-dir "tlon-biblio") "tlon-biblio" :column "packages")
+  ("i" (ps/elpaca-package-repo-dir "tlon-init") "tlon-init" :column "packages")
+  ("e" (ps/elpaca-package-repo-dir "tlon-ebib") "tlon-ebib" :column "packages")
+  ("m" (ps/elpaca-package-repo-dir "mullvad") "mullvad" :column "packages"))
 #+end_src
 
 *** org headings
@@ -1255,7 +1277,7 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   ("H-TAB" (ps/org-id-notes-with-clock "TAB"))
   )
 
-(defhydra hydra-dired-tlon
+(defhydra hydra-dirs-tlon
   (:exit t)
   "Org Headings: Tlön"
   ("d" (ps/org-id-goto "") "LBDLH")
@@ -1474,43 +1496,42 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 :PROPERTIES:
 :ID:       8AD794CB-0A81-4D36-BEAC-0F85F3B34831
 :END:
+:LOGBOOK:
+CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:36] =>  0:31
+:END:
 
 :PROPERTIES:
 :ID:       D71128ED-F3CC-43E1-8C8F-8938BDE9DE16
 :END:
 #+begin_src emacs-lisp :results silent
-(defhydra hydra-dired
+(defhydra hydra-dirs
   (:exit t)
   "Dired folders"
-  ("a" (hydra-dired-google-drive/body) "apps")
+  ("a" (hydra-dirs-google-drive/body) "apps")
   ("b" (dired ps/dir-personal-bibliography) "bibliography")
   ("d" (dired ps/dir-dotfiles) "dotfiles")
   ("e" (dired ps/dir-emacs) "Emacs")
   ("i" (dired ps/dir-anki) "Anki")
   ("j" (dired ps/dir-health) "Health")
-  ("k" (dired ps/dir-PW) "PW")
-  ("m" (hydra-dired-music/body) "Music")
+  ("m" (hydra-dirs-music/body) "Music")
   ("n" (dired ps/dir-notes) "Notes")
   ("o" (dired ps/dir-google-drive) "Google Drive")
-  ("p" (dired ps/dir-people) "people")
-  ;; ("q" (dired ps/dir-youtube))
-  ("t" (hydra-dired-tlon/body) "Tlön")
-  ("H-t" (hydra-dired-tlon/body) "Tlön")
+  ("p" (dired ps/dir-people) "People")
+  ("t" (hydra-dirs-tlon/body) "Tlön")
+  ("H-t" (hydra-dirs-tlon/body) "Tlön")
   ("U" (dired ps/dir-audiobooks) "Audiobooks")
   ("v" (dired ps/dir-movies) "movies")
   ("w" (dired ps/dir-downloads) "downloads")
   ("x" (dired ps/dir-dropbox) "Dropbox")
   ("y" (dired ps/dir-library-pdf) "Library: PDF")
   ("z" (dired ps/dir-library-html) "Library: HTML")
-  ;; ("'" (dired ps/dir-) "")
-  ;; ("-" (dired ) "")
   ("." (dired-at-point) "File at point")
   ("/" (dired "/") "Root")
   ("SPC" (dired "~/") "user")
   (";" (dired-jump) "Current buffer")
   ("H-;" (dired-jump-other-window) "Current buffer in other window"))
 
-(defhydra hydra-dired-tlon
+(defhydra hydra-dirs-tlon
   (:exit t)
   "Dired folders: Tlön"
   ("b" (dired ps/dir-dropbox-tlon-BAE) "Dropbox: BAE" :column "Dropbox")
@@ -1538,22 +1559,23 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
   ("l" (dired ps/dir-dropbox-tlon-leo) "Dropbox: leo" :column "Dropbox")
   ("H-l" (dired ps/dir-google-drive-tlon-leo) "Google Drive: leo" :column "Google Drive"))
 
-(defhydra hydra-dired-google-drive
+(defhydra hydra-dirs-google-drive
   (:exit t)
   "Dired folders: apps"
   ;; TODO: parametrize
   ("i" (dired "~/Google Drive/Apps/Anki") "Anki")
   ("c" (dired "~/Google Drive/Apps/Emacs") "Emacs")
   ("m" (dired "~/Google Drive/Apps/Keyboard Maestro") "Keyboard Maestro")
-  ("'" (hydra-dired/body) "back"))
-(defhydra hydra-dired-music
+  ("'" (hydra-dirs/body) "back"))
+
+(defhydra hydra-dirs-music
   (:exit t)
   "Dired folders: music"
   ("c" (dired ps/dir-music-classical) "classical")
   ("p" (dired ps/dir-music-popular) "popular")
   ("t" (dired ps/dir-music-tango) "tango")
   ("s" (dired ps/dir-music-to-sort) "to sort")
-  ("'" (hydra-dired/body) "back"))
+  ("'" (hydra-dirs/body) "back"))
 #+end_src
 
 ** warnings
@@ -1732,7 +1754,9 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
   (prefer-coding-system 'utf-8)
   (set-default-coding-systems 'utf-8)
   (set-terminal-coding-system 'utf-8)
-  (set-keyboard-coding-system 'utf-8))
+  (set-keyboard-coding-system 'utf-8)
+
+  (define-key input-decode-map (kbd "M-8") "•"))
 #+end_src
 
 * display
@@ -1809,7 +1833,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
   :demand t
   :after org
   :config
-  (setq org-modern-table nil)
+  (setq org-modern-table nil) ; doesn’t work well with variable-pitch: github.com/minad/org-modern/issues/99
   (setq org-modern-statistics nil)
   (setq org-modern-star '("◉" "◉" "◉" "◉" "◉"))
   (setq org-modern-list '((42 . "○")
@@ -1854,7 +1878,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 #+begin_src emacs-lisp :results silent
 (use-feature faces
   :demand t
-  :after org-modern
+  ;; :after org-modern
 
   :config
   (defun ps/faces-load-custom-faces ()
@@ -1882,9 +1906,9 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
        (set-face-attribute 'org-level-7 nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-level-8 nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-date nil :family ps/face-fixed-pitch :height 0.8)
-       (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
-       (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
-       (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
+      (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
+      (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
+      (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)
        (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))))
 #+end_src
@@ -2493,9 +2517,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   :demand t
   :general
   ("A-C-s-m" 'move-beginning-of-line
-   ;; karabiner maps `/' to `z'; otherwise I can't trigger the command while holding `shift'
-   "A-C-s-z" 'move-end-of-line)
-  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map help-mode-map helpful-mode-map Info-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
+   "A-C-s-/" 'move-end-of-line)
+  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map help-mode-map helpful-mode-map Info-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map E elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
    "k" 'previous-line
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)
@@ -3294,6 +3317,7 @@ with the current major mode."
           (ps/org-hide-logbook))
       (unless (eq major-mode 'org-agenda-mode)
         (org-modern-mode -1))
+
       (visible-mode)
       (org-remove-inline-images)
       (ps/org-show-properties)
@@ -3462,8 +3486,23 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
   ((outline-mode-map outline-minor-mode-map)
    "TAB" 'outline-cycle
    "<backtab>" 'outline-cycle-buffer
-   "A-C-s-r" 'outline-backward-same-level
-   "A-C-s-f" 'outline-forward-same-level))
+   "A-C-s-r" 'outline-previous-heading
+   "A-C-s-f" 'outline-next-heading))
+#+end_src
+
+** outshine
+:PROPERTIES:
+:ID:       7103E713-B985-465E-BC75-F73A096EB4EF
+:END:
+
+/[[https://github.com/alphapapa/outshine][outlshine]] extends the functionality of ~outline-minor-mode~./
+
+#+begin_src emacs-lisp
+(use-package outshine
+  :after outline
+  :demand t
+  :config
+  (add-hook 'prog-mode-hook 'outshine-mode))
 #+end_src
 
 ** fill
@@ -3577,7 +3616,9 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   :config
   (setq yas-snippet-dirs (list ps/dir-yasnippets
                                ps/dir-yasnippets-private
-                               (file-name-concat user-emacs-directory "elpaca/builds/yasnippet-snippets/snippets")))
+                               (file-name-concat elpaca-builds-directory "yasnippet-snippets/snippets/")
+                               (file-name-concat elpaca-builds-directory "doom-snippets/")))
+
   (setq yas-triggers-in-field t) ; allow stacked expansions
 
   (yas-global-mode)
@@ -3600,10 +3641,9 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 
   (setq yas-new-snippet-default (concat "# -*- mode: snippet -*-\n# name: $1\n# key: ${2:${1:$(ps/first-char-of-each-letter yas-text)}}\n# contributor: " ps/personal-name "\n# --\n$0"))
 
-  (defvar ps/yas-new-snippet-tlon "# -*- mode: snippet -*-\n# name: tlon-${1:name-of-snippet}\n# key: t${2:shortcut}\n#contributor: ${3: \n# --\n$0\\`(ps/insert-date)\\` \\$1\n	${4:account1}:\\$5  \\$2.00 \\${3:$$(yas-completing-read \"Currency: \" ps/ledger-active-currencies)} ; \\$4\n	${4:account2}:")
+  (defvar ps/yas-new-snippet-tlon "# -*- mode: snippet -*-\n# name: tlon-${1:name-of-snippet}\n# key: t${2:shortcut}\n#contributor: ${3: \n# --\n$0\\`(prot-simple-insert-date)\\` \\$1\n	${4:account1}:\\$5  \\$2.00 \\${3:$$(yas-completing-read \"Currency: \" ps/ledger-active-currencies)} ; \\$4\n	${4:account2}:")
 
   (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
-
 
   :general
   ("C-y" 'yas-new-snippet)
@@ -3623,6 +3663,21 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   :after yasnippet
   :demand t)
 #+end_src
+
+** doom-snippets
+:PROPERTIES:
+:ID:       F0017D7B-DEBD-460B-8DF6-1134ECF42A7A
+:END:
+
+/[[https://github.com/doomemacs/snippets][doom-snippets]] is another snippet library./
+
+#+begin_src emacs-lisp
+(use-package doom-snippets
+  :elpaca (doom-snippets :type git :host github :repo "doomemacs/snippets" :files ("*.el" "*"))
+  :after yasnippet
+  :demand t)
+#+end_src
+
 
 ** hippie-expand
 :PROPERTIES:
@@ -3997,13 +4052,6 @@ as the current buffer."
     (save-some-buffers
      `(4)))
 
-  (defun ps/visit-file-or-switch-to-buffer (thing)
-    "Visit file or switch to corresponding file-visiting buffer."
-    (interactive)
-    (if (get-buffer thing)
-        (switch-to-buffer thing)
-      (find-file thing)))
-
   (defun ps/org-show-subtree-hide-drawers ()
     (outline-hide-subtree)
     (org-show-entry)
@@ -4025,7 +4073,6 @@ as the current buffer."
 
   (defun ps/org-widen-and-reveal ()
     "Widen and reveal subtree."
-    (interactive)
     (widen)
     (org-reveal nil))
 
@@ -4323,19 +4370,47 @@ process in these cases."
 
   (advice-add 'recover-this-file :after #'ps/diff-buffer-with-file)
 
-  (defun ps/copy-path-of-current-buffer ()
+  (defun ps/copy-current-path ()
     "Copy the path of the current buffer to the kill ring."
     (interactive)
-    (let ((path (buffer-file-name)))
+    (let ((path (or (buffer-file-name) default-directory)))
       (kill-new path)
       (message "Copied `%s'" path)))
 
   (add-hook 'find-file-hook #'ps/auto-save-alert)
   ;; (add-hook 'kill-buffer-query-functions #'ps/auto-save-persist)
 
+  ;; reddit.com/r/emacs/comments/t07e7e/comment/hy88bum/?utm_source=reddit&utm_medium=web2x&context=3
+  (defun ps/make-hashed-auto-save-file-name-a (fn)
+    "Compress the auto-save file name so paths don't get too long."
+    (let ((buffer-file-name
+           (if (or (null buffer-file-name)
+                   (find-file-name-handler buffer-file-name 'make-auto-save-file-name))
+               buffer-file-name
+             (sha1 buffer-file-name))))
+      (funcall fn)))
+  (advice-add #'make-auto-save-file-name :around #'ps/make-hashed-auto-save-file-name-a)
+
+  (defun ps/make-hashed-backup-file-name-a (fn file)
+    "A few places use the backup file name so paths don't get too long."
+    (let ((alist backup-directory-alist)
+          backup-directory)
+      (while alist
+        (let ((elt (car alist)))
+          (if (string-match (car elt) file)
+              (setq backup-directory (cdr elt) alist nil)
+            (setq alist (cdr alist)))))
+      (let ((file (funcall fn file)))
+        (if (or (null backup-directory)
+                (not (file-name-absolute-p backup-directory)))
+            file
+          (expand-file-name (sha1 (file-name-nondirectory file))
+                            (file-name-directory file))))))
+  (advice-add #'make-backup-file-name-1 :around #'ps/make-hashed-backup-file-name-a)
+
   :general
   ("M--" 'not-modified
-   "M-;" 'ps/copy-path-of-current-buffer
+   "M-;" 'ps/copy-current-path
    "M-b" 'ps/save-and-revert-buffer
    "M-e" 'ps/eval-region-or-buffer
    "H-q" 'ps/kill-this-buffer
@@ -4381,7 +4456,8 @@ process in these cases."
 /[[https://github.com/rejeep/f.el][f]] is a modern API for working with files and directories in Emacs./
 
 #+begin_src emacs-lisp :results silent
-(use-package f)
+(use-package f
+  :demand t)
 #+end_src
 
 ** locate
@@ -4795,7 +4871,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
   ;; (dired-quick-sort-setup)
   :general
   (dired-mode-map
-   "T" 'hydra-dired-quick-sort/body))
+   "T" 'hydra-dirs-quick-sort/body))
 #+end_src
 
 ** peep-dired
@@ -5058,7 +5134,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
       (select-window last-window)))
 
   ;; Modified from endlessparentheses.com/emacs-narrow-or-widen-dwim.html
-  (defun ps/narrow-or-widen-dwim ()
+   (defun ps/narrow-or-widen-dwim ()
     "Widen if buffer is narrowed, narrow-dwim otherwise.
   Dwim means: region, org-src-block, org-subtree, ledger
   transaction, or defun, whichever applies first. Narrowing to
@@ -5479,8 +5555,7 @@ needs to be included as an element in the list defined by
   (advice-add 'writeroom-mode :before (lambda (&rest args) (setq writeroom-width (window-total-width))))
 
   :general
-  ("M-'" 'writeroom-mode
-   "M-A-'" 'global-writeroom-mode))
+  ("H-u" 'writeroom-mode))
 #+end_src
 
 ** ace-link
@@ -7111,7 +7186,6 @@ buffer are offered."
    "A-H-i" 'consult-info
    "H-R" 'consult-history
    "H-V" 'consult-yank-pop
-   "H-f" 'ps/consult-locate-file-current
    "H-F" 'ps/consult-locate-file-home
    "A-H-f" 'ps/consult-locate-file-anywhere
    "H-k" 'ps/consult-locate-current
@@ -7362,7 +7436,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (setq corfu-popupinfo-delay 0)
 
   ;; Adapted from Prot
-  ;; protesilaos.com/emacs/dotemacs#h:675ebef4-d74d-41af-808d-f9579c2a5ec4
   (defun ps/corfu-enable-always-in-minibuffer ()
     "Enable Corfu in the minibuffer if Vertico is not active.
 Useful for prompts such as `eval-expression' and `shell-command'."
@@ -7918,7 +7991,7 @@ e.g. ~nvm~ isn't recognized by eshell
   :demand t
   :config
   (setq jinx-languages "en")
-  
+
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
   (defun ps/jinx--add-to-abbrev (overlay word)
     "Add abbreviation to `text-mode-abbrev-table'.
@@ -8450,14 +8523,69 @@ argument (ARG), always force prompt."
              :host github
              :repo "tmalsburg/txl.el")
   :config
-  (setq txl-languages '(ES . EN-US))
-  (setq txl-deepl-api-key (auth-source-pass-get "api" (concat "chrome/deepl.com/" ps/personal-email)))
+  (setq txl-languages '(EN-US . ES))
+  (setq txl-deepl-api-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)))
 
   :general
   ("A-H-y" 'txl-translate-region-or-paragraph)
   (txl-edit-translation-mode-map
    "RET" 'txl-accept-translation
    "q" 'txl-dismiss-translation))
+#+end_src
+
+** go-translate
+:PROPERTIES:
+:ID:       543F613A-F3B8-426C-8505-48782483FBEC
+:END:
+
+/[[https://github.com/lorniu/go-translate][go-translate]] is an Emacs translator that supports multiple translation engines./
+
+Needs to be configured.
+
+#+begin_src emacs-lisp :tangle no
+(use-package go-translate
+  :demand t
+  :config
+  (setq gts-translate-list '(("en" "es")))
+  (setq gts-default-translator
+        (gts-translator
+
+         :picker ; used to pick source text, from, to. choose one.
+
+         ;;(gts-noprompt-picker)
+         ;;(gts-noprompt-picker :texter (gts-whole-buffer-texter))
+         (gts-prompt-picker)
+         ;;(gts-prompt-picker :single t)
+         ;;(gts-prompt-picker :texter (gts-current-or-selection-texter) :single t)
+
+         :engines ; engines, one or more. Provide a parser to give different output.
+
+         (list
+          ;; (gts-bing-engine)
+          ;;(gts-google-engine)
+          ;;(gts-google-rpc-engine)
+          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)) :pro t)
+          ;; (gts-google-engine :parser (gts-google-summary-parser))
+          ;;(gts-google-engine :parser (gts-google-parser))
+          ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")
+          ;; (gts-google-rpc-engine :parser (gts-google-rpc-parser) :url "https://translate.google.com")
+          )
+
+         :render ; render, only one, used to consumer the output result. Install posframe yourself when use gts-posframe-xxx
+
+         ;; (gts-buffer-render)
+         ;;(gts-posframe-pop-render)
+         ;;(gts-posframe-pop-render :backcolor "#333333" :forecolor "#ffffff")
+         ;; (gts-posframe-pin-render)
+         ;;(gts-posframe-pin-render :position (cons 1200 20))
+         ;;(gts-posframe-pin-render :width 80 :height 25 :position (cons 1000 20) :forecolor "#ffffff" :backcolor "#111111")
+         (gts-kill-ring-render)
+
+         :splitter ; optional, used to split text into several parts, and the translation result will be a list.
+
+         (gts-paragraph-splitter)
+         ))
+  )
 #+end_src
 
 ** atomic-chrome
@@ -8625,8 +8753,8 @@ With prefix argument, prompt for the URL to use."
            (selection (completing-read "Locator: " locators nil t)))
       (goto-char (cdr (bounds-of-thing-at-point 'symbol)))
       (when (string= "," (thing-at-point 'char))
-	(re-search-forward ", [[:alpha:]]*?\\. " nil t)
-	(replace-match ""))
+        (re-search-forward ", [[:alpha:]]*?\\. " nil t)
+        (replace-match ""))
       (insert (format ", %s " (alist-get selection locators "" "" 'string=)))))
 
   :general
@@ -9285,39 +9413,56 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
   (prog-mode-map
    "A-H-C-i" 'mark-defun
    "s-e" 'xref-find-definitions
-   "s-f" 'consult-flymake)
+   "s-f" 'consult-flycheck)
   ((emacs-lisp-mode-map shell-mode-map)
    "s-c" 'exit-recursive-edit))
 #+end_src
 
-** flymake
+** flycheck
 :PROPERTIES:
-:ID:       2259FE72-2958-4507-AD6D-4CB3F9B2E676
+:ID:       E407F295-B534-4195-A98C-10A131F391D9
 :END:
 
-/flymake is a universal on-the-fly syntax checker./
+#+begin_src emacs-lisp
+(use-package flycheck
+  :demand t
+  :init
+  (global-flycheck-mode)
+
+  :config
+  (setq flycheck-emacs-lisp-load-path 'inherit)
+
+  (defun flyckeck-disable-checkdoc-in-org-src-block ()
+    "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
+    (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
+
+  (add-hook 'org-src-mode-hook 'flyckeck-disable-checkdoc-in-org-src-block)
+
+  :general
+  (flycheck-mode-map
+   "C-c f l" 'flycheck-next-error
+   "C-c f k" 'flycheck-prev-error))
+#+end_src
+
+*** DONE Disable flyckeck for code blocks in my init file
+CLOSED: [2023-08-28 Mon 12:41]
+:PROPERTIES:
+:ID:       F4E9B7CB-2ECE-431F-968E-3B41132F9C9D
+:END:
+:LOGBOOK:
+CLOCK: [2023-08-26 Sat 01:55]--[2023-08-26 Sat 02:20] =>  0:25
+:END:
+https://emacs.stackexchange.com/questions/38207/how-to-specify-buffer-local-variables-for-the-edit-buffer-of-org-source-blocks
+
+** consult-flycheck
+:PROPERTIES:
+:ID:       C205D49D-F578-416E-8047-FC7633D6E4D3
+:END:
 
 #+begin_src emacs-lisp
-(use-feature flymake
-  ;; copied from Prot
-  :config
-  (setq flymake-fringe-indicator-position 'left-fringe)
-  (setq flymake-suppress-zero-counters t)
-  (setq flymake-start-on-flymake-mode t)
-  (setq flymake-no-changes-timeout nil)
-  (setq flymake-start-on-save-buffer t)
-  (setq flymake-proc-compilation-prevents-syntax-check t)
-  (setq flymake-wrap-around nil)
-  (setq flymake-mode-line-format
-        '("" flymake-mode-line-exception flymake-mode-line-counters))
-  (setq flymake-mode-line-counter-format
-        '(" " flymake-mode-line-error-counter
-          flymake-mode-line-warning-counter
-          flymake-mode-line-note-counter ""))
-  :general
-  (flymake-mode-map
-   "C-c f l" 'flymake-goto-next-error
-   "C-c f k" 'flymake-goto-prev-error))
+(use-package consult-flycheck
+  :after consult flyckeck
+  :demand t)
 #+end_src
 
 ** lsp-mode
@@ -9369,9 +9514,6 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 
 #+begin_src emacs-lisp :results silent
 (use-feature elisp-mode
-  :config
-  (add-hook 'emacs-lisp-mode-hook #'flymake-mode)
-
   :general
   (emacs-lisp-mode-map
    "s-d" 'eval-defun
@@ -9385,6 +9527,18 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 :ID:       89FDC8BC-DD5B-4616-8E73-37EDD9C088C1
 :END:
 Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-customary-to-put-many-closing-parentheses-on-one-line-in-lisp-based-la][here]].
+
+** s
+:PROPERTIES:
+:ID:       127B298B-BD3E-42BD-8032-D20B29075DA0
+:END:
+
+/[[https://github.com/magnars/s.el][s]] is a string manipulation library./
+
+#+begin_src emacs-lisp
+(use-package s
+  :demand t)
+#+end_src
 
 ** debug
 :PROPERTIES:
@@ -9473,6 +9627,19 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
    "s-e" 'python-shell-send-statement))
 #+end_src
 
+** emacs-ipython-notebook
+:PROPERTIES:
+:ID:       3F0CEFB0-2983-4659-AB1F-6936AD8BF0FC
+:END:
+
+/[[https://github.com/millejoh/emacs-ipython-notebook][emacs-ipython-notebook]] is a Jupyter notebook client in Emacs./
+
+This needs to be configured.
+
+#+begin_src emacs-lisp
+(use-package ein)
+#+end_src
+
 ** applescript-mode
 :PROPERTIES:
 :ID:       6F36A349-196D-40A8-9338-61DB3C86D760
@@ -9530,16 +9697,6 @@ instead of JSON."
             (lambda ()
               (when (equal buffer-file-name tlon-babel-file-contacts)
                 (add-hook 'after-save-hook #'ps/json-mode-validate nil t)))))
-#+end_src
-
-** flymake-json
-:PROPERTIES:
-:ID:       DA345E42-66A9-411B-AEDD-B087EA7267A7
-:END:
-
-#+begin_src emacs-lisp
-(use-package flymake-json
-  :demand t)
 #+end_src
 
 ** csv-mode
@@ -9697,7 +9854,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :general
   (copilot-mode-map
    "M-<tab>" 'copilot-accept-completion
-   "A-M-<tab>" 'copilot-accept-completion-by-line))
+   "M-S-<tab>" 'copilot-accept-completion-by-line))
 #+end_src
 
 ** gptel
@@ -10375,7 +10532,7 @@ image."
    "s-p" 'org-time-stamp-inactive
    "s-A-p" 'org-time-stamp
    "s-q" 'org-set-tags-command
-   "s-A-s" 'org-schedule
+   "s-s" 'org-schedule
    ;; "s-A-s" 'ps/org-isearch-visible-org-heading
    "s-t" 'org-todo
    "s-A-t" 'org-sort
@@ -10396,6 +10553,7 @@ image."
    "s-b" (lambda! (org-emphasize ?*))
    "s-i" (lambda! (org-emphasize ?/))
    "s-e" (lambda! (org-emphasize ?~))))
+
 #+end_src
 
 *** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
@@ -10617,8 +10775,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
       (if (looking-at "%%")
           (unless just-enable
             (delete-line))
-        (insert "%%(org-bbdb-anniversaries-future 1)
-")))
+        (insert "%%(org-bbdb-anniversaries-future 1)\n")))
     (unless just-enable
       (org-agenda-redo)))
 
@@ -11487,73 +11644,74 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 :END:
 
 #+begin_src emacs-lisp :results silent
-(use-feature org-id
-  :after org
-  :demand t
-  :init
-  ;; stackoverflow.com/a/16247032/4479455
-  (defvar ps/org-id-auto-add-excluded-directories
-    (list ps/dir-dropbox-tlon-fede
-          ps/dir-dropbox-tlon-leo)
-    "Directories containing files to exclude from `ps/org-id-auto-add-ids-to-headings-in-file'")
+  (use-feature org-id
+    :after org
+    :demand t
+    :init
+    ;; stackoverflow.com/a/16247032/4479455
+    (defvar ps/org-id-auto-add-excluded-directories
+      (list ps/dir-dropbox-tlon-fede
+            ps/dir-dropbox-tlon-leo)
+      "Directories containing files to exclude from `ps/org-id-auto-add-ids-to-headings-in-file'")
 
-  (defvar ps/org-id-auto-add-excluded-files
-    (list ps/file-orb-noter-template)
-    "Files to exclude from `ps/org-id-auto-add-ids-to-headings-in-file'")
+    (defvar ps/org-id-auto-add-excluded-files
+      (list ps/file-orb-noter-template)
+      "Files to exclude from `ps/org-id-auto-add-ids-to-headings-in-file'")
 
-  (defun ps/org-id-auto-add-ids-to-headings-in-file ()
-    "Add ID properties to all headings in the current file which do
-not already have one."
-    (when-let ((file (buffer-file-name)))
-      (when (and (eq major-mode 'org-mode)
-                 (string-match ps/dir-org file)
-                 (eq buffer-read-only nil))
-        (unless
-            (or
-             ;; exclude directories
-             (member (file-name-directory (buffer-file-name))
-                     ps/org-id-auto-add-excluded-directories)
-             ;; exclude files
-             (member (buffer-file-name)
-                     ps/org-id-auto-add-excluded-files)
-             (member (org-get-heading)
-                     '("Local variables"
-                       "COMMENT Local variables"
-                       "TODO Local variables")))
-          (org-map-entries 'org-id-get-create)))))
+    (defun ps/org-id-auto-add-ids-to-headings-in-file ()
+      "Add ID properties to all headings in the current file which do
+  not already have one."
+      (when-let ((file (buffer-file-name)))
+        (when (and (eq major-mode 'org-mode)
+                   (string-match ps/dir-org file)
+                   (eq buffer-read-only nil))
+          (unless
+              (or
+               ;; exclude directories
+               (member (file-name-directory (buffer-file-name))
+                       ps/org-id-auto-add-excluded-directories)
+               ;; exclude files
+               (member (buffer-file-name)
+                       ps/org-id-auto-add-excluded-files)
+               (member (org-get-heading)
+                       '("Local variables"
+                         "COMMENT Local variables"
+                         "TODO Local variables")))
+            (org-map-entries 'org-id-get-create)))))
 
-  :config
-  (setq org-id-link-to-org-use-id t)
-  ;; I want these files to be searched for IDs, so that I can use
-  ;; org-capture templates with them, but do not want them to be part
-  ;; of org-agenda or org-roam.
-  (setq org-id-extra-files (list
-                            ps/file-tlon-tareas-leo
-                            ps/file-tlon-tareas-fede))
+    :config
+    (setq org-id-link-to-org-use-id t)
+    ;; I want these files to be searched for IDs, so that I can use
+    ;; org-capture templates with them, but do not want them to be part
+    ;; of org-agenda or org-roam.
+    (setq org-id-extra-files (list
+                              ps/file-tlon-tareas-leo
+                              ps/file-tlon-tareas-fede))
 
-  (defun ps/org-id-update-id-locations ()
-    "Scan relevant files for IDs.
+    (defun ps/org-id-update-id-locations ()
+      "Scan relevant files for IDs.
 
-Store the relation between files and corresponding IDs. This will
-scan all agenda files, all associated archives, all open Org
-files, recursively all files in `org-directory', and all files in
-`org-id-extra-files'."
-    (interactive)
-    (org-id-update-id-locations
-     (directory-files-recursively org-directory ".org$\\|.org.gpg$")))
+  Store the relation between files and corresponding IDs. This will
+  scan all agenda files, all associated archives, all open Org
+  files, recursively all files in `org-directory', and all files in
+  `org-id-extra-files'."
+      (interactive)
+      (org-id-update-id-locations
+       (directory-files-recursively org-directory ".org$\\|.org.gpg$")))
 
-  (defun ps/org-id-goto (id &optional arg)
-    "Open ID even if narrowed."
-    (dotimes (i 2)
-      (ps/org-widen-and-reveal)
-      (org-id-goto id)))
+    (defun ps/org-id-goto (id &optional arg)
+      "Open ID even if narrowed."
+      (dotimes (i 2)
+        (ps/org-widen-and-reveal)
+        (sleep-for 0.05)
+        (org-id-goto id)))
 
-  (add-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)
+    (add-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)
 
-  :general
-  (org-mode-map
-   "s-A-i" 'org-id-copy
-   "s-A-u" 'ps/org-id-update-id-locations))
+    :general
+    (org-mode-map
+     "s-A-i" 'org-id-copy
+     "s-A-u" 'ps/org-id-update-id-locations))
 #+end_src
 
 ** org-list
@@ -11704,9 +11862,8 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
      ("." . (org-speed-move-safe 'org-forward-heading-same-level))
      ("," . (org-speed-move-safe 'org-backward-heading-same-level))
      ("l" . (org-speed-move-safe 'org-next-visible-heading))
-     ("j" . (org-speed-move-safe 'outline-up-heading))
-     ("m" . (org-previous-block nil))
-     ("/" . (org-next-block nil))
+     ("m" . (org-speed-move-safe 'outline-up-heading))
+     ("j" . (ps/consult-org-heading))
      ("Outline structure editing")
      ("A" . (org-metaleft))
      ("D" . (org-metadown))
@@ -11915,7 +12072,7 @@ Hugo should be able to export ~org-cite~ citations.
 
 #+begin_src emacs-lisp :results silent
 (use-package ox-hugo
-  :after org)
+  :after ox)
 #+end_src
 
 ** ox-pandoc
@@ -12090,7 +12247,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :after org
   :demand t
   :config
-  ;; temporarily disable cache to avoid `org-element-cache' errors
+  ;; set to nil to temporarily disable cache to avoid `org-element-cache' errors
   (setq org-element-use-cache t))
 #+end_src
 
@@ -13023,23 +13180,23 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   (setq org-noter-always-create-frame nil)
   (setq org-noter-separate-notes-from-heading t)
 
-  (defun ps/org-noter-cleanup-annotation (description)
-    "Cleanup the annotation at point.
+  (defun ps/org-noter-cleanup-annotation (title)
+  "Cleanup the annotation at point.
 Replaces the generic 'Highlight on page X' generated by
-`org-noter-create-skeleton' with a custom DESCRIPTION and
+`org-noter-create-skeleton' with a custom TITLE and
 encloses the content of the heading in a quote."
-    (interactive "sTitle: ")
-    (save-excursion
-      (re-search-backward "^\\*\\*\\*[^*]")
-      (re-search-forward "Highlight on page" nil t)
-      (replace-match (concat title ", p."))
-      (outline-next-visible-heading 1)
-      (delete-line)
-      (unfill-paragraph)
-      (insert "#+begin_quote\n")
-      (forward-paragraph)
-      (insert "#+end_quote\n")
-      (outline-next-visible-heading 1)))
+  (interactive "sTitle: ")
+  (save-excursion
+    (re-search-backward "^\\*\\*\\*[^*]")
+    (re-search-forward "Highlight on page" nil t)
+    (replace-match (concat title ", p."))
+    (outline-next-visible-heading 1)
+    (delete-line)
+    (unfill-paragraph)
+    (insert "#+begin_quote\n")
+    (forward-paragraph)
+    (insert "#+end_quote\n")
+    (outline-next-visible-heading 1)))
 
   ;; TODO: find `org-noter' hook to run this automatically
   (defun ps/org-noter-dehyphenate ()
@@ -13605,7 +13762,7 @@ Formats current entry according to variable `bibtex-entry-format'."
   ;; check tweaked version of `bibtex-format-entry' above
   (setq bibtex-entry-format '(opts-or-alts-fields last-comma delimiters page-dashes))
 
-  (defun ps/ebib-replace-element-by-name (list target-name new-element)
+  (defun ps/bibtex-replace-element-by-name (list target-name new-element)
     "Replace the element in LIST whose name matches TARGET-NAME with NEW-ELEMENT."
     (let ((current list))
       (while current
@@ -13615,7 +13772,7 @@ Formats current entry according to variable `bibtex-entry-format'."
     list)
 
   ;; Replace 'online' entry type
-  (ps/ebib-replace-element-by-name
+  (ps/bibtex-replace-element-by-name
    bibtex-biblatex-entry-alist
    "Online" '("Online" "Online Resource"
               (("author" nil nil 0) ("title") ("journaltitle" nil nil 3)
@@ -13797,7 +13954,7 @@ The correct Biblatex field for this information is
     "Move entry with KEY to TARGET bibliography file."
     (unless ebib--cur-db
       (user-error "Ebib does not seem to be open; please open it first"))
-    (let ((source (ps/ebib-get-file-of-key key)))
+    (let ((source (tlon-ebib-get-file-of-key key)))
       (when (string= source target)
         (user-error "`%s' is already in `%s'!" key target))
       (with-current-buffer (find-file-noselect source)
@@ -13822,6 +13979,7 @@ If KEY is nil, use the key of the entry at point."
 Save citekey to kill-ring. If KEY is nil, use the key of the
 entry at point."
     (interactive)
+    (require 'tlon-babel)
     (let ((key (or key (ps/bibtex-get-key)))
           (target tlon-babel-file-fluid))
       (ps/bibtex-move-entry key target)
@@ -13841,8 +13999,8 @@ entry at point."
       ;; If ebib is already open, we reload the database to insure it
       ;; reflects the current entry state.
       (when ebib--cur-db
-        (ebib-switch-to-database-nth (ps/ebib-get-db-number file))
-        (ps/ebib-reload-database-no-confirm ebib--cur-db))
+        (ebib-switch-to-database-nth (tlon-ebib-get-db-number file))
+        (tlon-ebib-reload-database-no-confirm ebib--cur-db))
       (ebib file key)
       (ebib--pop-to-buffer (ebib--buffer 'entry))))
 
@@ -14146,7 +14304,7 @@ citation styles. See specific functions for more detail."
     (interactive (list (citar-select-ref)))
     (unless (get-buffer "*ebib*")
       (ebib))
-    (ps/ebib-open-key citekey))
+    (tlon-ebib-open-key citekey))
 
   (defun ps/citar-move-entry-to-tlon (citekey)
     "Move bibliographic entry associated with the CITEKEY to the Tlön bibliography."
@@ -14158,7 +14316,7 @@ citation styles. See specific functions for more detail."
   (defun ps/citar-goto-bibtex-entry (citekey)
   "Goto the bibliographic entry associated with the CITEKEY in the bibtex file."
   (interactive (list (citar-select-ref)))
-  (if-let ((file (ps/ebib-get-file-of-key citekey)))
+  (if-let ((file (tlon-ebib-get-file-of-key citekey)))
       (progn
         (find-file file)
         (widen)
@@ -14190,12 +14348,20 @@ citation styles. See specific functions for more detail."
       :keymaps '(citar-map citar-citation-map)
       "b" 'ps/citar-goto-bibtex-entry
       "c" 'embark-copy-as-kill
-      "d" 'ps/ebib-download-dwim
+      "d" 'tlon-ebib-download-dwim
       "i" 'ps/citar-open-in-ebib
-      "s" 'ps/ebib-search-dwim
+      "s" 'tlon-ebib-search-dwim
       "t" 'ps/citar-move-entry-to-tlon
       "u" 'citar-open-links))))
 #+end_src
+
+*** TODO Answer bdarcus
+:PROPERTIES:
+:ID:       28ED2F37-EE78-4660-BC8A-46B7D9113593
+:END:
+:LOGBOOK:
+CLOCK: [2023-08-29 Tue 15:30]--[2023-08-29 Tue 16:34] =>  1:04
+:END:
 
 *** TODO Tweak note creation function so that it adds a tag with the work type
 :PROPERTIES:
@@ -14407,8 +14573,9 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 #+begin_src emacs-lisp :results silent
 (use-package ebib
-  :demand t
   :after tlon-babel
+  :demand t
+  ;; :after tlon-babel
   :config/el-patch
   ;; tweak original function to prevent unnecessary vertical window splits
   (defun ebib--setup-windows ()
@@ -14598,7 +14765,7 @@ value is copied to the kill ring."
                            (progn (kill-new contents)
                                   (message "Field contents copied."))
                          (error "Cannot copy an empty field")))
-                     (let* ((raw-contents (ps/ebib-get-field-value field))
+                     (let* ((raw-contents (tlon-ebib-get-field-value field))
                             (contents (if (f-file-p raw-contents)
                                           (file-truename raw-contents)
                                         raw-contents)))
@@ -14638,1135 +14805,49 @@ value is copied to the kill ring."
   ;; hide others
   (add-to-list 'ebib-hidden-fields "year")
 
-  (defun ps/ebib-open-or-switch ()
-    "Open ebib in the right window or switch to it if already open."
-    (interactive)
-    (ps/window-split-if-unsplit)
-    (if (> (frame-width) ps/frame-width-threshold)
-        (winum-select-window-3)
-      (winum-select-window-2))
-    (ebib))
-
-  (defun ps/ebib-reload-database-no-confirm (db)
-    "Reload the database DB from disk, without asking for confirmation."
-    (ebib--execute-when
-      (entries
-       (unless (and (ebib-db-modified-p db)
-                    (not (yes-or-no-p "Database modified.  Really reload from file? ")))
-         (ebib-db-set-current-entry-key (ebib--get-key-at-point) db)
-         (ebib--reload-database db)
-         (ebib--set-modified nil db)
-         (message "Database reloaded")))
-      (default
-       (beep))))
-
-  (defvar ps/ebib-isbn-p
-    "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
-
-  (defun ps/ebib-isbn-p (string)
-    "Return t if string looks like an ISBN."
-    (string-match ps/ebib-isbn-p string))
-
-  (defun ps/ebib-get-isbn ()
-    "Return ISBN for the current entry, if it exists."
-    (when-let ((isbn
-                (ps/ebib-get-field-value "isbn")))
-      (car (split-string
-            (s-replace "-"
-                       ""
-                       (substring-no-properties
-                        isbn))
-            " "))))
-
-  (defun ps/ebib-video-p (string)
-    "Return t if string looks like a video URL."
-    ;; TODO: Add more video sites
-    (string-match
-     "https?://\\(www\\.\\)?\\(youtube\\.com/watch\\?v=\\|youtu.be/\\)\\([a-zA-Z0-9_-]+\\)"
-     string))
-
-  (defun ps/ebib--update-file-field-contents (key file-name)
-    "docstring"
-    (let* ((field "file")
-           (file-field-contents (ps/ebib-get-field-value field)))
-      (unless (and
-               file-field-contents
-               (catch 'file-exists
-                 (dolist (file (ebib--split-files file-field-contents))
-                   (when (string= file file-name)
-                     (throw 'file-exists file)))))
-        (ebib-set-field-value field file-name key ebib--cur-db ";")
-        (ebib--store-multiline-text (current-buffer))
-        (ebib--redisplay-field field)
-        (ebib--redisplay-index-item field)
-        (ebib-save-current-database t))))
-
-  (defvar ps/ebib-book-like-entry-types
-    (let ((lowercase '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook")))
-      (append lowercase (mapcar (lambda (entry)
-                                  (concat (upcase (substring entry 0 1))
-                                          (substring entry 1)))
-                                lowercase)))
-    "Entry types for books and book-like entities, in both lowercase and sentence case.")
-
-  (defvar ps/ebib-article-like-entry-types
-    (let ((lowercase '("article")))
-      (append lowercase (mapcar (lambda (entry)
-                                  (concat (upcase (substring entry 0 1))
-                                          (substring entry 1)))
-                                lowercase)))
-    "Entry types for articles and article-like entities, in both lowercase and sentence case.")
-
-  (defvar ps/ebib-film-like-entry-types
-    (let ((lowercase '("movie" "video" "tvepisode")))
-      (append lowercase (mapcar (lambda (entry)
-                                  (concat (upcase (substring entry 0 1))
-                                          (substring entry 1)))
-                                lowercase)))
-    "Entry types for articles and article-like entities, in both lowercase and sentence case.")
-
-  (defun ps/ebib-copy-current-field-contents ()
-    "Copy the contents of the current field to the kill ring.
-If the field contains a value from a cross-referenced entry, that
-value is copied to the kill ring."
-    (interactive)
-    (ebib-copy-field-contents (ebib--current-field)))
-  (defun ps/ebib-get-file (extension)
-    "docstring"
-    (when-let ((files (ps/ebib-get-field-value "file")))
-      (catch 'tag
-        (mapc
-         (lambda (file)
-           (when (equal (file-name-extension file) extension)
-             (throw 'tag file)))
-         (ebib--split-files files))
-        nil)))
-
-  (defun ps/ebib-open-file (extension)
-    "Open file with EXTENSION in entry at point, if it (uniquely)
-    exists."
-    (interactive)
-    (if-let ((file-name (ps/ebib-get-file extension)))
-        (find-file file-name)
-      (user-error (format "No (unique) `%s' file found" extension))))
-
-  (defun ps/ebib-open-file-externally (extension)
-    "Open file with EXTENSION in entry at point, if it (uniquely)
-    exists."
-    (interactive)
-    (if-let ((file-name (expand-file-name (ps/ebib-get-file extension))))
-        (shell-command (format "open '%s'" file-name))
-      (user-error (format "No (unique) `%s' file found" extension))))
-
-  (defun ps/ebib-open-pdf-file ()
-    "Open `pdf' file in entry at point, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file "pdf"))
-
-  (defun ps/ebib-open-md-file ()
-    "Open `md' file in entry at point, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file "md"))
-
-  (defun ps/ebib-open-pdf-file-externally ()
-    "Open `pdf' file in entry at point externally, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file-externally "pdf"))
-
-  (defun ps/ebib-open-webm-file ()
-    "Open `webm' file in entry at point, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file-externally "webm"))
-
-  (defun ps/ebib-open-mp3-file ()
-    "Open `webm' file in entry at point, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file-externally "mp3"))
-
-  (defun ps/ebib-open-html-file ()
-    "Open `html' file in entry at point, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file "html")
-    (let ((html-buffer (buffer-name))
-          (browse-url-handlers nil)
-          (browse-url-browser-function #'eww-browse-url))
-      (browse-url-of-buffer)
-      (kill-buffer html-buffer)))
-
-  (defun ps/ebib-open-html-file-externally ()
-    "Open `html' file in entry at point externally, if it (uniquely) exists."
-    (interactive)
-    (ps/ebib-open-file-externally "html"))
-
-  (defvar ps/ebib-valid-file-extensions
-    '("pdf" "html" "webm" "flac" "mp3" "md")
-    "List of valid file extensions for `ps/ebib-open-file-dwim'.")
-
-  (defun ps/ebib-open-file-dwim ()
-    "Open file in entry at point.
-    If the entry contains more than one file, use the preference
-    ordering defined in `ps/ebib-valid-file-extensions'."
-    (interactive)
-    (if-let ((extension
-              (catch 'tag
-                (dolist (extension ps/ebib-valid-file-extensions)
-                  (when (ps/ebib-get-file extension)
-                    (throw 'tag extension))))))
-        (call-interactively
-         (intern
-          (concat "ps/ebib-open-" extension "-file")))
-      (user-error "No file found")))
-
-  (defun ps/ebib-rename-files ()
-    "Rename files in entry at point so that the file stems match the
-    corresponding entry key."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (let* ((field "file")
-              (key (ebib--get-key-at-point))
-              (file-list (split-string
-                          (ps/ebib-get-field-value field)
-                          ";")))
-         (ps/ebib-valid-key-p key)
-         (when file-list
-           (ebib-delete-field-contents field t)
-           (dolist (filename file-list)
-             (let ((stem (file-name-base filename))
-                   (extension (file-name-extension filename)))
-               (unless (equal stem key)
-                 (let ((new-filename
-                        (ps/ebib--rename-and-abbreviate-file
-                         (ps/ebib--extension-directories extension)
-                         key
-                         extension)))
-                   (rename-file filename new-filename)
-                   (setq filename new-filename)))
-               (ebib-set-field-value field filename key ebib--cur-db ";")))
-           (ebib--redisplay-field field)
-           (ebib--redisplay-index-item field))))
-      ;; (ebib-save-current-database nil))))
-      (default
-       (beep))))
-
-  (defun ps/ebib-validate-file-stem ()
-    "Check that stem of each attached file equals entry's unique key."
-    (when-let ((files (ps/ebib-get-field-value "file")))
-      (when (catch 'tag
-              (mapc
-               (lambda (file)
-                 (unless (equal
-                          (file-name-base file)
-                          (ebib--get-key-at-point))
-                   (throw 'tag file)))
-               (ebib--split-files files))
-              nil)
-        (user-error "Invalid file stem"))))
-
-  ;; We abbreviate the filename so that it works when invoked by my collaborators
-  (defun ps/ebib--rename-and-abbreviate-file (directory key &optional extension)
-    "docstring"
-    (file-name-concat
-     (abbreviate-file-name
-      directory)
-     (if extension
-         (file-name-with-extension key extension)
-       key)))
-
-  (defun ps/ebib-valid-key-p (&optional key)
-    "Check that KEY is a valid entry key; if not, throw an error."
-    (setq key (or key (ebib--get-key-at-point)))
-    (unless (string-match
-             "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
-             key)
-      (user-error "Ebib entry has an invalid key; please regenerate it")))
-
-  (defun ps/ebib--extension-directories (extension)
-    "Return directory associated with EXTENSION."
-    (cond ((string= extension "pdf")
-           ps/dir-library-pdf)
-          ((string= extension "html")
-           ps/dir-library-html)
-          ((string= extension "md")
-           (file-name-concat
-            ps/dir-tlon-babel
-            "translations/posts/"))
-          ((or (string= extension "webm")
-               (string= extension "mp3")
-               (string= extension "flac"))
-           ps/dir-library-media)
-          (t
-           (user-error "Invalid file extension"))))
-
-  (defun ps/ebib-attach-file (&optional most-recent)
-    "Prompt the user for a file to attach to the current entry.
-If MOST-RECENT is non-nil, attach the most recent file instead."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (let ((key (ebib--get-key-at-point)))
-         (ps/ebib-valid-key-p key)
-         (let* ((field "file")
-                (file-to-attach
-                 (if most-recent
-                     (ps/newest-file ps/dir-downloads)
-                   (let ((initial-folder
-                          (completing-read "Select folder: "
-                                           (list
-                                            ps/dir-downloads
-                                            ps/dir-library-html
-                                            ps/dir-library-pdf
-                                            ps/dir-library-media))))
-                     (read-file-name
-                      "File to attach: "
-                      ;; Use key as default selection if key-based file exists
-                      ;; else default to `initial-folder'
-                      (if (catch 'found
-                            (dolist (extension ps/ebib-valid-file-extensions)
-                              (when (f-file-p (file-name-concat
-                                               initial-folder
-                                               (file-name-with-extension key extension)))
-                                (throw 'found extension))))
-                          (file-name-concat initial-folder key)
-                        initial-folder)))))
-                (extension (file-name-extension file-to-attach))
-                (destination-folder
-                 (ps/ebib--extension-directories extension))
-                (file-name (ps/ebib--rename-and-abbreviate-file
-                            destination-folder key extension)))
-           (when (or (not (f-file-p file-name))
-                     (y-or-n-p "File exists. Overwrite? "))
-             (rename-file file-to-attach file-name t))
-           (ps/ebib--update-file-field-contents key file-name)
-           (when (string= (file-name-extension file-name) "pdf")
-             ;; open the pdf to make sure it displays the web page correctly
-             (ps/ebib-open-pdf-file)
-             ;; ocr the pdf if necessary
-             ;; (let ((expanded-file-name (expand-file-name file-name)))
-             ;; (ps/ocr-pdf (format "'%s' '%s'" expanded-file-name expanded-file-name)))
-             ))))
-      (default
-       (beep))))
-
-  (defvar ps/ebib-download-use-vpn nil
-    "Whether to use a VPN when downloading content.")
-
-  (defvar ps/ebib-library-genesis
-    '("Library Genesis"
-      "https://libgen.lc/index.php?req="
-      "&phrase=1&view=simple&column=def&sort=extension&sortmode=DESC"))
-
-  (defvar ps/ebib-amazon
-    '("Amazon"
-      "https://smile.amazon.com/s?k="
-      "&i=stripbooks"))
-
-  (defvar ps/ebib-worldcat
-    '("Worldcat"
-      "https://www.worldcat.org/search?q="
-      "&itemType=book&limit=50&offset=1"))
-
-  (defvar ps/ebib-internet-archive
-    '("Internet Archive"
-      "https://archive.org/search.php?query="
-      ""))
-
-  (defvar ps/ebib-university-of-toronto
-    '("University of Toronto"
-      "https://librarysearch.library.utoronto.ca/discovery/search?query=any,contains,"
-      "&tab=Everything&search_scope=UTL_AND_CI&vid=01UTORONTO_INST:UTORONTO&offset=0"))
-
-  (defvar ps/ebib-university-of-california-berkeley
-    '("University of California, Berkeley"
-      "https://search.library.berkeley.edu/discovery/search?query=any,contains,"
-      "&tab=Default_UCLibrarySearch&search_scope=DN_and_CI&vid=01UCS_BER:UCB&offset=0"))
-
-  (defvar ps/ebib-hathitrust
-    '("HathiTrust"
-      "https://babel.hathitrust.org/cgi/ls?q1="
-      "&field1=ocr;a=srchls;lmt=ft;sz=100"))
-
-  (defvar ps/ebib-connected-papers
-    '("Connected Papers"
-      "https://www.connectedpapers.com/search?q="
-      ""))
-
-  (defvar ps/ebib-google-scholar
-    '("Google Scholar"
-      "https://scholar.google.com/scholar?q="
-      ""))
-
-  (defvar ps/ebib-wikipedia
-    '("Google Scholar"
-      "http://en.wikipedia.org/w/index.php?title=Special%3ASearch&profile=default&search="
-      "&fulltext=Search"))
-
-  (defvar ps/ebib-goodreads
-    '("Goodreads"
-      "https://www.goodreads.com/search?q="
-      ""))
-
-  (defvar ps/ebib-audible
-    '("Audible"
-      "https://www.audible.com/search?keywords="
-      ""))
-
-  (defvar ps/ebib-audiobookbay
-    '("Audiobook Bay"
-      "https://theaudiobookbay.se/?s="
-      "&tt=1"))
-
-  (defvar ps/ebib-imdb
-    '("IMDB"
-      "https://www.imdb.com/find/?q="
-      ""))
-
-  (defvar ps/ebib-letterboxd
-    '("Letterboxd"
-      "https://letterboxd.com/search/films/"
-      ""))
-
-  (defvar ps/ebib-metacritic
-    '("Metacritic"
-      "https://www.metacritic.com/search/all/"
-      "/results"))
-
-  (defvar ps/ebib-search-book-functions
-    '(ps/ebib-search-goodreads
-      ps/ebib-search-hathitrust
-      ps/ebib-search-internet-archive
-      ps/ebib-search-library-genesis
-      ps/ebib-search-amazon)
-    "List of functions that search for books.")
-
-  (defvar ps/ebib-download-book-functions
-    '(ps/ebib-search-internet-archive
-      ps/ebib-search-hathitrust
-      ps/ebib-search-university-of-california-berkeley
-      ps/ebib-search-library-genesis
-      ps/ebib-search-audible
-      ps/ebib-search-audiobookbay)
-    "List of functions that download books.")
-
-  (defvar ps/ebib-search-article-functions
-    '(ps/ebib-search-connected-papers
-      ps/ebib-search-google-scholar)
-    "List of functions that search for articles.")
-
-  (defvar ps/ebib-download-article-functions
-    '(ps/ebib-search-article-functions)
-    "List of functions that download articles.")
-
-  (defvar ps/ebib-search-film-functions
-    '(ps/ebib-search-imdb
-      ps/ebib-search-letterboxd
-      ps/ebib-search-metacritic)
-    "List of functions that search for films.")
-
-  (defvar ps/ebib-download-film-functions
-    ps/ebib-search-film-functions
-    "List of functions that search for films.")
-
-  (defvar ps/ebib-search-engines '()
-    "List of search engine symbols. Used by the
- `ps/ebib-generate-search-commands' macro.")
-
-  (dolist (engine (delete-dups (append ps/ebib-search-book-functions
-                                       ps/ebib-search-article-functions
-                                       ps/ebib-search-film-functions
-                                       ps/ebib-download-book-functions)))
-    (let* ((engine-name (symbol-name engine))
-           (engine-symbol (intern (replace-regexp-in-string "ps/ebib-search-" "" engine-name))))
-      (add-to-list 'ps/ebib-search-engines engine-symbol)))
-
-   ;;; search functions
-  (defmacro ps/ebib-generate-search-commands ()
-    "Generate search commands for each search engine listed in `ps/ebib-search-engines'."
-    `(progn
-       ,@(mapcar (lambda (engine)
-                   `(defun ,(intern (concat "ps/ebib-search-" (symbol-name engine))) (&optional query)
-                      ,(let ((name (capitalize (replace-regexp-in-string "-" " " (symbol-name engine)))))
-                         (format "Run a search on %s." name)
-                         `(interactive ,(format "sSearch %s: " name)))
-                      (ps/ebib-search
-                       ,(intern (concat "ps/ebib-" (symbol-name engine)))
-                       query)))
-                 ps/ebib-search-engines)))
-
-  (ps/ebib-generate-search-commands)
-
-  (defun ps/ebib-search (search-engine query)
-    "Search for QUERY with SEARCH-ENGINE."
-    (let* ((prefix (nth 1 search-engine))
-           (suffix (nth 2 search-engine))
-           (query (url-hexify-string query)))
-      (browse-url (concat prefix query suffix))))
-
-  (setq ps/ebib-download-use-vpn t)
-
-  (defun ps/ebib--search-multi (query functions)
-    "Search for QUERY with each function in FUNCTIONS."
-    (dolist (fun functions)
-      (when (and ps/ebib-download-use-vpn
-                 (string-match "-download-" (symbol-name fun)))
-        (mullvad-connect-to-website "Library Genesis" 5))
-      (funcall fun query)))
-
-  (defun ps/ebib-search-dwim ()
-    "If field at point is 'title', run a search with its value, else use identifier.
-    The list of websites for the search query is defined by the
-    variable `ps/ebib-search-book'"
-    (interactive)
-    (ps/ebib--search-or-download 'search))
-
-  (defun ps/ebib-get-supertype ()
-    "Return the supertype of the current entry."
-    (let* ((type (ps/ebib-get-field-value "=type="))
-           (supertype (cond
-                       ((member type ps/ebib-book-like-entry-types)
-                        "book")
-                       ((member type ps/ebib-article-like-entry-types)
-                        "article")
-                       ((member type ps/ebib-film-like-entry-types)
-                        "film"))))
-      supertype))
-
-  (defun ps/ebib-get-query-field ()
-    "Return the field based on whose value the search query will be run."
-    (let ((query (if (string= (ebib--current-field) "title")
-                     "title"
-                   "identifier")))
-      query))
-
-  (defun ps/ebib--search-or-download (action)
-    "Perform ACTION (search or download) on the current entry, depending on field at point.
-If point is on field `title', perform ACTION based on its value.
-Else perform ACTION based on the value of its identifier (`doi'
-or `isbn')."
-    (let* ((supertype (ps/ebib-get-supertype))
-           (query (ps/ebib-get-query-field))
-           (fun (intern (format "ps/ebib-%s-%s-by-%s" action supertype query))))
-      (funcall fun)))
-
-  (defun ps/ebib-search-book (query)
-    "Search for QUERY with the relevant book search functions.
-The list of book search functions is specified by
-`ps/ebib-search-book-functions'."
-    (ps/ebib--search-multi query ps/ebib-search-book-functions))
-
-  ;; getting the value of the book title field is slightly more involved
-  ;; because two different fields may contain this value. so we create a
-  ;; special function
-  (defun ps/ebib--get-title-at-point ()
-    "Get the title of the entry at point."
-    (let ((title (catch 'found
-                   (dolist (field '("title" "booktitle"))
-                     (when-let ((title
-                                 (ps/ebib-get-field-value field)))
-                       (throw 'found title))))))
-      title))
-
-  (defun ps/ebib-search-book-by-title ()
-    "Search for the book's title with the relevant book search functions.
-The list of book search functions is specified by
-`ps/ebib-search-book-functions'."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (if-let ((title (ps/ebib--get-title-at-point)))
-           (ps/ebib-search-book title)
-         (user-error "Title field is empty")))
-      (default
-       (beep))))
-
-  (defun ps/ebib-search-article (query)
-    "Search for QUERY with the relevant article search functions.
-The list of article search functions is specified by
-`ps/ebib-search-article-functions'."
-    (ps/ebib--search-multi query ps/ebib-search-article-functions))
-
-  (defun ps/ebib-search-article-by-title ()
-    "Search for the article's title with the relevant article search functions.
-The list of article search functions is specified by
-`ps/ebib-search-article-functions'."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (if-let ((title (ps/ebib-get-field-value "title")))
-           (ps/ebib-search-article title)
-         (user-error "Title field is empty")))
-      (default
-       (beep))))
-
-  (defun ps/ebib-search-film (query)
-    "Search for QUERY with the relevant film search functions.
-The list of film search functions is specified by
-`ps/ebib-search-film-functions'."
-    (ps/ebib--search-multi query ps/ebib-search-film-functions))
-
-  (defun ps/ebib-search-film-by-title ()
-    "Search for the film's title with the relevant film search functions.
-The list of film search functions is specified by
-`ps/ebib-search-film-functions'."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (if-let ((title (ps/ebib-get-field-value "title")))
-           (ps/ebib-search-film title)
-         (user-error "Title field is empty")))
-      (default
-       (beep))))
-
-  (defun ps/ebib-search-by-identifier ()
-    "Search for a book or article by the ISBN or DOI of the entry at point."
-    (interactive)
-    ;; TODO: Add support for arXiv
-    (let ((id (or (ps/ebib-get-isbn)
-                  (ps/ebib-get-field-value "doi")
-                  (read-string "Enter ISBN or DOI: "))))
-      (cond ((ps/ebib-isbn-p id)
-             (ps/ebib-search-book id))
-            ((ps/doi-utils-doi-p id)
-             (ps/ebib-search-article id))
-            (t
-             (user-error "Identifier does not appear to be an ISBN or DOI")))))
-
-  (defalias 'ps/ebib-search-book-by-identifier 'ps/ebib-search-by-identifier)
-  (defalias 'ps/ebib-search-article-by-identifier 'ps/ebib-search-by-identifier)
-  ;; no film identifier; we just search for it
-  (defalias 'ps/ebib-search-film-by-identifier 'ps/ebib-search-film-by-title)
-
-  ;;; download functions
-  (defun ps/ebib-download-dwim ()
-    "If field at point is 'title', run a search with its value, else use identifier.
-    The list of websites for the search query is defined by the
-    variable `ps/ebib-download-book'"
-    (interactive)
-    (ps/ebib--search-or-download 'download))
-
-  (defun ps/ebib-download-book (query)
-    "Search for QUERY with the relevant book download functions.
-The list of book download functions is specified by
-`ps/ebib-download-book-functions'."
-    (ps/ebib--search-multi query ps/ebib-download-book-functions))
-
-  (defun ps/ebib-download-book-by-title ()
-    "Search for the book's title with the relevant book download functions.
-The list of book download functions is specified by
-`ps/ebib-download-book-functions'."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (if-let ((title (ps/ebib--get-title-at-point)))
-           (ps/ebib-download-book title)
-         (user-error "Title field is empty")))
-      (default
-       (beep))))
-
-  (defun ps/ebib-download-article (query)
-    "Search for QUERY with the relevant article download functions.
-The list of article download functions is specified by
-`ps/ebib-download-article-functions'."
-    (ps/ebib--search-multi query ps/ebib-download-article-functions))
-
-  (defun ps/ebib-download-article-by-title ()
-    "Search for the article's title with the relevant article download functions.
-The list of article download functions is specified by
-`ps/ebib-download-article-functions'."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (if-let ((title (ps/ebib-get-field-value "title")))
-           (ps/ebib-download-article title)
-         (user-error "Title field is empty")))
-      (default
-       (beep))))
-
-  (defun ps/ebib-download-by-identifier ()
-    "Download a book or article based on the ISBN or DOI of the entry at point."
-    ;; TODO: Add support for arXiv
-    (interactive)
-    (let ((id (or (ps/ebib-get-isbn)
-                  (ps/ebib-get-field-value "doi")
-                  (read-string "Enter ISBN or DOI: "))))
-      (cond ((ps/doi-utils-doi-p id)
-             (ps/doi-utils-doi-download id))
-            ;; there is now way (to my knowledge) of directly
-            ;; downloading a book from its ISBN, so we search for it
-            ;; instead
-            ((ps/ebib-isbn-p id)
-             (ps/ebib-download-book id))
-            (t
-             (user-error "Identifier does not appear to be an ISBN or DOI")))))
-
-  (defalias 'ps/ebib-download-book-by-identifier 'ps/ebib-download-by-identifier)
-  (defalias 'ps/ebib-download-article-by-identifier 'ps/ebib-download-by-identifier)
-  ;; all we want is to search for a film, and there is no film
-  ;; identifier, so we map all functions to
-  ;; `ps/ebib-search-film-by-title'
-  (defalias 'ps/ebib-download-film-by-title 'ps/ebib-search-film-by-title)
-  (defalias 'ps/ebib-download-film-by-identifier 'ps/ebib-search-film-by-title)
-
-  (defun ps/ebib-download-video (id)
-    "Download video with id ID using `yt-dlp'."
-    (unless (executable-find "yt-dlp")
-      (user-error "Please install `yt-dlp'"))
-    (ebib--execute-when
-      (entries
-       (let* ((key (ebib--get-key-at-point))
-              (file-name
-               (ps/ebib--rename-and-abbreviate-file
-                ps/dir-library-media key "webm")))
-         (async-shell-command (format "yt-dlp --output '%s' '%s'" file-name id))
-         (message (format "Downloading video from '%s'" (substring-no-properties id)))
-         (ps/ebib--update-file-field-contents key file-name)))
-      (default
-       (beep))))
-
-  (defun ps/ebib-sentence-case ()
-    "docstring"
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (let* ((field (ebib--current-field))
-              (value (ps/ebib-get-field-value field))
-              (words (split-string value)))
-         (setq words (mapcar
-                      (lambda (word)
-                        (if
-                            ;; match words containing {} or \ which are probably
-                            ;; LaTeX or protected words
-                            (string-match "\\$\\|{\\|}\\|\\\\" word)
-                            word
-                          (s-downcase word)))
-                      words))
-         ;; capitalize first word
-         (setf (car words) (s-capitalize (car words)))
-         (setq value (mapconcat 'identity words " "))
-         (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite 'unbraced)
-         (ebib--store-multiline-text (current-buffer))
-         (ebib--redisplay-field field)
-         (ebib--redisplay-index-item field)
-         (ebib-save-current-database nil)))
-      (default
-       (beep))))
-
-  (defun ps/ebib-open-entry-in-bibtex-file ()
-    "Open the bibtex file associated with the current entry and move point to its key."
-    (interactive)
-    (when-let ((file (ebib-db-get-filename ebib--cur-db))
-               (key (ebib--get-key-at-point)))
-      (find-file file)
-      (bibtex-find-entry key)))
-
-  (defun ps/ebib-get-file-of-key (key)
-    "Return the bibliographic file in which the entry with KEY is found."
-    (unless ebib--databases
-      (user-error "Please launch Ebib first"))
-    (let ((file (catch 'found
-                  (dotimes (i (length ebib--databases))
-                    (when (member key (ebib-db-list-keys (nth i ebib--databases)))
-                      (throw 'found
-                             (ebib-db-get-filename (nth i ebib--databases))))))))
-      (message file)))
-
-  (defun ps/ebib-open-key (key)
-    "Open the entry for KEY in Ebib."
-    (when-let ((file (ps/ebib-get-file-of-key key)))
-      (ebib file key)
-      (ebib-edit-entry)))
-
-  (defvar ps/ebib-sort-toggle 'Title)
-
-  (defun ps/ebib-sort-toggle ()
-    "Toggle between sorting by timestamp, author, and title."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (let ((order 'ascend))
-         (pcase ps/ebib-sort-toggle
-           ('Timestamp
-            (setq ps/ebib-sort-toggle 'Author))
-           ('Author
-            (setq ps/ebib-sort-toggle 'Title))
-           ('Title
-            (setq ps/ebib-sort-toggle 'Timestamp)
-            (setq order 'descend)))
-         (ebib--index-sort (symbol-name ps/ebib-sort-toggle) order)
-         (goto-char (point-min))
-         (message (format "Sorting by %s" ps/ebib-sort-toggle))))
-      (default
-       (beep))))
-
-  (defun ps/ebib-end-of-index-buffer ()
-    "Move to the end of the index buffer."
-    (interactive)
-    (when (equal major-mode 'ebib-index-mode)
-      (goto-char (point-max))
-      (forward-line -1)))
-
-  (defun ps/ebib-duplicate-entry ()
-    "Duplicate the current entry."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (let* ((key (ebib--get-key-at-point))
-              (new-key (if ebib-uniquify-keys
-                           (ebib-db-uniquify-key (ebib--get-key-at-point) ebib--cur-db)
-                         key))
-              entry)
-         (with-temp-buffer
-           (ebib--format-entry key ebib--cur-db)
-           (goto-char (point-min))
-           (while (re-search-forward (concat "\\(^@[[:alpha:]]*?{\\)" (regexp-quote key) ",") nil t)
-             (replace-match (concat "\\1" new-key ",")))
-           (setq entry (buffer-substring-no-properties (point-min) (point-max))))
-         (with-current-buffer (find-file-noselect zotra-default-bibliography)
-           (widen)
-           (goto-char (point-max))
-           (insert entry)
-           (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
-           (save-buffer)
-           (ps/ebib-reload-database-no-confirm ebib--cur-db)
-           (ebib zotra-default-bibliography new-key)
-           (ebib--index-sort "Timestamp" 'descend)
-           (goto-char (point-min))
-           (ps/ebib-open-key new-key))))
-      (default
-       (beep))))
-
-  (defun ps/ebib-citar-open-notes ()
-    "Open note for the entry at point using `citar-open-notes'.
-This command replaces the native `ebib-popup-note'. The
-replacement ensures that, when a note doesn't already exist, it
-is created following the same schema as notes created with
-`citar'."
-    (interactive)
-    (ebib--execute-when
-      (entries
-       (when-let ((citekey (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)))
-         (citar-open-notes (list citekey))))
-      (default
-       (beep))))
-
-  (defvar ps/ebib-auto-save-files
-    (list ps/file-personal-bibliography-new
-          tlon-babel-file-fluid)
-    "List of database files that should be auto-saved.
-The big files containing the 'old' bibliographic entries are excluded.")
-
-  (defun ps/ebib-auto-save-databases ()
-    "Check if any Ebib database has been modified and save it to its file if so.
-The list of files to be watched is defined in `ps/ebib-auto-save-files'."
-    (dolist (db ebib--databases)
-      (let ((db-file (ebib-db-get-filename db)))
-        (when (and (member db-file ps/ebib-auto-save-files)
-                   (ebib-db-modified-p db))
-          (ebib--save-database db '(16)))))
-    (run-with-timer 1 nil #'ps/ebib-auto-save-databases))
-
-  (run-with-timer 1 nil #'ps/ebib-auto-save-databases)
-
-  (defun ps/ebib-auto-reload-databases ()
-    "Check if any db file has been modified and reload the associated Ebib database if so.
-The list of files to be watched is defined in `ps/ebib-auto-save-files'."
-    (dolist (db ebib--databases)
-      (let ((db-file (ebib-db-get-filename db)))
-        (when (member db-file ps/ebib-auto-save-files)
-          ;; (file-notify-rm-all-watches)
-          (file-notify-add-watch
-           db-file
-           '(change attribute-change)
-           (lambda (event)
-             (message "reloading database")
-             (ps/ebib-reload-database-no-confirm db)))))))
-
-  (advice-add 'ebib-init :after #'ps/ebib-auto-reload-databases)
-
   (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
+
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
 
-  (defvar ps/ebib-db-numbers
-    `((,ps/file-personal-bibliography-new . 1)
-      (,ps/file-personal-bibliography-old . 2)
-      (,tlon-babel-file-fluid . 3)
-      (,tlon-babel-file-stable . 4))
-    "Association list of database files and their numbers.")
-
-  (defun ps/ebib-get-db-number (file)
-    "Get database number for FILE."
-    (cdr (assoc file ps/ebib-db-numbers)))
-
-  (defvar ps/ebib-existing-authors nil
-    "List of all authors in the current database.")
-
-  (defun ps/ebib-create-list-of-existing-authors ()
-    "Create a list of all authors in the current database."
-    (setq ps/ebib-existing-authors (ebib--create-author/editor-collection)))
-
-  (add-hook 'ebib-add-entry #'ps/ebib-create-list-of-existing-authors)
-
-  (defun ps/ebib-check-author-exists ()
-    "Check if the author of the given entry exists in the current database."
-    (interactive)
-    (let* ((db ebib--cur-db)
-           (key (ebib--db-get-current-entry-key db))
-           (author-to-check (ps/ebib-get-field-value "author")))
-      (if (member author-to-check ps/ebib-existing-authors)
-          (message "Author found in the database!")
-        (message "Warning: Author not found in the database!"))))
-
-  (defun ps/ebib-set-rating (&optional rating)
-    "Set rating of current entry to RATING.
-If applicable, open external website to set rating there as well."
-    (interactive)
-    (let ((rating (ps/ebib-choose-rating))
-          (supertype (ps/ebib-get-supertype))
-          (title (ps/ebib-get-field-value "title"))
-          (query (ps/ebib-get-query-field))
-          (key (ebib--get-key-at-point))
-          (db ebib--cur-db))
-      ;; TODO: open rating websites based on supertype
-      (pcase supertype
-        ("book" (ps/ebib-search-goodreads title))
-        ("film" (ps/ebib-search-imdb title) (ps/ebib-search-letterboxd title)))
-      (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db 'overwrite)
-      (ebib--update-entry-buffer)
-      (set-buffer-modified-p nil)
-      (ebib--set-modified t db t (seq-filter (lambda (dependent)
-                                               (ebib-db-has-key key dependent))
-                                             (ebib--list-dependents db)))))
-
-  (defun ps/ebib-choose-rating ()
-    "Prompt for a rating from 1 to 10 and return the choice."
-    (let* ((ratings '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?0))
-           (rating (char-to-string (read-char-choice "Rating (1–10): " ratings))))
-      (when (string= rating "0")
-        (setq rating "10"))
-      rating))
-
-  (defun ps/ebib-no-translation-found ()
-    "Log a note indicating that no translation for this work was found."
-    (interactive)
-    (let ((key (ebib--get-key-at-point))
-          (db ebib--cur-db))
-      (when (ps/ebib-get-field-value "note")
-        (user-error "Note field is not empty"))
-      (ebib-set-field-value "note"
-                            (format "No translation found on %s." (format-time-string "%Y-%m-%d"))
-                            key db)
-      (ebib--update-entry-buffer)
-      (set-buffer-modified-p nil)
-      (ebib--set-modified t db t (seq-filter (lambda (dependent)
-                                               (ebib-db-has-key key dependent))
-                                             (ebib--list-dependents db)))))
-
-  (defun ps/ebib-create-translation-entry (&optional title)
-    "Create an entry for the translation of the current entry."
-    (interactive)
-    (let* ((key (ebib--get-key-at-point))
-           (db ebib--cur-db)
-           (new-db-num (ps/ebib-get-db-number tlon-babel-file-fluid))
-           (author (ps/ebib-get-field-value "author"))
-           (title (or title (read-string "Title: ")))
-           (date "2023")
-           (journaltitle "Biblioteca Altruismo Eficaz")
-           (translator "Tlön")
-           (translation key)
-           (langid "spanish")
-           ;; (keywords (ebib--edit-separated-values-field field '(,field) nil))
-           )
-      (ebib-switch-to-database-nth new-db-num)
-      (ebib-add-entry)
-      (let ((new-key (ebib--get-key-at-point))
-            (new-db ebib--cur-db))
-        (dolist (field '(author title date journaltitle translator translation langid))
-          (ebib-set-field-value (symbol-name field) (symbol-value field) new-key new-db)))
-      (ebib--update-entry-buffer))
-    (ebib-generate-autokey)
-    (set-buffer-modified-p nil)
-    (ebib--set-modified t db t (seq-filter (lambda (dependent)
-                                             (ebib-db-has-key key dependent))
-                                           (ebib--list-dependents db))))
-
-  (defun ps/ebib-move-entry-to-tlon ()
-    "Move bibliographic entry associated with the key at point to the Tlön bibliography."
-    (interactive)
-    (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
-      (ps/citar-goto-bibtex-entry key)
-      (ps/bibtex-move-entry-to-tlon)
-      (ebib tlon-babel-file-fluid key)
-      (ps/ebib-open-key key)))
-
-  (defun ps/ebib-get-field-value (field)
-    "Get the value of FIELD for the entry at point.
-Convenience function that calls `ebib-get-field-value' with
-sensible defaults."
-    (let ((key (ebib--get-key-at-point)))
-      (ebib-get-field-value field key ebib--cur-db t t t)))
-
-  (defun ps/ebib-get-id-or-url ()
-    "Get the ID or URL of the entry at point."
-    (when-let ((id-or-url (catch 'found
-                            (dolist (field '("doi" "isbn" "url"))
-                              (when-let ((value (ps/ebib-get-field-value field)))
-                                (throw 'found value))))))
-      id-or-url))
-
-  (defun ps/ebib-fetch-id-or-url ()
-    "Fetch the ID or URL of the entry at point.
-Fetching is done using `tlon-biblio'."
-    (let ((title (ps/ebib-get-field-value "title"))
-          (author (ps/ebib-get-field-value "author")))
-      (pcase (ps/ebib-get-supertype)
-        ("book" (tlon-biblio-search-isbndb (concat title " " author)))
-        ("article" (tlon-biblio-search-crossref title author))
-        ("film" (concat "https://www.imdb.com/title/" (tlon-biblio-search-imdb
-                                                       (tlon-biblio-translate-title-to-english title))))
-        (_ (ps/ebib-get-field-value "url")))))
-
-  (defun ps/ebib-get-or-fetch-id-or-url ()
-    "Get the ID or URL of the entry at point, or fetch it if missing."
-    (or (ps/ebib-get-id-or-url)
-        (ps/ebib-fetch-id-or-url)))
-
-  (defun ps/ebib-set-id (&optional id)
-    "Add an ID to the current entry, if missing."
-    (interactive)
-    (let ((key (ebib--get-key-at-point))
-          (db ebib--cur-db)
-          (field (pcase (ps/ebib-get-supertype)
-                   ("book" "isbn")
-                   ("article" "doi")
-                   ("film" "url")))
-          (id (or id (ps/ebib-fetch-id-or-url))))
-      (when (ps/ebib-get-field-value field)
-        (user-error "ID field is not empty."))
-      (ebib-set-field-value field id key db)
-      (ebib--update-entry-buffer)
-      (set-buffer-modified-p nil)
-      (ebib--set-modified t db t (seq-filter (lambda (dependent)
-                                               (ebib-db-has-key key dependent))
-                                             (ebib--list-dependents db)))))
-
-  (defun ps/ebib-fetch-field-value (field)
-    "Fetch the value of FIELD for the entry at point.
-Fetching is done using `tlon-biblio'."
-    (unless (eq major-mode 'ebib-entry-mode)
-      (error "Not in `ebib-entry-mode'"))
-    (if-let ((id (ps/ebib-get-or-fetch-id-or-url)))
-        (let ((entry (zotra-get-entry id (not (ps/string-is-url-p id))))
-              value)
-          (with-temp-buffer (insert entry)
-                            (setq value (bibtex-autokey-get-field field)))
-          (when (string-empty-p value)
-            (user-error "Query returned no field `%s' for the current entry" field))
-          (let ((key (ebib--get-key-at-point)))
-            (ebib-set-field-value field value key ebib--cur-db 'overwrite)
-            (ebib--update-entry-buffer)
-            (set-buffer-modified-p nil)
-            (ebib--set-modified t ebib--cur-db t (seq-filter (lambda (dependent)
-                                                               (ebib-db-has-key key dependent))
-                                                             (ebib--list-dependents ebib--cur-db)))))
-      (user-error "No ID found for the current entry")))
-
-  (defun ps/ebib-fetch-abstract ()
-    "Fetch the abstract of the entry at point."
-    (interactive)
-    (let ((abstract (ps/ebib-get-field-value "abstract")))
-      (when (or
-             (not abstract)
-             (y-or-n-p "Abstract already exists. Overwrite?"))
-        (ps/ebib-fetch-field-value "abstract"))))
-
-  (defun ps/ebib-fetch-keywords ()
-    "Fetch keywords for the entry at point and put them in the associated org file."
-    (interactive)
-    (ps/ebib-fetch-field-value "keywords"))
-
-  (defun ps/ebib-export-keywords ()
-    "Export keywords in entry at point to its associated note file."
-    (interactive)
-    (when-let* ((key (ebib--get-key-at-point))
-                (field "keywords")
-                ;; unfill field contents
-                (keywords-raw (replace-regexp-in-string
-                               "\n                  "
-                               " "
-                               (ps/ebib-get-field-value field)))
-                ;; turn into bullet-separated links
-                (keywords (ps/org-linkify-elements
-                           (split-string keywords-raw ", "))))
-      (ebib-db-remove-field-value field key ebib--cur-db)
-      (ebib--redisplay-field field)
-      (ebib--redisplay-index-item field)
-      (ebib--set-modified t ebib--cur-db (seq-filter (lambda (dependent)
-                                                       (ebib-db-has-key key dependent))
-                                                     (ebib--list-dependents ebib--cur-db)))
-      (ps/ebib-citar-open-notes)
-      (ps/org-insert-subheading)
-      (insert (concat field "\n" keywords))
-      (ps/org-sort-keywords)))
+  (add-hook 'ebib-add-entry #'tlon-ebib-create-list-of-existing-authors)
 
   :general
-  ("A-i" 'ps/ebib-open-or-switch)
   (ebib-multiline-mode-map
    "s-c" 'ebib-quit-multiline-buffer-and-save)
   ((ebib-entry-mode-map ebib-index-mode-map)
    "H-s" 'ebib-save-current-database
    "K" 'ebib-copy-key-as-kill
-   "Q" 'ebib-quit
-   "d" 'ps/ebib-duplicate-entry
-   "n" 'ps/ebib-citar-open-notes)
+   "Q" 'ebib-quit)
   (ebib-entry-mode-map
    "TAB" 'ebib-goto-next-set
    "<backtab>" 'ebib-goto-prev-set
-   "SPC" 'ps/ebib-open-file-dwim
    "H-s" 'ebib-save-current-database
    "!" 'ebib-generate-autokey
-   "," 'ps/ebib-title-case
-   "." 'ps/ebib-sentence-case
-   "/" (lambda! (ps/ebib-attach-file t))
-   "?" 'ps/ebib-attach-file
-   "a" 'ps/ebib-search-amazon
+   "/" (lambda! (tlon-ebib-attach-file t))
    "A" 'ebib-add-field
-   "b" 'ps/ebib-open-entry-in-bibtex-file
    "c" 'ebib-copy-current-field-contents
    "D" 'ebib-delete-current-field-contents
    "E" 'ebib-edit-keyname
-   "g" 'ps/ebib-search-library-genesis
-   "G" 'ps/ebib-search-goodreads
-   "h" 'ps/ebib-open-html-file
-   "H" 'ps/ebib-open-html-file-externally
-   "i" 'ps/ebib-download-by-identifier
-   "I" 'ps/ebib-set-id
-   "o" 'ps/ebib-search-connected-papers
-   "p" 'ps/ebib-open-pdf-file
-   "P" 'ps/ebib-open-pdf-file-externally
-   "R" 'ps/ebib-set-rating
-   "s-r" 'ps/ebib-rename-files
-   "s" 'ps/ebib-search-dwim
-   "T" 'ps/ebib-no-translation-found
    "u" 'ebib-browse-url
-   "V" 'ps/ebib-search-internet-archive
-   "w" 'ps/ebib-download-dwim
-   "W" 'ps/ebib-fetch-keywords
-   "x" 'ps/ebib-search-university-of-toronto
-   "y" 'ps/ebib-search-hathitrust
-   "z" 'ps/ebib-search-google-scholar
    "1" (lambda! (ebib-view-file-in-field 1))
    "2" (lambda! (ebib-view-file-in-field 2)))
   (ebib-index-mode-map
    "<return>" 'ebib-edit-entry
-   "A-C-s-SPC" 'ps/ebib-end-of-index-buffer
    "D" 'ebib-delete-entry
    "k" 'ebib-prev-entry
-   "l" 'ebib-next-entry
-   "s" 'ps/ebib-sort-toggle
-   "s-t" 'ps/ebib-move-entry-to-tlon))
+   "l" 'ebib-next-entry))
 #+end_src
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
+
+*** DONE Move ebib to separate package
+CLOSED: [2023-08-28 Mon 12:41]
+:PROPERTIES:
+:ID:       1AAE6992-78F2-42CF-839B-2C6D6D5437ED
+:END:
+:LOGBOOK:
+CLOCK: [2023-08-27 Sun 12:18]--[2023-08-27 Sun 13:48] =>  1:30
+:END:
 
 *** TODO Tweak ebib film command so that it directly opens Letterboxd page with IMDb ID
 :PROPERTIES:
@@ -15804,6 +14885,74 @@ The macro below generates the commands correctly. But attempting to define key b
 :END:
 
 [[https://juanjose.garciaripoll.com/blog/ebib-biblio-interface/index.html][eBib-Biblio interface, aka. Mendeley for Emacs]]
+
+** tlon-ebib
+:PROPERTIES:
+:ID:       9E86F42E-2F41-4BB7-ABC5-1C929DBD5C06
+:END:
+
+#+begin_src emacs-lisp
+(use-package tlon-ebib
+  :elpaca (tlon-ebib
+           :host github
+           :repo "tlon-team/tlon-ebib"
+           :depth nil) ; clone entire repo, not just last commit
+  :after ebib tlon-babel
+  :demand t
+  :config
+  (setq tlon-ebib-download-use-vpn t)
+
+  (setq tlon-ebib-db-numbers
+        `((,ps/file-personal-bibliography-new . 1)
+          (,ps/file-personal-bibliography-old . 2)
+          (,tlon-babel-file-fluid . 3)
+          (,tlon-babel-file-stable . 4)))
+
+  (setq tlon-ebib-auto-save-files
+        (list ps/file-personal-bibliography-new
+              tlon-babel-file-fluid))
+
+  (advice-add 'ebib-init :after #'tlon-ebib-auto-reload-databases)
+
+  :general
+  ("A-i" 'tlon-ebib-open-or-switch)
+  ((ebib-entry-mode-map ebib-index-mode-map)
+   "d" 'tlon-ebib-duplicate-entry
+   "n" 'tlon-ebib-citar-open-notes)
+  (ebib-entry-mode-map
+   "SPC" 'tlon-ebib-open-file-dwim
+   "," 'tlon-ebib-title-case
+   "." 'tlon-ebib-sentence-case
+   "/" (lambda! (tlon-ebib-attach-file t))
+   "?" 'tlon-ebib-attach-file
+   "a" 'tlon-ebib-search-amazon
+   "b" 'tlon-ebib-open-entry-in-bibtex-file
+   "g" 'tlon-ebib-search-library-genesis
+   "G" 'tlon-ebib-search-goodreads
+   "h" 'tlon-ebib-open-html-file
+   "H" 'tlon-ebib-open-html-file-externally
+   "i" 'tlon-ebib-download-by-identifier
+   "I" 'tlon-ebib-set-id
+   "o" 'tlon-ebib-search-connected-papers
+   "p" 'tlon-ebib-open-pdf-file
+   "P" 'tlon-ebib-open-pdf-file-externally
+   "R" 'tlon-ebib-set-rating
+   "s-r" 'tlon-ebib-rename-files
+   "s" 'tlon-ebib-search-dwim
+   "T" 'tlon-ebib-no-translation-found
+   "V" 'tlon-ebib-search-internet-archive
+   "w" 'tlon-ebib-download-dwim
+   "W" 'tlon-ebib-fetch-keywords
+   "x" 'tlon-ebib-search-university-of-toronto
+   "y" 'tlon-ebib-search-hathitrust
+   "z" 'tlon-ebib-search-google-scholar
+   "1" (lambda! (ebib-view-file-in-field 1))
+   "2" (lambda! (ebib-view-file-in-field 2)))
+  (ebib-index-mode-map
+   "A-C-s-SPC" 'tlon-ebib-end-of-index-buffer
+   "s" 'tlon-ebib-sort-toggle
+   "s-t" 'tlon-ebib-move-entry-to-tlon))
+#+end_src
 
 ** persid
 :PROPERTIES:
@@ -15851,12 +15000,15 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (defvar ps/zotra-most-recent-bibliography-file nil
     "The most recent bibliography file to which an entry was added.")
 
+  (defun ps/zotra-set-bibfile ()
+    "Prompt the user to select a value for `org-cite-global-bibliography'."
+    (completing-read "Bibfile" (list
+                                tlon-babel-file-fluid
+                                ps/file-personal-bibliography-new)))
+
   (defun ps/zotra-add-entry-set-bibfile (orig-fun &optional url entry-format bibfile)
     "Advice to set `org-cite-global-bibliography' before Zotra add commands."
-    (setq ps/zotra-most-recent-bibliography-file
-          (completing-read "Bibfile" (list
-                                      tlon-babel-file-fluid
-                                      ps/file-personal-bibliography-new)))
+    (setq ps/zotra-most-recent-bibliography-file (ps/zotra-set-bibfile))
     (funcall orig-fun url entry-format ps/zotra-most-recent-bibliography-file))
 
   (defun ps/zotra-url-full-capture (&optional url)
@@ -15884,15 +15036,15 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (bibtex-clean-entry)
     (org-ref-clean-bibtex-entry)
     ;; (save-buffer)
-    (ebib-switch-to-database-nth (ps/ebib-get-db-number ps/zotra-most-recent-bibliography-file))
+    (ebib-switch-to-database-nth (tlon-ebib-get-db-number ps/zotra-most-recent-bibliography-file))
     (let ((citekey (ps/bibtex-get-key)))
-      (ps/ebib-open-or-switch)
-      (ps/ebib-reload-database-no-confirm ebib--cur-db)
+      (tlon-ebib-open-or-switch)
+      (tlon-ebib-reload-database-no-confirm ebib--cur-db)
       (ebib--update-buffers)
       (ebib ps/zotra-most-recent-bibliography-file citekey)
       (ebib--index-sort "Timestamp" 'descend)
       (goto-char (point-min))
-      (ps/ebib-open-key citekey)
+      (tlon-ebib-open-key citekey)
       ;; we add this so that the latest entry is sorted in the bibtex
       ;; file, instead of remaining at the end of it
       (ebib-save-current-database t)))
@@ -15900,14 +15052,14 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
 
   (defun ps/zotra-add-entry-dwim (url-or-identifier &optional bibfile entry-format)
-  "Get citation entry for URL or identifier."
-  (interactive
-   (list (read-string
-          "search URL or identifier (DOI, ISBN, PMID, arXiv ID): "
-          (ignore-errors (current-kill 0 t)))))
-  (if (ffap-url-p url-or-identifier)
-      (zotra-add-entry-from-url url-or-identifier bibfile entry-format)
-    (zotra-add-entry-from-search url-or-identifier bibfile entry-format)))
+    "Get citation entry for URL or identifier."
+    (interactive
+     (list (read-string
+            "search URL or identifier (DOI, ISBN, PMID, arXiv ID): "
+            (ignore-errors (current-kill 0 t)))))
+    (if (ffap-url-p url-or-identifier)
+        (zotra-add-entry-from-url url-or-identifier bibfile entry-format)
+      (zotra-add-entry-from-search url-or-identifier bibfile entry-format)))
 
   ;; Remarkably, this is needed because Emacs can't decode certain octal
   ;; sequences in Zotero-imported bibtex entries
@@ -16722,11 +15874,12 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   (setq telega-completing-read-function 'completing-read)
 
   (defun ps/telega-switch-to ()
-    "Switch to the most recent telega buffer, if one exists, else
- start telega. Always display telega buffers in the rightmost
- window. Repeated invocations of the command will move point from
- the middle of the chatbuf to the end of it, then to the root
- buffer, then to the beginning of it if not already there."
+    "Switch to the most recent telega buffer, if one exists, else start telega.
+ Repeated invocations of the command will move point from the
+ middle of the chat buffer to the end of it, then to the root
+ buffer, then to the beginning of it if not already there. A
+ similar sequence of events will be triggered if point is in an
+ archive buffer."
     (interactive)
     (let* ((telega-buffer-root "*Telega Root*")
            (telega-buffer
@@ -16735,39 +15888,27 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
                 (when (with-current-buffer buffer
                         (member major-mode '(telega-root-mode telega-chat-mode)))
                   (throw 'tag (buffer-name buffer))))))
-           (current-buffer (current-buffer))
-           (telega-buffer-is-current (string= (buffer-name current-buffer) telega-buffer)))
-      (if telega-buffer
-          (if telega-buffer-is-current
-              (if (string> telega-buffer telega-buffer-root)
-                  (if (ps/bollp)
-                      (progn
-                        (kill-buffer)
-                        (switch-to-buffer telega-buffer-root))
-                    (end-of-buffer))
-                (beginning-of-buffer)
-                (forward-line 4)) ; one extra to move past pinned message
-            (switch-to-buffer telega-buffer))
+           (telega-buffer-is-current (string= (buffer-name (current-buffer)) telega-buffer)))
+      (cond
+       ((not telega-buffer)
         (telega))
-      (let ((telega-buffer (current-buffer)))
-        (ps/window-split-if-unsplit)
-        (if (> (frame-width) ps/frame-width-threshold)
-            (winum-select-window-3)
-          (winum-select-window-2))
-        (let ((rightmost-window (selected-window))
-              (other-window (previous-window)))
-          ;; When the command is invoked from a Telega buffer which
-          ;; isn't on the rightmost window, we display on that window
-          ;; the most recent non-telega buffer.
-          (when telega-buffer-is-current
-            (setq current-buffer
-                  (catch 'tag
-                    (dolist (buffer (buffer-list))
-                      (unless (with-current-buffer buffer
-                                (member major-mode '(telega-root-mode telega-chat-mode)))
-                        (throw 'tag buffer))))))
-          (set-window-buffer (selected-window) telega-buffer)
-          (set-window-buffer other-window current-buffer)))))
+       ((not telega-buffer-is-current)
+        (switch-to-buffer telega-buffer))
+       ;; if currently in chatbuf, move to end, else back to main
+       ((not (string= telega-buffer-root telega-buffer))
+        (if (not (eobp))
+            (goto-char (point-max))
+          (kill-buffer)
+          (switch-to-buffer telega-buffer-root)))
+       ;; if currently in archive, move to beg, else back to main
+       ((eq (car (telega-filter-active)) 'archive)
+        (if (eq (count-lines (point-min) (point)) 3)
+            (telega-filters-reset)
+          (beginning-of-buffer)
+          (forward-line 3)))
+       ((not (eq (count-lines (point-min) (point)) 4))
+        (beginning-of-buffer)
+        (forward-line 4)))))
 
   (defun ps/telega-chat-org-capture ()
     "Capture chat message at point with `org-capture'."
@@ -16775,28 +15916,21 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
     (org-store-link nil)
     (org-capture nil "n"))
 
-  (defun ps/telega-chat-org-capture-leo ()
-    "Capture chat message at point with `org-capture' and turn it
-into a task for Leo."
-    (interactive)
-    (telega-msg-copy-text (telega-msg-at (point)))
-    (org-capture nil "lt"))
-
-  (defun ps/telega-filters-push-archive ()
+  (defun ps/telega-view-archive ()
     "Set active filters list to `archive'."
     (interactive)
+    (telega-filters-reset)
     (telega-filters-push '(archive)))
 
-  (defun ps/telega-filters-push-main ()
+  (defun ps/telega-view-main ()
     "Set active filters list to `main'."
     (interactive)
+    (telega-filters-reset)
     (telega-filters-push '(main)))
 
   (telega-mode-line-mode)
 
   (add-hook 'telega-chat-mode-hook #'(lambda () (setq default-directory ps/dir-downloads)))
-  ;; (add-hook 'telega-chat-mode-hook #'telega-autoplay-mode) ; causes massive slowdown
-  ;; (add-hook 'telega-chat-mode-hook #'(lambda () (setq line-spacing nil)))
 
   :general
   ("A-l" 'ps/telega-switch-to)
@@ -16812,8 +15946,8 @@ into a task for Leo."
    ;; if point is on a URL, `telega-msg-button-map' ceases to be
    ;; active and `<return>' triggers `newline' rather than
    ;; `push-button'. this seems to be a bug. as a workaround, we also
-   ;; bind `push-button' to `M-<return>' in `telega-chat-mode-map'.
-   "s-<return>" 'push-button
+   ;; bind `push-button' to `s-<return>' in `telega-chat-mode-map'.
+   "s-<return>" (lambda! (push-button))
    "s-," 'telega-chatbuf-goto-pinned-message
    "s-a" 'telega-chatbuf-attach
    "s-c" 'telega-mnz-chatbuf-attach-code
@@ -16832,7 +15966,7 @@ into a task for Leo."
    "M-s-v" 'telega-chatbuf-attach-clipboard
    "" 'telega-chatbuf-attach-voice-note)
   (telega-msg-button-map
-   "<return>" 'push-button
+   "<return>" (lambda! (push-button))
    "." 'ps/telega-docs-change-open
    "," 'telega-chatbuf-goto-pinned-message
    "a" (lambda! (end-of-buffer) (ps/kill-this-buffer))
@@ -16851,8 +15985,8 @@ into a task for Leo."
    "a" 'telega-chat-toggle-archive
    "m" 'telega-chat-toggle-muted)
   (telega-root-view-map
-   "a" 'ps/telega-filters-push-archive
-   "m" 'ps/telega-filters-push-main)
+   "a" 'ps/telega-view-archive
+   "m" 'ps/telega-view-main)
   (telega-webpage-mode-map
    "x" 'telega-webpage-browse-url)
   (dired-mode-map
@@ -17019,6 +16153,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/browse-url)
 (use-feature browse-url
+  :after f s
   :config
   (setq browse-url-browser-function 'eww-browse-url)
   (setq browse-url-firefox-program "/Applications/Firefox.app/Contents/MacOS/firefox")
@@ -17029,82 +16164,39 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
     ;; externally. there are many sites I hardly ever use, but the
     ;; list aspires to be exhaustive rather than representative of
     ;; my browsing habits.
-    (dolist (regex '("airbnb\\.com"
-                     "airtable\\.com"
-                     "airwander\\.com"
-                     "alignmentforum\\.com"
-                     "amazon\\."
-                     "archive\\.org"
-                     "audible\\.com"
-                     "audiobookbay"
-                     "berkeley\\.edu"
-                     "beyondpricing\\.com"
-                     "dhl\\."
-                     "bloomberg\\.com"
-                     "calendly\\.com"
-                     "cleverlayover\\.com"
-                     "connectedpapers\\.com"
-                     "doi\\.org"
-                     "dropbox\\.com"
-                     "effectivealtruism\\.org"
-                     "etsy\\.com"
-                     "facebook\\.com"
-                     "github\\.com"
-                     "gitguardian\\.com"
-                     "gmail\\.com"
-                     "goodreads\\.com"
-                     "google\\.com"
-                     "grammarly\\.com"
-                     "hathitrust\\.org"
-                     "igmchicago\\.org"
-                     "imdb\\.com"
-                     "interactivebrokers\\.co"
-                     "jit\\.si"
-                     "kentclarkcenter\\.org"
-                     "keyboardmaestro\\.com"
-                     "letterboxd\\.com"
-                     "libgen\\."
-                     "LinkedIn\\.com"
-                     "list-manage\\.com"
-                     "loc\\.gov"
-                     "maps\\."
-                     "mailist-manage\\.eu"
-                     "metacritic\\.com"
-                     "metafilter\\.com"
-                     "mercadopago\\.com"
-                     "mercadolibre\\.com"
-                     "metaculus\\.com"
-                     "metaforecast\\.com"
-                     "paxful\\.com"
-                     "qualtrics\\.com"
-                     "quora\\.com"
-                     "rescuetime\\.com"
-                     "savvycal\\.com"
-                     "skyscanner\\.com"
-                     "skyscanner\\.net"
-                     "slack\\.com"
-                     "squarespace\\.com"
-                     "stafforini\\.com"
-                     "teatrocolon\\.org\\.ar"
-                     "twitter\\.com"
-                     "utoronto\\.ca"
-                     "worldcat\\.org"
-                     "we\\.tl"
-                     "wetransfer\\.com"
-                     "worldcat\\.org"
-                     "youtu\\.be"
-                     "youtube\\.com"
-                     "zoom\\.us"))
-      (push (cons regex 'browse-url-default-browser) browse-url-handlers))
-    (dolist (regex '("economist\\.com"
-                     "ft\\.com"))
-      (push (cons regex 'browse-url-firefox) browse-url-handlers)))
+    (dolist (url (s-split "\n" (f-read ps/file-urls-open-externally-default) t))
+      (push (cons (regexp-quote url) 'browse-url-default-browser) browse-url-handlers))
+    (dolist (url (s-split "\n" (f-read ps/file-urls-open-externally-firefox) t))
+      (push (cons (regexp-quote url) 'browse-url-firefox) browse-url-handlers)))
 
   (defun ps/browse-url-of-dired-file-externally ()
     "In Dired, open the file at point in an external browser."
     (interactive)
     (let ((browse-url-browser-function 'browse-url-default-browser))
       (browse-url-of-dired-file)))
+
+  (defun ps/browse-url-add-domain-to-open-externally (arg)
+    "Prompt for a URL and add its domain to the list of URLs to open externally.
+If buffer is visiting a URL or if there is a URL in the kill ring,
+use its domain as the initial prompt input.
+
+With prefix argument, add the domain to the list of URLs to open
+in Firefox."
+    (interactive "P")
+    (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
+           (domain (when url (url-domain (url-generic-parse-url url))))
+           (file (if arg
+                     ps/file-urls-open-externally-firefox
+                   ps/file-urls-open-externally-default))
+           (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
+      (with-current-buffer (find-file-noselect file)
+        (goto-char (point-max))
+        (insert (format "\n%s" selection))
+        (goto-char (point-min))
+        (flush-lines "^$")
+        (delete-duplicate-lines (point-min) (point-max))
+        (sort-lines nil (point-min) (point-max))
+        (save-buffer))))
 
   :general
   (mhtml-mode-map
@@ -18778,7 +17870,7 @@ CLOCK: [2021-04-11 Sun 12:14]--[2021-04-11 Sun 12:28] =>  0:14
 CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 :END:
 
-/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for password-store./
+/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://en.wikipedia.org/wiki/Pass_(software)][pass]]./
 
 #+begin_src emacs-lisp :results silent
 (use-package pass
@@ -18865,8 +17957,6 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 #+end_src
 
 Note: to work, entries must conform to the pattern ~auth-sources/host~.
-
-- Also check [[https://git.sr.ht/~sirn/dotfiles/tree/85b9d5249712e3c35e6140083be1629be1d2b643/etc/emacs/packages/editor-auth.el][~sirn/dotfiles: etc/emacs/packages/editor-auth.el - sourcehut git]]
 
 * misc
 :PROPERTIES:
@@ -19345,6 +18435,7 @@ And finally, the section you've all been waiting for.
            :host github
            :repo "tlon-team/tlon-biblio"
            :depth nil) ; clone entire repo, not just last commit
+  :after ebib zotra
   :demand t
   :general
   (ebib-index-mode-map
@@ -19520,6 +18611,8 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/file-tlon-ledger-schedule-file . (file-name-concat ps/dir-dropbox-tlon-ledger "ledger-schedule.ledger"))
  (ps/file-tlon-babel . (file-name-concat ps/dir-notes "babel.org"))
  (ps/file-tlon-ledger . (file-name-concat ps/dir-dropbox-tlon-ledger "tlon.ledger"))
+ (ps/file-urls-open-externally-default . (file-name-concat ps/dir-dotemacs "etc/urls-default.txt"))
+ (ps/file-urls-open-externally-firefox . (file-name-concat ps/dir-dotemacs "etc/urls-firefox.txt"))
  (ps/personal-bibliography-files . (list ps/file-personal-bibliography-new ps/file-personal-bibliography-old))
  ;; TODO: define this properly
  (ps/tlon-bibliography-files . (list

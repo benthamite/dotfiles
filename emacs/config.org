@@ -1878,7 +1878,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 #+begin_src emacs-lisp :results silent
 (use-feature faces
   :demand t
-  :after org-modern
+  ;; :after org-modern
 
   :config
   (defun ps/faces-load-custom-faces ()

@@ -145,6 +145,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#sort][sort]]
   - [[#vundo][vundo]]
   - [[#outline][outline]]
+  - [[#outshine][outshine]]
   - [[#fill][fill]]
   - [[#unfill][unfill]]
   - [[#abbrev][abbrev]]
@@ -3464,6 +3465,19 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
    "<backtab>" 'outline-cycle-buffer
    "A-C-s-r" 'outline-backward-same-level
    "A-C-s-f" 'outline-forward-same-level))
+** outshine
+:PROPERTIES:
+:ID:       7103E713-B985-465E-BC75-F73A096EB4EF
+:END:
+
+/[[https://github.com/alphapapa/outshine][outlshine]] extends the functionality of ~outline-minor-mode~./
+
+#+begin_src emacs-lisp
+(use-package outshine
+  :after outline
+  :demand t
+  :config
+  (add-hook 'prog-mode-hook 'outshine-mode))
 #+end_src
 
 ** fill

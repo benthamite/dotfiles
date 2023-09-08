@@ -335,6 +335,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#whisper][whisper]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
+  - [[#tlon-org][tlon-org]]
   - [[#org-agenda][org-agenda]]
   - [[#org-capture][org-capture]]
   - [[#org-clock][org-clock]]
@@ -1158,7 +1159,7 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
   "Buffers"
   ("." (find-file ps/file-inbox-mobile) "inbox-mobile")
   ("," (find-file ps/file-inbox-desktop) "inbox-desktop")
-  ("a" (ps/org-agenda-switch-to-agenda-current-day) "agenda")
+  ("a" (tlon-org-agenda-switch-to-agenda-current-day) "agenda")
   ("c" (find-file ps/file-config) "config")
   ("d" (find-file ps/file-tlon-docs) "tlon-docs")
   ("h" (find-file ps/file-tlon-ledger) "tlon-ledger")
@@ -1210,86 +1211,86 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   (:exit t
          :idle 0.5)
   "Org headings"
-  ("SPC" (ps/org-id-goto "B67C920B-D855-4A27-A35C-1DAC56580DA7") "Anki habit")
-  ("i" (ps/org-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1") "Anki")
-  ("p" (ps/org-id-goto "0070312F-6233-4BED-98F4-A2BAAEE8DAFF") "audiobooks")
-  ("b" (ps/org-id-goto "7A788F19-30F5-4504-B47F-CE693AF3EA7E") "books")
-  ("u" (ps/org-id-goto "78577411-554E-4EEC-B669-C014A9581540") "Current book")
-  ("r" (ps/org-id-goto "1C5DCC5A-DA18-4CBD-8E2E-205766A656D6") "Documentaries")
-  ("z" (ps/org-id-goto "8F8E5495-A0D8-451A-B1F1-0A8706CBF6A0") "eablogs.net")
-  ("e" (ps/org-id-goto "96BBA849-B4CF-41C0-ABA3-A5D901BCDB18") "Email")
-  ("d" (ps/org-id-goto "6504C81B-28F0-44C3-BFC0-2F3E648974F0") "Feeds")
-  ("v" (ps/org-id-goto "E821F19E-C619-4895-A084-54D0A2772BAE") "films")
-  ("f" (ps/org-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C") "finance")
-  ("/" (ps/org-id-goto "D9D71BF0-6BD6-40A5-9896-E58C7D9556B7") "inbox")
-  ("m" (ps/org-id-goto "E65E393D-8694-4E23-994E-BA59A8063FCF") "Keyboard Maestro")
-  ("k" (ps/org-id-goto "6F0A4889-C303-4930-8512-757AAD310535") "Khan Academy")
-  ("l" (ps/org-id-goto "C308562B-222E-47E2-9A5F-B31EDB29569A") "Leonardo")
-  ("," (ps/org-id-goto "E1C1F691-8358-4DDF-AC71-F46B883411BB") "morning routine")
-  ("." (ps/org-id-goto "ADAA1E78-2904-4EF4-938C-F599A5C90822") "night routine")
-  ("c" (ps/org-id-goto "7CE82ABB-A23F-41F6-A29E-0B95553A8FEE") "podcasts")
-  ("s" (ps/org-id-goto "3513061C-5868-4EBC-9F77-9814AB776011") "Slack")
-  ("j" (ps/org-id-goto "356B7595-EC5B-4DF4-949C-A637537128E4") "sleep")
-  ("y" (ps/org-id-goto "FBDB7FC0-7650-48A0-933D-AE9606C2B621") "Spotify")
+  ("SPC" (tlon-org-id-goto "B67C920B-D855-4A27-A35C-1DAC56580DA7") "Anki habit")
+  ("i" (tlon-org-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1") "Anki")
+  ("p" (tlon-org-id-goto "0070312F-6233-4BED-98F4-A2BAAEE8DAFF") "audiobooks")
+  ("b" (tlon-org-id-goto "7A788F19-30F5-4504-B47F-CE693AF3EA7E") "books")
+  ("u" (tlon-org-id-goto "78577411-554E-4EEC-B669-C014A9581540") "Current book")
+  ("r" (tlon-org-id-goto "1C5DCC5A-DA18-4CBD-8E2E-205766A656D6") "Documentaries")
+  ("z" (tlon-org-id-goto "8F8E5495-A0D8-451A-B1F1-0A8706CBF6A0") "eablogs.net")
+  ("e" (tlon-org-id-goto "96BBA849-B4CF-41C0-ABA3-A5D901BCDB18") "Email")
+  ("d" (tlon-org-id-goto "6504C81B-28F0-44C3-BFC0-2F3E648974F0") "Feeds")
+  ("v" (tlon-org-id-goto "E821F19E-C619-4895-A084-54D0A2772BAE") "films")
+  ("f" (tlon-org-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C") "finance")
+  ("/" (tlon-org-id-goto "D9D71BF0-6BD6-40A5-9896-E58C7D9556B7") "inbox")
+  ("m" (tlon-org-id-goto "E65E393D-8694-4E23-994E-BA59A8063FCF") "Keyboard Maestro")
+  ("k" (tlon-org-id-goto "6F0A4889-C303-4930-8512-757AAD310535") "Khan Academy")
+  ("l" (tlon-org-id-goto "C308562B-222E-47E2-9A5F-B31EDB29569A") "Leonardo")
+  ("," (tlon-org-id-goto "E1C1F691-8358-4DDF-AC71-F46B883411BB") "morning routine")
+  ("." (tlon-org-id-goto "ADAA1E78-2904-4EF4-938C-F599A5C90822") "night routine")
+  ("c" (tlon-org-id-goto "7CE82ABB-A23F-41F6-A29E-0B95553A8FEE") "podcasts")
+  ("s" (tlon-org-id-goto "3513061C-5868-4EBC-9F77-9814AB776011") "Slack")
+  ("j" (tlon-org-id-goto "356B7595-EC5B-4DF4-949C-A637537128E4") "sleep")
+  ("y" (tlon-org-id-goto "FBDB7FC0-7650-48A0-933D-AE9606C2B621") "Spotify")
   ("t" (hydra-org-work/body) "tlon")
-  ("n" (ps/org-id-goto "9696939D-A8B7-4179-A5C8-FEBB017DC9EF") "Telegram")
-  ("q" (ps/org-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E") "YouTube")
-  ;; ("RET'" (ps/org-id-goto "") "")
-  ;; ("TAB'" (ps/org-id-goto "") "")
-  ;; ("='" (ps/org-id-goto "") "")
-  ;; ("-'" (ps/org-id-goto "") "")
-  ;; ("('" (ps/org-id-goto "") "")
-  ("H-a" (ps/org-id-notes-with-clock "a"))
-  ("H-b" (ps/org-id-notes-with-clock "b"))
-  ("H-c" (ps/org-id-notes-with-clock "c"))
-  ("H-d" (ps/org-id-notes-with-clock "d"))
-  ("H-e" (ps/org-id-notes-with-clock "e"))
-  ("H-f" (ps/org-id-notes-with-clock "f"))
-  ("H-g" (ps/org-id-notes-with-clock "g"))
-  ("H-h" (ps/org-id-notes-with-clock "h"))
-  ("H-i" (ps/org-id-notes-with-clock "i"))
-  ("H-j" (ps/org-id-notes-with-clock "j"))
-  ("H-k" (ps/org-id-notes-with-clock "k"))
-  ("H-l" (ps/org-id-notes-with-clock "l"))
-  ("H-m" (ps/org-id-notes-with-clock "m"))
-  ("H-n" (ps/org-id-notes-with-clock "n"))
-  ("H-o" (ps/org-id-notes-with-clock "o"))
-  ("H-p" (ps/org-id-notes-with-clock "p"))
-  ("H-q" (ps/org-id-notes-with-clock "q"))
-  ("H-r" (ps/org-id-notes-with-clock "r"))
-  ("H-s" (ps/org-id-notes-with-clock "s"))
-  ("H-t" (ps/org-id-notes-with-clock "t"))
-  ("H-u" (ps/org-id-notes-with-clock "u"))
-  ("H-v" (ps/org-id-notes-with-clock "v"))
-  ("H-w" (ps/org-id-notes-with-clock "w"))
-  ("H-x" (ps/org-id-notes-with-clock "x"))
-  ("H-y" (ps/org-id-notes-with-clock "y"))
-  ("H-z" (ps/org-id-notes-with-clock "z"))
-  ("H-," (ps/org-id-notes-with-clock ","))
-  ("H-." (ps/org-id-notes-with-clock "."))
-  ("H-/" (ps/org-id-notes-with-clock "/"))
-  ("H-=" (ps/org-id-notes-with-clock "="))
-  ("H--" (ps/org-id-notes-with-clock "-"))
-  ("H-(" (ps/org-id-notes-with-clock "("))
-  ("H-'" (ps/org-id-notes-with-clock "'"))
-  ("H-SPC" (ps/org-id-notes-with-clock "SPC"))
-  ("H-RET" (ps/org-id-notes-with-clock "RET"))
-  ("H-TAB" (ps/org-id-notes-with-clock "TAB"))
+  ("n" (tlon-org-id-goto "9696939D-A8B7-4179-A5C8-FEBB017DC9EF") "Telegram")
+  ("q" (tlon-org-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E") "YouTube")
+  ;; ("RET'" (tlon-org-id-goto "") "")
+  ;; ("TAB'" (tlon-org-id-goto "") "")
+  ;; ("='" (tlon-org-id-goto "") "")
+  ;; ("-'" (tlon-org-id-goto "") "")
+  ;; ("('" (tlon-org-id-goto "") "")
+  ("H-a" (tlon-org-id-notes-with-clock "a"))
+  ("H-b" (tlon-org-id-notes-with-clock "b"))
+  ("H-c" (tlon-org-id-notes-with-clock "c"))
+  ("H-d" (tlon-org-id-notes-with-clock "d"))
+  ("H-e" (tlon-org-id-notes-with-clock "e"))
+  ("H-f" (tlon-org-id-notes-with-clock "f"))
+  ("H-g" (tlon-org-id-notes-with-clock "g"))
+  ("H-h" (tlon-org-id-notes-with-clock "h"))
+  ("H-i" (tlon-org-id-notes-with-clock "i"))
+  ("H-j" (tlon-org-id-notes-with-clock "j"))
+  ("H-k" (tlon-org-id-notes-with-clock "k"))
+  ("H-l" (tlon-org-id-notes-with-clock "l"))
+  ("H-m" (tlon-org-id-notes-with-clock "m"))
+  ("H-n" (tlon-org-id-notes-with-clock "n"))
+  ("H-o" (tlon-org-id-notes-with-clock "o"))
+  ("H-p" (tlon-org-id-notes-with-clock "p"))
+  ("H-q" (tlon-org-id-notes-with-clock "q"))
+  ("H-r" (tlon-org-id-notes-with-clock "r"))
+  ("H-s" (tlon-org-id-notes-with-clock "s"))
+  ("H-t" (tlon-org-id-notes-with-clock "t"))
+  ("H-u" (tlon-org-id-notes-with-clock "u"))
+  ("H-v" (tlon-org-id-notes-with-clock "v"))
+  ("H-w" (tlon-org-id-notes-with-clock "w"))
+  ("H-x" (tlon-org-id-notes-with-clock "x"))
+  ("H-y" (tlon-org-id-notes-with-clock "y"))
+  ("H-z" (tlon-org-id-notes-with-clock "z"))
+  ("H-," (tlon-org-id-notes-with-clock ","))
+  ("H-." (tlon-org-id-notes-with-clock "."))
+  ("H-/" (tlon-org-id-notes-with-clock "/"))
+  ("H-=" (tlon-org-id-notes-with-clock "="))
+  ("H--" (tlon-org-id-notes-with-clock "-"))
+  ("H-(" (tlon-org-id-notes-with-clock "("))
+  ("H-'" (tlon-org-id-notes-with-clock "'"))
+  ("H-SPC" (tlon-org-id-notes-with-clock "SPC"))
+  ("H-RET" (tlon-org-id-notes-with-clock "RET"))
+  ("H-TAB" (tlon-org-id-notes-with-clock "TAB"))
   )
 
 (defhydra hydra-dirs-tlon
   (:exit t)
   "Org Headings: Tlön"
-  ("d" (ps/org-id-goto "") "LBDLH")
-  ("c" (ps/org-id-goto "") "core")
-  ("f" (ps/org-id-goto "") "fede")
-  ("g" (ps/org-id-goto "") "Dropbox: GPE")
-  ("h" (ps/org-id-goto "") "Dropbox: HEAR")
-  ("l" (ps/org-id-goto "") "Dropbox: leo")
-  ("r" (ps/org-id-goto "") "Dropbox: RAE")
-  ("s" (ps/org-id-goto "") "Dropbox: FM")
-  ("t" (ps/org-id-goto "") "Dropbox: tlon")
-  ("u" (ps/org-id-goto "") "Dropbox: EAN"))
+  ("d" (tlon-org-id-goto "") "LBDLH")
+  ("c" (tlon-org-id-goto "") "core")
+  ("f" (tlon-org-id-goto "") "fede")
+  ("g" (tlon-org-id-goto "") "Dropbox: GPE")
+  ("h" (tlon-org-id-goto "") "Dropbox: HEAR")
+  ("l" (tlon-org-id-goto "") "Dropbox: leo")
+  ("r" (tlon-org-id-goto "") "Dropbox: RAE")
+  ("s" (tlon-org-id-goto "") "Dropbox: FM")
+  ("t" (tlon-org-id-goto "") "Dropbox: tlon")
+  ("u" (tlon-org-id-goto "") "Dropbox: EAN"))
 #+end_src
 
 
@@ -1302,7 +1303,7 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
 
   )
 
-  (defun ps/org-id-notes-with-clock (key)
+  (defun tlon-org-id-notes-with-clock (key)
   (funcall (intern (concat "hydra-org-notes/lambda-" key "-and-exit")))
   (org-clock-in))
 #+end_src
@@ -1317,42 +1318,42 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   (:exit t
          :idle 0.5)
   "Org headings"
-  ("a" (ps/org-id-notes-only-clock "a"))
-  ("b" (ps/org-id-notes-only-clock "b"))
-  ("c" (ps/org-id-notes-only-clock "c"))
-  ("d" (ps/org-id-notes-only-clock "d"))
-  ("e" (ps/org-id-notes-only-clock "e"))
-  ("f" (ps/org-id-notes-only-clock "f"))
-  ("g" (ps/org-id-notes-only-clock "g"))
-  ("h" (ps/org-id-notes-only-clock "h"))
-  ("i" (ps/org-id-notes-only-clock "i"))
-  ("j" (ps/org-id-notes-only-clock "j"))
-  ("k" (ps/org-id-notes-only-clock "k"))
-  ("l" (ps/org-id-notes-only-clock "l"))
-  ("m" (ps/org-id-notes-only-clock "m"))
-  ("n" (ps/org-id-notes-only-clock "n"))
-  ("o" (ps/org-id-notes-only-clock "o"))
-  ("p" (ps/org-id-notes-only-clock "p"))
-  ("q" (ps/org-id-notes-only-clock "q"))
-  ("r" (ps/org-id-notes-only-clock "r"))
-  ("s" (ps/org-id-notes-only-clock "s"))
-  ("t" (ps/org-id-notes-only-clock "t"))
-  ("u" (ps/org-id-notes-only-clock "u"))
-  ("v" (ps/org-id-notes-only-clock "v"))
-  ("w" (ps/org-id-notes-only-clock "w"))
-  ("x" (ps/org-id-notes-only-clock "x"))
-  ("y" (ps/org-id-notes-only-clock "y"))
-  ("z" (ps/org-id-notes-only-clock "z"))
-  ("," (ps/org-id-notes-only-clock ","))
-  ("." (ps/org-id-notes-only-clock "."))
-  ("/" (ps/org-id-notes-only-clock "/"))
-  ("=" (ps/org-id-notes-only-clock "="))
-  ("-" (ps/org-id-notes-only-clock "-"))
-  ("(" (ps/org-id-notes-only-clock "("))
-  ("'" (ps/org-id-notes-only-clock "'"))
-  ("SPC" (ps/org-id-notes-only-clock "SPC"))
-  ("RET" (ps/org-id-notes-only-clock "RET"))
-  ("TAB" (ps/org-id-notes-only-clock "TAB"))
+  ("a" (tlon-org-id-notes-only-clock "a"))
+  ("b" (tlon-org-id-notes-only-clock "b"))
+  ("c" (tlon-org-id-notes-only-clock "c"))
+  ("d" (tlon-org-id-notes-only-clock "d"))
+  ("e" (tlon-org-id-notes-only-clock "e"))
+  ("f" (tlon-org-id-notes-only-clock "f"))
+  ("g" (tlon-org-id-notes-only-clock "g"))
+  ("h" (tlon-org-id-notes-only-clock "h"))
+  ("i" (tlon-org-id-notes-only-clock "i"))
+  ("j" (tlon-org-id-notes-only-clock "j"))
+  ("k" (tlon-org-id-notes-only-clock "k"))
+  ("l" (tlon-org-id-notes-only-clock "l"))
+  ("m" (tlon-org-id-notes-only-clock "m"))
+  ("n" (tlon-org-id-notes-only-clock "n"))
+  ("o" (tlon-org-id-notes-only-clock "o"))
+  ("p" (tlon-org-id-notes-only-clock "p"))
+  ("q" (tlon-org-id-notes-only-clock "q"))
+  ("r" (tlon-org-id-notes-only-clock "r"))
+  ("s" (tlon-org-id-notes-only-clock "s"))
+  ("t" (tlon-org-id-notes-only-clock "t"))
+  ("u" (tlon-org-id-notes-only-clock "u"))
+  ("v" (tlon-org-id-notes-only-clock "v"))
+  ("w" (tlon-org-id-notes-only-clock "w"))
+  ("x" (tlon-org-id-notes-only-clock "x"))
+  ("y" (tlon-org-id-notes-only-clock "y"))
+  ("z" (tlon-org-id-notes-only-clock "z"))
+  ("," (tlon-org-id-notes-only-clock ","))
+  ("." (tlon-org-id-notes-only-clock "."))
+  ("/" (tlon-org-id-notes-only-clock "/"))
+  ("=" (tlon-org-id-notes-only-clock "="))
+  ("-" (tlon-org-id-notes-only-clock "-"))
+  ("(" (tlon-org-id-notes-only-clock "("))
+  ("'" (tlon-org-id-notes-only-clock "'"))
+  ("SPC" (tlon-org-id-notes-only-clock "SPC"))
+  ("RET" (tlon-org-id-notes-only-clock "RET"))
+  ("TAB" (tlon-org-id-notes-only-clock "TAB"))
   )
 #+end_src
 
@@ -1369,7 +1370,7 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
          (unless (eq (current-buffer) ,old-buff)
            (switch-to-buffer ,old-buff))
          (goto-char ,old-point)))))
-(defun ps/org-id-notes-only-clock (key)
+(defun tlon-org-id-notes-only-clock (key)
   (ps/save-excursion
    (funcall (intern (concat "hydra-org-notes/lambda-" key "-and-exit")))
    (org-clock-in)
@@ -1387,35 +1388,35 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   :idle 0
   :color blue)
   "Tlön dashboard"
-  ;; ("a" (ps/org-id-goto "") "")
-  ;; ("b" (ps/org-id-goto "") "")
-  ;; ("c" (ps/org-id-goto "") "")
-  ("r" (ps/org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Main")
-  ("b" (ps/org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAE" :column "Main")
-  ("d" (ps/org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Main")
-  ("n" (ps/org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Main")
-  ("i" (ps/org-id-goto "6C7F53ED-B43E-401D-BEEA-DB38CAE367FD") "EAI" :column "Other")
-  ("w" (ps/org-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
-  ("v" (ps/org-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87") "Samotsvety" :column "Other")
-  ("x" (ps/org-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99") "Misc" :column "Other")
-  ("a" (ps/org-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD") "EA Archive" :column "Someday")
-  ("a" (ps/org-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110") "EA Nomad" :column "Someday")
-  ("h" (ps/org-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2") "HEAR" :column "On hold")
-  ("" (ps/org-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Done")
-  ("" (ps/org-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1") "GPE" :column "Done")
-  ("" (ps/org-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F") "LP" :column "Done")
-  ("" (ps/org-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A") "RCGs" :column "Done")
-  ("" (ps/org-id-goto "AE8F5AD4-B85A-4EE2-8A94-AA7B2AFF3E7F") "Regranting" :column "Done")
-  ("e" (ps/org-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5") "email" :column "Comms")
-  ("s" (ps/org-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C") "slack" :column "Comms")
-  ("t" (ps/org-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
-  ("f" (ps/org-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "Fede")
+  ;; ("a" (tlon-org-id-goto "") "")
+  ;; ("b" (tlon-org-id-goto "") "")
+  ;; ("c" (tlon-org-id-goto "") "")
+  ("r" (tlon-org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Main")
+  ("b" (tlon-org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAE" :column "Main")
+  ("d" (tlon-org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Main")
+  ("n" (tlon-org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Main")
+  ("i" (tlon-org-id-goto "6C7F53ED-B43E-401D-BEEA-DB38CAE367FD") "EAI" :column "Other")
+  ("w" (tlon-org-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
+  ("v" (tlon-org-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87") "Samotsvety" :column "Other")
+  ("x" (tlon-org-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99") "Misc" :column "Other")
+  ("a" (tlon-org-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD") "EA Archive" :column "Someday")
+  ("a" (tlon-org-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110") "EA Nomad" :column "Someday")
+  ("h" (tlon-org-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2") "HEAR" :column "On hold")
+  ("" (tlon-org-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Done")
+  ("" (tlon-org-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1") "GPE" :column "Done")
+  ("" (tlon-org-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F") "LP" :column "Done")
+  ("" (tlon-org-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A") "RCGs" :column "Done")
+  ("" (tlon-org-id-goto "AE8F5AD4-B85A-4EE2-8A94-AA7B2AFF3E7F") "Regranting" :column "Done")
+  ("e" (tlon-org-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5") "email" :column "Comms")
+  ("s" (tlon-org-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C") "slack" :column "Comms")
+  ("t" (tlon-org-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
+  ("f" (tlon-org-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "Fede")
   ("F" (tlon-core-meeting-with-fede) "fede: meeting" :column "Fede")
-  ("H-f" (ps/org-id-goto "EB5FC062-E46F-4C1F-930F-F2CC710F852D") "fede: tareas" :column "Fede")
-  ("l" (ps/org-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "Leo")
+  ("H-f" (tlon-org-id-goto "EB5FC062-E46F-4C1F-930F-F2CC710F852D") "fede: tareas" :column "Fede")
+  ("l" (tlon-org-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "Leo")
   ("L" (tlon-core-meeting-with-leo) "leo: meeting" :column "Leo")
-  ("H-l" (ps/org-id-goto "E5777AB0-DC81-40CB-8D03-77D6F111AA2E") "leo: tareas" :column "Leo")
-  ("RET" (ps/org-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A") "Home" :column "")
+  ("H-l" (tlon-org-id-goto "E5777AB0-DC81-40CB-8D03-77D6F111AA2E") "leo: tareas" :column "Leo")
+  ("RET" (tlon-org-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A") "Home" :column "")
   )
 
 (defhydra hydra-org-work-with-clock
@@ -1443,53 +1444,53 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 (defhydra hydra-org-config
   (:exit 1)
   "Org headings: config.org"
-  ("c" (ps/org-id-goto "50FAD2F3-E501-408E-A9A2-8358FAA87C1C") "Calc")
-  ("d" (ps/org-id-goto "617F5323-6518-4751-948B-3E8032D93130") "Dired")
-  ("e" (ps/org-id-goto "FF5DDBC3-ABB6-48A9-9B47-BC9A18F532D5") "Elfeed")
-  ("f" (ps/org-id-goto "B29F4586-2B8D-41FE-82DE-FEDCD863C74B") "Files & buffers")
-  ("g" (ps/org-id-goto "AACAE0F4-0B25-475B-831B-3F1E91E6349D") "Graveyard")
+  ("c" (tlon-org-id-goto "50FAD2F3-E501-408E-A9A2-8358FAA87C1C") "Calc")
+  ("d" (tlon-org-id-goto "617F5323-6518-4751-948B-3E8032D93130") "Dired")
+  ("e" (tlon-org-id-goto "FF5DDBC3-ABB6-48A9-9B47-BC9A18F532D5") "Elfeed")
+  ("f" (tlon-org-id-goto "B29F4586-2B8D-41FE-82DE-FEDCD863C74B") "Files & buffers")
+  ("g" (tlon-org-id-goto "AACAE0F4-0B25-475B-831B-3F1E91E6349D") "Graveyard")
   ("h" (hydra-org-config-hydra/body) "Hydra")
-  ("i" (ps/org-id-goto "A7940400-DD17-4B0B-A9B2-565A207D680C") "Introduction")
-  ("k" (ps/org-id-goto "4373E661-B19D-4E6C-B7DE-C2A26619A515") "Wiki")
-  ("l" (ps/org-id-goto "DE6D2307-9EBD-4E0F-B873-003C9813CA27") "Display")
-  ("m" (ps/org-id-goto "E83EC00B-0C94-44CD-9EC0-355992C99234") "Completion ")
-  ("n" (ps/org-id-goto "179BB021-8B2A-4BF0-B3AA-43AF5A212D4B") "Text manipulation")
+  ("i" (tlon-org-id-goto "A7940400-DD17-4B0B-A9B2-565A207D680C") "Introduction")
+  ("k" (tlon-org-id-goto "4373E661-B19D-4E6C-B7DE-C2A26619A515") "Wiki")
+  ("l" (tlon-org-id-goto "DE6D2307-9EBD-4E0F-B873-003C9813CA27") "Display")
+  ("m" (tlon-org-id-goto "E83EC00B-0C94-44CD-9EC0-355992C99234") "Completion ")
+  ("n" (tlon-org-id-goto "179BB021-8B2A-4BF0-B3AA-43AF5A212D4B") "Text manipulation")
   ("o" (hydra-org-config-org/body) "Org")
-  ("p" (ps/org-id-goto "7F0CBD06-FDB3-4889-91CE-D8A25D4F2613") "Help")
-  ("s" (ps/org-id-goto "9FDBBF3E-724F-4402-9DDB-F9349F65AB0E") "Search")
-  ("t" (ps/org-id-goto "1E8F4417-5D5F-4406-BB70-AA272F714EF2") "Text movement")
-  ("u" (ps/org-id-goto "AA460F4A-4035-4C96-A3A1-078A43F7892D") "user-init")
-  ("v" (ps/org-id-goto "10E891D3-9DF5-472A-8E3C-1DE30EE8C81F") "Variables")
-  ("w" (ps/org-id-goto "7E9A81E0-CAEB-4029-AD2C-B2416439FCDA") "Windows & frames")
-  ("y" (ps/org-id-goto "6405B8E7-6612-4D71-8C2C-A51F8808F4C6") "Yasnippets"))
+  ("p" (tlon-org-id-goto "7F0CBD06-FDB3-4889-91CE-D8A25D4F2613") "Help")
+  ("s" (tlon-org-id-goto "9FDBBF3E-724F-4402-9DDB-F9349F65AB0E") "Search")
+  ("t" (tlon-org-id-goto "1E8F4417-5D5F-4406-BB70-AA272F714EF2") "Text movement")
+  ("u" (tlon-org-id-goto "AA460F4A-4035-4C96-A3A1-078A43F7892D") "user-init")
+  ("v" (tlon-org-id-goto "10E891D3-9DF5-472A-8E3C-1DE30EE8C81F") "Variables")
+  ("w" (tlon-org-id-goto "7E9A81E0-CAEB-4029-AD2C-B2416439FCDA") "Windows & frames")
+  ("y" (tlon-org-id-goto "6405B8E7-6612-4D71-8C2C-A51F8808F4C6") "Yasnippets"))
 
 (defhydra hydra-org-config-hydra
   (:exit 1)
   "Org headings: config.org > hydra"
-  ("c" (ps/org-id-goto "F19DA0AC-B303-4A6B-8B4E-6E94FC98BC78") "Hydra config")
-  ("e" (ps/org-id-goto "CC88D9BE-6617-4D53-BCCF-02097C2A81E1") "Hydra wiki entries")
-  ("f" (ps/org-id-goto "39E06A29-2AEC-4EB4-A0D0-7E1A64832B18") "Hydra files")
-  ("h" (ps/org-id-goto "00E7E217-E02E-489B-968D-E49431FD5ECC") "Hydra main")
-  ("n" (ps/org-id-goto "C3A44EA2-5523-45DD-8100-6228D80ECAC8") "Hydra notes")
-  ("o" (ps/org-id-goto "E6290A57-7035-4ADB-89F6-9CCADF2D74DB") "Hydra mode buffers")
-  ("r" (ps/org-id-goto "F6AA197E-73A7-4688-986F-4A1D583BBA99") "Hydra org ratings")
-  ("s" (ps/org-id-goto "40207396-12B9-4374-9341-713E88772275") "Hydra Straight")
-  ("w" (ps/org-id-goto "B7B8956F-08D9-49E0-873C-4513F6FD44B8") "Hydra wiki notes")
-  ("y" (ps/org-id-goto "5CC3B9AA-629B-407A-899D-529E66A7D057") "Hydra yasnippets"))
+  ("c" (tlon-org-id-goto "F19DA0AC-B303-4A6B-8B4E-6E94FC98BC78") "Hydra config")
+  ("e" (tlon-org-id-goto "CC88D9BE-6617-4D53-BCCF-02097C2A81E1") "Hydra wiki entries")
+  ("f" (tlon-org-id-goto "39E06A29-2AEC-4EB4-A0D0-7E1A64832B18") "Hydra files")
+  ("h" (tlon-org-id-goto "00E7E217-E02E-489B-968D-E49431FD5ECC") "Hydra main")
+  ("n" (tlon-org-id-goto "C3A44EA2-5523-45DD-8100-6228D80ECAC8") "Hydra notes")
+  ("o" (tlon-org-id-goto "E6290A57-7035-4ADB-89F6-9CCADF2D74DB") "Hydra mode buffers")
+  ("r" (tlon-org-id-goto "F6AA197E-73A7-4688-986F-4A1D583BBA99") "Hydra org ratings")
+  ("s" (tlon-org-id-goto "40207396-12B9-4374-9341-713E88772275") "Hydra Straight")
+  ("w" (tlon-org-id-goto "B7B8956F-08D9-49E0-873C-4513F6FD44B8") "Hydra wiki notes")
+  ("y" (tlon-org-id-goto "5CC3B9AA-629B-407A-899D-529E66A7D057") "Hydra yasnippets"))
 
 (defhydra hydra-org-config-org
   (:exit 1)
   "Org headings: config.org > org"
-  ("a" (ps/org-id-goto "E03F4142-C90D-4550-8990-15391E27AD77") "org-agenda")
-  ("b" (ps/org-id-goto "52C959E4-54F4-4499-AE3A-5251F6337FA0") "org key bindings")
-  ("c" (ps/org-id-goto "14F93A83-0BE7-42E3-891E-F6806192296B") "org-capture")
-  ("m" (ps/org-id-goto "2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17") "org-roam")
-  ("n" (ps/org-id-goto "A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7") "org-noter")
-  ("o" (ps/org-id-goto "268B60E4-708C-4372-A59D-5DD876E493CA") "org-mode")
-  ("f" (ps/org-id-goto "35FB5BB5-6552-48C6-983A-F90011CCA908") "org-ref")
-  ("r" (ps/org-id-goto "3FAE7C0D-FB22-4175-A0A4-FFA392539743") "org-refile")
-  ("t" (ps/org-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A") "org-cite")
-  ("x" (ps/org-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF") "org-roam-bibtex"))
+  ("a" (tlon-org-id-goto "E03F4142-C90D-4550-8990-15391E27AD77") "org-agenda")
+  ("b" (tlon-org-id-goto "52C959E4-54F4-4499-AE3A-5251F6337FA0") "org key bindings")
+  ("c" (tlon-org-id-goto "14F93A83-0BE7-42E3-891E-F6806192296B") "org-capture")
+  ("m" (tlon-org-id-goto "2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17") "org-roam")
+  ("n" (tlon-org-id-goto "A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7") "org-noter")
+  ("o" (tlon-org-id-goto "268B60E4-708C-4372-A59D-5DD876E493CA") "org-mode")
+  ("f" (tlon-org-id-goto "35FB5BB5-6552-48C6-983A-F90011CCA908") "org-ref")
+  ("r" (tlon-org-id-goto "3FAE7C0D-FB22-4175-A0A4-FFA392539743") "org-refile")
+  ("t" (tlon-org-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A") "org-cite")
+  ("x" (tlon-org-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF") "org-roam-bibtex"))
 #+end_src
 
 *** dired
@@ -3113,21 +3114,21 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
   :after org
   :elpaca nil
   :config
-  (defun ps/org-copy-dwim ()
+  (defun tlon-org-copy-dwim ()
     "Copy the contents of the org element at point."
     (interactive)
     (if (derived-mode-p 'org-mode)
         (pcase (org-element-type (org-element-context))
-          ('headline (ps/org-copy-heading-name))
-          ('paragraph (ps/org-copy-heading-contents))
-          ('block (ps/org-copy-block))
-          ('table-cell (ps/org-copy-table-cell))
+          ('headline (tlon-org-copy-heading-name))
+          ('paragraph (tlon-org-copy-heading-contents))
+          ('block (tlon-org-copy-block))
+          ('table-cell (tlon-org-copy-table-cell))
           (_ (user-error "I don't know what to copy")))
       (user-error "Not in org-mode")))
 
   :general
   (org-mode-map
-   "A-C-H-t" 'ps/org-copy-dwim))
+   "A-C-H-t" 'tlon-org-copy-dwim))
 #+end_src
 
 ** region
@@ -3313,15 +3314,15 @@ with the current major mode."
           (unless (eq major-mode 'org-agenda-mode)
             (org-modern-mode))
           (org-display-inline-images)
-          (ps/org-hide-properties)
-          (ps/org-hide-logbook))
+          (tlon-org-hide-properties)
+          (tlon-org-hide-logbook))
       (unless (eq major-mode 'org-agenda-mode)
         (org-modern-mode -1))
 
       (visible-mode)
       (org-remove-inline-images)
-      (ps/org-show-properties)
-      (ps/org-show-logbook)))
+      (tlon-org-show-properties)
+      (tlon-org-show-logbook)))
 
   (defun ps/count-words-dwim ()
     "Count the number of words in region, if active, otherwise in
@@ -3417,7 +3418,7 @@ indent block only, else indent whole buffer."
             (let ((org-src-tab-acts-natively t))
               (org-narrow-to-block)
               (indent-region (point-min) (point-max) nil)
-              (ps/org-widen-and-reveal))
+              (tlon-org-widen-and-reveal))
           (indent-region (point-min) (point-max) nil)
           (message "Indented buffer.")))
       (whitespace-cleanup)))
@@ -3987,6 +3988,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (setq insert-directory-program "/opt/homebrew/bin/gls") ; use coreutils to avoid 'listing directory failed' error
   (setq auto-save-no-message t) ; don't emit message when auto-saving
   (setq delete-old-versions t) ; don't ask about deleting old versions
+  (setq make-backup-files nil)
   (setq version-control 'never) ; number backups
 
   (add-to-list 'auto-mode-alist '("\\.mdx\\'" . markdown-mode))
@@ -4052,30 +4054,6 @@ as the current buffer."
     (save-some-buffers
      `(4)))
 
-  (defun ps/org-show-subtree-hide-drawers ()
-    (outline-hide-subtree)
-    (org-show-entry)
-    (org-show-children))
-
-  (defun ps/org-narrow-to-entry-and-children ()
-    "Narrow org buffer to entry and all its children."
-    (interactive)
-    (org-narrow-to-subtree)
-    (ps/org-show-subtree-hide-drawers))
-
-  (defun ps/org-narrow-to-entry-no-children ()
-    "Narrow org buffer to entry excluding all children."
-    (interactive)
-    (org-narrow-to-subtree)
-    (save-excursion
-      (org-next-visible-heading 1)
-      (narrow-to-region (point-min) (point))))
-
-  (defun ps/org-widen-and-reveal ()
-    "Widen and reveal subtree."
-    (widen)
-    (org-reveal nil))
-
   (defun ps/eval-region-or-buffer ()
     "Evaluate a region if selected, otherwise the whole buffer."
     (interactive)
@@ -4139,16 +4117,26 @@ those visiting any of the EXCLUDED-FILES."
     (ps/switch-to-last-window))
 
   (defun ps/download-bypass-paywalls-chrome ()
-    "Download and install `bypass-paywalls-chrome'."
+    "Download and install `Bypass Paywalls Chrome Clean'.
+After running the command, both the Chrome extensions page and
+the `bypass-paywalls-chrome-clean-master' folder will open.
+To install the extension, drag the latter onto the former."
     (interactive)
-    (let ((file (file-name-concat ps/dir-downloads "bypass-paywalls.zip")))
-      (url-copy-file "https://github.com/iamadamdev/bypass-paywalls-chrome/archive/master.zip" file)
+    (let* ((file (file-name-concat ps/dir-downloads "bypass-paywalls.zip"))
+           (dir (file-name-concat ps/dir-downloads "bypass-paywalls-chrome-clean-master"))
+           (reveal-in-osx
+            (concat
+             "set thePath to POSIX file \"" dir "\"\n"
+             "tell application \"Finder\"\n"
+             " set frontmost to true\n"
+             " reveal thePath \n"
+             "end tell\n")))
+      (url-copy-file "https://gitlab.com/magnolia1234/bypass-paywalls-chrome-clean/-/archive/master/bypass-paywalls-chrome-clean-master.zip" file)
       (shell-command (format "unzip %s -d %s" file ps/dir-downloads))
-      (dired ps/dir-downloads)
-      (goto-char (point-min))
-      (search-forward "bypass-paywalls-chrome-master")
-      (reveal-in-osx-finder)
-      (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"89243CDA-4876-45C8-9AF2-3666664A0EAA\"'")))
+      (delete-file file)
+      ;; open Chrome extensions page
+      (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"89243CDA-4876-45C8-9AF2-3666664A0EAA\"'")
+      (start-process "osascript-getinfo" nil "osascript" "-e" reveal-in-osx)))
 
   (defun ps/internet-archive-dwim ()
     "Convert or download ACSM file, depending on whether or not an
@@ -4407,6 +4395,16 @@ process in these cases."
           (expand-file-name (sha1 (file-name-nondirectory file))
                             (file-name-directory file))))))
   (advice-add #'make-backup-file-name-1 :around #'ps/make-hashed-backup-file-name-a)
+
+  (defun ps/open-buffer-files ()
+    "Return the list of files currently open in emacs"
+    (delq nil
+          (mapcar (lambda (x)
+                    (if (and (buffer-file-name x)
+                             (string-match "\\.org$"
+                                           (buffer-file-name x)))
+                        (buffer-file-name x)))
+                  (buffer-list))))
 
   :general
   ("M--" 'not-modified
@@ -5144,7 +5142,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   is already narrowed."
     (interactive)
     (declare (interactive-only))
-    (cond ((buffer-narrowed-p) (ps/org-widen-and-reveal))
+    (cond ((buffer-narrowed-p) (tlon-org-widen-and-reveal))
           ((region-active-p)
            (narrow-to-region (region-beginning)
                              (region-end)))
@@ -5153,7 +5151,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
            ;; command. Remove this first conditional if
            ;; you don't want it.
            (cond ((ignore-errors (org-narrow-to-block) t))
-                 (t (ps/org-narrow-to-entry-and-children))))
+                 (t (tlon-org-narrow-to-entry-and-children))))
           ((derived-mode-p 'latex-mode)
            (LaTeX-narrow-to-environment))
           ((derived-mode-p 'ledger-mode)
@@ -5756,7 +5754,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 [2023-03-01 Wed 10:54] Check [[https://github.com/dedenbangkit/.emacs.d/blob/2cf69eb102af5a5cab7ec1d65af77e997082e17a/custom/main.el#L34][this config]] in case it helps me figure out how to avoid getting prompted for a password so frequently.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-gcal)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tlon-org-gcal)
 (use-package org-gcal
   :elpaca (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass org
@@ -6005,7 +6003,7 @@ heading."
   (setq org-gcal-up-days 1)
   (setq org-gcal-down-days 7)
 
-  (defun ps/org-gcal-open-at-point ()
+  (defun tlon-org-gcal-open-at-point ()
     "Get entry id of `org-gcal' entry at point and open the
 associated Google Calendar event in a browser."
     (interactive)
@@ -6036,7 +6034,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
     ("S" org-gcal-sync-buffer)
     ("p" org-gcal-post-at-point)
     ("d" org-gcal-delete-at-point)
-    ("o" ps/org-gcal-open-at-point)
+    ("o" tlon-org-gcal-open-at-point)
     ("u" org-gcal--sync-unlock)
     ("r" org-gcal-request-token)
     ("c" org-gcal-sync-tokens-clear)
@@ -7172,12 +7170,12 @@ entries are offered.  By default, all entries of the current
 buffer are offered."
     (interactive)
     (widen)
-    (ps/org-fold-show-all-headings)
+    (tlon-org-fold-show-all-headings)
     (consult-org-heading)
     (recenter 1))
 
-  ;; (advice-remove 'consult-org-heading #'ps/org-cycle-content)
-  ;; (advice-add 'consult-org-agenda :after #'ps/org-narrow-to-entry-and-children)
+  ;; (advice-remove 'consult-org-heading #'tlon-org-cycle-content)
+  ;; (advice-add 'consult-org-agenda :after #'tlon-org-narrow-to-entry-and-children)
 
   :general
   ("C-H-l" 'consult-line
@@ -10192,7 +10190,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (setq org-priority-highest 1)
   (setq org-priority-default 7)
   (setq org-priority-lowest 9) ; set priorities
-  ;; (org-extend-today-until 4 "youtu.be/31gwvApo8zg?t=3342")
   (setq org-deadline-warning-days 0)              ; show due tasks only on the day the tasks are due
   (setq org-hide-emphasis-markers t)
   (setq org-hide-leading-stars t) ; indent every heading and hide all but the last leading star
@@ -10220,7 +10217,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
                         ("\\.x?html?\\'" . default)
                         ("\\.pdf\\'" . emacs)))
   (setq org-use-tag-inheritance t)
-
   (setq org-structure-template-alist
         '(("a" . "export ascii")
           ("c" . "center")
@@ -10243,257 +10239,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (dolist (module '(org-habit org-tempo))
     (add-to-list 'org-modules module))
 
-  (defun ps/org-set-todo-properties ()
-    "Set priority and effort."
-    (interactive)
-    (org-priority)
-    (org-set-effort))
-
-  (defun ps/org-url-dwim ()
-    "docstring"
-    (interactive)
-    (cond
-     ((url-get-url-at-point)
-      (kill-new (url-get-url-at-point)))
-     ((ps/org-link-get-url-at-point)
-      (kill-new (ps/org-link-get-thing-at-point 1)))))
-
-  ;; Adapted from lists.gnu.org/archive/html/emacs-orgmode/2011-06/msg00716.html
-  (defun ps/org-link-get-thing-at-point (arg)
-    "When point is on org link, extract object, as defined by ARG."
-    (when (org-in-regexp org-link-bracket-re 1)
-      (kill-new (org-link-unescape (match-string-no-properties arg)))))
-
-  (defun ps/org-link-get-link-at-point ()
-    "When point is on org link, extract link (both url and
-description)."
-    (interactive)
-    (ps/org-link-get-thing-at-point 0))
-
-  (defun ps/org-link-get-url-at-point ()
-    "When point is on org link, extract url."
-    (interactive)
-    (ps/org-link-get-thing-at-point 1))
-
-  (defun ps/org-link-get-description-at-point ()
-    "When point is on org link, extract description."
-    (interactive)
-    (ps/org-link-get-thing-at-point 2))
-
-  (defun ps/org-isearch-visible-org-heading ()
-    "Jump to first visible org heading that matches string."
-    (interactive)
-    (widen)
-    (let ((search-invisible nil)
-          (isearchp-regexp-quote-yank-flag nil))
-      (isearch-forward-regexp nil 1) ; isearch+
-      (ps/isearch-yank-unquoted-string "^\*+ ")))
-
-  ;; emacs.stackexchange.com/a/10714/32089
-  (defun ps/org-remove-link ()
-    "Replace an org link by its description or, if empty, its
-address."
-    (interactive)
-    (if (org-in-regexp org-link-bracket-re 1)
-        (save-excursion
-          (let ((remove (list (match-beginning 0) (match-end 0)))
-                (description
-                 (if (match-end 2)
-                     (org-match-string-no-properties 2)
-                   (org-match-string-no-properties 1))))
-            (apply 'delete-region remove)
-            (insert description)))))
-
-  (defun ps/org-insert-todo-subheading-after-body ()
-    (interactive)
-    (save-restriction
-      (org-narrow-to-subtree)
-      (outline-hide-subtree)
-      (outline-show-entry)
-      (goto-char (point-max))
-      (org-beginning-of-line)
-      (org-insert-todo-heading nil t)
-      (org-do-demote)))
-
-  (defun ps/org-insert-subheading ()
-    "Insert an org subheading at the end of the current subtree.
-If the subtree contains other subheadings, insert it above them."
-    (interactive)
-    (save-restriction
-      (org-narrow-to-subtree)
-      (outline-next-visible-heading 1)
-      (left-char)
-      (newline)
-      (org-insert-heading)
-      (org-do-demote)))
-
-  ;; Adapted from hungyi.net/posts/org-mode-subtree-contents
-  (defun ps/org-get-heading-contents ()
-    "Get the content text of the heading at point and add it to the `kill-ring'.
-Excludes the heading itself and any child subtrees."
-    (if (org-before-first-heading-p)
-        (message "Not in or on an org heading")
-      (save-excursion
-        ;; If inside heading contents, move the point back to the heading
-        ;; otherwise `org-agenda-get-some-entry-text' won't work.
-        (unless (org-at-heading-p) (org-previous-visible-heading 1))
-        (let ((contents (substring-no-properties
-                         (org-agenda-get-some-entry-text
-                          (point-marker)
-                          most-positive-fixnum))))
-          contents))))
-
-  (defun ps/org-copy-heading-contents ()
-    (interactive)
-    (let ((contents (ps/org-get-heading-contents)))
-      (if (string= contents "")
-          (message "Heading is empty.")
-        (message "Copied heading")
-        (kill-new contents))))
-
-  (defun ps/org-copy-heading-name ()
-    (interactive)
-    "Copy name of heading at point."
-    (kill-new (org-entry-get nil "ITEM")))
-
-  ;; reddit.com/r/emacs/comments/e4jnlj/how_to_create_a_word_counter_that_counts_words_in/f9e3796
-  (defun ps/org-count-words ()
-    "If region is active, count words in it; otherwise count words
-in current subtree."
-    (interactive)
-    (if (use-region-p)
-        (funcall-interactively #'count-words-region (region-beginning) (region-end))
-      (org-with-wide-buffer
-       (cl-loop for (lines words characters)
-                in (org-map-entries
-                    (lambda ()
-                      (unpackaged/org-forward-to-entry-content 'unsafe)
-                      (let ((end (org-entry-end-position)))
-                        (list (count-lines (point) end)
-                              (count-words (point) end)
-                              (- end (point)))))
-                    nil 'tree)
-                sum lines into total-lines
-                sum words into total-words
-                sum characters into total-characters
-                finally return (let ((message (format "Subtree \"%s\" has %s lines, %s words, and %s characters."
-                                                      (org-get-heading t t) total-lines total-words total-characters)))
-                                 (kill-new (number-to-string total-words))
-                                 (message message)
-                                 message)))))
-
-  (defun ps/org-jump-to-first-heading ()
-    "Move point to the beginning of the first org heading in the
-current buffer."
-    (interactive)
-    (widen)
-    (goto-char (point-min))
-    (org-next-visible-heading 1))
-
-  (defun ps/org-super-return (&optional indent arg interactive)
-    "When `org-return-follows-link' is non-nil and point is on a
-link, call `org-open-at-point' and set
-`browse-url-browser-function' to `eww-browse-url'"
-    (interactive "P")
-    (let ((browse-url-browser-function 'eww-browse-url)
-          (browse-url-handlers nil))
-      (org-open-at-point)))
-
-  ;; currently not bound; consider deleting if unused
-  (defun ps/backward-org-transpose-element ()
-    "Transpose current and previous elements, keeping blank lines between.
-Point is moved after both elements."
-    (interactive)
-    (org-skip-whitespace)
-    (let ((end (org-element-property :end (org-element-at-point))))
-      (org-drag-element-forward)
-      (goto-char end)))
-
-  (defun ps/org-clear-heading-contents (&optional include-children include-properties)
-    "Remove contents in org heading at point."
-    (interactive)
-    (save-restriction
-      (if include-children
-          (ps/org-narrow-to-entry-and-children)
-        (ps/org-narrow-to-entry-no-children))
-      (org-back-to-heading)
-      (if include-properties
-          (forward-line)
-        (org-end-of-meta-data t))
-      (delete-region (point) (point-max))))
-
-  (defun ps/org-paste-html ()
-    "Take the contents of the system clipboard and use `pandoc' to
-convert it to `org-mode' format."
-    (interactive)
-    (let* ((clipboard (if (eq system-type 'darwin)
-                          "pbv public.html"
-                        "xclip -out -selection 'clipboard' -t text/html"))
-           (pandoc (concat "pandoc --wrap=none -f html -t org"))
-           (cmd (concat clipboard " | " pandoc))
-           (output (shell-command-to-string cmd))
-           ;; Not sure why Pandoc adds these double slashes; we remove them
-           (output (replace-regexp-in-string "^\\\\\\\\$" "" output))
-           (text (replace-regexp-in-string "= " "= " output)))
-      (kill-new text)
-      (yank)))
-
-  (defun ps/org-paste-image ()
-    "Take the contents of the system clipboard and paste it as an
-image."
-    (interactive)
-    (if (executable-find "pngpaste")
-        (let* ((counter 1)
-               (image-file (concat
-                            ps/dir-org-images
-                            (org-id-get nil 'create)
-                            (format "-%d.png" counter))))
-          (while (file-exists-p image-file)
-            (setq counter (1+ counter))
-            (setq image-file (concat
-                              ps/dir-org-images
-                              (org-id-get nil 'create)
-                              (format "-%d.png" counter))))
-          (call-process-shell-command (format "pngpaste '%s'" image-file))
-          (let ((caption (read-string "Caption: ")))
-            (unless (string= caption "")
-              (insert (format "#+CAPTION: %s \n" caption))))
-          (insert (format "[[file:%s]]" image-file))
-          (org-display-inline-images)
-          (message "You can toggle inline images with C-c C-x C-v"))
-      (user-error "Requires pngpaste in PATH")))
-
-  ;; The following functions produce a count of the TODOs added
-  ;; or removed from all agenda files in the last day:
-  ;; https://200ok.ch/posts/2022-12-06_how_much_did_you_get_done_today.html
-
-  (defun ps/org-count-lines-with-expression (s exp)
-    "Count the number of lines in the string S that contain the regular expression EXP."
-    (let ((count 0))
-      (mapc (lambda (line)
-              (when (string-match-p exp line)
-                (setq count (+ 1 count))))
-            (split-string s "\n"))
-      count))
-
-  (defun ps/org-productivity-of-the-day ()
-    (seq-reduce
-     (lambda (acc it)
-       (let* ((folder (file-name-directory it))
-              (file (file-name-nondirectory it))
-              (base-cmd (concat "cd "
-                                folder
-                                "; git log --since=midnight -p "
-                                file
-                                "| grep TODO"))
-              (changed (shell-command-to-string base-cmd))
-              (added (count-lines-with-expression changed "^\\+"))
-              (removed (count-lines-with-expression changed "^\\-")))
-         (cons (+ (car acc) added)
-               (- (cdr acc) removed))))
-     org-agenda-files
-     '(0 . 0)))
-
   :general
   (org-mode-map
    "<S-left>" nil
@@ -10508,7 +10253,6 @@ image."
    "<M-down>" nil
    "C-j" nil
    "<backtab>" 'org-shifttab
-   "s-<return>" 'ps/org-super-return
    "C-k" nil
    "C-," nil
    "A-C-s-i" 'org-backward-sentence
@@ -10523,30 +10267,22 @@ image."
    "A-C-s-M-/" 'org-next-block
    "A-H-M-t" 'org-transpose-element
    "H-s-o" 'org-open-at-point
-   "A-C-s-n" 'ps/org-jump-to-first-heading
-   "s-A-b" 'ps/org-set-todo-properties
    "s-d" 'org-deadline
    "s-e" 'org-set-effort
    "s-f" 'org-insert-todo-subheading
-   "s-A-f" 'ps/org-insert-todo-subheading-after-body
    "s-p" 'org-time-stamp-inactive
    "s-A-p" 'org-time-stamp
    "s-q" 'org-set-tags-command
    "s-s" 'org-schedule
-   ;; "s-A-s" 'ps/org-isearch-visible-org-heading
    "s-t" 'org-todo
    "s-A-t" 'org-sort
-   "s-v" 'ps/org-paste-html
-   "s-A-v" 'ps/org-paste-image
    "s-y" 'org-evaluate-time-range
    "s-z" 'org-edit-special
-   "s-A-z" 'ps/org-export-to-ea-wiki
    "s-," 'org-priority
    "A-<return>" "C-u M-<return>"
    "A-M-<return>" 'org-insert-todo-heading
    ;; bindings with matching commands in Fundamental mode
-   "H-v" 'org-yank
-   "M-w" 'ps/org-count-words)
+   "H-v" 'org-yank)
   (org-agenda-mode-map
    "s-s" 'org-save-all-org-buffers)
   (telega-chat-mode-map
@@ -10568,6 +10304,67 @@ By considering both tasks completed and their associated priorities.
 :Effort:   2:00
 :ID:       FCC486F6-7391-4EA3-9087-6BC3D5AB72B3
 :END:
+
+** tlon-org
+:PROPERTIES:
+:ID:       D423037B-F64F-4815-9EBC-6FB181969CDF
+:END:
+
+#+begin_src emacs-lisp
+(use-package tlon-org
+  :elpaca (tlon-org
+           :host github
+           :repo "tlon-team/tlon-org"
+           :depth nil) ; clone entire repo, not just last commit
+  :demand t
+  :init
+  (run-with-idle-timer (* 10 60) nil #'tlon-org-agenda-switch-to-agenda-current-day)
+
+  (setq tlon-org-id-auto-add-excluded-directories
+        (list ps/dir-dropbox-tlon-fede
+              ps/dir-dropbox-tlon-leo))
+
+  (setq tlon-org-id-auto-add-excluded-files
+        (list ps/file-orb-noter-template))
+
+  :config
+  (setq tlon-org-agenda-files-excluded (list
+                                        ps/file-tlon-tareas-leo
+                                        ps/file-tlon-tareas-fede))
+  (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter tlon-org-clocktable-sorter))
+
+  (add-hook 'before-save-hook #'tlon-org-id-auto-add-ids-to-headings-in-file)
+
+  :general
+  (org-mode-map
+   "s-A-f" 'tlon-org
+   "s-<return>" 'tlon-org-super-return
+   "A-C-s-n" 'tlon-org-jump-to-first-heading
+   "s-A-b" 'tlon-org-set-todo-properties
+   "s-A-f" 'tlon-org-insert-todo-subheading-after-body
+   "s-v" 'tlon-org-paste-html
+   "s-A-v" 'tlon-org-paste-image
+   "s-A-z" 'tlon-org-export-to-ea-wiki
+   "M-w" 'tlon-org-count-words
+   "s-A-n" 'tlon-org-new-clock-entry-today
+   "s-." 'tlon-org-time-stamp-active-current-time
+   "s-A-." 'tlon-org-time-stamp-active-current-date
+   "s-/" 'tlon-org-time-stamp-inactive-current-time
+   "s-A-u" 'tlon-org-id-update-id-locations
+   "s-A-c" 'tlon-org-mark-checkbox-complete-and-move-to-next-item
+   "s-A-o" 'tlon-org-reset-checkbox-state-subtree
+   "H-s-w" 'tlon-org-refile-and-archive
+   "s-A-w" 'tlon-org-refile-goto-latest
+   "s-y" 'tlon-org-crypt-dwim)
+  ((org-mode-map org-msg-edit-mode-map)
+   "s-A-l" 'tlon-org-url-dwim)
+  (org-agenda-mode-map
+   "RET" 'tlon-org-agenda-switch-to-dwim
+   "/" 'tlon-org-agenda-done-and-next
+   "\"" 'tlon-org-agenda-postpone-and-next
+   "b" 'tlon-org-agenda-toggle-anniversaries
+   "SPC" 'tlon-org-agenda-goto-and-start-clock))
+#+end_src
 
 ** org-agenda
 :PROPERTIES:
@@ -10619,26 +10416,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   :after org
   :demand t
   :init
-  (defun ps/org-agenda-switch-to-agenda-current-day ()
-    "Open agenda in left window, creating it if necessary."
-    (interactive)
-    (ps/window-split-if-unsplit)
-    (winum-select-window-1)
-    (let ((agenda "*Org Agenda(a)*"))
-      (if (get-buffer agenda)
-          (switch-to-buffer agenda)
-        (ps/org-agenda-toggle-anniversaries t)
-        (org-agenda nil "a"))))
-
-  (run-with-idle-timer (* 10 60) nil #'ps/org-agenda-switch-to-agenda-current-day)
-
   (setq org-agenda-hide-tags-regexp "project")
-
-  (defun ps/org-agenda-goto-and-start-clock ()
-    "In org-agenda, go to entry at point and clock in."
-    (interactive)
-    (org-agenda-goto)
-    (org-clock-in))
 
   :config/el-patch
   ;; Replace native function with variant that doesn't ask the user
@@ -10674,10 +10452,8 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   (setq org-agenda-skip-scheduled-if-done t)
   (setq org-agenda-skip-deadline-if-done t)
   (setq org-agenda-log-mode-items '(clock))
-  (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter ps/org-clocktable-sorter))
   (setq org-agenda-custom-commands
-        '(
-          ("E" "TODOs without effort"
+        '(("E" "TODOs without effort"
            ((org-ql-block '(and (todo)
                                 (not (property "effort")))
                           ((org-ql-block-header "TODOs without effort")))))
@@ -10702,47 +10478,11 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
            tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")))
   ;; (setq org-agenda-clockreport-parameter-plist)
   (setq org-agenda-files (list ps/file-calendar))
-  (setq ps/org-agenda-files-excluded (list
-                                      ps/file-tlon-tareas-leo
-                                      ps/file-tlon-tareas-fede))
-
-  (defun ps/org-clocktable-sorter (ipos tables params)
-    (setq tables (cl-sort tables (lambda (table1 table2) (> (nth 1 table1) (nth 1 table2)))))
-    (funcall (or org-clock-clocktable-formatter 'org-clocktable-write-default) ipos tables params))
+  (setq org-agenda-archives-mode 'trees)
 
   (advice-add 'org-agenda-goto :after
               (lambda (&rest args)
-                (ps/org-narrow-to-entry-and-children)))
-
-  (setq org-agenda-archives-mode 'trees) ; this variable is non-customizable, so won't work in `:custom'
-
-  (defun ps/org-agenda-done-and-next ()
-    "Temporary command to address bug when setting status via
-`org-agenda-todo'."
-    (interactive)
-    (org-agenda-goto)
-    (org-todo "DONE")
-    (ps/org-agenda-switch-to-agenda-current-day)
-    (org-agenda-next-line))
-
-  (defun ps/org-agenda-postpone-and-next ()
-    "Postpone task at point by one day and move to next task."
-    (interactive)
-    (org-agenda-date-later 1)
-    (org-agenda-next-line))
-
-  (defun ps/org-unhighlight ()
-    "Interactive version of `org-unhighlight'."
-    (interactive)
-    (org-unhighlight))
-
-  (defun ps/org-agenda-switch-to-dwim ()
-    "When point is in an agenda log line, goto to that line and
- position in the corresponding file. Else just open the file."
-    (interactive)
-    (condition-case error
-        (call-interactively 'org-clock-convenience-goto-ts)
-      (error (org-agenda-switch-to))))
+                (tlon-org-narrow-to-entry-and-children)))
 
   ;; We add these two advices because `org-modern-mode' interferes
   ;; with the display of the habits progress bar
@@ -10760,36 +10500,13 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
                                     (visual-line-mode -1)
                                     (toggle-truncate-lines)))
 
-  ;; this comments out the line "%%(org-bbdb-anniversaries-future 1)"
-  ;; in `calendar.org', which is the only way I found to hide
-  ;; anniversaries temporarily from the agenda
-  ;; for context, see https://orgmode.org/manual/Weekly_002fdaily-agenda.html
-  (defun ps/org-agenda-toggle-anniversaries (&optional just-enable)
-    "Toggle display of BBDB birthdays in the agenda."
-    (interactive)
-    (save-window-excursion
-      (ps/org-id-goto "C84DFF77-7AEB-4BEC-B1E6-AECE4E174F62")
-      (org-narrow-to-subtree)
-      (goto-char (point-min))
-      (org-end-of-meta-data t)
-      (if (looking-at "%%")
-          (unless just-enable
-            (delete-line))
-        (insert "%%(org-bbdb-anniversaries-future 1)\n")))
-    (unless just-enable
-      (org-agenda-redo)))
-
   :general
   ("C-<escape>" 'org-agenda)
   (org-agenda-mode-map
-   "RET" 'ps/org-agenda-switch-to-dwim
-   "/" 'ps/org-agenda-done-and-next
    "?" 'org-agenda-filter
    ";" 'org-agenda-later
-   "\"" 'ps/org-agenda-postpone-and-next
    "C-b" 'org-agenda-tree-to-indirect-buffer
    "C-k" nil
-   "b" 'ps/org-agenda-toggle-anniversaries
    "d" 'org-agenda-deadline
    "M-t" nil
    "H-n" nil
@@ -10805,7 +10522,6 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "p" 'org-agenda-date-earlier
    "q" 'org-agenda-kill-all-agenda-buffers
    "s" 'org-agenda-schedule
-   "SPC" 'ps/org-agenda-goto-and-start-clock
    "W" 'org-agenda-refile
    "X" 'org-agenda-exit
    "x" (lambda! (org-agenda-log-mode 'clockcheck))
@@ -10928,7 +10644,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tbb" "Tlön: BAE: Generic " entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-           ("tbd" "Tlön: BAE: Docs " entry
+          ("tbd" "Tlön: BAE: Docs " entry
            (id "49A79F81-8920-43FF-B1C7-B02F0962B30F")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
           ("tbi" "Tlön: BAE: Import " entry
@@ -11114,7 +10830,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlx" "Tlön: Leo: Meetings" entry
            (id "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")
-           "** %(ps/org-time-stamp-inactive-current-time)\n%?")
+           "** %(tlon-org-time-stamp-inactive-current-time)\n%?")
           ("tlp" "Tlön: Leo: Pending for next meeting" plain
            (id "8B2F18B4-A309-4F29-A5E6-CD40E010970D")
            "" :empty-lines 1 :empty-lines-after 3)
@@ -11140,80 +10856,10 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("w" "Web site" entry
            (file ps/file-downloads)
            "* %a :website:\n\n%U %?\n\n%:initial")))
-  ;; ("w" "Film watchlist" entry
-  ;; (id "E821F19E-C619-4895-A084-54D0A2772BAE")
-  ;; "** %?\n" :empty-lines 1 :prepend t)))
-  ;; ("W" "Weekly review" plain (function org-journal-find-location)
-  ;; "** %(format-time-string org-journal-time-format)Weekly review\n*** Mistakes made\n%?\n*** Lessons learned\n")
-  ;; ("z" "mailnote" entry
-  ;; (id "0D266C71-41B8-4E14-836E-AABE2654E942")
-  ;; "** From: %:from Subject: %:subject\n %a" :kill-buffer t)
-  ;; ("p" "Pomodoro entry" plain (function org-journal-find-location)
-  ;; "** %(format-time-string org-journal-time-format)Pomodoro\n%i%?")
 
-  (defun ps/org-capture-hydra-notes-hook ()
-    (when (string= (org-capture-get :key t) "p")
-      (hydra-org-notes-only-clock/body)))
-
-  (defun ps/org-capture-before-finalize-hook-function ()
-    "Define behavior of `org-capture-before-finalize-hook'."
-    (pcase (plist-get org-capture-plist :key)
-      ("gg"
-       (org-ai-mode)
-       (org-narrow-to-subtree)
-       (forward-line)
-       (forward-line)
-       (ps/yasnippet-expand-by-key "ai")
-       (message "finished"))
-      ("gd"
-       (org-ai-mode)
-       (org-narrow-to-subtree)
-       (forward-line)
-       (forward-line)
-       (ps/yasnippet-expand-by-key "aii")
-       (message "finished"))
-      ("l"
-       (org-align-all-tags)
-       (ispell-change-dictionary "english"))
-      ("la"
-       (save-window-excursion
-         (ps/switch-to-alternate-buffer)
-         (ps/org-jump-to-first-heading)
-         (widen)
-         (org-narrow-to-subtree)
-         (let ((org-use-tag-inheritance))
-           (org-roam-tag-remove '("unprocessed" "empty" "leo" "unpublished"))
-           (org-roam-tag-add '("leo")))
-         (ps/show-buffer-name))
-       (goto-char 0)
-       (search-forward "Procesar ")
-       (insert (format "~%s~" (current-kill 0))))
-      ("le"
-       (save-window-excursion
-         (ps/switch-to-alternate-buffer)
-         (ps/show-buffer-name))
-       (goto-char 0)
-       (search-forward "Renombrar ")
-       (insert (concat "~" (current-kill 0) "~ ")))
-      ;; Add link to open Slack message externally.
-      ("s"
-       (org-narrow-to-subtree)
-       (let ((url (s-replace-regexp
-                   "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
-                   "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
-                   (plist-get org-store-link-plist :link))))
-         (goto-char (point-max))
-         (insert (format "[[%s][external link]]" url))))
-      ("tmt"
-       (org-web-tools-insert-link-for-url (current-kill 0)))
-      ("v"
-       (org-do-demote))
-      ("y"
-       (youtube-dl (current-kill 0) :directory ps/dir-downloads :destination (org-hugo-slug (ps/org-web-tools--org-title-for-url))))))
-
-  (add-hook 'org-capture-mode-hook #'ps/org-capture-hydra-notes-hook)
-  (add-hook 'org-capture-before-finalize-hook #'ps/org-capture-before-finalize-hook-function)
-  (add-hook 'org-capture-before-prepare-hook #'ps/org-capture-prepare-finalize-hook-function)
+  (add-hook 'org-capture-mode-hook #'tlon-org-capture-hydra-notes-hook)
+  (add-hook 'org-capture-before-finalize-hook #'tlon-org-capture-before-finalize-hook-function)
+  (add-hook 'org-capture-before-prepare-hook #'tlon-org-capture-prepare-finalize-hook-function)
 
   :general
   ("H-t" 'org-capture
@@ -11306,62 +10952,11 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
   (setq org-clock-history-length 30)
   (org-clock-persistence-insinuate)
 
-  (defun ps/org-new-clock-entry-today (begin end)
-    "Insert a new clock entry with today's date, prompting for times."
-    (interactive "sTime begins: \nsTime ends: ")
-    (ps/org-jump-to-latest-clock-entry)
-    (crux-smart-open-line-above)
-    (let ((today (format-time-string "%Y-%m-%d %a" (current-time))))
-      (insert "CLOCK: [%s %s]--[%s %s]" today begin today end))
-    (org-evaluate-time-range))
-
-  (defun ps/org-time-stamp-active-current-time ()
-    "Insert an active timestamp with the current date and time."
-    (interactive)
-    (org-time-stamp '(16)))
-
-  (defun ps/org-time-stamp-inactive-current-time ()
-    "Insert an inactive timestamp with the current date and time."
-    (interactive)
-    (org-time-stamp '(16) t))
-
-  (defun ps/org-time-stamp-active-current-date ()
-    "Insert an active timestamp with the current date."
-    (interactive)
-    (org-insert-time-stamp (current-time) nil))
-
-  (defun ps/org-time-stamp-inactive-current-date ()
-    "Insert an inactive timestamp with the current date."
-    (interactive)
-    (org-insert-time-stamp (current-time) nil t))
-
-  (defun ps/org-jump-to-latest-clock-entry ()
-    "Jump to most recent clock entry for org heading at point."
-    (interactive)
-    (visible-mode)
-    (ps/org-show-logbook)
-    (org-back-to-heading)
-    (re-search-forward "CLOCK: \\[\\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\) \\([A-Za-z]\\{3\\}\\) \\([0-9]\\{2\\}:\\)" nil t))
-
-  (defun ps/org-clock-report (start-date end-date)
-    "Generate an org clock report for the period between START-DATE and END-DATE."
-    (interactive
-     (list (org-read-date nil nil nil "Start date: ")
-           (org-read-date nil nil nil "End date: ")))
-    (insert (format "#+BEGIN: clocktable :scope subtree :maxlevel 4 :narrow 50 :tstart \"%s\" :tend \"%s\"\n#+END:" start-date end-date))
-    (org-clock-report))
-
   :general
   ("A-H-j" 'org-clock-goto
    "A-H-x" 'org-clock-cancel
    "H-i" 'org-clock-in
-   "H-o" 'org-clock-out)
-  (org-mode-map
-   "s-A-n" 'ps/org-new-clock-entry-today
-   "s-." 'ps/org-time-stamp-active-current-time
-   "s-A-." 'ps/org-time-stamp-active-current-date
-   "s-/" 'ps/org-time-stamp-inactive-current-time
-   "s-A-/" 'ps/org-time-stamp-inactive-current-date))
+   "H-o" 'org-clock-out))
 #+end_src
 
 ** org-clock-convenience
@@ -11451,54 +11046,7 @@ CLOCK: [2023-03-18 Sat 13:14]--[2023-03-18 Sat 13:27] =>  0:13
   :after org
   :demand t
   :config
-  (setq org-cycle-emulate-tab nil) ; TAB always cycles, even if point not on a heading
-
-  (defun ps/org-cycle-global (&optional arg)
-    "Cycle the global visibility, hiding archived subtrees."
-    (interactive)
-    (org-cycle-global arg)
-    (org-cycle-hide-archived-subtrees 'all)))
-#+end_src
-
-
-[2022-10-04 Tue 19:05] The function below was taken from [[https://stackoverflow.com/questions/17478260/completely-hide-the-properties-drawer-in-org-mode/17492723#17492723][here]] but isn't working as intended. It only completely hides the drawers when the heading at point has children. Moreover, it also completely expands the drawers when cycling globally, which is not the normal behavior.
-
-#+begin_src emacs-lisp :results silent :tangle no
-  (defun ps/org-cycle-hide-drawers (state)
-    "Re-hide all drawers after a visibility state change. STATE should be one of the symbols listed in the docstring of `org-cycle-hook'."
-    (when (and (derived-mode-p 'org-mode)
-               (not (memq state '(overview folded contents))))
-      (save-excursion
-        (let* ((globalp (memq state '(contents all)))
-               (beg (if globalp
-                        (point-min)
-                      (point)))
-               (end (if globalp
-                        (point-max)
-                      (if (eq state 'children)
-                          (save-excursion
-                            (outline-next-heading)
-                            (point))
-                        (org-end-of-subtree t)))))
-          (goto-char beg)
-          (while (re-search-forward org-drawer-regexp end t)
-            (save-excursion
-              (beginning-of-line 1)
-              (when (looking-at org-drawer-regexp)
-                (let* ((start (1- (match-beginning 0)))
-                       (limit
-                        (save-excursion
-                          (outline-next-heading)
-                          (point)))
-                       (msg (format
-                             (concat
-                              "org-cycle-hide-drawers:  "
-                              "`:END:`"
-                              " line missing at position %s")
-                             (1+ start))))
-                  (if (re-search-forward "^[ \t]*:END:" limit t)
-                      (outline-flag-region start (point-at-eol) t)
-                    (user-error msg))))))))))
+  (setq org-cycle-emulate-tab nil)) ; TAB always cycles, even if point not on a heading
 #+end_src
 
 ** org-archive
@@ -11520,7 +11068,6 @@ CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
   (setq org-archive-location (expand-file-name "%s_archive.org::" ps/dir-archive))
 
   :general
-  ("M-s-d" 'ps/org-mark-as-done-for-good-and-archive)
   (org-mode-map
    "s-a" 'org-archive-to-archive-sibling))
 #+end_src
@@ -11571,53 +11118,8 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
   :config
   (setq org-fold-catch-invisible-edits 'smart)
 
-  (defun ps/org-fold-show-all-headings ()
-    "Show contents of all headings in buffer, except archives."
-    (interactive)
-    (org-fold-show-all '(headings))
-    (org-cycle-hide-archived-subtrees 'all))
-
-  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
-  (defun ps/org-hide-properties ()
-    "Hide all org-mode headline property drawers in buffer. Could be
-  slow if it has a lot of overlays."
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward
-              "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
-        (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-          (overlay-put ov_this 'display "")
-          (overlay-put ov_this 'hidden-prop-drawer t))))
-    (put 'org-toggle-properties-hide-state 'state 'hidden))
-
-  (defun ps/org-hide-logbook ()
-    "Hide all org-mode headline logbook drawers in buffer. Could be
-slow if it has a lot of overlays."
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward
-              "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
-        (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-          (overlay-put ov_this 'display "")
-          (overlay-put ov_this 'hidden-logbook-drawer t))))
-    (put 'org-toggle-logbook-hide-state 'state 'hidden))
-
-  (defun ps/org-show-properties ()
-    "Show all org-mode property drawers hidden by org-hide-properties."
-    (interactive)
-    (remove-overlays (point-min) (point-max) 'hidden-prop-drawer t)
-    (put 'org-toggle-properties-hide-state 'state 'shown))
-
-  (defun ps/org-show-logbook ()
-    "Show all org-mode logbook drawers hidden by org-hide-properties."
-    (interactive)
-    (remove-overlays (point-min) (point-max) 'hidden-logbook-drawer t)
-    (put 'org-toggle-logbook-hide-state 'state 'shown))
-
-  (add-hook 'org-mode-hook #'ps/org-hide-properties)
-  (add-hook 'org-mode-hook #'ps/org-hide-logbook))
+  (add-hook 'org-mode-hook #'tlon-org-hide-properties)
+  (add-hook 'org-mode-hook #'tlon-org-hide-logbook))
 #+end_src
 
 ** org-faces
@@ -11644,74 +11146,21 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 :END:
 
 #+begin_src emacs-lisp :results silent
-  (use-feature org-id
-    :after org
-    :demand t
-    :init
-    ;; stackoverflow.com/a/16247032/4479455
-    (defvar ps/org-id-auto-add-excluded-directories
-      (list ps/dir-dropbox-tlon-fede
-            ps/dir-dropbox-tlon-leo)
-      "Directories containing files to exclude from `ps/org-id-auto-add-ids-to-headings-in-file'")
+(use-feature org-id
+  :after org
+  :demand t
+  :config
+  (setq org-id-link-to-org-use-id t)
+  ;; I want these files to be searched for IDs, so that I can use
+  ;; org-capture templates with them, but do not want them to be part
+  ;; of org-agenda or org-roam.
+  (setq org-id-extra-files (list
+                            ps/file-tlon-tareas-leo
+                            ps/file-tlon-tareas-fede))
 
-    (defvar ps/org-id-auto-add-excluded-files
-      (list ps/file-orb-noter-template)
-      "Files to exclude from `ps/org-id-auto-add-ids-to-headings-in-file'")
-
-    (defun ps/org-id-auto-add-ids-to-headings-in-file ()
-      "Add ID properties to all headings in the current file which do
-  not already have one."
-      (when-let ((file (buffer-file-name)))
-        (when (and (eq major-mode 'org-mode)
-                   (string-match ps/dir-org file)
-                   (eq buffer-read-only nil))
-          (unless
-              (or
-               ;; exclude directories
-               (member (file-name-directory (buffer-file-name))
-                       ps/org-id-auto-add-excluded-directories)
-               ;; exclude files
-               (member (buffer-file-name)
-                       ps/org-id-auto-add-excluded-files)
-               (member (org-get-heading)
-                       '("Local variables"
-                         "COMMENT Local variables"
-                         "TODO Local variables")))
-            (org-map-entries 'org-id-get-create)))))
-
-    :config
-    (setq org-id-link-to-org-use-id t)
-    ;; I want these files to be searched for IDs, so that I can use
-    ;; org-capture templates with them, but do not want them to be part
-    ;; of org-agenda or org-roam.
-    (setq org-id-extra-files (list
-                              ps/file-tlon-tareas-leo
-                              ps/file-tlon-tareas-fede))
-
-    (defun ps/org-id-update-id-locations ()
-      "Scan relevant files for IDs.
-
-  Store the relation between files and corresponding IDs. This will
-  scan all agenda files, all associated archives, all open Org
-  files, recursively all files in `org-directory', and all files in
-  `org-id-extra-files'."
-      (interactive)
-      (org-id-update-id-locations
-       (directory-files-recursively org-directory ".org$\\|.org.gpg$")))
-
-    (defun ps/org-id-goto (id &optional arg)
-      "Open ID even if narrowed."
-      (dotimes (i 2)
-        (ps/org-widen-and-reveal)
-        (sleep-for 0.05)
-        (org-id-goto id)))
-
-    (add-hook 'before-save-hook #'ps/org-id-auto-add-ids-to-headings-in-file)
-
-    :general
-    (org-mode-map
-     "s-A-i" 'org-id-copy
-     "s-A-u" 'ps/org-id-update-id-locations))
+  :general
+  (org-mode-map
+   "s-A-i" 'org-id-copy))
 #+end_src
 
 ** org-list
@@ -11725,27 +11174,7 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
   :demand t
   :config
   (setq org-plain-list-ordered-item-terminator ?.)
-  (setq org-list-indent-offset 2)
-
-  (defun ps/org-mark-checkbox-complete-and-move-to-next-item ()
-    "Mark checkbox as completed and move to the next item."
-    (interactive)
-    (org-ctrl-c-ctrl-c nil)
-    (let ((debug-on-error nil))
-      (org-next-item)))
-
-  ;; I should instead advice the original org function
-  (defun ps/org-reset-checkbox-state-subtree ()
-    "Reset all checkboxes in an entry subtree, without showing heading properties."
-    (interactive)
-    (org-reset-checkbox-state-subtree)
-    (org-cycle)
-    (org-cycle))
-
-  :general
-  (org-mode-map
-   "s-A-c" 'ps/org-mark-checkbox-complete-and-move-to-next-item
-   "s-A-o" 'ps/org-reset-checkbox-state-subtree))
+  (setq org-list-indent-offset 2))
 #+end_src
 
 ** org-refile
@@ -11776,55 +11205,19 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
   (setq org-outline-path-complete-in-steps nil)
   (setq org-refile-allow-creating-parent-nodes 'confirm)
   (setq org-reverse-note-order t) ; refile to the beginning of header
-  ;; Build cache at startup
-  (setq org-refile-use-cache t)
+  (setq org-refile-use-cache t) ;  build cache at startup
   (setq org-refile-use-outline-path t)
   (setq org-refile-targets '((org-agenda-files :maxlevel . 9)
                              (ps/open-buffer-files :maxlevel . 9)))
-  (defun ps/open-buffer-files ()
-    "Return the list of files currently open in emacs"
-    (delq nil
-          (mapcar (lambda (x)
-                    (if (and (buffer-file-name x)
-                             (string-match "\\.org$"
-                                           (buffer-file-name x)))
-                        (buffer-file-name x)))
-                  (buffer-list))))
 
-  ;; Regenerate cache every half hour minutes
+  ;; Regenerate cache every half hour
   (run-with-idle-timer (* 60 30) t (lambda ()
                                      (org-refile-cache-clear)
                                      (org-refile-get-targets)))
 
-  (defun ps/org-refile-goto-latest ()
-    "Jump to the most recently refiled item."
-    (interactive)
-    (widen)
-    (org-refile '(16)))
-
-  (defun ps/org-refile-and-archive ()
-    "Refile and archive the current subtree."
-    (interactive)
-    (let ((source-buffer (current-buffer)))
-      (org-refile)
-      (save-window-excursion
-        (save-excursion
-          (org-refile '(16))
-          (org-archive-to-archive-sibling)))))
-
-  ;; Inspired by emacs.stackexchange.com/q/8045/32089
-  (defun ps/org-refile-to (file heading)
-    "Refile current heading to specified location."
-    (let ((pos (save-excursion
-                 (find-file file)
-                 (org-find-exact-headline-in-buffer heading))))
-      (org-refile nil nil (list heading file nil pos))))
-
   :general
   (org-mode-map
-   "s-w" 'org-refile
-   "H-s-w" 'ps/org-refile-and-archive
-   "s-A-w" 'ps/org-refile-goto-latest))
+   "s-w" 'org-refile))
 #+end_src
 
 ** org-keys
@@ -11879,8 +11272,8 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
      ("Meta data editing")
      ("t" . (org-todo))
      ("Clock")
-     ("h" . (ps/org-jump-to-latest-clock-entry))
-     ("H" . (lambda () (ps/org-jump-to-latest-clock-entry) (ps/org-clone-clock-entry)))
+     ("h" . (tlon-org-jump-to-latest-clock-entry))
+     ("H" . (lambda () (tlon-org-jump-to-latest-clock-entry) (tlon-org-clone-clock-entry)))
      ("i" . (org-clock-in))
      ("o" . (org-clock-out))
      ("Regular editing")
@@ -11913,66 +11306,11 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 (use-feature ol
   :after org
   :demand t
-  :config
-  (defun ps/org-nth-stored-link (&optional n)
-    "Return Nth last stored link in `org-stored-links'."
-    (let ((n (or n 1)))
-      (car (nth n org-stored-links)))
-    (format "[[%s][%s]]"
-            (car (nth n org-stored-links))
-            (cadr (nth n org-stored-links))))
-
-  (defun ps/org-sort-links (separator)
-    "Sort list of links in current subtree separated by SEPARATOR."
-    (interactive "sEnter separator: ")
-    (save-excursion
-      (let* ((bounds (bounds-of-thing-at-point 'paragraph))
-             (raw-text (buffer-substring-no-properties (car bounds) (cdr bounds)))
-             (elements (split-string raw-text separator t))
-             sorted-elements)
-        (with-temp-buffer
-          (org-mode)
-          (dolist (el (reverse elements))
-            (insert "- " el "\n"))
-          ;; Since `org-sort-list` sorts from point to the end of the list,
-          ;; go to the beginning of the temp buffer
-          (goto-char (point-min))
-          (org-sort-list nil ?a nil #'downcase)
-          ;; Then gather the sorted elements back
-          (setq sorted-elements (s-replace "- " "" (buffer-string))))
-        ;; Update the original paragraph
-        (delete-region (car bounds) (cdr bounds))
-        (insert (string-join (split-string sorted-elements "\n" t) separator)))))
-
-  (defun ps/org-sort-keywords ()
-    "Sort bullet-separated keywords in current subtree."
-    (interactive)
-    (ps/org-sort-links " • "))
-
-  (defun ps/org-linkify-elements (strings &optional separator)
-    "For each string in STRINGS, return its link if node is found, else the string itself.
-The elements are returned as a string separated by SEPARATOR. If
-SEPARATOR is nil, use ' • '."
-    (let ((nodes (org-roam-node-list)))
-      (string-join
-       (mapcar (lambda (x)
-                 (let* ((node (seq-find (lambda (n)
-                                          (string-equal (downcase (org-roam-node-title n)) (downcase x)))
-                                        nodes))
-                        (nodetitle (if node (org-roam-node-title node))))
-                   (if node
-                       (format "[[id:%s][%s]]" (org-roam-node-id node) nodetitle)
-                     x)))
-               strings)
-       (or separator " • "))))
-
   :general
   ("H-L" 'org-store-link)
   (org-mode-map
    "A-C-M-s-j" 'org-previous-link
    "A-C-M-s-;" 'org-next-link)
-  ((org-mode-map org-msg-edit-mode-map)
-   "s-A-l" 'ps/org-url-dwim)
   ((org-mode-map org-msg-edit-mode-map telega-chat-mode-map)
    "s-k" 'org-insert-link))
 #+end_src
@@ -12104,7 +11442,7 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
   :after org
   :demand t
   :config
-  (setq org-confirm-babel-evaluate 'ps/org-confirm-babel-evaluate)
+  (setq org-confirm-babel-evaluate 'tlon-org-confirm-babel-evaluate)
 
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -12112,16 +11450,6 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
      (shell . t)
      (python . t)
      (R . t)))
-
-  (defun ps/org-confirm-babel-evaluate (lang body)
-    (not (member lang '("python" "emacs-lisp"))))
-
-  (defun ps/org-babel-tangle ()
-    "Widen buffer, save its contents, and tangle file."
-    (interactive)
-    (widen)
-    (save-buffer)
-    (org-babel-tangle))
 
   (dolist (cons (list (cons "j" 'org-babel-next-src-block)
                       (cons "k" 'org-babel-previous-src-block)
@@ -12221,20 +11549,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   (setq org-crypt-key ps/personal-gmail)
   (setq org-crypt-disable-auto-save t)
 
-  (defun ps/org-crypt-dwim ()
-    "Decrypt entry unles in clock, then evaluate time range."
-    (interactive)
-    (if (derived-mode-p 'org-mode)
-        (pcase (org-element-type (org-element-context))
-          ('clock (org-evaluate-time-range))
-          (_ (org-decrypt-entry)))
-      (user-error "Not in org-mode")))
-
-  (org-crypt-use-before-save-magic)
-
-  :general
-  (org-mode-map
-   "s-y" 'ps/org-crypt-dwim))
+  (org-crypt-use-before-save-magic))
 #+end_src
 
 ** org-element
@@ -12567,15 +11882,7 @@ This may send a notification, play a sound and adds log."
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
 
-  (defun ps/org-pomodoro-format-timer (&optional arg)
-    "Format the `org-pomodoro' timer.
-We set this value by advising `org-pomodoro' so that the pomodoro
-count is updated."
-    (setq org-pomodoro-format
-          (concat "🍅 %s"
-                  (format "|%s" (number-to-string org-pomodoro-count)))))
-
-  (advice-add 'org-pomodoro :after #'ps/org-pomodoro-format-timer)
+  (advice-add 'org-pomodoro :after #'tlon-org-pomodoro-format-timer)
 
   :general
   ("H-I" 'org-pomodoro
@@ -12646,7 +11953,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
 /[[https://github.com/org-roam/][org-roam]] is a Roam replica with org-mode./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-roam)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tlon-org-roam)
 (use-package org-roam
   :after org emacsql
   :demand t
@@ -12655,7 +11962,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
       (setq org-roam-database-connector 'sqlite)
     (setq org-roam-database-connector 'sqlite-builtin))
 
-  (defun ps/org-roam-recent (days &optional limit)
+  (defun tlon-org-roam-recent (days &optional limit)
     "Return list of files modified in the last DAYS. Optionally,
 return such list if its length is less than LIMIT."
     (let* ((mins (* 60 24 days))
@@ -12716,7 +12023,7 @@ SQL can be either the emacsql vector representation, or a string."
         (concat "${hierarchy:160} "
                 (propertize "${tags:20}" 'face 'org-tag)))
 
-  (defvar ps/org-roam-excluded-dirs (list
+  (defvar tlon-org-roam-excluded-dirs (list
                                      ps/dir-anki
                                      ps/dir-inactive
                                      ps/dir-archive
@@ -12724,7 +12031,7 @@ SQL can be either the emacsql vector representation, or a string."
                                      ps/dir-dropbox-tlon-fede
                                      ))
 
-  (defvar ps/org-roam-excluded-files (list
+  (defvar tlon-org-roam-excluded-files (list
                                       ps/file-orb-noter-template
                                       "calendar.org" ; added directly as agenda file
                                       "quotes-old.org"
@@ -12739,8 +12046,8 @@ SQL can be either the emacsql vector representation, or a string."
         (let (result)
           (dolist (dir-or-file
                    (append
-                    ps/org-roam-excluded-dirs
-                    ps/org-roam-excluded-files)
+                    tlon-org-roam-excluded-dirs
+                    tlon-org-roam-excluded-files)
                    (regexp-opt result))
             (push (if (file-directory-p dir-or-file)
                       (file-relative-name dir-or-file ps/dir-org-roam)
@@ -12782,7 +12089,7 @@ SQL can be either the emacsql vector representation, or a string."
               nil
             t)))
 
-  (defun ps/org-roam-remove-file-level-properties ()
+  (defun tlon-org-roam-remove-file-level-properties ()
     "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
     (when (string= "r" (plist-get org-capture-plist :key))
       (goto-char (point-min))
@@ -12790,10 +12097,10 @@ SQL can be either the emacsql vector representation, or a string."
         ;; Take action with file-level properties only.
         (org-delete-property "ID")
         (org-delete-property "ROAM_REFS")
-        (ps/org-jump-to-first-heading)
+        (tlon-org-jump-to-first-heading)
         (org-id-get-create))))
 
-  (defun ps/org-roam-new-note (note-type)
+  (defun tlon-org-roam-new-note (note-type)
     "Create a new `org-roam' note."
     (interactive
      (list
@@ -12819,21 +12126,21 @@ SQL can be either the emacsql vector representation, or a string."
         (insert name)
         (org-set-tags tags)
         (org-id-get-create)
-        (ps/org-narrow-to-entry-and-children)
+        (tlon-org-narrow-to-entry-and-children)
         (goto-char (point-max)))))
 
-  (defun ps/org-roam-node-find ()
+  (defun tlon-org-roam-node-find ()
     "Find and open an Org-roam node by its title or alias."
     (interactive)
     (widen)
-    (ps/org-fold-show-all-headings)
+    (tlon-org-fold-show-all-headings)
     (org-roam-node-find)
     (recenter 1))
 
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
   ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
 
-  (defun ps/org-roam-node-find-special (&optional arg)
+  (defun tlon-org-roam-node-find-special (&optional arg)
     "Return a list of selected headings sorted by priority.
 The selection includes all headings with a priority and either no
 todo status or the todo status TODO, and excludes all headings
@@ -12842,7 +12149,7 @@ prompt the user to select from a unique list of tags and further
 restrict the selection to headings with that tag."
     (interactive "P")
     (let* ((selection (when arg
-                        (ps/org-roam-node-select-tag)))
+                        (tlon-org-roam-node-select-tag)))
            (headings-with-priority
             (if selection
                 (org-roam-db-query `[:select [id file title priority]
@@ -12898,7 +12205,7 @@ restrict the selection to headings with that tag."
             (funcall action))
         (message "No headings with priority found."))))
 
-  (defun ps/org-roam-node-select-tag ()
+  (defun tlon-org-roam-node-select-tag ()
     "Prompt for tag selection from list of org tags."
     (interactive)
     (let* ((query-result (org-roam-db-query [:select :distinct [tag] :from tags]))
@@ -12918,12 +12225,12 @@ restrict the selection to headings with that tag."
 
   (add-hook 'org-roam-capture-new-node-hook #'orb--insert-captured-ref-h)
   (add-hook 'org-roam-capture-new-node-hook #'org-roam-capture--insert-captured-ref-h)
-  (add-hook 'org-capture-prepare-finalize-hook #'ps/org-roam-remove-file-level-properties)
+  (add-hook 'org-capture-prepare-finalize-hook #'tlon-org-roam-remove-file-level-properties)
 
   :general
-  ("A-H-n" 'ps/org-roam-new-note
-   "H-j" 'ps/org-roam-node-find
-   "H-J" 'ps/org-roam-node-find-special)
+  ("A-H-n" 'tlon-org-roam-new-note
+   "H-j" 'tlon-org-roam-node-find
+   "H-J" 'tlon-org-roam-node-find-special)
   ((org-mode-map minibuffer-mode-map)
    "s-i" 'org-roam-node-insert)
   (org-mode-map
@@ -12966,7 +12273,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
 
 /[[https://github.com/org-roam/org-roam-ui][org-roam-ui]] is a graphical frontend for exploring org-roam./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-roam)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tlon-org-roam)
 (use-package org-roam-ui
   :elpaca
   (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
@@ -13040,9 +12347,9 @@ CLOCK: [2021-12-14 Tue 19:46]--[2021-12-14 Tue 20:06] =>  0:20
 /[[https://github.com/d12frosted/vulpea][vulpea]] is a collection of functions for note taking based on ~org~ and ~org-roam~./
 
 I use this package to define a dynamic agenda, as explained and illustrated [[d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html][here]]. I've made some changes to the system in that link, specifically to exclude files and directories at various stages:
-1. At the broadest level, I exclude files and directories from the function (~ps/org-id-auto-add-ids-to-headings-in-file~) that otherwise automatically adds an ID to every org heading in a file-visiting buffer. Headings so excluded are not indexed by org-roam, because a heading requires an ID to be indexed. See the variables ~ps/org-id-auto-add-excluded-files~ and ~ps/org-id-auto-add-excluded-directories~ under the ~org-id~ section of this file.
+1. At the broadest level, I exclude files and directories from the function (~tlon-org-id-auto-add-ids-to-headings-in-file~) that otherwise automatically adds an ID to every org heading in a file-visiting buffer. Headings so excluded are not indexed by org-roam, because a heading requires an ID to be indexed. See the variables ~tlon-org-id-auto-add-excluded-files~ and ~tlon-org-id-auto-add-excluded-directories~ under the ~org-id~ section of this file.
 2. I then exclude some headings with IDs from the org-roam database (via the variables  ~org-roam-file-exclude-regexp~ and ~org-roam-db-node-include-function~). See the ~org-roam~ section of this file.
-3. Finally, I selectively add to ~org-agenda-files~ files that satisfy certain conditions (as defined by ~ps/vulpea-project-p~) and files modified recently (as specified by ~ps/org-roam-recent~), and exclude from ~org-agenda-files~ files listed in ~ps/org-agenda-files-excluded~.
+3. Finally, I selectively add to ~org-agenda-files~ files that satisfy certain conditions (as defined by ~ps/vulpea-project-p~) and files modified recently (as specified by ~tlon-org-roam-recent~), and exclude from ~org-agenda-files~ files listed in ~tlon-org-agenda-files-excluded~.
 
 #+begin_src emacs-lisp :results silent
 (use-package vulpea
@@ -13135,9 +12442,9 @@ tasks."
                          (vulpea-project-files)
                          ;; include files modified in past three days,
                          ;; provided number of such files less than 1000
-                         (ps/org-roam-recent 1 500)
+                         (tlon-org-roam-recent 1 500)
                          ))
-           ps/org-agenda-files-excluded)))
+           tlon-org-agenda-files-excluded)))
 
   (advice-add 'org-agenda :before #'vulpea-agenda-files-update)
 
@@ -13180,7 +12487,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   (setq org-noter-always-create-frame nil)
   (setq org-noter-separate-notes-from-heading t)
 
-  (defun ps/org-noter-cleanup-annotation (title)
+  (defun tlon-org-noter-cleanup-annotation (title)
   "Cleanup the annotation at point.
 Replaces the generic 'Highlight on page X' generated by
 `org-noter-create-skeleton' with a custom TITLE and
@@ -13199,7 +12506,7 @@ encloses the content of the heading in a quote."
     (outline-next-visible-heading 1)))
 
   ;; TODO: find `org-noter' hook to run this automatically
-  (defun ps/org-noter-dehyphenate ()
+  (defun tlon-org-noter-dehyphenate ()
     "Remove leftover hyphens in hyphenated text.
 Operate on the current paragraph, or the region if active."
     (interactive)
@@ -13215,7 +12522,7 @@ Operate on the current paragraph, or the region if active."
           (replace-match "\\1\\2")))))
 
   ;; TODO: find `org-noter' hook to run this automatically
-  (defun ps/org-noter-highlight-offset (offset)
+  (defun tlon-org-noter-highlight-offset (offset)
     "Fix numbering mismatch between PDF and book/article pages.
 OFFSET is the difference between the page number in the PDF and
 the page number in the book or article."
@@ -15746,7 +15053,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
   (org-msg-mode)
 
-  (defun ps/org-msg-grammarly ()
+  (defun tlon-org-msg-grammarly ()
     "Enable `grammarly-mode' in `org-msg-edit-mode'."
     (interactive)
     (if (eq major-mode 'org-mode)
@@ -15755,7 +15062,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
       (require 'lsp-grammarly)
       (lsp)))
 
-  (defun ps/org-msg-kill-message ()
+  (defun tlon-org-msg-kill-message ()
     "Save the current message to the kill ring."
     (interactive)
     (unless (eq major-mode 'org-msg-edit-mode)
@@ -15770,20 +15077,20 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
   ;; currently, grammarly isn't working reliably in Emacs, so we use the
   ;; external editor instead
-  (defun ps/org-msg-open-in-grammarly ()
+  (defun tlon-org-msg-open-in-grammarly ()
     "Copy the current message in Grammarly's external editor."
     (interactive)
-    (ps/org-msg-kill-message)
+    (tlon-org-msg-kill-message)
     (ps/grammarly-open-external-editor))
 
   :general
   (org-msg-edit-mode-map
    "s-a" 'org-msg-attach
    "s-b" 'org-msg-goto-body
-   "s-g" 'ps/org-msg-open-in-grammarly
-   "s-x" 'ps/org-msg-kill-message)
+   "s-g" 'tlon-org-msg-open-in-grammarly
+   "s-x" 'tlon-org-msg-kill-message)
   (org-mode-map
-   "M-s-g" 'ps/org-msg-grammarly))
+   "M-s-g" 'tlon-org-msg-grammarly))
 #+end_src
 
 *** TODO [#5] Figure out how to make ~org-msg~ preserve formatting of quoted emails
@@ -15957,7 +15264,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
    "s-r" 'telega-msg-add-reaction
    "s-s" 'telega-chatbuf-filter-search
    "s-t" 'telega-sticker-choose-favorite-or-recent
-   "s-v" 'ps/org-paste-html
+   "s-v" 'tlon-org-paste-html
    "M-s-v" 'telega-chatbuf-attach-clipboard
    "s-z" 'telega-mnz-chatbuf-attach-code
    "M-s-e" 'telega-chatbuf-edit-prev
@@ -17373,7 +16680,7 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
   (advice-add #'twittering-generate-format-table :around #'ps/twittering-add-image-format)
 
   ;; github.com/sfromm/emacs.d#twitter
-  (defun ps/org-twittering-store-link ()
+  (defun tlon-org-twittering-store-link ()
     "Store a link to a tweet."
     (when (and (twittering-buffer-p) (twittering-get-id-at))
       (let ((status (twittering-find-status (twittering-get-id-at))))
@@ -17412,10 +16719,10 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
                          retweeting-source retweeting-source-url)))))))
 
   (org-link-set-parameters "twittering"
-                           :follow #'ps/org-twittering-open
-                           :store #'ps/org-twittering-store-link)
+                           :follow #'tlon-org-twittering-open
+                           :store #'tlon-org-twittering-store-link)
 
-  (defun ps/org-twittering-open (id-str)
+  (defun tlon-org-twittering-open (id-str)
     (twittering-visit-timeline (concat ":single/" id-str)))
 
   :general
@@ -18077,7 +17384,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   ;; note that the hooks appear in reverse order of execution
   (dolist (function #'(el-patch-validate-all
                        org-gcal-sync
-                       ps/org-id-update-id-locations
+                       tlon-org-id-update-id-locations
                        org-roam-db-sync
                        ps/pass-git-sync
                        ps/forge-pull-topics-and-notifications
@@ -18398,6 +17705,7 @@ And finally, the section you've all been waiting for.
            :host github
            :repo "tlon-team/tlon-babel"
            :depth nil) ; clone entire repo, not just last commit
+  :after tlon-org
   :demand t
   :general
   ("H-r" 'tlon-babel-dispatch)
@@ -18451,10 +17759,10 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 
 #+begin_src emacs-lisp :results silent
 (general-define-key
- "C-H-M-S-c" 'ps/org-copy-heading-contents
+ "C-H-M-S-c" 'tlon-org-copy-heading-contents
  "C-H-M-S-g" 'orgmdb-fill-movie-properties
  "C-H-M-S-n" 'ps/create-new-wiki-entry
- ;; "C-H-M-S-i" 'ps/org-switch-to-id ; delete
+ ;; "C-H-M-S-i" 'tlon-org-switch-to-id ; delete
  "C-H-M-S-w" 'eww)
 #+end_src
 
@@ -18645,13 +17953,13 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  ;; using brew --HEAD or compiling it from source
  (ps/telega-server-libs-prefix . "/opt/homebrew")
 
- (ps/org-agenda-files . `(,ps/file-calendar))
+ (tlon-org-agenda-files . `(,ps/file-calendar))
  ;; I have to exclude these files because otherwise extraneous
  ;; information shows up in my agenda, such as TODOs and time
  ;; logs. These files lack the `property' tag but the may still
  ;; otherwise be included if they have been modified recently
  ;; (see the function `vulpea-agenda-files-update')
- (ps/org-agenda-files-excluded . `(,ps/file-tlon-tareas-leo ,ps/file-tlon-tareas-fede))
+ (tlon-org-agenda-files-excluded . `(,ps/file-tlon-tareas-leo ,ps/file-tlon-tareas-fede))
 
  (ps/init-location . (file-name-concat
                       (or (catch 'default-path

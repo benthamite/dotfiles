@@ -4396,6 +4396,16 @@ process in these cases."
                             (file-name-directory file))))))
   (advice-add #'make-backup-file-name-1 :around #'ps/make-hashed-backup-file-name-a)
 
+  (defun ps/open-buffer-files ()
+    "Return the list of files currently open in emacs"
+    (delq nil
+          (mapcar (lambda (x)
+                    (if (and (buffer-file-name x)
+                             (string-match "\\.org$"
+                                           (buffer-file-name x)))
+                        (buffer-file-name x)))
+                  (buffer-list))))
+
   :general
   ("M--" 'not-modified
    "M-;" 'ps/copy-current-path

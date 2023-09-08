@@ -4117,16 +4117,26 @@ those visiting any of the EXCLUDED-FILES."
     (ps/switch-to-last-window))
 
   (defun ps/download-bypass-paywalls-chrome ()
-    "Download and install `bypass-paywalls-chrome'."
+    "Download and install `Bypass Paywalls Chrome Clean'.
+After running the command, both the Chrome extensions page and
+the `bypass-paywalls-chrome-clean-master' folder will open.
+To install the extension, drag the latter onto the former."
     (interactive)
-    (let ((file (file-name-concat ps/dir-downloads "bypass-paywalls.zip")))
-      (url-copy-file "https://github.com/iamadamdev/bypass-paywalls-chrome/archive/master.zip" file)
+    (let* ((file (file-name-concat ps/dir-downloads "bypass-paywalls.zip"))
+           (dir (file-name-concat ps/dir-downloads "bypass-paywalls-chrome-clean-master"))
+           (reveal-in-osx
+            (concat
+             "set thePath to POSIX file \"" dir "\"\n"
+             "tell application \"Finder\"\n"
+             " set frontmost to true\n"
+             " reveal thePath \n"
+             "end tell\n")))
+      (url-copy-file "https://gitlab.com/magnolia1234/bypass-paywalls-chrome-clean/-/archive/master/bypass-paywalls-chrome-clean-master.zip" file)
       (shell-command (format "unzip %s -d %s" file ps/dir-downloads))
-      (dired ps/dir-downloads)
-      (goto-char (point-min))
-      (search-forward "bypass-paywalls-chrome-master")
-      (reveal-in-osx-finder)
-      (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"89243CDA-4876-45C8-9AF2-3666664A0EAA\"'")))
+      (delete-file file)
+      ;; open Chrome extensions page
+      (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"89243CDA-4876-45C8-9AF2-3666664A0EAA\"'")
+      (start-process "osascript-getinfo" nil "osascript" "-e" reveal-in-osx)))
 
   (defun ps/internet-archive-dwim ()
     "Convert or download ACSM file, depending on whether or not an

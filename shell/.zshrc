@@ -35,4 +35,5 @@ export GOKU_EDN_CONFIG_FILE="/Users/pablostafforini/Library/CloudStorage/Dropbox
 export PATH="/Users/pablostafforini/source/emms/src:$PATH" # emms-print-metadata binary
 
 # aliases
-alias muinit="cd ~; mu init --maildir=/Users/pablostafforini/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL"
+alias muinit="cd ~; mu init --maildir=/Users/pablostafforini/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL; mu index"
+

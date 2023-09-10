@@ -37,3 +37,5 @@ export PATH="/Users/pablostafforini/source/emms/src:$PATH" # emms-print-metadata
 # aliases
 alias muinit="cd ~; mu init --maildir=/Users/pablostafforini/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL; mu index"
 
+# homebrew
+export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1

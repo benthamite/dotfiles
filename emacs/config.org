@@ -13883,7 +13883,6 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 (use-package ebib
   :after tlon-babel
   :demand t
-  ;; :after tlon-babel
   :config/el-patch
   ;; tweak original function to prevent unnecessary vertical window splits
   (defun ebib--setup-windows ()

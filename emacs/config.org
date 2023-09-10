@@ -470,7 +470,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#custom][custom]]
   - [[#tetris][tetris]]
 - [[#personal][personal]]
-  - [[#tlon-init][tlon-init]]
   - [[#tlon-core][tlon-core]]
   - [[#tlon-babel][tlon-babel]]
   - [[#tlon-biblio][tlon-biblio]]
@@ -17642,20 +17641,6 @@ And finally, the section you've all been waiting for.
 :PROPERTIES:
 :ID:       9D7B5C99-2380-4159-A8C8-4021CC0482DE
 :END:
-
-** tlon-init
-:PROPERTIES:
-:ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/tlon-init)
-(use-package tlon-init
-  :elpaca (tlon-init
-           :host github
-           :repo "tlon-team/tlon-init"
-           :depth nil) ; clone entire repo, not just last commit
-  :demand t)
-#+end_src
 
 ** tlon-core
 :PROPERTIES:

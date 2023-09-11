@@ -470,7 +470,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#custom][custom]]
   - [[#tetris][tetris]]
 - [[#personal][personal]]
-  - [[#tlon-init][tlon-init]]
   - [[#tlon-core][tlon-core]]
   - [[#tlon-babel][tlon-babel]]
   - [[#tlon-biblio][tlon-biblio]]
@@ -3418,7 +3417,7 @@ indent block only, else indent whole buffer."
             (let ((org-src-tab-acts-natively t))
               (org-narrow-to-block)
               (indent-region (point-min) (point-max) nil)
-              (tlon-org-widen-and-reveal))
+              (widen))
           (indent-region (point-min) (point-max) nil)
           (message "Indented buffer.")))
       (whitespace-cleanup)))
@@ -5142,7 +5141,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   is already narrowed."
     (interactive)
     (declare (interactive-only))
-    (cond ((buffer-narrowed-p) (tlon-org-widen-and-reveal))
+    (cond ((buffer-narrowed-p) (widen))
           ((region-active-p)
            (narrow-to-region (region-beginning)
                              (region-end)))
@@ -9846,6 +9845,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :config
   (setq copilot-node-executable "/opt/homebrew/opt/node/bin/node")
   (setq copilot-log-max 1000)
+  (setq copilot-max-char 1000000)
 
   (add-hook 'prog-mode-hook #'copilot-mode)
 
@@ -13882,7 +13882,6 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 (use-package ebib
   :after tlon-babel
   :demand t
-  ;; :after tlon-babel
   :config/el-patch
   ;; tweak original function to prevent unnecessary vertical window splits
   (defun ebib--setup-windows ()
@@ -14593,7 +14592,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                 :files ("mu4e/*.el" "build/mu4e/mu4e-meta.el" "build/mu4e/mu4e-config.el" "build/mu4e/mu4e.info")
                 :repo "djcb/mu"
                 :main "mu4e/mu4e.el"
-                :tag "1.10.5"
                 :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
                 :build (:not elpaca--compile-info))
   :demand t
@@ -17643,20 +17641,6 @@ And finally, the section you've all been waiting for.
 :PROPERTIES:
 :ID:       9D7B5C99-2380-4159-A8C8-4021CC0482DE
 :END:
-
-** tlon-init
-:PROPERTIES:
-:ID:       A6FF9A5C-B95D-46A4-AD0F-F5E327A59A4F
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/tlon-init)
-(use-package tlon-init
-  :elpaca (tlon-init
-           :host github
-           :repo "tlon-team/tlon-init"
-           :depth nil) ; clone entire repo, not just last commit
-  :demand t)
-#+end_src
 
 ** tlon-core
 :PROPERTIES:

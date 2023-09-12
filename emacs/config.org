@@ -5671,18 +5671,40 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   (setq calendar-week-start-day 1)    ; week starts on Monday
   (setq calendar-set-date-style 'iso) ; this isn't the default?
   (setq calendar-time-display-form
-   '(24-hours ":" minutes
-              (when time-zone
-                (concat " (" time-zone ")"))))
+        '(24-hours ":" minutes
+                   (when time-zone
+                     (concat " (" time-zone ")"))))
   (setq calendar-mark-holidays-flag nil)
   (setq calendar-time-zone-style 'numeric)
   (setq holiday-bahai-holidays nil)
-  (setq calendar-location-name ps/location-name)
-  (setq calendar-latitude ps/location-latitude)
-  (setq calendar-longitude ps/location-longitude)
-  ;; To copy the current latitude and longitude, go to Google Maps,
-  ;; right-click on your location, and select the coordinates.
-  ;; You should then set these values in YOUR VARIABLES file
+  (setq calendar-location-name (plist-get ps/personal-geolocation :city))
+  (setq calendar-latitude (plist-get ps/personal-geolocation :lat))
+  (setq calendar-longitude (plist-get ps/personal-geolocation :lon))
+
+  (defun ps/get-geolocation-from-ip (&optional ip)
+    "Get geolocation from IP address."
+    (let* ((ip (or ip (ps/get-local-ip-address)))
+           (url (format "http://ip-api.com/json/%s" ip))
+           (url-request-method "GET")
+           (url-request-extra-headers '(("Content-Type" . "application/json")))
+           (response-buffer (url-retrieve-synchronously url))
+           (json-object-type 'plist))
+      (with-current-buffer response-buffer
+        (goto-char (point-min))
+        ;; Skip HTTP headers.
+        (re-search-forward "^$")
+        (let* ((json (json-read))
+               (lat (plist-get json :lat))
+               (lon (plist-get json :lon))
+               (city (plist-get json :city))
+               (timezone (plist-get json :timezone)))
+          (list :lat lat :lon lon :city city :timezone timezone)))))
+
+  (defun ps/get-local-ip-address ()
+    (interactive)
+    (let ((local-ip (shell-command-to-string
+                     "dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com")))
+      (string-trim local-ip "\"" "\"\n")))
 
   :general
   ("C-d" 'calendar
@@ -17788,6 +17810,7 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/personal-gmail . (getenv "PERSONAL_GMAIL"))
  (ps/personal-email . (getenv "PERSONAL_EMAIL"))
  (ps/tlon-email . (getenv "TLON_EMAIL"))
+ (ps/personal-geolocation . (ps/get-geolocation-from-ip))
  (ps/dir-root . "/")
  (ps/dir-system-apps . "/Applications/")
  (ps/dir-user . (getenv "HOME"))
@@ -17942,10 +17965,6 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 --
 ,*Pablo*
 ,#+end_signature")
- (ps/location-name . "Madrid, Spain")
- (ps/display-wttr-locations . '("Madrid"))
- (ps/location-latitude . 40.4168)
- (ps/location-longitude . 3.7038)
 
  ;; Threshold for auto splitting the window sideways, in columns
  (ps/split-width-threshold . 200)

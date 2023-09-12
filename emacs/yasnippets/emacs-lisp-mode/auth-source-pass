@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: auth-source-pass
+# key: asp
+# contributor: Pablo Stafforini
+# --
+(auth-source-pass-get ${1:$$(yas-choose-value '("'secret" "\\\"user\\\"" "\\\"api\\\""))} "$2")

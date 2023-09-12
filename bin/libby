@@ -1,0 +1,184 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import re
+import requests
+import readline
+from bs4 import BeautifulSoup
+from html import unescape
+import subprocess
+from tqdm import tqdm
+
+def color_text(text, color_code):
+    return f"\033[{color_code}m{text}\033[0m"
+
+def get_first_author(authors_str):
+    authors_str = authors_str.replace(', ', '; ').replace(';', '; ')
+    authors_str = re.sub(r'\s+', ' ', authors_str)
+    authors = authors_str.split('; ')
+    if len(authors[0].split(" ")) == 1 and len(authors) > 1:
+        authors[0] += ", " + authors[1]
+
+    return authors[0]
+
+def download(query, options):
+    query = query.strip()
+    if options.lang:
+        lang = f"+lang%3A{options.lang}"
+    else:
+        lang = ""
+
+    url = f"https://libgen.gs/index.php?req={requests.utils.quote(query)}{lang}&columns%5B%5D=t&columns%5B%5D=a&columns%5B%5D=s&columns%5B%5D=y&columns%5B%5D=i&objects%5B%5D=f&topics%5B%5D=l&topics%5B%5D=f&order=year&res=100&gmode=on&filesuns=all"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/5.15.5 Chrome/87.0.4280.144 Safari/537.36"
+    }
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    table = soup.find_all("table")[-1]
+    if not table:
+        print(f"No results found for '{query}'")
+        return
+
+    rows = table.select("tr")
+    books = []
+    for row in rows[1:]:
+        cells = row.select("td")
+        if len(cells) < 9:
+            continue
+
+        filetype = cells[7].get_text(strip=True)
+        if filetype not in ["epub", "pdf"]:
+            continue
+
+        title_tags = cells[0].find_all('a', {'data-toggle': 'tooltip'})
+
+        title = None
+        for title_tag in title_tags:
+            text = title_tag.get_text(strip=True)
+            if text:
+                title = text
+                break
+
+        if not title:
+            for title_tag in title_tags:
+                title_attr = title_tag.get('title')
+                if title_attr:
+                    match = re.search(r'<br>(<.*?>)?(.*?)$', title_attr)
+                    if match:
+                        title = match.group(2).strip()
+                        break
+
+        if not options.full_titles:
+            if ": " in title:
+                title = title.split(": ")[0]
+            elif " - " in title:
+                title = title.split(" - ")[0]
+        
+        author = cells[1].get_text(strip=True)
+        publisher = cells[2].get_text(strip=True)
+        if not options.all_authors:
+            author = get_first_author(author)
+            publisher = get_first_author(publisher)
+
+        year = cells[3].get_text(strip=True)
+        size = cells[6].get_text(strip=True)
+        mirror = cells[8].find_all('a')[0]["href"]
+        if not mirror:
+            print("HTML:\n",cells[8].prettify(),"\n---\n")
+            print(f"Could not find the mirror element. Please check the selector or the mirror index.")
+            continue
+
+        books.append({
+            "title": unescape(title),
+            "author": unescape(author),
+            "publisher": unescape(publisher),
+            "year": unescape(year),
+            "size": unescape(size),
+            "filetype": unescape(filetype),
+            "mirror": mirror,
+        })
+
+    if not books:
+        print(f"No results found for '{query}'")
+        return
+
+    if options.mode == "rofi":
+        print("Rofi selection not yet implemented.")
+        return
+
+    selected_book = None
+    for idx, book in enumerate(reversed(books)):
+        num = color_text(str(len(books) - idx), 36)
+        title = color_text(book['title'], 32)  # Color the title in green (32)
+        author = color_text(book['author'], 35)  # Color the author in magenta (35)
+        publisher = book['publisher']
+        year = book['year']
+        size = book['size']
+        filetype = color_text(book['filetype'], 31)
+        
+        # Only include the comma when the publisher is available
+        publisher_string = f"{color_text(publisher.strip(), 34)}, " if publisher.strip() != "" else ""
+        year_string = f"{color_text(year.strip(), 34)}, " if year.strip() != "" else ""
+        size_string = f"{color_text(size.strip(), 34)}" if size.strip() != "" else ""
+        
+        print(f"{num}) {title} - {author} ({publisher_string}{year_string}{size_string}) [{filetype}]")
+
+    choice = int(input("> "))
+    if 1 <= choice <= len(books):
+        selected_book = books[choice-1]
+
+    if not selected_book:
+        print("No book selected")
+        return
+
+    mirror_site = '/'.join(selected_book["mirror"].split("/")[0:-1])
+    mirror_response = requests.get(selected_book["mirror"], headers=headers)
+    mirror_soup = BeautifulSoup(mirror_response.text, "html.parser")
+    download_link = mirror_site+'/'+mirror_soup.find("a", string="GET")["href"]
+
+    output_dir = options.output_dir
+    os.makedirs(output_dir, exist_ok=True)
+    title = re.sub(r"[^\w._-]+", "", selected_book["title"].lower().replace(" ", "-"))
+    output_path = os.path.join(output_dir, f"{title}.{selected_book['filetype']}")
+
+    print(f"Downloading {title}.{selected_book['filetype']} to {output_dir}")
+    response = requests.get(download_link, headers=headers, stream=True)
+
+    # Get the total file size from the response headers
+    total_size = int(response.headers.get('content-length', 0))
+
+    # Initialize the progress bar with the total file size
+    progress_bar = tqdm(total=total_size, unit='iB', unit_scale=True)
+
+    with open(output_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            # Update the progress bar with the chunk size
+            progress_bar.update(len(chunk))
+            f.write(chunk)
+
+    # Close the progress bar
+    progress_bar.close()
+
+    if options.view:
+        subprocess.run([options.viewer, output_path])
+
+def main():
+    parser = argparse.ArgumentParser(description="Download books from Library Genesis")
+    parser.add_argument("query", nargs='+', help="The query to search for")
+    parser.add_argument("--mode", default="fzf", help="Use rofi to select a book (default is fzf)")
+    parser.add_argument("--mirror", type=int, default=3, help="Use an alternative libgen mirror (default: 3)")
+    parser.add_argument("--no-view", dest="view", action="store_false", help="Don't view the result")
+    parser.add_argument("--output-dir", default=os.path.expanduser("~/books"), help="Output directory for downloaded books")
+    parser.add_argument("--viewer", default="xdg-open", help="Viewer command for downloaded books")
+    parser.add_argument("--full-titles", dest="full_titles", action="store_true", help="Show the full version of each title")
+    parser.add_argument("--all-authors", dest="all_authors", action="store_true", help="If multiple authors, show all instead of just the first")
+    parser.add_argument("--lang", type=str, default="eng", help="Specify language for results (default: eng)")
+
+    options = parser.parse_args()
+    query = ' '.join(options.query)
+    download(query, options)
+
+if __name__ == "__main__":
+    main()

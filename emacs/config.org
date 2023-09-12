@@ -468,6 +468,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#keycast][keycast]]
   - [[#activity-watch][activity-watch]]
   - [[#custom][custom]]
+  - [[#fatebook][fatebook]]
   - [[#tetris][tetris]]
 - [[#personal][personal]]
   - [[#tlon-core][tlon-core]]
@@ -17618,6 +17619,22 @@ then the window will be split horizontally rather than vertically."
   :config
   (setq custom-safe-themes t)
   (setq custom-file (file-name-concat ps/dir-downloads "delete.me"))) ; move unintended customizations to a garbage file
+#+end_src
+
+** fatebook
+:PROPERTIES:
+:ID:       6668B610-6BAD-40AD-823B-7E96EFBB23CB
+:END:
+
+/[[https://github.com/sonofhypnos/fatebook.el][fatebook]] is an Emacs package to create predictions on Fatebook./
+
+#+begin_src emacs-lisp
+(use-package fatebook
+  :elpaca (fatebook :repo "sonofhypnos/fatebook.el" :host github
+                    :files ("fatebook.el"))
+  :commands fatebook-create-question
+  :config
+  (setq fatebook-api-key-function (lambda () (auth-source-pass-get "api" "chrome/fatebook.io"))))
 #+end_src
 
 ** tetris

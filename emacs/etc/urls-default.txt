@@ -46,7 +46,6 @@ metaculus.com
 metafilter.com
 metaforecast.com
 paxful.com
-protesilaos.com
 qualtrics.com
 quora.com
 rescuetime.com
@@ -56,6 +55,7 @@ skyscanner.net
 slack.com
 squarespace.com
 stafforini.com
+stripe.com
 swapcard.com
 teatrocolon.org.ar
 twitter.com

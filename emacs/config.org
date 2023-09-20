@@ -14161,6 +14161,7 @@ value is copied to the kill ring."
    "TAB" 'ebib-goto-next-set
    "<backtab>" 'ebib-goto-prev-set
    "H-s" 'ebib-save-current-database
+   "H-S" 'ebib-save-all-databases
    "!" 'ebib-generate-autokey
    "/" (lambda! (tlon-ebib-attach-file t))
    "A" 'ebib-add-field

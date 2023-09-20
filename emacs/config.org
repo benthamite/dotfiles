@@ -17773,7 +17773,7 @@ And finally, the section you've all been waiting for.
   ((gfm-mode-map markdown-mode-map)
    "A-s-e" 'tlon-babel-yaml-edit-field
    "s-c" 'tlon-babel-copy-dwim
-   "s-u" 'tlon-babel-markdown-insert-tag)
+   "s-u" 'tlon-babel-markdown-insert-element)
   (github-review-mode-map
    "s-c" 'tlon-babel-submit-comment-revisions))
 #+end_src

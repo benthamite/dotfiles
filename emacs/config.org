@@ -1177,12 +1177,13 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
 
 (defhydra hydra-files-packages
   (:exit t)
-  ""
+  "Tlön packages"
   ("b" (ps/elpaca-package-repo-dir "tlon-babel") "tlon-babel" :column "packages")
   ("c" (ps/elpaca-package-repo-dir "tlon-core") "tlon-core" :column "packages")
   ("l" (ps/elpaca-package-repo-dir "tlon-biblio") "tlon-biblio" :column "packages")
   ("i" (ps/elpaca-package-repo-dir "tlon-init") "tlon-init" :column "packages")
   ("e" (ps/elpaca-package-repo-dir "tlon-ebib") "tlon-ebib" :column "packages")
+  ("o" (ps/elpaca-package-repo-dir "tlon-org") "tlon-org" :column "packages")
   ("m" (ps/elpaca-package-repo-dir "mullvad") "mullvad" :column "packages"))
 #+end_src
 

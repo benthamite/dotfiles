@@ -1141,7 +1141,7 @@ CLOCK: [2021-04-22 Thu 17:57]--[2021-04-22 Thu 18:21] =>  0:24
   ("y" (ps/switch-to-most-recent-buffer-in-mode 'python-mode) "Python"))
 #+end_src
 
-*** buffers
+*** files
 :PROPERTIES:
 :ID:       39E06A29-2AEC-4EB4-A0D0-7E1A64832B18
 :END:
@@ -2509,6 +2509,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ("A-C-s-p" 'forward-word
    "A-C-s-u" 'backward-word))
 #+end_src
+
 
 ** lines
 :PROPERTIES:
@@ -5776,13 +5777,13 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 (That's the actively maintained fork; the [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][official repository]] is no longer maintained.)
 
-[2023-03-01 Wed 10:54] Check [[https://github.com/dedenbangkit/.emacs.d/blob/2cf69eb102af5a5cab7ec1d65af77e997082e17a/custom/main.el#L34][this config]] in case it helps me figure out how to avoid getting prompted for a password so frequently.
+[2023-09-12 Tue 12:03] There is currently an [[https://github.com/kidd/org-gcal.el/issues/238#issuecomment-1555902363][issue]] that, apparently, can only be solved by downgrading to an earlier version of ~gnupg~.
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tlon-org-gcal)
 (use-package org-gcal
   :elpaca (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass org
-  :defer 15
+  :defer 10
 
   :init
   (setq org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
@@ -6007,7 +6008,7 @@ heading."
       (when desc
         (insert (replace-regexp-in-string "^\*" "✱" desc))
         (insert (if (string= "\n" (org-gcal--safe-substring desc -1)) "" "\n")))
-      (insert ":END:")
+      (insert ":END:\n")
       (when (org-gcal--event-cancelled-p event)
         (save-excursion
           (org-back-to-heading t)
@@ -6175,7 +6176,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :defer 10
   :config
   (setq display-wttr-interval (* 15 60))
-  (setq display-wttr-locations ps/display-wttr-locations)
 
   (display-wttr-mode))
 #+end_src
@@ -13840,6 +13840,7 @@ in the file. Data comes from www.ebook.de."
 :PROPERTIES:
 :ID:       A3B5FC74-45C6-475C-8D31-B8355F12747C
 :END:
+
 ** doi-utils
 :PROPERTIES:
 :ID:       626B4AD0-054C-4A28-AD5B-E66CA47403ED
@@ -14239,13 +14240,11 @@ CLOCK: [2023-08-27 Sun 12:18]--[2023-08-27 Sun 13:48] =>  1:30
   :demand t
   :config
   (setq tlon-ebib-download-use-vpn t)
-
   (setq tlon-ebib-db-numbers
         `((,ps/file-personal-bibliography-new . 1)
           (,ps/file-personal-bibliography-old . 2)
           (,tlon-babel-file-fluid . 3)
           (,tlon-babel-file-stable . 4)))
-
   (setq tlon-ebib-auto-save-files
         (list ps/file-personal-bibliography-new
               tlon-babel-file-fluid))

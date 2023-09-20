@@ -9491,17 +9491,6 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
    "s-c" 'exit-recursive-edit))
 #+end_src
 
-
-*** DONE Disable flyckeck for code blocks in my init file
-CLOSED: [2023-08-28 Mon 12:41]
-:PROPERTIES:
-:ID:       F4E9B7CB-2ECE-431F-968E-3B41132F9C9D
-:END:
-:LOGBOOK:
-CLOCK: [2023-08-26 Sat 01:55]--[2023-08-26 Sat 02:20] =>  0:25
-:END:
-https://emacs.stackexchange.com/questions/38207/how-to-specify-buffer-local-variables-for-the-edit-buffer-of-org-source-blocks
-
 ** lsp-mode
 :PROPERTIES:
 :ID:       E9D2E6CA-5256-4776-801F-13281BD390C9

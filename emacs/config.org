@@ -278,6 +278,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#spelling--grammar][spelling & grammar]]
   - [[#jinx][jinx]]
   - [[#flycheck][flycheck]]
+  - [[#consult-flycheck][consult-flycheck]]
   - [[#keytar][keytar]]
   - [[#grammarly][grammarly]]
   - [[#lsp-grammarly][lsp-grammarly]]
@@ -306,7 +307,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-pdftools][org-pdftools]]
   - [[#org-noter-pdftools][org-noter-pdftools]]
 - [[#prog-mode][prog-mode]]
-  - [[#consult-flycheck][consult-flycheck]]
   - [[#lsp-mode][lsp-mode]]
   - [[#lsp-ui][lsp-ui]]
   - [[#elisp-mode][elisp-mode]]
@@ -8065,6 +8065,21 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
    "C-c f l" 'flycheck-next-error
    "C-c f k" 'flycheck-prev-error))
 #+end_src
+
+** consult-flycheck
+:PROPERTIES:
+:ID:       C205D49D-F578-416E-8047-FC7633D6E4D3
+:END:
+
+/[[https://github.com/minad/consult-flycheck][consult-flycheck]] integrates ~flycheck~ with ~consult~./
+
+#+begin_src emacs-lisp
+(use-package consult-flycheck
+  :after consult flyckeck
+  :demand t)
+#+end_src
+
+
 ** keytar
 :PROPERTIES:
 :ID:       773AD672-8356-4097-990D-96BD160DAD40
@@ -9475,17 +9490,6 @@ CLOSED: [2023-08-28 Mon 12:41]
 CLOCK: [2023-08-26 Sat 01:55]--[2023-08-26 Sat 02:20] =>  0:25
 :END:
 https://emacs.stackexchange.com/questions/38207/how-to-specify-buffer-local-variables-for-the-edit-buffer-of-org-source-blocks
-
-** consult-flycheck
-:PROPERTIES:
-:ID:       C205D49D-F578-416E-8047-FC7633D6E4D3
-:END:
-
-#+begin_src emacs-lisp
-(use-package consult-flycheck
-  :after consult flyckeck
-  :demand t)
-#+end_src
 
 ** lsp-mode
 :PROPERTIES:

@@ -17153,7 +17153,10 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
 (use-feature epg-config
   :demand t
   :config
-  (setq epg-pinentry-mode 'loopback)) ; use minibuffer for password entry
+  (setq epg-pinentry-mode 'loopback) ; use minibuffer for password entry
+  (setq epg-gpg-program "/opt/homebrew/bin/gpg"))
+#+end_src
+
 ** epa-file
 :PROPERTIES:
 :ID:       FD3455F8-7CD3-4651-8063-304D4131F14E

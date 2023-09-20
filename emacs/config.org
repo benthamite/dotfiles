@@ -10380,21 +10380,22 @@ By considering both tasks completed and their associated priorities.
    "s-A-f" 'tlon-org
    "s-<return>" 'tlon-org-super-return
    "A-C-s-n" 'tlon-org-jump-to-first-heading
-   "s-A-b" 'tlon-org-set-todo-properties
-   "s-A-f" 'tlon-org-insert-todo-subheading-after-body
+   "A-s-b" 'tlon-org-set-todo-properties
+   "A-s-f" 'tlon-org-insert-todo-subheading-after-body
    "s-v" 'tlon-org-paste-html
-   "s-A-v" 'tlon-org-paste-image
-   "s-A-z" 'tlon-org-export-to-ea-wiki
+   "A-s-v" 'tlon-org-paste-image
+   "A-s-z" 'tlon-org-export-to-ea-wiki
    "M-w" 'tlon-org-count-words
-   "s-A-n" 'tlon-org-new-clock-entry-today
+   "A-s-n" 'tlon-org-new-clock-entry-today
    "s-." 'tlon-org-time-stamp-active-current-time
-   "s-A-." 'tlon-org-time-stamp-active-current-date
+   "A-s-." 'tlon-org-time-stamp-active-current-date
    "s-/" 'tlon-org-time-stamp-inactive-current-time
-   "s-A-u" 'tlon-org-id-update-id-locations
-   "s-A-c" 'tlon-org-mark-checkbox-complete-and-move-to-next-item
-   "s-A-o" 'tlon-org-reset-checkbox-state-subtree
+   "A-s-/" 'tlon-org-time-stamp-inactive-current-date
+   "A-s-u" 'tlon-org-id-update-id-locations
+   "A-s-c" 'tlon-org-mark-checkbox-complete-and-move-to-next-item
+   "A-s-o" 'tlon-org-reset-checkbox-state-subtree
    "H-s-w" 'tlon-org-refile-and-archive
-   "s-A-w" 'tlon-org-refile-goto-latest
+   "A-s-w" 'tlon-org-refile-goto-latest
    "s-y" 'tlon-org-crypt-dwim)
   ((org-mode-map org-msg-edit-mode-map)
    "s-A-l" 'tlon-org-url-dwim)

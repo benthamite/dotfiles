@@ -277,10 +277,12 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dwim-shell-command][dwim-shell-command]]
 - [[#spelling--grammar][spelling & grammar]]
   - [[#jinx][jinx]]
+  - [[#flycheck][flycheck]]
+  - [[#consult-flycheck][consult-flycheck]]
+  - [[#flycheck-languagetool][flycheck-languagetool]]
   - [[#keytar][keytar]]
   - [[#grammarly][grammarly]]
   - [[#lsp-grammarly][lsp-grammarly]]
-  - [[#languagetool][languagetool]]
 - [[#prose][prose]]
   - [[#text-mode][text-mode]]
   - [[#with-editor][with-editor]]
@@ -305,8 +307,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-pdftools][org-pdftools]]
   - [[#org-noter-pdftools][org-noter-pdftools]]
 - [[#prog-mode][prog-mode]]
-  - [[#flycheck][flycheck]]
-  - [[#consult-flycheck][consult-flycheck]]
   - [[#lsp-mode][lsp-mode]]
   - [[#lsp-ui][lsp-ui]]
   - [[#elisp-mode][elisp-mode]]
@@ -454,6 +454,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#passwords][passwords]]
   - [[#plstore][plstore]]
   - [[#epg-config][epg-config]]
+  - [[#epa-file][epa-file]]
   - [[#auth-source][auth-source]]
   - [[#oauth2-auto][oauth2-auto]]
   - [[#pass][pass]]
@@ -468,6 +469,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#keycast][keycast]]
   - [[#activity-watch][activity-watch]]
   - [[#custom][custom]]
+  - [[#fatebook][fatebook]]
   - [[#tetris][tetris]]
 - [[#personal][personal]]
   - [[#tlon-core][tlon-core]]
@@ -1139,7 +1141,7 @@ CLOCK: [2021-04-22 Thu 17:57]--[2021-04-22 Thu 18:21] =>  0:24
   ("y" (ps/switch-to-most-recent-buffer-in-mode 'python-mode) "Python"))
 #+end_src
 
-*** buffers
+*** files
 :PROPERTIES:
 :ID:       39E06A29-2AEC-4EB4-A0D0-7E1A64832B18
 :END:
@@ -1176,12 +1178,13 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
 
 (defhydra hydra-files-packages
   (:exit t)
-  ""
+  "Tlön packages"
   ("b" (ps/elpaca-package-repo-dir "tlon-babel") "tlon-babel" :column "packages")
   ("c" (ps/elpaca-package-repo-dir "tlon-core") "tlon-core" :column "packages")
   ("l" (ps/elpaca-package-repo-dir "tlon-biblio") "tlon-biblio" :column "packages")
   ("i" (ps/elpaca-package-repo-dir "tlon-init") "tlon-init" :column "packages")
   ("e" (ps/elpaca-package-repo-dir "tlon-ebib") "tlon-ebib" :column "packages")
+  ("o" (ps/elpaca-package-repo-dir "tlon-org") "tlon-org" :column "packages")
   ("m" (ps/elpaca-package-repo-dir "mullvad") "mullvad" :column "packages"))
 #+end_src
 
@@ -2506,6 +2509,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ("A-C-s-p" 'forward-word
    "A-C-s-u" 'backward-word))
 #+end_src
+
 
 ** lines
 :PROPERTIES:
@@ -5670,18 +5674,40 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   (setq calendar-week-start-day 1)    ; week starts on Monday
   (setq calendar-set-date-style 'iso) ; this isn't the default?
   (setq calendar-time-display-form
-   '(24-hours ":" minutes
-              (when time-zone
-                (concat " (" time-zone ")"))))
+        '(24-hours ":" minutes
+                   (when time-zone
+                     (concat " (" time-zone ")"))))
   (setq calendar-mark-holidays-flag nil)
   (setq calendar-time-zone-style 'numeric)
   (setq holiday-bahai-holidays nil)
-  (setq calendar-location-name ps/location-name)
-  (setq calendar-latitude ps/location-latitude)
-  (setq calendar-longitude ps/location-longitude)
-  ;; To copy the current latitude and longitude, go to Google Maps,
-  ;; right-click on your location, and select the coordinates.
-  ;; You should then set these values in YOUR VARIABLES file
+  (setq calendar-location-name (plist-get ps/personal-geolocation :city))
+  (setq calendar-latitude (plist-get ps/personal-geolocation :lat))
+  (setq calendar-longitude (plist-get ps/personal-geolocation :lon))
+
+  (defun ps/get-geolocation-from-ip (&optional ip)
+    "Get geolocation from IP address."
+    (let* ((ip (or ip (ps/get-local-ip-address)))
+           (url (format "http://ip-api.com/json/%s" ip))
+           (url-request-method "GET")
+           (url-request-extra-headers '(("Content-Type" . "application/json")))
+           (response-buffer (url-retrieve-synchronously url))
+           (json-object-type 'plist))
+      (with-current-buffer response-buffer
+        (goto-char (point-min))
+        ;; Skip HTTP headers.
+        (re-search-forward "^$")
+        (let* ((json (json-read))
+               (lat (plist-get json :lat))
+               (lon (plist-get json :lon))
+               (city (plist-get json :city))
+               (timezone (plist-get json :timezone)))
+          (list :lat lat :lon lon :city city :timezone timezone)))))
+
+  (defun ps/get-local-ip-address ()
+    (interactive)
+    (let ((local-ip (shell-command-to-string
+                     "dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com")))
+      (string-trim local-ip "\"" "\"\n")))
 
   :general
   ("C-d" 'calendar
@@ -5751,13 +5777,13 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 (That's the actively maintained fork; the [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][official repository]] is no longer maintained.)
 
-[2023-03-01 Wed 10:54] Check [[https://github.com/dedenbangkit/.emacs.d/blob/2cf69eb102af5a5cab7ec1d65af77e997082e17a/custom/main.el#L34][this config]] in case it helps me figure out how to avoid getting prompted for a password so frequently.
+[2023-09-12 Tue 12:03] There is currently an [[https://github.com/kidd/org-gcal.el/issues/238#issuecomment-1555902363][issue]] that, apparently, can only be solved by downgrading to an earlier version of ~gnupg~.
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tlon-org-gcal)
 (use-package org-gcal
   :elpaca (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass org
-  :defer 15
+  :defer 10
 
   :init
   (setq org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
@@ -5982,7 +6008,7 @@ heading."
       (when desc
         (insert (replace-regexp-in-string "^\*" "✱" desc))
         (insert (if (string= "\n" (org-gcal--safe-substring desc -1)) "" "\n")))
-      (insert ":END:")
+      (insert ":END:\n")
       (when (org-gcal--event-cancelled-p event)
         (save-excursion
           (org-back-to-heading t)
@@ -6150,7 +6176,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   :defer 10
   :config
   (setq display-wttr-interval (* 15 60))
-  (setq display-wttr-locations ps/display-wttr-locations)
 
   (display-wttr-mode))
 #+end_src
@@ -8015,6 +8040,66 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
    "A-M-p" 'jinx-languages))
 #+end_src
 
+** flycheck
+:PROPERTIES:
+:ID:       E407F295-B534-4195-A98C-10A131F391D9
+:END:
+
+/[[https://github.com/flycheck/flycheck][flycheck]] is a syntax-checker for Emacs./
+
+#+begin_src emacs-lisp
+(use-package flycheck
+  :demand t
+  :init
+  (global-flycheck-mode)
+
+  :config
+  (setq flycheck-emacs-lisp-load-path 'inherit)
+
+  (defun flyckeck-disable-checkdoc-in-org-src-block ()
+    "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
+    (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
+
+  (add-hook 'org-src-mode-hook 'flyckeck-disable-checkdoc-in-org-src-block)
+
+  :general
+  (flycheck-mode-map
+   "C-c f l" 'flycheck-next-error
+   "C-c f k" 'flycheck-prev-error))
+#+end_src
+
+** consult-flycheck
+:PROPERTIES:
+:ID:       C205D49D-F578-416E-8047-FC7633D6E4D3
+:END:
+
+/[[https://github.com/minad/consult-flycheck][consult-flycheck]] integrates ~flycheck~ with ~consult~./
+
+#+begin_src emacs-lisp
+(use-package consult-flycheck
+  :after consult flyckeck
+  :demand t)
+#+end_src
+
+
+** flycheck-languagetool
+:PROPERTIES:
+:ID:       761BF4F2-8821-42A6-852C-4C87A248EF90
+:END:
+
+/[[https://github.com/emacs-languagetool/flycheck-languagetool][flycheck-languagetool]] provides ~flycheck~ support for [[https://languagetool.org/][LanguageTool]]./
+
+#+begin_src emacs-lisp
+(use-package flycheck-languagetool
+  :after flycheck
+  :demand
+  :init
+  (setq flycheck-languagetool-server-jar "~/source/LanguageTool/languagetool-server.jar")
+  
+  :config
+  (add-hook 'markdown-mode-hook 'flycheck-languagetool-setup))
+#+end_src
+
 ** keytar
 :PROPERTIES:
 :ID:       773AD672-8356-4097-990D-96BD160DAD40
@@ -8105,13 +8190,6 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 https://notes.alexkehayias.com/using-grammarly-with-emacs/
 
 [2023-01-28 Sat] I followed the instructions but couldn't make it work.
-
-** languagetool
-:PROPERTIES:
-:ID:       9666F3AD-4637-4B0B-895E-8F1F030C7AD9
-:END:
-
-To check: https://github.com/PillFall/languagetool.el
 
 * prose
 :PROPERTIES:
@@ -9415,53 +9493,6 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
    "s-c" 'exit-recursive-edit))
 #+end_src
 
-** flycheck
-:PROPERTIES:
-:ID:       E407F295-B534-4195-A98C-10A131F391D9
-:END:
-
-#+begin_src emacs-lisp
-(use-package flycheck
-  :demand t
-  :init
-  (global-flycheck-mode)
-
-  :config
-  (setq flycheck-emacs-lisp-load-path 'inherit)
-
-  (defun flyckeck-disable-checkdoc-in-org-src-block ()
-    "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
-    (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
-
-  (add-hook 'org-src-mode-hook 'flyckeck-disable-checkdoc-in-org-src-block)
-
-  :general
-  (flycheck-mode-map
-   "C-c f l" 'flycheck-next-error
-   "C-c f k" 'flycheck-prev-error))
-#+end_src
-
-*** DONE Disable flyckeck for code blocks in my init file
-CLOSED: [2023-08-28 Mon 12:41]
-:PROPERTIES:
-:ID:       F4E9B7CB-2ECE-431F-968E-3B41132F9C9D
-:END:
-:LOGBOOK:
-CLOCK: [2023-08-26 Sat 01:55]--[2023-08-26 Sat 02:20] =>  0:25
-:END:
-https://emacs.stackexchange.com/questions/38207/how-to-specify-buffer-local-variables-for-the-edit-buffer-of-org-source-blocks
-
-** consult-flycheck
-:PROPERTIES:
-:ID:       C205D49D-F578-416E-8047-FC7633D6E4D3
-:END:
-
-#+begin_src emacs-lisp
-(use-package consult-flycheck
-  :after consult flyckeck
-  :demand t)
-#+end_src
-
 ** lsp-mode
 :PROPERTIES:
 :ID:       E9D2E6CA-5256-4776-801F-13281BD390C9
@@ -10340,21 +10371,22 @@ By considering both tasks completed and their associated priorities.
    "s-A-f" 'tlon-org
    "s-<return>" 'tlon-org-super-return
    "A-C-s-n" 'tlon-org-jump-to-first-heading
-   "s-A-b" 'tlon-org-set-todo-properties
-   "s-A-f" 'tlon-org-insert-todo-subheading-after-body
+   "A-s-b" 'tlon-org-set-todo-properties
+   "A-s-f" 'tlon-org-insert-todo-subheading-after-body
    "s-v" 'tlon-org-paste-html
-   "s-A-v" 'tlon-org-paste-image
-   "s-A-z" 'tlon-org-export-to-ea-wiki
+   "A-s-v" 'tlon-org-paste-image
+   "A-s-z" 'tlon-org-export-to-ea-wiki
    "M-w" 'tlon-org-count-words
-   "s-A-n" 'tlon-org-new-clock-entry-today
+   "A-s-n" 'tlon-org-new-clock-entry-today
    "s-." 'tlon-org-time-stamp-active-current-time
-   "s-A-." 'tlon-org-time-stamp-active-current-date
+   "A-s-." 'tlon-org-time-stamp-active-current-date
    "s-/" 'tlon-org-time-stamp-inactive-current-time
-   "s-A-u" 'tlon-org-id-update-id-locations
-   "s-A-c" 'tlon-org-mark-checkbox-complete-and-move-to-next-item
-   "s-A-o" 'tlon-org-reset-checkbox-state-subtree
+   "A-s-/" 'tlon-org-time-stamp-inactive-current-date
+   "A-s-u" 'tlon-org-id-update-id-locations
+   "A-s-c" 'tlon-org-mark-checkbox-complete-and-move-to-next-item
+   "A-s-o" 'tlon-org-reset-checkbox-state-subtree
    "H-s-w" 'tlon-org-refile-and-archive
-   "s-A-w" 'tlon-org-refile-goto-latest
+   "A-s-w" 'tlon-org-refile-goto-latest
    "s-y" 'tlon-org-crypt-dwim)
   ((org-mode-map org-msg-edit-mode-map)
    "s-A-l" 'tlon-org-url-dwim)
@@ -11962,7 +11994,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
       (setq org-roam-database-connector 'sqlite)
     (setq org-roam-database-connector 'sqlite-builtin))
 
-  (defun tlon-org-roam-recent (days &optional limit)
+  (defun ps/org-roam-recent (days &optional limit)
     "Return list of files modified in the last DAYS. Optionally,
 return such list if its length is less than LIMIT."
     (let* ((mins (* 60 24 days))
@@ -12023,31 +12055,31 @@ SQL can be either the emacsql vector representation, or a string."
         (concat "${hierarchy:160} "
                 (propertize "${tags:20}" 'face 'org-tag)))
 
-  (defvar tlon-org-roam-excluded-dirs (list
-                                     ps/dir-anki
-                                     ps/dir-inactive
-                                     ps/dir-archive
-                                     ps/dir-dropbox-tlon-leo
-                                     ps/dir-dropbox-tlon-fede
-                                     ))
+  (defvar ps/org-roam-excluded-dirs (list
+                                   ps/dir-anki
+                                   ps/dir-inactive
+                                   ps/dir-archive
+                                   ps/dir-dropbox-tlon-leo
+                                   ps/dir-dropbox-tlon-fede
+                                   ))
 
-  (defvar tlon-org-roam-excluded-files (list
-                                      ps/file-orb-noter-template
-                                      "calendar.org" ; added directly as agenda file
-                                      "quotes-old.org"
-                                      ".org2blog.org"
-                                      "wiki-notes.org" ; removing temporarily
-                                      "feeds.org"
-                                      ".*conflicted copy.*"
-                                      ".*conflicted-copy.*"))
+  (defvar ps/org-roam-excluded-files (list
+                                    ps/file-orb-noter-template
+                                    "calendar.org" ; added directly as agenda file
+                                    "quotes-old.org"
+                                    ".org2blog.org"
+                                    "wiki-notes.org" ; removing temporarily
+                                    "feeds.org"
+                                    ".*conflicted copy.*"
+                                    ".*conflicted-copy.*"))
 
   ;; exclude headings in specific files and directories
   (setq org-roam-file-exclude-regexp
         (let (result)
           (dolist (dir-or-file
                    (append
-                    tlon-org-roam-excluded-dirs
-                    tlon-org-roam-excluded-files)
+                    ps/org-roam-excluded-dirs
+                    ps/org-roam-excluded-files)
                    (regexp-opt result))
             (push (if (file-directory-p dir-or-file)
                       (file-relative-name dir-or-file ps/dir-org-roam)
@@ -12089,7 +12121,7 @@ SQL can be either the emacsql vector representation, or a string."
               nil
             t)))
 
-  (defun tlon-org-roam-remove-file-level-properties ()
+  (defun ps/org-roam-remove-file-level-properties ()
     "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
     (when (string= "r" (plist-get org-capture-plist :key))
       (goto-char (point-min))
@@ -12100,7 +12132,7 @@ SQL can be either the emacsql vector representation, or a string."
         (tlon-org-jump-to-first-heading)
         (org-id-get-create))))
 
-  (defun tlon-org-roam-new-note (note-type)
+  (defun ps/org-roam-new-note (note-type)
     "Create a new `org-roam' note."
     (interactive
      (list
@@ -12129,7 +12161,7 @@ SQL can be either the emacsql vector representation, or a string."
         (tlon-org-narrow-to-entry-and-children)
         (goto-char (point-max)))))
 
-  (defun tlon-org-roam-node-find ()
+  (defun ps/org-roam-node-find ()
     "Find and open an Org-roam node by its title or alias."
     (interactive)
     (widen)
@@ -12140,7 +12172,7 @@ SQL can be either the emacsql vector representation, or a string."
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
   ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
 
-  (defun tlon-org-roam-node-find-special (&optional arg)
+  (defun ps/org-roam-node-find-special (&optional arg)
     "Return a list of selected headings sorted by priority.
 The selection includes all headings with a priority and either no
 todo status or the todo status TODO, and excludes all headings
@@ -12149,7 +12181,7 @@ prompt the user to select from a unique list of tags and further
 restrict the selection to headings with that tag."
     (interactive "P")
     (let* ((selection (when arg
-                        (tlon-org-roam-node-select-tag)))
+                        (ps/org-roam-node-select-tag)))
            (headings-with-priority
             (if selection
                 (org-roam-db-query `[:select [id file title priority]
@@ -12205,7 +12237,7 @@ restrict the selection to headings with that tag."
             (funcall action))
         (message "No headings with priority found."))))
 
-  (defun tlon-org-roam-node-select-tag ()
+  (defun ps/org-roam-node-select-tag ()
     "Prompt for tag selection from list of org tags."
     (interactive)
     (let* ((query-result (org-roam-db-query [:select :distinct [tag] :from tags]))
@@ -12225,12 +12257,12 @@ restrict the selection to headings with that tag."
 
   (add-hook 'org-roam-capture-new-node-hook #'orb--insert-captured-ref-h)
   (add-hook 'org-roam-capture-new-node-hook #'org-roam-capture--insert-captured-ref-h)
-  (add-hook 'org-capture-prepare-finalize-hook #'tlon-org-roam-remove-file-level-properties)
+  (add-hook 'org-capture-prepare-finalize-hook #'ps/org-roam-remove-file-level-properties)
 
   :general
-  ("A-H-n" 'tlon-org-roam-new-note
-   "H-j" 'tlon-org-roam-node-find
-   "H-J" 'tlon-org-roam-node-find-special)
+  ("H-N" 'ps/org-roam-new-note
+   "H-j" 'ps/org-roam-node-find
+   "H-J" 'ps/org-roam-node-find-special)
   ((org-mode-map minibuffer-mode-map)
    "s-i" 'org-roam-node-insert)
   (org-mode-map
@@ -12349,7 +12381,7 @@ CLOCK: [2021-12-14 Tue 19:46]--[2021-12-14 Tue 20:06] =>  0:20
 I use this package to define a dynamic agenda, as explained and illustrated [[d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html][here]]. I've made some changes to the system in that link, specifically to exclude files and directories at various stages:
 1. At the broadest level, I exclude files and directories from the function (~tlon-org-id-auto-add-ids-to-headings-in-file~) that otherwise automatically adds an ID to every org heading in a file-visiting buffer. Headings so excluded are not indexed by org-roam, because a heading requires an ID to be indexed. See the variables ~tlon-org-id-auto-add-excluded-files~ and ~tlon-org-id-auto-add-excluded-directories~ under the ~org-id~ section of this file.
 2. I then exclude some headings with IDs from the org-roam database (via the variables  ~org-roam-file-exclude-regexp~ and ~org-roam-db-node-include-function~). See the ~org-roam~ section of this file.
-3. Finally, I selectively add to ~org-agenda-files~ files that satisfy certain conditions (as defined by ~ps/vulpea-project-p~) and files modified recently (as specified by ~tlon-org-roam-recent~), and exclude from ~org-agenda-files~ files listed in ~tlon-org-agenda-files-excluded~.
+3. Finally, I selectively add to ~org-agenda-files~ files that satisfy certain conditions (as defined by ~ps/vulpea-project-p~) and files modified recently (as specified by ~ps/org-roam-recent~), and exclude from ~org-agenda-files~ files listed in ~tlon-org-agenda-files-excluded~.
 
 #+begin_src emacs-lisp :results silent
 (use-package vulpea
@@ -12442,7 +12474,7 @@ tasks."
                          (vulpea-project-files)
                          ;; include files modified in past three days,
                          ;; provided number of such files less than 1000
-                         (tlon-org-roam-recent 1 500)
+                         (ps/org-roam-recent 1 500)
                          ))
            tlon-org-agenda-files-excluded)))
 
@@ -13808,6 +13840,7 @@ in the file. Data comes from www.ebook.de."
 :PROPERTIES:
 :ID:       A3B5FC74-45C6-475C-8D31-B8355F12747C
 :END:
+
 ** doi-utils
 :PROPERTIES:
 :ID:       626B4AD0-054C-4A28-AD5B-E66CA47403ED
@@ -14128,6 +14161,7 @@ value is copied to the kill ring."
    "TAB" 'ebib-goto-next-set
    "<backtab>" 'ebib-goto-prev-set
    "H-s" 'ebib-save-current-database
+   "H-S" 'ebib-save-all-databases
    "!" 'ebib-generate-autokey
    "/" (lambda! (tlon-ebib-attach-file t))
    "A" 'ebib-add-field
@@ -14207,13 +14241,11 @@ CLOCK: [2023-08-27 Sun 12:18]--[2023-08-27 Sun 13:48] =>  1:30
   :demand t
   :config
   (setq tlon-ebib-download-use-vpn t)
-
   (setq tlon-ebib-db-numbers
         `((,ps/file-personal-bibliography-new . 1)
           (,ps/file-personal-bibliography-old . 2)
           (,tlon-babel-file-fluid . 3)
           (,tlon-babel-file-stable . 4)))
-
   (setq tlon-ebib-auto-save-files
         (list ps/file-personal-bibliography-new
               tlon-babel-file-fluid))
@@ -17121,7 +17153,19 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
 (use-feature epg-config
   :demand t
   :config
-  (setq epg-pinentry-mode 'loopback)) ; use minibuffer for password entry
+  (setq epg-pinentry-mode 'loopback) ; use minibuffer for password entry
+  (setq epg-gpg-program "/opt/homebrew/bin/gpg"))
+#+end_src
+
+** epa-file
+:PROPERTIES:
+:ID:       FD3455F8-7CD3-4651-8063-304D4131F14E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature epa-file
+  :config
+  (epa-file-enable))
 #+end_src
 
 ** auth-source
@@ -17600,8 +17644,11 @@ then the window will be split horizontally rather than vertically."
 :ID:       809139BE-A8AF-40A7-BF1A-899839313729
 :END:
 
+Disabling because it interferes with [[https://emacs.stackexchange.com/questions/14950/invalid-coding-system-auto-save-coding-when-trying-to-recover-auto-save-files][recover-this-file]].
+
 #+begin_src emacs-lisp
 (use-package activity-watch-mode
+  :disabled t
   :demand t
   :config
   (global-activity-watch-mode))
@@ -17618,6 +17665,22 @@ then the window will be split horizontally rather than vertically."
   :config
   (setq custom-safe-themes t)
   (setq custom-file (file-name-concat ps/dir-downloads "delete.me"))) ; move unintended customizations to a garbage file
+#+end_src
+
+** fatebook
+:PROPERTIES:
+:ID:       6668B610-6BAD-40AD-823B-7E96EFBB23CB
+:END:
+
+/[[https://github.com/sonofhypnos/fatebook.el][fatebook]] is an Emacs package to create predictions on Fatebook./
+
+#+begin_src emacs-lisp
+(use-package fatebook
+  :elpaca (fatebook :repo "sonofhypnos/fatebook.el" :host github
+                    :files ("fatebook.el"))
+  :commands fatebook-create-question
+  :config
+  (setq fatebook-api-key-function (lambda () (auth-source-pass-get "api" "chrome/fatebook.io"))))
 #+end_src
 
 ** tetris
@@ -17711,7 +17774,7 @@ And finally, the section you've all been waiting for.
   ((gfm-mode-map markdown-mode-map)
    "A-s-e" 'tlon-babel-yaml-edit-field
    "s-c" 'tlon-babel-copy-dwim
-   "s-u" 'tlon-babel-markdown-insert-tag)
+   "s-u" 'tlon-babel-markdown-insert-element)
   (github-review-mode-map
    "s-c" 'tlon-babel-submit-comment-revisions))
 #+end_src
@@ -17729,6 +17792,14 @@ And finally, the section you've all been waiting for.
            :depth nil) ; clone entire repo, not just last commit
   :after ebib zotra
   :demand t
+  :config
+  (setq tlon-biblio-isbndb-key
+        (auth-source-pass-get "key" (concat "tlon/BAE/isbndb.com/" ps/tlon-email)))
+  (setq tlon-biblio-omdb-key
+        (auth-source-pass-get 'secret "chrome/omdbapi.com"))
+  (setq tlon-biblio-tmdb-key
+        (auth-source-pass-get "key" "chrome/themoviedb.org/stafforini"))
+
   :general
   (ebib-index-mode-map
    "t" 'tlon-biblio-zotra-add-entry-from-title))
@@ -17771,6 +17842,7 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
  (ps/personal-gmail . (getenv "PERSONAL_GMAIL"))
  (ps/personal-email . (getenv "PERSONAL_EMAIL"))
  (ps/tlon-email . (getenv "TLON_EMAIL"))
+ (ps/personal-geolocation . (ps/get-geolocation-from-ip))
  (ps/dir-root . "/")
  (ps/dir-system-apps . "/Applications/")
  (ps/dir-user . (getenv "HOME"))
@@ -17925,10 +17997,6 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 --
 ,*Pablo*
 ,#+end_signature")
- (ps/location-name . "Madrid, Spain")
- (ps/display-wttr-locations . '("Madrid"))
- (ps/location-latitude . 40.4168)
- (ps/location-longitude . 3.7038)
 
  ;; Threshold for auto splitting the window sideways, in columns
  (ps/split-width-threshold . 200)

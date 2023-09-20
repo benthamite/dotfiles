@@ -8091,13 +8091,13 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 
 #+begin_src emacs-lisp
 (use-package flycheck-languagetool
-  :ensure t
-  :hook (text-mode . flycheck-languagetool-setup)
+  :after flycheck
+  :demand
   :init
-  (setq flycheck-languagetool-server-jar "/Users/pablostafforini/Downloads/LanguageTool-stable/LanguageTool-6.2/languagetool-server.jar")
+  (setq flycheck-languagetool-server-jar "~/source/LanguageTool/languagetool-server.jar")
+  
   :config
-  (setq flycheck-languagetool-language "es"))
-
+  (add-hook 'markdown-mode-hook 'flycheck-languagetool-setup))
 #+end_src
 
 ** keytar

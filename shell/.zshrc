@@ -39,3 +39,6 @@ alias muinit="cd ~; mu init --maildir=/Users/pablostafforini/Mail --my-address=$
 
 # homebrew
 export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
+
+# libby
+export LIBBY_OUTPUT_DIR="/Users/pablostafforini/Downloads/"

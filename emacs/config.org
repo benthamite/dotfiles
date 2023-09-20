@@ -277,6 +277,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dwim-shell-command][dwim-shell-command]]
 - [[#spelling--grammar][spelling & grammar]]
   - [[#jinx][jinx]]
+  - [[#flycheck][flycheck]]
   - [[#keytar][keytar]]
   - [[#grammarly][grammarly]]
   - [[#lsp-grammarly][lsp-grammarly]]
@@ -305,7 +306,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-pdftools][org-pdftools]]
   - [[#org-noter-pdftools][org-noter-pdftools]]
 - [[#prog-mode][prog-mode]]
-  - [[#flycheck][flycheck]]
   - [[#consult-flycheck][consult-flycheck]]
   - [[#lsp-mode][lsp-mode]]
   - [[#lsp-ui][lsp-ui]]
@@ -8038,6 +8038,33 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
    "A-M-p" 'jinx-languages))
 #+end_src
 
+** flycheck
+:PROPERTIES:
+:ID:       E407F295-B534-4195-A98C-10A131F391D9
+:END:
+
+/[[https://github.com/flycheck/flycheck][flycheck]] is a syntax-checker for Emacs./
+
+#+begin_src emacs-lisp
+(use-package flycheck
+  :demand t
+  :init
+  (global-flycheck-mode)
+
+  :config
+  (setq flycheck-emacs-lisp-load-path 'inherit)
+
+  (defun flyckeck-disable-checkdoc-in-org-src-block ()
+    "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
+    (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
+
+  (add-hook 'org-src-mode-hook 'flyckeck-disable-checkdoc-in-org-src-block)
+
+  :general
+  (flycheck-mode-map
+   "C-c f l" 'flycheck-next-error
+   "C-c f k" 'flycheck-prev-error))
+#+end_src
 ** keytar
 :PROPERTIES:
 :ID:       773AD672-8356-4097-990D-96BD160DAD40
@@ -9438,31 +9465,6 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
    "s-c" 'exit-recursive-edit))
 #+end_src
 
-** flycheck
-:PROPERTIES:
-:ID:       E407F295-B534-4195-A98C-10A131F391D9
-:END:
-
-#+begin_src emacs-lisp
-(use-package flycheck
-  :demand t
-  :init
-  (global-flycheck-mode)
-
-  :config
-  (setq flycheck-emacs-lisp-load-path 'inherit)
-
-  (defun flyckeck-disable-checkdoc-in-org-src-block ()
-    "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
-    (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
-
-  (add-hook 'org-src-mode-hook 'flyckeck-disable-checkdoc-in-org-src-block)
-
-  :general
-  (flycheck-mode-map
-   "C-c f l" 'flycheck-next-error
-   "C-c f k" 'flycheck-prev-error))
-#+end_src
 
 *** DONE Disable flyckeck for code blocks in my init file
 CLOSED: [2023-08-28 Mon 12:41]

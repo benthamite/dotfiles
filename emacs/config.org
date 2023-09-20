@@ -279,10 +279,10 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#jinx][jinx]]
   - [[#flycheck][flycheck]]
   - [[#consult-flycheck][consult-flycheck]]
+  - [[#flycheck-languagetool][flycheck-languagetool]]
   - [[#keytar][keytar]]
   - [[#grammarly][grammarly]]
   - [[#lsp-grammarly][lsp-grammarly]]
-  - [[#languagetool][languagetool]]
 - [[#prose][prose]]
   - [[#text-mode][text-mode]]
   - [[#with-editor][with-editor]]
@@ -8080,6 +8080,24 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 #+end_src
 
 
+** flycheck-languagetool
+:PROPERTIES:
+:ID:       761BF4F2-8821-42A6-852C-4C87A248EF90
+:END:
+
+/[[https://github.com/emacs-languagetool/flycheck-languagetool][flycheck-languagetool]] provides ~flycheck~ support for [[https://languagetool.org/][LanguageTool]]./
+
+#+begin_src emacs-lisp
+(use-package flycheck-languagetool
+  :ensure t
+  :hook (text-mode . flycheck-languagetool-setup)
+  :init
+  (setq flycheck-languagetool-server-jar "/Users/pablostafforini/Downloads/LanguageTool-stable/LanguageTool-6.2/languagetool-server.jar")
+  :config
+  (setq flycheck-languagetool-language "es"))
+
+#+end_src
+
 ** keytar
 :PROPERTIES:
 :ID:       773AD672-8356-4097-990D-96BD160DAD40
@@ -8170,13 +8188,6 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 https://notes.alexkehayias.com/using-grammarly-with-emacs/
 
 [2023-01-28 Sat] I followed the instructions but couldn't make it work.
-
-** languagetool
-:PROPERTIES:
-:ID:       9666F3AD-4637-4B0B-895E-8F1F030C7AD9
-:END:
-
-To check: https://github.com/PillFall/languagetool.el
 
 * prose
 :PROPERTIES:

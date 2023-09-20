@@ -17792,6 +17792,14 @@ And finally, the section you've all been waiting for.
            :depth nil) ; clone entire repo, not just last commit
   :after ebib zotra
   :demand t
+  :config
+  (setq tlon-biblio-isbndb-key
+        (auth-source-pass-get "key" (concat "tlon/BAE/isbndb.com/" ps/tlon-email)))
+  (setq tlon-biblio-omdb-key
+        (auth-source-pass-get 'secret "chrome/omdbapi.com"))
+  (setq tlon-biblio-tmdb-key
+        (auth-source-pass-get "key" "chrome/themoviedb.org/stafforini"))
+
   :general
   (ebib-index-mode-map
    "t" 'tlon-biblio-zotra-add-entry-from-title))

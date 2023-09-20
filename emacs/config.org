@@ -454,6 +454,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#passwords][passwords]]
   - [[#plstore][plstore]]
   - [[#epg-config][epg-config]]
+  - [[#epa-file][epa-file]]
   - [[#auth-source][auth-source]]
   - [[#oauth2-auto][oauth2-auto]]
   - [[#pass][pass]]
@@ -17153,6 +17154,15 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
   :demand t
   :config
   (setq epg-pinentry-mode 'loopback)) ; use minibuffer for password entry
+** epa-file
+:PROPERTIES:
+:ID:       FD3455F8-7CD3-4651-8063-304D4131F14E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature epa-file
+  :config
+  (epa-file-enable))
 #+end_src
 
 ** auth-source

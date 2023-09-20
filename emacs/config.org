@@ -17644,8 +17644,11 @@ then the window will be split horizontally rather than vertically."
 :ID:       809139BE-A8AF-40A7-BF1A-899839313729
 :END:
 
+Disabling because it interferes with [[https://emacs.stackexchange.com/questions/14950/invalid-coding-system-auto-save-coding-when-trying-to-recover-auto-save-files][recover-this-file]].
+
 #+begin_src emacs-lisp
 (use-package activity-watch-mode
+  :disabled t
   :demand t
   :config
   (global-activity-watch-mode))

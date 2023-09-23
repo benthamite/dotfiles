@@ -17817,7 +17817,7 @@ And finally, the section you've all been waiting for.
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
     magit-status-mode-map)
-   "," 'tlon-babel-orgit-capture)
+   "," 'tlon-babel-create-todo-from-issue)
   (magit-status-mode-map
    "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)

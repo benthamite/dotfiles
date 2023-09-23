@@ -145,6 +145,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#sort][sort]]
   - [[#vundo][vundo]]
   - [[#outline][outline]]
+  - [[#outli][outli]]
   - [[#fill][fill]]
   - [[#unfill][unfill]]
   - [[#abbrev][abbrev]]
@@ -3493,15 +3494,50 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
    "A-C-s-f" 'outline-next-heading))
 #+end_src
 
+** outli
 :PROPERTIES:
+:ID:       FEACA323-B5F2-4DBB-890C-41EA39E6794B
+:END:
+:LOGBOOK:
+CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
 :END:
 
+/[[https://github.com/jdtsmith/outli][outli]] is a simple comment-based outliner for Emacs./
 
 #+begin_src emacs-lisp
+(use-package outli
+  :elpaca (outli
+	   :host github
+	   :repo "jdtsmith/outli")
   :after outline
   :demand t
   :config
   
+  (setq outli-speed-commands
+	'(("Outline navigation")
+	  ("k" . outline-previous-visible-heading)
+	  ("." . outline-forward-same-level)
+	  ("," . outline-backward-same-level)
+	  ("l" . outline-next-visible-heading)
+	  ("m" . outline-up-heading)
+	  ("j" . consult-imenu)
+	  ("Outline structure editing")
+          ("q" . outline-promote)
+	  ("a" . ps/outline-promote-heading)
+	  ("d" . outline-move-subtree-down)
+	  ("s" . outline-move-subtree-up)
+	  ("f" . ps/outline-demote-heading)
+	  ("r" . outline-demote)
+	  ("Outline visibility")
+	  ("<tab>" . outline-cycle)
+	  ("C" . outline-cycle-buffer)
+	  ("w" . outli-toggle-narrow-to-subtree)
+	  ("Regular editing")
+	  ("z" . undo-only)
+	  ("v" . yank)
+	  ("Other")
+	  ("?" . outli-speed-command-help)))
+  (add-hook 'emacs-lisp-mode-hook 'outli-mode))
 #+end_src
 ** fill
 :PROPERTIES:

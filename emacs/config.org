@@ -4460,6 +4460,26 @@ process in these cases."
                         (buffer-file-name x)))
                   (buffer-list))))
 
+  ;; https://emacs.stackexchange.com/a/5531/32089
+  (defvar ps/walk-dir-locals-upward nil
+    "If non-nil, evaluate `.dir-locals.el' files starting in the
+  current directory and going up. Otherwise they will be
+  evaluated from the top down to the current directory.")
+
+  (defun ps/walk-dir-locals-file (old-fun &rest args)
+    (let* ((dir-locals-list (list dir-locals-file))
+           (walk-dir-locals-file (car dir-locals-list)))
+      (while (file-readable-p (concat "../" walk-dir-locals-file))
+	(progn
+          (setq walk-dir-locals-file (concat "../" walk-dir-locals-file))
+          (add-to-list 'dir-locals-list walk-dir-locals-file
+                       ps/walk-dir-locals-upward)))
+      (dolist (file dir-locals-list)
+	(let ((dir-locals-file (expand-file-name file)))
+          (apply old-fun args)))))
+
+  (advice-add 'hack-dir-local-variables :around #'ps/walk-dir-locals-file)
+
   :general
   ("M--" 'not-modified
    "M-;" 'ps/copy-current-path

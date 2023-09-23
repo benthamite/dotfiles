@@ -8163,12 +8163,17 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 #+begin_src emacs-lisp
 (use-package flycheck-languagetool
   :after flycheck
-  :demand
+  :demand t
   :init
   (setq flycheck-languagetool-server-jar "~/source/LanguageTool/languagetool-server.jar")
-  
+
   :config
-  (add-hook 'markdown-mode-hook 'flycheck-languagetool-setup))
+  (defun ps/flycheck-languagetool-enable ()
+    "Enable the `languagetool' checker."
+    (unless (eq major-mode 'forge-post-mode)
+      (flycheck-select-checker 'languagetool)))
+
+  (add-hook 'markdown-mode-hook 'ps/flycheck-languagetool-enable))
 #+end_src
 
 ** keytar

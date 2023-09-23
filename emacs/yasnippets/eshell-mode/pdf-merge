@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: pdf-merge
+# key: pm
+# contributor: Pablo Stafforini
+# --
+mutool merge -o /Users/pablostafforini/Downloads/merged.pdf `(current-kill 0)`

@@ -17804,6 +17804,11 @@ And finally, the section you've all been waiting for.
            :depth nil) ; clone entire repo, not just last commit
   :after tlon-org
   :demand t
+  :config
+  (setq tlon-babel-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
+  (setq tlon-babel-todos-generic-id "14AB72D8-D707-41B3-89FF-7A787F266E5E")
+  (setq tlon-babel-todos-file (file-name-concat ps/dir-notes "babel.org"))
+  
   :general
   ("H-r" 'tlon-babel-dispatch)
   (markdown-mode-map

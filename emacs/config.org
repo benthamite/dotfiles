@@ -8284,11 +8284,6 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
   (add-hook 'text-mode-hook #'ps/visual-line-mode-enhanced))
 #+end_src
 
-*** TODO [#6] Define ~text-mode-hook~ and ~prog-mode-hook~
-:PROPERTIES:
-:ID:       30886FEE-60C4-4BAA-B629-2871CFC120A1
-:END:
-
 ** with-editor
 :PROPERTIES:
 :ID:       48431AA9-2ABE-403C-9E91-68066B24CB26

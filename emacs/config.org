@@ -6727,7 +6727,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)
       ("e a" "edit assigness"             forge-edit-topic-assignees)]
      ["Misc"
-      ("," "capture topic" tlon-babel-orgit-capture)
+      ("," "capture topic" tlon-babel-create-todo-from-issue)
       ("s" "search topics" forge-search)
       ("'" "open associated file" forge-search)
       (";" "Show/hide closed topics" forge-toggle-closed-visibility)

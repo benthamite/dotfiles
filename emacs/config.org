@@ -3104,7 +3104,14 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
    "C-H-M-s-q" 'org-shiftmetaleft
    "C-H-M-s-w" 'org-shiftmetaup
    "C-H-M-s-e" 'org-shiftmetadown
-   "C-H-M-s-r" 'org-shiftmetaright))
+   "C-H-M-s-r" 'org-shiftmetaright)
+  ((outline-mode-map outline-minor-mode-map)
+   "C-H-M-s-a" 'ps/outline-promote-heading
+   "C-H-M-s-s" 'outline-move-subtree-up
+   "C-H-M-s-d" 'outline-move-subtree-down
+   "C-H-M-s-f" 'ps/outline-demote-heading
+   "C-H-M-s-q" 'outline-promote
+   "C-H-M-s-r" 'outline-demote))
 #+end_src
 
 ** element

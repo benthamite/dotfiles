@@ -3493,6 +3493,20 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
   :config
   (add-hook 'prog-mode-hook #'outline-minor-mode)
 
+  (defun ps/outline-promote-heading ()
+    "Promote the current heading higher up the tree."
+    (interactive)
+    (let ((current-prefix-arg '(4)))
+      (call-interactively 'outline-promote))
+    (outline-previous-heading))
+
+  (defun ps/outline-demote-heading ()
+    "Demote the current heading higher up the tree."
+    (interactive)
+    (let ((current-prefix-arg '(4)))
+      (call-interactively 'outline-demote))
+    (outline-previous-heading))
+
   :general
   ((outline-mode-map outline-minor-mode-map)
    "TAB" 'outline-cycle

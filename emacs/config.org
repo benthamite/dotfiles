@@ -10710,7 +10710,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
 #+begin_src emacs-lisp :results silent
 (use-feature org-capture
   :after org
-  :demand t
+  :defer 5
   :config
   (setq org-default-notes-file ps/file-inbox-desktop)
   (setq org-capture-templates
@@ -10763,28 +10763,10 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (id "6171D3E2-8BC4-41E5-9C8A-E808DC4DD9D3")
            "** TODO [#5] %? \n" :empty-lines 1 :prepend t :jump-to-captured t)
           ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
-           (id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbC" "Tlön: BAE: Check topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
+           (id ,tlon-babel-todos-jobs-id)
+           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
+	  ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
+           (id ,tlon-babel-todos-generic-id)
            "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
           ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")

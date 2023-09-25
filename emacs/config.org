@@ -8247,14 +8247,6 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
               )
 #+end_src
 
-*** TODO [#6] Check this
-:PROPERTIES:
-:ID:       267EC580-1F84-4820-8701-C09F5CB89172
-:END:
-https://notes.alexkehayias.com/using-grammarly-with-emacs/
-
-[2023-01-28 Sat] I followed the instructions but couldn't make it work.
-
 * prose
 :PROPERTIES:
 :ID:       9C33C68A-B82E-4898-B967-337B7D0619EE

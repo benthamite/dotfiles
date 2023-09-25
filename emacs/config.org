@@ -8116,11 +8116,11 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   :config
   (setq flycheck-emacs-lisp-load-path 'inherit)
 
-  (defun flyckeck-disable-checkdoc-in-org-src-block ()
+  (defun ps/flyckeck-disable-checkdoc-in-org-src-block ()
     "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
     (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
 
-  (add-hook 'org-src-mode-hook 'flyckeck-disable-checkdoc-in-org-src-block)
+  (add-hook 'org-src-mode-hook 'ps/flyckeck-disable-checkdoc-in-org-src-block)
 
   :general
   (flycheck-mode-map
@@ -8140,7 +8140,6 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   :after consult flyckeck
   :demand t)
 #+end_src
-
 
 ** flycheck-languagetool
 :PROPERTIES:

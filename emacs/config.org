@@ -7946,13 +7946,6 @@ Assumes only one external hard drive is connected."
    "M-l" 'comint-next-input))
 #+end_src
 
-*** TODO [#6] Call Emacs commands from shell
-:PROPERTIES:
-:Effort:   0:30
-:ID:       BD2CACC7-6077-4B9B-98D3-5D565F340D87
-:END:
-https://emacs.stackexchange.com/questions/14947/can-emacs-commands-be-called-from-a-shell-script
-
 ** eshell
 :PROPERTIES:
 :ID:       ABD03BEF-8E02-43AF-A137-AE9F9906704C
@@ -8000,10 +7993,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :ID:       E57974CA-1CC6-45B7-A1D3-359C1C025E92
 :END:
 e.g. ~nvm~ isn't recognized by eshell
-*** TODO Fix, then swtich to, ~eshell~
-:PROPERTIES:
-:ID:       3314BBDD-21DE-4460-9506-9EA137762771
-:END:
 
 ** emacs-eat
 :PROPERTIES:

@@ -17760,7 +17760,7 @@ And finally, the section you've all been waiting for.
 :ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/tlon)
+#+begin_src emacs-lisp
 (use-package tlon-core
   :elpaca (tlon-core
            :host github

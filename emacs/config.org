@@ -5850,7 +5850,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 [2023-09-12 Tue 12:03] There is currently an [[https://github.com/kidd/org-gcal.el/issues/238#issuecomment-1555902363][issue]] that, apparently, can only be solved by downgrading to an earlier version of ~gnupg~.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tlon-org-gcal)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-gcal)
 (use-package org-gcal
   :elpaca (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass org

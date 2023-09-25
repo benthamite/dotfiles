@@ -8565,7 +8565,6 @@ These changes should resolve the error and successfully compile the "gdcv" progr
 [ME]:
 #+end_ai
 
-
 ** powerthesaurus
 :PROPERTIES:
 :ID:       81CC0280-A8A5-4C8F-BF05-D324EB917DCD
@@ -10690,7 +10689,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
 #+begin_src emacs-lisp :results silent
 (use-feature org-capture
   :after org
-  :defer 5
+  :demand t
   :config
   (setq org-default-notes-file ps/file-inbox-desktop)
   (setq org-capture-templates
@@ -10742,12 +10741,6 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tbw" "Tlön: BAE: Website " entry
            (id "6171D3E2-8BC4-41E5-9C8A-E808DC4DD9D3")
            "** TODO [#5] %? \n" :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
-           (id ,tlon-babel-todos-jobs-id)
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
-	  ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
-           (id ,tlon-babel-todos-generic-id)
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
           ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
            "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
@@ -17788,6 +17781,14 @@ And finally, the section you've all been waiting for.
   (setq tlon-babel-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
   (setq tlon-babel-todos-generic-id "14AB72D8-D707-41B3-89FF-7A787F266E5E")
   (setq tlon-babel-todos-file (file-name-concat ps/dir-notes "babel.org"))
+
+  (dolist (template `(("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
+		       (id ,tlon-babel-todos-jobs-id)
+		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
+		      ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
+		       (id ,tlon-babel-todos-generic-id)
+		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
+    (push template org-capture-templates))
   
   :general
   ("H-r" 'tlon-babel-dispatch)

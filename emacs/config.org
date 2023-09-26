@@ -145,7 +145,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#sort][sort]]
   - [[#vundo][vundo]]
   - [[#outline][outline]]
-  - [[#outshine][outshine]]
+  - [[#outli][outli]]
   - [[#fill][fill]]
   - [[#unfill][unfill]]
   - [[#abbrev][abbrev]]
@@ -310,6 +310,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#lsp-mode][lsp-mode]]
   - [[#lsp-ui][lsp-ui]]
   - [[#elisp-mode][elisp-mode]]
+  - [[#lisp-mode][lisp-mode]]
   - [[#s][s]]
   - [[#debug][debug]]
   - [[#edebug][edebug]]
@@ -3104,7 +3105,14 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
    "C-H-M-s-q" 'org-shiftmetaleft
    "C-H-M-s-w" 'org-shiftmetaup
    "C-H-M-s-e" 'org-shiftmetadown
-   "C-H-M-s-r" 'org-shiftmetaright))
+   "C-H-M-s-r" 'org-shiftmetaright)
+  ((outline-mode-map outline-minor-mode-map)
+   "C-H-M-s-a" 'ps/outline-promote-heading
+   "C-H-M-s-s" 'outline-move-subtree-up
+   "C-H-M-s-d" 'outline-move-subtree-down
+   "C-H-M-s-f" 'ps/outline-demote-heading
+   "C-H-M-s-q" 'outline-promote
+   "C-H-M-s-r" 'outline-demote))
 #+end_src
 
 ** element
@@ -3486,6 +3494,20 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
   :config
   (add-hook 'prog-mode-hook #'outline-minor-mode)
 
+  (defun ps/outline-promote-heading ()
+    "Promote the current heading higher up the tree."
+    (interactive)
+    (let ((current-prefix-arg '(4)))
+      (call-interactively 'outline-promote))
+    (outline-previous-heading))
+
+  (defun ps/outline-demote-heading ()
+    "Demote the current heading higher up the tree."
+    (interactive)
+    (let ((current-prefix-arg '(4)))
+      (call-interactively 'outline-demote))
+    (outline-previous-heading))
+
   :general
   ((outline-mode-map outline-minor-mode-map)
    "TAB" 'outline-cycle
@@ -3494,21 +3516,51 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
    "A-C-s-f" 'outline-next-heading))
 #+end_src
 
-** outshine
+** outli
 :PROPERTIES:
-:ID:       7103E713-B985-465E-BC75-F73A096EB4EF
+:ID:       FEACA323-B5F2-4DBB-890C-41EA39E6794B
+:END:
+:LOGBOOK:
+CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
 :END:
 
-/[[https://github.com/alphapapa/outshine][outlshine]] extends the functionality of ~outline-minor-mode~./
+/[[https://github.com/jdtsmith/outli][outli]] is a simple comment-based outliner for Emacs./
 
 #+begin_src emacs-lisp
-(use-package outshine
+(use-package outli
+  :elpaca (outli
+           :host github
+           :repo "jdtsmith/outli")
   :after outline
   :demand t
   :config
-  (add-hook 'prog-mode-hook 'outshine-mode))
-#+end_src
 
+  (setq outli-speed-commands
+        '(("Outline navigation")
+          ("k" . outline-previous-visible-heading)
+          ("." . outline-forward-same-level)
+          ("," . outline-backward-same-level)
+          ("l" . outline-next-visible-heading)
+          ("m" . outline-up-heading)
+          ("j" . consult-imenu)
+          ("Outline structure editing")
+          ("q" . outline-promote)
+          ("a" . ps/outline-promote-heading)
+          ("d" . outline-move-subtree-down)
+          ("s" . outline-move-subtree-up)
+          ("f" . ps/outline-demote-heading)
+          ("r" . outline-demote)
+          ("Outline visibility")
+          ("<tab>" . outline-cycle)
+          ("C" . outline-cycle-buffer)
+          ("w" . outli-toggle-narrow-to-subtree)
+          ("Regular editing")
+          ("z" . undo-only)
+          ("v" . yank)
+          ("Other")
+          ("?" . outli-speed-command-help)))
+  (add-hook 'emacs-lisp-mode-hook 'outli-mode))
+#+end_src
 ** fill
 :PROPERTIES:
 :ID:       FC4A89FD-8A66-49A6-ADB3-7895A85CBFD0
@@ -3521,7 +3573,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 (use-feature emacs
   :demand t
   :init
-  (setq-default fill-column 72)
+  (setq-default fill-column 80)
   ;; endlessparentheses.com/fill-and-unfill-paragraphs-with-a-single-key.html
   (defun ps/fill-or-unfill-paragraph ()
     "Like `fill-paragraph', but unfill if used twice."
@@ -4408,6 +4460,26 @@ process in these cases."
                                            (buffer-file-name x)))
                         (buffer-file-name x)))
                   (buffer-list))))
+
+  ;; https://emacs.stackexchange.com/a/5531/32089
+  (defvar ps/walk-dir-locals-upward nil
+    "If non-nil, evaluate `.dir-locals.el' files starting in the
+  current directory and going up. Otherwise they will be
+  evaluated from the top down to the current directory.")
+
+  (defun ps/walk-dir-locals-file (old-fun &rest args)
+    (let* ((dir-locals-list (list dir-locals-file))
+           (walk-dir-locals-file (car dir-locals-list)))
+      (while (file-readable-p (concat "../" walk-dir-locals-file))
+        (progn
+          (setq walk-dir-locals-file (concat "../" walk-dir-locals-file))
+          (add-to-list 'dir-locals-list walk-dir-locals-file
+                       ps/walk-dir-locals-upward)))
+      (dolist (file dir-locals-list)
+        (let ((dir-locals-file (expand-file-name file)))
+          (apply old-fun args)))))
+
+  (advice-add 'hack-dir-local-variables :around #'ps/walk-dir-locals-file)
 
   :general
   ("M--" 'not-modified
@@ -5779,7 +5851,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 [2023-09-12 Tue 12:03] There is currently an [[https://github.com/kidd/org-gcal.el/issues/238#issuecomment-1555902363][issue]] that, apparently, can only be solved by downgrading to an earlier version of ~gnupg~.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tlon-org-gcal)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-gcal)
 (use-package org-gcal
   :elpaca (org-gcal :type git :host github :repo "kidd/org-gcal.el")
   :after auth-source-pass org
@@ -6028,7 +6100,7 @@ heading."
   (setq org-gcal-up-days 1)
   (setq org-gcal-down-days 7)
 
-  (defun tlon-org-gcal-open-at-point ()
+  (defun ps/org-gcal-open-at-point ()
     "Get entry id of `org-gcal' entry at point and open the
 associated Google Calendar event in a browser."
     (interactive)
@@ -6059,7 +6131,7 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
     ("S" org-gcal-sync-buffer)
     ("p" org-gcal-post-at-point)
     ("d" org-gcal-delete-at-point)
-    ("o" tlon-org-gcal-open-at-point)
+    ("o" ps/org-gcal-open-at-point)
     ("u" org-gcal--sync-unlock)
     ("r" org-gcal-request-token)
     ("c" org-gcal-sync-tokens-clear)
@@ -6656,7 +6728,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)
       ("e a" "edit assigness"             forge-edit-topic-assignees)]
      ["Misc"
-      ("," "capture topic" tlon-babel-orgit-capture)
+      ("," "capture topic" tlon-babel-create-todo-from-issue)
       ("s" "search topics" forge-search)
       ("'" "open associated file" forge-search)
       (";" "Show/hide closed topics" forge-toggle-closed-visibility)
@@ -7875,13 +7947,6 @@ Assumes only one external hard drive is connected."
    "M-l" 'comint-next-input))
 #+end_src
 
-*** TODO [#6] Call Emacs commands from shell
-:PROPERTIES:
-:Effort:   0:30
-:ID:       BD2CACC7-6077-4B9B-98D3-5D565F340D87
-:END:
-https://emacs.stackexchange.com/questions/14947/can-emacs-commands-be-called-from-a-shell-script
-
 ** eshell
 :PROPERTIES:
 :ID:       ABD03BEF-8E02-43AF-A137-AE9F9906704C
@@ -7929,10 +7994,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :ID:       E57974CA-1CC6-45B7-A1D3-359C1C025E92
 :END:
 e.g. ~nvm~ isn't recognized by eshell
-*** TODO Fix, then swtich to, ~eshell~
-:PROPERTIES:
-:ID:       3314BBDD-21DE-4460-9506-9EA137762771
-:END:
 
 ** emacs-eat
 :PROPERTIES:
@@ -8056,16 +8117,16 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   :config
   (setq flycheck-emacs-lisp-load-path 'inherit)
 
-  (defun flyckeck-disable-checkdoc-in-org-src-block ()
+  (defun ps/flyckeck-disable-checkdoc-in-org-src-block ()
     "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
     (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
 
-  (add-hook 'org-src-mode-hook 'flyckeck-disable-checkdoc-in-org-src-block)
+  (add-hook 'org-src-mode-hook 'ps/flyckeck-disable-checkdoc-in-org-src-block)
 
   :general
   (flycheck-mode-map
    "C-c f l" 'flycheck-next-error
-   "C-c f k" 'flycheck-prev-error))
+   "C-c f k" 'flycheck-previous-error))
 #+end_src
 
 ** consult-flycheck
@@ -8081,7 +8142,6 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   :demand t)
 #+end_src
 
-
 ** flycheck-languagetool
 :PROPERTIES:
 :ID:       761BF4F2-8821-42A6-852C-4C87A248EF90
@@ -8092,12 +8152,17 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 #+begin_src emacs-lisp
 (use-package flycheck-languagetool
   :after flycheck
-  :demand
+  :demand t
   :init
   (setq flycheck-languagetool-server-jar "~/source/LanguageTool/languagetool-server.jar")
-  
+
   :config
-  (add-hook 'markdown-mode-hook 'flycheck-languagetool-setup))
+  (defun ps/flycheck-languagetool-enable ()
+    "Enable the `languagetool' checker."
+    (unless (eq major-mode 'forge-post-mode)
+      (flycheck-select-checker 'languagetool)))
+
+  (add-hook 'markdown-mode-hook 'ps/flycheck-languagetool-enable))
 #+end_src
 
 ** keytar
@@ -8183,14 +8248,6 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
               )
 #+end_src
 
-*** TODO [#6] Check this
-:PROPERTIES:
-:ID:       267EC580-1F84-4820-8701-C09F5CB89172
-:END:
-https://notes.alexkehayias.com/using-grammarly-with-emacs/
-
-[2023-01-28 Sat] I followed the instructions but couldn't make it work.
-
 * prose
 :PROPERTIES:
 :ID:       9C33C68A-B82E-4898-B967-337B7D0619EE
@@ -8207,11 +8264,6 @@ https://notes.alexkehayias.com/using-grammarly-with-emacs/
   :config
   (add-hook 'text-mode-hook #'ps/visual-line-mode-enhanced))
 #+end_src
-
-*** TODO [#6] Define ~text-mode-hook~ and ~prog-mode-hook~
-:PROPERTIES:
-:ID:       30886FEE-60C4-4BAA-B629-2871CFC120A1
-:END:
 
 ** with-editor
 :PROPERTIES:
@@ -8513,7 +8565,6 @@ These changes should resolve the error and successfully compile the "gdcv" progr
 
 [ME]:
 #+end_ai
-
 
 ** powerthesaurus
 :PROPERTIES:
@@ -9555,6 +9606,19 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 :ID:       89FDC8BC-DD5B-4616-8E73-37EDD9C088C1
 :END:
 Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-customary-to-put-many-closing-parentheses-on-one-line-in-lisp-based-la][here]].
+
+** lisp-mode
+:PROPERTIES:
+:ID:       E6608F6D-CC63-4A0B-A6B5-D012D3065801
+:END:
+
+#+begin_src emacs-lisp
+(use-feature lisp-mode
+  :demand t
+  :config
+  ;; default is 65, which overrides the value of `fill-column'
+  (setq emacs-lisp-docstring-fill-column nil))
+#+end_src
 
 ** s
 :PROPERTIES:
@@ -10691,30 +10755,6 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tbw" "Tlön: BAE: Website " entry
            (id "6171D3E2-8BC4-41E5-9C8A-E808DC4DD9D3")
            "** TODO [#5] %? \n" :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
-           (id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbC" "Tlön: BAE: Check topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
-           (id "DFE45995-7935-4F19-80DA-FB9C11FE9E24")
-           "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
           ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
            "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
@@ -11282,44 +11322,41 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
   :config
   (setq org-use-speed-commands t)
   (setq org-speed-commands
-   '(("Outline navigation")
-     ("k" . (org-speed-move-safe 'org-previous-visible-heading))
-     ("." . (org-speed-move-safe 'org-forward-heading-same-level))
-     ("," . (org-speed-move-safe 'org-backward-heading-same-level))
-     ("l" . (org-speed-move-safe 'org-next-visible-heading))
-     ("m" . (org-speed-move-safe 'outline-up-heading))
-     ("j" . (ps/consult-org-heading))
-     ("Outline structure editing")
-     ("A" . (org-metaleft))
-     ("D" . (org-metadown))
-     ("S" . (org-metaup))
-     ("F" . (org-metaright))
-     ("Q" . (org-shiftmetaleft))
-     ("E" . (org-shiftmetadown))
-     ("W" . (org-shiftmetaup))
-     ("R" . (org-shiftmetaright))
-     ("Outline visibility")
-     ("'" . (org-force-cycle-archived))
-     ("w" . (ps/narrow-or-widen-dwim))
-     ("Meta data editing")
-     ("t" . (org-todo))
-     ("Clock")
-     ("h" . (tlon-org-jump-to-latest-clock-entry))
-     ("H" . (lambda () (tlon-org-jump-to-latest-clock-entry) (tlon-org-clone-clock-entry)))
-     ("i" . (org-clock-in))
-     ("o" . (org-clock-out))
-     ("Regular editing")
-     ("z" . (undo-only))
-     ("X" . (org-cut-subtree)) ; capital 'X' to prevent accidents
-     ("c" . (org-copy-subtree))
-     ("v" . (org-yank))
-     ("Other")
-     ("f" . (ace-link-org))
-     ("a" . (org-archive-to-archive-sibling))
-     ("I" . (org-id-copy))
-     ("p" . (org-priority))
-     ("u" . (org-speed-command-help))
-     ("g" . (org-agenda)))))
+        '(("Outline navigation")
+          ("k" . (org-speed-move-safe 'org-previous-visible-heading))
+          ("." . (org-speed-move-safe 'org-forward-heading-same-level))
+          ("," . (org-speed-move-safe 'org-backward-heading-same-level))
+          ("l" . (org-speed-move-safe 'org-next-visible-heading))
+          ("m" . (org-speed-move-safe 'outline-up-heading))
+          ("j" . (ps/consult-org-heading))
+          ("Outline structure editing")
+          ("a" . (org-metaleft))
+          ("d" . (org-metadown))
+          ("s" . (org-metaup))
+          ("f" . (org-metaright))
+          ("q" . (org-shiftmetaleft))
+          ("e" . (org-shiftmetadown))
+          ("w" . (org-shiftmetaup))
+          ("r" . (org-shiftmetaright))
+          ("Outline visibility")
+          ("'" . (org-force-cycle-archived))
+          ("Meta data editing")
+          ("t" . (org-todo))
+          ("Clock")
+          ("h" . (tlon-org-jump-to-latest-clock-entry))
+          ("H" . (lambda () (tlon-org-jump-to-latest-clock-entry) (tlon-org-clone-clock-entry)))
+          ("i" . (org-clock-in))
+          ("o" . (org-clock-out))
+          ("Regular editing")
+          ("z" . (undo-only))
+          ("X" . (org-cut-subtree)) ; capital 'X' to prevent accidents
+          ("c" . (org-copy-subtree))
+          ("v" . (org-yank))
+          ("Other")
+          ("I" . (org-id-copy))
+          ("p" . (org-priority))
+          ("u" . (org-speed-command-help))
+          ("g" . (org-agenda)))))
 #+end_src
 
 Set custom speed commands.
@@ -11985,7 +12022,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
 /[[https://github.com/org-roam/][org-roam]] is a Roam replica with org-mode./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tlon-org-roam)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-roam)
 (use-package org-roam
   :after org emacsql
   :demand t
@@ -12020,8 +12057,6 @@ SQL can be either the emacsql vector representation, or a string."
 
   :config
   (setq org-roam-directory ps/dir-org-roam)
-  ;; (org-roam-complete-everywhere t)
-  ;; (org-roam-completion-everywhere t)
   (setq org-roam-node-display-template
         (concat "${title:*} "
                 (propertize "${tags:10}" 'face 'org-tag)))
@@ -12056,22 +12091,22 @@ SQL can be either the emacsql vector representation, or a string."
                 (propertize "${tags:20}" 'face 'org-tag)))
 
   (defvar ps/org-roam-excluded-dirs (list
-                                   ps/dir-anki
-                                   ps/dir-inactive
-                                   ps/dir-archive
-                                   ps/dir-dropbox-tlon-leo
-                                   ps/dir-dropbox-tlon-fede
-                                   ))
+                                     ps/dir-anki
+                                     ps/dir-inactive
+                                     ps/dir-archive
+                                     ps/dir-dropbox-tlon-leo
+                                     ps/dir-dropbox-tlon-fede
+                                     ))
 
   (defvar ps/org-roam-excluded-files (list
-                                    ps/file-orb-noter-template
-                                    "calendar.org" ; added directly as agenda file
-                                    "quotes-old.org"
-                                    ".org2blog.org"
-                                    "wiki-notes.org" ; removing temporarily
-                                    "feeds.org"
-                                    ".*conflicted copy.*"
-                                    ".*conflicted-copy.*"))
+                                      ps/file-orb-noter-template
+                                      "calendar.org" ; added directly as agenda file
+                                      "quotes-old.org"
+                                      ".org2blog.org"
+                                      "wiki-notes.org" ; removing temporarily
+                                      "feeds.org"
+                                      ".*conflicted copy.*"
+                                      ".*conflicted-copy.*"))
 
   ;; exclude headings in specific files and directories
   (setq org-roam-file-exclude-regexp
@@ -12141,17 +12176,18 @@ SQL can be either the emacsql vector representation, or a string."
        '("generic" "person"))))
     (let ((tags)
           (directory))
-      (cond ((string= note-type "generic")
-             (setq tags "note")
-             (setq directory ps/dir-notes))
-            ((string= note-type "person")
-             (setq tags "person")
-             (setq directory ps/dir-people)))
+      (pcase note-type
+        ("generic"
+         (setq tags "note")
+         (setq directory ps/dir-notes))
+        ("person"
+         (setq tags "person")
+         (setq directory ps/dir-people)))
       (let* ((name (read-from-minibuffer "Entry name: "))
              (slug (tlon-core-slugify name))
-             (filename (concat slug ".org")))
+             (filename (file-name-with-extension slug "org")))
         (when (file-exists-p filename)
-          (user-error (format "File `%s' already exists." filename)))
+          (user-error (format "File `%s' already exists" filename)))
         (find-file (file-name-concat directory filename))
         (insert "#+title: " name "\n\n")
         (org-insert-heading)
@@ -17710,7 +17746,7 @@ And finally, the section you've all been waiting for.
 :ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/tlon)
+#+begin_src emacs-lisp
 (use-package tlon-core
   :elpaca (tlon-core
            :host github
@@ -17754,6 +17790,19 @@ And finally, the section you've all been waiting for.
            :depth nil) ; clone entire repo, not just last commit
   :after tlon-org
   :demand t
+  :config
+  (setq tlon-babel-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
+  (setq tlon-babel-todos-generic-id "14AB72D8-D707-41B3-89FF-7A787F266E5E")
+  (setq tlon-babel-todos-file (file-name-concat ps/dir-notes "babel.org"))
+
+  (dolist (template `(("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
+                       (id ,tlon-babel-todos-jobs-id)
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
+                      ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
+                       (id ,tlon-babel-todos-generic-id)
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
+    (push template org-capture-templates))
+
   :general
   ("H-r" 'tlon-babel-dispatch)
   (markdown-mode-map
@@ -17762,7 +17811,7 @@ And finally, the section you've all been waiting for.
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
     magit-status-mode-map)
-   "," 'tlon-babel-orgit-capture)
+   "," 'tlon-babel-create-todo-from-issue)
   (magit-status-mode-map
    "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)

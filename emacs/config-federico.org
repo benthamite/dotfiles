@@ -111,7 +111,6 @@
  )
 #+end_src
 
-
 * code overrides
 :PROPERTIES:
 :ID:       71ED9AC5-9D0A-40E0-BA58-7AA7FA36793A
@@ -448,11 +447,11 @@ one hour only."
 (setq real-auto-save-interval 10)
 
 
-(defhydra hydra-dired
+(defhydra hydra-dirs
   (:exit t)
   "Dired folders"
-  ("t" (hydra-dired-tlon-dropbox/body) "Tlön Dropbox" :column "Folders")
-  ("g" (hydra-dired-tlon-google-drive/body) "Tlön Google Drive" :column "Folders")
+  ("t" (hydra-dirs-tlon/body) "Tlön Dropbox" :column "Folders")
+  ("g" (hydra-dirs-google-drive/body) "Tlön Google Drive" :column "Folders")
   ("w" (dired (file-name-concat (getenv "HOME") "www")) "Nginx www root" :column "Folders")
   ("h" (dired "~/") "/Users/fede" :column "User" )
   ("n" (dired "/opt/homebrew/etc/nginx/sites-available/") "Local Nginx config" :column "Config" )
@@ -471,7 +470,7 @@ one hour only."
   ("b" (dired (file-name-concat (getenv "HOME") "source/dotfiles/emacs")) "Pablo's Emacs config" :column "Config"))
 
 
-(defhydra hydra-dired-tlon-dropbox
+(defhydra hydra-dirs-tlon
   (:exit t)
   "Dired folders: Tlön Dropbox"
   (";" (dired ps/dir-dropbox-tlon) "This folder")
@@ -487,7 +486,7 @@ one hour only."
   ("s" (dired ps/dir-dropbox-tlon-FM) "FM")
   ("u" (dired ps/dir-dropbox-tlon-EAN) "EAN"))
 
-(defhydra hydra-dired-tlon-google-drive
+(defhydra hydra-dirs-google-drive
   (:exit t)
   "Dired folders: Tlön Google Drive"
   (";" (dired ps/dir-google-drive-tlon) "This folder")
@@ -527,15 +526,7 @@ one hour only."
 (use-feature org-fold
   :demand t
   :config
-  (setq org-fold-catch-invisible-edits 'smart)
-  (defun ps/org-fold-show-all-headings ())
-  (defun ps/org-hide-properties ())
-  (defun ps/org-hide-logbook ())
-  (defun ps/org-show-properties ())
-  (defun ps/org-show-logbook ())
-  (defun ps/org-toggle-properties ())
-  (defun ps/org-toggle-logbook ())
-  ;; Also overwrite renamed functions - I believe Pablo made a mistake here
+  (setq org-fold-catch-invisible-edits 'smart) 
   (defun tlon-org-fold-show-all-headings ())
   (defun tlon-org-hide-properties ())
   (defun tlon-org-hide-logbook ())
@@ -544,6 +535,7 @@ one hour only."
   (defun tlon-org-toggle-properties ())
   (defun tlon-org-toggle-logbook ())
   )
+ (setq display-time-format "%a %e %b %R")
 #+end_src
 
 * local variables

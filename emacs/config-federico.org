@@ -1,12 +1,12 @@
 #+title: Fede's config
 
-* tangle flags:PROPERTIES:
-:ID:       505DAEBC-E97F-4974-B658-ADE5A093E022
+* tangle flags
+:PROPERTIES:
+:ID:       4241A319-CECB-41DC-87DA-C0FD778CD187
 :END:
 
 #+begin_src emacs-lisp :tangle (if (eq tlon-init-extra-config-tangle-pass 1) (print tlon-init-tangle-flags-path) "no")
 (
- (:ps/org-gcal . nil)
  (:ps/aide . nil)
  (:ps/anki-editor . nil)
  (:ps/auto-commit-mode . nil)
@@ -17,11 +17,13 @@
  (:ps/corfu-terminal . nil)
  (:ps/erc . nil)
  (:ps/espotify . nil)
+ (:ps/flycheck . nil)
  (:ps/flymake . nil)
  (:ps/frame . t)
  (:ps/forge . t)
  (:ps/git-auto-commit-mode . nil)
  (:ps/hammy . nil)
+ (:ps/jinx . nil)
  (:ps/keytar . nil)
  (:ps/midnight . nil)
  (:ps/mixed-pitch . nil)
@@ -73,6 +75,7 @@
  (ps/dir-org-images . (file-name-concat ps/dir-google-drive "org-images/"))
  (ps/dir-websites . "")
  (ps/dir-calibre . (file-name-concat (getenv "HOME") "calibre/"))
+ (ps/dir-notes . (file-name-concat ps/dir-dropbox "tlon/fede/"))
  (ps/file-notes . (file-name-concat ps/dir-org "notes.org"))
  (ps/file-feeds-pablo . "")
  (ps/file-anki . "")
@@ -107,7 +110,7 @@
  (ps/telega-server-libs-prefix . "/opt/homebrew/Cellar/tdlib/HEAD-0d16085")
  )
 #+end_src
- (ps/telega-server-libs-prefix . (file-name-concat (getenv "HOME") "source/td/tdlib/"))
+
 
 * code overrides
 :PROPERTIES:
@@ -224,6 +227,25 @@
   (define-key cua-global-keymap (kbd "<C-return>") nil)
   (setq shift-select-mode t))
 
+;; Config tlon-babel
+(setq tlon-babel-todos-jobs-id
+      "")
+(setq tlon-babel-todos-generic-id
+      "42408D2B-5012-4675-8985-4DA62C1F0E2A")
+(setq tlon-babel-todos-file (file-name-concat ps/dir-notes "babel.org"))
+(dolist (template `(("tbJ" "Tlön: BAE: Create new job (via
+    org-capture)" entry
+    (id ,tlon-babel-todos-jobs-id)
+    "** TODO [#5] %c" :immediate-finish t :empty-lines 1
+    :jump-to-captured t)
+                    ("tbG" "Tlön: BAE: Create new todo from GitHub (via
+          org-capture)" entry
+          (id ,tlon-babel-todos-generic-id)
+          "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend
+          t :jump-to-captured t)))
+  (push template org-capture-templates))
+
+  
 (with-eval-after-load 'dired
   (general-define-key
    :keymaps 'dired-mode-map
@@ -313,35 +335,34 @@
   ("g" (org-id-goto "97F7D54F-4F4A-45A4-9616-A0B548A049BE") "GPE")
   ("c" (org-id-goto "7EDB8441-7EFA-43CC-B3DE-5682D55BCEE1") "Core")
   )
-(setq org-capture-templates
-      `(("b" "Tlön: BAE" entry
-         (id "33BFC41C-324A-47E1-A313-8233A36B2346")
-         "** TODO %?\n" :prepend t)
-        ("r" "Tlön: RAE" entry
-         (id "87906C3B-B52B-4816-BCCA-BE3EA4B88968")
-         "** TODO %?\n" :prepend t)
-        ("f" "Tlön: FM" entry
-         (id "809F6C1D-DDF7-4C6B-BB84-FFC082BE8601")
-         "** TODO %?\n" :prepend t)
-        ("d" "Tlön: LBDLH" entry
-         (id "0079A5CD-A07B-4919-A76C-4F6E6841512D")
-         "** TODO %?\n" :prepend t)
-        ("u" "Tlön: EAN" entry
-         (id "B168E4F1-D2E1-4D59-B88C-4CF924E82624")
-         "** TODO %?\n" :prepend t)
-        ("i" "Tlön: EAI" entry
-         (id "715D2C4E-4BEE-4EC4-B432-720DA35C21A9")
-         "** TODO %?\n" :prepend t)
-        ("h" "Tlön: HEAR" entry
-         (id "B157C986-D75D-4244-A522-43DCBA2F0C8E")
-         "** TODO %?\n" :prepend t)
-        ("g" "Tlön: GPE" entry
-         (id "97F7D54F-4F4A-45A4-9616-A0B548A049BE")
-         "** TODO %?\n" :prepend t)
-        ("c" "Tlön: Core" entry
-         (id "7EDB8441-7EFA-43CC-B3DE-5682D55BCEE1")
-         "** TODO %?\n" :prepend t)
-        ))
+  (dolist (template `(("b" "Tlön: BAE" entry
+                       (id "33BFC41C-324A-47E1-A313-8233A36B2346")
+                       "** TODO %?\n" :prepend t)
+                      ("r" "Tlön: RAE" entry
+                       (id "87906C3B-B52B-4816-BCCA-BE3EA4B88968")
+                       "** TODO %?\n" :prepend t)
+                      ("f" "Tlön: FM" entry
+                       (id "809F6C1D-DDF7-4C6B-BB84-FFC082BE8601")
+                       "** TODO %?\n" :prepend t)
+                      ("d" "Tlön: LBDLH" entry
+                       (id "0079A5CD-A07B-4919-A76C-4F6E6841512D")
+                       "** TODO %?\n" :prepend t)
+                      ("u" "Tlön: EAN" entry
+                       (id "B168E4F1-D2E1-4D59-B88C-4CF924E82624")
+                       "** TODO %?\n" :prepend t)
+                      ("i" "Tlön: EAI" entry
+                       (id "715D2C4E-4BEE-4EC4-B432-720DA35C21A9")
+                       "** TODO %?\n" :prepend t)
+                      ("h" "Tlön: HEAR" entry
+                       (id "B157C986-D75D-4244-A522-43DCBA2F0C8E")
+                       "** TODO %?\n" :prepend t)
+                      ("g" "Tlön: GPE" entry
+                       (id "97F7D54F-4F4A-45A4-9616-A0B548A049BE")
+                       "** TODO %?\n" :prepend t)
+                      ("c" "Tlön: Core" entry
+                       (id "7EDB8441-7EFA-43CC-B3DE-5682D55BCEE1")
+                       "** TODO %?\n" :prepend t)))
+      (push template org-capture-templates))
 
 
 (defvar ps/file-cookies (file-name-concat ps/dir-downloads "cookies.txt"))
@@ -513,7 +534,16 @@ one hour only."
   (defun ps/org-show-properties ())
   (defun ps/org-show-logbook ())
   (defun ps/org-toggle-properties ())
-  (defun ps/org-toggle-logbook ()))
+  (defun ps/org-toggle-logbook ())
+  ;; Also overwrite renamed functions - I believe Pablo made a mistake here
+  (defun tlon-org-fold-show-all-headings ())
+  (defun tlon-org-hide-properties ())
+  (defun tlon-org-hide-logbook ())
+  (defun tlon-org-show-properties ())
+  (defun tlon-org-show-logbook ())
+  (defun tlon-org-toggle-properties ())
+  (defun tlon-org-toggle-logbook ())
+  )
 #+end_src
 
 * local variables

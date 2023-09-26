@@ -8068,7 +8068,7 @@ e.g. ~nvm~ isn't recognized by eshell
 
 /[[https://github.com/minad/jinx][jinx]] is a highly performant spell-checker for Emacs./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/jinx)
 (use-package jinx
   :demand t
   :config
@@ -8107,7 +8107,7 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 
 /[[https://github.com/flycheck/flycheck][flycheck]] is a syntax-checker for Emacs./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/flycheck)
 (use-package flycheck
   :demand t
   :init
@@ -8135,7 +8135,7 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 
 /[[https://github.com/minad/consult-flycheck][consult-flycheck]] integrates ~flycheck~ with ~consult~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/flycheck)
 (use-package consult-flycheck
   :after consult flyckeck
   :demand t)
@@ -8148,7 +8148,7 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 
 /[[https://github.com/emacs-languagetool/flycheck-languagetool][flycheck-languagetool]] provides ~flycheck~ support for [[https://languagetool.org/][LanguageTool]]./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/flycheck)
 (use-package flycheck-languagetool
   :after flycheck
   :demand t
@@ -12008,7 +12008,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
 /[[https://github.com/org-roam/][org-roam]] is a Roam replica with org-mode./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tlon-org-roam)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-roam)
 (use-package org-roam
   :after org emacsql
   :demand t
@@ -12328,7 +12328,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
 
 /[[https://github.com/org-roam/org-roam-ui][org-roam-ui]] is a graphical frontend for exploring org-roam./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tlon-org-roam)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-roam)
 (use-package org-roam-ui
   :elpaca
   (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))

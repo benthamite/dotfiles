@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: pdf-swap-pages
+# key: psp
+# contributor: Pablo Stafforini
+# --
+pdftk '`(current-kill 0)`' shuffle even odd output '`(concat (file-name-sans-extension (current-kill 0)) "-swapped.pdf")`'

@@ -1066,6 +1066,7 @@
     ("convertion" "conversion" nil :count 1)
     ("conviced" "convinced" nil :count 1)
     ("convienient" "convenient" nil :count 1)
+    ("coontra" "contra" nil :count 0)
     ("coordiantion" "coordination" nil :count 1)
     ("coorperation" "cooperation" nil :count 1)
     ("coorperations" "corporations" nil :count 1)

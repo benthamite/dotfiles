@@ -12008,7 +12008,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
 /[[https://github.com/org-roam/][org-roam]] is a Roam replica with org-mode./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tlon-org-roam)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/org-roam)
 (use-package org-roam
   :after org emacsql
   :demand t

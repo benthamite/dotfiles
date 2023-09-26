@@ -12043,8 +12043,6 @@ SQL can be either the emacsql vector representation, or a string."
 
   :config
   (setq org-roam-directory ps/dir-org-roam)
-  ;; (org-roam-complete-everywhere t)
-  ;; (org-roam-completion-everywhere t)
   (setq org-roam-node-display-template
         (concat "${title:*} "
                 (propertize "${tags:10}" 'face 'org-tag)))

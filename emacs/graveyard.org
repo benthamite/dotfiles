@@ -8,6 +8,22 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** outshine
+:PROPERTIES:
+:ID:       7103E713-B985-465E-BC75-F73A096EB4EF
+:END:
+
+/[[https://github.com/alphapapa/outshine][outlshine]] extends the functionality of ~outline-minor-mode~./
+
+#+begin_src emacs-lisp
+(use-package outshine
+  :after outline
+  :demand t
+  :config
+  (setq outshine-use-speed-commands t)
+  (add-hook 'emacs-lisp-mode-hook 'outshine-mode))
+#+end_src
+
 ** flymake-json
 :PROPERTIES:
 :ID:       DA345E42-66A9-411B-AEDD-B087EA7267A7

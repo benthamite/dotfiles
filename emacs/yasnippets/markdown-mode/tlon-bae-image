@@ -3,4 +3,4 @@
 # key: tbi
 # contributor: Pablo Stafforini
 # --
-![](../media/`(file-name-concat (file-name-base (buffer-file-name)))`/$1)
+![](../imagenes/`(file-name-concat (file-name-base (buffer-file-name)))`/$1)

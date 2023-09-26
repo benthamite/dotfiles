@@ -310,6 +310,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#lsp-mode][lsp-mode]]
   - [[#lsp-ui][lsp-ui]]
   - [[#elisp-mode][elisp-mode]]
+  - [[#lisp-mode][lisp-mode]]
   - [[#s][s]]
   - [[#debug][debug]]
   - [[#edebug][edebug]]
@@ -3528,36 +3529,36 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
 #+begin_src emacs-lisp
 (use-package outli
   :elpaca (outli
-	   :host github
-	   :repo "jdtsmith/outli")
+           :host github
+           :repo "jdtsmith/outli")
   :after outline
   :demand t
   :config
-  
+
   (setq outli-speed-commands
-	'(("Outline navigation")
-	  ("k" . outline-previous-visible-heading)
-	  ("." . outline-forward-same-level)
-	  ("," . outline-backward-same-level)
-	  ("l" . outline-next-visible-heading)
-	  ("m" . outline-up-heading)
-	  ("j" . consult-imenu)
-	  ("Outline structure editing")
+        '(("Outline navigation")
+          ("k" . outline-previous-visible-heading)
+          ("." . outline-forward-same-level)
+          ("," . outline-backward-same-level)
+          ("l" . outline-next-visible-heading)
+          ("m" . outline-up-heading)
+          ("j" . consult-imenu)
+          ("Outline structure editing")
           ("q" . outline-promote)
-	  ("a" . ps/outline-promote-heading)
-	  ("d" . outline-move-subtree-down)
-	  ("s" . outline-move-subtree-up)
-	  ("f" . ps/outline-demote-heading)
-	  ("r" . outline-demote)
-	  ("Outline visibility")
-	  ("<tab>" . outline-cycle)
-	  ("C" . outline-cycle-buffer)
-	  ("w" . outli-toggle-narrow-to-subtree)
-	  ("Regular editing")
-	  ("z" . undo-only)
-	  ("v" . yank)
-	  ("Other")
-	  ("?" . outli-speed-command-help)))
+          ("a" . ps/outline-promote-heading)
+          ("d" . outline-move-subtree-down)
+          ("s" . outline-move-subtree-up)
+          ("f" . ps/outline-demote-heading)
+          ("r" . outline-demote)
+          ("Outline visibility")
+          ("<tab>" . outline-cycle)
+          ("C" . outline-cycle-buffer)
+          ("w" . outli-toggle-narrow-to-subtree)
+          ("Regular editing")
+          ("z" . undo-only)
+          ("v" . yank)
+          ("Other")
+          ("?" . outli-speed-command-help)))
   (add-hook 'emacs-lisp-mode-hook 'outli-mode))
 #+end_src
 ** fill
@@ -3572,7 +3573,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2021-09-29 Wed 09:07] =>  0:10
 (use-feature emacs
   :demand t
   :init
-  (setq-default fill-column 72)
+  (setq-default fill-column 80)
   ;; endlessparentheses.com/fill-and-unfill-paragraphs-with-a-single-key.html
   (defun ps/fill-or-unfill-paragraph ()
     "Like `fill-paragraph', but unfill if used twice."
@@ -4470,12 +4471,12 @@ process in these cases."
     (let* ((dir-locals-list (list dir-locals-file))
            (walk-dir-locals-file (car dir-locals-list)))
       (while (file-readable-p (concat "../" walk-dir-locals-file))
-	(progn
+        (progn
           (setq walk-dir-locals-file (concat "../" walk-dir-locals-file))
           (add-to-list 'dir-locals-list walk-dir-locals-file
                        ps/walk-dir-locals-upward)))
       (dolist (file dir-locals-list)
-	(let ((dir-locals-file (expand-file-name file)))
+        (let ((dir-locals-file (expand-file-name file)))
           (apply old-fun args)))))
 
   (advice-add 'hack-dir-local-variables :around #'ps/walk-dir-locals-file)
@@ -9606,6 +9607,19 @@ Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A gui
 :END:
 Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-customary-to-put-many-closing-parentheses-on-one-line-in-lisp-based-la][here]].
 
+** lisp-mode
+:PROPERTIES:
+:ID:       E6608F6D-CC63-4A0B-A6B5-D012D3065801
+:END:
+
+#+begin_src emacs-lisp
+(use-feature lisp-mode
+  :demand t
+  :config
+  ;; default is 65, which overrides the value of `fill-column'
+  (setq emacs-lisp-docstring-fill-column nil))
+#+end_src
+
 ** s
 :PROPERTIES:
 :ID:       127B298B-BD3E-42BD-8032-D20B29075DA0
@@ -11308,41 +11322,41 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
   :config
   (setq org-use-speed-commands t)
   (setq org-speed-commands
-	'(("Outline navigation")
-	  ("k" . (org-speed-move-safe 'org-previous-visible-heading))
-	  ("." . (org-speed-move-safe 'org-forward-heading-same-level))
-	  ("," . (org-speed-move-safe 'org-backward-heading-same-level))
-	  ("l" . (org-speed-move-safe 'org-next-visible-heading))
-	  ("m" . (org-speed-move-safe 'outline-up-heading))
-	  ("j" . (ps/consult-org-heading))
-	  ("Outline structure editing")
-	  ("a" . (org-metaleft))
-	  ("d" . (org-metadown))
-	  ("s" . (org-metaup))
-	  ("f" . (org-metaright))
-	  ("q" . (org-shiftmetaleft))
-	  ("e" . (org-shiftmetadown))
-	  ("w" . (org-shiftmetaup))
-	  ("r" . (org-shiftmetaright))
-	  ("Outline visibility")
-	  ("'" . (org-force-cycle-archived))
-	  ("Meta data editing")
-	  ("t" . (org-todo))
-	  ("Clock")
-	  ("h" . (tlon-org-jump-to-latest-clock-entry))
-	  ("H" . (lambda () (tlon-org-jump-to-latest-clock-entry) (tlon-org-clone-clock-entry)))
-	  ("i" . (org-clock-in))
-	  ("o" . (org-clock-out))
-	  ("Regular editing")
-	  ("z" . (undo-only))
-	  ("X" . (org-cut-subtree)) ; capital 'X' to prevent accidents
-	  ("c" . (org-copy-subtree))
-	  ("v" . (org-yank))
-	  ("Other")
-	  ("I" . (org-id-copy))
-	  ("p" . (org-priority))
-	  ("u" . (org-speed-command-help))
-	  ("g" . (org-agenda)))))
+        '(("Outline navigation")
+          ("k" . (org-speed-move-safe 'org-previous-visible-heading))
+          ("." . (org-speed-move-safe 'org-forward-heading-same-level))
+          ("," . (org-speed-move-safe 'org-backward-heading-same-level))
+          ("l" . (org-speed-move-safe 'org-next-visible-heading))
+          ("m" . (org-speed-move-safe 'outline-up-heading))
+          ("j" . (ps/consult-org-heading))
+          ("Outline structure editing")
+          ("a" . (org-metaleft))
+          ("d" . (org-metadown))
+          ("s" . (org-metaup))
+          ("f" . (org-metaright))
+          ("q" . (org-shiftmetaleft))
+          ("e" . (org-shiftmetadown))
+          ("w" . (org-shiftmetaup))
+          ("r" . (org-shiftmetaright))
+          ("Outline visibility")
+          ("'" . (org-force-cycle-archived))
+          ("Meta data editing")
+          ("t" . (org-todo))
+          ("Clock")
+          ("h" . (tlon-org-jump-to-latest-clock-entry))
+          ("H" . (lambda () (tlon-org-jump-to-latest-clock-entry) (tlon-org-clone-clock-entry)))
+          ("i" . (org-clock-in))
+          ("o" . (org-clock-out))
+          ("Regular editing")
+          ("z" . (undo-only))
+          ("X" . (org-cut-subtree)) ; capital 'X' to prevent accidents
+          ("c" . (org-copy-subtree))
+          ("v" . (org-yank))
+          ("Other")
+          ("I" . (org-id-copy))
+          ("p" . (org-priority))
+          ("u" . (org-speed-command-help))
+          ("g" . (org-agenda)))))
 #+end_src
 
 Set custom speed commands.
@@ -12043,8 +12057,6 @@ SQL can be either the emacsql vector representation, or a string."
 
   :config
   (setq org-roam-directory ps/dir-org-roam)
-  ;; (org-roam-complete-everywhere t)
-  ;; (org-roam-completion-everywhere t)
   (setq org-roam-node-display-template
         (concat "${title:*} "
                 (propertize "${tags:10}" 'face 'org-tag)))
@@ -12079,22 +12091,22 @@ SQL can be either the emacsql vector representation, or a string."
                 (propertize "${tags:20}" 'face 'org-tag)))
 
   (defvar ps/org-roam-excluded-dirs (list
-                                   ps/dir-anki
-                                   ps/dir-inactive
-                                   ps/dir-archive
-                                   ps/dir-dropbox-tlon-leo
-                                   ps/dir-dropbox-tlon-fede
-                                   ))
+                                     ps/dir-anki
+                                     ps/dir-inactive
+                                     ps/dir-archive
+                                     ps/dir-dropbox-tlon-leo
+                                     ps/dir-dropbox-tlon-fede
+                                     ))
 
   (defvar ps/org-roam-excluded-files (list
-                                    ps/file-orb-noter-template
-                                    "calendar.org" ; added directly as agenda file
-                                    "quotes-old.org"
-                                    ".org2blog.org"
-                                    "wiki-notes.org" ; removing temporarily
-                                    "feeds.org"
-                                    ".*conflicted copy.*"
-                                    ".*conflicted-copy.*"))
+                                      ps/file-orb-noter-template
+                                      "calendar.org" ; added directly as agenda file
+                                      "quotes-old.org"
+                                      ".org2blog.org"
+                                      "wiki-notes.org" ; removing temporarily
+                                      "feeds.org"
+                                      ".*conflicted copy.*"
+                                      ".*conflicted-copy.*"))
 
   ;; exclude headings in specific files and directories
   (setq org-roam-file-exclude-regexp
@@ -12164,17 +12176,18 @@ SQL can be either the emacsql vector representation, or a string."
        '("generic" "person"))))
     (let ((tags)
           (directory))
-      (cond ((string= note-type "generic")
-             (setq tags "note")
-             (setq directory ps/dir-notes))
-            ((string= note-type "person")
-             (setq tags "person")
-             (setq directory ps/dir-people)))
+      (pcase note-type
+        ("generic"
+         (setq tags "note")
+         (setq directory ps/dir-notes))
+        ("person"
+         (setq tags "person")
+         (setq directory ps/dir-people)))
       (let* ((name (read-from-minibuffer "Entry name: "))
              (slug (tlon-core-slugify name))
-             (filename (concat slug ".org")))
+             (filename (file-name-with-extension slug "org")))
         (when (file-exists-p filename)
-          (user-error (format "File `%s' already exists." filename)))
+          (user-error (format "File `%s' already exists" filename)))
         (find-file (file-name-concat directory filename))
         (insert "#+title: " name "\n\n")
         (org-insert-heading)
@@ -17783,13 +17796,13 @@ And finally, the section you've all been waiting for.
   (setq tlon-babel-todos-file (file-name-concat ps/dir-notes "babel.org"))
 
   (dolist (template `(("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
-		       (id ,tlon-babel-todos-jobs-id)
-		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
-		      ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
-		       (id ,tlon-babel-todos-generic-id)
-		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
+                       (id ,tlon-babel-todos-jobs-id)
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
+                      ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
+                       (id ,tlon-babel-todos-generic-id)
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
     (push template org-capture-templates))
-  
+
   :general
   ("H-r" 'tlon-babel-dispatch)
   (markdown-mode-map

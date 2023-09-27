@@ -4479,7 +4479,7 @@ process in these cases."
         (let ((dir-locals-file (expand-file-name file)))
           (apply old-fun args)))))
 
-  (advice-add 'hack-dir-local-variables :around #'ps/walk-dir-locals-file)
+  ;; (advice-add 'hack-dir-local-variables :around #'ps/walk-dir-locals-file)
 
   :general
   ("M--" 'not-modified

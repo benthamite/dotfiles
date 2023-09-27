@@ -516,7 +516,7 @@ one hour only."
 (setq consult-preview-key nil)
 
 ;; Code run on a long timer: aimed at running after all of Pablo's deferred calls
-(run-at-time "1 sec" nil (lambda
+(run-at-time "90 sec" nil (lambda
 			   () (progn
 				(print "Fede's post init deferred function start.")
 				(use-feature org-fold
@@ -532,7 +532,6 @@ one hour only."
 				  (defun tlon-org-toggle-logbook ())
 				  )
 				(setq display-time-format "%a %e %b %R")
-				(with eval-a)
 				(global-flycheck-mode -1)
 				(remove-hook
 				 'markdown-mode-hook 'ps/flycheck-languagetool-enable)

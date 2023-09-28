@@ -515,29 +515,40 @@ one hour only."
 (scroll-bar-mode -1)
 (setq consult-preview-key nil)
 
+(remove-hook
+ 'markdown-mode-hook 'ps/flycheck-languagetool-enable)
+(dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
+  (remove-hook hook #'jinx-mode))
+
+;; disable tlon functions
+(tlon-init-disable-funs 60
+			'(tlon-org-fold-show-all-headings
+			  tlon-org-hide-properties
+			  tlon-org-hide-logbook
+			  tlon-org-show-properties
+			  tlon-org-show-logbook
+			  tlon-org-toggle-properties
+			  tlon-org-toggle-logbook))
+
 ;; Code run on a long timer: aimed at running after all of Pablo's deferred calls
 (run-at-time "90 sec" nil (lambda
-			   () (progn
-				(print "Fede's post init deferred function start.")
-				(use-feature org-fold
-				  :demand t
-				  :config
-				  (setq org-fold-catch-invisible-edits 'smart) 
-				  (defun tlon-org-fold-show-all-headings ())
-				  (defun tlon-org-hide-properties ())
-				  (defun tlon-org-hide-logbook ())
-				  (defun tlon-org-show-properties ())
-				  (defun tlon-org-show-logbook ())
-				  (defun tlon-org-toggle-properties ())
-				  (defun tlon-org-toggle-logbook ())
-				  )
-				(setq display-time-format "%a %e %b %R")
-				(global-flycheck-mode -1)
-				(remove-hook
-				 'markdown-mode-hook 'ps/flycheck-languagetool-enable)
-				(dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
-				  (remove-hook hook #'jinx-mode))
-				(print "Fede's post init deferred function end."))))
+			    () (progn
+				 (print "Fede's post init deferred function start.")
+				 ;; (use-feature org-fold
+				 ;;   :demand t
+				 ;;   :config
+				 ;;   (setq org-fold-catch-invisible-edits 'smart) 
+				 ;;   (defun tlon-org-fold-show-all-headings ())
+				 ;;   (defun tlon-org-hide-properties ())
+				 ;;   (defun tlon-org-hide-logbook ())
+				 ;;   (defun tlon-org-show-properties ())
+				 ;;   (defun tlon-org-show-logbook ())
+				 ;;   (defun tlon-org-toggle-properties ())
+				 ;;   (defun tlon-org-toggle-logbook ())
+				 ;;   )
+				 (setq display-time-format "%a %e %b %R")
+				 (global-flycheck-mode -1)
+				 (print "Fede's post init deferred function end."))))
 
 #+end_src
 

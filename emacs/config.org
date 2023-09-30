@@ -4479,7 +4479,7 @@ process in these cases."
         (let ((dir-locals-file (expand-file-name file)))
           (apply old-fun args)))))
 
-  (advice-add 'hack-dir-local-variables :around #'ps/walk-dir-locals-file)
+  ;; (advice-add 'hack-dir-local-variables :around #'ps/walk-dir-locals-file)
 
   :general
   ("M--" 'not-modified
@@ -6608,8 +6608,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :general
   ("A-g" 'magit
    "A-M-g" 'magit-clone)
-  (magit-mode-map
-   "n" 'forge-dispatch
+   (magit-mode-map
    "p" 'magit-pull
    "." 'magit-push)
   (magit-status-mode-map
@@ -6737,6 +6736,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
     )
 
   :general
+  ((magit-mode-map forge-issue-list-mode-map)
+   "n" 'forge-dispatch)
   (forge-post-mode-map
    "s-c" 'forge-post-submit)
   (forge-topic-mode-map
@@ -6822,7 +6823,20 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 #+begin_src emacs-lisp
 (use-package gh-notify
   :after forge
-  :demand t)
+  :demand t
+  :config
+  (defun ps/gh-notify-visit-next-notification ()
+  (interactive)
+  (let ((old-buffer (current-buffer))
+        (old-window (selected-window)))
+    (next-line)
+    (call-interactively 'gh-notify-visit-notification)
+    (select-window old-window)
+    (switch-to-buffer old-buffer)))
+
+  :general
+  (gh-notify-mode-map
+   "." 'ps/gh-notify-visit-next-notification))
 #+end_src
 
 ** git-auto-commit-mode

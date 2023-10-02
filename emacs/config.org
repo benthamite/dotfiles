@@ -6971,6 +6971,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :config
   ;; emacs.stackexchange.com/a/12318/32089
   (setq query-replace-from-history-variable 'regexp-search-ring)
+  (setq case-replace nil)
 
   :general
   ("C-H-a" 'query-replace

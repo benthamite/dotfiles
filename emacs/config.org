@@ -17765,23 +17765,31 @@ And finally, the section you've all been waiting for.
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
-  (defun ps/tlon-core-meeting-with-fede ()
-    "TODO: docstring"
+  (defun ps/tlon-core-meeting ()
+    "Initialize Tlön meeting.
+Search for user name in `org-mode' heading at point. If found, copy the content
+ of the corresponding \"Pending for next meeting\" heading, clear that content,
+ and insert it at the end of the current subtree."
     (interactive)
-    (tlon-core-meeting-with
-     "Fede"
-     "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
-     "56CBB3F8-8E75-4298-99B3-899365EB75E0"
-     "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
-
-  (defun ps/tlon-core-meeting-with-leo ()
-    "TODO: docstring"
-    (interactive)
-    (tlon-core-meeting-with
-     "Leo"
-     "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
-     "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-     "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
+    (unless (derived-mode-p 'org-mode)
+      (user-error "Not in an Org buffer"))
+    (let* ((heading (org-no-properties (org-get-heading)))
+	   (person (catch 'found
+		     (dolist (person '("fede" "leo"))
+		       (when (string-match-p person heading)
+			 (throw 'found person)))))
+	   (pending-id (pcase person
+			 ("fede" "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
+			 ("leo" "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
+	   to-discuss)
+      (save-excursion
+	(tlon-org-id-goto pending-id)
+	(setq to-discuss (tlon-org-get-heading-contents))
+	(tlon-org-clear-heading-contents))
+      (unless (string= to-discuss "")
+	(org-narrow-to-subtree)
+	(goto-char (point-max))
+	(insert (concat "\nTo discuss:" to-discuss)))))
 
   :general
   (markdown-mode-map

@@ -15749,6 +15749,8 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
   (defvar ps/eww-readable-exceptions
     '("protesilaos\\.com"
       "wikipedia\\.org"
+      "google\\.com"
+      "altruismoeficaz\\.net"
       "gwern\\.net"
       "git\\.sr\\.ht")
     "List of URLs for which `eww-readable' should not be used by default.")

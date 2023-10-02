@@ -15322,9 +15322,9 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
    "o" 'ps/telega-chat-org-capture)
   (telega-chat-mode-map
    "M-p" nil
-   "<return>" 'newline
+   "S-<return>" 'newline
    "A-C-s-r" 'telega-chatbuf-beginning-of-thing
-   "C-<return>" 'telega-chatbuf-input-send
+   "<return>" 'telega-chatbuf-input-send
    ;; if point is on a URL, `telega-msg-button-map' ceases to be
    ;; active and `<return>' triggers `newline' rather than
    ;; `push-button'. this seems to be a bug. as a workaround, we also

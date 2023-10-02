@@ -1390,14 +1390,14 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   (:hint nil
   :idle 0
   :color blue)
-  "Tlön dashboard"
+  "Projects dashboard"
   ;; ("a" (tlon-org-id-goto "") "")
   ;; ("b" (tlon-org-id-goto "") "")
   ;; ("c" (tlon-org-id-goto "") "")
-  ("r" (tlon-org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Main")
-  ("b" (tlon-org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAE" :column "Main")
-  ("d" (tlon-org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Main")
-  ("n" (tlon-org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Main")
+  ("b" (tlon-org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAB" :column "Tlön")
+  ("r" (tlon-org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Tlön")
+  ("n" (tlon-org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Tlön")
+  ("d" (tlon-org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Tlön")
   ("i" (tlon-org-id-goto "6C7F53ED-B43E-401D-BEEA-DB38CAE367FD") "EAI" :column "Other")
   ("w" (tlon-org-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
   ("v" (tlon-org-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87") "Samotsvety" :column "Other")

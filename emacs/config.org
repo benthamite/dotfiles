@@ -9797,12 +9797,7 @@ instead of JSON."
                    (length errs)
                    first-err-pos
                    (js2-get-msg (caar first-err))))))
-      (if first-err (goto-char first-err-pos))))
-
-  (add-hook 'find-file-hook
-            (lambda ()
-              (when (equal buffer-file-name tlon-babel-file-contacts)
-                (add-hook 'after-save-hook #'ps/json-mode-validate nil t)))))
+      (if first-err (goto-char first-err-pos)))))
 #+end_src
 
 ** csv-mode

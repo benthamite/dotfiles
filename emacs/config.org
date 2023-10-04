@@ -2170,12 +2170,13 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
        '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
        '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
 
+     (add-hook 'magit-status-mode-hook 'doom-modeline--github-fetch-notifications)
 
-     (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-                           (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-                           (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-                           (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-       (remove-hook (car hook-cons) (cdr hook-cons))))))
+     (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
+		      (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+		      (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+		      (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+       (remove-hook (car cons) (cdr cons))))))
 #+end_src
 
 ** tab-bar

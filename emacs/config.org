@@ -2157,12 +2157,14 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :config
   (tlon-init-override-code-if-available
    :ps/doom-modeline
-   '(
-     (setq doom-modeline-mu4e nil) ; avoid distractions
+   '((setq doom-modeline-mu4e nil) ; avoid distractions
      (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
      (setq doom-modeline-buffer-encoding nil)
      (setq doom-modeline-irc t)
      (setq doom-modeline-irc-buffers t)
+     (setq doom-modeline--flycheck-icon t)
+     (setq doom-modeline-github t)
+     (setq doom-modeline-github-interval (* 10 60))
      (setq doom-modeline-buffer-file-name-style 'auto)
      (setq doom-modeline-enable-word-count t)
 
@@ -2170,12 +2172,13 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
        '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
        '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
 
+     (add-hook 'magit-status-mode-hook 'doom-modeline--github-fetch-notifications)
 
-     (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-                           (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-                           (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-                           (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-       (remove-hook (car hook-cons) (cdr hook-cons))))))
+     (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
+		      (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+		      (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+		      (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+       (remove-hook (car cons) (cdr cons))))))
 #+end_src
 
 ** tab-bar
@@ -6667,12 +6670,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
-
-  (defun ps/forge-pull-topics-and-notifications ()
-    (dolist (repo '(ps/dir-tlon-babel))
-      (let ((defult-directory repo))
-        (forge-pull)
-        (forge-pull-notifications))))
+  (setq forge-pull-notifications t)
+  
 
   (transient-define-prefix forge-dispatch ()
     "Dispatch a forge command."
@@ -10332,7 +10331,8 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
           ("q" . "quote")
           ("s" . "src")
           ("se" . "src emacs-lisp")
-          ("sj" . "src clojure")
+          ("sc" . "src clojure")
+          ("sj" . "src javascript")
           ("sm" . "src markdown")
           ("sp" . "src python")
           ("sq" . "src sql")
@@ -17789,7 +17789,7 @@ Search for user name in `org-mode' heading at point. If found, copy the content
       (unless (string= to-discuss "")
 	(org-narrow-to-subtree)
 	(goto-char (point-max))
-	(insert (concat "\nTo discuss:" to-discuss)))))
+	(insert (concat "\nTo discuss\n:" to-discuss)))))
 
   :general
   (markdown-mode-map
@@ -17812,7 +17812,7 @@ Search for user name in `org-mode' heading at point. If found, copy the content
   :config
   (setq tlon-babel-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
   (setq tlon-babel-todos-generic-id "14AB72D8-D707-41B3-89FF-7A787F266E5E")
-  (setq tlon-babel-todos-file (file-name-concat "tlon-private/babel.org"))
+  (setq tlon-babel-todos-file (file-name-concat ps/dir-dropbox "tlon-private/babel.org"))
 
   (dolist (template `(("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
                        (id ,tlon-babel-todos-jobs-id)

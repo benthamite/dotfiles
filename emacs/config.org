@@ -17789,7 +17789,7 @@ Search for user name in `org-mode' heading at point. If found, copy the content
       (unless (string= to-discuss "")
 	(org-narrow-to-subtree)
 	(goto-char (point-max))
-	(insert (concat "\nTo discuss:" to-discuss)))))
+	(insert (concat "\nTo discuss\n:" to-discuss)))))
 
   :general
   (markdown-mode-map

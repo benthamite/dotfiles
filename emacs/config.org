@@ -17813,7 +17813,7 @@ Search for user name in `org-mode' heading at point. If found, copy the content
   :config
   (setq tlon-babel-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
   (setq tlon-babel-todos-generic-id "14AB72D8-D707-41B3-89FF-7A787F266E5E")
-  (setq tlon-babel-todos-file (file-name-concat "tlon-private/babel.org"))
+  (setq tlon-babel-todos-file (file-name-concat ps/dir-dropbox "tlon-private/babel.org"))
 
   (dolist (template `(("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
                        (id ,tlon-babel-todos-jobs-id)

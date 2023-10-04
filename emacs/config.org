@@ -1380,7 +1380,7 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
    ))
 #+end_src
 
-**** work
+**** Projects
 :PROPERTIES:
 :ID:       47C81DBE-9ACA-4AAA-9942-6FEC4A3483C6
 :END:
@@ -1390,14 +1390,14 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   (:hint nil
   :idle 0
   :color blue)
-  "Tlön dashboard"
+  "Projects dashboard"
   ;; ("a" (tlon-org-id-goto "") "")
   ;; ("b" (tlon-org-id-goto "") "")
   ;; ("c" (tlon-org-id-goto "") "")
-  ("r" (tlon-org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Main")
-  ("b" (tlon-org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAE" :column "Main")
-  ("d" (tlon-org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Main")
-  ("n" (tlon-org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Main")
+  ("b" (tlon-org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAB" :column "Tlön")
+  ("r" (tlon-org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Tlön")
+  ("n" (tlon-org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Tlön")
+  ("d" (tlon-org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Tlön")
   ("i" (tlon-org-id-goto "6C7F53ED-B43E-401D-BEEA-DB38CAE367FD") "EAI" :column "Other")
   ("w" (tlon-org-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
   ("v" (tlon-org-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87") "Samotsvety" :column "Other")
@@ -6653,7 +6653,7 @@ CLOCK: [2021-07-19 Mon 14:22]--[2021-07-19 Mon 15:15] =>  0:53
 CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :END:
 
-/[[https://github.com/magit/forge][forge]] let's one work with git forges directly from magit./
+/[[https://github.com/magit/forge][forge]] let's one work with git forges directly from Magit./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/forge)
 (use-package forge
@@ -6696,10 +6696,10 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("l t" "topics"                 forge-list-topics)
       ("l r" "repositories"           forge-list-repositories)
       """Edit"
-      ("e t" "edit title"                 forge-edit-topic-title)
-      ("e s" "edit state"                 forge-edit-topic-state)
-      ("e m" "edit milestone"             forge-edit-topic-milestone)
-      ("e l" "edit labels"                forge-edit-topic-labels)
+      ("e t" "edit title"             forge-edit-topic-title)
+      ("e s" "edit state"             forge-edit-topic-state)
+      ("e m" "edit milestone"         forge-edit-topic-milestone)
+      ("e l" "edit labels"            forge-edit-topic-labels)
       ]
      ["Browse"
       ("b i" "issue"                  forge-browse-issue)
@@ -6725,11 +6725,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       """Labeled"
       ("d i" "labeled issues"         forge-list-labeled-issues)
       ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)
-      ("e a" "edit assigness"             forge-edit-topic-assignees)]
+      ("e a" "edit assigness"         forge-edit-topic-assignees)]
      ["Misc"
-      ("," "capture topic" tlon-babel-create-todo-from-issue)
-      ("s" "search topics" forge-search)
-      ("'" "open associated file" forge-search)
+      ("s" "search topics"            forge-search)
       (";" "Show/hide closed topics" forge-toggle-closed-visibility)
       ]
      ]
@@ -6823,7 +6821,20 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 #+begin_src emacs-lisp
 (use-package gh-notify
   :after forge
-  :demand t)
+  :demand t
+  :config
+  (defun ps/gh-notify-visit-next-notification ()
+  (interactive)
+  (let ((old-buffer (current-buffer))
+        (old-window (selected-window)))
+    (next-line)
+    (call-interactively 'gh-notify-visit-notification)
+    (select-window old-window)
+    (switch-to-buffer old-buffer)))
+
+  :general
+  (gh-notify-mode-map
+   "." 'ps/gh-notify-visit-next-notification))
 #+end_src
 
 ** git-auto-commit-mode
@@ -6960,6 +6971,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :config
   ;; emacs.stackexchange.com/a/12318/32089
   (setq query-replace-from-history-variable 'regexp-search-ring)
+  (setq case-replace nil)
 
   :general
   ("C-H-a" 'query-replace
@@ -9540,7 +9552,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
   (prog-mode-map
    "A-H-C-i" 'mark-defun
    "s-e" 'xref-find-definitions
-   "s-f" 'consult-flycheck)
+   "s-f" 'consult-flycheck
+   "s-q" 'prog-fill-reindent-defun)
   ((emacs-lisp-mode-map shell-mode-map)
    "s-c" 'exit-recursive-edit))
 #+end_src
@@ -9784,12 +9797,7 @@ instead of JSON."
                    (length errs)
                    first-err-pos
                    (js2-get-msg (caar first-err))))))
-      (if first-err (goto-char first-err-pos))))
-
-  (add-hook 'find-file-hook
-            (lambda ()
-              (when (equal buffer-file-name tlon-babel-file-contacts)
-                (add-hook 'after-save-hook #'ps/json-mode-validate nil t)))))
+      (if first-err (goto-char first-err-pos)))))
 #+end_src
 
 ** csv-mode
@@ -15314,9 +15322,9 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
    "o" 'ps/telega-chat-org-capture)
   (telega-chat-mode-map
    "M-p" nil
-   "<return>" 'newline
+   "S-<return>" 'newline
    "A-C-s-r" 'telega-chatbuf-beginning-of-thing
-   "C-<return>" 'telega-chatbuf-input-send
+   "<return>" 'telega-chatbuf-input-send
    ;; if point is on a URL, `telega-msg-button-map' ceases to be
    ;; active and `<return>' triggers `newline' rather than
    ;; `push-button'. this seems to be a bug. as a workaround, we also
@@ -15706,7 +15714,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
                     (when (eq major-mode 'ebib-entry-mode)
                       (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
                     (read-string "URL: ")))
-           (title (ps/org-web-tools--org-title-for-url url))
+           (title (or (buffer-name) (ps/org-web-tools--org-title-for-url url)))
            (slug (org-hugo-slug title))
            (file-name (file-name-with-extension slug ".pdf"))
            (output-file (file-name-concat ps/dir-downloads file-name)))
@@ -15741,6 +15749,8 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
   (defvar ps/eww-readable-exceptions
     '("protesilaos\\.com"
       "wikipedia\\.org"
+      "google\\.com"
+      "altruismoeficaz\\.net"
       "gwern\\.net"
       "git\\.sr\\.ht")
     "List of URLs for which `eww-readable' should not be used by default.")
@@ -17755,23 +17765,31 @@ And finally, the section you've all been waiting for.
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
-  (defun ps/tlon-core-meeting-with-fede ()
-    "TODO: docstring"
+  (defun ps/tlon-core-meeting ()
+    "Initialize Tlön meeting.
+Search for user name in `org-mode' heading at point. If found, copy the content
+ of the corresponding \"Pending for next meeting\" heading, clear that content,
+ and insert it at the end of the current subtree."
     (interactive)
-    (tlon-core-meeting-with
-     "Fede"
-     "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
-     "56CBB3F8-8E75-4298-99B3-899365EB75E0"
-     "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
-
-  (defun ps/tlon-core-meeting-with-leo ()
-    "TODO: docstring"
-    (interactive)
-    (tlon-core-meeting-with
-     "Leo"
-     "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
-     "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-     "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
+    (unless (derived-mode-p 'org-mode)
+      (user-error "Not in an Org buffer"))
+    (let* ((heading (org-no-properties (org-get-heading)))
+	   (person (catch 'found
+		     (dolist (person '("fede" "leo"))
+		       (when (string-match-p person heading)
+			 (throw 'found person)))))
+	   (pending-id (pcase person
+			 ("fede" "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
+			 ("leo" "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
+	   to-discuss)
+      (save-excursion
+	(tlon-org-id-goto pending-id)
+	(setq to-discuss (tlon-org-get-heading-contents))
+	(tlon-org-clear-heading-contents))
+      (unless (string= to-discuss "")
+	(org-narrow-to-subtree)
+	(goto-char (point-max))
+	(insert (concat "\nTo discuss:" to-discuss)))))
 
   :general
   (markdown-mode-map
@@ -17794,7 +17812,7 @@ And finally, the section you've all been waiting for.
   :config
   (setq tlon-babel-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
   (setq tlon-babel-todos-generic-id "14AB72D8-D707-41B3-89FF-7A787F266E5E")
-  (setq tlon-babel-todos-file (file-name-concat ps/dir-notes "babel.org"))
+  (setq tlon-babel-todos-file (file-name-concat "tlon-private/babel.org"))
 
   (dolist (template `(("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
                        (id ,tlon-babel-todos-jobs-id)

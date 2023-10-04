@@ -6670,12 +6670,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
-
-  (defun ps/forge-pull-topics-and-notifications ()
-    (dolist (repo '(ps/dir-tlon-babel))
-      (let ((defult-directory repo))
-        (forge-pull)
-        (forge-pull-notifications))))
+  (setq forge-pull-notifications t)
+  
 
   (transient-define-prefix forge-dispatch ()
     "Dispatch a forge command."

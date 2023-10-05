@@ -244,7 +244,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#consult-gh][consult-gh]]
   - [[#consult-yasnippet][consult-yasnippet]]
   - [[#consult-spotify][consult-spotify]]
-  - [[#consult-flyspell][consult-flyspell]]
   - [[#embark-consult][embark-consult]]
   - [[#marginalia][marginalia]]
   - [[#orderless][orderless]]
@@ -1910,11 +1909,14 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
        (set-face-attribute 'org-level-7 nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-level-8 nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-date nil :family ps/face-fixed-pitch :height 0.8)
-      (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
-      (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
-      (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
+       (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
+       (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)
-       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))))
+       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)
+       (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
+       (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
+       (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))))))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -2175,9 +2177,9 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
      (add-hook 'magit-status-mode-hook 'doom-modeline--github-fetch-notifications)
 
      (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-		      (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-		      (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-		      (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+                      (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+                      (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+                      (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
        (remove-hook (car cons) (cdr cons))))))
 #+end_src
 
@@ -6671,7 +6673,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
   (setq forge-pull-notifications t)
-  
+
 
   (transient-define-prefix forge-dispatch ()
     "Dispatch a forge command."
@@ -7368,6 +7370,7 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
 
 /[[https://github.com/mohkale/consult-yasnippet/tree/cdb256d2c50e4f8473c6052e1009441b65b8f8ab][consult-yasnippet]] provides [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]] functionality to [[id:6405B8E7-6612-4D71-8C2C-A51F8808F4C6][yasnippet]]./
 
+
 #+begin_src emacs-lisp :results silent
 (use-package consult-yasnippet
   :after consult yasnippet
@@ -7387,18 +7390,6 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
 (use-package consult-spotify
   :disabled
   :after consult espotify)
-#+end_src
-
-** consult-flyspell
-:PROPERTIES:
-:ID:       272C2359-045B-49A7-8DFB-71F9B349D07D
-:END:
-
-/[[https://gitlab.com/OlMon/consult-flyspell][consult-flyspell]] integrates flyspell with consult./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
-(use-package consult-flyspell
-  :after consult flyspell)
 #+end_src
 
 ** embark-consult
@@ -8086,6 +8077,7 @@ e.g. ~nvm~ isn't recognized by eshell
   :demand t
   :config
   (setq jinx-languages "en")
+  (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
 
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
   (defun ps/jinx--add-to-abbrev (overlay word)
@@ -8099,6 +8091,12 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 
   (advice-add 'jinx--correct-replace :before #'ps/jinx--add-to-abbrev)
 
+  (defun ps/jinx-toggle-languages ()
+    "Toggle between English and Spanish."
+    (interactive)
+    (let ((lang (if (string= jinx-languages "en") "es" "en")))
+      (jinx-languages lang)))
+
   (add-to-list 'vertico-multiform-categories
                '(jinx grid (vertico-grid-annotate . 20)))
 
@@ -8106,11 +8104,8 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
     (add-hook hook #'jinx-mode))
 
   :general
-  ((jinx-correct-map jinx-overlay-map jinx-repeat-map)
-   "M-k" 'jinx-previous
-   "M-l" 'jinx-next)
-  ("M-p" 'jinx-correct
-   "A-M-p" 'jinx-languages))
+  ("M-p" (lambda! (jinx-correct 'all))
+   "A-M-p" 'ps/jinx-toggle-languages))
 #+end_src
 
 ** flycheck
@@ -8128,6 +8123,9 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 
   :config
   (setq flycheck-emacs-lisp-load-path 'inherit)
+  (setq flycheck-indication-mode nil)
+  (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
+  (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
 
   (defun ps/flyckeck-disable-checkdoc-in-org-src-block ()
     "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
@@ -8136,9 +8134,7 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   (add-hook 'org-src-mode-hook 'ps/flyckeck-disable-checkdoc-in-org-src-block)
 
   :general
-  (flycheck-mode-map
-   "C-c f l" 'flycheck-next-error
-   "C-c f k" 'flycheck-previous-error))
+  ("M-k" 'flycheck-next-error))
 #+end_src
 
 ** consult-flycheck
@@ -17774,22 +17770,22 @@ Search for user name in `org-mode' heading at point. If found, copy the content
     (unless (derived-mode-p 'org-mode)
       (user-error "Not in an Org buffer"))
     (let* ((heading (org-no-properties (org-get-heading)))
-	   (person (catch 'found
-		     (dolist (person '("fede" "leo"))
-		       (when (string-match-p person heading)
-			 (throw 'found person)))))
-	   (pending-id (pcase person
-			 ("fede" "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
-			 ("leo" "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
-	   to-discuss)
+           (person (catch 'found
+                     (dolist (person '("fede" "leo"))
+                       (when (string-match-p person heading)
+                         (throw 'found person)))))
+           (pending-id (pcase person
+                         ("fede" "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
+                         ("leo" "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
+           to-discuss)
       (save-excursion
-	(tlon-org-id-goto pending-id)
-	(setq to-discuss (tlon-org-get-heading-contents))
-	(tlon-org-clear-heading-contents))
+        (tlon-org-id-goto pending-id)
+        (setq to-discuss (tlon-org-get-heading-contents))
+        (tlon-org-clear-heading-contents))
       (unless (string= to-discuss "")
-	(org-narrow-to-subtree)
-	(goto-char (point-max))
-	(insert (concat "\nTo discuss\n:" to-discuss)))))
+        (org-narrow-to-subtree)
+        (goto-char (point-max))
+        (insert (concat "\nTo discuss\n:" to-discuss)))))
 
   :general
   (markdown-mode-map

@@ -8,6 +8,20 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** consult-flyspell
+:PROPERTIES:
+:ID:       272C2359-045B-49A7-8DFB-71F9B349D07D
+:END:
+
+/[[https://gitlab.com/OlMon/consult-flyspell][consult-flyspell]] integrates flyspell with consult./
+
+[2023-10-05 Thu] I don’t use ~flyspell~ anymore.
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
+(use-package consult-flyspell
+  :after consult flyspell)
+#+end_src
+
 ** outshine
 :PROPERTIES:
 :ID:       7103E713-B985-465E-BC75-F73A096EB4EF

@@ -2175,9 +2175,9 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
      (add-hook 'magit-status-mode-hook 'doom-modeline--github-fetch-notifications)
 
      (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-		      (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-		      (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-		      (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+                      (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+                      (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+                      (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
        (remove-hook (car cons) (cdr cons))))))
 #+end_src
 
@@ -6671,7 +6671,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
   (setq forge-pull-notifications t)
-  
+
 
   (transient-define-prefix forge-dispatch ()
     "Dispatch a forge command."
@@ -8086,6 +8086,7 @@ e.g. ~nvm~ isn't recognized by eshell
   :demand t
   :config
   (setq jinx-languages "en")
+  (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
 
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
   (defun ps/jinx--add-to-abbrev (overlay word)
@@ -8128,6 +8129,9 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 
   :config
   (setq flycheck-emacs-lisp-load-path 'inherit)
+  (setq flycheck-indication-mode nil)
+  (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
+  (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
 
   (defun ps/flyckeck-disable-checkdoc-in-org-src-block ()
     "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
@@ -17774,22 +17778,22 @@ Search for user name in `org-mode' heading at point. If found, copy the content
     (unless (derived-mode-p 'org-mode)
       (user-error "Not in an Org buffer"))
     (let* ((heading (org-no-properties (org-get-heading)))
-	   (person (catch 'found
-		     (dolist (person '("fede" "leo"))
-		       (when (string-match-p person heading)
-			 (throw 'found person)))))
-	   (pending-id (pcase person
-			 ("fede" "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
-			 ("leo" "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
-	   to-discuss)
+           (person (catch 'found
+                     (dolist (person '("fede" "leo"))
+                       (when (string-match-p person heading)
+                         (throw 'found person)))))
+           (pending-id (pcase person
+                         ("fede" "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
+                         ("leo" "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
+           to-discuss)
       (save-excursion
-	(tlon-org-id-goto pending-id)
-	(setq to-discuss (tlon-org-get-heading-contents))
-	(tlon-org-clear-heading-contents))
+        (tlon-org-id-goto pending-id)
+        (setq to-discuss (tlon-org-get-heading-contents))
+        (tlon-org-clear-heading-contents))
       (unless (string= to-discuss "")
-	(org-narrow-to-subtree)
-	(goto-char (point-max))
-	(insert (concat "\nTo discuss\n:" to-discuss)))))
+        (org-narrow-to-subtree)
+        (goto-char (point-max))
+        (insert (concat "\nTo discuss\n:" to-discuss)))))
 
   :general
   (markdown-mode-map

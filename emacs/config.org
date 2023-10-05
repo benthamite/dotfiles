@@ -244,7 +244,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#consult-gh][consult-gh]]
   - [[#consult-yasnippet][consult-yasnippet]]
   - [[#consult-spotify][consult-spotify]]
-  - [[#consult-flyspell][consult-flyspell]]
   - [[#embark-consult][embark-consult]]
   - [[#marginalia][marginalia]]
   - [[#orderless][orderless]]
@@ -7371,6 +7370,7 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
 
 /[[https://github.com/mohkale/consult-yasnippet/tree/cdb256d2c50e4f8473c6052e1009441b65b8f8ab][consult-yasnippet]] provides [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]] functionality to [[id:6405B8E7-6612-4D71-8C2C-A51F8808F4C6][yasnippet]]./
 
+
 #+begin_src emacs-lisp :results silent
 (use-package consult-yasnippet
   :after consult yasnippet
@@ -7390,18 +7390,6 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
 (use-package consult-spotify
   :disabled
   :after consult espotify)
-#+end_src
-
-** consult-flyspell
-:PROPERTIES:
-:ID:       272C2359-045B-49A7-8DFB-71F9B349D07D
-:END:
-
-/[[https://gitlab.com/OlMon/consult-flyspell][consult-flyspell]] integrates flyspell with consult./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
-(use-package consult-flyspell
-  :after consult flyspell)
 #+end_src
 
 ** embark-consult

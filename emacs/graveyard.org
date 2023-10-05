@@ -1620,7 +1620,8 @@ When to use Anki versus org-drill? Use Anki for everything, except tags that req
 
 /[[https://github.com/tefkah/org-roam-timestamps][org-roam-timestamps]] adds modified and creation timestamps to the org-roam property drawer./
 
-[2023-03-07 Tue 13:47] I don't really need this, and it clutters my org drawers. Moving to graveyard. 
+[2023-03-07 Tue 13:47] I don't really need this, and it clutters my org drawers. Moving to graveyard. All my notes are under version control anyway, so their creation and modification times can be obtained from the git repository rather than having to be stored explicitly as an ~org-mode~ heading property.
+
 #+begin_src emacs-lisp :tangle (ps/init-get-tangle-flag :ps/org-roam)
 (use-package org-roam-timestamps
   :disabled
@@ -2739,7 +2740,7 @@ CLOCK: [2022-06-25 Sat 11:36]--[2022-06-25 Sat 12:46] =>  1:10
 :END:
 /[[https://github.com/jgru/consult-org-roam][consult-org-roam]] provides assorted convenience functions for operating [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]] with the help of [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]]./
 
-[2022-10-23 Sun 22:29] Disabling since it was interferring with ~consult-buffer~ and didn't find it useful anyway.
+[2022-10-23 Sun 22:29] Disabling since it was interfering with ~consult-buffer~ and didn't find it useful anyway.
 
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package consult-org-roam

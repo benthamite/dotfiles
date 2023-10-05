@@ -1910,11 +1910,14 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
        (set-face-attribute 'org-level-7 nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-level-8 nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-date nil :family ps/face-fixed-pitch :height 0.8)
-      (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
-      (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
-      (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
+       (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
+       (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)
-       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))))
+       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)
+       (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
+       (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
+       (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))))))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -8100,6 +8103,12 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 
   (advice-add 'jinx--correct-replace :before #'ps/jinx--add-to-abbrev)
 
+  (defun ps/jinx-toggle-languages ()
+    "Toggle between English and Spanish."
+    (interactive)
+    (let ((lang (if (string= jinx-languages "en") "es" "en")))
+      (jinx-languages lang)))
+
   (add-to-list 'vertico-multiform-categories
                '(jinx grid (vertico-grid-annotate . 20)))
 
@@ -8107,11 +8116,8 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
     (add-hook hook #'jinx-mode))
 
   :general
-  ((jinx-correct-map jinx-overlay-map jinx-repeat-map)
-   "M-k" 'jinx-previous
-   "M-l" 'jinx-next)
-  ("M-p" 'jinx-correct
-   "A-M-p" 'jinx-languages))
+  ("M-p" (lambda! (jinx-correct 'all))
+   "A-M-p" 'ps/jinx-toggle-languages))
 #+end_src
 
 ** flycheck
@@ -8140,9 +8146,7 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   (add-hook 'org-src-mode-hook 'ps/flyckeck-disable-checkdoc-in-org-src-block)
 
   :general
-  (flycheck-mode-map
-   "C-c f l" 'flycheck-next-error
-   "C-c f k" 'flycheck-previous-error))
+  ("M-k" 'flycheck-next-error))
 #+end_src
 
 ** consult-flycheck

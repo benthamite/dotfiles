@@ -1,7 +1,7 @@
 # -*- mode: snippet -*-
 # name: sitio-web-oficial
-# key: swo
+# key: sw
 # contributor: Pablo Stafforini
 # --
-[$1]($2). Sitio web oficial.
+[$1]($2). Sitio web.
 $0

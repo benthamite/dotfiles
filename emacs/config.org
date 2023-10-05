@@ -8077,6 +8077,7 @@ e.g. ~nvm~ isn't recognized by eshell
   :demand t
   :config
   (setq jinx-languages "en")
+  (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
 
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
   (defun ps/jinx--add-to-abbrev (overlay word)
@@ -8123,6 +8124,8 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   :config
   (setq flycheck-emacs-lisp-load-path 'inherit)
   (setq flycheck-indication-mode nil)
+  (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
+  (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
 
   (defun ps/flyckeck-disable-checkdoc-in-org-src-block ()
     "Disable `emacs-lisp-checkdoc' in `org-src' blocks."

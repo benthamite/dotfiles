@@ -504,12 +504,13 @@ one hour only."
         ("q" . "quote")
         ("s" . "src")
         ("se" . "src emacs-lisp")
-        ("sc" . "src clojure")
+        ("sc" . "src css")
         ("sj" . "src javascript")
         ("sm" . "src markdown")
         ("sp" . "src python")
         ("sq" . "src sql")
         ("ss" . "src shell")
+        ("st" . "src typescript")
         ("sx" . "src jsx")
         ("v" . "verse")
         ("w" . "WP")))
@@ -548,7 +549,7 @@ one hour only."
 
 
 ;; Code run on a long timer: aimed at running after all of Pablo's deferred calls
-(run-at-time "90 sec" nil (lambda
+(run-at-time "60 sec" nil (lambda
 			    () (progn
 				 (setq display-time-format "%a %e %b %R")
 				 (global-flycheck-mode -1)

@@ -17,13 +17,13 @@
  (:ps/corfu-terminal . nil)
  (:ps/erc . nil)
  (:ps/espotify . nil)
- (:ps/flycheck . t)
+ (:ps/flycheck . nil)
  (:ps/flymake . nil)
  (:ps/frame . t)
  (:ps/forge . t)
  (:ps/git-auto-commit-mode . nil)
  (:ps/hammy . nil)
- (:ps/jinx . t)
+ (:ps/jinx . nil)
  (:ps/keytar . nil)
  (:ps/midnight . nil)
  (:ps/mixed-pitch . nil)
@@ -147,21 +147,28 @@
      (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.0)
      (message "Loaded fede's override for faces")))
  (:ps/doom-modeline
-  . ((setq doom-modeline-time nil)
-     (setq doom-modeline-mu4e nil)
-     (setq doom-modeline-buffer-encoding t)
-     (setq doom-modeline-irc nil)
-     (setq doom-modeline-irc-buffers nil)
-     ;; (doom-modeline--flycheck-icon t)
+  . ((setq doom-modeline-mu4e nil) ; avoid distractions
+     (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
+     (setq doom-modeline-buffer-encoding t) ; FEDE ==> I want to show encoding
+     (setq doom-modeline-irc t)
+     (setq doom-modeline-irc-buffers t)
+     (setq doom-modeline--flycheck-icon nil)
      (setq doom-modeline-github t)
      (setq doom-modeline-github-interval (* 10 60))
-     (setq doom-modeline-buffer-file-name-style 'truncate-nil)
-     (remove-hook 'display-time-mode-hook 'doom-modeline-override-display-time-modeline)
-     (remove-hook 'display-battery-mode-hook 'doom-modeline-override-battery-modeline)
-     (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-display-time-modeline)
-     (remove-hook 'doom-modeline-mode-hook 'doom-modeline-override-battery-modeline)
-     (message "Loaded fede's override for doom-modeline")
-     (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)))
+     (setq doom-modeline-buffer-file-name-style 'truncate-nil) ; FEDE ==> Full filenames, please!
+     (setq doom-modeline-enable-word-count t)
+
+     (doom-modeline-def-modeline 'main
+       '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
+       '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
+
+     (add-hook 'magit-status-mode-hook 'doom-modeline--github-fetch-notifications)
+
+     (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
+                      (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+                      (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+                      (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+       (remove-hook (car cons) (cdr cons)))))
  (:ps/window-border . ((ignore)))
  (:ps/window-split . ((ignore)))
  (:ps/modus-themes-load . ((modus-themes-load-theme 'modus-vivendi)))
@@ -551,9 +558,7 @@ one hour only."
 ;; Code run on a long timer: aimed at running after all of Pablo's deferred calls
 (run-at-time "60 sec" nil (lambda
 			    () (progn
-				 (setq display-time-format "%a %e %b %R")
-				 (global-flycheck-mode -1)
-				 (print "Fede's post init finished."))))
+				 (setq display-time-format "%a %e %b %R"))))
 
 #+end_src
 

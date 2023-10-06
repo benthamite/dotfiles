@@ -6675,6 +6675,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq forge-pull-notifications t)
   (run-with-timer (* 5 60) t #'forge-pull-notifications)
 
+  (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
+
   (transient-define-prefix forge-dispatch ()
     "Dispatch a forge command."
     [["Fetch"

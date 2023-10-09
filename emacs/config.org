@@ -295,6 +295,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown-mode][markdown-mode]]
   - [[#grip-mode][grip-mode]]
+  - [[#xwidget][xwidget]]
   - [[#edit-indirect][edit-indirect]]
   - [[#mediawiki-el][mediawiki-el]]
   - [[#gdrive][gdrive]]
@@ -8928,6 +8929,21 @@ With prefix argument, prompt for the URL to use."
   :general
   ((gfm-mode-map markdown-mode-map)
    "s-w" 'grip-mode))
+#+end_src
+
+** xwidget
+:PROPERTIES:
+:ID:       DA6275F2-F3A2-482E-B7A8-34633775F430
+:END:
+
+#+begin_src emacs-lisp
+(use-feature xwidget
+  :general
+  (xwidget-webkit-mode-map
+   "," 'xwidget-webkit-scroll-down
+   "." 'xwidget-webkit-scroll-up
+   "j" 'xwidget-webkit-scroll-top
+   ";" 'xwidget-webkit-scroll-bottom))
 #+end_src
 
 ** edit-indirect

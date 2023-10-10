@@ -12083,8 +12083,8 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
     (setq org-roam-database-connector 'sqlite-builtin))
 
   (defun ps/org-roam-recent (days &optional limit)
-    "Return list of files modified in the last DAYS. Optionally,
-return such list if its length is less than LIMIT."
+    "Return a list of all files modified in the last DAYS.
+Optionally, return such list if its length is less than LIMIT."
     (let* ((mins (* 60 24 days))
            (file-list (split-string
                        (shell-command-to-string

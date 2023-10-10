@@ -14429,8 +14429,10 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 (use-package zotra
   :elpaca (zotra
            :host github
-           :repo "mpedramfar/zotra")
-  :defer 15
+           :repo "mpedramfar/zotra"
+           :ref "9cd9eb3"
+           :depth nil)
+  :demand t
 
   :config
   (setq zotra-use-curl nil)

@@ -8936,6 +8936,10 @@ With prefix argument, prompt for the URL to use."
 
 #+begin_src emacs-lisp
 (use-package grip-mode
+  :config
+  (setq grip-github-user (auth-source-pass-get "user" "tlon/core/api.github.com/grip-mode"))
+  (setq grip-github-password (auth-source-pass-get 'secret "tlon/core/api.github.com/grip-mode"))
+  
   :general
   ((gfm-mode-map markdown-mode-map)
    "s-w" 'grip-mode))

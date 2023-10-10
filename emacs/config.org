@@ -357,6 +357,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ox][ox]]
   - [[#ox-hugo][ox-hugo]]
   - [[#ox-pandoc][ox-pandoc]]
+  - [[#ox-gfm][ox-gfm]]
   - [[#ob][ob]]
   - [[#org-src][org-src]]
   - [[#org-table][org-table]]
@@ -11515,6 +11516,19 @@ Hugo should be able to export ~org-cite~ citations.
 #+begin_src emacs-lisp :results silent
 (use-package ox-pandoc
   :after org)
+#+end_src
+
+** ox-gfm
+:PROPERTIES:
+:ID:       E0D2A0D0-4442-482C-B076-36CD8BB3F062
+:END:
+
+/[[https://github.com/larstvei/ox-gfm][ox-gfm]] is a Github Flavored Markdown org-mode exporter./
+
+#+begin_src emacs-lisp
+(use-package ox-gfm
+  :after org
+  :defer 20)
 #+end_src
 
 ** ob

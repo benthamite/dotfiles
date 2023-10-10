@@ -29,7 +29,7 @@ GPG_TTY=$(tty)
 export GPG_TTY
 
 # goku
-export GOKU_EDN_CONFIG_FILE="$HOME/Library/CloudStorage/Dropbox/dotfiles/karabiner/karabiner.edn"
+export GOKU_EDN_CONFIG_FILE="$DOTFILES/karabiner/karabiner.edn"
 
 # emms
 export PATH="$HOME/source/emms/src:$PATH" # emms-print-metadata binary

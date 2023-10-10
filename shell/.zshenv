@@ -21,7 +21,7 @@ export GOPATH=/Users/$USER/go
 export PATH=$GOPATH/bin:$PATH
 
 # rust
-. "$HOME/.cargo/env"
+# . "$HOME/.cargo/env"
 
 # emacs
 export EDITOR="emacsclient -nw"

@@ -10423,7 +10423,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    "s-b" (lambda! (org-emphasize ?*))
    "s-i" (lambda! (org-emphasize ?/))
    "s-e" (lambda! (org-emphasize ?~))))
-
 #+end_src
 
 *** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
@@ -12146,8 +12145,7 @@ SQL can be either the emacsql vector representation, or a string."
                                      ps/dir-inactive
                                      ps/dir-archive
                                      ps/dir-dropbox-tlon-leo
-                                     ps/dir-dropbox-tlon-fede
-                                     ))
+                                     ps/dir-dropbox-tlon-fede))
 
   (defvar ps/org-roam-excluded-files (list
                                       ps/file-orb-noter-template
@@ -12487,7 +12485,6 @@ I use this package to define a dynamic agenda, as explained and illustrated [[d1
 
   (defun ps/vulpea-project-p ()
     "Return non-nil if current buffer has a TODO, a schedule or a deadline.
-
 TODO entries marked as done are ignored, meaning the this
 function returns nil if current buffer contains only completed
 tasks."

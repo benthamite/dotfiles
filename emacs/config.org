@@ -10489,8 +10489,7 @@ By considering both tasks completed and their associated priorities.
    "A-s-c" 'tlon-org-mark-checkbox-complete-and-move-to-next-item
    "A-s-o" 'tlon-org-reset-checkbox-state-subtree
    "H-s-w" 'tlon-org-refile-and-archive
-   "A-s-w" 'tlon-org-refile-goto-latest
-   "s-y" 'tlon-org-crypt-dwim)
+   "A-s-w" 'tlon-org-refile-goto-latest)
   ((org-mode-map org-msg-edit-mode-map)
    "s-A-l" 'tlon-org-url-dwim)
   (org-agenda-mode-map

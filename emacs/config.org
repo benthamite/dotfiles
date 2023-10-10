@@ -17885,8 +17885,6 @@ Search for user name in `org-mode' heading at point. If found, copy the content
 
   :general
   ("H-r" 'tlon-babel-dispatch)
-  (markdown-mode-map
-   "s-t" 'tlon-babel-insert-cite-tag)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
@@ -17896,14 +17894,12 @@ Search for user name in `org-mode' heading at point. If found, copy the content
    "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
    "'" 'tlon-babel-open-forge-file)
-  ((gfm-mode-map markdown-mode-map eww-mode-map)
-   "H-," 'tlon-babel-read-backward
-   "H-." 'tlon-babel-read-forward
-   "H-;" 'tlon-babel-read-target-start-or-stop)
   ((gfm-mode-map markdown-mode-map)
    "A-s-e" 'tlon-babel-yaml-edit-field
    "s-c" 'tlon-babel-copy-dwim
-   "s-u" 'tlon-babel-markdown-insert-element)
+   "s-t" 'tlon-babel-insert-cite-tag
+   "s-u" 'tlon-babel-markdown-insert-element
+   "A-C-s-<tab>" 'tlon-babel-markdown-end-of-buffer-dwim)
   (github-review-mode-map
    "s-c" 'tlon-babel-submit-comment-revisions))
 #+end_src

@@ -244,7 +244,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#consult-gh][consult-gh]]
   - [[#consult-yasnippet][consult-yasnippet]]
   - [[#consult-spotify][consult-spotify]]
-  - [[#consult-flyspell][consult-flyspell]]
   - [[#embark-consult][embark-consult]]
   - [[#marginalia][marginalia]]
   - [[#orderless][orderless]]
@@ -296,6 +295,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown-mode][markdown-mode]]
   - [[#grip-mode][grip-mode]]
+  - [[#xwidget][xwidget]]
   - [[#edit-indirect][edit-indirect]]
   - [[#mediawiki-el][mediawiki-el]]
   - [[#gdrive][gdrive]]
@@ -357,6 +357,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ox][ox]]
   - [[#ox-hugo][ox-hugo]]
   - [[#ox-pandoc][ox-pandoc]]
+  - [[#ox-gfm][ox-gfm]]
   - [[#ob][ob]]
   - [[#org-src][org-src]]
   - [[#org-table][org-table]]
@@ -1380,7 +1381,7 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
    ))
 #+end_src
 
-**** work
+**** Projects
 :PROPERTIES:
 :ID:       47C81DBE-9ACA-4AAA-9942-6FEC4A3483C6
 :END:
@@ -1390,14 +1391,14 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   (:hint nil
   :idle 0
   :color blue)
-  "Tlön dashboard"
+  "Projects dashboard"
   ;; ("a" (tlon-org-id-goto "") "")
   ;; ("b" (tlon-org-id-goto "") "")
   ;; ("c" (tlon-org-id-goto "") "")
-  ("r" (tlon-org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Main")
-  ("b" (tlon-org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAE" :column "Main")
-  ("d" (tlon-org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Main")
-  ("n" (tlon-org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Main")
+  ("b" (tlon-org-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAB" :column "Tlön")
+  ("r" (tlon-org-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Tlön")
+  ("n" (tlon-org-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Tlön")
+  ("d" (tlon-org-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Tlön")
   ("i" (tlon-org-id-goto "6C7F53ED-B43E-401D-BEEA-DB38CAE367FD") "EAI" :column "Other")
   ("w" (tlon-org-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
   ("v" (tlon-org-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87") "Samotsvety" :column "Other")
@@ -1910,11 +1911,14 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
        (set-face-attribute 'org-level-7 nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-level-8 nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-date nil :family ps/face-fixed-pitch :height 0.8)
-      (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
-      (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
-      (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
+       (set-face-attribute 'org-modern-date-active nil :family ps/face-fixed-pitch :height 0.8)
+       (set-face-attribute 'org-modern-date-inactive nil :family ps/face-fixed-pitch :height 0.8)
+       (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
        (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.3)
-       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)))))
+       (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1)
+       (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
+       (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
+       (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))))))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -2157,12 +2161,14 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :config
   (tlon-init-override-code-if-available
    :ps/doom-modeline
-   '(
-     (setq doom-modeline-mu4e nil) ; avoid distractions
+   '((setq doom-modeline-mu4e nil) ; avoid distractions
      (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
      (setq doom-modeline-buffer-encoding nil)
      (setq doom-modeline-irc t)
      (setq doom-modeline-irc-buffers t)
+     (setq doom-modeline--flycheck-icon t)
+     (setq doom-modeline-github t)
+     (setq doom-modeline-github-interval (* 10 60))
      (setq doom-modeline-buffer-file-name-style 'auto)
      (setq doom-modeline-enable-word-count t)
 
@@ -2170,12 +2176,13 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
        '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
        '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
 
+     (add-hook 'magit-status-mode-hook 'doom-modeline--github-fetch-notifications)
 
-     (dolist (hook-cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-                           (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-                           (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-                           (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-       (remove-hook (car hook-cons) (cdr hook-cons))))))
+     (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
+                      (display-battery-mode-hook . doom-modeline-override-battery-modeline)
+                      (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
+                      (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
+       (remove-hook (car cons) (cdr cons))))))
 #+end_src
 
 ** tab-bar
@@ -4479,7 +4486,7 @@ process in these cases."
         (let ((dir-locals-file (expand-file-name file)))
           (apply old-fun args)))))
 
-  (advice-add 'hack-dir-local-variables :around #'ps/walk-dir-locals-file)
+  ;; (advice-add 'hack-dir-local-variables :around #'ps/walk-dir-locals-file)
 
   :general
   ("M--" 'not-modified
@@ -6608,8 +6615,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :general
   ("A-g" 'magit
    "A-M-g" 'magit-clone)
-  (magit-mode-map
-   "n" 'forge-dispatch
+   (magit-mode-map
    "p" 'magit-pull
    "." 'magit-push)
   (magit-status-mode-map
@@ -6654,7 +6660,7 @@ CLOCK: [2021-07-19 Mon 14:22]--[2021-07-19 Mon 15:15] =>  0:53
 CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :END:
 
-/[[https://github.com/magit/forge][forge]] let's one work with git forges directly from magit./
+/[[https://github.com/magit/forge][forge]] let's one work with git forges directly from Magit./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/forge)
 (use-package forge
@@ -6668,12 +6674,10 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :config
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
+  (setq forge-pull-notifications t)
+  (run-with-timer (* 5 60) t #'forge-pull-notifications)
 
-  (defun ps/forge-pull-topics-and-notifications ()
-    (dolist (repo '(ps/dir-tlon-babel))
-      (let ((defult-directory repo))
-        (forge-pull)
-        (forge-pull-notifications))))
+  (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
 
   (transient-define-prefix forge-dispatch ()
     "Dispatch a forge command."
@@ -6697,10 +6701,10 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       ("l t" "topics"                 forge-list-topics)
       ("l r" "repositories"           forge-list-repositories)
       """Edit"
-      ("e t" "edit title"                 forge-edit-topic-title)
-      ("e s" "edit state"                 forge-edit-topic-state)
-      ("e m" "edit milestone"             forge-edit-topic-milestone)
-      ("e l" "edit labels"                forge-edit-topic-labels)
+      ("e t" "edit title"             forge-edit-topic-title)
+      ("e s" "edit state"             forge-edit-topic-state)
+      ("e m" "edit milestone"         forge-edit-topic-milestone)
+      ("e l" "edit labels"            forge-edit-topic-labels)
       ]
      ["Browse"
       ("b i" "issue"                  forge-browse-issue)
@@ -6726,17 +6730,17 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
       """Labeled"
       ("d i" "labeled issues"         forge-list-labeled-issues)
       ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)
-      ("e a" "edit assigness"             forge-edit-topic-assignees)]
+      ("e a" "edit assigness"         forge-edit-topic-assignees)]
      ["Misc"
-      ("," "capture topic" tlon-babel-create-todo-from-issue)
-      ("s" "search topics" forge-search)
-      ("'" "open associated file" forge-search)
+      ("s" "search topics"            forge-search)
       (";" "Show/hide closed topics" forge-toggle-closed-visibility)
       ]
      ]
     )
 
   :general
+  ((magit-mode-map forge-issue-list-mode-map)
+   "n" 'forge-dispatch)
   (forge-post-mode-map
    "s-c" 'forge-post-submit)
   (forge-topic-mode-map
@@ -6822,7 +6826,20 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 #+begin_src emacs-lisp
 (use-package gh-notify
   :after forge
-  :demand t)
+  :demand t
+  :config
+  (defun ps/gh-notify-visit-next-notification ()
+  (interactive)
+  (let ((old-buffer (current-buffer))
+        (old-window (selected-window)))
+    (next-line)
+    (call-interactively 'gh-notify-visit-notification)
+    (select-window old-window)
+    (switch-to-buffer old-buffer)))
+
+  :general
+  (gh-notify-mode-map
+   "." 'ps/gh-notify-visit-next-notification))
 #+end_src
 
 ** git-auto-commit-mode
@@ -6959,6 +6976,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :config
   ;; emacs.stackexchange.com/a/12318/32089
   (setq query-replace-from-history-variable 'regexp-search-ring)
+  (setq case-replace nil)
 
   :general
   ("C-H-a" 'query-replace
@@ -7201,6 +7219,15 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   (setq consult-narrow-key "<")
   (setq consult-widen-key ">")
 
+  (defun ps/consult-toggle-multiline ()
+    "Toggle between single line and multiline search."
+    (interactive)
+    (let* ((multiline-flags " --multiline --multiline-dotall")
+	   (new-value (if (string-match (concat "\\(.*?\\)" multiline-flags) consult-ripgrep-args)
+			  (match-string 1)
+			(concat consult-ripgrep-args multiline-flags))))
+      (setq consult-ripgrep-args new-value)))
+  
   (defun ps/consult-locate-current ()
     "Search with `consult-locate' in current directory."
     (interactive)
@@ -7356,6 +7383,7 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
 
 /[[https://github.com/mohkale/consult-yasnippet/tree/cdb256d2c50e4f8473c6052e1009441b65b8f8ab][consult-yasnippet]] provides [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]] functionality to [[id:6405B8E7-6612-4D71-8C2C-A51F8808F4C6][yasnippet]]./
 
+
 #+begin_src emacs-lisp :results silent
 (use-package consult-yasnippet
   :after consult yasnippet
@@ -7375,18 +7403,6 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
 (use-package consult-spotify
   :disabled
   :after consult espotify)
-#+end_src
-
-** consult-flyspell
-:PROPERTIES:
-:ID:       272C2359-045B-49A7-8DFB-71F9B349D07D
-:END:
-
-/[[https://gitlab.com/OlMon/consult-flyspell][consult-flyspell]] integrates flyspell with consult./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
-(use-package consult-flyspell
-  :after consult flyspell)
 #+end_src
 
 ** embark-consult
@@ -8074,6 +8090,7 @@ e.g. ~nvm~ isn't recognized by eshell
   :demand t
   :config
   (setq jinx-languages "en")
+  (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
 
   ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
   (defun ps/jinx--add-to-abbrev (overlay word)
@@ -8087,6 +8104,12 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 
   (advice-add 'jinx--correct-replace :before #'ps/jinx--add-to-abbrev)
 
+  (defun ps/jinx-toggle-languages ()
+    "Toggle between English and Spanish."
+    (interactive)
+    (let ((lang (if (string= jinx-languages "en") "es" "en")))
+      (jinx-languages lang)))
+
   (add-to-list 'vertico-multiform-categories
                '(jinx grid (vertico-grid-annotate . 20)))
 
@@ -8094,11 +8117,8 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
     (add-hook hook #'jinx-mode))
 
   :general
-  ((jinx-correct-map jinx-overlay-map jinx-repeat-map)
-   "M-k" 'jinx-previous
-   "M-l" 'jinx-next)
-  ("M-p" 'jinx-correct
-   "A-M-p" 'jinx-languages))
+  ("M-p" (lambda! (jinx-correct 'all))
+   "A-M-p" 'ps/jinx-toggle-languages))
 #+end_src
 
 ** flycheck
@@ -8116,6 +8136,9 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 
   :config
   (setq flycheck-emacs-lisp-load-path 'inherit)
+  (setq flycheck-indication-mode nil)
+  (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
+  (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
 
   (defun ps/flyckeck-disable-checkdoc-in-org-src-block ()
     "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
@@ -8124,9 +8147,7 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   (add-hook 'org-src-mode-hook 'ps/flyckeck-disable-checkdoc-in-org-src-block)
 
   :general
-  (flycheck-mode-map
-   "C-c f l" 'flycheck-next-error
-   "C-c f k" 'flycheck-previous-error))
+  ("M-k" 'flycheck-next-error))
 #+end_src
 
 ** consult-flycheck
@@ -8915,9 +8936,28 @@ With prefix argument, prompt for the URL to use."
 
 #+begin_src emacs-lisp
 (use-package grip-mode
+  :config
+  (setq grip-github-user (auth-source-pass-get "user" "tlon/core/api.github.com/grip-mode"))
+  (setq grip-github-password (auth-source-pass-get 'secret "tlon/core/api.github.com/grip-mode"))
+  
   :general
   ((gfm-mode-map markdown-mode-map)
    "s-w" 'grip-mode))
+#+end_src
+
+** xwidget
+:PROPERTIES:
+:ID:       DA6275F2-F3A2-482E-B7A8-34633775F430
+:END:
+
+#+begin_src emacs-lisp
+(use-feature xwidget
+  :general
+  (xwidget-webkit-mode-map
+   "," 'xwidget-webkit-scroll-down
+   "." 'xwidget-webkit-scroll-up
+   "j" 'xwidget-webkit-scroll-top
+   ";" 'xwidget-webkit-scroll-bottom))
 #+end_src
 
 ** edit-indirect
@@ -9206,6 +9246,8 @@ otherwise the whole buffer."
 
   :general
   (ledger-mode-map
+   "M-p" nil
+   "M-n" nil
    "s-SPC" 'ps/ledger-new-entry-below
    "s-=" 'ledger-reconcile
    "s-a" 'ledger-add-transaction
@@ -9539,7 +9581,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
   (prog-mode-map
    "A-H-C-i" 'mark-defun
    "s-e" 'xref-find-definitions
-   "s-f" 'consult-flycheck)
+   "s-f" 'consult-flycheck
+   "s-q" 'prog-fill-reindent-defun)
   ((emacs-lisp-mode-map shell-mode-map)
    "s-c" 'exit-recursive-edit))
 #+end_src
@@ -9783,12 +9826,7 @@ instead of JSON."
                    (length errs)
                    first-err-pos
                    (js2-get-msg (caar first-err))))))
-      (if first-err (goto-char first-err-pos))))
-
-  (add-hook 'find-file-hook
-            (lambda ()
-              (when (equal buffer-file-name tlon-babel-file-contacts)
-                (add-hook 'after-save-hook #'ps/json-mode-validate nil t)))))
+      (if first-err (goto-char first-err-pos)))))
 #+end_src
 
 ** csv-mode
@@ -10323,7 +10361,8 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
           ("q" . "quote")
           ("s" . "src")
           ("se" . "src emacs-lisp")
-          ("sj" . "src clojure")
+          ("sc" . "src clojure")
+          ("sj" . "src javascript")
           ("sm" . "src markdown")
           ("sp" . "src python")
           ("sq" . "src sql")
@@ -10450,8 +10489,7 @@ By considering both tasks completed and their associated priorities.
    "A-s-c" 'tlon-org-mark-checkbox-complete-and-move-to-next-item
    "A-s-o" 'tlon-org-reset-checkbox-state-subtree
    "H-s-w" 'tlon-org-refile-and-archive
-   "A-s-w" 'tlon-org-refile-goto-latest
-   "s-y" 'tlon-org-crypt-dwim)
+   "A-s-w" 'tlon-org-refile-goto-latest)
   ((org-mode-map org-msg-edit-mode-map)
    "s-A-l" 'tlon-org-url-dwim)
   (org-agenda-mode-map
@@ -11494,6 +11532,19 @@ Hugo should be able to export ~org-cite~ citations.
   :after org)
 #+end_src
 
+** ox-gfm
+:PROPERTIES:
+:ID:       E0D2A0D0-4442-482C-B076-36CD8BB3F062
+:END:
+
+/[[https://github.com/larstvei/ox-gfm][ox-gfm]] is a Github Flavored Markdown org-mode exporter./
+
+#+begin_src emacs-lisp
+(use-package ox-gfm
+  :after org
+  :defer 20)
+#+end_src
+
 ** ob
 :PROPERTIES:
 :ID:       A19E8C93-0435-4D02-AF4F-8213212D2386
@@ -12032,8 +12083,8 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
     (setq org-roam-database-connector 'sqlite-builtin))
 
   (defun ps/org-roam-recent (days &optional limit)
-    "Return list of files modified in the last DAYS. Optionally,
-return such list if its length is less than LIMIT."
+    "Return a list of all files modified in the last DAYS.
+Optionally, return such list if its length is less than LIMIT."
     (let* ((mins (* 60 24 days))
            (file-list (split-string
                        (shell-command-to-string
@@ -12532,6 +12583,7 @@ tasks."
 :ID:       A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7
 :END:
 :LOGBOOK:
+CLOCK: [2023-10-08 Sun 09:23]--[2023-10-08 Sun 10:22] =>  0:59
 CLOCK: [2022-01-05 Wed 16:03]--[2022-01-05 Wed 16:11] =>  0:08
 CLOCK: [2021-07-27 Tue 20:55]--[2021-07-27 Tue 22:17] =>  1:22
 CLOCK: [2021-07-27 Tue 19:42]--[2021-07-27 Tue 20:15] =>  0:33
@@ -12555,26 +12607,50 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   (setq org-noter-always-create-frame nil)
   (setq org-noter-separate-notes-from-heading t)
 
-  (defun tlon-org-noter-cleanup-annotation (title)
-  "Cleanup the annotation at point.
+  (defun ps/org-noter-cleanup-annotation (title)
+    "Cleanup the annotation at point.
 Replaces the generic 'Highlight on page X' generated by
-`org-noter-create-skeleton' with a custom TITLE and
-encloses the content of the heading in a quote."
-  (interactive "sTitle: ")
-  (save-excursion
-    (re-search-backward "^\\*\\*\\*[^*]")
-    (re-search-forward "Highlight on page" nil t)
-    (replace-match (concat title ", p."))
-    (outline-next-visible-heading 1)
-    (delete-line)
-    (unfill-paragraph)
-    (insert "#+begin_quote\n")
-    (forward-paragraph)
-    (insert "#+end_quote\n")
-    (outline-next-visible-heading 1)))
+`org-noter-create-skeleton' with a custom TITLE and encloses the content of the
+heading in a quote."
+    (interactive "sTitle: ")
+    (unless (derived-mode-p 'org-mode)
+      (error "Not in an Org buffer"))
+    (let ((initial-heading (org-get-heading t t t t))
+	  (highlight-heading-regexp "Highlight on page \\(.*\\)"))
+      (save-restriction
+	(save-excursion
+	  (cond
+	   ((string-match highlight-heading-regexp initial-heading)
+	    (org-back-to-heading)
+	    (org-next-visible-heading 1))
+	   ((string-match "Contents" initial-heading)
+	    (org-back-to-heading))
+	   (t
+	    (user-error "You must be either in a \"contents\" heading or in a \"highlight on page\" Heading")))
+	  (org-narrow-to-subtree)
+	  (org-end-of-meta-data t)
+	  (narrow-to-region (point) (point-max))
+	  (unfill-region (point) (point-max))
+	  (ps/org-noter-dehyphenate)
+	  (let ((content (buffer-substring-no-properties (point) (point-max))))
+	    (widen)
+	    (org-cut-subtree)
+	    (org-previous-visible-heading 1)
+	    (let* ((highlight-heading (org-get-heading t t t t))
+		   (page (progn
+			   (string-match highlight-heading-regexp highlight-heading)
+			   (match-string 1 highlight-heading))))
+	      (org-edit-headline (format "%s, p. %s" title page))
+	      (org-narrow-to-subtree)
+	      (goto-char (point-max))
+	      (insert "\n#+begin_quote\n")
+	      (insert content)
+	      (insert "#+end_quote\n")
+	      (tlon-core-remove-extra-blank-lines)
+	      (org-next-visible-heading 1)))))))
 
   ;; TODO: find `org-noter' hook to run this automatically
-  (defun tlon-org-noter-dehyphenate ()
+  (defun ps/org-noter-dehyphenate ()
     "Remove leftover hyphens in hyphenated text.
 Operate on the current paragraph, or the region if active."
     (interactive)
@@ -12590,7 +12666,7 @@ Operate on the current paragraph, or the region if active."
           (replace-match "\\1\\2")))))
 
   ;; TODO: find `org-noter' hook to run this automatically
-  (defun tlon-org-noter-highlight-offset (offset)
+  (defun ps/org-noter-highlight-offset (offset)
     "Fix numbering mismatch between PDF and book/article pages.
 OFFSET is the difference between the page number in the PDF and
 the page number in the book or article."
@@ -15313,9 +15389,9 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
    "o" 'ps/telega-chat-org-capture)
   (telega-chat-mode-map
    "M-p" nil
-   "<return>" 'newline
+   "S-<return>" 'newline
    "A-C-s-r" 'telega-chatbuf-beginning-of-thing
-   "C-<return>" 'telega-chatbuf-input-send
+   "<return>" 'telega-chatbuf-input-send
    ;; if point is on a URL, `telega-msg-button-map' ceases to be
    ;; active and `<return>' triggers `newline' rather than
    ;; `push-button'. this seems to be a bug. as a workaround, we also
@@ -15705,7 +15781,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
                     (when (eq major-mode 'ebib-entry-mode)
                       (ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
                     (read-string "URL: ")))
-           (title (ps/org-web-tools--org-title-for-url url))
+           (title (or (buffer-name) (ps/org-web-tools--org-title-for-url url)))
            (slug (org-hugo-slug title))
            (file-name (file-name-with-extension slug ".pdf"))
            (output-file (file-name-concat ps/dir-downloads file-name)))
@@ -15740,6 +15816,8 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
   (defvar ps/eww-readable-exceptions
     '("protesilaos\\.com"
       "wikipedia\\.org"
+      "google\\.com"
+      "altruismoeficaz\\.net"
       "gwern\\.net"
       "git\\.sr\\.ht")
     "List of URLs for which `eww-readable' should not be used by default.")
@@ -16075,15 +16153,9 @@ poorly-designed websites."
     (switch-to-buffer buffer)
     (elfeed-show-refresh))
 
-  ;; (run-with-idle-timer (* 60 10) t 'elfeed-update)
+  (run-with-idle-timer (* 60 10) t 'ps/elfeed-full-update)
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
-  ;; I believe this is no longer needed
-  ;; github.com/skeeto/elfeed/issues/190#issuecomment-384346895
-  ;; (elfeed-show-mode-hook . (lambda ()
-  ;;                            (setq fill-column (current-fill-column))
-  ;;                            (setq-local shr-width (current-fill-column))
-  ;;                            (setq elfeed-show-entry-switch #'ps/show-elfeed)))
 
   :general
   ;; ("A-f" (lambda! (elfeed) (ps/elfeed-full-update)))
@@ -17754,23 +17826,31 @@ And finally, the section you've all been waiting for.
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
-  (defun ps/tlon-core-meeting-with-fede ()
-    "TODO: docstring"
+  (defun ps/tlon-core-meeting ()
+    "Initialize Tlön meeting.
+Search for user name in `org-mode' heading at point. If found, copy the content
+ of the corresponding \"Pending for next meeting\" heading, clear that content,
+ and insert it at the end of the current subtree."
     (interactive)
-    (tlon-core-meeting-with
-     "Fede"
-     "CE0C7638-97F1-4509-8212-5B77F4A4AF29"
-     "56CBB3F8-8E75-4298-99B3-899365EB75E0"
-     "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1"))
-
-  (defun ps/tlon-core-meeting-with-leo ()
-    "TODO: docstring"
-    (interactive)
-    (tlon-core-meeting-with
-     "Leo"
-     "76A01EAA-74BC-41FC-9050-E6BDC0D56029"
-     "51610BEB-7583-4C84-8FC2-A3B28CA79FAB"
-     "8B2F18B4-A309-4F29-A5E6-CD40E010970D"))
+    (unless (derived-mode-p 'org-mode)
+      (user-error "Not in an Org buffer"))
+    (let* ((heading (org-no-properties (org-get-heading)))
+           (person (catch 'found
+                     (dolist (person '("fede" "leo"))
+                       (when (string-match-p person heading)
+                         (throw 'found person)))))
+           (pending-id (pcase person
+                         ("fede" "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
+                         ("leo" "8B2F18B4-A309-4F29-A5E6-CD40E010970D")))
+           to-discuss)
+      (save-excursion
+        (tlon-org-id-goto pending-id)
+        (setq to-discuss (tlon-org-get-heading-contents))
+        (tlon-org-clear-heading-contents))
+      (unless (string= to-discuss "")
+        (org-narrow-to-subtree)
+        (goto-char (point-max))
+        (insert (concat "\nTo discuss\n:" to-discuss)))))
 
   :general
   (markdown-mode-map
@@ -17793,7 +17873,7 @@ And finally, the section you've all been waiting for.
   :config
   (setq tlon-babel-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
   (setq tlon-babel-todos-generic-id "14AB72D8-D707-41B3-89FF-7A787F266E5E")
-  (setq tlon-babel-todos-file (file-name-concat ps/dir-notes "babel.org"))
+  (setq tlon-babel-todos-file (file-name-concat ps/dir-dropbox "tlon-private/babel.org"))
 
   (dolist (template `(("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
                        (id ,tlon-babel-todos-jobs-id)
@@ -17805,8 +17885,6 @@ And finally, the section you've all been waiting for.
 
   :general
   ("H-r" 'tlon-babel-dispatch)
-  (markdown-mode-map
-   "s-t" 'tlon-babel-insert-cite-tag)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
@@ -17816,14 +17894,12 @@ And finally, the section you've all been waiting for.
    "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
    "'" 'tlon-babel-open-forge-file)
-  ((gfm-mode-map markdown-mode-map eww-mode-map)
-   "H-," 'tlon-babel-read-backward
-   "H-." 'tlon-babel-read-forward
-   "H-;" 'tlon-babel-read-target-start-or-stop)
   ((gfm-mode-map markdown-mode-map)
    "A-s-e" 'tlon-babel-yaml-edit-field
    "s-c" 'tlon-babel-copy-dwim
-   "s-u" 'tlon-babel-markdown-insert-element)
+   "s-t" 'tlon-babel-insert-cite-tag
+   "s-u" 'tlon-babel-markdown-insert-element
+   "A-C-s-<tab>" 'tlon-babel-markdown-end-of-buffer-dwim)
   (github-review-mode-map
    "s-c" 'tlon-babel-submit-comment-revisions))
 #+end_src

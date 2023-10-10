@@ -9246,6 +9246,8 @@ otherwise the whole buffer."
 
   :general
   (ledger-mode-map
+   "M-p" nil
+   "M-n" nil
    "s-SPC" 'ps/ledger-new-entry-below
    "s-=" 'ledger-reconcile
    "s-a" 'ledger-add-transaction

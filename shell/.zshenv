@@ -4,7 +4,7 @@ export LDFLAGS="-L/opt/homebrew/opt/sqlite/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/sqlite/include"
 
 # secrets
-source "/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/shell/.zshenv-secrets"
+source "$HOME/Library/CloudStorage/Dropbox/dotfiles/shell/.zshenv-secrets"
 
 export PATH="/opt/homebrew/opt/node/bin:$PATH"
 

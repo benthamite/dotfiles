@@ -106,7 +106,7 @@
 ,*Federico*
 ,#+end_signature")
  (ps/gpe-signature . "")
- (ps/split-width-threshold . 170)
+ (ps/split-width-threshold . 140)
  (ps/telega-server-libs-prefix . "/opt/homebrew/Cellar/tdlib/HEAD-0d16085")
  )
 #+end_src
@@ -145,6 +145,7 @@
      (set-face-attribute 'org-modern-tag nil :family ps/face-fixed-pitch :height 0.9)
      (set-face-attribute 'corfu-default nil :family ps/face-fixed-pitch :height 1.0)
      (set-face-attribute 'org-quote nil :family ps/face-variable-pitch :height 1.0)
+     (set-face-attribute 'gh-notify-notification-repo-face nil :family ps/face-variable-pitch :height 1.0)
      (message "Loaded fede's override for faces")))
  (:ps/doom-modeline
   . ((setq doom-modeline-mu4e nil) ; avoid distractions

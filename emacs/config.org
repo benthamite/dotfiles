@@ -7219,6 +7219,15 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   (setq consult-narrow-key "<")
   (setq consult-widen-key ">")
 
+  (defun ps/consult-toggle-multiline ()
+    "Toggle between single line and multiline search."
+    (interactive)
+    (let* ((multiline-flags " --multiline --multiline-dotall")
+	   (new-value (if (string-match (concat "\\(.*?\\)" multiline-flags) consult-ripgrep-args)
+			  (match-string 1)
+			(concat consult-ripgrep-args multiline-flags))))
+      (setq consult-ripgrep-args new-value)))
+  
   (defun ps/consult-locate-current ()
     "Search with `consult-locate' in current directory."
     (interactive)

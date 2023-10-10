@@ -244,7 +244,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#consult-gh][consult-gh]]
   - [[#consult-yasnippet][consult-yasnippet]]
   - [[#consult-spotify][consult-spotify]]
-  - [[#consult-flyspell][consult-flyspell]]
   - [[#embark-consult][embark-consult]]
   - [[#marginalia][marginalia]]
   - [[#orderless][orderless]]
@@ -296,6 +295,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown-mode][markdown-mode]]
   - [[#grip-mode][grip-mode]]
+  - [[#xwidget][xwidget]]
   - [[#edit-indirect][edit-indirect]]
   - [[#mediawiki-el][mediawiki-el]]
   - [[#gdrive][gdrive]]
@@ -357,6 +357,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ox][ox]]
   - [[#ox-hugo][ox-hugo]]
   - [[#ox-pandoc][ox-pandoc]]
+  - [[#ox-gfm][ox-gfm]]
   - [[#ob][ob]]
   - [[#org-src][org-src]]
   - [[#org-table][org-table]]
@@ -6674,7 +6675,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq forge-owned-accounts `((,ps/forge-owned-accounts)))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
   (setq forge-pull-notifications t)
+  (run-with-timer (* 5 60) t #'forge-pull-notifications)
 
+  (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
 
   (transient-define-prefix forge-dispatch ()
     "Dispatch a forge command."
@@ -7216,6 +7219,15 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   (setq consult-narrow-key "<")
   (setq consult-widen-key ">")
 
+  (defun ps/consult-toggle-multiline ()
+    "Toggle between single line and multiline search."
+    (interactive)
+    (let* ((multiline-flags " --multiline --multiline-dotall")
+	   (new-value (if (string-match (concat "\\(.*?\\)" multiline-flags) consult-ripgrep-args)
+			  (match-string 1)
+			(concat consult-ripgrep-args multiline-flags))))
+      (setq consult-ripgrep-args new-value)))
+  
   (defun ps/consult-locate-current ()
     "Search with `consult-locate' in current directory."
     (interactive)
@@ -7371,6 +7383,7 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
 
 /[[https://github.com/mohkale/consult-yasnippet/tree/cdb256d2c50e4f8473c6052e1009441b65b8f8ab][consult-yasnippet]] provides [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]] functionality to [[id:6405B8E7-6612-4D71-8C2C-A51F8808F4C6][yasnippet]]./
 
+
 #+begin_src emacs-lisp :results silent
 (use-package consult-yasnippet
   :after consult yasnippet
@@ -7390,18 +7403,6 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
 (use-package consult-spotify
   :disabled
   :after consult espotify)
-#+end_src
-
-** consult-flyspell
-:PROPERTIES:
-:ID:       272C2359-045B-49A7-8DFB-71F9B349D07D
-:END:
-
-/[[https://gitlab.com/OlMon/consult-flyspell][consult-flyspell]] integrates flyspell with consult./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
-(use-package consult-flyspell
-  :after consult flyspell)
 #+end_src
 
 ** embark-consult
@@ -8935,9 +8936,28 @@ With prefix argument, prompt for the URL to use."
 
 #+begin_src emacs-lisp
 (use-package grip-mode
+  :config
+  (setq grip-github-user (auth-source-pass-get "user" "tlon/core/api.github.com/grip-mode"))
+  (setq grip-github-password (auth-source-pass-get 'secret "tlon/core/api.github.com/grip-mode"))
+  
   :general
   ((gfm-mode-map markdown-mode-map)
    "s-w" 'grip-mode))
+#+end_src
+
+** xwidget
+:PROPERTIES:
+:ID:       DA6275F2-F3A2-482E-B7A8-34633775F430
+:END:
+
+#+begin_src emacs-lisp
+(use-feature xwidget
+  :general
+  (xwidget-webkit-mode-map
+   "," 'xwidget-webkit-scroll-down
+   "." 'xwidget-webkit-scroll-up
+   "j" 'xwidget-webkit-scroll-top
+   ";" 'xwidget-webkit-scroll-bottom))
 #+end_src
 
 ** edit-indirect
@@ -9226,6 +9246,8 @@ otherwise the whole buffer."
 
   :general
   (ledger-mode-map
+   "M-p" nil
+   "M-n" nil
    "s-SPC" 'ps/ledger-new-entry-below
    "s-=" 'ledger-reconcile
    "s-a" 'ledger-add-transaction
@@ -10467,8 +10489,7 @@ By considering both tasks completed and their associated priorities.
    "A-s-c" 'tlon-org-mark-checkbox-complete-and-move-to-next-item
    "A-s-o" 'tlon-org-reset-checkbox-state-subtree
    "H-s-w" 'tlon-org-refile-and-archive
-   "A-s-w" 'tlon-org-refile-goto-latest
-   "s-y" 'tlon-org-crypt-dwim)
+   "A-s-w" 'tlon-org-refile-goto-latest)
   ((org-mode-map org-msg-edit-mode-map)
    "s-A-l" 'tlon-org-url-dwim)
   (org-agenda-mode-map
@@ -11511,6 +11532,19 @@ Hugo should be able to export ~org-cite~ citations.
   :after org)
 #+end_src
 
+** ox-gfm
+:PROPERTIES:
+:ID:       E0D2A0D0-4442-482C-B076-36CD8BB3F062
+:END:
+
+/[[https://github.com/larstvei/ox-gfm][ox-gfm]] is a Github Flavored Markdown org-mode exporter./
+
+#+begin_src emacs-lisp
+(use-package ox-gfm
+  :after org
+  :defer 20)
+#+end_src
+
 ** ob
 :PROPERTIES:
 :ID:       A19E8C93-0435-4D02-AF4F-8213212D2386
@@ -12049,8 +12083,8 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
     (setq org-roam-database-connector 'sqlite-builtin))
 
   (defun ps/org-roam-recent (days &optional limit)
-    "Return list of files modified in the last DAYS. Optionally,
-return such list if its length is less than LIMIT."
+    "Return a list of all files modified in the last DAYS.
+Optionally, return such list if its length is less than LIMIT."
     (let* ((mins (* 60 24 days))
            (file-list (split-string
                        (shell-command-to-string
@@ -12549,6 +12583,7 @@ tasks."
 :ID:       A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7
 :END:
 :LOGBOOK:
+CLOCK: [2023-10-08 Sun 09:23]--[2023-10-08 Sun 10:22] =>  0:59
 CLOCK: [2022-01-05 Wed 16:03]--[2022-01-05 Wed 16:11] =>  0:08
 CLOCK: [2021-07-27 Tue 20:55]--[2021-07-27 Tue 22:17] =>  1:22
 CLOCK: [2021-07-27 Tue 19:42]--[2021-07-27 Tue 20:15] =>  0:33
@@ -12572,26 +12607,50 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   (setq org-noter-always-create-frame nil)
   (setq org-noter-separate-notes-from-heading t)
 
-  (defun tlon-org-noter-cleanup-annotation (title)
-  "Cleanup the annotation at point.
+  (defun ps/org-noter-cleanup-annotation (title)
+    "Cleanup the annotation at point.
 Replaces the generic 'Highlight on page X' generated by
-`org-noter-create-skeleton' with a custom TITLE and
-encloses the content of the heading in a quote."
-  (interactive "sTitle: ")
-  (save-excursion
-    (re-search-backward "^\\*\\*\\*[^*]")
-    (re-search-forward "Highlight on page" nil t)
-    (replace-match (concat title ", p."))
-    (outline-next-visible-heading 1)
-    (delete-line)
-    (unfill-paragraph)
-    (insert "#+begin_quote\n")
-    (forward-paragraph)
-    (insert "#+end_quote\n")
-    (outline-next-visible-heading 1)))
+`org-noter-create-skeleton' with a custom TITLE and encloses the content of the
+heading in a quote."
+    (interactive "sTitle: ")
+    (unless (derived-mode-p 'org-mode)
+      (error "Not in an Org buffer"))
+    (let ((initial-heading (org-get-heading t t t t))
+	  (highlight-heading-regexp "Highlight on page \\(.*\\)"))
+      (save-restriction
+	(save-excursion
+	  (cond
+	   ((string-match highlight-heading-regexp initial-heading)
+	    (org-back-to-heading)
+	    (org-next-visible-heading 1))
+	   ((string-match "Contents" initial-heading)
+	    (org-back-to-heading))
+	   (t
+	    (user-error "You must be either in a \"contents\" heading or in a \"highlight on page\" Heading")))
+	  (org-narrow-to-subtree)
+	  (org-end-of-meta-data t)
+	  (narrow-to-region (point) (point-max))
+	  (unfill-region (point) (point-max))
+	  (ps/org-noter-dehyphenate)
+	  (let ((content (buffer-substring-no-properties (point) (point-max))))
+	    (widen)
+	    (org-cut-subtree)
+	    (org-previous-visible-heading 1)
+	    (let* ((highlight-heading (org-get-heading t t t t))
+		   (page (progn
+			   (string-match highlight-heading-regexp highlight-heading)
+			   (match-string 1 highlight-heading))))
+	      (org-edit-headline (format "%s, p. %s" title page))
+	      (org-narrow-to-subtree)
+	      (goto-char (point-max))
+	      (insert "\n#+begin_quote\n")
+	      (insert content)
+	      (insert "#+end_quote\n")
+	      (tlon-core-remove-extra-blank-lines)
+	      (org-next-visible-heading 1)))))))
 
   ;; TODO: find `org-noter' hook to run this automatically
-  (defun tlon-org-noter-dehyphenate ()
+  (defun ps/org-noter-dehyphenate ()
     "Remove leftover hyphens in hyphenated text.
 Operate on the current paragraph, or the region if active."
     (interactive)
@@ -12607,7 +12666,7 @@ Operate on the current paragraph, or the region if active."
           (replace-match "\\1\\2")))))
 
   ;; TODO: find `org-noter' hook to run this automatically
-  (defun tlon-org-noter-highlight-offset (offset)
+  (defun ps/org-noter-highlight-offset (offset)
     "Fix numbering mismatch between PDF and book/article pages.
 OFFSET is the difference between the page number in the PDF and
 the page number in the book or article."
@@ -16094,15 +16153,9 @@ poorly-designed websites."
     (switch-to-buffer buffer)
     (elfeed-show-refresh))
 
-  ;; (run-with-idle-timer (* 60 10) t 'elfeed-update)
+  (run-with-idle-timer (* 60 10) t 'ps/elfeed-full-update)
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
-  ;; I believe this is no longer needed
-  ;; github.com/skeeto/elfeed/issues/190#issuecomment-384346895
-  ;; (elfeed-show-mode-hook . (lambda ()
-  ;;                            (setq fill-column (current-fill-column))
-  ;;                            (setq-local shr-width (current-fill-column))
-  ;;                            (setq elfeed-show-entry-switch #'ps/show-elfeed)))
 
   :general
   ;; ("A-f" (lambda! (elfeed) (ps/elfeed-full-update)))
@@ -17832,8 +17885,6 @@ Search for user name in `org-mode' heading at point. If found, copy the content
 
   :general
   ("H-r" 'tlon-babel-dispatch)
-  (markdown-mode-map
-   "s-t" 'tlon-babel-insert-cite-tag)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
@@ -17843,14 +17894,12 @@ Search for user name in `org-mode' heading at point. If found, copy the content
    "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
    "'" 'tlon-babel-open-forge-file)
-  ((gfm-mode-map markdown-mode-map eww-mode-map)
-   "H-," 'tlon-babel-read-backward
-   "H-." 'tlon-babel-read-forward
-   "H-;" 'tlon-babel-read-target-start-or-stop)
   ((gfm-mode-map markdown-mode-map)
    "A-s-e" 'tlon-babel-yaml-edit-field
    "s-c" 'tlon-babel-copy-dwim
-   "s-u" 'tlon-babel-markdown-insert-element)
+   "s-t" 'tlon-babel-insert-cite-tag
+   "s-u" 'tlon-babel-markdown-insert-element
+   "A-C-s-<tab>" 'tlon-babel-markdown-end-of-buffer-dwim)
   (github-review-mode-map
    "s-c" 'tlon-babel-submit-comment-revisions))
 #+end_src

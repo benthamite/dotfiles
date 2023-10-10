@@ -25,4 +25,4 @@ export EDITOR="emacsclient -nw"
 export VISUAL="$EDITOR"
 
 # gdcv
-export PATH="$PATH:/Users/pablostafforini/source/gdcv"
+export PATH="$PATH:$HOME/source/gdcv"

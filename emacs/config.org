@@ -16153,15 +16153,9 @@ poorly-designed websites."
     (switch-to-buffer buffer)
     (elfeed-show-refresh))
 
-  ;; (run-with-idle-timer (* 60 10) t 'elfeed-update)
+  (run-with-idle-timer (* 60 10) t 'ps/elfeed-full-update)
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
-  ;; I believe this is no longer needed
-  ;; github.com/skeeto/elfeed/issues/190#issuecomment-384346895
-  ;; (elfeed-show-mode-hook . (lambda ()
-  ;;                            (setq fill-column (current-fill-column))
-  ;;                            (setq-local shr-width (current-fill-column))
-  ;;                            (setq elfeed-show-entry-switch #'ps/show-elfeed)))
 
   :general
   ;; ("A-f" (lambda! (elfeed) (ps/elfeed-full-update)))

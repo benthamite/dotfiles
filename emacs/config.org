@@ -12583,6 +12583,7 @@ tasks."
 :ID:       A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7
 :END:
 :LOGBOOK:
+CLOCK: [2023-10-08 Sun 09:23]--[2023-10-08 Sun 10:22] =>  0:59
 CLOCK: [2022-01-05 Wed 16:03]--[2022-01-05 Wed 16:11] =>  0:08
 CLOCK: [2021-07-27 Tue 20:55]--[2021-07-27 Tue 22:17] =>  1:22
 CLOCK: [2021-07-27 Tue 19:42]--[2021-07-27 Tue 20:15] =>  0:33
@@ -12665,7 +12666,7 @@ Operate on the current paragraph, or the region if active."
           (replace-match "\\1\\2")))))
 
   ;; TODO: find `org-noter' hook to run this automatically
-  (defun tlon-org-noter-highlight-offset (offset)
+  (defun ps/org-noter-highlight-offset (offset)
     "Fix numbering mismatch between PDF and book/article pages.
 OFFSET is the difference between the page number in the PDF and
 the page number in the book or article."

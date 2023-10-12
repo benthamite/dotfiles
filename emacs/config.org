@@ -8202,7 +8202,7 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   :config
   (defun ps/flycheck-languagetool-enable ()
     "Enable the `languagetool' checker."
-    (unless (eq major-mode 'forge-post-mode)
+    (unless (member major-mode '(forge-post-mode gfm-mode))
       (flycheck-select-checker 'languagetool)))
 
   (add-hook 'markdown-mode-hook 'ps/flycheck-languagetool-enable))

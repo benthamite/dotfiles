@@ -7254,11 +7254,11 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
     "Toggle between single line and multiline search."
     (interactive)
     (let* ((multiline-flags " --multiline --multiline-dotall")
-	   (new-value (if (string-match (concat "\\(.*?\\)" multiline-flags) consult-ripgrep-args)
-			  (match-string 1)
-			(concat consult-ripgrep-args multiline-flags))))
+           (new-value (if (string-match (concat "\\(.*?\\)" multiline-flags) consult-ripgrep-args)
+                          (match-string 1)
+                        (concat consult-ripgrep-args multiline-flags))))
       (setq consult-ripgrep-args new-value)))
-  
+
   (defun ps/consult-locate-current ()
     "Search with `consult-locate' in current directory."
     (interactive)
@@ -7348,6 +7348,8 @@ buffer are offered."
    "A-H-p" 'ps/consult-ripgrep-anywhere)
   (org-mode-map
    "s-j" 'ps/consult-org-heading)
+   ((markdown-mode-map gfm-mode-map outline-mode-map)
+   "s-j" 'consult-outline)
   ((elfeed-show-mode-map eww-mode-map prog-mode-map)
    "s-j" 'consult-imenu))
 #+end_src

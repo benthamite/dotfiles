@@ -8944,8 +8944,6 @@ otherwise the whole buffer."
 
 /[[https://github.com/lorniu/go-translate][go-translate]] is an Emacs translator that supports multiple translation engines./
 
-Needs to be configured.
-
 #+begin_src emacs-lisp :tangle no
 (use-package go-translate
   :demand t
@@ -8968,7 +8966,7 @@ Needs to be configured.
           ;; (gts-bing-engine)
           ;;(gts-google-engine)
           ;;(gts-google-rpc-engine)
-          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)) :pro t)
+          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)) :pro nil)
           ;; (gts-google-engine :parser (gts-google-summary-parser))
           ;;(gts-google-engine :parser (gts-google-parser))
           ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")

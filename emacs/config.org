@@ -7403,6 +7403,8 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :after consult forge
   :demand t
   :config
+  (add-to-list 'consult-gh-default-orgs-list "benthamite")
+  (setq consult-gh-default-clone-directory "~/source/")
   (setq consult-gh-issues-state-to-show "all"))
 #+end_src
 

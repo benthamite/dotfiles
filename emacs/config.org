@@ -2336,7 +2336,14 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 (use-feature hl-line
   :demand t
   :config
-  (global-hl-line-mode))
+  (global-hl-line-mode)
+
+  (dolist (hook '(markdown-mode-hook org-mode-hook))
+    (add-hook hook
+              (lambda ()
+                (set (make-local-variable 'global-hl-line-mode) nil)))))
+#+end_src
+
 ** lin
 :PROPERTIES:
 :ID:       FA8149A2-9984-4C39-AA81-120317615E86

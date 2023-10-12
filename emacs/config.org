@@ -16426,9 +16426,6 @@ https://superuser.com/a/1350144/387888."
   (defengine GitHub
     "https://github.com/search?q=%s&type=code"
     :keybinding "g h")
-  (defengine GiveWell
-    "https://www.givewell.org/search/ss360/%s"
-    :keybinding "g w")
   (defengine Goodreads
     "http://www.goodreads.com/search/search?search_type=books&search[query]=%s"
     :keybinding "g r")
@@ -16447,6 +16444,9 @@ https://superuser.com/a/1350144/387888."
   (defengine Google-Drive
     "https://drive.google.com/drive/u/0/search?q=%s"
     :keybinding "g d")
+  (defengine Google-Trends
+    "http://www.google.com/trends/explore#q=%s"
+    :keybinding "g e")
   (defengine Google-Images
     "https://www.google.com/search?tbm=isch&source=hp&biw=1920&bih=1006&ei=2PlgWp_OEcHF6QTo2b2ACQ&q=%s"
     :keybinding "g i")

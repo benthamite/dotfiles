@@ -1977,6 +1977,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 
   :init
   (setq modus-themes-org-blocks 'gray-background)
+
   (defun ps/modus-themes-highlight-parentheses ()
     (modus-themes-with-colors
       (setq highlight-parentheses-background-colors (list bg-cyan-intense
@@ -2016,22 +2017,24 @@ installed."
 
   (tlon-init-override-code-if-available
    :ps/modus-themes-load
-   '(
-     (ps/modus-themes-load-theme-conditionally)
-     ))
+   '((ps/modus-themes-load-theme-conditionally)))
 
   (setq modus-themes-common-palette-overrides
-        `(
-          ;; hide the fringe
-          (fringe unspecified)
-          ;; additional customizations can be added here
+        `((fringe unspecified) ; hide the fringe
+          ;; additional customizations can be added here:
 
           ;; for the rest, use the predefined intense values
-
           ,@modus-themes-preset-overrides-intense))
+
+  (defun ps/modus-set-extra-faces ()
+  "Set extra faces for the `modus' themes."
+  (if (eq 'modus-operandi (car custom-enabled-themes))
+      (set-face-attribute 'hl-sentence nil :background "#bfefff")
+    (set-face-attribute 'hl-sentence nil :background "#004065")))
 
   (add-hook 'modus-themes-after-load-theme-hook #'ps/faces-load-custom-faces)
   (add-hook 'modus-themes-after-load-theme-hook #'ps/modus-themes-highlight-parentheses)
+  (add-hook 'modus-themes-after-load-theme-hook #'ps/modus-set-extra-faces)
 
   :general
   ("A-u" 'modus-themes-toggle))

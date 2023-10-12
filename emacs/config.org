@@ -287,12 +287,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#text-mode][text-mode]]
   - [[#with-editor][with-editor]]
   - [[#latex-mode][latex-mode]]
-  - [[#goldendict][goldendict]]
-  - [[#powerthesaurus][powerthesaurus]]
-  - [[#reverso][reverso]]
-  - [[#goldendict][goldendict]]
-  - [[#txl][txl]]
-  - [[#go-translate][go-translate]]
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown-mode][markdown-mode]]
   - [[#grip-mode][grip-mode]]
@@ -301,6 +295,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#mediawiki-el][mediawiki-el]]
   - [[#gdrive][gdrive]]
   - [[#ledger-mode][ledger-mode]]
+- [[#translation][translation]]
+  - [[#go-translate][go-translate]]
+  - [[#powerthesaurus][powerthesaurus]]
+  - [[#goldendict][goldendict]]
+  - [[#reverso][reverso]]
 - [[#pdf][pdf]]
   - [[#pdf-tools][pdf-tools]]
   - [[#scroll-other-window][scroll-other-window]]
@@ -8352,424 +8351,6 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 :END:
 [cite:@Jenner2021EmacsAmazingLaTeX]
 
-** goldendict
-:PROPERTIES:
-:ID:       32143368-5DE3-44F5-A35B-05F157DEC2A5
-:END:
-
-*** TODO [#5] Check out shawcm/goldendict-emacs: Lookup marked text by GoldenDict in Emacs
-:PROPERTIES:
-:Effort:   0:25
-:ID:       4B44B3FE-6553-4BA0-98B9-5C0ECFE0C913
-:END:
-:LOGBOOK:
-CLOCK: [2023-05-03 Wed 17:35]--[2023-05-03 Wed 18:14] =>  0:39
-CLOCK: [2021-11-19 Fri 12:35]--[2021-11-19 Fri 12:59] =>  0:24
-CLOCK: [2021-11-18 Thu 11:35]--[2021-11-18 Thu 12:05] =>  0:30
-CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
-:END:
-- https://github.com/konstare/gdcv
-  seems complicated; haven't tried
-  next step is to try this, once Leo confirms that his dictionaries are in gdcv format
-- https://github.com/stardiviner/goldendict.el
-  crashes Goldendict
-- https://github.com/shawcm/goldendict-emacs
-  crashes Goldendict
-- https://www.reddit.com/r/emacs/comments/dm1x5c/offline_dictionary_lookup/?utm_source=amp&utm_medium=&utm_content=post_body
-
-Update on ~gdcv~: I spent 45 minutes with GPT-4 trying to make it work, but I failed. Here's the conversation, for future reference:
-
-#+begin_ai
-[SYS]: You are a helpful assistant.
-
-[ME]: I'm trying to install a program found in https://github.com/konstare/gdcv. I made sure I have the requirements and followed the instructions:
-
-```
-git clone https://github.com/konstare/gdcv
-cd gdcv
-make gdcv
-```
-
-However, after running `make gdcv`, I get the message `make: `gdcv' is up to date.` and no binary is created. What's going on?
-
-[AI]: It seems like there might be an issue related to the "Makefile" in the repository. In this case, you can try to compile the program manually.
-
-First, ensure that the required dependencies are installed:
-
-- SDL2
-- SDL2_ttf
-- SDL2_image
-- pkg-config
-
-Then, open a terminal and navigate (`cd`) to the "gdcv" directory.
-
-Next, you can directly compile the source code using the following command:
-
-```
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/main.c
-```
-
-This will create a binary file called "gdcv," which you can then run using:
-
-```
-./gdcv
-```
-
-Please note that this is appropriate for a Linux environment. If you use a different platform, the process might be slightly different, and you may need to modify the compile command accordingly.
-
-[ME]: Thanks. How do I ensure that those dependencies are installed? Should they be listed in `brew list`?
-
-[AI]: Yes, you can use Homebrew to install and manage these dependencies if you are using macOS.
-
-First, make sure Homebrew is installed on your machine. If not, you can install it with the following command:
-
-```
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-To install the required dependencies using Homebrew, run the following commands:
-
-
-#`
-brew+end_ai
-_image
-brew install sdl2_ttf
-brew install pkg-config
-```
-
-After successfully installing the dependencies, you can check if they are installed and listed using:
-
-```
-brew list | egrep "sdl2|sdl2_image|sdl2_ttf|pkg that match the specified names. If the required dependencies are installed correctly, you should see `sdl2`, `sdl2_image`, `sdl2_ttf`, and `pkg-config` in the output.
-
-[ME]: Thanis. When I follow the compilation instructions (i.e. when I run `gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/main.c` after insuring I have all the dependencies), I get the following error:
-
-```
-clang: error: no such file or directory: 'src/main.c'
-```
-
-
-[AI]: Apologies for the confusion earlier. It seems the file structure of the "gdcv" repository does not follow the expected format. I have looked into the repository, and it appears the main source file is located in "src/gdcv.c" instead of "src/main.c".
-
-Please run the following modified command to compile the program:
-
-```bash
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/gdcv.c
-```
-
-After running this command, you should see the "gdcv" binary created. You can run it by typing:
-
-```bash
-./gdcv
-```
-
-[ME]: I now get the following error:
-
-```
-gdcv.c:3:10: fatal error: 'argp.h' file not found
-#include <argp.h> //argp
-^~~~~~~~
-1 error generated.
-```
-
-[AI]: I apologize for the oversight. The error indicates that the "argp.h" header file is missing. This file is part of the GNU C library, which is not included in macOS by default.
-
-You can install the "argp-standalone" package using Homebrew and update the compilation command to include the new header and library paths:
-
-1. Install argp-standalone using Homebrew:
-
-```bash
-brew install argp-standalone
-```
-
-2. Now modify the compilation command to include the header and library paths:
-
-```bash
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
-```
-
-Please let me know if this resolves your issue, and you are able to compile and run the "gdcv" program.
-
-[ME]: Now I get this error:
-
-```
-gdcv.c:4:10: fatal error: 'error.h' file not found
-#include <error.h> //argp
-^~~~~~~~~
-1 error generated.
-```
-
-[AI]: I apologize for the inconvenience. It seems that "error.h" is another header file that is part of the GNU C Library which is not present in the default macOS libraries.
-
-To work around this, you can create your custom "error.h" file in the "gdcv" folder with the essential parts needed to compile the program. Create a new file called "error.h" in the "gdcv" folder and add the following lines:
-
-```c
-#include <stdio.h>
-#include <stdlib.h>
-void error(int status, int errnum, const char *format, ...);
-```
-
-Now, add a custom implementation of the 'error' function in "src/gdcv.c" before the "main" function:
-
-```c
-#include <stdarg.h> // For va_start, va_end
-
-void error(int status, int errnum, const char *format, ...)
-{
-va_list args;
-fprintf(stderr, "ERROR: ");
-va_start(args, format);
-vfprintf(stderr, format, args);
-va_end(args);
-
-if (errnum != 0)
-{
-fprintf(stderr, ": %s", strerror(errnum));
-}
-fprintf(stderr, "\n");
-
-if (status != 0)
-{
-exit(status);
-}
-}
-```
-
-Finally, update your compilation command to include the local directory for the header file search:
-
-```bash
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I. -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
-```
-
-This should allow you to compile "gdcv" without errors. Please let me know if you still encounter any issues.
-
-[ME]: Can you clarify where in the file should I add the custom implementation of the 'error' function?
-
-[AI]: Sure, I'll clarify that for you.
-
-In the "src/gdcv.c" file, you should add the custom implementation of the 'error' function right after the inclusion of the header files and before the main function.
-
-Here is a modified snippet from the "src/gdcv.c" file with the 'error' function added in the appropriate location:
-
-```c
-#include <argp.h>
-#include <error.h>
-#include <stdlib.h>
-#include <string.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-
-/* Add this custom 'error' function implementation right after the includes */
-#include <stdarg.h> // For va_start, va_end
-
-void error(int status, int errnum, const char *format, ...)
-{
-va_list args;
-fprintf(stderr, "ERROR: ");
-va_start(args, format);
-vfprintf(stderr, format, args);
-va_end(args);
-
-if (errnum != 0)
-{
-fprintf(stderr, ": %s", strerror(errnum));
-}
-fprintf(stderr, "\n");
-
-if (status != 0)
-{
-exit(status);
-}
-}
-
-/* Existing main function and other code */
-int main(int argc, char **argv)
-{
-// Rest of the code
-}
-```
-
-Make sure to save the changes to the "src/gdcv.c" file and then proceed with the compilation using the command shared in the previous response. This should enable you to compile the "gdcv" program without encountering the "error.h" issue.
-
-[ME]: Unfortunately, after following those steps I still get this error:
-
-```
-gdcv.c:4:10: fatal error: 'error.h' file not found
-#include <error.h> //argp
-^~~~~~~~~
-1 error generated.
-```
-
-[AI]: I apologize for the confusion in my previous messages. I realize now that there's a mistake in the custom solution I provided.
-
-Instead of creating a custom `error.h` file, you should remove the `#include <error.h>` line from the `src/gdcv.c` file since we have added the custom `error` function implementation directly into `src/gdcv.c`.
-
-Please follow these steps:
-
-1. Remove the `#include <error.h>` line from `src/gdcv.c`.
-
-2. Ensure that the custom `error` function implementation is present in `src/gdcv.c` as previously mentioned.
-
-3. Compile the program using the command I provided earlier:
-
-```bash
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I. -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
-```
-
-These changes should resolve the error and successfully compile the "gdcv" program. Please let me know if you have any further issues, and I'll be happy to assist you.
-
-[ME]:
-#+end_ai
-
-** powerthesaurus
-:PROPERTIES:
-:ID:       81CC0280-A8A5-4C8F-BF05-D324EB917DCD
-:END:
-
-/[[https://github.com/SavchenkoValeriy/emacs-powerthesaurus][powerthesaurus]] is an Emacs client for [[https://www.powerthesaurus.org/][power thesaurus]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package powerthesaurus
-  :general
-  ("H-y" 'powerthesaurus-transient))
-#+end_src
-
-** reverso
-:PROPERTIES:
-:ID:       F3063A73-ED50-42BD-8ABD-8D7FC68758FD
-:END:
-:LOGBOOK:
-CLOCK: [2023-05-11 Thu 20:24]--[2023-05-11 Thu 20:27] =>  0:03
-CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
-:END:
-
-/[[https://github.com/SqrtMinusOne/reverso.el][reverso]] is an Emacs client for [[https://www.reverso.net/][reverso]]./
-
-#+begin_src emacs-lisp
-(use-package reverso
-  :elpaca (reverso
-           :host github
-           :repo "SqrtMinusOne/reverso.el")
-  :config
-  (setq reverso-languages '(english french german italian portuguese spanish))
-
-  :general
-  ("H-Y" 'reverso))
-#+end_src
-
-** goldendict
-:PROPERTIES:
-:ID:       F2FFB5E0-060B-4A31-B2D2-4DF03ABC62B5
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defun ps/goldendict-region-or-word ()
-  "Return region or word around point.
-If `mark-active' on, return region string. Otherwise return word
-around point."
-  (if (use-region-p)
-      (buffer-substring-no-properties (region-beginning)
-                                      (region-end))
-    (thing-at-point 'word)))
-
-(defun ps/goldendict-search-input (input &optional arg)
-  "Run an external search for INPUT in GoldenDict.
-If there is a word at point or an active selection, look it up,
-else prompt user for input. If invoked with prefix
-argument (ARG), always force prompt."
-  (interactive (list (ps/goldendict-region-or-word) current-prefix-arg))
-  (if (and input (not arg))
-      (kill-new input)
-    (kill-new (read-string "Expression: ")))
-  ;; KM macro name: "Goldendict: lookup text in clipboard"
-  (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"D4404D73-FF1D-4DF6-8107-7AB050C28C9F\"'"))
-
-(general-define-key
- "A-y" 'ps/goldendict-search-input)
-#+end_src
-
-** txl
-:PROPERTIES:
-:ID:       BE78F0BD-D676-4E19-838A-2E6BD4504F52
-:END:
-
-/[[https://github.com/tmalsburg/txl.el][txl]] provides direct access to DeepL's machine translation API./
-
-#+begin_src emacs-lisp
-(use-package txl
-  :elpaca (txl
-             :host github
-             :repo "tmalsburg/txl.el")
-  :config
-  (setq txl-languages '(EN-US . ES))
-  (setq txl-deepl-api-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)))
-
-  :general
-  ("A-H-y" 'txl-translate-region-or-paragraph)
-  (txl-edit-translation-mode-map
-   "RET" 'txl-accept-translation
-   "q" 'txl-dismiss-translation))
-#+end_src
-
-** go-translate
-:PROPERTIES:
-:ID:       543F613A-F3B8-426C-8505-48782483FBEC
-:END:
-
-/[[https://github.com/lorniu/go-translate][go-translate]] is an Emacs translator that supports multiple translation engines./
-
-Needs to be configured.
-
-#+begin_src emacs-lisp :tangle no
-(use-package go-translate
-  :demand t
-  :config
-  (setq gts-translate-list '(("en" "es")))
-  (setq gts-default-translator
-        (gts-translator
-
-         :picker ; used to pick source text, from, to. choose one.
-
-         ;;(gts-noprompt-picker)
-         ;;(gts-noprompt-picker :texter (gts-whole-buffer-texter))
-         (gts-prompt-picker)
-         ;;(gts-prompt-picker :single t)
-         ;;(gts-prompt-picker :texter (gts-current-or-selection-texter) :single t)
-
-         :engines ; engines, one or more. Provide a parser to give different output.
-
-         (list
-          ;; (gts-bing-engine)
-          ;;(gts-google-engine)
-          ;;(gts-google-rpc-engine)
-          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)) :pro t)
-          ;; (gts-google-engine :parser (gts-google-summary-parser))
-          ;;(gts-google-engine :parser (gts-google-parser))
-          ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")
-          ;; (gts-google-rpc-engine :parser (gts-google-rpc-parser) :url "https://translate.google.com")
-          )
-
-         :render ; render, only one, used to consumer the output result. Install posframe yourself when use gts-posframe-xxx
-
-         ;; (gts-buffer-render)
-         ;;(gts-posframe-pop-render)
-         ;;(gts-posframe-pop-render :backcolor "#333333" :forecolor "#ffffff")
-         ;; (gts-posframe-pin-render)
-         ;;(gts-posframe-pin-render :position (cons 1200 20))
-         ;;(gts-posframe-pin-render :width 80 :height 25 :position (cons 1000 20) :forecolor "#ffffff" :backcolor "#111111")
-         (gts-kill-ring-render)
-
-         :splitter ; optional, used to split text into several parts, and the translation result will be a list.
-
-         (gts-paragraph-splitter)
-         ))
-  )
-#+end_src
-
 ** atomic-chrome
 :PROPERTIES:
 :ID:       D7CE2507-FDB5-44E9-A129-C18E17590476
@@ -8974,7 +8555,7 @@ With prefix argument, prompt for the URL to use."
   :config
   (setq grip-github-user (auth-source-pass-get "user" "tlon/core/api.github.com/grip-mode"))
   (setq grip-github-password (auth-source-pass-get 'secret "tlon/core/api.github.com/grip-mode"))
-  
+
   :general
   ((gfm-mode-map markdown-mode-map)
    "s-w" 'grip-mode))
@@ -9350,6 +8931,376 @@ otherwise the whole buffer."
 :ID:       49D7A193-157E-4A10-9C33-98727FC191BF
 :END:
 1. [[https://felixcrux.com/blog/ledger-practices-create-a-ledgerrc][create a ~.ledgerrc~ file]]
+
+* translation
+:PROPERTIES:
+:ID:       1A1D70D3-DBB4-4EEC-A83E-15FD4348ED94
+:END:
+
+** go-translate
+:PROPERTIES:
+:ID:       543F613A-F3B8-426C-8505-48782483FBEC
+:END:
+
+/[[https://github.com/lorniu/go-translate][go-translate]] is an Emacs translator that supports multiple translation engines./
+
+Needs to be configured.
+
+#+begin_src emacs-lisp :tangle no
+(use-package go-translate
+  :demand t
+  :config
+  (setq gts-translate-list '(("en" "es")))
+  (setq gts-default-translator
+        (gts-translator
+
+         :picker ; used to pick source text, from, to. choose one.
+
+         ;;(gts-noprompt-picker)
+         ;;(gts-noprompt-picker :texter (gts-whole-buffer-texter))
+         (gts-prompt-picker)
+         ;;(gts-prompt-picker :single t)
+         ;;(gts-prompt-picker :texter (gts-current-or-selection-texter) :single t)
+
+         :engines ; engines, one or more. Provide a parser to give different output.
+
+         (list
+          ;; (gts-bing-engine)
+          ;;(gts-google-engine)
+          ;;(gts-google-rpc-engine)
+          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)) :pro t)
+          ;; (gts-google-engine :parser (gts-google-summary-parser))
+          ;;(gts-google-engine :parser (gts-google-parser))
+          ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")
+          ;; (gts-google-rpc-engine :parser (gts-google-rpc-parser) :url "https://translate.google.com")
+          )
+
+         :render ; render, only one, used to consumer the output result. Install posframe yourself when use gts-posframe-xxx
+
+         ;; (gts-buffer-render)
+         ;;(gts-posframe-pop-render)
+         ;;(gts-posframe-pop-render :backcolor "#333333" :forecolor "#ffffff")
+         ;; (gts-posframe-pin-render)
+         ;;(gts-posframe-pin-render :position (cons 1200 20))
+         ;;(gts-posframe-pin-render :width 80 :height 25 :position (cons 1000 20) :forecolor "#ffffff" :backcolor "#111111")
+         (gts-kill-ring-render)
+
+         :splitter ; optional, used to split text into several parts, and the translation result will be a list.
+
+         (gts-paragraph-splitter)
+         ))
+  )
+#+end_src
+
+
+** powerthesaurus
+:PROPERTIES:
+:ID:       81CC0280-A8A5-4C8F-BF05-D324EB917DCD
+:END:
+
+/[[https://github.com/SavchenkoValeriy/emacs-powerthesaurus][powerthesaurus]] is an Emacs client for [[https://www.powerthesaurus.org/][power thesaurus]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package powerthesaurus
+  :general
+  ("H-y" 'powerthesaurus-transient))
+#+end_src
+
+** goldendict
+:PROPERTIES:
+:ID:       32143368-5DE3-44F5-A35B-05F157DEC2A5
+:END:
+:LOGBOOK:
+CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
+:END:
+
+*** TODO [#5] Check out shawcm/goldendict-emacs: Lookup marked text by GoldenDict in Emacs
+:PROPERTIES:
+:Effort:   0:25
+:ID:       4B44B3FE-6553-4BA0-98B9-5C0ECFE0C913
+:END:
+:LOGBOOK:
+CLOCK: [2023-05-03 Wed 17:35]--[2023-05-03 Wed 18:14] =>  0:39
+CLOCK: [2021-11-19 Fri 12:35]--[2021-11-19 Fri 12:59] =>  0:24
+CLOCK: [2021-11-18 Thu 11:35]--[2021-11-18 Thu 12:05] =>  0:30
+CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
+:END:
+- https://github.com/konstare/gdcv
+  seems complicated; haven't tried
+  next step is to try this, once Leo confirms that his dictionaries are in gdcv format
+- https://github.com/stardiviner/goldendict.el
+  crashes Goldendict
+- https://github.com/shawcm/goldendict-emacs
+  crashes Goldendict
+- https://www.reddit.com/r/emacs/comments/dm1x5c/offline_dictionary_lookup/?utm_source=amp&utm_medium=&utm_content=post_body
+
+Update on ~gdcv~: I spent 45 minutes with GPT-4 trying to make it work, but I failed. Here's the conversation, for future reference:
+
+#+begin_ai
+[SYS]: You are a helpful assistant.
+
+[ME]: I'm trying to install a program found in https://github.com/konstare/gdcv. I made sure I have the requirements and followed the instructions:
+
+```
+git clone https://github.com/konstare/gdcv
+cd gdcv
+make gdcv
+```
+
+However, after running `make gdcv`, I get the message `make: `gdcv' is up to date.` and no binary is created. What's going on?
+
+[AI]: It seems like there might be an issue related to the "Makefile" in the repository. In this case, you can try to compile the program manually.
+
+First, ensure that the required dependencies are installed:
+
+- SDL2
+- SDL2_ttf
+- SDL2_image
+- pkg-config
+
+Then, open a terminal and navigate (`cd`) to the "gdcv" directory.
+
+Next, you can directly compile the source code using the following command:
+
+```
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/main.c
+```
+
+This will create a binary file called "gdcv," which you can then run using:
+
+```
+./gdcv
+```
+
+Please note that this is appropriate for a Linux environment. If you use a different platform, the process might be slightly different, and you may need to modify the compile command accordingly.
+
+[ME]: Thanks. How do I ensure that those dependencies are installed? Should they be listed in `brew list`?
+
+[AI]: Yes, you can use Homebrew to install and manage these dependencies if you are using macOS.
+
+First, make sure Homebrew is installed on your machine. If not, you can install it with the following command:
+
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+To install the required dependencies using Homebrew, run the following commands:
+
+
+#`
+brew+end_ai
+_image
+brew install sdl2_ttf
+brew install pkg-config
+```
+
+After successfully installing the dependencies, you can check if they are installed and listed using:
+
+```
+brew list | egrep "sdl2|sdl2_image|sdl2_ttf|pkg that match the specified names. If the required dependencies are installed correctly, you should see `sdl2`, `sdl2_image`, `sdl2_ttf`, and `pkg-config` in the output.
+
+[ME]: Thanis. When I follow the compilation instructions (i.e. when I run `gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/main.c` after insuring I have all the dependencies), I get the following error:
+
+```
+clang: error: no such file or directory: 'src/main.c'
+```
+
+
+[AI]: Apologies for the confusion earlier. It seems the file structure of the "gdcv" repository does not follow the expected format. I have looked into the repository, and it appears the main source file is located in "src/gdcv.c" instead of "src/main.c".
+
+Please run the following modified command to compile the program:
+
+```bash
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/gdcv.c
+```
+
+After running this command, you should see the "gdcv" binary created. You can run it by typing:
+
+```bash
+./gdcv
+```
+
+[ME]: I now get the following error:
+
+```
+gdcv.c:3:10: fatal error: 'argp.h' file not found
+#include <argp.h> //argp
+^~~~~~~~
+1 error generated.
+```
+
+[AI]: I apologize for the oversight. The error indicates that the "argp.h" header file is missing. This file is part of the GNU C library, which is not included in macOS by default.
+
+You can install the "argp-standalone" package using Homebrew and update the compilation command to include the new header and library paths:
+
+1. Install argp-standalone using Homebrew:
+
+```bash
+brew install argp-standalone
+```
+
+2. Now modify the compilation command to include the header and library paths:
+
+```bash
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
+```
+
+Please let me know if this resolves your issue, and you are able to compile and run the "gdcv" program.
+
+[ME]: Now I get this error:
+
+```
+gdcv.c:4:10: fatal error: 'error.h' file not found
+#include <error.h> //argp
+^~~~~~~~~
+1 error generated.
+```
+
+[AI]: I apologize for the inconvenience. It seems that "error.h" is another header file that is part of the GNU C Library which is not present in the default macOS libraries.
+
+To work around this, you can create your custom "error.h" file in the "gdcv" folder with the essential parts needed to compile the program. Create a new file called "error.h" in the "gdcv" folder and add the following lines:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+void error(int status, int errnum, const char *format, ...);
+```
+
+Now, add a custom implementation of the 'error' function in "src/gdcv.c" before the "main" function:
+
+```c
+#include <stdarg.h> // For va_start, va_end
+
+void error(int status, int errnum, const char *format, ...)
+{
+va_list args;
+fprintf(stderr, "ERROR: ");
+va_start(args, format);
+vfprintf(stderr, format, args);
+va_end(args);
+
+if (errnum != 0)
+{
+fprintf(stderr, ": %s", strerror(errnum));
+}
+fprintf(stderr, "\n");
+
+if (status != 0)
+{
+exit(status);
+}
+}
+```
+
+Finally, update your compilation command to include the local directory for the header file search:
+
+```bash
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I. -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
+```
+
+This should allow you to compile "gdcv" without errors. Please let me know if you still encounter any issues.
+
+[ME]: Can you clarify where in the file should I add the custom implementation of the 'error' function?
+
+[AI]: Sure, I'll clarify that for you.
+
+In the "src/gdcv.c" file, you should add the custom implementation of the 'error' function right after the inclusion of the header files and before the main function.
+
+Here is a modified snippet from the "src/gdcv.c" file with the 'error' function added in the appropriate location:
+
+```c
+#include <argp.h>
+#include <error.h>
+#include <stdlib.h>
+#include <string.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+
+/* Add this custom 'error' function implementation right after the includes */
+#include <stdarg.h> // For va_start, va_end
+
+void error(int status, int errnum, const char *format, ...)
+{
+va_list args;
+fprintf(stderr, "ERROR: ");
+va_start(args, format);
+vfprintf(stderr, format, args);
+va_end(args);
+
+if (errnum != 0)
+{
+fprintf(stderr, ": %s", strerror(errnum));
+}
+fprintf(stderr, "\n");
+
+if (status != 0)
+{
+exit(status);
+}
+}
+
+/* Existing main function and other code */
+int main(int argc, char **argv)
+{
+// Rest of the code
+}
+```
+
+Make sure to save the changes to the "src/gdcv.c" file and then proceed with the compilation using the command shared in the previous response. This should enable you to compile the "gdcv" program without encountering the "error.h" issue.
+
+[ME]: Unfortunately, after following those steps I still get this error:
+
+```
+gdcv.c:4:10: fatal error: 'error.h' file not found
+#include <error.h> //argp
+^~~~~~~~~
+1 error generated.
+```
+
+[AI]: I apologize for the confusion in my previous messages. I realize now that there's a mistake in the custom solution I provided.
+
+Instead of creating a custom `error.h` file, you should remove the `#include <error.h>` line from the `src/gdcv.c` file since we have added the custom `error` function implementation directly into `src/gdcv.c`.
+
+Please follow these steps:
+
+1. Remove the `#include <error.h>` line from `src/gdcv.c`.
+
+2. Ensure that the custom `error` function implementation is present in `src/gdcv.c` as previously mentioned.
+
+3. Compile the program using the command I provided earlier:
+
+```bash
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I. -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
+```
+
+These changes should resolve the error and successfully compile the "gdcv" program. Please let me know if you have any further issues, and I'll be happy to assist you.
+
+[ME]:
+#+end_ai
+
+** reverso
+:PROPERTIES:
+:ID:       F3063A73-ED50-42BD-8ABD-8D7FC68758FD
+:END:
+:LOGBOOK:
+CLOCK: [2023-05-11 Thu 20:24]--[2023-05-11 Thu 20:27] =>  0:03
+CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
+:END:
+
+/[[https://github.com/SqrtMinusOne/reverso.el][reverso]] is an Emacs client for [[https://www.reverso.net/][reverso]]./
+
+#+begin_src emacs-lisp
+(use-package reverso
+  :elpaca (reverso
+           :host github
+           :repo "SqrtMinusOne/reverso.el")
+  :config
+  (setq reverso-languages '(english french german italian portuguese spanish))
+
+  :general
+  ("H-Y" 'reverso))
+#+end_src
 
 * pdf
 :PROPERTIES:

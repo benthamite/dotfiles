@@ -1706,7 +1706,8 @@ Remember that every piece of Elisp that I write is for my own educational and re
   (setq prot-simple-time-specifier "%R %z")
 
   :general
-  ("M-s-=" 'prot-simple-insert-date))
+  ("M-s-=" 'prot-simple-insert-date
+   "C-g" 'prot-simple-keyboard-quit-dwim))
 #+end_src
 
 ** prot-common
@@ -16456,30 +16457,30 @@ https://superuser.com/a/1350144/387888."
   (defengine Google-News
     "https://news.google.com/search?q=%s"
     :keybinding "g n")
-  (defengine Google-Photos
-    "https://photos.google.com/search/%s"
-    :keybinding "g p")
-  (defengine Google-Play
-    "https://play.google.com/store/search?q=%s"
-    :keybinding "g y")
   (defengine Google-Podcasts
     "https://podcasts.google.com/?q=%s"
     :keybinding "g o")
+  (defengine Google-Photos
+    "https://photos.google.com/search/%s"
+    :keybinding "g p")
   (defengine Google-Scholar
-    "https://scholar.google.com/scholar?hl=en&as_sdt=1%2C5&q=%s&btnG="
+    "https://scholar.google.com/scholar?hl=en&as_sdt=1%2C5&q=%s&btnG=&lr="
     :keybinding "s s")
-  (defengine Google-Translate
+    (defengine Google-Translate
     "https://translate.google.com/#auto/en/%s"
     :keybinding "g t")
-  (defengine Google-Trends
-    "http://www.google.com/trends/explore#q=%s"
-    :keybinding "g e")
   (defengine Google-Video
     "https://www.google.com/search?q=%s&tbm=vid"
     :keybinding "g v")
-  (defengine GoDaddy
-    "https://www.godaddy.com/domainsearch/find?checkAvail=1&domainToCheck=%s"
-    :keybinding "g d")
+  (defengine GiveWell
+    "https://www.givewell.org/search/ss360/%s"
+    :keybinding "g w")
+  (defengine Google-Play
+    "https://play.google.com/store/search?q=%s"
+    :keybinding "g y")
+  (defengine Google-Scholar-Spanish
+    "https://scholar.google.com/scholar?hl=en&as_sdt=1%2C5&q=%s&btnG="
+    :keybinding "s x")
   (defengine Gwern
     "https://www.google.com/search?q=%s+site:gwern.net"
     :keybinding "g w")

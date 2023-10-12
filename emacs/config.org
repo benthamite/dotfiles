@@ -12078,8 +12078,9 @@ Optionally, return such list if its length is less than LIMIT."
       (setq file-list (cl-delete-if (lambda (k)
                                       (string-match-p org-roam-file-exclude-regexp k))
                                     file-list))
-      (when (and limit
-                 (< (length file-list) limit))
+      (if limit
+          (when (< (length file-list) limit)
+            file-list)
         file-list)))
 
   :config/el-patch

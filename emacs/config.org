@@ -97,7 +97,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#modus-themes][modus-themes]]
   - [[#highlight-parentheses][highlight-parentheses]]
   - [[#emoji][emoji]]
-  - [[#lin][lin]]
   - [[#image][image]]
   - [[#paren][paren]]
   - [[#doom-modeline][doom-modeline]]
@@ -111,6 +110,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#scroll-bar][scroll-bar]]
   - [[#delsel][delsel]]
   - [[#hl-line][hl-line]]
+  - [[#lin][lin]]
   - [[#jit-lock][jit-lock]]
 - [[#performance][performance]]
   - [[#profiler][profiler]]
@@ -2067,41 +2067,6 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   ("H-e" 'emoji-insert))
 #+end_src
 
-** lin
-:PROPERTIES:
-:ID:       FA8149A2-9984-4C39-AA81-120317615E86
-:END:
-:LOGBOOK:
-CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
-:END:
-
-/[[https://protesilaos.com/codelog/2022-09-08-lin-1-0-0/][lin]] is a stylistic enhancement for Emacs’ built-in ~hl-line-mode~. It remaps the ~hl-line~ face (or equivalent) buffer-locally to a style optimal for major modes where line selection is the primary mode of interaction./
-
-#+begin_src emacs-lisp :results silent
-(use-package lin
-  :demand t
-  :config
-  (setq lin-face 'lin-blue)
-  (setq lin-mode-hooks
-   '(dired-mode-hook
-     elfeed-search-mode-hook
-     git-rebase-mode-hook
-     grep-mode-hook
-     ibuffer-mode-hook
-     ilist-mode-hook
-     ledger-report-mode-hook
-     log-view-mode-hook
-     magit-log-mode-hook
-     mu4e-headers-mode
-     occur-mode-hook
-     org-agenda-mode-hook
-     pdf-outline-buffer-mode-hook
-     proced-mode-hook
-     tabulated-list-mode-hook))
-
-  (lin-global-mode))
-#+end_src
-
 ** image
 :PROPERTIES:
 :ID:       E1A616FF-7D93-4AB4-AD44-44FB6550FD2E
@@ -2367,6 +2332,40 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
   :demand t
   :config
   (global-hl-line-mode))
+** lin
+:PROPERTIES:
+:ID:       FA8149A2-9984-4C39-AA81-120317615E86
+:END:
+:LOGBOOK:
+CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
+:END:
+
+/[[https://protesilaos.com/codelog/2022-09-08-lin-1-0-0/][lin]] is a stylistic enhancement for Emacs’ built-in ~hl-line-mode~. It remaps the ~hl-line~ face (or equivalent) buffer-locally to a style optimal for major modes where line selection is the primary mode of interaction./
+
+#+begin_src emacs-lisp :results silent
+(use-package lin
+  :demand t
+  :config
+  (setq lin-face 'lin-blue)
+  (setq lin-mode-hooks
+   '(dired-mode-hook
+     elfeed-search-mode-hook
+     git-rebase-mode-hook
+     grep-mode-hook
+     ibuffer-mode-hook
+     ilist-mode-hook
+     ledger-report-mode-hook
+     log-view-mode-hook
+     magit-log-mode-hook
+     mu4e-headers-mode
+     occur-mode-hook
+     org-agenda-mode-hook
+     pdf-outline-buffer-mode-hook
+     proced-mode-hook
+     tabulated-list-mode-hook))
+
+  (lin-global-mode))
+#+end_src
 #+end_src
 
 ** jit-lock

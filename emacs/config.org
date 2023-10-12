@@ -111,6 +111,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#delsel][delsel]]
   - [[#hl-line][hl-line]]
   - [[#lin][lin]]
+  - [[#hl-sentence][hl-sentence]]
   - [[#jit-lock][jit-lock]]
 - [[#performance][performance]]
   - [[#profiler][profiler]]
@@ -2366,6 +2367,25 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 
   (lin-global-mode))
 #+end_src
+
+** hl-sentence
+:PROPERTIES:
+:ID:       1E12C3EF-BBB1-45CD-845D-3E1AEEB4EE30
+:END:
+
+/[[https://github.com/milkypostman/hl-sentence][hl-sentence]] highlights sentences rather than lines./
+
+I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specifically, ~org-mode~ and ~markdown-mode~) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the modes. See the above sections and the ~ps/modus-set-extra-faces~ function in the ~modus-themes~ section.
+
+#+begin_src emacs-lisp
+(use-package hl-sentence
+  :elpaca (hl-sentence
+           :host github
+           :repo "milkypostman/hl-sentence")
+  :demand t
+  :config
+  (dolist (hook '(markdown-mode-hook org-mode-hook))
+    (add-hook hook #'hl-sentence-mode)))
 #+end_src
 
 ** jit-lock

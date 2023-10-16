@@ -1,3 +1,5 @@
+// Settings for https://darkreader.org/
+    
 {
     "enabled": true,
     "fetchNews": true,

@@ -97,7 +97,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#modus-themes][modus-themes]]
   - [[#highlight-parentheses][highlight-parentheses]]
   - [[#emoji][emoji]]
-  - [[#lin][lin]]
   - [[#image][image]]
   - [[#paren][paren]]
   - [[#doom-modeline][doom-modeline]]
@@ -111,6 +110,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#scroll-bar][scroll-bar]]
   - [[#delsel][delsel]]
   - [[#hl-line][hl-line]]
+  - [[#lin][lin]]
+  - [[#hl-sentence][hl-sentence]]
   - [[#jit-lock][jit-lock]]
 - [[#performance][performance]]
   - [[#profiler][profiler]]
@@ -286,12 +287,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#text-mode][text-mode]]
   - [[#with-editor][with-editor]]
   - [[#latex-mode][latex-mode]]
-  - [[#goldendict][goldendict]]
-  - [[#powerthesaurus][powerthesaurus]]
-  - [[#reverso][reverso]]
-  - [[#goldendict][goldendict]]
-  - [[#txl][txl]]
-  - [[#go-translate][go-translate]]
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown-mode][markdown-mode]]
   - [[#grip-mode][grip-mode]]
@@ -300,6 +295,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#mediawiki-el][mediawiki-el]]
   - [[#gdrive][gdrive]]
   - [[#ledger-mode][ledger-mode]]
+- [[#translation][translation]]
+  - [[#go-translate][go-translate]]
+  - [[#powerthesaurus][powerthesaurus]]
+  - [[#goldendict][goldendict]]
+  - [[#reverso][reverso]]
 - [[#pdf][pdf]]
   - [[#pdf-tools][pdf-tools]]
   - [[#scroll-other-window][scroll-other-window]]
@@ -1705,7 +1705,8 @@ Remember that every piece of Elisp that I write is for my own educational and re
   (setq prot-simple-time-specifier "%R %z")
 
   :general
-  ("M-s-=" 'prot-simple-insert-date))
+  ("M-s-=" 'prot-simple-insert-date
+   "C-g" 'prot-simple-keyboard-quit-dwim))
 #+end_src
 
 ** prot-common
@@ -1976,6 +1977,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 
   :init
   (setq modus-themes-org-blocks 'gray-background)
+
   (defun ps/modus-themes-highlight-parentheses ()
     (modus-themes-with-colors
       (setq highlight-parentheses-background-colors (list bg-cyan-intense
@@ -2015,22 +2017,24 @@ installed."
 
   (tlon-init-override-code-if-available
    :ps/modus-themes-load
-   '(
-     (ps/modus-themes-load-theme-conditionally)
-     ))
+   '((ps/modus-themes-load-theme-conditionally)))
 
   (setq modus-themes-common-palette-overrides
-        `(
-          ;; hide the fringe
-          (fringe unspecified)
-          ;; additional customizations can be added here
+        `((fringe unspecified) ; hide the fringe
+          ;; additional customizations can be added here:
 
           ;; for the rest, use the predefined intense values
-
           ,@modus-themes-preset-overrides-intense))
+
+  (defun ps/modus-set-extra-faces ()
+  "Set extra faces for the `modus' themes."
+  (if (eq 'modus-operandi (car custom-enabled-themes))
+      (set-face-attribute 'hl-sentence nil :background "#bfefff")
+    (set-face-attribute 'hl-sentence nil :background "#004065")))
 
   (add-hook 'modus-themes-after-load-theme-hook #'ps/faces-load-custom-faces)
   (add-hook 'modus-themes-after-load-theme-hook #'ps/modus-themes-highlight-parentheses)
+  (add-hook 'modus-themes-after-load-theme-hook #'ps/modus-set-extra-faces)
 
   :general
   ("A-u" 'modus-themes-toggle))
@@ -2065,41 +2069,6 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 (use-feature emoji
   :general
   ("H-e" 'emoji-insert))
-#+end_src
-
-** lin
-:PROPERTIES:
-:ID:       FA8149A2-9984-4C39-AA81-120317615E86
-:END:
-:LOGBOOK:
-CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
-:END:
-
-/[[https://protesilaos.com/codelog/2022-09-08-lin-1-0-0/][lin]] is a stylistic enhancement for Emacs’ built-in ~hl-line-mode~. It remaps the ~hl-line~ face (or equivalent) buffer-locally to a style optimal for major modes where line selection is the primary mode of interaction./
-
-#+begin_src emacs-lisp :results silent
-(use-package lin
-  :demand t
-  :config
-  (setq lin-face 'lin-blue)
-  (setq lin-mode-hooks
-   '(dired-mode-hook
-     elfeed-search-mode-hook
-     git-rebase-mode-hook
-     grep-mode-hook
-     ibuffer-mode-hook
-     ilist-mode-hook
-     ledger-report-mode-hook
-     log-view-mode-hook
-     magit-log-mode-hook
-     mu4e-headers-mode
-     occur-mode-hook
-     org-agenda-mode-hook
-     pdf-outline-buffer-mode-hook
-     proced-mode-hook
-     tabulated-list-mode-hook))
-
-  (lin-global-mode))
 #+end_src
 
 ** image
@@ -2366,7 +2335,67 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 (use-feature hl-line
   :demand t
   :config
-  (global-hl-line-mode))
+  (global-hl-line-mode)
+
+  (dolist (hook '(markdown-mode-hook org-mode-hook))
+    (add-hook hook
+              (lambda ()
+                (set (make-local-variable 'global-hl-line-mode) nil)))))
+#+end_src
+
+** lin
+:PROPERTIES:
+:ID:       FA8149A2-9984-4C39-AA81-120317615E86
+:END:
+:LOGBOOK:
+CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
+:END:
+
+/[[https://protesilaos.com/codelog/2022-09-08-lin-1-0-0/][lin]] is a stylistic enhancement for Emacs’ built-in ~hl-line-mode~. It remaps the ~hl-line~ face (or equivalent) buffer-locally to a style optimal for major modes where line selection is the primary mode of interaction./
+
+#+begin_src emacs-lisp :results silent
+(use-package lin
+  :demand t
+  :config
+  (setq lin-face 'lin-blue)
+  (setq lin-mode-hooks
+   '(dired-mode-hook
+     elfeed-search-mode-hook
+     git-rebase-mode-hook
+     grep-mode-hook
+     ibuffer-mode-hook
+     ilist-mode-hook
+     ledger-report-mode-hook
+     log-view-mode-hook
+     magit-log-mode-hook
+     mu4e-headers-mode
+     occur-mode-hook
+     org-agenda-mode-hook
+     pdf-outline-buffer-mode-hook
+     proced-mode-hook
+     tabulated-list-mode-hook))
+
+  (lin-global-mode))
+#+end_src
+
+** hl-sentence
+:PROPERTIES:
+:ID:       1E12C3EF-BBB1-45CD-845D-3E1AEEB4EE30
+:END:
+
+/[[https://github.com/milkypostman/hl-sentence][hl-sentence]] highlights sentences rather than lines./
+
+I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specifically, ~org-mode~ and ~markdown-mode~) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the modes. See the above sections and the ~ps/modus-set-extra-faces~ function in the ~modus-themes~ section.
+
+#+begin_src emacs-lisp
+(use-package hl-sentence
+  :elpaca (hl-sentence
+           :host github
+           :repo "milkypostman/hl-sentence")
+  :demand t
+  :config
+  (dolist (hook '(markdown-mode-hook org-mode-hook))
+    (add-hook hook #'hl-sentence-mode)))
 #+end_src
 
 ** jit-lock
@@ -4697,6 +4726,7 @@ option."
     (revert-buffer))
 
   (add-hook 'dired-mode-hook #'dired-hide-details-mode) ; hide details by default
+  (add-hook 'dired-mode-hook #'(lambda () (visual-line-mode -1)))
 
   ;; consider binding this to something
   (defun ps/dired-convert-image-to-pdf ()
@@ -7223,11 +7253,11 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
     "Toggle between single line and multiline search."
     (interactive)
     (let* ((multiline-flags " --multiline --multiline-dotall")
-	   (new-value (if (string-match (concat "\\(.*?\\)" multiline-flags) consult-ripgrep-args)
-			  (match-string 1)
-			(concat consult-ripgrep-args multiline-flags))))
+           (new-value (if (string-match (concat "\\(.*?\\)" multiline-flags) consult-ripgrep-args)
+                          (match-string 1)
+                        (concat consult-ripgrep-args multiline-flags))))
       (setq consult-ripgrep-args new-value)))
-  
+
   (defun ps/consult-locate-current ()
     "Search with `consult-locate' in current directory."
     (interactive)
@@ -7317,6 +7347,8 @@ buffer are offered."
    "A-H-p" 'ps/consult-ripgrep-anywhere)
   (org-mode-map
    "s-j" 'ps/consult-org-heading)
+   ((markdown-mode-map gfm-mode-map outline-mode-map)
+   "s-j" 'consult-outline)
   ((elfeed-show-mode-map eww-mode-map prog-mode-map)
    "s-j" 'consult-imenu))
 #+end_src
@@ -7370,6 +7402,8 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :after consult forge
   :demand t
   :config
+  (add-to-list 'consult-gh-default-orgs-list "benthamite")
+  (setq consult-gh-default-clone-directory "~/source/")
   (setq consult-gh-issues-state-to-show "all"))
 #+end_src
 
@@ -8180,7 +8214,7 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   :config
   (defun ps/flycheck-languagetool-enable ()
     "Enable the `languagetool' checker."
-    (unless (eq major-mode 'forge-post-mode)
+    (unless (member major-mode '(forge-post-mode gfm-mode))
       (flycheck-select-checker 'languagetool)))
 
   (add-hook 'markdown-mode-hook 'ps/flycheck-languagetool-enable))
@@ -8316,424 +8350,6 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 :ID:       D4EBFE04-FEB0-46B4-AF58-BAFCD52BAA87
 :END:
 [cite:@Jenner2021EmacsAmazingLaTeX]
-
-** goldendict
-:PROPERTIES:
-:ID:       32143368-5DE3-44F5-A35B-05F157DEC2A5
-:END:
-
-*** TODO [#5] Check out shawcm/goldendict-emacs: Lookup marked text by GoldenDict in Emacs
-:PROPERTIES:
-:Effort:   0:25
-:ID:       4B44B3FE-6553-4BA0-98B9-5C0ECFE0C913
-:END:
-:LOGBOOK:
-CLOCK: [2023-05-03 Wed 17:35]--[2023-05-03 Wed 18:14] =>  0:39
-CLOCK: [2021-11-19 Fri 12:35]--[2021-11-19 Fri 12:59] =>  0:24
-CLOCK: [2021-11-18 Thu 11:35]--[2021-11-18 Thu 12:05] =>  0:30
-CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
-:END:
-- https://github.com/konstare/gdcv
-  seems complicated; haven't tried
-  next step is to try this, once Leo confirms that his dictionaries are in gdcv format
-- https://github.com/stardiviner/goldendict.el
-  crashes Goldendict
-- https://github.com/shawcm/goldendict-emacs
-  crashes Goldendict
-- https://www.reddit.com/r/emacs/comments/dm1x5c/offline_dictionary_lookup/?utm_source=amp&utm_medium=&utm_content=post_body
-
-Update on ~gdcv~: I spent 45 minutes with GPT-4 trying to make it work, but I failed. Here's the conversation, for future reference:
-
-#+begin_ai
-[SYS]: You are a helpful assistant.
-
-[ME]: I'm trying to install a program found in https://github.com/konstare/gdcv. I made sure I have the requirements and followed the instructions:
-
-```
-git clone https://github.com/konstare/gdcv
-cd gdcv
-make gdcv
-```
-
-However, after running `make gdcv`, I get the message `make: `gdcv' is up to date.` and no binary is created. What's going on?
-
-[AI]: It seems like there might be an issue related to the "Makefile" in the repository. In this case, you can try to compile the program manually.
-
-First, ensure that the required dependencies are installed:
-
-- SDL2
-- SDL2_ttf
-- SDL2_image
-- pkg-config
-
-Then, open a terminal and navigate (`cd`) to the "gdcv" directory.
-
-Next, you can directly compile the source code using the following command:
-
-```
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/main.c
-```
-
-This will create a binary file called "gdcv," which you can then run using:
-
-```
-./gdcv
-```
-
-Please note that this is appropriate for a Linux environment. If you use a different platform, the process might be slightly different, and you may need to modify the compile command accordingly.
-
-[ME]: Thanks. How do I ensure that those dependencies are installed? Should they be listed in `brew list`?
-
-[AI]: Yes, you can use Homebrew to install and manage these dependencies if you are using macOS.
-
-First, make sure Homebrew is installed on your machine. If not, you can install it with the following command:
-
-```
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-To install the required dependencies using Homebrew, run the following commands:
-
-
-#`
-brew+end_ai
-_image
-brew install sdl2_ttf
-brew install pkg-config
-```
-
-After successfully installing the dependencies, you can check if they are installed and listed using:
-
-```
-brew list | egrep "sdl2|sdl2_image|sdl2_ttf|pkg that match the specified names. If the required dependencies are installed correctly, you should see `sdl2`, `sdl2_image`, `sdl2_ttf`, and `pkg-config` in the output.
-
-[ME]: Thanis. When I follow the compilation instructions (i.e. when I run `gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/main.c` after insuring I have all the dependencies), I get the following error:
-
-```
-clang: error: no such file or directory: 'src/main.c'
-```
-
-
-[AI]: Apologies for the confusion earlier. It seems the file structure of the "gdcv" repository does not follow the expected format. I have looked into the repository, and it appears the main source file is located in "src/gdcv.c" instead of "src/main.c".
-
-Please run the following modified command to compile the program:
-
-```bash
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/gdcv.c
-```
-
-After running this command, you should see the "gdcv" binary created. You can run it by typing:
-
-```bash
-./gdcv
-```
-
-[ME]: I now get the following error:
-
-```
-gdcv.c:3:10: fatal error: 'argp.h' file not found
-#include <argp.h> //argp
-^~~~~~~~
-1 error generated.
-```
-
-[AI]: I apologize for the oversight. The error indicates that the "argp.h" header file is missing. This file is part of the GNU C library, which is not included in macOS by default.
-
-You can install the "argp-standalone" package using Homebrew and update the compilation command to include the new header and library paths:
-
-1. Install argp-standalone using Homebrew:
-
-```bash
-brew install argp-standalone
-```
-
-2. Now modify the compilation command to include the header and library paths:
-
-```bash
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
-```
-
-Please let me know if this resolves your issue, and you are able to compile and run the "gdcv" program.
-
-[ME]: Now I get this error:
-
-```
-gdcv.c:4:10: fatal error: 'error.h' file not found
-#include <error.h> //argp
-^~~~~~~~~
-1 error generated.
-```
-
-[AI]: I apologize for the inconvenience. It seems that "error.h" is another header file that is part of the GNU C Library which is not present in the default macOS libraries.
-
-To work around this, you can create your custom "error.h" file in the "gdcv" folder with the essential parts needed to compile the program. Create a new file called "error.h" in the "gdcv" folder and add the following lines:
-
-```c
-#include <stdio.h>
-#include <stdlib.h>
-void error(int status, int errnum, const char *format, ...);
-```
-
-Now, add a custom implementation of the 'error' function in "src/gdcv.c" before the "main" function:
-
-```c
-#include <stdarg.h> // For va_start, va_end
-
-void error(int status, int errnum, const char *format, ...)
-{
-va_list args;
-fprintf(stderr, "ERROR: ");
-va_start(args, format);
-vfprintf(stderr, format, args);
-va_end(args);
-
-if (errnum != 0)
-{
-fprintf(stderr, ": %s", strerror(errnum));
-}
-fprintf(stderr, "\n");
-
-if (status != 0)
-{
-exit(status);
-}
-}
-```
-
-Finally, update your compilation command to include the local directory for the header file search:
-
-```bash
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I. -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
-```
-
-This should allow you to compile "gdcv" without errors. Please let me know if you still encounter any issues.
-
-[ME]: Can you clarify where in the file should I add the custom implementation of the 'error' function?
-
-[AI]: Sure, I'll clarify that for you.
-
-In the "src/gdcv.c" file, you should add the custom implementation of the 'error' function right after the inclusion of the header files and before the main function.
-
-Here is a modified snippet from the "src/gdcv.c" file with the 'error' function added in the appropriate location:
-
-```c
-#include <argp.h>
-#include <error.h>
-#include <stdlib.h>
-#include <string.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-
-/* Add this custom 'error' function implementation right after the includes */
-#include <stdarg.h> // For va_start, va_end
-
-void error(int status, int errnum, const char *format, ...)
-{
-va_list args;
-fprintf(stderr, "ERROR: ");
-va_start(args, format);
-vfprintf(stderr, format, args);
-va_end(args);
-
-if (errnum != 0)
-{
-fprintf(stderr, ": %s", strerror(errnum));
-}
-fprintf(stderr, "\n");
-
-if (status != 0)
-{
-exit(status);
-}
-}
-
-/* Existing main function and other code */
-int main(int argc, char **argv)
-{
-// Rest of the code
-}
-```
-
-Make sure to save the changes to the "src/gdcv.c" file and then proceed with the compilation using the command shared in the previous response. This should enable you to compile the "gdcv" program without encountering the "error.h" issue.
-
-[ME]: Unfortunately, after following those steps I still get this error:
-
-```
-gdcv.c:4:10: fatal error: 'error.h' file not found
-#include <error.h> //argp
-^~~~~~~~~
-1 error generated.
-```
-
-[AI]: I apologize for the confusion in my previous messages. I realize now that there's a mistake in the custom solution I provided.
-
-Instead of creating a custom `error.h` file, you should remove the `#include <error.h>` line from the `src/gdcv.c` file since we have added the custom `error` function implementation directly into `src/gdcv.c`.
-
-Please follow these steps:
-
-1. Remove the `#include <error.h>` line from `src/gdcv.c`.
-
-2. Ensure that the custom `error` function implementation is present in `src/gdcv.c` as previously mentioned.
-
-3. Compile the program using the command I provided earlier:
-
-```bash
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I. -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
-```
-
-These changes should resolve the error and successfully compile the "gdcv" program. Please let me know if you have any further issues, and I'll be happy to assist you.
-
-[ME]:
-#+end_ai
-
-** powerthesaurus
-:PROPERTIES:
-:ID:       81CC0280-A8A5-4C8F-BF05-D324EB917DCD
-:END:
-
-/[[https://github.com/SavchenkoValeriy/emacs-powerthesaurus][powerthesaurus]] is an Emacs client for [[https://www.powerthesaurus.org/][power thesaurus]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package powerthesaurus
-  :general
-  ("H-y" 'powerthesaurus-transient))
-#+end_src
-
-** reverso
-:PROPERTIES:
-:ID:       F3063A73-ED50-42BD-8ABD-8D7FC68758FD
-:END:
-:LOGBOOK:
-CLOCK: [2023-05-11 Thu 20:24]--[2023-05-11 Thu 20:27] =>  0:03
-CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
-:END:
-
-/[[https://github.com/SqrtMinusOne/reverso.el][reverso]] is an Emacs client for [[https://www.reverso.net/][reverso]]./
-
-#+begin_src emacs-lisp
-(use-package reverso
-  :elpaca (reverso
-           :host github
-           :repo "SqrtMinusOne/reverso.el")
-  :config
-  (setq reverso-languages '(english french german italian portuguese spanish))
-
-  :general
-  ("H-Y" 'reverso))
-#+end_src
-
-** goldendict
-:PROPERTIES:
-:ID:       F2FFB5E0-060B-4A31-B2D2-4DF03ABC62B5
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defun ps/goldendict-region-or-word ()
-  "Return region or word around point.
-If `mark-active' on, return region string. Otherwise return word
-around point."
-  (if (use-region-p)
-      (buffer-substring-no-properties (region-beginning)
-                                      (region-end))
-    (thing-at-point 'word)))
-
-(defun ps/goldendict-search-input (input &optional arg)
-  "Run an external search for INPUT in GoldenDict.
-If there is a word at point or an active selection, look it up,
-else prompt user for input. If invoked with prefix
-argument (ARG), always force prompt."
-  (interactive (list (ps/goldendict-region-or-word) current-prefix-arg))
-  (if (and input (not arg))
-      (kill-new input)
-    (kill-new (read-string "Expression: ")))
-  ;; KM macro name: "Goldendict: lookup text in clipboard"
-  (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"D4404D73-FF1D-4DF6-8107-7AB050C28C9F\"'"))
-
-(general-define-key
- "A-y" 'ps/goldendict-search-input)
-#+end_src
-
-** txl
-:PROPERTIES:
-:ID:       BE78F0BD-D676-4E19-838A-2E6BD4504F52
-:END:
-
-/[[https://github.com/tmalsburg/txl.el][txl]] provides direct access to DeepL's machine translation API./
-
-#+begin_src emacs-lisp
-(use-package txl
-  :elpaca (txl
-             :host github
-             :repo "tmalsburg/txl.el")
-  :config
-  (setq txl-languages '(EN-US . ES))
-  (setq txl-deepl-api-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)))
-
-  :general
-  ("A-H-y" 'txl-translate-region-or-paragraph)
-  (txl-edit-translation-mode-map
-   "RET" 'txl-accept-translation
-   "q" 'txl-dismiss-translation))
-#+end_src
-
-** go-translate
-:PROPERTIES:
-:ID:       543F613A-F3B8-426C-8505-48782483FBEC
-:END:
-
-/[[https://github.com/lorniu/go-translate][go-translate]] is an Emacs translator that supports multiple translation engines./
-
-Needs to be configured.
-
-#+begin_src emacs-lisp :tangle no
-(use-package go-translate
-  :demand t
-  :config
-  (setq gts-translate-list '(("en" "es")))
-  (setq gts-default-translator
-        (gts-translator
-
-         :picker ; used to pick source text, from, to. choose one.
-
-         ;;(gts-noprompt-picker)
-         ;;(gts-noprompt-picker :texter (gts-whole-buffer-texter))
-         (gts-prompt-picker)
-         ;;(gts-prompt-picker :single t)
-         ;;(gts-prompt-picker :texter (gts-current-or-selection-texter) :single t)
-
-         :engines ; engines, one or more. Provide a parser to give different output.
-
-         (list
-          ;; (gts-bing-engine)
-          ;;(gts-google-engine)
-          ;;(gts-google-rpc-engine)
-          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)) :pro t)
-          ;; (gts-google-engine :parser (gts-google-summary-parser))
-          ;;(gts-google-engine :parser (gts-google-parser))
-          ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")
-          ;; (gts-google-rpc-engine :parser (gts-google-rpc-parser) :url "https://translate.google.com")
-          )
-
-         :render ; render, only one, used to consumer the output result. Install posframe yourself when use gts-posframe-xxx
-
-         ;; (gts-buffer-render)
-         ;;(gts-posframe-pop-render)
-         ;;(gts-posframe-pop-render :backcolor "#333333" :forecolor "#ffffff")
-         ;; (gts-posframe-pin-render)
-         ;;(gts-posframe-pin-render :position (cons 1200 20))
-         ;;(gts-posframe-pin-render :width 80 :height 25 :position (cons 1000 20) :forecolor "#ffffff" :backcolor "#111111")
-         (gts-kill-ring-render)
-
-         :splitter ; optional, used to split text into several parts, and the translation result will be a list.
-
-         (gts-paragraph-splitter)
-         ))
-  )
-#+end_src
 
 ** atomic-chrome
 :PROPERTIES:
@@ -8939,7 +8555,7 @@ With prefix argument, prompt for the URL to use."
   :config
   (setq grip-github-user (auth-source-pass-get "user" "tlon/core/api.github.com/grip-mode"))
   (setq grip-github-password (auth-source-pass-get 'secret "tlon/core/api.github.com/grip-mode"))
-  
+
   :general
   ((gfm-mode-map markdown-mode-map)
    "s-w" 'grip-mode))
@@ -9315,6 +8931,374 @@ otherwise the whole buffer."
 :ID:       49D7A193-157E-4A10-9C33-98727FC191BF
 :END:
 1. [[https://felixcrux.com/blog/ledger-practices-create-a-ledgerrc][create a ~.ledgerrc~ file]]
+
+* translation
+:PROPERTIES:
+:ID:       1A1D70D3-DBB4-4EEC-A83E-15FD4348ED94
+:END:
+
+** go-translate
+:PROPERTIES:
+:ID:       543F613A-F3B8-426C-8505-48782483FBEC
+:END:
+
+/[[https://github.com/lorniu/go-translate][go-translate]] is an Emacs translator that supports multiple translation engines./
+
+#+begin_src emacs-lisp :tangle no
+(use-package go-translate
+  :demand t
+  :config
+  (setq gts-translate-list '(("en" "es")))
+  (setq gts-default-translator
+        (gts-translator
+
+         :picker ; used to pick source text, from, to. choose one.
+
+         ;;(gts-noprompt-picker)
+         ;;(gts-noprompt-picker :texter (gts-whole-buffer-texter))
+         (gts-prompt-picker)
+         ;;(gts-prompt-picker :single t)
+         ;;(gts-prompt-picker :texter (gts-current-or-selection-texter) :single t)
+
+         :engines ; engines, one or more. Provide a parser to give different output.
+
+         (list
+          ;; (gts-bing-engine)
+          ;;(gts-google-engine)
+          ;;(gts-google-rpc-engine)
+          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)) :pro nil)
+          ;; (gts-google-engine :parser (gts-google-summary-parser))
+          ;;(gts-google-engine :parser (gts-google-parser))
+          ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")
+          ;; (gts-google-rpc-engine :parser (gts-google-rpc-parser) :url "https://translate.google.com")
+          )
+
+         :render ; render, only one, used to consumer the output result. Install posframe yourself when use gts-posframe-xxx
+
+         ;; (gts-buffer-render)
+         ;;(gts-posframe-pop-render)
+         ;;(gts-posframe-pop-render :backcolor "#333333" :forecolor "#ffffff")
+         ;; (gts-posframe-pin-render)
+         ;;(gts-posframe-pin-render :position (cons 1200 20))
+         ;;(gts-posframe-pin-render :width 80 :height 25 :position (cons 1000 20) :forecolor "#ffffff" :backcolor "#111111")
+         (gts-kill-ring-render)
+
+         :splitter ; optional, used to split text into several parts, and the translation result will be a list.
+
+         (gts-paragraph-splitter)
+         ))
+  )
+#+end_src
+
+
+** powerthesaurus
+:PROPERTIES:
+:ID:       81CC0280-A8A5-4C8F-BF05-D324EB917DCD
+:END:
+
+/[[https://github.com/SavchenkoValeriy/emacs-powerthesaurus][powerthesaurus]] is an Emacs client for [[https://www.powerthesaurus.org/][power thesaurus]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package powerthesaurus
+  :general
+  ("H-y" 'powerthesaurus-transient))
+#+end_src
+
+** goldendict
+:PROPERTIES:
+:ID:       32143368-5DE3-44F5-A35B-05F157DEC2A5
+:END:
+:LOGBOOK:
+CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
+:END:
+
+*** TODO [#5] Check out shawcm/goldendict-emacs: Lookup marked text by GoldenDict in Emacs
+:PROPERTIES:
+:Effort:   0:25
+:ID:       4B44B3FE-6553-4BA0-98B9-5C0ECFE0C913
+:END:
+:LOGBOOK:
+CLOCK: [2023-05-03 Wed 17:35]--[2023-05-03 Wed 18:14] =>  0:39
+CLOCK: [2021-11-19 Fri 12:35]--[2021-11-19 Fri 12:59] =>  0:24
+CLOCK: [2021-11-18 Thu 11:35]--[2021-11-18 Thu 12:05] =>  0:30
+CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
+:END:
+- https://github.com/konstare/gdcv
+  seems complicated; haven't tried
+  next step is to try this, once Leo confirms that his dictionaries are in gdcv format
+- https://github.com/stardiviner/goldendict.el
+  crashes Goldendict
+- https://github.com/shawcm/goldendict-emacs
+  crashes Goldendict
+- https://www.reddit.com/r/emacs/comments/dm1x5c/offline_dictionary_lookup/?utm_source=amp&utm_medium=&utm_content=post_body
+
+Update on ~gdcv~: I spent 45 minutes with GPT-4 trying to make it work, but I failed. Here's the conversation, for future reference:
+
+#+begin_ai
+[SYS]: You are a helpful assistant.
+
+[ME]: I'm trying to install a program found in https://github.com/konstare/gdcv. I made sure I have the requirements and followed the instructions:
+
+```
+git clone https://github.com/konstare/gdcv
+cd gdcv
+make gdcv
+```
+
+However, after running `make gdcv`, I get the message `make: `gdcv' is up to date.` and no binary is created. What's going on?
+
+[AI]: It seems like there might be an issue related to the "Makefile" in the repository. In this case, you can try to compile the program manually.
+
+First, ensure that the required dependencies are installed:
+
+- SDL2
+- SDL2_ttf
+- SDL2_image
+- pkg-config
+
+Then, open a terminal and navigate (`cd`) to the "gdcv" directory.
+
+Next, you can directly compile the source code using the following command:
+
+```
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/main.c
+```
+
+This will create a binary file called "gdcv," which you can then run using:
+
+```
+./gdcv
+```
+
+Please note that this is appropriate for a Linux environment. If you use a different platform, the process might be slightly different, and you may need to modify the compile command accordingly.
+
+[ME]: Thanks. How do I ensure that those dependencies are installed? Should they be listed in `brew list`?
+
+[AI]: Yes, you can use Homebrew to install and manage these dependencies if you are using macOS.
+
+First, make sure Homebrew is installed on your machine. If not, you can install it with the following command:
+
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+To install the required dependencies using Homebrew, run the following commands:
+
+
+#`
+brew+end_ai
+_image
+brew install sdl2_ttf
+brew install pkg-config
+```
+
+After successfully installing the dependencies, you can check if they are installed and listed using:
+
+```
+brew list | egrep "sdl2|sdl2_image|sdl2_ttf|pkg that match the specified names. If the required dependencies are installed correctly, you should see `sdl2`, `sdl2_image`, `sdl2_ttf`, and `pkg-config` in the output.
+
+[ME]: Thanis. When I follow the compilation instructions (i.e. when I run `gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/main.c` after insuring I have all the dependencies), I get the following error:
+
+```
+clang: error: no such file or directory: 'src/main.c'
+```
+
+
+[AI]: Apologies for the confusion earlier. It seems the file structure of the "gdcv" repository does not follow the expected format. I have looked into the repository, and it appears the main source file is located in "src/gdcv.c" instead of "src/main.c".
+
+Please run the following modified command to compile the program:
+
+```bash
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/gdcv.c
+```
+
+After running this command, you should see the "gdcv" binary created. You can run it by typing:
+
+```bash
+./gdcv
+```
+
+[ME]: I now get the following error:
+
+```
+gdcv.c:3:10: fatal error: 'argp.h' file not found
+#include <argp.h> //argp
+^~~~~~~~
+1 error generated.
+```
+
+[AI]: I apologize for the oversight. The error indicates that the "argp.h" header file is missing. This file is part of the GNU C library, which is not included in macOS by default.
+
+You can install the "argp-standalone" package using Homebrew and update the compilation command to include the new header and library paths:
+
+1. Install argp-standalone using Homebrew:
+
+```bash
+brew install argp-standalone
+```
+
+2. Now modify the compilation command to include the header and library paths:
+
+```bash
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
+```
+
+Please let me know if this resolves your issue, and you are able to compile and run the "gdcv" program.
+
+[ME]: Now I get this error:
+
+```
+gdcv.c:4:10: fatal error: 'error.h' file not found
+#include <error.h> //argp
+^~~~~~~~~
+1 error generated.
+```
+
+[AI]: I apologize for the inconvenience. It seems that "error.h" is another header file that is part of the GNU C Library which is not present in the default macOS libraries.
+
+To work around this, you can create your custom "error.h" file in the "gdcv" folder with the essential parts needed to compile the program. Create a new file called "error.h" in the "gdcv" folder and add the following lines:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+void error(int status, int errnum, const char *format, ...);
+```
+
+Now, add a custom implementation of the 'error' function in "src/gdcv.c" before the "main" function:
+
+```c
+#include <stdarg.h> // For va_start, va_end
+
+void error(int status, int errnum, const char *format, ...)
+{
+va_list args;
+fprintf(stderr, "ERROR: ");
+va_start(args, format);
+vfprintf(stderr, format, args);
+va_end(args);
+
+if (errnum != 0)
+{
+fprintf(stderr, ": %s", strerror(errnum));
+}
+fprintf(stderr, "\n");
+
+if (status != 0)
+{
+exit(status);
+}
+}
+```
+
+Finally, update your compilation command to include the local directory for the header file search:
+
+```bash
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I. -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
+```
+
+This should allow you to compile "gdcv" without errors. Please let me know if you still encounter any issues.
+
+[ME]: Can you clarify where in the file should I add the custom implementation of the 'error' function?
+
+[AI]: Sure, I'll clarify that for you.
+
+In the "src/gdcv.c" file, you should add the custom implementation of the 'error' function right after the inclusion of the header files and before the main function.
+
+Here is a modified snippet from the "src/gdcv.c" file with the 'error' function added in the appropriate location:
+
+```c
+#include <argp.h>
+#include <error.h>
+#include <stdlib.h>
+#include <string.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+
+/* Add this custom 'error' function implementation right after the includes */
+#include <stdarg.h> // For va_start, va_end
+
+void error(int status, int errnum, const char *format, ...)
+{
+va_list args;
+fprintf(stderr, "ERROR: ");
+va_start(args, format);
+vfprintf(stderr, format, args);
+va_end(args);
+
+if (errnum != 0)
+{
+fprintf(stderr, ": %s", strerror(errnum));
+}
+fprintf(stderr, "\n");
+
+if (status != 0)
+{
+exit(status);
+}
+}
+
+/* Existing main function and other code */
+int main(int argc, char **argv)
+{
+// Rest of the code
+}
+```
+
+Make sure to save the changes to the "src/gdcv.c" file and then proceed with the compilation using the command shared in the previous response. This should enable you to compile the "gdcv" program without encountering the "error.h" issue.
+
+[ME]: Unfortunately, after following those steps I still get this error:
+
+```
+gdcv.c:4:10: fatal error: 'error.h' file not found
+#include <error.h> //argp
+^~~~~~~~~
+1 error generated.
+```
+
+[AI]: I apologize for the confusion in my previous messages. I realize now that there's a mistake in the custom solution I provided.
+
+Instead of creating a custom `error.h` file, you should remove the `#include <error.h>` line from the `src/gdcv.c` file since we have added the custom `error` function implementation directly into `src/gdcv.c`.
+
+Please follow these steps:
+
+1. Remove the `#include <error.h>` line from `src/gdcv.c`.
+
+2. Ensure that the custom `error` function implementation is present in `src/gdcv.c` as previously mentioned.
+
+3. Compile the program using the command I provided earlier:
+
+```bash
+gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I. -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
+```
+
+These changes should resolve the error and successfully compile the "gdcv" program. Please let me know if you have any further issues, and I'll be happy to assist you.
+
+[ME]:
+#+end_ai
+
+** reverso
+:PROPERTIES:
+:ID:       F3063A73-ED50-42BD-8ABD-8D7FC68758FD
+:END:
+:LOGBOOK:
+CLOCK: [2023-05-11 Thu 20:24]--[2023-05-11 Thu 20:27] =>  0:03
+CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
+:END:
+
+/[[https://github.com/SqrtMinusOne/reverso.el][reverso]] is an Emacs client for [[https://www.reverso.net/][reverso]]./
+
+#+begin_src emacs-lisp
+(use-package reverso
+  :elpaca (reverso
+           :host github
+           :repo "SqrtMinusOne/reverso.el")
+  :config
+  (setq reverso-languages '(english french german italian portuguese spanish))
+
+  :general
+  ("H-Y" 'reverso))
+#+end_src
 
 * pdf
 :PROPERTIES:
@@ -12094,8 +12078,9 @@ Optionally, return such list if its length is less than LIMIT."
       (setq file-list (cl-delete-if (lambda (k)
                                       (string-match-p org-roam-file-exclude-regexp k))
                                     file-list))
-      (when (and limit
-                 (< (length file-list) limit))
+      (if limit
+          (when (< (length file-list) limit)
+            file-list)
         file-list)))
 
   :config/el-patch
@@ -12558,7 +12543,7 @@ tasks."
                          (vulpea-project-files)
                          ;; include files modified in past three days,
                          ;; provided number of such files less than 1000
-                         (ps/org-roam-recent 1 500)
+                         (ps/org-roam-recent 2 1000)
                          ))
            tlon-org-agenda-files-excluded)))
 
@@ -14429,9 +14414,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 (use-package zotra
   :elpaca (zotra
            :host github
-           :repo "mpedramfar/zotra"
-           :ref "9cd9eb3"
-           :depth nil)
+           :repo "mpedramfar/zotra")
   :demand t
 
   :config
@@ -14440,10 +14423,8 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (setq zotra-default-entry-format "biblatex")
   (setq zotra-after-add-entry-hook nil)
   (setq zotra-download-attachment-default-directory ps/dir-downloads)
-  ;; I experimented with setting the value of `zotra-backend' to each of
-  ;; the three available values, but only `translation-server' works
-  ;; reliably.
-  (setq zotra-backend 'translation-server)
+  (setq zotra-backend 'zotra-server)
+  (setq zotra-local-server-directory (expand-file-name "~/source/zotra-server/"))
   (setq zotra-cli-command `("node" ,(file-name-concat ps/dir-dropbox "source/zotra-cli/bin/index.js")))
 
   (defvar ps/zotra-most-recent-bibliography-file nil
@@ -14460,19 +14441,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
     (setq ps/zotra-most-recent-bibliography-file (ps/zotra-set-bibfile))
     (funcall orig-fun url entry-format ps/zotra-most-recent-bibliography-file))
 
-  (defun ps/zotra-url-full-capture (&optional url)
-    "Add URL to bibfile and generate associated PDF and HTML files."
-    (interactive)
-    (unless ebib--cur-db
-      (ebib))
-    (let ((url (or url
-                   (read-string "URL: " (current-kill 0)))))
-      (zotra-add-entry-from-url url)
-      (ps/eww-url-to-pdf url)
-      (ps/eww-url-to-html url)))
-
-  (advice-add 'zotra-add-entry-from-url :around #'ps/zotra-add-entry-set-bibfile)
-  (advice-add 'zotra-add-entry-from-search :around #'ps/zotra-add-entry-set-bibfile)
+  (advice-add 'zotra-add-entry :around #'ps/zotra-add-entry-set-bibfile)
 
   (defun ps/zotra-after-add-entry-hook-function ()
     "Function to trigger with `zotra-after-add-entry-hook'."
@@ -14500,15 +14469,16 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
   (add-hook 'zotra-after-add-entry-hook #'ps/zotra-after-add-entry-hook-function)
 
-  (defun ps/zotra-add-entry-dwim (url-or-identifier &optional bibfile entry-format)
-    "Get citation entry for URL or identifier."
-    (interactive
-     (list (read-string
-            "search URL or identifier (DOI, ISBN, PMID, arXiv ID): "
-            (ignore-errors (current-kill 0 t)))))
-    (if (ffap-url-p url-or-identifier)
-        (zotra-add-entry-from-url url-or-identifier bibfile entry-format)
-      (zotra-add-entry-from-search url-or-identifier bibfile entry-format)))
+  (defun ps/zotra-url-full-capture (&optional url)
+    "Add URL to bibfile and generate associated PDF and HTML files."
+    (interactive)
+    (unless ebib--cur-db
+      (ebib))
+    (let ((url (or url
+                   (read-string "URL: " (current-kill 0)))))
+      (zotra-add-entry url)
+      (ps/eww-url-to-pdf url)
+      (ps/eww-url-to-html url)))
 
   ;; Remarkably, this is needed because Emacs can't decode certain octal
   ;; sequences in Zotero-imported bibtex entries
@@ -14529,8 +14499,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :general
   ("C-H-M-S-z" 'zotra-add-entry-from-url) ; triggered by KM macro
   (ebib-index-mode-map
-   "i" 'zotra-add-entry-from-search
-   "u" 'zotra-add-entry-from-url
+   "n" 'zotra-add-entry
    "z" 'ps/zotra-url-full-capture))
 #+end_src
 
@@ -16404,9 +16373,6 @@ https://superuser.com/a/1350144/387888."
   (defengine GitHub
     "https://github.com/search?q=%s&type=code"
     :keybinding "g h")
-  (defengine GiveWell
-    "https://www.givewell.org/search/ss360/%s"
-    :keybinding "g w")
   (defengine Goodreads
     "http://www.goodreads.com/search/search?search_type=books&search[query]=%s"
     :keybinding "g r")
@@ -16425,6 +16391,9 @@ https://superuser.com/a/1350144/387888."
   (defengine Google-Drive
     "https://drive.google.com/drive/u/0/search?q=%s"
     :keybinding "g d")
+  (defengine Google-Trends
+    "http://www.google.com/trends/explore#q=%s"
+    :keybinding "g e")
   (defengine Google-Images
     "https://www.google.com/search?tbm=isch&source=hp&biw=1920&bih=1006&ei=2PlgWp_OEcHF6QTo2b2ACQ&q=%s"
     :keybinding "g i")
@@ -16434,30 +16403,30 @@ https://superuser.com/a/1350144/387888."
   (defengine Google-News
     "https://news.google.com/search?q=%s"
     :keybinding "g n")
-  (defengine Google-Photos
-    "https://photos.google.com/search/%s"
-    :keybinding "g p")
-  (defengine Google-Play
-    "https://play.google.com/store/search?q=%s"
-    :keybinding "g y")
   (defengine Google-Podcasts
     "https://podcasts.google.com/?q=%s"
     :keybinding "g o")
+  (defengine Google-Photos
+    "https://photos.google.com/search/%s"
+    :keybinding "g p")
   (defengine Google-Scholar
-    "https://scholar.google.com/scholar?hl=en&as_sdt=1%2C5&q=%s&btnG="
+    "https://scholar.google.com/scholar?hl=en&as_sdt=1%2C5&q=%s&btnG=&lr="
     :keybinding "s s")
-  (defengine Google-Translate
+    (defengine Google-Translate
     "https://translate.google.com/#auto/en/%s"
     :keybinding "g t")
-  (defengine Google-Trends
-    "http://www.google.com/trends/explore#q=%s"
-    :keybinding "g e")
   (defengine Google-Video
     "https://www.google.com/search?q=%s&tbm=vid"
     :keybinding "g v")
-  (defengine GoDaddy
-    "https://www.godaddy.com/domainsearch/find?checkAvail=1&domainToCheck=%s"
-    :keybinding "g d")
+  (defengine GiveWell
+    "https://www.givewell.org/search/ss360/%s"
+    :keybinding "g w")
+  (defengine Google-Play
+    "https://play.google.com/store/search?q=%s"
+    :keybinding "g y")
+  (defengine Google-Scholar-Spanish
+    "https://scholar.google.com/scholar?hl=en&as_sdt=1%2C5&q=%s&btnG="
+    :keybinding "s x")
   (defengine Gwern
     "https://www.google.com/search?q=%s+site:gwern.net"
     :keybinding "g w")
@@ -17883,7 +17852,8 @@ Search for user name in `org-mode' heading at point. If found, copy the content
     (push template org-capture-templates))
 
   :general
-  ("H-r" 'tlon-babel-dispatch)
+  ("H-r" 'tlon-babel-dispatch
+   "A-y" 'tlon-babel-goldendict-search-input)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map

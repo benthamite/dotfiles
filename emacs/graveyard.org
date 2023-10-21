@@ -25,6 +25,32 @@ This is a place where I move Emacs packages I no longer use.
 #+end_src
 
 
+** txl
+:PROPERTIES:
+:ID:       BE78F0BD-D676-4E19-838A-2E6BD4504F52
+:END:
+
+/[[https://github.com/tmalsburg/txl.el][txl]] provides direct access to DeepL's machine translation API./
+
+[2023-10-11 Wed] Superseded by ~go-translate~.
+
+#+begin_src emacs-lisp
+(use-package txl
+  :elpaca (txl
+           :host github
+           :repo "tmalsburg/txl.el")
+  :config
+  (setq txl-languages '(EN-US . ES))
+  (setq txl-deepl-api-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" ps/tlon-email)))
+  (setq txl-deepl-api-url "https://api-free.deepl.com/v2/translate")
+
+  :general
+  ("A-H-y" 'txl-translate-region-or-paragraph)
+  (txl-edit-translation-mode-map
+   "RET" 'txl-accept-translation
+   "q" 'txl-dismiss-translation))
+#+end_src
+
 ** consult-flyspell
 :PROPERTIES:
 :ID:       272C2359-045B-49A7-8DFB-71F9B349D07D

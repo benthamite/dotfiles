@@ -278,6 +278,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#jinx][jinx]]
   - [[#flycheck][flycheck]]
   - [[#consult-flycheck][consult-flycheck]]
+  - [[#flycheck-ledger][flycheck-ledger]]
   - [[#flycheck-languagetool][flycheck-languagetool]]
   - [[#keytar][keytar]]
   - [[#grammarly][grammarly]]
@@ -8177,6 +8178,19 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
 #+begin_src emacs-lisp
 (use-package consult-flycheck
   :after consult flyckeck
+  :demand t)
+#+end_src
+
+** flycheck-ledger
+:PROPERTIES:
+:ID:       35BCB962-B49F-43D9-A7E8-269CE61EF6C8
+:END:
+
+/[[https://github.com/purcell/flycheck-ledger][flycheck-ledger]] provides ~flycheck~ support for ~ledger-mode~./
+
+#+begin_src emacs-lisp
+(use-package flycheck-ledger
+  :after flycheck ledger-mode
   :demand t)
 #+end_src
 

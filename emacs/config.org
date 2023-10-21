@@ -298,7 +298,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#translation][translation]]
   - [[#go-translate][go-translate]]
   - [[#powerthesaurus][powerthesaurus]]
-  - [[#goldendict][goldendict]]
+  - [[#goldendict-ng][goldendict-ng]]
   - [[#reverso][reverso]]
 - [[#pdf][pdf]]
   - [[#pdf-tools][pdf-tools]]
@@ -1188,6 +1188,7 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
   ("e" (ps/elpaca-package-repo-dir "tlon-ebib") "tlon-ebib" :column "packages")
   ("o" (ps/elpaca-package-repo-dir "tlon-org") "tlon-org" :column "packages")
   ("m" (ps/elpaca-package-repo-dir "mullvad") "mullvad" :column "packages"))
+  ("g" (ps/elpaca-package-repo-dir "goldendict-ng") "glondendict-ng" :column "other")
 #+end_src
 
 *** org headings
@@ -9001,7 +9002,7 @@ otherwise the whole buffer."
   ("H-y" 'powerthesaurus-transient))
 #+end_src
 
-** goldendict
+** goldendict-ng
 :PROPERTIES:
 :ID:       32143368-5DE3-44F5-A35B-05F157DEC2A5
 :END:
@@ -9014,16 +9015,16 @@ CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
 #+begin_src emacs-lisp
 (use-package goldendict-ng
   :elpaca (goldendict-ng
-	   :host github
-	   :repo "benthamite/goldendict-ng")
+           :host github
+           :repo "benthamite/goldendict-ng")
   :demand t
   :config
   (setq goldendict-ng-executable "/Applications/GoldenDict.app/Contents/MacOS/GoldenDict")
   (setq goldendict-ng-groups '(("Spanish" . "es")
-			       ("English" . "en")
-			       ("English core" . "en")
-			       ("English thesauri" . "en")
-			       ("French" . "fr")))
+                               ("English" . "en")
+                               ("English core" . "en")
+                               ("English thesauri" . "en")
+                               ("French" . "fr")))
   (setq goldendict-ng-groups-enforce t)
   (setq goldendict-ng-narrow-groups-to-matching-languages t)
   (setq goldendict-ng-show-all-group t)
@@ -9034,7 +9035,7 @@ CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
   (setq goldendict-ng-scanpopup t)
   (setq goldendict-ng-reset-window-state t)
   (setq goldendict-ng-disable-tts t)
-  
+
   :general
   ("A-y" 'goldendict-ng-search))
 #+end_src

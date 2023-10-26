@@ -11901,7 +11901,6 @@ SQL can be either the emacsql vector representation, or a string."
                                       "quotes-old.org"
                                       ".org2blog.org"
                                       "wiki-notes.org" ; removing temporarily
-                                      "feeds.org"
                                       ".*conflicted copy.*"
                                       ".*conflicted-copy.*"))
 

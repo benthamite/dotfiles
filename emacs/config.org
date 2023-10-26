@@ -14236,10 +14236,9 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (defun ps/zotra-url-full-capture (&optional url)
     "Add URL to bibfile and generate associated PDF and HTML files."
     (interactive)
-    (unless ebib--cur-db
-      (ebib))
-    (let ((url (or url
-                   (read-string "URL: " (current-kill 0)))))
+    (let ((url (or url (read-string "URL: "))))
+      (unless ebib--cur-db
+        (ebib))
       (zotra-add-entry url)
       (ps/eww-url-to-pdf url)
       (ps/eww-url-to-html url)))

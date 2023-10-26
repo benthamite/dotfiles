@@ -8206,7 +8206,8 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   :after flycheck
   :demand t
   :init
-  (setq flycheck-languagetool-server-jar "~/source/LanguageTool/languagetool-server.jar")
+  (setq flycheck-languagetool-server-jar
+        (expand-file-name "~/source/LanguageTool/languagetool-server.jar"))
 
   :config
   (defun ps/flycheck-languagetool-enable ()

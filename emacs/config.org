@@ -14262,7 +14262,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :general
   ("C-H-M-S-z" 'zotra-add-entry-from-url) ; triggered by KM macro
   (ebib-index-mode-map
-   "n" 'zotra-add-entry
+   "a" 'zotra-add-entry
    "z" 'ps/zotra-url-full-capture))
 #+end_src
 

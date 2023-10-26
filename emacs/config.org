@@ -152,7 +152,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#abbrev][abbrev]]
   - [[#yasnippet][yasnippet]]
   - [[#yasnippet-snippets][yasnippet-snippets]]
-  - [[#doom-snippets][doom-snippets]]
   - [[#hippie-expand][hippie-expand]]
   - [[#expand-region][expand-region]]
   - [[#newcomment][newcomment]]
@@ -279,6 +278,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#jinx][jinx]]
   - [[#flycheck][flycheck]]
   - [[#consult-flycheck][consult-flycheck]]
+  - [[#flycheck-ledger][flycheck-ledger]]
   - [[#flycheck-languagetool][flycheck-languagetool]]
   - [[#keytar][keytar]]
   - [[#grammarly][grammarly]]
@@ -298,7 +298,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#translation][translation]]
   - [[#go-translate][go-translate]]
   - [[#powerthesaurus][powerthesaurus]]
-  - [[#goldendict][goldendict]]
+  - [[#goldendict-ng][goldendict-ng]]
   - [[#reverso][reverso]]
 - [[#pdf][pdf]]
   - [[#pdf-tools][pdf-tools]]
@@ -1181,13 +1181,14 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
 (defhydra hydra-files-packages
   (:exit t)
   "Tlön packages"
-  ("b" (ps/elpaca-package-repo-dir "tlon-babel") "tlon-babel" :column "packages")
-  ("c" (ps/elpaca-package-repo-dir "tlon-core") "tlon-core" :column "packages")
-  ("l" (ps/elpaca-package-repo-dir "tlon-biblio") "tlon-biblio" :column "packages")
-  ("i" (ps/elpaca-package-repo-dir "tlon-init") "tlon-init" :column "packages")
-  ("e" (ps/elpaca-package-repo-dir "tlon-ebib") "tlon-ebib" :column "packages")
-  ("o" (ps/elpaca-package-repo-dir "tlon-org") "tlon-org" :column "packages")
-  ("m" (ps/elpaca-package-repo-dir "mullvad") "mullvad" :column "packages"))
+  ("b" (ps/elpaca-package-repo-dir "tlon-babel") "tlon-babel" :column "tlon")
+  ("c" (ps/elpaca-package-repo-dir "tlon-core") "tlon-core" :column "tlon")
+  ("e" (ps/elpaca-package-repo-dir "tlon-ebib") "tlon-ebib" :column "tlon")
+  ("i" (ps/elpaca-package-repo-dir "tlon-init") "tlon-init" :column "tlon")
+  ("l" (ps/elpaca-package-repo-dir "tlon-biblio") "tlon-biblio" :column "tlon")
+  ("o" (ps/elpaca-package-repo-dir "tlon-org") "tlon-org" :column "tlon")
+  ("g" (ps/elpaca-package-repo-dir "goldendict-ng") "glondendict-ng" :column "other")
+  ("m" (ps/elpaca-package-repo-dir "mullvad") "mullvad" :column "other"))
 #+end_src
 
 *** org headings
@@ -3708,8 +3709,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   :config
   (setq yas-snippet-dirs (list ps/dir-yasnippets
                                ps/dir-yasnippets-private
-                               (file-name-concat elpaca-builds-directory "yasnippet-snippets/snippets/")
-                               (file-name-concat elpaca-builds-directory "doom-snippets/")))
+                               (file-name-concat elpaca-builds-directory "yasnippet-snippets/snippets/")))
 
   (setq yas-triggers-in-field t) ; allow stacked expansions
 
@@ -3755,21 +3755,6 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   :after yasnippet
   :demand t)
 #+end_src
-
-** doom-snippets
-:PROPERTIES:
-:ID:       F0017D7B-DEBD-460B-8DF6-1134ECF42A7A
-:END:
-
-/[[https://github.com/doomemacs/snippets][doom-snippets]] is another snippet library./
-
-#+begin_src emacs-lisp
-(use-package doom-snippets
-  :elpaca (doom-snippets :type git :host github :repo "doomemacs/snippets" :files ("*.el" "*"))
-  :after yasnippet
-  :demand t)
-#+end_src
-
 
 ** hippie-expand
 :PROPERTIES:
@@ -5207,27 +5192,19 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   ;; The following prevents Emacs from splitting windows indefinitely when the monitor config changes
   ;; stackoverflow.com/questions/23207958/how-to-prevent-emacs-dired-from-splitting-frame-into-more-than-two-windows
   (add-to-list 'display-buffer-alist `(,shell-command-buffer-name-async display-buffer-no-window))
-  (defvar ps/split-emacs-chrome-sideways nil)
-  (defun ps/split-emacs-chrome-sideways ()
-    "Split Emacs and Chrome frames sideways. A second
-  invocation restores original layout.
 
-  Calls Keyboard Maestro macro via shell script."
+  ;; FIXME: trigger macOS window maximization
+  (defun ps/toggle-frame-maximized ()
+    "Toggle frame maximized."
     (interactive)
     (toggle-frame-maximized)
-    (if ps/split-emacs-chrome-sideways
-        (progn
-          (winner-undo)
-          (ps/switch-to-last-window)
-          ;; Maximize Chrome
-          (eshell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"DBA06CC2-86E4-4F6B-9FA6-C1C12C007BCC\"'"))
-      (progn
-        (delete-other-windows)
-        (set-frame-size nil 950 1080 t)
-        ;; Split Chrome left
-        (eshell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"CF26FBCF-93C1-4C5D-9038-9AB31F6C6903\"'")))
-    (setq ps/split-emacs-chrome-sideways
-          (not ps/split-emacs-chrome-sideways)))
+    (if (ps/frame-is-maximized-p)
+        (remove-function after-focus-change-function
+                         (lambda ()
+                           (set-frame-parameter nil 'fullscreen 'maximized)))
+      (add-function :after after-focus-change-function
+                    (lambda ()
+                      (set-frame-parameter nil 'fullscreen 'maximized)))))
 
   (defun ps/get-last-window ()
     "Get to previously selected ordinary or minibuffer window."
@@ -5386,6 +5363,12 @@ window depending on the number of present windows."
   (blink-cursor-mode)
   (setq window-divider-default-right-width 1)
   (window-divider-mode)
+
+  (defun ps/frame-is-maximized-p ()
+  "Return t iff the current frame is maximized."
+  (and
+   (eq (frame-pixel-width) (display-pixel-width))
+   (eq (frame-pixel-height) (display-pixel-height))))
 
   ;; When returning focus to Emacs after browsing other macOS windows,
   ;; the frame is sometimes not fully maximized. This advice makes
@@ -6517,6 +6500,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :defer 5
   :config
   (setq magit-commit-ask-to-stage 'stage)
+  (setq magit-clone-set-remote.pushDefault t)
   (setq magit-diff-refine-hunk 'all) ; show word-granularity differences in all diff hunks
 
   (add-to-list 'magit-no-confirm 'stage-all-changes)
@@ -8197,6 +8181,19 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   :demand t)
 #+end_src
 
+** flycheck-ledger
+:PROPERTIES:
+:ID:       35BCB962-B49F-43D9-A7E8-269CE61EF6C8
+:END:
+
+/[[https://github.com/purcell/flycheck-ledger][flycheck-ledger]] provides ~flycheck~ support for ~ledger-mode~./
+
+#+begin_src emacs-lisp
+(use-package flycheck-ledger
+  :after flycheck ledger-mode
+  :demand t)
+#+end_src
+
 ** flycheck-languagetool
 :PROPERTIES:
 :ID:       761BF4F2-8821-42A6-852C-4C87A248EF90
@@ -8209,7 +8206,8 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
   :after flycheck
   :demand t
   :init
-  (setq flycheck-languagetool-server-jar "~/source/LanguageTool/languagetool-server.jar")
+  (setq flycheck-languagetool-server-jar
+        (expand-file-name "~/source/LanguageTool/languagetool-server.jar"))
 
   :config
   (defun ps/flycheck-languagetool-enable ()
@@ -9004,7 +9002,7 @@ otherwise the whole buffer."
   ("H-y" 'powerthesaurus-transient))
 #+end_src
 
-** goldendict
+** goldendict-ng
 :PROPERTIES:
 :ID:       32143368-5DE3-44F5-A35B-05F157DEC2A5
 :END:
@@ -9012,270 +9010,35 @@ otherwise the whole buffer."
 CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
 :END:
 
-*** TODO [#5] Check out shawcm/goldendict-emacs: Lookup marked text by GoldenDict in Emacs
-:PROPERTIES:
-:Effort:   0:25
-:ID:       4B44B3FE-6553-4BA0-98B9-5C0ECFE0C913
-:END:
-:LOGBOOK:
-CLOCK: [2023-05-03 Wed 17:35]--[2023-05-03 Wed 18:14] =>  0:39
-CLOCK: [2021-11-19 Fri 12:35]--[2021-11-19 Fri 12:59] =>  0:24
-CLOCK: [2021-11-18 Thu 11:35]--[2021-11-18 Thu 12:05] =>  0:30
-CLOCK: [2021-07-29 Thu 22:19]--[2021-07-29 Thu 22:32] =>  0:13
-:END:
-- https://github.com/konstare/gdcv
-  seems complicated; haven't tried
-  next step is to try this, once Leo confirms that his dictionaries are in gdcv format
-- https://github.com/stardiviner/goldendict.el
-  crashes Goldendict
-- https://github.com/shawcm/goldendict-emacs
-  crashes Goldendict
-- https://www.reddit.com/r/emacs/comments/dm1x5c/offline_dictionary_lookup/?utm_source=amp&utm_medium=&utm_content=post_body
-
-Update on ~gdcv~: I spent 45 minutes with GPT-4 trying to make it work, but I failed. Here's the conversation, for future reference:
-
-#+begin_ai
-[SYS]: You are a helpful assistant.
-
-[ME]: I'm trying to install a program found in https://github.com/konstare/gdcv. I made sure I have the requirements and followed the instructions:
-
-```
-git clone https://github.com/konstare/gdcv
-cd gdcv
-make gdcv
-```
-
-However, after running `make gdcv`, I get the message `make: `gdcv' is up to date.` and no binary is created. What's going on?
-
-[AI]: It seems like there might be an issue related to the "Makefile" in the repository. In this case, you can try to compile the program manually.
-
-First, ensure that the required dependencies are installed:
-
-- SDL2
-- SDL2_ttf
-- SDL2_image
-- pkg-config
-
-Then, open a terminal and navigate (`cd`) to the "gdcv" directory.
-
-Next, you can directly compile the source code using the following command:
-
-```
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/main.c
-```
-
-This will create a binary file called "gdcv," which you can then run using:
-
-```
-./gdcv
-```
-
-Please note that this is appropriate for a Linux environment. If you use a different platform, the process might be slightly different, and you may need to modify the compile command accordingly.
-
-[ME]: Thanks. How do I ensure that those dependencies are installed? Should they be listed in `brew list`?
-
-[AI]: Yes, you can use Homebrew to install and manage these dependencies if you are using macOS.
-
-First, make sure Homebrew is installed on your machine. If not, you can install it with the following command:
-
-```
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-To install the required dependencies using Homebrew, run the following commands:
-
-
-#`
-brew+end_ai
-_image
-brew install sdl2_ttf
-brew install pkg-config
-```
-
-After successfully installing the dependencies, you can check if they are installed and listed using:
-
-```
-brew list | egrep "sdl2|sdl2_image|sdl2_ttf|pkg that match the specified names. If the required dependencies are installed correctly, you should see `sdl2`, `sdl2_image`, `sdl2_ttf`, and `pkg-config` in the output.
-
-[ME]: Thanis. When I follow the compilation instructions (i.e. when I run `gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/main.c` after insuring I have all the dependencies), I get the following error:
-
-```
-clang: error: no such file or directory: 'src/main.c'
-```
-
-
-[AI]: Apologies for the confusion earlier. It seems the file structure of the "gdcv" repository does not follow the expected format. I have looked into the repository, and it appears the main source file is located in "src/gdcv.c" instead of "src/main.c".
-
-Please run the following modified command to compile the program:
-
-```bash
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -o gdcv src/gdcv.c
-```
-
-After running this command, you should see the "gdcv" binary created. You can run it by typing:
-
-```bash
-./gdcv
-```
-
-[ME]: I now get the following error:
-
-```
-gdcv.c:3:10: fatal error: 'argp.h' file not found
-#include <argp.h> //argp
-^~~~~~~~
-1 error generated.
-```
-
-[AI]: I apologize for the oversight. The error indicates that the "argp.h" header file is missing. This file is part of the GNU C library, which is not included in macOS by default.
-
-You can install the "argp-standalone" package using Homebrew and update the compilation command to include the new header and library paths:
-
-1. Install argp-standalone using Homebrew:
-
-```bash
-brew install argp-standalone
-```
-
-2. Now modify the compilation command to include the header and library paths:
-
-```bash
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
-```
-
-Please let me know if this resolves your issue, and you are able to compile and run the "gdcv" program.
-
-[ME]: Now I get this error:
-
-```
-gdcv.c:4:10: fatal error: 'error.h' file not found
-#include <error.h> //argp
-^~~~~~~~~
-1 error generated.
-```
-
-[AI]: I apologize for the inconvenience. It seems that "error.h" is another header file that is part of the GNU C Library which is not present in the default macOS libraries.
-
-To work around this, you can create your custom "error.h" file in the "gdcv" folder with the essential parts needed to compile the program. Create a new file called "error.h" in the "gdcv" folder and add the following lines:
-
-```c
-#include <stdio.h>
-#include <stdlib.h>
-void error(int status, int errnum, const char *format, ...);
-```
-
-Now, add a custom implementation of the 'error' function in "src/gdcv.c" before the "main" function:
-
-```c
-#include <stdarg.h> // For va_start, va_end
-
-void error(int status, int errnum, const char *format, ...)
-{
-va_list args;
-fprintf(stderr, "ERROR: ");
-va_start(args, format);
-vfprintf(stderr, format, args);
-va_end(args);
-
-if (errnum != 0)
-{
-fprintf(stderr, ": %s", strerror(errnum));
-}
-fprintf(stderr, "\n");
-
-if (status != 0)
-{
-exit(status);
-}
-}
-```
-
-Finally, update your compilation command to include the local directory for the header file search:
-
-```bash
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I. -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
-```
-
-This should allow you to compile "gdcv" without errors. Please let me know if you still encounter any issues.
-
-[ME]: Can you clarify where in the file should I add the custom implementation of the 'error' function?
-
-[AI]: Sure, I'll clarify that for you.
-
-In the "src/gdcv.c" file, you should add the custom implementation of the 'error' function right after the inclusion of the header files and before the main function.
-
-Here is a modified snippet from the "src/gdcv.c" file with the 'error' function added in the appropriate location:
-
-```c
-#include <argp.h>
-#include <error.h>
-#include <stdlib.h>
-#include <string.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-
-/* Add this custom 'error' function implementation right after the includes */
-#include <stdarg.h> // For va_start, va_end
-
-void error(int status, int errnum, const char *format, ...)
-{
-va_list args;
-fprintf(stderr, "ERROR: ");
-va_start(args, format);
-vfprintf(stderr, format, args);
-va_end(args);
-
-if (errnum != 0)
-{
-fprintf(stderr, ": %s", strerror(errnum));
-}
-fprintf(stderr, "\n");
-
-if (status != 0)
-{
-exit(status);
-}
-}
-
-/* Existing main function and other code */
-int main(int argc, char **argv)
-{
-// Rest of the code
-}
-```
-
-Make sure to save the changes to the "src/gdcv.c" file and then proceed with the compilation using the command shared in the previous response. This should enable you to compile the "gdcv" program without encountering the "error.h" issue.
-
-[ME]: Unfortunately, after following those steps I still get this error:
-
-```
-gdcv.c:4:10: fatal error: 'error.h' file not found
-#include <error.h> //argp
-^~~~~~~~~
-1 error generated.
-```
-
-[AI]: I apologize for the confusion in my previous messages. I realize now that there's a mistake in the custom solution I provided.
-
-Instead of creating a custom `error.h` file, you should remove the `#include <error.h>` line from the `src/gdcv.c` file since we have added the custom `error` function implementation directly into `src/gdcv.c`.
-
-Please follow these steps:
-
-1. Remove the `#include <error.h>` line from `src/gdcv.c`.
-
-2. Ensure that the custom `error` function implementation is present in `src/gdcv.c` as previously mentioned.
-
-3. Compile the program using the command I provided earlier:
-
-```bash
-gcc $(pkg-config --cflags --libs sdl2 SDL2_image SDL2_ttf) -O3 -std=c99 -Wall -I. -I/usr/local/opt/argp-standalone/include -L/usr/local/opt/argp-standalone/lib -largp -o gdcv src/gdcv.c
-```
-
-These changes should resolve the error and successfully compile the "gdcv" program. Please let me know if you have any further issues, and I'll be happy to assist you.
-
-[ME]:
-#+end_ai
+/[[https://github.com/benthamite/goldendict-ng][goldendict-ng]] integrates [[https://github.com/xiaoyifang/goldendict-ng][GoldenDict]] with Emacs./
+
+#+begin_src emacs-lisp
+(use-package goldendict-ng
+  :elpaca (goldendict-ng
+           :host github
+           :repo "benthamite/goldendict-ng")
+  :demand t
+  :config
+  (setq goldendict-ng-executable "/Applications/GoldenDict.app/Contents/MacOS/GoldenDict")
+  (setq goldendict-ng-groups '(("Spanish" . "es")
+                               ("English" . "en")
+                               ("English core" . "en")
+                               ("English thesauri" . "en")
+                               ("French" . "fr")))
+  (setq goldendict-ng-groups-enforce t)
+  (setq goldendict-ng-narrow-groups-to-matching-languages t)
+  (setq goldendict-ng-show-all-group t)
+  (setq goldendict-ng-bypass-prompt-when-sole-candidate t)
+  (setq goldendict-ng-use-active-region 'initial-input)
+  (setq goldendict-ng-use-word-at-point 'initial-input)
+  (setq goldendict-ng-main-window t)
+  (setq goldendict-ng-scanpopup t)
+  (setq goldendict-ng-reset-window-state t)
+  (setq goldendict-ng-disable-tts t)
+
+  :general
+  ("A-y" 'goldendict-ng-search))
+#+end_src
 
 ** reverso
 :PROPERTIES:
@@ -12138,7 +11901,6 @@ SQL can be either the emacsql vector representation, or a string."
                                       "quotes-old.org"
                                       ".org2blog.org"
                                       "wiki-notes.org" ; removing temporarily
-                                      "feeds.org"
                                       ".*conflicted copy.*"
                                       ".*conflicted-copy.*"))
 
@@ -12598,38 +12360,38 @@ heading in a quote."
     (unless (derived-mode-p 'org-mode)
       (error "Not in an Org buffer"))
     (let ((initial-heading (org-get-heading t t t t))
-	  (highlight-heading-regexp "Highlight on page \\(.*\\)"))
+          (highlight-heading-regexp "Highlight on page \\(.*\\)"))
       (save-restriction
-	(save-excursion
-	  (cond
-	   ((string-match highlight-heading-regexp initial-heading)
-	    (org-back-to-heading)
-	    (org-next-visible-heading 1))
-	   ((string-match "Contents" initial-heading)
-	    (org-back-to-heading))
-	   (t
-	    (user-error "You must be either in a \"contents\" heading or in a \"highlight on page\" Heading")))
-	  (org-narrow-to-subtree)
-	  (org-end-of-meta-data t)
-	  (narrow-to-region (point) (point-max))
-	  (unfill-region (point) (point-max))
-	  (ps/org-noter-dehyphenate)
-	  (let ((content (buffer-substring-no-properties (point) (point-max))))
-	    (widen)
-	    (org-cut-subtree)
-	    (org-previous-visible-heading 1)
-	    (let* ((highlight-heading (org-get-heading t t t t))
-		   (page (progn
-			   (string-match highlight-heading-regexp highlight-heading)
-			   (match-string 1 highlight-heading))))
-	      (org-edit-headline (format "%s, p. %s" title page))
-	      (org-narrow-to-subtree)
-	      (goto-char (point-max))
-	      (insert "\n#+begin_quote\n")
-	      (insert content)
-	      (insert "#+end_quote\n")
-	      (tlon-core-remove-extra-blank-lines)
-	      (org-next-visible-heading 1)))))))
+        (save-excursion
+          (cond
+           ((string-match highlight-heading-regexp initial-heading)
+            (org-back-to-heading)
+            (org-next-visible-heading 1))
+           ((string-match "Contents" initial-heading)
+            (org-back-to-heading))
+           (t
+            (user-error "You must be either in a \"contents\" heading or in a \"highlight on page\" Heading")))
+          (org-narrow-to-subtree)
+          (org-end-of-meta-data t)
+          (narrow-to-region (point) (point-max))
+          (unfill-region (point) (point-max))
+          (ps/org-noter-dehyphenate)
+          (let ((content (buffer-substring-no-properties (point) (point-max))))
+            (widen)
+            (org-cut-subtree)
+            (org-previous-visible-heading 1)
+            (let* ((highlight-heading (org-get-heading t t t t))
+                   (page (progn
+                           (string-match highlight-heading-regexp highlight-heading)
+                           (match-string 1 highlight-heading))))
+              (org-edit-headline (format "%s, p. %s" title page))
+              (org-narrow-to-subtree)
+              (goto-char (point-max))
+              (insert "\n#+begin_quote\n")
+              (insert content)
+              (insert "#+end_quote\n")
+              (tlon-core-remove-extra-blank-lines)
+              (org-next-visible-heading 1)))))))
 
   ;; TODO: find `org-noter' hook to run this automatically
   (defun ps/org-noter-dehyphenate ()
@@ -14267,6 +14029,7 @@ value is copied to the kill ring."
    "2" (lambda! (ebib-view-file-in-field 2)))
   (ebib-index-mode-map
    "<return>" 'ebib-edit-entry
+   "A" 'ebib-add-entry
    "D" 'ebib-delete-entry
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry))
@@ -14412,9 +14175,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
 #+begin_src emacs-lisp :results silent
 (use-package zotra
-  :elpaca (zotra
-           :host github
-           :repo "mpedramfar/zotra")
   :demand t
 
   :config
@@ -14472,10 +14232,9 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (defun ps/zotra-url-full-capture (&optional url)
     "Add URL to bibfile and generate associated PDF and HTML files."
     (interactive)
-    (unless ebib--cur-db
-      (ebib))
-    (let ((url (or url
-                   (read-string "URL: " (current-kill 0)))))
+    (let ((url (or url (read-string "URL: "))))
+      (unless ebib--cur-db
+        (ebib))
       (zotra-add-entry url)
       (ps/eww-url-to-pdf url)
       (ps/eww-url-to-html url)))
@@ -14499,7 +14258,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :general
   ("C-H-M-S-z" 'zotra-add-entry-from-url) ; triggered by KM macro
   (ebib-index-mode-map
-   "n" 'zotra-add-entry
+   "a" 'zotra-add-entry
    "z" 'ps/zotra-url-full-capture))
 #+end_src
 
@@ -15575,16 +15334,20 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
   (setq browse-url-browser-function 'eww-browse-url)
   (setq browse-url-firefox-program "/Applications/Firefox.app/Contents/MacOS/firefox")
   (setq browse-url-chrome-program "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
-  (let ((default 'browse-url-default-browser)
-        (firefox 'browse-url-firefox))
-    ;; these are websites that use JS and have to be browsed
-    ;; externally. there are many sites I hardly ever use, but the
-    ;; list aspires to be exhaustive rather than representative of
-    ;; my browsing habits.
-    (dolist (url (s-split "\n" (f-read ps/file-urls-open-externally-default) t))
-      (push (cons (regexp-quote url) 'browse-url-default-browser) browse-url-handlers))
-    (dolist (url (s-split "\n" (f-read ps/file-urls-open-externally-firefox) t))
-      (push (cons (regexp-quote url) 'browse-url-firefox) browse-url-handlers)))
+
+
+  (defun ps/browse-url-set-domains-to-open-externally ()
+    "Set the domains to open externally.
+Read the files `ps/file-urls-open-externally-default' and
+`ps/file-urls-open-externally-firefox', and set `browse-url-handlers' to open
+the domains in those files with the default browser and with Firefox,
+respectively."
+    (let ((default 'browse-url-default-browser)
+          (firefox 'browse-url-firefox))
+      (dolist (url (s-split "\n" (f-read ps/file-urls-open-externally-default) t))
+        (push (cons (regexp-quote url) 'browse-url-default-browser) browse-url-handlers))
+      (dolist (url (s-split "\n" (f-read ps/file-urls-open-externally-firefox) t))
+        (push (cons (regexp-quote url) 'browse-url-firefox) browse-url-handlers))))
 
   (defun ps/browse-url-of-dired-file-externally ()
     "In Dired, open the file at point in an external browser."
@@ -15597,8 +15360,8 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 If buffer is visiting a URL or if there is a URL in the kill ring,
 use its domain as the initial prompt input.
 
-With prefix argument, add the domain to the list of URLs to open
-in Firefox."
+If called with a prefix argument, add the domain to the list of URLs to open in
+Firefox."
     (interactive "P")
     (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
            (domain (when url (url-domain (url-generic-parse-url url))))
@@ -15613,9 +15376,14 @@ in Firefox."
         (flush-lines "^$")
         (delete-duplicate-lines (point-min) (point-max))
         (sort-lines nil (point-min) (point-max))
-        (save-buffer))))
+        (save-buffer))
+      (ps/browse-url-set-domains-to-open-externally)))
+
+  (ps/browse-url-set-domains-to-open-externally)
 
   :general
+  (eww-mode-map
+  "e" 'ps/browse-url-add-domain-to-open-externally)
   (mhtml-mode-map
    "s-x" 'browse-url-of-buffer)
   (telega-chat-mode-map

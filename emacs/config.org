@@ -6500,6 +6500,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :defer 5
   :config
   (setq magit-commit-ask-to-stage 'stage)
+  (setq magit-clone-set-remote.pushDefault t)
   (setq magit-diff-refine-hunk 'all) ; show word-granularity differences in all diff hunks
 
   (add-to-list 'magit-no-confirm 'stage-all-changes)

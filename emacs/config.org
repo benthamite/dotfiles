@@ -5192,27 +5192,19 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   ;; The following prevents Emacs from splitting windows indefinitely when the monitor config changes
   ;; stackoverflow.com/questions/23207958/how-to-prevent-emacs-dired-from-splitting-frame-into-more-than-two-windows
   (add-to-list 'display-buffer-alist `(,shell-command-buffer-name-async display-buffer-no-window))
-  (defvar ps/split-emacs-chrome-sideways nil)
-  (defun ps/split-emacs-chrome-sideways ()
-    "Split Emacs and Chrome frames sideways. A second
-  invocation restores original layout.
 
-  Calls Keyboard Maestro macro via shell script."
+  ;; FIXME: trigger macOS window maximization
+  (defun ps/toggle-frame-maximized ()
+    "Toggle frame maximized."
     (interactive)
     (toggle-frame-maximized)
-    (if ps/split-emacs-chrome-sideways
-        (progn
-          (winner-undo)
-          (ps/switch-to-last-window)
-          ;; Maximize Chrome
-          (eshell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"DBA06CC2-86E4-4F6B-9FA6-C1C12C007BCC\"'"))
-      (progn
-        (delete-other-windows)
-        (set-frame-size nil 950 1080 t)
-        ;; Split Chrome left
-        (eshell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"CF26FBCF-93C1-4C5D-9038-9AB31F6C6903\"'")))
-    (setq ps/split-emacs-chrome-sideways
-          (not ps/split-emacs-chrome-sideways)))
+    (if (ps/frame-is-maximized-p)
+        (remove-function after-focus-change-function
+                         (lambda ()
+                           (set-frame-parameter nil 'fullscreen 'maximized)))
+      (add-function :after after-focus-change-function
+                    (lambda ()
+                      (set-frame-parameter nil 'fullscreen 'maximized)))))
 
   (defun ps/get-last-window ()
     "Get to previously selected ordinary or minibuffer window."

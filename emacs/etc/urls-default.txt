@@ -1,4 +1,5 @@
 airbnb.com
+airserbia.com
 airtable.com
 airwander.com
 alignmentforum.com
@@ -13,6 +14,7 @@ calendly.com
 cleverlayover.com
 connectedpapers.com
 darbaja.es
+deepl.com
 dhl.
 doi.org
 dropbox.com
@@ -27,8 +29,10 @@ goodreads.com
 google.com
 grammarly.com
 hathitrust.org
+holafly.com
 igmchicago.org
 imdb.com
+ingebrigtsen.no
 interactivebrokers.co
 jit.si
 kentclarkcenter.org
@@ -61,6 +65,7 @@ swapcard.com
 teatrocolon.org.ar
 twitter.com
 utoronto.ca
+vueling.com
 we.tl
 wetransfer.com
 worldcat.org

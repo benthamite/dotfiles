@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: browse-url-add-urls
-# key: buau
+# name: update-urls-default
+# key: uud
 # contributor: Pablo Stafforini
 # --
-browse-url: add urls
+urls-default.txt: add urls

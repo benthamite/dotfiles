@@ -12361,38 +12361,38 @@ heading in a quote."
     (unless (derived-mode-p 'org-mode)
       (error "Not in an Org buffer"))
     (let ((initial-heading (org-get-heading t t t t))
-	  (highlight-heading-regexp "Highlight on page \\(.*\\)"))
+          (highlight-heading-regexp "Highlight on page \\(.*\\)"))
       (save-restriction
-	(save-excursion
-	  (cond
-	   ((string-match highlight-heading-regexp initial-heading)
-	    (org-back-to-heading)
-	    (org-next-visible-heading 1))
-	   ((string-match "Contents" initial-heading)
-	    (org-back-to-heading))
-	   (t
-	    (user-error "You must be either in a \"contents\" heading or in a \"highlight on page\" Heading")))
-	  (org-narrow-to-subtree)
-	  (org-end-of-meta-data t)
-	  (narrow-to-region (point) (point-max))
-	  (unfill-region (point) (point-max))
-	  (ps/org-noter-dehyphenate)
-	  (let ((content (buffer-substring-no-properties (point) (point-max))))
-	    (widen)
-	    (org-cut-subtree)
-	    (org-previous-visible-heading 1)
-	    (let* ((highlight-heading (org-get-heading t t t t))
-		   (page (progn
-			   (string-match highlight-heading-regexp highlight-heading)
-			   (match-string 1 highlight-heading))))
-	      (org-edit-headline (format "%s, p. %s" title page))
-	      (org-narrow-to-subtree)
-	      (goto-char (point-max))
-	      (insert "\n#+begin_quote\n")
-	      (insert content)
-	      (insert "#+end_quote\n")
-	      (tlon-core-remove-extra-blank-lines)
-	      (org-next-visible-heading 1)))))))
+        (save-excursion
+          (cond
+           ((string-match highlight-heading-regexp initial-heading)
+            (org-back-to-heading)
+            (org-next-visible-heading 1))
+           ((string-match "Contents" initial-heading)
+            (org-back-to-heading))
+           (t
+            (user-error "You must be either in a \"contents\" heading or in a \"highlight on page\" Heading")))
+          (org-narrow-to-subtree)
+          (org-end-of-meta-data t)
+          (narrow-to-region (point) (point-max))
+          (unfill-region (point) (point-max))
+          (ps/org-noter-dehyphenate)
+          (let ((content (buffer-substring-no-properties (point) (point-max))))
+            (widen)
+            (org-cut-subtree)
+            (org-previous-visible-heading 1)
+            (let* ((highlight-heading (org-get-heading t t t t))
+                   (page (progn
+                           (string-match highlight-heading-regexp highlight-heading)
+                           (match-string 1 highlight-heading))))
+              (org-edit-headline (format "%s, p. %s" title page))
+              (org-narrow-to-subtree)
+              (goto-char (point-max))
+              (insert "\n#+begin_quote\n")
+              (insert content)
+              (insert "#+end_quote\n")
+              (tlon-core-remove-extra-blank-lines)
+              (org-next-visible-heading 1)))))))
 
   ;; TODO: find `org-noter' hook to run this automatically
   (defun ps/org-noter-dehyphenate ()
@@ -14030,6 +14030,7 @@ value is copied to the kill ring."
    "2" (lambda! (ebib-view-file-in-field 2)))
   (ebib-index-mode-map
    "<return>" 'ebib-edit-entry
+   "A" 'ebib-add-entry
    "D" 'ebib-delete-entry
    "k" 'ebib-prev-entry
    "l" 'ebib-next-entry))

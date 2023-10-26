@@ -15338,16 +15338,20 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
   (setq browse-url-browser-function 'eww-browse-url)
   (setq browse-url-firefox-program "/Applications/Firefox.app/Contents/MacOS/firefox")
   (setq browse-url-chrome-program "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
-  (let ((default 'browse-url-default-browser)
-        (firefox 'browse-url-firefox))
-    ;; these are websites that use JS and have to be browsed
-    ;; externally. there are many sites I hardly ever use, but the
-    ;; list aspires to be exhaustive rather than representative of
-    ;; my browsing habits.
-    (dolist (url (s-split "\n" (f-read ps/file-urls-open-externally-default) t))
-      (push (cons (regexp-quote url) 'browse-url-default-browser) browse-url-handlers))
-    (dolist (url (s-split "\n" (f-read ps/file-urls-open-externally-firefox) t))
-      (push (cons (regexp-quote url) 'browse-url-firefox) browse-url-handlers)))
+
+
+  (defun ps/browse-url-set-domains-to-open-externally ()
+    "Set the domains to open externally.
+Read the files `ps/file-urls-open-externally-default' and
+`ps/file-urls-open-externally-firefox', and set `browse-url-handlers' to open
+the domains in those files with the default browser and with Firefox,
+respectively."
+    (let ((default 'browse-url-default-browser)
+          (firefox 'browse-url-firefox))
+      (dolist (url (s-split "\n" (f-read ps/file-urls-open-externally-default) t))
+        (push (cons (regexp-quote url) 'browse-url-default-browser) browse-url-handlers))
+      (dolist (url (s-split "\n" (f-read ps/file-urls-open-externally-firefox) t))
+        (push (cons (regexp-quote url) 'browse-url-firefox) browse-url-handlers))))
 
   (defun ps/browse-url-of-dired-file-externally ()
     "In Dired, open the file at point in an external browser."
@@ -15360,8 +15364,8 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 If buffer is visiting a URL or if there is a URL in the kill ring,
 use its domain as the initial prompt input.
 
-With prefix argument, add the domain to the list of URLs to open
-in Firefox."
+If called with a prefix argument, add the domain to the list of URLs to open in
+Firefox."
     (interactive "P")
     (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
            (domain (when url (url-domain (url-generic-parse-url url))))
@@ -15376,9 +15380,14 @@ in Firefox."
         (flush-lines "^$")
         (delete-duplicate-lines (point-min) (point-max))
         (sort-lines nil (point-min) (point-max))
-        (save-buffer))))
+        (save-buffer))
+      (ps/browse-url-set-domains-to-open-externally)))
+
+  (ps/browse-url-set-domains-to-open-externally)
 
   :general
+  (eww-mode-map
+  "e" 'ps/browse-url-add-domain-to-open-externally)
   (mhtml-mode-map
    "s-x" 'browse-url-of-buffer)
   (telega-chat-mode-map

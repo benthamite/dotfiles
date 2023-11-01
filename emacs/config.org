@@ -15905,9 +15905,10 @@ poorly-designed websites."
    "d" 'elfeed-update
    "e" 'ps/elfeed-toggle-read-entries
    "f" 'ps/avy-elfeed-search-show-entry
-   "q" 'ps/elfeed-toggle-session
-   "U" 'ps/elfeed-full-update
    "j" 'elfeed-unjam
+   "q" 'ps/elfeed-toggle-session
+   "u" 'ps/elfeed-full-update
+   "U" 'elfeed-search-tag-all-unread
    "o" 'elfeed-org
    "w" 'ps/elfeed-toggle-wiki-entries)
   (elfeed-show-mode-map

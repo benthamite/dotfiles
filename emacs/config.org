@@ -9057,7 +9057,7 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
            :host github
            :repo "SqrtMinusOne/reverso.el")
   :config
-  (setq reverso-languages '(english french german italian portuguese spanish))
+  (setq reverso-languages '(spanish english french german italian portuguese))
 
   :general
   ("H-Y" 'reverso))

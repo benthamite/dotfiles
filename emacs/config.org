@@ -17621,8 +17621,7 @@ Search for user name in `org-mode' heading at point. If found, copy the content
     (push template org-capture-templates))
 
   :general
-  ("H-r" 'tlon-babel-dispatch
-   "A-y" 'tlon-babel-goldendict-search-input)
+  ("H-r" 'tlon-babel-dispatch)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map

@@ -232,8 +232,8 @@
 (setq tlon-babel-todos-jobs-id
       "")
 (setq tlon-babel-todos-generic-id
-      "42408D2B-5012-4675-8985-4DA62C1F0E2A")
-(setq tlon-babel-todos-file (file-name-concat ps/dir-notes "babel.org"))
+      "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
+(setq tlon-babel-todos-file (file-name-concat ps/dir-notes "tareas.org"))
 (dolist (template `(("tbJ" "Tlön: BAE: Create new job (via
     org-capture)" entry
     (id ,tlon-babel-todos-jobs-id)

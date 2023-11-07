@@ -106,7 +106,7 @@
 ,*Federico*
 ,#+end_signature")
  (ps/gpe-signature . "")
- (ps/split-width-threshold . 140)
+ (ps/split-width-threshold . 160)
  (ps/telega-server-libs-prefix . "/opt/homebrew/Cellar/tdlib/HEAD-0d16085")
  )
 #+end_src

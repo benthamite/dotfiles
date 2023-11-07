@@ -29,16 +29,16 @@ GPG_TTY=$(tty)
 export GPG_TTY
 
 # goku
-export GOKU_EDN_CONFIG_FILE="/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/karabiner/karabiner.edn"
+export GOKU_EDN_CONFIG_FILE="$DOTFILES/karabiner/karabiner.edn"
 
 # emms
-export PATH="/Users/pablostafforini/source/emms/src:$PATH" # emms-print-metadata binary
+export PATH="$HOME/source/emms/src:$PATH" # emms-print-metadata binary
 
 # aliases
-alias muinit="cd ~; mu init --maildir=/Users/pablostafforini/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL; mu index"
+alias muinit="cd ~; mu init --maildir=$HOME/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL; mu index"
 
 # homebrew
 export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
 
 # libby
-export LIBBY_OUTPUT_DIR="/Users/pablostafforini/Downloads/"
+export LIBBY_OUTPUT_DIR="$HOME/Downloads/"

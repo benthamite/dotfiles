@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: update-urls-default
+# key: uud
+# contributor: Pablo Stafforini
+# --
+urls-default.txt: add urls

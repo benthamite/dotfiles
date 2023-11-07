@@ -3,8 +3,11 @@ export PATH="/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:
 export LDFLAGS="-L/opt/homebrew/opt/sqlite/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/sqlite/include"
 
+# local vars
+source ~/.zvars
+
 # secrets
-source "/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/shell/.zshenv-secrets"
+source "$DOTFILES/shell/.zshenv-secrets"
 
 export PATH="/opt/homebrew/opt/node/bin:$PATH"
 
@@ -18,11 +21,11 @@ export GOPATH=/Users/$USER/go
 export PATH=$GOPATH/bin:$PATH
 
 # rust
-. "$HOME/.cargo/env"
+# . "$HOME/.cargo/env"
 
 # emacs
 export EDITOR="emacsclient -nw"
 export VISUAL="$EDITOR"
 
 # gdcv
-export PATH="$PATH:/Users/pablostafforini/source/gdcv"
+export PATH="$PATH:$HOME/source/gdcv"

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: merge-mkv-track
+# key: mmt
+# contributor: Pablo Stafforini
+# --
+mkvmerge -o merged.mkv '${1:video file}' '${2:audio file}'

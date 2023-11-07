@@ -2338,7 +2338,8 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
   :config
   (global-hl-line-mode)
 
-  (dolist (hook '(markdown-mode-hook org-mode-hook))
+  ;; disable `hl-line' in selected modes
+  (dolist (hook '(markdown-mode-hook)) ; add other modes as needed
     (add-hook hook
               (lambda ()
                 (set (make-local-variable 'global-hl-line-mode) nil)))))
@@ -2395,8 +2396,7 @@ I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specific
            :repo "milkypostman/hl-sentence")
   :demand t
   :config
-  (dolist (hook '(markdown-mode-hook org-mode-hook))
-    (add-hook hook #'hl-sentence-mode)))
+  (add-hook 'markdown-mode-hook #'hl-sentence-mode))
 #+end_src
 
 ** jit-lock

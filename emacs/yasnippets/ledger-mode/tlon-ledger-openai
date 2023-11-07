@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: tlon-ledger-openai
+# key: tlo
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` OpenAI
+    Expenses:Core:Web services                 $1 USD ; Monthly charge for using the OpenAI API
+    Assets:Wise
+

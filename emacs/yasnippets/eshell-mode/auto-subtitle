@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: auto-subtitle
+# key: as
+# contributor: Pablo Stafforini
+# https://github.com/m1guelpf/auto-subtitle
+# --
+auto_subtitle '`(current-kill 0)`' -o subtitled/ --language $1 --model medium --srt_only true

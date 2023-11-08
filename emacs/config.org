@@ -6658,7 +6658,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
 #+begin_src emacs-lisp :results silent
 (use-package ghub
-  :defer 5)
+  :demand t)
 #+end_src
 
 ** forge

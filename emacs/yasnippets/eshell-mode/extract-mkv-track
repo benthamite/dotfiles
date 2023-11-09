@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: extract-subtitles
+# key: es
+# contributor: Pablo Stafforini
+# --
+mkvextract tracks `(current-kill 0)` ${1:track number (run ‘detect-subtitle-track [dst]’)}:`(file-name-with-extension (file-name-sans-extension (current-kill 0)) "srt")`

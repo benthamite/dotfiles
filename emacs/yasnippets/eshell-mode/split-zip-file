@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: split-zip-file
+# key: szf
+# contributor: Pablo Stafforini
+# --
+zip `(current-kill 0)` --out SplitArchive.zip -s 100m$1

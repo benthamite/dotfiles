@@ -27,9 +27,6 @@
 
 ;;; Code:
 
-(require 'org-clock)
-(require 'display-wttr)
-
 ;;;; User options
 
 (defgroup tab-bar-extras ()

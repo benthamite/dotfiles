@@ -27,6 +27,8 @@
 
 ;;; Code:
 
+(require 'profiler)
+
 ;;;; Variables
 
 (defvar essentials-profiler-toggle nil)
@@ -48,5 +50,6 @@
   "Expand all subentries below entry at point."
   (interactive)
   (profiler-report-toggle-entry '(4)))
+
 (provide 'essentials)
 ;;; essentials.el ends here

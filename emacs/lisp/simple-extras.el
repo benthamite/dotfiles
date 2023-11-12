@@ -33,6 +33,8 @@
 
 ;;;; Functions
 
+;;;;; editing
+
 (defmacro simple-extras-delete-instead-of-kill (&rest body)
   "Replace `kill-region' with `delete-region' in BODY."
   `(cl-letf (((symbol-function 'kill-region)
@@ -54,6 +56,8 @@
     (if bounds
         (kill-region (car bounds) (cdr bounds))
       (error "No %s at point" thing))))
+
+;;;;;; words
 
 (defun simple-extras-delete-word (&optional arg)
   "Like `kill-word', but deletes instead of killing.
@@ -100,6 +104,7 @@ With argument ARG, do this that many times."
   (interactive)
   (transpose-words -1))
 
+;;;;;;
 (defun simple-extras-backward-zap-to-char (arg char &optional interactive)
   "Kill backward up to and including ARGth occurrence of CHAR.
 When run interactively, the argument INTERACTIVE is non-nil.
@@ -169,6 +174,8 @@ See also `zap-up-to-char'."
   (interactive)
   (transpose-chars -1))
 
+;;;;;; lines
+
 (defun simple-extras-delete-line (&optional arg)
   "Like `kill-line', but deletes instead of killing.
 With prefix argument ARG, kill that many lines from point."
@@ -210,6 +217,8 @@ With prefix argument ARG, copy that many lines from point."
   "Exchange current line and previous line, leaving point between the two."
   (interactive)
   (transpose-lines -1))
+
+;;;;;; sentences
 
 (defun simple-extras-delete-sentence (&optional arg)
   "Like `kill-sentence', but deletes instead of killing.
@@ -258,6 +267,8 @@ negative ARG -N."
   "Interchange the current sentence with the previous one."
   (interactive)
   (transpose-sentences -1))
+
+;;;;;; paragraphs
 
 ;; the functions below are derivatives of functions in `paragraphs.el' so maybe
 ;; they should be moved to another extra package there
@@ -309,6 +320,8 @@ negative ARG -N means copy forward to Nth end of paragraph."
   (interactive)
   (transpose-paragraphs -1))
 
+;;;;;; sexps
+
 ;; ;; the functions below are derivatives of functions in `lisp.el' so maybe
 ;; ;; they should be moved to another extra package there
 (defun simple-extras-delete-sexp (&optional arg)
@@ -359,6 +372,8 @@ Negative arg -N means copy N sexps after point."
   (interactive)
   (transpose-sexps -1))
 
+;;;;;; region
+
 (defun simple-extras-smart-kill-region ()
   "Kill region if active, else kill line."
   (interactive)
@@ -379,6 +394,108 @@ Negative arg -N means copy N sexps after point."
   (if (region-active-p)
       (call-interactively 'copy-region-as-kill)
     (call-interactively 'ps/copy-whole-line)))
+
+;;;;;; yank
+
+(defun simple-extras-yank-and-pop ()
+  "Yank, then pop the last kill off the ring."
+  (interactive)
+  (yank)
+  (when kill-ring
+    (setq kill-ring (cdr kill-ring)))
+  (when kill-ring-yank-pointer
+    (setq kill-ring-yank-pointer kill-ring))
+  (message "Last kill popped off kill-ring."))
+
+
+;;;;; Other
+
+;; spwhitton.name/blog/entry/transient-mark-mode/
+(defun simple-extras-exchange-point-and-mark (arg)
+  "Exchange point and mark, but reactivate mark a bit less often.
+
+Specifically, invert the meaning of ARG in the case where
+Transient Mark mode is on but the region is inactive."
+  (interactive "P")
+  (exchange-point-and-mark
+   (if (and transient-mark-mode (not mark-active))
+       (not arg)
+     arg)))
+
+(defun simple-extras-visible-mode-enhanced ()
+  "Toggle `visible-mode' and associated modes."
+  (interactive)
+  (require 'org)
+  (require 'org-modern)
+  (if visible-mode
+      (progn
+        ;; (org-tidy-mode)
+        (visible-mode -1)
+        (unless (eq major-mode 'org-agenda-mode)
+          (org-modern-mode))
+        (org-display-inline-images))
+    (unless (eq major-mode 'org-agenda-mode)
+      (org-modern-mode -1))
+    ;; (org-tidy-mode -1)
+    (visible-mode)
+    (org-remove-inline-images)))
+
+(defun simple-extras-count-words-dwim ()
+  "Count the number of words in region, if active, otherwise in clipboard.
+Either way, save count to kill ring."
+  (interactive)
+  (if (region-active-p)
+      (let ((count (how-many "\\w+" (region-beginning) (region-end))))
+        (message "%s words in region" count)
+        (kill-new (number-to-string count))
+        (message "region has %s words" count))
+    (let ((clipboard-text (current-kill 0)))
+      (with-temp-buffer
+        (insert clipboard-text)
+        (let ((clipboard-count (kill-new (format "%d" (count-words-region (point-min) (point-max))))))
+          (message clipboard-count))))))
+
+(defun simple-extras-visual-line-mode-enhancedps/visual-line-mode-enhanced ()
+  "Toggle `visual-line-mode' handling `truncate-lines'."
+  (interactive)
+  (if visual-line-mode
+      (progn
+        (visual-line-mode -1)
+        (setq truncate-lines t))
+    (visual-line-mode)
+    (setq truncate-lines nil)))
+
+;;;;; macros
+
+;; From Gonçalo Santos (github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org#helpers)
+(defmacro lambda! (&rest body)
+  "A shortcut for inline interactive lambdas."
+  (declare (doc-string 1))
+  `(lambda () (interactive) ,@body))
+
+;;;;; indent
+
+;; Adapted from `spacemacs/indent-region-or-buffer'.
+(defun simple-extras-indent-dwim ()
+  "Indent in a smart way, depending on context.
+If a region is selected, indent it. Otherwise, if point is on code block indent
+block only, else indent whole buffer."
+  (interactive)
+  (require 'org)
+  (save-excursion
+    (if (region-active-p)
+        (progn
+          (indent-region (region-beginning) (region-end))
+          (message "Indented selected region."))
+      (if (when (derived-mode-p 'org-mode)
+            (org-in-src-block-p))
+          (let ((org-src-tab-acts-natively t))
+            (org-narrow-to-block)
+            (indent-region (point-min) (point-max) nil)
+            (widen))
+        (indent-region (point-min) (point-max) nil)
+        (message "Indented buffer.")))
+    (whitespace-cleanup)))
 
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

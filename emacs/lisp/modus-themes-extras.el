@@ -67,7 +67,7 @@
          (add-hook 'ns-system-appearance-change-functions
                    #'modus-themes-extras-load-theme-emacs-plus))))
 
-(defun modus-set-extras-extra-faces ()
+(defun modus-themes-extras-set-faces ()
   "Set extra faces for the `modus' themes."
   (if (eq 'modus-operandi (car custom-enabled-themes))
       (set-face-attribute 'hl-sentence nil :background "#bfefff")

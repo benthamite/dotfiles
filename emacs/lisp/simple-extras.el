@@ -59,19 +59,19 @@
   "Like `kill-word', but deletes instead of killing.
 With argument ARG, do this that many times."
   (interactive "p")
-  (ps/delete-instead-of-kill (kill-word arg)))
+  (simple-extras-delete-instead-of-kill (kill-word arg)))
 
 (defun simple-extras-backward-delete-word (&optional arg)
   "Like `backward-kill-word', but deletes instead of killing.
 With argument ARG, do this that many times."
   (interactive "p")
-  (ps/delete-instead-of-kill (backward-kill-word arg)))
+  (simple-extras-delete-instead-of-kill (backward-kill-word arg)))
 
 (defun simple-extras-copy-word (&optional arg)
   "Like `kill-word', but copies instead of killing.
 With argument ARG, do this that many times."
   (interactive "P")
-  (ps/copy-instead-of-kill (kill-word arg)))
+  (simple-extras-copy-instead-of-kill (kill-word arg)))
 
 ;; The macro wasn't working for `backward-kill-word', so using a custom function.
 (defun simple-extras-backward-copy-word ()
@@ -82,18 +82,18 @@ With argument ARG, do this that many times."
 (defun simple-extras-kill-whole-word ()
   "Kill the word at point."
   (interactive)
-  (ps/kill-whole-thing 'word))
+  (simple-extras-kill-whole-thing 'word))
 
 (defun simple-extras-delete-whole-word ()
   "Like `kill-whole-word', but deletes instead of killing."
   (interactive)
-  (ps/delete-instead-of-kill (simple-extras-kill-whole-word)))
+  (simple-extras-delete-instead-of-kill (simple-extras-kill-whole-word)))
 
 (defun simple-extras-copy-whole-word ()
   "Like `kill-whole-word', but copies instead of killing.
 With argument ARG, do this that many times."
   (interactive)
-  (ps/copy-instead-of-kill (simple-extras-kill-whole-word)))
+  (simple-extras-copy-instead-of-kill (simple-extras-kill-whole-word)))
 
 (defun simple-extras-transpose-words-backward ()
   "Interchange words around point, leaving point at beginning."

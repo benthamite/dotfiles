@@ -359,5 +359,26 @@ Negative arg -N means copy N sexps after point."
   (interactive)
   (transpose-sexps -1))
 
+(defun simple-extras-smart-kill-region ()
+  "Kill region if active, else kill line."
+  (interactive)
+  (if (region-active-p)
+      (call-interactively 'kill-region)
+    (call-interactively 'kill-whole-line)))
+
+(defun simple-extras-smart-delete-region ()
+  "Kill region if active, else kill line."
+  (interactive)
+  (if (region-active-p)
+      (call-interactively 'delete-region)
+    (call-interactively 'ps/delete-whole-line)))
+
+(defun simple-extras-smart-copy-region ()
+  "Kill region if active, else kill line."
+  (interactive)
+  (if (region-active-p)
+      (call-interactively 'copy-region-as-kill)
+    (call-interactively 'ps/copy-whole-line)))
+
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

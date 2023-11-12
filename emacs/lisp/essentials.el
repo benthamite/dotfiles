@@ -33,6 +33,7 @@
 
 ;;;; Functions
 
+;;;###autoload
 (defun essentials-profiler-toggle ()
   "Start or stop Emacs profiler and generate profiling report."
   (interactive)
@@ -42,6 +43,7 @@
     (profiler-stop))
   (setq essentials-profiler-toggle (not essentials-profiler-toggle)))
 
+;;;###autoload
 (defun essentials-profiler-report-toggle-entry-global ()
   "Expand all subentries below entry at point."
   (interactive)

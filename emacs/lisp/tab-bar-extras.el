@@ -33,7 +33,7 @@
   "Extensions for `tab-bar'."
   :group 'tab-bar)
 
-(defcustom tab-bar-extras-global-mode-string-default nil
+(defcustom tab-bar-extras-global-mode-string nil
   "Default value of `global-mode-string' when `tab-bar-extras-mode' is active."
   :type 'list
   :group 'tab-bar-extras)

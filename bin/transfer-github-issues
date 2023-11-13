@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Fill out these details.
+file_path="/Users/pablostafforini/Downloads/issues.txt"
+source_repo="tlon-team/biblioteca-altruismo-eficaz"
+destination_repo="tlon-team/bibliotheca-issues"
+
+# Read the text file line by line.
+while IFS= read -r issue_number; do
+  # Transfer each individual issue.
+  hub issue transfer $issue_number $destination_repo
+done <"$file_path"

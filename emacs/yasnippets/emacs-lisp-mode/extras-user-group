@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: extras-user-group
+# key: eug
+# contributor: Pablo Stafforini
+# --
+(defgroup $1-extras ()
+  "Extensions for `$1'."
+  :group '$1-extras)

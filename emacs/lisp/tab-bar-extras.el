@@ -43,13 +43,15 @@
 (defun tab-bar-extras-reset ()
   "Temporary command to handle mysterious proliferation of clocks."
   (interactive)
-  (setq global-mode-string tab-bar-extras-global-mode-string-default)
+  (require 'display-wttr)
+  (setq global-mode-string tab-bar-extras-global-mode-string)
   (display-wttr-mode))
 
 (defun tab-bar-extras-reset-unless-clock ()
   "Reset the tab-bar when org-clock isn't running.
 The condition is included to prevent the currently clocked task
 from disappearing when the tab-bar is reset."
+  (require 'org-clock)
   (unless org-clock-current-task
     (tab-bar-extras-reset)))
 

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: extras-url
+# key: eu
+# contributor: Pablo Stafforini
+# --
+https://github.com/benthamite/dotfiles/tree/master/emacs/lisp/$1-extras.el

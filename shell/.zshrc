@@ -42,3 +42,7 @@ export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
 
 # libby
 export LIBBY_OUTPUT_DIR="$HOME/Downloads/"
+
+# ruby
+export PATH="$HOME/.gem/bin:$PATH"
+export GEM_HOME="$HOME/.gem"

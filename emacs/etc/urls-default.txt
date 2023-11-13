@@ -13,6 +13,8 @@ bloomberg.com
 calendly.com
 cleverlayover.com
 connectedpapers.com
+correos.es
+correosaduanas.es
 darbaja.es
 deepl.com
 dhl.
@@ -62,12 +64,15 @@ savvycal.com
 skyscanner.com
 skyscanner.net
 slack.com
+soundcloud.com
 squarespace.com
 stafforini.com
 stripe.com
 swapcard.com
+tangotimetravel.be
 tangotunes.com
 teatrocolon.org.ar
+traveltrolley.co.uk
 twitter.com
 utoronto.ca
 vueling.com

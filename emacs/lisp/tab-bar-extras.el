@@ -35,7 +35,7 @@
 
 (defcustom tab-bar-extras-global-mode-string nil
   "Default value of `global-mode-string' when `tab-bar-extras-mode' is active."
-  :type 'list
+  :type 'alist
   :group 'tab-bar-extras)
 
 ;;;; Functions

@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'files)
+
 ;;;; User options
 
 (defgroup files-extras ()
@@ -39,15 +40,13 @@
   :type 'symbol
   :group 'files-extras)
 
-;;;; Main variables
-
 ;;;; Functions
 
 ;; christiantietze.de/posts/2021/06/emacs-trash-file-macos/
 (defun files-extras-system-move-file-to-trash (path)
   "Move file in PATH to the trash according to `move-file-to-trash' convention."
   (unless (executable-find "trash")
-    (user-error "`trash' not found; please install it (e.g. `brew install trash')")
+    (user-error "`trash' not found; please install it (e.g. `brew install trash')"))
   (shell-command (concat "trash -vF \"" path "\""
                          "| sed -e 's/^/Trashed: /'")
                  nil ;; Name of output buffer

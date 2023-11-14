@@ -3,7 +3,7 @@
 ;; Copyright (C) 2023
 
 ;; Author: Pablo Stafforini
-;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/lisp/mu4e-extras.el
+;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/mu4e-extras.el
 ;; Version: 0.1
 
 ;; This file is NOT part of GNU Emacs.

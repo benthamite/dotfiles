@@ -68,7 +68,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
 OFFSET changes the distance between the closest key to the cursor and the
 cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (interactive)
-  (call-interactively (lambda! (avy-goto-line-below offset bottom-up)
+  (call-interactively (lambda! (avy-goto-line-below offset bottom-up)))
   (end-of-line))
 
 (defun avy-extras-dired-find-file ()

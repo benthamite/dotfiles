@@ -126,5 +126,33 @@ losing the `put back' option."
       (all-the-icons-dired-mode)
     (all-the-icons-dired-mode -1)))
 
+;;;; gnus-dired
+
+;; replaces `gnus-dired-mail-buffers' function so it works on
+;; `message-mode' derived modes, such as `mu4e-compose-mode'
+;; djcbsoftware.nl/code/mu/mu4e/Attaching-files-with-dired.html
+(el-patch-defun gnus-dired-mail-buffers ()
+  "Return a list of active mail composition buffers."
+  (el-patch-swap
+    (if (and (memq gnus-dired-mail-mode '(message-user-agent gnus-user-agent))
+	     (require 'message)
+	     (fboundp 'message-buffers))
+	(message-buffers)
+      ;; Cf. `message-buffers' in `message.el':
+      (let (buffers)
+	(save-excursion
+	  (dolist (buffer (buffer-list t))
+	    (set-buffer buffer)
+	    (when (eq major-mode 'mail-mode)
+	      (push (buffer-name buffer) buffers))))
+	(nreverse buffers)))
+    (let (buffers)
+      (save-excursion
+	(dolist (buffer (buffer-list t))
+	  (set-buffer buffer)
+	  (when (eq major-mode 'mail-mode)
+	    (push (buffer-name buffer) buffers))))
+      (nreverse buffers))))
+
 (provide 'dired-extras)
 ;;; dired-extras.el ends here

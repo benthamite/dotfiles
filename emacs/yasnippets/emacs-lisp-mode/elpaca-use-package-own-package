@@ -4,10 +4,8 @@
 # contributor: Pablo Stafforini
 # --
 (use-package $1
-  :elpaca ($1
-             :host github
-             :repo "benthamite/dotfiles"
-	     :files ("emacs/lisp/$1.el"))
+  :elpaca nil
+  :load-path "/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/emacs/lisp/"
   :after $2
   :demand t$3
   :config

@@ -113,8 +113,8 @@ losing the `put back' option."
 
 (defun dired-extras-image-dired-current-directory ()
   "Run `image-dired' in the current directory."
-  (require 'image-dired)
   (interactive)
+  (require 'image-dired)
   (image-dired-show-all-from-dir (dired-current-directory)))
 
 ;;;; all-the-icons-dired

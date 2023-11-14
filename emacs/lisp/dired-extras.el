@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'dired)
-(require 'dired-x)
+(require 'el-patch)
 
 ;;;; Functions
 

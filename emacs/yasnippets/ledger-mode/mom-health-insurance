@@ -3,7 +3,7 @@
 # key: mhi
 # contributor: Pablo Stafforini
 # --
-`(ps/yasnippet-expand-by-key "ldlm")` Health insurance
+`(ps/time-last-day-of-last-month)` Health insurance
     Expenses:Health:Medical                 $1.00 ARS
     Liabilities:Mom:$2
 

@@ -497,5 +497,68 @@ block only, else indent whole buffer."
         (message "Indented buffer.")))
     (whitespace-cleanup)))
 
+;;;;; strip
+
+;; github.com/typester/emacs/blob/master/lisp/url/url-util.el
+(defun simple-extras-get-url-at-point (&optional pt)
+  "Get the URL closest to point, but don't change position.
+Has a preference for looking backward when not directly on a symbol.
+
+If PT is non-nil, start at that position instead of `point'."
+  ;; Not at all perfect - point must be right in the name.
+  (require 'url-vars)
+  (save-excursion
+    (if pt (goto-char pt))
+    (let (start url)
+      (save-excursion
+        ;; first see if you're just past a filename
+        (if (not (eobp))
+            (if (looking-at "[] \t\n[{}()]") ; whitespace or some parens
+                (progn
+                  (skip-chars-backward " \n\t\r({[]})")
+                  (if (not (bobp))
+                      (backward-char 1)))))
+        (if (and (char-after (point))
+                 (string-match (eval-when-compile
+                                 (concat "[" "-%.?@a-zA-Z0-9()_/:~=&" "]"))
+                               (char-to-string (char-after (point)))))
+            (progn
+              (skip-chars-backward "-%.?@a-zA-Z0-9()_/:~=&")
+              (setq start (point))
+              (skip-chars-forward "-%.?@a-zA-Z0-9()_/:~=&"))
+          (setq start (point)))
+        (setq url (buffer-substring-no-properties start (point))))
+      (if (and url (string-match "^(.*)\\.?$" url))
+          (setq url (match-string 1 url)))
+      (if (and url (string-match "^URL:" url))
+          (setq url (substring url 4 nil)))
+      (if (and url (string-match "\\.$" url))
+          (setq url (substring url 0 -1)))
+      (if (and url (string-match "^www\\." url))
+          (setq url (concat "http://" url)))
+      (if (and url (not (string-match url-nonrelative-link url)))
+          (setq url nil))
+      url)))
+
+(defun simple-extras-strip-url ()
+  "Strip URL of unnecessary elements."
+  (interactive)
+  (unless (simple-extras-get-url-at-point)
+    (error "No URL at point."))
+  (let* ((url-original (simple-extras-get-url-at-point))
+         (url-stripped (replace-regexp-in-string "\\(?:https?://\\)?\\(?:www.\\)?" "" url-original)))
+    (search-backward " ")
+    (while (search-forward url-original nil t)
+      (replace-match url-stripped nil t))
+    (search-backward url-stripped)))
+
+;; TODO: expand
+(defun simple-extras-strip-thing-at-point ()
+  "Strip thing at point."
+  (interactive)
+  (cond ((simple-extras-get-url-at-point)
+         (simple-extras-strip-url)))
+  (just-one-space 0))
+
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

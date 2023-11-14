@@ -109,6 +109,12 @@ losing the `put back' option."
     (copy-file existing-file new-file))
   (revert-buffer))
 
+(defun dired-extras-image-dired-current-directory ()
+  "Run `image-dired' in the current directory."
+  (require 'image-dired)
+  (interactive)
+  (image-dired-show-all-from-dir (dired-current-directory))
+
 (provide 'dired-extras)
 ;;; dired-extras.el ends here
 

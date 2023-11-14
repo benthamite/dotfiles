@@ -474,5 +474,13 @@ OLD-FUN and ARGS are arguments passed to the original function."
 
 ;; (advice-add 'hack-dir-local-variables :around #'files-extras-walk-dir-locals-file)
 
+;; consider binding this to something
+(defun files-extras-convert-image-to-pdf ()
+  "Convert image at point to PDF."
+  (interactive)
+  (let ((file (buffer-file-name)))
+    (shell-command (format "convert '%s' '%s.pdf'" file (file-name-sans-extension file)))
+    (message "Converted image to PDF.")))
+
 (provide 'files-extras)
 ;;; files-extras.el ends here

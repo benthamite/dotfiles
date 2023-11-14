@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: yasnippet-update-snippets
+# name: yasnippet-update-snippet
 # key: yus
 # contributor: Pablo Stafforini
 # --
-yasnippet: update snippets
+yasnippet: update snippet ($1)

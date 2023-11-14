@@ -74,18 +74,21 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
 (defun avy-extras-dired-find-file ()
   "In Dired, visit the file or directory in selected line."
   (interactive)
+  (require 'dired)
   (avy-goto-line)
   (dired-find-alternate-file))
 
 (defun avy-extras-ebib-view-entry ()
   "In Ebib, view the entry in selected line."
   (interactive)
+  (require 'ebib)
   (avy-goto-line)
   (ebib-edit-entry))
 
 (defun avy-extras-headers-view-message ()
   "In mu4e, view the message in selected line."
   (interactive)
+  (require 'mu4e-headers)
   (avy-goto-line)
   (mu4e-headers-view-message))
 

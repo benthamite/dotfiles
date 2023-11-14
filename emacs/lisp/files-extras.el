@@ -192,7 +192,7 @@ present in the `downloads' folder."
   (interactive)
   (if (member "URLLink.acsm" (directory-files ps/dir-downloads))
       (files-extras-internet-archive-convert)
-    (files-extras-extras-internet-archive-download)))
+    (files-extras-internet-archive-download)))
 
 (defun files-extras-internet-archive-download ()
   "Download and open ACSM file from Internet Archive URL in kill ring.
@@ -237,7 +237,7 @@ one hour only."
          (id (replace-regexp-in-string "\\(\\(\\(
 \\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
          (calibre-file (car (directory-files-recursively ps/dir-calibre "\\.pdf$" t)))
-         ;; Should match filename used in `files-extras-extras-internet-archive-download'
+         ;; Should match filename used in `files-extras-internet-archive-download'
          (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
     (rename-file calibre-file (file-name-as-directory ps/dir-downloads))
     (shell-command (format "calibredb remove %s" id))

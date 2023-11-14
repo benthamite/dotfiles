@@ -43,13 +43,13 @@
   (interactive)
   (when (equal major-mode 'dired-mode)
     (if (or (not (boundp 'dired-dotfiles-show-p)) dired-dotfiles-show-p) ; if currently showing
-        (progn
-          (set (make-local-variable 'dired-dotfiles-show-p) nil)
-          (message "h")
-          (dired-mark-files-regexp "^\\\.")
-          (dired-do-kill-lines))
+	(progn
+	  (set (make-local-variable 'dired-dotfiles-show-p) nil)
+	  (message "h")
+	  (dired-mark-files-regexp "^\\\.")
+	  (dired-do-kill-lines))
       (progn (revert-buffer) ; otherwise just revert to re-show
-             (set (make-local-variable 'dired-dotfiles-show-p) t)))))
+	     (set (make-local-variable 'dired-dotfiles-show-p) t)))))
 
 (defun dired-extras-mark-screenshots ()
   "Mark all screenshot files."
@@ -79,8 +79,8 @@ If no files are marked, copy file at point instead."
     (:around (old-fun &rest r) kill-dired-buffer-quietly)
   (define-advice y-or-n-p (:around (old-fun prompt) just-yes)
     (if (or (string-prefix-p "Kill Dired buffer" prompt)
-            (string-prefix-p "Kill buffer of" prompt))
-        t
+	    (string-prefix-p "Kill buffer of" prompt))
+	t
       (funcall old-fun prompt)))
   (unwind-protect (apply old-fun r)
     (advice-remove 'y-or-n-p #'y-or-n-p@just-yes)))
@@ -99,22 +99,32 @@ losing the `put back' option."
   "Duplicate file at point."
   (interactive)
   (let* ((existing-file (dired-get-filename t))
-         (existing-file-stem (file-name-sans-extension existing-file))
-         (existing-file-extension (file-name-extension existing-file))
-         (counter 1)
-         (new-file (format "%s[%d].%s" existing-file-stem counter existing-file-extension)))
+	 (existing-file-stem (file-name-sans-extension existing-file))
+	 (existing-file-extension (file-name-extension existing-file))
+	 (counter 1)
+	 (new-file (format "%s[%d].%s" existing-file-stem counter existing-file-extension)))
     (while (file-exists-p new-file)
       (setq counter (1+ counter)
-            new-file (format "%s[%d].%s" existing-file-stem counter existing-file-extension)))
+	    new-file (format "%s[%d].%s" existing-file-stem counter existing-file-extension)))
     (copy-file existing-file new-file))
   (revert-buffer))
+
+;;;; image-dired
 
 (defun dired-extras-image-dired-current-directory ()
   "Run `image-dired' in the current directory."
   (require 'image-dired)
   (interactive)
-  (image-dired-show-all-from-dir (dired-current-directory))
+  (image-dired-show-all-from-dir (dired-current-directory)))
+
+;;;; all-the-icons-dired
+
+(defun dired-extras-all-the-icons-activate ()
+  "Define conditions for activation of `all-the-icons-dired-mode'."
+  (require 'all-the-icons-dired)
+  (if (< (length (directory-files default-directory)) 1000)
+      (all-the-icons-dired-mode)
+    (all-the-icons-dired-mode -1)))
 
 (provide 'dired-extras)
 ;;; dired-extras.el ends here
-

@@ -30,3 +30,6 @@ leiterreports.typepad.com###paid_advertisements
 leiterreports.typepad.com###paid_advertisements_
 leiterreports.typepad.com###advertise_on_lr
 
+! 2023-10-14 https://www.youtube.com
+www.youtube.com##tp-yt-paper-dialog.ytd-popup-container.style-scope
+

@@ -3,14 +3,14 @@
 # key: ft
 # contributor: Pablo Stafforini
 # --
-(defvar ps/file-tlon-$1
+(defvar path-file-tlon-$1
   (cond
    ;; Pablo
    ((equal (system-name) ps/computer-hostname-pablo)
-    (file-name-concat ps/dir-dropbox-tlon$2 "$1"))
+    (file-name-concat path-dir-dropbox-tlon$2 "$1"))
    ;; Leo
    ((equal (system-name) ps/computer-hostname-leo)
-    (file-name-concat ps/dir-dropbox-tlon$2 "$1"))
+    (file-name-concat path-dir-dropbox-tlon$2 "$1"))
    ;; Fede
    ((equal (system-name) ps/computer-hostname-fede)
     "")))

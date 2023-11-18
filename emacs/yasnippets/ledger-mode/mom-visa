@@ -3,7 +3,7 @@
 # key: visa
 # contributor: Pablo Stafforini
 # `(format-time-string "%Y-%m-%d")` $1
-`(ps/time-last-day-of-last-month)`
+`(calendar-extras-time-last-day-of-last-month)`
 2022-12-31 $1
     Expenses:$2  $3.00 ARS
     Liabilities:Mom:Visa

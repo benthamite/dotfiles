@@ -3,4 +3,4 @@
 # key: cm
 # contributor: Pablo Stafforini
 # --
-mv "`(current-kill 0)`" "`ps/dir-downloads`"
+mv "`(current-kill 0)`" "`path-dir-downloads`"

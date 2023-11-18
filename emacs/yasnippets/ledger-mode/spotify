@@ -3,7 +3,7 @@
 # key: spot
 # contributor: Pablo Stafforini
 # --
-`(ps/time-last-day-of-last-month)` Spotify
+`(calendar-extras-time-last-day-of-last-month)` Spotify
     Expenses:Leisure:Music  485.00 ARS
     Liabilities:Mom:Visa
 

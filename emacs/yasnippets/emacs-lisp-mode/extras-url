@@ -3,4 +3,4 @@
 # key: eu
 # contributor: Pablo Stafforini
 # --
-https://github.com/benthamite/dotfiles/tree/master/emacs/lisp/$1-extras.el
+https://github.com/benthamite/dotfiles/tree/master/emacs/extras/$1-extras.el

@@ -69,7 +69,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#use-package][use-package]]
 - [[#foundational][foundational]]
   - [[#general][general]]
-  - [[#path][path]]
+  - [[#paths][paths]]
   - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
@@ -972,13 +972,13 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 (elpaca-wait)
 #+end_src
 
-** path
+** paths
 :PROPERTIES:
 :ID:       B5BBC376-FA8B-47B6-A618-48F94BD1C4A5
 :END:
 
 #+begin_src emacs-lisp
-(use-personal-package path
+(use-personal-package paths
   :demand t)
 #+end_src
 
@@ -996,8 +996,8 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   ;; these directories should be shared across profiles, so there should
   ;; be only one `var' and one `etc' directory in `emacs-profiles'
   ;; rather than a pair of such directories for each profile
-  (setq no-littering-etc-directory (file-name-concat path-dir-chemacs-profiles "etc/"))
-  (setq no-littering-var-directory (file-name-concat path-dir-chemacs-profiles "var/"))
+  (setq no-littering-etc-directory (file-name-concat paths-dir-chemacs-profiles "etc/"))
+  (setq no-littering-var-directory (file-name-concat paths-dir-chemacs-profiles "var/"))
 
   :config
   ;; github.com/emacscollective/no-littering#auto-save-settings
@@ -1146,24 +1146,24 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
 (defhydra hydra-files
   (:exit t)
   "Buffers"
-  ("." (find-file path-file-inbox-mobile) "inbox-mobile")
-  ("," (find-file path-file-inbox-desktop) "inbox-desktop")
+  ("." (find-file paths-file-inbox-mobile) "inbox-mobile")
+  ("," (find-file paths-file-inbox-desktop) "inbox-desktop")
   ("a" (org-extras-agenda-switch-to-agenda-current-day) "agenda")
-  ("c" (find-file path-file-config) "config")
-  ("d" (find-file path-file-tlon-docs) "tlon-docs")
+  ("c" (find-file paths-file-config) "config")
+  ("d" (find-file paths-file-tlon-docs) "tlon-docs")
   ("e" (files-extras-open-extras-package) "extras")
-  ("h" (find-file path-file-tlon-ledger) "tlon-ledger")
-  ("i" (find-file path-file-anki) "anki")
-  ("j" (find-file path-file-ledger) "ledger")
-  ("k" (find-file path-file-karabiner) "karabiner")
+  ("h" (find-file paths-file-tlon-ledger) "tlon-ledger")
+  ("i" (find-file paths-file-anki) "anki")
+  ("j" (find-file paths-file-ledger) "ledger")
+  ("k" (find-file paths-file-karabiner) "karabiner")
   ("o" (switch-to-buffer "*notes*") "notes")
   ("p" (hydra-files-packages/body) "packages")
-  ("q" (find-file path-file-quotes) "quotes")
-  ("r" (find-file path-file-calendar) "calendar")
+  ("q" (find-file paths-file-quotes) "quotes")
+  ("r" (find-file paths-file-calendar) "calendar")
   ("s" (switch-to-buffer "*scratch*") "scratch")
-  ("v" (find-file path-file-films) "films")
-  ("w" (find-file path-file-work) "work")
-  ("z" (find-file path-file-variables) "variables"))
+  ("v" (find-file paths-file-films) "films")
+  ("w" (find-file paths-file-work) "work")
+  ("z" (find-file paths-file-variables) "variables"))
 
 (defhydra hydra-files-packages
   (:exit t)
@@ -1470,23 +1470,23 @@ CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:36] =>  0:31
   (:exit t)
   "Dired folders"
   ("a" (hydra-dirs-google-drive/body) "apps")
-  ("b" (dired path-dir-personal-bibliography) "bibliography")
-  ("d" (dired path-dir-dotfiles) "dotfiles")
-  ("e" (dired path-dir-emacs) "Emacs")
-  ("i" (dired path-dir-anki) "Anki")
-  ("j" (dired path-dir-health) "Health")
+  ("b" (dired paths-dir-personal-bibliography) "bibliography")
+  ("d" (dired paths-dir-dotfiles) "dotfiles")
+  ("e" (dired paths-dir-emacs) "Emacs")
+  ("i" (dired paths-dir-anki) "Anki")
+  ("j" (dired paths-dir-health) "Health")
   ("m" (hydra-dirs-music/body) "Music")
-  ("n" (dired path-dir-notes) "Notes")
-  ("o" (dired path-dir-google-drive) "Google Drive")
-  ("p" (dired path-dir-people) "People")
+  ("n" (dired paths-dir-notes) "Notes")
+  ("o" (dired paths-dir-google-drive) "Google Drive")
+  ("p" (dired paths-dir-people) "People")
   ("t" (hydra-dirs-tlon/body) "Tlön")
   ("H-t" (hydra-dirs-tlon/body) "Tlön")
-  ("U" (dired path-dir-audiobooks) "Audiobooks")
-  ("v" (dired path-dir-movies) "movies")
-  ("w" (dired path-dir-downloads) "downloads")
-  ("x" (dired path-dir-dropbox) "Dropbox")
-  ("y" (dired path-dir-pdf-library) "Library: PDF")
-  ("z" (dired path-dir-html-library) "Library: HTML")
+  ("U" (dired paths-dir-audiobooks) "Audiobooks")
+  ("v" (dired paths-dir-movies) "movies")
+  ("w" (dired paths-dir-downloads) "downloads")
+  ("x" (dired paths-dir-dropbox) "Dropbox")
+  ("y" (dired paths-dir-pdf-library) "Library: PDF")
+  ("z" (dired paths-dir-html-library) "Library: HTML")
   ("." (dired-at-point) "File at point")
   ("/" (dired "/") "Root")
   ("SPC" (dired "~/") "user")
@@ -1496,30 +1496,30 @@ CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:36] =>  0:31
 (defhydra hydra-dirs-tlon
   (:exit t)
   "Dired folders: Tlön"
-  ("b" (dired path-dir-dropbox-tlon-BAE) "Dropbox: BAE" :column "Dropbox")
-  ("H-b" (dired path-dir-google-drive-tlon-BAE) "Google Drive: BAE" :column "Google Drive")
-  ("n" (dired path-dir-dropbox-tlon-EAN) "Dropbox: EAN" :column "Dropbox")
-  ("H-n" (dired path-dir-google-drive-tlon-EAN) "Google Drive: EAN" :column "Google Drive")
-  ("m" (dired path-dir-dropbox-tlon-FM) "Dropbox: FM" :column "Dropbox")
-  ("H-m" (dired path-dir-google-drive-tlon-FM) "Google Drive: FM" :column "Google Drive")
-  ("g" (dired path-dir-dropbox-tlon-GPE) "Dropbox: GPE" :column "Dropbox")
-  ("H-g" (dired path-dir-google-drive-tlon-GPE) "Google Drive: GPE" :column "Google Drive")
-  ("h" (dired path-dir-dropbox-tlon-HEAR) "Dropbox: HEAR" :column "Dropbox")
-  ("H-h" (dired path-dir-google-drive-tlon-HEAR) "Google Drive: HEAR" :column "Google Drive")
-  ("d" (dired path-dir-dropbox-tlon-LBDLH) "Dropbox: LBDLH" :column "Dropbox")
-  ("H-d" (dired path-dir-google-drive-tlon-LBDLH) "Google Drive: LBDLH" :column "Google Drive")
-  ("p" (dired path-dir-dropbox-tlon-LP) "Dropbox: LP" :column "Dropbox")
-  ("H-p" (dired path-dir-google-drive-tlon-LP) "Google Drive: LP" :column "Google Drive")
-  ("r" (dired path-dir-dropbox-tlon-RAE) "Dropbox: RAE" :column "Dropbox")
-  ("H-r" (dired path-dir-google-drive-tlon-RAE) "Google Drive: RAE" :column "Google Drive")
-  ("t" (dired path-dir-dropbox-tlon) "Dropbox: tlon" :column "Dropbox")
-  ("H-t" (dired path-dir-google-drive-tlon) "Google Drive: tlon" :column "Google Drive")
-  ("c" (dired path-dir-dropbox-tlon-core) "Dropbox: core" :column "Dropbox")
-  ("H-c" (dired path-dir-google-drive-tlon-core) "Google Drive: core" :column "Google Drive")
-  ("f" (dired path-dir-dropbox-tlon-fede) "Dropbox: fede" :column "Dropbox")
-  ("H-f" (dired path-dir-google-drive-tlon-fede) "Google Drive: fede" :column "Google Drive")
-  ("l" (dired path-dir-dropbox-tlon-leo) "Dropbox: leo" :column "Dropbox")
-  ("H-l" (dired path-dir-google-drive-tlon-leo) "Google Drive: leo" :column "Google Drive"))
+  ("b" (dired paths-dir-dropbox-tlon-BAE) "Dropbox: BAE" :column "Dropbox")
+  ("H-b" (dired paths-dir-google-drive-tlon-BAE) "Google Drive: BAE" :column "Google Drive")
+  ("n" (dired paths-dir-dropbox-tlon-EAN) "Dropbox: EAN" :column "Dropbox")
+  ("H-n" (dired paths-dir-google-drive-tlon-EAN) "Google Drive: EAN" :column "Google Drive")
+  ("m" (dired paths-dir-dropbox-tlon-FM) "Dropbox: FM" :column "Dropbox")
+  ("H-m" (dired paths-dir-google-drive-tlon-FM) "Google Drive: FM" :column "Google Drive")
+  ("g" (dired paths-dir-dropbox-tlon-GPE) "Dropbox: GPE" :column "Dropbox")
+  ("H-g" (dired paths-dir-google-drive-tlon-GPE) "Google Drive: GPE" :column "Google Drive")
+  ("h" (dired paths-dir-dropbox-tlon-HEAR) "Dropbox: HEAR" :column "Dropbox")
+  ("H-h" (dired paths-dir-google-drive-tlon-HEAR) "Google Drive: HEAR" :column "Google Drive")
+  ("d" (dired paths-dir-dropbox-tlon-LBDLH) "Dropbox: LBDLH" :column "Dropbox")
+  ("H-d" (dired paths-dir-google-drive-tlon-LBDLH) "Google Drive: LBDLH" :column "Google Drive")
+  ("p" (dired paths-dir-dropbox-tlon-LP) "Dropbox: LP" :column "Dropbox")
+  ("H-p" (dired paths-dir-google-drive-tlon-LP) "Google Drive: LP" :column "Google Drive")
+  ("r" (dired paths-dir-dropbox-tlon-RAE) "Dropbox: RAE" :column "Dropbox")
+  ("H-r" (dired paths-dir-google-drive-tlon-RAE) "Google Drive: RAE" :column "Google Drive")
+  ("t" (dired paths-dir-dropbox-tlon) "Dropbox: tlon" :column "Dropbox")
+  ("H-t" (dired paths-dir-google-drive-tlon) "Google Drive: tlon" :column "Google Drive")
+  ("c" (dired paths-dir-dropbox-tlon-core) "Dropbox: core" :column "Dropbox")
+  ("H-c" (dired paths-dir-google-drive-tlon-core) "Google Drive: core" :column "Google Drive")
+  ("f" (dired paths-dir-dropbox-tlon-fede) "Dropbox: fede" :column "Dropbox")
+  ("H-f" (dired paths-dir-google-drive-tlon-fede) "Google Drive: fede" :column "Google Drive")
+  ("l" (dired paths-dir-dropbox-tlon-leo) "Dropbox: leo" :column "Dropbox")
+  ("H-l" (dired paths-dir-google-drive-tlon-leo) "Google Drive: leo" :column "Google Drive"))
 
 (defhydra hydra-dirs-google-drive
   (:exit t)
@@ -1533,10 +1533,10 @@ CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:36] =>  0:31
 (defhydra hydra-dirs-music
   (:exit t)
   "Dired folders: music"
-  ("c" (dired path-dir-music-classical) "classical")
-  ("p" (dired path-dir-music-popular) "popular")
-  ("t" (dired path-dir-music-tango) "tango")
-  ("s" (dired path-dir-music-to-sort) "to sort")
+  ("c" (dired paths-dir-music-classical) "classical")
+  ("p" (dired paths-dir-music-popular) "popular")
+  ("t" (dired paths-dir-music-tango) "tango")
+  ("s" (dired paths-dir-music-to-sort) "to sort")
   ("'" (hydra-dirs/body) "back"))
 #+end_src
 
@@ -1727,7 +1727,7 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 #+begin_src emacs-lisp :results silent
 (use-feature emacs
   :config
-  (setq default-directory path-dir-dropbox)
+  (setq default-directory paths-dir-dropbox)
   (setq use-short-answers t)
   (setq message-log-max t)
   (setq ring-bell-function 'ignore) ; silence bell when mistake is made
@@ -2962,7 +2962,7 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
   :demand t
   :config
   (setq save-abbrevs 'silently)
-  (setq abbrev-file-name (file-name-concat path-dir-abbrev "abbrev_defs"))
+  (setq abbrev-file-name (file-name-concat paths-dir-abbrev "abbrev_defs"))
   ;; (setq abbrev-suggest t)
   ;; (setq abbrev-suggest-hint-threshold 0)
   (setq-default abbrev-mode t)
@@ -3022,8 +3022,8 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 (use-package yasnippet
   :demand t
   :config
-  (setq yas-snippet-dirs (list path-dir-yasnippets
-                               path-dir-yasnippets-private
+  (setq yas-snippet-dirs (list paths-dir-yasnippets
+                               paths-dir-yasnippets-private
                                (file-name-concat elpaca-builds-directory "yasnippet-snippets/snippets/")))
 
   (setq yas-triggers-in-field t) ; allow stacked expansions
@@ -3291,7 +3291,7 @@ _a_pend       |_k_macro      |                    "
 (use-feature bookmark
   :demand t
   :config
-  (setq bookmark-default-file path-file-bookmarks) ; Set location of bookmarks file
+  (setq bookmark-default-file paths-file-bookmarks) ; Set location of bookmarks file
   (setq bookmark-save-flag 1)) ; Save bookmarks after each entry
 #+end_src
 
@@ -3860,7 +3860,7 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
   (setq tramp-use-ssh-controlmaster-options nil)
 
   ;; Store TRAMP auto-save files locally.
-  (setq tramp-auto-save-directory path-dir-emacs-var)
+  (setq tramp-auto-save-directory paths-dir-emacs-var)
 
   ;; A more representative name for this file.
   (setq tramp-persistency-file-name (file-name-concat tramp-auto-save-directory "tramp-connection-history"))
@@ -6352,7 +6352,7 @@ To populate the database of historical prices:
   :config
   (setq ledger-default-date-format ledger-iso-date-format)
   (setq ledger-reconcile-default-commodity "ARS")
-  (setq ledger-schedule-file path-file-tlon-ledger-schedule-file)
+  (setq ledger-schedule-file paths-file-tlon-ledger-schedule-file)
   (setq ledger-schedule-look-forward 0)
   (setq ledger-schedule-look-backward 30)
 
@@ -6471,7 +6471,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :config
   (setq ledger-prices-api-key-finnhub (auth-source-pass-get 'secret "chrome/api.finnhub.io"))
   (setq ledger-prices-api-key-exchangerates (auth-source-pass-get 'secret "chrome/api.exchangeratesapi.io"))
-  (setq ledger-prices-pricedb-file path-file-ledger-db)
+  (setq ledger-prices-pricedb-file paths-file-ledger-db)
   (setq ledger-prices-stocks '("NVDA" "TSLA"))
   (setq ledger-prices-currencies '("USD" "EUR" "GBP" "MXN" "ARS")))
 #+end_src
@@ -6494,7 +6494,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
-  (setq path-files-bibliography-all
+  (setq paths-files-bibliography-all
         `(,@path-files-bibliography-personal
           ,@tlon-babel-bibliography-files))
 
@@ -7194,7 +7194,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (setq org-ai-default-chat-model "gpt-4")
   (setq org-ai-default-chat-system-prompt "You are a helpful and competent assistant. Please omit any disclaimers")
   (setq org-ai-talk-say-words-per-minute 210)
-  (setq org-ai-image-directory path-dir-org-images)
+  (setq org-ai-image-directory paths-dir-org-images)
   (add-hook 'org-mode-hook #'org-ai-mode)
   (org-ai-install-yasnippets)
   (require 'org-ai-talk)
@@ -7483,7 +7483,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 (use-package org
   :demand t
   :config
-  (setq org-directory path-dir-org) ; set org directory
+  (setq org-directory paths-dir-org) ; set org directory
   (setq org-todo-keywords
         '((sequence "TODO(t)"
                     "DOING(g)"
@@ -7747,13 +7747,13 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
            "Reading list"
            tags
            "PRIORITY=\"1\"|PRIORITY=\"2\"|PRIORITY=\"3\"|PRIORITY=\"4\"|PRIORITY=\"5\"|PRIORITY=\"6\"|PRIORITY=\"7\"|PRIORITY=\"8\"|PRIORITY=\"9\""
-           ((org-agenda-files (list path-dir-bibliographic-notes))))
+           ((org-agenda-files (list paths-dir-bibliographic-notes))))
           ("g" "All TODOs"
            todo "TODO")
           ("," "All tasks with no priority"
            tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")))
   ;; (setq org-agenda-clockreport-parameter-plist)
-  (setq org-agenda-files (list path-file-calendar))
+  (setq org-agenda-files (list paths-file-calendar))
   (setq org-agenda-archives-mode 'trees)
 
   (advice-add 'org-agenda-goto :after
@@ -7885,13 +7885,13 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
   :after org
   :demand t
   :config
-  (setq org-default-notes-file path-file-inbox-desktop)
+  (setq org-default-notes-file paths-file-inbox-desktop)
   (setq org-capture-templates
         `(("." "Todo" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO %?\n" :empty-lines 1)
           ("c" "Calendar" entry
-           (file path-file-calendar)
+           (file paths-file-calendar)
            "* TODO %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t)
           ;; djcbsoftware.nl/code/mu/mu4e/Org_002dmode-links.html
           ("e" "Email" entry
@@ -8009,18 +8009,18 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
           ("tf" "Tlön: Fede")
           ("tff" "Tlön: Fede: generic task" entry
-           (file+headline path-file-tlon-tareas-fede "Tareas Fede")
+           (file+headline paths-file-tlon-tareas-fede "Tareas Fede")
            "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
           ("tfp" "Tlön: Fede: Pending for next meeting" plain
            (id "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
            "" :empty-lines 1 :empty-lines-after 3)
           ("tfr" "Tlön: Fede: RAE")
           ("tfrs" "Tlön: Fede: RAE suggestion" entry
-           (file+headline path-file-tlon-tareas-fede "sugerencias de Pablo")
+           (file+headline paths-file-tlon-tareas-fede "sugerencias de Pablo")
            "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
           ("tl" "Tlön: Leo")
           ("tll" "Tlön: Leo: Generic task" entry
-           (file+headline path-file-tlon-tareas-leo "Tareas Leo")
+           (file+headline paths-file-tlon-tareas-leo "Tareas Leo")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
           ("tlb" "Tlön: Leo: BAE")
           ("tlba" "Tlön: Leo: BAE: Add to translations Airtable" entry
@@ -8087,7 +8087,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (id "8B2F18B4-A309-4F29-A5E6-CD40E010970D")
            "" :empty-lines 1 :empty-lines-after 3)
           ("tlg" "Tlön: Leo: Telegram" entry
-           (file+headline path-file-tlon-tareas-leo "Tareas Leo")
+           (file+headline paths-file-tlon-tareas-leo "Tareas Leo")
            "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
           ;; ("n" "Day reflection" plain (function org-journal-find-location)
           ;; "** %(format-time-string org-journal-time-format)Day reflection\n%i%?")
@@ -8096,7 +8096,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ;; ("v" "Entry: revise" entry
           ;; (function
           ;; (lambda ()
-          ;; (let ((filename (file-name-concat path-dir-wiki-entries (current-kill 0))))
+          ;; (let ((filename (file-name-concat paths-dir-wiki-entries (current-kill 0))))
           ;; (set-buffer (find-file-noselect filename))
           ;; (pop kill-ring)
           ;; (goto-char (point-max)))))
@@ -8106,7 +8106,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            "* %(org-web-tools-extras-youtube-dl (current-kill 0))\n[[%c][YouTube link]]" :empty-lines 1 :prepend t :immediate-finish t)
           ;; github.com/alphapapa/org-protocol-capture-html#org-capture-template
           ("w" "Web site" entry
-           (file path-file-downloads)
+           (file paths-file-downloads)
            "* %a :website:\n\n%U %?\n\n%:initial")))
 
   (add-hook 'org-capture-mode-hook #'org-extras-capture-hydra-notes-hook)
@@ -8247,7 +8247,7 @@ CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
   :demand t
   :config
   (setq org-archive-default-command 'org-archive-to-archive-sibling)
-  (setq org-archive-location (expand-file-name "%s_archive.org::" path-dir-archive))
+  (setq org-archive-location (expand-file-name "%s_archive.org::" paths-dir-archive))
 
   :general
   (org-mode-map
@@ -8338,8 +8338,8 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
   ;; org-capture templates with them, but do not want them to be part
   ;; of org-agenda or org-roam.
   (setq org-id-extra-files (list
-                            path-file-tlon-tareas-leo
-                            path-file-tlon-tareas-fede))
+                            paths-file-tlon-tareas-leo
+                            paths-file-tlon-tareas-fede))
 
   :general
   (org-mode-map
@@ -8880,7 +8880,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
            :password ,(auth-source-pass-get 'secret "tlon/EAQUOTES/eaquotes.net/wp_admin@eaquotes.net"))))
 
   (setq org2blog/wp-show-post-in-browser 'show)
-  (setq org2blog/wp-track-posts (list path-file-org2blog "Posts"))
+  (setq org2blog/wp-track-posts (list paths-file-org2blog "Posts"))
 
   :general
   ("A-o" 'org2blog-user-interface))
@@ -8908,7 +8908,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 (use-package org-journal
   :after org
   :config
-  (setq org-journal-dir path-dir-journal)
+  (setq org-journal-dir paths-dir-journal)
   (setq org-journal-date-format "%Y-%m-%d")
   (setq org-journal-file-format "%Y.org")
   (setq org-journal-file-type 'yearly) ; set org-journal to use the same files for same year entries
@@ -9007,7 +9007,7 @@ CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
   :after org
   :defer 20
   :config
-  (setq elgantt-agenda-files (file-name-concat path-dir-emacs "elpaca/repos/elgantt/test.org")))
+  (setq elgantt-agenda-files (file-name-concat paths-dir-emacs "elpaca/repos/elgantt/test.org")))
 #+end_src
 
 ** org-pomodoro
@@ -9072,7 +9072,7 @@ This may send a notification, play a sound and adds log."
   :after org-pomodoro
   :demand t
   :config
-  (setq pomodoro-centile-history-file (file-name-concat path-dir-dropbox "misc/pomodoro-centile-history"))
+  (setq pomodoro-centile-history-file (file-name-concat paths-dir-dropbox "misc/pomodoro-centile-history"))
   (setq pomodoro-centile-day-offset 4))
 #+end_src
 
@@ -9141,7 +9141,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
     (setq org-roam-database-connector 'sqlite-builtin))
 
   :config
-  (setq org-roam-directory path-dir-org-roam)
+  (setq org-roam-directory paths-dir-org-roam)
   (setq org-roam-node-display-template
         (concat "${title:*} "
                 (propertize "${tags:10}" 'face 'org-tag)))
@@ -9184,7 +9184,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
                     org-roam-extras-excluded-files)
                    (regexp-opt result))
             (push (if (file-directory-p dir-or-file)
-                      (file-relative-name dir-or-file path-dir-org-roam)
+                      (file-relative-name dir-or-file paths-dir-org-roam)
                     dir-or-file)
                   result))))
 
@@ -9216,7 +9216,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
                  (mapcar #'file-name-as-directory
                          ;; List of special dirs
                          (list
-                          path-dir-journal)))
+                          paths-dir-journal)))
                 ;; heading condition
                 (> (org-current-level) 1))
                )
@@ -9461,9 +9461,9 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 (use-feature oc
   :after org
   :config
-  ;; (setq org-cite-global-bibliography path-files-bibliography-all)
+  ;; (setq org-cite-global-bibliography paths-files-bibliography-all)
   (setq org-cite-csl-styles-dir "/Users/pablostafforini/Library/CloudStorage/Dropbox/repos/genus/refs/styles/")
-  (setq org-cite-csl-locales-dir path-dir-personal-csl-locales)
+  (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (setq org-cite-activate-processor 'citar) ;
@@ -9557,7 +9557,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   :config
   ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
   ;; retorque.re/zotero-better-bibtex/citing/
-  (setq bibtex-files path-files-bibliography-all)
+  (setq bibtex-files paths-files-bibliography-all)
   (setq bibtex-search-entry-globally t)
   (setq bibtex-autokey-names 1)
   (setq bibtex-autokey-name-case-convert-function 'capitalize)
@@ -9776,8 +9776,8 @@ Also sets `bibtex-completion-display-formats-internal'."
 
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)
-  (setq bibtex-completion-bibliography path-files-bibliography-all)
-  (setq bibtex-completion-notes-path path-dir-bibliographic-notes)
+  (setq bibtex-completion-bibliography paths-files-bibliography-all)
+  (setq bibtex-completion-notes-path paths-dir-bibliographic-notes)
   (setq bibtex-completion-pdf-field "file")
   (setq bibtex-dialect 'biblatex))
 #+end_src
@@ -9840,7 +9840,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   :demand t
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))
-  (setq citar-bibliography path-files-bibliography-all)
+  (setq citar-bibliography paths-files-bibliography-all)
   (setq citar-notes-paths `(,path-dir-bibliographic-notes))
   (setq citar-at-point-function 'embark-act)
   (setq citar-symbol-separator "  ")
@@ -9966,8 +9966,8 @@ Having headings tagged with the type of work they are notes of allows me to quer
 (use-package org-ref
   :defer 20
   :config
-  (setq org-ref-bibtex-pdf-download-dir path-dir-downloads)
-  (setq bibtex-completion-library-path path-dir-pdf-library)
+  (setq org-ref-bibtex-pdf-download-dir paths-dir-downloads)
+  (setq bibtex-completion-library-path paths-dir-pdf-library)
 
   ;; Tweak function to remove redundant and conflicting `Year' field
   (defun isbn-to-bibtex (isbn bibfile)
@@ -10079,8 +10079,8 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
   :after tlon-babel
   :demand t
   :config
-  (setq ebib-preload-bib-files path-files-bibliography-all)
-  (setq ebib-notes-directory path-dir-bibliographic-notes)
+  (setq ebib-preload-bib-files paths-files-bibliography-all)
+  (setq ebib-notes-directory paths-dir-bibliographic-notes)
   (setq ebib-notes-use-org-capture t)
   (setq ebib-notes-display-max-lines 9999)
   (setq ebib-filename-separator ";")
@@ -10302,7 +10302,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (setq zotra-url-retrieve-timeout 15)
   (setq zotra-default-entry-format "biblatex")
   (setq zotra-after-add-entry-hook nil)
-  (setq zotra-download-attachment-default-directory path-dir-downloads)
+  (setq zotra-download-attachment-default-directory paths-dir-downloads)
   (setq zotra-backend 'zotra-server)
   (setq zotra-local-server-directory (expand-file-name "~/source/zotra-server/"))
 
@@ -10546,7 +10546,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-sent-folder "/[Gmail]/Sent Mail")
   (setq mu4e-refile-folder "/[Gmail]/All Mail")
   (setq mu4e-trash-folder "/[Gmail]/Trash")
-  (setq mu4e-attachment-dir path-dir-downloads)
+  (setq mu4e-attachment-dir paths-dir-downloads)
   (setq mu4e-change-filenames-when-moving t)
   (setq mu4e-maildir-shortcuts
         `((,mu4e-drafts-folder  . ?d)
@@ -10934,7 +10934,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
   (telega-mode-line-mode)
 
-  (add-hook 'telega-chat-mode-hook (lambda () (setq default-directory path-dir-downloads)))
+  (add-hook 'telega-chat-mode-hook (lambda () (setq default-directory paths-dir-downloads)))
 
   :general
   ((telega-msg-button-map telega-root-mode-map)
@@ -11255,7 +11255,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
   (setq eww-restore-desktop t)
   (setq eww-desktop-remove-duplicates t)
   (setq eww-header-line-format nil)
-  (setq eww-download-directory path-dir-downloads)
+  (setq eww-download-directory paths-dir-downloads)
   (setq eww-suggest-uris
         '(eww-links-at-point
           thing-at-point-url-at-point))
@@ -11497,7 +11497,7 @@ These key bindings produce the same behavior in eww.
   :after elfeed
   :demand t
   :config
-  (setq rmh-elfeed-org-files (list path-file-feeds-pablo path-file-tlon-feeds))
+  (setq rmh-elfeed-org-files (list paths-file-feeds-pablo paths-file-tlon-feeds))
 
   (elfeed-org))
 #+end_src
@@ -12020,7 +12020,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
   (require 'emms-playing-time)
 
   (setq emms-player-list '(emms-player-mpv))
-  (setq emms-source-file-default-directory path-dir-music-tango)
+  (setq emms-source-file-default-directory paths-dir-music-tango)
   (setq emms-playlist-buffer-name "*Music*")
   (setq emms-info-functions '(emms-info-libtag)) ; make sure libtag is the only thing delivering metadata
   ;; ~1 order of magnitude fzaster; requires GNU find: `brew install findutils'
@@ -12414,8 +12414,8 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
            :repo "tlon-team/bbdb")
 
   :config
-  (setq bbdb-file (file-name-concat path-dir-bbdb "bbdn.el"))
-  (setq bbdb-image-path (file-name-concat path-dir-bbdb "media/"))
+  (setq bbdb-file (file-name-concat paths-dir-bbdb "bbdn.el"))
+  (setq bbdb-image-path (file-name-concat paths-dir-bbdb "media/"))
   (bbdb-initialize 'anniv)
 
   :general
@@ -12457,7 +12457,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 (use-package bbdb-vcard
   :after bbdb
   :config
-  (setq bbdb-vcard-directory path-dir-bbdb)
+  (setq bbdb-vcard-directory paths-dir-bbdb)
   (setq bbdb-vcard-media-directory "media"))
 #+end_src
 
@@ -12507,7 +12507,7 @@ Disabling because it interferes with [[https://emacs.stackexchange.com/questions
   :demand t
   :config
   (setq custom-safe-themes t)
-  (setq custom-file (file-name-concat path-dir-downloads "delete.me"))) ; move unintended customizations to a garbage file
+  (setq custom-file (file-name-concat paths-dir-downloads "delete.me"))) ; move unintended customizations to a garbage file
 #+end_src
 
 ** fatebook

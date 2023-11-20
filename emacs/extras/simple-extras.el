@@ -27,9 +27,7 @@
 
 ;;; Code:
 
-;;;; User options
-
-;;;; Variables
+(require 'path)
 
 ;;;; Functions
 
@@ -204,16 +202,16 @@ With prefix argument ARG, copy that many lines from point."
   (simple-extras-kill-whole-thing 'line))
 
 (defun simple-extras-delete-whole-line ()
-  "Like `kill-whole-line', but deletes instead of killing."
+  "Like the command `kill-whole-line', but deletes instead of killing."
   (interactive)
   (simple-extras-delete-instead-of-kill (simple-extras-kill-whole-line)))
 
 (defun simple-extras-copy-whole-line ()
-  "Like `kill-whole-line', but copies instead of killing."
+  "Like the command `kill-whole-line', but copies instead of killing."
   (interactive)
   (simple-extras-copy-instead-of-kill (simple-extras-kill-whole-line)))
 
-(defun simple-extras-extras-transpose-lines-backward ()
+(defun simple-extras-transpose-lines-backward ()
   "Exchange current line and previous line, leaving point between the two."
   (interactive)
   (transpose-lines -1))
@@ -386,14 +384,14 @@ Negative arg -N means copy N sexps after point."
   (interactive)
   (if (region-active-p)
       (call-interactively 'delete-region)
-    (call-interactively 'ps/delete-whole-line)))
+    (call-interactively 'simple-extras-delete-whole-line)))
 
 (defun simple-extras-smart-copy-region ()
   "Kill region if active, else kill line."
   (interactive)
   (if (region-active-p)
       (call-interactively 'copy-region-as-kill)
-    (call-interactively 'ps/copy-whole-line)))
+    (call-interactively 'simple-extras-copy-whole-line)))
 
 ;;;;;; yank
 
@@ -559,6 +557,47 @@ If PT is non-nil, start at that position instead of `point'."
   (cond ((simple-extras-get-url-at-point)
          (simple-extras-strip-url)))
   (just-one-space 0))
+
+;; save-excursion wasn't restoring point, so using this custom
+;; function, from stackoverflow.com/a/24283996/4479455
+(defmacro simple-extras-save-excursion (&rest forms)
+  (let ((old-point (gensym "old-point"))
+        (old-buff (gensym "old-buff")))
+    `(let ((,old-point (point))
+           (,old-buff (current-buffer)))
+       (prog1
+           (progn ,@forms)
+         (unless (eq (current-buffer) ,old-buff)
+           (switch-to-buffer ,old-buff))
+         (goto-char ,old-point)))))
+
+;; endlessparentheses.com/fill-and-unfill-paragraphs-with-a-single-key.html
+(defun simple-extras-fill-or-unfill-paragraph ()
+  "Like `fill-paragraph', but unfill if used twice."
+  (interactive)
+  (let ((fill-column
+         (if (eq last-command 'simple-extras-fill-or-unfill-paragraph)
+             (progn (setq this-command nil)
+                    (point-max))
+           fill-column)))
+    (call-interactively #'fill-paragraph)))
+
+(defun simple-extras-get-url (url)
+  "Get URL from URL, current buffer, or prompt user for it."
+  (or url
+      (when (eq major-mode 'eww-mode)
+	(eww-current-url))
+      (when (eq major-mode 'ebib-entry-mode)
+	(ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
+      (read-string "URL: ")))
+
+;;;;; url-parse
+
+(defun simple-extras-string-is-url-p (str)
+  "Check if STR is a valid URL."
+  (require 'url-parse)
+  (let ((url (url-generic-parse-url str)))
+    (and (url-type url) (url-host url))))
 
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

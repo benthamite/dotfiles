@@ -1,4 +1,4 @@
-;;; jinx-extras.el --- Additional functionality for jinx -*- lexical-binding: t -*-
+;;; jinx-extras.el --- Extensions for jinx -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2023
 
@@ -23,11 +23,14 @@
 
 ;;; Commentary:
 
-;; Additional functionality for `jinx'.
+;; Extensions for `jinx'.
 
 ;;; Code:
 
 (require 'jinx)
+(require 'path)
+
+;;;; Functions
 
 ;; github.com/minad/jinx/wiki#save-misspelling-and-correction-as-abbreviation
 (defun jinx-extras--add-to-abbrev (overlay word)

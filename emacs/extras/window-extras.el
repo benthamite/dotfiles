@@ -27,6 +27,24 @@
 
 ;;; Code:
 
+(require 'path)
+
+;;;; User options
+
+(defgroup window-extras ()
+  "Extensions for `window'."
+  :group 'window)
+
+(defcustom window-extras-frame-split-width-threshold  350
+  "Width threshold for splitting the frame, in columns."
+  :type 'integer
+  :group 'window-extras)
+
+(defcustom window-extras-window-split-width-threshold 200
+  "Threshold for splitting the window sideways, in columns."
+  :type 'integer
+  :group 'window-extras)
+
 ;;;; Functions
 
 ;; FIXME: trigger macOS window maximization
@@ -76,21 +94,21 @@
          ;; command. Remove this first conditional if
          ;; you don't want it.
          (cond ((ignore-errors (org-narrow-to-block) t))
-               (t (tlon-org-narrow-to-entry-and-children))))
+               (t (org-extras-narrow-to-entry-and-children))))
         ((derived-mode-p 'latex-mode)
          (LaTeX-narrow-to-environment))
         ((derived-mode-p 'ledger-mode)
-         (ps/ledger-narrow-to-xact))
+         (ledger-mode-extras-narrow-to-xact))
         (t (narrow-to-defun))))
 
 (defun window-extras-split-if-unsplit ()
   "Split windows when frame is unsplit.
 Split in three windows if `frame-width' is greater than
-`ps/frame-width-threshold', otherwise in two windows."
+`window-extras-frame-split-width-threshold', otherwise in two windows."
   (interactive)
   (when (= (length (window-list)) 1)
     (split-window-right))
-  (when (> (frame-width) ps/frame-width-threshold)
+  (when (> (frame-width) window-extras-frame-split-width-threshold)
     (when (= (length (window-list)) 2)
       (split-window-right))
     (balance-windows)))
@@ -161,6 +179,14 @@ window depending on the number of present windows."
   (and
    (eq (frame-pixel-width) (display-pixel-width))
    (eq (frame-pixel-height) (display-pixel-height))))
+
+;; superuser.com/a/132454/387888
+(defun window-extras-switch-to-minibuffer-window ()
+  "Switch to minibuffer window, if active."
+  (interactive)
+  (when (active-minibuffer-window)
+    (select-frame-set-input-focus (window-frame (active-minibuffer-window)))
+    (select-window (active-minibuffer-window))))
 
 (provide 'window-extras)
 ;;; window-extras.el ends here

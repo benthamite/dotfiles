@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'dired)
+(require 'path)
 (require 'el-patch)
 
 ;;;; Functions
@@ -124,6 +125,7 @@ losing the `put back' option."
   (require 'all-the-icons-dired)
   (if (< (length (directory-files default-directory)) 1000)
       (all-the-icons-dired-mode)
+    
     (all-the-icons-dired-mode -1)))
 
 ;;;; gnus-dired

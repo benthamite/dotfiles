@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'files)
-
+(require 'path)
 ;;;; User options
 
 (defgroup files-extras ()
@@ -135,7 +135,7 @@
   (interactive)
   (kill-buffer (current-buffer)))
 
-(defun ps/kill-other-buffer ()
+(defun file-extras-kill-other-buffer ()
   "Kill the buffer in the other window."
   (interactive)
   (save-window-excursion
@@ -145,8 +145,8 @@
 (defun files-extras-kill-this-buffer-switch-to-other-window ()
   "Kill the current buffer and switch to the other window."
   (interactive)
-  (ps/kill-this-buffer)
-  (ps/switch-to-last-window))
+  (files-extras-kill-this-buffer)
+  (window-extras-switch-to-last-window))
 
 (defun files-extras-kill-all-file-visiting-buffers (&optional excluded-files)
   "Kill all open buffers visiting a file except those visiting any of EXCLUDED-FILES."
@@ -161,7 +161,7 @@
   "Bury the current buffer and switch to the other window."
   (interactive)
   (bury-buffer)
-  (ps/switch-to-last-window))
+  (window-extras-switch-to-last-window))
 
 (defun files-extras-download-bypass-paywalls-chrome ()
   "Download and install `Bypass Paywalls Chrome Clean'.
@@ -169,8 +169,8 @@ After running the command, both the Chrome extensions page and
 the `bypass-paywalls-chrome-clean-master' folder will open.
 To install the extension, drag the latter onto the former."
   (interactive)
-  (let* ((file (file-name-concat ps/dir-downloads "bypass-paywalls.zip"))
-         (dir (file-name-concat ps/dir-downloads "bypass-paywalls-chrome-clean-master"))
+  (let* ((file (file-name-concat path-dir-downloads "bypass-paywalls.zip"))
+         (dir (file-name-concat path-dir-downloads "bypass-paywalls-chrome-clean-master"))
          (reveal-in-osx
           (concat
            "set thePath to POSIX file \"" dir "\"\n"
@@ -179,7 +179,7 @@ To install the extension, drag the latter onto the former."
            " reveal thePath \n"
            "end tell\n")))
     (url-copy-file "https://gitlab.com/magnolia1234/bypass-paywalls-chrome-clean/-/archive/master/bypass-paywalls-chrome-clean-master.zip" file)
-    (shell-command (format "unzip %s -d %s" file ps/dir-downloads))
+    (shell-command (format "unzip %s -d %s" file path-dir-downloads))
     (delete-file file)
     ;; open Chrome extensions page
     (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"89243CDA-4876-45C8-9AF2-3666664A0EAA\"'")
@@ -190,7 +190,7 @@ To install the extension, drag the latter onto the former."
 ACSM will be converted or downloaded depending on whether or not an ACSM file is
 present in the `downloads' folder."
   (interactive)
-  (if (member "URLLink.acsm" (directory-files ps/dir-downloads))
+  (if (member "URLLink.acsm" (directory-files path-dir-downloads))
       (files-extras-internet-archive-convert)
     (files-extras-internet-archive-download)))
 
@@ -208,7 +208,7 @@ one hour only."
                   "\\2"
                   (current-kill 0)))
              (url (concat prefix id suffix))
-             (acsm-file (file-name-concat ps/dir-downloads "URLLink.acsm")))
+             (acsm-file (file-name-concat path-dir-downloads "URLLink.acsm")))
         ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
         ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
         ;; Then replace the path below with the location of the downloaded cookies file.
@@ -220,7 +220,7 @@ one hour only."
         ;; (async-shell-command
         ;; (format
         ;; "wget --load-cookies='%s' '%s' -O '%s'; open %s"
-        ;; ps/file-cookies url acsm-file acsm-file))))
+        ;; path-file-cookies url acsm-file acsm-file))))
         ;; (message "ACSM file downloaded successfully.")
         (kill-new url)
         (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Open it manually and then run `files-extras-internet-archive-dwim' to convert it.")
@@ -231,18 +231,19 @@ one hour only."
   "Convert ACSM file to PDF."
   (let* ((adobe-file
           ;; stackoverflow.com/a/30887300/4479455
-          (car (directory-files (file-name-as-directory ps/dir-ade) 'full "\\.pdf$" #'file-newer-than-file-p)))
+          (car (directory-files (file-name-as-directory path-dir-adobe-digital-editions)
+				'full "\\.pdf$" #'file-newer-than-file-p)))
          (output (shell-command-to-string (format "calibredb add '%s'" adobe-file)))
          ;; Capture Calibre book id
          (id (replace-regexp-in-string "\\(\\(\\(
 \\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
-         (calibre-file (car (directory-files-recursively ps/dir-calibre "\\.pdf$" t)))
+         (calibre-file (car (directory-files-recursively path-dir-calibre "\\.pdf$" t)))
          ;; Should match filename used in `files-extras-internet-archive-download'
-         (acsm-file (file-name-concat ps/dir-downloads "book.acsm")))
-    (rename-file calibre-file (file-name-as-directory ps/dir-downloads))
+         (acsm-file (file-name-concat path-dir-downloads "book.acsm")))
+    (rename-file calibre-file (file-name-as-directory path-dir-downloads))
     (shell-command (format "calibredb remove %s" id))
     (mapcar #'delete-file `(,adobe-file ,calibre-file))
-    (delete-directory ps/dir-calibre t)
+    (delete-directory path-dir-calibre t)
     (kill-buffer "*Shell Command Output*")
     (when (find-file acsm-file)
       (delete-file acsm-file)
@@ -354,10 +355,10 @@ One normally uses `recover-session' for this, but when Emacs crashes a session
 may fail to be created and then each file has to be recovered separately. This
 command automates the recovery process in these cases."
   (interactive)
-  (dolist (file (directory-files (file-name-concat ps/dir-chemacs-profiles "var/auto-save")))
+  (dolist (file (directory-files (file-name-concat path-dir-chemacs-profiles "var/auto-save")))
     (when-let ((file-to-recover (string-replace "#" "" file)))
       (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
-      (ps/diff-buffer-with-file))))
+      (files-extras-diff-buffer-with-file))))
 
 
 (defun files-extras-auto-save-alert ()
@@ -481,6 +482,45 @@ OLD-FUN and ARGS are arguments passed to the original function."
   (let ((file (buffer-file-name)))
     (shell-command (format "convert '%s' '%s.pdf'" file (file-name-sans-extension file)))
     (message "Converted image to PDF.")))
+
+(defun files-extras-open-elpaca-package (package)
+  "Open the package named PACKAGE in the `repos' elpaca directory."
+  (require 'elpaca)
+  (let ((file (file-name-concat elpaca-repos-directory
+				package
+				(file-name-with-extension package "el"))))
+    (find-file file)))
+
+(defun files-extras-open-extras-package ()
+  "Prompt the user to select an `extras' package and open it."
+  (let* ((files (directory-files path-dir-extras t directory-files-no-dot-files-regexp))
+	 (file-names (mapcar #'file-name-nondirectory files))
+	 (selection (completing-read "Package: " file-names nil t))
+	 (file (file-name-concat path-dir-extras selection)))
+    (find-file file)))
+
+;; TODO: Expand for other modes
+(defun file-extras-copy-as-kill-dwim ()
+  "Copy the relevant string in the current buffer, depending on its mode.
+- In a `helpful-mode' buffer, get the name of the symbol whose docstring the
+current helpful buffer displays, then kill the buffer."
+  (interactive)
+  (pcase major-mode
+    ('helpful-mode (kill-new (replace-regexp-in-string "\\(\\*helpful .*: \\)\\(.*\\)\\(\\*\\)" "\\2" (buffer-name)))
+		   (files-extras-kill-this-buffer-switch-to-other-window))))
+
+(defun file-extras-grammarly-open-in-external-editor ()
+  "Open Grammarly's external editor."
+  (interactive)
+  (browse-url "https://app.grammarly.com/ddocs/1929393566"))
+
+(defun file-extras-remove-extra-blank-lines ()
+  "Remove extra blank lines from the current buffer."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "\\(^\\s-*$\\)\n\\(\\(^\\s-*$\\)\n\\)+" nil t)
+      (replace-match "\n"))))
 
 (provide 'files-extras)
 ;;; files-extras.el ends here

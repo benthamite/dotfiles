@@ -35,7 +35,7 @@ export GOKU_EDN_CONFIG_FILE="$DOTFILES/karabiner/karabiner.edn"
 export PATH="$HOME/source/emms/src:$PATH" # emms-print-metadata binary
 
 # mu
-alias muinit="cd ~; mu init --maildir=$HOME/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL; mu index"
+alias muinit="cd ~; mu init --maildir=$HOME/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL --my-address=$WORK_EMAIL; mu index"
 
 # homebrew
 export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1

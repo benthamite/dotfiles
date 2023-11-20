@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: use-personal-package
+# key: upp
+# contributor: Pablo Stafforini
+# --
+(use-personal-package $1-extras
+  :after $1
+  :demand t$0)

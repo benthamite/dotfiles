@@ -55,7 +55,6 @@
       :open_single_quote {:key :!Eclose_bracket}
       :close_single_quote {:key :!SEclose_bracket}
       :tilde {:key :!Sgrave_accent_and_tilde}
-      :ellipsis {:key :!Esemicolon}
       :en_dash {:key :!Ehyphen}
       :em_dash {:key :!SEhyphen}
 
@@ -80,7 +79,7 @@
       :ogonek {:key :!Em}
       :tilde_accent {:key :!En}
 
-      ;; "foreign" chars
+      ;; “special” chars
       :ø {:key :!Eo}
       :œ {:key :!Eq}
       :ß {:key :!Es}
@@ -91,6 +90,9 @@
       :« {:key :!Ebackslash}
       :» {:key :!SEbackslash}
       :• {:key :!O8}
+      :£ {:key :!E3}
+      :€ {:key :!ES2}
+      :… {:key :!Esemicolon}
 
       ;; math
       := {:key :equal_sign}
@@ -156,15 +158,16 @@
             }
 
 :applications {
-               :emacs ["org.gnu.Emacs"]
-               :chrome ["com.google.Chrome"]
                :anki ["net.ankiweb.dtop"]
+               :chrome ["com.google.Chrome"]
+               :emacs ["org.gnu.Emacs"]
+               :firefox ["org.mozilla.firefox"]
+               :safari ["com.apple.Safari"]
                :steam [:paths ".*/Application Support/Steam.*"]
                }
 
 :devices {
          :corne [{:vendor_id 7504}]
-         :kinesis [{:vendor_id 10730}]
          :moonlander [{:vendor_id 12951}]
          }
 
@@ -177,12 +180,12 @@
             :f-mode {:key :f}
             :j-mode {:key :j}
             :k-mode {:key :k}
-            :l-mode {:key :l :condi :emacs}
             :m-mode {:key :m}
             :p-mode {:key :p}
             :q-mode {:key :q}
             :v-mode {:key :v}
             :x-mode {:key :x :condi :emacs}
+            :y-mode {:key :y}
             :z-mode {:key :z}
             :comma-mode {:key :comma :condi :emacs}
             :period-mode {:key :period}
@@ -192,7 +195,8 @@
 
 :templates {:alfred "osascript -e 'tell application \"Alfred 4\" to run trigger \"%s\" in workflow \"%s\" with argument \"%s\"'"
             :km "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"%s\"'"
-            :open "osascript -e 'tell application \"%s\" to activate'"
+            :open "open \"%s\""
+            :insert "~/Library/CloudStorage/Dropbox/dotfiles/bin/char_input \"%s\""
             }
 
 :main [
@@ -224,6 +228,16 @@
          [:##left_option :⇧ :!emacs {:alone :return_or_enter}]
          ]}
 
+{:des "left_option + right_command → ⇧ + enter"
+ :rules [
+         [:!Sright_command {:modi :⇧ :key :return_or_enter}]
+         ]}
+
+{:des "left_option + right_command → ⇧ + enter"
+ :rules [
+         [:!Sright_command {:modi :⇧ :key :return_or_enter}]
+         ]}
+
 {:des "Emacs: left_command → other window (alone) | H- (held)"
  :rules [
          [:##left_command :H- :emacs {:alone {:modi :C-H- :key :0}}]
@@ -236,7 +250,7 @@
 
 {:des "Emacs: spacebar → C- (held) | ⌘tab (alone)"
  :rules [
-         [:!Cspacebar {:modi :A-H-M-s- :key :spacebar} :emacs] ; ps/switch-to-alternate-buffer
+         [:!Cspacebar {:modi :A-H-M-s- :key :spacebar} :emacs] ; files-extras-switch-to-alternate-buffer
          [:##spacebar :C- :emacs {:alone {:modi :⌘ :key :tab}}]
          ]}
 
@@ -291,54 +305,44 @@
          [:##right_option :⌥ :!emacs {:alone :tab}]
          ]}
 
-{:des "b-mode (media controls)"
+{:des "left_shift + side mouse buttons → navigate open tabs"
+ :rules [
+         [{:pkey :button4 :modi :left_shift} :!COleft_arrow]
+         [{:pkey :button5 :modi :left_shift} :!COright_arrow]
+         ]}
+
+{:des "b-mode (media controls, window sizing)"
  :rules [:b-mode
-         ;; [: :display_brightness_increment]
-         ;; [: :launchpad]
-         ;; [: :mission_control]
-         [:a {:mkey {:x -1500}}]
-         ;; [:b {:modi :⇧⌘ :key :5}] ; Screenshot and recording options
-         [:c {:modi :⇧⌘ :key :4}] ; Save picture of selected area to a file
-         [:d {:mkey {:y 1500}}]
-         [:e {:mkey {:y 4500}}]
-         [:f {:mkey {:x 1500}}]
-         [:g {:modi :⇧⌘⌥⌃ :key :g}] ; Rectangle, half right
-         [:h {:modi :⇧⌘⌥⌃ :key :h}] ; Rectangle, center
-         [:i [:km "Use Play to control Spotify not shitty Apple Music"]]
-         [:j :volume_decrement]
-         [:k :mute]
-         [:l :fastforward]
-         [:m {:modi :⇧⌘⌃ :key :0}] ; dictation
-         [:n {:modi :⇧⌘⌃ :key :1}] ; read aloud
-         [:o :rewind]
-         [:q {:mkey {:x -4500}}]
-         [:r {:mkey {:x 4500}}]
-         [:s {:mkey {:y -1500}}]
-         ;; [:return_or_enter :!QWERreturn_or_enter] ; doesn't work
-         [:spacebar :button1]
-         [:tab :button2]
-         [:t {:modi :⇧⌘⌥⌃ :key :t}] ; Recntangle, center
-         [:u :volume_increment] ;
-         [:v {:modi :⇧⌘⌃ :key :4}] ; Copy picture of selected area to the clipboard
-         [:w {:mkey {:y -4500}}]
+         [:u {:modi :⇧⌘⌥⌃ :key :p}] ; Rectangle, right half
+         [:i {:modi :⇧⌘⌥⌃ :key :i}] ; Rectangle, maximize
+         [:o {:modi :⇧⌘⌥⌃ :key :o}] ; Rectangle, center
+         [:p {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
+         [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
-         [:y {:modi :⇧⌘⌥⌃ :key :y}] ; Rectangle, maximize
-         [:z {:modi :⇧⌘ :key :3}] ; Save picture of screen as a file
+         [:l [:km "Play Spotify"]]
+         [:semicolon :fastforward]
+         [:comma :volume_increment]
+         [:period :volume_decrement]
+         [:slash :mute]
+         [:h {:modi :⇧⌘⌃ :key :0}] ; dictation
+         [:n {:modi :⇧⌘⌃ :key :1}] ; narration
          ]}
 
 {:des "f-mode (special chars)"
  :rules [:f-mode
-         [:b :•]
          [:d :ð]
+         [:e :…]
          [:i :¡]
          [:o :ø]
+         [:p :£]
          [:q :œ]
+         [:r :€]
          [:s :ß]
          [:t :þ]
+         [:u :•]
          [:slash :¿]
          [:comma :«]
          [:period :»]
-         [:e :ellipsis]
          ]
  }
 
@@ -396,7 +400,7 @@
          ]}
 
 {:des "k-mode (website-specific)"
- :rules [:quote-mode
+ :rules [:k-mode
          [:a [:km "Local website a"]]
          [:b [:km "Local website b"]]
          [:c [:km "Local website c"]]
@@ -432,35 +436,6 @@
          ;; [:spacebar [:km "Local website spacebar"]]
          ]}
 
-{:des "l-mode (org headings)"
- :rules [:l-mode
-         [:a {:modi :C-H-M-s- :key :a}]
-         [:b {:modi :C-H-M-s- :key :b}]
-         [:c {:modi :C-H-M-s- :key :c}]
-         [:d {:modi :C-H-M-s- :key :d}]
-         [:e {:modi :C-H-M-s- :key :e}]
-         [:f {:modi :C-H-M-s- :key :f}]
-         [:g {:modi :C-H-M-s- :key :g}]
-         [:h {:modi :C-H-M-s- :key :h}]
-         [:i {:modi :C-H-M-s- :key :i}]
-         [:j {:modi :C-H-M-s- :key :j}]
-         [:m {:modi :C-H-M-s- :key :m}]
-         [:n {:modi :C-H-M-s- :key :n}]
-         [:o {:modi :C-H-M-s- :key :o}]
-         [:p {:modi :C-H-M-s- :key :p}]
-         [:q {:modi :C-H-M-s- :key :q}]
-         [:r {:modi :C-H-M-s- :key :r}]
-         [:s {:modi :C-H-M-s- :key :s}]
-         [:t {:modi :C-H-M-s- :key :t}]
-         [:u {:modi :C-H-M-s- :key :u}]
-         [:v {:modi :C-H-M-s- :key :v}]
-         [:w {:modi :C-H-M-s- :key :w}]
-         [:z {:modi :C-H-M-s- :key :z}]
-         [:x {:modi :C-H-M-s- :key :x}]
-         [:y {:modi :C-H-M-s- :key :y}]
-         [:period {:modi :C-H-M-s- :key :period}]
-         ]}
-
 {:des "m-mode (math symbols)"
  :rules [:m-mode
          [:e :=]
@@ -468,6 +443,7 @@
          [:q :≠]
          [:d :÷]
          [:o :±]
+         [:x [:insert "×"]]
          [:comma :≤]
          [:period :≥]
          ]}
@@ -498,26 +474,28 @@
 
 {:des "q-mode (apps)"
  :rules [:q-mode
-         [:b [:km "Activate: qBitTorrent (b)"]]
-         [:d [:km "Activate: Discord (d)"]]
-         [:e [:km "Activate: Emacs (e)"]]
-         [:f [:km "Activate: Firefox (f)"]]
-         [:g [:km "Activate: Goldendict (g)"]]
-         [:h [:km "Activate: Chrome (h)"]]
-         [:i [:km "Activate: Anki (i)"]]
-         [:k [:km "Activate: Keyboard Maestro (k)"]]
-         [:l [:km "Activate: DeepL (l)"]]
-         [:m [:km "Activate: Media Center (m)"]]
-         [:o [:km "Activate: Zoom (o)"]]
-         [:p [:km "Activate: Preview (p)"]]
-         [:r [:km "Activate: Karabiner-Elements (r)"]]
-         [:s [:km "Activate: Slack (s)"]]
-         [:t [:km "Activate: Terminal (t)"]]
-         [:u [:km "Activate: Revolut (u)"]]
-         [:v [:km "Activate: mpv (v)"]]
-         [:w [:km "Activate: HoudahSpot (w)"]]
-         [:x [:km "Activate: Signal (x)"]]
-         [:y [:km "Activate: Spotify (y)"]]
+         [:b [:open "/Applications/qBitTorrent.app"]]
+         [:d [:open "/System/Library/CoreServices/Finder.app"]]
+         [:e [:open "/Applications/Emacs.app"]]
+         [:f [:open "/Applications/Firefox.app"]]
+         [:g [:open "/Applications/Goldendict.app"]]
+         [:h [:open "/Applications/Google Chrome.app"]]
+         [:i [:open "/Applications/Anki.app"]]
+         [:j [:km "open: System Preferences"]]
+         [:k [:open "/Applications/Keyboard Maestro.app"]]
+         [:l [:open "/Applications/DeepL.app"]]
+         [:m [:open "/Applications/Media Center 29.app"]]
+         [:o [:open "/Applications/zoom.us.app"]]
+         [:p [:open "/Applications/Signal.app"]]
+         [:r [:open "/Applications/Karabiner-Elements.app"]]
+         [:s [:open "/Applications/Slack.app"]]
+         [:t [:open "/System/Applications/Utilities/Terminal.app"]]
+         [:u [:open "/Applications/Revolut.app"]]
+         [:v [:open "/Applications/mpv.app"]]
+         [:w [:open "/Applications/HoudahSpot.app"]]
+         [:y [:open "/Applications/Spotify.app"]]
+         [:comma [:open "/Applications/Plex Media Server.app/"]]
+         [:period [:open "/Applications/Tor Browser.app"]]
          ]}
 
 {:des "v-mode (numbers)"
@@ -583,74 +561,76 @@
          [:tab [{:modi :C-H-s- :key :tab}]]
          ]}
 
+{:des "y-mode (mouse, screenshots)"
+ :rules [:y-mode
+         [:b {:modi :⇧⌘ :key :5}] ; Screenshot and recording options
+         [:c {:modi :⇧⌘ :key :4}] ; Save picture of selected area to a file
+         [:d {:mkey {:y 1500}}]
+         [:e {:mkey {:y 4500}}]
+         [:a {:mkey {:x -1500}}]
+         [:f {:mkey {:x 1500}}]
+         [:q {:mkey {:x -4500}}]
+         [:r {:mkey {:x 4500}}]
+         [:s {:mkey {:y -1500}}]
+         [:v {:modi :⇧⌘⌃ :key :4}] ; Copy picture of selected area to the clipboard
+         [:w {:mkey {:y -4500}}]
+         [:z {:modi :⇧⌘ :key :3}] ; Save picture of screen as a file
+         [:right_command :button2]
+         [:return_or_enter :button1]
+         ]}
+
 {:des "z-mode (navigation)"
  :rules [:z-mode
+         [:b {:modi :A-C-s- :key :b} :emacs]
+         [:c {:modi :A-C-s- :key :c}]
+         [:d {:modi :A-H-M-s- :key :d} :emacs] ; WTQ intercepted by OSX
+         [:e {:modi :A-C-s- :key :e} :emacs]
+         [:f [{:modi :⌘⌃ :key :n} {:modi :⌘⌃ :key :h}] :chrome] ; Google Docs next heading
+         [:f {:modi :A-C-s- :key :f}]
+         [:g {:modi :A-C-s- :key :g} :emacs]
+         [:h {:modi :A-C-s- :key :h} :emacs]
+         [:##h :page_down]
+         [:i {:modi :A-C-s- :key :i} :emacs]
+         [:##i {:modi :⌥ :key :up_arrow}]
          [:j :left_arrow]
          [:##j :left_arrow]
-         [:semicolon :right_arrow]
-         [:##semicolon :right_arrow]
          [:k :up_arrow]
-         [:!Ck :!WTQCk :emacs]
-         [:!COk :!WTQCOk :emacs]
          [:##k :up_arrow]
          [:l :down_arrow]
-         [:!Cl :!WTQCl :emacs]
-         [:!COl :!WTQCOl :emacs]
          [:##l :down_arrow]
-         [:m :!WTQm :emacs]
-         [:!Sm :!WTQSm :emacs]
-         [:##m :!Cleft_arrow]
-         [:slash :!WTQz :emacs]
-         [:!Sslash :!WTQSz :emacs]
-         [:##slash :!Cright_arrow]
-         [:comma :!WTQcomma :emacs]
-         [:##comma :!Cup_arrow]
-         [:period :!WTQperiod :emacs]
-         [:##period :!Cdown_arrow]
-         [:n :!WTQn :emacs]
-         [:v :!WTQv :emacs]
-         [:b :!WTQb :emacs]
-         [:u :!WTQu :emacs]
-         [:!Cu :!WTQCu :emacs]
-         [:##u :!Oleft_arrow]
-         [:p :!WTQp :emacs]
-         [:!Cp :!WTQCp :emacs]
-         [:##p :!Oright_arrow]
-         [:i :!WTQi :emacs]
-         [:!Ci :!WTQCi :emacs]
-         [:!COi :!WTQCOi :emacs]
-         [:##i :!Oup_arrow]
-         [:o :!WTQo :emacs]
-         [:!Co :!WTQCo :emacs]
-         [:!COo :!WTQCOo :emacs]
-         [:##o :!Odown_arrow]
-         [:y :!WTQy :emacs]
+         [:m {:modi :A-C-s- :key :m} :emacs]
+         [:##m {:modi :⌘ :key :left_arrow}]
+         [:n {:modi :A-C-s- :key :n} :emacs]
+         [:o {:modi :A-C-s- :key :o} :emacs]
+         [:##o {:modi :⌥ :key :down_arrow}]
+         [:p {:modi :A-C-s- :key :p} :emacs]
+         [:##p {:modi :⌥ :key :right_arrow}]
+         [:r [{:modi :⌘⌃ :key :p} {:modi :⌘⌃ :key :h}] :chrome] ; Google Docs previous heading
+         [:r {:modi :A-C-s- :key :r} :emacs]
+         [:s {:modi :A-C-s- :key :s} :emacs]
+         [:t {:modi :A-C-s- :key :t} :emacs]
+         [:u {:modi :A-C-s- :key :u} :emacs]
+         [:##u {:modi :⌥ :key :left_arrow}]
+         [:v {:modi :A-C-s- :key :v} :emacs]
+         [:w {:modi :A-C-s- :key :w} :emacs]
+         [:x {:modi :A-C-s- :key :x}]
+         [:y {:modi :A-C-s- :key :y} :emacs]
          [:##y :page_up]
-         [:h :!WTQh :emacs]
-         [:##h :page_down]
-         [:t :!WTQt :emacs]
-         [:g :!WTQg :emacs]
-         [:right_command :!WTQtab :emacs :!moonlander]
-         [:tab :!WTQtab :emacs]
-         [:##right_command :end :!moonlander]
-         [:##tab :home :moonlander]
-         [:##return_or_enter :home :kinesis]
-         [:spacebar :!WTQspacebar :emacs]
+         [:##return_or_enter :home]
+         [:comma {:modi :A-C-s- :key :comma} :emacs]
+         [:##comma {:modi :⌘ :key :up_arrow}]
+         [:period {:modi :A-C-s- :key :period} :emacs]
+         [:##period {:modi :⌘ :key :down_arrow}]
+         [:right_command {:modi :A-C-s- :key :tab} :emacs]
+         [:##right_command :end]
+         [:semicolon :right_arrow]
+         [:##semicolon :right_arrow]
+         [:slash {:modi :A-C-s- :key :slash} :emacs]
+         [:##slash {:modi :⌘ :key :right_arrow}]
+         [:spacebar {:modi :A-C-s- :key :spacebar} :emacs]
          [:##spacebar :home]
-         [:x :!WTQx]
-         [:c :!WTQc]
-         [:r [:!TCp :!TCh] :chrome] ; Google Docs previous heading
-         [:r :!WTQr :emacs]
-         [:f [:!TCn :!TCh] :chrome] ; Google Docs next heading
-         [:f :!WTQf]
-         [:e :!WTQe :emacs]
-         [:e [:km "Change selection to title case"] :!emacs]
-         [:d {:modi :A-H-M-s- :key :d} :emacs] ; WTQ intercepted by OSX
-         [:d [:km "Change selection to sentence case"] :!emacs]
-         [:w :!WTQw :emacs]
-         [:w [:km "Remove hyphens from selection"] :!emacs]
-         [:s :!WTQs :emacs]
-         [:s [:km "Remove spaces from selection"] :!emacs]
+         [:tab {:modi :A-C-s- :key :tab} :emacs]
+         [:##tab :home]
          ]}
 
 {:des "comma-mode (transposition)"
@@ -752,41 +732,35 @@
          [:##comma :en_dash]
          [:##period :em_dash]
          [:##right_command :underscore]
-         ;; [:!Sd :!Ebackslash] ; not sure what these two lines do
-         ;; [:#SRf :!SEbackslash]
          ]}
 
-;; TODO: split into two sections (Emacs/Outside Emacs)
-{:des "slash simlyaer → files (Emacs) | app-specific macros (outside Emacs)"
+{:des "slash simlyaer → org-mode (Emacs) | app-specific macros (outside Emacs)"
  :rules [:slash-mode
-         [:a {:modi :H-M-s- :key :a}]
-         [:b {:modi :H-M-s- :key :b}]
-         [:c {:modi :H-M-s- :key :c}]
-         [:d {:modi :H-M-s- :key :d}]
-         [:e {:modi :H-M-s- :key :e}]
-         [:f {:modi :H-M-s- :key :f}]
-         [:g {:modi :H-M-s- :key :g}]
-         [:h {:modi :H-M-s- :key :h}]
-         [:i {:modi :H-M-s- :key :i}]
-         [:j {:modi :H-M-s- :key :j}]
-         [:k {:modi :H-M-s- :key :k}]
-         [:l {:modi :H-M-s- :key :l}]
-         [:m {:modi :H-M-s- :key :m}]
-         [:n {:modi :H-M-s- :key :n}]
-         [:o {:modi :H-M-s- :key :o}]
-         [:p {:modi :H-M-s- :key :p}]
-         [:q {:modi :H-M-s- :key :q}]
-         [:r {:modi :H-M-s- :key :r}]
-         [:s {:modi :H-M-s- :key :s}]
-         [:t {:modi :H-M-s- :key :t}]
-         [:u {:modi :H-M-s- :key :u}]
-         [:v {:modi :H-M-s- :key :v}]
-         [:w {:modi :H-M-s- :key :w}]
-         [:x {:modi :H-M-s- :key :x}]
-         [:y {:modi :H-M-s- :key :y}]
-         [:z {:modi :H-M-s- :key :z}]
-         [:period {:modi :H-M-s- :key :period}]
-         [:comma {:modi :H-M-s- :key :comma}]
+         [:a {:modi :C-H-M-s- :key :a} :emacs]
+         [:b {:modi :C-H-M-s- :key :b} :emacs]
+         [:c {:modi :C-H-M-s- :key :c} :emacs]
+         [:d {:modi :C-H-M-s- :key :d} :emacs]
+         [:e {:modi :C-H-M-s- :key :e} :emacs]
+         [:f {:modi :C-H-M-s- :key :f} :emacs]
+         [:g {:modi :C-H-M-s- :key :g} :emacs]
+         [:h {:modi :C-H-M-s- :key :h} :emacs]
+         [:i {:modi :C-H-M-s- :key :i} :emacs]
+         [:j {:modi :C-H-M-s- :key :j} :emacs]
+         [:m {:modi :C-H-M-s- :key :m} :emacs]
+         [:n {:modi :C-H-M-s- :key :n} :emacs]
+         [:o {:modi :C-H-M-s- :key :o} :emacs]
+         [:p {:modi :C-H-M-s- :key :p} :emacs]
+         [:q {:modi :C-H-M-s- :key :q} :emacs]
+         [:r {:modi :C-H-M-s- :key :r} :emacs]
+         [:s {:modi :C-H-M-s- :key :s} :emacs]
+         [:t {:modi :C-H-M-s- :key :t} :emacs]
+         [:u {:modi :C-H-M-s- :key :u} :emacs]
+         [:v {:modi :C-H-M-s- :key :v} :emacs]
+         [:w {:modi :C-H-M-s- :key :w} :emacs]
+         [:z {:modi :C-H-M-s- :key :z} :emacs]
+         [:x {:modi :C-H-M-s- :key :x} :emacs]
+         [:y {:modi :C-H-M-s- :key :y} :emacs]
+         [:period {:modi :C-H-M-s- :key :period} :emacs]
          [:a [:km "Local app a"] :!emacs]
          [:b [:km "Local app b"] :!emacs]
          [:c [:km "Local app c"] :!emacs]

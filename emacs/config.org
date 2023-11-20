@@ -828,9 +828,6 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
 :END:
 
 /[[https://github.com/progfolio/elpaca][elpaca]] is a package manager that supports asynchronous installation of packages./
-:PROPERTIES:
-:ID:       4EB0A831-1B7D-4C7E-AE4B-6A2DE27FFD87
-:END:
 
 #+begin_src emacs-lisp
 ;;; init.el --- Init File -*- lexical-binding: t -*-

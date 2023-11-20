@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: directory-files-sans-dots
+# key: dfsd
+# contributor: Pablo Stafforini
+# --
+(directory-files "$1" t directory-files-no-dot-files-regexp)$0

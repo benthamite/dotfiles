@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'browse-url)
-(require 'path)
+(require 'paths)
 
 ;;;; User options
 

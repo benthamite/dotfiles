@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'elfeed)
-(require 'path)
+(require 'paths)
 (require 'elfeed-show)
 
 ;;;; Functions

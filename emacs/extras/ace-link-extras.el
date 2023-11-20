@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'ace-link)
-(require 'path)
+(require 'paths)
 
 ;;;; Functions
 

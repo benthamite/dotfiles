@@ -27,7 +27,7 @@
 
 ;;; Code:
 
-(require 'path)
+(require 'paths)
 
 ;;;; Functions
 
@@ -598,6 +598,13 @@ If PT is non-nil, start at that position instead of `point'."
   (require 'url-parse)
   (let ((url (url-generic-parse-url str)))
     (and (url-type url) (url-host url))))
+
+;;;;; misc
+
+(defun simple-extras-init-disable-funs (seconds funs)
+  "Disable functions in list FUNS after SECONDS."
+  (dolist (fun funs)
+    (run-with-timer seconds nil (lambda () (advice-add fun :override #'ignore)))))
 
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

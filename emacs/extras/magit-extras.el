@@ -28,7 +28,7 @@
 ;;; Code:
 
 ;; (require 'magit)
-;; (require 'path)
+;; (require 'paths)
 ;; (require 'with-editor)
 
 ;;;; Functions

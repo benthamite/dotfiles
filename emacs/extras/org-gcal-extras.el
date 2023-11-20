@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'org-gcal)
-(require 'path)
+(require 'paths)
 (require 'el-patch)
 (require 'hydra)
 

@@ -27,7 +27,7 @@
 
 ;;; Code:
 (require 'bibtex)
-(require 'path)
+(require 'paths)
 (require 'el-patch)
 (require 'citar)
 (require 'ebib)

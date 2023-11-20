@@ -7,7 +7,7 @@
 
 #+begin_src emacs-lisp :tangle (print tlon-init-code-overrides-path)
 (
- (:ps/org-id-add-ids-to-headings-in-file . ((ignore)))
+ (:org-id-add-ids-to-headings-in-file . ((ignore)))
  )
 #+end_src
 
@@ -16,13 +16,19 @@
 :ID:       86F0B93D-E2A3-4064-977D-1002602B58F3
 :END:
 
+** key bindings
+:PROPERTIES:
+:ID:       7B2B4853-D7B7-4C8A-B597-232E13605E1B
+:END:
 #+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
 (when (eq system-type 'darwin) ;; mac specific settings
   (setq mac-right-option-modifier 'meta)
   (setq mac-command-modifier 'hyper)
   (setq mac-option-modifier 'alt)
+  (setq mac-function-modifier '(:button 2))
   (setq mac-right-command-modifier 'super))
 (tool-bar-mode -1)
+
 (global-set-key [kp-delete] 'delete-char)   ;; sets fn-delete to be right-delete
 (global-set-key (kbd "<home>") 'beginning-of-line)
 (global-set-key (kbd "<end>") 'end-of-line)
@@ -30,6 +36,7 @@
 (global-set-key (kbd "<S-left>") 'other-window)
 (global-set-key (kbd "<A-right>") 'end-of-buffer)
 (global-set-key (kbd "<A-left>") 'beginning-of-buffer)
+
 (with-eval-after-load "org"
   (define-key org-mode-map (kbd "<M-right>") nil)
   (define-key org-mode-map (kbd "<M-left>") nil)
@@ -46,127 +53,108 @@
   (global-set-key (kbd "<M-right>") 'forward-word)
   (global-set-key (kbd "<M-left>") 'backward-word)
   )
-(with-eval-after-load "markdown-mode"
-  (define-key markdown-mode-map (kbd "s-u") 'tlon-bae-insert-eawiki-url))
-(defvar path-file-cookies (file-name-concat path-dir-downloads "cookies.txt"))
-(defun ps/internet-archive-download-ACSM ()
-  "Download and open ACSM file from Internet Archive URL in kill
-ring.
+#+end_src
 
-NB: You need to have previously borrowed the book for the command
-to work. The command will work even if the book was borrowed for
-one hour only."
-  (interactive)
-  (if (string-search "archive.org" (current-kill 0))
-      (progn
-        (let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
-               (suffix "&format=pdf&redirect=1")
-               (id (replace-regexp-in-string
-                    "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
-                    "\\2"
-                    (current-kill 0)))
-               (url (concat prefix id suffix))
-               (acsm-file (file-name-concat path-dir-downloads "book.acsm")))
-          ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
-          ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
-          ;; Then replace the path below with the location of the downloaded cookies file.
-          (save-window-excursion
-            (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
-              (async-shell-command
-               (format
-                "wget --load-cookies='%s' '%s' -O '%s'"
-                path-file-cookies url acsm-file))
-              ;; (sleep-for 2)
-              ;; (async-shell-command
-              ;; (format
-              ;; "open %s"
-              ;; "/users/cartago/downloads/book.acsm"))
-              ))
-          (dired path-dir-downloads)
-          ))
-    (user-error "You forgot to copy the URL!")))
+** tlon-babel
+:PROPERTIES:
+:ID:       73031860-40D4-4D45-B270-58213D055F8D
+:END:
 
-(setq telega-server-libs-prefix "/Users/cartago/source/td/tdlib")
-(setq mac-function-modifier '(:button 2))
-
+#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
 (setq tlon-babel-todos-jobs-id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
 (setq tlon-babel-todos-generic-id "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29")
 (setq tlon-babel-todos-file (expand-file-name "~/Library/CloudStorage/Dropbox/tlon/leo/tareas.org"))
 
+#+end_src
+
+** org-capture
+:PROPERTIES:
+:ID:       D2052656-45F1-4FA1-AAB7-D001395AE789
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
 ;; If Emacs doesn't find an ID, run `M-x org-id-update-id-locations'
 (dolist (template `(("r" "Tlön: RAE" entry
-		     (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
-		     "** TODO %?\n" :empty-lines 1 :prepend t)
-		    ("f" "Tlön: FM" entry
-		     (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-		     "** TODO %?\n" :empty-lines 1 :prepend t)
-		    ("d" "Tlön: LBDLH" entry
-		     (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
-		     "** TODO %?\n" :empty-lines 1 :prepend t)
-		    ("u" "Tlön: EAN" entry
-		     (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
-		     "** TODO %?\n" :empty-lines 1 :prepend t)
-		    ("h" "Tlön: HEAR" entry
-		     (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
-		     "** TODO %?\n" :empty-lines 1 :prepend t)
-		    ("g" "Tlön: GPE" entry
-		     (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
-		     "** TODO %?\n" :empty-lines 1 :prepend t)
-		    ("c" "Tlön: Core" entry
-		     (id "68f0150e-9b0d-4bab-86c0-2bf878e19d9e")
-		     "** TODO %?\n" :empty-lines 1 :prepend t)
-		    ("s" "To sort" entry
-		     (id "107D27EC-B193-444E-B65B-9B1AD2A7CC65")
-		     "** TODO %?\n" :empty-lines 1 :prepend t)
-		    ("m" "Tlön: Core: messaging" entry
-		     (id "9387B56D-2940-4FB0-91EF-92879D58659E")
-		     "** TODO %?\n" :empty-lines 1 :prepend t)
-		    ("e" "Tlön: Core: debugging Emacs" entry
-		     (id "8402F53C-F547-4705-B79E-24D6286D2C9E")
-		     "** TODO %?\n" :empty-lines 1 :prepend t)
-		    ("t" "Tlön: Core: Project t" entry
-		     (id "12645897-A06F-44DD-876D-0FFC47D0E742")
-		     "** TODO %?\n" :empty-lines 1 :prepend t)
-		    ("tb" "tlon: bae")
-		    ("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
-		     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		    ("tbC" "Tlön: BAE: Check topic (via org-capture)" entry
-		     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		    ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
-		     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		    ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
-		     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		    ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
-		     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		    ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
-		     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		    ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
-		     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		    ("tbI" "Tlön: BAE: Import topic (via org-capture)" entry
-		     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		    ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
-		     (id "7CCD6226-DB0A-4742-9277-955FCB276137")
-		     "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
-		    ("p" "GPT-4" entry
-		     (id "C5C5EF82-E7FC-461E-B7BE-FE921CEE9158")
-		     "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
-		    ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
-		     (id ,tlon-babel-todos-jobs-id)
-		     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
-		    ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
-		     (id ,tlon-babel-todos-generic-id)
-		     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
+                     (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
+                     "** TODO %?\n" :empty-lines 1 :prepend t)
+                    ("f" "Tlön: FM" entry
+                     (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+                     "** TODO %?\n" :empty-lines 1 :prepend t)
+                    ("d" "Tlön: LBDLH" entry
+                     (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
+                     "** TODO %?\n" :empty-lines 1 :prepend t)
+                    ("u" "Tlön: EAN" entry
+                     (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
+                     "** TODO %?\n" :empty-lines 1 :prepend t)
+                    ("h" "Tlön: HEAR" entry
+                     (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
+                     "** TODO %?\n" :empty-lines 1 :prepend t)
+                    ("g" "Tlön: GPE" entry
+                     (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
+                     "** TODO %?\n" :empty-lines 1 :prepend t)
+                    ("c" "Tlön: Core" entry
+                     (id "68f0150e-9b0d-4bab-86c0-2bf878e19d9e")
+                     "** TODO %?\n" :empty-lines 1 :prepend t)
+                    ("s" "To sort" entry
+                     (id "107D27EC-B193-444E-B65B-9B1AD2A7CC65")
+                     "** TODO %?\n" :empty-lines 1 :prepend t)
+                    ("m" "Tlön: Core: messaging" entry
+                     (id "9387B56D-2940-4FB0-91EF-92879D58659E")
+                     "** TODO %?\n" :empty-lines 1 :prepend t)
+                    ("e" "Tlön: Core: debugging Emacs" entry
+                     (id "8402F53C-F547-4705-B79E-24D6286D2C9E")
+                     "** TODO %?\n" :empty-lines 1 :prepend t)
+                    ("t" "Tlön: Core: Project t" entry
+                     (id "12645897-A06F-44DD-876D-0FFC47D0E742")
+                     "** TODO %?\n" :empty-lines 1 :prepend t)
+                    ("tb" "tlon: bae")
+                    ("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                    ("tbC" "Tlön: BAE: Check topic (via org-capture)" entry
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                    ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                    ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                    ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                    ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                    ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                    ("tbI" "Tlön: BAE: Import topic (via org-capture)" entry
+                     (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                    ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
+                     (id "7CCD6226-DB0A-4742-9277-955FCB276137")
+                     "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
+                    ("p" "GPT-4" entry
+                     (id "C5C5EF82-E7FC-461E-B7BE-FE921CEE9158")
+                     "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
+                    ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
+                     (id ,tlon-babel-todos-jobs-id)
+                     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
+                    ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
+                     (id ,tlon-babel-todos-generic-id)
+                     "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
   (push template org-capture-templates))
 
-(defun ps/org-capture-before-finalize-hook-function ()
+#+end_src
+
+** org-extras
+:PROPERTIES:
+:ID:       A33C8C23-C628-4BBC-858F-EBCCE5FB9AC8
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+(defun org-extras-capture-before-finalize-hook-function ()
   "Define behavior of `org-capture-before-finalize-hook'."
   (pcase (plist-get org-capture-plist :key)
     ("p"
@@ -174,13 +162,21 @@ one hour only."
      (org-narrow-to-subtree)
      (forward-line)
      (forward-line)
-     (ps/yasnippet-expand-by-key "ai")
+     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai
+")
      (message "finished"))))
+     #+end_src
 
+** hydra
+:PROPERTIES:
+:ID:       3F8128CC-0476-476D-A00C-8B0A2E15821D
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
 (defhydra hydra-org-work
   (:hint nil
-	 :idle 0
-	 :color blue)
+         :idle 0
+         :color blue)
   "Tlön dashboard"
   ("b" (org-id-goto "49adbb3e-b542-4752-a67b-16bc2eb44624") "BAE")
   ("r" (org-id-goto "604dbb4c-4948-492e-b1cd-84b0a1451b4a") "RAE")
@@ -201,12 +197,36 @@ one hour only."
 (put 'scroll-left 'disabled nil)
 
 
-(setq telega-server-libs-prefix "/Users/cartago/source/td/tdlib")
+#+end_src
 
-(ps/modus-themes-load-theme-conditionally)
+** modus-themes-extras
+:PROPERTIES:
+:ID:       4BD0E9B3-FB9E-47D3-AAB1-A93D6280EFF4
+:END:
 
+#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+(modus-themes-extras-load-theme-conditionally)
+
+#+end_src
+
+** warnings
+:PROPERTIES:
+:ID:       0E6CBFCD-10E5-4A01-B6FE-12B26F6C7C08
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
 (setq warning-minimum-level :error)
 #+end_src
+
+** telega
+:PROPERTIES:
+:ID:       880FDECC-C882-4686-AB55-4F6BBC5D884D
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+(setq telega-server-libs-prefix "/Users/cartago/source/td/tdlib")
+#+end_src
+
 
 * tangle flags
 :PROPERTIES:
@@ -215,25 +235,25 @@ one hour only."
 
 #+begin_src emacs-lisp :tangle (print tlon-init-tangle-flags-path)
 (
- (:ps/anki-editor . nil)
- (:ps/copilot . nil)
- (:ps/corfu-terminal . nil)
- (:ps/corfu-doc-terminal . nil)
- (:ps/erc . nil)
- (:ps/espotify . nil)
- (:ps/hammy . nil)
- (:ps/keytar . nil)
- (:ps/lsp-grammarly . t)
- (:ps/midnight . nil)
- (:ps/mu4e . nil)
- (:ps/org-gcal . nil)
- (:ps/org-roam . nil)
- (:ps/org2blog . nil)
- (:ps/orgmdb . nil)
- (:ps/remember . nil)
- (:ps/slack . nil)
- (:ps/twittering-mode . t)
- (:ps/vulpea . nil)
+ (:anki-editor . nil)
+ (:copilot . nil)
+ (:corfu-terminal . nil)
+ (:corfu-doc-terminal . nil)
+ (:erc . nil)
+ (:espotify . nil)
+ (:hammy . nil)
+ (:keytar . nil)
+ (:lsp-grammarly . t)
+ (:midnight . nil)
+ (:mu4e . nil)
+ (:org-gcal . nil)
+ (:org-roam . nil)
+ (:org2blog . nil)
+ (:orgmdb . nil)
+ (:remember . nil)
+ (:slack . nil)
+ (:twittering-mode . t)
+ (:vulpea . nil)
  )
 #+end_src
 
@@ -244,11 +264,9 @@ one hour only."
 
 #+begin_src emacs-lisp :tangle (print tlon-init-variables-override-path)
 (
- (ps/personal-name . "Leonardo Picón")
- (ps/personal-gmail . "leonardodecartago@gmail.com")
- (ps/personal-email . "")
- (ps/personal-phone . "‭+34 635 304 503‬")
- (ps/personal-gpe-email . "leo@globalprioritiesencyclopedia.org")
+ (path-file-cookies . (file-name-concat path-dir-downloads "cookies.txt"))
+ (user-full-name . "Leonardo Picón")
+ (user-mail-address . "leonardodecartago@gmail.com")
  (path-dir-root . (file-name-as-directory (expand-file-name "/")))
  (path-dir-system-apps . (file-name-concat path-dir-root "Applications/"))
  (path-dir-user . (file-name-concat path-dir-root "Users/cartago/"))
@@ -372,19 +390,11 @@ one hour only."
  (path-file-tlon-docs-core . (file-name-concat path-dir-tlon-docs "core.org"))
  (path-file-tlon-ledger . (file-name-concat path-dir-dropbox-tlon-ledger "tlon.ledger"))
  (path-file-tlon-babel . path-file-tlon-tareas-leo)
- (ps/face-fixed-pitch . "Source Code Pro")
- (ps/face-variable-pitch . "Source Serif Pro")
- (ps/monitor-type . (cdr (assoc 'name (frame-monitor-attributes))))
- (ps/ledger-active-currencies . '("USD" "EUR" "GBP" "MXN" "ARS"))
- (ps/frame-width-threshold .    350)
- (ps/new-empty-buffer-major-mode . 'org-mode)
- (ps/forge-owned-accounts . "worldsaround")
- (ps/personal-signature . "
-
-,#+begin_signature
---
-,*Leo*
-,#+end_signature")
+ (faces-extras-fixed-pitch-font . "Source Code Pro")
+ (faces-extras-variable-pitch-font . "Source Serif Pro")
+ (window-extras-frame-split-width-threshold .    350)
+ (files-extras-new-empty-buffer-major-mode . 'org-mode)
+ (forge-owned-accounts . "worldsaround")
  )
 #+end_src
 

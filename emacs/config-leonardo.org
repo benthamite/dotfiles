@@ -395,6 +395,9 @@
  (window-extras-frame-split-width-threshold .    350)
  (files-extras-new-empty-buffer-major-mode . 'org-mode)
  (forge-owned-accounts . "worldsaround")
+ (path-dir-chemacs-profiles . ".config/emacs-profiles/")
+ (path-file-urls-open-externally-default . (file-name-concat path-dir-dotemacs "etc/urls-default.txt"))
+ (path-file-urls-open-externally-firefox . (file-name-concat path-dir-dotemacs "etc/urls-firefox.txt"))
  )
 #+end_src
 

@@ -30,19 +30,37 @@
 (require 'browse-url)
 (require 'path)
 
+;;;; User options
+
+(defgroup browse-url-extras ()
+  "Extensions for `browse-url'."
+  :group 'browse-url)
+
+(defcustom browse-url-extras-urls-default-file
+  (file-name-concat path-dir-dotemacs "etc/urls-default.txt")
+  "Path to the `urls-default.txt' file."
+  :type 'file
+  :group 'path)
+
+(defcustom browse-url-extras-urls-firefox-file
+  (file-name-concat path-dir-dotemacs "etc/urls-firefox.txt")
+  "Path to the `urls-firefox.txt' file."
+  :type 'file
+  :group 'path)
+
 ;;;; Functions
 
 (defun browse-url-extras-set-domains-to-open-externally ()
   "Set the domains to open externally.
-Read the files `path-file-urls-open-externally-default' and
-`path-file-urls-open-externally-firefox', and set `browse-url-handlers' to open
+Read the files `browse-url-extras-urls-default-file' and
+`browse-url-extras-urls-firefox-file', and set `browse-url-handlers' to open
 the domains in those files with the default browser and with Firefox,
 respectively."
   (require 'f)
   (require 's)
-  (dolist (url (s-split "\n" (f-read path-file-urls-open-externally-default) t))
+  (dolist (url (s-split "\n" (f-read browse-url-extras-urls-default-file) t))
     (push (cons (regexp-quote url) 'browse-url-default-browser) browse-url-handlers))
-  (dolist (url (s-split "\n" (f-read path-file-urls-open-externally-firefox) t))
+  (dolist (url (s-split "\n" (f-read browse-url-extras-urls-firefox-file) t))
     (push (cons (regexp-quote url) 'browse-url-firefox) browse-url-handlers)))
 
 (defun browse-url-extras-of-dired-file-externally ()
@@ -64,8 +82,8 @@ in Firefox."
   (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
          (domain (when url (url-domain (url-generic-parse-url url))))
          (file (if arg
-                   path-file-urls-open-externally-firefox
-                 path-file-urls-open-externally-default))
+                   browse-url-extras-urls-firefox-file
+                 browse-url-extras-urls-default-file))
          (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
     (browse-url-extras--write-url-to-file selection file)
     (browse-url-extras-set-domains-to-open-externally)

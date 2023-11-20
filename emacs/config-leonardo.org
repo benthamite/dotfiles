@@ -1,17 +1,17 @@
 #+title: Leo's config
 
-* code overrides
+* code override
 :PROPERTIES:
 :ID:       1DDFC928-66D5-4E09-B85C-7844082044D7
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-code-overrides-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-code-override)
 (
  (:org-id-add-ids-to-headings-in-file . ((ignore)))
  )
 #+end_src
 
-* post init
+* late init
 :PROPERTIES:
 :ID:       86F0B93D-E2A3-4064-977D-1002602B58F3
 :END:
@@ -20,7 +20,8 @@
 :PROPERTIES:
 :ID:       7B2B4853-D7B7-4C8A-B597-232E13605E1B
 :END:
-#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (when (eq system-type 'darwin) ;; mac specific settings
   (setq mac-right-option-modifier 'meta)
   (setq mac-command-modifier 'hyper)
@@ -60,7 +61,7 @@
 :ID:       73031860-40D4-4D45-B270-58213D055F8D
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq tlon-babel-todos-jobs-id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
 (setq tlon-babel-todos-generic-id "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29")
 (setq tlon-babel-todos-file (expand-file-name "~/Library/CloudStorage/Dropbox/tlon/leo/tareas.org"))
@@ -72,7 +73,7 @@
 :ID:       D2052656-45F1-4FA1-AAB7-D001395AE789
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 ;; If Emacs doesn't find an ID, run `M-x org-id-update-id-locations'
 (dolist (template `(("r" "Tlön: RAE" entry
                      (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
@@ -153,7 +154,7 @@
 :ID:       A33C8C23-C628-4BBC-858F-EBCCE5FB9AC8
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (defun org-extras-capture-before-finalize-hook-function ()
   "Define behavior of `org-capture-before-finalize-hook'."
   (pcase (plist-get org-capture-plist :key)
@@ -172,7 +173,7 @@
 :ID:       3F8128CC-0476-476D-A00C-8B0A2E15821D
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (defhydra hydra-org-work
   (:hint nil
          :idle 0
@@ -204,7 +205,7 @@
 :ID:       4BD0E9B3-FB9E-47D3-AAB1-A93D6280EFF4
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (modus-themes-extras-load-theme-conditionally)
 
 #+end_src
@@ -214,7 +215,7 @@
 :ID:       0E6CBFCD-10E5-4A01-B6FE-12B26F6C7C08
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq warning-minimum-level :error)
 #+end_src
 
@@ -223,17 +224,16 @@
 :ID:       880FDECC-C882-4686-AB55-4F6BBC5D884D
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-post-init-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq telega-server-libs-prefix "/Users/cartago/source/td/tdlib")
 #+end_src
-
 
 * tangle flags
 :PROPERTIES:
 :ID:       A4E7C5AD-1E55-4C6F-B0E5-8320D282A886
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-tangle-flags-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-tangle-flags)
 (
  (:anki-editor . nil)
  (:copilot . nil)
@@ -257,12 +257,12 @@
  )
 #+end_src
 
-* variables override
+* paths override
 :PROPERTIES:
 :ID:       0B85812B-1620-4F40-A5BA-534626B6B112
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-variables-override-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-paths-override)
 (
  (path-file-cookies . (file-name-concat path-dir-downloads "cookies.txt"))
  (user-full-name . "Leonardo Picón")

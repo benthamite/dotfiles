@@ -3,4 +3,4 @@
 # key: yus
 # contributor: Pablo Stafforini
 # --
-yasnippet: update snippet ($1)
+yasnippet: update snippet (`(magit-extras-get-commit-file 'sans-dir)`)

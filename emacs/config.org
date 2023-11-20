@@ -501,9 +501,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#tetris][tetris]]
 - [[#personal][personal]]
   - [[#keyboard-maestro][Keyboard Maestro]]
-- [[#variables][variables]]
-  - [[#shared-variables][shared variables]]
-  - [[#local-variables][local variables]]
+- [[#local-variables][local variables]]
 :END:
 
 * introductory
@@ -12547,6 +12545,9 @@ And finally, the section you've all been waiting for.
 :PROPERTIES:
 :ID:       9D7B5C99-2380-4159-A8C8-4021CC0482DE
 :END:
+:LOGBOOK:
+CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
+:END:
 
 ** Keyboard Maestro
 :PROPERTIES:
@@ -12563,57 +12564,7 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
  "C-H-M-S-w" 'eww)
 #+end_src
 
-* variables
-:PROPERTIES:
-:ID:       5A96B05D-52BD-4648-B0D6-1E0B6C49DB37
-:END:
-
-The section below defines all the personal variables used by this file.
-
-** shared variables
-:PROPERTIES:
-:ID:       3A5E2CF3-5CC3-4804-8AEC-89BFD943E0BF
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
-:END:
-
-#+begin_src emacs-lisp :tangle (print tlon-init-variables-path)
-(
- (ps/init-location . (file-name-concat
-                      (or (catch 'default-path
-                            (dolist (profile chemacs-profiles)
-                              (when (string= (car profile) "default")
-                                (throw 'default-path (cdadr profile)))))
-                          "~/.config/emacs-profiles/develop/")
-                      "init-pablo.el"))
- ;; "Target location of `init-pablo.el' file to be tangled upon invocation of `org-babel-tangle'. Defaults to the path associated with the default Chemacs profile, when such a profile is defined, else to '~/.config/emacs-profiles/develop/'. A different path may be set manually via `ps/init-configure-tangle-options'."
-
- (ps/early-init-location . (file-name-concat
-                            (or (catch 'default-path
-                                  (dolist (profile chemacs-profiles)
-                                    (when (string= (car profile) "default")
-                                      (throw 'default-path (cdadr profile)))))
-                                "~/.config/emacs-profiles/develop/")
-                            "early-init.el"))
- ;; "Target location of `early-init.el' file to be tangled upon invocation of `org-babel-tangle'. Defaults to the path associated with the default Chemacs profile, when such a profile is defined, else to '~/.config/emacs-profiles/develop/'. A different path may be set manually via `ps/init-configure-tangle-options'.")
-
- (ps/init-target-locations . (let (target-directories)
-                               (dolist (chemacs-profile chemacs-profiles target-directories)
-                                 (push
-                                  (cons
-                                   (car chemacs-profile)
-                                   (file-name-concat (cdadr chemacs-profile) "init-pablo.el"))
-                                  target-directories))))
- ;; "Alist of Chemacs profiles and associated locations for the `init-pablo.el' and `early-init-pablo.el' files to be passed to `ps/init-configure-tangle-options'.")
-
- (ps/init-tangle-flags-filename-sans-directory . "tangle-flags-pablo.el")
-
- (ps/init-dir . "/Users/pablostafforini/.config/emacs-profiles/develop/")
- )
-#+end_src
-
-** local variables
+* local variables
 :PROPERTIES:
 :ID:       4FB9C92B-B39E-4C3D-B9AE-A3342A6F1695
 :END:

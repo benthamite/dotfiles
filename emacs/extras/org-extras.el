@@ -31,7 +31,7 @@
 
 (require 'org)
 (require 'org-agenda)
-(require 'path)
+(require 'paths)
 (require 'el-patch)
 
 ;;;; User options

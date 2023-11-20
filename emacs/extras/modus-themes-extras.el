@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'modus-themes)
-(require 'path)
+(require 'paths)
 (require 'cl-lib)
 (require 'highlight-parentheses)
 

@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'files)
-(require 'path)
+(require 'paths)
 ;;;; User options
 
 (defgroup files-extras ()

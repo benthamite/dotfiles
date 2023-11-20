@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'mu4e)
-(require 'path)
+(require 'paths)
 (require 'el-patch)
 
 ;;;; User options

@@ -29,7 +29,7 @@
 
 (require 'bbdb)
 (require 'bbdb-com)
-(require 'path)
+(require 'paths)
 ;; open URL directly, without prompting for confirmation
 (defun bbdb-extras-bbdb-browse-url (records &optional which)
   "Brwose URLs stored in the `url' field of RECORDS.

@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'dired)
-(require 'path)
+(require 'paths)
 (require 'el-patch)
 
 ;;;; Functions

@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'calendar)
-(require 'path)
+(require 'paths)
 
 ;;;; User options
 

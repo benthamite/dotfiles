@@ -29,7 +29,7 @@
 
 (require 'org-roam)
 (require 'org-extras)
-(require 'path)
+(require 'paths)
 (require 'el-patch)
 
 ;;;; User options

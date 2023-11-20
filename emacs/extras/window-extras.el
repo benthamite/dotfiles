@@ -27,7 +27,7 @@
 
 ;;; Code:
 
-(require 'path)
+(require 'paths)
 
 ;;;; User options
 

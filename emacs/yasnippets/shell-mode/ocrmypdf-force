@@ -3,4 +3,4 @@
 # key: ocrf
 # contributor: Pablo Stafforini
 # --
-ocrmypdf `(current-kill 0)` `(current-kill 0)` --force-ocr
+ocrmypdf '`(current-kill 0)`' '`(current-kill 0)`' --force-ocr

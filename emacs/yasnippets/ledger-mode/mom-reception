@@ -3,11 +3,11 @@
 # key: mr
 # contributor: Pablo Stafforini
 # --
-`(ps/time-last-day-of-last-month)` Reception
+`(calendar-extras-time-last-day-of-last-month)` Reception
     Expenses:Tucumán 11                          $1 USD
     Liabilities:Mom:Consolidated
 
-`(ps/time-last-day-of-last-month)` Reception
+`(calendar-extras-time-last-day-of-last-month)` Reception
     Expenses:Tucumán 10                          $1 USD
     Liabilities:Mom:Consolidated
 

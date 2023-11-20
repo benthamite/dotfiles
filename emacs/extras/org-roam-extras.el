@@ -1,0 +1,224 @@
+;;; org-roam-extras.el --- Extensions for org-roam -*- lexical-binding: t -*-
+
+;; Copyright (C) 2023
+
+;; Author: Pablo Stafforini
+;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-roam-extras.el
+;; Version: 0.1
+
+;; This file is NOT part of GNU Emacs.
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; Extensions for `org-roam'.
+
+;;; Code:
+
+(require 'org-roam)
+(require 'org-extras)
+(require 'path)
+(require 'el-patch)
+
+;;;; User options
+
+(defgroup org-roam-extras ()
+  "Extensions for `org-roam'."
+  :group 'org-roam)
+
+(defcustom org-roam-extras-excluded-dirs
+  (list
+   path-dir-inactive
+   path-dir-archive
+   path-dir-dropbox-tlon-leo
+   path-dir-dropbox-tlon-fede)
+  "List of directories to exclude from `org-roam'."
+  :type '(repeat directory)
+  :group 'org-roam-extras)
+
+(defcustom org-roam-extras-excluded-files
+  (list
+   path-file-orb-noter-template
+   "calendar.org" ; added directly as agenda file
+   "quotes-old.org"
+   ".org2blog.org"
+   "wiki-notes.org" ; removing temporarily
+   ".*conflicted copy.*"
+   ".*conflicted-copy.*")
+  "List of files to exclude from `org-roam'."
+  :type '(repeat string)
+  :group 'org-roam-extras)
+
+;;;; Main variables
+
+;;;; Functions
+
+(defun org-roam-extras-recent (days &optional limit)
+  "Return a list of all files modified in the last DAYS.
+Optionally, return such list only if its length is less than LIMIT."
+  (let* ((mins (* 60 24 days))
+	 (file-list (split-string
+		     (shell-command-to-string
+		      (format
+		       "find %s -name '*.org'  -mmin -%s"
+		       (directory-file-name org-roam-directory) mins)))))
+    ;; Remove excluded files
+    (setq file-list (cl-delete-if (lambda (k)
+				    (string-match-p org-roam-file-exclude-regexp k))
+				  file-list))
+    (if limit
+	(when (< (length file-list) limit)
+	  file-list)
+      file-list)))
+
+(defun org-roam-extras-remove-file-level-properties ()
+  "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
+  (when (string= "r" (plist-get org-capture-plist :key))
+    (goto-char (point-min))
+    (unless (org-get-heading)
+      ;; Take action with file-level properties only.
+      (org-delete-property "ID")
+      (org-delete-property "ROAM_REFS")
+      (org-extras-jump-to-first-heading)
+      (org-id-get-create))))
+
+(defun org-roam-extras-new-note (note-type)
+  "Create a new `org-roam' note of type NOTE-TYPE."
+  (interactive
+   (list
+    (completing-read
+     "Select note type: "
+     '("generic" "person"))))
+  (require 'prot-eww)
+  (let ((tags)
+	(directory))
+    (pcase note-type
+      ("generic"
+       (setq tags "note")
+       (setq directory path-dir-notes))
+      ("person"
+       (setq tags "person")
+       (setq directory path-dir-people)))
+    (let* ((name (read-from-minibuffer "Entry name: "))
+	   (slug (prot-eww--sluggify name))
+	   (filename (file-name-with-extension slug "org")))
+      (when (file-exists-p filename)
+	(user-error (format "File `%s' already exists" filename)))
+      (find-file (file-name-concat directory filename))
+      (insert "#+title: " name "\n\n")
+      (org-insert-heading)
+      (insert name)
+      (org-set-tags tags)
+      (org-id-get-create)
+      (org-extras-narrow-to-entry-and-children)
+      (goto-char (point-max)))))
+
+(defun org-roam-extras-node-find ()
+  "Find and open an Org-roam node by its title or alias."
+  (interactive)
+  (widen)
+  (org-extras-fold-show-all-headings)
+  (org-roam-node-find)
+  (recenter 1))
+
+(defun org-roam-extras-node-find-special (&optional arg)
+  "Return a list of selected headings sorted by priority.
+The selection includes all headings with a priority and either no todo status or
+the todo status TODO, and excludes all headings with a date (scheduled or
+deadline). With ARG prefix argument, prompt the user to select from a unique
+list of tags and further restrict the selection to headings with that tag."
+  (interactive "P")
+  (require 'consult)
+  (let* ((selection (when arg
+                      (org-roam-extras-node-select-tag)))
+	 (headings-with-priority
+	  (if selection
+              (org-roam-db-query `[:select [id file title priority]
+					   :from nodes
+					   :left-join tags
+					   :on (= nodes:id tags:node-id)
+					   :where (and
+						   (= tags:tag ,selection)
+						   (notnull nodes:priority)
+						   ;; how do I avoid the double negation?
+						   (not (notnull nodes:scheduled))
+						   (not (notnull nodes:deadline))
+						   (or
+						    (= nodes:todo "TODO")
+						    (not (notnull nodes:todo))))
+					   :order-by (asc nodes:priority)])
+	    (org-roam-db-query `[:select [id file title priority]
+					 :from nodes
+					 :left-join tags
+					 :on (= nodes:id tags:node-id)
+					 :where (and
+						 (notnull nodes:priority)
+						 ;; how do I avoid the double negation?
+						 (not (notnull nodes:scheduled))
+						 (not (notnull nodes:deadline))
+						 (or
+						  (= nodes:todo "TODO")
+						  (not (notnull nodes:todo))))
+					 :order-by (asc nodes:priority)])))
+	 (result '()))
+    (dolist (record headings-with-priority)
+      (let* ((id (nth 0 record))
+	     (file (nth 1 record))
+	     (title (nth 2 record))
+	     (priority (nth 3 record))
+	     (formatted-priority (if priority
+				     (format "[#%c] " priority)
+				   ""))
+	     (formatted-heading (concat formatted-priority title)))
+	(push (cons formatted-heading `(lambda ()
+					 (org-id-goto ,id)))
+              result)))
+    (if result
+	(let* ((candidates (reverse result))
+               (selection (consult--read
+			   candidates
+			   :prompt "Jump to heading: "
+			   :category 'jump
+			   :history t
+			   :require-match t
+			   :sort nil))
+               (action (cdr (assoc selection candidates))))
+	  (funcall action))
+      (message "No headings with priority found."))))
+
+(defun org-roam-extras-node-select-tag ()
+  "Prompt for tag selection from list of org tags."
+  (interactive)
+  (let* ((query-result (org-roam-db-query [:select :distinct [tag] :from tags]))
+	 (tag-candidates (mapcar #'car query-result))
+	 (selected-tag (consult--read tag-candidates
+                                      :prompt "Select a tag: "
+                                      :history 'org-roam-tag-history
+                                      :sort t
+                                      :require-match t)))
+    (message "Selected tag: %s" selected-tag)
+    selected-tag))
+
+;;;;; Patched functions
+
+(el-patch-defun org-roam-db-query (sql &rest args)
+  "Run SQL query on Org-roam database with ARGS.
+SQL can be either the emacsql vector representation, or a string."
+  (el-patch-add (sleep-for 0 1))
+  (apply #'emacsql (org-roam-db) sql args))
+
+(provide 'org-roam-extras)
+;;; org-roam-extras.el ends here
+

@@ -3,4 +3,4 @@
 # key: aao
 # contributor: Pablo Stafforini
 # --
-(advice-add '$1 :override #'ps/$1)
+(advice-add '$1 :override #'$1)

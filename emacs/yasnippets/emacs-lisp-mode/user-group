@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: user-group
+# key: ug
+# contributor: Pablo Stafforini
+# --
+(defgroup $1 ()
+  "`$2'."
+  :group '$3)

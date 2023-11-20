@@ -28,6 +28,8 @@
 ;;; Code:
 
 (require 'avy)
+(require 'path)
+(require 'el-patch)
 
 ;;;; Functions
 
@@ -109,6 +111,30 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   "Mark the region from point to PT."
   (activate-mark)
   (goto-char pt))
+
+;;;; Patched functions
+
+;; Launch dispatcher with `/' rather than `?'
+(el-patch-defun avy-handler-default (char)
+  "The default handler for a bad CHAR."
+  (let (dispatch)
+    (cond ((setq dispatch (assoc char avy-dispatch-alist))
+	   (unless (eq avy-style 'words)
+	     (setq avy-action (cdr dispatch)))
+	   (throw 'done 'restart))
+	  ((memq char avy-escape-chars)
+	   ;; exit silently
+	   (throw 'done 'abort))
+	  ((el-patch-swap
+	     (eq char ??)
+	     (eq char ?/))
+	   (avy-show-dispatch-help)
+	   (throw 'done 'restart))
+	  ((mouse-event-p char)
+	   (signal 'user-error (list "Mouse event not handled" char)))
+	  (t
+	   (message "No such candidate: %s, hit `C-g' to quit."
+		    (if (characterp char) (string char) char))))))
 
 (provide 'avy-extras)
 ;;; avy-extras.el ends here

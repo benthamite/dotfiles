@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'modus-themes)
+(require 'path)
 (require 'cl-lib)
 (require 'highlight-parentheses)
 
@@ -72,6 +73,7 @@
   (if (eq 'modus-operandi (car custom-enabled-themes))
       (set-face-attribute 'hl-sentence nil :background "#bfefff")
     (set-face-attribute 'hl-sentence nil :background "#004065")))
+
 
 (provide 'modus-themes-extras)
 ;;; modus-themes-extras.el ends here

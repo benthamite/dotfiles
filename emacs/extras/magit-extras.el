@@ -1,0 +1,160 @@
+;;; magit-extras.el --- Extensions for magit -*- lexical-binding: t -*-
+
+;; Copyright (C) 2023
+
+;; Author: Pablo Stafforini
+;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/magit-extras.el
+;; Version: 0.1
+
+;; This file is NOT part of GNU Emacs.
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; Extensions for `magit'.
+
+;;; Code:
+
+;; (require 'magit)
+;; (require 'path)
+;; (require 'with-editor)
+
+;;;; Functions
+
+;; adapted from Sacha Chua
+(defun magit-extras-stage-commit-and-push (message)
+  "Stage, commit and push all changes.
+As commit message, use MESSAGE."
+  (interactive
+   (list (progn (magit-diff-unstaged) (read-string "Commit Message: "))))
+  (when (or
+         (magit-anything-staged-p)
+         (magit-anything-unstaged-p))
+    (magit-stage-modified '(4))
+    (magit-commit-create (list "-m" message)))
+  (call-interactively #'magit-push-current-to-pushremote))
+
+(defun magit-extras-stage-commit-and-push-all-repos ()
+  "Update all active depositories."
+  (dolist (directory path-dir-all-repos)
+    (magit-extras-midnight-update directory)))
+
+(defun magit-extras-midnight-update (directory)
+  "Update repo in DIRECTORY with `midnight'."
+  (let ((default-directory directory))
+    (magit-extras-stage-commit-and-push "Midnight update")))
+
+;; gist.github.com/dotemacs/9a0433341e75e01461c9
+(defun magit-extras-parse-url (url)
+  "Convert a git remote location as a HTTP URL."
+  (if (string-match "^http" url)
+      url
+    (replace-regexp-in-string "\\(.*\\)@\\(.*\\):\\(.*\\)\\(\\.git?\\)"
+                              "https://\\2/\\3"
+                              url)))
+
+(defun magit-extras-move-point-to-start ()
+  "Move point to the start of the buffer."
+  (run-at-time 0.3 nil #'(lambda () (goto-char (point-min)))))
+
+(transient-define-prefix magit-extras-dispatch ()
+  "Invoke a Magit command from a list of available commands."
+  :info-manual "(magit)Top"
+  ["Transient and dwim commands"
+   ;; → bound in magit-mode-map or magit-section-mode-map
+   ;; ↓ bound below
+   [("A" "Apply"          magit-cherry-pick)
+    ;; a                  ↓
+    ("b" "Branch"         magit-branch)
+    ("B" "Bisect"         magit-bisect)
+    ("c" "Commit"         magit-commit)
+    ("C" "Clone"          magit-clone)
+    ("d" "Diff"           magit-diff)
+    ("D" "Diff (change)"  magit-diff-refresh)
+    ("e" "Ediff (dwim)"   magit-ediff-dwim)
+    ("E" "Ediff"          magit-ediff)
+    ("f" "Fetch"          magit-fetch)
+    ("F" "Pull"           magit-pull)
+    ;; g                  ↓
+    ;; G                → magit-refresh-all
+    ("h" "Help"           magit-info)
+    ("H" "Section info"   magit-describe-section :if-derived magit-mode)]
+   [("i" "Ignore"         magit-gitignore)
+    ("I" "Init"           magit-init)
+    ("j" "Jump to section"magit-status-jump  :if-mode     magit-status-mode)
+    ("j" "Display status" magit-status-quick :if-not-mode magit-status-mode)
+    ("J" "Display buffer" magit-display-repository-buffer)
+    ;; k                  ↓
+    ;; K                → magit-file-untrack
+    ("l" "Log"            magit-log)
+    ("L" "Log (change)"   magit-log-refresh)
+    ("m" "Merge"          magit-merge)
+    ("M" "Remote"         magit-remote)
+    ("n" "Forge"          forge-dispatch)
+    ;; N       reserved → forge-dispatch
+    ("o" "Submodule"      magit-submodule)
+    ("O" "Subtree"        magit-subtree)
+    ("p" "Pull"           magit-pull)
+    ;; P                → magit-section-backward
+    ;; q                → magit-mode-bury-buffer
+    ("Q" "Command"        magit-git-command)]
+   [("r" "Rebase"         magit-rebase)
+    ;; R                → magit-file-rename
+    ;; s                  ↓
+    ;; S                  ↓
+    ("t" "Tag"            magit-tag)
+    ("T" "Note"           magit-notes)
+    ;; u                  ↓
+    ;; U                  ↓
+    ;; v                  ↓
+    ("V" "Revert"         magit-revert)
+    ("w" "Apply patches"  magit-am)
+    ("W" "Format patches" magit-patch)
+    ;; x                → magit-reset-quickly
+    ("X" "Reset"          magit-reset)
+    ("y" "Show Refs"      magit-show-refs)
+    ("Y" "Cherries"       magit-cherry)
+    ("z" "Stash"          magit-stash)
+    ("Z" "Worktree"       magit-worktree)
+    ("." "Push"           magit-push)
+    ("!" "Run"            magit-run)]]
+  ["Applying changes"
+   :if-derived magit-mode
+   [("a" "Apply"          magit-apply)
+    ("v" "Reverse"        magit-reverse)
+    ("k" "Discard"        magit-discard)]
+   [("s" "Stage"          magit-stage)
+    ("u" "Unstage"        magit-unstage)]
+   [("S" "Stage all"      magit-stage-modified)
+    ("U" "Unstage all"    magit-unstage-all)]]
+  ["Essential commands"
+   :if-derived magit-mode
+   [("g" "       refresh current buffer"   magit-refresh)
+    ("q" "       bury current buffer"      magit-mode-bury-buffer)
+    ("<tab>" "   toggle section at point"  magit-section-toggle)
+    ("<return>" "visit thing at point"     magit-visit-thing)]
+   [("C-x m"    "show all key bindings"    describe-mode)
+    ("C-x i"    "show Info manual"         magit-info)]])
+
+(advice-add 'magit-dispatch :override #'magit-extras-dispatch)
+
+(defun magit-extras-with-editor-finish-and-push ()
+  "Finish editing and push commit."
+  (interactive)
+  (with-editor-finish nil)
+  (call-interactively #'magit-push-current-to-pushremote))
+
+(provide 'magit-extras)
+;;; magit-extras.el ends here

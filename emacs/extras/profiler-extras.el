@@ -1,9 +1,9 @@
-;;; essentials.el --- Assorted functions for Pablo's config -*- lexical-binding: t -*-
+;;; profiler-extras.el --- Assorted functions for Pablo's config -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2023
 
 ;; Author: Pablo Stafforini
-;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/essentials.el
+;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/profiler-extras.el
 ;; Version: 0.1
 
 ;; This file is NOT part of GNU Emacs.
@@ -31,25 +31,25 @@
 
 ;;;; Variables
 
-(defvar essentials-profiler-toggle nil)
+(defvar profiler-extras-profiler-toggle nil)
 
 ;;;; Functions
 
 ;;;###autoload
-(defun essentials-profiler-toggle ()
+(defun profiler-extras-profiler-toggle ()
   "Start or stop Emacs profiler and generate profiling report."
   (interactive)
-  (if (not essentials-profiler-toggle)
+  (if (not profiler-extras-profiler-toggle)
       (profiler-start 'cpu+mem)
     (profiler-report)
     (profiler-stop))
-  (setq essentials-profiler-toggle (not essentials-profiler-toggle)))
+  (setq profiler-extras-profiler-toggle (not profiler-extras-profiler-toggle)))
 
 ;;;###autoload
-(defun essentials-profiler-report-toggle-entry-global ()
+(defun profiler-extras-profiler-report-toggle-entry-global ()
   "Expand all subentries below entry at point."
   (interactive)
   (profiler-report-toggle-entry '(4)))
 
-(provide 'essentials)
-;;; essentials.el ends here
+(provide 'profiler-extras)
+;;; profiler-extras.el ends here

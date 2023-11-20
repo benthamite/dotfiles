@@ -789,18 +789,6 @@ This includes personal files and `tlon-babel' files."
   :type 'file
   :group 'path)
 
-(defcustom path-file-urls-open-externally-default
-  (file-name-concat path-dir-dotemacs "etc/urls-default.txt")
-  "Path to the `urls-default.txt' file."
-  :type 'file
-  :group 'path)
-
-(defcustom path-file-urls-open-externally-firefox
-  (file-name-concat path-dir-dotemacs "etc/urls-firefox.txt")
-  "Path to the `urls-firefox.txt' file."
-  :type 'file
-  :group 'path)
-
 (provide 'path)
 
 ;;; path.el ends here

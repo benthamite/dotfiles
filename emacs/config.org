@@ -915,7 +915,10 @@ NAME and ARGS are in `use-package'."
   (declare (indent defun))
   `(use-package ,name
      :elpaca nil
-     :load-path "/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/emacs/extras/"
+     :load-path ,(pcase user-full-name
+		  ("Pablo Stafforini" "/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/emacs/extras/")
+		  ("Leonardo Picón" "/Users/cartago/source/dotfiles/emacs/extras/")
+                  ("Federico Stafforini" "/Users/cartago/source/dotfiles/emacs/extras/"))
      ,@args))
 
 (elpaca elpaca-use-package

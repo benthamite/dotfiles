@@ -789,6 +789,57 @@ This includes personal files and `tlon-babel' files."
   :type 'file
   :group 'path)
 
+(defcustom path-dir-init-default
+  (file-name-concat path-dir-chemacs-profiles "develop/")
+  "Default target location for the init files to be tangled."
+  :type 'directory
+  :group 'path)
+
+(defcustom path-dir-init
+  (or (catch 'default-path
+	(dolist (profile chemacs-profiles)
+	  (when (string= (car profile) "default")
+	    (throw 'default-path (cdadr profile)))))
+      path-dir-init-default)
+  "Actual target location for the init files to be tangled.
+It takes the value of the path associated with the default Chemacs profile, when
+such a profile is defined, else `path-dir-init-default'. A different path may be
+set manually via `init-configure-tangle-options'."
+  :type 'directory
+  :group 'path)
+
+(defcustom path-file-early-init
+  (file-name-concat path-dir-init "early-init.el")
+  "Target location of `early-init.el' file to be tangled'."
+  :type 'file
+  :group 'path)
+
+(defcustom path-file-init
+  (file-name-concat path-dir-init "init-pablo.el")
+  "Target location of `init-pablo.el' file to be tangled'."
+  :type 'file
+  :group 'path)
+
+(defcustom path-dir-init-target-locations
+  (let (target-directories)
+    (dolist (chemacs-profile chemacs-profiles target-directories)
+      (push
+       (cons
+	(car chemacs-profile)
+	(file-name-concat (cdadr chemacs-profile) "init-pablo.el"))
+       target-directories)))
+  "Init target locations.
+Alist of Chemacs profiles and associated locations for the `init-pablo.el' and
+`early-init-pablo.el' files to be passed to `init-configure-tangle-options'."
+  :type 'alist
+  :group 'path)
+
+(defcustom path-file-init-tangle-flags-sans-directory
+  "tangle-flags-pablo.el"
+  "Name of the file containing the tangle flags."
+  :type 'file
+  :group 'path)
+
 (provide 'path)
 
 ;;; path.el ends here

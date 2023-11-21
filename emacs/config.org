@@ -1,6 +1,6 @@
 #+TITLE:Pablo's Emacs config
 #+AUTHOR: Pablo Stafforini
-#+PROPERTY: header-args :tangle (print tlon-init-user-init-path)
+#+PROPERTY: header-args :tangle (print tlon-init-file-user-init)
 :PROPERTIES:
 :TOC:      ignore
 :END:

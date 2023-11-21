@@ -463,7 +463,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elfeed-extras][elfeed-extras]]
   - [[#elfeed-org][elfeed-org]]
   - [[#engine-mode][engine-mode]]
-  - [[#osm][osm]]
   - [[#org-download][org-download]]
   - [[#org-web-tools][org-web-tools]]
   - [[#org-web-tools-extras][org-web-tools-extras]]
@@ -11861,27 +11860,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (engine/set-keymap-prefix (kbd "H-g")))
 #+end_src
 
-
-** osm
-:PROPERTIES:
-:ID:       1DCEE01C-1951-45F0-B9B8-60977E2D4314
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-16 Mon 19:11]--[2022-05-16 Mon 19:19] =>  0:08
-:END:
-
-/[[https://github.com/minad/osm][osm]] is an OpenStreetMap viewer for Emacs./
-
-#+begin_src emacs-lisp :results silent
-(use-package osm
-  :elpaca (osm
-             :host github
-             :repo "minad/osm")
-  :init
-  ;; Load Org link support
-  (with-eval-after-load 'org
-    (require 'osm-ol)))
-#+end_src
 
 ** org-download
 :PROPERTIES:

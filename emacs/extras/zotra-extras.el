@@ -27,9 +27,9 @@
 
 ;;; Code:
 
-(require 'zotra)
-(require 'paths)
-(require 'ebib)
+;; (require 'zotra)
+;; (require 'paths)
+;; (require 'ebib)
 
 ;;;; Functions
 
@@ -111,4 +111,3 @@ ORIG-FUN, URL, ENTRY-FORMAT, and BIBFILE are arguments passed to
 
 (provide 'zotra-extras)
 ;;; zotra-extras.el ends here
-

@@ -549,11 +549,11 @@ This should be the path you set `org-roam-directory' to."
 
 (defcustom paths-dir-all-repos
   (list paths-dir-android
-	path-dir-personal-bibliography
-	path-dir-bibliographic-notes
-	path-dir-journal
-	path-dir-notes
-	path-dir-people)
+	paths-dir-personal-bibliography
+	paths-dir-bibliographic-notes
+	paths-dir-journal
+	paths-dir-notes
+	paths-dir-people)
   "List of all personal repos."
   :type '(repeat directory)
   :group 'paths)
@@ -651,8 +651,8 @@ This should be the path you set `org-roam-directory' to."
   :group 'paths)
 
 (defcustom paths-files-bibliography-personal
-  `(,path-file-personal-bibliography-new
-    ,path-file-personal-bibliography-old)
+  `(,paths-file-personal-bibliography-new
+    ,paths-file-personal-bibliography-old)
   "List of personal bibliography files."
   :type '(repeat file)
   :group 'paths)
@@ -803,8 +803,14 @@ This includes personal files and `tlon-babel' files."
       paths-dir-init-default)
   "Actual target location for the init files to be tangled.
 It takes the value of the path associated with the default Chemacs profile, when
-such a profile is defined, else `path-dir-init-default'. A different path may be
+such a profile is defined, else `paths-dir-init-default'. A different path may be
 set manually via `init-configure-tangle-options'."
+  :type 'directory
+  :group 'paths)
+
+(defcustom paths-dir-extras
+  (file-name-concat paths-dir-init "extras/")
+  "Target location of the `extras' package directory."
   :type 'directory
   :group 'paths)
 

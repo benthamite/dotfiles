@@ -8,6 +8,29 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** osm
+:PROPERTIES:
+:ID:       1DCEE01C-1951-45F0-B9B8-60977E2D4314
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-16 Mon 19:11]--[2022-05-16 Mon 19:19] =>  0:08
+:END:
+
+/[[https://github.com/minad/osm][osm]] is an OpenStreetMap viewer for Emacs./
+
+[2023-11-21 Tue] Not using.
+
+#+begin_src emacs-lisp :results silent
+(use-package osm
+  :elpaca (osm
+             :host github
+             :repo "minad/osm")
+  :init
+  ;; Load Org link support
+  (with-eval-after-load 'org
+    (require 'osm-ol)))
+#+end_src
+
 ** mentor
 :PROPERTIES:
 :ID:       E3F6210D-F6CD-4397-9004-3D31B5623D18
@@ -23,7 +46,7 @@ CLOCK: [2023-03-07 Tue 00:53]--[2023-03-07 Tue 01:30] =>  0:37
 #+begin_src emacs-lisp :results silent
 (use-package mentor
   :config
-  (setq mentor-rtorrent-download-directory path-dir-downloads)
+  (setq mentor-rtorrent-download-directory paths-dir-downloads)
   (setq mentor-rtorrent-external-rpc (expand-file-name "~/.rtorrent-rpc.socket"))
 
   :general
@@ -1216,7 +1239,7 @@ CLOCK: [2021-04-03 Sat 18:49]--[2021-04-03 Sat 18:54] =>  0:05
   ("H-y" 'osx-dictionary-search-input))
 #+end_src
 
-** exec-path-from-shell
+** exec-paths-from-shell
 :PROPERTIES:
 :ID:       31238246-249F-42E8-BE80-06DB327259FD
 :END:
@@ -1229,20 +1252,20 @@ CLOCK: [2021-02-05 Fri 18:46]--[2021-02-05 Fri 19:00] =>  0:14
 CLOCK: [2021-02-05 Fri 19:09]--[2021-02-05 Fri 19:14] =>  0:05
 :END:
 
-/[[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] makes Emacs use the $PATH set up by the user's shell./
+/[[https://github.com/purcell/exec-paths-from-shell][exec-paths-from-shell]] makes Emacs use the $PATH set up by the user's shell./
 
 [2023-04-30 Sun 10:14] This shouldn't be needed if Emacs is launched from the Terminal, as I do. Disabling for the time being; will remove if noticed no issues.
 
 #+begin_src emacs-lisp :results silent
-(use-package exec-path-from-shell
+(use-package exec-paths-from-shell
   :disabled
   :if (eq system-type 'darwin)
   :init
   (dolist (var '("NVM_DIR"))
-    (add-to-list 'exec-path-from-shell-variables var))
+    (add-to-list 'exec-paths-from-shell-variables var))
 
   :config
-  (exec-path-from-shell-initialize))
+  (exec-paths-from-shell-initialize))
 #+end_src
 
 *** resources
@@ -1832,7 +1855,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   :defer 60
   :commands slack-select-rooms
   :config
-  (setq slack-file-dir path-dir-downloads)
+  (setq slack-file-dir paths-dir-downloads)
   (setq slack-prefer-current-team t)
 
   (slack-register-team
@@ -1961,7 +1984,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 #+begin_src emacs-lisp :results silent
 (use-package scihub
   :config
-  (setq scihub-download-directory path-dir-downloads)
+  (setq scihub-download-directory paths-dir-downloads)
   (setq scihub-open-after-download nil)
   (setq scihub-fetch-domain 'scihub-fetch-domains-lovescihub)
   ;; run `scihub-homepage' for a list of available scihub webservers
@@ -2825,7 +2848,7 @@ point."
 ;; (org-yank)
 ;; (org-id-copy)
 ;; (ps/org-show-subtree-hide-drawers)
-;; (ps/visit-file-or-switch-to-buffer path-file-wiki-entries)
+;; (ps/visit-file-or-switch-to-buffer paths-file-wiki-entries)
 ;; (ps/yasnippet-expand-by-key "wpe")
 ;; (current-kill 2)))
 
@@ -2910,7 +2933,7 @@ The `slug' generated from that STR follows these rules:
   (let* ((name (read-from-minibuffer "Entry name: "))
          (slug (org-hugo-slug name))
          (filename (concat slug ".org")))
-    (find-file (expand-file-name filename path-dir-wiki-entries))
+    (find-file (expand-file-name filename paths-dir-wiki-entries))
     (insert "#+title: " name
             "\n[[https://forum.effectivealtruism.org/tag/" slug "][online entry]]\n")
     (ps/yasnippet-expand-by-name "wiki-new-entry-checklist")
@@ -2932,7 +2955,7 @@ The `slug' generated from that STR follows these rules:
   (let* ((name (read-from-minibuffer "Entry name: "))
          (slug (org-hugo-slug name))
          (filename (concat slug ".org")))
-    (find-file (expand-file-name filename path-dir-hear-notes))
+    (find-file (expand-file-name filename paths-dir-hear-notes))
     (insert "#+title: " name "\n\n")
     (org-insert-heading)
     (insert name "\n")
@@ -2945,7 +2968,7 @@ The `slug' generated from that STR follows these rules:
   "Find heading in Wiki list of articles whose name matches clipboard string and add the current date to it."
 
   (interactive)
-  (ps/visit-file-or-switch-to-buffer path-file-wiki-entries)
+  (ps/visit-file-or-switch-to-buffer paths-file-wiki-entries)
   (org-link-open-from-string (concat "[[*" (current-kill 0) "]]"))
   (org-schedule nil "today"))
 
@@ -3339,7 +3362,7 @@ I don't think I need this, except for the ~scihub~ functionality. However, .[[ht
            (file-name (url-file-nondirectory url)))
       (unless (equal (file-name-extension file-name) "pdf")
         (setq file-name (file-name-with-extension file-name "pdf")))
-      (let ((file-path (file-name-concat path-dir-downloads file-name)))
+      (let ((file-path (file-name-concat paths-dir-downloads file-name)))
         (url-copy-file url file-path 1)))))
 #+end_src
 
@@ -3613,7 +3636,7 @@ CLOSED: [2021-11-23 Tue 22:32]
 :END:
 [2022-10-02 Sun 14:12] I installed this package only because I wanted to have a persistent ~*scratch*~ buffer. But I am now accomplishing this with [[id:B6CB6A6C-0BCC-4A07-9608-BDCA6184C63A][persistent scratch]].
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-feature remember
   :custom
   (remember-data-file "~/Google Drive/Apps/Emacs/notes")
@@ -3630,7 +3653,7 @@ CLOCK: [2021-06-25 Fri 21:05]--[2021-06-25 Fri 21:14] =>  0:09
 CLOCK: [2021-04-06 Tue 21:35]--[2021-04-06 Tue 21:54] =>  0:19
 :END:
 [2022-09-08 Thu 09:31] No longer using.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package org-sidebar
   :custom
   (org-sidebar-default-fns '(org-sidebar--todo-items))
@@ -3654,7 +3677,7 @@ also upcoming items."
 :ID:       B7B8956F-08D9-49E0-873C-4513F6FD44B8
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(normal)) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(normal)) (print paths-file-init))
 (defhydra hydra-org-wiki-notes
   (:exit t
          :idle 0.5)
@@ -3719,7 +3742,7 @@ also upcoming items."
   )
 #+end_src
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(normal)) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(normal)) (print paths-file-init))
 (defun ps/org-id-wiki-with-clock (key)
   (funcall (intern (concat "hydra-org-wiki-notes/lambda-" key "-and-exit")))
   (org-clock-in))
@@ -3731,7 +3754,7 @@ also upcoming items."
 :END:
 [2022-07-21 Thu 16:59] replaced by [[id:DDFE6DC9-A986-4E79-BF5B-A99124B65BA2][smtpmail-multi]].
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-feature smtpmail
   :custom
   (smtpmail-smtp-server "smtp.gmail.com")
@@ -3746,7 +3769,7 @@ also upcoming items."
 :ID:       672A178C-D2C3-4A2A-9B6F-19A6E2E4FF4F
 :END:
 I rely on phone notifications for events in my calendar, so I don't need this.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package org-wild-notifier
   :defer 10
   :config
@@ -3767,7 +3790,7 @@ CLOCK: [2021-04-21 Wed 14:33]--[2021-04-21 Wed 14:38] =>  0:05
 :END:
 [2022-07-21 Thu 22:05] Replaced with version that requires no external dependencies.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package buffer-move
   :demand t
   :after winum
@@ -3800,7 +3823,7 @@ If there is no horizontal split, signal an error."
 :END:
 
 [2022-07-17 Sun 10:25] No longer using.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package google-contacts)
 #+end_src
 
@@ -3811,7 +3834,7 @@ If there is no horizontal split, signal an error."
 
 [2022-07-17 Sun 09:34] For this type of movement, [[id:D83A1681-A3F0-4C70-9986-F01275320585][avy]] is much more efficient.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (general-define-key
  "A-C-s-M-," "C-u C-u <up>"
  "A-C-s-M-." "C-u C-u <down>")
@@ -3823,7 +3846,7 @@ If there is no horizontal split, signal an error."
 :END:
 [2022-07-17 Sun 09:34] For this type of movement, [[id:D83A1681-A3F0-4C70-9986-F01275320585][avy]] is much more efficient.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (general-define-key
  "A-C-s-M-k" "C-u <up>"
  "A-C-s-M-l" "C-u <down>")
@@ -3835,7 +3858,7 @@ If there is no horizontal split, signal an error."
 :END:
 [2022-07-17 Sun 09:34] For this type of movement, [[id:D83A1681-A3F0-4C70-9986-F01275320585][avy]] is much more efficient.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (general-define-key
  "A-C-s-M-u" "C-u A-C-s-u"
  "A-C-s-M-p" "C-u A-C-s-p")
@@ -4166,7 +4189,7 @@ I don't think I needed, given that I use ~company-emoji~.
 
 [2022-07-09 Sat 08:55] Enabling it to use with [[id:94F76C3D-9547-431D-93AB-8814F4218AFF][slack]].
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package emojify
   :hook
   (slack-mode-hook . emojify-mode))
@@ -4331,7 +4354,7 @@ CLOCK: [2021-04-02 Fri 16:59]--[2021-04-02 Fri 17:11] =>  0:12
 I've considered migrating to ivy, but unfortunately Helm offers better support for org-related commands. Examples include ~helm-org-in-buffer-headings~, ~org-helm-ql~, ~org-rifle~, and others.
 
 [2022-06-21 Tue 20:51] No longer using ~helm~.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package helm
   :demand t
   :custom
@@ -4467,7 +4490,7 @@ I think the desired behavior is that point goes to the top-level heading, with a
 :END:
 [2022-06-21 Tue 20:49] Replaced by ~consult-ag~.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print paths-file-init))
 (use-package helm-ag
   :general
   ("A-C-a" 'helm-ag))
@@ -4479,7 +4502,7 @@ I think the desired behavior is that point goes to the top-level heading, with a
 :END:
 [2022-06-22 Wed 19:20] No longer using ~helm~.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package helm-bibtex
   :demand t
   :after bibtex-completion)
@@ -4548,7 +4571,7 @@ Stopped working.
 :ID:       B0D9D5A9-D7E1-4950-9716-1B660D343C45
 :END:
 Replacing with ~org-ql-find~.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package helm-org-ql
   :after helm
   :config
@@ -4720,7 +4743,7 @@ CLOCK: [2022-06-18 Sat 11:22]--[2022-06-18 Sat 11:53] =>  0:31
 :ID:       27A45C51-0A2E-47B8-BA06-F9BCCCFC6680
 :END:
 [2022-06-21 Tue 20:50] No longer using ~helm~.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print paths-file-init))
 (use-package helm-pass
   :general
   ("H-P" 'helm-pass))
@@ -4734,10 +4757,10 @@ CLOCK: [2022-06-18 Sat 11:22]--[2022-06-18 Sat 11:53] =>  0:31
 CLOCK: [2021-07-31 Sat 16:07]--[2021-07-31 Sat 16:19] =>  0:12
 :END:
 [2022-06-21 Tue 20:44] Replaced by ~consult-ripgrep~.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print paths-file-init))
 (use-package helm-rg
   :custom
-  (helm-rg-default-directory path-dir-org)
+  (helm-rg-default-directory paths-dir-org)
   (helm-rg-thing-at-point nil) ; do not prepopulate minibuffer
   :config
   (defun ps/helm-rg-root ()
@@ -4786,7 +4809,7 @@ After installing it, I realized I already have ~helm-swoop~, so I don't see a ne
 CLOCK: [2021-04-14 Wed 12:55]--[2021-04-14 Wed 13:14] =>  0:19
 :END:
 [2022-06-21 Tue 20:46] Migrated to ~consult~.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print paths-file-init))
 (use-package helm-swoop
   :custom
   (helm-swoop-pre-input-function (lambda () "")) ; do not start search with thing at point (press 'C-w' when you need it)
@@ -4810,7 +4833,7 @@ CLOCK: [2021-06-25 Fri 21:15]--[2021-06-25 Fri 21:16] =>  0:01
 :END:
 [2022-06-22 Wed 06:09] Replaced by [[id:437A790A-467F-46CB-9EE3-25AA91D43D89][consult-yasnippet]].
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package helm-c-yasnippet
   :after yasnippet
   :general
@@ -5017,15 +5040,15 @@ have a single notes file, rather than one file per note. I address this by repla
 
 [2022-06-22 Wed 15:51] Migrating to [[id:35FB5BB5-6552-48C6-983A-F90011CCA908][org-ref]] and [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]]; no longer needed.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
   (use-package org-ref
     :demand t
     :after (helm-bibtex bibtex-completion)
     :custom
-    (org-ref-csl-default-style (expand-file-name "org-mode.csl" path-dir-wiki-references))
+    (org-ref-csl-default-style (expand-file-name "org-mode.csl" paths-dir-wiki-references))
     (org-ref-default-bibliography bibtex-completion-bibliography)
     (org-ref-bibliography-notes bibtex-completion-notes-path)
-    (org-ref-pdf-directory path-dir-downloads)
+    (org-ref-pdf-directory paths-dir-downloads)
 
     ;; Make Helm-bibtex use file path specified in bibtex entry
     ;; See emacs.stackexchange.com/a/58248/32089
@@ -5040,7 +5063,7 @@ have a single notes file, rather than one file per note. I address this by repla
 
     ;; set org-ref to create one file per note
     (org-ref-notes-function 'org-ref-notes-function-many-files)
-    (org-ref-notes-directory path-dir-bibliographic-notes)
+    (org-ref-notes-directory paths-dir-bibliographic-notes)
 
     ;; Added after upgrade to version 3
     (org-ref-insert-link-function 'org-ref-insert-link-hydra/body)
@@ -5219,7 +5242,7 @@ Currently I've defined the key mappings but have not updated the menu to reflect
 CLOCK: [2021-03-01 Mon 09:45]--[2021-03-01 Mon 09:58] =>  0:13
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package helm-org-rifle
   :general
   (org-mode-map
@@ -5287,7 +5310,7 @@ This is needed for some [[id:DCD9D75D-7814-49D8-A3E0-33846D5A08FD][bibtex-comple
 
 [2022-06-23 Thu 08:32] No longer using [[id:DCD9D75D-7814-49D8-A3E0-33846D5A08FD][bibtex-completion]].
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package request
   :demand t
   :after bibtex-completion)
@@ -5335,7 +5358,7 @@ CLOCK: [2021-04-06 Tue 16:19]--[2021-04-06 Tue 16:26] =>  0:07
 :END:
 Not needed since ~consult-locate~ can be configured to call ~mfind~.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package spotlight)
 #+end_src
 
@@ -5368,7 +5391,7 @@ CLOCK: [2021-05-15 Sat 22:26]--[2021-05-15 Sat 22:30] =>  0:04
 
 Since I don't use yankpad, I don't need this package either.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package ya-org-capture
   :straight (ya-org-capture
              :host github
@@ -5385,7 +5408,7 @@ Since I don't use yankpad, I don't need this package either.
 https://github.com/Kungsgeten/yankpad
 I don't really see the need for this. I'm happy with have separate files for my snippets.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print path-file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package yankpad)
 #+end_src
 

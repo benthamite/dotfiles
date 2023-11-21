@@ -40,17 +40,17 @@
 
 (defcustom org-roam-extras-excluded-dirs
   (list
-   path-dir-inactive
-   path-dir-archive
-   path-dir-dropbox-tlon-leo
-   path-dir-dropbox-tlon-fede)
+   paths-dir-inactive
+   paths-dir-archive
+   paths-dir-dropbox-tlon-leo
+   paths-dir-dropbox-tlon-fede)
   "List of directories to exclude from `org-roam'."
   :type '(repeat directory)
   :group 'org-roam-extras)
 
 (defcustom org-roam-extras-excluded-files
   (list
-   path-file-orb-noter-template
+   paths-file-orb-noter-template
    "calendar.org" ; added directly as agenda file
    "quotes-old.org"
    ".org2blog.org"
@@ -107,10 +107,10 @@ Optionally, return such list only if its length is less than LIMIT."
     (pcase note-type
       ("generic"
        (setq tags "note")
-       (setq directory path-dir-notes))
+       (setq directory paths-dir-notes))
       ("person"
        (setq tags "person")
-       (setq directory path-dir-people)))
+       (setq directory paths-dir-people)))
     (let* ((name (read-from-minibuffer "Entry name: "))
 	   (slug (prot-eww--sluggify name))
 	   (filename (file-name-with-extension slug "org")))

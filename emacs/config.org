@@ -1,6 +1,6 @@
 #+TITLE:Pablo's Emacs config
 #+AUTHOR: Pablo Stafforini
-#+PROPERTY: header-args :tangle (print tlon-init-user-init-path)
+#+PROPERTY: header-args :tangle (print tlon-init-file-user-init)
 :PROPERTIES:
 :TOC:      ignore
 :END:
@@ -463,7 +463,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elfeed-extras][elfeed-extras]]
   - [[#elfeed-org][elfeed-org]]
   - [[#engine-mode][engine-mode]]
-  - [[#osm][osm]]
   - [[#org-download][org-download]]
   - [[#org-web-tools][org-web-tools]]
   - [[#org-web-tools-extras][org-web-tools-extras]]
@@ -797,7 +796,7 @@ Some useful config files:
 
 The contents of this code block are tangled to the ~early-init.el~ file.
 
-#+begin_src emacs-lisp :tangle (print tlon-init-early-init-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-early-init)
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 
@@ -911,10 +910,7 @@ NAME and ARGS are in `use-package'."
   (declare (indent defun))
   `(use-package ,name
      :elpaca nil
-     :load-path ,(pcase user-full-name
-		  ("Pablo Stafforini" "/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/emacs/extras/")
-		  ("Leonardo Picón" "/Users/cartago/source/dotfiles/emacs/extras/")
-                  ("Federico Stafforini" "/Users/cartago/source/dotfiles/emacs/extras/"))
+     :load-path paths-dir-extras
      ,@args))
 
 (elpaca elpaca-use-package
@@ -929,7 +925,14 @@ NAME and ARGS are in `use-package'."
 (setq use-package-always-defer t)
 (setq use-package-hook-name-suffix nil)       ; use real name for hooks, i.e. do not omit the `-hook' bit
 (setq use-package-minimum-reported-time 0.1) ; report if loading a package takes longer than 100 ms
+
+;; we load `org-mode' early to prevent version conflicts
+;; (use-package org
+  ;; :demand t
+  ;; :ensure org-plus-contrib
+  ;; )
 #+end_src
+
 
 *** use-package-ensure-system-package
 :PROPERTIES:
@@ -4397,7 +4400,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (setq org-gcal-client-secret (auth-source-pass-get 'secret "auth-sources/org-gcal"))
 
   :config
-  (setq org-gcal-fetch-file-alist `((,user-mail-address . ,path-file-calendar)))
+  (setq org-gcal-fetch-file-alist `((,user-mail-address . ,paths-file-calendar)))
   (setq org-gcal-recurring-events-mode 'top-level)
   (setq org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
   (setq org-gcal-notify-p nil)
@@ -6493,7 +6496,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :demand t
   :config
   (setq paths-files-bibliography-all
-        `(,@path-files-bibliography-personal
+        `(,@paths-files-bibliography-personal
           ,@tlon-babel-bibliography-files))
 
   (dolist (template `(("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
@@ -7906,9 +7909,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
           ("r" "Bibliography reference" plain
-           (file ,path-file-orb-noter-template)
+           (file ,paths-file-orb-noter-template)
            ;; :if-new
-           ;; (file ,path-file-orb-capture-template)
+           ;; (file ,paths-file-orb-capture-template)
            :unnarrowed t :immediate-finish t)
           ("s" "Slack" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
@@ -8383,7 +8386,7 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
   :defer 10
   :config
   (setq org-refile-use-outline-path 'level3)
-  (setq org-outline-path-complete-in-steps nil)
+  (setq org-outline-paths-complete-in-steps nil)
   (setq org-refile-allow-creating-parent-nodes 'confirm)
   (setq org-reverse-note-order t) ; refile to the beginning of header
   (setq org-refile-use-cache t) ;  build cache at startup
@@ -9146,9 +9149,9 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
   (setq org-roam-capture-templates
         `(("r" "bibliography reference" plain
-           (file ,path-file-orb-noter-template)
+           (file ,paths-file-orb-noter-template)
            :if-new
-           (file ,path-file-orb-capture-template)
+           (file ,paths-file-orb-capture-template)
            :unnarrowed t :immediate-finish t :jump-to-captured t)))
 
   ;; adapted from
@@ -9414,7 +9417,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 (use-package org-noter
   :after org
   :config
-  (setq org-noter-notes-search-path `(,path-dir-bibliographic-notes))
+  (setq org-noter-notes-search-path `(,paths-dir-bibliographic-notes))
   (setq org-noter-auto-save-last-location t)
   (setq org-noter-always-create-frame nil)
   (setq org-noter-separate-notes-from-heading t)
@@ -9839,7 +9842,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))
   (setq citar-bibliography paths-files-bibliography-all)
-  (setq citar-notes-paths `(,path-dir-bibliographic-notes))
+  (setq citar-notes-paths `(,paths-dir-bibliographic-notes))
   (setq citar-at-point-function 'embark-act)
   (setq citar-symbol-separator "  ")
   (setq citar-format-reference-function 'citar-citeproc-format-reference)
@@ -11857,27 +11860,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (engine/set-keymap-prefix (kbd "H-g")))
 #+end_src
 
-
-** osm
-:PROPERTIES:
-:ID:       1DCEE01C-1951-45F0-B9B8-60977E2D4314
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-16 Mon 19:11]--[2022-05-16 Mon 19:19] =>  0:08
-:END:
-
-/[[https://github.com/minad/osm][osm]] is an OpenStreetMap viewer for Emacs./
-
-#+begin_src emacs-lisp :results silent
-(use-package osm
-  :elpaca (osm
-             :host github
-             :repo "minad/osm")
-  :init
-  ;; Load Org link support
-  (with-eval-after-load 'org
-    (require 'osm-ol)))
-#+end_src
 
 ** org-download
 :PROPERTIES:

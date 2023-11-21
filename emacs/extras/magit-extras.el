@@ -48,7 +48,7 @@ As commit message, use MESSAGE."
 
 (defun magit-extras-stage-commit-and-push-all-repos ()
   "Update all active depositories."
-  (dolist (directory path-dir-all-repos)
+  (dolist (directory paths-dir-all-repos)
     (magit-extras-midnight-update directory)))
 
 (defun magit-extras-midnight-update (directory)

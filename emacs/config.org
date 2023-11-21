@@ -3064,10 +3064,11 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 (use-feature hippie-exp
   :config
   ;; stackoverflow.com/a/8723712/4479455
-  (defadvice hippie-expand (around hippie-expand-case-fold)
-    "Try to do case-sensitive matching (not effective with all functions)."
-    (let ((case-fold-search nil))
-      ad-do-it))
+  (advice-add 'hippie-expand
+              :around (lambda ()
+                        "Try to do case-sensitive matching (not effective with all functions)."
+                        (let ((case-fold-search nil))
+                          (apply orig-fun args))))
   (ad-activate 'hippie-expand)
 
   :general
@@ -3881,8 +3882,11 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
   ;; This will put in effect PATH changes in the remote ~/.profile.
   (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
 
-  (defadvice projectile-project-root (around ignore-remote first activate)
-    (unless (file-remote-p default-directory 'no-identification) ad-do-it)))
+  (advice-add 'projectile-project-root
+              :around (lambda ()
+                        "Ignore remote files."
+                        (unless (file-remote-p default-directory 'no-identification)
+                          (apply orig-fun args)))))
 #+end_src
 
 ** pandoc-mode

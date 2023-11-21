@@ -71,15 +71,15 @@
   (interactive)
   (async-shell-command
    (format "python3 %s"
-           (file-name-concat path-dir-ledger "commodities.py"))))
+           (file-name-concat paths-dir-ledger "commodities.py"))))
 
 (defun ledger-mode-extras-update-coin-prices ()
   "Update `coinprices.py'."
   (interactive)
   (async-shell-command
    (format "python3 %s >> %s"
-           (file-name-concat path-dir-ledger "coinprices/coinprices.py")
-           path-file-ledger-db)))
+           (file-name-concat paths-dir-ledger "coinprices/coinprices.py")
+           paths-file-ledger-db)))
 
 (defun ledger-mode-extras-sort-region-reversed (beg end)
   "Sort the region from BEG to END in reverse chronological order."

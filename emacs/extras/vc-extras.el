@@ -51,7 +51,7 @@
   :type 'string
   :group 'vc-extras)
 
-(defcustom vc-extras-personal-repo-dir path-dir-repos
+(defcustom vc-extras-personal-repo-dir paths-dir-repos
   "The directory where personal repositories are stored."
   :type 'directory
   :group 'vc-extras)

@@ -41,7 +41,7 @@
   (require 'tlon-babel)
   (completing-read "Bibfile" (list
                               tlon-babel-file-fluid
-                              path-file-personal-bibliography-new)))
+                              paths-file-personal-bibliography-new)))
 
 (defun zotra-extras-add-entry-set-bibfile (orig-fun &optional
 						    url entry-format bibfile)

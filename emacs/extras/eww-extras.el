@@ -61,7 +61,7 @@
 		    (org-web-tools-extras-org-title-for-url url)))
 	 (slug (prot-eww--sluggify title))
 	 (file-name (file-name-with-extension slug type))
-	 (output-file (file-name-concat path-dir-downloads file-name)))
+	 (output-file (file-name-concat paths-dir-downloads file-name)))
     (async-shell-command
      (format
       (pcase type

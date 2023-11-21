@@ -57,7 +57,7 @@ To be used in conjunction with associated `org-capture' template."
   (require 'prot-eww)
   (let* ((html (org-web-tools--get-url url))
          (title (org-web-tools--html-title html))
-         (file-path (file-name-concat path-dir-downloads
+         (file-path (file-name-concat paths-dir-downloads
 				      (file-name-with-extension (prot-eww--sluggify title) "webm"))))
     (if title
         (org-link-make-string (concat "file:" file-path) title)

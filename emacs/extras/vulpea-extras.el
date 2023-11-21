@@ -44,8 +44,8 @@
 
 (defcustom vulpea-extras-excluded-files
   (list
-   path-file-tlon-tareas-leo
-   path-file-tlon-tareas-fede)
+   paths-file-tlon-tareas-leo
+   paths-file-tlon-tareas-fede)
   "Files to exclude from list of projects."
   :type '(repeat file)
   :group 'vulpea-extras)

@@ -169,8 +169,8 @@ After running the command, both the Chrome extensions page and
 the `bypass-paywalls-chrome-clean-master' folder will open.
 To install the extension, drag the latter onto the former."
   (interactive)
-  (let* ((file (file-name-concat path-dir-downloads "bypass-paywalls.zip"))
-         (dir (file-name-concat path-dir-downloads "bypass-paywalls-chrome-clean-master"))
+  (let* ((file (file-name-concat paths-dir-downloads "bypass-paywalls.zip"))
+         (dir (file-name-concat paths-dir-downloads "bypass-paywalls-chrome-clean-master"))
          (reveal-in-osx
           (concat
            "set thePath to POSIX file \"" dir "\"\n"
@@ -179,7 +179,7 @@ To install the extension, drag the latter onto the former."
            " reveal thePath \n"
            "end tell\n")))
     (url-copy-file "https://gitlab.com/magnolia1234/bypass-paywalls-chrome-clean/-/archive/master/bypass-paywalls-chrome-clean-master.zip" file)
-    (shell-command (format "unzip %s -d %s" file path-dir-downloads))
+    (shell-command (format "unzip %s -d %s" file paths-dir-downloads))
     (delete-file file)
     ;; open Chrome extensions page
     (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"89243CDA-4876-45C8-9AF2-3666664A0EAA\"'")
@@ -190,7 +190,7 @@ To install the extension, drag the latter onto the former."
 ACSM will be converted or downloaded depending on whether or not an ACSM file is
 present in the `downloads' folder."
   (interactive)
-  (if (member "URLLink.acsm" (directory-files path-dir-downloads))
+  (if (member "URLLink.acsm" (directory-files paths-dir-downloads))
       (files-extras-internet-archive-convert)
     (files-extras-internet-archive-download)))
 
@@ -208,7 +208,7 @@ one hour only."
                   "\\2"
                   (current-kill 0)))
              (url (concat prefix id suffix))
-             (acsm-file (file-name-concat path-dir-downloads "URLLink.acsm")))
+             (acsm-file (file-name-concat paths-dir-downloads "URLLink.acsm")))
         ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
         ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
         ;; Then replace the path below with the location of the downloaded cookies file.
@@ -220,7 +220,7 @@ one hour only."
         ;; (async-shell-command
         ;; (format
         ;; "wget --load-cookies='%s' '%s' -O '%s'; open %s"
-        ;; path-file-cookies url acsm-file acsm-file))))
+        ;; paths-file-cookies url acsm-file acsm-file))))
         ;; (message "ACSM file downloaded successfully.")
         (kill-new url)
         (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Open it manually and then run `files-extras-internet-archive-dwim' to convert it.")
@@ -231,19 +231,19 @@ one hour only."
   "Convert ACSM file to PDF."
   (let* ((adobe-file
           ;; stackoverflow.com/a/30887300/4479455
-          (car (directory-files (file-name-as-directory path-dir-adobe-digital-editions)
+          (car (directory-files (file-name-as-directory paths-dir-adobe-digital-editions)
 				'full "\\.pdf$" #'file-newer-than-file-p)))
          (output (shell-command-to-string (format "calibredb add '%s'" adobe-file)))
          ;; Capture Calibre book id
          (id (replace-regexp-in-string "\\(\\(\\(
 \\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
-         (calibre-file (car (directory-files-recursively path-dir-calibre "\\.pdf$" t)))
+         (calibre-file (car (directory-files-recursively paths-dir-calibre "\\.pdf$" t)))
          ;; Should match filename used in `files-extras-internet-archive-download'
-         (acsm-file (file-name-concat path-dir-downloads "book.acsm")))
-    (rename-file calibre-file (file-name-as-directory path-dir-downloads))
+         (acsm-file (file-name-concat paths-dir-downloads "book.acsm")))
+    (rename-file calibre-file (file-name-as-directory paths-dir-downloads))
     (shell-command (format "calibredb remove %s" id))
     (mapcar #'delete-file `(,adobe-file ,calibre-file))
-    (delete-directory path-dir-calibre t)
+    (delete-directory paths-dir-calibre t)
     (kill-buffer "*Shell Command Output*")
     (when (find-file acsm-file)
       (delete-file acsm-file)
@@ -355,7 +355,7 @@ One normally uses `recover-session' for this, but when Emacs crashes a session
 may fail to be created and then each file has to be recovered separately. This
 command automates the recovery process in these cases."
   (interactive)
-  (dolist (file (directory-files (file-name-concat path-dir-chemacs-profiles "var/auto-save")))
+  (dolist (file (directory-files (file-name-concat paths-dir-chemacs-profiles "var/auto-save")))
     (when-let ((file-to-recover (string-replace "#" "" file)))
       (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
       (files-extras-diff-buffer-with-file))))
@@ -493,10 +493,10 @@ OLD-FUN and ARGS are arguments passed to the original function."
 
 (defun files-extras-open-extras-package ()
   "Prompt the user to select an `extras' package and open it."
-  (let* ((files (directory-files path-dir-extras t directory-files-no-dot-files-regexp))
+  (let* ((files (directory-files paths-dir-extras t directory-files-no-dot-files-regexp))
 	 (file-names (mapcar #'file-name-nondirectory files))
 	 (selection (completing-read "Package: " file-names nil t))
-	 (file (file-name-concat path-dir-extras selection)))
+	 (file (file-name-concat paths-dir-extras selection)))
     (find-file file)))
 
 ;; TODO: Expand for other modes

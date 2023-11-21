@@ -42,8 +42,8 @@
 
 (defcustom org-extras-agenda-files-excluded
   (list
-   path-file-tlon-tareas-leo
-   path-file-tlon-tareas-fede)
+   paths-file-tlon-tareas-leo
+   paths-file-tlon-tareas-fede)
   "Files to exclude from `org-agenda'.
 I have to exclude these files because otherwise extraneous information shows up
 in my agenda, such as TODOs and time logs. These files lack the `property' tag
@@ -53,14 +53,14 @@ the function `vulpea-agenda-files-update')."
   :group 'org-extras)
 
 (defcustom org-extras-id-auto-add-excluded-directories
-  (list path-dir-dropbox-tlon-fede
-        path-dir-dropbox-tlon-leo)
+  (list paths-dir-dropbox-tlon-fede
+        paths-dir-dropbox-tlon-leo)
   "Directories to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'."
   :type 'list
   :group 'org-extras)
 
 (defcustom org-extras-id-auto-add-excluded-files
-  (list path-file-orb-noter-template)
+  (list paths-file-orb-noter-template)
   "Files to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'."
   :type 'list
   :group 'org-extras)
@@ -259,13 +259,13 @@ image."
   (if (executable-find "pngpaste")
       (let* ((counter 1)
              (image-file (concat
-                          path-dir-org-images
+                          paths-dir-org-images
                           (org-id-get nil 'create)
                           (format "-%d.png" counter))))
         (while (file-exists-p image-file)
           (setq counter (1+ counter))
           (setq image-file (concat
-                            path-dir-org-images
+                            paths-dir-org-images
                             (org-id-get nil 'create)
                             (format "-%d.png" counter))))
         (call-process-shell-command (format "pngpaste '%s'" image-file))
@@ -456,7 +456,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     ("y"
      (require 'youtube-dl)
      (youtube-dl (current-kill 0)
-		 :directory path-dir-downloads-directory
+		 :directory paths-dir-downloads-directory
 		 :destination (prot-eww--sluggify
 			       (org-extras-web-tools--org-title-for-url))))))
 
@@ -581,7 +581,7 @@ Could be slow if it has a lot of overlays."
   "Add IDs to all headings in the current file missing them."
   (when-let ((file (buffer-file-name)))
     (when (and (eq major-mode 'org-mode)
-               (string-match path-dir-org file)
+               (string-match paths-dir-org file)
                (eq buffer-read-only nil))
       (unless
           (or
@@ -790,7 +790,7 @@ That is, move point after the stars, and the TODO and priority if present."
 To see a list of Google Docs and their respective IDs, run
 `gdrive list' in the terminal."
   (interactive)
-  (let* ((default-directory path-dir-downloads)
+  (let* ((default-directory paths-dir-downloads)
          (doc-id (read-from-minibuffer "Doc ID: "))
          (doc-info (shell-command-to-string
                     (format "gdrive info '%s'" doc-id)))

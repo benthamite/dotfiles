@@ -797,7 +797,7 @@ Some useful config files:
 
 The contents of this code block are tangled to the ~early-init.el~ file.
 
-#+begin_src emacs-lisp :tangle (print tlon-init-early-init-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-early-init)
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 

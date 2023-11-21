@@ -8,6 +8,29 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** osm
+:PROPERTIES:
+:ID:       1DCEE01C-1951-45F0-B9B8-60977E2D4314
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-16 Mon 19:11]--[2022-05-16 Mon 19:19] =>  0:08
+:END:
+
+/[[https://github.com/minad/osm][osm]] is an OpenStreetMap viewer for Emacs./
+
+[2023-11-21 Tue] Not using.
+
+#+begin_src emacs-lisp :results silent
+(use-package osm
+  :elpaca (osm
+             :host github
+             :repo "minad/osm")
+  :init
+  ;; Load Org link support
+  (with-eval-after-load 'org
+    (require 'osm-ol)))
+#+end_src
+
 ** mentor
 :PROPERTIES:
 :ID:       E3F6210D-F6CD-4397-9004-3D31B5623D18

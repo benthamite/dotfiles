@@ -6472,7 +6472,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
            :host github
            :repo "benthamite/ledger-prices")
   :demand t
-  :after ledger
+  :after ledger-mode
   :config
   (setq ledger-prices-api-key-finnhub (auth-source-pass-get 'secret "chrome/api.finnhub.io"))
   (setq ledger-prices-api-key-exchangerates (auth-source-pass-get 'secret "chrome/api.exchangeratesapi.io"))

@@ -2391,7 +2391,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
   :general
   ("C-H-p" 'profiler-extras-profiler-toggle)
   (profiler-report-mode-map
-   "<backtab>" 'profiler-extras-profiler-report-toggle-entry-global))  
+   "<backtab>" 'profiler-extras-profiler-report-toggle-entry-global))
 #+end_src
 
 ** so-long
@@ -3848,9 +3848,9 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
   :config
   ;; Disable version control on tramp buffers to avoid freezes.
   (setq vc-ignore-dir-regexp
-   (format "\\(%s\\)\\|\\(%s\\)"
-           vc-ignore-dir-regexp
-           tramp-file-name-regexp))
+        (format "\\(%s\\)\\|\\(%s\\)"
+                vc-ignore-dir-regexp
+                tramp-file-name-regexp))
 
   ;; Don't clean up recentf tramp buffers.
   (setq recentf-auto-cleanup 'never)
@@ -4265,7 +4265,7 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
    "F" 'ace-link-extras-eww-new-buffer
    "s-f" 'ace-link-extras-eww-externally)
   (mu4e-view-mode-map
-   "f" 'ace-link-extras-mu4e)   
+   "f" 'ace-link-extras-mu4e)
   (org-agenda-mode-map
    "s-f" 'ace-link-extras-org-agenda-clock-in))
 #+end_src

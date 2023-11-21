@@ -295,13 +295,13 @@ If EXTENSION is non-nil, set its extension to its value."
 (defun ebib-extras--extension-directories (extension)
   "Return directory associated with EXTENSION."
   (cond ((string= extension "pdf")
-         path-dir-pdf-library)
+         paths-dir-pdf-library)
         ((string= extension "html")
-         path-dir-html-library)
+         paths-dir-html-library)
         ((or (string= extension "webm")
              (string= extension "mp3")
              (string= extension "flac"))
-         path-dir-media-library)
+         paths-dir-media-library)
         (t
          (user-error "Invalid file extension"))))
 
@@ -315,14 +315,14 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
        (ebib-extras-valid-key-p key)
        (let* ((file-to-attach
 	       (if most-recent
-		   (files-extras-newest-file path-dir-downloads)
+		   (files-extras-newest-file paths-dir-downloads)
 		 (let ((initial-folder
 			(completing-read "Select folder: "
 					 (list
-					  path-dir-downloads
-					  path-dir-pdf-library
-					  path-dir-html-library
-					  path-dir-media-library))))
+					  paths-dir-downloads
+					  paths-dir-pdf-library
+					  paths-dir-html-library
+					  paths-dir-media-library))))
 		   (read-file-name
 		    "File to attach: "
 		    ;; Use key as default selection if key-based file exists
@@ -733,7 +733,7 @@ The list of article download functions is specified by
      (let* ((key (ebib--get-key-at-point))
             (file-name
              (ebib-extras--rename-and-abbreviate-file
-              path-dir-media-library key "webm")))
+              paths-dir-media-library key "webm")))
        (async-shell-command (format "yt-dlp --output '%s' '%s'" file-name id))
        (message (format "Downloading video from '%s'" (substring-no-properties id)))
        (ebib-extras--update-file-field-contents key file-name)))
@@ -868,7 +868,7 @@ is created following the same schema as notes created with
      (beep))))
 
 (defvar ebib-extras-auto-save-files
-  `(,path-file-personal-bibliography-new
+  `(,paths-file-personal-bibliography-new
     ,tlon-babel-file-fluid)
   "List of database files that should be auto-saved.
 The big files containing the `old' bibliographic entries are excluded.")
@@ -900,8 +900,8 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
            (ebib-extras-reload-database-no-confirm db)))))))
 
 (defvar ebib-extras-db-numbers
-  `((,path-file-personal-bibliography-new . 1)
-    (,path-file-personal-bibliography-old . 2)
+  `((,paths-file-personal-bibliography-new . 1)
+    (,paths-file-personal-bibliography-old . 2)
     (,tlon-babel-file-fluid . 3)
     (,tlon-babel-file-stable . 4))
   "Association list of database files and their numbers.")
@@ -1113,7 +1113,7 @@ Prompt the user for a title, unless TITLE is non-nil."
   "Download DOI from Sci-Hub."
   (unless (executable-find "scidownl")
     (error "Please install `scidownl' (https://github.com/Tishacy/SciDownl)"))
-  (let ((default-directory path-dir-downloads))
+  (let ((default-directory paths-dir-downloads))
     (message "Trying to download file...")
     (async-shell-command
      (format "~/.pyenv/shims/scidownl download --doi %s" doi))))

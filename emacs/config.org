@@ -9687,7 +9687,6 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 
 #+begin_src emacs-lisp
 (use-personal-package bibtex-extras
-  :after bibtex
   :demand t
   :config
   ;; Replace 'online' entry type

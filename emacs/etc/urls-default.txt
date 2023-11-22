@@ -33,7 +33,6 @@ gitguardian.com
 github.com
 gmail.com
 goodreads.com
-google.com
 grammarly.com
 hathitrust.org
 holafly.com

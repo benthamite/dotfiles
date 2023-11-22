@@ -76,7 +76,9 @@
 (setq tlon-babel-todos-jobs-id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
 (setq tlon-babel-todos-generic-id "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29")
 (setq tlon-babel-todos-file (expand-file-name "~/Library/CloudStorage/Dropbox/tlon/leo/tareas.org"))
-
+(setq paths-files-bibliography-all
+      `(,@paths-files-bibliography-personal
+        ,@tlon-babel-bibliography-files))
 #+end_src
 
 ** org-capture
@@ -91,75 +93,75 @@
   :config
   ;; If Emacs doesn't find an ID, run `M-x org-id-update-id-locations'
   (dolist (template `(("r" "Tlön: RAE" entry
-		       (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
-		       "** TODO %?\n" :empty-lines 1 :prepend t)
-		      ("f" "Tlön: FM" entry
-		       (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-		       "** TODO %?\n" :empty-lines 1 :prepend t)
-		      ("d" "Tlön: LBDLH" entry
-		       (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
-		       "** TODO %?\n" :empty-lines 1 :prepend t)
-		      ("u" "Tlön: EAN" entry
-		       (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
-		       "** TODO %?\n" :empty-lines 1 :prepend t)
-		      ("h" "Tlön: HEAR" entry
-		       (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
-		       "** TODO %?\n" :empty-lines 1 :prepend t)
-		      ("g" "Tlön: GPE" entry
-		       (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
-		       "** TODO %?\n" :empty-lines 1 :prepend t)
-		      ("c" "Tlön: Core" entry
-		       (id "68f0150e-9b0d-4bab-86c0-2bf878e19d9e")
-		       "** TODO %?\n" :empty-lines 1 :prepend t)
-		      ("s" "To sort" entry
-		       (id "107D27EC-B193-444E-B65B-9B1AD2A7CC65")
-		       "** TODO %?\n" :empty-lines 1 :prepend t)
-		      ("m" "Tlön: Core: messaging" entry
-		       (id "9387B56D-2940-4FB0-91EF-92879D58659E")
-		       "** TODO %?\n" :empty-lines 1 :prepend t)
-		      ("e" "Tlön: Core: debugging Emacs" entry
-		       (id "8402F53C-F547-4705-B79E-24D6286D2C9E")
-		       "** TODO %?\n" :empty-lines 1 :prepend t)
-		      ("t" "Tlön: Core: Project t" entry
-		       (id "12645897-A06F-44DD-876D-0FFC47D0E742")
-		       "** TODO %?\n" :empty-lines 1 :prepend t)
-		      ("tb" "tlon: bae")
-		      ("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
-		       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		      ("tbC" "Tlön: BAE: Check topic (via org-capture)" entry
-		       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		      ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
-		       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		      ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
-		       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		      ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
-		       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		      ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
-		       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		      ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
-		       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		      ("tbI" "Tlön: BAE: Import topic (via org-capture)" entry
-		       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
-		      ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
-		       (id "7CCD6226-DB0A-4742-9277-955FCB276137")
-		       "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
-		      ("p" "GPT-4" entry
-		       (id "C5C5EF82-E7FC-461E-B7BE-FE921CEE9158")
-		       "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
-		      ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
-		       (id ,tlon-babel-todos-jobs-id)
-		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
-		      ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
-		       (id ,tlon-babel-todos-generic-id)
-		       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
+                       (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
+                       "** TODO %?\n" :empty-lines 1 :prepend t)
+                      ("f" "Tlön: FM" entry
+                       (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
+                       "** TODO %?\n" :empty-lines 1 :prepend t)
+                      ("d" "Tlön: LBDLH" entry
+                       (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
+                       "** TODO %?\n" :empty-lines 1 :prepend t)
+                      ("u" "Tlön: EAN" entry
+                       (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
+                       "** TODO %?\n" :empty-lines 1 :prepend t)
+                      ("h" "Tlön: HEAR" entry
+                       (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
+                       "** TODO %?\n" :empty-lines 1 :prepend t)
+                      ("g" "Tlön: GPE" entry
+                       (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
+                       "** TODO %?\n" :empty-lines 1 :prepend t)
+                      ("c" "Tlön: Core" entry
+                       (id "68f0150e-9b0d-4bab-86c0-2bf878e19d9e")
+                       "** TODO %?\n" :empty-lines 1 :prepend t)
+                      ("s" "To sort" entry
+                       (id "107D27EC-B193-444E-B65B-9B1AD2A7CC65")
+                       "** TODO %?\n" :empty-lines 1 :prepend t)
+                      ("m" "Tlön: Core: messaging" entry
+                       (id "9387B56D-2940-4FB0-91EF-92879D58659E")
+                       "** TODO %?\n" :empty-lines 1 :prepend t)
+                      ("e" "Tlön: Core: debugging Emacs" entry
+                       (id "8402F53C-F547-4705-B79E-24D6286D2C9E")
+                       "** TODO %?\n" :empty-lines 1 :prepend t)
+                      ("t" "Tlön: Core: Project t" entry
+                       (id "12645897-A06F-44DD-876D-0FFC47D0E742")
+                       "** TODO %?\n" :empty-lines 1 :prepend t)
+                      ("tb" "tlon: bae")
+                      ("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbC" "Tlön: BAE: Check topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbI" "Tlön: BAE: Import topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
+                       (id "7CCD6226-DB0A-4742-9277-955FCB276137")
+                       "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
+                      ("p" "GPT-4" entry
+                       (id "C5C5EF82-E7FC-461E-B7BE-FE921CEE9158")
+                       "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
+                       (id ,tlon-babel-todos-jobs-id)
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
+                      ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
+                       (id ,tlon-babel-todos-generic-id)
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
     (push template org-capture-templates))
 
   )
@@ -182,7 +184,7 @@
      (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai
 ")
      (message "finished"))))
-     #+end_src
+#+end_src
 
 ** file-extras
 :PROPERTIES:
@@ -339,7 +341,7 @@
  (paths-dir-wiki-references . "")
  (paths-dir-dotfiles . (file-name-concat paths-dir-user "source/dotfiles/"))
  (paths-dir-dotemacs . (file-name-concat paths-dir-user "source/dotfiles/emacs/"))
- (paths-dir-extras . (file-name-concat paths-dir-dotemacs "extras/")) 
+ (paths-dir-extras . (file-name-concat paths-dir-dotemacs "extras/"))
  (paths-dir-karabiner . "")
  (paths-dir-bibliographic-notes .   (file-name-concat paths-dir-dropbox "bibliographic-notes/"))
  (paths-dir-yasnippets . (file-name-concat paths-dir-dotemacs "yasnippets/"))
@@ -432,6 +434,10 @@
  (paths-file-tlon-docs-core . (file-name-concat paths-dir-tlon-docs "core.org"))
  (paths-file-tlon-ledger . (file-name-concat paths-dir-dropbox-tlon-ledger "tlon.ledger"))
  (paths-file-tlon-babel . paths-file-tlon-tareas-leo)
+ (paths-file-personal-bibliography-new . (file-name-concat paths-dir-personal-bibliography "old.bib"))
+ (paths-file-personal-bibliography-new . (file-name-concat paths-dir-personal-bibliography "new.bib"))
+ (paths-files-bibliography-personal . `(,paths-file-personal-bibliography-new
+                                        ,paths-file-personal-bibliography-old))
  )
 #+end_src
 

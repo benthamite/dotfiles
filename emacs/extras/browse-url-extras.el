@@ -50,18 +50,21 @@
 
 ;;;; Functions
 
+(defun browse-url-extras-set-handler (urls-file handler)
+  "Set the URL HANDLER from a URLS-FILE."
+  (dolist (url (s-split "\n" (f-read urls-file) t))
+    (push (cons (regexp-quote url) handler) browse-url-handlers)))
+
 (defun browse-url-extras-set-domains-to-open-externally ()
   "Set the domains to open externally.
 Read the files `browse-url-extras-urls-default-file' and
 `browse-url-extras-urls-firefox-file', and set `browse-url-handlers' to open
 the domains in those files with the default browser and with Firefox,
 respectively."
-  (require 'f)
-  (require 's)
-  (dolist (url (s-split "\n" (f-read browse-url-extras-urls-default-file) t))
-    (push (cons (regexp-quote url) 'browse-url-default-browser) browse-url-handlers))
-  (dolist (url (s-split "\n" (f-read browse-url-extras-urls-firefox-file) t))
-    (push (cons (regexp-quote url) 'browse-url-firefox) browse-url-handlers)))
+  (interactive)
+  (setq browse-url-handlers '())
+  (browse-url-extras-set-handler browse-url-extras-urls-default-file 'browse-url-default-browser)
+  (browse-url-extras-set-handler browse-url-extras-urls-firefox-file 'browse-url-firefox))
 
 (defun browse-url-extras-of-dired-file-externally ()
   "In Dired, open the file at point in an external browser."

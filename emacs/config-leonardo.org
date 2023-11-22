@@ -184,6 +184,8 @@
      (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai
 ")
      (message "finished"))))
+
+(setq org-extras-bbdb-anniversaries-heading nil)
 #+end_src
 
 ** file-extras

@@ -58,9 +58,6 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-paths-override)
 (
  (paths-init-dir . (getenv "HOME"))
- (paths-personal-name . "Federico Stafforini")
- (paths-personal-gmail . "fstafforini@gmail.com")
- (paths-personal-phone . "+54 11 6646 3552")
  (paths-dir-bibliography . (file-name-concat (getenv "HOME") ".local/bibliography-tlon/"))
  (paths-dir-google-drive . (file-name-concat (getenv "HOME") "google_drive/My Drive/"))
  (paths-dir-music . (file-name-concat paths-dir-google-drive "Music/"))
@@ -95,18 +92,6 @@
  (paths-file-ean . "")
  (paths-file-cookies . "")
  (paths-file-work . "")
- (paths-face-fixed-pitch . "Iosevka Nerd Font Mono")
- (paths-face-fixed-pitch-size . 150)
- (paths-forge-owned-accounts . "fstafforini")
- (paths-personal-signature . "
-
-,#+begin_signature
---
-,*Federico*
-,#+end_signature")
- (paths-gpe-signature . "")
- (paths-split-width-threshold . 160)
- (paths-telega-server-libs-prefix . "/opt/homebrew/Cellar/tdlib/HEAD-0d16085")
  )
 #+end_src
 
@@ -170,6 +155,12 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(setq user-full-name "Federico Stafforini")
+(setq user-mail-address "fstafforini@gmail.com")
+(setq forge-owned-accounts '(("fstafforini")))
+(setq split-width-threshold 160)
+(setq telega-server-libs-prefix "/opt/homebrew/Cellar/tdlib/HEAD-ec788c7/")
+
 (use-package nginx-mode :demand t)
 
 (setq inhibit-startup-screen t)
@@ -198,7 +189,6 @@
   (setq shift-select-mode t))
 
 ;; Config tlon-babel
-(setq tlon-babel-dir-repos (file-name-concat (getenv "HOME") "source/"))
 (setq tlon-babel-todos-jobs-id
       "")
 (setq tlon-babel-todos-generic-id
@@ -412,7 +402,6 @@ one hour only."
           ))))
 
 (setq org-extras-bbdb-anniversaries-heading nil)
-(setq telega-server-libs-prefix "/Users/fede/source/td/tdlib")
 (setq mac-function-modifier '(:button 2))
 (setq real-auto-save-interval 10)
 
@@ -522,6 +511,8 @@ one hour only."
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+ (setq faces-extras-fixed-pitch-font "Iosevka")
+
 (defun faces-extras-load-custom-faces ()
   "My custom faces, to be used in conjunction with theme."
   (set-face-attribute 'default nil :family faces-extras-fixed-pitch-font :height 150)

@@ -3032,7 +3032,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   (yas-global-mode)
   (yas-reload-all)
 
-  (setq yas-new-snippet-default (concat "# -*- mode: snippet -*-\n# name: $1\n# key: ${2:${1:$(essentials-first-char-of-each-letter yas-text)}}\n# contributor: " user-full-name "\n# --\n$0"))
+  (setq yas-new-snippet-default (concat "# -*- mode: snippet -*-\n# name: $1\n# key: $2\n# contributor: " user-full-name "\n# --\n$0"))
 
   (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
 

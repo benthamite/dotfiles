@@ -5,7 +5,7 @@
 :ID:       4241A319-CECB-41DC-87DA-C0FD778CD187
 :END:
 
-#+begin_src emacs-lisp :tangle (if (eq tlon-init-extra-config-tangle-pass 1) (print tlon-init-tangle-flags-path) "no")
+#+begin_src emacs-lisp :tangle (print tlon-init-file-tangle-flags)
 (
  (:aide . nil)
  (:anki-editor . nil)
@@ -51,17 +51,16 @@
  )
 #+end_src
 
-* variables override
+* paths override
 :PROPERTIES:
 :ID:       79C65A15-D040-48C0-98FC-8DC092804E76
 :END:
-#+begin_src emacs-lisp :tangle (if (eq tlon-init-extra-config-tangle-pass 2) (print tlon-init-variables-override-path) "no")
+#+begin_src emacs-lisp :tangle (print tlon-init-file-paths-override)
 (
  (paths-init-dir . (getenv "HOME"))
  (paths-personal-name . "Federico Stafforini")
  (paths-personal-gmail . "fstafforini@gmail.com")
  (paths-personal-phone . "+54 11 6646 3552")
- (paths-personal-gpe-email . "federico@globalprioritiesencyclopedia.org")
  (paths-dir-bibliography . (file-name-concat (getenv "HOME") ".local/bibliography-tlon/"))
  (paths-dir-google-drive . (file-name-concat (getenv "HOME") "google_drive/My Drive/"))
  (paths-dir-music . (file-name-concat paths-dir-google-drive "Music/"))
@@ -116,7 +115,7 @@
 :ID:       71ED9AC5-9D0A-40E0-BA58-7AA7FA36793A
 :END:
 
-#+begin_src emacs-lisp :tangle (if (eq tlon-init-extra-config-tangle-pass 2) (print tlon-init-code-overrides-path) "no")
+#+begin_src emacs-lisp :tangle (print tlon-init-file-code-override)
 ((:org-id-add-ids-to-headings-in-file . ((ignore)))
  (:zotra-startup . ((ignore)))
  (:doom-modeline
@@ -154,7 +153,7 @@
 :PROPERTIES:
 :ID:       0C6ACEE9-21F3-49C2-A091-F02DDFCF6B3C
 :END:
-#+begin_src emacs-lisp :tangle (print tlon-init-early-init-path)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-early-init)
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 
@@ -170,7 +169,7 @@
 :ID:       3FB5128E-FBBA-4C4B-BFC9-8186878DDB4E
 :END:
 
-#+begin_src emacs-lisp :tangle (if (eq tlon-init-extra-config-tangle-pass 2) (print tlon-init-post-init-path) "no")
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (use-package nginx-mode :demand t)
 
 (setq inhibit-startup-screen t)
@@ -502,8 +501,7 @@ one hour only."
 (dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
   (remove-hook hook #'jinx-mode))
 
-;; Pablo's suggested method, not working:
-(simple-extras-disable-funs 90 '(org-extras-fold-show-all-headings
+(simple-extras-init-disable-funs 90 '(org-extras-fold-show-all-headings
                                  org-extras-hide-properties
                                  org-extras-hide-logbook
                                  org-extras-show-properties
@@ -523,36 +521,36 @@ one hour only."
 :ID:       555F14B7-A0D0-4B7A-980F-E157C1B87EFB
 :END:
 
-#+begin_src emacs-lisp :tangle (if (eq tlon-init-extra-config-tangle-pass 2) (print tlon-init-post-init-path) "no")
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (defun faces-extras-load-custom-faces ()
   "My custom faces, to be used in conjunction with theme."
-  ((set-face-attribute 'default nil :family faces-extras-fixed-pitch-font :height 150)
-   (set-face-attribute 'fixed-pitch nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'variable-pitch nil :family faces-extras-variable-pitch-font :height 1.0)
-   (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family faces-extras-fixed-pitch-font :height 0.8)
-   (set-face-attribute 'org-property-value nil :family faces-extras-fixed-pitch-font :height 0.9)
-   (set-face-attribute 'org-todo nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'org-archived nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'org-document-title nil :family faces-extras-fixed-pitch-font :underline t :height 1.0)
-   (set-face-attribute 'org-special-keyword nil :family faces-extras-fixed-pitch-font :height 0.9)
-   (set-face-attribute 'org-tag nil :family faces-extras-fixed-pitch-font :height 0.8)
-   (set-face-attribute 'org-code nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'org-level-1 nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'org-level-2 nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'org-level-3 nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'org-level-4 nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'org-level-5 nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'org-level-6 nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'org-level-7 nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'org-level-8 nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'org-date nil :family faces-extras-fixed-pitch-font :height 0.8)
-   (set-face-attribute 'org-modern-date-active nil :family faces-extras-fixed-pitch-font :height 0.9)
-   (set-face-attribute 'org-modern-date-inactive nil :family faces-extras-fixed-pitch-font :height 0.9)
-   (set-face-attribute 'org-modern-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
-   (set-face-attribute 'corfu-default nil :family faces-extras-fixed-pitch-font :height 1.0)
-   (set-face-attribute 'org-quote nil :family faces-extras-variable-pitch-font :height 1.0)
-   (set-face-attribute 'gh-notify-notification-repo-face nil :family faces-extras-variable-pitch-font :height 1.0)
-   (message "Loaded fede's override for faces")))
+  (set-face-attribute 'default nil :family faces-extras-fixed-pitch-font :height 150)
+  (set-face-attribute 'fixed-pitch nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'variable-pitch nil :family faces-extras-variable-pitch-font :height 1.0)
+  (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family faces-extras-fixed-pitch-font :height 0.8)
+  (set-face-attribute 'org-property-value nil :family faces-extras-fixed-pitch-font :height 0.9)
+  (set-face-attribute 'org-todo nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'org-archived nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'org-document-title nil :family faces-extras-fixed-pitch-font :underline t :height 1.0)
+  (set-face-attribute 'org-special-keyword nil :family faces-extras-fixed-pitch-font :height 0.9)
+  (set-face-attribute 'org-tag nil :family faces-extras-fixed-pitch-font :height 0.8)
+  (set-face-attribute 'org-code nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'org-level-1 nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'org-level-2 nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'org-level-3 nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'org-level-4 nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'org-level-5 nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'org-level-6 nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'org-level-7 nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'org-level-8 nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'org-date nil :family faces-extras-fixed-pitch-font :height 0.8)
+  (set-face-attribute 'org-modern-date-active nil :family faces-extras-fixed-pitch-font :height 0.9)
+  (set-face-attribute 'org-modern-date-inactive nil :family faces-extras-fixed-pitch-font :height 0.9)
+  (set-face-attribute 'org-modern-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
+  (set-face-attribute 'corfu-default nil :family faces-extras-fixed-pitch-font :height 1.0)
+  (set-face-attribute 'org-quote nil :family faces-extras-variable-pitch-font :height 1.0)
+  (set-face-attribute 'gh-notify-notification-repo-face nil :family faces-extras-variable-pitch-font :height 1.0)
+  (message "Loaded fede's override for faces"))
 
 (faces-extras-load-custom-faces)
 #+end_src

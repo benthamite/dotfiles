@@ -11136,9 +11136,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
   (mhtml-mode-map
    "s-x" 'browse-url-of-buffer)
   (telega-chat-mode-map
-   "s-<return>" 'browse-url-at-point)
-  (dired-mode-map
-   "e" 'browse-url-extras-of-dired-file-externally))
+   "s-<return>" 'browse-url-at-point))
 #+end_src
 
 ** browse-url-extras
@@ -11146,14 +11144,16 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :ID:       15B6192C-652C-47FC-8477-0B701129E89F
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :browse-url-extras)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :browse-url)
 (use-personal-package browse-url-extras
   :after browse-url s f
   :demand t
   :config
   :general
   (eww-mode-map
-  "e" 'browse-url-extras-add-domain-to-open-externally))
+  "e" 'browse-url-extras-add-domain-to-open-externally)
+  (dired-mode-map
+   "e" 'browse-url-extras-of-dired-file-externally))
 #+end_src
 
 ** shr

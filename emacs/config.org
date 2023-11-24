@@ -865,7 +865,7 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
 
-(toggle-debug-on-error) ; uncomment when debugging
+;; (toggle-debug-on-error) ; uncomment when debugging
 #+end_src
 
 ** use-package
@@ -2891,7 +2891,7 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :ID:       8BC3FF58-62AD-43E9-87A0-B886F20B428A
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :outline)
 (use-personal-package outline-extras
   :after outline
   :demand t)
@@ -3989,7 +3989,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :ID:       E29EF401-C8A5-4B57-8CB4-C2C8B386F446
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :window)
 (use-personal-package window-extras
   :after window
   :demand t
@@ -4417,7 +4417,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 :ID:       BBED8E2E-2A29-4465-926A-22D531E6DBE7
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-gcal)
 (use-personal-package org-gcal-extras
   :after org-gcal
   :demand t
@@ -4944,7 +4944,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       B74712E7-2A8C-4D17-8FD4-C854C88D3D72
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-personal-package forge-extras
   :after forge orgit-forge gh-notify
   :demand t
@@ -5999,7 +5999,7 @@ e.g. ~nvm~ isn't recognized by eshell
 
 /[[https://github.com/minad/jinx][jinx]] is a highly performant spell-checker for Emacs./
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/jinx)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :jinx)
 (use-package jinx
   :demand t
   :config
@@ -6022,7 +6022,7 @@ e.g. ~nvm~ isn't recognized by eshell
 :ID:       7C91CA35-275E-446A-ACE8-1214310479BB
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :jinx)
 (use-personal-package jinx-extras
   :after jinx
   :demand t)
@@ -6035,7 +6035,7 @@ e.g. ~nvm~ isn't recognized by eshell
 
 /[[https://github.com/flycheck/flycheck][flycheck]] is a syntax-checker for Emacs./
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/flycheck)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :flycheck)
 (use-package flycheck
   :demand t
   :init
@@ -6060,7 +6060,7 @@ e.g. ~nvm~ isn't recognized by eshell
 
 /[[https://github.com/minad/consult-flycheck][consult-flycheck]] integrates ~flycheck~ with ~consult~./
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/flycheck)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :flycheck)
 (use-package consult-flycheck
   :after consult flyckeck
   :demand t)
@@ -6073,7 +6073,7 @@ e.g. ~nvm~ isn't recognized by eshell
 
 /[[https://github.com/purcell/flycheck-ledger][flycheck-ledger]] provides ~flycheck~ support for ~ledger-mode~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :flycheck)
 (use-package flycheck-ledger
   :after flycheck ledger-mode
   :demand t)
@@ -6086,7 +6086,7 @@ e.g. ~nvm~ isn't recognized by eshell
 
 /[[https://github.com/emacs-languagetool/flycheck-languagetool][flycheck-languagetool]] provides ~flycheck~ support for [[https://languagetool.org/][LanguageTool]]./
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/flycheck)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :flycheck)
 (use-package flycheck-languagetool
   :after flycheck
   :demand t
@@ -9275,7 +9275,7 @@ So the links to other Wiki articles do not break.
 :ID:       44F722DC-C324-4A86-85A1-F103812B2A6A
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-roam)
 (use-personal-package org-roam-extras
   :after org-roam
   :demand t
@@ -9374,7 +9374,7 @@ I use this package to define a dynamic agenda, as explained and illustrated [[d1
 2. I then exclude some headings with IDs from the org-roam database (via the variables  ~org-roam-file-exclude-regexp~ and ~org-roam-db-node-include-function~). See the ~org-roam~ section of this file.
 3. Finally, I selectively add to ~org-agenda-files~ files that satisfy certain conditions (as defined by ~vulpea-extras-project-p~) and files modified recently (as specified by ~org-roam-extras-recent~), and exclude from ~org-agenda-files~ files listed in ~org-extras-agenda-files-excluded~.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :vulpea)
 (use-package vulpea
   :after org org-roam
   :demand t)
@@ -9385,7 +9385,7 @@ I use this package to define a dynamic agenda, as explained and illustrated [[d1
 :ID:       466CED55-6DCA-4D17-83C7-B2FE9C2B0A69
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :vulpea)
 (use-personal-package vulpea-extras
   :after vulpea
   :demand t
@@ -10659,7 +10659,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       A131F743-C780-4D66-9F1A-D3F63F92DE0B
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
 (use-personal-package mu4e-extras
   :after mu4e
   :demand t
@@ -11136,9 +11136,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
   (mhtml-mode-map
    "s-x" 'browse-url-of-buffer)
   (telega-chat-mode-map
-   "s-<return>" 'browse-url-at-point)
-  (dired-mode-map
-   "e" 'browse-url-extras-of-dired-file-externally))
+   "s-<return>" 'browse-url-at-point))
 #+end_src
 
 ** browse-url-extras
@@ -11146,14 +11144,16 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :ID:       15B6192C-652C-47FC-8477-0B701129E89F
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :browse-url-extras)
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :browse-url)
 (use-personal-package browse-url-extras
   :after browse-url s f
   :demand t
   :config
   :general
   (eww-mode-map
-  "e" 'browse-url-extras-add-domain-to-open-externally))
+  "e" 'browse-url-extras-add-domain-to-open-externally)
+  (dired-mode-map
+   "e" 'browse-url-extras-of-dired-file-externally))
 #+end_src
 
 ** shr
@@ -12423,7 +12423,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 :ID:       07EA04A6-65BE-4AF9-A945-99095D719815
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :bbdb)
 (use-personal-package bbdb-extras
   :after bbdb
   :demand t)

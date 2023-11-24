@@ -42,6 +42,12 @@
   "Extensions for `ebib'."
   :group 'ebib)
 
+(defcustom ebib-extras-scidownl
+  (expand-file-name "~/.pyenv/shims/scidownl")
+  "Location of `scidownl' (https://github.com/Tishacy/SciDownl)."
+  :type 'file
+  :group 'ebib-extras)
+
 ;;;; Functions
 
 (defun ebib-extras-open-or-switch ()
@@ -1111,20 +1117,34 @@ Prompt the user for a title, unless TITLE is non-nil."
 
 (defun ebib-extras-doi-download (doi)
   "Download DOI from Sci-Hub."
-  (unless (executable-find "scidownl")
-    (error "Please install `scidownl' (https://github.com/Tishacy/SciDownl)"))
-  (let ((default-directory paths-dir-downloads))
-    (message "Trying to download file...")
-    (async-shell-command
-     (format "~/.pyenv/shims/scidownl download --doi %s" doi))))
+  (interactive "sDOI: ")
+  (unless (executable-find ebib-extras-scidownl)
+    (user-error
+     "Please install `scidownl' (https://github.com/Tishacy/SciDownl) and set `ebib-extras-scidownl' accordingly"))
+  (let* ((default-directory paths-dir-downloads)
+	 (process-name "scidownl-process")
+	 (command (format "'%s' download --doi %s" ebib-extras-scidownl doi))
+	 (buffer (generate-new-buffer "*do-download-output*"))
+	 (proc (start-process-shell-command process-name buffer command))
+	 download-successful)
+    (message "Trying to download DOI `%s'..." doi)
+    (set-process-filter proc
+			(lambda (process output)
+			  (when (string-match-p "Successfully download the url" output)
+			    (setq download-successful t))))
+    (set-process-sentinel proc
+			  (lambda (process signal)
+			    (if (and (string= signal "finished\n") download-successful)
+				(message "File downloaded successfully to `%s'." paths-dir-downloads)
+			      (message "File download failed."))))))
 
 ;;;;; Patched functions
 
 ;; tweak original function to prevent unnecessary vertical window splits
 (el-patch-defun ebib--setup-windows ()
   "Create Ebib's window configuration.
-If the index buffer is already visible in some frame, select its
-window and make the frame active,"
+  If the index buffer is already visible in some frame, select its
+  window and make the frame active,"
   (let ((index-window (get-buffer-window (ebib--buffer 'index) t))
 	(old-frame (selected-frame)))
     (if index-window

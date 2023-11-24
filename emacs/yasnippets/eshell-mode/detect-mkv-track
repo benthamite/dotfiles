@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: detect-subtitle-track
-# key: dst
+# name: detect-mkv-track
+# key: dmt
 # contributor: Pablo Stafforini
 # --
 mkvmerge -i '`(current-kill 0)`'

@@ -5938,7 +5938,10 @@ e.g. ~nvm~ isn't recognized by eshell
   :elpaca (macos
            :host github
            :repo "benthamite/macos")
-  :demand t)
+  :demand t
+  :config
+  (setq macos-bluetooth-device-list
+  '(("Sonny WH-1000XM5" . "ac-80-0a-37-41-1e"))))
 #+end_src
 
 ** em-hist

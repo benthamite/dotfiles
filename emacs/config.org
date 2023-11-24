@@ -11181,7 +11181,7 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
   (setq shr-cookie-policy t)
 
   :general
-  (mhtml-mode-map
+  ((html-mode-map mhtml-mode-map)
    "s-w" 'shr-render-buffer))
 #+end_src
 

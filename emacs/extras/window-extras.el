@@ -40,11 +40,6 @@
   :type 'integer
   :group 'window-extras)
 
-(defcustom window-extras-window-split-width-threshold 200
-  "Threshold for splitting the window sideways, in columns."
-  :type 'integer
-  :group 'window-extras)
-
 ;;;; Functions
 
 ;; FIXME: trigger macOS window maximization

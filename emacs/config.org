@@ -191,6 +191,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#window][window]]
   - [[#window-extras][window-extras]]
   - [[#frame][frame]]
+  - [[#frame-extras][frame-extras]]
   - [[#winum][winum]]
   - [[#winner][winner]]
   - [[#avy][avy]]
@@ -2405,6 +2406,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 (use-feature so-long
   :demand t
   :config
+  (setq so-long-threshold 500000)
   (global-so-long-mode))
 #+end_src
 
@@ -3994,7 +3996,8 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   :after window
   :demand t
   :config
-  (setq split-width-threshold window-extras-window-split-width-threshold)
+  (setq split-width-threshold 200)
+
   :general
   ("C-H-0" 'window-extras-switch-to-last-window
    "A-C-H-0" 'window-extras-switch-to-minibuffer-window
@@ -4022,20 +4025,21 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   (blink-cursor-mode)
   (window-divider-mode)
 
-  (tlon-init-override-code-if-available
-   :frame-maximize
-   '((add-function :after after-focus-change-function
-                   (lambda ()
-                     "Maximize the frame every time focus is regained.
-When returning focus to Emacs after browsing other macOS windows, the frame is
-sometimes not fully maximized. This advice makes Emacs maximize the frame every
-time focus is regained."
-                     (set-frame-parameter nil 'fullscreen 'maximized)))))
-
   :general
   ("H-M-<tab>" 'other-frame) ; M-S-TAB
   ("M-N" 'make-frame)
   ("M-W" 'delete-frame))
+#+end_src
+
+** frame-extras
+:PROPERTIES:
+:ID:       488EF2B1-CCAC-4B91-A927-F89F71BCDAD3
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package frame-extras
+  :after frame
+  :demand t)
 #+end_src
 
 ** winum
@@ -11178,7 +11182,7 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
   (setq shr-cookie-policy t)
 
   :general
-  (mhtml-mode-map
+  ((html-mode-map mhtml-mode-map)
    "s-w" 'shr-render-buffer))
 #+end_src
 

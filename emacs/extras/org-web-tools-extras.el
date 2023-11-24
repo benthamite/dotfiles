@@ -40,16 +40,12 @@
   (org-web-tools--org-link-for-url (org-web-tools--get-first-url)))
 
 (cl-defun org-web-tools-extras-org-title-for-url (&optional (url (org-web-tools--get-first-url)))
-  "Return title of HTML page at URL.
-If URL is not given, look for first URL in `kill-ring'. If page at URL has no
-title, return URL."
-  (require 'org-web-tools)
-  (let* ((html (org-web-tools--get-url url))
-         (title (org-web-tools--html-title html)))
-    (if title
-        title
-      (message "HTML page at URL has no title")
-      url)))
+  "Return Org link to URL using title of HTML page at URL.
+If URL is not given, look for first URL in `kill-ring'.  If page
+at URL has no title, return URL."
+  (if-let ((dom (plz 'get url :as #'libxml-parse-html-region))
+           (title (cl-caddr (car (dom-by-tag dom 'title)))))
+      (org-web-tools--cleanup-title title)))
 
 (defun org-web-tools-extras-youtube-dl (url)
   "Create org link to local copy of YouTube video downloaded from URL.

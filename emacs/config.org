@@ -2129,7 +2129,7 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
           " | "
           fancy-battery-mode-line
           " | "
-          telega-zmode-line-format
+          telega-mode-line-format
           " | "))
   (setq global-mode-string tab-bar-extras-global-mode-string)
   (run-with-idle-timer 300 t #'tab-bar-extras-reset-unless-clock))

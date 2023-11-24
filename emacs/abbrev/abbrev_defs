@@ -1997,6 +1997,7 @@
     ("ideosyncratic" "idiosyncratic" nil :count 1)
     ("idesa" "ideas" nil :count 1)
     ("idiosyncracy" "idiosyncrasy" nil :count 1)
+    ("idyosincratic" "idiosyncratic" nil :count 0)
     ("ihaca" "Ithaca" nil :count 1)
     ("illegimacy" "illegitimacy" nil :count 1)
     ("illegitmate" "illegitimate" nil :count 1)

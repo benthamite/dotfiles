@@ -2406,6 +2406,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 (use-feature so-long
   :demand t
   :config
+  (setq so-long-threshold 500000)
   (global-so-long-mode))
 #+end_src
 

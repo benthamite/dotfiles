@@ -129,7 +129,6 @@
  (:window-border . ((ignore)))
  (:window-split . ((ignore)))
  (:modus-themes-load . ((modus-themes-load-theme 'modus-vivendi)))
- (:frame-maximize . ((ignore)))
  (:citar-keybindings . ((ignore)))
  (:org-fold . ((ignore))))
 #+end_src
@@ -160,13 +159,14 @@
 (setq forge-owned-accounts '(("fstafforini")))
 (setq split-width-threshold 160)
 (setq telega-server-libs-prefix "/opt/homebrew/Cellar/tdlib/HEAD-ec788c7/")
-
 (use-package nginx-mode :demand t)
 
-(setq inhibit-startup-screen t)
+;; remove Pablo's auto maximize frame
+(remove-function after-focus-change-function #'frame-extras-maximize-frame)
+
 ;; remove Pablo's org-roam auto add ids
 (remove-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
-(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+
 (message "Loading fede's custom faces:")
 (recentf-mode)
 (global-unset-key (kbd "C--"))

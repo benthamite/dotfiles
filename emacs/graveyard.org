@@ -8,6 +8,535 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** osm
+:PROPERTIES:
+:ID:       1DCEE01C-1951-45F0-B9B8-60977E2D4314
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-16 Mon 19:11]--[2022-05-16 Mon 19:19] =>  0:08
+:END:
+
+/[[https://github.com/minad/osm][osm]] is an OpenStreetMap viewer for Emacs./
+
+[2023-11-21 Tue] Not using.
+
+#+begin_src emacs-lisp :results silent
+(use-package osm
+  :elpaca (osm
+             :host github
+             :repo "minad/osm")
+  :init
+  ;; Load Org link support
+  (with-eval-after-load 'org
+    (require 'osm-ol)))
+#+end_src
+
+** mentor
+:PROPERTIES:
+:ID:       E3F6210D-F6CD-4397-9004-3D31B5623D18
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-07 Tue 00:53]--[2023-03-07 Tue 01:30] =>  0:37
+:END:
+
+/[[https://github.com/skangas/mentor][mentor]] is an Emacs frontend for the rTorrent bittorrent client./
+
+[2022-10-07 Fri 21:48] I wasn't able to make it work.
+
+#+begin_src emacs-lisp :results silent
+(use-package mentor
+  :config
+  (setq mentor-rtorrent-download-directory paths-dir-downloads)
+  (setq mentor-rtorrent-external-rpc (expand-file-name "~/.rtorrent-rpc.socket"))
+
+  :general
+  (mentor-mode-map
+   "SPC" 'mentor-download-load-magnet-link-or-url
+   "<return>" 'mentor-download-load-torrent))
+#+end_src
+
+** keytar
+:PROPERTIES:
+:ID:       773AD672-8356-4097-990D-96BD160DAD40
+:END:
+
+/[[https://github.com/emacs-grammarly/keytar][keytar]] is an Emacs Lisp interface for [[https://www.npmjs.com/package/keytar][keytar]]./
+
+This package is required by lsp-grammarly.
+
+[2023-11-16 Thu] No longer using ~grammarly~.
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :keytar)
+(use-package keytar
+  :defer 10)
+#+end_src
+
+** lsp-grammarly
+:PROPERTIES:
+:ID:       2D0C20F1-1CE6-45F9-AA4B-46FB02DD0271
+:END:
+:LOGBOOK:
+CLOCK: [2022-09-29 Thu 18:50]--[2022-09-29 Thu 21:20] =>  2:30
+CLOCK: [2021-11-27 Sat 21:56]--[2021-11-27 Sat 22:48] =>  0:52
+CLOCK: [2021-11-27 Sat 19:44]--[2021-11-27 Sat 20:17] =>  0:33
+CLOCK: [2021-11-27 Sat 19:23]--[2021-11-27 Sat 19:26] =>  0:03
+CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
+:END:
+
+/[[https://github.com/emacs-grammarly/lsp-grammarly][lsp-grammarly]] is an lsp-mode for Grammarly./
+
+[2022-10-06 Thu 23:35] At the moment, the premium version isn't working. The package maintainers are migrating to to a new server, which may resolve the issues I was having authenticating my account. You can check whether the premium account is being used by evaluating ~(grammarly-premium-p)~.
+
+[2023-11-16 Thu] No longer using ~grammarly~.
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :spelling)
+(use-package lsp-grammarly
+  :after lsp-mode keytar grammarly
+  :demand t
+
+  :config
+  (setq lsp-grammarly-suggestions-split-infinitive nil)
+  (setq lsp-grammarly-suggestions-preposition-at-the-end-of-sentence nil)
+  ;; 🙄
+  (setq lsp-grammarly-suggestions-possibly-biased-language-age-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-disability-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-family-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-gender-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-human-rights nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-human-rights-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-lgbtqia-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-race-ethnicity-related nil)
+  (setq lsp-grammarly-suggestions-possibly-politically-incorrect-language nil)
+
+  ;; (add-hook 'org-mode-hook
+            ;; (lambda ()
+              ;; (require 'lsp-grammarly)
+              ;; (lsp)))
+              )
+#+end_src
+
+** grammarly
+:PROPERTIES:
+:ID:       C87EAC5F-7831-469C-96FB-603397C51925
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
+:END:
+
+/[[https://github.com/emacs-grammarly/grammarly][grammarly]] is an API interface for [[https://www.grammarly.com/][Grammarly]]./
+
+[2023-11-16 Thu] It doesn’t support the paid version, so not useful to me.
+
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :spelling)
+(use-package grammarly
+  :defer 25
+  :config
+  (setq grammarly-username user-mail-address)
+  (setq grammarly-password (auth-source-pass-get 'secret (concat "chrome/grammarly.com/" user-mail-address))))
+#+end_src
+
+** lsp-ui
+:PROPERTIES:
+:ID:       FE34C313-80BF-4095-B2F0-6228041DFCFF
+:END:
+
+/[[https://github.com/emacs-lsp/lsp-ui][lsp-ui]] provides UI integrations for lsp-mode./
+
+[2023-11-16 Thu] No longer using ~lsp~.
+
+#+begin_src emacs-lisp :results silent
+(use-package lsp-ui
+  :after lsp-mode
+  :demand t
+  :config
+  (setq lsp-ui-doc-show-with-cursor t)) ; move the cursor over a symbol to show its documentation
+#+end_src
+
+** lsp-mode
+:PROPERTIES:
+:ID:       E9D2E6CA-5256-4776-801F-13281BD390C9
+:END:
+/[[https://github.com/emacs-lsp/lsp-mode][lsp-mode]] is an Emacs client/library for the Language Server Protocol./
+
+Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A guide on disabling/enabling lsp-mode features - LSP Mode - LSP support for Emacs]]
+
+[2023-11-16 Thu] I was only using this with ~grammarly~, but since that package is not supporting the paid version, I am now replacing it with ~flycheck-languagetool~. Hence I no longer have a need for this package.
+
+#+begin_src emacs-lisp :results silent
+(use-package lsp-mode
+  :defer 7
+  :config
+  (setq lsp-warn-no-matched-clients nil)
+  (setq lsp-headerline-breadcrumb-enable nil)
+
+  (defun ps/lsp-toggle ()
+    "Connect/disconnect to lsp server."
+    (interactive)
+    (if (or (not lsp-mode)
+            (equal lsp-mode '(lsp-enable-which-key-integration)))
+        (lsp)
+      (lsp-disconnect)))
+
+  ;; (add-hook 'org-mode-hook #'lsp)
+  (add-hook 'lsp-mode #'lsp-enable-which-key-integration))
+#+end_src
+
+** google-this
+:PROPERTIES:
+:ID:       877DFFD8-8121-4CEC-B8EC-175EB8526641
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-21 Thu 14:43]--[2022-07-21 Thu 14:56] =>  0:13
+CLOCK: [2022-07-21 Thu 14:30]--[2022-07-21 Thu 14:30] =>  0:00
+CLOCK: [2021-05-22 Sat 21:42]--[2021-05-22 Sat 21:50] =>  0:08
+:END:
+
+/[[https://github.com/Malabarba/emacs-google-this][google-this]] is a set of emacs functions and bindings to google under point./
+
+[2023-05-09 Tue 10:07] Replacing with ~engine-mode~
+
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package google-this
+  :config/el-patch
+  ;; Tweak original function to offer contents of kill ring if there
+  ;; is no symbol or word at point.
+  (defun google-this-pick-term (prefix)
+    "Decide what \"this\" and return it.
+PREFIX determines quoting."
+    (let* ((term (if (region-active-p)
+                     (buffer-substring-no-properties (region-beginning) (region-end))
+                   (or (thing-at-point 'symbol)
+                       (thing-at-point 'word)
+                       (el-patch-swap
+                         (buffer-substring-no-properties (line-beginning-position)
+                                                         (line-end-position))
+                         (current-kill 0)))))
+           (term (read-string (concat "Googling [" term "]: ") nil nil term)))
+      term))
+
+  :general
+  ("H-g" 'google-this-search)
+  :bind-keymap
+  ("H-G" . google-this-mode-submap))
+#+end_src
+
+** smudge
+:PROPERTIES:
+:ID:       B5010216-E345-4F6D-9033-DE354D7E707A
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-21 Fri 10:45]--[2021-05-21 Fri 10:59] =>  0:14
+CLOCK: [2021-05-20 Thu 19:49]--[2021-05-20 Thu 20:00] =>  0:11
+CLOCK: [2021-05-20 Thu 19:11]--[2021-05-20 Thu 19:13] =>  0:02
+CLOCK: [2021-05-19 Wed 21:40]--[2021-05-19 Wed 21:52] =>  0:12
+CLOCK: [2021-05-19 Wed 20:34]--[2021-05-19 Wed 21:13] =>  0:39
+CLOCK: [2021-05-19 Wed 16:37]--[2021-05-19 Wed 16:59] =>  0:22
+CLOCK: [2021-05-19 Wed 11:26]--[2021-05-19 Wed 12:23] =>  0:57
+:END:
+
+/[[https://github.com/danielfm/smudge][smudge]] lets the user control Spotify from Emacs./
+
+[2023-11-15 Wed] Not using it.
+
+#+begin_src emacs-lisp :results silent
+(use-package smudge
+  :disabled
+  :after auth-source-pass
+  ;; :defer 600
+  :config
+  (setq smudge-oauth2-client-id (auth-source-pass-get "id" "auth-sources/spotify"))
+  (setq smudge-oauth2-client-secret (auth-source-pass-get 'secret "auth-sources/spotify"))
+  (setq smudge-player-status-format "[%a - %t ◷ %l]")
+  (setq smudge-api-search-limit 100) ; values >100 result in a 400 error
+  (setq smudge-status-location nil)
+
+  ;; should renew credentials and store with `pass'
+  (defun ps/smudge ()
+    "Turn on global smudge remote mode and go to my playlists."
+    (interactive)
+    (global-smudge-remote-mode 1)
+    (smudge-my-playlists))
+    
+  (defun ps/smudge-track-load-more ()
+    "Move point to end of playlist buffer and load more tracks."
+    (interactive)
+    (end-of-buffer)
+    (smudge-track-load-more))
+    
+  :general
+  ("A-y" 'ps/smudge)
+  (smudge-track-search-mode-map
+   "RET" 'smudge-track-select
+   "b" 'smudge-track-album-select
+   "d" 'smudge-select-device
+   "m" 'smudge-my-playlists
+   "t" 'smudge-track-search
+   "r" 'smudge-recently-played
+   "s" 'smudge-track-search
+   "t" 'smudge-track-artist-select
+   "y" 'smudge-playlist-search
+   "." 'ps/smudge-track-load-more)
+  (smudge-playlist-search-mode-map
+   "RET" 'smudge-track-select
+   "b" 'smudge-track-album-select
+   "d" 'smudge-select-device
+   "m" 'smudge-my-playlists
+   "r" 'smudge-recently-played
+   "s" 'smudge-track-search
+   "t" 'smudge-track-artist-select
+   "y" 'smudge-playlist-search
+   "." 'ps/smudge-track-load-more))
+#+end_src
+
+
+** md4rd
+:PROPERTIES:
+:ID:       CEDBA9CB-F7FB-4E7F-8CAB-C96812BE1517
+:END:
+
+/[[https://github.com/ahungry/md4rd][md4rd]] is an Emacs mode for browsing Reddit./
+
+[2023-04-04 Tue 18:57]
+#+begin_src emacs-lisp :results silent :tangle no
+(use-package md4rd
+  :config
+  (setq md4rd-subs-active '(emacs))
+  (setq md4rd--oauth-access-token
+        (auth-source-pass-get 'secret "auth-sources/reddit"))
+  (setq md4rd--oauth-refresh-token
+        (auth-source-pass-get "refresh" "auth-sources/reddit"))
+
+  (add-hook 'md4rd-mode-hook #'md4rd-indent-all-the-lines))
+#+end_src
+
+
+** twittering-mode
+:PROPERTIES:
+:ID:       125BC626-0D89-468E-9026-AF3CF58939F2
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-19 Tue 14:40]--[2022-07-19 Tue 15:56] =>  1:16
+CLOCK: [2022-07-18 Mon 19:53]--[2022-07-18 Mon 20:04] =>  0:11
+CLOCK: [2022-07-12 Tue 21:47]--[2022-07-12 Tue 22:16] =>  0:29
+CLOCK: [2022-07-12 Tue 20:45]--[2022-07-12 Tue 21:30] =>  0:45
+CLOCK: [2021-05-20 Thu 19:22]--[2021-05-20 Thu 19:36] =>  0:14
+CLOCK: [2021-05-16 Sun 20:34]--[2021-05-16 Sun 21:22] =>  0:48
+CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
+:END:
+
+/[[https://github.com/hayamiz/twittering-mode][twittering-mode]] is a Twitter client for Emacs./
+
+[2023-11-11 Sat 06:27] Stopped working.
+
+#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :ps/twittering-mode)
+(use-package twittering-mode
+  :defer t
+  :config
+  (defalias 'epa--decode-coding-string 'decode-coding-string) ; github.com/sfromm/emacs.d#twitter
+  (setq twittering-use-master-password t)
+  (setq twittering-icon-mode t)
+  (setq twittering-use-icon-storage t)
+  (setq twittering-icon-storage-limit 10000)
+  (setq twittering-timeline-header "Refresh buffer contents\n")
+  (setq twittering-timeline-footer "")
+  (setq twittering-status-format "%FACE[font-lock-function-name-face]{  @%s}  %FACE[italic]{%@}  %FACE[error]{%FIELD-IF-NONZERO[❤ %d]{favorite_count}}  %FACE[warning]{%FIELD-IF-NONZERO[↺ %d]{retweet_count}}
+%FOLD[   ]{%FILL{%t}%QT{
+%FOLD[   ]{%FACE[font-lock-function-name-face]{@%s}\t%FACE[shadow]{%@}
+%FOLD[ ]{%FILL{%t}}
+}}}
+%FACE[twitter-divider]{                                                                                                }
+")
+
+  (defun ps/twittering-account-select (arg)
+    "docstring"
+    (interactive
+     (list
+      (completing-read "Select account: " '("EA News" "Future Matters" "anonymous"))))
+    (cond ((string= arg "EA News") (ps/twittering-ea-news))
+          ((string= arg "Future Matters") (ps/twittering-future-matters))
+          ((string= arg "anonymous") (ps/twittering-anonymous))))
+
+  (defface twitter-divider
+    '((((background dark))  (:underline (:color "#141519")))
+      (((background light)) (:underline (:color "#d3d3d3"))))
+    "The vertical divider between tweets."
+    :group 'twittering-mode)
+
+  ;; github.com/hayamiz/twittering-mode/issues/83#issuecomment-343649348
+  (defun ps/twittering-reload ()
+    "Reload `twittering-mode'."
+    (require 'twittering-mode)
+    ;; Clear existing twit buffers
+    (mapcar
+     (lambda (buffer)
+       (twittering-deactivate-buffer buffer)
+       (kill-buffer buffer))
+     (twittering-get-buffer-list))
+    (twittering-unregister-killed-buffer)
+    ;; Clear variables
+    (setq twittering-private-info-file-loaded nil)
+    (setq twittering-account-authorization nil)
+    (setq twittering-oauth-access-token-alist nil)
+    (setq twittering-buffer-info-list nil)
+    (setq twittering-timeline-data-table (make-hash-table :test 'equal))
+    (twit))
+
+    ;; TODO: create macro for this
+  (defun ps/twittering-ea-news ()
+    "Start a `twittering-mode' session with the `ea_dot_news' account."
+    (interactive)
+    (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-ea-news.gpg"))
+    (auth-source-pass-get 'secret "auth-sources/twitter/ea_dot_news")
+    (ps/twittering-reload))
+
+  (defun ps/twittering-future-matters ()
+    "Start a `twittering-mode' session with the `futurematters_' account."
+    (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-future-matters.gpg"))
+    (auth-source-pass-get 'secret "auth-sources/twitter/futurematters_")
+    (ps/twittering-reload))
+
+(defun ps/twittering-anonymous ()
+    "Start a `twittering-mode' session with anonymous account."
+    (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-anonymous.gpg"))
+    (auth-source-pass-get 'secret "auth-sources/twitter/anonymous")
+    (ps/twittering-reload))
+
+  (defun ps/twittering-mode-get-uri ()
+    "Get URI of tweet at point."
+    (or (get-text-property (point) 'uri)
+        (if (get-text-property (point) 'field)
+            (let* ((id (get-text-property (point) 'id))
+                   (status (twittering-find-status id)))
+              (twittering-get-status-url-from-alist status))
+          nil)))
+
+  (defun ps/twittering-mode-open-externally ()
+    "Open URI of tweet at point with external web browser."
+    (interactive)
+    (browse-url (ps/twittering-mode-get-uri)))
+
+  (defun ps/twittering-mode-open-internally ()
+    "Open URI of tweet at point with internal web browser."
+    (interactive)
+    (eaf-open (eaf-wrap-url (ps/twittering-mode-get-uri)) "browser"))
+
+  (defun ps/twittering-mode-search-people-externally (&optional query)
+    "Search for Twitter users in an external browser."
+    (interactive)
+    (let ((query (or query
+                     (read-string "Search for person: "))))
+      (browse-url (concat
+                   "https://twitter.com/search?q="
+                   query
+                   "&src=typed_query&f=user"))))
+
+  (defun ps/twittering-mode-org-capture-future-matters-research ()
+    "Launch 'Future Matters: Research' `org-capture' template."
+    (interactive)
+    (twittering-push-uri-onto-kill-ring)
+    (org-capture nil "tlmr"))
+
+  (defun ps/twittering-mode-org-capture-future-matters-news ()
+    "Launch 'Future Matters: News' `org-capture' template."
+    (interactive)
+    (twittering-push-uri-onto-kill-ring)
+    (org-capture nil "tlmn"))
+
+  ;; what follows copied from github.com/sfromm/emacs.d#twitter
+  (defun ps/twittering-toggle-icons ()
+    "Toggle use of icons in twittering mode."
+    (interactive)
+    (if (eq twittering-icon-mode t)
+        (twittering-icon-mode nil)
+      (twittering-icon-mode t)))
+
+  (defun ps/twittering-add-image-format (format-table-func status-sym prefix-sym)
+    "Adds the I format code to display images in the twittering-mode format table."
+    (let ((format-table (funcall format-table-func status-sym prefix-sym)))
+      (push `("I" .
+              (let* ((entities (cdr (assq 'entity ,status-sym)))
+                     text)
+                (mapc (lambda (url-info)
+                        (setq text (or (cdr (assq 'media-url url-info)) "")))
+                      (cdr (assq 'media entities)))
+                (if (string-equal "" text)
+                    text
+                  (let ((twittering-convert-fix-size 720))
+                    (twittering-make-icon-string nil nil text))))) format-table)))
+
+  (advice-add #'twittering-generate-format-table :around #'ps/twittering-add-image-format)
+
+  ;; github.com/sfromm/emacs.d#twitter
+  (defun tlon-org-twittering-store-link ()
+    "Store a link to a tweet."
+    (when (and (twittering-buffer-p) (twittering-get-id-at))
+      (let ((status (twittering-find-status (twittering-get-id-at))))
+        (apply 'org-store-link-props
+               :type "twittering"
+               :link (concat "twittering:"
+                             (or (cdr (assq 'retweeting-id status))
+                                 (cdr (assq 'id status))))
+               :description (format "@%s: %s"
+                                    (cdr (assq 'user-screen-name status))
+                                    (cdr (assq 'text status)))
+               :url (twittering-get-status-url-from-alist status)
+               :date
+               (format-time-string (org-time-stamp-format)
+                                   (cdr (assq 'created-at status)))
+               :date-timestamp
+               (format-time-string (org-time-stamp-format t)
+                                   (cdr (assq 'created-at status)))
+               (apply 'append
+                      (mapcar
+                       (lambda (sym)
+                         (let ((name (symbol-name sym)))
+                           `(,(intern (concat ":" name))
+                             ,(or (cdr (assq sym status))
+                                  (concat "[no " name "]")))))
+                       '(text
+                         id
+                         user-id user-name user-screen-name user-description
+                         user-url user-location
+                         source source-url
+                         retweeting-user-id retweeting-user-name
+                         retweeting-user-screen-name
+                         retweeting-user-description
+                         retweeting-user-url
+                         retweeting-user-location
+                         retweeting-source retweeting-source-url)))))))
+
+  (org-link-set-parameters "twittering"
+                           :follow #'tlon-org-twittering-open
+                           :store #'tlon-org-twittering-store-link)
+
+  (defun tlon-org-twittering-open (id-str)
+    (twittering-visit-timeline (concat ":single/" id-str)))
+
+  :general
+  ("A-t" 'ps/twittering-account-select)
+  (twittering-mode-map
+   "s-m" 'twittering-replies-timeline
+   "s-r" 'twittering-mentions-timeline
+   "g" (lambda! (twittering-get-and-render-timeline)) ; refresh
+   "c" 'twittering-push-tweet-onto-kill-ring
+   "d" 'twittering-delete-status
+   "A-C-s-f" 'twittering-goto-next-status
+   "A-C-s-r" 'twittering-goto-previous-status
+   "n" 'ps/twittering-mode-org-capture-future-matters-news
+   "P" 'ps/twittering-mode-search-people-externally
+   "q" 'twittering-kill-buffer
+   "r" 'ps/twittering-mode-org-capture-future-matters-research
+   "s" 'twittering-search
+   "S" 'ps/twittering-mode-search-people-externally
+   "t" 'twittering-update-status-interactive
+   "u" 'twittering-push-uri-onto-kill-ring
+   "x" 'ps/twittering-mode-open-externally
+   "X" 'ps/twittering-mode-open-internally)
+  (twittering-edit-mode-map
+   "s-p" 'ps/twittering-mode-search-people-externally
+   "s-c" 'twittering-edit-post-status))
+#+end_src
+
 ** doom-snippets
 :PROPERTIES:
 :ID:       F0017D7B-DEBD-460B-8DF6-1134ECF42A7A
@@ -24,6 +553,25 @@ This is a place where I move Emacs packages I no longer use.
   :demand t)
 #+end_src
 
+
+** xwwp
+:PROPERTIES:
+:ID:       1A0D1889-F54B-4552-AE4B-8C140C90E3DC
+:END:
+
+/[[Enhance the Emacs xwidget-webkit browser][xwwp]] enhance the Emacs xwidget-webkit browser./
+
+[2023-10-12 Thu] Buggy, mysterious. Too much hassle to make it work the way I want it.
+
+#+begin_src emacs-lisp
+(use-package xwwp
+  :elpaca (xwwp
+           :host github
+	   :repo "kchanqvq/xwwp")
+  :after xwidget
+  :demand t
+  )
+#+end_src
 
 ** txl
 :PROPERTIES:
@@ -71,6 +619,8 @@ This is a place where I move Emacs packages I no longer use.
 :END:
 
 /[[https://github.com/alphapapa/outshine][outlshine]] extends the functionality of ~outline-minor-mode~./
+
+Replaced by ~outli~.
 
 #+begin_src emacs-lisp
 (use-package outshine
@@ -250,12 +800,15 @@ Disscussion [[https://www.reddit.com/r/emacs/comments/zhwhww/comment/izp8rxy/?ut
 
   (add-hook 'post-command-hook #'ps/typo-mode-enable-conditionally))
 #+end_src
+
 ** flyspell-correct
 :PROPERTIES:
 :ID:       5E8AA3D3-68AE-407E-B662-524B8B0AAD43
 :END:
 
 /[[https://github.com/d12frosted/flyspell-correct][flyspell-correct]] provides distraction-free words correction with flyspell via selected interface./
+
+No longer using ~flyspell~.
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-package flyspell-correct
@@ -269,6 +822,8 @@ Disscussion [[https://www.reddit.com/r/emacs/comments/zhwhww/comment/izp8rxy/?ut
 :END:
 
 /[[https://github.com/rolandwalker/flyspell-lazy][flyspell-lazy]] improves Emacs flyspell responsiveness using idle timers./
+
+No longer using ~flyspell~.
 
 #+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/spelling)
 (use-package flyspell-lazy
@@ -295,9 +850,8 @@ CLOCK: [2021-04-10 Sat 20:58]--[2021-04-10 Sat 21:40] =>  0:42
 CLOCK: [2021-04-10 Sat 20:10]--[2021-04-10 Sat 20:16] =>  0:06
 :END:
 
-By default, Emacs gives priority to Aspell, if installed. This default can be overridden with the user option ~ispell-program-name~. The user option ~ispell-dictionary~, in turn, controls the dictionary to be used by the program declared under ~ispell-program-name~.
 
-By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-checking-enable-auto-dictionary~ to ~t~. Apparently this mode is kind of buggy, and the issues associated with it can be avoided only by disabling it altogether.
+Replaced by ~jinx~.
 
 #+begin_src emacs-lisp :results silent
 (use-feature flyspell
@@ -382,12 +936,6 @@ By default, ~auto-dictionary-mode~ is turned off. To enable it, set ~spell-check
    "s-c" 'flyspell-correct-wrapper))
 #+end_src
 
-*** TODO [#7] Create dwim version of flyspell-buffer
-:PROPERTIES:
-:Effort:   0:30
-:ID:       05BDF065-280F-4F09-B55A-9B32D10A36B1
-:END:
-
 ** ispell
 :PROPERTIES:
 :ID:       4C7A4F1F-41B8-49AB-B0F8-0EB092F88696
@@ -439,11 +987,6 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
   :general
   ("M-A-p" 'ps/ispell-toggle-language))
 #+end_src
-
-*** TODO Make Aspell use American and British English
-:PROPERTIES:
-:ID:       FF58FF80-5BEE-428C-B60C-FDD8D05AD967
-:END:
 
 ** corfu-doc-terminal
 :PROPERTIES:
@@ -525,6 +1068,8 @@ CLOCK: [2023-03-17 Fri 21:54]--[2023-03-17 Fri 22:24] =>  0:30
 :END:
 
 /[[https://github.com/emacs-openai/openai][openai]] is an Elisp library for the OpenAI API./
+
+No longer using ~chatgpt~.
 
 #+begin_src emacs-lisp
 (use-package openai
@@ -667,7 +1212,7 @@ CLOCK: [2023-05-14 Sun 09:32]--[2023-05-14 Sun 09:49]--[2023-05-14 Sun 09:53] =>
 CLOCK: [2021-08-02 Mon 21:38]--[2021-08-02 Mon 22:09] =>  0:31
 :END:
 
-[2023-05-11 Thu 20:14] Replaced by powerthesaurus.
+[2023-05-11 Thu 20:14] Replaced by ~powerthesaurus~~.
 
 #+begin_src emacs-lisp :results silent
 (use-feature dictionary
@@ -686,7 +1231,7 @@ CLOCK: [2021-04-03 Sat 18:49]--[2021-04-03 Sat 18:54] =>  0:05
 
 /[[https://github.com/xuchunyang/osx-dictionary.el][osx-dictionary]] is a Mac OS X Dictionary.app interface for Emacs./
 
-[2023-05-11 Thu 20:14] Replaced by powerthesaurus.
+[2023-05-11 Thu 20:14] Replaced by ~powerthesaurus~~.
 
 #+begin_src emacs-lisp :results silent
 (use-package osx-dictionary
@@ -694,7 +1239,7 @@ CLOCK: [2021-04-03 Sat 18:49]--[2021-04-03 Sat 18:54] =>  0:05
   ("H-y" 'osx-dictionary-search-input))
 #+end_src
 
-** exec-path-from-shell
+** exec-paths-from-shell
 :PROPERTIES:
 :ID:       31238246-249F-42E8-BE80-06DB327259FD
 :END:
@@ -707,20 +1252,20 @@ CLOCK: [2021-02-05 Fri 18:46]--[2021-02-05 Fri 19:00] =>  0:14
 CLOCK: [2021-02-05 Fri 19:09]--[2021-02-05 Fri 19:14] =>  0:05
 :END:
 
-/[[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] makes Emacs use the $PATH set up by the user's shell./
+/[[https://github.com/purcell/exec-paths-from-shell][exec-paths-from-shell]] makes Emacs use the $PATH set up by the user's shell./
 
 [2023-04-30 Sun 10:14] This shouldn't be needed if Emacs is launched from the Terminal, as I do. Disabling for the time being; will remove if noticed no issues.
 
 #+begin_src emacs-lisp :results silent
-(use-package exec-path-from-shell
+(use-package exec-paths-from-shell
   :disabled
   :if (eq system-type 'darwin)
   :init
   (dolist (var '("NVM_DIR"))
-    (add-to-list 'exec-path-from-shell-variables var))
+    (add-to-list 'exec-paths-from-shell-variables var))
 
   :config
-  (exec-path-from-shell-initialize))
+  (exec-paths-from-shell-initialize))
 #+end_src
 
 *** resources
@@ -771,6 +1316,9 @@ CLOCK: [2021-02-05 Fri 19:09]--[2021-02-05 Fri 19:14] =>  0:05
 :PROPERTIES:
 :ID:       40207396-12B9-4374-9341-713E88772275
 :END:
+
+
+Replaced with ~elpaca~.
 
 #+begin_src emacs-lisp :results silent
 (defhydra hydra-straight (:hint nil)
@@ -888,26 +1436,6 @@ CLOCK: [2022-07-17 Sun 11:55]--[2022-07-17 Sun 12:30] =>  0:35
 
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package constants)
-#+end_src
-
-** md4rd
-:PROPERTIES:
-:ID:       CEDBA9CB-F7FB-4E7F-8CAB-C96812BE1517
-:END:
-
-/[[https://github.com/ahungry/md4rd][md4rd]] is an Emacs mode for browsing Reddit./
-
-[2023-04-04 Tue 18:57]
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package md4rd
-  :config
-  (setq md4rd-subs-active '(emacs))
-  (setq md4rd--oauth-access-token
-        (auth-source-pass-get 'secret "auth-sources/reddit"))
-  (setq md4rd--oauth-refresh-token
-        (auth-source-pass-get "refresh" "auth-sources/reddit"))
-
-  (add-hook 'md4rd-mode-hook #'md4rd-indent-all-the-lines))
 #+end_src
 
 ** iy-go-to-char
@@ -1327,7 +1855,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   :defer 60
   :commands slack-select-rooms
   :config
-  (setq slack-file-dir ps/dir-downloads)
+  (setq slack-file-dir paths-dir-downloads)
   (setq slack-prefer-current-team t)
 
   (slack-register-team
@@ -1456,7 +1984,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 #+begin_src emacs-lisp :results silent
 (use-package scihub
   :config
-  (setq scihub-download-directory ps/dir-downloads)
+  (setq scihub-download-directory paths-dir-downloads)
   (setq scihub-open-after-download nil)
   (setq scihub-fetch-domain 'scihub-fetch-domains-lovescihub)
   ;; run `scihub-homepage' for a list of available scihub webservers
@@ -2320,7 +2848,7 @@ point."
 ;; (org-yank)
 ;; (org-id-copy)
 ;; (ps/org-show-subtree-hide-drawers)
-;; (ps/visit-file-or-switch-to-buffer ps/file-wiki-entries)
+;; (ps/visit-file-or-switch-to-buffer paths-file-wiki-entries)
 ;; (ps/yasnippet-expand-by-key "wpe")
 ;; (current-kill 2)))
 
@@ -2405,7 +2933,7 @@ The `slug' generated from that STR follows these rules:
   (let* ((name (read-from-minibuffer "Entry name: "))
          (slug (org-hugo-slug name))
          (filename (concat slug ".org")))
-    (find-file (expand-file-name filename ps/dir-wiki-entries))
+    (find-file (expand-file-name filename paths-dir-wiki-entries))
     (insert "#+title: " name
             "\n[[https://forum.effectivealtruism.org/tag/" slug "][online entry]]\n")
     (ps/yasnippet-expand-by-name "wiki-new-entry-checklist")
@@ -2427,7 +2955,7 @@ The `slug' generated from that STR follows these rules:
   (let* ((name (read-from-minibuffer "Entry name: "))
          (slug (org-hugo-slug name))
          (filename (concat slug ".org")))
-    (find-file (expand-file-name filename ps/dir-hear-notes))
+    (find-file (expand-file-name filename paths-dir-hear-notes))
     (insert "#+title: " name "\n\n")
     (org-insert-heading)
     (insert name "\n")
@@ -2440,7 +2968,7 @@ The `slug' generated from that STR follows these rules:
   "Find heading in Wiki list of articles whose name matches clipboard string and add the current date to it."
 
   (interactive)
-  (ps/visit-file-or-switch-to-buffer ps/file-wiki-entries)
+  (ps/visit-file-or-switch-to-buffer paths-file-wiki-entries)
   (org-link-open-from-string (concat "[[*" (current-kill 0) "]]"))
   (org-schedule nil "today"))
 
@@ -2834,7 +3362,7 @@ I don't think I need this, except for the ~scihub~ functionality. However, .[[ht
            (file-name (url-file-nondirectory url)))
       (unless (equal (file-name-extension file-name) "pdf")
         (setq file-name (file-name-with-extension file-name "pdf")))
-      (let ((file-path (file-name-concat ps/dir-downloads file-name)))
+      (let ((file-path (file-name-concat paths-dir-downloads file-name)))
         (url-copy-file url file-path 1)))))
 #+end_src
 
@@ -3108,7 +3636,7 @@ CLOSED: [2021-11-23 Tue 22:32]
 :END:
 [2022-10-02 Sun 14:12] I installed this package only because I wanted to have a persistent ~*scratch*~ buffer. But I am now accomplishing this with [[id:B6CB6A6C-0BCC-4A07-9608-BDCA6184C63A][persistent scratch]].
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-feature remember
   :custom
   (remember-data-file "~/Google Drive/Apps/Emacs/notes")
@@ -3125,7 +3653,7 @@ CLOCK: [2021-06-25 Fri 21:05]--[2021-06-25 Fri 21:14] =>  0:09
 CLOCK: [2021-04-06 Tue 21:35]--[2021-04-06 Tue 21:54] =>  0:19
 :END:
 [2022-09-08 Thu 09:31] No longer using.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package org-sidebar
   :custom
   (org-sidebar-default-fns '(org-sidebar--todo-items))
@@ -3149,7 +3677,7 @@ also upcoming items."
 :ID:       B7B8956F-08D9-49E0-873C-4513F6FD44B8
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(normal)) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(normal)) (print paths-file-init))
 (defhydra hydra-org-wiki-notes
   (:exit t
          :idle 0.5)
@@ -3214,7 +3742,7 @@ also upcoming items."
   )
 #+end_src
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(normal)) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(normal)) (print paths-file-init))
 (defun ps/org-id-wiki-with-clock (key)
   (funcall (intern (concat "hydra-org-wiki-notes/lambda-" key "-and-exit")))
   (org-clock-in))
@@ -3226,7 +3754,7 @@ also upcoming items."
 :END:
 [2022-07-21 Thu 16:59] replaced by [[id:DDFE6DC9-A986-4E79-BF5B-A99124B65BA2][smtpmail-multi]].
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-feature smtpmail
   :custom
   (smtpmail-smtp-server "smtp.gmail.com")
@@ -3241,7 +3769,7 @@ also upcoming items."
 :ID:       672A178C-D2C3-4A2A-9B6F-19A6E2E4FF4F
 :END:
 I rely on phone notifications for events in my calendar, so I don't need this.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package org-wild-notifier
   :defer 10
   :config
@@ -3262,7 +3790,7 @@ CLOCK: [2021-04-21 Wed 14:33]--[2021-04-21 Wed 14:38] =>  0:05
 :END:
 [2022-07-21 Thu 22:05] Replaced with version that requires no external dependencies.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package buffer-move
   :demand t
   :after winum
@@ -3295,7 +3823,7 @@ If there is no horizontal split, signal an error."
 :END:
 
 [2022-07-17 Sun 10:25] No longer using.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package google-contacts)
 #+end_src
 
@@ -3306,7 +3834,7 @@ If there is no horizontal split, signal an error."
 
 [2022-07-17 Sun 09:34] For this type of movement, [[id:D83A1681-A3F0-4C70-9986-F01275320585][avy]] is much more efficient.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (general-define-key
  "A-C-s-M-," "C-u C-u <up>"
  "A-C-s-M-." "C-u C-u <down>")
@@ -3318,7 +3846,7 @@ If there is no horizontal split, signal an error."
 :END:
 [2022-07-17 Sun 09:34] For this type of movement, [[id:D83A1681-A3F0-4C70-9986-F01275320585][avy]] is much more efficient.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (general-define-key
  "A-C-s-M-k" "C-u <up>"
  "A-C-s-M-l" "C-u <down>")
@@ -3330,7 +3858,7 @@ If there is no horizontal split, signal an error."
 :END:
 [2022-07-17 Sun 09:34] For this type of movement, [[id:D83A1681-A3F0-4C70-9986-F01275320585][avy]] is much more efficient.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (general-define-key
  "A-C-s-M-u" "C-u A-C-s-u"
  "A-C-s-M-p" "C-u A-C-s-p")
@@ -3661,7 +4189,7 @@ I don't think I needed, given that I use ~company-emoji~.
 
 [2022-07-09 Sat 08:55] Enabling it to use with [[id:94F76C3D-9547-431D-93AB-8814F4218AFF][slack]].
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package emojify
   :hook
   (slack-mode-hook . emojify-mode))
@@ -3826,7 +4354,7 @@ CLOCK: [2021-04-02 Fri 16:59]--[2021-04-02 Fri 17:11] =>  0:12
 I've considered migrating to ivy, but unfortunately Helm offers better support for org-related commands. Examples include ~helm-org-in-buffer-headings~, ~org-helm-ql~, ~org-rifle~, and others.
 
 [2022-06-21 Tue 20:51] No longer using ~helm~.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package helm
   :demand t
   :custom
@@ -3962,7 +4490,7 @@ I think the desired behavior is that point goes to the top-level heading, with a
 :END:
 [2022-06-21 Tue 20:49] Replaced by ~consult-ag~.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print paths-file-init))
 (use-package helm-ag
   :general
   ("A-C-a" 'helm-ag))
@@ -3974,7 +4502,7 @@ I think the desired behavior is that point goes to the top-level heading, with a
 :END:
 [2022-06-22 Wed 19:20] No longer using ~helm~.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package helm-bibtex
   :demand t
   :after bibtex-completion)
@@ -4043,7 +4571,7 @@ Stopped working.
 :ID:       B0D9D5A9-D7E1-4950-9716-1B660D343C45
 :END:
 Replacing with ~org-ql-find~.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package helm-org-ql
   :after helm
   :config
@@ -4215,7 +4743,7 @@ CLOCK: [2022-06-18 Sat 11:22]--[2022-06-18 Sat 11:53] =>  0:31
 :ID:       27A45C51-0A2E-47B8-BA06-F9BCCCFC6680
 :END:
 [2022-06-21 Tue 20:50] No longer using ~helm~.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print paths-file-init))
 (use-package helm-pass
   :general
   ("H-P" 'helm-pass))
@@ -4229,10 +4757,10 @@ CLOCK: [2022-06-18 Sat 11:22]--[2022-06-18 Sat 11:53] =>  0:31
 CLOCK: [2021-07-31 Sat 16:07]--[2021-07-31 Sat 16:19] =>  0:12
 :END:
 [2022-06-21 Tue 20:44] Replaced by ~consult-ripgrep~.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print paths-file-init))
 (use-package helm-rg
   :custom
-  (helm-rg-default-directory ps/dir-org)
+  (helm-rg-default-directory paths-dir-org)
   (helm-rg-thing-at-point nil) ; do not prepopulate minibuffer
   :config
   (defun ps/helm-rg-root ()
@@ -4281,7 +4809,7 @@ After installing it, I realized I already have ~helm-swoop~, so I don't see a ne
 CLOCK: [2021-04-14 Wed 12:55]--[2021-04-14 Wed 13:14] =>  0:19
 :END:
 [2022-06-21 Tue 20:46] Migrated to ~consult~.
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '(disabled)) (print paths-file-init))
 (use-package helm-swoop
   :custom
   (helm-swoop-pre-input-function (lambda () "")) ; do not start search with thing at point (press 'C-w' when you need it)
@@ -4305,7 +4833,7 @@ CLOCK: [2021-06-25 Fri 21:15]--[2021-06-25 Fri 21:16] =>  0:01
 :END:
 [2022-06-22 Wed 06:09] Replaced by [[id:437A790A-467F-46CB-9EE3-25AA91D43D89][consult-yasnippet]].
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package helm-c-yasnippet
   :after yasnippet
   :general
@@ -4512,15 +5040,15 @@ have a single notes file, rather than one file per note. I address this by repla
 
 [2022-06-22 Wed 15:51] Migrating to [[id:35FB5BB5-6552-48C6-983A-F90011CCA908][org-ref]] and [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]]; no longer needed.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
   (use-package org-ref
     :demand t
     :after (helm-bibtex bibtex-completion)
     :custom
-    (org-ref-csl-default-style (expand-file-name "org-mode.csl" ps/dir-wiki-references))
+    (org-ref-csl-default-style (expand-file-name "org-mode.csl" paths-dir-wiki-references))
     (org-ref-default-bibliography bibtex-completion-bibliography)
     (org-ref-bibliography-notes bibtex-completion-notes-path)
-    (org-ref-pdf-directory ps/dir-downloads)
+    (org-ref-pdf-directory paths-dir-downloads)
 
     ;; Make Helm-bibtex use file path specified in bibtex entry
     ;; See emacs.stackexchange.com/a/58248/32089
@@ -4535,7 +5063,7 @@ have a single notes file, rather than one file per note. I address this by repla
 
     ;; set org-ref to create one file per note
     (org-ref-notes-function 'org-ref-notes-function-many-files)
-    (org-ref-notes-directory ps/dir-bibliographic-notes)
+    (org-ref-notes-directory paths-dir-bibliographic-notes)
 
     ;; Added after upgrade to version 3
     (org-ref-insert-link-function 'org-ref-insert-link-hydra/body)
@@ -4714,7 +5242,7 @@ Currently I've defined the key mappings but have not updated the menu to reflect
 CLOCK: [2021-03-01 Mon 09:45]--[2021-03-01 Mon 09:58] =>  0:13
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package helm-org-rifle
   :general
   (org-mode-map
@@ -4782,7 +5310,7 @@ This is needed for some [[id:DCD9D75D-7814-49D8-A3E0-33846D5A08FD][bibtex-comple
 
 [2022-06-23 Thu 08:32] No longer using [[id:DCD9D75D-7814-49D8-A3E0-33846D5A08FD][bibtex-completion]].
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package request
   :demand t
   :after bibtex-completion)
@@ -4830,7 +5358,7 @@ CLOCK: [2021-04-06 Tue 16:19]--[2021-04-06 Tue 16:26] =>  0:07
 :END:
 Not needed since ~consult-locate~ can be configured to call ~mfind~.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package spotlight)
 #+end_src
 
@@ -4863,7 +5391,7 @@ CLOCK: [2021-05-15 Sat 22:26]--[2021-05-15 Sat 22:30] =>  0:04
 
 Since I don't use yankpad, I don't need this package either.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package ya-org-capture
   :straight (ya-org-capture
              :host github
@@ -4880,7 +5408,18 @@ Since I don't use yankpad, I don't need this package either.
 https://github.com/Kungsgeten/yankpad
 I don't really see the need for this. I'm happy with have separate files for my snippets.
 
-#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print ps/file-init))
+#+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-package yankpad)
 #+end_src
 
+** local variables
+:PROPERTIES:
+:ID:       4FB9C92B-B39E-4C3D-B9AE-A3342A6F1695
+:END:
+# Local Variables:
+# eval: (files-extras-buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
+# eval: (files-extras-buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
+# eval: (add-hook 'before-save-hook 'org-make-toc nil t)
+# eval: (flycheck-mode -1)
+# doom-modeline-enable-word-count: nil
+# End:

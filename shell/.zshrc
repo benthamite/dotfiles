@@ -34,11 +34,22 @@ export GOKU_EDN_CONFIG_FILE="$DOTFILES/karabiner/karabiner.edn"
 # emms
 export PATH="$HOME/source/emms/src:$PATH" # emms-print-metadata binary
 
-# aliases
-alias muinit="cd ~; mu init --maildir=$HOME/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL; mu index"
+# mu
+alias muinit="cd ~; mu init --maildir=$HOME/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL --my-address=$WORK_EMAIL; mu index"
 
 # homebrew
 export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
 
 # libby
 export LIBBY_OUTPUT_DIR="$HOME/Downloads/"
+
+# ruby
+export PATH="$HOME/.gem/bin:$PATH"
+export GEM_HOME="$HOME/.gem"
+
+# mdfind
+# silence debugging output
+# reddit.com/r/MacOS/comments/zq36l1/comment/j3s0oy5/
+function mdfind() {
+    /usr/bin/mdfind $@ 2> >(grep --invert-match ' \[UserQueryParser\] ' >&2)
+}

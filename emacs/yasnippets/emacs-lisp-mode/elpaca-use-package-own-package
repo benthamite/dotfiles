@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: elpaca-use-package-own-package
+# key: eupo
+# contributor: Pablo Stafforini
+# --
+(use-package $1
+  :elpaca nil
+  :load-path "/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/emacs/lisp/"
+  :after $2
+  :demand t$3
+  :config
+$0
+)

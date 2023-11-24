@@ -1,3 +1,4 @@
+accounts.google.com
 airbnb.com
 airserbia.com
 airtable.com
@@ -51,6 +52,7 @@ libgen.
 LinkedIn.com
 list-manage.com
 loc.gov
+mail.google.com
 mailerlite.com
 mailist-manage.eu
 maps.

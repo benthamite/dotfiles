@@ -42,9 +42,11 @@
 ;;;; Functions
 
 (defun tab-bar-extras-reset ()
-  "Temporary command to handle mysterious proliferation of clocks."
+  "Reset the tab bar.
+This resets the clock, and fixes the mysterious proliferation of clocks."
   (interactive)
   (require 'display-wttr)
+  (display-time)
   (setq global-mode-string tab-bar-extras-global-mode-string)
   (display-wttr-mode))
 

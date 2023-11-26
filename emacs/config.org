@@ -4497,9 +4497,9 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
   :after tab-bar
   :config
   (setq world-clock-list '(("Europe/Barcelona" "Barcelona")
+                           ("Europe/Madrid" "Madrid")
                            ("Europe/London" "London")
                            ("America/Buenos_Aires" "Buenos Aires")
-                           ("America/Nassau" "Nassau")
                            ("America/New_York" "New York")
                            ("America/Los_Angeles" "San Francisco")))
   (setq display-time-format "%a %e %b %T")

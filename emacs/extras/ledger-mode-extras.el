@@ -144,12 +144,6 @@
       (call-interactively #'ledger-mode-extras-sort-region-reversed)
     (ledger-mode-extras-sort-buffer-reversed)))
 
-(defun mode-mode-extras-extras-sort-region-or-buffer-reversed ()
-  "Toggle current transaction and move to the next transaction."
-  (interactive)
-  (ledger-toggle-current-transaction)
-  (ledger-navigate-next-xact-or-directive))
-
 (defun ledger-mode-extras-copy-transaction-at-point ()
   "Save transaction at point to the kill ring."
   (interactive)

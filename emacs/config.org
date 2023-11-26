@@ -9432,6 +9432,9 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 #+begin_src emacs-lisp :results silent
 (use-package org-noter
+  :elpaca (org-noter
+           :host github
+           :repo "org-noter/org-noter")
   :after org
   :config
   (setq org-noter-notes-search-path `(,paths-dir-bibliographic-notes))

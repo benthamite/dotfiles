@@ -1948,6 +1948,8 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
           ,@modus-themes-preset-overrides-intense))
 
   (add-hook 'modus-themes-after-load-theme-hook #'faces-extras-load-custom-faces)
+  (add-hook 'modus-themes-after-load-theme-hook #'frames-extras-restore-window-divider)
+
   :general
   ("A-u" 'modus-themes-toggle))
 #+end_src

@@ -1947,6 +1947,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
           ;; for the rest, use the predefined intense values
           ,@modus-themes-preset-overrides-intense))
 
+  (add-hook 'modus-themes-after-load-theme-hook #'faces-extras-load-custom-faces)
   :general
   ("A-u" 'modus-themes-toggle))
 #+end_src
@@ -1965,7 +1966,6 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
    :modus-themes-load
    '((modus-themes-extras-load-theme-conditionally)))
 
-  (add-hook 'modus-themes-after-load-theme-hook #'faces-extras-load-custom-faces)
   (add-hook 'modus-themes-after-load-theme-hook #'modus-themes-extras-highlight-parentheses)
   (add-hook 'modus-themes-after-load-theme-hook #'modus-themes-extras-set-faces))
 #+end_src

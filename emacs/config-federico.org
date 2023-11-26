@@ -146,6 +146,7 @@
  (:modus-themes-load . ((modus-themes-load-theme 'modus-vivendi)))
  (:frame-maximize . ((ignore)))
  (:citar-keybindings . ((ignore)))
+ (:frame-extras-maximize-frame . ((ignore)))
  (:org-fold . ((ignore))))
 #+end_src
 

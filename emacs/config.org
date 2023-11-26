@@ -439,7 +439,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#mu4e][mu4e]]
   - [[#mu4e-extras][mu4e-extras]]
   - [[#mu4e-contrib][mu4e-contrib]]
-  - [[#mu4e-alert][mu4e-alert]]
   - [[#org-msg][org-msg]]
   - [[#org-msg-extras][org-msg-extras]]
 - [[#messaging][messaging]]
@@ -934,7 +933,6 @@ NAME and ARGS are in `use-package'."
   ;; :ensure org-plus-contrib
   ;; )
 #+end_src
-
 
 *** use-package-ensure-system-package
 :PROPERTIES:
@@ -10721,28 +10719,13 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
 :END:
 
+[2023-11-26 Sun] Do I need this? Disabling to test.
+
 #+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :mu4e)
 (use-feature mu4e-contrib
+  :disabled
   :after mu4e
   :demand t)
-#+end_src
-
-** mu4e-alert
-:PROPERTIES:
-:ID:       32C6498F-B3C5-4D50-8ACC-8DD83FF48448
-:END:
-
-/[[https://github.com/iqbalansari/mu4e-alert][mu4e-alert]] supports desktop notifications and modeline display for mu4e./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
-(use-package mu4e-alert
-  :after mu4e
-  :demand t
-  :config
-  ;; Notify about unread emails in inbox only
-  (setq mu4e-alert-interesting-mail-query "flag:unread AND maildir:/inbox")
-
-  (mu4e-alert-enable-mode-line-display))
 #+end_src
 
 ** org-msg

@@ -2132,6 +2132,9 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 :PROPERTIES:
 :ID:       97CCF169-9F3B-40A4-BB81-220DDE6DB1DB
 :END:
+:LOGBOOK:
+CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
+:END:
 
 #+begin_src emacs-lisp
 (use-personal-package tab-bar-extras
@@ -2139,16 +2142,40 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
   :demand t
   :config
   (setq tab-bar-extras-global-mode-string
-        '(" "
-          (:eval (propertize display-time-string 'face 'faces-extras-display-time))
-          " |  "
-          chemacs-profile-name
-          " | "
-          fancy-battery-mode-line
-          " | "
-          telega-mode-line-format
-          " | "))
+	'(" "
+	  ;; date & time
+	  (:eval (propertize display-time-string 'face 'faces-extras-display-time))
+
+	  ;; Chemacs profile name
+	  " |  " chemacs-profile-name
+
+	  ;; battery information
+	  " | " fancy-battery-mode-line
+
+	  ;; github notifications
+	  (:eval (when (> doom-modeline--github-notification-number 0)
+		   (concat
+		    " | "
+		    (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
+					:face 'doom-modeline-notification)
+		    (doom-modeline-vspc)
+		    (propertize
+		     (cond
+		      ((> doom-modeline--github-notification-number 99) "99+")
+		      (t (number-to-string doom-modeline--github-notification-number)))
+		     'face '(:inherit
+			     (doom-modeline-unread-number doom-modeline-notification))))))
+
+	  ;; telega notifications
+	  (:eval (when (and
+			(telega-server-live-p)
+			(> (plist-get telega--unread-message-count :unread_count) 0))
+		   (concat " | " telega-mode-line-string)))
+	  " | "))
+
   (setq global-mode-string tab-bar-extras-global-mode-string)
+  (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
+
   (run-with-idle-timer 300 t #'tab-bar-extras-reset-unless-clock))
 #+end_src
 

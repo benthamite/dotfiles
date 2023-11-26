@@ -130,6 +130,7 @@
  (:window-split . ((ignore)))
  (:modus-themes-load . ((modus-themes-load-theme 'modus-vivendi)))
  (:citar-keybindings . ((ignore)))
+ (:frame-extras-maximize-frame . ((ignore)))
  (:org-fold . ((ignore))))
 #+end_src
 

@@ -3971,6 +3971,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   (setq split-height-threshold nil)
   ;; move point to top of buffer if `scroll-down-command' invoked when screen can scroll no further
   (setq scroll-error-top-bottom t)
+  (setq split-width-threshold 200)
 
   ;; we add `*ocr-pdf' buffer to list of buffers not to be displayed,
   ;; so that the process runs in the background`
@@ -4008,9 +4009,6 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 (use-personal-package window-extras
   :after window
   :demand t
-  :config
-  (setq split-width-threshold 200)
-
   :general
   ("C-H-0" 'window-extras-switch-to-last-window
    "A-C-H-0" 'window-extras-switch-to-minibuffer-window

@@ -58,5 +58,10 @@ from disappearing when the tab-bar is reset."
   (unless org-clock-current-task
     (tab-bar-extras-reset)))
 
+(defun tab-bar-extras-update-tab-bar-color ()
+  "Update the tab-bar color to match the modeline color."
+  (let ((active-background (face-background 'mode-line)))
+    (set-face-background 'tab-bar active-background)))
+
 (provide 'tab-bar-extras)
 ;;; tab-bar-extras.el ends here

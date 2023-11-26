@@ -52,8 +52,6 @@
 
 (defun eww-extras-url-to-file (type &optional url)
   "Generate file of TYPE for URL."
-  (require 'ebib)
-  (require 'ebib-utils)
   (require 'org-web-tools-extras)
   (require 'prot-eww)
   (let* ((url (simple-extras-get-url url))

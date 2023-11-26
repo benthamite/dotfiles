@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'ledger-mode)
-(require 'paths)
 
 ;;;; Functions
 

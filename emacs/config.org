@@ -2585,7 +2585,6 @@ CLOCK: [2021-04-03 Sat 18:54]--[2021-04-03 Sat 18:55] =>  0:01
 CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
 :END:
 
-
 ** simple
 :PROPERTIES:
 :ID:       E2461097-8125-471E-A987-139F0D3EBEAA
@@ -4469,7 +4468,6 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
   :demand t)
 #+end_src
 
-
 ** calfw-blocks
 :PROPERTIES:
 :ID:       03DD73DD-6347-4D30-B103-A61718459C41
@@ -4955,7 +4953,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 (use-package gh-notify
   :elpaca (gh-notify
            :host github
-	   :repo "benthamite/gh-notify"
+           :repo "benthamite/gh-notify"
                       :depth nil)
   :after forge
   :demand t)
@@ -11870,7 +11868,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
 
   (engine/set-keymap-prefix (kbd "H-g")))
 #+end_src
-
 
 ** org-download
 :PROPERTIES:

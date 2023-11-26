@@ -10550,7 +10550,7 @@ CLOCK: [2021-04-15 Thu 20:52]--[2021-04-15 Thu 21:10] =>  0:18
 CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 :END:
 
-/[[https://github.com/djcb/mu][mu4e]] is an an emacs-based e-mail client./
+/[[https://github.com/djcb/mu][mu4e]] is an an Emacs-based e-mail client./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
 (use-package mu4e
@@ -10575,7 +10575,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-trash-folder "/[Gmail]/Trash")
   (setq mu4e-attachment-dir paths-dir-downloads)
   (setq mu4e-change-filenames-when-moving t)
-  (setq mu4e-maildir-shortcuts
+  (setq mu4e-search-results-limit
         `((,mu4e-drafts-folder  . ?d)
           (,mu4e-sent-folder    . ?t)
           (,mu4e-trash-folder   . ?x)
@@ -10586,14 +10586,11 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-compose-format-flowed t)
   (setq mu4e-confirm-quit nil)
   (setq mu4e-headers-date-format "%Y-%m-%d %H:%M")
-  (setq mu4e-headers-include-related nil)
-  (setq mu4e-headers-results-limit 1000)
+  (setq mu4e-search-include-related nil)
+  (setq mu4e-search-results-limit 1000)
   (setq mu4e-headers-visible-lines 25)
   (setq mu4e-hide-index-messages t)
-  (setq mu4e-html2text-command 'mu4e-shr2text) ; requires `mu4e-contrib'
   (setq mu4e-sent-messages-behavior 'delete) ; Gmail already keeps a copy
-  (setq mu4e-view-show-addresses t)
-  (setq mu4e-view-show-images t)
 
   ;; performance improvements
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
@@ -10622,8 +10619,8 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    "r" 'mu4e-compose-reply)
   (mu4e-main-mode-map
    "h" 'mu4e-display-manual
-   "j" 'mu4e~headers-jump-to-maildir
-   "s" 'mu4e-headers-search
+   "j" 'mu4e-search-maildir
+   "s" 'mu4e-search
    "u" 'mu4e-update-mail-and-index)
   (mu4e-headers-mode-map
    "*" 'mu4e-headers-mark-all

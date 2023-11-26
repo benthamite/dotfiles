@@ -27,7 +27,6 @@
 
 ;;; Code:
 
-(require 'paths)
 ;;;; User options
 
 (defgroup tab-bar-extras ()

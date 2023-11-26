@@ -6085,9 +6085,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (setq flycheck-emacs-lisp-load-path 'inherit)
   (setq flycheck-indication-mode nil)
 
-  ;; (add-hook 'org-src-mode-hook (lambda ()
-  ;; "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
-  ;; (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc))))
+  ;; Disable `emacs-lisp-checkdoc' in `org-src' blocks.
+  (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc))
 
   :general
   ("M-k" 'flycheck-next-error))

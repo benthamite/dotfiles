@@ -6422,14 +6422,14 @@ To populate the database of historical prices:
    "s-a" 'ledger-add-transaction
    "M-s-a" 'ledger-mode-extras-report-account
    "s-b" 'ledger-post-edit-amount
-   "M-s-b" 'ledger-mode-extras-decrease-date-of-transaction-at-point-by-one-day
+   "M-s-b" 'ledger-mode-extras-decrease-date-by-one-day
    "s-c" 'ledger-mode-extras-align-and-next
    "M-s-c" 'ledger-mode-extras-copy-transaction-at-point
    "s-d" 'ledger-delete-current-transaction
    "s-e" 'mode-mode-extras-extras-sort-region-or-buffer-reversed
    "M-s-e" 'ledger-toggle-current-transaction
    "s-f" 'ledger-occur
-   "M-s-f" 'ledger-mode-extras-increase-date-of-transaction-at-point-by-one-day
+   "M-s-f" 'ledger-mode-extras-increase-date-by-one-day
    "s-g" 'ledger-report-goto
    "s-i" 'ledger-insert-effective-date
    "s-y" 'ledger-copy-transaction-at-point

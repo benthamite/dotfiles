@@ -5918,12 +5918,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
    "M-n" nil))
 #+end_src
 
-*** TODO [#5] Figure out why env variables differ between shell and eshell
-:PROPERTIES:
-:ID:       E57974CA-1CC6-45B7-A1D3-359C1C025E92
-:END:
-e.g. ~nvm~ isn't recognized by eshell
-
 ** emacs-eat
 :PROPERTIES:
 :ID:       94971F2F-FF78-4088-BBDB-A95ADEDECE9B
@@ -6435,12 +6429,6 @@ To populate the database of historical prices:
 :ID:       E235F4DC-677D-4143-A679-66FCBC310101
 :END:
 
-*** TODO [#6] Consider replacing ~commodities.py~ with Elisp alternative
-:PROPERTIES:
-:ID:       303E3552-2FD9-41A9-A6E6-C26110E61282
-:END:
-[[https://www.reddit.com/r/emacs/comments/xdrg1r/semiautomatically_fetching_ledger_commodity/][This]] could be adapted.
-
 *** resources
 :PROPERTIES:
 :ID:       FD6B578E-9794-4C38-A2F3-5A877ED2C4C8
@@ -6734,15 +6722,13 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
    "A-u" 'pdf-view-midnight-minor-mode))
 #+end_src
 
-*** TODO Tweak function to copy all pdf text to clipboard so that the region is copied instead, if active
-:PROPERTIES:
-:ID:       2CA2A24B-DB63-47EC-977E-B7EFC6F7CAB9
-:END:
-
 *** TODO [#4] Tweak chrome headless command so that chrome authenticates before printing a pdf
 :PROPERTIES:
 :ID:       BDE975FE-56AA-45C3-AF47-C70503051B30
 :Effort:   0:20
+:END:
+:LOGBOOK:
+CLOCK: [2023-11-25 Sat 22:25]--[2023-11-25 Sat 23:33] =>  1:08
 :END:
 https://stackoverflow.com/questions/62602327/headless-chrome-sharing-credentials
 Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~

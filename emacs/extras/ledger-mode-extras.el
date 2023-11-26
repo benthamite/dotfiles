@@ -168,33 +168,28 @@
         (xact-ends (ledger-navigate-end-of-xact)))
     (narrow-to-region xact-begins xact-ends)))
 
-(defun ledger-mode-extras--increase-date-of-transaction-at-point (days)
-  "Increase date of transaction at point by DAYS."
-  (interactive)
-  (let* ((xact-begins (ledger-navigate-beginning-of-xact))
-         (xact-ends (ledger-navigate-end-of-xact))
-         (xact (buffer-substring xact-begins xact-ends)))
-    (delete-region xact-begins xact-ends)
-    (insert
-     (with-temp-buffer
-       (insert xact)
-       (let* ((date (ledger-xact-date))
-              (timestamp (date-to-time date))
-              (date-minus-one-day (format-time-string "%Y-%m-%d" (time-add timestamp (days-to-time days)))))
-         (goto-char (point-min))
-         (re-search-forward ledger-iso-date-regexp "")
-         (insert date-minus-one-day)
-         (buffer-string))))))
+(defun ledger-mode-extras--increase-date (days)
+  "Increase the date of transaction at point by DAYS.
+DAYS can be positive or negative."
+  (save-excursion
+    (ledger-mode-extras-narrow-to-xact)
+    (let* ((date (ledger-xact-date))
+           (timestamp (date-to-time date))
+           (date-minus-days (format-time-string "%Y-%m-%d" (time-add timestamp (days-to-time days)))))
+      (goto-char (point-min))
+      (re-search-forward ledger-iso-date-regexp nil t)
+      (replace-match date-minus-days)
+      (widen))))
 
-(defun ledger-mode-extras-increase-date-of-transaction-at-point-by-one-day ()
-  "Increase date of transaction at point by one day."
+(defun ledger-mode-extras-increase-date-by-one-day ()
+  "Increase the date of transaction at point by one day."
   (interactive)
-  (ledger-mode-extras--increase-date-of-transaction-at-point 1))
+  (ledger-mode-extras--increase-date 1))
 
-(defun ledger-mode-extras-decrease-date-of-transaction-at-point-by-one-day ()
-  "Decrease date of transaction at point by one day."
+(defun ledger-mode-extras-decrease-date-by-one-day ()
+  "Decrease the date of transaction at point by one day."
   (interactive)
-  (ledger-mode-extras--increase-date-of-transaction-at-point -1))
+  (ledger-mode-extras--increase-date -1))
 
 (provide 'ledger-mode-extras)
 ;;; ledger-mode-extras.el ends here

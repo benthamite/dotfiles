@@ -2069,6 +2069,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 
 #+begin_src emacs-lisp :results silent
 (use-package doom-modeline
+  :after ghub async
   :demand t
   :init
   (doom-modeline-mode)
@@ -2076,12 +2077,10 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :config
   (tlon-init-override-code-if-available
    :doom-modeline
-   '((setq doom-modeline-mu4e nil) ; avoid distractions
-     (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
+   '((setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
      (setq doom-modeline-buffer-encoding nil)
      (setq doom-modeline-irc t)
      (setq doom-modeline-irc-buffers t)
-     (setq doom-modeline--flycheck-icon t)
      (setq doom-modeline-github t)
      (setq doom-modeline-github-interval (* 10 60))
      (setq doom-modeline-buffer-file-name-style 'auto)

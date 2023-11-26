@@ -4502,7 +4502,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
                            ("America/Buenos_Aires" "Buenos Aires")
                            ("America/New_York" "New York")
                            ("America/Los_Angeles" "San Francisco")))
-  (setq display-time-format "%a %e %b %T")
+  (setq display-time-format "%a %e %b %T %z")
   (setq display-time-interval 1)
   (setq display-time-default-load-average nil)
 

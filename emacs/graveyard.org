@@ -8,6 +8,26 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** mu4e-alert
+:PROPERTIES:
+:ID:       32C6498F-B3C5-4D50-8ACC-8DD83FF48448
+:END:
+
+/[[https://github.com/iqbalansari/mu4e-alert][mu4e-alert]] supports desktop notifications and modeline display for mu4e./
+
+[2023-11-25 Sat] I do not regard email messages as requiring immediate attention, so I now prefer not to be notified of unread messages.
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
+(use-package mu4e-alert
+  :after mu4e
+  :demand t
+  :config
+  ;; Notify about unread emails in inbox only
+  (setq mu4e-alert-interesting-mail-query "flag:unread AND maildir:/inbox")
+
+  (mu4e-alert-enable-mode-line-display -1))
+#+end_src
+
 ** osm
 :PROPERTIES:
 :ID:       1DCEE01C-1951-45F0-B9B8-60977E2D4314

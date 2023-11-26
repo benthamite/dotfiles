@@ -48,7 +48,9 @@ This resets the clock, and fixes the mysterious proliferation of clocks."
   (require 'display-wttr)
   (display-time)
   (setq global-mode-string tab-bar-extras-global-mode-string)
-  (display-wttr-mode))
+  (calendar-extras-set-location-variables-from-ip)
+  (display-wttr-mode)
+  (tab-bar-extras-update-tab-bar-color))
 
 (defun tab-bar-extras-reset-unless-clock ()
   "Reset the tab-bar when org-clock isn't running.

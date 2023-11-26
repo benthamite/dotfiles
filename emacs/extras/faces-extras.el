@@ -83,7 +83,13 @@
   (set-face-attribute 'corfu-default nil :family faces-extras-fixed-pitch-font :height 1)
   (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
   (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
-  (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave)))
+  (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
+  (let ((current-color (face-attribute 'mode-line :background)))
+    (set-face-attribute 'tab-bar nil
+			;; slightly increase the size of the tab-bar elements
+			;; :height 1.1
+			;; slightly increase the width of the tab-bar itself
+			:box `(:line-width 3 :color ,current-color :style nil))))
 
 (add-hook 'org-mode-hook #'faces-extras-load-custom-faces)
 

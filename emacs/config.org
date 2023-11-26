@@ -98,6 +98,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#modus-themes][modus-themes]]
   - [[#modus-themes-extras][modus-themes-extras]]
   - [[#highlight-parentheses][highlight-parentheses]]
+  - [[#spacious-padding][spacious-padding]]
   - [[#emoji][emoji]]
   - [[#image][image]]
   - [[#paren][paren]]
@@ -438,7 +439,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#mu4e][mu4e]]
   - [[#mu4e-extras][mu4e-extras]]
   - [[#mu4e-contrib][mu4e-contrib]]
-  - [[#mu4e-alert][mu4e-alert]]
   - [[#org-msg][org-msg]]
   - [[#org-msg-extras][org-msg-extras]]
 - [[#messaging][messaging]]
@@ -933,7 +933,6 @@ NAME and ARGS are in `use-package'."
   ;; :ensure org-plus-contrib
   ;; )
 #+end_src
-
 
 *** use-package-ensure-system-package
 :PROPERTIES:
@@ -1948,6 +1947,9 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
           ;; for the rest, use the predefined intense values
           ,@modus-themes-preset-overrides-intense))
 
+  (add-hook 'modus-themes-after-load-theme-hook #'faces-extras-load-custom-faces)
+  (add-hook 'modus-themes-after-load-theme-hook #'frames-extras-restore-window-divider)
+
   :general
   ("A-u" 'modus-themes-toggle))
 #+end_src
@@ -1966,7 +1968,6 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
    :modus-themes-load
    '((modus-themes-extras-load-theme-conditionally)))
 
-  (add-hook 'modus-themes-after-load-theme-hook #'faces-extras-load-custom-faces)
   (add-hook 'modus-themes-after-load-theme-hook #'modus-themes-extras-highlight-parentheses)
   (add-hook 'modus-themes-after-load-theme-hook #'modus-themes-extras-set-faces))
 #+end_src
@@ -1989,6 +1990,22 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   (global-highlight-parentheses-mode)
 
   (add-hook 'minibuffer-setup-hook #'highlight-parentheses-minibuffer-setup))
+#+end_src
+
+** spacious-padding
+:PROPERTIES:
+:ID:       7CEDA166-BA43-49E6-99EB-0F24766398F6
+:END:
+
+/[[https://git.sr.ht/~protesilaos/spacious-padding][spacious-padding]] increases the spacing of frames and windows./
+
+#+begin_src emacs-lisp
+(use-package spacious-padding
+  :demand t
+  :config
+  (setq spacious-padding-widths '())
+  (add-hook 'spacious-padding-mode-hook #'frames-extras-restore-window-divider)
+  (spacious-padding-mode 1))
 #+end_src
 
 ** emoji
@@ -2054,6 +2071,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 
 #+begin_src emacs-lisp :results silent
 (use-package doom-modeline
+  :after ghub async
   :demand t
   :init
   (doom-modeline-mode)
@@ -2061,12 +2079,10 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :config
   (tlon-init-override-code-if-available
    :doom-modeline
-   '((setq doom-modeline-mu4e nil) ; avoid distractions
-     (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
+   '((setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
      (setq doom-modeline-buffer-encoding nil)
      (setq doom-modeline-irc t)
      (setq doom-modeline-irc-buffers t)
-     (setq doom-modeline--flycheck-icon t)
      (setq doom-modeline-github t)
      (setq doom-modeline-github-interval (* 10 60))
      (setq doom-modeline-buffer-file-name-style 'auto)
@@ -2116,6 +2132,9 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 :PROPERTIES:
 :ID:       97CCF169-9F3B-40A4-BB81-220DDE6DB1DB
 :END:
+:LOGBOOK:
+CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
+:END:
 
 #+begin_src emacs-lisp
 (use-personal-package tab-bar-extras
@@ -2123,16 +2142,40 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
   :demand t
   :config
   (setq tab-bar-extras-global-mode-string
-        '(" "
-          (:eval (propertize display-time-string 'face 'faces-extras-display-time))
-          " |  "
-          chemacs-profile-name
-          " | "
-          fancy-battery-mode-line
-          " | "
-          telega-mode-line-format
-          " | "))
+	'(" "
+	  ;; date & time
+	  (:eval (propertize display-time-string 'face 'faces-extras-display-time))
+
+	  ;; Chemacs profile name
+	  " |  " chemacs-profile-name
+
+	  ;; battery information
+	  " | " fancy-battery-mode-line
+
+	  ;; github notifications
+	  (:eval (when (> doom-modeline--github-notification-number 0)
+		   (concat
+		    " | "
+		    (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
+					:face 'doom-modeline-notification)
+		    (doom-modeline-vspc)
+		    (propertize
+		     (cond
+		      ((> doom-modeline--github-notification-number 99) "99+")
+		      (t (number-to-string doom-modeline--github-notification-number)))
+		     'face '(:inherit
+			     (doom-modeline-unread-number doom-modeline-notification))))))
+
+	  ;; telega notifications
+	  (:eval (when (and
+			(telega-server-live-p)
+			(> (plist-get telega--unread-message-count :unread_count) 0))
+		   (concat " | " telega-mode-line-string)))
+	  " | "))
+
   (setq global-mode-string tab-bar-extras-global-mode-string)
+  (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
+
   (run-with-idle-timer 300 t #'tab-bar-extras-reset-unless-clock))
 #+end_src
 
@@ -2570,7 +2613,6 @@ CLOCK: [2021-04-03 Sat 18:55]--[2021-04-03 Sat 19:01] =>  0:06
 CLOCK: [2021-04-03 Sat 18:54]--[2021-04-03 Sat 18:55] =>  0:01
 CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
 :END:
-
 
 ** simple
 :PROPERTIES:
@@ -3958,6 +4000,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   (setq split-height-threshold nil)
   ;; move point to top of buffer if `scroll-down-command' invoked when screen can scroll no further
   (setq scroll-error-top-bottom t)
+  (setq split-width-threshold 200)
 
   ;; we add `*ocr-pdf' buffer to list of buffers not to be displayed,
   ;; so that the process runs in the background`
@@ -3995,9 +4038,6 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 (use-personal-package window-extras
   :after window
   :demand t
-  :config
-  (setq split-width-threshold 200)
-
   :general
   ("C-H-0" 'window-extras-switch-to-last-window
    "A-C-H-0" 'window-extras-switch-to-minibuffer-window
@@ -4036,10 +4076,12 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :ID:       488EF2B1-CCAC-4B91-A927-F89F71BCDAD3
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :frame-extras)
 (use-personal-package frame-extras
   :after frame
-  :demand t)
+  :demand t
+  :config
+  (add-hook 'elpaca-after-init-hook #'frame-extras-maximize-frame))
 #+end_src
 
 ** winum
@@ -4337,10 +4379,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   :after calendar
   :defer 5
   :config
-  (setq calendar-extras-personal-geolocation (calendar-extras-get-geolocation-from-ip))
-  (setq calendar-location-name (plist-get calendar-extras-personal-geolocation :city))
-  (setq calendar-latitude (plist-get calendar-extras-personal-geolocation :lat))
-  (setq calendar-longitude (plist-get calendar-extras-personal-geolocation :lon))
+  (calendar-extras-set-location-variables-from-ip)
 
   :general
   (org-agenda-mode-map
@@ -4455,7 +4494,6 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
   :demand t)
 #+end_src
 
-
 ** calfw-blocks
 :PROPERTIES:
 :ID:       03DD73DD-6347-4D30-B103-A61718459C41
@@ -4483,12 +4521,12 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
   :after tab-bar
   :config
   (setq world-clock-list '(("Europe/Barcelona" "Barcelona")
+                           ("Europe/Madrid" "Madrid")
                            ("Europe/London" "London")
                            ("America/Buenos_Aires" "Buenos Aires")
-                           ("America/Nassau" "Nassau")
                            ("America/New_York" "New York")
                            ("America/Los_Angeles" "San Francisco")))
-  (setq display-time-format "%a %e %b %T")
+  (setq display-time-format "%a %e %b %T %z")
   (setq display-time-interval 1)
   (setq display-time-default-load-average nil)
 
@@ -4515,7 +4553,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 :ID:       E1DB2097-7273-4FAC-BA84-67D46815FC45
 :END:
 
-/[[https://github.com/josegpt/display-wttr][display-wttr]] displays weather information in the modeline (or tab-bar)./
+/[[https://git.sr.ht/~josegpt/display-wttr][display-wttr]] displays weather information in the modeline (or tab-bar)./
 
 #+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :tab-bar)
 (use-package display-wttr
@@ -4939,6 +4977,10 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp
 (use-package gh-notify
+  :elpaca (gh-notify
+           :host github
+           :repo "benthamite/gh-notify"
+                      :depth nil)
   :after forge
   :demand t)
 #+end_src
@@ -5907,12 +5949,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
    "M-n" nil))
 #+end_src
 
-*** TODO [#5] Figure out why env variables differ between shell and eshell
-:PROPERTIES:
-:ID:       E57974CA-1CC6-45B7-A1D3-359C1C025E92
-:END:
-e.g. ~nvm~ isn't recognized by eshell
-
 ** emacs-eat
 :PROPERTIES:
 :ID:       94971F2F-FF78-4088-BBDB-A95ADEDECE9B
@@ -6049,9 +6085,8 @@ e.g. ~nvm~ isn't recognized by eshell
   (setq flycheck-emacs-lisp-load-path 'inherit)
   (setq flycheck-indication-mode nil)
 
-  ;; (add-hook 'org-src-mode-hook (lambda ()
-  ;; "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
-  ;; (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc))))
+  ;; Disable `emacs-lisp-checkdoc' in `org-src' blocks.
+  (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc))
 
   :general
   ("M-k" 'flycheck-next-error))
@@ -6386,14 +6421,14 @@ To populate the database of historical prices:
    "s-a" 'ledger-add-transaction
    "M-s-a" 'ledger-mode-extras-report-account
    "s-b" 'ledger-post-edit-amount
-   "M-s-b" 'ledger-mode-extras-decrease-date-of-transaction-at-point-by-one-day
+   "M-s-b" 'ledger-mode-extras-decrease-date-by-one-day
    "s-c" 'ledger-mode-extras-align-and-next
    "M-s-c" 'ledger-mode-extras-copy-transaction-at-point
    "s-d" 'ledger-delete-current-transaction
    "s-e" 'mode-mode-extras-extras-sort-region-or-buffer-reversed
    "M-s-e" 'ledger-toggle-current-transaction
    "s-f" 'ledger-occur
-   "M-s-f" 'ledger-mode-extras-increase-date-of-transaction-at-point-by-one-day
+   "M-s-f" 'ledger-mode-extras-increase-date-by-one-day
    "s-g" 'ledger-report-goto
    "s-i" 'ledger-insert-effective-date
    "s-y" 'ledger-copy-transaction-at-point
@@ -6423,12 +6458,6 @@ To populate the database of historical prices:
 :PROPERTIES:
 :ID:       E235F4DC-677D-4143-A679-66FCBC310101
 :END:
-
-*** TODO [#6] Consider replacing ~commodities.py~ with Elisp alternative
-:PROPERTIES:
-:ID:       303E3552-2FD9-41A9-A6E6-C26110E61282
-:END:
-[[https://www.reddit.com/r/emacs/comments/xdrg1r/semiautomatically_fetching_ledger_commodity/][This]] could be adapted.
 
 *** resources
 :PROPERTIES:
@@ -6723,15 +6752,13 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
    "A-u" 'pdf-view-midnight-minor-mode))
 #+end_src
 
-*** TODO Tweak function to copy all pdf text to clipboard so that the region is copied instead, if active
-:PROPERTIES:
-:ID:       2CA2A24B-DB63-47EC-977E-B7EFC6F7CAB9
-:END:
-
 *** TODO [#4] Tweak chrome headless command so that chrome authenticates before printing a pdf
 :PROPERTIES:
 :ID:       BDE975FE-56AA-45C3-AF47-C70503051B30
 :Effort:   0:20
+:END:
+:LOGBOOK:
+CLOCK: [2023-11-25 Sat 22:25]--[2023-11-25 Sat 23:33] =>  1:08
 :END:
 https://stackoverflow.com/questions/62602327/headless-chrome-sharing-credentials
 Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
@@ -9421,6 +9448,9 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 #+begin_src emacs-lisp :results silent
 (use-package org-noter
+  :elpaca (org-noter
+           :host github
+           :repo "org-noter/org-noter")
   :after org
   :config
   (setq org-noter-notes-search-path `(,paths-dir-bibliographic-notes))
@@ -10531,7 +10561,7 @@ CLOCK: [2021-04-15 Thu 20:52]--[2021-04-15 Thu 21:10] =>  0:18
 CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 :END:
 
-/[[https://github.com/djcb/mu][mu4e]] is an an emacs-based e-mail client./
+/[[https://github.com/djcb/mu][mu4e]] is an an Emacs-based e-mail client./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
 (use-package mu4e
@@ -10556,7 +10586,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-trash-folder "/[Gmail]/Trash")
   (setq mu4e-attachment-dir paths-dir-downloads)
   (setq mu4e-change-filenames-when-moving t)
-  (setq mu4e-maildir-shortcuts
+  (setq mu4e-search-results-limit
         `((,mu4e-drafts-folder  . ?d)
           (,mu4e-sent-folder    . ?t)
           (,mu4e-trash-folder   . ?x)
@@ -10567,14 +10597,11 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-compose-format-flowed t)
   (setq mu4e-confirm-quit nil)
   (setq mu4e-headers-date-format "%Y-%m-%d %H:%M")
-  (setq mu4e-headers-include-related nil)
-  (setq mu4e-headers-results-limit 1000)
+  (setq mu4e-search-include-related nil)
+  (setq mu4e-search-results-limit 1000)
   (setq mu4e-headers-visible-lines 25)
   (setq mu4e-hide-index-messages t)
-  (setq mu4e-html2text-command 'mu4e-shr2text) ; requires `mu4e-contrib'
   (setq mu4e-sent-messages-behavior 'delete) ; Gmail already keeps a copy
-  (setq mu4e-view-show-addresses t)
-  (setq mu4e-view-show-images t)
 
   ;; performance improvements
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
@@ -10584,6 +10611,10 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
   (setq mu4e-compose-context-policy 'ask)
   (setq mu4e-context-policy 'ask)
+  (setq mu4e-modeline-support nil)
+  (setq mu4e-headers-fields '((:human-date . 16)
+			      (:from . 30)
+			      (:subject)))
   (mu4e t)
 
   ;; (add-hook 'change-major-mode-hook #'faces-extras-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode
@@ -10603,8 +10634,8 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    "r" 'mu4e-compose-reply)
   (mu4e-main-mode-map
    "h" 'mu4e-display-manual
-   "j" 'mu4e~headers-jump-to-maildir
-   "s" 'mu4e-headers-search
+   "j" 'mu4e-search-maildir
+   "s" 'mu4e-search
    "u" 'mu4e-update-mail-and-index)
   (mu4e-headers-mode-map
    "*" 'mu4e-headers-mark-all
@@ -10700,28 +10731,13 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
 :END:
 
+[2023-11-26 Sun] Do I need this? Disabling to test.
+
 #+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :mu4e)
 (use-feature mu4e-contrib
+  :disabled
   :after mu4e
   :demand t)
-#+end_src
-
-** mu4e-alert
-:PROPERTIES:
-:ID:       32C6498F-B3C5-4D50-8ACC-8DD83FF48448
-:END:
-
-/[[https://github.com/iqbalansari/mu4e-alert][mu4e-alert]] supports desktop notifications and modeline display for mu4e./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
-(use-package mu4e-alert
-  :after mu4e
-  :demand t
-  :config
-  ;; Notify about unread emails in inbox only
-  (setq mu4e-alert-interesting-mail-query "flag:unread AND maildir:/inbox")
-
-  (mu4e-alert-enable-mode-line-display))
 #+end_src
 
 ** org-msg
@@ -11866,7 +11882,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
 
   (engine/set-keymap-prefix (kbd "H-g")))
 #+end_src
-
 
 ** org-download
 :PROPERTIES:

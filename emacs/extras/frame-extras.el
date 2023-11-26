@@ -29,21 +29,18 @@
 
 (require 'frame)
 
-;;;; User options
-
-;;;; Main variables
-
 ;;;; Functions
 
 
 (defun frame-extras-maximize-frame ()
-  "Maximize the frame every time focus is regained.
-When returning focus to Emacs after browsing other macOS windows, the frame is
-sometimes not fully maximized. This advice makes Emacs maximize the frame every
-time focus is regained."
+  "Maximize the current frame."
+  (interactive)
   (set-frame-parameter nil 'fullscreen 'maximized))
 
-(add-function :after after-focus-change-function #'frame-extras-maximize-frame)
+(defun frames-extras-restore-window-divider ()
+  "Restore visibility of window divider."
+  (custom-set-faces
+   '(window-divider (( )))))
 
 (provide 'frame-extras)
 ;;; frame-extras.el ends here

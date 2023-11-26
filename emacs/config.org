@@ -98,6 +98,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#modus-themes][modus-themes]]
   - [[#modus-themes-extras][modus-themes-extras]]
   - [[#highlight-parentheses][highlight-parentheses]]
+  - [[#spacious-padding][spacious-padding]]
   - [[#emoji][emoji]]
   - [[#image][image]]
   - [[#paren][paren]]
@@ -1989,6 +1990,22 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   (global-highlight-parentheses-mode)
 
   (add-hook 'minibuffer-setup-hook #'highlight-parentheses-minibuffer-setup))
+#+end_src
+
+** spacious-padding
+:PROPERTIES:
+:ID:       7CEDA166-BA43-49E6-99EB-0F24766398F6
+:END:
+
+/[[https://git.sr.ht/~protesilaos/spacious-padding][spacious-padding]] increases the spacing of frames and windows./
+
+#+begin_src emacs-lisp
+(use-package spacious-padding
+  :demand t
+  :config
+  (setq spacious-padding-widths '())
+  (add-hook 'spacious-padding-mode-hook #'frames-extras-restore-window-divider)
+  (spacious-padding-mode 1))
 #+end_src
 
 ** emoji

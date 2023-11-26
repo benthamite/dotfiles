@@ -70,9 +70,7 @@ heading in a quote."
             (org-edit-headline (format "%s, p. %s" title page))
             (org-narrow-to-subtree)
             (goto-char (point-max))
-            (insert "\n#+begin_quote\n")
-            (insert content)
-            (insert "#+end_quote\n")
+            (insert (concat "\n#+begin_quote\n" content "\n#+end_quote\n"))
             (file-extras-remove-extra-blank-lines)
             (org-next-visible-heading 1)))))))
 

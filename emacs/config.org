@@ -4811,6 +4811,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
                   magit-diff-mode-hook))
     (add-hook hook
               (lambda ()
+                "Disable line truncation in Magit buffers."
                 (setq truncate-lines nil))))
 
   :general

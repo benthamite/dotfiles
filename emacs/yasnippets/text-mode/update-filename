@@ -3,4 +3,4 @@
 # key: u
 # contributor: Pablo Stafforini
 # --
-Update `(file-name-nondirectory (tlon-babel-magit-get-commit-file))`
+Update `(file-name-nondirectory (magit-extras-get-commit-file))`

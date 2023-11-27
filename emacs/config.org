@@ -10588,7 +10588,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-trash-folder "/[Gmail]/Trash")
   (setq mu4e-attachment-dir paths-dir-downloads)
   (setq mu4e-change-filenames-when-moving t)
-  (setq mu4e-search-results-limit
+  (setq mu4e-maildir-shortcuts
         `((,mu4e-drafts-folder  . ?d)
           (,mu4e-sent-folder    . ?t)
           (,mu4e-trash-folder   . ?x)
@@ -10615,8 +10615,8 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-context-policy 'ask)
   (setq mu4e-modeline-support nil)
   (setq mu4e-headers-fields '((:human-date . 16)
-			      (:from . 30)
-			      (:subject)))
+                              (:from . 30)
+                              (:subject)))
   (mu4e t)
 
   ;; (add-hook 'change-major-mode-hook #'faces-extras-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode

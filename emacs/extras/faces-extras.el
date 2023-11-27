@@ -56,6 +56,7 @@
 
 (defun faces-extras-load-custom-faces ()
   "My custom faces, to be used in conjunction with theme."
+  (interactive)
   (set-face-attribute 'default nil :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
   (set-face-attribute 'fixed-pitch nil :family faces-extras-fixed-pitch-font :height 1.1)
   (set-face-attribute 'variable-pitch nil :family faces-extras-variable-pitch-font :height 1.4)
@@ -84,12 +85,10 @@
   (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
   (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
   (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
-  (let ((current-color (face-attribute 'mode-line :background)))
-    (set-face-attribute 'tab-bar nil
-			;; slightly increase the size of the tab-bar elements
-			;; :height 1.1
-			;; slightly increase the width of the tab-bar itself
-			:box `(:line-width 3 :color ,current-color :style nil))))
+  (set-face-attribute 'window-divider nil :foreground (face-attribute 'mode-line-inactive :background))
+  (set-face-attribute 'tab-bar nil
+		      ;; slightly increase the width of the tab-bar
+		      :box `(:line-width 3 :color ,(face-attribute 'mode-line :background) :style nil)))
 
 (add-hook 'org-mode-hook #'faces-extras-load-custom-faces)
 

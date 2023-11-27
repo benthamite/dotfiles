@@ -3,4 +3,4 @@
 # key: a
 # contributor: Pablo Stafforini
 # --
-Add `(file-name-nondirectory (tlon-babel-magit-get-commit-file))`
+Add `(file-name-nondirectory (magit-extras-get-commit-file))`

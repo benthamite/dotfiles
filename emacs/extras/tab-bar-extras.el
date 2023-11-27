@@ -27,7 +27,6 @@
 
 ;;; Code:
 
-(require 'paths)
 ;;;; User options
 
 (defgroup tab-bar-extras ()
@@ -42,11 +41,17 @@
 ;;;; Functions
 
 (defun tab-bar-extras-reset ()
-  "Temporary command to handle mysterious proliferation of clocks."
+  "Reset the tab bar.
+This resets the clock, updates the tab-bar and its color, and fixes the
+mysterious proliferation of clocks."
   (interactive)
   (require 'display-wttr)
+  (display-time)
   (setq global-mode-string tab-bar-extras-global-mode-string)
-  (display-wttr-mode))
+  (when calendar-extras-use-geolocation
+    (calendar-extras-set-location-variables-from-ip))
+  (display-wttr-mode)
+  (tab-bar-extras-update-tab-bar-color))
 
 (defun tab-bar-extras-reset-unless-clock ()
   "Reset the tab-bar when org-clock isn't running.
@@ -55,6 +60,11 @@ from disappearing when the tab-bar is reset."
   (require 'org-clock)
   (unless org-clock-current-task
     (tab-bar-extras-reset)))
+
+(defun tab-bar-extras-update-tab-bar-color ()
+  "Update the tab-bar color to match the modeline color."
+  (let ((active-background (face-background 'mode-line)))
+    (set-face-background 'tab-bar active-background)))
 
 (provide 'tab-bar-extras)
 ;;; tab-bar-extras.el ends here

@@ -44,13 +44,13 @@
 (defun consult-extras-locate-current ()
   "Search with `consult-locate' in current directory."
   (interactive)
-  (let ((consult-locate-args (concat "mdfind -onlyin " default-directory)))
+  (let ((consult-locate-args (format "mdfind -onlyin '%s'" default-directory)))
     (consult-locate)))
 
 (defun consult-extras-locate-home ()
   "Search with `consult-locate' in home directory."
   (interactive)
-  (let ((consult-locate-args (concat "mdfind -onlyin " paths-dir-user)))
+  (let ((consult-locate-args (format "mdfind -onlyin '%s'" paths-dir-user)))
     (consult-locate)))
 
 (defun consult-extras-locate-anywhere ()

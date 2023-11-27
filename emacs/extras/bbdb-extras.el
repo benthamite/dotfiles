@@ -110,16 +110,14 @@ then the window will be split horizontally rather than vertically."
                            (setq window w window-height w-height))))
                    (window-list))
              (condition-case nil
-                 (unless (eql bbdb-pop-up-window-size 1.0)
-                   (set-window-buffer window buffer)) ; might fail
-               (cond (bbdb-dedicated-window
-                      (set-window-dedicated-p window bbdb-dedicated-window))
-                     ((and (fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
+		 (set-window-buffer window buffer) ; might fail
+	       (cond (bbdb-dedicated-window
+		      (set-window-dedicated-p window bbdb-dedicated-window))
+		     ((and (fboundp 'display-buffer-record-window) ; GNU Emacs >= 24.1
                            (not (eql bbdb-pop-up-window-size 1.0)))
-                      (set-window-prev-buffers window nil)
-                      (display-buffer-record-window 'window window buffer)))
-               (if select (select-window window)))
-             (error (bbdb-pop-up-window-simple buffer select)))))))
+		      (set-window-prev-buffers window nil)
+		      (display-buffer-record-window 'window window buffer)))
+	       (if select (select-window window))))))))
 
 (advice-add 'bbdb-pop-up-window :override #'bbdb-extras-bbdb-pop-up-window)
 

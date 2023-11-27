@@ -4815,14 +4815,19 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :general
   ("A-g" 'magit
    "A-M-g" 'magit-clone)
-   (magit-mode-map
+  (magit-mode-map
    "p" 'magit-pull
    "." 'magit-push)
   (magit-status-mode-map
    "A-C-s-r" 'magit-section-backward-sibling
-   "A-C-s-f" 'magit-section-forward-sibling))
+   "A-C-s-f" 'magit-section-forward-sibling)
+   ((magit-status-mode-map magit-hunk-section-mode-map magit-hunk-section-smerge-map)
+   "s-l" 'magit-smerge-keep-lower
+   "s-k" 'magit-smerge-keep-upper
+   "s-a" 'magit-smerge-keep-all
+   "s-b" 'magit-smerge-keep-base
+   "s-c" 'magit-smerge-keep-current))
 #+end_src
-
 
 - [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
 - To read: [[https://emacsredux.com/blog/2020/12/11/super-keybindings-for-magit/][Super Keybindings for Magit | Emacs Redux]]

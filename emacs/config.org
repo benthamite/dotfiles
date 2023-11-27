@@ -149,7 +149,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#abbrev][abbrev]]
   - [[#yasnippet][yasnippet]]
   - [[#yasnippet-snippets][yasnippet-snippets]]
-  - [[#hippie-expand][hippie-expand]]
   - [[#expand-region][expand-region]]
   - [[#newcomment][newcomment]]
   - [[#skeleton][skeleton]]
@@ -3097,26 +3096,6 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 (use-package yasnippet-snippets
   :after yasnippet
   :demand t)
-#+end_src
-
-** hippie-expand
-:PROPERTIES:
-:ID:       06396799-A9FB-4417-AAE3-3654BC901B93
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature hippie-exp
-  :config
-  ;; stackoverflow.com/a/8723712/4479455
-  (advice-add 'hippie-expand
-              :around (lambda ()
-                        "Try to do case-sensitive matching (not effective with all functions)."
-                        (let ((case-fold-search nil))
-                          (apply orig-fun args))))
-  (ad-activate 'hippie-expand)
-
-  :general
-  ("M-<tab>" 'hippie-expand))
 #+end_src
 
 ** expand-region

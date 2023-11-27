@@ -42,12 +42,14 @@
 
 (defun tab-bar-extras-reset ()
   "Reset the tab bar.
-This resets the clock, and fixes the mysterious proliferation of clocks."
+This resets the clock, updates the tab-bar and its color, and fixes the
+mysterious proliferation of clocks."
   (interactive)
   (require 'display-wttr)
   (display-time)
   (setq global-mode-string tab-bar-extras-global-mode-string)
-  (calendar-extras-set-location-variables-from-ip)
+  (when calendar-extras-use-geolocation
+    (calendar-extras-set-location-variables-from-ip))
   (display-wttr-mode)
   (tab-bar-extras-update-tab-bar-color))
 

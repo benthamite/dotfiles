@@ -44,6 +44,11 @@
 				   (string :tag "Timezone")))
   :group 'calendar-extras)
 
+(defcustom calendar-extras-use-geolocation nil
+  "Whether to use geolocation to set calendar variables."
+  :type 'boolean
+  :group 'calendar-extras)
+
 ;;;; Functions
 
 (defun calendar-extras-get-local-ip-address ()

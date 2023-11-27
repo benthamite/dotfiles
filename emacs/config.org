@@ -4374,7 +4374,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   :after calendar
   :defer 5
   :config
-  (calendar-extras-set-location-variables-from-ip)
+  (setq calendar-extras-use-geolocation nil)
 
   :general
   (org-agenda-mode-map

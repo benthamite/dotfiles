@@ -103,6 +103,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#image][image]]
   - [[#paren][paren]]
   - [[#doom-modeline][doom-modeline]]
+  - [[#doom-modeline-extras][doom-modeline-extras]]
   - [[#tab-bar][tab-bar]]
   - [[#tab-bar-extras][tab-bar-extras]]
   - [[#fancy-battery][fancy-battery]]
@@ -2098,6 +2099,19 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
                       (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
                       (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
        (remove-hook (car cons) (cdr cons))))))
+#+end_src
+
+** doom-modeline-extras
+:PROPERTIES:
+:ID:       AA94A6D8-DD39-415C-9E34-5793F44B9FF9
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package doom-modeline-extras
+  :after doom-modeline
+  :demand t
+  :config
+  (doom-modeline-mode))
 #+end_src
 
 ** tab-bar

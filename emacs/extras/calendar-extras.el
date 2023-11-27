@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'calendar)
-(require 'paths)
 
 ;;;; User options
 
@@ -45,17 +44,22 @@
 				   (string :tag "Timezone")))
   :group 'calendar-extras)
 
+(defcustom calendar-extras-use-geolocation nil
+  "Whether to use geolocation to set calendar variables."
+  :type 'boolean
+  :group 'calendar-extras)
+
 ;;;; Functions
 
 (defun calendar-extras-get-local-ip-address ()
   "Get local IP address."
-  (interactive)
   (let ((local-ip (shell-command-to-string
                    "dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com")))
     (string-trim local-ip "\"" "\"\n")))
 
 (defun calendar-extras-get-geolocation-from-ip (&optional ip)
-  "Get geolocation from IP address."
+  "Get geolocation from IP address.
+If IP is non-nil, use the local IP address."
   (require 'url-vars)
   (require 'json)
   (let* ((ip (or ip (calendar-extras-get-local-ip-address)))
@@ -74,6 +78,16 @@
              (city (plist-get json :city))
              (timezone (plist-get json :timezone)))
         (list :lat lat :lon lon :city city :timezone timezone)))))
+
+(defun calendar-extras-set-location-variables-from-ip (&optional ip)
+  "Set location variables from IP address.
+If IP is non-nil, use the local IP address."
+  (interactive)
+  (setq calendar-extras-personal-geolocation (calendar-extras-get-geolocation-from-ip ip))
+  (setq calendar-location-name (plist-get calendar-extras-personal-geolocation :city))
+  (setq calendar-latitude (plist-get calendar-extras-personal-geolocation :lat))
+  (setq calendar-longitude (plist-get calendar-extras-personal-geolocation :lon))
+  (message "Variables set: %s" calendar-extras-personal-geolocation))
 
 (defun calendar-extras-time-last-day-of-last-month ()
   "Insert the last day of the most recent month."

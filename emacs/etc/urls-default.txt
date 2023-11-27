@@ -1,3 +1,4 @@
+accounts.google.com
 airbnb.com
 airserbia.com
 airtable.com
@@ -12,6 +13,7 @@ berkeley.edu
 beyondpricing.com
 bloomberg.com
 box.com
+calendar.google.com
 calendly.com
 cleverlayover.com
 connectedpapers.com
@@ -51,6 +53,7 @@ libgen.
 LinkedIn.com
 list-manage.com
 loc.gov
+mail.google.com
 mailerlite.com
 mailist-manage.eu
 maps.
@@ -61,6 +64,7 @@ metaculus.com
 metafilter.com
 metaforecast.com
 myheritage.es
+openai.com
 paxful.com
 qualtrics.com
 quora.com

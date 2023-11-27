@@ -4823,7 +4823,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   (magit-status-mode-map
    "A-C-s-r" 'magit-section-backward-sibling
    "A-C-s-f" 'magit-section-forward-sibling)
-   ((magit-status-mode-map magit-hunk-section-mode-map magit-hunk-section-smerge-map)
+  ((magit-status-mode-map magit-hunk-section-mode-map magit-hunk-section-smerge-map)
    "s-l" 'magit-smerge-keep-lower
    "s-k" 'magit-smerge-keep-upper
    "s-a" 'magit-smerge-keep-all

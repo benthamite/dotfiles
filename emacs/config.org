@@ -2152,36 +2152,36 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   :demand t
   :config
   (setq tab-bar-extras-global-mode-string
-	'(" "
-	  ;; date & time
-	  (:eval (propertize display-time-string 'face 'faces-extras-display-time))
+        '(" "
+          ;; date & time
+          (:eval (propertize display-time-string 'face 'faces-extras-display-time))
 
-	  ;; Chemacs profile name
-	  " |  " chemacs-profile-name
+          ;; Chemacs profile name
+          " |  " chemacs-profile-name
 
-	  ;; battery information
-	  " | " fancy-battery-mode-line
+          ;; battery information
+          " | " fancy-battery-mode-line
 
-	  ;; github notifications
-	  (:eval (when (> doom-modeline--github-notification-number 0)
-		   (concat
-		    " | "
-		    (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
-					:face 'doom-modeline-notification)
-		    (doom-modeline-vspc)
-		    (propertize
-		     (cond
-		      ((> doom-modeline--github-notification-number 99) "99+")
-		      (t (number-to-string doom-modeline--github-notification-number)))
-		     'face '(:inherit
-			     (doom-modeline-unread-number doom-modeline-notification))))))
+          ;; telega notifications
+          (:eval (when (and
+                        (telega-server-live-p)
+                        (> (plist-get telega--unread-message-count :unread_count) 0))
+                   (concat " | " telega-mode-line-string)))
 
-	  ;; telega notifications
-	  (:eval (when (and
-			(telega-server-live-p)
-			(> (plist-get telega--unread-message-count :unread_count) 0))
-		   (concat " | " telega-mode-line-string)))
-	  " | "))
+          ;; github notifications
+          (:eval (when (> doom-modeline--github-notification-number 0)
+                   (concat
+                    " | "
+                    (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
+                                        :face 'doom-modeline-notification)
+                    (doom-modeline-vspc)
+                    (propertize
+                     (cond
+                      ((> doom-modeline--github-notification-number 99) "99+")
+                      (t (number-to-string doom-modeline--github-notification-number)))
+                     'face '(:inherit
+                             (doom-modeline-unread-number doom-modeline-notification))))))
+          " | "))
 
   (setq global-mode-string tab-bar-extras-global-mode-string)
   (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
@@ -4375,7 +4375,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 
   :general
   (org-agenda-mode-map
-  "s-b" 'calendar-extras-calfw-block-agenda))
+   "s-b" 'calendar-extras-calfw-block-agenda))
 #+end_src
 
 ** loaddefs

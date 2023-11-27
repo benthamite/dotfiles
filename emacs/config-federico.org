@@ -512,7 +512,7 @@ one hour only."
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
- (setq faces-extras-fixed-pitch-font "Iosevka")
+ (setq faces-extras-fixed-pitch-font "Iosevka NF")
 
 (defun faces-extras-load-custom-faces ()
   "My custom faces, to be used in conjunction with theme."

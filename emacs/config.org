@@ -4340,6 +4340,10 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   (setq calendar-mark-holidays-flag nil)
   (setq calendar-time-zone-style 'numeric)
   (setq holiday-bahai-holidays nil)
+  (setq calendar-location-name "Madrid")
+  (setq calendar-latitude "40.4168")
+  (setq calendar-longitude "-3.703790")
+
 
   :general
   ("C-d" 'calendar

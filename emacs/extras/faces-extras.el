@@ -87,8 +87,9 @@
   (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
   (set-face-attribute 'window-divider nil :foreground (face-attribute 'mode-line-inactive :background))
   (set-face-attribute 'tab-bar nil
+		      :background (face-background 'mode-line)
 		      ;; slightly increase the width of the tab-bar
-		      :box `(:line-width 3 :color ,(face-attribute 'mode-line :background) :style nil)))
+		      :box `(:line-width 6 :color ,(face-attribute 'mode-line :background) :style nil)))
 
 (add-hook 'org-mode-hook #'faces-extras-load-custom-faces)
 

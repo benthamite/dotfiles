@@ -203,12 +203,6 @@
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-dotemacs
-  (file-name-concat paths-dir-dotfiles "emacs/")
-  "Path to the Emacs dotfiles directory."
-  :type 'directory
-  :group 'paths)
-
 (defcustom paths-dir-extras
   (file-name-concat tlon-init-dir-dotemacs "extras/")
   "Path to the `extras' package directory."

@@ -808,12 +808,6 @@ set manually via `init-configure-tangle-options'."
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-extras
-  (file-name-concat paths-dir-init "extras/")
-  "Target location of the `extras' package directory."
-  :type 'directory
-  :group 'paths)
-
 (defcustom paths-file-early-init
   (file-name-concat paths-dir-init "early-init.el")
   "Target location of `early-init.el' file to be tangled'."

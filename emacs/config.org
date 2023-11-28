@@ -2186,7 +2186,8 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   (setq global-mode-string tab-bar-extras-global-mode-string)
   (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
 
-  (run-with-idle-timer 300 t #'tab-bar-extras-reset-unless-clock))
+  ;; (run-with-idle-timer 300 t #'tab-bar-extras-reset-unless-clock)
+  )
 #+end_src
 
 ** fancy-battery
@@ -8296,7 +8297,7 @@ longer then the CLOCK entry's total time.
         ;; Update interval duration, which fails if point doesn't move to beginning of line
         (org-ctrl-c-ctrl-c)
         (move-beginning-of-line nil))))
-        
+
   :general
   (org-mode-map
    "s-u" 'org-clock-split))

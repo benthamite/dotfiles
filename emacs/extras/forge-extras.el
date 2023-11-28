@@ -113,6 +113,7 @@
                (forge-visit-issue topic)))
         (call-interactively #'org-store-link)))))
 
+;; TODO: check that this is programmed correctly
 (defun forge-extras-gh-notify-visit-next-notification ()
   (interactive)
   (let ((old-buffer (current-buffer))
@@ -135,11 +136,34 @@
       (save-window-excursion
 	(let ((url (forge-extras-get-issue-url))
 	      (w3m-new-session-in-background t)
-	      (inhibit-message t)
-	      (w3m-message-silent t))
-	  (w3m-goto-url-new-session url nil nil nil nil t)
-	  (run-with-timer 15 nil (lambda () (w3m-quit t)))))
+	      (inhibit-message t))
+	  (w3m-goto-url-new-session url nil nil nil nil t)))
     (run-with-timer 1 nil 'forge-extras-mark-issue-as-read)))
+
+(defun forge-extras-delete-residual-w3m-buffers (&rest _)
+  "Delete all `w3m' buffers minus one."
+  (require 'w3m)
+  (let ((w3m-buffers (w3m-list-buffers)))
+    (while (> (length w3m-buffers) 1)
+      (setq w3m-buffers (cdr w3m-buffers))
+      (when (buffer-live-p (car w3m-buffers))
+        (with-current-buffer (car w3m-buffers)
+          (w3m-delete-buffer))))))
+
+(defun forge-extras-w3m-after-load (original-func format-string &rest args)
+  "Functions to trigger when `w3m' is done loading.
+ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
+  (require 'w3m)
+  (let ((message-text (apply 'format format-string args)))
+    (when (or (string-match "The content (\\(.*\\)) has been retrieved in \\(.*\\)" message-text)
+	      (string-match "fontifying...done" message-text))
+      (message "It worked again!")
+      (forge-pull-notifications)
+      (doom-modeline--github-fetch-notifications))
+    (apply original-func format-string args)))
+
+(advice-add 'w3m-message :around #'forge-extras-w3m-after-load)
+(advice-add 'w3m--goto-url--handler-function :after #'forge-extras-delete-residual-w3m-buffers)
 
 (defun forge-extras-gh-notify-visit-notification (P)
   "Visit the notification at point and mark it as read.
@@ -150,4 +174,3 @@ Browse issue or PR on prefix P."
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here
-

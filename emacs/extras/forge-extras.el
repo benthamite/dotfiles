@@ -123,6 +123,13 @@
     (select-window old-window)
     (switch-to-buffer old-buffer)))
 
+;;;;; gh-notify
+
+;; the code below is a workaround to make `gh-notify' mark issues as read when
+;; they are visited. It assumes that the user has authenticated with GitHub
+;; using the `w3m' browser. If not, please evaluate
+;; `(w3m "https://github.com/login")' and enter your credentials.
+
 (defun forge-extras-get-issue-url ()
   "Get the URL of the issue at point."
   (unless (derived-mode-p 'forge-issue-mode)
@@ -157,8 +164,9 @@ ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
   (let ((message-text (apply 'format format-string args)))
     (when (or (string-match "The content (\\(.*\\)) has been retrieved in \\(.*\\)" message-text)
 	      (string-match "fontifying...done" message-text))
-      (message "It worked again!")
+      (message "")
       (forge-pull-notifications)
+      ;; if `doom-modeline' is used to display github notifications
       (doom-modeline--github-fetch-notifications))
     (apply original-func format-string args)))
 

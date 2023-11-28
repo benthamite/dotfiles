@@ -46,6 +46,7 @@ This resets the clock, updates the tab-bar and its color, and fixes the
 mysterious proliferation of clocks."
   (interactive)
   (require 'display-wttr)
+  (require 'calendar-extras)
   (display-time)
   (setq global-mode-string tab-bar-extras-global-mode-string)
   (when calendar-extras-use-geolocation

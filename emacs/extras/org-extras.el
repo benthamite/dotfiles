@@ -932,51 +932,6 @@ Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
     (concat "*Org Src " org-buffer-name "[ " lang " ]*")
     (concat org-buffer-name " (org src)")))
 
-;; fix weird behavior that inserted one of the clocks not enclosed in square
-;; brackets
-(el-patch-defun org-clock-split (from-end splitter-string)
-  "Split CLOCK entry under cursor into two entries.
-Total time of created entries will be the same as original entry.
-
-   WARNING: Negative time entries can be created if splitting at an offset
-longer then the CLOCK entry's total time.
-
-   FROM-END: nil if the function should split with duration from
-   the start of the clock segment (default for backwards
-   compatibility), t if the function should split counting from
-   the end of the clock segment.
- 
-   SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
-
-  (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
-
-  (move-beginning-of-line nil)
-  (let ((original-line (buffer-substring (line-beginning-position) (line-beginning-position 2))))
-    
-    ;; Error if CLOCK line does not contain check in and check out time
-    (unless (string-match org-clock-split-clock-range-regexp original-line)
-      (error "Cursor must be placed on line with valid CLOCK entry range"))
-
-    (let* ((whitespace (match-string 1 original-line))
-	   (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
-	   (t0 (pop timestamps))
-	   (t1 (el-patch-swap (pop timestamps) (format "[%s]" (pop timestamps))))
-	   (t2 (pop timestamps)))
-      ;; delete line without moving to kill ring
-      (delete-region (line-beginning-position) (line-end-position))
-      ;; insert the earlier segment
-      (insert (format org-clock-split-clock-range-format whitespace t0 t1))
-      ;; Update interval duration, which moves point to the end of the later timestamp
-      (org-ctrl-c-ctrl-c)
-      ;; insert the later segment before the earlier segment, so it's ready for org-clock-merge
-      (move-beginning-of-line nil)
-      (newline)
-      (previous-line)
-      (insert (format org-clock-split-clock-range-format whitespace t1 t2))
-      ;; Update interval duration, which fails if point doesn't move to beginning of line
-      (org-ctrl-c-ctrl-c)
-      (move-beginning-of-line nil))))
-
 
 ;;;; Footer
 

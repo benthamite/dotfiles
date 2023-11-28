@@ -3,4 +3,4 @@
 # key: r
 # contributor: Pablo Stafforini
 # --
-Revise `(file-name-nondirectory (tlon-babel-magit-get-commit-file))`
+Revise `(file-name-nondirectory (magit-extras-get-commit-file))`

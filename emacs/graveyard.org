@@ -8,6 +8,28 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** hippie-expand
+:PROPERTIES:
+:ID:       06396799-A9FB-4417-AAE3-3654BC901B93
+:END:
+
+[2023-11-26 Sun] Not using it.
+
+#+begin_src emacs-lisp :results silent
+(use-feature hippie-exp
+  :config
+  ;; stackoverflow.com/a/8723712/4479455
+  (advice-add 'hippie-expand
+              :around (lambda ()
+                        "Try to do case-sensitive matching (not effective with all functions)."
+                        (let ((case-fold-search nil))
+                          (apply orig-fun args))))
+  (ad-activate 'hippie-expand)
+
+  :general
+  ("M-<tab>" 'hippie-expand))
+#+end_src
+
 ** mu4e-alert
 :PROPERTIES:
 :ID:       32C6498F-B3C5-4D50-8ACC-8DD83FF48448

@@ -5001,6 +5001,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   :general
   (gh-notify-mode-map
+  "RET" 'forge-extras-gh-notify-visit-notification
    "." 'forge-extras-gh-notify-visit-next-notification))
 #+end_src
 

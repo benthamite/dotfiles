@@ -122,6 +122,32 @@
     (select-window old-window)
     (switch-to-buffer old-buffer)))
 
+(defun forge-extras-get-issue-url ()
+  "Get the URL of the issue at point."
+  (unless (derived-mode-p 'forge-issue-mode)
+    (user-error "Not in `forge-issue-mode'"))
+  (forge-get-url forge-buffer-topic))
+
+(defun forge-extras-mark-issue-as-read ()
+  "Mark issue at point as read on GitHub."
+  (require 'w3m)
+  (if (derived-mode-p 'forge-issue-mode)
+      (save-window-excursion
+	(let ((url (forge-extras-get-issue-url))
+	      (w3m-new-session-in-background t)
+	      (inhibit-message t)
+	      (w3m-message-silent t))
+	  (w3m-goto-url-new-session url nil nil nil nil t)
+	  (run-with-timer 15 nil (lambda () (w3m-quit t)))))
+    (run-with-timer 1 nil 'forge-extras-mark-issue-as-read)))
+
+(defun forge-extras-gh-notify-visit-notification (P)
+  "Visit the notification at point and mark it as read.
+Browse issue or PR on prefix P."
+  (interactive "P")
+  (gh-notify-visit-notification P)
+  (forge-extras-mark-issue-as-read))
+
 (provide 'forge-extras)
 ;;; forge-extras.el ends here
 

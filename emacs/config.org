@@ -4552,7 +4552,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 /[[https://git.sr.ht/~josegpt/display-wttr][display-wttr]] displays weather information in the modeline (or tab-bar)./
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :tab-bar)
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :display-wttr)
 (use-package display-wttr
   :defer 10
   :config

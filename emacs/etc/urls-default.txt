@@ -23,6 +23,7 @@ darbaja.es
 deepl.com
 dhl.
 disqus.com
+docs.google.com
 doi.org
 dropbox.com
 easy.jet
@@ -88,6 +89,7 @@ vueling.com
 we.tl
 wetransfer.com
 worldcat.org
+yahoo.com
 youtu.be
 youtube.com
 zoom.us

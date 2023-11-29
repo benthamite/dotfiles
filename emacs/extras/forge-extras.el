@@ -145,8 +145,7 @@
 	(let ((url (forge-extras-get-issue-url))
 	      (w3m-new-session-in-background t)
 	      (inhibit-message t))
-	  (w3m-goto-url-new-session url nil nil nil nil t)
-	  (bury-buffer "*w3m*")))
+	  (w3m-goto-url-new-session url nil nil nil nil t)))
     (run-with-timer 1 nil 'forge-extras-mark-issue-as-read)))
 
 (defun forge-extras-delete-residual-w3m-buffers (&rest _)
@@ -172,6 +171,14 @@ ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
 	(doom-modeline--github-fetch-notifications)))
     (apply original-func format-string args)))
 
+;; TODO: restrict the scope of this so that it doesn’t conflict with normal uses
+;; of `w3m'
+(defun forge-extras-rename-w3m-buffers ()
+  "Rename w3m buffers to be hidden."
+  (when (string-match "^\\*w3m*" (buffer-name))
+    (rename-buffer (concat " " (buffer-name)) t)))
+
+(add-hook 'buffer-list-update-hook 'rename-w3m-buffers)
 (advice-add 'w3m-message :around #'forge-extras-w3m-after-load)
 (advice-add 'w3m--goto-url--handler-function :after #'forge-extras-delete-residual-w3m-buffers)
 

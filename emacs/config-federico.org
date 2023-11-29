@@ -500,7 +500,10 @@ one hour only."
 #+end_src
 
 ** tab-bar-extras
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       6AC832A6-0F9D-450E-BFA2-0271AF4F2FB6
+:END:
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (remove-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
 
 ;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
@@ -549,7 +552,15 @@ mysterious proliferation of clocks."
 (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
 #+end_src
 
-** faces-extras
+** hl-sentence
+:PROPERTIES:
+:ID:       48D3B0B5-5626-4B9C-803E-5D156E3A1036
+:END:
+Disable hl-sentence because I do not like it...
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(remove-hook 'markdown-mode-hook #'hl-sentence-mode)
+#+end_src
+** faces-extras :tangle (print tlon-init-file-late-init)
 :PROPERTIES:
 :ID:       555F14B7-A0D0-4B7A-980F-E157C1B87EFB
 :END:
@@ -604,7 +615,10 @@ mysterious proliferation of clocks."
 #+end_src
 
 ** After init callback
-#+begin_src emacs-lisp
+:PROPERTIES:
+:ID:       712F1BEF-5B9F-42E3-96B7-4482FC9FADFF
+:END:
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 ;; Code run on a long timer: aimed at running after all of Pablo's deferred calls
 (run-at-time 60 nil (lambda
                       ()
@@ -612,7 +626,7 @@ mysterious proliferation of clocks."
 			(setq display-time-format "%a %e %b %R")
 			(tab-bar-extras-reset)
 			;; (display-wttr-mode -1)
-			(doom-modeline--github-fetch-notifications)
+			;; (doom-modeline--github-fetch-notifications)
 			)))
 #+end_src
 * local variables

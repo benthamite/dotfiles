@@ -144,7 +144,8 @@
 	(let ((url (forge-extras-get-issue-url))
 	      (w3m-new-session-in-background t)
 	      (inhibit-message t))
-	  (w3m-goto-url-new-session url nil nil nil nil t)))
+	  (w3m-goto-url-new-session url nil nil nil nil t)
+	  (bury-buffer "*w3m*")))
     (run-with-timer 1 nil 'forge-extras-mark-issue-as-read)))
 
 (defun forge-extras-delete-residual-w3m-buffers (&rest _)

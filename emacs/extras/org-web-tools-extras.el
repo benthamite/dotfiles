@@ -45,7 +45,8 @@ If URL is not given, look for first URL in `kill-ring'.  If page
 at URL has no title, return URL."
   (if-let ((dom (plz 'get url :as #'libxml-parse-html-region))
            (title (cl-caddr (car (dom-by-tag dom 'title)))))
-      (org-web-tools--cleanup-title title)))
+      (org-web-tools--cleanup-title title)
+    "Downloaded webpage"))
 
 (defun org-web-tools-extras-youtube-dl (url)
   "Create org link to local copy of YouTube video downloaded from URL.

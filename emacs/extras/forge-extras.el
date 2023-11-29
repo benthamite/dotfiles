@@ -183,11 +183,14 @@ ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
 (advice-add 'w3m--goto-url--handler-function :after #'forge-extras-delete-residual-w3m-buffers)
 
 (defun forge-extras-gh-notify-visit-notification (P)
-  "Visit the notification at point and mark it as read.
+  "Visit the notification at point and mark it as read if unread.
 Browse issue or PR on prefix P."
   (interactive "P")
-  (gh-notify-visit-notification P)
-  (forge-extras-mark-issue-as-read))
+  (let ((unread (eq (get-text-property (point) 'face)
+		    'gh-notify-notification-unread-face)))
+    (gh-notify-visit-notification P)
+    (when unread
+      (forge-extras-mark-issue-as-read))))
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

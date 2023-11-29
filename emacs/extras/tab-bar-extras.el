@@ -54,9 +54,9 @@ mysterious proliferation of clocks."
     (display-wttr-mode)))
 
 (defun tab-bar-extras-reset-unless-clock ()
-  "Reset the tab-bar when org-clock isn't running.
-The condition is included to prevent the currently clocked task
-from disappearing when the tab-bar is reset."
+  "Reset the tab-bar when `org-clock' isn't running.
+The condition is included to prevent the currently clocked task from
+disappearing when the tab-bar is reset."
   (require 'org-clock)
   (unless org-clock-current-task
     (tab-bar-extras-reset)))

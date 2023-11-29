@@ -166,8 +166,8 @@ ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
 	      (string-match "fontifying...done" message-text))
       (message "")
       (forge-pull-notifications)
-      ;; if `doom-modeline' is used to display github notifications
-      (doom-modeline--github-fetch-notifications))
+      (when (featurep 'doom-modeline)
+	(doom-modeline--github-fetch-notifications)))
     (apply original-func format-string args)))
 
 (advice-add 'w3m-message :around #'forge-extras-w3m-after-load)

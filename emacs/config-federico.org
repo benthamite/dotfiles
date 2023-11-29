@@ -103,6 +103,16 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-code-override)
 ((:org-id-add-ids-to-headings-in-file . ((ignore)))
  (:zotra-startup . ((ignore)))
+ (:window-border . ((ignore)))
+ (:window-split . ((ignore)))
+ (:modus-themes-load . ((modus-themes-load-theme 'modus-vivendi)))
+ (:citar-keybindings . ((ignore)))
+ (:frame-extras-maximize-frame . ((ignore)))
+ (:org-fold . ((ignore))))
+#+end_src
+
+Doom modeline
+#+begin_src emacs-lisp :tangle no
  (:doom-modeline
   . ((setq doom-modeline-mu4e nil) ; avoid distractions
      (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
@@ -126,12 +136,6 @@
                       (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
                       (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
        (remove-hook (car cons) (cdr cons)))))
- (:window-border . ((ignore)))
- (:window-split . ((ignore)))
- (:modus-themes-load . ((modus-themes-load-theme 'modus-vivendi)))
- (:citar-keybindings . ((ignore)))
- (:frame-extras-maximize-frame . ((ignore)))
- (:org-fold . ((ignore))))
 #+end_src
 
 * fede's early-init
@@ -213,16 +217,13 @@
    :keymaps 'dired-mode-map
    "n" 'find-file))
 
-(defun tab-bar-extras-reset ()
-  "Temporary command to handle mysterious proliferation of clocks."
-  (interactive)
-  (setq global-mode-string tab-bar-extras-global-mode-string)
-  (display-wttr-mode 0))
+;; (defun tab-bar-extras-reset ()
+;;   "Temporary command to handle mysterious proliferation of clocks."
+;;   (interactive)
+;;   (setq global-mode-string tab-bar-extras-global-mode-string)
+;;   (display-wttr-mode 0))
 
-(display-wttr-mode 0)
-(tab-bar-extras-reset)
-(telega)
-(switch-to-buffer "*scratch*")
+;; (display-wttr-mode 0)
 (setq consult-preview-key nil)
 
 (general-define-key
@@ -500,9 +501,13 @@ one hour only."
                                  org-extras-toggle-logbook))
 
 ;; Code run on a long timer: aimed at running after all of Pablo's deferred calls
-(run-at-time 60 nil (lambda
+(run-at-time 30 nil (lambda
                       ()
-                      (setq display-time-format "%a %e %b %R")))
+                      (progn
+			(setq display-time-format "%a %e %b %R")
+                        (display-wttr-mode 0)
+                        (tab-bar-extras-reset)			
+			)))
 
 #+end_src
 

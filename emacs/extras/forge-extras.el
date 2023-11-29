@@ -158,7 +158,7 @@
         (with-current-buffer (car w3m-buffers)
           (w3m-delete-buffer))))))
 
-(defun forge-extras-w3m-after-load (original-func format-string &rest args)
+(defun forge-extras-w3m-after-load-funs (original-func format-string &rest args)
   "Functions to trigger when `w3m' is done loading.
 ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
   (require 'w3m)
@@ -179,7 +179,7 @@ ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
     (rename-buffer (concat " " (buffer-name)) t)))
 
 (add-hook 'buffer-list-update-hook 'rename-w3m-buffers)
-(advice-add 'w3m-message :around #'forge-extras-w3m-after-load)
+(advice-add 'w3m-message :around #'forge-extras-w3m-after-load-funs)
 (advice-add 'w3m--goto-url--handler-function :after #'forge-extras-delete-residual-w3m-buffers)
 
 (defun forge-extras-gh-notify-visit-notification (P)

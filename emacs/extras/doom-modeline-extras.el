@@ -27,9 +27,6 @@
 
 ;;; Code:
 
-(require 'doom-modeline)
-(require 'el-patch)
-
 ;;;; Functions
 
 ;;;;; Patched functions
@@ -74,6 +71,7 @@
 	     (run-with-idle-timer 30
 				  doom-modeline-github-interval
 				  #'doom-modeline--github-fetch-notifications))))
+
 (provide 'doom-modeline-extras)
 ;;; doom-modeline-extras.el ends here
 

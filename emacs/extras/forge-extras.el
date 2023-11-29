@@ -126,7 +126,7 @@
 ;;;;; gh-notify
 
 ;; the code below is a workaround to make `gh-notify' mark issues as read when
-;; they are visited. It assumes that the user has authenticated with GitHub
+;; they are visited. It assumes that you have authenticated with GitHub
 ;; using the `w3m' browser. If not, please evaluate
 ;; `(w3m "https://github.com/login")' and enter your credentials.
 

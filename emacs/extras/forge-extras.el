@@ -115,10 +115,11 @@
 
 ;; TODO: check that this is programmed correctly
 (defun forge-extras-gh-notify-visit-next-notification ()
+  "Visit the next notification and mark it as read."
   (interactive)
   (let ((old-buffer (current-buffer))
         (old-window (selected-window)))
-    (next-line)
+    (forward-line)
     (call-interactively 'gh-notify-visit-notification)
     (select-window old-window)
     (switch-to-buffer old-buffer)))

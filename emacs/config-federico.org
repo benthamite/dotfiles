@@ -601,6 +601,7 @@ Disable hl-sentence because I do not like it...
   (set-face-attribute 'org-quote nil :family faces-extras-variable-pitch-font :height  faces-extras-variable-pitch-size)
   (set-face-attribute 'corfu-default nil :family faces-extras-fixed-pitch-font :height 1)
   (set-face-attribute 'gh-notify-notification-repo-face nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
+  (set-face-attribute 'gh-notify-notification-unread-face nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal :foreground "#00a6c9")
   ;; (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
   ;; (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
   ;; (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))

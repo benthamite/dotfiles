@@ -144,7 +144,6 @@
       (save-window-excursion
 	(let ((url (forge-extras-get-issue-url))
 	      (w3m-new-session-in-background t)
-	      (inhibit-message t))
 	  (w3m-goto-url-new-session url nil nil nil nil t)))
     (run-with-timer 1 nil 'forge-extras-mark-issue-as-read)))
 
@@ -162,10 +161,10 @@
   "Functions to trigger when `w3m' is done loading.
 ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
   (require 'w3m)
-  (let ((message-text (apply 'format format-string args)))
+  (let ((message-text (apply 'format format-string args))
+	(inhibit-message t))
     (when (or (string-match "The content (\\(.*\\)) has been retrieved in \\(.*\\)" message-text)
 	      (string-match "fontifying...done" message-text))
-      (message "")
       (forge-pull-notifications)
       (when (featurep 'doom-modeline)
 	(doom-modeline--github-fetch-notifications)))

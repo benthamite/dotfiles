@@ -4985,13 +4985,23 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :elpaca (gh-notify
            :host github
            :repo "benthamite/gh-notify"
-                      :depth nil)
+           :depth nil)
   :after forge
-  :demand t)
+  :demand t
+  :config
+  ;; unset bindings for all the keys that were bound to self-insert-command in
+  ;; `gh-notify-mode-map'
+  (let ((char-table (cl-second gh-notify-mode-map)))
+    (map-char-table (lambda (key def)
+                      (when (eq def 'gh-notify--self-insert-command)
+                        (set-char-table-range char-table key nil)))
+                    char-table))
   :general
   (gh-notify-mode-map
    "g" 'gh-notify-forge-refresh
    "Q" 'files-extras-kill-this-buffer))
+#+end_src
+
 ** gh-notify-extras
 :PROPERTIES:
 :ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F

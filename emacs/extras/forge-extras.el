@@ -143,7 +143,7 @@
   (if (derived-mode-p 'forge-issue-mode)
       (save-window-excursion
 	(let ((url (forge-extras-get-issue-url))
-	      (w3m-new-session-in-background t)
+	      (w3m-new-session-in-background t))
 	  (w3m-goto-url-new-session url nil nil nil nil t)))
     (run-with-timer 1 nil 'forge-extras-mark-issue-as-read)))
 

@@ -234,6 +234,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#orgit-forge][orgit-forge]]
   - [[#forge-search][forge-search]]
   - [[#gh-notify][gh-notify]]
+  - [[#gh-notify-extras][gh-notify-extras]]
   - [[#forge-extras][forge-extras]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#search--replace][search & replace]]
@@ -4984,6 +4985,20 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
                       :depth nil)
   :after forge
   :demand t)
+** gh-notify-extras
+:PROPERTIES:
+:ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package gh-notify-extras
+  :after gh-notify
+  :demand t
+  :general
+  (gh-notify-mode-map
+   "RET" 'gh-notify-extras-visit-notification
+   "x" 'gh-notify-extras-browse-externally
+   "." 'gh-notify-extras-visit-next-notification))
 #+end_src
 
 ** forge-extras

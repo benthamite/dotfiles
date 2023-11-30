@@ -234,6 +234,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#orgit-forge][orgit-forge]]
   - [[#forge-search][forge-search]]
   - [[#gh-notify][gh-notify]]
+  - [[#gh-notify-extras][gh-notify-extras]]
   - [[#forge-extras][forge-extras]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#search--replace][search & replace]]
@@ -2531,7 +2532,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   :general
   ("A-C-s-m" 'move-beginning-of-line
    "A-C-s-/" 'move-end-of-line)
-  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map help-mode-map helpful-mode-map Info-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map E elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
+  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map gh-notify-mode-map help-mode-map helpful-mode-map Info-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map E elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
    "k" 'previous-line
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)
@@ -3416,6 +3417,8 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
    "H-C-A-g" 'keyboard-escape-quit) ; ESC ESC ESC
   ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "H-q" 'bury-buffer)
+   (gh-notify-mode-map
+   "q" 'bury-buffer)
   (pdf-view-mode-map
    "s" 'save-buffer))
 #+end_src
@@ -3451,7 +3454,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   ;; We typically enter these modes to lookup some information and
   ;; then return to the previous buffer, so we set `q' to switch to
   ;; the other window, and reserve `Q' for the normal behavior
-  ((help-mode-map helpful-mode-map osx-dictionary-mode-map)
+  ((help-mode-map helpful-mode-map gh-notify-mode-map  osx-dictionary-mode-map)
    "Q" 'files-extras-kill-this-buffer
    "q" 'files-extras-kill-this-buffer-switch-to-other-window)
   (helpful-mode-map
@@ -4913,7 +4916,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
 
   :general
-  ((magit-mode-map forge-issue-list-mode-map)
+  ((magit-mode-map forge-issue-list-mode-map gh-notify-mode-map)
    "n" 'forge-dispatch)
   (forge-post-mode-map
    "s-c" 'forge-post-submit)
@@ -4926,8 +4929,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "x" 'forge-edit-topic-state
    "t" 'forge-edit-topic-title
    "e" 'forge-edit-post
-   "p" 'forge-create-post
-   "r" 'forge-create-post)
+   "p" 'forge-create-post)
+  (gh-notify-mode-map
+   "G" 'forge-pull-notifications)
   (magit-status-mode-map
    "s-x" 'forge-remove-topic-locally))
 #+end_src
@@ -4981,9 +4985,37 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :elpaca (gh-notify
            :host github
            :repo "benthamite/gh-notify"
-                      :depth nil)
+           :depth nil)
   :after forge
-  :demand t)
+  :demand t
+  :config
+  ;; unset bindings for all the keys that were bound to self-insert-command in
+  ;; `gh-notify-mode-map'
+  (let ((char-table (cl-second gh-notify-mode-map)))
+    (map-char-table (lambda (key def)
+                      (when (eq def 'gh-notify--self-insert-command)
+                        (set-char-table-range char-table key nil)))
+                    char-table))
+  :general
+  (gh-notify-mode-map
+   "g" 'gh-notify-forge-refresh
+   "Q" 'files-extras-kill-this-buffer))
+#+end_src
+
+** gh-notify-extras
+:PROPERTIES:
+:ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package gh-notify-extras
+  :after gh-notify
+  :demand t
+  :general
+  (gh-notify-mode-map
+   "RET" 'gh-notify-extras-visit-notification
+   "x" 'gh-notify-extras-browse-externally
+   "." 'gh-notify-extras-visit-next-notification))
 #+end_src
 
 ** forge-extras
@@ -4996,12 +5028,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :after forge orgit-forge gh-notify
   :demand t
   :config
-  (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link)
-
-  :general
-  (gh-notify-mode-map
-  "RET" 'forge-extras-gh-notify-visit-notification
-   "." 'forge-extras-gh-notify-visit-next-notification))
+  (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link))
 #+end_src
 
 ** git-auto-commit-mode
@@ -6536,10 +6563,10 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
         `(,@paths-files-bibliography-personal
           ,@tlon-babel-bibliography-files))
 
-  (dolist (template `(("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
+  (dolist (template `(("tbJ" "Tlön: BAE: Create a new Babel job" entry
                        (id ,tlon-babel-todos-jobs-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
-                      ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
+                      ("tbG" "Tlön: BAE: Create new generic todo from GitHub" entry
                        (id ,tlon-babel-todos-generic-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
     (push template org-capture-templates)) 
@@ -6655,17 +6682,12 @@ CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
   (setq goldendict-ng-groups '(("es-es" . "es")
                                ("es-en" . "es")
                                ("en-en" . "en")
-                               ("en-es" . "en")))
+                               ("en-es" . "en")
+                               ("fr-es" . "fr")))
   (setq goldendict-ng-groups-enforce t)
   (setq goldendict-ng-narrow-groups-to-matching-languages t)
-  (setq goldendict-ng-show-all-group t)
-  (setq goldendict-ng-bypass-prompt-when-sole-candidate t)
-  (setq goldendict-ng-use-active-region 'initial-input)
-  (setq goldendict-ng-use-word-at-point 'initial-input)
-  (setq goldendict-ng-main-window t)
-  (setq goldendict-ng-scanpopup t)
-  (setq goldendict-ng-reset-window-state t)
-  (setq goldendict-ng-disable-tts t)
+  (setq goldendict-ng-auto-select-sole-candidate t)
+  (setq goldendict-ng-count-all-group-in-auto-selection nil)
 
   :general
   ("A-y" 'goldendict-ng-search))

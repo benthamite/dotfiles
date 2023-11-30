@@ -6563,10 +6563,10 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
         `(,@paths-files-bibliography-personal
           ,@tlon-babel-bibliography-files))
 
-  (dolist (template `(("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
+  (dolist (template `(("tbJ" "Tlön: BAE: Create a new Babel job" entry
                        (id ,tlon-babel-todos-jobs-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
-                      ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
+                      ("tbG" "Tlön: BAE: Create new generic todo from GitHub" entry
                        (id ,tlon-babel-todos-generic-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
     (push template org-capture-templates)) 

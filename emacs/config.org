@@ -4929,7 +4929,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "x" 'forge-edit-topic-state
    "t" 'forge-edit-topic-title
    "e" 'forge-edit-post
-   "p" 'forge-create-post)
+   "p" 'forge-create-post
+   "r" 'forge-create-post)
   (gh-notify-mode-map
    "G" 'forge-pull-notifications)
   (magit-status-mode-map

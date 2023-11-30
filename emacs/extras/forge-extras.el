@@ -177,7 +177,7 @@ ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
   (when (string-match "^\\*w3m*" (buffer-name))
     (rename-buffer (concat " " (buffer-name)) t)))
 
-(add-hook 'buffer-list-update-hook 'rename-w3m-buffers)
+(add-hook 'buffer-list-update-hook 'forge-extras-rename-w3m-buffers)
 (advice-add 'w3m-message :around #'forge-extras-w3m-after-load-funs)
 (advice-add 'w3m--goto-url--handler-function :after #'forge-extras-delete-residual-w3m-buffers)
 

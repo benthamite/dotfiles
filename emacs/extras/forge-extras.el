@@ -49,7 +49,6 @@
     ("l a" "awaiting review"        forge-list-requested-reviews)
     ("l i" "issues"                 forge-list-issues)
     ("l n" "notifications"          forge-list-notifications)
-    ("l g" "notifications (GHub)"   gh-notify)
     ("l p" "pull-requests"          forge-list-pullreqs)
     ("l t" "topics"                 forge-list-topics)
     ("l r" "repositories"           forge-list-repositories)
@@ -86,7 +85,8 @@
     ("e a" "edit assigness"         forge-edit-topic-assignees)]
    ["Misc"
     ("s" "search topics"            forge-search)
-    (";" "Show/hide closed topics" forge-toggle-closed-visibility)
+    ("." "gh-notify"                gh-notify)
+    (";" "Show/hide closed topics"  forge-toggle-closed-visibility)
     ]
    ]
   )

@@ -5028,8 +5028,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :after forge orgit-forge gh-notify
   :demand t
   :config
-  (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link)
-
+  (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link))
 #+end_src
 
 ** git-auto-commit-mode

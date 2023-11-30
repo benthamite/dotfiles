@@ -6542,7 +6542,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
                       ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
                        (id ,tlon-babel-todos-generic-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
-    (push template org-capture-templates))
+    (push template org-capture-templates)) 
 
   :general
   ("H-r" 'tlon-babel-dispatch)
@@ -7975,15 +7975,6 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
            "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
-          ("tbA" "Tlön: BAE: [via email] Revise article translation and Leo's revision" entry
-           (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
-           "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
-          ("tbG" "Tlön: BAE: [via email] Respond to Glossary comment" entry
-           (id "91D521B8-454A-42D7-A8E1-5B8B8B30B6A7")
-           "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
-          ("tbW" "Tlön: BAE: [via email] Revise Leo's Wiki entry translation" entry
-           (id "87996ABF-D31A-414E-81B8-604454533DB1")
-           "** TODO [#5] %a\n" :empty-lines 1 :prepend t :immediate-finish t)
           ("tbr" "Tlön: BAE: Revise translation " entry
            (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
            "** TODO [#6] Revise '%c%?' translation \n" :empty-lines 1 :prepend t)

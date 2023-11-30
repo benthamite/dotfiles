@@ -29,7 +29,6 @@
 
 (require 'forge)
 (require 'orgit-forge)
-(require 'gh-notify)
 
 ;;;; Functions
 
@@ -50,7 +49,6 @@
     ("l a" "awaiting review"        forge-list-requested-reviews)
     ("l i" "issues"                 forge-list-issues)
     ("l n" "notifications"          forge-list-notifications)
-    ("l g" "notifications (GHub)"   gh-notify)
     ("l p" "pull-requests"          forge-list-pullreqs)
     ("l t" "topics"                 forge-list-topics)
     ("l r" "repositories"           forge-list-repositories)
@@ -87,7 +85,8 @@
     ("e a" "edit assigness"         forge-edit-topic-assignees)]
    ["Misc"
     ("s" "search topics"            forge-search)
-    (";" "Show/hide closed topics" forge-toggle-closed-visibility)
+    ("." "gh-notify"                gh-notify)
+    (";" "Show/hide closed topics"  forge-toggle-closed-visibility)
     ]
    ]
   )
@@ -112,73 +111,6 @@
               ((forge-issue-p topic)
                (forge-visit-issue topic)))
         (call-interactively #'org-store-link)))))
-
-;; TODO: check that this is programmed correctly
-(defun forge-extras-gh-notify-visit-next-notification ()
-  (interactive)
-  (let ((old-buffer (current-buffer))
-        (old-window (selected-window)))
-    (next-line)
-    (call-interactively 'gh-notify-visit-notification)
-    (select-window old-window)
-    (switch-to-buffer old-buffer)))
-
-;;;;; gh-notify
-
-;; the code below is a workaround to make `gh-notify' mark issues as read when
-;; they are visited. It assumes that the user has authenticated with GitHub
-;; using the `w3m' browser. If not, please evaluate
-;; `(w3m "https://github.com/login")' and enter your credentials.
-
-(defun forge-extras-get-issue-url ()
-  "Get the URL of the issue at point."
-  (unless (derived-mode-p 'forge-issue-mode)
-    (user-error "Not in `forge-issue-mode'"))
-  (forge-get-url forge-buffer-topic))
-
-(defun forge-extras-mark-issue-as-read ()
-  "Mark issue at point as read on GitHub."
-  (require 'w3m)
-  (if (derived-mode-p 'forge-issue-mode)
-      (save-window-excursion
-	(let ((url (forge-extras-get-issue-url))
-	      (w3m-new-session-in-background t)
-	      (inhibit-message t))
-	  (w3m-goto-url-new-session url nil nil nil nil t)))
-    (run-with-timer 1 nil 'forge-extras-mark-issue-as-read)))
-
-(defun forge-extras-delete-residual-w3m-buffers (&rest _)
-  "Delete all `w3m' buffers minus one."
-  (require 'w3m)
-  (let ((w3m-buffers (w3m-list-buffers)))
-    (while (> (length w3m-buffers) 1)
-      (setq w3m-buffers (cdr w3m-buffers))
-      (when (buffer-live-p (car w3m-buffers))
-        (with-current-buffer (car w3m-buffers)
-          (w3m-delete-buffer))))))
-
-(defun forge-extras-w3m-after-load (original-func format-string &rest args)
-  "Functions to trigger when `w3m' is done loading.
-ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
-  (require 'w3m)
-  (let ((message-text (apply 'format format-string args)))
-    (when (or (string-match "The content (\\(.*\\)) has been retrieved in \\(.*\\)" message-text)
-	      (string-match "fontifying...done" message-text))
-      (message "")
-      (forge-pull-notifications)
-      (when (featurep 'doom-modeline)
-	(doom-modeline--github-fetch-notifications)))
-    (apply original-func format-string args)))
-
-(advice-add 'w3m-message :around #'forge-extras-w3m-after-load)
-(advice-add 'w3m--goto-url--handler-function :after #'forge-extras-delete-residual-w3m-buffers)
-
-(defun forge-extras-gh-notify-visit-notification (P)
-  "Visit the notification at point and mark it as read.
-Browse issue or PR on prefix P."
-  (interactive "P")
-  (gh-notify-visit-notification P)
-  (forge-extras-mark-issue-as-read))
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

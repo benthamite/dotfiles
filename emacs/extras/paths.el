@@ -203,14 +203,8 @@
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-dotemacs
-  (file-name-concat paths-dir-dotfiles "emacs/")
-  "Path to the Emacs dotfiles directory."
-  :type 'directory
-  :group 'paths)
-
 (defcustom paths-dir-extras
-  (file-name-concat paths-dir-dotemacs "extras/")
+  (file-name-concat tlon-init-dir-dotemacs "extras/")
   "Path to the `extras' package directory."
   :type 'directory
   :group 'paths)
@@ -228,19 +222,19 @@
   :group 'paths)
 
 (defcustom paths-dir-yasnippets
-  (file-name-concat paths-dir-dotemacs "yasnippets/")
+  (file-name-concat tlon-init-dir-dotemacs "yasnippets/")
   "Path to the Yasnippets directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-yasnippets-private
-  (file-name-concat paths-dir-dotemacs "yasnippets-private/")
+  (file-name-concat tlon-init-dir-dotemacs "yasnippets-private/")
   "Path to the private Yasnippets directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-abbrev
-  (file-name-concat paths-dir-dotemacs "abbrev/")
+  (file-name-concat tlon-init-dir-dotemacs "abbrev/")
   "Path to the abbrev directory."
   :type 'directory
   :group 'paths)
@@ -615,13 +609,13 @@ This should be the path you set `org-roam-directory' to."
   :group 'paths)
 
 (defcustom paths-file-init
-  (file-name-concat paths-dir-dotemacs "init.el")
+  (file-name-concat tlon-init-dir-dotemacs "init.el")
   "Path to the `init.el' file."
   :type 'file
   :group 'paths)
 
 (defcustom paths-file-config
-  (file-name-concat paths-dir-dotemacs "config.org")
+  (file-name-concat tlon-init-dir-dotemacs "config.org")
   "Path to the `org-mode' config file."
   :type 'file
   :group 'paths)
@@ -805,12 +799,6 @@ This includes personal files and `tlon-babel' files."
 It takes the value of the path associated with the default Chemacs profile, when
 such a profile is defined, else `paths-dir-init-default'. A different path may be
 set manually via `init-configure-tangle-options'."
-  :type 'directory
-  :group 'paths)
-
-(defcustom paths-dir-extras
-  (file-name-concat paths-dir-init "extras/")
-  "Target location of the `extras' package directory."
   :type 'directory
   :group 'paths)
 

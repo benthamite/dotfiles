@@ -10816,11 +10816,11 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-hide-index-messages t)
   (setq mu4e-sent-messages-behavior 'delete) ; Gmail already keeps a copy
 
-  ;; performance improvements
+  ;; performance improvements (but with downsides)
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
-  (setq mu4e-index-cleanup t) ; `nil' improves performance"
-  (setq mu4e-index-lazy-check nil) ; `t' improves performance"
+  (setq mu4e-index-cleanup t) ; nil improves performance
+  (setq mu4e-index-lazy-check nil) ; t improves performance
 
   (setq mu4e-compose-context-policy 'ask)
   (setq mu4e-context-policy 'ask)
@@ -10830,7 +10830,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                               (:subject)))
   (mu4e t)
 
-  ;; (add-hook 'change-major-mode-hook #'faces-extras-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode
   ;; Is this needed?
   (add-hook 'mu4e-compose-pre-hook #'org-msg-mode)
 

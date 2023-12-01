@@ -85,6 +85,15 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#prot-simple][prot-simple]]
   - [[#prot-common][prot-common]]
   - [[#misc][misc.]]
+- [[#secrets][secrets]]
+  - [[#plstore][plstore]]
+  - [[#epg-config][epg-config]]
+  - [[#epa-file][epa-file]]
+  - [[#auth-source][auth-source]]
+  - [[#oauth2-auto][oauth2-auto]]
+  - [[#pass][pass]]
+  - [[#pass-extras][pass-extras]]
+  - [[#auth-source-pass][auth-source-pass]]
 - [[#version-control][version control]]
   - [[#vc][vc]]
   - [[#vc-extras][vc-extras]]
@@ -236,15 +245,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#session][session]]
   - [[#recentf][recentf]]
   - [[#remember][remember]]
-- [[#secrets][secrets]]
-  - [[#plstore][plstore]]
-  - [[#epg-config][epg-config]]
-  - [[#epa-file][epa-file]]
-  - [[#auth-source][auth-source]]
-  - [[#oauth2-auto][oauth2-auto]]
-  - [[#pass][pass]]
-  - [[#pass-extras][pass-extras]]
-  - [[#auth-source-pass][auth-source-pass]]
 - [[#search--replace][search & replace]]
   - [[#isearch][isearch]]
   - [[#isearch-extras][isearch-extras]]
@@ -1746,6 +1746,156 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
   (define-key input-decode-map (kbd "M-8") "•"))
 #+end_src
 
+* secrets
+:PROPERTIES:
+:ID:       D412C998-40EE-4638-959A-C2530EC9F247
+:END:
+:LOGBOOK:
+:END:
+
+** plstore
+:PROPERTIES:
+:ID:       5257E611-7953-4898-B743-25803EC7D9B4
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature plstore
+  :demand t
+  :init
+  (setq-default plstore-cache-passphrase-for-symmetric-encryption t))
+#+end_src
+
+** epg-config
+:PROPERTIES:
+:ID:       012F15A3-7717-4B09-9F43-74DA6F5F7C1A
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature epg-config
+  :demand t
+  :config
+  (setq epg-pinentry-mode 'loopback) ; use minibuffer for password entry
+  (setq epg-gpg-program "/opt/homebrew/bin/gpg"))
+#+end_src
+
+** epa-file
+:PROPERTIES:
+:ID:       FD3455F8-7CD3-4651-8063-304D4131F14E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature epa-file
+  :config
+  (epa-file-enable))
+#+end_src
+
+** auth-source
+:PROPERTIES:
+:ID:       291F9998-9940-4249-A048-92B5F2A2895E
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature auth-source
+  :demand t
+  :preface
+  (eval-when-compile
+    (defvar auth-sources))
+  :config
+  (setq auth-source-debug nil) ; set to t for debugging
+  (setq auth-sources '(macos-keychain-internet macos-keychain-generic)))
+#+end_src
+
+** oauth2-auto
+:PROPERTIES:
+:ID:       C7B36982-D472-4248-8C61-B7EB0ED6ACF6
+:END:
+
+/[[https://github.com/telotortium/emacs-oauth2-auto][emacs-oauth2-auto]] supports authentication to an OAuth2 provider from within Emacs./
+
+#+begin_src emacs-lisp :results silent
+(use-package oauth2-auto
+  :elpaca (emacs-oauth2-auto
+           :host github
+           :repo "telotortium/emacs-oauth2-auto"
+           :protocol ssh))
+#+end_src
+
+** pass
+:PROPERTIES:
+:ID:       518D3C1F-AFD6-4B72-8980-CAD10BBAEDDE
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-03 Fri 16:18]--[2022-06-03 Fri 16:35] =>  0:17
+CLOCK: [2022-06-03 Fri 16:38]--[2022-06-03 Fri 16:44] =>  0:06
+CLOCK: [2021-07-20 Tue 09:33]--[2021-07-20 Tue 10:14] =>  0:41
+CLOCK: [2021-05-29 Sat 15:44]--[2021-05-29 Sat 16:28] =>  0:44
+CLOCK: [2021-05-26 Wed 17:46]--[2021-05-26 Wed 18:04] =>  0:18
+CLOCK: [2021-05-14 Fri 14:55]--[2021-05-14 Fri 15:07] =>  0:12
+CLOCK: [2021-04-12 Mon 13:12]--[2021-04-12 Mon 13:20] =>  0:08
+CLOCK: [2021-04-11 Sun 14:36]--[2021-04-11 Sun 14:47] =>  0:11
+CLOCK: [2021-04-11 Sun 12:14]--[2021-04-11 Sun 12:28] =>  0:14
+CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
+:END:
+
+/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://en.wikipedia.org/wiki/Pass_(software)][pass]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package pass
+  :demand t
+  :general
+  ("A-H-o" 'pass)
+  (pass-mode-map
+   "c" 'pass-copy
+   "d" 'pass-kill)
+  (pass-view-mode-map
+   "s-c" 'pass-view-toggle-password
+   "s-s" 'server-edit))
+#+end_src
+
+** pass-extras
+:PROPERTIES:
+:ID:       524FE3D7-EA5B-408E-A338-68E633528632
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package pass-extras
+  :after pass
+  :demand t
+  :general
+  (pass-mode-map
+   "<return>" 'pass-extras-edit
+   "SPC" 'pass-extras-open-at-point
+   "e" 'pass-extras-edit
+   "I" 'pass-extras-insert-generated-no-symbols
+   "y" 'pass-extras-git-sync))
+#+end_src
+
+** auth-source-pass
+:PROPERTIES:
+:ID:       00772E1B-A97C-46B5-8DE9-77462AAE0189
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-29 Sat 15:10]--[2021-05-29 Sat 15:44] =>  0:34
+CLOCK: [2021-05-29 Sat 13:52]--[2021-05-29 Sat 14:10] =>  0:18
+CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature auth-source-pass
+  :demand t
+  :after auth-source pass
+  :config
+  (setq auth-source-debug t)
+  (setq auth-source-do-cache nil)
+  (auth-source-pass-enable)
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
+#+end_src
+
+Note: to work, entries must conform to the pattern ~auth-sources/host~.
+
 * version control
 :PROPERTIES:
 :ID:       CBBAD256-2800-4E9C-9042-C033FF95FA58
@@ -2100,7 +2250,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq-default gac-silent-message-p t)
   (setq-default gac-automatically-add-new-files-p t))
 #+end_src
-
 
 * display
 :PROPERTIES:
@@ -5047,156 +5196,6 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
         (lambda () (kill-buffer remember-notes-buffer-name)
           (remember-notes))))
 #+end_src
-
-* secrets
-:PROPERTIES:
-:ID:       D412C998-40EE-4638-959A-C2530EC9F247
-:END:
-:LOGBOOK:
-:END:
-
-** plstore
-:PROPERTIES:
-:ID:       5257E611-7953-4898-B743-25803EC7D9B4
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature plstore
-  :demand t
-  :init
-  (setq-default plstore-cache-passphrase-for-symmetric-encryption t))
-#+end_src
-
-** epg-config
-:PROPERTIES:
-:ID:       012F15A3-7717-4B09-9F43-74DA6F5F7C1A
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature epg-config
-  :demand t
-  :config
-  (setq epg-pinentry-mode 'loopback) ; use minibuffer for password entry
-  (setq epg-gpg-program "/opt/homebrew/bin/gpg"))
-#+end_src
-
-** epa-file
-:PROPERTIES:
-:ID:       FD3455F8-7CD3-4651-8063-304D4131F14E
-:END:
-
-#+begin_src emacs-lisp
-(use-feature epa-file
-  :config
-  (epa-file-enable))
-#+end_src
-
-** auth-source
-:PROPERTIES:
-:ID:       291F9998-9940-4249-A048-92B5F2A2895E
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature auth-source
-  :demand t
-  :preface
-  (eval-when-compile
-    (defvar auth-sources))
-  :config
-  (setq auth-source-debug nil) ; set to t for debugging
-  (setq auth-sources '(macos-keychain-internet macos-keychain-generic)))
-#+end_src
-
-** oauth2-auto
-:PROPERTIES:
-:ID:       C7B36982-D472-4248-8C61-B7EB0ED6ACF6
-:END:
-
-/[[https://github.com/telotortium/emacs-oauth2-auto][emacs-oauth2-auto]] supports authentication to an OAuth2 provider from within Emacs./
-
-#+begin_src emacs-lisp :results silent
-(use-package oauth2-auto
-  :elpaca (emacs-oauth2-auto
-           :host github
-           :repo "telotortium/emacs-oauth2-auto"
-           :protocol ssh))
-#+end_src
-
-** pass
-:PROPERTIES:
-:ID:       518D3C1F-AFD6-4B72-8980-CAD10BBAEDDE
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-03 Fri 16:18]--[2022-06-03 Fri 16:35] =>  0:17
-CLOCK: [2022-06-03 Fri 16:38]--[2022-06-03 Fri 16:44] =>  0:06
-CLOCK: [2021-07-20 Tue 09:33]--[2021-07-20 Tue 10:14] =>  0:41
-CLOCK: [2021-05-29 Sat 15:44]--[2021-05-29 Sat 16:28] =>  0:44
-CLOCK: [2021-05-26 Wed 17:46]--[2021-05-26 Wed 18:04] =>  0:18
-CLOCK: [2021-05-14 Fri 14:55]--[2021-05-14 Fri 15:07] =>  0:12
-CLOCK: [2021-04-12 Mon 13:12]--[2021-04-12 Mon 13:20] =>  0:08
-CLOCK: [2021-04-11 Sun 14:36]--[2021-04-11 Sun 14:47] =>  0:11
-CLOCK: [2021-04-11 Sun 12:14]--[2021-04-11 Sun 12:28] =>  0:14
-CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
-:END:
-
-/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://en.wikipedia.org/wiki/Pass_(software)][pass]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package pass
-  :demand t
-  :general
-  ("A-H-o" 'pass)
-  (pass-mode-map
-   "c" 'pass-copy
-   "d" 'pass-kill)
-  (pass-view-mode-map
-   "s-c" 'pass-view-toggle-password
-   "s-s" 'server-edit))
-#+end_src
-
-** pass-extras
-:PROPERTIES:
-:ID:       524FE3D7-EA5B-408E-A338-68E633528632
-:END:
-
-#+begin_src emacs-lisp
-(use-personal-package pass-extras
-  :after pass
-  :demand t
-  :general
-  (pass-mode-map
-   "<return>" 'pass-extras-edit
-   "SPC" 'pass-extras-open-at-point
-   "e" 'pass-extras-edit
-   "I" 'pass-extras-insert-generated-no-symbols
-   "y" 'pass-extras-git-sync))
-#+end_src
-
-** auth-source-pass
-:PROPERTIES:
-:ID:       00772E1B-A97C-46B5-8DE9-77462AAE0189
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-29 Sat 15:10]--[2021-05-29 Sat 15:44] =>  0:34
-CLOCK: [2021-05-29 Sat 13:52]--[2021-05-29 Sat 14:10] =>  0:18
-CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature auth-source-pass
-  :demand t
-  :after auth-source pass
-  :config
-  (setq auth-source-debug t)
-  (setq auth-source-do-cache nil)
-  (auth-source-pass-enable)
-  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
-#+end_src
-
-Note: to work, entries must conform to the pattern ~auth-sources/host~.
 
 * search & replace
 :PROPERTIES:

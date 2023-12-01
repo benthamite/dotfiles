@@ -9709,7 +9709,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 (use-feature oc
   :after org
   :config
-  ;; (setq org-cite-global-bibliography paths-files-bibliography-all)
+  ;; (setq org-cite-global-bibliography paths-files-bibliography-all) ; disabled due to performance issues
   (setq org-cite-csl-styles-dir paths-dir-personal-csl-styles)
   (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)

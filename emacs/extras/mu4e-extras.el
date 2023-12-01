@@ -79,7 +79,8 @@ interpret KEY as the `org-capture' template key.
 
 If ARG is non-nil, do not archive the message after capturing it."
   (interactive "P")
-  (if (eq major-mode 'mu4e-view-mode)
+  (if (or (derived-mode-p 'mu4e-view-mode)
+	  (derived-mode-p 'mu4e-headers-mode))
       (let* ((message-body (or (mu4e-message-field (mu4e-message-at-point) :body-txt)
 			       ;; inexplicably, the above returns nil
 			       ;; for a few non-empty messages; to avoid

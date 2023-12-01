@@ -188,4 +188,3 @@ Browse issue or PR on prefix P."
 
 (provide 'gh-notify-extras)
 ;;; gh-notify-extras.el ends here
-

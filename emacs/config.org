@@ -85,6 +85,24 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#prot-simple][prot-simple]]
   - [[#prot-common][prot-common]]
   - [[#misc][misc.]]
+- [[#version-control][version control]]
+  - [[#vc][vc]]
+  - [[#vc-extras][vc-extras]]
+  - [[#diff-mode][diff-mode]]
+  - [[#ediff][ediff]]
+  - [[#ediff-extras][ediff-extras]]
+  - [[#smerge][smerge]]
+  - [[#magit][magit]]
+  - [[#git-commit][git-commit]]
+  - [[#magit-extras][magit-extras]]
+  - [[#ghub][ghub]]
+  - [[#forge][forge]]
+  - [[#orgit-forge][orgit-forge]]
+  - [[#forge-search][forge-search]]
+  - [[#gh-notify][gh-notify]]
+  - [[#gh-notify-extras][gh-notify-extras]]
+  - [[#forge-extras][forge-extras]]
+  - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#display][display]]
   - [[#mixed-pitch][mixed-pitch]]
   - [[#fringe][fringe]]
@@ -227,24 +245,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#pass][pass]]
   - [[#pass-extras][pass-extras]]
   - [[#auth-source-pass][auth-source-pass]]
-- [[#version-control][version control]]
-  - [[#vc][vc]]
-  - [[#vc-extras][vc-extras]]
-  - [[#diff-mode][diff-mode]]
-  - [[#ediff][ediff]]
-  - [[#ediff-extras][ediff-extras]]
-  - [[#smerge][smerge]]
-  - [[#magit][magit]]
-  - [[#git-commit][git-commit]]
-  - [[#magit-extras][magit-extras]]
-  - [[#ghub][ghub]]
-  - [[#forge][forge]]
-  - [[#orgit-forge][orgit-forge]]
-  - [[#forge-search][forge-search]]
-  - [[#gh-notify][gh-notify]]
-  - [[#gh-notify-extras][gh-notify-extras]]
-  - [[#forge-extras][forge-extras]]
-  - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#search--replace][search & replace]]
   - [[#isearch][isearch]]
   - [[#isearch-extras][isearch-extras]]
@@ -1745,6 +1745,362 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 
   (define-key input-decode-map (kbd "M-8") "•"))
 #+end_src
+
+* version control
+:PROPERTIES:
+:ID:       CBBAD256-2800-4E9C-9042-C033FF95FA58
+:END:
+:LOGBOOK:
+:END:
+
+** vc
+:PROPERTIES:
+:ID:       B9E38DFD-09DC-4DB2-B710-44DB6F00D9DC
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature vc
+  :config
+  (setq vc-follow-symlinks t) ; don't ask for confirmation when opening symlinked file
+  (setq vc-make-backup-files nil)) ; do not backup version controlled files
+#+end_src
+
+** vc-extras
+:PROPERTIES:
+:ID:       A7254905-0FBE-4F8F-8D93-1A5D1FA95BB9
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package vc-extras
+  :after vc
+  :demand t)
+#+end_src
+
+** diff-mode
+:PROPERTIES:
+:ID:       33F1D5AA-3DA7-43EC-8ACD-0D8360445459
+:END:
+
+#+begin_src emacs-lisp
+(use-feature diff-mode
+  :demand t
+  :general
+  (diff-mode-map
+   "M-o" nil))
+#+end_src
+
+** ediff
+:PROPERTIES:
+:ID:       987C9066-28ED-4B5A-944C-A90681182264
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature ediff
+  :config
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+  (setq ediff-split-window-function 'split-window-horizontally)
+
+  :general
+  ("A-d" 'ediff))
+#+end_src
+
+** ediff-extras
+:PROPERTIES:
+:ID:       BFD82441-5547-45C5-AD36-E5DE9FDD4898
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package ediff-extras
+  :after ediff
+  :demand t
+  :config
+  (add-hook 'ediff-startup-hook #'ediff-extras-toggle-word-mode))
+#+end_src
+
+** smerge
+:PROPERTIES:
+:ID:       FE85CC7E-E2A0-4494-8D1E-A64A4C40013E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature smerge-mode
+  :general
+  (smerge-mode-map
+   "s-n" 'smerge-next
+   "s-SPC" 'smerge-next
+   "s-p" 'smerge-prev
+   "s-l" 'smerge-keep-lower
+   "s-k" 'smerge-keep-upper
+   "s-a" 'smerge-keep-all
+   "s-b" 'smerge-keep-base
+   "s-c" 'smerge-keep-current))
+#+end_src
+
+** magit
+:PROPERTIES:
+:ID:       B662CE1B-3F94-486E-A3DE-052775035960
+:END:
+:LOGBOOK:
+CLOCK: [2021-11-18 Thu 21:51]--[2021-11-18 Thu 21:52] =>  0:01
+CLOCK: [2021-07-22 Thu 17:12]--[2021-07-22 Thu 17:20] =>  0:08
+CLOCK: [2021-07-01 Thu 22:05]--[2021-07-01 Thu 22:55] =>  0:50
+CLOCK: [2021-02-25 Thu 17:24]--[2021-02-25 Thu 17:45] =>  0:21
+CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
+:END:
+
+/[[https://github.com/magit/magit][magit]] is a complete text-based user interface to Git./
+
+#+begin_src emacs-lisp :results silent
+(use-package magit
+  :demand t
+  :config
+  (setq magit-commit-ask-to-stage 'stage)
+  (setq magit-clone-set-remote.pushDefault t)
+  (setq magit-diff-refine-hunk 'all) ; show word-granularity differences in all diff hunks
+
+  (add-to-list 'magit-no-confirm 'stage-all-changes)
+  (dolist (hook '(magit-status-mode-hook
+                  magit-diff-mode-hook))
+    (add-hook hook
+              (lambda ()
+                "Disable line truncation in Magit buffers."
+                (setq truncate-lines nil))))
+
+  :general
+  ("A-g" 'magit
+   "A-M-g" 'magit-clone)
+  (magit-mode-map
+   "p" 'magit-pull
+   "." 'magit-push)
+  (magit-status-mode-map
+   "A-C-s-r" 'magit-section-backward-sibling
+   "A-C-s-f" 'magit-section-forward-sibling)
+  ((magit-status-mode-map magit-hunk-section-mode-map magit-hunk-section-smerge-map)
+   "s-l" 'magit-smerge-keep-lower
+   "s-k" 'magit-smerge-keep-upper
+   "s-a" 'magit-smerge-keep-all
+   "s-b" 'magit-smerge-keep-base
+   "s-c" 'magit-smerge-keep-current))
+#+end_src
+
+- [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
+- To read: [[https://emacsredux.com/blog/2020/12/11/super-keybindings-for-magit/][Super Keybindings for Magit | Emacs Redux]]
+
+*** resources
+:PROPERTIES:
+:ID:       09A7E16B-377A-4BB7-AC3B-4D7A673E7CA8
+:END:
+- [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
+- https://tvraman.github.io/emacspeak/blog/github-quick-workflow.html
+- [[https://prathamesh.tech/2019/06/21/creating-pull-requests-from-emacs/][Creating pull requests from emacs]]
+
+** git-commit
+:PROPERTIES:
+:ID:       2A5E2C53-A4F4-4D44-8BA0-BFC19C26DD63
+:END:
+
+#+begin_src emacs-lisp
+(use-feature git-commit
+  :after magit
+  :demand t)
+#+end_src
+
+** magit-extras
+:PROPERTIES:
+:ID:       DFB5D4F4-0BF8-4C1F-8C3C-1A3992387CBC
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package magit-extras
+  ;; :after magit
+  :demand t
+  :config
+  (add-hook 'git-commit-setup-hook 'magit-extras-move-point-to-start)
+
+  :general
+  ("s-p" 'magit-extras-with-editor-finish-and-push))
+#+end_src
+
+** ghub
+:PROPERTIES:
+:ID:       C557A862-9EC7-406C-98E1-C248F7D579F5
+:END:
+
+/[[https://github.com/magit/ghub][ghub]] provides basic support for using the APIs of various Git forges from Emacs packages./
+
+#+begin_src emacs-lisp :results silent
+(use-package ghub
+  :after auth-source
+  :demand t)
+#+end_src
+
+** forge
+:PROPERTIES:
+:ID:       F6F60AE4-9FEA-4179-922C-CC649BC752A4
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-19 Wed 17:59]--[2023-04-19 Wed 18:48] =>  0:49
+CLOCK: [2022-06-25 Sat 15:55]--[2022-06-25 Sat 16:30] =>  0:35
+CLOCK: [2021-12-21 Tue 20:20]--[2021-12-21 Tue 20:27] =>  0:07
+CLOCK: [2021-07-19 Mon 16:11]--[2021-07-19 Mon 16:39] =>  0:28
+CLOCK: [2021-07-19 Mon 14:22]--[2021-07-19 Mon 15:15] =>  0:53
+CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
+:END:
+
+/[[https://github.com/magit/forge][forge]] let's one work with git forges directly from Magit./
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
+(use-package forge
+  :after magit ghub emacsql auth-source-pass
+  :demand t
+  :init
+  (if (version<= emacs-version "29.0")
+      (setq forge-database-connector 'sqlite)
+    (setq forge-database-connector 'sqlite-builtin))
+
+  :config
+  (setq forge-owned-accounts '(("benthamite")))
+  (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
+  (setq forge-pull-notifications t)
+  (run-with-timer (* 5 60) t #'forge-pull-notifications)
+
+  (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
+
+  :general
+  ((magit-mode-map forge-issue-list-mode-map gh-notify-mode-map)
+   "n" 'forge-dispatch)
+  (forge-post-mode-map
+   "s-c" 'forge-post-submit)
+  (forge-topic-mode-map
+   "a" 'forge-edit-topic-assignees
+   "b" 'forge-edit-topic-body
+   "d" 'forge-delete-comment
+   "l" 'forge-edit-topic-labels
+   "m" 'forge-edit-topic-milestone
+   "x" 'forge-edit-topic-state
+   "t" 'forge-edit-topic-title
+   "e" 'forge-edit-post
+   "p" 'forge-create-post
+   "r" 'forge-create-post)
+  (magit-status-mode-map
+   "s-x" 'forge-remove-topic-locally))
+#+end_src
+
+** orgit-forge
+:PROPERTIES:
+:ID:       8D2CFDBF-4DD1-412C-A9F0-0D9393156A11
+:END:
+
+/[[https://github.com/magit/orgit-forge][orgit-forge]] supports ~org-mode~ links to ~forge~ buffers./
+
+#+begin_src emacs-lisp
+(use-package orgit-forge
+  :after org forge
+  :demand t)
+#+end_src
+
+** forge-search
+:PROPERTIES:
+:ID:       1E83FDA2-3529-4189-8F5D-6B3388A45AE4
+:END:
+
+/[[https://github.com/eatse21/forge-search.el/blob/master/forge-search.el][forge-search]] supports searching through issues and pull requests within ~forge~./
+
+#+begin_src emacs-lisp
+(use-package forge-search
+  :elpaca (forge-search
+           :host github
+           :repo "eatse21/forge-search.el")
+  :after forge
+  :demand t
+  :general
+  ((forge-topic-mode-map
+    forge-topic-list-mode-map
+    forge-issue-list-mode-map
+    forge-pullreq-list-mode-map
+    forge-notifications-mode-map
+    forge-repository-list-mode-map)
+   "s" 'forge-search))
+#+end_src
+
+** gh-notify
+:PROPERTIES:
+:ID:       02EE3FAE-133C-479E-B7C7-9B2BB2160DCA
+:END:
+
+/[[https://github.com/anticomputer/gh-notify][gh-notify]] is a veneer for the Magit/Forge GitHub porcelain./
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
+(use-package gh-notify
+  :elpaca (gh-notify
+           :host github
+           :repo "benthamite/gh-notify"
+           :depth nil)
+  :after forge
+  :demand t
+  :config
+  ;; unset bindings for all the keys that were bound to self-insert-command in
+  ;; `gh-notify-mode-map'
+  (let ((char-table (cl-second gh-notify-mode-map)))
+    (map-char-table (lambda (key def)
+                      (when (eq def 'gh-notify--self-insert-command)
+                        (set-char-table-range char-table key nil)))
+                    char-table))
+  :general
+  (gh-notify-mode-map
+   "g" 'gh-notify-forge-refresh
+   "Q" 'files-extras-kill-this-buffer))
+#+end_src
+
+** gh-notify-extras
+:PROPERTIES:
+:ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
+(use-personal-package gh-notify-extras
+  :after gh-notify
+  :demand t
+  :general
+  (gh-notify-mode-map
+   "RET" 'gh-notify-extras-visit-notification
+   "G" 'gh-notify-extras-full-refresh
+   "x" 'gh-notify-extras-browse-externally
+   "." 'gh-notify-extras-visit-next-notification))
+#+end_src
+
+** forge-extras
+:PROPERTIES:
+:ID:       B74712E7-2A8C-4D17-8FD4-C854C88D3D72
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
+(use-personal-package forge-extras
+  :after forge orgit-forge gh-notify
+  :demand t
+  :config
+  (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link))
+#+end_src
+
+** git-auto-commit-mode
+:PROPERTIES:
+:ID:       FCB4DDAC-CD47-48CE-BA0F-96C0574C458A
+:END:
+
+/[[https://github.com/ryuslash/git-auto-commit-mode][git-auto-commit-mode]] allows for committing and pushing automatically after each save./
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :git-auto-commit-mode)
+(use-package git-auto-commit-mode
+  :config
+  (setq-default gac-automatically-push-p nil)
+  (setq-default gac-debounce-interval 30)
+  (setq-default gac-silent-message-p t)
+  (setq-default gac-automatically-add-new-files-p t))
+#+end_src
+
 
 * display
 :PROPERTIES:
@@ -4841,361 +5197,6 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 #+end_src
 
 Note: to work, entries must conform to the pattern ~auth-sources/host~.
-
-* version control
-:PROPERTIES:
-:ID:       CBBAD256-2800-4E9C-9042-C033FF95FA58
-:END:
-:LOGBOOK:
-:END:
-
-** vc
-:PROPERTIES:
-:ID:       B9E38DFD-09DC-4DB2-B710-44DB6F00D9DC
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature vc
-  :config
-  (setq vc-follow-symlinks t) ; don't ask for confirmation when opening symlinked file
-  (setq vc-make-backup-files nil)) ; do not backup version controlled files
-#+end_src
-
-** vc-extras
-:PROPERTIES:
-:ID:       A7254905-0FBE-4F8F-8D93-1A5D1FA95BB9
-:END:
-
-#+begin_src emacs-lisp
-(use-personal-package vc-extras
-  :after vc
-  :demand t)
-#+end_src
-
-** diff-mode
-:PROPERTIES:
-:ID:       33F1D5AA-3DA7-43EC-8ACD-0D8360445459
-:END:
-
-#+begin_src emacs-lisp
-(use-feature diff-mode
-  :demand t
-  :general
-  (diff-mode-map
-   "M-o" nil))
-#+end_src
-
-** ediff
-:PROPERTIES:
-:ID:       987C9066-28ED-4B5A-944C-A90681182264
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature ediff
-  :config
-  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
-  (setq ediff-split-window-function 'split-window-horizontally)
-
-  :general
-  ("A-d" 'ediff))
-#+end_src
-
-** ediff-extras
-:PROPERTIES:
-:ID:       BFD82441-5547-45C5-AD36-E5DE9FDD4898
-:END:
-
-#+begin_src emacs-lisp
-(use-personal-package ediff-extras
-  :after ediff
-  :demand t
-  :config
-  (add-hook 'ediff-startup-hook #'ediff-extras-toggle-word-mode))
-#+end_src
-
-** smerge
-:PROPERTIES:
-:ID:       FE85CC7E-E2A0-4494-8D1E-A64A4C40013E
-:END:
-
-#+begin_src emacs-lisp
-(use-feature smerge-mode
-  :general
-  (smerge-mode-map
-   "s-n" 'smerge-next
-   "s-SPC" 'smerge-next
-   "s-p" 'smerge-prev
-   "s-l" 'smerge-keep-lower
-   "s-k" 'smerge-keep-upper
-   "s-a" 'smerge-keep-all
-   "s-b" 'smerge-keep-base
-   "s-c" 'smerge-keep-current))
-#+end_src
-
-** magit
-:PROPERTIES:
-:ID:       B662CE1B-3F94-486E-A3DE-052775035960
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-18 Thu 21:51]--[2021-11-18 Thu 21:52] =>  0:01
-CLOCK: [2021-07-22 Thu 17:12]--[2021-07-22 Thu 17:20] =>  0:08
-CLOCK: [2021-07-01 Thu 22:05]--[2021-07-01 Thu 22:55] =>  0:50
-CLOCK: [2021-02-25 Thu 17:24]--[2021-02-25 Thu 17:45] =>  0:21
-CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
-:END:
-
-/[[https://github.com/magit/magit][magit]] is a complete text-based user interface to Git./
-
-#+begin_src emacs-lisp :results silent
-(use-package magit
-  :demand t
-  :config
-  (setq magit-commit-ask-to-stage 'stage)
-  (setq magit-clone-set-remote.pushDefault t)
-  (setq magit-diff-refine-hunk 'all) ; show word-granularity differences in all diff hunks
-
-  (add-to-list 'magit-no-confirm 'stage-all-changes)
-  (dolist (hook '(magit-status-mode-hook
-                  magit-diff-mode-hook))
-    (add-hook hook
-              (lambda ()
-                "Disable line truncation in Magit buffers."
-                (setq truncate-lines nil))))
-
-  :general
-  ("A-g" 'magit
-   "A-M-g" 'magit-clone)
-  (magit-mode-map
-   "p" 'magit-pull
-   "." 'magit-push)
-  (magit-status-mode-map
-   "A-C-s-r" 'magit-section-backward-sibling
-   "A-C-s-f" 'magit-section-forward-sibling)
-  ((magit-status-mode-map magit-hunk-section-mode-map magit-hunk-section-smerge-map)
-   "s-l" 'magit-smerge-keep-lower
-   "s-k" 'magit-smerge-keep-upper
-   "s-a" 'magit-smerge-keep-all
-   "s-b" 'magit-smerge-keep-base
-   "s-c" 'magit-smerge-keep-current))
-#+end_src
-
-- [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
-- To read: [[https://emacsredux.com/blog/2020/12/11/super-keybindings-for-magit/][Super Keybindings for Magit | Emacs Redux]]
-
-*** resources
-:PROPERTIES:
-:ID:       09A7E16B-377A-4BB7-AC3B-4D7A673E7CA8
-:END:
-- [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
-- https://tvraman.github.io/emacspeak/blog/github-quick-workflow.html
-- [[https://prathamesh.tech/2019/06/21/creating-pull-requests-from-emacs/][Creating pull requests from emacs]]
-
-** git-commit
-:PROPERTIES:
-:ID:       2A5E2C53-A4F4-4D44-8BA0-BFC19C26DD63
-:END:
-
-#+begin_src emacs-lisp
-(use-feature git-commit
-  :after magit
-  :demand t)
-#+end_src
-
-** magit-extras
-:PROPERTIES:
-:ID:       DFB5D4F4-0BF8-4C1F-8C3C-1A3992387CBC
-:END:
-
-#+begin_src emacs-lisp
-(use-personal-package magit-extras
-  ;; :after magit
-  :demand t
-  :config
-  (add-hook 'git-commit-setup-hook 'magit-extras-move-point-to-start)
-
-  :general
-  ("s-p" 'magit-extras-with-editor-finish-and-push))
-#+end_src
-
-** ghub
-:PROPERTIES:
-:ID:       C557A862-9EC7-406C-98E1-C248F7D579F5
-:END:
-
-/[[https://github.com/magit/ghub][ghub]] provides basic support for using the APIs of various Git forges from Emacs packages./
-
-#+begin_src emacs-lisp :results silent
-(use-package ghub
-  :after auth-source
-  :demand t)
-#+end_src
-
-** forge
-:PROPERTIES:
-:ID:       F6F60AE4-9FEA-4179-922C-CC649BC752A4
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-19 Wed 17:59]--[2023-04-19 Wed 18:48] =>  0:49
-CLOCK: [2022-06-25 Sat 15:55]--[2022-06-25 Sat 16:30] =>  0:35
-CLOCK: [2021-12-21 Tue 20:20]--[2021-12-21 Tue 20:27] =>  0:07
-CLOCK: [2021-07-19 Mon 16:11]--[2021-07-19 Mon 16:39] =>  0:28
-CLOCK: [2021-07-19 Mon 14:22]--[2021-07-19 Mon 15:15] =>  0:53
-CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
-:END:
-
-/[[https://github.com/magit/forge][forge]] let's one work with git forges directly from Magit./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
-(use-package forge
-  :after magit ghub emacsql auth-source-pass
-  :demand t
-  :init
-  (if (version<= emacs-version "29.0")
-      (setq forge-database-connector 'sqlite)
-    (setq forge-database-connector 'sqlite-builtin))
-
-  :config
-  (setq forge-owned-accounts '(("benthamite")))
-  (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
-  (setq forge-pull-notifications t)
-  (run-with-timer (* 5 60) t #'forge-pull-notifications)
-
-  (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
-
-  :general
-  ((magit-mode-map forge-issue-list-mode-map gh-notify-mode-map)
-   "n" 'forge-dispatch)
-  (forge-post-mode-map
-   "s-c" 'forge-post-submit)
-  (forge-topic-mode-map
-   "a" 'forge-edit-topic-assignees
-   "b" 'forge-edit-topic-body
-   "d" 'forge-delete-comment
-   "l" 'forge-edit-topic-labels
-   "m" 'forge-edit-topic-milestone
-   "x" 'forge-edit-topic-state
-   "t" 'forge-edit-topic-title
-   "e" 'forge-edit-post
-   "p" 'forge-create-post
-   "r" 'forge-create-post)
-  (magit-status-mode-map
-   "s-x" 'forge-remove-topic-locally))
-#+end_src
-
-** orgit-forge
-:PROPERTIES:
-:ID:       8D2CFDBF-4DD1-412C-A9F0-0D9393156A11
-:END:
-
-/[[https://github.com/magit/orgit-forge][orgit-forge]] supports ~org-mode~ links to ~forge~ buffers./
-
-#+begin_src emacs-lisp
-(use-package orgit-forge
-  :after org forge
-  :demand t)
-#+end_src
-
-** forge-search
-:PROPERTIES:
-:ID:       1E83FDA2-3529-4189-8F5D-6B3388A45AE4
-:END:
-
-/[[https://github.com/eatse21/forge-search.el/blob/master/forge-search.el][forge-search]] supports searching through issues and pull requests within ~forge~./
-
-#+begin_src emacs-lisp
-(use-package forge-search
-  :elpaca (forge-search
-           :host github
-           :repo "eatse21/forge-search.el")
-  :after forge
-  :demand t
-  :general
-  ((forge-topic-mode-map
-    forge-topic-list-mode-map
-    forge-issue-list-mode-map
-    forge-pullreq-list-mode-map
-    forge-notifications-mode-map
-    forge-repository-list-mode-map)
-   "s" 'forge-search))
-#+end_src
-
-** gh-notify
-:PROPERTIES:
-:ID:       02EE3FAE-133C-479E-B7C7-9B2BB2160DCA
-:END:
-
-/[[https://github.com/anticomputer/gh-notify][gh-notify]] is a veneer for the Magit/Forge GitHub porcelain./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
-(use-package gh-notify
-  :elpaca (gh-notify
-           :host github
-           :repo "benthamite/gh-notify"
-           :depth nil)
-  :after forge
-  :demand t
-  :config
-  ;; unset bindings for all the keys that were bound to self-insert-command in
-  ;; `gh-notify-mode-map'
-  (let ((char-table (cl-second gh-notify-mode-map)))
-    (map-char-table (lambda (key def)
-                      (when (eq def 'gh-notify--self-insert-command)
-                        (set-char-table-range char-table key nil)))
-                    char-table))
-  :general
-  (gh-notify-mode-map
-   "g" 'gh-notify-forge-refresh
-   "Q" 'files-extras-kill-this-buffer))
-#+end_src
-
-** gh-notify-extras
-:PROPERTIES:
-:ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F
-:END:
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
-(use-personal-package gh-notify-extras
-  :after gh-notify
-  :demand t
-  :general
-  (gh-notify-mode-map
-   "RET" 'gh-notify-extras-visit-notification
-   "G" 'gh-notify-extras-full-refresh
-   "x" 'gh-notify-extras-browse-externally
-   "." 'gh-notify-extras-visit-next-notification))
-#+end_src
-
-** forge-extras
-:PROPERTIES:
-:ID:       B74712E7-2A8C-4D17-8FD4-C854C88D3D72
-:END:
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
-(use-personal-package forge-extras
-  :after forge orgit-forge gh-notify
-  :demand t
-  :config
-  (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link))
-#+end_src
-
-** git-auto-commit-mode
-:PROPERTIES:
-:ID:       FCB4DDAC-CD47-48CE-BA0F-96C0574C458A
-:END:
-
-/[[https://github.com/ryuslash/git-auto-commit-mode][git-auto-commit-mode]] allows for committing and pushing automatically after each save./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :git-auto-commit-mode)
-(use-package git-auto-commit-mode
-  :config
-  (setq-default gac-automatically-push-p nil)
-  (setq-default gac-debounce-interval 30)
-  (setq-default gac-silent-message-p t)
-  (setq-default gac-automatically-add-new-files-p t))
-#+end_src
 
 * search & replace
 :PROPERTIES:

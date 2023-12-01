@@ -4931,8 +4931,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "e" 'forge-edit-post
    "p" 'forge-create-post
    "r" 'forge-create-post)
-  (gh-notify-mode-map
-   "G" 'forge-pull-notifications)
   (magit-status-mode-map
    "s-x" 'forge-remove-topic-locally))
 #+end_src
@@ -4981,7 +4979,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 /[[https://github.com/anticomputer/gh-notify][gh-notify]] is a veneer for the Magit/Forge GitHub porcelain./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-package gh-notify
   :elpaca (gh-notify
            :host github
@@ -5008,13 +5006,14 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-personal-package gh-notify-extras
   :after gh-notify
   :demand t
   :general
   (gh-notify-mode-map
    "RET" 'gh-notify-extras-visit-notification
+   "G" 'gh-notify-extras-full-refresh
    "x" 'gh-notify-extras-browse-externally
    "." 'gh-notify-extras-visit-next-notification))
 #+end_src
@@ -10771,6 +10770,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 
   :general
   ((mu4e-headers-mode-map mu4e-view-mode-map)
+   "o" 'mu4e-extras-view-org-capture
    "$" 'mu4e-extras-copy-sum)
   (mu4e-main-mode-map
    "g" 'mu4e-extras-compose-new-externally
@@ -10785,7 +10785,6 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
    "D" 'mu4e-extras-view-trash
    "e" 'mu4e-extras-view-archive
    "x" 'mu4e-extras-view-in-gmail
-   "o" 'mu4e-extras-view-org-capture
    "v" 'mu4e-extras-view-move))
 #+end_src
 

@@ -113,6 +113,12 @@ Browse issue or PR on prefix P."
   (interactive)
   (browse-url "https://github.com/notifications"))
 
+(defun gh-notify-extras-full-refresh ()
+  "Pull Forge notifications and then refresh the `gh-notify' buffer."
+  (interactive)
+  (forge-pull-notifications)
+  (gh-notify-forge-refresh))
+
 ;;;;; patched functions
 
 ;; do not run `forge-pull-topic' when visiting an issue or PR

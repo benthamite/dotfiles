@@ -64,7 +64,6 @@
  (paths-dir-music . (file-name-concat paths-dir-google-drive "Music/"))
  (paths-dir-movies . (file-name-concat paths-dir-google-drive "Movies/"))
  (paths-dir-dotfiles . (file-name-concat (getenv "HOME") "source/dotfiles/"))
- (paths-dir-dotemacs . (file-name-concat (getenv "HOME") "source/dotfiles/emacs/"))
  (paths-dir-source . (file-name-concat (getenv "HOME") "source/"))
  (paths-dir-org . (file-name-concat paths-dir-dropbox "org/"))
  (paths-dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat paths-dir-source "biblioteca-altruismo-eficaz/"))

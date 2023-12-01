@@ -9966,12 +9966,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
       "A-H-M-s-?" 'citar-extras-open-file-at-point) ; i.e. H-S-/
      (general-define-key
       :keymaps '(citar-map citar-citation-map)
-      "b" 'citar-extras-goto-bibtex-entry
       "c" 'embark-copy-as-kill
-      "d" 'ebib-extras-download-dwim
-      "i" 'citar-extras-open-in-ebib
-      "s" 'ebib-extras-search-dwim
-      "t" 'citar-extras-move-entry-to-tlon
       "u" 'citar-open-links))))
 #+end_src
 
@@ -9996,7 +9991,14 @@ Having headings tagged with the type of work they are notes of allows me to quer
 #+begin_src emacs-lisp
 (use-personal-package citar-extras
   :after citar
-  :demand t)
+  :demand t
+  :general
+  ((citar-map citar-citation-map)
+   "d" 'ebib-extras-download-dwim
+   "i" 'citar-extras-open-in-ebib
+   "s" 'ebib-extras-search-dwim
+   "t" 'citar-extras-move-entry-to-tlon
+   "b" 'citar-extras-goto-bibtex-entry))
 #+end_src
 
 ** citar-citeproc

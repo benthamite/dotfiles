@@ -103,7 +103,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#smerge][smerge]]
   - [[#magit][magit]]
   - [[#git-commit][git-commit]]
-  - [[#magit-extras][magit-extras]]
+  - [[#magit-extra][magit-extra]]
   - [[#ghub][ghub]]
   - [[#forge][forge]]
   - [[#orgit-forge][orgit-forge]]
@@ -2058,13 +2058,15 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :demand t)
 #+end_src
 
-** magit-extras
+** magit-extra
 :PROPERTIES:
 :ID:       DFB5D4F4-0BF8-4C1F-8C3C-1A3992387CBC
 :END:
 
+Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magit already provides a feature called ~magit-extras~.
+
 #+begin_src emacs-lisp
-(use-personal-package magit-extras
+(use-personal-package magit-extra
   ;; :after magit
   :demand t
   :config

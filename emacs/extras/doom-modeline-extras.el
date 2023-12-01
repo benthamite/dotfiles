@@ -27,6 +27,8 @@
 
 ;;; Code:
 
+(require 'doom-modeline)
+
 ;;;; Functions
 
 ;;;;; Patched functions

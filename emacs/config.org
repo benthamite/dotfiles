@@ -10770,6 +10770,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 
   :general
   ((mu4e-headers-mode-map mu4e-view-mode-map)
+   "o" 'mu4e-extras-view-org-capture
    "$" 'mu4e-extras-copy-sum)
   (mu4e-main-mode-map
    "g" 'mu4e-extras-compose-new-externally
@@ -10784,7 +10785,6 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
    "D" 'mu4e-extras-view-trash
    "e" 'mu4e-extras-view-archive
    "x" 'mu4e-extras-view-in-gmail
-   "o" 'mu4e-extras-view-org-capture
    "v" 'mu4e-extras-view-move))
 #+end_src
 

@@ -4931,8 +4931,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "e" 'forge-edit-post
    "p" 'forge-create-post
    "r" 'forge-create-post)
-  (gh-notify-mode-map
-   "G" 'forge-pull-notifications)
   (magit-status-mode-map
    "s-x" 'forge-remove-topic-locally))
 #+end_src
@@ -5015,6 +5013,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :general
   (gh-notify-mode-map
    "RET" 'gh-notify-extras-visit-notification
+   "G" 'gh-notify-extras-full-refresh
    "x" 'gh-notify-extras-browse-externally
    "." 'gh-notify-extras-visit-next-notification))
 #+end_src

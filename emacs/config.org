@@ -9553,8 +9553,9 @@ So the links to other Wiki articles do not break.
                       (file-relative-name dir-or-file paths-dir-org-roam)
                     dir-or-file)
                   result))))
-                  
+
   (add-hook 'org-capture-prepare-finalize-hook #'org-roam-extras-remove-file-level-properties)
+  
   :general
   ("H-N" 'org-roam-extras-new-note
    "H-j" 'org-roam-extras-node-find
@@ -10671,8 +10672,24 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :PROPERTIES:
 :ID:       BEF562DB-61D5-4AB5-8B8A-44DD866FE285
 :END:
+:LOGBOOK:
+CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
+:END:
 
 /[[https://github.com/lordpretzel/async-email-sending][async-email-sending]] enables asynchronous sending of emails in Emacs using the new built-in sqlite support in Emacs 29./
+
+<2023-12-01 Fri> Failed to send an email when I tested it. So not using for the time being.
+
+#+begin_src emacs-lisp
+(use-package async-email-sending
+  :disabled
+  :elpaca (async-email-sending
+	   :host github
+	   :repo "lordpretzel/async-email-sending")
+  :demand t
+  ;; needs to be set via `customize'
+  :custom (async-email-sending-use-async-send-mail t))
+#+end_src
 
 ** message
 :PROPERTIES:

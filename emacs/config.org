@@ -2084,9 +2084,6 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
      (setq doom-modeline-buffer-file-name-style 'auto)
      (setq doom-modeline-enable-word-count t)
 
-     ;; needed if managing secrets with `pass'
-     (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)
-
      (doom-modeline-def-modeline 'main
        '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
        '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
@@ -12329,7 +12326,8 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
   :config
   (setq auth-source-debug t)
   (setq auth-source-do-cache nil)
-  (auth-source-pass-enable))
+  (auth-source-pass-enable)
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
 #+end_src
 
 Note: to work, entries must conform to the pattern ~auth-sources/host~.

@@ -49,14 +49,16 @@
 
 (defun gh-notify-extras-get-issue-url ()
   "Get the URL of the issue at point."
-  (unless (derived-mode-p 'forge-issue-mode)
-    (user-error "Not in `forge-issue-mode'"))
+  (unless (or (derived-mode-p 'forge-issue-mode)
+	      (derived-mode-p 'forge-pullreq-mode))
+    (user-error "Not in `forge-issue-mode' or `forge-pullreq-mode'"))
   (forge-get-url forge-buffer-topic))
 
 (defun gh-notify-extras-mark-issue-as-read ()
   "Mark issue at point as read on GitHub."
   (require 'w3m)
-  (if (derived-mode-p 'forge-issue-mode)
+  (if (or (derived-mode-p 'forge-issue-mode)
+	  (derived-mode-p 'forge-pullreq-mode))
       (save-window-excursion
 	(let ((url (gh-notify-extras-get-issue-url))
 	      (w3m-new-session-in-background t))

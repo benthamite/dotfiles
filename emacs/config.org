@@ -9560,7 +9560,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
   :after org
   :config
   ;; (setq org-cite-global-bibliography paths-files-bibliography-all)
-  (setq org-cite-csl-styles-dir "/Users/pablostafforini/Library/CloudStorage/Dropbox/repos/genus/refs/styles/")
+  (setq org-cite-csl-styles-dir paths-dir-personal-csl-styles)
   (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration

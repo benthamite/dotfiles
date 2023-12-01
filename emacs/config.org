@@ -9270,19 +9270,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
         (concat "${hierarchy:160} "
                 (propertize "${tags:20}" 'face 'org-tag)))
 
-  ;; exclude headings in specific files and directories
-  (setq org-roam-file-exclude-regexp
-        (let (result)
-          (dolist (dir-or-file
-                   (append
-                    org-roam-extras-excluded-dirs
-                    org-roam-extras-excluded-files)
-                   (regexp-opt result))
-            (push (if (file-directory-p dir-or-file)
-                      (file-relative-name dir-or-file paths-dir-org-roam)
-                    dir-or-file)
-                  result))))
-
   ;; exclude selected headings based on other criteria
   (setq org-roam-db-node-include-function
         (lambda ()
@@ -9372,6 +9359,19 @@ So the links to other Wiki articles do not break.
   :after org-roam
   :demand t
   :config
+    ;; exclude headings in specific files and directories
+  (setq org-roam-file-exclude-regexp
+        (let (result)
+          (dolist (dir-or-file
+                   (append
+                    org-roam-extras-excluded-dirs
+                    org-roam-extras-excluded-files)
+                   (regexp-opt result))
+            (push (if (file-directory-p dir-or-file)
+                      (file-relative-name dir-or-file paths-dir-org-roam)
+                    dir-or-file)
+                  result))))
+                  
   (add-hook 'org-capture-prepare-finalize-hook #'org-roam-extras-remove-file-level-properties)
   :general
   ("H-N" 'org-roam-extras-new-note

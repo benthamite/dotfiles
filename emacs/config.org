@@ -4981,7 +4981,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 /[[https://github.com/anticomputer/gh-notify][gh-notify]] is a veneer for the Magit/Forge GitHub porcelain./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-package gh-notify
   :elpaca (gh-notify
            :host github
@@ -5008,7 +5008,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-personal-package gh-notify-extras
   :after gh-notify
   :demand t

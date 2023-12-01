@@ -6268,6 +6268,12 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   ;; Disable `emacs-lisp-checkdoc' in `org-src' blocks.
   (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc))
 
+  (add-hook 'after-change-major-mode-hook
+	    (lambda ()
+	      "Disable flycheck in the *scratch* buffer."
+	      (when (equal (buffer-name) "*scratch*")
+		(flycheck-mode -1))))
+
   :general
   ("M-k" 'flycheck-next-error))
 #+end_src

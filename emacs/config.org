@@ -326,12 +326,13 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict-ng][goldendict-ng]]
   - [[#reverso][reverso]]
-- [[#pdf][pdf]]
+- [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
   - [[#scroll-other-window][scroll-other-window]]
   - [[#pdf-view-restore][pdf-view-restore]]
   - [[#org-pdftools][org-pdftools]]
+  - [[#nov][nov]]
 - [[#prog-mode][prog-mode]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
@@ -6873,7 +6874,7 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
   ("H-Y" 'reverso))
 #+end_src
 
-* pdf
+* docs
 :PROPERTIES:
 :ID:       6C0D0737-734E-4EAB-8A3F-138EF990B967
 :END:
@@ -7020,6 +7021,16 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
   (add-hook 'org-mode-hook #'org-pdftools-setup-link))
 #+end_src
 
+** nov
+:PROPERTIES:
+:ID:       CA54F4D1-2562-483A-BBD0-67A039E0F2FC
+:END:
+
+/[[https://depp.brause.cc/nov.el/][nov]] is a major mode for reading EPUBs in Emacs./
+
+#+begin_src emacs-lisp
+(use-package nov)
+#+end_src
 * prog-mode
 :PROPERTIES:
 :ID:       A8700D18-574A-4093-938C-5707589DBB41

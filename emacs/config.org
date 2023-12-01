@@ -447,7 +447,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#mml][mml]]
   - [[#mu4e][mu4e]]
   - [[#mu4e-extras][mu4e-extras]]
-  - [[#mu4e-contrib][mu4e-contrib]]
   - [[#org-msg][org-msg]]
   - [[#org-msg-extras][org-msg-extras]]
 - [[#messaging][messaging]]
@@ -10942,20 +10941,6 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
    "e" 'mu4e-extras-view-archive
    "x" 'mu4e-extras-view-in-gmail
    "v" 'mu4e-extras-view-move))
-#+end_src
-
-** mu4e-contrib
-:PROPERTIES:
-:ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
-:END:
-
-[2023-11-26 Sun] Do I need this? Disabling to test.
-
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :mu4e)
-(use-feature mu4e-contrib
-  :disabled
-  :after mu4e
-  :demand t)
 #+end_src
 
 ** org-msg

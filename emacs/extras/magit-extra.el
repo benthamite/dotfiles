@@ -1,4 +1,4 @@
-;;; magit-extras.el --- Extensions for magit -*- lexical-binding: t -*-
+;;; magit-extra.el --- Extensions for magit -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2023
 
@@ -27,9 +27,7 @@
 
 ;;; Code:
 
-;; (require 'magit)
-;; (require 'paths)
-;; (require 'with-editor)
+(require 'magit)
 
 ;;;; Functions
 
@@ -167,5 +165,5 @@ non-nil, return the file name without its directory."
   (with-editor-finish nil)
   (call-interactively #'magit-push-current-to-pushremote))
 
-(provide 'magit-extras)
-;;; magit-extras.el ends here
+(provide 'magit-extra)
+;;; magit-extra.el ends here

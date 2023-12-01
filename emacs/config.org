@@ -10653,9 +10653,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
         `((,mu4e-drafts-folder  . ?d)
           (,mu4e-sent-folder    . ?t)
           (,mu4e-trash-folder   . ?x)
-          (,mu4e-refile-folder  . ?a)
-          (,mu4e-extras-inbox-folder . ?i)
-          (,mu4e-extras-daily-folder . ?y))) ; required for correct Gmail refiling
+          (,mu4e-refile-folder  . ?a))) ; required for correct Gmail refiling
   (setq mu4e-compose-dont-reply-to-self t)
   (setq mu4e-compose-format-flowed t)
   (setq mu4e-confirm-quit nil)
@@ -10765,6 +10763,10 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   (setq mu4e-extras-inbox-folder "/Inbox")
   (setq mu4e-extras-daily-folder "/Daily")
 
+  (dolist (shortcut `((,mu4e-extras-inbox-folder . ?i)
+		      (,mu4e-extras-daily-folder . ?y)))
+    (add-to-list 'mu4e-maildir-shortcuts shortcut))
+  
   (add-hook 'elpaca-after-init-hook #'mu4e-extras-set-contexts)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-view-mode-hook-functions)
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)

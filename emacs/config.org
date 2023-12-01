@@ -69,7 +69,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#use-package][use-package]]
 - [[#foundational][foundational]]
   - [[#general][general]]
-  - [[#paths][paths]]
   - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
@@ -906,14 +905,27 @@ NAME and ARGS are in `use-package'."
      :elpaca nil
      ,@args))
 
-(defmacro use-personal-package (name &rest args)
-  "Like `use-package' but accounting for personal packages.
-NAME and ARGS are in `use-package'."
-  (declare (indent defun))
-  `(use-package ,name
-     :elpaca nil
-     :load-path paths-dir-extras
-     ,@args))
+(if (tlon-init-machine-pablo-p)
+    (defmacro use-personal-package (name &rest args)
+      "Like `use-package' but accounting for personal packages.
+   NAME and ARGS are in `use-package'."
+      (declare (indent defun))
+      `(use-package ,name
+         :elpaca nil
+         :load-path paths-dir-extras
+         ,@args))
+  (defmacro use-personal-package (name &rest args)
+    "Like `use-package' but accounting for personal packages.
+   NAME and ARGS are in `use-package'."
+    (declare (indent defun))
+    `(use-package ,name
+       :elpaca (,name
+                :host github
+                :repo "benthamite/dotfiles"
+                :files ,(list (file-name-concat
+                               "emacs/extras"
+                               (file-name-with-extension (symbol-name (eval `(quote ,name))) "el"))))
+       ,@args)))
 
 (elpaca elpaca-use-package
   (elpaca-use-package-mode)
@@ -930,9 +942,9 @@ NAME and ARGS are in `use-package'."
 
 ;; we load `org-mode' early to prevent version conflicts
 ;; (use-package org
-  ;; :demand t
-  ;; :ensure org-plus-contrib
-  ;; )
+;; :demand t
+;; :ensure org-plus-contrib
+;; )
 #+end_src
 
 *** use-package-ensure-system-package
@@ -972,16 +984,6 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :bind
   ("C-A-b" . 'general-describe-keybindings))
 (elpaca-wait)
-#+end_src
-
-** paths
-:PROPERTIES:
-:ID:       B5BBC376-FA8B-47B6-A618-48F94BD1C4A5
-:END:
-
-#+begin_src emacs-lisp
-(use-personal-package paths
-  :demand t)
 #+end_src
 
 ** no-littering
@@ -2005,7 +2007,6 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   :demand t
   :config
   (setq spacious-padding-widths '())
-  (add-hook 'spacious-padding-mode-hook #'frames-extras-restore-window-divider)
   (spacious-padding-mode 1))
 #+end_src
 
@@ -2082,9 +2083,6 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
      (setq doom-modeline-irc-buffers t)
      (setq doom-modeline-buffer-file-name-style 'auto)
      (setq doom-modeline-enable-word-count t)
-
-     ;; needed if managing secrets with `pass'
-     (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)
 
      (doom-modeline-def-modeline 'main
        '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
@@ -4075,7 +4073,8 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   :config
   (tlon-init-override-code-if-available
    :frame-extras-maximize-frame
-   '((add-hook 'elpaca-after-init-hook #'frame-extras-maximize-frame))))
+   '((add-hook 'elpaca-after-init-hook #'frame-extras-maximize-frame)))
+     (add-hook 'spacious-padding-mode-hook #'frames-extras-restore-window-divider))
 #+end_src
 
 ** winum
@@ -6569,7 +6568,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
                       ("tbG" "Tlön: BAE: Create new generic todo from GitHub" entry
                        (id ,tlon-babel-todos-generic-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
-    (push template org-capture-templates)) 
+    (push template org-capture-templates))
 
   :general
   ("H-r" 'tlon-babel-dispatch)
@@ -9271,19 +9270,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
         (concat "${hierarchy:160} "
                 (propertize "${tags:20}" 'face 'org-tag)))
 
-  ;; exclude headings in specific files and directories
-  (setq org-roam-file-exclude-regexp
-        (let (result)
-          (dolist (dir-or-file
-                   (append
-                    org-roam-extras-excluded-dirs
-                    org-roam-extras-excluded-files)
-                   (regexp-opt result))
-            (push (if (file-directory-p dir-or-file)
-                      (file-relative-name dir-or-file paths-dir-org-roam)
-                    dir-or-file)
-                  result))))
-
   ;; exclude selected headings based on other criteria
   (setq org-roam-db-node-include-function
         (lambda ()
@@ -9373,6 +9359,19 @@ So the links to other Wiki articles do not break.
   :after org-roam
   :demand t
   :config
+    ;; exclude headings in specific files and directories
+  (setq org-roam-file-exclude-regexp
+        (let (result)
+          (dolist (dir-or-file
+                   (append
+                    org-roam-extras-excluded-dirs
+                    org-roam-extras-excluded-files)
+                   (regexp-opt result))
+            (push (if (file-directory-p dir-or-file)
+                      (file-relative-name dir-or-file paths-dir-org-roam)
+                    dir-or-file)
+                  result))))
+                  
   (add-hook 'org-capture-prepare-finalize-hook #'org-roam-extras-remove-file-level-properties)
   :general
   ("H-N" 'org-roam-extras-new-note
@@ -9561,7 +9560,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
   :after org
   :config
   ;; (setq org-cite-global-bibliography paths-files-bibliography-all)
-  (setq org-cite-csl-styles-dir "/Users/pablostafforini/Library/CloudStorage/Dropbox/repos/genus/refs/styles/")
+  (setq org-cite-csl-styles-dir paths-dir-personal-csl-styles)
   (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
@@ -9967,12 +9966,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
       "A-H-M-s-?" 'citar-extras-open-file-at-point) ; i.e. H-S-/
      (general-define-key
       :keymaps '(citar-map citar-citation-map)
-      "b" 'citar-extras-goto-bibtex-entry
       "c" 'embark-copy-as-kill
-      "d" 'ebib-extras-download-dwim
-      "i" 'citar-extras-open-in-ebib
-      "s" 'ebib-extras-search-dwim
-      "t" 'citar-extras-move-entry-to-tlon
       "u" 'citar-open-links))))
 #+end_src
 
@@ -9997,7 +9991,14 @@ Having headings tagged with the type of work they are notes of allows me to quer
 #+begin_src emacs-lisp
 (use-personal-package citar-extras
   :after citar
-  :demand t)
+  :demand t
+  :general
+  ((citar-map citar-citation-map)
+   "d" 'ebib-extras-download-dwim
+   "i" 'citar-extras-open-in-ebib
+   "s" 'ebib-extras-search-dwim
+   "t" 'citar-extras-move-entry-to-tlon
+   "b" 'citar-extras-goto-bibtex-entry))
 #+end_src
 
 ** citar-citeproc
@@ -10010,7 +10011,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
 #+begin_src emacs-lisp :results silent
 (use-feature citar-citeproc
   :demand t
-  :after citar citeproc
+  :after citar citeproc citar-extras
   :config
   (setq citar-citeproc-csl-styles-dir org-cite-csl-styles-dir)
   (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir)
@@ -10652,9 +10653,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
         `((,mu4e-drafts-folder  . ?d)
           (,mu4e-sent-folder    . ?t)
           (,mu4e-trash-folder   . ?x)
-          (,mu4e-refile-folder  . ?a)
-          (,mu4e-extras-inbox-folder . ?i)
-          (,mu4e-extras-daily-folder . ?y))) ; required for correct Gmail refiling
+          (,mu4e-refile-folder  . ?a))) ; required for correct Gmail refiling
   (setq mu4e-compose-dont-reply-to-self t)
   (setq mu4e-compose-format-flowed t)
   (setq mu4e-confirm-quit nil)
@@ -10764,6 +10763,10 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   (setq mu4e-extras-inbox-folder "/Inbox")
   (setq mu4e-extras-daily-folder "/Daily")
 
+  (dolist (shortcut `((,mu4e-extras-inbox-folder . ?i)
+		      (,mu4e-extras-daily-folder . ?y)))
+    (add-to-list 'mu4e-maildir-shortcuts shortcut))
+  
   (add-hook 'elpaca-after-init-hook #'mu4e-extras-set-contexts)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-view-mode-hook-functions)
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
@@ -12327,7 +12330,8 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
   :config
   (setq auth-source-debug t)
   (setq auth-source-do-cache nil)
-  (auth-source-pass-enable))
+  (auth-source-pass-enable)
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
 #+end_src
 
 Note: to work, entries must conform to the pattern ~auth-sources/host~.

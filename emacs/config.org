@@ -10009,7 +10009,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
 #+begin_src emacs-lisp :results silent
 (use-feature citar-citeproc
   :demand t
-  :after citar citeproc
+  :after citar citeproc citar-extras
   :config
   (setq citar-citeproc-csl-styles-dir org-cite-csl-styles-dir)
   (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir)

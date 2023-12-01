@@ -911,18 +911,20 @@ NAME and ARGS are in `use-package'."
    NAME and ARGS are in `use-package'."
       (declare (indent defun))
       `(use-package ,name
-	 :elpaca nil
-	 :load-path paths-dir-extras
-	 ,@args))
+         :elpaca nil
+         :load-path paths-dir-extras
+         ,@args))
   (defmacro use-personal-package (name &rest args)
     "Like `use-package' but accounting for personal packages.
    NAME and ARGS are in `use-package'."
     (declare (indent defun))
     `(use-package ,name
        :elpaca (,name
-	        :host github
+                :host github
                 :repo "benthamite/dotfiles"
-                :files ,(file-name-concat "emacs/extras" (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
+                :files ,(list (file-name-concat
+                               "emacs/extras"
+                               (file-name-with-extension (symbol-name (eval `(quote ,name))) "el"))))
        ,@args)))
 
 (elpaca elpaca-use-package
@@ -940,9 +942,9 @@ NAME and ARGS are in `use-package'."
 
 ;; we load `org-mode' early to prevent version conflicts
 ;; (use-package org
-  ;; :demand t
-  ;; :ensure org-plus-contrib
-  ;; )
+;; :demand t
+;; :ensure org-plus-contrib
+;; )
 #+end_src
 
 *** use-package-ensure-system-package
@@ -6569,7 +6571,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
                       ("tbG" "Tlön: BAE: Create new generic todo from GitHub" entry
                        (id ,tlon-babel-todos-generic-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
-    (push template org-capture-templates)) 
+    (push template org-capture-templates))
 
   :general
   ("H-r" 'tlon-babel-dispatch)

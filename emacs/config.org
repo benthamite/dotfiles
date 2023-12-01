@@ -905,14 +905,25 @@ NAME and ARGS are in `use-package'."
      :elpaca nil
      ,@args))
 
-(defmacro use-personal-package (name &rest args)
-  "Like `use-package' but accounting for personal packages.
-NAME and ARGS are in `use-package'."
-  (declare (indent defun))
-  `(use-package ,name
-     :elpaca nil
-     :load-path paths-dir-extras
-     ,@args))
+(if (tlon-init-machine-pablo-p)
+    (defmacro use-personal-package (name &rest args)
+      "Like `use-package' but accounting for personal packages.
+   NAME and ARGS are in `use-package'."
+      (declare (indent defun))
+      `(use-package ,name
+	 :elpaca nil
+	 :load-path paths-dir-extras
+	 ,@args))
+  (defmacro use-personal-package (name &rest args)
+    "Like `use-package' but accounting for personal packages.
+   NAME and ARGS are in `use-package'."
+    (declare (indent defun))
+    `(use-package ,name
+       :elpaca (,name
+	        :host github
+                :repo "benthamite/dotfiles"
+                :files ,(file-name-concat "emacs/extras" (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
+       ,@args)))
 
 (elpaca elpaca-use-package
   (elpaca-use-package-mode)

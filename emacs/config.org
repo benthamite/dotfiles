@@ -333,6 +333,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#pdf-view-restore][pdf-view-restore]]
   - [[#org-pdftools][org-pdftools]]
   - [[#nov][nov]]
+  - [[#djvu][djvu]]
 - [[#prog-mode][prog-mode]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
@@ -7031,6 +7032,18 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 #+begin_src emacs-lisp
 (use-package nov)
 #+end_src
+
+** djvu
+:PROPERTIES:
+:ID:       CB96565F-C0FF-454C-A1F1-E986BC45EDDE
+:END:
+
+/[[https://elpa.gnu.org/packages/djvu.html][djvu]] is a major mode for viewing and editing Djvu files in Emacs./
+
+#+begin_src emacs-lisp
+(use-package djvu)
+#+end_src
+
 * prog-mode
 :PROPERTIES:
 :ID:       A8700D18-574A-4093-938C-5707589DBB41

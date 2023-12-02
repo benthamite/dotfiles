@@ -12321,10 +12321,12 @@ CLOCK: [2023-05-07 Sun 10:53]--[2023-05-07 Sun 11:27] =>  0:34
 Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dlp]], a ~youtube-dl~ fork.
 
 #+begin_src emacs-lisp :results silent
-(use-package ytdl)
-
-
+(use-package ytdl
   :config
+  (setq ytdl-command "yt-dlp")
+
+  :general
+  ("A-M-y" 'ytdl-download))
 #+end_src
 
 ** read-aloud

@@ -2667,30 +2667,34 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
           " | " fancy-battery-mode-line
 
           ;; telega notifications
-          (:eval (when (and
-                        (telega-server-live-p)
-                        (> (plist-get telega--unread-message-count :unread_count) 0))
-                   (concat " | " telega-mode-line-string)))
+          (when (featurep 'telega)
+	    (:eval (when (and
+			  (telega-server-live-p)
+			  (> (plist-get telega--unread-message-count :unread_count) 0))
+		     (concat " | " telega-mode-line-string))))
 
           ;; github notifications
-          (:eval (when (> doom-modeline--github-notification-number 0)
-                   (concat
-                    " | "
-                    (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
-                                        :face 'doom-modeline-notification)
-                    (doom-modeline-vspc)
-                    (propertize
-                     (cond
-                      ((> doom-modeline--github-notification-number 99) "99+")
-                      (t (number-to-string doom-modeline--github-notification-number)))
-                     'face '(:inherit
-                             (doom-modeline-unread-number doom-modeline-notification))))))
-          " | "))
+          (when (featurep 'doom-modeline)
+	    (:eval (when (> doom-modeline--github-notification-number 0)
+                     (concat
+		      " | "
+		      (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
+                                          :face 'doom-modeline-notification)
+		      (doom-modeline-vspc)
+		      (propertize
+		       (cond
+			((> doom-modeline--github-notification-number 99) "99+")
+			(t (number-to-string doom-modeline--github-notification-number)))
+		       'face '(:inherit
+			       (doom-modeline-unread-number doom-modeline-notification)))))))
+          " | "
+
 	  ;; pomodoro timer
 	  (when (featurep 'org-pomodoro)
 	    (:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
 		     (setq global-mode-string (append global-mode-string
 						      '(org-pomodoro-mode-line))))))
+                                                      ))
 
   (setq global-mode-string tab-bar-extras-global-mode-string)
   (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)

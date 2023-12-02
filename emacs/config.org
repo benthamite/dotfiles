@@ -12413,7 +12413,9 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 
 #+begin_src emacs-lisp :results silent
 (use-package unpackaged
-  :elpaca (unpackaged :host github :repo "alphapapa/unpackaged.el")
+  :elpaca (unpackaged
+	   :host github
+	   :repo "alphapapa/unpackaged.el")
   :commands (unpackaged/org-forward-to-entry-content))
 #+end_src
 

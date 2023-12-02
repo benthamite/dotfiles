@@ -5078,6 +5078,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
   :defer 10
   :config
   (setq display-wttr-interval (* 15 60))
+  (setq display-wttr-locations `(,calendar-location-name))
 
   (display-wttr-mode))
 #+end_src

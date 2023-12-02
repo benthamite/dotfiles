@@ -12323,14 +12323,6 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 #+begin_src emacs-lisp :results silent
 (use-package ytdl)
 
-*** TODO [#4] Fix naming problem for videos
-:PROPERTIES:
-:Effort:   0:45
-:ID:       F4F4B47A-6B45-41DD-831C-0C23D67C4398
-:END:
-:LOGBOOK:
-CLOCK: [2022-09-05 Mon 20:22]--[2022-09-05 Mon 21:28] =>  1:06
-:END:
 
   :config
 #+end_src

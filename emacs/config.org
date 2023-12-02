@@ -8415,6 +8415,8 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
   (setq org-clock-history-length 30)
   (org-clock-persistence-insinuate)
 
+  (add-hook 'org-clock-in-prepare-hook #'tab-bar-extras-quick-reset)
+  
   :general
   ("A-H-j" 'org-clock-goto
    "A-H-x" 'org-clock-cancel

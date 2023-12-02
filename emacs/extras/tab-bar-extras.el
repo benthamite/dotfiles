@@ -53,6 +53,10 @@ mysterious proliferation of clocks."
   (when (boundp 'display-wttr-mode)
     (display-wttr-mode)))
 
+(defun tab-bar-extras-quick-reset ()
+  "Reset the tab bar by running only the essential reset functions."
+  (tab-bar-extras-reset t))
+
 (defun tab-bar-extras-reset-unless-clock ()
   "Reset the tab-bar when `org-clock' isn't running.
 The condition is included to prevent the currently clocked task from

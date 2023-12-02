@@ -9496,7 +9496,8 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
                  (mapcar #'file-name-as-directory
                          ;; List of special dirs
                          (list
-                          paths-dir-journal)))
+                          paths-dir-journal
+                          (file-name-concat paths-dir-dropbox ".Trash"))))
                 ;; heading condition
                 (> (org-current-level) 1))
                )

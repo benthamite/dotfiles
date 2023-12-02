@@ -9505,7 +9505,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
             t)))
 
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
-  ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
 
   ;; include transcluded links in `org-roam' backlinks
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)

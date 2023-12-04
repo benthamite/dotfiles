@@ -28,13 +28,8 @@
 ;;; Code:
 
 (require 'org-gcal)
-(require 'paths)
 (require 'el-patch)
 (require 'hydra)
-
-;;;; User options
-
-;;;; Main variables
 
 ;;;; Functions
 
@@ -273,26 +268,22 @@ heading."
 		       (if (< 11 (length end))
 			   end
 			 (org-gcal--iso-previous-day end))))))))
-      (el-patch-swap
-	(if (org-element-property :scheduled elem)
-	    (unless (and recurrence old-start)
-	      ;; Ensure CLOSED timestamp isn’t wiped out by ‘org-gcal-sync’ (see
-	      ;; https://github.com/kidd/org-gcal.el/issues/218).
-	      (let ((org-closed-keep-when-no-todo t))
-		(org-schedule nil timestamp)))
-	  (insert timestamp)
-	  (newline)
-	  (when desc (newline)))
-	(if (org-element-property :deadline elem)
-	    (unless (and recurrence old-start) (org-deadline nil timestamp))
-	  (org-deadline nil timestamp)
-	  (newline)
-	  (when desc (newline)))))
+      (if (el-patch-swap (org-element-property :scheduled elem)
+			 (org-element-property :deadline elem))
+	  (unless (and recurrence old-start)
+	    ;; Ensure CLOSED timestamp isn’t wiped out by ‘org-gcal-sync’ (see
+	    ;; https://github.com/kidd/org-gcal.el/issues/218).
+	    (let ((org-closed-keep-when-no-todo t))
+	      (el-patch-swap (org-schedule nil timestamp)
+			     (org-deadline nil timestamp))))
+	(insert timestamp)
+	(newline)
+	(when desc (newline))))
     ;; Insert event description if present.
     (when desc
       (insert (replace-regexp-in-string "^\*" "✱" desc))
       (insert (if (string= "\n" (org-gcal--safe-substring desc -1)) "" "\n")))
-    (insert ":END:\n")
+    (insert ":END:")
     (when (org-gcal--event-cancelled-p event)
       (save-excursion
 	(org-back-to-heading t)

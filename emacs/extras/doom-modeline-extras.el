@@ -61,7 +61,8 @@
 			  :noerror t))))))
      (lambda (result)
        (message "")                     ; suppress message
-       (setq doom-modeline--github-notification-number (length result))))))
+       (setq doom-modeline--github-notification-number (length result))
+       (run-hooks 'doom-modeline-after-github-fetch-notification-hook)))))
 
 (el-patch-defun doom-modeline-github-timer ()
   "Start/Stop the timer for GitHub fetching."

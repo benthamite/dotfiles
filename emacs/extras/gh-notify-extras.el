@@ -121,6 +121,15 @@ Browse issue or PR on prefix P."
   (forge-pull-notifications)
   (gh-notify-forge-refresh))
 
+(defun gh-notify-extras-refresh-in-background ()
+  "Refresh `gh-notify' without switching to its buffer."
+  (interactive)
+  (let ((buf (get-buffer-create "*github-notifications*")))
+    (set-buffer buf)
+    (unless (eq major-mode 'gh-notify-mode)
+      (gh-notify-mode)))
+  (gh-notify-forge-refresh))
+
 ;;;;; patched functions
 
 ;; do not run `forge-pull-topic' when visiting an issue or PR

@@ -217,62 +217,6 @@ To install the extension, drag the latter onto the former."
     (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"89243CDA-4876-45C8-9AF2-3666664A0EAA\"'")
     (start-process "osascript-getinfo" nil "osascript" "-e" reveal-in-osx)))
 
-(defun files-extras-internet-archive-dwim ()
-  "Convert or download ACSM file.
-ACSM will be converted or downloaded depending on whether or not an ACSM file is
-present in the `downloads' folder."
-  (interactive)
-  (if (member "URLLink.acsm" (directory-files paths-dir-downloads))
-      (files-extras-internet-archive-convert)
-    (files-extras-internet-archive-download)))
-
-(defun files-extras-internet-archive-download ()
-  "Download and open ACSM file from Internet Archive URL in kill ring.
-NB: You need to have previously borrowed the book on IA for the command to work.
-The command will work even if the book was borrowed for one hour only. You also
-need to download your IA cookies and set `paths-file-cookies' to point to this
-file. To download cookies, you may use the \"Get cookies.txt LOCALLY\" browser
-extension (https://github.com/kairi003/Get-cookies.txt-LOCALLY)."
-  (if (string-search "archive.org" (current-kill 0))
-      (let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
-	     (suffix "&format=pdf&redirect=1")
-	     (id (replace-regexp-in-string
-		  "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
-		  "\\2"
-		  (current-kill 0)))
-	     (url (concat prefix id suffix))
-	     (acsm-file (file-name-concat paths-dir-downloads "URLLink.acsm")))
-	(save-window-excursion
-	  (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
-	    (async-shell-command
-	     (format
-	      "wget --load-cookies='%s' '%s' -O '%s'; open %s"
-	      paths-file-cookies url acsm-file acsm-file)))))
-    (user-error "You forgot to copy the URL!")))
-
-(defun files-extras-internet-archive-convert ()
-  "Convert ACSM file to PDF."
-  (let* ((adobe-file
-	  ;; stackoverflow.com/a/30887300/4479455
-	  (car (directory-files (file-name-as-directory paths-dir-adobe-digital-editions)
-				'full "\\.pdf$" #'file-newer-than-file-p)))
-	 (output (shell-command-to-string (format "calibredb add '%s'" adobe-file)))
-	 ;; Capture Calibre book id
-	 (id (replace-regexp-in-string "\\(\\(\\(
-\\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
-	 (calibre-file (car (directory-files-recursively paths-dir-calibre "\\.pdf$" t)))
-	 ;; Should match filename used in `files-extras-internet-archive-download'
-	 (acsm-file (file-name-concat paths-dir-downloads "book.acsm")))
-    (rename-file calibre-file (file-name-as-directory paths-dir-downloads))
-    (shell-command (format "calibredb remove %s" id))
-    (mapcar #'delete-file `(,adobe-file ,calibre-file))
-    (delete-directory paths-dir-calibre t)
-    (kill-buffer "*Shell Command Output*")
-    (when (find-file acsm-file)
-      (delete-file acsm-file)
-      (kill-buffer))
-    (message "ACSM file converted successfully.")))
-
 ;; Copied from emacs.stackexchange.com/a/24461/32089
 (defun files-extras-revert-all-file-buffers ()
   "Refresh all open file buffers without confirmation.
@@ -344,19 +288,45 @@ files which do not exist any more or are no longer readable will be killed."
     (define-key newmap key command)
     (use-local-map newmap)))
 
-(defun files-extras-ocr-pdf (&optional parameters)
-  "OCR the PDF file at point or visited by the current buffer.
-Optionally, pass PARAMETERS to `ocrmypdf'."
-  (interactive)
-  ;; TODO: add disjunct to handle file at point in minibuffer.
-  (unless (executable-find 'ocrmypdf)
+(defun files-extras-ocr-pdf (arg &optional filename parameters)
+  "OCR the FILENAME.
+If FILENAME is nil, use the PDF file at point or the file visited by the current
+buffer. Optionally, pass PARAMETERS to `ocrmypdf'. With prefix argument ARG,
+force OCR even if it has already been performed on the file."
+  (interactive "P")
+  (unless (executable-find "ocrmypdf")
     (user-error "`ocrmypdf' not found. Please install it (e.g. `brew install ocrmypdf'"))
-  (let* ((filename (cond ((equal major-mode 'dired-mode) (dired-get-filename))
-                         ((equal major-mode 'pdf-view-mode) (buffer-file-name))))
-         (parameters (or parameters
-                         (format "--force '%s' '%s'" filename filename)))
-         (shell-command-buffer-name-async "*ocr-pdf*"))
-    (async-shell-command (concat "ocrmypdf " parameters))))
+  (let* ((filename (or filename
+		       (pcase major-mode
+			 ('dired-mode (dired-get-filename))
+			 ('pdf-view-mode (buffer-file-name))))))
+    (unless (string= (file-name-extension filename) "pdf")
+      (user-error "File is not a PDF"))
+    (let* ((parameters (or parameters
+			   (format (concat (when arg "--force-ocr ") "--deskew '%s' '%s'") filename filename)))
+	   (process (start-process-shell-command
+		     "ocrmypdf" "*ocr-pdf*"
+		     (concat "ocrmypdf " parameters))))
+      (set-process-filter process 'files-extras-ocr-pdf-process-filter))))
+
+(defun files-extras-ocr-pdf-process-filter (process string)
+  "Process filter function to handle output from `ocrmypdf'.
+This function gets STRING when PROCESS produces output."
+  (when (buffer-live-p (process-buffer process))
+    (with-current-buffer (process-buffer process)
+      (cond ((string-match-p "PriorOcrFoundError: page already has text" string)
+	     (message "OCR already performed on this file."))
+	    ;; when invoked with `--force-ocr'
+	    ((string-match-p "page already has text" string)
+	     (message "OCR already performed on this file; forcing new OCR."))
+	    ;; silence irrelevant messages
+	    ((or (string-match-p "Scanning contents" string)
+		 (string-match-p "Start processing" string)
+		 (string-match-p "Recompressing JPEGs" string)
+		 (string-match-p "Deflating JPEGs" string)
+		 (string-match-p "empty page" string)))
+	    ;; print all other messages
+	    (t (princ string))))))
 
 (defun files-extras-get-stem-of-current-buffer ()
   "Return the stem of the current buffer."
@@ -544,6 +514,75 @@ current helpful buffer displays, then kill the buffer."
     (goto-char (point-min))
     (while (re-search-forward "\\(^\\s-*$\\)\n\\(\\(^\\s-*$\\)\n\\)+" nil t)
       (replace-match "\n"))))
+
+;;;;; Internet Archive
+
+(defun files-extras-internet-archive-dwim ()
+  "Convert or download ACSM file.
+ACSM will be converted or downloaded depending on whether or not an ACSM file is
+present in the `downloads' folder.
+
+This function is called in the context of the following workflow. First you
+identify a book you would like to download from Internet Archive, click
+\"borrow\" (either for one hour or for 14 days; it doesn’t matter), and copy the
+URL. You then call `files-extras-internet-archive-dwim' from Emacs. A file will
+be downloaded an opened in Adobe Digital Editions. This will take 15—60 seconds.
+Once the file is done loading, you may close ADE. You then call
+`files-extras-internet-archive-dwim' again, and the `acsm' file created by ADE
+will be converted to a PDF.
+
+NB: For this command to work, you need to have previously downloaded your IA
+cookies and set `files-extras-cookies-file'to point to this file. To download
+cookies, you may use the \"Get cookies.txt LOCALLY\" browser
+extension (https://github.com/kairi003/Get-cookies.txt-LOCALLY). You also need
+to set the user options `files-extras-calibre-directory' and
+`files-extras-adobe-digital-editions-directory' to point to the relevant
+directories."
+  (interactive)
+  (if (file-regular-p files-extras-internet-archive-acsm-file)
+      (files-extras-internet-archive-convert)
+    (files-extras-internet-archive-download)))
+
+(defun files-extras-internet-archive-download ()
+  "Download and open ACSM file from Internet Archive URL in the kill ring."
+  (if (string-search "archive.org" (current-kill 0))
+      (let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
+	     (suffix "&format=pdf&redirect=1")
+	     (id (replace-regexp-in-string
+		  "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
+		  "\\2"
+		  (current-kill 0)))
+	     (url (concat prefix id suffix)))
+	(save-window-excursion
+	  (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
+	    (async-shell-command
+	     (format
+	      "wget --load-cookies='%s' '%s' -O '%s'; open %s"
+	      files-extras-cookies-file url
+	      files-extras-internet-archive-acsm-file
+	      files-extras-internet-archive-acsm-file)))))
+    (user-error "You forgot to copy the URL!")))
+
+(defun files-extras-internet-archive-convert ()
+  "Convert ACSM file to PDF."
+  (let* ((adobe-file
+	  ;; stackoverflow.com/a/30887300/4479455
+	  (car (directory-files (file-name-as-directory files-extras-adobe-digital-editions-directory)
+				'full "\\.pdf$" #'file-newer-than-file-p)))
+	 (output (shell-command-to-string (format "calibredb add '%s'" adobe-file)))
+	 ;; Capture Calibre book id
+	 (id (replace-regexp-in-string "\\(\\(\\(
+\\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
+	 (calibre-file (car (directory-files-recursively files-extras-calibre-directory "\\.pdf$" t))))
+    (rename-file calibre-file (file-name-as-directory paths-dir-downloads))
+    (shell-command (format "calibredb remove %s" id))
+    (mapcar #'delete-file `(,adobe-file ,calibre-file))
+    (delete-directory files-extras-calibre-directory t)
+    (kill-buffer "*Shell Command Output*")
+    (when (find-file files-extras-internet-archive-acsm-file)
+      (delete-file files-extras-internet-archive-acsm-file)
+      (kill-buffer))
+    (message "ACSM file converted successfully.")))
 
 (provide 'files-extras)
 ;;; files-extras.el ends here

@@ -43,14 +43,19 @@
 ;;;; Functions
 
 ;; christiantietze.de/posts/2021/06/emacs-trash-file-macos/
-(defun files-extras-system-move-file-to-trash (path)
-  "Move file in PATH to the trash according to `move-file-to-trash' convention."
+(defun files-extras-system-move-file-to-trash (filename)
+  "Move file or directory named FILENAME to the recycle bin.
+This function overrides `system-move-file-to-trash' to use delete files using
+the `trash' utility. Deleting files in this way supports the \"Put Back\"
+functionality in macOS."
   (unless (executable-find "trash")
     (user-error "`trash' not found; please install it (e.g. `brew install trash')"))
-  (shell-command (concat "trash -vF \"" path "\""
+  (shell-command (concat "trash -vF \"" filename "\""
 			 "| sed -e 's/^/Trashed: /'")
 		 nil ;; Name of output buffer
 		 "*Trash Error Buffer*"))
+
+(advice-add 'system-move-file-to-trash :override #'files-extras-system-move-file-to-trash)
 
 (defun files-extras-save-and-revert-buffer ()
   "Save buffer, then revert it."

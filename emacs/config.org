@@ -10508,7 +10508,7 @@ The macro below generates the commands correctly. But attempting to define key b
    "H" 'ebib-extras-open-html-file-externally
    "i" 'ebib-extras-download-by-identifier
    "I" 'ebib-extras-set-id
-   "K" 'ebib-extras-fetch-keywords
+   "s-k" 'ebib-extras-fetch-keywords
    "o" 'ebib-extras-search-connected-papers
    "p" 'ebib-extras-open-pdf-file
    "P" 'ebib-extras-open-pdf-file-externally

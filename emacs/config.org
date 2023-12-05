@@ -4572,11 +4572,9 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   (window-divider-mode)
 
   :general
-  ("H-M-<tab>" 'other-frame ; M-S-TAB
-   "M-N" 'make-frame
-   "M-W" 'delete-frame
-   "C-H-M-i" (lambda! (set-frame-parameter nil 'fullscreen 'maximized))
-   "C-H-M-o" (lambda!  (set-frame-parameter nil 'fullscreen nil))))
+  ("H-M-<tab>" 'other-frame) ; M-S-TAB
+  ("M-N" 'make-frame)
+  ("M-W" 'delete-frame))
 #+end_src
 
 ** frame-extras
@@ -7739,8 +7737,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 
 #+begin_src emacs-lisp :results silent
 (use-package org
-  :elpaca (org
-           :ref "bc01cf33" ) ; v 9.6
   :demand t
   :config
   (setq org-directory paths-dir-org) ; set org directory

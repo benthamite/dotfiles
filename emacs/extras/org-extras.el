@@ -839,29 +839,36 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
 ;; the function has to be slightly modified to make it work
 (el-patch-defun org-clock-split
   (from-end splitter-string)
-  "Split CLOCK entry under cursor into two entries.\nTotal time of created entries will be the same as original entry.\n\n   WARNING: Negative time entries can be created if splitting at an offset\nlonger then the CLOCK entry's total time.\n\n   FROM-END: nil if the function should split with duration from\n   the start of the clock segment (default for backwards\n   compatibility), t if the function should split counting from\n   the end of the clock segment.\n \n   SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
+  "Split CLOCK entry under cursor into two entries.
+Total time of created entries will be the same as original entry.
+
+   WARNING: Negative time entries can be created if splitting at an offset
+longer then the CLOCK entry's total time.
+
+   FROM-END: nil if the function should split with duration from
+   the start of the clock segment (default for backwards
+   compatibility), t if the function should split counting from
+   the end of the clock segment.
+ 
+   SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
+
   (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
+
   (move-beginning-of-line nil)
-  (let
-      ((original-line
-	(buffer-substring
-	 (line-beginning-position)
-	 (line-beginning-position 2))))
-    (unless
-	(string-match org-clock-split-clock-range-regexp original-line)
+  (let ((original-line (buffer-substring (line-beginning-position) (line-beginning-position 2))))
+    
+    ;; Error if CLOCK line does not contain check in and check out time
+    (unless (string-match org-clock-split-clock-range-regexp original-line)
       (error "Cursor must be placed on line with valid CLOCK entry range"))
-    (let*
-	((whitespace
-	  (match-string 1 original-line))
-	 (timestamps
-	  (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
-	 (t0
-	  (pop timestamps))
-	 (t1 (el-patch-swap
-	       (pop timestamps)
-	       (concat "[" (pop timestamps) "]")))
-	 (t2
-	  (pop timestamps)))
+
+    (let* ((whitespace (match-string 1 original-line))
+           (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
+	   (t0 (pop timestamps))
+	   (t1 (el-patch-swap
+		 (pop timestamps)
+		 (concat "[" (pop timestamps) "]")))
+	   (t2
+	    (pop timestamps)))
       (delete-region
        (line-beginning-position)
        (line-end-position))
@@ -914,15 +921,16 @@ ARG is the prefix argument received when calling interactively the function."
       (user-error "Processor %S cannot insert citations" name))
      (t
       (let ((context (org-element-context))
-	    (insert (org-cite-processor-insert (org-cite-get-processor name))))
-	(cond
-	 ((org-element-type-p context '(citation citation-reference))
-	  (funcall insert context arg))
+            (insert (org-cite-processor-insert (org-cite-get-processor name))))
+        (cond
+         ((memq (org-element-type context) '(citation citation-reference))
+          (funcall insert context arg))
 	 (el-patch-remove
 	   ((org-cite--allowed-p context)
 	    (funcall insert nil arg)))
 	 (t
-	  (el-patch-swap (user-error "Cannot insert a citation here") (funcall insert nil arg)))))))))
+	  (el-patch-swap (user-error "Cannot insert a citation here")
+			 (funcall insert nil arg)))))))))
 
 ;; name buffers more cleanly
 (el-patch-defun org-src--construct-edit-buffer-name (org-buffer-name lang)
@@ -932,9 +940,7 @@ Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
     (concat "*Org Src " org-buffer-name "[ " lang " ]*")
     (concat org-buffer-name " (org src)")))
 
-
 ;;;; Footer
-
 
 (provide 'org-extras)
 

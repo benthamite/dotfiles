@@ -3902,7 +3902,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   :config
   (setq confirm-kill-processes nil) ; Do not prompt to kill running processes when quitting Emacs
   (setq delete-by-moving-to-trash t)
-  (setq trash-directory "~/.Trash") ; fallback for `move-file-to-trash'
+  (setq trash-directory (file-name-concat "~" ".Trash")) ; fallback for `move-file-to-trash'
   (setq find-file-visit-truename t); emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
   (setq kill-buffer-query-functions nil)
   (setq create-lockfiles nil) ; lockfiles are indexed by `org-roam', which causes problems with `org-agenda'

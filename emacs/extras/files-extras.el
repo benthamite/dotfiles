@@ -196,35 +196,26 @@ present in the `downloads' folder."
 
 (defun files-extras-internet-archive-download ()
   "Download and open ACSM file from Internet Archive URL in kill ring.
-
-NB: You need to have previously borrowed the book for the command
-to work. The command will work even if the book was borrowed for
-one hour only."
+NB: You need to have previously borrowed the book on IA for the command to work.
+The command will work even if the book was borrowed for one hour only. You also
+need to download your IA cookies and set `paths-file-cookies' to point to this
+file. To download cookies, you may use the \"Get cookies.txt LOCALLY\" browser
+extension (https://github.com/kairi003/Get-cookies.txt-LOCALLY)."
   (if (string-search "archive.org" (current-kill 0))
       (let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
-             (suffix "&format=pdf&redirect=1")
-             (id (replace-regexp-in-string
-                  "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
-                  "\\2"
-                  (current-kill 0)))
-             (url (concat prefix id suffix))
-             (acsm-file (file-name-concat paths-dir-downloads "URLLink.acsm")))
-        ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
-        ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
-        ;; Then replace the path below with the location of the downloaded cookies file.
-
-        ;; 2023-06-08 Currently not working, I think due to authentication issues.
-        ;; So copying the URL to kill ring instead.
-        ;; (save-window-excursion
-        ;; (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
-        ;; (async-shell-command
-        ;; (format
-        ;; "wget --load-cookies='%s' '%s' -O '%s'; open %s"
-        ;; paths-file-cookies url acsm-file acsm-file))))
-        ;; (message "ACSM file downloaded successfully.")
-        (kill-new url)
-        (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Open it manually and then run `files-extras-internet-archive-dwim' to convert it.")
-        )
+	     (suffix "&format=pdf&redirect=1")
+	     (id (replace-regexp-in-string
+		  "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
+		  "\\2"
+		  (current-kill 0)))
+	     (url (concat prefix id suffix))
+	     (acsm-file (file-name-concat paths-dir-downloads "URLLink.acsm")))
+	(save-window-excursion
+	  (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
+	    (async-shell-command
+	     (format
+	      "wget --load-cookies='%s' '%s' -O '%s'; open %s"
+	      paths-file-cookies url acsm-file acsm-file)))))
     (user-error "You forgot to copy the URL!")))
 
 (defun files-extras-internet-archive-convert ()

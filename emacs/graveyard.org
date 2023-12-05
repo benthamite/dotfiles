@@ -8,6 +8,28 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** guess-language
+:PROPERTIES:
+:ID:       F3163168-2247-4205-B08B-E8816DB02CE7
+:END:
+:LOGBOOK:
+CLOCK: [2023-12-03 Sun 09:05]--[2023-12-03 Sun 09:25] =>  0:20
+:END:
+
+#+begin_src emacs-lisp
+(use-package guess-language
+  :demand t
+  :config
+  (setq guess-language-languages '(en es))
+  (setq guess-language-min-paragraph-length 35)
+  (defun my-custom-function (lang beginning end)
+    (jinx-languages lang)
+    (setq-local flycheck-languagetool-language lang)
+    (message "Detected language: %s" lang))
+
+  (add-hook 'guess-language-after-detection-functions #'my-custom-function))
+#+end_src
+
 ** espotify
 :PROPERTIES:
 :ID:       5879A8B7-0889-4FCD-A16A-77D0BCEE4804

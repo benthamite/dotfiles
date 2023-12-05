@@ -12464,28 +12464,28 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   :defer 600
   :config
   (setq clean-buffer-list-kill-never-buffer-names
-        '("*mu4e-headers*"
-          " *mu4e-update*")) ; not sure if the space is part of the buffer name
+	'("*mu4e-headers*"
+	  " *mu4e-update*")) ; not sure if the space is part of the buffer name
   (setq clean-buffer-list-kill-never-regexps
-        '("\\` \\*Minibuf-.*\\*\\'"
-          "^untitled.*"))
+	'("\\` \\*Minibuf-.*\\*\\'"
+	  "^untitled.*"))
   (setq clean-buffer-list-delay-general 2) ; kill buffers unused for more than three days
 
   (midnight-mode)
   (midnight-delay-set 'midnight-delay "4:00am")
 
   ;; note that the hooks appear in reverse order of execution
-  (dolist (function #'(el-patch-validate-all
-                       org-gcal-sync
-                       org-extras-id-update-id-locations
-                       org-roam-db-sync
-                       pass-extras-git-sync
-                       tlon-babel-forge-update-repos
-                       magit-extras-stage-commit-and-push-all-repos
-                       ledger-mode-extras-update-commodities
-                       ledger-mode-extras-update-coin-prices
-                       clean-buffer-list
-                       files-extras-save-all-buffers))
+  (dolist (function #'(tlon-babel-forge-update-all-repos
+		       el-patch-validate-all
+		       org-gcal-sync
+		       org-extras-id-update-id-locations
+		       org-roam-db-sync
+		       pass-extras-git-sync
+		       magit-extras-stage-commit-and-push-all-repos
+		       ledger-mode-extras-update-commodities
+		       ledger-mode-extras-update-coin-prices
+		       clean-buffer-list
+		       files-extras-save-all-buffers))
     (add-hook 'midnight-hook function)))
 #+end_src
 

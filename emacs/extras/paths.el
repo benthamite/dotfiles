@@ -35,20 +35,14 @@
 
 ;;;;; Directories
 
-(defcustom paths-dir-user
-  (file-name-as-directory (expand-file-name (getenv "HOME")))
-  "Home user directory."
-  :type 'directory
-  :group 'paths)
-
 (defcustom paths-dir-downloads
-  (file-name-concat paths-dir-user "Downloads/")
+  (file-name-concat (expand-file-name "~") "Downloads/")
   "Path to the `downloads' directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-chemacs-profiles
-  (file-name-concat paths-dir-user ".config/emacs-profiles/")
+  (file-name-concat (expand-file-name "~") ".config/emacs-profiles/")
   "Path to the Chemacs profiles directory."
   :type 'directory
   :group 'paths)
@@ -66,7 +60,7 @@
   :group 'paths)
 
 (defcustom paths-dir-dropbox
-  (file-name-concat paths-dir-user "Library/CloudStorage/Dropbox/")
+  (file-name-concat (expand-file-name "~") "Library/CloudStorage/Dropbox/")
   "Path to the Dropbox directory."
   :type 'directory
   :group 'paths)
@@ -78,7 +72,7 @@
   :group 'paths)
 
 (defcustom paths-dir-google-drive
-  (file-name-concat paths-dir-user "Google Drive/")
+  (file-name-concat (expand-file-name "~") "Google Drive/")
   "Path to the Google Drive directory."
   :type 'directory
   :group 'paths)
@@ -108,7 +102,7 @@
   :group 'paths)
 
 (defcustom paths-dir-movies
-  (file-name-concat paths-dir-user "movies/")
+  (file-name-concat (expand-file-name "~") "movies/")
   "Path to the movies directory."
   :type 'directory
   :group 'paths)
@@ -288,7 +282,7 @@
   :group 'paths)
 
 (defcustom paths-dir-source
-  (file-name-concat paths-dir-user "source/")
+  (file-name-concat (expand-file-name "~") "source/")
   "Path to the source repos directory."
   :type 'directory
   :group 'paths)
@@ -523,18 +517,6 @@ This should be the path you set `org-roam-directory' to."
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-calibre
-  (file-name-concat paths-dir-user "Calibre Library/")
-  "Path to the `Calibre Library' directory."
-  :type 'directory
-  :group 'paths)
-
-(defcustom paths-dir-adobe-digital-editions
-  (file-name-concat paths-dir-user "Documents/Digital Editions/")
-  "Path to the Adobe Digital Editions directory."
-  :type 'directory
-  :group 'paths)
-
 (defcustom paths-dir-personal-bibliography
   (file-name-concat paths-dir-dropbox "bibliography/")
   "Path to the `bibliography' directory."
@@ -750,12 +732,6 @@ This includes personal files and `tlon-babel' files."
 (defcustom paths-file-ean
   (file-name-concat paths-dir-notes "ea.news.org")
   "Path to the EA News file."
-  :type 'file
-  :group 'paths)
-
-(defcustom paths-file-cookies
-  (file-name-concat paths-dir-google-drive "Apps/Chrome/cookies.txt")
-  "Path to the Chrome cookies file."
   :type 'file
   :group 'paths)
 

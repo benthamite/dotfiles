@@ -40,33 +40,6 @@
   :type 'symbol
   :group 'files-extras)
 
-;;;;; Internet Archive
-
-(defcustom files-extras-internet-archive-acsm-file
-  (file-name-concat paths-dir-downloads "URLLink.acsm")
-  "ACSM file downloaded from Internet Archive.
-This file can be named anything, but it must be in an existing directory."
-  :type 'file
-  :group 'files-extras)
-
-(defcustom files-extras-cookies-file
-  (file-name-concat paths-dir-google-drive "Apps/Chrome/cookies.txt")
-  "Path to the Chrome cookies file."
-  :type 'file
-  :group 'files-extras)
-
-(defcustom files-extras-calibre-directory
-  (file-name-concat (expand-file-name "~") "Calibre Library/")
-  "Path to the `Calibre Library' directory."
-  :type 'directory
-  :group 'files-extras)
-
-(defcustom files-extras-adobe-digital-editions-directory
-  (file-name-concat (expand-file-name "~") "Documents/Digital Editions/")
-  "Path to the Adobe Digital Editions directory."
-  :type 'directory
-  :group 'files-extras)
-
 ;;;; Functions
 
 ;; christiantietze.de/posts/2021/06/emacs-trash-file-macos/
@@ -514,75 +487,6 @@ current helpful buffer displays, then kill the buffer."
     (goto-char (point-min))
     (while (re-search-forward "\\(^\\s-*$\\)\n\\(\\(^\\s-*$\\)\n\\)+" nil t)
       (replace-match "\n"))))
-
-;;;;; Internet Archive
-
-(defun files-extras-internet-archive-dwim ()
-  "Convert or download ACSM file.
-ACSM will be converted or downloaded depending on whether or not an ACSM file is
-present in the `downloads' folder.
-
-This function is called in the context of the following workflow. First you
-identify a book you would like to download from Internet Archive, click
-\"borrow\" (either for one hour or for 14 days; it doesn’t matter), and copy the
-URL. You then call `files-extras-internet-archive-dwim' from Emacs. A file will
-be downloaded an opened in Adobe Digital Editions. This will take 15—60 seconds.
-Once the file is done loading, you may close ADE. You then call
-`files-extras-internet-archive-dwim' again, and the `acsm' file created by ADE
-will be converted to a PDF.
-
-NB: For this command to work, you need to have previously downloaded your IA
-cookies and set `files-extras-cookies-file'to point to this file. To download
-cookies, you may use the \"Get cookies.txt LOCALLY\" browser
-extension (https://github.com/kairi003/Get-cookies.txt-LOCALLY). You also need
-to set the user options `files-extras-calibre-directory' and
-`files-extras-adobe-digital-editions-directory' to point to the relevant
-directories."
-  (interactive)
-  (if (file-regular-p files-extras-internet-archive-acsm-file)
-      (files-extras-internet-archive-convert)
-    (files-extras-internet-archive-download)))
-
-(defun files-extras-internet-archive-download ()
-  "Download and open ACSM file from Internet Archive URL in the kill ring."
-  (if (string-search "archive.org" (current-kill 0))
-      (let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
-	     (suffix "&format=pdf&redirect=1")
-	     (id (replace-regexp-in-string
-		  "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
-		  "\\2"
-		  (current-kill 0)))
-	     (url (concat prefix id suffix)))
-	(save-window-excursion
-	  (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
-	    (async-shell-command
-	     (format
-	      "wget --load-cookies='%s' '%s' -O '%s'; open %s"
-	      files-extras-cookies-file url
-	      files-extras-internet-archive-acsm-file
-	      files-extras-internet-archive-acsm-file)))))
-    (user-error "You forgot to copy the URL!")))
-
-(defun files-extras-internet-archive-convert ()
-  "Convert ACSM file to PDF."
-  (let* ((adobe-file
-	  ;; stackoverflow.com/a/30887300/4479455
-	  (car (directory-files (file-name-as-directory files-extras-adobe-digital-editions-directory)
-				'full "\\.pdf$" #'file-newer-than-file-p)))
-	 (output (shell-command-to-string (format "calibredb add '%s'" adobe-file)))
-	 ;; Capture Calibre book id
-	 (id (replace-regexp-in-string "\\(\\(\\(
-\\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
-	 (calibre-file (car (directory-files-recursively files-extras-calibre-directory "\\.pdf$" t))))
-    (rename-file calibre-file (file-name-as-directory paths-dir-downloads))
-    (shell-command (format "calibredb remove %s" id))
-    (mapcar #'delete-file `(,adobe-file ,calibre-file))
-    (delete-directory files-extras-calibre-directory t)
-    (kill-buffer "*Shell Command Output*")
-    (when (find-file files-extras-internet-archive-acsm-file)
-      (delete-file files-extras-internet-archive-acsm-file)
-      (kill-buffer))
-    (message "ACSM file converted successfully.")))
 
 (provide 'files-extras)
 ;;; files-extras.el ends here

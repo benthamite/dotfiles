@@ -3,4 +3,4 @@
 # key: da
 # contributor: Pablo Stafforini
 # --
-yt-dlp -x --format bestaudio $1
+yt-dlp -x --format bestaudio `(current-kill 0)`

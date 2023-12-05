@@ -355,9 +355,7 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
 	   ;; open the pdf to make sure it displays the web page correctly
 	   (ebib-extras-open-pdf-file)
 	   ;; ocr the pdf if necessary
-	   ;; (let ((expanded-file-name (expand-file-name file-name)))
-	   ;; (files-extras-ocr-pdf (format "'%s' '%s'" expanded-file-name expanded-file-name)))
-	   ))))
+	   (files-extras-ocr-pdf nil (expand-file-name file-name))))))
     (default
      (beep))))
 

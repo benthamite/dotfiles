@@ -5060,7 +5060,8 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 (use-package tmr
   :defer 10
   :config
-  (setq tmr-sound-file org-pomodoro-finished-sound)
+  (when (eq system-type 'darwin)
+    (setq tmr-sound-file "/System/Library/Sounds/Blow.aiff"))
 
   :general
   ("A-t" 'tmr))
@@ -9338,8 +9339,7 @@ This may send a notification, play a sound and adds log."
   (setq org-pomodoro-length 25)
   (setq org-pomodoro-short-break-length (- 30 org-pomodoro-length))
   (setq org-pomodoro-long-break-length org-pomodoro-short-break-length)
-  (when (eq system-type 'darwin)
-    (setq org-pomodoro-finished-sound "/System/Library/Sounds/Blow.aiff"))
+  (setq org-pomodoro-finished-sound tmr-sound-file)
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
   ;; (add-hook 'org-pomodoro-started-hook #'org-extras-pomodoro-format-timer)

@@ -1337,5 +1337,6 @@ value is copied to the kill ring."
 				(message "Field contents copied."))
 		       (user-error "Cannot copy an empty field"))))))
 
+
 (provide 'ebib-extras)
 ;;; ebib-extras.el ends here

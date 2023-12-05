@@ -2668,32 +2668,32 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
           ;; telega notifications
           (when (featurep 'telega)
-	    (:eval (when (and
-			  (telega-server-live-p)
-			  (> (plist-get telega--unread-message-count :unread_count) 0))
-		     (concat " | " telega-mode-line-string))))
+            (:eval (when (and
+                          (telega-server-live-p)
+                          (> (plist-get telega--unread-message-count :unread_count) 0))
+                     (concat " | " telega-mode-line-string))))
 
           ;; github notifications
           (when (featurep 'doom-modeline)
-	    (:eval (when (> doom-modeline--github-notification-number 0)
+            (:eval (when (> doom-modeline--github-notification-number 0)
                      (concat
-		      " | "
-		      (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
+                      " | "
+                      (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
                                           :face 'doom-modeline-notification)
-		      (doom-modeline-vspc)
-		      (propertize
-		       (cond
-			((> doom-modeline--github-notification-number 99) "99+")
-			(t (number-to-string doom-modeline--github-notification-number)))
-		       'face '(:inherit
-			       (doom-modeline-unread-number doom-modeline-notification)))))))
+                      (doom-modeline-vspc)
+                      (propertize
+                       (cond
+                        ((> doom-modeline--github-notification-number 99) "99+")
+                        (t (number-to-string doom-modeline--github-notification-number)))
+                       'face '(:inherit
+                               (doom-modeline-unread-number doom-modeline-notification)))))))
           " | "
 
-	  ;; pomodoro timer
-	  (when (featurep 'org-pomodoro)
-	    (:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
-		     (setq global-mode-string (append global-mode-string
-						      '(org-pomodoro-mode-line))))))
+          ;; pomodoro timer
+          (when (featurep 'org-pomodoro)
+            (:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
+                     (setq global-mode-string (append global-mode-string
+                                                      '(org-pomodoro-mode-line))))))
                                                       ))
 
   (setq global-mode-string tab-bar-extras-global-mode-string)
@@ -8421,7 +8421,7 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
   (org-clock-persistence-insinuate)
 
   (add-hook 'org-clock-in-prepare-hook #'tab-bar-extras-quick-reset)
-  
+
   :general
   ("A-H-j" 'org-clock-goto
    "A-H-x" 'org-clock-cancel
@@ -9572,7 +9572,7 @@ So the links to other Wiki articles do not break.
                   result))))
 
   (add-hook 'org-capture-prepare-finalize-hook #'org-roam-extras-remove-file-level-properties)
-  
+
   :general
   ("H-N" 'org-roam-extras-new-note
    "H-j" 'org-roam-extras-node-find
@@ -10701,8 +10701,8 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 (use-package async-email-sending
   :disabled
   :elpaca (async-email-sending
-	   :host github
-	   :repo "lordpretzel/async-email-sending")
+           :host github
+           :repo "lordpretzel/async-email-sending")
   :demand t
   ;; needs to be set via `customize'
   :custom (async-email-sending-use-async-send-mail t))
@@ -12426,8 +12426,8 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 #+begin_src emacs-lisp :results silent
 (use-package unpackaged
   :elpaca (unpackaged
-	   :host github
-	   :repo "alphapapa/unpackaged.el")
+           :host github
+           :repo "alphapapa/unpackaged.el")
   :commands (unpackaged/org-forward-to-entry-content))
 #+end_src
 

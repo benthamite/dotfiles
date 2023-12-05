@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'jinx)
-(require 'paths)
 
 ;;;; Functions
 

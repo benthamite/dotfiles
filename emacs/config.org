@@ -5060,7 +5060,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 #+begin_src emacs-lisp :results silent
 (use-package tmr
-  :defer 10
+  :demand t
   :config
   (when (eq system-type 'darwin)
     (setq tmr-sound-file "/System/Library/Sounds/Blow.aiff"))

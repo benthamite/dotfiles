@@ -1196,8 +1196,8 @@ Authors enclosed in braces are left untouched, but the braces are removed."
 ;; tweak original function to prevent unnecessary vertical window splits
 (el-patch-defun ebib--setup-windows ()
   "Create Ebib's window configuration.
-  If the index buffer is already visible in some frame, select its
-  window and make the frame active,"
+If the index buffer is already visible in some frame, select its
+window and make the frame active,"
   (let ((index-window (get-buffer-window (ebib--buffer 'index) t))
 	(old-frame (selected-frame)))
     (if index-window
@@ -1236,7 +1236,7 @@ Authors enclosed in braces are left untouched, but the braces are removed."
 
 ;; tweak original function to pass custom arguments to `format-time-string'
 (el-patch-defun ebib--store-entry (entry-key fields db &optional timestamp if-exists)
-  "Store the entry defined by ENTRY-KEY and FIELDS into DB.
+"Store the entry defined by ENTRY-KEY and FIELDS into DB.
 Optional argument TIMESTAMP indicates whether a timestamp is to
 be added to the entry.  Note that for a timestamp to be added,
 `ebib-use-timestamp' must also be set to T. IF-EXISTS is as for
@@ -1247,10 +1247,10 @@ the entry is actually stored (which, if IF-EXISTS is `uniquify',
 may differ from ENTRY-KEY); otherwise return nil.  Depending on
 the value of IF-EXISTS, storing an entry may also result in an
 error."
-  (let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
-    (when (and actual-key timestamp ebib-use-timestamp)
-      (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
-    actual-key))
+(let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
+  (when (and actual-key timestamp ebib-use-timestamp)
+    (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
+  actual-key))
 
 ;; tweak original two functions below so that focus doesn't move away
 ;; from the current entry when the database is saved or reloaded.

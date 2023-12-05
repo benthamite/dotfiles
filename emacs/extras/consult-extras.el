@@ -50,7 +50,7 @@
 (defun consult-extras-locate-home ()
   "Search with `consult-locate' in home directory."
   (interactive)
-  (let ((consult-locate-args (format "mdfind -onlyin '%s'" paths-dir-user)))
+  (let ((consult-locate-args (format "mdfind -onlyin '%s'" (expand-file-name "~"))))
     (consult-locate)))
 
 (defun consult-extras-locate-anywhere ()
@@ -68,7 +68,7 @@
 (defun consult-extras-locate-file-home ()
   "Search with `consult-locate' in home directory for matching file names only."
   (interactive)
-  (let ((consult-locate-args (concat "mdfind -name -onlyin " paths-dir-user)))
+  (let ((consult-locate-args (concat "mdfind -name -onlyin " (expand-file-name "~"))))
     (consult-locate)))
 
 (defun consult-extras-locate-file-anywhere ()
@@ -85,7 +85,7 @@
 (defun consult-extras-ripgrep-home ()
   "Search with `rg' for files with matching regexp in home directory."
   (interactive)
-  (consult-ripgrep paths-dir-user))
+  (consult-ripgrep (expand-file-name "~")))
 
 (defun consult-extras-ripgrep-anywhere ()
   "Search with `rg' for files with matching regexp anywhere in hard drive."

@@ -40,6 +40,33 @@
   :type 'symbol
   :group 'files-extras)
 
+;;;;; Internet Archive
+
+(defcustom files-extras-internet-archive-acsm-file
+  (file-name-concat paths-dir-downloads "URLLink.acsm")
+  "ACSM file downloaded from Internet Archive.
+This file can be named anything, but it must be in an existing directory."
+  :type 'file
+  :group 'files-extras)
+
+(defcustom files-extras-cookies-file
+  (file-name-concat paths-dir-google-drive "Apps/Chrome/cookies.txt")
+  "Path to the Chrome cookies file."
+  :type 'file
+  :group 'files-extras)
+
+(defcustom files-extras-calibre-directory
+  (file-name-concat (expand-file-name "~") "Calibre Library/")
+  "Path to the `Calibre Library' directory."
+  :type 'directory
+  :group 'files-extras)
+
+(defcustom files-extras-adobe-digital-editions-directory
+  (file-name-concat (expand-file-name "~") "Documents/Digital Editions/")
+  "Path to the Adobe Digital Editions directory."
+  :type 'directory
+  :group 'files-extras)
+
 ;;;; Functions
 
 ;; christiantietze.de/posts/2021/06/emacs-trash-file-macos/

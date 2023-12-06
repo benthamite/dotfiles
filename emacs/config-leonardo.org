@@ -332,7 +332,7 @@
  (paths-dir-anki . "")
  (paths-dir-archive . "")
  (paths-dir-inactive . "")
- (paths-dir-personal-bibliography . (file-name-concat paths-dir-user "source/bibliography/"))
+ (paths-dir-personal-bibliography . (file-name-concat (expand-file-name "~") "source/bibliography/"))
  (paths-dir-personal-csl-styles . (file-name-concat paths-dir-personal-bibliography "styles/"))
  (paths-dir-personal-csl-locales . (file-name-concat paths-dir-personal-bibliography "locales/"))
  (paths-dir-csl-styles . (file-name-concat paths-dir-dropbox "repos/genus/ref/styles/"))

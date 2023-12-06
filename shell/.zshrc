@@ -32,7 +32,8 @@ export GPG_TTY
 export GOKU_EDN_CONFIG_FILE="$DOTFILES/karabiner/karabiner.edn"
 
 # emms
-export PATH="$HOME/source/emms/src:$PATH" # emms-print-metadata binary
+# emms-print-metadata binary
+export PATH="$HOME/source/emms/src:$PATH"
 
 # mu
 alias muinit="cd ~; mu init --maildir=$HOME/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL --my-address=$WORK_EMAIL; mu index"
@@ -49,7 +50,6 @@ export GEM_HOME="$HOME/.gem"
 
 # mdfind
 # silence debugging output
-# reddit.com/r/MacOS/comments/zq36l1/comment/j3s0oy5/
 function mdfind() {
-    /usr/bin/mdfind $@ 2> >(grep --invert-match ' \[UserQueryParser\] ' >&2)
+    { /usr/bin/mdfind "$@" 2> >(grep --invert-match ' \[UserQueryParser\] ' >&2); } 2>/dev/null
 }

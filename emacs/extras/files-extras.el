@@ -28,7 +28,7 @@
 ;;; Code:
 
 (require 'files)
-(require 'paths)
+
 ;;;; User options
 
 (defgroup files-extras ()
@@ -43,14 +43,19 @@
 ;;;; Functions
 
 ;; christiantietze.de/posts/2021/06/emacs-trash-file-macos/
-(defun files-extras-system-move-file-to-trash (path)
-  "Move file in PATH to the trash according to `move-file-to-trash' convention."
+(defun files-extras-system-move-file-to-trash (filename)
+  "Move file or directory named FILENAME to the recycle bin.
+This function overrides `system-move-file-to-trash' to use delete files using
+the `trash' utility. Deleting files in this way supports the \"Put Back\"
+functionality in macOS."
   (unless (executable-find "trash")
     (user-error "`trash' not found; please install it (e.g. `brew install trash')"))
-  (shell-command (concat "trash -vF \"" path "\""
-                         "| sed -e 's/^/Trashed: /'")
-                 nil ;; Name of output buffer
-                 "*Trash Error Buffer*"))
+  (shell-command (concat "trash -vF \"" filename "\""
+			 "| sed -e 's/^/Trashed: /'")
+		 nil ;; Name of output buffer
+		 "*Trash Error Buffer*"))
+
+(advice-add 'system-move-file-to-trash :override #'files-extras-system-move-file-to-trash)
 
 (defun files-extras-save-and-revert-buffer ()
   "Save buffer, then revert it."
@@ -76,7 +81,7 @@
     (with-current-buffer newbuf
       (setq-local buffer-offer-save t)
       (when files-extras-new-empty-buffer-major-mode
-        (funcall files-extras-new-empty-buffer-major-mode)))
+	(funcall files-extras-new-empty-buffer-major-mode)))
     (switch-to-buffer newbuf nil 'force-same-window)))
 
 
@@ -84,17 +89,17 @@
   "Create a new buffer in the same major mode as the current buffer."
   (interactive)
   (let ((buffer-name (generate-new-buffer "untitled"))
-        (buffer-major-mode major-mode))
+	(buffer-major-mode major-mode))
     (cond ((eq buffer-major-mode 'shell-mode)
-           (shell))
-          ((eq buffer-major-mode 'eshell-mode)
-           (eshell))
-          (t
-           ;; Prompt to save on `save-some-buffers' with positive PRED
-           (with-current-buffer buffer-name
-             (setq-local buffer-offer-save t)
-             (funcall buffer-major-mode))
-           (switch-to-buffer buffer-name nil 'force-same-window)))))
+	   (shell))
+	  ((eq buffer-major-mode 'eshell-mode)
+	   (eshell))
+	  (t
+	   ;; Prompt to save on `save-some-buffers' with positive PRED
+	   (with-current-buffer buffer-name
+	     (setq-local buffer-offer-save t)
+	     (funcall buffer-major-mode))
+	   (switch-to-buffer buffer-name nil 'force-same-window)))))
 
 (defun files-extras-save-all-buffers ()
   "Save all file-visiting buffers."
@@ -112,17 +117,17 @@
 (defun files-extras-get-alternate-buffer ()
   "Return name of last buffer active in the current window."
   (let ((current-buffer (window-buffer))
-        (buffer-predicate
-         (frame-parameter (window-frame) 'buffer-predicate)))
+	(buffer-predicate
+	 (frame-parameter (window-frame) 'buffer-predicate)))
     ;; switch to first buffer previously shown in this window that matches
     ;; frame-parameter `buffer-predicate'
     (or (cl-find-if (lambda (buffer)
-                      (and (not (eq buffer current-buffer))
-                           (or (null buffer-predicate)
-                               (funcall buffer-predicate buffer))))
-                    (mapcar #'car (window-prev-buffers)))
-        ;; `other-buffer' honors `buffer-predicate' so no need to filter
-        (other-buffer current-buffer t))))
+		      (and (not (eq buffer current-buffer))
+			   (or (null buffer-predicate)
+			       (funcall buffer-predicate buffer))))
+		    (mapcar #'car (window-prev-buffers)))
+	;; `other-buffer' honors `buffer-predicate' so no need to filter
+	(other-buffer current-buffer t))))
 
 (defun files-extras-switch-to-alternate-buffer ()
   "Switch to the last buffer active in the current window."
@@ -153,8 +158,8 @@
   (interactive)
   (dolist (buffer (buffer-list))
     (when (with-current-buffer buffer
-            (and (buffer-file-name)
-                 (not (member (buffer-file-name) excluded-files))))
+	    (and (buffer-file-name)
+		 (not (member (buffer-file-name) excluded-files))))
       (kill-buffer buffer))))
 
 (defun files-extras-bury-buffer-switch-to-other-window ()
@@ -170,85 +175,20 @@ the `bypass-paywalls-chrome-clean-master' folder will open.
 To install the extension, drag the latter onto the former."
   (interactive)
   (let* ((file (file-name-concat paths-dir-downloads "bypass-paywalls.zip"))
-         (dir (file-name-concat paths-dir-downloads "bypass-paywalls-chrome-clean-master"))
-         (reveal-in-osx
-          (concat
-           "set thePath to POSIX file \"" dir "\"\n"
-           "tell application \"Finder\"\n"
-           " set frontmost to true\n"
-           " reveal thePath \n"
-           "end tell\n")))
+	 (dir (file-name-concat paths-dir-downloads "bypass-paywalls-chrome-clean-master"))
+	 (reveal-in-osx
+	  (concat
+	   "set thePath to POSIX file \"" dir "\"\n"
+	   "tell application \"Finder\"\n"
+	   " set frontmost to true\n"
+	   " reveal thePath \n"
+	   "end tell\n")))
     (url-copy-file "https://gitlab.com/magnolia1234/bypass-paywalls-chrome-clean/-/archive/master/bypass-paywalls-chrome-clean-master.zip" file)
     (shell-command (format "unzip %s -d %s" file paths-dir-downloads))
     (delete-file file)
     ;; open Chrome extensions page
     (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"89243CDA-4876-45C8-9AF2-3666664A0EAA\"'")
     (start-process "osascript-getinfo" nil "osascript" "-e" reveal-in-osx)))
-
-(defun files-extras-internet-archive-dwim ()
-  "Convert or download ACSM file.
-ACSM will be converted or downloaded depending on whether or not an ACSM file is
-present in the `downloads' folder."
-  (interactive)
-  (if (member "URLLink.acsm" (directory-files paths-dir-downloads))
-      (files-extras-internet-archive-convert)
-    (files-extras-internet-archive-download)))
-
-(defun files-extras-internet-archive-download ()
-  "Download and open ACSM file from Internet Archive URL in kill ring.
-
-NB: You need to have previously borrowed the book for the command
-to work. The command will work even if the book was borrowed for
-one hour only."
-  (if (string-search "archive.org" (current-kill 0))
-      (let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
-             (suffix "&format=pdf&redirect=1")
-             (id (replace-regexp-in-string
-                  "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
-                  "\\2"
-                  (current-kill 0)))
-             (url (concat prefix id suffix))
-             (acsm-file (file-name-concat paths-dir-downloads "URLLink.acsm")))
-        ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
-        ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
-        ;; Then replace the path below with the location of the downloaded cookies file.
-
-        ;; 2023-06-08 Currently not working, I think due to authentication issues.
-        ;; So copying the URL to kill ring instead.
-        ;; (save-window-excursion
-        ;; (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
-        ;; (async-shell-command
-        ;; (format
-        ;; "wget --load-cookies='%s' '%s' -O '%s'; open %s"
-        ;; paths-file-cookies url acsm-file acsm-file))))
-        ;; (message "ACSM file downloaded successfully.")
-        (kill-new url)
-        (message "URL copied to kill ring. Paste it in a browser to download the ACSM file. Open it manually and then run `files-extras-internet-archive-dwim' to convert it.")
-        )
-    (user-error "You forgot to copy the URL!")))
-
-(defun files-extras-internet-archive-convert ()
-  "Convert ACSM file to PDF."
-  (let* ((adobe-file
-          ;; stackoverflow.com/a/30887300/4479455
-          (car (directory-files (file-name-as-directory paths-dir-adobe-digital-editions)
-				'full "\\.pdf$" #'file-newer-than-file-p)))
-         (output (shell-command-to-string (format "calibredb add '%s'" adobe-file)))
-         ;; Capture Calibre book id
-         (id (replace-regexp-in-string "\\(\\(\\(
-\\|.\\)*\\)Added book ids: \\)\\([[:digit:]]\\)" "\\4" output))
-         (calibre-file (car (directory-files-recursively paths-dir-calibre "\\.pdf$" t)))
-         ;; Should match filename used in `files-extras-internet-archive-download'
-         (acsm-file (file-name-concat paths-dir-downloads "book.acsm")))
-    (rename-file calibre-file (file-name-as-directory paths-dir-downloads))
-    (shell-command (format "calibredb remove %s" id))
-    (mapcar #'delete-file `(,adobe-file ,calibre-file))
-    (delete-directory paths-dir-calibre t)
-    (kill-buffer "*Shell Command Output*")
-    (when (find-file acsm-file)
-      (delete-file acsm-file)
-      (kill-buffer))
-    (message "ACSM file converted successfully.")))
 
 ;; Copied from emacs.stackexchange.com/a/24461/32089
 (defun files-extras-revert-all-file-buffers ()
@@ -262,15 +202,15 @@ files which do not exist any more or are no longer readable will be killed."
       ;; Revert only buffers containing files, which are not modified;
       ;; do not try to revert non-file buffers like *Messages*.
       (when (and filename
-                 (not (buffer-modified-p buf)))
-        (if (file-readable-p filename)
-            ;; If the file exists and is readable, revert the buffer.
-            (with-current-buffer buf
-              (revert-buffer :ignore-auto :noconfirm :preserve-modes))
-          ;; Otherwise, kill the buffer.
-          (let (kill-buffer-query-functions) ; No query done when killing buffer
-            (kill-buffer buf)
-            (message "Killed non-existing/unreadable file buffer: %s" filename))))))
+		 (not (buffer-modified-p buf)))
+	(if (file-readable-p filename)
+	    ;; If the file exists and is readable, revert the buffer.
+	    (with-current-buffer buf
+	      (revert-buffer :ignore-auto :noconfirm :preserve-modes))
+	  ;; Otherwise, kill the buffer.
+	  (let (kill-buffer-query-functions) ; No query done when killing buffer
+	    (kill-buffer buf)
+	    (message "Killed non-existing/unreadable file buffer: %s" filename))))))
   (message "Finished reverting buffers containing unmodified files."))
 
 (defun files-extras-show-buffer-name ()
@@ -278,9 +218,9 @@ files which do not exist any more or are no longer readable will be killed."
   (interactive)
   (let ((buffer-name (buffer-name)))
     (if buffer-name
-        (progn
-          (message buffer-name)
-          (kill-new buffer-name))
+	(progn
+	  (message buffer-name)
+	  (kill-new buffer-name))
       (error "Buffer not visiting a file"))))
 
 ;; On MacOS, `DS_Store' files can interfere with this command.
@@ -289,10 +229,10 @@ files which do not exist any more or are no longer readable will be killed."
   (car
    (seq-find
     #'(lambda (x)
-        (let ((file-name (file-name-nondirectory (car x))))
-          (and (not (nth 1 x)) ; non-directory
-               (not (string= file-name ".DS_Store"))
-               (not (string= file-name ".localized")))))
+	(let ((file-name (file-name-nondirectory (car x))))
+	  (and (not (nth 1 x)) ; non-directory
+	       (not (string= file-name ".DS_Store"))
+	       (not (string= file-name ".localized")))))
     (sort
      (directory-files-and-attributes path 'full nil t)
      #'(lambda (x y) (time-less-p (nth 5 y) (nth 5 x)))))))
@@ -302,38 +242,64 @@ files which do not exist any more or are no longer readable will be killed."
   (let (found)
     (catch 'done
       (mapc (lambda (x)
-              (when (with-current-buffer x (eq major-mode mode))
-                (switch-to-buffer x)
-                (setq found t)
-                (throw 'done nil)))
-            (buffer-list))
+	      (when (with-current-buffer x (eq major-mode mode))
+		(switch-to-buffer x)
+		(setq found t)
+		(throw 'done nil)))
+	    (buffer-list))
       (unless found
-        (print "not found")))))
+	(print "not found")))))
 
 ;; stackoverflow.com/questions/21486934/file-specific-key-binding-in-emacs/21493693#21493693
 (defun files-extras-buffer-local-set-key (key command)
   "Bind KEY to COMMAND in current buffer only."
   (interactive "KSet key buffer-locally: \nCSet key %s buffer-locally to command: ")
   (let ((oldmap (current-local-map))
-        (newmap (make-sparse-keymap)))
+	(newmap (make-sparse-keymap)))
     (when oldmap
       (set-keymap-parent newmap oldmap))
     (define-key newmap key command)
     (use-local-map newmap)))
 
-(defun files-extras-ocr-pdf (&optional parameters)
-  "OCR the PDF file at point or visited by the current buffer.
-Optionally, pass PARAMETERS to `ocrmypdf'."
-  (interactive)
-  ;; TODO: add disjunct to handle file at point in minibuffer.
-  (unless (executable-find 'ocrmypdf)
+(defun files-extras-ocr-pdf (arg &optional filename parameters)
+  "OCR the FILENAME.
+If FILENAME is nil, use the PDF file at point or the file visited by the current
+buffer. Optionally, pass PARAMETERS to `ocrmypdf'. With prefix argument ARG,
+force OCR even if it has already been performed on the file."
+  (interactive "P")
+  (unless (executable-find "ocrmypdf")
     (user-error "`ocrmypdf' not found. Please install it (e.g. `brew install ocrmypdf'"))
-  (let* ((filename (cond ((equal major-mode 'dired-mode) (dired-get-filename))
-                         ((equal major-mode 'pdf-view-mode) (buffer-file-name))))
-         (parameters (or parameters
-                         (format "--force '%s' '%s'" filename filename)))
-         (shell-command-buffer-name-async "*ocr-pdf*"))
-    (async-shell-command (concat "ocrmypdf " parameters))))
+  (let* ((filename (or filename
+		       (pcase major-mode
+			 ('dired-mode (dired-get-filename))
+			 ('pdf-view-mode (buffer-file-name))))))
+    (unless (string= (file-name-extension filename) "pdf")
+      (user-error "File is not a PDF"))
+    (let* ((parameters (or parameters
+			   (format (concat (when arg "--force-ocr ") "--deskew '%s' '%s'") filename filename)))
+	   (process (start-process-shell-command
+		     "ocrmypdf" "*ocr-pdf*"
+		     (concat "ocrmypdf " parameters))))
+      (set-process-filter process 'files-extras-ocr-pdf-process-filter))))
+
+(defun files-extras-ocr-pdf-process-filter (process string)
+  "Process filter function to handle output from `ocrmypdf'.
+This function gets STRING when PROCESS produces output."
+  (when (buffer-live-p (process-buffer process))
+    (with-current-buffer (process-buffer process)
+      (cond ((string-match-p "PriorOcrFoundError: page already has text" string)
+	     (message "OCR already performed on this file."))
+	    ;; when invoked with `--force-ocr'
+	    ((string-match-p "page already has text" string)
+	     (message "OCR already performed on this file; forcing new OCR."))
+	    ;; silence irrelevant messages
+	    ((or (string-match-p "Scanning contents" string)
+		 (string-match-p "Start processing" string)
+		 (string-match-p "Recompressing JPEGs" string)
+		 (string-match-p "Deflating JPEGs" string)
+		 (string-match-p "empty page" string)))
+	    ;; print all other messages
+	    (t (princ string))))))
 
 (defun files-extras-get-stem-of-current-buffer ()
   "Return the stem of the current buffer."
@@ -343,10 +309,10 @@ Optionally, pass PARAMETERS to `ocrmypdf'."
 (defun file-extras-bollp ()
   "Return t if point is at the beginning of the last line."
   (let ((beginning-of-last-line
-         (save-excursion
-           (end-of-buffer)
-           (beginning-of-line)
-           (point))))
+	 (save-excursion
+	   (end-of-buffer)
+	   (beginning-of-line)
+	   (point))))
     (>= (point) beginning-of-last-line)))
 
 (defun files-extras-recover-all-files ()
@@ -366,13 +332,13 @@ command automates the recovery process in these cases."
 `recover-this-file' notifications are easy to miss. This function triggers a
 more intrusive alert."
   (when (and (not buffer-read-only)
-             (file-newer-than-file-p (or buffer-auto-save-file-name
-                                         (make-auto-save-file-name))
-                                     buffer-file-name)
-             (alert (format "%s has auto save data"
-                            (file-name-nondirectory buffer-file-name))
-                    :title "Auto save detected"
-                    :severity 'high))))
+	     (file-newer-than-file-p (or buffer-auto-save-file-name
+					 (make-auto-save-file-name))
+				     buffer-file-name)
+	     (alert (format "%s has auto save data"
+			    (file-name-nondirectory buffer-file-name))
+		    :title "Auto save detected"
+		    :severity 'high))))
 
 ;; for some reason, `alert' fails to create persistent alerts. so we
 ;; trigger a warning if either `*log4e-alert*' or `*Messages*'
@@ -386,11 +352,11 @@ more intrusive alert."
    (let ((alert-buffers '(" *log4e-alert*" "*Messages*")))
      (dolist (buffer alert-buffers)
        (when (get-buffer buffer)
-         (set-buffer buffer)
-         (goto-char (point-min))
-         (when (search-forward "has auto save data" nil t)
-           (yes-or-no-p "Buffers with auto save data detected. Check `*log4e-alert*' and `*Messages*' for details. Are you sure you want to proceed? "))
-         (kill-buffer))))))
+	 (set-buffer buffer)
+	 (goto-char (point-min))
+	 (when (search-forward "has auto save data" nil t)
+	   (yes-or-no-p "Buffers with auto save data detected. Check `*log4e-alert*' and `*Messages*' for details. Are you sure you want to proceed? "))
+	 (kill-buffer))))))
 
 ;; https://emacs.stackexchange.com/a/3778/32089
 (defun files-extras-diff-buffer-with-file ()
@@ -416,10 +382,10 @@ more intrusive alert."
   "Compress the `auto-save' file name so paths don't get too long.
 FN is an argument in the adviced function."
   (let ((buffer-file-name
-         (if (or (null buffer-file-name)
-                 (find-file-name-handler buffer-file-name 'make-auto-save-file-name))
-             buffer-file-name
-           (sha1 buffer-file-name))))
+	 (if (or (null buffer-file-name)
+		 (find-file-name-handler buffer-file-name 'make-auto-save-file-name))
+	     buffer-file-name
+	   (sha1 buffer-file-name))))
     (funcall fn)))
 
 (advice-add #'make-auto-save-file-name :around #'files-extras-make-hashed-auto-save-file-name-a)
@@ -428,30 +394,30 @@ FN is an argument in the adviced function."
   "A few places use the backup file name so paths don't get too long.
 FN and FILE are arguments in the adviced function."
   (let ((alist backup-directory-alist)
-        backup-directory)
+	backup-directory)
     (while alist
       (let ((elt (car alist)))
-        (if (string-match (car elt) file)
-            (setq backup-directory (cdr elt) alist nil)
-          (setq alist (cdr alist)))))
+	(if (string-match (car elt) file)
+	    (setq backup-directory (cdr elt) alist nil)
+	  (setq alist (cdr alist)))))
     (let ((file (funcall fn file)))
       (if (or (null backup-directory)
-              (not (file-name-absolute-p backup-directory)))
-          file
-        (expand-file-name (sha1 (file-name-nondirectory file))
-                          (file-name-directory file))))))
+	      (not (file-name-absolute-p backup-directory)))
+	  file
+	(expand-file-name (sha1 (file-name-nondirectory file))
+			  (file-name-directory file))))))
 
 (advice-add #'make-backup-file-name-1 :around #'files-extras-make-hashed-backup-file-name-a)
 
 (defun files-extras-open-buffer-files ()
   "Return the list of files currently open in Emacs."
   (delq nil
-        (mapcar (lambda (x)
-                  (if (and (buffer-file-name x)
-                           (string-match "\\.org$"
-                                         (buffer-file-name x)))
-                      (buffer-file-name x)))
-                (buffer-list))))
+	(mapcar (lambda (x)
+		  (if (and (buffer-file-name x)
+			   (string-match "\\.org$"
+					 (buffer-file-name x)))
+		      (buffer-file-name x)))
+		(buffer-list))))
 
 ;; https://emacs.stackexchange.com/a/5531/32089
 (defvar files-extras-walk-dir-locals-upward nil
@@ -463,15 +429,15 @@ Evaluate `dir-locals.el' files starting in the current directory and going up.
 Otherwise they will be evaluated from the top down to the current directory.
 OLD-FUN and ARGS are arguments passed to the original function."
   (let* ((dir-locals-list (list dir-locals-file))
-         (walk-dir-locals-file (car dir-locals-list)))
+	 (walk-dir-locals-file (car dir-locals-list)))
     (while (file-readable-p (concat "../" walk-dir-locals-file))
       (progn
-        (setq walk-dir-locals-file (concat "../" walk-dir-locals-file))
-        (add-to-list 'dir-locals-list walk-dir-locals-file
-                     files-extras-walk-dir-locals-upward)))
+	(setq walk-dir-locals-file (concat "../" walk-dir-locals-file))
+	(add-to-list 'dir-locals-list walk-dir-locals-file
+		     files-extras-walk-dir-locals-upward)))
     (dolist (file dir-locals-list)
       (let ((dir-locals-file (expand-file-name file)))
-        (apply old-fun args)))))
+	(apply old-fun args)))))
 
 ;; (advice-add 'hack-dir-local-variables :around #'files-extras-walk-dir-locals-file)
 

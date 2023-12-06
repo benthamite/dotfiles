@@ -351,12 +351,11 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
 	   (rename-file file-to-attach file-name t))
 	 (ebib-extras--update-file-field-contents key file-name)
 	 (when (string= (file-name-extension file-name) "pdf")
+	   (ebib-extras-set-pdf-metadata)
 	   ;; open the pdf to make sure it displays the web page correctly
 	   (ebib-extras-open-pdf-file)
 	   ;; ocr the pdf if necessary
-	   ;; (let ((expanded-file-name (expand-file-name file-name)))
-	   ;; (files-extras-ocr-pdf (format "'%s' '%s'" expanded-file-name expanded-file-name)))
-	   ))))
+	   (files-extras-ocr-pdf nil (expand-file-name file-name))))))
     (default
      (beep))))
 
@@ -1138,13 +1137,67 @@ Prompt the user for a title, unless TITLE is non-nil."
 				(message "File downloaded successfully to `%s'." paths-dir-downloads)
 			      (message "File download failed."))))))
 
+;;;;; pdf metadata
+
+(defun ebib-extras-set-pdf-metadata ()
+  "Set the metadata of the PDF associated with the current entry."
+  (interactive)
+  (unless (executable-find "exiftool")
+    (user-error "Please install `exiftool' (e.g. `brew install exiftool'"))
+  (unless (derived-mode-p 'ebib-entry-mode)
+    (user-error "Not in `ebib-entry-mode'"))
+  (when-let ((file (ebib-extras-get-file "pdf"))
+	     (author (or (ebib-extras-get-field-value "author")
+			 (ebib-extras-get-field-value "editor"))))
+    (let* ((file-absolute (expand-file-name file))
+	   (author-list (ebib-extras-get-authors-list author))
+	   (author-string (ebib-extras-format-authors author-list))
+	   (title (ebib-extras-get-field-value "title"))
+	   (author-arg (format "-Author='%s' " author-string))
+	   (title-arg (format "-Title='%s' " title)))
+      (when (or author-arg title-arg)
+	(shell-command (concat "exiftool -overwrite_original "
+			       (when author-arg author-arg)
+			       (when title-arg title-arg)
+			       (shell-quote-argument file-absolute))))
+      (message "Set metadata for PDF file `%s'" file))))
+
+(defun ebib-extras-get-authors-list (authors)
+  "Split AUTHORS into a list of authors, reversing the first and last names.
+Authors enclosed in braces are left untouched, but the braces are removed."
+  (unless (derived-mode-p 'ebib-entry-mode)
+    (user-error "Not in `ebib-entry-mode'"))
+  (let* ((authors-split (split-string authors " and "))
+         (authors-formatted
+          (mapcar (lambda (author)
+                    (cond ((string-match "{\\(.*\\)}" author)
+			   (match-string 1 author))
+			  ((string-match "\\(.*\\), \\(.*\\)" author)
+                           (format "%s %s" 
+                                   (match-string 2 author)
+                                   (match-string 1 author)))
+			  (t author)))
+		  authors-split)))
+    authors-formatted))
+
+(defun ebib-extras-format-authors (authors &optional separator max)
+  "Format AUTHORS as a string.
+  The authors are separated by SEPARATOR, which defaults to \" & \". A maximum
+  of MAX authors are included in the string, which defaults to three. When MAX is
+  exceeded, only the first author will be listed, followed by \" et al\"."
+  (let ((separator (or separator " & "))
+	(max (or max 3)))
+    (if (> (length authors) max)
+	(format "%s et al" (car authors))
+      (mapconcat 'identity authors separator))))
+
 ;;;;; Patched functions
 
 ;; tweak original function to prevent unnecessary vertical window splits
 (el-patch-defun ebib--setup-windows ()
   "Create Ebib's window configuration.
-  If the index buffer is already visible in some frame, select its
-  window and make the frame active,"
+If the index buffer is already visible in some frame, select its
+window and make the frame active,"
   (let ((index-window (get-buffer-window (ebib--buffer 'index) t))
 	(old-frame (selected-frame)))
     (if index-window
@@ -1183,7 +1236,7 @@ Prompt the user for a title, unless TITLE is non-nil."
 
 ;; tweak original function to pass custom arguments to `format-time-string'
 (el-patch-defun ebib--store-entry (entry-key fields db &optional timestamp if-exists)
-  "Store the entry defined by ENTRY-KEY and FIELDS into DB.
+"Store the entry defined by ENTRY-KEY and FIELDS into DB.
 Optional argument TIMESTAMP indicates whether a timestamp is to
 be added to the entry.  Note that for a timestamp to be added,
 `ebib-use-timestamp' must also be set to T. IF-EXISTS is as for
@@ -1194,10 +1247,10 @@ the entry is actually stored (which, if IF-EXISTS is `uniquify',
 may differ from ENTRY-KEY); otherwise return nil.  Depending on
 the value of IF-EXISTS, storing an entry may also result in an
 error."
-  (let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
-    (when (and actual-key timestamp ebib-use-timestamp)
-      (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
-    actual-key))
+(let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
+  (when (and actual-key timestamp ebib-use-timestamp)
+    (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
+  actual-key))
 
 ;; tweak original two functions below so that focus doesn't move away
 ;; from the current entry when the database is saved or reloaded.
@@ -1336,6 +1389,7 @@ value is copied to the kill ring."
 			 (progn (kill-new contents)
 				(message "Field contents copied."))
 		       (user-error "Cannot copy an empty field"))))))
+
 
 (provide 'ebib-extras)
 ;;; ebib-extras.el ends here

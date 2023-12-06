@@ -70,7 +70,6 @@
  (paths-dir-org-roam . "")
  (paths-dir-org-images . (file-name-concat paths-dir-google-drive "org-images/"))
  (paths-dir-websites . "")
- (paths-dir-calibre . (file-name-concat (getenv "HOME") "calibre/"))
  (paths-dir-notes . (file-name-concat paths-dir-dropbox "tlon/fede/"))
  (paths-file-notes . (file-name-concat paths-dir-org "notes.org"))
  (paths-file-feeds-pablo . "")
@@ -317,45 +316,6 @@ Doom modeline
                      (id "7EDB8441-7EFA-43CC-B3DE-5682D55BCEE1")
                      "** TODO %?\n" :prepend t)))
   (push template org-capture-templates))
-
-
-(defvar path-file-cookies (file-name-concat paths-dir-downloads "cookies.txt"))
-(defun files-extras-internet-archive-download ()
-  "Download and open ACSM file from Internet Archive URL in kill
-ring.
-
-NB: You need to have previously borrowed the book for the command
-to work. The command will work even if the book was borrowed for
-one hour only."
-  (interactive)
-  (if (string-search "archive.org" (current-kill 0))
-      (progn
-        (let* ((prefix "https://archive.org/services/loans/loan/?action=media_url&identifier=")
-               (suffix "&format=pdf&redirect=1")
-               (id (replace-regexp-in-string
-                    "\\(http.*?details/\\)\\([_[:alnum:]]*\\)\\(.*\\)"
-                    "\\2"
-                    (current-kill 0)))
-               (url (concat prefix id suffix))
-               (acsm-file (file-name-concat paths-dir-downloads "book.acsm")))
-          ;; Download the Internet Archive cookies to a file so `wget' can authenticate:
-          ;; askubuntu.com/questions/161778/how-do-i-use-wget-curl-to-download-from-a-site-i-am-logged-into
-          ;; Then replace the path below with the location of the downloaded cookies file.
-          (save-window-excursion
-            (let ((shell-command-buffer-name-async "*internet-archive-download-ACSM*"))
-              (async-shell-command
-               (format
-                "wget --load-cookies='%s' '%s' -O '%s'"
-                paths-file-cookies url acsm-file))
-              ;; (sleep-for 2)
-              ;; (async-shell-command
-              ;; (format
-              ;; "open %s"
-              ;; "/users/cartago/downloads/book.acsm"))
-              ))
-          (dired paths-dir-downloads)
-          ))
-    (user-error "You forgot to copy the URL!")))
 
 (setq-default org-support-shift-select 'always
               org-replace-disputed-keys t)

@@ -326,12 +326,14 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict-ng][goldendict-ng]]
   - [[#reverso][reverso]]
-- [[#pdf][pdf]]
+- [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
   - [[#scroll-other-window][scroll-other-window]]
   - [[#pdf-view-restore][pdf-view-restore]]
   - [[#org-pdftools][org-pdftools]]
+  - [[#nov][nov]]
+  - [[#djvu][djvu]]
 - [[#prog-mode][prog-mode]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
@@ -438,6 +440,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#persid][persid]]
   - [[#zotra][zotra]]
   - [[#zotra-extras][zotra-extras]]
+  - [[#internet-archive][internet-archive]]
 - [[#email][email]]
   - [[#simple][simple]]
   - [[#sendmail][sendmail]]
@@ -447,7 +450,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#mml][mml]]
   - [[#mu4e][mu4e]]
   - [[#mu4e-extras][mu4e-extras]]
-  - [[#mu4e-contrib][mu4e-contrib]]
   - [[#org-msg][org-msg]]
   - [[#org-msg-extras][org-msg-extras]]
 - [[#messaging][messaging]]
@@ -484,7 +486,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#emms][EMMS]]
   - [[#mpv][mpv]]
   - [[#ytdl][ytdl]]
-  - [[#espotify][espotify]]
   - [[#read-aloud][read-aloud]]
 - [[#misc][misc]]
   - [[#calc][calc]]
@@ -2067,7 +2068,7 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
 
 #+begin_src emacs-lisp
 (use-personal-package magit-extra
-  ;; :after magit
+  :after magit
   :demand t
   :config
   (add-hook 'git-commit-setup-hook 'magit-extras-move-point-to-start)
@@ -2667,25 +2668,34 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
           " | " fancy-battery-mode-line
 
           ;; telega notifications
-          (:eval (when (and
-                        (telega-server-live-p)
-                        (> (plist-get telega--unread-message-count :unread_count) 0))
-                   (concat " | " telega-mode-line-string)))
+          (when (featurep 'telega)
+            (:eval (when (and
+                          (telega-server-live-p)
+                          (> (plist-get telega--unread-message-count :unread_count) 0))
+                     (concat " | " telega-mode-line-string))))
 
           ;; github notifications
-          (:eval (when (> doom-modeline--github-notification-number 0)
-                   (concat
-                    " | "
-                    (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
-                                        :face 'doom-modeline-notification)
-                    (doom-modeline-vspc)
-                    (propertize
-                     (cond
-                      ((> doom-modeline--github-notification-number 99) "99+")
-                      (t (number-to-string doom-modeline--github-notification-number)))
-                     'face '(:inherit
-                             (doom-modeline-unread-number doom-modeline-notification))))))
-          " | "))
+          (when (featurep 'doom-modeline)
+            (:eval (when (> doom-modeline--github-notification-number 0)
+                     (concat
+                      " | "
+                      (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
+                                          :face 'doom-modeline-notification)
+                      (doom-modeline-vspc)
+                      (propertize
+                       (cond
+                        ((> doom-modeline--github-notification-number 99) "99+")
+                        (t (number-to-string doom-modeline--github-notification-number)))
+                       'face '(:inherit
+                               (doom-modeline-unread-number doom-modeline-notification)))))))
+          " | "
+
+          ;; pomodoro timer
+          (when (featurep 'org-pomodoro)
+            (:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
+                     (setq global-mode-string (append global-mode-string
+                                                      '(org-pomodoro-mode-line))))))
+                                                      ))
 
   (setq global-mode-string tab-bar-extras-global-mode-string)
   (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
@@ -3893,7 +3903,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   :config
   (setq confirm-kill-processes nil) ; Do not prompt to kill running processes when quitting Emacs
   (setq delete-by-moving-to-trash t)
-  (setq trash-directory "~/.Trash") ; fallback for `move-file-to-trash'
+  (setq trash-directory (file-name-concat "~" ".Trash")) ; fallback for `move-file-to-trash'
   (setq find-file-visit-truename t); emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
   (setq kill-buffer-query-functions nil)
   (setq create-lockfiles nil) ; lockfiles are indexed by `org-roam', which causes problems with `org-agenda'
@@ -4883,7 +4893,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   :after calendar
   :defer 5
   :config
-  (setq calendar-extras-use-geolocation nil)
+  (setq calendar-extras-use-geolocation t)
 
   :general
   (org-agenda-mode-map
@@ -5049,7 +5059,13 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 #+begin_src emacs-lisp :results silent
 (use-package tmr
-  :defer 10)
+  :demand t
+  :config
+  (when (eq system-type 'darwin)
+    (setq tmr-sound-file "/System/Library/Sounds/Blow.aiff"))
+
+  :general
+  ("A-t" 'tmr))
 #+end_src
 
 ** display-wttr
@@ -5064,6 +5080,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
   :defer 10
   :config
   (setq display-wttr-interval (* 15 60))
+  (setq display-wttr-locations `(,calendar-location-name))
 
   (display-wttr-mode))
 #+end_src
@@ -6269,6 +6286,13 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   ;; Disable `emacs-lisp-checkdoc' in `org-src' blocks.
   (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc))
 
+  (add-hook 'after-change-major-mode-hook
+            (lambda ()
+              "Disable flycheck in the *scratch* buffer."
+              (when (or (equal (buffer-name) "*scratch*")
+                        (equal (buffer-name) "notes"))
+                (flycheck-mode -1))))
+
   :general
   ("M-k" 'flycheck-next-error))
 #+end_src
@@ -6868,7 +6892,7 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
   ("H-Y" 'reverso))
 #+end_src
 
-* pdf
+* docs
 :PROPERTIES:
 :ID:       6C0D0737-734E-4EAB-8A3F-138EF990B967
 :END:
@@ -7013,6 +7037,28 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
   :defer 30
   :config
   (add-hook 'org-mode-hook #'org-pdftools-setup-link))
+#+end_src
+
+** nov
+:PROPERTIES:
+:ID:       CA54F4D1-2562-483A-BBD0-67A039E0F2FC
+:END:
+
+/[[https://depp.brause.cc/nov.el/][nov]] is a major mode for reading EPUBs in Emacs./
+
+#+begin_src emacs-lisp
+(use-package nov)
+#+end_src
+
+** djvu
+:PROPERTIES:
+:ID:       CB96565F-C0FF-454C-A1F1-E986BC45EDDE
+:END:
+
+/[[https://elpa.gnu.org/packages/djvu.html][djvu]] is a major mode for viewing and editing Djvu files in Emacs./
+
+#+begin_src emacs-lisp
+(use-package djvu)
 #+end_src
 
 * prog-mode
@@ -8377,6 +8423,8 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
   (setq org-clock-history-length 30)
   (org-clock-persistence-insinuate)
 
+  (add-hook 'org-clock-in-prepare-hook #'tab-bar-extras-quick-reset)
+
   :general
   ("A-H-j" 'org-clock-goto
    "A-H-x" 'org-clock-cancel
@@ -9274,6 +9322,7 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 #+begin_src emacs-lisp :results silent
 (use-package org-pomodoro
   :after org
+  :defer 10
   :config/el-patch
   ;; silence silly lecture about killing pomodoros
   (defun org-pomodoro-killed ()
@@ -9292,8 +9341,7 @@ This may send a notification, play a sound and adds log."
   (setq org-pomodoro-length 25)
   (setq org-pomodoro-short-break-length (- 30 org-pomodoro-length))
   (setq org-pomodoro-long-break-length org-pomodoro-short-break-length)
-  (when (eq system-type 'darwin)
-    (setq org-pomodoro-finished-sound "/System/Library/Sounds/Blow.aiff"))
+  (setq org-pomodoro-finished-sound tmr-sound-file)
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
   ;; (add-hook 'org-pomodoro-started-hook #'org-extras-pomodoro-format-timer)
@@ -9451,7 +9499,8 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
                  (mapcar #'file-name-as-directory
                          ;; List of special dirs
                          (list
-                          paths-dir-journal)))
+                          paths-dir-journal
+                          (file-name-concat paths-dir-dropbox ".Trash"))))
                 ;; heading condition
                 (> (org-current-level) 1))
                )
@@ -9459,7 +9508,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
             t)))
 
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
-  ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
 
   ;; include transcluded links in `org-roam' backlinks
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
@@ -9524,8 +9572,9 @@ So the links to other Wiki articles do not break.
                       (file-relative-name dir-or-file paths-dir-org-roam)
                     dir-or-file)
                   result))))
-                  
+
   (add-hook 'org-capture-prepare-finalize-hook #'org-roam-extras-remove-file-level-properties)
+
   :general
   ("H-N" 'org-roam-extras-new-note
    "H-j" 'org-roam-extras-node-find
@@ -10460,7 +10509,7 @@ The macro below generates the commands correctly. But attempting to define key b
    "H" 'ebib-extras-open-html-file-externally
    "i" 'ebib-extras-download-by-identifier
    "I" 'ebib-extras-set-id
-   "K" 'ebib-extras-fetch-keywords
+   "s-k" 'ebib-extras-fetch-keywords
    "o" 'ebib-extras-search-connected-papers
    "p" 'ebib-extras-open-pdf-file
    "P" 'ebib-extras-open-pdf-file-externally
@@ -10584,6 +10633,19 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
    "z" 'zotra-extras-url-full-capture))
 #+end_src
 
+** internet-archive
+:PROPERTIES:
+:ID:       89CD61F5-D883-4A4F-9210-EA238235AD34
+:END:
+
+#+begin_src emacs-lisp
+(use-package internet-archive
+  :elpaca (internet-archive
+           :host github
+	   :repo "benthamite/internet-archive")
+  :demand t)
+#+end_src
+
 * email
 :PROPERTIES:
 :ID:       2CF6D256-143D-4F3E-8383-36CB090FC4F2
@@ -10642,8 +10704,24 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :PROPERTIES:
 :ID:       BEF562DB-61D5-4AB5-8B8A-44DD866FE285
 :END:
+:LOGBOOK:
+CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
+:END:
 
 /[[https://github.com/lordpretzel/async-email-sending][async-email-sending]] enables asynchronous sending of emails in Emacs using the new built-in sqlite support in Emacs 29./
+
+<2023-12-01 Fri> Failed to send an email when I tested it. So not using for the time being.
+
+#+begin_src emacs-lisp
+(use-package async-email-sending
+  :disabled
+  :elpaca (async-email-sending
+           :host github
+           :repo "lordpretzel/async-email-sending")
+  :demand t
+  ;; needs to be set via `customize'
+  :custom (async-email-sending-use-async-send-mail t))
+#+end_src
 
 ** message
 :PROPERTIES:
@@ -10817,11 +10895,11 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-hide-index-messages t)
   (setq mu4e-sent-messages-behavior 'delete) ; Gmail already keeps a copy
 
-  ;; performance improvements
+  ;; performance improvements (but with downsides)
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
-  (setq mu4e-index-cleanup t) ; `nil' improves performance"
-  (setq mu4e-index-lazy-check nil) ; `t' improves performance"
+  (setq mu4e-index-cleanup t) ; nil improves performance
+  (setq mu4e-index-lazy-check nil) ; t improves performance
 
   (setq mu4e-compose-context-policy 'ask)
   (setq mu4e-context-policy 'ask)
@@ -10831,7 +10909,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                               (:subject)))
   (mu4e t)
 
-  ;; (add-hook 'change-major-mode-hook #'faces-extras-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode
   ;; Is this needed?
   (add-hook 'mu4e-compose-pre-hook #'org-msg-mode)
 
@@ -10916,10 +10993,12 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   (setq mu4e-extras-inbox-folder "/Inbox")
   (setq mu4e-extras-daily-folder "/Daily")
 
-  (dolist (shortcut `((,mu4e-extras-inbox-folder . ?i)
-		      (,mu4e-extras-daily-folder . ?y)))
-    (add-to-list 'mu4e-maildir-shortcuts shortcut))
-  
+  (add-hook 'elpaca-after-init-hook
+            (lambda ()
+              (dolist (shortcut `((,mu4e-extras-inbox-folder . ?i)
+                                  (,mu4e-extras-daily-folder . ?y)))
+                (add-to-list 'mu4e-maildir-shortcuts shortcut))))
+
   (add-hook 'elpaca-after-init-hook #'mu4e-extras-set-contexts)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-view-mode-hook-functions)
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
@@ -10942,20 +11021,6 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
    "e" 'mu4e-extras-view-archive
    "x" 'mu4e-extras-view-in-gmail
    "v" 'mu4e-extras-view-move))
-#+end_src
-
-** mu4e-contrib
-:PROPERTIES:
-:ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
-:END:
-
-[2023-11-26 Sun] Do I need this? Disabling to test.
-
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :mu4e)
-(use-feature mu4e-contrib
-  :disabled
-  :after mu4e
-  :demand t)
 #+end_src
 
 ** org-msg
@@ -12284,40 +12349,12 @@ CLOCK: [2023-05-07 Sun 10:53]--[2023-05-07 Sun 11:27] =>  0:34
 Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dlp]], a ~youtube-dl~ fork.
 
 #+begin_src emacs-lisp :results silent
-(use-package ytdl)
-#+end_src
-
-*** TODO [#4] Fix naming problem for videos
-:PROPERTIES:
-:Effort:   0:45
-:ID:       F4F4B47A-6B45-41DD-831C-0C23D67C4398
-:END:
-:LOGBOOK:
-CLOCK: [2022-09-05 Mon 20:22]--[2022-09-05 Mon 21:28] =>  1:06
-:END:
-
-** espotify
-:PROPERTIES:
-:ID:       5879A8B7-0889-4FCD-A16A-77D0BCEE4804
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-22 Wed 14:50]--[2022-06-22 Wed 15:10] =>  0:20
-:END:
-
-/[[https://codeberg.org/jao/espotify][espotify]] supports interacting with spotify API and players inside emacs./
-
-[2022-06-22 Wed 15:07] I can't make this work. Maybe related to the [[id:86EE7A94-E470-45DB-B0A5-0AE717A15353][dbus problem]]?
-
-#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :espotify)
-(use-package espotify
-  :disabled
-  :after auth-source-pass
-  :defer 20
+(use-package ytdl
   :config
-  (setq espotify-service-name "spotify")
-  (setq espotify-use-system-bus-p nil)
-  (setq espotify-client-id (auth-source-pass-get "id" "auth-sources/spotify"))
-  (setq espotify-client-secret (auth-source-pass-get 'secret "auth-sources/spotify")))
+  (setq ytdl-command "yt-dlp")
+
+  :general
+  ("A-M-y" 'ytdl-download))
 #+end_src
 
 ** read-aloud
@@ -12404,7 +12441,9 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 
 #+begin_src emacs-lisp :results silent
 (use-package unpackaged
-  :elpaca (unpackaged :host github :repo "alphapapa/unpackaged.el")
+  :elpaca (unpackaged
+           :host github
+           :repo "alphapapa/unpackaged.el")
   :commands (unpackaged/org-forward-to-entry-content))
 #+end_src
 
@@ -12435,28 +12474,28 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   :defer 600
   :config
   (setq clean-buffer-list-kill-never-buffer-names
-        '("*mu4e-headers*"
-          " *mu4e-update*")) ; not sure if the space is part of the buffer name
+	'("*mu4e-headers*"
+	  " *mu4e-update*")) ; not sure if the space is part of the buffer name
   (setq clean-buffer-list-kill-never-regexps
-        '("\\` \\*Minibuf-.*\\*\\'"
-          "^untitled.*"))
+	'("\\` \\*Minibuf-.*\\*\\'"
+	  "^untitled.*"))
   (setq clean-buffer-list-delay-general 2) ; kill buffers unused for more than three days
 
   (midnight-mode)
   (midnight-delay-set 'midnight-delay "4:00am")
 
   ;; note that the hooks appear in reverse order of execution
-  (dolist (function #'(el-patch-validate-all
-                       org-gcal-sync
-                       org-extras-id-update-id-locations
-                       org-roam-db-sync
-                       pass-extras-git-sync
-                       tlon-babel-forge-update-repos
-                       magit-extras-stage-commit-and-push-all-repos
-                       ledger-mode-extras-update-commodities
-                       ledger-mode-extras-update-coin-prices
-                       clean-buffer-list
-                       files-extras-save-all-buffers))
+  (dolist (function #'(tlon-babel-forge-update-all-repos
+		       el-patch-validate-all
+		       org-gcal-sync
+		       org-extras-id-update-id-locations
+		       org-roam-db-sync
+		       pass-extras-git-sync
+		       magit-extras-stage-commit-and-push-all-repos
+		       ledger-mode-extras-update-commodities
+		       ledger-mode-extras-update-coin-prices
+		       clean-buffer-list
+		       files-extras-save-all-buffers))
     (add-hook 'midnight-hook function)))
 #+end_src
 

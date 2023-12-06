@@ -8,6 +8,69 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** guess-language
+:PROPERTIES:
+:ID:       F3163168-2247-4205-B08B-E8816DB02CE7
+:END:
+:LOGBOOK:
+CLOCK: [2023-12-03 Sun 09:05]--[2023-12-03 Sun 09:25] =>  0:20
+:END:
+
+#+begin_src emacs-lisp
+(use-package guess-language
+  :demand t
+  :config
+  (setq guess-language-languages '(en es))
+  (setq guess-language-min-paragraph-length 35)
+  (defun my-custom-function (lang beginning end)
+    (jinx-languages lang)
+    (setq-local flycheck-languagetool-language lang)
+    (message "Detected language: %s" lang))
+
+  (add-hook 'guess-language-after-detection-functions #'my-custom-function))
+#+end_src
+
+** espotify
+:PROPERTIES:
+:ID:       5879A8B7-0889-4FCD-A16A-77D0BCEE4804
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-22 Wed 14:50]--[2022-06-22 Wed 15:10] =>  0:20
+:END:
+
+/[[https://codeberg.org/jao/espotify][espotify]] supports interacting with spotify API and players inside emacs./
+
+[2022-06-22 Wed 15:07] I can't make this work. Maybe related to the [[id:86EE7A94-E470-45DB-B0A5-0AE717A15353][dbus problem]]?
+
+[2023-12-01 Fri] I couldn’t make it work and it provides very limited functionality (which I can replicate with the media keys).
+
+#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :espotify)
+(use-package espotify
+  :after auth-source-pass
+  :demand t
+  :config
+  (setq espotify-service-name "spotify")
+  (setq espotify-use-system-bus-p t)
+  (setq espotify-client-id (auth-source-pass-get "id" "auth-sources/spotify"))
+  (setq espotify-client-secret (auth-source-pass-get 'secret "auth-sources/spotify")))
+#+end_src
+
+** mu4e-contrib
+:PROPERTIES:
+:ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
+:END:
+
+[2023-11-26 Sun] Do I need this? Disabling to test.
+
+[2023-12-01 Fri] Not using it.
+
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :mu4e)
+(use-feature mu4e-contrib
+  :disabled
+  :after mu4e
+  :demand t)
+#+end_src
+
 ** hippie-expand
 :PROPERTIES:
 :ID:       06396799-A9FB-4417-AAE3-3654BC901B93

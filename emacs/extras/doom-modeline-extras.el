@@ -61,7 +61,8 @@
 			  :noerror t))))))
      (lambda (result)
        (message "")                     ; suppress message
-       (setq doom-modeline--github-notification-number (length result))))))
+       (setq doom-modeline--github-notification-number (length result))
+       (run-hooks 'doom-modeline-after-github-fetch-notification-hook)))))
 
 (el-patch-defun doom-modeline-github-timer ()
   "Start/Stop the timer for GitHub fetching."
@@ -79,11 +80,13 @@
   "Notification count when the modeline notification counter was last updated.")
 
 (defun doom-modeline-extras-trigger-forge-update ()
-  "Pull notifications in Forge when the modeline notification counter is updated."
+  "Pull notifications in Forge when the modeline notification counter is updated.
+Also refresh the the `gh-notify' buffer."
   (unless (eq doom-modeline--github-notification-number
 	      (length doom-modeline-extras-github-notification-last-count))
     (setq prev-result doom-modeline--github-notification-number)
-    (forge-pull-notifications)))
+    (forge-pull-notifications)
+    (gh-notify-extras-refresh-in-background)))
 
 (add-hook 'doom-modeline-after-github-fetch-notification-hook
 	  #'doom-modeline-extras-trigger-forge-update)

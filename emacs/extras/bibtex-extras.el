@@ -41,7 +41,7 @@
       (setq current (cdr current))))
   list)
 
-;; Copied from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
+;; Adapted from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
 (defun bibtex-extras-asciify-text (&optional begin end)
   "Remove accents in some letters. e.g. café → cafe.
 Change European language characters into equivalent ASCII ones.
@@ -72,6 +72,8 @@ Optionally, remove accents in region from BEGIN to END."
           [" " " "]       ; thin space etc
           ["–" "-"]       ; dash
           ["—\\|一" "--"] ; em dash etc
+	  ["¿" ""]
+	  ["¡" ""]
           ])
         ($p1 (if begin begin
                (if (region-active-p)

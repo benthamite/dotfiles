@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'bibtex)
-(require 'paths)
 (require 'el-patch)
 
 ;;;; Functions

@@ -10943,9 +10943,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                               (:subject)))
   (mu4e t)
 
-  ;; Is this needed?
-  (add-hook 'mu4e-compose-pre-hook #'org-msg-mode)
-
   :general
   ("A-m" 'mu4e)
   ((mu4e-main-mode-map mu4e-headers-mode-map mu4e-view-mode-map)

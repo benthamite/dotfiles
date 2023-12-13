@@ -12072,6 +12072,9 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine Internet-Archive
     "https://archive.org/search.php?query=%s"
     :keybinding "v v")
+  (defengine Internet-Archive-Scholar
+    "https://scholar.archive.org/search?q=%s"
+    :keybinding "v s")
   (defengine JustWatch
     "https://www.justwatch.com/us/search?q=%s"
     :keybinding "j w")

@@ -9751,10 +9751,13 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   (setq org-noter-auto-save-last-location t)
   (setq org-noter-always-create-frame nil)
   (setq org-noter-separate-notes-from-heading t)
+  (setq org-noter-kill-frame-at-session-end nil)
 
   :general
   (pdf-annot-minor-mode-map
-   "s-s" 'org-noter-create-skeleton))
+   "s-s" 'org-noter-create-skeleton)
+   (org-mode-map
+   "s-n" 'org-noter-sync-current-note))
 #+end_src
 
 - To check: https://org-roam.discourse.group/t/org-roam-bibtex-in-a-sub-directory/649/5

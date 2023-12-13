@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'citar)
-(require 'paths)
 (require 'el-patch)
 
 ;;;; Main variables

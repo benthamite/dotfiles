@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'markdown-mode)
-(require 'paths)
 (require 'el-patch)
 
 ;;;; User options

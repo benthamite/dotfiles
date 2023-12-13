@@ -2022,6 +2022,11 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
 #+begin_src emacs-lisp :results silent
 (use-package magit
+  :elpaca (magit
+           :host github
+           :repo "magit/magit"
+	   :ref "2b02bfb0495bf738e006d82f3a233e8f511b90b8"
+           :depth nil)
   :demand t
   :config
   (setq magit-commit-ask-to-stage 'stage)

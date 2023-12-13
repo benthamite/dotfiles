@@ -11872,7 +11872,9 @@ These key bindings produce the same behavior in eww.
 #+begin_src emacs-lisp
 (use-package elfeed-tube-mpv
   :after elfeed-tube
-  :demand t)
+  :demand t
+  :config
+  (setq elfeed-tube-save-indicator t))
 #+end_src
 
 ** engine-mode

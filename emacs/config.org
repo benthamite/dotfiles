@@ -10674,12 +10674,17 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 :ID:       89CD61F5-D883-4A4F-9210-EA238235AD34
 :END:
 
+/[[https://github.com/benthamite/internet-archive][internet-archive]] supports the downloading of books from the Internet Archive./
+
 #+begin_src emacs-lisp
 (use-package internet-archive
   :elpaca (internet-archive
            :host github
-	   :repo "benthamite/internet-archive")
-  :demand t)
+           :repo "benthamite/internet-archive")
+  :demand t
+  :config
+  (setq internet-archive-ade-close-when-done t)
+  (add-hook 'internet-archive-protocol-hook #'frame-extras-restore-focus))
 #+end_src
 
 * email

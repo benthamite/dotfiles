@@ -56,6 +56,7 @@
 
 (defun gh-notify-extras-mark-issue-as-read ()
   "Mark issue at point as read on GitHub."
+  (interactive)
   (require 'w3m)
   (if (or (derived-mode-p 'forge-issue-mode)
 	  (derived-mode-p 'forge-pullreq-mode))

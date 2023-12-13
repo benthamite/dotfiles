@@ -475,6 +475,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elfeed][elfeed]]
   - [[#elfeed-extras][elfeed-extras]]
   - [[#elfeed-org][elfeed-org]]
+  - [[#elfeed-tube][elfeed-tube]]
   - [[#engine-mode][engine-mode]]
   - [[#org-download][org-download]]
   - [[#org-web-tools][org-web-tools]]
@@ -11838,6 +11839,21 @@ These key bindings produce the same behavior in eww.
   (setq rmh-elfeed-org-files (list paths-file-feeds-pablo paths-file-tlon-feeds))
 
   (elfeed-org))
+#+end_src
+
+** elfeed-tube
+:PROPERTIES:
+:ID:       410603F9-0FE3-4C31-BCB4-F85A9052263C
+:END:
+
+/[[https://github.com/karthink/elfeed-tube][elfeed-tube]] integrates ~elfeed~ with YouTube./
+
+#+begin_src emacs-lisp
+(use-package elfeed-tube
+  :after elfeed
+  :demand t
+  :config
+  (elfeed-tube-setup))
 #+end_src
 
 ** engine-mode

@@ -476,6 +476,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elfeed-extras][elfeed-extras]]
   - [[#elfeed-org][elfeed-org]]
   - [[#elfeed-tube][elfeed-tube]]
+  - [[#elfeed-tube-mpv][elfeed-tube-mpv]]
   - [[#engine-mode][engine-mode]]
   - [[#org-download][org-download]]
   - [[#org-web-tools][org-web-tools]]
@@ -11854,6 +11855,19 @@ These key bindings produce the same behavior in eww.
   :demand t
   :config
   (elfeed-tube-setup))
+#+end_src
+
+** elfeed-tube-mpv
+:PROPERTIES:
+:ID:       0ADC0E03-67F8-446F-AF26-5CBBE16F2BBD
+:END:
+
+/[[https://github.com/karthink/elfeed-tube][elfeed-tube-mpv]] integrates ~elfeed-tube~ with ~mpv~./
+
+#+begin_src emacs-lisp
+(use-package elfeed-tube-mpv
+  :after elfeed-tube
+  :demand t)
 #+end_src
 
 ** engine-mode

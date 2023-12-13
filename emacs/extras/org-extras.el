@@ -918,10 +918,10 @@ ARG is the prefix argument received when calling interactively the function."
       (user-error "Processor %S cannot insert citations" name))
      (t
       (let ((context (org-element-context))
-            (insert (org-cite-processor-insert (org-cite-get-processor name))))
-        (cond
-         ((memq (org-element-type context) '(citation citation-reference))
-          (funcall insert context arg))
+	    (insert (org-cite-processor-insert (org-cite-get-processor name))))
+	(cond
+	 ((org-element-type-p context '(citation citation-reference))
+	  (funcall insert context arg))
 	 (el-patch-remove
 	   ((org-cite--allowed-p context)
 	    (funcall insert nil arg)))

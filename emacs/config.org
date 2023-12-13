@@ -2311,8 +2311,11 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   :config
   (setq mixed-pitch-set-height t)
 
-  (add-hook 'mu4e-view-mode-hook #'mixed-pitch-mode)
-  (add-hook 'outline-mode-hook #'mixed-pitch-mode))
+  (dolist (hook '(elfeed-show-mode-hook
+                  eww-mode-hook
+                  mu4e-view-mode-hook
+                  outline-mode-hook))
+    (add-hook hook #'mixed-pitch-mode)))
 #+end_src
 
 ** fringe

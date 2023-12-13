@@ -54,8 +54,8 @@
 (defun calendar-extras-get-local-ip-address ()
   "Get local IP address."
   (let ((local-ip (shell-command-to-string
-                   "dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com")))
-    (string-trim local-ip "\"" "\"\n")))
+		   "timeout 1 curl -s ifconfig.me | awk '/[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*/{print $0}'")))
+    (string-trim local-ip "\"" "\n")))
 
 (defun calendar-extras-get-geolocation-from-ip (&optional ip)
   "Get geolocation from IP address.

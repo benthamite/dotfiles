@@ -179,13 +179,6 @@ Do not ask for confirmation."
   (forward-line -1)
   (mu4e-extras-headers-archive))
 
-(defun mu4e-extras-view-mode-hook-functions ()
-  "Functions to be called by `mu4e-view-mode-hook'."
-  (interactive)
-  (require 'faces-extras)
-  (toggle-truncate-lines 1)
-  (set-face-attribute 'variable-pitch nil :family faces-extras-variable-pitch-font :height 1.15))
-
 (defun mu4e-extras-set-contexts ()
   "Set `mu4e-contexts'.
 We set the value of `mu4e-contexts' here because we want to hide the email

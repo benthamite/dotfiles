@@ -11757,8 +11757,6 @@ CLOCK: [2021-04-08 Thu 21:19]--[2021-04-08 Thu 21:50] =>  0:31
 
 If the lines are breaking at the wrong places, set ~shr-width~ to the right value.
 
-Check [[https://www.reddit.com/r/emacs/comments/gpoaaa/updating_elfeed_using_seperate_emacs_process/][this]].
-
 #+begin_src emacs-lisp :results silent
 (use-package elfeed
   :defer 30

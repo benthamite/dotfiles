@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'eww)
-(require 'paths)
 (require 'simple-extras)
 
 ;;;; User options

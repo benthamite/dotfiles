@@ -6,7 +6,6 @@ airwander.com
 algolia.com
 alignmentforum.com
 amazon.
-archive.org
 audible.com
 audiobookbay
 berkeley.edu
@@ -84,6 +83,7 @@ swapcard.com
 tangotimetravel.be
 tangotunes.com
 teatrocolon.org.ar
+tradingview.com
 traveltrolley.co.uk
 twitter.com
 utoronto.ca
@@ -92,6 +92,7 @@ we.tl
 wetransfer.com
 worldcat.org
 yahoo.com
+yaml-online-parser.appspot.com
 youtu.be
 youtube.com
 zoom.us

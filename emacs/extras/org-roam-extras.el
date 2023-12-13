@@ -99,7 +99,7 @@ Optionally, return such list only if its length is less than LIMIT."
    (list
     (completing-read
      "Select note type: "
-     '("generic" "person"))))
+     '("generic" "person" "Borges"))))
   (require 'prot-eww)
   (let ((tags)
 	(directory))
@@ -109,7 +109,9 @@ Optionally, return such list only if its length is less than LIMIT."
        (setq directory paths-dir-notes))
       ("person"
        (setq tags "person")
-       (setq directory paths-dir-people)))
+       (setq directory paths-dir-people))
+      ("Borges"
+       (setq directory (file-name-concat paths-dir-dropbox "borges"))))
     (let* ((name (read-from-minibuffer "Entry name: "))
 	   (slug (prot-eww--sluggify name))
 	   (filename (file-name-with-extension slug "org")))

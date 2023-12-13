@@ -73,6 +73,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
+  - [[#transient][transient]]
   - [[#hydra][hydra]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
@@ -1064,6 +1065,21 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :demand t
   :config
   (setq el-patch-enable-use-package-integration t))
+#+end_src
+
+** transient
+:PROPERTIES:
+:ID:       E21AC33E-D108-4860-997C-A4982569005E
+:END:
+
+#+begin_src emacs-lisp
+(use-package transient
+  :elpaca (transient
+           :host github
+           :repo "magit/transient"
+           :ref "b4a2963"
+           :depth nil)
+  :demand t)
 #+end_src
 
 ** hydra

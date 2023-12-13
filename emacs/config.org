@@ -9738,7 +9738,7 @@ CLOCK: [2021-07-17 Sat 19:16]--[2021-07-17 Sat 19:52] =>  0:36
 CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 :END:
 
-/[[https://github.com/weirdNox/org-noter][org-noter]] is an org-mode document annotator./
+/[[https://github.com/org-noter/org-noter][org-noter]] is an org-mode document annotator./
 
 #+begin_src emacs-lisp :results silent
 (use-package org-noter

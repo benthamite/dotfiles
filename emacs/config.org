@@ -11765,6 +11765,7 @@ Check [[https://www.reddit.com/r/emacs/comments/gpoaaa/updating_elfeed_using_sep
   (setq-default elfeed-search-filter "+unread -wiki")
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
+  (add-hook 'elfeed-show-mode-hook #'visual-line-mode)
 
   :general
   (eww-mode-map

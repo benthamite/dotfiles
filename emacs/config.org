@@ -1864,6 +1864,9 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 #+begin_src emacs-lisp :results silent
 (use-package pass
   :demand t
+  :config
+  (setq pass-suppress-confirmations t)
+  
   :general
   ("A-H-o" 'pass)
   (pass-mode-map

@@ -42,6 +42,13 @@
   (custom-set-faces
    '(window-divider (( )))))
 
+(defun frame-extras-restore-focus ()
+  "Restore focus to Emacs."
+  (do-applescript
+   "tell application \"Emacs\"
+    activate
+   end tell"))
+
 (provide 'frame-extras)
 ;;; frame-extras.el ends here
 

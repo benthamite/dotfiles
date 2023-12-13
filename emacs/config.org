@@ -8511,34 +8511,34 @@ longer then the CLOCK entry's total time.
 
    SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
 
-    (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
+  (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
 
-    (move-beginning-of-line nil)
-    (let ((original-line (buffer-substring (line-beginning-position) (line-beginning-position 2))))
+  (move-beginning-of-line nil)
+  (let ((original-line (buffer-substring (line-beginning-position) (line-beginning-position 2))))
 
-      ;; Error if CLOCK line does not contain check in and check out time
-      (unless (string-match org-clock-split-clock-range-regexp original-line)
-        (error "Cursor must be placed on line with valid CLOCK entry range"))
+    ;; Error if CLOCK line does not contain check in and check out time
+    (unless (string-match org-clock-split-clock-range-regexp original-line)
+      (error "Cursor must be placed on line with valid CLOCK entry range"))
 
-      (let* ((whitespace (match-string 1 original-line))
-             (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
-             (t0 (pop timestamps))
-             (t1 (el-patch-swap (pop timestamps) (format "[%s]" (pop timestamps))))
-             (t2 (pop timestamps)))
-        ;; delete line without moving to kill ring
-        (delete-region (line-beginning-position) (line-end-position))
-        ;; insert the earlier segment
-        (insert (format org-clock-split-clock-range-format whitespace t0 t1))
-        ;; Update interval duration, which moves point to the end of the later timestamp
-        (org-ctrl-c-ctrl-c)
-        ;; insert the later segment before the earlier segment, so it's ready for org-clock-merge
-        (move-beginning-of-line nil)
-        (newline)
-        (previous-line)
-        (insert (format org-clock-split-clock-range-format whitespace t1 t2))
-        ;; Update interval duration, which fails if point doesn't move to beginning of line
-        (org-ctrl-c-ctrl-c)
-        (move-beginning-of-line nil))))
+    (let* ((whitespace (match-string 1 original-line))
+           (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
+           (t0 (pop timestamps))
+           (t1 (el-patch-swap (pop timestamps) (format "[%s]" (pop timestamps))))
+           (t2 (pop timestamps)))
+      ;; delete line without moving to kill ring
+      (delete-region (line-beginning-position) (line-end-position))
+      ;; insert the earlier segment
+      (insert (format org-clock-split-clock-range-format whitespace t0 t1))
+      ;; Update interval duration, which moves point to the end of the later timestamp
+      (org-ctrl-c-ctrl-c)
+      ;; insert the later segment before the earlier segment, so it's ready for org-clock-merge
+      (move-beginning-of-line nil)
+      (newline)
+      (previous-line)
+      (insert (format org-clock-split-clock-range-format whitespace t1 t2))
+      ;; Update interval duration, which fails if point doesn't move to beginning of line
+      (org-ctrl-c-ctrl-c)
+      (move-beginning-of-line nil))))
 
   :general
   (org-mode-map
@@ -12522,11 +12522,11 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   :defer 600
   :config
   (setq clean-buffer-list-kill-never-buffer-names
-	'("*mu4e-headers*"
-	  " *mu4e-update*")) ; not sure if the space is part of the buffer name
+        '("*mu4e-headers*"
+          " *mu4e-update*")) ; not sure if the space is part of the buffer name
   (setq clean-buffer-list-kill-never-regexps
-	'("\\` \\*Minibuf-.*\\*\\'"
-	  "^untitled.*"))
+        '("\\` \\*Minibuf-.*\\*\\'"
+          "^untitled.*"))
   (setq clean-buffer-list-delay-general 2) ; kill buffers unused for more than three days
 
   (midnight-mode)
@@ -12534,16 +12534,16 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
   ;; note that the hooks appear in reverse order of execution
   (dolist (function #'(tlon-babel-forge-update-all-repos
-		       el-patch-validate-all
-		       org-gcal-sync
-		       org-extras-id-update-id-locations
-		       org-roam-db-sync
-		       pass-extras-git-sync
-		       magit-extras-stage-commit-and-push-all-repos
-		       ledger-mode-extras-update-commodities
-		       ledger-mode-extras-update-coin-prices
-		       clean-buffer-list
-		       files-extras-save-all-buffers))
+                       el-patch-validate-all
+                       org-gcal-sync
+                       org-extras-id-update-id-locations
+                       org-roam-db-sync
+                       pass-extras-git-sync
+                       magit-extras-stage-commit-and-push-all-repos
+                       ledger-mode-extras-update-commodities
+                       ledger-mode-extras-update-coin-prices
+                       clean-buffer-list
+                       files-extras-save-all-buffers))
     (add-hook 'midnight-hook function)))
 #+end_src
 

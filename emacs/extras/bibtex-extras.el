@@ -74,6 +74,7 @@ Optionally, remove accents in region from BEGIN to END."
           ["—\\|一" "--"] ; em dash etc
 	  ["¿" ""]
 	  ["¡" ""]
+	  ["…" ""]
           ])
         ($p1 (if begin begin
                (if (region-active-p)

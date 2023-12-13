@@ -82,15 +82,15 @@ heading in a quote."
 Operate on the current paragraph, or the region if active."
   (interactive)
   (let ((start (if (use-region-p)
-                   (region-beginning)
-                 (save-excursion (backward-paragraph) (point))))
-        (end (if (use-region-p)
-                 (region-end)
-               (save-excursion (forward-paragraph) (point)))))
+		   (region-beginning)
+		 (save-excursion (backward-paragraph) (point))))
+	(end (if (use-region-p)
+		 (region-end)
+	       (save-excursion (forward-paragraph) (point)))))
     (save-excursion
       (goto-char start)
       (while (re-search-forward "\\([[:alpha:]]\\)- \\([[:alpha:]]\\)" end t)
-        (replace-match "\\1\\2")))))
+	(replace-match "\\1\\2")))))
 
 ;; TODO: find `org-noter' hook to run this automatically
 (defun org-noter-extras-highlight-offset (offset)
@@ -102,9 +102,8 @@ the page number in the book or article."
     (goto-char (point-min))
     (while (re-search-forward "\\(Highlight on page \\)\\(.*$\\)" nil t)
       (let* ((num (number-to-string (+ (string-to-number (match-string 2)) offset)))
-             (replacement (concat (match-string 1) num)))
-        (replace-match replacement)))))
+	     (replacement (concat (match-string 1) num)))
+	(replace-match replacement)))))
 
 (provide 'org-noter-extras)
 ;;; org-noter-extras.el ends here
-

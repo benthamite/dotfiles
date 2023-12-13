@@ -27,8 +27,6 @@
 
 ;;; Code:
 
-(require 'paths)
-
 ;;;; User options
 
 (defgroup window-extras ()

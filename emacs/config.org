@@ -11859,6 +11859,7 @@ These key bindings produce the same behavior in eww.
   :after elfeed
   :demand t
   :config
+  (push '(text . shr-text) elfeed-tube-captions-faces)
   (elfeed-tube-setup))
 #+end_src
 

@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'eww)
-(require 'paths)
 (require 'simple-extras)
 
 ;;;; User options
@@ -37,15 +36,15 @@
   "Extensions for `eww'."
   :group 'eww)
 
-(defcustom eww-extras-readable-exceptions
-  '("protesilaos\\.com"
-    "wikipedia\\.org"
-    "google\\.com"
-    "altruismoeficaz\\.net"
-    "gwern\\.net"
-    "git\\.sr\\.ht")
+(defcustom eww-extras-readable-exceptions '()
   "List of URLs for which `eww-readable' should not be used by default."
   :type '(repeat string)
+  :group 'eww-extras)
+
+(defcustom eww-extras-readable-exceptions-file
+  (file-name-concat tlon-init-dir-dotemacs "etc/eww-readable-exceptions.txt")
+  "File containing the URLs for which `eww-readable' should not be used by default."
+  :type 'file
   :group 'eww-extras)
 
 ;;;; Functions
@@ -90,6 +89,29 @@ The exceptions are listed in `eww-extras-readable-exceptions'."
       (eww-readable))))
 
 (add-hook 'eww-after-render-hook #'eww-extras-readable-autoview)
+
+(defun eww-extras-add-domain-to-readable-exceptions ()
+  "Prompt for a URL and add its domain to the list of `eww-readable' exceptions.
+If buffer is visiting a URL or if there is a URL in the kill ring, use its
+domain as the initial prompt input."
+  (interactive)
+  (require 'eww)
+  (require 'f)
+  (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
+         (domain (when url (url-domain (url-generic-parse-url url))))
+	 (file eww-extras-readable-exceptions-file)
+         (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
+    (browse-url-extras--write-url-to-file selection file)
+    (eww-extras-set-readable-exceptions-from-file)))
+
+(defun eww-extras-set-readable-exceptions-from-file ()
+  "Set `eww-readable' exceptions from file of exception URLs."
+  (when (file-exists-p eww-extras-readable-exceptions-file)
+    (with-temp-buffer
+      (insert-file-contents eww-extras-readable-exceptions-file)
+      (setq eww-extras-readable-exceptions (split-string (regexp-quote (buffer-string)) "\n" t)))))
+
+(eww-extras-set-readable-exceptions-from-file)
 
 ;; The following four commands copied from
 ;; github.com/gopar/.emacs.d#eww

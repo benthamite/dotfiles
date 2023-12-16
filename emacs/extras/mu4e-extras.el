@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'mu4e)
-(require 'paths)
 (require 'el-patch)
 
 ;;;; User options
@@ -180,13 +179,6 @@ Do not ask for confirmation."
   (forward-line -1)
   (mu4e-extras-headers-archive))
 
-(defun mu4e-extras-view-mode-hook-functions ()
-  "Functions to be called by `mu4e-view-mode-hook'."
-  (interactive)
-  (require 'faces-extras)
-  (toggle-truncate-lines 1)
-  (set-face-attribute 'variable-pitch nil :family faces-extras-variable-pitch-font :height 1.15))
-
 (defun mu4e-extras-set-contexts ()
   "Set `mu4e-contexts'.
 We set the value of `mu4e-contexts' here because we want to hide the email
@@ -213,6 +205,11 @@ thing with lexical binding inside lambda functions."
 		     . ,(getenv "WORK_EMAIL"))
 		    (org-msg-signature
 		     . "\n\n#+begin_signature\n--\n*Pablo*\nDirector, Tlön\nhttps://tlon.team\n#+end_signature"))))))
+
+(defun mu4e-extras-set-face-locally ()
+  "Set `shr-text' face locally in `mu4ew-view-mode' buffers."
+  (when (eq major-mode 'mu4e-view-mode)
+    (face-remap-add-relative 'shr-text :height 0.9)))
 
 ;;;;; patches
 

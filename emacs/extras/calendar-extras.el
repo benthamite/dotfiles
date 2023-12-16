@@ -54,8 +54,8 @@
 (defun calendar-extras-get-local-ip-address ()
   "Get local IP address."
   (let ((local-ip (shell-command-to-string
-                   "dig -4 TXT +short o-o.myaddr.l.google.com @ns1.google.com")))
-    (string-trim local-ip "\"" "\"\n")))
+		   "timeout 1 curl -s ifconfig.me | awk '/[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*/{print $0}'")))
+    (string-trim local-ip "\"" "\n")))
 
 (defun calendar-extras-get-geolocation-from-ip (&optional ip)
   "Get geolocation from IP address.
@@ -63,42 +63,43 @@ If IP is non-nil, use the local IP address."
   (require 'url-vars)
   (require 'json)
   (let* ((ip (or ip (calendar-extras-get-local-ip-address)))
-         (url (format "http://ip-api.com/json/%s" ip))
-         (url-request-method "GET")
-         (url-request-extra-headers '(("Content-Type" . "application/json")))
-         (response-buffer (url-retrieve-synchronously url))
-         (json-object-type 'plist))
+	 (url (format "http://ip-api.com/json/%s" ip))
+	 (url-request-method "GET")
+	 (url-request-extra-headers '(("Content-Type" . "application/json")))
+	 (response-buffer (url-retrieve-synchronously url))
+	 (json-object-type 'plist))
     (with-current-buffer response-buffer
       (goto-char (point-min))
       ;; Skip HTTP headers.
       (re-search-forward "^$")
       (let* ((json (json-read))
-             (lat (plist-get json :lat))
-             (lon (plist-get json :lon))
-             (city (plist-get json :city))
-             (timezone (plist-get json :timezone)))
-        (list :lat lat :lon lon :city city :timezone timezone)))))
+	     (lat (plist-get json :lat))
+	     (lon (plist-get json :lon))
+	     (city (plist-get json :city))
+	     (timezone (plist-get json :timezone)))
+	(list :lat lat :lon lon :city city :timezone timezone)))))
 
 (defun calendar-extras-set-location-variables-from-ip (&optional ip)
   "Set location variables from IP address.
 If IP is non-nil, use the local IP address."
   (interactive)
-  (setq calendar-extras-personal-geolocation (calendar-extras-get-geolocation-from-ip ip))
-  (setq calendar-location-name (plist-get calendar-extras-personal-geolocation :city))
-  (setq calendar-latitude (plist-get calendar-extras-personal-geolocation :lat))
-  (setq calendar-longitude (plist-get calendar-extras-personal-geolocation :lon))
-  (message "Variables set: %s" calendar-extras-personal-geolocation))
+  (when-let ((ip (or ip (calendar-extras-get-local-ip-address))))
+    (setq calendar-extras-personal-geolocation (calendar-extras-get-geolocation-from-ip ip))
+    (setq calendar-location-name (plist-get calendar-extras-personal-geolocation :city))
+    (setq calendar-latitude (plist-get calendar-extras-personal-geolocation :lat))
+    (setq calendar-longitude (plist-get calendar-extras-personal-geolocation :lon))
+    (message "Variables set: %s" calendar-extras-personal-geolocation)))
 
 (defun calendar-extras-time-last-day-of-last-month ()
   "Insert the last day of the most recent month."
   (interactive)
   (let* ((date (calendar-current-date))
-         (year (calendar-extract-year date))
-         (month (- (calendar-extract-month date) 1))
-         (day (calendar-last-day-of-month month year)))
+	 (year (calendar-extract-year date))
+	 (month (- (calendar-extract-month date) 1))
+	 (day (calendar-last-day-of-month month year)))
     (insert (format-time-string
-             "%Y-%m-%d"
-             (encode-time 0 0 0 day month year)))))
+	     "%Y-%m-%d"
+	     (encode-time 0 0 0 day month year)))))
 
 (defun calendar-extras-calfw-block-agenda ()
   "Display today’s agenda as visual time blocks."
@@ -113,4 +114,3 @@ If IP is non-nil, use the local IP address."
 (provide 'calendar-extras)
 
 ;;; calendar-extras.el ends here
-

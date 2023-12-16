@@ -31,7 +31,6 @@
 
 (require 'org)
 (require 'org-agenda)
-(require 'paths)
 (require 'el-patch)
 
 ;;;; User options
@@ -54,7 +53,7 @@ the function `vulpea-agenda-files-update')."
 
 (defcustom org-extras-id-auto-add-excluded-directories
   (list paths-dir-dropbox-tlon-fede
-        paths-dir-dropbox-tlon-leo)
+	paths-dir-dropbox-tlon-leo)
   "Directories to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'."
   :type 'list
   :group 'org-extras)
@@ -120,13 +119,13 @@ The extracted link includes both the URL and the description."
   (interactive)
   (if (org-in-regexp org-link-bracket-re 1)
       (save-excursion
-        (let ((remove (list (match-beginning 0) (match-end 0)))
-              (description
-               (if (match-end 2)
-                   (match-string-no-properties 2)
-                 (match-string-no-properties 1))))
-          (apply 'delete-region remove)
-          (insert description)))))
+	(let ((remove (list (match-beginning 0) (match-end 0)))
+	      (description
+	       (if (match-end 2)
+		   (match-string-no-properties 2)
+		 (match-string-no-properties 1))))
+	  (apply 'delete-region remove)
+	  (insert description)))))
 
 (defun org-extras-insert-todo-subheading-after-body ()
   "Insert an org subheading at the end of the current subtree."
@@ -163,17 +162,17 @@ Excludes the heading itself and any child subtrees."
       ;; otherwise `org-agenda-get-some-entry-text' won't work.
       (unless (org-at-heading-p) (org-previous-visible-heading 1))
       (let ((contents (substring-no-properties
-                       (org-agenda-get-some-entry-text
-                        (point-marker)
-                        most-positive-fixnum))))
-        contents))))
+		       (org-agenda-get-some-entry-text
+			(point-marker)
+			most-positive-fixnum))))
+	contents))))
 
 (defun org-extras-copy-heading-contents ()
   "Copy the content text of the heading at point to the `kill-ring'."
   (interactive)
   (let ((contents (org-extras-get-heading-contents)))
     (if (string= contents "")
-        (message "Heading is empty.")
+	(message "Heading is empty.")
       (message "Copied heading")
       (kill-new contents))))
 
@@ -190,22 +189,22 @@ Excludes the heading itself and any child subtrees."
       (funcall-interactively #'count-words-region (region-beginning) (region-end))
     (org-with-wide-buffer
      (cl-loop for (lines words characters)
-              in (org-map-entries
-                  (lambda ()
-                    (unpackaged/org-forward-to-entry-content 'unsafe)
-                    (let ((end (org-entry-end-position)))
-                      (list (count-lines (point) end)
-                            (count-words (point) end)
-                            (- end (point)))))
-                  nil 'tree)
-              sum lines into total-lines
-              sum words into total-words
-              sum characters into total-characters
-              finally return (let ((message (format "Subtree \"%s\" has %s lines, %s words, and %s characters."
-                                                    (org-get-heading t t) total-lines total-words total-characters)))
-                               (kill-new (number-to-string total-words))
-                               (message message)
-                               message)))))
+	      in (org-map-entries
+		  (lambda ()
+		    (unpackaged/org-forward-to-entry-content 'unsafe)
+		    (let ((end (org-entry-end-position)))
+		      (list (count-lines (point) end)
+			    (count-words (point) end)
+			    (- end (point)))))
+		  nil 'tree)
+	      sum lines into total-lines
+	      sum words into total-words
+	      sum characters into total-characters
+	      finally return (let ((message (format "Subtree \"%s\" has %s lines, %s words, and %s characters."
+						    (org-get-heading t t) total-lines total-words total-characters)))
+			       (kill-new (number-to-string total-words))
+			       (message message)
+			       message)))))
 
 (defun org-extras-jump-to-first-heading ()
   "Move point to the beginning of the first org heading in the current buffer."
@@ -220,7 +219,7 @@ link, call `org-open-at-point' and set
 `browse-url-browser-function' to `eww-browse-url'"
   (interactive "P")
   (let ((browse-url-browser-function 'eww-browse-url)
-        (browse-url-handlers nil))
+	(browse-url-handlers nil))
     (org-open-at-point)))
 
 (defun org-extras-clear-heading-contents (&optional include-children include-properties)
@@ -228,53 +227,51 @@ link, call `org-open-at-point' and set
   (interactive)
   (save-restriction
     (if include-children
-        (org-extras-narrow-to-entry-and-children)
+	(org-extras-narrow-to-entry-and-children)
       (org-extras-narrow-to-entry-no-children))
     (org-back-to-heading)
     (if include-properties
-        (forward-line)
+	(forward-line)
       (org-end-of-meta-data t))
     (delete-region (point) (point-max))))
 
 (defun org-extras-paste-html ()
-  "Take the contents of the system clipboard and use `pandoc' to
-convert it to `org-mode' format."
+  "Convert the contents of the system clipboard to `org-mode' using `pandoc'."
   (interactive)
   (let* ((clipboard (if (eq system-type 'darwin)
-                        "pbv public.html"
-                      "xclip -out -selection 'clipboard' -t text/html"))
-         (pandoc (concat "pandoc --wrap=none -f html -t org"))
-         (cmd (concat clipboard " | " pandoc))
-         (output (shell-command-to-string cmd))
-         ;; Not sure why Pandoc adds these double slashes; we remove them
-         (output (replace-regexp-in-string "^\\\\\\\\$" "" output))
-         (text (replace-regexp-in-string "= " "= " output)))
+			"pbv public.html"
+		      "xclip -out -selection 'clipboard' -t text/html"))
+	 (pandoc (concat "pandoc --wrap=none -f html -t org"))
+	 (cmd (concat clipboard " | " pandoc))
+	 (output (shell-command-to-string cmd))
+	 ;; Not sure why Pandoc adds these double slashes; we remove them
+	 (output (replace-regexp-in-string "^\\\\\\\\$" "" output))
+	 (text (replace-regexp-in-string "= " "= " output)))
     (kill-new text)
     (yank)))
 
 (defun org-extras-paste-image ()
-  "Take the contents of the system clipboard and paste it as an
-image."
+  "Take the contents of the system clipboard and paste it as an image."
   (interactive)
   (if (executable-find "pngpaste")
       (let* ((counter 1)
-             (image-file (concat
-                          paths-dir-org-images
-                          (org-id-get nil 'create)
-                          (format "-%d.png" counter))))
-        (while (file-exists-p image-file)
-          (setq counter (1+ counter))
-          (setq image-file (concat
-                            paths-dir-org-images
-                            (org-id-get nil 'create)
-                            (format "-%d.png" counter))))
-        (call-process-shell-command (format "pngpaste '%s'" image-file))
-        (let ((caption (read-string "Caption: ")))
-          (unless (string= caption "")
-            (insert (format "#+CAPTION: %s \n" caption))))
-        (insert (format "[[file:%s]]" image-file))
-        (org-display-inline-images)
-        (message "You can toggle inline images with C-c C-x C-v"))
+	     (image-file (concat
+			  paths-dir-org-images
+			  (org-id-get nil 'create)
+			  (format "-%d.png" counter))))
+	(while (file-exists-p image-file)
+	  (setq counter (1+ counter))
+	  (setq image-file (concat
+			    paths-dir-org-images
+			    (org-id-get nil 'create)
+			    (format "-%d.png" counter))))
+	(call-process-shell-command (format "pngpaste '%s'" image-file))
+	(let ((caption (read-string "Caption: ")))
+	  (unless (string= caption "")
+	    (insert (format "#+CAPTION: %s \n" caption))))
+	(insert (format "[[file:%s]]" image-file))
+	(org-display-inline-images)
+	(message "You can toggle inline images with C-c C-x C-v"))
     (user-error "Requires pngpaste in PATH")))
 
 ;; The following functions produce a count of the TODOs added
@@ -285,26 +282,26 @@ image."
   "Count the number of lines in the string S that contain the regular expression EXP."
   (let ((count 0))
     (mapc (lambda (line)
-            (when (string-match-p exp line)
-              (setq count (+ 1 count))))
-          (split-string s "\n"))
+	    (when (string-match-p exp line)
+	      (setq count (+ 1 count))))
+	  (split-string s "\n"))
     count))
 
 (defun org-extras-productivity-of-the-day ()
   (seq-reduce
    (lambda (acc it)
      (let* ((folder (file-name-directory it))
-            (file (file-name-nondirectory it))
-            (base-cmd (concat "cd "
-                              folder
-                              "; git log --since=midnight -p "
-                              file
-                              "| grep TODO"))
-            (changed (shell-command-to-string base-cmd))
-            (added (count-lines-with-expression changed "^\\+"))
-            (removed (count-lines-with-expression changed "^\\-")))
+	    (file (file-name-nondirectory it))
+	    (base-cmd (concat "cd "
+			      folder
+			      "; git log --since=midnight -p "
+			      file
+			      "| grep TODO"))
+	    (changed (shell-command-to-string base-cmd))
+	    (added (count-lines-with-expression changed "^\\+"))
+	    (removed (count-lines-with-expression changed "^\\-")))
        (cons (+ (car acc) added)
-             (- (cdr acc) removed))))
+	     (- (cdr acc) removed))))
    org-agenda-files
    '(0 . 0)))
 
@@ -313,11 +310,11 @@ image."
   (interactive)
   (if (derived-mode-p 'org-mode)
       (pcase (org-element-type (org-element-context))
-        ('headline (org-extras-copy-heading-name))
-        ('paragraph (org-extras-copy-heading-contents))
-        ('block (org-extras-copy-block))
-        ('table-cell (org-extras-copy-table-cell))
-        (_ (user-error "I don't know what to copy")))
+	('headline (org-extras-copy-heading-name))
+	('paragraph (org-extras-copy-heading-contents))
+	('block (org-extras-copy-block))
+	('table-cell (org-extras-copy-table-cell))
+	(_ (user-error "I don't know what to copy")))
     (user-error "Not in org-mode")))
 
 ;;;;; org-agenda
@@ -329,7 +326,7 @@ image."
   (winum-select-window-1)
   (let ((agenda "*Org Agenda(a)*"))
     (if (get-buffer agenda)
-        (switch-to-buffer agenda)
+	(switch-to-buffer agenda)
       (org-extras-agenda-toggle-anniversaries t)
       (org-agenda nil "a"))))
 
@@ -387,7 +384,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
       (org-end-of-meta-data t)
       (if (looking-at "%%")
 	  (unless just-enable
-            (delete-line))
+	    (delete-line))
 	(insert "%%(org-bbdb-anniversaries-future 1)\n")))
     (unless just-enable
       (org-agenda-redo))))
@@ -427,8 +424,8 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
        (widen)
        (org-narrow-to-subtree)
        (let ((org-use-tag-inheritance))
-         (org-roam-tag-remove '("unprocessed" "empty" "leo" "unpublished"))
-         (org-roam-tag-add '("leo")))
+	 (org-roam-tag-remove '("unprocessed" "empty" "leo" "unpublished"))
+	 (org-roam-tag-add '("leo")))
        (files-extras-show-buffer-name))
      (goto-char 0)
      (search-forward "Procesar ")
@@ -444,9 +441,9 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     ("s"
      (org-narrow-to-subtree)
      (let ((url (s-replace-regexp
-                 "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
-                 "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
-                 (plist-get org-store-link-plist :link))))
+		 "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
+		 "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
+		 (plist-get org-store-link-plist :link))))
        (goto-char (point-max))
        (insert (format "[[%s][external link]]" url))))
     ("tmt"
@@ -503,7 +500,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
   "Generate an org clock report for the period between START-DATE and END-DATE."
   (interactive
    (list (org-read-date nil nil nil "Start date: ")
-         (org-read-date nil nil nil "End date: ")))
+	 (org-read-date nil nil nil "End date: ")))
   (insert (format "#+BEGIN: clocktable :scope subtree :maxlevel 4 :narrow 50 :tstart \"%s\" :tend \"%s\"\n#+END:" start-date end-date))
   (org-clock-report))
 
@@ -515,9 +512,9 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
       (goto-char (point-min))
       (while (re-search-forward "^\\*+ .*$" nil t)
 	(unless (save-excursion
-                  (re-search-forward ":LOGBOOK:" (save-excursion (outline-next-heading) (point)) t))
-          (let ((end (save-excursion (or (outline-next-heading) (point-max)))))
-            (delete-region (point-at-bol) end)))))))
+		  (re-search-forward ":LOGBOOK:" (save-excursion (outline-next-heading) (point)) t))
+	  (let ((end (save-excursion (or (outline-next-heading) (point-max)))))
+	    (delete-region (point-at-bol) end)))))))
 
 ;;;;; org-cycle
 
@@ -544,10 +541,10 @@ Could be slow if it has a lot of overlays."
   (save-excursion
     (goto-char (point-min))
     (while (re-search-forward
-            "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
+	    "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
       (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-        (overlay-put ov_this 'display "")
-        (overlay-put ov_this 'hidden-prop-drawer t))))
+	(overlay-put ov_this 'display "")
+	(overlay-put ov_this 'hidden-prop-drawer t))))
   (put 'org-toggle-properties-hide-state 'state 'hidden))
 
 (defun org-extras-hide-logbook ()
@@ -557,10 +554,10 @@ Could be slow if it has a lot of overlays."
   (save-excursion
     (goto-char (point-min))
     (while (re-search-forward
-            "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
+	    "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
       (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-        (overlay-put ov_this 'display "")
-        (overlay-put ov_this 'hidden-logbook-drawer t))))
+	(overlay-put ov_this 'display "")
+	(overlay-put ov_this 'hidden-logbook-drawer t))))
   (put 'org-toggle-logbook-hide-state 'state 'hidden))
 
 (defun org-extras-show-properties ()
@@ -581,25 +578,24 @@ Could be slow if it has a lot of overlays."
   "Add IDs to all headings in the current file missing them."
   (when-let ((file (buffer-file-name)))
     (when (and (eq major-mode 'org-mode)
-               (string-match paths-dir-org file)
-               (eq buffer-read-only nil))
+	       (string-match paths-dir-org file)
+	       (eq buffer-read-only nil))
       (unless
-          (or
-           ;; exclude directories
-           (member (file-name-directory (buffer-file-name))
-                   org-extras-id-auto-add-excluded-directories)
-           ;; exclude files
-           (member (buffer-file-name)
-                   org-extras-id-auto-add-excluded-files)
-           (member (org-get-heading)
-                   '("Local variables"
-                     "COMMENT Local variables"
-                     "TODO Local variables")))
-        (org-map-entries 'org-id-get-create)))))
+	  (or
+	   ;; exclude directories
+	   (member (file-name-directory (buffer-file-name))
+		   org-extras-id-auto-add-excluded-directories)
+	   ;; exclude files
+	   (member (buffer-file-name)
+		   org-extras-id-auto-add-excluded-files)
+	   (member (org-get-heading)
+		   '("Local variables"
+		     "COMMENT Local variables"
+		     "TODO Local variables")))
+	(org-map-entries 'org-id-get-create)))))
 
 (defun org-extras-id-update-id-locations ()
   "Scan relevant files for IDs.
-
 Store the relation between files and corresponding IDs. This will
 scan all agenda files, all associated archives, all open Org
 files, recursively all files in `org-directory', and all files in
@@ -607,13 +603,6 @@ files, recursively all files in `org-directory', and all files in
   (interactive)
   (org-id-update-id-locations
    (directory-files-recursively org-directory ".org$\\|.org.gpg$")))
-
-(defun org-extras-id-goto (id)
-  "Open ID even if narrowed."
-  (widen)
-  (org-id-goto id)
-  (widen)
-  (org-id-goto id))
 
 (defun org-extras-id-notes-with-clock (key)
   "Clock in to the org note with ID KEY."
@@ -662,8 +651,8 @@ files, recursively all files in `org-directory', and all files in
 (defun org-extras-refile-to (file heading)
   "Refile HEADING to FILE."
   (let ((pos (save-excursion
-               (find-file file)
-               (org-find-exact-headline-in-buffer heading))))
+	       (find-file file)
+	       (org-find-exact-headline-in-buffer heading))))
     (org-refile nil nil (list heading file nil pos))))
 
 ;;;;; ol
@@ -673,19 +662,19 @@ files, recursively all files in `org-directory', and all files in
   (interactive "sEnter separator: ")
   (save-excursion
     (let* ((bounds (bounds-of-thing-at-point 'paragraph))
-           (raw-text (buffer-substring-no-properties (car bounds) (cdr bounds)))
-           (elements (split-string raw-text separator t))
-           sorted-elements)
+	   (raw-text (buffer-substring-no-properties (car bounds) (cdr bounds)))
+	   (elements (split-string raw-text separator t))
+	   sorted-elements)
       (with-temp-buffer
-        (org-mode)
-        (dolist (el (reverse elements))
-          (insert "- " el "\n"))
-        ;; Since `org-sort-list` sorts from point to the end of the list,
-        ;; go to the beginning of the temp buffer
-        (goto-char (point-min))
-        (org-sort-list nil ?a nil #'downcase)
-        ;; Then gather the sorted elements back
-        (setq sorted-elements (s-replace "- " "" (buffer-string))))
+	(org-mode)
+	(dolist (el (reverse elements))
+	  (insert "- " el "\n"))
+	;; Since `org-sort-list` sorts from point to the end of the list,
+	;; go to the beginning of the temp buffer
+	(goto-char (point-min))
+	(org-sort-list nil ?a nil #'downcase)
+	;; Then gather the sorted elements back
+	(setq sorted-elements (s-replace "- " "" (buffer-string))))
       ;; Update the original paragraph
       (delete-region (car bounds) (cdr bounds))
       (insert (string-join (split-string sorted-elements "\n" t) separator)))))
@@ -703,14 +692,14 @@ SEPARATOR is nil, use ' • '."
   (let ((nodes (org-roam-node-list)))
     (string-join
      (mapcar (lambda (x)
-               (let* ((node (seq-find (lambda (n)
-                                        (string-equal (downcase (org-roam-node-title n)) (downcase x)))
-                                      nodes))
-                      (nodetitle (if node (org-roam-node-title node))))
-                 (if node
-                     (format "[[id:%s][%s]]" (org-roam-node-id node) nodetitle)
-                   x)))
-             strings)
+	       (let* ((node (seq-find (lambda (n)
+					(string-equal (downcase (org-roam-node-title n)) (downcase x)))
+				      nodes))
+		      (nodetitle (if node (org-roam-node-title node))))
+		 (if node
+		     (format "[[id:%s][%s]]" (org-roam-node-id node) nodetitle)
+		   x)))
+	     strings)
      (or separator " • "))))
 
 ;;;;; ob
@@ -732,8 +721,8 @@ SEPARATOR is nil, use ' • '."
   (interactive)
   (if (derived-mode-p 'org-mode)
       (pcase (org-element-type (org-element-context))
-        ('clock (org-evaluate-time-range))
-        (_ (org-decrypt-entry)))
+	('clock (org-evaluate-time-range))
+	(_ (org-decrypt-entry)))
     (user-error "Not in org-mode")))
 
 ;;;;; org-pomodoro
@@ -744,8 +733,8 @@ We set this value by advising `org-pomodoro' so that the pomodoro
 count is updated."
   (require 'org-pomodoro)
   (setq org-pomodoro-format
-        (concat "🍅 %s"
-                (format "|%s" (number-to-string org-pomodoro-count)))))
+	(concat "🍅 %s"
+		(format "|%s" (number-to-string org-pomodoro-count)))))
 
 ;;;;; to sort
 
@@ -791,13 +780,13 @@ To see a list of Google Docs and their respective IDs, run
 `gdrive list' in the terminal."
   (interactive)
   (let* ((default-directory paths-dir-downloads)
-         (doc-id (read-from-minibuffer "Doc ID: "))
-         (doc-info (shell-command-to-string
-                    (format "gdrive info '%s'" doc-id)))
-         (doc-name (when (string-match "^Name: \\(.*\\)$" doc-info)
-                     (match-string 1 doc-info)))
-         (input (concat doc-name ".docx"))
-         (output (concat doc-name ".org")))
+	 (doc-id (read-from-minibuffer "Doc ID: "))
+	 (doc-info (shell-command-to-string
+		    (format "gdrive info '%s'" doc-id)))
+	 (doc-name (when (string-match "^Name: \\(.*\\)$" doc-info)
+		     (match-string 1 doc-info)))
+	 (input (concat doc-name ".docx"))
+	 (output (concat doc-name ".org")))
     ;; download Google Doc as docx
     (shell-command
      (format "gdrive export --mime application/vnd.openxmlformats-officedocument.wordprocessingml.document %s" doc-id))
@@ -849,20 +838,20 @@ longer then the CLOCK entry's total time.
    the start of the clock segment (default for backwards
    compatibility), t if the function should split counting from
    the end of the clock segment.
- 
+
    SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
 
   (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
 
   (move-beginning-of-line nil)
   (let ((original-line (buffer-substring (line-beginning-position) (line-beginning-position 2))))
-    
+
     ;; Error if CLOCK line does not contain check in and check out time
     (unless (string-match org-clock-split-clock-range-regexp original-line)
       (error "Cursor must be placed on line with valid CLOCK entry range"))
 
     (let* ((whitespace (match-string 1 original-line))
-           (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
+	   (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
 	   (t0 (pop timestamps))
 	   (t1 (el-patch-swap
 		 (pop timestamps)
@@ -921,10 +910,10 @@ ARG is the prefix argument received when calling interactively the function."
       (user-error "Processor %S cannot insert citations" name))
      (t
       (let ((context (org-element-context))
-            (insert (org-cite-processor-insert (org-cite-get-processor name))))
-        (cond
-         ((memq (org-element-type context) '(citation citation-reference))
-          (funcall insert context arg))
+	    (insert (org-cite-processor-insert (org-cite-get-processor name))))
+	(cond
+	 ((org-element-type-p context '(citation citation-reference))
+	  (funcall insert context arg))
 	 (el-patch-remove
 	   ((org-cite--allowed-p context)
 	    (funcall insert nil arg)))

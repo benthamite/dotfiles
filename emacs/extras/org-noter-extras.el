@@ -43,36 +43,38 @@ heading in a quote."
   (unless (derived-mode-p 'org-mode)
     (error "Not in an Org buffer"))
   (let ((initial-heading (org-get-heading t t t t))
-        (highlight-heading-regexp "Highlight on page \\(.*\\)"))
+	(highlight-heading-regexp "Highlight on page \\(.*\\)"))
     (save-restriction
       (save-excursion
-        (cond
-         ((string-match highlight-heading-regexp initial-heading)
-          (org-back-to-heading)
-          (org-next-visible-heading 1))
-         ((string-match "Contents" initial-heading)
-          (org-back-to-heading))
-         (t
-          (user-error "You must be either in a \"contents\" heading or in a \"highlight on page\" Heading")))
-        (org-narrow-to-subtree)
-        (org-end-of-meta-data t)
-        (narrow-to-region (point) (point-max))
-        (unfill-region (point) (point-max))
-        (org-noter-extras-dehyphenate)
-        (let ((content (buffer-substring-no-properties (point) (point-max))))
-          (widen)
-          (org-cut-subtree)
-          (org-previous-visible-heading 1)
-          (let* ((highlight-heading (org-get-heading t t t t))
-                 (page (progn
-                         (string-match highlight-heading-regexp highlight-heading)
-                         (match-string 1 highlight-heading))))
-            (org-edit-headline (format "%s, p. %s" title page))
-            (org-narrow-to-subtree)
-            (goto-char (point-max))
-            (insert (concat "\n#+begin_quote\n" content "\n#+end_quote\n"))
-            (file-extras-remove-extra-blank-lines)
-            (org-next-visible-heading 1)))))))
+	(cond
+	 ((string-match highlight-heading-regexp initial-heading)
+	  (org-back-to-heading)
+	  (org-next-visible-heading 1))
+	 ((string-match "Contents" initial-heading)
+	  (org-back-to-heading))
+	 (t
+	  (user-error "You must be either in a \"contents\" heading or in a \"highlight on page\" Heading")))
+	(org-narrow-to-subtree)
+	(org-end-of-meta-data t)
+	(narrow-to-region (point) (point-max))
+	(unfill-region (point) (point-max))
+	(org-noter-extras-dehyphenate)
+	(let ((content (buffer-substring-no-properties (point) (point-max))))
+	  (widen)
+	  (org-cut-subtree)
+	  (org-previous-visible-heading 1)
+	  (let* ((highlight-heading (org-get-heading t t t t))
+		 (page (progn
+			 (string-match highlight-heading-regexp highlight-heading)
+			 (match-string 1 highlight-heading))))
+	    (org-edit-headline (format "%s, p. %s" title page))
+	    (org-narrow-to-subtree)
+	    (goto-char (point-max))
+	    (insert (concat "\n#+begin_quote\n" content "\n#+end_quote\n"))
+	    (file-extras-remove-extra-blank-lines)
+	    ))))
+    (org-next-visible-heading 1)
+    (org-fold-show-subtree)))
 
 ;; TODO: find `org-noter' hook to run this automatically
 (defun org-noter-extras-dehyphenate ()
@@ -80,15 +82,15 @@ heading in a quote."
 Operate on the current paragraph, or the region if active."
   (interactive)
   (let ((start (if (use-region-p)
-                   (region-beginning)
-                 (save-excursion (backward-paragraph) (point))))
-        (end (if (use-region-p)
-                 (region-end)
-               (save-excursion (forward-paragraph) (point)))))
+		   (region-beginning)
+		 (save-excursion (backward-paragraph) (point))))
+	(end (if (use-region-p)
+		 (region-end)
+	       (save-excursion (forward-paragraph) (point)))))
     (save-excursion
       (goto-char start)
       (while (re-search-forward "\\([[:alpha:]]\\)- \\([[:alpha:]]\\)" end t)
-        (replace-match "\\1\\2")))))
+	(replace-match "\\1\\2")))))
 
 ;; TODO: find `org-noter' hook to run this automatically
 (defun org-noter-extras-highlight-offset (offset)
@@ -100,9 +102,8 @@ the page number in the book or article."
     (goto-char (point-min))
     (while (re-search-forward "\\(Highlight on page \\)\\(.*$\\)" nil t)
       (let* ((num (number-to-string (+ (string-to-number (match-string 2)) offset)))
-             (replacement (concat (match-string 1) num)))
-        (replace-match replacement)))))
+	     (replacement (concat (match-string 1) num)))
+	(replace-match replacement)))))
 
 (provide 'org-noter-extras)
 ;;; org-noter-extras.el ends here
-

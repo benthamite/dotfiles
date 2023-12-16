@@ -589,6 +589,11 @@ Disable hl-sentence because I do not like it...
 			;; (doom-modeline--github-fetch-notifications)
 			)))
 #+end_src
+
+#+begin_src emacs-lisp
+(run-hooks 'tlon-init-post-init-hook)
+#+end_src
+
 * local variables
 :PROPERTIES:
 :ID:       D706DE65-4291-4950-876D-1E38F5B330F6

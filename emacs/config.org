@@ -419,9 +419,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-noter-extras][org-noter-extras]]
 - [[#reference--citation][reference & citation]]
   - [[#oc][oc]]
-  - [[#oc-basic][oc-basic]]
-  - [[#oc-bibtex][oc-bibtex]]
-  - [[#oc-biblatex][oc-biblatex]]
   - [[#oc-csl][oc-csl]]
   - [[#citeproc][citeproc]]
   - [[#bibtex][bibtex]]
@@ -9800,8 +9797,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 (use-feature oc
   :after org
   :config
-  ;; (setq org-cite-global-bibliography paths-files-bibliography-all) ; disabled due to performance issues
-  (setq org-cite-csl-styles-dir paths-dir-personal-csl-styles)
+  (setq org-cite-global-bibliography paths-files-bibliography-all)
   (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
@@ -9817,41 +9813,6 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 
 - [cite:@Balintona2022CitationsOrgmodeOrgcite]. The most comprehensive explanation I'm aware of about how to use ~org-cite~. See [[https://www.reddit.com/r/orgmode/comments/vc7ys6/how_i_run_my_wiki_with_org_mode/][Reddit discussion]].
 - [cite:@Kolsc2021HowActuallyInsert]. Reddit thread about the basics of ~org-cite~.
-
-** oc-basic
-:PROPERTIES:
-:ID:       DD72A5D8-057E-4945-8EF0-E681904731D4
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature oc-basic
-  :after oc
-  :defer 20)
-#+end_src
-
-** oc-bibtex
-:PROPERTIES:
-:ID:       5515E05E-1A8F-40F1-B19F-BD48925C6679
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature oc-bibtex
-  :after oc
-  :defer 20)
-#+end_src
-
-** oc-biblatex
-:PROPERTIES:
-:ID:       126F2E2D-537E-45A0-8DD6-56B8FF69176D
-:END:
-:LOGBOOK:
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature oc-biblatex
-  :after oc
-  :defer 20)
-#+end_src
 
 ** oc-csl
 :PROPERTIES:

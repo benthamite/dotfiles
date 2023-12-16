@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: update-browse-url-firefox
+# key: ubuf
+# contributor: Pablo Stafforini
+# --
+browse-url-firefox.txt: add urls

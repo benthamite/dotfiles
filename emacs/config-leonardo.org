@@ -438,6 +438,9 @@
  )
 #+end_src
 
+#+begin_src emacs-lisp
+(run-hooks 'tlon-init-post-init-hook)
+#+end_src
 
 * local variables
 :PROPERTIES:

@@ -11454,7 +11454,6 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 (use-personal-package browse-url-extras
   :after browse-url s f
   :demand t
-  :config
   :general
   (eww-mode-map
   "e" 'browse-url-extras-add-domain-to-open-externally)

@@ -2028,7 +2028,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :elpaca (magit
            :host github
            :repo "magit/magit"
-	   :ref "f25d1035"
+           :ref "f25d1035"
            :depth nil)
   :demand t
   :config
@@ -2315,7 +2315,7 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   (setq mixed-pitch-set-height t)
 
   (dolist (hook '(elfeed-show-mode-hook
-		  
+
                   eww-mode-hook
                   mu4e-view-mode-hook
                   outline-mode-hook))
@@ -6773,7 +6773,6 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
-  (setq org-cite-csl-styles-dir tlon-babel-csl-styles)
   (setq paths-files-bibliography-all
         `(,@paths-files-bibliography-personal
           ,@tlon-babel-bibliography-files))
@@ -7782,8 +7781,8 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (setq org-todo-keywords
         '((sequence "TODO(t)"
                     "DOING(g)"
-		    "IMPORTANT(i)"
-		    "URGENT(u)"
+                    "IMPORTANT(i)"
+                    "URGENT(u)"
                     "SOMEDAY(s)"
                     "MAYBE(m)"
                     "WAITING(w)"
@@ -9803,8 +9802,13 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 #+begin_src emacs-lisp :results silent
 (use-feature oc
   :after org
+  :demand t
   :config
-  (setq org-cite-global-bibliography paths-files-bibliography-all)
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `org-cite' vars after `tlon-babel' is loaded."
+              ;; (setq org-cite-global-bibliography paths-files-bibliography-all) ; disabled for poor performance
+                (setq org-cite-csl-styles-dir tlon-babel-csl-styles)))
   (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
@@ -9864,7 +9868,10 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   :config
   ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
   ;; retorque.re/zotero-better-bibtex/citing/
-  (setq bibtex-files paths-files-bibliography-all)
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `bibtex-files after `paths-files-bibliography-all' is set."
+              (setq bibtex-files paths-files-bibliography-all)))
   (setq bibtex-search-entry-globally t)
   (setq bibtex-autokey-names 1)
   (setq bibtex-autokey-name-case-convert-function 'capitalize)
@@ -10082,7 +10089,10 @@ Also sets `bibtex-completion-display-formats-internal'."
 
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)
-  (setq bibtex-completion-bibliography paths-files-bibliography-all)
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `bibtex-completion-bibliography' after `paths-files-bibliography-all' is set."
+              (setq bibtex-completion-bibliography paths-files-bibliography-all)))
   (setq bibtex-completion-notes-path paths-dir-bibliographic-notes)
   (setq bibtex-completion-pdf-field "file")
   (setq bibtex-dialect 'biblatex))
@@ -10146,7 +10156,10 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   :demand t
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))
-  (setq citar-bibliography paths-files-bibliography-all)
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `citar-bibliography' after `paths-files-bibliography-all' is set."
+              (setq citar-bibliography paths-files-bibliography-all)))
   (setq citar-notes-paths `(,paths-dir-bibliographic-notes))
   (setq citar-at-point-function 'embark-act)
   (setq citar-symbol-separator "  ")
@@ -10222,7 +10235,10 @@ Having headings tagged with the type of work they are notes of allows me to quer
   :demand t
   :after citar citeproc citar-extras tlon-babel
   :config
-  (setq citar-citeproc-csl-styles-dir org-cite-csl-styles-dir)
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `citar-citeproc-csl-styles-dir' after `tlon-babel-csl-styles' is set."
+                (setq citar-citeproc-csl-styles-dir tlon-babel-csl-styles)))
   (setq citar-citeproc-csl-style "biblioteca-altruismo-eficaz.csl")
   (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir)
   ;; https://github.com/emacs-citar/citar/wiki/Indicators
@@ -10387,7 +10403,10 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 (use-package ebib
   :demand t
   :config
-  (setq ebib-preload-bib-files paths-files-bibliography-all)
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `ebib-preload-bib-files' after `paths-files-bibliography-all' is set."
+              (setq ebib-preload-bib-files paths-files-bibliography-all)))
   (setq ebib-notes-directory paths-dir-bibliographic-notes)
   (setq ebib-notes-use-org-capture t)
   (setq ebib-notes-display-max-lines 9999)

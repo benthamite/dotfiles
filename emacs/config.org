@@ -7781,6 +7781,8 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (setq org-todo-keywords
         '((sequence "TODO(t)"
                     "DOING(g)"
+		    "IMPORTANT(i)"
+		    "URGENT(u)"
                     "SOMEDAY(s)"
                     "MAYBE(m)"
                     "WAITING(w)"

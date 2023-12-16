@@ -212,6 +212,13 @@ list of tags and further restrict the selection to headings with that tag."
     (message "Selected tag: %s" selected-tag)
     selected-tag))
 
+(defun org-roam-extras-id-goto (id)
+  "Open ID even if narrowed."
+  (widen)
+  (org-roam-id-open id nil)
+  (widen)
+  (org-roam-id-open id nil))
+
 ;;;;; Patched functions
 
 (el-patch-defun org-roam-db-query (sql &rest args)

@@ -596,7 +596,6 @@ Could be slow if it has a lot of overlays."
 
 (defun org-extras-id-update-id-locations ()
   "Scan relevant files for IDs.
-
 Store the relation between files and corresponding IDs. This will
 scan all agenda files, all associated archives, all open Org
 files, recursively all files in `org-directory', and all files in
@@ -604,13 +603,6 @@ files, recursively all files in `org-directory', and all files in
   (interactive)
   (org-id-update-id-locations
    (directory-files-recursively org-directory ".org$\\|.org.gpg$")))
-
-(defun org-extras-id-goto (id)
-  "Open ID even if narrowed."
-  (widen)
-  (org-id-goto id)
-  (widen)
-  (org-id-goto id))
 
 (defun org-extras-id-notes-with-clock (key)
   "Clock in to the org note with ID KEY."

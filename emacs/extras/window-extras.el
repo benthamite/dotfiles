@@ -27,8 +27,6 @@
 
 ;;; Code:
 
-(require 'paths)
-
 ;;;; User options
 
 (defgroup window-extras ()
@@ -47,7 +45,7 @@
   (interactive)
   (if (and (active-minibuffer-window) (not (minibufferp)))
       (select-window (active-minibuffer-window))
-    (get-mru-window nil nil t)))
+    (get-mru-window 'visible t t)))
 
 (defun window-extras-switch-to-last-window ()
   "Switch to previously selected ordinary or minibuffer window."

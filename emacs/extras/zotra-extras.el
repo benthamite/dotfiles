@@ -27,9 +27,7 @@
 
 ;;; Code:
 
-;; (require 'zotra)
-;; (require 'paths)
-;; (require 'ebib)
+(require 'zotra)
 
 ;;;; Functions
 

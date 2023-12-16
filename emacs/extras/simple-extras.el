@@ -27,7 +27,6 @@
 
 ;;; Code:
 
-(require 'paths)
 
 ;;;; Functions
 

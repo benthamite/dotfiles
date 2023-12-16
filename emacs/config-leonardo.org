@@ -26,7 +26,6 @@
 (setq user-mail-address "leonardodecartago@gmail.com")
 #+end_src
 
-
 ** key bindings
 :PROPERTIES:
 :ID:       7B2B4853-D7B7-4C8A-B597-232E13605E1B
@@ -75,7 +74,6 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq tlon-babel-todos-jobs-id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
 (setq tlon-babel-todos-generic-id "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29")
-(setq tlon-babel-todos-file (expand-file-name "~/Library/CloudStorage/Dropbox/tlon/leo/tareas.org"))
 (setq paths-files-bibliography-all
       `(,@paths-files-bibliography-personal
         ,@tlon-babel-bibliography-files))

@@ -2315,6 +2315,7 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   (setq mixed-pitch-set-height t)
 
   (dolist (hook '(elfeed-show-mode-hook
+		  
                   eww-mode-hook
                   mu4e-view-mode-hook
                   outline-mode-hook))
@@ -6325,7 +6326,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
   (add-hook 'after-change-major-mode-hook
             (lambda ()
-              "Disable flycheck in the *scratch* buffer."
+              "Disable flycheck in the *scratch* and `notes' buffers."
               (when (or (equal (buffer-name) "*scratch*")
                         (equal (buffer-name) "notes"))
                 (flycheck-mode -1))))
@@ -8506,7 +8507,7 @@ CLOCK: [2023-03-18 Sat 13:14]--[2023-03-18 Sat 13:27] =>  0:13
   ;; fix weird behavior that inserted one of the clocks not enclosed in square
   ;; brackets
   (el-patch-defun org-clock-split (from-end splitter-string)
-    "Split CLOCK entry under cursor into two entries.
+  "Split CLOCK entry under cursor into two entries.
 Total time of created entries will be the same as original entry.
 
    WARNING: Negative time entries can be created if splitting at an offset

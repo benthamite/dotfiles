@@ -6772,6 +6772,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
+  (setq org-cite-csl-styles-dir tlon-babel-csl-styles)
   (setq paths-files-bibliography-all
         `(,@paths-files-bibliography-personal
           ,@tlon-babel-bibliography-files))

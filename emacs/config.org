@@ -6777,13 +6777,8 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
         `(,@paths-files-bibliography-personal
           ,@tlon-babel-bibliography-files))
 
-  (dolist (template `(("tbJ" "Tlön: BAE: Create a new Babel job" entry
-                       (id ,tlon-babel-todos-jobs-id)
-                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
-                      ("tbG" "Tlön: BAE: Create new generic todo from GitHub" entry
-                       (id ,tlon-babel-todos-generic-id)
-                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
-    (push template org-capture-templates))
+    (setq tlon-babel-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
+    (setq tlon-babel-todos-generic-id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
 
   :general
   ("H-r" 'tlon-babel-dispatch)

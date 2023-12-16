@@ -9822,7 +9822,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 #+begin_src emacs-lisp :results silent
 (use-feature oc-csl
   :after oc
-  :defer 20)
+  :demand t)
 #+end_src
 
 ** citeproc

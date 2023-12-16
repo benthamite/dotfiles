@@ -4608,8 +4608,10 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   ("H-M-<tab>" 'other-frame ; M-S-TAB
    "M-N" 'make-frame
    "M-W" 'delete-frame
-   "C-H-M-i" (lambda! (set-frame-parameter nil 'fullscreen 'maximized))
-   "C-H-M-o" (lambda!  (set-frame-parameter nil 'fullscreen nil))))
+   ;; this was throwing out an error in Leo’s config
+   ;; "C-H-M-i" (lambda! (set-frame-parameter nil 'fullscreen 'maximized))
+   ;; "C-H-M-o" (lambda!  (set-frame-parameter nil 'fullscreen nil))
+   ))
 #+end_src
 
 ** frame-extras

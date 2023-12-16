@@ -35,15 +35,15 @@
   "Extensions for `browse-url'."
   :group 'browse-url)
 
-(defcustom browse-url-extras-urls-default-file
-  (file-name-concat tlon-init-dir-dotemacs "etc/urls-default.txt")
-  "Path to the `urls-default.txt' file."
+(defcustom browse-url-extras-browse-url-default-file
+  (file-name-concat tlon-init-dir-dotemacs "etc/browse-url-default.txt")
+  "Path to the `browse-url-default.txt' file."
   :type 'file
   :group 'path)
 
-(defcustom browse-url-extras-urls-firefox-file
+(defcustom browse-url-extras-browse-url-firefox-file
   (file-name-concat tlon-init-dir-dotemacs "etc/browse-url-firefox.txt")
-  "Path to the `urls-firefox.txt' file."
+  "Path to the `browse-url-firefox.txt' file."
   :type 'file
   :group 'path)
 
@@ -56,14 +56,14 @@
 
 (defun browse-url-extras-set-domains-to-open-externally ()
   "Set the domains to open externally.
-Read the files `browse-url-extras-urls-default-file' and
-`browse-url-extras-urls-firefox-file', and set `browse-url-handlers' to open
-the domains in those files with the default browser and with Firefox,
+Read the files `browse-url-extras-browse-url-default-file' and
+`browse-url-extras-browse-url-firefox-file', and set `browse-url-handlers' to
+open the domains in those files with the default browser and with Firefox,
 respectively."
   (interactive)
   (setq browse-url-handlers '())
-  (browse-url-extras-set-handler browse-url-extras-urls-default-file 'browse-url-default-browser)
-  (browse-url-extras-set-handler browse-url-extras-urls-firefox-file 'browse-url-firefox))
+  (browse-url-extras-set-handler browse-url-extras-browse-url-default-file 'browse-url-default-browser)
+  (browse-url-extras-set-handler browse-url-extras-browse-url-firefox-file 'browse-url-firefox))
 
 (defun browse-url-extras-of-dired-file-externally ()
   "In Dired, open the file at point in an external browser."
@@ -84,8 +84,8 @@ in Firefox."
   (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
          (domain (when url (url-domain (url-generic-parse-url url))))
          (file (if arg
-                   browse-url-extras-urls-firefox-file
-                 browse-url-extras-urls-default-file))
+                   browse-url-extras-browse-url-firefox-file
+                 browse-url-extras-browse-url-default-file))
          (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
     (browse-url-extras--write-url-to-file selection file)
     (browse-url-extras-set-domains-to-open-externally)

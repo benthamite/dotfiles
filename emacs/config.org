@@ -2030,7 +2030,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :elpaca (magit
            :host github
            :repo "magit/magit"
-	   :ref "2b02bfb0495bf738e006d82f3a233e8f511b90b8"
+	   :ref "f25d1035"
            :depth nil)
   :demand t
   :config

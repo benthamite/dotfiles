@@ -11043,7 +11043,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 
   (add-hook 'elpaca-after-init-hook #'mu4e-extras-set-contexts)
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
-  ;; (add-hook 'mu4e-view-mode-hook #'mu4e-extras-view-mode-hook-functions)
+  (add-hook 'mu4e-view-mode-hook #'mu4e-extras-set-face-locally)
 
   :general
   ((mu4e-headers-mode-map mu4e-view-mode-map)

@@ -206,6 +206,11 @@ thing with lexical binding inside lambda functions."
 		    (org-msg-signature
 		     . "\n\n#+begin_signature\n--\n*Pablo*\nDirector, Tlön\nhttps://tlon.team\n#+end_signature"))))))
 
+(defun mu4e-extras-set-face-locally ()
+  "Set `shr-text' face locally in `mu4ew-view-mode' buffers."
+  (when (eq major-mode 'mu4e-view-mode)
+    (face-remap-add-relative 'shr-text :height 0.9)))
+
 ;;;;; patches
 
 ;; do not prompt for an URL number when there is only one URL

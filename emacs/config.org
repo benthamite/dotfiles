@@ -3700,7 +3700,8 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
    "(" 'skeleton-pair-insert-maybe
    "\"" 'skeleton-pair-insert-maybe)
   ((org-mode-map telega-chat-mode-map)
-   "~" 'skeleton-pair-insert-maybe)
+   "~" 'skeleton-pair-insert-maybe
+   "*" 'skeleton-pair-insert-maybe)
   (markdown-mode-map
    "`" 'skeleton-pair-insert-maybe
    "*" 'skeleton-pair-insert-maybe))

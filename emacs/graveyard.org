@@ -5519,7 +5519,7 @@ I don't really see the need for this. I'm happy with have separate files for my 
 
 ** local variables
 :PROPERTIES:
-:ID:       4FB9C92B-B39E-4C3D-B9AE-A3342A6F1695
+:ID:       6DF33C54-12B6-41B2-AF16-B7C61CCA5CDA
 :END:
 # Local Variables:
 # eval: (files-extras-buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)

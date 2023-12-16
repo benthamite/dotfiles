@@ -42,7 +42,7 @@
   :group 'path)
 
 (defcustom browse-url-extras-urls-firefox-file
-  (file-name-concat tlon-init-dir-dotemacs "etc/urls-firefox.txt")
+  (file-name-concat tlon-init-dir-dotemacs "etc/browse-url-firefox.txt")
   "Path to the `urls-firefox.txt' file."
   :type 'file
   :group 'path)

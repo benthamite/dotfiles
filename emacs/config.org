@@ -1076,7 +1076,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :elpaca (transient
            :host github
            :repo "magit/transient"
-           :ref "b4a2963"
+           :ref "37307c1"
            :depth nil)
   :demand t)
 #+end_src

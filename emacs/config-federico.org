@@ -15,16 +15,16 @@
  (:copilot . nil)
  (:corfu-doc-terminal . nil)
  (:corfu-terminal . nil)
- (:display-wttr . nil)
+ (:display-wttr . t)
  (:erc . nil)
  (:espotify . nil)
- (:flycheck . nil)
- (:flymake . nil)
+ (:flycheck . t)
+ (:flymake . t)
  (:frame . t)
  (:forge . t)
  (:git-auto-commit-mode . nil)
  (:hammy . nil)
- (:jinx . nil)
+ (:jinx . t)
  (:keytar . nil)
  (:midnight . nil)
  (:mixed-pitch . nil)
@@ -32,7 +32,7 @@
  (:mullvad . t)
  (:ns-win . nil)
  (:org-gcal . nil)
- (:org-roam . nil)
+ (:org-roam . t)
  (:org2blog . nil)
  (:orgmdb . nil)
  (:outline . nil)
@@ -66,7 +66,8 @@
  (paths-dir-dotfiles . (file-name-concat (getenv "HOME") "source/dotfiles/"))
  (paths-dir-dotemacs . (file-name-concat (getenv "HOME") "source/dotfiles/emacs/"))
  (paths-dir-source . (file-name-concat (getenv "HOME") "source/"))
- (paths-dir-org . (file-name-concat paths-dir-dropbox "org/"))
+ (paths-dir-org . (file-name-concat paths-dir-dropbox "tlon/fede/"))
+ (paths-dir-org-roam . (file-name-concat paths-dir-dropbox "tlon/fede/"))
  (paths-dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat paths-dir-source "biblioteca-altruismo-eficaz/"))
  (paths-dir-org-roam . "")
  (paths-dir-org-images . (file-name-concat paths-dir-google-drive "org-images/"))
@@ -195,10 +196,9 @@ Doom modeline
   (setq shift-select-mode t))
 
 ;; Config tlon-babel
-(setq tlon-babel-todos-jobs-id
-      "")
-(setq tlon-babel-todos-generic-id
-      "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
+(setq tlon-babel-todos-jobs-id "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
+(setq tlon-babel-todos-generic-id "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
+
 (setq tlon-babel-todos-file (file-name-concat paths-dir-notes "tareas.org"))
 (dolist (template `(("tbJ" "Tlön: BAE: Create new job (via
     org-capture)" entry
@@ -361,6 +361,7 @@ one hour only."
 (setq-default org-support-shift-select 'always
               org-replace-disputed-keys t)
 
+(setq org-roam-directory paths-dir-org-roam)              
 (setq org-agenda-custom-commands
       '(("j" "Agenda + TODOs"
          (
@@ -504,52 +505,54 @@ one hour only."
 :ID:       6AC832A6-0F9D-450E-BFA2-0271AF4F2FB6
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(remove-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
+(setq tab-bar-extras-reset-wttr nil)
 
-;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
-(setq tab-bar-extras-global-mode-string
-      '(" "
-        ;; date & time
-        (:eval (propertize display-time-string 'face 'faces-extras-display-time))
+;; (remove-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
 
-        ;; Chemacs profile name
-        " |  " chemacs-profile-name
+;; ;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
+;; (setq tab-bar-extras-global-mode-string
+;;       '(" "
+;;         ;; date & time
+;;         (:eval (propertize display-time-string 'face 'faces-extras-display-time))
 
-        ;; telega notifications
-        (:eval (when (and
-                      (telega-server-live-p)
-                      (> (plist-get telega--unread-message-count :unread_count) 0))
-                 (concat " | " telega-mode-line-string)))
+;;         ;; Chemacs profile name
+;;         " |  " chemacs-profile-name
 
-        ;; github notifications
-        (:eval (when (> doom-modeline--github-notification-number 0)
-                 (concat
-                  " | "
-                  (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
-                                      :face 'doom-modeline-notification)
-                  (doom-modeline-vspc)
-                  (propertize
-                   (cond
-                    ((> doom-modeline--github-notification-number 99) "99+")
-                    (t (number-to-string doom-modeline--github-notification-number)))
-                   'face '(:inherit
-                           (doom-modeline-unread-number doom-modeline-notification))))))
-        " | "))
-(setq global-mode-string tab-bar-extras-global-mode-string)
+;;         ;; telega notifications
+;;         (:eval (when (and
+;;                       (telega-server-live-p)
+;;                       (> (plist-get telega--unread-message-count :unread_count) 0))
+;;                  (concat " | " telega-mode-line-string)))
 
-(defun tab-bar-extras-reset ()
-  "Reset the tab bar.
-This resets the clock, updates the tab-bar and its color, and fixes the
-mysterious proliferation of clocks."
-  (interactive)
-  (require 'calendar-extras)
-  (display-time)
-  (setq global-mode-string tab-bar-extras-global-mode-string)
-  (fancy-battery-mode -1)
-  (when calendar-extras-use-geolocation
-    (calendar-extras-set-location-variables-from-ip)))
+;;         ;; github notifications
+;;         (:eval (when (> doom-modeline--github-notification-number 0)
+;;                  (concat
+;;                   " | "
+;;                   (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
+;;                                       :face 'doom-modeline-notification)
+;;                   (doom-modeline-vspc)
+;;                   (propertize
+;;                    (cond
+;;                     ((> doom-modeline--github-notification-number 99) "99+")
+;;                     (t (number-to-string doom-modeline--github-notification-number)))
+;;                    'face '(:inherit
+;;                            (doom-modeline-unread-number doom-modeline-notification))))))
+;;         " | "))
+;; (setq global-mode-string tab-bar-extras-global-mode-string)
 
-(add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
+;; (defun tab-bar-extras-reset ()
+;;   "Reset the tab bar.
+;; This resets the clock, updates the tab-bar and its color, and fixes the
+;; mysterious proliferation of clocks."
+;;   (interactive)
+;;   (require 'calendar-extras)
+;;   (display-time)
+;;   (setq global-mode-string tab-bar-extras-global-mode-string)
+;;   (fancy-battery-mode -1)
+;;   (when calendar-extras-use-geolocation
+;;     (calendar-extras-set-location-variables-from-ip)))
+
+;; (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
 #+end_src
 
 ** hl-sentence
@@ -602,9 +605,9 @@ Disable hl-sentence because I do not like it...
   (set-face-attribute 'corfu-default nil :family faces-extras-fixed-pitch-font :height 1)
   (set-face-attribute 'gh-notify-notification-repo-face nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
   (set-face-attribute 'gh-notify-notification-unread-face nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal :foreground "#00a6c9")
-  ;; (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
-  ;; (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
-  ;; (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
+  (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
+  (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
+  (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
   (set-face-attribute 'window-divider nil :foreground (face-attribute 'mode-line-inactive :background))
   (set-face-attribute 'tab-bar nil
 		      ;; slightly increase the width of the tab-bar

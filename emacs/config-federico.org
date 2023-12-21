@@ -258,6 +258,8 @@ Doom modeline
 
 (general-define-key
  :keymaps 'org-mode-map
+ "s-i" nil
+ "s-o" nil
  "M-<right>" nil
  "M-<left>" nil
  "M-<up>" nil
@@ -467,52 +469,52 @@ Doom modeline
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq tab-bar-extras-reset-wttr nil)
 
-;; (remove-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
+(remove-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
 
-;; ;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
-;; (setq tab-bar-extras-global-mode-string
-;;       '(" "
-;;         ;; date & time
-;;         (:eval (propertize display-time-string 'face 'faces-extras-display-time))
+;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
+(setq tab-bar-extras-global-mode-string
+      '(" "
+        ;; Chemacs profile name
+        "  " chemacs-profile-name
 
-;;         ;; Chemacs profile name
-;;         " |  " chemacs-profile-name
+        ;; telega notifications
+        (when (featurep 'telega)
+          (:eval (when (and
+                        (telega-server-live-p)
+                        (> (plist-get telega--unread-message-count :unread_count) 0))
+                   (concat " | " telega-mode-line-string))))
 
-;;         ;; telega notifications
-;;         (:eval (when (and
-;;                       (telega-server-live-p)
-;;                       (> (plist-get telega--unread-message-count :unread_count) 0))
-;;                  (concat " | " telega-mode-line-string)))
+        ;; github notifications
+        (when (featurep 'doom-modeline)
+          (:eval (when (> doom-modeline--github-notification-number 0)
+                   (concat
+                    " | "
+                    (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
+                                        :face 'doom-modeline-notification)
+                    (doom-modeline-vspc)
+                    (propertize
+                     (cond
+                      ((> doom-modeline--github-notification-number 99) "99+")
+                      (t (number-to-string doom-modeline--github-notification-number)))
+                     'face '(:inherit
+                             (doom-modeline-unread-number doom-modeline-notification)))))))))
 
-;;         ;; github notifications
-;;         (:eval (when (> doom-modeline--github-notification-number 0)
-;;                  (concat
-;;                   " | "
-;;                   (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
-;;                                       :face 'doom-modeline-notification)
-;;                   (doom-modeline-vspc)
-;;                   (propertize
-;;                    (cond
-;;                     ((> doom-modeline--github-notification-number 99) "99+")
-;;                     (t (number-to-string doom-modeline--github-notification-number)))
-;;                    'face '(:inherit
-;;                            (doom-modeline-unread-number doom-modeline-notification))))))
-;;         " | "))
-;; (setq global-mode-string tab-bar-extras-global-mode-string)
+(setq global-mode-string tab-bar-extras-global-mode-string)
 
-;; (defun tab-bar-extras-reset ()
-;;   "Reset the tab bar.
-;; This resets the clock, updates the tab-bar and its color, and fixes the
-;; mysterious proliferation of clocks."
-;;   (interactive)
-;;   (require 'calendar-extras)
-;;   (display-time)
-;;   (setq global-mode-string tab-bar-extras-global-mode-string)
-;;   (fancy-battery-mode -1)
-;;   (when calendar-extras-use-geolocation
-;;     (calendar-extras-set-location-variables-from-ip)))
+(defun tab-bar-extras-reset (&optional quick)
+  "Reset the tab bar.
+This resets the clock, updates the tab-bar and its color, and fixes the
+mysterious proliferation of clocks."
+  (interactive)
+  (require 'calendar-extras)
+  (display-time)
+  (setq global-mode-string tab-bar-extras-global-mode-string)
+  (fancy-battery-mode -1)
+  (unless quick
+    (when calendar-extras-use-geolocation
+      (calendar-extras-set-location-variables-from-ip))))
 
-;; (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
+(add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
 #+end_src
 
 ** hl-sentence
@@ -523,7 +525,7 @@ Disable hl-sentence because I do not like it...
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (remove-hook 'markdown-mode-hook #'hl-sentence-mode)
 #+end_src
-** faces-extras :tangle (print tlon-init-file-late-init)
+** faces-extras
 :PROPERTIES:
 :ID:       555F14B7-A0D0-4B7A-980F-E157C1B87EFB
 :END:

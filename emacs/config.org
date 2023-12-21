@@ -11962,6 +11962,9 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine DuckDuckGo
     "https://duckduckgo.com/?q=%s"
     :keybinding "d d")
+    (defengine Diccionario-Panhispánico-de-Dudas
+    "https://www.rae.es/dpd/%s"
+    :keybinding "d p")
   (defengine EAForum
     "https://www.google.com/search?q=%s+site:forum.effectivealtruism.org"
     :keybinding "f f")

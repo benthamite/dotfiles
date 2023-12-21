@@ -510,7 +510,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 	(unless (save-excursion
 		  (re-search-forward ":LOGBOOK:" (save-excursion (outline-next-heading) (point)) t))
 	  (let ((end (save-excursion (or (outline-next-heading) (point-max)))))
-	    (delete-region (point-at-bol) end)))))))
+	    (delete-region (line-beginning-position) end)))))))
 
 (defun org-extras-clocktable-sorter (ipos tables params)
   "Sort clocktable tables by time.

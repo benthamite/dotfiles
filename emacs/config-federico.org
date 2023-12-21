@@ -166,7 +166,9 @@ Doom modeline
 (setq split-width-threshold 160)
 (setq telega-server-libs-prefix "/opt/homebrew/Cellar/tdlib/HEAD-ec788c7/")
 (use-package nginx-mode :demand t)
-
+  (fancy-battery-mode -1)
+  (telega)
+  
 ;; remove Pablo's auto maximize frame
 (remove-function after-focus-change-function #'frame-extras-maximize-frame)
 
@@ -473,9 +475,8 @@ Doom modeline
 
 ;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
 (setq tab-bar-extras-global-mode-string
-      '(" "
-        ;; Chemacs profile name
-        "  " chemacs-profile-name
+      '(;; Chemacs profile name
+        "  " chemacs-profile-name " | "
 
         ;; telega notifications
         (when (featurep 'telega)

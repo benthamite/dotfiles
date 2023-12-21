@@ -336,10 +336,6 @@ link, call `org-open-at-point' and set
   (org-agenda-goto)
   (org-clock-in))
 
-(defun org-extras-clocktable-sorter (ipos tables params)
-  (setq tables (cl-sort tables (lambda (table1 table2) (> (nth 1 table1) (nth 1 table2)))))
-  (funcall (or org-clock-clocktable-formatter 'org-clocktable-write-default) ipos tables params))
-
 (defun org-extras-agenda-done-and-next ()
   "Temporary command to address bug when setting status via `org-agenda-todo'."
   (interactive)
@@ -515,6 +511,12 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 		  (re-search-forward ":LOGBOOK:" (save-excursion (outline-next-heading) (point)) t))
 	  (let ((end (save-excursion (or (outline-next-heading) (point-max)))))
 	    (delete-region (point-at-bol) end)))))))
+
+(defun org-extras-clocktable-sorter (ipos tables params)
+  "Sort clocktable tables by time.
+IPOS, TABLES and PARAMS are required by the formatter function."
+  (setq tables (cl-sort tables (lambda (table1 table2) (> (nth 1 table1) (nth 1 table2)))))
+  (funcall (or org-clock-clocktable-formatter 'org-clocktable-write-default) ipos tables params))
 
 ;;;;; org-cycle
 

@@ -331,7 +331,7 @@ link, call `org-open-at-point' and set
       (org-agenda nil "a"))))
 
 (defun org-extras-agenda-goto-and-start-clock ()
-  "In org-agenda, go to entry at point and clock in."
+  "In `org-agenda', go to entry at point and clock in."
   (interactive)
   (org-agenda-goto)
   (org-clock-in))

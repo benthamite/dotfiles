@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'vulpea)
-(require 'paths)
 
 ;;;; User options
 

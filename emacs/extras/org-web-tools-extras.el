@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'org-web-tools)
-(require 'paths)
 
 ;;;; Functions
 
@@ -43,10 +42,12 @@
   "Return Org link to URL using title of HTML page at URL.
 If URL is not given, look for first URL in `kill-ring'.  If page
 at URL has no title, return URL."
-  (if-let ((dom (plz 'get url :as #'libxml-parse-html-region))
-           (title (cl-caddr (car (dom-by-tag dom 'title)))))
-      (org-web-tools--cleanup-title title)
-    "Downloaded webpage"))
+  (let ((title (if-let ((dom (condition-case nil
+				 (plz 'get url :as #'libxml-parse-html-region)
+			       (error nil))))
+		   (cl-caddr (car (dom-by-tag dom 'title)))
+		 "Downloaded webpage")))
+    (org-web-tools--cleanup-title title)))
 
 (defun org-web-tools-extras-youtube-dl (url)
   "Create org link to local copy of YouTube video downloaded from URL.

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: update-browse-url-default
+# key: ubud
+# contributor: Pablo Stafforini
+# --
+browse-url-default.txt: add urls

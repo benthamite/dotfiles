@@ -49,14 +49,17 @@
 
 (defun gh-notify-extras-get-issue-url ()
   "Get the URL of the issue at point."
-  (unless (derived-mode-p 'forge-issue-mode)
-    (user-error "Not in `forge-issue-mode'"))
+  (unless (or (derived-mode-p 'forge-issue-mode)
+	      (derived-mode-p 'forge-pullreq-mode))
+    (user-error "Not in `forge-issue-mode' or `forge-pullreq-mode'"))
   (forge-get-url forge-buffer-topic))
 
 (defun gh-notify-extras-mark-issue-as-read ()
   "Mark issue at point as read on GitHub."
+  (interactive)
   (require 'w3m)
-  (if (derived-mode-p 'forge-issue-mode)
+  (if (or (derived-mode-p 'forge-issue-mode)
+	  (derived-mode-p 'forge-pullreq-mode))
       (save-window-excursion
 	(let ((url (gh-notify-extras-get-issue-url))
 	      (w3m-new-session-in-background t))
@@ -112,6 +115,21 @@ Browse issue or PR on prefix P."
   "Browse notifications on GitHub."
   (interactive)
   (browse-url "https://github.com/notifications"))
+
+(defun gh-notify-extras-full-refresh ()
+  "Pull Forge notifications and then refresh the `gh-notify' buffer."
+  (interactive)
+  (forge-pull-notifications)
+  (gh-notify-forge-refresh))
+
+(defun gh-notify-extras-refresh-in-background ()
+  "Refresh `gh-notify' without switching to its buffer."
+  (interactive)
+  (let ((buf (get-buffer-create "*github-notifications*")))
+    (set-buffer buf)
+    (unless (eq major-mode 'gh-notify-mode)
+      (gh-notify-mode)))
+  (gh-notify-forge-refresh))
 
 ;;;;; patched functions
 
@@ -180,4 +198,3 @@ Browse issue or PR on prefix P."
 
 (provide 'gh-notify-extras)
 ;;; gh-notify-extras.el ends here
-

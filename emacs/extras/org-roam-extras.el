@@ -29,7 +29,6 @@
 
 (require 'org-roam)
 (require 'org-extras)
-(require 'paths)
 (require 'el-patch)
 
 ;;;; User options
@@ -100,7 +99,7 @@ Optionally, return such list only if its length is less than LIMIT."
    (list
     (completing-read
      "Select note type: "
-     '("generic" "person"))))
+     '("generic" "person" "Borges"))))
   (require 'prot-eww)
   (let ((tags)
 	(directory))
@@ -110,7 +109,9 @@ Optionally, return such list only if its length is less than LIMIT."
        (setq directory paths-dir-notes))
       ("person"
        (setq tags "person")
-       (setq directory paths-dir-people)))
+       (setq directory paths-dir-people))
+      ("Borges"
+       (setq directory (file-name-concat paths-dir-dropbox "borges"))))
     (let* ((name (read-from-minibuffer "Entry name: "))
 	   (slug (prot-eww--sluggify name))
 	   (filename (file-name-with-extension slug "org")))
@@ -210,6 +211,13 @@ list of tags and further restrict the selection to headings with that tag."
                                       :require-match t)))
     (message "Selected tag: %s" selected-tag)
     selected-tag))
+
+(defun org-roam-extras-id-goto (id)
+  "Open ID even if narrowed."
+  (widen)
+  (org-roam-id-open id nil)
+  (widen)
+  (org-roam-id-open id nil))
 
 ;;;;; Patched functions
 

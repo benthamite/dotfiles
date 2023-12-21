@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'avy)
-(require 'paths)
 (require 'el-patch)
 
 ;;;; Functions

@@ -6,9 +6,9 @@ airwander.com
 algolia.com
 alignmentforum.com
 amazon.
-archive.org
 audible.com
 audiobookbay
+awstrack.me
 berkeley.edu
 beyondpricing.com
 bloomberg.com
@@ -21,6 +21,7 @@ correos.es
 correosaduanas.es
 darbaja.es
 deepl.com
+deporweb.net
 dhl.
 disqus.com
 docs.google.com
@@ -64,6 +65,7 @@ metacritic.com
 metaculus.com
 metafilter.com
 metaforecast.com
+myaccount.google.com
 myheritage.es
 openai.com
 paxful.com
@@ -82,7 +84,9 @@ swapcard.com
 tangotimetravel.be
 tangotunes.com
 teatrocolon.org.ar
+tradingview.com
 traveltrolley.co.uk
+trip.com
 twitter.com
 utoronto.ca
 vueling.com
@@ -90,6 +94,7 @@ we.tl
 wetransfer.com
 worldcat.org
 yahoo.com
+yaml-online-parser.appspot.com
 youtu.be
 youtube.com
 zoom.us

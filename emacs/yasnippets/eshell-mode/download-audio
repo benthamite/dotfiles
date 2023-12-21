@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: download-audio
+# key: da
+# contributor: Pablo Stafforini
+# --
+yt-dlp -x --format bestaudio `(current-kill 0)`

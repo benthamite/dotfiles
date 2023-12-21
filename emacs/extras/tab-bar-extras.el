@@ -38,20 +38,32 @@
   :type 'alist
   :group 'tab-bar-extras)
 
+(defcustom tab-bar-extras-reset-wttr t
+  "Whether to reset the weather information when `tab-bar-extras-mode' is activated."
+  :type 'boolean
+  :group 'tab-bar-extras)
+
 ;;;; Functions
 
-(defun tab-bar-extras-reset ()
+(defun tab-bar-extras-reset (&optional quick)
   "Reset the tab bar.
-This resets the clock, updates the tab-bar and its color, and fixes the
-mysterious proliferation of clocks."
+This resets the clock, refreshes the tab-bar and its color, and updates the
+geolocation and weather information. If QUICK is non-nil, run only the essential
+reset functions."
   (interactive)
   (require 'calendar-extras)
   (display-time)
   (setq global-mode-string tab-bar-extras-global-mode-string)
-  (when calendar-extras-use-geolocation
-    (calendar-extras-set-location-variables-from-ip))
-  (when (boundp 'display-wttr-mode)
-    (display-wttr-mode)))
+  (unless quick
+    (when calendar-extras-use-geolocation
+      (calendar-extras-set-location-variables-from-ip))
+    (setq display-wttr-locations `(,calendar-location-name)))
+  (when tab-bar-extras-reset-wttr
+    (display-wttr)))
+
+(defun tab-bar-extras-quick-reset ()
+  "Reset the tab bar quickly."
+  (tab-bar-extras-reset t))
 
 (defun tab-bar-extras-reset-unless-clock ()
   "Reset the tab-bar when `org-clock' isn't running.

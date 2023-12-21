@@ -69,11 +69,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#use-package][use-package]]
 - [[#foundational][foundational]]
   - [[#general][general]]
-  - [[#paths][paths]]
   - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
+  - [[#transient][transient]]
   - [[#hydra][hydra]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
@@ -86,6 +86,33 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#prot-simple][prot-simple]]
   - [[#prot-common][prot-common]]
   - [[#misc][misc.]]
+- [[#secrets][secrets]]
+  - [[#plstore][plstore]]
+  - [[#epg-config][epg-config]]
+  - [[#epa-file][epa-file]]
+  - [[#auth-source][auth-source]]
+  - [[#oauth2-auto][oauth2-auto]]
+  - [[#pass][pass]]
+  - [[#pass-extras][pass-extras]]
+  - [[#auth-source-pass][auth-source-pass]]
+- [[#version-control][version control]]
+  - [[#vc][vc]]
+  - [[#vc-extras][vc-extras]]
+  - [[#diff-mode][diff-mode]]
+  - [[#ediff][ediff]]
+  - [[#ediff-extras][ediff-extras]]
+  - [[#smerge][smerge]]
+  - [[#magit][magit]]
+  - [[#git-commit][git-commit]]
+  - [[#magit-extra][magit-extra]]
+  - [[#ghub][ghub]]
+  - [[#forge][forge]]
+  - [[#orgit-forge][orgit-forge]]
+  - [[#forge-search][forge-search]]
+  - [[#gh-notify][gh-notify]]
+  - [[#gh-notify-extras][gh-notify-extras]]
+  - [[#forge-extras][forge-extras]]
+  - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#display][display]]
   - [[#mixed-pitch][mixed-pitch]]
   - [[#fringe][fringe]]
@@ -219,24 +246,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#session][session]]
   - [[#recentf][recentf]]
   - [[#remember][remember]]
-- [[#version-control][version control]]
-  - [[#vc][vc]]
-  - [[#vc-extras][vc-extras]]
-  - [[#diff-mode][diff-mode]]
-  - [[#ediff][ediff]]
-  - [[#ediff-extras][ediff-extras]]
-  - [[#smerge][smerge]]
-  - [[#magit][magit]]
-  - [[#git-commit][git-commit]]
-  - [[#magit-extras][magit-extras]]
-  - [[#ghub][ghub]]
-  - [[#forge][forge]]
-  - [[#orgit-forge][orgit-forge]]
-  - [[#forge-search][forge-search]]
-  - [[#gh-notify][gh-notify]]
-  - [[#gh-notify-extras][gh-notify-extras]]
-  - [[#forge-extras][forge-extras]]
-  - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#search--replace][search & replace]]
   - [[#isearch][isearch]]
   - [[#isearch-extras][isearch-extras]]
@@ -318,12 +327,14 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict-ng][goldendict-ng]]
   - [[#reverso][reverso]]
-- [[#pdf][pdf]]
+- [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
   - [[#scroll-other-window][scroll-other-window]]
   - [[#pdf-view-restore][pdf-view-restore]]
   - [[#org-pdftools][org-pdftools]]
+  - [[#nov][nov]]
+  - [[#djvu][djvu]]
 - [[#prog-mode][prog-mode]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
@@ -408,9 +419,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-noter-extras][org-noter-extras]]
 - [[#reference--citation][reference & citation]]
   - [[#oc][oc]]
-  - [[#oc-basic][oc-basic]]
-  - [[#oc-bibtex][oc-bibtex]]
-  - [[#oc-biblatex][oc-biblatex]]
   - [[#oc-csl][oc-csl]]
   - [[#citeproc][citeproc]]
   - [[#bibtex][bibtex]]
@@ -430,6 +438,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#persid][persid]]
   - [[#zotra][zotra]]
   - [[#zotra-extras][zotra-extras]]
+  - [[#internet-archive][internet-archive]]
 - [[#email][email]]
   - [[#simple][simple]]
   - [[#sendmail][sendmail]]
@@ -439,7 +448,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#mml][mml]]
   - [[#mu4e][mu4e]]
   - [[#mu4e-extras][mu4e-extras]]
-  - [[#mu4e-contrib][mu4e-contrib]]
   - [[#org-msg][org-msg]]
   - [[#org-msg-extras][org-msg-extras]]
 - [[#messaging][messaging]]
@@ -464,6 +472,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elfeed][elfeed]]
   - [[#elfeed-extras][elfeed-extras]]
   - [[#elfeed-org][elfeed-org]]
+  - [[#elfeed-tube][elfeed-tube]]
+  - [[#elfeed-tube-mpv][elfeed-tube-mpv]]
   - [[#engine-mode][engine-mode]]
   - [[#org-download][org-download]]
   - [[#org-web-tools][org-web-tools]]
@@ -476,17 +486,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#emms][EMMS]]
   - [[#mpv][mpv]]
   - [[#ytdl][ytdl]]
-  - [[#espotify][espotify]]
   - [[#read-aloud][read-aloud]]
-- [[#passwords][passwords]]
-  - [[#plstore][plstore]]
-  - [[#epg-config][epg-config]]
-  - [[#epa-file][epa-file]]
-  - [[#auth-source][auth-source]]
-  - [[#oauth2-auto][oauth2-auto]]
-  - [[#pass][pass]]
-  - [[#pass-extras][pass-extras]]
-  - [[#auth-source-pass][auth-source-pass]]
 - [[#misc][misc]]
   - [[#calc][calc]]
   - [[#alert][alert]]
@@ -906,14 +906,27 @@ NAME and ARGS are in `use-package'."
      :elpaca nil
      ,@args))
 
-(defmacro use-personal-package (name &rest args)
-  "Like `use-package' but accounting for personal packages.
-NAME and ARGS are in `use-package'."
-  (declare (indent defun))
-  `(use-package ,name
-     :elpaca nil
-     :load-path paths-dir-extras
-     ,@args))
+(if (tlon-init-machine-pablo-p)
+    (defmacro use-personal-package (name &rest args)
+      "Like `use-package' but accounting for personal packages.
+   NAME and ARGS are in `use-package'."
+      (declare (indent defun))
+      `(use-package ,name
+         :elpaca nil
+         :load-path paths-dir-extras
+         ,@args))
+  (defmacro use-personal-package (name &rest args)
+    "Like `use-package' but accounting for personal packages.
+   NAME and ARGS are in `use-package'."
+    (declare (indent defun))
+    `(use-package ,name
+       :elpaca (,name
+                :host github
+                :repo "benthamite/dotfiles"
+                :files ,(list (file-name-concat
+                               "emacs/extras"
+                               (file-name-with-extension (symbol-name (eval `(quote ,name))) "el"))))
+       ,@args)))
 
 (elpaca elpaca-use-package
   (elpaca-use-package-mode)
@@ -930,9 +943,9 @@ NAME and ARGS are in `use-package'."
 
 ;; we load `org-mode' early to prevent version conflicts
 ;; (use-package org
-  ;; :demand t
-  ;; :ensure org-plus-contrib
-  ;; )
+;; :demand t
+;; :ensure org-plus-contrib
+;; )
 #+end_src
 
 *** use-package-ensure-system-package
@@ -972,16 +985,6 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :bind
   ("C-A-b" . 'general-describe-keybindings))
 (elpaca-wait)
-#+end_src
-
-** paths
-:PROPERTIES:
-:ID:       B5BBC376-FA8B-47B6-A618-48F94BD1C4A5
-:END:
-
-#+begin_src emacs-lisp
-(use-personal-package paths
-  :demand t)
 #+end_src
 
 ** no-littering
@@ -1061,6 +1064,21 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :demand t
   :config
   (setq el-patch-enable-use-package-integration t))
+#+end_src
+
+** transient
+:PROPERTIES:
+:ID:       E21AC33E-D108-4860-997C-A4982569005E
+:END:
+
+#+begin_src emacs-lisp
+(use-package transient
+  :elpaca (transient
+           :host github
+           :repo "magit/transient"
+           :ref "37307c1"
+           :depth nil)
+  :demand t)
 #+end_src
 
 ** hydra
@@ -1173,7 +1191,8 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
   ("b" (files-extras-open-elpaca-package "tlon-babel") "tlon-babel" :column "tlon")
   ("c" (files-extras-open-elpaca-package "tlon-core") "tlon-core")
   ("i" (files-extras-open-elpaca-package "tlon-init") "tlon-init")
-  ("l" (files-extras-open-elpaca-package "bib") "bib" :column "personal")
+  ("a" (files-extras-open-elpaca-package "internet-archive") "internet-archive" :column "personal")
+  ("l" (files-extras-open-elpaca-package "bib") "bib")
   ("g" (files-extras-open-elpaca-package "goldendict-ng") "glondendict-ng")
   ("o" (files-extras-open-elpaca-package "macos") "macos")
   ("m" (files-extras-open-elpaca-package "mullvad") "mullvad")
@@ -1205,35 +1224,35 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   (:exit t
          :idle 0.5)
   "Org headings"
-  ("SPC" (org-extras-id-goto "B67C920B-D855-4A27-A35C-1DAC56580DA7") "Anki habit")
-  ("i" (org-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1") "Anki")
-  ("p" (org-extras-id-goto "0070312F-6233-4BED-98F4-A2BAAEE8DAFF") "audiobooks")
-  ("b" (org-extras-id-goto "7A788F19-30F5-4504-B47F-CE693AF3EA7E") "books")
-  ("u" (org-extras-id-goto "78577411-554E-4EEC-B669-C014A9581540") "Current book")
-  ("r" (org-extras-id-goto "1C5DCC5A-DA18-4CBD-8E2E-205766A656D6") "Documentaries")
-  ("z" (org-extras-id-goto "8F8E5495-A0D8-451A-B1F1-0A8706CBF6A0") "eablogs.net")
-  ("e" (org-extras-id-goto "96BBA849-B4CF-41C0-ABA3-A5D901BCDB18") "Email")
-  ("d" (org-extras-id-goto "6504C81B-28F0-44C3-BFC0-2F3E648974F0") "Feeds")
-  ("v" (org-extras-id-goto "E821F19E-C619-4895-A084-54D0A2772BAE") "films")
-  ("f" (org-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C") "finance")
-  ("/" (org-extras-id-goto "D9D71BF0-6BD6-40A5-9896-E58C7D9556B7") "inbox")
-  ("m" (org-extras-id-goto "E65E393D-8694-4E23-994E-BA59A8063FCF") "Keyboard Maestro")
-  ("k" (org-extras-id-goto "6F0A4889-C303-4930-8512-757AAD310535") "Khan Academy")
-  ("l" (org-extras-id-goto "C308562B-222E-47E2-9A5F-B31EDB29569A") "Leonardo")
-  ("," (org-extras-id-goto "E1C1F691-8358-4DDF-AC71-F46B883411BB") "morning routine")
-  ("." (org-extras-id-goto "ADAA1E78-2904-4EF4-938C-F599A5C90822") "night routine")
-  ("c" (org-extras-id-goto "7CE82ABB-A23F-41F6-A29E-0B95553A8FEE") "podcasts")
-  ("s" (org-extras-id-goto "3513061C-5868-4EBC-9F77-9814AB776011") "Slack")
-  ("j" (org-extras-id-goto "356B7595-EC5B-4DF4-949C-A637537128E4") "sleep")
-  ("y" (org-extras-id-goto "FBDB7FC0-7650-48A0-933D-AE9606C2B621") "Spotify")
+  ("SPC" (org-roam-extras-id-goto "B67C920B-D855-4A27-A35C-1DAC56580DA7") "Anki habit")
+  ("i" (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1") "Anki")
+  ("p" (org-roam-extras-id-goto "0070312F-6233-4BED-98F4-A2BAAEE8DAFF") "audiobooks")
+  ("b" (org-roam-extras-id-goto "7A788F19-30F5-4504-B47F-CE693AF3EA7E") "books")
+  ("u" (org-roam-extras-id-goto "78577411-554E-4EEC-B669-C014A9581540") "Current book")
+  ("r" (org-roam-extras-id-goto "1C5DCC5A-DA18-4CBD-8E2E-205766A656D6") "Documentaries")
+  ("z" (org-roam-extras-id-goto "8F8E5495-A0D8-451A-B1F1-0A8706CBF6A0") "eablogs.net")
+  ("e" (org-roam-extras-id-goto "96BBA849-B4CF-41C0-ABA3-A5D901BCDB18") "Email")
+  ("d" (org-roam-extras-id-goto "6504C81B-28F0-44C3-BFC0-2F3E648974F0") "Feeds")
+  ("v" (org-roam-extras-id-goto "E821F19E-C619-4895-A084-54D0A2772BAE") "films")
+  ("f" (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C") "finance")
+  ("/" (org-roam-extras-id-goto "D9D71BF0-6BD6-40A5-9896-E58C7D9556B7") "inbox")
+  ("m" (org-roam-extras-id-goto "E65E393D-8694-4E23-994E-BA59A8063FCF") "Keyboard Maestro")
+  ("k" (org-roam-extras-id-goto "6F0A4889-C303-4930-8512-757AAD310535") "Khan Academy")
+  ("l" (org-roam-extras-id-goto "C308562B-222E-47E2-9A5F-B31EDB29569A") "Leonardo")
+  ("," (org-roam-extras-id-goto "E1C1F691-8358-4DDF-AC71-F46B883411BB") "morning routine")
+  ("." (org-roam-extras-id-goto "ADAA1E78-2904-4EF4-938C-F599A5C90822") "night routine")
+  ("c" (org-roam-extras-id-goto "7CE82ABB-A23F-41F6-A29E-0B95553A8FEE") "podcasts")
+  ("s" (org-roam-extras-id-goto "3513061C-5868-4EBC-9F77-9814AB776011") "Slack")
+  ("j" (org-roam-extras-id-goto "356B7595-EC5B-4DF4-949C-A637537128E4") "sleep")
+  ("y" (org-roam-extras-id-goto "FBDB7FC0-7650-48A0-933D-AE9606C2B621") "Spotify")
   ("t" (hydra-org-work/body) "tlon")
-  ("n" (org-extras-id-goto "9696939D-A8B7-4179-A5C8-FEBB017DC9EF") "Telegram")
-  ("q" (org-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E") "YouTube")
-  ;; ("RET'" (org-extras-id-goto "") "")
-  ;; ("TAB'" (org-extras-id-goto "") "")
-  ;; ("='" (org-extras-id-goto "") "")
-  ;; ("-'" (org-extras-id-goto "") "")
-  ;; ("('" (org-extras-id-goto "") "")
+  ("n" (org-roam-extras-id-goto "9696939D-A8B7-4179-A5C8-FEBB017DC9EF") "Telegram")
+  ("q" (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E") "YouTube")
+  ;; ("RET'" (org-roam-extras-id-goto "") "")
+  ;; ("TAB'" (org-roam-extras-id-goto "") "")
+  ;; ("='" (org-roam-extras-id-goto "") "")
+  ;; ("-'" (org-roam-extras-id-goto "") "")
+  ;; ("('" (org-roam-extras-id-goto "") "")
   ("H-a" (org-extras-id-notes-with-clock "a"))
   ("H-b" (org-extras-id-notes-with-clock "b"))
   ("H-c" (org-extras-id-notes-with-clock "c"))
@@ -1275,16 +1294,16 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
 (defhydra hydra-dirs-tlon
   (:exit t)
   "Org Headings: Tlön"
-  ("d" (org-extras-id-goto "") "LBDLH")
-  ("c" (org-extras-id-goto "") "core")
-  ("f" (org-extras-id-goto "") "fede")
-  ("g" (org-extras-id-goto "") "Dropbox: GPE")
-  ("h" (org-extras-id-goto "") "Dropbox: HEAR")
-  ("l" (org-extras-id-goto "") "Dropbox: leo")
-  ("r" (org-extras-id-goto "") "Dropbox: RAE")
-  ("s" (org-extras-id-goto "") "Dropbox: FM")
-  ("t" (org-extras-id-goto "") "Dropbox: tlon")
-  ("u" (org-extras-id-goto "") "Dropbox: EAN"))
+  ("d" (org-roam-extras-id-goto "") "LBDLH")
+  ("c" (org-roam-extras-id-goto "") "core")
+  ("f" (org-roam-extras-id-goto "") "fede")
+  ("g" (org-roam-extras-id-goto "") "Dropbox: GPE")
+  ("h" (org-roam-extras-id-goto "") "Dropbox: HEAR")
+  ("l" (org-roam-extras-id-goto "") "Dropbox: leo")
+  ("r" (org-roam-extras-id-goto "") "Dropbox: RAE")
+  ("s" (org-roam-extras-id-goto "") "Dropbox: FM")
+  ("t" (org-roam-extras-id-goto "") "Dropbox: tlon")
+  ("u" (org-roam-extras-id-goto "") "Dropbox: EAN"))
 #+end_src
 
 #+begin_src emacs-lisp :results silent
@@ -1355,34 +1374,34 @@ CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
   :idle 0
   :color blue)
   "Projects dashboard"
-  ;; ("a" (org-extras-id-goto "") "")
-  ;; ("b" (org-extras-id-goto "") "")
-  ;; ("c" (org-extras-id-goto "") "")
-  ("b" (org-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAB" :column "Tlön")
-  ("r" (org-extras-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Tlön")
-  ("n" (org-extras-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Tlön")
-  ("d" (org-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Tlön")
-  ("w" (org-extras-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
-  ("v" (org-extras-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87") "Samotsvety" :column "Other")
-  ("x" (org-extras-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99") "Misc" :column "Other")
-  ("c" (org-extras-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD") "EA Archive" :column "Someday")
-  ("a" (org-extras-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110") "EA Nomad" :column "Someday")
-  ("h" (org-extras-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2") "HEAR" :column "On hold")
-  ("" (org-extras-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Done")
-  ("" (org-extras-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1") "GPE" :column "Done")
-  ("" (org-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F") "LP" :column "Done")
-  ("" (org-extras-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A") "RCGs" :column "Done")
-  ("" (org-extras-id-goto "AE8F5AD4-B85A-4EE2-8A94-AA7B2AFF3E7F") "Regranting" :column "Done")
-  ("e" (org-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5") "email" :column "Comms")
-  ("s" (org-extras-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C") "slack" :column "Comms")
-  ("t" (org-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
-  ("f" (org-extras-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "Fede")
+  ;; ("a" (org-roam-extras-id-goto "") "")
+  ;; ("b" (org-roam-extras-id-goto "") "")
+  ;; ("c" (org-roam-extras-id-goto "") "")
+  ("b" (org-roam-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAB" :column "Tlön")
+  ("r" (org-roam-extras-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Tlön")
+  ("n" (org-roam-extras-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Tlön")
+  ("d" (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Tlön")
+  ("w" (org-roam-extras-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
+  ("v" (org-roam-extras-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87") "Samotsvety" :column "Other")
+  ("x" (org-roam-extras-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99") "Misc" :column "Other")
+  ("c" (org-roam-extras-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD") "EA Archive" :column "Someday")
+  ("a" (org-roam-extras-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110") "EA Nomad" :column "Someday")
+  ("h" (org-roam-extras-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2") "HEAR" :column "On hold")
+  ("" (org-roam-extras-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Done")
+  ("" (org-roam-extras-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1") "GPE" :column "Done")
+  ("" (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F") "LP" :column "Done")
+  ("" (org-roam-extras-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A") "RCGs" :column "Done")
+  ("" (org-roam-extras-id-goto "AE8F5AD4-B85A-4EE2-8A94-AA7B2AFF3E7F") "Regranting" :column "Done")
+  ("e" (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5") "email" :column "Comms")
+  ("s" (org-roam-extras-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C") "slack" :column "Comms")
+  ("t" (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
+  ("f" (org-roam-extras-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "Fede")
   ("F" (tlon-core-meeting-with-fede) "fede: meeting" :column "Fede")
-  ("H-f" (org-extras-id-goto "EB5FC062-E46F-4C1F-930F-F2CC710F852D") "fede: tareas" :column "Fede")
-  ("l" (org-extras-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "Leo")
+  ("H-f" (org-roam-extras-id-goto "EB5FC062-E46F-4C1F-930F-F2CC710F852D") "fede: tareas" :column "Fede")
+  ("l" (org-roam-extras-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "Leo")
   ("L" (tlon-core-meeting-with-leo) "leo: meeting" :column "Leo")
-  ("H-l" (org-extras-id-goto "E5777AB0-DC81-40CB-8D03-77D6F111AA2E") "leo: tareas" :column "Leo")
-  ("RET" (org-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A") "Home" :column "")
+  ("H-l" (org-roam-extras-id-goto "E5777AB0-DC81-40CB-8D03-77D6F111AA2E") "leo: tareas" :column "Leo")
+  ("RET" (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A") "Home" :column "")
   )
 
 (defhydra hydra-org-work-with-clock
@@ -1410,53 +1429,53 @@ CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
 (defhydra hydra-org-config
   (:exit 1)
   "Org headings: config.org"
-  ("c" (org-extras-id-goto "50FAD2F3-E501-408E-A9A2-8358FAA87C1C") "Calc")
-  ("d" (org-extras-id-goto "617F5323-6518-4751-948B-3E8032D93130") "Dired")
-  ("e" (org-extras-id-goto "FF5DDBC3-ABB6-48A9-9B47-BC9A18F532D5") "Elfeed")
-  ("f" (org-extras-id-goto "B29F4586-2B8D-41FE-82DE-FEDCD863C74B") "Files & buffers")
-  ("g" (org-extras-id-goto "AACAE0F4-0B25-475B-831B-3F1E91E6349D") "Graveyard")
+  ("c" (org-roam-extras-id-goto "50FAD2F3-E501-408E-A9A2-8358FAA87C1C") "Calc")
+  ("d" (org-roam-extras-id-goto "617F5323-6518-4751-948B-3E8032D93130") "Dired")
+  ("e" (org-roam-extras-id-goto "FF5DDBC3-ABB6-48A9-9B47-BC9A18F532D5") "Elfeed")
+  ("f" (org-roam-extras-id-goto "B29F4586-2B8D-41FE-82DE-FEDCD863C74B") "Files & buffers")
+  ("g" (org-roam-extras-id-goto "AACAE0F4-0B25-475B-831B-3F1E91E6349D") "Graveyard")
   ("h" (hydra-org-config-hydra/body) "Hydra")
-  ("i" (org-extras-id-goto "A7940400-DD17-4B0B-A9B2-565A207D680C") "Introduction")
-  ("k" (org-extras-id-goto "4373E661-B19D-4E6C-B7DE-C2A26619A515") "Wiki")
-  ("l" (org-extras-id-goto "DE6D2307-9EBD-4E0F-B873-003C9813CA27") "Display")
-  ("m" (org-extras-id-goto "E83EC00B-0C94-44CD-9EC0-355992C99234") "Completion ")
-  ("n" (org-extras-id-goto "179BB021-8B2A-4BF0-B3AA-43AF5A212D4B") "Text manipulation")
+  ("i" (org-roam-extras-id-goto "A7940400-DD17-4B0B-A9B2-565A207D680C") "Introduction")
+  ("k" (org-roam-extras-id-goto "4373E661-B19D-4E6C-B7DE-C2A26619A515") "Wiki")
+  ("l" (org-roam-extras-id-goto "DE6D2307-9EBD-4E0F-B873-003C9813CA27") "Display")
+  ("m" (org-roam-extras-id-goto "E83EC00B-0C94-44CD-9EC0-355992C99234") "Completion ")
+  ("n" (org-roam-extras-id-goto "179BB021-8B2A-4BF0-B3AA-43AF5A212D4B") "Text manipulation")
   ("o" (hydra-org-config-org/body) "Org")
-  ("p" (org-extras-id-goto "7F0CBD06-FDB3-4889-91CE-D8A25D4F2613") "Help")
-  ("s" (org-extras-id-goto "9FDBBF3E-724F-4402-9DDB-F9349F65AB0E") "Search")
-  ("t" (org-extras-id-goto "1E8F4417-5D5F-4406-BB70-AA272F714EF2") "Text movement")
-  ("u" (org-extras-id-goto "AA460F4A-4035-4C96-A3A1-078A43F7892D") "user-init")
-  ("v" (org-extras-id-goto "10E891D3-9DF5-472A-8E3C-1DE30EE8C81F") "Variables")
-  ("w" (org-extras-id-goto "7E9A81E0-CAEB-4029-AD2C-B2416439FCDA") "Windows & frames")
-  ("y" (org-extras-id-goto "6405B8E7-6612-4D71-8C2C-A51F8808F4C6") "Yasnippets"))
+  ("p" (org-roam-extras-id-goto "7F0CBD06-FDB3-4889-91CE-D8A25D4F2613") "Help")
+  ("s" (org-roam-extras-id-goto "9FDBBF3E-724F-4402-9DDB-F9349F65AB0E") "Search")
+  ("t" (org-roam-extras-id-goto "1E8F4417-5D5F-4406-BB70-AA272F714EF2") "Text movement")
+  ("u" (org-roam-extras-id-goto "AA460F4A-4035-4C96-A3A1-078A43F7892D") "user-init")
+  ("v" (org-roam-extras-id-goto "10E891D3-9DF5-472A-8E3C-1DE30EE8C81F") "Variables")
+  ("w" (org-roam-extras-id-goto "7E9A81E0-CAEB-4029-AD2C-B2416439FCDA") "Windows & frames")
+  ("y" (org-roam-extras-id-goto "6405B8E7-6612-4D71-8C2C-A51F8808F4C6") "Yasnippets"))
 
 (defhydra hydra-org-config-hydra
   (:exit 1)
   "Org headings: config.org > hydra"
-  ("c" (org-extras-id-goto "F19DA0AC-B303-4A6B-8B4E-6E94FC98BC78") "Hydra config")
-  ("e" (org-extras-id-goto "CC88D9BE-6617-4D53-BCCF-02097C2A81E1") "Hydra wiki entries")
-  ("f" (org-extras-id-goto "39E06A29-2AEC-4EB4-A0D0-7E1A64832B18") "Hydra files")
-  ("h" (org-extras-id-goto "00E7E217-E02E-489B-968D-E49431FD5ECC") "Hydra main")
-  ("n" (org-extras-id-goto "C3A44EA2-5523-45DD-8100-6228D80ECAC8") "Hydra notes")
-  ("o" (org-extras-id-goto "E6290A57-7035-4ADB-89F6-9CCADF2D74DB") "Hydra mode buffers")
-  ("r" (org-extras-id-goto "F6AA197E-73A7-4688-986F-4A1D583BBA99") "Hydra org ratings")
-  ("s" (org-extras-id-goto "40207396-12B9-4374-9341-713E88772275") "Hydra Straight")
-  ("w" (org-extras-id-goto "B7B8956F-08D9-49E0-873C-4513F6FD44B8") "Hydra wiki notes")
-  ("y" (org-extras-id-goto "5CC3B9AA-629B-407A-899D-529E66A7D057") "Hydra yasnippets"))
+  ("c" (org-roam-extras-id-goto "F19DA0AC-B303-4A6B-8B4E-6E94FC98BC78") "Hydra config")
+  ("e" (org-roam-extras-id-goto "CC88D9BE-6617-4D53-BCCF-02097C2A81E1") "Hydra wiki entries")
+  ("f" (org-roam-extras-id-goto "39E06A29-2AEC-4EB4-A0D0-7E1A64832B18") "Hydra files")
+  ("h" (org-roam-extras-id-goto "00E7E217-E02E-489B-968D-E49431FD5ECC") "Hydra main")
+  ("n" (org-roam-extras-id-goto "C3A44EA2-5523-45DD-8100-6228D80ECAC8") "Hydra notes")
+  ("o" (org-roam-extras-id-goto "E6290A57-7035-4ADB-89F6-9CCADF2D74DB") "Hydra mode buffers")
+  ("r" (org-roam-extras-id-goto "F6AA197E-73A7-4688-986F-4A1D583BBA99") "Hydra org ratings")
+  ("s" (org-roam-extras-id-goto "40207396-12B9-4374-9341-713E88772275") "Hydra Straight")
+  ("w" (org-roam-extras-id-goto "B7B8956F-08D9-49E0-873C-4513F6FD44B8") "Hydra wiki notes")
+  ("y" (org-roam-extras-id-goto "5CC3B9AA-629B-407A-899D-529E66A7D057") "Hydra yasnippets"))
 
 (defhydra hydra-org-config-org
   (:exit 1)
   "Org headings: config.org > org"
-  ("a" (org-extras-id-goto "E03F4142-C90D-4550-8990-15391E27AD77") "org-agenda")
-  ("b" (org-extras-id-goto "52C959E4-54F4-4499-AE3A-5251F6337FA0") "org key bindings")
-  ("c" (org-extras-id-goto "14F93A83-0BE7-42E3-891E-F6806192296B") "org-capture")
-  ("m" (org-extras-id-goto "2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17") "org-roam")
-  ("n" (org-extras-id-goto "A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7") "org-noter")
-  ("o" (org-extras-id-goto "268B60E4-708C-4372-A59D-5DD876E493CA") "org-mode")
-  ("f" (org-extras-id-goto "35FB5BB5-6552-48C6-983A-F90011CCA908") "org-ref")
-  ("r" (org-extras-id-goto "3FAE7C0D-FB22-4175-A0A4-FFA392539743") "org-refile")
-  ("t" (org-extras-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A") "org-cite")
-  ("x" (org-extras-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF") "org-roam-bibtex"))
+  ("a" (org-roam-extras-id-goto "E03F4142-C90D-4550-8990-15391E27AD77") "org-agenda")
+  ("b" (org-roam-extras-id-goto "52C959E4-54F4-4499-AE3A-5251F6337FA0") "org key bindings")
+  ("c" (org-roam-extras-id-goto "14F93A83-0BE7-42E3-891E-F6806192296B") "org-capture")
+  ("m" (org-roam-extras-id-goto "2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17") "org-roam")
+  ("n" (org-roam-extras-id-goto "A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7") "org-noter")
+  ("o" (org-roam-extras-id-goto "268B60E4-708C-4372-A59D-5DD876E493CA") "org-mode")
+  ("f" (org-roam-extras-id-goto "35FB5BB5-6552-48C6-983A-F90011CCA908") "org-ref")
+  ("r" (org-roam-extras-id-goto "3FAE7C0D-FB22-4175-A0A4-FFA392539743") "org-refile")
+  ("t" (org-roam-extras-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A") "org-cite")
+  ("x" (org-roam-extras-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF") "org-roam-bibtex"))
 #+end_src
 
 *** dired
@@ -1744,6 +1763,524 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
   (define-key input-decode-map (kbd "M-8") "•"))
 #+end_src
 
+* secrets
+:PROPERTIES:
+:ID:       D412C998-40EE-4638-959A-C2530EC9F247
+:END:
+:LOGBOOK:
+:END:
+
+** plstore
+:PROPERTIES:
+:ID:       5257E611-7953-4898-B743-25803EC7D9B4
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature plstore
+  :demand t
+  :init
+  (setq-default plstore-cache-passphrase-for-symmetric-encryption t))
+#+end_src
+
+** epg-config
+:PROPERTIES:
+:ID:       012F15A3-7717-4B09-9F43-74DA6F5F7C1A
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature epg-config
+  :demand t
+  :config
+  (setq epg-pinentry-mode 'loopback) ; use minibuffer for password entry
+  (setq epg-gpg-program "/opt/homebrew/bin/gpg"))
+#+end_src
+
+** epa-file
+:PROPERTIES:
+:ID:       FD3455F8-7CD3-4651-8063-304D4131F14E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature epa-file
+  :config
+  (epa-file-enable))
+#+end_src
+
+** auth-source
+:PROPERTIES:
+:ID:       291F9998-9940-4249-A048-92B5F2A2895E
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature auth-source
+  :demand t
+  :preface
+  (eval-when-compile
+    (defvar auth-sources))
+  :config
+  (setq auth-source-debug nil) ; set to t for debugging
+  (setq auth-sources '(macos-keychain-internet macos-keychain-generic)))
+#+end_src
+
+** oauth2-auto
+:PROPERTIES:
+:ID:       C7B36982-D472-4248-8C61-B7EB0ED6ACF6
+:END:
+
+/[[https://github.com/telotortium/emacs-oauth2-auto][emacs-oauth2-auto]] supports authentication to an OAuth2 provider from within Emacs./
+
+#+begin_src emacs-lisp :results silent
+(use-package oauth2-auto
+  :elpaca (emacs-oauth2-auto
+           :host github
+           :repo "telotortium/emacs-oauth2-auto"
+           :protocol ssh))
+#+end_src
+
+** pass
+:PROPERTIES:
+:ID:       518D3C1F-AFD6-4B72-8980-CAD10BBAEDDE
+:END:
+:LOGBOOK:
+CLOCK: [2022-06-03 Fri 16:18]--[2022-06-03 Fri 16:35] =>  0:17
+CLOCK: [2022-06-03 Fri 16:38]--[2022-06-03 Fri 16:44] =>  0:06
+CLOCK: [2021-07-20 Tue 09:33]--[2021-07-20 Tue 10:14] =>  0:41
+CLOCK: [2021-05-29 Sat 15:44]--[2021-05-29 Sat 16:28] =>  0:44
+CLOCK: [2021-05-26 Wed 17:46]--[2021-05-26 Wed 18:04] =>  0:18
+CLOCK: [2021-05-14 Fri 14:55]--[2021-05-14 Fri 15:07] =>  0:12
+CLOCK: [2021-04-12 Mon 13:12]--[2021-04-12 Mon 13:20] =>  0:08
+CLOCK: [2021-04-11 Sun 14:36]--[2021-04-11 Sun 14:47] =>  0:11
+CLOCK: [2021-04-11 Sun 12:14]--[2021-04-11 Sun 12:28] =>  0:14
+CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
+:END:
+
+/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://en.wikipedia.org/wiki/Pass_(software)][pass]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package pass
+  :demand t
+  :config
+  (setq pass-suppress-confirmations t)
+
+  :general
+  ("A-H-o" 'pass)
+  (pass-mode-map
+   "c" 'pass-copy
+   "d" 'pass-kill)
+  (pass-view-mode-map
+   "s-c" 'pass-view-toggle-password
+   "s-s" 'server-edit))
+#+end_src
+
+** pass-extras
+:PROPERTIES:
+:ID:       524FE3D7-EA5B-408E-A338-68E633528632
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package pass-extras
+  :after pass
+  :demand t
+  :general
+  (pass-mode-map
+   "<return>" 'pass-extras-edit
+   "SPC" 'pass-extras-open-at-point
+   "e" 'pass-extras-edit
+   "I" 'pass-extras-insert-generated-no-symbols
+   "y" 'pass-extras-git-sync))
+#+end_src
+
+** auth-source-pass
+:PROPERTIES:
+:ID:       00772E1B-A97C-46B5-8DE9-77462AAE0189
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-29 Sat 15:10]--[2021-05-29 Sat 15:44] =>  0:34
+CLOCK: [2021-05-29 Sat 13:52]--[2021-05-29 Sat 14:10] =>  0:18
+CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature auth-source-pass
+  :demand t
+  :after auth-source pass
+  :config
+  (setq auth-source-debug t)
+  (setq auth-source-do-cache nil)
+  (auth-source-pass-enable)
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
+#+end_src
+
+Note: to work, entries must conform to the pattern ~auth-sources/host~.
+
+* version control
+:PROPERTIES:
+:ID:       CBBAD256-2800-4E9C-9042-C033FF95FA58
+:END:
+:LOGBOOK:
+:END:
+
+** vc
+:PROPERTIES:
+:ID:       B9E38DFD-09DC-4DB2-B710-44DB6F00D9DC
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature vc
+  :config
+  (setq vc-follow-symlinks t) ; don't ask for confirmation when opening symlinked file
+  (setq vc-make-backup-files nil)) ; do not backup version controlled files
+#+end_src
+
+** vc-extras
+:PROPERTIES:
+:ID:       A7254905-0FBE-4F8F-8D93-1A5D1FA95BB9
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package vc-extras
+  :after vc
+  :demand t)
+#+end_src
+
+** diff-mode
+:PROPERTIES:
+:ID:       33F1D5AA-3DA7-43EC-8ACD-0D8360445459
+:END:
+
+#+begin_src emacs-lisp
+(use-feature diff-mode
+  :demand t
+  :general
+  (diff-mode-map
+   "M-o" nil))
+#+end_src
+
+** ediff
+:PROPERTIES:
+:ID:       987C9066-28ED-4B5A-944C-A90681182264
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature ediff
+  :config
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+  (setq ediff-split-window-function 'split-window-horizontally)
+
+  :general
+  ("A-d" 'ediff))
+#+end_src
+
+** ediff-extras
+:PROPERTIES:
+:ID:       BFD82441-5547-45C5-AD36-E5DE9FDD4898
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package ediff-extras
+  :after ediff
+  :demand t
+  :config
+  (add-hook 'ediff-startup-hook #'ediff-extras-toggle-word-mode))
+#+end_src
+
+** smerge
+:PROPERTIES:
+:ID:       FE85CC7E-E2A0-4494-8D1E-A64A4C40013E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature smerge-mode
+  :general
+  (smerge-mode-map
+   "s-n" 'smerge-next
+   "s-SPC" 'smerge-next
+   "s-p" 'smerge-prev
+   "s-l" 'smerge-keep-lower
+   "s-k" 'smerge-keep-upper
+   "s-a" 'smerge-keep-all
+   "s-b" 'smerge-keep-base
+   "s-c" 'smerge-keep-current))
+#+end_src
+
+** magit
+:PROPERTIES:
+:ID:       B662CE1B-3F94-486E-A3DE-052775035960
+:END:
+:LOGBOOK:
+CLOCK: [2021-11-18 Thu 21:51]--[2021-11-18 Thu 21:52] =>  0:01
+CLOCK: [2021-07-22 Thu 17:12]--[2021-07-22 Thu 17:20] =>  0:08
+CLOCK: [2021-07-01 Thu 22:05]--[2021-07-01 Thu 22:55] =>  0:50
+CLOCK: [2021-02-25 Thu 17:24]--[2021-02-25 Thu 17:45] =>  0:21
+CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
+:END:
+
+/[[https://github.com/magit/magit][magit]] is a complete text-based user interface to Git./
+
+#+begin_src emacs-lisp :results silent
+(use-package magit
+  :elpaca (magit
+           :host github
+           :repo "magit/magit"
+           :ref "f25d1035"
+           :depth nil)
+  :demand t
+  :config
+  (setq magit-commit-ask-to-stage 'stage)
+  (setq magit-clone-set-remote.pushDefault t)
+  (setq magit-diff-refine-hunk 'all) ; show word-granularity differences in all diff hunks
+
+  (add-to-list 'magit-no-confirm 'stage-all-changes)
+  (dolist (hook '(magit-status-mode-hook
+                  magit-diff-mode-hook))
+    (add-hook hook
+              (lambda ()
+                "Disable line truncation in Magit buffers."
+                (setq truncate-lines nil))))
+
+  :general
+  ("A-g" 'magit
+   "A-M-g" 'magit-clone)
+  (magit-mode-map
+   "p" 'magit-pull
+   "." 'magit-push)
+  (magit-status-mode-map
+   "A-C-s-r" 'magit-section-backward-sibling
+   "A-C-s-f" 'magit-section-forward-sibling)
+  ((magit-status-mode-map magit-hunk-section-mode-map magit-hunk-section-smerge-map)
+   "s-l" 'magit-smerge-keep-lower
+   "s-k" 'magit-smerge-keep-upper
+   "s-a" 'magit-smerge-keep-all
+   "s-b" 'magit-smerge-keep-base
+   "s-c" 'magit-smerge-keep-current))
+#+end_src
+
+- [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
+- To read: [[https://emacsredux.com/blog/2020/12/11/super-keybindings-for-magit/][Super Keybindings for Magit | Emacs Redux]]
+
+*** resources
+:PROPERTIES:
+:ID:       09A7E16B-377A-4BB7-AC3B-4D7A673E7CA8
+:END:
+- [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
+- https://tvraman.github.io/emacspeak/blog/github-quick-workflow.html
+- [[https://prathamesh.tech/2019/06/21/creating-pull-requests-from-emacs/][Creating pull requests from emacs]]
+
+** git-commit
+:PROPERTIES:
+:ID:       2A5E2C53-A4F4-4D44-8BA0-BFC19C26DD63
+:END:
+
+#+begin_src emacs-lisp
+(use-feature git-commit
+  :after magit
+  :demand t)
+#+end_src
+
+** magit-extra
+:PROPERTIES:
+:ID:       DFB5D4F4-0BF8-4C1F-8C3C-1A3992387CBC
+:END:
+
+Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magit already provides a feature called ~magit-extras~.
+
+#+begin_src emacs-lisp
+(use-personal-package magit-extra
+  :after magit
+  :demand t
+  :config
+  (add-hook 'git-commit-setup-hook 'magit-extras-move-point-to-start)
+
+  :general
+  ("s-p" 'magit-extras-with-editor-finish-and-push))
+#+end_src
+
+** ghub
+:PROPERTIES:
+:ID:       C557A862-9EC7-406C-98E1-C248F7D579F5
+:END:
+
+/[[https://github.com/magit/ghub][ghub]] provides basic support for using the APIs of various Git forges from Emacs packages./
+
+#+begin_src emacs-lisp :results silent
+(use-package ghub
+  :after auth-source
+  :demand t)
+#+end_src
+
+** forge
+:PROPERTIES:
+:ID:       F6F60AE4-9FEA-4179-922C-CC649BC752A4
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-19 Wed 17:59]--[2023-04-19 Wed 18:48] =>  0:49
+CLOCK: [2022-06-25 Sat 15:55]--[2022-06-25 Sat 16:30] =>  0:35
+CLOCK: [2021-12-21 Tue 20:20]--[2021-12-21 Tue 20:27] =>  0:07
+CLOCK: [2021-07-19 Mon 16:11]--[2021-07-19 Mon 16:39] =>  0:28
+CLOCK: [2021-07-19 Mon 14:22]--[2021-07-19 Mon 15:15] =>  0:53
+CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
+:END:
+
+/[[https://github.com/magit/forge][forge]] let's one work with git forges directly from Magit./
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
+(use-package forge
+  :elpaca (forge
+           :ref "5dcca0e"
+           :depth nil)
+  :after magit ghub emacsql auth-source-pass
+  :demand t
+  :init
+  (if (version<= emacs-version "29.0")
+      (setq forge-database-connector 'sqlite)
+    (setq forge-database-connector 'sqlite-builtin))
+
+  :config
+  (setq forge-owned-accounts '(("benthamite")))
+  (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
+  (setq forge-pull-notifications t)
+  (run-with-timer (* 5 60) t #'forge-pull-notifications)
+
+  (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
+
+  :general
+  ((magit-mode-map forge-issue-list-mode-map gh-notify-mode-map)
+   "n" 'forge-dispatch)
+  (forge-post-mode-map
+   "s-c" 'forge-post-submit)
+  (forge-topic-mode-map
+   "a" 'forge-edit-topic-assignees
+   "b" 'forge-edit-topic-body
+   "d" 'forge-delete-comment
+   "l" 'forge-edit-topic-labels
+   "m" 'forge-edit-topic-milestone
+   "x" 'forge-edit-topic-state
+   "t" 'forge-edit-topic-title
+   "e" 'forge-edit-post
+   "p" 'forge-create-post
+   "r" 'forge-create-post)
+  (magit-status-mode-map
+   "s-x" 'forge-remove-topic-locally))
+#+end_src
+
+** orgit-forge
+:PROPERTIES:
+:ID:       8D2CFDBF-4DD1-412C-A9F0-0D9393156A11
+:END:
+
+/[[https://github.com/magit/orgit-forge][orgit-forge]] supports ~org-mode~ links to ~forge~ buffers./
+
+#+begin_src emacs-lisp
+(use-package orgit-forge
+  :after org forge
+  :demand t)
+#+end_src
+
+** forge-search
+:PROPERTIES:
+:ID:       1E83FDA2-3529-4189-8F5D-6B3388A45AE4
+:END:
+
+/[[https://github.com/eatse21/forge-search.el/blob/master/forge-search.el][forge-search]] supports searching through issues and pull requests within ~forge~./
+
+#+begin_src emacs-lisp
+(use-package forge-search
+  :elpaca (forge-search
+           :host github
+           :repo "eatse21/forge-search.el")
+  :after forge
+  :demand t
+  :general
+  ((forge-topic-mode-map
+    forge-topic-list-mode-map
+    forge-issue-list-mode-map
+    forge-pullreq-list-mode-map
+    forge-notifications-mode-map
+    forge-repository-list-mode-map)
+   "s" 'forge-search))
+#+end_src
+
+** gh-notify
+:PROPERTIES:
+:ID:       02EE3FAE-133C-479E-B7C7-9B2BB2160DCA
+:END:
+
+/[[https://github.com/anticomputer/gh-notify][gh-notify]] is a veneer for the Magit/Forge GitHub porcelain./
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
+(use-package gh-notify
+  :elpaca (gh-notify
+           :host github
+           :repo "benthamite/gh-notify"
+           :depth nil)
+  :after forge
+  :demand t
+  :config
+  ;; unset bindings for all the keys that were bound to self-insert-command in
+  ;; `gh-notify-mode-map'
+  (let ((char-table (cl-second gh-notify-mode-map)))
+    (map-char-table (lambda (key def)
+                      (when (eq def 'gh-notify--self-insert-command)
+                        (set-char-table-range char-table key nil)))
+                    char-table))
+  :general
+  (gh-notify-mode-map
+   "g" 'gh-notify-forge-refresh
+   "Q" 'files-extras-kill-this-buffer))
+#+end_src
+
+** gh-notify-extras
+:PROPERTIES:
+:ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
+(use-personal-package gh-notify-extras
+  :after gh-notify
+  :demand t
+  :general
+  (gh-notify-mode-map
+   "RET" 'gh-notify-extras-visit-notification
+   "G" 'gh-notify-extras-full-refresh
+   "x" 'gh-notify-extras-browse-externally
+   "." 'gh-notify-extras-visit-next-notification))
+#+end_src
+
+** forge-extras
+:PROPERTIES:
+:ID:       B74712E7-2A8C-4D17-8FD4-C854C88D3D72
+:END:
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
+(use-personal-package forge-extras
+  :after forge orgit-forge gh-notify
+  :demand t
+  :config
+  (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link))
+#+end_src
+
+** git-auto-commit-mode
+:PROPERTIES:
+:ID:       FCB4DDAC-CD47-48CE-BA0F-96C0574C458A
+:END:
+
+/[[https://github.com/ryuslash/git-auto-commit-mode][git-auto-commit-mode]] allows for committing and pushing automatically after each save./
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :git-auto-commit-mode)
+(use-package git-auto-commit-mode
+  :config
+  (setq-default gac-automatically-push-p nil)
+  (setq-default gac-debounce-interval 30)
+  (setq-default gac-silent-message-p t)
+  (setq-default gac-automatically-add-new-files-p t))
+#+end_src
+
 * display
 :PROPERTIES:
 :ID:       DE6D2307-9EBD-4E0F-B873-003C9813CA27
@@ -1777,8 +2314,12 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   :config
   (setq mixed-pitch-set-height t)
 
-  (add-hook 'mu4e-view-mode-hook #'mixed-pitch-mode)
-  (add-hook 'outline-mode-hook #'mixed-pitch-mode))
+  (dolist (hook '(elfeed-show-mode-hook
+
+                  eww-mode-hook
+                  mu4e-view-mode-hook
+                  outline-mode-hook))
+    (add-hook hook #'mixed-pitch-mode)))
 #+end_src
 
 ** fringe
@@ -2005,7 +2546,6 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   :demand t
   :config
   (setq spacious-padding-widths '())
-  (add-hook 'spacious-padding-mode-hook #'frames-extras-restore-window-divider)
   (spacious-padding-mode 1))
 #+end_src
 
@@ -2083,9 +2623,6 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
      (setq doom-modeline-buffer-file-name-style 'auto)
      (setq doom-modeline-enable-word-count t)
 
-     ;; needed if managing secrets with `pass'
-     (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)
-
      (doom-modeline-def-modeline 'main
        '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
        '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
@@ -2162,25 +2699,34 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
           " | " fancy-battery-mode-line
 
           ;; telega notifications
-          (:eval (when (and
-                        (telega-server-live-p)
-                        (> (plist-get telega--unread-message-count :unread_count) 0))
-                   (concat " | " telega-mode-line-string)))
+          (when (featurep 'telega)
+            (:eval (when (and
+                          (telega-server-live-p)
+                          (> (plist-get telega--unread-message-count :unread_count) 0))
+                     (concat " | " telega-mode-line-string))))
 
           ;; github notifications
-          (:eval (when (> doom-modeline--github-notification-number 0)
-                   (concat
-                    " | "
-                    (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
-                                        :face 'doom-modeline-notification)
-                    (doom-modeline-vspc)
-                    (propertize
-                     (cond
-                      ((> doom-modeline--github-notification-number 99) "99+")
-                      (t (number-to-string doom-modeline--github-notification-number)))
-                     'face '(:inherit
-                             (doom-modeline-unread-number doom-modeline-notification))))))
-          " | "))
+          (when (featurep 'doom-modeline)
+            (:eval (when (> doom-modeline--github-notification-number 0)
+                     (concat
+                      " | "
+                      (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
+                                          :face 'doom-modeline-notification)
+                      (doom-modeline-vspc)
+                      (propertize
+                       (cond
+                        ((> doom-modeline--github-notification-number 99) "99+")
+                        (t (number-to-string doom-modeline--github-notification-number)))
+                       'face '(:inherit
+                               (doom-modeline-unread-number doom-modeline-notification)))))))
+          " | "
+
+          ;; pomodoro timer
+          (when (featurep 'org-pomodoro)
+            (:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
+                     (setq global-mode-string (append global-mode-string
+                                                      '(org-pomodoro-mode-line))))))
+                                                      ))
 
   (setq global-mode-string tab-bar-extras-global-mode-string)
   (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
@@ -2903,7 +3449,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
 (use-package vundo
   :demand t
   :config
-  (setq undo-limit 1600000)
+  (setq undo-limit (* 100 1000 1000))
 
   :general
   (vundo-mode-map
@@ -3155,7 +3701,8 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
    "(" 'skeleton-pair-insert-maybe
    "\"" 'skeleton-pair-insert-maybe)
   ((org-mode-map telega-chat-mode-map)
-   "~" 'skeleton-pair-insert-maybe)
+   "~" 'skeleton-pair-insert-maybe
+   "*" 'skeleton-pair-insert-maybe)
   (markdown-mode-map
    "`" 'skeleton-pair-insert-maybe
    "*" 'skeleton-pair-insert-maybe))
@@ -3388,7 +3935,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   :config
   (setq confirm-kill-processes nil) ; Do not prompt to kill running processes when quitting Emacs
   (setq delete-by-moving-to-trash t)
-  (setq trash-directory "~/.Trash") ; fallback for `move-file-to-trash'
+  (setq trash-directory (file-name-concat "~" ".Trash")) ; fallback for `move-file-to-trash'
   (setq find-file-visit-truename t); emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
   (setq kill-buffer-query-functions nil)
   (setq create-lockfiles nil) ; lockfiles are indexed by `org-roam', which causes problems with `org-agenda'
@@ -4058,9 +4605,13 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   (window-divider-mode)
 
   :general
-  ("H-M-<tab>" 'other-frame) ; M-S-TAB
-  ("M-N" 'make-frame)
-  ("M-W" 'delete-frame))
+  ("H-M-<tab>" 'other-frame ; M-S-TAB
+   "M-N" 'make-frame
+   "M-W" 'delete-frame
+   ;; this was throwing out an error in Leo’s config
+   ;; "C-H-M-i" (lambda! (set-frame-parameter nil 'fullscreen 'maximized))
+   ;; "C-H-M-o" (lambda!  (set-frame-parameter nil 'fullscreen nil))
+   ))
 #+end_src
 
 ** frame-extras
@@ -4075,7 +4626,8 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   :config
   (tlon-init-override-code-if-available
    :frame-extras-maximize-frame
-   '((add-hook 'elpaca-after-init-hook #'frame-extras-maximize-frame))))
+   '((add-hook 'elpaca-after-init-hook #'frame-extras-maximize-frame)))
+     (add-hook 'spacious-padding-mode-hook #'frames-extras-restore-window-divider))
 #+end_src
 
 ** winum
@@ -4377,7 +4929,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   :after calendar
   :defer 5
   :config
-  (setq calendar-extras-use-geolocation nil)
+  (setq calendar-extras-use-geolocation t)
 
   :general
   (org-agenda-mode-map
@@ -4435,7 +4987,10 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-gcal)
 (use-package org-gcal
-  :elpaca (org-gcal :type git :host github :repo "kidd/org-gcal.el")
+  :elpaca (org-gcal
+           :type git
+           :host github
+           :repo "benthamite/org-gcal.el")
   :after auth-source-pass org
   :defer 10
 
@@ -4450,7 +5005,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (setq org-gcal-notify-p nil)
   (setq org-gcal-auto-archive nil)
   (setq org-gcal-up-days 1)
-  (setq org-gcal-down-days 7))
+  (setq org-gcal-down-days 7)
+  (setq org-gcal-org-timestamp-property :deadline))
 #+end_src
 
 ** org-gcal-extras
@@ -4543,7 +5099,13 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 #+begin_src emacs-lisp :results silent
 (use-package tmr
-  :defer 10)
+  :demand t
+  :config
+  (when (eq system-type 'darwin)
+    (setq tmr-sound-file "/System/Library/Sounds/Blow.aiff"))
+
+  :general
+  ("A-t" 'tmr))
 #+end_src
 
 ** display-wttr
@@ -4558,6 +5120,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
   :defer 10
   :config
   (setq display-wttr-interval (* 15 60))
+  (setq display-wttr-locations `(,calendar-location-name))
 
   (display-wttr-mode))
 #+end_src
@@ -4693,361 +5256,6 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
           (remember-notes))))
 #+end_src
 
-* version control
-:PROPERTIES:
-:ID:       CBBAD256-2800-4E9C-9042-C033FF95FA58
-:END:
-:LOGBOOK:
-:END:
-
-** vc
-:PROPERTIES:
-:ID:       B9E38DFD-09DC-4DB2-B710-44DB6F00D9DC
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature vc
-  :config
-  (setq vc-follow-symlinks t) ; don't ask for confirmation when opening symlinked file
-  (setq vc-make-backup-files nil)) ; do not backup version controlled files
-#+end_src
-
-** vc-extras
-:PROPERTIES:
-:ID:       A7254905-0FBE-4F8F-8D93-1A5D1FA95BB9
-:END:
-
-#+begin_src emacs-lisp
-(use-personal-package vc-extras
-  :after vc
-  :demand t)
-#+end_src
-
-** diff-mode
-:PROPERTIES:
-:ID:       33F1D5AA-3DA7-43EC-8ACD-0D8360445459
-:END:
-
-#+begin_src emacs-lisp
-(use-feature diff-mode
-  :demand t
-  :general
-  (diff-mode-map
-   "M-o" nil))
-#+end_src
-
-** ediff
-:PROPERTIES:
-:ID:       987C9066-28ED-4B5A-944C-A90681182264
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature ediff
-  :config
-  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
-  (setq ediff-split-window-function 'split-window-horizontally)
-
-  :general
-  ("A-d" 'ediff))
-#+end_src
-
-** ediff-extras
-:PROPERTIES:
-:ID:       BFD82441-5547-45C5-AD36-E5DE9FDD4898
-:END:
-
-#+begin_src emacs-lisp
-(use-personal-package ediff-extras
-  :after ediff
-  :demand t
-  :config
-  (add-hook 'ediff-startup-hook #'ediff-extras-toggle-word-mode))
-#+end_src
-
-** smerge
-:PROPERTIES:
-:ID:       FE85CC7E-E2A0-4494-8D1E-A64A4C40013E
-:END:
-
-#+begin_src emacs-lisp
-(use-feature smerge-mode
-  :general
-  (smerge-mode-map
-   "s-n" 'smerge-next
-   "s-SPC" 'smerge-next
-   "s-p" 'smerge-prev
-   "s-l" 'smerge-keep-lower
-   "s-k" 'smerge-keep-upper
-   "s-a" 'smerge-keep-all
-   "s-b" 'smerge-keep-base
-   "s-c" 'smerge-keep-current))
-#+end_src
-
-** magit
-:PROPERTIES:
-:ID:       B662CE1B-3F94-486E-A3DE-052775035960
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-18 Thu 21:51]--[2021-11-18 Thu 21:52] =>  0:01
-CLOCK: [2021-07-22 Thu 17:12]--[2021-07-22 Thu 17:20] =>  0:08
-CLOCK: [2021-07-01 Thu 22:05]--[2021-07-01 Thu 22:55] =>  0:50
-CLOCK: [2021-02-25 Thu 17:24]--[2021-02-25 Thu 17:45] =>  0:21
-CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
-:END:
-
-/[[https://github.com/magit/magit][magit]] is a complete text-based user interface to Git./
-
-#+begin_src emacs-lisp :results silent
-(use-package magit
-  :demand t
-  :config
-  (setq magit-commit-ask-to-stage 'stage)
-  (setq magit-clone-set-remote.pushDefault t)
-  (setq magit-diff-refine-hunk 'all) ; show word-granularity differences in all diff hunks
-
-  (add-to-list 'magit-no-confirm 'stage-all-changes)
-  (dolist (hook '(magit-status-mode-hook
-                  magit-diff-mode-hook))
-    (add-hook hook
-              (lambda ()
-                "Disable line truncation in Magit buffers."
-                (setq truncate-lines nil))))
-
-  :general
-  ("A-g" 'magit
-   "A-M-g" 'magit-clone)
-  (magit-mode-map
-   "p" 'magit-pull
-   "." 'magit-push)
-  (magit-status-mode-map
-   "A-C-s-r" 'magit-section-backward-sibling
-   "A-C-s-f" 'magit-section-forward-sibling)
-  ((magit-status-mode-map magit-hunk-section-mode-map magit-hunk-section-smerge-map)
-   "s-l" 'magit-smerge-keep-lower
-   "s-k" 'magit-smerge-keep-upper
-   "s-a" 'magit-smerge-keep-all
-   "s-b" 'magit-smerge-keep-base
-   "s-c" 'magit-smerge-keep-current))
-#+end_src
-
-- [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
-- To read: [[https://emacsredux.com/blog/2020/12/11/super-keybindings-for-magit/][Super Keybindings for Magit | Emacs Redux]]
-
-*** resources
-:PROPERTIES:
-:ID:       09A7E16B-377A-4BB7-AC3B-4D7A673E7CA8
-:END:
-- [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
-- https://tvraman.github.io/emacspeak/blog/github-quick-workflow.html
-- [[https://prathamesh.tech/2019/06/21/creating-pull-requests-from-emacs/][Creating pull requests from emacs]]
-
-** git-commit
-:PROPERTIES:
-:ID:       2A5E2C53-A4F4-4D44-8BA0-BFC19C26DD63
-:END:
-
-#+begin_src emacs-lisp
-(use-feature git-commit
-  :after magit
-  :demand t)
-#+end_src
-
-** magit-extras
-:PROPERTIES:
-:ID:       DFB5D4F4-0BF8-4C1F-8C3C-1A3992387CBC
-:END:
-
-#+begin_src emacs-lisp
-(use-personal-package magit-extras
-  ;; :after magit
-  :demand t
-  :config
-  (add-hook 'git-commit-setup-hook 'magit-extras-move-point-to-start)
-
-  :general
-  ("s-p" 'magit-extras-with-editor-finish-and-push))
-#+end_src
-
-** ghub
-:PROPERTIES:
-:ID:       C557A862-9EC7-406C-98E1-C248F7D579F5
-:END:
-
-/[[https://github.com/magit/ghub][ghub]] provides basic support for using the APIs of various Git forges from Emacs packages./
-
-#+begin_src emacs-lisp :results silent
-(use-package ghub
-  :demand t)
-#+end_src
-
-** forge
-:PROPERTIES:
-:ID:       F6F60AE4-9FEA-4179-922C-CC649BC752A4
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-19 Wed 17:59]--[2023-04-19 Wed 18:48] =>  0:49
-CLOCK: [2022-06-25 Sat 15:55]--[2022-06-25 Sat 16:30] =>  0:35
-CLOCK: [2021-12-21 Tue 20:20]--[2021-12-21 Tue 20:27] =>  0:07
-CLOCK: [2021-07-19 Mon 16:11]--[2021-07-19 Mon 16:39] =>  0:28
-CLOCK: [2021-07-19 Mon 14:22]--[2021-07-19 Mon 15:15] =>  0:53
-CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
-:END:
-
-/[[https://github.com/magit/forge][forge]] let's one work with git forges directly from Magit./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
-(use-package forge
-  :after magit ghub emacsql auth-source-pass
-  :demand t
-  :init
-  (if (version<= emacs-version "29.0")
-      (setq forge-database-connector 'sqlite)
-    (setq forge-database-connector 'sqlite-builtin))
-
-  :config
-  (setq forge-owned-accounts '(("benthamite")))
-  (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
-  (setq forge-pull-notifications t)
-  (run-with-timer (* 5 60) t #'forge-pull-notifications)
-
-  (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
-
-  :general
-  ((magit-mode-map forge-issue-list-mode-map gh-notify-mode-map)
-   "n" 'forge-dispatch)
-  (forge-post-mode-map
-   "s-c" 'forge-post-submit)
-  (forge-topic-mode-map
-   "a" 'forge-edit-topic-assignees
-   "b" 'forge-edit-topic-body
-   "d" 'forge-delete-comment
-   "l" 'forge-edit-topic-labels
-   "m" 'forge-edit-topic-milestone
-   "x" 'forge-edit-topic-state
-   "t" 'forge-edit-topic-title
-   "e" 'forge-edit-post
-   "p" 'forge-create-post
-   "r" 'forge-create-post)
-  (gh-notify-mode-map
-   "G" 'forge-pull-notifications)
-  (magit-status-mode-map
-   "s-x" 'forge-remove-topic-locally))
-#+end_src
-
-** orgit-forge
-:PROPERTIES:
-:ID:       8D2CFDBF-4DD1-412C-A9F0-0D9393156A11
-:END:
-
-/[[https://github.com/magit/orgit-forge][orgit-forge]] supports ~org-mode~ links to ~forge~ buffers./
-
-#+begin_src emacs-lisp
-(use-package orgit-forge
-  :after org forge
-  :demand t)
-#+end_src
-
-** forge-search
-:PROPERTIES:
-:ID:       1E83FDA2-3529-4189-8F5D-6B3388A45AE4
-:END:
-
-/[[https://github.com/eatse21/forge-search.el/blob/master/forge-search.el][forge-search]] supports searching through issues and pull requests within ~forge~./
-
-#+begin_src emacs-lisp
-(use-package forge-search
-  :elpaca (forge-search
-           :host github
-           :repo "eatse21/forge-search.el")
-  :after forge
-  :demand t
-  :general
-  ((forge-topic-mode-map
-    forge-topic-list-mode-map
-    forge-issue-list-mode-map
-    forge-pullreq-list-mode-map
-    forge-notifications-mode-map
-    forge-repository-list-mode-map)
-   "s" 'forge-search))
-#+end_src
-
-** gh-notify
-:PROPERTIES:
-:ID:       02EE3FAE-133C-479E-B7C7-9B2BB2160DCA
-:END:
-
-/[[https://github.com/anticomputer/gh-notify][gh-notify]] is a veneer for the Magit/Forge GitHub porcelain./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
-(use-package gh-notify
-  :elpaca (gh-notify
-           :host github
-           :repo "benthamite/gh-notify"
-           :depth nil)
-  :after forge
-  :demand t
-  :config
-  ;; unset bindings for all the keys that were bound to self-insert-command in
-  ;; `gh-notify-mode-map'
-  (let ((char-table (cl-second gh-notify-mode-map)))
-    (map-char-table (lambda (key def)
-                      (when (eq def 'gh-notify--self-insert-command)
-                        (set-char-table-range char-table key nil)))
-                    char-table))
-  :general
-  (gh-notify-mode-map
-   "g" 'gh-notify-forge-refresh
-   "Q" 'files-extras-kill-this-buffer))
-#+end_src
-
-** gh-notify-extras
-:PROPERTIES:
-:ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F
-:END:
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
-(use-personal-package gh-notify-extras
-  :after gh-notify
-  :demand t
-  :general
-  (gh-notify-mode-map
-   "RET" 'gh-notify-extras-visit-notification
-   "x" 'gh-notify-extras-browse-externally
-   "." 'gh-notify-extras-visit-next-notification))
-#+end_src
-
-** forge-extras
-:PROPERTIES:
-:ID:       B74712E7-2A8C-4D17-8FD4-C854C88D3D72
-:END:
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
-(use-personal-package forge-extras
-  :after forge orgit-forge gh-notify
-  :demand t
-  :config
-  (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link))
-#+end_src
-
-** git-auto-commit-mode
-:PROPERTIES:
-:ID:       FCB4DDAC-CD47-48CE-BA0F-96C0574C458A
-:END:
-
-/[[https://github.com/ryuslash/git-auto-commit-mode][git-auto-commit-mode]] allows for committing and pushing automatically after each save./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :git-auto-commit-mode)
-(use-package git-auto-commit-mode
-  :config
-  (setq-default gac-automatically-push-p nil)
-  (setq-default gac-debounce-interval 30)
-  (setq-default gac-silent-message-p t)
-  (setq-default gac-automatically-add-new-files-p t))
-#+end_src
-
 * search & replace
 :PROPERTIES:
 :ID:       9FDBBF3E-724F-4402-9DDB-F9349F65AB0E
@@ -5068,7 +5276,7 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 (use-feature isearch
   :config
   (setq search-default-mode #'char-fold-to-regexp)
-  (setq search-whitespace-regexp "[ \\t\\r\\n]+")
+  (setq search-whitespace-regexp ".*?")
   (setq isearch-lax-whitespace t)
   (setq isearch-regexp-lax-whitespace nil)
   (setq isearch-yank-on-move t)
@@ -6118,6 +6326,13 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   ;; Disable `emacs-lisp-checkdoc' in `org-src' blocks.
   (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc))
 
+  (add-hook 'after-change-major-mode-hook
+            (lambda ()
+              "Disable flycheck in the *scratch* and `notes' buffers."
+              (when (or (equal (buffer-name) "*scratch*")
+                        (equal (buffer-name) "notes"))
+                (flycheck-mode -1))))
+
   :general
   ("M-k" 'flycheck-next-error))
 #+end_src
@@ -6560,17 +6775,9 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
-  (setq paths-files-bibliography-all
-        `(,@paths-files-bibliography-personal
-          ,@tlon-babel-bibliography-files))
-
-  (dolist (template `(("tbJ" "Tlön: BAE: Create a new Babel job" entry
-                       (id ,tlon-babel-todos-jobs-id)
-                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
-                      ("tbG" "Tlön: BAE: Create new generic todo from GitHub" entry
-                       (id ,tlon-babel-todos-generic-id)
-                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
-    (push template org-capture-templates)) 
+  (setq tlon-babel-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
+  (setq tlon-babel-todos-generic-id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+  (add-hook 'tlon-init-post-init-hook #'tlon-babel-init)
 
   :general
   ("H-r" 'tlon-babel-dispatch)
@@ -6578,7 +6785,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
     magit-status-mode-map)
-   "," 'tlon-babel-create-todo-from-issue)
+   "," 'tlon-babel-create-or-visit-todo-from-issue)
   (magit-status-mode-map
    "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
@@ -6717,7 +6924,7 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
   ("H-Y" 'reverso))
 #+end_src
 
-* pdf
+* docs
 :PROPERTIES:
 :ID:       6C0D0737-734E-4EAB-8A3F-138EF990B967
 :END:
@@ -6864,6 +7071,28 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
   (add-hook 'org-mode-hook #'org-pdftools-setup-link))
 #+end_src
 
+** nov
+:PROPERTIES:
+:ID:       CA54F4D1-2562-483A-BBD0-67A039E0F2FC
+:END:
+
+/[[https://depp.brause.cc/nov.el/][nov]] is a major mode for reading EPUBs in Emacs./
+
+#+begin_src emacs-lisp
+(use-package nov)
+#+end_src
+
+** djvu
+:PROPERTIES:
+:ID:       CB96565F-C0FF-454C-A1F1-E986BC45EDDE
+:END:
+
+/[[https://elpa.gnu.org/packages/djvu.html][djvu]] is a major mode for viewing and editing Djvu files in Emacs./
+
+#+begin_src emacs-lisp
+(use-package djvu)
+#+end_src
+
 * prog-mode
 :PROPERTIES:
 :ID:       A8700D18-574A-4093-938C-5707589DBB41
@@ -7008,12 +7237,16 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :config
   (setq python-shell-interpreter "python3")
   (setq org-babel-python-command "python3")
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((python . t)))
 
   (setq flycheck-python-pycompile-executable "python3")
   (remove-hook 'python-mode-hook #'yasnippet-snippets--fixed-indent) ; some package (`elpy'?) is adding this
 
   :general
-  (python-mode-map
+  ((python-mode-map python-ts-mode-map)
+   "C-c p" 'run-python
    "s-l" 'python-shell-send-file
    "s-d" 'python-shell-send-defun
    "s-c" 'python-shell-send-buffer
@@ -7547,6 +7780,8 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (setq org-todo-keywords
         '((sequence "TODO(t)"
                     "DOING(g)"
+                    "IMPORTANT(i)"
+                    "URGENT(u)"
                     "SOMEDAY(s)"
                     "MAYBE(m)"
                     "WAITING(w)"
@@ -8226,6 +8461,8 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
   (setq org-clock-history-length 30)
   (org-clock-persistence-insinuate)
 
+  (add-hook 'org-clock-in-prepare-hook #'tab-bar-extras-quick-reset)
+
   :general
   ("A-H-j" 'org-clock-goto
    "A-H-x" 'org-clock-cancel
@@ -8268,7 +8505,7 @@ CLOCK: [2023-03-18 Sat 13:14]--[2023-03-18 Sat 13:27] =>  0:13
   ;; fix weird behavior that inserted one of the clocks not enclosed in square
   ;; brackets
   (el-patch-defun org-clock-split (from-end splitter-string)
-    "Split CLOCK entry under cursor into two entries.
+  "Split CLOCK entry under cursor into two entries.
 Total time of created entries will be the same as original entry.
 
    WARNING: Negative time entries can be created if splitting at an offset
@@ -8281,34 +8518,34 @@ longer then the CLOCK entry's total time.
 
    SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
 
-    (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
+  (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
 
-    (move-beginning-of-line nil)
-    (let ((original-line (buffer-substring (line-beginning-position) (line-beginning-position 2))))
+  (move-beginning-of-line nil)
+  (let ((original-line (buffer-substring (line-beginning-position) (line-beginning-position 2))))
 
-      ;; Error if CLOCK line does not contain check in and check out time
-      (unless (string-match org-clock-split-clock-range-regexp original-line)
-        (error "Cursor must be placed on line with valid CLOCK entry range"))
+    ;; Error if CLOCK line does not contain check in and check out time
+    (unless (string-match org-clock-split-clock-range-regexp original-line)
+      (error "Cursor must be placed on line with valid CLOCK entry range"))
 
-      (let* ((whitespace (match-string 1 original-line))
-             (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
-             (t0 (pop timestamps))
-             (t1 (el-patch-swap (pop timestamps) (format "[%s]" (pop timestamps))))
-             (t2 (pop timestamps)))
-        ;; delete line without moving to kill ring
-        (delete-region (line-beginning-position) (line-end-position))
-        ;; insert the earlier segment
-        (insert (format org-clock-split-clock-range-format whitespace t0 t1))
-        ;; Update interval duration, which moves point to the end of the later timestamp
-        (org-ctrl-c-ctrl-c)
-        ;; insert the later segment before the earlier segment, so it's ready for org-clock-merge
-        (move-beginning-of-line nil)
-        (newline)
-        (previous-line)
-        (insert (format org-clock-split-clock-range-format whitespace t1 t2))
-        ;; Update interval duration, which fails if point doesn't move to beginning of line
-        (org-ctrl-c-ctrl-c)
-        (move-beginning-of-line nil))))
+    (let* ((whitespace (match-string 1 original-line))
+           (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
+           (t0 (pop timestamps))
+           (t1 (el-patch-swap (pop timestamps) (format "[%s]" (pop timestamps))))
+           (t2 (pop timestamps)))
+      ;; delete line without moving to kill ring
+      (delete-region (line-beginning-position) (line-end-position))
+      ;; insert the earlier segment
+      (insert (format org-clock-split-clock-range-format whitespace t0 t1))
+      ;; Update interval duration, which moves point to the end of the later timestamp
+      (org-ctrl-c-ctrl-c)
+      ;; insert the later segment before the earlier segment, so it's ready for org-clock-merge
+      (move-beginning-of-line nil)
+      (newline)
+      (previous-line)
+      (insert (format org-clock-split-clock-range-format whitespace t1 t2))
+      ;; Update interval duration, which fails if point doesn't move to beginning of line
+      (org-ctrl-c-ctrl-c)
+      (move-beginning-of-line nil))))
 
   :general
   (org-mode-map
@@ -8844,7 +9081,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :demand t
   :config
   ;; set to nil to temporarily disable cache to avoid `org-element-cache' errors
-  (setq org-element-use-cache nil))
+  (setq org-element-use-cache t))
 #+end_src
 
 ** org-lint
@@ -9123,6 +9360,7 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 #+begin_src emacs-lisp :results silent
 (use-package org-pomodoro
   :after org
+  :defer 10
   :config/el-patch
   ;; silence silly lecture about killing pomodoros
   (defun org-pomodoro-killed ()
@@ -9141,8 +9379,7 @@ This may send a notification, play a sound and adds log."
   (setq org-pomodoro-length 25)
   (setq org-pomodoro-short-break-length (- 30 org-pomodoro-length))
   (setq org-pomodoro-long-break-length org-pomodoro-short-break-length)
-  (when (eq system-type 'darwin)
-    (setq org-pomodoro-finished-sound "/System/Library/Sounds/Blow.aiff"))
+  (setq org-pomodoro-finished-sound tmr-sound-file)
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
   ;; (add-hook 'org-pomodoro-started-hook #'org-extras-pomodoro-format-timer)
@@ -9272,19 +9509,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
         (concat "${hierarchy:160} "
                 (propertize "${tags:20}" 'face 'org-tag)))
 
-  ;; exclude headings in specific files and directories
-  (setq org-roam-file-exclude-regexp
-        (let (result)
-          (dolist (dir-or-file
-                   (append
-                    org-roam-extras-excluded-dirs
-                    org-roam-extras-excluded-files)
-                   (regexp-opt result))
-            (push (if (file-directory-p dir-or-file)
-                      (file-relative-name dir-or-file paths-dir-org-roam)
-                    dir-or-file)
-                  result))))
-
   ;; exclude selected headings based on other criteria
   (setq org-roam-db-node-include-function
         (lambda ()
@@ -9313,7 +9537,8 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
                  (mapcar #'file-name-as-directory
                          ;; List of special dirs
                          (list
-                          paths-dir-journal)))
+                          paths-dir-journal
+                          (file-name-concat paths-dir-dropbox ".Trash"))))
                 ;; heading condition
                 (> (org-current-level) 1))
                )
@@ -9321,7 +9546,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
             t)))
 
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
-  ;; (add-to-list 'completion-at-point-functions #'org-roam-complete-everywhere)
 
   ;; include transcluded links in `org-roam' backlinks
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
@@ -9374,7 +9598,21 @@ So the links to other Wiki articles do not break.
   :after org-roam
   :demand t
   :config
+    ;; exclude headings in specific files and directories
+  (setq org-roam-file-exclude-regexp
+        (let (result)
+          (dolist (dir-or-file
+                   (append
+                    org-roam-extras-excluded-dirs
+                    org-roam-extras-excluded-files)
+                   (regexp-opt result))
+            (push (if (file-directory-p dir-or-file)
+                      (file-relative-name dir-or-file paths-dir-org-roam)
+                    dir-or-file)
+                  result))))
+
   (add-hook 'org-capture-prepare-finalize-hook #'org-roam-extras-remove-file-level-properties)
+
   :general
   ("H-N" 'org-roam-extras-new-note
    "H-j" 'org-roam-extras-node-find
@@ -9507,7 +9745,7 @@ CLOCK: [2021-07-17 Sat 19:16]--[2021-07-17 Sat 19:52] =>  0:36
 CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 :END:
 
-/[[https://github.com/weirdNox/org-noter][org-noter]] is an org-mode document annotator./
+/[[https://github.com/org-noter/org-noter][org-noter]] is an org-mode document annotator./
 
 #+begin_src emacs-lisp :results silent
 (use-package org-noter
@@ -9520,10 +9758,13 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   (setq org-noter-auto-save-last-location t)
   (setq org-noter-always-create-frame nil)
   (setq org-noter-separate-notes-from-heading t)
+  (setq org-noter-kill-frame-at-session-end nil)
 
   :general
   (pdf-annot-minor-mode-map
-   "s-s" 'org-noter-create-skeleton))
+   "s-s" 'org-noter-create-skeleton)
+   (org-mode-map
+   "s-n" 'org-noter-sync-current-note))
 #+end_src
 
 - To check: https://org-roam.discourse.group/t/org-roam-bibtex-in-a-sub-directory/649/5
@@ -9560,9 +9801,13 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 #+begin_src emacs-lisp :results silent
 (use-feature oc
   :after org
+  :demand t
   :config
-  ;; (setq org-cite-global-bibliography paths-files-bibliography-all)
-  (setq org-cite-csl-styles-dir "/Users/pablostafforini/Library/CloudStorage/Dropbox/repos/genus/refs/styles/")
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `org-cite' vars after `tlon-babel' is loaded."
+              ;; (setq org-cite-global-bibliography paths-files-bibliography-all) ; disabled for poor performance
+              (setq org-cite-csl-styles-dir tlon-babel-csl-styles)))
   (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
@@ -9579,41 +9824,6 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 - [cite:@Balintona2022CitationsOrgmodeOrgcite]. The most comprehensive explanation I'm aware of about how to use ~org-cite~. See [[https://www.reddit.com/r/orgmode/comments/vc7ys6/how_i_run_my_wiki_with_org_mode/][Reddit discussion]].
 - [cite:@Kolsc2021HowActuallyInsert]. Reddit thread about the basics of ~org-cite~.
 
-** oc-basic
-:PROPERTIES:
-:ID:       DD72A5D8-057E-4945-8EF0-E681904731D4
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature oc-basic
-  :after oc
-  :defer 20)
-#+end_src
-
-** oc-bibtex
-:PROPERTIES:
-:ID:       5515E05E-1A8F-40F1-B19F-BD48925C6679
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature oc-bibtex
-  :after oc
-  :defer 20)
-#+end_src
-
-** oc-biblatex
-:PROPERTIES:
-:ID:       126F2E2D-537E-45A0-8DD6-56B8FF69176D
-:END:
-:LOGBOOK:
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature oc-biblatex
-  :after oc
-  :defer 20)
-#+end_src
-
 ** oc-csl
 :PROPERTIES:
 :ID:       72710244-0369-4C12-8B83-0674EE0E11D5
@@ -9622,7 +9832,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 #+begin_src emacs-lisp :results silent
 (use-feature oc-csl
   :after oc
-  :defer 20)
+  :demand t)
 #+end_src
 
 ** citeproc
@@ -9657,7 +9867,10 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   :config
   ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
   ;; retorque.re/zotero-better-bibtex/citing/
-  (setq bibtex-files paths-files-bibliography-all)
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `bibtex-files after `paths-files-bibliography-all' is set."
+              (setq bibtex-files paths-files-bibliography-all)))
   (setq bibtex-search-entry-globally t)
   (setq bibtex-autokey-names 1)
   (setq bibtex-autokey-name-case-convert-function 'capitalize)
@@ -9875,7 +10088,10 @@ Also sets `bibtex-completion-display-formats-internal'."
 
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)
-  (setq bibtex-completion-bibliography paths-files-bibliography-all)
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `bibtex-completion-bibliography' after `paths-files-bibliography-all' is set."
+              (setq bibtex-completion-bibliography paths-files-bibliography-all)))
   (setq bibtex-completion-notes-path paths-dir-bibliographic-notes)
   (setq bibtex-completion-pdf-field "file")
   (setq bibtex-dialect 'biblatex))
@@ -9939,7 +10155,10 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   :demand t
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))
-  (setq citar-bibliography paths-files-bibliography-all)
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `citar-bibliography' after `paths-files-bibliography-all' is set."
+              (setq citar-bibliography paths-files-bibliography-all)))
   (setq citar-notes-paths `(,paths-dir-bibliographic-notes))
   (setq citar-at-point-function 'embark-act)
   (setq citar-symbol-separator "  ")
@@ -9968,12 +10187,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
       "A-H-M-s-?" 'citar-extras-open-file-at-point) ; i.e. H-S-/
      (general-define-key
       :keymaps '(citar-map citar-citation-map)
-      "b" 'citar-extras-goto-bibtex-entry
       "c" 'embark-copy-as-kill
-      "d" 'ebib-extras-download-dwim
-      "i" 'citar-extras-open-in-ebib
-      "s" 'ebib-extras-search-dwim
-      "t" 'citar-extras-move-entry-to-tlon
       "u" 'citar-open-links))))
 #+end_src
 
@@ -9998,7 +10212,14 @@ Having headings tagged with the type of work they are notes of allows me to quer
 #+begin_src emacs-lisp
 (use-personal-package citar-extras
   :after citar
-  :demand t)
+  :demand t
+  :general
+  ((citar-map citar-citation-map)
+   "d" 'ebib-extras-download-dwim
+   "i" 'citar-extras-open-in-ebib
+   "s" 'ebib-extras-search-dwim
+   "t" 'citar-extras-move-entry-to-tlon
+   "b" 'citar-extras-goto-bibtex-entry))
 #+end_src
 
 ** citar-citeproc
@@ -10011,9 +10232,13 @@ Having headings tagged with the type of work they are notes of allows me to quer
 #+begin_src emacs-lisp :results silent
 (use-feature citar-citeproc
   :demand t
-  :after citar citeproc
+  :after citar citeproc citar-extras tlon-babel
   :config
-  (setq citar-citeproc-csl-styles-dir org-cite-csl-styles-dir)
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `citar-citeproc-csl-styles-dir' after `tlon-babel-csl-styles' is set."
+                (setq citar-citeproc-csl-styles-dir tlon-babel-csl-styles)))
+  (setq citar-citeproc-csl-style "biblioteca-altruismo-eficaz.csl")
   (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir)
   ;; https://github.com/emacs-citar/citar/wiki/Indicators
   (setq citar-indicators
@@ -10177,7 +10402,10 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 (use-package ebib
   :demand t
   :config
-  (setq ebib-preload-bib-files paths-files-bibliography-all)
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `ebib-preload-bib-files' after `paths-files-bibliography-all' is set."
+              (setq ebib-preload-bib-files paths-files-bibliography-all)))
   (setq ebib-notes-directory paths-dir-bibliographic-notes)
   (setq ebib-notes-use-org-capture t)
   (setq ebib-notes-display-max-lines 9999)
@@ -10307,7 +10535,7 @@ The macro below generates the commands correctly. But attempting to define key b
    "H" 'ebib-extras-open-html-file-externally
    "i" 'ebib-extras-download-by-identifier
    "I" 'ebib-extras-set-id
-   "K" 'ebib-extras-fetch-keywords
+   "s-k" 'ebib-extras-fetch-keywords
    "o" 'ebib-extras-search-connected-papers
    "p" 'ebib-extras-open-pdf-file
    "P" 'ebib-extras-open-pdf-file-externally
@@ -10431,6 +10659,24 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
    "z" 'zotra-extras-url-full-capture))
 #+end_src
 
+** internet-archive
+:PROPERTIES:
+:ID:       89CD61F5-D883-4A4F-9210-EA238235AD34
+:END:
+
+/[[https://github.com/benthamite/internet-archive][internet-archive]] supports the downloading of books from the Internet Archive./
+
+#+begin_src emacs-lisp
+(use-package internet-archive
+  :elpaca (internet-archive
+           :host github
+           :repo "benthamite/internet-archive")
+  :demand t
+  :config
+  (setq internet-archive-ade-close-when-done t)
+  (add-hook 'internet-archive-protocol-hook #'frame-extras-restore-focus))
+#+end_src
+
 * email
 :PROPERTIES:
 :ID:       2CF6D256-143D-4F3E-8383-36CB090FC4F2
@@ -10489,8 +10735,24 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :PROPERTIES:
 :ID:       BEF562DB-61D5-4AB5-8B8A-44DD866FE285
 :END:
+:LOGBOOK:
+CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
+:END:
 
 /[[https://github.com/lordpretzel/async-email-sending][async-email-sending]] enables asynchronous sending of emails in Emacs using the new built-in sqlite support in Emacs 29./
+
+<2023-12-01 Fri> Failed to send an email when I tested it. So not using for the time being.
+
+#+begin_src emacs-lisp
+(use-package async-email-sending
+  :disabled
+  :elpaca (async-email-sending
+           :host github
+           :repo "lordpretzel/async-email-sending")
+  :demand t
+  ;; needs to be set via `customize'
+  :custom (async-email-sending-use-async-send-mail t))
+#+end_src
 
 ** message
 :PROPERTIES:
@@ -10634,7 +10896,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                 :main "mu4e/mu4e.el"
                 :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
                 :build (:not elpaca--compile-info)
-                :ref "9ddde205" (v1.10.7)
+                :ref "9ddde205"
                 :depth nil)
   :demand t
   :config
@@ -10653,9 +10915,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
         `((,mu4e-drafts-folder  . ?d)
           (,mu4e-sent-folder    . ?t)
           (,mu4e-trash-folder   . ?x)
-          (,mu4e-refile-folder  . ?a)
-          (,mu4e-extras-inbox-folder . ?i)
-          (,mu4e-extras-daily-folder . ?y))) ; required for correct Gmail refiling
+          (,mu4e-refile-folder  . ?a))) ; required for correct Gmail refiling
   (setq mu4e-compose-dont-reply-to-self t)
   (setq mu4e-compose-format-flowed t)
   (setq mu4e-confirm-quit nil)
@@ -10666,11 +10926,11 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-hide-index-messages t)
   (setq mu4e-sent-messages-behavior 'delete) ; Gmail already keeps a copy
 
-  ;; performance improvements
+  ;; performance improvements (but with downsides)
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
-  (setq mu4e-index-cleanup t) ; `nil' improves performance"
-  (setq mu4e-index-lazy-check nil) ; `t' improves performance"
+  (setq mu4e-index-cleanup t) ; nil improves performance
+  (setq mu4e-index-lazy-check nil) ; t improves performance
 
   (setq mu4e-compose-context-policy 'ask)
   (setq mu4e-context-policy 'ask)
@@ -10679,10 +10939,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                               (:from . 30)
                               (:subject)))
   (mu4e t)
-
-  ;; (add-hook 'change-major-mode-hook #'faces-extras-load-custom-faces) ; reload normal faces upon leaving mu4e-view-mode
-  ;; Is this needed?
-  (add-hook 'mu4e-compose-pre-hook #'org-msg-mode)
 
   :general
   ("A-m" 'mu4e)
@@ -10765,12 +11021,19 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   (setq mu4e-extras-inbox-folder "/Inbox")
   (setq mu4e-extras-daily-folder "/Daily")
 
+  (add-hook 'elpaca-after-init-hook
+            (lambda ()
+              (dolist (shortcut `((,mu4e-extras-inbox-folder . ?i)
+                                  (,mu4e-extras-daily-folder . ?y)))
+                (add-to-list 'mu4e-maildir-shortcuts shortcut))))
+
   (add-hook 'elpaca-after-init-hook #'mu4e-extras-set-contexts)
-  (add-hook 'mu4e-view-mode-hook #'mu4e-extras-view-mode-hook-functions)
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
+  (add-hook 'mu4e-view-mode-hook #'mu4e-extras-set-face-locally)
 
   :general
   ((mu4e-headers-mode-map mu4e-view-mode-map)
+   "o" 'mu4e-extras-view-org-capture
    "$" 'mu4e-extras-copy-sum)
   (mu4e-main-mode-map
    "g" 'mu4e-extras-compose-new-externally
@@ -10785,22 +11048,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
    "D" 'mu4e-extras-view-trash
    "e" 'mu4e-extras-view-archive
    "x" 'mu4e-extras-view-in-gmail
-   "o" 'mu4e-extras-view-org-capture
    "v" 'mu4e-extras-view-move))
-#+end_src
-
-** mu4e-contrib
-:PROPERTIES:
-:ID:       7D84D1E5-BFA6-4990-AD14-21C51BFD356E
-:END:
-
-[2023-11-26 Sun] Do I need this? Disabling to test.
-
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :mu4e)
-(use-feature mu4e-contrib
-  :disabled
-  :after mu4e
-  :demand t)
 #+end_src
 
 ** org-msg
@@ -11231,7 +11479,6 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 (use-personal-package browse-url-extras
   :after browse-url s f
   :demand t
-  :config
   :general
   (eww-mode-map
   "e" 'browse-url-extras-add-domain-to-open-externally)
@@ -11261,7 +11508,7 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
   (setq shr-cookie-policy t)
 
   :general
-  ((html-mode-map mhtml-mode-map)
+  ((js-mode html-mode-map mhtml-mode-map)
    "s-w" 'shr-render-buffer))
 #+end_src
 
@@ -11326,6 +11573,7 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
 :ID:       E9E3FE6F-5580-4D21-90D8-6B0E595C10F7
 :END:
 :LOGBOOK:
+CLOCK: [2023-12-16 Sat 08:46]--[2023-12-16 Sat 09:37] =>  0:51
 CLOCK: [2023-04-08 Sat 12:09]--[2023-04-08 Sat 12:21] =>  0:12
 CLOCK: [2021-05-18 Tue 17:41]--[2021-05-18 Tue 18:26] =>  0:45
 CLOCK: [2021-05-04 Tue 22:07]--[2021-05-04 Tue 22:25] =>  0:18
@@ -11360,10 +11608,8 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
    "]" 'eww-next-url
    "j" 'eww-back-url
    ";" 'eww-forward-url
-   "r" 'eww-readable
    "g" nil
    "o" 'eww-toggle-fonts
-   "p" 'eww-extras-url-to-pdf
    "r" 'eww-reload
    ":" (lambda! (eww-follow-link '(4)))
    "x" 'eww-browse-with-external-browser))
@@ -11498,8 +11744,6 @@ CLOCK: [2021-04-08 Thu 21:19]--[2021-04-08 Thu 21:50] =>  0:31
 
 If the lines are breaking at the wrong places, set ~shr-width~ to the right value.
 
-Check [[https://www.reddit.com/r/emacs/comments/gpoaaa/updating_elfeed_using_seperate_emacs_process/][this]].
-
 #+begin_src emacs-lisp :results silent
 (use-package elfeed
   :defer 30
@@ -11507,6 +11751,7 @@ Check [[https://www.reddit.com/r/emacs/comments/gpoaaa/updating_elfeed_using_sep
   (setq-default elfeed-search-filter "+unread -wiki")
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
+  (add-hook 'elfeed-show-mode-hook #'visual-line-mode)
 
   :general
   (eww-mode-map
@@ -11587,6 +11832,37 @@ These key bindings produce the same behavior in eww.
   (setq rmh-elfeed-org-files (list paths-file-feeds-pablo paths-file-tlon-feeds))
 
   (elfeed-org))
+#+end_src
+
+** elfeed-tube
+:PROPERTIES:
+:ID:       410603F9-0FE3-4C31-BCB4-F85A9052263C
+:END:
+
+/[[https://github.com/karthink/elfeed-tube][elfeed-tube]] integrates ~elfeed~ with YouTube./
+
+#+begin_src emacs-lisp
+(use-package elfeed-tube
+  :after elfeed
+  :demand t
+  :config
+  (push '(text . shr-text) elfeed-tube-captions-faces)
+  (elfeed-tube-setup))
+#+end_src
+
+** elfeed-tube-mpv
+:PROPERTIES:
+:ID:       0ADC0E03-67F8-446F-AF26-5CBBE16F2BBD
+:END:
+
+/[[https://github.com/karthink/elfeed-tube][elfeed-tube-mpv]] integrates ~elfeed-tube~ with ~mpv~./
+
+#+begin_src emacs-lisp
+(use-package elfeed-tube-mpv
+  :after elfeed-tube
+  :demand t
+  :config
+  (setq elfeed-tube-save-indicator t))
 #+end_src
 
 ** engine-mode
@@ -11782,6 +12058,9 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine Internet-Archive
     "https://archive.org/search.php?query=%s"
     :keybinding "v v")
+  (defengine Internet-Archive-Scholar
+    "https://scholar.archive.org/search?q=%s"
+    :keybinding "v s")
   (defengine JustWatch
     "https://www.justwatch.com/us/search?q=%s"
     :keybinding "j w")
@@ -12039,7 +12318,7 @@ CLOCK: [2022-09-29 Thu 16:52]--[2022-09-29 Thu 18:01] =>  1:09
 CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
 :END:
 
-This little package collects a few simple commands I created for interfacing with Mullvad, a VPN service. To use these commands, you must first run ~mullvad account login [your account number]~ in the terminal.  To find your account number, go to "settings" > "account".
+/[[https://github.com/benthamite/mullvad][mullvad]] provides a few functions for interfacing with Mullvad, a VPN service./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mullvad)
 (use-package mullvad
@@ -12047,6 +12326,25 @@ This little package collects a few simple commands I created for interfacing wit
            :host github
            :repo "benthamite/mullvad")
   :demand t
+  :config
+  (setq mullvad-cities-and-servers
+        '(("London" . "gb-lon-wg-001")
+          ("Madrid" . "es-mad-wg-101")
+          ("Malmö" . "se-sto-wg-001")
+          ("Frankfurt" . "de-fra-wg-001")
+          ("New York" . "us-nyc-wg-601")
+          ("San José" . "us-sjc-wg-001")
+          ("São Paulo" . "br-sao-wg-001")))
+
+  (setq mullvad-websites-and-cities
+        '(("Betfair" . "London")
+          ("Criterion Channel" . "New York")
+          ("HathiTrust" . "San José")
+          ("Library Genesis" . "Malmö")
+          ("Pirate Bay" . "Malmö")
+          ("UC Berkeley" . "San José")
+          ("Wise" . "Madrid")))
+
   :general
   ("A-a" 'mullvad-dispatch))
 #+end_src
@@ -12129,40 +12427,12 @@ CLOCK: [2023-05-07 Sun 10:53]--[2023-05-07 Sun 11:27] =>  0:34
 Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dlp]], a ~youtube-dl~ fork.
 
 #+begin_src emacs-lisp :results silent
-(use-package ytdl)
-#+end_src
-
-*** TODO [#4] Fix naming problem for videos
-:PROPERTIES:
-:Effort:   0:45
-:ID:       F4F4B47A-6B45-41DD-831C-0C23D67C4398
-:END:
-:LOGBOOK:
-CLOCK: [2022-09-05 Mon 20:22]--[2022-09-05 Mon 21:28] =>  1:06
-:END:
-
-** espotify
-:PROPERTIES:
-:ID:       5879A8B7-0889-4FCD-A16A-77D0BCEE4804
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-22 Wed 14:50]--[2022-06-22 Wed 15:10] =>  0:20
-:END:
-
-/[[https://codeberg.org/jao/espotify][espotify]] supports interacting with spotify API and players inside emacs./
-
-[2022-06-22 Wed 15:07] I can't make this work. Maybe related to the [[id:86EE7A94-E470-45DB-B0A5-0AE717A15353][dbus problem]]?
-
-#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :espotify)
-(use-package espotify
-  :disabled
-  :after auth-source-pass
-  :defer 20
+(use-package ytdl
   :config
-  (setq espotify-service-name "spotify")
-  (setq espotify-use-system-bus-p nil)
-  (setq espotify-client-id (auth-source-pass-get "id" "auth-sources/spotify"))
-  (setq espotify-client-secret (auth-source-pass-get 'secret "auth-sources/spotify")))
+  (setq ytdl-command "yt-dlp")
+
+  :general
+  ("A-M-y" 'ytdl-download))
 #+end_src
 
 ** read-aloud
@@ -12183,155 +12453,6 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
   :general
   ("C-H-r" 'read-aloud-this)) ; remember that `A-C-d' starts/stops dictation
 #+end_src
-
-* passwords
-:PROPERTIES:
-:ID:       D412C998-40EE-4638-959A-C2530EC9F247
-:END:
-:LOGBOOK:
-:END:
-
-** plstore
-:PROPERTIES:
-:ID:       5257E611-7953-4898-B743-25803EC7D9B4
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature plstore
-  :demand t
-  :init
-  (setq-default plstore-cache-passphrase-for-symmetric-encryption t))
-#+end_src
-
-** epg-config
-:PROPERTIES:
-:ID:       012F15A3-7717-4B09-9F43-74DA6F5F7C1A
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature epg-config
-  :demand t
-  :config
-  (setq epg-pinentry-mode 'loopback) ; use minibuffer for password entry
-  (setq epg-gpg-program "/opt/homebrew/bin/gpg"))
-#+end_src
-
-** epa-file
-:PROPERTIES:
-:ID:       FD3455F8-7CD3-4651-8063-304D4131F14E
-:END:
-
-#+begin_src emacs-lisp
-(use-feature epa-file
-  :config
-  (epa-file-enable))
-#+end_src
-
-** auth-source
-:PROPERTIES:
-:ID:       291F9998-9940-4249-A048-92B5F2A2895E
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature auth-source
-  :demand t
-  :preface
-  (eval-when-compile
-    (defvar auth-sources))
-  :config
-  (setq auth-source-debug nil) ; set to t for debugging
-  (setq auth-sources '(macos-keychain-internet macos-keychain-generic)))
-#+end_src
-
-** oauth2-auto
-:PROPERTIES:
-:ID:       C7B36982-D472-4248-8C61-B7EB0ED6ACF6
-:END:
-
-/[[https://github.com/telotortium/emacs-oauth2-auto][emacs-oauth2-auto]] supports authentication to an OAuth2 provider from within Emacs./
-
-#+begin_src emacs-lisp :results silent
-(use-package oauth2-auto
-  :elpaca (emacs-oauth2-auto
-           :host github
-           :repo "telotortium/emacs-oauth2-auto"
-           :protocol ssh))
-#+end_src
-
-** pass
-:PROPERTIES:
-:ID:       518D3C1F-AFD6-4B72-8980-CAD10BBAEDDE
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-03 Fri 16:18]--[2022-06-03 Fri 16:35] =>  0:17
-CLOCK: [2022-06-03 Fri 16:38]--[2022-06-03 Fri 16:44] =>  0:06
-CLOCK: [2021-07-20 Tue 09:33]--[2021-07-20 Tue 10:14] =>  0:41
-CLOCK: [2021-05-29 Sat 15:44]--[2021-05-29 Sat 16:28] =>  0:44
-CLOCK: [2021-05-26 Wed 17:46]--[2021-05-26 Wed 18:04] =>  0:18
-CLOCK: [2021-05-14 Fri 14:55]--[2021-05-14 Fri 15:07] =>  0:12
-CLOCK: [2021-04-12 Mon 13:12]--[2021-04-12 Mon 13:20] =>  0:08
-CLOCK: [2021-04-11 Sun 14:36]--[2021-04-11 Sun 14:47] =>  0:11
-CLOCK: [2021-04-11 Sun 12:14]--[2021-04-11 Sun 12:28] =>  0:14
-CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
-:END:
-
-/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://en.wikipedia.org/wiki/Pass_(software)][pass]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package pass
-  :defer 5
-  :general
-  ("A-H-o" 'pass)
-  (pass-mode-map
-   "c" 'pass-copy
-   "d" 'pass-kill)
-  (pass-view-mode-map
-   "s-c" 'pass-view-toggle-password
-   "s-s" 'server-edit))
-#+end_src
-
-** pass-extras
-:PROPERTIES:
-:ID:       524FE3D7-EA5B-408E-A338-68E633528632
-:END:
-
-#+begin_src emacs-lisp
-(use-personal-package pass-extras
-  :after pass
-  :demand t
-  :general
-  (pass-mode-map
-   "<return>" 'pass-extras-edit
-   "SPC" 'pass-extras-open-at-point
-   "e" 'pass-extras-edit
-   "I" 'pass-extras-insert-generated-no-symbols
-   "y" 'pass-extras-git-sync))
-#+end_src
-
-** auth-source-pass
-:PROPERTIES:
-:ID:       00772E1B-A97C-46B5-8DE9-77462AAE0189
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-29 Sat 15:10]--[2021-05-29 Sat 15:44] =>  0:34
-CLOCK: [2021-05-29 Sat 13:52]--[2021-05-29 Sat 14:10] =>  0:18
-CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature auth-source-pass
-  :demand t
-  :after auth-source pass
-  :config
-  (setq auth-source-debug t)
-  (setq auth-source-do-cache nil)
-  (auth-source-pass-enable))
-#+end_src
-
-Note: to work, entries must conform to the pattern ~auth-sources/host~.
 
 * misc
 :PROPERTIES:
@@ -12398,7 +12519,9 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 
 #+begin_src emacs-lisp :results silent
 (use-package unpackaged
-  :elpaca (unpackaged :host github :repo "alphapapa/unpackaged.el")
+  :elpaca (unpackaged
+           :host github
+           :repo "alphapapa/unpackaged.el")
   :commands (unpackaged/org-forward-to-entry-content))
 #+end_src
 
@@ -12440,12 +12563,12 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (midnight-delay-set 'midnight-delay "4:00am")
 
   ;; note that the hooks appear in reverse order of execution
-  (dolist (function #'(el-patch-validate-all
+  (dolist (function #'(tlon-babel-forge-update-all-repos
+                       el-patch-validate-all
                        org-gcal-sync
                        org-extras-id-update-id-locations
                        org-roam-db-sync
                        pass-extras-git-sync
-                       tlon-babel-forge-update-repos
                        magit-extras-stage-commit-and-push-all-repos
                        ledger-mode-extras-update-commodities
                        ledger-mode-extras-update-coin-prices

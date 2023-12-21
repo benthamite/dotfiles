@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'elfeed)
-(require 'paths)
 (require 'elfeed-show)
 
 ;;;; Functions
@@ -162,6 +161,7 @@ poorly-designed websites."
 (add-hook 'elfeed-update-hooks #'elfeed-extras-update-complete-hook)
 
 (defun elfeed-extras-update-message-completed (&rest _ignore)
+  "Display a message when `elfeed-update' is finished."
   (message "Feeds updated"))
 
 (add-hook 'elfeed-extras-update-complete-hook #'elfeed-extras-update-message-completed)
@@ -184,11 +184,13 @@ poorly-designed websites."
 (add-hook 'elfeed-update-init-hooks #'elfeed-extras-search-update-save-filter)
 
 (defun elfeed-extras-update-counter-inc (&rest ignore)
+  "Increment `elfeed-extras-updates-in-progress'."
   (cl-incf elfeed-extras-updates-in-progress))
 
 (advice-add #'elfeed-update-feed :before #'elfeed-extras-update-counter-inc)
 
 (defun elfeed-extras-update-counter-dec (&rest ignore)
+  "Decrement `elfeed-extras-updates-in-progress'."
   (cl-decf elfeed-extras-updates-in-progress)
   (when (< elfeed-extras-updates-in-progress 0)
     ;; Just in case

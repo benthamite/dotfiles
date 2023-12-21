@@ -27,14 +27,15 @@
 
 ;;; Code:
 
+(require 'doom-modeline)
+
 ;;;; Functions
 
 ;;;;; Patched functions
 
-;; patch the two functions below to remove the `doom-modeline-github`
-;; requirement.
-;; I show the notifications in the tab-bar, so I don't want them to
-;; appear in modeline as well
+;; Patch the two functions below to remove the `doom-modeline-github`
+;; requirement. I show the notifications in the tab-bar, so I don't want them to
+;; appear in the modeline as well
 
 (el-patch-defun doom-modeline--github-fetch-notifications ()
   "Fetch GitHub notifications."
@@ -60,7 +61,8 @@
 			  :noerror t))))))
      (lambda (result)
        (message "")                     ; suppress message
-       (setq doom-modeline--github-notification-number (length result))))))
+       (setq doom-modeline--github-notification-number (length result))
+       (run-hooks 'doom-modeline-after-github-fetch-notification-hook)))))
 
 (el-patch-defun doom-modeline-github-timer ()
   "Start/Stop the timer for GitHub fetching."
@@ -72,10 +74,30 @@
 				  doom-modeline-github-interval
 				  #'doom-modeline--github-fetch-notifications))))
 
+;;;;; notification counter Forge sync
+
+(defvar doom-modeline-extras-github-notification-last-count nil
+  "Notification count when the modeline notification counter was last updated.")
+
+(defun doom-modeline-extras-trigger-forge-update ()
+  "Pull notifications in Forge when the modeline notification counter is updated.
+Also refresh the the `gh-notify' buffer."
+  (unless (eq doom-modeline--github-notification-number
+	      (length doom-modeline-extras-github-notification-last-count))
+    (setq prev-result doom-modeline--github-notification-number)
+    (forge-pull-notifications)
+    (gh-notify-extras-refresh-in-background)))
+
+(add-hook 'doom-modeline-after-github-fetch-notification-hook
+	  #'doom-modeline-extras-trigger-forge-update)
+
+;;;;; vars
+
+;; TODO: move this to `config.org' if you determine it works correctly
+
 (setq doom-modeline-github t) ; we display the counter in the tab-bar; see `doom-modeline-extras.el'
 (setq doom-modeline-github-interval (* 1 60))
 (setq doom-modeline-github nil)
 
 (provide 'doom-modeline-extras)
 ;;; doom-modeline-extras.el ends here
-

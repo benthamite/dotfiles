@@ -38,6 +38,11 @@
   :type 'alist
   :group 'tab-bar-extras)
 
+(defcustom tab-bar-extras-reset-wttr t
+  "Whether to reset the weather information when `tab-bar-extras-mode' is activated."
+  :type 'boolean
+  :group 'tab-bar-extras)
+
 ;;;; Functions
 
 (defun tab-bar-extras-reset (&optional quick)
@@ -53,7 +58,7 @@ reset functions."
     (when calendar-extras-use-geolocation
       (calendar-extras-set-location-variables-from-ip))
     (setq display-wttr-locations `(,calendar-location-name)))
-  (when (boundp 'display-wttr-mode)
+  (when tab-bar-extras-reset-wttr
     (display-wttr)))
 
 (defun tab-bar-extras-quick-reset ()

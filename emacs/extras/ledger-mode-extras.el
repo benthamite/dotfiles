@@ -41,6 +41,7 @@
 
 (defun ledger-extras-import-polymarket (file)
   "Import Polymarket CSV FILE into the current ledger file."
+  (interactive "f")
   (let (token-alist)
     (dolist (raw (s-split "\n" (f-read file) t))
       (let* ((clean (split-string (replace-regexp-in-string "\"" "" raw) "," t))
@@ -54,14 +55,22 @@
 		  match
 		(read-string (format "Token symbol for `%s': " token-name))))
 	     (date (format-time-string "%Y-%m-%d" (seconds-to-time (string-to-number (nth 5 clean)))))
+	     (payee "Polymarket")
 	     (account "Assets:Polymarket"))
 	(push (cons token-name token-symbol) token-alist)
-	(with-current-buffer (find-file-noselect paths-file-ledger)
-	  (goto-char (point-max))
-	  (insert (format "%s Polymarket\n     %2$s  %s %s @ %s USD\n     %2$s"
-			  date account quantity token-symbol price))
-	  (ledger-mode-extras-align-and-next)
-	  (insert "\n\n"))))))
+	(ledger-mode-extras-insert-transaction (list payee date account quantity token-symbol price))))))
+
+(defun ledger-mode-extras-insert-transaction (fields &optional file)
+  "Insert a new transaction with FIELDS at the end of FILE.
+If FILE is nil, use `paths-file-ledger'."
+  (let ((file (or file paths-file-ledger)))
+    (cl-destructuring-bind (payee date account quantity token-symbol price) fields
+      (with-current-buffer (find-file-noselect file)
+	(goto-char (point-max))
+	(insert (format "%s %s\n     %3$s  %s %s @ %s USD\n     %3$s"
+			payee date account quantity token-symbol price))
+	(ledger-mode-extras-align-and-next)
+	(insert "\n\n")))))
 
 (defun ledger-mode-extras-new-entry-below ()
   "Create new entry below one at point."

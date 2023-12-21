@@ -2490,7 +2490,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
           ,@modus-themes-preset-overrides-intense))
 
   (add-hook 'modus-themes-after-load-theme-hook #'faces-extras-load-custom-faces)
-  (add-hook 'modus-themes-after-load-theme-hook #'frames-extras-restore-window-divider)
+  (add-hook 'modus-themes-after-load-theme-hook #'frame-extras-restore-window-divider)
 
   :general
   ("A-u" 'modus-themes-toggle))
@@ -4627,7 +4627,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   (tlon-init-override-code-if-available
    :frame-extras-maximize-frame
    '((add-hook 'elpaca-after-init-hook #'frame-extras-maximize-frame)))
-     (add-hook 'spacious-padding-mode-hook #'frames-extras-restore-window-divider))
+     (add-hook 'spacious-padding-mode-hook #'frame-extras-restore-window-divider))
 #+end_src
 
 ** winum

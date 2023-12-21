@@ -65,18 +65,7 @@ user input."
   (call-interactively #'password-store-generate-no-symbols)
   (pass-update-buffer))
 
-;;;;; Patched functions
-
-(el-patch-defun pass-quit ()
-  "Kill the buffer quitting the window."
-  (interactive)
-  (when (el-patch-swap (y-or-n-p "Kill all pass entry buffers? ") t)
-    (dolist (buf (buffer-list))
-      (with-current-buffer buf
-	(when (eq major-mode 'pass-view-mode)
-	  (kill-buffer buf)))))
-  (quit-window t))
-
 (provide 'pass-extras)
+
 ;;; pass-extras.el ends here
 

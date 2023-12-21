@@ -28,8 +28,40 @@
 ;;; Code:
 
 (require 'ledger-mode)
+(require 'f)
+(require 's)
+
+;;;; Variables
+
+(defgroup ledger-extras ()
+  "Extensions for `ledger'."
+  :group 'ledger-extras)
 
 ;;;; Functions
+
+(defun ledger-extras-import-polymarket (file)
+  "Import Polymarket CSV FILE into the current ledger file."
+  (let (token-alist)
+    (dolist (raw (s-split "\n" (f-read file) t))
+      (let* ((clean (split-string (replace-regexp-in-string "\"" "" raw) "," t))
+	     (sign (if (string= (nth 1 clean) "Buy") 1 -1))
+	     (proceeds (float (string-to-number (nth 2 clean))))
+	     (quantity (float (* sign (string-to-number (nth 3 clean)))))
+	     (price (abs (/ proceeds quantity)))
+	     (token-name (string-trim (nth 0 clean)))
+	     (token-symbol
+	      (if-let ((match (alist-get token-name token-alist nil nil #'string=)))
+		  match
+		(read-string (format "Token symbol for `%s': " token-name))))
+	     (date (format-time-string "%Y-%m-%d" (seconds-to-time (string-to-number (nth 5 clean)))))
+	     (account "Assets:Polymarket"))
+	(push (cons token-name token-symbol) token-alist)
+	(with-current-buffer (find-file-noselect paths-file-ledger)
+	  (goto-char (point-max))
+	  (insert (format "%s Polymarket\n     %2$s  %s %s @ %s USD\n     %2$s"
+			  date account quantity token-symbol price))
+	  (ledger-mode-extras-align-and-next)
+	  (insert "\n\n"))))))
 
 (defun ledger-mode-extras-new-entry-below ()
   "Create new entry below one at point."
@@ -70,49 +102,49 @@
   (interactive)
   (async-shell-command
    (format "python3 %s"
-           (file-name-concat paths-dir-ledger "commodities.py"))))
+	   (file-name-concat paths-dir-ledger "commodities.py"))))
 
 (defun ledger-mode-extras-update-coin-prices ()
   "Update `coinprices.py'."
   (interactive)
   (async-shell-command
    (format "python3 %s >> %s"
-           (file-name-concat paths-dir-ledger "coinprices/coinprices.py")
-           paths-file-ledger-db)))
+	   (file-name-concat paths-dir-ledger "coinprices/coinprices.py")
+	   paths-file-ledger-db)))
 
 (defun ledger-mode-extras-sort-region-reversed (beg end)
   "Sort the region from BEG to END in reverse chronological order."
   (interactive "r") ;; load beg and end from point and mark
   ;; automagically
   (let* ((new-beg beg)
-         (new-end end)
-         (bounds (ledger-navigate-find-xact-extents (point)))
-         (point-delta (- (point) (car bounds)))
-         (target-xact (buffer-substring (car bounds) (cadr bounds)))
-         (inhibit-modification-hooks t))
+	 (new-end end)
+	 (bounds (ledger-navigate-find-xact-extents (point)))
+	 (point-delta (- (point) (car bounds)))
+	 (target-xact (buffer-substring (car bounds) (cadr bounds)))
+	 (inhibit-modification-hooks t))
     (save-excursion
       (save-restriction
-        (goto-char beg)
-        ;; make sure beg of region is at the beginning of a line
-        (beginning-of-line)
-        ;; make sure point is at the beginning of a xact
-        (unless (looking-at ledger-payee-any-status-regex)
-          (ledger-navigate-next-xact))
-        (setq new-beg (point))
-        (goto-char end)
-        (ledger-navigate-next-xact)
-        ;; make sure end of region is at the beginning of next record
-        ;; after the region
-        (setq new-end (point))
-        (narrow-to-region new-beg new-end)
-        (goto-char new-beg)
+	(goto-char beg)
+	;; make sure beg of region is at the beginning of a line
+	(beginning-of-line)
+	;; make sure point is at the beginning of a xact
+	(unless (looking-at ledger-payee-any-status-regex)
+	  (ledger-navigate-next-xact))
+	(setq new-beg (point))
+	(goto-char end)
+	(ledger-navigate-next-xact)
+	;; make sure end of region is at the beginning of next record
+	;; after the region
+	(setq new-end (point))
+	(narrow-to-region new-beg new-end)
+	(goto-char new-beg)
 
-        (let ((inhibit-field-text-motion t))
-          (sort-subr
-           t
-           'ledger-navigate-next-xact
-           'ledger-navigate-end-of-xact
-           'ledger-sort-startkey))))
+	(let ((inhibit-field-text-motion t))
+	  (sort-subr
+	   t
+	   'ledger-navigate-next-xact
+	   'ledger-navigate-end-of-xact
+	   'ledger-sort-startkey))))
 
     (goto-char (point-min))
     (re-search-forward (regexp-quote target-xact))
@@ -122,11 +154,11 @@
   "Sort the entire buffer in reverse chronological order."
   (interactive)
   (let (sort-start
-        sort-end)
+	sort-end)
     (save-excursion
       (goto-char (point-min))
       (setq sort-start (ledger-sort-find-start)
-            sort-end (ledger-sort-find-end)))
+	    sort-end (ledger-sort-find-end)))
     (ledger-mode-extras-sort-region-reversed (or sort-start (point-min))
 					     (or sort-end (point-max)))))
 
@@ -158,7 +190,7 @@
   "Narrow to the current transaction."
   (interactive)
   (let ((xact-begins (ledger-navigate-beginning-of-xact))
-        (xact-ends (ledger-navigate-end-of-xact)))
+	(xact-ends (ledger-navigate-end-of-xact)))
     (narrow-to-region xact-begins xact-ends)))
 
 (defun ledger-mode-extras--increase-date (days)
@@ -167,8 +199,8 @@ DAYS can be positive or negative."
   (save-excursion
     (ledger-mode-extras-narrow-to-xact)
     (let* ((date (ledger-xact-date))
-           (timestamp (date-to-time date))
-           (date-minus-days (format-time-string "%Y-%m-%d" (time-add timestamp (days-to-time days)))))
+	   (timestamp (date-to-time date))
+	   (date-minus-days (format-time-string "%Y-%m-%d" (time-add timestamp (days-to-time days)))))
       (goto-char (point-min))
       (re-search-forward ledger-iso-date-regexp nil t)
       (replace-match date-minus-days)

@@ -27,8 +27,6 @@
 
 ;;; Code:
 
-(require 'paths)
-
 ;;;; User options
 
 (defgroup window-extras ()
@@ -42,25 +40,12 @@
 
 ;;;; Functions
 
-;; FIXME: trigger macOS window maximization
-(defun window-extras-toggle-frame-maximized ()
-  "Toggle frame maximized."
-  (interactive)
-  (toggle-frame-maximized)
-  (if (window-extras-frame-is-maximized-p)
-      (remove-function after-focus-change-function
-                       (lambda ()
-                         (set-frame-parameter nil 'fullscreen 'maximized)))
-    (add-function :after after-focus-change-function
-                  (lambda ()
-                    (set-frame-parameter nil 'fullscreen 'maximized)))))
-
 (defun window-extras-get-last-window ()
   "Get to previously selected ordinary or minibuffer window."
   (interactive)
   (if (and (active-minibuffer-window) (not (minibufferp)))
       (select-window (active-minibuffer-window))
-    (get-mru-window nil nil t)))
+    (get-mru-window 'visible t t)))
 
 (defun window-extras-switch-to-last-window ()
   "Switch to previously selected ordinary or minibuffer window."

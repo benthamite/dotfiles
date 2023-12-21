@@ -707,6 +707,8 @@ SEPARATOR is nil, use ' • '."
 ;;;;; ob
 
 (defun org-extras-confirm-babel-evaluate (lang body)
+  "`org-babel' confirm function that prompts for confirmation.
+LANG and BODY are required by the `org-confirm-babel-evaluate' user option."
   (not (member lang '("python" "emacs-lisp"))))
 
 (defun org-extras-babel-tangle ()

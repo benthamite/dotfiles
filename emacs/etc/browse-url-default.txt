@@ -12,6 +12,7 @@ awstrack.me
 berkeley.edu
 beyondpricing.com
 bloomberg.com
+bolt.eu
 box.com
 calendar.google.com
 calendly.com

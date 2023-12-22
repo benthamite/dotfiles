@@ -1089,6 +1089,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
            :repo "magit/transient"
            :ref "37307c1"
            :depth nil)
+           :after seq
   :demand t)
 #+end_src
 

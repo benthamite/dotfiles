@@ -93,6 +93,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#epa-file][epa-file]]
   - [[#auth-source][auth-source]]
   - [[#oauth2-auto][oauth2-auto]]
+  - [[#password-store][password-store]]
   - [[#pass][pass]]
   - [[#pass-extras][pass-extras]]
   - [[#auth-source-pass][auth-source-pass]]
@@ -1857,6 +1858,20 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
            :protocol ssh))
 #+end_src
 
+** password-store
+:PROPERTIES:
+:ID:       80D05BB8-D440-417A-8D94-61F4EB79EA00
+:END:
+
+#+begin_src emacs-lisp
+(use-package password-store
+  :elpaca (password-store
+            :host github
+            :repo "zx2c4/password-store"
+            :files ("contrib/emacs/*.el"))
+  :demand t)
+#+end_src
+
 ** pass
 :PROPERTIES:
 :ID:       518D3C1F-AFD6-4B72-8980-CAD10BBAEDDE
@@ -1879,6 +1894,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 #+begin_src emacs-lisp :results silent
 (use-package pass
   :demand t
+  :after password-store
   :config
   (setq pass-suppress-confirmations t)
 

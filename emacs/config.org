@@ -1041,7 +1041,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
   ;; unset all `Super' key bindings
   (dolist (char (number-sequence ?a ?z))
-  (keymap-unset key-translation-map (concat "s-" (char-to-string char))))
+    (keymap-global-unset (concat "s-" (char-to-string char))))
 
   ;; unset some `Alt' key bindings in `key-translation-map'
   (dolist (char '("SPC" "!" "$" "+" "-" "<" ">" "?" "a" "c" "m" "o" "u" "x" "C" "L" "P" "R" "S" "T" "Y" "[" "]" "{" "|" "}"))

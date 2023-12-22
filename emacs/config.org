@@ -73,6 +73,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
+  - [[#seq][seq]]
   - [[#transient][transient]]
   - [[#hydra][hydra]]
   - [[#warnings][warnings]]
@@ -1064,6 +1065,16 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :demand t
   :config
   (setq el-patch-enable-use-package-integration t))
+#+end_src
+
+** seq
+:PROPERTIES:
+:ID:       FD3A9A18-BDB8-4D52-9F5C-8E040FA042A2
+:END:
+
+#+begin_src emacs-lisp
+(use-feature seq
+  :demand t)
 #+end_src
 
 ** transient

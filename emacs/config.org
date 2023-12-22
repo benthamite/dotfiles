@@ -359,6 +359,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#ai][AI]]
   - [[#copilot][copilot]]
   - [[#gptel][gptel]]
+  - [[#gptel-extras][gptel-extras]]
   - [[#org-ai][org-ai]]
   - [[#gpt-commit][gpt-commit]]
   - [[#whisper][whisper]]
@@ -7484,8 +7485,18 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :demand t
   :config
   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
-  (setq gptel-default-mode 'org-mode)
-  (setq-default gptel-model "gpt-4"))
+  (setq gptel-default-mode 'org-mode))
+#+end_src
+
+** gptel-extras
+:PROPERTIES:
+:ID:       AEA2E978-0321-4F3D-B3EB-14CDA505A9D9
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package gptel-extras
+  :after gptel
+  :demand t)
 #+end_src
 
 ** org-ai

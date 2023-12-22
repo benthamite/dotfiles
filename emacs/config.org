@@ -1206,7 +1206,7 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
 (defhydra hydra-files-packages
   (:exit t)
   "packages"
-  ("b" (files-extras-open-elpaca-package "tlon-babel") "tlon-babel" :column "tlon")
+  ("b" (files-extras-open-elpaca-package "tlon-babel") "tlon-babel" :column "tlön")
   ("c" (files-extras-open-elpaca-package "tlon-core") "tlon-core")
   ("i" (files-extras-open-elpaca-package "tlon-init") "tlon-init")
   ("a" (files-extras-open-elpaca-package "internet-archive") "internet-archive" :column "personal")

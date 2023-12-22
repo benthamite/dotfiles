@@ -35,35 +35,34 @@
   "Extensions for `gptel'."
   :group 'gptel-extras)
 
+;;;; Variables
+
+(defvar gptel-extras-gemini-pro-backend-plist
+  `(:key ,(auth-source-pass-get 'secret (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared))
+	 :stream t)
+  "Parameters for creating a Gemini Pro backend.")
+
 (defvar gptel-extras-gemini-pro-backend
-  (gptel-make-gemini
-   "Gemini"
-   :key (auth-source-pass-get 'secret (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared))
-   :stream t)
+  (apply #'gptel-make-gemini "Gemini" gptel-extras-gemini-pro-backend-plist)
   "Backend for `gptel' when using the Gemini Pro model.")
 
 (defvar gptel-extras-gemini-pro-no-stream-backend
-  (gptel-make-gemini
-   "Gemini"
-   :key (auth-source-pass-get 'secret (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared))
-   :stream nil)
+  (apply #'gptel-make-gemini "Gemini" (plist-put gptel-extras-gemini-pro-backend-plist :stream nil))
   "Backend for `gptel' when using the Gemini Pro model with `:stream' set to nil.")
+
+(defvar gptel-extras-backends
+  `(("gpt-4" . ,gptel--openai)
+    ("gemini-pro" . ,gptel-extras-gemini-pro-backend)
+    ("gemini-pro-no-stream" . ,gptel-extras-gemini-pro-no-stream-backend))
+  "List of backends for `gptel'.")
 
 ;;;; Functions
 
 (defun gptel-model-config (model)
   "Configure `gptel' for MODEL."
-  (interactive (list (completing-read "Model: " '("gpt-4"
-						  "gemini-pro"
-						  "gemini-pro-no-stream")
-				      nil t)))
-  (pcase model
-    ("gpt-4" (setq gptel-model "gpt-4"
-		   gptel-backend gptel--openai))
-    ("gemini-pro" (setq gptel-model "gemini-pro"
-			gptel-backend gptel-extras-gemini-pro-backend))
-    ("gemini-pro-no-stream" (setq gptel-model "gemini-pro-no-stream"
-				  gptel-backend gptel-extras-gemini-pro-no-stream-backend))))
+  (interactive (list (completing-read "Model: " gptel-extras-backends nil t)))
+  (setq gptel-model model
+	gptel-backend (alist-get model gptel-extras-backends nil nil #'string=)))
 
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

@@ -68,12 +68,12 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elpaca][elpaca]]
   - [[#use-package][use-package]]
 - [[#foundational][foundational]]
+  - [[#seq][seq]]
   - [[#general][general]]
   - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
-  - [[#seq][seq]]
   - [[#transient][transient]]
   - [[#hydra][hydra]]
   - [[#warnings][warnings]]
@@ -964,6 +964,20 @@ NAME and ARGS are in `use-package'."
 :ID:       B2CADEA2-F8B7-4E8E-8FB0-D6B59658933D
 :END:
 
+** seq
+:PROPERTIES:
+:ID:       FD3A9A18-BDB8-4D52-9F5C-8E040FA042A2
+:END:
+
+#+begin_src emacs-lisp
+(unload-feature 'seq t)
+(use-package seq
+  :elpaca (seq
+           :repo "https://git.savannah.gnu.org/git/emacs/elpa.git"
+           :branch "externals/seq")
+  :demand t)
+#+end_src
+
 ** general
 :PROPERTIES:
 :ID:       70C622E0-FAC7-4AB1-841F-36437858218C
@@ -1065,16 +1079,6 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :demand t
   :config
   (setq el-patch-enable-use-package-integration t))
-#+end_src
-
-** seq
-:PROPERTIES:
-:ID:       FD3A9A18-BDB8-4D52-9F5C-8E040FA042A2
-:END:
-
-#+begin_src emacs-lisp
-(use-feature seq
-  :demand t)
 #+end_src
 
 ** transient

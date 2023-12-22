@@ -476,7 +476,7 @@ Doom modeline
 ;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
 (setq tab-bar-extras-global-mode-string
       '(;; Chemacs profile name
-        "  " chemacs-profile-name " | "
+        "  " chemacs-profile-name
 
         ;; telega notifications
         (when (featurep 'telega)
@@ -498,7 +498,8 @@ Doom modeline
                       ((> doom-modeline--github-notification-number 99) "99+")
                       (t (number-to-string doom-modeline--github-notification-number)))
                      'face '(:inherit
-                             (doom-modeline-unread-number doom-modeline-notification)))))))))
+                             (doom-modeline-unread-number doom-modeline-notification)))))))
+                             " | "))
 
 (setq global-mode-string tab-bar-extras-global-mode-string)
 

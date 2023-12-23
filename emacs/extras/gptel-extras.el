@@ -46,14 +46,9 @@
   (apply #'gptel-make-gemini "Gemini" gptel-extras-gemini-pro-backend-plist)
   "Backend for `gptel' when using the Gemini Pro model.")
 
-(defvar gptel-extras-gemini-pro-no-stream-backend
-  (apply #'gptel-make-gemini "Gemini" (plist-put gptel-extras-gemini-pro-backend-plist :stream nil))
-  "Backend for `gptel' when using the Gemini Pro model with `:stream' set to nil.")
-
 (defvar gptel-extras-backends
   `(("gpt-4" . ,gptel--openai)
-    ("gemini-pro" . ,gptel-extras-gemini-pro-backend)
-    ("gemini-pro-no-stream" . ,gptel-extras-gemini-pro-no-stream-backend))
+    ("gemini-pro" . ,gptel-extras-gemini-pro-backend))
   "List of backends for `gptel'.")
 
 ;;;; Functions

@@ -53,7 +53,7 @@
 
 ;;;; Functions
 
-(defun gptel-model-config (model)
+(defun gptel-extras-model-config (model)
   "Configure `gptel' for MODEL.
 For Gemini, a VPN will be used to circumvent location restrictions."
   (interactive (list (completing-read "Model: " gptel-extras-backends nil t)))

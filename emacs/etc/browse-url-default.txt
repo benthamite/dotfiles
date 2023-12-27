@@ -57,6 +57,7 @@ libgen.
 LinkedIn.com
 list-manage.com
 loc.gov
+loops.so
 mail.google.com
 mailerlite.com
 mailist-manage.eu
@@ -71,6 +72,7 @@ myaccount.google.com
 myheritage.es
 openai.com
 paxful.com
+perplexity.ai
 qualtrics.com
 quora.com
 rescuetime.com

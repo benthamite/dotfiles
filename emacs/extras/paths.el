@@ -479,6 +479,12 @@
   :type 'directory
   :group 'paths)
 
+(defcustom paths-dir-clock-repos
+  (file-name-concat paths-dir-repos "clock-reports/")
+  "Path to the Dropbox repos directory."
+  :type 'directory
+  :group 'paths)
+
 (defcustom paths-dir-tlon-babel
   (file-name-concat paths-dir-repos "babel/")
   "Path to the `tlon-babel' repo directory."

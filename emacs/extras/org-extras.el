@@ -492,13 +492,20 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
   (org-back-to-heading)
   (re-search-forward "CLOCK: \\[\\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\) \\([A-Za-z]\\{3\\}\\) \\([0-9]\\{2\\}:\\)" nil t))
 
-(defun org-extras-clock-report (start-date end-date)
-  "Generate an org clock report for the period between START-DATE and END-DATE."
+(defun org-extras-clock-report-insert (start-date end-date scope)
+  "Insert an org clock report for the period between START-DATE and END-DATE.
+SCOPE is the scope of the report, and can be `agenda', `file', or `subtree'."
   (interactive
    (list (org-read-date nil nil nil "Start date: ")
-	 (org-read-date nil nil nil "End date: ")))
-  (insert (format "#+BEGIN: clocktable :scope subtree :maxlevel 4 :narrow 50 :tstart \"%s\" :tend \"%s\"\n#+END:" start-date end-date))
-  (org-clock-report))
+	 (org-read-date nil nil nil "End date: ")
+	 (org-completing-read "Scope: " '("agenda" "file" "subtree"))))
+  (let ((range (if (string= start-date end-date)
+		   ":block today"
+		 (format ":tstart \"%s\" :tend \"%s\"" start-date end-date))))
+    (insert
+     (format "#+BEGIN: clocktable :scope %s :maxlevel 4 :narrow 60! :fileskip0 t %s \n#+END:"
+	     scope range))
+    (org-clock-report)))
 
 (defun org-extras-delete-headings-without-logbook ()
   "Delete all headings in the current buffer that do not have a logbook."

@@ -272,6 +272,11 @@
 (setq telega-server-libs-prefix "/Users/cartago/source/td/tdlib")
 #+end_src
 
+** citar
+
+#+begin_src emacs-lisp
+(setq citar-citeproc-csl-styles-dir paths-dir-personal-csl-styles)
+#+end_src
 * tangle flags
 :PROPERTIES:
 :ID:       A4E7C5AD-1E55-4C6F-B0E5-8320D282A886

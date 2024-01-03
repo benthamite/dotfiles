@@ -395,21 +395,12 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
   "Define behavior of `org-capture-before-finalize-hook'."
   (require 'org-capture)
   (pcase (plist-get org-capture-plist :key)
-    ("gg"
+    ((or "gg" "gd" "ge")
      (org-ai-mode)
      (org-narrow-to-subtree)
-     (forward-line)
-     (forward-line)
-     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai
-")
-     (message "finished"))
-    ("gd"
-     (org-ai-mode)
-     (org-narrow-to-subtree)
-     (forward-line)
-     (forward-line)
-     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.}\n\n}[ME]:\n#+end_ai
-"))
+     (forward-line 2)
+     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai\n")
+     (goto-char (point-max)))
     ("l"
      (org-align-all-tags)
      (ispell-change-dictionary "english"))

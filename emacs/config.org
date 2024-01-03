@@ -11331,8 +11331,10 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 #+begin_src emacs-lisp :results silent
 (use-package telega
   :defer 5
-  :config
+  :init
   (setq telega-server-libs-prefix "/opt/homebrew")
+
+  :config
   (setq telega-chat-input-markups '("org"))
   (setq telega-use-images t)
   (setq telega-emoji-font-family 'noto-emoji)

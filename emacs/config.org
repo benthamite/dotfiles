@@ -2431,12 +2431,13 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
 
 /[[https://github.com/jxq0/org-tidy][org-tidy]] hides org-mode property drawers./
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package org-tidy
   :after org
   :demand t
   :config
   (setq org-tidy-properties-inline-symbol "")
+  (setq org-tidy-protect-overlay nil) ; github.com/jxq0/org-tidy/issues/11
   (add-hook 'org-mode-hook #'org-tidy-mode))
 #+end_src
 

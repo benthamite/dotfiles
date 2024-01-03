@@ -766,7 +766,10 @@ That is, move point after the stars, and the TODO and priority if present."
   (when (org-at-heading-p)
     (let ((org-special-ctrl-a/e t))
       (org-end-of-line)
-      (org-beginning-of-line))))
+      (org-beginning-of-line))
+    ;; handle special case when heading consists of a TODO status followed by a single space
+    (when (looking-at "^\\*+ [A-Z]+ $")
+      (goto-char (match-end 0)))))
 
 (defun org-extras-id-notes-only-clock (key)
   "Clock in to a heading with KEY."

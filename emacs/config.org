@@ -4144,6 +4144,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 
   (put 'dired-find-alternate-file 'disabled nil) ; do not disable dired-find-alternate-file!
 
+
   (add-hook 'dired-mode-hook #'dired-hide-details-mode) ; hide details by default
   (add-hook 'dired-mode-hook (lambda () (visual-line-mode -1)))
 
@@ -5043,6 +5044,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 (That's the actively maintained fork; the [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][official repository]] is no longer maintained.)
 
 [2023-09-12 Tue 12:03] There is currently an [[https://github.com/kidd/org-gcal.el/issues/238#issuecomment-1555902363][issue]] that, apparently, can only be solved by downgrading to an earlier version of ~gnupg~.
+
+Note to self: if the package doesn't work after deploying a new profile, even after following the steps in the solution above, copy the ~oauth2-auto.plist~ file from a working profile.
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-gcal)
 (use-package org-gcal

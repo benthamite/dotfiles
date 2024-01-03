@@ -37,7 +37,7 @@
   (interactive)
   (set-frame-parameter nil 'fullscreen 'maximized))
 
-(defun frames-extras-restore-window-divider ()
+(defun frame-extras-restore-window-divider ()
   "Restore visibility of window divider."
   (custom-set-faces
    '(window-divider (( )))))

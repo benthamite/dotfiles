@@ -55,7 +55,6 @@
     """Edit"
     ("e t" "edit title"             forge-edit-topic-title)
     ("e s" "edit state"             forge-edit-topic-state)
-    ("e m" "edit milestone"         forge-edit-topic-milestone)
     ("e l" "edit labels"            forge-edit-topic-labels)
     ]
    ["Browse"

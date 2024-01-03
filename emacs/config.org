@@ -68,6 +68,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elpaca][elpaca]]
   - [[#use-package][use-package]]
 - [[#foundational][foundational]]
+  - [[#seq][seq]]
   - [[#general][general]]
   - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
@@ -92,6 +93,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#epa-file][epa-file]]
   - [[#auth-source][auth-source]]
   - [[#oauth2-auto][oauth2-auto]]
+  - [[#password-store][password-store]]
   - [[#pass][pass]]
   - [[#pass-extras][pass-extras]]
   - [[#auth-source-pass][auth-source-pass]]
@@ -196,6 +198,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#locate][locate]]
   - [[#autorevert][autorevert]]
   - [[#dired][dired]]
+  - [[#dired-aux][dired-aux]]
   - [[#dired-extras][dired-extras]]
   - [[#dired-x][dired-x]]
   - [[#dired-async][dired-async]]
@@ -358,6 +361,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#ai][AI]]
   - [[#copilot][copilot]]
   - [[#gptel][gptel]]
+  - [[#gptel-extras][gptel-extras]]
   - [[#org-ai][org-ai]]
   - [[#gpt-commit][gpt-commit]]
   - [[#whisper][whisper]]
@@ -485,6 +489,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#multimedia][multimedia]]
   - [[#emms][EMMS]]
   - [[#mpv][mpv]]
+  - [[#empv][empv]]
   - [[#ytdl][ytdl]]
   - [[#read-aloud][read-aloud]]
 - [[#misc][misc]]
@@ -963,6 +968,26 @@ NAME and ARGS are in `use-package'."
 :ID:       B2CADEA2-F8B7-4E8E-8FB0-D6B59658933D
 :END:
 
+** seq
+:PROPERTIES:
+:ID:       FD3A9A18-BDB8-4D52-9F5C-8E040FA042A2
+:END:
+
+#+begin_src emacs-lisp
+;; https://github.com/progfolio/elpaca/issues/216#issuecomment-1868747372
+(defun elpaca-unload-seq (e)
+  (and (featurep 'seq) (unload-feature 'seq t))
+  (elpaca--continue-build e))
+
+;; You could embed this code directly in the reicpe, I just abstracted it into a function.
+(defun elpaca-seq-build-steps ()
+  (append (butlast (if (file-exists-p (expand-file-name "seq" elpaca-builds-directory))
+                       elpaca--pre-built-steps elpaca-build-steps))
+          (list 'elpaca-unload-seq 'elpaca--activate-package)))
+
+(use-package seq :elpaca `(seq :build ,(elpaca-seq-build-steps)))
+#+end_src
+
 ** general
 :PROPERTIES:
 :ID:       70C622E0-FAC7-4AB1-841F-36437858218C
@@ -1078,6 +1103,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
            :repo "magit/transient"
            :ref "37307c1"
            :depth nil)
+           :after seq
   :demand t)
 #+end_src
 
@@ -1188,7 +1214,7 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
 (defhydra hydra-files-packages
   (:exit t)
   "packages"
-  ("b" (files-extras-open-elpaca-package "tlon-babel") "tlon-babel" :column "tlon")
+  ("b" (files-extras-open-elpaca-package "tlon-babel") "tlon-babel" :column "tlön")
   ("c" (files-extras-open-elpaca-package "tlon-core") "tlon-core")
   ("i" (files-extras-open-elpaca-package "tlon-init") "tlon-init")
   ("a" (files-extras-open-elpaca-package "internet-archive") "internet-archive" :column "personal")
@@ -1840,6 +1866,20 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
            :protocol ssh))
 #+end_src
 
+** password-store
+:PROPERTIES:
+:ID:       80D05BB8-D440-417A-8D94-61F4EB79EA00
+:END:
+
+#+begin_src emacs-lisp
+(use-package password-store
+  :elpaca (password-store
+            :host github
+            :repo "zx2c4/password-store"
+            :files ("contrib/emacs/*.el"))
+  :demand t)
+#+end_src
+
 ** pass
 :PROPERTIES:
 :ID:       518D3C1F-AFD6-4B72-8980-CAD10BBAEDDE
@@ -1862,6 +1902,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 #+begin_src emacs-lisp :results silent
 (use-package pass
   :demand t
+  :after password-store
   :config
   (setq pass-suppress-confirmations t)
 
@@ -2396,12 +2437,13 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
 
 /[[https://github.com/jxq0/org-tidy][org-tidy]] hides org-mode property drawers./
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package org-tidy
   :after org
   :demand t
   :config
   (setq org-tidy-properties-inline-symbol "")
+  (setq org-tidy-protect-overlay nil) ; github.com/jxq0/org-tidy/issues/11
   (add-hook 'org-mode-hook #'org-tidy-mode))
 #+end_src
 
@@ -2490,7 +2532,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
           ,@modus-themes-preset-overrides-intense))
 
   (add-hook 'modus-themes-after-load-theme-hook #'faces-extras-load-custom-faces)
-  (add-hook 'modus-themes-after-load-theme-hook #'frames-extras-restore-window-divider)
+  (add-hook 'modus-themes-after-load-theme-hook #'frame-extras-restore-window-divider)
 
   :general
   ("A-u" 'modus-themes-toggle))
@@ -3394,6 +3436,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
    "M-o" 'downcase-dwim
    "M-q" 'save-buffers-kill-terminal
    "M-u" 'capitalize-dwim
+   "M-U" 'upcase-dwim
    "M-w" 'count-words-region
    "H-z" 'undo-only))
 #+end_src
@@ -4101,6 +4144,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 
   (put 'dired-find-alternate-file 'disabled nil) ; do not disable dired-find-alternate-file!
 
+
   (add-hook 'dired-mode-hook #'dired-hide-details-mode) ; hide details by default
   (add-hook 'dired-mode-hook (lambda () (visual-line-mode -1)))
 
@@ -4124,6 +4168,19 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
    "A-C-s-." 'dired-next-marked-file)
   (pdf-annot-minor-mode-map
    "x" 'dired-jump))
+#+end_src
+
+** dired-aux
+:PROPERTIES:
+:ID:       F41AFC26-002A-4152-9FC7-E9AD92DF5BBA
+:END:
+
+#+begin_src emacs-lisp
+(use-feature dired-aux
+  :after dired
+  :demand t
+  :config
+  (push '("\\.rar\\'" "" "unar") dired-compress-file-suffixes)) ; with `unar' installed, `Z' uncompresses `rar' files
 #+end_src
 
 ** dired-extras
@@ -4587,6 +4644,9 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
    "M-." 'window-extras-buffer-move-right
    "A-M--" 'window-extras-buffer-swap ; `emacs-mac'
    "A-M-–" 'window-extras-buffer-swap) ; `emacs-plus'
+  (js-mode-map
+   "M-," 'window-extras-buffer-move-left
+   "M-." 'window-extras-buffer-move-right)
   (isearch-mode-map
    "C-w" 'window-extras-narrow-or-widen-dwim))
 #+end_src
@@ -4627,7 +4687,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   (tlon-init-override-code-if-available
    :frame-extras-maximize-frame
    '((add-hook 'elpaca-after-init-hook #'frame-extras-maximize-frame)))
-     (add-hook 'spacious-padding-mode-hook #'frames-extras-restore-window-divider))
+     (add-hook 'spacious-padding-mode-hook #'frame-extras-restore-window-divider))
 #+end_src
 
 ** winum
@@ -4985,6 +5045,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 [2023-09-12 Tue 12:03] There is currently an [[https://github.com/kidd/org-gcal.el/issues/238#issuecomment-1555902363][issue]] that, apparently, can only be solved by downgrading to an earlier version of ~gnupg~.
 
+Note to self: if the package doesn't work after deploying a new profile, even after following the steps in the solution above, copy the ~oauth2-auto.plist~ file from a working profile.
+
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-gcal)
 (use-package org-gcal
   :elpaca (org-gcal
@@ -5276,7 +5338,6 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 (use-feature isearch
   :config
   (setq search-default-mode #'char-fold-to-regexp)
-  (setq search-whitespace-regexp ".*?")
   (setq isearch-lax-whitespace t)
   (setq isearch-regexp-lax-whitespace nil)
   (setq isearch-yank-on-move t)
@@ -5860,6 +5921,8 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   :general
   (corfu-map
    "M-f" 'corfu-quick-complete
+   "TAB" nil
+   "<tab>" nil
    "<return>" 'corfu-complete
    "RET" 'corfu-complete))
 #+end_src
@@ -6785,7 +6848,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
     magit-status-mode-map)
-   "," 'tlon-babel-create-or-visit-todo-from-issue)
+   "," 'tlon-babel-visit-counterpart-or-capture)
   (magit-status-mode-map
    "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
@@ -7445,9 +7508,13 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
                                 (copilot-mode))))
 
   :general
-  (copilot-mode-map
+  (copilot-completion-map
+   "s-C-g" 'copilot-clear-overlay
+   "<tab>" 'copilot-accept-completion-by-line
    "M-<tab>" 'copilot-accept-completion
-   "M-S-<tab>" 'copilot-accept-completion-by-line))
+   "M-k" 'copilot-previous-completion
+   "M-l" 'copilot-next-completion
+   "M-;" 'copilot-accept-completion-by-word))
 #+end_src
 
 ** gptel
@@ -7465,8 +7532,18 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :demand t
   :config
   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
-  (setq gptel-default-mode 'org-mode)
-  (setq-default gptel-model "gpt-4"))
+  (setq gptel-default-mode 'org-mode))
+#+end_src
+
+** gptel-extras
+:PROPERTIES:
+:ID:       AEA2E978-0321-4F3D-B3EB-14CDA505A9D9
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package gptel-extras
+  :after gptel
+  :demand t)
 #+end_src
 
 ** org-ai
@@ -8193,8 +8270,11 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
           ("g" "GPT")
-          ("gg" "GPT-4" entry
+          ("gg" "GPT-4: generic" entry
            (id "9FF746E2-06DE-4E03-B536-5DC65A4023F8")
+           "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
+           ("ge" "GPT-4: Elisp" entry
+           (id "7E3248D0-1C65-479A-85D0-94A21C73AAF5")
            "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
           ("gd" "DALL-E" entry
            (id "15B74595-50DC-40A6-8FDC-B8DB8AA4DFAB")
@@ -9268,7 +9348,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   :after org
   :demand t
   :config
-  (setq org-contacts-files '("/Users/pablostafforini/Library/CloudStorage/Dropbox/repos/babel/etc/contacts.org")))
+  (setq org-contacts-files `(,(file-name-concat paths-dir-repos "genus/contacts.org"))))
 #+end_src
 
 ** org-autosort
@@ -10896,7 +10976,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                 :main "mu4e/mu4e.el"
                 :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
                 :build (:not elpaca--compile-info)
-                :ref "9ddde205"
+                :ref "a8f002b"
                 :depth nil)
   :demand t
   :config
@@ -11065,7 +11145,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
 /[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
-[2023-10-28 Sat] Some updates in ~mu~~ v1.11.23 have broken ~org-msg~. To make it work, you can uninstall ~mu~ and then install the stable version via ~brew install mu~. Then use  [[https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipe-keyword-ref][ref]] keyword in the ~mu4e~ elpaca formula to install the commit of that version. As of today, ~brew info mu~ says the stable version of ~mu~ is 1.10.7. In the ~mu~ repo, we see that the commit corresponding to this version is ~9ddde205~. So we use ~ref: "9ddde205"~.
+[2023-10-28 Sat] Some updates in ~mu~~ v1.11.23 have broken ~org-msg~. To make it work, you can uninstall ~mu~ and then install the stable version via ~brew install mu~. Then use  [[https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipe-keyword-ref][ref]] keyword in the ~mu4e~ elpaca formula to install the commit of that version. As of today, ~brew info mu~ says the stable version of ~mu~ is 1.10.8. In the ~mu~ repo [[https://github.com/djcb/mu/releases][releases]] page, we see that the commit corresponding to this version is ~a8f002b~. So we use ~ref: "a8f002b"~.
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
 (use-package org-msg
@@ -11251,8 +11331,10 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 #+begin_src emacs-lisp :results silent
 (use-package telega
   :defer 5
-  :config
+  :init
   (setq telega-server-libs-prefix "/opt/homebrew")
+
+  :config
   (setq telega-chat-input-markups '("org"))
   (setq telega-use-images t)
   (setq telega-emoji-font-family 'noto-emoji)
@@ -11962,6 +12044,9 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine DuckDuckGo
     "https://duckduckgo.com/?q=%s"
     :keybinding "d d")
+    (defengine Diccionario-Panhispánico-de-Dudas
+    "https://www.rae.es/dpd/%s"
+    :keybinding "d p")
   (defengine EAForum
     "https://www.google.com/search?q=%s+site:forum.effectivealtruism.org"
     :keybinding "f f")
@@ -12339,6 +12424,7 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
   (setq mullvad-websites-and-cities
         '(("Betfair" . "London")
           ("Criterion Channel" . "New York")
+          ("Gemini" . "New York")
           ("HathiTrust" . "San José")
           ("Library Genesis" . "Malmö")
           ("Pirate Bay" . "Malmö")
@@ -12412,6 +12498,21 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 
 #+begin_src emacs-lisp :results silent
 (use-package mpv)
+#+end_src
+
+** empv
+:PROPERTIES:
+:ID:       A26317BD-B76E-4A0A-9DA1-ED4CC9F4416F
+:END:
+
+#+begin_src emacs-lisp
+(use-package empv
+  :elpaca (:host github
+		 :repo "isamert/empv.el")
+  :demand t
+  :config
+  (setq empv-audio-dir paths-dir-music-tango)
+  (setq empv-invidious-instance "https://invidious.fdn.fr/api/v1"))
 #+end_src
 
 ** ytdl

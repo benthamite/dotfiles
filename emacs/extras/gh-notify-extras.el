@@ -43,9 +43,14 @@
     (switch-to-buffer old-buffer)))
 
 ;; the code below is a workaround to make `gh-notify' mark issues as read when
-;; they are visited. It assumes that you have authenticated with GitHub
-;; using the `w3m' browser. If not, please evaluate
-;; `(w3m "https://github.com/login")' and enter your credentials.
+;; they are visited. It assumes that you have authenticated with GitHub using
+;; the `w3m' browser. If not, please run `gh-notify-extras-w3m-login' and enter
+;; your credentials.
+
+(defun gh-notify-extras-w3m-login ()
+  "Log in to GitHub using `w3m'."
+  (interactive)
+  (w3m "https://github.com/login"))
 
 (defun gh-notify-extras-get-issue-url ()
   "Get the URL of the issue at point."

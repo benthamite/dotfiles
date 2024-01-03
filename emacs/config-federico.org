@@ -65,6 +65,7 @@
  (paths-dir-movies . (file-name-concat paths-dir-google-drive "Movies/"))
  (paths-dir-dotfiles . (file-name-concat (getenv "HOME") "source/dotfiles/"))
  (paths-dir-source . (file-name-concat (getenv "HOME") "source/"))
+ (paths-dir-repos . (file-name-concat (getenv "HOME") "source/"))
  (paths-dir-org . (file-name-concat paths-dir-dropbox "tlon/fede/"))
  (paths-dir-org-roam . (file-name-concat paths-dir-dropbox "tlon/fede/"))
  (paths-dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat paths-dir-source "biblioteca-altruismo-eficaz/"))
@@ -471,7 +472,7 @@ Doom modeline
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq tab-bar-extras-reset-wttr nil)
 
-(remove-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
+;; (remove-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
 
 ;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
 (setq tab-bar-extras-global-mode-string
@@ -499,24 +500,24 @@ Doom modeline
                       (t (number-to-string doom-modeline--github-notification-number)))
                      'face '(:inherit
                              (doom-modeline-unread-number doom-modeline-notification)))))))
-                             " | "))
+        " | "))
 
 (setq global-mode-string tab-bar-extras-global-mode-string)
 
-(defun tab-bar-extras-reset (&optional quick)
-  "Reset the tab bar.
-This resets the clock, updates the tab-bar and its color, and fixes the
-mysterious proliferation of clocks."
-  (interactive)
-  (require 'calendar-extras)
-  (display-time)
-  (setq global-mode-string tab-bar-extras-global-mode-string)
-  (fancy-battery-mode -1)
-  (unless quick
-    (when calendar-extras-use-geolocation
-      (calendar-extras-set-location-variables-from-ip))))
+;; (defun tab-bar-extras-reset (&optional quick)
+;;   "Reset the tab bar.
+;; This resets the clock, updates the tab-bar and its color, and fixes the
+;; mysterious proliferation of clocks."
+;;   (interactive)
+;;   (require 'calendar-extras)
+;;   (display-time)
+;;   (setq global-mode-string tab-bar-extras-global-mode-string)
+;;   (fancy-battery-mode -1)
+;;   (unless quick
+;;     (when calendar-extras-use-geolocation
+;;       (calendar-extras-set-location-variables-from-ip))))
 
-(add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
+;; (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
 #+end_src
 
 ** hl-sentence
@@ -593,6 +594,8 @@ Disable hl-sentence because I do not like it...
                       (progn
 			(setq display-time-format "%a %e %b %R")
 			(tab-bar-extras-reset)
+                        (cancel-function-timers 'org-extras-agenda-switch-to-agenda-current-day)
+			(cancel-function-timers 'citar-extras-update-old-bibliography)
 			;; (display-wttr-mode -1)
 			;; (doom-modeline--github-fetch-notifications)
 			)))

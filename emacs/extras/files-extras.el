@@ -297,7 +297,12 @@ This function gets STRING when PROCESS produces output."
 		 (string-match-p "Start processing" string)
 		 (string-match-p "Recompressing JPEGs" string)
 		 (string-match-p "Deflating JPEGs" string)
-		 (string-match-p "empty page" string)))
+		 (string-match-p "empty page" string)
+		 (string-match-p "lots of diacritics" string) ; maybe should leave this to alert about lang mismatch?
+		 (string-match-p "image will be rendered at" string)
+		 (string-match-p "weight average at" string)
+		 (string-match-p "postprocessing..." string)
+		 (string-match-p "image too small to scale" string)))
 	    ;; print all other messages
 	    (t (princ string))))))
 

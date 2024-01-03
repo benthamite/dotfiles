@@ -353,10 +353,42 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
 	   (ebib-extras-set-pdf-metadata)
 	   ;; open the pdf to make sure it displays the web page correctly
 	   (ebib-extras-open-pdf-file)
-	   ;; ocr the pdf if necessary
-	   (files-extras-ocr-pdf nil (expand-file-name file-name))))))
+	   (ebib-extras-ocr-pdf)))))
     (default
      (beep))))
+
+(defvar ebib-extras-iso-639-2
+  '(("english" . "eng")
+    ("american" . "eng")
+    ("french" . "fra")
+    ("german" . "deu")
+    ("italian" . "ita")
+    ("spanish" . "spa")
+    ("portuguese" . "por")
+    ("russian" . "rus")
+    ("chinese" . "zho")
+    ("japanese" . "jpn")
+    ("korean" . "kor")
+    ("arabic" . "ara")
+    ("latin" . "lat")
+    ("greek" . "ell"))
+  "Alist of languages and their ISO 639-2 codes.")
+
+(defun ebib-extras-ocr-pdf (&optional force)
+  "OCR the PDF file in the current entry.
+If FORCE is non-nil, force OCR even if the file is already"
+  (interactive)
+  (ebib--execute-when
+    (entries
+     (let ((lang (or (ebib-extras-get-field-value "langid")
+		     (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english"))))
+       (ebib-set-field-value "langid" lang (ebib--get-key-at-point) ebib--cur-db 'overwrite)
+       (let ((file-name (ebib-extras-get-file "pdf")))
+	 (files-extras-ocr-pdf nil nil
+			       (format (concat (when force "--force-ocr ") "--deskew -l %s \"%s\" \"%s\"")
+				       (alist-get lang ebib-extras-iso-639-2 nil nil 'string=)
+				       (expand-file-name file-name)
+				       (expand-file-name file-name))))))))
 
 (defvar ebib-extras-download-use-vpn nil
   "Whether to use a VPN when downloading content.")

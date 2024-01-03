@@ -81,7 +81,7 @@
   (set-face-attribute 'org-modern-date-inactive nil :family faces-extras-fixed-pitch-font :height 0.8)
   (set-face-attribute 'org-modern-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
   (set-face-attribute 'org-quote nil :family faces-extras-variable-pitch-font :height 1.3)
-  (set-face-attribute 'shr-text nil :height 0.6)
+  (set-face-attribute 'shr-text nil :height 0.65)
   (set-face-attribute 'corfu-default nil :family faces-extras-fixed-pitch-font :height 1)
   (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
   (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))

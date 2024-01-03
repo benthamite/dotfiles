@@ -71,21 +71,39 @@
          (private (y-or-n-p "Private? "))
          (work (y-or-n-p "Work? "))
 	 (account (if work vc-extras-github-account-work vc-extras-github-account-personal))
-	 (is-git-dir-p (eq (vc-responsible-backend default-directory t) 'Git))
 	 (default-directory (read-directory-name
-			     "Directory: " (if is-git-dir-p
+			     "Directory: " (if (vc-extras-is-git-dir-p default-directory)
 					       default-directory
 					     (if work vc-extras-work-repo-dir vc-extras-personal-repo-dir))
-			     nil nil)))
-    (when (and (not (file-exists-p default-directory))
-               (y-or-n-p (format "Directory %s does not exist. Create it?" default-directory)))
-      (make-directory default-directory))
-    (unless (or is-git-dir-p
-		(not (y-or-n-p (format "Directory %s is not a Git repository. Initialize it?" default-directory))))
-      (vc-create-repo 'Git))
-    (shell-command
-     (format "%s create -d \"%s\" %s %s/%s"
-             vc-extras-hub-executable description (if private "--private" "") account name))))
+			     nil nil name)))
+    (vc-extras-check-dir-exists)
+    (vc-extras-check-dir-git)
+    (vc-extras-hub-create-repo name description account private)))
+
+(defun vc-extras-is-git-dir-p (dir)
+  "Return non-nil if DIR is a Git repository."
+  (eq (vc-responsible-backend dir t) 'Git))
+
+(defun vc-extras-check-dir-exists ()
+  "Check if DIR exists, and prompt for its creation if it doesn't."
+  (when (and (not (file-exists-p default-directory))
+             (y-or-n-p (format "Directory `%s' does not exist. Create it?" default-directory)))
+    (make-directory default-directory)))
+
+(defun vc-extras-check-dir-git ()
+  "Check if DIR is a Git repository, and prompt for its initialization if it isn't."
+  (when (and (not (vc-extras-is-git-dir-p default-directory))
+	     (y-or-n-p (format "Directory `%s' is not a Git repository. Initialize it?" default-directory)))
+    (vc-create-repo 'Git)))
+
+(defun vc-extras-hub-create-repo (name description account &optional private)
+  "Create a new GitHub repository in ACCOUNT with NAME and DESCRIPTION.
+If PRIVATE is non-nil, make it a private repository."
+  (shell-command
+   (format
+    "%s create -d \"%s\" %s %s/%s"
+    vc-extras-hub-executable description (if private "--private" "") account name))
+  (message "Repository %s/%s created" account name))
 
 (provide 'vc-extras)
 ;;; vc-extras.el ends here

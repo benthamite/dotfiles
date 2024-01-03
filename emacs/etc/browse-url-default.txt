@@ -12,6 +12,7 @@ awstrack.me
 berkeley.edu
 beyondpricing.com
 bloomberg.com
+bolt.eu
 box.com
 calendar.google.com
 calendly.com
@@ -22,6 +23,7 @@ correosaduanas.es
 darbaja.es
 deepl.com
 deporweb.net
+descript.com
 dhl.
 disqus.com
 docs.google.com
@@ -50,11 +52,13 @@ jit.si
 kentclarkcenter.org
 keyboardmaestro.com
 kmail-lists.com
+kroll.com
 letterboxd.com
 libgen.
 LinkedIn.com
 list-manage.com
 loc.gov
+loops.so
 mail.google.com
 mailerlite.com
 mailist-manage.eu
@@ -69,6 +73,7 @@ myaccount.google.com
 myheritage.es
 openai.com
 paxful.com
+perplexity.ai
 qualtrics.com
 quora.com
 rescuetime.com

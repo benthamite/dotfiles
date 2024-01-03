@@ -331,14 +331,10 @@ link, call `org-open-at-point' and set
       (org-agenda nil "a"))))
 
 (defun org-extras-agenda-goto-and-start-clock ()
-  "In org-agenda, go to entry at point and clock in."
+  "In `org-agenda', go to entry at point and clock in."
   (interactive)
   (org-agenda-goto)
   (org-clock-in))
-
-(defun org-extras-clocktable-sorter (ipos tables params)
-  (setq tables (cl-sort tables (lambda (table1 table2) (> (nth 1 table1) (nth 1 table2)))))
-  (funcall (or org-clock-clocktable-formatter 'org-clocktable-write-default) ipos tables params))
 
 (defun org-extras-agenda-done-and-next ()
   "Temporary command to address bug when setting status via `org-agenda-todo'."
@@ -378,7 +374,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
   (interactive)
   (when org-extras-bbdb-anniversaries-heading
     (save-window-excursion
-      (org-extras-id-goto org-extras-bbdb-anniversaries-heading)
+      (org-roam-extras-id-goto org-extras-bbdb-anniversaries-heading)
       (org-narrow-to-subtree)
       (goto-char (point-min))
       (org-end-of-meta-data t)
@@ -399,21 +395,12 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
   "Define behavior of `org-capture-before-finalize-hook'."
   (require 'org-capture)
   (pcase (plist-get org-capture-plist :key)
-    ("gg"
+    ((or "gg" "gd" "ge")
      (org-ai-mode)
      (org-narrow-to-subtree)
-     (forward-line)
-     (forward-line)
-     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai
-")
-     (message "finished"))
-    ("gd"
-     (org-ai-mode)
-     (org-narrow-to-subtree)
-     (forward-line)
-     (forward-line)
-     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.}\n\n}[ME]:\n#+end_ai
-"))
+     (forward-line 2)
+     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai\n")
+     (goto-char (point-max)))
     ("l"
      (org-align-all-tags)
      (ispell-change-dictionary "english"))
@@ -496,13 +483,20 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
   (org-back-to-heading)
   (re-search-forward "CLOCK: \\[\\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\) \\([A-Za-z]\\{3\\}\\) \\([0-9]\\{2\\}:\\)" nil t))
 
-(defun org-extras-clock-report (start-date end-date)
-  "Generate an org clock report for the period between START-DATE and END-DATE."
+(defun org-extras-clock-report-insert (start-date end-date scope)
+  "Insert an org clock report for the period between START-DATE and END-DATE.
+SCOPE is the scope of the report, and can be `agenda', `file', or `subtree'."
   (interactive
    (list (org-read-date nil nil nil "Start date: ")
-	 (org-read-date nil nil nil "End date: ")))
-  (insert (format "#+BEGIN: clocktable :scope subtree :maxlevel 4 :narrow 50 :tstart \"%s\" :tend \"%s\"\n#+END:" start-date end-date))
-  (org-clock-report))
+	 (org-read-date nil nil nil "End date: ")
+	 (org-completing-read "Scope: " '("agenda" "file" "subtree"))))
+  (let ((range (if (string= start-date end-date)
+		   ":block today"
+		 (format ":tstart \"%s\" :tend \"%s\"" start-date end-date))))
+    (insert
+     (format "#+BEGIN: clocktable :scope %s :maxlevel 4 :narrow 60! :fileskip0 t %s \n#+END:"
+	     scope range))
+    (org-clock-report)))
 
 (defun org-extras-delete-headings-without-logbook ()
   "Delete all headings in the current buffer that do not have a logbook."
@@ -514,7 +508,13 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 	(unless (save-excursion
 		  (re-search-forward ":LOGBOOK:" (save-excursion (outline-next-heading) (point)) t))
 	  (let ((end (save-excursion (or (outline-next-heading) (point-max)))))
-	    (delete-region (point-at-bol) end)))))))
+	    (delete-region (line-beginning-position) end)))))))
+
+(defun org-extras-clocktable-sorter (ipos tables params)
+  "Sort clocktable tables by time.
+IPOS, TABLES and PARAMS are required by the formatter function."
+  (setq tables (cl-sort tables (lambda (table1 table2) (> (nth 1 table1) (nth 1 table2)))))
+  (funcall (or org-clock-clocktable-formatter 'org-clocktable-write-default) ipos tables params))
 
 ;;;;; org-cycle
 
@@ -705,6 +705,8 @@ SEPARATOR is nil, use ' • '."
 ;;;;; ob
 
 (defun org-extras-confirm-babel-evaluate (lang body)
+  "`org-babel' confirm function that prompts for confirmation.
+LANG and BODY are required by the `org-confirm-babel-evaluate' user option."
   (not (member lang '("python" "emacs-lisp"))))
 
 (defun org-extras-babel-tangle ()
@@ -764,7 +766,10 @@ That is, move point after the stars, and the TODO and priority if present."
   (when (org-at-heading-p)
     (let ((org-special-ctrl-a/e t))
       (org-end-of-line)
-      (org-beginning-of-line))))
+      (org-beginning-of-line))
+    ;; handle special case when heading consists of a TODO status followed by a single space
+    (when (looking-at "^\\*+ [A-Z]+ $")
+      (goto-char (match-end 0)))))
 
 (defun org-extras-id-notes-only-clock (key)
   "Clock in to a heading with KEY."

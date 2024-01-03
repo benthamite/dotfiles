@@ -5921,6 +5921,8 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   :general
   (corfu-map
    "M-f" 'corfu-quick-complete
+   "TAB" nil
+   "<tab>" nil
    "<return>" 'corfu-complete
    "RET" 'corfu-complete))
 #+end_src

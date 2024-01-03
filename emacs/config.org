@@ -198,6 +198,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#locate][locate]]
   - [[#autorevert][autorevert]]
   - [[#dired][dired]]
+  - [[#dired-aux][dired-aux]]
   - [[#dired-extras][dired-extras]]
   - [[#dired-x][dired-x]]
   - [[#dired-async][dired-async]]
@@ -4158,6 +4159,19 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
    "A-C-s-." 'dired-next-marked-file)
   (pdf-annot-minor-mode-map
    "x" 'dired-jump))
+#+end_src
+
+** dired-aux
+:PROPERTIES:
+:ID:       F41AFC26-002A-4152-9FC7-E9AD92DF5BBA
+:END:
+
+#+begin_src emacs-lisp
+(use-feature dired-aux
+  :after dired
+  :demand t
+  :config
+  (push '("\\.rar\\'" "" "unar") dired-compress-file-suffixes)) ; with `unar' installed, `Z' uncompresses `rar' files
 #+end_src
 
 ** dired-extras

@@ -84,8 +84,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#async][async]]
   - [[#emacsql][emacsql]]
   - [[#tlon-core][tlon-core]]
-  - [[#prot-simple][prot-simple]]
   - [[#prot-common][prot-common]]
+  - [[#prot-simple][prot-simple]]
   - [[#misc][misc.]]
 - [[#secrets][secrets]]
   - [[#plstore][plstore]]
@@ -93,6 +93,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#epa-file][epa-file]]
   - [[#auth-source][auth-source]]
   - [[#oauth2-auto][oauth2-auto]]
+  - [[#password-store-otp][password-store-otp]]
   - [[#password-store][password-store]]
   - [[#pass][pass]]
   - [[#pass-extras][pass-extras]]
@@ -104,8 +105,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ediff][ediff]]
   - [[#ediff-extras][ediff-extras]]
   - [[#smerge][smerge]]
+  - [[#gh][gh]]
   - [[#magit][magit]]
-  - [[#git-commit][git-commit]]
   - [[#magit-extra][magit-extra]]
   - [[#ghub][ghub]]
   - [[#forge][forge]]
@@ -468,7 +469,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#shr][shr]]
   - [[#shr-tag-pre-highlight][shr-tag-pre-highlight]]
   - [[#shr-heading][shr-heading]]
-  - [[#mm-decode][mm-decode]]
   - [[#eww][eww]]
   - [[#eww-extras][eww-extras]]
   - [[#prot-eww][prot-eww]]
@@ -832,6 +832,8 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
 :END:
 
 /[[https://github.com/progfolio/elpaca][elpaca]] is a package manager that supports asynchronous installation of packages./
+
+When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshooting][follow these steps]].
 
 #+begin_src emacs-lisp
 ;;; init.el --- Init File -*- lexical-binding: t -*-
@@ -1704,35 +1706,6 @@ CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:36] =>  0:31
    "s-y" 'tlon-core-slugify-clipboard))
 #+end_src
 
-** prot-simple
-:PROPERTIES:
-:ID:       6C67743E-7250-4BC5-B496-2D969EF2D015
-:END:
-
-/[[https://git.sr.ht/~protesilaos/dotfiles/tree/master/item/emacs/%2Eemacs.d/prot-lisp/prot-simple.el][prot-simple]] is a set of common commands used by Protesilaos Stavrou's unreleased "packages"./
-
-Note Prot's clarification:
-
-#+begin_quote
-Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
-#+end_quote
-
-#+begin_src emacs-lisp
-(use-package prot-simple
-  :elpaca (prot-simple
-           :host sourcehut
-           :repo "protesilaos/dotfiles"
-           :files ("emacs/.emacs.d/prot-lisp/prot-simple.el"))
-  :demand t
-  :config
-  (setq prot-simple-date-specifier "%F")
-  (setq prot-simple-time-specifier "%R %z")
-
-  :general
-  ("M-s-=" 'prot-simple-insert-date
-   "C-g" 'prot-simple-keyboard-quit-dwim))
-#+end_src
-
 ** prot-common
 :PROPERTIES:
 :ID:       300DFB2C-878E-4F21-833C-327C9DFDC01B
@@ -1751,8 +1724,45 @@ Remember that every piece of Elisp that I write is for my own educational and re
   :elpaca (prot-common
            :host sourcehut
            :repo "protesilaos/dotfiles"
+           :local-repo "prot-common"
+           :main "emacs/.emacs.d/prot-lisp/prot-common.el"
+           :build (:not elpaca--check-version)
            :files ("emacs/.emacs.d/prot-lisp/prot-common.el"))
   :demand t)
+
+#+end_src
+
+** prot-simple
+:PROPERTIES:
+:ID:       6C67743E-7250-4BC5-B496-2D969EF2D015
+:END:
+
+/[[https://git.sr.ht/~protesilaos/dotfiles/tree/master/item/emacs/%2Eemacs.d/prot-lisp/prot-simple.el][prot-simple]] is a set of common commands used by Protesilaos Stavrou's unreleased "packages"./
+
+Note Prot's clarification:
+
+#+begin_quote
+Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
+#+end_quote
+
+#+begin_src emacs-lisp
+(use-package prot-simple
+  :elpaca (prot-simple
+           :host sourcehut
+           :repo "protesilaos/dotfiles"
+           :local-repo "prot-simple"
+           :main "emacs/.emacs.d/prot-lisp/prot-simple.el"
+           :build (:not elpaca--check-version)
+           :files ("emacs/.emacs.d/prot-lisp/prot-simple.el"))
+  :after prot-common
+  :demand t
+  :config
+  (setq prot-simple-date-specifier "%F")
+  (setq prot-simple-time-specifier "%R %z")
+
+  :general
+  ("M-s-=" 'prot-simple-insert-date
+   "C-g" 'prot-simple-keyboard-quit-dwim))
 #+end_src
 
 ** misc.
@@ -1860,10 +1870,21 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 
 #+begin_src emacs-lisp :results silent
 (use-package oauth2-auto
-  :elpaca (emacs-oauth2-auto
+  :elpaca (oauth2-auto
            :host github
            :repo "telotortium/emacs-oauth2-auto"
            :protocol ssh))
+#+end_src
+
+** password-store-otp
+:PROPERTIES:
+:ID:       761A0B71-DA6A-42A1-8137-F4C857F029F0
+:END:
+
+#+begin_src emacs-lisp
+(use-package password-store-otp
+  :elpaca (password-store-otp :version (lambda (_) "0.1.5"))  ; github.com/progfolio/elpaca/issues/229
+  :demand t)
 #+end_src
 
 ** password-store
@@ -1877,6 +1898,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
             :host github
             :repo "zx2c4/password-store"
             :files ("contrib/emacs/*.el"))
+  :after password-store-otp
   :demand t)
 #+end_src
 
@@ -2050,6 +2072,16 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
    "s-c" 'smerge-keep-current))
 #+end_src
 
+** gh
+:PROPERTIES:
+:ID:       8FCB87B4-2396-4A9A-8638-AEA8A5818252
+:END:
+
+#+begin_src emacs-lisp
+(use-package gh
+  :elpaca (gh :version (lambda (_) "2.29"))) ; github.com/progfolio/elpaca/issues/229
+#+end_src
+
 ** magit
 :PROPERTIES:
 :ID:       B662CE1B-3F94-486E-A3DE-052775035960
@@ -2069,7 +2101,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :elpaca (magit
            :host github
            :repo "magit/magit"
-           :ref "f25d1035"
+           :ref "5ad367d7"
            :depth nil)
   :demand t
   :config
@@ -2112,17 +2144,6 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 - [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
 - https://tvraman.github.io/emacspeak/blog/github-quick-workflow.html
 - [[https://prathamesh.tech/2019/06/21/creating-pull-requests-from-emacs/][Creating pull requests from emacs]]
-
-** git-commit
-:PROPERTIES:
-:ID:       2A5E2C53-A4F4-4D44-8BA0-BFC19C26DD63
-:END:
-
-#+begin_src emacs-lisp
-(use-feature git-commit
-  :after magit
-  :demand t)
-#+end_src
 
 ** magit-extra
 :PROPERTIES:
@@ -5738,7 +5759,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :elpaca (consult-gh
            :host github
            :repo "armindarvish/consult-gh")
-  :after consult forge
+  :after consult forge gh
   :demand t
   :config
   (add-to-list 'consult-gh-default-orgs-list "benthamite")
@@ -7506,6 +7527,8 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   (add-hook 'prog-mode-hook (lambda ()
                               (unless (eq major-mode 'dsssl-mode)
                                 (copilot-mode))))
+  (add-hook 'copilot-mode-hook (lambda ()
+                                 (setq-local copilot--indent-warning-printed-p t)))
 
   :general
   (copilot-completion-map
@@ -10120,6 +10143,7 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
 
 #+begin_src emacs-lisp :results silent
 (use-package bibtex-completion
+  :elpaca (bibtex-completion :version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
   :defer 5
   :config/el-patch
   ;; disable file watchers
@@ -11638,18 +11662,6 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
    "A-C-s-f" 'shr-heading-next))
 #+end_src
 
-** mm-decode
-:PROPERTIES:
-:ID:       63A9AE3A-569A-4F0B-8426-AC4D1FD5CAE5
-:END:
-
-#+begin_src emacs-lisp :tangle no
-(use-feature mm-decode
-  :demand t
-  :config
-  (setq mm-text-html-renderer 'w3m))
-#+end_src
-
 ** eww
 :PROPERTIES:
 :ID:       E9E3FE6F-5580-4D21-90D8-6B0E595C10F7
@@ -11755,16 +11767,18 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
 #+begin_src emacs-lisp
 (use-package prot-eww
-  :elpaca (prot-eww
-           :host sourcehut
-           :repo "protesilaos/dotfiles"
-           :files ("emacs/.emacs.d/prot-lisp/prot-eww.el"))
+  :elpaca (prot-eww :host sourcehut
+          :repo "protesilaos/dotfiles"
+          :local-repo "prot-eww"
+          :main "emacs/.emacs.d/prot-lisp/prot-eww.el"
+          :build (:not elpaca--check-version)
+          :files ("emacs/.emacs.d/prot-lisp/prot-eww.el"))
   :after eww prot-common
   :demand t
   :general
   (eww-mode-map
-  "M-f" 'prot-eww-visit-url-on-page
-  "A-M-f" 'prot-eww-jump-to-url-on-page))
+   "M-f" 'prot-eww-visit-url-on-page
+   "A-M-f" 'prot-eww-jump-to-url-on-page))
 #+end_src
 
 ** w3m
@@ -12508,7 +12522,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 #+begin_src emacs-lisp
 (use-package empv
   :elpaca (:host github
-		 :repo "isamert/empv.el")
+                 :repo "isamert/empv.el")
   :demand t
   :config
   (setq empv-audio-dir paths-dir-music-tango)

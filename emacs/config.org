@@ -93,6 +93,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#epa-file][epa-file]]
   - [[#auth-source][auth-source]]
   - [[#oauth2-auto][oauth2-auto]]
+  - [[#password-store-otp][password-store-otp]]
   - [[#password-store][password-store]]
   - [[#pass][pass]]
   - [[#pass-extras][pass-extras]]
@@ -1859,10 +1860,21 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 
 #+begin_src emacs-lisp :results silent
 (use-package oauth2-auto
-  :elpaca (emacs-oauth2-auto
+  :elpaca (oauth2-auto
            :host github
            :repo "telotortium/emacs-oauth2-auto"
            :protocol ssh))
+#+end_src
+
+** password-store-otp
+:PROPERTIES:
+:ID:       761A0B71-DA6A-42A1-8137-F4C857F029F0
+:END:
+
+#+begin_src emacs-lisp
+(use-package password-store-otp
+  :elpaca (password-store-otp :version (lambda (_) "0.1.5"))  ; github.com/progfolio/elpaca/issues/229
+  :demand t)
 #+end_src
 
 ** password-store
@@ -1876,6 +1888,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
             :host github
             :repo "zx2c4/password-store"
             :files ("contrib/emacs/*.el"))
+  :after password-store-otp
   :demand t)
 #+end_src
 

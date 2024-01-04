@@ -106,7 +106,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ediff-extras][ediff-extras]]
   - [[#smerge][smerge]]
   - [[#magit][magit]]
-  - [[#git-commit][git-commit]]
   - [[#magit-extra][magit-extra]]
   - [[#ghub][ghub]]
   - [[#forge][forge]]
@@ -2124,17 +2123,6 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 - [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
 - https://tvraman.github.io/emacspeak/blog/github-quick-workflow.html
 - [[https://prathamesh.tech/2019/06/21/creating-pull-requests-from-emacs/][Creating pull requests from emacs]]
-
-** git-commit
-:PROPERTIES:
-:ID:       2A5E2C53-A4F4-4D44-8BA0-BFC19C26DD63
-:END:
-
-#+begin_src emacs-lisp
-(use-feature git-commit
-  :after magit
-  :demand t)
-#+end_src
 
 ** magit-extra
 :PROPERTIES:

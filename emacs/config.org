@@ -10133,6 +10133,7 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
 
 #+begin_src emacs-lisp :results silent
 (use-package bibtex-completion
+  :elpaca (bibtex-completion :version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
   :defer 5
   :config/el-patch
   ;; disable file watchers

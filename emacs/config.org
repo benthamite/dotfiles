@@ -105,6 +105,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ediff][ediff]]
   - [[#ediff-extras][ediff-extras]]
   - [[#smerge][smerge]]
+  - [[#gh][gh]]
   - [[#magit][magit]]
   - [[#magit-extra][magit-extra]]
   - [[#ghub][ghub]]
@@ -2059,6 +2060,16 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
    "s-a" 'smerge-keep-all
    "s-b" 'smerge-keep-base
    "s-c" 'smerge-keep-current))
+#+end_src
+
+** gh
+:PROPERTIES:
+:ID:       8FCB87B4-2396-4A9A-8638-AEA8A5818252
+:END:
+
+#+begin_src emacs-lisp
+(use-package gh
+  :elpaca (gh :version (lambda (_) "2.29"))) ; github.com/progfolio/elpaca/issues/229
 #+end_src
 
 ** magit
@@ -5738,7 +5749,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :elpaca (consult-gh
            :host github
            :repo "armindarvish/consult-gh")
-  :after consult forge
+  :after consult forge gh
   :demand t
   :config
   (add-to-list 'consult-gh-default-orgs-list "benthamite")

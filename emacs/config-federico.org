@@ -165,7 +165,7 @@ Doom modeline
 (setq user-mail-address "fstafforini@gmail.com")
 (setq forge-owned-accounts '(("fstafforini")))
 (setq split-width-threshold 160)
-(setq telega-server-libs-prefix "/opt/homebrew/Cellar/tdlib/HEAD-ec788c7/")
+;; (setq telega-server-libs-prefix "/opt/homebrew/Cellar/tdlib/HEAD-ec788c7/")
 (use-package nginx-mode :demand t)
   (fancy-battery-mode -1)
   (telega)
@@ -200,20 +200,6 @@ Doom modeline
 ;; Config tlon-babel
 (setq tlon-babel-todos-jobs-id "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
 (setq tlon-babel-todos-generic-id "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
-
-(setq tlon-babel-todos-file (file-name-concat paths-dir-notes "tareas.org"))
-(dolist (template `(("tbJ" "Tlön: BAE: Create new job (via
-    org-capture)" entry
-    (id ,tlon-babel-todos-jobs-id)
-    "** TODO [#5] %c" :immediate-finish t :empty-lines 1
-    :jump-to-captured t)
-                    ("tbG" "Tlön: BAE: Create new todo from GitHub (via
-          org-capture)" entry
-          (id ,tlon-babel-todos-generic-id)
-          "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend
-          t :jump-to-captured t)))
-  (push template org-capture-templates))
-
 
 (with-eval-after-load 'dired
   (general-define-key
@@ -448,6 +434,8 @@ Doom modeline
 (setq org-agenda-files-excluded nil)
 (scroll-bar-mode -1)
 (setq consult-preview-key nil)
+
+(tlon-babel-init)
 
 (dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
   (remove-hook hook #'jinx-mode))

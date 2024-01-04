@@ -282,7 +282,7 @@ have no effect."
       (user-error "File is not a PDF"))
     (let* ((parameters
 	    (or parameters
-		(format (concat (when arg "--force-ocr ") "--deskew '%$1s' '%$1s'") filename)))
+		(format (concat (when arg "--force-ocr ") "--deskew '%s' '%s'") filename filename)))
 	   (process (start-process-shell-command
 		     "ocrmypdf" "*ocr-pdf*"
 		     (concat "ocrmypdf " parameters))))

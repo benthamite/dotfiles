@@ -12522,7 +12522,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 #+begin_src emacs-lisp
 (use-package empv
   :elpaca (:host github
-		 :repo "isamert/empv.el")
+                 :repo "isamert/empv.el")
   :demand t
   :config
   (setq empv-audio-dir paths-dir-music-tango)

@@ -7527,6 +7527,8 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   (add-hook 'prog-mode-hook (lambda ()
                               (unless (eq major-mode 'dsssl-mode)
                                 (copilot-mode))))
+  (add-hook 'copilot-mode-hook (lambda ()
+                                 (setq-local copilot--indent-warning-printed-p t)))
 
   :general
   (copilot-completion-map

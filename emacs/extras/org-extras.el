@@ -395,21 +395,12 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
   "Define behavior of `org-capture-before-finalize-hook'."
   (require 'org-capture)
   (pcase (plist-get org-capture-plist :key)
-    ("gg"
+    ((or "gg" "gd" "ge")
      (org-ai-mode)
      (org-narrow-to-subtree)
-     (forward-line)
-     (forward-line)
-     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai
-")
-     (message "finished"))
-    ("gd"
-     (org-ai-mode)
-     (org-narrow-to-subtree)
-     (forward-line)
-     (forward-line)
-     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.}\n\n}[ME]:\n#+end_ai
-"))
+     (forward-line 2)
+     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai\n")
+     (goto-char (point-max)))
     ("l"
      (org-align-all-tags)
      (ispell-change-dictionary "english"))
@@ -492,13 +483,20 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
   (org-back-to-heading)
   (re-search-forward "CLOCK: \\[\\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\) \\([A-Za-z]\\{3\\}\\) \\([0-9]\\{2\\}:\\)" nil t))
 
-(defun org-extras-clock-report (start-date end-date)
-  "Generate an org clock report for the period between START-DATE and END-DATE."
+(defun org-extras-clock-report-insert (start-date end-date scope)
+  "Insert an org clock report for the period between START-DATE and END-DATE.
+SCOPE is the scope of the report, and can be `agenda', `file', or `subtree'."
   (interactive
    (list (org-read-date nil nil nil "Start date: ")
-	 (org-read-date nil nil nil "End date: ")))
-  (insert (format "#+BEGIN: clocktable :scope subtree :maxlevel 4 :narrow 50 :tstart \"%s\" :tend \"%s\"\n#+END:" start-date end-date))
-  (org-clock-report))
+	 (org-read-date nil nil nil "End date: ")
+	 (org-completing-read "Scope: " '("agenda" "file" "subtree"))))
+  (let ((range (if (string= start-date end-date)
+		   ":block today"
+		 (format ":tstart \"%s\" :tend \"%s\"" start-date end-date))))
+    (insert
+     (format "#+BEGIN: clocktable :scope %s :maxlevel 4 :narrow 60! :fileskip0 t %s \n#+END:"
+	     scope range))
+    (org-clock-report)))
 
 (defun org-extras-delete-headings-without-logbook ()
   "Delete all headings in the current buffer that do not have a logbook."
@@ -768,7 +766,10 @@ That is, move point after the stars, and the TODO and priority if present."
   (when (org-at-heading-p)
     (let ((org-special-ctrl-a/e t))
       (org-end-of-line)
-      (org-beginning-of-line))))
+      (org-beginning-of-line))
+    ;; handle special case when heading consists of a TODO status followed by a single space
+    (when (looking-at "^\\*+ [A-Z]+ $")
+      (goto-char (match-end 0)))))
 
 (defun org-extras-id-notes-only-clock (key)
   "Clock in to a heading with KEY."

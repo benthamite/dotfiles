@@ -419,23 +419,24 @@ Transient Mark mode is on but the region is inactive."
        (not arg)
      arg)))
 
-(defun simple-extras-visible-mode-enhanced ()
-  "Toggle `visible-mode' and associated modes."
+(defun simple-extras-visible-mode-enhanced (&optional arg)
+  "Set `visible-mode' and associated modes.
+Toggle the mode if ARG is `toggle' or called interactively. Enable the mode if
+ARG is nil, omitted, or a positive number. Disable the mode if ARG is a negative
+number."
   (interactive)
   (require 'org)
   (require 'org-modern)
-  (if visible-mode
-      (progn
-        ;; (org-tidy-mode)
-        (visible-mode -1)
-        (unless (eq major-mode 'org-agenda-mode)
-          (org-modern-mode))
-        (org-display-inline-images))
+  (let ((arg (if (or (eq arg 'toggle)
+                     (and (null arg) (called-interactively-p 'any)))
+                 (if visible-mode 1 -1)
+               (or arg 1))))
+    (visible-mode (* arg -1))
+    (org-tidy-mode arg)
+    (org-display-inline-images arg)
     (unless (eq major-mode 'org-agenda-mode)
-      (org-modern-mode -1))
-    ;; (org-tidy-mode -1)
-    (visible-mode)
-    (org-remove-inline-images)))
+      (org-modern-mode arg))
+    (not visible-mode)))
 
 (defun simple-extras-count-words-dwim ()
   "Count the number of words in region, if active, otherwise in clipboard.

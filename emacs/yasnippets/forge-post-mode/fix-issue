@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: fix-issue
+# key: fi
+# contributor: Pablo Stafforini
+# --
+fixes tlon-team/uqbar-issues#$1
+${2:dummy}${3:$(when (y-or-n-p "Submit?") (progn (setq yas-text "Submitted!") yas-text))}

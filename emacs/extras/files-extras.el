@@ -264,19 +264,25 @@ files which do not exist any more or are no longer readable will be killed."
 (defun files-extras-ocr-pdf (arg &optional filename parameters)
   "OCR the FILENAME.
 If FILENAME is nil, use the PDF file at point or the file visited by the current
-buffer. Optionally, pass PARAMETERS to `ocrmypdf'. With prefix argument ARG,
-force OCR even if it has already been performed on the file."
+buffer. With prefix argument ARG, force OCR even if it has already been
+performed on the file.
+
+Optionally, pass PARAMETERS to `ocrmypdf'. If so, ARG and FILENAME
+have no effect."
   (interactive "P")
   (unless (executable-find "ocrmypdf")
     (user-error "`ocrmypdf' not found. Please install it (e.g. `brew install ocrmypdf'"))
   (let* ((filename (or filename
 		       (pcase major-mode
 			 ('dired-mode (dired-get-filename))
-			 ('pdf-view-mode (buffer-file-name))))))
+			 ('pdf-view-mode (buffer-file-name))
+			 ('ebib-entry-mode (ebib-extras-get-file "pdf"))
+			 (_ (user-error "Could not determine file to OCR"))))))
     (unless (string= (file-name-extension filename) "pdf")
       (user-error "File is not a PDF"))
-    (let* ((parameters (or parameters
-			   (format (concat (when arg "--force-ocr ") "--deskew '%s' '%s'") filename filename)))
+    (let* ((parameters
+	    (or parameters
+		(format (concat (when arg "--force-ocr ") "--deskew '%s' '%s'") filename filename)))
 	   (process (start-process-shell-command
 		     "ocrmypdf" "*ocr-pdf*"
 		     (concat "ocrmypdf " parameters))))
@@ -297,7 +303,12 @@ This function gets STRING when PROCESS produces output."
 		 (string-match-p "Start processing" string)
 		 (string-match-p "Recompressing JPEGs" string)
 		 (string-match-p "Deflating JPEGs" string)
-		 (string-match-p "empty page" string)))
+		 (string-match-p "empty page" string)
+		 (string-match-p "lots of diacritics" string) ; maybe should leave this to alert about lang mismatch?
+		 (string-match-p "image will be rendered at" string)
+		 (string-match-p "weight average at" string)
+		 (string-match-p "postprocessing..." string)
+		 (string-match-p "image too small to scale" string)))
 	    ;; print all other messages
 	    (t (princ string))))))
 

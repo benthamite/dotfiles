@@ -93,38 +93,63 @@ Optionally, return such list only if its length is less than LIMIT."
       (org-extras-jump-to-first-heading)
       (org-id-get-create))))
 
-(defun org-roam-extras-new-note (note-type)
-  "Create a new `org-roam' note of type NOTE-TYPE."
-  (interactive
-   (list
-    (completing-read
-     "Select note type: "
-     '("generic" "person" "Borges"))))
+(defun org-roam-extras-new-note ()
+  "Create a new `org-roam' note, prompting for its type."
+  (interactive)
+  (let* ((props (org-roam-extras-get-note-properties))
+	 (dir (car props))
+	 (tags (cadr props))
+	 (name (read-from-minibuffer "Entry name: ")))
+    (org-roam-extras-create-file-for-note name dir)
+    (insert "#+title: " name "\n\n")
+    (org-insert-heading)
+    (insert name)
+    (org-set-tags tags)
+    (org-id-get-create)
+    (org-extras-narrow-to-entry-and-children)
+    (goto-char (point-max))))
+
+(defun org-roam-extras-create-file-for-note (note-name &optional dir)
+  "Create a file named after NOTE-NAME.
+If DIR is nil, use `paths-dir-notes'."
   (require 'prot-eww)
-  (let ((tags)
-	(directory))
+  (let* ((slug (prot-eww--sluggify note-name))
+	 (filename (file-name-with-extension slug "org")))
+    (when (file-exists-p filename)
+      (user-error (format "File `%s' already exists" filename)))
+    (find-file (file-name-concat dir filename))))
+
+(defun org-roam-extras-get-note-properties ()
+  "Prompt the user to select a note type and return its directory and tags."
+  (let ((note-type (completing-read
+		    "Select note type: "
+		    '("generic" "person" "Borges" "tango" "tlon-private")))
+	(tags)
+	(dir))
     (pcase note-type
       ("generic"
        (setq tags "note")
-       (setq directory paths-dir-notes))
+       (setq dir paths-dir-notes))
       ("person"
        (setq tags "person")
-       (setq directory paths-dir-people))
-      ("Borges"
-       (setq directory (file-name-concat paths-dir-dropbox "borges"))))
-    (let* ((name (read-from-minibuffer "Entry name: "))
-	   (slug (prot-eww--sluggify name))
-	   (filename (file-name-with-extension slug "org")))
-      (when (file-exists-p filename)
-	(user-error (format "File `%s' already exists" filename)))
-      (find-file (file-name-concat directory filename))
-      (insert "#+title: " name "\n\n")
-      (org-insert-heading)
-      (insert name)
-      (org-set-tags tags)
-      (org-id-get-create)
-      (org-extras-narrow-to-entry-and-children)
-      (goto-char (point-max)))))
+       (setq dir paths-dir-people))
+      ((or "Borges" "tango" "tlon-private")
+       (setq dir (file-name-concat paths-dir-dropbox note-type))))
+    (list dir tags)))
+
+(defun org-roam-extras-turn-heading-to-note ()
+  "Convert the heading at point into a note in a separate file."
+  (interactive)
+  (let ((note-name (read-string "Note name: " (org-get-heading t t t t))))
+    (save-restriction
+      (org-narrow-to-subtree)
+      (kill-region (point-min) (point-max)))
+    (org-roam-extras-create-file-for-note note-name)
+    (insert "#+title: " note-name "\n\n")
+    (insert (current-kill 0))
+    (goto-char (point-min))
+    (org-next-visible-heading 1)
+    (org-edit-headline note-name)))
 
 (defun org-roam-extras-node-find ()
   "Find and open an Org-roam node by its title or alias."

@@ -62,7 +62,7 @@
     (async-shell-command
      (format
       (pcase type
-	("pdf" "'%s' --print-to-pdf-no-header --headless %s --print-to-pdf='%s'")
+	("pdf" "'%s' --print-to-pdf --no-pdf-header-footer --headless %s --print-to-pdf='%s'")
 	("html" "'%s' --headless --dump-dom '%s' > %s"))
       browse-url-chrome-program url output-file))))
 

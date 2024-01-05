@@ -40,7 +40,7 @@ As commit message, use MESSAGE."
   (when (or
          (magit-anything-staged-p)
          (magit-anything-unstaged-p))
-    (magit-stage-modified '(4))
+    (magit-stage-modified t)
     (magit-commit-create (list "-m" message)))
   (call-interactively #'magit-push-current-to-pushremote))
 

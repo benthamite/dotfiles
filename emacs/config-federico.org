@@ -198,8 +198,8 @@ Doom modeline
   (setq shift-select-mode t))
 
 ;; Config tlon-babel
-(setq tlon-babel-todos-jobs-id "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
-(setq tlon-babel-todos-generic-id "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
+(setq tlon-babel-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
+(setq tlon-babel-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
 
 (with-eval-after-load 'dired
   (general-define-key

@@ -53,7 +53,6 @@ heading in a quote."
   (save-restriction
     (save-excursion
       (let ((content (org-noter-get-annotation-contents)))
-	(when- (not (simple-extras-visible-mode-enhanced))
 	(widen)
 	(org-cut-subtree)
 	(org-previous-visible-heading 1)

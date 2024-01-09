@@ -185,15 +185,26 @@ If FILE is nil, use `paths-file-ledger'."
       (call-interactively #'ledger-mode-extras-sort-region-reversed)
     (ledger-mode-extras-sort-buffer-reversed)))
 
-(defun ledger-mode-extras-copy-transaction-at-point ()
-  "Save transaction at point to the kill ring."
-  (interactive)
+(defun ledger-mode-extras-copy-or-kill-transaction-at-point (action)
+  "Copy or kill transaction at point, depending on ACTION."
   (save-excursion
     (ledger-navigate-next-xact-or-directive)
-    (let ((end (point)))
+    (let ((end (point))
+	  (fun (pcase action
+		 ('copy #'copy-region-as-kill)
+		 ('kill #'kill-region))))
       (ledger-navigate-prev-xact-or-directive)
-      (copy-region-as-kill (point) end))
-    (message "Transaction copied.")))
+      (funcall fun (point) end))))
+
+(defun ledger-mode-extras-kill-transaction-at-point ()
+  "Kill transaction at point."
+  (interactive)
+  (ledger-mode-extras-copy-or-kill-transaction-at-point 'kill))
+
+(defun ledger-mode-extras-copy-transaction-at-point ()
+  "Copy transaction at point."
+  (interactive)
+  (ledger-mode-extras-copy-or-kill-transaction-at-point 'copy))
 
 (defun ledger-mode-extras-narrow-to-xact ()
   "Narrow to the current transaction."

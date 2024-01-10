@@ -151,12 +151,12 @@ field for this information is `journaltitle', so we move it there."
     (message "Moved entry %s to %s" key target)))
 
 (defun bibtex-extras-move-entry-to-tlon (&optional key)
-  "Move entry with KEY to `tlon-babel-file-fluid'..
+  "Move entry with KEY to `elbab-file-fluid'..
 Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point."
   (interactive)
-  (require 'tlon-babel)
+  (require 'elbab)
   (let ((key (or key (bibtex-extras-get-key)))
-        (target tlon-babel-file-fluid))
+        (target elbab-file-fluid))
     (bibtex-extras-move-entry key target)
     (with-current-buffer (find-file-noselect target)
       (widen)
@@ -211,17 +211,17 @@ and sets the value of the field for all entries to `Tlön'."
 
 (defun bibtex-extras-auto-add-database-field ()
   "Run `bibtex-extras-add-database-field' every time `new.bib' is saved."
-  (require 'tlon-babel)
-  (let ((file tlon-babel-file-fluid))
+  (require 'elbab)
+  (let ((file elbab-file-fluid))
     (when (string= (buffer-file-name) file)
       (bibtex-extras-add-database-field file))))
 
 (defun bibtex-extras-auto-clean-entry ()
   "Clean up bibtex entry at point upon saving."
-  (require 'tlon-babel)
+  (require 'elbab)
   (let ((after-save-hook nil))
     (bibtex-extras-add-or-update-field "database" "Tlön")
-    (tlon-babel-add-lang-id-to-entry)
+    (elbab-add-lang-id-to-entry)
     (bibtex-clean-entry)
     (save-buffer)))
 

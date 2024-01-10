@@ -6815,7 +6815,11 @@ To populate the database of historical prices:
 #+begin_src emacs-lisp
 (use-personal-package ledger-mode-extras
   :after ledger-mode
-  :demand t)
+  :demand t
+  :general
+  (ledger-mode-map
+   "A-s-c" 'ledger-mode-extras-copy-transaction-at-point
+   "s-x" 'ledger-mode-extras-kill-transaction-at-point))
 #+end_src
 
 ** ledger-prices

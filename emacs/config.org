@@ -505,6 +505,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#custom][custom]]
   - [[#fatebook][fatebook]]
   - [[#tetris][tetris]]
+  - [[#tlon-init][tlon-init]]
 - [[#personal][personal]]
   - [[#keyboard-maestro][Keyboard Maestro]]
 - [[#local-variables][local variables]]
@@ -12848,6 +12849,16 @@ And finally, the section you've all been waiting for.
    "l" 'tetris-move-down
    "j" 'tetris-move-left
    ";" 'tetris-move-right))
+#+end_src
+
+** tlon-init
+:PROPERTIES:
+:ID:       8130737A-D75B-424C-8CDF-DDEF06281D59
+:END:
+
+#+begin_src emacs-lisp
+(when (tlon-init-machine-pablo-p)
+  (run-hooks 'tlon-init-post-init-hook))
 #+end_src
 
 * personal

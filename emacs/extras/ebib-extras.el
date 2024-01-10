@@ -905,7 +905,7 @@ is created following the same schema as notes created with
 
 (defvar ebib-extras-auto-save-files
   `(,paths-file-personal-bibliography-new
-    ,tlon-babel-file-fluid)
+    ,elbab-file-fluid)
   "List of database files that should be auto-saved.
 The big files containing the `old' bibliographic entries are excluded.")
 
@@ -938,8 +938,8 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 (defvar ebib-extras-db-numbers
   `((,paths-file-personal-bibliography-new . 1)
     (,paths-file-personal-bibliography-old . 2)
-    (,tlon-babel-file-fluid . 3)
-    (,tlon-babel-file-stable . 4))
+    (,elbab-file-fluid . 3)
+    (,elbab-file-stable . 4))
   "Association list of database files and their numbers.")
 
 (defun ebib-extras-get-db-number (file)
@@ -1009,11 +1009,11 @@ If applicable, open external website to set rating there as well."
 (defun ebib-extras-move-entry-to-tlon ()
   "Move bibliographic entry associated with the key at point to the Tlön bibliography."
   (interactive)
-  (require 'tlon-babel)
+  (require 'elbab)
   (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
     (citar-extras-goto-bibtex-entry key)
     (bibtex-extras-move-entry-to-tlon)
-    (ebib tlon-babel-file-fluid key)
+    (ebib elbab-file-fluid key)
     (ebib-extras-open-key key)))
 
 (defun ebib-extras-get-field-value (field)
@@ -1132,14 +1132,14 @@ Fetching is done using `tlon-biblio'."
   "Create a BibTeX entry for the section of the current entry.
 Prompt the user for a title, unless TITLE is non-nil."
   (interactive)
-  (require 'tlon-babel)
+  (require 'elbab)
   (let* ((fields `(("title" . ,(or title (read-string "Section title: ")))
 		   ("eventtitle" . ,(ebib-extras-get-field-value "title"))
 		   ("url" . ,(read-string "URL: " (ebib-extras-get-field-value "url")))
 		   ("crossref" . ,(ebib--get-key-at-point))
 		   ("author" . ,(ebib-extras-get-field-value "author"))
 		   ("date" . ,(ebib-extras-get-field-value "")))))
-    (tlon-babel--create-entry-from-current fields)))
+    (elbab--create-entry-from-current fields)))
 
 (defun ebib-extras-doi-p (string)
   "Return t if STRING is a valid DOI."

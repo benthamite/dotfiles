@@ -485,9 +485,9 @@
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-tlon-babel
+(defcustom paths-dir-elbab
   (file-name-concat paths-dir-repos "babel/")
-  "Path to the `tlon-babel' repo directory."
+  "Path to the `elbab' repo directory."
   :type 'directory
   :group 'paths)
 
@@ -641,7 +641,7 @@ This should be the path you set `org-roam-directory' to."
 
 (defcustom paths-files-bibliography-all '()
   "List of all bibliography files.
-This includes personal files and `tlon-babel' files."
+This includes personal files and `elbab' files."
   :type '(repeat file)
   :group 'paths)
 
@@ -753,7 +753,7 @@ This includes personal files and `tlon-babel' files."
   :type 'file
   :group 'paths)
 
-(defcustom paths-file-tlon-babel
+(defcustom paths-file-elbab
   (file-name-concat paths-dir-notes "babel.org")
   "Path to the Babel project file."
   :type 'file

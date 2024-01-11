@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: tlon-pablo-cabify
+# key: tpc
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Cabify
+    Expenses:Core:Transportation            $1 ARS ; taxi $2 Fede's place
+    Liabilities:Pablo Stafforini
+
+`(format-time-string "%Y-%m-%d")` Cabify
+    Liabilities:Tlon                        $1 ARS ; taxi $2 Fede's place
+    Liabilities:Mom:Extension
+
+$0

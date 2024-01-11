@@ -431,11 +431,12 @@ number."
                      (and (null arg) (called-interactively-p 'any)))
                  (if visible-mode 1 -1)
                (or arg 1))))
-    (visible-mode (* arg -1))
     (org-tidy-mode arg)
     (org-display-inline-images arg)
     (unless (eq major-mode 'org-agenda-mode)
       (org-modern-mode arg))
+    ;; `org-modern-mode' must be set before `visible-mode' to avoid weird interaction
+    (visible-mode 'toggle)
     (not visible-mode)))
 
 (defun simple-extras-count-words-dwim ()

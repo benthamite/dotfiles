@@ -61,7 +61,7 @@
 (defun consult-extras-locate-file-current ()
   "Search with `consult-locate' in current directory for matching file names only."
   (interactive)
-  (let ((consult-locate-args (concat "mdfind -name -onlyin " default-directory)))
+  (let ((consult-locate-args (format "mdfind -onlyin \"%s\" -name " default-directory)))
     (consult-locate)))
 
 (defun consult-extras-locate-file-home ()

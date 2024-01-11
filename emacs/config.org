@@ -1546,8 +1546,8 @@ CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:36] =>  0:31
 (defhydra hydra-dirs-tlon
   (:exit t)
   "Dired folders: Tlön"
-  ("b" (dired paths-dir-dropbox-tlon-BAE) "Dropbox: BAE" :column "Dropbox")
-  ("H-b" (dired paths-dir-google-drive-tlon-BAE) "Google Drive: BAE" :column "Google Drive")
+  ("b" (dired paths-dir-dropbox-tlon-babel) "Dropbox: Babel" :column "Dropbox")
+  ("H-b" (dired paths-dir-google-drive-tlon-babel) "Google Drive: Babel" :column "Google Drive")
   ("n" (dired paths-dir-dropbox-tlon-EAN) "Dropbox: EAN" :column "Dropbox")
   ("H-n" (dired paths-dir-google-drive-tlon-EAN) "Google Drive: EAN" :column "Google Drive")
   ("m" (dired paths-dir-dropbox-tlon-FM) "Dropbox: FM" :column "Dropbox")
@@ -6919,7 +6919,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
           ;; (gts-bing-engine)
           ;;(gts-google-engine)
           ;;(gts-google-rpc-engine)
-          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" tlon-core-email-shared)) :pro nil)
+          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/babel/deepl.com/" tlon-core-email-shared)) :pro nil)
           ;; (gts-google-engine :parser (gts-google-summary-parser))
           ;;(gts-google-engine :parser (gts-google-parser))
           ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")
@@ -8299,7 +8299,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("gg" "GPT-4: generic" entry
            (id "9FF746E2-06DE-4E03-B536-5DC65A4023F8")
            "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
-           ("ge" "GPT-4: Elisp" entry
+          ("ge" "GPT-4: Elisp" entry
            (id "7E3248D0-1C65-479A-85D0-94A21C73AAF5")
            "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
           ("gd" "DALL-E" entry
@@ -8317,29 +8317,29 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
           ("t" "Tlön")
-          ("tb" "Tlön: BAE")
-          ("tbb" "Tlön: BAE: Generic " entry
+          ("tb" "Tlön: Babel")
+          ("tbb" "Tlön: Babel: Generic " entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tbd" "Tlön: BAE: Docs " entry
+          ("tbd" "Tlön: Babel: Docs " entry
            (id "49A79F81-8920-43FF-B1C7-B02F0962B30F")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tbi" "Tlön: BAE: Import " entry
+          ("tbi" "Tlön: Babel: Import " entry
            (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
            "** TODO [#6] Import '%?' \n%c" :empty-lines 1 :prepend t)
-          ("tbl" "Tlön: BAE: Process Leo's revisions " entry
+          ("tbl" "Tlön: Babel: Process Leo's revisions " entry
            (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
            "** TODO [#6] Process Leo's revisions of '%c%?' \n" :empty-lines 1 :prepend t)
-          ("tbt" "Tlön: BAE: Translate article " entry
+          ("tbt" "Tlön: Babel: Translate article " entry
            (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
            "** TODO [#5] Translate '%?' \n" :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbw" "Tlön: BAE: Website " entry
+          ("tbw" "Tlön: Babel: Website " entry
            (id "6171D3E2-8BC4-41E5-9C8A-E808DC4DD9D3")
            "** TODO [#5] %? \n" :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
+          ("tbM" "Tlön: Babel: Misc [via org-capture] Misc" entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
            "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
-          ("tbr" "Tlön: BAE: Revise translation " entry
+          ("tbr" "Tlön: Babel: Revise translation " entry
            (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
            "** TODO [#6] Revise '%c%?' translation \n" :empty-lines 1 :prepend t)
           ("ti" "Tlön: EAI")
@@ -8475,6 +8475,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tlx" "Tlön: Leo: Meetings" entry
            (id "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")
            "** %(org-extras-time-stamp-inactive-current-time)\n%?")
+          ("tlb" "Tlön: Leo: Babel")
           ("tlp" "Tlön: Leo: Pending for next meeting" plain
            (id "8B2F18B4-A309-4F29-A5E6-CD40E010970D")
            "" :empty-lines 1 :empty-lines-after 3)
@@ -10677,7 +10678,7 @@ The macro below generates the commands correctly. But attempting to define key b
   :demand t
   :config
   (setq bib-isbndb-key
-        (auth-source-pass-get "key" (concat "tlon/BAE/isbndb.com/" tlon-core-email-shared)))
+        (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
   (setq bib-omdb-key
         (auth-source-pass-get 'secret "chrome/omdbapi.com"))
   (setq bib-tmdb-key

@@ -72,6 +72,10 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(add-hook 'tlon-babel-post-init-hook
+          (lambda ()
+            "Set `citar-citeproc-csl-styles-dir' after `tlon-babel-csl-styles' is set."
+            (setq citar-citeproc-csl-styles-dir paths-dir-personal-csl-styles)))
 (setq tlon-babel-todos-jobs-id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
 (setq tlon-babel-todos-generic-id "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29")
 (setq paths-files-bibliography-all
@@ -273,11 +277,6 @@
 (setq telega-server-libs-prefix "/Users/cartago/source/td/tdlib")
 #+end_src
 
-** citar
-
-#+begin_src emacs-lisp
-(setq citar-citeproc-csl-styles-dir paths-dir-personal-csl-styles)
-#+end_src
 * tangle flags
 :PROPERTIES:
 :ID:       A4E7C5AD-1E55-4C6F-B0E5-8320D282A886

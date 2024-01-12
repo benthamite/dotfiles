@@ -3,4 +3,4 @@
 # key: aa
 # contributor: Pablo Stafforini
 # --
-Add `(elbab-get-commit-key)`
+Add `(tlon-babel-get-commit-key)`

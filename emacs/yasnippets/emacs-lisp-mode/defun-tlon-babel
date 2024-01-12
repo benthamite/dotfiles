@@ -1,9 +1,9 @@
 # -*- mode: snippet -*-
-# name: defun-elbab
-# key: dtb
+# name: defun-tlon-babel
+# key: de
 # contributor: Pablo Stafforini
 # --
-(defun elbab-$1 ($2)
+(defun tlon-babel-$1 ($2)
   "$3"
   $4
 $0)

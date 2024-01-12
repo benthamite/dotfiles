@@ -505,6 +505,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#custom][custom]]
   - [[#fatebook][fatebook]]
   - [[#tetris][tetris]]
+  - [[#tlon-init][tlon-init]]
 - [[#personal][personal]]
   - [[#keyboard-maestro][Keyboard Maestro]]
 - [[#local-variables][local variables]]
@@ -981,7 +982,6 @@ NAME and ARGS are in `use-package'."
   (and (featurep 'seq) (unload-feature 'seq t))
   (elpaca--continue-build e))
 
-;; You could embed this code directly in the reicpe, I just abstracted it into a function.
 (defun elpaca-seq-build-steps ()
   (append (butlast (if (file-exists-p (expand-file-name "seq" elpaca-builds-directory))
                        elpaca--pre-built-steps elpaca-build-steps))
@@ -1545,8 +1545,8 @@ CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:36] =>  0:31
 (defhydra hydra-dirs-tlon
   (:exit t)
   "Dired folders: Tlön"
-  ("b" (dired paths-dir-dropbox-tlon-BAE) "Dropbox: BAE" :column "Dropbox")
-  ("H-b" (dired paths-dir-google-drive-tlon-BAE) "Google Drive: BAE" :column "Google Drive")
+  ("b" (dired paths-dir-dropbox-tlon-babel) "Dropbox: Babel" :column "Dropbox")
+  ("H-b" (dired paths-dir-google-drive-tlon-babel) "Google Drive: Babel" :column "Google Drive")
   ("n" (dired paths-dir-dropbox-tlon-EAN) "Dropbox: EAN" :column "Dropbox")
   ("H-n" (dired paths-dir-google-drive-tlon-EAN) "Google Drive: EAN" :column "Google Drive")
   ("m" (dired paths-dir-dropbox-tlon-FM) "Dropbox: FM" :column "Dropbox")
@@ -6815,7 +6815,11 @@ To populate the database of historical prices:
 #+begin_src emacs-lisp
 (use-personal-package ledger-mode-extras
   :after ledger-mode
-  :demand t)
+  :demand t
+  :general
+  (ledger-mode-map
+   "A-s-c" 'ledger-mode-extras-copy-transaction-at-point
+   "s-x" 'ledger-mode-extras-kill-transaction-at-point))
 #+end_src
 
 ** ledger-prices
@@ -6914,7 +6918,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
           ;; (gts-bing-engine)
           ;;(gts-google-engine)
           ;;(gts-google-rpc-engine)
-          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/BAE/deepl.com/" tlon-core-email-shared)) :pro nil)
+          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/babel/deepl.com/" tlon-core-email-shared)) :pro nil)
           ;; (gts-google-engine :parser (gts-google-summary-parser))
           ;;(gts-google-engine :parser (gts-google-parser))
           ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")
@@ -7516,7 +7520,10 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :copilot)
 (use-package copilot
-  :elpaca (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+  :elpaca (:host github
+		 :repo "zerolfx/copilot.el"
+		 :build (:not elpaca--check-version)
+		 :files ("dist" "*.el"))
   :demand t
 
   :config
@@ -7589,11 +7596,9 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (setq org-ai-default-chat-system-prompt "You are a helpful and competent assistant. Please omit any disclaimers")
   (setq org-ai-talk-say-words-per-minute 210)
   (setq org-ai-image-directory paths-dir-org-images)
-  ;; (add-hook 'org-mode-hook #'org-ai-mode)
   (org-ai-install-yasnippets)
   (require 'org-ai-talk))
 #+end_src
-
 
 ** gpt-commit
 :PROPERTIES:
@@ -8011,7 +8016,7 @@ By considering both tasks completed and their associated priorities.
 
 ** org-extras
 :PROPERTIES:
-:ID:       D423037B-F64F-4815-9EBC-6FB181969CDF
+:ID:       4DE04276-B164-441D-ADCA-017346C525D6
 :END:
 
 #+begin_src emacs-lisp
@@ -8296,7 +8301,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("gg" "GPT-4: generic" entry
            (id "9FF746E2-06DE-4E03-B536-5DC65A4023F8")
            "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
-           ("ge" "GPT-4: Elisp" entry
+          ("ge" "GPT-4: Elisp" entry
            (id "7E3248D0-1C65-479A-85D0-94A21C73AAF5")
            "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
           ("gd" "DALL-E" entry
@@ -8314,29 +8319,29 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
           ("t" "Tlön")
-          ("tb" "Tlön: BAE")
-          ("tbb" "Tlön: BAE: Generic " entry
+          ("tb" "Tlön: Babel")
+          ("tbb" "Tlön: Babel: Generic " entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tbd" "Tlön: BAE: Docs " entry
+          ("tbd" "Tlön: Babel: Docs " entry
            (id "49A79F81-8920-43FF-B1C7-B02F0962B30F")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tbi" "Tlön: BAE: Import " entry
+          ("tbi" "Tlön: Babel: Import " entry
            (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
            "** TODO [#6] Import '%?' \n%c" :empty-lines 1 :prepend t)
-          ("tbl" "Tlön: BAE: Process Leo's revisions " entry
+          ("tbl" "Tlön: Babel: Process Leo's revisions " entry
            (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
            "** TODO [#6] Process Leo's revisions of '%c%?' \n" :empty-lines 1 :prepend t)
-          ("tbt" "Tlön: BAE: Translate article " entry
+          ("tbt" "Tlön: Babel: Translate article " entry
            (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
            "** TODO [#5] Translate '%?' \n" :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbw" "Tlön: BAE: Website " entry
+          ("tbw" "Tlön: Babel: Website " entry
            (id "6171D3E2-8BC4-41E5-9C8A-E808DC4DD9D3")
            "** TODO [#5] %? \n" :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
+          ("tbM" "Tlön: Babel: Misc [via org-capture] Misc" entry
            (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
            "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
-          ("tbr" "Tlön: BAE: Revise translation " entry
+          ("tbr" "Tlön: Babel: Revise translation " entry
            (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
            "** TODO [#6] Revise '%c%?' translation \n" :empty-lines 1 :prepend t)
           ("ti" "Tlön: EAI")
@@ -8396,10 +8401,6 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("ttff" "Tlön: Core: Finance: Generic " entry
            (id "21E0FE78-C45B-4E6E-9447-56375111BAEA")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tf" "Tlön: Fede")
-          ("tff" "Tlön: Fede: generic task" entry
-           (file+headline paths-file-tlon-tareas-fede "Tareas Fede")
-           "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
           ("tfp" "Tlön: Fede: Pending for next meeting" plain
            (id "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
            "" :empty-lines 1 :empty-lines-after 3)
@@ -8411,73 +8412,10 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("tll" "Tlön: Leo: Generic task" entry
            (file+headline paths-file-tlon-tareas-leo "Tareas Leo")
            "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tlb" "Tlön: Leo: BAE")
-          ("tlba" "Tlön: Leo: BAE: Add to translations Airtable" entry
-           (id "49adbb3e-b542-4752-a67b-16bc2eb44624")
-           "** TODO [#5] Add to translations Airtable :leo:\n%c" :empty-lines 1 :prepend t)
-          ("tlbb" "Tlön: Leo: BAE: Generic BAE task" entry
-           (id "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29")
-           "** TODO [#5] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tli" "Tlön: Leo: EAI")
-          ("tlii" "Tlön: Leo: EAI: Generic EAI task" entry
-           (id "698743B9-B754-4061-89BD-6E49F3B64DE2")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tln" "Tlön: Leo: EAN")
-          ("tlna" "Tlön: Leo: EAN: Add to ea.news" entry
-           (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
-           "** TODO [#6] Agregar a ea.news :leo:\n%c" :empty-lines 1 :prepend t)
-          ("tlnn" "Tlön: Leo: EAN: Generic EAN" entry
-           (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tlnu" "Tlön: Leo: EAN: Update ea.news" entry
-           (id "8b9c313a-3630-4b77-b924-a8f7f9e52d8d")
-           "** TODO [#7] Actualizar feed/link de ea.news :leo:\n%?\n%c" :empty-lines 1 :prepend t)
-          ("tlm" "Tlön: Leo: FM")
-          ("tlmm" "Tlön: Leo: FM: Generic FM task" entry
-           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tlmn" "Tlön: Leo: FM: Add to Future Matters: news" entry
-           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-           "** TODO [#4] Future Matters: news :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
-          ("tlmr" "Tlön: Leo: FM: Add to Future Matters: research" entry
-           (id "5d94a97f-701f-4d0d-94ad-ff1b88bf0e82")
-           "** TODO [#4] Future Matters: research :leo:\n%c\n[[https://docs.google.com/document/d/1Mq7f0sn6Ps1IIA71dTu0MCgz8cdn81zQ9_zHyZUn7aQ/edit][Checklist]]" :empty-lines 1 :prepend t)
-          ("tlg" "Tlön: Leo: GPE")
-          ("tlgg" "Tlön: Leo: GPE: Generic GPE task" entry
-           (id "e9b7041f-8721-495f-b5f7-97ad83ae061c")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tlh" "Tlön: Leo: HEAR")
-          ("tlhh" "Tlön: Leo: HEAR: Generic HEAR task" entry
-           (id "f3f14f2f-2b74-4ea7-a84f-4d9aae458201")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tld" "Tlön: Leo: LBDLH")
-          ("tldd" "Tlön: Leo: LBDLH: Generic LBDLH task" entry
-           (id "0d6d7ebb-bb51-4505-9a29-68b79f8c12de")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tlw" "Tlön: Leo: PW")
-          ("tlww" "Tlön: Leo: PW: Generic PW task" entry
-           (id "12645897-A06F-44DD-876D-0FFC47D0E742")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tlr" "Tlön: Leo: RAE")
-          ("tlrl" "Tlön: Leo: RAE: Add to lexicon" entry
-           (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
-           "** TODO [#6] Agregar al lexicon de Azure :leo:\n%?" :empty-lines 1 :prepend t)
-          ("tlrr" "Tlön: Leo: RAE: Generic RAE task" entry
-           (id "604dbb4c-4948-492e-b1cd-84b0a1451b4a")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tlc" "Tlön: Leo: Core")
-          ("tlcc" "Tlön: Leo: Generic Core task" entry
-           (id "68f0150e-9b0d-4bab-86c0-2bf878e19d9e")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tlx" "Tlön: Leo: Meetings" entry
-           (id "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")
-           "** %(org-extras-time-stamp-inactive-current-time)\n%?")
+          ("tlb" "Tlön: Leo: Babel")
           ("tlp" "Tlön: Leo: Pending for next meeting" plain
            (id "8B2F18B4-A309-4F29-A5E6-CD40E010970D")
            "" :empty-lines 1 :empty-lines-after 3)
-          ("tlg" "Tlön: Leo: Telegram" entry
-           (file+headline paths-file-tlon-tareas-leo "Tareas Leo")
-           "** TODO [#6] [via Telegram] %? \n%a\n%c'" :empty-lines 1 :prepend t)
           ;; ("n" "Day reflection" plain (function org-journal-find-location)
           ;; "** %(format-time-string org-journal-time-format)Day reflection\n%i%?")
           ;; ("j" "Pomodoro" plain (function org-journal-find-location)
@@ -9225,7 +9163,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 :ID:       F2DD9900-5926-4FE1-A8DC-C398CFE80378
 :END:
 
-/[[https://git.sr.ht/~bzg/org-contrib][org-contrib]] features add-ons to ~org-mode~ currently looking for maintainers./
+/[[https://git.sr.ht/~bzg/org-contrib][org-contrib]] features add-ons to ~org-mode~.
 
 #+begin_src emacs-lisp
 (use-package org-contrib
@@ -10674,7 +10612,7 @@ The macro below generates the commands correctly. But attempting to define key b
   :demand t
   :config
   (setq bib-isbndb-key
-        (auth-source-pass-get "key" (concat "tlon/BAE/isbndb.com/" tlon-core-email-shared)))
+        (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
   (setq bib-omdb-key
         (auth-source-pass-get 'secret "chrome/omdbapi.com"))
   (setq bib-tmdb-key
@@ -12844,6 +12782,16 @@ And finally, the section you've all been waiting for.
    "l" 'tetris-move-down
    "j" 'tetris-move-left
    ";" 'tetris-move-right))
+#+end_src
+
+** tlon-init
+:PROPERTIES:
+:ID:       8130737A-D75B-424C-8CDF-DDEF06281D59
+:END:
+
+#+begin_src emacs-lisp
+(when (tlon-init-machine-pablo-p)
+  (run-hooks 'tlon-init-post-init-hook))
 #+end_src
 
 * personal

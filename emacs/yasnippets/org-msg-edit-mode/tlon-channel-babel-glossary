@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: tlon-channel-bae-glossary
+# name: tlon-channel-babel-glossary
 # key: tcbg
 # contributor: Pablo Stafforini
 # --
-[Tlön: BAE: Glossary] $1
+[Tlön: babel: Glossary] $1

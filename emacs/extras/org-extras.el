@@ -51,9 +51,7 @@ the function `vulpea-agenda-files-update')."
   :type 'list
   :group 'org-extras)
 
-(defcustom org-extras-id-auto-add-excluded-directories
-  (list paths-dir-dropbox-tlon-fede
-	paths-dir-dropbox-tlon-leo)
+(defcustom org-extras-id-auto-add-excluded-directories nil
   "Directories to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'."
   :type 'list
   :group 'org-extras)

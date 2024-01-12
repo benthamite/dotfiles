@@ -982,7 +982,6 @@ NAME and ARGS are in `use-package'."
   (and (featurep 'seq) (unload-feature 'seq t))
   (elpaca--continue-build e))
 
-;; You could embed this code directly in the reicpe, I just abstracted it into a function.
 (defun elpaca-seq-build-steps ()
   (append (butlast (if (file-exists-p (expand-file-name "seq" elpaca-builds-directory))
                        elpaca--pre-built-steps elpaca-build-steps))
@@ -7521,7 +7520,10 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :copilot)
 (use-package copilot
-  :elpaca (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+  :elpaca (:host github
+		 :repo "zerolfx/copilot.el"
+		 :build (:not elpaca--check-version)
+		 :files ("dist" "*.el"))
   :demand t
 
   :config

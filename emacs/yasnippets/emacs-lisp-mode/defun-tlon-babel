@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
 # name: defun-tlon-babel
-# key: dtb
+# key: de
 # contributor: Pablo Stafforini
 # --
 (defun tlon-babel-$1 ($2)

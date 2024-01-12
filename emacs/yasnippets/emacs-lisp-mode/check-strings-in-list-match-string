@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: check-strings-in-list-match-string
+# key: ctms
+# contributor: Pablo Stafforini
+# --
+(seq-find (lambda (item) (string= item ${1:string-to-match})) ${2:list-of-strings})

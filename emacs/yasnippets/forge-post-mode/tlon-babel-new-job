@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-babel-job
+# key: tbj
+# contributor: Pablo Stafforini
+# --
+Job: \``(cl-nth-value 0 (tlon-babel-format-file (current-kill 0) nil t))`\`

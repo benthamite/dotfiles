@@ -102,8 +102,7 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-code-override)
-((:org-id-add-ids-to-headings-in-file . ((ignore)))
- (:zotra-startup . ((ignore)))
+((:zotra-startup . ((ignore)))
  (:window-border . ((ignore)))
  (:window-split . ((ignore)))
  ;; (:modus-themes-load . ((modus-themes-load-theme 'modus-vivendi)))
@@ -169,12 +168,15 @@ Doom modeline
 (use-package nginx-mode :demand t)
   (fancy-battery-mode -1)
   (telega)
+
+;; Disable org-tidy-mode
+(remove-hook 'org-mode-hook #'org-tidy-mode)
   
 ;; remove Pablo's auto maximize frame
 (remove-function after-focus-change-function #'frame-extras-maximize-frame)
 
 ;; remove Pablo's org-roam auto add ids
-(remove-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
+;; (remove-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
 
 (message "Loading fede's custom faces:")
 (recentf-mode)
@@ -249,6 +251,7 @@ Doom modeline
  :keymaps 'org-mode-map
  "s-i" nil
  "s-o" nil
+ "s-w" 'org-roam-refile
  "M-<right>" nil
  "M-<left>" nil
  "M-<up>" nil
@@ -450,6 +453,7 @@ Doom modeline
 
 ;; Open tareas.org
 (find-file (file-name-concat paths-dir-dropbox-tlon-fede "tareas.org"))
+(org-tidy-mode -1)
 
 #+end_src
 

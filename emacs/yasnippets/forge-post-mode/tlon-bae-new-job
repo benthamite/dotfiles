@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: tlon-bae-job
-# key: tbj
-# contributor: Pablo Stafforini
-# --
-Job: \``(cl-nth-value 0 (tlon-bae-format-file (current-kill 0) nil t))`\`

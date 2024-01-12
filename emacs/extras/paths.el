@@ -311,9 +311,9 @@
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-google-drive-tlon-BAE
-  (file-name-concat paths-dir-google-drive-tlon "BAE/")
-  "Path to the BAE Google Drive directory."
+(defcustom paths-dir-google-drive-tlon-babel
+  (file-name-concat paths-dir-google-drive-tlon "babel/")
+  "Path to the Babel Google Drive directory."
   :type 'directory
   :group 'paths)
 
@@ -419,9 +419,9 @@
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-dropbox-tlon-BAE
-  (file-name-concat paths-dir-dropbox-tlon "BAE/")
-  "Path to the BAE Dropbox directory."
+(defcustom paths-dir-dropbox-tlon-babel
+  (file-name-concat paths-dir-dropbox-tlon "babel/")
+  "Path to the Babel Dropbox directory."
   :type 'directory
   :group 'paths)
 

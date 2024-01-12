@@ -326,7 +326,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ledger-mode-extras][ledger-mode-extras]]
   - [[#ledger-prices][ledger-prices]]
 - [[#translation][translation]]
-  - [[#elbab][elbab]]
+  - [[#tlon-babel][tlon-babel]]
   - [[#go-translate][go-translate]]
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict-ng][goldendict-ng]]
@@ -1217,7 +1217,7 @@ CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
 (defhydra hydra-files-packages
   (:exit t)
   "packages"
-  ("b" (files-extras-open-elpaca-package "elbab") "elbab" :column "tlön")
+  ("b" (files-extras-open-elpaca-package "tlon-babel") "tlon-babel" :column "tlön")
   ("c" (files-extras-open-elpaca-package "tlon-core") "tlon-core")
   ("i" (files-extras-open-elpaca-package "tlon-init") "tlon-init")
   ("a" (files-extras-open-elpaca-package "internet-archive") "internet-archive" :column "personal")
@@ -6851,42 +6851,42 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 :ID:       1A1D70D3-DBB4-4EEC-A83E-15FD4348ED94
 :END:
 
-** elbab
+** tlon-babel
 :PROPERTIES:
 :ID:       5EDD6F28-3299-4D90-83E1-C7476176277D
 :END:
 
 #+begin_src emacs-lisp
-(use-package elbab
-  :elpaca (elbab
+(use-package tlon-babel
+  :elpaca (tlon-babel
            :host github
-           :repo "tlon-team/elbab"
+           :repo "tlon-team/tlon-babel"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
-  (setq elbab-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
-  (setq elbab-todos-generic-id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
-  (add-hook 'tlon-init-post-init-hook #'elbab-init)
+  (setq tlon-babel-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
+  (setq tlon-babel-todos-generic-id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+  (add-hook 'tlon-init-post-init-hook #'tlon-babel-init)
 
   :general
-  ("H-r" 'elbab-dispatch)
+  ("H-r" 'tlon-babel-dispatch)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
     magit-status-mode-map)
-   "," 'elbab-visit-counterpart-or-capture)
+   "," 'tlon-babel-visit-counterpart-or-capture)
   (magit-status-mode-map
-   "s-r" 'elbab-commit-when-slug-at-point)
+   "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
-   "'" 'elbab-open-forge-file)
+   "'" 'tlon-babel-open-forge-file)
   ((gfm-mode-map markdown-mode-map)
-   "A-s-e" 'elbab-yaml-edit-field
-   "s-c" 'elbab-copy-dwim
-   "s-t" 'elbab-insert-cite-tag
-   "s-u" 'elbab-markdown-insert-element
-   "A-C-s-<tab>" 'elbab-markdown-end-of-buffer-dwim)
+   "A-s-e" 'tlon-babel-yaml-edit-field
+   "s-c" 'tlon-babel-copy-dwim
+   "s-t" 'tlon-babel-insert-cite-tag
+   "s-u" 'tlon-babel-markdown-insert-element
+   "A-C-s-<tab>" 'tlon-babel-markdown-end-of-buffer-dwim)
   (github-review-mode-map
-   "s-c" 'elbab-submit-comment-revisions))
+   "s-c" 'tlon-babel-submit-comment-revisions))
 #+end_src
 
 
@@ -9842,11 +9842,11 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
   :after org
   :demand t
   :config
-  (add-hook 'elbab-post-init-hook
+  (add-hook 'tlon-babel-post-init-hook
             (lambda ()
-              "Set `org-cite' vars after `elbab' is loaded."
+              "Set `org-cite' vars after `tlon-babel' is loaded."
               ;; (setq org-cite-global-bibliography paths-files-bibliography-all) ; disabled for poor performance
-              (setq org-cite-csl-styles-dir elbab-csl-styles)))
+              (setq org-cite-csl-styles-dir tlon-babel-csl-styles)))
   (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
@@ -9906,7 +9906,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   :config
   ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
   ;; retorque.re/zotero-better-bibtex/citing/
-  (add-hook 'elbab-post-init-hook
+  (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `bibtex-files after `paths-files-bibliography-all' is set."
               (setq bibtex-files paths-files-bibliography-all)))
@@ -10128,7 +10128,7 @@ Also sets `bibtex-completion-display-formats-internal'."
 
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)
-  (add-hook 'elbab-post-init-hook
+  (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `bibtex-completion-bibliography' after `paths-files-bibliography-all' is set."
               (setq bibtex-completion-bibliography paths-files-bibliography-all)))
@@ -10195,7 +10195,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   :demand t
   :config
   (setq citar-open-note-functions '(orb-citar-edit-note))
-  (add-hook 'elbab-post-init-hook
+  (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `citar-bibliography' after `paths-files-bibliography-all' is set."
               (setq citar-bibliography paths-files-bibliography-all)))
@@ -10272,12 +10272,12 @@ Having headings tagged with the type of work they are notes of allows me to quer
 #+begin_src emacs-lisp :results silent
 (use-feature citar-citeproc
   :demand t
-  :after citar citeproc citar-extras elbab
+  :after citar citeproc citar-extras tlon-babel
   :config
-  (add-hook 'elbab-post-init-hook
+  (add-hook 'tlon-babel-post-init-hook
             (lambda ()
-              "Set `citar-citeproc-csl-styles-dir' after `elbab-csl-styles' is set."
-                (setq citar-citeproc-csl-styles-dir elbab-csl-styles)))
+              "Set `citar-citeproc-csl-styles-dir' after `tlon-babel-csl-styles' is set."
+                (setq citar-citeproc-csl-styles-dir tlon-babel-csl-styles)))
   (setq citar-citeproc-csl-style "biblioteca-altruismo-eficaz.csl")
   (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir)
   ;; https://github.com/emacs-citar/citar/wiki/Indicators
@@ -10442,7 +10442,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 (use-package ebib
   :demand t
   :config
-  (add-hook 'elbab-post-init-hook
+  (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `ebib-preload-bib-files' after `paths-files-bibliography-all' is set."
               (setq ebib-preload-bib-files paths-files-bibliography-all)))
@@ -10551,7 +10551,7 @@ The macro below generates the commands correctly. But attempting to define key b
 
 #+begin_src emacs-lisp
 (use-personal-package ebib-extras
-  :after ebib elbab
+  :after ebib tlon-babel
   :demand t
   :config
   (advice-add 'ebib-init :after #'ebib-extras-auto-reload-databases)
@@ -12614,7 +12614,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (midnight-delay-set 'midnight-delay "4:00am")
 
   ;; note that the hooks appear in reverse order of execution
-  (dolist (function #'(elbab-forge-update-all-repos
+  (dolist (function #'(tlon-babel-forge-update-all-repos
                        el-patch-validate-all
                        org-gcal-sync
                        org-extras-id-update-id-locations

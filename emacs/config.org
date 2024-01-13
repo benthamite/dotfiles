@@ -7879,6 +7879,11 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 
 #+begin_src emacs-lisp :results silent
 (use-package org
+  :elpaca (org
+           :host sourcehut
+           :repo "bzg/org-mode"
+           :ref "7b38670"
+           :depth nil) ; v9.6.8
   :demand t
   :config
   (setq org-directory paths-dir-org) ; set org directory

@@ -8769,7 +8769,6 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
   (setq org-refile-allow-creating-parent-nodes 'confirm)
   (setq org-reverse-note-order t) ; refile to the beginning of header
   (setq org-refile-use-cache t) ;  build cache at startup
-  (setq org-refile-use-outline-path t)
   (setq org-refile-targets '((org-agenda-files :maxlevel . 9)
                              (files-extras-open-buffer-files :maxlevel . 9)))
 

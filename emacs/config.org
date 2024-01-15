@@ -9530,7 +9530,7 @@ CLOCK: [2020-09-10 Thu 19:53]--[2020-09-10 Thu 20:01] =>  0:08
 CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 :END:
 
-/[[https://github.com/org-roam/][org-roam]] is a Roam replica with org-mode./
+/[[https://github.com/org-roam/org-roam][org-roam]] is a Roam replica with org-mode./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-roam)
 (use-package org-roam
@@ -9632,28 +9632,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 - Check [[https://www.reddit.com/r/emacs/comments/omxl6n/config_for_orgroam_v2/][this config]] (v 2.0)
 - And [[https://github.com/alexkehayias/emacs.d/blob/master/init.el#L715][this one]] (by the author of [[https://notes.alexkehayias.com/][this notes repository]], created with org-roam)
 - And [[https://takeonrules.com/2021/08/22/ever-further-refinements-of-org-roam-usage/][this post]]
-
-*** TODO [#7] check this org-roam config for ideas
-:PROPERTIES:
-:ID:       C375E205-3B70-4C1C-BB0B-1F7FC3A56187
-:END:
-
-https://github.com/hieutkt/.doom.d/blob/master/config.el#L690-L742
-
-*** TODO [#6] Create new generic and person notes via capture templates, not function
-:PROPERTIES:
-:ID:       569027E9-D918-4A06-A85A-8E800DAC16EA
-:END:
-
-https://commonplace.doubleloop.net/adding-timestamps-to-org-roam-notes
-
-*** TODO [#5] Investigate if org-roam has a way to resolve links when exporting
-:PROPERTIES:
-:Effort:   0:30
-:ID:       83AA4CF2-A783-4C27-895F-C68EAE5AB456
-:END:
-
-So the links to other Wiki articles do not break.
 
 ** org-roam-extras
 :PROPERTIES:

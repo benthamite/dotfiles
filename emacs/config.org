@@ -101,6 +101,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#version-control][version control]]
   - [[#vc][vc]]
   - [[#vc-extras][vc-extras]]
+  - [[#log-edit][log-edit]]
   - [[#diff-mode][diff-mode]]
   - [[#ediff][ediff]]
   - [[#ediff-extras][ediff-extras]]
@@ -2012,6 +2013,16 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   :demand t)
 #+end_src
 
+** log-edit
+:PROPERTIES:
+:ID:       FABAB5ED-7883-4F95-B3A2-3EB8F07DD33F
+:END:
+
+#+begin_src emacs-lisp
+(use-feature log-edit
+  :config
+  (push 'log-edit-comment-ring savehist-additional-variables))
+#+end_src
 ** diff-mode
 :PROPERTIES:
 :ID:       33F1D5AA-3DA7-43EC-8ACD-0D8360445459

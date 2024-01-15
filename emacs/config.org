@@ -9874,7 +9874,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
             (lambda ()
               "Set `org-cite' vars after `tlon-babel' is loaded."
               ;; (setq org-cite-global-bibliography paths-files-bibliography-all) ; disabled for poor performance
-              (setq org-cite-csl-styles-dir tlon-babel-csl-styles)))
+              (setq org-cite-csl-styles-dir tlon-babel-dir-styles)))
   (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
@@ -10306,8 +10306,8 @@ Having headings tagged with the type of work they are notes of allows me to quer
   :config
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
-              "Set `citar-citeproc-csl-styles-dir' after `tlon-babel-csl-styles' is set."
-                (setq citar-citeproc-csl-styles-dir tlon-babel-csl-styles)))
+              "Set `citar-citeproc-csl-styles-dir' after `tlon-babel-dir-styles' is set."
+                (setq citar-citeproc-csl-styles-dir tlon-babel-dir-styles)))
   (setq citar-citeproc-csl-style "biblioteca-altruismo-eficaz.csl")
   (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir)
   ;; https://github.com/emacs-citar/citar/wiki/Indicators

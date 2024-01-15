@@ -5134,8 +5134,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 /[[https://github.com/kiwanami/emacs-calfw][calf]] is a calendar framework for Emacs./
 
 #+begin_src emacs-lisp
-(use-package calfw
-  :demand t)
+(use-package calfw)
 #+end_src
 
 ** calfw-org

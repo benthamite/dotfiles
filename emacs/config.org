@@ -8784,15 +8784,15 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
 #+begin_src emacs-lisp :results silent
 (use-feature org-refile
   :after org
-  :defer 10
+  :demand t
   :config
-  (setq org-refile-use-outline-path 'level3)
   (setq org-outline-paths-complete-in-steps nil)
   (setq org-refile-allow-creating-parent-nodes 'confirm)
   (setq org-reverse-note-order t) ; refile to the beginning of header
   (setq org-refile-use-cache t) ;  build cache at startup
   (setq org-refile-targets '((org-agenda-files :maxlevel . 9)
-                             (files-extras-open-buffer-files :maxlevel . 9)))
+                             (files-extras-open-buffer-files :maxlevel . 9)
+                             (nil :maxlevel . 9)))
 
   ;; Regenerate cache every half hour
   (run-with-idle-timer (* 60 30) t (lambda ()

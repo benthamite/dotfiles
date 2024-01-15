@@ -3,4 +3,4 @@
 # key: dfsdd
 # contributor: Pablo Stafforini
 # --
-(directory-files "$1" t "\\`[^.]\\|\\.\\.\\[^/]*[^.]\\|\\.DS_Store\\'")$0
+(directory-files "$1" t "\\\\`[^.]\\\\|\\\\.\\\\.\\\\[^/]*[^.]\\\\|\\\\.DS_Store\\\\'")$0

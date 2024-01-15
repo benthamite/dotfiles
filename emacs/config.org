@@ -4012,7 +4012,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   :after savehist
   :demand t
   :config
-  (setq confirm-kill-processes nil) ; Do not prompt to kill running processes when quitting Emacs
+  (setq confirm-kill-processes nil) ; do not prompt to kill running processes when quitting Emacs
   (setq delete-by-moving-to-trash t)
   (setq trash-directory (file-name-concat "~" ".Trash")) ; fallback for `move-file-to-trash'
   (setq find-file-visit-truename t); emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
@@ -4021,10 +4021,10 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (setq large-file-warning-threshold (* 200 1000 1000))
   (setq enable-local-variables :all)
   (setq insert-directory-program "/opt/homebrew/bin/gls") ; use coreutils to avoid 'listing directory failed' error
-  (setq auto-save-no-message t) ; don't emit message when auto-saving
-  (setq delete-old-versions t) ; don't ask about deleting old versions
+  (setq auto-save-no-message t)
+  (setq delete-old-versions t)
   (setq make-backup-files nil)
-  (setq version-control 'never) ; number backups
+  (setq version-control 'never)
 
   (advice-add 'recover-session
               :after (lambda ()

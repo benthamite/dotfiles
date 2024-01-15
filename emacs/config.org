@@ -191,7 +191,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#goto-last-change][goto-last-change]]
   - [[#goto-addr][goto-addr]]
 - [[#registers--bookmarks][registers & bookmarks]]
-  - [[#registers][registers]]
+  - [[#register][register]]
   - [[#bookmarks][bookmarks]]
 - [[#files--buffers][files & buffers]]
   - [[#files][files]]
@@ -245,8 +245,9 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#tmr][tmr]]
   - [[#display-wttr][display-wttr]]
 - [[#history][history]]
-  - [[#simple][simple]]
   - [[#savehist][savehist]]
+  - [[#simple][simple]]
+  - [[#chistory][chistory]]
   - [[#saveplace][saveplace]]
   - [[#session][session]]
   - [[#recentf][recentf]]
@@ -971,7 +972,6 @@ NAME and ARGS are in `use-package'."
 :PROPERTIES:
 :ID:       B2CADEA2-F8B7-4E8E-8FB0-D6B59658933D
 :END:
-
 ** seq
 :PROPERTIES:
 :ID:       FD3A9A18-BDB8-4D52-9F5C-8E040FA042A2
@@ -2110,23 +2110,25 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 #+begin_src emacs-lisp :results silent
 (use-package magit
   :elpaca (magit
-           :host github
-           :repo "magit/magit"
-           :ref "5ad367d7"
-           :depth nil)
+             :host github
+             :repo "magit/magit"
+             :ref "5ad367d7"
+             :depth nil)
   :demand t
   :config
   (setq magit-commit-ask-to-stage 'stage)
   (setq magit-clone-set-remote.pushDefault t)
   (setq magit-diff-refine-hunk 'all) ; show word-granularity differences in all diff hunks
 
+  (push 'magit-read-rev-history savehist-additional-variables)
+
   (add-to-list 'magit-no-confirm 'stage-all-changes)
   (dolist (hook '(magit-status-mode-hook
-                  magit-diff-mode-hook))
+                    magit-diff-mode-hook))
     (add-hook hook
-              (lambda ()
-                "Disable line truncation in Magit buffers."
-                (setq truncate-lines nil))))
+                (lambda ()
+                  "Disable line truncation in Magit buffers."
+                  (setq truncate-lines nil))))
 
   :general
   ("A-g" 'magit
@@ -3457,7 +3459,6 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
   (setq truncate-partial-width-windows nil)
   (setq tab-always-indent 'complete)
   (setq-default fill-column 80)
-
   (column-number-mode)
 
   :general
@@ -3890,7 +3891,7 @@ CLOCK: [2021-07-29 Thu 16:15]--[2021-07-29 Thu 16:23] =>  0:08
 CLOCK: [2021-04-05 Mon 15:34]--[2021-04-05 Mon 15:35] =>  0:01
 :END:
 
-** registers
+** register
 :PROPERTIES:
 :ID:       893A2A5B-707A-4C9A-9E25-414DC663F2CD
 :END:
@@ -3902,11 +3903,14 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 
 #+begin_src emacs-lisp :results silent
 (use-feature register
+  :after savehist
   :demand t
   :config
+  (push 'register-alist savehist-additional-variables)
+
   (defhydra hydra-register
-  (:hint nil
-  :color blue)
+    (:hint nil
+           :color blue)
     "
 _c_opy        |_n_umber      |p_o_int
 _i_nsert      |incremen_t_   |_j_ump        |   _f_rame    | _l_ist
@@ -3936,6 +3940,7 @@ _a_pend       |_k_macro      |                    "
     ("l" list-registers)
     ("h" consult-register)
     ("q" nil))
+
   :general
   ("C-r" 'hydra-register/body))
 #+end_src
@@ -4006,6 +4011,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 
 #+begin_src emacs-lisp :results silent
 (use-feature files
+  :after savehist
   :demand t
   :config
   (setq confirm-kill-processes nil) ; Do not prompt to kill running processes when quitting Emacs
@@ -4027,6 +4033,8 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
                        "Disable `dired-hide-details-mode' to show dates in `recover-session'."
                        (dired-hide-details-mode -1)))
 
+  (push 'file-name-history savehist-additional-variables)
+
   (add-to-list 'auto-mode-alist '("\\.mdx\\'" . markdown-mode))
 
   :general
@@ -4039,7 +4047,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
    "H-C-A-g" 'keyboard-escape-quit) ; ESC ESC ESC
   ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "H-q" 'bury-buffer)
-   (gh-notify-mode-map
+  (gh-notify-mode-map
    "q" 'bury-buffer)
   (pdf-view-mode-map
    "s" 'save-buffer))
@@ -5224,20 +5232,6 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 :ID:       20B0D7AB-5B27-4D80-A9D8-DAAAFCB27651
 :END:
 
-** simple
-:PROPERTIES:
-:ID:       C7BA09A3-635F-4F31-A17A-F94F3B024522
-:END:
-
-#+begin_src emacs-lisp :results silent
-(use-feature simple
-  :demand t
-  :general
-  ((minibuffer-mode-map mu4e-minibuffer-search-query-map)
-   "M-k" 'previous-history-element
-   "M-l" 'next-history-element))
-#+end_src
-
 ** savehist
 :PROPERTIES:
 :ID:       D411AA79-C8FE-4E03-B06E-1BED5B7688BC
@@ -5247,36 +5241,44 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 #+begin_src emacs-lisp :results silent
 (use-feature savehist
-  :defer 3
-
+  :demand t
   :config
   (savehist-mode)
   (setq history-length t) ; unlimited history
-  (setq savehist-additional-variables
-        '(calc-quick-calc-history
-          citar-history
-          command-history
-          compile-history
-          compilation-command
-          eww-history
-          extended-command-history
-          file-name-history
-          Info-history-list
-          ido-file-history
-          kill-ring
-          kmacro-ring
-          last-kbd-macro
-          log-edit-comment-ring
-          magit-read-rev-history
-          mark-ring
-          read-expression-history
-          regexp-search-ring
-          register-alist
-          search-ring
-          shell-command-history
-          telega-search-history
-          twittering-search-history))
   (setq savehist-save-minibuffer-history t))
+#+end_src
+
+** simple
+:PROPERTIES:
+:ID:       C7BA09A3-635F-4F31-A17A-F94F3B024522
+:END:
+
+#+begin_src emacs-lisp :results silent
+(use-feature simple
+  :demand t
+  :config
+  (dolist (var '(extended-command-history
+                 kill-ring
+                 mark-ring
+                 shell-command-history
+                 read-expression-history))
+    (push var savehist-additional-variables))
+
+  :general
+  ((minibuffer-mode-map mu4e-minibuffer-search-query-map)
+   "M-k" 'previous-history-element
+   "M-l" 'next-history-element))
+#+end_src
+
+** chistory
+:PROPERTIES:
+:ID:       1604256B-74B9-41DC-9F19-7EAED0473FB6
+:END:
+
+#+begin_src emacs-lisp
+(use-feature chistory
+  :config
+  (push 'command-history savehist-additional-variables))
 #+end_src
 
 ** saveplace
@@ -5379,6 +5381,9 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
   (setq isearch-allow-scroll 'unlimited)
   (setq search-upper-case t)
   (setq search-exit-option t) ; `t' is the default, but some alternative value may be more sensible
+
+  (dolist (var '(regexp-search-ring search-ring))
+    (push var savehist-additional-variables))
 
   (add-hook 'isearch-mode-end-hook #'recenter-top-bottom)
 
@@ -5884,6 +5889,9 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
 #+begin_src emacs-lisp :results silent
 (use-feature ido
+  :config
+  (push 'ido-file-history savehist-additional-variables)
+
   :general
   (dired-mode-map
    "i" 'ido-find-file))
@@ -6127,6 +6135,9 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 #+begin_src emacs-lisp :results silent
 (use-feature info
   :demand t
+  :config
+  (push 'Info-history-list savehist-additional-variables)
+
   :general
   (Info-mode-map
    "j" 'Info-backward-node
@@ -6187,6 +6198,8 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
   :defer 20
   :config
   (kmacro-set-counter 1)
+  (dolist (var '(kmacro-ring last-kbd-macro))
+    (push var savehist-additional-variables))
 
   :general
   ("A-H-M-s-h" 'kmacro-end-or-call-macro ; = H-h, to circumvent OSX mapping
@@ -10226,6 +10239,8 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
                           (preview . "${author editor:%etal} (${year issued date}) ${title}, ${journal journaltitle publisher container-title collection-title}.\n")
                           (note . "Notes on ${author editor:%etal}, ${title}")))
 
+  (push 'citar-history savehist-additional-variables)
+
   (require 'citar-org-roam)
   (citar-register-notes-source
    'orb-citar-source (list :name "Org-Roam Notes"
@@ -11326,6 +11341,8 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
                                 ("Channels" type channel)))
   (setq telega-completing-read-function 'completing-read)
 
+  (push 'telega-search-history savehist-additional-variables)
+
   (telega-mode-line-mode)
 
   (add-hook 'telega-chat-mode-hook (lambda () (setq default-directory paths-dir-downloads)))
@@ -11647,6 +11664,8 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
   (dolist (cons browse-url-handlers)
     (setq eww-use-browse-url
           (concat eww-use-browse-url "\\|" (car cons))))
+
+  (push 'eww-history savehist-additional-variables)
 
   :general
   ("A-w" 'eww)
@@ -12534,6 +12553,9 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
 
 #+begin_src emacs-lisp :results silent
 (use-feature calc
+  :config
+  (push 'calc-quick-calc-history savehist-additional-variables)
+
   :general
   ("A-c" 'calc
    "A-M-c" 'quick-calc)

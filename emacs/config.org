@@ -6857,7 +6857,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :elpaca (ledger-prices
            :host github
            :repo "benthamite/ledger-prices")
-  :demand t
+  :defer 5
   :after ledger-mode
   :config
   (setq ledger-prices-api-key-finnhub (auth-source-pass-get 'secret "chrome/api.finnhub.io"))

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: add-to-savehist
+# key: as
+# contributor: Pablo Stafforini
+# --
+(push '$1 savehist-additional-variables)

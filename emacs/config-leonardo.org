@@ -77,6 +77,7 @@
 (setq paths-files-bibliography-all
       `(,@paths-files-bibliography-personal
         ,@tlon-babel-bibliography-files))
+(tlon-babel-init)
 #+end_src
 
 ** org-capture
@@ -272,6 +273,11 @@
 (setq telega-server-libs-prefix "/Users/cartago/source/td/tdlib")
 #+end_src
 
+** citar
+
+#+begin_src emacs-lisp
+(setq citar-citeproc-csl-styles-dir paths-dir-personal-csl-styles)
+#+end_src
 * tangle flags
 :PROPERTIES:
 :ID:       A4E7C5AD-1E55-4C6F-B0E5-8320D282A886
@@ -333,8 +339,6 @@
  (paths-dir-personal-bibliography . (file-name-concat (expand-file-name "~") "source/bibliography/"))
  (paths-dir-personal-csl-styles . (file-name-concat paths-dir-personal-bibliography "styles/"))
  (paths-dir-personal-csl-locales . (file-name-concat paths-dir-personal-bibliography "locales/"))
- (paths-dir-csl-styles . (file-name-concat paths-dir-dropbox "repos/genus/ref/styles/"))
- (paths-dir-csl-locales . (file-name-concat paths-dir-dropbox "repos/genus/ref/locales/"))
  (paths-dir-blog . "")
  (paths-dir-journal . "")
  (paths-dir-wiki . "")

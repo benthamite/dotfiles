@@ -436,8 +436,11 @@ number."
     (org-display-inline-images arg)
     (unless (eq major-mode 'org-agenda-mode)
       (org-modern-mode arg))
-    ;; `org-modern-mode' must be set before `visible-mode' to avoid weird interaction
     (visible-mode 'toggle)
+    ;; we repeat this to handle weird interaction between `visible-mode' and
+    ;; `org-modern-mode'
+    (unless (eq major-mode 'org-agenda-mode)
+      (org-modern-mode arg))
     (not visible-mode)))
 
 (defun simple-extras-count-words-dwim ()

@@ -113,7 +113,7 @@ Optionally, return such list only if its length is less than LIMIT."
   "Create a file named after NOTE-NAME.
 If DIR is nil, use `paths-dir-notes'."
   (require 'prot-eww)
-  (let* ((slug (prot-eww--sluggify note-name))
+  (let* ((slug (tlon-core-slugify note-name))
 	 (filename (file-name-with-extension slug "org")))
     (when (file-exists-p filename)
       (user-error (format "File `%s' already exists" filename)))

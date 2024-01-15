@@ -5144,7 +5144,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 #+begin_src emacs-lisp
 (use-package calfw-org
-  :demand t)
+  :after calfw)
 #+end_src
 
 ** calfw-blocks

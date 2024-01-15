@@ -3588,9 +3588,8 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
            :host github
            :repo "jdtsmith/outli")
   :after outline
-  :demand t
+  :defer 5
   :config
-
   (setq outli-speed-commands
         '(("Outline navigation")
           ("k" . outline-previous-visible-heading)

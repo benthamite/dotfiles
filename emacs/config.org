@@ -7569,7 +7569,6 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 (use-package copilot
   :elpaca (:host github
                  :repo "zerolfx/copilot.el"
-                 :build (:not elpaca--check-version)
                  :files ("dist" "*.el"))
   :demand t
 

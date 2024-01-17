@@ -2010,6 +2010,9 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       A7254905-0FBE-4F8F-8D93-1A5D1FA95BB9
 :END:
 
+
+/[[file:extras/vc-extras.el][vc-extras]] collects my extensions for ~vc~./
+
 #+begin_src emacs-lisp
 (use-personal-package vc-extras
   :after vc

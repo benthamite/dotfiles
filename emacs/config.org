@@ -1945,6 +1945,8 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 :ID:       524FE3D7-EA5B-408E-A338-68E633528632
 :END:
 
+/[[file:extras/pass-extras.el][pass-extras]] collects my extensions for ~pass~./
+
 #+begin_src emacs-lisp
 (use-personal-package pass-extras
   :after pass

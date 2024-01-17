@@ -9663,10 +9663,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
    "s-r" 'org-roam-buffer-toggle))
 #+end_src
 
-- Check [[https://www.reddit.com/r/emacs/comments/omxl6n/config_for_orgroam_v2/][this config]] (v 2.0)
-- And [[https://github.com/alexkehayias/emacs.d/blob/master/init.el#L715][this one]] (by the author of [[https://notes.alexkehayias.com/][this notes repository]], created with org-roam)
-- And [[https://takeonrules.com/2021/08/22/ever-further-refinements-of-org-roam-usage/][this post]]
-
 ** org-roam-extras
 :PROPERTIES:
 :ID:       44F722DC-C324-4A86-85A1-F103812B2A6A

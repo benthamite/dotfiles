@@ -5692,15 +5692,10 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
         '((consult-line buffer)
           (consult-imenu buffer)
           (consult-grep buffer)))
-  ;; Configure the display per completion category.
-  ;; Use the grid display for files and a buffer
-  ;; for the consult-grep commands.
   (setq vertico-multiform-categories
         '((file grid)))
   (setq vertico-cycle t)
   (setq vertico-count 16)
-  ;; (setq vertico-quick1 avy-keys)
-  ;; (setq vertico-quick2 avy-keys)
 
   (vertico-multiform-mode)
 

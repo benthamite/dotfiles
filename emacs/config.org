@@ -5871,11 +5871,14 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
 
 /[[https://github.com/mohkale/consult-yasnippet/tree/cdb256d2c50e4f8473c6052e1009441b65b8f8ab][consult-yasnippet]] provides [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]] functionality to [[id:6405B8E7-6612-4D71-8C2C-A51F8808F4C6][yasnippet]]./
 
-
 #+begin_src emacs-lisp :results silent
 (use-package consult-yasnippet
   :after consult yasnippet
   :demand t
+  :config
+  (add-to-list 'vertico-multiform-commands
+               '(consult-yasnippet grid))
+
   :general
   ("C-H-y" 'consult-yasnippet))
 #+end_src

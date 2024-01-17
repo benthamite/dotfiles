@@ -63,6 +63,7 @@ mail.google.com
 mailerlite.com
 mailist-manage.eu
 maps.
+mediacore.app
 mercadolibre.com
 mercadopago.com
 metacritic.com

@@ -7453,6 +7453,9 @@ This needs to be configured.
 CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 :END:
 
+
+/[[https://github.com/AmaiKinono/puni][puni]] supports structured editing for many major modes./
+
 #+begin_src emacs-lisp
 (use-package puni
   :general

@@ -7609,7 +7609,13 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :defer 10
   :config
   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
-  (setq gptel-default-mode 'org-mode))
+  (setq gptel-default-mode 'org-mode)
+
+  :general
+  ("H-s-a" 'gptel)
+  (gptel-mode-map
+   "s-a" 'gptel-menu
+   "s-c" 'gptel-send))
 #+end_src
 
 ** gptel-extras

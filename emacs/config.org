@@ -272,7 +272,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#consult-git-log-grep][consult-git-log-grep]]
   - [[#consult-gh][consult-gh]]
   - [[#consult-yasnippet][consult-yasnippet]]
-  - [[#consult-spotify][consult-spotify]]
   - [[#embark-consult][embark-consult]]
   - [[#marginalia][marginalia]]
   - [[#orderless][orderless]]
@@ -5865,19 +5864,6 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
   :demand t
   :general
   ("C-H-y" 'consult-yasnippet))
-#+end_src
-
-** consult-spotify
-:PROPERTIES:
-:ID:       1605F697-9968-474A-9691-941723977EEC
-:END:
-
-Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I'm disabling this.
-
-#+begin_src emacs-lisp :results silent
-(use-package consult-spotify
-  :disabled
-  :after consult espotify)
 #+end_src
 
 ** embark-consult

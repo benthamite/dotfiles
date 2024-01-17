@@ -344,6 +344,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#prog-mode][prog-mode]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
+  - [[#lisp][lisp]]
   - [[#s][s]]
   - [[#debug][debug]]
   - [[#edebug][edebug]]
@@ -7260,6 +7261,17 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
   :config
   ;; default is 65, which overrides the value of `fill-column'
   (setq emacs-lisp-docstring-fill-column nil))
+#+end_src
+
+** lisp
+:PROPERTIES:
+:ID:       38BDC170-9B9D-4694-960F-4B746EEC9FD6
+:END:
+
+#+begin_src emacs-lisp
+(use-feature lisp
+  :general
+  ("A-C-H-j" 'mark-sexp))
 #+end_src
 
 ** s

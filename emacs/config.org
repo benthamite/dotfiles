@@ -3470,7 +3470,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
    "M-o" 'downcase-dwim
    "M-q" 'save-buffers-kill-terminal
    "M-u" 'capitalize-dwim
-   "M-U" 'upcase-dwim
+   "A-M-u" 'upcase-dwim
    "M-w" 'count-words-region
    "H-z" 'undo-only))
 #+end_src

@@ -2062,6 +2062,9 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       BFD82441-5547-45C5-AD36-E5DE9FDD4898
 :END:
 
+
+/[[file:extras/ediff-extras.el][ediff-extras]] collects my extensions for ~ediff~./
+
 #+begin_src emacs-lisp
 (use-personal-package ediff-extras
   :after ediff
@@ -2321,6 +2324,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F
 :END:
 
+
+/[[file:extras/gh-notify-extras.el][gh-notify-extras]] collects my extensions for ~gh-notify~./
+
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-personal-package gh-notify-extras
   :after gh-notify
@@ -2337,6 +2343,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :PROPERTIES:
 :ID:       B74712E7-2A8C-4D17-8FD4-C854C88D3D72
 :END:
+
+
+/[[file:extras/forge-extras.el][forge-extras]] collects my extensions for ~forge~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-personal-package forge-extras
@@ -2515,6 +2524,9 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :ID:       9478C42B-7864-4F53-BD17-5EBEC2A55DB8
 :END:
 
+
+/[[file:extras/faces-extras.el][faces-extras]] collects my extensions for ~faces~./
+
 #+begin_src emacs-lisp
 (use-personal-package faces-extras
   :after faces
@@ -2582,6 +2594,9 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 :PROPERTIES:
 :ID:       9EB47A74-CEFE-4929-B990-F88A57D57A1D
 :END:
+
+
+/[[file:extras/modus-themes-extras.el][modus-themes-extras]] collects my extensions for ~modus-themes~./
 
 #+begin_src emacs-lisp
 (use-personal-package modus-themes-extras
@@ -2721,6 +2736,9 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 :ID:       AA94A6D8-DD39-415C-9E34-5793F44B9FF9
 :END:
 
+
+/[[file:extras/doom-modeline-extras.el][doom-modeline-extras]] collects my extensions for ~doom-modeline~./
+
 #+begin_src emacs-lisp
 (use-personal-package doom-modeline-extras
   :after doom-modeline
@@ -2763,6 +2781,9 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 :LOGBOOK:
 CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 :END:
+
+
+/[[file:extras/tab-bar-extras.el][tab-bar-extras]] collects my extensions for ~tab-bar~./
 
 #+begin_src emacs-lisp
 (use-personal-package tab-bar-extras
@@ -3066,6 +3087,9 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 :ID:       21CE8D7E-377F-49AD-A864-D7926F462D4E
 :END:
 
+
+/[[file:extras/profiler-extras.el][profiler-extras]] collects my extensions for ~profiler~./
+
 #+begin_src emacs-lisp
 (use-personal-package profiler-extras
   :after profiler
@@ -3317,6 +3341,9 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 CLOCK: [2021-05-30 Sun 11:16]--[2021-05-30 Sun 12:16] =>  1:00
 CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
 :END:
+
+
+/[[file:extras/simple-extras.el][simple-extras]] collects my extensions for ~simple~./
 
 #+begin_src emacs-lisp
 (use-personal-package simple-extras
@@ -3572,6 +3599,9 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :PROPERTIES:
 :ID:       8BC3FF58-62AD-43E9-87A0-B886F20B428A
 :END:
+
+
+/[[file:extras/outline-extras.el][outline-extras]] collects my extensions for ~outline~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :outline)
 (use-personal-package outline-extras
@@ -4061,6 +4091,9 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 :ID:       DA1D9D59-0EE4-439E-BCC9-5A7C316794A2
 :END:
 
+
+/[[file:extras/files-extras.el][files-extras]] collects my extensions for ~files~./
+
 #+begin_src emacs-lisp
 (use-personal-package files-extras
   :demand t
@@ -4230,6 +4263,9 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 :PROPERTIES:
 :ID:       DDF9A650-13A5-4C47-B2C5-6B376B75998D
 :END:
+
+
+/[[file:extras/dired-extras.el][dired-extras]] collects my extensions for ~dired~./
 
 #+begin_src emacs-lisp
 (use-personal-package dired-extras
@@ -4673,6 +4709,9 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :ID:       E29EF401-C8A5-4B57-8CB4-C2C8B386F446
 :END:
 
+
+/[[file:extras/window-extras.el][window-extras]] collects my extensions for ~window~./
+
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :window)
 (use-personal-package window-extras
   :after window
@@ -4721,6 +4760,9 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :PROPERTIES:
 :ID:       488EF2B1-CCAC-4B91-A927-F89F71BCDAD3
 :END:
+
+
+/[[file:extras/frame-extras.el][frame-extras]] collects my extensions for ~frame~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :frame)
 (use-personal-package frame-extras
@@ -4839,6 +4881,9 @@ Maybe the way to do this is by creating a ~pass-to-avy~ generic function, which 
 :ID:       E8AFD4F9-439F-48F6-8C60-149CB87B5FEA
 :END:
 
+
+/[[file:extras/avy-extras.el][avy-extras]] collects my extensions for ~avy~./
+
 #+begin_src emacs-lisp
 (use-personal-package avy-extras
   :after avy
@@ -4951,6 +4996,9 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 :ID:       BD522C3E-92F7-4D61-A697-8186F01E2BE7
 :END:
 
+
+/[[file:extras/ace-link-extras.el][ace-link-extras]] collects my extensions for ace-~link~./
+
 #+begin_src emacs-lisp
 (use-personal-package ace-link-extras
   :after ace-link
@@ -5026,6 +5074,9 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 :PROPERTIES:
 :ID:       746F8B0D-5817-4FCC-9DA5-C198CE632F92
 :END:
+
+
+/[[file:extras/calendar-extras.el][calendar-extras]] collects my extensions for ~calendar~./
 
 #+begin_src emacs-lisp
 (use-personal-package calendar-extras
@@ -5118,6 +5169,9 @@ Note to self: if the package doesn't work after deploying a new profile, even af
 :PROPERTIES:
 :ID:       BBED8E2E-2A29-4465-926A-22D531E6DBE7
 :END:
+
+
+/[[file:extras/org-gcal-extras.el][org-gcal-extras]] collects my extensions for ~org-gcal~.
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-gcal)
 (use-personal-package org-gcal-extras
@@ -5431,6 +5485,9 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :ID:       6992A0D9-FF6A-4BF7-95C9-B3E3B25CD44C
 :END:
 
+
+/[[file:extras/isearch-extras.el][isearch-extras]] collects my extensions for ~isearch~./
+
 #+begin_src emacs-lisp
 (use-personal-package isearch-extras
   :after isearch
@@ -5717,6 +5774,9 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 :ID:       163D3CB3-B2D9-44DB-9728-E2F5CA7600A8
 :END:
 
+
+/[[file:extras/consult-extras.el][consult-extras]] collects my extensions for ~consult~./
+
 #+begin_src emacs-lisp
 (use-personal-package consult-extras
   :after consult
@@ -5870,6 +5930,9 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 :ID:       2B2BED63-EC35-4DD6-B6A4-DC8E06817290
 :END:
 
+
+/[[file:extras/orderless-extras.el][orderless-extras]] collects my extensions for ~orderless~./
+
 #+begin_src emacs-lisp
 (use-personal-package orderless-extras
   :after orderless
@@ -5973,6 +6036,9 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 :PROPERTIES:
 :ID:       061EBAB9-2846-4922-BBAF-C29E11FAA476
 :END:
+
+
+/[[file:extras/corfu-extras.el][corfu-extras]] collects my extensions for ~corfu~./
 
 #+begin_src emacs-lisp
 (use-personal-package corfu-extras
@@ -6217,6 +6283,9 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 :ID:       13CB9BBA-95F7-446A-A6DB-924C5F62C1C4
 :END:
 
+
+/[[file:extras/kmacro-extras.el][kmacro-extras]] collects my extensions for ~kmacro~./
+
 #+begin_src emacs-lisp
 (use-personal-package kmacro-extras
   :after kmacro
@@ -6409,6 +6478,9 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :PROPERTIES:
 :ID:       7C91CA35-275E-446A-ACE8-1214310479BB
 :END:
+
+
+/[[file:extras/jinx-extras.el][jinx-extras]] collects my extensions for ~jinx~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :jinx)
 (use-personal-package jinx-extras
@@ -6624,6 +6696,9 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 :ID:       856FDF94-95B6-49EB-A6D5-B95F0A53384A
 :END:
 
+
+/[[file:extras/markdown-mode-extras.el][markdown-mode-extras]] collects my extensions for ~markdown-mode~
+
 #+begin_src emacs-lisp
 (use-personal-package markdown-mode-extras
   :after markdown-mode
@@ -6838,6 +6913,9 @@ To populate the database of historical prices:
 :PROPERTIES:
 :ID:       3FC5A39F-AEA9-4D54-AB55-836F58DA8103
 :END:
+
+
+/[[file:extras/ledger-mode-extras.el][ledger-mode-extras]] collects my extensions for ~ledger-mode~
 
 #+begin_src emacs-lisp
 (use-personal-package ledger-mode-extras
@@ -7114,6 +7192,9 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 :PROPERTIES:
 :ID:       C4B53EDC-372F-42B2-924E-FE48647B67AE
 :END:
+
+
+/[[file:extras/pdf-tools-extras.el][pdf-tools-extras]] collects my extensions for ~pdf-tools~.
 
 #+begin_src emacs-lisp
 (use-personal-package pdf-tools-extras
@@ -7627,6 +7708,9 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 :ID:       AEA2E978-0321-4F3D-B3EB-14CDA505A9D9
 :END:
 
+
+/[[file:extras/gptel-extras.el][gptel-extras]] collects my extensions for ~gptel~./
+
 #+begin_src emacs-lisp
 (use-personal-package gptel-extras
   :after gptel
@@ -8083,6 +8167,9 @@ By considering both tasks completed and their associated priorities.
 :PROPERTIES:
 :ID:       4DE04276-B164-441D-ADCA-017346C525D6
 :END:
+
+
+/[[file:extras/org-extras.el][org-extras]] collects my extensions for ~org~./
 
 #+begin_src emacs-lisp
 (use-personal-package org-extras
@@ -9331,6 +9418,9 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 :ID:       189C41F8-D0BF-40CC-A4AD-96C7F4A76E4D
 :END:
 
+
+/[[file:extras/org2blog-extras.el][org2blog-extras]] collects my extensions for ~org2blog~./
+
 #+begin_src emacs-lisp
 (use-personal-package org2blog-extras
   :after org2blog
@@ -9673,6 +9763,9 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 :ID:       44F722DC-C324-4A86-85A1-F103812B2A6A
 :END:
 
+
+/[[file:extras/org-roam-extras.el][org-roam-extras]] collects my extensions for ~org-roam~.
+
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-roam)
 (use-personal-package org-roam-extras
   :after org-roam
@@ -9797,6 +9890,9 @@ I use this package to define a dynamic agenda, as explained and illustrated [[d1
 :ID:       466CED55-6DCA-4D17-83C7-B2FE9C2B0A69
 :END:
 
+
+/[[file:extras/vulpea-extras.el][vulpea-extras]] collects my extensions for ~vulpea~./
+
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :vulpea)
 (use-personal-package vulpea-extras
   :after vulpea
@@ -9854,6 +9950,9 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 :PROPERTIES:
 :ID:       3E324D44-27D5-4FA4-9D2F-2FFC6A4021DE
 :END:
+
+
+/[[file:extras/org-noter-extras.el][org-noter-extras]] collects my extensions for ~org-noter~.
 
 #+begin_src emacs-lisp
 (use-personal-package org-noter-extras
@@ -10076,6 +10175,9 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 :ID:       31E4CEF9-8CF3-4921-A108-3C60A7191F8F
 :END:
 
+
+/[[file:extras/bibtex-extras.el][bibtex-extras]] collects my extensions for ~bibtex~./
+
 #+begin_src emacs-lisp
 (use-personal-package bibtex-extras
   :demand t
@@ -10291,6 +10393,9 @@ Having headings tagged with the type of work they are notes of allows me to quer
 :PROPERTIES:
 :ID:       6CC7F660-F6E6-4605-AA42-B495FF090B5D
 :END:
+
+
+/[[file:extras/citar-extras.el][citar-extras]] collects my extensions for ~citar~./
 
 #+begin_src emacs-lisp
 (use-personal-package citar-extras
@@ -10592,6 +10697,9 @@ The macro below generates the commands correctly. But attempting to define key b
 :ID:       9E86F42E-2F41-4BB7-ABC5-1C929DBD5C06
 :END:
 
+
+/[[file:extras/ebib-extras.el][ebib-extras]] collects my extensions for ~ebib~./
+
 #+begin_src emacs-lisp
 (use-personal-package ebib-extras
   :after ebib tlon-babel
@@ -10726,6 +10834,9 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 :PROPERTIES:
 :ID:       29BBF8F1-FC6D-4AFE-AEE4-6C01BB4AAA5F
 :END:
+
+
+/[[file:extras/zotra-extras.el][zotra-extras]] collects my extensions for ~zotra~./
 
 #+begin_src emacs-lisp
 (use-personal-package zotra-extras
@@ -11096,6 +11207,9 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       A131F743-C780-4D66-9F1A-D3F63F92DE0B
 :END:
 
+
+/[[file:extras/mu4e-extras.el][mu4e-extras]] collects my extensions for ~mu4e~./
+
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
 (use-personal-package mu4e-extras
   :after mu4e
@@ -11265,6 +11379,9 @@ I.e. the message quoted when on replies to, or forwards, an existing email.
 :PROPERTIES:
 :ID:       672D77D8-E9AA-4A66-A16A-EAB54E0238E6
 :END:
+
+
+/[[file:extras/org-msg-extras.el][org-msg-extras]] collects my extensions for ~org-msg~.
 
 #+begin_src emacs-lisp
 (use-personal-package org-msg-extras
@@ -11444,6 +11561,9 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 :ID:       C7D90E9B-3503-4BFA-A736-89803A9DA664
 :END:
 
+
+/[[file:extras/telega-extras.el][telega-extras]] collects my extensions for ~telega~./
+
 #+begin_src emacs-lisp
 (use-personal-package telega-extras
   :after telega telega-dired-dwim
@@ -11561,6 +11681,9 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :PROPERTIES:
 :ID:       15B6192C-652C-47FC-8477-0B701129E89F
 :END:
+
+
+/[[file:extras/browse-url-extras.el][browse-url-extras]] collects my extensions for ~browse-url~.
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :browse-url)
 (use-personal-package browse-url-extras
@@ -11876,6 +11999,9 @@ These key bindings produce the same behavior in eww.
 :PROPERTIES:
 :ID:       57DE6F0B-9245-4E39-A747-6C2A6714B02A
 :END:
+
+
+/[[file:extras/elfeed-extras.el][elfeed-extras]] collects my extensions for ~elfeed~./
 
 #+begin_src emacs-lisp
 (use-personal-package elfeed-extras
@@ -12349,6 +12475,9 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 :ID:       544201E3-BFB5-4398-AECC-EDD45410C064
 :END:
 
+
+/[[file:extras/org-web-tools-extras.el][org-web-tools-extras]] collects my extensions for ~org-web-tools~.
+
 #+begin_src emacs-lisp
 (use-personal-package org-web-tools-extras
   :after org-web-tools-extras
@@ -12728,6 +12857,9 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 :PROPERTIES:
 :ID:       07EA04A6-65BE-4AF9-A945-99095D719815
 :END:
+
+
+/[[file:extras/bbdb-extras.el][bbdb-extras]] collects my extensions for ~bbdb~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :bbdb)
 (use-personal-package bbdb-extras

@@ -5853,12 +5853,52 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :elpaca (consult-gh
            :host github
            :repo "armindarvish/consult-gh")
-  :after consult forge gh
+  :after consult forge
   :demand t
   :config
-  (add-to-list 'consult-gh-default-orgs-list "benthamite")
+  (require 'consult-gh-embark)
+  (require 'consult-gh-forge)
+  (add-to-list 'consult-gh-default-orgs-list "tlon-team")
   (setq consult-gh-default-clone-directory "~/source/")
-  (setq consult-gh-issues-state-to-show "all"))
+  (setq consult-gh-repo-maxnum 30)
+  (setq consult-gh-issues-maxnum 100)
+  (setq consult-gh-show-preview nil)
+  (setq consult-gh-preview-key "M-o")
+  (setq consult-gh-preview-buffer-mode 'org-mode)
+  (setq consult-gh-repo-action #'consult-gh--repo-browse-files-action)
+  (setq consult-gh-issue-action #'consult-gh-forge--issue-view-action)
+  (setq consult-gh-pr-action #'consult-gh-forge--pr-view-action)
+  (setq consult-gh-code-action #'consult-gh--code-view-action)
+  (setq consult-gh-file-action #'consult-gh--files-view-action)
+  (setq consult-gh-issues-state-to-show "all")
+
+  (dolist (var '(consult-gh--known-orgs-list
+                 consult-gh--known-repos-list))
+    (push var savehist-additional-variables))
+  
+  (transient-define-prefix consult-gh-dispatch ()
+    "Dispatch a `consult-gh' command."
+    [["list"
+      ("l r" "repo" consult-gh-repo-list)
+      ("l i" "issue" consult-gh-issue-list)
+      ("l p" "pull request" consult-gh-pr-list)]
+     ["search"
+      ("s r" "repos" consult-gh-search-repos)
+      ("s i" "issues" consult-gh-search-issues)
+      ("s p" "pull requests" consult-gh-search-prs)
+      ("s c" "code" consult-gh-search-code)]
+     ["clone/fork repo"
+      ("c" "clone" consult-gh-repo-clone)
+      ("f" "fork" consult-gh-repo-fork)]
+     ["browse"
+      ("b" "file" consult-gh-find-file)
+      ""
+      "default"
+      ("d" "repos" consult-gh-default-repos)
+      ]])
+
+      :general
+      ("H-G" 'consult-gh-dispatch))
 #+end_src
 
 ** consult-yasnippet

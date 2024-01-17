@@ -7626,7 +7626,10 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 #+begin_src emacs-lisp
 (use-personal-package gptel-extras
   :after gptel
-  :demand t)
+  :demand t
+  :general
+  (gptel-mode-map
+   "s-m" 'gptel-extras-model-config))
 #+end_src
 
 ** org-ai

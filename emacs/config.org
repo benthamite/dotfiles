@@ -354,6 +354,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#python][python]]
   - [[#emacs-ipython-notebook][emacs-ipython-notebook]]
   - [[#applescript-mode][applescript-mode]]
+  - [[#jsonrpc][jsonrpc]]
   - [[#json-mode][json-mode]]
   - [[#csv-mode][csv-mode]]
   - [[#js2-mode][js2-mode]]
@@ -7399,6 +7400,16 @@ This needs to be configured.
 
 #+begin_src emacs-lisp :results silent
 (use-package applescript-mode)
+#+end_src
+
+** jsonrpc
+:PROPERTIES:
+:ID:       438DEA77-5F4B-4E1D-8A1D-E65DA588927F
+:END:
+
+#+begin_src emacs-lisp
+(use-feature jsonrpc
+  :demand t)
 #+end_src
 
 ** json-mode

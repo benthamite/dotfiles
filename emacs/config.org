@@ -3640,8 +3640,6 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
   :config
   (setq save-abbrevs 'silently)
   (setq abbrev-file-name (file-name-concat paths-dir-abbrev "abbrev_defs"))
-  ;; (setq abbrev-suggest t)
-  ;; (setq abbrev-suggest-hint-threshold 0)
   (setq-default abbrev-mode t)
   ;; do not look up abbrevs with case folding; e.g. `EA' will not expand an `ea' abbrev
   (abbrev-table-put global-abbrev-table :case-fixed t)

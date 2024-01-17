@@ -7642,12 +7642,13 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 :ID:       2064FE34-0301-4E33-AB51-FE4921CA0E16
 :END:
 
-/[[https://github.com/zerolfx/copilot.el][copilot]] is an unofficial Copilot plugin for Emacs./
+/[[https://github.com/copilot-emacs/copilot.el][copilot]] is an unofficial Copilot plugin for Emacs./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :copilot)
 (use-package copilot
   :elpaca (:host github
-                 :repo "zerolfx/copilot.el"
+                 :repo "copilot-emacs/copilot.el"
+                 :ref "1542d76" ; 2024-01-03, before update to jsonrpc requirement
                  :files ("dist" "*.el"))
   :demand t
 

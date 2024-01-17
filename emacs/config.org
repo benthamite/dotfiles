@@ -8820,8 +8820,9 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
   :after org
   :demand t
   :config
-  (setq org-outline-paths-complete-in-steps nil)
-  (setq org-refile-allow-creating-parent-nodes 'confirm)
+  (setq org-refile-use-outline-path 'file)
+  (setq org-outline-path-complete-in-steps nil)
+  (setq org-refile-allow-creating-parent-nodes nil)
   (setq org-reverse-note-order t) ; refile to the beginning of header
   (setq org-refile-use-cache t) ;  build cache at startup
   (setq org-refile-targets '((org-agenda-files :maxlevel . 9)

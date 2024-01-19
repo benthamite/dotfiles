@@ -5855,7 +5855,6 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :config
   (require 'consult-gh-embark)
   (require 'consult-gh-forge)
-  (add-to-list 'consult-gh-default-orgs-list "tlon-team")
   (setq consult-gh-default-clone-directory "~/source/")
   (setq consult-gh-repo-maxnum 30)
   (setq consult-gh-issues-maxnum 100)
@@ -5869,6 +5868,9 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   (setq consult-gh-file-action #'consult-gh--files-view-action)
   (setq consult-gh-issues-state-to-show "all")
 
+  (dolist (org '("tlon-team" "benthamite"))
+    (push org consult-gh-default-orgs-list))
+  
   (dolist (var '(consult-gh--known-orgs-list
                  consult-gh--known-repos-list))
     (push var savehist-additional-variables))
@@ -5894,8 +5896,10 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
       ("d" "repos" consult-gh-default-repos)
       ]])
 
-      :general
-      ("H-G" 'consult-gh-dispatch))
+  :general
+  ("H-G" 'consult-gh-dispatch))
+#+end_src
+
 ** consult-mu
 :PROPERTIES:
 :ID:       834A9797-AD26-44B5-BE4E-1CE52184E265

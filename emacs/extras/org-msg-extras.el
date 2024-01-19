@@ -53,6 +53,18 @@
   (org-msg-extras-kill-message)
   (browse-url "https://app.grammarly.com/ddocs/2264307164"))
 
+(defun org-msg-extras-begin-compose ()
+  "Move point to start composing an email.
+This is a slightly tweaked version of `org-msg-goto-body'."
+  (interactive)
+  (goto-char (point-min))
+  (if org-msg-signature
+      (when (search-forward org-msg-signature nil t)
+	(goto-char (match-beginning 0)))
+    (while (re-search-forward org-property-re nil t)
+      (forward-line))
+    (newline)
+    (simple-extras-visible-mode-enhanced -1)))
 
 (provide 'org-msg-extras)
 ;;; org-msg-extras.el ends here

@@ -357,6 +357,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
   - [[#csv-mode][csv-mode]]
+  - [[#yaml][yaml]]
   - [[#js2-mode][js2-mode]]
   - [[#puni][puni]]
   - [[#hideshow][hideshow]]
@@ -7565,6 +7566,20 @@ This needs to be configured.
 
 #+begin_src emacs-lisp
 (use-package csv-mode
+  :demand t)
+#+end_src
+
+** yaml
+:PROPERTIES:
+:ID:       9DD1BC24-7AFE-406B-9C1C-7BC66BD241F3
+:END:
+/[[https://github.com/zkry/yaml.el][yaml]] is YAML parser written in Emacs List without any external dependencies./
+
+#+begin_src emacs-lisp
+(use-package yaml
+  :elpaca (yaml
+           :host github
+	   :repo "zkry/yaml.el")
   :demand t)
 #+end_src
 

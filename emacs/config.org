@@ -10062,7 +10062,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (setq org-cite-activate-processor 'citar) ;
   (setq org-cite-export-processors
-        '((t . (csl "biblioteca-altruismo-eficaz.csl")))))
+        '((t . (csl "long.csl")))))
 #+end_src
 
 *** Resources

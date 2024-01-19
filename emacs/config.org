@@ -7723,7 +7723,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 (use-package copilot
   :elpaca (:host github
                  :repo "copilot-emacs/copilot.el"
-                 :ref "1542d76" ; 2024-01-03, before update to jsonrpc requirement
+                 :ref "653fe7b12990b5b7a050971bed4579022ce4b4f8" ; 2024-01-03, before jumping cursor bug “fix”
                  :files ("dist" "*.el"))
   :demand t
 

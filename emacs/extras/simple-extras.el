@@ -35,23 +35,23 @@
 (defmacro simple-extras-delete-instead-of-kill (&rest body)
   "Replace `kill-region' with `delete-region' in BODY."
   `(cl-letf (((symbol-function 'kill-region)
-              (lambda (beg end)
-                (delete-region beg end))))
+	      (lambda (beg end)
+		(delete-region beg end))))
      ,@body))
 
 (defmacro simple-extras-copy-instead-of-kill (&rest body)
   "Replace `kill-region' with `kill-ring-save' in BODY."
   `(cl-letf (((symbol-function 'kill-region)
-              (lambda (beg end)
-                (kill-ring-save beg end)
-                (setq this-command 'kill-region))))
+	      (lambda (beg end)
+		(kill-ring-save beg end)
+		(setq this-command 'kill-region))))
      ,@body))
 
 (defun simple-extras-kill-whole-thing (thing)
   "Kill the `thing-at-point' for the specified kind of THING."
   (let ((bounds (bounds-of-thing-at-point thing)))
     (if bounds
-        (kill-region (car bounds) (cdr bounds))
+	(kill-region (car bounds) (cdr bounds))
       (error "No %s at point" thing))))
 
 ;;;;;; words
@@ -122,15 +122,15 @@ Case is ignored if `case-fold-search' is non-nil in the current buffer.
 Goes backward if ARG is negative; error if CHAR not found.
 See also `zap-up-to-char'."
   (interactive (list (prefix-numeric-value current-prefix-arg)
-                     (read-char-from-minibuffer "Zap to char: "
-                                                nil 'read-char-history)))
+		     (read-char-from-minibuffer "Zap to char: "
+						nil 'read-char-history)))
   ;; Avoid "obsolete" warnings for translation-table-for-input.
   (with-no-warnings
     (if (char-table-p translation-table-for-input)
-        (setq char (or (aref translation-table-for-input char) char))))
+	(setq char (or (aref translation-table-for-input char) char))))
   (copy-region-as-kill (point) (progn
-                                 (search-forward (char-to-string char) nil nil arg)
-                                 (point))))
+				 (search-forward (char-to-string char) nil nil arg)
+				 (point))))
 
 (defun simple-extras-backward-zap-copy-to-char ()
   "Copy backward up to and including ARGth occurrence of CHAR.
@@ -147,15 +147,15 @@ Case is ignored if `case-fold-search' is non-nil in the current buffer.
 Goes backward if ARG is negative; error if CHAR not found.
 See also `zap-up-to-char'."
   (interactive (list (prefix-numeric-value current-prefix-arg)
-                     (read-char-from-minibuffer "Zap to char: "
-                                                nil 'read-char-history)))
+		     (read-char-from-minibuffer "Zap to char: "
+						nil 'read-char-history)))
   ;; Avoid "obsolete" warnings for translation-table-for-input.
   (with-no-warnings
     (if (char-table-p translation-table-for-input)
-        (setq char (or (aref translation-table-for-input char) char))))
+	(setq char (or (aref translation-table-for-input char) char))))
   (delete-region (point) (progn
-                           (search-forward (char-to-string char) nil nil arg)
-                           (point))))
+			   (search-forward (char-to-string char) nil nil arg)
+			   (point))))
 
 (defun simple-extras-backward-zap-delete-to-char ()
   "Copy backward up to and including ARGth occurrence of CHAR.
@@ -419,29 +419,35 @@ Transient Mark mode is on but the region is inactive."
        (not arg)
      arg)))
 
+(visible-mode 'toggle)
+
 (defun simple-extras-visible-mode-enhanced (&optional arg)
   "Set `visible-mode' and associated modes.
 Toggle the mode if ARG is `toggle' or called interactively. Enable the mode if
 ARG is nil, omitted, or a positive number. Disable the mode if ARG is a negative
 number."
-  (interactive)
-  (require 'org)
-  (require 'org-modern)
+  (interactive "P")
   (let ((arg (if (or (eq arg 'toggle)
-                     (and (null arg) (called-interactively-p 'any)))
-                 (if visible-mode 1 -1)
-               (or arg 1))))
+		     (and (null arg) (called-interactively-p 'any)))
+		 (if visible-mode 1 -1)
+	       (or arg 1))))
+    (visible-mode (* arg -1))
+    (simple-extras-visible-mode-enhanced-org arg)
+    ;; we repeat this to handle weird interaction between `visible-mode' and
+    ;; `org-modern-mode'
+    (visible-mode (* arg -1))))
+
+(defun simple-extras-visible-mode-enhanced-org (&optional arg)
+  "Set associated `org' modes based on ARG."
+  (interactive "P")
+  (when (or (derived-mode-p 'org-mode)
+	    (derived-mode-p 'org-agenda-mode)
+	    (derived-mode-p 'org-msg-mode))
     (when (member 'org-tidy-mode org-mode-hook)
       (org-tidy-mode arg))
     (org-display-inline-images arg)
     (unless (eq major-mode 'org-agenda-mode)
-      (org-modern-mode arg))
-    (visible-mode 'toggle)
-    ;; we repeat this to handle weird interaction between `visible-mode' and
-    ;; `org-modern-mode'
-    (unless (eq major-mode 'org-agenda-mode)
-      (org-modern-mode arg))
-    (not visible-mode)))
+      (org-modern-mode arg))))
 
 (defun simple-extras-count-words-dwim ()
   "Count the number of words in region, if active, otherwise in clipboard.
@@ -449,22 +455,22 @@ Either way, save count to kill ring."
   (interactive)
   (if (region-active-p)
       (let ((count (how-many "\\w+" (region-beginning) (region-end))))
-        (message "%s words in region" count)
-        (kill-new (number-to-string count))
-        (message "region has %s words" count))
+	(message "%s words in region" count)
+	(kill-new (number-to-string count))
+	(message "region has %s words" count))
     (let ((clipboard-text (current-kill 0)))
       (with-temp-buffer
-        (insert clipboard-text)
-        (let ((clipboard-count (kill-new (format "%d" (count-words-region (point-min) (point-max))))))
-          (message clipboard-count))))))
+	(insert clipboard-text)
+	(let ((clipboard-count (kill-new (format "%d" (count-words-region (point-min) (point-max))))))
+	  (message clipboard-count))))))
 
 (defun simple-extras-visual-line-mode-enhanced ()
   "Toggle `visual-line-mode' handling `truncate-lines'."
   (interactive)
   (if visual-line-mode
       (progn
-        (visual-line-mode -1)
-        (setq truncate-lines t))
+	(visual-line-mode -1)
+	(setq truncate-lines t))
     (visual-line-mode)
     (setq truncate-lines nil)))
 
@@ -487,17 +493,17 @@ block only, else indent whole buffer."
   (require 'org)
   (save-excursion
     (if (region-active-p)
-        (progn
-          (indent-region (region-beginning) (region-end))
-          (message "Indented selected region."))
+	(progn
+	  (indent-region (region-beginning) (region-end))
+	  (message "Indented selected region."))
       (if (when (derived-mode-p 'org-mode)
-            (org-in-src-block-p))
-          (let ((org-src-tab-acts-natively t))
-            (org-narrow-to-block)
-            (indent-region (point-min) (point-max) nil)
-            (widen))
-        (indent-region (point-min) (point-max) nil)
-        (message "Indented buffer.")))
+	    (org-in-src-block-p))
+	  (let ((org-src-tab-acts-natively t))
+	    (org-narrow-to-block)
+	    (indent-region (point-min) (point-max) nil)
+	    (widen))
+	(indent-region (point-min) (point-max) nil)
+	(message "Indented buffer.")))
     (whitespace-cleanup)))
 
 ;;;;; strip
@@ -514,33 +520,33 @@ If PT is non-nil, start at that position instead of `point'."
     (if pt (goto-char pt))
     (let (start url)
       (save-excursion
-        ;; first see if you're just past a filename
-        (if (not (eobp))
-            (if (looking-at "[] \t\n[{}()]") ; whitespace or some parens
-                (progn
-                  (skip-chars-backward " \n\t\r({[]})")
-                  (if (not (bobp))
-                      (backward-char 1)))))
-        (if (and (char-after (point))
-                 (string-match (eval-when-compile
-                                 (concat "[" "-%.?@a-zA-Z0-9()_/:~=&" "]"))
-                               (char-to-string (char-after (point)))))
-            (progn
-              (skip-chars-backward "-%.?@a-zA-Z0-9()_/:~=&")
-              (setq start (point))
-              (skip-chars-forward "-%.?@a-zA-Z0-9()_/:~=&"))
-          (setq start (point)))
-        (setq url (buffer-substring-no-properties start (point))))
+	;; first see if you're just past a filename
+	(if (not (eobp))
+	    (if (looking-at "[] \t\n[{}()]") ; whitespace or some parens
+		(progn
+		  (skip-chars-backward " \n\t\r({[]})")
+		  (if (not (bobp))
+		      (backward-char 1)))))
+	(if (and (char-after (point))
+		 (string-match (eval-when-compile
+				 (concat "[" "-%.?@a-zA-Z0-9()_/:~=&" "]"))
+			       (char-to-string (char-after (point)))))
+	    (progn
+	      (skip-chars-backward "-%.?@a-zA-Z0-9()_/:~=&")
+	      (setq start (point))
+	      (skip-chars-forward "-%.?@a-zA-Z0-9()_/:~=&"))
+	  (setq start (point)))
+	(setq url (buffer-substring-no-properties start (point))))
       (if (and url (string-match "^(.*)\\.?$" url))
-          (setq url (match-string 1 url)))
+	  (setq url (match-string 1 url)))
       (if (and url (string-match "^URL:" url))
-          (setq url (substring url 4 nil)))
+	  (setq url (substring url 4 nil)))
       (if (and url (string-match "\\.$" url))
-          (setq url (substring url 0 -1)))
+	  (setq url (substring url 0 -1)))
       (if (and url (string-match "^www\\." url))
-          (setq url (concat "http://" url)))
+	  (setq url (concat "http://" url)))
       (if (and url (not (string-match url-nonrelative-link url)))
-          (setq url nil))
+	  (setq url nil))
       url)))
 
 (defun simple-extras-strip-url ()
@@ -549,7 +555,7 @@ If PT is non-nil, start at that position instead of `point'."
   (unless (simple-extras-get-url-at-point)
     (error "No URL at point."))
   (let* ((url-original (simple-extras-get-url-at-point))
-         (url-stripped (replace-regexp-in-string "\\(?:https?://\\)?\\(?:www.\\)?" "" url-original)))
+	 (url-stripped (replace-regexp-in-string "\\(?:https?://\\)?\\(?:www.\\)?" "" url-original)))
     (search-backward " ")
     (while (search-forward url-original nil t)
       (replace-match url-stripped nil t))
@@ -560,31 +566,31 @@ If PT is non-nil, start at that position instead of `point'."
   "Strip thing at point."
   (interactive)
   (cond ((simple-extras-get-url-at-point)
-         (simple-extras-strip-url)))
+	 (simple-extras-strip-url)))
   (just-one-space 0))
 
 ;; save-excursion wasn't restoring point, so using this custom
 ;; function, from stackoverflow.com/a/24283996/4479455
 (defmacro simple-extras-save-excursion (&rest forms)
   (let ((old-point (gensym "old-point"))
-        (old-buff (gensym "old-buff")))
+	(old-buff (gensym "old-buff")))
     `(let ((,old-point (point))
-           (,old-buff (current-buffer)))
+	   (,old-buff (current-buffer)))
        (prog1
-           (progn ,@forms)
-         (unless (eq (current-buffer) ,old-buff)
-           (switch-to-buffer ,old-buff))
-         (goto-char ,old-point)))))
+	   (progn ,@forms)
+	 (unless (eq (current-buffer) ,old-buff)
+	   (switch-to-buffer ,old-buff))
+	 (goto-char ,old-point)))))
 
 ;; endlessparentheses.com/fill-and-unfill-paragraphs-with-a-single-key.html
 (defun simple-extras-fill-or-unfill-paragraph ()
   "Like `fill-paragraph', but unfill if used twice."
   (interactive)
   (let ((fill-column
-         (if (eq last-command 'simple-extras-fill-or-unfill-paragraph)
-             (progn (setq this-command nil)
-                    (point-max))
-           fill-column)))
+	 (if (eq last-command 'simple-extras-fill-or-unfill-paragraph)
+	     (progn (setq this-command nil)
+		    (point-max))
+	   fill-column)))
     (call-interactively #'fill-paragraph)))
 
 (defun simple-extras-get-url (url)

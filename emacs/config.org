@@ -11429,7 +11429,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
   :general
   (org-msg-edit-mode-map
    "s-a" 'org-msg-attach
-   "s-b" 'org-msg-goto-body))
+   "s-b" 'org-msg-extras-begin-compose))
 #+end_src
 
 *** TODO [#5] Figure out how to make ~org-msg~ preserve formatting of quoted emails
@@ -11451,7 +11451,7 @@ I.e. the message quoted when on replies to, or forwards, an existing email.
 :END:
 
 
-/[[file:extras/org-msg-extras.el][org-msg-extras]] collects my extensions for ~org-msg~.
+/[[file:extras/org-msg-extras.el][org-msg-extras]] collects my extensions for ~org-msg~./
 
 #+begin_src emacs-lisp
 (use-personal-package org-msg-extras

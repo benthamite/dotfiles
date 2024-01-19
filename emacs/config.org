@@ -272,6 +272,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#consult-dir][consult-dir]]
   - [[#consult-git-log-grep][consult-git-log-grep]]
   - [[#consult-gh][consult-gh]]
+  - [[#consult-mu][consult-mu]]
   - [[#consult-yasnippet][consult-yasnippet]]
   - [[#embark-consult][embark-consult]]
   - [[#marginalia][marginalia]]
@@ -5894,6 +5895,23 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 
       :general
       ("H-G" 'consult-gh-dispatch))
+** consult-mu
+:PROPERTIES:
+:ID:       834A9797-AD26-44B5-BE4E-1CE52184E265
+:END:
+
+/[[https://github.com/armindarvish/consult-mu][consult-mu]] provides a dynamiccaly updated search interface to mu4e./
+
+#+begin_src emacs-lisp
+(use-package consult-mu
+  :elpaca (consult-mu :type git
+		      :host github
+		      :repo "armindarvish/consult-mu"
+		      :branch "develop")
+  :after consult mu4e
+  :demand t
+  :general
+  ("A-M-m" 'consult-mu))
 #+end_src
 
 ** consult-yasnippet

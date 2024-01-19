@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: directory-files-sans-dots-and-ds-store
+# name: directory-files-sans-dots-and-hidden
 # key: dfsdd
 # contributor: Pablo Stafforini
 # --
-(directory-files "$1" t "\\\\`[^.]\\\\|\\\\.\\\\.\\\\[^/]*[^.]\\\\|\\\\.DS_Store\\\\'")$0
+(directory-files "$1" t `(progn (yas-expand-snippet (yas-lookup-snippet 'regexp-match-all-files-except-dots-and-hidden)) nil)`)$0

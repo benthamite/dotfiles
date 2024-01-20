@@ -58,11 +58,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :CONTENTS:
 - [[#exordium][exordium]]
 - [[#table-of-contents][table of contents]]
-- [[#introductory][introductory]]
-  - [[#key-bindings][key bindings]]
-  - [[#profiling][profiling]]
-  - [[#installation][installation]]
-  - [[#other-config-files][other config files]]
 - [[#early-init][early-init]]
 - [[#package-management][package management]]
   - [[#elpaca][elpaca]]
@@ -513,294 +508,13 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#tlon-init][tlon-init]]
 - [[#personal][personal]]
   - [[#keyboard-maestro][Keyboard Maestro]]
+- [[#appendices][appendices]]
+  - [[#key-bindings][key bindings]]
+  - [[#profiling][profiling]]
+  - [[#installation][installation]]
+  - [[#other-config-files][other config files]]
 - [[#local-variables][local variables]]
 :END:
-
-* introductory
-:PROPERTIES:
-:CUSTOM_ID: introduction
-:ID:       A7940400-DD17-4B0B-A9B2-565A207D680C
-:END:
-:LOGBOOK:
-CLOCK: [2021-10-20 Wed 19:56]--[2021-10-20 Wed 19:59] =>  0:03
-CLOCK: [2021-07-24 Sat 10:45]--[2021-07-24 Sat 10:56] =>  0:11
-CLOCK: [2021-07-23 Fri 15:26]--[2021-07-23 Fri 15:58] =>  0:32
-CLOCK: [2021-07-13 Tue 18:29]--[2021-07-13 Tue 18:47] =>  0:18
-CLOCK: [2021-07-11 Sun 21:41]--[2021-07-11 Sun 22:14] =>  0:33
-CLOCK: [2021-12-03 Fri 21:49]--[2021-12-03 Fri 21:56] =>  0:07
-CLOCK: [2021-06-15 Tue 20:45]--[2021-06-15 Tue 20:52] =>  0:07
-CLOCK: [2021-06-03 Thu 16:09]--[2021-06-03 Thu 16:37] =>  0:28
-CLOCK: [2021-06-01 Tue 21:00]--[2021-06-01 Tue 21:59] =>  0:59
-CLOCK: [2021-05-18 Tue 09:22]--[2021-05-18 Tue 09:32] =>  0:10
-CLOCK: [2021-05-14 Fri 15:45]--[2021-05-14 Fri 16:01] =>  0:00
-CLOCK: [2021-04-27 Tue 22:10]--[2021-04-27 Tue 22:26] =>  0:16
-CLOCK: [2021-03-31 Wed 10:10]--[2021-03-31 Wed 11:08] =>  0:58
-CLOCK: [2021-03-30 Tue 15:21]--[2021-03-30 Tue 18:00] =>  2:39
-CLOCK: [2021-03-30 Tue 09:43]--[2021-03-30 Tue 11:46] =>  2:03
-CLOCK: [2021-03-22 Mon 21:40]--[2021-03-22 Mon 21:49] =>  0:09
-CLOCK: [2021-03-20 Sat 13:16]--[2021-03-20 Sat 13:30] =>  0:14
-CLOCK: [2021-03-04 Thu 10:10]--[2021-03-04 Thu 10:37] =>  0:27
-CLOCK: [2021-03-02 Tue 21:12]--[2021-03-02 Tue 21:50] =>  0:38
-CLOCK: [2021-03-01 Mon 10:11]--[2021-03-01 Mon 10:28] =>  0:17
-CLOCK: [2021-02-23 Tue 10:45]--[2021-02-23 Tue 10:54] =>  0:09
-CLOCK: [2021-02-04 Thu 19:36]--[2021-02-04 Thu 20:54] =>  1:18
-CLOCK: [2021-02-04 Thu 18:40]--[2021-02-04 Thu 19:33] =>  0:53
-CLOCK: [2021-02-04 Thu 16:40]--[2021-02-04 Thu 18:35] =>  1:55
-CLOCK: [2021-02-04 Thu 12:27]--[2021-02-04 Thu 12:44] =>  0:17
-CLOCK: [2021-02-04 Thu 12:19]--[2021-02-04 Thu 12:27] =>  0:08
-CLOCK: [2021-02-04 Thu 09:30]--[2021-02-04 Thu 10:49] =>  1:19
-CLOCK: [2021-02-03 Wed 22:09]--[2021-02-03 Wed 22:46] =>  0:37
-CLOCK: [2021-02-03 Wed 20:24]--[2021-02-03 Wed 20:33] =>  0:09
-CLOCK: [2021-02-03 Wed 18:27]--[2021-02-03 Wed 20:00] =>  1:33
-CLOCK: [2021-02-03 Wed 19:43]--[2021-02-03 Wed 19:43] =>  0:00
-CLOCK: [2021-04-08 Thu 13:56]--[2021-04-08 Thu 14:12] =>  0:16
-CLOCK: [2021-04-03 Sat 19:06]--[2021-04-03 Sat 19:31] =>  0:25
-CLOCK: [2022-05-29 Sun 09:25]--[2022-05-29 Sun 10:31] =>  1:13
-CLOCK: [2021-07-24 Sat 09:51]--[2021-07-24 Sat 09:58] =>  0:07
-CLOCK: [2021-07-14 Wed 22:51]--[2021-07-14 Wed 23:09] =>  0:18
-CLOCK: [2021-03-07 Sun 18:52]--[2021-03-07 Sun 18:57] =>  0:05
-CLOCK: [2021-03-04 Thu 09:05]--[2021-03-04 Thu 09:22] =>  0:17
-CLOCK: [2021-02-03 Wed 16:32]--[2021-02-03 Wed 18:27] =>  1:55
-CLOCK: [2021-02-03 Wed 16:01]--[2021-02-03 Wed 16:32] =>  0:31
-CLOCK: [2021-02-03 Wed 15:40]--[2021-02-03 Wed 16:01] =>  0:21
-CLOCK: [2021-02-03 Wed 13:56]--[2021-02-03 Wed 15:02] =>  1:06
-CLOCK: [2021-01-31 Sun 15:22]--[2021-01-31 Sun 16:01] =>  0:39
-CLOCK: [2021-01-31 Sun 10:07]--[2021-01-31 Sun 10:28] =>  0:21
-CLOCK: [2021-01-24 Sun 11:41]--[2021-01-24 Sun 11:48] =>  0:07
-CLOCK: [2021-01-23 Sat 08:40]--[2021-01-23 Sat 08:46] =>  0:06
-CLOCK: [2021-01-22 Fri 09:29]--[2021-01-22 Fri 09:32] =>  0:03
-CLOCK: [2021-01-12 Tue 19:22]--[2021-01-12 Tue 19:27] =>  0:05
-CLOCK: [2021-01-12 Tue 11:41]--[2021-01-12 Tue 12:42] =>  1:01
-CLOCK: [2021-01-08 Fri 13:34]--[2021-01-08 Fri 13:34] =>  0:00
-CLOCK: [2021-01-06 Wed 22:04]--[2021-01-06 Wed 22:14] =>  0:10
-CLOCK: [2021-01-06 Wed 13:46]--[2021-01-06 Wed 13:58] =>  0:12
-CLOCK: [2021-01-06 Wed 12:30]--[2021-01-06 Wed 12:53] =>  0:23
-CLOCK: [2021-01-06 Wed 11:02]--[2021-01-06 Wed 11:34] =>  0:32
-CLOCK: [2021-01-03 Sun 22:11]--[2021-01-03 Sun 22:18] =>  0:07
-CLOCK: [2021-01-03 Sun 22:03]--[2021-01-03 Sun 22:07] =>  0:04
-CLOCK: [2021-01-02 Sat 14:00]--[2021-01-02 Sat 14:06] =>  0:06
-CLOCK: [2020-12-31 Thu 13:56]--[2020-12-31 Thu 14:25] =>  0:29
-CLOCK: [2020-12-31 Thu 13:46]--[2020-12-31 Thu 13:52] =>  0:06
-CLOCK: [2020-12-29 Tue 15:07]--[2020-12-29 Tue 15:18] =>  0:11
-CLOCK: [2020-12-22 Tue 09:57]--[2020-12-22 Tue 10:25] =>  0:28
-CLOCK: [2020-12-19 Sat 12:18]--[2020-12-19 Sat 12:22] =>  0:04
-CLOCK: [2020-12-14 Mon 18:39]--[2020-12-14 Mon 18:44] =>  0:05
-CLOCK: [2020-12-07 Mon 18:15]--[2020-12-07 Mon 18:27] =>  0:12
-CLOCK: [2020-10-20 Tue 17:48]--[2020-10-20 Tue 18:10] =>  0:22
-CLOCK: [2020-10-20 Tue 17:27]--[2020-10-20 Tue 17:38] =>  0:11
-CLOCK: [2020-10-20 Tue 11:30]--[2020-10-20 Tue 11:36] =>  0:06
-CLOCK: [2020-10-19 Mon 20:24]--[2020-10-19 Mon 20:39] =>  0:15
-CLOCK: [2020-10-15 Thu 20:37]--[2020-10-15 Thu 20:52] =>  0:15
-CLOCK: [2020-10-15 Thu 18:56]--[2020-10-15 Thu 19:06] =>  0:10
-CLOCK: [2020-10-15 Thu 18:11]--[2020-10-15 Thu 18:26] =>  0:15
-CLOCK: [2020-10-14 Wed 07:31]--[2020-10-14 Wed 07:52] =>  0:21
-CLOCK: [2020-10-12 Mon 18:15]--[2020-10-12 Mon 19:58] =>  1:43
-CLOCK: [2020-10-12 Mon 15:28]--[2020-10-12 Mon 15:29] =>  0:01
-CLOCK: [2020-10-11 Sun 21:10]--[2020-10-11 Sun 21:15] =>  0:05
-CLOCK: [2020-10-11 Sun 10:05]--[2020-10-11 Sun 10:19] =>  0:14
-CLOCK: [2020-10-10 Sat 18:21]--[2020-10-10 Sat 18:25] =>  0:04
-CLOCK: [2020-10-05 Mon 18:56]--[2020-10-05 Mon 18:58] =>  0:02
-CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
-CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
-CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
-:END:
-
-** key bindings
-:PROPERTIES:
-:ID:       a47d148a-1b5e-4850-a1a7-6cd745bad696
-:END:
-Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~Control~ (~C~), ~Meta~ (~M~), ~Super~ (~s~), ~Hyper~ (~H~), and ~Alt~ (~A~). (The letter abbreviation for the ~Super~ modifier is ~s~ because ~S~ is assigned to the ~Shift~ key.) I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "pseudo modifiers", or mappings between individual keys and combinations of two or more Emacs modifiers:
-
-[[file:etc/moonlander-emacs.png]]
-
-So when you see a monstrous key binding such as ~C-H-M-s-d~, remember that everything that precedes the final key (in this case, ~d~) represents a single key press (in this case, ~l~). For details, see my [[../karabiner/modifications.org][Karabiner config file]], specifically the "Key associations" section.
-
-** debugging                                                       :noexport:
-:PROPERTIES:
-:ID:       ED2955EA-3BD8-4058-A973-3CC87847D9A5
-:END:
-:LOGBOOK:
-CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
-:END:
-- Run ~bug-hunter-init-file~ (from the [[id:0C19171B-8DFA-4E06-9E17-45C1F9158C28][elisp-bug-hunter]] package) and select "automatic error detection" (~e~).
-- Run ~emacs -q~ or ~emacs --debug-init~.
-- Cut suspected sections of the org file (~org-cut-subtree~), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections, while leaving the literal org file intact.
-- Use ~magit-log-buffer-file~ or ~git-timemachine~ to explore previous versions of your config file.
-- Set ~debug-on-error~ to ~t~ to see a backtrace of an error. Or call ~toggle-debug-on-error~ interactively.
-  - To determine what function is changing the value of a variable, use ~debug-on-variable-change~.
-  - To determine what function is generating a particular message, use ~debug-on-message~.
-- Bisect the init file until you locate the culprit.
-  - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).
-- If Emacs becomes unresponsive, run ~pkill -USR2 Emacs~ in a terminal. Emacs will likely trigger a backtrace, which you can inspect to diagnose the issue.
-- You may want to periodically save a stable init file so that you can temporarily use Emacs with all your customizations while debugging your current init file (instead of having to use an external editor or a non-customized Emacs). Say you call this stable file ~stable.el~. Then you can tell Emacs to load this file on startup file with ~emacs -q -l ~/stable.el~.
-- Use ~edebug-defun~. See [[https://org-roam.discourse.group/t/need-help-getting-noter-pdfs-and-org-roam-bibtex-to-work/794/45?u=pablo][this discussion]].
-- For org-related issues (e.g. tangling the config file), use ~org-lint~, which checks the current buffer for syntax mistakes.
-- For more ideas, see:
-  - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
-  - [[https://whatacold.io/blog/2022-07-17-emacs-elisp-debug/][Emacs Debugging Basics - whatacold's space]]
-  - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
-  - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]]
-
-** profiling
-:PROPERTIES:
-:ID:       60B7A58C-A79A-4EEF-A91D-EECC85CFA173
-:END:
-- If you use ~use-package~, the command ~use-package-report~ displays a table showing the impact of each package on load times.
-- You may also want to try [[https://www.emacswiki.org/emacs/ProfileDotEmacs][profile-dotemacs]].
-
-** installation
-:PROPERTIES:
-:ID:       6712DA4C-BA45-4E74-8AEF-C903462D9BCB
-:END:
-:LOGBOOK:
-CLOCK: [2021-04-20 Tue 22:00]--[2021-04-20 Tue 23:28] =>  1:28
-CLOCK: [2021-04-20 Tue 20:55]--[2021-04-20 Tue 21:26] =>  0:31
-CLOCK: [2021-04-03 Sat 14:40]--[2021-04-03 Sat 15:07] =>  0:27
-CLOCK: [2021-04-02 Fri 22:15]--[2021-04-02 Fri 22:35] =>  0:20
-CLOCK: [2021-03-31 Wed 22:00]--[2021-03-31 Wed 23:00] =>  1:00
-CLOCK: [2021-03-31 Wed 21:40]--[2021-03-31 Wed 21:47] =>  0:07
-CLOCK: [2021-03-27 Sat 10:08]--[2021-03-27 Sat 13:05] =>  2:57
-CLOCK: [2021-03-27 Sat 07:49]--[2021-03-27 Sat 09:10] =>  1:21
-CLOCK: [2021-03-27 Sat 16:48]--[2021-03-27 Sat 16:50] =>  0:02
-CLOCK: [2021-03-22 Mon 15:46]--[2021-03-22 Mon 15:53] =>  0:07
-CLOCK: [2021-03-22 Mon 15:00]--[2021-03-22 Mon 15:20] =>  0:20
-CLOCK: [2021-02-27 Sat 17:20]--[2021-02-27 Sat 18:00] =>  0:40
-CLOCK: [2021-02-25 Thu 08:30]--[2021-02-25 Thu 11:54] =>  3:24
-CLOCK: [2021-02-07 Sun 15:01]--[2021-02-07 Sun 15:18] =>  0:17
-CLOCK: [2021-02-07 Sun 14:52]--[2021-02-07 Sun 14:54] =>  0:26
-CLOCK: [2021-02-07 Sun 14:30]--[2021-02-07 Sun 14:49] =>  0:19
-CLOCK: [2021-02-04 Thu 08:10]--[2021-02-04 Thu 09:25] =>  1:15
-CLOCK: [2020-09-22 Tue 12:15]--[2020-09-22 Tue 13:01] =>  0:46
-CLOCK: [2020-09-22 Tue 10:50]--[2020-09-22 Tue 12:15] =>  1:25
-CLOCK: [2022-04-27 Wed 16:21]--[2022-04-27 Wed 16:44] =>  0:23
-CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
-:END:
-
-For personal reference, these are the most recent Emacs installations (in reverse chronological order).
-
-[2023-02-23 Thu]
-
-#+begin_src shell :tangle no
-brew tap d12frosted/emacs-plus
-brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
-#+end_src
-
-[2023-02-23 Thu 02:10]
-
-#+begin_src shell :tangle no
-brew tap d12frosted/emacs-plus
-brew install emacs-plus@28 --with-dbus --with-no-titlebar --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
-#+end_src
-
-- Very slow.
-- Theme broke for some reason.
-- Some functions (e.g. ~keymap-unset~) not available).
-- Telega doesn't show profile pics
-
-[2023-02-14 Tue 20:07]:
-
-#+begin_src shell :tangle no
-brew tap d12frosted/emacs-plus
-brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
-#+end_src
-
-[2023-02-07 Tue 21:52]:
-
-#+begin_src shell :tangle no
-brew install emacs-mac --with-dbus --with-starter --with-natural-title-bar --with-native-comp --with-mac-metal --with-xwidgets --with-imagemagick  --with-librsvg  --with-spacemacs-icon
-#+end_src
-
-** other config files
-:PROPERTIES:
-:ID:       20E3D45E-D8AB-44BD-A5E2-C6DF9C20744E
-:END:
-
-:LOGBOOK:
-CLOCK: [2022-06-29 Wed 18:08]--[2022-06-29 Wed 18:18] =>  0:10
-CLOCK: [2022-06-17 Fri 21:20]--[2022-06-17 Fri 21:47] =>  0:27
-CLOCK: [2021-08-02 Mon 21:29]--[2021-08-02 Mon 21:30] =>  0:01
-CLOCK: [2021-06-30 Wed 20:43]--[2021-06-30 Wed 21:15] =>  0:32
-CLOCK: [2021-06-30 Wed 19:32]--[2021-06-30 Wed 20:02] =>  0:30
-CLOCK: [2021-06-05 Sat 19:34]--[2021-06-05 Sat 19:41] =>  0:07
-CLOCK: [2021-06-03 Thu 16:09]--[2021-06-03 Thu 16:37] =>  0:28
-CLOCK: [2021-06-03 Thu 13:47]--[2021-06-03 Thu 13:52] =>  0:05
-CLOCK: [2021-06-03 Thu 07:21]--[2021-06-03 Thu 07:50] =>  0:29
-CLOCK: [2021-06-02 Wed 22:00]--[2021-06-02 Wed 22:11] =>  0:11
-CLOCK: [2021-06-02 Wed 21:44]--[2021-06-02 Wed 21:50] =>  0:06
-CLOCK: [2021-05-26 Wed 19:32]--[2021-05-26 Wed 19:44] =>  0:12
-CLOCK: [2021-05-23 Sun 19:52]--[2021-05-23 Sun 20:02] =>  0:10
-CLOCK: [2021-05-22 Sat 16:36]--[2021-05-22 Sat 16:44] =>  0:08
-CLOCK: [2021-04-03 Sat 18:21]--[2021-04-03 Sat 18:36] =>  0:15
-CLOCK: [2021-03-27 Sat 17:00]--[2021-03-27 Sat 17:32] =>  0:32
-CLOCK: [2021-03-26 Fri 13:31]--[2021-03-26 Fri 14:14] =>  0:43
-CLOCK: [2021-03-26 Fri 12:47]--[2021-03-26 Fri 13:18] =>  0:00
-CLOCK: [2021-03-26 Fri 10:47]--[2021-03-26 Fri 10:57] =>  0:10
-CLOCK: [2021-03-23 Tue 14:30]--[2021-03-23 Tue 16:45] =>  2:15
-CLOCK: [2021-03-23 Tue 14:10]--[2021-03-23 Tue 14:30] =>  0:20
-CLOCK: [2021-03-21 Sun 16:23]--[2021-03-21 Sun 16:32] =>  0:09
-CLOCK: [2021-02-28 Sun 10:12]--[2021-02-28 Sun 10:27] =>  0:15
-CLOCK: [2021-02-04 Thu 12:49]--[2021-02-04 Thu 14:36] =>  1:47
-:END:
-The below is a link dump for config files and other related links I have found useful in the past or may want to check out for ideas at some point in the future.
-- [[https://github.com/emacs-tw/awesome-emacs][Awesome Emacs]]: A list of useful Emacs packages.
-- [[https://sam217pa.github.io/2016/09/02/how-to-build-your-own-spacemacs/][How to build your own spacemacs · Samuel Barreto]]
-- [[https://www.reddit.com/r/emacs/comments/3lt3c6/using_spacemacs_modeline_in_vanilla_emacs/][Using SpaceMacs mode-line in vanilla Emacs : emacs]]
-- [[https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-start-up-so-quickly][How does Emacs Doom start so quickly?]] Might be useful for ideas on how to speed up config file.
-- [[https://prelude.emacsredux.com/en/latest/][Emacs Prelude]]. I've seen this recommended. Might want to check it out.
-- [[https://www.reddit.com/r/emacs/comments/ehjcu2/screenshot_polishing_my_emacs_who_said_an_old/][Polishing my Emacs -- who said an old tool can't look modern]]
-  [[https://github.com/mbriggs/.emacs.d-oldv2/blob/master/init/init-keymaps.el][.emacs.d-oldv2/init-keymaps.el at master · mbriggs/.emacs.d-oldv2]]. Lots of key bindings.
-
-Literate configuration
-- [[https://commonplace.doubleloop.net/setting-up-a-spacemacs-literate-config-file][Setting up a spacemacs literate config file]]
-- [[https://www.reddit.com/r/spacemacs/comments/atuzd9/does_anyone_have_their_dotfile_redone_in_literate/][Does anyone have their dotfile redone in literate programming with babel? : spacemacs]]
-- Diego Zamboni, /[[https://leanpub.com/lit-config][Literate configuration]]/
-- [[https://emacs.sJtackexchange.com/questions/3143/can-i-use-org-mode-to-structure-my-emacs-or-other-el-configuration-file][elisp - Can I use org-mode to structure my .emacs or other .el configuration file? - Emacs Stack Exchange]]
-
-Some useful config files:
-- [[https://zzamboni.org/post/my-emacs-configuration-with-commentary/][Diego Zamboni]]
-- [[https://jamiecollinson.com/blog/my-emacs-config/][Jamie Collinson]]
-- [[https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el][Jethro Kuan]]. Creator or ~org-roam~ and author of some great posts on note-taking. Not literal.
-- [[https://github.com/joodie/emacs-literal-config/blob/master/emacs.org][Joost Diepenmat]]
-- [[https://github.com/gjstein/emacs.d][Gregory Stein]]. Author of the excellent [[http://cachestocaches.com/][Caches to Caches]] blog.
-- [[https://luca.cambiaghi.me/vanilla-emacs/readme.html][Luca Cambiaghi]]
-- [[https://config.phundrak.com/emacs][Lucien Cartier-Tilet]] (Spacemacs)
-- [[https://github.com/isamert/dotfiles/blob/master/emacs/index.org][Isa Mert Gurbuz]]
-  - Has a cool [[https://isamert.net/index.html][blog]] about org mode and other topics.
-- [[https://www.mfoot.com/blog/2015/11/22/literate-emacs-configuration-with-org-mode/][Martin Foot]]
-  - Has a very simple init file.
-  - [[https://github.com/mfoo/dotfiles/blob/master/.emacs.d/config.org][.org file]]
-- [[https://github.com/mpereira/.emacs.d][Murilo Pereira]].
-  - Very well organized. The author has also written some excellent blog posts about Emacs.
-- [[https://out-of-cheese-error.netlify.app/spacemacs-config][OutOfCheeseError]]
-- [[https://protesilaos.com/dotemacs/][Protesilaos Stavrou]]
-  - [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][here]] is the last commit before he abandoned ~use-package~ and ~straight~
-- [[https://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua]]. A legend in the Emacs community.
-- [[https://github.com/novoid/dot-emacs/blob/master/config.org][Karl Voit]].
-  - Author of ~Memacs~, prolific blogger.
-- [[https://github.com/sriramkswamy/dotemacs][Sriram Krishnaswamy]] ([[https://sriramkswamy.github.io/][website]])
-  - [[https://sriramkswamy.github.io/dotemacs/][.org file]]
-- [[https://github.com/sfromm/emacs.d#twitter][Stephen Fromm]]. Has an extended list of config files [[https://github.com/sfromm/emacs.d#inspiration][here]].
-- [[https://tecosaur.github.io/emacs-config/config.html][Tecosaur]]
-- [[https://www.tquelch.com/posts/emacs-config/#languages][Tim Quelch]]
-- [[http://irfu.cea.fr/Pisp/vianney.lebouteiller/emacs.html#orgbcdc8b2][Vianney Lebouteiller]]
-- [[https://github.com/bixuanzju/emacs.d/blob/master/emacs-init.org#meta][Xuan Bi]].
-- [[https://github.com/turbana/emacs-config][GitHub - turbana/emacs-config: My personal emac's configuration]]. Some potentially useful stuff on native comp, debugging, etc.
-- [[https://github.com/creichert/dotfiles/blob/master/emacs/.emacs][dotfiles/.emacs at master · creichert/dotfiles · GitHub]]. Has detailed Gnus, Slack config.
-- [[https://github.com/ianpan870102/yay-evil-emacs][yay-evil-emacs]]. slick design.
-- [[https://github.com/rememberYou/.emacs.d][GitHub - rememberYou/.emacs.d: 🎉 Personal GNU Emacs configuration]]. Has a bunch of Reddit posts explaining how he uses the different packages.
-- [[https://github.com/nkicg6/emacs-config/blob/master/config.org][emacs-config/config.org at master · nkicg6/emacs-config · GitHub]]. Found it while searching for org-ref.
-- [[https://github.com/yiufung/dot-emacs/blob/master/init.el][dot-emacs/init.el at master · yiufung/dot-emacs · GitHub]]. Not literal. Lots of packages. Gnus, notmuch, Slack, etc. Author has great post on Anki.
-- [[https://github.com/tshu-w/.emacs.d][GitHub - tshu-w/.emacs.d: My personal Emacs config, based on Spacemacs]]. Has nice note-taking config, with org-roam, org-ref, Zotero, etc (see [[https://github.com/tshu-w/.emacs.d/blob/master/lisp/lang-org.el][here]]).
-- [[https://github.com/raxod502/radian/blob/e3aad124c8e0cc870ed09da8b3a4905d01e49769/emacs/radian.el][Radon Rosborough]]. Author of ~straight~ package manager.
-- [[https://github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org][Gonçalo Santos]]. Author of ~org-noter~.
-- [[https://github.com/tonyaldon/emacs.d/blob/master/init.el][Tony Aldon]]. Has some slick [[https://www.youtube.com/channel/UCQCrbWOFRmFYqoeou0Qv3Kg][videos]] on ~org-table~. Optimized key bindings.
-- [[https://github.com/progfolio/.emacs.d/blob/master/init.org][Nicholas Vollmer]]. Maitantainer of ~elpaca~. I copied his ~org-habits~ config. Haven't yet looked at the rest but looks like there's plenty of valuable material.
-- [[https://github.com/yantar92/emacs-config/blob/master/config.org][emacs-config/config.org at master · yantar92/emacs-config · GitHub]]. Focus on knowledge management with org. Lots of good stuff.
-- [[https://github.com/xenodium/dotsies/blob/main/dots.org][Álvaro Ramírez]]. Also users Karabiner.
-- [[https://github.com/karthink/.emacs.d][Karthik Chikmagalur]]. Has excellent blog posts on ~avy~, ~eshell~, ~re-builder~, etc.
-- [[https://github.com/iqbalansari/dotEmacs][Iqbal Ansari]].
-- [[https://www.danielclemente.com/emacs/confi.html][Daniel Clemente]].
-- [[https://github.com/patrl][Patrick Elliott]]
 
 * early-init
 :PROPERTIES:
@@ -13039,9 +12753,10 @@ And finally, the section you've all been waiting for.
 :ID:       8130737A-D75B-424C-8CDF-DDEF06281D59
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent
 (when (tlon-init-machine-pablo-p)
   (run-hooks 'tlon-init-post-init-hook))
+(add-to-list 'load-path (file-name-concat elpaca-repos-directory "tlon-init/"))
 #+end_src
 
 * personal
@@ -13066,6 +12781,292 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
  ;; "C-H-M-S-i" 'org-extras-switch-to-id ; delete
  "C-H-M-S-w" 'eww)
 #+end_src
+
+* appendices
+:PROPERTIES:
+:CUSTOM_ID: introduction
+:ID:       A7940400-DD17-4B0B-A9B2-565A207D680C
+:END:
+:LOGBOOK:
+CLOCK: [2021-10-20 Wed 19:56]--[2021-10-20 Wed 19:59] =>  0:03
+CLOCK: [2021-07-24 Sat 10:45]--[2021-07-24 Sat 10:56] =>  0:11
+CLOCK: [2021-07-23 Fri 15:26]--[2021-07-23 Fri 15:58] =>  0:32
+CLOCK: [2021-07-13 Tue 18:29]--[2021-07-13 Tue 18:47] =>  0:18
+CLOCK: [2021-07-11 Sun 21:41]--[2021-07-11 Sun 22:14] =>  0:33
+CLOCK: [2021-12-03 Fri 21:49]--[2021-12-03 Fri 21:56] =>  0:07
+CLOCK: [2021-06-15 Tue 20:45]--[2021-06-15 Tue 20:52] =>  0:07
+CLOCK: [2021-06-03 Thu 16:09]--[2021-06-03 Thu 16:37] =>  0:28
+CLOCK: [2021-06-01 Tue 21:00]--[2021-06-01 Tue 21:59] =>  0:59
+CLOCK: [2021-05-18 Tue 09:22]--[2021-05-18 Tue 09:32] =>  0:10
+CLOCK: [2021-05-14 Fri 15:45]--[2021-05-14 Fri 16:01] =>  0:00
+CLOCK: [2021-04-27 Tue 22:10]--[2021-04-27 Tue 22:26] =>  0:16
+CLOCK: [2021-03-31 Wed 10:10]--[2021-03-31 Wed 11:08] =>  0:58
+CLOCK: [2021-03-30 Tue 15:21]--[2021-03-30 Tue 18:00] =>  2:39
+CLOCK: [2021-03-30 Tue 09:43]--[2021-03-30 Tue 11:46] =>  2:03
+CLOCK: [2021-03-22 Mon 21:40]--[2021-03-22 Mon 21:49] =>  0:09
+CLOCK: [2021-03-20 Sat 13:16]--[2021-03-20 Sat 13:30] =>  0:14
+CLOCK: [2021-03-04 Thu 10:10]--[2021-03-04 Thu 10:37] =>  0:27
+CLOCK: [2021-03-02 Tue 21:12]--[2021-03-02 Tue 21:50] =>  0:38
+CLOCK: [2021-03-01 Mon 10:11]--[2021-03-01 Mon 10:28] =>  0:17
+CLOCK: [2021-02-23 Tue 10:45]--[2021-02-23 Tue 10:54] =>  0:09
+CLOCK: [2021-02-04 Thu 19:36]--[2021-02-04 Thu 20:54] =>  1:18
+CLOCK: [2021-02-04 Thu 18:40]--[2021-02-04 Thu 19:33] =>  0:53
+CLOCK: [2021-02-04 Thu 16:40]--[2021-02-04 Thu 18:35] =>  1:55
+CLOCK: [2021-02-04 Thu 12:27]--[2021-02-04 Thu 12:44] =>  0:17
+CLOCK: [2021-02-04 Thu 12:19]--[2021-02-04 Thu 12:27] =>  0:08
+CLOCK: [2021-02-04 Thu 09:30]--[2021-02-04 Thu 10:49] =>  1:19
+CLOCK: [2021-02-03 Wed 22:09]--[2021-02-03 Wed 22:46] =>  0:37
+CLOCK: [2021-02-03 Wed 20:24]--[2021-02-03 Wed 20:33] =>  0:09
+CLOCK: [2021-02-03 Wed 18:27]--[2021-02-03 Wed 20:00] =>  1:33
+CLOCK: [2021-02-03 Wed 19:43]--[2021-02-03 Wed 19:43] =>  0:00
+CLOCK: [2021-04-08 Thu 13:56]--[2021-04-08 Thu 14:12] =>  0:16
+CLOCK: [2021-04-03 Sat 19:06]--[2021-04-03 Sat 19:31] =>  0:25
+CLOCK: [2022-05-29 Sun 09:25]--[2022-05-29 Sun 10:31] =>  1:13
+CLOCK: [2021-07-24 Sat 09:51]--[2021-07-24 Sat 09:58] =>  0:07
+CLOCK: [2021-07-14 Wed 22:51]--[2021-07-14 Wed 23:09] =>  0:18
+CLOCK: [2021-03-07 Sun 18:52]--[2021-03-07 Sun 18:57] =>  0:05
+CLOCK: [2021-03-04 Thu 09:05]--[2021-03-04 Thu 09:22] =>  0:17
+CLOCK: [2021-02-03 Wed 16:32]--[2021-02-03 Wed 18:27] =>  1:55
+CLOCK: [2021-02-03 Wed 16:01]--[2021-02-03 Wed 16:32] =>  0:31
+CLOCK: [2021-02-03 Wed 15:40]--[2021-02-03 Wed 16:01] =>  0:21
+CLOCK: [2021-02-03 Wed 13:56]--[2021-02-03 Wed 15:02] =>  1:06
+CLOCK: [2021-01-31 Sun 15:22]--[2021-01-31 Sun 16:01] =>  0:39
+CLOCK: [2021-01-31 Sun 10:07]--[2021-01-31 Sun 10:28] =>  0:21
+CLOCK: [2021-01-24 Sun 11:41]--[2021-01-24 Sun 11:48] =>  0:07
+CLOCK: [2021-01-23 Sat 08:40]--[2021-01-23 Sat 08:46] =>  0:06
+CLOCK: [2021-01-22 Fri 09:29]--[2021-01-22 Fri 09:32] =>  0:03
+CLOCK: [2021-01-12 Tue 19:22]--[2021-01-12 Tue 19:27] =>  0:05
+CLOCK: [2021-01-12 Tue 11:41]--[2021-01-12 Tue 12:42] =>  1:01
+CLOCK: [2021-01-08 Fri 13:34]--[2021-01-08 Fri 13:34] =>  0:00
+CLOCK: [2021-01-06 Wed 22:04]--[2021-01-06 Wed 22:14] =>  0:10
+CLOCK: [2021-01-06 Wed 13:46]--[2021-01-06 Wed 13:58] =>  0:12
+CLOCK: [2021-01-06 Wed 12:30]--[2021-01-06 Wed 12:53] =>  0:23
+CLOCK: [2021-01-06 Wed 11:02]--[2021-01-06 Wed 11:34] =>  0:32
+CLOCK: [2021-01-03 Sun 22:11]--[2021-01-03 Sun 22:18] =>  0:07
+CLOCK: [2021-01-03 Sun 22:03]--[2021-01-03 Sun 22:07] =>  0:04
+CLOCK: [2021-01-02 Sat 14:00]--[2021-01-02 Sat 14:06] =>  0:06
+CLOCK: [2020-12-31 Thu 13:56]--[2020-12-31 Thu 14:25] =>  0:29
+CLOCK: [2020-12-31 Thu 13:46]--[2020-12-31 Thu 13:52] =>  0:06
+CLOCK: [2020-12-29 Tue 15:07]--[2020-12-29 Tue 15:18] =>  0:11
+CLOCK: [2020-12-22 Tue 09:57]--[2020-12-22 Tue 10:25] =>  0:28
+CLOCK: [2020-12-19 Sat 12:18]--[2020-12-19 Sat 12:22] =>  0:04
+CLOCK: [2020-12-14 Mon 18:39]--[2020-12-14 Mon 18:44] =>  0:05
+CLOCK: [2020-12-07 Mon 18:15]--[2020-12-07 Mon 18:27] =>  0:12
+CLOCK: [2020-10-20 Tue 17:48]--[2020-10-20 Tue 18:10] =>  0:22
+CLOCK: [2020-10-20 Tue 17:27]--[2020-10-20 Tue 17:38] =>  0:11
+CLOCK: [2020-10-20 Tue 11:30]--[2020-10-20 Tue 11:36] =>  0:06
+CLOCK: [2020-10-19 Mon 20:24]--[2020-10-19 Mon 20:39] =>  0:15
+CLOCK: [2020-10-15 Thu 20:37]--[2020-10-15 Thu 20:52] =>  0:15
+CLOCK: [2020-10-15 Thu 18:56]--[2020-10-15 Thu 19:06] =>  0:10
+CLOCK: [2020-10-15 Thu 18:11]--[2020-10-15 Thu 18:26] =>  0:15
+CLOCK: [2020-10-14 Wed 07:31]--[2020-10-14 Wed 07:52] =>  0:21
+CLOCK: [2020-10-12 Mon 18:15]--[2020-10-12 Mon 19:58] =>  1:43
+CLOCK: [2020-10-12 Mon 15:28]--[2020-10-12 Mon 15:29] =>  0:01
+CLOCK: [2020-10-11 Sun 21:10]--[2020-10-11 Sun 21:15] =>  0:05
+CLOCK: [2020-10-11 Sun 10:05]--[2020-10-11 Sun 10:19] =>  0:14
+CLOCK: [2020-10-10 Sat 18:21]--[2020-10-10 Sat 18:25] =>  0:04
+CLOCK: [2020-10-05 Mon 18:56]--[2020-10-05 Mon 18:58] =>  0:02
+CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
+CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
+CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
+:END:
+
+** key bindings
+:PROPERTIES:
+:ID:       a47d148a-1b5e-4850-a1a7-6cd745bad696
+:END:
+Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~Control~ (~C~), ~Meta~ (~M~), ~Super~ (~s~), ~Hyper~ (~H~), and ~Alt~ (~A~). (The letter abbreviation for the ~Super~ modifier is ~s~ because ~S~ is assigned to the ~Shift~ key.) I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "pseudo modifiers", or mappings between individual keys and combinations of two or more Emacs modifiers:
+
+[[file:etc/moonlander-emacs.png]]
+
+So when you see a monstrous key binding such as ~C-H-M-s-d~, remember that everything that precedes the final key (in this case, ~d~) represents a single key press (in this case, ~l~). For details, see my [[../karabiner/modifications.org][Karabiner config file]], specifically the "Key associations" section.
+
+** debugging                                                       :noexport:
+:PROPERTIES:
+:ID:       ED2955EA-3BD8-4058-A973-3CC87847D9A5
+:END:
+:LOGBOOK:
+CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
+:END:
+- Run ~bug-hunter-init-file~ (from the [[id:0C19171B-8DFA-4E06-9E17-45C1F9158C28][elisp-bug-hunter]] package) and select "automatic error detection" (~e~).
+- Run ~emacs -q~ or ~emacs --debug-init~.
+- Cut suspected sections of the org file (~org-cut-subtree~), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections, while leaving the literal org file intact.
+- Use ~magit-log-buffer-file~ or ~git-timemachine~ to explore previous versions of your config file.
+- Set ~debug-on-error~ to ~t~ to see a backtrace of an error. Or call ~toggle-debug-on-error~ interactively.
+  - To determine what function is changing the value of a variable, use ~debug-on-variable-change~.
+  - To determine what function is generating a particular message, use ~debug-on-message~.
+- Bisect the init file until you locate the culprit.
+  - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).
+- If Emacs becomes unresponsive, run ~pkill -USR2 Emacs~ in a terminal. Emacs will likely trigger a backtrace, which you can inspect to diagnose the issue.
+- You may want to periodically save a stable init file so that you can temporarily use Emacs with all your customizations while debugging your current init file (instead of having to use an external editor or a non-customized Emacs). Say you call this stable file ~stable.el~. Then you can tell Emacs to load this file on startup file with ~emacs -q -l ~/stable.el~.
+- Use ~edebug-defun~. See [[https://org-roam.discourse.group/t/need-help-getting-noter-pdfs-and-org-roam-bibtex-to-work/794/45?u=pablo][this discussion]].
+- For org-related issues (e.g. tangling the config file), use ~org-lint~, which checks the current buffer for syntax mistakes.
+- For more ideas, see:
+  - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
+  - [[https://whatacold.io/blog/2022-07-17-emacs-elisp-debug/][Emacs Debugging Basics - whatacold's space]]
+  - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
+  - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]]
+
+** profiling
+:PROPERTIES:
+:ID:       60B7A58C-A79A-4EEF-A91D-EECC85CFA173
+:END:
+- If you use ~use-package~, the command ~use-package-report~ displays a table showing the impact of each package on load times.
+- You may also want to try [[https://www.emacswiki.org/emacs/ProfileDotEmacs][profile-dotemacs]].
+
+** installation
+:PROPERTIES:
+:ID:       6712DA4C-BA45-4E74-8AEF-C903462D9BCB
+:END:
+:LOGBOOK:
+CLOCK: [2021-04-20 Tue 22:00]--[2021-04-20 Tue 23:28] =>  1:28
+CLOCK: [2021-04-20 Tue 20:55]--[2021-04-20 Tue 21:26] =>  0:31
+CLOCK: [2021-04-03 Sat 14:40]--[2021-04-03 Sat 15:07] =>  0:27
+CLOCK: [2021-04-02 Fri 22:15]--[2021-04-02 Fri 22:35] =>  0:20
+CLOCK: [2021-03-31 Wed 22:00]--[2021-03-31 Wed 23:00] =>  1:00
+CLOCK: [2021-03-31 Wed 21:40]--[2021-03-31 Wed 21:47] =>  0:07
+CLOCK: [2021-03-27 Sat 10:08]--[2021-03-27 Sat 13:05] =>  2:57
+CLOCK: [2021-03-27 Sat 07:49]--[2021-03-27 Sat 09:10] =>  1:21
+CLOCK: [2021-03-27 Sat 16:48]--[2021-03-27 Sat 16:50] =>  0:02
+CLOCK: [2021-03-22 Mon 15:46]--[2021-03-22 Mon 15:53] =>  0:07
+CLOCK: [2021-03-22 Mon 15:00]--[2021-03-22 Mon 15:20] =>  0:20
+CLOCK: [2021-02-27 Sat 17:20]--[2021-02-27 Sat 18:00] =>  0:40
+CLOCK: [2021-02-25 Thu 08:30]--[2021-02-25 Thu 11:54] =>  3:24
+CLOCK: [2021-02-07 Sun 15:01]--[2021-02-07 Sun 15:18] =>  0:17
+CLOCK: [2021-02-07 Sun 14:52]--[2021-02-07 Sun 14:54] =>  0:26
+CLOCK: [2021-02-07 Sun 14:30]--[2021-02-07 Sun 14:49] =>  0:19
+CLOCK: [2021-02-04 Thu 08:10]--[2021-02-04 Thu 09:25] =>  1:15
+CLOCK: [2020-09-22 Tue 12:15]--[2020-09-22 Tue 13:01] =>  0:46
+CLOCK: [2020-09-22 Tue 10:50]--[2020-09-22 Tue 12:15] =>  1:25
+CLOCK: [2022-04-27 Wed 16:21]--[2022-04-27 Wed 16:44] =>  0:23
+CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
+:END:
+
+For personal reference, these are the most recent Emacs installations (in reverse chronological order).
+
+[2023-02-23 Thu]
+
+#+begin_src shell :tangle no
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+end_src
+
+[2023-02-23 Thu 02:10]
+
+#+begin_src shell :tangle no
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@28 --with-dbus --with-no-titlebar --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+end_src
+
+- Very slow.
+- Theme broke for some reason.
+- Some functions (e.g. ~keymap-unset~) not available).
+- Telega doesn't show profile pics
+
+[2023-02-14 Tue 20:07]:
+
+#+begin_src shell :tangle no
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+end_src
+
+[2023-02-07 Tue 21:52]:
+
+#+begin_src shell :tangle no
+brew install emacs-mac --with-dbus --with-starter --with-natural-title-bar --with-native-comp --with-mac-metal --with-xwidgets --with-imagemagick  --with-librsvg  --with-spacemacs-icon
+#+end_src
+
+** other config files
+:PROPERTIES:
+:ID:       20E3D45E-D8AB-44BD-A5E2-C6DF9C20744E
+:END:
+
+:LOGBOOK:
+CLOCK: [2022-06-29 Wed 18:08]--[2022-06-29 Wed 18:18] =>  0:10
+CLOCK: [2022-06-17 Fri 21:20]--[2022-06-17 Fri 21:47] =>  0:27
+CLOCK: [2021-08-02 Mon 21:29]--[2021-08-02 Mon 21:30] =>  0:01
+CLOCK: [2021-06-30 Wed 20:43]--[2021-06-30 Wed 21:15] =>  0:32
+CLOCK: [2021-06-30 Wed 19:32]--[2021-06-30 Wed 20:02] =>  0:30
+CLOCK: [2021-06-05 Sat 19:34]--[2021-06-05 Sat 19:41] =>  0:07
+CLOCK: [2021-06-03 Thu 16:09]--[2021-06-03 Thu 16:37] =>  0:28
+CLOCK: [2021-06-03 Thu 13:47]--[2021-06-03 Thu 13:52] =>  0:05
+CLOCK: [2021-06-03 Thu 07:21]--[2021-06-03 Thu 07:50] =>  0:29
+CLOCK: [2021-06-02 Wed 22:00]--[2021-06-02 Wed 22:11] =>  0:11
+CLOCK: [2021-06-02 Wed 21:44]--[2021-06-02 Wed 21:50] =>  0:06
+CLOCK: [2021-05-26 Wed 19:32]--[2021-05-26 Wed 19:44] =>  0:12
+CLOCK: [2021-05-23 Sun 19:52]--[2021-05-23 Sun 20:02] =>  0:10
+CLOCK: [2021-05-22 Sat 16:36]--[2021-05-22 Sat 16:44] =>  0:08
+CLOCK: [2021-04-03 Sat 18:21]--[2021-04-03 Sat 18:36] =>  0:15
+CLOCK: [2021-03-27 Sat 17:00]--[2021-03-27 Sat 17:32] =>  0:32
+CLOCK: [2021-03-26 Fri 13:31]--[2021-03-26 Fri 14:14] =>  0:43
+CLOCK: [2021-03-26 Fri 12:47]--[2021-03-26 Fri 13:18] =>  0:00
+CLOCK: [2021-03-26 Fri 10:47]--[2021-03-26 Fri 10:57] =>  0:10
+CLOCK: [2021-03-23 Tue 14:30]--[2021-03-23 Tue 16:45] =>  2:15
+CLOCK: [2021-03-23 Tue 14:10]--[2021-03-23 Tue 14:30] =>  0:20
+CLOCK: [2021-03-21 Sun 16:23]--[2021-03-21 Sun 16:32] =>  0:09
+CLOCK: [2021-02-28 Sun 10:12]--[2021-02-28 Sun 10:27] =>  0:15
+CLOCK: [2021-02-04 Thu 12:49]--[2021-02-04 Thu 14:36] =>  1:47
+:END:
+The below is a link dump for config files and other related links I have found useful in the past or may want to check out for ideas at some point in the future.
+- [[https://github.com/emacs-tw/awesome-emacs][Awesome Emacs]]: A list of useful Emacs packages.
+- [[https://sam217pa.github.io/2016/09/02/how-to-build-your-own-spacemacs/][How to build your own spacemacs · Samuel Barreto]]
+- [[https://www.reddit.com/r/emacs/comments/3lt3c6/using_spacemacs_modeline_in_vanilla_emacs/][Using SpaceMacs mode-line in vanilla Emacs : emacs]]
+- [[https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-start-up-so-quickly][How does Emacs Doom start so quickly?]] Might be useful for ideas on how to speed up config file.
+- [[https://prelude.emacsredux.com/en/latest/][Emacs Prelude]]. I've seen this recommended. Might want to check it out.
+- [[https://www.reddit.com/r/emacs/comments/ehjcu2/screenshot_polishing_my_emacs_who_said_an_old/][Polishing my Emacs -- who said an old tool can't look modern]]
+  [[https://github.com/mbriggs/.emacs.d-oldv2/blob/master/init/init-keymaps.el][.emacs.d-oldv2/init-keymaps.el at master · mbriggs/.emacs.d-oldv2]]. Lots of key bindings.
+
+Literate configuration
+- [[https://commonplace.doubleloop.net/setting-up-a-spacemacs-literate-config-file][Setting up a spacemacs literate config file]]
+- [[https://www.reddit.com/r/spacemacs/comments/atuzd9/does_anyone_have_their_dotfile_redone_in_literate/][Does anyone have their dotfile redone in literate programming with babel? : spacemacs]]
+- Diego Zamboni, /[[https://leanpub.com/lit-config][Literate configuration]]/
+- [[https://emacs.sJtackexchange.com/questions/3143/can-i-use-org-mode-to-structure-my-emacs-or-other-el-configuration-file][elisp - Can I use org-mode to structure my .emacs or other .el configuration file? - Emacs Stack Exchange]]
+
+Some useful config files:
+- [[https://zzamboni.org/post/my-emacs-configuration-with-commentary/][Diego Zamboni]]
+- [[https://jamiecollinson.com/blog/my-emacs-config/][Jamie Collinson]]
+- [[https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el][Jethro Kuan]]. Creator or ~org-roam~ and author of some great posts on note-taking. Not literal.
+- [[https://github.com/joodie/emacs-literal-config/blob/master/emacs.org][Joost Diepenmat]]
+- [[https://github.com/gjstein/emacs.d][Gregory Stein]]. Author of the excellent [[http://cachestocaches.com/][Caches to Caches]] blog.
+- [[https://luca.cambiaghi.me/vanilla-emacs/readme.html][Luca Cambiaghi]]
+- [[https://config.phundrak.com/emacs][Lucien Cartier-Tilet]] (Spacemacs)
+- [[https://github.com/isamert/dotfiles/blob/master/emacs/index.org][Isa Mert Gurbuz]]
+  - Has a cool [[https://isamert.net/index.html][blog]] about org mode and other topics.
+- [[https://www.mfoot.com/blog/2015/11/22/literate-emacs-configuration-with-org-mode/][Martin Foot]]
+  - Has a very simple init file.
+  - [[https://github.com/mfoo/dotfiles/blob/master/.emacs.d/config.org][.org file]]
+- [[https://github.com/mpereira/.emacs.d][Murilo Pereira]].
+  - Very well organized. The author has also written some excellent blog posts about Emacs.
+- [[https://out-of-cheese-error.netlify.app/spacemacs-config][OutOfCheeseError]]
+- [[https://protesilaos.com/dotemacs/][Protesilaos Stavrou]]
+  - [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][here]] is the last commit before he abandoned ~use-package~ and ~straight~
+- [[https://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua]]. A legend in the Emacs community.
+- [[https://github.com/novoid/dot-emacs/blob/master/config.org][Karl Voit]].
+  - Author of ~Memacs~, prolific blogger.
+- [[https://github.com/sriramkswamy/dotemacs][Sriram Krishnaswamy]] ([[https://sriramkswamy.github.io/][website]])
+  - [[https://sriramkswamy.github.io/dotemacs/][.org file]]
+- [[https://github.com/sfromm/emacs.d#twitter][Stephen Fromm]]. Has an extended list of config files [[https://github.com/sfromm/emacs.d#inspiration][here]].
+- [[https://tecosaur.github.io/emacs-config/config.html][Tecosaur]]
+- [[https://www.tquelch.com/posts/emacs-config/#languages][Tim Quelch]]
+- [[http://irfu.cea.fr/Pisp/vianney.lebouteiller/emacs.html#orgbcdc8b2][Vianney Lebouteiller]]
+- [[https://github.com/bixuanzju/emacs.d/blob/master/emacs-init.org#meta][Xuan Bi]].
+- [[https://github.com/turbana/emacs-config][GitHub - turbana/emacs-config: My personal emac's configuration]]. Some potentially useful stuff on native comp, debugging, etc.
+- [[https://github.com/creichert/dotfiles/blob/master/emacs/.emacs][dotfiles/.emacs at master · creichert/dotfiles · GitHub]]. Has detailed Gnus, Slack config.
+- [[https://github.com/ianpan870102/yay-evil-emacs][yay-evil-emacs]]. slick design.
+- [[https://github.com/rememberYou/.emacs.d][GitHub - rememberYou/.emacs.d: 🎉 Personal GNU Emacs configuration]]. Has a bunch of Reddit posts explaining how he uses the different packages.
+- [[https://github.com/nkicg6/emacs-config/blob/master/config.org][emacs-config/config.org at master · nkicg6/emacs-config · GitHub]]. Found it while searching for org-ref.
+- [[https://github.com/yiufung/dot-emacs/blob/master/init.el][dot-emacs/init.el at master · yiufung/dot-emacs · GitHub]]. Not literal. Lots of packages. Gnus, notmuch, Slack, etc. Author has great post on Anki.
+- [[https://github.com/tshu-w/.emacs.d][GitHub - tshu-w/.emacs.d: My personal Emacs config, based on Spacemacs]]. Has nice note-taking config, with org-roam, org-ref, Zotero, etc (see [[https://github.com/tshu-w/.emacs.d/blob/master/lisp/lang-org.el][here]]).
+- [[https://github.com/raxod502/radian/blob/e3aad124c8e0cc870ed09da8b3a4905d01e49769/emacs/radian.el][Radon Rosborough]]. Author of ~straight~ package manager.
+- [[https://github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org][Gonçalo Santos]]. Author of ~org-noter~.
+- [[https://github.com/tonyaldon/emacs.d/blob/master/init.el][Tony Aldon]]. Has some slick [[https://www.youtube.com/channel/UCQCrbWOFRmFYqoeou0Qv3Kg][videos]] on ~org-table~. Optimized key bindings.
+- [[https://github.com/progfolio/.emacs.d/blob/master/init.org][Nicholas Vollmer]]. Maitantainer of ~elpaca~. I copied his ~org-habits~ config. Haven't yet looked at the rest but looks like there's plenty of valuable material.
+- [[https://github.com/yantar92/emacs-config/blob/master/config.org][emacs-config/config.org at master · yantar92/emacs-config · GitHub]]. Focus on knowledge management with org. Lots of good stuff.
+- [[https://github.com/xenodium/dotsies/blob/main/dots.org][Álvaro Ramírez]]. Also users Karabiner.
+- [[https://github.com/karthink/.emacs.d][Karthik Chikmagalur]]. Has excellent blog posts on ~avy~, ~eshell~, ~re-builder~, etc.
+- [[https://github.com/iqbalansari/dotEmacs][Iqbal Ansari]].
+- [[https://www.danielclemente.com/emacs/confi.html][Daniel Clemente]].
+- [[https://github.com/patrl][Patrick Elliott]]
 
 * local variables
 :PROPERTIES:

@@ -68,6 +68,22 @@ specified by `browse-url-handlers')."
   (interactive)
   (ace-link-eww '(16)))
 
+;;;;; Patched functions
+
+(declare-function shr-browse-url "shr")
+(declare-function mu4e--view-browse-url-from-binding "mu4e-view")
+(declare-function mu4e--view-open-attach-from-binding "mu4e-view")
+(el-patch-defun ace-link--mu4e-action (pt)
+  "Open link at PT in a `mu4e-view' buffer."
+  (when (number-or-marker-p pt)
+    (goto-char (1+ pt))
+    (cond ((get-text-property (point) 'shr-url)
+	   (shr-browse-url))
+          ((get-text-property (point) 'mu4e-url)
+	   (el-patch-swap (mu4e~view-browse-url-from-binding) (mu4e--view-browse-url-from-binding)))
+          ((get-text-property (point) 'mu4e-attnum)
+	   (el-patch-swap (mu4e~view-open-attach-from-binding) (mu4e--view-open-attach-from-binding))))))
+
 (provide 'ace-link-extras)
 ;;; ace-link-extras.el ends here
 

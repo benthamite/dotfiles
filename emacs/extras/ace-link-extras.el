@@ -28,6 +28,9 @@
 ;;; Code:
 
 (require 'ace-link)
+(require 'el-patch)
+(require 'mm-decode)
+(require 'org-roam-mode)
 
 ;;;; Functions
 

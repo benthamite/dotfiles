@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: require
+# key: r
+# contributor: Pablo Stafforini
+# --
+(require '$1)

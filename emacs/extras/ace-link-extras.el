@@ -68,6 +68,22 @@ specified by `browse-url-handlers')."
   (interactive)
   (ace-link-eww '(16)))
 
+(defun ace-link-extras-org-roam ()
+  "Open a visible link in an `org-roam-mode' buffer."
+  (interactive)
+  (require 'org-roam)
+  (let ((pt (avy-with ace-link-org
+              (avy-process
+               (mapcar #'cdr (ace-link--org-collect))
+               (avy--style-fn avy-style)))))
+    (ace-link-extras--org-roam-action pt)))
+
+(defun ace-link-extras--org-roam-action (pt)
+  "Visit the link at PT in an `org-roam-mode' buffer."
+  (when (numberp pt)
+    (goto-char pt)
+    (call-interactively #'org-roam-preview-visit)))
+
 ;;;;; Patched functions
 
 (declare-function shr-browse-url "shr")
@@ -86,4 +102,3 @@ specified by `browse-url-handlers')."
 
 (provide 'ace-link-extras)
 ;;; ace-link-extras.el ends here
-

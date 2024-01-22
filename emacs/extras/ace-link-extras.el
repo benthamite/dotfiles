@@ -58,13 +58,6 @@ specified by `browse-url-handlers')."
     (when pt
       (get-text-property (point) 'w3m-href-anchor))))
 
-(defun ace-link-extras-org-agenda-clock-in ()
-  "Open a visible link in an `org-mode-agenda' buffer and start clock."
-  (interactive)
-  (require 'org-clock)
-  (ace-link-org-agenda)
-  (org-clock-in))
-
 (defun ace-link-extras-eww-externally ()
   "Browse URL using `browse-url-secondary-browser-function'."
   (interactive)

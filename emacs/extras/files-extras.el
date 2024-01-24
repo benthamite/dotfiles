@@ -162,7 +162,7 @@ functionality in macOS."
   (window-extras-switch-to-last-window))
 
 (defun files-extras-kill-all-file-visiting-buffers (&optional excluded-files)
-  "Kill all open buffers visiting a file except those visiting any of EXCLUDED-FILES."
+  "Kill all open buffers visiting a file except those visiting EXCLUDED-FILES."
   (interactive)
   (dolist (buffer (buffer-list))
     (when (with-current-buffer buffer

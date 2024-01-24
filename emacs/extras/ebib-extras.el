@@ -42,16 +42,6 @@
 
 ;;;; User options
 
-(defgroup ebib-extras ()
-  "Extensions for `ebib'."
-  :group 'ebib)
-
-(defcustom ebib-extras-scidownl
-  (expand-file-name "~/.pyenv/shims/scidownl")
-  "Location of `scidownl' (https://github.com/Tishacy/SciDownl)."
-  :type 'file
-  :group 'ebib-extras)
-
 ;;;; Functions
 
 (defun ebib-extras-open-or-switch ()

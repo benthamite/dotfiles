@@ -4695,7 +4695,7 @@ CLOCK: [2021-06-18 Fri 10:05]--[2021-06-18 Fri 10:47] =>  0:42
 CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 :END:
 
-/[[https://github.com/abo-abo/ace-link][Add e-link]] lets you quickly follow links in Emacs, Vimium-styce-link]] lets you quickly follow links in Emacs, Vimium-style./
+/[[https://github.com/abo-abo/ace-link][ace-link]] lets you quickly follow links in Emacs, Vimium-styce-link]] lets you quickly follow links in Emacs, Vimium-style./
 
 #+begin_src emacs-lisp :results silent
 (use-package ace-link

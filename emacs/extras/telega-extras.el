@@ -115,13 +115,6 @@
         (dolist (file dired-files)
           (funcall (telega-extras-dired-attach-func file) file))))))
 
-(defun telega-extras-chatbuf-attach-most-recent-screenshot ()
-  "Attach most recently captured screenshot as photo."
-  (interactive)
-  (if-let ((screenshot (files-extras-newest-file default-directory "\\.png$")))
-      (telega-chatbuf-attach-photo screenshot)
-    (user-error (format "No screenshots found in %s" default-directory))))
-
 (defun telega-extras-chatbuf-attach-most-recent-file ()
   "Attach most recently saved file in `downloads' folder."
   (interactive)

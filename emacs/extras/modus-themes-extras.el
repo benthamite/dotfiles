@@ -43,12 +43,13 @@
                                              green
                                              yellow))))
 
+
 (defun modus-themes-extras-load-theme-emacs-mac ()
-"Load modus theme that matches system."
-(interactive)
-(if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-    (modus-themes-load-theme 'modus-operandi)
-  (modus-themes-load-theme 'modus-vivendi)))
+  "Load modus theme that matches system."
+  (interactive)
+  (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
+      (modus-themes-load-theme 'modus-operandi)
+    (modus-themes-load-theme 'modus-vivendi)))
 
 (defun modus-themes-extras-load-theme-emacs-plus (appearance)
 "Load theme, taking current system APPEARANCE into consideration."

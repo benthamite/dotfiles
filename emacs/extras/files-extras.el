@@ -354,11 +354,11 @@ more intrusive alert."
   (when (and (not buffer-read-only)
 	     (file-newer-than-file-p (or buffer-auto-save-file-name
 					 (make-auto-save-file-name))
-				     buffer-file-name)
-	     (alert (format "%s has auto save data"
-			    (file-name-nondirectory buffer-file-name))
-		    :title "Auto save detected"
-		    :severity 'high))))
+				     buffer-file-name))
+    (alert (format "%s has auto save data"
+		   (file-name-nondirectory buffer-file-name))
+	   :title "Auto save detected"
+	   :severity 'high)))
 
 ;; for some reason, `alert' fails to create persistent alerts. so we
 ;; trigger a warning if either `*log4e-alert*' or `*Messages*'

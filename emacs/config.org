@@ -663,8 +663,8 @@ NAME and ARGS are in `use-package'."
 
 ;; we load `org-mode' early to prevent version conflicts
 (use-package org
-:demand t
-:ensure org-plus-contrib)
+  :demand t
+  :ensure org-plus-contrib)
 #+end_src
 
 *** use-package-ensure-system-package
@@ -690,8 +690,8 @@ NAME and ARGS are in `use-package'."
   ;; (unload-feature 'jsonrpc t)
   (use-package jsonrpc
     :elpaca (jsonrpc
-		     :host github
-		     :repo "emacs-straight/jsonrpc")
+                     :host github
+                     :repo "emacs-straight/jsonrpc")
     :demand t)
 #+end_src
 
@@ -2742,7 +2742,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 
 /[[https://github.com/milkypostman/hl-sentence][hl-sentence]] highlights sentences rather than lines./
 
-I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specifically, ~org-mode~ and ~markdown-mode~) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the modes. See the above sections and the ~modus-themes-extras-set-faces~ function ~modus-themes-extras~.
+I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specifically, ~org-mode~ and ~markdown-mode~) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the modes. See the above sections and the ~modus-themes-extras-set-faces~ function from ~modus-themes-extras~.
 
 #+begin_src emacs-lisp
 (use-package hl-sentence
@@ -4788,8 +4788,6 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 :PROPERTIES:
 :ID:       746F8B0D-5817-4FCC-9DA5-C198CE632F92
 :END:
-
-
 /[[file:extras/calendar-extras.el][calendar-extras]] collects my extensions for ~calendar~./
 
 #+begin_src emacs-lisp
@@ -5569,11 +5567,11 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 
   (dolist (org '("tlon-team" "benthamite"))
     (push org consult-gh-default-orgs-list))
-  
+
   (dolist (var '(consult-gh--known-orgs-list
                  consult-gh--known-repos-list))
     (push var savehist-additional-variables))
-  
+
   (transient-define-prefix consult-gh-dispatch ()
     "Dispatch a `consult-gh' command."
     [["list"
@@ -5609,9 +5607,9 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 #+begin_src emacs-lisp
 (use-package consult-mu
   :elpaca (consult-mu :type git
-		      :host github
-		      :repo "armindarvish/consult-mu"
-		      :branch "develop")
+                      :host github
+                      :repo "armindarvish/consult-mu"
+                      :branch "develop")
   :after consult mu4e
   :demand t
   :general
@@ -6325,7 +6323,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
         (expand-file-name "~/source/LanguageTool/languagetool-server.jar"))
 
   :config
-  ;; the package doesn't provide a general way of disabling rule, but as an
+  ;; the package doesn't provide a general way of disabling a rule, but as an
   ;; imperfect workaround we extend the list of rules to ignore when
   ;; spell-checking is active; this works well for rules in prose buffers, since
   ;; I normally have spell-checking enabled there.
@@ -7278,7 +7276,7 @@ This needs to be configured.
 (use-package yaml
   :elpaca (yaml
            :host github
-	   :repo "zkry/yaml.el")
+           :repo "zkry/yaml.el")
   :demand t)
 #+end_src
 

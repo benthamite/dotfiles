@@ -390,6 +390,10 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
   (when (string= (org-capture-get :key t) "p")
     (hydra-org-notes-only-clock/body)))
 
+(declare-function org-ai-mode "org-ai")
+(declare-function org-web-tools-insert-link-for-url "org-web-tools")
+(declare-function org-extras-web-tools--org-title-for-url "org-web-tools")
+(declare-function youtube-dl "youtube-dl")
 (defun org-extras-capture-before-finalize-hook-function ()
   "Define behavior of `org-capture-before-finalize-hook'."
   (pcase (plist-get org-capture-plist :key)
@@ -930,6 +934,9 @@ Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
 
 ;; fix weird behavior that inserted one of the clocks not enclosed in square
 ;; brackets
+(defvar org-clock-split-clock-range-regexp)
+(defvar org-clock-split-clock-range-format)
+(declare-function org-clock-split-split-line-into-timestamps "org-clock-split")
 (el-patch-defun org-clock-split (from-end splitter-string)
   "Split CLOCK entry under cursor into two entries.
 Total time of created entries will be the same as original entry.

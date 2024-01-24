@@ -258,10 +258,23 @@
 #+end_src
 
 ** citar
+:PROPERTIES:
+:ID:       54D18706-0226-479A-A482-FD3E5AADFA47
+:END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq citar-citeproc-csl-styles-dir paths-dir-personal-csl-styles)
 #+end_src
+
+** tlon-init
+:PROPERTIES:
+:ID:       A38AB01A-19E7-4F42-BF0C-20207882BB67
+:END:
+
+#+begin_src emacs-lisp  :tangle (print tlon-init-file-late-init)
+(run-hooks 'tlon-init-post-init-hook)
+#+end_src
+
 * tangle flags
 :PROPERTIES:
 :ID:       A4E7C5AD-1E55-4C6F-B0E5-8320D282A886

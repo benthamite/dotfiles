@@ -440,6 +440,8 @@ number."
     ;; `org-modern-mode'
     (visible-mode (* arg -1))))
 
+(declare-function org-tidy-mode "org-tidy")
+(declare-function org-modern-mode "org-modern")
 (defun simple-extras-visible-mode-enhanced-org (&optional arg)
   "Set associated `org' modes based on ARG."
   (interactive "P")
@@ -596,6 +598,10 @@ If PT is non-nil, start at that position instead of `point'."
 	   fill-column)))
     (call-interactively #'fill-paragraph)))
 
+(declare-function eww-current-url "eww")
+(declare-function ebib-get-field-value "ebib")
+(declare-function ebib--get-key-at-point "ebib")
+(defvar ebib--cur-db)
 (defun simple-extras-get-url (url)
   "Get URL from URL, current buffer, or prompt user for it."
   (or url
@@ -625,5 +631,7 @@ If PT is non-nil, start at that position instead of `point'."
   (interactive "aFunction symbol: ")
   (advice-mapc (lambda (advice _props) (advice-remove sym advice)) sym))
 
+(declare-function org-extras-narrow-to-entry-and-children "org-extras")
+(declare-function ledger-mode-extras-narrow-to-xact "ledger-mode-extras")
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

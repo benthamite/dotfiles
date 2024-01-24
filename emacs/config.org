@@ -6264,6 +6264,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (global-flycheck-mode)
 
   :config
+  (setq flycheck-temp-prefix ".flycheck") ; hide flycheck temp files
   (setq flycheck-emacs-lisp-load-path 'inherit)
   (setq flycheck-indication-mode nil)
   (setq flycheck-checker-error-threshold 5000)

@@ -84,8 +84,6 @@ use its domain as the initial prompt input.
 If called with prefix argument ARG, add the domain to the list of URLs to open
 in Firefox."
   (interactive "P")
-  (require 'eww)
-  (require 'f)
   (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
          (domain (when url (url-domain (url-generic-parse-url url))))
          (file (if arg

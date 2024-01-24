@@ -49,18 +49,6 @@ at URL has no title, return URL."
 		 "Downloaded webpage")))
     (org-web-tools--cleanup-title title)))
 
-(defun org-web-tools-extras-youtube-dl (url)
-  "Create org link to local copy of YouTube video downloaded from URL.
-To be used in conjunction with associated `org-capture' template."
-  (require 'prot-eww)
-  (let* ((html (org-web-tools--get-url url))
-         (title (org-web-tools--html-title html))
-         (file-path (file-name-concat paths-dir-downloads
-				      (file-name-with-extension (prot-eww--sluggify title) "webm"))))
-    (if title
-        (org-link-make-string (concat "file:" file-path) title)
-      (user-error "HTML page at URL has no title"))))
-
 (provide 'org-web-tools-extras)
 ;;; org-web-tools-extras.el ends here
 

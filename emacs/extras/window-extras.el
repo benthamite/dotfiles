@@ -70,7 +70,10 @@ Split in three windows if `frame-width' is greater than
     (balance-windows)))
 
 (defun window-extras--move-or-swap (this-buffer other-buffer &optional target-window)
-  "docstring"
+  "Move THIS-BUFFER to the other window, and OTHER-BUFFER to the current window.
+If TARGET-WINDOW is non-nil, move THIS-BUFFER to TARGET-WINDOW and OTHER-BUFFER
+to the current window. If there is no other window, create it and move
+THIS-BUFFER to it."
   (window-extras-split-if-unsplit)
   (let* ((target-window (if (or (not target-window)
                                 (eq (window-extras-get-last-window) target-window)
@@ -85,17 +88,16 @@ Split in three windows if `frame-width' is greater than
     (select-window target-window)))
 
 (defun window-extras-buffer-swap ()
-  "Swap the current buffer and the buffer in the other
-window. If there is only one window, create a second one. If frame
-is wide enough, create a third."
+  "Swap the current buffer and the buffer in the other window.
+If there is only one window, create a second one."
   (interactive)
   (window-extras--move-or-swap
    (window-buffer)
    (window-buffer (window-extras-get-last-window))))
 
-(defun window-extras-buffer-move (&optional target-window)
-  "Move the current buffer to the other window. If there is only one
-window, create a second one. If frame is wide enough, create a third."
+(defun window-extras-buffer-move (target-window)
+  "Move the current buffer to the TARGET-WINDOW.
+If there is only one window, create a second one."
   (interactive)
   (window-extras--move-or-swap
    (window-buffer)
@@ -103,7 +105,7 @@ window, create a second one. If frame is wide enough, create a third."
    target-window))
 
 (defun window-extras-buffer-move-right ()
-  "docstring."
+  "Move the current buffer to the right window."
   (interactive)
   (window-extras-buffer-move
    (winum-get-window-by-number
@@ -113,7 +115,7 @@ window, create a second one. If frame is wide enough, create a third."
       (count-windows))))))
 
 (defun window-extras-buffer-move-left ()
-  "docstring."
+  "Move the current buffer to the left window."
   (interactive)
   (window-extras-buffer-move
    (winum-get-window-by-number

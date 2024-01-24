@@ -30,6 +30,11 @@
 (require 'dired)
 (require 'el-patch)
 
+;;;; Variables
+
+(defvar dired-extras-show-dotfiles-p nil
+  "Whether to show dot files in Dired.")
+
 ;;;; Functions
 
 (defun dired-extras-copy-filename-as-kill-sans-extension ()
@@ -42,9 +47,9 @@
   "Show/hide dot-files."
   (interactive)
   (when (equal major-mode 'dired-mode)
-    (if (or (not (boundp 'dired-dotfiles-show-p)) dired-dotfiles-show-p) ; if currently showing
+    (if dired-extras-show-dotfiles-p
 	(progn
-	  (set (make-local-variable 'dired-dotfiles-show-p) nil)
+	  (setq dired-extras-show-dotfiles-p nil)
 	  (message "h")
 	  (dired-mark-files-regexp "^\\\.")
 	  (dired-do-kill-lines))

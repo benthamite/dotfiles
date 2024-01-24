@@ -206,6 +206,11 @@ thing with lexical binding inside lambda functions."
 		     . ,(getenv "WORK_EMAIL"))
 		    (org-msg-signature
 		     . "\n\n#+begin_signature\n--\n*Pablo*\nDirector, Tlön\nhttps://tlon.team\n#+end_signature"))))))
+(defun mu4e-extras-set-shortcuts ()
+  "Set `mu4e-maildir-shortcuts'."
+  (dolist (shortcut `((,mu4e-extras-inbox-folder . ?i)
+		      (,mu4e-extras-daily-folder . ?y)))
+    (add-to-list 'mu4e-maildir-shortcuts shortcut)))
 
 (defun mu4e-extras-set-face-locally ()
   "Set `shr-text' face locally in `mu4ew-view-mode' buffers."

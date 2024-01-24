@@ -94,7 +94,7 @@ Set to nil to disable display of BBDB anniversaries in agenda."
   (org-set-effort))
 
 (defun org-extras-url-dwim ()
-  "docstring"
+  "When point is on a URL, copy it to the kill ring."
   (interactive)
   (cond
    ((thing-at-point-url-at-point)

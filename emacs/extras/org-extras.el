@@ -275,9 +275,8 @@ link, call `org-open-at-point' and set
 ;; The following functions produce a count of the TODOs added
 ;; or removed from all agenda files in the last day:
 ;; https://200ok.ch/posts/2022-12-06_how_much_did_you_get_done_today.html
-
 (defun org-extras-count-lines-with-expression (s exp)
-  "Count the number of lines in the string S that contain the regular expression EXP."
+  "Count the number of lines in the string S that contain the regexp EXP."
   (let ((count 0))
     (mapc (lambda (line)
 	    (when (string-match-p exp line)
@@ -692,9 +691,9 @@ SEPARATOR is nil, use ' • '."
 
 ;;;;; ob
 
-(defun org-extras-confirm-babel-evaluate (lang body)
-  "`org-babel' confirm function that prompts for confirmation.
-LANG and BODY are required by the `org-confirm-babel-evaluate' user option."
+(defun org-extras-confirm-babel-evaluate (lang _)
+  "Confirm function before evaluating code block.
+LANG is the language of the code block."
   (not (member lang '("python" "emacs-lisp"))))
 
 (defun org-extras-babel-tangle ()
@@ -719,8 +718,8 @@ LANG and BODY are required by the `org-confirm-babel-evaluate' user option."
 
 (defun org-extras-pomodoro-format-timer ()
   "Format the `org-pomodoro' timer.
-We set this value by advising `org-pomodoro' so that the pomodoro
-count is updated."
+We set this value by advising `org-pomodoro' so that the pomodoro count is
+updated."
   (setq org-pomodoro-format
 	(concat "🍅 %s"
 		(format "|%s" (number-to-string org-pomodoro-count)))))

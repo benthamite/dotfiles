@@ -506,7 +506,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#custom][custom]]
   - [[#fatebook][fatebook]]
   - [[#tetris][tetris]]
-  - [[#tlon-init][tlon-init]]
 - [[#personal][personal]]
   - [[#keyboard-maestro][Keyboard Maestro]]
 - [[#appendices][appendices]]
@@ -749,9 +748,9 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 #+begin_src emacs-lisp
 (use-package tlon-init
   :elpaca (tlon-init
-           :host github
-           :repo "tlon-team/tlon-init"
-           :depth nil) ; clone entire repo, not just last commit
+	   :host github
+	   :repo "tlon-team/tlon-init"
+	   :depth nil) ; clone entire repo, not just last commit
   :demand t)
   #+end_src
   
@@ -12721,16 +12720,6 @@ And finally, the section you've all been waiting for.
    "l" 'tetris-move-down
    "j" 'tetris-move-left
    ";" 'tetris-move-right))
-#+end_src
-
-** tlon-init
-:PROPERTIES:
-:ID:       8130737A-D75B-424C-8CDF-DDEF06281D59
-:END:
-
-#+begin_src emacs-lisp :results silent
-(add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook)
-(add-to-list 'load-path (file-name-concat elpaca-repos-directory "tlon-init/"))
 #+end_src
 
 * personal

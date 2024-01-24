@@ -8697,7 +8697,7 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
   :after org
   :demand t
   :config
-  (setq org-refile-use-outline-path 'file)
+  (setq org-refile-use-outline-path 'level3)
   (setq org-outline-path-complete-in-steps nil)
   (setq org-refile-allow-creating-parent-nodes nil)
   (setq org-reverse-note-order t) ; refile to the beginning of header

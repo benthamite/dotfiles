@@ -6749,8 +6749,6 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
-  (setq tlon-babel-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
-  (setq tlon-babel-todos-generic-id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
   (add-hook 'tlon-init-post-init-hook #'tlon-babel-init)
 
   :general
@@ -6764,16 +6762,14 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
    "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
    "'" 'tlon-babel-open-forge-file)
+  ;; revise; consider using `tlon-babel-md-insert-dispatch'
   ((gfm-mode-map markdown-mode-map)
    "A-s-e" 'tlon-babel-yaml-edit-field
    "s-c" 'tlon-babel-copy-dwim
-   "s-t" 'tlon-babel-insert-cite-tag
-   "s-u" 'tlon-babel-markdown-insert-element
-   "A-C-s-<tab>" 'tlon-babel-markdown-end-of-buffer-dwim)
-  (github-review-mode-map
-   "s-c" 'tlon-babel-submit-comment-revisions))
+   "s-t" 'tlon-babel-md-insert-cite-tag
+   "s-u" 'tlon-babel-md-insert-element
+   "A-C-s-<tab>" 'tlon-babel-markdown-end-of-buffer-dwim))
 #+end_src
-
 
 ** go-translate
 :PROPERTIES:
@@ -9773,7 +9769,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
             (lambda ()
               "Set `org-cite' vars after `tlon-babel' is loaded."
               ;; (setq org-cite-global-bibliography paths-files-bibliography-all) ; disabled for poor performance
-              (setq org-cite-csl-styles-dir tlon-babel-dir-styles)))
+              (setq org-cite-csl-styles-dir tlon-babel-refs-styles-dir)))
   (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
@@ -10211,8 +10207,8 @@ Having headings tagged with the type of work they are notes of allows me to quer
   :config
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
-              "Set `citar-citeproc-csl-styles-dir' after `tlon-babel-dir-styles' is set."
-                (setq citar-citeproc-csl-styles-dir tlon-babel-dir-styles)))
+              "Set `citar-citeproc-csl-styles-dir' after `tlon-babel-refs-styles-dir' is set."
+                (setq citar-citeproc-csl-styles-dir tlon-babel-refs-styles-dir)))
   (setq citar-citeproc-csl-style "biblioteca-altruismo-eficaz.csl")
   (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir)
   ;; https://github.com/emacs-citar/citar/wiki/Indicators

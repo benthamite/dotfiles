@@ -45,7 +45,7 @@
   "Prompt the user to select a value for `org-cite-global-bibliography'."
   (require 'tlon-babel)
   (completing-read "Bibfile" (list
-                              tlon-babel-file-fluid
+                              tlon-babel-refs-file-fluid
                               paths-file-personal-bibliography-new)))
 
 (defun zotra-extras-add-entry-set-bibfile (orig-fun &optional

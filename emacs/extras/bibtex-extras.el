@@ -154,12 +154,11 @@ field for this information is `journaltitle', so we move it there."
     (message "Moved entry %s to %s" key target)))
 
 (defun bibtex-extras-move-entry-to-tlon (&optional key)
-  "Move entry with KEY to `tlon-babel-file-fluid'..
+  "Move entry with KEY to `tlon-babel-refs-file-fluid'..
 Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point."
   (interactive)
-  (require 'tlon-babel)
   (let ((key (or key (bibtex-extras-get-key)))
-        (target tlon-babel-file-fluid))
+        (target tlon-babel-refs-file-fluid))
     (bibtex-extras-move-entry key target)
     (with-current-buffer (find-file-noselect target)
       (widen)

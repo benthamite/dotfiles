@@ -576,7 +576,7 @@ Disable hl-sentence because I do not like it...
                         )))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (run-hooks 'tlon-init-post-init-hook)
 #+end_src
 

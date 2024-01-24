@@ -32,11 +32,10 @@
 
 ;;;; Functions
 
-;; This function slightly tweaks `org-web-tools-insert-link-for-url'
-;; so that it can be used with `org-capture'
-;; blog.lazkani.io/posts/text-editors/bookmark-with-org-capture/
 (defun org-web-tools-extras-insert-link-for-clipboard-url ()
-  "Extend `org-web-tools-inster-link-for-url' to take URL from \"kill-ring\"."
+  "Extend `org-web-tools-instert-link-for-url' to take URL from \"kill-ring\".
+This function slightly tweaks `org-web-tools-insert-link-for-url' so that it can
+be used with `org-capture'."
   (org-web-tools--org-link-for-url (org-web-tools--get-first-url)))
 
 (cl-defun org-web-tools-extras-org-title-for-url (&optional (url (org-web-tools--get-first-url)))

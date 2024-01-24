@@ -199,12 +199,6 @@
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-extras
-  (file-name-concat tlon-init-dir-dotemacs "extras/")
-  "Path to the `extras' package directory."
-  :type 'directory
-  :group 'paths)
-
 (defcustom paths-dir-karabiner
   (file-name-concat paths-dir-dotfiles "karabiner/")
   "Path to the Karabiner dotfiles directory."

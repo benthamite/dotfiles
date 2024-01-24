@@ -344,7 +344,6 @@
  (paths-dir-wiki-entries . "")
  (paths-dir-wiki-references . "")
  (paths-dir-dotfiles . (file-name-concat (expand-file-name "~") "source/dotfiles/"))
- (paths-dir-extras . (file-name-concat tlon-init-dir-dotemacs "extras/"))
  (paths-dir-karabiner . "")
  (paths-dir-bibliographic-notes .  (file-name-concat paths-dir-dropbox "bibliographic-notes/"))
  (paths-dir-yasnippets . (file-name-concat tlon-init-dir-dotemacs "yasnippets/"))

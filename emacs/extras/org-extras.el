@@ -233,19 +233,6 @@ link, call `org-open-at-point' and set
 	(browse-url-handlers nil))
     (org-open-at-point)))
 
-(defun org-extras-clear-heading-contents (&optional include-children include-properties)
-  "Remove contents in org heading at point."
-  (interactive)
-  (save-restriction
-    (if include-children
-	(org-extras-narrow-to-entry-and-children)
-      (org-extras-narrow-to-entry-no-children))
-    (org-back-to-heading)
-    (if include-properties
-	(forward-line)
-      (org-end-of-meta-data t))
-    (delete-region (point) (point-max))))
-
 (defun org-extras-paste-html ()
   "Convert the contents of the system clipboard to `org-mode' using `pandoc'."
   (interactive)

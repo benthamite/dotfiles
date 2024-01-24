@@ -5,7 +5,6 @@
 :TOC:      ignore
 :END:
 #+filetags: :project:
-
 * exordium
 :PROPERTIES:
 :ID:       66EACB4A-84D2-42AE-9F85-EF30DA714A17
@@ -616,12 +615,6 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 - [[https://jwiegley.github.io/use-package/keywords/][Keywords — use-package]]
 - Useful Reddit thread: [[https://www.reddit.com/r/emacs/comments/j2xezg/usepackage_best_practices/][use-package Best Practices : emacs]]
 - Note that you can expand the ~use-package~ macro and see what it will do by invoking ~pp-macroexpand-last-sexp~ with point at the end of the relevant sexp.
-- To use ~use-package~ with /features/ rather than /packages/, you can check whether something is a feature with ~featurep~.
-- Sometimes we want to defer the loading of a package, but not indefinitely. I find it useful to rely on a variety of conditional deferrals, depending on the needs of the particular case:
-  - /time deferral/: we use ~:defer~ followed by a number, such that when Emacs has been idle for this number of seconds, the package will load.
-  - /command deferral/: we use ~:general~ to bind a key sequence to a command belonging to the package we want to load. The package will load when the key sequence  is executed.
-  - /hook deferral/: we use ~:hook~ to create a hook that calls a package function when some event occurs. Upon the occurrence of this event, typically the loading of a major mode, the package will load.
-  - /package deferral/: we use ~:after~ to load the package after some other package which itself has been conditionally deferred (using one of the other methods above). Note that if  ~use-package-always-defer~ is set to ~t~, you need to add ~demand t~ to the declaration.
 
 #+begin_src emacs-lisp :results silent
 ;; github.com/raxod502/radian/blob/develop/emacs/radian.el

@@ -31,10 +31,6 @@
 (require 'markdown-mode)
 (require 'el-patch)
 
-;;;; User options
-
-;;;; Main variables
-
 ;;;; Functions
 
 (defun markdown-mode-extras-org-paste-dwim ()

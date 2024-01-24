@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(require 'paths)
 (require 'vc)
 
 ;;;; User options

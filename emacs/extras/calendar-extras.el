@@ -28,6 +28,9 @@
 ;;; Code:
 
 (require 'calendar)
+(require 'calfw-org)
+(require 'json)
+(require 'url-vars)
 
 ;;;; User options
 
@@ -60,8 +63,6 @@
 (defun calendar-extras-get-geolocation-from-ip (&optional ip)
   "Get geolocation from IP address.
 If IP is non-nil, use the local IP address."
-  (require 'url-vars)
-  (require 'json)
   (let* ((ip (or ip (calendar-extras-get-local-ip-address)))
 	 (url (format "http://ip-api.com/json/%s" ip))
 	 (url-request-method "GET")
@@ -110,7 +111,6 @@ If IP is non-nil, use the local IP address."
 (defun calendar-extras-calfw-block-agenda ()
   "Display today’s agenda as visual time blocks."
   (interactive)
-  (require 'calfw-blocks)
   (cfw:open-calendar-buffer
    :contents-sources
    (list

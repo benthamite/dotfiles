@@ -67,6 +67,7 @@ reset functions."
   "Reset the tab bar quickly."
   (tab-bar-extras-reset t))
 
+(defvar org-clock-current-task)
 (defun tab-bar-extras-reset-unless-clock ()
   "Reset the tab-bar when `org-clock' isn't running.
 The condition is included to prevent the currently clocked task from

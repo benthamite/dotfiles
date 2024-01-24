@@ -193,6 +193,7 @@ Excludes the heading itself and any child subtrees."
   (kill-new (org-entry-get nil "ITEM")))
 
 ;; reddit.com/r/emacs/comments/e4jnlj/how_to_create_a_word_counter_that_counts_words_in/f9e3796
+;; consider replacing with https://emacs.stackexchange.com/questions/69924/count-words-under-subtree-ignoring-the-properties-drawer-and-the-subheading
 (defun org-extras-count-words ()
   "Count words in region if active; otherwise count words in current subtree."
   (interactive)

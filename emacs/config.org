@@ -10294,9 +10294,12 @@ in the file. Data comes from www.ebook.de."
                   (s-trim (buffer-string))))
         (save-buffer))))
 
-  (delete 'orcb-check-journal org-ref-clean-bibtex-entry-hook)
-  (delete 'orcb-download-pdf org-ref-clean-bibtex-entry-hook))
+  (dolist (fun '(org-ref-replace-nonascii
+                 orcb-check-journal
+                 orcb-download-pdf))
+  (delete fun org-ref-clean-bibtex-entry-hook)))
 #+end_src
+
 *** TODO Define ~isbn-to-bibtex~ via elpatch
 :PROPERTIES:
 :ID:       A3B5FC74-45C6-475C-8D31-B8355F12747C

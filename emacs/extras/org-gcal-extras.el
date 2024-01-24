@@ -33,6 +33,7 @@
 
 ;;;; Functions
 
+;;;###autoload
 (defun org-gcal-extras-open-at-point ()
   "Open the event at point in a Google Calendar."
   (interactive)
@@ -50,6 +51,7 @@
            id))))))
   (user-error "No id found"))
 
+;;;###autoload
 (defhydra org-gcal-extras-hydra (:exit t :hint nil)
   "
 _f_etch all       |_s_ync all        |_p_ost at point   |_d_elete at point |                   |_t_oggle debug

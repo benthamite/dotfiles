@@ -81,8 +81,9 @@ respectively."
 If buffer is visiting a URL or if there is a URL in the kill ring,
 use its domain as the initial prompt input.
 
-If called with prefix argument ARG, add the domain to the list of URLs to open
-in Firefox."
+By default, the command adds the URL to the list of domains to open with the
+deafult browser. If called with prefix argument ARG, add the domain to the list
+of URLs to open in Firefox instead."
   (interactive "P")
   (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
          (domain (when url (url-domain (url-generic-parse-url url))))

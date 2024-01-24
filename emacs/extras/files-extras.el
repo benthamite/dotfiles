@@ -27,7 +27,15 @@
 
 ;;; Code:
 
+;; (require 'alert) ; recursive
+(require 'cl-seq)
+(require 'dired)
+(require 'dired-extras)
+;; (require 'ebib-extras) ; recursive
+(require 'elpaca)
 (require 'files)
+(require 'paths)
+;; (require 'window-extras)
 
 ;;;; User options
 

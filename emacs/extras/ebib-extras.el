@@ -671,7 +671,7 @@ The list of film search functions is specified by
 		(read-string "Enter ISBN or DOI: "))))
     (cond ((ebib-extras-isbn-p id)
 	   (ebib-extras-search-book id))
-	  ((ebib-extras-doi-p id)
+	  ((scihub-is-doi-p id)
 	   (ebib-extras-search-article id))
 	  (t
 	   (user-error "Identifier does not appear to be an ISBN or DOI")))))
@@ -737,8 +737,8 @@ The list of article download functions is specified by
   (let ((id (or (ebib-extras-get-isbn)
 		(ebib-extras-get-field-value "doi")
 		(read-string "Enter ISBN or DOI: "))))
-    (cond ((ebib-extras-doi-p id)
-	   (ebib-extras-doi-download id))
+    (cond ((scihub-is-doi-p id)
+	   (scihub-download id))
 	  ;; there is now way (to my knowledge) of directly
 	  ;; downloading a book from its ISBN, so we search for it
 	  ;; instead
@@ -1135,32 +1135,6 @@ Prompt the user for a title, unless TITLE is non-nil."
 		   ("date" . ,(ebib-extras-get-field-value "")))))
     (tlon-babel--create-entry-from-current fields)))
 
-(defun ebib-extras-doi-p (string)
-  "Return t if STRING is a valid DOI."
-  (string-match "^10.[[:digit:]]\\{4,9\\}/[().-;A-Z_-]+$" string))
-
-(defun ebib-extras-doi-download (doi)
-  "Download DOI from Sci-Hub."
-  (interactive "sDOI: ")
-  (unless (executable-find ebib-extras-scidownl)
-    (user-error
-     "Please install `scidownl' (https://github.com/Tishacy/SciDownl) and set `ebib-extras-scidownl' accordingly"))
-  (let* ((default-directory paths-dir-downloads)
-	 (process-name "scidownl-process")
-	 (command (format "'%s' download --doi %s" ebib-extras-scidownl doi))
-	 (buffer (generate-new-buffer "*do-download-output*"))
-	 (proc (start-process-shell-command process-name buffer command))
-	 download-successful)
-    (message "Trying to download DOI `%s'..." doi)
-    (set-process-filter proc
-			(lambda (process output)
-			  (when (string-match-p "Successfully download the url" output)
-			    (setq download-successful t))))
-    (set-process-sentinel proc
-			  (lambda (process signal)
-			    (if (and (string= signal "finished\n") download-successful)
-				(message "File downloaded successfully to `%s'." paths-dir-downloads)
-			      (message "File download failed."))))))
 
 ;;;;; pdf metadata
 

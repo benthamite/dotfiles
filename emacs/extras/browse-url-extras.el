@@ -28,6 +28,11 @@
 ;;; Code:
 
 (require 'browse-url)
+(require 'eww)
+(require 'f)
+(require 'ffap)
+(require 'tlon-init)
+(require 's)
 
 ;;;; User options
 

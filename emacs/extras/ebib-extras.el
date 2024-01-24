@@ -1208,7 +1208,7 @@ Authors enclosed in braces are left untouched, but the braces are removed."
                     (cond ((string-match "{\\(.*\\)}" author)
 			   (match-string 1 author))
 			  ((string-match "\\(.*\\), \\(.*\\)" author)
-                           (format "%s %s" 
+                           (format "%s %s"
                                    (match-string 2 author)
                                    (match-string 1 author)))
 			  (t author)))
@@ -1217,9 +1217,9 @@ Authors enclosed in braces are left untouched, but the braces are removed."
 
 (defun ebib-extras-format-authors (authors &optional separator max)
   "Format AUTHORS as a string.
-  The authors are separated by SEPARATOR, which defaults to \" & \". A maximum
-  of MAX authors are included in the string, which defaults to three. When MAX is
-  exceeded, only the first author will be listed, followed by \" et al\"."
+The authors are separated by SEPARATOR, which defaults to \" & \". A maximum of
+MAX authors are included in the string, which defaults to three. When MAX is
+exceeded, only the first author will be listed, followed by \" et al\"."
   (let ((separator (or separator " & "))
 	(max (or max 3)))
     (if (> (length authors) max)

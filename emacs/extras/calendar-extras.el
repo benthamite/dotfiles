@@ -118,8 +118,7 @@ If IP is non-nil, use the local IP address."
   (interactive)
   (cfw:open-calendar-buffer
    :contents-sources
-   (list
-    (cfw:org-create-source "medium purple"))
+   (list (cfw:org-create-source "medium purple"))
    :view 'block-day))
 
 (provide 'calendar-extras)

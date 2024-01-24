@@ -10923,7 +10923,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-index-lazy-check nil) ; t improves performance
 
   (setq mu4e-compose-context-policy 'ask)
-  (setq mu4e-context-policy 'ask)
+  (setq mu4e-context-policy nil)
   (setq mu4e-modeline-support nil)
   (setq mu4e-headers-fields '((:human-date . 16)
                               (:from . 30)

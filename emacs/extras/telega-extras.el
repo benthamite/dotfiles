@@ -36,11 +36,11 @@
 
 (defun telega-extras-switch-to ()
   "Switch to the most recent telega buffer, if one exists, else start telega.
- Repeated invocations of the command will move point from the
- middle of the chat buffer to the end of it, then to the root
- buffer, then to the beginning of it if not already there. A
- similar sequence of events will be triggered if point is in an
- archive buffer."
+Repeated invocations of the command will move point from the
+middle of the chat buffer to the end of it, then to the root
+buffer, then to the beginning of it if not already there. A
+similar sequence of events will be triggered if point is in an
+archive buffer."
   (interactive)
   (let* ((telega-buffer-root "*Telega Root*")
          (telega-buffer
@@ -65,10 +65,10 @@
      ((eq (car (telega-filter-active)) 'archive)
       (if (eq (count-lines (point-min) (point)) 3)
           (telega-filters-reset)
-        (beginning-of-buffer)
+        (goto-char (point-min))
         (forward-line 3)))
      ((not (eq (count-lines (point-min) (point)) 4))
-      (beginning-of-buffer)
+      (goto-char (point-min))
       (forward-line 4)))))
 
 (defun telega-extras-chat-org-capture ()
@@ -96,7 +96,7 @@
            #'telega-chatbuf-attach-audio)
           ((member file-ext '("mp4" "mkv"))
            #'telega-chatbuf-attach-video)
-          ((image-type-from-file-name file)
+          ((image-supported-file-p file)
            #'telega-chatbuf-attach-photo)
           (t
            #'telega-chatbuf-attach-file))))

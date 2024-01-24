@@ -42,10 +42,12 @@ Useful for prompts such as `eval-expression' and `shell-command'."
 (defun corfu-extras-move-to-minibuffer ()
   "Transfer selected candidate to the minibuffer."
   (interactive)
-  (require 'consult)
-  (let ((completion-extra-properties corfu--extra)
-        completion-cycle-threshold completion-cycling)
-    (apply #'consult-completion-in-region completion-in-region--data)))
+  (pcase completion-in-region--data
+    (`(,beg ,end ,table ,pred ,extras)
+     (let ((completion-extra-properties extras)
+           completion-cycle-threshold completion-cycling)
+       (consult-completion-in-region beg end table pred)))))
+(add-to-list 'corfu-continue-commands #'corfu-extras-move-to-minibuffer)
 
 (provide 'corfu-extras)
 ;;; corfu-extras.el ends here

@@ -451,7 +451,8 @@ number."
     (when (member 'org-tidy-mode org-mode-hook)
       (org-tidy-mode arg))
     (org-display-inline-images arg)
-    (unless (eq major-mode 'org-agenda-mode)
+    (when (and (not (eq major-mode 'org-agenda-mode))
+	       (featurep 'org-modern))
       (org-modern-mode arg))))
 
 (defun simple-extras-count-words-dwim ()

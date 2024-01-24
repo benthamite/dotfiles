@@ -305,7 +305,7 @@ This function gets STRING when PROCESS produces output."
 	     (message "OCR already performed on this file."))
 	    ;; when invoked with `--force-ocr'
 	    ((or (string-match-p "page already has text" string)
-		 (string-match-p "common.py:261"))
+		 (string-match-p "common.py:261" string))
 	     (message "OCR already performed on this file; forcing new OCR."))
 	    ;; silence irrelevant messages
 	    ((or (string-match-p "Scanning contents" string)

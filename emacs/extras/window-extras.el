@@ -27,6 +27,9 @@
 
 ;;; Code:
 
+(require 'files-extras)
+(require 'winum)
+
 ;;;; User options
 
 (defgroup window-extras ()
@@ -121,7 +124,6 @@ is wide enough, create a third."
   "Move the current buffer to the other window. If there is only one
 window, create a second one. If frame is wide enough, create a third."
   (interactive)
-  (require 'files-extras)
   (window-extras--move-or-swap
    (window-buffer)
    (files-extras-get-alternate-buffer)

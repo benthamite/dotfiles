@@ -575,9 +575,10 @@ If PT is non-nil, start at that position instead of `point'."
 	 (simple-extras-strip-url)))
   (just-one-space 0))
 
-;; save-excursion wasn't restoring point, so using this custom
-;; function, from stackoverflow.com/a/24283996/4479455
+;; stackoverflow.com/a/24283996/4479455
 (defmacro simple-extras-save-excursion (&rest forms)
+  "Like `save-excursion', but actually restore point.
+FORMS are evaluated with point restored to its original position."
   (let ((old-point (gensym "old-point"))
 	(old-buff (gensym "old-buff")))
     `(let ((,old-point (point))

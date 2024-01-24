@@ -118,18 +118,7 @@ If there is only one window, create a second one."
   "Move the current buffer to the left window."
   (interactive)
   (window-extras-buffer-move
-   (winum-get-window-by-number
-    (1+
-     (mod
-      (count-windows)
-      (winum-get-number))))))
-
-(defun window-extras-buffer-move-dwim ()
-  "Based on frame size, create one or two additional windows if
-necessary, and move buffer to the other window or to the middle
-window depending on the number of present windows."
-  (interactive)
-  (window-extras-buffer-move (when (> (count-windows) 2) (winum-get-window-by-number 2))))
+   (winum-get-window-by-number (1+ (mod (count-windows) (winum-get-number))))))
 
 (defun window-extras-frame-is-maximized-p ()
   "Return t iff the current frame is maximized."

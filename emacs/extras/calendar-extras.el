@@ -100,7 +100,7 @@ If IP is non-nil, use the local IP address."
   "Insert the last day of the most recent month."
   (interactive)
   (let* ((date (calendar-current-date))
-	 (is-january-p (when (eq (calendar-extract-month date) 1)))
+	 (is-january-p (when (eq (calendar-extract-month date) 1) t))
 	 (raw-year (calendar-extract-year date))
 	 (year (if is-january-p
 		   (- raw-year 1)

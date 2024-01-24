@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(require 'citar-markdown)
 (require 'markdown-mode)
 (require 'el-patch)
 

@@ -29,6 +29,9 @@
 
 (require 'bibtex)
 (require 'el-patch)
+(require 'ebib)
+;; (require 'ebib-extras)
+(require 'tlon-babel-refs)
 
 ;;;; Functions
 
@@ -168,8 +171,6 @@ Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point.
 (defun bibtex-extras-open-in-ebib ()
   "Open the current BibTeX entry in Ebib."
   (interactive)
-  (require 'ebib)
-  (require 'ebib-extras)
   (let ((file (buffer-file-name))
         (key (bibtex-extras-get-key)))
     (save-buffer)
@@ -211,8 +212,7 @@ and sets the value of the field for all entries to `Tlön'."
 
 (defun bibtex-extras-auto-add-database-field ()
   "Run `bibtex-extras-add-database-field' every time `new.bib' is saved."
-  (require 'tlon-babel)
-  (let ((file tlon-babel-file-fluid))
+  (let ((file tlon-babel-refs-file-fluid))
     (when (string= (buffer-file-name) file)
       (bibtex-extras-add-database-field file))))
 

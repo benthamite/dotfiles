@@ -199,7 +199,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dired-aux][dired-aux]]
   - [[#dired-extras][dired-extras]]
   - [[#dired-x][dired-x]]
-  - [[#dired-async][dired-async]]
   - [[#image-dired][image-dired]]
   - [[#all-the-icons-dired][all-the-icons-dired]]
   - [[#nerd-icons-dired][nerd-icons-dired]]
@@ -1403,7 +1402,6 @@ CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:36] =>  0:31
 #+begin_src emacs-lisp :results silent
 (use-package async
 :demand t)
-  ;; :commands dired-async-mode)
 #+end_src
 
 ** emacsql
@@ -4048,18 +4046,6 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
   :general
   (dired-mode-map
    "–" 'dired-omit-mode))
-#+end_src
-
-** dired-async
-:PROPERTIES:
-:ID:       966B615F-69EF-428D-82E5-6E68B64D0FDD
-:END:
-
-#+begin_src emacs-lisp
-(use-feature dired-async
-  :after async dired
-  :config
-  (dired-async-mode))
 #+end_src
 
 ** image-dired

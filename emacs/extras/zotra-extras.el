@@ -53,8 +53,9 @@
   "Advice to set `org-cite-global-bibliography' before Zotra add commands.
 ORIG-FUN, URL, ENTRY-FORMAT, and BIBFILE are arguments passed to
 `zotra-add-entry'."
-  (setq zotra-extras-most-recent-bibliography-file (zotra-extras-set-bibfile))
-  (funcall orig-fun url entry-format zotra-extras-most-recent-bibliography-file))
+  (let ((bibfile (or bibfile
+		     (setq zotra-extras-most-recent-bibliography-file (zotra-extras-set-bibfile)))))
+    (funcall orig-fun url entry-format bibfile)))
 
 (advice-add 'zotra-add-entry :around #'zotra-extras-add-entry-set-bibfile)
 

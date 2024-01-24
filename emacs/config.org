@@ -66,6 +66,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#seq][seq]]
   - [[#general][general]]
   - [[#paths][paths]]
+  - [[#tlon-init][tlon-init]]
   - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
@@ -740,6 +741,20 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :demand t)
 #+end_src
 
+** tlon-init
+:PROPERTIES:
+:ID:       BCE74006-DDB4-4AF5-AAFA-D44BC6AF55A7
+:END:
+
+#+begin_src emacs-lisp
+(use-package tlon-init
+  :elpaca (tlon-init
+           :host github
+           :repo "tlon-team/tlon-init"
+           :depth nil) ; clone entire repo, not just last commit
+  :demand t)
+  #+end_src
+  
 ** no-littering
 :PROPERTIES:
 :ID:       21B40C49-BBD2-4E04-871B-BB578C92F71B

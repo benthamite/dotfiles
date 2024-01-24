@@ -2446,7 +2446,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
      (setq doom-modeline-enable-word-count t)
 
      (doom-modeline-def-modeline 'main
-       '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
+       '(bar workspace-name modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
        '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
 
      (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)

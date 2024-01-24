@@ -559,7 +559,7 @@ If PT is non-nil, start at that position instead of `point'."
   "Strip URL of unnecessary elements."
   (interactive)
   (unless (simple-extras-get-url-at-point)
-    (error "No URL at point."))
+    (user-error "No URL at point"))
   (let* ((url-original (simple-extras-get-url-at-point))
 	 (url-stripped (replace-regexp-in-string "\\(?:https?://\\)?\\(?:www.\\)?" "" url-original)))
     (search-backward " ")

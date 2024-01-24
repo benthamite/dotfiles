@@ -97,8 +97,8 @@ Set to nil to disable display of BBDB anniversaries in agenda."
   "docstring"
   (interactive)
   (cond
-   ((url-get-url-at-point)
-    (kill-new (url-get-url-at-point)))
+   ((thing-at-point-url-at-point)
+    (kill-new (thing-at-point-url-at-point)))
    ((org-extras-link-get-url-at-point)
     (kill-new (org-extras-link-get-thing-at-point 1)))))
 

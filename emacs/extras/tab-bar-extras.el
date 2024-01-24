@@ -46,6 +46,76 @@
   :type 'boolean
   :group 'tab-bar-extras)
 
+;;;;; elements
+
+(defcustom tab-bar-extras-date-element
+  `(:eval (propertize display-time-string 'face 'faces-extras-display-time))
+  "Element to display the date."
+  :type 'sexp
+  :group 'tab-bar-extras)
+
+(defcustom tab-bar-extras-chemacs-element
+  `(" |  " chemacs-profile-name)
+  "Element to display the Chemacs profile."
+  :type 'sexp
+  :group 'tab-bar-extras)
+
+(defcustom tab-bar-extras-battery-element
+  `(" | " fancy-battery-mode-line)
+  "Element to display the battery."
+  :type 'sexp
+  :group 'tab-bar-extras)
+
+(defcustom tab-bar-extras-telega-element
+  `(when (featurep 'telega)
+     (:eval (when (and
+                   (telega-server-live-p)
+                   (> (plist-get telega--unread-message-count :unread_count) 0))
+              (concat " | " telega-mode-line-string))))
+  "Element to display Telega notificaations."
+  :type 'sexp
+  :group 'tab-bar-extras)
+
+(defcustom tab-bar-extras-telega-element
+  `(when (featurep 'doom-modeline)
+     (:eval (when (> doom-modeline--github-notification-number 0)
+              (concat
+               " | "
+               (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
+                                   :face 'doom-modeline-notification)
+               (doom-modeline-vspc)
+               (propertize
+                (cond
+		 ((> doom-modeline--github-notification-number 99) "99+")
+		 (t (number-to-string doom-modeline--github-notification-number)))
+                'face '(:inherit
+                        (doom-modeline-unread-number doom-modeline-notification)))))))
+  "Element to display Github notificaations."
+  :type 'sexp
+  :group 'tab-bar-extras)
+
+(defcustom tab-bar-extras-pomodoro-element
+  `(when (featurep 'org-pomodoro)
+     (:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
+	      (setq global-mode-string (append global-mode-string
+					       '(org-pomodoro-mode-line))))))
+  "Element to display Pomodoro information."
+  :type 'sexp
+  :group 'tab-bar-extras)
+
+(defcustom tab-bar-extras-prefix-element
+  " "
+  "Element to display at the beginning of the tab-bar."
+  :type 'sexp
+  :group 'tab-bar-extras)
+
+(defcustom tab-bar-extras-suffix-element
+  " | "
+  "Element to display at the end of the tab-bar."
+  :type 'sexp
+  :group 'tab-bar-extras)
+
+
 ;;;; Functions
 
 (defun tab-bar-extras-reset (&optional quick)

@@ -27,8 +27,9 @@
 
 ;;; Code:
 
-(require 'mu4e)
 (require 'el-patch)
+(require 'mu4e)
+(require 'org-msg-extras)
 
 ;;;; User options
 

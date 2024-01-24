@@ -42,7 +42,7 @@
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-reset-wttr t
-  "Whether to reset the weather information when `tab-bar-extras-mode' is activated."
+  "Whether to reset weather information when `tab-bar-extras-mode' is activated."
   :type 'boolean
   :group 'tab-bar-extras)
 

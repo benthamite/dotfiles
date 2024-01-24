@@ -3838,6 +3838,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 
 #+begin_src emacs-lisp
 (use-personal-package files-extras
+  :after alert
   :demand t
   :general
   ("M-;" 'files-extras-copy-current-path

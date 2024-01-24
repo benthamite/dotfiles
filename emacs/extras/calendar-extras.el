@@ -38,13 +38,12 @@
   "Extensions for `calendar'."
   :group 'calendar)
 
-(defcustom calendar-extras-location-name nil
-  "Location name."
-  :type 'string
-  :group 'calendar-extras
+(defcustom calendar-extras-location-name ""
   "Name of the current location.
 The value can be set manually. It can also be set via
-`calendar-extras-set-location-variables-from-ip'.")
+`calendar-extras-set-location-variables-from-ip'."
+  :type 'string
+  :group 'calendar-extras )
 
 (defcustom calendar-extras-personal-geolocation '()
   "Personal geolocation."

@@ -27,6 +27,8 @@
 
 ;;; Code:
 
+(require 'files-extras)
+(require 'paths)
 (require 'telega)
 (require 'telega-dired-dwim)
 

@@ -12762,8 +12762,7 @@ And finally, the section you've all been waiting for.
 :END:
 
 #+begin_src emacs-lisp :results silent
-(when (tlon-init-machine-pablo-p)
-  (run-hooks 'tlon-init-post-init-hook))
+(add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook)
 (add-to-list 'load-path (file-name-concat elpaca-repos-directory "tlon-init/"))
 #+end_src
 

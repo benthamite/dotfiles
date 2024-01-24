@@ -65,6 +65,7 @@
  (paths-dir-movies . (file-name-concat paths-dir-google-drive "Movies/"))
  (paths-dir-dotfiles . (file-name-concat (getenv "HOME") "source/dotfiles/"))
  (paths-dir-source . (file-name-concat (getenv "HOME") "source/"))
+ (paths-dir-tlon-repos . paths-dir-source)
  (paths-dir-org . (file-name-concat paths-dir-dropbox "org/"))
  (paths-dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat paths-dir-source "biblioteca-altruismo-eficaz/"))
  (paths-dir-org-roam . "")
@@ -91,6 +92,8 @@
  (paths-file-ean . "")
  (paths-file-cookies . "")
  (paths-file-work . "")
+ (paths-tlon-babel-todos-jobs-id . "")
+ (paths-tlon-babel-todos-generic-id . "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
  )
 #+end_src
 
@@ -193,23 +196,6 @@ Doom modeline
   (setq shift-select-mode t))
 
 ;; Config tlon-babel
-(setq tlon-babel-todos-jobs-id
-      "")
-(setq tlon-babel-todos-generic-id
-      "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
-(setq tlon-babel-todos-file (file-name-concat paths-dir-notes "tareas.org"))
-(dolist (template `(("tbJ" "Tlön: BAE: Create new job (via
-    org-capture)" entry
-    (id ,tlon-babel-todos-jobs-id)
-    "** TODO [#5] %c" :immediate-finish t :empty-lines 1
-    :jump-to-captured t)
-                    ("tbG" "Tlön: BAE: Create new todo from GitHub (via
-          org-capture)" entry
-          (id ,tlon-babel-todos-generic-id)
-          "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend
-          t :jump-to-captured t)))
-  (push template org-capture-templates))
-
 
 (with-eval-after-load 'dired
   (general-define-key
@@ -566,10 +552,10 @@ Disable hl-sentence because I do not like it...
   ;; (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
   (set-face-attribute 'window-divider nil :foreground (face-attribute 'mode-line-inactive :background))
   (set-face-attribute 'tab-bar nil
-		      ;; slightly increase the width of the tab-bar
-		      :box `(:line-width 4 :color ,(face-attribute 'mode-line :background) :style nil)
-		      :background (face-background 'mode-line)))
-                      
+                      ;; slightly increase the width of the tab-bar
+                      :box `(:line-width 4 :color ,(face-attribute 'mode-line :background) :style nil)
+                      :background (face-background 'mode-line)))
+
 (add-hook 'org-mode-hook #'faces-extras-load-custom-faces)
 (faces-extras-load-custom-faces)
 #+end_src
@@ -583,11 +569,11 @@ Disable hl-sentence because I do not like it...
 (run-at-time 60 nil (lambda
                       ()
                       (progn
-			(setq display-time-format "%a %e %b %R")
-			(tab-bar-extras-reset)
-			;; (display-wttr-mode -1)
-			;; (doom-modeline--github-fetch-notifications)
-			)))
+                        (setq display-time-format "%a %e %b %R")
+                        (tab-bar-extras-reset)
+                        ;; (display-wttr-mode -1)
+                        ;; (doom-modeline--github-fetch-notifications)
+                        )))
 #+end_src
 
 #+begin_src emacs-lisp

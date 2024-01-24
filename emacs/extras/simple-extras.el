@@ -633,5 +633,31 @@ If PT is non-nil, start at that position instead of `point'."
 
 (declare-function org-extras-narrow-to-entry-and-children "org-extras")
 (declare-function ledger-mode-extras-narrow-to-xact "ledger-mode-extras")
+
+;; Modified from endlessparentheses.com/emacs-narrow-or-widen-dwim.html
+(defun simple-extras-narrow-or-widen-dwim ()
+  "Widen if buffer is narrowed, narrow-dwim otherwise.
+Dwim means: region, org-src-block, org-subtree, ledger
+transaction, or defun, whichever applies first. Narrowing to
+org-src-block actually calls `org-edit-src-code'.
+
+With prefix P, don't widen, just narrow even if buffer
+is already narrowed."
+  (declare (interactive-only t))
+  (interactive)
+  (cond ((buffer-narrowed-p) (widen))
+        ((region-active-p)
+         (narrow-to-region (region-beginning)
+                           (region-end)))
+        ((derived-mode-p 'org-mode)
+         ;; `org-edit-src-code' is not a real narrowing
+         ;; command. Remove this first conditional if
+         ;; you don't want it.
+         (cond ((ignore-errors (org-narrow-to-block) t))
+               (t (org-extras-narrow-to-entry-and-children))))
+        ((derived-mode-p 'ledger-mode)
+         (ledger-mode-extras-narrow-to-xact))
+        (t (narrow-to-defun))))
+
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

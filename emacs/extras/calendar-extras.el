@@ -38,6 +38,14 @@
   "Extensions for `calendar'."
   :group 'calendar)
 
+(defcustom calendar-extras-location-name nil
+  "Location name."
+  :type 'string
+  :group 'calendar-extras
+  "Name of the current location.
+The value can be set manually. It can also be set via
+`calendar-extras-set-location-variables-from-ip'.")
+
 (defcustom calendar-extras-personal-geolocation '()
   "Personal geolocation."
   :type '(alist :key-type (string :tag "City")
@@ -86,9 +94,7 @@ If IP is non-nil, use the local IP address."
   (interactive)
   (when-let ((ip (or ip (calendar-extras-get-local-ip-address))))
     (setq calendar-extras-personal-geolocation (calendar-extras-get-geolocation-from-ip ip))
-    (setq calendar-location-name (plist-get calendar-extras-personal-geolocation :city))
-    (setq calendar-latitude (plist-get calendar-extras-personal-geolocation :lat))
-    (setq calendar-longitude (plist-get calendar-extras-personal-geolocation :lon))
+    (setq calendar-extras-location-name (plist-get calendar-extras-personal-geolocation :city))
     (message "Variables set: %s" calendar-extras-personal-geolocation)))
 
 (defun calendar-extras-time-last-day-of-last-month ()

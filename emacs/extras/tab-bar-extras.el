@@ -59,7 +59,7 @@ reset functions."
   (unless quick
     (when calendar-extras-use-geolocation
       (calendar-extras-set-location-variables-from-ip))
-    (setq display-wttr-locations `(,calendar-location-name)))
+    (setq display-wttr-locations `(,calendar-extras-location-name)))
   (when tab-bar-extras-reset-wttr
     (display-wttr)))
 

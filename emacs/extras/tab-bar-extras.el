@@ -133,6 +133,7 @@ reset functions."
 
 (defun tab-bar-extras-quick-reset ()
   "Reset the tab bar quickly."
+  (interactive)
   (tab-bar-extras-reset t))
 
 (defvar org-clock-current-task)

@@ -391,7 +391,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
      (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai\n")
      (goto-char (point-max)))
     ("l"
-     (org-align-all-tags)
+     (org-align-tags)
      (ispell-change-dictionary "english"))
     ("la"
      (save-window-excursion

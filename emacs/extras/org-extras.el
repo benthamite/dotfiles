@@ -316,18 +316,6 @@ link, call `org-open-at-point' and set
    org-agenda-files
    '(0 . 0)))
 
-(defun org-extras-copy-dwim ()
-  "Copy the contents of the org element at point."
-  (interactive)
-  (if (derived-mode-p 'org-mode)
-      (pcase (org-element-type (org-element-context))
-	('headline (org-extras-copy-heading-name))
-	('paragraph (org-extras-copy-heading-contents))
-	('block (org-extras-copy-block))
-	('table-cell (org-extras-copy-table-cell))
-	(_ (user-error "I don't know what to copy")))
-    (user-error "Not in org-mode")))
-
 ;;;;; org-agenda
 
 (defun org-extras-agenda-switch-to-agenda-current-day ()

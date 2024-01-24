@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(require 'tlon-init)
 ;;;; User options
 
 (defgroup paths ()

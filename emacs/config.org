@@ -3358,7 +3358,9 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
            :host github
            :repo "jdtsmith/outli")
   :after outline
-  :defer 5
+  :init
+  (add-hook 'emacs-lisp-mode-hook 'outli-mode)
+
   :config
   (setq outli-speed-commands
         '(("Outline navigation")
@@ -3383,9 +3385,9 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
           ("z" . undo-only)
           ("v" . yank)
           ("Other")
-          ("?" . outli-speed-command-help)))
-  (add-hook 'emacs-lisp-mode-hook 'outli-mode))
+          ("?" . outli-speed-command-help))))
 #+end_src
+
 ** unfill
 :PROPERTIES:
 :ID:       DF5137EA-79B3-4A5F-8D6C-7222CD8D4F4A

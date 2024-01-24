@@ -27,6 +27,9 @@
 
 ;;; Code:
 
+(require 'org)
+(require 'url-parse)
+(require 'url-vars)
 
 ;;;; Functions
 
@@ -606,7 +609,6 @@ If PT is non-nil, start at that position instead of `point'."
 
 (defun simple-extras-string-is-url-p (str)
   "Check if STR is a valid URL."
-  (require 'url-parse)
   (let ((url (url-generic-parse-url str)))
     (and (url-type url) (url-host url))))
 

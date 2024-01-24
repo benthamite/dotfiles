@@ -2247,6 +2247,9 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 (use-personal-package faces-extras
   :after faces
   :demand t
+  :config
+  (add-hook 'tlon-init-post-init-hook #'faces-extras-load-custom-faces)
+  
   :general
   ("C-h C-f" 'faces-extras-describe-face))
 #+end_src

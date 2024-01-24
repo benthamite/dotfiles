@@ -27,6 +27,9 @@
 
 ;;; Code:
 
+(require 'calendar-extras)
+(require 'display-wttr)
+
 ;;;; User options
 
 (defgroup tab-bar-extras ()
@@ -51,7 +54,6 @@ This resets the clock, refreshes the tab-bar and its color, and updates the
 geolocation and weather information. If QUICK is non-nil, run only the essential
 reset functions."
   (interactive)
-  (require 'calendar-extras)
   (display-time)
   (setq global-mode-string tab-bar-extras-global-mode-string)
   (unless quick

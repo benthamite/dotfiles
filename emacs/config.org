@@ -235,8 +235,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-gcal][org-gcal]]
   - [[#org-gcal-extras][org-gcal-extras]]
   - [[#calfw][calfw]]
-  - [[#calfw-org][calfw-org]]
   - [[#calfw-blocks][calfw-blocks]]
+  - [[#calfw-org][calfw-org]]
   - [[#time][time]]
   - [[#tmr][tmr]]
   - [[#display-wttr][display-wttr]]
@@ -4925,17 +4925,8 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 /[[https://github.com/kiwanami/emacs-calfw][calf]] is a calendar framework for Emacs./
 
 #+begin_src emacs-lisp
-(use-package calfw)
-#+end_src
-
-** calfw-org
-:PROPERTIES:
-:ID:       67CD7ECA-260B-4E09-B56B-6A39BAB78D5A
-:END:
-
-#+begin_src emacs-lisp
-(use-package calfw-org
-  :after calfw)
+(use-package calfw
+  :demand t)
 #+end_src
 
 ** calfw-blocks
@@ -4952,6 +4943,17 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
              :repo "ml729/calfw-blocks")
   :after calfw
   :demand t)
+#+end_src
+
+** calfw-org
+:PROPERTIES:
+:ID:       67CD7ECA-260B-4E09-B56B-6A39BAB78D5A
+:END:
+/[[https://github.com/kiwanami/emacs-calfw/blob/master/calfw-org.el][calfw-org]] display org-agenda items in the calfw buffer./
+
+#+begin_src emacs-lisp
+(use-package calfw-org
+  :after calfw)
 #+end_src
 
 ** time

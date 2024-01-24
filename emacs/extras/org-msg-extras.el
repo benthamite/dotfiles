@@ -29,6 +29,7 @@
 
 (require 'org-msg)
 (require 'org-extras)
+(require 'simple-extras)
 
 ;;;; Functions
 

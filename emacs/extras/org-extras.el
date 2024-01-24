@@ -202,7 +202,7 @@ Excludes the heading itself and any child subtrees."
      (cl-loop for (lines words characters)
 	      in (org-map-entries
 		  (lambda ()
-		    (unpackaged/org-forward-to-entry-content 'unsafe)
+		    (org-end-of-meta-data 'full)
 		    (let ((end (org-entry-end-position)))
 		      (list (count-lines (point) end)
 			    (count-words (point) end)
@@ -224,7 +224,7 @@ Excludes the heading itself and any child subtrees."
   (goto-char (point-min))
   (org-next-visible-heading 1))
 
-(defun org-extras-super-return (&optional indent arg interactive)
+(defun org-extras-super-return ()
   "When `org-return-follows-link' is non-nil and point is on a
 link, call `org-open-at-point' and set
 `browse-url-browser-function' to `eww-browse-url'"

@@ -296,8 +296,8 @@ link, call `org-open-at-point' and set
 			      file
 			      "| grep TODO"))
 	    (changed (shell-command-to-string base-cmd))
-	    (added (count-lines-with-expression changed "^\\+"))
-	    (removed (count-lines-with-expression changed "^\\-")))
+	    (added (org-extras-count-lines-with-expression changed "^\\+"))
+	    (removed (org-extras-count-lines-with-expression changed "^\\-")))
        (cons (+ (car acc) added)
 	     (- (cdr acc) removed))))
    org-agenda-files

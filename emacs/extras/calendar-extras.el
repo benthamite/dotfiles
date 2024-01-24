@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'calendar)
-(require 'calfw-org)
 (require 'json)
 (require 'url-vars)
 
@@ -112,6 +111,8 @@ If IP is non-nil, use the local IP address."
 	     "%Y-%m-%d"
 	     (encode-time 0 0 0 day month year)))))
 
+(declare-function cfw:open-calendar-buffer "cfw:org")
+(declare-function cfw:org-create-source "cfw:org")
 (defun calendar-extras-calfw-block-agenda ()
   "Display today’s agenda as visual time blocks."
   (interactive)

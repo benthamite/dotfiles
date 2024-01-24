@@ -4885,13 +4885,11 @@ Note to self: if the package doesn't work after deploying a new profile, even af
 :PROPERTIES:
 :ID:       BBED8E2E-2A29-4465-926A-22D531E6DBE7
 :END:
-
-
 /[[file:extras/org-gcal-extras.el][org-gcal-extras]] collects my extensions for ~org-gcal~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-gcal)
 (use-personal-package org-gcal-extras
-  :after org-gcal
+  :after calf-org org-gcal
   :demand t
   :general
   (org-mode-map

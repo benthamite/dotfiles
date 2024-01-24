@@ -65,6 +65,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#jsonrpc][jsonrpc]]
   - [[#seq][seq]]
   - [[#general][general]]
+  - [[#paths][paths]]
   - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
@@ -727,6 +728,16 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :bind
   ("C-A-b" . 'general-describe-keybindings))
 (elpaca-wait)
+#+end_src
+
+** paths
+:PROPERTIES:
+:ID:       9D90809B-4CCF-4058-BB8B-396CF12B6E3F
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package paths
+  :demand t)
 #+end_src
 
 ** no-littering

@@ -2546,11 +2546,11 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
               (propertize "⏰" 'face 'org-clock-modeline-clock-face)
               " ")))
 
-          ;; pomodoro timer
-          (when (featurep 'org-pomodoro)
-            (:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
-                     (setq global-mode-string (append global-mode-string
-                                                      '(org-pomodoro-mode-line))))))))
+	  ;; pomodoro timer
+	  (when (featurep 'org-pomodoro)
+	    (:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
+		     (setq global-mode-string (append global-mode-string
+						      '(org-pomodoro-mode-line))))))))
 
   (setq global-mode-string tab-bar-extras-global-mode-string)
   (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)

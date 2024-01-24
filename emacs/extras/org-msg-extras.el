@@ -31,6 +31,36 @@
 (require 'org-extras)
 (require 'simple-extras)
 
+;;;; User options
+
+(defgroup org-msg-extras ()
+  "Extensions for `org-msg'."
+  :group 'org-msg)
+
+(defcustom org-msg-extras-personal-plain-text-signature
+  "\n--\nPablo\n"
+  "Personal signature for plain text emails."
+  :type 'string
+  :group 'org-msg-extras)
+
+(defcustom org-msg-extras-personal-html-signature
+  "\n#+begin_signature\n--\n*Pablo*\n#+end_signature"
+  "Personal signature for HTML emails."
+  :type 'string
+  :group 'org-msg-extras)
+
+(defcustom org-msg-extras-work-plain-text-signature
+  "\n--\nPablo\nDirector, Tlön\nhttps://tlon.team\n"
+  "Work signature for HTML emails."
+  :type 'string
+  :group 'org-msg-extras)
+
+(defcustom org-msg-extras-work-html-signature
+  "\n#+begin_signature\n--\n*Pablo*\nDirector, Tlön\nhttps://tlon.team\n#+end_signature"
+  "Work signature for HTML emails."
+  :type 'string
+  :group 'org-msg-extras)
+
 ;;;; Functions
 
 (defun org-msg-extras-kill-message ()

@@ -425,8 +425,8 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
      (org-do-demote))
     ("y"
      (youtube-dl (current-kill 0)
-		 :destination (prot-eww--sluggify
 		 :directory paths-dir-downloads
+		 :destination (tlon-core-slugify
 			       (org-extras-web-tools--org-title-for-url))))))
 
 ;;;;; org-clock

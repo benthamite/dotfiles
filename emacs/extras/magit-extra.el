@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'magit)
+(require 'paths)
 
 ;;;; Functions
 

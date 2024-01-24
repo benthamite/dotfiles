@@ -286,6 +286,7 @@ link, call `org-open-at-point' and set
     count))
 
 (defun org-extras-productivity-of-the-day ()
+  "Compute productivity of the day."
   (seq-reduce
    (lambda (acc it)
      (let* ((folder (file-name-directory it))

@@ -626,7 +626,7 @@ NAME and ARGS are in `use-package'."
      :elpaca nil
      ,@args))
 
-(if (tlon-init-machine-pablo-p)
+(if t
     (defmacro use-personal-package (name &rest args)
       "Like `use-package' but accounting for personal packages.
    NAME and ARGS are in `use-package'."
@@ -8348,7 +8348,6 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (file paths-file-downloads)
            "* %a :website:\n\n%U %?\n\n%:initial")))
 
-  (add-hook 'org-capture-mode-hook #'org-extras-capture-hydra-notes-hook)
   (add-hook 'org-capture-before-finalize-hook #'org-extras-capture-before-finalize-hook-function)
   (add-hook 'org-capture-before-prepare-hook #'org-extras-capture-prepare-finalize-hook-function)
 

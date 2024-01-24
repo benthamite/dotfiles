@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'consult)
+(require 'paths)
 
 ;;;; Functions
 

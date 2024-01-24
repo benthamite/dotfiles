@@ -27,8 +27,10 @@
 
 ;;; Code:
 
-(require 'ledger-mode)
+(require 'crux)
 (require 'f)
+(require 'ledger-mode)
+(require 'paths)
 (require 's)
 
 ;;;; Variables

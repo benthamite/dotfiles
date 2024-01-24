@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'faces)
+(require 'hl-line)
 
 ;;;; User options
 

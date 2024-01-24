@@ -43,7 +43,7 @@
                                              green
                                              yellow))))
 
-
+(declare-function mac-application-state nil)
 (defun modus-themes-extras-load-theme-emacs-mac ()
   "Load modus theme that matches system."
   (interactive)

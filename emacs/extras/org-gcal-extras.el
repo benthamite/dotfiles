@@ -153,7 +153,7 @@ If UPDATE-MODE is passed, then the functions in
 arguments as passed to this function and the point moved to the beginning of the
 heading."
   (unless (org-at-heading-p)
-    (user-error "Must be on Org-mode heading."))
+    (user-error "Must be on Org-mode heading"))
   (let* ((smry  (plist-get event :summary))
 	 (desc  (plist-get event :description))
 	 (loc   (plist-get event :location))

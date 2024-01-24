@@ -27,7 +27,14 @@
 
 ;;; Code:
 
-(require 'zotra)
+(require 'bibtex-extras)
+(require 'doi-utils)
+;; (require 'ebib-extras) ; recusrive 
+(require 'ebib-utils)
+(require 'eww-extras)
+(require 'paths)
+(require 'tlon-babel-refs)
+;; (require 'zotra) ; recursive
 
 ;;;; Functions
 
@@ -53,11 +60,6 @@ ORIG-FUN, URL, ENTRY-FORMAT, and BIBFILE are arguments passed to
 
 (defun zotra-after-get-bibtex-entry-hook-function ()
   "Function to trigger with `zotra-after-add-entry-hook'."
-  (require 'ebib-utils)
-  (require 'ebib-extras)
-  (require 'doi-utils)
-  (require 'bibtex-extras)
-  (require 'org-ref-bibtex)
   ;; (revert-buffer nil t)
   (goto-char (point-max))
   (bibtex-extras-convert-titleaddon-to-journaltitle)

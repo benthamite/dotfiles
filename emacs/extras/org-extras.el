@@ -29,9 +29,23 @@
 
 ;;; Code:
 
+(require 'browse-url)
+;; (require 'crux) ; Error (use-package): org-extras/:catch: Cannot open load file: No such file or directory, crux
+(require 'el-patch)
+(require 'el-patch)
 (require 'org)
 (require 'org-agenda)
-(require 'el-patch)
+(require 'org-capture)
+(require 'org-clock)
+;; (require 'org-pomodoro) ; org-extras/:catch: Cannot open load file: No such file or directory, org-pomodoro
+;; (require 'org-roam-extras) ; recursion error
+(require 'paths)
+(require 's)
+(require 'simple-extras)
+(require 'thingatpt)
+;; (require 'tlon-core) ; recursion error
+(require 'url-util)
+(require 'window-extras)
 
 ;;;; User options
 
@@ -82,7 +96,6 @@ Set to nil to disable display of BBDB anniversaries in agenda."
 (defun org-extras-url-dwim ()
   "docstring"
   (interactive)
-  (require 'url-util)
   (cond
    ((url-get-url-at-point)
     (kill-new (url-get-url-at-point)))
@@ -391,7 +404,6 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 
 (defun org-extras-capture-before-finalize-hook-function ()
   "Define behavior of `org-capture-before-finalize-hook'."
-  (require 'org-capture)
   (pcase (plist-get org-capture-plist :key)
     ((or "gg" "gd" "ge")
      (org-ai-mode)
@@ -436,7 +448,6 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     ("v"
      (org-do-demote))
     ("y"
-     (require 'youtube-dl)
      (youtube-dl (current-kill 0)
 		 :directory paths-dir-downloads-directory
 		 :destination (prot-eww--sluggify
@@ -686,7 +697,6 @@ files, recursively all files in `org-directory', and all files in
   "For all STRINGS, return its link if node is found, else the string itself.
 The elements are returned as a string separated by SEPARATOR. If
 SEPARATOR is nil, use ' • '."
-  (require 'org-roam)
   (let ((nodes (org-roam-node-list)))
     (string-join
      (mapcar (lambda (x)
@@ -731,7 +741,6 @@ LANG and BODY are required by the `org-confirm-babel-evaluate' user option."
   "Format the `org-pomodoro' timer.
 We set this value by advising `org-pomodoro' so that the pomodoro
 count is updated."
-  (require 'org-pomodoro)
   (setq org-pomodoro-format
 	(concat "🍅 %s"
 		(format "|%s" (number-to-string org-pomodoro-count)))))
@@ -771,7 +780,6 @@ That is, move point after the stars, and the TODO and priority if present."
 
 (defun org-extras-id-notes-only-clock (key)
   "Clock in to a heading with KEY."
-  (require 'simple-extras)
   (simple-extras-save-excursion
    (funcall (intern (concat "hydra-org-notes/lambda-" key "-and-exit")))
    (org-clock-in)))

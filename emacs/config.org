@@ -7895,10 +7895,11 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    "H-v" 'org-yank)
   (org-agenda-mode-map
    "s-s" 'org-save-all-org-buffers)
-  (telega-chat-mode-map
-   "s-b" (lambda! (org-emphasize ?*))
-   "s-i" (lambda! (org-emphasize ?/))
-   "s-e" (lambda! (org-emphasize ?~))))
+  ;; (telega-chat-mode-map
+   ;; "s-b" (lambda! (org-emphasize ?*))
+   ;; "s-i" (lambda! (org-emphasize ?/))
+   ;; "s-e" (lambda! (org-emphasize ?~)))
+   )
 #+end_src
 
 *** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
@@ -8103,7 +8104,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "s" 'org-agenda-schedule
    "W" 'org-agenda-refile
    "X" 'org-agenda-exit
-   "x" (lambda! (org-agenda-log-mode 'clockcheck))
+   ;; "x" (lambda! (org-agenda-log-mode 'clockcheck))
    "y" 'org-agenda-day-view
    "z" 'org-agenda-undo))
 #+end_src

@@ -11010,17 +11010,14 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 (use-personal-package mu4e-extras
   :after mu4e
   :demand t
+  :init
+  (add-hook 'elpaca-after-init-hook #'mu4e-extras-set-shortcuts)
+  (add-hook 'elpaca-after-init-hook #'mu4e-extras-set-contexts)
+
   :config
   (setq mu4e-extras-inbox-folder "/Inbox")
   (setq mu4e-extras-daily-folder "/Daily")
 
-  (add-hook 'elpaca-after-init-hook
-            (lambda ()
-              (dolist (shortcut `((,mu4e-extras-inbox-folder . ?i)
-                                  (,mu4e-extras-daily-folder . ?y)))
-                (add-to-list 'mu4e-maildir-shortcuts shortcut))))
-
-  (add-hook 'elpaca-after-init-hook #'mu4e-extras-set-contexts)
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-set-face-locally)
 

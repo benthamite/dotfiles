@@ -28,6 +28,9 @@
 ;;; Code:
 
 (require 'doom-modeline)
+(require 'el-patch)
+(require 'forge)
+(require 'gh-notify-extras)
 
 ;;;; Functions
 

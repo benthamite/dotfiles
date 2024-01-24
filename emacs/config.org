@@ -4729,7 +4729,7 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 :END:
 
 
-/[[file:extras/ace-link-extras.el][ace-link-extras]] collects my extensions for ace-~link~./
+/[[file:extras/ace-link-extras.el][ace-link-extras]] collects my extensions for ~ace-link~./
 
 #+begin_src emacs-lisp
 (use-personal-package ace-link-extras
@@ -4903,7 +4903,7 @@ Note to self: if the package doesn't work after deploying a new profile, even af
 :END:
 
 
-/[[file:extras/org-gcal-extras.el][org-gcal-extras]] collects my extensions for ~org-gcal~.
+/[[file:extras/org-gcal-extras.el][org-gcal-extras]] collects my extensions for ~org-gcal~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-gcal)
 (use-personal-package org-gcal-extras
@@ -6477,7 +6477,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 :END:
 
 
-/[[file:extras/markdown-mode-extras.el][markdown-mode-extras]] collects my extensions for ~markdown-mode~
+/[[file:extras/markdown-mode-extras.el][markdown-mode-extras]] collects my extensions for ~markdown-mode~./
 
 #+begin_src emacs-lisp
 (use-personal-package markdown-mode-extras
@@ -9550,7 +9550,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 :END:
 
 
-/[[file:extras/org-roam-extras.el][org-roam-extras]] collects my extensions for ~org-roam~.
+/[[file:extras/org-roam-extras.el][org-roam-extras]] collects my extensions for ~org-roam~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-roam)
 (use-personal-package org-roam-extras
@@ -12262,7 +12262,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 :END:
 
 
-/[[file:extras/org-web-tools-extras.el][org-web-tools-extras]] collects my extensions for ~org-web-tools~.
+/[[file:extras/org-web-tools-extras.el][org-web-tools-extras]] collects my extensions for ~org-web-tools~./
 
 #+begin_src emacs-lisp
 (use-personal-package org-web-tools-extras

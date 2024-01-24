@@ -9802,6 +9802,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 
 #+begin_src emacs-lisp :results silent
 (use-feature bibtex
+  :after ebib
   :demand t
   :config
   ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX

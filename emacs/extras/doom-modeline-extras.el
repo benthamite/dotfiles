@@ -40,6 +40,8 @@
 ;; requirement. I show the notifications in the tab-bar, so I don't want them to
 ;; appear in the modeline as well
 
+(declare-function async-start "async")
+(declare-function async-inject-variables "async")
 (el-patch-defun doom-modeline--github-fetch-notifications ()
   "Fetch GitHub notifications."
   (when (and (el-patch-swap doom-modeline-github t)

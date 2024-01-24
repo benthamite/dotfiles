@@ -30,6 +30,13 @@
 (require 'calendar-extras)
 (require 'display-wttr)
 
+;;;; Variables
+
+(defvar tab-bar-extras-run-again nil
+  "Whether to run `tab-bar-extras-reset' again.
+This is to ensure that the tab-bar is correctly displayed if some packages are
+not loaded when `tab-bar-extras-reset' is first run.")
+
 ;;;; User options
 
 (defgroup tab-bar-extras ()
@@ -61,14 +68,14 @@
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-battery-element
-  `(progn (require 'fancy-battery)
+  `(progn (tab-bar-extras-run-again-if-unloaded 'fancy-battery)
 	  (" | " fancy-battery-mode-line))
   "Element to display the battery."
   :type 'sexp
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-telega-element
-  `(progn (require 'telega)
+  `(progn (tab-bar-extras-run-again-if-unloaded 'telega)
 	  (:eval (when (and
 			(telega-server-live-p)
 			(> (plist-get telega--unread-message-count :unread_count) 0))
@@ -77,8 +84,8 @@
   :type 'sexp
   :group 'tab-bar-extras)
 
-(defcustom tab-bar-extras-telega-element
-  `(progn (require 'doom-modeline)
+(defcustom tab-bar-extras-github-element
+  `(progn (tab-bar-extras-run-again-if-unloaded 'doom-modeline)
 	  (:eval (when (> doom-modeline--github-notification-number 0)
 		   (concat
 		    " | "
@@ -86,17 +93,17 @@
 					:face 'doom-modeline-notification)
 		    (doom-modeline-vspc)
 		    (propertize
-                     (cond
+		     (cond
 		      ((> doom-modeline--github-notification-number 99) "99+")
 		      (t (number-to-string doom-modeline--github-notification-number)))
-                     'face '(:inherit
-                             (doom-modeline-unread-number doom-modeline-notification)))))))
+		     'face '(:inherit
+			     (doom-modeline-unread-number doom-modeline-notification)))))))
   "Element to display Github notifications."
   :type 'sexp
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-pomodoro-element
-  `(progn (require 'org-pomodoro)
+  `(progn (tab-bar-extras-run-again-if-unloaded 'org-pomodoro)
 	  (:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
 		   (setq global-mode-string (append global-mode-string
 						    '(org-pomodoro-mode-line))))))
@@ -118,6 +125,10 @@
 
 ;;;; Functions
 
+(defun tab-bar-extras-set-global-mode-string ()
+  "Set `global-mode-string' to `tab-bar-extras-global-mode-string'."
+  (setq global-mode-string tab-bar-extras-global-mode-string))
+
 (defun tab-bar-extras-reset (&optional quick)
   "Reset the tab bar.
 This resets the clock, refreshes the tab-bar and its color, and updates the
@@ -125,13 +136,22 @@ geolocation and weather information. If QUICK is non-nil, run only the essential
 reset functions."
   (interactive)
   (display-time)
-  (setq global-mode-string tab-bar-extras-global-mode-string)
+  (tab-bar-extras-set-global-mode-string)
   (unless quick
     (when calendar-extras-use-geolocation
       (calendar-extras-set-location-variables-from-ip))
-    (setq display-wttr-locations `(,calendar-extras-location-name)))
-  (when tab-bar-extras-reset-wttr
-    (display-wttr)))
+    (setq display-wttr-locations `(,calendar-extras-location-name))
+    (when tab-bar-extras-reset-wttr
+      (display-wttr)))
+  (when tab-bar-extras-run-again
+    (run-with-timer 10 nil #'tab-bar-extras-set-global-mode-string)
+    (setq tab-bar-extras-run-again nil)))
+
+(defun tab-bar-extras-run-again-if-unloaded (feature)
+  "Run `tab-bar-extras-reset' again if FEATURE is not loaded."
+  (unless (boundp feature)
+    (require feature)
+    (setq tab-bar-extras-run-again t)))
 
 (defun tab-bar-extras-quick-reset ()
   "Reset the tab bar quickly."

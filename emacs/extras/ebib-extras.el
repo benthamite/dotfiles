@@ -32,8 +32,13 @@
 (require 'ebib)
 (require 'filenotify)
 (require 'mullvad)
+(require 'paths)
 (require 's)
+(require 'scihub)
 (require 'zotra)
+(require 'tlon-babel-refs)
+;; (require 'zotra-extras) ; recursive
+(require 'window-extras)
 
 ;;;; User options
 
@@ -1009,7 +1014,6 @@ If applicable, open external website to set rating there as well."
 (defun ebib-extras-move-entry-to-tlon ()
   "Move bibliographic entry associated with the key at point to the Tlön bibliography."
   (interactive)
-  (require 'tlon-babel)
   (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
     (citar-extras-goto-bibtex-entry key)
     (bibtex-extras-move-entry-to-tlon)

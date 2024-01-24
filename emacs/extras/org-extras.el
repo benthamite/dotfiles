@@ -416,7 +416,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     ;; Add link to open Slack message externally.
     ("s"
      (org-narrow-to-subtree)
-     (let ((url (s-replace-regexp
+     (let ((url (replace-regexp-in-string
 		 "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
 		 "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
 		 (plist-get org-store-link-plist :link))))

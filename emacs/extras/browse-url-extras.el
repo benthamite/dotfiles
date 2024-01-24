@@ -38,19 +38,19 @@
 
 (defgroup browse-url-extras ()
   "Extensions for `browse-url'."
-  :group 'browse-url)
+  :group 'browse-url-extras)
 
 (defcustom browse-url-extras-browse-url-default-file
   (file-name-concat tlon-init-dir-dotemacs "etc/browse-url-default.txt")
   "Path to the `browse-url-default.txt' file."
   :type 'file
-  :group 'path)
+  :group 'browse-url-extras)
 
 (defcustom browse-url-extras-browse-url-firefox-file
   (file-name-concat tlon-init-dir-dotemacs "etc/browse-url-firefox.txt")
   "Path to the `browse-url-firefox.txt' file."
   :type 'file
-  :group 'path)
+  :group 'browse-url-extras)
 
 ;;;; Functions
 

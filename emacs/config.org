@@ -662,10 +662,9 @@ NAME and ARGS are in `use-package'."
 (setq use-package-minimum-reported-time 0.1) ; report if loading a package takes longer than 100 ms
 
 ;; we load `org-mode' early to prevent version conflicts
-;; (use-package org
-;; :demand t
-;; :ensure org-plus-contrib
-;; )
+(use-package org
+:demand t
+:ensure org-plus-contrib)
 #+end_src
 
 *** use-package-ensure-system-package

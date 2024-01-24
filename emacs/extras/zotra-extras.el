@@ -29,12 +29,12 @@
 
 (require 'bibtex-extras)
 (require 'doi-utils)
-;; (require 'ebib-extras) ; recusrive 
+;; (require 'ebib-extras) ; recusrive
 (require 'ebib-utils)
 (require 'eww-extras)
 (require 'paths)
 (require 'tlon-babel-refs)
-;; (require 'zotra) ; recursive
+(require 'zotra) ; recursive
 
 ;;;; Functions
 
@@ -59,6 +59,7 @@ ORIG-FUN, URL, ENTRY-FORMAT, and BIBFILE are arguments passed to
 
 (advice-add 'zotra-add-entry :around #'zotra-extras-add-entry-set-bibfile)
 
+(declare-function org-ref-clean-bibtex-entry "org-ref-bibtex")
 (defun zotra-after-get-bibtex-entry-hook-function ()
   "Function to trigger with `zotra-after-add-entry-hook'."
   ;; (revert-buffer nil t)

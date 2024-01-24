@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'corfu)
+(require 'consult)
 
 ;;;; Functions
 

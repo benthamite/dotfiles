@@ -32,6 +32,7 @@
 (require 'prot-eww)
 (require 'ffap)
 (require 'f)
+(require 'org-web-tools-extras)
 (require 'paths)
 (require 'simple-extras)
 

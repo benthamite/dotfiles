@@ -23,7 +23,7 @@
 
 ;;; Commentary:
 
-;; Extensions for dired.
+;; Extensions for Dired.
 
 ;;; Code:
 
@@ -124,12 +124,12 @@ losing the `put back' option."
 
 ;;;; all-the-icons-dired
 
+(declare-function all-the-icons-dired-mode "all-the-icons-dired")
 (defun dired-extras-all-the-icons-activate ()
   "Define conditions for activation of `all-the-icons-dired-mode'."
   (require 'all-the-icons-dired)
   (if (< (length (directory-files default-directory)) 1000)
       (all-the-icons-dired-mode)
-    
     (all-the-icons-dired-mode -1)))
 
 ;;;; gnus-dired

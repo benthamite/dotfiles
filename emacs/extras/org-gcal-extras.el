@@ -52,7 +52,7 @@
 
 (defhydra org-gcal-extras-hydra (:exit t :hint nil)
   "
-_f_etch all       |_s_ync all        |_p_ost at point   |_d_elete at point |_r_equest token    |_t_oggle debug
+_f_etch all       |_s_ync all        |_p_ost at point   |_d_elete at point |                   |_t_oggle debug
 _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_lear token      |re_l_oad secret  "
   ("f" org-gcal-fetch)
   ("F" org-gcal-fetch-buffer)
@@ -62,7 +62,6 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
   ("d" org-gcal-delete-at-point)
   ("o" org-gcal-extras-open-at-point)
   ("u" org-gcal--sync-unlock)
-  ("r" org-gcal-request-token)
   ("c" org-gcal-sync-tokens-clear)
   ("t" org-gcal-toggle-debug)
   ("l" org-gcal-reload-client-id-secret))

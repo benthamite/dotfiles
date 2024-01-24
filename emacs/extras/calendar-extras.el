@@ -75,17 +75,16 @@ If IP is non-nil, use the local IP address."
 	 (url (format "http://ip-api.com/json/%s" ip))
 	 (url-request-method "GET")
 	 (url-request-extra-headers '(("Content-Type" . "application/json")))
-	 (response-buffer (url-retrieve-synchronously url))
-	 (json-object-type 'plist))
+	 (response-buffer (url-retrieve-synchronously url)))
     (with-current-buffer response-buffer
       (goto-char (point-min))
       ;; Skip HTTP headers.
       (re-search-forward "^$")
       (let* ((json (json-read))
-	     (lat (plist-get json :lat))
-	     (lon (plist-get json :lon))
-	     (city (plist-get json :city))
-	     (timezone (plist-get json :timezone)))
+	     (lat (alist-get 'lat json))
+	     (lon (alist-get 'lon json))
+	     (city (alist-get 'city json))
+	     (timezone (alist-get 'timezone json)))
 	(list :lat lat :lon lon :city city :timezone timezone)))))
 
 (defun calendar-extras-set-location-variables-from-ip (&optional ip)

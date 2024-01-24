@@ -330,7 +330,7 @@ This function gets STRING when PROCESS produces output."
   "Return t if point is at the beginning of the last line."
   (let ((beginning-of-last-line
 	 (save-excursion
-	   (end-of-buffer)
+	   (goto-char (point-max))
 	   (beginning-of-line)
 	   (point))))
     (>= (point) beginning-of-last-line)))

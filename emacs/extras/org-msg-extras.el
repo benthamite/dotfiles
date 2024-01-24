@@ -66,10 +66,11 @@
 (defun org-msg-extras-kill-message ()
   "Save the current message to the kill ring."
   (interactive)
-  (unless (eq major-mode 'org-msg-edit-mode)
+  (unless (derived-mode-p 'org-msg-edit-mode)
     (user-error "Not in org-msg-edit-mode"))
   (save-excursion
     (goto-char (org-msg-start))
+    ;; hack; consider refining
     (re-search-forward "^:END:\n")
     (let ((beg (point)))
       (goto-char (org-msg-end))

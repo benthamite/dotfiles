@@ -100,19 +100,13 @@ If there is only one window, create a second one."
 If there is only one window, create a second one."
   (interactive)
   (window-extras--move-or-swap
-   (window-buffer)
-   (files-extras-get-alternate-buffer)
-   target-window))
+   (window-buffer) (files-extras-get-alternate-buffer) target-window))
 
 (defun window-extras-buffer-move-right ()
   "Move the current buffer to the right window."
   (interactive)
   (window-extras-buffer-move
-   (winum-get-window-by-number
-    (1+
-     (mod
-      (winum-get-number)
-      (count-windows))))))
+   (winum-get-window-by-number (1+ (mod (winum-get-number) (count-windows))))))
 
 (defun window-extras-buffer-move-left ()
   "Move the current buffer to the left window."
@@ -122,9 +116,8 @@ If there is only one window, create a second one."
 
 (defun window-extras-frame-is-maximized-p ()
   "Return t iff the current frame is maximized."
-  (and
-   (eq (frame-pixel-width) (display-pixel-width))
-   (eq (frame-pixel-height) (display-pixel-height))))
+  (and (eq (frame-pixel-width) (display-pixel-width))
+       (eq (frame-pixel-height) (display-pixel-height))))
 
 ;; superuser.com/a/132454/387888
 (defun window-extras-switch-to-minibuffer-window ()

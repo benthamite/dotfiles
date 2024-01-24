@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'org-web-tools)
+(require 'paths)
 
 ;;;; Functions
 

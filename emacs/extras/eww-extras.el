@@ -105,7 +105,8 @@ domain as the initial prompt input."
 	 (file eww-extras-readable-exceptions-file)
          (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
     (browse-url-extras--write-url-to-file selection file)
-    (eww-extras-set-readable-exceptions-from-file)))
+    (eww-extras-set-readable-exceptions-from-file)
+    (eww-reload)))
 
 (defun eww-extras-set-readable-exceptions-from-file ()
   "Set `eww-readable' exceptions from file of exception URLs."

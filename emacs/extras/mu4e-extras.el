@@ -180,32 +180,6 @@ Do not ask for confirmation."
   (forward-line -1)
   (mu4e-extras-headers-archive))
 
-(defun mu4e-extras-set-contexts ()
-  "Set `mu4e-contexts'.
-We set the value of `mu4e-contexts' here because we want to hide the email
-addresses, whose values cannot be obtained from a variable because of some weird
-thing with lexical binding inside lambda functions."
-  (setq mu4e-contexts
-	`(,(make-mu4e-context
-            :name "Personal"
-            :match-func (lambda (msg) (when msg
-                                   (mu4e-message-contact-field-matches msg
-								       :to "pablo.stafforini@gmail.com")))
-            :vars `((user-mail-address
-		     . ,(getenv "PERSONAL_GMAIL"))
-		    (org-msg-signature
-		     . "\n\n#+begin_signature\n--\n*Pablo*\n#+end_signature")))
-	  ,(make-mu4e-context
-            :name "Work"
-            :match-func (lambda (msg) (when msg
-                                   (or (mu4e-message-contact-field-matches msg
-									   :to "pablo@tlon.team")
-				       (mu4e-message-contact-field-matches msg
-									   :reply-to "tlon-team@googlegroups.com"))))
-            :vars `((user-mail-address
-		     . ,(getenv "WORK_EMAIL"))
-		    (org-msg-signature
-		     . "\n\n#+begin_signature\n--\n*Pablo*\nDirector, Tlön\nhttps://tlon.team\n#+end_signature"))))))
 (defun mu4e-extras-set-shortcuts ()
   "Set `mu4e-maildir-shortcuts'."
   (dolist (shortcut `((,mu4e-extras-inbox-folder . ?i)
@@ -217,7 +191,67 @@ thing with lexical binding inside lambda functions."
   (when (eq major-mode 'mu4e-view-mode)
     (face-remap-add-relative 'shr-text :height 0.9)))
 
-;;;;; patches
+;;;;; Contexts
+
+(defun mu4e-extras-set-contexts ()
+  "Set `mu4e-contexts'."
+  (setq mu4e-contexts
+	`(,(make-mu4e-context
+            :name "Personal HTML"
+            :match-func #'mu4e-extras-msg-is-personal-and-html-p
+            :vars `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
+		    (org-msg-signature . ,org-msg-extras-personal-html-signature)))
+	  ,(make-mu4e-context
+            :name "Personal plain text"
+            :match-func #'mu4e-extras-msg-is-personal-and-plain-text-p
+            :vars `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
+		    (org-msg-signature . ,org-msg-extras-personal-plain-text-signature)))
+	  ,(make-mu4e-context
+            :name "Work HTML"
+            :match-func #'mu4e-extras-msg-is-work-and-html-p
+            :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
+		    (org-msg-signature . ,org-msg-extras-work-html-signature)))
+	  ,(make-mu4e-context
+            :name "Work plain text"
+            :match-func #'mu4e-extras-msg-is-work-and-plain-text-p
+            :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
+		    (org-msg-signature . ,org-msg-extras-work-plain-text-signature))))))
+
+(defun mu4e-extras-msg-is-personal-and-html-p (msg)
+  "Return t iff MSG is a personal HTML message."
+  (when msg
+    (and (org-msg-extras-msg-is-html-p)
+	 (mu4e-extras-msg-is-personal-p msg))))
+
+(defun mu4e-extras-msg-is-personal-and-plain-text-p (msg)
+  "Return t iff MSG is a personal plain text message."
+  (when msg
+    (and (not (org-msg-extras-msg-is-html-p))
+	 (mu4e-extras-msg-is-personal-p msg))))
+
+(defun mu4e-extras-msg-is-work-and-html-p (msg)
+  "Return t iff MSG is a work HTML message."
+  (when msg
+    (and (org-msg-extras-msg-is-html-p)
+	 (mu4e-extras-msg-is-work-p msg))))
+
+(defun mu4e-extras-msg-is-work-and-plain-text-p (msg)
+  "Return t iff MSG is a work plain text message."
+  (when msg
+    (and (not (org-msg-extras-msg-is-html-p))
+	 (mu4e-extras-msg-is-work-p msg))))
+
+(defun mu4e-extras-msg-is-personal-p (msg)
+  "Return t iff MSG is a personal message."
+  (let ((address (getenv "PERSONAL_GMAIL")))
+    (mu4e-message-contact-field-matches msg :to address)))
+
+(defun mu4e-extras-msg-is-work-p (msg)
+  "Return t iff MSG is a work message."
+  (or (mu4e-message-contact-field-matches msg :to (getenv "WORK_EMAIL"))
+      (mu4e-message-contact-field-matches msg :reply-to "tlon-team@googlegroups.com")))
+
+;;;;; Patches
 
 ;; do not prompt for an URL number when there is only one URL
 (el-patch-defun mu4e--view-get-urls-num (prompt &optional multi)

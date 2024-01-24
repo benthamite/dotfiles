@@ -57,33 +57,6 @@
     (select-frame-set-input-focus (window-frame last-window))
     (select-window last-window)))
 
-;; Modified from endlessparentheses.com/emacs-narrow-or-widen-dwim.html
-(defun window-extras-narrow-or-widen-dwim ()
-  "Widen if buffer is narrowed, narrow-dwim otherwise.
-  Dwim means: region, org-src-block, org-subtree, ledger
-  transaction, or defun, whichever applies first. Narrowing to
-  org-src-block actually calls `org-edit-src-code'.
-
-  With prefix P, don't widen, just narrow even if buffer
-  is already narrowed."
-  (interactive)
-  (declare (interactive-only))
-  (cond ((buffer-narrowed-p) (widen))
-        ((region-active-p)
-         (narrow-to-region (region-beginning)
-                           (region-end)))
-        ((derived-mode-p 'org-mode)
-         ;; `org-edit-src-code' is not a real narrowing
-         ;; command. Remove this first conditional if
-         ;; you don't want it.
-         (cond ((ignore-errors (org-narrow-to-block) t))
-               (t (org-extras-narrow-to-entry-and-children))))
-        ((derived-mode-p 'latex-mode)
-         (LaTeX-narrow-to-environment))
-        ((derived-mode-p 'ledger-mode)
-         (ledger-mode-extras-narrow-to-xact))
-        (t (narrow-to-defun))))
-
 (defun window-extras-split-if-unsplit ()
   "Split windows when frame is unsplit.
 Split in three windows if `frame-width' is greater than

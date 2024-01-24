@@ -3128,7 +3128,10 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
    "H-x" 'simple-extras-smart-kill-region
    "M-A-i" 'simple-extras-visual-line-mode-enhanced
    "M-i" 'simple-extras-indent-dwim
-   "M-v" 'simple-extras-visible-mode-enhanced))
+   "M-v" 'simple-extras-visible-mode-enhanced
+   "C-w" 'simple-extras-narrow-or-widen-dwim)
+  (isearch-mode-map
+   "C-w" 'simple-extras-narrow-or-widen-dwim))
 #+end_src
 
 ** paragraphs
@@ -4451,7 +4454,6 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   :general
   ("C-H-0" 'window-extras-switch-to-last-window
    "A-C-H-0" 'window-extras-switch-to-minibuffer-window
-   "C-w" 'window-extras-narrow-or-widen-dwim
    "M-–" 'window-extras-buffer-move-dwim ; `emacs-mac'
    "M--" 'window-extras-buffer-move-dwim ; `emacs-plus'
    "M-," 'window-extras-buffer-move-left
@@ -4461,8 +4463,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   (js-mode-map
    "M-," 'window-extras-buffer-move-left
    "M-." 'window-extras-buffer-move-right)
-  (isearch-mode-map
-   "C-w" 'window-extras-narrow-or-widen-dwim))
+   "M-." 'window-extras-buffer-move-right))
 #+end_src
 
 ** frame

@@ -782,14 +782,14 @@ This includes personal files and `tlon-babel' files."
 ;;;;; Other
 
 (defcustom paths-tlon-babel-todos-generic-id
-  "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB"
+  "4388B4D0-3830-48E0-A118-C3195B62F0D1"
   "ID of the user-specific `org-mode' heading where generic TODOs are stored.
 \"Generic\" TODOs are all TODOs except those related to a translation job."
   :type 'string
   :group 'paths)
 
 (defcustom paths-tlon-babel-todos-jobs-id
-  "4388B4D0-3830-48E0-A118-C3195B62F0D1"
+  "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB"
   "ID of the user-specific `org-mode' heading where job TODOs are stored.
 A job TODO is a TODO for a translation job."
   :type 'string

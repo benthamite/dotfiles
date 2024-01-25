@@ -27,8 +27,8 @@
 
 ;;; Code:
 
-(require 'org-msg)
 (require 'org-extras)
+(require 'org-msg)
 (require 'simple-extras)
 
 ;;;; User options

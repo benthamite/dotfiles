@@ -625,28 +625,26 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
   (elpaca-use-package-mode)
   (setq elpaca-use-package-by-default t))
 
+(use-package use-package
+  :config
+  (setq use-package-verbose t)
+  (setq use-package-compute-statistics t)
+  (setq use-package-always-ensure nil)
+  (setq use-package-always-defer t)
+  (setq use-package-hook-name-suffix nil) ; use real name for hooks, i.e. do not omit the `-hook' bit
+  (setq use-package-minimum-reported-time 0.1))
+
 (elpaca-wait)
-
-(setq use-package-verbose t)
-(setq use-package-compute-statistics t)
-(setq use-package-always-ensure nil)
-(setq use-package-always-defer t)
-(setq use-package-hook-name-suffix nil)       ; use real name for hooks, i.e. do not omit the `-hook' bit
-(setq use-package-minimum-reported-time 0.1) ; report if loading a package takes longer than 100 ms
-
-;; we load `org-mode' early to prevent version conflicts
-(use-package org
-  :demand t
-  :ensure org-plus-contrib)
 #+end_src
 
-*** use-package-ensure-system-package
+** use-package-extras
 :PROPERTIES:
-:ID:       5C17424A-4950-4745-B7FD-F0CACEB48AFB
+:ID:       A1D2F9BE-0983-4CE8-89C2-6727149F3268
 :END:
 
-#+begin_src emacs-lisp :results silent
-(use-package use-package-ensure-system-package
+#+begin_src emacs-lisp
+(use-personal-package use-package-extras
+  :after use-package
   :demand t)
 #+end_src
 
@@ -680,7 +678,6 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
                      :repo "emacs-straight/jsonrpc")
     :demand t)
 #+end_src
-
 ** seq
 :PROPERTIES:
 :ID:       FD3A9A18-BDB8-4D52-9F5C-8E040FA042A2
@@ -748,7 +745,9 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 	   :host github
 	   :repo "tlon-team/tlon-init"
 	   :depth nil) ; clone entire repo, not just last commit
-  :demand t)
+  :demand t
+  :init
+  (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook))
   #+end_src
   
 ** no-littering

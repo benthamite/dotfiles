@@ -412,6 +412,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-mime][org-mime]]
   - [[#elgantt][elgantt]]
   - [[#org-pomodoro][org-pomodoro]]
+  - [[#org-pomodoro-extras][org-pomodoro-extras]]
   - [[#pomodoro-centile][pomodoro-centile]]
 - [[#note-taking][note-taking]]
   - [[#org-roam][org-roam]]
@@ -9282,20 +9283,6 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 (use-package org-pomodoro
   :after org
   :defer 10
-  :config/el-patch
-  ;; silence silly lecture about killing pomodoros
-  (defun org-pomodoro-killed ()
-    "Is invoked when a pomodoro was killed.
-This may send a notification, play a sound and adds log."
-    (org-pomodoro-reset)
-    (org-pomodoro-notify "Pomodoro killed." (el-patch-swap "One does not simply kill a pomodoro!" ""))
-    (org-pomodoro-maybe-play-sound :killed)
-    (when (org-clocking-p)
-      (if org-pomodoro-keep-killed-pomodoro-time
-          (org-clock-out nil t)
-        (org-clock-cancel)))
-    (run-hooks 'org-pomodoro-killed-hook))
-
   :config
   (setq org-pomodoro-length 25)
   (setq org-pomodoro-short-break-length (- 30 org-pomodoro-length))
@@ -9303,7 +9290,7 @@ This may send a notification, play a sound and adds log."
   (setq org-pomodoro-finished-sound tmr-sound-file)
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
-  ;; (add-hook 'org-pomodoro-started-hook #'org-extras-pomodoro-format-timer)
+  (add-hook 'org-pomodoro-started-hook #'org-pomodoro-extras-format-timer)
 
   :general
   ("H-I" 'org-pomodoro
@@ -9313,6 +9300,17 @@ This may send a notification, play a sound and adds log."
 #+end_src
 
 - check: https://gist.github.com/bravosierrasierra/1d98a89a7bcb618ef70c6c4a92af1a96#file-org-pomodoro-plus
+
+** org-pomodoro-extras
+:PROPERTIES:
+:ID:       6D8C1A4B-3131-4175-AB23-4C3DDA311872
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package org-pomodoro-extras
+  :after org-pomodoro
+  :demand t)
+#+end_src
 
 ** pomodoro-centile
 :PROPERTIES:

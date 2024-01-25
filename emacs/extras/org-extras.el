@@ -37,6 +37,7 @@
 (require 'org-agenda)
 (require 'org-capture)
 (require 'org-clock)
+(require 'oc)
 ;; (require 'org-roam-extras) ; recursion error
 (require 'paths)
 (require 's)

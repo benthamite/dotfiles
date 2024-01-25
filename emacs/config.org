@@ -61,6 +61,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#package-management][package management]]
   - [[#elpaca][elpaca]]
   - [[#use-package][use-package]]
+  - [[#use-package-extras][use-package-extras]]
 - [[#foundational][foundational]]
   - [[#jsonrpc][jsonrpc]]
   - [[#seq][seq]]
@@ -618,28 +619,6 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 - Note that you can expand the ~use-package~ macro and see what it will do by invoking ~pp-macroexpand-last-sexp~ with point at the end of the relevant sexp.
 
 #+begin_src emacs-lisp :results silent
-;; github.com/raxod502/radian/blob/develop/emacs/radian.el
-(defmacro use-feature (name &rest args)
-  "Like `use-package' but accounting for asynchronous installation.
-NAME and ARGS are in `use-package'."
-  (declare (indent defun))
-  `(use-package ,name
-     :elpaca nil
-     ,@args))
-
-(defmacro use-personal-package (name &rest args)
-  "Like `use-package' but accounting for personal packages.
-   NAME and ARGS are in `use-package'."
-  (declare (indent defun))
-  `(use-package ,name
-     :elpaca (,name
-              :host github
-              :repo "benthamite/dotfiles"
-              :files ,(list (file-name-concat
-                             "emacs/extras"
-                             (file-name-with-extension (symbol-name (eval `(quote ,name))) "el"))))
-     ,@args))
-
 (elpaca elpaca-use-package
   (elpaca-use-package-mode)
   (setq elpaca-use-package-by-default t))

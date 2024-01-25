@@ -63,6 +63,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#use-package][use-package]]
   - [[#use-package-extras][use-package-extras]]
 - [[#foundational][foundational]]
+  - [[#org][org]]
   - [[#jsonrpc][jsonrpc]]
   - [[#seq][seq]]
   - [[#general][general]]
@@ -653,6 +654,19 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 :PROPERTIES:
 :ID:       B2CADEA2-F8B7-4E8E-8FB0-D6B59658933D
 :END:
+** org
+:PROPERTIES:
+:ID:       C73C4B08-960E-4EA6-B92F-A7657B56FA1C
+:END:
+
+We load ~org-mode~ early to prevent version conflicts. The package is configured properly later (see =org= section).
+
+#+begin_src emacs-lisp
+(use-package org
+  :demand t
+  :ensure org-plus-contrib)
+#+end_src
+
 ** jsonrpc
 :PROPERTIES:
 :ID:       438DEA77-5F4B-4E1D-8A1D-E65DA588927F

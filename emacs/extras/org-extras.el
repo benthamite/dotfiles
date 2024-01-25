@@ -37,7 +37,6 @@
 (require 'org-agenda)
 (require 'org-capture)
 (require 'org-clock)
-;; (require 'org-pomodoro) ; org-extras/:catch: Cannot open load file: No such file or directory, org-pomodoro
 ;; (require 'org-roam-extras) ; recursion error
 (require 'paths)
 (require 's)
@@ -710,16 +709,6 @@ LANG is the language of the code block."
 	('clock (org-evaluate-time-range))
 	(_ (org-decrypt-entry)))
     (user-error "Not in org-mode")))
-
-;;;;; org-pomodoro
-
-(defun org-extras-pomodoro-format-timer ()
-  "Format the `org-pomodoro' timer.
-We set this value by advising `org-pomodoro' so that the pomodoro count is
-updated."
-  (setq org-pomodoro-format
-	(concat "🍅 %s"
-		(format "|%s" (number-to-string org-pomodoro-count)))))
 
 ;;;;; to sort
 

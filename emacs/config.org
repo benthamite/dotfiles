@@ -3820,7 +3820,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
    "A-H-M-s-q" 'files-extras-kill-this-buffer-switch-to-other-window
    "A-H-q" 'files-extras-kill-other-buffer
    "H-n" 'files-extras-new-empty-buffer
-   "H-N" 'files-extras-new-buffer-in-current-mode
+   "A-H-n" 'files-extras-new-buffer-in-current-mode
    "H-S" 'files-extras-save-all-buffers
    "A-H-M-s-SPC" 'files-extras-switch-to-alternate-buffer
    "A-H-v" 'files-extras-internet-archive-dwim)

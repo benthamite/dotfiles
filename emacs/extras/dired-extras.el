@@ -114,7 +114,7 @@ losing the `put back' option."
     (copy-file existing-file new-file))
   (revert-buffer))
 
-;;;; image-dired
+;;;;; image-dired
 
 (defun dired-extras-image-dired-current-directory ()
   "Run `image-dired' in the current directory."
@@ -122,7 +122,7 @@ losing the `put back' option."
   (require 'image-dired)
   (image-dired-show-all-from-dir (dired-current-directory)))
 
-;;;; all-the-icons-dired
+;;;;; all-the-icons-dired
 
 (declare-function all-the-icons-dired-mode "all-the-icons-dired")
 (defun dired-extras-all-the-icons-activate ()
@@ -132,7 +132,7 @@ losing the `put back' option."
       (all-the-icons-dired-mode)
     (all-the-icons-dired-mode -1)))
 
-;;;; gnus-dired
+;;;;; gnus-dired
 
 ;; replaces `gnus-dired-mail-buffers' function so it works on
 ;; `message-mode' derived modes, such as `mu4e-compose-mode'

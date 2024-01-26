@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: transient-group
+# key: tg
+# contributor: Pablo Stafforini
+# --
+   "$1"
+    $2

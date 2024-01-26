@@ -747,7 +747,8 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :init
-  (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook))
+  (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook)
+  (tlon-init-startup))
 (elpaca-wait)    
 #+end_src
 
@@ -10886,7 +10887,7 @@ CLOCK: [2021-05-18 Tue 18:26]--[2021-05-18 Tue 18:54] =>  0:28
 CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :browse-url)
+#+begin_src emacs-lisp :results silent
 (use-feature browse-url
   :config
   (setq browse-url-browser-function 'eww-browse-url)
@@ -10908,7 +10909,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 
 /[[file:extras/browse-url-extras.el][browse-url-extras]] collects my extensions for ~browse-url~.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :browse-url)
+#+begin_src emacs-lisp :results silent
 (use-personal-package browse-url-extras
   :after browse-url s f
   :demand t

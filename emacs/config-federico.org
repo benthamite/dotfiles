@@ -11,7 +11,6 @@
  (:anki-editor . nil)
  (:auto-commit-mode . nil)
  (:bbdb . nil)
- (:browse-url . nil)
  (:copilot . nil)
  (:corfu-doc-terminal . nil)
  (:corfu-terminal . nil)
@@ -66,6 +65,7 @@
  (paths-dir-dotfiles . (file-name-concat (getenv "HOME") "source/dotfiles/"))
  (paths-dir-source . (file-name-concat (getenv "HOME") "source/"))
  (paths-dir-repos . (file-name-concat (getenv "HOME") "source/"))
+ (paths-dir-tlon-repos . (file-name-concat (getenv "HOME") "source/"))
  (paths-dir-org . (file-name-concat paths-dir-dropbox "tlon/fede/"))
  (paths-dir-org-roam . (file-name-concat paths-dir-dropbox "tlon/fede/"))
  (paths-dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat paths-dir-source "biblioteca-altruismo-eficaz/"))
@@ -574,14 +574,16 @@ Disable hl-sentence because I do not like it...
 ;; Code run on a long timer: aimed at running after all of Pablo's deferred calls
 (run-at-time 60 nil (lambda
                       ()
-                      (progn
-			(setq display-time-format "%a %e %b %R")
-			(tab-bar-extras-reset)
-                        (cancel-function-timers 'org-extras-agenda-switch-to-agenda-current-day)
-			(cancel-function-timers 'citar-extras-update-old-bibliography)
-			;; (display-wttr-mode -1)
-			;; (doom-modeline--github-fetch-notifications)
-			)))
+                      (message "Running Fede's last hook")
+		      (setq display-time-format "%a %e %b %R")
+		      (tab-bar-extras-reset)
+                      (cancel-function-timers 'org-extras-agenda-switch-to-agenda-current-day)
+		      (cancel-function-timers 'citar-extras-update-old-bibliography)
+		      ;; (display-wttr-mode -1)
+		      ;; (doom-modeline--github-fetch-notifications)
+		      ))
+
+(add-hook 'tlon-init-post-init-hook (lambda ()  (message "Running Fede's last hook")))
 #+end_src
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)

@@ -29,7 +29,6 @@
 
 (require 'org-gcal)
 (require 'el-patch)
-(require 'hydra)
 
 ;;;; Functions
 
@@ -40,33 +39,35 @@
   (if-let ((id (org-entry-get nil "entry-id")))
       (browse-url
        (concat
-        "https://calendar.google.com/calendar/u/0/r/eventedit/"
-        (replace-regexp-in-string
-         "\n"
-         ""
-         (base64-encode-string
-          (replace-regexp-in-string
-           "/"
-           " "
-           id))))))
+	"https://calendar.google.com/calendar/u/0/r/eventedit/"
+	(replace-regexp-in-string
+	 "\n"
+	 ""
+	 (base64-encode-string
+	  (replace-regexp-in-string
+	   "/"
+	   " "
+	   id))))))
   (user-error "No id found"))
 
 ;;;###autoload
-(defhydra org-gcal-extras-hydra (:exit t :hint nil)
-  "
-_f_etch all       |_s_ync all        |_p_ost at point   |_d_elete at point |                   |_t_oggle debug
-_F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_lear token      |re_l_oad secret  "
-  ("f" org-gcal-fetch)
-  ("F" org-gcal-fetch-buffer)
-  ("s" org-gcal-sync)
-  ("S" org-gcal-sync-buffer)
-  ("p" org-gcal-post-at-point)
-  ("d" org-gcal-delete-at-point)
-  ("o" org-gcal-extras-open-at-point)
-  ("u" org-gcal--sync-unlock)
-  ("c" org-gcal-sync-tokens-clear)
-  ("t" org-gcal-toggle-debug)
-  ("l" org-gcal-reload-client-id-secret))
+(transient-define-prefix org-gcal-extras-dispatch ()
+  "Dispatch an `org-gcal' command."
+  [["Fetch"
+    ("f" "fetch all" org-gcal-fetch)
+    ("F" "fetch buffer" org-gcal-fetch-buffer)]
+   ["Sync"
+    ("s" "sync all" org-gcal-sync)
+    ("S" "sync buffer" org-gcal-sync-buffer)]
+   ["Act"
+    ("p" "post at point" org-gcal-post-at-point)
+    ("d" "open at point" org-gcal-delete-at-point)
+    ("o" "delete at point" org-gcal-extras-open-at-point)]
+   ["Setup"
+    ("u" "unlock sync" org-gcal--sync-unlock)
+    ("c" "clear token" org-gcal-sync-tokens-clear)
+    ("t" "toggle debug" org-gcal-toggle-debug)
+    ("l" "reload secret" org-gcal-reload-client-id-secret)]])
 
 ;;;;; Patched functions
 

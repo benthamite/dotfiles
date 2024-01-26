@@ -3177,39 +3177,6 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
   :config
   (push 'register-alist savehist-additional-variables)
 
-  (defhydra hydra-register
-    (:hint nil
-           :color blue)
-    "
-_c_opy        |_n_umber      |p_o_int
-_i_nsert      |incremen_t_   |_j_ump        |   _f_rame    | _l_ist
-------------^^+------------^^+------------^^+  frame_s_et  + _v_iew       ||_q_uit||
-_p_repend     |_r_ectangle   |        |   _w_indow   | _h_elm
-_a_pend       |_k_macro      |                    "
-    ;; text
-    ("c" copy-to-register)
-    ("i" insert-register)
-    ("p" prepend-to-register)
-    ("a" append-to-register)
-    ;; number
-    ("n" number-to-register)
-    ("t" increment-register)
-    ;; rectangle/kmacro
-    ("r" copy-rectangle-to-register)
-    ("k" kmacro-to-register)
-    ;; position
-    ("o" point-to-register)
-    ("j" jump-to-register)
-    ;; windows
-    ("w" window-configuration-to-register)
-    ("f" frame-configuration-to-register)
-    ("s" frameset-to-register)
-    ;; view
-    ("v" view-register)
-    ("l" list-registers)
-    ("h" consult-register)
-    ("q" nil))
-
   :general
   ("C-r" 'hydra-register/body))
 #+end_src

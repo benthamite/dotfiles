@@ -44,11 +44,17 @@
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-reset-wttr t
-  "Whether to reset weather information when `tab-bar-extras-mode' is activated."
+  "Whether to reset weather information when `tab-bar-extras-reset' is invoked."
   :type 'boolean
   :group 'tab-bar-extras)
 
 ;;;;; elements
+
+(defcustom tab-bar-extras-prefix-element
+  " "
+  "Element to display at the beginning of the tab-bar."
+  :type 'sexp
+  :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-date-element
   `(:eval (propertize display-time-string 'face 'faces-extras-display-time))
@@ -57,13 +63,13 @@
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-chemacs-element
-  `(" |  " chemacs-profile-name)
+  `(" " chemacs-profile-name)
   "Element to display the Chemacs profile."
   :type 'sexp
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-battery-element
-  `(" | " fancy-battery-mode-line)
+  `("" fancy-battery-mode-line)
   "Element to display the battery."
   :type 'sexp
   :group 'tab-bar-extras)
@@ -102,15 +108,12 @@
   :type 'sexp
   :group 'tab-bar-extras)
 
-(defcustom tab-bar-extras-prefix-element
-  " "
-  "Element to display at the beginning of the tab-bar."
-  :type 'sexp
-  :group 'tab-bar-extras)
-
-(defcustom tab-bar-extras-suffix-element
+(defcustom tab-bar-extras-separator-element
   " | "
-  "Element to display at the end of the tab-bar."
+  "Element to separate the tab-bar elements.
+Note that elements that the separator is already part of elements that do not
+always show (like Github or Telega notifications), because otherwise the
+separator would remain even when the elements are absent."
   :type 'sexp
   :group 'tab-bar-extras)
 

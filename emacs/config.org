@@ -614,10 +614,7 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 
 /[[https://github.com/jwiegley/use-package][use-package]] is a package organizer./
 
-- If statistics is enabled (see below), use package can produce very useful reports. Invoke ~use-package-report~, then press ~S~ with point on the 'Time' column to sort the packages by time; pressing the key again reverses the sort order.
-- [[https://jwiegley.github.io/use-package/keywords/][Keywords — use-package]]
-- Useful Reddit thread: [[https://www.reddit.com/r/emacs/comments/j2xezg/usepackage_best_practices/][use-package Best Practices : emacs]]
-- Note that you can expand the ~use-package~ macro and see what it will do by invoking ~pp-macroexpand-last-sexp~ with point at the end of the relevant sexp.
+We load ~use-package~ itself with ~elpaca~, then proceed to do the confiuration with ~use-package~.
 
 #+begin_src emacs-lisp :results silent
 (elpaca elpaca-use-package

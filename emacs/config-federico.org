@@ -204,6 +204,81 @@ Doom modeline
 
 (setq consult-preview-key nil)
 
+;; hydra — should be moved to transient eventually
+
+(use-package hydra
+  :demand t)
+
+(defhydra hydra-org-work
+  (:hint nil
+         :idle 0
+         :color blue)
+  "Tlön dashboard"
+  ("b" (org-id-goto "33BFC41C-324A-47E1-A313-8233A36B2346") "BAE")
+  ("r" (org-id-goto "87906C3B-B52B-4816-BCCA-BE3EA4B88968") "RAE")
+  ("f" (org-id-goto "809F6C1D-DDF7-4C6B-BB84-FFC082BE8601") "FM")
+  ("d" (org-id-goto "0079A5CD-A07B-4919-A76C-4F6E6841512D") "LBDLHD")
+  ("u" (org-id-goto "B168E4F1-D2E1-4D59-B88C-4CF924E82624") "EAN")
+  ("i" (org-id-goto "715D2C4E-4BEE-4EC4-B432-720DA35C21A9") "EAI")
+  ("h" (org-id-goto "B157C986-D75D-4244-A522-43DCBA2F0C8E") "HEAR")
+  ("g" (org-id-goto "97F7D54F-4F4A-45A4-9616-A0B548A049BE") "GPE")
+  ("c" (org-id-goto "7EDB8441-7EFA-43CC-B3DE-5682D55BCEE1") "Core")
+  )
+
+(defhydra hydra-dirs
+  (:exit t)
+  "Dired folders"
+  ("t" (hydra-dirs-tlon/body) "Tlön Dropbox" :column "Folders")
+  ("g" (hydra-dirs-google-drive/body) "Tlön Google Drive" :column "Folders")
+  ("w" (dired (file-name-concat (getenv "HOME") "www")) "Nginx www root" :column "Folders")
+  ("h" (dired "~/") "/Users/fede" :column "User" )
+  ("n" (dired "/opt/homebrew/etc/nginx/sites-available/") "Local Nginx config" :column "Config" )
+  ("o" (dired paths-dir-google-drive) "Google Drive" :column "User")
+  ("w" (dired paths-dir-downloads) "Downloads" :column "User")
+  ("x" (dired paths-dir-dropbox) "Dropbox" :column "User")
+  ("s" (dired (file-name-concat (getenv "HOME") "source")) "Source" :column "Folders")
+  ("." (dired-at-point) "File at point" :column "Other")
+  ("N" (dired "/ssh:root@tlon.team:/etc/nginx/sites-available/") "Nginx config" :column "DigitalOcean")
+  ("H" (dired "/ssh:fede@tlon.team:/home/fede") "/home/fede" :column "DigitalOcean")
+  ("/" (dired "/") "Root" :column "Other")
+  (";" (dired-jump) "Current buffer" :column "Other")
+  ("H-;" (dired-jump-other-window) "Current buffer in other window" :column "Other")
+  ("e" (dired paths-dir-emacs) "Emacs" :column "Config")
+  ("p" (dired (file-name-concat (getenv "HOME") ".config/emacs-profiles")) "Emacs profiles" :column "Config")
+  ("b" (dired (file-name-concat (getenv "HOME") "source/dotfiles/emacs")) "Pablo's Emacs config" :column "Config"))
+
+(defhydra hydra-dirs-tlon
+  (:exit t)
+  "Dired folders: Tlön Dropbox"
+  (";" (dired paths-dir-dropbox-tlon) "This folder")
+  ("b" (dired paths-dir-dropbox-tlon-BAE) "BAE")
+  ("c" (dired paths-dir-dropbox-tlon-core) "core")
+  ("d" (dired paths-dir-dropbox-tlon-LBDLH) "LBDLH")
+  ("f" (dired paths-dir-dropbox-tlon-fede) "fede")
+  ("g" (dired paths-dir-dropbox-tlon-GPE) "GPE")
+  ("h" (dired paths-dir-dropbox-tlon-HEAR) "HEAR")
+  ("l" (dired paths-dir-dropbox-tlon-leo) "leo")
+  ("p" (dired paths-dir-dropbox-tlon-LP) "LP")
+  ("r" (dired paths-dir-dropbox-tlon-RAE) "RAE")
+  ("s" (dired paths-dir-dropbox-tlon-FM) "FM")
+  ("u" (dired paths-dir-dropbox-tlon-EAN) "EAN"))
+
+(defhydra hydra-dirs-google-drive
+  (:exit t)
+  "Dired folders: Tlön Google Drive"
+  (";" (dired paths-dir-google-drive-tlon) "This folder")
+  ("b" (dired paths-dir-google-drive-tlon-BAE) "BAE")
+  ("c" (dired paths-dir-google-drive-tlon-core) "core")
+  ("d" (dired paths-dir-google-drive-tlon-LBDLH) "LBDLH")
+  ("f" (dired paths-dir-google-drive-tlon-fede) "fede")
+  ("g" (dired paths-dir-google-drive-tlon-GPE) "GPE")
+  ("h" (dired paths-dir-google-drive-tlon-HEAR) "HEAR")
+  ("l" (dired paths-dir-google-drive-tlon-leo) "leo")
+  ("p" (dired paths-dir-google-drive-tlon-LP) "LP")
+  ("r" (dired paths-dir-google-drive-tlon-RAE) "RAE")
+  ("s" (dired paths-dir-google-drive-tlon-FM) "FM")
+  ("u" (dired paths-dir-google-drive-tlon-EAN) "EAN"))
+
 (general-define-key
  "<kp-delete>" 'delete-char
  "<home>" 'beginning-of-line
@@ -259,21 +334,6 @@ Doom modeline
  "M-<left>" 'backward-word)
 
 
-(defhydra hydra-org-work
-  (:hint nil
-         :idle 0
-         :color blue)
-  "Tlön dashboard"
-  ("b" (org-id-goto "33BFC41C-324A-47E1-A313-8233A36B2346") "BAE")
-  ("r" (org-id-goto "87906C3B-B52B-4816-BCCA-BE3EA4B88968") "RAE")
-  ("f" (org-id-goto "809F6C1D-DDF7-4C6B-BB84-FFC082BE8601") "FM")
-  ("d" (org-id-goto "0079A5CD-A07B-4919-A76C-4F6E6841512D") "LBDLHD")
-  ("u" (org-id-goto "B168E4F1-D2E1-4D59-B88C-4CF924E82624") "EAN")
-  ("i" (org-id-goto "715D2C4E-4BEE-4EC4-B432-720DA35C21A9") "EAI")
-  ("h" (org-id-goto "B157C986-D75D-4244-A522-43DCBA2F0C8E") "HEAR")
-  ("g" (org-id-goto "97F7D54F-4F4A-45A4-9616-A0B548A049BE") "GPE")
-  ("c" (org-id-goto "7EDB8441-7EFA-43CC-B3DE-5682D55BCEE1") "Core")
-  )
 (dolist (template `(("b" "Tlön: BAE" entry
                      (id "33BFC41C-324A-47E1-A313-8233A36B2346")
                      "** TODO %?\n" :prepend t)
@@ -345,61 +405,6 @@ Doom modeline
 (setq org-extras-bbdb-anniversaries-heading nil)
 (setq mac-function-modifier '(:button 2))
 (setq real-auto-save-interval 10)
-
-(defhydra hydra-dirs
-  (:exit t)
-  "Dired folders"
-  ("t" (hydra-dirs-tlon/body) "Tlön Dropbox" :column "Folders")
-  ("g" (hydra-dirs-google-drive/body) "Tlön Google Drive" :column "Folders")
-  ("w" (dired (file-name-concat (getenv "HOME") "www")) "Nginx www root" :column "Folders")
-  ("h" (dired "~/") "/Users/fede" :column "User" )
-  ("n" (dired "/opt/homebrew/etc/nginx/sites-available/") "Local Nginx config" :column "Config" )
-  ("o" (dired paths-dir-google-drive) "Google Drive" :column "User")
-  ("w" (dired paths-dir-downloads) "Downloads" :column "User")
-  ("x" (dired paths-dir-dropbox) "Dropbox" :column "User")
-  ("s" (dired (file-name-concat (getenv "HOME") "source")) "Source" :column "Folders")
-  ("." (dired-at-point) "File at point" :column "Other")
-  ("N" (dired "/ssh:root@tlon.team:/etc/nginx/sites-available/") "Nginx config" :column "DigitalOcean")
-  ("H" (dired "/ssh:fede@tlon.team:/home/fede") "/home/fede" :column "DigitalOcean")
-  ("/" (dired "/") "Root" :column "Other")
-  (";" (dired-jump) "Current buffer" :column "Other")
-  ("H-;" (dired-jump-other-window) "Current buffer in other window" :column "Other")
-  ("e" (dired paths-dir-emacs) "Emacs" :column "Config")
-  ("p" (dired (file-name-concat (getenv "HOME") ".config/emacs-profiles")) "Emacs profiles" :column "Config")
-  ("b" (dired (file-name-concat (getenv "HOME") "source/dotfiles/emacs")) "Pablo's Emacs config" :column "Config"))
-
-
-(defhydra hydra-dirs-tlon
-  (:exit t)
-  "Dired folders: Tlön Dropbox"
-  (";" (dired paths-dir-dropbox-tlon) "This folder")
-  ("b" (dired paths-dir-dropbox-tlon-BAE) "BAE")
-  ("c" (dired paths-dir-dropbox-tlon-core) "core")
-  ("d" (dired paths-dir-dropbox-tlon-LBDLH) "LBDLH")
-  ("f" (dired paths-dir-dropbox-tlon-fede) "fede")
-  ("g" (dired paths-dir-dropbox-tlon-GPE) "GPE")
-  ("h" (dired paths-dir-dropbox-tlon-HEAR) "HEAR")
-  ("l" (dired paths-dir-dropbox-tlon-leo) "leo")
-  ("p" (dired paths-dir-dropbox-tlon-LP) "LP")
-  ("r" (dired paths-dir-dropbox-tlon-RAE) "RAE")
-  ("s" (dired paths-dir-dropbox-tlon-FM) "FM")
-  ("u" (dired paths-dir-dropbox-tlon-EAN) "EAN"))
-
-(defhydra hydra-dirs-google-drive
-  (:exit t)
-  "Dired folders: Tlön Google Drive"
-  (";" (dired paths-dir-google-drive-tlon) "This folder")
-  ("b" (dired paths-dir-google-drive-tlon-BAE) "BAE")
-  ("c" (dired paths-dir-google-drive-tlon-core) "core")
-  ("d" (dired paths-dir-google-drive-tlon-LBDLH) "LBDLH")
-  ("f" (dired paths-dir-google-drive-tlon-fede) "fede")
-  ("g" (dired paths-dir-google-drive-tlon-GPE) "GPE")
-  ("h" (dired paths-dir-google-drive-tlon-HEAR) "HEAR")
-  ("l" (dired paths-dir-google-drive-tlon-leo) "leo")
-  ("p" (dired paths-dir-google-drive-tlon-LP) "LP")
-  ("r" (dired paths-dir-google-drive-tlon-RAE) "RAE")
-  ("s" (dired paths-dir-google-drive-tlon-FM) "FM")
-  ("u" (dired paths-dir-google-drive-tlon-EAN) "EAN"))
 
 (setq org-structure-template-alist
       '(("a" . "export ascii")

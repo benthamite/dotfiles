@@ -29,6 +29,7 @@
 
 (require 'dired)
 (require 'el-patch)
+(require 'paths)
 
 ;;;; Variables
 

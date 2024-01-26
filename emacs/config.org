@@ -742,14 +742,14 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 #+begin_src emacs-lisp
 (use-package tlon-init
   :elpaca (tlon-init
-	   :host github
-	   :repo "tlon-team/tlon-init"
-	   :depth nil) ; clone entire repo, not just last commit
+           :host github
+           :repo "tlon-team/tlon-init"
+           :depth nil) ; clone entire repo, not just last commit
   :demand t
   :init
   (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook))
-  #+end_src
-  
+#+end_src
+
 ** no-littering
 :PROPERTIES:
 :ID:       21B40C49-BBD2-4E04-871B-BB578C92F71B
@@ -2270,7 +2270,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
   :demand t
   :config
   (add-hook 'tlon-init-post-init-hook #'faces-extras-load-custom-faces)
-  
+
   :general
   ("C-h C-f" 'faces-extras-describe-face))
 #+end_src
@@ -2534,12 +2534,12 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
         `(,tab-bar-extras-prefix-element
           ,tab-bar-extras-date-element
           ,tab-bar-extras-chemacs-element
-	  ,tab-bar-extras-battery-element
-	  ,tab-bar-extras-telega-element
-	  ,tab-bar-extras-github-element
-	  ,tab-bar-extras-pomodoro-element
-	  ,tab-bar-extras-suffix-element))
-          
+          ,tab-bar-extras-battery-element
+          ,tab-bar-extras-telega-element
+          ,tab-bar-extras-github-element
+          ,tab-bar-extras-pomodoro-element
+          ,tab-bar-extras-suffix-element))
+
   (add-hook 'tlon-init-post-init-hook #'tab-bar-extras-reset))
 #+end_src
 
@@ -2555,11 +2555,11 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   :defer 10
   :config
   (setq fancy-battery-show-percentage t)
-  
+
   (add-hook 'fancy-battery-mode-hook
-	    (lambda ()
-	      "Reset the tab to correctly show battery icon."
-	      (run-with-timer 10 nil #'tab-bar-extras-quick-reset)))
+            (lambda ()
+              "Reset the tab to correctly show battery icon."
+              (run-with-timer 10 nil #'tab-bar-extras-quick-reset)))
   (fancy-battery-mode))
 #+end_src
 
@@ -9959,7 +9959,8 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
 
 #+begin_src emacs-lisp :results silent
 (use-package bibtex-completion
-  :elpaca (bibtex-completion :version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
+  :elpaca (bibtex-completion
+           :version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
   :defer 5
   :config/el-patch
   ;; disable file watchers
@@ -10066,11 +10067,10 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 
 #+begin_src emacs-lisp :results silent
 (use-package citar
-  :elpaca
-  (citar :type git
-         :host github
-         :repo "emacs-citar/citar"
-         :includes (citar-org))
+  :elpaca (citar :type git
+                 :host github
+                 :repo "emacs-citar/citar"
+                 :includes (citar-org))
   :after oc vertico embark marginalia
   :demand t
   :config

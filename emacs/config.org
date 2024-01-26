@@ -640,8 +640,10 @@ We load ~use-package~ itself with ~elpaca~, then proceed to do the confiuration 
 :END:
 
 #+begin_src emacs-lisp
-(use-personal-package use-package-extras
-  :after use-package
+(use-package use-package-extras
+  :elpaca (use-package-extras
+           :host github :repo "benthamite/dotfiles"
+           :files ("emacs/extras/use-package-extras.el"))
   :demand t)
 #+end_src
 

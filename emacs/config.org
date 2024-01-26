@@ -2051,12 +2051,15 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   (setq tab-bar-extras-global-mode-string
         `(,tab-bar-extras-prefix-element
           ,tab-bar-extras-date-element
+          ,tab-bar-extras-separator-element
           ,tab-bar-extras-chemacs-element
+          ,tab-bar-extras-separator-element
           ,tab-bar-extras-battery-element
           ,tab-bar-extras-telega-element
           ,tab-bar-extras-github-element
           ,tab-bar-extras-pomodoro-element
-          ,tab-bar-extras-suffix-element))
+          ,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
+          ))
 
   (add-hook 'tlon-init-post-init-hook #'tab-bar-extras-reset))
 #+end_src

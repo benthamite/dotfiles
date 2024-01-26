@@ -431,6 +431,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#bibtex][bibtex]]
   - [[#bibtex-extras][bibtex-extras]]
   - [[#bibtex-completion][bibtex-completion]]
+  - [[#bibtex-completion-extras][bibtex-completion-extras]]
   - [[#org-roam-bibtex][org-roam-bibtex]]
   - [[#citar][citar]]
   - [[#citar-extras][citar-extras]]
@@ -747,6 +748,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :demand t
   :init
   (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook))
+(elpaca-wait)    
 #+end_src
 
 ** no-littering
@@ -3175,39 +3177,6 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
   :demand t
   :config
   (push 'register-alist savehist-additional-variables)
-
-  (defhydra hydra-register
-    (:hint nil
-           :color blue)
-    "
-_c_opy        |_n_umber      |p_o_int
-_i_nsert      |incremen_t_   |_j_ump        |   _f_rame    | _l_ist
-------------^^+------------^^+------------^^+  frame_s_et  + _v_iew       ||_q_uit||
-_p_repend     |_r_ectangle   |        |   _w_indow   | _h_elm
-_a_pend       |_k_macro      |                    "
-    ;; text
-    ("c" copy-to-register)
-    ("i" insert-register)
-    ("p" prepend-to-register)
-    ("a" append-to-register)
-    ;; number
-    ("n" number-to-register)
-    ("t" increment-register)
-    ;; rectangle/kmacro
-    ("r" copy-rectangle-to-register)
-    ("k" kmacro-to-register)
-    ;; position
-    ("o" point-to-register)
-    ("j" jump-to-register)
-    ;; windows
-    ("w" window-configuration-to-register)
-    ("f" frame-configuration-to-register)
-    ("s" frameset-to-register)
-    ;; view
-    ("v" view-register)
-    ("l" list-registers)
-    ("h" consult-register)
-    ("q" nil))
 
   :general
   ("C-r" 'hydra-register/body))
@@ -6252,6 +6221,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
    "s-c" 'tlon-babel-copy-dwim
    "s-t" 'tlon-babel-md-insert-cite-tag
    "s-u" 'tlon-babel-md-insert-element
+   "A-C-s-SPC" 'tlon-babel-md-beginning-of-buffer-dwim
    "A-C-s-<tab>" 'tlon-babel-md-end-of-buffer-dwim))
 #+end_src
 
@@ -9496,57 +9466,22 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
               "Set `bibtex-completion-bibliography' after `paths-files-bibliography-all' is set."
               (setq bibtex-completion-bibliography paths-files-bibliography-all)))
 
-  :config/el-patch
-  ;; disable file watchers
-  (defun bibtex-completion-init ()
-  "Check that the files and directories specified by the user actually exist.
-Also sets `bibtex-completion-display-formats-internal'."
-
-  ;; Remove current watch-descriptors for bibliography files:
-  (mapc (lambda (watch-descriptor)
-          (file-notify-rm-watch watch-descriptor))
-        bibtex-completion-file-watch-descriptors)
-  (setq bibtex-completion-file-watch-descriptors nil)
-
-  ;; Check that all specified bibliography files exist and add file
-  ;; watches for automatic reloading of the bibliography when a file
-  ;; is changed:
-  (el-patch-remove (mapc (lambda (file)
-                           (if  (f-file? file)
-                               (if bibtex-completion-watch-bibliography
-                                   (let ((watch-descriptor
-                                          (file-notify-add-watch file
-                                                                 '(change)
-                                                                 (lambda (event) (bibtex-completion-candidates)))))
-                                     (setq bibtex-completion-file-watch-descriptors
-                                           (cons watch-descriptor bibtex-completion-file-watch-descriptors))))
-                             (user-error "Bibliography file %s could not be found" file)))
-                         (bibtex-completion-normalize-bibliography)))
-
-  ;; Pre-calculate minimal widths needed by the format strings for
-  ;; various entry types:
-  (setq bibtex-completion-display-formats-internal
-        (mapcar (lambda (format)
-                  (let* ((format-string (cdr format))
-                         (fields-width 0)
-                         (string-width
-                          (string-width
-                           (s-format format-string
-                                     (lambda (field)
-                                       (setq fields-width
-                                             (+ fields-width
-                                                (string-to-number
-                                                 (or (cadr (split-string field ":"))
-                                                     ""))))
-                                       "")))))
-                    (-cons* (car format) format-string (+ fields-width string-width))))
-                bibtex-completion-display-formats)))
-
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)
   (setq bibtex-completion-notes-path paths-dir-bibliographic-notes)
   (setq bibtex-completion-pdf-field "file")
   (setq bibtex-dialect 'biblatex))
+#+end_src
+
+** bibtex-completion-extras
+:PROPERTIES:
+:ID:       E7420E36-9396-48A5-9FD2-6A4CA4610324
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package bibtex-completion-extras
+  :after bibtex-completion
+  :demand t)
 #+end_src
 
 ** org-roam-bibtex

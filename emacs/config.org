@@ -9496,47 +9496,48 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
   :config/el-patch
   ;; disable file watchers
   (defun bibtex-completion-init ()
-    "Check that the files and directories specified by the user actually exist.
+  "Check that the files and directories specified by the user actually exist.
 Also sets `bibtex-completion-display-formats-internal'."
 
-    ;; Remove current watch-descriptors for bibliography files:
-    (mapc (lambda (watch-descriptor)
-            (file-notify-rm-watch watch-descriptor))
-          bibtex-completion-file-watch-descriptors)
-    (setq bibtex-completion-file-watch-descriptors nil)
+  ;; Remove current watch-descriptors for bibliography files:
+  (mapc (lambda (watch-descriptor)
+          (file-notify-rm-watch watch-descriptor))
+        bibtex-completion-file-watch-descriptors)
+  (setq bibtex-completion-file-watch-descriptors nil)
 
-    ;; Check that all specified bibliography files exist and add file
-    ;; watches for automatic reloading of the bibliography when a file
-    ;; is changed:
-    (el-patch-remove (mapc (lambda (file)
-                             (if (f-file? file)
-                                 (let ((watch-descriptor
-                                        (file-notify-add-watch file
-                                                               '(change)
-                                                               (lambda (event) (bibtex-completion-candidates)))))
-                                   (setq bibtex-completion-file-watch-descriptors
-                                         (cons watch-descriptor bibtex-completion-file-watch-descriptors)))
-                               (user-error "Bibliography file %s could not be found" file)))
-                           (bibtex-completion-normalize-bibliography)))
+  ;; Check that all specified bibliography files exist and add file
+  ;; watches for automatic reloading of the bibliography when a file
+  ;; is changed:
+  (el-patch-remove (mapc (lambda (file)
+                           (if  (f-file? file)
+                               (if bibtex-completion-watch-bibliography
+                                   (let ((watch-descriptor
+                                          (file-notify-add-watch file
+                                                                 '(change)
+                                                                 (lambda (event) (bibtex-completion-candidates)))))
+                                     (setq bibtex-completion-file-watch-descriptors
+                                           (cons watch-descriptor bibtex-completion-file-watch-descriptors))))
+                             (user-error "Bibliography file %s could not be found" file)))
+                         (bibtex-completion-normalize-bibliography)))
 
-    ;; Pre-calculate minimal widths needed by the format strings for
-    ;; various entry types:
-    (setq bibtex-completion-display-formats-internal
-          (mapcar (lambda (format)
-                    (let* ((format-string (cdr format))
-                           (fields-width 0)
-                           (string-width
-                            (string-width
-                             (s-format format-string
-                                       (lambda (field)
-                                         (setq fields-width
-                                               (+ fields-width
-                                                  (string-to-number
-                                                   (or (cadr (split-string field ":"))
-                                                       ""))))
-                                         "")))))
-                      (-cons* (car format) format-string (+ fields-width string-width))))
-                  bibtex-completion-display-formats)))
+  ;; Pre-calculate minimal widths needed by the format strings for
+  ;; various entry types:
+  (setq bibtex-completion-display-formats-internal
+        (mapcar (lambda (format)
+                  (let* ((format-string (cdr format))
+                         (fields-width 0)
+                         (string-width
+                          (string-width
+                           (s-format format-string
+                                     (lambda (field)
+                                       (setq fields-width
+                                             (+ fields-width
+                                                (string-to-number
+                                                 (or (cadr (split-string field ":"))
+                                                     ""))))
+                                       "")))))
+                    (-cons* (car format) format-string (+ fields-width string-width))))
+                bibtex-completion-display-formats)))
 
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)

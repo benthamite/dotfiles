@@ -453,48 +453,20 @@ Doom modeline
 
 ;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
 (setq tab-bar-extras-global-mode-string
-      '(" "
-        ;; date & time
-        (:eval (propertize display-time-string 'face 'faces-extras-display-time))
+      `(,tab-bar-extras-prefix-element
+        ;; ,tab-bar-extras-date-element
+        ;; ,tab-bar-extras-separator-element
+        ,tab-bar-extras-chemacs-element
+        ;; ,tab-bar-extras-separator-element
+        ;; ,tab-bar-extras-battery-element
+        ,tab-bar-extras-telega-element
+        ,tab-bar-extras-github-element
+        ;; ,tab-bar-extras-pomodoro-element
+        ;; ,tab-bar-extras-suffix-element
+        ))
 
-        ;; Chemacs profile name
-        " |  " chemacs-profile-name
-
-        ;; telega notifications
-        (:eval (when (and
-                      (telega-server-live-p)
-                      (> (plist-get telega--unread-message-count :unread_count) 0))
-                 (concat " | " telega-mode-line-string)))
-
-        ;; github notifications
-        (:eval (when (> doom-modeline--github-notification-number 0)
-                 (concat
-                  " | "
-                  (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
-                                      :face 'doom-modeline-notification)
-                  (doom-modeline-vspc)
-                  (propertize
-                   (cond
-                    ((> doom-modeline--github-notification-number 99) "99+")
-                    (t (number-to-string doom-modeline--github-notification-number)))
-                   'face '(:inherit
-                           (doom-modeline-unread-number doom-modeline-notification))))))
-        " | "))
 (setq global-mode-string tab-bar-extras-global-mode-string)
-
-(defun tab-bar-extras-reset ()
-  "Reset the tab bar.
-This resets the clock, updates the tab-bar and its color, and fixes the
-mysterious proliferation of clocks."
-  (interactive)
-  (require 'calendar-extras)
-  (display-time)
-  (setq global-mode-string tab-bar-extras-global-mode-string)
-  (fancy-battery-mode -1)
-  (when calendar-extras-use-geolocation
-    (calendar-extras-set-location-variables-from-ip)))
-
-(add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
+(setq tab-bar-extras-reset-wttr nil)
 #+end_src
 
 ** hl-sentence

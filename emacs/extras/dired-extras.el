@@ -161,5 +161,69 @@ losing the `put back' option."
 	    (push (buffer-name buffer) buffers))))
       (nreverse buffers))))
 
+;;;;; Dispatcher
+
+(transient-define-prefix dired-extras-dispatch ()
+  "Dispatcher for Dired."
+  ["Dired folders"
+   ;; ("a" "apps" hydra-dirs-google-drive/body)
+   [("b" "bibliography" (lambda () (interactive) (dired paths-dir-personal-bibliography)))
+    ("d" "dotfiles" (lambda () (interactive) (dired paths-dir-dotfiles)))
+    ("e" "Emacs" (lambda () (interactive) (dired paths-dir-emacs)))
+    ("i" "Anki" (lambda () (interactive) (dired paths-dir-anki)))
+    ("j" "Health" (lambda () (interactive) (dired paths-dir-health)))
+    ("n" "Notes" (lambda () (interactive) (dired paths-dir-notes)))
+    ("o" "Google Drive" (lambda () (interactive) (dired paths-dir-google-drive)))
+    ("p" "People" (lambda () (interactive) (dired paths-dir-people)))
+    ;; ("t" "Tlön" hydra-dirs-tlon/body)
+    ;; ("H-t" "Tlön" hydra-dirs-tlon/body)
+    ("U" "Audiobooks" (lambda () (interactive) (dired paths-dir-audiobooks)))
+    ("v" "movies" (lambda () (interactive) (dired paths-dir-movies)))
+    ("w" "downloads" (lambda () (interactive) (dired paths-dir-downloads)))
+    ("x" "Dropbox" (lambda () (interactive) (dired paths-dir-dropbox)))
+    ("y" "Library: PDF" (lambda () (interactive) (dired paths-dir-pdf-library)))
+    ("z" "Library: HTML" (lambda () (interactive) (dired paths-dir-html-library)))
+    ]
+   ["Music"
+    ("m c" "classical" (lambda () (interactive) (dired paths-dir-music-classical)))
+    ("m p" "popular" (lambda () (interactive) (dired paths-dir-music-popular)))
+    ("m t" "tango" (lambda () (interactive) (dired paths-dir-music-tango)))
+    ("m s" "to sort" (lambda () (interactive) (dired paths-dir-music-to-sort)))]
+   ["Special"
+    ("." "File at point" (lambda () (interactive) (dired-at-point)))
+    ("/" "Root" (lambda () (interactive) (dired "/")))
+    ("SPC" "user" (lambda () (interactive) (dired "~/")))
+    (";" "Current buffer" dired-jump)
+    ("H-;" "Current buffer in other window" dired-jump-other-window)]
+   ["Tlön: Dropbox"
+    ("b" "Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
+    ("n" "EAN" (lambda () (interactive) (dired paths-dir-dropbox-tlon-EAN)))
+    ("m" "FM" (lambda () (interactive) (dired paths-dir-dropbox-tlon-FM)))
+    ("g" "GPE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-GPE)))
+    ("h" "HEAR" (lambda () (interactive) (dired paths-dir-dropbox-tlon-HEAR)))
+    ("d" "LBDLH" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LBDLH)))
+    ("p" "LP" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LP)))
+    ("r" "RAE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-RAE)))
+    ("t" "tlon" (lambda () (interactive) (dired paths-dir-dropbox-tlon)))
+    ("c" "core" (lambda () (interactive) (dired paths-dir-dropbox-tlon-core)))
+    ("f" "fede" (lambda () (interactive) (dired paths-dir-dropbox-tlon-fede)))
+    ("l" "leo" (lambda () (interactive) (dired paths-dir-dropbox-tlon-leo)))
+    ]
+   ["Tlön: Drive"
+    ("H-b" "Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
+    ("H-n" "EAN" (lambda () (interactive) (dired paths-dir-google-drive-tlon-EAN)))
+    ("H-m" "FM" (lambda () (interactive) (dired paths-dir-google-drive-tlon-FM)))
+    ("H-g" "GPE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-GPE)))
+    ("H-h" "HEAR" (lambda () (interactive) (dired paths-dir-google-drive-tlon-HEAR)))
+    ("H-d" "LBDLH" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LBDLH)))
+    ("H-p" "LP" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LP)))
+    ("H-r" "RAE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-RAE)))
+    ("H-t" "tlon" (lambda () (interactive) (dired paths-dir-google-drive-tlon)))
+    ("H-c" "core" (lambda () (interactive) (dired paths-dir-google-drive-tlon-core)))
+    ("H-l" "leo" (lambda () (interactive) (dired paths-dir-google-drive-tlon-leo)))
+    ("H-f" "fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))
+    ]
+   ])
+
 (provide 'dired-extras)
 ;;; dired-extras.el ends here

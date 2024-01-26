@@ -27,7 +27,14 @@
 
 ;;; Code:
 
-(require 'zotra)
+(require 'bibtex-extras)
+(require 'doi-utils)
+;; (require 'ebib-extras) ; recusrive
+(require 'ebib-utils)
+(require 'eww-extras)
+(require 'paths)
+(require 'tlon-babel-refs)
+(require 'zotra) ; recursive
 
 ;;;; Functions
 
@@ -38,7 +45,7 @@
   "Prompt the user to select a value for `org-cite-global-bibliography'."
   (require 'tlon-babel)
   (completing-read "Bibfile" (list
-                              tlon-babel-file-fluid
+                              tlon-babel-refs-file-fluid
                               paths-file-personal-bibliography-new)))
 
 (defun zotra-extras-add-entry-set-bibfile (orig-fun &optional
@@ -46,18 +53,15 @@
   "Advice to set `org-cite-global-bibliography' before Zotra add commands.
 ORIG-FUN, URL, ENTRY-FORMAT, and BIBFILE are arguments passed to
 `zotra-add-entry'."
-  (setq zotra-extras-most-recent-bibliography-file (zotra-extras-set-bibfile))
-  (funcall orig-fun url entry-format zotra-extras-most-recent-bibliography-file))
+  (let ((bibfile (or bibfile
+		     (setq zotra-extras-most-recent-bibliography-file (zotra-extras-set-bibfile)))))
+    (funcall orig-fun url entry-format bibfile)))
 
 (advice-add 'zotra-add-entry :around #'zotra-extras-add-entry-set-bibfile)
 
+(declare-function org-ref-clean-bibtex-entry "org-ref-bibtex")
 (defun zotra-after-get-bibtex-entry-hook-function ()
   "Function to trigger with `zotra-after-add-entry-hook'."
-  (require 'ebib-utils)
-  (require 'ebib-extras)
-  (require 'doi-utils)
-  (require 'bibtex-extras)
-  (require 'org-ref-bibtex)
   ;; (revert-buffer nil t)
   (goto-char (point-max))
   (bibtex-extras-convert-titleaddon-to-journaltitle)

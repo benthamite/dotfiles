@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(require 'paths)
 (require 'vc)
 
 ;;;; User options
@@ -103,7 +104,8 @@ If PRIVATE is non-nil, make it a private repository."
    (format
     "%s create -d \"%s\" %s %s/%s"
     vc-extras-hub-executable description (if private "--private" "") account name))
-  (message "Repository %s/%s created" account name))
+  (when (y-or-n-p (format "Repository %s/%s created. Open in Dired? " account name))
+    (dired default-directory)))
 
 (provide 'vc-extras)
 ;;; vc-extras.el ends here

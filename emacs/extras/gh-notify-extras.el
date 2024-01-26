@@ -27,7 +27,11 @@
 
 ;;; Code:
 
+(require 'doom-modeline-segments)
+(require 'el-patch)
 (require 'gh-notify)
+(require 'paths)
+(require 'w3m)
 
 ;;;; Functions
 

@@ -5,7 +5,6 @@
 :TOC:      ignore
 :END:
 #+filetags: :project:
-
 * exordium
 :PROPERTIES:
 :ID:       66EACB4A-84D2-42AE-9F85-EF30DA714A17
@@ -58,24 +57,23 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 :CONTENTS:
 - [[#exordium][exordium]]
 - [[#table-of-contents][table of contents]]
-- [[#introductory][introductory]]
-  - [[#key-bindings][key bindings]]
-  - [[#profiling][profiling]]
-  - [[#installation][installation]]
-  - [[#other-config-files][other config files]]
 - [[#early-init][early-init]]
 - [[#package-management][package management]]
   - [[#elpaca][elpaca]]
   - [[#use-package][use-package]]
+  - [[#use-package-extras][use-package-extras]]
 - [[#foundational][foundational]]
+  - [[#org][org]]
+  - [[#jsonrpc][jsonrpc]]
   - [[#seq][seq]]
   - [[#general][general]]
+  - [[#paths][paths]]
+  - [[#tlon-init][tlon-init]]
   - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
   - [[#transient][transient]]
-  - [[#hydra][hydra]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
   - [[#bytecomp][bytecomp]]
@@ -203,7 +201,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dired-aux][dired-aux]]
   - [[#dired-extras][dired-extras]]
   - [[#dired-x][dired-x]]
-  - [[#dired-async][dired-async]]
   - [[#image-dired][image-dired]]
   - [[#all-the-icons-dired][all-the-icons-dired]]
   - [[#nerd-icons-dired][nerd-icons-dired]]
@@ -239,8 +236,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-gcal][org-gcal]]
   - [[#org-gcal-extras][org-gcal-extras]]
   - [[#calfw][calfw]]
-  - [[#calfw-org][calfw-org]]
   - [[#calfw-blocks][calfw-blocks]]
+  - [[#calfw-org][calfw-org]]
   - [[#time][time]]
   - [[#tmr][tmr]]
   - [[#display-wttr][display-wttr]]
@@ -271,8 +268,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#consult-dir][consult-dir]]
   - [[#consult-git-log-grep][consult-git-log-grep]]
   - [[#consult-gh][consult-gh]]
+  - [[#consult-mu][consult-mu]]
   - [[#consult-yasnippet][consult-yasnippet]]
-  - [[#consult-spotify][consult-spotify]]
   - [[#embark-consult][embark-consult]]
   - [[#marginalia][marginalia]]
   - [[#orderless][orderless]]
@@ -344,6 +341,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#prog-mode][prog-mode]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
+  - [[#lisp][lisp]]
   - [[#s][s]]
   - [[#debug][debug]]
   - [[#edebug][edebug]]
@@ -355,6 +353,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
   - [[#csv-mode][csv-mode]]
+  - [[#yaml][yaml]]
   - [[#js2-mode][js2-mode]]
   - [[#puni][puni]]
   - [[#hideshow][hideshow]]
@@ -413,6 +412,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-mime][org-mime]]
   - [[#elgantt][elgantt]]
   - [[#org-pomodoro][org-pomodoro]]
+  - [[#org-pomodoro-extras][org-pomodoro-extras]]
   - [[#pomodoro-centile][pomodoro-centile]]
 - [[#note-taking][note-taking]]
   - [[#org-roam][org-roam]]
@@ -446,6 +446,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#zotra][zotra]]
   - [[#zotra-extras][zotra-extras]]
   - [[#internet-archive][internet-archive]]
+  - [[#scihub][scihub]]
 - [[#email][email]]
   - [[#simple][simple]]
   - [[#sendmail][sendmail]]
@@ -507,297 +508,15 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#custom][custom]]
   - [[#fatebook][fatebook]]
   - [[#tetris][tetris]]
-  - [[#tlon-init][tlon-init]]
 - [[#personal][personal]]
   - [[#keyboard-maestro][Keyboard Maestro]]
+- [[#appendices][appendices]]
+  - [[#key-bindings][key bindings]]
+  - [[#profiling][profiling]]
+  - [[#installation][installation]]
+  - [[#other-config-files][other config files]]
 - [[#local-variables][local variables]]
 :END:
-
-* introductory
-:PROPERTIES:
-:CUSTOM_ID: introduction
-:ID:       A7940400-DD17-4B0B-A9B2-565A207D680C
-:END:
-:LOGBOOK:
-CLOCK: [2021-10-20 Wed 19:56]--[2021-10-20 Wed 19:59] =>  0:03
-CLOCK: [2021-07-24 Sat 10:45]--[2021-07-24 Sat 10:56] =>  0:11
-CLOCK: [2021-07-23 Fri 15:26]--[2021-07-23 Fri 15:58] =>  0:32
-CLOCK: [2021-07-13 Tue 18:29]--[2021-07-13 Tue 18:47] =>  0:18
-CLOCK: [2021-07-11 Sun 21:41]--[2021-07-11 Sun 22:14] =>  0:33
-CLOCK: [2021-12-03 Fri 21:49]--[2021-12-03 Fri 21:56] =>  0:07
-CLOCK: [2021-06-15 Tue 20:45]--[2021-06-15 Tue 20:52] =>  0:07
-CLOCK: [2021-06-03 Thu 16:09]--[2021-06-03 Thu 16:37] =>  0:28
-CLOCK: [2021-06-01 Tue 21:00]--[2021-06-01 Tue 21:59] =>  0:59
-CLOCK: [2021-05-18 Tue 09:22]--[2021-05-18 Tue 09:32] =>  0:10
-CLOCK: [2021-05-14 Fri 15:45]--[2021-05-14 Fri 16:01] =>  0:00
-CLOCK: [2021-04-27 Tue 22:10]--[2021-04-27 Tue 22:26] =>  0:16
-CLOCK: [2021-03-31 Wed 10:10]--[2021-03-31 Wed 11:08] =>  0:58
-CLOCK: [2021-03-30 Tue 15:21]--[2021-03-30 Tue 18:00] =>  2:39
-CLOCK: [2021-03-30 Tue 09:43]--[2021-03-30 Tue 11:46] =>  2:03
-CLOCK: [2021-03-22 Mon 21:40]--[2021-03-22 Mon 21:49] =>  0:09
-CLOCK: [2021-03-20 Sat 13:16]--[2021-03-20 Sat 13:30] =>  0:14
-CLOCK: [2021-03-04 Thu 10:10]--[2021-03-04 Thu 10:37] =>  0:27
-CLOCK: [2021-03-02 Tue 21:12]--[2021-03-02 Tue 21:50] =>  0:38
-CLOCK: [2021-03-01 Mon 10:11]--[2021-03-01 Mon 10:28] =>  0:17
-CLOCK: [2021-02-23 Tue 10:45]--[2021-02-23 Tue 10:54] =>  0:09
-CLOCK: [2021-02-04 Thu 19:36]--[2021-02-04 Thu 20:54] =>  1:18
-CLOCK: [2021-02-04 Thu 18:40]--[2021-02-04 Thu 19:33] =>  0:53
-CLOCK: [2021-02-04 Thu 16:40]--[2021-02-04 Thu 18:35] =>  1:55
-CLOCK: [2021-02-04 Thu 12:27]--[2021-02-04 Thu 12:44] =>  0:17
-CLOCK: [2021-02-04 Thu 12:19]--[2021-02-04 Thu 12:27] =>  0:08
-CLOCK: [2021-02-04 Thu 09:30]--[2021-02-04 Thu 10:49] =>  1:19
-CLOCK: [2021-02-03 Wed 22:09]--[2021-02-03 Wed 22:46] =>  0:37
-CLOCK: [2021-02-03 Wed 20:24]--[2021-02-03 Wed 20:33] =>  0:09
-CLOCK: [2021-02-03 Wed 18:27]--[2021-02-03 Wed 20:00] =>  1:33
-CLOCK: [2021-02-03 Wed 19:43]--[2021-02-03 Wed 19:43] =>  0:00
-CLOCK: [2021-04-08 Thu 13:56]--[2021-04-08 Thu 14:12] =>  0:16
-CLOCK: [2021-04-03 Sat 19:06]--[2021-04-03 Sat 19:31] =>  0:25
-CLOCK: [2022-05-29 Sun 09:25]--[2022-05-29 Sun 10:31] =>  1:13
-CLOCK: [2021-07-24 Sat 09:51]--[2021-07-24 Sat 09:58] =>  0:07
-CLOCK: [2021-07-14 Wed 22:51]--[2021-07-14 Wed 23:09] =>  0:18
-CLOCK: [2021-03-07 Sun 18:52]--[2021-03-07 Sun 18:57] =>  0:05
-CLOCK: [2021-03-04 Thu 09:05]--[2021-03-04 Thu 09:22] =>  0:17
-CLOCK: [2021-02-03 Wed 16:32]--[2021-02-03 Wed 18:27] =>  1:55
-CLOCK: [2021-02-03 Wed 16:01]--[2021-02-03 Wed 16:32] =>  0:31
-CLOCK: [2021-02-03 Wed 15:40]--[2021-02-03 Wed 16:01] =>  0:21
-CLOCK: [2021-02-03 Wed 13:56]--[2021-02-03 Wed 15:02] =>  1:06
-CLOCK: [2021-01-31 Sun 15:22]--[2021-01-31 Sun 16:01] =>  0:39
-CLOCK: [2021-01-31 Sun 10:07]--[2021-01-31 Sun 10:28] =>  0:21
-CLOCK: [2021-01-24 Sun 11:41]--[2021-01-24 Sun 11:48] =>  0:07
-CLOCK: [2021-01-23 Sat 08:40]--[2021-01-23 Sat 08:46] =>  0:06
-CLOCK: [2021-01-22 Fri 09:29]--[2021-01-22 Fri 09:32] =>  0:03
-CLOCK: [2021-01-12 Tue 19:22]--[2021-01-12 Tue 19:27] =>  0:05
-CLOCK: [2021-01-12 Tue 11:41]--[2021-01-12 Tue 12:42] =>  1:01
-CLOCK: [2021-01-08 Fri 13:34]--[2021-01-08 Fri 13:34] =>  0:00
-CLOCK: [2021-01-06 Wed 22:04]--[2021-01-06 Wed 22:14] =>  0:10
-CLOCK: [2021-01-06 Wed 13:46]--[2021-01-06 Wed 13:58] =>  0:12
-CLOCK: [2021-01-06 Wed 12:30]--[2021-01-06 Wed 12:53] =>  0:23
-CLOCK: [2021-01-06 Wed 11:02]--[2021-01-06 Wed 11:34] =>  0:32
-CLOCK: [2021-01-03 Sun 22:11]--[2021-01-03 Sun 22:18] =>  0:07
-CLOCK: [2021-01-03 Sun 22:03]--[2021-01-03 Sun 22:07] =>  0:04
-CLOCK: [2021-01-02 Sat 14:00]--[2021-01-02 Sat 14:06] =>  0:06
-CLOCK: [2020-12-31 Thu 13:56]--[2020-12-31 Thu 14:25] =>  0:29
-CLOCK: [2020-12-31 Thu 13:46]--[2020-12-31 Thu 13:52] =>  0:06
-CLOCK: [2020-12-29 Tue 15:07]--[2020-12-29 Tue 15:18] =>  0:11
-CLOCK: [2020-12-22 Tue 09:57]--[2020-12-22 Tue 10:25] =>  0:28
-CLOCK: [2020-12-19 Sat 12:18]--[2020-12-19 Sat 12:22] =>  0:04
-CLOCK: [2020-12-14 Mon 18:39]--[2020-12-14 Mon 18:44] =>  0:05
-CLOCK: [2020-12-07 Mon 18:15]--[2020-12-07 Mon 18:27] =>  0:12
-CLOCK: [2020-10-20 Tue 17:48]--[2020-10-20 Tue 18:10] =>  0:22
-CLOCK: [2020-10-20 Tue 17:27]--[2020-10-20 Tue 17:38] =>  0:11
-CLOCK: [2020-10-20 Tue 11:30]--[2020-10-20 Tue 11:36] =>  0:06
-CLOCK: [2020-10-19 Mon 20:24]--[2020-10-19 Mon 20:39] =>  0:15
-CLOCK: [2020-10-15 Thu 20:37]--[2020-10-15 Thu 20:52] =>  0:15
-CLOCK: [2020-10-15 Thu 18:56]--[2020-10-15 Thu 19:06] =>  0:10
-CLOCK: [2020-10-15 Thu 18:11]--[2020-10-15 Thu 18:26] =>  0:15
-CLOCK: [2020-10-14 Wed 07:31]--[2020-10-14 Wed 07:52] =>  0:21
-CLOCK: [2020-10-12 Mon 18:15]--[2020-10-12 Mon 19:58] =>  1:43
-CLOCK: [2020-10-12 Mon 15:28]--[2020-10-12 Mon 15:29] =>  0:01
-CLOCK: [2020-10-11 Sun 21:10]--[2020-10-11 Sun 21:15] =>  0:05
-CLOCK: [2020-10-11 Sun 10:05]--[2020-10-11 Sun 10:19] =>  0:14
-CLOCK: [2020-10-10 Sat 18:21]--[2020-10-10 Sat 18:25] =>  0:04
-CLOCK: [2020-10-05 Mon 18:56]--[2020-10-05 Mon 18:58] =>  0:02
-CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
-CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
-CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
-:END:
-
-** key bindings
-:PROPERTIES:
-:ID:       a47d148a-1b5e-4850-a1a7-6cd745bad696
-:END:
-Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~Control~ (~C~), ~Meta~ (~M~), ~Super~ (~s~), ~Hyper~ (~H~), and ~Alt~ (~A~). (The letter abbreviation for the ~Super~ modifier is ~s~ because ~S~ is assigned to the ~Shift~ key.) I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "pseudo modifiers", or mappings between individual keys and combinations of two or more Emacs modifiers:
-
-[[file:etc/moonlander-emacs.png]]
-
-So when you see a monstrous key binding such as ~C-H-M-s-d~, remember that everything that precedes the final key (in this case, ~d~) represents a single key press (in this case, ~l~). For details, see my [[../karabiner/modifications.org][Karabiner config file]], specifically the "Key associations" section.
-
-** debugging                                                       :noexport:
-:PROPERTIES:
-:ID:       ED2955EA-3BD8-4058-A973-3CC87847D9A5
-:END:
-:LOGBOOK:
-CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
-:END:
-- Run ~bug-hunter-init-file~ (from the [[id:0C19171B-8DFA-4E06-9E17-45C1F9158C28][elisp-bug-hunter]] package) and select "automatic error detection" (~e~).
-- Run ~emacs -q~ or ~emacs --debug-init~.
-- Cut suspected sections of the org file (~org-cut-subtree~), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections, while leaving the literal org file intact.
-- Use ~magit-log-buffer-file~ or ~git-timemachine~ to explore previous versions of your config file.
-- Set ~debug-on-error~ to ~t~ to see a backtrace of an error. Or call ~toggle-debug-on-error~ interactively.
-  - To determine what function is changing the value of a variable, use ~debug-on-variable-change~.
-  - To determine what function is generating a particular message, use ~debug-on-message~.
-- Bisect the init file until you locate the culprit.
-  - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).
-- If Emacs becomes unresponsive, run ~pkill -USR2 Emacs~ in a terminal. Emacs will likely trigger a backtrace, which you can inspect to diagnose the issue.
-- You may want to periodically save a stable init file so that you can temporarily use Emacs with all your customizations while debugging your current init file (instead of having to use an external editor or a non-customized Emacs). Say you call this stable file ~stable.el~. Then you can tell Emacs to load this file on startup file with ~emacs -q -l ~/stable.el~.
-- Use ~edebug-defun~. See [[https://org-roam.discourse.group/t/need-help-getting-noter-pdfs-and-org-roam-bibtex-to-work/794/45?u=pablo][this discussion]].
-- For org-related issues (e.g. tangling the config file), use ~org-lint~, which checks the current buffer for syntax mistakes.
-- For more ideas, see:
-  - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
-  - [[https://whatacold.io/blog/2022-07-17-emacs-elisp-debug/][Emacs Debugging Basics - whatacold's space]]
-  - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
-  - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]]
-
-** profiling
-:PROPERTIES:
-:ID:       60B7A58C-A79A-4EEF-A91D-EECC85CFA173
-:END:
-- If you use ~use-package~, the command ~use-package-report~ displays a table showing the impact of each package on load times.
-- You may also want to try [[https://www.emacswiki.org/emacs/ProfileDotEmacs][profile-dotemacs]].
-
-** installation
-:PROPERTIES:
-:ID:       6712DA4C-BA45-4E74-8AEF-C903462D9BCB
-:END:
-:LOGBOOK:
-CLOCK: [2021-04-20 Tue 22:00]--[2021-04-20 Tue 23:28] =>  1:28
-CLOCK: [2021-04-20 Tue 20:55]--[2021-04-20 Tue 21:26] =>  0:31
-CLOCK: [2021-04-03 Sat 14:40]--[2021-04-03 Sat 15:07] =>  0:27
-CLOCK: [2021-04-02 Fri 22:15]--[2021-04-02 Fri 22:35] =>  0:20
-CLOCK: [2021-03-31 Wed 22:00]--[2021-03-31 Wed 23:00] =>  1:00
-CLOCK: [2021-03-31 Wed 21:40]--[2021-03-31 Wed 21:47] =>  0:07
-CLOCK: [2021-03-27 Sat 10:08]--[2021-03-27 Sat 13:05] =>  2:57
-CLOCK: [2021-03-27 Sat 07:49]--[2021-03-27 Sat 09:10] =>  1:21
-CLOCK: [2021-03-27 Sat 16:48]--[2021-03-27 Sat 16:50] =>  0:02
-CLOCK: [2021-03-22 Mon 15:46]--[2021-03-22 Mon 15:53] =>  0:07
-CLOCK: [2021-03-22 Mon 15:00]--[2021-03-22 Mon 15:20] =>  0:20
-CLOCK: [2021-02-27 Sat 17:20]--[2021-02-27 Sat 18:00] =>  0:40
-CLOCK: [2021-02-25 Thu 08:30]--[2021-02-25 Thu 11:54] =>  3:24
-CLOCK: [2021-02-07 Sun 15:01]--[2021-02-07 Sun 15:18] =>  0:17
-CLOCK: [2021-02-07 Sun 14:52]--[2021-02-07 Sun 14:54] =>  0:26
-CLOCK: [2021-02-07 Sun 14:30]--[2021-02-07 Sun 14:49] =>  0:19
-CLOCK: [2021-02-04 Thu 08:10]--[2021-02-04 Thu 09:25] =>  1:15
-CLOCK: [2020-09-22 Tue 12:15]--[2020-09-22 Tue 13:01] =>  0:46
-CLOCK: [2020-09-22 Tue 10:50]--[2020-09-22 Tue 12:15] =>  1:25
-CLOCK: [2022-04-27 Wed 16:21]--[2022-04-27 Wed 16:44] =>  0:23
-CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
-:END:
-
-For personal reference, these are the most recent Emacs installations (in reverse chronological order).
-
-[2023-02-23 Thu]
-
-#+begin_src shell :tangle no
-brew tap d12frosted/emacs-plus
-brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
-#+end_src
-
-[2023-02-23 Thu 02:10]
-
-#+begin_src shell :tangle no
-brew tap d12frosted/emacs-plus
-brew install emacs-plus@28 --with-dbus --with-no-titlebar --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
-#+end_src
-
-- Very slow.
-- Theme broke for some reason.
-- Some functions (e.g. ~keymap-unset~) not available).
-- Telega doesn't show profile pics
-
-[2023-02-14 Tue 20:07]:
-
-#+begin_src shell :tangle no
-brew tap d12frosted/emacs-plus
-brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
-#+end_src
-
-[2023-02-07 Tue 21:52]:
-
-#+begin_src shell :tangle no
-brew install emacs-mac --with-dbus --with-starter --with-natural-title-bar --with-native-comp --with-mac-metal --with-xwidgets --with-imagemagick  --with-librsvg  --with-spacemacs-icon
-#+end_src
-
-** other config files
-:PROPERTIES:
-:ID:       20E3D45E-D8AB-44BD-A5E2-C6DF9C20744E
-:END:
-
-:LOGBOOK:
-CLOCK: [2022-06-29 Wed 18:08]--[2022-06-29 Wed 18:18] =>  0:10
-CLOCK: [2022-06-17 Fri 21:20]--[2022-06-17 Fri 21:47] =>  0:27
-CLOCK: [2021-08-02 Mon 21:29]--[2021-08-02 Mon 21:30] =>  0:01
-CLOCK: [2021-06-30 Wed 20:43]--[2021-06-30 Wed 21:15] =>  0:32
-CLOCK: [2021-06-30 Wed 19:32]--[2021-06-30 Wed 20:02] =>  0:30
-CLOCK: [2021-06-05 Sat 19:34]--[2021-06-05 Sat 19:41] =>  0:07
-CLOCK: [2021-06-03 Thu 16:09]--[2021-06-03 Thu 16:37] =>  0:28
-CLOCK: [2021-06-03 Thu 13:47]--[2021-06-03 Thu 13:52] =>  0:05
-CLOCK: [2021-06-03 Thu 07:21]--[2021-06-03 Thu 07:50] =>  0:29
-CLOCK: [2021-06-02 Wed 22:00]--[2021-06-02 Wed 22:11] =>  0:11
-CLOCK: [2021-06-02 Wed 21:44]--[2021-06-02 Wed 21:50] =>  0:06
-CLOCK: [2021-05-26 Wed 19:32]--[2021-05-26 Wed 19:44] =>  0:12
-CLOCK: [2021-05-23 Sun 19:52]--[2021-05-23 Sun 20:02] =>  0:10
-CLOCK: [2021-05-22 Sat 16:36]--[2021-05-22 Sat 16:44] =>  0:08
-CLOCK: [2021-04-03 Sat 18:21]--[2021-04-03 Sat 18:36] =>  0:15
-CLOCK: [2021-03-27 Sat 17:00]--[2021-03-27 Sat 17:32] =>  0:32
-CLOCK: [2021-03-26 Fri 13:31]--[2021-03-26 Fri 14:14] =>  0:43
-CLOCK: [2021-03-26 Fri 12:47]--[2021-03-26 Fri 13:18] =>  0:00
-CLOCK: [2021-03-26 Fri 10:47]--[2021-03-26 Fri 10:57] =>  0:10
-CLOCK: [2021-03-23 Tue 14:30]--[2021-03-23 Tue 16:45] =>  2:15
-CLOCK: [2021-03-23 Tue 14:10]--[2021-03-23 Tue 14:30] =>  0:20
-CLOCK: [2021-03-21 Sun 16:23]--[2021-03-21 Sun 16:32] =>  0:09
-CLOCK: [2021-02-28 Sun 10:12]--[2021-02-28 Sun 10:27] =>  0:15
-CLOCK: [2021-02-04 Thu 12:49]--[2021-02-04 Thu 14:36] =>  1:47
-:END:
-The below is a link dump for config files and other related links I have found useful in the past or may want to check out for ideas at some point in the future.
-- [[https://github.com/emacs-tw/awesome-emacs][Awesome Emacs]]: A list of useful Emacs packages.
-- [[https://sam217pa.github.io/2016/09/02/how-to-build-your-own-spacemacs/][How to build your own spacemacs · Samuel Barreto]]
-- [[https://www.reddit.com/r/emacs/comments/3lt3c6/using_spacemacs_modeline_in_vanilla_emacs/][Using SpaceMacs mode-line in vanilla Emacs : emacs]]
-- [[https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-start-up-so-quickly][How does Emacs Doom start so quickly?]] Might be useful for ideas on how to speed up config file.
-- [[https://prelude.emacsredux.com/en/latest/][Emacs Prelude]]. I've seen this recommended. Might want to check it out.
-- [[https://www.reddit.com/r/emacs/comments/ehjcu2/screenshot_polishing_my_emacs_who_said_an_old/][Polishing my Emacs -- who said an old tool can't look modern]]
-  [[https://github.com/mbriggs/.emacs.d-oldv2/blob/master/init/init-keymaps.el][.emacs.d-oldv2/init-keymaps.el at master · mbriggs/.emacs.d-oldv2]]. Lots of key bindings.
-
-Literate configuration
-- [[https://commonplace.doubleloop.net/setting-up-a-spacemacs-literate-config-file][Setting up a spacemacs literate config file]]
-- [[https://www.reddit.com/r/spacemacs/comments/atuzd9/does_anyone_have_their_dotfile_redone_in_literate/][Does anyone have their dotfile redone in literate programming with babel? : spacemacs]]
-- Diego Zamboni, /[[https://leanpub.com/lit-config][Literate configuration]]/
-- [[https://emacs.sJtackexchange.com/questions/3143/can-i-use-org-mode-to-structure-my-emacs-or-other-el-configuration-file][elisp - Can I use org-mode to structure my .emacs or other .el configuration file? - Emacs Stack Exchange]]
-
-Some useful config files:
-- [[https://zzamboni.org/post/my-emacs-configuration-with-commentary/][Diego Zamboni]]
-- [[https://jamiecollinson.com/blog/my-emacs-config/][Jamie Collinson]]
-- [[https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el][Jethro Kuan]]. Creator or ~org-roam~ and author of some great posts on note-taking. Not literal.
-- [[https://github.com/joodie/emacs-literal-config/blob/master/emacs.org][Joost Diepenmat]]
-- [[https://github.com/gjstein/emacs.d][Gregory Stein]]. Author of the excellent [[http://cachestocaches.com/][Caches to Caches]] blog.
-- [[https://luca.cambiaghi.me/vanilla-emacs/readme.html][Luca Cambiaghi]]
-- [[https://config.phundrak.com/emacs][Lucien Cartier-Tilet]] (Spacemacs)
-- [[https://github.com/isamert/dotfiles/blob/master/emacs/index.org][Isa Mert Gurbuz]]
-  - Has a cool [[https://isamert.net/index.html][blog]] about org mode and other topics.
-- [[https://www.mfoot.com/blog/2015/11/22/literate-emacs-configuration-with-org-mode/][Martin Foot]]
-  - Has a very simple init file.
-  - [[https://github.com/mfoo/dotfiles/blob/master/.emacs.d/config.org][.org file]]
-- [[https://github.com/mpereira/.emacs.d][Murilo Pereira]].
-  - Very well organized. The author has also written some excellent blog posts about Emacs.
-- [[https://out-of-cheese-error.netlify.app/spacemacs-config][OutOfCheeseError]]
-- [[https://protesilaos.com/dotemacs/][Protesilaos Stavrou]]
-  - [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][here]] is the last commit before he abandoned ~use-package~ and ~straight~
-- [[https://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua]]. A legend in the Emacs community.
-- [[https://github.com/novoid/dot-emacs/blob/master/config.org][Karl Voit]].
-  - Author of ~Memacs~, prolific blogger.
-- [[https://github.com/sriramkswamy/dotemacs][Sriram Krishnaswamy]] ([[https://sriramkswamy.github.io/][website]])
-  - [[https://sriramkswamy.github.io/dotemacs/][.org file]]
-- [[https://github.com/sfromm/emacs.d#twitter][Stephen Fromm]]. Has an extended list of config files [[https://github.com/sfromm/emacs.d#inspiration][here]].
-- [[https://tecosaur.github.io/emacs-config/config.html][Tecosaur]]
-- [[https://www.tquelch.com/posts/emacs-config/#languages][Tim Quelch]]
-- [[http://irfu.cea.fr/Pisp/vianney.lebouteiller/emacs.html#orgbcdc8b2][Vianney Lebouteiller]]
-- [[https://github.com/bixuanzju/emacs.d/blob/master/emacs-init.org#meta][Xuan Bi]].
-- [[https://github.com/turbana/emacs-config][GitHub - turbana/emacs-config: My personal emac's configuration]]. Some potentially useful stuff on native comp, debugging, etc.
-- [[https://github.com/creichert/dotfiles/blob/master/emacs/.emacs][dotfiles/.emacs at master · creichert/dotfiles · GitHub]]. Has detailed Gnus, Slack config.
-- [[https://github.com/ianpan870102/yay-evil-emacs][yay-evil-emacs]]. slick design.
-- [[https://github.com/rememberYou/.emacs.d][GitHub - rememberYou/.emacs.d: 🎉 Personal GNU Emacs configuration]]. Has a bunch of Reddit posts explaining how he uses the different packages.
-- [[https://github.com/nkicg6/emacs-config/blob/master/config.org][emacs-config/config.org at master · nkicg6/emacs-config · GitHub]]. Found it while searching for org-ref.
-- [[https://github.com/yiufung/dot-emacs/blob/master/init.el][dot-emacs/init.el at master · yiufung/dot-emacs · GitHub]]. Not literal. Lots of packages. Gnus, notmuch, Slack, etc. Author has great post on Anki.
-- [[https://github.com/tshu-w/.emacs.d][GitHub - tshu-w/.emacs.d: My personal Emacs config, based on Spacemacs]]. Has nice note-taking config, with org-roam, org-ref, Zotero, etc (see [[https://github.com/tshu-w/.emacs.d/blob/master/lisp/lang-org.el][here]]).
-- [[https://github.com/raxod502/radian/blob/e3aad124c8e0cc870ed09da8b3a4905d01e49769/emacs/radian.el][Radon Rosborough]]. Author of ~straight~ package manager.
-- [[https://github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org][Gonçalo Santos]]. Author of ~org-noter~.
-- [[https://github.com/tonyaldon/emacs.d/blob/master/init.el][Tony Aldon]]. Has some slick [[https://www.youtube.com/channel/UCQCrbWOFRmFYqoeou0Qv3Kg][videos]] on ~org-table~. Optimized key bindings.
-- [[https://github.com/progfolio/.emacs.d/blob/master/init.org][Nicholas Vollmer]]. Maitantainer of ~elpaca~. I copied his ~org-habits~ config. Haven't yet looked at the rest but looks like there's plenty of valuable material.
-- [[https://github.com/yantar92/emacs-config/blob/master/config.org][emacs-config/config.org at master · yantar92/emacs-config · GitHub]]. Focus on knowledge management with org. Lots of good stuff.
-- [[https://github.com/xenodium/dotsies/blob/main/dots.org][Álvaro Ramírez]]. Also users Karabiner.
-- [[https://github.com/karthink/.emacs.d][Karthik Chikmagalur]]. Has excellent blog posts on ~avy~, ~eshell~, ~re-builder~, etc.
-- [[https://github.com/iqbalansari/dotEmacs][Iqbal Ansari]].
-- [[https://www.danielclemente.com/emacs/confi.html][Daniel Clemente]].
-- [[https://github.com/patrl][Patrick Elliott]]
 
 * early-init
 :PROPERTIES:
@@ -895,76 +614,36 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 
 /[[https://github.com/jwiegley/use-package][use-package]] is a package organizer./
 
-- If statistics is enabled (see below), use package can produce very useful reports. Invoke ~use-package-report~, then press ~S~ with point on the 'Time' column to sort the packages by time; pressing the key again reverses the sort order.
-- [[https://jwiegley.github.io/use-package/keywords/][Keywords — use-package]]
-- Useful Reddit thread: [[https://www.reddit.com/r/emacs/comments/j2xezg/usepackage_best_practices/][use-package Best Practices : emacs]]
-- Note that you can expand the ~use-package~ macro and see what it will do by invoking ~pp-macroexpand-last-sexp~ with point at the end of the relevant sexp.
-- To use ~use-package~ with /features/ rather than /packages/, you can check whether something is a feature with ~featurep~.
-- Sometimes we want to defer the loading of a package, but not indefinitely. I find it useful to rely on a variety of conditional deferrals, depending on the needs of the particular case:
-  - /time deferral/: we use ~:defer~ followed by a number, such that when Emacs has been idle for this number of seconds, the package will load.
-  - /command deferral/: we use ~:general~ to bind a key sequence to a command belonging to the package we want to load. The package will load when the key sequence  is executed.
-  - /hook deferral/: we use ~:hook~ to create a hook that calls a package function when some event occurs. Upon the occurrence of this event, typically the loading of a major mode, the package will load.
-  - /package deferral/: we use ~:after~ to load the package after some other package which itself has been conditionally deferred (using one of the other methods above). Note that if  ~use-package-always-defer~ is set to ~t~, you need to add ~demand t~ to the declaration.
+We load ~use-package~ itself with ~elpaca~, then proceed to do the confiuration with ~use-package~.
 
 #+begin_src emacs-lisp :results silent
-;; github.com/raxod502/radian/blob/develop/emacs/radian.el
-(defmacro use-feature (name &rest args)
-  "Like `use-package' but accounting for asynchronous installation.
-NAME and ARGS are in `use-package'."
-  (declare (indent defun))
-  `(use-package ,name
-     :elpaca nil
-     ,@args))
-
-(if (tlon-init-machine-pablo-p)
-    (defmacro use-personal-package (name &rest args)
-      "Like `use-package' but accounting for personal packages.
-   NAME and ARGS are in `use-package'."
-      (declare (indent defun))
-      `(use-package ,name
-         :elpaca nil
-         :load-path paths-dir-extras
-         ,@args))
-  (defmacro use-personal-package (name &rest args)
-    "Like `use-package' but accounting for personal packages.
-   NAME and ARGS are in `use-package'."
-    (declare (indent defun))
-    `(use-package ,name
-       :elpaca (,name
-                :host github
-                :repo "benthamite/dotfiles"
-                :files ,(list (file-name-concat
-                               "emacs/extras"
-                               (file-name-with-extension (symbol-name (eval `(quote ,name))) "el"))))
-       ,@args)))
-
 (elpaca elpaca-use-package
   (elpaca-use-package-mode)
   (setq elpaca-use-package-by-default t))
 
+(use-package use-package
+  :demand t
+  :config
+  (setq use-package-verbose t)
+  (setq use-package-compute-statistics t)
+  (setq use-package-always-ensure nil)
+  (setq use-package-always-defer t)
+  (setq use-package-hook-name-suffix nil) ; use real name for hooks, i.e. do not omit the `-hook' bit
+  (setq use-package-minimum-reported-time 0.1))
+
 (elpaca-wait)
-
-(setq use-package-verbose t)
-(setq use-package-compute-statistics t)
-(setq use-package-always-ensure nil)
-(setq use-package-always-defer t)
-(setq use-package-hook-name-suffix nil)       ; use real name for hooks, i.e. do not omit the `-hook' bit
-(setq use-package-minimum-reported-time 0.1) ; report if loading a package takes longer than 100 ms
-
-;; we load `org-mode' early to prevent version conflicts
-;; (use-package org
-;; :demand t
-;; :ensure org-plus-contrib
-;; )
 #+end_src
 
-*** use-package-ensure-system-package
+** use-package-extras
 :PROPERTIES:
-:ID:       5C17424A-4950-4745-B7FD-F0CACEB48AFB
+:ID:       A1D2F9BE-0983-4CE8-89C2-6727149F3268
 :END:
 
-#+begin_src emacs-lisp :results silent
-(use-package use-package-ensure-system-package
+#+begin_src emacs-lisp
+(use-package use-package-extras
+  :elpaca (use-package-extras
+           :host github :repo "benthamite/dotfiles"
+           :files ("emacs/extras/use-package-extras.el"))
   :demand t)
 #+end_src
 
@@ -972,6 +651,32 @@ NAME and ARGS are in `use-package'."
 :PROPERTIES:
 :ID:       B2CADEA2-F8B7-4E8E-8FB0-D6B59658933D
 :END:
+** org
+:PROPERTIES:
+:ID:       C73C4B08-960E-4EA6-B92F-A7657B56FA1C
+:END:
+
+We load ~org-mode~ early to prevent version conflicts. The package is configured properly later (see =org= section).
+
+#+begin_src emacs-lisp
+(use-package org
+  :demand t
+  :ensure org-plus-contrib)
+#+end_src
+
+** jsonrpc
+:PROPERTIES:
+:ID:       438DEA77-5F4B-4E1D-8A1D-E65DA588927F
+:END:
+
+#+begin_src emacs-lisp
+  ;; (unload-feature 'jsonrpc t)
+  (use-package jsonrpc
+    :elpaca (jsonrpc
+                     :host github
+                     :repo "emacs-straight/jsonrpc")
+    :demand t)
+#+end_src
 ** seq
 :PROPERTIES:
 :ID:       FD3A9A18-BDB8-4D52-9F5C-8E040FA042A2
@@ -1013,6 +718,35 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :bind
   ("C-A-b" . 'general-describe-keybindings))
 (elpaca-wait)
+#+end_src
+
+** paths
+:PROPERTIES:
+:ID:       9D90809B-4CCF-4058-BB8B-396CF12B6E3F
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package paths
+  :demand t)
+#+end_src
+
+** tlon-init
+:PROPERTIES:
+:ID:       BCE74006-DDB4-4AF5-AAFA-D44BC6AF55A7
+:END:
+
+
+/~tlon-init~ is a private package that my team uses to manage their respective config files./
+
+#+begin_src emacs-lisp
+(use-package tlon-init
+  :elpaca (tlon-init
+           :host github
+           :repo "tlon-team/tlon-init"
+           :depth nil) ; clone entire repo, not just last commit
+  :demand t
+  :init
+  (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook))
 #+end_src
 
 ** no-littering
@@ -1110,486 +844,6 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :demand t)
 #+end_src
 
-** hydra
-:PROPERTIES:
-:ID:       00E7E217-E02E-489B-968D-E49431FD5ECC
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-15 Fri 11:19]--[2022-07-15 Fri 12:01] =>  0:42
-CLOCK: [2021-07-23 Fri 12:19]--[2021-07-23 Fri 12:36] =>  0:17
-CLOCK: [2021-06-25 Fri 21:36]--[2021-06-25 Fri 21:37] =>  0:01
-CLOCK: [2021-03-30 Tue 08:50]--[2021-03-30 Tue 09:02] =>  0:12
-:END:
-
-/[[https://github.com/abo-abo/hydra][hydra]] makes Emacs bindings that stick around./
-
-#+begin_src emacs-lisp :results silent
-(use-package hydra
-  :demand t
-
-  :general
-  ("H-d" 'hydra-dirs/body
-   "H-f" 'hydra-files/body
-   "H-l" 'hydra-org-notes/body
-   "H-O" 'hydra-major-modes/body))
-(elpaca-wait)
-#+end_src
-
-*** resources
-:PROPERTIES:
-:ID:       A6CE7CD9-B940-4221-9BE4-2BF0776D7637
-:END:
-
-https://oremacs.com/2015/02/04/pre-hydra-post/
-https://sriramkswamy.github.io/dotemacs/#orgheadline141
-
-*** major modes
-:PROPERTIES:
-:ID:       E6290A57-7035-4ADB-89F6-9CCADF2D74DB
-:END:
-:LOGBOOK:
-CLOCK: [2021-04-22 Thu 22:08]--[2021-04-22 Thu 22:23] =>  0:15
-CLOCK: [2021-04-22 Thu 17:57]--[2021-04-22 Thu 18:21] =>  0:24
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-major-modes
-  (:exit t
-         :idle 0.5)
-  "Major modes"
-  ("a" (files-extras-switch-to-most-recent-buffer-in-mode 'org-agenda-mode) "Agenda")
-  ("c" (files-extras-switch-to-most-recent-buffer-in-mode 'calendar-mode) "Calendar")
-  ("d" (files-extras-switch-to-most-recent-buffer-in-mode 'dired-mode) "Dired")
-  ("e" (files-extras-switch-to-most-recent-buffer-in-mode 'elfeed-search-mode) "Elfeed")
-  ("f" (files-extras-switch-to-most-recent-buffer-in-mode 'fundamental-mode) "Fundamental")
-  ("h" (files-extras-switch-to-most-recent-buffer-in-mode 'helpful-mode) "Helpful")
-  ("i" (files-extras-switch-to-most-recent-buffer-in-mode 'Info-mode) "Info")
-  ("j" (files-extras-switch-to-most-recent-buffer-in-mode 'ledger-mode) "Ledger")
-  ("k" (files-extras-switch-to-most-recent-buffer-in-mode 'slack-message-buffer-mode) "Slack")
-  ("l" (files-extras-switch-to-most-recent-buffer-in-mode 'emacs-lisp-mode) "Emacs Lisp")
-  ("n" (files-extras-switch-to-most-recent-buffer-in-mode 'snippet-mode) "Snippet")
-  ("o" (files-extras-switch-to-most-recent-buffer-in-mode 'org-mode) "Org")
-  ("p" (files-extras-switch-to-most-recent-buffer-in-mode 'pdf-view-mode) "PDF")
-  ("s" (files-extras-switch-to-most-recent-buffer-in-mode 'eshell-mode) "Eshell")
-  ("z" (files-extras-switch-to-most-recent-buffer-in-mode 'special-mode) "Special")
-  ("t" (files-extras-switch-to-most-recent-buffer-in-mode 'twittering-mode) "Twittering")
-  ("w" (files-extras-switch-to-most-recent-buffer-in-mode 'eww-mode) "Eww")
-  ("x" (files-extras-switch-to-most-recent-buffer-in-mode 'mhtml-mode) "XHTML+")
-  ("y" (files-extras-switch-to-most-recent-buffer-in-mode 'python-mode) "Python"))
-#+end_src
-
-*** files
-:PROPERTIES:
-:ID:       39E06A29-2AEC-4EB4-A0D0-7E1A64832B18
-:END:
-:LOGBOOK:
-CLOCK: [2023-08-27 Sun 15:36]--[2023-08-27 Sun 16:10] =>  0:34
-CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:05] =>  0:00
-CLOCK: [2022-10-01 Sat 18:06]--[2022-10-01 Sat 18:14] =>  0:08
-CLOCK: [2021-07-13 Tue 18:20]--[2021-07-13 Tue 18:57] =>  0:37
-CLOCK: [2021-03-31 Wed 11:21]--[2021-03-31 Wed 11:35] =>  0:14
-CLOCK: [2021-03-07 Sun 11:06]--[2021-03-07 Sun 11:55] =>  0:49
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-files
-  (:exit t)
-  "Buffers"
-  ("." (find-file paths-file-inbox-mobile) "inbox-mobile")
-  ("," (find-file paths-file-inbox-desktop) "inbox-desktop")
-  ("a" (org-extras-agenda-switch-to-agenda-current-day) "agenda")
-  ("c" (find-file paths-file-config) "config")
-  ("d" (find-file paths-file-tlon-docs) "tlon-docs")
-  ("e" (files-extras-open-extras-package) "extras")
-  ("h" (find-file paths-file-tlon-ledger) "tlon-ledger")
-  ("i" (find-file paths-file-anki) "anki")
-  ("j" (find-file paths-file-ledger) "ledger")
-  ("k" (find-file paths-file-karabiner) "karabiner")
-  ("o" (switch-to-buffer "*notes*") "notes")
-  ("p" (hydra-files-packages/body) "packages")
-  ("q" (find-file paths-file-quotes) "quotes")
-  ("r" (find-file paths-file-calendar) "calendar")
-  ("s" (switch-to-buffer "*scratch*") "scratch")
-  ("v" (find-file paths-file-films) "films")
-  ("w" (find-file paths-file-work) "work")
-  ("z" (find-file paths-file-variables) "variables"))
-
-(defhydra hydra-files-packages
-  (:exit t)
-  "packages"
-  ("b" (files-extras-open-elpaca-package "tlon-babel") "tlon-babel" :column "tlön")
-  ("c" (files-extras-open-elpaca-package "tlon-core") "tlon-core")
-  ("i" (files-extras-open-elpaca-package "tlon-init") "tlon-init")
-  ("a" (files-extras-open-elpaca-package "internet-archive") "internet-archive" :column "personal")
-  ("l" (files-extras-open-elpaca-package "bib") "bib")
-  ("g" (files-extras-open-elpaca-package "goldendict-ng") "glondendict-ng")
-  ("o" (files-extras-open-elpaca-package "macos") "macos")
-  ("m" (files-extras-open-elpaca-package "mullvad") "mullvad")
-  ("p" (files-extras-open-elpaca-package "pomodoro-centile") "pomodoro-centile"))
-#+end_src
-
-*** org headings
-:PROPERTIES:
-:ID:       FBC1D388-0EFA-452D-828D-44724CF99191
-:END:
-:LOGBOOK:
-CLOCK: [2021-04-03 Sat 10:40]--[2021-04-03 Sat 10:41] =>  0:01
-CLOCK: [2021-04-03 Sat 10:24]--[2021-04-03 Sat 10:33] =>  0:09
-CLOCK: [2021-03-07 Sun 11:55]--[2021-03-07 Sun 12:13] =>  0:18
-CLOCK: [2021-03-07 Sun 11:01]--[2021-03-07 Sun 11:06] =>  0:05
-CLOCK: [2021-02-24 Wed 16:02]--[2021-02-24 Wed 16:26] =>  0:24
-:END:
-
-**** notes.org
-:PROPERTIES:
-:ID:       C3A44EA2-5523-45DD-8100-6228D80ECAC8
-:END:
-:LOGBOOK:
-CLOCK: [2021-04-03 Sat 10:41]--[2021-04-03 Sat 11:20] =>  0:39
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-org-notes
-  (:exit t
-         :idle 0.5)
-  "Org headings"
-  ("SPC" (org-roam-extras-id-goto "B67C920B-D855-4A27-A35C-1DAC56580DA7") "Anki habit")
-  ("i" (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1") "Anki")
-  ("p" (org-roam-extras-id-goto "0070312F-6233-4BED-98F4-A2BAAEE8DAFF") "audiobooks")
-  ("b" (org-roam-extras-id-goto "7A788F19-30F5-4504-B47F-CE693AF3EA7E") "books")
-  ("u" (org-roam-extras-id-goto "78577411-554E-4EEC-B669-C014A9581540") "Current book")
-  ("r" (org-roam-extras-id-goto "1C5DCC5A-DA18-4CBD-8E2E-205766A656D6") "Documentaries")
-  ("z" (org-roam-extras-id-goto "8F8E5495-A0D8-451A-B1F1-0A8706CBF6A0") "eablogs.net")
-  ("e" (org-roam-extras-id-goto "96BBA849-B4CF-41C0-ABA3-A5D901BCDB18") "Email")
-  ("d" (org-roam-extras-id-goto "6504C81B-28F0-44C3-BFC0-2F3E648974F0") "Feeds")
-  ("v" (org-roam-extras-id-goto "E821F19E-C619-4895-A084-54D0A2772BAE") "films")
-  ("f" (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C") "finance")
-  ("/" (org-roam-extras-id-goto "D9D71BF0-6BD6-40A5-9896-E58C7D9556B7") "inbox")
-  ("m" (org-roam-extras-id-goto "E65E393D-8694-4E23-994E-BA59A8063FCF") "Keyboard Maestro")
-  ("k" (org-roam-extras-id-goto "6F0A4889-C303-4930-8512-757AAD310535") "Khan Academy")
-  ("l" (org-roam-extras-id-goto "C308562B-222E-47E2-9A5F-B31EDB29569A") "Leonardo")
-  ("," (org-roam-extras-id-goto "E1C1F691-8358-4DDF-AC71-F46B883411BB") "morning routine")
-  ("." (org-roam-extras-id-goto "ADAA1E78-2904-4EF4-938C-F599A5C90822") "night routine")
-  ("c" (org-roam-extras-id-goto "7CE82ABB-A23F-41F6-A29E-0B95553A8FEE") "podcasts")
-  ("s" (org-roam-extras-id-goto "3513061C-5868-4EBC-9F77-9814AB776011") "Slack")
-  ("j" (org-roam-extras-id-goto "356B7595-EC5B-4DF4-949C-A637537128E4") "sleep")
-  ("y" (org-roam-extras-id-goto "FBDB7FC0-7650-48A0-933D-AE9606C2B621") "Spotify")
-  ("t" (hydra-org-work/body) "tlon")
-  ("n" (org-roam-extras-id-goto "9696939D-A8B7-4179-A5C8-FEBB017DC9EF") "Telegram")
-  ("q" (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E") "YouTube")
-  ;; ("RET'" (org-roam-extras-id-goto "") "")
-  ;; ("TAB'" (org-roam-extras-id-goto "") "")
-  ;; ("='" (org-roam-extras-id-goto "") "")
-  ;; ("-'" (org-roam-extras-id-goto "") "")
-  ;; ("('" (org-roam-extras-id-goto "") "")
-  ("H-a" (org-extras-id-notes-with-clock "a"))
-  ("H-b" (org-extras-id-notes-with-clock "b"))
-  ("H-c" (org-extras-id-notes-with-clock "c"))
-  ("H-d" (org-extras-id-notes-with-clock "d"))
-  ("H-e" (org-extras-id-notes-with-clock "e"))
-  ("H-f" (org-extras-id-notes-with-clock "f"))
-  ("H-g" (org-extras-id-notes-with-clock "g"))
-  ("H-h" (org-extras-id-notes-with-clock "h"))
-  ("H-i" (org-extras-id-notes-with-clock "i"))
-  ("H-j" (org-extras-id-notes-with-clock "j"))
-  ("H-k" (org-extras-id-notes-with-clock "k"))
-  ("H-l" (org-extras-id-notes-with-clock "l"))
-  ("H-m" (org-extras-id-notes-with-clock "m"))
-  ("H-n" (org-extras-id-notes-with-clock "n"))
-  ("H-o" (org-extras-id-notes-with-clock "o"))
-  ("H-p" (org-extras-id-notes-with-clock "p"))
-  ("H-q" (org-extras-id-notes-with-clock "q"))
-  ("H-r" (org-extras-id-notes-with-clock "r"))
-  ("H-s" (org-extras-id-notes-with-clock "s"))
-  ("H-t" (org-extras-id-notes-with-clock "t"))
-  ("H-u" (org-extras-id-notes-with-clock "u"))
-  ("H-v" (org-extras-id-notes-with-clock "v"))
-  ("H-w" (org-extras-id-notes-with-clock "w"))
-  ("H-x" (org-extras-id-notes-with-clock "x"))
-  ("H-y" (org-extras-id-notes-with-clock "y"))
-  ("H-z" (org-extras-id-notes-with-clock "z"))
-  ("H-," (org-extras-id-notes-with-clock ","))
-  ("H-." (org-extras-id-notes-with-clock "."))
-  ("H-/" (org-extras-id-notes-with-clock "/"))
-  ("H-=" (org-extras-id-notes-with-clock "="))
-  ("H--" (org-extras-id-notes-with-clock "-"))
-  ("H-(" (org-extras-id-notes-with-clock "("))
-  ("H-'" (org-extras-id-notes-with-clock "'"))
-  ("H-SPC" (org-extras-id-notes-with-clock "SPC"))
-  ("H-RET" (org-extras-id-notes-with-clock "RET"))
-  ("H-TAB" (org-extras-id-notes-with-clock "TAB"))
-  )
-
-(defhydra hydra-dirs-tlon
-  (:exit t)
-  "Org Headings: Tlön"
-  ("d" (org-roam-extras-id-goto "") "LBDLH")
-  ("c" (org-roam-extras-id-goto "") "core")
-  ("f" (org-roam-extras-id-goto "") "fede")
-  ("g" (org-roam-extras-id-goto "") "Dropbox: GPE")
-  ("h" (org-roam-extras-id-goto "") "Dropbox: HEAR")
-  ("l" (org-roam-extras-id-goto "") "Dropbox: leo")
-  ("r" (org-roam-extras-id-goto "") "Dropbox: RAE")
-  ("s" (org-roam-extras-id-goto "") "Dropbox: FM")
-  ("t" (org-roam-extras-id-goto "") "Dropbox: tlon")
-  ("u" (org-roam-extras-id-goto "") "Dropbox: EAN"))
-#+end_src
-
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-org-notes-with-clock
-  (:exit t
-         :idle 0.5)
-  "Org headings"
-  )
-#+end_src
-
-***** clock only
-:PROPERTIES:
-:ID:       E549DF73-C724-4FE8-B5BB-F56147F919A1
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-org-notes-only-clock
-  (:exit t
-         :idle 0.5)
-  "Org headings"
-  ("a" (org-extras-id-notes-only-clock "a"))
-  ("b" (org-extras-id-notes-only-clock "b"))
-  ("c" (org-extras-id-notes-only-clock "c"))
-  ("d" (org-extras-id-notes-only-clock "d"))
-  ("e" (org-extras-id-notes-only-clock "e"))
-  ("f" (org-extras-id-notes-only-clock "f"))
-  ("g" (org-extras-id-notes-only-clock "g"))
-  ("h" (org-extras-id-notes-only-clock "h"))
-  ("i" (org-extras-id-notes-only-clock "i"))
-  ("j" (org-extras-id-notes-only-clock "j"))
-  ("k" (org-extras-id-notes-only-clock "k"))
-  ("l" (org-extras-id-notes-only-clock "l"))
-  ("m" (org-extras-id-notes-only-clock "m"))
-  ("n" (org-extras-id-notes-only-clock "n"))
-  ("o" (org-extras-id-notes-only-clock "o"))
-  ("p" (org-extras-id-notes-only-clock "p"))
-  ("q" (org-extras-id-notes-only-clock "q"))
-  ("r" (org-extras-id-notes-only-clock "r"))
-  ("s" (org-extras-id-notes-only-clock "s"))
-  ("t" (org-extras-id-notes-only-clock "t"))
-  ("u" (org-extras-id-notes-only-clock "u"))
-  ("v" (org-extras-id-notes-only-clock "v"))
-  ("w" (org-extras-id-notes-only-clock "w"))
-  ("x" (org-extras-id-notes-only-clock "x"))
-  ("y" (org-extras-id-notes-only-clock "y"))
-  ("z" (org-extras-id-notes-only-clock "z"))
-  ("," (org-extras-id-notes-only-clock ","))
-  ("." (org-extras-id-notes-only-clock "."))
-  ("/" (org-extras-id-notes-only-clock "/"))
-  ("=" (org-extras-id-notes-only-clock "="))
-  ("-" (org-extras-id-notes-only-clock "-"))
-  ("(" (org-extras-id-notes-only-clock "("))
-  ("'" (org-extras-id-notes-only-clock "'"))
-  ("SPC" (org-extras-id-notes-only-clock "SPC"))
-  ("RET" (org-extras-id-notes-only-clock "RET"))
-  ("TAB" (org-extras-id-notes-only-clock "TAB"))
-  )
-#+end_src
-
-**** Projects
-:PROPERTIES:
-:ID:       47C81DBE-9ACA-4AAA-9942-6FEC4A3483C6
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-org-work
-  (:hint nil
-  :idle 0
-  :color blue)
-  "Projects dashboard"
-  ;; ("a" (org-roam-extras-id-goto "") "")
-  ;; ("b" (org-roam-extras-id-goto "") "")
-  ;; ("c" (org-roam-extras-id-goto "") "")
-  ("b" (org-roam-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24") "BAB" :column "Tlön")
-  ("r" (org-roam-extras-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D") "RAE" :column "Tlön")
-  ("n" (org-roam-extras-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC") "EAN" :column "Tlön")
-  ("d" (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5") "LBDLHD" :column "Tlön")
-  ("w" (org-roam-extras-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A") "PW" :column "Other")
-  ("v" (org-roam-extras-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87") "Samotsvety" :column "Other")
-  ("x" (org-roam-extras-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99") "Misc" :column "Other")
-  ("c" (org-roam-extras-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD") "EA Archive" :column "Someday")
-  ("a" (org-roam-extras-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110") "EA Nomad" :column "Someday")
-  ("h" (org-roam-extras-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2") "HEAR" :column "On hold")
-  ("" (org-roam-extras-id-goto "9066D77E-7F2B-4176-9533-243060F11276") "FM" :column "Done")
-  ("" (org-roam-extras-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1") "GPE" :column "Done")
-  ("" (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F") "LP" :column "Done")
-  ("" (org-roam-extras-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A") "RCGs" :column "Done")
-  ("" (org-roam-extras-id-goto "AE8F5AD4-B85A-4EE2-8A94-AA7B2AFF3E7F") "Regranting" :column "Done")
-  ("e" (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5") "email" :column "Comms")
-  ("s" (org-roam-extras-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C") "slack" :column "Comms")
-  ("t" (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D") "telegram" :column "Comms")
-  ("f" (org-roam-extras-id-goto "AED9330C-1673-4669-A367-4B87614965F6") "fede" :column "Fede")
-  ("F" (tlon-core-meeting-with-fede) "fede: meeting" :column "Fede")
-  ("H-f" (org-roam-extras-id-goto "EB5FC062-E46F-4C1F-930F-F2CC710F852D") "fede: tareas" :column "Fede")
-  ("l" (org-roam-extras-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA") "leo" :column "Leo")
-  ("L" (tlon-core-meeting-with-leo) "leo: meeting" :column "Leo")
-  ("H-l" (org-roam-extras-id-goto "E5777AB0-DC81-40CB-8D03-77D6F111AA2E") "leo: tareas" :column "Leo")
-  ("RET" (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A") "Home" :column "")
-  )
-
-(defhydra hydra-org-work-with-clock
-  (:exit t
-         :idle 0.5)
-  "Org headings"
-
-  )
-#+end_src
-
-**** config.org
-:PROPERTIES:
-:ID:       F19DA0AC-B303-4A6B-8B4E-6E94FC98BC78
-:END:
-:LOGBOOK:
-CLOCK: [2021-12-04 Sat 15:05]--[2021-12-04 Sat 15:07] =>  0:02
-CLOCK: [2021-07-28 Wed 20:56]--[2021-07-28 Wed 21:07] =>  0:11
-CLOCK: [2021-06-22 Tue 12:34]--[2021-06-22 Tue 12:54] =>  0:20
-CLOCK: [2021-03-16 Tue 11:23]--[2021-03-16 Tue 11:26] =>  0:03
-CLOCK: [2021-03-16 Tue 11:13]--[2021-03-16 Tue 11:19] =>  0:06
-CLOCK: [2021-03-15 Mon 14:27]--[2021-03-15 Mon 14:51] =>  0:24
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-org-config
-  (:exit 1)
-  "Org headings: config.org"
-  ("c" (org-roam-extras-id-goto "50FAD2F3-E501-408E-A9A2-8358FAA87C1C") "Calc")
-  ("d" (org-roam-extras-id-goto "617F5323-6518-4751-948B-3E8032D93130") "Dired")
-  ("e" (org-roam-extras-id-goto "FF5DDBC3-ABB6-48A9-9B47-BC9A18F532D5") "Elfeed")
-  ("f" (org-roam-extras-id-goto "B29F4586-2B8D-41FE-82DE-FEDCD863C74B") "Files & buffers")
-  ("g" (org-roam-extras-id-goto "AACAE0F4-0B25-475B-831B-3F1E91E6349D") "Graveyard")
-  ("h" (hydra-org-config-hydra/body) "Hydra")
-  ("i" (org-roam-extras-id-goto "A7940400-DD17-4B0B-A9B2-565A207D680C") "Introduction")
-  ("k" (org-roam-extras-id-goto "4373E661-B19D-4E6C-B7DE-C2A26619A515") "Wiki")
-  ("l" (org-roam-extras-id-goto "DE6D2307-9EBD-4E0F-B873-003C9813CA27") "Display")
-  ("m" (org-roam-extras-id-goto "E83EC00B-0C94-44CD-9EC0-355992C99234") "Completion ")
-  ("n" (org-roam-extras-id-goto "179BB021-8B2A-4BF0-B3AA-43AF5A212D4B") "Text manipulation")
-  ("o" (hydra-org-config-org/body) "Org")
-  ("p" (org-roam-extras-id-goto "7F0CBD06-FDB3-4889-91CE-D8A25D4F2613") "Help")
-  ("s" (org-roam-extras-id-goto "9FDBBF3E-724F-4402-9DDB-F9349F65AB0E") "Search")
-  ("t" (org-roam-extras-id-goto "1E8F4417-5D5F-4406-BB70-AA272F714EF2") "Text movement")
-  ("u" (org-roam-extras-id-goto "AA460F4A-4035-4C96-A3A1-078A43F7892D") "user-init")
-  ("v" (org-roam-extras-id-goto "10E891D3-9DF5-472A-8E3C-1DE30EE8C81F") "Variables")
-  ("w" (org-roam-extras-id-goto "7E9A81E0-CAEB-4029-AD2C-B2416439FCDA") "Windows & frames")
-  ("y" (org-roam-extras-id-goto "6405B8E7-6612-4D71-8C2C-A51F8808F4C6") "Yasnippets"))
-
-(defhydra hydra-org-config-hydra
-  (:exit 1)
-  "Org headings: config.org > hydra"
-  ("c" (org-roam-extras-id-goto "F19DA0AC-B303-4A6B-8B4E-6E94FC98BC78") "Hydra config")
-  ("e" (org-roam-extras-id-goto "CC88D9BE-6617-4D53-BCCF-02097C2A81E1") "Hydra wiki entries")
-  ("f" (org-roam-extras-id-goto "39E06A29-2AEC-4EB4-A0D0-7E1A64832B18") "Hydra files")
-  ("h" (org-roam-extras-id-goto "00E7E217-E02E-489B-968D-E49431FD5ECC") "Hydra main")
-  ("n" (org-roam-extras-id-goto "C3A44EA2-5523-45DD-8100-6228D80ECAC8") "Hydra notes")
-  ("o" (org-roam-extras-id-goto "E6290A57-7035-4ADB-89F6-9CCADF2D74DB") "Hydra mode buffers")
-  ("r" (org-roam-extras-id-goto "F6AA197E-73A7-4688-986F-4A1D583BBA99") "Hydra org ratings")
-  ("s" (org-roam-extras-id-goto "40207396-12B9-4374-9341-713E88772275") "Hydra Straight")
-  ("w" (org-roam-extras-id-goto "B7B8956F-08D9-49E0-873C-4513F6FD44B8") "Hydra wiki notes")
-  ("y" (org-roam-extras-id-goto "5CC3B9AA-629B-407A-899D-529E66A7D057") "Hydra yasnippets"))
-
-(defhydra hydra-org-config-org
-  (:exit 1)
-  "Org headings: config.org > org"
-  ("a" (org-roam-extras-id-goto "E03F4142-C90D-4550-8990-15391E27AD77") "org-agenda")
-  ("b" (org-roam-extras-id-goto "52C959E4-54F4-4499-AE3A-5251F6337FA0") "org key bindings")
-  ("c" (org-roam-extras-id-goto "14F93A83-0BE7-42E3-891E-F6806192296B") "org-capture")
-  ("m" (org-roam-extras-id-goto "2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17") "org-roam")
-  ("n" (org-roam-extras-id-goto "A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7") "org-noter")
-  ("o" (org-roam-extras-id-goto "268B60E4-708C-4372-A59D-5DD876E493CA") "org-mode")
-  ("f" (org-roam-extras-id-goto "35FB5BB5-6552-48C6-983A-F90011CCA908") "org-ref")
-  ("r" (org-roam-extras-id-goto "3FAE7C0D-FB22-4175-A0A4-FFA392539743") "org-refile")
-  ("t" (org-roam-extras-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A") "org-cite")
-  ("x" (org-roam-extras-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF") "org-roam-bibtex"))
-#+end_src
-
-*** dired
-:PROPERTIES:
-:ID:       8AD794CB-0A81-4D36-BEAC-0F85F3B34831
-:END:
-:LOGBOOK:
-CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:36] =>  0:31
-:END:
-
-#+begin_src emacs-lisp :results silent
-(defhydra hydra-dirs
-  (:exit t)
-  "Dired folders"
-  ("a" (hydra-dirs-google-drive/body) "apps")
-  ("b" (dired paths-dir-personal-bibliography) "bibliography")
-  ("d" (dired paths-dir-dotfiles) "dotfiles")
-  ("e" (dired paths-dir-emacs) "Emacs")
-  ("i" (dired paths-dir-anki) "Anki")
-  ("j" (dired paths-dir-health) "Health")
-  ("m" (hydra-dirs-music/body) "Music")
-  ("n" (dired paths-dir-notes) "Notes")
-  ("o" (dired paths-dir-google-drive) "Google Drive")
-  ("p" (dired paths-dir-people) "People")
-  ("t" (hydra-dirs-tlon/body) "Tlön")
-  ("H-t" (hydra-dirs-tlon/body) "Tlön")
-  ("U" (dired paths-dir-audiobooks) "Audiobooks")
-  ("v" (dired paths-dir-movies) "movies")
-  ("w" (dired paths-dir-downloads) "downloads")
-  ("x" (dired paths-dir-dropbox) "Dropbox")
-  ("y" (dired paths-dir-pdf-library) "Library: PDF")
-  ("z" (dired paths-dir-html-library) "Library: HTML")
-  ("." (dired-at-point) "File at point")
-  ("/" (dired "/") "Root")
-  ("SPC" (dired "~/") "user")
-  (";" (dired-jump) "Current buffer")
-  ("H-;" (dired-jump-other-window) "Current buffer in other window"))
-
-(defhydra hydra-dirs-tlon
-  (:exit t)
-  "Dired folders: Tlön"
-  ("b" (dired paths-dir-dropbox-tlon-babel) "Dropbox: Babel" :column "Dropbox")
-  ("H-b" (dired paths-dir-google-drive-tlon-babel) "Google Drive: Babel" :column "Google Drive")
-  ("n" (dired paths-dir-dropbox-tlon-EAN) "Dropbox: EAN" :column "Dropbox")
-  ("H-n" (dired paths-dir-google-drive-tlon-EAN) "Google Drive: EAN" :column "Google Drive")
-  ("m" (dired paths-dir-dropbox-tlon-FM) "Dropbox: FM" :column "Dropbox")
-  ("H-m" (dired paths-dir-google-drive-tlon-FM) "Google Drive: FM" :column "Google Drive")
-  ("g" (dired paths-dir-dropbox-tlon-GPE) "Dropbox: GPE" :column "Dropbox")
-  ("H-g" (dired paths-dir-google-drive-tlon-GPE) "Google Drive: GPE" :column "Google Drive")
-  ("h" (dired paths-dir-dropbox-tlon-HEAR) "Dropbox: HEAR" :column "Dropbox")
-  ("H-h" (dired paths-dir-google-drive-tlon-HEAR) "Google Drive: HEAR" :column "Google Drive")
-  ("d" (dired paths-dir-dropbox-tlon-LBDLH) "Dropbox: LBDLH" :column "Dropbox")
-  ("H-d" (dired paths-dir-google-drive-tlon-LBDLH) "Google Drive: LBDLH" :column "Google Drive")
-  ("p" (dired paths-dir-dropbox-tlon-LP) "Dropbox: LP" :column "Dropbox")
-  ("H-p" (dired paths-dir-google-drive-tlon-LP) "Google Drive: LP" :column "Google Drive")
-  ("r" (dired paths-dir-dropbox-tlon-RAE) "Dropbox: RAE" :column "Dropbox")
-  ("H-r" (dired paths-dir-google-drive-tlon-RAE) "Google Drive: RAE" :column "Google Drive")
-  ("t" (dired paths-dir-dropbox-tlon) "Dropbox: tlon" :column "Dropbox")
-  ("H-t" (dired paths-dir-google-drive-tlon) "Google Drive: tlon" :column "Google Drive")
-  ("c" (dired paths-dir-dropbox-tlon-core) "Dropbox: core" :column "Dropbox")
-  ("H-c" (dired paths-dir-google-drive-tlon-core) "Google Drive: core" :column "Google Drive")
-  ("f" (dired paths-dir-dropbox-tlon-fede) "Dropbox: fede" :column "Dropbox")
-  ("H-f" (dired paths-dir-google-drive-tlon-fede) "Google Drive: fede" :column "Google Drive")
-  ("l" (dired paths-dir-dropbox-tlon-leo) "Dropbox: leo" :column "Dropbox")
-  ("H-l" (dired paths-dir-google-drive-tlon-leo) "Google Drive: leo" :column "Google Drive"))
-
-(defhydra hydra-dirs-google-drive
-  (:exit t)
-  "Dired folders: apps"
-  ;; TODO: parametrize
-  ("i" (dired "~/Google Drive/Apps/Anki") "Anki")
-  ("c" (dired "~/Google Drive/Apps/Emacs") "Emacs")
-  ("m" (dired "~/Google Drive/Apps/Keyboard Maestro") "Keyboard Maestro")
-  ("'" (hydra-dirs/body) "back"))
-
-(defhydra hydra-dirs-music
-  (:exit t)
-  "Dired folders: music"
-  ("c" (dired paths-dir-music-classical) "classical")
-  ("p" (dired paths-dir-music-popular) "popular")
-  ("t" (dired paths-dir-music-tango) "tango")
-  ("s" (dired paths-dir-music-to-sort) "to sort")
-  ("'" (hydra-dirs/body) "back"))
-#+end_src
-
 ** warnings
 :PROPERTIES:
 :ID:       C8FB5BC6-6895-4D63-86A8-E49D6BB3001C
@@ -1670,7 +924,6 @@ CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:36] =>  0:31
 #+begin_src emacs-lisp :results silent
 (use-package async
 :demand t)
-  ;; :commands dired-async-mode)
 #+end_src
 
 ** emacsql
@@ -1698,6 +951,7 @@ CLOCK: [2023-08-27 Sun 15:05]--[2023-08-27 Sun 15:36] =>  0:31
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
+  (setq tlon-core-repo-dirs (expand-file-name "~/Library/CloudStorage/Dropbox/repos/"))
   (setq tlon-core-meeting-pending-id-fede "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
   (setq tlon-core-meeting-pending-id-leo "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
 
@@ -1943,6 +1197,8 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 :ID:       524FE3D7-EA5B-408E-A338-68E633528632
 :END:
 
+/[[file:extras/pass-extras.el][pass-extras]] collects my extensions for ~pass~./
+
 #+begin_src emacs-lisp
 (use-personal-package pass-extras
   :after pass
@@ -2006,6 +1262,9 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       A7254905-0FBE-4F8F-8D93-1A5D1FA95BB9
 :END:
 
+
+/[[file:extras/vc-extras.el][vc-extras]] collects my extensions for ~vc~./
+
 #+begin_src emacs-lisp
 (use-personal-package vc-extras
   :after vc
@@ -2054,6 +1313,9 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :PROPERTIES:
 :ID:       BFD82441-5547-45C5-AD36-E5DE9FDD4898
 :END:
+
+
+/[[file:extras/ediff-extras.el][ediff-extras]] collects my extensions for ~ediff~./
 
 #+begin_src emacs-lisp
 (use-personal-package ediff-extras
@@ -2161,6 +1423,9 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 :PROPERTIES:
 :ID:       DFB5D4F4-0BF8-4C1F-8C3C-1A3992387CBC
 :END:
+
+
+/[[file:extras/magit-extra.el][magit-extra]] collects my extensions for ~magit~./
 
 Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magit already provides a feature called ~magit-extras~.
 
@@ -2314,6 +1579,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F
 :END:
 
+
+/[[file:extras/gh-notify-extras.el][gh-notify-extras]] collects my extensions for ~gh-notify~./
+
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-personal-package gh-notify-extras
   :after gh-notify
@@ -2330,6 +1598,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :PROPERTIES:
 :ID:       B74712E7-2A8C-4D17-8FD4-C854C88D3D72
 :END:
+
+
+/[[file:extras/forge-extras.el][forge-extras]] collects my extensions for ~forge~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-personal-package forge-extras
@@ -2508,10 +1779,16 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :ID:       9478C42B-7864-4F53-BD17-5EBEC2A55DB8
 :END:
 
+
+/[[file:extras/faces-extras.el][faces-extras]] collects my extensions for ~faces~./
+
 #+begin_src emacs-lisp
 (use-personal-package faces-extras
   :after faces
   :demand t
+  :config
+  (add-hook 'tlon-init-post-init-hook #'faces-extras-load-custom-faces)
+
   :general
   ("C-h C-f" 'faces-extras-describe-face))
 #+end_src
@@ -2575,6 +1852,9 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 :PROPERTIES:
 :ID:       9EB47A74-CEFE-4929-B990-F88A57D57A1D
 :END:
+
+
+/[[file:extras/modus-themes-extras.el][modus-themes-extras]] collects my extensions for ~modus-themes~./
 
 #+begin_src emacs-lisp
 (use-personal-package modus-themes-extras
@@ -2699,7 +1979,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
      (setq doom-modeline-enable-word-count t)
 
      (doom-modeline-def-modeline 'main
-       '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
+       '(bar workspace-name modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
        '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
 
      (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
@@ -2713,6 +1993,9 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 :PROPERTIES:
 :ID:       AA94A6D8-DD39-415C-9E34-5793F44B9FF9
 :END:
+
+
+/[[file:extras/doom-modeline-extras.el][doom-modeline-extras]] collects my extensions for ~doom-modeline~./
 
 #+begin_src emacs-lisp
 (use-personal-package doom-modeline-extras
@@ -2757,57 +2040,28 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 :END:
 
+
+/[[file:extras/tab-bar-extras.el][tab-bar-extras]] collects my extensions for ~tab-bar~./
+
 #+begin_src emacs-lisp
 (use-personal-package tab-bar-extras
   :after tab-bar
   :demand t
   :config
   (setq tab-bar-extras-global-mode-string
-        '(" "
-          ;; date & time
-          (:eval (propertize display-time-string 'face 'faces-extras-display-time))
+        `(,tab-bar-extras-prefix-element
+          ,tab-bar-extras-date-element
+          ,tab-bar-extras-separator-element
+          ,tab-bar-extras-chemacs-element
+          ,tab-bar-extras-separator-element
+          ,tab-bar-extras-battery-element
+          ,tab-bar-extras-telega-element
+          ,tab-bar-extras-github-element
+          ,tab-bar-extras-pomodoro-element
+          ,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
+          ))
 
-          ;; Chemacs profile name
-          " |  " chemacs-profile-name
-
-          ;; battery information
-          " | " fancy-battery-mode-line
-
-          ;; telega notifications
-          (when (featurep 'telega)
-            (:eval (when (and
-                          (telega-server-live-p)
-                          (> (plist-get telega--unread-message-count :unread_count) 0))
-                     (concat " | " telega-mode-line-string))))
-
-          ;; github notifications
-          (when (featurep 'doom-modeline)
-            (:eval (when (> doom-modeline--github-notification-number 0)
-                     (concat
-                      " | "
-                      (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
-                                          :face 'doom-modeline-notification)
-                      (doom-modeline-vspc)
-                      (propertize
-                       (cond
-                        ((> doom-modeline--github-notification-number 99) "99+")
-                        (t (number-to-string doom-modeline--github-notification-number)))
-                       'face '(:inherit
-                               (doom-modeline-unread-number doom-modeline-notification)))))))
-          " | "
-
-          ;; pomodoro timer
-          (when (featurep 'org-pomodoro)
-            (:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
-                     (setq global-mode-string (append global-mode-string
-                                                      '(org-pomodoro-mode-line))))))
-                                                      ))
-
-  (setq global-mode-string tab-bar-extras-global-mode-string)
-  (add-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
-
-  ;; (run-with-idle-timer 300 t #'tab-bar-extras-reset-unless-clock)
-  )
+  (add-hook 'tlon-init-post-init-hook #'tab-bar-extras-reset))
 #+end_src
 
 ** fancy-battery
@@ -2823,6 +2077,10 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   :config
   (setq fancy-battery-show-percentage t)
 
+  (add-hook 'fancy-battery-mode-hook
+            (lambda ()
+              "Reset the tab to correctly show battery icon."
+              (run-with-timer 10 nil #'tab-bar-extras-quick-reset)))
   (fancy-battery-mode))
 #+end_src
 
@@ -2985,7 +2243,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 
 /[[https://github.com/milkypostman/hl-sentence][hl-sentence]] highlights sentences rather than lines./
 
-I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specifically, ~org-mode~ and ~markdown-mode~) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the modes. See the above sections and the ~modus-themes-extras-set-faces~ function ~modus-themes-extras~.
+I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specifically, ~org-mode~ and ~markdown-mode~) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the modes. See the above sections and the ~modus-themes-extras-set-faces~ function from ~modus-themes-extras~.
 
 #+begin_src emacs-lisp
 (use-package hl-sentence
@@ -3058,6 +2316,9 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 :PROPERTIES:
 :ID:       21CE8D7E-377F-49AD-A864-D7926F462D4E
 :END:
+
+
+/[[file:extras/profiler-extras.el][profiler-extras]] collects my extensions for ~profiler~./
 
 #+begin_src emacs-lisp
 (use-personal-package profiler-extras
@@ -3311,6 +2572,9 @@ CLOCK: [2021-05-30 Sun 11:16]--[2021-05-30 Sun 12:16] =>  1:00
 CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
 :END:
 
+
+/[[file:extras/simple-extras.el][simple-extras]] collects my extensions for ~simple~./
+
 #+begin_src emacs-lisp
 (use-personal-package simple-extras
   :demand t
@@ -3362,7 +2626,10 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
    "H-x" 'simple-extras-smart-kill-region
    "M-A-i" 'simple-extras-visual-line-mode-enhanced
    "M-i" 'simple-extras-indent-dwim
-   "M-v" 'simple-extras-visible-mode-enhanced))
+   "M-v" 'simple-extras-visible-mode-enhanced
+   "C-w" 'simple-extras-narrow-or-widen-dwim)
+  (isearch-mode-map
+   "C-w" 'simple-extras-narrow-or-widen-dwim))
 #+end_src
 
 ** paragraphs
@@ -3468,7 +2735,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
    "M-o" 'downcase-dwim
    "M-q" 'save-buffers-kill-terminal
    "M-u" 'capitalize-dwim
-   "M-U" 'upcase-dwim
+   "A-M-u" 'upcase-dwim
    "M-w" 'count-words-region
    "H-z" 'undo-only))
 #+end_src
@@ -3566,6 +2833,9 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :ID:       8BC3FF58-62AD-43E9-87A0-B886F20B428A
 :END:
 
+
+/[[file:extras/outline-extras.el][outline-extras]] collects my extensions for ~outline~./
+
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :outline)
 (use-personal-package outline-extras
   :after outline
@@ -3588,7 +2858,9 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
            :host github
            :repo "jdtsmith/outli")
   :after outline
-  :defer 5
+  :init
+  (add-hook 'emacs-lisp-mode-hook 'outli-mode)
+
   :config
   (setq outli-speed-commands
         '(("Outline navigation")
@@ -3613,9 +2885,9 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
           ("z" . undo-only)
           ("v" . yank)
           ("Other")
-          ("?" . outli-speed-command-help)))
-  (add-hook 'emacs-lisp-mode-hook 'outli-mode))
+          ("?" . outli-speed-command-help))))
 #+end_src
+
 ** unfill
 :PROPERTIES:
 :ID:       DF5137EA-79B3-4A5F-8D6C-7222CD8D4F4A
@@ -3638,8 +2910,6 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
   :config
   (setq save-abbrevs 'silently)
   (setq abbrev-file-name (file-name-concat paths-dir-abbrev "abbrev_defs"))
-  ;; (setq abbrev-suggest t)
-  ;; (setq abbrev-suggest-hint-threshold 0)
   (setq-default abbrev-mode t)
   ;; do not look up abbrevs with case folding; e.g. `EA' will not expand an `ea' abbrev
   (abbrev-table-put global-abbrev-table :case-fixed t)
@@ -4014,7 +3284,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   :config
   (setq confirm-kill-processes nil) ; do not prompt to kill running processes when quitting Emacs
   (setq delete-by-moving-to-trash t)
-  (setq trash-directory (file-name-concat "~" ".Trash")) ; fallback for `move-file-to-trash'
+  (setq trash-directory (expand-file-name (file-name-concat "~" ".Trash"))) ; fallback for `move-file-to-trash'
   (setq find-file-visit-truename t); emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
   (setq kill-buffer-query-functions nil)
   (setq create-lockfiles nil) ; lockfiles are indexed by `org-roam', which causes problems with `org-agenda'
@@ -4056,18 +3326,23 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 :ID:       DA1D9D59-0EE4-439E-BCC9-5A7C316794A2
 :END:
 
+
+/[[file:extras/files-extras.el][files-extras]] collects my extensions for ~files~./
+
 #+begin_src emacs-lisp
 (use-personal-package files-extras
+  :after alert
   :demand t
   :general
   ("M-;" 'files-extras-copy-current-path
+   "H-f" 'files-extras-dispatch
    "M-b" 'files-extras-save-and-revert-buffer
    "M-e" 'files-extras-eval-region-or-buffer
    "H-q" 'files-extras-kill-this-buffer
    "A-H-M-s-q" 'files-extras-kill-this-buffer-switch-to-other-window
    "A-H-q" 'files-extras-kill-other-buffer
    "H-n" 'files-extras-new-empty-buffer
-   "H-N" 'files-extras-new-buffer-in-current-mode
+   "A-H-n" 'files-extras-new-buffer-in-current-mode
    "H-S" 'files-extras-save-all-buffers
    "A-H-M-s-SPC" 'files-extras-switch-to-alternate-buffer
    "A-H-v" 'files-extras-internet-archive-dwim)
@@ -4226,11 +3501,15 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 :ID:       DDF9A650-13A5-4C47-B2C5-6B376B75998D
 :END:
 
+
+/[[file:extras/dired-extras.el][dired-extras]] collects my extensions for ~dired~./
+
 #+begin_src emacs-lisp
 (use-personal-package dired-extras
   :after dired
   :demand t
   :general
+  ("H-d" 'dired-extras-dispatch)
   (dired-mode-map
    "," 'dired-extras-up-directory-reuse
    "H-." 'dired-extras-dotfiles-toggle
@@ -4264,18 +3543,6 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
   :general
   (dired-mode-map
    "–" 'dired-omit-mode))
-#+end_src
-
-** dired-async
-:PROPERTIES:
-:ID:       966B615F-69EF-428D-82E5-6E68B64D0FDD
-:END:
-
-#+begin_src emacs-lisp
-(use-feature dired-async
-  :after async dired
-  :config
-  (dired-async-mode))
 #+end_src
 
 ** image-dired
@@ -4668,14 +3935,16 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :ID:       E29EF401-C8A5-4B57-8CB4-C2C8B386F446
 :END:
 
+
+/[[file:extras/window-extras.el][window-extras]] collects my extensions for ~window~./
+
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :window)
 (use-personal-package window-extras
-  :after window
+  :after alert window
   :demand t
   :general
   ("C-H-0" 'window-extras-switch-to-last-window
    "A-C-H-0" 'window-extras-switch-to-minibuffer-window
-   "C-w" 'window-extras-narrow-or-widen-dwim
    "M-–" 'window-extras-buffer-move-dwim ; `emacs-mac'
    "M--" 'window-extras-buffer-move-dwim ; `emacs-plus'
    "M-," 'window-extras-buffer-move-left
@@ -4684,9 +3953,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
    "A-M-–" 'window-extras-buffer-swap) ; `emacs-plus'
   (js-mode-map
    "M-," 'window-extras-buffer-move-left
-   "M-." 'window-extras-buffer-move-right)
-  (isearch-mode-map
-   "C-w" 'window-extras-narrow-or-widen-dwim))
+   "M-." 'window-extras-buffer-move-right))
 #+end_src
 
 ** frame
@@ -4716,6 +3983,9 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :PROPERTIES:
 :ID:       488EF2B1-CCAC-4B91-A927-F89F71BCDAD3
 :END:
+
+
+/[[file:extras/frame-extras.el][frame-extras]] collects my extensions for ~frame~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :frame)
 (use-personal-package frame-extras
@@ -4834,6 +4104,9 @@ Maybe the way to do this is by creating a ~pass-to-avy~ generic function, which 
 :ID:       E8AFD4F9-439F-48F6-8C60-149CB87B5FEA
 :END:
 
+
+/[[file:extras/avy-extras.el][avy-extras]] collects my extensions for ~avy~./
+
 #+begin_src emacs-lisp
 (use-personal-package avy-extras
   :after avy
@@ -4919,7 +4192,7 @@ CLOCK: [2021-06-18 Fri 10:05]--[2021-06-18 Fri 10:47] =>  0:42
 CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 :END:
 
-/[[https://github.com/abo-abo/ace-link][Add e-link]] lets you quickly follow links in Emacs, Vimium-styce-link]] lets you quickly follow links in Emacs, Vimium-style./
+/[[https://github.com/abo-abo/ace-link][ace-link]] lets you quickly follow links in Emacs, Vimium-styce-link]] lets you quickly follow links in Emacs, Vimium-style./
 
 #+begin_src emacs-lisp :results silent
 (use-package ace-link
@@ -4945,6 +4218,9 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 :PROPERTIES:
 :ID:       BD522C3E-92F7-4D61-A697-8186F01E2BE7
 :END:
+
+
+/[[file:extras/ace-link-extras.el][ace-link-extras]] collects my extensions for ~ace-link~./
 
 #+begin_src emacs-lisp
 (use-personal-package ace-link-extras
@@ -4992,10 +4268,6 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   (setq calendar-mark-holidays-flag nil)
   (setq calendar-time-zone-style 'numeric)
   (setq holiday-bahai-holidays nil)
-  (setq calendar-location-name "Madrid")
-  (setq calendar-latitude "40.4168")
-  (setq calendar-longitude "-3.703790")
-
 
   :general
   ("C-d" 'calendar
@@ -5021,12 +4293,14 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 :PROPERTIES:
 :ID:       746F8B0D-5817-4FCC-9DA5-C198CE632F92
 :END:
+/[[file:extras/calendar-extras.el][calendar-extras]] collects my extensions for ~calendar~./
 
 #+begin_src emacs-lisp
 (use-personal-package calendar-extras
   :after calendar
   :defer 5
   :config
+  (setq calendar-extras-location-name "Buenos Aires")
   (setq calendar-extras-use-geolocation t)
 
   :general
@@ -5113,10 +4387,11 @@ Note to self: if the package doesn't work after deploying a new profile, even af
 :PROPERTIES:
 :ID:       BBED8E2E-2A29-4465-926A-22D531E6DBE7
 :END:
+/[[file:extras/org-gcal-extras.el][org-gcal-extras]] collects my extensions for ~org-gcal~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-gcal)
 (use-personal-package org-gcal-extras
-  :after org-gcal
+  :after calf-org org-gcal
   :demand t
   :general
   (org-mode-map
@@ -5134,17 +4409,8 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 /[[https://github.com/kiwanami/emacs-calfw][calf]] is a calendar framework for Emacs./
 
 #+begin_src emacs-lisp
-(use-package calfw)
-#+end_src
-
-** calfw-org
-:PROPERTIES:
-:ID:       67CD7ECA-260B-4E09-B56B-6A39BAB78D5A
-:END:
-
-#+begin_src emacs-lisp
-(use-package calfw-org
-  :after calfw)
+(use-package calfw
+  :demand t)
 #+end_src
 
 ** calfw-blocks
@@ -5161,6 +4427,17 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
              :repo "ml729/calfw-blocks")
   :after calfw
   :demand t)
+#+end_src
+
+** calfw-org
+:PROPERTIES:
+:ID:       67CD7ECA-260B-4E09-B56B-6A39BAB78D5A
+:END:
+/[[https://github.com/kiwanami/emacs-calfw/blob/master/calfw-org.el][calfw-org]] display org-agenda items in the calfw buffer./
+
+#+begin_src emacs-lisp
+(use-package calfw-org
+  :after calfw)
 #+end_src
 
 ** time
@@ -5219,7 +4496,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
   :defer 10
   :config
   (setq display-wttr-interval (* 15 60))
-  (setq display-wttr-locations `(,calendar-location-name))
+  (setq display-wttr-locations `(,calendar-extras-location-name))
 
   (display-wttr-mode))
 #+end_src
@@ -5426,6 +4703,9 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :ID:       6992A0D9-FF6A-4BF7-95C9-B3E3B25CD44C
 :END:
 
+
+/[[file:extras/isearch-extras.el][isearch-extras]] collects my extensions for ~isearch~./
+
 #+begin_src emacs-lisp
 (use-personal-package isearch-extras
   :after isearch
@@ -5614,15 +4894,10 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
         '((consult-line buffer)
           (consult-imenu buffer)
           (consult-grep buffer)))
-  ;; Configure the display per completion category.
-  ;; Use the grid display for files and a buffer
-  ;; for the consult-grep commands.
   (setq vertico-multiform-categories
         '((file grid)))
   (setq vertico-cycle t)
   (setq vertico-count 16)
-  ;; (setq vertico-quick1 avy-keys)
-  ;; (setq vertico-quick2 avy-keys)
 
   (vertico-multiform-mode)
 
@@ -5712,6 +4987,9 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 :ID:       163D3CB3-B2D9-44DB-9728-E2F5CA7600A8
 :END:
 
+
+/[[file:extras/consult-extras.el][consult-extras]] collects my extensions for ~consult~./
+
 #+begin_src emacs-lisp
 (use-personal-package consult-extras
   :after consult
@@ -5772,12 +5050,73 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :elpaca (consult-gh
            :host github
            :repo "armindarvish/consult-gh")
-  :after consult forge gh
+  :after consult forge
   :demand t
   :config
-  (add-to-list 'consult-gh-default-orgs-list "benthamite")
+  (require 'consult-gh-embark)
+  (require 'consult-gh-forge)
   (setq consult-gh-default-clone-directory "~/source/")
-  (setq consult-gh-issues-state-to-show "all"))
+  (setq consult-gh-repo-maxnum 30)
+  (setq consult-gh-issues-maxnum 100)
+  (setq consult-gh-show-preview nil)
+  (setq consult-gh-preview-key "M-o")
+  (setq consult-gh-preview-buffer-mode 'org-mode)
+  (setq consult-gh-repo-action #'consult-gh--repo-browse-files-action)
+  (setq consult-gh-issue-action #'consult-gh-forge--issue-view-action)
+  (setq consult-gh-pr-action #'consult-gh-forge--pr-view-action)
+  (setq consult-gh-code-action #'consult-gh--code-view-action)
+  (setq consult-gh-file-action #'consult-gh--files-view-action)
+  (setq consult-gh-issues-state-to-show "all")
+
+  (dolist (org '("tlon-team" "benthamite"))
+    (push org consult-gh-default-orgs-list))
+
+  (dolist (var '(consult-gh--known-orgs-list
+                 consult-gh--known-repos-list))
+    (push var savehist-additional-variables))
+
+  (transient-define-prefix consult-gh-dispatch ()
+    "Dispatch a `consult-gh' command."
+    [["list"
+      ("l r" "repo" consult-gh-repo-list)
+      ("l i" "issue" consult-gh-issue-list)
+      ("l p" "pull request" consult-gh-pr-list)]
+     ["search"
+      ("s r" "repos" consult-gh-search-repos)
+      ("s i" "issues" consult-gh-search-issues)
+      ("s p" "pull requests" consult-gh-search-prs)
+      ("s c" "code" consult-gh-search-code)]
+     ["clone/fork repo"
+      ("c" "clone" consult-gh-repo-clone)
+      ("f" "fork" consult-gh-repo-fork)]
+     ["browse"
+      ("b" "file" consult-gh-find-file)
+      ""
+      "default"
+      ("d" "repos" consult-gh-default-repos)
+      ]])
+
+  :general
+  ("H-G" 'consult-gh-dispatch))
+#+end_src
+
+** consult-mu
+:PROPERTIES:
+:ID:       834A9797-AD26-44B5-BE4E-1CE52184E265
+:END:
+
+/[[https://github.com/armindarvish/consult-mu][consult-mu]] provides a dynamiccaly updated search interface to mu4e./
+
+#+begin_src emacs-lisp
+(use-package consult-mu
+  :elpaca (consult-mu :type git
+                      :host github
+                      :repo "armindarvish/consult-mu"
+                      :branch "develop")
+  :after consult mu4e
+  :demand t
+  :general
+  ("A-M-m" 'consult-mu))
 #+end_src
 
 ** consult-yasnippet
@@ -5790,26 +5129,16 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
 
 /[[https://github.com/mohkale/consult-yasnippet/tree/cdb256d2c50e4f8473c6052e1009441b65b8f8ab][consult-yasnippet]] provides [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]] functionality to [[id:6405B8E7-6612-4D71-8C2C-A51F8808F4C6][yasnippet]]./
 
-
 #+begin_src emacs-lisp :results silent
 (use-package consult-yasnippet
   :after consult yasnippet
   :demand t
+  :config
+  (add-to-list 'vertico-multiform-commands
+               '(consult-yasnippet grid))
+
   :general
   ("C-H-y" 'consult-yasnippet))
-#+end_src
-
-** consult-spotify
-:PROPERTIES:
-:ID:       1605F697-9968-474A-9691-941723977EEC
-:END:
-
-Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I'm disabling this.
-
-#+begin_src emacs-lisp :results silent
-(use-package consult-spotify
-  :disabled
-  :after consult espotify)
 #+end_src
 
 ** embark-consult
@@ -5864,6 +5193,9 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 :PROPERTIES:
 :ID:       2B2BED63-EC35-4DD6-B6A4-DC8E06817290
 :END:
+
+
+/[[file:extras/orderless-extras.el][orderless-extras]] collects my extensions for ~orderless~./
 
 #+begin_src emacs-lisp
 (use-personal-package orderless-extras
@@ -5968,6 +5300,9 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 :PROPERTIES:
 :ID:       061EBAB9-2846-4922-BBAF-C29E11FAA476
 :END:
+
+
+/[[file:extras/corfu-extras.el][corfu-extras]] collects my extensions for ~corfu~./
 
 #+begin_src emacs-lisp
 (use-personal-package corfu-extras
@@ -6212,6 +5547,9 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 :ID:       13CB9BBA-95F7-446A-A6DB-924C5F62C1C4
 :END:
 
+
+/[[file:extras/kmacro-extras.el][kmacro-extras]] collects my extensions for ~kmacro~./
+
 #+begin_src emacs-lisp
 (use-personal-package kmacro-extras
   :after kmacro
@@ -6405,6 +5743,9 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :ID:       7C91CA35-275E-446A-ACE8-1214310479BB
 :END:
 
+
+/[[file:extras/jinx-extras.el][jinx-extras]] collects my extensions for ~jinx~./
+
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :jinx)
 (use-personal-package jinx-extras
   :after jinx
@@ -6425,6 +5766,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (global-flycheck-mode)
 
   :config
+  (setq flycheck-temp-prefix ".flycheck") ; hide flycheck temp files
   (setq flycheck-emacs-lisp-load-path 'inherit)
   (setq flycheck-indication-mode nil)
   (setq flycheck-checker-error-threshold 5000)
@@ -6485,7 +5827,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
         (expand-file-name "~/source/LanguageTool/languagetool-server.jar"))
 
   :config
-  ;; the package doesn't provide a general way of disabling rule, but as an
+  ;; the package doesn't provide a general way of disabling a rule, but as an
   ;; imperfect workaround we extend the list of rules to ignore when
   ;; spell-checking is active; this works well for rules in prose buffers, since
   ;; I normally have spell-checking enabled there.
@@ -6618,6 +5960,9 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 :PROPERTIES:
 :ID:       856FDF94-95B6-49EB-A6D5-B95F0A53384A
 :END:
+
+
+/[[file:extras/markdown-mode-extras.el][markdown-mode-extras]] collects my extensions for ~markdown-mode~./
 
 #+begin_src emacs-lisp
 (use-personal-package markdown-mode-extras
@@ -6834,6 +6179,9 @@ To populate the database of historical prices:
 :ID:       3FC5A39F-AEA9-4D54-AB55-836F58DA8103
 :END:
 
+
+/[[file:extras/ledger-mode-extras.el][ledger-mode-extras]] collects my extensions for ~ledger-mode~
+
 #+begin_src emacs-lisp
 (use-personal-package ledger-mode-extras
   :after ledger-mode
@@ -6885,8 +6233,6 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
-  (setq tlon-babel-todos-jobs-id "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB")
-  (setq tlon-babel-todos-generic-id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
   (add-hook 'tlon-init-post-init-hook #'tlon-babel-init)
 
   :general
@@ -6895,21 +6241,19 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
     magit-status-mode-map)
-   "," 'tlon-babel-visit-counterpart-or-capture)
+   "," 'tlon-babel-ogh-visit-counterpart-or-capture)
   (magit-status-mode-map
    "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
    "'" 'tlon-babel-open-forge-file)
+  ;; revise; consider using `tlon-babel-md-insert-dispatch'
   ((gfm-mode-map markdown-mode-map)
    "A-s-e" 'tlon-babel-yaml-edit-field
    "s-c" 'tlon-babel-copy-dwim
-   "s-t" 'tlon-babel-insert-cite-tag
-   "s-u" 'tlon-babel-markdown-insert-element
-   "A-C-s-<tab>" 'tlon-babel-markdown-end-of-buffer-dwim)
-  (github-review-mode-map
-   "s-c" 'tlon-babel-submit-comment-revisions))
+   "s-t" 'tlon-babel-md-insert-cite-tag
+   "s-u" 'tlon-babel-md-insert-element
+   "A-C-s-<tab>" 'tlon-babel-md-end-of-buffer-dwim))
 #+end_src
-
 
 ** go-translate
 :PROPERTIES:
@@ -7110,6 +6454,9 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 :ID:       C4B53EDC-372F-42B2-924E-FE48647B67AE
 :END:
 
+
+/[[file:extras/pdf-tools-extras.el][pdf-tools-extras]] collects my extensions for ~pdf-tools~.
+
 #+begin_src emacs-lisp
 (use-personal-package pdf-tools-extras
   :after pdf-tools
@@ -7236,7 +6583,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 (use-feature elisp-mode
   :after simple-extras
   :general
-  (emacs-lisp-mode-map
+  ((emacs-lisp-mode-map lisp-interaction-mode-map)
+   "s-b" 'eval-buffer
    "s-d" 'eval-defun
    "s-i" (lambda! (eval-defun t)) ; instrument defun
    ))
@@ -7260,6 +6608,17 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
   :config
   ;; default is 65, which overrides the value of `fill-column'
   (setq emacs-lisp-docstring-fill-column nil))
+#+end_src
+
+** lisp
+:PROPERTIES:
+:ID:       38BDC170-9B9D-4694-960F-4B746EEC9FD6
+:END:
+
+#+begin_src emacs-lisp
+(use-feature lisp
+  :general
+  ("A-C-H-j" 'mark-sexp))
 #+end_src
 
 ** s
@@ -7411,6 +6770,20 @@ This needs to be configured.
   :demand t)
 #+end_src
 
+** yaml
+:PROPERTIES:
+:ID:       9DD1BC24-7AFE-406B-9C1C-7BC66BD241F3
+:END:
+/[[https://github.com/zkry/yaml.el][yaml]] is YAML parser written in Emacs List without any external dependencies./
+
+#+begin_src emacs-lisp
+(use-package yaml
+  :elpaca (yaml
+           :host github
+           :repo "zkry/yaml.el")
+  :demand t)
+#+end_src
+
 ** js2-mode
 :PROPERTIES:
 :ID:       14639C64-720D-4105-B31B-3A84A447D19F
@@ -7430,6 +6803,9 @@ This needs to be configured.
 :LOGBOOK:
 CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 :END:
+
+
+/[[https://github.com/AmaiKinono/puni][puni]] supports structured editing for many major modes./
 
 #+begin_src emacs-lisp
 (use-package puni
@@ -7538,20 +6914,14 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 :ID:       2064FE34-0301-4E33-AB51-FE4921CA0E16
 :END:
 
-/[[https://github.com/zerolfx/copilot.el][copilot]] is an unofficial Copilot plugin for Emacs./
+/[[https://github.com/copilot-emacs/copilot.el][copilot]] is an unofficial Copilot plugin for Emacs./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :copilot)
 (use-package copilot
   :elpaca (:host github
-<<<<<<< HEAD
-		 :repo "zerolfx/copilot.el"
-		 :build (:not elpaca--check-version)
-		 :files ("dist" "*.el"))
-=======
-                 :repo "zerolfx/copilot.el"
-                 :build (:not elpaca--check-version)
+                 :repo "copilot-emacs/copilot.el"
+                 :ref "653fe7b12990b5b7a050971bed4579022ce4b4f8" ; 2024-01-03, before jumping cursor bug “fix”
                  :files ("dist" "*.el"))
->>>>>>> master
   :demand t
 
   :config
@@ -7590,7 +6960,14 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :defer 10
   :config
   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
-  (setq gptel-default-mode 'org-mode))
+  (setq gptel-default-mode 'org-mode)
+  (setq-default gptel-model "gpt-4")
+
+  :general
+  ("M-c" 'gptel-send
+   "H-s-a" 'gptel-abort
+   "H-s-g" 'gptel
+   "H-s-m" 'gptel-menu))
 #+end_src
 
 ** gptel-extras
@@ -7598,10 +6975,16 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 :ID:       AEA2E978-0321-4F3D-B3EB-14CDA505A9D9
 :END:
 
+
+/[[file:extras/gptel-extras.el][gptel-extras]] collects my extensions for ~gptel~./
+
 #+begin_src emacs-lisp
 (use-personal-package gptel-extras
   :after gptel
-  :demand t)
+  :demand t
+  :general
+  (gptel-mode-map
+   "s-m" 'gptel-extras-model-config))
 #+end_src
 
 ** org-ai
@@ -7906,12 +7289,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 /[[https://orgmode.org/][org-mode]] is a major mode for keeping notes, authoring documents, computational notebooks, literate programming, maintaining to-do lists, planning projects, and more./
 
 #+begin_src emacs-lisp :results silent
-(use-package org
-  :elpaca (org
-           :host sourcehut
-           :repo "bzg/org-mode"
-           :ref "7b38670"
-           :depth nil) ; v9.6.8
+(use-feature org
   :demand t
   :config
   (setq org-directory paths-dir-org) ; set org directory
@@ -8028,10 +7406,11 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    "H-v" 'org-yank)
   (org-agenda-mode-map
    "s-s" 'org-save-all-org-buffers)
-  (telega-chat-mode-map
-   "s-b" (lambda! (org-emphasize ?*))
-   "s-i" (lambda! (org-emphasize ?/))
-   "s-e" (lambda! (org-emphasize ?~))))
+  ;; (telega-chat-mode-map
+   ;; "s-b" (lambda! (org-emphasize ?*))
+   ;; "s-i" (lambda! (org-emphasize ?/))
+   ;; "s-e" (lambda! (org-emphasize ?~)))
+   )
 #+end_src
 
 *** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
@@ -8052,6 +7431,9 @@ By considering both tasks completed and their associated priorities.
 :ID:       4DE04276-B164-441D-ADCA-017346C525D6
 :END:
 
+
+/[[file:extras/org-extras.el][org-extras]] collects my extensions for ~org~./
+
 #+begin_src emacs-lisp
 (use-personal-package org-extras
   :after org
@@ -8065,6 +7447,7 @@ By considering both tasks completed and their associated priorities.
   (add-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
 
   :general
+  ("H-l" 'org-extras-dispatch)
   (org-mode-map
    "s-<return>" 'org-extras-super-return
    "A-C-s-n" 'org-extras-jump-to-first-heading
@@ -8233,7 +7616,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "s" 'org-agenda-schedule
    "W" 'org-agenda-refile
    "X" 'org-agenda-exit
-   "x" (lambda! (org-agenda-log-mode 'clockcheck))
+   ;; "x" (lambda! (org-agenda-log-mode 'clockcheck))
    "y" 'org-agenda-day-view
    "z" 'org-agenda-undo))
 #+end_src
@@ -8469,7 +7852,6 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (file paths-file-downloads)
            "* %a :website:\n\n%U %?\n\n%:initial")))
 
-  (add-hook 'org-capture-mode-hook #'org-extras-capture-hydra-notes-hook)
   (add-hook 'org-capture-before-finalize-hook #'org-extras-capture-before-finalize-hook-function)
   (add-hook 'org-capture-before-prepare-hook #'org-extras-capture-prepare-finalize-hook-function)
 
@@ -8535,7 +7917,7 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
   (setq org-clock-history-length 30)
   (org-clock-persistence-insinuate)
 
-  (add-hook 'org-clock-in-prepare-hook #'tab-bar-extras-quick-reset)
+  ;; (add-hook 'org-clock-in-prepare-hook #'tab-bar-extras-quick-reset)
 
   :general
   ("A-H-j" 'org-clock-goto
@@ -8792,8 +8174,9 @@ Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/m
   :after org
   :demand t
   :config
-  (setq org-outline-paths-complete-in-steps nil)
-  (setq org-refile-allow-creating-parent-nodes 'confirm)
+  (setq org-refile-use-outline-path 'level3)
+  (setq org-outline-path-complete-in-steps nil)
+  (setq org-refile-allow-creating-parent-nodes nil)
   (setq org-reverse-note-order t) ; refile to the beginning of header
   (setq org-refile-use-cache t) ;  build cache at startup
   (setq org-refile-targets '((org-agenda-files :maxlevel . 9)
@@ -9298,6 +8681,9 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 :ID:       189C41F8-D0BF-40CC-A4AD-96C7F4A76E4D
 :END:
 
+
+/[[file:extras/org2blog-extras.el][org2blog-extras]] collects my extensions for ~org2blog~./
+
 #+begin_src emacs-lisp
 (use-personal-package org2blog-extras
   :after org2blog
@@ -9434,20 +8820,6 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 (use-package org-pomodoro
   :after org
   :defer 10
-  :config/el-patch
-  ;; silence silly lecture about killing pomodoros
-  (defun org-pomodoro-killed ()
-    "Is invoked when a pomodoro was killed.
-This may send a notification, play a sound and adds log."
-    (org-pomodoro-reset)
-    (org-pomodoro-notify "Pomodoro killed." (el-patch-swap "One does not simply kill a pomodoro!" ""))
-    (org-pomodoro-maybe-play-sound :killed)
-    (when (org-clocking-p)
-      (if org-pomodoro-keep-killed-pomodoro-time
-          (org-clock-out nil t)
-        (org-clock-cancel)))
-    (run-hooks 'org-pomodoro-killed-hook))
-
   :config
   (setq org-pomodoro-length 25)
   (setq org-pomodoro-short-break-length (- 30 org-pomodoro-length))
@@ -9455,7 +8827,7 @@ This may send a notification, play a sound and adds log."
   (setq org-pomodoro-finished-sound tmr-sound-file)
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
-  ;; (add-hook 'org-pomodoro-started-hook #'org-extras-pomodoro-format-timer)
+  (add-hook 'org-pomodoro-started-hook #'org-pomodoro-extras-format-timer)
 
   :general
   ("H-I" 'org-pomodoro
@@ -9465,6 +8837,17 @@ This may send a notification, play a sound and adds log."
 #+end_src
 
 - check: https://gist.github.com/bravosierrasierra/1d98a89a7bcb618ef70c6c4a92af1a96#file-org-pomodoro-plus
+
+** org-pomodoro-extras
+:PROPERTIES:
+:ID:       6D8C1A4B-3131-4175-AB23-4C3DDA311872
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package org-pomodoro-extras
+  :after org-pomodoro
+  :demand t)
+#+end_src
 
 ** pomodoro-centile
 :PROPERTIES:
@@ -9635,21 +9018,20 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
    "s-r" 'org-roam-buffer-toggle))
 #+end_src
 
-- Check [[https://www.reddit.com/r/emacs/comments/omxl6n/config_for_orgroam_v2/][this config]] (v 2.0)
-- And [[https://github.com/alexkehayias/emacs.d/blob/master/init.el#L715][this one]] (by the author of [[https://notes.alexkehayias.com/][this notes repository]], created with org-roam)
-- And [[https://takeonrules.com/2021/08/22/ever-further-refinements-of-org-roam-usage/][this post]]
-
 ** org-roam-extras
 :PROPERTIES:
 :ID:       44F722DC-C324-4A86-85A1-F103812B2A6A
 :END:
+
+
+/[[file:extras/org-roam-extras.el][org-roam-extras]] collects my extensions for ~org-roam~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-roam)
 (use-personal-package org-roam-extras
   :after org-roam
   :demand t
   :config
-    ;; exclude headings in specific files and directories
+  ;; exclude headings in specific files and directories
   (setq org-roam-file-exclude-regexp
         (let (result)
           (dolist (dir-or-file
@@ -9768,6 +9150,9 @@ I use this package to define a dynamic agenda, as explained and illustrated [[d1
 :ID:       466CED55-6DCA-4D17-83C7-B2FE9C2B0A69
 :END:
 
+
+/[[file:extras/vulpea-extras.el][vulpea-extras]] collects my extensions for ~vulpea~./
+
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :vulpea)
 (use-personal-package vulpea-extras
   :after vulpea
@@ -9826,6 +9211,9 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 :ID:       3E324D44-27D5-4FA4-9D2F-2FFC6A4021DE
 :END:
 
+
+/[[file:extras/org-noter-extras.el][org-noter-extras]] collects my extensions for ~org-noter~.
+
 #+begin_src emacs-lisp
 (use-personal-package org-noter-extras
    :after org-noter
@@ -9853,18 +9241,20 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 (use-feature oc
   :after org
   :demand t
-  :config
+  :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `org-cite' vars after `tlon-babel' is loaded."
               ;; (setq org-cite-global-bibliography paths-files-bibliography-all) ; disabled for poor performance
-              (setq org-cite-csl-styles-dir tlon-babel-dir-styles)))
+              (setq org-cite-csl-styles-dir tlon-babel-refs-styles-dir)))
+
+  :config
   (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (setq org-cite-activate-processor 'citar) ;
   (setq org-cite-export-processors
-        '((t . (csl "biblioteca-altruismo-eficaz.csl")))))
+        '((t . (csl "long.csl")))))
 #+end_src
 
 *** Resources
@@ -9914,14 +9304,17 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 
 #+begin_src emacs-lisp :results silent
 (use-feature bibtex
+  :after ebib
   :demand t
-  :config
-  ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
-  ;; retorque.re/zotero-better-bibtex/citing/
+  :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `bibtex-files after `paths-files-bibliography-all' is set."
               (setq bibtex-files paths-files-bibliography-all)))
+
+  :config
+  ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
+  ;; retorque.re/zotero-better-bibtex/citing/
   (setq bibtex-search-entry-globally t)
   (setq bibtex-autokey-names 1)
   (setq bibtex-autokey-name-case-convert-function 'capitalize)
@@ -10047,9 +9440,12 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 :ID:       31E4CEF9-8CF3-4921-A108-3C60A7191F8F
 :END:
 
+
+/[[file:extras/bibtex-extras.el][bibtex-extras]] collects my extensions for ~bibtex~./
+
 #+begin_src emacs-lisp
 (use-personal-package bibtex-extras
-  :demand t
+  :defer 1
   :config
   ;; Replace 'online' entry type
   (bibtex-extras-replace-element-by-name
@@ -10091,59 +9487,63 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
 
 #+begin_src emacs-lisp :results silent
 (use-package bibtex-completion
-  :elpaca (bibtex-completion :version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
+  :elpaca (bibtex-completion
+           :version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
   :defer 5
-  :config/el-patch
-  ;; disable file watchers
-  (defun bibtex-completion-init ()
-    "Check that the files and directories specified by the user actually exist.
-Also sets `bibtex-completion-display-formats-internal'."
-
-    ;; Remove current watch-descriptors for bibliography files:
-    (mapc (lambda (watch-descriptor)
-            (file-notify-rm-watch watch-descriptor))
-          bibtex-completion-file-watch-descriptors)
-    (setq bibtex-completion-file-watch-descriptors nil)
-
-    ;; Check that all specified bibliography files exist and add file
-    ;; watches for automatic reloading of the bibliography when a file
-    ;; is changed:
-    (el-patch-remove (mapc (lambda (file)
-                             (if (f-file? file)
-                                 (let ((watch-descriptor
-                                        (file-notify-add-watch file
-                                                               '(change)
-                                                               (lambda (event) (bibtex-completion-candidates)))))
-                                   (setq bibtex-completion-file-watch-descriptors
-                                         (cons watch-descriptor bibtex-completion-file-watch-descriptors)))
-                               (user-error "Bibliography file %s could not be found" file)))
-                           (bibtex-completion-normalize-bibliography)))
-
-    ;; Pre-calculate minimal widths needed by the format strings for
-    ;; various entry types:
-    (setq bibtex-completion-display-formats-internal
-          (mapcar (lambda (format)
-                    (let* ((format-string (cdr format))
-                           (fields-width 0)
-                           (string-width
-                            (string-width
-                             (s-format format-string
-                                       (lambda (field)
-                                         (setq fields-width
-                                               (+ fields-width
-                                                  (string-to-number
-                                                   (or (cadr (split-string field ":"))
-                                                       ""))))
-                                         "")))))
-                      (-cons* (car format) format-string (+ fields-width string-width))))
-                  bibtex-completion-display-formats)))
-
-  :config
-  (setq bibtex-completion-pdf-open-function 'find-file)
+  :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `bibtex-completion-bibliography' after `paths-files-bibliography-all' is set."
               (setq bibtex-completion-bibliography paths-files-bibliography-all)))
+
+  :config/el-patch
+  ;; disable file watchers
+  (defun bibtex-completion-init ()
+  "Check that the files and directories specified by the user actually exist.
+Also sets `bibtex-completion-display-formats-internal'."
+
+  ;; Remove current watch-descriptors for bibliography files:
+  (mapc (lambda (watch-descriptor)
+          (file-notify-rm-watch watch-descriptor))
+        bibtex-completion-file-watch-descriptors)
+  (setq bibtex-completion-file-watch-descriptors nil)
+
+  ;; Check that all specified bibliography files exist and add file
+  ;; watches for automatic reloading of the bibliography when a file
+  ;; is changed:
+  (el-patch-remove (mapc (lambda (file)
+                           (if  (f-file? file)
+                               (if bibtex-completion-watch-bibliography
+                                   (let ((watch-descriptor
+                                          (file-notify-add-watch file
+                                                                 '(change)
+                                                                 (lambda (event) (bibtex-completion-candidates)))))
+                                     (setq bibtex-completion-file-watch-descriptors
+                                           (cons watch-descriptor bibtex-completion-file-watch-descriptors))))
+                             (user-error "Bibliography file %s could not be found" file)))
+                         (bibtex-completion-normalize-bibliography)))
+
+  ;; Pre-calculate minimal widths needed by the format strings for
+  ;; various entry types:
+  (setq bibtex-completion-display-formats-internal
+        (mapcar (lambda (format)
+                  (let* ((format-string (cdr format))
+                         (fields-width 0)
+                         (string-width
+                          (string-width
+                           (s-format format-string
+                                     (lambda (field)
+                                       (setq fields-width
+                                             (+ fields-width
+                                                (string-to-number
+                                                 (or (cadr (split-string field ":"))
+                                                     ""))))
+                                       "")))))
+                    (-cons* (car format) format-string (+ fields-width string-width))))
+                bibtex-completion-display-formats)))
+
+  :config
+  (setq bibtex-completion-pdf-open-function 'find-file)
   (setq bibtex-completion-notes-path paths-dir-bibliographic-notes)
   (setq bibtex-completion-pdf-field "file")
   (setq bibtex-dialect 'biblatex))
@@ -10198,19 +9598,20 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 
 #+begin_src emacs-lisp :results silent
 (use-package citar
-  :elpaca
-  (citar :type git
-         :host github
-         :repo "emacs-citar/citar"
-         :includes (citar-org))
+  :elpaca (citar :type git
+                 :host github
+                 :repo "emacs-citar/citar"
+                 :includes (citar-org))
   :after oc vertico embark marginalia
   :demand t
-  :config
-  (setq citar-open-note-functions '(orb-citar-edit-note))
+  :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `citar-bibliography' after `paths-files-bibliography-all' is set."
               (setq citar-bibliography paths-files-bibliography-all)))
+
+  :config
+  (setq citar-open-note-functions '(orb-citar-edit-note))
   (setq citar-notes-paths `(,paths-dir-bibliographic-notes))
   (setq citar-at-point-function 'embark-act)
   (setq citar-symbol-separator "  ")
@@ -10263,6 +9664,9 @@ Having headings tagged with the type of work they are notes of allows me to quer
 :ID:       6CC7F660-F6E6-4605-AA42-B495FF090B5D
 :END:
 
+
+/[[file:extras/citar-extras.el][citar-extras]] collects my extensions for ~citar~./
+
 #+begin_src emacs-lisp
 (use-personal-package citar-extras
   :after citar
@@ -10287,11 +9691,13 @@ Having headings tagged with the type of work they are notes of allows me to quer
 (use-feature citar-citeproc
   :demand t
   :after citar citeproc citar-extras tlon-babel
-  :config
+  :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
-              "Set `citar-citeproc-csl-styles-dir' after `tlon-babel-dir-styles' is set."
-                (setq citar-citeproc-csl-styles-dir tlon-babel-dir-styles)))
+              "Set `citar-citeproc-csl-styles-dir' after `tlon-babel-refs-styles-dir' is set."
+                (setq citar-citeproc-csl-styles-dir tlon-babel-refs-styles-dir)))
+
+  :config
   (setq citar-citeproc-csl-style "biblioteca-altruismo-eficaz.csl")
   (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir)
   ;; https://github.com/emacs-citar/citar/wiki/Indicators
@@ -10400,9 +9806,12 @@ in the file. Data comes from www.ebook.de."
                   (s-trim (buffer-string))))
         (save-buffer))))
 
-  (delete 'orcb-check-journal org-ref-clean-bibtex-entry-hook)
-  (delete 'orcb-download-pdf org-ref-clean-bibtex-entry-hook))
+  (dolist (fun '(org-ref-replace-nonascii
+                 orcb-check-journal
+                 orcb-download-pdf))
+  (delete fun org-ref-clean-bibtex-entry-hook)))
 #+end_src
+
 *** TODO Define ~isbn-to-bibtex~ via elpatch
 :PROPERTIES:
 :ID:       A3B5FC74-45C6-475C-8D31-B8355F12747C
@@ -10455,11 +9864,13 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 #+begin_src emacs-lisp :results silent
 (use-package ebib
   :demand t
-  :config
+  :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `ebib-preload-bib-files' after `paths-files-bibliography-all' is set."
               (setq ebib-preload-bib-files paths-files-bibliography-all)))
+
+  :config
   (setq ebib-notes-directory paths-dir-bibliographic-notes)
   (setq ebib-notes-use-org-capture t)
   (setq ebib-notes-display-max-lines 9999)
@@ -10562,6 +9973,9 @@ The macro below generates the commands correctly. But attempting to define key b
 :PROPERTIES:
 :ID:       9E86F42E-2F41-4BB7-ABC5-1C929DBD5C06
 :END:
+
+
+/[[file:extras/ebib-extras.el][ebib-extras]] collects my extensions for ~ebib~./
 
 #+begin_src emacs-lisp
 (use-personal-package ebib-extras
@@ -10698,6 +10112,9 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 :ID:       29BBF8F1-FC6D-4AFE-AEE4-6C01BB4AAA5F
 :END:
 
+
+/[[file:extras/zotra-extras.el][zotra-extras]] collects my extensions for ~zotra~./
+
 #+begin_src emacs-lisp
 (use-personal-package zotra-extras
   :demand t
@@ -10729,6 +10146,21 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :config
   (setq internet-archive-ade-close-when-done t)
   (add-hook 'internet-archive-protocol-hook #'frame-extras-restore-focus))
+#+end_src
+
+** scihub
+:PROPERTIES:
+:ID:       C8F5B1DC-15F3-4D3A-9363-A32AEE1D34D4
+:END:
+
+/[[https://github.com/benthamite/scihub][scihub]] supports the downloading of files from SciHub./
+
+#+begin_src emacs-lisp
+(use-package scihub
+  :elpaca (scihub
+           :host github
+           :repo "benthamite/scihub")
+  :demand t)
 #+end_src
 
 * email
@@ -10987,7 +10419,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-index-lazy-check nil) ; t improves performance
 
   (setq mu4e-compose-context-policy 'ask)
-  (setq mu4e-context-policy 'ask)
+  (setq mu4e-context-policy nil)
   (setq mu4e-modeline-support nil)
   (setq mu4e-headers-fields '((:human-date . 16)
                               (:from . 30)
@@ -11067,21 +10499,21 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       A131F743-C780-4D66-9F1A-D3F63F92DE0B
 :END:
 
+
+/[[file:extras/mu4e-extras.el][mu4e-extras]] collects my extensions for ~mu4e~./
+
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
 (use-personal-package mu4e-extras
   :after mu4e
   :demand t
+  :init
+  (add-hook 'elpaca-after-init-hook #'mu4e-extras-set-shortcuts)
+  (add-hook 'elpaca-after-init-hook #'mu4e-extras-set-contexts)
+
   :config
   (setq mu4e-extras-inbox-folder "/Inbox")
   (setq mu4e-extras-daily-folder "/Daily")
 
-  (add-hook 'elpaca-after-init-hook
-            (lambda ()
-              (dolist (shortcut `((,mu4e-extras-inbox-folder . ?i)
-                                  (,mu4e-extras-daily-folder . ?y)))
-                (add-to-list 'mu4e-maildir-shortcuts shortcut))))
-
-  (add-hook 'elpaca-after-init-hook #'mu4e-extras-set-contexts)
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-set-face-locally)
 
@@ -11119,7 +10551,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
 /[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
-[2023-10-28 Sat] Some updates in ~mu~~ v1.11.23 have broken ~org-msg~. To make it work, you can uninstall ~mu~ and then install the stable version via ~brew install mu~. Then use  [[https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipe-keyword-ref][ref]] keyword in the ~mu4e~ elpaca formula to install the commit of that version. As of today, ~brew info mu~ says the stable version of ~mu~ is 1.10.8. In the ~mu~ repo [[https://github.com/djcb/mu/releases][releases]] page, we see that the commit corresponding to this version is ~a8f002b~. So we use ~ref: "a8f002b"~.
+[2023-10-28 Sat] Some updates in ~mu~ v1.11.23 have broken ~org-msg~. To make it work, you can uninstall ~mu~ and then install the stable version via ~brew install mu~. Then use  [[https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipe-keyword-ref][ref]] keyword in the ~mu4e~ elpaca formula to install the commit of that version. As of today, ~brew info mu~ says the stable version of ~mu~ is 1.10.8. In the ~mu~ repo [[https://github.com/djcb/mu/releases][releases]] page, we see that the commit corresponding to this version is ~a8f002b~. So we use ~ref: "a8f002b"~.
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
 (use-package org-msg
@@ -11216,7 +10648,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
   :general
   (org-msg-edit-mode-map
    "s-a" 'org-msg-attach
-   "s-b" 'org-msg-goto-body))
+   "s-b" 'org-msg-extras-begin-compose))
 #+end_src
 
 *** TODO [#5] Figure out how to make ~org-msg~ preserve formatting of quoted emails
@@ -11236,6 +10668,9 @@ I.e. the message quoted when on replies to, or forwards, an existing email.
 :PROPERTIES:
 :ID:       672D77D8-E9AA-4A66-A16A-EAB54E0238E6
 :END:
+
+
+/[[file:extras/org-msg-extras.el][org-msg-extras]] collects my extensions for ~org-msg~./
 
 #+begin_src emacs-lisp
 (use-personal-package org-msg-extras
@@ -11415,6 +10850,9 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 :ID:       C7D90E9B-3503-4BFA-A736-89803A9DA664
 :END:
 
+
+/[[file:extras/telega-extras.el][telega-extras]] collects my extensions for ~telega~./
+
 #+begin_src emacs-lisp
 (use-personal-package telega-extras
   :after telega telega-dired-dwim
@@ -11428,7 +10866,6 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
    "L" 'telega-extras-chat-org-capture-leo)
   (telega-chat-mode-map
    "s-v" 'org-extras-paste-html
-   "M-s-s" 'telega-extras-chatbuf-attach-most-recent-screenshot
    "M-s-t" 'telega-extras-chatbuf-attach-most-recent-file)
   (dired-mode-map
    "M-s-a" 'telega-extras-dired-attach-send)
@@ -11532,6 +10969,9 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :PROPERTIES:
 :ID:       15B6192C-652C-47FC-8477-0B701129E89F
 :END:
+
+
+/[[file:extras/browse-url-extras.el][browse-url-extras]] collects my extensions for ~browse-url~.
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :browse-url)
 (use-personal-package browse-url-extras
@@ -11847,6 +11287,9 @@ These key bindings produce the same behavior in eww.
 :PROPERTIES:
 :ID:       57DE6F0B-9245-4E39-A747-6C2A6714B02A
 :END:
+
+
+/[[file:extras/elfeed-extras.el][elfeed-extras]] collects my extensions for ~elfeed~./
 
 #+begin_src emacs-lisp
 (use-personal-package elfeed-extras
@@ -12320,6 +11763,9 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 :ID:       544201E3-BFB5-4398-AECC-EDD45410C064
 :END:
 
+
+/[[file:extras/org-web-tools-extras.el][org-web-tools-extras]] collects my extensions for ~org-web-tools~./
+
 #+begin_src emacs-lisp
 (use-personal-package org-web-tools-extras
   :after org-web-tools-extras
@@ -12700,6 +12146,9 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 :ID:       07EA04A6-65BE-4AF9-A945-99095D719815
 :END:
 
+
+/[[file:extras/bbdb-extras.el][bbdb-extras]] collects my extensions for ~bbdb~./
+
 #+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :bbdb)
 (use-personal-package bbdb-extras
   :after bbdb
@@ -12803,16 +12252,6 @@ And finally, the section you've all been waiting for.
    ";" 'tetris-move-right))
 #+end_src
 
-** tlon-init
-:PROPERTIES:
-:ID:       8130737A-D75B-424C-8CDF-DDEF06281D59
-:END:
-
-#+begin_src emacs-lisp
-(when (tlon-init-machine-pablo-p)
-  (run-hooks 'tlon-init-post-init-hook))
-#+end_src
-
 * personal
 :PROPERTIES:
 :ID:       9D7B5C99-2380-4159-A8C8-4021CC0482DE
@@ -12835,6 +12274,292 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
  ;; "C-H-M-S-i" 'org-extras-switch-to-id ; delete
  "C-H-M-S-w" 'eww)
 #+end_src
+
+* appendices
+:PROPERTIES:
+:CUSTOM_ID: introduction
+:ID:       A7940400-DD17-4B0B-A9B2-565A207D680C
+:END:
+:LOGBOOK:
+CLOCK: [2021-10-20 Wed 19:56]--[2021-10-20 Wed 19:59] =>  0:03
+CLOCK: [2021-07-24 Sat 10:45]--[2021-07-24 Sat 10:56] =>  0:11
+CLOCK: [2021-07-23 Fri 15:26]--[2021-07-23 Fri 15:58] =>  0:32
+CLOCK: [2021-07-13 Tue 18:29]--[2021-07-13 Tue 18:47] =>  0:18
+CLOCK: [2021-07-11 Sun 21:41]--[2021-07-11 Sun 22:14] =>  0:33
+CLOCK: [2021-12-03 Fri 21:49]--[2021-12-03 Fri 21:56] =>  0:07
+CLOCK: [2021-06-15 Tue 20:45]--[2021-06-15 Tue 20:52] =>  0:07
+CLOCK: [2021-06-03 Thu 16:09]--[2021-06-03 Thu 16:37] =>  0:28
+CLOCK: [2021-06-01 Tue 21:00]--[2021-06-01 Tue 21:59] =>  0:59
+CLOCK: [2021-05-18 Tue 09:22]--[2021-05-18 Tue 09:32] =>  0:10
+CLOCK: [2021-05-14 Fri 15:45]--[2021-05-14 Fri 16:01] =>  0:00
+CLOCK: [2021-04-27 Tue 22:10]--[2021-04-27 Tue 22:26] =>  0:16
+CLOCK: [2021-03-31 Wed 10:10]--[2021-03-31 Wed 11:08] =>  0:58
+CLOCK: [2021-03-30 Tue 15:21]--[2021-03-30 Tue 18:00] =>  2:39
+CLOCK: [2021-03-30 Tue 09:43]--[2021-03-30 Tue 11:46] =>  2:03
+CLOCK: [2021-03-22 Mon 21:40]--[2021-03-22 Mon 21:49] =>  0:09
+CLOCK: [2021-03-20 Sat 13:16]--[2021-03-20 Sat 13:30] =>  0:14
+CLOCK: [2021-03-04 Thu 10:10]--[2021-03-04 Thu 10:37] =>  0:27
+CLOCK: [2021-03-02 Tue 21:12]--[2021-03-02 Tue 21:50] =>  0:38
+CLOCK: [2021-03-01 Mon 10:11]--[2021-03-01 Mon 10:28] =>  0:17
+CLOCK: [2021-02-23 Tue 10:45]--[2021-02-23 Tue 10:54] =>  0:09
+CLOCK: [2021-02-04 Thu 19:36]--[2021-02-04 Thu 20:54] =>  1:18
+CLOCK: [2021-02-04 Thu 18:40]--[2021-02-04 Thu 19:33] =>  0:53
+CLOCK: [2021-02-04 Thu 16:40]--[2021-02-04 Thu 18:35] =>  1:55
+CLOCK: [2021-02-04 Thu 12:27]--[2021-02-04 Thu 12:44] =>  0:17
+CLOCK: [2021-02-04 Thu 12:19]--[2021-02-04 Thu 12:27] =>  0:08
+CLOCK: [2021-02-04 Thu 09:30]--[2021-02-04 Thu 10:49] =>  1:19
+CLOCK: [2021-02-03 Wed 22:09]--[2021-02-03 Wed 22:46] =>  0:37
+CLOCK: [2021-02-03 Wed 20:24]--[2021-02-03 Wed 20:33] =>  0:09
+CLOCK: [2021-02-03 Wed 18:27]--[2021-02-03 Wed 20:00] =>  1:33
+CLOCK: [2021-02-03 Wed 19:43]--[2021-02-03 Wed 19:43] =>  0:00
+CLOCK: [2021-04-08 Thu 13:56]--[2021-04-08 Thu 14:12] =>  0:16
+CLOCK: [2021-04-03 Sat 19:06]--[2021-04-03 Sat 19:31] =>  0:25
+CLOCK: [2022-05-29 Sun 09:25]--[2022-05-29 Sun 10:31] =>  1:13
+CLOCK: [2021-07-24 Sat 09:51]--[2021-07-24 Sat 09:58] =>  0:07
+CLOCK: [2021-07-14 Wed 22:51]--[2021-07-14 Wed 23:09] =>  0:18
+CLOCK: [2021-03-07 Sun 18:52]--[2021-03-07 Sun 18:57] =>  0:05
+CLOCK: [2021-03-04 Thu 09:05]--[2021-03-04 Thu 09:22] =>  0:17
+CLOCK: [2021-02-03 Wed 16:32]--[2021-02-03 Wed 18:27] =>  1:55
+CLOCK: [2021-02-03 Wed 16:01]--[2021-02-03 Wed 16:32] =>  0:31
+CLOCK: [2021-02-03 Wed 15:40]--[2021-02-03 Wed 16:01] =>  0:21
+CLOCK: [2021-02-03 Wed 13:56]--[2021-02-03 Wed 15:02] =>  1:06
+CLOCK: [2021-01-31 Sun 15:22]--[2021-01-31 Sun 16:01] =>  0:39
+CLOCK: [2021-01-31 Sun 10:07]--[2021-01-31 Sun 10:28] =>  0:21
+CLOCK: [2021-01-24 Sun 11:41]--[2021-01-24 Sun 11:48] =>  0:07
+CLOCK: [2021-01-23 Sat 08:40]--[2021-01-23 Sat 08:46] =>  0:06
+CLOCK: [2021-01-22 Fri 09:29]--[2021-01-22 Fri 09:32] =>  0:03
+CLOCK: [2021-01-12 Tue 19:22]--[2021-01-12 Tue 19:27] =>  0:05
+CLOCK: [2021-01-12 Tue 11:41]--[2021-01-12 Tue 12:42] =>  1:01
+CLOCK: [2021-01-08 Fri 13:34]--[2021-01-08 Fri 13:34] =>  0:00
+CLOCK: [2021-01-06 Wed 22:04]--[2021-01-06 Wed 22:14] =>  0:10
+CLOCK: [2021-01-06 Wed 13:46]--[2021-01-06 Wed 13:58] =>  0:12
+CLOCK: [2021-01-06 Wed 12:30]--[2021-01-06 Wed 12:53] =>  0:23
+CLOCK: [2021-01-06 Wed 11:02]--[2021-01-06 Wed 11:34] =>  0:32
+CLOCK: [2021-01-03 Sun 22:11]--[2021-01-03 Sun 22:18] =>  0:07
+CLOCK: [2021-01-03 Sun 22:03]--[2021-01-03 Sun 22:07] =>  0:04
+CLOCK: [2021-01-02 Sat 14:00]--[2021-01-02 Sat 14:06] =>  0:06
+CLOCK: [2020-12-31 Thu 13:56]--[2020-12-31 Thu 14:25] =>  0:29
+CLOCK: [2020-12-31 Thu 13:46]--[2020-12-31 Thu 13:52] =>  0:06
+CLOCK: [2020-12-29 Tue 15:07]--[2020-12-29 Tue 15:18] =>  0:11
+CLOCK: [2020-12-22 Tue 09:57]--[2020-12-22 Tue 10:25] =>  0:28
+CLOCK: [2020-12-19 Sat 12:18]--[2020-12-19 Sat 12:22] =>  0:04
+CLOCK: [2020-12-14 Mon 18:39]--[2020-12-14 Mon 18:44] =>  0:05
+CLOCK: [2020-12-07 Mon 18:15]--[2020-12-07 Mon 18:27] =>  0:12
+CLOCK: [2020-10-20 Tue 17:48]--[2020-10-20 Tue 18:10] =>  0:22
+CLOCK: [2020-10-20 Tue 17:27]--[2020-10-20 Tue 17:38] =>  0:11
+CLOCK: [2020-10-20 Tue 11:30]--[2020-10-20 Tue 11:36] =>  0:06
+CLOCK: [2020-10-19 Mon 20:24]--[2020-10-19 Mon 20:39] =>  0:15
+CLOCK: [2020-10-15 Thu 20:37]--[2020-10-15 Thu 20:52] =>  0:15
+CLOCK: [2020-10-15 Thu 18:56]--[2020-10-15 Thu 19:06] =>  0:10
+CLOCK: [2020-10-15 Thu 18:11]--[2020-10-15 Thu 18:26] =>  0:15
+CLOCK: [2020-10-14 Wed 07:31]--[2020-10-14 Wed 07:52] =>  0:21
+CLOCK: [2020-10-12 Mon 18:15]--[2020-10-12 Mon 19:58] =>  1:43
+CLOCK: [2020-10-12 Mon 15:28]--[2020-10-12 Mon 15:29] =>  0:01
+CLOCK: [2020-10-11 Sun 21:10]--[2020-10-11 Sun 21:15] =>  0:05
+CLOCK: [2020-10-11 Sun 10:05]--[2020-10-11 Sun 10:19] =>  0:14
+CLOCK: [2020-10-10 Sat 18:21]--[2020-10-10 Sat 18:25] =>  0:04
+CLOCK: [2020-10-05 Mon 18:56]--[2020-10-05 Mon 18:58] =>  0:02
+CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
+CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
+CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
+:END:
+
+** key bindings
+:PROPERTIES:
+:ID:       a47d148a-1b5e-4850-a1a7-6cd745bad696
+:END:
+Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~Control~ (~C~), ~Meta~ (~M~), ~Super~ (~s~), ~Hyper~ (~H~), and ~Alt~ (~A~). (The letter abbreviation for the ~Super~ modifier is ~s~ because ~S~ is assigned to the ~Shift~ key.) I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "pseudo modifiers", or mappings between individual keys and combinations of two or more Emacs modifiers:
+
+[[file:etc/moonlander-emacs.png]]
+
+So when you see a monstrous key binding such as ~C-H-M-s-d~, remember that everything that precedes the final key (in this case, ~d~) represents a single key press (in this case, ~l~). For details, see my [[../karabiner/modifications.org][Karabiner config file]], specifically the "Key associations" section.
+
+** debugging                                                       :noexport:
+:PROPERTIES:
+:ID:       ED2955EA-3BD8-4058-A973-3CC87847D9A5
+:END:
+:LOGBOOK:
+CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
+:END:
+- Run ~bug-hunter-init-file~ (from the [[id:0C19171B-8DFA-4E06-9E17-45C1F9158C28][elisp-bug-hunter]] package) and select "automatic error detection" (~e~).
+- Run ~emacs -q~ or ~emacs --debug-init~.
+- Cut suspected sections of the org file (~org-cut-subtree~), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections, while leaving the literal org file intact.
+- Use ~magit-log-buffer-file~ or ~git-timemachine~ to explore previous versions of your config file.
+- Set ~debug-on-error~ to ~t~ to see a backtrace of an error. Or call ~toggle-debug-on-error~ interactively.
+  - To determine what function is changing the value of a variable, use ~debug-on-variable-change~.
+  - To determine what function is generating a particular message, use ~debug-on-message~.
+- Bisect the init file until you locate the culprit.
+  - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).
+- If Emacs becomes unresponsive, run ~pkill -USR2 Emacs~ in a terminal. Emacs will likely trigger a backtrace, which you can inspect to diagnose the issue.
+- You may want to periodically save a stable init file so that you can temporarily use Emacs with all your customizations while debugging your current init file (instead of having to use an external editor or a non-customized Emacs). Say you call this stable file ~stable.el~. Then you can tell Emacs to load this file on startup file with ~emacs -q -l ~/stable.el~.
+- Use ~edebug-defun~. See [[https://org-roam.discourse.group/t/need-help-getting-noter-pdfs-and-org-roam-bibtex-to-work/794/45?u=pablo][this discussion]].
+- For org-related issues (e.g. tangling the config file), use ~org-lint~, which checks the current buffer for syntax mistakes.
+- For more ideas, see:
+  - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
+  - [[https://whatacold.io/blog/2022-07-17-emacs-elisp-debug/][Emacs Debugging Basics - whatacold's space]]
+  - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
+  - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]]
+
+** profiling
+:PROPERTIES:
+:ID:       60B7A58C-A79A-4EEF-A91D-EECC85CFA173
+:END:
+- If you use ~use-package~, the command ~use-package-report~ displays a table showing the impact of each package on load times.
+- You may also want to try [[https://www.emacswiki.org/emacs/ProfileDotEmacs][profile-dotemacs]].
+
+** installation
+:PROPERTIES:
+:ID:       6712DA4C-BA45-4E74-8AEF-C903462D9BCB
+:END:
+:LOGBOOK:
+CLOCK: [2021-04-20 Tue 22:00]--[2021-04-20 Tue 23:28] =>  1:28
+CLOCK: [2021-04-20 Tue 20:55]--[2021-04-20 Tue 21:26] =>  0:31
+CLOCK: [2021-04-03 Sat 14:40]--[2021-04-03 Sat 15:07] =>  0:27
+CLOCK: [2021-04-02 Fri 22:15]--[2021-04-02 Fri 22:35] =>  0:20
+CLOCK: [2021-03-31 Wed 22:00]--[2021-03-31 Wed 23:00] =>  1:00
+CLOCK: [2021-03-31 Wed 21:40]--[2021-03-31 Wed 21:47] =>  0:07
+CLOCK: [2021-03-27 Sat 10:08]--[2021-03-27 Sat 13:05] =>  2:57
+CLOCK: [2021-03-27 Sat 07:49]--[2021-03-27 Sat 09:10] =>  1:21
+CLOCK: [2021-03-27 Sat 16:48]--[2021-03-27 Sat 16:50] =>  0:02
+CLOCK: [2021-03-22 Mon 15:46]--[2021-03-22 Mon 15:53] =>  0:07
+CLOCK: [2021-03-22 Mon 15:00]--[2021-03-22 Mon 15:20] =>  0:20
+CLOCK: [2021-02-27 Sat 17:20]--[2021-02-27 Sat 18:00] =>  0:40
+CLOCK: [2021-02-25 Thu 08:30]--[2021-02-25 Thu 11:54] =>  3:24
+CLOCK: [2021-02-07 Sun 15:01]--[2021-02-07 Sun 15:18] =>  0:17
+CLOCK: [2021-02-07 Sun 14:52]--[2021-02-07 Sun 14:54] =>  0:26
+CLOCK: [2021-02-07 Sun 14:30]--[2021-02-07 Sun 14:49] =>  0:19
+CLOCK: [2021-02-04 Thu 08:10]--[2021-02-04 Thu 09:25] =>  1:15
+CLOCK: [2020-09-22 Tue 12:15]--[2020-09-22 Tue 13:01] =>  0:46
+CLOCK: [2020-09-22 Tue 10:50]--[2020-09-22 Tue 12:15] =>  1:25
+CLOCK: [2022-04-27 Wed 16:21]--[2022-04-27 Wed 16:44] =>  0:23
+CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
+:END:
+
+For personal reference, these are the most recent Emacs installations (in reverse chronological order).
+
+[2023-02-23 Thu]
+
+#+begin_src shell :tangle no
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+end_src
+
+[2023-02-23 Thu 02:10]
+
+#+begin_src shell :tangle no
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@28 --with-dbus --with-no-titlebar --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+end_src
+
+- Very slow.
+- Theme broke for some reason.
+- Some functions (e.g. ~keymap-unset~) not available).
+- Telega doesn't show profile pics
+
+[2023-02-14 Tue 20:07]:
+
+#+begin_src shell :tangle no
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+end_src
+
+[2023-02-07 Tue 21:52]:
+
+#+begin_src shell :tangle no
+brew install emacs-mac --with-dbus --with-starter --with-natural-title-bar --with-native-comp --with-mac-metal --with-xwidgets --with-imagemagick  --with-librsvg  --with-spacemacs-icon
+#+end_src
+
+** other config files
+:PROPERTIES:
+:ID:       20E3D45E-D8AB-44BD-A5E2-C6DF9C20744E
+:END:
+
+:LOGBOOK:
+CLOCK: [2022-06-29 Wed 18:08]--[2022-06-29 Wed 18:18] =>  0:10
+CLOCK: [2022-06-17 Fri 21:20]--[2022-06-17 Fri 21:47] =>  0:27
+CLOCK: [2021-08-02 Mon 21:29]--[2021-08-02 Mon 21:30] =>  0:01
+CLOCK: [2021-06-30 Wed 20:43]--[2021-06-30 Wed 21:15] =>  0:32
+CLOCK: [2021-06-30 Wed 19:32]--[2021-06-30 Wed 20:02] =>  0:30
+CLOCK: [2021-06-05 Sat 19:34]--[2021-06-05 Sat 19:41] =>  0:07
+CLOCK: [2021-06-03 Thu 16:09]--[2021-06-03 Thu 16:37] =>  0:28
+CLOCK: [2021-06-03 Thu 13:47]--[2021-06-03 Thu 13:52] =>  0:05
+CLOCK: [2021-06-03 Thu 07:21]--[2021-06-03 Thu 07:50] =>  0:29
+CLOCK: [2021-06-02 Wed 22:00]--[2021-06-02 Wed 22:11] =>  0:11
+CLOCK: [2021-06-02 Wed 21:44]--[2021-06-02 Wed 21:50] =>  0:06
+CLOCK: [2021-05-26 Wed 19:32]--[2021-05-26 Wed 19:44] =>  0:12
+CLOCK: [2021-05-23 Sun 19:52]--[2021-05-23 Sun 20:02] =>  0:10
+CLOCK: [2021-05-22 Sat 16:36]--[2021-05-22 Sat 16:44] =>  0:08
+CLOCK: [2021-04-03 Sat 18:21]--[2021-04-03 Sat 18:36] =>  0:15
+CLOCK: [2021-03-27 Sat 17:00]--[2021-03-27 Sat 17:32] =>  0:32
+CLOCK: [2021-03-26 Fri 13:31]--[2021-03-26 Fri 14:14] =>  0:43
+CLOCK: [2021-03-26 Fri 12:47]--[2021-03-26 Fri 13:18] =>  0:00
+CLOCK: [2021-03-26 Fri 10:47]--[2021-03-26 Fri 10:57] =>  0:10
+CLOCK: [2021-03-23 Tue 14:30]--[2021-03-23 Tue 16:45] =>  2:15
+CLOCK: [2021-03-23 Tue 14:10]--[2021-03-23 Tue 14:30] =>  0:20
+CLOCK: [2021-03-21 Sun 16:23]--[2021-03-21 Sun 16:32] =>  0:09
+CLOCK: [2021-02-28 Sun 10:12]--[2021-02-28 Sun 10:27] =>  0:15
+CLOCK: [2021-02-04 Thu 12:49]--[2021-02-04 Thu 14:36] =>  1:47
+:END:
+The below is a link dump for config files and other related links I have found useful in the past or may want to check out for ideas at some point in the future.
+- [[https://github.com/emacs-tw/awesome-emacs][Awesome Emacs]]: A list of useful Emacs packages.
+- [[https://sam217pa.github.io/2016/09/02/how-to-build-your-own-spacemacs/][How to build your own spacemacs · Samuel Barreto]]
+- [[https://www.reddit.com/r/emacs/comments/3lt3c6/using_spacemacs_modeline_in_vanilla_emacs/][Using SpaceMacs mode-line in vanilla Emacs : emacs]]
+- [[https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-start-up-so-quickly][How does Emacs Doom start so quickly?]] Might be useful for ideas on how to speed up config file.
+- [[https://prelude.emacsredux.com/en/latest/][Emacs Prelude]]. I've seen this recommended. Might want to check it out.
+- [[https://www.reddit.com/r/emacs/comments/ehjcu2/screenshot_polishing_my_emacs_who_said_an_old/][Polishing my Emacs -- who said an old tool can't look modern]]
+  [[https://github.com/mbriggs/.emacs.d-oldv2/blob/master/init/init-keymaps.el][.emacs.d-oldv2/init-keymaps.el at master · mbriggs/.emacs.d-oldv2]]. Lots of key bindings.
+
+Literate configuration
+- [[https://commonplace.doubleloop.net/setting-up-a-spacemacs-literate-config-file][Setting up a spacemacs literate config file]]
+- [[https://www.reddit.com/r/spacemacs/comments/atuzd9/does_anyone_have_their_dotfile_redone_in_literate/][Does anyone have their dotfile redone in literate programming with babel? : spacemacs]]
+- Diego Zamboni, /[[https://leanpub.com/lit-config][Literate configuration]]/
+- [[https://emacs.sJtackexchange.com/questions/3143/can-i-use-org-mode-to-structure-my-emacs-or-other-el-configuration-file][elisp - Can I use org-mode to structure my .emacs or other .el configuration file? - Emacs Stack Exchange]]
+
+Some useful config files:
+- [[https://zzamboni.org/post/my-emacs-configuration-with-commentary/][Diego Zamboni]]
+- [[https://jamiecollinson.com/blog/my-emacs-config/][Jamie Collinson]]
+- [[https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el][Jethro Kuan]]. Creator or ~org-roam~ and author of some great posts on note-taking. Not literal.
+- [[https://github.com/joodie/emacs-literal-config/blob/master/emacs.org][Joost Diepenmat]]
+- [[https://github.com/gjstein/emacs.d][Gregory Stein]]. Author of the excellent [[http://cachestocaches.com/][Caches to Caches]] blog.
+- [[https://luca.cambiaghi.me/vanilla-emacs/readme.html][Luca Cambiaghi]]
+- [[https://config.phundrak.com/emacs][Lucien Cartier-Tilet]] (Spacemacs)
+- [[https://github.com/isamert/dotfiles/blob/master/emacs/index.org][Isa Mert Gurbuz]]
+  - Has a cool [[https://isamert.net/index.html][blog]] about org mode and other topics.
+- [[https://www.mfoot.com/blog/2015/11/22/literate-emacs-configuration-with-org-mode/][Martin Foot]]
+  - Has a very simple init file.
+  - [[https://github.com/mfoo/dotfiles/blob/master/.emacs.d/config.org][.org file]]
+- [[https://github.com/mpereira/.emacs.d][Murilo Pereira]].
+  - Very well organized. The author has also written some excellent blog posts about Emacs.
+- [[https://out-of-cheese-error.netlify.app/spacemacs-config][OutOfCheeseError]]
+- [[https://protesilaos.com/dotemacs/][Protesilaos Stavrou]]
+  - [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][here]] is the last commit before he abandoned ~use-package~ and ~straight~
+- [[https://pages.sachachua.com/.emacs.d/Sacha.html][Sacha Chua]]. A legend in the Emacs community.
+- [[https://github.com/novoid/dot-emacs/blob/master/config.org][Karl Voit]].
+  - Author of ~Memacs~, prolific blogger.
+- [[https://github.com/sriramkswamy/dotemacs][Sriram Krishnaswamy]] ([[https://sriramkswamy.github.io/][website]])
+  - [[https://sriramkswamy.github.io/dotemacs/][.org file]]
+- [[https://github.com/sfromm/emacs.d#twitter][Stephen Fromm]]. Has an extended list of config files [[https://github.com/sfromm/emacs.d#inspiration][here]].
+- [[https://tecosaur.github.io/emacs-config/config.html][Tecosaur]]
+- [[https://www.tquelch.com/posts/emacs-config/#languages][Tim Quelch]]
+- [[http://irfu.cea.fr/Pisp/vianney.lebouteiller/emacs.html#orgbcdc8b2][Vianney Lebouteiller]]
+- [[https://github.com/bixuanzju/emacs.d/blob/master/emacs-init.org#meta][Xuan Bi]].
+- [[https://github.com/turbana/emacs-config][GitHub - turbana/emacs-config: My personal emac's configuration]]. Some potentially useful stuff on native comp, debugging, etc.
+- [[https://github.com/creichert/dotfiles/blob/master/emacs/.emacs][dotfiles/.emacs at master · creichert/dotfiles · GitHub]]. Has detailed Gnus, Slack config.
+- [[https://github.com/ianpan870102/yay-evil-emacs][yay-evil-emacs]]. slick design.
+- [[https://github.com/rememberYou/.emacs.d][GitHub - rememberYou/.emacs.d: 🎉 Personal GNU Emacs configuration]]. Has a bunch of Reddit posts explaining how he uses the different packages.
+- [[https://github.com/nkicg6/emacs-config/blob/master/config.org][emacs-config/config.org at master · nkicg6/emacs-config · GitHub]]. Found it while searching for org-ref.
+- [[https://github.com/yiufung/dot-emacs/blob/master/init.el][dot-emacs/init.el at master · yiufung/dot-emacs · GitHub]]. Not literal. Lots of packages. Gnus, notmuch, Slack, etc. Author has great post on Anki.
+- [[https://github.com/tshu-w/.emacs.d][GitHub - tshu-w/.emacs.d: My personal Emacs config, based on Spacemacs]]. Has nice note-taking config, with org-roam, org-ref, Zotero, etc (see [[https://github.com/tshu-w/.emacs.d/blob/master/lisp/lang-org.el][here]]).
+- [[https://github.com/raxod502/radian/blob/e3aad124c8e0cc870ed09da8b3a4905d01e49769/emacs/radian.el][Radon Rosborough]]. Author of ~straight~ package manager.
+- [[https://github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org][Gonçalo Santos]]. Author of ~org-noter~.
+- [[https://github.com/tonyaldon/emacs.d/blob/master/init.el][Tony Aldon]]. Has some slick [[https://www.youtube.com/channel/UCQCrbWOFRmFYqoeou0Qv3Kg][videos]] on ~org-table~. Optimized key bindings.
+- [[https://github.com/progfolio/.emacs.d/blob/master/init.org][Nicholas Vollmer]]. Maitantainer of ~elpaca~. I copied his ~org-habits~ config. Haven't yet looked at the rest but looks like there's plenty of valuable material.
+- [[https://github.com/yantar92/emacs-config/blob/master/config.org][emacs-config/config.org at master · yantar92/emacs-config · GitHub]]. Focus on knowledge management with org. Lots of good stuff.
+- [[https://github.com/xenodium/dotsies/blob/main/dots.org][Álvaro Ramírez]]. Also users Karabiner.
+- [[https://github.com/karthink/.emacs.d][Karthik Chikmagalur]]. Has excellent blog posts on ~avy~, ~eshell~, ~re-builder~, etc.
+- [[https://github.com/iqbalansari/dotEmacs][Iqbal Ansari]].
+- [[https://www.danielclemente.com/emacs/confi.html][Daniel Clemente]].
+- [[https://github.com/patrl][Patrick Elliott]]
 
 * local variables
 :PROPERTIES:

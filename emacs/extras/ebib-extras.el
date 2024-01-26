@@ -32,20 +32,15 @@
 (require 'ebib)
 (require 'filenotify)
 (require 'mullvad)
+(require 'paths)
 (require 's)
+(require 'scihub)
 (require 'zotra)
+(require 'tlon-babel-refs)
+;; (require 'zotra-extras) ; recursive
+(require 'window-extras)
 
 ;;;; User options
-
-(defgroup ebib-extras ()
-  "Extensions for `ebib'."
-  :group 'ebib)
-
-(defcustom ebib-extras-scidownl
-  (expand-file-name "~/.pyenv/shims/scidownl")
-  "Location of `scidownl' (https://github.com/Tishacy/SciDownl)."
-  :type 'file
-  :group 'ebib-extras)
 
 ;;;; Functions
 
@@ -540,7 +535,7 @@ Used by the `ebib-extras-generate-search-commands' macro.")
 		     query)))
 	       ebib-extras-search-engines)))
 
-(ebib-extras-generate-search-commands)
+;; (ebib-extras-generate-search-commands)
 
 (defun ebib-extras-search (search-engine query)
   "Search for QUERY with SEARCH-ENGINE."
@@ -676,7 +671,7 @@ The list of film search functions is specified by
 		(read-string "Enter ISBN or DOI: "))))
     (cond ((ebib-extras-isbn-p id)
 	   (ebib-extras-search-book id))
-	  ((ebib-extras-doi-p id)
+	  ((scihub-is-doi-p id)
 	   (ebib-extras-search-article id))
 	  (t
 	   (user-error "Identifier does not appear to be an ISBN or DOI")))))
@@ -742,8 +737,8 @@ The list of article download functions is specified by
   (let ((id (or (ebib-extras-get-isbn)
 		(ebib-extras-get-field-value "doi")
 		(read-string "Enter ISBN or DOI: "))))
-    (cond ((ebib-extras-doi-p id)
-	   (ebib-extras-doi-download id))
+    (cond ((scihub-is-doi-p id)
+	   (scihub-download id))
 	  ;; there is now way (to my knowledge) of directly
 	  ;; downloading a book from its ISBN, so we search for it
 	  ;; instead
@@ -905,7 +900,7 @@ is created following the same schema as notes created with
 
 (defvar ebib-extras-auto-save-files
   `(,paths-file-personal-bibliography-new
-    ,tlon-babel-file-fluid)
+    ,tlon-babel-refs-file-fluid)
   "List of database files that should be auto-saved.
 The big files containing the `old' bibliographic entries are excluded.")
 
@@ -938,8 +933,8 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 (defvar ebib-extras-db-numbers
   `((,paths-file-personal-bibliography-new . 1)
     (,paths-file-personal-bibliography-old . 2)
-    (,tlon-babel-file-fluid . 3)
-    (,tlon-babel-file-stable . 4))
+    (,tlon-babel-refs-file-fluid . 3)
+    (,tlon-babel-refs-file-stable . 4))
   "Association list of database files and their numbers.")
 
 (defun ebib-extras-get-db-number (file)
@@ -1009,11 +1004,10 @@ If applicable, open external website to set rating there as well."
 (defun ebib-extras-move-entry-to-tlon ()
   "Move bibliographic entry associated with the key at point to the Tlön bibliography."
   (interactive)
-  (require 'tlon-babel)
   (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
     (citar-extras-goto-bibtex-entry key)
     (bibtex-extras-move-entry-to-tlon)
-    (ebib tlon-babel-file-fluid key)
+    (ebib tlon-babel-refs-file-fluid key)
     (ebib-extras-open-key key)))
 
 (defun ebib-extras-get-field-value (field)
@@ -1141,32 +1135,6 @@ Prompt the user for a title, unless TITLE is non-nil."
 		   ("date" . ,(ebib-extras-get-field-value "")))))
     (tlon-babel--create-entry-from-current fields)))
 
-(defun ebib-extras-doi-p (string)
-  "Return t if STRING is a valid DOI."
-  (string-match "^10.[[:digit:]]\\{4,9\\}/[().-;A-Z_-]+$" string))
-
-(defun ebib-extras-doi-download (doi)
-  "Download DOI from Sci-Hub."
-  (interactive "sDOI: ")
-  (unless (executable-find ebib-extras-scidownl)
-    (user-error
-     "Please install `scidownl' (https://github.com/Tishacy/SciDownl) and set `ebib-extras-scidownl' accordingly"))
-  (let* ((default-directory paths-dir-downloads)
-	 (process-name "scidownl-process")
-	 (command (format "'%s' download --doi %s" ebib-extras-scidownl doi))
-	 (buffer (generate-new-buffer "*do-download-output*"))
-	 (proc (start-process-shell-command process-name buffer command))
-	 download-successful)
-    (message "Trying to download DOI `%s'..." doi)
-    (set-process-filter proc
-			(lambda (process output)
-			  (when (string-match-p "Successfully download the url" output)
-			    (setq download-successful t))))
-    (set-process-sentinel proc
-			  (lambda (process signal)
-			    (if (and (string= signal "finished\n") download-successful)
-				(message "File downloaded successfully to `%s'." paths-dir-downloads)
-			      (message "File download failed."))))))
 
 ;;;;; pdf metadata
 
@@ -1204,7 +1172,7 @@ Authors enclosed in braces are left untouched, but the braces are removed."
                     (cond ((string-match "{\\(.*\\)}" author)
 			   (match-string 1 author))
 			  ((string-match "\\(.*\\), \\(.*\\)" author)
-                           (format "%s %s" 
+                           (format "%s %s"
                                    (match-string 2 author)
                                    (match-string 1 author)))
 			  (t author)))
@@ -1213,9 +1181,9 @@ Authors enclosed in braces are left untouched, but the braces are removed."
 
 (defun ebib-extras-format-authors (authors &optional separator max)
   "Format AUTHORS as a string.
-  The authors are separated by SEPARATOR, which defaults to \" & \". A maximum
-  of MAX authors are included in the string, which defaults to three. When MAX is
-  exceeded, only the first author will be listed, followed by \" et al\"."
+The authors are separated by SEPARATOR, which defaults to \" & \". A maximum of
+MAX authors are included in the string, which defaults to three. When MAX is
+exceeded, only the first author will be listed, followed by \" et al\"."
   (let ((separator (or separator " & "))
 	(max (or max 3)))
     (if (> (length authors) max)

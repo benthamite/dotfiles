@@ -27,6 +27,9 @@
 
 ;;; Code:
 
+(require 'files-extras)
+(require 'winum)
+
 ;;;; User options
 
 (defgroup window-extras ()
@@ -54,33 +57,6 @@
     (select-frame-set-input-focus (window-frame last-window))
     (select-window last-window)))
 
-;; Modified from endlessparentheses.com/emacs-narrow-or-widen-dwim.html
-(defun window-extras-narrow-or-widen-dwim ()
-  "Widen if buffer is narrowed, narrow-dwim otherwise.
-  Dwim means: region, org-src-block, org-subtree, ledger
-  transaction, or defun, whichever applies first. Narrowing to
-  org-src-block actually calls `org-edit-src-code'.
-
-  With prefix P, don't widen, just narrow even if buffer
-  is already narrowed."
-  (interactive)
-  (declare (interactive-only))
-  (cond ((buffer-narrowed-p) (widen))
-        ((region-active-p)
-         (narrow-to-region (region-beginning)
-                           (region-end)))
-        ((derived-mode-p 'org-mode)
-         ;; `org-edit-src-code' is not a real narrowing
-         ;; command. Remove this first conditional if
-         ;; you don't want it.
-         (cond ((ignore-errors (org-narrow-to-block) t))
-               (t (org-extras-narrow-to-entry-and-children))))
-        ((derived-mode-p 'latex-mode)
-         (LaTeX-narrow-to-environment))
-        ((derived-mode-p 'ledger-mode)
-         (ledger-mode-extras-narrow-to-xact))
-        (t (narrow-to-defun))))
-
 (defun window-extras-split-if-unsplit ()
   "Split windows when frame is unsplit.
 Split in three windows if `frame-width' is greater than
@@ -94,7 +70,10 @@ Split in three windows if `frame-width' is greater than
     (balance-windows)))
 
 (defun window-extras--move-or-swap (this-buffer other-buffer &optional target-window)
-  "docstring"
+  "Move THIS-BUFFER to the other window, and OTHER-BUFFER to the current window.
+If TARGET-WINDOW is non-nil, move THIS-BUFFER to TARGET-WINDOW and OTHER-BUFFER
+to the current window. If there is no other window, create it and move
+THIS-BUFFER to it."
   (window-extras-split-if-unsplit)
   (let* ((target-window (if (or (not target-window)
                                 (eq (window-extras-get-last-window) target-window)
@@ -109,56 +88,36 @@ Split in three windows if `frame-width' is greater than
     (select-window target-window)))
 
 (defun window-extras-buffer-swap ()
-  "Swap the current buffer and the buffer in the other
-window. If there is only one window, create a second one. If frame
-is wide enough, create a third."
+  "Swap the current buffer and the buffer in the other window.
+If there is only one window, create a second one."
   (interactive)
   (window-extras--move-or-swap
    (window-buffer)
    (window-buffer (window-extras-get-last-window))))
 
-(defun window-extras-buffer-move (&optional target-window)
-  "Move the current buffer to the other window. If there is only one
-window, create a second one. If frame is wide enough, create a third."
+(defun window-extras-buffer-move (target-window)
+  "Move the current buffer to the TARGET-WINDOW.
+If there is only one window, create a second one."
   (interactive)
-  (require 'files-extras)
   (window-extras--move-or-swap
-   (window-buffer)
-   (files-extras-get-alternate-buffer)
-   target-window))
+   (window-buffer) (files-extras-get-alternate-buffer) target-window))
 
 (defun window-extras-buffer-move-right ()
-  "docstring."
+  "Move the current buffer to the right window."
   (interactive)
   (window-extras-buffer-move
-   (winum-get-window-by-number
-    (1+
-     (mod
-      (winum-get-number)
-      (count-windows))))))
+   (winum-get-window-by-number (1+ (mod (winum-get-number) (count-windows))))))
 
 (defun window-extras-buffer-move-left ()
-  "docstring."
+  "Move the current buffer to the left window."
   (interactive)
   (window-extras-buffer-move
-   (winum-get-window-by-number
-    (1+
-     (mod
-      (count-windows)
-      (winum-get-number))))))
-
-(defun window-extras-buffer-move-dwim ()
-  "Based on frame size, create one or two additional windows if
-necessary, and move buffer to the other window or to the middle
-window depending on the number of present windows."
-  (interactive)
-  (window-extras-buffer-move (when (> (count-windows) 2) (winum-get-window-by-number 2))))
+   (winum-get-window-by-number (1+ (mod (count-windows) (winum-get-number))))))
 
 (defun window-extras-frame-is-maximized-p ()
   "Return t iff the current frame is maximized."
-  (and
-   (eq (frame-pixel-width) (display-pixel-width))
-   (eq (frame-pixel-height) (display-pixel-height))))
+  (and (eq (frame-pixel-width) (display-pixel-width))
+       (eq (frame-pixel-height) (display-pixel-height))))
 
 ;; superuser.com/a/132454/387888
 (defun window-extras-switch-to-minibuffer-window ()

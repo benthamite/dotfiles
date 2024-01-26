@@ -9238,12 +9238,14 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 (use-feature oc
   :after org
   :demand t
-  :config
+  :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `org-cite' vars after `tlon-babel' is loaded."
               ;; (setq org-cite-global-bibliography paths-files-bibliography-all) ; disabled for poor performance
               (setq org-cite-csl-styles-dir tlon-babel-refs-styles-dir)))
+
+  :config
   (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
@@ -9301,13 +9303,15 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 (use-feature bibtex
   :after ebib
   :demand t
-  :config
-  ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
-  ;; retorque.re/zotero-better-bibtex/citing/
+  :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `bibtex-files after `paths-files-bibliography-all' is set."
               (setq bibtex-files paths-files-bibliography-all)))
+
+  :config
+  ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
+  ;; retorque.re/zotero-better-bibtex/citing/
   (setq bibtex-search-entry-globally t)
   (setq bibtex-autokey-names 1)
   (setq bibtex-autokey-name-case-convert-function 'capitalize)
@@ -9483,6 +9487,12 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
   :elpaca (bibtex-completion
            :version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
   :defer 5
+  :init
+  (add-hook 'tlon-babel-post-init-hook
+            (lambda ()
+              "Set `bibtex-completion-bibliography' after `paths-files-bibliography-all' is set."
+              (setq bibtex-completion-bibliography paths-files-bibliography-all)))
+
   :config/el-patch
   ;; disable file watchers
   (defun bibtex-completion-init ()
@@ -9530,10 +9540,6 @@ Also sets `bibtex-completion-display-formats-internal'."
 
   :config
   (setq bibtex-completion-pdf-open-function 'find-file)
-  (add-hook 'tlon-babel-post-init-hook
-            (lambda ()
-              "Set `bibtex-completion-bibliography' after `paths-files-bibliography-all' is set."
-              (setq bibtex-completion-bibliography paths-files-bibliography-all)))
   (setq bibtex-completion-notes-path paths-dir-bibliographic-notes)
   (setq bibtex-completion-pdf-field "file")
   (setq bibtex-dialect 'biblatex))
@@ -9594,12 +9600,14 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
                  :includes (citar-org))
   :after oc vertico embark marginalia
   :demand t
-  :config
-  (setq citar-open-note-functions '(orb-citar-edit-note))
+  :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `citar-bibliography' after `paths-files-bibliography-all' is set."
               (setq citar-bibliography paths-files-bibliography-all)))
+
+  :config
+  (setq citar-open-note-functions '(orb-citar-edit-note))
   (setq citar-notes-paths `(,paths-dir-bibliographic-notes))
   (setq citar-at-point-function 'embark-act)
   (setq citar-symbol-separator "  ")
@@ -9679,11 +9687,13 @@ Having headings tagged with the type of work they are notes of allows me to quer
 (use-feature citar-citeproc
   :demand t
   :after citar citeproc citar-extras tlon-babel
-  :config
+  :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `citar-citeproc-csl-styles-dir' after `tlon-babel-refs-styles-dir' is set."
                 (setq citar-citeproc-csl-styles-dir tlon-babel-refs-styles-dir)))
+
+  :config
   (setq citar-citeproc-csl-style "biblioteca-altruismo-eficaz.csl")
   (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir)
   ;; https://github.com/emacs-citar/citar/wiki/Indicators
@@ -9850,11 +9860,13 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 #+begin_src emacs-lisp :results silent
 (use-package ebib
   :demand t
-  :config
+  :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
               "Set `ebib-preload-bib-files' after `paths-files-bibliography-all' is set."
               (setq ebib-preload-bib-files paths-files-bibliography-all)))
+
+  :config
   (setq ebib-notes-directory paths-dir-bibliographic-notes)
   (setq ebib-notes-use-org-capture t)
   (setq ebib-notes-display-max-lines 9999)

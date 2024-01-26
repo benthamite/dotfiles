@@ -875,7 +875,7 @@ longer then the CLOCK entry's total time.
    the start of the clock segment (default for backwards
    compatibility), t if the function should split counting from
    the end of the clock segment.
-
+ 
    SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
 
   (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")

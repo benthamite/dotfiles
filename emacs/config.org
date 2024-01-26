@@ -6253,6 +6253,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
    "s-c" 'tlon-babel-copy-dwim
    "s-t" 'tlon-babel-md-insert-cite-tag
    "s-u" 'tlon-babel-md-insert-element
+   "A-C-s-SPC" 'tlon-babel-md-beginning-of-buffer-dwim
    "A-C-s-<tab>" 'tlon-babel-md-end-of-buffer-dwim))
 #+end_src
 

@@ -190,6 +190,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#goto-addr][goto-addr]]
 - [[#registers--bookmarks][registers & bookmarks]]
   - [[#register][register]]
+  - [[#register-extras][register-extras]]
   - [[#bookmarks][bookmarks]]
 - [[#files--buffers][files & buffers]]
   - [[#files][files]]
@@ -3176,10 +3177,20 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
   :after savehist
   :demand t
   :config
-  (push 'register-alist savehist-additional-variables)
+  (push 'register-alist savehist-additional-variables))
+#+end_src
 
+** register-extras
+:PROPERTIES:
+:ID:       6790E728-CA51-42C1-9CEB-F6CDBF6836B8
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package register-extras
+  :after register
+  :demand t
   :general
-  ("C-r" 'hydra-register/body))
+  ("C-r" 'register-extras-dispatch))
 #+end_src
 
 ** bookmarks

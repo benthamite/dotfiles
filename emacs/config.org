@@ -7060,7 +7060,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 (use-feature elisp-mode
   :after simple-extras
   :general
-  (emacs-lisp-mode-map
+  ((emacs-lisp-mode-map lisp-interaction-mode-map)
    "s-b" 'eval-buffer
    "s-d" 'eval-defun
    "s-i" (lambda! (eval-defun t)) ; instrument defun

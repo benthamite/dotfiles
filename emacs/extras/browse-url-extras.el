@@ -28,24 +28,29 @@
 ;;; Code:
 
 (require 'browse-url)
+(require 'eww)
+(require 'f)
+(require 'ffap)
+(require 'tlon-init)
+(require 's)
 
 ;;;; User options
 
 (defgroup browse-url-extras ()
   "Extensions for `browse-url'."
-  :group 'browse-url)
+  :group 'browse-url-extras)
 
 (defcustom browse-url-extras-browse-url-default-file
   (file-name-concat tlon-init-dir-dotemacs "etc/browse-url-default.txt")
   "Path to the `browse-url-default.txt' file."
   :type 'file
-  :group 'path)
+  :group 'browse-url-extras)
 
 (defcustom browse-url-extras-browse-url-firefox-file
   (file-name-concat tlon-init-dir-dotemacs "etc/browse-url-firefox.txt")
   "Path to the `browse-url-firefox.txt' file."
   :type 'file
-  :group 'path)
+  :group 'browse-url-extras)
 
 ;;;; Functions
 
@@ -76,11 +81,10 @@ respectively."
 If buffer is visiting a URL or if there is a URL in the kill ring,
 use its domain as the initial prompt input.
 
-If called with prefix argument ARG, add the domain to the list of URLs to open
-in Firefox."
+By default, the command adds the URL to the list of domains to open with the
+deafult browser. If called with prefix argument ARG, add the domain to the list
+of URLs to open in Firefox instead."
   (interactive "P")
-  (require 'eww)
-  (require 'f)
   (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
          (domain (when url (url-domain (url-generic-parse-url url))))
          (file (if arg

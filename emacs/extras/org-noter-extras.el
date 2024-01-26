@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'org-noter)
+(require 'unfill)
 
 ;;;; Variables
 

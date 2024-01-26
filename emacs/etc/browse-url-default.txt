@@ -48,6 +48,7 @@ imgur.com
 ingebrigtsen.no
 instagram.com
 interactivebrokers.co
+itnext.io
 jit.si
 kentclarkcenter.org
 keyboardmaestro.com
@@ -63,6 +64,7 @@ mail.google.com
 mailerlite.com
 mailist-manage.eu
 maps.
+mediacore.app
 mercadolibre.com
 mercadopago.com
 metacritic.com
@@ -102,4 +104,5 @@ yahoo.com
 yaml-online-parser.appspot.com
 youtu.be
 youtube.com
+zonaprop.com.ar
 zoom.us

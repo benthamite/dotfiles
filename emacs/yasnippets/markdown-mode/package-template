@@ -1,0 +1,52 @@
+# -*- mode: snippet -*-
+# name: package-template
+# key: pt
+# contributor: Pablo Stafforini
+# --
+# $1
+
+## Introduction
+
+$2
+
+## Requirements
+
+$3
+
+## Installation
+
+### Manual installation
+
+Clone this repository and add this to your \`init.el\` file:
+
+\`\`\` emacs-lisp
+(add-to-list 'load-path "path/to/internet-archive")
+\`\`\`
+
+Where \`"path/to/internet-archive"\` is the path to the local repository you just cloned.
+
+### Elpaca/Straight
+
+If you use the [elpaca](https://github.com/progfolio/elpaca) package manager, you just need to add this your \`init.el\` file:
+
+\`\`\` emacs-lisp
+(use-package $1
+  :elpaca ($1
+           :host github
+	   :repo "benthamite/$1")
+  :demand t)
+\`\`\`
+
+If you use [straight](https://github.com/radian-software/straight.el), just replace \`:elpaca\` with \`:straight\` in the formula above.
+
+## Configuration
+
+$4
+
+## Usage
+
+$5
+
+## Troubleshooting
+
+The package has not been extensively tested. If you encounter any problems, feel free to open an issue.

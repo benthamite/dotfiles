@@ -29,6 +29,9 @@
 
 (require 'bibtex)
 (require 'el-patch)
+(require 'ebib)
+;; (require 'ebib-extras)
+(require 'tlon-babel-refs)
 
 ;;;; Functions
 
@@ -151,12 +154,11 @@ field for this information is `journaltitle', so we move it there."
     (message "Moved entry %s to %s" key target)))
 
 (defun bibtex-extras-move-entry-to-tlon (&optional key)
-  "Move entry with KEY to `tlon-babel-file-fluid'..
+  "Move entry with KEY to `tlon-babel-refs-file-fluid'..
 Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point."
   (interactive)
-  (require 'tlon-babel)
   (let ((key (or key (bibtex-extras-get-key)))
-        (target tlon-babel-file-fluid))
+        (target tlon-babel-refs-file-fluid))
     (bibtex-extras-move-entry key target)
     (with-current-buffer (find-file-noselect target)
       (widen)
@@ -168,8 +170,6 @@ Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point.
 (defun bibtex-extras-open-in-ebib ()
   "Open the current BibTeX entry in Ebib."
   (interactive)
-  (require 'ebib)
-  (require 'ebib-extras)
   (let ((file (buffer-file-name))
         (key (bibtex-extras-get-key)))
     (save-buffer)
@@ -211,8 +211,7 @@ and sets the value of the field for all entries to `Tlön'."
 
 (defun bibtex-extras-auto-add-database-field ()
   "Run `bibtex-extras-add-database-field' every time `new.bib' is saved."
-  (require 'tlon-babel)
-  (let ((file tlon-babel-file-fluid))
+  (let ((file tlon-babel-refs-file-fluid))
     (when (string= (buffer-file-name) file)
       (bibtex-extras-add-database-field file))))
 

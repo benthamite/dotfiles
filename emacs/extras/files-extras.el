@@ -27,7 +27,15 @@
 
 ;;; Code:
 
+;; (require 'alert) ; recursive
+(require 'cl-seq)
+(require 'dired)
+(require 'dired-extras)
+;; (require 'ebib-extras) ; recursive
+(require 'elpaca)
 (require 'files)
+(require 'paths)
+;; (require 'window-extras)
 
 ;;;; User options
 
@@ -154,7 +162,7 @@ functionality in macOS."
   (window-extras-switch-to-last-window))
 
 (defun files-extras-kill-all-file-visiting-buffers (&optional excluded-files)
-  "Kill all open buffers visiting a file except those visiting any of EXCLUDED-FILES."
+  "Kill all open buffers visiting a file except those visiting EXCLUDED-FILES."
   (interactive)
   (dolist (buffer (buffer-list))
     (when (with-current-buffer buffer
@@ -296,7 +304,8 @@ This function gets STRING when PROCESS produces output."
       (cond ((string-match-p "PriorOcrFoundError: page already has text" string)
 	     (message "OCR already performed on this file."))
 	    ;; when invoked with `--force-ocr'
-	    ((string-match-p "page already has text" string)
+	    ((or (string-match-p "page already has text" string)
+		 (string-match-p "common.py:261" string))
 	     (message "OCR already performed on this file; forcing new OCR."))
 	    ;; silence irrelevant messages
 	    ((or (string-match-p "Scanning contents" string)
@@ -321,7 +330,7 @@ This function gets STRING when PROCESS produces output."
   "Return t if point is at the beginning of the last line."
   (let ((beginning-of-last-line
 	 (save-excursion
-	   (end-of-buffer)
+	   (goto-char (point-max))
 	   (beginning-of-line)
 	   (point))))
     (>= (point) beginning-of-last-line)))
@@ -345,11 +354,11 @@ more intrusive alert."
   (when (and (not buffer-read-only)
 	     (file-newer-than-file-p (or buffer-auto-save-file-name
 					 (make-auto-save-file-name))
-				     buffer-file-name)
-	     (alert (format "%s has auto save data"
-			    (file-name-nondirectory buffer-file-name))
-		    :title "Auto save detected"
-		    :severity 'high))))
+				     buffer-file-name))
+    (alert (format "%s has auto save data"
+		   (file-name-nondirectory buffer-file-name))
+	   :title "Auto save detected"
+	   :severity 'high)))
 
 ;; for some reason, `alert' fails to create persistent alerts. so we
 ;; trigger a warning if either `*log4e-alert*' or `*Messages*'
@@ -470,10 +479,11 @@ OLD-FUN and ARGS are arguments passed to the original function."
 
 (defun files-extras-open-extras-package ()
   "Prompt the user to select an `extras' package and open it."
-  (let* ((files (directory-files paths-dir-extras t directory-files-no-dot-files-regexp))
+  (let* ((dir (file-name-concat elpaca-repos-directory "dotfiles/emacs/extras/"))
+	 (files (directory-files dir t directory-files-no-dot-files-regexp))
 	 (file-names (mapcar #'file-name-nondirectory files))
 	 (selection (completing-read "Package: " file-names nil t))
-	 (file (file-name-concat paths-dir-extras selection)))
+	 (file (file-name-concat dir selection)))
     (find-file file)))
 
 ;; TODO: Expand for other modes
@@ -498,6 +508,48 @@ current helpful buffer displays, then kill the buffer."
     (goto-char (point-min))
     (while (re-search-forward "\\(^\\s-*$\\)\n\\(\\(^\\s-*$\\)\n\\)+" nil t)
       (replace-match "\n"))))
+
+;;;;; Dispatcher
+
+(transient-define-prefix files-extras-dispatch ()
+  "Dispatcher for files."
+  ["Files"
+   ("." "inbox-mobile"    (lambda () (interactive) (find-file paths-file-inbox-mobile)))
+   ("," "inbox-desktop"   (lambda () (interactive) (find-file paths-file-inbox-desktop)))
+   ("a" "agenda"          org-extras-agenda-switch-to-agenda-current-day)
+   ("c" "config"          (lambda () (interactive) (find-file paths-file-config)))
+   ("d" "tlon-docs"       (lambda () (interactive) (find-file paths-file-tlon-docs)))
+   ("e" "extras"          (lambda () (interactive) (files-extras-open-extras-package)))
+   ("h" "tlon-ledger"     (lambda () (interactive) (find-file paths-file-tlon-ledger)))
+   ("i" "anki"            (lambda () (interactive) (find-file paths-file-anki)))
+   ("j" "ledger"          (lambda () (interactive) (find-file paths-file-ledger)))
+   ("k" "karabiner"       (lambda () (interactive) (find-file paths-file-karabiner)))
+   ("o" "notes"           (lambda () (interactive) (switch-to-buffer "*notes*")))
+   ("p" "packages"        files-extras-packages-dispatch)
+   ("q" "quotes"          (lambda () (interactive) (find-file paths-file-quotes)))
+   ("r" "calendar"        (lambda () (interactive) (find-file paths-file-calendar)))
+   ("s" "scratch"         (lambda () (interactive) (switch-to-buffer "*scratch*")))
+   ("v" "films"           (lambda () (interactive) (find-file paths-file-films)))
+   ("w" "work"            (lambda () (interactive) (find-file paths-file-work)))
+   ("z" "variables"       (lambda () (interactive) (find-file paths-file-variables)))
+   ])
+
+(transient-define-prefix files-extras-packages-dispatch ()
+  "Dispatcher for personal package files."
+  [["Tlön"
+    ("b" "tlon-babel"       (lambda () (interactive) (files-extras-open-elpaca-package "tlon-babel")))
+    ("c" "tlon-core"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-core")))
+    ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))
+    ]
+   ["Personal"
+    ("a" "internet-archive" (lambda () (interactive )(files-extras-open-elpaca-package "internet-archive")))
+    ("l" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))
+    ("g" "glondendict-ng"   (lambda () (interactive )(files-extras-open-elpaca-package "goldendict-ng")))
+    ("o" "macos"            (lambda () (interactive )(files-extras-open-elpaca-package "macos")))
+    ("m" "mullvad"          (lambda () (interactive )(files-extras-open-elpaca-package "mullvad")))
+    ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))
+    ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))
+    ]])
 
 (provide 'files-extras)
 ;;; files-extras.el ends here

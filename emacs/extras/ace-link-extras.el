@@ -28,6 +28,9 @@
 ;;; Code:
 
 (require 'ace-link)
+(require 'el-patch)
+(require 'mm-decode)
+(require 'org-roam-mode)
 
 ;;;; Functions
 
@@ -58,13 +61,6 @@ specified by `browse-url-handlers')."
     (when pt
       (get-text-property (point) 'w3m-href-anchor))))
 
-(defun ace-link-extras-org-agenda-clock-in ()
-  "Open a visible link in an `org-mode-agenda' buffer and start clock."
-  (interactive)
-  (require 'org-clock)
-  (ace-link-org-agenda)
-  (org-clock-in))
-
 (defun ace-link-extras-eww-externally ()
   "Browse URL using `browse-url-secondary-browser-function'."
   (interactive)
@@ -75,6 +71,37 @@ specified by `browse-url-handlers')."
   (interactive)
   (ace-link-eww '(16)))
 
+(defun ace-link-extras-org-roam ()
+  "Open a visible link in an `org-roam-mode' buffer."
+  (interactive)
+  (require 'org-roam)
+  (let ((pt (avy-with ace-link-org
+              (avy-process
+               (mapcar #'cdr (ace-link--org-collect))
+               (avy--style-fn avy-style)))))
+    (ace-link-extras--org-roam-action pt)))
+
+(defun ace-link-extras--org-roam-action (pt)
+  "Visit the link at PT in an `org-roam-mode' buffer."
+  (when (numberp pt)
+    (goto-char pt)
+    (call-interactively #'org-roam-preview-visit)))
+
+;;;;; Patched functions
+
+(declare-function shr-browse-url "shr")
+(declare-function mu4e--view-browse-url-from-binding "mu4e-view")
+(declare-function mu4e--view-open-attach-from-binding "mu4e-view")
+(el-patch-defun ace-link--mu4e-action (pt)
+  "Open link at PT in a `mu4e-view' buffer."
+  (when (number-or-marker-p pt)
+    (goto-char (1+ pt))
+    (cond ((get-text-property (point) 'shr-url)
+	   (shr-browse-url))
+          ((get-text-property (point) 'mu4e-url)
+	   (el-patch-swap (mu4e~view-browse-url-from-binding) (mu4e--view-browse-url-from-binding)))
+          ((get-text-property (point) 'mu4e-attnum)
+	   (el-patch-swap (mu4e~view-open-attach-from-binding) (mu4e--view-open-attach-from-binding))))))
+
 (provide 'ace-link-extras)
 ;;; ace-link-extras.el ends here
-

@@ -28,6 +28,9 @@
 ;;; Code:
 
 (require 'gptel)
+(require 'gptel-gemini)
+(require 'mullvad)
+(require 'tlon-core)
 
 ;;;; User options
 

@@ -27,18 +27,50 @@
 
 ;;; Code:
 
-(require 'org-msg)
 (require 'org-extras)
+(require 'org-msg)
+(require 'simple-extras)
+
+;;;; User options
+
+(defgroup org-msg-extras ()
+  "Extensions for `org-msg'."
+  :group 'org-msg)
+
+(defcustom org-msg-extras-personal-plain-text-signature
+  "\n--\nPablo\n"
+  "Personal signature for plain text emails."
+  :type 'string
+  :group 'org-msg-extras)
+
+(defcustom org-msg-extras-personal-html-signature
+  "\n#+begin_signature\n--\n*Pablo*\n#+end_signature"
+  "Personal signature for HTML emails."
+  :type 'string
+  :group 'org-msg-extras)
+
+(defcustom org-msg-extras-work-plain-text-signature
+  "\n--\nPablo\nDirector, Tlön\nhttps://tlon.team\n"
+  "Work signature for HTML emails."
+  :type 'string
+  :group 'org-msg-extras)
+
+(defcustom org-msg-extras-work-html-signature
+  "\n#+begin_signature\n--\n*Pablo*\nDirector, Tlön\nhttps://tlon.team\n#+end_signature"
+  "Work signature for HTML emails."
+  :type 'string
+  :group 'org-msg-extras)
 
 ;;;; Functions
 
 (defun org-msg-extras-kill-message ()
   "Save the current message to the kill ring."
   (interactive)
-  (unless (eq major-mode 'org-msg-edit-mode)
+  (unless (derived-mode-p 'org-msg-edit-mode)
     (user-error "Not in org-msg-edit-mode"))
   (save-excursion
     (goto-char (org-msg-start))
+    ;; hack; consider refining
     (re-search-forward "^:END:\n")
     (let ((beg (point)))
       (goto-char (org-msg-end))
@@ -53,6 +85,24 @@
   (org-msg-extras-kill-message)
   (browse-url "https://app.grammarly.com/ddocs/2264307164"))
 
+(defun org-msg-extras-begin-compose ()
+  "Move point to start composing an email.
+This is a slightly tweaked version of `org-msg-goto-body'."
+  (interactive)
+  (goto-char (point-min))
+  (if org-msg-signature
+      (when (search-forward org-msg-signature nil t)
+	(goto-char (match-beginning 0)))
+    (while (re-search-forward org-property-re nil t)
+      (forward-line))
+    (newline)
+    (simple-extras-visible-mode-enhanced -1)))
+
+(defun org-msg-extras-msg-is-html-p ()
+  "Return t iff the current message is an HTML message."
+  (not (null (condition-case nil
+		 (org-msg-mua-call 'article-htmlp)
+	       (error nil)))))
 
 (provide 'org-msg-extras)
 ;;; org-msg-extras.el ends here

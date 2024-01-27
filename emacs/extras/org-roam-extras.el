@@ -27,9 +27,11 @@
 
 ;;; Code:
 
-(require 'org-roam)
-(require 'org-extras)
+(require 'consult)
 (require 'el-patch)
+(require 'org-extras)
+(require 'org-roam)
+(require 'tlon-core)
 
 ;;;; User options
 
@@ -201,7 +203,6 @@ list of tags and further restrict the selection to headings with that tag."
 	 (result '()))
     (dolist (record headings-with-priority)
       (let* ((id (nth 0 record))
-	     (file (nth 1 record))
 	     (title (nth 2 record))
 	     (priority (nth 3 record))
 	     (formatted-priority (if priority

@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'faces)
+(require 'hl-line)
 
 ;;;; User options
 
@@ -91,8 +92,6 @@
 		      :background (face-background 'mode-line)
 		      ;; slightly increase the width of the tab-bar
 		      :box `(:line-width 6 :color ,(face-attribute 'mode-line :background) :style nil)))
-
-(add-hook 'org-mode-hook #'faces-extras-load-custom-faces)
 
 ;; github.com/arunkmv/.config/tree/main/emacs#tab-bar
 (defface faces-extras-display-time

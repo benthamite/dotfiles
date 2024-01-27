@@ -28,13 +28,13 @@
 ;;; Code:
 
 (require 'magit)
+(require 'paths)
 
 ;;;; Functions
 
 ;; adapted from Sacha Chua
 (defun magit-extras-stage-commit-and-push (message)
-  "Stage, commit and push all changes.
-As commit message, use MESSAGE."
+  "Stage all modified files, commit them with MESSAGE and push to remote."
   (interactive
    (list (progn (magit-diff-unstaged) (read-string "Commit Message: "))))
   (when (or

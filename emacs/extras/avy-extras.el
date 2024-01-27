@@ -28,7 +28,11 @@
 ;;; Code:
 
 (require 'avy)
+(require 'dired)
+(require 'ebib)
 (require 'el-patch)
+(require 'mu4e-headers)
+(require 'simple-extras)
 
 ;;;; Functions
 

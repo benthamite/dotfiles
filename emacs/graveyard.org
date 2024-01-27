@@ -8,6 +8,38 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** use-package-ensure-system-package
+:PROPERTIES:
+:ID:       5C17424A-4950-4745-B7FD-F0CACEB48AFB
+:END:
+
+
+This is actually part of ~use-package~, so not needed.
+
+#+begin_src emacs-lisp :results silent
+(use-package use-package-ensure-system-package
+  :demand t)
+#+end_src
+
+** dired-async
+:PROPERTIES:
+:ID:       241CB93C-0637-4208-B8CF-3DD74FF6F106
+:END:
+
+[2024-01-24 Wed] No longer using.
+
+:PROPERTIES:
+:ID:       966B615F-69EF-428D-82E5-6E68B64D0FDD
+:END:
+
+#+begin_src emacs-lisp
+(use-feature dired-async
+  :after async dired
+  :demand t
+  :config
+  (dired-async-mode))
+#+end_src
+
 ** guess-language
 :PROPERTIES:
 :ID:       F3163168-2247-4205-B08B-E8816DB02CE7

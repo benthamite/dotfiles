@@ -29,9 +29,23 @@
 
 ;;; Code:
 
+(require 'browse-url)
+;; (require 'crux) ; Error (use-package): org-extras/:catch: Cannot open load file: No such file or directory, crux
+(require 'el-patch)
+(require 'el-patch)
 (require 'org)
 (require 'org-agenda)
-(require 'el-patch)
+(require 'org-capture)
+(require 'org-clock)
+(require 'oc)
+;; (require 'org-roam-extras) ; recursion error
+(require 'paths)
+(require 's)
+(require 'simple-extras)
+(require 'thingatpt)
+;; (require 'tlon-core) ; recursion error
+(require 'url-util)
+(require 'window-extras)
 
 ;;;; User options
 
@@ -80,12 +94,11 @@ Set to nil to disable display of BBDB anniversaries in agenda."
   (org-set-effort))
 
 (defun org-extras-url-dwim ()
-  "docstring"
+  "When point is on a URL, copy it to the kill ring."
   (interactive)
-  (require 'url-util)
   (cond
-   ((url-get-url-at-point)
-    (kill-new (url-get-url-at-point)))
+   ((thing-at-point-url-at-point)
+    (kill-new (thing-at-point-url-at-point)))
    ((org-extras-link-get-url-at-point)
     (kill-new (org-extras-link-get-thing-at-point 1)))))
 
@@ -180,6 +193,7 @@ Excludes the heading itself and any child subtrees."
   (kill-new (org-entry-get nil "ITEM")))
 
 ;; reddit.com/r/emacs/comments/e4jnlj/how_to_create_a_word_counter_that_counts_words_in/f9e3796
+;; consider replacing with https://emacs.stackexchange.com/questions/69924/count-words-under-subtree-ignoring-the-properties-drawer-and-the-subheading
 (defun org-extras-count-words ()
   "Count words in region if active; otherwise count words in current subtree."
   (interactive)
@@ -189,7 +203,7 @@ Excludes the heading itself and any child subtrees."
      (cl-loop for (lines words characters)
 	      in (org-map-entries
 		  (lambda ()
-		    (unpackaged/org-forward-to-entry-content 'unsafe)
+		    (org-end-of-meta-data 'full)
 		    (let ((end (org-entry-end-position)))
 		      (list (count-lines (point) end)
 			    (count-words (point) end)
@@ -211,7 +225,7 @@ Excludes the heading itself and any child subtrees."
   (goto-char (point-min))
   (org-next-visible-heading 1))
 
-(defun org-extras-super-return (&optional indent arg interactive)
+(defun org-extras-super-return ()
   "When `org-return-follows-link' is non-nil and point is on a
 link, call `org-open-at-point' and set
 `browse-url-browser-function' to `eww-browse-url'"
@@ -219,19 +233,6 @@ link, call `org-open-at-point' and set
   (let ((browse-url-browser-function 'eww-browse-url)
 	(browse-url-handlers nil))
     (org-open-at-point)))
-
-(defun org-extras-clear-heading-contents (&optional include-children include-properties)
-  "Remove contents in org heading at point."
-  (interactive)
-  (save-restriction
-    (if include-children
-	(org-extras-narrow-to-entry-and-children)
-      (org-extras-narrow-to-entry-no-children))
-    (org-back-to-heading)
-    (if include-properties
-	(forward-line)
-      (org-end-of-meta-data t))
-    (delete-region (point) (point-max))))
 
 (defun org-extras-paste-html ()
   "Convert the contents of the system clipboard to `org-mode' using `pandoc'."
@@ -275,9 +276,8 @@ link, call `org-open-at-point' and set
 ;; The following functions produce a count of the TODOs added
 ;; or removed from all agenda files in the last day:
 ;; https://200ok.ch/posts/2022-12-06_how_much_did_you_get_done_today.html
-
 (defun org-extras-count-lines-with-expression (s exp)
-  "Count the number of lines in the string S that contain the regular expression EXP."
+  "Count the number of lines in the string S that contain the regexp EXP."
   (let ((count 0))
     (mapc (lambda (line)
 	    (when (string-match-p exp line)
@@ -286,6 +286,7 @@ link, call `org-open-at-point' and set
     count))
 
 (defun org-extras-productivity-of-the-day ()
+  "Compute productivity of the day."
   (seq-reduce
    (lambda (acc it)
      (let* ((folder (file-name-directory it))
@@ -296,24 +297,12 @@ link, call `org-open-at-point' and set
 			      file
 			      "| grep TODO"))
 	    (changed (shell-command-to-string base-cmd))
-	    (added (count-lines-with-expression changed "^\\+"))
-	    (removed (count-lines-with-expression changed "^\\-")))
+	    (added (org-extras-count-lines-with-expression changed "^\\+"))
+	    (removed (org-extras-count-lines-with-expression changed "^\\-")))
        (cons (+ (car acc) added)
 	     (- (cdr acc) removed))))
    org-agenda-files
    '(0 . 0)))
-
-(defun org-extras-copy-dwim ()
-  "Copy the contents of the org element at point."
-  (interactive)
-  (if (derived-mode-p 'org-mode)
-      (pcase (org-element-type (org-element-context))
-	('headline (org-extras-copy-heading-name))
-	('paragraph (org-extras-copy-heading-contents))
-	('block (org-extras-copy-block))
-	('table-cell (org-extras-copy-table-cell))
-	(_ (user-error "I don't know what to copy")))
-    (user-error "Not in org-mode")))
 
 ;;;;; org-agenda
 
@@ -385,13 +374,12 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 
 ;;;;; org-capture
 
-(defun org-extras-capture-hydra-notes-hook ()
-  (when (string= (org-capture-get :key t) "p")
-    (hydra-org-notes-only-clock/body)))
-
+(declare-function org-ai-mode "org-ai")
+(declare-function org-web-tools-insert-link-for-url "org-web-tools")
+(declare-function org-extras-web-tools--org-title-for-url "org-web-tools")
+(declare-function youtube-dl "youtube-dl")
 (defun org-extras-capture-before-finalize-hook-function ()
   "Define behavior of `org-capture-before-finalize-hook'."
-  (require 'org-capture)
   (pcase (plist-get org-capture-plist :key)
     ((or "gg" "gd" "ge")
      (org-ai-mode)
@@ -400,7 +388,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
      (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai\n")
      (goto-char (point-max)))
     ("l"
-     (org-align-all-tags)
+     (org-align-tags)
      (ispell-change-dictionary "english"))
     ("la"
      (save-window-excursion
@@ -425,7 +413,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     ;; Add link to open Slack message externally.
     ("s"
      (org-narrow-to-subtree)
-     (let ((url (s-replace-regexp
+     (let ((url (replace-regexp-in-string
 		 "emacs-slack:[_[:digit:][:alnum:]]\\{11\\}&\\([_[:digit:][:alnum:]]\\{11\\}\\)&ts:\\([[:digit:]]\\{10\\}\\)\\.\\([[:digit:]]\\{6\\}\\)"
 		 "https://samotsvety.slack.com/archives/\\1/p\\2\\3"
 		 (plist-get org-store-link-plist :link))))
@@ -436,10 +424,9 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     ("v"
      (org-do-demote))
     ("y"
-     (require 'youtube-dl)
      (youtube-dl (current-kill 0)
-		 :directory paths-dir-downloads-directory
-		 :destination (prot-eww--sluggify
+		 :directory paths-dir-downloads
+		 :destination (tlon-core-slugify
 			       (org-extras-web-tools--org-title-for-url))))))
 
 ;;;;; org-clock
@@ -686,7 +673,6 @@ files, recursively all files in `org-directory', and all files in
   "For all STRINGS, return its link if node is found, else the string itself.
 The elements are returned as a string separated by SEPARATOR. If
 SEPARATOR is nil, use ' • '."
-  (require 'org-roam)
   (let ((nodes (org-roam-node-list)))
     (string-join
      (mapcar (lambda (x)
@@ -702,9 +688,9 @@ SEPARATOR is nil, use ' • '."
 
 ;;;;; ob
 
-(defun org-extras-confirm-babel-evaluate (lang body)
-  "`org-babel' confirm function that prompts for confirmation.
-LANG and BODY are required by the `org-confirm-babel-evaluate' user option."
+(defun org-extras-confirm-babel-evaluate (lang _)
+  "Confirm function before evaluating code block.
+LANG is the language of the code block."
   (not (member lang '("python" "emacs-lisp"))))
 
 (defun org-extras-babel-tangle ()
@@ -724,17 +710,6 @@ LANG and BODY are required by the `org-confirm-babel-evaluate' user option."
 	('clock (org-evaluate-time-range))
 	(_ (org-decrypt-entry)))
     (user-error "Not in org-mode")))
-
-;;;;; org-pomodoro
-
-(defun org-extras-pomodoro-format-timer ()
-  "Format the `org-pomodoro' timer.
-We set this value by advising `org-pomodoro' so that the pomodoro
-count is updated."
-  (require 'org-pomodoro)
-  (setq org-pomodoro-format
-	(concat "🍅 %s"
-		(format "|%s" (number-to-string org-pomodoro-count)))))
 
 ;;;;; to sort
 
@@ -771,7 +746,6 @@ That is, move point after the stars, and the TODO and priority if present."
 
 (defun org-extras-id-notes-only-clock (key)
   "Clock in to a heading with KEY."
-  (require 'simple-extras)
   (simple-extras-save-excursion
    (funcall (intern (concat "hydra-org-notes/lambda-" key "-and-exit")))
    (org-clock-in)))
@@ -796,6 +770,112 @@ To see a list of Google Docs and their respective IDs, run
     ;; export docx to org-mode
     (shell-command
      (format "pandoc -s '%s' -o '%s'" input output))))
+
+;;;;; Dispatchers
+
+(transient-define-prefix org-extras-dispatch ()
+  "Dispatcher for `org-mode' headings."
+  ["Heading"
+   ("SPC" "Anki habit" (lambda () (interactive) (org-roam-extras-id-goto "B67C920B-D855-4A27-A35C-1DAC56580DA7")))
+   ("i" "Anki" (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))
+   ("p" "audiobooks" (lambda () (interactive) (org-roam-extras-id-goto "0070312F-6233-4BED-98F4-A2BAAEE8DAFF")))
+   ("b" "books" (lambda () (interactive) (org-roam-extras-id-goto "7A788F19-30F5-4504-B47F-CE693AF3EA7E")))
+   ("u" "Current book" (lambda () (interactive) (org-roam-extras-id-goto "78577411-554E-4EEC-B669-C014A9581540")))
+   ("r" "Documentaries" (lambda () (interactive) (org-roam-extras-id-goto "1C5DCC5A-DA18-4CBD-8E2E-205766A656D6")))
+   ("z" "eablogs.net" (lambda () (interactive) (org-roam-extras-id-goto "8F8E5495-A0D8-451A-B1F1-0A8706CBF6A0")))
+   ("e" "Email" (lambda () (interactive) (org-roam-extras-id-goto "96BBA849-B4CF-41C0-ABA3-A5D901BCDB18")))
+   ("d" "Feeds" (lambda () (interactive) (org-roam-extras-id-goto "6504C81B-28F0-44C3-BFC0-2F3E648974F0")))
+   ("v" "films" (lambda () (interactive) (org-roam-extras-id-goto "E821F19E-C619-4895-A084-54D0A2772BAE")))
+   ("f" "finance" (lambda () (interactive) (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C")))
+   ("/" "inbox" (lambda () (interactive) (org-roam-extras-id-goto "D9D71BF0-6BD6-40A5-9896-E58C7D9556B7")))
+   ("m" "Keyboard Maestro" (lambda () (interactive) (org-roam-extras-id-goto "E65E393D-8694-4E23-994E-BA59A8063FCF")))
+   ("k" "Khan Academy" (lambda () (interactive) (org-roam-extras-id-goto "6F0A4889-C303-4930-8512-757AAD310535")))
+   ("l" "Leonardo" (lambda () (interactive) (org-roam-extras-id-goto "C308562B-222E-47E2-9A5F-B31EDB29569A")))
+   ("," "morning routine" (lambda () (interactive) (org-roam-extras-id-goto "E1C1F691-8358-4DDF-AC71-F46B883411BB")))
+   ("." "night routine" (lambda () (interactive) (org-roam-extras-id-goto "ADAA1E78-2904-4EF4-938C-F599A5C90822")))
+   ("c" "podcasts" (lambda () (interactive) (org-roam-extras-id-goto "7CE82ABB-A23F-41F6-A29E-0B95553A8FEE")))
+   ("s" "Slack" (lambda () (interactive) (org-roam-extras-id-goto "3513061C-5868-4EBC-9F77-9814AB776011")))
+   ("j" "sleep" (lambda () (interactive) (org-roam-extras-id-goto "356B7595-EC5B-4DF4-949C-A637537128E4")))
+   ("y" "Spotify" (lambda () (interactive) (org-roam-extras-id-goto "FBDB7FC0-7650-48A0-933D-AE9606C2B621")))
+   ("t" "tlon" org-extras-work-dispatch)
+   ("n" "Telegram" (lambda () (interactive) (org-roam-extras-id-goto "9696939D-A8B7-4179-A5C8-FEBB017DC9EF")))
+   ("q" "YouTube" (lambda () (interactive) (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E")))
+   ])
+
+(transient-define-prefix org-extras-work-dispatch ()
+  "Dispatcher for work projects."
+  ["Projects dashboard"
+   ["""Tlön"
+    ("b" "BAB" (lambda () (interactive) (org-roam-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24")))
+    ("r" "RAE" (lambda () (interactive) (org-roam-extras-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D")))
+    ("n" "EAN" (lambda () (interactive) (org-roam-extras-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC")))
+    ("d" "LBDLHD" (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))]
+   ["""Other"
+    ("w" "PW" (lambda () (interactive) (org-roam-extras-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A")))
+    ("v" "Samotsvety" (lambda () (interactive) (org-roam-extras-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87")))
+    ("x" "Misc" (lambda () (interactive) (org-roam-extras-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99")))]
+   ["""Someday"
+    ("c" "EA Archive" (lambda () (interactive) (org-roam-extras-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD")))
+    ("a" "EA Nomad" (lambda () (interactive) (org-roam-extras-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110")))
+    """On hold"
+    ("h" "HEAR" (lambda () (interactive) (org-roam-extras-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2")))]
+   ["""Done"
+    ("" "FM" (lambda () (interactive) (org-roam-extras-id-goto "9066D77E-7F2B-4176-9533-243060F11276")))
+    ("" "GPE" (lambda () (interactive) (org-roam-extras-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1")))
+    ("" "LP" (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))
+    ("" "RCGs" (lambda () (interactive) (org-roam-extras-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A")))
+    ("" "Regranting" (lambda () (interactive) (org-roam-extras-id-goto "AE8F5AD4-B85A-4EE2-8A94-AA7B2AFF3E7F")))]
+   ["""Comms"
+    ("e" "email" (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
+    ("s" "slack" (lambda () (interactive) (org-roam-extras-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C")))
+    ("t" "telegram" (lambda () (interactive) (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D")))]
+   ["""Meetings"
+    ("f" "fede" (lambda () (interactive) (org-roam-extras-id-goto "AED9330C-1673-4669-A367-4B87614965F6")))
+    ;; ("F" "fede: meeting" tlon-core-meeting-with-fede)
+    ("H-f" "fede: tareas" (lambda () (interactive) (org-roam-extras-id-goto "EB5FC062-E46F-4C1F-930F-F2CC710F852D")))
+    ("l" "leo" (lambda () (interactive) (org-roam-extras-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA")))
+    ;; ("L" "leo: meeting" tlon-core-meeting-with-leo)
+    ("H-l" "leo: tareas" (lambda () (interactive) (org-roam-extras-id-goto "E5777AB0-DC81-40CB-8D03-77D6F111AA2E")))]
+   [""""
+    ("RET" "Home" (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))]
+   ])
+
+(defhydra hydra-org-config
+  (:exit 1)
+  "Org headings: config.org"
+  ("c" (org-roam-extras-id-goto "50FAD2F3-E501-408E-A9A2-8358FAA87C1C") "Calc")
+  ("d" (org-roam-extras-id-goto "617F5323-6518-4751-948B-3E8032D93130") "Dired")
+  ("e" (org-roam-extras-id-goto "FF5DDBC3-ABB6-48A9-9B47-BC9A18F532D5") "Elfeed")
+  ("f" (org-roam-extras-id-goto "B29F4586-2B8D-41FE-82DE-FEDCD863C74B") "Files & buffers")
+  ("g" (org-roam-extras-id-goto "AACAE0F4-0B25-475B-831B-3F1E91E6349D") "Graveyard")
+  ("h" (hydra-org-config-hydra/body) "Hydra")
+  ("i" (org-roam-extras-id-goto "A7940400-DD17-4B0B-A9B2-565A207D680C") "Introduction")
+  ("k" (org-roam-extras-id-goto "4373E661-B19D-4E6C-B7DE-C2A26619A515") "Wiki")
+  ("l" (org-roam-extras-id-goto "DE6D2307-9EBD-4E0F-B873-003C9813CA27") "Display")
+  ("m" (org-roam-extras-id-goto "E83EC00B-0C94-44CD-9EC0-355992C99234") "Completion ")
+  ("n" (org-roam-extras-id-goto "179BB021-8B2A-4BF0-B3AA-43AF5A212D4B") "Text manipulation")
+  ("o" (hydra-org-config-org/body) "Org")
+  ("p" (org-roam-extras-id-goto "7F0CBD06-FDB3-4889-91CE-D8A25D4F2613") "Help")
+  ("s" (org-roam-extras-id-goto "9FDBBF3E-724F-4402-9DDB-F9349F65AB0E") "Search")
+  ("t" (org-roam-extras-id-goto "1E8F4417-5D5F-4406-BB70-AA272F714EF2") "Text movement")
+  ("u" (org-roam-extras-id-goto "AA460F4A-4035-4C96-A3A1-078A43F7892D") "user-init")
+  ("v" (org-roam-extras-id-goto "10E891D3-9DF5-472A-8E3C-1DE30EE8C81F") "Variables")
+  ("w" (org-roam-extras-id-goto "7E9A81E0-CAEB-4029-AD2C-B2416439FCDA") "Windows & frames")
+  ("y" (org-roam-extras-id-goto "6405B8E7-6612-4D71-8C2C-A51F8808F4C6") "Yasnippets"))
+
+(defhydra hydra-org-config-org
+  (:exit 1)
+  "Org headings: config.org > org"
+  ("a" (org-roam-extras-id-goto "E03F4142-C90D-4550-8990-15391E27AD77") "org-agenda")
+  ("b" (org-roam-extras-id-goto "52C959E4-54F4-4499-AE3A-5251F6337FA0") "org key bindings")
+  ("c" (org-roam-extras-id-goto "14F93A83-0BE7-42E3-891E-F6806192296B") "org-capture")
+  ("m" (org-roam-extras-id-goto "2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17") "org-roam")
+  ("n" (org-roam-extras-id-goto "A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7") "org-noter")
+  ("o" (org-roam-extras-id-goto "268B60E4-708C-4372-A59D-5DD876E493CA") "org-mode")
+  ("f" (org-roam-extras-id-goto "35FB5BB5-6552-48C6-983A-F90011CCA908") "org-ref")
+  ("r" (org-roam-extras-id-goto "3FAE7C0D-FB22-4175-A0A4-FFA392539743") "org-refile")
+  ("t" (org-roam-extras-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A") "org-cite")
+  ("x" (org-roam-extras-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF") "org-roam-bibtex"))
 
 ;;;;; Patched functions
 
@@ -827,53 +907,6 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
 				 60))))
 		   (or last-valid
 		       (cdr clock)))))))))))
-
-;; the function has to be slightly modified to make it work
-(el-patch-defun org-clock-split
-  (from-end splitter-string)
-  "Split CLOCK entry under cursor into two entries.
-Total time of created entries will be the same as original entry.
-
-   WARNING: Negative time entries can be created if splitting at an offset
-longer then the CLOCK entry's total time.
-
-   FROM-END: nil if the function should split with duration from
-   the start of the clock segment (default for backwards
-   compatibility), t if the function should split counting from
-   the end of the clock segment.
-
-   SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
-
-  (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
-
-  (move-beginning-of-line nil)
-  (let ((original-line (buffer-substring (line-beginning-position) (line-beginning-position 2))))
-
-    ;; Error if CLOCK line does not contain check in and check out time
-    (unless (string-match org-clock-split-clock-range-regexp original-line)
-      (error "Cursor must be placed on line with valid CLOCK entry range"))
-
-    (let* ((whitespace (match-string 1 original-line))
-	   (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
-	   (t0 (pop timestamps))
-	   (t1 (el-patch-swap
-		 (pop timestamps)
-		 (concat "[" (pop timestamps) "]")))
-	   (t2
-	    (pop timestamps)))
-      (delete-region
-       (line-beginning-position)
-       (line-end-position))
-      (insert
-       (format org-clock-split-clock-range-format whitespace t0 t1))
-      (org-ctrl-c-ctrl-c)
-      (move-beginning-of-line nil)
-      (newline)
-      (previous-line)
-      (insert
-       (format org-clock-split-clock-range-format whitespace t1 t2))
-      (org-ctrl-c-ctrl-c)
-      (move-beginning-of-line nil))))
 
 ;; Replace native function with variant that doesn't ask the user
 ;; multiple times to remove non-existent agenda file
@@ -934,6 +967,9 @@ Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
 
 ;; fix weird behavior that inserted one of the clocks not enclosed in square
 ;; brackets
+(defvar org-clock-split-clock-range-regexp)
+(defvar org-clock-split-clock-range-format)
+(declare-function org-clock-split-split-line-into-timestamps "org-clock-split")
 (el-patch-defun org-clock-split (from-end splitter-string)
   "Split CLOCK entry under cursor into two entries.
 Total time of created entries will be the same as original entry.
@@ -945,7 +981,7 @@ longer then the CLOCK entry's total time.
    the start of the clock segment (default for backwards
    compatibility), t if the function should split counting from
    the end of the clock segment.
-
+ 
    SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
 
   (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")

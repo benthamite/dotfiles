@@ -29,6 +29,9 @@
 
 (require 'bbdb)
 (require 'bbdb-com)
+
+;;;; Patched functions
+
 ;; open URL directly, without prompting for confirmation
 (defun bbdb-extras-bbdb-browse-url (records &optional which)
   "Brwose URLs stored in the `url' field of RECORDS.
@@ -146,7 +149,6 @@ reading mode; see the `bbdb-read-name' docstring for details."
   "Delete the current field or record without confirmation."
   (interactive)
   (bbdb-delete-field-or-record (bbdb-do-records) (bbdb-current-field) t))
-
 
 (provide 'bbdb-extras)
 ;;; bbdb-extras.el ends here

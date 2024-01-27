@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: transient-line
+# key: tl
+# contributor: Pablo Stafforini
+# --
+   ("$1" "$2"               $3)

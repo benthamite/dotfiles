@@ -7418,7 +7418,7 @@ By considering both tasks completed and their associated priorities.
 
 #+begin_src emacs-lisp
 (use-personal-package org-extras
-  :after org
+  :after org oc
   :demand t
   :init
   (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day)

@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: transient-define-prefix
+# key: tdp
+# contributor: Pablo Stafforini
+# --
+(transient-define-prefix $1 ()
+  "$2."
+  [
+   $3
+   ]
+  )

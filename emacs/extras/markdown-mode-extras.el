@@ -27,12 +27,9 @@
 
 ;;; Code:
 
+(require 'citar-markdown)
 (require 'markdown-mode)
 (require 'el-patch)
-
-;;;; User options
-
-;;;; Main variables
 
 ;;;; Functions
 

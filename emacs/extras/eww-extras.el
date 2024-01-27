@@ -27,7 +27,13 @@
 
 ;;; Code:
 
+(require 'browse-url-extras)
 (require 'eww)
+(require 'prot-eww)
+(require 'ffap)
+(require 'f)
+(require 'org-web-tools-extras)
+(require 'paths)
 (require 'simple-extras)
 
 ;;;; User options
@@ -95,14 +101,13 @@ The exceptions are listed in `eww-extras-readable-exceptions'."
 If buffer is visiting a URL or if there is a URL in the kill ring, use its
 domain as the initial prompt input."
   (interactive)
-  (require 'eww)
-  (require 'f)
   (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
          (domain (when url (url-domain (url-generic-parse-url url))))
 	 (file eww-extras-readable-exceptions-file)
          (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
     (browse-url-extras--write-url-to-file selection file)
-    (eww-extras-set-readable-exceptions-from-file)))
+    (eww-extras-set-readable-exceptions-from-file)
+    (eww-reload)))
 
 (defun eww-extras-set-readable-exceptions-from-file ()
   "Set `eww-readable' exceptions from file of exception URLs."

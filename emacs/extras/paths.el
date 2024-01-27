@@ -1,4 +1,4 @@
-;;; paths.el --- Set personal paths -*- lexical-binding: t -*-
+;;; paths.el --- Set variable paths -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2023
 
@@ -23,9 +23,11 @@
 
 ;;; Commentary:
 
-;; Set personal paths.
+;; Set variable paths. Values set via these variables will be available at startup for each user.
 
 ;;; Code:
+
+(require 'tlon-init)
 
 ;;;; User options
 
@@ -194,12 +196,6 @@
 (defcustom paths-dir-dotfiles
   (file-name-concat paths-dir-dropbox "dotfiles/")
   "Path to the dotfiles directory."
-  :type 'directory
-  :group 'paths)
-
-(defcustom paths-dir-extras
-  (file-name-concat tlon-init-dir-dotemacs "extras/")
-  "Path to the `extras' package directory."
   :type 'directory
   :group 'paths)
 
@@ -473,6 +469,12 @@
   :type 'directory
   :group 'paths)
 
+(defcustom paths-dir-tlon-repos
+  (file-name-concat paths-dir-dropbox "repos/")
+  "Directory where the Tlön repositories are stored."
+  :type 'directory
+  :group 'paths)
+
 (defcustom paths-dir-repos
   (file-name-concat paths-dir-dropbox "repos/")
   "Path to the Dropbox repos directory."
@@ -481,7 +483,7 @@
 
 (defcustom paths-dir-clock-repos
   (file-name-concat paths-dir-repos "clock-reports/")
-  "Path to the Dropbox repos directory."
+  "Path to the `clock-reports' directory."
   :type 'directory
   :group 'paths)
 
@@ -526,6 +528,12 @@ This should be the path you set `org-roam-directory' to."
 (defcustom paths-dir-personal-bibliography
   (file-name-concat paths-dir-dropbox "bibliography/")
   "Path to the `bibliography' directory."
+  :type 'directory
+  :group 'paths)
+
+(defcustom paths-dir-babel-refs
+  (file-name-concat paths-dir-tlon-repos "babel-refs/")
+  "Path to the `babel-refs' repo directory."
   :type 'directory
   :group 'paths)
 
@@ -593,12 +601,6 @@ This should be the path you set `org-roam-directory' to."
 (defcustom paths-file-anki
   (file-name-concat paths-dir-anki "main.org")
   "Path to the Anki file."
-  :type 'file
-  :group 'paths)
-
-(defcustom paths-file-init
-  (file-name-concat tlon-init-dir-dotemacs "init.el")
-  "Path to the `init.el' file."
   :type 'file
   :group 'paths)
 
@@ -771,49 +773,26 @@ This includes personal files and `tlon-babel' files."
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-init
-  (or (catch 'default-path
-	(dolist (profile chemacs-profiles)
-	  (when (string= (car profile) "default")
-	    (throw 'default-path (cdadr profile)))))
-      paths-dir-init-default)
-  "Actual target location for the init files to be tangled.
-It takes the value of the path associated with the default Chemacs profile, when
-such a profile is defined, else `paths-dir-init-default'. A different path may be
-set manually via `init-configure-tangle-options'."
-  :type 'directory
-  :group 'paths)
-
-(defcustom paths-file-early-init
-  (file-name-concat paths-dir-init "early-init.el")
-  "Target location of `early-init.el' file to be tangled'."
-  :type 'file
-  :group 'paths)
-
-(defcustom paths-file-init
-  (file-name-concat paths-dir-init "init-pablo.el")
-  "Target location of `init-pablo.el' file to be tangled'."
-  :type 'file
-  :group 'paths)
-
-(defcustom paths-dir-init-target-locations
-  (let (target-directories)
-    (dolist (chemacs-profile chemacs-profiles target-directories)
-      (push
-       (cons
-	(car chemacs-profile)
-	(file-name-concat (cdadr chemacs-profile) "init-pablo.el"))
-       target-directories)))
-  "Init target locations.
-Alist of Chemacs profiles and associated locations for the `init-pablo.el' and
-`early-init-pablo.el' files to be passed to `init-configure-tangle-options'."
-  :type 'alist
-  :group 'paths)
-
 (defcustom paths-file-init-tangle-flags-sans-directory
   "tangle-flags-pablo.el"
   "Name of the file containing the tangle flags."
   :type 'file
+  :group 'paths)
+
+;;;;; Other
+
+(defcustom paths-tlon-babel-todos-generic-id
+  "4388B4D0-3830-48E0-A118-C3195B62F0D1"
+  "ID of the user-specific `org-mode' heading where generic TODOs are stored.
+\"Generic\" TODOs are all TODOs except those related to a translation job."
+  :type 'string
+  :group 'paths)
+
+(defcustom paths-tlon-babel-todos-jobs-id
+  "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB"
+  "ID of the user-specific `org-mode' heading where job TODOs are stored.
+A job TODO is a TODO for a translation job."
+  :type 'string
   :group 'paths)
 
 (provide 'paths)

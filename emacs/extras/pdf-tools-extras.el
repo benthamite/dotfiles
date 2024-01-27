@@ -27,7 +27,10 @@
 
 ;;; Code:
 
+(require 'modus-themes)
+(require 'pdf-annot)
 (require 'pdf-tools)
+(require 'writeroom-mode)
 
 ;;;; User options
 
@@ -118,6 +121,7 @@ If page number is already listed, remove it from list."
       (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
       (message "Copied all text in PDF to kill ring."))))
 
+(defvar no-query-p)
 ;; TODO: this isn’t working; fix it
 (defun pdf-tools-extras-install-no-confirm (orig-fun &rest args)
   "Don't ask for confirmation when installing `pdf-tools'.
@@ -165,8 +169,10 @@ PROPERTY-ALIST are as in `pdf-annot-add-highlight-markup-annotation'."
 	map))
 
 (define-minor-mode pdf-tools-extras-sel-mode
-  "\\<pdf-sel-mode-map>Just binding \\[pdf-tools-extras-sel-mouse] to `pdf-tools-extras-sel-mouse'.
-`pdf-tools-extras-sel-mouse' selects the text at point and copies it to `kill-ring'."
+  "Minor mode for selecting words in PDFs.
+\\<pdf-sel-mode-map>Just binding \\[pdf-tools-extras-sel-mouse] to
+`pdf-tools-extras-sel-mouse'. `pdf-tools-extras-sel-mouse' selects the text at
+point and copies it to `kill-ring'."
   :keymap pdf-tools-extras-sel-mode-map)
 
 (defun pdf-tools-extras-sel-mouse (ev)

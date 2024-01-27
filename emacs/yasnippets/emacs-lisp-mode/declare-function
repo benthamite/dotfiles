@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: declare-function
+# key: dec
+# contributor: Pablo Stafforini
+# --
+(declare-function ${1:function-name} "${2:file-name}")

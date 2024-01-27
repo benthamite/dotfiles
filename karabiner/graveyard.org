@@ -1,4 +1,17 @@
 #+filetags: :project:
+* consult-spotify
+:PROPERTIES:
+:ID:       1605F697-9968-474A-9691-941723977EEC
+:END:
+
+Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I'm disabling this.
+
+#+begin_src emacs-lisp :results silent
+(use-package consult-spotify
+  :disabled
+  :after consult espotify)
+#+end_src
+
 * Karabiner graveyard
 :PROPERTIES:
 :ID:       ECC3DE43-56AD-43A7-9386-CA1D720FFBB0

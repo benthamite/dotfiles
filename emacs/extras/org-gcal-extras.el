@@ -50,7 +50,6 @@
 	   id))))))
   (user-error "No id found"))
 
-;;;###autoload
 (transient-define-prefix org-gcal-extras-dispatch ()
   "Dispatch an `org-gcal' command."
   [["Fetch"

@@ -4372,7 +4372,7 @@ Note to self: if the package doesn't work after deploying a new profile, even af
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-gcal)
 (use-personal-package org-gcal-extras
-  :after calf-org org-gcal
+  :after org-gcal calfw-org
   :demand t
   :general
   (org-mode-map

@@ -243,7 +243,8 @@ Do not ask for confirmation."
 
 (defun mu4e-extras-msg-is-personal-p (msg)
   "Return t iff MSG is a personal message."
-  (mu4e-message-contact-field-matches msg :to (getenv "PERSONAL_GMAIL")))
+  (or (mu4e-message-contact-field-matches msg :to (getenv "PERSONAL_GMAIL"))
+      (mu4e-message-contact-field-matches msg :to (getenv "PERSONAL_EMAIL"))))
 
 (defun mu4e-extras-msg-is-work-p (msg)
   "Return t iff MSG is a work message."

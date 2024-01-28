@@ -10672,6 +10672,12 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
                                 ("Groups" type basicgroup supergroup)
                                 ("Channels" type channel)))
   (setq telega-completing-read-function 'completing-read)
+  (setq telega-webpage-history-max eww-history-limit)
+  (setq telega-root-fill-column 110)
+  (setq telega-chat-fill-column 90)
+  (setq telega-webpage-fill-column 110)
+  (setq telega-photo-size-limits `(8 3 ,(* 55 1.5) ,(* 12 1.5)))
+  (setq telega-webpage-photo-size-limits `(55 10 ,(* 110 1.5) ,(* 20 1.5)))
 
   (push 'telega-search-history savehist-additional-variables)
 

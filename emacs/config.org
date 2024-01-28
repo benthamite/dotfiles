@@ -8671,6 +8671,15 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   (setq org-contacts-files `(,(file-name-concat paths-dir-repos "babel-core/contacts.org"))))
 #+end_src
 
+*** TODO Migrate from ~bbdb~
+:PROPERTIES:
+:ID:       7762DE20-118C-49AF-9D47-CDDFDF846BD8
+:END:
+- [ ] Cleanup ~bbdb~ so that only contacts worth having a dedicated file remain.
+- [ ] Export ~bbdb~ contacts as ~org~ properties.
+- [ ] Add each property to the relevant contact file, creating one if necessary.
+- [ ] Set ~org-contacts-files~ to ~(directory-files paths-dir-people t "^[^.][^/]*$")~.
+
 ** org-autosort
 :PROPERTIES:
 :ID:       1BC53647-A492-4EA3-A9A5-352C71119629

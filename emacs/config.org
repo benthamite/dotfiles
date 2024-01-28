@@ -10339,6 +10339,9 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-headers-fields '((:human-date . 16)
                               (:from . 30)
                               (:subject)))
+
+  (push 'mu4e--search-hist savehist-additional-variables)
+
   (mu4e t)
 
   :general

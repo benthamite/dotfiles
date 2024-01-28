@@ -6085,8 +6085,8 @@ To populate the database of historical prices:
               "%(binary) -f %(ledger-file) reg %(account) --price-db .pricedb --exchange USD")
              ;; I need to understand how the `--basis' flag works
              ("cost basis"
-              "%(binary) -f %(ledger-file) --basis bal %(account) --strict")))
-
+              "%(binary) -f %(ledger-file) --basis bal %(account) --strict")
+              ("account (unrounded)" "%(binary) --unround  -f %(ledger-file) reg %(account)")))
     (add-to-list 'ledger-reports report))
 
   :general

@@ -4376,7 +4376,7 @@ Note to self: if the package doesn't work after deploying a new profile, even af
   :demand t
   :general
   (org-mode-map
-   "s-g" 'org-gcal-extras-hydra/body))
+   "s-g" 'org-gcal-extras-dispatch))
 #+end_src
 
 ** calfw

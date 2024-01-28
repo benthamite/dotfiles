@@ -4418,7 +4418,8 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 #+begin_src emacs-lisp
 (use-package calfw-org
-  :after calfw)
+  :after calfw
+  :demand t)
 #+end_src
 
 ** time
@@ -7941,7 +7942,7 @@ I’m using a fork that fixes some functionality that broke when org changed ~or
 (use-package org-clock-split
   :elpaca (org-clock-split
            :host github
-	   :repo "0robustus1/org-clock-split"
+           :repo "0robustus1/org-clock-split"
            :branch "support-emacs-29.1")
   :demand t
   :general

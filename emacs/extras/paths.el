@@ -300,6 +300,12 @@ value."
   :type 'directory
   :group 'paths)
 
+(defcustom paths-dir-split-git
+  (file-name-concat (expand-file-name "~") "git-dirs/")
+  "Path to the \".git\" directory in split repos."
+  :type 'directory
+  :group 'paths)
+
 (defcustom paths-dir-clock-reports
   (file-name-concat paths-dir-tlon-repos "clock-reports/")
   "Path to the `clock-reports' directory."

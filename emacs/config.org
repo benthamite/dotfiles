@@ -8504,9 +8504,9 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :config
   (setq org-habit-today-glyph #x1f4c5)
   (setq org-habit-completed-glyph #x2713)
-  (setq org-habit-preceding-days 29)
+  (setq org-habit-preceding-days 25)
   (setq org-habit-following-days 1)
-  (setq org-habit-graph-column 3)
+  (setq org-habit-graph-column 85)
   (setq org-habit-show-habits nil)
   (setq org-habit-show-habits-only-for-today nil)
 

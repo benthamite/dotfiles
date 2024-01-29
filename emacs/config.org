@@ -8669,7 +8669,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   :after org
   :demand t
   :config
-  (setq org-contacts-files `(,(file-name-concat paths-dir-repos "babel-core/contacts.org"))))
+  (setq org-contacts-files `(,(file-name-concat paths-dir-tlon-repos "babel-core/contacts.org"))))
 #+end_src
 
 *** TODO Migrate from ~bbdb~

@@ -475,26 +475,27 @@
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-repos
+(defcustom paths-dir-personal-repos
   (file-name-concat paths-dir-dropbox "repos/")
-  "Path to the Dropbox repos directory."
+  "Path to the personal repositories are stored."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-clock-repos
-  (file-name-concat paths-dir-repos "clock-reports/")
+  (file-name-concat paths-dir-tlon-repos "clock-reports/")
   "Path to the `clock-reports' directory."
   :type 'directory
   :group 'paths)
 
+;; TODO: delete?
 (defcustom paths-dir-tlon-babel
-  (file-name-concat paths-dir-repos "babel/")
+  (file-name-concat paths-dir-tlon-repos "babel/")
   "Path to the `tlon-babel' repo directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-tlon-docs
-  (file-name-concat paths-dir-repos "tlon-docs/")
+  (file-name-concat paths-dir-tlon-repos "tlon-docs/")
   "Path to the `tlon-docs' repo directory."
   :type 'directory
   :group 'paths)

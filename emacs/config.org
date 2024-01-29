@@ -7556,24 +7556,29 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   (setq org-agenda-archives-mode 'trees)
 
   (advice-add 'org-agenda-goto :after
-              (lambda (&rest args)
+              (lambda (&rest _)
+		"Narrow to the entry and its children after jumping to it."
                 (org-extras-narrow-to-entry-and-children)))
 
-  ;; We add these two advices because `org-modern-mode' interferes
-  ;; with the display of the habits progress bar
-  (advice-add 'org-habit-toggle-display-in-agenda :before
-              (lambda (arg)
-                (if org-habit-show-habits
-                    (global-org-modern-mode)
-                  (global-org-modern-mode -1))))
-  (advice-add 'org-habit-toggle-display-in-agenda :after
-              (lambda (arg)
-                (org-agenda-redo)
-                (global-org-modern-mode)))
+  (add-hook 'org-agenda-mode-hook
+	    (lambda ()
+	      "Disable `visual-line-mode' and `toggle-truncate-lines' in `org-agenda'."
+              (visual-line-mode -1)
+              (toggle-truncate-lines)))
 
-  (add-hook 'org-agenda-mode-hook (lambda ()
-                                    (visual-line-mode -1)
-                                    (toggle-truncate-lines)))
+  (advice-add 'org-habit-toggle-display-in-agenda :around
+              (lambda (orig-fun &rest args)
+		"Prevent `org-modern-mode' interference with org habits."
+		(if org-habit-show-habits
+                    (progn
+                      (global-org-modern-mode)
+                      (apply orig-fun args)
+                      (org-agenda-redo)
+                      (global-org-modern-mode))
+                  (global-org-modern-mode -1)
+                  (apply orig-fun args)
+                  (org-agenda-redo)
+                  (global-org-modern-mode -1))))
 
   :general
   ("C-<escape>" 'org-agenda)

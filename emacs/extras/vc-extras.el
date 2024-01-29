@@ -51,13 +51,13 @@
   :type 'string
   :group 'vc-extras)
 
-(defcustom vc-extras-personal-repo-dir paths-dir-repos
+(defcustom vc-extras-personal-repo-dir paths-dir-personal-repos
   "The directory where personal repositories are stored."
   :type 'directory
   :group 'vc-extras)
 
-(defcustom vc-extras-work-repo-dir vc-extras-personal-repo-dir
-  "The directory where personal repositories are stored."
+(defcustom vc-extras-work-repo-dir paths-dir-tlon-repos
+  "The directory where work repositories are stored."
   :type 'directory
   :group 'vc-extras)
 

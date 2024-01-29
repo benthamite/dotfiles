@@ -48,7 +48,7 @@
   :group 'eww-extras)
 
 (defcustom eww-extras-readable-exceptions-file
-  (file-name-concat tlon-init-dir-dotemacs "etc/eww-readable-exceptions.txt")
+  (file-name-concat paths-dir-dotemacs "etc/eww-readable-exceptions.txt")
   "File containing the URLs for which `eww-readable' should not be used by default."
   :type 'file
   :group 'eww-extras)

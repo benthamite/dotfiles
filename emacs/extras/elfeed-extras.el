@@ -158,13 +158,13 @@ poorly-designed websites."
   (when (= 0 elfeed-extras-updates-in-progress)
     (run-hooks 'elfeed-extras-update-complete-hook)))
 
-(add-hook 'elfeed-update-hooks #'elfeed-extras-update-complete-hook)
+;; (add-hook 'elfeed-update-hooks #'elfeed-extras-update-complete-hook)
 
 (defun elfeed-extras-update-message-completed (&rest _ignore)
   "Display a message when `elfeed-update' is finished."
   (message "Feeds updated"))
 
-(add-hook 'elfeed-extras-update-complete-hook #'elfeed-extras-update-message-completed)
+;; (add-hook 'elfeed-extras-update-complete-hook #'elfeed-extras-update-message-completed)
 
 (defun elfeed-extras-search-update-restore-filter (&rest ignore)
   "Restore filter after feeds update."
@@ -172,7 +172,7 @@ poorly-designed websites."
     (elfeed-search-set-filter elfeed-extras-search-update-filter)
     (setq elfeed-extras-search-update-filter nil)))
 
-(add-hook 'elfeed-extras-update-complete-hook #'elfeed-extras-search-update-restore-filter)
+;; (add-hook 'elfeed-extras-update-complete-hook #'elfeed-extras-search-update-restore-filter)
 
 (defun elfeed-extras-search-update-save-filter (&rest ignore)
   "Save and change the filter while updating."
@@ -187,7 +187,7 @@ poorly-designed websites."
   "Increment `elfeed-extras-updates-in-progress'."
   (cl-incf elfeed-extras-updates-in-progress))
 
-(advice-add #'elfeed-update-feed :before #'elfeed-extras-update-counter-inc)
+;; (advice-add #'elfeed-update-feed :before #'elfeed-extras-update-counter-inc)
 
 (defun elfeed-extras-update-counter-dec (&rest ignore)
   "Decrement `elfeed-extras-updates-in-progress'."
@@ -196,7 +196,7 @@ poorly-designed websites."
     ;; Just in case
     (setq elfeed-extras-updates-in-progress 0)))
 
-(add-hook 'elfeed-update-hooks #'elfeed-extras-update-counter-dec)
+;; (add-hook 'elfeed-update-hooks #'elfeed-extras-update-counter-dec)
 
 (provide 'elfeed-extras)
 ;;; elfeed-extras.el ends here

@@ -64,10 +64,10 @@
  (paths-dir-music . (file-name-concat paths-dir-google-drive "Music/"))
  (paths-dir-movies . (file-name-concat paths-dir-google-drive "Movies/"))
  (paths-dir-dotfiles . (file-name-concat (getenv "HOME") "source/dotfiles/"))
- (paths-dir-source . (file-name-concat (getenv "HOME") "source/"))
- (paths-dir-tlon-repos . paths-dir-source)
+ (paths-dir-external-repos . (file-name-concat (getenv "HOME") "source/"))
+ (paths-dir-tlon-repos . paths-dir-external-repos)
  (paths-dir-org . (file-name-concat paths-dir-dropbox "org/"))
- (paths-dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat paths-dir-source "biblioteca-altruismo-eficaz/"))
+ (paths-dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat paths-dir-tlon-repos "biblioteca-altruismo-eficaz/"))
  (paths-dir-org-roam . "")
  (paths-dir-org-images . (file-name-concat paths-dir-google-drive "org-images/"))
  (paths-dir-websites . "")
@@ -285,11 +285,11 @@ Doom modeline
  "<end>" 'end-of-line
  "H-q" 'delete-window
  "H-w" 'files-extras-kill-this-buffer
- "H-k" 'hydra-org-work/body
+ "H-k" 'org-extras-work-dispatch
  "H-o" 'find-file
  "H-/" 'comment-line
  "H-\\" 'window-extras-split-if-unsplit
- "H-;" 'hydra-org-work/body
+ "H-;" 'org-extras-work-dispatch
  "H-g" nil
  "H-h" 'other-window
  "H-H" 'window-extras-buffer-move-dwim

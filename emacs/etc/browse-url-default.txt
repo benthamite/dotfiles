@@ -16,6 +16,7 @@ bolt.eu
 box.com
 calendar.google.com
 calendly.com
+cheerfy.com
 cleverlayover.com
 connectedpapers.com
 correos.es

@@ -285,11 +285,11 @@ Doom modeline
  "<end>" 'end-of-line
  "H-q" 'delete-window
  "H-w" 'files-extras-kill-this-buffer
- "H-k" 'hydra-org-work/body
+ "H-k" 'org-extras-work-dispatch
  "H-o" 'find-file
  "H-/" 'comment-line
  "H-\\" 'window-extras-split-if-unsplit
- "H-;" 'hydra-org-work/body
+ "H-;" 'org-extras-work-dispatch
  "H-g" nil
  "H-h" 'other-window
  "H-H" 'window-extras-buffer-move-dwim

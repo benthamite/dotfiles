@@ -217,7 +217,7 @@
   )
 
 
-(global-set-key (kbd "H-;") 'hydra-org-work/body)
+(global-set-key (kbd "H-;") 'org-extras-work-dispatch)
 (put 'scroll-left 'disabled nil)
 #+end_src
 

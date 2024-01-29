@@ -27,8 +27,6 @@
 
 ;;; Code:
 
-(require 'tlon-init)
-
 ;;;; User options
 
 (defgroup paths ()
@@ -211,20 +209,31 @@
   :type 'directory
   :group 'paths)
 
+(defcustom paths-dir-dotemacs
+  (let ((dir (pcase (getenv "HOME")
+	       ("/Users/pablostafforini" "Library/CloudStorage/Dropbox/dotfiles/emacs/")
+	       ("/Users/fede" "source/dotfiles/emacs/")
+	       ("/Users/cartago" "source/dotfiles/emacs/")
+	       (_ (user-error "Home directory does not match that of a known user")))))
+    (file-name-concat (getenv "HOME") dir))
+  "Path to the \"emacs\" directory in Pablo’s \"dotfiles\" repo."
+  :type 'directory
+  :group 'paths)
+
 (defcustom paths-dir-yasnippets
-  (file-name-concat tlon-init-dir-dotemacs "yasnippets/")
+  (file-name-concat paths-dir-dotemacs "yasnippets/")
   "Path to the Yasnippets directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-yasnippets-private
-  (file-name-concat tlon-init-dir-dotemacs "yasnippets-private/")
+  (file-name-concat paths-dir-dotemacs "yasnippets-private/")
   "Path to the private Yasnippets directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-abbrev
-  (file-name-concat tlon-init-dir-dotemacs "abbrev/")
+  (file-name-concat paths-dir-dotemacs "abbrev/")
   "Path to the abbrev directory."
   :type 'directory
   :group 'paths)
@@ -610,7 +619,7 @@ This should be the path you set `org-roam-directory' to."
   :group 'paths)
 
 (defcustom paths-file-config
-  (file-name-concat tlon-init-dir-dotemacs "config.org")
+  (file-name-concat paths-dir-dotemacs "config.org")
   "Path to the `org-mode' config file."
   :type 'file
   :group 'paths)

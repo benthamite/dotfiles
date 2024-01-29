@@ -806,12 +806,11 @@ To see a list of Google Docs and their respective IDs, run
   "Dispatcher for work projects."
   ["Projects dashboard"
    ["""Tlön"
-    ("b" "BAB" (lambda () (interactive) (org-roam-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24")))
+    ("b" "Babel" (lambda () (interactive) (org-roam-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24")))
     ("r" "RAE" (lambda () (interactive) (org-roam-extras-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D")))
     ("n" "EAN" (lambda () (interactive) (org-roam-extras-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC")))
     ("d" "LBDLHD" (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))]
    ["""Other"
-    ("w" "PW" (lambda () (interactive) (org-roam-extras-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A")))
     ("v" "Samotsvety" (lambda () (interactive) (org-roam-extras-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87")))
     ("x" "Misc" (lambda () (interactive) (org-roam-extras-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99")))]
    ["""Someday"

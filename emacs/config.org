@@ -1664,10 +1664,10 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   (setq mixed-pitch-set-height t)
 
   (dolist (hook '(elfeed-show-mode-hook
-
-                  eww-mode-hook
-                  mu4e-view-mode-hook
-                  outline-mode-hook))
+		  telega-webpage-mode-hook
+		  eww-mode-hook
+		  mu4e-view-mode-hook
+		  outline-mode-hook))
     (add-hook hook #'mixed-pitch-mode)))
 #+end_src
 
@@ -2418,7 +2418,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   :general
   ("A-C-s-m" 'move-beginning-of-line
    "A-C-s-/" 'move-end-of-line)
-  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map gh-notify-mode-map help-mode-map helpful-mode-map Info-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map E elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
+  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map gh-notify-mode-map help-mode-map helpful-mode-map Info-mode-map ledger-reconcile-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map E elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
    "k" 'previous-line
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)
@@ -4372,11 +4372,11 @@ Note to self: if the package doesn't work after deploying a new profile, even af
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-gcal)
 (use-personal-package org-gcal-extras
-  :after calf-org org-gcal
+  :after org-gcal calfw-org
   :demand t
   :general
   (org-mode-map
-   "s-g" 'org-gcal-extras-hydra/body))
+   "s-g" 'org-gcal-extras-dispatch))
 #+end_src
 
 ** calfw
@@ -4418,7 +4418,8 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 #+begin_src emacs-lisp
 (use-package calfw-org
-  :after calfw)
+  :after calfw
+  :demand t)
 #+end_src
 
 ** time
@@ -6085,8 +6086,8 @@ To populate the database of historical prices:
               "%(binary) -f %(ledger-file) reg %(account) --price-db .pricedb --exchange USD")
              ;; I need to understand how the `--basis' flag works
              ("cost basis"
-              "%(binary) -f %(ledger-file) --basis bal %(account) --strict")))
-
+              "%(binary) -f %(ledger-file) --basis bal %(account) --strict")
+              ("account (unrounded)" "%(binary) --unround  -f %(ledger-file) reg %(account)")))
     (add-to-list 'ledger-reports report))
 
   :general
@@ -7555,24 +7556,29 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   (setq org-agenda-archives-mode 'trees)
 
   (advice-add 'org-agenda-goto :after
-              (lambda (&rest args)
+              (lambda (&rest _)
+		"Narrow to the entry and its children after jumping to it."
                 (org-extras-narrow-to-entry-and-children)))
 
-  ;; We add these two advices because `org-modern-mode' interferes
-  ;; with the display of the habits progress bar
-  (advice-add 'org-habit-toggle-display-in-agenda :before
-              (lambda (arg)
-                (if org-habit-show-habits
-                    (global-org-modern-mode)
-                  (global-org-modern-mode -1))))
-  (advice-add 'org-habit-toggle-display-in-agenda :after
-              (lambda (arg)
-                (org-agenda-redo)
-                (global-org-modern-mode)))
+  (add-hook 'org-agenda-mode-hook
+	    (lambda ()
+	      "Disable `visual-line-mode' and `toggle-truncate-lines' in `org-agenda'."
+              (visual-line-mode -1)
+              (toggle-truncate-lines)))
 
-  (add-hook 'org-agenda-mode-hook (lambda ()
-                                    (visual-line-mode -1)
-                                    (toggle-truncate-lines)))
+  (advice-add 'org-habit-toggle-display-in-agenda :around
+              (lambda (orig-fun &rest args)
+		"Prevent `org-modern-mode' interference with org habits."
+		(if org-habit-show-habits
+                    (progn
+                      (global-org-modern-mode)
+                      (apply orig-fun args)
+                      (org-agenda-redo)
+                      (global-org-modern-mode))
+                  (global-org-modern-mode -1)
+                  (apply orig-fun args)
+                  (org-agenda-redo)
+                  (global-org-modern-mode -1))))
 
   :general
   ("C-<escape>" 'org-agenda)
@@ -7941,7 +7947,7 @@ I’m using a fork that fixes some functionality that broke when org changed ~or
 (use-package org-clock-split
   :elpaca (org-clock-split
            :host github
-	   :repo "0robustus1/org-clock-split"
+           :repo "0robustus1/org-clock-split"
            :branch "support-emacs-29.1")
   :demand t
   :general
@@ -8271,7 +8277,7 @@ CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
   :defer 30
   :config
   (setq org-export-exclude-tags '("noexport" "ARCHIVE"))
-  (setq org-export-backends '(ascii html icalendar latex md odt)) ; set export backends
+  (setq org-export-backends '(ascii html icalendar latex md odt texinfo)) ; set export backends
   (setq org-export-with-broken-links 'mark) ; allow export with broken links
   (setq org-export-with-section-numbers nil) ; do not add numbers to section headings
   (setq org-export-with-toc nil) ; do not include table of contents
@@ -8503,9 +8509,9 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :config
   (setq org-habit-today-glyph #x1f4c5)
   (setq org-habit-completed-glyph #x2713)
-  (setq org-habit-preceding-days 29)
+  (setq org-habit-preceding-days 25)
   (setq org-habit-following-days 1)
-  (setq org-habit-graph-column 3)
+  (setq org-habit-graph-column 85)
   (setq org-habit-show-habits nil)
   (setq org-habit-show-habits-only-for-today nil)
 
@@ -8519,7 +8525,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 :ID:       F2DD9900-5926-4FE1-A8DC-C398CFE80378
 :END:
 
-/[[https://git.sr.ht/~bzg/org-contrib][org-contrib]] features add-ons to ~org-mode~.
+/[[https://git.sr.ht/~bzg/org-contrib][org-contrib]] features add-ons to ~org-mode~./
 
 #+begin_src emacs-lisp
 (use-package org-contrib
@@ -8668,8 +8674,17 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   :after org
   :demand t
   :config
-  (setq org-contacts-files `(,(file-name-concat paths-dir-repos "genus/contacts.org"))))
+  (setq org-contacts-files `(,(file-name-concat paths-dir-tlon-repos "babel-core/contacts.org"))))
 #+end_src
+
+*** TODO Migrate from ~bbdb~
+:PROPERTIES:
+:ID:       7762DE20-118C-49AF-9D47-CDDFDF846BD8
+:END:
+- [ ] Cleanup ~bbdb~ so that only contacts worth having a dedicated file remain.
+- [ ] Export ~bbdb~ contacts as ~org~ properties.
+- [ ] Add each property to the relevant contact file, creating one if necessary.
+- [ ] Set ~org-contacts-files~ to ~(directory-files paths-dir-people t "^[^.][^/]*$")~.
 
 ** org-autosort
 :PROPERTIES:
@@ -10337,6 +10352,9 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-headers-fields '((:human-date . 16)
                               (:from . 30)
                               (:subject)))
+
+  (push 'mu4e--search-hist savehist-additional-variables)
+
   (mu4e t)
 
   :general
@@ -10670,6 +10688,12 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
                                 ("Groups" type basicgroup supergroup)
                                 ("Channels" type channel)))
   (setq telega-completing-read-function 'completing-read)
+  (setq telega-webpage-history-max eww-history-limit)
+  (setq telega-root-fill-column 110)
+  (setq telega-chat-fill-column 90)
+  (setq telega-webpage-fill-column 110)
+  (setq telega-photo-size-limits `(8 3 ,(* 55 1.5) ,(* 12 1.5)))
+  (setq telega-webpage-photo-size-limits `(55 10 ,(* 110 1.5) ,(* 20 1.5)))
 
   (push 'telega-search-history savehist-additional-variables)
 

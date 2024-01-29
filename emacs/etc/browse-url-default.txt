@@ -16,6 +16,7 @@ bolt.eu
 box.com
 calendar.google.com
 calendly.com
+cheerfy.com
 cleverlayover.com
 connectedpapers.com
 correos.es
@@ -28,6 +29,7 @@ dhl.
 disqus.com
 docs.google.com
 doi.org
+drive.google.com
 dropbox.com
 easy.jet
 ecoveritas.es

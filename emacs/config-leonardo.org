@@ -142,10 +142,10 @@
                        (id "C5C5EF82-E7FC-461E-B7BE-FE921CEE9158")
                        "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
                       ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
-                       (id ,tlon-babel-todos-jobs-id)
+                       (id ,paths-tlon-babel-todos-jobs-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
                       ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
-                       (id ,tlon-babel-todos-generic-id)
+                       (id ,paths-tlon-babel-todos-generic-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
     (push template org-capture-templates))
 

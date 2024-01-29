@@ -749,7 +749,8 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :after paths
   :demand t
   :config
-  (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook))
+  (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook)
+  (tlon-init-startup))
 (elpaca-wait)
 #+end_src
 

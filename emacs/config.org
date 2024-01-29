@@ -8277,7 +8277,7 @@ CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
   :defer 30
   :config
   (setq org-export-exclude-tags '("noexport" "ARCHIVE"))
-  (setq org-export-backends '(ascii html icalendar latex md odt)) ; set export backends
+  (setq org-export-backends '(ascii html icalendar latex md odt texinfo)) ; set export backends
   (setq org-export-with-broken-links 'mark) ; allow export with broken links
   (setq org-export-with-section-numbers nil) ; do not add numbers to section headings
   (setq org-export-with-toc nil) ; do not include table of contents

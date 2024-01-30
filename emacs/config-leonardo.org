@@ -319,7 +319,7 @@
  (paths-dir-google-drive . (file-name-concat (expand-file-name "~") "Google Drive/"))
  (paths-dir-downloads . (file-name-concat (expand-file-name "~") "Downloads/"))
  (paths-dir-external-repos . (file-name-concat (expand-file-name "~") "source/"))
- (paths-dir-tlon-repos . paths-dir-external-repos)
+ (paths-dir-tlon-repos . (file-name-concat paths-dir-dropbox "repos/"))
  (paths-dir-babel-refs . (file-name-concat paths-dir-tlon-repos "babel-refs/"))
  (paths-dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat (expand-file-name "~") "source/biblioteca-altruismo-eficaz/"))
  (paths-dir-emacs .   user-emacs-directory)

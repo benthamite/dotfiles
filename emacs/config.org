@@ -9198,15 +9198,8 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 (use-feature oc
   :after org
   :demand t
-  :init
-  (add-hook 'tlon-babel-post-init-hook
-            (lambda ()
-              "Set `org-cite' vars after `tlon-babel' is loaded."
-              ;; (setq org-cite-global-bibliography paths-files-bibliography-all) ; disabled for poor performance
-              (setq org-cite-csl-styles-dir tlon-babel-refs-styles-dir)))
-
   :config
-  (setq org-cite-csl-locales-dir paths-dir-personal-csl-locales)
+  (setq org-cite-csl-styles-dir paths-dir-tlon-csl-styles)
   (setq org-cite-insert-processor 'citar)
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (setq org-cite-activate-processor 'citar) ;

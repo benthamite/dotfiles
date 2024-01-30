@@ -263,7 +263,7 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(setq citar-citeproc-csl-styles-dir paths-dir-personal-csl-styles)
+(setq citar-citeproc-csl-styles-dir paths-dir-tlon-csl-styles)
 #+end_src
 
 ** tlon-init
@@ -336,8 +336,6 @@
  (paths-dir-archive . "")
  (paths-dir-inactive . "")
  (paths-dir-personal-bibliography . (file-name-concat (expand-file-name "~") "source/bibliography/"))
- (paths-dir-personal-csl-styles . (file-name-concat paths-dir-personal-bibliography "styles/"))
- (paths-dir-personal-csl-locales . (file-name-concat paths-dir-personal-bibliography "locales/"))
  (paths-dir-blog . "")
  (paths-dir-journal . "")
  (paths-dir-wiki . "")

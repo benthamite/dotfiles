@@ -9606,14 +9606,8 @@ Having headings tagged with the type of work they are notes of allows me to quer
 (use-feature citar-citeproc
   :demand t
   :after citar citeproc citar-extras tlon-babel
-  :init
-  (add-hook 'tlon-babel-post-init-hook
-            (lambda ()
-              "Set `citar-citeproc-csl-styles-dir' after `tlon-babel-refs-styles-dir' is set."
-                (setq citar-citeproc-csl-styles-dir tlon-babel-refs-styles-dir)))
-
   :config
-  (setq citar-citeproc-csl-style "biblioteca-altruismo-eficaz.csl")
+  (setq citar-citeproc-csl-styles-dir paths-dir-tlon-csl-styles)
   (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir)
   ;; https://github.com/emacs-citar/citar/wiki/Indicators
   (setq citar-indicators

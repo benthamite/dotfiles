@@ -263,7 +263,7 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(setq citar-citeproc-csl-styles-dir paths-dir-personal-csl-styles)
+(setq citar-citeproc-csl-styles-dir paths-dir-tlon-csl-styles)
 #+end_src
 
 ** tlon-init

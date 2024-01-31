@@ -5955,7 +5955,6 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
   :general
   ((gfm-mode-map markdown-mode-map)
    "A-C-H-t" 'markdown-mode-extras-copy-section
-   "s-l" 'markdown-mode-extras-insert-locator
    "s-r" 'markdown-mode-extras-remove-url-in-link)
   ((ghm-mode-map markdown-mode-map org-mode-map)
    "H-s-v" 'markdown-mode-extras-org-paste-dwim))
@@ -6235,6 +6234,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   ((gfm-mode-map markdown-mode-map)
    "A-s-e" 'tlon-babel-yaml-edit-field
    "s-c" 'tlon-babel-copy-dwim
+   "s-l" 'tlon-babel-md-insert-locator
    "s-t" 'tlon-babel-md-insert-cite-tag
    "s-u" 'tlon-babel-md-insert-element
    "A-C-s-SPC" 'tlon-babel-md-beginning-of-buffer-dwim

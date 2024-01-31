@@ -1665,10 +1665,10 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   (setq mixed-pitch-set-height t)
 
   (dolist (hook '(elfeed-show-mode-hook
-		  telega-webpage-mode-hook
-		  eww-mode-hook
-		  mu4e-view-mode-hook
-		  outline-mode-hook))
+                  telega-webpage-mode-hook
+                  eww-mode-hook
+                  mu4e-view-mode-hook
+                  outline-mode-hook))
     (add-hook hook #'mixed-pitch-mode)))
 #+end_src
 
@@ -7561,19 +7561,19 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 
   (advice-add 'org-agenda-goto :after
               (lambda (&rest _)
-		"Narrow to the entry and its children after jumping to it."
+                "Narrow to the entry and its children after jumping to it."
                 (org-extras-narrow-to-entry-and-children)))
 
   (add-hook 'org-agenda-mode-hook
-	    (lambda ()
-	      "Disable `visual-line-mode' and `toggle-truncate-lines' in `org-agenda'."
+            (lambda ()
+              "Disable `visual-line-mode' and `toggle-truncate-lines' in `org-agenda'."
               (visual-line-mode -1)
               (toggle-truncate-lines)))
 
   (advice-add 'org-habit-toggle-display-in-agenda :around
               (lambda (orig-fun &rest args)
-		"Prevent `org-modern-mode' interference with org habits."
-		(if org-habit-show-habits
+                "Prevent `org-modern-mode' interference with org habits."
+                (if org-habit-show-habits
                     (progn
                       (global-org-modern-mode)
                       (apply orig-fun args)

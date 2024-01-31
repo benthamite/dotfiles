@@ -776,35 +776,6 @@ To see a list of Google Docs and their respective IDs, run
 
 ;;;;; Dispatchers
 
-(transient-define-prefix org-extras-dispatch ()
-  "Dispatcher for `org-mode' headings."
-  ["Heading"
-   ("SPC" "Anki habit" (lambda () (interactive) (org-roam-extras-id-goto "B67C920B-D855-4A27-A35C-1DAC56580DA7")))
-   ("i" "Anki" (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))
-   ("p" "audiobooks" (lambda () (interactive) (org-roam-extras-id-goto "0070312F-6233-4BED-98F4-A2BAAEE8DAFF")))
-   ("b" "books" (lambda () (interactive) (org-roam-extras-id-goto "7A788F19-30F5-4504-B47F-CE693AF3EA7E")))
-   ("u" "Current book" (lambda () (interactive) (org-roam-extras-id-goto "78577411-554E-4EEC-B669-C014A9581540")))
-   ("r" "Documentaries" (lambda () (interactive) (org-roam-extras-id-goto "1C5DCC5A-DA18-4CBD-8E2E-205766A656D6")))
-   ("z" "eablogs.net" (lambda () (interactive) (org-roam-extras-id-goto "8F8E5495-A0D8-451A-B1F1-0A8706CBF6A0")))
-   ("e" "Email" (lambda () (interactive) (org-roam-extras-id-goto "96BBA849-B4CF-41C0-ABA3-A5D901BCDB18")))
-   ("d" "Feeds" (lambda () (interactive) (org-roam-extras-id-goto "6504C81B-28F0-44C3-BFC0-2F3E648974F0")))
-   ("v" "films" (lambda () (interactive) (org-roam-extras-id-goto "E821F19E-C619-4895-A084-54D0A2772BAE")))
-   ("f" "finance" (lambda () (interactive) (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C")))
-   ("/" "inbox" (lambda () (interactive) (org-roam-extras-id-goto "D9D71BF0-6BD6-40A5-9896-E58C7D9556B7")))
-   ("m" "Keyboard Maestro" (lambda () (interactive) (org-roam-extras-id-goto "E65E393D-8694-4E23-994E-BA59A8063FCF")))
-   ("k" "Khan Academy" (lambda () (interactive) (org-roam-extras-id-goto "6F0A4889-C303-4930-8512-757AAD310535")))
-   ("l" "Leonardo" (lambda () (interactive) (org-roam-extras-id-goto "C308562B-222E-47E2-9A5F-B31EDB29569A")))
-   ("," "morning routine" (lambda () (interactive) (org-roam-extras-id-goto "E1C1F691-8358-4DDF-AC71-F46B883411BB")))
-   ("." "night routine" (lambda () (interactive) (org-roam-extras-id-goto "ADAA1E78-2904-4EF4-938C-F599A5C90822")))
-   ("c" "podcasts" (lambda () (interactive) (org-roam-extras-id-goto "7CE82ABB-A23F-41F6-A29E-0B95553A8FEE")))
-   ("s" "Slack" (lambda () (interactive) (org-roam-extras-id-goto "3513061C-5868-4EBC-9F77-9814AB776011")))
-   ("j" "sleep" (lambda () (interactive) (org-roam-extras-id-goto "356B7595-EC5B-4DF4-949C-A637537128E4")))
-   ("y" "Spotify" (lambda () (interactive) (org-roam-extras-id-goto "FBDB7FC0-7650-48A0-933D-AE9606C2B621")))
-   ("t" "tlon" org-extras-work-dispatch)
-   ("n" "Telegram" (lambda () (interactive) (org-roam-extras-id-goto "9696939D-A8B7-4179-A5C8-FEBB017DC9EF")))
-   ("q" "YouTube" (lambda () (interactive) (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E")))
-   ])
-
 (transient-define-prefix org-extras-work-dispatch ()
   "Dispatcher for work projects."
   ["Projects dashboard"
@@ -843,42 +814,62 @@ To see a list of Google Docs and their respective IDs, run
     ("RET" "Home" (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))]
    ])
 
-(defhydra hydra-org-config
-  (:exit 1)
-  "Org headings: config.org"
-  ("c" (org-roam-extras-id-goto "50FAD2F3-E501-408E-A9A2-8358FAA87C1C") "Calc")
-  ("d" (org-roam-extras-id-goto "617F5323-6518-4751-948B-3E8032D93130") "Dired")
-  ("e" (org-roam-extras-id-goto "FF5DDBC3-ABB6-48A9-9B47-BC9A18F532D5") "Elfeed")
-  ("f" (org-roam-extras-id-goto "B29F4586-2B8D-41FE-82DE-FEDCD863C74B") "Files & buffers")
-  ("g" (org-roam-extras-id-goto "AACAE0F4-0B25-475B-831B-3F1E91E6349D") "Graveyard")
-  ("h" (hydra-org-config-hydra/body) "Hydra")
-  ("i" (org-roam-extras-id-goto "A7940400-DD17-4B0B-A9B2-565A207D680C") "Introduction")
-  ("k" (org-roam-extras-id-goto "4373E661-B19D-4E6C-B7DE-C2A26619A515") "Wiki")
-  ("l" (org-roam-extras-id-goto "DE6D2307-9EBD-4E0F-B873-003C9813CA27") "Display")
-  ("m" (org-roam-extras-id-goto "E83EC00B-0C94-44CD-9EC0-355992C99234") "Completion ")
-  ("n" (org-roam-extras-id-goto "179BB021-8B2A-4BF0-B3AA-43AF5A212D4B") "Text manipulation")
-  ("o" (hydra-org-config-org/body) "Org")
-  ("p" (org-roam-extras-id-goto "7F0CBD06-FDB3-4889-91CE-D8A25D4F2613") "Help")
-  ("s" (org-roam-extras-id-goto "9FDBBF3E-724F-4402-9DDB-F9349F65AB0E") "Search")
-  ("t" (org-roam-extras-id-goto "1E8F4417-5D5F-4406-BB70-AA272F714EF2") "Text movement")
-  ("u" (org-roam-extras-id-goto "AA460F4A-4035-4C96-A3A1-078A43F7892D") "user-init")
-  ("v" (org-roam-extras-id-goto "10E891D3-9DF5-472A-8E3C-1DE30EE8C81F") "Variables")
-  ("w" (org-roam-extras-id-goto "7E9A81E0-CAEB-4029-AD2C-B2416439FCDA") "Windows & frames")
-  ("y" (org-roam-extras-id-goto "6405B8E7-6612-4D71-8C2C-A51F8808F4C6") "Yasnippets"))
+;; TODO: create this
 
-(defhydra hydra-org-config-org
-  (:exit 1)
-  "Org headings: config.org > org"
-  ("a" (org-roam-extras-id-goto "E03F4142-C90D-4550-8990-15391E27AD77") "org-agenda")
-  ("b" (org-roam-extras-id-goto "52C959E4-54F4-4499-AE3A-5251F6337FA0") "org key bindings")
-  ("c" (org-roam-extras-id-goto "14F93A83-0BE7-42E3-891E-F6806192296B") "org-capture")
-  ("m" (org-roam-extras-id-goto "2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17") "org-roam")
-  ("n" (org-roam-extras-id-goto "A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7") "org-noter")
-  ("o" (org-roam-extras-id-goto "268B60E4-708C-4372-A59D-5DD876E493CA") "org-mode")
-  ("f" (org-roam-extras-id-goto "35FB5BB5-6552-48C6-983A-F90011CCA908") "org-ref")
-  ("r" (org-roam-extras-id-goto "3FAE7C0D-FB22-4175-A0A4-FFA392539743") "org-refile")
-  ("t" (org-roam-extras-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A") "org-cite")
-  ("x" (org-roam-extras-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF") "org-roam-bibtex"))
+(defun define-extras-work-dispatch (lines)
+  "docstring."
+  (eval `(transient-define-prefix org-extras-work-dispatch ()
+	   "Dispatcher for work projects."
+	   ["Projects dashboard"
+	    ,@lines])))
+
+
+;; (setq lines )
+;; (dolist (repo tlon-babel-core-repos)
+;; (let ((name (plist-get :name repo))
+;; (key (plist-get :key repo))
+;; (id (plist-get :id-pablo repo)))
+;; (push `(,name ,key (lambda () (interactive) (org-roam-extras-id-goto ,id))))
+;; ))
+
+;; (define-extras-work-dispatch lines)
+
+(transient-define-prefix org-extras-config-dispatch ()
+  "Jump to a section in `config.org'."
+  [["Org headings: config.org"
+    ("c" "Calc" (lambda () (interactive) (org-roam-extras-id-goto "50FAD2F3-E501-408E-A9A2-8358FAA87C1C")))
+    ("d" "Dired" (lambda () (interactive) (org-roam-extras-id-goto "617F5323-6518-4751-948B-3E8032D93130")))
+    ("e" "Elfeed" (lambda () (interactive) (org-roam-extras-id-goto "FF5DDBC3-ABB6-48A9-9B47-BC9A18F532D5")))
+    ("f" "Files & buffers" (lambda () (interactive) (org-roam-extras-id-goto "B29F4586-2B8D-41FE-82DE-FEDCD863C74B")))
+    ("g" "Graveyard" (lambda () (interactive) (org-roam-extras-id-goto "AACAE0F4-0B25-475B-831B-3F1E91E6349D")))
+    ("i" "Introduction" (lambda () (interactive) (org-roam-extras-id-goto "A7940400-DD17-4B0B-A9B2-565A207D680C")))
+    ("k" "Wiki" (lambda () (interactive) (org-roam-extras-id-goto "4373E661-B19D-4E6C-B7DE-C2A26619A515")))
+    ("l" "Display" (lambda () (interactive) (org-roam-extras-id-goto "DE6D2307-9EBD-4E0F-B873-003C9813CA27")))
+    ("m" "Completion " (lambda () (interactive) (org-roam-extras-id-goto "E83EC00B-0C94-44CD-9EC0-355992C99234")))
+    ("n" "Text manipulation" (lambda () (interactive) (org-roam-extras-id-goto "179BB021-8B2A-4BF0-B3AA-43AF5A212D4B")))
+    ("p" "Help" (lambda () (interactive) (org-roam-extras-id-goto "7F0CBD06-FDB3-4889-91CE-D8A25D4F2613")))
+    ("s" "Search" (lambda () (interactive) (org-roam-extras-id-goto "9FDBBF3E-724F-4402-9DDB-F9349F65AB0E")))
+    ("t" "Text movement" (lambda () (interactive) (org-roam-extras-id-goto "1E8F4417-5D5F-4406-BB70-AA272F714EF2")))
+    ("u" "user-init" (lambda () (interactive) (org-roam-extras-id-goto "AA460F4A-4035-4C96-A3A1-078A43F7892D")))
+    ("v" "Variables" (lambda () (interactive) (org-roam-extras-id-goto "10E891D3-9DF5-472A-8E3C-1DE30EE8C81F")))
+    ("y" "Yasnippets" (lambda () (interactive) (org-roam-extras-id-goto "6405B8E7-6612-4D71-8C2C-A51F8808F4C6")))
+    ("w" "Windows & frames" (lambda () (interactive) (org-roam-extras-id-goto "7E9A81E0-CAEB-4029-AD2C-B2416439FCDA")))]
+   ["Org headings: config.org > org"
+    ("a" "org-agenda" (lambda () (interactive) (org-roam-extras-id-goto "E03F4142-C90D-4550-8990-15391E27AD77")))
+    ("b" "org key bindings" (lambda () (interactive) (org-roam-extras-id-goto "52C959E4-54F4-4499-AE3A-5251F6337FA0")))
+    ("c" "org-capture" (lambda () (interactive) (org-roam-extras-id-goto "14F93A83-0BE7-42E3-891E-F6806192296B")))
+    ("m" "org-roam" (lambda () (interactive) (org-roam-extras-id-goto "2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17")))
+    ("n" "org-noter" (lambda () (interactive) (org-roam-extras-id-goto "A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7")))
+    ("o" "org-mode" (lambda () (interactive) (org-roam-extras-id-goto "268B60E4-708C-4372-A59D-5DD876E493CA")))
+    ("f" "org-ref" (lambda () (interactive) (org-roam-extras-id-goto "35FB5BB5-6552-48C6-983A-F90011CCA908")))
+    ("r" "org-refile" (lambda () (interactive) (org-roam-extras-id-goto "3FAE7C0D-FB22-4175-A0A4-FFA392539743")))
+    ("t" "org-cite" (lambda () (interactive) (org-roam-extras-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A")))
+    ("x" "org-roam-bibtex" (lambda () (interactive) (org-roam-extras-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF")))]])
+
+;; make it part of the above dispatcher, using prefix key
+(transient-define-prefix org-extras-config-org-dispatch ()
+  "Jump to an `org-mode' subsection in `config.org'."
+  )
 
 ;;;;; Patched functions
 
@@ -984,7 +975,7 @@ longer then the CLOCK entry's total time.
    the start of the clock segment (default for backwards
    compatibility), t if the function should split counting from
    the end of the clock segment.
- 
+
    SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
 
   (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
@@ -997,9 +988,9 @@ longer then the CLOCK entry's total time.
       (error "Cursor must be placed on line with valid CLOCK entry range"))
 
     (let* ((whitespace (match-string 1 original-line))
-           (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
-           (t0 (pop timestamps))
-           (t1 (el-patch-swap (pop timestamps) (format "[%s]" (pop timestamps))))
+	   (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
+	   (t0 (pop timestamps))
+	   (t1 (el-patch-swap (pop timestamps) (format "[%s]" (pop timestamps))))
 	   (t2 (pop timestamps)))
       ;; delete line without moving to kill ring
       (delete-region (line-beginning-position) (line-end-position))

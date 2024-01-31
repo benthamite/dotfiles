@@ -220,7 +220,7 @@ and sets the value of the field for all entries to `Tlön'."
   (require 'tlon-babel)
   (let ((after-save-hook nil))
     (bibtex-extras-add-or-update-field "database" "Tlön")
-    (tlon-babel-add-lang-id-to-entry)
+    (tlon-babel-refs-add-lang-id-to-entry)
     (bibtex-clean-entry)
     (save-buffer)))
 

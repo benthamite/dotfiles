@@ -5815,7 +5815,9 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   ;; spell-checking is active; this works well for rules in prose buffers, since
   ;; I normally have spell-checking enabled there.
   (dolist (rule '("ARROWS"
-                  "WHITESPACE_RULE"))
+                  "WHITESPACE_RULE"
+                  "DATE_NEW_YEAR" ; throws warning with every org-clock line
+                  ))
     (add-to-list 'flycheck-languagetool--spelling-rules rule))
 
   (dolist (hook '(markdown-mode-hook

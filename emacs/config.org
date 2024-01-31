@@ -5807,7 +5807,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :demand t
   :init
   (setq flycheck-languagetool-server-jar
-        (expand-file-name "~/source/LanguageTool/languagetool-server.jar"))
+        (expand-file-name (file-name-concat paths-dir-external-repos "LanguageTool/languagetool-server.jar")))
 
   :config
   ;; the package doesn't provide a general way of disabling a rule, but as an

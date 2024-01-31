@@ -171,6 +171,9 @@
      (message "finished"))))
 
 (setq org-extras-bbdb-anniversaries-heading nil)
+
+;; remove Pablo’s org-agenda timer
+(cancel-timer org-extras-agenda-switch-to-agenda-current-day-timer)
 #+end_src
 
 ** file-extras

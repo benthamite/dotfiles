@@ -306,6 +306,9 @@ link, call `org-open-at-point' and set
 
 ;;;;; org-agenda
 
+(defvar org-extras-agenda-switch-to-agenda-current-day-timer nil
+  "Timer to switch to agenda of current day.")
+
 (defun org-extras-agenda-switch-to-agenda-current-day ()
   "Open agenda in left window, creating it if necessary."
   (interactive)

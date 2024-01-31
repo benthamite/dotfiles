@@ -981,7 +981,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 #+begin_src emacs-lisp
 (use-package prot-common
   :elpaca (prot-common
-           :host sourcehut
+           :host github
            :repo "protesilaos/dotfiles"
            :local-repo "prot-common"
            :main "emacs/.emacs.d/prot-lisp/prot-common.el"
@@ -1007,7 +1007,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 #+begin_src emacs-lisp
 (use-package prot-simple
   :elpaca (prot-simple
-           :host sourcehut
+           :host github
            :repo "protesilaos/dotfiles"
            :local-repo "prot-simple"
            :main "emacs/.emacs.d/prot-lisp/prot-simple.el"
@@ -11079,12 +11079,13 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
 #+begin_src emacs-lisp
 (use-package prot-eww
-  :elpaca (prot-eww :host sourcehut
-          :repo "protesilaos/dotfiles"
-          :local-repo "prot-eww"
-          :main "emacs/.emacs.d/prot-lisp/prot-eww.el"
-          :build (:not elpaca--check-version)
-          :files ("emacs/.emacs.d/prot-lisp/prot-eww.el"))
+  :elpaca (prot-eww
+           :host github
+           :repo "protesilaos/dotfiles"
+           :local-repo "prot-eww"
+           :main "emacs/.emacs.d/prot-lisp/prot-eww.el"
+           :build (:not elpaca--check-version)
+           :files ("emacs/.emacs.d/prot-lisp/prot-eww.el"))
   :after eww prot-common
   :demand t
   :general

@@ -7423,7 +7423,8 @@ By considering both tasks completed and their associated priorities.
   :after org oc
   :demand t
   :init
-  (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day)
+  (setq org-extras-agenda-switch-to-agenda-current-day-timer
+        (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
 
   :config
   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter org-extras-clocktable-sorter))

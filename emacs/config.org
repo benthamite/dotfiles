@@ -3278,6 +3278,16 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (setq make-backup-files nil)
   (setq version-control 'never)
 
+  (setq auto-save-visited-interval 1)
+  ;; we enable `auto-save-visited-mode' globally...
+  (auto-save-visited-mode 1)
+  ;; ...but then we disable it for all buffers
+  (setq-default auto-save-visited-mode nil)
+  ;; so that we can then re-enable it for specific buffers via a file-local variable:
+  ;; # Local Variables:
+  ;; # eval: (setq-local auto-save-visited-mode t)
+  ;; # End:
+  
   (advice-add 'recover-session
               :after (lambda ()
                        "Disable `dired-hide-details-mode' to show dates in `recover-session'."

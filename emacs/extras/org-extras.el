@@ -855,16 +855,16 @@ To see a list of Google Docs and their respective IDs, run
     ("y" "Yasnippets" (lambda () (interactive) (org-roam-extras-id-goto "6405B8E7-6612-4D71-8C2C-A51F8808F4C6")))
     ("w" "Windows & frames" (lambda () (interactive) (org-roam-extras-id-goto "7E9A81E0-CAEB-4029-AD2C-B2416439FCDA")))]
    ["Org headings: config.org > org"
-    ("a" "org-agenda" (lambda () (interactive) (org-roam-extras-id-goto "E03F4142-C90D-4550-8990-15391E27AD77")))
-    ("b" "org key bindings" (lambda () (interactive) (org-roam-extras-id-goto "52C959E4-54F4-4499-AE3A-5251F6337FA0")))
-    ("c" "org-capture" (lambda () (interactive) (org-roam-extras-id-goto "14F93A83-0BE7-42E3-891E-F6806192296B")))
-    ("m" "org-roam" (lambda () (interactive) (org-roam-extras-id-goto "2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17")))
-    ("n" "org-noter" (lambda () (interactive) (org-roam-extras-id-goto "A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7")))
-    ("o" "org-mode" (lambda () (interactive) (org-roam-extras-id-goto "268B60E4-708C-4372-A59D-5DD876E493CA")))
-    ("f" "org-ref" (lambda () (interactive) (org-roam-extras-id-goto "35FB5BB5-6552-48C6-983A-F90011CCA908")))
-    ("r" "org-refile" (lambda () (interactive) (org-roam-extras-id-goto "3FAE7C0D-FB22-4175-A0A4-FFA392539743")))
-    ("t" "org-cite" (lambda () (interactive) (org-roam-extras-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A")))
-    ("x" "org-roam-bibtex" (lambda () (interactive) (org-roam-extras-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF")))]])
+    ("o a" "org-agenda" (lambda () (interactive) (org-roam-extras-id-goto "E03F4142-C90D-4550-8990-15391E27AD77")))
+    ("o b" "org key bindings" (lambda () (interactive) (org-roam-extras-id-goto "52C959E4-54F4-4499-AE3A-5251F6337FA0")))
+    ("o c" "org-capture" (lambda () (interactive) (org-roam-extras-id-goto "14F93A83-0BE7-42E3-891E-F6806192296B")))
+    ("o m" "org-roam" (lambda () (interactive) (org-roam-extras-id-goto "2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17")))
+    ("o n" "org-noter" (lambda () (interactive) (org-roam-extras-id-goto "A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7")))
+    ("o o" "org-mode" (lambda () (interactive) (org-roam-extras-id-goto "268B60E4-708C-4372-A59D-5DD876E493CA")))
+    ("o f" "org-ref" (lambda () (interactive) (org-roam-extras-id-goto "35FB5BB5-6552-48C6-983A-F90011CCA908")))
+    ("o r" "org-refile" (lambda () (interactive) (org-roam-extras-id-goto "3FAE7C0D-FB22-4175-A0A4-FFA392539743")))
+    ("o t" "org-cite" (lambda () (interactive) (org-roam-extras-id-goto "8AF25840-AC38-4FF7-A45F-F01B96C5DF5A")))
+    ("o x" "org-roam-bibtex" (lambda () (interactive) (org-roam-extras-id-goto "EC73B84D-530E-4179-BB67-F19110A543DF")))]])
 
 ;; make it part of the above dispatcher, using prefix key
 (transient-define-prefix org-extras-config-org-dispatch ()

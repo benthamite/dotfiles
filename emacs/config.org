@@ -6230,7 +6230,8 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   (add-hook 'tlon-init-post-init-hook #'tlon-babel-init)
 
   :general
-  ("H-r" 'tlon-babel-dispatch)
+  ("H-r" 'tlon-babel-dispatch
+   "H-?" 'tlon-babel-md-insert-mdx-cite)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map

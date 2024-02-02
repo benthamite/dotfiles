@@ -153,6 +153,7 @@ field for this information is `journaltitle', so we move it there."
       (save-buffer))
     (message "Moved entry %s to %s" key target)))
 
+;; TODO: perhaps the functions below should be moved to `tlon-babel-refs.el'?
 (defun bibtex-extras-move-entry-to-tlon (&optional key)
   "Move entry with KEY to `tlon-babel-refs-file-fluid'..
 Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point."
@@ -217,12 +218,19 @@ and sets the value of the field for all entries to `Tlön'."
 
 (defun bibtex-extras-auto-clean-entry ()
   "Clean up bibtex entry at point upon saving."
-  (require 'tlon-babel)
   (let ((after-save-hook nil))
     (bibtex-extras-add-or-update-field "database" "Tlön")
-    (tlon-babel-add-lang-id-to-entry)
+    (tlon-babel-refs-add-lang-id-to-entry)
+    (bibtex-extras-remove-empty-spaces)
     (bibtex-clean-entry)
     (save-buffer)))
+
+(defun bibtex-extras-remove-empty-spaces ()
+  "Remove empty spaces at the end of field."
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward " \\}" nil t)
+      (replace-match "}" t t))))
 
 ;;;;; Patches
 

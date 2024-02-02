@@ -981,7 +981,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 #+begin_src emacs-lisp
 (use-package prot-common
   :elpaca (prot-common
-           :host sourcehut
+           :host github
            :repo "protesilaos/dotfiles"
            :local-repo "prot-common"
            :main "emacs/.emacs.d/prot-lisp/prot-common.el"
@@ -1007,7 +1007,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 #+begin_src emacs-lisp
 (use-package prot-simple
   :elpaca (prot-simple
-           :host sourcehut
+           :host github
            :repo "protesilaos/dotfiles"
            :local-repo "prot-simple"
            :main "emacs/.emacs.d/prot-lisp/prot-simple.el"
@@ -1665,10 +1665,10 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
   (setq mixed-pitch-set-height t)
 
   (dolist (hook '(elfeed-show-mode-hook
-		  telega-webpage-mode-hook
-		  eww-mode-hook
-		  mu4e-view-mode-hook
-		  outline-mode-hook))
+                  telega-webpage-mode-hook
+                  eww-mode-hook
+                  mu4e-view-mode-hook
+                  outline-mode-hook))
     (add-hook hook #'mixed-pitch-mode)))
 #+end_src
 
@@ -3278,6 +3278,16 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (setq make-backup-files nil)
   (setq version-control 'never)
 
+  (setq auto-save-visited-interval 1)
+  ;; we enable `auto-save-visited-mode' globally...
+  (auto-save-visited-mode 1)
+  ;; ...but then we disable it for all buffers
+  (setq-default auto-save-visited-mode nil)
+  ;; so that we can then re-enable it for specific buffers via a file-local variable:
+  ;; # Local Variables:
+  ;; # eval: (setq-local auto-save-visited-mode t)
+  ;; # End:
+  
   (advice-add 'recover-session
               :after (lambda ()
                        "Disable `dired-hide-details-mode' to show dates in `recover-session'."
@@ -5807,7 +5817,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :demand t
   :init
   (setq flycheck-languagetool-server-jar
-        (expand-file-name "~/source/LanguageTool/languagetool-server.jar"))
+        (expand-file-name (file-name-concat paths-dir-external-repos "LanguageTool/languagetool-server.jar")))
 
   :config
   ;; the package doesn't provide a general way of disabling a rule, but as an
@@ -5815,7 +5825,9 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   ;; spell-checking is active; this works well for rules in prose buffers, since
   ;; I normally have spell-checking enabled there.
   (dolist (rule '("ARROWS"
-                  "WHITESPACE_RULE"))
+                  "WHITESPACE_RULE"
+                  "DATE_NEW_YEAR" ; throws warning with every org-clock line
+                  ))
     (add-to-list 'flycheck-languagetool--spelling-rules rule))
 
   (dolist (hook '(markdown-mode-hook
@@ -5953,7 +5965,6 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
   :general
   ((gfm-mode-map markdown-mode-map)
    "A-C-H-t" 'markdown-mode-extras-copy-section
-   "s-l" 'markdown-mode-extras-insert-locator
    "s-r" 'markdown-mode-extras-remove-url-in-link)
   ((ghm-mode-map markdown-mode-map org-mode-map)
    "H-s-v" 'markdown-mode-extras-org-paste-dwim))
@@ -6219,7 +6230,8 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   (add-hook 'tlon-init-post-init-hook #'tlon-babel-init)
 
   :general
-  ("H-r" 'tlon-babel-dispatch)
+  ("H-r" 'tlon-babel-dispatch
+   "H-?" 'tlon-babel-md-insert-mdx-cite)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
@@ -6233,8 +6245,9 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   ((gfm-mode-map markdown-mode-map)
    "A-s-e" 'tlon-babel-yaml-edit-field
    "s-c" 'tlon-babel-copy-dwim
-   "s-t" 'tlon-babel-md-insert-cite-tag
-   "s-u" 'tlon-babel-md-insert-element
+   "s-d" 'tlon-babel-md-dispatch
+   "s-l" 'tlon-babel-md-insert-locator
+   "s-u" 'tlon-babel-md-insert-entity
    "A-C-s-SPC" 'tlon-babel-md-beginning-of-buffer-dwim
    "A-C-s-<tab>" 'tlon-babel-md-end-of-buffer-dwim))
 #+end_src
@@ -7423,7 +7436,8 @@ By considering both tasks completed and their associated priorities.
   :after org oc
   :demand t
   :init
-  (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day)
+  (setq org-extras-agenda-switch-to-agenda-current-day-timer
+        (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
 
   :config
   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter org-extras-clocktable-sorter))
@@ -7558,19 +7572,19 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 
   (advice-add 'org-agenda-goto :after
               (lambda (&rest _)
-		"Narrow to the entry and its children after jumping to it."
+                "Narrow to the entry and its children after jumping to it."
                 (org-extras-narrow-to-entry-and-children)))
 
   (add-hook 'org-agenda-mode-hook
-	    (lambda ()
-	      "Disable `visual-line-mode' and `toggle-truncate-lines' in `org-agenda'."
+            (lambda ()
+              "Disable `visual-line-mode' and `toggle-truncate-lines' in `org-agenda'."
               (visual-line-mode -1)
               (toggle-truncate-lines)))
 
   (advice-add 'org-habit-toggle-display-in-agenda :around
               (lambda (orig-fun &rest args)
-		"Prevent `org-modern-mode' interference with org habits."
-		(if org-habit-show-habits
+                "Prevent `org-modern-mode' interference with org habits."
+                (if org-habit-show-habits
                     (progn
                       (global-org-modern-mode)
                       (apply orig-fun args)
@@ -7723,116 +7737,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
           ("s" "Slack" entry
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
-          ("t" "Tlön")
-          ("tb" "Tlön: Babel")
-          ("tbb" "Tlön: Babel: Generic " entry
-           (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
+          ("t" "Tlön inbox " entry
+           (id "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")
            "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tbd" "Tlön: Babel: Docs " entry
-           (id "49A79F81-8920-43FF-B1C7-B02F0962B30F")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tbi" "Tlön: Babel: Import " entry
-           (id "5F0A62AA-1B81-4671-96FA-8C4FED82155F")
-           "** TODO [#6] Import '%?' \n%c" :empty-lines 1 :prepend t)
-          ("tbl" "Tlön: Babel: Process Leo's revisions " entry
-           (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
-           "** TODO [#6] Process Leo's revisions of '%c%?' \n" :empty-lines 1 :prepend t)
-          ("tbt" "Tlön: Babel: Translate article " entry
-           (id "584BF0CB-8838-44C4-843C-78A36DE54CD6")
-           "** TODO [#5] Translate '%?' \n" :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbw" "Tlön: Babel: Website " entry
-           (id "6171D3E2-8BC4-41E5-9C8A-E808DC4DD9D3")
-           "** TODO [#5] %? \n" :empty-lines 1 :prepend t :jump-to-captured t)
-          ("tbM" "Tlön: Babel: Misc [via org-capture] Misc" entry
-           (id "4424AA7E-C2F9-4228-97F9-38088056A5CD")
-           "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
-          ("tbr" "Tlön: Babel: Revise translation " entry
-           (id "641485F9-C3B6-4082-8F69-9162DCC3DEB9")
-           "** TODO [#6] Revise '%c%?' translation \n" :empty-lines 1 :prepend t)
-          ("ti" "Tlön: EAI")
-          ("tii" "Tlön: EAI: Generic " entry
-           (id "6C7F53ED-B43E-401D-BEEA-DB38CAE367FD")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tn" "Tlön: EAN")
-          ("tnn" "Tlön: EAN: Generic " entry
-           (id "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tm" "Tlön: FM")
-          ("tmm" "Tlön: FM: Generic " entry
-           (id "9066D77E-7F2B-4176-9533-243060F11276")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tmt" "Tlön: FM: Post to Twitter" entry
-           (id "244D8486-9F36-4AC5-A185-8FE77C7ED7A7")
-           "** TODO [#6] %s" :empty-lines 1 :prepend t)
-          ("tmr" "Tlön: FM: Review transcript of conversation" entry
-           (id "9066D77E-7F2B-4176-9533-243060F11276")
-           "** TODO [#5] Review transcript of conversation with %? \n" :empty-lines 1 :prepend t)
-          ("tg" "Tlön: GPE")
-          ("tgg" "Tlön: GPE: Generic " entry
-           (id "022CAD09-9F99-4812-BAA3-F52BCF95ACC6")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t :immediate-finish t)
-          ("th" "Tlön: HEAR")
-          ("thh" "Tlön: HEAR: Generic " entry
-           (id "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("td" "Tlön: LBDLH")
-          ("tdd" "Tlön: LBDLH: Generic " entry
-           (id "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tp" "Tlön: LP")
-          ("tpp" "Tlön: LP: Generic " entry
-           (id "2514AA39-CFBF-4E5A-B18E-147497E31C8F")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tr" "Tlön: RAE")
-          ("trr" "Tlön: RAE: Generic " entry
-           (id "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("trn" "Tlön: RAE: Interacting with narrators " entry
-           (id "D90B718C-6933-47AC-9B15-F95C2A2E1FD5")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tt" "Tlön: Core")
-          ("ttt" "Tlön: Core: Generic " entry
-           (id "77A450DE-5867-423E-A251-7E92BF1617FC")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tte" "Tlön: Core: Emacs")
-          ("ttee" "Tlön: Core: Emacs: Generic " entry
-           (id "91CEC8F0-F690-4318-B63B-040D6B98A6E2")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tcc" "Tlön: Core: Comms")
-          ("tccc" "Tlön: Core: Comms: Generic " entry
-           (id "7E56628D-8FBA-4A58-BFCA-14A6F7FAC3BA")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("ttf" "Tlön: Core: Finance")
-          ("ttff" "Tlön: Core: Finance: Generic " entry
-           (id "21E0FE78-C45B-4E6E-9447-56375111BAEA")
-           "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
-          ("tfp" "Tlön: Fede: Pending for next meeting" plain
-           (id "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
-           "" :empty-lines 1 :empty-lines-after 3)
-          ("tfr" "Tlön: Fede: RAE")
-          ("tfrs" "Tlön: Fede: RAE suggestion" entry
-           (file+headline paths-file-tlon-tareas-fede "sugerencias de Pablo")
-           "** TODO [#6] %? :fede:\n" :empty-lines 1 :prepend t)
-          ("tl" "Tlön: Leo")
-          ("tll" "Tlön: Leo: Generic task" entry
-           (file+headline paths-file-tlon-tareas-leo "Tareas Leo")
-           "** TODO [#6] %? :leo:\n" :empty-lines 1 :prepend t)
-          ("tlb" "Tlön: Leo: Babel")
-          ("tlp" "Tlön: Leo: Pending for next meeting" plain
-           (id "8B2F18B4-A309-4F29-A5E6-CD40E010970D")
-           "" :empty-lines 1 :empty-lines-after 3)
-          ;; ("n" "Day reflection" plain (function org-journal-find-location)
-          ;; "** %(format-time-string org-journal-time-format)Day reflection\n%i%?")
-          ;; ("j" "Pomodoro" plain (function org-journal-find-location)
-          ;; "** %(format-time-string org-journal-time-format)Pomodoro\n%i%?")
-          ;; ("v" "Entry: revise" entry
-          ;; (function
-          ;; (lambda ()
-          ;; (let ((filename (file-name-concat paths-dir-wiki-entries (current-kill 0))))
-          ;; (set-buffer (find-file-noselect filename))
-          ;; (pop kill-ring)
-          ;; (goto-char (point-max)))))
-          ;; "* TODO Revise entry \nSCHEDULED: %(org-insert-time-stamp nil nil nil nil nil \" .+1d\")")
           ("y" "YouTube playlist" entry
            (id "319B1611-A5A6-42C8-923F-884A354333F9")
            "* %(org-web-tools-extras-youtube-dl (current-kill 0))\n[[%c][YouTube link]]" :empty-lines 1 :prepend t :immediate-finish t)
@@ -11086,12 +10993,13 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
 #+begin_src emacs-lisp
 (use-package prot-eww
-  :elpaca (prot-eww :host sourcehut
-          :repo "protesilaos/dotfiles"
-          :local-repo "prot-eww"
-          :main "emacs/.emacs.d/prot-lisp/prot-eww.el"
-          :build (:not elpaca--check-version)
-          :files ("emacs/.emacs.d/prot-lisp/prot-eww.el"))
+  :elpaca (prot-eww
+           :host github
+           :repo "protesilaos/dotfiles"
+           :local-repo "prot-eww"
+           :main "emacs/.emacs.d/prot-lisp/prot-eww.el"
+           :build (:not elpaca--check-version)
+           :files ("emacs/.emacs.d/prot-lisp/prot-eww.el"))
   :after eww prot-common
   :demand t
   :general
@@ -12491,7 +12399,7 @@ Some useful config files:
 :ID:       4FB9C92B-B39E-4C3D-B9AE-A3342A6F1695
 :END:
 # Local Variables:
-# eval: (files-extras-buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
+# eval: (files-extras-buffer-local-set-key (kbd "H-;") 'org-extras-config-dispatch)
 # eval: (files-extras-buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
 # eval: (flycheck-mode -1)

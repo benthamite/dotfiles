@@ -60,6 +60,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#early-init][early-init]]
 - [[#package-management][package management]]
   - [[#elpaca][elpaca]]
+  - [[#elpaca-extras][elpaca-extras]]
   - [[#use-package][use-package]]
   - [[#use-package-extras][use-package-extras]]
 - [[#foundational][foundational]]
@@ -599,6 +600,17 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (elpaca `(,@elpaca-order))
 
 ;; (toggle-debug-on-error) ; uncomment when debugging
+#+end_src
+
+** elpaca-extras
+:PROPERTIES:
+:ID:       9A6A90C2-ACB6-4899-B38C-1C483A4FFE06
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package elpaca-extras
+  :after elpaca
+  :demand t)
 #+end_src
 
 ** use-package

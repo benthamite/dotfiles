@@ -141,6 +141,8 @@
 	  (when (plist-get (cadr tobj) :hour-end) t)))))
     (list :start start :end end :desc desc)))
 
+;; Do not create a new `org-gcal' drawer; insert description as part of the heading contents;
+;; set date as a deadline.
 (el-patch-defun org-gcal--update-entry (calendar-id event &optional update-mode)
   "Update the entry at the current heading with information from EVENT.
 
@@ -243,8 +245,8 @@ heading."
 	       (buffer-name) (buffer-file-name) (point)))
     (end-of-line)
     (newline)
-    (insert (format ":%s:" org-gcal-drawer-name))
-    (newline)
+    (el-patch-remove (insert (format ":%s:" org-gcal-drawer-name)))
+    (el-patch-remove (newline))
     ;; Keep existing timestamps for parent recurring events.
     (when (and recurrence old-start old-end)
       (setq start old-start
@@ -277,14 +279,14 @@ heading."
 	    (let ((org-closed-keep-when-no-todo t))
 	      (el-patch-swap (org-schedule nil timestamp)
 			     (org-deadline nil timestamp))))
-	(insert timestamp)
-	(newline)
+	(el-patch-swap (insert timestamp) (org-deadline nil timestamp))
+	(el-patch-remove (newline))
 	(when desc (newline))))
     ;; Insert event description if present.
     (when desc
       (insert (replace-regexp-in-string "^\*" "✱" desc))
       (insert (if (string= "\n" (org-gcal--safe-substring desc -1)) "" "\n")))
-    (insert ":END:")
+    (el-patch-remove (insert ":END:"))
     (when (org-gcal--event-cancelled-p event)
       (save-excursion
 	(org-back-to-heading t)

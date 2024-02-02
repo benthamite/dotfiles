@@ -574,6 +574,18 @@ This should be the path you set `org-roam-directory' to."
   :type 'directory
   :group 'paths)
 
+(defcustom paths-dir-tlon-csl-styles
+  (file-name-concat paths-dir-tlon-repos "babel-refs/styles/")
+  "Path to the Tlön CSL styles directory."
+  :type 'directory
+  :group 'paths)
+
+(defcustom paths-dir-tlon-csl-locales
+  (file-name-concat paths-dir-tlon-repos "babel-refs/locales/")
+  "Path to the Tlön CSL locales directory."
+  :type 'directory
+  :group 'paths)
+
 ;;;;; Files
 
 (defcustom paths-file-notes

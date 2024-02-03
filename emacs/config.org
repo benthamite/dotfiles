@@ -8709,7 +8709,7 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
   (setq org-pomodoro-finished-sound tmr-sound-file)
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
-  (add-hook 'org-pomodoro-started-hook #'org-pomodoro-extras-format-timer)
+  (add-hook 'org-pomodoro-started-hook #'org-extras-pomodoro-format-timer)
 
   :general
   ("H-I" 'org-pomodoro

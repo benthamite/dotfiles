@@ -685,6 +685,12 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 
 ** jsonrpc
 :PROPERTIES:
+:ID:       ECE3D86D-035D-461C-937F-DF39086E4C5C
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
+
+:PROPERTIES:
 :ID:       438DEA77-5F4B-4E1D-8A1D-E65DA588927F
 :END:
 

@@ -3203,8 +3203,10 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 
 ** register-extras
 :PROPERTIES:
-:ID:       6790E728-CA51-42C1-9CEB-F6CDBF6836B8
+:ID:       A2DCE7E0-6094-45FC-B5BE-AF3A0351D3CC
 :END:
+
+/[[file:extras/register-extras.el][register-extras]] collects my extensions for ~register~./
 
 #+begin_src emacs-lisp
 (use-personal-package register-extras

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: add-description
+# key: ad
+# contributor: Pablo Stafforini
+# --
+$1: add description

@@ -1877,7 +1877,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   :after modus-themes
   :demand t
   :config
-  (tlon-init-override-code-if-available
+  (tlon-init-override-code
    :modus-themes-load
    '((modus-themes-extras-load-theme-conditionally)))
 
@@ -1985,7 +1985,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :after ghub async
   :demand t
   :config
-  (tlon-init-override-code-if-available
+  (tlon-init-override-code
    :doom-modeline
    '((setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
      (setq doom-modeline-buffer-encoding nil)
@@ -3900,7 +3900,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   ;; stackoverflow.com/questions/23207958/how-to-prevent-emacs-dired-from-splitting-frame-into-more-than-two-windows
   (add-to-list 'display-buffer-alist `(,shell-command-buffer-name-async display-buffer-no-window))
 
-  (tlon-init-override-code-if-available
+  (tlon-init-override-code
    :window-split
    '((add-hook 'elpaca-after-init-hook #'window-extras-split-if-unsplit)))
 
@@ -3981,7 +3981,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   :after frame
   :demand t
   :config
-  (tlon-init-override-code-if-available
+  (tlon-init-override-code
    :frame-extras-maximize-frame
    '((add-hook 'elpaca-after-init-hook #'frame-extras-maximize-frame)))
      (add-hook 'spacious-padding-mode-hook #'frame-extras-restore-window-divider))
@@ -9451,7 +9451,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
                            :annotate #'citar-org-roam--annotate))
   (setq citar-notes-source 'orb-citar-source)
 
-  (tlon-init-override-code-if-available
+  (tlon-init-override-code
    :citar-keybindings
    '((general-define-key
       "H-/" 'citar-insert-citation

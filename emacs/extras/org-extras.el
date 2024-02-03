@@ -565,7 +565,7 @@ Could be slow if it has a lot of overlays."
 (defun org-extras-id-auto-add-ids-to-headings-in-file ()
   "Add IDs to all headings in the current file missing them."
   (when-let ((file (buffer-file-name)))
-    (when (and (eq major-mode 'org-mode)
+    (when (and (derived-mode-p 'org-mode)
 	       (string-match paths-dir-org file)
 	       (eq buffer-read-only nil))
       (unless

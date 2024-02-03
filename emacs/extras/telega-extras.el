@@ -47,9 +47,9 @@ archive buffer."
           (catch 'tag
             (dolist (buffer (buffer-list))
               (when (with-current-buffer buffer
-                      (member major-mode '(telega-root-mode telega-chat-mode)))
-                (throw 'tag (buffer-name buffer))))))
-         (telega-buffer-is-current (string= (buffer-name (current-buffer)) telega-buffer)))
+                      (derived-mode-p 'telega-root-mode 'telega-chat-mode))
+		(throw 'tag (buffer-name buffer))))))
+	 (telega-buffer-is-current (string= (buffer-name (current-buffer)) telega-buffer)))
     (cond
      ((not telega-buffer)
       (telega))

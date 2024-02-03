@@ -849,7 +849,7 @@ The list of article download functions is specified by
 (defun ebib-extras-end-of-index-buffer ()
   "Move to the end of the index buffer."
   (interactive)
-  (when (equal major-mode 'ebib-index-mode)
+  (when (derived-mode-p 'ebib-index-mode)
     (goto-char (point-max))
     (forward-line -1)))
 
@@ -1066,7 +1066,7 @@ Fetching is done using `tlon-biblio'."
   "Fetch the value of FIELD for the entry at point.
 Fetching is done using `tlon-biblio'."
   (require 'simple-extras)
-  (unless (eq major-mode 'ebib-entry-mode)
+  (unless (derived-mode-p 'ebib-entry-mode)
     (error "Not in `ebib-entry-mode'"))
   (if-let ((id (ebib-extras-get-or-fetch-id-or-url)))
       (let ((entry (zotra-get-entry id (not (simple-extras-string-is-url-p id))))

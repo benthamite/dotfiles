@@ -451,7 +451,7 @@ number."
     (when (member 'org-tidy-mode org-mode-hook)
       (org-tidy-mode arg))
     (org-display-inline-images arg)
-    (when (and (not (eq major-mode 'org-agenda-mode))
+    (when (and (not (derived-mode-p 'org-agenda-mode))
 	       (featurep 'org-modern))
       (org-modern-mode arg))))
 
@@ -607,9 +607,9 @@ FORMS are evaluated with point restored to its original position."
 (defun simple-extras-get-url (url)
   "Get URL from URL, current buffer, or prompt user for it."
   (or url
-      (when (eq major-mode 'eww-mode)
+      (when (derived-mode-p 'eww-mode)
 	(eww-current-url))
-      (when (eq major-mode 'ebib-entry-mode)
+      (when (derived-mode-p 'ebib-entry-mode)
 	(ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
       (read-string "URL: ")))
 

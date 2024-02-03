@@ -2201,9 +2201,6 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 :ID:       EBCFE2FC-27B4-4C30-9D2A-A841B34271F7
 :END:
 
-:PROPERTIES:
-:ID:       2793C213-5A36-4DAB-9217-DA1BBE257E09
-:END:
 #+begin_src emacs-lisp :results silent
 (use-feature hl-line
   :demand t
@@ -8124,9 +8121,6 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 :ID:       6BA48DB9-1861-40A3-9811-1B5D9F0E350E
 :END:
 
-:PROPERTIES:
-:ID:       9C00589B-C296-48BA-BD7A-B50992624AB0
-:END:
 #+begin_src emacs-lisp :results silent
 (use-feature ol
   :after org

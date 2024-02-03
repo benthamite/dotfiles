@@ -33,7 +33,7 @@
 ;;;; User options
 
 (defgroup vc-extras ()
-  "`Extensions for `vc'."
+  "Extensions for `vc'."
   :group 'vc)
 
 (defcustom vc-extras-hub-executable "/opt/homebrew/bin/hub"

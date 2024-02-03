@@ -3164,7 +3164,7 @@ CLOCK: [2021-06-25 Fri 21:18]--[2021-06-25 Fri 21:19] =>  0:01
 :ID:       29DA9B62-C7A6-4B53-B49C-BE2C47D0F3AF
 :END:
 
-/goto-addr activate URLs and e-mail addresses in buffers./
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/net/goto-addr.el][goto-addr]] activates URLs and e-mail addresses in buffers./
 
 #+begin_src emacs-lisp
 (use-feature goto-addr

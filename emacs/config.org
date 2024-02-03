@@ -12060,7 +12060,7 @@ Disabling because it interferes with [[https://emacs.stackexchange.com/questions
   :demand t
   :config
   (setq custom-safe-themes t)
-  (setq custom-file (file-name-concat paths-dir-downloads "delete.me"))) ; move unintended customizations to a garbage file
+  (setq custom-file (make-temp-file "gone-baby-gone"))) ; move unintended customizations to a garbage file
 #+end_src
 
 ** fatebook

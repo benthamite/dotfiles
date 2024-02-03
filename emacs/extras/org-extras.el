@@ -875,7 +875,7 @@ To see a list of Google Docs and their respective IDs, run
 
 ;; replace `org-files-list' with `org-agenda-files' so that
 ;; extraneous files are excluded from the dangling clocks check.
-(el-patch-defun  org-resolve-clocks (&optional only-dangling-p prompt-fn last-valid)
+(el-patch-defun org-resolve-clocks (&optional only-dangling-p prompt-fn last-valid)
   "Resolve all currently open Org clocks.
 If `only-dangling-p' is non-nil, only ask to resolve dangling
 \(i.e., not currently open and valid) clocks."

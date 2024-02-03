@@ -606,6 +606,9 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 :ID:       9A6A90C2-ACB6-4899-B38C-1C483A4FFE06
 :END:
 
+
+/[[file:extras/elpaca-extras.el][elpaca-extras]] collects my extensions for ~elpaca~./
+
 #+begin_src emacs-lisp
 (use-personal-package elpaca-extras
   :after elpaca

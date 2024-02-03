@@ -29,6 +29,7 @@
 
 (require 'dired)
 (require 'el-patch)
+(require 'gnus-dired)
 (require 'paths)
 
 ;;;; Variables
@@ -150,7 +151,7 @@ losing the `put back' option."
 	(save-excursion
 	  (dolist (buffer (buffer-list t))
 	    (set-buffer buffer)
-	    (when (derived-mode-p 'mail-mode)
+	    (when (eq major-mode 'mail-mode)
 	      (push (buffer-name buffer) buffers))))
 	(nreverse buffers)))
     (let (buffers)

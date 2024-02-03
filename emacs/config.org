@@ -655,6 +655,9 @@ We load ~use-package~ itself with ~elpaca~, then proceed to do the configuration
 :ID:       A1D2F9BE-0983-4CE8-89C2-6727149F3268
 :END:
 
+
+/[[file:extras/use-package-extras.el][use-package-extras]] collects my extensions for ~use-package~./
+
 #+begin_src emacs-lisp
 (use-package use-package-extras
   :elpaca (use-package-extras

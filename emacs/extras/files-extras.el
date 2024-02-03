@@ -98,9 +98,9 @@ functionality in macOS."
   (interactive)
   (let ((buffer-name (generate-new-buffer "untitled"))
 	(buffer-major-mode major-mode))
-    (cond ((eq buffer-major-mode 'shell-mode)
+    (cond ((eq derived-mode-p 'shell-mode)
 	   (shell))
-	  ((eq buffer-major-mode 'eshell-mode)
+	  ((eq derived-mode-p 'eshell-mode)
 	   (eshell))
 	  (t
 	   ;; Prompt to save on `save-some-buffers' with positive PRED
@@ -250,7 +250,7 @@ files which do not exist any more or are no longer readable will be killed."
   (let (found)
     (catch 'done
       (mapc (lambda (x)
-	      (when (with-current-buffer x (eq major-mode mode))
+	      (when (with-current-buffer x (derived-mode-p mode))
 		(switch-to-buffer x)
 		(setq found t)
 		(throw 'done nil)))

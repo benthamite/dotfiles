@@ -136,7 +136,7 @@ With prefix ARG is passed, open in new EWW buffer."
   (interactive "P")
   (if arg
       (with-current-buffer
-	  (if (eq major-mode 'eww-mode) (clone-buffer)
+	  (if (derived-mode-p 'eww-mode) (clone-buffer)
 	    (generate-new-buffer "*eww*"))
 	(eww-mode)
 	(eww (current-kill 0)))

@@ -38,7 +38,7 @@
 Only show the readable part once the website loads. This can fail on
 poorly-designed websites."
   (interactive)
-  (let* ((entry (if (eq major-mode 'elfeed-show-mode)
+  (let* ((entry (if (derived-mode-p 'elfeed-show-mode)
                     elfeed-show-entry
                   (elfeed-search-selected :ignore-region)))
          (link (or link (elfeed-entry-link entry))))
@@ -108,9 +108,7 @@ poorly-designed websites."
 (defun elfeed-extras-toggle-session ()
   "Start or end an `elfeed' session."
   (interactive)
-  (if (or
-       (equal major-mode 'elfeed-search-mode)
-       (equal major-mode 'elfeed-show-mode))
+  (if (derived-mode-p 'elfeed-search-mode 'elfeed-show-mode)
       (progn
         (kill-matching-buffers "^\*elfeed\-*\*" nil t))
     (elfeed)
@@ -137,7 +135,7 @@ poorly-designed websites."
 (defun elfeed-extras-url-full-capture ()
   "Add current URL to bibfile and generate associated PDF and HTML files."
   (interactive)
-  (when (eq major-mode 'elfeed-show-mode)
+  (when (derived-mode-p 'elfeed-show-mode)
     (zotra-extras-url-full-capture (elfeed-entry-link elfeed-show-entry))))
 
 ;;;;; Performance improvemenets

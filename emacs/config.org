@@ -3113,6 +3113,8 @@ CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:18] =>  0:01
 :ID:       38C9C0A7-5979-4656-879D-F71638FCF40D
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/button.el][button]] defines functions for inserting and manipulating clickable buttons in Emacs buffers./
+
 #+begin_src emacs-lisp :results silent
 (use-feature button
   :demand t

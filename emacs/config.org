@@ -1826,8 +1826,10 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 
 ** face-remap
 :PROPERTIES:
-:ID:       3F96E2F2-7C68-4D61-8CB8-EFE4C7220FC8
+:ID:       A999E839-CB99-4BC3-BB40-962B17683EDE
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/face-remap.el][face-remap]] defines simple operations for face remapping./
 
 #+begin_src emacs-lisp :results silent
 (use-feature face-remap

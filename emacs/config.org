@@ -3186,11 +3186,12 @@ CLOCK: [2021-04-05 Mon 15:34]--[2021-04-05 Mon 15:35] =>  0:01
 :PROPERTIES:
 :ID:       893A2A5B-707A-4C9A-9E25-414DC663F2CD
 :END:
-
 :LOGBOOK:
 CLOCK: [2021-07-30 Fri 21:35]--[2021-07-30 Fri 22:18] =>  0:43
 CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/register.el][register]] saves text, rectangles, positions, and other things for later use./
 
 #+begin_src emacs-lisp :results silent
 (use-feature register

@@ -183,7 +183,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#expand-region][expand-region]]
   - [[#newcomment][newcomment]]
   - [[#skeleton][skeleton]]
-  - [[#multiple-cursors][multiple-cursors]]
   - [[#crux][crux]]
   - [[#button][button]]
   - [[#back-button][back-button]]
@@ -3055,34 +3054,23 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
   :demand t
   :config
   (setq skeleton-pair t)
-
+  ;; use two backticks, rather than ` and ', in selected modes
+  (dolist (mode '(markdown-mode forge-post-mode))
+    (setq-mode-local mode skeleton-pair-alist '((?` _ ?`))))
+  
   :general
   ("[" 'skeleton-pair-insert-maybe
    "{" 'skeleton-pair-insert-maybe
    "(" 'skeleton-pair-insert-maybe
-   "\"" 'skeleton-pair-insert-maybe)
+   "\"" 'skeleton-pair-insert-maybe
+   "«" 'skeleton-pair-insert-maybe)
   ((org-mode-map telega-chat-mode-map)
    "~" 'skeleton-pair-insert-maybe
    "*" 'skeleton-pair-insert-maybe)
-  (markdown-mode-map
-   "`" 'skeleton-pair-insert-maybe
+  ((emacs-lisp-mode-map emacs-lisp-interaction-mode-map markdown-mode-map forge-post-mode-map)
+   "`" 'skeleton-pair-insert-maybe)
+  ((markdown-mode-map forge-post-mode-map)
    "*" 'skeleton-pair-insert-maybe))
-#+end_src
-
-** multiple-cursors
-:PROPERTIES:
-:ID:       E3F6EB63-D6C1-474C-9129-B6424852EEC8
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:17] =>  0:00
-:END:
-
-/[[https://github.com/magnars/multiple-cursors.el][multiple-cursors]] supports multiple cursors in Emacs./
-
-#+begin_src emacs-lisp :results silent
-(use-package multiple-cursors
-  :general
-  ("M-m" 'mc/mark-pop))
 #+end_src
 
 ** crux

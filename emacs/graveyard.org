@@ -8,6 +8,23 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** multiple-cursors
+:PROPERTIES:
+:ID:       E3F6EB63-D6C1-474C-9129-B6424852EEC8
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:17] =>  0:00
+:END:
+
+/[[https://github.com/magnars/multiple-cursors.el][multiple-cursors]] supports multiple cursors in Emacs./
+
+[2024-02-02 Fri] Instead of multiple cursors I basically always use kmacros.
+#+begin_src emacs-lisp :results silent
+(use-package multiple-cursors
+  :general
+  ("M-m" 'mc/mark-pop))
+#+end_src
+
 ** use-package-ensure-system-package
 :PROPERTIES:
 :ID:       5C17424A-4950-4745-B7FD-F0CACEB48AFB

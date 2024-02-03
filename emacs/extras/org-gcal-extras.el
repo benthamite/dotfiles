@@ -40,14 +40,9 @@
       (browse-url
        (concat
 	"https://calendar.google.com/calendar/u/0/r/eventedit/"
-	(replace-regexp-in-string
-	 "\n"
-	 ""
-	 (base64-encode-string
-	  (replace-regexp-in-string
-	   "/"
-	   " "
-	   id))))))
+	(replace-regexp-in-string "\n" ""
+				  (base64-encode-string
+				   (replace-regexp-in-string "/" " " id))))))
   (user-error "No id found"))
 
 (transient-define-prefix org-gcal-extras-dispatch ()

@@ -55,8 +55,8 @@
     ("S" "sync buffer" org-gcal-sync-buffer)]
    ["Act"
     ("p" "post at point" org-gcal-post-at-point)
-    ("d" "open at point" org-gcal-delete-at-point)
-    ("o" "delete at point" org-gcal-extras-open-at-point)]
+    ("o" "open at point" org-gcal-delete-at-point)
+    ("d" "delete at point" org-gcal-extras-open-at-point)]
    ["Setup"
     ("u" "unlock sync" org-gcal--sync-unlock)
     ("c" "clear token" org-gcal-sync-tokens-clear)

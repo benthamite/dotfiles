@@ -72,7 +72,8 @@ Optionally, remove accents in region from BEGIN to END."
           ["š\\|ś" "s"]
           ["ť" "t"]
           ["ž\\|ź\\|ż" "z"]
-          [" " " "]       ; thin space etc
+	  ["­" ""]       ; soft hyphen
+          [" " " "]       ; thin space
           ["–" "-"]       ; dash
           ["—\\|一" "--"] ; em dash etc
 	  ["¿" ""]

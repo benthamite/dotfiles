@@ -3691,6 +3691,7 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
 
   :general
   (dired-mode-map
+   "C-w" 'dired-narrow-regexp
    "<tab>" 'dired-subtree-toggle
    "<backtab>" 'dired-subtree-cycle))
 #+end_src
@@ -5869,14 +5870,15 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
                   org-mode-hook
                   org-msg-edit-mode-hook))
     (add-hook hook (lambda ()
-                     (unless (member major-mode '(forge-post-mode
-                                                  gfm-mode
-                                                  mhtml-mode
-                                                  flycheck-error-message-mode
-                                                  mu4e-compose-mode
-                                                  mu4e-view-mode
-                                                  org-journal-mode
-                                                  org-msg-edit-mode))
+                     "Enable `flycheck-languagetool' in selected buffers."
+                     (unless (derived-mode-p 'forge-post-mode
+                                             'gfm-mode
+                                             'mhtml-mode
+                                             'flycheck-error-message-mode
+                                             'mu4e-compose-mode
+                                             'mu4e-view-mode
+                                             'org-journal-mode
+                                             'org-msg-edit-mode)
                        (flycheck-select-checker 'languagetool))))))
 #+end_src
 

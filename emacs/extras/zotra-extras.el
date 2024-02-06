@@ -29,12 +29,12 @@
 
 (require 'bibtex-extras)
 (require 'doi-utils)
-;; (require 'ebib-extras) ; recusrive
+(require 'ebib-extras)
 (require 'ebib-utils)
 (require 'eww-extras)
 (require 'paths)
 (require 'tlon-babel-refs)
-(require 'zotra) ; recursive
+(require 'zotra)
 
 ;;;; Functions
 

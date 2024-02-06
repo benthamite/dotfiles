@@ -7541,7 +7541,8 @@ By considering both tasks completed and their associated priorities.
   (add-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
 
   :general
-  ("H-l" 'org-extras-dispatch)
+  ("H-l" 'org-extras-dispatch
+  "H-;" 'org-extras-tlon-dispatch)
   (org-mode-map
    "s-<return>" 'org-extras-super-return
    "A-C-s-n" 'org-extras-jump-to-first-heading

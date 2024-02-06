@@ -10304,6 +10304,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                 :depth nil)
   :demand t
   :config
+  (require 'mu4e-contrib)
   ;; (mu4e-debug t) ; uncomment when debugging
   (setq mu4e-split-view 'single-window)
   (setq mu4e-headers-show-target nil)

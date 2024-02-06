@@ -48,6 +48,17 @@
 
 ;;;; Functions
 
+(defun read-aloud-extras-engines ()
+  "Set `read-aloud' engines dynamically."
+  `("speech-dispatcher"		; Linux/FreeBSD only
+    (cmd "spd-say" args ("-e" "-w") kill "spd-say -S")
+    "flite"				; Cygwin?
+    (cmd "flite" args nil)
+    "jampal"				; Windows
+    (cmd "cscript" args ("C:\\Program Files\\Jampal\\ptts.vbs" "-r" "5"))
+    "say"				; macOS
+    (cmd "say" args (,(format "-r %s" (read-aloud-extras-rate))))))
+
 (defun read-aloud-extras-rate ()
   "Return the rate at which to read text aloud, in words per minute."
   read-aloud-extras-rate)
@@ -71,6 +82,13 @@ SIGN is the sign of the change: 1 for increase, -1 for decrease."
   "Decrease the rate at which to read text aloud."
   (interactive)
   (read-aloud-extras-change-rate -1))
+
+;;;;; Patched functions
+
+(el-patch-defun read-aloud--args ()
+  (plist-get (lax-plist-get (el-patch-swap read-aloud-engines (read-aloud-extras-engines))
+			    read-aloud-engine)
+	     'args))
 
 (provide 'read-aloud-extras)
 ;;; read-aloud-extras.el ends here

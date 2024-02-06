@@ -3713,11 +3713,9 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 #+begin_src emacs-lisp :results silent
 (use-package dired-quick-sort
   :after dired
-  ;; :config
-  ;; (dired-quick-sort-setup)
   :general
   (dired-mode-map
-   "T" 'hydra-dirs-quick-sort/body))
+   "T" 'hydra-dired-quick-sort/body))
 #+end_src
 
 ** peep-dired

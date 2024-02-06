@@ -565,7 +565,7 @@ Could be slow if it has a lot of overlays."
 (defun org-extras-id-auto-add-ids-to-headings-in-file ()
   "Add IDs to all headings in the current file missing them."
   (when-let ((file (buffer-file-name)))
-    (when (and (eq major-mode 'org-mode)
+    (when (and (derived-mode-p 'org-mode)
 	       (string-match paths-dir-org file)
 	       (eq buffer-read-only nil))
       (unless
@@ -776,6 +776,53 @@ To see a list of Google Docs and their respective IDs, run
 
 ;;;;; Dispatchers
 
+(transient-define-prefix org-extras-tlon-dispatch ()
+  "Dispatcher for Tlön projects."
+  [["Tlön"
+    ("t t" "tlon"              (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))
+    ("t i" "tlon inbox"        (lambda () (interactive) (org-roam-extras-id-goto "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")))
+    ]
+   ["Babel"
+    ("b c" "babel"             (lambda () (interactive) (org-roam-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24")))
+    ("b e" "babel-emacs"       (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))
+    ("b r" "babel-refs"        (lambda () (interactive) (org-roam-extras-id-goto "06C5E072-99F2-4A1F-A87E-0E05E330E111")))
+    ]
+   ["Uqbar"
+    ("q i" "uqbar-issues"      (lambda () (interactive) (org-roam-extras-id-goto "1844F672-62B5-49CF-8BD8-A55F8FCAAFE9")))
+    ("q s" "uqbar-es"          (lambda () (interactive) (org-roam-extras-id-goto "EF190A03-0037-430A-B8A1-414738AEAEA4")))
+    ]
+   ["utilitarianism"
+    ("u n" "utilitarianism-en" (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))
+    ]
+   ["Longtermism"
+    ("l s" "longtermism-es"    (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))
+    ]
+   ["Essays on Longtermism"
+    ("e e" "essays-es"         (lambda () (interactive) (org-roam-extras-id-goto "96C4B5CC-0E85-4AEC-A5C2-95996A09DCEB")))
+    ]
+   ["EA News"
+    ("n i" "ean-issues"        (lambda () (interactive) (org-roam-extras-id-goto "A2710AA8-BEEB-412D-9FE0-8AF856E4464C")))
+    ]
+   ["La Bisagra"
+    ("s s" "bisagra"           (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))
+    ]
+   ["Boletín"
+    ("a a" "boletin"           (lambda () (interactive) (org-roam-extras-id-goto "989E6696-2672-47FE-855B-00DA806B7A56")))
+    ]
+   ["GWWC"
+    ("g g" "gwwc"              (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))
+    ]
+   ["Radio Altruismo Eficaz"
+    ("rae" "rae"               (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))
+    ]
+   ["Meetings"
+    ("m f" "fede"              (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
+    ("m l" "leo"               (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))
+    ]
+   ]
+  )
+
+;; semi-obsolete
 (transient-define-prefix org-extras-work-dispatch ()
   "Dispatcher for work projects."
   ["Projects dashboard"
@@ -875,7 +922,7 @@ To see a list of Google Docs and their respective IDs, run
 
 ;; replace `org-files-list' with `org-agenda-files' so that
 ;; extraneous files are excluded from the dangling clocks check.
-(el-patch-defun  org-resolve-clocks (&optional only-dangling-p prompt-fn last-valid)
+(el-patch-defun org-resolve-clocks (&optional only-dangling-p prompt-fn last-valid)
   "Resolve all currently open Org clocks.
 If `only-dangling-p' is non-nil, only ask to resolve dangling
 \(i.e., not currently open and valid) clocks."
@@ -958,54 +1005,6 @@ Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
   (el-patch-swap
     (concat "*Org Src " org-buffer-name "[ " lang " ]*")
     (concat org-buffer-name " (org src)")))
-
-;; fix weird behavior that inserted one of the clocks not enclosed in square
-;; brackets
-(defvar org-clock-split-clock-range-regexp)
-(defvar org-clock-split-clock-range-format)
-(declare-function org-clock-split-split-line-into-timestamps "org-clock-split")
-(el-patch-defun org-clock-split (from-end splitter-string)
-  "Split CLOCK entry under cursor into two entries.
-Total time of created entries will be the same as original entry.
-
-   WARNING: Negative time entries can be created if splitting at an offset
-longer then the CLOCK entry's total time.
-
-   FROM-END: nil if the function should split with duration from
-   the start of the clock segment (default for backwards
-   compatibility), t if the function should split counting from
-   the end of the clock segment.
-
-   SPLITTER-STRING: Time offset to split record at.  Examples: '1h', '01m', '68m1h', '9:20'."
-
-  (interactive "P\nsTime offset to split clock entry (ex 1h2m): ")
-
-  (move-beginning-of-line nil)
-  (let ((original-line (buffer-substring (line-beginning-position) (line-beginning-position 2))))
-
-    ;; Error if CLOCK line does not contain check in and check out time
-    (unless (string-match org-clock-split-clock-range-regexp original-line)
-      (error "Cursor must be placed on line with valid CLOCK entry range"))
-
-    (let* ((whitespace (match-string 1 original-line))
-	   (timestamps (org-clock-split-split-line-into-timestamps original-line splitter-string from-end))
-	   (t0 (pop timestamps))
-	   (t1 (el-patch-swap (pop timestamps) (format "[%s]" (pop timestamps))))
-	   (t2 (pop timestamps)))
-      ;; delete line without moving to kill ring
-      (delete-region (line-beginning-position) (line-end-position))
-      ;; insert the earlier segment
-      (insert (format org-clock-split-clock-range-format whitespace t0 t1))
-      ;; Update interval duration, which moves point to the end of the later timestamp
-      (org-ctrl-c-ctrl-c)
-      ;; insert the later segment before the earlier segment, so it's ready for org-clock-merge
-      (move-beginning-of-line nil)
-      (newline)
-      (previous-line)
-      (insert (format org-clock-split-clock-range-format whitespace t1 t2))
-      ;; Update interval duration, which fails if point doesn't move to beginning of line
-      (org-ctrl-c-ctrl-c)
-      (move-beginning-of-line nil))))
 
 ;;;; Footer
 

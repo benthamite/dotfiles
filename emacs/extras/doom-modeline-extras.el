@@ -97,13 +97,5 @@ Also refresh the the `gh-notify' buffer."
 (add-hook 'doom-modeline-after-github-fetch-notification-hook
 	  #'doom-modeline-extras-trigger-forge-update)
 
-;;;;; vars
-
-;; TODO: move this to `config.org' if you determine it works correctly
-
-(setq doom-modeline-github t) ; we display the counter in the tab-bar; see `doom-modeline-extras.el'
-(setq doom-modeline-github-interval (* 1 60))
-(setq doom-modeline-github nil)
-
 (provide 'doom-modeline-extras)
 ;;; doom-modeline-extras.el ends here

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: extras-description
+# key: ed
+# contributor: Pablo Stafforini
+# --
+/[[file:extras/$1-extras.el][$1-extras]] collects my extensions for ~$1~./

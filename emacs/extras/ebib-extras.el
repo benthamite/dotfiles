@@ -37,7 +37,6 @@
 (require 'scihub)
 (require 'zotra)
 (require 'tlon-babel-refs)
-;; (require 'zotra-extras) ; recursive
 (require 'window-extras)
 
 ;;;; User options
@@ -849,10 +848,11 @@ The list of article download functions is specified by
 (defun ebib-extras-end-of-index-buffer ()
   "Move to the end of the index buffer."
   (interactive)
-  (when (equal major-mode 'ebib-index-mode)
+  (when (derived-mode-p 'ebib-index-mode)
     (goto-char (point-max))
     (forward-line -1)))
 
+(declare-function zotra-extras-set-bibfile "zotra-extras")
 (defun ebib-extras-duplicate-entry ()
   "Duplicate the current entry."
   (interactive)
@@ -971,11 +971,16 @@ If applicable, open external website to set rating there as well."
       ("book" (ebib-extras-search-goodreads title))
       ("film" (ebib-extras-search-imdb title) (ebib-extras-search-letterboxd title)))
     (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db 'overwrite)
-    (ebib--update-entry-buffer)
-    (set-buffer-modified-p nil)
-    (ebib--set-modified t db t (seq-filter (lambda (dependent)
-					     (ebib-db-has-key key dependent))
-					   (ebib--list-dependents db)))))
+    (ebib-extras-update-entry-buffer db)))
+
+;; TODO: find way to do this without moving point
+(defun ebib-extras-update-entry-buffer (db)
+  "Update the entry buffer with the current entry in DB."
+  (ebib--update-entry-buffer)
+  (set-buffer-modified-p nil)
+  (ebib--set-modified t db t (seq-filter (lambda (dependent)
+					   (ebib-db-has-key key dependent))
+					 (ebib--list-dependents db))))
 
 (defun ebib-extras-choose-rating ()
   "Prompt for a rating from 1 to 10 and return the choice."
@@ -995,11 +1000,7 @@ If applicable, open external website to set rating there as well."
     (ebib-set-field-value "note"
 			  (format "No translation found on %s." (format-time-string "%Y-%m-%d"))
 			  key db)
-    (ebib--update-entry-buffer)
-    (set-buffer-modified-p nil)
-    (ebib--set-modified t db t (seq-filter (lambda (dependent)
-					     (ebib-db-has-key key dependent))
-					   (ebib--list-dependents db)))))
+    (ebib-extras-update-entry-buffer db)))
 
 (defun ebib-extras-move-entry-to-tlon ()
   "Move bibliographic entry associated with the key at point to the Tlön bibliography."
@@ -1056,17 +1057,13 @@ Fetching is done using `tlon-biblio'."
     (when (ebib-extras-get-field-value field)
       (user-error "ID field is not empty"))
     (ebib-set-field-value field id key db)
-    (ebib--update-entry-buffer)
-    (set-buffer-modified-p nil)
-    (ebib--set-modified t db t (seq-filter (lambda (dependent)
-					     (ebib-db-has-key key dependent))
-					   (ebib--list-dependents db)))))
+    (ebib-extras-update-entry-buffer db)))
 
 (defun ebib-extras-fetch-field-value (field)
   "Fetch the value of FIELD for the entry at point.
 Fetching is done using `tlon-biblio'."
   (require 'simple-extras)
-  (unless (eq major-mode 'ebib-entry-mode)
+  (unless (derived-mode-p 'ebib-entry-mode)
     (error "Not in `ebib-entry-mode'"))
   (if-let ((id (ebib-extras-get-or-fetch-id-or-url)))
       (let ((entry (zotra-get-entry id (not (simple-extras-string-is-url-p id))))
@@ -1077,11 +1074,7 @@ Fetching is done using `tlon-biblio'."
 	  (user-error "Query returned no field `%s' for the current entry" field))
 	(let ((key (ebib--get-key-at-point)))
 	  (ebib-set-field-value field value key ebib--cur-db 'overwrite)
-	  (ebib--update-entry-buffer)
-	  (set-buffer-modified-p nil)
-	  (ebib--set-modified t ebib--cur-db t (seq-filter (lambda (dependent)
-							     (ebib-db-has-key key dependent))
-							   (ebib--list-dependents ebib--cur-db)))))
+	  (ebib-extras-update-entry-buffer ebib--cur-db)))
     (user-error "No ID found for the current entry")))
 
 (defun ebib-extras-fetch-abstract ()
@@ -1190,9 +1183,22 @@ exceeded, only the first author will be listed, followed by \" et al\"."
 	(format "%s et al" (car authors))
       (mapconcat 'identity authors separator))))
 
+(declare-function zotra-extras-get-field "zotra-extras")
+(defun ebib-extras-update-field (&optional field keep-braces)
+  "Update FIELD in entry at point.
+If FIELD is nil, update the field at point. If KEEP-BRACES is non-nil, do not
+remove braces from the field value."
+  (interactive)
+  (when-let* ((id-or-url (ebib-extras-get-id-or-url))
+	      (field (or field (ebib--current-field)))
+	      (value (zotra-extras-get-field field id-or-url keep-braces)))
+    (ebib-set-field-value
+     field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
+    (ebib-extras-update-entry-buffer ebib--cur-db)))
+
 ;;;;; Patched functions
 
-;; tweak original function to prevent unnecessary vertical window splits
+;; prevent unnecessary vertical window splits
 (el-patch-defun ebib--setup-windows ()
   "Create Ebib's window configuration.
 If the index buffer is already visible in some frame, select its
@@ -1233,7 +1239,7 @@ window and make the frame active,"
   (if (buffer-local-value 'ebib--dirty-index-buffer (ebib--buffer 'index))
       (setq ebib--needs-update t)))
 
-;; tweak original function to pass custom arguments to `format-time-string'
+;; pass custom arguments to `format-time-string'
 (el-patch-defun ebib--store-entry (entry-key fields db &optional timestamp if-exists)
 "Store the entry defined by ENTRY-KEY and FIELDS into DB.
 Optional argument TIMESTAMP indicates whether a timestamp is to
@@ -1251,8 +1257,7 @@ error."
     (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
   actual-key))
 
-;; tweak original two functions below so that focus doesn't move away
-;; from the current entry when the database is saved or reloaded.
+;; keep focus in current entry when the database is saved or reloaded.
 (el-patch-defun ebib--save-database (db &optional force)
   "Save the database DB.
 The FORCE argument is used as in `ebib-save-current-database'."
@@ -1303,8 +1308,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
     (default
      (beep))))
 
-;; [hack] tweak original function so that hitting `RET' in
-;; `ebib-index-mode' always edits the entry at point
+;; [hack] hitting `RET' in `ebib-index-mode' always edits the entry at point
 (el-patch-defun ebib-edit-entry ()
   "Edit the current BibTeX entry."
   (interactive)
@@ -1321,7 +1325,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
     (default
      (beep))))
 
-;; tweak original function so that it asks user before uniquifying key
+;; ask user before uniquifying key
 (el-patch-defun ebib-db-set-entry (key data db &optional if-exists)
   "Set KEY to DATA in database DB.
 DATA is an alist of (FIELD . VALUE) pairs.
@@ -1367,8 +1371,7 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
 	(remhash key (ebib-db-val 'entries db)))
       key)))
 
-;; tweak original function so that when field contains a file,
-;; the absolute file path value is copied
+;; when field contains a file, copy absolute file path
 (el-patch-defun ebib-copy-field-contents (field)
   "Copy the contents of FIELD to the kill ring.
 If the field contains a value from a cross-referenced entry, that
@@ -1388,7 +1391,6 @@ value is copied to the kill ring."
 			 (progn (kill-new contents)
 				(message "Field contents copied."))
 		       (user-error "Cannot copy an empty field"))))))
-
 
 (provide 'ebib-extras)
 ;;; ebib-extras.el ends here

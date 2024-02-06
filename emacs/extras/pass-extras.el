@@ -35,7 +35,7 @@
 (defun pass-extras-open-at-point ()
   "Open the URL of the entry at point and its password to the clipboard."
   (interactive)
-  (when (eq major-mode 'pass-mode)
+  (when (derived-mode-p 'pass-mode)
     (pass-copy)
     (pass--with-closest-entry entry
       (let* ((inhibit-message t)

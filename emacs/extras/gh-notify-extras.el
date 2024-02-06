@@ -147,7 +147,7 @@ Browse issue or PR on prefix P."
   (interactive)
   (let ((buf (get-buffer-create "*github-notifications*")))
     (set-buffer buf)
-    (unless (eq major-mode 'gh-notify-mode)
+    (unless (derived-mode-p 'gh-notify-mode)
       (gh-notify-mode)))
   (gh-notify-forge-refresh))
 

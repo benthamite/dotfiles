@@ -11912,17 +11912,7 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
 #+begin_src emacs-lisp
 (use-personal-package read-aloud-extras
   :after read-aloud
-  :demand t
-  :config
-  (setq read-aloud-engines
-	`("speech-dispatcher"		; Linux/FreeBSD only
-	  (cmd "spd-say" args ("-e" "-w") kill "spd-say -S")
-	  "flite"				; Cygwin?
-	  (cmd "flite" args nil)
-	  "jampal"				; Windows
-	  (cmd "cscript" args ("C:\\Program Files\\Jampal\\ptts.vbs" "-r" "5"))
-	  "say"				; macOS
-	  (cmd "say" args (,(format "-r %s" (read-aloud-extras-rate)))))))
+  :demand t)
 #+end_src
 
 * misc

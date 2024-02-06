@@ -117,7 +117,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
 
 ;;;; Patched functions
 
-;; Launch dispatcher with `/' rather than `?'
+;; Launch dispatcher with `;' rather than `?'
 (el-patch-defun avy-handler-default (char)
   "The default handler for a bad CHAR."
   (let (dispatch)
@@ -130,7 +130,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
 	   (throw 'done 'abort))
 	  ((el-patch-swap
 	     (eq char ??)
-	     (eq char ?/))
+	     (eq char ?\;))
 	   (avy-show-dispatch-help)
 	   (throw 'done 'restart))
 	  ((mouse-event-p char)

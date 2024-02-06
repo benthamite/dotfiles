@@ -3082,13 +3082,16 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
 
 #+begin_src emacs-lisp
 (use-feature skeleton
+  :after mode-local
   :demand t
   :config
   (setq skeleton-pair t)
-  ;; use two backticks, rather than ` and ', in selected modes
-  (dolist (mode '(markdown-mode forge-post-mode))
-    (setq-mode-local mode skeleton-pair-alist '((?` _ ?`))))
-  
+
+  (dolist (hook '(markdown-mode-hook forge-post-mode-hook))
+    (add-hook hook (lambda ()
+                     "Use two backticks, rather than ` and ', in selected modes."
+                     (setq-local skeleton-pair-alist '((?` _ ?`))))))
+
   :general
   ("[" 'skeleton-pair-insert-maybe
    "{" 'skeleton-pair-insert-maybe

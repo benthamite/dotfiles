@@ -1185,7 +1185,7 @@ exceeded, only the first author will be listed, followed by \" et al\"."
 
 ;;;;; Patched functions
 
-;; tweak original function to prevent unnecessary vertical window splits
+;; prevent unnecessary vertical window splits
 (el-patch-defun ebib--setup-windows ()
   "Create Ebib's window configuration.
 If the index buffer is already visible in some frame, select its
@@ -1226,7 +1226,7 @@ window and make the frame active,"
   (if (buffer-local-value 'ebib--dirty-index-buffer (ebib--buffer 'index))
       (setq ebib--needs-update t)))
 
-;; tweak original function to pass custom arguments to `format-time-string'
+;; pass custom arguments to `format-time-string'
 (el-patch-defun ebib--store-entry (entry-key fields db &optional timestamp if-exists)
 "Store the entry defined by ENTRY-KEY and FIELDS into DB.
 Optional argument TIMESTAMP indicates whether a timestamp is to
@@ -1244,8 +1244,7 @@ error."
     (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
   actual-key))
 
-;; tweak original two functions below so that focus doesn't move away
-;; from the current entry when the database is saved or reloaded.
+;; keep focus in current entry when the database is saved or reloaded.
 (el-patch-defun ebib--save-database (db &optional force)
   "Save the database DB.
 The FORCE argument is used as in `ebib-save-current-database'."
@@ -1296,8 +1295,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
     (default
      (beep))))
 
-;; [hack] tweak original function so that hitting `RET' in
-;; `ebib-index-mode' always edits the entry at point
+;; [hack] hitting `RET' in `ebib-index-mode' always edits the entry at point
 (el-patch-defun ebib-edit-entry ()
   "Edit the current BibTeX entry."
   (interactive)
@@ -1314,7 +1312,7 @@ The FORCE argument is used as in `ebib-save-current-database'."
     (default
      (beep))))
 
-;; tweak original function so that it asks user before uniquifying key
+;; ask user before uniquifying key
 (el-patch-defun ebib-db-set-entry (key data db &optional if-exists)
   "Set KEY to DATA in database DB.
 DATA is an alist of (FIELD . VALUE) pairs.
@@ -1360,8 +1358,7 @@ instead.  Use `ebib-db-add-entries-to-dependent' instead."
 	(remhash key (ebib-db-val 'entries db)))
       key)))
 
-;; tweak original function so that when field contains a file,
-;; the absolute file path value is copied
+;; when field contains a file, copy absolute file path
 (el-patch-defun ebib-copy-field-contents (field)
   "Copy the contents of FIELD to the kill ring.
 If the field contains a value from a cross-referenced entry, that
@@ -1381,7 +1378,6 @@ value is copied to the kill ring."
 			 (progn (kill-new contents)
 				(message "Field contents copied."))
 		       (user-error "Cannot copy an empty field"))))))
-
 
 (provide 'ebib-extras)
 ;;; ebib-extras.el ends here

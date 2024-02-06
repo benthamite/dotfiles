@@ -2964,23 +2964,6 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
   (abbrev-table-put text-mode-abbrev-table :case-fixed t))
 #+end_src
 
-*** TODO Make abbrevs local
-:PROPERTIES:
-:ID:       D54BEE93-6514-46A0-879F-9F93381CE41B
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-24 Mon 08:58]--[2023-04-24 Mon 09:20] =>  0:22
-:END:
-To remove an abbrev definition, give a negative argument to the abbrev definition command: C-u - C-x a g or C-u - C-x a l. The former removes a global definition, while the latter removes a mode-specific definition. M-x kill-all-abbrevs removes all abbrev definitions, both global and local.
-
-*** TODO Set up Emacs abbrevs
-:PROPERTIES:
-:ID:       A0B65562-6C61-4212-98B5-4FE8FB60E78F
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-22 Sat 17:23]--[2023-04-22 Sat 17:57] =>  0:34
-:END:
-
 ** yasnippet
 :PROPERTIES:
 :ID:       6405B8E7-6612-4D71-8C2C-A51F8808F4C6

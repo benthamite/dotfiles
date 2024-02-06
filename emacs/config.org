@@ -311,6 +311,9 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#consult-flycheck][consult-flycheck]]
   - [[#flycheck-ledger][flycheck-ledger]]
   - [[#flycheck-languagetool][flycheck-languagetool]]
+  - [[#lsp-mode][lsp-mode]]
+  - [[#grammarly][grammarly]]
+  - [[#lsp-grammarly][lsp-grammarly]]
 - [[#prose][prose]]
   - [[#text-mode][text-mode]]
   - [[#with-editor][with-editor]]
@@ -5869,6 +5872,85 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
                                                   org-journal-mode
                                                   org-msg-edit-mode))
                        (flycheck-select-checker 'languagetool))))))
+#+end_src
+
+** lsp-mode
+:PROPERTIES:
+:ID:       E9D2E6CA-5256-4776-801F-13281BD390C9
+:END:
+/[[https://github.com/emacs-lsp/lsp-mode][lsp-mode]] is an Emacs client/library for the Language Server Protocol./
+
+I only use =lsp= with =lsp-grammarly=. (There are versions of Grammarly for =flycheck= and =flyspell=, but they do not support premium plans.)
+
+#+begin_src emacs-lisp :results silent
+(use-package lsp-mode
+  :defer 7
+  :config
+  (setq lsp-warn-no-matched-clients nil)
+  (setq lsp-headerline-breadcrumb-enable nil)
+  (setq lsp-auto-guess-root t) ; disable annoying prompt to import project
+  (setq lsp-modeline-diagnostics-enable nil)
+
+  (add-hook 'lsp-mode #'lsp-enable-which-key-integration)
+
+  :general
+  ("A-H-g" (lambda! (if lsp-mode (lsp-disconnect) (lsp)))))
+#+end_src
+
+** grammarly
+:PROPERTIES:
+:ID:       C87EAC5F-7831-469C-96FB-603397C51925
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
+:END:
+
+/[[https://github.com/emacs-grammarly/grammarly][grammarly]] is an API interface for [[https://www.grammarly.com/][Grammarly]]./
+
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :spelling)
+(use-package grammarly
+  :defer 7
+  :config
+  (setq grammarly-username tlon-core-email-shared)
+  (setq grammarly-password (auth-source-pass-get 'secret (concat "tlon/core/grammarly.com/" tlon-core-email-shared))))
+#+end_src
+
+** lsp-grammarly
+:PROPERTIES:
+:ID:       2D0C20F1-1CE6-45F9-AA4B-46FB02DD0271
+:END:
+:LOGBOOK:
+CLOCK: [2022-09-29 Thu 18:50]--[2022-09-29 Thu 21:20] =>  2:30
+CLOCK: [2021-11-27 Sat 21:56]--[2021-11-27 Sat 22:48] =>  0:52
+CLOCK: [2021-11-27 Sat 19:44]--[2021-11-27 Sat 20:17] =>  0:33
+CLOCK: [2021-11-27 Sat 19:23]--[2021-11-27 Sat 19:26] =>  0:03
+CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
+:END:
+
+/[[https://github.com/emacs-grammarly/lsp-grammarly][lsp-grammarly]] provides ~lsp-mode~ support for Grammarly./
+
+[2022-10-06 Thu 23:35] At the moment, the premium version isn't working. The package maintainers are migrating to to a new server, which may resolve the issues I was having authenticating my account. You can check whether the premium account is being used by evaluating ~(grammarly-premium-p)~.
+
+[2024-02-03 Sat 12:33] It’s working again, so re-enabling.
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :spelling)
+(use-package lsp-grammarly
+  :after lsp-mode grammarly
+  :demand t
+
+  :config
+  (setq lsp-grammarly-suggestions-split-infinitive nil)
+  (setq lsp-grammarly-suggestions-preposition-at-the-end-of-sentence nil)
+  ;; 🙄
+  (setq lsp-grammarly-suggestions-possibly-biased-language-age-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-disability-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-family-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-gender-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-human-rights nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-human-rights-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-lgbtqia-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-race-ethnicity-related nil)
+  (setq lsp-grammarly-suggestions-possibly-politically-incorrect-language nil))
 #+end_src
 
 * prose

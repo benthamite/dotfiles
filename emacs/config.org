@@ -4394,7 +4394,7 @@ Note to self: if the package doesn't work after deploying a new profile, even af
   :elpaca (org-gcal
            :type git
            :host github
-           :repo "benthamite/org-gcal.el")
+           :repo "kidd/org-gcal.el")
   :after auth-source-pass org
   :defer 10
 

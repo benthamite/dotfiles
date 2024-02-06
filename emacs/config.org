@@ -1316,6 +1316,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   :config
   (push 'log-edit-comment-ring savehist-additional-variables))
 #+end_src
+
 ** diff-mode
 :PROPERTIES:
 :ID:       33F1D5AA-3DA7-43EC-8ACD-0D8360445459
@@ -3326,7 +3327,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   ;; # Local Variables:
   ;; # eval: (setq-local auto-save-visited-mode t)
   ;; # End:
-  
+
   (advice-add 'recover-session
               :after (lambda ()
                        "Disable `dired-hide-details-mode' to show dates in `recover-session'."
@@ -3565,9 +3566,9 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
   :after dired
   :config
   (setq dired-omit-verbose nil)    ; shut up
-  (setq dired-omit-size-limit nil) ; always omit, regardless of directory size
   (setq dired-omit-files
         (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
+  (setq dired-omit-size-limit nil) ; always omit, regardless of directory size
 
   (add-hook 'dired-mode-hook #'dired-omit-mode)
 
@@ -6292,7 +6293,7 @@ To populate the database of historical prices:
 :END:
 
 
-/[[file:extras/ledger-mode-extras.el][ledger-mode-extras]] collects my extensions for ~ledger-mode~
+/[[file:extras/ledger-mode-extras.el][ledger-mode-extras]] collects my extensions for ~ledger-mode~./
 
 #+begin_src emacs-lisp
 (use-personal-package ledger-mode-extras
@@ -6571,7 +6572,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 :END:
 
 
-/[[file:extras/pdf-tools-extras.el][pdf-tools-extras]] collects my extensions for ~pdf-tools~.
+/[[file:extras/pdf-tools-extras.el][pdf-tools-extras]] collects my extensions for ~pdf-tools~./
 
 #+begin_src emacs-lisp
 (use-personal-package pdf-tools-extras

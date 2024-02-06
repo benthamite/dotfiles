@@ -359,6 +359,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#yaml][yaml]]
   - [[#js2-mode][js2-mode]]
   - [[#puni][puni]]
+  - [[#project][project]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent][aggressive-indent]]
   - [[#elpy][elpy]]
@@ -6929,6 +6930,20 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
    "A-C-s-f" 'puni-end-of-sexp
    "A-C-H-j" 'puni-mark-sexp-at-point
    "A-C-H-k" 'puni-mark-sexp-around-point))
+#+end_src
+
+** project
+:PROPERTIES:
+:ID:       A8E52422-BB0D-410B-A497-64BB2AC5576D
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/project.el][project]] provides various functions for dealing with projects./
+
+#+begin_src emacs-lisp
+(use-feature project
+  :general
+  ((emacs-lisp-mode-map)
+   "s-r" 'project-query-replace-regexp))
 #+end_src
 
 ** hideshow

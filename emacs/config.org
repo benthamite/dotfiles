@@ -9964,9 +9964,8 @@ The macro below generates the commands correctly. But attempting to define key b
 
   :general
   (ebib-index-mode-map
-   "t" 'bib-zotra-add-entry-from-title))
+   "t" 'bib-add-entry))
 #+end_src
-
 
 ** biblio
 :PROPERTIES:

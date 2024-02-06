@@ -500,6 +500,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#empv][empv]]
   - [[#ytdl][ytdl]]
   - [[#read-aloud][read-aloud]]
+  - [[#read-aloud-extras][read-aloud-extras]]
 - [[#misc][misc]]
   - [[#calc][calc]]
   - [[#alert][alert]]
@@ -11902,6 +11903,27 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
 
   :general
   ("C-H-r" 'read-aloud-this)) ; remember that `A-C-d' starts/stops dictation
+#+end_src
+
+** read-aloud-extras
+:PROPERTIES:
+:ID:       AA0F6FA2-2226-47C3-AE3F-7C8A1D542A17
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package read-aloud-extras
+  :after read-aloud
+  :demand t
+  :config
+  (setq read-aloud-engines
+	`("speech-dispatcher"		; Linux/FreeBSD only
+	  (cmd "spd-say" args ("-e" "-w") kill "spd-say -S")
+	  "flite"				; Cygwin?
+	  (cmd "flite" args nil)
+	  "jampal"				; Windows
+	  (cmd "cscript" args ("C:\\Program Files\\Jampal\\ptts.vbs" "-r" "5"))
+	  "say"				; macOS
+	  (cmd "say" args (,(format "-r %s" (read-aloud-extras-rate)))))))
 #+end_src
 
 * misc

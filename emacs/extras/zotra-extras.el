@@ -95,10 +95,10 @@ ORIG-FUN, URL, ENTRY-FORMAT, and BIBFILE are arguments passed to
     (eww-extras-url-to-pdf url)
     (eww-extras-url-to-html url)))
 
-;; Remarkably, this is needed because Emacs can't decode certain octal
-;; sequences in Zotero-imported bibtex entries
 (defun zotra-extras-fix-octal-sequences ()
-  "Replace octal sequences with corresponding characters."
+  "Replace octal sequences with corresponding characters.
+Remarkably, this is needed because Emacs can't decode certain octal sequences in
+Zotero-imported bibtex entries."
   (save-excursion
     (dotimes (i 79)
       (dolist  (pattern '("\"\\302\\%o\""

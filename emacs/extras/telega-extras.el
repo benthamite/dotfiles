@@ -47,9 +47,9 @@ archive buffer."
           (catch 'tag
             (dolist (buffer (buffer-list))
               (when (with-current-buffer buffer
-                      (member major-mode '(telega-root-mode telega-chat-mode)))
-                (throw 'tag (buffer-name buffer))))))
-         (telega-buffer-is-current (string= (buffer-name (current-buffer)) telega-buffer)))
+                      (derived-mode-p 'telega-root-mode 'telega-chat-mode))
+		(throw 'tag (buffer-name buffer))))))
+	 (telega-buffer-is-current (string= (buffer-name (current-buffer)) telega-buffer)))
     (cond
      ((not telega-buffer)
       (telega))
@@ -59,14 +59,14 @@ archive buffer."
      ((not (string= telega-buffer-root telega-buffer))
       (if (not (eobp))
           (goto-char (point-max))
-        (kill-buffer)
-        (switch-to-buffer telega-buffer-root)))
+	(kill-buffer)
+	(switch-to-buffer telega-buffer-root)))
      ;; if currently in archive, move to beg, else back to main
      ((eq (car (telega-filter-active)) 'archive)
       (if (eq (count-lines (point-min) (point)) 3)
           (telega-filters-reset)
-        (goto-char (point-min))
-        (forward-line 3)))
+	(goto-char (point-min))
+	(forward-line 3)))
      ((not (eq (count-lines (point-min) (point)) 4))
       (goto-char (point-min))
       (forward-line 4)))))

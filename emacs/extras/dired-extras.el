@@ -29,6 +29,7 @@
 
 (require 'dired)
 (require 'el-patch)
+(require 'gnus-dired)
 (require 'paths)
 
 ;;;; Variables
@@ -47,7 +48,7 @@
 (defun dired-extras-dotfiles-toggle ()
   "Show/hide dot-files."
   (interactive)
-  (when (equal major-mode 'dired-mode)
+  (when (derived-mode-p 'dired-mode)
     (if dired-extras-show-dotfiles-p
 	(progn
 	  (setq dired-extras-show-dotfiles-p nil)
@@ -157,7 +158,7 @@ losing the `put back' option."
       (save-excursion
 	(dolist (buffer (buffer-list t))
 	  (set-buffer buffer)
-	  (when (eq major-mode 'mail-mode)
+	  (when (derived-mode-p 'mail-mode)
 	    (push (buffer-name buffer) buffers))))
       (nreverse buffers))))
 

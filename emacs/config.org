@@ -62,6 +62,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elpaca][elpaca]]
   - [[#use-package][use-package]]
   - [[#use-package-extras][use-package-extras]]
+  - [[#elpaca-extras][elpaca-extras]]
 - [[#foundational][foundational]]
   - [[#org][org]]
   - [[#jsonrpc][jsonrpc]]
@@ -182,7 +183,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#expand-region][expand-region]]
   - [[#newcomment][newcomment]]
   - [[#skeleton][skeleton]]
-  - [[#multiple-cursors][multiple-cursors]]
   - [[#crux][crux]]
   - [[#button][button]]
   - [[#back-button][back-button]]
@@ -311,6 +311,9 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#consult-flycheck][consult-flycheck]]
   - [[#flycheck-ledger][flycheck-ledger]]
   - [[#flycheck-languagetool][flycheck-languagetool]]
+  - [[#lsp-mode][lsp-mode]]
+  - [[#grammarly][grammarly]]
+  - [[#lsp-grammarly][lsp-grammarly]]
 - [[#prose][prose]]
   - [[#text-mode][text-mode]]
   - [[#with-editor][with-editor]]
@@ -342,7 +345,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#prog-mode][prog-mode]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
-  - [[#lisp][lisp]]
   - [[#s][s]]
   - [[#debug][debug]]
   - [[#edebug][edebug]]
@@ -597,6 +599,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
     (load "./elpaca-autoloads")))
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
+(elpaca-wait)
 
 ;; (toggle-debug-on-error) ; uncomment when debugging
 #+end_src
@@ -616,7 +619,7 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 
 /[[https://github.com/jwiegley/use-package][use-package]] is a package organizer./
 
-We load ~use-package~ itself with ~elpaca~, then proceed to do the confiuration with ~use-package~.
+We load ~use-package~ itself with ~elpaca~, then proceed to do the configuration with ~use-package~.
 
 #+begin_src emacs-lisp :results silent
 (elpaca elpaca-use-package
@@ -632,7 +635,6 @@ We load ~use-package~ itself with ~elpaca~, then proceed to do the confiuration 
   (setq use-package-always-defer t)
   (setq use-package-hook-name-suffix nil) ; use real name for hooks, i.e. do not omit the `-hook' bit
   (setq use-package-minimum-reported-time 0.1))
-
 (elpaca-wait)
 #+end_src
 
@@ -641,11 +643,30 @@ We load ~use-package~ itself with ~elpaca~, then proceed to do the confiuration 
 :ID:       A1D2F9BE-0983-4CE8-89C2-6727149F3268
 :END:
 
+
+/[[file:extras/use-package-extras.el][use-package-extras]] collects my extensions for ~use-package~./
+
 #+begin_src emacs-lisp
 (use-package use-package-extras
   :elpaca (use-package-extras
            :host github :repo "benthamite/dotfiles"
            :files ("emacs/extras/use-package-extras.el"))
+  :after use-package
+  :demand t)
+(elpaca-wait)
+#+end_src
+
+** elpaca-extras
+:PROPERTIES:
+:ID:       9A6A90C2-ACB6-4899-B38C-1C483A4FFE06
+:END:
+
+
+/[[file:extras/elpaca-extras.el][elpaca-extras]] collects my extensions for ~elpaca~./
+
+#+begin_src emacs-lisp
+(use-personal-package elpaca-extras
+  :after elpaca use-package-extras
   :demand t)
 #+end_src
 
@@ -668,6 +689,12 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 
 ** jsonrpc
 :PROPERTIES:
+:ID:       ECE3D86D-035D-461C-937F-DF39086E4C5C
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
+
+:PROPERTIES:
 :ID:       438DEA77-5F4B-4E1D-8A1D-E65DA588927F
 :END:
 
@@ -684,6 +711,9 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 :PROPERTIES:
 :ID:       FD3A9A18-BDB8-4D52-9F5C-8E040FA042A2
 :END:
+
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/seq.el][seq]] provides sequence-manipulation functions that complement basic functions provided by ~subr.el~./
 
 #+begin_src emacs-lisp
 ;; https://github.com/progfolio/elpaca/issues/216#issuecomment-1868747372
@@ -954,7 +984,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
            :host github
            :repo "tlon-team/tlon-core"
            :depth nil) ; clone entire repo, not just last commit
-  :demand t
+  :defer 4
   :config
   (setq tlon-core-repo-dirs (expand-file-name "~/Library/CloudStorage/Dropbox/repos/"))
   (setq tlon-core-meeting-pending-id-fede "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
@@ -1021,7 +1051,8 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
   :general
   ("M-s-=" 'prot-simple-insert-date
-   "C-g" 'prot-simple-keyboard-quit-dwim))
+   "C-g" 'prot-simple-keyboard-quit-dwim
+   "A-C-H-j" 'prot-simple-mark-sexp))
 #+end_src
 
 ** misc.
@@ -1286,6 +1317,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   :config
   (push 'log-edit-comment-ring savehist-additional-variables))
 #+end_src
+
 ** diff-mode
 :PROPERTIES:
 :ID:       33F1D5AA-3DA7-43EC-8ACD-0D8360445459
@@ -1380,7 +1412,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
              :repo "magit/magit"
              :ref "5ad367d7"
              :depth nil)
-  :demand t
+  :defer 5
   :config
   (setq magit-commit-ask-to-stage 'stage)
   (setq magit-clone-set-remote.pushDefault t)
@@ -1479,7 +1511,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
            :ref "5dcca0e"
            :depth nil)
   :after magit ghub emacsql auth-source-pass
-  :demand t
+  :defer 5
   :init
   (if (version<= emacs-version "29.0")
       (setq forge-database-connector 'sqlite)
@@ -1725,7 +1757,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 
 /[[https://github.com/jdtsmith/org-modern-indent][org-modern-indent]] extends org-modern stylistic improvements to contexts involving indentation./
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package org-modern-indent
   :elpaca (org-modern-indent
              :host github
@@ -1773,7 +1805,9 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 
 #+begin_src emacs-lisp :results silent
 (use-feature faces
-  :demand t)
+  :demand t
+  :config
+  (setq ns-use-thin-smoothing t))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
@@ -1800,8 +1834,10 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 
 ** face-remap
 :PROPERTIES:
-:ID:       3F96E2F2-7C68-4D61-8CB8-EFE4C7220FC8
+:ID:       A999E839-CB99-4BC3-BB40-962B17683EDE
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/face-remap.el][face-remap]] defines simple operations for face remapping./
 
 #+begin_src emacs-lisp :results silent
 (use-feature face-remap
@@ -1866,7 +1902,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   :after modus-themes
   :demand t
   :config
-  (tlon-init-override-code-if-available
+  (tlon-init-override-code
    :modus-themes-load
    '((modus-themes-extras-load-theme-conditionally)))
 
@@ -1974,7 +2010,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :after ghub async
   :demand t
   :config
-  (tlon-init-override-code-if-available
+  (tlon-init-override-code
    :doom-modeline
    '((setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
      (setq doom-modeline-buffer-encoding nil)
@@ -2007,6 +2043,9 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :after doom-modeline
   :demand t
   :config
+  (setq doom-modeline-github t)
+  (setq doom-modeline-github-interval (* 1 60))
+  (setq doom-modeline-github nil)
   (doom-modeline-mode))
 #+end_src
 
@@ -2036,6 +2075,13 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 
   (tab-bar-mode))
 #+end_src
+
+*** TODO Diagnose proliferation of clocks
+:PROPERTIES:
+:ID:       58EB9BE2-8819-4CFB-A008-11A8B119F73A
+:END:
+
+I now realize this happens predictably when the doom modeline is enabled or disabled.
 
 ** tab-bar-extras
 :PROPERTIES:
@@ -2190,9 +2236,6 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 :ID:       EBCFE2FC-27B4-4C30-9D2A-A841B34271F7
 :END:
 
-:PROPERTIES:
-:ID:       2793C213-5A36-4DAB-9217-DA1BBE257E09
-:END:
 #+begin_src emacs-lisp :results silent
 (use-feature hl-line
   :demand t
@@ -2540,7 +2583,7 @@ CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
    "C-H-M-q" 'backward-kill-word
    "C-H-M-r" 'kill-word
    "C-H-M-s" 'delete-backward-char
-   "C-H-M-t" 'cycle-space
+   "M-SPC" 'cycle-spacing
    "C-H-M-v" 'kill-line
    "C-H-M-w" 'backward-kill-sentence
    "C-H-M-z" 'crux-kill-line-backwards
@@ -2921,23 +2964,6 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
   (abbrev-table-put text-mode-abbrev-table :case-fixed t))
 #+end_src
 
-*** TODO Make abbrevs local
-:PROPERTIES:
-:ID:       D54BEE93-6514-46A0-879F-9F93381CE41B
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-24 Mon 08:58]--[2023-04-24 Mon 09:20] =>  0:22
-:END:
-To remove an abbrev definition, give a negative argument to the abbrev definition command: C-u - C-x a g or C-u - C-x a l. The former removes a global definition, while the latter removes a mode-specific definition. M-x kill-all-abbrevs removes all abbrev definitions, both global and local.
-
-*** TODO Set up Emacs abbrevs
-:PROPERTIES:
-:ID:       A0B65562-6C61-4212-98B5-4FE8FB60E78F
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-22 Sat 17:23]--[2023-04-22 Sat 17:57] =>  0:34
-:END:
-
 ** yasnippet
 :PROPERTIES:
 :ID:       6405B8E7-6612-4D71-8C2C-A51F8808F4C6
@@ -2970,7 +2996,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 
 #+begin_src emacs-lisp :results silent
 (use-package yasnippet
-  :demand t
+  :defer 5
   :config
   (setq yas-snippet-dirs (list paths-dir-yasnippets
                                paths-dir-yasnippets-private
@@ -2981,7 +3007,8 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   (yas-global-mode)
   (yas-reload-all)
 
-  (setq yas-new-snippet-default (concat "# -*- mode: snippet -*-\n# name: $1\n# key: $2\n# contributor: " user-full-name "\n# --\n$0"))
+  (setq yas-new-snippet-default
+        (format "# -*- mode: snippet -*-\n# name: $1\n# key: $2\n# contributor: %s\n# --\n$0" user-full-name))
 
   (add-hook 'minibuffer-setup-hook #'yas-minor-mode)
 
@@ -3040,37 +3067,30 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
 
 #+begin_src emacs-lisp
 (use-feature skeleton
+  :after mode-local
   :demand t
   :config
   (setq skeleton-pair t)
+
+  (dolist (hook '(markdown-mode-hook forge-post-mode-hook))
+    (add-hook hook (lambda ()
+                     "Use two backticks, rather than ` and ', in selected modes."
+                     (setq-local skeleton-pair-alist '((?` _ ?`))))))
 
   :general
   ("[" 'skeleton-pair-insert-maybe
    "{" 'skeleton-pair-insert-maybe
    "(" 'skeleton-pair-insert-maybe
-   "\"" 'skeleton-pair-insert-maybe)
+   "\"" 'skeleton-pair-insert-maybe
+   "«" 'skeleton-pair-insert-maybe)
   ((org-mode-map telega-chat-mode-map)
    "~" 'skeleton-pair-insert-maybe
+   "=" 'skeleton-pair-insert-maybe
    "*" 'skeleton-pair-insert-maybe)
-  (markdown-mode-map
-   "`" 'skeleton-pair-insert-maybe
+  ((emacs-lisp-mode-map emacs-lisp-interaction-mode-map markdown-mode-map forge-post-mode-map)
+   "`" 'skeleton-pair-insert-maybe)
+  ((markdown-mode-map forge-post-mode-map)
    "*" 'skeleton-pair-insert-maybe))
-#+end_src
-
-** multiple-cursors
-:PROPERTIES:
-:ID:       E3F6EB63-D6C1-474C-9129-B6424852EEC8
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:17] =>  0:00
-:END:
-
-/[[https://github.com/magnars/multiple-cursors.el][multiple-cursors]] supports multiple cursors in Emacs./
-
-#+begin_src emacs-lisp :results silent
-(use-package multiple-cursors
-  :general
-  ("M-m" 'mc/mark-pop))
 #+end_src
 
 ** crux
@@ -3082,7 +3102,7 @@ CLOCK: [2022-06-08 Wed 17:31]--[2022-06-08 Wed 17:51] =>  0:20
 CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:18] =>  0:01
 :END:
 
-/[[https://github.com/bbatsov/crux][crux]] is a "collection of ridiculously useful extensions"./
+/[[https://github.com/bbatsov/crux][crux]] is a “collection of ridiculously useful extensions”./
 
 #+begin_src emacs-lisp :results silent
 (use-package crux
@@ -3096,6 +3116,8 @@ CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:18] =>  0:01
 :PROPERTIES:
 :ID:       38C9C0A7-5979-4656-879D-F71638FCF40D
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/button.el][button]] defines functions for inserting and manipulating clickable buttons in Emacs buffers./
 
 #+begin_src emacs-lisp :results silent
 (use-feature button
@@ -3146,7 +3168,7 @@ CLOCK: [2021-06-25 Fri 21:18]--[2021-06-25 Fri 21:19] =>  0:01
 :ID:       29DA9B62-C7A6-4B53-B49C-BE2C47D0F3AF
 :END:
 
-/goto-addr activate URLs and e-mail addresses in buffers./
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/net/goto-addr.el][goto-addr]] activates URLs and e-mail addresses in buffers./
 
 #+begin_src emacs-lisp
 (use-feature goto-addr
@@ -3168,11 +3190,12 @@ CLOCK: [2021-04-05 Mon 15:34]--[2021-04-05 Mon 15:35] =>  0:01
 :PROPERTIES:
 :ID:       893A2A5B-707A-4C9A-9E25-414DC663F2CD
 :END:
-
 :LOGBOOK:
 CLOCK: [2021-07-30 Fri 21:35]--[2021-07-30 Fri 22:18] =>  0:43
 CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/register.el][register]] saves text, rectangles, positions, and other things for later use./
 
 #+begin_src emacs-lisp :results silent
 (use-feature register
@@ -3184,8 +3207,10 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 
 ** register-extras
 :PROPERTIES:
-:ID:       6790E728-CA51-42C1-9CEB-F6CDBF6836B8
+:ID:       A2DCE7E0-6094-45FC-B5BE-AF3A0351D3CC
 :END:
+
+/[[file:extras/register-extras.el][register-extras]] collects my extensions for ~register~./
 
 #+begin_src emacs-lisp
 (use-personal-package register-extras
@@ -3287,7 +3312,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   ;; # Local Variables:
   ;; # eval: (setq-local auto-save-visited-mode t)
   ;; # End:
-  
+
   (advice-add 'recover-session
               :after (lambda ()
                        "Disable `dired-hide-details-mode' to show dates in `recover-session'."
@@ -3450,7 +3475,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
   (put 'dired-find-alternate-file 'disabled nil) ; do not disable dired-find-alternate-file!
 
 
-  (add-hook 'dired-mode-hook #'dired-hide-details-mode) ; hide details by default
+  (add-hook 'dired-mode-hook #'dired-hide-details-mode)
   (add-hook 'dired-mode-hook (lambda () (visual-line-mode -1)))
 
   :general
@@ -3526,9 +3551,9 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
   :after dired
   :config
   (setq dired-omit-verbose nil)    ; shut up
-  (setq dired-omit-size-limit nil) ; always omit, regardless of directory size
   (setq dired-omit-files
         (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
+  (setq dired-omit-size-limit nil) ; always omit, regardless of directory size
 
   (add-hook 'dired-mode-hook #'dired-omit-mode)
 
@@ -3656,6 +3681,7 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
 
   :general
   (dired-mode-map
+   "C-w" 'dired-narrow-regexp
    "<tab>" 'dired-subtree-toggle
    "<backtab>" 'dired-subtree-cycle))
 #+end_src
@@ -3673,11 +3699,9 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 #+begin_src emacs-lisp :results silent
 (use-package dired-quick-sort
   :after dired
-  ;; :config
-  ;; (dired-quick-sort-setup)
   :general
   (dired-mode-map
-   "T" 'hydra-dirs-quick-sort/body))
+   "T" 'hydra-dired-quick-sort/body))
 #+end_src
 
 ** peep-dired
@@ -3903,7 +3927,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   ;; stackoverflow.com/questions/23207958/how-to-prevent-emacs-dired-from-splitting-frame-into-more-than-two-windows
   (add-to-list 'display-buffer-alist `(,shell-command-buffer-name-async display-buffer-no-window))
 
-  (tlon-init-override-code-if-available
+  (tlon-init-override-code
    :window-split
    '((add-hook 'elpaca-after-init-hook #'window-extras-split-if-unsplit)))
 
@@ -3984,7 +4008,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   :after frame
   :demand t
   :config
-  (tlon-init-override-code-if-available
+  (tlon-init-override-code
    :frame-extras-maximize-frame
    '((add-hook 'elpaca-after-init-hook #'frame-extras-maximize-frame)))
      (add-hook 'spacious-padding-mode-hook #'frame-extras-restore-window-divider))
@@ -4188,7 +4212,7 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 
 #+begin_src emacs-lisp :results silent
 (use-package ace-link
-  :demand t
+  :defer 5
   :general
   ((eww-mode-map elfeed-show-mode-map)
    "f" 'ace-link-eww)
@@ -4356,7 +4380,7 @@ Note to self: if the package doesn't work after deploying a new profile, even af
   :elpaca (org-gcal
            :type git
            :host github
-           :repo "benthamite/org-gcal.el")
+           :repo "kidd/org-gcal.el")
   :after auth-source-pass org
   :defer 10
 
@@ -5834,15 +5858,95 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
                   org-mode-hook
                   org-msg-edit-mode-hook))
     (add-hook hook (lambda ()
-                     (unless (member major-mode '(forge-post-mode
-                                                  gfm-mode
-                                                  mhtml-mode
-                                                  flycheck-error-message-mode
-                                                  mu4e-compose-mode
-                                                  mu4e-view-mode
-                                                  org-journal-mode
-                                                  org-msg-edit-mode))
+                     "Enable `flycheck-languagetool' in selected buffers."
+                     (unless (derived-mode-p 'forge-post-mode
+                                             'gfm-mode
+                                             'mhtml-mode
+                                             'flycheck-error-message-mode
+                                             'mu4e-compose-mode
+                                             'mu4e-view-mode
+                                             'org-journal-mode
+                                             'org-msg-edit-mode)
                        (flycheck-select-checker 'languagetool))))))
+#+end_src
+
+** lsp-mode
+:PROPERTIES:
+:ID:       E9D2E6CA-5256-4776-801F-13281BD390C9
+:END:
+/[[https://github.com/emacs-lsp/lsp-mode][lsp-mode]] is an Emacs client/library for the Language Server Protocol./
+
+I only use =lsp= with =lsp-grammarly=. (There are versions of Grammarly for =flycheck= and =flyspell=, but they do not support premium plans.)
+
+#+begin_src emacs-lisp :results silent
+(use-package lsp-mode
+  :defer 7
+  :config
+  (setq lsp-warn-no-matched-clients nil)
+  (setq lsp-headerline-breadcrumb-enable nil)
+  (setq lsp-auto-guess-root t) ; disable annoying prompt to import project
+  (setq lsp-modeline-diagnostics-enable nil)
+
+  (add-hook 'lsp-mode #'lsp-enable-which-key-integration)
+
+  :general
+  ("A-H-g" (lambda! (if lsp-mode (lsp-disconnect) (lsp)))))
+#+end_src
+
+** grammarly
+:PROPERTIES:
+:ID:       C87EAC5F-7831-469C-96FB-603397C51925
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
+:END:
+
+/[[https://github.com/emacs-grammarly/grammarly][grammarly]] is an API interface for [[https://www.grammarly.com/][Grammarly]]./
+
+#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :spelling)
+(use-package grammarly
+  :defer 7
+  :config
+  (setq grammarly-username tlon-core-email-shared)
+  (setq grammarly-password (auth-source-pass-get 'secret (concat "tlon/core/grammarly.com/" tlon-core-email-shared))))
+#+end_src
+
+** lsp-grammarly
+:PROPERTIES:
+:ID:       2D0C20F1-1CE6-45F9-AA4B-46FB02DD0271
+:END:
+:LOGBOOK:
+CLOCK: [2022-09-29 Thu 18:50]--[2022-09-29 Thu 21:20] =>  2:30
+CLOCK: [2021-11-27 Sat 21:56]--[2021-11-27 Sat 22:48] =>  0:52
+CLOCK: [2021-11-27 Sat 19:44]--[2021-11-27 Sat 20:17] =>  0:33
+CLOCK: [2021-11-27 Sat 19:23]--[2021-11-27 Sat 19:26] =>  0:03
+CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
+:END:
+
+/[[https://github.com/emacs-grammarly/lsp-grammarly][lsp-grammarly]] provides ~lsp-mode~ support for Grammarly./
+
+[2022-10-06 Thu 23:35] At the moment, the premium version isn't working. The package maintainers are migrating to to a new server, which may resolve the issues I was having authenticating my account. You can check whether the premium account is being used by evaluating ~(grammarly-premium-p)~.
+
+[2024-02-03 Sat 12:33] It’s working again, so re-enabling.
+
+#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :spelling)
+(use-package lsp-grammarly
+  :after lsp-mode grammarly
+  :demand t
+
+  :config
+  (setq lsp-grammarly-suggestions-split-infinitive nil)
+  (setq lsp-grammarly-suggestions-preposition-at-the-end-of-sentence nil)
+  ;; 🙄
+  (setq lsp-grammarly-suggestions-possibly-biased-language-age-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-disability-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-family-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-gender-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-human-rights nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-human-rights-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-lgbtqia-related nil)
+  (setq lsp-grammarly-suggestions-possibly-biased-language-race-ethnicity-related nil)
+  (setq lsp-grammarly-suggestions-possibly-politically-incorrect-language nil))
 #+end_src
 
 * prose
@@ -5942,10 +6046,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
    "s-k" 'markdown-insert-link
    "s-l" 'markdown-mode-extras-insert-locator
    "s-p" 'markdown-preview
-   "s-r" 'markdown-mode-extras-remove-url-in-link
-   "s-v") ; should convert from html, mirroring the org binding
-  ((ghm-mode-map markdown-mode-map org-mode-map)
-   "H-s-v" 'markdown-mode-extras-org-paste-dwim)
+   "s-r" 'markdown-mode-extras-remove-url-in-link)
   (gfm-mode-map
    "s-a" 'markdown-insert-gfm-code-block
    "s-z" 'markdown-edit-code-block))
@@ -6174,7 +6275,7 @@ To populate the database of historical prices:
 :END:
 
 
-/[[file:extras/ledger-mode-extras.el][ledger-mode-extras]] collects my extensions for ~ledger-mode~
+/[[file:extras/ledger-mode-extras.el][ledger-mode-extras]] collects my extensions for ~ledger-mode~./
 
 #+begin_src emacs-lisp
 (use-personal-package ledger-mode-extras
@@ -6219,6 +6320,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 :ID:       5EDD6F28-3299-4D90-83E1-C7476176277D
 :END:
 
+
 #+begin_src emacs-lisp
 (use-package tlon-babel
   :elpaca (tlon-babel
@@ -6236,7 +6338,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
     magit-status-mode-map)
-   "," 'tlon-babel-ogh-visit-counterpart-or-capture)
+   "," 'tlon-babel-visit-counterpart-or-capture)
   (magit-status-mode-map
    "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
@@ -6452,7 +6554,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 :END:
 
 
-/[[file:extras/pdf-tools-extras.el][pdf-tools-extras]] collects my extensions for ~pdf-tools~.
+/[[file:extras/pdf-tools-extras.el][pdf-tools-extras]] collects my extensions for ~pdf-tools~./
 
 #+begin_src emacs-lisp
 (use-personal-package pdf-tools-extras
@@ -6607,17 +6709,6 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
   (setq emacs-lisp-docstring-fill-column nil))
 #+end_src
 
-** lisp
-:PROPERTIES:
-:ID:       38BDC170-9B9D-4694-960F-4B746EEC9FD6
-:END:
-
-#+begin_src emacs-lisp
-(use-feature lisp
-  :general
-  ("A-C-H-j" 'mark-sexp))
-#+end_src
-
 ** s
 :PROPERTIES:
 :ID:       127B298B-BD3E-42BD-8032-D20B29075DA0
@@ -6752,7 +6843,7 @@ This needs to be configured.
 
 #+begin_src emacs-lisp
 (use-package json-mode
-  :demand t)
+  :defer 10)
 #+end_src
 
 ** csv-mode
@@ -6818,6 +6909,20 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
    "A-C-s-f" 'puni-end-of-sexp
    "A-C-H-j" 'puni-mark-sexp-at-point
    "A-C-H-k" 'puni-mark-sexp-around-point))
+#+end_src
+
+** project
+:PROPERTIES:
+:ID:       A8E52422-BB0D-410B-A497-64BB2AC5576D
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/project.el][project]] provides various functions for dealing with projects./
+
+#+begin_src emacs-lisp
+(use-feature project
+  :general
+  ((emacs-lisp-mode-map)
+   "s-r" 'project-query-replace-regexp))
 #+end_src
 
 ** hideshow
@@ -6927,7 +7032,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   (setq copilot-max-char 1000000)
 
   (add-hook 'prog-mode-hook (lambda ()
-                              (unless (eq major-mode 'dsssl-mode)
+                              (unless (derived-mode-p 'dsssl-mode)
                                 (copilot-mode))))
   (add-hook 'copilot-mode-hook (lambda ()
                                  (setq-local copilot--indent-warning-printed-p t)))
@@ -7435,17 +7540,17 @@ By considering both tasks completed and their associated priorities.
 (use-personal-package org-extras
   :after org oc
   :demand t
-  :init
+  :config
   (setq org-extras-agenda-switch-to-agenda-current-day-timer
         (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
 
-  :config
   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter org-extras-clocktable-sorter))
 
   (add-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
 
   :general
-  ("H-l" 'org-extras-dispatch)
+  ("H-l" 'org-extras-dispatch
+  "H-;" 'org-extras-tlon-dispatch)
   (org-mode-map
    "s-<return>" 'org-extras-super-return
    "A-C-s-n" 'org-extras-jump-to-first-heading
@@ -7522,7 +7627,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 
 #+begin_src emacs-lisp :results silent
 (use-feature org-agenda
-  :after org
+  :after org simple-extras
   :demand t
   :init
   (setq org-agenda-hide-tags-regexp "project")
@@ -7619,7 +7724,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "s" 'org-agenda-schedule
    "W" 'org-agenda-refile
    "X" 'org-agenda-exit
-   ;; "x" (lambda! (org-agenda-log-mode 'clockcheck))
+   "x" (lambda! (org-agenda-log-mode 'clockcheck))
    "y" 'org-agenda-day-view
    "z" 'org-agenda-undo))
 #+end_src
@@ -7822,6 +7927,11 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
    "H-o" 'org-clock-out))
 #+end_src
 
+*** TODO Find a way to restore the org-clock when refreshing the tab bar
+:PROPERTIES:
+:ID:       91C2D236-79B7-470A-B667-D200CCA92A9D
+:END:
+Examine ~org-clock-update-mode-line~.
 ** org-clock-convenience
 :PROPERTIES:
 :ID:       1DB11C80-DE47-42EA-851A-4D35398C1005
@@ -8124,9 +8234,6 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 :ID:       6BA48DB9-1861-40A3-9811-1B5D9F0E350E
 :END:
 
-:PROPERTIES:
-:ID:       9C00589B-C296-48BA-BD7A-B50992624AB0
-:END:
 #+begin_src emacs-lisp :results silent
 (use-feature ol
   :after org
@@ -8580,7 +8687,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 #+begin_src emacs-lisp
 (use-package org-contacts
   :after org
-  :demand t
+  :defer 10
   :config
   (setq org-contacts-files `(,(file-name-concat paths-dir-tlon-repos "babel-core/contacts.org"))))
 #+end_src
@@ -8691,7 +8798,7 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
   (setq org-pomodoro-finished-sound tmr-sound-file)
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
-  (add-hook 'org-pomodoro-started-hook #'org-pomodoro-extras-format-timer)
+  (add-hook 'org-pomodoro-started-hook #'org-extras-pomodoro-format-timer)
 
   :general
   ("H-I" 'org-pomodoro
@@ -8900,7 +9007,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-roam)
 (use-personal-package org-roam-extras
   :after org-roam
-  :demand t
+  :defer 5
   :config
   ;; exclude headings in specific files and directories
   (setq org-roam-file-exclude-regexp
@@ -9005,7 +9112,7 @@ CLOCK: [2021-12-14 Tue 19:46]--[2021-12-14 Tue 20:06] =>  0:20
 
 /[[https://github.com/d12frosted/vulpea][vulpea]] is a collection of functions for note taking based on ~org~ and ~org-roam~./
 
-I use this package to define a dynamic agenda, as explained and illustrated [[d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html][here]]. I've made some changes to the system in that link, specifically to exclude files and directories at various stages:
+I use this package to define a dynamic agenda, as explained and illustrated [[https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html][here]]. I've made some changes to the system in that link, specifically to exclude files and directories at various stages:
 1. At the broadest level, I exclude files and directories from the function (~org-extras-id-auto-add-ids-to-headings-in-file~) that otherwise automatically adds an ID to every org heading in a file-visiting buffer. Headings so excluded are not indexed by org-roam, because a heading requires an ID to be indexed. See the variables ~org-extras-id-auto-add-excluded-files~ and ~org-extras-id-auto-add-excluded-directories~ under the ~org-id~ section of this file.
 2. I then exclude some headings with IDs from the org-roam database (via the variables  ~org-roam-file-exclude-regexp~ and ~org-roam-db-node-include-function~). See the ~org-roam~ section of this file.
 3. Finally, I selectively add to ~org-agenda-files~ files that satisfy certain conditions (as defined by ~vulpea-extras-project-p~) and files modified recently (as specified by ~org-roam-extras-recent~), and exclude from ~org-agenda-files~ files listed in ~org-extras-agenda-files-excluded~.
@@ -9464,7 +9571,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
                            :annotate #'citar-org-roam--annotate))
   (setq citar-notes-source 'orb-citar-source)
 
-  (tlon-init-override-code-if-available
+  (tlon-init-override-code
    :citar-keybindings
    '((general-define-key
       "H-/" 'citar-insert-citation
@@ -9686,7 +9793,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 #+begin_src emacs-lisp :results silent
 (use-package ebib
-  :demand t
+  :defer 5
   :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
@@ -9858,6 +9965,7 @@ The macro below generates the commands correctly. But attempting to define key b
            :host github
            :repo "benthamite/bib"
            :depth nil) ; clone entire repo, not just last commit
+  :after tlon-core
   :defer 5
   :config
   (setq bib-isbndb-key
@@ -9869,9 +9977,8 @@ The macro below generates the commands correctly. But attempting to define key b
 
   :general
   (ebib-index-mode-map
-   "t" 'bib-zotra-add-entry-from-title))
+   "t" 'bib-add-entry))
 #+end_src
-
 
 ** biblio
 :PROPERTIES:
@@ -9965,7 +10072,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :elpaca (internet-archive
            :host github
            :repo "benthamite/internet-archive")
-  :demand t
+  :defer 10
   :config
   (setq internet-archive-ade-close-when-done t)
   (add-hook 'internet-archive-protocol-hook #'frame-extras-restore-focus))
@@ -10209,6 +10316,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                 :depth nil)
   :demand t
   :config
+  (require 'mu4e-contrib)
   ;; (mu4e-debug t) ; uncomment when debugging
   (setq mu4e-split-view 'single-window)
   (setq mu4e-headers-show-target nil)
@@ -12049,7 +12157,7 @@ Disabling because it interferes with [[https://emacs.stackexchange.com/questions
   :demand t
   :config
   (setq custom-safe-themes t)
-  (setq custom-file (file-name-concat paths-dir-downloads "delete.me"))) ; move unintended customizations to a garbage file
+  (setq custom-file (make-temp-file "gone-baby-gone"))) ; move unintended customizations to a garbage file
 #+end_src
 
 ** fatebook

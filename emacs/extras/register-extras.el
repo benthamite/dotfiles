@@ -31,6 +31,12 @@
 
 ;;;; Functions
 
+(defun register-extras-kill-to-register (text register)
+  "Copy TEXT from the kill ring to REGISTER."
+  (interactive (list (read-from-kill-ring "Kill to store: ")
+		     (register-read-with-preview "Register: ")))
+  (set-register register text))
+
 (transient-define-prefix register-extras-dispatch ()
   "Dispatch a `register' command."
   [["region"

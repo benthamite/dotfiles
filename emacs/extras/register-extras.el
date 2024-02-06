@@ -40,27 +40,31 @@
 (transient-define-prefix register-extras-dispatch ()
   "Dispatch a `register' command."
   [["region"
-    ("a" "append region" append-to-register)
-    ("c" "copy region" copy-to-register)
-    ("p" "prepend region" prepend-to-register)]
+    ("a" "append" append-to-register)
+    ("c" "copy" copy-to-register)
+    ("p" "prepend" prepend-to-register)]
    ["number"
-    ("n" "store number" number-to-register)
-    ("t" "increment number" increment-register)]
+    ("n" "store" number-to-register)
+    ("t" "increment" increment-register)]
+   ["kill ring"
+    ("k" "store" register-extras-kill-to-register)]
+   ["kmacro"
+    ("m" "store" kmacro-to-register)]
+   ["rectangle"
+    ("r" "copy" copy-rectangle-to-register)]
+   ["window/frame config"
+    ("f" "store frame" frameset-to-register)
+    ("w" "store window" window-configuration-to-register)
+    ("W" "store all windows" frame-configuration-to-register)]
    ["navigation"
     ("j" "jump" jump-to-register)
     ("o" "store point" point-to-register)]
-   ["window"
-    ("f" "store frame config" frameset-to-register)
-    ("w" "store window config" window-configuration-to-register)
-    ("W" "store all window configs" frame-configuration-to-register)]
-   ["view"
+   ["display"
     ("h" "consult" consult-register)
     ("l" "list" list-registers)
     ("v" "view" view-register)]
-   ["misc"
-    ("i" "insert contents" insert-register)
-    ("k" "store last" kmacro-to-register)
-    ("r" "copy rectangle" copy-rectangle-to-register)]
+   ["insert"
+    ("i" "insert contents" insert-register)]
    ])
 
 (provide 'register-extras)

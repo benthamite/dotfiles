@@ -7930,6 +7930,11 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
    "H-o" 'org-clock-out))
 #+end_src
 
+*** TODO Find a way to restore the org-clock when refreshing the tab bar
+:PROPERTIES:
+:ID:       91C2D236-79B7-470A-B667-D200CCA92A9D
+:END:
+Examine ~org-clock-update-mode-line~.
 ** org-clock-convenience
 :PROPERTIES:
 :ID:       1DB11C80-DE47-42EA-851A-4D35398C1005

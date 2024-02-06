@@ -6931,6 +6931,20 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
    "A-C-H-k" 'puni-mark-sexp-around-point))
 #+end_src
 
+** project
+:PROPERTIES:
+:ID:       A8E52422-BB0D-410B-A497-64BB2AC5576D
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/project.el][project]] provides various functions for dealing with projects./
+
+#+begin_src emacs-lisp
+(use-feature project
+  :general
+  ((emacs-lisp-mode-map)
+   "s-r" 'project-query-replace-regexp))
+#+end_src
+
 ** hideshow
 :PROPERTIES:
 :ID:       8E6459FA-9978-42F8-9DAC-C4D7FB385F97

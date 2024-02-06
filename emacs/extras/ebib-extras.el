@@ -971,11 +971,16 @@ If applicable, open external website to set rating there as well."
       ("book" (ebib-extras-search-goodreads title))
       ("film" (ebib-extras-search-imdb title) (ebib-extras-search-letterboxd title)))
     (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db 'overwrite)
-    (ebib--update-entry-buffer)
-    (set-buffer-modified-p nil)
-    (ebib--set-modified t db t (seq-filter (lambda (dependent)
-					     (ebib-db-has-key key dependent))
-					   (ebib--list-dependents db)))))
+    (ebib-extras-update-entry-buffer db)))
+
+;; TODO: find way to do this without moving point
+(defun ebib-extras-update-entry-buffer (db)
+  "Update the entry buffer with the current entry in DB."
+  (ebib--update-entry-buffer)
+  (set-buffer-modified-p nil)
+  (ebib--set-modified t db t (seq-filter (lambda (dependent)
+					   (ebib-db-has-key key dependent))
+					 (ebib--list-dependents db))))
 
 (defun ebib-extras-choose-rating ()
   "Prompt for a rating from 1 to 10 and return the choice."
@@ -995,11 +1000,7 @@ If applicable, open external website to set rating there as well."
     (ebib-set-field-value "note"
 			  (format "No translation found on %s." (format-time-string "%Y-%m-%d"))
 			  key db)
-    (ebib--update-entry-buffer)
-    (set-buffer-modified-p nil)
-    (ebib--set-modified t db t (seq-filter (lambda (dependent)
-					     (ebib-db-has-key key dependent))
-					   (ebib--list-dependents db)))))
+    (ebib-extras-update-entry-buffer db)))
 
 (defun ebib-extras-move-entry-to-tlon ()
   "Move bibliographic entry associated with the key at point to the Tlön bibliography."
@@ -1056,11 +1057,7 @@ Fetching is done using `tlon-biblio'."
     (when (ebib-extras-get-field-value field)
       (user-error "ID field is not empty"))
     (ebib-set-field-value field id key db)
-    (ebib--update-entry-buffer)
-    (set-buffer-modified-p nil)
-    (ebib--set-modified t db t (seq-filter (lambda (dependent)
-					     (ebib-db-has-key key dependent))
-					   (ebib--list-dependents db)))))
+    (ebib-extras-update-entry-buffer db)))
 
 (defun ebib-extras-fetch-field-value (field)
   "Fetch the value of FIELD for the entry at point.
@@ -1077,11 +1074,7 @@ Fetching is done using `tlon-biblio'."
 	  (user-error "Query returned no field `%s' for the current entry" field))
 	(let ((key (ebib--get-key-at-point)))
 	  (ebib-set-field-value field value key ebib--cur-db 'overwrite)
-	  (ebib--update-entry-buffer)
-	  (set-buffer-modified-p nil)
-	  (ebib--set-modified t ebib--cur-db t (seq-filter (lambda (dependent)
-							     (ebib-db-has-key key dependent))
-							   (ebib--list-dependents ebib--cur-db)))))
+	  (ebib-extras-update-entry-buffer ebib--cur-db)))
     (user-error "No ID found for the current entry")))
 
 (defun ebib-extras-fetch-abstract ()

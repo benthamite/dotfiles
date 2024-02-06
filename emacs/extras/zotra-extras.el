@@ -111,5 +111,19 @@ Zotero-imported bibtex entries."
           (while (search-forward octal nil t)
             (replace-match char)))))))
 
+(defun zotra-extras-get-field (field url-or-search-string &optional keep-braces)
+  "Get FIELD in bibliographic entry for URL-OR-SEARCH-STRING.
+If KEEP-BRACES is non-nil, keep enclosing braces, if present."
+  (let ((entry (zotra-get-entry url-or-search-string)))
+    (with-temp-buffer
+      (insert entry)
+      (goto-char (point-min))
+      (bibtex-mode)
+      (bibtex-next-entry)
+      (when-let ((value (cdr (assoc-string field (bibtex-parse-entry)))))
+	(if keep-braces
+	    value
+	  (substring value 1 -1))))))
+
 (provide 'zotra-extras)
 ;;; zotra-extras.el ends here

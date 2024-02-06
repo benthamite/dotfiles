@@ -6047,10 +6047,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
    "s-k" 'markdown-insert-link
    "s-l" 'markdown-mode-extras-insert-locator
    "s-p" 'markdown-preview
-   "s-r" 'markdown-mode-extras-remove-url-in-link
-   "s-v") ; should convert from html, mirroring the org binding
-  ((ghm-mode-map markdown-mode-map org-mode-map)
-   "H-s-v" 'markdown-mode-extras-org-paste-dwim)
+   "s-r" 'markdown-mode-extras-remove-url-in-link)
   (gfm-mode-map
    "s-a" 'markdown-insert-gfm-code-block
    "s-z" 'markdown-edit-code-block))

@@ -852,6 +852,7 @@ The list of article download functions is specified by
     (goto-char (point-max))
     (forward-line -1)))
 
+(declare-function zotra-extras-set-bibfile "zotra-extras")
 (defun ebib-extras-duplicate-entry ()
   "Duplicate the current entry."
   (interactive)

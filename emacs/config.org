@@ -7723,7 +7723,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "s" 'org-agenda-schedule
    "W" 'org-agenda-refile
    "X" 'org-agenda-exit
-   ;; "x" (lambda! (org-agenda-log-mode 'clockcheck))
+   "x" (lambda! (org-agenda-log-mode 'clockcheck))
    "y" 'org-agenda-day-view
    "z" 'org-agenda-undo))
 #+end_src

@@ -6059,7 +6059,6 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 :ID:       856FDF94-95B6-49EB-A6D5-B95F0A53384A
 :END:
 
-
 /[[file:extras/markdown-mode-extras.el][markdown-mode-extras]] collects my extensions for ~markdown-mode~./
 
 #+begin_src emacs-lisp

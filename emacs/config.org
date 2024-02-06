@@ -980,7 +980,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
            :host github
            :repo "tlon-team/tlon-core"
            :depth nil) ; clone entire repo, not just last commit
-  :demand t
+  :defer 4
   :config
   (setq tlon-core-repo-dirs (expand-file-name "~/Library/CloudStorage/Dropbox/repos/"))
   (setq tlon-core-meeting-pending-id-fede "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
@@ -1406,7 +1406,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
              :repo "magit/magit"
              :ref "5ad367d7"
              :depth nil)
-  :demand t
+  :defer 5
   :config
   (setq magit-commit-ask-to-stage 'stage)
   (setq magit-clone-set-remote.pushDefault t)
@@ -1505,7 +1505,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
            :ref "5dcca0e"
            :depth nil)
   :after magit ghub emacsql auth-source-pass
-  :demand t
+  :defer 5
   :init
   (if (version<= emacs-version "29.0")
       (setq forge-database-connector 'sqlite)
@@ -3000,7 +3000,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 
 #+begin_src emacs-lisp :results silent
 (use-package yasnippet
-  :demand t
+  :defer 5
   :config
   (setq yas-snippet-dirs (list paths-dir-yasnippets
                                paths-dir-yasnippets-private
@@ -4212,7 +4212,7 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 
 #+begin_src emacs-lisp :results silent
 (use-package ace-link
-  :demand t
+  :defer 5
   :general
   ((eww-mode-map elfeed-show-mode-map)
    "f" 'ace-link-eww)
@@ -6777,7 +6777,7 @@ This needs to be configured.
 
 #+begin_src emacs-lisp
 (use-package json-mode
-  :demand t)
+  :defer 10)
 #+end_src
 
 ** csv-mode
@@ -8602,7 +8602,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 #+begin_src emacs-lisp
 (use-package org-contacts
   :after org
-  :demand t
+  :defer 10
   :config
   (setq org-contacts-files `(,(file-name-concat paths-dir-tlon-repos "babel-core/contacts.org"))))
 #+end_src
@@ -8915,7 +8915,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-roam)
 (use-personal-package org-roam-extras
   :after org-roam
-  :demand t
+  :defer 5
   :config
   ;; exclude headings in specific files and directories
   (setq org-roam-file-exclude-regexp
@@ -9701,7 +9701,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 #+begin_src emacs-lisp :results silent
 (use-package ebib
-  :demand t
+  :defer 5
   :init
   (add-hook 'tlon-babel-post-init-hook
             (lambda ()
@@ -9873,6 +9873,7 @@ The macro below generates the commands correctly. But attempting to define key b
            :host github
            :repo "benthamite/bib"
            :depth nil) ; clone entire repo, not just last commit
+  :after tlon-core
   :defer 5
   :config
   (setq bib-isbndb-key
@@ -9980,7 +9981,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :elpaca (internet-archive
            :host github
            :repo "benthamite/internet-archive")
-  :demand t
+  :defer 10
   :config
   (setq internet-archive-ade-close-when-done t)
   (add-hook 'internet-archive-protocol-hook #'frame-extras-restore-focus))

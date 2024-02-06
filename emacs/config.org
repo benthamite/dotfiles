@@ -3485,7 +3485,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
   (put 'dired-find-alternate-file 'disabled nil) ; do not disable dired-find-alternate-file!
 
 
-  (add-hook 'dired-mode-hook #'dired-hide-details-mode) ; hide details by default
+  (add-hook 'dired-mode-hook #'dired-hide-details-mode)
   (add-hook 'dired-mode-hook (lambda () (visual-line-mode -1)))
 
   :general

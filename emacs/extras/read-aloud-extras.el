@@ -40,7 +40,7 @@
   :type 'integer
   :group 'read-aloud-extras)
 
-(defcustom read-aloud-extras-rate-change 25
+(defcustom read-aloud-extras-rate-change 10
   "The magnitude of the rate increment or decrement."
   :type 'integer
   :group 'read-aloud-extras)

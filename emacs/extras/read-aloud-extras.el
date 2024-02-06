@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(require 'el-patch)
 (require 'read-aloud)
 
 ;;;; User options

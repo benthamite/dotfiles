@@ -2037,6 +2037,9 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :after doom-modeline
   :demand t
   :config
+  (setq doom-modeline-github t)
+  (setq doom-modeline-github-interval (* 1 60))
+  (setq doom-modeline-github nil)
   (doom-modeline-mode))
 #+end_src
 

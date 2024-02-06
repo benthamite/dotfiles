@@ -1183,6 +1183,19 @@ exceeded, only the first author will be listed, followed by \" et al\"."
 	(format "%s et al" (car authors))
       (mapconcat 'identity authors separator))))
 
+(declare-function zotra-extras-get-field "zotra-extras")
+(defun ebib-extras-update-field (&optional field keep-braces)
+  "Update FIELD in entry at point.
+If FIELD is nil, update the field at point. If KEEP-BRACES is non-nil, do not
+remove braces from the field value."
+  (interactive)
+  (when-let* ((id-or-url (ebib-extras-get-id-or-url))
+	      (field (or field (ebib--current-field)))
+	      (value (zotra-extras-get-field field id-or-url keep-braces)))
+    (ebib-set-field-value
+     field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
+    (ebib-extras-update-entry-buffer ebib--cur-db)))
+
 ;;;;; Patched functions
 
 ;; prevent unnecessary vertical window splits

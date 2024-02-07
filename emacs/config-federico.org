@@ -287,6 +287,51 @@ Doom modeline
   ("s" (dired paths-dir-google-drive-tlon-FM) "FM")
   ("u" (dired paths-dir-google-drive-tlon-EAN) "EAN"))
 
+(transient-define-prefix dired-fedes-dispatch ()
+  "Fede's version of Pablo's dispatcher."
+  ["Dired folders"
+   [("d" "dotfiles" (lambda () (interactive) (dired paths-dir-dotfiles)))
+    ("e" "emacs: current profile dir" (lambda () (interactive) (dired paths-dir-emacs)))
+    ("p" "emacs: profiles" (lambda () (interactive) (dired (file-name-concat (getenv "HOME") ".config/emacs-profiles"))))
+    ("s" "source" (lambda () (interactive) (dired (file-name-concat (getenv "HOME") "source"))))
+    ("v" "movies" (lambda () (interactive) (dired paths-dir-movies)))
+    ("w" "downloads" (lambda () (interactive) (dired paths-dir-downloads)))
+    ("x" "Dropbox" (lambda () (interactive) (dired paths-dir-dropbox)))
+    ("z" "Google Drive" (lambda () (interactive) (dired paths-dir-google-drive)))]
+
+   ["Special"
+    ("." "File at point" (lambda () (interactive) (dired-at-point)))
+    ("/" "Root" (lambda () (interactive) (dired "/")))
+    ("SPC" "user" (lambda () (interactive) (dired "~/")))
+    (";" "Current buffer" dired-jump)
+    ("H-;" "Current buffer in other window" dired-jump-other-window)]
+
+   ["System config"
+    ("n" "Local ningx config" (lambda () (interactive) (dired "/opt/homebrew/etc/nginx/sites-available/")))
+    ("w" "nginx home" (lambda () (interactive) (dired (file-name-concat (getenv "HOME") "www"))))]
+
+   ["DigitalOcean"
+    ("N" "/config/nginx/sites-available" (lambda () (interactive) (dired "/ssh:root@tlon.team:/etc/nginx/sites-available/")))
+    ("H" "/home/fede" (lambda () (interactive) (dired "/ssh:fede@tlon.team:/home/fede")))]
+
+   ["Tlön: Dropbox"
+    ("b" "Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
+    ("n" "EAN" (lambda () (interactive) (dired paths-dir-dropbox-tlon-EAN)))
+    ("m" "FM" (lambda () (interactive) (dired paths-dir-dropbox-tlon-FM)))
+    ("g" "GPE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-GPE)))
+    ("h" "HEAR" (lambda () (interactive) (dired paths-dir-dropbox-tlon-HEAR)))
+    ("d" "LBDLH" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LBDLH)))
+    ("p" "LP" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LP)))
+    ("r" "RAE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-RAE)))
+    ("t" "tlon" (lambda () (interactive) (dired paths-dir-dropbox-tlon)))
+    ("c" "core" (lambda () (interactive) (dired paths-dir-dropbox-tlon-core)))
+    ("f" "fede" (lambda () (interactive) (dired paths-dir-dropbox-tlon-fede)))
+    ("l" "leo" (lambda () (interactive) (dired paths-dir-dropbox-tlon-leo)))
+    ]
+   ["Tlön: Drive"
+    ("H-b" "Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))]])
+
+
 (general-define-key
  "<kp-delete>" 'delete-char
  "<home>" 'beginning-of-line
@@ -295,6 +340,7 @@ Doom modeline
  "H-w" 'files-extras-kill-this-buffer
  "H-k" 'hydra-org-work/body
  "H-o" 'find-file
+ "H-d" 'dired-fedes-dispatch
  "H-/" 'comment-line
  "H-\\" 'window-extras-split-if-unsplit
  "H-;" 'hydra-org-work/body

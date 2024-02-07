@@ -3,9 +3,7 @@
   '(
     ("!?" "‽" nil :count 0)
     ("?!" "‽" nil :count 0)
-    ("Ziplock" "Ziploc" nil :count 0)
     ("atb" "All the best" nil :count 51)
-    ("espeíficcamente" "específicamente" nil :count 0)
     ("ty" "thank you" nil :count 1)
     ("xxx" "×" nil :count 1)
     ("¡¿" "⸘" nil :count 0)

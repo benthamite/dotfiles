@@ -59,7 +59,7 @@
 TODO entries marked as done are ignored, meaning the this
 function returns nil if current buffer contains only completed
 tasks."
-  (when (and (eq major-mode 'org-mode)
+  (when (and (derived-mode-p 'org-mode)
 
              ;; exclude dirs
              (not (member (file-name-directory (buffer-file-name))
@@ -83,7 +83,7 @@ tasks."
 
 (defun vulpea-extras-anniversary-p ()
   "Return non-nil if current buffer has an anniversary."
-  (when (eq major-mode 'org-mode)
+  (when (derived-mode-p 'org-mode)
     (save-excursion
       (goto-char (point-min))
       (search-forward "%%(org-anniversary" nil t))))

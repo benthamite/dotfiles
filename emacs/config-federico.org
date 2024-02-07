@@ -63,12 +63,11 @@
  (paths-dir-music . (file-name-concat paths-dir-google-drive "Music/"))
  (paths-dir-movies . (file-name-concat paths-dir-google-drive "Movies/"))
  (paths-dir-dotfiles . (file-name-concat (getenv "HOME") "source/dotfiles/"))
- (paths-dir-source . (file-name-concat (getenv "HOME") "source/"))
- (paths-dir-repos . (file-name-concat (getenv "HOME") "source/"))
- (paths-dir-tlon-repos . (file-name-concat (getenv "HOME") "source/"))
+ (paths-dir-external-repos . (file-name-concat (getenv "HOME") "source/"))
+ (paths-dir-tlon-repos . paths-dir-external-repos)
  (paths-dir-org . (file-name-concat paths-dir-dropbox "tlon/fede/"))
  (paths-dir-org-roam . (file-name-concat paths-dir-dropbox "tlon/fede/"))
- (paths-dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat paths-dir-source "biblioteca-altruismo-eficaz/"))
+ (paths-dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat paths-dir-tlon-repos "biblioteca-altruismo-eficaz/"))
  (paths-dir-org-roam . "")
  (paths-dir-org-images . (file-name-concat paths-dir-google-drive "org-images/"))
  (paths-dir-websites . "")
@@ -179,6 +178,9 @@ Doom modeline
 
 ;; remove Pablo's org-roam auto add ids
 ;; (remove-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
+
+;; remove Pablo’s org-agenda timer
+(cancel-timer org-extras-agenda-switch-to-agenda-current-day-timer)
 
 (message "Loading fede's custom faces:")
 (recentf-mode)
@@ -338,12 +340,12 @@ Doom modeline
  "<end>" 'end-of-line
  "H-q" 'delete-window
  "H-w" 'files-extras-kill-this-buffer
- "H-k" 'hydra-org-work/body
+ "H-k" 'org-extras-work-dispatch
  "H-o" 'find-file
  "H-d" 'dired-fedes-dispatch
  "H-/" 'comment-line
  "H-\\" 'window-extras-split-if-unsplit
- "H-;" 'hydra-org-work/body
+ "H-;" 'org-extras-work-dispatch
  "H-g" nil
  "H-h" 'other-window
  "H-H" 'window-extras-buffer-move-dwim

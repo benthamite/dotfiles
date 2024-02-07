@@ -27,8 +27,6 @@
 
 ;;; Code:
 
-(require 'tlon-init)
-
 ;;;; User options
 
 (defgroup paths ()
@@ -211,20 +209,31 @@
   :type 'directory
   :group 'paths)
 
+(defcustom paths-dir-dotemacs
+  (let ((dir (pcase (getenv "HOME")
+	       ("/Users/pablostafforini" "Library/CloudStorage/Dropbox/dotfiles/emacs/")
+	       ("/Users/fede" "source/dotfiles/emacs/")
+	       ("/Users/cartago" "source/dotfiles/emacs/")
+	       (_ (user-error "Home directory does not match that of a known user")))))
+    (file-name-concat (getenv "HOME") dir))
+  "Path to the \"emacs\" directory in Pablo’s \"dotfiles\" repo."
+  :type 'directory
+  :group 'paths)
+
 (defcustom paths-dir-yasnippets
-  (file-name-concat tlon-init-dir-dotemacs "yasnippets/")
+  (file-name-concat paths-dir-dotemacs "yasnippets/")
   "Path to the Yasnippets directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-yasnippets-private
-  (file-name-concat tlon-init-dir-dotemacs "yasnippets-private/")
+  (file-name-concat paths-dir-dotemacs "yasnippets-private/")
   "Path to the private Yasnippets directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-abbrev
-  (file-name-concat tlon-init-dir-dotemacs "abbrev/")
+  (file-name-concat paths-dir-dotemacs "abbrev/")
   "Path to the abbrev directory."
   :type 'directory
   :group 'paths)
@@ -277,14 +286,49 @@
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-source
+(defcustom paths-dir-external-repos
   (file-name-concat (expand-file-name "~") "source/")
-  "Path to the source repos directory."
+  "Path to the external repositories directory.
+This is where the repositories that are neither personal
+repositories (`paths-dir-personal-repos') nor Tlön
+repositories(`paths-dir-tlon-repos') will be cloned. If you clone all
+repositories in the same directory, all these variables will have the same
+value."
+  :type 'directory
+  :group 'paths)
+
+(defcustom paths-dir-tlon-repos
+  (file-name-concat paths-dir-dropbox "repos/")
+  "Path to the Tlön repositories directory."
+  :type 'directory
+  :group 'paths)
+
+(defcustom paths-dir-personal-repos
+  (file-name-concat paths-dir-dropbox "repos/")
+  "Path to the personal repositories directory."
+  :type 'directory
+  :group 'paths)
+
+(defcustom paths-dir-split-git
+  (file-name-concat (expand-file-name "~") "git-dirs/")
+  "Path to the \".git\" directory in split repos."
+  :type 'directory
+  :group 'paths)
+
+(defcustom paths-dir-clock-reports
+  (file-name-concat paths-dir-tlon-repos "clock-reports/")
+  "Path to the `clock-reports' directory."
+  :type 'directory
+  :group 'paths)
+
+(defcustom paths-dir-tlon-docs
+  (file-name-concat paths-dir-tlon-repos "tlon-docs/")
+  "Path to the `tlon-docs' repo directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-translation-server
-  (file-name-concat paths-dir-source "translation-server/")
+  (file-name-concat paths-dir-external-repos "translation-server/")
   "Path to the the `translation-server' directory."
   :type 'directory
   :group 'paths)
@@ -469,36 +513,6 @@
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-tlon-repos
-  (file-name-concat paths-dir-dropbox "repos/")
-  "Directory where the Tlön repositories are stored."
-  :type 'directory
-  :group 'paths)
-
-(defcustom paths-dir-repos
-  (file-name-concat paths-dir-dropbox "repos/")
-  "Path to the Dropbox repos directory."
-  :type 'directory
-  :group 'paths)
-
-(defcustom paths-dir-clock-repos
-  (file-name-concat paths-dir-repos "clock-reports/")
-  "Path to the `clock-reports' directory."
-  :type 'directory
-  :group 'paths)
-
-(defcustom paths-dir-tlon-babel
-  (file-name-concat paths-dir-repos "babel/")
-  "Path to the `tlon-babel' repo directory."
-  :type 'directory
-  :group 'paths)
-
-(defcustom paths-dir-tlon-docs
-  (file-name-concat paths-dir-repos "tlon-docs/")
-  "Path to the `tlon-docs' repo directory."
-  :type 'directory
-  :group 'paths)
-
 (defcustom paths-dir-org
   paths-dir-dropbox
   "Path to the directory containing your org files.
@@ -560,6 +574,18 @@ This should be the path you set `org-roam-directory' to."
   :type 'directory
   :group 'paths)
 
+(defcustom paths-dir-tlon-csl-styles
+  (file-name-concat paths-dir-tlon-repos "babel-refs/styles/")
+  "Path to the Tlön CSL styles directory."
+  :type 'directory
+  :group 'paths)
+
+(defcustom paths-dir-tlon-csl-locales
+  (file-name-concat paths-dir-tlon-repos "babel-refs/locales/")
+  "Path to the Tlön CSL locales directory."
+  :type 'directory
+  :group 'paths)
+
 ;;;;; Files
 
 (defcustom paths-file-notes
@@ -605,7 +631,7 @@ This should be the path you set `org-roam-directory' to."
   :group 'paths)
 
 (defcustom paths-file-config
-  (file-name-concat tlon-init-dir-dotemacs "config.org")
+  (file-name-concat paths-dir-dotemacs "config.org")
   "Path to the `org-mode' config file."
   :type 'file
   :group 'paths)

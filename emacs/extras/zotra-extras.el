@@ -29,12 +29,12 @@
 
 (require 'bibtex-extras)
 (require 'doi-utils)
-;; (require 'ebib-extras) ; recusrive
+(require 'ebib-extras)
 (require 'ebib-utils)
 (require 'eww-extras)
 (require 'paths)
 (require 'tlon-babel-refs)
-(require 'zotra) ; recursive
+(require 'zotra)
 
 ;;;; Functions
 
@@ -95,10 +95,10 @@ ORIG-FUN, URL, ENTRY-FORMAT, and BIBFILE are arguments passed to
     (eww-extras-url-to-pdf url)
     (eww-extras-url-to-html url)))
 
-;; Remarkably, this is needed because Emacs can't decode certain octal
-;; sequences in Zotero-imported bibtex entries
 (defun zotra-extras-fix-octal-sequences ()
-  "Replace octal sequences with corresponding characters."
+  "Replace octal sequences with corresponding characters.
+Remarkably, this is needed because Emacs can't decode certain octal sequences in
+Zotero-imported bibtex entries."
   (save-excursion
     (dotimes (i 79)
       (dolist  (pattern '("\"\\302\\%o\""
@@ -110,6 +110,20 @@ ORIG-FUN, URL, ENTRY-FORMAT, and BIBFILE are arguments passed to
           (goto-char (point-min))
           (while (search-forward octal nil t)
             (replace-match char)))))))
+
+(defun zotra-extras-get-field (field url-or-search-string &optional keep-braces)
+  "Get FIELD in bibliographic entry for URL-OR-SEARCH-STRING.
+If KEEP-BRACES is non-nil, keep enclosing braces, if present."
+  (let ((entry (zotra-get-entry url-or-search-string)))
+    (with-temp-buffer
+      (insert entry)
+      (goto-char (point-min))
+      (bibtex-mode)
+      (bibtex-next-entry)
+      (when-let ((value (cdr (assoc-string field (bibtex-parse-entry)))))
+	(if keep-braces
+	    value
+	  (substring value 1 -1))))))
 
 (provide 'zotra-extras)
 ;;; zotra-extras.el ends here

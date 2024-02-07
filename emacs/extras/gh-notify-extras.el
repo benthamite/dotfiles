@@ -33,6 +33,17 @@
 (require 'paths)
 (require 'w3m)
 
+;;;; User options
+
+(defgroup gh-notify-extras ()
+  "Extensions for `gh-notify'."
+  :group 'gh-notify)
+
+(defcustom gh-notify-extras-repos paths-dir-tlon-repos
+  "Directory where the repositories are stored."
+  :type 'directory
+  :group 'gh-notify-extras)
+
 ;;;; Functions
 
 ;; TODO: check that this is programmed correctly
@@ -113,7 +124,7 @@ ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
   "Visit the notification at point and mark it as read if unread.
 Browse issue or PR on prefix P."
   (interactive "P")
-  (let ((default-directory paths-dir-repos)
+  (let ((default-directory gh-notify-extras-repos)
 	(unread (eq (get-text-property (point) 'face)
 		    'gh-notify-notification-unread-face)))
     (gh-notify-visit-notification P)
@@ -136,7 +147,7 @@ Browse issue or PR on prefix P."
   (interactive)
   (let ((buf (get-buffer-create "*github-notifications*")))
     (set-buffer buf)
-    (unless (eq major-mode 'gh-notify-mode)
+    (unless (derived-mode-p 'gh-notify-mode)
       (gh-notify-mode)))
   (gh-notify-forge-refresh))
 

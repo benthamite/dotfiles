@@ -8,6 +8,23 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** multiple-cursors
+:PROPERTIES:
+:ID:       E3F6EB63-D6C1-474C-9129-B6424852EEC8
+:END:
+:LOGBOOK:
+CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:17] =>  0:00
+:END:
+
+/[[https://github.com/magnars/multiple-cursors.el][multiple-cursors]] supports multiple cursors in Emacs./
+
+[2024-02-02 Fri] Instead of multiple cursors I basically always use kmacros.
+#+begin_src emacs-lisp :results silent
+(use-package multiple-cursors
+  :general
+  ("M-m" 'mc/mark-pop))
+#+end_src
+
 ** use-package-ensure-system-package
 :PROPERTIES:
 :ID:       5C17424A-4950-4745-B7FD-F0CACEB48AFB
@@ -205,73 +222,6 @@ This package is required by lsp-grammarly.
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :keytar)
 (use-package keytar
-  :defer 10)
-#+end_src
-
-** lsp-grammarly
-:PROPERTIES:
-:ID:       2D0C20F1-1CE6-45F9-AA4B-46FB02DD0271
-:END:
-:LOGBOOK:
-CLOCK: [2022-09-29 Thu 18:50]--[2022-09-29 Thu 21:20] =>  2:30
-CLOCK: [2021-11-27 Sat 21:56]--[2021-11-27 Sat 22:48] =>  0:52
-CLOCK: [2021-11-27 Sat 19:44]--[2021-11-27 Sat 20:17] =>  0:33
-CLOCK: [2021-11-27 Sat 19:23]--[2021-11-27 Sat 19:26] =>  0:03
-CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
-:END:
-
-/[[https://github.com/emacs-grammarly/lsp-grammarly][lsp-grammarly]] is an lsp-mode for Grammarly./
-
-[2022-10-06 Thu 23:35] At the moment, the premium version isn't working. The package maintainers are migrating to to a new server, which may resolve the issues I was having authenticating my account. You can check whether the premium account is being used by evaluating ~(grammarly-premium-p)~.
-
-[2023-11-16 Thu] No longer using ~grammarly~.
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :spelling)
-(use-package lsp-grammarly
-  :after lsp-mode keytar grammarly
-  :demand t
-
-  :config
-  (setq lsp-grammarly-suggestions-split-infinitive nil)
-  (setq lsp-grammarly-suggestions-preposition-at-the-end-of-sentence nil)
-  ;; 🙄
-  (setq lsp-grammarly-suggestions-possibly-biased-language-age-related nil)
-  (setq lsp-grammarly-suggestions-possibly-biased-language-disability-related nil)
-  (setq lsp-grammarly-suggestions-possibly-biased-language-family-related nil)
-  (setq lsp-grammarly-suggestions-possibly-biased-language-gender-related nil)
-  (setq lsp-grammarly-suggestions-possibly-biased-language-human-rights nil)
-  (setq lsp-grammarly-suggestions-possibly-biased-language-human-rights-related nil)
-  (setq lsp-grammarly-suggestions-possibly-biased-language-lgbtqia-related nil)
-  (setq lsp-grammarly-suggestions-possibly-biased-language-race-ethnicity-related nil)
-  (setq lsp-grammarly-suggestions-possibly-politically-incorrect-language nil)
-
-  ;; (add-hook 'org-mode-hook
-            ;; (lambda ()
-              ;; (require 'lsp-grammarly)
-              ;; (lsp)))
-              )
-#+end_src
-
-** grammarly
-:PROPERTIES:
-:ID:       C87EAC5F-7831-469C-96FB-603397C51925
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
-:END:
-
-/[[https://github.com/emacs-grammarly/grammarly][grammarly]] is an API interface for [[https://www.grammarly.com/][Grammarly]]./
-
-[2023-11-16 Thu] It doesn’t support the paid version, so not useful to me.
-
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :spelling)
-(use-package grammarly
-  :defer 25
-  :config
-  (setq grammarly-username user-mail-address)
-  (setq grammarly-password (auth-source-pass-get 'secret (concat "chrome/grammarly.com/" user-mail-address))))
-#+end_src
-
 ** lsp-ui
 :PROPERTIES:
 :ID:       FE34C313-80BF-4095-B2F0-6228041DFCFF
@@ -288,34 +238,7 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
   :config
   (setq lsp-ui-doc-show-with-cursor t)) ; move the cursor over a symbol to show its documentation
 #+end_src
-
-** lsp-mode
-:PROPERTIES:
-:ID:       E9D2E6CA-5256-4776-801F-13281BD390C9
-:END:
-/[[https://github.com/emacs-lsp/lsp-mode][lsp-mode]] is an Emacs client/library for the Language Server Protocol./
-
-Useful: [[https://emacs-lsp.github.io/lsp-mode/tutorials/how-to-turn-off/][A guide on disabling/enabling lsp-mode features - LSP Mode - LSP support for Emacs]]
-
-[2023-11-16 Thu] I was only using this with ~grammarly~, but since that package is not supporting the paid version, I am now replacing it with ~flycheck-languagetool~. Hence I no longer have a need for this package.
-
-#+begin_src emacs-lisp :results silent
-(use-package lsp-mode
-  :defer 7
-  :config
-  (setq lsp-warn-no-matched-clients nil)
-  (setq lsp-headerline-breadcrumb-enable nil)
-
-  (defun ps/lsp-toggle ()
-    "Connect/disconnect to lsp server."
-    (interactive)
-    (if (or (not lsp-mode)
-            (equal lsp-mode '(lsp-enable-which-key-integration)))
-        (lsp)
-      (lsp-disconnect)))
-
-  ;; (add-hook 'org-mode-hook #'lsp)
-  (add-hook 'lsp-mode #'lsp-enable-which-key-integration))
+  :defer t)
 #+end_src
 
 ** google-this

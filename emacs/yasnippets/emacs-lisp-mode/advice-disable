@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: advice-disable
+# key: ad
+# contributor: Pablo Stafforini
+# --
+(advice-add '$1 :around #'ignore)

@@ -29,6 +29,7 @@
 
 (require 'dired)
 (require 'el-patch)
+(require 'gnus-dired)
 (require 'paths)
 
 ;;;; Variables
@@ -47,7 +48,7 @@
 (defun dired-extras-dotfiles-toggle ()
   "Show/hide dot-files."
   (interactive)
-  (when (equal major-mode 'dired-mode)
+  (when (derived-mode-p 'dired-mode)
     (if dired-extras-show-dotfiles-p
 	(progn
 	  (setq dired-extras-show-dotfiles-p nil)
@@ -157,7 +158,7 @@ losing the `put back' option."
       (save-excursion
 	(dolist (buffer (buffer-list t))
 	  (set-buffer buffer)
-	  (when (eq major-mode 'mail-mode)
+	  (when (derived-mode-p 'mail-mode)
 	    (push (buffer-name buffer) buffers))))
       (nreverse buffers))))
 
@@ -166,7 +167,6 @@ losing the `put back' option."
 (transient-define-prefix dired-extras-dispatch ()
   "Dispatcher for Dired."
   ["Dired folders"
-   ;; ("a" "apps" hydra-dirs-google-drive/body)
    [("b" "bibliography" (lambda () (interactive) (dired paths-dir-personal-bibliography)))
     ("d" "dotfiles" (lambda () (interactive) (dired paths-dir-dotfiles)))
     ("e" "Emacs" (lambda () (interactive) (dired paths-dir-emacs)))
@@ -175,8 +175,6 @@ losing the `put back' option."
     ("n" "Notes" (lambda () (interactive) (dired paths-dir-notes)))
     ("o" "Google Drive" (lambda () (interactive) (dired paths-dir-google-drive)))
     ("p" "People" (lambda () (interactive) (dired paths-dir-people)))
-    ;; ("t" "Tlön" hydra-dirs-tlon/body)
-    ;; ("H-t" "Tlön" hydra-dirs-tlon/body)
     ("U" "Audiobooks" (lambda () (interactive) (dired paths-dir-audiobooks)))
     ("v" "movies" (lambda () (interactive) (dired paths-dir-movies)))
     ("w" "downloads" (lambda () (interactive) (dired paths-dir-downloads)))
@@ -195,33 +193,33 @@ losing the `put back' option."
     ("SPC" "user" (lambda () (interactive) (dired "~/")))
     (";" "Current buffer" dired-jump)
     ("H-;" "Current buffer in other window" dired-jump-other-window)]
-   ["Tlön: Dropbox"
-    ("b" "Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
-    ("n" "EAN" (lambda () (interactive) (dired paths-dir-dropbox-tlon-EAN)))
-    ("m" "FM" (lambda () (interactive) (dired paths-dir-dropbox-tlon-FM)))
-    ("g" "GPE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-GPE)))
-    ("h" "HEAR" (lambda () (interactive) (dired paths-dir-dropbox-tlon-HEAR)))
-    ("d" "LBDLH" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LBDLH)))
-    ("p" "LP" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LP)))
-    ("r" "RAE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-RAE)))
-    ("t" "tlon" (lambda () (interactive) (dired paths-dir-dropbox-tlon)))
-    ("c" "core" (lambda () (interactive) (dired paths-dir-dropbox-tlon-core)))
-    ("f" "fede" (lambda () (interactive) (dired paths-dir-dropbox-tlon-fede)))
-    ("l" "leo" (lambda () (interactive) (dired paths-dir-dropbox-tlon-leo)))
+   ["Tlön: Google Drive"
+    ("t H-b" "Google Drive: Babel" (lambda () (interactive) (dired paths-dir-google-drive-tlon-babel)))
+    ("t H-n" "Google Drive: EAN" (lambda () (interactive) (dired paths-dir-google-drive-tlon-EAN)))
+    ("t H-m" "Google Drive: FM" (lambda () (interactive) (dired paths-dir-google-drive-tlon-FM)))
+    ("t H-g" "Google Drive: GPE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-GPE)))
+    ("t H-h" "Google Drive: HEAR" (lambda () (interactive) (dired paths-dir-google-drive-tlon-HEAR)))
+    ("t H-d" "Google Drive: LBDLH" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LBDLH)))
+    ("t H-p" "Google Drive: LP" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LP)))
+    ("t H-r" "Google Drive: RAE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-RAE)))
+    ("t H-t" "Google Drive: tlon" (lambda () (interactive) (dired paths-dir-google-drive-tlon)))
+    ("t H-c" "Google Drive: core" (lambda () (interactive) (dired paths-dir-google-drive-tlon-core)))
+    ("t H-l" "Google Drive: leo" (lambda () (interactive) (dired paths-dir-google-drive-tlon-leo)))
+    ("t H-f" "Google Drive: fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))
     ]
-   ["Tlön: Drive"
-    ("H-b" "Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
-    ("H-n" "EAN" (lambda () (interactive) (dired paths-dir-google-drive-tlon-EAN)))
-    ("H-m" "FM" (lambda () (interactive) (dired paths-dir-google-drive-tlon-FM)))
-    ("H-g" "GPE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-GPE)))
-    ("H-h" "HEAR" (lambda () (interactive) (dired paths-dir-google-drive-tlon-HEAR)))
-    ("H-d" "LBDLH" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LBDLH)))
-    ("H-p" "LP" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LP)))
-    ("H-r" "RAE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-RAE)))
-    ("H-t" "tlon" (lambda () (interactive) (dired paths-dir-google-drive-tlon)))
-    ("H-c" "core" (lambda () (interactive) (dired paths-dir-google-drive-tlon-core)))
-    ("H-l" "leo" (lambda () (interactive) (dired paths-dir-google-drive-tlon-leo)))
-    ("H-f" "fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))
+   ["Tlön: Dropbox"
+    ("t b" "Dropbox: Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
+    ("t n" "Dropbox: EAN" (lambda () (interactive) (dired paths-dir-dropbox-tlon-EAN)))
+    ("t m" "Dropbox: FM" (lambda () (interactive) (dired paths-dir-dropbox-tlon-FM)))
+    ("t g" "Dropbox: GPE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-GPE)))
+    ("t h" "Dropbox: HEAR" (lambda () (interactive) (dired paths-dir-dropbox-tlon-HEAR)))
+    ("t d" "Dropbox: LBDLH" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LBDLH)))
+    ("t p" "Dropbox: LP" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LP)))
+    ("t r" "Dropbox: RAE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-RAE)))
+    ("t t" "Dropbox: tlon" (lambda () (interactive) (dired paths-dir-dropbox-tlon)))
+    ("t c" "Dropbox: core" (lambda () (interactive) (dired paths-dir-dropbox-tlon-core)))
+    ("t f" "Dropbox: fede" (lambda () (interactive) (dired paths-dir-dropbox-tlon-fede)))
+    ("t l" "Dropbox: leo" (lambda () (interactive) (dired paths-dir-dropbox-tlon-leo)))
     ]
    ])
 

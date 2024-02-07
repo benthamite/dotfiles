@@ -155,7 +155,7 @@ Do not ask for confirmation."
 (defun mu4e-extras-copy-sum ()
   "Copy amount in subject line."
   (interactive)
-  (when (eq major-mode 'mu4e-headers-mode)
+  (when (derived-mode-p 'mu4e-headers-mode)
     (save-excursion
       (re-search-forward "\\(\\$\\)\\([[:digit:]]+.[[:digit:]]+\\)")
       (kill-new (match-string 2)))))
@@ -188,7 +188,7 @@ Do not ask for confirmation."
 
 (defun mu4e-extras-set-face-locally ()
   "Set `shr-text' face locally in `mu4ew-view-mode' buffers."
-  (when (eq major-mode 'mu4e-view-mode)
+  (when (derived-mode-p 'mu4e-view-mode)
     (face-remap-add-relative 'shr-text :height 0.9)))
 
 ;;;;; Contexts
@@ -243,7 +243,8 @@ Do not ask for confirmation."
 
 (defun mu4e-extras-msg-is-personal-p (msg)
   "Return t iff MSG is a personal message."
-  (mu4e-message-contact-field-matches msg :to (getenv "PERSONAL_GMAIL")))
+  (or (mu4e-message-contact-field-matches msg :to (getenv "PERSONAL_GMAIL"))
+      (mu4e-message-contact-field-matches msg :to (getenv "PERSONAL_EMAIL"))))
 
 (defun mu4e-extras-msg-is-work-p (msg)
   "Return t iff MSG is a work message."

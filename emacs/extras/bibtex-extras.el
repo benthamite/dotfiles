@@ -72,7 +72,8 @@ Optionally, remove accents in region from BEGIN to END."
           ["š\\|ś" "s"]
           ["ť" "t"]
           ["ž\\|ź\\|ż" "z"]
-          [" " " "]       ; thin space etc
+	  ["­" ""]       ; soft hyphen
+          [" " " "]       ; thin space
           ["–" "-"]       ; dash
           ["—\\|一" "--"] ; em dash etc
 	  ["¿" ""]
@@ -153,6 +154,7 @@ field for this information is `journaltitle', so we move it there."
       (save-buffer))
     (message "Moved entry %s to %s" key target)))
 
+;; TODO: perhaps the functions below should be moved to `tlon-babel-refs.el'?
 (defun bibtex-extras-move-entry-to-tlon (&optional key)
   "Move entry with KEY to `tlon-babel-refs-file-fluid'..
 Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point."
@@ -163,7 +165,7 @@ Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point.
     (with-current-buffer (find-file-noselect target)
       (widen)
       (bibtex-search-entry key)
-      (bibtex-extras-add-or-update-field "database" "Tlön")
+      (bibtex-extras-add-or-update-tlon-field)
       (save-buffer))
     (kill-new key)))
 
@@ -183,7 +185,6 @@ Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point.
 
 (defun bibtex-extras-add-or-update-field (field value)
   "Add or update FIELD with VALUE in the current BibTeX entry."
-  (require 'doi-utils)
   (bibtex-beginning-of-entry)
   ;; Check if FIELD exists
   (unless (bibtex-search-forward-field field)
@@ -193,6 +194,10 @@ Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point.
   (let ((field-content (bibtex-autokey-get-field field)))
     (when field-content
       (bibtex-set-field field value))))
+
+(defun bibtex-extras-add-or-update-tlon-field ()
+  "Add or update \"database\" field with \"Tlön\" value in the current BibTeX entry."
+  (bibtex-extras-add-or-update-field "database" "Tlön"))
 
 (defun bibtex-extras-add-database-field (file)
   "Iterate over each entry in FILE and add/update the `database' field.
@@ -205,7 +210,7 @@ and sets the value of the field for all entries to `Tlön'."
        (lambda (_key start _end)
          (save-excursion
            (goto-char start)
-           (bibtex-extras-add-or-update-field "database" "Tlön")))))
+           (bibtex-extras-add-or-update-tlon-field)))))
     ;; Save the updated entries to the file
     (save-buffer)))
 
@@ -217,12 +222,19 @@ and sets the value of the field for all entries to `Tlön'."
 
 (defun bibtex-extras-auto-clean-entry ()
   "Clean up bibtex entry at point upon saving."
-  (require 'tlon-babel)
   (let ((after-save-hook nil))
-    (bibtex-extras-add-or-update-field "database" "Tlön")
-    (tlon-babel-add-lang-id-to-entry)
+    (bibtex-extras-add-or-update-tlon-field)
+    (tlon-babel-refs-add-lang-id-to-entry)
+    (bibtex-extras-remove-empty-spaces)
     (bibtex-clean-entry)
     (save-buffer)))
+
+(defun bibtex-extras-remove-empty-spaces ()
+  "Remove empty spaces at the end of field."
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward " \\}" nil t)
+      (replace-match "}" t t))))
 
 ;;;;; Patches
 

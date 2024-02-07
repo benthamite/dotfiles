@@ -435,25 +435,29 @@ number."
 		 (if visible-mode 1 -1)
 	       (or arg 1))))
     (visible-mode (* arg -1))
-    (simple-extras-visible-mode-enhanced-org arg)
-    ;; we repeat this to handle weird interaction between `visible-mode' and
-    ;; `org-modern-mode'
-    (visible-mode (* arg -1))))
+    (simple-extras-visible-mode-enhanced-dired arg)
+    (simple-extras-visible-mode-enhanced-org arg)))
+
+(declare-function dired-hide-details-mode "dired")
+(declare-function dired-omit-mode "dired-x")
+(defun simple-extras-visible-mode-enhanced-dired (&optional arg)
+  "Set associated `dired' modes based on ARG."
+  (when (derived-mode-p 'dired-mode)
+    (dired-hide-details-mode arg)
+    (dired-omit-mode arg)))
 
 (declare-function org-tidy-mode "org-tidy")
 (declare-function org-modern-mode "org-modern")
 (defun simple-extras-visible-mode-enhanced-org (&optional arg)
   "Set associated `org' modes based on ARG."
-  (interactive "P")
-  (when (or (derived-mode-p 'org-mode)
-	    (derived-mode-p 'org-agenda-mode)
-	    (derived-mode-p 'org-msg-mode))
+  (when (derived-mode-p 'org-mode 'org-agenda-mode 'org-msg-mode)
     (when (member 'org-tidy-mode org-mode-hook)
       (org-tidy-mode arg))
     (org-display-inline-images arg)
-    (when (and (not (eq major-mode 'org-agenda-mode))
+    (when (and (not (derived-mode-p 'org-agenda-mode))
 	       (featurep 'org-modern))
-      (org-modern-mode arg))))
+      (org-modern-mode arg)))
+  (visible-mode (* arg -1)))
 
 (defun simple-extras-count-words-dwim ()
   "Count the number of words in region, if active, otherwise in clipboard.
@@ -484,7 +488,7 @@ Either way, save count to kill ring."
 
 ;; From Gonçalo Santos (github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org#helpers)
 (defmacro lambda! (&rest body)
-  "A shortcut for inline interactive lambdas."
+  "Return a lambda function with BODY."
   (declare (doc-string 1))
   `(lambda () (interactive) ,@body))
 
@@ -607,9 +611,9 @@ FORMS are evaluated with point restored to its original position."
 (defun simple-extras-get-url (url)
   "Get URL from URL, current buffer, or prompt user for it."
   (or url
-      (when (eq major-mode 'eww-mode)
+      (when (derived-mode-p 'eww-mode)
 	(eww-current-url))
-      (when (eq major-mode 'ebib-entry-mode)
+      (when (derived-mode-p 'ebib-entry-mode)
 	(ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
       (read-string "URL: ")))
 

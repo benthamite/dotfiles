@@ -29,7 +29,6 @@
 
 (require 'org-gcal)
 (require 'el-patch)
-(require 'hydra)
 
 ;;;; Functions
 
@@ -40,33 +39,29 @@
   (if-let ((id (org-entry-get nil "entry-id")))
       (browse-url
        (concat
-        "https://calendar.google.com/calendar/u/0/r/eventedit/"
-        (replace-regexp-in-string
-         "\n"
-         ""
-         (base64-encode-string
-          (replace-regexp-in-string
-           "/"
-           " "
-           id))))))
+	"https://calendar.google.com/calendar/u/0/r/eventedit/"
+	(replace-regexp-in-string "\n" ""
+				  (base64-encode-string
+				   (replace-regexp-in-string "/" " " id))))))
   (user-error "No id found"))
 
-;;;###autoload
-(defhydra org-gcal-extras-hydra (:exit t :hint nil)
-  "
-_f_etch all       |_s_ync all        |_p_ost at point   |_d_elete at point |                   |_t_oggle debug
-_F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_lear token      |re_l_oad secret  "
-  ("f" org-gcal-fetch)
-  ("F" org-gcal-fetch-buffer)
-  ("s" org-gcal-sync)
-  ("S" org-gcal-sync-buffer)
-  ("p" org-gcal-post-at-point)
-  ("d" org-gcal-delete-at-point)
-  ("o" org-gcal-extras-open-at-point)
-  ("u" org-gcal--sync-unlock)
-  ("c" org-gcal-sync-tokens-clear)
-  ("t" org-gcal-toggle-debug)
-  ("l" org-gcal-reload-client-id-secret))
+(transient-define-prefix org-gcal-extras-dispatch ()
+  "Dispatch an `org-gcal' command."
+  [["Fetch"
+    ("f" "fetch all" org-gcal-fetch)
+    ("F" "fetch buffer" org-gcal-fetch-buffer)]
+   ["Sync"
+    ("s" "sync all" org-gcal-sync)
+    ("S" "sync buffer" org-gcal-sync-buffer)]
+   ["Act"
+    ("p" "post at point" org-gcal-post-at-point)
+    ("o" "open at point" org-gcal-delete-at-point)
+    ("d" "delete at point" org-gcal-extras-open-at-point)]
+   ["Setup"
+    ("u" "unlock sync" org-gcal--sync-unlock)
+    ("c" "clear token" org-gcal-sync-tokens-clear)
+    ("t" "toggle debug" org-gcal-toggle-debug)
+    ("l" "reload secret" org-gcal-reload-client-id-secret)]])
 
 ;;;;; Patched functions
 
@@ -141,6 +136,8 @@ _F_etch buffer    |_S_ync buffer     |_o_pen at point   |_u_nlock sync     |_c_l
 	  (when (plist-get (cadr tobj) :hour-end) t)))))
     (list :start start :end end :desc desc)))
 
+;; Do not create a new `org-gcal' drawer; insert description as part of the heading contents;
+;; set date as a deadline.
 (el-patch-defun org-gcal--update-entry (calendar-id event &optional update-mode)
   "Update the entry at the current heading with information from EVENT.
 
@@ -153,7 +150,7 @@ If UPDATE-MODE is passed, then the functions in
 arguments as passed to this function and the point moved to the beginning of the
 heading."
   (unless (org-at-heading-p)
-    (user-error "Must be on Org-mode heading"))
+    (user-error "Must be on Org-mode heading."))
   (let* ((smry  (plist-get event :summary))
 	 (desc  (plist-get event :description))
 	 (loc   (plist-get event :location))
@@ -243,8 +240,8 @@ heading."
 	       (buffer-name) (buffer-file-name) (point)))
     (end-of-line)
     (newline)
-    (insert (format ":%s:" org-gcal-drawer-name))
-    (newline)
+    (el-patch-remove (insert (format ":%s:" org-gcal-drawer-name)))
+    (el-patch-remove (newline))
     ;; Keep existing timestamps for parent recurring events.
     (when (and recurrence old-start old-end)
       (setq start old-start
@@ -277,14 +274,14 @@ heading."
 	    (let ((org-closed-keep-when-no-todo t))
 	      (el-patch-swap (org-schedule nil timestamp)
 			     (org-deadline nil timestamp))))
-	(insert timestamp)
-	(newline)
+	(el-patch-swap (insert timestamp) (org-deadline nil timestamp))
+	(el-patch-remove (newline))
 	(when desc (newline))))
     ;; Insert event description if present.
     (when desc
       (insert (replace-regexp-in-string "^\*" "✱" desc))
       (insert (if (string= "\n" (org-gcal--safe-substring desc -1)) "" "\n")))
-    (insert ":END:")
+    (el-patch-remove (insert ":END:"))
     (when (org-gcal--event-cancelled-p event)
       (save-excursion
 	(org-back-to-heading t)

@@ -565,7 +565,7 @@ Disable hl-sentence because I do not like it...
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(setq faces-extras-fixed-pitch-font "Iosevka Nerd Font Propo")
+(setq faces-extras-fixed-pitch-font "Iosevka Nerd Font")
 (setq faces-extras-fixed-pitch-size 150)
 (setq faces-extras-variable-pitch-size 160)
 

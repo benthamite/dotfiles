@@ -36,6 +36,28 @@
   "Return the number of unread notifications."
   (when-let ((unread-notifications (forge--ls-notifications '(unread))))
       (length unread-notifications)))
+
+(defun forge-extras-orgit-store-link (_arg)
+  "Like `org-store-link' but store links to all selected commits, if any."
+  (interactive "P")
+  (if-let ((sections (magit-region-sections 'commit)))
+      (save-excursion
+        (dolist (section sections)
+          (goto-char (oref section start))
+          (set-mark (point))
+          (activate-mark)
+          (call-interactively #'org-store-link))
+        (deactivate-mark))
+    (save-window-excursion
+      (let ((topic (forge-topic-at-point)))
+        (cond ((forge-pullreq-p topic)
+               (forge-visit-pullreq topic))
+              ((forge-issue-p topic)
+               (forge-visit-issue topic)))
+        (call-interactively #'org-store-link)))))
+
+;;;;; Menus
+
 (transient-define-prefix forge-extras-dispatch ()
   "Dispatch a forge command."
   [["Fetch"
@@ -96,24 +118,6 @@
 
 (advice-add 'forge-dispatch :override #'forge-extras-dispatch)
 
-(defun forge-extras-orgit-store-link (_arg)
-  "Like `org-store-link' but store links to all selected commits, if any."
-  (interactive "P")
-  (if-let ((sections (magit-region-sections 'commit)))
-      (save-excursion
-        (dolist (section sections)
-          (goto-char (oref section start))
-          (set-mark (point))
-          (activate-mark)
-          (call-interactively #'org-store-link))
-        (deactivate-mark))
-    (save-window-excursion
-      (let ((topic (forge-topic-at-point)))
-        (cond ((forge-pullreq-p topic)
-               (forge-visit-pullreq topic))
-              ((forge-issue-p topic)
-               (forge-visit-issue topic)))
-        (call-interactively #'org-store-link)))))
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

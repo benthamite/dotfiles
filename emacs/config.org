@@ -75,6 +75,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
   - [[#transient][transient]]
+  - [[#transient-showcase][transient-showcase]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
   - [[#bytecomp][bytecomp]]
@@ -879,6 +880,21 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
            :depth nil)
            :after seq
   :demand t)
+#+end_src
+
+** transient-showcase
+:PROPERTIES:
+:ID:       72949AB3-4ACF-4E55-AACB-8AAA0D7058B6
+:END:
+/[[https://github.com/positron-solutions/transient-showcase][transient-showcase]] provides code examples for interactive explanations of ~transient~./
+
+#+begin_src emacs-lisp
+(use-package transient-showcase
+  :elpaca (transient-showcase
+           :host github
+           :repo "positron-solutions/transient-showcase")
+  :after transient
+  :defer 10)
 #+end_src
 
 ** warnings

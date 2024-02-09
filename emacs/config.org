@@ -1279,7 +1279,12 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
   (setq auth-source-debug t)
   (setq auth-source-do-cache nil)
   (auth-source-pass-enable)
-  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)
+  (advice-add 'auth-source-pass-search :around
+	      (lambda (orig-fun &rest args)
+		"Make `auth-source-pass' less verbose."
+		(let ((auth-source-debug nil))
+		  (apply orig-fun args)))))
 #+end_src
 
 Note: to work, entries must conform to the pattern ~auth-sources/host~.

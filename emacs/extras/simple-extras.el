@@ -484,14 +484,6 @@ Either way, save count to kill ring."
     (visual-line-mode)
     (setq truncate-lines nil)))
 
-;;;;; macros
-
-;; From Gonçalo Santos (github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org#helpers)
-(defmacro lambda! (&rest body)
-  "Return a lambda function with BODY."
-  (declare (doc-string 1))
-  `(lambda () (interactive) ,@body))
-
 ;;;;; indent
 
 ;; Adapted from `spacemacs/indent-region-or-buffer'.

@@ -116,8 +116,5 @@
    ]
   )
 
-(advice-add 'forge-dispatch :override #'forge-extras-dispatch)
-
-
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

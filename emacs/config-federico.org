@@ -178,7 +178,7 @@ Doom modeline
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'window
   (setq split-width-threshold 160)
-  (message "`window' late-init config loaded".))
+  (message "`window' late-init config loaded."))
 #+end_src
 
 ** nginx-mode
@@ -337,8 +337,7 @@ Doom modeline
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(eval-after-load 'forge
-  (setq forge-owned-accounts `(("fstafforini"))))
+(setq forge-owned-accounts `(("fstafforini")))
 #+end_src
 
 ** key bindings
@@ -411,45 +410,45 @@ Doom modeline
           ("E" . "export")
           ("h" . "export html")
           ("l" . "export latex")
-          ("q" . "quote"))
-        ("s" . "src")
-        ("se" . "src emacs-lisp")
-        ("sc" . "src css")
-        ("sj" . "src javascript")
-        ("sm" . "src markdown")
-        ("sp" . "src python")
-        ("sq" . "src sql")
-        ("ss" . "src shell")
-        ("st" . "src typescript")
-        ("sx" . "src jsx")
-        ("v" . "verse")
-        ("w" . "WP")))
+          ("q" . "quote")
+          ("s" . "src")
+          ("se" . "src emacs-lisp")
+          ("sc" . "src css")
+          ("sj" . "src javascript")
+          ("sm" . "src markdown")
+          ("sp" . "src python")
+          ("sq" . "src sql")
+          ("ss" . "src shell")
+          ("st" . "src typescript")
+          ("sx" . "src jsx")
+          ("v" . "verse")
+          ("w" . "WP")))
 
-(setq-default org-support-shift-select 'always
-              org-replace-disputed-keys t)
+  (setq-default org-support-shift-select 'always
+                org-replace-disputed-keys t)
 
-(general-define-key
- :keymap 'org-mode-map
- "s-i" 'org-clock-in
- "s-o" 'org-clock-out
- "M-<right>" nil
- "M-<left>" nil
- "M-<up>" nil
- "M-<down>" nil
- "M-S-<right>" nil
- "M-S-<left>" nil
- "M-S-<up>" nil
- "M-S-<down>" nil
- "H-<right>" 'org-metaright
- "H-<left>" 'org-metaleft
- "H-<up>" 'org-metaup
- "H-<down>" 'org-metadown
- "M-<right>" 'forward-word
- "M-<left>" 'backward-word)
+  (general-define-key
+   :keymap 'org-mode-map
+   "s-i" 'org-clock-in
+   "s-o" 'org-clock-out
+   "M-<right>" nil
+   "M-<left>" nil
+   "M-<up>" nil
+   "M-<down>" nil
+   "M-S-<right>" nil
+   "M-S-<left>" nil
+   "M-S-<up>" nil
+   "M-S-<down>" nil
+   "H-<right>" 'org-metaright
+   "H-<left>" 'org-metaleft
+   "H-<up>" 'org-metaup
+   "H-<down>" 'org-metadown
+   "M-<right>" 'forward-word
+   "M-<left>" 'backward-word)
 
-;; remove unwanted keybindings from Pablo
-(keymap-unset org-mode-map "s-i"
-	      (message "`org' late-init config loaded."))
+  ;; remove unwanted keybindings from Pablo
+  (keymap-unset org-mode-map "s-i"
+                (message "`org' late-init config loaded.")))
 #+end_src
 
 ** org-capture
@@ -737,7 +736,6 @@ Disable hl-sentence because I do not like it...
                         :background (face-background 'mode-line)))
 
   (add-hook 'org-mode-hook #'faces-extras-load-custom-faces)
-  (faces-extras-load-custom-faces)
   (message "`faces-extras' late-init config loaded."))
 #+end_src
 

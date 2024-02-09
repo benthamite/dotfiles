@@ -106,8 +106,7 @@
     ("i p" "assigned pull-requests" forge-list-assigned-pullreqs)
     """Labeled"
     ("d i" "labeled issues"         forge-list-labeled-issues)
-    ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)
-    ("e a" "edit assigness"         forge-edit-topic-assignees)]
+    ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)]
    ["Misc"
     ("s" "search topics"            forge-search)
     ("." "gh-notify"                gh-notify)

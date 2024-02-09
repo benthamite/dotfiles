@@ -79,9 +79,9 @@
     ("l t" "topics"                 forge-list-topics)
     ("l r" "repositories"           forge-list-repositories)
     """Edit"
-    ("e t" "edit title"             forge-edit-topic-title)
-    ("e s" "edit state"             forge-edit-topic-state)
-    ("e l" "edit labels"            forge-edit-topic-labels)
+    ("e t" "edit title"             forge-topic-set-title)
+    ("e s" "edit state"             forge-topic-state-menu)
+    ("e l" "edit labels"            forge-topic-set-labels)
     ]
    ["Browse"
     ("b i" "issue"                  forge-browse-issue)

@@ -579,6 +579,9 @@ Doom modeline
 #+end_src
 
 ** outline
+:PROPERTIES:
+:ID:       FB1CC8B9-42C0-402B-8EEE-7B36688E94AF
+:END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'outline
 (keymap-unset emacs-lisp-mode-map "M-<right>")

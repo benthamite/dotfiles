@@ -51,7 +51,7 @@
  )
 #+end_src
 
-* paths override
+* paths
 :PROPERTIES:
 :ID:       79C65A15-D040-48C0-98FC-8DC092804E76
 :END:
@@ -92,6 +92,7 @@
  (paths-file-ean . "")
  (paths-file-cookies . "")
  (paths-file-work . "")
+ (paths-file-tlon-tareas-fede . (file-name-concat paths-dir-dropbox-tlon-fede "tareas.org"))
  (paths-tlon-babel-todos-jobs-id . "")
  (paths-tlon-babel-todos-generic-id . "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
  )
@@ -110,7 +111,7 @@
  (:citar-keybindings . ((ignore)))
  ;; (:frame-extras-maximize-frame . ((ignore)))
  ;; (:org-fold . ((ignore)))
- ) 
+ )
 #+end_src
 
 Doom modeline
@@ -160,192 +161,185 @@ Doom modeline
 :ID:       3FB5128E-FBBA-4C4B-BFC9-8186878DDB4E
 :END:
 
+
+** startup
+:PROPERTIES:
+:ID:       5E67511F-C40D-4BFC-84AA-353DA60585DE
+:END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq user-full-name "Federico Stafforini")
 (setq user-mail-address "fstafforini@gmail.com")
-(setq forge-owned-accounts '(("fstafforini")))
-(setq split-width-threshold 160)
-;; (setq telega-server-libs-prefix "/opt/homebrew/Cellar/tdlib/HEAD-ec788c7/")
+#+end_src
+** window
+:PROPERTIES:
+:ID:       8EF5C4DE-C641-4770-83F1-638DD324238B
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'window
+  (setq split-width-threshold 160))
+#+end_src
+
+** nginx-mode
+:PROPERTIES:
+:ID:       20402D51-C4D0-4CB4-8523-D57EA6BEED0C
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (use-package nginx-mode :demand t)
-  (fancy-battery-mode -1)
-  (telega)
+#+end_src
 
-;; Disable org-tidy-mode
-(remove-hook 'org-mode-hook #'org-tidy-mode)
-  
-;; remove Pablo's auto maximize frame
-(remove-function after-focus-change-function #'frame-extras-maximize-frame)
+** ns-win
+:PROPERTIES:
+:ID:       72CD77BE-CB5B-4052-AA5A-40CE41DCA867
+:END:
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'ns-win
+  (when (eq system-type 'darwin) ;; mac specific settings
+    (setq mac-right-option-modifier 'alt)
+    (setq mac-command-modifier 'hyper)
+    (setq mac-option-modifier 'meta)
+    (setq mac-right-command-modifier 'super)
+    (setq mac-function-modifier '(:button 2))))
+#+end_src
 
-;; remove Pablo's org-roam auto add ids
-;; (remove-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
+** fancy-battery-mode
+:PROPERTIES:
+:ID:       D59EED4B-A6AF-45D0-92F2-26F15E3F6B21
+:END:
 
-;; remove Pablo’s org-agenda timer
-(cancel-timer org-extras-agenda-switch-to-agenda-current-day-timer)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'fancy-battery-mode
+(fancy-battery-mode -1))
+#+end_src
 
-(message "Loading fede's custom faces:")
-(recentf-mode)
-(global-unset-key (kbd "C--"))
-(general-unbind "C--")
-(setq global-mark-ring-max 100)
-(setq local-mark-ring-max 100)
-(setq make-backup-files nil)
+#+RESULTS:
 
-(when (eq system-type 'darwin) ;; mac specific settings
-  (setq mac-right-option-modifier 'alt)
-  (setq mac-command-modifier 'hyper)
-  (setq mac-option-modifier 'meta)
-  (setq mac-right-command-modifier 'super)
-  (tool-bar-mode -1)
+** frame-extras
+:PROPERTIES:
+:ID:       F24B3E2D-ACB2-49EB-AE1C-BDCE5C8A1239
+:END:
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'frame-extras
+  (remove-function after-focus-change-function #'frame-extras-maximize-frame))
+#+end_src
 
-  (delete-selection-mode 1)
-  (cua-selection-mode 1)
-  ;; disable C-return or it will interfere with org
-  (define-key cua-global-keymap (kbd "<C-return>") nil)
+** simple
+:PROPERTIES:
+:ID:       D5957624-5E90-404B-B86D-72F1D79A1401
+:END:
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'simple
+  (setq global-mark-ring-max 100)
+  (setq mark-ring-max 100)
   (setq shift-select-mode t))
+#+end_src
 
-;; Config tlon-babel
-(setq tlon-babel-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
-(setq tlon-babel-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
+** files
+:PROPERTIES:
+:ID:       93EA6DFF-EE82-4CE4-8E1A-B4054E71D473
+:END:
 
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'files
+  (setq make-backup-files nil))
+#+end_src
+
+** cua-base
+:PROPERTIES:
+:ID:       ECA4B30E-DE5C-4ACC-87AA-30975B8398EC
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(cua-selection-mode 1)
+;; disable C-return or it will interfere with org
+(define-key cua-global-keymap (kbd "<C-return>") nil)
+#+end_src
+
+** dired
+:PROPERTIES:
+:ID:       303394D7-3C61-4D9D-8765-028BD4254DA9
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'dired
   (general-define-key
    :keymaps 'dired-mode-map
-   "n" 'find-file))
+   "n" 'find-file)
 
-(setq consult-preview-key nil)
+  (transient-define-prefix dired-fedes-dispatch ()
+    "Fede's version of Pablo's dispatcher."
+    ["Dired folders"
+     [("d" "dotfiles" (lambda () (interactive) (dired paths-dir-dotfiles)))
+      ("e" "emacs: current profile dir" (lambda () (interactive) (dired paths-dir-emacs)))
+      ("p" "emacs: profiles" (lambda () (interactive) (dired (file-name-concat (getenv "HOME") ".config/emacs-profiles"))))
+      ("s" "source" (lambda () (interactive) (dired (file-name-concat (getenv "HOME") "source"))))
+      ("v" "movies" (lambda () (interactive) (dired paths-dir-movies)))
+      ("w" "downloads" (lambda () (interactive) (dired paths-dir-downloads)))
+      ("x" "Dropbox" (lambda () (interactive) (dired paths-dir-dropbox)))
+      ("z" "Google Drive" (lambda () (interactive) (dired paths-dir-google-drive)))]
 
-;; hydra — should be moved to transient eventually
+     ["Special"
+      ("." "File at point" (lambda () (interactive) (dired-at-point)))
+      ("/" "Root" (lambda () (interactive) (dired "/")))
+      ("SPC" "user" (lambda () (interactive) (dired "~/")))
+      (";" "Current buffer" dired-jump)
+      ("H-;" "Current buffer in other window" dired-jump-other-window)]
 
-(use-package hydra
-  :demand t)
+     ["System config"
+      ("n" "Local ningx config" (lambda () (interactive) (dired "/opt/homebrew/etc/nginx/sites-available/")))
+      ("w" "nginx home" (lambda () (interactive) (dired (file-name-concat (getenv "HOME") "www"))))]
 
-(defhydra hydra-org-work
-  (:hint nil
-         :idle 0
-         :color blue)
-  "Tlön dashboard"
-  ("b" (org-id-goto "33BFC41C-324A-47E1-A313-8233A36B2346") "BAE")
-  ("r" (org-id-goto "87906C3B-B52B-4816-BCCA-BE3EA4B88968") "RAE")
-  ("f" (org-id-goto "809F6C1D-DDF7-4C6B-BB84-FFC082BE8601") "FM")
-  ("d" (org-id-goto "0079A5CD-A07B-4919-A76C-4F6E6841512D") "LBDLHD")
-  ("u" (org-id-goto "B168E4F1-D2E1-4D59-B88C-4CF924E82624") "EAN")
-  ("i" (org-id-goto "715D2C4E-4BEE-4EC4-B432-720DA35C21A9") "EAI")
-  ("h" (org-id-goto "B157C986-D75D-4244-A522-43DCBA2F0C8E") "HEAR")
-  ("g" (org-id-goto "97F7D54F-4F4A-45A4-9616-A0B548A049BE") "GPE")
-  ("c" (org-id-goto "7EDB8441-7EFA-43CC-B3DE-5682D55BCEE1") "Core")
-  )
+     ["DigitalOcean"
+      ("N" "/config/nginx/sites-available" (lambda () (interactive) (dired "/ssh:root@tlon.team:/etc/nginx/sites-available/")))
+      ("H" "/home/fede" (lambda () (interactive) (dired "/ssh:fede@tlon.team:/home/fede")))]
 
-(defhydra hydra-dirs
-  (:exit t)
-  "Dired folders"
-  ("t" (hydra-dirs-tlon/body) "Tlön Dropbox" :column "Folders")
-  ("g" (hydra-dirs-google-drive/body) "Tlön Google Drive" :column "Folders")
-  ("w" (dired (file-name-concat (getenv "HOME") "www")) "Nginx www root" :column "Folders")
-  ("h" (dired "~/") "/Users/fede" :column "User" )
-  ("n" (dired "/opt/homebrew/etc/nginx/sites-available/") "Local Nginx config" :column "Config" )
-  ("o" (dired paths-dir-google-drive) "Google Drive" :column "User")
-  ("w" (dired paths-dir-downloads) "Downloads" :column "User")
-  ("x" (dired paths-dir-dropbox) "Dropbox" :column "User")
-  ("s" (dired (file-name-concat (getenv "HOME") "source")) "Source" :column "Folders")
-  ("." (dired-at-point) "File at point" :column "Other")
-  ("N" (dired "/ssh:root@tlon.team:/etc/nginx/sites-available/") "Nginx config" :column "DigitalOcean")
-  ("H" (dired "/ssh:fede@tlon.team:/home/fede") "/home/fede" :column "DigitalOcean")
-  ("/" (dired "/") "Root" :column "Other")
-  (";" (dired-jump) "Current buffer" :column "Other")
-  ("H-;" (dired-jump-other-window) "Current buffer in other window" :column "Other")
-  ("e" (dired paths-dir-emacs) "Emacs" :column "Config")
-  ("p" (dired (file-name-concat (getenv "HOME") ".config/emacs-profiles")) "Emacs profiles" :column "Config")
-  ("b" (dired (file-name-concat (getenv "HOME") "source/dotfiles/emacs")) "Pablo's Emacs config" :column "Config"))
+     ["Tlön: Google Drive"
+      ("t H-b" "Google Drive: Babel" (lambda () (interactive) (dired paths-dir-google-drive-tlon-babel)))
+      ("t H-n" "Google Drive: EAN" (lambda () (interactive) (dired paths-dir-google-drive-tlon-EAN)))
+      ("t H-m" "Google Drive: FM" (lambda () (interactive) (dired paths-dir-google-drive-tlon-FM)))
+      ("t H-g" "Google Drive: GPE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-GPE)))
+      ("t H-h" "Google Drive: HEAR" (lambda () (interactive) (dired paths-dir-google-drive-tlon-HEAR)))
+      ("t H-d" "Google Drive: LBDLH" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LBDLH)))
+      ("t H-p" "Google Drive: LP" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LP)))
+      ("t H-r" "Google Drive: RAE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-RAE)))
+      ("t H-t" "Google Drive: tlon" (lambda () (interactive) (dired paths-dir-google-drive-tlon)))
+      ("t H-c" "Google Drive: core" (lambda () (interactive) (dired paths-dir-google-drive-tlon-core)))
+      ("t H-l" "Google Drive: leo" (lambda () (interactive) (dired paths-dir-google-drive-tlon-leo)))
+      ("t H-f" "Google Drive: fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))
+      ]
+     ["Tlön: Dropbox"
+      ("t b" "Dropbox: Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
+      ("t n" "Dropbox: EAN" (lambda () (interactive) (dired paths-dir-dropbox-tlon-EAN)))
+      ("t m" "Dropbox: FM" (lambda () (interactive) (dired paths-dir-dropbox-tlon-FM)))
+      ("t g" "Dropbox: GPE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-GPE)))
+      ("t h" "Dropbox: HEAR" (lambda () (interactive) (dired paths-dir-dropbox-tlon-HEAR)))
+      ("t d" "Dropbox: LBDLH" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LBDLH)))
+      ("t p" "Dropbox: LP" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LP)))
+      ("t r" "Dropbox: RAE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-RAE)))
+      ("t t" "Dropbox: tlon" (lambda () (interactive) (dired paths-dir-dropbox-tlon)))
+      ("t c" "Dropbox: core" (lambda () (interactive) (dired paths-dir-dropbox-tlon-core)))
+      ("t f" "Dropbox: fede" (lambda () (interactive) (dired paths-dir-dropbox-tlon-fede)))
+      ("t l" "Dropbox: leo" (lambda () (interactive) (dired paths-dir-dropbox-tlon-leo)))
+      ]]))
+#+end_src
 
-(defhydra hydra-dirs-tlon
-  (:exit t)
-  "Dired folders: Tlön Dropbox"
-  (";" (dired paths-dir-dropbox-tlon) "This folder")
-  ("b" (dired paths-dir-dropbox-tlon-BAE) "BAE")
-  ("c" (dired paths-dir-dropbox-tlon-core) "core")
-  ("d" (dired paths-dir-dropbox-tlon-LBDLH) "LBDLH")
-  ("f" (dired paths-dir-dropbox-tlon-fede) "fede")
-  ("g" (dired paths-dir-dropbox-tlon-GPE) "GPE")
-  ("h" (dired paths-dir-dropbox-tlon-HEAR) "HEAR")
-  ("l" (dired paths-dir-dropbox-tlon-leo) "leo")
-  ("p" (dired paths-dir-dropbox-tlon-LP) "LP")
-  ("r" (dired paths-dir-dropbox-tlon-RAE) "RAE")
-  ("s" (dired paths-dir-dropbox-tlon-FM) "FM")
-  ("u" (dired paths-dir-dropbox-tlon-EAN) "EAN"))
+** forge
+:PROPERTIES:
+:ID:       4540F42A-BE3F-4D98-A0E7-3E65DA0C2CA2
+:END:
 
-(defhydra hydra-dirs-google-drive
-  (:exit t)
-  "Dired folders: Tlön Google Drive"
-  (";" (dired paths-dir-google-drive-tlon) "This folder")
-  ("b" (dired paths-dir-google-drive-tlon-BAE) "BAE")
-  ("c" (dired paths-dir-google-drive-tlon-core) "core")
-  ("d" (dired paths-dir-google-drive-tlon-LBDLH) "LBDLH")
-  ("f" (dired paths-dir-google-drive-tlon-fede) "fede")
-  ("g" (dired paths-dir-google-drive-tlon-GPE) "GPE")
-  ("h" (dired paths-dir-google-drive-tlon-HEAR) "HEAR")
-  ("l" (dired paths-dir-google-drive-tlon-leo) "leo")
-  ("p" (dired paths-dir-google-drive-tlon-LP) "LP")
-  ("r" (dired paths-dir-google-drive-tlon-RAE) "RAE")
-  ("s" (dired paths-dir-google-drive-tlon-FM) "FM")
-  ("u" (dired paths-dir-google-drive-tlon-EAN) "EAN"))
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(eval-after-load 'forge
+  (setq forge-owned-accounts `(("fstafforini"))))
+#+end_src
 
-(transient-define-prefix dired-fedes-dispatch ()
-  "Fede's version of Pablo's dispatcher."
-  ["Dired folders"
-   [("d" "dotfiles" (lambda () (interactive) (dired paths-dir-dotfiles)))
-    ("e" "emacs: current profile dir" (lambda () (interactive) (dired paths-dir-emacs)))
-    ("p" "emacs: profiles" (lambda () (interactive) (dired (file-name-concat (getenv "HOME") ".config/emacs-profiles"))))
-    ("s" "source" (lambda () (interactive) (dired (file-name-concat (getenv "HOME") "source"))))
-    ("v" "movies" (lambda () (interactive) (dired paths-dir-movies)))
-    ("w" "downloads" (lambda () (interactive) (dired paths-dir-downloads)))
-    ("x" "Dropbox" (lambda () (interactive) (dired paths-dir-dropbox)))
-    ("z" "Google Drive" (lambda () (interactive) (dired paths-dir-google-drive)))]
+** key bindings
+:PROPERTIES:
+:ID:       B641FFEE-128A-4961-8A18-C8097C046A0C
+:END:
 
-   ["Special"
-    ("." "File at point" (lambda () (interactive) (dired-at-point)))
-    ("/" "Root" (lambda () (interactive) (dired "/")))
-    ("SPC" "user" (lambda () (interactive) (dired "~/")))
-    (";" "Current buffer" dired-jump)
-    ("H-;" "Current buffer in other window" dired-jump-other-window)]
-
-   ["System config"
-    ("n" "Local ningx config" (lambda () (interactive) (dired "/opt/homebrew/etc/nginx/sites-available/")))
-    ("w" "nginx home" (lambda () (interactive) (dired (file-name-concat (getenv "HOME") "www"))))]
-
-   ["DigitalOcean"
-    ("N" "/config/nginx/sites-available" (lambda () (interactive) (dired "/ssh:root@tlon.team:/etc/nginx/sites-available/")))
-    ("H" "/home/fede" (lambda () (interactive) (dired "/ssh:fede@tlon.team:/home/fede")))]
-
-   ["Tlön: Google Drive"
-    ("t H-b" "Google Drive: Babel" (lambda () (interactive) (dired paths-dir-google-drive-tlon-babel)))
-    ("t H-n" "Google Drive: EAN" (lambda () (interactive) (dired paths-dir-google-drive-tlon-EAN)))
-    ("t H-m" "Google Drive: FM" (lambda () (interactive) (dired paths-dir-google-drive-tlon-FM)))
-    ("t H-g" "Google Drive: GPE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-GPE)))
-    ("t H-h" "Google Drive: HEAR" (lambda () (interactive) (dired paths-dir-google-drive-tlon-HEAR)))
-    ("t H-d" "Google Drive: LBDLH" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LBDLH)))
-    ("t H-p" "Google Drive: LP" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LP)))
-    ("t H-r" "Google Drive: RAE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-RAE)))
-    ("t H-t" "Google Drive: tlon" (lambda () (interactive) (dired paths-dir-google-drive-tlon)))
-    ("t H-c" "Google Drive: core" (lambda () (interactive) (dired paths-dir-google-drive-tlon-core)))
-    ("t H-l" "Google Drive: leo" (lambda () (interactive) (dired paths-dir-google-drive-tlon-leo)))
-    ("t H-f" "Google Drive: fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))
-    ]
-   ["Tlön: Dropbox"
-    ("t b" "Dropbox: Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
-    ("t n" "Dropbox: EAN" (lambda () (interactive) (dired paths-dir-dropbox-tlon-EAN)))
-    ("t m" "Dropbox: FM" (lambda () (interactive) (dired paths-dir-dropbox-tlon-FM)))
-    ("t g" "Dropbox: GPE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-GPE)))
-    ("t h" "Dropbox: HEAR" (lambda () (interactive) (dired paths-dir-dropbox-tlon-HEAR)))
-    ("t d" "Dropbox: LBDLH" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LBDLH)))
-    ("t p" "Dropbox: LP" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LP)))
-    ("t r" "Dropbox: RAE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-RAE)))
-    ("t t" "Dropbox: tlon" (lambda () (interactive) (dired paths-dir-dropbox-tlon)))
-    ("t c" "Dropbox: core" (lambda () (interactive) (dired paths-dir-dropbox-tlon-core)))
-    ("t f" "Dropbox: fede" (lambda () (interactive) (dired paths-dir-dropbox-tlon-fede)))
-    ("t l" "Dropbox: leo" (lambda () (interactive) (dired paths-dir-dropbox-tlon-leo)))
-    ]])
-
-
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (general-define-key
  "<kp-delete>" 'delete-char
  "<home>" 'beginning-of-line
@@ -384,6 +378,49 @@ Doom modeline
  "<C-down>" nil
  "<C-S-down>" nil)
 
+(global-unset-key (kbd "C--"))
+(general-unbind "C--")
+(keymap-unset minibuffer-mode-map "s-i")
+
+;; (general-define-key
+;; :keymap 'yas-minor-mode-map
+;; "TAB" nil
+;; "s-TAB" 'yas-expand)
+
+#+end_src
+
+** org
+:PROPERTIES:
+:ID:       A20984A0-7402-4775-92E9-39929324DCD2
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'org
+  (setq org-structure-template-alist
+        '(("a" . "export ascii")
+          ("c" . "center")
+          ("C" . "comment")
+          ("e" . "example")
+          ("E" . "export")
+          ("h" . "export html")
+          ("l" . "export latex")
+          ("q" . "quote"))
+        ("s" . "src")
+        ("se" . "src emacs-lisp")
+        ("sc" . "src css")
+        ("sj" . "src javascript")
+        ("sm" . "src markdown")
+        ("sp" . "src python")
+        ("sq" . "src sql")
+        ("ss" . "src shell")
+        ("st" . "src typescript")
+        ("sx" . "src jsx")
+        ("v" . "verse")
+        ("w" . "WP")))
+
+(setq-default org-support-shift-select 'always
+              org-replace-disputed-keys t)
+
 (general-define-key
  :keymap 'org-mode-map
  "s-i" 'org-clock-in
@@ -405,131 +442,161 @@ Doom modeline
 
 ;; remove unwanted keybindings from Pablo
 (keymap-unset org-mode-map "s-i")
-(keymap-unset minibuffer-mode-map "s-i")
+#+end_src
 
-;; (general-define-key
-;; :keymap 'yas-minor-mode-map
-;; "TAB" nil
-;; "s-TAB" 'yas-expand)
+** org-capture
+:PROPERTIES:
+:ID:       F29D9BDF-C2BB-4301-9E40-70018729229A
+:END:
 
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'org-capture
+  (dolist (template `(("b" "Tlön: BAE" entry
+                       (id "33BFC41C-324A-47E1-A313-8233A36B2346")
+                       "** TODO %?\n" :prepend t)
+                      ("r" "Tlön: RAE" entry
+                       (id "87906C3B-B52B-4816-BCCA-BE3EA4B88968")
+                       "** TODO %?\n" :prepend t)
+                      ("f" "Tlön: FM" entry
+                       (id "809F6C1D-DDF7-4C6B-BB84-FFC082BE8601")
+                       "** TODO %?\n" :prepend t)
+                      ("d" "Tlön: LBDLH" entry
+                       (id "0079A5CD-A07B-4919-A76C-4F6E6841512D")
+                       "** TODO %?\n" :prepend t)
+                      ("u" "Tlön: EAN" entry
+                       (id "B168E4F1-D2E1-4D59-B88C-4CF924E82624")
+                       "** TODO %?\n" :prepend t)
+                      ("i" "Tlön: EAI" entry
+                       (id "715D2C4E-4BEE-4EC4-B432-720DA35C21A9")
+                       "** TODO %?\n" :prepend t)
+                      ("h" "Tlön: HEAR" entry
+                       (id "B157C986-D75D-4244-A522-43DCBA2F0C8E")
+                       "** TODO %?\n" :prepend t)
+                      ("g" "Tlön: GPE" entry
+                       (id "97F7D54F-4F4A-45A4-9616-A0B548A049BE")
+                       "** TODO %?\n" :prepend t)
+                      ("c" "Tlön: Core" entry
+                       (id "7EDB8441-7EFA-43CC-B3DE-5682D55BCEE1")
+                       "** TODO %?\n" :prepend t)))
+    (push template org-capture-templates))
+  )
+#+end_src
 
-(dolist (template `(("b" "Tlön: BAE" entry
-                     (id "33BFC41C-324A-47E1-A313-8233A36B2346")
-                     "** TODO %?\n" :prepend t)
-                    ("r" "Tlön: RAE" entry
-                     (id "87906C3B-B52B-4816-BCCA-BE3EA4B88968")
-                     "** TODO %?\n" :prepend t)
-                    ("f" "Tlön: FM" entry
-                     (id "809F6C1D-DDF7-4C6B-BB84-FFC082BE8601")
-                     "** TODO %?\n" :prepend t)
-                    ("d" "Tlön: LBDLH" entry
-                     (id "0079A5CD-A07B-4919-A76C-4F6E6841512D")
-                     "** TODO %?\n" :prepend t)
-                    ("u" "Tlön: EAN" entry
-                     (id "B168E4F1-D2E1-4D59-B88C-4CF924E82624")
-                     "** TODO %?\n" :prepend t)
-                    ("i" "Tlön: EAI" entry
-                     (id "715D2C4E-4BEE-4EC4-B432-720DA35C21A9")
-                     "** TODO %?\n" :prepend t)
-                    ("h" "Tlön: HEAR" entry
-                     (id "B157C986-D75D-4244-A522-43DCBA2F0C8E")
-                     "** TODO %?\n" :prepend t)
-                    ("g" "Tlön: GPE" entry
-                     (id "97F7D54F-4F4A-45A4-9616-A0B548A049BE")
-                     "** TODO %?\n" :prepend t)
-                    ("c" "Tlön: Core" entry
-                     (id "7EDB8441-7EFA-43CC-B3DE-5682D55BCEE1")
-                     "** TODO %?\n" :prepend t)))
-  (push template org-capture-templates))
+** org-agenda
+:PROPERTIES:
+:ID:       84547352-3F99-4A1E-88CE-945FCD28C803
+:END:
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'org-agenda
+  (setq org-agenda-files
+        `(,paths-file-tlon-tareas-fede
+          "/Users/fede/Library/CloudStorage/Dropbox/org/todo.org"))
 
-(setq-default org-support-shift-select 'always
-              org-replace-disputed-keys t)
+  (setq org-agenda-files-excluded nil)
 
-(setq org-roam-directory paths-dir-org-roam)              
-(setq org-agenda-custom-commands
-      '(("j" "Agenda + TODOs"
-         (
-          (tags-todo "+fede"
-                     (;; (tags "fede")
-                      (org-agenda-sorting-strategy '(priority-down todo-state-down))
-                      (org-agenda-overriding-header "Mensajes para Fede")))
-          (tags-todo "+pablo"
-                     (;; (tags "fede")
-                      (org-agenda-sorting-strategy '(priority-down todo-state-down))
-                      (org-agenda-overriding-header "Mensajes para Pablo")))
-          (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Library/CloudStorage/Dropbox/tlon/fede/tareas.org\""
-                     ((org-agenda-max-entries 10)
-                      (org-agenda-sorting-strategy '(priority-down todo-state-down))
-                      (org-agenda-overriding-header "TODO - Trabajo")))
-          (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Library/CloudStorage/Dropbox/org/todo.org\""
-                     ((org-agenda-max-entries 10)
-                      (org-agenda-sorting-strategy '(priority-down todo-state-down))
-                      (org-agenda-overriding-header "TODO - Personal")))
-          (tags-todo "+SCHEDULED<=\"<today>\""
-                     ((org-agenda-sorting-strategy '(priority-down todo-state-down))
-                      (org-agenda-overriding-header "Scheduled for today")))
-          (tags-todo "+DEADLINE<=\"<today>\" +DEADLINE>=\"<today -2m>\""
-                     ((org-agenda-sorting-strategy '(priority-down todo-state-down))
-                      (org-agenda-overriding-header "Upcoming deadlines")))
-          (agenda "" ((org-agenda-span 14)))
-          (todo "WAITING"
-                ((org-agenda-overriding-header "WAITING")))
-          (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Dropbox/tlon/fede/tareas.org\""
-                     ((org-agenda-sorting-strategy '(priority-down todo-state-down))
-                      (org-agenda-overriding-header "TODO - Trabajo - Todos")))
-          (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Dropbox/org/todo.org\""
-                     ((org-agenda-sorting-strategy '(priority-down todo-state-down))
-                      (org-agenda-overriding-header "TODO - Personal - Todos")))
-          ))))
+  (setq org-agenda-custom-commands
+        '(("j" "Agenda + TODOs"
+           (
+            (tags-todo "+fede"
+                       (;; (tags "fede")
+                        (org-agenda-sorting-strategy '(priority-down todo-state-down))
+                        (org-agenda-overriding-header "Mensajes para Fede")))
+            (tags-todo "+pablo"
+                       (;; (tags "fede")
+                        (org-agenda-sorting-strategy '(priority-down todo-state-down))
+                        (org-agenda-overriding-header "Mensajes para Pablo")))
+            (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Library/CloudStorage/Dropbox/tlon/fede/tareas.org\""
+                       ((org-agenda-max-entries 10)
+                        (org-agenda-sorting-strategy '(priority-down todo-state-down))
+                        (org-agenda-overriding-header "TODO - Trabajo")))
+            (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Library/CloudStorage/Dropbox/org/todo.org\""
+                       ((org-agenda-max-entries 10)
+                        (org-agenda-sorting-strategy '(priority-down todo-state-down))
+                        (org-agenda-overriding-header "TODO - Personal")))
+            (tags-todo "+SCHEDULED<=\"<today>\""
+                       ((org-agenda-sorting-strategy '(priority-down todo-state-down))
+                        (org-agenda-overriding-header "Scheduled for today")))
+            (tags-todo "+DEADLINE<=\"<today>\" +DEADLINE>=\"<today -2m>\""
+                       ((org-agenda-sorting-strategy '(priority-down todo-state-down))
+                        (org-agenda-overriding-header "Upcoming deadlines")))
+            (agenda "" ((org-agenda-span 14)))
+            (todo "WAITING"
+                  ((org-agenda-overriding-header "WAITING")))
+            (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Dropbox/tlon/fede/tareas.org\""
+                       ((org-agenda-sorting-strategy '(priority-down todo-state-down))
+                        (org-agenda-overriding-header "TODO - Trabajo - Todos")))
+            (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Dropbox/org/todo.org\""
+                       ((org-agenda-sorting-strategy '(priority-down todo-state-down))
+                        (org-agenda-overriding-header "TODO - Personal - Todos")))
+            )))))
+#+end_src
 
-(setq org-extras-bbdb-anniversaries-heading nil)
-(setq mac-function-modifier '(:button 2))
-(setq real-auto-save-interval 10)
+** org-extras
+:PROPERTIES:
+:ID:       E0CFFE8C-FDC1-4D7D-B484-A8E7BC87CB98
+:END:
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'org-extras
+  (setq org-extras-bbdb-anniversaries-heading nil)
+  (simple-extras-init-disable-funs 90 '(org-extras-fold-show-all-headings
+                                        org-extras-hide-properties
+                                        org-extras-hide-logbook
+                                        org-extras-show-properties
+                                        org-extras-show-logbook
+                                        org-extras-toggle-properties
+                                        org-extras-toggle-logbook))
+  (cancel-timer org-extras-agenda-switch-to-agenda-current-day-timer))
+#+end_src
+** org-roam
+:PROPERTIES:
+:ID:       C16FEC1D-DA7E-44D1-92BE-D13D28B6C089
+:END:
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'org-roam
+  (setq org-roam-directory paths-dir-org-roam))
+#+end_src
 
-(setq org-structure-template-alist
-      '(("a" . "export ascii")
-        ("c" . "center")
-        ("C" . "comment")
-        ("e" . "example")
-        ("E" . "export")
-        ("h" . "export html")
-        ("l" . "export latex")
-        ("q" . "quote")
-        ("s" . "src")
-        ("se" . "src emacs-lisp")
-        ("sc" . "src css")
-        ("sj" . "src javascript")
-        ("sm" . "src markdown")
-        ("sp" . "src python")
-        ("sq" . "src sql")
-        ("ss" . "src shell")
-        ("st" . "src typescript")
-        ("sx" . "src jsx")
-        ("v" . "verse")
-        ("w" . "WP")))
+** org-tidy-mode
+:PROPERTIES:
+:ID:       8F1B85FF-6AC1-4169-8F24-F80B61A298AC
+:END:
 
-(setq org-agenda-files '("/Users/fede/Library/CloudStorage/Dropbox/tlon/fede/tareas.org" "/Users/fede/Library/CloudStorage/Dropbox/org/todo.org"))
-(setq org-agenda-files-excluded nil)
-(scroll-bar-mode -1)
-(setq consult-preview-key nil)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'org-tidy-mode
+  (remove-hook 'org-mode-hook #'org-tidy-mode)
+  (org-tidy-mode -1))
+#+end_src
 
-(tlon-babel-init)
+** consult
+:PROPERTIES:
+:ID:       306F1791-DDC6-4F33-A5CD-EC1F1DA5E778
+:END:
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'consult
+  (setq consult-preview-key nil))
+#+end_src
 
-(dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
-  (remove-hook hook #'jinx-mode))
+** tlon-babel
+:PROPERTIES:
+:ID:       27C0F2A5-14EC-4456-90B0-3E16AD8EF35B
+:END:
 
-(simple-extras-init-disable-funs 90 '(org-extras-fold-show-all-headings
-                                      org-extras-hide-properties
-                                      org-extras-hide-logbook
-                                      org-extras-show-properties
-                                      org-extras-show-logbook
-                                      org-extras-toggle-properties
-                                      org-extras-toggle-logbook))
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'tlon-babel
+  (setq tlon-babel-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
+  (setq tlon-babel-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
+  (tlon-babel-init))
+#+end_src
 
-;; Open tareas.org
-(find-file (file-name-concat paths-dir-dropbox-tlon-fede "tareas.org"))
-(org-tidy-mode -1)
+** jinx
+:PROPERTIES:
+:ID:       BD4F6E88-01BE-4625-AF75-7DB04DE8F8D3
+:END:
 
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'jinx
+  (dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
+    (remove-hook hook #'jinx-mode)))
 #+end_src
 
 ** tab-bar-extras
@@ -537,26 +604,27 @@ Doom modeline
 :ID:       6AC832A6-0F9D-450E-BFA2-0271AF4F2FB6
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(setq tab-bar-extras-reset-wttr nil)
+(with-eval-after-load 'tab-bar-extras
+  (setq tab-bar-extras-reset-wttr nil)
 
-;; (remove-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
+  ;; (remove-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
 
-;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
-(setq tab-bar-extras-global-mode-string
-      `(,tab-bar-extras-prefix-element
-        ;; ,tab-bar-extras-date-element
-        ;; ,tab-bar-extras-separator-element
-        ,tab-bar-extras-chemacs-element
-        ;; ,tab-bar-extras-separator-element
-        ;; ,tab-bar-extras-battery-element
-        ,tab-bar-extras-telega-element
-        ,tab-bar-extras-github-element
-        ;; ,tab-bar-extras-pomodoro-element
-        ;; ,tab-bar-extras-suffix-element
-        ))
+  ;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
+  (setq tab-bar-extras-global-mode-string
+        `(,tab-bar-extras-prefix-element
+          ;; ,tab-bar-extras-date-element
+          ;; ,tab-bar-extras-separator-element
+          ,tab-bar-extras-chemacs-element
+          ;; ,tab-bar-extras-separator-element
+          ;; ,tab-bar-extras-battery-element
+          ,tab-bar-extras-telega-element
+          ,tab-bar-extras-github-element
+          ;; ,tab-bar-extras-pomodoro-element
+          ;; ,tab-bar-extras-suffix-element
+          ))
 
-(setq global-mode-string tab-bar-extras-global-mode-string)
-(setq tab-bar-extras-reset-wttr nil)
+  (setq global-mode-string tab-bar-extras-global-mode-string)
+  (setq tab-bar-extras-reset-wttr nil))
 #+end_src
 
 ** hl-sentence
@@ -565,61 +633,93 @@ Doom modeline
 :END:
 Disable hl-sentence because I do not like it...
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(remove-hook 'markdown-mode-hook #'hl-sentence-mode)
+(with-eval-after-load 'hl-sentence
+  (remove-hook 'markdown-mode-hook #'hl-sentence-mode))
 #+end_src
+
+** telega
+:PROPERTIES:
+:ID:       3CD1A0F0-BF55-47FE-9E81-9FEAC9A9AE6B
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+;; (setq telega-server-libs-prefix "/opt/homebrew/Cellar/tdlib/HEAD-ec788c7/")
+  #+end_src
+
+** yasnippet
+:PROPERTIES:
+:ID:       FEF9B315-DE3F-4F4D-AB5F-DC71BEE19B54
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'yasnippet
+  (keymap-unset yas-minor-mode-map "TAB")
+  (keymap-set yas-minor-mode-map "s-TAB" 'yas-expand))
+#+end_src
+
 ** faces-extras
 :PROPERTIES:
 :ID:       555F14B7-A0D0-4B7A-980F-E157C1B87EFB
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(setq faces-extras-fixed-pitch-font "Iosevka Nerd Font")
-(setq faces-extras-fixed-pitch-size 150)
-(setq faces-extras-variable-pitch-size 160)
+(with-eval-after-load 'faces-extras
+  (setq faces-extras-fixed-pitch-font "Iosevka Nerd Font")
+  (setq faces-extras-fixed-pitch-size 150)
+  (setq faces-extras-variable-pitch-size 160)
 
-(remove-hook 'org-mode-hook #'faces-extras-load-custom-faces)
+  (remove-hook 'org-mode-hook #'faces-extras-load-custom-faces)
 
-(defun faces-extras-load-custom-faces ()
-  "My custom faces, to be used in conjunction with theme."
-  (interactive)
-  (set-face-attribute 'default nil :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
-  (set-face-attribute 'fixed-pitch nil :family faces-extras-fixed-pitch-font :height 1.0)
-  (set-face-attribute 'variable-pitch nil :family faces-extras-variable-pitch-font :height faces-extras-variable-pitch-size)
-  (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family faces-extras-fixed-pitch-font :height 0.8)
-  (set-face-attribute 'org-property-value nil :family faces-extras-fixed-pitch-font :height 0.8)
-  (set-face-attribute 'org-todo nil :family faces-extras-fixed-pitch-font :height 1.0)
-  (set-face-attribute 'org-archived nil :family faces-extras-fixed-pitch-font :height 0.9)
-  (set-face-attribute 'org-document-title nil :family faces-extras-fixed-pitch-font :height 1.0)
-  (set-face-attribute 'org-special-keyword nil :family faces-extras-fixed-pitch-font :height 0.8)
-  (set-face-attribute 'org-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
-  (set-face-attribute 'org-code nil :family faces-extras-fixed-pitch-font :height 1.0)
-  (set-face-attribute 'org-level-1 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-  (set-face-attribute 'org-level-2 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-  (set-face-attribute 'org-level-3 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-  (set-face-attribute 'org-level-4 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-  (set-face-attribute 'org-level-5 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-  (set-face-attribute 'org-level-6 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-  (set-face-attribute 'org-level-7 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-  (set-face-attribute 'org-level-8 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-  (set-face-attribute 'org-date nil :family faces-extras-fixed-pitch-font :height 0.8)
-  (set-face-attribute 'org-modern-date-active nil :family faces-extras-fixed-pitch-font :height 0.8)
-  (set-face-attribute 'org-modern-date-inactive nil :family faces-extras-fixed-pitch-font :height 0.8)
-  (set-face-attribute 'org-modern-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
-  (set-face-attribute 'org-quote nil :family faces-extras-variable-pitch-font :height  faces-extras-variable-pitch-size)
-  (set-face-attribute 'corfu-default nil :family faces-extras-fixed-pitch-font :height 1)
-  (set-face-attribute 'gh-notify-notification-repo-face nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-  (set-face-attribute 'gh-notify-notification-unread-face nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal :foreground "#00a6c9")
-  (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
-  (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
-  (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
-  (set-face-attribute 'window-divider nil :foreground (face-attribute 'mode-line-inactive :background))
-  (set-face-attribute 'tab-bar nil
-                      ;; slightly increase the width of the tab-bar
-                      :box `(:line-width 4 :color ,(face-attribute 'mode-line :background) :style nil)
-                      :background (face-background 'mode-line)))
+  (defun faces-extras-load-custom-faces ()
+    "My custom faces, to be used in conjunction with theme."
+    (interactive)
+    (set-face-attribute 'default nil :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
+    (set-face-attribute 'fixed-pitch nil :family faces-extras-fixed-pitch-font :height 1.0)
+    (set-face-attribute 'variable-pitch nil :family faces-extras-variable-pitch-font :height faces-extras-variable-pitch-size)
+    (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family faces-extras-fixed-pitch-font :height 0.8)
+    (set-face-attribute 'org-property-value nil :family faces-extras-fixed-pitch-font :height 0.8)
+    (set-face-attribute 'org-todo nil :family faces-extras-fixed-pitch-font :height 1.0)
+    (set-face-attribute 'org-archived nil :family faces-extras-fixed-pitch-font :height 0.9)
+    (set-face-attribute 'org-document-title nil :family faces-extras-fixed-pitch-font :height 1.0)
+    (set-face-attribute 'org-special-keyword nil :family faces-extras-fixed-pitch-font :height 0.8)
+    (set-face-attribute 'org-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
+    (set-face-attribute 'org-code nil :family faces-extras-fixed-pitch-font :height 1.0)
+    (set-face-attribute 'org-level-1 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
+    (set-face-attribute 'org-level-2 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
+    (set-face-attribute 'org-level-3 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
+    (set-face-attribute 'org-level-4 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
+    (set-face-attribute 'org-level-5 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
+    (set-face-attribute 'org-level-6 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
+    (set-face-attribute 'org-level-7 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
+    (set-face-attribute 'org-level-8 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
+    (set-face-attribute 'org-date nil :family faces-extras-fixed-pitch-font :height 0.8)
+    (set-face-attribute 'org-modern-date-active nil :family faces-extras-fixed-pitch-font :height 0.8)
+    (set-face-attribute 'org-modern-date-inactive nil :family faces-extras-fixed-pitch-font :height 0.8)
+    (set-face-attribute 'org-modern-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
+    (set-face-attribute 'org-quote nil :family faces-extras-variable-pitch-font :height  faces-extras-variable-pitch-size)
+    (set-face-attribute 'corfu-default nil :family faces-extras-fixed-pitch-font :height 1)
+    (set-face-attribute 'gh-notify-notification-repo-face nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
+    (set-face-attribute 'gh-notify-notification-unread-face nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal :foreground "#00a6c9")
+    (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
+    (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
+    (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
+    (set-face-attribute 'window-divider nil :foreground (face-attribute 'mode-line-inactive :background))
+    (set-face-attribute 'tab-bar nil
+                        ;; slightly increase the width of the tab-bar
+                        :box `(:line-width 4 :color ,(face-attribute 'mode-line :background) :style nil)
+                        :background (face-background 'mode-line)))
 
-(add-hook 'org-mode-hook #'faces-extras-load-custom-faces)
-(faces-extras-load-custom-faces)
+  (add-hook 'org-mode-hook #'faces-extras-load-custom-faces)
+  (faces-extras-load-custom-faces))
+#+end_src
+
+** tareas
+:PROPERTIES:
+:ID:       B891DE59-5914-4452-B1F0-F856C1DA8F6E
+:END:
+
+  #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(find-file paths-file-tlon-tareas-fede)
 #+end_src
 
 ** After init callback
@@ -631,21 +731,22 @@ Disable hl-sentence because I do not like it...
 (run-at-time 60 nil (lambda
                       ()
                       (message "Running Fede's last hook")
-		      (setq display-time-format "%a %e %b %R")
-		      (tab-bar-extras-reset)
+                      (setq display-time-format "%a %e %b %R")
+                      (tab-bar-extras-reset)
                       (cancel-function-timers 'org-extras-agenda-switch-to-agenda-current-day)
-		      (cancel-function-timers 'citar-extras-update-old-bibliography)
-                      ;; rebind yasnippet command to avoid conflicts in org mode
-		      (keymap-unset yas-minor-mode-map "TAB")
-		      (keymap-set yas-minor-mode-map "s-TAB" 'yas-expand)                      
-		      ;; (display-wttr-mode -1)
-		      ;; (doom-modeline--github-fetch-notifications)
-		      ))
-
-(add-hook 'tlon-init-post-init-hook (lambda ()  (message "Running Fede's last hook")))
+                      (cancel-function-timers 'citar-extras-update-old-bibliography)
+                      ))
 #+end_src
 
+** post-init-hook
+:PROPERTIES:
+:ID:       A2F2A628-A3F3-44FF-B02E-AF755A2D58E7
+:END:
+
+This should be at the very end of the ~late-init~ file.
+
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(add-hook 'tlon-init-post-init-hook (lambda ()  (message "Running Fede's last hook")))
 (run-hooks 'tlon-init-post-init-hook)
 #+end_src
 

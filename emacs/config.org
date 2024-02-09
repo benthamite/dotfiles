@@ -686,7 +686,8 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 #+begin_src emacs-lisp
 (use-package org
   :demand t
-  :ensure org-plus-contrib)
+  ;; :ensure org-plus-contrib
+  )
 #+end_src
 
 ** jsonrpc

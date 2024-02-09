@@ -1539,7 +1539,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
   (setq forge-pull-notifications t)
   (setq forge-notifications-github-kludge 'pending-if-unset)
-  (run-with-timer (* 5 60) t #'forge-pull-notifications)
+  (run-with-idle-timer 60 t #'forge-pull-notifications)
 
   (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
 

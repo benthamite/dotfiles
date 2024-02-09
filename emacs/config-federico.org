@@ -177,7 +177,8 @@ Doom modeline
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'window
-  (setq split-width-threshold 160))
+  (setq split-width-threshold 160)
+  (message "`window' late-init config loaded".))
 #+end_src
 
 ** nginx-mode
@@ -200,7 +201,8 @@ Doom modeline
     (setq mac-command-modifier 'hyper)
     (setq mac-option-modifier 'meta)
     (setq mac-right-command-modifier 'super)
-    (setq mac-function-modifier '(:button 2))))
+    (setq mac-function-modifier '(:button 2)))
+  (message "`ns-win' late-init config loaded."))
 #+end_src
 
 ** fancy-battery-mode
@@ -210,7 +212,8 @@ Doom modeline
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'fancy-battery-mode
-(fancy-battery-mode -1))
+  (fancy-battery-mode -1)
+  (message "`fancy-battery-mode' late-init config loaded."))
 #+end_src
 
 #+RESULTS:
@@ -221,7 +224,8 @@ Doom modeline
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'frame-extras
-  (remove-function after-focus-change-function #'frame-extras-maximize-frame))
+  (remove-function after-focus-change-function #'frame-extras-maximize-frame)
+  (message "`frame-extras' late-init config loaded."))
 #+end_src
 
 ** simple
@@ -232,7 +236,8 @@ Doom modeline
 (with-eval-after-load 'simple
   (setq global-mark-ring-max 100)
   (setq mark-ring-max 100)
-  (setq shift-select-mode t))
+  (setq shift-select-mode t)
+  (message "`simple' late-init config loaded."))
 #+end_src
 
 ** files
@@ -242,7 +247,8 @@ Doom modeline
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'files
-  (setq make-backup-files nil))
+  (setq make-backup-files nil)
+  (message "`files' late-init config loaded."))
 #+end_src
 
 ** cua-base
@@ -321,7 +327,8 @@ Doom modeline
       ("t c" "Dropbox: core" (lambda () (interactive) (dired paths-dir-dropbox-tlon-core)))
       ("t f" "Dropbox: fede" (lambda () (interactive) (dired paths-dir-dropbox-tlon-fede)))
       ("t l" "Dropbox: leo" (lambda () (interactive) (dired paths-dir-dropbox-tlon-leo)))
-      ]]))
+      ]])
+  (message "`dired' late-init config loaded."))
 #+end_src
 
 ** forge
@@ -441,7 +448,8 @@ Doom modeline
  "M-<left>" 'backward-word)
 
 ;; remove unwanted keybindings from Pablo
-(keymap-unset org-mode-map "s-i")
+(keymap-unset org-mode-map "s-i"
+	      (message "`org' late-init config loaded."))
 #+end_src
 
 ** org-capture
@@ -479,7 +487,7 @@ Doom modeline
                        (id "7EDB8441-7EFA-43CC-B3DE-5682D55BCEE1")
                        "** TODO %?\n" :prepend t)))
     (push template org-capture-templates))
-  )
+  (message "`org-capture' late-init config loaded."))
 #+end_src
 
 ** org-agenda
@@ -527,8 +535,8 @@ Doom modeline
                         (org-agenda-overriding-header "TODO - Trabajo - Todos")))
             (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Dropbox/org/todo.org\""
                        ((org-agenda-sorting-strategy '(priority-down todo-state-down))
-                        (org-agenda-overriding-header "TODO - Personal - Todos")))
-            )))))
+                        (org-agenda-overriding-header "TODO - Personal - Todos")))))))
+  (message "`org-agenda' late-init config loaded."))
 #+end_src
 
 ** org-extras
@@ -545,7 +553,8 @@ Doom modeline
                                         org-extras-show-logbook
                                         org-extras-toggle-properties
                                         org-extras-toggle-logbook))
-  (cancel-timer org-extras-agenda-switch-to-agenda-current-day-timer))
+  (cancel-timer org-extras-agenda-switch-to-agenda-current-day-timer)
+  (message "`org-extras' late-init config loaded."))
 #+end_src
 ** org-roam
 :PROPERTIES:
@@ -553,7 +562,8 @@ Doom modeline
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'org-roam
-  (setq org-roam-directory paths-dir-org-roam))
+  (setq org-roam-directory paths-dir-org-roam)
+  (message "`org-roam' late-init config loaded."))
 #+end_src
 
 ** org-tidy-mode
@@ -564,7 +574,8 @@ Doom modeline
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'org-tidy-mode
   (remove-hook 'org-mode-hook #'org-tidy-mode)
-  (org-tidy-mode -1))
+  (org-tidy-mode -1)
+  (message "`org-tidy-mode' late-init config loaded."))
 #+end_src
 
 ** consult
@@ -573,7 +584,8 @@ Doom modeline
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'consult
-  (setq consult-preview-key nil))
+  (setq consult-preview-key nil)
+  (message "`consult' late-init config loaded."))
 #+end_src
 
 ** tlon-babel
@@ -585,7 +597,8 @@ Doom modeline
 (with-eval-after-load 'tlon-babel
   (setq tlon-babel-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
   (setq tlon-babel-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
-  (tlon-babel-init))
+  (tlon-babel-init)
+  (message "`tlon-babel' late-init config loaded."))
 #+end_src
 
 ** jinx
@@ -596,7 +609,8 @@ Doom modeline
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'jinx
   (dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
-    (remove-hook hook #'jinx-mode)))
+    (remove-hook hook #'jinx-mode))
+  (message "`jinx' late-init config loaded."))
 #+end_src
 
 ** tab-bar-extras
@@ -624,7 +638,8 @@ Doom modeline
           ))
 
   (setq global-mode-string tab-bar-extras-global-mode-string)
-  (setq tab-bar-extras-reset-wttr nil))
+  (setq tab-bar-extras-reset-wttr nil)
+  (message "`tab-bar-extras' late-init config loaded."))
 #+end_src
 
 ** hl-sentence
@@ -634,7 +649,8 @@ Doom modeline
 Disable hl-sentence because I do not like it...
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'hl-sentence
-  (remove-hook 'markdown-mode-hook #'hl-sentence-mode))
+  (remove-hook 'markdown-mode-hook #'hl-sentence-mode)
+  (message "`hl-sentence' late-init config loaded."))
 #+end_src
 
 ** telega
@@ -654,7 +670,8 @@ Disable hl-sentence because I do not like it...
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'yasnippet
   (keymap-unset yas-minor-mode-map "TAB")
-  (keymap-set yas-minor-mode-map "s-TAB" 'yas-expand))
+  (keymap-set yas-minor-mode-map "s-TAB" 'yas-expand)
+  (message "`yasnippet' late-init config loaded."))
 #+end_src
 
 ** faces-extras
@@ -710,7 +727,8 @@ Disable hl-sentence because I do not like it...
                         :background (face-background 'mode-line)))
 
   (add-hook 'org-mode-hook #'faces-extras-load-custom-faces)
-  (faces-extras-load-custom-faces))
+  (faces-extras-load-custom-faces)
+  (message "`faces-extras' late-init config loaded."))
 #+end_src
 
 ** tareas

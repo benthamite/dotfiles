@@ -6222,6 +6222,9 @@ To populate the database of historical prices:
 :PROPERTIES:
 :ID:       FD6B578E-9794-4C38-A2F3-5A877ED2C4C8
 :END:
+
+https://gitlab.com/chrisberkhout/pricehist
+
 - [[https://devhints.io/ledger][Ledger CLI cheatsheet]]
 - [[https://github.com/davidkeegan/dklrt][GitHub - davidkeegan/dklrt: Ledger Recurring Transactiions.]]
 - [[https://rolfschr.github.io/gswl-book/latest.html][Getting Started With Ledger - August 28, 2019 201f047]]

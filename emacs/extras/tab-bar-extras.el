@@ -101,7 +101,7 @@
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-forge-element
-  `(:eval (when (> (forge-extras-get-unread-notifications) 0)
+  `(:eval (when (forge-extras-get-unread-notifications)
 	    (concat
 	     " | "
 	     (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"

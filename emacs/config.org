@@ -874,12 +874,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp
 (use-package transient
-  :elpaca (transient
-           :host github
-           :repo "magit/transient"
-           :ref "37307c1"
-           :depth nil)
-           :after seq
+  :after seq
   :demand t)
 #+end_src
 
@@ -1439,12 +1434,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
 #+begin_src emacs-lisp :results silent
 (use-package magit
-  :elpaca (magit
-             :host github
-             :repo "magit/magit"
-             :ref "5ad367d7"
-             :depth nil)
-  :defer 5
+  :demand t
   :config
   (setq magit-commit-ask-to-stage 'stage)
   (setq magit-clone-set-remote.pushDefault t)
@@ -1539,11 +1529,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-package forge
-  :elpaca (forge
-           :ref "5dcca0e"
-           :depth nil)
   :after magit ghub emacsql auth-source-pass
-  :defer 5
+  :demand t
   :init
   (if (version<= emacs-version "29.0")
       (setq forge-database-connector 'sqlite)

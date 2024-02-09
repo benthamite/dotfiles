@@ -53,6 +53,11 @@ NAME and ARGS as in `use-package'."
                              (file-name-with-extension (symbol-name (eval `(quote ,name))) "el"))))
      ,@args))
 
+;; From Gonçalo Santos (github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org#helpers)
+(defmacro lambda! (&rest body)
+  "Return a lambda function with BODY."
+  (declare (doc-string 1))
+  `(lambda () (interactive) ,@body))
 
 (provide 'use-package-extras)
 ;;; use-package-extras.el ends here

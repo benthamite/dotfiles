@@ -52,10 +52,8 @@
 
 (defun simple-extras-kill-whole-thing (thing)
   "Kill the `thing-at-point' for the specified kind of THING."
-  (let ((bounds (bounds-of-thing-at-point thing)))
-    (if bounds
-	(kill-region (car bounds) (cdr bounds))
-      (error "No %s at point" thing))))
+  (when-let ((bounds (bounds-of-thing-at-point thing)))
+    (kill-region (car bounds) (cdr bounds))))
 
 ;;;;;; words
 

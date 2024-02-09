@@ -578,6 +578,13 @@ Doom modeline
   (message "`org-tidy-mode' late-init config loaded."))
 #+end_src
 
+** outline
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'outline
+(keymap-unset emacs-lisp-mode-map "M-<right>")
+  (message "`outline' late-init config loaded."))
+#+end_src
+
 ** consult
 :PROPERTIES:
 :ID:       306F1791-DDC6-4F33-A5CD-EC1F1DA5E778

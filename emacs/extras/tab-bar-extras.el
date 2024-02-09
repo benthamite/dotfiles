@@ -100,6 +100,23 @@
   :type 'sexp
   :group 'tab-bar-extras)
 
+(defcustom tab-bar-extras-forge-element
+  `(:eval (when (> (forge-extras-get-unread-notifications) 0)
+	    (concat
+	     " | "
+	     (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
+				 :face 'doom-modeline-notification)
+	     (doom-modeline-vspc)
+	     (propertize
+	      (cond
+	       ((> (forge-extras-get-unread-notifications) 99) "99+")
+	       (t (number-to-string (forge-extras-get-unread-notifications))))
+	      'face '(:inherit
+		      (doom-modeline-unread-number doom-modeline-notification))))))
+  "Element to display Forge notification count."
+  :type 'sexp
+  :group 'tab-bar-extras)
+
 (defcustom tab-bar-extras-pomodoro-element
   `(:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
 	    (setq global-mode-string (append global-mode-string

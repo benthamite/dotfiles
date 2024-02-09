@@ -107,6 +107,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ediff-extras][ediff-extras]]
   - [[#smerge][smerge]]
   - [[#gh][gh]]
+  - [[#closql][closql]]
   - [[#magit][magit]]
   - [[#magit-extra][magit-extra]]
   - [[#ghub][ghub]]
@@ -1407,6 +1408,19 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 #+begin_src emacs-lisp
 (use-package gh
   :elpaca (gh :version (lambda (_) "2.29"))) ; github.com/progfolio/elpaca/issues/229
+#+end_src
+
+** closql
+:PROPERTIES:
+:ID:       917EA2B7-565D-4BC9-94BF-2BE6F1D9B9BC
+:END:
+
+#+begin_src emacs-lisp
+(use-package closql
+  :elpaca (closql
+           :host github
+           :repo "magit/closql")
+  :demand t)
 #+end_src
 
 ** magit

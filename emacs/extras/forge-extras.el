@@ -32,6 +32,10 @@
 
 ;;;; Functions
 
+(defun forge-extras-get-unread-notifications ()
+  "Return the number of unread notifications."
+  (when-let ((unread-notifications (forge--ls-notifications '(unread))))
+      (length unread-notifications)))
 (transient-define-prefix forge-extras-dispatch ()
   "Dispatch a forge command."
   [["Fetch"

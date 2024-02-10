@@ -1550,7 +1550,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
 
   :general
-  ((magit-mode-map forge-issue-list-mode-map gh-notify-mode-map)
+  ((magit-mode-map forge-issue-list-mode-map)
    "n" 'forge-dispatch)
   (forge-post-mode-map
    "s-c" 'forge-post-submit)
@@ -1613,12 +1613,11 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       B74712E7-2A8C-4D17-8FD4-C854C88D3D72
 :END:
 
-
 /[[file:extras/forge-extras.el][forge-extras]] collects my extensions for ~forge~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-personal-package forge-extras
-  :after forge orgit-forge gh-notify
+  :after forge orgit-forge
   :demand t
   :config
   (advice-add 'forge-dispatch :override #'forge-extras-dispatch)
@@ -2437,7 +2436,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   :general
   ("A-C-s-m" 'move-beginning-of-line
    "A-C-s-/" 'move-end-of-line)
-  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map gh-notify-mode-map help-mode-map helpful-mode-map Info-mode-map ledger-reconcile-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map E elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
+  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map help-mode-map helpful-mode-map Info-mode-map ledger-reconcile-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map E elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
    "k" 'previous-line
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)
@@ -3307,8 +3306,6 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
    "H-C-A-g" 'keyboard-escape-quit) ; ESC ESC ESC
   ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "H-q" 'bury-buffer)
-  (gh-notify-mode-map
-   "q" 'bury-buffer)
   (pdf-view-mode-map
    "s" 'save-buffer))
 #+end_src
@@ -3349,7 +3346,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   ;; We typically enter these modes to lookup some information and
   ;; then return to the previous buffer, so we set `q' to switch to
   ;; the other window, and reserve `Q' for the normal behavior
-  ((help-mode-map helpful-mode-map gh-notify-mode-map  osx-dictionary-mode-map)
+  ((help-mode-map helpful-mode-map osx-dictionary-mode-map)
    "Q" 'files-extras-kill-this-buffer
    "q" 'files-extras-kill-this-buffer-switch-to-other-window)
   (helpful-mode-map

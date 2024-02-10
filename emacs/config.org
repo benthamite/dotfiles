@@ -5444,6 +5444,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
   ("C-h k" 'helpful-key
    "C-h f" 'helpful-function
    "C-h c" 'helpful-command
+   "C-h o" 'helpful-symbol
    "C-h v" 'helpful-variable
    "C-h ." 'helpful-at-point)
   (embark-symbol-map

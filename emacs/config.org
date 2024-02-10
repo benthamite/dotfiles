@@ -5398,7 +5398,8 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
   (lossage-size 10000)
 
   :general
-  ("C-A-k" 'describe-keymap)
+  ("C-h C-k" 'describe-keymap
+   "C-h C-." 'display-local-help)
   (input-decode-map
    [?\C-m] [C-m]
    [?\C-i] [C-i]))

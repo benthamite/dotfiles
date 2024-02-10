@@ -109,7 +109,6 @@
     ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)]
    ["Misc"
     ("s" "search topics"            forge-search)
-    ("." "gh-notify"                gh-notify)
     (";" "Show/hide closed topics"  forge-toggle-closed-visibility)
     ]
    ]

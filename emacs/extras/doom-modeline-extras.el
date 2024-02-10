@@ -30,7 +30,6 @@
 (require 'doom-modeline)
 (require 'el-patch)
 (require 'forge)
-;; (require 'gh-notify-extras)
 
 ;;;; Functions
 
@@ -91,9 +90,7 @@ Also refresh the the `gh-notify' buffer."
 	      (length doom-modeline-extras-github-notification-last-count))
     ;; `prev-result'? is this a global var??? check
     (setq prev-result doom-modeline--github-notification-number)
-    (forge-pull-notifications)
-    ;; (gh-notify-extras-refresh-in-background)
-    ))
+    (forge-pull-notifications)))
 
 (add-hook 'doom-modeline-after-github-fetch-notification-hook
 	  #'doom-modeline-extras-trigger-forge-update)

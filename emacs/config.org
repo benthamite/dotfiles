@@ -698,10 +698,6 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
 
-:PROPERTIES:
-:ID:       438DEA77-5F4B-4E1D-8A1D-E65DA588927F
-:END:
-
 #+begin_src emacs-lisp
   ;; (unload-feature 'jsonrpc t)
   (use-package jsonrpc

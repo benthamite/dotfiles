@@ -652,7 +652,8 @@ We load ~use-package~ itself with ~elpaca~, then proceed to do the configuration
 (use-package use-package-extras
   :elpaca (use-package-extras
            :host github :repo "benthamite/dotfiles"
-           :files ("emacs/extras/use-package-extras.el"))
+           :files ("emacs/extras/use-package-extras.el")
+           :depth nil)
   :after use-package
   :demand t)
 (elpaca-wait)

@@ -5464,6 +5464,9 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 
   :general
   (Info-mode-map
+   "m" 'Info-prev
+   "/" 'Info-next
+   "," 'Info-up
    "j" 'Info-backward-node
    ";" 'Info-forward-node))
 #+end_src

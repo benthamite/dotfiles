@@ -50,7 +50,8 @@ NAME and ARGS as in `use-package'."
               :repo "benthamite/dotfiles"
               :files ,(list (file-name-concat
                              "emacs/extras"
-                             (file-name-with-extension (symbol-name (eval `(quote ,name))) "el"))))
+                             (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
+	      :depth nil)
      ,@args))
 
 ;; From Gonçalo Santos (github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org#helpers)

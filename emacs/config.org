@@ -5435,7 +5435,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 
 #+begin_src emacs-lisp :results silent
 (use-package helpful
-  :defer 20
+  :demand t
   :config
   ;; always use `helpful', even when `describe-function' is called by a program
   ;; (e.g. `transient')

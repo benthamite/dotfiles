@@ -5111,6 +5111,9 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
   :after consult yasnippet
   :demand t
   :config
+  ;; we delay previews to avoid accidentally triggering snippets that execute elisp code
+  (consult-customize consult-yasnippet :preview-key nil)
+
   (add-to-list 'vertico-multiform-commands
                '(consult-yasnippet grid))
 

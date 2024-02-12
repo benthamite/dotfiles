@@ -12109,11 +12109,13 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 :ID:       809139BE-A8AF-40A7-BF1A-899839313729
 :END:
 
-Disabling because it interferes with [[https://emacs.stackexchange.com/questions/14950/invalid-coding-system-auto-save-coding-when-trying-to-recover-auto-save-files][recover-this-file]].
 
 #+begin_src emacs-lisp
 (use-package activity-watch-mode
-  :disabled t
+  :elpaca (activity-watch-mode
+           :host github
+           :repo "meliache/activity-watch-mode"
+           :branch "fix/invalid-coding-system-on-recover")
   :demand t
   :config
   (global-activity-watch-mode))

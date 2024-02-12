@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: yasnippet-delete-snippet
+# key: yds
+# contributor: Pablo Stafforini
+# --
+yasnippet: delete snippet (`(magit-extras-get-commit-file 'sans-dir)`)

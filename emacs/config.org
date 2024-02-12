@@ -5033,7 +5033,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :config
   (require 'consult-gh-embark)
   (require 'consult-gh-forge)
-  (setq consult-gh-default-clone-directory "~/source/")
+  (setq consult-gh-default-clone-directory "~/source")
   (setq consult-gh-repo-maxnum 30)
   (setq consult-gh-issues-maxnum 100)
   (setq consult-gh-show-preview nil)

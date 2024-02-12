@@ -2534,6 +2534,7 @@ CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
    "A-H-M-f" 'transpose-sexps
    "A-H-M-r" 'transpose-words
    "A-H-M-v" 'transpose-lines
+   "C-k" nil
    "C-<delete>" nil
    "C-H-M-=" 'overwrite-mode
    "C-H-M-a" 'backward-kill-sexp

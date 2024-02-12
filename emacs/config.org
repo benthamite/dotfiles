@@ -5028,7 +5028,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :elpaca (consult-gh
            :host github
            :repo "armindarvish/consult-gh")
-  :after consult forge
+  :after consult embark transient vertico forge
   :demand t
   :config
   (require 'consult-gh-embark)

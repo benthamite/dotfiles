@@ -5071,8 +5071,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
       ("b" "file" consult-gh-find-file)
       ""
       "default"
-      ("d" "repos" consult-gh-default-repos)
-      ]])
+      ("d" "repos" consult-gh-default-repos)]])
 
   :general
   ("H-G" 'consult-gh-dispatch))

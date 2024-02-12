@@ -1593,15 +1593,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
            :host github
            :repo "eatse21/forge-search.el")
   :after forge
-  :demand t
-  :general
-  ((forge-topic-mode-map
-    forge-topic-list-mode-map
-    forge-issue-list-mode-map
-    forge-pullreq-list-mode-map
-    forge-notifications-mode-map
-    forge-repository-list-mode-map)
-   "s" 'forge-search))
+  :demand t)
 #+end_src
 
 ** forge-extras

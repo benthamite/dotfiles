@@ -6290,6 +6290,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 :ID:       5EDD6F28-3299-4D90-83E1-C7476176277D
 :END:
 
+/[[https://github.com/tlon-team/tlon-babel][tlon-babel]] is a set of Emacs commands that my team uses in various contexts./
 
 #+begin_src emacs-lisp
 (use-package tlon-babel

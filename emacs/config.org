@@ -8470,7 +8470,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :after org
   :demand t
   :config
-  ;; set to nil to temporarily disable cache to avoid `org-element-cache' errors
+  ;; set to nil to temporarily disable cache and avoid `org-element-cache' errors
   (setq org-element-use-cache t))
 #+end_src
 

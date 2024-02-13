@@ -8719,7 +8719,9 @@ CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
 
 /[[https://github.com/org-mime/org-mime][org-mime]] lets you send HTML email using Org-mode HTML export./
 
-#+begin_src emacs-lisp :results silent
+[2024-02-13 Tue] Temporarily disabling to test whether I need this.
+
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package org-mime
   :after org
   :general

@@ -8952,6 +8952,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
 
   (org-roam-db-autosync-mode -1)
+  (run-with-idle-timer (* 5 60) t #'org-roam-db-sync)
 
   (add-hook 'org-roam-capture-new-node-hook #'orb--insert-captured-ref-h)
   (add-hook 'org-roam-capture-new-node-hook #'org-roam-capture--insert-captured-ref-h)

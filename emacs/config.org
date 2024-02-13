@@ -7487,13 +7487,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    )
 #+end_src
 
-*** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
-:PROPERTIES:
-:ID:       1B86CB4D-D297-4C6D-99F7-49A80B7B0688
-:END:
-
-By considering both tasks completed and their associated priorities.
-
 *** TODO [#4] Create function to compute the total number of TODOs and hours in effort estimates
 :PROPERTIES:
 :Effort:   2:00

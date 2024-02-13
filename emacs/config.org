@@ -9157,7 +9157,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 :END:
 
 
-/[[file:extras/org-noter-extras.el][org-noter-extras]] collects my extensions for ~org-noter~.
+/[[file:extras/org-noter-extras.el][org-noter-extras]] collects my extensions for ~org-noter~./
 
 #+begin_src emacs-lisp
 (use-personal-package org-noter-extras

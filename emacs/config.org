@@ -6716,6 +6716,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
   ;; do not truncate print results in Edebug
   (setq edebug-print-level nil)
   (setq edebug-print-length nil)
+  (setq edebug-print-circle nil) ; disable confusing #N= and #N# print syntax
 
   :general
   (emacs-lisp-mode-map

@@ -7779,7 +7779,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO %?\n" :empty-lines 1)
           ("c" "Calendar" entry
-           (file paths-file-calendar)
+           (file ,paths-file-calendar)
            "* TODO %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t)
           ;; djcbsoftware.nl/code/mu/mu4e/Org_002dmode-links.html
           ("e" "Email" entry

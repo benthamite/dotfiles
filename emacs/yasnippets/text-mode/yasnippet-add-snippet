@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: yasnippet-add-new-snippet
-# key: yans
+# name: yasnippet-add-snippet
+# key: yas
 # contributor: Pablo Stafforini
 # --
-yasnippet: add new snippet (`(magit-extras-get-commit-file 'sans-dir)`)
+yasnippet: add snippet (`(magit-extras-get-commit-file 'sans-dir)`)

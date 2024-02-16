@@ -665,11 +665,7 @@ NAME and ARGS as in `use-package'."
 /[[file:extras/use-package-extras.el][use-package-extras]] collects my extensions for ~use-package~./
 
 #+begin_src emacs-lisp
-(use-package use-package-extras
-  :elpaca (use-package-extras
-           :host github :repo "benthamite/dotfiles"
-           :files ("emacs/extras/use-package-extras.el")
-           :depth nil)
+(use-personal-package use-package-extras
   :after use-package
   :demand t)
 (elpaca-wait)

@@ -40,20 +40,6 @@ NAME and ARGS as in `use-package'."
      :elpaca nil
      ,@args))
 
-(defmacro use-personal-package (name &rest args)
-  "Like `use-package' but accounting for personal packages.
-NAME and ARGS as in `use-package'."
-  (declare (indent defun))
-  `(use-package ,name
-     :elpaca (,name
-              :host github
-              :repo "benthamite/dotfiles"
-              :files ,(list (file-name-concat
-                             "emacs/extras"
-                             (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
-	      :depth nil)
-     ,@args))
-
 ;; From Gonçalo Santos (github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org#helpers)
 (defmacro lambda! (&rest body)
   "Return a lambda function with BODY."

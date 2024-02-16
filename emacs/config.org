@@ -4952,15 +4952,14 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   :general
   ("C-H-l" 'consult-line
    "C-f" 'consult-find
+   "s-j" 'consult-imenu
    "H-b" 'consult-buffer
    "H-k" 'consult-locate
    "A-H-i" 'consult-info
    "H-R" 'consult-history
    "H-V" 'consult-yank-pop)
   ((markdown-mode-map gfm-mode-map outline-mode-map)
-   "s-j" 'consult-outline)
-  ((elfeed-show-mode-map eww-mode-map prog-mode-map)
-   "s-j" 'consult-imenu))
+   "s-j" 'consult-outline))
 #+end_src
 
 ** consult-extras

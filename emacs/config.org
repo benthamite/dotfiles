@@ -12360,8 +12360,6 @@ CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
 
 For personal reference, these are the most recent Emacs installations (in reverse chronological order).
 
-[2023-02-23 Thu]
-
 #+begin_src shell :tangle no
 brew tap d12frosted/emacs-plus
 brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon

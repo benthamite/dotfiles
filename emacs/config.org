@@ -652,7 +652,8 @@ We load ~use-package~ itself with ~elpaca~, then proceed to do the configuration
 (use-package use-package-extras
   :elpaca (use-package-extras
            :host github :repo "benthamite/dotfiles"
-           :files ("emacs/extras/use-package-extras.el"))
+           :files ("emacs/extras/use-package-extras.el")
+           :depth nil)
   :after use-package
   :demand t)
 (elpaca-wait)
@@ -782,8 +783,8 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :after paths
   :demand t
   :config
-  (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook)
-  (tlon-init-startup))
+  (tlon-init-startup)
+  (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook))
 (elpaca-wait)
 #+end_src
 
@@ -1279,7 +1280,12 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
   (setq auth-source-debug t)
   (setq auth-source-do-cache nil)
   (auth-source-pass-enable)
-  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)
+  (advice-add 'auth-source-pass-search :around
+              (lambda (orig-fun &rest args)
+                "Make `auth-source-pass' less verbose."
+                (let ((auth-source-debug nil))
+                  (apply orig-fun args)))))
 #+end_src
 
 Note: to work, entries must conform to the pattern ~auth-sources/host~.
@@ -1539,13 +1545,13 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq forge-owned-accounts '(("benthamite")))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
   (setq forge-pull-notifications t)
-  (setq forge-notifications-github-kludge 'pending-if-unset)
+  (setq forge-notifications-github-kludge 'pending-again)
   (run-with-idle-timer 60 t #'forge-pull-notifications)
 
   (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
 
   :general
-  ((magit-mode-map forge-issue-list-mode-map gh-notify-mode-map)
+  ((magit-mode-map forge-issue-list-mode-map)
    "n" 'forge-dispatch)
   (forge-post-mode-map
    "s-c" 'forge-post-submit)
@@ -1608,12 +1614,11 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       B74712E7-2A8C-4D17-8FD4-C854C88D3D72
 :END:
 
-
 /[[file:extras/forge-extras.el][forge-extras]] collects my extensions for ~forge~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-personal-package forge-extras
-  :after forge orgit-forge gh-notify
+  :after forge orgit-forge
   :demand t
   :config
   (advice-add 'forge-dispatch :override #'forge-extras-dispatch)
@@ -2432,7 +2437,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   :general
   ("A-C-s-m" 'move-beginning-of-line
    "A-C-s-/" 'move-end-of-line)
-  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map gh-notify-mode-map help-mode-map helpful-mode-map Info-mode-map ledger-reconcile-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map E elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
+  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map help-mode-map helpful-mode-map Info-mode-map ledger-reconcile-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map E elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
    "k" 'previous-line
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)
@@ -3302,8 +3307,6 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
    "H-C-A-g" 'keyboard-escape-quit) ; ESC ESC ESC
   ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "H-q" 'bury-buffer)
-  (gh-notify-mode-map
-   "q" 'bury-buffer)
   (pdf-view-mode-map
    "s" 'save-buffer))
 #+end_src
@@ -3344,7 +3347,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   ;; We typically enter these modes to lookup some information and
   ;; then return to the previous buffer, so we set `q' to switch to
   ;; the other window, and reserve `Q' for the normal behavior
-  ((help-mode-map helpful-mode-map gh-notify-mode-map  osx-dictionary-mode-map)
+  ((help-mode-map helpful-mode-map osx-dictionary-mode-map)
    "Q" 'files-extras-kill-this-buffer
    "q" 'files-extras-kill-this-buffer-switch-to-other-window)
   (helpful-mode-map
@@ -5396,7 +5399,8 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
   (lossage-size 10000)
 
   :general
-  ("C-A-k" 'describe-keymap)
+  ("C-h C-k" 'describe-keymap
+   "C-h C-." 'display-local-help)
   (input-decode-map
    [?\C-m] [C-m]
    [?\C-i] [C-i]))
@@ -5430,18 +5434,19 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 
 #+begin_src emacs-lisp :results silent
 (use-package helpful
-  :defer 20
+  :demand t
+  :config
+  ;; always use `helpful', even when `describe-function' is called by a program
+  ;; (e.g. `transient')
+  (advice-add 'describe-function :override #'helpful-function)
+
   :general
-  ("H-U" 'helpful-at-point
-   "C-k" 'helpful-key
-   "C-h k" 'helpful-key
+  ("C-h k" 'helpful-key
    "C-h f" 'helpful-function
-   "C-A-f" 'helpful-function
+   "C-h c" 'helpful-command
    "C-h o" 'helpful-symbol
-   "C-A-o" 'helpful-symbol
    "C-h v" 'helpful-variable
-   "C-A-v" 'helpful-variable
-   "C-h c" 'helpful-command)
+   "C-h ." 'helpful-at-point)
   (embark-symbol-map
    "h" 'helpful-symbol))
 #+end_src
@@ -5459,6 +5464,9 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 
   :general
   (Info-mode-map
+   "m" 'Info-prev
+   "/" 'Info-next
+   "," 'Info-up
    "j" 'Info-backward-node
    ";" 'Info-forward-node))
 #+end_src
@@ -6493,8 +6501,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
           (strike-out
            (color . "red"))))
 
-  (unless (or noninteractive (eq this-command 'pdf-tools-install))
-    (pdf-tools-install))
+  (pdf-tools-install t)
 
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
   (add-hook 'pdf-tools-enabled-hook #'sow-mode)
@@ -12352,8 +12359,6 @@ CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
 :END:
 
 For personal reference, these are the most recent Emacs installations (in reverse chronological order).
-
-[2023-02-23 Thu]
 
 #+begin_src shell :tangle no
 brew tap d12frosted/emacs-plus

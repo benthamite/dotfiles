@@ -1062,12 +1062,15 @@ Fetching is done using `tlon-biblio'."
 (defun ebib-extras-fetch-field-value (field)
   "Fetch the value of FIELD for the entry at point.
 Fetching is done using `tlon-biblio'."
-  (require 'simple-extras)
   (unless (derived-mode-p 'ebib-entry-mode)
     (error "Not in `ebib-entry-mode'"))
   (if-let ((id (ebib-extras-get-or-fetch-id-or-url)))
-      (let ((entry (zotra-get-entry id (not (simple-extras-string-is-url-p id))))
-	    value)
+      (let* ((query-result
+              (zotra-query-url-or-search-string id))
+             (data (car query-result))
+	     (endpoint (cdr query-result))
+	     (entry (zotra-get-entry-1 data zotra-default-entry-format endpoint))
+	     value)
 	(with-temp-buffer (insert entry)
 			  (setq value (bibtex-autokey-get-field field)))
 	(when (string-empty-p value)

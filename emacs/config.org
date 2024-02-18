@@ -3552,7 +3552,7 @@ CLOCK: [2022-07-17 Sun 10:49]--[2022-07-17 Sun 11:13] =>  0:24
 
 #+begin_src emacs-lisp
 (use-package nerd-icons-dired
-  :disabled
+  :demand t
   :config
   (add-hook 'dired-mode-hook #'nerd-icons-dired-mode))
 #+end_src

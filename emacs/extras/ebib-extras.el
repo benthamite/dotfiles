@@ -76,7 +76,7 @@
 (defun ebib-extras-get-isbn ()
   "Return ISBN for the current entry, if it exists."
   (when-let ((isbn
-	      (ebib-extras-get-field-value "isbn")))
+	      (ebib-extras-get-field "isbn")))
     (car (split-string
 	  (s-replace "-"
 		     ""
@@ -94,7 +94,7 @@
 (defun ebib-extras--update-file-field-contents (key file-name)
   "Update contents of FILE-NAME in field `file' for entry KEY."
   (let* ((field "file")
-	 (file-field-contents (ebib-extras-get-field-value field)))
+	 (file-field-contents (ebib-extras-get-field field)))
     (unless (and
 	     file-field-contents
 	     (catch 'file-exists
@@ -144,7 +144,7 @@ value is copied to the kill ring."
 (defun ebib-extras-get-file (extension)
   "Return the file with EXTENSION in entry at point.
 A file will be returned if it uniquely exists."
-  (when-let ((files (ebib-extras-get-field-value "file")))
+  (when-let ((files (ebib-extras-get-field "file")))
     (catch 'tag
       (mapc
        (lambda (file)
@@ -236,7 +236,7 @@ ordering defined in `ebib-extras-valid-file-extensions'."
      (let* ((field "file")
 	    (key (ebib--get-key-at-point))
 	    (file-list (split-string
-			(ebib-extras-get-field-value field)
+			(ebib-extras-get-field field)
 			";")))
        (ebib-extras-valid-key-p key)
        (when file-list
@@ -261,7 +261,7 @@ ordering defined in `ebib-extras-valid-file-extensions'."
 
 (defun ebib-extras-validate-file-stem ()
   "Check that stem of each attached file equals entry's unique key."
-  (when-let ((files (ebib-extras-get-field-value "file")))
+  (when-let ((files (ebib-extras-get-field "file")))
     (when (catch 'tag
 	    (mapc
 	     (lambda (file)
@@ -374,7 +374,7 @@ If FORCE is non-nil, force OCR even if the file is already"
   (interactive)
   (ebib--execute-when
     (entries
-     (let ((lang (or (ebib-extras-get-field-value "langid")
+     (let ((lang (or (ebib-extras-get-field "langid")
 		     (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english"))))
        (ebib-set-field-value "langid" lang (ebib--get-key-at-point) ebib--cur-db 'overwrite)
        (let ((file-name (ebib-extras-get-file "pdf")))
@@ -563,7 +563,7 @@ variable `ebib-extras-search-book'."
 
 (defun ebib-extras-get-supertype ()
   "Return the supertype of the current entry."
-  (let* ((type (ebib-extras-get-field-value "=type="))
+  (let* ((type (ebib-extras-get-field "=type="))
 	 (supertype (cond
 		     ((member type ebib-extras-book-like-entry-types)
 		      "book")
@@ -606,7 +606,7 @@ The list of book search functions is specified by
   (let ((title (catch 'found
 		 (dolist (field '("title" "booktitle"))
 		   (when-let ((title
-			       (ebib-extras-get-field-value field)))
+			       (ebib-extras-get-field field)))
 		     (throw 'found title))))))
     title))
 
@@ -636,7 +636,7 @@ The list of article search functions is specified by
   (interactive)
   (ebib--execute-when
     (entries
-     (if-let ((title (ebib-extras-get-field-value "title")))
+     (if-let ((title (ebib-extras-get-field "title")))
 	 (ebib-extras-search-article title)
        (user-error "Title field is empty")))
     (default
@@ -655,7 +655,7 @@ The list of film search functions is specified by
   (interactive)
   (ebib--execute-when
     (entries
-     (if-let ((title (ebib-extras-get-field-value "title")))
+     (if-let ((title (ebib-extras-get-field "title")))
 	 (ebib-extras-search-film title)
        (user-error "Title field is empty")))
     (default
@@ -666,7 +666,7 @@ The list of film search functions is specified by
   (interactive)
   ;; TODO: Add support for arXiv
   (let ((id (or (ebib-extras-get-isbn)
-		(ebib-extras-get-field-value "doi")
+		(ebib-extras-get-field "doi")
 		(read-string "Enter ISBN or DOI: "))))
     (cond ((ebib-extras-isbn-p id)
 	   (ebib-extras-search-book id))
@@ -723,7 +723,7 @@ The list of article download functions is specified by
   (interactive)
   (ebib--execute-when
     (entries
-     (if-let ((title (ebib-extras-get-field-value "title")))
+     (if-let ((title (ebib-extras-get-field "title")))
 	 (ebib-extras-download-article title)
        (user-error "Title field is empty")))
     (default
@@ -734,7 +734,7 @@ The list of article download functions is specified by
   ;; TODO: Add support for arXiv
   (interactive)
   (let ((id (or (ebib-extras-get-isbn)
-		(ebib-extras-get-field-value "doi")
+		(ebib-extras-get-field "doi")
 		(read-string "Enter ISBN or DOI: "))))
     (cond ((scihub-is-doi-p id)
 	   (scihub-download id))
@@ -776,7 +776,7 @@ The list of article download functions is specified by
   (ebib--execute-when
     (entries
      (let* ((field (ebib--current-field))
-	    (value (ebib-extras-get-field-value field))
+	    (value (ebib-extras-get-field field))
 	    (words (split-string value)))
        (setq words (mapcar
 		    (lambda (word)
@@ -952,7 +952,7 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
   "Check if the author of the given entry exists in the current database."
   (interactive)
   (let* ((db ebib--cur-db)
-	 (author-to-check (ebib-extras-get-field-value "author")))
+	 (author-to-check (ebib-extras-get-field "author")))
     (if (member author-to-check ebib-extras-existing-authors)
 	(message "Author found in the database!")
       (message "Warning: Author not found in the database!"))))
@@ -963,7 +963,7 @@ If applicable, open external website to set rating there as well."
   (interactive)
   (let ((rating (ebib-extras-choose-rating))
 	(supertype (ebib-extras-get-supertype))
-	(title (ebib-extras-get-field-value "title"))
+	(title (ebib-extras-get-field "title"))
 	(key (ebib--get-key-at-point))
 	(db ebib--cur-db))
     ;; TODO: open rating websites based on supertype
@@ -995,7 +995,7 @@ If applicable, open external website to set rating there as well."
   (interactive)
   (let ((key (ebib--get-key-at-point))
 	(db ebib--cur-db))
-    (when (ebib-extras-get-field-value "note")
+    (when (ebib-extras-get-field "note")
       (user-error "Note field is not empty"))
     (ebib-set-field-value "note"
 			  (format "No translation found on %s." (format-time-string "%Y-%m-%d"))
@@ -1011,7 +1011,7 @@ If applicable, open external website to set rating there as well."
     (ebib tlon-babel-refs-file-fluid key)
     (ebib-extras-open-key key)))
 
-(defun ebib-extras-get-field-value (field)
+(defun ebib-extras-get-field (field)
   "Get the value of FIELD for the entry at point.
 Convenience function that calls `ebib-get-field-value' with
 sensible defaults and remove line breaks and empty spaces."
@@ -1023,21 +1023,21 @@ sensible defaults and remove line breaks and empty spaces."
   "Get the ID or URL of the entry at point."
   (when-let ((id-or-url (catch 'found
 			  (dolist (field '("doi" "isbn" "url"))
-			    (when-let ((value (ebib-extras-get-field-value field)))
+			    (when-let ((value (ebib-extras-get-field field)))
 			      (throw 'found value))))))
     id-or-url))
 
 (defun ebib-extras-fetch-id-or-url ()
   "Fetch the ID or URL of the entry at point.
 Fetching is done using `bib'."
-  (let ((title (ebib-extras-get-field-value "title"))
-	(author (ebib-extras-get-field-value "author")))
+  (let ((title (ebib-extras-get-field "title"))
+	(author (ebib-extras-get-field "author")))
     (pcase (ebib-extras-get-supertype)
       ("book" (bib-search-isbn (format "% %" title author)))
       ("article" (bib-search-crossref title author))
       ("film" (bib-search-imdb
 	       (bib-translate-title-to-english title)))
-      (_ (ebib-extras-get-field-value "url")))))
+      (_ (ebib-extras-get-field "url")))))
 
 (defun ebib-extras-get-or-fetch-id-or-url ()
   "Get the ID or URL of the entry at point, or fetch it if missing."
@@ -1054,7 +1054,7 @@ Fetching is done using `bib'."
 		 ("article" "doi")
 		 ("film" "url")))
 	(id (or id (ebib-extras-fetch-id-or-url))))
-    (when (ebib-extras-get-field-value field)
+    (when (ebib-extras-get-field field)
       (user-error "ID field is not empty"))
     (ebib-set-field-value field id key db)
     (ebib-extras-update-entry-buffer db)))
@@ -1110,17 +1110,17 @@ When the entry already contains an abstract, prompt the user for confirmation.
 Bypass this prompt if OVERWRITE is either `always' or `never'; if so, the new
 abstract will, or will not, replace the existing one, respectively."
   (interactive)
-  (let ((abstract (ebib-extras-get-field-value "abstract")))
+  (let ((abstract (ebib-extras-get-field "abstract")))
     (when (or
 	   (eq overwrite 'always)
 	   (not abstract)
 	   (unless (eq overwrite 'never)
 	     (y-or-n-p "Abstract already exists. Overwrite?")))
-      (if-let ((value (or (when-let ((doi (ebib-extras-get-field-value "doi")))
+      (if-let ((value (or (when-let ((doi (ebib-extras-get-field "doi")))
 			    (bib-fetch-abstract-from-crossref doi))
-			  (when-let ((isbn (ebib-extras-get-field-value "isbn")))
+			  (when-let ((isbn (ebib-extras-get-field "isbn")))
 			    (bib-fetch-abstract-from-google-books isbn))
-			  (when-let ((url (ebib-extras-get-field-value "url")))
+			  (when-let ((url (ebib-extras-get-field "url")))
 			    ;; running zotero on a URL of a PDF throws an error
 			    (unless (string-match-p "\\.pdf$" url)
 			      (ebib-extras-fetch-field-from-zotero "abstract" url))))))
@@ -1141,7 +1141,7 @@ abstract will, or will not, replace the existing one, respectively."
 	      (keywords-raw (replace-regexp-in-string
 			     "\n                  "
 			     " "
-			     (ebib-extras-get-field-value field)))
+			     (ebib-extras-get-field field)))
 	      ;; turn into bullet-separated links
 	      (keywords (org-extras-linkify-elements
 			 (split-string keywords-raw ", "))))
@@ -1162,11 +1162,11 @@ Prompt the user for a title, unless TITLE is non-nil."
   (interactive)
   (require 'tlon-babel)
   (let* ((fields `(("title" . ,(or title (read-string "Section title: ")))
-		   ("eventtitle" . ,(ebib-extras-get-field-value "title"))
-		   ("url" . ,(read-string "URL: " (ebib-extras-get-field-value "url")))
+		   ("eventtitle" . ,(ebib-extras-get-field "title"))
+		   ("url" . ,(read-string "URL: " (ebib-extras-get-field "url")))
 		   ("crossref" . ,(ebib--get-key-at-point))
-		   ("author" . ,(ebib-extras-get-field-value "author"))
-		   ("date" . ,(ebib-extras-get-field-value "")))))
+		   ("author" . ,(ebib-extras-get-field "author"))
+		   ("date" . ,(ebib-extras-get-field "")))))
     (tlon-babel--create-entry-from-current fields)))
 
 
@@ -1180,12 +1180,12 @@ Prompt the user for a title, unless TITLE is non-nil."
   (unless (derived-mode-p 'ebib-entry-mode)
     (user-error "Not in `ebib-entry-mode'"))
   (when-let ((file (ebib-extras-get-file "pdf"))
-	     (author (or (ebib-extras-get-field-value "author")
-			 (ebib-extras-get-field-value "editor"))))
+	     (author (or (ebib-extras-get-field "author")
+			 (ebib-extras-get-field "editor"))))
     (let* ((file-absolute (expand-file-name file))
 	   (author-list (ebib-extras-get-authors-list author))
 	   (author-string (ebib-extras-format-authors author-list))
-	   (title (ebib-extras-get-field-value "title"))
+	   (title (ebib-extras-get-field "title"))
 	   (author-arg (format "-Author='%s' " author-string))
 	   (title-arg (format "-Title='%s' " title)))
       (when (or author-arg title-arg)
@@ -1424,7 +1424,7 @@ value is copied to the kill ring."
 			 (progn (kill-new contents)
 				(message "Field contents copied."))
 		       (error "Cannot copy an empty field")))
-		   (let* ((raw-contents (ebib-extras-get-field-value field))
+		   (let* ((raw-contents (ebib-extras-get-field field))
 			  (contents (if (f-file-p raw-contents)
 					(file-truename raw-contents)
 				      raw-contents)))

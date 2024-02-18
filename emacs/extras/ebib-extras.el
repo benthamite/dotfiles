@@ -1105,6 +1105,11 @@ DIRECTION can be `prev' or `next'."
   (interactive)
   (ebib-extras-move-entry 'prev))
 
+(defun ebib-extras-set-field (field value)
+  "Set the value of FIELD to VALUE for the entry at point."
+  (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
+  (ebib-extras-update-entry-buffer ebib--cur-db))
+
   (interactive)
   (let ((abstract (ebib-extras-get-field-value "abstract")))
     (when (or

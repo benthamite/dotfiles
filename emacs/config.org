@@ -644,13 +644,13 @@ NAME and ARGS as in `use-package'."
      :elpaca (,name
               :host github
               :repo "benthamite/dotfiles"
-	      :branch "6.1.0-test"
+              :branch "6.1.0-test"
               :files ,(list (file-name-concat
                              "emacs/extras"
                              (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
-	      :depth nil)
+              :depth nil)
      ,@args))
-     
+
 (elpaca-wait)
 #+end_src
 
@@ -4833,17 +4833,17 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
 #+begin_src emacs-lisp :results silent
 (use-package vertico
   :elpaca (vertico :files (:defaults "extensions/*")
-                     :includes (vertico-indexed
-                                vertico-flat
-                                vertico-grid
-                                vertico-mouse
-                                vertico-quick
-                                vertico-buffer
-                                vertico-repeat
-                                vertico-reverse
-                                vertico-directory
-                                vertico-multiform
-                                vertico-unobtrusive))
+                   :includes (vertico-indexed
+                              vertico-flat
+                              vertico-grid
+                              vertico-mouse
+                              vertico-quick
+                              vertico-buffer
+                              vertico-repeat
+                              vertico-reverse
+                              vertico-directory
+                              vertico-multiform
+                              vertico-unobtrusive))
   :demand t
   :init
   (vertico-mode)
@@ -4886,15 +4886,14 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
   :demand t
   :config
   (setq embark-confirm-act-all nil)
-
   (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
 
   (defvar-keymap embark-yasnippet-completion-actions
-  :parent embark-general-map)
+    :parent embark-general-map)
 
   :general
   (embark-yasnippet-completion-actions
-  "d" 'consult-yasnippet-visit-snippet-file)
+   "d" 'consult-yasnippet-visit-snippet-file)
   ("C-;" 'embark-act
    "C-H-;" 'embark-act-all
    "C-h B" 'embark-bindings))

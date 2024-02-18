@@ -4867,6 +4867,8 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
   (vertico-map
    "<C-i>" 'vertico-exit
    "M-f" 'vertico-quick-exit
+   "M-k" 'vertico-previous-group
+   "M-l" 'vertico-next-group
    "C-H-M-w" 'vertico-directory-up))
 #+end_src
 

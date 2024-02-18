@@ -5145,7 +5145,8 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 (use-package orderless
   :demand t
   :config
-  (setq completion-styles '(orderless basic partial-completion))
+  (setq completion-styles
+        '(basic partial-completion orderless))
   (setq completion-category-overrides
         '((file (styles . (basic partial-completion orderless)))
           (embark-keybinding (styles . (basic substring)))

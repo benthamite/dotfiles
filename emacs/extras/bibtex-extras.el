@@ -330,6 +330,29 @@ and sets the value of the field for all entries to `Tlön'."
     (while (re-search-forward " \\}" nil t)
       (replace-match "}" t t))))
 
+(defun bibtex-extras-get-entry-as-string ()
+  "Return the bibtex entry at point as a string."
+  (save-excursion
+    (save-restriction
+      (bibtex-narrow-to-entry)
+      (buffer-substring-no-properties (point-min) (point-max)))))
+
+(defun bibtex-extras-get-field (field)
+  "Return the value of FIELD in the current BibTeX entry."
+  (save-excursion
+    (save-restriction
+      (bibtex-narrow-to-entry)
+      (bibtex-beginning-of-entry)
+      (let ((value (bibtex-autokey-get-field field)))
+	(unless (string-empty-p value)
+	  value)))))
+
+(defun bibtex-extras-get-field-in-string (string field)
+  "Return the value of FIELD in STRING."
+  (with-temp-buffer
+    (insert string)
+    (bibtex-extras-get-field field)))
+
 (defun bibtex-extras-get-two-letter-code (language)
   "Return the two-letter code for LANGUAGE."
   (when-let* ((downcased (downcase language))

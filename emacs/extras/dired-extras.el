@@ -124,16 +124,6 @@ losing the `put back' option."
   (require 'image-dired)
   (image-dired-show-all-from-dir (dired-current-directory)))
 
-;;;;; all-the-icons-dired
-
-(declare-function all-the-icons-dired-mode "all-the-icons-dired")
-(defun dired-extras-all-the-icons-activate ()
-  "Define conditions for activation of `all-the-icons-dired-mode'."
-  (require 'all-the-icons-dired)
-  (if (< (length (directory-files default-directory)) 1000)
-      (all-the-icons-dired-mode)
-    (all-the-icons-dired-mode -1)))
-
 ;;;;; gnus-dired
 
 ;; replaces `gnus-dired-mail-buffers' function so it works on

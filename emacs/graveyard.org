@@ -8,6 +8,26 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** all-the-icons-dired
+:PROPERTIES:
+:ID:       53778128-E0F3-4199-9D7D-2118904F39A9
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-17 Sun 10:49]--[2022-07-17 Sun 11:13] =>  0:24
+:END:
+
+/[[https://github.com/jtbm37/all-the-icons-dired][all-the-icons-dired]] adds dired support to [[id:46EB8CD9-E498-4F80-AC02-A116CFA58799][all-the-icons]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package all-the-icons-dired
+  :demand t
+  :after all-the-icons dired
+  :config
+  (setq all-the-icons-dired-monochrome nil)
+
+  (add-hook 'dired-mode-hook #'dired-extras-all-the-icons-activate))
+#+end_src
+
 ** all-the-icons-completion
 :PROPERTIES:
 :ID:       A0DAA757-1CC9-460B-9F46-78A5145E7E61

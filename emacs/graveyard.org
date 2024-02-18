@@ -8,6 +8,44 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** all-the-icons-completion
+:PROPERTIES:
+:ID:       A0DAA757-1CC9-460B-9F46-78A5145E7E61
+:END:
+
+/[[https://github.com/iyefrat/all-the-icons-completion][all-the-icons-completion]] adds icons to completion candidates./
+
+[2024-02-18 Sun] Replaced with ~nerd-icons~.
+
+#+begin_src emacs-lisp :results silent
+(use-package all-the-icons-completion
+  :demand t
+  :after all-the-icons marginalia vertico
+  :config
+  (all-the-icons-completion-mode)
+
+  (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
+#+end_src
+
+** all-the-icons
+:PROPERTIES:
+:ID:       46EB8CD9-E498-4F80-AC02-A116CFA58799
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-17 Sun 11:13]--[2022-07-17 Sun 11:21] =>  0:08
+CLOCK: [2021-05-20 Thu 18:21]--[2021-05-20 Thu 18:39] =>  0:18
+CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
+:END:
+
+/[[https://github.com/domtronn/all-the-icons.el][all-the-icons]] collects various icon fonts and propertizes them./
+
+[2024-02-18 Sun] Replaced with ~nerd-icons~.
+
+#+begin_src emacs-lisp :results silent
+(use-package all-the-icons
+  :demand t)
+#+end_src
+
 ** gh-notify-extras
 :PROPERTIES:
 :ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F

@@ -219,7 +219,7 @@ field for this information is `journaltitle', so we move it there."
       (bibtex-narrow-to-entry)
       (bibtex-beginning-of-entry)
       (when (bibtex-autokey-get-field "titleaddon")
-        (while (re-search-forward "titleaddon = " nil t)
+	(while (re-search-forward "titleaddon = " nil t)
           (replace-match "journaltitle = " nil nil))))))
 
 (defun bibtex-extras-kill-field (field)

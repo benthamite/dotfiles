@@ -285,9 +285,8 @@ Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point.
     (bibtex-beginning-of-entry)
     (bibtex-make-field field t t))
   ;; Update the value of FIELD
-  (let ((field-content (bibtex-autokey-get-field field)))
-    (when field-content
-      (bibtex-set-field field value))))
+  (when (bibtex-autokey-get-field field)
+    (bibtex-set-field field value)))
 
 (defun bibtex-extras-add-or-update-tlon-field ()
   "Add or update \"database\" field with \"Tlön\" value in the current BibTeX entry."

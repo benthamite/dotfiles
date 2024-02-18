@@ -62,6 +62,15 @@
    :padding "    "
    :tag "has:notes"))
 
+(defvar citar-extras-indicator-cited-icons
+  (citar-indicator-create
+   :symbol (nerd-icons-faicon
+            "nf-fa-circle_o"
+            :face 'nerd-icon-green)
+   :function #'citar-is-cited
+   :padding "  "
+   :tag "is:cited"))
+
 ;;;; Functions
 
 (defun citar-extras-open-in-ebib (citekey)

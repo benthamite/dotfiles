@@ -9523,6 +9523,14 @@ Having headings tagged with the type of work they are notes of allows me to quer
 (use-personal-package citar-extras
   :after citar
   :demand t
+  :config
+  ;; https://github.com/emacs-citar/citar/wiki/Indicators
+  (setq citar-indicators
+        (list citar-extras-indicator-files-icons
+              citar-extras-indicator-links-icons
+              citar-extras-indicator-notes-icons
+              citar-extras-indicator-cited-icons))
+              
   :general
   ((citar-map citar-citation-map)
    "d" 'ebib-extras-download-dwim
@@ -9545,12 +9553,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
   :after citar citeproc citar-extras tlon-babel
   :config
   (setq citar-citeproc-csl-styles-dir paths-dir-tlon-csl-styles)
-  (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir)
-  ;; https://github.com/emacs-citar/citar/wiki/Indicators
-  (setq citar-indicators
-        (list citar-extras-indicator-files-icons
-              citar-extras-indicator-links-icons
-              citar-extras-indicator-notes-icons)))
+  (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir))
 #+end_src
 
 ** citar-embark

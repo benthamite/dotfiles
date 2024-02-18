@@ -1110,12 +1110,30 @@ DIRECTION can be `prev' or `next'."
   (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
   (ebib-extras-update-entry-buffer ebib--cur-db))
 
+(defun ebib-extras-fetch-and-set-abstract (&optional overwrite)
+  "Fetch the abstract of the entry at point and set it as the new value.
+We use CrossRef for DOIs, Google Books for ISBN and Zotero for URLs.
+
+When the entry already contains an abstract, prompt the user for confirmation.
+Bypass this prompt if OVERWRITE is either `always' or `never'; if so, the new
+abstract will, or will not, replace the existing one, respectively."
   (interactive)
   (let ((abstract (ebib-extras-get-field-value "abstract")))
     (when (or
+	   (eq overwrite 'always)
 	   (not abstract)
-	   (y-or-n-p "Abstract already exists. Overwrite?"))
-      (ebib-extras-fetch-field-value "abstract"))))
+	   (unless (eq overwrite 'never)
+	     (y-or-n-p "Abstract already exists. Overwrite?")))
+      (if-let ((value (or (when-let ((doi (ebib-extras-get-field-value "doi")))
+			    (bib-fetch-abstract-from-crossref doi))
+			  (when-let ((isbn (ebib-extras-get-field-value "isbn")))
+			    (bib-fetch-abstract-from-google-books isbn))
+			  (when-let ((url (ebib-extras-get-field-value "url")))
+			    ;; running zotero on a URL of a PDF throws an error
+			    (unless (string-match-p "\\.pdf$" url)
+			      (ebib-extras-fetch-field-from-zotero "abstract" url))))))
+	  (ebib-extras-set-field "abstract" value)
+	(message "No abstract found")))))
 
 (defun ebib-extras-fetch-keywords ()
   "Fetch keywords for the entry at point and put them in the associated org file."

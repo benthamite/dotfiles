@@ -1201,14 +1201,14 @@ Authors enclosed in braces are left untouched, but the braces are removed."
   (unless (derived-mode-p 'ebib-entry-mode)
     (user-error "Not in `ebib-entry-mode'"))
   (let* ((authors-split (split-string authors " and "))
-         (authors-formatted
-          (mapcar (lambda (author)
-                    (cond ((string-match "{\\(.*\\)}" author)
+	 (authors-formatted
+	  (mapcar (lambda (author)
+		    (cond ((string-match "{\\(.*\\)}" author)
 			   (match-string 1 author))
 			  ((string-match "\\(.*\\), \\(.*\\)" author)
-                           (format "%s %s"
-                                   (match-string 2 author)
-                                   (match-string 1 author)))
+			   (format "%s %s"
+				   (match-string 2 author)
+				   (match-string 1 author)))
 			  (t author)))
 		  authors-split)))
     authors-formatted))
@@ -1282,7 +1282,7 @@ window and make the frame active,"
 
 ;; pass custom arguments to `format-time-string'
 (el-patch-defun ebib--store-entry (entry-key fields db &optional timestamp if-exists)
-"Store the entry defined by ENTRY-KEY and FIELDS into DB.
+  "Store the entry defined by ENTRY-KEY and FIELDS into DB.
 Optional argument TIMESTAMP indicates whether a timestamp is to
 be added to the entry.  Note that for a timestamp to be added,
 `ebib-use-timestamp' must also be set to T. IF-EXISTS is as for
@@ -1293,10 +1293,10 @@ the entry is actually stored (which, if IF-EXISTS is `uniquify',
 may differ from ENTRY-KEY); otherwise return nil.  Depending on
 the value of IF-EXISTS, storing an entry may also result in an
 error."
-(let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
-  (when (and actual-key timestamp ebib-use-timestamp)
-    (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
-  actual-key))
+  (let ((actual-key (ebib-db-set-entry entry-key fields db if-exists)))
+    (when (and actual-key timestamp ebib-use-timestamp)
+      (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
+    actual-key))
 
 ;; keep focus in current entry when the database is saved or reloaded.
 (el-patch-defun ebib--save-database (db &optional force)

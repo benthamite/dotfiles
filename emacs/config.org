@@ -9846,7 +9846,7 @@ The macro below generates the commands correctly. But attempting to define key b
    "/" (lambda! (ebib-extras-attach-file t))
    "?" 'ebib-extras-attach-file
    "a" 'ebib-extras-search-amazon
-   "b" 'ebib-extras-open-entry-in-bibtex-file
+   "b" 'ebib-extras-get-or-open-entry
    "g" 'ebib-extras-search-library-genesis
    "G" 'ebib-extras-search-goodreads
    "h" 'ebib-extras-open-html-file

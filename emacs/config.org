@@ -3672,6 +3672,8 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
   (setq resize-mini-windows t)
   ;; TAB cycle if there are only few candidates
   (setq completion-cycle-threshold 3)
+  (setq minibuffer-default-prompt-format " [%s]")
+  (minibuffer-electric-default-mode)
 
   :general
   ((minibuffer-mode-map)

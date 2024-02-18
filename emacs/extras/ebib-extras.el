@@ -1059,9 +1059,6 @@ Fetching is done using `bib'."
     (ebib-set-field-value field id key db)
     (ebib-extras-update-entry-buffer db)))
 
-(defun ebib-extras-fetch-field-value (field)
-  "Fetch the value of FIELD for the entry at point.
-Fetching is done using `tlon-biblio'."
 (defun ebib-extras-bibtex-command (command)
   "Execute a `bibtex' COMMAND with point on the current entry."
   (when-let ((file (ebib-db-get-filename ebib--cur-db))
@@ -1069,26 +1066,14 @@ Fetching is done using `tlon-biblio'."
     (with-current-buffer (find-file-noselect file)
       (funcall command))))
 
+(defun ebib-extras-fetch-field-from-zotero (field &optional id-or-url)
+  "Fetch the value of FIELD from the ID-OR-URL of the entry at point.
+IF ID-OR-URL is nil, try to get it or fetch it."
   (unless (derived-mode-p 'ebib-entry-mode)
     (error "Not in `ebib-entry-mode'"))
-  (if-let ((id (ebib-extras-get-or-fetch-id-or-url)))
-      (let* ((query-result
-              (zotra-query-url-or-search-string id))
-             (data (car query-result))
-	     (endpoint (cdr query-result))
-	     (entry (zotra-get-entry-1 data zotra-default-entry-format endpoint))
-	     value)
-	(with-temp-buffer (insert entry)
-			  (setq value (bibtex-autokey-get-field field)))
-	(when (string-empty-p value)
-	  (user-error "Query returned no field `%s' for the current entry" field))
-	(let ((key (ebib--get-key-at-point)))
-	  (ebib-set-field-value field value key ebib--cur-db 'overwrite)
-	  (ebib-extras-update-entry-buffer ebib--cur-db)))
-    (user-error "No ID found for the current entry")))
+  (let* ((id-or-url (or id-or-url (ebib-extras-get-or-fetch-id-or-url))))
+    (zotra-extras-fetch-field field id-or-url)))
 
-(defun ebib-extras-fetch-abstract ()
-  "Fetch the abstract of the entry at point."
 (defun ebib-extras-move-entry (direction)
   "Move to the previous or next entry in the current database.
 DIRECTION can be `prev' or `next'."

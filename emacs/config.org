@@ -4818,7 +4818,7 @@ CLOCK: [2021-06-10 Thu 12:43]--[2021-06-10 Thu 12:49] =>  0:06
 | [[id:C1B0678E-7334-4AF3-B1FE-9D63DFB6BE68][marginalia]] | minibuffer completion annotations |
 | [[id:19A4F21C-2169-4529-92E4-68E3A584DDAC][embark]]     | minibuffer completion actions     |
 
-For a comprehensive overview of completion in Emacs—both minibuffer completion and completion at point—I recommend [[https://www.youtube.com/watch?v=fnE0lXoe7Y0][this video]] by Andrew Tropin.
+For an introduction to minibuffer completion, I recommend [[https://www.youtube.com/watch?v=d3aaxOqwHhI][this video]] by Protesilaos Stavrou. For a comprehensive overview of both minibuffer completion and completion at point, I recommend [[https://www.youtube.com/watch?v=fnE0lXoe7Y0][this video]] by Andrew Tropin.
 
 ** vertico
 :PROPERTIES:

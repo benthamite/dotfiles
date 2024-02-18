@@ -1082,6 +1082,29 @@ Fetching is done using `tlon-biblio'."
 
 (defun ebib-extras-fetch-abstract ()
   "Fetch the abstract of the entry at point."
+(defun ebib-extras-move-entry (direction)
+  "Move to the previous or next entry in the current database.
+DIRECTION can be `prev' or `next'."
+  (let ((fun (pcase direction
+	       ('prev #'ebib-prev-entry)
+	       ('next #'ebib-next-entry))))
+    (pcase major-mode
+      ('ebib-index-mode (funcall fun))
+      ('ebib-entry-mode
+       (ebib-extras-open-or-switch)
+       (funcall fun)
+       (ebib-edit-entry)))))
+
+(defun ebib-extras-next-entry ()
+  "Move to the next entry in the current database."
+  (interactive)
+  (ebib-extras-move-entry 'next))
+
+(defun ebib-extras-prev-entry ()
+  "Move to the next entry in the current database."
+  (interactive)
+  (ebib-extras-move-entry 'prev))
+
   (interactive)
   (let ((abstract (ebib-extras-get-field-value "abstract")))
     (when (or

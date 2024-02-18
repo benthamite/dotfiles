@@ -2117,11 +2117,11 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 /[[https://github.com/rainstormstudio/nerd-icons.el][nerd-icons]] is a library for [[https://github.com/ryanoasis/nerd-fonts][Nerd Font]] icons inside Emacs./
 
+Note that the icons need to be installed via ~nerd-icons-install-fonts~. If you want to install the icons with =brew= on macOS, run ~brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font~.
+
 #+begin_src emacs-lisp
 (use-package nerd-icons
-  :demand t
-  :config
-  (setq nerd-icons-font-family faces-extras-fixed-pitch-font))
+  :demand t)
 #+end_src
 
 ** menu-bar

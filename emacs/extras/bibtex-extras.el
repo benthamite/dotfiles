@@ -202,6 +202,13 @@ Optionally, remove accents in region from BEGIN to END."
           (match-string-no-properties 1)
         (user-error "Not on a BibTeX entry")))))
 
+(defun bibtex-extras-validate-language (language)
+  "If LANGUAGE is a valid language, return it.
+The validation is case-insensitive, but the returned language is in lowercase."
+  (let ((language (downcase language)))
+    (when (member language (mapcar #'car bibtex-extras-valid-languages))
+      language)))
+
 (defun bibtex-extras-convert-titleaddon-to-journaltitle ()
   "Convert field `titleaddon' to `journaltitle' in entry at point.
 When items are imported with the Zotero translation server, the online
@@ -322,6 +329,12 @@ and sets the value of the field for all entries to `Tlön'."
     (goto-char (point-min))
     (while (re-search-forward " \\}" nil t)
       (replace-match "}" t t))))
+
+(defun bibtex-extras-get-two-letter-code (language)
+  "Return the two-letter code for LANGUAGE."
+  (when-let* ((downcased (downcase language))
+	      (code-raw (alist-get downcased bibtex-extras-valid-languages nil nil #'string=)))
+    (string-limit code-raw 2)))
 
 ;;;;; Patches
 

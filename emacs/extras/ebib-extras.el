@@ -1029,14 +1029,14 @@ sensible defaults and remove line breaks and empty spaces."
 
 (defun ebib-extras-fetch-id-or-url ()
   "Fetch the ID or URL of the entry at point.
-Fetching is done using `tlon-biblio'."
+Fetching is done using `bib'."
   (let ((title (ebib-extras-get-field-value "title"))
 	(author (ebib-extras-get-field-value "author")))
     (pcase (ebib-extras-get-supertype)
-      ("book" (tlon-biblio-search-isbn (concat title " " author)))
-      ("article" (tlon-biblio-search-crossref title author))
-      ("film" (tlon-biblio-search-imdb
-	       (tlon-biblio-translate-title-to-english title)))
+      ("book" (bib-search-isbn (format "% %" title author)))
+      ("article" (bib-search-crossref title author))
+      ("film" (bib-search-imdb
+	       (bib-translate-title-to-english title)))
       (_ (ebib-extras-get-field-value "url")))))
 
 (defun ebib-extras-get-or-fetch-id-or-url ()

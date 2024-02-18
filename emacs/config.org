@@ -201,7 +201,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dired-extras][dired-extras]]
   - [[#dired-x][dired-x]]
   - [[#image-dired][image-dired]]
-  - [[#all-the-icons-dired][all-the-icons-dired]]
   - [[#nerd-icons-dired][nerd-icons-dired]]
   - [[#wdired][wdired]]
   - [[#gnus-dired][gnus-dired]]
@@ -3519,26 +3518,6 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
    "l" 'image-dired-display-next-thumbnail-original)
   (dired-mode-map
    "I" 'dired-extras-image-dired-current-directory))
-#+end_src
-
-** all-the-icons-dired
-:PROPERTIES:
-:ID:       53778128-E0F3-4199-9D7D-2118904F39A9
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-17 Sun 10:49]--[2022-07-17 Sun 11:13] =>  0:24
-:END:
-
-/[[https://github.com/jtbm37/all-the-icons-dired][all-the-icons-dired]] adds dired support to [[id:46EB8CD9-E498-4F80-AC02-A116CFA58799][all-the-icons]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package all-the-icons-dired
-  :demand t
-  :after all-the-icons dired
-  :config
-  (setq all-the-icons-dired-monochrome nil)
-
-  (add-hook 'dired-mode-hook #'dired-extras-all-the-icons-activate))
 #+end_src
 
 ** nerd-icons-dired

@@ -1062,6 +1062,13 @@ Fetching is done using `bib'."
 (defun ebib-extras-fetch-field-value (field)
   "Fetch the value of FIELD for the entry at point.
 Fetching is done using `tlon-biblio'."
+(defun ebib-extras-bibtex-command (command)
+  "Execute a `bibtex' COMMAND with point on the current entry."
+  (when-let ((file (ebib-db-get-filename ebib--cur-db))
+	     (key (ebib--get-key-at-point)))
+    (with-current-buffer (find-file-noselect file)
+      (funcall command))))
+
   (unless (derived-mode-p 'ebib-entry-mode)
     (error "Not in `ebib-entry-mode'"))
   (if-let ((id (ebib-extras-get-or-fetch-id-or-url)))

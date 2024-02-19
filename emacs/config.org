@@ -5050,7 +5050,9 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :after consult mu4e
   :demand t
   :general
-  ("A-M-m" 'consult-mu))
+  ("A-M-m" 'consult-mu)
+  ((mu4e-main-mode-map mu4e-headers-mode-map mu4e-view-mode-map)
+   "s" 'consult-mu))
 #+end_src
 
 ** consult-yasnippet
@@ -10276,7 +10278,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (mu4e-main-mode-map
    "h" 'mu4e-display-manual
    "j" 'mu4e-search-maildir
-   "s" 'mu4e-search
    "u" 'mu4e-update-mail-and-index)
   (mu4e-headers-mode-map
    "*" 'mu4e-headers-mark-all

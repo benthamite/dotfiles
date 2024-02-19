@@ -359,6 +359,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#yaml][yaml]]
   - [[#js2-mode][js2-mode]]
   - [[#puni][puni]]
+  - [[#project][project]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent][aggressive-indent]]
   - [[#elpy][elpy]]
@@ -1757,7 +1758,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 
 /[[https://github.com/jdtsmith/org-modern-indent][org-modern-indent]] extends org-modern stylistic improvements to contexts involving indentation./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package org-modern-indent
   :elpaca (org-modern-indent
              :host github

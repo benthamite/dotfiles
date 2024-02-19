@@ -5836,10 +5836,6 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 
 /[[https://github.com/emacs-grammarly/lsp-grammarly][lsp-grammarly]] provides ~lsp-mode~ support for Grammarly./
 
-[2022-10-06 Thu 23:35] At the moment, the premium version isn't working. The package maintainers are migrating to to a new server, which may resolve the issues I was having authenticating my account. You can check whether the premium account is being used by evaluating ~(grammarly-premium-p)~.
-
-[2024-02-03 Sat 12:33] It’s working again, so re-enabling.
-
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :spelling)
 (use-package lsp-grammarly
   :after lsp-mode grammarly

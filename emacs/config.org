@@ -5267,22 +5267,14 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
    "M-m" 'corfu-extras-move-to-minibuffer))
 #+end_src
 
-** kind-icon
 :PROPERTIES:
-:ID:       DE439647-A62B-4C32-A0BB-AA7D4BB3D9DD
 :END:
 
-/[[https://github.com/jdtsmith/kind-icon][kind-icon]] provides SVG icons for in-region completion./
 
-#+begin_src emacs-lisp :results silent
-(use-package kind-icon
   :after corfu
   :demand t
-
   :config
-  (setq kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
 
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 #+end_src
 
 ** cape

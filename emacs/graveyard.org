@@ -8,6 +8,18 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** company
+:PROPERTIES:
+:ID:       D8BC79D0-C883-45A9-A5B2-98E88C59EE6B
+:END:
+
+I use ~completion-at-point~ for completion, not company. However, I still rely on company for a few completion backends.
+
+[2024-02-18 Sun] I think the above is no longer the case, so moving to graveyard.
+#+begin_src emacs-lisp :results silent
+(use-package company)
+#+end_src
+
 ** all-the-icons-dired
 :PROPERTIES:
 :ID:       53778128-E0F3-4199-9D7D-2118904F39A9

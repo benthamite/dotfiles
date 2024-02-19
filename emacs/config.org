@@ -6590,13 +6590,13 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 
 #+begin_src emacs-lisp :results silent
 (use-feature elisp-mode
+  :demand t
   :after simple-extras
   :general
   ((emacs-lisp-mode-map lisp-interaction-mode-map)
    "s-b" 'eval-buffer
    "s-d" 'eval-defun
-   "s-i" (lambda! (eval-defun t)) ; instrument defun
-   ))
+   "s-i" (lambda! (eval-defun t)))) ; instrument defun
 #+end_src
 
 *** TODO [#6] Learn to use all relevant sexp commands

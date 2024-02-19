@@ -9842,7 +9842,7 @@ The macro below generates the commands correctly. But attempting to define key b
   :general
   ("A-i" 'ebib-extras-open-or-switch)
   ((ebib-entry-mode-map ebib-index-mode-map)
-     "," 'ebib-extras-prev-entry
+   "," 'ebib-extras-prev-entry
    "." 'ebib-extras-next-entry
    "d" 'ebib-extras-duplicate-entry
    "n" 'ebib-extras-citar-open-notes)

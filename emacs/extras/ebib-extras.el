@@ -1126,8 +1126,20 @@ abstract will, or will not, replace the existing one, respectively."
 			    ;; running zotero on a URL of a PDF throws an error
 			    (unless (string-match-p "\\.pdf$" url)
 			      (ebib-extras-fetch-field-from-zotero "abstract" url))))))
-	  (ebib-extras-set-field "abstract" value)
+	  (ebib-extras-set-field "abstract" (ebib-extracts-abstract-cleanup value))
 	(message "No abstract found")))))
+
+(defun ebib-extracts-abstract-cleanup (string)
+  "Clean up raw abstract consisting of STRING."
+  ;; remove a bunch of stuff
+  (dolist (regexp '("<[^>]+>" ; XML tags
+		    "{\\\\textless}.?p{\\\\textgreater}" ; LaTeX tag
+		    "^summary\\|^abstract\\(:? ?\\)" ; extraneous leading words
+		    )
+		  string)
+    (setq string (replace-regexp-in-string regexp "" string)))
+  ;; add a period at the end of the abstract if missing
+  (replace-regexp-in-string "\\([^\\.]\\)$" "\\1." string))
 
 (defun ebib-extras-fetch-keywords ()
   "Fetch keywords for the entry at point and put them in the associated org file."

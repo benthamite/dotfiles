@@ -4752,6 +4752,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 /[[https://github.com/mhayashi1120/Emacs-wgrep][wgrep]] lets you create a writable grep buffer and apply the changes to files./
 
+
 #+begin_src emacs-lisp :results silent
 (use-package wgrep
   :demand t
@@ -5217,12 +5218,12 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 #+begin_src emacs-lisp :results silent
 (use-package corfu
   :elpaca (corfu :files (:defaults "extensions/*")
-		 :includes (corfu-info
-			    corfu-echo
-			    corfu-history
-			    ;; corfu-indexed
-			    corfu-popupinfo
-			    corfu-quick))
+                 :includes (corfu-info
+                            corfu-echo
+                            corfu-history
+                            ;; corfu-indexed
+                            corfu-popupinfo
+                            corfu-quick))
   :demand t
   :config
   (setq corfu-auto t)                 ;; Enable auto completion
@@ -9511,7 +9512,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
               citar-extras-indicator-links-icons
               citar-extras-indicator-notes-icons
               citar-extras-indicator-cited-icons))
-              
+
   :general
   ((citar-map citar-citation-map)
    "d" 'ebib-extras-download-dwim

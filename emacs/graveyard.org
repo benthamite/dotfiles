@@ -20,6 +20,26 @@ I use ~completion-at-point~ for completion, not company. However, I still rely o
 (use-package company)
 #+end_src
 
+** kind-icon
+:PROPERTIES:
+:ID:       DE439647-A62B-4C32-A0BB-AA7D4BB3D9DD
+:END:
+
+/[[https://github.com/jdtsmith/kind-icon][kind-icon]] provides SVG icons for in-region completion./
+
+[2024-02-18 Sun] Replaced with =nerd-icons-corfu=.
+
+#+begin_src emacs-lisp :results silent
+(use-package kind-icon
+  :after corfu
+  :demand t
+
+  :config
+  (setq kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
+
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+#+end_src
+
 ** all-the-icons-dired
 :PROPERTIES:
 :ID:       53778128-E0F3-4199-9D7D-2118904F39A9

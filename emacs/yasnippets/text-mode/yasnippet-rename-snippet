@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: yasnippet-rename-snippet
+# key: yrs
+# contributor: Pablo Stafforini
+# --
+yasnippet: rename snippet (`(magit-extras-get-commit-file 'sans-dir)`)

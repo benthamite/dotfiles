@@ -8,6 +8,96 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** company
+:PROPERTIES:
+:ID:       D8BC79D0-C883-45A9-A5B2-98E88C59EE6B
+:END:
+
+I use ~completion-at-point~ for completion, not company. However, I still rely on company for a few completion backends.
+
+[2024-02-18 Sun] I think the above is no longer the case, so moving to graveyard.
+#+begin_src emacs-lisp :results silent
+(use-package company)
+#+end_src
+
+** kind-icon
+:PROPERTIES:
+:ID:       DE439647-A62B-4C32-A0BB-AA7D4BB3D9DD
+:END:
+
+/[[https://github.com/jdtsmith/kind-icon][kind-icon]] provides SVG icons for in-region completion./
+
+[2024-02-18 Sun] Replaced with =nerd-icons-corfu=.
+
+#+begin_src emacs-lisp :results silent
+(use-package kind-icon
+  :after corfu
+  :demand t
+
+  :config
+  (setq kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
+
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+#+end_src
+
+** all-the-icons-dired
+:PROPERTIES:
+:ID:       53778128-E0F3-4199-9D7D-2118904F39A9
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-17 Sun 10:49]--[2022-07-17 Sun 11:13] =>  0:24
+:END:
+
+/[[https://github.com/jtbm37/all-the-icons-dired][all-the-icons-dired]] adds dired support to [[id:46EB8CD9-E498-4F80-AC02-A116CFA58799][all-the-icons]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package all-the-icons-dired
+  :demand t
+  :after all-the-icons dired
+  :config
+  (setq all-the-icons-dired-monochrome nil)
+
+  (add-hook 'dired-mode-hook #'dired-extras-all-the-icons-activate))
+#+end_src
+
+** all-the-icons-completion
+:PROPERTIES:
+:ID:       A0DAA757-1CC9-460B-9F46-78A5145E7E61
+:END:
+
+/[[https://github.com/iyefrat/all-the-icons-completion][all-the-icons-completion]] adds icons to completion candidates./
+
+[2024-02-18 Sun] Replaced with ~nerd-icons~.
+
+#+begin_src emacs-lisp :results silent
+(use-package all-the-icons-completion
+  :demand t
+  :after all-the-icons marginalia vertico
+  :config
+  (all-the-icons-completion-mode)
+
+  (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
+#+end_src
+
+** all-the-icons
+:PROPERTIES:
+:ID:       46EB8CD9-E498-4F80-AC02-A116CFA58799
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-17 Sun 11:13]--[2022-07-17 Sun 11:21] =>  0:08
+CLOCK: [2021-05-20 Thu 18:21]--[2021-05-20 Thu 18:39] =>  0:18
+CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
+:END:
+
+/[[https://github.com/domtronn/all-the-icons.el][all-the-icons]] collects various icon fonts and propertizes them./
+
+[2024-02-18 Sun] Replaced with ~nerd-icons~.
+
+#+begin_src emacs-lisp :results silent
+(use-package all-the-icons
+  :demand t)
+#+end_src
+
 ** gh-notify-extras
 :PROPERTIES:
 :ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F

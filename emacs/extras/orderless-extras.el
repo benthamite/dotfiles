@@ -33,29 +33,25 @@
 
 (defun orderless-extras-flex-dispatcher (pattern _index _total)
   "Flex dispatcher using `~' as suffix.
-PATTERN is the string to match, INDEX is the index of the current
-subgroup, and TOTAL is the total number of subgroups."
+PATTERN is the string to match."
   (when (string-suffix-p "~" pattern)
     `(orderless-flex . ,(substring pattern 0 -1))))
 
 (defun orderless-extras-initialism-dispatcher (pattern _index _total)
   "Initialism dispatcher using `\,' as suffix.
-PATTERN is the string to match, INDEX is the index of the current
-subgroup, and TOTAL is the total number of subgroups."
+PATTERN is the string to match."
   (when (string-suffix-p "," pattern)
     `(orderless-initialism . ,(substring pattern 0 -1))))
 
 (defun orderless-extras-prefixes-dispatcher (pattern _index _total)
   "Prefix dispatcher using `\;' as suffix.
-PATTERN is the string to match, INDEX is the index of the current
-subgroup, and TOTAL is the total number of subgroups."
+PATTERN is the string to match."
   (when (string-suffix-p ";" pattern)
     `(orderless-prefixes . ,(substring pattern 0 -1))))
 
 (defun orderless-extras-exclusion-dispatcher (pattern _index _total)
   "Exclusion dispatcher using `!' as suffix.
-PATTERN is the string to match, INDEX is the index of the current
-subgroup, and TOTAL is the total number of subgroups."
+PATTERN is the string to match."
   (when (string-suffix-p "!" pattern)
     `(orderless-without-literal . ,(substring pattern 1))))
 

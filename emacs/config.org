@@ -4331,7 +4331,7 @@ Note to self: if the package doesn't work after deploying a new profile, even af
   :after org-gcal calfw-org
   :demand t
   :general
-  (org-mode-map
+  ((org-mode-map org-agenda-mode-map)
    "s-g" 'org-gcal-extras-dispatch))
 #+end_src
 

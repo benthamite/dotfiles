@@ -1005,8 +1005,6 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :defer 4
   :config
   (setq tlon-core-repo-dirs (expand-file-name "~/Library/CloudStorage/Dropbox/repos/"))
-  (setq tlon-core-meeting-pending-id-fede "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
-  (setq tlon-core-meeting-pending-id-leo "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
 
   :general
   (markdown-mode-map

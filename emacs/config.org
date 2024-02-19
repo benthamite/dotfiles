@@ -6051,10 +6051,6 @@ To reinstall:
 - Edit the ~clientId~ and ~clientSecret~ in the file ~handlers_drive.go~ with the values stored in ~pass~ (search for ~gdrive~).
 - Within the locally cloned repo, run ~go install~.
 
-*** TODO Develop package
-:PROPERTIES:
-:ID:       990D5C3F-0725-4BDB-A931-86762BCE7D69
-:END:
 *** TODO [#5] Write command to create new Google Doc in chosen folder
 :PROPERTIES:
 :Effort:   0:30

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-reference-issue
+# key: tri
+# contributor: Pablo Stafforini
+# --
+`(format "tlon-team/%s#" (completing-read "repo: " (tlon-babel-repo-lookup-all :name)))`

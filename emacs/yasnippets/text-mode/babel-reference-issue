@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: babel-reference-issue
-# key: bri
-# contributor: Pablo Stafforini
-# --
-`(when-let ((repo (tlon-babel-get-repo 'no-prompt))) (format "tlon-team/%s#" (tlon-babel-repo-lookup :name :dir repo)))`

@@ -1,0 +1,145 @@
+#+title: Change lof of my Emacs configuration
+#+author: Pablo Stafforini
+#+langauge: en
+
+This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository.
+
+* Version 6.1.0 on 2024-02-19
+:PROPERTIES:
+:ID:       862E30DF-E178-4023-B1C8-4BDEA1217C0B
+:END:
+
+** activity-watch
+:PROPERTIES:
+:ID:       468DD112-6910-4A89-BD31-2EF07AF40185
+:END:
+
+- The package was until now disabled after we detected a bug that interfered with ~recover-this-file~. This bug was fixed recently in a fix branch, so it is enabled again.
+
+** bibtex
+:PROPERTIES:
+:ID:       FBBA78C3-7CF5-4322-80A5-8F9E2EB16819
+:END:
+
+- Set ~bibtex-field-indentation~ to 8, which is (I believe) the default value in =ebib=. This should avoid the situation where the indentation of the same BibTeX entry changes with subsequent commits.
+
+** bibtex-extras
+:PROPERTIES:
+:ID:       7066760C-C68A-4EBB-946B-DBD6A904FFF6
+:END:
+
+- Added functionality to validate languages in =landid= field.
+- Added various functions to get BibTeX fields, entries as strings.
+    
+** consult
+:PROPERTIES:
+:ID:       3F6C96B6-3282-425C-8AF0-F161EFEEAA2F
+:END:
+
+=s-j= is now globally bound to ~consult-imenu~. Previously, we used =s-j= in specific major modes (like =org-mode=) to bind to it commands with the relevant functionality (such as ~consult-org-heading~) . These bindings are preserved, but when no local binding is set, =s-j= now triggers ~consult-imenu~ as a fallback.
+
+** consult-yasnippet
+:PROPERTIES:
+:ID:       5A82F9F7-DA40-48E6-8093-02077CF87227
+:END:
+
+- Disabled previews to avoid accidentally triggering snippets that execute elisp code.
+
+** ebib-extras
+:PROPERTIES:
+:ID:       6FEDC52D-D239-4106-BCAB-744CC844E3C8
+:END:
+
+- Added ~ebib-extras-previous-entry~ and ~ebib-extras-next-entry~, bound to =,= and =.=, respectively.
+- Revised or refactor various functions.
+- Significantly revised ~ebib-extras-fetch-and-set-abstract~ , and created the associated ~ebib-extracts-abstract-cleanup~.
+  
+** edebug
+:PROPERTIES:
+:ID:       5E8D7A90-6768-4F7F-A064-3D930772AB27
+:END:
+
+- Disabled maddening =#N== and =#N#= print syntax.
+
+** elfeed
+:PROPERTIES:
+:ID:       F20310DE-7576-4EDD-A1DD-F23DB31E570B
+:END:
+
+- Set a timer to update the database after 30 minutes of idleness. Feel free to disable it.
+  
+** forge
+:PROPERTIES:
+:ID:       05A1E517-5009-4E6B-BFFE-7965ED93B9F6
+:END:
+- Disabled my custom menu (aka “dispatcher”), restoring the forge native one. The native forge dispatcher has been much improved and I think it is now preferable to what we had before.
+- Unset custom ~s~ key bindings, bound to ~forge-search~. js
+
+** graveyard
+:PROPERTIES:
+:ID:       32B52015-E71E-4D8F-82D6-6A385587C318
+:END:
+
+The following packages now rest in peace:
+
+- =company=
+- =org-mime=
+
+See also the packages listed in the ‘icons’ section below.
+
+** helpful
+:PROPERTIES:
+:ID:       A0C11FB6-A835-44AB-BB75-20BF53A6796B
+:END:
+
+- Unset custom ~C-k~ key binding, bound to ~helpful-key~. The command is now bound to the default binding for ~help-key~, ~C-h k~. 
+
+** icons
+:PROPERTIES:
+:ID:       F7886119-D788-4C50-A022-C92A20F8F60B
+:END:
+
+Removed =all-the-icons=, =all-the-icons-completion=, =all-the-icons-dired= and replaced them with =nerd-icons=, =nerd-icons-completion=, =nerd-icons-dired=.
+
+NB: you need to install these icons for the package to work correctly. In macOS, run
+
+#+begin_src shell
+brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font
+#+end_src
+
+=font-symbols-only-nerd-font= installs the nerd icon font that is guaranteed to display the icons correctly. If you don’t want to install a new font, you may try to configure the package to use your installed nerd icon font, though this is not guaranteed to work:
+
+#+begin_src emacs-lisp
+(setq nerd-icons-font-family <your font>)
+#+end_src
+
+Because =nerd-icons= do not impose additional performance costs, they are now always shown in Dired, irrespective of directory size, whereas before they were shown only in directories containing fewer than a certain number of files.
+
+** org-extras
+:PROPERTIES:
+:ID:       8F121806-D46D-4108-8269-95EC079A186A
+:END:
+
+- Changed the ~org-extras-tlon-dispatch~ binding from =H-;= to =H-l=.
+  
+** org-roam
+:PROPERTIES:
+:ID:       E4E18C04-A5A5-46B7-B96F-C8BC56755198
+:END:
+
+- Set a timer to update the database after 30 minutes of idleness. I recommend not changing this unless you really need to.
+
+** vertico
+:PROPERTIES:
+:ID:       50B6C283-2B7D-4CA3-96EF-A8A082A688A2
+:END:
+
+The keys =M-k= and =M-l= are now bound to ~vertico-previous-group~ and ~vertico-next-group~, respectively. These commands let you cycle between different sections of the completion candidates in the minibuffer. For example, in ~consult-buffer~ (~H-b~), you can cycle between the “Buffer”, “File”, and “Bookmark” sections.
+
+** Yasnippet
+:PROPERTIES:
+:ID:       8CBE8833-17B3-48C1-AE18-0223CED370FB
+:END:
+
+- Created snippets to reference a commit (=tlon-reference-commit=) and an issue (=tlon-reference-issue=) from a Forge buffer. These snippets are expanded with =trc= and =tri=,  respectively.
+  

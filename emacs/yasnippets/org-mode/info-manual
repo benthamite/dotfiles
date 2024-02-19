@@ -1,0 +1,22 @@
+# -*- mode: snippet -*-
+# name: info-manual
+# key: im
+# contributor: Pablo Stafforini
+# --
+#+title: $1
+#+author: Pablo Stafforini
+#+language: en
+#+options: ':t toc:nil author:t email:t num:t
+#+startup: content
+#+texinfo_filename: $1.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: $2: ($1)
+#+texinfo_dir_desc: $3
+#+texinfo_header: @set MAINTAINERSITE @uref{$4,maintainer webpage}
+#+texinfo_header: @set MAINTAINER Pablo Stafforini
+#+texinfo_header: @set MAINTAINEREMAIL @email{$5}
+#+texinfo_header: @set MAINTAINERCONTACT @uref{mailto:$5,contact the maintainer}
+
+#+texinfo: @insertcopying
+
+~$1~ $0 $3

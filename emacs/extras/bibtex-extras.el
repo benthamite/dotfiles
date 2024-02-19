@@ -33,6 +33,93 @@
 ;; (require 'ebib-extras)
 (require 'tlon-babel-refs)
 
+;;;; Variables
+
+(defconst bibtex-extras-valid-languages
+  '(("albanian" . "sq")
+    ("american" . "en-US")
+    ("amharic" . "am")
+    ("arabic" . "ar")
+    ("argentinian" . "es-AR")
+    ("armenian" . "hy")
+    ("assamese" . "as")
+    ("asturian" . "ast")
+    ("austrian" . "de-AT")
+    ("australian" . "en-AU")
+    ("basque" . "eu")
+    ("belarusian" . "be")
+    ("bengali" . "bn")
+    ("bosnian" . "bs")
+    ("breton" . "br")
+    ("british" . "en-GB")
+    ("bulgarian" . "bg")
+    ("canadian" . "en-CA")
+    ("catalan" . "ca")
+    ("chinese" . "zh")
+    ("coptic" . "cop")
+    ("croatian" . "hr")
+    ("czech" . "cs")
+    ("danish" . "da")
+    ("dutch" . "nl")
+    ("english" . "en")
+    ("esperanto" . "eo")
+    ("estonian" . "et")
+    ("finnish" . "fi")
+    ("french" . "fr")
+    ("galician" . "gl")
+    ("georgian" . "ka")
+    ("german" . "de")
+    ("greek" . "el")
+    ("hebrew" . "he")
+    ("hindi" . "hi")
+    ("hungarian" . "hu")
+    ("icelandic" . "is")
+    ("interlingua" . "ia")
+    ("irish" . "ga")
+    ("italian" . "it")
+    ("japanese" . "ja")
+    ("kannada" . "kn")
+    ("korean" . "ko")
+    ("lao" . "lo")
+    ("latin" . "la")
+    ("latvian" . "lv")
+    ("lithuanian" . "lt")
+    ("macedonian" . "mk")
+    ("malayalam" . "ml")
+    ("marathi" . "mr")
+    ("mexican" . "es-MX")
+    ("mongolian" . "mn")
+    ("naustrian" . "de-AT")
+    ("newzealand" . "en-NZ")
+    ("ngerman" . "de-DE")
+    ("nko" . "nqo")
+    ("norwegian" . "no")
+    ("oriya" . "or")
+    ("persian" . "fa")
+    ("polish" . "pl")
+    ("portuges" . "pt")
+    ("romanian" . "ro")
+    ("russian" . "ru")
+    ("sanskrit" . "sa")
+    ("serbian" . "sr")
+    ("slovak" . "sk")
+    ("slovenian" . "sl")
+    ("spanish" . "es")
+    ("spanish" . "es")
+    ("swedish" . "sv")
+    ("swissgerman" . "de-CH")
+    ("tamil" . "ta")
+    ("telugu" . "te")
+    ("thai" . "th")
+    ("turkish" . "tr")
+    ("turkmen" . "tk")
+    ("ukenglish" . "en-GB")
+    ("ukrainian" . "uk")
+    ("urdu" . "ur")
+    ("vietnamese" . "vi")
+    ("welsh" . "cy")
+    ("afrikaans" . "af"))
+  "Alist of languages and ISO 639-1 codes for the `landid' field in BibTeX entries.")
 ;;;; Functions
 
 (defun bibtex-extras-replace-element-by-name (list target-name new-element)
@@ -115,6 +202,13 @@ Optionally, remove accents in region from BEGIN to END."
           (match-string-no-properties 1)
         (user-error "Not on a BibTeX entry")))))
 
+(defun bibtex-extras-validate-language (language)
+  "If LANGUAGE is a valid language, return it.
+The validation is case-insensitive, but the returned language is in lowercase."
+  (let ((language (downcase language)))
+    (when (member language (mapcar #'car bibtex-extras-valid-languages))
+      language)))
+
 (defun bibtex-extras-convert-titleaddon-to-journaltitle ()
   "Convert field `titleaddon' to `journaltitle' in entry at point.
 When items are imported with the Zotero translation server, the online
@@ -125,7 +219,7 @@ field for this information is `journaltitle', so we move it there."
       (bibtex-narrow-to-entry)
       (bibtex-beginning-of-entry)
       (when (bibtex-autokey-get-field "titleaddon")
-        (while (re-search-forward "titleaddon = " nil t)
+	(while (re-search-forward "titleaddon = " nil t)
           (replace-match "journaltitle = " nil nil))))))
 
 (defun bibtex-extras-kill-field (field)
@@ -191,9 +285,12 @@ Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point.
     (bibtex-beginning-of-entry)
     (bibtex-make-field field t t))
   ;; Update the value of FIELD
-  (let ((field-content (bibtex-autokey-get-field field)))
-    (when field-content
-      (bibtex-set-field field value))))
+  (when (bibtex-autokey-get-field field)
+    (bibtex-set-field field value)))
+
+(defun bibtex-extras-add-or-update-tlon-field ()
+  "Add or update \"database\" field with \"Tlön\" value in the current BibTeX entry."
+  (bibtex-extras-add-or-update-field "database" "Tlön"))
 
 (defun bibtex-extras-add-or-update-tlon-field ()
   "Add or update \"database\" field with \"Tlön\" value in the current BibTeX entry."
@@ -235,6 +332,35 @@ and sets the value of the field for all entries to `Tlön'."
     (goto-char (point-min))
     (while (re-search-forward " \\}" nil t)
       (replace-match "}" t t))))
+
+(defun bibtex-extras-get-entry-as-string ()
+  "Return the bibtex entry at point as a string."
+  (save-excursion
+    (save-restriction
+      (bibtex-narrow-to-entry)
+      (buffer-substring-no-properties (point-min) (point-max)))))
+
+(defun bibtex-extras-get-field (field)
+  "Return the value of FIELD in the current BibTeX entry."
+  (save-excursion
+    (save-restriction
+      (bibtex-narrow-to-entry)
+      (bibtex-beginning-of-entry)
+      (let ((value (bibtex-autokey-get-field field)))
+	(unless (string-empty-p value)
+	  value)))))
+
+(defun bibtex-extras-get-field-in-string (string field)
+  "Return the value of FIELD in STRING."
+  (with-temp-buffer
+    (insert string)
+    (bibtex-extras-get-field field)))
+
+(defun bibtex-extras-get-two-letter-code (language)
+  "Return the two-letter code for LANGUAGE."
+  (when-let* ((downcased (downcase language))
+	      (code-raw (alist-get downcased bibtex-extras-valid-languages nil nil #'string=)))
+    (string-limit code-raw 2)))
 
 ;;;;; Patches
 

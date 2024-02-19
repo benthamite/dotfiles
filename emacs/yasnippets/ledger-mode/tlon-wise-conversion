@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
 # name: tlon-wise-conversion
-# key: twc
+# key: twv
 # contributor: Pablo Stafforini
 # --
 `(format-time-string "%Y-%m-%d")` Conversion

@@ -5211,15 +5211,16 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
 /[[https://github.com/minad/corfu][corfu]] enhances completion at point with a small completion popup./
 
+
 #+begin_src emacs-lisp :results silent
 (use-package corfu
   :elpaca (corfu :files (:defaults "extensions/*")
-                 :includes (corfu-info
-                            corfu-echo
-                            corfu-history
-                            ;; corfu-indexed
-                            corfu-popupinfo
-                            corfu-quick))
+		 :includes (corfu-info
+			    corfu-echo
+			    corfu-history
+			    ;; corfu-indexed
+			    corfu-popupinfo
+			    corfu-quick))
   :demand t
   :config
   (setq corfu-auto t)                 ;; Enable auto completion
@@ -5228,7 +5229,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (setq corfu-count vertico-count)
   (setq corfu-info-documentation nil)
   (setq corfu-auto-prefix 3)
-  (setq corfu-popupinfo-delay 0)
 
   (global-corfu-mode)
 

@@ -75,6 +75,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
   - [[#transient][transient]]
+  - [[#transient-showcase][transient-showcase]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
   - [[#bytecomp][bytecomp]]
@@ -106,14 +107,13 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ediff-extras][ediff-extras]]
   - [[#smerge][smerge]]
   - [[#gh][gh]]
+  - [[#closql][closql]]
   - [[#magit][magit]]
   - [[#magit-extra][magit-extra]]
   - [[#ghub][ghub]]
   - [[#forge][forge]]
   - [[#orgit-forge][orgit-forge]]
   - [[#forge-search][forge-search]]
-  - [[#gh-notify][gh-notify]]
-  - [[#gh-notify-extras][gh-notify-extras]]
   - [[#forge-extras][forge-extras]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#display][display]]
@@ -137,8 +137,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#tab-bar][tab-bar]]
   - [[#tab-bar-extras][tab-bar-extras]]
   - [[#fancy-battery][fancy-battery]]
-  - [[#all-the-icons][all-the-icons]]
-  - [[#all-the-icons-completion][all-the-icons-completion]]
   - [[#nerd-icons][nerd-icons]]
   - [[#menu-bar][menu-bar]]
   - [[#tool-bar][tool-bar]]
@@ -203,7 +201,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dired-extras][dired-extras]]
   - [[#dired-x][dired-x]]
   - [[#image-dired][image-dired]]
-  - [[#all-the-icons-dired][all-the-icons-dired]]
   - [[#nerd-icons-dired][nerd-icons-dired]]
   - [[#wdired][wdired]]
   - [[#gnus-dired][gnus-dired]]
@@ -275,15 +272,14 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#marginalia][marginalia]]
   - [[#orderless][orderless]]
   - [[#orderless-extras][orderless-extras]]
+  - [[#nerd-icons-completion][nerd-icons-completion]]
   - [[#ido][ido]]
   - [[#which-key][which-key]]
 - [[#completion-at-point][completion at point]]
   - [[#corfu][corfu]]
   - [[#corfu-extras][corfu-extras]]
-  - [[#kind-icon][kind-icon]]
   - [[#cape][cape]]
   - [[#org-block-cafp][org-block-cafp]]
-  - [[#company][company]]
 - [[#help][help]]
   - [[#help][help]]
   - [[#help-at-pt][help-at-pt]]
@@ -500,6 +496,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#empv][empv]]
   - [[#ytdl][ytdl]]
   - [[#read-aloud][read-aloud]]
+  - [[#read-aloud-extras][read-aloud-extras]]
 - [[#misc][misc]]
   - [[#calc][calc]]
   - [[#alert][alert]]
@@ -569,7 +566,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil
+                              :ref "f19f4db"
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                               :build (:not elpaca--activate-package)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
@@ -636,6 +633,22 @@ We load ~use-package~ itself with ~elpaca~, then proceed to do the configuration
   (setq use-package-always-defer t)
   (setq use-package-hook-name-suffix nil) ; use real name for hooks, i.e. do not omit the `-hook' bit
   (setq use-package-minimum-reported-time 0.1))
+
+(defmacro use-personal-package (name &rest args)
+  "Like `use-package' but accounting for personal packages.
+NAME and ARGS as in `use-package'."
+  (declare (indent defun))
+  `(use-package ,name
+     :elpaca (,name
+              :host github
+              :repo "benthamite/dotfiles"
+              ;; :branch "dev"
+              :files ,(list (file-name-concat
+                             "emacs/extras"
+                             (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
+              :depth nil)
+     ,@args))
+
 (elpaca-wait)
 #+end_src
 
@@ -648,10 +661,7 @@ We load ~use-package~ itself with ~elpaca~, then proceed to do the configuration
 /[[file:extras/use-package-extras.el][use-package-extras]] collects my extensions for ~use-package~./
 
 #+begin_src emacs-lisp
-(use-package use-package-extras
-  :elpaca (use-package-extras
-           :host github :repo "benthamite/dotfiles"
-           :files ("emacs/extras/use-package-extras.el"))
+(use-personal-package use-package-extras
   :after use-package
   :demand t)
 (elpaca-wait)
@@ -685,7 +695,8 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 #+begin_src emacs-lisp
 (use-package org
   :demand t
-  :ensure org-plus-contrib)
+  ;; :ensure org-plus-contrib
+  )
 #+end_src
 
 ** jsonrpc
@@ -695,12 +706,7 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
 
-:PROPERTIES:
-:ID:       438DEA77-5F4B-4E1D-8A1D-E65DA588927F
-:END:
-
 #+begin_src emacs-lisp
-  ;; (unload-feature 'jsonrpc t)
   (use-package jsonrpc
     :elpaca (jsonrpc
                      :host github
@@ -771,7 +777,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
 /~tlon-init~ is a private package that my team uses to manage their respective config files./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent
 (use-package tlon-init
   :elpaca (tlon-init
            :host github
@@ -780,8 +786,8 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :after paths
   :demand t
   :config
-  (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook)
-  (tlon-init-startup))
+  (tlon-init-startup)
+  (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook))
 (elpaca-wait)
 #+end_src
 
@@ -831,7 +837,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 :ID:       0A62A6C8-D3D8-4960-A809-35B60A479D2B
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :results silent
 (use-feature iso-transl
   :demand t
   :config
@@ -839,7 +845,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
   ;; unset all `Super' key bindings
   (dolist (char (number-sequence ?a ?z))
-  (keymap-global-unset (concat "s-" (char-to-string char))))
+    (keymap-global-unset (concat "s-" (char-to-string char))))
 
   ;; unset some `Alt' key bindings in `key-translation-map'
   (dolist (char '("SPC" "!" "$" "+" "-" "<" ">" "?" "a" "c" "m" "o" "u" "x" "C" "L" "P" "R" "S" "T" "Y" "[" "]" "{" "|" "}"))
@@ -871,13 +877,23 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp
 (use-package transient
-  :elpaca (transient
-           :host github
-           :repo "magit/transient"
-           :ref "37307c1"
-           :depth nil)
-           :after seq
+  :after seq
   :demand t)
+#+end_src
+
+** transient-showcase
+:PROPERTIES:
+:ID:       72949AB3-4ACF-4E55-AACB-8AAA0D7058B6
+:END:
+/[[https://github.com/positron-solutions/transient-showcase][transient-showcase]] provides code examples for interactive explanations of ~transient~./
+
+#+begin_src emacs-lisp
+(use-package transient-showcase
+  :elpaca (transient-showcase
+           :host github
+           :repo "positron-solutions/transient-showcase")
+  :after transient
+  :defer 10)
 #+end_src
 
 ** warnings
@@ -988,8 +1004,6 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :defer 4
   :config
   (setq tlon-core-repo-dirs (expand-file-name "~/Library/CloudStorage/Dropbox/repos/"))
-  (setq tlon-core-meeting-pending-id-fede "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
-  (setq tlon-core-meeting-pending-id-leo "AAB63566-B9AD-4BA3-96E9-0F3F0A26E2B1")
 
   :general
   (markdown-mode-map
@@ -1267,7 +1281,12 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
   (setq auth-source-debug t)
   (setq auth-source-do-cache nil)
   (auth-source-pass-enable)
-  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)
+  (advice-add 'auth-source-pass-search :around
+              (lambda (orig-fun &rest args)
+                "Make `auth-source-pass' less verbose."
+                (let ((auth-source-debug nil))
+                  (apply orig-fun args)))))
 #+end_src
 
 Note: to work, entries must conform to the pattern ~auth-sources/host~.
@@ -1392,6 +1411,19 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   :elpaca (gh :version (lambda (_) "2.29"))) ; github.com/progfolio/elpaca/issues/229
 #+end_src
 
+** closql
+:PROPERTIES:
+:ID:       917EA2B7-565D-4BC9-94BF-2BE6F1D9B9BC
+:END:
+
+#+begin_src emacs-lisp
+(use-package closql
+  :elpaca (closql
+           :host github
+           :repo "magit/closql")
+  :demand t)
+#+end_src
+
 ** magit
 :PROPERTIES:
 :ID:       B662CE1B-3F94-486E-A3DE-052775035960
@@ -1408,12 +1440,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
 #+begin_src emacs-lisp :results silent
 (use-package magit
-  :elpaca (magit
-             :host github
-             :repo "magit/magit"
-             :ref "5ad367d7"
-             :depth nil)
-  :defer 5
+  :demand t
   :config
   (setq magit-commit-ask-to-stage 'stage)
   (setq magit-clone-set-remote.pushDefault t)
@@ -1508,11 +1535,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-package forge
-  :elpaca (forge
-           :ref "5dcca0e"
-           :depth nil)
   :after magit ghub emacsql auth-source-pass
-  :defer 5
+  :demand t
   :init
   (if (version<= emacs-version "29.0")
       (setq forge-database-connector 'sqlite)
@@ -1522,23 +1546,26 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq forge-owned-accounts '(("benthamite")))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
   (setq forge-pull-notifications t)
-  (run-with-timer (* 5 60) t #'forge-pull-notifications)
+  (setq forge-notifications-github-kludge 'pending-again)
+  (run-with-idle-timer 60 t #'forge-pull-notifications)
 
   (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
 
   :general
-  ((magit-mode-map forge-issue-list-mode-map gh-notify-mode-map)
+  ((magit-mode-map forge-issue-list-mode-map)
    "n" 'forge-dispatch)
   (forge-post-mode-map
    "s-c" 'forge-post-submit)
   (forge-topic-mode-map
-   "a" 'forge-edit-topic-assignees
+   "a" 'forge-topic-set-assignees
    "b" 'forge-edit-topic-body
    "d" 'forge-delete-comment
-   "l" 'forge-edit-topic-labels
-   "m" 'forge-edit-topic-milestone
-   "x" 'forge-edit-topic-state
-   "t" 'forge-edit-topic-title
+   "l" 'forge-topic-set-labels
+   "s" 'forge-topic-state-menu
+   "i" 'forge-browse-issue
+   "I" (lambda! (let ((current-prefix-arg '(4))) (call-interactively 'forge-browse-issue)))
+   "x" 'forge-browse-issues
+   "t" 'forge-topic-set-title
    "e" 'forge-edit-post
    "p" 'forge-create-post
    "r" 'forge-create-post)
@@ -1572,64 +1599,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
            :host github
            :repo "eatse21/forge-search.el")
   :after forge
-  :demand t
-  :general
-  ((forge-topic-mode-map
-    forge-topic-list-mode-map
-    forge-issue-list-mode-map
-    forge-pullreq-list-mode-map
-    forge-notifications-mode-map
-    forge-repository-list-mode-map)
-   "s" 'forge-search))
-#+end_src
-
-** gh-notify
-:PROPERTIES:
-:ID:       02EE3FAE-133C-479E-B7C7-9B2BB2160DCA
-:END:
-
-/[[https://github.com/anticomputer/gh-notify][gh-notify]] is a veneer for the Magit/Forge GitHub porcelain./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
-(use-package gh-notify
-  :elpaca (gh-notify
-           :host github
-           :repo "benthamite/gh-notify"
-           :depth nil)
-  :after forge
-  :demand t
-  :config
-  ;; unset bindings for all the keys that were bound to self-insert-command in
-  ;; `gh-notify-mode-map'
-  (let ((char-table (cl-second gh-notify-mode-map)))
-    (map-char-table (lambda (key def)
-                      (when (eq def 'gh-notify--self-insert-command)
-                        (set-char-table-range char-table key nil)))
-                    char-table))
-  :general
-  (gh-notify-mode-map
-   "g" 'gh-notify-forge-refresh
-   "Q" 'files-extras-kill-this-buffer))
-#+end_src
-
-** gh-notify-extras
-:PROPERTIES:
-:ID:       C0B10485-4BA9-4370-8D60-2B96A138FC3F
-:END:
-
-
-/[[file:extras/gh-notify-extras.el][gh-notify-extras]] collects my extensions for ~gh-notify~./
-
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
-(use-personal-package gh-notify-extras
-  :after gh-notify
-  :demand t
-  :general
-  (gh-notify-mode-map
-   "RET" 'gh-notify-extras-visit-notification
-   "G" 'gh-notify-extras-full-refresh
-   "x" 'gh-notify-extras-browse-externally
-   "." 'gh-notify-extras-visit-next-notification))
+  :demand t)
 #+end_src
 
 ** forge-extras
@@ -1637,12 +1607,11 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       B74712E7-2A8C-4D17-8FD4-C854C88D3D72
 :END:
 
-
 /[[file:extras/forge-extras.el][forge-extras]] collects my extensions for ~forge~./
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-personal-package forge-extras
-  :after forge orgit-forge gh-notify
+  :after forge orgit-forge
   :demand t
   :config
   (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link))
@@ -2044,9 +2013,6 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :after doom-modeline
   :demand t
   :config
-  (setq doom-modeline-github t)
-  (setq doom-modeline-github-interval (* 1 60))
-  (setq doom-modeline-github nil)
   (doom-modeline-mode))
 #+end_src
 
@@ -2108,7 +2074,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
           ,tab-bar-extras-separator-element
           ,tab-bar-extras-battery-element
           ,tab-bar-extras-telega-element
-          ,tab-bar-extras-github-element
+          ,tab-bar-extras-forge-element
           ,tab-bar-extras-pomodoro-element
           ,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
           ))
@@ -2116,6 +2082,10 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   (add-hook 'tlon-init-post-init-hook #'tab-bar-extras-reset))
 #+end_src
 
+*** TODO Develop functionality to snooze notifications
+:PROPERTIES:
+:ID:       D0A5875F-575E-4FF3-B0CF-D73DE0185559
+:END:
 ** fancy-battery
 :PROPERTIES:
 :ID:       DDFE34BA-7C23-459E-B4E2-2957D2535700
@@ -2136,40 +2106,6 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   (fancy-battery-mode))
 #+end_src
 
-** all-the-icons
-:PROPERTIES:
-:ID:       46EB8CD9-E498-4F80-AC02-A116CFA58799
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-17 Sun 11:13]--[2022-07-17 Sun 11:21] =>  0:08
-CLOCK: [2021-05-20 Thu 18:21]--[2021-05-20 Thu 18:39] =>  0:18
-CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
-:END:
-
-/[[https://github.com/domtronn/all-the-icons.el][all-the-icons]] collects various icon fonts and propertizes them./
-
-#+begin_src emacs-lisp :results silent
-(use-package all-the-icons
-  :demand t)
-#+end_src
-
-** all-the-icons-completion
-:PROPERTIES:
-:ID:       A0DAA757-1CC9-460B-9F46-78A5145E7E61
-:END:
-
-/[[https://github.com/iyefrat/all-the-icons-completion][all-the-icons-completion]] adds icons to completion candidates./
-
-#+begin_src emacs-lisp :results silent
-(use-package all-the-icons-completion
-  :demand t
-  :after all-the-icons marginalia vertico
-  :config
-  (all-the-icons-completion-mode)
-
-  (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
-#+end_src
-
 ** nerd-icons
 :PROPERTIES:
 :ID:       0C470436-3327-4B81-89DA-005449893FF4
@@ -2177,11 +2113,11 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 
 /[[https://github.com/rainstormstudio/nerd-icons.el][nerd-icons]] is a library for [[https://github.com/ryanoasis/nerd-fonts][Nerd Font]] icons inside Emacs./
 
+Note that the icons need to be installed via ~nerd-icons-install-fonts~. If you want to install the icons with =brew= on macOS, run ~brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font~.
+
 #+begin_src emacs-lisp
 (use-package nerd-icons
-  :demand t
-  :config
-  (setq nerd-icons-font-family faces-extras-fixed-pitch-font))
+  :demand t)
 #+end_src
 
 ** menu-bar
@@ -2463,7 +2399,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   :general
   ("A-C-s-m" 'move-beginning-of-line
    "A-C-s-/" 'move-end-of-line)
-  ((custom-mode-map ebib-index-mode-map ebib-entry-mode-map gh-notify-mode-map help-mode-map helpful-mode-map Info-mode-map ledger-reconcile-mode-map Man-node-map org-lint--report-mode-map osa-chrome-mode-map mu4e-view-mode-map eww-mode-map elfeed-search-mode-map E elfeed-show-mode-map pass-mode-map elisp-refs-mode-map special-mode-map twittering-mode-map)
+  ((custom-mode-map ebib-entry-mode-map ebib-index-mode-map elfeed-search-mode-map elfeed-show-mode-map elisp-refs-mode-map eww-mode-map forge-notifications-mode help-mode-map helpful-mode-map Info-mode-map ledger-reconcile-mode-map Man-mode-map mu4e-view-mode-map org-lint--report-mode-map osa-chrome-mode-map pass-mode-map special-mode-map)
    "k" 'previous-line
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)
@@ -2573,6 +2509,7 @@ CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
    "A-H-M-f" 'transpose-sexps
    "A-H-M-r" 'transpose-words
    "A-H-M-v" 'transpose-lines
+   "C-k" nil
    "C-<delete>" nil
    "C-H-M-=" 'overwrite-mode
    "C-H-M-a" 'backward-kill-sexp
@@ -3333,8 +3270,6 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
    "H-C-A-g" 'keyboard-escape-quit) ; ESC ESC ESC
   ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
    "H-q" 'bury-buffer)
-  (gh-notify-mode-map
-   "q" 'bury-buffer)
   (pdf-view-mode-map
    "s" 'save-buffer))
 #+end_src
@@ -3375,7 +3310,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   ;; We typically enter these modes to lookup some information and
   ;; then return to the previous buffer, so we set `q' to switch to
   ;; the other window, and reserve `Q' for the normal behavior
-  ((help-mode-map helpful-mode-map gh-notify-mode-map  osx-dictionary-mode-map)
+  ((help-mode-map helpful-mode-map osx-dictionary-mode-map)
    "Q" 'files-extras-kill-this-buffer
    "q" 'files-extras-kill-this-buffer-switch-to-other-window)
   (helpful-mode-map
@@ -3582,26 +3517,6 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
    "I" 'dired-extras-image-dired-current-directory))
 #+end_src
 
-** all-the-icons-dired
-:PROPERTIES:
-:ID:       53778128-E0F3-4199-9D7D-2118904F39A9
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-17 Sun 10:49]--[2022-07-17 Sun 11:13] =>  0:24
-:END:
-
-/[[https://github.com/jtbm37/all-the-icons-dired][all-the-icons-dired]] adds dired support to [[id:46EB8CD9-E498-4F80-AC02-A116CFA58799][all-the-icons]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package all-the-icons-dired
-  :demand t
-  :after all-the-icons dired
-  :config
-  (setq all-the-icons-dired-monochrome nil)
-
-  (add-hook 'dired-mode-hook #'dired-extras-all-the-icons-activate))
-#+end_src
-
 ** nerd-icons-dired
 :PROPERTIES:
 :ID:       C3F3F430-4DAE-4C77-907A-84B385CC3CCB
@@ -3613,7 +3528,7 @@ CLOCK: [2022-07-17 Sun 10:49]--[2022-07-17 Sun 11:13] =>  0:24
 
 #+begin_src emacs-lisp
 (use-package nerd-icons-dired
-  :disabled
+  :demand t
   :config
   (add-hook 'dired-mode-hook #'nerd-icons-dired-mode))
 #+end_src
@@ -3733,6 +3648,8 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
   (setq resize-mini-windows t)
   ;; TAB cycle if there are only few candidates
   (setq completion-cycle-threshold 3)
+  (setq minibuffer-default-prompt-format " [%s]")
+  (minibuffer-electric-default-mode)
 
   :general
   ((minibuffer-mode-map)
@@ -4411,7 +4328,7 @@ Note to self: if the package doesn't work after deploying a new profile, even af
   :after org-gcal calfw-org
   :demand t
   :general
-  (org-mode-map
+  ((org-mode-map org-agenda-mode-map)
    "s-g" 'org-gcal-extras-dispatch))
 #+end_src
 
@@ -4877,7 +4794,7 @@ CLOCK: [2021-06-10 Thu 12:43]--[2021-06-10 Thu 12:49] =>  0:06
 | [[id:C1B0678E-7334-4AF3-B1FE-9D63DFB6BE68][marginalia]] | minibuffer completion annotations |
 | [[id:19A4F21C-2169-4529-92E4-68E3A584DDAC][embark]]     | minibuffer completion actions     |
 
-For a comprehensive overview of completion in Emacs—both minibuffer completion and completion at point—I recommend [[https://www.youtube.com/watch?v=fnE0lXoe7Y0][this video]] by Andrew Tropin.
+For an introduction to minibuffer completion, I recommend [[https://www.youtube.com/watch?v=d3aaxOqwHhI][this video]] by Protesilaos Stavrou. For a comprehensive overview of both minibuffer completion and completion at point, I recommend [[https://www.youtube.com/watch?v=fnE0lXoe7Y0][this video]] by Andrew Tropin.
 
 ** vertico
 :PROPERTIES:
@@ -4892,17 +4809,17 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
 #+begin_src emacs-lisp :results silent
 (use-package vertico
   :elpaca (vertico :files (:defaults "extensions/*")
-                     :includes (vertico-indexed
-                                vertico-flat
-                                vertico-grid
-                                vertico-mouse
-                                vertico-quick
-                                vertico-buffer
-                                vertico-repeat
-                                vertico-reverse
-                                vertico-directory
-                                vertico-multiform
-                                vertico-unobtrusive))
+                   :includes (vertico-indexed
+                              vertico-flat
+                              vertico-grid
+                              vertico-mouse
+                              vertico-quick
+                              vertico-buffer
+                              vertico-repeat
+                              vertico-reverse
+                              vertico-directory
+                              vertico-multiform
+                              vertico-unobtrusive))
   :demand t
   :init
   (vertico-mode)
@@ -4926,6 +4843,8 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
   (vertico-map
    "<C-i>" 'vertico-exit
    "M-f" 'vertico-quick-exit
+   "M-k" 'vertico-previous-group
+   "M-l" 'vertico-next-group
    "C-H-M-w" 'vertico-directory-up))
 #+end_src
 
@@ -4945,15 +4864,14 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
   :demand t
   :config
   (setq embark-confirm-act-all nil)
-
   (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
 
   (defvar-keymap embark-yasnippet-completion-actions
-  :parent embark-general-map)
+    :parent embark-general-map)
 
   :general
   (embark-yasnippet-completion-actions
-  "d" 'consult-yasnippet-visit-snippet-file)
+   "d" 'consult-yasnippet-visit-snippet-file)
   ("C-;" 'embark-act
    "C-H-;" 'embark-act-all
    "C-h B" 'embark-bindings))
@@ -4989,15 +4907,14 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   :general
   ("C-H-l" 'consult-line
    "C-f" 'consult-find
+   "s-j" 'consult-imenu
    "H-b" 'consult-buffer
    "H-k" 'consult-locate
    "A-H-i" 'consult-info
    "H-R" 'consult-history
    "H-V" 'consult-yank-pop)
   ((markdown-mode-map gfm-mode-map outline-mode-map)
-   "s-j" 'consult-outline)
-  ((elfeed-show-mode-map eww-mode-map prog-mode-map)
-   "s-j" 'consult-imenu))
+   "s-j" 'consult-outline))
 #+end_src
 
 ** consult-extras
@@ -5068,12 +4985,12 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :elpaca (consult-gh
            :host github
            :repo "armindarvish/consult-gh")
-  :after consult forge
+  :after consult embark transient vertico forge
   :demand t
   :config
   (require 'consult-gh-embark)
   (require 'consult-gh-forge)
-  (setq consult-gh-default-clone-directory "~/source/")
+  (setq consult-gh-default-clone-directory "~/source")
   (setq consult-gh-repo-maxnum 30)
   (setq consult-gh-issues-maxnum 100)
   (setq consult-gh-show-preview nil)
@@ -5111,8 +5028,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
       ("b" "file" consult-gh-find-file)
       ""
       "default"
-      ("d" "repos" consult-gh-default-repos)
-      ]])
+      ("d" "repos" consult-gh-default-repos)]])
 
   :general
   ("H-G" 'consult-gh-dispatch))
@@ -5152,6 +5068,9 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
   :after consult yasnippet
   :demand t
   :config
+  ;; we delay previews to avoid accidentally triggering snippets that execute elisp code
+  (consult-customize consult-yasnippet :preview-key nil)
+
   (add-to-list 'vertico-multiform-commands
                '(consult-yasnippet grid))
 
@@ -5226,6 +5145,20 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
                                       orderless-extras-exclusion-dispatcher)))
 #+end_src
 
+** nerd-icons-completion
+:PROPERTIES:
+:ID:       1a127c06-43b5-435b-a4e5-becc61997794
+:END:
+
+#+begin_src emacs-lisp
+(use-package nerd-icons-completion
+  :demand t
+  :after marginalia
+  :config
+  (nerd-icons-completion-mode)
+  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+#+end_src
+
 ** ido
 :PROPERTIES:
 :ID:       458A26BD-1601-41D9-BC7E-7630466BC374
@@ -5278,15 +5211,16 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
 /[[https://github.com/minad/corfu][corfu]] enhances completion at point with a small completion popup./
 
+
 #+begin_src emacs-lisp :results silent
 (use-package corfu
   :elpaca (corfu :files (:defaults "extensions/*")
-                 :includes (corfu-info
-                            corfu-echo
-                            corfu-history
-                            ;; corfu-indexed
-                            corfu-popupinfo
-                            corfu-quick))
+		 :includes (corfu-info
+			    corfu-echo
+			    corfu-history
+			    ;; corfu-indexed
+			    corfu-popupinfo
+			    corfu-quick))
   :demand t
   :config
   (setq corfu-auto t)                 ;; Enable auto completion
@@ -5294,9 +5228,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (setq corfu-cycle vertico-cycle)
   (setq corfu-count vertico-count)
   (setq corfu-info-documentation nil)
-  (setq corfu-auto-delay 0)
   (setq corfu-auto-prefix 3)
-  (setq corfu-popupinfo-delay 0)
 
   (global-corfu-mode)
 
@@ -5329,24 +5261,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   :general
   (corfu-map
    "M-m" 'corfu-extras-move-to-minibuffer))
-#+end_src
-
-** kind-icon
-:PROPERTIES:
-:ID:       DE439647-A62B-4C32-A0BB-AA7D4BB3D9DD
-:END:
-
-/[[https://github.com/jdtsmith/kind-icon][kind-icon]] provides SVG icons for in-region completion./
-
-#+begin_src emacs-lisp :results silent
-(use-package kind-icon
-  :after corfu
-  :demand t
-
-  :config
-  (setq kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
-
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 #+end_src
 
 ** cape
@@ -5392,17 +5306,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (add-hook 'org-mode-hook #'org-block-capf-add-to-completion-at-point-functions))
 #+end_src
 
-** company
-:PROPERTIES:
-:ID:       D8BC79D0-C883-45A9-A5B2-98E88C59EE6B
-:END:
-
-I use ~completion-at-point~ for completion, not company. However, I still rely on company for a few completion backends.
-
-#+begin_src emacs-lisp :results silent
-(use-package company)
-#+end_src
-
 * help
 :PROPERTIES:
 :ID:       7F0CBD06-FDB3-4889-91CE-D8A25D4F2613
@@ -5427,7 +5330,8 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
   (lossage-size 10000)
 
   :general
-  ("C-A-k" 'describe-keymap)
+  ("C-h C-k" 'describe-keymap
+   "C-h C-." 'display-local-help)
   (input-decode-map
    [?\C-m] [C-m]
    [?\C-i] [C-i]))
@@ -5461,18 +5365,19 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 
 #+begin_src emacs-lisp :results silent
 (use-package helpful
-  :defer 20
+  :demand t
+  :config
+  ;; always use `helpful', even when `describe-function' is called by a program
+  ;; (e.g. `transient')
+  (advice-add 'describe-function :override #'helpful-function)
+
   :general
-  ("H-U" 'helpful-at-point
-   "C-k" 'helpful-key
-   "C-h k" 'helpful-key
+  ("C-h k" 'helpful-key
    "C-h f" 'helpful-function
-   "C-A-f" 'helpful-function
+   "C-h c" 'helpful-command
    "C-h o" 'helpful-symbol
-   "C-A-o" 'helpful-symbol
    "C-h v" 'helpful-variable
-   "C-A-v" 'helpful-variable
-   "C-h c" 'helpful-command)
+   "C-h ." 'helpful-at-point)
   (embark-symbol-map
    "h" 'helpful-symbol))
 #+end_src
@@ -5490,6 +5395,9 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 
   :general
   (Info-mode-map
+   "m" 'Info-prev
+   "/" 'Info-next
+   "," 'Info-up
    "j" 'Info-backward-node
    ";" 'Info-forward-node))
 #+end_src
@@ -6058,7 +5966,6 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 :ID:       856FDF94-95B6-49EB-A6D5-B95F0A53384A
 :END:
 
-
 /[[file:extras/markdown-mode-extras.el][markdown-mode-extras]] collects my extensions for ~markdown-mode~./
 
 #+begin_src emacs-lisp
@@ -6255,6 +6162,9 @@ To populate the database of historical prices:
 :PROPERTIES:
 :ID:       FD6B578E-9794-4C38-A2F3-5A877ED2C4C8
 :END:
+
+https://gitlab.com/chrisberkhout/pricehist
+
 - [[https://devhints.io/ledger][Ledger CLI cheatsheet]]
 - [[https://github.com/davidkeegan/dklrt][GitHub - davidkeegan/dklrt: Ledger Recurring Transactiions.]]
 - [[https://rolfschr.github.io/gswl-book/latest.html][Getting Started With Ledger - August 28, 2019 201f047]]
@@ -6321,12 +6231,14 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 :ID:       5EDD6F28-3299-4D90-83E1-C7476176277D
 :END:
 
+/[[https://github.com/tlon-team/tlon-babel][tlon-babel]] is a set of Emacs commands that my team uses in various contexts./
 
 #+begin_src emacs-lisp
 (use-package tlon-babel
   :elpaca (tlon-babel
            :host github
            :repo "tlon-team/tlon-babel"
+           ;; :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
@@ -6348,7 +6260,6 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   ((gfm-mode-map markdown-mode-map)
    "A-s-e" 'tlon-babel-yaml-edit-field
    "s-c" 'tlon-babel-copy-dwim
-   "s-d" 'tlon-babel-md-dispatch
    "s-l" 'tlon-babel-md-insert-locator
    "s-u" 'tlon-babel-md-insert-entity
    "A-C-s-SPC" 'tlon-babel-md-beginning-of-buffer-dwim
@@ -6522,8 +6433,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
           (strike-out
            (color . "red"))))
 
-  (unless (or noninteractive (eq this-command 'pdf-tools-install))
-    (pdf-tools-install))
+  (pdf-tools-install t)
 
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
   (add-hook 'pdf-tools-enabled-hook #'sow-mode)
@@ -6744,6 +6654,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
   ;; do not truncate print results in Edebug
   (setq edebug-print-level nil)
   (setq edebug-print-length nil)
+  (setq edebug-print-circle nil) ; disable confusing #N= and #N# print syntax
 
   :general
   (emacs-lisp-mode-map
@@ -7026,7 +6937,6 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
                  :ref "653fe7b12990b5b7a050971bed4579022ce4b4f8" ; 2024-01-03, before jumping cursor bug “fix”
                  :files ("dist" "*.el"))
   :demand t
-
   :config
   (setq copilot-node-executable "/opt/homebrew/opt/node/bin/node")
   (setq copilot-log-max 1000)
@@ -7060,6 +6970,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp
 (use-package gptel
+  :after pass
   :defer 10
   :config
   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
@@ -7516,13 +7427,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    )
 #+end_src
 
-*** TODO [#4] Tweak ~ps/productivity-of-the-day~ function to compute value created
-:PROPERTIES:
-:ID:       1B86CB4D-D297-4C6D-99F7-49A80B7B0688
-:END:
-
-By considering both tasks completed and their associated priorities.
-
 *** TODO [#4] Create function to compute the total number of TODOs and hours in effort estimates
 :PROPERTIES:
 :Effort:   2:00
@@ -7533,7 +7437,6 @@ By considering both tasks completed and their associated priorities.
 :PROPERTIES:
 :ID:       4DE04276-B164-441D-ADCA-017346C525D6
 :END:
-
 
 /[[file:extras/org-extras.el][org-extras]] collects my extensions for ~org~./
 
@@ -7550,8 +7453,7 @@ By considering both tasks completed and their associated priorities.
   (add-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
 
   :general
-  ("H-l" 'org-extras-dispatch
-  "H-;" 'org-extras-tlon-dispatch)
+  ("H-l" 'org-extras-tlon-dispatch)
   (org-mode-map
    "s-<return>" 'org-extras-super-return
    "A-C-s-n" 'org-extras-jump-to-first-heading
@@ -7816,7 +7718,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
            (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
            "** TODO %?\n" :empty-lines 1)
           ("c" "Calendar" entry
-           (file paths-file-calendar)
+           (file ,paths-file-calendar)
            "* TODO %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t)
           ;; djcbsoftware.nl/code/mu/mu4e/Org_002dmode-links.html
           ("e" "Email" entry
@@ -8499,7 +8401,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :after org
   :demand t
   :config
-  ;; set to nil to temporarily disable cache to avoid `org-element-cache' errors
+  ;; set to nil to temporarily disable cache and avoid `org-element-cache' errors
   (setq org-element-use-cache t))
 #+end_src
 
@@ -8748,7 +8650,9 @@ CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
 
 /[[https://github.com/org-mime/org-mime][org-mime]] lets you send HTML email using Org-mode HTML export./
 
-#+begin_src emacs-lisp :results silent
+[2024-02-13 Tue] Temporarily disabling to test whether I need this.
+
+#+begin_src emacs-lisp :results silent :tangle no
 (use-package org-mime
   :after org
   :general
@@ -8979,6 +8883,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
 
   (org-roam-db-autosync-mode -1)
+  (run-with-idle-timer (* 5 60) t #'org-roam-db-sync)
 
   (add-hook 'org-roam-capture-new-node-hook #'orb--insert-captured-ref-h)
   (add-hook 'org-roam-capture-new-node-hook #'org-roam-capture--insert-captured-ref-h)
@@ -9115,7 +9020,7 @@ CLOCK: [2021-12-14 Tue 19:46]--[2021-12-14 Tue 20:06] =>  0:20
 
 I use this package to define a dynamic agenda, as explained and illustrated [[https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html][here]]. I've made some changes to the system in that link, specifically to exclude files and directories at various stages:
 1. At the broadest level, I exclude files and directories from the function (~org-extras-id-auto-add-ids-to-headings-in-file~) that otherwise automatically adds an ID to every org heading in a file-visiting buffer. Headings so excluded are not indexed by org-roam, because a heading requires an ID to be indexed. See the variables ~org-extras-id-auto-add-excluded-files~ and ~org-extras-id-auto-add-excluded-directories~ under the ~org-id~ section of this file.
-2. I then exclude some headings with IDs from the org-roam database (via the variables  ~org-roam-file-exclude-regexp~ and ~org-roam-db-node-include-function~). See the ~org-roam~ section of this file.
+2. I then exclude some headings with IDs from the org-roam database. See the variables ~org-roam-file-exclude-regexp~ and ~org-roam-db-node-include-function~  under the ~org-roam~ section of this file.
 3. Finally, I selectively add to ~org-agenda-files~ files that satisfy certain conditions (as defined by ~vulpea-extras-project-p~) and files modified recently (as specified by ~org-roam-extras-recent~), and exclude from ~org-agenda-files~ files listed in ~org-extras-agenda-files-excluded~.
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :vulpea)
@@ -9136,7 +9041,6 @@ I use this package to define a dynamic agenda, as explained and illustrated [[ht
 (use-personal-package vulpea-extras
   :after vulpea
   :demand t
-  ;; :commands (vulpea-extras-buffer-p vulpea-agenda-files-update vulpea-extras-buffer-prop-get-list vulpea-extras-project-update-tag)
   :config
   (add-hook 'find-file-hook #'vulpea-extras-project-update-tag)
   (add-hook 'before-save-hook #'vulpea-extras-project-update-tag))
@@ -9191,7 +9095,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 :END:
 
 
-/[[file:extras/org-noter-extras.el][org-noter-extras]] collects my extensions for ~org-noter~.
+/[[file:extras/org-noter-extras.el][org-noter-extras]] collects my extensions for ~org-noter~./
 
 #+begin_src emacs-lisp
 (use-personal-package org-noter-extras
@@ -9304,6 +9208,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (setq bibtex-autokey-before-presentation-function 'bibtex-extras-asciify-string)
   ;; check tweaked version of `bibtex-format-entry' above
   (setq bibtex-entry-format '(opts-or-alts-fields last-comma delimiters page-dashes))
+  (setq bibtex-field-indentation 8) ; match ebib value
 
   ;; Add custom 'Video' entry type
   (push '("Video" "Video file"
@@ -9608,6 +9513,14 @@ Having headings tagged with the type of work they are notes of allows me to quer
 (use-personal-package citar-extras
   :after citar
   :demand t
+  :config
+  ;; https://github.com/emacs-citar/citar/wiki/Indicators
+  (setq citar-indicators
+        (list citar-extras-indicator-files-icons
+              citar-extras-indicator-links-icons
+              citar-extras-indicator-notes-icons
+              citar-extras-indicator-cited-icons))
+              
   :general
   ((citar-map citar-citation-map)
    "d" 'ebib-extras-download-dwim
@@ -9630,12 +9543,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
   :after citar citeproc citar-extras tlon-babel
   :config
   (setq citar-citeproc-csl-styles-dir paths-dir-tlon-csl-styles)
-  (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir)
-  ;; https://github.com/emacs-citar/citar/wiki/Indicators
-  (setq citar-indicators
-        (list citar-extras-indicator-files-icons
-              citar-extras-indicator-links-icons
-              citar-extras-indicator-notes-icons)))
+  (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir))
 #+end_src
 
 ** citar-embark
@@ -9918,16 +9826,16 @@ The macro below generates the commands correctly. But attempting to define key b
   :general
   ("A-i" 'ebib-extras-open-or-switch)
   ((ebib-entry-mode-map ebib-index-mode-map)
+   "," 'ebib-extras-prev-entry
+   "." 'ebib-extras-next-entry
    "d" 'ebib-extras-duplicate-entry
    "n" 'ebib-extras-citar-open-notes)
   (ebib-entry-mode-map
    "SPC" 'ebib-extras-open-file-dwim
-   "," 'ebib-extras-title-case
-   "." 'ebib-extras-sentence-case
    "/" (lambda! (ebib-extras-attach-file t))
    "?" 'ebib-extras-attach-file
    "a" 'ebib-extras-search-amazon
-   "b" 'ebib-extras-open-entry-in-bibtex-file
+   "b" 'ebib-extras-get-or-open-entry
    "g" 'ebib-extras-search-library-genesis
    "G" 'ebib-extras-search-goodreads
    "h" 'ebib-extras-open-html-file
@@ -10892,7 +10800,7 @@ CLOCK: [2021-05-18 Tue 18:26]--[2021-05-18 Tue 18:54] =>  0:28
 CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :browse-url)
+#+begin_src emacs-lisp :results silent
 (use-feature browse-url
   :config
   (setq browse-url-browser-function 'eww-browse-url)
@@ -10914,7 +10822,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 
 /[[file:extras/browse-url-extras.el][browse-url-extras]] collects my extensions for ~browse-url~.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :browse-url)
+#+begin_src emacs-lisp :results silent
 (use-personal-package browse-url-extras
   :after browse-url s f
   :demand t
@@ -11184,6 +11092,8 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
   (add-hook 'elfeed-show-mode-hook #'visual-line-mode)
+
+  (run-with-idle-timer (* 30 60) t #'elfeed-update)
 
   :general
   (eww-mode-map
@@ -11911,6 +11821,17 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
   ("C-H-r" 'read-aloud-this)) ; remember that `A-C-d' starts/stops dictation
 #+end_src
 
+** read-aloud-extras
+:PROPERTIES:
+:ID:       AA0F6FA2-2226-47C3-AE3F-7C8A1D542A17
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package read-aloud-extras
+  :after read-aloud
+  :demand t)
+#+end_src
+
 * misc
 :PROPERTIES:
 :ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
@@ -12138,11 +12059,13 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 :ID:       809139BE-A8AF-40A7-BF1A-899839313729
 :END:
 
-Disabling because it interferes with [[https://emacs.stackexchange.com/questions/14950/invalid-coding-system-auto-save-coding-when-trying-to-recover-auto-save-files][recover-this-file]].
 
 #+begin_src emacs-lisp
 (use-package activity-watch-mode
-  :disabled t
+  :elpaca (activity-watch-mode
+           :host github
+           :repo "meliache/activity-watch-mode"
+           :branch "fix/invalid-coding-system-on-recover")
   :demand t
   :config
   (global-activity-watch-mode))
@@ -12378,8 +12301,6 @@ CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
 :END:
 
 For personal reference, these are the most recent Emacs installations (in reverse chronological order).
-
-[2023-02-23 Thu]
 
 #+begin_src shell :tangle no
 brew tap d12frosted/emacs-plus

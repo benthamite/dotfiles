@@ -278,7 +278,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#completion-at-point][completion at point]]
   - [[#corfu][corfu]]
   - [[#corfu-extras][corfu-extras]]
-  - [[#nerd-icons-corfu][nerd-icons-corfu]]
   - [[#cape][cape]]
   - [[#org-block-cafp][org-block-cafp]]
 - [[#help][help]]
@@ -5263,26 +5262,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   :general
   (corfu-map
    "M-m" 'corfu-extras-move-to-minibuffer))
-#+end_src
-
-** nerd-icons-corfu
-:PROPERTIES:
-:ID:       91409eea-b893-4112-98ae-481381b8c43e
-:END:
-
-/[[https://github.com/LuigiPiucco/nerd-icons-corfu][nerd-icons-corfu]] is a library for adding icons to completions in =corfu=./
-
-#+begin_src emacs-lisp
-(use-package nerd-icons-corfu
-  :after corfu
-  :demand t
-  :config
-  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)
-
-  (setq nerd-icons-corfu-mapping
-	'((array :style "cod" :icon "symbol_array" :face font-lock-type-face)
-          (boolean :style "cod" :icon "symbol_boolean" :face font-lock-builtin-face)
-          (t :style "cod" :icon "code" :face font-lock-warning-face))))
 #+end_src
 
 ** cape

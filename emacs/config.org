@@ -1556,19 +1556,17 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "n" 'forge-dispatch)
   (forge-post-mode-map
    "s-c" 'forge-post-submit)
-  (forge-topic-mode-map
-   "a" 'forge-topic-set-assignees
-   "b" 'forge-edit-topic-body
-   "d" 'forge-delete-comment
-   "l" 'forge-topic-set-labels
-   "s" 'forge-topic-state-menu
-   "i" 'forge-browse-issue
-   "I" (lambda! (let ((current-prefix-arg '(4))) (call-interactively 'forge-browse-issue)))
-   "x" 'forge-browse-issues
-   "t" 'forge-topic-set-title
-   "e" 'forge-edit-post
-   "p" 'forge-create-post
-   "r" 'forge-create-post)
+  ((forge-topic-mode-map forge-notifications-mode-map magit-status-mode-map)
+   "s-a" 'forge-topic-set-assignees
+   "s-d" 'forge-delete-comment
+   "s-l" 'forge-topic-set-labels
+   "s-i" 'forge-browse-issue
+   "s-I" 'forge-browse-issues
+   "s-t" 'forge-topic-set-title
+   "s-e" 'forge-edit-post
+   "s-p" 'forge-create-post
+   "s-r" 'forge-create-post
+   "s-x" 'forge-issue-state-set-completed)
   (magit-status-mode-map
    "s-x" 'forge-remove-topic-locally))
 #+end_src

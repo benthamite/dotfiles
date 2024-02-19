@@ -272,15 +272,15 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#marginalia][marginalia]]
   - [[#orderless][orderless]]
   - [[#orderless-extras][orderless-extras]]
+  - [[#nerd-icons-completion][nerd-icons-completion]]
   - [[#ido][ido]]
   - [[#which-key][which-key]]
 - [[#completion-at-point][completion at point]]
   - [[#corfu][corfu]]
   - [[#corfu-extras][corfu-extras]]
-  - [[#kind-icon][kind-icon]]
+  - [[#nerd-icons-corfu][nerd-icons-corfu]]
   - [[#cape][cape]]
   - [[#org-block-cafp][org-block-cafp]]
-  - [[#company][company]]
 - [[#help][help]]
   - [[#help][help]]
   - [[#help-at-pt][help-at-pt]]
@@ -5146,6 +5146,20 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
                                       orderless-extras-initialism-dispatcher
                                       orderless-extras-prefixes-dispatcher
                                       orderless-extras-exclusion-dispatcher)))
+#+end_src
+
+** nerd-icons-completion
+:PROPERTIES:
+:ID:       1a127c06-43b5-435b-a4e5-becc61997794
+:END:
+
+#+begin_src emacs-lisp
+(use-package nerd-icons-completion
+  :demand t
+  :after marginalia
+  :config
+  (nerd-icons-completion-mode)
+  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 #+end_src
 
 ** ido

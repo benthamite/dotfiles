@@ -33,7 +33,6 @@
 (require 'ebib-utils)
 (require 'eww-extras)
 (require 'paths)
-(require 'tlon-babel-refs)
 (require 'zotra)
 
 ;;;; Functions
@@ -119,6 +118,7 @@ Zotero-imported bibtex entries."
 	 (entry (zotra-get-entry-1 data zotra-default-entry-format endpoint)))
     (with-temp-buffer
       (insert entry)
+      (bibtex-mode)
       (let ((value (bibtex-autokey-get-field field)))
 	(if (string-empty-p value)
 	    nil

@@ -31,7 +31,6 @@
 (require 'el-patch)
 (require 'ebib)
 ;; (require 'ebib-extras)
-(require 'tlon-babel-refs)
 
 ;;;; Variables
 

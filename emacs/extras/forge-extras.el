@@ -56,6 +56,10 @@
                (forge-visit-issue topic)))
         (call-interactively #'org-store-link)))))
 
+(defun forge-extras-browse-github-inbox ()
+  "Browse the GitHub notification inbox."
+  (interactive)
+  (browse-url "https://github.com/notifications"))
 ;;;;; Menus
 
 (transient-define-prefix forge-extras-dispatch ()

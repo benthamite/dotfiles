@@ -1068,14 +1068,6 @@ Fetching is done using `bib'."
     (with-current-buffer (find-file-noselect file)
       (funcall command))))
 
-(defun ebib-extras-fetch-field-from-zotero (field &optional id-or-url)
-  "Fetch the value of FIELD from the ID-OR-URL of the entry at point.
-IF ID-OR-URL is nil, try to get it or fetch it."
-  (unless (derived-mode-p 'ebib-entry-mode)
-    (error "Not in `ebib-entry-mode'"))
-  (let* ((id-or-url (or id-or-url (ebib-extras-get-or-fetch-id-or-url))))
-    (zotra-extras-fetch-field field id-or-url)))
-
 (defun ebib-extras-move-entry (direction)
   "Move to the previous or next entry in the current database.
 DIRECTION can be `prev' or `next'."
@@ -1103,43 +1095,6 @@ DIRECTION can be `prev' or `next'."
   "Set the value of FIELD to VALUE for the entry at point."
   (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
   (ebib-extras-update-entry-buffer ebib--cur-db))
-
-(defun ebib-extras-fetch-and-set-abstract (&optional overwrite)
-  "Fetch the abstract of the entry at point and set it as the new value.
-We use CrossRef for DOIs, Google Books for ISBN and Zotero for URLs.
-
-When the entry already contains an abstract, prompt the user for confirmation.
-Bypass this prompt if OVERWRITE is either `always' or `never'; if so, the new
-abstract will, or will not, replace the existing one, respectively."
-  (interactive)
-  (let ((abstract (ebib-extras-get-field "abstract")))
-    (when (or
-	   (eq overwrite 'always)
-	   (not abstract)
-	   (unless (eq overwrite 'never)
-	     (y-or-n-p "Abstract already exists. Overwrite?")))
-      (if-let ((value (or (when-let ((doi (ebib-extras-get-field "doi")))
-			    (bib-fetch-abstract-from-crossref doi))
-			  (when-let ((isbn (ebib-extras-get-field "isbn")))
-			    (bib-fetch-abstract-from-google-books isbn))
-			  (when-let ((url (ebib-extras-get-field "url")))
-			    ;; running zotero on a URL of a PDF throws an error
-			    (unless (string-match-p "\\.pdf$" url)
-			      (ebib-extras-fetch-field-from-zotero "abstract" url))))))
-	  (ebib-extras-set-field "abstract" (ebib-extracts-abstract-cleanup value))
-	(message "No abstract found")))))
-
-(defun ebib-extracts-abstract-cleanup (string)
-  "Clean up raw abstract consisting of STRING."
-  ;; remove a bunch of stuff
-  (dolist (regexp '("<[^>]+>" ; XML tags
-		    "{\\\\textless}.?p{\\\\textgreater}" ; LaTeX tag
-		    "^summary\\|^abstract\\(:? ?\\)" ; extraneous leading words
-		    )
-		  string)
-    (setq string (replace-regexp-in-string regexp "" string)))
-  ;; add a period at the end of the abstract if missing
-  (replace-regexp-in-string "\\([^\\.]\\)$" "\\1." string))
 
 (defun ebib-extras-fetch-keywords ()
   "Fetch keywords for the entry at point and put them in the associated org file."

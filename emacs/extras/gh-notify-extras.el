@@ -131,11 +131,6 @@ Browse issue or PR on prefix P."
     (when unread
       (gh-notify-extras-mark-issue-as-read))))
 
-(defun gh-notify-extras-browse-externally ()
-  "Browse notifications on GitHub."
-  (interactive)
-  (browse-url "https://github.com/notifications"))
-
 (defun gh-notify-extras-full-refresh ()
   "Pull Forge notifications and then refresh the `gh-notify' buffer."
   (interactive)

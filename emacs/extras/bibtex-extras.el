@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'bibtex)
+(require 'doi-utils)
 (require 'el-patch)
 (require 'ebib)
 ;; (require 'ebib-extras)

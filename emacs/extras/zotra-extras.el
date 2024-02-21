@@ -33,7 +33,6 @@
 (require 'ebib-utils)
 (require 'eww-extras)
 (require 'paths)
-(require 'tlon-babel-refs)
 (require 'zotra)
 
 ;;;; Functions

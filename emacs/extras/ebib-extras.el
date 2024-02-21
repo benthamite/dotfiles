@@ -26,7 +26,7 @@
 ;; Extensions for `ebib'.
 
 ;;; Code:
-
+(require 'tlon-babel-tex)
 (require 'bibtex)
 (require 'el-patch)
 (require 'citar)
@@ -141,14 +141,17 @@ value is copied to the kill ring."
 (defun ebib-extras-get-file (extension)
   "Return the file with EXTENSION in entry at point.
 A file will be returned if it uniquely exists."
-  (when-let ((files (ebib-extras-get-field "file")))
-    (catch 'tag
-      (mapc
-       (lambda (file)
-	 (when (equal (file-name-extension file) extension)
-	   (throw 'tag file)))
-       (ebib--split-files files))
-      nil)))
+  (let ((get-field (pcase major-mode
+		     ('ebib-entry-mode #'ebib-extras-get-field)
+		     ('bibtex-mode #'bibtex-extras-get-field))))
+    (when-let ((files (funcall get-field "file")))
+      (catch 'tag
+	(mapc
+	 (lambda (file)
+	   (when (equal (file-name-extension file) extension)
+	     (throw 'tag (expand-file-name file))))
+	 (ebib--split-files files))
+	nil))))
 
 (defun ebib-extras-open-file (extension)
   "Open file with EXTENSION in entry at point.

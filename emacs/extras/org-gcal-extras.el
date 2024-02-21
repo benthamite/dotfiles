@@ -45,7 +45,7 @@
 				   (replace-regexp-in-string "/" " " id))))))
   (user-error "No id found"))
 
-(transient-define-prefix org-gcal-extras-dispatch ()
+(transient-define-prefix org-gcal-extras-menu ()
   "Dispatch an `org-gcal' command."
   [["Fetch"
     ("f" "fetch all" org-gcal-fetch)

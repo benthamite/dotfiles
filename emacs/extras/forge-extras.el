@@ -35,7 +35,7 @@
 (defun forge-extras-get-unread-notifications ()
   "Return the number of unread notifications."
   (when-let ((unread-notifications (forge--ls-notifications '(unread))))
-      (length unread-notifications)))
+    (length unread-notifications)))
 
 (defun forge-extras-orgit-store-link (_arg)
   "Like `org-store-link' but store links to all selected commits, if any."
@@ -84,8 +84,7 @@ If ISSUE is nil, use the issue at point."
     ("c p" "pull-request"           forge-create-pullreq)
     ("c u" "pull-request from issue" forge-create-pullreq-from-issue
      :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
-    ("c f" "fork or remote"        forge-fork)
-    ]
+    ("c f" "fork or remote"        forge-fork)]
    ["List"
     ("l a" "awaiting review"        forge-list-requested-reviews)
     ("l i" "issues"                 forge-list-issues)
@@ -96,8 +95,7 @@ If ISSUE is nil, use the issue at point."
     """Edit"
     ("e t" "edit title"             forge-topic-set-title)
     ("e s" "edit state"             forge-topic-state-menu)
-    ("e l" "edit labels"            forge-topic-set-labels)
-    ]
+    ("e l" "edit labels"            forge-topic-set-labels)]
    ["Browse"
     ("b i" "issue"                  forge-browse-issue)
     ("b p" "pull-request"           forge-browse-pullreq)
@@ -108,8 +106,7 @@ If ISSUE is nil, use the issue at point."
     """Visit"
     ("v i" "issue"                  forge-visit-issue)
     ("v p" "pull-request"           forge-visit-pullreq)
-    ("v t" "topic"                  forge-visit-topic)
-    ]
+    ("v t" "topic"                  forge-visit-topic)]
    ["Authored"
     ("u i" "authored issues"        forge-list-authored-issues)
     ("u p" "authored pull-requests" forge-list-authored-pullreqs)
@@ -124,10 +121,7 @@ If ISSUE is nil, use the issue at point."
     ("d p" "labeled pull-requests"  forge-list-labeled-pullreqs)]
    ["Misc"
     ("s" "search topics"            forge-search)
-    (";" "Show/hide closed topics"  forge-toggle-closed-visibility)
-    ]
-   ]
-  )
+    (";" "Show/hide closed topics"  forge-toggle-closed-visibility)]])
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

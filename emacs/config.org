@@ -506,7 +506,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#bbdb-extras][bbdb-extras]]
   - [[#bbdb-vcard][bbdb-vcard]]
   - [[#keycast][keycast]]
-  - [[#activity-watch][activity-watch]]
+  - [[#activity-watch-mode][activity-watch-mode]]
   - [[#custom][custom]]
   - [[#fatebook][fatebook]]
   - [[#tetris][tetris]]
@@ -12049,18 +12049,17 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
     (add-to-list 'global-mode-string '("" keycast-mode-line))))
 #+end_src
 
-** activity-watch
+** activity-watch-mode
 :PROPERTIES:
 :ID:       809139BE-A8AF-40A7-BF1A-899839313729
 :END:
 
 
+
+/[[https://github.com/pauldub/activity-watch-mode][activity-watch-mode]] is an Emacs watcher for [[https://activitywatch.net/][ActivityWatch]]./
+
 #+begin_src emacs-lisp
 (use-package activity-watch-mode
-  :elpaca (activity-watch-mode
-           :host github
-           :repo "meliache/activity-watch-mode"
-           :branch "fix/invalid-coding-system-on-recover")
   :demand t
   :config
   (global-activity-watch-mode))

@@ -1909,6 +1909,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 
 #+begin_src emacs-lisp
 (use-package spacious-padding
+  :elpaca (spacious-padding :tag "0.3.0") ; using tagged version to avoid error on 2024-02-21
   :demand t
   :config
   (setq spacious-padding-widths '())
@@ -1991,7 +1992,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 
      (doom-modeline-def-modeline 'main
        '(bar workspace-name modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
-       '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
+       '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
 
      (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
                       (display-battery-mode-hook . doom-modeline-override-battery-modeline)
@@ -11698,7 +11699,7 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
           ("Wise" . "Madrid")))
 
   :general
-  ("A-a" 'mullvad-dispatch))
+  ("A-a" 'mullvad))
 #+end_src
 
 * multimedia

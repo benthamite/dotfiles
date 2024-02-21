@@ -36,7 +36,6 @@
 (require 's)
 (require 'scihub)
 (require 'zotra)
-(require 'tlon-babel-refs)
 (require 'window-extras)
 
 ;;;; User options

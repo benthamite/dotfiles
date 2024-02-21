@@ -642,7 +642,7 @@ NAME and ARGS as in `use-package'."
      :elpaca (,name
               :host github
               :repo "benthamite/dotfiles"
-              :branch "dev"
+              ;; :branch "dev"
               :files ,(list (file-name-concat
                              "emacs/extras"
                              (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
@@ -5231,12 +5231,12 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 #+begin_src emacs-lisp :results silent
 (use-package corfu
   :elpaca (corfu :files (:defaults "extensions/*")
-                 :includes (corfu-info
-                            corfu-echo
-                            corfu-history
-                            ;; corfu-indexed
-                            corfu-popupinfo
-                            corfu-quick))
+		 :includes (corfu-info
+			    corfu-echo
+			    corfu-history
+			    ;; corfu-indexed
+			    corfu-popupinfo
+			    corfu-quick))
   :demand t
   :config
   (setq corfu-auto t)                 ;; Enable auto completion
@@ -6246,7 +6246,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :elpaca (tlon-babel
            :host github
            :repo "tlon-team/tlon-babel"
-           :branch "dev"
+           ;; :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config

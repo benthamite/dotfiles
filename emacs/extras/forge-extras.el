@@ -60,6 +60,17 @@
   "Browse the GitHub notification inbox."
   (interactive)
   (browse-url "https://github.com/notifications"))
+
+(defun forge-extras-state-set-dwim (&optional issue)
+  "Close ISSUE if open, or reopen it if closed.
+If ISSUE is nil, use the issue at point."
+  (interactive)
+  (let* ((issue (or issue (forge-current-topic)))
+	 (state (oref issue state)))
+    (if (eq state 'completed)
+	(forge-issue-reopen issue)
+      (forge-issue-state-set-completed issue)))
+  )
 ;;;;; Menus
 
 (transient-define-prefix forge-extras-dispatch ()

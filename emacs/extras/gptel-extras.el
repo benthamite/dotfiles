@@ -61,11 +61,10 @@
   "Configure `gptel' for MODEL.
 For Gemini, a VPN will be used to circumvent location restrictions."
   (interactive (list (completing-read "Model: " gptel-extras-backends nil t)))
-  (require 'mullvad)
   (setq gptel-model model
 	gptel-backend (alist-get model gptel-extras-backends nil nil #'string=))
   (when (string= model "gemini-pro")
-    (mullvad-connect-to-website "Gemini" "1")))
+    (mullvad-connect-to-website "Gemini" "1" 'silently)))
 
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

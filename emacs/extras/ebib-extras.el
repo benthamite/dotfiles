@@ -26,6 +26,7 @@
 ;; Extensions for `ebib'.
 
 ;;; Code:
+
 (require 'bibtex)
 (require 'el-patch)
 (require 'citar)
@@ -36,17 +37,13 @@
 (require 's)
 (require 'scihub)
 (require 'zotra)
-(require 'tlon-babel-refs)
 (require 'window-extras)
-
-;;;; User options
 
 ;;;; Functions
 
 (defun ebib-extras-open-or-switch ()
   "Open ebib in the right window or switch to it if already open."
   (interactive)
-  (require 'window-extras)
   (window-extras-split-if-unsplit)
   (if (> (frame-width) window-extras-frame-split-width-threshold)
       (winum-select-window-3)
@@ -1129,7 +1126,6 @@ DIRECTION can be `prev' or `next'."
   "Create a BibTeX entry for the section of the current entry.
 Prompt the user for a title, unless TITLE is non-nil."
   (interactive)
-  (require 'tlon-babel)
   (let* ((fields `(("title" . ,(or title (read-string "Section title: ")))
 		   ("eventtitle" . ,(ebib-extras-get-field "title"))
 		   ("url" . ,(read-string "URL: " (ebib-extras-get-field "url")))

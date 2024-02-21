@@ -39,6 +39,7 @@
 
 ;;;; Variables
 
+(defvar tlon-core-email-shared)
 (defvar gptel-extras-gemini-pro-backend-plist
   `(:key ,(auth-source-pass-get 'secret (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared))
 	 :stream t)

@@ -32,95 +32,7 @@
 (require 'el-patch)
 (require 'ebib)
 ;; (require 'ebib-extras)
-(require 'tlon-babel-refs)
 
-;;;; Variables
-
-(defconst bibtex-extras-valid-languages
-  '(("albanian" . "sq")
-    ("american" . "en-US")
-    ("amharic" . "am")
-    ("arabic" . "ar")
-    ("argentinian" . "es-AR")
-    ("armenian" . "hy")
-    ("assamese" . "as")
-    ("asturian" . "ast")
-    ("austrian" . "de-AT")
-    ("australian" . "en-AU")
-    ("basque" . "eu")
-    ("belarusian" . "be")
-    ("bengali" . "bn")
-    ("bosnian" . "bs")
-    ("breton" . "br")
-    ("british" . "en-GB")
-    ("bulgarian" . "bg")
-    ("canadian" . "en-CA")
-    ("catalan" . "ca")
-    ("chinese" . "zh")
-    ("coptic" . "cop")
-    ("croatian" . "hr")
-    ("czech" . "cs")
-    ("danish" . "da")
-    ("dutch" . "nl")
-    ("english" . "en")
-    ("esperanto" . "eo")
-    ("estonian" . "et")
-    ("finnish" . "fi")
-    ("french" . "fr")
-    ("galician" . "gl")
-    ("georgian" . "ka")
-    ("german" . "de")
-    ("greek" . "el")
-    ("hebrew" . "he")
-    ("hindi" . "hi")
-    ("hungarian" . "hu")
-    ("icelandic" . "is")
-    ("interlingua" . "ia")
-    ("irish" . "ga")
-    ("italian" . "it")
-    ("japanese" . "ja")
-    ("kannada" . "kn")
-    ("korean" . "ko")
-    ("lao" . "lo")
-    ("latin" . "la")
-    ("latvian" . "lv")
-    ("lithuanian" . "lt")
-    ("macedonian" . "mk")
-    ("malayalam" . "ml")
-    ("marathi" . "mr")
-    ("mexican" . "es-MX")
-    ("mongolian" . "mn")
-    ("naustrian" . "de-AT")
-    ("newzealand" . "en-NZ")
-    ("ngerman" . "de-DE")
-    ("nko" . "nqo")
-    ("norwegian" . "no")
-    ("oriya" . "or")
-    ("persian" . "fa")
-    ("polish" . "pl")
-    ("portuges" . "pt")
-    ("romanian" . "ro")
-    ("russian" . "ru")
-    ("sanskrit" . "sa")
-    ("serbian" . "sr")
-    ("slovak" . "sk")
-    ("slovenian" . "sl")
-    ("spanish" . "es")
-    ("spanish" . "es")
-    ("swedish" . "sv")
-    ("swissgerman" . "de-CH")
-    ("tamil" . "ta")
-    ("telugu" . "te")
-    ("thai" . "th")
-    ("turkish" . "tr")
-    ("turkmen" . "tk")
-    ("ukenglish" . "en-GB")
-    ("ukrainian" . "uk")
-    ("urdu" . "ur")
-    ("vietnamese" . "vi")
-    ("welsh" . "cy")
-    ("afrikaans" . "af"))
-  "Alist of languages and ISO 639-1 codes for the `landid' field in BibTeX entries.")
 ;;;; Functions
 
 (defun bibtex-extras-replace-element-by-name (list target-name new-element)
@@ -203,18 +115,16 @@ Optionally, remove accents in region from BEGIN to END."
           (match-string-no-properties 1)
         (user-error "Not on a BibTeX entry")))))
 
-(defun bibtex-extras-validate-language (language)
-  "If LANGUAGE is a valid language, return it.
-The validation is case-insensitive, but the returned language is in lowercase."
-  (let ((language (downcase language)))
-    (when (member language (mapcar #'car bibtex-extras-valid-languages))
-      language)))
-
-(defun bibtex-extras-get-two-letter-code (language)
-  "Return the two-letter code for LANGUAGE."
-  (when-let* ((downcased (downcase language))
-	      (code-raw (alist-get downcased bibtex-extras-valid-languages nil nil #'string=)))
-    (string-limit code-raw 2)))
+(defun bibtex-extras-add-or-update-field (field value)
+  "Add or update FIELD with VALUE in the current BibTeX entry."
+  (bibtex-beginning-of-entry)
+  ;; Check if FIELD exists
+  (unless (bibtex-search-forward-field field)
+    (bibtex-beginning-of-entry)
+    (bibtex-make-field field t t))
+  ;; Update the value of FIELD
+  (when (bibtex-autokey-get-field field)
+    (bibtex-set-field field value)))
 
 (defun bibtex-extras-convert-titleaddon-to-journaltitle ()
   "Convert field `titleaddon' to `journaltitle' in entry at point.
@@ -255,21 +165,6 @@ field for this information is `journaltitle', so we move it there."
       (save-buffer))
     (message "Moved entry %s to %s" key target)))
 
-;; TODO: perhaps the functions below should be moved to `tlon-babel-refs.el'?
-(defun bibtex-extras-move-entry-to-tlon (&optional key)
-  "Move entry with KEY to `tlon-babel-refs-file-fluid'..
-Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point."
-  (interactive)
-  (let ((key (or key (bibtex-extras-get-key)))
-        (target tlon-babel-refs-file-fluid))
-    (bibtex-extras-move-entry key target)
-    (with-current-buffer (find-file-noselect target)
-      (widen)
-      (bibtex-search-entry key)
-      (bibtex-extras-add-or-update-tlon-field)
-      (save-buffer))
-    (kill-new key)))
-
 (defun bibtex-extras-open-in-ebib ()
   "Open the current BibTeX entry in Ebib."
   (interactive)
@@ -283,81 +178,6 @@ Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point.
       (ebib-extras-reload-database-no-confirm ebib--cur-db))
     (ebib file key)
     (ebib--pop-to-buffer (ebib--buffer 'entry))))
-
-(defun bibtex-extras-add-or-update-field (field value)
-  "Add or update FIELD with VALUE in the current BibTeX entry."
-  (bibtex-beginning-of-entry)
-  ;; Check if FIELD exists
-  (unless (bibtex-search-forward-field field)
-    (bibtex-beginning-of-entry)
-    (bibtex-make-field field t t))
-  ;; Update the value of FIELD
-  (when (bibtex-autokey-get-field field)
-    (bibtex-set-field field value)))
-
-(defun bibtex-extras-add-or-update-tlon-field ()
-  "Add or update \"database\" field with \"Tlön\" value in the current BibTeX entry."
-  (bibtex-extras-add-or-update-field "database" "Tlön"))
-
-(defun bibtex-extras-add-database-field (file)
-  "Iterate over each entry in FILE and add/update the `database' field.
-Adds the field `database' to every entry if it doesn't have it
-and sets the value of the field for all entries to `Tlön'."
-  (interactive "fBibTeX file: ")
-  (with-current-buffer (find-file-noselect file)
-    (save-excursion
-      (bibtex-map-entries
-       (lambda (_key start _end)
-         (save-excursion
-           (goto-char start)
-           (bibtex-extras-add-or-update-tlon-field)))))
-    ;; Save the updated entries to the file
-    (save-buffer)))
-
-(defun bibtex-extras-auto-add-database-field ()
-  "Run `bibtex-extras-add-database-field' every time `new.bib' is saved."
-  (let ((file tlon-babel-refs-file-fluid))
-    (when (string= (buffer-file-name) file)
-      (bibtex-extras-add-database-field file))))
-
-(defun bibtex-extras-auto-clean-entry ()
-  "Clean up bibtex entry at point upon saving."
-  (let ((after-save-hook nil))
-    (bibtex-extras-add-or-update-tlon-field)
-    (tlon-babel-refs-add-lang-id-to-entry)
-    (bibtex-extras-remove-empty-spaces)
-    (bibtex-clean-entry)
-    (save-buffer)))
-
-(defun bibtex-extras-remove-empty-spaces ()
-  "Remove empty spaces at the end of field."
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward " \\}" nil t)
-      (replace-match "}" t t))))
-
-(defun bibtex-extras-get-entry-as-string ()
-  "Return the bibtex entry at point as a string."
-  (save-excursion
-    (save-restriction
-      (bibtex-narrow-to-entry)
-      (buffer-substring-no-properties (point-min) (point-max)))))
-
-(defun bibtex-extras-get-field (field)
-  "Return the value of FIELD in the current BibTeX entry."
-  (save-excursion
-    (save-restriction
-      (bibtex-narrow-to-entry)
-      (bibtex-beginning-of-entry)
-      (let ((value (bibtex-autokey-get-field field)))
-	(unless (string-empty-p value)
-	  value)))))
-
-(defun bibtex-extras-get-field-in-string (string field)
-  "Return the value of FIELD in STRING."
-  (with-temp-buffer
-    (insert string)
-    (bibtex-extras-get-field field)))
 
 ;;;;; Patches
 

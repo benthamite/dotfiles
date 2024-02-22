@@ -65,7 +65,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elpaca-extras][elpaca-extras]]
 - [[#foundational][foundational]]
   - [[#org][org]]
-  - [[#jsonrpc][jsonrpc]]
   - [[#seq][seq]]
   - [[#general][general]]
   - [[#paths][paths]]
@@ -697,21 +696,6 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
   :demand t
   ;; :ensure org-plus-contrib
   )
-#+end_src
-
-** jsonrpc
-:PROPERTIES:
-:ID:       ECE3D86D-035D-461C-937F-DF39086E4C5C
-:END:
-
-/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
-
-#+begin_src emacs-lisp
-  (use-package jsonrpc
-    :elpaca (jsonrpc
-                     :host github
-                     :repo "emacs-straight/jsonrpc")
-    :demand t)
 #+end_src
 
 ** seq
@@ -4533,6 +4517,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 #+begin_src emacs-lisp :results silent
 (use-feature recentf
+  :after no-littering
   :defer 10
   :config
   (setq recentf-max-saved-items 100)
@@ -6935,8 +6920,8 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 (use-package copilot
   :elpaca (:host github
                  :repo "copilot-emacs/copilot.el"
-                 :ref "653fe7b12990b5b7a050971bed4579022ce4b4f8" ; 2024-01-03, before jumping cursor bug “fix”
                  :files ("dist" "*.el"))
+  :after jsonrpc
   :demand t
   :config
   (setq copilot-node-executable "/opt/homebrew/opt/node/bin/node")

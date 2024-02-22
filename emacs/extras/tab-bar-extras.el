@@ -74,8 +74,14 @@
   :type 'sexp
   :group 'tab-bar-extras)
 
+(defcustom tab-bar-extras-telega-notify nil
+  "Whether the Telega element actually displays notifications in the tab-bar."
+  :type 'boolean
+  :group 'tab-bar-extras)
+
 (defcustom tab-bar-extras-telega-element
   `(:eval (when (and
+		 tab-bar-extras-telega-notify
 		 (telega-server-live-p)
 		 (> (plist-get telega--unread-message-count :unread_count) 0))
 	    (concat " | " telega-mode-line-string)))
@@ -83,6 +89,9 @@
   :type 'sexp
   :group 'tab-bar-extras)
 
+(defcustom tab-bar-extras-github-notify nil
+  "Whether the GitHub element actually displays notifications in the tab-bar."
+  :type 'boolean
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-github-element
@@ -150,6 +159,59 @@ disappearing when the tab-bar is reset."
   (require 'org-clock)
   (unless org-clock-current-task
     (tab-bar-extras-reset)))
+
+;;;;; notifications
+
+(defun tab-bar-extras-notifications (var &optional action no-reset)
+  "Enable or disable notifications for VAR in the tab-bar.
+If ACTION is `enable', enable notifications. If ACTION is `disable', disable.
+Otherwise, toggle the current state.
+
+If NO-RESET is non-nil, do not reset the tab-bar after changing the state."
+  (let ((state (pcase action
+		 ('enable t)
+		 ('disable nil)
+		 (_ (not (symbol-value var))))))
+    (message "%s notifications."
+	     (if (set var state) "Enabled" "Disabled")))
+  (unless no-reset
+    (tab-bar-extras-quick-reset)))
+
+(defun tab-bar-extras-all-notifications (&optional action)
+  "Enable or disable all notifications in the tab-bar.
+If ACTION is `enable', enable notifications. If ACTION is `disable', disable.
+Otherwise, toggle the current state."
+  (dolist (fun '(tab-bar-extras-github-notifications
+		 tab-bar-extras-telega-notifications))
+    (funcall fun action 'no-reset)))
+
+(defun tab-bar-extras-enable-all-notifications ()
+  "Disable notifications in the tab-bar."
+  (interactive)
+  (tab-bar-extras-all-notifications 'enable))
+
+(defun tab-bar-extras-disable-all-notifications ()
+  "Disable notifications in the tab-bar."
+  (interactive)
+  (tab-bar-extras-all-notifications 'disable))
+
+(defun tab-bar-extras-telega-notifications (&optional action no-reset)
+  "Enable or disable Telega notifications in the tab-bar.
+If ACTION is `enable', enable notifications. If ACTION is `disable', disable.
+Otherwise, toggle the current state.
+
+If NO-RESET is non-nil, do not reset the tab-bar after changing the state."
+  (interactive)
+  (tab-bar-extras-notifications 'tab-bar-extras-telega-notify action no-reset))
+
+(defun tab-bar-extras-github-notifications (&optional action no-reset)
+  "Enable or disable GitHub notifications in the tab-bar.
+If ACTION is `enable', enable notifications. If ACTION is `disable', disable.
+Otherwise, toggle the current state.
+
+If NO-RESET is non-nil, do not reset the tab-bar after changing the state."
+  (interactive)
+  (tab-bar-extras-notifications 'tab-bar-extras-github-notify action no-reset))
 
 (provide 'tab-bar-extras)
 ;;; tab-bar-extras.el ends here

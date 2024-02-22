@@ -57,8 +57,6 @@
 
 (defun eww-extras-url-to-file (type &optional url)
   "Generate file of TYPE for URL."
-  (require 'org-web-tools-extras)
-  (require 'prot-eww)
   (let* ((url (simple-extras-get-url url))
 	 (title (or (when (string= type "pdf") (buffer-name))
 		    (org-web-tools-extras-org-title-for-url url)))
@@ -145,7 +143,6 @@ With prefix ARG is passed, open in new EWW buffer."
 (defun eww-extras-go-up-url-hierarchy ()
   "Go up the URL hierarchy."
   (interactive)
-  (require 's)
   (let* ((url (url-generic-parse-url (eww-current-url)))
 	 (filepath (url-filename url))
 	 (paths (s-split "/" filepath))

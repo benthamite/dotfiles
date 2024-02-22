@@ -6928,6 +6928,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :elpaca (:host github
                  :repo "copilot-emacs/copilot.el"
                  :files ("dist" "*.el"))
+  :after jsonrpc
   :demand t
   :config
   (setq copilot-node-executable "/opt/homebrew/opt/node/bin/node")

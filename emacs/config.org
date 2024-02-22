@@ -1548,8 +1548,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "s-t" 'forge-topic-set-title
    "s-e" 'forge-edit-post
    "s-p" 'forge-create-post
-   "s-r" 'forge-create-post
-   "s-x" 'forge-issue-state-set-completed)
+   "s-r" 'forge-create-post)
   (magit-status-mode-map
    "s-x" 'forge-remove-topic-locally))
 #+end_src
@@ -1580,8 +1579,11 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :demand t
   :config
   (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link)
+
   :general
-  ((forge-notifications-mode-map)
+  ((forge-topic-mode-map forge-notifications-mode-map magit-status-mode-map)
+   "s-x" 'forge-extras-state-set-dwim)
+  (forge-notifications-mode-map
    "x" 'forge-extras-browse-github-inbox))
 #+end_src
 

@@ -79,7 +79,7 @@
 		 (telega-server-live-p)
 		 (> (plist-get telega--unread-message-count :unread_count) 0))
 	    (concat " | " telega-mode-line-string)))
-  "Element to display Telega notificaations."
+  "Element to display Telega notifications."
   :type 'sexp
   :group 'tab-bar-extras)
 

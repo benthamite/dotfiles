@@ -6951,7 +6951,6 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :config
   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
   (setq gptel-default-mode 'org-mode)
-  (setq-default gptel-model "gpt-4")
 
   :general
   ("M-c" 'gptel-send
@@ -6972,6 +6971,9 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 (use-personal-package gptel-extras
   :after gptel
   :demand t
+  :config
+  (gptel-extras-model-config "gemini-pro" 'globally)
+  
   :general
   (gptel-mode-map
    "s-m" 'gptel-extras-model-config))

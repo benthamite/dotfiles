@@ -38,6 +38,7 @@
 (require 'scihub)
 (require 'zotra)
 (require 'window-extras)
+(require 'tlon-babel-tex)
 
 ;;;; User options
 

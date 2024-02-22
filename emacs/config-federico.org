@@ -607,9 +607,6 @@ Doom modeline
 (with-eval-after-load 'tab-bar-extras
   (setq tab-bar-extras-reset-wttr nil)
 
-  ;; (remove-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
-
-  ;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
   (setq tab-bar-extras-global-mode-string
         `(,tab-bar-extras-prefix-element
           ;; ,tab-bar-extras-date-element

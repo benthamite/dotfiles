@@ -5216,12 +5216,12 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 #+begin_src emacs-lisp :results silent
 (use-package corfu
   :elpaca (corfu :files (:defaults "extensions/*")
-		 :includes (corfu-info
-			    corfu-echo
-			    corfu-history
-			    ;; corfu-indexed
-			    corfu-popupinfo
-			    corfu-quick))
+                 :includes (corfu-info
+                            corfu-echo
+                            corfu-history
+                            ;; corfu-indexed
+                            corfu-popupinfo
+                            corfu-quick))
   :demand t
   :config
   (setq corfu-auto t)                 ;; Enable auto completion
@@ -11932,7 +11932,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
   ;; note that the hooks appear in reverse order of execution
   (dolist (function #'(org-gcal-sync
-		       org-extras-agenda-switch-to-agenda-current-day
+                       org-extras-agenda-switch-to-agenda-current-day
                        tlon-babel-forge-update-all-repos
                        el-patch-validate-all
                        org-extras-id-update-id-locations

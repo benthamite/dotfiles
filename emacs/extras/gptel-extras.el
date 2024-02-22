@@ -57,14 +57,25 @@
 
 ;;;; Functions
 
-(defun gptel-extras-model-config (model)
+(defun gptel-extras-model-config (model &optional globally)
   "Configure `gptel' for MODEL.
+By default, this configures `gptel' for the current buffer. If GLOBALLY is
+non-nil, configure it globally.
+
 For Gemini, a VPN will be used to circumvent location restrictions."
   (interactive (list (completing-read "Model: " gptel-extras-backends nil t)))
-  (setq gptel-model model
-	gptel-backend (alist-get model gptel-extras-backends nil nil #'string=))
-  (when (string= model "gemini-pro")
-    (mullvad-connect-to-website "Gemini" "1" 'silently)))
+  (let ((setter (if globally #'set-default #'set))
+	(backend (alist-get model gptel-extras-backends nil nil #'string=)))
+    (funcall setter 'gptel-model model)
+    (funcall setter 'gptel-backend backend)))
+
+(defun gptel-extras-set-mullvad (orig-fun &rest args)
+  "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS."
+  (when (string= gptel-model "gemini-pro")
+    (mullvad-connect-to-website "Gemini" "1" 'silently)
+    (apply orig-fun args)))
+
+(advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)
 
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

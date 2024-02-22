@@ -8,24 +8,6 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
-** forge-search
-:PROPERTIES:
-:ID:       1E83FDA2-3529-4189-8F5D-6B3388A45AE4
-:END:
-
-/[[https://github.com/eatse21/forge-search.el/blob/master/forge-search.el][forge-search]] supports searching through issues and pull requests within ~forge~./
-
-[2024-02-22 Thu] Superseded by ~consult-gh~.
-
-#+begin_src emacs-lisp
-(use-package forge-search
-  :elpaca (forge-search
-           :host github
-           :repo "eatse21/forge-search.el")
-  :after forge
-  :demand t)
-#+end_src
-
 ** jsonrpc
 :PROPERTIES:
 :ID:       ECE3D86D-035D-461C-937F-DF39086E4C5C

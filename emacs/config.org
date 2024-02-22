@@ -112,6 +112,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ghub][ghub]]
   - [[#forge][forge]]
   - [[#orgit-forge][orgit-forge]]
+  - [[#forge-search][forge-search]]
   - [[#forge-extras][forge-extras]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#display][display]]
@@ -1565,6 +1566,22 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 #+begin_src emacs-lisp
 (use-package orgit-forge
   :after org forge
+  :demand t)
+#+end_src
+
+** forge-search
+:PROPERTIES:
+:ID:       1E83FDA2-3529-4189-8F5D-6B3388A45AE4
+:END:
+
+/[[https://github.com/eatse21/forge-search.el/blob/master/forge-search.el][forge-search]] supports searching through issues and pull requests within ~forge~./
+
+#+begin_src emacs-lisp
+(use-package forge-search
+  :elpaca (forge-search
+           :host github
+           :repo "eatse21/forge-search.el")
+  :after forge
   :demand t)
 #+end_src
 

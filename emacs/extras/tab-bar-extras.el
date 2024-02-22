@@ -84,24 +84,8 @@
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-github-element
-  `(:eval (when (> doom-modeline--github-notification-number 0)
-	    (concat
-	     " | "
-	     (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
-				 :face 'doom-modeline-notification)
-	     (doom-modeline-vspc)
-	     (propertize
-	      (cond
-	       ((> doom-modeline--github-notification-number 99) "99+")
-	       (t (number-to-string doom-modeline--github-notification-number)))
-	      'face '(:inherit
-		      (doom-modeline-unread-number doom-modeline-notification))))))
-  "Element to display Github notifications."
-  :type 'sexp
-  :group 'tab-bar-extras)
-
-(defcustom tab-bar-extras-forge-element
-  `(:eval (when (forge-extras-get-unread-notifications)
+  `(:eval (when (and tab-bar-extras-github-notify
+		     (forge-extras-get-unread-notifications))
 	    (concat
 	     " | "
 	     (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"

@@ -3,12 +3,12 @@
 # key: tpc
 # contributor: Pablo Stafforini
 # --
-`(format-time-string "%Y-%m-%d")` Cabify
-    Expenses:Core:Transportation            $1 ARS ; taxi $2 Fede's place
+`(format-time-string "%Y-%m-%d")`$4 Cabify
+    Expenses:Core:Transportation            $1 GBP ; taxi $2 Fede's place
     Liabilities:Pablo Stafforini
 
-`(format-time-string "%Y-%m-%d")` Cabify
-    Liabilities:Tlon                        $1 ARS ; taxi $2 Fede's place
-    Liabilities:Mom:Extension
+`(format-time-string "%Y-%m-%d")`$5 Cabify
+    Liabilities:Tlon                        $1 GBP ; taxi $2 Fede's place
+    Assets:Monzo$3
 
 $0

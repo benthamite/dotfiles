@@ -62,15 +62,16 @@
   (browse-url "https://github.com/notifications"))
 
 (defun forge-extras-state-set-dwim (&optional issue)
-  "Close ISSUE if open, or reopen it if closed.
-If ISSUE is nil, use the issue at point."
+  "Close ISSUE at point if open, or reopen it if closed.
+If ISSUE is nil, use the issue at point or in the current buffer."
   (interactive)
   (let* ((issue (or issue (forge-current-topic)))
+	 (repo (forge-get-repository issue))
 	 (state (oref issue state)))
-    (if (eq state 'completed)
-	(forge-issue-reopen issue)
-      (forge-issue-state-set-completed issue)))
-  )
+    (pcase state
+      ('open (forge--set-topic-state repo issue 'completed))
+      ('completed (forge--set-topic-state repo issue 'open)))))
+
 ;;;;; Menus
 
 (transient-define-prefix forge-extras-dispatch ()

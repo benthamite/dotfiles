@@ -1025,23 +1025,29 @@ sensible defaults and remove line breaks and empty spaces."
 
 (defun ebib-extras-get-id-or-url ()
   "Get the ID or URL of the entry at point."
-  (when-let ((id-or-url (catch 'found
-			  (dolist (field '("doi" "isbn" "url"))
-			    (when-let ((value (ebib-extras-get-field field)))
-			      (throw 'found value))))))
-    id-or-url))
+  (let ((get-field (pcase major-mode
+		     ('ebib-entry-mode #'ebib-extras-get-field)
+		     ('bibtex-mode #' (bibtex-extras-get-field)))))
+    (when-let ((id-or-url (catch 'found
+			    (dolist (field '("doi" "isbn" "url"))
+			      (when-let ((value (funcall get-field field)))
+				(throw 'found value))))))
+      id-or-url)))
 
 (defun ebib-extras-fetch-id-or-url ()
   "Fetch the ID or URL of the entry at point.
 Fetching is done using `bib'."
-  (let ((title (ebib-extras-get-field "title"))
-	(author (ebib-extras-get-field "author")))
+  (let* ((get-field (pcase major-mode
+		      ('ebib-entry-mode #'ebib-extras-get-field)
+		      ('bibtex-mode #' (bibtex-extras-get-field))))
+	 (title (get-field "title"))
+	 (author (get-field "author")))
     (pcase (ebib-extras-get-supertype)
       ("book" (bib-search-isbn (format "% %" title author)))
       ("article" (bib-search-crossref title author))
       ("film" (bib-search-imdb
 	       (bib-translate-title-to-english title)))
-      (_ (ebib-extras-get-field "url")))))
+      (_ (get-field "url")))))
 
 (defun ebib-extras-get-or-fetch-id-or-url ()
   "Get the ID or URL of the entry at point, or fetch it if missing."

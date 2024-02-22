@@ -11946,9 +11946,10 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (midnight-delay-set 'midnight-delay "4:00am")
 
   ;; note that the hooks appear in reverse order of execution
-  (dolist (function #'(tlon-babel-forge-update-all-repos
+  (dolist (function #'(org-gcal-sync
+		       org-extras-agenda-switch-to-agenda-current-day
+                       tlon-babel-forge-update-all-repos
                        el-patch-validate-all
-                       org-gcal-sync
                        org-extras-id-update-id-locations
                        org-roam-db-sync
                        pass-extras-git-sync

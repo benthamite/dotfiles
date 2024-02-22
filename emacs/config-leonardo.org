@@ -297,7 +297,7 @@
  (:midnight . nil)
  (:mu4e . nil)
  (:org-gcal . nil)
- (:org-roam . nil)
+ (:org-roam . t)
  (:org2blog . nil)
  (:orgmdb . nil)
  (:remember . nil)

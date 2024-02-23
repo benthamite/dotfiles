@@ -403,7 +403,7 @@ If FORCE is non-nil, force OCR even if the file is already"
 			    (format (concat (when force "--force-ocr ") "--deskew -l %s \"%s\" \"%s\"")
 				    (alist-get lang ebib-extras-iso-639-2 nil nil 'string=)
 				    (expand-file-name file-name)
-				    (expand-file-name file-name))))))))
+				    (expand-file-name file-name))))))
 
 (defvar ebib-extras-download-use-vpn nil
   "Whether to use a VPN when downloading content.")

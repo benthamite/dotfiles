@@ -248,7 +248,7 @@ ordering defined in `ebib-extras-valid-file-extensions'."
 	    (file-list (split-string
 			(ebib-extras-get-field field)
 			";")))
-       (ebib-extras-valid-key-p key)
+       (ebib-extras-check-valid-key key)
        (when file-list
 	 (ebib-delete-field-contents field t)
 	 (dolist (filename file-list)
@@ -293,7 +293,7 @@ If EXTENSION is non-nil, set its extension to its value."
        (file-name-with-extension key extension)
      key)))
 
-(defun ebib-extras-valid-key-p (&optional key)
+(defun ebib-extras-check-valid-key (&optional key)
   "Check that KEY is a valid entry key; if not, throw an error."
   (setq key (or key (ebib--get-key-at-point)))
   (unless (string-match

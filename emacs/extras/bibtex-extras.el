@@ -179,6 +179,33 @@ field for this information is `journaltitle', so we move it there."
     (ebib file key)
     (ebib--pop-to-buffer (ebib--buffer 'entry))))
 
+;;;;; getters
+
+(defun bibtex-extras-get-entry-as-string ()
+  "Return the bibtex entry at point as a string."
+  (save-excursion
+    (save-restriction
+      (bibtex-narrow-to-entry)
+      (buffer-substring-no-properties (point-min) (point-max)))))
+
+(defun bibtex-extras-get-field (field)
+  "Return the value of FIELD in the current BibTeX entry."
+  (save-excursion
+    (save-restriction
+      (bibtex-narrow-to-entry)
+      (bibtex-beginning-of-entry)
+      (let* ((bibtex-autokey-use-crossref nil)
+	     (value (bibtex-autokey-get-field field)))
+	(unless (string-empty-p value)
+	  (replace-regexp-in-string "[\n\t ]+" " " value))))))
+
+(defun bibtex-extras-get-field-in-string (string field)
+  "Return the value of FIELD in STRING."
+  (save-window-excursion
+    (with-temp-buffer
+      (insert string)
+      (bibtex-extras-get-field field))))
+
 ;;;;; Patches
 
 ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field

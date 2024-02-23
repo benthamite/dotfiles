@@ -750,25 +750,19 @@ The list of article download functions is specified by
     (default
      (beep))))
 
-(defun ebib-extras-download-by-identifier ()
-  "Download a book or article based on the ISBN or DOI of the entry at point."
-  ;; TODO: Add support for arXiv
+(defun ebib-extras-download-pdf ()
+  "Download a PDF of the work at point based on its DOI, URL or ISBN."
   (interactive)
-  (let ((id (or (ebib-extras-get-isbn)
-		(ebib-extras-get-field "doi")
-		(read-string "Enter ISBN or DOI: "))))
-    (cond ((scihub-is-doi-p id)
-	   (scihub-download id))
-	  ;; there is now way (to my knowledge) of directly
-	  ;; downloading a book from its ISBN, so we search for it
-	  ;; instead
-	  ((ebib-extras-isbn-p id)
-	   (ebib-extras-download-book id))
-	  (t
-	   (user-error "Identifier does not appear to be an ISBN or DOI")))))
+  (let ((get-field (pcase major-mode
+		     ('ebib-entry-mode #'ebib-extras-get-field)
+		     ('bibtex-mode #'bibtex-extras-get-field))))
+    (or (when-let ((doi (funcall get-field "doi")))
+	  (scihub-download doi))
+	(when-let ((url (funcall get-field "url")))
+	  (eww-extras-url-to-pdf url))
+	(when-let ((isbn (ebib-extras-get-isbn)))
+	  (ebib-extras-download-book isbn)))))
 
-(defalias 'ebib-extras-download-book-by-identifier 'ebib-extras-download-by-identifier)
-(defalias 'ebib-extras-download-article-by-identifier 'ebib-extras-download-by-identifier)
 ;; all we want is to search for a film, and there is no film
 ;; identifier, so we map all functions to
 ;; `ebib-extras-search-film-by-title'

@@ -595,16 +595,15 @@ FORMS are evaluated with point restored to its original position."
     (call-interactively #'fill-paragraph)))
 
 (declare-function eww-current-url "eww")
-(declare-function ebib-get-field-value "ebib")
-(declare-function ebib--get-key-at-point "ebib")
-(defvar ebib--cur-db)
+(declare-function ebib-extras-get-field "ebib-extras")
+(declare-function bibtex-extras-get-field "bibtex-extras")
 (defun simple-extras-get-url (url)
   "Get URL from URL, current buffer, or prompt user for it."
   (or url
-      (when (derived-mode-p 'eww-mode)
-	(eww-current-url))
-      (when (derived-mode-p 'ebib-entry-mode)
-	(ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
+      (pcase major-mode
+	('eww-mode (eww-current-url))
+	((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "url"))
+	('bibtex-mode (bibtex-extras-get-field "url")))
       (read-string "URL: ")))
 
 ;;;;; url-parse

@@ -2059,7 +2059,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
           ,tab-bar-extras-separator-element
           ,tab-bar-extras-battery-element
           ,tab-bar-extras-telega-element
-          ,tab-bar-extras-forge-element
+          ,tab-bar-extras-github-element
           ,tab-bar-extras-pomodoro-element
           ,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
           ))
@@ -6244,6 +6244,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
    "'" 'tlon-babel-open-forge-file)
   ;; revise; consider using `tlon-babel-md-insert-dispatch'
   ((gfm-mode-map markdown-mode-map)
+   "H-;" 'tlon-babel-md-menu
    "A-s-e" 'tlon-babel-yaml-edit-field
    "s-c" 'tlon-babel-copy-dwim
    "s-l" 'tlon-babel-md-insert-locator
@@ -6961,7 +6962,6 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :config
   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
   (setq gptel-default-mode 'org-mode)
-  (setq-default gptel-model "gpt-4")
 
   :general
   ("M-c" 'gptel-send
@@ -6982,6 +6982,9 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 (use-personal-package gptel-extras
   :after gptel
   :demand t
+  :config
+  (gptel-extras-model-config "gemini-pro" 'globally)
+
   :general
   (gptel-mode-map
    "s-m" 'gptel-extras-model-config))
@@ -9818,7 +9821,7 @@ The macro below generates the commands correctly. But attempting to define key b
    "n" 'ebib-extras-citar-open-notes)
   (ebib-entry-mode-map
    "SPC" 'ebib-extras-open-file-dwim
-   "/" (lambda! (ebib-extras-attach-file t))
+   "/" 'ebib-extras-attach-most-recent-file
    "?" 'ebib-extras-attach-file
    "a" 'ebib-extras-search-amazon
    "b" 'ebib-extras-get-or-open-entry
@@ -9846,7 +9849,11 @@ The macro below generates the commands correctly. But attempting to define key b
   (ebib-index-mode-map
    "A-C-s-<tab>" 'ebib-extras-end-of-index-buffer
    "s" 'ebib-extras-sort-toggle
-   "s-t" 'ebib-extras-move-entry-to-tlon))
+   "s-t" 'ebib-extras-move-entry-to-tlon)
+  ((bibtex-mode-map ebib-entry-mode-map)
+   "s-p" 'ebib-extras-download-pdf)
+  (bibtex-mode-map
+   "s-/" 'ebib-extras-attach-most-recent-file))
 #+end_src
 
 ** bib
@@ -10973,12 +10980,10 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
    "g e" 'eww-extras-edit-current-url
    "g u" 'eww-extras-go-up-url-hierarchy
    "g U" 'eww-extras-go-to-root-url-hierarchy
-   "h" 'eww-extras-url-to-html
    ;; "p" 'eww-extras-open-with-recent-kill-ring
    "p" 'eww-extras-url-to-pdf)
-  (ebib-entry-mode-map
-   "s-h" 'eww-extras-url-to-html
-   "s-p" 'eww-extras-url-to-pdf))
+  ((bibtex-mode-map eww-mode-map ebib-entry-mode-map ebib-index-mode-map)
+   "s-h" 'eww-extras-url-to-html))
 #+end_src
 
 ** prot-eww

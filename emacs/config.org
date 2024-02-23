@@ -9814,7 +9814,7 @@ The macro below generates the commands correctly. But attempting to define key b
    "n" 'ebib-extras-citar-open-notes)
   (ebib-entry-mode-map
    "SPC" 'ebib-extras-open-file-dwim
-   "/" (lambda! (ebib-extras-attach-file t))
+   "/" 'ebib-extras-attach-most-recent-file
    "?" 'ebib-extras-attach-file
    "a" 'ebib-extras-search-amazon
    "b" 'ebib-extras-get-or-open-entry
@@ -9842,7 +9842,11 @@ The macro below generates the commands correctly. But attempting to define key b
   (ebib-index-mode-map
    "A-C-s-<tab>" 'ebib-extras-end-of-index-buffer
    "s" 'ebib-extras-sort-toggle
-   "s-t" 'ebib-extras-move-entry-to-tlon))
+   "s-t" 'ebib-extras-move-entry-to-tlon)
+  ((bibtex-mode-map ebib-entry-mode-map)
+   "s-p" 'ebib-extras-download-pdf)
+  (bibtex-mode-map
+   "s-/" 'ebib-extras-attach-most-recent-file))
 #+end_src
 
 ** bib

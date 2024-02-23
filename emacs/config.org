@@ -10973,12 +10973,10 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
    "g e" 'eww-extras-edit-current-url
    "g u" 'eww-extras-go-up-url-hierarchy
    "g U" 'eww-extras-go-to-root-url-hierarchy
-   "h" 'eww-extras-url-to-html
    ;; "p" 'eww-extras-open-with-recent-kill-ring
    "p" 'eww-extras-url-to-pdf)
-  (ebib-entry-mode-map
-   "s-h" 'eww-extras-url-to-html
-   "s-p" 'eww-extras-url-to-pdf))
+  ((bibtex-mode-map eww-mode-map ebib-entry-mode-map ebib-index-mode-map)
+   "s-h" 'eww-extras-url-to-html))
 #+end_src
 
 ** prot-eww

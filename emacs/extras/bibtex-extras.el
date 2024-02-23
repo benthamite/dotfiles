@@ -247,20 +247,15 @@ field for this information is `journaltitle', so we move it there."
       (save-buffer))
     (message "Moved entry %s to %s" key target)))
 
-;; TODO: perhaps the functions below should be moved to `tlon-babel-refs.el'?
-(defun bibtex-extras-move-entry-to-tlon (&optional key)
-  "Move entry with KEY to `tlon-babel-refs-file-fluid'..
-Save citekey to \"kill-ring\". If KEY is nil, use the key of the entry at point."
-  (interactive)
-  (let ((key (or key (bibtex-extras-get-key)))
-        (target tlon-babel-refs-file-fluid))
-    (bibtex-extras-move-entry key target)
-    (with-current-buffer (find-file-noselect target)
-      (widen)
-      (bibtex-search-entry key)
-      (bibtex-extras-add-or-update-tlon-field)
-      (save-buffer))
-    (kill-new key)))
+(defun bibtex-extras-append-to-field (field value &optional delimiter)
+  "Append VALUE to FIELD.
+If DELIMITER is nil, use a semicolon."
+  (let* ((delimiter (or delimiter ";"))
+	 (current-value (bibtex-autokey-get-field field))
+	 (new-value (if (string-empty-p current-value)
+			value
+		      (concat current-value delimiter value))))
+    (bibtex-extras-add-or-update-field field new-value)))
 
 (defun bibtex-extras-open-in-ebib ()
   "Open the current BibTeX entry in Ebib."

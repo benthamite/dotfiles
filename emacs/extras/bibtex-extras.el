@@ -165,6 +165,16 @@ field for this information is `journaltitle', so we move it there."
       (save-buffer))
     (message "Moved entry %s to %s" key target)))
 
+(defun bibtex-extras-append-to-field (field value &optional delimiter)
+  "Append VALUE to FIELD.
+If DELIMITER is nil, use a semicolon."
+  (let* ((delimiter (or delimiter ";"))
+	 (current-value (bibtex-autokey-get-field field))
+	 (new-value (if (string-empty-p current-value)
+			value
+		      (concat current-value delimiter value))))
+    (bibtex-extras-add-or-update-field field new-value)))
+
 (defun bibtex-extras-open-in-ebib ()
   "Open the current BibTeX entry in Ebib."
   (interactive)

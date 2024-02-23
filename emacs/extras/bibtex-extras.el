@@ -338,7 +338,7 @@ and sets the value of the field for all entries to `Tlön'."
       (bibtex-beginning-of-entry)
       (let ((value (bibtex-autokey-get-field field)))
 	(unless (string-empty-p value)
-	  value)))))
+	  (replace-regexp-in-string "[\n\t ]+" " " value))))))
 
 (defun bibtex-extras-get-field-in-string (string field)
   "Return the value of FIELD in STRING."

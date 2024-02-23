@@ -60,8 +60,12 @@
   (require 'org-web-tools-extras)
   (require 'prot-eww)
   (let* ((url (simple-extras-get-url url))
-	 (title (or (when (string= type "pdf") (buffer-name))
-		    (org-web-tools-extras-org-title-for-url url)))
+	 (title (pcase type
+		  ("pdf" (or (pcase major-mode
+			       ('bibtex-mode (bibtex-extras-get-field "title"))
+			       ((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "title")))
+			     (buffer-name)))
+		  ("html" (org-web-tools-extras-org-title-for-url url))))
 	 (slug (prot-eww--sluggify title))
 	 (file-name (file-name-with-extension slug type))
 	 (output-file (file-name-concat paths-dir-downloads file-name)))

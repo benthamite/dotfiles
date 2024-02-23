@@ -284,7 +284,7 @@ have no effect."
 		       (pcase major-mode
 			 ('dired-mode (dired-get-filename))
 			 ('pdf-view-mode (buffer-file-name))
-			 ('ebib-entry-mode (ebib-extras-get-file "pdf"))
+			 ((or 'ebib-entry-mode 'bibtex-mode) (ebib-extras-get-file "pdf"))
 			 (_ (user-error "Could not determine file to OCR"))))))
     (unless (string= (file-name-extension filename) "pdf")
       (user-error "File is not a PDF"))

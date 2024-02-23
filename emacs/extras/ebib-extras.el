@@ -76,8 +76,11 @@
 
 (defun ebib-extras-get-isbn ()
   "Return ISBN for the current entry, if it exists."
-  (when-let ((isbn
-	      (ebib-extras-get-field "isbn")))
+  (when-let ((get-field (pcase major-mode
+			  ('ebib-entry-mode #'ebib-extras-get-field)
+			  ('bibtex-mode #'bibtex-extras-get-field)))
+	     (isbn
+	      (funcall get-field "isbn")))
     (car (split-string
 	  (s-replace "-"
 		     ""
@@ -94,19 +97,25 @@
 
 (defun ebib-extras--update-file-field-contents (key file-name)
   "Update contents of FILE-NAME in field `file' for entry KEY."
-  (let* ((field "file")
-	 (file-field-contents (ebib-extras-get-field field)))
+  (let* ((get-field (pcase major-mode
+		      ('ebib-entry-mode #'ebib-extras-get-field)
+		      ('bibtex-mode #'bibtex-extras-get-field)))
+	 (field "file")
+	 (file-field-contents (funcall get-field field)))
     (unless (and
 	     file-field-contents
 	     (catch 'file-exists
 	       (dolist (file (ebib--split-files file-field-contents))
 		 (when (string= file file-name)
 		   (throw 'file-exists file)))))
-      (ebib-set-field-value field file-name key ebib--cur-db ";")
-      (ebib--store-multiline-text (current-buffer))
-      (ebib--redisplay-field field)
-      (ebib--redisplay-index-item field)
-      (ebib-save-current-database t))))
+      (pcase major-mode
+	('ebib-entry-mode (ebib-set-field-value field file-name key ebib--cur-db ";"))
+	('bibtex-mode (bibtex-extras-append-to-field field file-name)))
+      (when (eq major-mode 'ebib-entry-mode)
+	(ebib--store-multiline-text (current-buffer))
+	(ebib--redisplay-field field)
+	(ebib--redisplay-index-item field)
+	(ebib-save-current-database t)))))
 
 (defvar ebib-extras-book-like-entry-types
   (let ((lowercase '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook")))
@@ -242,7 +251,7 @@ ordering defined in `ebib-extras-valid-file-extensions'."
 	    (file-list (split-string
 			(ebib-extras-get-field field)
 			";")))
-       (ebib-extras-valid-key-p key)
+       (ebib-extras-check-valid-key key)
        (when file-list
 	 (ebib-delete-field-contents field t)
 	 (dolist (filename file-list)
@@ -287,7 +296,7 @@ If EXTENSION is non-nil, set its extension to its value."
        (file-name-with-extension key extension)
      key)))
 
-(defun ebib-extras-valid-key-p (&optional key)
+(defun ebib-extras-check-valid-key (&optional key)
   "Check that KEY is a valid entry key; if not, throw an error."
   (setq key (or key (ebib--get-key-at-point)))
   (unless (string-match
@@ -310,50 +319,54 @@ If EXTENSION is non-nil, set its extension to its value."
 
 (defun ebib-extras-attach-file (&optional most-recent)
   "Prompt the user for a file to attach to the current entry.
-If MOST-RECENT is non-nil, attach the most recent file instead."
+If MOST-RECENT is non-nil, attach the most recent file in the
+`paths-dir-downloads' directory."
   (interactive)
-  (ebib--execute-when
-    (entries
-     (let ((key (ebib--get-key-at-point)))
-       (ebib-extras-valid-key-p key)
-       (let* ((file-to-attach
-	       (if most-recent
-		   (files-extras-newest-file paths-dir-downloads)
-		 (let ((initial-folder
-			(completing-read "Select folder: "
-					 (list
-					  paths-dir-downloads
-					  paths-dir-pdf-library
-					  paths-dir-html-library
-					  paths-dir-media-library))))
-		   (read-file-name
-		    "File to attach: "
-		    ;; Use key as default selection if key-based file exists
-		    ;; else default to `initial-folder'
-		    (if (catch 'found
-			  (dolist (extension ebib-extras-valid-file-extensions)
-			    (when (file-regular-p (file-name-concat
-						   initial-folder
-						   (file-name-with-extension key extension)))
-			      (throw 'found extension))))
-			(file-name-concat initial-folder key)
-		      initial-folder)))))
-	      (extension (file-name-extension file-to-attach))
-	      (destination-folder
-	       (ebib-extras--extension-directories extension))
-	      (file-name (ebib-extras--rename-and-abbreviate-file
-			  destination-folder key extension)))
-	 (when (or (not (file-regular-p file-name))
-		   (y-or-n-p "File exists. Overwrite? "))
-	   (rename-file file-to-attach file-name t))
-	 (ebib-extras--update-file-field-contents key file-name)
-	 (when (string= (file-name-extension file-name) "pdf")
-	   (ebib-extras-set-pdf-metadata)
-	   ;; open the pdf to make sure it displays the web page correctly
-	   (ebib-extras-open-pdf-file)
-	   (ebib-extras-ocr-pdf)))))
-    (default
-     (beep))))
+  (let* ((get-key (pcase major-mode
+		    ('ebib-entry-mode #'ebib--get-key-at-point)
+		    ('bibtex-mode #'bibtex-extras-get-key)))
+	 (key (funcall get-key)))
+    (ebib-extras-check-valid-key key)
+    (let* ((file-to-attach
+	    (if most-recent
+		(files-extras-newest-file paths-dir-downloads)
+	      (let ((initial-folder
+		     (completing-read "Select folder: "
+				      (list
+				       paths-dir-downloads
+				       paths-dir-pdf-library
+				       paths-dir-html-library
+				       paths-dir-media-library))))
+		(read-file-name
+		 "File to attach: "
+		 ;; Use key as default selection if key-based file exists
+		 ;; else default to `initial-folder'
+		 (if (catch 'found
+		       (dolist (extension ebib-extras-valid-file-extensions)
+			 (when (file-regular-p (file-name-concat
+						initial-folder
+						(file-name-with-extension key extension)))
+			   (throw 'found extension))))
+		     (file-name-concat initial-folder key)
+		   initial-folder)))))
+	   (extension (file-name-extension file-to-attach))
+	   (destination-folder (ebib-extras--extension-directories extension))
+	   (file-name (ebib-extras--rename-and-abbreviate-file
+		       destination-folder key extension)))
+      (when (or (not (file-regular-p file-name))
+		(y-or-n-p "File exists. Overwrite? "))
+	(rename-file file-to-attach file-name t))
+      (ebib-extras--update-file-field-contents key file-name)
+      (when (string= (file-name-extension file-name) "pdf")
+	(ebib-extras-set-pdf-metadata)
+	;; open the pdf to make sure it displays the web page correctly
+	(ebib-extras-ocr-pdf)
+	(ebib-extras-open-pdf-file)))))
+
+(defun ebib-extras-attach-most-recent-file ()
+  "Attach the most recent file in `paths-dir-downloads' to the current entry."
+  (interactive)
+  (ebib-extras-attach-file t))
 
 (defvar ebib-extras-iso-639-2
   '(("english" . "eng")
@@ -376,17 +389,21 @@ If MOST-RECENT is non-nil, attach the most recent file instead."
   "OCR the PDF file in the current entry.
 If FORCE is non-nil, force OCR even if the file is already"
   (interactive)
-  (ebib--execute-when
-    (entries
-     (let ((lang (or (ebib-extras-get-field "langid")
-		     (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english"))))
-       (ebib-set-field-value "langid" lang (ebib--get-key-at-point) ebib--cur-db 'overwrite)
-       (let ((file-name (ebib-extras-get-file "pdf")))
-	 (files-extras-ocr-pdf nil nil
-			       (format (concat (when force "--force-ocr ") "--deskew -l %s \"%s\" \"%s\"")
-				       (alist-get lang ebib-extras-iso-639-2 nil nil 'string=)
-				       (expand-file-name file-name)
-				       (expand-file-name file-name))))))))
+  (let* ((get-field (pcase major-mode
+		      ('ebib-entry-mode #'ebib-extras-get-field)
+		      ('bibtex-mode #'bibtex-extras-get-field)))
+	 (set-field (pcase major-mode
+		      ('ebib-entry-mode #'ebib-extras-set-field)
+		      ('bibtex-mode #'bibtex-set-field)))
+	 (lang (or (funcall get-field "langid")
+		   (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english"))))
+    (funcall set-field "langid" lang)
+    (let ((file-name (ebib-extras-get-file "pdf")))
+      (files-extras-ocr-pdf nil nil
+			    (format (concat (when force "--force-ocr ") "--deskew -l %s \"%s\" \"%s\"")
+				    (alist-get lang ebib-extras-iso-639-2 nil nil 'string=)
+				    (expand-file-name file-name)
+				    (expand-file-name file-name))))))
 
 (defvar ebib-extras-download-use-vpn nil
   "Whether to use a VPN when downloading content.")
@@ -733,25 +750,19 @@ The list of article download functions is specified by
     (default
      (beep))))
 
-(defun ebib-extras-download-by-identifier ()
-  "Download a book or article based on the ISBN or DOI of the entry at point."
-  ;; TODO: Add support for arXiv
+(defun ebib-extras-download-pdf ()
+  "Download a PDF of the work at point based on its DOI, URL or ISBN."
   (interactive)
-  (let ((id (or (ebib-extras-get-isbn)
-		(ebib-extras-get-field "doi")
-		(read-string "Enter ISBN or DOI: "))))
-    (cond ((scihub-is-doi-p id)
-	   (scihub-download id))
-	  ;; there is now way (to my knowledge) of directly
-	  ;; downloading a book from its ISBN, so we search for it
-	  ;; instead
-	  ((ebib-extras-isbn-p id)
-	   (ebib-extras-download-book id))
-	  (t
-	   (user-error "Identifier does not appear to be an ISBN or DOI")))))
+  (let ((get-field (pcase major-mode
+		     ('ebib-entry-mode #'ebib-extras-get-field)
+		     ('bibtex-mode #'bibtex-extras-get-field))))
+    (or (when-let ((doi (funcall get-field "doi")))
+	  (scihub-download doi))
+	(when-let ((url (funcall get-field "url")))
+	  (eww-extras-url-to-pdf url))
+	(when-let ((isbn (ebib-extras-get-isbn)))
+	  (ebib-extras-download-book isbn)))))
 
-(defalias 'ebib-extras-download-book-by-identifier 'ebib-extras-download-by-identifier)
-(defalias 'ebib-extras-download-article-by-identifier 'ebib-extras-download-by-identifier)
 ;; all we want is to search for a film, and there is no film
 ;; identifier, so we map all functions to
 ;; `ebib-extras-search-film-by-title'
@@ -1195,15 +1206,18 @@ Prompt the user for a title, unless TITLE is non-nil."
   (interactive)
   (unless (executable-find "exiftool")
     (user-error "Please install `exiftool' (e.g. `brew install exiftool'"))
-  (unless (derived-mode-p 'ebib-entry-mode)
-    (user-error "Not in `ebib-entry-mode'"))
-  (when-let ((file (ebib-extras-get-file "pdf"))
-	     (author (or (ebib-extras-get-field "author")
-			 (ebib-extras-get-field "editor"))))
+  (unless (derived-mode-p 'ebib-entry-mode 'bibtex-mode)
+    (user-error "Not in `ebib-entry-mode' or `bibtex-mode'"))
+  (when-let ((get-field (pcase major-mode
+			  ('ebib-entry-mode #'ebib-extras-get-field)
+			  ('bibtex-mode #'bibtex-extras-get-field)))
+	     (file (ebib-extras-get-file "pdf"))
+	     (author (or (funcall get-field "author")
+			 (funcall get-field "editor"))))
     (let* ((file-absolute (expand-file-name file))
 	   (author-list (ebib-extras-get-authors-list author))
 	   (author-string (ebib-extras-format-authors author-list))
-	   (title (ebib-extras-get-field "title"))
+	   (title (funcall get-field  "title"))
 	   (author-arg (format "-Author='%s' " author-string))
 	   (title-arg (format "-Title='%s' " title)))
       (when (or author-arg title-arg)
@@ -1216,8 +1230,6 @@ Prompt the user for a title, unless TITLE is non-nil."
 (defun ebib-extras-get-authors-list (authors)
   "Split AUTHORS into a list of authors, reversing the first and last names.
 Authors enclosed in braces are left untouched, but the braces are removed."
-  (unless (derived-mode-p 'ebib-entry-mode)
-    (user-error "Not in `ebib-entry-mode'"))
   (let* ((authors-split (split-string authors " and "))
 	 (authors-formatted
 	  (mapcar (lambda (author)

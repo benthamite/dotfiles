@@ -8717,6 +8717,8 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
   (add-hook 'org-pomodoro-started-hook #'org-extras-pomodoro-format-timer)
+  (add-hook 'org-pomodoro-started-hook #'tab-bar-extras-disable-all-notifications)
+  (add-hook 'org-pomodoro-finished-hook #'tab-bar-extras-enable-all-notifications)
 
   :general
   ("H-I" 'org-pomodoro

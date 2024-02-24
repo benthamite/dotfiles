@@ -4688,6 +4688,9 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
            :host sourcehut
            :repo "protesilaos/substitute")
   :demand t
+  :config
+  (add-hook 'substitute-post-replace-functions #'substitute-report-operation)
+  
   :general
   ("A-H-b" 'substitute-target-in-buffer)
   (prog-mode-map

@@ -36,6 +36,11 @@
 
 (defgroup gptel-extras ()
   "Extensions for `gptel'."
+  :group 'gptel)
+
+(defcustom gptel-extras-gemini-mullvad-disconnect-after 1
+  "The number of minutes to disconnect `mullvad' after starting the Gemini session."
+  :type 'integer
   :group 'gptel-extras)
 
 ;;;; Variables
@@ -72,7 +77,9 @@ For Gemini, a VPN will be used to circumvent location restrictions."
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
   "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS."
   (when (string= gptel-model "gemini-pro")
-    (mullvad-connect-to-website "Gemini" "1" 'silently)
+    (mullvad-connect-to-website "Gemini"
+				gptel-extras-gemini-mullvad-disconnect-after
+				'silently)
     (apply orig-fun args)))
 
 (advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)

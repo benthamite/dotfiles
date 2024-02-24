@@ -1097,6 +1097,9 @@ DIRECTION can be `prev' or `next'."
       ('ebib-entry-mode
        (ebib-extras-open-or-switch)
        (funcall fun)
+       (ebib-edit-entry)
+       ;; hack: we do this twice to ensure the index buffer is updated
+       (ebib-extras-open-or-switch)
        (ebib-edit-entry)))))
 
 (defun ebib-extras-next-entry ()

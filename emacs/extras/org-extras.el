@@ -780,47 +780,34 @@ To see a list of Google Docs and their respective IDs, run
   "Dispatcher for Tlön projects."
   [["Tlön"
     ("t t" "tlon"              (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))
-    ("t i" "tlon inbox"        (lambda () (interactive) (org-roam-extras-id-goto "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")))
-    ]
+    ("t e" "tlon-emacs"        (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))
+    ("t i" "tlon inbox"        (lambda () (interactive) (org-roam-extras-id-goto "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")))]
    ["Babel"
     ("b c" "babel"             (lambda () (interactive) (org-roam-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24")))
-    ("b e" "babel-emacs"       (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))
-    ("b r" "babel-refs"        (lambda () (interactive) (org-roam-extras-id-goto "06C5E072-99F2-4A1F-A87E-0E05E330E111")))
-    ]
+    ("b s" "babel-es"          (lambda () (interactive) (org-roam-extras-id-goto "A2347582-CF81-497E-81C9-CF82E56D8312")))
+    ("b r" "babel-refs"        (lambda () (interactive) (org-roam-extras-id-goto "06C5E072-99F2-4A1F-A87E-0E05E330E111")))]
    ["Uqbar"
     ("q i" "uqbar-issues"      (lambda () (interactive) (org-roam-extras-id-goto "1844F672-62B5-49CF-8BD8-A55F8FCAAFE9")))
-    ("q s" "uqbar-es"          (lambda () (interactive) (org-roam-extras-id-goto "EF190A03-0037-430A-B8A1-414738AEAEA4")))
-    ]
+    ("q s" "uqbar-es"          (lambda () (interactive) (org-roam-extras-id-goto "EF190A03-0037-430A-B8A1-414738AEAEA4")))]
    ["utilitarianism"
-    ("u n" "utilitarianism-en" (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))
-    ]
+    ("u n" "utilitarianism-en" (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))]
    ["Longtermism"
-    ("l s" "longtermism-es"    (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))
-    ]
+    ("l s" "longtermism-es"    (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))]
    ["Essays on Longtermism"
-    ("e e" "essays-es"         (lambda () (interactive) (org-roam-extras-id-goto "96C4B5CC-0E85-4AEC-A5C2-95996A09DCEB")))
-    ]
+    ("e e" "essays-es"         (lambda () (interactive) (org-roam-extras-id-goto "96C4B5CC-0E85-4AEC-A5C2-95996A09DCEB")))]
    ["EA News"
-    ("n i" "ean-issues"        (lambda () (interactive) (org-roam-extras-id-goto "A2710AA8-BEEB-412D-9FE0-8AF856E4464C")))
-    ]
+    ("n i" "ean-issues"        (lambda () (interactive) (org-roam-extras-id-goto "A2710AA8-BEEB-412D-9FE0-8AF856E4464C")))]
    ["La Bisagra"
-    ("s s" "bisagra"           (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))
-    ]
+    ("s s" "bisagra"           (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))]
    ["Boletín"
-    ("a a" "boletin"           (lambda () (interactive) (org-roam-extras-id-goto "989E6696-2672-47FE-855B-00DA806B7A56")))
-    ]
+    ("a a" "boletin"           (lambda () (interactive) (org-roam-extras-id-goto "989E6696-2672-47FE-855B-00DA806B7A56")))]
    ["GWWC"
-    ("g g" "gwwc"              (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))
-    ]
+    ("g g" "gwwc"              (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
    ["Radio Altruismo Eficaz"
-    ("rae" "rae"               (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))
-    ]
+    ("rae" "rae"               (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
    ["Meetings"
     ("m f" "fede"              (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
-    ("m l" "leo"               (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))
-    ]
-   ]
-  )
+    ("m l" "leo"               (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))]])
 
 ;; semi-obsolete
 (transient-define-prefix org-extras-work-dispatch ()

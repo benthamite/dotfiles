@@ -1971,24 +1971,27 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :after ghub async
   :demand t
   :config
-  (tlon-init-override-code
-   :doom-modeline
-   '((setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
-     (setq doom-modeline-buffer-encoding nil)
-     (setq doom-modeline-irc t)
-     (setq doom-modeline-irc-buffers t)
-     (setq doom-modeline-buffer-file-name-style 'auto)
-     (setq doom-modeline-enable-word-count t)
+  (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
+  (setq doom-modeline-irc t)
+  (setq doom-modeline-irc-buffers t)
+  (setq doom-modeline-minor-modes nil)
+  (setq doom-modeline-total-line-number nil)
+  (setq doom-modeline-indent-info t)
+  (setq doom-modeline-buffer-name nil)
+  (setq doom-modeline-enable-word-count t)
+  (setq mode-line-position-column-line-format '(" %c %l"))
 
-     (doom-modeline-def-modeline 'main
-       '(bar workspace-name modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
+     (doom-modeline-def-modeline 'main-reordered
+       '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
        '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
+       
+  (doom-modeline-set-modeline 'main-reordered t)
 
-     (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-                      (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-                      (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-                      (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-       (remove-hook (car cons) (cdr cons))))))
+  (dolist (cons  '((display-time-mode-hook . doom-modeline-override-time)
+                   (display-battery-mode-hook . doom-modeline-override-battery)
+                   (doom-modeline-mode-hook . doom-modeline-override-time)
+                   (doom-modeline-mode-hook . doom-modeline-override-battery)))
+    (remove-hook (car cons) (cdr cons))))
 #+end_src
 
 ** doom-modeline-extras

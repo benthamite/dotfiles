@@ -135,6 +135,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#doom-modeline-extras][doom-modeline-extras]]
   - [[#tab-bar][tab-bar]]
   - [[#tab-bar-extras][tab-bar-extras]]
+  - [[#breadcrumb][breadcrumb]]
   - [[#fancy-battery][fancy-battery]]
   - [[#nerd-icons][nerd-icons]]
   - [[#menu-bar][menu-bar]]
@@ -2076,6 +2077,23 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 :PROPERTIES:
 :ID:       D0A5875F-575E-4FF3-B0CF-D73DE0185559
 :END:
+
+** breadcrumb
+:PROPERTIES:
+:ID:       483A0D4F-B273-449C-BCB0-E8703AC45FC5
+:END:
+
+#+begin_src emacs-lisp
+(use-package breadcrumb
+  :demand t
+  :config
+  (setq breadcrumb-project-max-length 0.5)
+  (setq breadcrumb-project-crumb-separator "/")
+  (setq breadcrumb-imenu-max-length 1.0)
+  (setq breadcrumb-imenu-crumb-separator " > ")
+
+  (breadcrumb-mode))
+#+end_src
 ** fancy-battery
 :PROPERTIES:
 :ID:       DDFE34BA-7C23-459E-B4E2-2957D2535700

@@ -38,7 +38,7 @@
 ;;;; User options
 
 (defgroup tab-bar-extras ()
-  "Extensions for `tab-bar'."
+  "Extensions for the Tab Bar."
   :group 'tab-bar)
 
 (defcustom tab-bar-extras-global-mode-string nil
@@ -55,7 +55,7 @@
 
 (defcustom tab-bar-extras-prefix-element
   " "
-  "Element to display at the beginning of the tab-bar."
+  "Element to display at the beginning of the Tab Bar."
   :type 'sexp
   :group 'tab-bar-extras)
 
@@ -78,7 +78,7 @@
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-telega-notify nil
-  "Whether the Telega element actually displays notifications in the tab-bar."
+  "Whether the Telega element actually displays notifications in the Tab Bar."
   :type 'boolean
   :group 'tab-bar-extras)
 
@@ -86,14 +86,15 @@
   `(:eval (when (and
 		 tab-bar-extras-telega-notify
 		 (telega-server-live-p)
-		 (> (plist-get telega--unread-message-count :unread_count) 0))
+		 (> (plist-get telega--unread-message-count :unread_count) 0)
+		 )
 	    (concat " | " telega-mode-line-string)))
   "Element to display Telega notifications."
   :type 'sexp
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-github-notify nil
-  "Whether the GitHub element actually displays notifications in the tab-bar."
+  "Whether the GitHub element actually displays notifications in the Tab Bar."
   :type 'boolean
   :group 'tab-bar-extras)
 
@@ -132,7 +133,7 @@
 
 (defcustom tab-bar-extras-separator-element
   " | "
-  "Element to separate the tab-bar elements.
+  "Element to separate the Tab Bar elements.
 Note that elements that the separator is already part of elements that do not
 always show (like Github or Telega notifications), because otherwise the
 separator would remain even when the elements are absent."
@@ -143,7 +144,7 @@ separator would remain even when the elements are absent."
 
 (defun tab-bar-extras-reset (&optional quick)
   "Reset the tab bar.
-This resets the clock, refreshes the tab-bar and its color, and updates the
+This resets the clock, refreshes the Tab Bar and its color, and updates the
 geolocation and weather information. If QUICK is non-nil, run only the essential
 reset functions."
   (interactive)
@@ -167,9 +168,9 @@ reset functions."
 
 (defvar org-clock-current-task)
 (defun tab-bar-extras-reset-unless-clock ()
-  "Reset the tab-bar when `org-clock' isn't running.
+  "Reset the Tab Bar when `org-clock' isn't running.
 The condition is included to prevent the currently clocked task from
-disappearing when the tab-bar is reset."
+disappearing when the Tab Bar is reset."
   (require 'org-clock)
   (unless org-clock-current-task
     (tab-bar-extras-reset)))

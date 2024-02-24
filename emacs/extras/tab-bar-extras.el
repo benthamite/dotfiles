@@ -32,6 +32,9 @@
 
 ;;;; Variables
 
+(defvar tab-bar-notifications-enabled t
+  "Whether notifications are enabled in the Tab Bar.")
+
 ;;;; User options
 
 (defgroup tab-bar-extras ()
@@ -120,6 +123,13 @@
   :type 'sexp
   :group 'tab-bar-extras)
 
+(defcustom tab-bar-extras-notification-status-element
+  `(:eval (unless tab-bar-notifications-enabled
+	    (concat (propertize "🔕" 'face '(:height 0.8)) tab-bar-extras-separator-element)))
+  "Element to display when the notifications are disabled."
+  :type 'sexp
+  :group 'tab-bar-extras)
+
 (defcustom tab-bar-extras-separator-element
   " | "
   "Element to separate the tab-bar elements.
@@ -137,8 +147,7 @@ This resets the clock, refreshes the tab-bar and its color, and updates the
 geolocation and weather information. If QUICK is non-nil, run only the essential
 reset functions."
   (interactive)
-  (display-time)
-  (setq global-mode-string tab-bar-extras-global-mode-string)
+  (tab-bar-extras-set-global-mode-string)
   (unless quick
     (when calendar-extras-use-geolocation
       (calendar-extras-set-location-variables-from-ip))
@@ -151,6 +160,11 @@ reset functions."
   (interactive)
   (tab-bar-extras-reset t))
 
+(defun tab-bar-extras-set-global-mode-string ()
+  "Set `global-mode-string' to `tab-bar-extras-global-mode-string'."
+  (let ((inhibit-message t))
+    (setq global-mode-string tab-bar-extras-global-mode-string)))
+
 (defvar org-clock-current-task)
 (defun tab-bar-extras-reset-unless-clock ()
   "Reset the tab-bar when `org-clock' isn't running.
@@ -162,56 +176,45 @@ disappearing when the tab-bar is reset."
 
 ;;;;; notifications
 
-(defun tab-bar-extras-notifications (var &optional action no-reset)
-  "Enable or disable notifications for VAR in the tab-bar.
-If ACTION is `enable', enable notifications. If ACTION is `disable', disable.
-Otherwise, toggle the current state.
+(defun tab-bar-extras-toggle-notifications (&optional action)
+  "Toggle all notifications in the Tab Bar.
+If ACTION is `enable', enable notifications. If ACTION is `disable', disable
+them."
+  (interactive)
+  (dolist (fun '(tab-bar-extras-toggle-github-notifications
+		 tab-bar-extras-toggle-telega-notifications))
+    (funcall fun action))
+  (setq tab-bar-notifications-enabled
+	(tab-bar-extras-get-state action 'tab-bar-notifications-enabled)))
 
-If NO-RESET is non-nil, do not reset the tab-bar after changing the state."
-  (let ((state (pcase action
-		 ('enable t)
-		 ('disable nil)
-		 (_ (not (symbol-value var))))))
+(defun tab-bar-extras-toggle-telega-notifications (&optional action)
+  "Toggle Telega notifications in the Tab Bar.
+If ACTION is `enable', enable notifications. If ACTION is `disable', disable
+them."
+  (tab-bar-extras-toggle-individual-notifications 'tab-bar-extras-telega-notify action))
+
+(defun tab-bar-extras-toggle-github-notifications (&optional action)
+  "Toggle GitHub notifications in the Tab Bar.
+If ACTION is `enable', enable notifications. If ACTION is `disable', disable
+them."
+  (tab-bar-extras-toggle-individual-notifications 'tab-bar-extras-github-notify action))
+
+(defun tab-bar-extras-toggle-individual-notifications (var &optional action)
+  "Toggle notifications for VAR in the Tab Bar.
+If ACTION is `enable', enable notifications. If ACTION is `disable', disable
+them."
+  (let ((state (tab-bar-extras-get-state action var)))
     (message "%s notifications."
-	     (if (set var state) "Enabled" "Disabled")))
-  (unless no-reset
-    (tab-bar-extras-quick-reset)))
+	     (if (set var state) "Enabled" "Disabled"))))
 
-(defun tab-bar-extras-all-notifications (&optional action)
-  "Enable or disable all notifications in the tab-bar.
-If ACTION is `enable', enable notifications. If ACTION is `disable', disable.
-Otherwise, toggle the current state."
-  (dolist (fun '(tab-bar-extras-github-notifications
-		 tab-bar-extras-telega-notifications))
-    (funcall fun action 'no-reset)))
-
-(defun tab-bar-extras-enable-all-notifications ()
-  "Disable notifications in the tab-bar."
-  (interactive)
-  (tab-bar-extras-all-notifications 'enable))
-
-(defun tab-bar-extras-disable-all-notifications ()
-  "Disable notifications in the tab-bar."
-  (interactive)
-  (tab-bar-extras-all-notifications 'disable))
-
-(defun tab-bar-extras-telega-notifications (&optional action no-reset)
-  "Enable or disable Telega notifications in the tab-bar.
-If ACTION is `enable', enable notifications. If ACTION is `disable', disable.
-Otherwise, toggle the current state.
-
-If NO-RESET is non-nil, do not reset the tab-bar after changing the state."
-  (interactive)
-  (tab-bar-extras-notifications 'tab-bar-extras-telega-notify action no-reset))
-
-(defun tab-bar-extras-github-notifications (&optional action no-reset)
-  "Enable or disable GitHub notifications in the tab-bar.
-If ACTION is `enable', enable notifications. If ACTION is `disable', disable.
-Otherwise, toggle the current state.
-
-If NO-RESET is non-nil, do not reset the tab-bar after changing the state."
-  (interactive)
-  (tab-bar-extras-notifications 'tab-bar-extras-github-notify action no-reset))
+(defun tab-bar-extras-get-state (action &optional var)
+  "Get the state of the Tab Bar based on ACTION and VAR.
+Return t or nil depending on whether ACTION is `enable' or `disable',
+respectively. Otherwise, return t if the value of VAR is nil, and vice versa."
+  (pcase action
+    ('enable t)
+    ('disable nil)
+    (_ (not (symbol-value var)))))
 
 (provide 'tab-bar-extras)
 ;;; tab-bar-extras.el ends here

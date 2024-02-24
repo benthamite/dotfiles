@@ -2037,13 +2037,6 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
   (tab-bar-mode))
 #+end_src
 
-*** TODO Diagnose proliferation of clocks
-:PROPERTIES:
-:ID:       58EB9BE2-8819-4CFB-A008-11A8B119F73A
-:END:
-
-I now realize this happens predictably when the doom modeline is enabled or disabled.
-
 ** tab-bar-extras
 :PROPERTIES:
 :ID:       97CCF169-9F3B-40A4-BB81-220DDE6DB1DB

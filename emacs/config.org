@@ -5685,7 +5685,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
     (add-hook hook #'jinx-mode))
 
   :general
-  ("M-p" (lambda! (jinx-correct 'all))
+  ("M-p" 'jinx-correct
    "A-M-p" 'jinx-extras-toggle-languages))
 #+end_src
 

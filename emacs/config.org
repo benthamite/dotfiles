@@ -881,8 +881,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :elpaca (transient-showcase
            :host github
            :repo "positron-solutions/transient-showcase")
-  :after transient
-  :defer 10)
+  :after transient)
 #+end_src
 
 ** warnings

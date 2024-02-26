@@ -1972,20 +1972,22 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :after ghub async
   :demand t
   :config
-  (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
+  (setq doom-modeline-time nil) ; we display time (and date) in the tab bar
+  (setq doom-modeline-buffer-name nil) ; we display buffer name information in the header line
   (setq doom-modeline-irc t)
   (setq doom-modeline-irc-buffers t)
-  (setq doom-modeline-minor-modes nil)
-  (setq doom-modeline-total-line-number nil)
-  (setq doom-modeline-indent-info t)
-  (setq doom-modeline-buffer-name nil)
+  (setq doom-modeline-total-line-number t)
+  (setq doom-modeline-position-column-line-format '(" %c %l"))
   (setq doom-modeline-enable-word-count t)
-  (setq mode-line-position-column-line-format '(" %c %l"))
+  (setq doom-modeline-indent-info t)
 
-     (doom-modeline-def-modeline 'main-reordered
-       '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
-       '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
-       
+  ;; we slightly tweak the `main' modeline to display the major mode icon to the
+  ;; left of point position indicators. this tweak doesn't change which elements
+  ;; are shown, which is controlled by the user options above
+  (doom-modeline-def-modeline 'main-reordered
+    '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
+    '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
+
   (doom-modeline-set-modeline 'main-reordered t)
 
   (dolist (cons  '((display-time-mode-hook . doom-modeline-override-time)

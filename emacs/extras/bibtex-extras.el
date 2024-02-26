@@ -209,6 +209,15 @@ If DELIMITER is nil, use a semicolon."
 	(unless (string-empty-p value)
 	  (replace-regexp-in-string "[\n\t ]+" " " value))))))
 
+(defun bibtex-extras-get-field-name ()
+  "Return the name of the field at point."
+  (save-excursion
+    (let* ((case-fold-search t)
+           (bounds (bibtex-enclosing-field))
+           (end (bibtex-end-of-field bounds)))
+      (goto-char end)
+      (bibtex-name-in-field bounds))))
+
 (defun bibtex-extras-get-field-in-string (string field)
   "Return the value of FIELD in STRING."
   (save-window-excursion

@@ -6618,7 +6618,8 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
   :demand t
   :config
   ;; default is 65, which overrides the value of `fill-column'
-  (setq emacs-lisp-docstring-fill-column nil))
+  (setq emacs-lisp-docstring-fill-column nil)
+  (setq max-lisp-eval-depth 16000))
 #+end_src
 
 ** s

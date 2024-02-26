@@ -5010,6 +5010,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :config
   (require 'consult-gh-embark)
   (require 'consult-gh-forge)
+  (require 'consult-gh-transient)
   (setq consult-gh-default-clone-directory "~/source")
   (setq consult-gh-repo-maxnum 30)
   (setq consult-gh-issues-maxnum 100)
@@ -5030,28 +5031,8 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
                  consult-gh--known-repos-list))
     (push var savehist-additional-variables))
 
-  (transient-define-prefix consult-gh-menu ()
-    "`consult-gh' menu."
-    [["list"
-      ("l r" "repo" consult-gh-repo-list)
-      ("l i" "issue" consult-gh-issue-list)
-      ("l p" "pull request" consult-gh-pr-list)]
-     ["search"
-      ("s r" "repos" consult-gh-search-repos)
-      ("s i" "issues" consult-gh-search-issues)
-      ("s p" "pull requests" consult-gh-search-prs)
-      ("s c" "code" consult-gh-search-code)]
-     ["repos"
-      ("c" "clone" consult-gh-repo-clone)
-      ("f" "fork" consult-gh-repo-fork)]
-     ["browse"
-      ("b" "file" consult-gh-find-file)
-      ""
-      "default"
-      ("d" "repos" consult-gh-default-repos)]])
-
   :general
-  ("H-G" 'consult-gh-menu))
+  ("H-G" 'consult-gh))
 #+end_src
 
 ** consult-mu

@@ -5424,7 +5424,8 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
    "/" 'Info-next
    "," 'Info-up
    "j" 'Info-backward-node
-   ";" 'Info-forward-node))
+   ";" 'Info-forward-node
+   "s-j" 'Info-menu))
 #+end_src
 
 ** man

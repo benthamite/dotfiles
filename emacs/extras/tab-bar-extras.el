@@ -32,8 +32,14 @@
 
 ;;;; Variables
 
-(defvar tab-bar-notifications-enabled t
+(defvar tab-bar-extras-notifications-enabled t
   "Whether notifications are enabled in the Tab Bar.")
+
+(defvar tab-bar-extras-telega-notifications-enabled t
+  "Whether the Telega element actually displays notifications in the Tab Bar.")
+
+(defvar tab-bar-extras-github-notifications-enabled t
+  "Whether the GitHub element actually displays notifications in the Tab Bar.")
 
 ;;;; User options
 
@@ -77,14 +83,9 @@
   :type 'sexp
   :group 'tab-bar-extras)
 
-(defcustom tab-bar-extras-telega-notify nil
-  "Whether the Telega element actually displays notifications in the Tab Bar."
-  :type 'boolean
-  :group 'tab-bar-extras)
-
 (defcustom tab-bar-extras-telega-element
   `(:eval (when (and
-		 tab-bar-extras-telega-notify
+		 tab-bar-extras-telega-notifications-enabled
 		 (telega-server-live-p)
 		 (> (plist-get telega--unread-message-count :unread_count) 0)
 		 )
@@ -93,13 +94,8 @@
   :type 'sexp
   :group 'tab-bar-extras)
 
-(defcustom tab-bar-extras-github-notify nil
-  "Whether the GitHub element actually displays notifications in the Tab Bar."
-  :type 'boolean
-  :group 'tab-bar-extras)
-
 (defcustom tab-bar-extras-github-element
-  `(:eval (when (and tab-bar-extras-github-notify
+  `(:eval (when (and tab-bar-extras-github-notifications-enabled
 		     (forge-extras-get-unread-notifications))
 	    (concat
 	     " | "
@@ -125,7 +121,7 @@
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-notification-status-element
-  `(:eval (unless tab-bar-notifications-enabled
+  `(:eval (unless tab-bar-extras-notifications-enabled
 	    (concat (propertize "🔕" 'face '(:height 0.8)) tab-bar-extras-separator-element)))
   "Element to display when the notifications are disabled."
   :type 'sexp
@@ -185,20 +181,20 @@ them."
   (dolist (fun '(tab-bar-extras-toggle-github-notifications
 		 tab-bar-extras-toggle-telega-notifications))
     (funcall fun action))
-  (setq tab-bar-notifications-enabled
-	(tab-bar-extras-get-state action 'tab-bar-notifications-enabled)))
+  (setq tab-bar-extras-notifications-enabled
+	(tab-bar-extras-get-state action 'tab-bar-extras-notifications-enabled)))
 
 (defun tab-bar-extras-toggle-telega-notifications (&optional action)
   "Toggle Telega notifications in the Tab Bar.
 If ACTION is `enable', enable notifications. If ACTION is `disable', disable
 them."
-  (tab-bar-extras-toggle-individual-notifications 'tab-bar-extras-telega-notify action))
+  (tab-bar-extras-toggle-individual-notifications 'tab-bar-extras-telega-notifications-enabled action))
 
 (defun tab-bar-extras-toggle-github-notifications (&optional action)
   "Toggle GitHub notifications in the Tab Bar.
 If ACTION is `enable', enable notifications. If ACTION is `disable', disable
 them."
-  (tab-bar-extras-toggle-individual-notifications 'tab-bar-extras-github-notify action))
+  (tab-bar-extras-toggle-individual-notifications 'tab-bar-extras-github-notifications-enabled action))
 
 (defun tab-bar-extras-toggle-individual-notifications (var &optional action)
   "Toggle notifications for VAR in the Tab Bar.

@@ -26,7 +26,6 @@
 ;; Extensions for `ebib'.
 
 ;;; Code:
-(require 'tlon-babel-tex)
 (require 'bibtex)
 (require 'el-patch)
 (require 'citar)

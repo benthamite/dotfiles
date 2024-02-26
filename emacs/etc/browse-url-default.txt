@@ -29,6 +29,7 @@ dhl.
 disqus.com
 docs.google.com
 doi.org
+domains.google.com
 drive.google.com
 dropbox.com
 easy.jet
@@ -101,6 +102,7 @@ utoronto.ca
 vueling.com
 we.tl
 wetransfer.com
+wiley.com
 wise.com
 worldcat.org
 yahoo.com

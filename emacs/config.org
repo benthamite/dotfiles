@@ -12132,7 +12132,8 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 #+begin_src emacs-lisp
 (use-package fatebook
-  :elpaca (fatebook :repo "sonofhypnos/fatebook.el" :host github
+  :elpaca (fatebook :repo "sonofhypnos/fatebook.el"
+                    :host github
                     :files ("fatebook.el"))
   :commands fatebook-create-question
   :config

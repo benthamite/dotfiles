@@ -354,6 +354,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#csv-mode][csv-mode]]
   - [[#yaml][yaml]]
   - [[#js2-mode][js2-mode]]
+  - [[#shut-up][shut-up]]
   - [[#puni][puni]]
   - [[#project][project]]
   - [[#hideshow][hideshow]]
@@ -6809,6 +6810,19 @@ This needs to be configured.
 
 #+begin_src emacs-lisp
 (use-package js2-mode
+  :demand t)
+#+end_src
+
+** shut-up
+:PROPERTIES:
+:ID:       54AE6A1C-1A30-4C24-B5BA-7CE39F0B10D9
+:END:
+
+
+/[[https://github.com/cask/shut-up/][shut-up]] provides a macro to silence function calls./
+
+#+begin_src emacs-lisp
+(use-package shut-up
   :demand t)
 #+end_src
 

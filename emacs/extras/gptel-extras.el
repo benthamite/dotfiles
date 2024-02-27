@@ -47,25 +47,26 @@
 
 (defvar tlon-core-email-shared)
 (defvar gptel-extras-gemini-pro-backend-plist
-  `(:key ,(auth-source-pass-get 'secret (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared))
+  `(:key ,(auth-source-pass-get 'secret
+				(concat "tlon/core/makersuite.google.com/" tlon-core-email-shared))
 	 :stream t)
   "Parameters for creating a Gemini Pro backend.")
 
 (defvar gptel-extras-gemini-pro-backend
   (apply #'gptel-make-gemini "Gemini" gptel-extras-gemini-pro-backend-plist)
-  "Backend for `gptel' when using the Gemini Pro model.")
+  "`gptel' backend when using the Gemini Pro model.")
 
 (defvar gptel-extras-backends
   `(("gpt-4" . ,gptel--openai)
     ("gemini-pro" . ,gptel-extras-gemini-pro-backend))
-  "List of backends for `gptel'.")
+  "List of for `gptel' backends.")
 
 ;;;; Functions
 
 (defun gptel-extras-model-config (model &optional globally)
   "Configure `gptel' for MODEL.
-By default, this configures `gptel' for the current buffer. If GLOBALLY is
-non-nil, configure it globally.
+By default, configure MODEL for the current buffer. If GLOBALLY is non-nil,
+configure it globally.
 
 For Gemini, a VPN will be used to circumvent location restrictions."
   (interactive (list (completing-read "Model: " gptel-extras-backends nil t)))

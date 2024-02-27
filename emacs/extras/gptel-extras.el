@@ -80,8 +80,8 @@ For Gemini, a VPN will be used to circumvent location restrictions."
   (when (string= gptel-model "gemini-pro")
     (mullvad-connect-to-website "Gemini"
 				gptel-extras-gemini-mullvad-disconnect-after
-				'silently)
-    (apply orig-fun args)))
+				'silently))
+  (apply orig-fun args))
 
 (advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)
 

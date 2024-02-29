@@ -66,9 +66,7 @@
 (defun gptel-extras-model-config (model &optional globally)
   "Configure `gptel' for MODEL.
 By default, configure MODEL for the current buffer. If GLOBALLY is non-nil,
-configure it globally.
-
-For Gemini, a VPN will be used to circumvent location restrictions."
+configure it globally."
   (interactive (list (completing-read "Model: " gptel-extras-backends nil t)))
   (let ((setter (if globally #'set-default #'set))
 	(backend (alist-get model gptel-extras-backends nil nil #'string=)))

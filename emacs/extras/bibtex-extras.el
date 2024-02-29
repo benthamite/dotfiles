@@ -33,6 +33,99 @@
 (require 'ebib)
 ;; (require 'ebib-extras)
 
+;;;; Variables
+
+(defconst bibtex-extras-biblatex-fields
+  '("author"
+    "editor"
+    "title"
+    "booktitle"
+    "date"
+    "journaltitle"
+    "volume"
+    "number"
+    "issue"
+    "edition"
+    "series"
+    "pages"
+    "isbn"
+    "issn"
+    "doi"
+    "url"
+    "urldate"
+    "publisher"
+    "location"
+    "chapter"
+    "note"
+    "addendum"
+    "pubstate"
+    "eprint"
+    "eprinttype"
+    "eprintclass"
+    "file"
+    "abstract"
+    "keywords"
+    "language"
+    "langid"
+    "translator"
+    "annotator"
+    "commentator"
+    "introduction"
+    "foreword"
+    "afterword"
+    "venue"
+    "eventtitle"
+    "eventdate"
+    "venue"
+    "organization"
+    "institution"
+    "school"
+    "library"
+    "archive"
+    "index"
+    "part"
+    "version"
+    "crossref"
+    "related"
+    "relatedtype"
+    "entrysubtype"
+    "nameaddon"
+    "type"
+    "maintitle"
+    "mainsubtitle"
+    "maintitleaddon"
+    "booksubtitle"
+    "booktitleaddon"
+    "journaltitleaddon"
+    "journalsubtitle"
+    "issuetitle"
+    "issuesubtitle"
+    "issuetitleaddon"
+    "editora"
+    "editorb"
+    "editorc"
+    "translator"
+    "commentator"
+    "annotator"
+    "introduction"
+    "foreword"
+    "afterword"
+    "subtitle"
+    "titleaddon"
+    "editoratype"
+    "editorbtype"
+    "editorctype"
+    "label"
+    "options"
+    "shorthand"
+    "shorthandintro"
+    "xref"
+    "entryset"
+    "execute"
+    "howpublished"
+    "sortkey")
+  "A list of valid BibLaTeX fields.")
+
 ;;;; Functions
 
 (defun bibtex-extras-replace-element-by-name (list target-name new-element)
@@ -224,6 +317,15 @@ If DELIMITER is nil, use a semicolon."
     (with-temp-buffer
       (insert string)
       (bibtex-extras-get-field field))))
+
+;;;;; setters
+
+(defun bibtex-extras-set-field ()
+  "Set FIELD to VALUE, creating it if necessary."
+  (interactive)
+  (let* ((field (completing-read "Field: " bibtex-extras-biblatex-fields))
+	 (value (read-string "Value: " (bibtex-extras-get-field field))))
+    (bibtex-set-field field (substring-no-properties value))))
 
 ;;;;; Patches
 

@@ -1967,7 +1967,8 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :demand t
   :config
   (setq doom-modeline-time nil) ; we display time (and date) in the tab bar
-  (setq doom-modeline-buffer-name nil) ; we display buffer name information in the header line
+  (setq doom-modeline-buffer-name t)
+  (setq doom-modeline-buffer-file-name-style 'file-name) ; we display the full path in the header line
   (setq doom-modeline-irc t)
   (setq doom-modeline-irc-buffers t)
   (setq doom-modeline-total-line-number t)

@@ -1053,6 +1053,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
   :general
   ("M-s-=" 'prot-simple-insert-date
    "C-g" 'prot-simple-keyboard-quit-dwim
+   "M-q" 'prot-simple-keyboard-quit-dwim
    "A-C-H-j" 'prot-simple-mark-sexp))
 #+end_src
 

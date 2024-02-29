@@ -313,10 +313,11 @@ If EXTENSION is non-nil, set its extension to its value."
 	(t
 	 (user-error "Invalid file extension"))))
 
-(defun ebib-extras-attach-file (&optional most-recent)
-  "Prompt the user for a file to attach to the current entry.
-If MOST-RECENT is non-nil, attach the most recent file in the
-`paths-dir-downloads' directory."
+(defun ebib-extras-attach-file (&optional file most-recent open)
+  "Attach FILE to attach to the current entry.
+If FILE is nil, prompt the user for one. If MOST-RECENT is non-nil, attach the
+most recent file in the `paths-dir-downloads' directory. If OPEN is non-nil,
+open FILE."
   (interactive)
   (let* ((get-key (pcase major-mode
 		    ('ebib-entry-mode #'ebib--get-key-at-point)
@@ -324,27 +325,29 @@ If MOST-RECENT is non-nil, attach the most recent file in the
 	 (key (funcall get-key)))
     (ebib-extras-check-valid-key key)
     (let* ((file-to-attach
-	    (if most-recent
-		(files-extras-newest-file paths-dir-downloads)
-	      (let ((initial-folder
-		     (completing-read "Select folder: "
-				      (list
-				       paths-dir-downloads
-				       paths-dir-pdf-library
-				       paths-dir-html-library
-				       paths-dir-media-library))))
-		(read-file-name
-		 "File to attach: "
-		 ;; Use key as default selection if key-based file exists
-		 ;; else default to `initial-folder'
-		 (if (catch 'found
-		       (dolist (extension ebib-extras-valid-file-extensions)
-			 (when (file-regular-p (file-name-concat
-						initial-folder
-						(file-name-with-extension key extension)))
-			   (throw 'found extension))))
-		     (file-name-concat initial-folder key)
-		   initial-folder)))))
+	    (or
+	     (when most-recent
+	       (files-extras-newest-file paths-dir-downloads))
+	     file
+	     (let ((initial-folder
+		    (completing-read "Select folder: "
+				     (list
+				      paths-dir-downloads
+				      paths-dir-pdf-library
+				      paths-dir-html-library
+				      paths-dir-media-library))))
+	       (read-file-name
+		"File to attach: "
+		;; Use key as default selection if key-based file exists
+		;; else default to `initial-folder'
+		(if (catch 'found
+		      (dolist (extension ebib-extras-valid-file-extensions)
+			(when (file-regular-p (file-name-concat
+					       initial-folder
+					       (file-name-with-extension key extension)))
+			  (throw 'found extension))))
+		    (file-name-concat initial-folder key)
+		  initial-folder)))))
 	   (extension (file-name-extension file-to-attach))
 	   (destination-folder (ebib-extras--extension-directories extension))
 	   (file-name (ebib-extras--rename-and-abbreviate-file
@@ -357,12 +360,13 @@ If MOST-RECENT is non-nil, attach the most recent file in the
 	(ebib-extras-set-pdf-metadata)
 	;; open the pdf to make sure it displays the web page correctly
 	(ebib-extras-ocr-pdf)
-	(ebib-extras-open-pdf-file)))))
+	(when open
+	  (ebib-extras-open-pdf-file))))))
 
 (defun ebib-extras-attach-most-recent-file ()
   "Attach the most recent file in `paths-dir-downloads' to the current entry."
   (interactive)
-  (ebib-extras-attach-file t))
+  (ebib-extras-attach-file nil 'most-recent))
 
 (defvar ebib-extras-iso-639-2
   '(("english" . "eng")

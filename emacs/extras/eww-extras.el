@@ -55,24 +55,34 @@
 
 ;;;; Functions
 
-(defun eww-extras-url-to-file (type &optional url)
-  "Generate file of TYPE for URL."
+(defun eww-extras-url-to-file (type &optional url callback)
+  "Generate file of TYPE for URL and take ACTION.
+CALLBACK is a function called when the process concludes. The function takes two
+arguments: the file of the converted PDF and the file of the BibTeX entry
+associated with the PDF."
   (let* ((url (simple-extras-get-url url))
-	 (title (pcase type
-		  ("pdf" (or (pcase major-mode
-			       ('bibtex-mode (bibtex-extras-get-field "title"))
-			       ((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "title")))
-			     (buffer-name)))
-		  ("html" (org-web-tools-extras-org-title-for-url url))))
-	 (slug (prot-eww--sluggify title))
-	 (file-name (file-name-with-extension slug type))
-	 (output-file (file-name-concat paths-dir-downloads file-name)))
-    (async-shell-command
-     (format
-      (pcase type
-	("pdf" "'%s' --print-to-pdf --no-pdf-header-footer --headless %s --print-to-pdf='%s'")
-	("html" "'%s' --headless --dump-dom '%s' > %s"))
-      browse-url-chrome-program url output-file))))
+	 (title (pcase major-mode
+		  ('bibtex-mode (bibtex-extras-get-key))
+		  ((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "=key="))
+		  (_ (pcase type
+		       ("pdf" (buffer-name))
+		       ("html" (prot-eww--sluggify (org-web-tools-extras-org-title-for-url url)))))))
+	 (file-name (file-name-with-extension title type))
+	 (output-file (file-name-concat paths-dir-downloads file-name))
+	 (bibtex-file (buffer-file-name))
+	 (process (make-process
+		   :name (format "url-to-%s" type)
+		   :buffer "*URL-to-File-Process*"
+		   :command (list shell-file-name shell-command-switch
+				  (format
+				   (pcase type
+				     ("pdf" "'%s' --print-to-pdf --no-pdf-header-footer --headless %s --print-to-pdf='%s'")
+				     ("html" "'%s' --headless --dump-dom '%s' > %s"))
+				   browse-url-chrome-program url output-file)))))
+    (set-process-sentinel process
+			  (lambda (proc event)
+			    (when (string= event "finished\n")
+			      (funcall callback output-file bibtex-file))))))
 
 (defun eww-extras-url-to-html (&optional url)
   "Generate HTML of URL."

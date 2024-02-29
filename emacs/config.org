@@ -9336,7 +9336,10 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
                ("eprinttype" nil nil 5) ("archiveprefix" nil nil -5) ("urldate"))))
   :general
   (bibtex-mode-map
+  "s-a" 'bibtex-extras-set-field
+  "s-h" 'bibtex-extras-url-to-html-attach
    "s-i" 'bibtex-extras-open-in-ebib
+   "s-p" 'bibtex-extras-url-to-pdf-attach
    "s-t" 'bibtex-extras-move-entry-to-tlon))
 #+end_src
 
@@ -9859,7 +9862,7 @@ The macro below generates the commands correctly. But attempting to define key b
    "s" 'ebib-extras-sort-toggle
    "s-t" 'ebib-extras-move-entry-to-tlon)
   ((bibtex-mode-map ebib-entry-mode-map)
-   "s-p" 'ebib-extras-download-pdf)
+    "s-f" 'ebib-extras-open-file-dwim)
   (bibtex-mode-map
    "s-/" 'ebib-extras-attach-most-recent-file))
 #+end_src

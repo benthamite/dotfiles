@@ -367,7 +367,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#gptel][gptel]]
   - [[#gptel-extras][gptel-extras]]
   - [[#gpt-commit][gpt-commit]]
-  - [[#whisper][whisper]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
   - [[#org-extras][org-extras]]
@@ -7043,24 +7042,6 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :config
   (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
   (setq gpt-commit-model-name "gpt-4"))
-#+end_src
-
-** whisper
-:PROPERTIES:
-:ID:       19FF2502-D4A0-41CC-8F72-E1CF1D960304
-:END:
-
-/[[https://github.com/natrys/whisper.el][whisper]] is a speech-to-Text interface for Emacs using OpenAI's whisper model and whisper.cpp as inference engine./
-
-#+begin_src emacs-lisp
-(use-package whisper
-  :elpaca (whisper.el
-           :host github
-           :repo "natrys/whisper.el"
-           :protocol ssh)
-  :config
-  (setq whisper-install-directory no-littering-var-directory)
-  (setq whisper--ffmpeg-input-device ":0"))
 #+end_src
 
 * org-mode

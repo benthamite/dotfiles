@@ -21,6 +21,24 @@ This is a place where I move Emacs packages I no longer use.
 (use-package mpv)
 #+end_src
 
+** whisper
+:PROPERTIES:
+:ID:       19FF2502-D4A0-41CC-8F72-E1CF1D960304
+:END:
+
+/[[https://github.com/natrys/whisper.el][whisper]] is a speech-to-Text interface for Emacs using OpenAI's whisper model and whisper.cpp as inference engine./
+
+#+begin_src emacs-lisp
+(use-package whisper
+  :elpaca (whisper.el
+           :host github
+           :repo "natrys/whisper.el"
+           :protocol ssh)
+  :config
+  (setq whisper-install-directory no-littering-var-directory)
+  (setq whisper--ffmpeg-input-device ":0"))
+#+end_src
+
 ** org-ai
 :PROPERTIES:
 :ID:       DE0368E4-FFE7-42D8-8557-2D5DD4DA5BF5

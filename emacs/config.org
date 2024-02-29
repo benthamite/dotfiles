@@ -642,7 +642,7 @@ NAME and ARGS as in `use-package'."
      :elpaca (,name
               :host github
               :repo "benthamite/dotfiles"
-              ;; :branch "dev"
+              :branch "dev"
               :files ,(list (file-name-concat
                              "emacs/extras"
                              (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
@@ -6241,7 +6241,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :elpaca (tlon-babel
            :host github
            :repo "tlon-team/tlon-babel"
-           ;; :branch "dev"
+           :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config

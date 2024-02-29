@@ -11115,8 +11115,8 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
    "<tab>" (lambda! (elfeed-show-next-link) (recenter))
    "b" nil
    "q" 'elfeed
-   "j" 'elfeed-show-next
-   ";W" 'elfeed-show-prev
+   "j" 'elfeed-show-prev
+   ";" 'elfeed-show-next
    "x" 'elfeed-show-visit))
 #+end_src
 

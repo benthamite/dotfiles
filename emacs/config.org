@@ -6986,7 +6986,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 :ID:       AB88D95E-3D6F-4B70-850F-F1B7E13AF1AD
 :END:
 
-/[[file:extras/-extras.el][copilot-extras]] collects my extensions for ~copilot~./
+/[[file:extras/copilot-extras.el][copilot-extras]] collects my extensions for ~copilot~./
 
 #+begin_src emacs-lisp
 (use-personal-package copilot-extras

@@ -6973,7 +6973,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 
   :general
   (copilot-completion-map
-   "s-C-g" 'copilot-clear-overlay
+   "C-s-g" 'copilot-clear-overlay
    "<tab>" 'copilot-accept-completion-by-line
    "M-<tab>" 'copilot-accept-completion
    "M-k" 'copilot-previous-completion

@@ -6968,8 +6968,8 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :config
   (setq copilot-max-char 1000000)
 
-  (add-hook 'copilot-mode-hook (lambda ()
-                                 (setq-local copilot--indent-warning-printed-p t)))
+  (unless (copilot-installed-version)
+    (copilot-install-server))
 
   :general
   (copilot-completion-map

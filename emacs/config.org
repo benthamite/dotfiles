@@ -10820,7 +10820,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :END:
 
 
-/[[file:extras/browse-url-extras.el][browse-url-extras]] collects my extensions for ~browse-url~.
+/[[file:extras/browse-url-extras.el][browse-url-extras]] collects my extensions for ~browse-url~./
 
 #+begin_src emacs-lisp :results silent
 (use-personal-package browse-url-extras

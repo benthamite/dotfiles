@@ -1521,13 +1521,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-package forge
-  :after magit ghub emacsql auth-source-pass
-  :demand t
-  :init
-  (if (version<= emacs-version "29.0")
-      (setq forge-database-connector 'sqlite)
-    (setq forge-database-connector 'sqlite-builtin))
 
+:after magit ghub emacsql auth-source-pass
+  :demand t
   :config
   (setq forge-owned-accounts '(("benthamite")))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'

@@ -364,6 +364,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#eldoc][eldoc]]
 - [[#ai][AI]]
   - [[#copilot][copilot]]
+  - [[#copilot-extras][copilot-extras]]
   - [[#gptel][gptel]]
   - [[#gptel-extras][gptel-extras]]
   - [[#gpt-commit][gpt-commit]]
@@ -6966,9 +6967,6 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :config
   (setq copilot-max-char 1000000)
 
-  (add-hook 'prog-mode-hook (lambda ()
-                              (unless (derived-mode-p 'dsssl-mode)
-                                (copilot-mode))))
   (add-hook 'copilot-mode-hook (lambda ()
                                  (setq-local copilot--indent-warning-printed-p t)))
 
@@ -6980,6 +6978,23 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
    "M-k" 'copilot-previous-completion
    "M-l" 'copilot-next-completion
    "M-;" 'copilot-accept-completion-by-word))
+#+end_src
+
+** copilot-extras
+:PROPERTIES:
+:ID:       AB88D95E-3D6F-4B70-850F-F1B7E13AF1AD
+:END:
+
+/[[file:extras/-extras.el][copilot-extras]] collects my extensions for ~copilot~./
+
+#+begin_src emacs-lisp
+(use-personal-package copilot-extras
+  :after copilot
+  :demand t
+  :config
+  (setq copilot-extras-excluded-modes '(dsssl-mode))
+  
+  (add-hook 'prog-mode-hook #'copilot-extras-enable-conditionally))
 #+end_src
 
 ** gptel

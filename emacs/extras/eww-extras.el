@@ -104,9 +104,9 @@ If buffer is visiting a URL or if there is a URL in the kill ring, use its
 domain as the initial prompt input."
   (interactive)
   (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
-         (domain (when url (url-domain (url-generic-parse-url url))))
+	 (domain (when url (url-domain (url-generic-parse-url url))))
 	 (file eww-extras-readable-exceptions-file)
-         (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
+	 (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
     (browse-url-extras--write-url-to-file selection file)
     (eww-extras-set-readable-exceptions-from-file)
     (eww-reload)))
@@ -165,21 +165,21 @@ With prefix ARG is passed, open in new EWW buffer."
     (eww-browse-url (url-recreate-url new-url))))
 
 (defun eww-extras-go-to-root-url-hierarchy ()
-"Go to root of current URL hierarchy."
-(interactive)
-(let* ((url (url-generic-parse-url (eww-current-url)))
-       (new-url nil))
-  (setq new-url (url-parse-make-urlobj
-		 (url-type url)
-		 (url-user url)
-		 (url-password url)
-		 (url-host url)
-		 (url-port url)
-		 ""
-		 (url-target url)
-		 nil
-		 (url-fullness url)))
-  (eww-browse-url (url-recreate-url new-url))))
+  "Go to root of current URL hierarchy."
+  (interactive)
+  (let* ((url (url-generic-parse-url (eww-current-url)))
+	 (new-url nil))
+    (setq new-url (url-parse-make-urlobj
+		   (url-type url)
+		   (url-user url)
+		   (url-password url)
+		   (url-host url)
+		   (url-port url)
+		   ""
+		   (url-target url)
+		   nil
+		   (url-fullness url)))
+    (eww-browse-url (url-recreate-url new-url))))
 
 (provide 'eww-extras)
 

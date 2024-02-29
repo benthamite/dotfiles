@@ -493,7 +493,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#mullvad][mullvad]]
 - [[#multimedia][multimedia]]
   - [[#emms][EMMS]]
-  - [[#mpv][mpv]]
   - [[#empv][empv]]
   - [[#ytdl][ytdl]]
   - [[#read-aloud][read-aloud]]
@@ -11753,17 +11752,6 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 :END:
 
 [[https://sqrtminusone.xyz/posts/2021-09-07-emms/][My EMMS and elfeed setup]]
-
-** mpv
-:PROPERTIES:
-:ID:       8D75E528-AA79-4512-B4A9-6EB7A56F9026
-:END:
-
-/[[https://github.com/kljohann/mpv.el][mpv]] provides various functions to control [[https://en.wikipedia.org/wiki/Mpv_(media_player)][mpv]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package mpv)
-#+end_src
 
 ** empv
 :PROPERTIES:

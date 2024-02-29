@@ -11089,14 +11089,15 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
 #+begin_src emacs-lisp :results silent
 (use-package elfeed
-  :defer 30
+  :init
+  (run-with-idle-timer (* 10 60) t #'elfeed-update)
+
   :config
   (setq-default elfeed-search-filter "+unread -wiki")
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
   (add-hook 'elfeed-show-mode-hook #'visual-line-mode)
 
-  (run-with-idle-timer (* 30 60) t #'elfeed-update)
 
   :general
   (eww-mode-map

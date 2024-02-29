@@ -2234,7 +2234,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 
 /[[https://github.com/milkypostman/hl-sentence][hl-sentence]] highlights sentences rather than lines./
 
-I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specifically, ~org-mode~ and ~markdown-mode~) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the modes. See the above sections and the ~modus-themes-extras-set-faces~ function from ~modus-themes-extras~.
+I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specifically, ~org-mode~ and ~markdown-mode~) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the other modes. See the above sections and the ~modus-themes-extras-set-faces~ function from ~modus-themes-extras~.
 
 #+begin_src emacs-lisp
 (use-package hl-sentence

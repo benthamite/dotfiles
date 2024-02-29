@@ -1893,7 +1893,8 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 
 #+begin_src emacs-lisp
 (use-package spacious-padding
-  :elpaca (spacious-padding :tag "0.3.0") ; using tagged version to avoid error on 2024-02-21
+  :elpaca (spacious-padding
+           :tag "0.3.0") ; using tagged version to avoid error on 2024-02-21
   :demand t
   :config
   (setq spacious-padding-widths '())

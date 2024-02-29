@@ -10978,6 +10978,9 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 :ID:       69B35912-79CB-4611-8E43-7C8A5BC82B55
 :END:
 
+
+/[[file:extras/eww-extras.el][eww-extras]] collects my extensions for ~eww~./
+
 #+begin_src emacs-lisp
 (use-personal-package eww-extras
   :after eww

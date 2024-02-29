@@ -1,4 +1,4 @@
-#+PROPERTY: header-args :tangle (print path-file-karabiner-edn)
+#+PROPERTY: header-args :tangle (print paths-file-karabiner-edn)
 #+TITLE:Pablo's Karabiner modifications
 #+AUTHOR: Pablo Stafforini
 :PROPERTIES:

@@ -327,6 +327,31 @@ If DELIMITER is nil, use a semicolon."
 	 (value (read-string "Value: " (bibtex-extras-get-field field))))
     (bibtex-set-field field (substring-no-properties value))))
 
+;;;;; attach downloads
+
+(defun bibtex-extras-url-to-file-attach (type)
+  "Generate PDF of file of TYPE."
+  (eww-extras-url-to-file type nil #'bibtex-extras-attach-file-to-entry))
+
+(defun bibtex-extras-url-to-pdf-attach ()
+  "Generate PDF of URL."
+  (interactive)
+  (bibtex-extras-url-to-file-attach "pdf"))
+
+(defun bibtex-extras-url-to-html-attach ()
+  "Generate HTML of URL."
+  (interactive)
+  (bibtex-extras-url-to-file-attach "html"))
+
+(defun bibtex-extras-attach-file-to-entry (&optional file bibtex-file)
+  "Attach FILE to the relevant entry in BIBTEX-FILE.
+The relevant entry is the entry in BIBTEX-FILE whose key equals the name of FILE
+sans its extension."
+  (let ((key (file-name-nondirectory (file-name-sans-extension file))))
+    (with-current-buffer (find-file-noselect bibtex-file)
+      (bibtex-search-entry key)
+      (ebib-extras-attach-file file))))
+
 ;;;;; Patches
 
 ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field

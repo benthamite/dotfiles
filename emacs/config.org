@@ -6964,8 +6964,6 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :after jsonrpc
   :demand t
   :config
-  (setq copilot-node-executable "/opt/homebrew/opt/node/bin/node")
-  (setq copilot-log-max 1000)
   (setq copilot-max-char 1000000)
 
   (add-hook 'prog-mode-hook (lambda ()

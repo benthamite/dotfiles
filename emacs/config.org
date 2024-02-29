@@ -2251,6 +2251,9 @@ I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specific
 :ID:       66598B06-4BB1-4E7C-AE36-7CE81E4CBF5A
 :END:
 
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jit-lock.el][jit-lock]] provides just-in-time fontification./
+
 #+begin_src emacs-lisp :results silent
 (use-feature jit-lock
   :defer 10

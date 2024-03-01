@@ -147,7 +147,7 @@ reset functions."
   (tab-bar-extras-set-global-mode-string)
   (unless quick
     (when calendar-extras-use-geolocation
-      (calendar-extras-set-location-variables-from-ip))
+      (calendar-extras-set-geolocation))
     (setq display-wttr-locations `(,calendar-extras-location-name)))
   (when tab-bar-extras-reset-wttr
     (display-wttr)))

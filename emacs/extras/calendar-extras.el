@@ -40,7 +40,7 @@
 (defcustom calendar-extras-location-name ""
   "Name of the current location.
 The value can be set manually. It can also be set via
-`calendar-extras-set-location-variables-from-ip'."
+`calendar-extras-set-geolocation'."
   :type 'string
   :group 'calendar-extras )
 
@@ -85,9 +85,9 @@ If IP is non-nil, use the local IP address."
 	     (timezone (alist-get 'timezone json)))
 	(list :lat lat :lon lon :city city :timezone timezone)))))
 
-(defun calendar-extras-set-location-variables-from-ip (&optional ip)
   "Set location variables from IP address.
 If IP is non-nil, use the local IP address."
+(defun calendar-extras-set-geolocation ()
   (interactive)
   (when-let ((ip (or ip (calendar-extras-get-local-ip-address))))
     (setq calendar-extras-personal-geolocation (calendar-extras-get-geolocation-from-ip ip))

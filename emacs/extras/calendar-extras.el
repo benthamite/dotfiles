@@ -60,17 +60,11 @@ The value can be set manually. It can also be set via
 
 ;;;; Functions
 
-(defun calendar-extras-get-local-ip-address ()
-  "Get local IP address."
-  (let ((local-ip (shell-command-to-string
-		   "timeout 1 curl -s ifconfig.me | awk '/[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*/{print $0}'")))
-    (string-trim local-ip "\"" "\n")))
-
-(defun calendar-extras-get-geolocation-from-ip (&optional ip)
+(defun calendar-extras-get-geolocation ()
   "Get geolocation from IP address.
 If IP is non-nil, use the local IP address."
-  (let* ((ip (or ip (calendar-extras-get-local-ip-address)))
-	 (url (format "http://ip-api.com/json/%s" ip))
+  (let* ((key (auth-source-pass-get 'secret "chrome/myprojects.geoapify.com"))
+	 (url (format "https://api.geoapify.com/v1/ipinfo?&apiKey=%s" key))
 	 (url-request-method "GET")
 	 (url-request-extra-headers '(("Content-Type" . "application/json")))
 	 (response-buffer (url-retrieve-synchronously url)))
@@ -79,20 +73,20 @@ If IP is non-nil, use the local IP address."
       ;; Skip HTTP headers.
       (re-search-forward "^$")
       (let* ((json (json-read))
-	     (lat (alist-get 'lat json))
-	     (lon (alist-get 'lon json))
+	     (location (alist-get 'location json))
+	     (lat (alist-get 'latitude location))
+	     (lon (alist-get 'longitude location))
 	     (city (alist-get 'city json))
-	     (timezone (alist-get 'timezone json)))
-	(list :lat lat :lon lon :city city :timezone timezone)))))
+	     (names (alist-get 'names city))
+	     (name (alist-get 'en names)))
+	(list :lat lat :lon lon :city name)))))
 
-  "Set location variables from IP address.
-If IP is non-nil, use the local IP address."
 (defun calendar-extras-set-geolocation ()
+  "Set location variables from IP address."
   (interactive)
-  (when-let ((ip (or ip (calendar-extras-get-local-ip-address))))
-    (setq calendar-extras-personal-geolocation (calendar-extras-get-geolocation-from-ip ip))
-    (setq calendar-extras-location-name (plist-get calendar-extras-personal-geolocation :city))
-    (message "Variables set: %s" calendar-extras-personal-geolocation)))
+  (setq calendar-extras-personal-geolocation (calendar-extras-get-geolocation))
+  (setq calendar-extras-location-name (plist-get calendar-extras-personal-geolocation :city))
+  (message "Variables set: %s" calendar-extras-personal-geolocation)))
 
 (defun calendar-extras-time-last-day-of-last-month ()
   "Insert the last day of the most recent month."

@@ -2069,11 +2069,6 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   (add-hook 'tlon-init-post-init-hook #'tab-bar-extras-reset))
 #+end_src
 
-*** TODO Develop functionality to snooze notifications
-:PROPERTIES:
-:ID:       D0A5875F-575E-4FF3-B0CF-D73DE0185559
-:END:
-
 ** breadcrumb
 :PROPERTIES:
 :ID:       483A0D4F-B273-449C-BCB0-E8703AC45FC5

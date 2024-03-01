@@ -6583,6 +6583,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
    "A-H-C-i" 'mark-defun
    "s-e" 'xref-find-definitions
    "s-f" 'consult-flycheck
+   "M-q" nil
    "s-q" 'prog-fill-reindent-defun)
   ((emacs-lisp-mode-map shell-mode-map)
    "s-c" 'exit-recursive-edit))

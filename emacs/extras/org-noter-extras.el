@@ -36,7 +36,7 @@
   "Extensions for `org-noter'."
   :group 'org-noter-extras)
 
-(defvar org-noter-extras-dehyphenate-hyphen "-"
+(defconst org-noter-extras-dehyphenate-hyphens '("-" "¬")
   "Hyphen to be removed by `org-noter-extras-dehyphenate'.")
 
 (defconst org-noter-highlight-heading-regexp "Highlight on page \\(.*\\)"
@@ -134,9 +134,9 @@ tends to be higher than the book page number."
   "Set hyphen character for de-hyphenation."
   (interactive)
   (let ((hyphen (completing-read (format "Hyphen character (currently `%s'): "
-					 org-noter-extras-dehyphenate-hyphen)
+					 org-noter-extras-dehyphenate-hyphens)
 				 '("-" "­"))))
-    (setq org-noter-extras-dehyphenate-hyphen hyphen)))
+    (setq org-noter-extras-dehyphenate-hyphens hyphen)))
 
 (provide 'org-noter-extras)
 ;;; org-noter-extras.el ends here

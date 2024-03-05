@@ -327,6 +327,38 @@ If DELIMITER is nil, use a semicolon."
 	 (value (read-string "Value: " (bibtex-extras-get-field field))))
     (bibtex-set-field field (substring-no-properties value))))
 
+;;;;; sorting of bibtex buffer
+
+;; the two functions below are used to sort the bibtex files, via the user
+;; option `bibtex-maintain-sorted-entries'
+(defun bibtex-extras-entry-sorter ()
+  "Return a list of the bibtex key and the `crossref' field of the entry at point."
+  (list (bibtex-extras-get-key)
+	(not (string-empty-p (bibtex-autokey-get-field "crossref")))
+	nil))
+
+(defun bibtex-extras-lessp (index1 index2)
+  "Predicate for sorting BibTeX entries with indices INDEX1 and INDEX2.
+Entries will be first be sorted as follows. Those with a `crossref' field will
+be placed above the rest, and will be sorted in reverse alphabetical order. The
+rest will be sorted alphabetically.
+
+This sorting criterion replicates the Ebib criterion. That the entries with a
+`crossref' field are sorted in reverse alphabetical order rather than
+alphabetically appears to be a bug. But we replicate it for consistency’s sake:
+this way when either Ebib or `bibtex' sorts the buffer, it won't be later
+re-sorted by the other."
+  (let ((key1 (nth 0 index1))
+	(key2 (nth 0 index2))
+	(crossref1 (nth 1 index1))
+	(crossref2 (nth 1 index2)))
+    (cond ((xor crossref1 crossref2)
+	   crossref1)
+	  ((and crossref1 crossref2)
+	   (string< key2 key1))
+	  (t
+	   (string< key1 key2)))))
+
 ;;;;; attach downloads
 
 (defun bibtex-extras-url-to-file-attach (type)

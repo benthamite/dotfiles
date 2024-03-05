@@ -363,7 +363,8 @@ re-sorted by the other."
 
 (defun bibtex-extras-url-to-file-attach (type)
   "Generate PDF of file of TYPE."
-  (eww-extras-url-to-file type nil #'bibtex-extras-attach-file-to-entry))
+  (when (bibtex-extras-get-field "url")
+    (eww-extras-url-to-file type nil #'bibtex-extras-attach-file-to-entry)))
 
 (defun bibtex-extras-url-to-pdf-attach ()
   "Generate PDF of URL."

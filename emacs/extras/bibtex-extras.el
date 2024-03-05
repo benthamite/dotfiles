@@ -380,9 +380,11 @@ re-sorted by the other."
 The relevant entry is the entry in BIBTEX-FILE whose key equals the name of FILE
 sans its extension."
   (let ((key (file-name-nondirectory (file-name-sans-extension file))))
-    (with-current-buffer (find-file-noselect bibtex-file)
-      (bibtex-search-entry key)
-      (ebib-extras-attach-file file))))
+    (save-excursion
+      (with-current-buffer (find-file-noselect bibtex-file)
+	(bibtex-search-entry key)
+	(ebib-extras-attach-file file)
+	(message "Attached `%s' to %s" file key)))))
 
 ;;;;; Patches
 

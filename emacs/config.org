@@ -350,6 +350,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#python][python]]
   - [[#pyenv-mode][pyenv-mode]]
   - [[#emacs-ipython-notebook][emacs-ipython-notebook]]
+  - [[#go][go]]
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
   - [[#jsonrpc][jsonrpc]]
@@ -6748,6 +6749,17 @@ This needs to be configured.
 
 #+begin_src emacs-lisp
 (use-package ein)
+#+end_src
+
+** go
+:PROPERTIES:
+:ID:       248AB3F6-2BA7-4DD0-8DFE-FFA79762BC73
+:END:
+
+/[[https://github.com/dominikh/go-mode.el][go-mode]] provides support for the Go programming language./
+
+#+begin_src emacs-lisp
+(use-package go-mode)
 #+end_src
 
 ** applescript-mode

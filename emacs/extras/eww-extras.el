@@ -53,6 +53,12 @@
   :type 'file
   :group 'eww-extras)
 
+(defcustom eww-extras-chrome-data-dir
+  (expand-file-name "~/Library/Application Support/Google/Chrome/Default")
+  "Directory where Chrome data is stored."
+  :type 'directory
+  :group 'eww-extras)
+
 ;;;; Functions
 
 (defun eww-extras-url-to-file (type &optional url callback)
@@ -76,9 +82,10 @@ associated with the PDF."
 		   :command (list shell-file-name shell-command-switch
 				  (format
 				   (pcase type
-				     ("pdf" "'%s' --print-to-pdf --no-pdf-header-footer --headless %s --print-to-pdf='%s'")
-				     ("html" "'%s' --headless --dump-dom '%s' > %s"))
-				   browse-url-chrome-program url output-file)))))
+				     ("pdf" "'%s' --user-data-dir='%s' --print-to-pdf --no-pdf-header-footer --headless %s --print-to-pdf='%s'")
+				     ("html" "'%s' --user-data-dir='%s' --headless --dump-dom '%s' > %s"))
+				   browse-url-chrome-program eww-extras-chrome-data-dir url output-file)))))
+    (message "Getting %s file..." type)
     (set-process-sentinel process
 			  (lambda (proc event)
 			    (when (string= event "finished\n")

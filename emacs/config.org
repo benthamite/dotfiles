@@ -1451,7 +1451,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   (magit-mode-map
    "p" 'magit-pull
    "." 'magit-push)
-  (magit-status-mode-map
+  ((magit-status-mode-map magit-revision-mode-map)
    "A-C-s-r" 'magit-section-backward-sibling
    "A-C-s-f" 'magit-section-forward-sibling)
   ((magit-status-mode-map magit-hunk-section-mode-map magit-hunk-section-smerge-map)

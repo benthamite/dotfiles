@@ -11020,7 +11020,7 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
    "g U" 'eww-extras-go-to-root-url-hierarchy
    ;; "p" 'eww-extras-open-with-recent-kill-ring
    "p" 'eww-extras-url-to-pdf)
-  ((bibtex-mode-map eww-mode-map ebib-entry-mode-map ebib-index-mode-map)
+  ((eww-mode-map ebib-entry-mode-map ebib-index-mode-map)
    "s-h" 'eww-extras-url-to-html))
 #+end_src
 

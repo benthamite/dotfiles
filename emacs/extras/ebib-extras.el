@@ -314,7 +314,7 @@ If EXTENSION is non-nil, set its extension to its value."
 	 (user-error "Invalid file extension"))))
 
 (defun ebib-extras-attach-file (&optional file most-recent open)
-  "Attach FILE to attach to the current entry.
+  "Attach FILE to the current entry.
 If FILE is nil, prompt the user for one. If MOST-RECENT is non-nil, attach the
 most recent file in the `paths-dir-downloads' directory. If OPEN is non-nil,
 open FILE."

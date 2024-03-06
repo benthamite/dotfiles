@@ -355,7 +355,8 @@ open FILE."
       (when (or (not (file-regular-p file-name))
 		(y-or-n-p "File exists. Overwrite? "))
 	(rename-file file-to-attach file-name t))
-      (ebib-extras--update-file-field-contents key file-name)
+      (shut-up
+	(ebib-extras--update-file-field-contents key file-name))
       (when (string= (file-name-extension file-name) "pdf")
 	(ebib-extras-set-pdf-metadata)
 	;; open the pdf to make sure it displays the web page correctly

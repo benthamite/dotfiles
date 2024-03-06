@@ -237,17 +237,20 @@ link, call `org-open-at-point' and set
 (defun org-extras-paste-html ()
   "Convert the contents of the system clipboard to `org-mode' using `pandoc'."
   (interactive)
-  (let* ((clipboard (if (eq system-type 'darwin)
-			"pbv public.html"
-		      "xclip -out -selection 'clipboard' -t text/html"))
-	 (pandoc (concat "pandoc --wrap=none -f html -t org"))
-	 (cmd (concat clipboard " | " pandoc))
-	 (output (shell-command-to-string cmd))
-	 ;; Not sure why Pandoc adds these double slashes; we remove them
-	 (output (replace-regexp-in-string "^\\\\\\\\$" "" output))
-	 (text (replace-regexp-in-string "= " "= " output)))
-    (kill-new text)
-    (yank)))
+  (let* ((output (shell-command-to-string
+		  "pbv public.html | pandoc --wrap=none -f html -t org")))
+    (when (string-match-p "Could not access pasteboard contents" output)
+      (setq output (shell-command-to-string "pbpaste | pandoc --wrap=none -f markdown -t org")))
+    (insert
+     (with-temp-buffer
+       (insert output)
+       (dolist (regexp '(("^\\\\\\\\" . "")
+			 ("\\\\\\\\$" . "")
+			 (" " . " ")))
+	 (goto-char (point-min))
+	 (while (re-search-forward (car regexp) nil t)
+	   (replace-match (cdr regexp) nil nil)))
+       (buffer-string)))))
 
 (defun org-extras-paste-image ()
   "Take the contents of the system clipboard and paste it as an image."

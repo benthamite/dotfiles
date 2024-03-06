@@ -9904,6 +9904,7 @@ The macro below generates the commands correctly. But attempting to define key b
         (auth-source-pass-get 'secret "chrome/omdbapi.com"))
   (setq bib-tmdb-key
         (auth-source-pass-get "key" "chrome/themoviedb.org/stafforini"))
+  (setq bib-imdb-use-mullvad-p t)
 
   :general
   (ebib-index-mode-map

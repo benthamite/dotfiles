@@ -2076,7 +2076,6 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 :ID:       483A0D4F-B273-449C-BCB0-E8703AC45FC5
 :END:
 
-
 /[[https://github.com/joaotavora/breadcrumb/][breadcrumb]] displays project information in the header line./
 
 #+begin_src emacs-lisp
@@ -2090,6 +2089,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
   (breadcrumb-mode))
 #+end_src
+
 ** fancy-battery
 :PROPERTIES:
 :ID:       DDFE34BA-7C23-459E-B4E2-2957D2535700

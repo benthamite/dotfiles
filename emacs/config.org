@@ -348,6 +348,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#macrostep][macrostep]]
   - [[#clojure][clojure]]
   - [[#python][python]]
+  - [[#pyenv-mode][pyenv-mode]]
   - [[#emacs-ipython-notebook][emacs-ipython-notebook]]
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
@@ -6723,6 +6724,17 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
    "s-s" 'python-shell-send-string
    "s-r" 'python-shell-send-region
    "s-e" 'python-shell-send-statement))
+#+end_src
+
+** pyenv-mode
+:PROPERTIES:
+:ID:       1D91CD1E-F1E6-4D69-AA42-83C81DC09D57
+:END:
+
+#+begin_src emacs-lisp
+(use-package pyenv-mode
+  :after python
+  :demand t)
 #+end_src
 
 ** emacs-ipython-notebook

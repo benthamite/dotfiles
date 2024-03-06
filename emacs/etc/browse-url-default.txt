@@ -1,4 +1,5 @@
 accounts.google.com
+airbnb.co.uk
 airbnb.com
 airserbia.com
 airtable.com
@@ -42,6 +43,7 @@ gitguardian.com
 github.com
 gmail.com
 goodreads.com
+google.com
 grammarly.com
 hathitrust.org
 heinonline.org
@@ -68,6 +70,7 @@ mail.google.com
 mailerlite.com
 mailist-manage.eu
 maps.
+maps.google.com
 mediacore.app
 mercadolibre.com
 mercadopago.com

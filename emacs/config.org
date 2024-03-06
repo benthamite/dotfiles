@@ -4590,8 +4590,6 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 (use-feature isearch
   :config
   (setq search-default-mode #'char-fold-to-regexp)
-  (setq isearch-lax-whitespace t)
-  (setq isearch-regexp-lax-whitespace nil)
   (setq isearch-yank-on-move t)
   (setq isearch-lazy-count t)
   (setq lazy-count-prefix-format nil)

@@ -86,7 +86,7 @@ If IP is non-nil, use the local IP address."
   (interactive)
   (setq calendar-extras-personal-geolocation (calendar-extras-get-geolocation))
   (setq calendar-extras-location-name (plist-get calendar-extras-personal-geolocation :city))
-  (message "Variables set: %s" calendar-extras-personal-geolocation)))
+  (message "Variables set: %s" calendar-extras-personal-geolocation))
 
 (defun calendar-extras-time-last-day-of-last-month ()
   "Insert the last day of the most recent month."

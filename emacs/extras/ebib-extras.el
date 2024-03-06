@@ -555,7 +555,7 @@ Used by the `ebib-extras-generate-search-commands' macro.")
 		     query)))
 	       ebib-extras-search-engines)))
 
-;; (ebib-extras-generate-search-commands)
+(ebib-extras-generate-search-commands)
 
 (defun ebib-extras-search (search-engine query)
   "Search for QUERY with SEARCH-ENGINE."

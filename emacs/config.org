@@ -135,6 +135,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#doom-modeline-extras][doom-modeline-extras]]
   - [[#tab-bar][tab-bar]]
   - [[#tab-bar-extras][tab-bar-extras]]
+  - [[#breadcrumb][breadcrumb]]
   - [[#fancy-battery][fancy-battery]]
   - [[#nerd-icons][nerd-icons]]
   - [[#menu-bar][menu-bar]]
@@ -347,12 +348,16 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#macrostep][macrostep]]
   - [[#clojure][clojure]]
   - [[#python][python]]
+  - [[#pyenv-mode][pyenv-mode]]
   - [[#emacs-ipython-notebook][emacs-ipython-notebook]]
+  - [[#go][go]]
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
+  - [[#jsonrpc][jsonrpc]]
   - [[#csv-mode][csv-mode]]
   - [[#yaml][yaml]]
   - [[#js2-mode][js2-mode]]
+  - [[#shut-up][shut-up]]
   - [[#puni][puni]]
   - [[#project][project]]
   - [[#hideshow][hideshow]]
@@ -361,11 +366,10 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#eldoc][eldoc]]
 - [[#ai][AI]]
   - [[#copilot][copilot]]
+  - [[#copilot-extras][copilot-extras]]
   - [[#gptel][gptel]]
   - [[#gptel-extras][gptel-extras]]
-  - [[#org-ai][org-ai]]
   - [[#gpt-commit][gpt-commit]]
-  - [[#whisper][whisper]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
   - [[#org-extras][org-extras]]
@@ -491,7 +495,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#mullvad][mullvad]]
 - [[#multimedia][multimedia]]
   - [[#emms][EMMS]]
-  - [[#mpv][mpv]]
   - [[#empv][empv]]
   - [[#ytdl][ytdl]]
   - [[#read-aloud][read-aloud]]
@@ -505,7 +508,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#bbdb-extras][bbdb-extras]]
   - [[#bbdb-vcard][bbdb-vcard]]
   - [[#keycast][keycast]]
-  - [[#activity-watch][activity-watch]]
+  - [[#activity-watch-mode][activity-watch-mode]]
   - [[#custom][custom]]
   - [[#fatebook][fatebook]]
   - [[#tetris][tetris]]
@@ -641,7 +644,7 @@ NAME and ARGS as in `use-package'."
      :elpaca (,name
               :host github
               :repo "benthamite/dotfiles"
-              ;; :branch "dev"
+              :branch "dev"
               :files ,(list (file-name-concat
                              "emacs/extras"
                              (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
@@ -862,6 +865,8 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 #+begin_src emacs-lisp
 (use-package transient
   :after seq
+  :config
+  (setq transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
   :demand t)
 #+end_src
 
@@ -876,8 +881,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :elpaca (transient-showcase
            :host github
            :repo "positron-solutions/transient-showcase")
-  :after transient
-  :defer 10)
+  :after transient)
 #+end_src
 
 ** warnings
@@ -999,7 +1003,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       300DFB2C-878E-4F21-833C-327C9DFDC01B
 :END:
 
-/[[https://git.sr.ht/~protesilaos/dotfiles/tree/master/item/emacs/%2Eemacs.d/prot-lisp/prot-common.el][prot-common]] is a set of functions used by Protesilaos Stavrou's unreleased "packages"./
+/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-common.el][prot-common]] is a set of functions used by Protesilaos Stavrou's unreleased "packages"./
 
 Note Prot's clarification:
 
@@ -1025,7 +1029,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 :ID:       6C67743E-7250-4BC5-B496-2D969EF2D015
 :END:
 
-/[[https://git.sr.ht/~protesilaos/dotfiles/tree/master/item/emacs/%2Eemacs.d/prot-lisp/prot-simple.el][prot-simple]] is a set of common commands used by Protesilaos Stavrou's unreleased "packages"./
+/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-simple.el][prot-simple]] is a set of common commands used by Protesilaos Stavrou's unreleased "packages"./
 
 Note Prot's clarification:
 
@@ -1051,6 +1055,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
   :general
   ("M-s-=" 'prot-simple-insert-date
    "C-g" 'prot-simple-keyboard-quit-dwim
+   "M-q" 'prot-simple-keyboard-quit-dwim
    "A-C-H-j" 'prot-simple-mark-sexp))
 #+end_src
 
@@ -1446,7 +1451,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   (magit-mode-map
    "p" 'magit-pull
    "." 'magit-push)
-  (magit-status-mode-map
+  ((magit-status-mode-map magit-revision-mode-map)
    "A-C-s-r" 'magit-section-backward-sibling
    "A-C-s-f" 'magit-section-forward-sibling)
   ((magit-status-mode-map magit-hunk-section-mode-map magit-hunk-section-smerge-map)
@@ -1519,18 +1524,13 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
 (use-package forge
-  :after magit ghub emacsql auth-source-pass
-  :demand t
-  :init
-  (if (version<= emacs-version "29.0")
-      (setq forge-database-connector 'sqlite)
-    (setq forge-database-connector 'sqlite-builtin))
 
+:after magit ghub emacsql auth-source-pass
+  :demand t
   :config
   (setq forge-owned-accounts '(("benthamite")))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
   (setq forge-pull-notifications t)
-  (setq forge-notifications-github-kludge 'pending-again)
   (run-with-idle-timer 60 t #'forge-pull-notifications)
 
   (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
@@ -1540,19 +1540,16 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "n" 'forge-dispatch)
   (forge-post-mode-map
    "s-c" 'forge-post-submit)
-  (forge-topic-mode-map
-   "a" 'forge-topic-set-assignees
-   "b" 'forge-edit-topic-body
-   "d" 'forge-delete-comment
-   "l" 'forge-topic-set-labels
-   "s" 'forge-topic-state-menu
-   "i" 'forge-browse-issue
-   "I" (lambda! (let ((current-prefix-arg '(4))) (call-interactively 'forge-browse-issue)))
-   "x" 'forge-browse-issues
-   "t" 'forge-topic-set-title
-   "e" 'forge-edit-post
-   "p" 'forge-create-post
-   "r" 'forge-create-post)
+  ((forge-issue-mode-map forge-notifications-mode-map forge-topic-mode-map magit-status-mode-map)
+   "s-a" 'forge-topic-set-assignees
+   "s-d" 'forge-delete-comment
+   "s-l" 'forge-topic-set-labels
+   "s-i" 'forge-browse-issue
+   "s-I" 'forge-browse-issues
+   "s-t" 'forge-topic-set-title
+   "s-e" 'forge-edit-post
+   "s-p" 'forge-create-post
+   "s-r" 'forge-create-post)
   (magit-status-mode-map
    "s-x" 'forge-remove-topic-locally))
 #+end_src
@@ -1598,7 +1595,13 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :after forge orgit-forge
   :demand t
   :config
-  (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link))
+  (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link)
+
+  :general
+  ((forge-topic-mode-map forge-notifications-mode-map magit-status-mode-map)
+   "s-x" 'forge-extras-state-set-dwim)
+  (forge-notifications-mode-map
+   "x" 'forge-extras-browse-github-inbox))
 #+end_src
 
 ** git-auto-commit-mode
@@ -1893,7 +1896,8 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 
 #+begin_src emacs-lisp
 (use-package spacious-padding
-  :elpaca (spacious-padding :tag "0.3.0") ; using tagged version to avoid error on 2024-02-21
+  :elpaca (spacious-padding
+           :tag "0.3.0") ; using tagged version to avoid error on 2024-02-21
   :demand t
   :config
   (setq spacious-padding-widths '())
@@ -1965,24 +1969,30 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :after ghub async
   :demand t
   :config
-  (tlon-init-override-code
-   :doom-modeline
-   '((setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
-     (setq doom-modeline-buffer-encoding nil)
-     (setq doom-modeline-irc t)
-     (setq doom-modeline-irc-buffers t)
-     (setq doom-modeline-buffer-file-name-style 'auto)
-     (setq doom-modeline-enable-word-count t)
+  (setq doom-modeline-time nil) ; we display time (and date) in the tab bar
+  (setq doom-modeline-buffer-name t)
+  (setq doom-modeline-buffer-file-name-style 'file-name) ; we display the full path in the header line
+  (setq doom-modeline-irc t)
+  (setq doom-modeline-irc-buffers t)
+  (setq doom-modeline-total-line-number t)
+  (setq doom-modeline-position-column-line-format '(" %c %l"))
+  (setq doom-modeline-enable-word-count t)
+  (setq doom-modeline-indent-info t)
 
-     (doom-modeline-def-modeline 'main
-       '(bar workspace-name modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
-       '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
+  ;; we slightly tweak the `main' modeline to display the major mode icon to the
+  ;; left of point position indicators. this tweak doesn't change which elements
+  ;; are shown, which is controlled by the user options above
+  (doom-modeline-def-modeline 'main-reordered
+    '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
+    '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
 
-     (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-                      (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-                      (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-                      (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-       (remove-hook (car cons) (cdr cons))))))
+  (doom-modeline-set-modeline 'main-reordered t)
+
+  (dolist (cons  '((display-time-mode-hook . doom-modeline-override-time)
+                   (display-battery-mode-hook . doom-modeline-override-battery)
+                   (doom-modeline-mode-hook . doom-modeline-override-time)
+                   (doom-modeline-mode-hook . doom-modeline-override-battery)))
+    (remove-hook (car cons) (cdr cons))))
 #+end_src
 
 ** doom-modeline-extras
@@ -2028,13 +2038,6 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
   (tab-bar-mode))
 #+end_src
 
-*** TODO Diagnose proliferation of clocks
-:PROPERTIES:
-:ID:       58EB9BE2-8819-4CFB-A008-11A8B119F73A
-:END:
-
-I now realize this happens predictably when the doom modeline is enabled or disabled.
-
 ** tab-bar-extras
 :PROPERTIES:
 :ID:       97CCF169-9F3B-40A4-BB81-220DDE6DB1DB
@@ -2053,6 +2056,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   :config
   (setq tab-bar-extras-global-mode-string
         `(,tab-bar-extras-prefix-element
+          ,tab-bar-extras-notification-status-element
           ,tab-bar-extras-date-element
           ,tab-bar-extras-separator-element
           ,tab-bar-extras-chemacs-element
@@ -2067,10 +2071,25 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   (add-hook 'tlon-init-post-init-hook #'tab-bar-extras-reset))
 #+end_src
 
-*** TODO Develop functionality to snooze notifications
+** breadcrumb
 :PROPERTIES:
-:ID:       D0A5875F-575E-4FF3-B0CF-D73DE0185559
+:ID:       483A0D4F-B273-449C-BCB0-E8703AC45FC5
 :END:
+
+/[[https://github.com/joaotavora/breadcrumb/][breadcrumb]] displays project information in the header line./
+
+#+begin_src emacs-lisp
+(use-package breadcrumb
+  :demand t
+  :config
+  (setq breadcrumb-project-max-length 0.5)
+  (setq breadcrumb-project-crumb-separator "/")
+  (setq breadcrumb-imenu-max-length 1.0)
+  (setq breadcrumb-imenu-crumb-separator " > ")
+
+  (breadcrumb-mode))
+#+end_src
+
 ** fancy-battery
 :PROPERTIES:
 :ID:       DDFE34BA-7C23-459E-B4E2-2957D2535700
@@ -2086,7 +2105,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
   (add-hook 'fancy-battery-mode-hook
             (lambda ()
-              "Reset the tab to correctly show battery icon."
+              "Reset the tab shortly after startup to correctly show battery icon."
               (run-with-timer 10 nil #'tab-bar-extras-quick-reset)))
   (fancy-battery-mode))
 #+end_src
@@ -2213,7 +2232,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 
 /[[https://github.com/milkypostman/hl-sentence][hl-sentence]] highlights sentences rather than lines./
 
-I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specifically, ~org-mode~ and ~markdown-mode~) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the modes. See the above sections and the ~modus-themes-extras-set-faces~ function from ~modus-themes-extras~.
+I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specifically, ~org-mode~ and ~markdown-mode~) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the other modes. See the above sections and the ~modus-themes-extras-set-faces~ function from ~modus-themes-extras~.
 
 #+begin_src emacs-lisp
 (use-package hl-sentence
@@ -2229,6 +2248,9 @@ I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specific
 :PROPERTIES:
 :ID:       66598B06-4BB1-4E7C-AE36-7CE81E4CBF5A
 :END:
+
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jit-lock.el][jit-lock]] provides just-in-time fontification./
 
 #+begin_src emacs-lisp :results silent
 (use-feature jit-lock
@@ -2704,7 +2726,6 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
    "H-m" 'set-mark-command
    "H-Z" 'undo-redo
    "M-o" 'downcase-dwim
-   "M-q" 'save-buffers-kill-terminal
    "M-u" 'capitalize-dwim
    "A-M-u" 'upcase-dwim
    "M-w" 'count-words-region
@@ -2763,6 +2784,8 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
   :demand t
   :config
   (setq undo-limit (* 100 1000 1000))
+  ;; (setq undo-strong-limit undo-limit)
+  ;; (setq undo-outer-limit undo-limit)
 
   :general
   (vundo-mode-map
@@ -4314,7 +4337,7 @@ Note to self: if the package doesn't work after deploying a new profile, even af
   :demand t
   :general
   ((org-mode-map org-agenda-mode-map)
-   "s-g" 'org-gcal-extras-dispatch))
+   "s-g" 'org-gcal-extras-menu))
 #+end_src
 
 ** calfw
@@ -4567,8 +4590,6 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 (use-feature isearch
   :config
   (setq search-default-mode #'char-fold-to-regexp)
-  (setq isearch-lax-whitespace t)
-  (setq isearch-regexp-lax-whitespace nil)
   (setq isearch-yank-on-move t)
   (setq isearch-lazy-count t)
   (setq lazy-count-prefix-format nil)
@@ -4668,6 +4689,9 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
            :host sourcehut
            :repo "protesilaos/substitute")
   :demand t
+  :config
+  (add-hook 'substitute-post-replace-functions #'substitute-report-operation)
+
   :general
   ("A-H-b" 'substitute-target-in-buffer)
   (prog-mode-map
@@ -4738,6 +4762,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 /[[https://github.com/mhayashi1120/Emacs-wgrep][wgrep]] lets you create a writable grep buffer and apply the changes to files./
 
+
 #+begin_src emacs-lisp :results silent
 (use-package wgrep
   :demand t
@@ -4749,6 +4774,13 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   (wgrep-mode-map
    "s-c" 'wgrep-finish-edit))
 #+end_src
+
+*** TODO Debug why changes are sometimes not applied
+:PROPERTIES:
+:ID:       861C92F2-F0CF-4407-925C-A7ECBBAE0BEC
+:END:
+
+Some discussion [[https://github.com/mhayashi1120/Emacs-wgrep/issues/36][here]]. Maybe start by trying ~M-x wgrep-save-all-buffers~  next time this happens?
 
 ** elgrep
 :PROPERTIES:
@@ -4829,8 +4861,8 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
   (vertico-map
    "<C-i>" 'vertico-exit
    "M-f" 'vertico-quick-exit
-   "M-k" 'vertico-previous-group
-   "M-l" 'vertico-next-group
+   "C-k" 'vertico-previous-group
+   "C-l" 'vertico-next-group
    "C-H-M-w" 'vertico-directory-up))
 #+end_src
 
@@ -4899,7 +4931,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
    "A-H-i" 'consult-info
    "H-R" 'consult-history
    "H-V" 'consult-yank-pop)
-  ((markdown-mode-map gfm-mode-map outline-mode-map)
+  ((help-mode-map helpful-mode-map markdown-mode-map gfm-mode-map outline-mode-map)
    "s-j" 'consult-outline))
 #+end_src
 
@@ -4976,6 +5008,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :config
   (require 'consult-gh-embark)
   (require 'consult-gh-forge)
+  (require 'consult-gh-transient)
   (setq consult-gh-default-clone-directory "~/source")
   (setq consult-gh-repo-maxnum 30)
   (setq consult-gh-issues-maxnum 100)
@@ -4996,28 +5029,8 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
                  consult-gh--known-repos-list))
     (push var savehist-additional-variables))
 
-  (transient-define-prefix consult-gh-dispatch ()
-    "Dispatch a `consult-gh' command."
-    [["list"
-      ("l r" "repo" consult-gh-repo-list)
-      ("l i" "issue" consult-gh-issue-list)
-      ("l p" "pull request" consult-gh-pr-list)]
-     ["search"
-      ("s r" "repos" consult-gh-search-repos)
-      ("s i" "issues" consult-gh-search-issues)
-      ("s p" "pull requests" consult-gh-search-prs)
-      ("s c" "code" consult-gh-search-code)]
-     ["clone/fork repo"
-      ("c" "clone" consult-gh-repo-clone)
-      ("f" "fork" consult-gh-repo-fork)]
-     ["browse"
-      ("b" "file" consult-gh-find-file)
-      ""
-      "default"
-      ("d" "repos" consult-gh-default-repos)]])
-
   :general
-  ("H-G" 'consult-gh-dispatch))
+  ("H-G" 'consult-gh))
 #+end_src
 
 ** consult-mu
@@ -5025,18 +5038,24 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 :ID:       834A9797-AD26-44B5-BE4E-1CE52184E265
 :END:
 
-/[[https://github.com/armindarvish/consult-mu][consult-mu]] provides a dynamiccaly updated search interface to mu4e./
+/[[https://github.com/armindarvish/consult-mu][consult-mu]] provides a dynamically updated search interface to mu4e./
 
 #+begin_src emacs-lisp
 (use-package consult-mu
   :elpaca (consult-mu :type git
                       :host github
                       :repo "armindarvish/consult-mu"
-                      :branch "develop")
+                      :branch "develop"
+                      :files (:defaults "extras/*")
+                      :includes (consult-mu-compose
+                                 consult-mu-contacts-embark
+                                 consult-mu-contacts))
   :after consult mu4e
   :demand t
   :general
-  ("A-M-m" 'consult-mu))
+  ("A-M-m" 'consult-mu)
+  ((mu4e-main-mode-map mu4e-headers-mode-map mu4e-view-mode-map)
+   "s" 'consult-mu))
 #+end_src
 
 ** consult-yasnippet
@@ -5201,12 +5220,12 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 #+begin_src emacs-lisp :results silent
 (use-package corfu
   :elpaca (corfu :files (:defaults "extensions/*")
-		 :includes (corfu-info
-			    corfu-echo
-			    corfu-history
-			    ;; corfu-indexed
-			    corfu-popupinfo
-			    corfu-quick))
+                 :includes (corfu-info
+                            corfu-echo
+                            corfu-history
+                            ;; corfu-indexed
+                            corfu-popupinfo
+                            corfu-quick))
   :demand t
   :config
   (setq corfu-auto t)                 ;; Enable auto completion
@@ -5385,7 +5404,8 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
    "/" 'Info-next
    "," 'Info-up
    "j" 'Info-backward-node
-   ";" 'Info-forward-node))
+   ";" 'Info-forward-node
+   "s-j" 'Info-menu))
 #+end_src
 
 ** man
@@ -5646,7 +5666,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
     (add-hook hook #'jinx-mode))
 
   :general
-  ("M-p" (lambda! (jinx-correct 'all))
+  ("M-p" 'jinx-correct
    "A-M-p" 'jinx-extras-toggle-languages))
 #+end_src
 
@@ -5819,10 +5839,6 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 :END:
 
 /[[https://github.com/emacs-grammarly/lsp-grammarly][lsp-grammarly]] provides ~lsp-mode~ support for Grammarly./
-
-[2022-10-06 Thu 23:35] At the moment, the premium version isn't working. The package maintainers are migrating to to a new server, which may resolve the issues I was having authenticating my account. You can check whether the premium account is being used by evaluating ~(grammarly-premium-p)~.
-
-[2024-02-03 Sat 12:33] It’s working again, so re-enabling.
 
 #+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :spelling)
 (use-package lsp-grammarly
@@ -6038,10 +6054,6 @@ To reinstall:
 - Edit the ~clientId~ and ~clientSecret~ in the file ~handlers_drive.go~ with the values stored in ~pass~ (search for ~gdrive~).
 - Within the locally cloned repo, run ~go install~.
 
-*** TODO Develop package
-:PROPERTIES:
-:ID:       990D5C3F-0725-4BDB-A931-86762BCE7D69
-:END:
 *** TODO [#5] Write command to create new Google Doc in chosen folder
 :PROPERTIES:
 :Effort:   0:30
@@ -6224,7 +6236,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :elpaca (tlon-babel
            :host github
            :repo "tlon-team/tlon-babel"
-           ;; :branch "dev"
+           :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
@@ -6566,6 +6578,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
    "A-H-C-i" 'mark-defun
    "s-e" 'xref-find-definitions
    "s-f" 'consult-flycheck
+   "M-q" nil
    "s-q" 'prog-fill-reindent-defun)
   ((emacs-lisp-mode-map shell-mode-map)
    "s-c" 'exit-recursive-edit))
@@ -6578,13 +6591,13 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 
 #+begin_src emacs-lisp :results silent
 (use-feature elisp-mode
+  :demand t
   :after simple-extras
   :general
   ((emacs-lisp-mode-map lisp-interaction-mode-map)
    "s-b" 'eval-buffer
    "s-d" 'eval-defun
-   "s-i" (lambda! (eval-defun t)) ; instrument defun
-   ))
+   "s-i" (lambda! (eval-defun t)))) ; instrument defun
 #+end_src
 
 *** TODO [#6] Learn to use all relevant sexp commands
@@ -6711,6 +6724,17 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
    "s-e" 'python-shell-send-statement))
 #+end_src
 
+** pyenv-mode
+:PROPERTIES:
+:ID:       1D91CD1E-F1E6-4D69-AA42-83C81DC09D57
+:END:
+
+#+begin_src emacs-lisp
+(use-package pyenv-mode
+  :after python
+  :demand t)
+#+end_src
+
 ** emacs-ipython-notebook
 :PROPERTIES:
 :ID:       3F0CEFB0-2983-4659-AB1F-6936AD8BF0FC
@@ -6722,6 +6746,17 @@ This needs to be configured.
 
 #+begin_src emacs-lisp
 (use-package ein)
+#+end_src
+
+** go
+:PROPERTIES:
+:ID:       248AB3F6-2BA7-4DD0-8DFE-FFA79762BC73
+:END:
+
+/[[https://github.com/dominikh/go-mode.el][go-mode]] provides support for the Go programming language./
+
+#+begin_src emacs-lisp
+(use-package go-mode)
 #+end_src
 
 ** applescript-mode
@@ -6743,6 +6778,16 @@ This needs to be configured.
 #+begin_src emacs-lisp
 (use-package json-mode
   :defer 10)
+#+end_src
+
+** jsonrpc
+:PROPERTIES:
+:ID:       0130C01A-AE7F-4A89-96C9-015813F42075
+:END:
+
+#+begin_src emacs-lisp
+(use-feature jsonrpc
+  :demand)
 #+end_src
 
 ** csv-mode
@@ -6780,6 +6825,19 @@ This needs to be configured.
 
 #+begin_src emacs-lisp
 (use-package js2-mode
+  :demand t)
+#+end_src
+
+** shut-up
+:PROPERTIES:
+:ID:       54AE6A1C-1A30-4C24-B5BA-7CE39F0B10D9
+:END:
+
+
+/[[https://github.com/cask/shut-up/][shut-up]] provides a macro to silence function calls./
+
+#+begin_src emacs-lisp
+(use-package shut-up
   :demand t)
 #+end_src
 
@@ -6925,24 +6983,38 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :after jsonrpc
   :demand t
   :config
-  (setq copilot-node-executable "/opt/homebrew/opt/node/bin/node")
-  (setq copilot-log-max 1000)
   (setq copilot-max-char 1000000)
 
-  (add-hook 'prog-mode-hook (lambda ()
-                              (unless (derived-mode-p 'dsssl-mode)
-                                (copilot-mode))))
-  (add-hook 'copilot-mode-hook (lambda ()
-                                 (setq-local copilot--indent-warning-printed-p t)))
+  (setq copilot-indent-offset-warning-disable t)
+                                 
+  (unless (copilot-installed-version)
+    (copilot-install-server))
 
   :general
   (copilot-completion-map
-   "s-C-g" 'copilot-clear-overlay
+   "C-s-g" 'copilot-clear-overlay
    "<tab>" 'copilot-accept-completion-by-line
    "M-<tab>" 'copilot-accept-completion
    "M-k" 'copilot-previous-completion
    "M-l" 'copilot-next-completion
    "M-;" 'copilot-accept-completion-by-word))
+#+end_src
+
+** copilot-extras
+:PROPERTIES:
+:ID:       AB88D95E-3D6F-4B70-850F-F1B7E13AF1AD
+:END:
+
+/[[file:extras/copilot-extras.el][copilot-extras]] collects my extensions for ~copilot~./
+
+#+begin_src emacs-lisp
+(use-personal-package copilot-extras
+  :after copilot
+  :demand t
+  :config
+  (setq copilot-extras-excluded-modes '(dsssl-mode))
+
+  (add-hook 'prog-mode-hook #'copilot-extras-enable-conditionally))
 #+end_src
 
 ** gptel
@@ -6990,30 +7062,6 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    "s-m" 'gptel-extras-model-config))
 #+end_src
 
-** org-ai
-:PROPERTIES:
-:ID:       DE0368E4-FFE7-42D8-8557-2D5DD4DA5BF5
-:END:
-
-/[[https://github.com/rksm/org-ai][org-ai]] turns Emacs into your personal AI assistant using ChatGPT, DALL-E, and Whisper./
-
-#+begin_src emacs-lisp
-(use-package org-ai
-  :elpaca  (org-ai :type git :host github :repo "rksm/org-ai"
-                   :local-repo "org-ai"
-                   :files ("*.el" "README.md" "snippets"))
-  :after org yasnippet
-  :commands org-ai-mode
-  :config
-  (setq org-ai-openai-api-token (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
-  (setq org-ai-default-chat-model "gpt-4")
-  (setq org-ai-default-chat-system-prompt "You are a helpful and competent assistant. Please omit any disclaimers")
-  (setq org-ai-talk-say-words-per-minute 210)
-  (setq org-ai-image-directory paths-dir-org-images)
-  (org-ai-install-yasnippets)
-  (require 'org-ai-talk))
-#+end_src
-
 ** gpt-commit
 :PROPERTIES:
 :ID:       735CC302-C86D-4886-A78B-8EF89171086C
@@ -7027,24 +7075,6 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :config
   (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
   (setq gpt-commit-model-name "gpt-4"))
-#+end_src
-
-** whisper
-:PROPERTIES:
-:ID:       19FF2502-D4A0-41CC-8F72-E1CF1D960304
-:END:
-
-/[[https://github.com/natrys/whisper.el][whisper]] is a speech-to-Text interface for Emacs using OpenAI's whisper model and whisper.cpp as inference engine./
-
-#+begin_src emacs-lisp
-(use-package whisper
-  :elpaca (whisper.el
-           :host github
-           :repo "natrys/whisper.el"
-           :protocol ssh)
-  :config
-  (setq whisper-install-directory no-littering-var-directory)
-  (setq whisper--ffmpeg-input-device ":0"))
 #+end_src
 
 * org-mode
@@ -7809,8 +7839,6 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
   (setq org-clock-ask-before-exiting nil)
   (setq org-clock-history-length 30)
   (org-clock-persistence-insinuate)
-
-  ;; (add-hook 'org-clock-in-prepare-hook #'tab-bar-extras-quick-reset)
 
   :general
   ("A-H-j" 'org-clock-goto
@@ -8618,10 +8646,14 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   :after org
   :demand t
   :config
-  ;; the default value works but will set the font to a particular
-  ;; size, so when pasting to e.g. Google Docs it won't inherit the
-  ;; font size of the rest of the document. this new value fixes this.
-  (setq ox-clip-osx-cmd "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
+  (defun ox-clip-formatted-copy-advice (r1 r2)
+    (interactive "r")
+    (let* ((collection '(("HTML" . "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
+			 ("Markdown" . "pandoc -f html -t markdown - | grep -v \"^:::\" | sed 's/{#.*}//g' | pbcopy")))
+	   (choice (completing-read "Destination: " collection)))
+      (setq ox-clip-osx-cmd (alist-get choice collection nil nil #'string=))))
+
+  (advice-add 'ox-clip-formatted-copy :before #'ox-clip-formatted-copy-advice)
 
   :general
   ((org-mode-map)
@@ -8693,6 +8725,8 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
   (setq org-pomodoro-long-break-sound org-pomodoro-finished-sound)
   (setq org-pomodoro-short-break-sound org-pomodoro-finished-sound)
   (add-hook 'org-pomodoro-started-hook #'org-extras-pomodoro-format-timer)
+  (add-hook 'org-pomodoro-started-hook #'tab-bar-extras-disable-all-notifications)
+  (add-hook 'org-pomodoro-finished-hook #'tab-bar-extras-enable-all-notifications)
 
   :general
   ("H-I" 'org-pomodoro
@@ -9306,6 +9340,10 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 (use-personal-package bibtex-extras
   :defer 1
   :config
+  ;; sorter
+  (setq bibtex-maintain-sorted-entries
+      '(bibtex-extras-entry-index bibtex-extras-lessp))
+      
   ;; Replace 'online' entry type
   (bibtex-extras-replace-element-by-name
    bibtex-biblatex-entry-alist
@@ -9320,7 +9358,10 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
                ("eprinttype" nil nil 5) ("archiveprefix" nil nil -5) ("urldate"))))
   :general
   (bibtex-mode-map
+  "s-a" 'bibtex-extras-set-field
+  "s-h" 'bibtex-extras-url-to-html-attach
    "s-i" 'bibtex-extras-open-in-ebib
+   "s-p" 'bibtex-extras-url-to-pdf-attach
    "s-t" 'bibtex-extras-move-entry-to-tlon))
 #+end_src
 
@@ -9502,7 +9543,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
               citar-extras-indicator-links-icons
               citar-extras-indicator-notes-icons
               citar-extras-indicator-cited-icons))
-              
+
   :general
   ((citar-map citar-citation-map)
    "d" 'ebib-extras-download-dwim
@@ -9709,7 +9750,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
                              ("Title" 50 t)))
   (setq ebib-extra-fields
         '((biblatex "abstract" "keywords" "origdate" "langid" "translation" "narrator" "file" "timestamp" "rating" "crossref" "=key=")
-          (BibTeX "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
+          (bibtex "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
 
   (setq ebib-hidden-fields ; unhide some fields
         (cl-remove-if
@@ -9718,7 +9759,6 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
          ebib-hidden-fields))
 
   (add-to-list 'ebib-hidden-fields "year") ; hide others
-  (add-hook 'ebib-index-mode-hook #'doom-modeline-mode)
   (add-hook 'ebib-entry-mode-hook #'visual-line-mode)
   (add-hook 'ebib-add-entry #'ebib-extras-create-list-of-existing-authors)
 
@@ -9844,7 +9884,7 @@ The macro below generates the commands correctly. But attempting to define key b
    "s" 'ebib-extras-sort-toggle
    "s-t" 'ebib-extras-move-entry-to-tlon)
   ((bibtex-mode-map ebib-entry-mode-map)
-   "s-p" 'ebib-extras-download-pdf)
+    "s-f" 'ebib-extras-open-file-dwim)
   (bibtex-mode-map
    "s-/" 'ebib-extras-attach-most-recent-file))
 #+end_src
@@ -9869,10 +9909,11 @@ The macro below generates the commands correctly. But attempting to define key b
         (auth-source-pass-get 'secret "chrome/omdbapi.com"))
   (setq bib-tmdb-key
         (auth-source-pass-get "key" "chrome/themoviedb.org/stafforini"))
+  (setq bib-imdb-use-mullvad-p t)
 
   :general
   (ebib-index-mode-map
-   "t" 'bib-add-entry))
+   "t" 'bib-zotra-add-entry-from-title))
 #+end_src
 
 ** biblio
@@ -9966,7 +10007,8 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 (use-package internet-archive
   :elpaca (internet-archive
            :host github
-           :repo "benthamite/internet-archive")
+           :repo "benthamite/internet-archive"
+           :depth nil)
   :defer 10
   :config
   (setq internet-archive-ade-close-when-done t)
@@ -10213,6 +10255,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   :config
   (require 'mu4e-contrib)
   ;; (mu4e-debug t) ; uncomment when debugging
+  (setq mu4e-index-update-error-warning nil) ; set to `t' when debugging
   (setq mu4e-split-view 'single-window)
   (setq mu4e-headers-show-target nil)
   (setq mu4e-get-mail-command "mbsync -a")
@@ -10269,7 +10312,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (mu4e-main-mode-map
    "h" 'mu4e-display-manual
    "j" 'mu4e-search-maildir
-   "s" 'mu4e-search
    "u" 'mu4e-update-mail-and-index)
   (mu4e-headers-mode-map
    "*" 'mu4e-headers-mark-all
@@ -10806,7 +10848,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :END:
 
 
-/[[file:extras/browse-url-extras.el][browse-url-extras]] collects my extensions for ~browse-url~.
+/[[file:extras/browse-url-extras.el][browse-url-extras]] collects my extensions for ~browse-url~./
 
 #+begin_src emacs-lisp :results silent
 (use-personal-package browse-url-extras
@@ -10964,6 +11006,9 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 :ID:       69B35912-79CB-4611-8E43-7C8A5BC82B55
 :END:
 
+
+/[[file:extras/eww-extras.el][eww-extras]] collects my extensions for ~eww~./
+
 #+begin_src emacs-lisp
 (use-personal-package eww-extras
   :after eww
@@ -10975,7 +11020,7 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
    "g U" 'eww-extras-go-to-root-url-hierarchy
    ;; "p" 'eww-extras-open-with-recent-kill-ring
    "p" 'eww-extras-url-to-pdf)
-  ((bibtex-mode-map eww-mode-map ebib-entry-mode-map ebib-index-mode-map)
+  ((eww-mode-map ebib-entry-mode-map ebib-index-mode-map)
    "s-h" 'eww-extras-url-to-html))
 #+end_src
 
@@ -10984,7 +11029,7 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 :ID:       C83AED09-FA8C-46CE-91E0-13A7D49D7B8A
 :END:
 
-/[[https://git.sr.ht/~protesilaos/dotfiles/tree/master/item/emacs/%2Eemacs.d/prot-lisp/prot-eww.el][prot-eww]] is a set of ~eww~ extensions from Protesilaos Stavrou's personal configuration./
+/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-eww.el][prot-eww]] is a set of ~eww~ extensions from Protesilaos Stavrou's personal configuration./
 
 Note Prot's clarification:
 
@@ -11070,14 +11115,15 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
 #+begin_src emacs-lisp :results silent
 (use-package elfeed
-  :defer 30
+  :init
+  (run-with-idle-timer (* 10 60) t #'elfeed-update)
+
   :config
   (setq-default elfeed-search-filter "+unread -wiki")
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
   (add-hook 'elfeed-show-mode-hook #'visual-line-mode)
 
-  (run-with-idle-timer (* 30 60) t #'elfeed-update)
 
   :general
   (eww-mode-map
@@ -11095,8 +11141,8 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
    "<tab>" (lambda! (elfeed-show-next-link) (recenter))
    "b" nil
    "q" 'elfeed
-   "j" 'elfeed-show-next
-   ";W" 'elfeed-show-prev
+   "j" 'elfeed-show-prev
+   ";" 'elfeed-show-next
    "x" 'elfeed-show-visit))
 #+end_src
 
@@ -11662,6 +11708,8 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
            :repo "benthamite/mullvad")
   :demand t
   :config
+  (setq mullvad-durations '(1 5 10 30 60 120))
+
   (setq mullvad-cities-and-servers
         '(("London" . "gb-lon-wg-001")
           ("Madrid" . "es-mad-wg-101")
@@ -11676,6 +11724,7 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
           ("Criterion Channel" . "New York")
           ("Gemini" . "New York")
           ("HathiTrust" . "San José")
+          ("IMDb" . "New York")
           ("Library Genesis" . "Malmö")
           ("Pirate Bay" . "Malmö")
           ("UC Berkeley" . "San José")
@@ -11739,21 +11788,13 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 
 [[https://sqrtminusone.xyz/posts/2021-09-07-emms/][My EMMS and elfeed setup]]
 
-** mpv
-:PROPERTIES:
-:ID:       8D75E528-AA79-4512-B4A9-6EB7A56F9026
-:END:
-
-/[[https://github.com/kljohann/mpv.el][mpv]] provides various functions to control [[https://en.wikipedia.org/wiki/Mpv_(media_player)][mpv]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package mpv)
-#+end_src
-
 ** empv
 :PROPERTIES:
 :ID:       A26317BD-B76E-4A0A-9DA1-ED4CC9F4416F
 :END:
+
+
+/[[https://github.com/isamert/empv.el][empv]] is a media player based on mpv./
 
 #+begin_src emacs-lisp
 (use-package empv
@@ -11928,9 +11969,10 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (midnight-delay-set 'midnight-delay "4:00am")
 
   ;; note that the hooks appear in reverse order of execution
-  (dolist (function #'(tlon-babel-forge-update-all-repos
+  (dolist (function #'(org-gcal-sync
+                       org-extras-agenda-switch-to-agenda-current-day
+                       tlon-babel-forge-update-all-repos
                        el-patch-validate-all
-                       org-gcal-sync
                        org-extras-id-update-id-locations
                        org-roam-db-sync
                        pass-extras-git-sync
@@ -12038,18 +12080,17 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
     (add-to-list 'global-mode-string '("" keycast-mode-line))))
 #+end_src
 
-** activity-watch
+** activity-watch-mode
 :PROPERTIES:
 :ID:       809139BE-A8AF-40A7-BF1A-899839313729
 :END:
 
 
+
+/[[https://github.com/pauldub/activity-watch-mode][activity-watch-mode]] is an Emacs watcher for [[https://activitywatch.net/][ActivityWatch]]./
+
 #+begin_src emacs-lisp
 (use-package activity-watch-mode
-  :elpaca (activity-watch-mode
-           :host github
-           :repo "meliache/activity-watch-mode"
-           :branch "fix/invalid-coding-system-on-recover")
   :demand t
   :config
   (global-activity-watch-mode))
@@ -12077,7 +12118,8 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 #+begin_src emacs-lisp
 (use-package fatebook
-  :elpaca (fatebook :repo "sonofhypnos/fatebook.el" :host github
+  :elpaca (fatebook :repo "sonofhypnos/fatebook.el"
+                    :host github
                     :files ("fatebook.el"))
   :commands fatebook-create-question
   :config

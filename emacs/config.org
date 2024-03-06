@@ -8646,10 +8646,14 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   :after org
   :demand t
   :config
-  ;; the default value works but will set the font to a particular
-  ;; size, so when pasting to e.g. Google Docs it won't inherit the
-  ;; font size of the rest of the document. this new value fixes this.
-  (setq ox-clip-osx-cmd "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
+  (defun ox-clip-formatted-copy-advice (r1 r2)
+    (interactive "r")
+    (let* ((collection '(("HTML" . "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
+			 ("Markdown" . "pandoc -f html -t markdown - | grep -v \"^:::\" | sed 's/{#.*}//g' | pbcopy")))
+	   (choice (completing-read "Destination: " collection)))
+      (setq ox-clip-osx-cmd (alist-get choice collection nil nil #'string=))))
+
+  (advice-add 'ox-clip-formatted-copy :before #'ox-clip-formatted-copy-advice)
 
   :general
   ((org-mode-map)

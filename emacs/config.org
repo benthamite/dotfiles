@@ -9864,12 +9864,10 @@ The macro below generates the commands correctly. But attempting to define key b
    "H" 'ebib-extras-open-html-file-externally
    "i" 'ebib-extras-download-by-identifier
    "I" 'ebib-extras-set-id
-   "s-k" 'ebib-extras-fetch-keywords
    "o" 'ebib-extras-search-connected-papers
    "p" 'ebib-extras-open-pdf-file
    "P" 'ebib-extras-open-pdf-file-externally
    "R" 'ebib-extras-set-rating
-   "s-r" 'ebib-extras-rename-files
    "s" 'ebib-extras-search-dwim
    "T" 'ebib-extras-no-translation-found
    "V" 'ebib-extras-search-internet-archive
@@ -9878,13 +9876,17 @@ The macro below generates the commands correctly. But attempting to define key b
    "y" 'ebib-extras-search-hathitrust
    "z" 'ebib-extras-search-google-scholar
    "1" (lambda! (ebib-view-file-in-field 1))
-   "2" (lambda! (ebib-view-file-in-field 2)))
+   "2" (lambda! (ebib-view-file-in-field 2))
+   "s-k" 'ebib-extras-fetch-keywords
+   "s-h" 'ebib-extras-url-to-html-attach
+   "s-p" 'ebib-extras-url-to-pdf-attach
+   "s-r" 'ebib-extras-rename-files)
   (ebib-index-mode-map
    "A-C-s-<tab>" 'ebib-extras-end-of-index-buffer
    "s" 'ebib-extras-sort-toggle
    "s-t" 'ebib-extras-move-entry-to-tlon)
   ((bibtex-mode-map ebib-entry-mode-map)
-    "s-f" 'ebib-extras-open-file-dwim)
+   "s-f" 'ebib-extras-open-file-dwim)
   (bibtex-mode-map
    "s-/" 'ebib-extras-attach-most-recent-file))
 #+end_src

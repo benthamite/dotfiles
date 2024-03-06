@@ -88,8 +88,10 @@ associated with the PDF."
     (message "Getting %s file..." type)
     (set-process-sentinel process
 			  (lambda (proc event)
-			    (when (string= event "finished\n")
-			      (funcall callback output-file bibtex-file))))))
+			    (if (string= event "finished\n")
+				(when callback
+				  (funcall callback output-file bibtex-file))
+			      (user-error "Could not get file"))))))
 
 (defun eww-extras-url-to-html (&optional url)
   "Generate HTML of URL."

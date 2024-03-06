@@ -751,7 +751,7 @@ The list of article download functions is specified by
      (beep))))
 
 (defun ebib-extras-download-pdf ()
-  "Download a PDF of the work at point based on its DOI, URL or ISBN."
+  "Download and attach a PDF of the work at point based on its DOI, URL or ISBN."
   (interactive)
   (let ((get-field (pcase major-mode
 		     ('ebib-entry-mode #'ebib-extras-get-field)

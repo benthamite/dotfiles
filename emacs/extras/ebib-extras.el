@@ -313,6 +313,8 @@ If EXTENSION is non-nil, set its extension to its value."
 	(t
 	 (user-error "Invalid file extension"))))
 
+;;;;; attach downloads
+
 (defun ebib-extras-attach-file (&optional file most-recent open)
   "Attach FILE to the current entry.
 If FILE is nil, prompt the user for one. If MOST-RECENT is non-nil, attach the
@@ -368,6 +370,33 @@ open FILE."
   "Attach the most recent file in `paths-dir-downloads' to the current entry."
   (interactive)
   (ebib-extras-attach-file nil 'most-recent))
+
+(defun ebib-extras-url-to-file-attach (type)
+  "Generate PDF of file of TYPE."
+  (when (ebib-extras-get-field "url")
+    (eww-extras-url-to-file type nil #'ebib-extras-attach-file-to-entry)))
+
+(defun ebib-extras-url-to-pdf-attach ()
+  "Generate PDF of URL."
+  (interactive)
+  (ebib-extras-url-to-file-attach "pdf"))
+
+(defun ebib-extras-url-to-html-attach ()
+  "Generate HTML of URL."
+  (interactive)
+  (ebib-extras-url-to-file-attach "html"))
+
+(defun ebib-extras-attach-file-to-entry (&optional file _)
+  "Attach FILE to the relevant entry.
+The relevant entry is the entry whose key equals the name of FILE sans its
+extension."
+  (let ((key (file-name-nondirectory (file-name-sans-extension file))))
+    (save-excursion
+      (ebib-extras-open-key key)
+      (ebib-extras-attach-file file)
+      (message "Attached `%s' to %s" file key))))
+
+;;;;; ?
 
 (defvar ebib-extras-iso-639-2
   '(("english" . "eng")

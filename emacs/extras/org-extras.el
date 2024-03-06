@@ -297,13 +297,13 @@ link, call `org-open-at-point' and set
 	    (base-cmd (concat "cd "
 			      folder
 			      "; git log --since=midnight -p "
-			      file
-			      "| grep TODO"))
-	    (changed (shell-command-to-string base-cmd))
-	    (added (org-extras-count-lines-with-expression changed "^\\+"))
-	    (removed (org-extras-count-lines-with-expression changed "^\\-")))
-       (cons (+ (car acc) added)
-	     (- (cdr acc) removed))))
+	    file
+	    "| grep TODO"))
+      (changed (shell-command-to-string base-cmd))
+      (added (org-extras-count-lines-with-expression changed "^\\+"))
+      (removed (org-extras-count-lines-with-expression changed "^\\-")))
+    (cons (+ (car acc) added)
+	  (- (cdr acc) removed))))
    org-agenda-files
    '(0 . 0)))
 

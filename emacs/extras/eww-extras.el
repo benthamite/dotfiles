@@ -93,15 +93,15 @@ associated with the PDF."
 				  (funcall callback output-file bibtex-file))
 			      (user-error "Could not get file"))))))
 
-(defun eww-extras-url-to-html (&optional url)
+(defun eww-extras-url-to-html (&optional url callback)
   "Generate HTML of URL."
   (interactive)
-  (eww-extras-url-to-file "html" url))
+  (eww-extras-url-to-file "html" url callback))
 
-(defun eww-extras-url-to-pdf (&optional url)
+(defun eww-extras-url-to-pdf (&optional url callback)
   "Generate PDF of URL."
   (interactive)
-  (eww-extras-url-to-file "pdf" url))
+  (eww-extras-url-to-file "pdf" url callback))
 
 (defun eww-extras-readable-autoview ()
   "Display the \"readable\" parts of the current web page by default.

@@ -1540,7 +1540,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "n" 'forge-dispatch)
   (forge-post-mode-map
    "s-c" 'forge-post-submit)
-  ((forge-topic-mode-map forge-notifications-mode-map magit-status-mode-map)
+  ((forge-issue-mode-map forge-notifications-mode-map forge-topic-mode-map magit-status-mode-map)
    "s-a" 'forge-topic-set-assignees
    "s-d" 'forge-delete-comment
    "s-l" 'forge-topic-set-labels

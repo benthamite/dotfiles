@@ -6988,6 +6988,8 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :config
   (setq copilot-max-char 1000000)
 
+  (setq copilot-indent-offset-warning-disable t)
+                                 
   (unless (copilot-installed-version)
     (copilot-install-server))
 

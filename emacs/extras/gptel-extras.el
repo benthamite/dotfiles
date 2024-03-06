@@ -36,32 +36,37 @@
 
 (defgroup gptel-extras ()
   "Extensions for `gptel'."
+  :group 'gptel)
+
+(defcustom gptel-extras-gemini-mullvad-disconnect-after 1
+  "The number of minutes to disconnect `mullvad' after starting the Gemini session."
+  :type 'integer
   :group 'gptel-extras)
 
 ;;;; Variables
 
+(defvar tlon-core-email-shared)
 (defvar gptel-extras-gemini-pro-backend-plist
-  `(:key ,(auth-source-pass-get 'secret (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared))
+  `(:key ,(auth-source-pass-get 'secret
+				(concat "tlon/core/makersuite.google.com/" tlon-core-email-shared))
 	 :stream t)
   "Parameters for creating a Gemini Pro backend.")
 
 (defvar gptel-extras-gemini-pro-backend
   (apply #'gptel-make-gemini "Gemini" gptel-extras-gemini-pro-backend-plist)
-  "Backend for `gptel' when using the Gemini Pro model.")
+  "`gptel' backend when using the Gemini Pro model.")
 
 (defvar gptel-extras-backends
   `(("gpt-4" . ,gptel--openai)
     ("gemini-pro" . ,gptel-extras-gemini-pro-backend))
-  "List of backends for `gptel'.")
+  "List of for `gptel' backends.")
 
 ;;;; Functions
 
 (defun gptel-extras-model-config (model &optional globally)
   "Configure `gptel' for MODEL.
-By default, this configures `gptel' for the current buffer. If GLOBALLY is
-non-nil, configure it globally.
-
-For Gemini, a VPN will be used to circumvent location restrictions."
+By default, configure MODEL for the current buffer. If GLOBALLY is non-nil,
+configure it globally."
   (interactive (list (completing-read "Model: " gptel-extras-backends nil t)))
   (let ((setter (if globally #'set-default #'set))
 	(backend (alist-get model gptel-extras-backends nil nil #'string=)))
@@ -71,8 +76,10 @@ For Gemini, a VPN will be used to circumvent location restrictions."
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
   "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS."
   (when (string= gptel-model "gemini-pro")
-    (mullvad-connect-to-website "Gemini" "1" 'silently)
-    (apply orig-fun args)))
+    (mullvad-connect-to-website "Gemini"
+				gptel-extras-gemini-mullvad-disconnect-after
+				'silently))
+  (apply orig-fun args))
 
 (advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)
 

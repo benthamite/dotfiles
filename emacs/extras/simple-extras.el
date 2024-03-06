@@ -597,7 +597,7 @@ FORMS are evaluated with point restored to its original position."
 (declare-function eww-current-url "eww")
 (declare-function ebib-extras-get-field "ebib-extras")
 (declare-function bibtex-extras-get-field "bibtex-extras")
-(defun simple-extras-get-url (url)
+(defun simple-extras-get-url (&optional url)
   "Get URL from URL, current buffer, or prompt user for it."
   (or url
       (pcase major-mode

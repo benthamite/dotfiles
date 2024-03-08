@@ -53,6 +53,21 @@
      string
      (mapconcat 'isearch-text-char-description string ""))))
 
+;; adapted from reddit.com/r/emacs/comments/2amn1v/isearch_selected_text/cixq7zx/
+(defun isearch-extras-use-selection (orig-fun &rest args)
+  "Use the current selection as the initial input for an incremental search.
+ORIG-FUN is the original function being advised, and ARGS are its arguments."
+  (if (region-active-p)
+      (progn
+        (isearch-update-ring (buffer-substring-no-properties (mark) (point)))
+        (deactivate-mark)
+        (apply orig-fun args)
+        (if (not (car args))
+            (isearch-repeat-backward)
+          (goto-char (mark))
+          (isearch-repeat-forward)))
+    (apply orig-fun args)))
+
 (provide 'isearch-extras)
 ;;; isearch-extras.el ends here
 

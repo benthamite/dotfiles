@@ -29,6 +29,7 @@
 
 (require 'forge)
 (require 'orgit-forge)
+(require 'shut-up)
 
 ;;;; Functions
 

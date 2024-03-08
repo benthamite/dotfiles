@@ -233,6 +233,7 @@ CLOCK: [2021-07-16 Fri 21:54]--[2021-07-16 Fri 22:04] =>  0:10
       :em_dash {:key :!SEhyphen}
 
       ;; diacritics
+      ;; note that many of the mappings below require ABC - Extended as the macOS input source
       :overdot {:key :!Ew}
       :underdot {:key :!Ex}
       :accute_accent {:key :!Ee}

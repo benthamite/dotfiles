@@ -4663,6 +4663,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   "C-<return>" 'isearch-extras-exit-other-end
   "H-c" 'isearch-extras-copy-match
   "C-p" 'isearch-extras-project-search
+  "C-l" 'isearch-extras-consult-line
   "C-H-v" 'isearch-extras-yank-kill-literally))
 #+end_src
 

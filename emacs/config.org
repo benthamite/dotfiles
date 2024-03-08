@@ -4655,6 +4655,9 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 (use-personal-package isearch-extras
   :after isearch
   :demand t
+  :config
+  (advice-add 'isearch-mode :around #'isearch-extras-use-selection)
+  
   :general
   (isearch-mode-map
   "C-<return>" 'isearch-extras-exit-other-end

@@ -3787,9 +3787,7 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 /[[https://github.com/joostkremers/pandoc-mode][pandoc-mode]] is a minor mode for interacting with Pandoc./
 
 #+begin_src emacs-lisp :results silent
-(use-package pandoc-mode
-  :general
-  ("A-p" 'pandoc-main-hydra/body))
+(use-package pandoc-mode)
 #+end_src
 
 *** TODO [#7] Make pandoc preserve emojis

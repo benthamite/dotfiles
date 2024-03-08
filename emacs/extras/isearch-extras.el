@@ -68,6 +68,34 @@ ORIG-FUN is the original function being advised, and ARGS are its arguments."
           (isearch-repeat-forward)))
     (apply orig-fun args)))
 
+;; blog.chmouel.com/posts/emacs-isearch/#use-consult-to-jump-onto-the-search-occurrence
+(declare-function consult-line "consult")
+(defun isearch-extras-consult-line ()
+  "Invoke `consult-line' from an interactive search."
+  (interactive)
+  (let ((query (if isearch-regexp
+		   isearch-string
+		 (regexp-quote isearch-string))))
+    (isearch-update-ring isearch-string isearch-regexp)
+    (let (search-nonincremental-instead)
+      (ignore-errors (isearch-done t t)))
+    (consult-line query)))
+
+;; blog.chmouel.com/posts/emacs-isearch/#do-a-project-search-from-a-search-term
+(defun isearch-extras-project-search ()
+  "Invoke `project-find-regexp' from an interactive search."
+  (interactive)
+  (let ((query (if isearch-regexp
+		   isearch-string
+		 (regexp-quote isearch-string))))
+    (isearch-update-ring isearch-string isearch-regexp)
+    (let (search-nonincremental-instead)
+      (ignore-errors (isearch-done t t)))
+    (project-find-regexp query)))
+
+(defvar vertico-multiform-commands)
+(push '(isearch-extras-consult-line buffer) vertico-multiform-commands)
+
 (provide 'isearch-extras)
 ;;; isearch-extras.el ends here
 

@@ -4024,7 +4024,9 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55] =>  0:25
    "C-H-s-k" 'avy-goto-word-1-above
    "C-H-s-l" 'avy-goto-word-1-below)
   (ebib-entry-mode-map
-   "f" 'avy-goto-line))
+   "f" 'avy-goto-line)
+  (isearch-mode-map
+   "M-f" 'avy-isearch))
 #+end_src
 
 *** TODO [#5] See if I can implement my idea of passing avy any Emacs command

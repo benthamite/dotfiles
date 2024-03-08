@@ -72,6 +72,14 @@ If ISSUE is nil, use the issue at point or in the current buffer."
       ('open (forge--set-topic-state repo issue 'completed))
       ('completed (forge--set-topic-state repo issue 'open)))))
 
+(defun forge-extras-browse-topic-in-background ()
+  "Browse the topic at point, when unread, without shifting focus to the browser."
+  (let* ((issue (forge-current-topic))
+	 (url (forge-get-url issue)))
+    (when (eq (oref issue status) 'unread)
+      (shut-up
+	(shell-command (format "open -a Firefox --background %s" url))))))
+
 ;;;;; Menus
 
 (transient-define-prefix forge-extras-dispatch ()

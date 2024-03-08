@@ -200,6 +200,12 @@ With prefix ARG is passed, open in new EWW buffer."
 		   (url-fullness url)))
     (eww-browse-url (url-recreate-url new-url))))
 
+(defun eww-extras-browse-youtube-in-mpv (url)
+  "Browse YouTube URL in MPV."
+  (when (string-match "youtube.com" url)
+    (empv-play url)
+    (empv-toggle-video)))
+
 (provide 'eww-extras)
 
 ;;; eww-extras.el ends here

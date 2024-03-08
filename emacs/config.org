@@ -1535,6 +1535,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
 
+  ;; hack: to mark the topic as read, we browse it in the background
+  (advice-add 'forge-visit-this-topic :before #'forge-extras-browse-topic-in-background)
+  
   :general
   ((magit-mode-map forge-issue-list-mode-map)
    "n" 'forge-dispatch)

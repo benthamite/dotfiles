@@ -11977,7 +11977,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   :config
   (setq clean-buffer-list-kill-never-buffer-names
         '("*mu4e-headers*"
-          " *mu4e-update*")) ; not sure if the space is part of the buffer name
+          " *mu4e-update*"))
   (setq clean-buffer-list-kill-never-regexps
         '("\\` \\*Minibuf-.*\\*\\'"
           "^untitled.*"))

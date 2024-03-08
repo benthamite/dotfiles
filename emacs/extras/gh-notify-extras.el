@@ -96,9 +96,9 @@
         (with-current-buffer (car w3m-buffers)
           (w3m-delete-buffer))))))
 
-(defun gh-notify-extras-w3m-after-load-funs (original-func format-string &rest args)
+(defun gh-notify-extras-w3m-after-load-funs (orig-fun format-string &rest args)
   "Functions to trigger when `w3m' is done loading.
-ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
+ORIG-FUN, FORMAT-STRING and ARGS are passed to the advised function."
   (require 'w3m)
   (let ((message-text (apply 'format format-string args))
 	(inhibit-message t))
@@ -107,7 +107,7 @@ ORIGINAL-FUNC, FORMAT-STRING and ARGS are passed to the advised function."
       (forge-pull-notifications)
       (when (featurep 'doom-modeline)
 	(doom-modeline--github-fetch-notifications)))
-    (apply original-func format-string args)))
+    (apply orig-fun format-string args)))
 
 ;; TODO: restrict the scope of this so that it doesn’t conflict with normal uses
 ;; of `w3m'

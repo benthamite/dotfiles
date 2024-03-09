@@ -1054,8 +1054,6 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
   :general
   ("M-s-=" 'prot-simple-insert-date
-   "C-g" 'prot-simple-keyboard-quit-dwim
-   "M-q" 'prot-simple-keyboard-quit-dwim
    "A-C-H-j" 'prot-simple-mark-sexp))
 #+end_src
 
@@ -2623,6 +2621,8 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
    "M-A-i" 'simple-extras-visual-line-mode-enhanced
    "M-i" 'simple-extras-indent-dwim
    "M-v" 'simple-extras-visible-mode-enhanced
+   "C-g" 'simple-extras-keyboard-quit-dwim
+   "M-q" 'simple-extras-keyboard-quit-dwim
    "C-w" 'simple-extras-narrow-or-widen-dwim)
   (isearch-mode-map
    "C-w" 'simple-extras-narrow-or-widen-dwim))

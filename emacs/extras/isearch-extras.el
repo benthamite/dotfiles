@@ -93,9 +93,6 @@ ORIG-FUN is the original function being advised, and ARGS are its arguments."
       (ignore-errors (isearch-done t t)))
     (project-find-regexp query)))
 
-(defvar vertico-multiform-commands)
-(push '(isearch-extras-consult-line buffer) vertico-multiform-commands)
-
 (provide 'isearch-extras)
 ;;; isearch-extras.el ends here
 

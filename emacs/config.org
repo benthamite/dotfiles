@@ -7085,8 +7085,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (add-hook 'prog-mode-hook (lambda () (gptel-extras-model-config nil "ChatGPT" "gpt-4")))
 
   :general
-  (gptel-mode-map
-   "s-m" 'gptel-extras-model-config))
+  ("H-s-c" 'gptel-extras-model-config))
 #+end_src
 
 ** gpt-commit

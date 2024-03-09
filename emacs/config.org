@@ -1539,7 +1539,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   ;; hack: to mark the topic as read, we browse it in the background
   (advice-add 'forge-visit-this-topic :before #'forge-extras-browse-topic-in-background)
-  
+
   :general
   ((magit-mode-map forge-issue-list-mode-map)
    "n" 'forge-dispatch)
@@ -4661,7 +4661,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :demand t
   :config
   (advice-add 'isearch-mode :around #'isearch-extras-use-selection)
-  
+
   :general
   (isearch-mode-map
   "C-<return>" 'isearch-extras-exit-other-end
@@ -6330,7 +6330,6 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   )
 #+end_src
 
-
 ** powerthesaurus
 :PROPERTIES:
 :ID:       81CC0280-A8A5-4C8F-BF05-D324EB917DCD
@@ -6998,7 +6997,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   (setq copilot-max-char 1000000)
 
   (setq copilot-indent-offset-warning-disable t)
-                                 
+
   (unless (copilot-installed-version)
     (copilot-install-server))
 
@@ -8661,8 +8660,8 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   (defun ox-clip-formatted-copy-advice (r1 r2)
     (interactive "r")
     (let* ((collection '(("HTML" . "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
-			 ("Markdown" . "pandoc -f html -t markdown - | grep -v \"^:::\" | sed 's/{#.*}//g' | pbcopy")))
-	   (choice (completing-read "Destination: " collection)))
+                         ("Markdown" . "pandoc -f html -t markdown - | grep -v \"^:::\" | sed 's/{#.*}//g' | pbcopy")))
+           (choice (completing-read "Destination: " collection)))
       (setq ox-clip-osx-cmd (alist-get choice collection nil nil #'string=))))
 
   (advice-add 'ox-clip-formatted-copy :before #'ox-clip-formatted-copy-advice)
@@ -9355,7 +9354,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   ;; sorter
   (setq bibtex-maintain-sorted-entries
       '(bibtex-extras-entry-index bibtex-extras-lessp))
-      
+
   ;; Replace 'online' entry type
   (bibtex-extras-replace-element-by-name
    bibtex-biblatex-entry-alist
@@ -11823,7 +11822,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
   (add-to-list 'empv-mpv-args "--ytdl-format=best") ; github.com/isamert/empv.el#viewing-youtube-videos
   (advice-add 'eww :before
               (lambda (url &optional _new-session)
-		(eww-extras-browse-youtube-in-mpv url)))
+                (eww-extras-browse-youtube-in-mpv url)))
   :bind-keymap
   ("A-p" . empv-map))
 #+end_src
@@ -11991,17 +11990,17 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (midnight-delay-set 'midnight-delay "4:00am")
 
   (dolist (fun (nreverse '(files-extras-save-all-buffers
-			   clean-buffer-list
-			   ledger-mode-extras-update-coin-prices
-			   ledger-mode-extras-update-commodities
-			   magit-extras-stage-commit-and-push-all-repos
-			   pass-extras-git-sync
-			   org-roam-db-sync
-			   org-extras-id-update-id-locations
-			   el-patch-validate-all
-			   tlon-babel-forge-update-all-repos
-			   org-extras-agenda-switch-to-agenda-current-day
-			   org-gcal-sync)))
+                           clean-buffer-list
+                           ledger-mode-extras-update-coin-prices
+                           ledger-mode-extras-update-commodities
+                           magit-extras-stage-commit-and-push-all-repos
+                           pass-extras-git-sync
+                           org-roam-db-sync
+                           org-extras-id-update-id-locations
+                           el-patch-validate-all
+                           tlon-babel-forge-update-all-repos
+                           org-extras-agenda-switch-to-agenda-current-day
+                           org-gcal-sync)))
     (add-hook 'midnight-hook fun)))
 #+end_src
 

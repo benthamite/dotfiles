@@ -7049,6 +7049,15 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
   (setq gptel-default-mode 'org-mode)
 
+  (gptel-make-anthropic "Claude"
+    :stream t
+    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-core-email-shared)))
+
+  (gptel-make-gemini "Gemini"
+    :stream t
+    :key (auth-source-pass-get 'secret
+			       (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared)))
+  
   :general
   ("M-c" 'gptel-send
    "H-s-a" 'gptel-abort

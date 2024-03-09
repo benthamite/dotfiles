@@ -35,6 +35,7 @@
 (require 'paths)
 (require 's)
 (require 'scihub)
+(require 'tlon-babel-tts)
 (require 'zotra)
 (require 'window-extras)
 

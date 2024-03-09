@@ -6266,7 +6266,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
    "s-r" 'tlon-babel-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
    "'" 'tlon-babel-open-forge-file)
-  ;; revise; consider using `tlon-babel-md-insert-dispatch'
+  ;; revise; consider using `tlon-babel-md-menu'
   ((gfm-mode-map markdown-mode-map)
    "H-;" 'tlon-babel-md-menu
    "A-s-e" 'tlon-babel-yaml-edit-field

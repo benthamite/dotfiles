@@ -31,6 +31,17 @@
 (require 'el-patch)
 (require 'forge)
 
+;;;; User options
+
+(defgroup gptel-extras ()
+  "Extensions for `gptel'."
+  :group 'gptel)
+
+(defcustom doom-modeline-extras-gptel t
+  "Whether to display the `gptel' model in the modeline."
+  :type 'boolean
+  :group 'gptel-extras)
+
 ;;;; Functions
 
 ;;;;; Patched functions

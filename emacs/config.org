@@ -4860,7 +4860,8 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
   (setq vertico-multiform-commands
         '((consult-line buffer)
           (consult-imenu buffer)
-          (consult-grep buffer)))
+          (consult-grep buffer)
+          (isearch-extras-consult-line buffer)))
   (setq vertico-multiform-categories
         '((file grid)))
   (setq vertico-cycle t)

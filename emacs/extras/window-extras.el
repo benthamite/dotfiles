@@ -44,18 +44,18 @@
 ;;;; Functions
 
 (defun window-extras-get-last-window ()
-  "Get to previously selected ordinary or minibuffer window."
+  "Return the most recently selected window in the current frame.
+The most recently selected window may include the minibuffer window."
   (interactive)
   (if (and (active-minibuffer-window) (not (minibufferp)))
       (select-window (active-minibuffer-window))
-    (get-mru-window 'visible t t)))
+    (get-mru-window (selected-frame) t t)))
 
 (defun window-extras-switch-to-last-window ()
-  "Switch to previously selected ordinary or minibuffer window."
+  "Switch to the most recently selected window in the current frame.
+The most recently selected window may include the minibuffer window."
   (interactive)
-  (let ((last-window (window-extras-get-last-window)))
-    (select-frame-set-input-focus (window-frame last-window))
-    (select-window last-window)))
+  (select-window (window-extras-get-last-window)))
 
 (defun window-extras-split-if-unsplit ()
   "Split windows when frame is unsplit.

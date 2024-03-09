@@ -1984,15 +1984,6 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (setq doom-modeline-enable-word-count t)
   (setq doom-modeline-indent-info t)
 
-  ;; we slightly tweak the `main' modeline to display the major mode icon to the
-  ;; left of point position indicators. this tweak doesn't change which elements
-  ;; are shown, which is controlled by the user options above
-  (doom-modeline-def-modeline 'main-reordered
-    '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
-    '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
-
-  (doom-modeline-set-modeline 'main-reordered t)
-
   (dolist (cons  '((display-time-mode-hook . doom-modeline-override-time)
                    (display-battery-mode-hook . doom-modeline-override-battery)
                    (doom-modeline-mode-hook . doom-modeline-override-time)
@@ -2013,6 +2004,17 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :after doom-modeline
   :demand t
   :config
+  ;; we slightly tweak the `main' modeline to (1) display the major mode icon to
+  ;; the left of point position indicators and (2) and a `gptel' element. note
+  ;; that which elements are shown is controlled by the relevant `doom-modeline'
+  ;; user options. to hide the `gptel' element, set `doom-modeline-extras-gptel'
+  ;; to nil.
+  (doom-modeline-def-modeline 'main-pablo
+    '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
+    '(gptel compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
+
+  (doom-modeline-set-modeline 'main-reordered t)
+
   (doom-modeline-mode))
 #+end_src
 

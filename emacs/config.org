@@ -9366,9 +9366,8 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 (use-personal-package bibtex-extras
   :defer 1
   :config
-  ;; sorter
   (setq bibtex-maintain-sorted-entries
-      '(bibtex-extras-entry-index bibtex-extras-lessp))
+      '(bibtex-extras-entry-sorter bibtex-extras-lessp))
 
   ;; Replace 'online' entry type
   (bibtex-extras-replace-element-by-name

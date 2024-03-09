@@ -2001,7 +2001,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 
 #+begin_src emacs-lisp
 (use-personal-package doom-modeline-extras
-  :after doom-modeline
+  :after doom-modeline gptel
   :demand t
   :config
   ;; we slightly tweak the `main' modeline to (1) display the major mode icon to
@@ -2011,9 +2011,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   ;; to nil.
   (doom-modeline-def-modeline 'main-pablo
     '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
-    '(gptel compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
-
-  (doom-modeline-set-modeline 'main-pablo t)
+    '(gptel compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))  
 
   (doom-modeline-mode))
 #+end_src
@@ -7080,10 +7078,12 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :config
   (dolist (hook '(text-mode-hook bibtex-mode-hook))
     (add-hook hook (lambda ()
-		     "Use Gemini in all text-related modes, broadly construed."
-		     (gptel-extras-model-config nil "Gemini" "gemini-pro"))))
+                     "Use Gemini in all text-related modes, broadly construed."
+                     (gptel-extras-model-config nil "Gemini" "gemini-pro"))))
   (add-hook 'prog-mode-hook (lambda () (gptel-extras-model-config nil "ChatGPT" "gpt-4")))
 
+  (doom-modeline-set-modeline 'main-pablo t)
+  
   :general
   ("H-s-c" 'gptel-extras-model-config))
 #+end_src

@@ -7067,7 +7067,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :after gptel
   :demand t
   :config
-  (gptel-extras-model-config "gemini-pro" 'globally)
+  (gptel-extras-model-config "gpt-4" 'globally)
 
   :general
   (gptel-mode-map

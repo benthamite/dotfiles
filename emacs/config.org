@@ -865,10 +865,14 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 #+begin_src emacs-lisp
 (use-package transient
   :after seq
+  :demand t
   :config
   (setq transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
-  :demand t)
-#+end_src
+  
+  :general
+  (transient-base-map
+  "M-q" 'transient-quit-one))
+#+end_src 
 
 ** transient-showcase
 :PROPERTIES:

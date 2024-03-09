@@ -43,34 +43,26 @@
   :type 'integer
   :group 'gptel-extras)
 
-;;;; Variables
-
-(defvar tlon-core-email-shared)
-(defvar gptel-extras-gemini-pro-backend-plist
-  `(:key ,(auth-source-pass-get 'secret
-				(concat "tlon/core/makersuite.google.com/" tlon-core-email-shared))
-	 :stream t)
-  "Parameters for creating a Gemini Pro backend.")
-
-(defvar gptel-extras-gemini-pro-backend
-  (apply #'gptel-make-gemini "Gemini" gptel-extras-gemini-pro-backend-plist)
-  "`gptel' backend when using the Gemini Pro model.")
-
-(defvar gptel-extras-backends
-  `(("gpt-4" . ,gptel--openai)
-    ("gemini-pro" . ,gptel-extras-gemini-pro-backend))
-  "List of for `gptel' backends.")
-
 ;;;; Functions
 
-(defun gptel-extras-model-config (model &optional globally)
-  "Configure `gptel' for MODEL.
-By default, configure MODEL for the current buffer. If GLOBALLY is non-nil,
-configure it globally."
-  (interactive (list (completing-read "Model: " gptel-extras-backends nil t)))
-  (let ((setter (if globally #'set-default #'set))
-	(backend (alist-get model gptel-extras-backends nil nil #'string=)))
-    (funcall setter 'gptel-model model)
+;; adapted from the `:reader' lambda of `transient-infix-set' in `gptel-transient.el'
+(defun gptel-extras-model-config (globally &optional backend-name model-name)
+  "Configure `gptel' for BACKEND-NAME and MODEL-NAME.
+By default, configure it for the current buffer. If GLOBALLY is non-nil, or
+called with a prefix argument, configure it globally."
+  (interactive "P")
+  (let* ((backend-name (or backend-name
+			   (if (<= (length gptel--known-backends) 1)
+			       (caar gptel--known-backends)
+			     (completing-read "Backend name: " (mapcar #'car gptel--known-backends) nil t))))
+	 (backend (alist-get backend-name gptel--known-backends nil nil #'equal))
+	 (backend-models (gptel-backend-models backend))
+	 (model-name (or model-name
+			 (if (= (length backend-models) 1)
+			     (car backend-models)
+			   (completing-read "Model name: " backend-models))))
+	 (setter (if globally #'set-default #'set)))
+    (funcall setter 'gptel-model model-name)
     (funcall setter 'gptel-backend backend)))
 
 (defun gptel-extras-set-mullvad (orig-fun &rest args)

@@ -121,6 +121,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-modern][org-modern]]
   - [[#org-modern-indent][org-modern-indent]]
   - [[#org-tidy][org-tidy]]
+  - [[#org-appear][org-appear]]
   - [[#faces][faces]]
   - [[#faces-extras][faces-extras]]
   - [[#face-remap][face-remap]]
@@ -1746,6 +1747,21 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
   (setq org-tidy-properties-inline-symbol "")
   (setq org-tidy-protect-overlay nil) ; github.com/jxq0/org-tidy/issues/11
   (add-hook 'org-mode-hook #'org-tidy-mode))
+#+end_src
+
+** org-appear
+:PROPERTIES:
+:ID:       9F84EE2C-F5E7-4935-912E-5D286B897C19
+:END:
+
+/[[https://github.com/awth13/org-appear][org-appear]] toggles the visibility of hidden org mode element parts upon entering and leaving those elements./
+
+#+begin_src emacs-lisp
+(use-package org-appear
+  :after org
+  :demand t
+  :config
+  (add-hook 'org-mode-hook 'org-appear-mode))
 #+end_src
 
 ** faces

@@ -871,11 +871,11 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :demand t
   :config
   (setq transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
-  
+
   :general
   (transient-base-map
   "M-q" 'transient-quit-one))
-#+end_src 
+#+end_src
 
 ** transient-showcase
 :PROPERTIES:
@@ -7070,8 +7070,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-make-gemini "Gemini"
     :stream t
     :key (auth-source-pass-get 'secret
-			       (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared)))
-  
+                               (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared)))
+
   :general
   ("M-c" 'gptel-send
    "H-s-a" 'gptel-abort
@@ -7098,7 +7098,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (add-hook 'prog-mode-hook (lambda () (gptel-extras-model-config nil "ChatGPT" "gpt-4")))
 
   (doom-modeline-set-modeline 'main-pablo t)
-  
+
   :general
   ("H-s-c" 'gptel-extras-model-config))
 #+end_src

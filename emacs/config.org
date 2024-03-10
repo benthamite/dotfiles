@@ -11836,7 +11836,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 :END:
 
 
-/[[https://github.com/isamert/empv.el][empv]] is a media player based on mpv./
+/[[https://github.com/isamert/empv.el][empv]] is a media player based on [[https://mpv.io/][mpv]]./
 
 #+begin_src emacs-lisp
 (use-package empv

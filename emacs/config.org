@@ -2791,8 +2791,8 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
   :demand t
   :config
   (setq undo-limit (* 100 1000 1000))
-  ;; (setq undo-strong-limit undo-limit)
-  ;; (setq undo-outer-limit undo-limit)
+  (setq undo-strong-limit undo-limit)
+  (setq undo-outer-limit undo-limit)
 
   :general
   (vundo-mode-map

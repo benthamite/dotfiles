@@ -29,7 +29,6 @@
 
 (require 'bibtex-extras)
 (require 'doi-utils)
-(require 'ebib-extras)
 (require 'ebib-utils)
 (require 'eww-extras)
 (require 'paths)

@@ -405,7 +405,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-habit][org-habit]]
   - [[#org-contrib][org-contrib]]
   - [[#org-checklist][org-checklist]]
-  - [[#org-analyzer][org-analyzer]]
   - [[#org-make-toc][org-make-toc]]
   - [[#org2blog][org2blog]]
   - [[#org2blog-extras][org2blog-extras]]
@@ -8527,14 +8526,6 @@ Allows reset of checkboxes in recurring tasks. This works only on headings that 
   :demand t)
 #+end_src
 
-** org-analyzer
-:PROPERTIES:
-:ID:       33BBA839-D680-4D74-AF0F-C6225799DD53
-:END:
-
-To try:
-https://github.com/rksm/clj-org-analyzer/
-https://www.reddit.com/r/emacs/comments/cptwh4/org_analyzer_an_app_that_visualizes_orgmode_time/
 ** org-make-toc
 :PROPERTIES:
 :ID:       5BAB49C3-DB85-4CB1-9CF7-5FD72AFB4608

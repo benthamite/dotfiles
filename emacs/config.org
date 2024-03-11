@@ -85,7 +85,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#tlon-core][tlon-core]]
   - [[#prot-common][prot-common]]
   - [[#prot-simple][prot-simple]]
-  - [[#misc][misc.]]
+  - [[#misc][misc]]
 - [[#secrets][secrets]]
   - [[#plstore][plstore]]
   - [[#epg-config][epg-config]]
@@ -339,7 +339,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-pdftools][org-pdftools]]
   - [[#nov][nov]]
   - [[#djvu][djvu]]
-- [[#prog-mode][prog-mode]]
+- [[#programing][programing]]
+  - [[#prog-mode][prog-mode]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
   - [[#s][s]]
@@ -511,8 +512,9 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#fatebook][fatebook]]
   - [[#tetris][tetris]]
 - [[#personal][personal]]
-  - [[#keyboard-maestro][Keyboard Maestro]]
+  - [[#keyboard-maestro][keyboard-maestro]]
 - [[#appendices][appendices]]
+  - [[#excluded-packages][excluded packages]]
   - [[#key-bindings][key bindings]]
   - [[#profiling][profiling]]
   - [[#installation][installation]]
@@ -1061,7 +1063,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
    "A-C-H-j" 'prot-simple-mark-sexp))
 #+end_src
 
-** misc.
+** misc
 :PROPERTIES:
 :ID:       72D2BA33-0E12-4893-B790-B132CE2F9404
 :END:
@@ -6584,7 +6586,12 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 (use-package djvu)
 #+end_src
 
-* prog-mode
+* programing
+:PROPERTIES:
+:ID:       35CB9C38-D0FE-458A-9F77-EC6702B2D976
+:END:
+
+** prog-mode
 :PROPERTIES:
 :ID:       A8700D18-574A-4093-938C-5707589DBB41
 :END:
@@ -12154,7 +12161,7 @@ And finally, the section you've all been waiting for.
 CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 :END:
 
-** Keyboard Maestro
+** keyboard-maestro
 :PROPERTIES:
 :ID:       1776C0C3-CEEC-4DED-B609-4DF0DF83B0C2
 :END:
@@ -12257,6 +12264,18 @@ CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
 CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
+
+** excluded packages
+:PROPERTIES:
+:ID:       4241A319-CECB-41DC-87DA-C0FD778CD187
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
+(setq tlon-init-excluded-packages
+      '(
+        breadcrumb
+        ))
+#+end_src
 
 ** key bindings
 :PROPERTIES:

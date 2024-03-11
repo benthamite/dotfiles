@@ -9936,6 +9936,14 @@ The macro below generates the commands correctly. But attempting to define key b
 
 To check out.
 
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package persid
+  :elpaca (persid
+           :host github
+           :repo "rougier/persid")
+  :disabled)
+#+end_src
+
 ** zotra
 :PROPERTIES:
 :ID:       815B8CEA-D36D-4E47-B728-D86FEFB736DF

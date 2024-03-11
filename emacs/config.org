@@ -412,7 +412,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-contacts][org-contacts]]
   - [[#org-autosort][org-autosort]]
   - [[#ox-clip][ox-clip]]
-  - [[#org-mime][org-mime]]
   - [[#elgantt][elgantt]]
   - [[#org-pomodoro][org-pomodoro]]
   - [[#org-pomodoro-extras][org-pomodoro-extras]]
@@ -8672,41 +8671,19 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 /[[https://github.com/jkitchin/ox-clip][ox-clip]] copies selected regions in org-mode as formatted text on the clipboard./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ox-clip
   :after org
   :demand t
   :config
   ;; github.com/jkitchin/ox-clip/issues/13
   (setq ox-clip-osx-cmd
-	'(("HTML" . "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
+        '(("HTML" . "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
           ("Markdown" . "pandoc -f html -t markdown - | grep -v \"^:::\" | sed 's/{#.*}//g' | pbcopy")))
-  
+
   :general
   ((org-mode-map)
    "s-c" 'ox-clip-formatted-copy))
-#+end_src
-
-** org-mime
-:PROPERTIES:
-:ID:       EB437B48-CEB2-4727-8910-627061F4701F
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-04 Tue 17:42]--[2021-05-04 Tue 17:54] =>  0:12
-CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
-:END:
-
-/[[https://github.com/org-mime/org-mime][org-mime]] lets you send HTML email using Org-mode HTML export./
-
-[2024-02-13 Tue] Temporarily disabling to test whether I need this.
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package org-mime
-  :after org
-  :general
-  (org-mode-map
-   "s-m" 'org-mime-htmlize
-   "s-A-m" 'org-mime-org-subtree-htmlize))
 #+end_src
 
 ** elgantt

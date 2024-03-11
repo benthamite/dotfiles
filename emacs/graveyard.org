@@ -16,6 +16,30 @@ This is a place where I move Emacs packages I no longer use.
 [[https://github.com/madnificent/org-roam-browser-extension][org-roam-browser-extension]] indicates via a browser icon whether you have ~org-roam~ notes on the web page you are visiting.
 
 Abandoned.
+** org-mime
+:PROPERTIES:
+:ID:       EB437B48-CEB2-4727-8910-627061F4701F
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-04 Tue 17:42]--[2021-05-04 Tue 17:54] =>  0:12
+CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
+:END:
+
+/[[https://github.com/org-mime/org-mime][org-mime]] lets you send HTML email using Org-mode HTML export./
+
+[2024-02-13 Tue] Temporarily disabling to test whether I need this.
+
+[2024-03-10 Sun] Not needed. Moving to graveyard.
+
+#+begin_src emacs-lisp :tangle no
+(use-package org-mime
+  :after org
+  :general
+  (org-mode-map
+   "s-m" 'org-mime-htmlize
+   "s-A-m" 'org-mime-org-subtree-htmlize))
+#+end_src
+
 ** mpv
 :PROPERTIES:
 :ID:       8D75E528-AA79-4512-B4A9-6EB7A56F9026

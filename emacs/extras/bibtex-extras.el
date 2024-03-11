@@ -28,11 +28,103 @@
 ;;; Code:
 
 (require 'bibtex)
+(require 'doi-utils)
 (require 'el-patch)
 (require 'ebib)
 ;; (require 'ebib-extras)
 
 ;;;; Variables
+
+(defconst bibtex-extras-biblatex-fields
+  '("author"
+    "editor"
+    "title"
+    "booktitle"
+    "date"
+    "journaltitle"
+    "volume"
+    "number"
+    "issue"
+    "edition"
+    "series"
+    "pages"
+    "isbn"
+    "issn"
+    "doi"
+    "url"
+    "urldate"
+    "publisher"
+    "location"
+    "chapter"
+    "note"
+    "addendum"
+    "pubstate"
+    "eprint"
+    "eprinttype"
+    "eprintclass"
+    "file"
+    "abstract"
+    "keywords"
+    "language"
+    "langid"
+    "translator"
+    "annotator"
+    "commentator"
+    "introduction"
+    "foreword"
+    "afterword"
+    "venue"
+    "eventtitle"
+    "eventdate"
+    "venue"
+    "organization"
+    "institution"
+    "school"
+    "library"
+    "archive"
+    "index"
+    "part"
+    "version"
+    "crossref"
+    "related"
+    "relatedtype"
+    "entrysubtype"
+    "nameaddon"
+    "type"
+    "maintitle"
+    "mainsubtitle"
+    "maintitleaddon"
+    "booksubtitle"
+    "booktitleaddon"
+    "journaltitleaddon"
+    "journalsubtitle"
+    "issuetitle"
+    "issuesubtitle"
+    "issuetitleaddon"
+    "editora"
+    "editorb"
+    "editorc"
+    "translator"
+    "commentator"
+    "annotator"
+    "introduction"
+    "foreword"
+    "afterword"
+    "subtitle"
+    "titleaddon"
+    "editoratype"
+    "editorbtype"
+    "editorctype"
+    "label"
+    "options"
+    "shorthand"
+    "shorthandintro"
+    "xref"
+    "entryset"
+    "execute"
+    "howpublished"
+    "sortkey")
+  "A list of valid BibLaTeX fields.")
 
 (defconst bibtex-extras-valid-languages
   '(("albanian" . "sq")
@@ -119,6 +211,7 @@
     ("welsh" . "cy")
     ("afrikaans" . "af"))
   "Alist of languages and ISO 639-1 codes for the `landid' field in BibTeX entries.")
+
 ;;;; Functions
 
 (defun bibtex-extras-replace-element-by-name (list target-name new-element)
@@ -201,12 +294,16 @@ Optionally, remove accents in region from BEGIN to END."
           (match-string-no-properties 1)
         (user-error "Not on a BibTeX entry")))))
 
-(defun bibtex-extras-validate-language (language)
-  "If LANGUAGE is a valid language, return it.
-The validation is case-insensitive, but the returned language is in lowercase."
-  (let ((language (downcase language)))
-    (when (member language (mapcar #'car bibtex-extras-valid-languages))
-      language)))
+(defun bibtex-extras-add-or-update-field (field value)
+  "Add or update FIELD with VALUE in the current BibTeX entry."
+  (bibtex-beginning-of-entry)
+  ;; Check if FIELD exists
+  (unless (bibtex-search-forward-field field)
+    (bibtex-beginning-of-entry)
+    (bibtex-make-field field t t))
+  ;; Update the value of FIELD
+  (when (bibtex-autokey-get-field field)
+    (bibtex-set-field field value)))
 
 (defun bibtex-extras-convert-titleaddon-to-journaltitle ()
   "Convert field `titleaddon' to `journaltitle' in entry at point.
@@ -271,61 +368,7 @@ If DELIMITER is nil, use a semicolon."
     (ebib file key)
     (ebib--pop-to-buffer (ebib--buffer 'entry))))
 
-(defun bibtex-extras-add-or-update-field (field value)
-  "Add or update FIELD with VALUE in the current BibTeX entry."
-  (bibtex-beginning-of-entry)
-  ;; Check if FIELD exists
-  (unless (bibtex-search-forward-field field)
-    (bibtex-beginning-of-entry)
-    (bibtex-make-field field t t))
-  ;; Update the value of FIELD
-  (when (bibtex-autokey-get-field field)
-    (bibtex-set-field field value)))
-
-(defun bibtex-extras-add-or-update-tlon-field ()
-  "Add or update \"database\" field with \"Tlön\" value in the current BibTeX entry."
-  (bibtex-extras-add-or-update-field "database" "Tlön"))
-
-(defun bibtex-extras-add-or-update-tlon-field ()
-  "Add or update \"database\" field with \"Tlön\" value in the current BibTeX entry."
-  (bibtex-extras-add-or-update-field "database" "Tlön"))
-
-(defun bibtex-extras-add-database-field (file)
-  "Iterate over each entry in FILE and add/update the `database' field.
-Adds the field `database' to every entry if it doesn't have it
-and sets the value of the field for all entries to `Tlön'."
-  (interactive "fBibTeX file: ")
-  (with-current-buffer (find-file-noselect file)
-    (save-excursion
-      (bibtex-map-entries
-       (lambda (_key start _end)
-         (save-excursion
-           (goto-char start)
-           (bibtex-extras-add-or-update-tlon-field)))))
-    ;; Save the updated entries to the file
-    (save-buffer)))
-
-(defun bibtex-extras-auto-add-database-field ()
-  "Run `bibtex-extras-add-database-field' every time `new.bib' is saved."
-  (let ((file tlon-babel-refs-file-fluid))
-    (when (string= (buffer-file-name) file)
-      (bibtex-extras-add-database-field file))))
-
-(defun bibtex-extras-auto-clean-entry ()
-  "Clean up bibtex entry at point upon saving."
-  (let ((after-save-hook nil))
-    (bibtex-extras-add-or-update-tlon-field)
-    (tlon-babel-refs-add-lang-id-to-entry)
-    (bibtex-extras-remove-empty-spaces)
-    (bibtex-clean-entry)
-    (save-buffer)))
-
-(defun bibtex-extras-remove-empty-spaces ()
-  "Remove empty spaces at the end of field."
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward " \\}" nil t)
-      (replace-match "}" t t))))
+;;;;; getters
 
 (defun bibtex-extras-get-entry-as-string ()
   "Return the bibtex entry at point as a string."
@@ -340,21 +383,95 @@ and sets the value of the field for all entries to `Tlön'."
     (save-restriction
       (bibtex-narrow-to-entry)
       (bibtex-beginning-of-entry)
-      (let ((value (bibtex-autokey-get-field field)))
+      (let* ((bibtex-autokey-use-crossref nil)
+	     (value (bibtex-autokey-get-field field)))
 	(unless (string-empty-p value)
 	  (replace-regexp-in-string "[\n\t ]+" " " value))))))
 
+(defun bibtex-extras-get-field-name ()
+  "Return the name of the field at point."
+  (save-excursion
+    (let* ((case-fold-search t)
+           (bounds (bibtex-enclosing-field))
+           (end (bibtex-end-of-field bounds)))
+      (goto-char end)
+      (bibtex-name-in-field bounds))))
+
 (defun bibtex-extras-get-field-in-string (string field)
   "Return the value of FIELD in STRING."
-  (with-temp-buffer
-    (insert string)
-    (bibtex-extras-get-field field)))
+  (save-window-excursion
+    (with-temp-buffer
+      (insert string)
+      (bibtex-extras-get-field field))))
 
-(defun bibtex-extras-get-two-letter-code (language)
-  "Return the two-letter code for LANGUAGE."
-  (when-let* ((downcased (downcase language))
-	      (code-raw (alist-get downcased bibtex-extras-valid-languages nil nil #'string=)))
-    (string-limit code-raw 2)))
+;;;;; setters
+
+(defun bibtex-extras-set-field ()
+  "Set FIELD to VALUE, creating it if necessary."
+  (interactive)
+  (let* ((field (completing-read "Field: " bibtex-extras-biblatex-fields))
+	 (value (read-string "Value: " (bibtex-extras-get-field field))))
+    (bibtex-set-field field (substring-no-properties value))))
+
+;;;;; sorting of bibtex buffer
+
+;; the two functions below are used to sort the bibtex files, via the user
+;; option `bibtex-maintain-sorted-entries'
+(defun bibtex-extras-entry-sorter ()
+  "Return a list of the bibtex key and the `crossref' field of the entry at point."
+  (list (bibtex-extras-get-key)
+	(not (string-empty-p (bibtex-autokey-get-field "crossref")))
+	nil))
+
+(defun bibtex-extras-lessp (index1 index2)
+  "Predicate for sorting BibTeX entries with indices INDEX1 and INDEX2.
+Entries will be first be sorted as follows. Those with a `crossref' field will
+be placed above the rest, and will be sorted in reverse alphabetical order. The
+rest will be sorted alphabetically.
+
+This sorting criterion replicates the Ebib criterion. That the entries with a
+`crossref' field are sorted in reverse alphabetical order rather than
+alphabetically appears to be a bug. But we replicate it for consistency’s sake:
+this way when either Ebib or `bibtex' sorts the buffer, it won't be later
+re-sorted by the other."
+  (let ((key1 (nth 0 index1))
+	(key2 (nth 0 index2))
+	(crossref1 (nth 1 index1))
+	(crossref2 (nth 1 index2)))
+    (cond ((xor crossref1 crossref2)
+	   crossref1)
+	  ((and crossref1 crossref2)
+	   (string< key2 key1))
+	  (t
+	   (string< key1 key2)))))
+
+;;;;; attach downloads
+
+(defun bibtex-extras-url-to-file-attach (type)
+  "Generate PDF of file of TYPE."
+  (when (bibtex-extras-get-field "url")
+    (eww-extras-url-to-file type nil #'bibtex-extras-attach-file-to-entry)))
+
+(defun bibtex-extras-url-to-pdf-attach ()
+  "Generate PDF of URL."
+  (interactive)
+  (bibtex-extras-url-to-file-attach "pdf"))
+
+(defun bibtex-extras-url-to-html-attach ()
+  "Generate HTML of URL."
+  (interactive)
+  (bibtex-extras-url-to-file-attach "html"))
+
+(defun bibtex-extras-attach-file-to-entry (&optional file bibtex-file)
+  "Attach FILE to the relevant entry in BIBTEX-FILE.
+The relevant entry is the entry in BIBTEX-FILE whose key equals the name of FILE
+sans its extension."
+  (let ((key (file-name-nondirectory (file-name-sans-extension file))))
+    (save-excursion
+      (with-current-buffer (find-file-noselect bibtex-file)
+	(bibtex-search-entry key)
+	(ebib-extras-attach-file file)
+	(message "Attached `%s' to %s" file key)))))
 
 ;;;;; Patches
 

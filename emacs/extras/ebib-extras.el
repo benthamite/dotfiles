@@ -26,7 +26,6 @@
 ;; Extensions for `ebib'.
 
 ;;; Code:
-(require 'tlon-babel-tex)
 (require 'bibtex)
 (require 'el-patch)
 (require 'citar)
@@ -36,18 +35,16 @@
 (require 'paths)
 (require 's)
 (require 'scihub)
+(require 'tlon-babel-tex)
+(require 'tlon-babel-tts)
 (require 'zotra)
 (require 'window-extras)
-(require 'tlon-babel-tex)
-
-;;;; User options
 
 ;;;; Functions
 
 (defun ebib-extras-open-or-switch ()
   "Open ebib in the right window or switch to it if already open."
   (interactive)
-  (require 'window-extras)
   (window-extras-split-if-unsplit)
   (if (> (frame-width) window-extras-frame-split-width-threshold)
       (winum-select-window-3)
@@ -317,10 +314,13 @@ If EXTENSION is non-nil, set its extension to its value."
 	(t
 	 (user-error "Invalid file extension"))))
 
-(defun ebib-extras-attach-file (&optional most-recent)
-  "Prompt the user for a file to attach to the current entry.
-If MOST-RECENT is non-nil, attach the most recent file in the
-`paths-dir-downloads' directory."
+;;;;; attach downloads
+
+(defun ebib-extras-attach-file (&optional file most-recent open)
+  "Attach FILE to the current entry.
+If FILE is nil, prompt the user for one. If MOST-RECENT is non-nil, attach the
+most recent file in the `paths-dir-downloads' directory. If OPEN is non-nil,
+open FILE."
   (interactive)
   (let* ((get-key (pcase major-mode
 		    ('ebib-entry-mode #'ebib--get-key-at-point)
@@ -328,27 +328,29 @@ If MOST-RECENT is non-nil, attach the most recent file in the
 	 (key (funcall get-key)))
     (ebib-extras-check-valid-key key)
     (let* ((file-to-attach
-	    (if most-recent
-		(files-extras-newest-file paths-dir-downloads)
-	      (let ((initial-folder
-		     (completing-read "Select folder: "
-				      (list
-				       paths-dir-downloads
-				       paths-dir-pdf-library
-				       paths-dir-html-library
-				       paths-dir-media-library))))
-		(read-file-name
-		 "File to attach: "
-		 ;; Use key as default selection if key-based file exists
-		 ;; else default to `initial-folder'
-		 (if (catch 'found
-		       (dolist (extension ebib-extras-valid-file-extensions)
-			 (when (file-regular-p (file-name-concat
-						initial-folder
-						(file-name-with-extension key extension)))
-			   (throw 'found extension))))
-		     (file-name-concat initial-folder key)
-		   initial-folder)))))
+	    (or
+	     (when most-recent
+	       (files-extras-newest-file paths-dir-downloads))
+	     file
+	     (let ((initial-folder
+		    (completing-read "Select folder: "
+				     (list
+				      paths-dir-downloads
+				      paths-dir-pdf-library
+				      paths-dir-html-library
+				      paths-dir-media-library))))
+	       (read-file-name
+		"File to attach: "
+		;; Use key as default selection if key-based file exists
+		;; else default to `initial-folder'
+		(if (catch 'found
+		      (dolist (extension ebib-extras-valid-file-extensions)
+			(when (file-regular-p (file-name-concat
+					       initial-folder
+					       (file-name-with-extension key extension)))
+			  (throw 'found extension))))
+		    (file-name-concat initial-folder key)
+		  initial-folder)))))
 	   (extension (file-name-extension file-to-attach))
 	   (destination-folder (ebib-extras--extension-directories extension))
 	   (file-name (ebib-extras--rename-and-abbreviate-file
@@ -356,17 +358,46 @@ If MOST-RECENT is non-nil, attach the most recent file in the
       (when (or (not (file-regular-p file-name))
 		(y-or-n-p "File exists. Overwrite? "))
 	(rename-file file-to-attach file-name t))
-      (ebib-extras--update-file-field-contents key file-name)
+      (shut-up
+	(ebib-extras--update-file-field-contents key file-name))
       (when (string= (file-name-extension file-name) "pdf")
 	(ebib-extras-set-pdf-metadata)
 	;; open the pdf to make sure it displays the web page correctly
 	(ebib-extras-ocr-pdf)
-	(ebib-extras-open-pdf-file)))))
+	(when open
+	  (ebib-extras-open-pdf-file))))))
 
 (defun ebib-extras-attach-most-recent-file ()
   "Attach the most recent file in `paths-dir-downloads' to the current entry."
   (interactive)
-  (ebib-extras-attach-file t))
+  (ebib-extras-attach-file nil 'most-recent))
+
+(defun ebib-extras-url-to-file-attach (type)
+  "Generate PDF of file of TYPE."
+  (when (ebib-extras-get-field "url")
+    (eww-extras-url-to-file type nil #'ebib-extras-attach-file-to-entry)))
+
+(defun ebib-extras-url-to-pdf-attach ()
+  "Generate PDF of URL."
+  (interactive)
+  (ebib-extras-url-to-file-attach "pdf"))
+
+(defun ebib-extras-url-to-html-attach ()
+  "Generate HTML of URL."
+  (interactive)
+  (ebib-extras-url-to-file-attach "html"))
+
+(defun ebib-extras-attach-file-to-entry (&optional file _)
+  "Attach FILE to the relevant entry.
+The relevant entry is the entry whose key equals the name of FILE sans its
+extension."
+  (let ((key (file-name-nondirectory (file-name-sans-extension file))))
+    (save-excursion
+      (ebib-extras-open-key key)
+      (ebib-extras-attach-file file)
+      (message "Attached `%s' to %s" file key))))
+
+;;;;; ?
 
 (defvar ebib-extras-iso-639-2
   '(("english" . "eng")
@@ -751,7 +782,7 @@ The list of article download functions is specified by
      (beep))))
 
 (defun ebib-extras-download-pdf ()
-  "Download a PDF of the work at point based on its DOI, URL or ISBN."
+  "Download and attach a PDF of the work at point based on its DOI, URL or ISBN."
   (interactive)
   (let ((get-field (pcase major-mode
 		     ('ebib-entry-mode #'ebib-extras-get-field)
@@ -1039,23 +1070,29 @@ sensible defaults and remove line breaks and empty spaces."
 
 (defun ebib-extras-get-id-or-url ()
   "Get the ID or URL of the entry at point."
-  (when-let ((id-or-url (catch 'found
-			  (dolist (field '("doi" "isbn" "url"))
-			    (when-let ((value (ebib-extras-get-field field)))
-			      (throw 'found value))))))
-    id-or-url))
+  (let ((get-field (pcase major-mode
+		     ('ebib-entry-mode #'ebib-extras-get-field)
+		     ('bibtex-mode #' (bibtex-extras-get-field)))))
+    (when-let ((id-or-url (catch 'found
+			    (dolist (field '("doi" "isbn" "url"))
+			      (when-let ((value (funcall get-field field)))
+				(throw 'found value))))))
+      id-or-url)))
 
 (defun ebib-extras-fetch-id-or-url ()
   "Fetch the ID or URL of the entry at point.
 Fetching is done using `bib'."
-  (let ((title (ebib-extras-get-field "title"))
-	(author (ebib-extras-get-field "author")))
+  (let* ((get-field (pcase major-mode
+		      ('ebib-entry-mode #'ebib-extras-get-field)
+		      ('bibtex-mode #' (bibtex-extras-get-field))))
+	 (title (get-field "title"))
+	 (author (get-field "author")))
     (pcase (ebib-extras-get-supertype)
       ("book" (bib-search-isbn (format "% %" title author)))
       ("article" (bib-search-crossref title author))
       ("film" (bib-search-imdb
 	       (bib-translate-title-to-english title)))
-      (_ (ebib-extras-get-field "url")))))
+      (_ (get-field "url")))))
 
 (defun ebib-extras-get-or-fetch-id-or-url ()
   "Get the ID or URL of the entry at point, or fetch it if missing."
@@ -1083,14 +1120,6 @@ Fetching is done using `bib'."
     (with-current-buffer (find-file-noselect file)
       (funcall command))))
 
-(defun ebib-extras-fetch-field-from-zotero (field &optional id-or-url)
-  "Fetch the value of FIELD from the ID-OR-URL of the entry at point.
-IF ID-OR-URL is nil, try to get it or fetch it."
-  (unless (derived-mode-p 'ebib-entry-mode)
-    (error "Not in `ebib-entry-mode'"))
-  (let* ((id-or-url (or id-or-url (ebib-extras-get-or-fetch-id-or-url))))
-    (zotra-extras-fetch-field field id-or-url)))
-
 (defun ebib-extras-move-entry (direction)
   "Move to the previous or next entry in the current database.
 DIRECTION can be `prev' or `next'."
@@ -1102,6 +1131,9 @@ DIRECTION can be `prev' or `next'."
       ('ebib-entry-mode
        (ebib-extras-open-or-switch)
        (funcall fun)
+       (ebib-edit-entry)
+       ;; hack: we do this twice to ensure the index buffer is updated
+       (ebib-extras-open-or-switch)
        (ebib-edit-entry)))))
 
 (defun ebib-extras-next-entry ()
@@ -1118,43 +1150,6 @@ DIRECTION can be `prev' or `next'."
   "Set the value of FIELD to VALUE for the entry at point."
   (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
   (ebib-extras-update-entry-buffer ebib--cur-db))
-
-(defun ebib-extras-fetch-and-set-abstract (&optional overwrite)
-  "Fetch the abstract of the entry at point and set it as the new value.
-We use CrossRef for DOIs, Google Books for ISBN and Zotero for URLs.
-
-When the entry already contains an abstract, prompt the user for confirmation.
-Bypass this prompt if OVERWRITE is either `always' or `never'; if so, the new
-abstract will, or will not, replace the existing one, respectively."
-  (interactive)
-  (let ((abstract (ebib-extras-get-field "abstract")))
-    (when (or
-	   (eq overwrite 'always)
-	   (not abstract)
-	   (unless (eq overwrite 'never)
-	     (y-or-n-p "Abstract already exists. Overwrite?")))
-      (if-let ((value (or (when-let ((doi (ebib-extras-get-field "doi")))
-			    (bib-fetch-abstract-from-crossref doi))
-			  (when-let ((isbn (ebib-extras-get-field "isbn")))
-			    (bib-fetch-abstract-from-google-books isbn))
-			  (when-let ((url (ebib-extras-get-field "url")))
-			    ;; running zotero on a URL of a PDF throws an error
-			    (unless (string-match-p "\\.pdf$" url)
-			      (ebib-extras-fetch-field-from-zotero "abstract" url))))))
-	  (ebib-extras-set-field "abstract" (ebib-extracts-abstract-cleanup value))
-	(message "No abstract found")))))
-
-(defun ebib-extracts-abstract-cleanup (string)
-  "Clean up raw abstract consisting of STRING."
-  ;; remove a bunch of stuff
-  (dolist (regexp '("<[^>]+>" ; XML tags
-		    "{\\\\textless}.?p{\\\\textgreater}" ; LaTeX tag
-		    "^summary\\|^abstract\\(:? ?\\)" ; extraneous leading words
-		    )
-		  string)
-    (setq string (replace-regexp-in-string regexp "" string)))
-  ;; add a period at the end of the abstract if missing
-  (replace-regexp-in-string "\\([^\\.]\\)$" "\\1." string))
 
 (defun ebib-extras-fetch-keywords ()
   "Fetch keywords for the entry at point and put them in the associated org file."
@@ -1189,7 +1184,6 @@ abstract will, or will not, replace the existing one, respectively."
   "Create a BibTeX entry for the section of the current entry.
 Prompt the user for a title, unless TITLE is non-nil."
   (interactive)
-  (require 'tlon-babel)
   (let* ((fields `(("title" . ,(or title (read-string "Section title: ")))
 		   ("eventtitle" . ,(ebib-extras-get-field "title"))
 		   ("url" . ,(read-string "URL: " (ebib-extras-get-field "url")))

@@ -53,38 +53,55 @@
   :type 'file
   :group 'eww-extras)
 
+(defcustom eww-extras-chrome-data-dir
+  (expand-file-name "~/Library/Application Support/Google/Chrome/Default")
+  "Directory where Chrome data is stored."
+  :type 'directory
+  :group 'eww-extras)
+
 ;;;; Functions
 
-(defun eww-extras-url-to-file (type &optional url)
-  "Generate file of TYPE for URL."
-  (require 'org-web-tools-extras)
-  (require 'prot-eww)
+(defun eww-extras-url-to-file (type &optional url callback)
+  "Generate file of TYPE for URL and take ACTION.
+CALLBACK is a function called when the process concludes. The function takes two
+arguments: the file of the converted PDF and the file of the BibTeX entry
+associated with the PDF."
   (let* ((url (simple-extras-get-url url))
-	 (title (pcase type
-		  ("pdf" (or (pcase major-mode
-			       ('bibtex-mode (bibtex-extras-get-field "title"))
-			       ((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "title")))
-			     (buffer-name)))
-		  ("html" (org-web-tools-extras-org-title-for-url url))))
-	 (slug (prot-eww--sluggify title))
-	 (file-name (file-name-with-extension slug type))
-	 (output-file (file-name-concat paths-dir-downloads file-name)))
-    (async-shell-command
-     (format
-      (pcase type
-	("pdf" "'%s' --print-to-pdf --no-pdf-header-footer --headless %s --print-to-pdf='%s'")
-	("html" "'%s' --headless --dump-dom '%s' > %s"))
-      browse-url-chrome-program url output-file))))
+	 (title (pcase major-mode
+		  ('bibtex-mode (bibtex-extras-get-key))
+		  ((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "=key="))
+		  (_ (pcase type
+		       ("pdf" (buffer-name))
+		       ("html" (prot-eww--sluggify (org-web-tools-extras-org-title-for-url url)))))))
+	 (file-name (file-name-with-extension title type))
+	 (output-file (file-name-concat paths-dir-downloads file-name))
+	 (bibtex-file (buffer-file-name))
+	 (process (make-process
+		   :name (format "url-to-%s" type)
+		   :buffer "*URL-to-File-Process*"
+		   :command (list shell-file-name shell-command-switch
+				  (format
+				   (pcase type
+				     ("pdf" "'%s' --user-data-dir='%s' --print-to-pdf --no-pdf-header-footer --headless %s --print-to-pdf='%s'")
+				     ("html" "'%s' --user-data-dir='%s' --headless --dump-dom '%s' > %s"))
+				   browse-url-chrome-program eww-extras-chrome-data-dir url output-file)))))
+    (message "Getting %s file..." type)
+    (set-process-sentinel process
+			  (lambda (proc event)
+			    (if (string= event "finished\n")
+				(when callback
+				  (funcall callback output-file bibtex-file))
+			      (user-error "Could not get file"))))))
 
-(defun eww-extras-url-to-html (&optional url)
+(defun eww-extras-url-to-html (&optional url callback)
   "Generate HTML of URL."
   (interactive)
-  (eww-extras-url-to-file "html" url))
+  (eww-extras-url-to-file "html" url callback))
 
-(defun eww-extras-url-to-pdf (&optional url)
+(defun eww-extras-url-to-pdf (&optional url callback)
   "Generate PDF of URL."
   (interactive)
-  (eww-extras-url-to-file "pdf" url))
+  (eww-extras-url-to-file "pdf" url callback))
 
 (defun eww-extras-readable-autoview ()
   "Display the \"readable\" parts of the current web page by default.
@@ -106,9 +123,9 @@ If buffer is visiting a URL or if there is a URL in the kill ring, use its
 domain as the initial prompt input."
   (interactive)
   (let* ((url (or (eww-current-url) (ffap-url-p (current-kill 0))))
-         (domain (when url (url-domain (url-generic-parse-url url))))
+	 (domain (when url (url-domain (url-generic-parse-url url))))
 	 (file eww-extras-readable-exceptions-file)
-         (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
+	 (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
     (browse-url-extras--write-url-to-file selection file)
     (eww-extras-set-readable-exceptions-from-file)
     (eww-reload)))
@@ -149,7 +166,6 @@ With prefix ARG is passed, open in new EWW buffer."
 (defun eww-extras-go-up-url-hierarchy ()
   "Go up the URL hierarchy."
   (interactive)
-  (require 's)
   (let* ((url (url-generic-parse-url (eww-current-url)))
 	 (filepath (url-filename url))
 	 (paths (s-split "/" filepath))
@@ -168,21 +184,27 @@ With prefix ARG is passed, open in new EWW buffer."
     (eww-browse-url (url-recreate-url new-url))))
 
 (defun eww-extras-go-to-root-url-hierarchy ()
-"Go to root of current URL hierarchy."
-(interactive)
-(let* ((url (url-generic-parse-url (eww-current-url)))
-       (new-url nil))
-  (setq new-url (url-parse-make-urlobj
-		 (url-type url)
-		 (url-user url)
-		 (url-password url)
-		 (url-host url)
-		 (url-port url)
-		 ""
-		 (url-target url)
-		 nil
-		 (url-fullness url)))
-  (eww-browse-url (url-recreate-url new-url))))
+  "Go to root of current URL hierarchy."
+  (interactive)
+  (let* ((url (url-generic-parse-url (eww-current-url)))
+	 (new-url nil))
+    (setq new-url (url-parse-make-urlobj
+		   (url-type url)
+		   (url-user url)
+		   (url-password url)
+		   (url-host url)
+		   (url-port url)
+		   ""
+		   (url-target url)
+		   nil
+		   (url-fullness url)))
+    (eww-browse-url (url-recreate-url new-url))))
+
+(defun eww-extras-browse-youtube-in-mpv (url)
+  "Browse YouTube URL in MPV."
+  (when (string-match "youtube.com" url)
+    (empv-play url)
+    (empv-toggle-video)))
 
 (provide 'eww-extras)
 

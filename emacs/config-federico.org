@@ -114,33 +114,6 @@
  )
 #+end_src
 
-Doom modeline
-#+begin_src emacs-lisp :tangle no
- (:doom-modeline
-  . ((setq doom-modeline-mu4e nil) ; avoid distractions
-     (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
-     (setq doom-modeline-buffer-encoding t) ; FEDE ==> I want to show encoding
-     (setq doom-modeline-irc t)
-     (setq doom-modeline-irc-buffers t)
-     (setq doom-modeline--flycheck-icon nil)
-     (setq doom-modeline-github t)
-     (setq doom-modeline-github-interval (* 10 60))
-     (setq doom-modeline-buffer-file-name-style 'truncate-nil) ; FEDE ==> Full filenames, please!
-     (setq doom-modeline-enable-word-count t)
-
-     (doom-modeline-def-modeline 'main
-       '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
-       '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
-
-     (add-hook 'magit-status-mode-hook 'doom-modeline--github-fetch-notifications)
-
-     (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-                      (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-                      (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-                      (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-       (remove-hook (car cons) (cdr cons)))))
-#+end_src
-
 * fede's early-init
 :PROPERTIES:
 :ID:       0C6ACEE9-21F3-49C2-A091-F02DDFCF6B3C
@@ -599,6 +572,19 @@ Doom modeline
     (remove-hook hook #'jinx-mode)))
 #+end_src
 
+** doom-modeline
+:PROPERTIES:
+:ID:       611B2410-F87D-4733-86E8-4442AB3D3D32
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'doom-modeline
+  ;; buffer names are currently shown via the `breadcrumbs' package
+  ;; to display them in the modeline, uncomment the line below and disable the `bradcrumbs' package
+  ;; (setq doom-modeline-buffer-name t) ; 
+  (setq doom-modeline-buffer-file-name-style 'truncate-nil)) ; FEDE ==> Full filenames, please!
+#+end_src
+
 ** tab-bar-extras
 :PROPERTIES:
 :ID:       6AC832A6-0F9D-450E-BFA2-0271AF4F2FB6
@@ -607,9 +593,6 @@ Doom modeline
 (with-eval-after-load 'tab-bar-extras
   (setq tab-bar-extras-reset-wttr nil)
 
-  ;; (remove-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
-
-  ;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
   (setq tab-bar-extras-global-mode-string
         `(,tab-bar-extras-prefix-element
           ;; ,tab-bar-extras-date-element

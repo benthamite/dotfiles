@@ -4,6 +4,132 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository.
 
+* Version 6.2.0 on 2024-03-09
+:PROPERTIES:
+:ID:       59A209FE-181E-4D74-B9C7-DC176E56CCCA
+:END:
+
+** bibtex
+:PROPERTIES:
+:ID:       266E695B-65A3-419F-9F72-A65DD1A7F58F
+:END:
+
+- The ~fluid.bib~ and ~stable.bib~ files are now auto-sorted with the same sorting criterion used by Ebib. This solves the problem whereby changes to one entry (such as adding an abstract) were diffed as being part of another entry, because the file was re-sorted before the changes were committed.
+- Relevant commands:
+
+#+begin_src emacs-lisp
+"s-a" 'bibtex-extras-set-field
+"s-h" 'bibtex-extras-url-to-html-attach
+"s-i" 'bibtex-extras-open-in-ebib
+"s-p" 'bibtex-extras-url-to-pdf-attach
+"s-t" 'bibtex-extras-move-entry-to-tlon)
+#+end_src
+
+** breadcrumb
+:PROPERTIES:
+:ID:       F98F0790-972E-447B-B57F-869B9D6A05C7
+:END:
+- Added this package that displays a narrow bar below the tab bar with context-specific information about the buffer. In file-visiting buffers, it will show the file path, sometimes followed by additional details, such as the heading(s) in org-mode or Markdown files. Since this information is now shown here, the modeline only shows the name of the buffer, since it would be redundant to show the full path there as well. This leaves more room to show other potentially relevant information, such as the encoding system and, as noted below, the name of the active AI model.
+
+** consult-gh
+:PROPERTIES:
+:ID:       15A8B42B-8B6B-4B2F-98C9-83F4FC22711A
+:END:
+
+- A new package, ~consult-gh~ provides an interface to interact with GitHub repositories. The relevant commands may all be accessed from the “dispatcher”, via ~H-G~.
+** doom-modeline
+:PROPERTIES:
+:ID:       9AC16375-24B8-4010-81F7-BF22C2A3858B
+:END:
+- The modeline now shows the AI language model active in the buffer. Since ~gptel~ can be invoked from any buffer, I think it’s useful to know which model will be used. If you don’t want to see this information, just set ~doom-modeline-extras-gptel~ to ~nil~.
+
+** ebib
+:PROPERTIES:
+:ID:       FB1EA3B2-7BF0-4E00-A2B4-631AC9CEC3D3
+:END:
+- The commands to generate PDF (~s-p~) or HTML (~s-h~) files now directly attach the generated file to the appropriate entry, bypassing the need to do this manually. Note that these commands also work from bibtex and from eww, and have the same key bindings.
+
+** eww
+:PROPERTIES:
+:ID:       EF99C3D0-4423-4700-9D05-751AB5DA2DF9
+:END:
+- The shell command to create PDF files now incorporates an extra authentication argument that should prevent the messages to approve cookies from showing up in the document.
+- Following a YouTube will now open it in ~mpv~, if installed. This integration makes use of the package ~empv~, which also supports controlling the playback directly from Emacs (~A-p~ to see a list of commands).
+
+** forge
+:PROPERTIES:
+:ID:       8988FD8C-7D84-4E12-A0E3-23224DD873B5
+:END:
+- When visiting an unread issue, the associated GitHub page will open silently in a Firefox browser. This should happen without any visual or performance effects. Recently Forge made a major update to its notifications functionality, and they now work out of the box. However, because of limitations of the GitHub API, two-way sync is not possible: although viewing an issue in GitHub will show it as read in Forge, the reverse is not the case.g I don't mind this much since I ignore the GitHub visited status, but the Firefox hack ensures that the two counts remain fully in sync. To disable this behavior, remove this advice:
+
+#+begin_src emacs-lisp
+(advice-add 'forge-visit-this-topic :before #'forge-extras-browse-topic-in-background)
+#+end_src
+
+- The key bindings had become quite chaotic, so I switched to the following convention: we retain all the native key bindings, and use the Super modifier for all our custom bindings:
+
+#+begin_src emacs-lisp
+"s-a" 'forge-topic-set-assignees
+"s-d" 'forge-delete-comment
+"s-l" 'forge-topic-set-labels
+"s-i" 'forge-browse-issue
+"s-I" 'forge-browse-issues
+"s-t" 'forge-topic-set-title
+"s-e" 'forge-edit-post
+"s-p" 'forge-create-post
+"s-r" 'forge-create-post ; (= reply)
+"s-x" 'forge-extras-state-set-dwim ; close/reopen issue
+#+end_src
+
+These commands should work in all Forge-related buffers.
+
+** gptel
+:PROPERTIES:
+:ID:       FBC48717-0EFE-4C41-A2B3-4C04A5629F50
+:END:
+
+- I have configured this package to activate the Gemini backend in text-related modes (including ~bibtex-mode~) and the GPT-4 backend in programming-related modes. GPT-4 is much better for answering programming questions (at least questions about Emacs Lisp), but Gemini has a much higher token limit and is free. So we use it for tasks like generating summaries (and the quality for these taks is comparable to that of GPT-4).
+- I have also added a third backend, Claude (from Anthropic), though I haven’t yet experimented with it.
+- The command ~gptel-extras-model-config~, bound to ~H-s-c~, can be used to switch to a different backend. This command will also prompt the user to select among a variety of "models" within a given backend. Note that some backends are much more expensive than others (as in ~10x more expensive). See these pages for details:
+    - [[https://www.anthropic.com/api#pricing][Claude]]
+    - [[https://openai.com/pricing][GPT-4]]
+- The main other relevant commands are ~gptel~ (~H-s-g~), ~gptel~ (~H-s-g~), ~gptel-abort~ (~H-s-a~) and ~gptel-send~ (~M-c~). See [[https://www.youtube.com/watch?v=bsRnh_brggM][this great video]] for details. 
+
+** isearch
+:PROPERTIES:
+:ID:       3AA348DB-68C1-46E1-AFD1-46EF647A11E3
+:END:
+
+- The commands ~isearch-extras-consult-line~ (~C-l~) and ~isearch-extras-project-search~ (~C-p~) have been added.
+- ~avy-isearch~ is now bound to ~M-f~ (~avy~ and ~ace-link~ commands are generally bound to ~M-f~ or—in read-only files—to ~f~).
+
+** org-appear
+:PROPERTIES:
+:ID:       9CEA642C-962A-4281-BABD-B9C623C647BB
+:END:
+- new package: emphasis markers are now displayed with point moves to them.
+  
+** ox-clip
+:PROPERTIES:
+:ID:       7B0AA24B-3DF5-4B06-8316-57EA58C0CF8A
+:END:
+
+- ~ox-clip-formatted-copy~ (~s-c~) had stopped working, but is now fixed. With this command, you can copy text in ~org-mode~ and paste it as Markdown (e.g. on GitHub) or as rendered HTML (e.g. on Slack).
+
+** tab-bar
+:PROPERTIES:
+:ID:       43814A67-7E2F-4C7C-AEA9-4C60019C6D6E
+:END:
+
+- A command now exists to hide (and unhide) GitHub and Telega notifications: ~tab-bar-extras-toggle-notifications~. Notifications are now also automatically hidden and unhidden when a Pomodoro session starts and ends.
+
+** vertico
+:PROPERTIES:
+:ID:       12991722-05E3-4B14-AAF8-5C6FF387F4F3
+:END:
+
+- The commands ~vertico-previous-group~ and ~vertico-next-group~ are bound to ~C-k~ and ~C-l~.
+
 * Version 6.1.0 on 2024-02-19
 :PROPERTIES:
 :ID:       862E30DF-E178-4023-B1C8-4BDEA1217C0B
@@ -30,7 +156,7 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 
 - Added functionality to validate languages in =landid= field.
 - Added various functions to get BibTeX fields, entries as strings.
-    
+
 ** consult
 :PROPERTIES:
 :ID:       3F6C96B6-3282-425C-8AF0-F161EFEEAA2F
@@ -53,7 +179,7 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 - Added ~ebib-extras-previous-entry~ and ~ebib-extras-next-entry~, bound to =,= and =.=, respectively.
 - Revised or refactor various functions.
 - Significantly revised ~ebib-extras-fetch-and-set-abstract~ , and created the associated ~ebib-extracts-abstract-cleanup~.
-  
+
 ** edebug
 :PROPERTIES:
 :ID:       5E8D7A90-6768-4F7F-A064-3D930772AB27
@@ -67,7 +193,7 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 :END:
 
 - Set a timer to update the database after 30 minutes of idleness. Feel free to disable it.
-  
+
 ** forge
 :PROPERTIES:
 :ID:       05A1E517-5009-4E6B-BFFE-7965ED93B9F6
@@ -92,7 +218,7 @@ See also the packages listed in the ‘icons’ section below.
 :ID:       A0C11FB6-A835-44AB-BB75-20BF53A6796B
 :END:
 
-- Unset custom ~C-k~ key binding, bound to ~helpful-key~. The command is now bound to the default binding for ~help-key~, ~C-h k~. 
+- Unset custom ~C-k~ key binding, bound to ~helpful-key~. The command is now bound to the default binding for ~help-key~, ~C-h k~.
 
 ** icons
 :PROPERTIES:
@@ -121,7 +247,7 @@ Because =nerd-icons= do not impose additional performance costs, they are now al
 :END:
 
 - Changed the ~org-extras-tlon-dispatch~ binding from =H-;= to =H-l=.
-  
+
 ** org-roam
 :PROPERTIES:
 :ID:       E4E18C04-A5A5-46B7-B96F-C8BC56755198
@@ -142,4 +268,3 @@ The keys =M-k= and =M-l= are now bound to ~vertico-previous-group~ and ~vertico-
 :END:
 
 - Created snippets to reference a commit (=tlon-reference-commit=) and an issue (=tlon-reference-issue=) from a Forge buffer. These snippets are expanded with =trc= and =tri=,  respectively.
-  

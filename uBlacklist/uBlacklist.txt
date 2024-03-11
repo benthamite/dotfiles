@@ -1,0 +1,4 @@
+*://*.rationalwiki.org/*
+*://*.dailymail.co.uk/*
+*://*.nypost.com/*
+*://*.currentaffairs.org/*

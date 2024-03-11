@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: tlon-pablo-uber
+# key: tpu
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")`$4 Uber
+    Expenses:Core:Transportation         $1.00 ARS ; taxi $2 Fede's place
+    Liabilities:Pablo Stafforini
+
+`(format-time-string "%Y-%m-%d")`$5 Uber
+    Liabilities:Tlon                     $1.00 ARS ; taxi $2 Fede's place
+    Liabilities:Mom:Extension
+
+$0

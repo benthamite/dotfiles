@@ -482,6 +482,47 @@ Either way, save count to kill ring."
     (visual-line-mode)
     (setq truncate-lines nil)))
 
+;; inspired by
+;; web.archive.org/web/20220527155813/with-emacs.com/posts/tips/quit-current-context/
+;; protesilaos.com/emacs/dotemacs#h:5f78e837-0d27-4390-bd9a-6d0bca57fa50
+(defun simple-extras-keyboard-quit-dwim ()
+  "Do-What-I-Mean behaviour for a general `keyboard-quit'.
+
+The DWIM behaviour of this command is as follows:
+
+- When the region is active, disable it.
+- When the Completions buffer is selected, close it.
+- When the minibuffer is active, close it.
+- When defining a keyboard macro, do nothing.
+- When a prefix argument is given, do nothing.
+- Otherwise, call `keyboard-quit'."
+  (interactive)
+  (cond ((region-active-p)
+         ;; Avoid adding the region to the window selection.
+         (setq saved-region-selection nil)
+         (let (select-active-regions)
+           (deactivate-mark)))
+	((derived-mode-p 'completion-list-mode)
+	 (delete-completion-window))
+        ((eq last-command 'mode-exited) nil)
+        (current-prefix-arg
+         nil)
+        (defining-kbd-macro
+         (message
+          (substitute-command-keys
+           "Quit is ignored during macro defintion, use \\[kmacro-end-macro] if you want to stop macro definition"))
+         (cancel-kbd-macro-events))
+        ((active-minibuffer-window)
+         (when (get-buffer-window "*Completions*")
+           ;; hide completions first so point stays in active window when
+           ;; outside the minibuffer
+           (minibuffer-hide-completions))
+         (abort-recursive-edit))
+        (t
+         ;; if we got this far just use the default so we don't miss
+         ;; any upstream changes
+         (keyboard-quit))))
+
 ;;;;; indent
 
 ;; Adapted from `spacemacs/indent-region-or-buffer'.
@@ -595,16 +636,15 @@ FORMS are evaluated with point restored to its original position."
     (call-interactively #'fill-paragraph)))
 
 (declare-function eww-current-url "eww")
-(declare-function ebib-get-field-value "ebib")
-(declare-function ebib--get-key-at-point "ebib")
-(defvar ebib--cur-db)
-(defun simple-extras-get-url (url)
+(declare-function ebib-extras-get-field "ebib-extras")
+(declare-function bibtex-extras-get-field "bibtex-extras")
+(defun simple-extras-get-url (&optional url)
   "Get URL from URL, current buffer, or prompt user for it."
   (or url
-      (when (derived-mode-p 'eww-mode)
-	(eww-current-url))
-      (when (derived-mode-p 'ebib-entry-mode)
-	(ebib-get-field-value "url" (ebib--get-key-at-point) ebib--cur-db 'noerror t))
+      (pcase major-mode
+	('eww-mode (eww-current-url))
+	((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "url"))
+	('bibtex-mode (bibtex-extras-get-field "url")))
       (read-string "URL: ")))
 
 ;;;;; url-parse

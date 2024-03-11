@@ -1,4 +1,4 @@
-#+PROPERTY: header-args :tangle (print path-file-karabiner-edn)
+#+PROPERTY: header-args :tangle (print paths-file-karabiner-edn)
 #+TITLE:Pablo's Karabiner modifications
 #+AUTHOR: Pablo Stafforini
 :PROPERTIES:
@@ -233,6 +233,7 @@ CLOCK: [2021-07-16 Fri 21:54]--[2021-07-16 Fri 22:04] =>  0:10
       :em_dash {:key :!SEhyphen}
 
       ;; diacritics
+      ;; note that many of the mappings below require ABC - Extended as the macOS input source
       :overdot {:key :!Ew}
       :underdot {:key :!Ex}
       :accute_accent {:key :!Ee}
@@ -899,9 +900,6 @@ CLOCK: [2021-12-01 Wed 17:12]--[2021-12-01 Wed 17:27] =>  0:15
 :ID:       E0EEFD9C-91E1-40D3-BCC0-7B3D3EB632D4
 :END:
 
-:PROPERTIES:
-:ID:       30BAC8D5-5966-4786-8C82-38543AD0FF04
-:END:
 #+begin_src clojure
 {:des "p-mode (diacritics)"
  :rules [:p-mode

@@ -421,7 +421,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-roam][org-roam]]
   - [[#org-roam-extras][org-roam-extras]]
   - [[#org-roam-ui][org-roam-ui]]
-  - [[#org-roam-browser-extension][org-roam-browser-extension]]
   - [[#org-transclusion][org-transclusion]]
   - [[#vulpea][vulpea]]
   - [[#vulpea-extras][vulpea-extras]]
@@ -9005,15 +9004,6 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
   (setq org-roam-ui-update-on-save nil)
   (setq org-roam-ui-open-on-start nil))
 #+end_src
-
-** org-roam-browser-extension
-:PROPERTIES:
-:ID:       5461B907-53F6-4D99-B70C-45E9C3902EB4
-:END:
-
-[[https://github.com/madnificent/org-roam-browser-extension][org-roam-browser-extension]] indicates via a browser icon whether you have ~org-roam~ notes on the web page you are visiting.
-
-I should check this out.
 
 ** org-transclusion
 :PROPERTIES:

@@ -8,6 +8,14 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** org-roam-browser-extension
+:PROPERTIES:
+:ID:       5461B907-53F6-4D99-B70C-45E9C3902EB4
+:END:
+
+[[https://github.com/madnificent/org-roam-browser-extension][org-roam-browser-extension]] indicates via a browser icon whether you have ~org-roam~ notes on the web page you are visiting.
+
+Abandoned.
 ** mpv
 :PROPERTIES:
 :ID:       8D75E528-AA79-4512-B4A9-6EB7A56F9026

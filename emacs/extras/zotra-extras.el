@@ -29,11 +29,10 @@
 
 (require 'bibtex-extras)
 (require 'doi-utils)
-(require 'ebib-extras)
 (require 'ebib-utils)
 (require 'eww-extras)
 (require 'paths)
-(require 'tlon-babel-refs)
+(require 'tlon-babel-tts)
 (require 'zotra)
 
 ;;;; Functions
@@ -111,18 +110,26 @@ Zotero-imported bibtex entries."
           (while (search-forward octal nil t)
             (replace-match char)))))))
 
-(defun zotra-extras-fetch-field (field url-or-search-string)
-  "Get FIELD value in bibliographic entry for URL-OR-SEARCH-STRING."
+(defun zotra-extras-fetch-field (field url-or-search-string &optional ignore-errors)
+  "Get FIELD value in bibliographic entry for URL-OR-SEARCH-STRING.
+If IGNORE-ERRORS is non-nil, handle error thrown by `zotra-get-entry-1'
+gracefully."
   (let* ((query-result (zotra-query-url-or-search-string url-or-search-string))
 	 (data (car query-result))
 	 (endpoint (cdr query-result))
-	 (entry (zotra-get-entry-1 data zotra-default-entry-format endpoint)))
-    (with-temp-buffer
-      (insert entry)
-      (let ((value (bibtex-autokey-get-field field)))
-	(if (string-empty-p value)
-	    nil
-	  value)))))
+	 (entry (if ignore-errors
+                    (condition-case nil
+			(zotra-get-entry-1 data zotra-default-entry-format endpoint)
+		      (error nil))
+                  (zotra-get-entry-1 data zotra-default-entry-format endpoint))))
+    (when entry
+      (with-temp-buffer
+        (insert entry)
+        (bibtex-mode)
+        (let ((value (bibtex-autokey-get-field field)))
+          (if (string-empty-p value)
+              nil
+            value))))))
 
 (provide 'zotra-extras)
 ;;; zotra-extras.el ends here

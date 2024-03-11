@@ -32,10 +32,19 @@
 
 ;;;; Variables
 
+(defvar tab-bar-extras-notifications-enabled t
+  "Whether notifications are enabled in the Tab Bar.")
+
+(defvar tab-bar-extras-telega-notifications-enabled t
+  "Whether the Telega element actually displays notifications in the Tab Bar.")
+
+(defvar tab-bar-extras-github-notifications-enabled t
+  "Whether the GitHub element actually displays notifications in the Tab Bar.")
+
 ;;;; User options
 
 (defgroup tab-bar-extras ()
-  "Extensions for `tab-bar'."
+  "Extensions for the Tab Bar."
   :group 'tab-bar)
 
 (defcustom tab-bar-extras-global-mode-string nil
@@ -52,7 +61,7 @@
 
 (defcustom tab-bar-extras-prefix-element
   " "
-  "Element to display at the beginning of the tab-bar."
+  "Element to display at the beginning of the Tab Bar."
   :type 'sexp
   :group 'tab-bar-extras)
 
@@ -76,32 +85,18 @@
 
 (defcustom tab-bar-extras-telega-element
   `(:eval (when (and
+		 tab-bar-extras-telega-notifications-enabled
 		 (telega-server-live-p)
-		 (> (plist-get telega--unread-message-count :unread_count) 0))
+		 (> (plist-get telega--unread-message-count :unread_count) 0)
+		 )
 	    (concat " | " telega-mode-line-string)))
-  "Element to display Telega notificaations."
+  "Element to display Telega notifications."
   :type 'sexp
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-github-element
-  `(:eval (when (> doom-modeline--github-notification-number 0)
-	    (concat
-	     " | "
-	     (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
-				 :face 'doom-modeline-notification)
-	     (doom-modeline-vspc)
-	     (propertize
-	      (cond
-	       ((> doom-modeline--github-notification-number 99) "99+")
-	       (t (number-to-string doom-modeline--github-notification-number)))
-	      'face '(:inherit
-		      (doom-modeline-unread-number doom-modeline-notification))))))
-  "Element to display Github notifications."
-  :type 'sexp
-  :group 'tab-bar-extras)
-
-(defcustom tab-bar-extras-forge-element
-  `(:eval (when (forge-extras-get-unread-notifications)
+  `(:eval (when (and tab-bar-extras-github-notifications-enabled
+		     (forge-extras-get-unread-notifications))
 	    (concat
 	     " | "
 	     (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
@@ -125,9 +120,16 @@
   :type 'sexp
   :group 'tab-bar-extras)
 
+(defcustom tab-bar-extras-notification-status-element
+  `(:eval (unless tab-bar-extras-notifications-enabled
+	    (concat (propertize "🔕" 'face '(:height 0.8)) tab-bar-extras-separator-element)))
+  "Element to display when the notifications are disabled."
+  :type 'sexp
+  :group 'tab-bar-extras)
+
 (defcustom tab-bar-extras-separator-element
   " | "
-  "Element to separate the tab-bar elements.
+  "Element to separate the Tab Bar elements.
 Note that elements that the separator is already part of elements that do not
 always show (like Github or Telega notifications), because otherwise the
 separator would remain even when the elements are absent."
@@ -138,15 +140,14 @@ separator would remain even when the elements are absent."
 
 (defun tab-bar-extras-reset (&optional quick)
   "Reset the tab bar.
-This resets the clock, refreshes the tab-bar and its color, and updates the
+This resets the clock, refreshes the Tab Bar and its color, and updates the
 geolocation and weather information. If QUICK is non-nil, run only the essential
 reset functions."
   (interactive)
-  (display-time)
-  (setq global-mode-string tab-bar-extras-global-mode-string)
+  (tab-bar-extras-set-global-mode-string)
   (unless quick
     (when calendar-extras-use-geolocation
-      (calendar-extras-set-location-variables-from-ip))
+      (calendar-extras-set-geolocation))
     (setq display-wttr-locations `(,calendar-extras-location-name)))
   (when tab-bar-extras-reset-wttr
     (display-wttr)))
@@ -156,14 +157,61 @@ reset functions."
   (interactive)
   (tab-bar-extras-reset t))
 
+(defun tab-bar-extras-set-global-mode-string ()
+  "Set `global-mode-string' to `tab-bar-extras-global-mode-string'."
+  (let ((inhibit-message t))
+    (setq global-mode-string tab-bar-extras-global-mode-string)))
+
 (defvar org-clock-current-task)
 (defun tab-bar-extras-reset-unless-clock ()
-  "Reset the tab-bar when `org-clock' isn't running.
+  "Reset the Tab Bar when `org-clock' isn't running.
 The condition is included to prevent the currently clocked task from
-disappearing when the tab-bar is reset."
+disappearing when the Tab Bar is reset."
   (require 'org-clock)
   (unless org-clock-current-task
     (tab-bar-extras-reset)))
+
+;;;;; notifications
+
+(defun tab-bar-extras-toggle-notifications (&optional action)
+  "Toggle all notifications in the Tab Bar.
+If ACTION is `enable', enable notifications. If ACTION is `disable', disable
+them."
+  (interactive)
+  (dolist (fun '(tab-bar-extras-toggle-github-notifications
+		 tab-bar-extras-toggle-telega-notifications))
+    (funcall fun action))
+  (setq tab-bar-extras-notifications-enabled
+	(tab-bar-extras-get-state action 'tab-bar-extras-notifications-enabled)))
+
+(defun tab-bar-extras-toggle-telega-notifications (&optional action)
+  "Toggle Telega notifications in the Tab Bar.
+If ACTION is `enable', enable notifications. If ACTION is `disable', disable
+them."
+  (tab-bar-extras-toggle-individual-notifications 'tab-bar-extras-telega-notifications-enabled action))
+
+(defun tab-bar-extras-toggle-github-notifications (&optional action)
+  "Toggle GitHub notifications in the Tab Bar.
+If ACTION is `enable', enable notifications. If ACTION is `disable', disable
+them."
+  (tab-bar-extras-toggle-individual-notifications 'tab-bar-extras-github-notifications-enabled action))
+
+(defun tab-bar-extras-toggle-individual-notifications (var &optional action)
+  "Toggle notifications for VAR in the Tab Bar.
+If ACTION is `enable', enable notifications. If ACTION is `disable', disable
+them."
+  (let ((state (tab-bar-extras-get-state action var)))
+    (message "%s notifications."
+	     (if (set var state) "Enabled" "Disabled"))))
+
+(defun tab-bar-extras-get-state (action &optional var)
+  "Get the state of the Tab Bar based on ACTION and VAR.
+Return t or nil depending on whether ACTION is `enable' or `disable',
+respectively. Otherwise, return t if the value of VAR is nil, and vice versa."
+  (pcase action
+    ('enable t)
+    ('disable nil)
+    (_ (not (symbol-value var)))))
 
 (provide 'tab-bar-extras)
 ;;; tab-bar-extras.el ends here

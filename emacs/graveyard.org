@@ -8,6 +8,79 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+** mpv
+:PROPERTIES:
+:ID:       8D75E528-AA79-4512-B4A9-6EB7A56F9026
+:END:
+
+/[[https://github.com/kljohann/mpv.el][mpv]] provides various functions to control [[https://en.wikipedia.org/wiki/Mpv_(media_player)][mpv]]./
+
+[2024-02-28 Wed] Replaced with ~empv~.
+
+#+begin_src emacs-lisp :results silent
+(use-package mpv)
+#+end_src
+
+** whisper
+:PROPERTIES:
+:ID:       19FF2502-D4A0-41CC-8F72-E1CF1D960304
+:END:
+
+/[[https://github.com/natrys/whisper.el][whisper]] is a speech-to-Text interface for Emacs using OpenAI's whisper model and whisper.cpp as inference engine./
+
+#+begin_src emacs-lisp
+(use-package whisper
+  :elpaca (whisper.el
+           :host github
+           :repo "natrys/whisper.el"
+           :protocol ssh)
+  :config
+  (setq whisper-install-directory no-littering-var-directory)
+  (setq whisper--ffmpeg-input-device ":0"))
+#+end_src
+
+** org-ai
+:PROPERTIES:
+:ID:       DE0368E4-FFE7-42D8-8557-2D5DD4DA5BF5
+:END:
+
+/[[https://github.com/rksm/org-ai][org-ai]] turns Emacs into your personal AI assistant using ChatGPT, DALL-E, and Whisper./
+
+[2024-02-26 Mon] Superseded by ~gptel~.
+
+#+begin_src emacs-lisp
+(use-package org-ai
+  :elpaca  (org-ai :type git :host github :repo "rksm/org-ai"
+                   :local-repo "org-ai"
+                   :files ("*.el" "README.md" "snippets"))
+  :after org yasnippet
+  :commands org-ai-mode
+  :config
+  (setq org-ai-openai-api-token (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
+  (setq org-ai-default-chat-model "gpt-4")
+  (setq org-ai-default-chat-system-prompt "You are a helpful and competent assistant. Please omit any disclaimers")
+  (setq org-ai-talk-say-words-per-minute 210)
+  (setq org-ai-image-directory paths-dir-org-images)
+  (org-ai-install-yasnippets)
+  (require 'org-ai-talk))
+#+end_src
+
+** jsonrpc
+:PROPERTIES:
+:ID:       ECE3D86D-035D-461C-937F-DF39086E4C5C
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
+
+#+begin_src emacs-lisp
+(use-package jsonrpc
+  ;; :elpaca (jsonrpc
+                   ;; :host github
+                   ;; :repo "emacs-straight/jsonrpc")
+  :demand t)
+#+end_src
+
+
 ** company
 :PROPERTIES:
 :ID:       D8BC79D0-C883-45A9-A5B2-98E88C59EE6B

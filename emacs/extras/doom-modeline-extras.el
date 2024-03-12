@@ -60,8 +60,7 @@
 
 (defvar prev-result)
 (defun doom-modeline-extras-trigger-forge-update ()
-  "Pull notifications in Forge when the modeline notification counter is updated.
-Also refresh the the `gh-notify' buffer."
+  "Pull notifications in Forge when the modeline notification counter is updated."
   (unless (eq doom-modeline--github-notification-number
 	      (length doom-modeline-extras-github-notification-last-count))
     (setq prev-result doom-modeline--github-notification-number)

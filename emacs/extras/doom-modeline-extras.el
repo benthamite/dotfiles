@@ -30,6 +30,7 @@
 (require 'doom-modeline)
 (require 'el-patch)
 (require 'forge)
+(require 'gptel)
 
 ;;;; User options
 
@@ -46,7 +47,6 @@
 
 ;;;;; Modeline segments
 
-(defvar gptel-model)
 (doom-modeline-def-segment gptel ()
   "Displays the `gptel' model active in the current buffer."
   (when (and doom-modeline-extras-gptel

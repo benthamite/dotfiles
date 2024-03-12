@@ -536,6 +536,7 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'org-roam
   (setq org-roam-directory paths-dir-org-roam)
+  (org-roam-db-autosync-mode 1)
   (message "`org-roam' late-init config loaded."))
 #+end_src
 

@@ -234,13 +234,15 @@ link, call `org-open-at-point' and set
 	(browse-url-handlers nil))
     (org-open-at-point)))
 
-(defun org-extras-paste-html ()
-  "Convert the contents of the system clipboard to `org-mode' using `pandoc'."
+(defun org-extras-paste-with-conversion ()
+  "Convert the contents of the system clipboard to Org Mode using Pandoc.
+This command will convert from HTML if the clipboard contains HTML, and from
+Markdown otherwise.
+
+See also `markdown-mode-extras-paste-with-conversion'. For the reverse process,
+use `ox-clip-formatted-copy'."
   (interactive)
-  (let* ((output (shell-command-to-string
-		  "pbv public.html | pandoc --wrap=none -f html -t org")))
-    (when (string-match-p "Could not access pasteboard contents" output)
-      (setq output (shell-command-to-string "pbpaste | pandoc --wrap=none -f markdown -t org")))
+  (let ((output (simple-extras-pandoc-convert "org" "markdown")))
     (insert
      (with-temp-buffer
        (insert output)
@@ -297,13 +299,13 @@ link, call `org-open-at-point' and set
 	    (base-cmd (concat "cd "
 			      folder
 			      "; git log --since=midnight -p "
-	    file
-	    "| grep TODO"))
-      (changed (shell-command-to-string base-cmd))
-      (added (org-extras-count-lines-with-expression changed "^\\+"))
-      (removed (org-extras-count-lines-with-expression changed "^\\-")))
-    (cons (+ (car acc) added)
-	  (- (cdr acc) removed))))
+			      file
+			      "| grep TODO"))
+	    (changed (shell-command-to-string base-cmd))
+	    (added (org-extras-count-lines-with-expression changed "^\\+"))
+	    (removed (org-extras-count-lines-with-expression changed "^\\-")))
+       (cons (+ (car acc) added)
+	     (- (cdr acc) removed))))
    org-agenda-files
    '(0 . 0)))
 

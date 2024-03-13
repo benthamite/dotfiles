@@ -11188,8 +11188,10 @@ These key bindings produce the same behavior in eww.
 (use-personal-package elfeed-extras
   :after elfeed
   :demand t
+  :config
+  (advice-add 'elfeed :after #'elfeed-extras-auto-update)
+
   :general
-  ("A-f" 'elfeed-extras-toggle-session)
   (elfeed-search-mode-map
    "A" 'elfeed-extras-mark-all-as-read
    "e" 'elfeed-extras-toggle-read-entries

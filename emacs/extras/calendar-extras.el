@@ -63,7 +63,7 @@ The value can be set manually. It can also be set via
 (defun calendar-extras-get-geolocation ()
   "Get geolocation from IP address.
 If IP is non-nil, use the local IP address."
-  (let* ((key (auth-source-pass-get 'secret "chrome/myprojects.geoapify.com"))
+  (let* ((key (auth-source-pass-get 'secret "tlon/core/myprojects.geoapify.com"))
 	 (url (format "https://api.geoapify.com/v1/ipinfo?&apiKey=%s" key))
 	 (url-request-method "GET")
 	 (url-request-extra-headers '(("Content-Type" . "application/json")))

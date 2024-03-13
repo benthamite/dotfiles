@@ -4259,7 +4259,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 /[[file:extras/calendar-extras.el][calendar-extras]] collects my extensions for ~calendar~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-personal-package calendar-extras auth
+(use-personal-package calendar-extras
   :after calendar auth-source-pass
   :defer 5
   :config

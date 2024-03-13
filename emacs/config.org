@@ -11129,16 +11129,14 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elfeed
-  :init
-
   :config
-  (setq-default elfeed-search-filter "+unread -wiki")
+  (setq-default elfeed-search-filter "+unread")
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
   (add-hook 'elfeed-show-mode-hook #'visual-line-mode)
 
-
   :general
+  ("A-f" 'elfeed)
   (eww-mode-map
    "c" 'elfeed-kill-link-url-at-point)
   (elfeed-show-mode-map

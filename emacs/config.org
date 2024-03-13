@@ -5264,6 +5264,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (setq corfu-count vertico-count)
   (setq corfu-info-documentation nil)
   (setq corfu-auto-prefix 3)
+  (setq corfu-auto-delay 0.5)
 
   (global-corfu-mode)
 

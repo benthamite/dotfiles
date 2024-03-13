@@ -7098,7 +7098,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     (add-hook hook (lambda ()
                      "Use Gemini in all text-related modes, broadly construed."
                      (gptel-extras-model-config nil "Gemini" "gemini-pro"))))
-  (add-hook 'prog-mode-hook (lambda () (gptel-extras-model-config nil "ChatGPT" "gpt-4")))
+  (add-hook 'prog-mode-hook (lambda () (gptel-extras-model-config nil "ChatGPT" "gpt-4-0125-preview")))
 
   (doom-modeline-set-modeline 'main-pablo t)
 

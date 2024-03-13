@@ -135,13 +135,6 @@
 :END:
 
 
-** exec-path-from-shell
-#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(use-package exec-path-from-shell)
-(exec-path-from-shell-copy-env "TLON_EMAIL")
-(exec-path-from-shell-initialize)
-#+end_src
-
 ** startup
 :PROPERTIES:
 :ID:       5E67511F-C40D-4BFC-84AA-353DA60585DE
@@ -149,6 +142,35 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq user-full-name "Federico Stafforini")
 (setq user-mail-address "fstafforini@gmail.com")
+#+end_src
+
+** exec-path-from-shell
+:PROPERTIES:
+:ID:       483A1BF8-C5BA-43AA-A502-13EE72419362
+:END:
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(use-package exec-path-from-shell
+  :demand t
+  :config
+  (exec-path-from-shell-initialize)
+  (exec-path-from-shell-copy-env "TLON_EMAIL")
+  (setq tlon-core-email-shared (getenv "TLON_EMAIL"))
+  (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
+  ;; (gptel-make-anthropic "Claude"
+  ;;   :stream t
+  ;;   :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-core-email-shared)))
+
+  ;; (gptel-make-gemini "Gemini"
+  ;;   :stream t
+  ;;   :key (auth-source-pass-get 'secret
+  ;; 			       (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared)))
+  (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
+  (setq gpt-commit-model-name "gpt-4")
+  (setq bib-isbndb-key
+	(auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
+  
+  (message (format "exec-path-from-shell: TLON_EMAIL=%s" (getenv "TLON_EMAIL")))
+  )
 #+end_src
 
 ** window
@@ -233,11 +255,17 @@
 #+end_src
 
 ** gptel
+:PROPERTIES:
+:ID:       66628F76-29A9-42EF-BEDC-FDC33D6E78D8
+:END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq gptel-default-mode 'markdown-mode)
 #+end_src
 
 ** gptel-extras
+:PROPERTIES:
+:ID:       3B1E43B8-BE9C-4FA1-B2CA-6BD8E9ED746F
+:END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (gptel-extras-model-config 'globally "ChatGPT" "gpt-4-0125-preview")
 #+end_src
@@ -774,7 +802,31 @@ Disable hl-sentence because I do not like it...
 This should be at the very end of the ~late-init~ file.
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(add-hook 'tlon-init-post-init-hook (lambda ()  (message "Running Fede's post-init-hook")))
+(add-hook 'tlon-init-post-init-hook
+	  (lambda ()
+	    (message "Running Fede's post-init-hook"
+		     (use-package exec-path-from-shell
+		       :demand t
+		       :config
+		       (exec-path-from-shell-initialize)
+		       (exec-path-from-shell-copy-env "TLON_EMAIL")
+		       (setq tlon-core-email-shared (getenv "TLON_EMAIL"))
+		       (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
+		       ;; (gptel-make-anthropic "Claude"
+		       ;;   :stream t
+		       ;;   :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-core-email-shared)))
+
+		       ;; (gptel-make-gemini "Gemini"
+		       ;;   :stream t
+		       ;;   :key (auth-source-pass-get 'secret
+		       ;; 			       (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared)))
+		       (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
+		       (setq gpt-commit-model-name "gpt-4")
+		       (setq bib-isbndb-key
+			     (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
+		       
+		       (message (format "exec-path-from-shell (POST-INIT): TLON_EMAIL=%s" (getenv "TLON_EMAIL")))
+		       ))))
 (run-hooks 'tlon-init-post-init-hook)
 #+end_src
 

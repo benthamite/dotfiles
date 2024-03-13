@@ -29,6 +29,7 @@
 
 (require 'calendar-extras)
 (require 'display-wttr)
+(require 'tlon-init)
 
 ;;;; Variables
 
@@ -72,7 +73,7 @@
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-chemacs-element
-  `(" " chemacs-profile-name)
+  `(" " tlon-init-chemacs-profile-name)
   "Element to display the Chemacs profile."
   :type 'sexp
   :group 'tab-bar-extras)

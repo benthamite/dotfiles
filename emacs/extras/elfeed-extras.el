@@ -51,18 +51,6 @@ poorly-designed websites."
   (call-interactively 'mark-whole-buffer)
   (elfeed-search-untag-all-unread))
 
-(defun elfeed-extras-full-update ()
-  "*Really* update feeds!"
-  (interactive)
-  (require 'elfeed-org)
-  (let ((elfeed-search-buffer "*elfeed-search*"))
-    (when (and (get-buffer elfeed-search-buffer)
-               (not (equal (buffer-name) elfeed-search-buffer)))
-      (kill-buffer elfeed-search-buffer)))
-  (elfeed-org)
-  (elfeed-unjam)
-  (elfeed-update))
-
 (defun elfeed-extras-kill-link-url-of-entry ()
   "Add link of current entry to kill ring."
   (interactive)
@@ -96,42 +84,7 @@ poorly-designed websites."
     (elfeed-extras-filter-tags "+unread -wiki"))
   (setq elfeed-extras-toggle-wiki-entries (not elfeed-extras-toggle-wiki-entries)))
 
-(defun elfeed-extras-toggle-fixed-pitch ()
-  "Toggle between fixed pitch and variable pitch."
-  (interactive)
-  (if shr-use-fonts
-      (setq shr-use-fonts nil)
-    (setq shr-use-fonts t))
-  (elfeed-show-refresh))
-
-;;;###autoload
-(defun elfeed-extras-toggle-session ()
-  "Start or end an `elfeed' session."
-  (interactive)
-  (if (derived-mode-p 'elfeed-search-mode 'elfeed-show-mode)
-      (progn
-        (kill-matching-buffers "^\*elfeed\-*\*" nil t))
-    (elfeed)
-    (when (< elfeed-search-last-update
-             (time-to-seconds (time-subtract (current-time) (seconds-to-time (* 60 60 2)))))
-      (elfeed-update))))
-
-;; This only works in Firefox due to a Chrome limitation
-;; xenodium.com/open-emacs-elfeed-links-in-background/
-(defun elfeed-extras-search-browse-background-url ()
-  "Open current `elfeed' entry (or region entries) in browser without losing focus."
-  (interactive)
-  (let ((entries (elfeed-search-selected)))
-    (mapc (lambda (entry)
-            (cl-assert (memq system-type '(darwin)) t "open command is macOS only")
-            (start-process (concat "open " (elfeed-entry-link entry))
-                           nil "open" "--background" (elfeed-entry-link entry))
-            (elfeed-untag entry 'unread)
-            (elfeed-search-update-entry entry))
-          entries)
-    (unless (or elfeed-search-remain-on-entry (use-region-p))
-      (forward-line))))
-
+(declare-function zotra-extras-url-full-capture "zotra-extras")
 (defun elfeed-extras-url-full-capture ()
   "Add current URL to bibfile and generate associated PDF and HTML files."
   (interactive)

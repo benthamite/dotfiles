@@ -43,6 +43,62 @@
   :type 'integer
   :group 'gptel-extras)
 
+;;;; Variables
+
+(defconst gptel-extras-ai-models
+  '((:backend "Gemini"
+	      :model "gemini-pro"
+	      :cost 0
+	      :tokens 32000)
+    (:backend "ChatGPT"
+	      :model "gpt-3.5-turbo"
+	      :cost 0.50
+	      :description "Less powerful GPT model.")
+    (:backend "ChatGPT"
+	      :model "gpt-3.5-turbo-16k"
+	      :cost 0.50
+	      :description "Less powerful GPT model.")
+    (:backend "ChatGPT"
+	      :model "gpt-4-turbo-preview"
+	      :cost 10
+	      :description "Currently points to `gpt-4-0125-preview'.") ; cost assumed
+    (:backend "ChatGPT"
+	      :model "gpt-4-1106-preview"
+	      :cost 10
+	      :tokens 128000
+	      :description "GPT-4 Turbo model featuring improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more. Returns a maximum of 4,096 output tokens. Training data up to April 2023.")
+    (:backend "ChatGPT"
+	      :model "gpt-4-0125-preview"
+	      :cost 10
+	      :description "[recommended] The latest GPT-4 model. Returns a maximum of 4,096 output tokens. Training data up to December 2023.")
+    (:backend "ChatGPT"
+	      :model "gpt-4"
+	      :cost 30
+	      :tokens 8000
+	      :description "Standard GPT-4 model.")
+    (:backend "ChatGPT"
+	      :model "gpt-4-32k"
+	      :cost 60
+	      :tokens 32000
+	      :description "Standard GPT-4 with 32k token window.")
+    (:backend "Claude"
+	      :model "Claude Haiku"
+	      :cost 0.25
+	      :description "[not available] The least capable Anthropic model")
+    (:backend "Claude"
+	      :model "claude-3-sonnet-20240229"
+	      :cost 3
+	      :description "The intermediate Anthropic model.")
+    (:backend "Claude"
+	      :model "claude-3-opus-20240229"
+	      :cost 15
+	      :description "The most capable Anthropic model."))
+  "Alist of AI models and input cost in US dollars per one million tokens.
+The pricing information has been obtained from the following websites:
+- GPT: <https://openai.com/pricing>
+- Claude: <https://www.anthropic.com/api#pricing>")
+;; https://github.com/psimm/website/blob/master/blog/llm-price-performance/data.csv
+
 ;;;; Functions
 
 ;; adapted from the `:reader' lambda of `transient-infix-set' in `gptel-transient.el'
@@ -57,13 +113,28 @@ called with a prefix argument, configure it globally."
 			     (completing-read "Backend name: " (mapcar #'car gptel--known-backends) nil t))))
 	 (backend (alist-get backend-name gptel--known-backends nil nil #'equal))
 	 (backend-models (gptel-backend-models backend))
+	 (models-with-cost (mapcar (lambda (backend)
+				     (cons (format "%-25s $ %5.2f   %-80s"
+						   backend
+						   (tlon-babel-lookup gptel-extras-ai-models :cost :model backend)
+						   (tlon-babel-lookup gptel-extras-ai-models :description :model backend))
+					   backend))
+				   backend-models))
 	 (model-name (or model-name
-			 (if (= (length backend-models) 1)
-			     (car backend-models)
-			   (completing-read "Model name: " backend-models))))
+			 (alist-get (completing-read "Model name: " models-with-cost)
+				    models-with-cost nil nil #'string=)))
 	 (setter (if globally #'set-default #'set)))
     (funcall setter 'gptel-model model-name)
     (funcall setter 'gptel-backend backend)))
+
+(defun gptel-extras-get-cost ()
+  "Get the cost of prompting the current model."
+  (let* ((cost-per-1m (tlon-babel-lookup gptel-extras-ai-models :cost :model gptel-model))
+	 (words (if (region-active-p)
+		    (count-words (region-beginning) (region-end))
+		  (count-words (point-min) (point))))
+	 (cost (/ (* cost-per-1m words) 1000000.0)))
+    cost))
 
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
   "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS."

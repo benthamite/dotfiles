@@ -654,6 +654,19 @@ FORMS are evaluated with point restored to its original position."
   (let ((url (url-generic-parse-url str)))
     (and (url-type url) (url-host url))))
 
+;;;;; conversion
+
+(defun simple-extras-pandoc-convert (language &optional non-html)
+  "Convert the contents of the system clipboard to target LANGUAGE using Pandoc.
+Convert from HTML if the clipboard contains HTML, and from NON-HTML otherwise.
+Both LANGUAGE and NON-HTML are specified using the Pandoc name for that
+language."
+  (let* ((command (format "%%s | pandoc --wrap=none -f %%s -t %s" language))
+	 (output (shell-command-to-string (format command "pbv public.html" "html"))))
+    (when (string-match-p "Could not access pasteboard contents" output)
+      (setq output (shell-command-to-string (format command "pbpaste" non-html))))
+    output))
+
 ;;;;; misc
 
 (defun simple-extras-init-disable-funs (seconds funs)

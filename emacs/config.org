@@ -5078,6 +5078,10 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
                                  consult-mu-contacts))
   :after consult mu4e
   :demand t
+  :config
+  (add-to-list 'vertico-multiform-commands
+               '(consult-mu buffer))
+               
   :general
   ("A-M-m" 'consult-mu)
   ((mu4e-main-mode-map mu4e-headers-mode-map mu4e-view-mode-map)

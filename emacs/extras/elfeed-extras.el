@@ -30,6 +30,11 @@
 (require 'elfeed)
 (require 'elfeed-show)
 
+;;;; Variables
+
+(defvar elfeed-extras-update-timer nil
+  "Timer for updating elfeed.")
+
 ;;;; Functions
 
 ;; Borrowed from Prot
@@ -90,6 +95,12 @@ poorly-designed websites."
   (interactive)
   (when (derived-mode-p 'elfeed-show-mode)
     (zotra-extras-url-full-capture (elfeed-entry-link elfeed-show-entry))))
+
+(defun elfeed-extras-auto-update ()
+  "Automatically update `elfeed' every 15 minutes of idleness."
+  (cancel-timer elfeed-extras-update-timer)
+  (setq elfeed-extras-update-timer
+	(run-with-idle-timer (* 15 60) t #'elfeed-update)))
 
 (provide 'elfeed-extras)
 ;;; elfeed-extras.el ends here

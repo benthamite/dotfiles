@@ -6007,7 +6007,8 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
   :general
   ((gfm-mode-map markdown-mode-map)
    "A-C-H-t" 'markdown-mode-extras-copy-section
-   "s-r" 'markdown-mode-extras-remove-url-in-link)
+   "s-r" 'markdown-mode-extras-remove-url-in-link
+   "s-v" 'markdown-mode-extras-paste-with-conversion)
   ((ghm-mode-map markdown-mode-map org-mode-map)
    "H-s-v" 'markdown-mode-extras-org-paste-dwim))
 #+end_src
@@ -7524,7 +7525,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    "A-C-s-n" 'org-extras-jump-to-first-heading
    "A-s-b" 'org-extras-set-todo-properties
    "A-s-f" 'org-extras-insert-todo-subheading-after-body
-   "s-v" 'org-extras-paste-html
    "A-s-v" 'org-extras-paste-image
    "A-s-z" 'org-extras-export-to-ea-wiki
    "M-w" 'org-extras-count-words
@@ -7540,6 +7540,8 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    "A-s-w" 'org-extras-refile-goto-latest)
   ((org-mode-map org-msg-edit-mode-map)
    "s-A-l" 'org-extras-url-dwim)
+  ((org-mode-map telega-chat-mode-map)
+   "s-v" 'org-extras-paste-with-conversion)
   (org-agenda-mode-map
    "RET" 'org-extras-agenda-switch-to-dwim
    "/" 'org-extras-agenda-done-and-next
@@ -10754,7 +10756,6 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
    "." 'telega-extras-docs-change-open
    "L" 'telega-extras-chat-org-capture-leo)
   (telega-chat-mode-map
-   "s-v" 'org-extras-paste-html
    "M-s-t" 'telega-extras-chatbuf-attach-most-recent-file)
   (dired-mode-map
    "M-s-a" 'telega-extras-dired-attach-send)

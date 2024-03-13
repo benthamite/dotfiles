@@ -94,6 +94,7 @@
  (paths-file-tlon-tareas-fede . (file-name-concat paths-dir-dropbox-tlon-fede "tareas.org"))
  (paths-tlon-babel-todos-jobs-id . "")
  (paths-tlon-babel-todos-generic-id . "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
+ (paths-dir-babel-refs . (file-name-concat paths-dir-external-repos "babel-refs"))
  )
 #+end_src
 
@@ -133,6 +134,13 @@
 :ID:       3FB5128E-FBBA-4C4B-BFC9-8186878DDB4E
 :END:
 
+
+** exec-path-from-shell
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(use-package exec-path-from-shell)
+(exec-path-from-shell-copy-env "TLON_EMAIL")
+(exec-path-from-shell-initialize)
+#+end_src
 
 ** startup
 :PROPERTIES:
@@ -224,6 +232,15 @@
   (message "`files' late-init config loaded."))
 #+end_src
 
+** gptel
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(setq gptel-default-mode 'markdown-mode)
+#+end_src
+
+** gptel-extras
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(gptel-extras-model-config 'globally "ChatGPT" "gpt-4-0125-preview")
+#+end_src
 ** cua-base
 :PROPERTIES:
 :ID:       ECA4B30E-DE5C-4ACC-87AA-30975B8398EC
@@ -664,7 +681,7 @@ Disable hl-sentence because I do not like it...
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'yasnippet
   (keymap-unset yas-minor-mode-map "TAB")
-  (keymap-set yas-minor-mode-map "s-TAB" 'yas-expand)
+  (keymap-set yas-minor-mode-map "A-x" 'yas-expand)
   (message "`yasnippet' late-init config loaded."))
 #+end_src
 

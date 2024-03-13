@@ -7105,9 +7105,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :demand t
   :config
   (gptel-extras-model-config 'globally "Gemini" "gemini-pro")
-  (add-hook 'prog-mode-hook (lambda () (gptel-extras-model-config nil "ChatGPT" "gpt-4-0125-preview")))
-
-  (doom-modeline-set-modeline 'main-pablo t)
+  ;; for programming modes, we override the default and instead use GPT-4
+  (add-hook 'prog-mode-hook (lambda () (gptel-extras-model-config nil "ChatGPT" "gpt-4")))
 
   :general
   ("H-s-c" 'gptel-extras-model-config))

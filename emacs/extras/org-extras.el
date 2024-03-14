@@ -233,6 +233,7 @@ link, call `org-open-at-point' and set
 	(browse-url-handlers nil))
     (org-open-at-point)))
 
+(declare-function simple-extras-pandoc-convert "simple-extras")
 (defun org-extras-paste-with-conversion ()
   "Convert the contents of the system clipboard to Org Mode using Pandoc.
 This command will convert from HTML if the clipboard contains HTML, and from
@@ -362,6 +363,7 @@ corresponding file. Else, open the file."
 ;; in `calendar.org', which is the only way I found to hide
 ;; anniversaries temporarily from the agenda
 ;; for context, see https://orgmode.org/manual/Weekly_002fdaily-agenda.html
+(declare-function org-roam-extras-id-goto "org-roam-extras")
 (defun org-extras-agenda-toggle-anniversaries (&optional just-enable)
   "Toggle display of BBDB birthdays in the agenda.
 If JUST-ENABLE is non-nil, always enable the display of birthdays."
@@ -385,6 +387,9 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 (declare-function org-web-tools-insert-link-for-url "org-web-tools")
 (declare-function org-extras-web-tools--org-title-for-url "org-web-tools")
 (declare-function youtube-dl "youtube-dl")
+(declare-function org-roam-tag-remove "org-roam")
+(declare-function org-roam-tag-add "org-roam")
+(declare-function tlon-core-slugify "tlon-core")
 (defun org-extras-capture-before-finalize-hook-function ()
   "Define behavior of `org-capture-before-finalize-hook'."
   (pcase (plist-get org-capture-plist :key)
@@ -438,6 +443,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 
 ;;;;; org-clock
 
+(declare-function crux-smart-open-line-above "crux")
 (defun org-extras-new-clock-entry-today (begin end)
   "Insert a new clock entry with today's date, prompting for BEGIN and END times."
   (interactive "sTime begins: \nsTime ends: ")
@@ -676,6 +682,9 @@ files, recursively all files in `org-directory', and all files in
   (interactive)
   (org-extras-sort-links " • "))
 
+(declare-function org-roam-node-list "org-roam")
+(declare-function org-roam-node-title "org-roam")
+(declare-function org-roam-node-id "org-roam")
 (defun org-extras-linkify-elements (strings &optional separator)
   "For all STRINGS, return its link if node is found, else the string itself.
 The elements are returned as a string separated by SEPARATOR. If

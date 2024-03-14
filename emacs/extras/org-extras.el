@@ -822,65 +822,6 @@ To see a list of Google Docs and their respective IDs, run
     ("m f" "fede"              (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
     ("m l" "leo"               (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))]])
 
-;; semi-obsolete
-(transient-define-prefix org-extras-work-dispatch ()
-  "Dispatcher for work projects."
-  ["Projects dashboard"
-   ["""Tlön"
-    ("b" "BAB" (lambda () (interactive) (org-roam-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24")))
-    ("r" "RAE" (lambda () (interactive) (org-roam-extras-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D")))
-    ("n" "EAN" (lambda () (interactive) (org-roam-extras-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC")))
-    ("d" "LBDLHD" (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))]
-   ["""Other"
-    ("w" "PW" (lambda () (interactive) (org-roam-extras-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A")))
-    ("v" "Samotsvety" (lambda () (interactive) (org-roam-extras-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87")))
-    ("x" "Misc" (lambda () (interactive) (org-roam-extras-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99")))]
-   ["""Someday"
-    ("c" "EA Archive" (lambda () (interactive) (org-roam-extras-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD")))
-    ("a" "EA Nomad" (lambda () (interactive) (org-roam-extras-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110")))
-    """On hold"
-    ("h" "HEAR" (lambda () (interactive) (org-roam-extras-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2")))]
-   ["""Done"
-    ("" "FM" (lambda () (interactive) (org-roam-extras-id-goto "9066D77E-7F2B-4176-9533-243060F11276")))
-    ("" "GPE" (lambda () (interactive) (org-roam-extras-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1")))
-    ("" "LP" (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))
-    ("" "RCGs" (lambda () (interactive) (org-roam-extras-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A")))
-    ("" "Regranting" (lambda () (interactive) (org-roam-extras-id-goto "AE8F5AD4-B85A-4EE2-8A94-AA7B2AFF3E7F")))]
-   ["""Comms"
-    ("e" "email" (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
-    ("s" "slack" (lambda () (interactive) (org-roam-extras-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C")))
-    ("t" "telegram" (lambda () (interactive) (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D")))]
-   ["""Meetings"
-    ("f" "fede" (lambda () (interactive) (org-roam-extras-id-goto "AED9330C-1673-4669-A367-4B87614965F6")))
-    ;; ("F" "fede: meeting" tlon-core-meeting-with-fede)
-    ("H-f" "fede: tareas" (lambda () (interactive) (org-roam-extras-id-goto "EB5FC062-E46F-4C1F-930F-F2CC710F852D")))
-    ("l" "leo" (lambda () (interactive) (org-roam-extras-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA")))
-    ;; ("L" "leo: meeting" tlon-core-meeting-with-leo)
-    ("H-l" "leo: tareas" (lambda () (interactive) (org-roam-extras-id-goto "E5777AB0-DC81-40CB-8D03-77D6F111AA2E")))]
-   [""""
-    ("RET" "Home" (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))]
-   ])
-
-;; TODO: create this
-
-(defun define-extras-work-dispatch (lines)
-  "docstring."
-  (eval `(transient-define-prefix org-extras-work-dispatch ()
-	   "Dispatcher for work projects."
-	   ["Projects dashboard"
-	    ,@lines])))
-
-
-;; (setq lines )
-;; (dolist (repo tlon-babel-core-repos)
-;; (let ((name (plist-get :name repo))
-;; (key (plist-get :key repo))
-;; (id (plist-get :id-pablo repo)))
-;; (push `(,name ,key (lambda () (interactive) (org-roam-extras-id-goto ,id))))
-;; ))
-
-;; (define-extras-work-dispatch lines)
-
 ;;;###autoload (autoload 'org-extras-config-dispatch "org-extras" nil t)
 (transient-define-prefix org-extras-config-dispatch ()
   "Jump to a section in `config.org'."
@@ -998,14 +939,6 @@ ARG is the prefix argument received when calling interactively the function."
 	 (t
 	  (el-patch-swap (user-error "Cannot insert a citation here")
 			 (funcall insert nil arg)))))))))
-
-;; name buffers more cleanly
-(el-patch-defun org-src--construct-edit-buffer-name (org-buffer-name lang)
-  "Construct the buffer name for a source editing buffer.
-Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
-  (el-patch-swap
-    (concat "*Org Src " org-buffer-name "[ " lang " ]*")
-    (concat org-buffer-name " (org src)")))
 
 ;;;; Footer
 

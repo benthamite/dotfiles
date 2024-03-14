@@ -521,7 +521,6 @@ current helpful buffer displays, then kill the buffer."
    ("," "inbox-desktop"   (lambda () (interactive) (find-file paths-file-inbox-desktop)))
    ("a" "agenda"          org-extras-agenda-switch-to-agenda-current-day)
    ("c" "config"          (lambda () (interactive) (find-file paths-file-config)))
-   ("d" "tlon-docs"       (lambda () (interactive) (find-file paths-file-tlon-docs)))
    ("e" "extras"          (lambda () (interactive) (files-extras-open-extras-package)))
    ("h" "tlon-ledger"     (lambda () (interactive) (find-file paths-file-tlon-ledger)))
    ("i" "anki"            (lambda () (interactive) (find-file paths-file-anki)))
@@ -533,9 +532,7 @@ current helpful buffer displays, then kill the buffer."
    ("r" "calendar"        (lambda () (interactive) (find-file paths-file-calendar)))
    ("s" "scratch"         (lambda () (interactive) (switch-to-buffer "*scratch*")))
    ("v" "films"           (lambda () (interactive) (find-file paths-file-films)))
-   ("w" "work"            (lambda () (interactive) (find-file paths-file-work)))
-   ("z" "variables"       (lambda () (interactive) (find-file paths-file-variables)))
-   ])
+   ("w" "work"            (lambda () (interactive) (find-file paths-file-work)))])
 
 ;;;###autoload (autoload 'files-extras-packages-dispatch "files-extras" nil t)
 (transient-define-prefix files-extras-packages-dispatch ()
@@ -543,8 +540,7 @@ current helpful buffer displays, then kill the buffer."
   [["Tlön"
     ("b" "tlon-babel"       (lambda () (interactive) (files-extras-open-elpaca-package "tlon-babel")))
     ("c" "tlon-core"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-core")))
-    ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))
-    ]
+    ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))]
    ["Personal"
     ("a" "internet-archive" (lambda () (interactive )(files-extras-open-elpaca-package "internet-archive")))
     ("l" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))
@@ -552,8 +548,7 @@ current helpful buffer displays, then kill the buffer."
     ("o" "macos"            (lambda () (interactive )(files-extras-open-elpaca-package "macos")))
     ("m" "mullvad"          (lambda () (interactive )(files-extras-open-elpaca-package "mullvad")))
     ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))
-    ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))
-    ]])
+    ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))]])
 
 (provide 'files-extras)
 ;;; files-extras.el ends here

@@ -348,7 +348,6 @@ command automates the recovery process in these cases."
       (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
       (files-extras-diff-buffer-with-file))))
 
-
 (defun files-extras-auto-save-alert ()
   "Alert user when auto save data is detected.
 `recover-this-file' notifications are easy to miss. This function triggers a
@@ -367,18 +366,17 @@ more intrusive alert."
 ;; buffers have logged a message related to `recover-this-file'.
 (defun files-extras-auto-save-persist ()
   "Prevent killing buffer when auto save data is detected."
-  ;; FIXME: This doesn't work
-  (alert--log-open-log
-   ;; we check both `*log4e-alert*' and `*Messages*' buffers for
-   ;; extra safety
-   (let ((alert-buffers '(" *log4e-alert*" "*Messages*")))
-     (dolist (buffer alert-buffers)
-       (when (get-buffer buffer)
-	 (set-buffer buffer)
-	 (goto-char (point-min))
-	 (when (search-forward "has auto save data" nil t)
-	   (yes-or-no-p "Buffers with auto save data detected. Check `*log4e-alert*' and `*Messages*' for details. Are you sure you want to proceed? "))
-	 (kill-buffer))))))
+  ;; we check both `*log4e-alert*' and `*Messages*' buffers for
+  ;; extra safety
+  (let ((alert-buffers '(" *log4e-alert*" "*Messages*")))
+    (dolist (buffer alert-buffers)
+      (when (get-buffer buffer)
+	(with-current-buffer buffer
+	  (goto-char (point-min))
+	  (when (search-forward "has auto save data" nil t)
+	    (yes-or-no-p "Buffers with auto save data detected. Check `*log4e-alert*' and `*Messages*' for details. Are you sure you want to proceed? ")
+	    (kill-buffer)))))
+    t))
 
 ;; https://emacs.stackexchange.com/a/3778/32089
 (defun files-extras-diff-buffer-with-file ()
@@ -397,7 +395,7 @@ more intrusive alert."
     (message "Copied `%s'" path)))
 
 (add-hook 'find-file-hook #'files-extras-auto-save-alert)
-;; (add-hook 'kill-buffer-query-functions #'files-extras-auto-save-persist)
+(add-hook 'kill-buffer-query-functions #'files-extras-auto-save-persist)
 
 ;; reddit.com/r/emacs/comments/t07e7e/comment/hy88bum/?utm_source=reddit&utm_medium=web2x&context=3
 (defun files-extras-make-hashed-auto-save-file-name-a (fn)

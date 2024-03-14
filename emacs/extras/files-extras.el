@@ -155,6 +155,7 @@ functionality in macOS."
     (other-window 1)
     (files-extras-kill-this-buffer)))
 
+(declare-function window-extras-switch-to-last-window "window-extras")
 (defun files-extras-kill-this-buffer-switch-to-other-window ()
   "Kill the current buffer and switch to the other window."
   (interactive)
@@ -269,6 +270,7 @@ files which do not exist any more or are no longer readable will be killed."
     (define-key newmap key command)
     (use-local-map newmap)))
 
+(declare-function ebib-extras-get-file "ebib-extras")
 (defun files-extras-ocr-pdf (arg &optional filename parameters)
   "OCR the FILENAME.
 If FILENAME is nil, use the PDF file at point or the file visited by the current

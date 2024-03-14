@@ -84,6 +84,13 @@ and (2) after two minutes, it marks the issue as read (again)."
 	(shell-command (format "open -a Firefox --background %s" url))
 	(run-with-timer 120 nil (lambda () (forge-topic-mark-read issue)))))))
 
+(defun forge-extras-pull-notifications ()
+  "Fetch notifications for all repositories from the current forge.
+Do not update if `elfeed' is in the process of being updated, since this causes
+problems."
+  (unless (bound-and-true-p elfeed-extras-auto-update-in-process)
+    (forge-pull-notifications)))
+
 ;;;;; Menus
 
 (transient-define-prefix forge-extras-dispatch ()

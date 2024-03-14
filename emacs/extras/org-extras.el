@@ -224,11 +224,12 @@ Excludes the heading itself and any child subtrees."
   (goto-char (point-min))
   (org-next-visible-heading 1))
 
+;; TODO: revise this
 (defun org-extras-super-return ()
-  "When `org-return-follows-link' is non-nil and point is on a
-link, call `org-open-at-point' and set
-`browse-url-browser-function' to `eww-browse-url'"
-  (interactive "P")
+  "Call a special form of RET.
+When `org-return-follows-link' is non-nil and point is on a link, call
+`org-open-at-point' and set `browse-url-browser-function' to `eww-browse-url'"
+  (interactive)
   (let ((browse-url-browser-function 'eww-browse-url)
 	(browse-url-handlers nil))
     (org-open-at-point)))

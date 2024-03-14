@@ -513,6 +513,7 @@ current helpful buffer displays, then kill the buffer."
 
 ;;;;; Dispatcher
 
+;;;###autoload (autoload 'files-extras-dispatch "files-extras" nil t)
 (transient-define-prefix files-extras-dispatch ()
   "Dispatcher for files."
   ["Files"
@@ -536,6 +537,7 @@ current helpful buffer displays, then kill the buffer."
    ("z" "variables"       (lambda () (interactive) (find-file paths-file-variables)))
    ])
 
+;;;###autoload (autoload 'files-extras-packages-dispatch "files-extras" nil t)
 (transient-define-prefix files-extras-packages-dispatch ()
   "Dispatcher for personal package files."
   [["Tlön"

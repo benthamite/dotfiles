@@ -1534,7 +1534,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :config
   (setq forge-owned-accounts '(("benthamite")))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
-  (run-with-idle-timer 60 t #'forge-pull-notifications)
 
   ;; why is this turned on by default!?
   (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
@@ -1600,6 +1599,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link)
   ;; hack: to mark the topic as read, we browse it in the background
   (advice-add 'forge-visit-this-topic :before #'forge-extras-sync-read-status)
+
+  (run-with-idle-timer 60 t #'forge-extras-pull-notifications)
 
   :general
   ((forge-topic-mode-map forge-notifications-mode-map magit-status-mode-map)
@@ -11190,7 +11191,6 @@ These key bindings produce the same behavior in eww.
 :ID:       57DE6F0B-9245-4E39-A747-6C2A6714B02A
 :END:
 
-
 /[[file:extras/elfeed-extras.el][elfeed-extras]] collects my extensions for ~elfeed~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -11199,7 +11199,7 @@ These key bindings produce the same behavior in eww.
   :demand t
   :config
   (advice-add 'elfeed :after #'elfeed-extras-auto-update)
-
+  
   :general
   (elfeed-search-mode-map
    "A" 'elfeed-extras-mark-all-as-read
@@ -11245,6 +11245,7 @@ These key bindings produce the same behavior in eww.
   :demand t
   :config
   (push '(text . shr-text) elfeed-tube-captions-faces)
+
   (elfeed-tube-setup))
 #+end_src
 

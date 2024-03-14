@@ -37,6 +37,7 @@
 		     (register-read-with-preview "Register: ")))
   (set-register register text))
 
+;;;###autoload (autoload 'register-extras-dispatch "register-extras" nil t)
 (transient-define-prefix register-extras-dispatch ()
   "Dispatch a `register' command."
   [["region"
@@ -64,8 +65,7 @@
     ("l" "list" list-registers)
     ("v" "view" view-register)]
    ["insert"
-    ("i" "insert contents" insert-register)]
-   ])
+    ("i" "insert contents" insert-register)]])
 
 (provide 'register-extras)
 ;;; register-extras.el ends here

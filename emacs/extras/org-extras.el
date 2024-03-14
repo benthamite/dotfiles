@@ -54,26 +54,25 @@
   :group 'org)
 
 (defcustom org-extras-agenda-files-excluded
-  (list
-   paths-file-tlon-tareas-leo
-   paths-file-tlon-tareas-fede)
+  (list paths-file-tlon-tareas-leo
+	paths-file-tlon-tareas-fede)
   "Files to exclude from `org-agenda'.
 I have to exclude these files because otherwise extraneous information shows up
 in my agenda, such as TODOs and time logs. These files lack the `property' tag
 but the may still otherwise be included if they have been modified recently (see
 the function `vulpea-agenda-files-update')."
-  :type 'list
+  :type '(repeat file)
   :group 'org-extras)
 
 (defcustom org-extras-id-auto-add-excluded-directories nil
   "Directories to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'."
-  :type 'list
+  :type '(repeat file)
   :group 'org-extras)
 
 (defcustom org-extras-id-auto-add-excluded-files
   (list paths-file-orb-noter-template)
   "Files to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'."
-  :type 'list
+  :type '(repeat file)
   :group 'org-extras)
 
 (defcustom org-extras-bbdb-anniversaries-heading

@@ -200,11 +200,15 @@ With prefix ARG is passed, open in new EWW buffer."
 		   (url-fullness url)))
     (eww-browse-url (url-recreate-url new-url))))
 
-(defun eww-extras-browse-youtube-in-mpv (url)
-  "Browse YouTube URL in MPV."
+(defun eww-extras-browse-youtube (url &optional player)
+  "For YouTube URLs, show its transcript and open video with PLAYER.
+If PLAYER is nil, default to `mpv'."
   (when (string-match "youtube.com" url)
-    (empv-play url)
-    (empv-toggle-video)))
+    (let ((player (or player "mpv")))
+      (kill-buffer)
+      (unless (macos-app-is-open-p player)
+	(macos-open-app player 'background))
+      (elfeed-tube-fetch url))))
 
 (provide 'eww-extras)
 

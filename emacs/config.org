@@ -1931,7 +1931,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emoji
   :general
-  ("H-e" 'emoji-insert))
+  ("H-E" 'emoji-insert))
 #+end_src
 
 ** image
@@ -2557,6 +2557,7 @@ CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
    "C-H-M-z" 'crux-kill-line-backwards
    "C-M-<backspace>" nil
    "C-M-k" nil
+   "H-e" 'shell-command
    "H-v" 'yank
    "M-DEL" nil))
 #+end_src

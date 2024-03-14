@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'register)
+(require 'transient)
 
 ;;;; Functions
 

@@ -881,6 +881,7 @@ To see a list of Google Docs and their respective IDs, run
 
 ;; (define-extras-work-dispatch lines)
 
+;;;###autoload (autoload 'org-extras-config-dispatch "org-extras" nil t)
 (transient-define-prefix org-extras-config-dispatch ()
   "Jump to a section in `config.org'."
   [["Org headings: config.org"

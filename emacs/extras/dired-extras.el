@@ -31,6 +31,7 @@
 (require 'el-patch)
 (require 'gnus-dired)
 (require 'paths)
+(require 'transient)
 
 ;;;; Variables
 
@@ -154,6 +155,7 @@ losing the `put back' option."
 
 ;;;;; Dispatcher
 
+;;;###autoload (autoload 'dired-extras-dispatch "dired-extras" nil t)
 (transient-define-prefix dired-extras-dispatch ()
   "Dispatcher for Dired."
   ["Dired folders"
@@ -161,7 +163,6 @@ losing the `put back' option."
     ("d" "dotfiles" (lambda () (interactive) (dired paths-dir-dotfiles)))
     ("e" "Emacs" (lambda () (interactive) (dired paths-dir-emacs)))
     ("i" "Anki" (lambda () (interactive) (dired paths-dir-anki)))
-    ("j" "Health" (lambda () (interactive) (dired paths-dir-health)))
     ("n" "Notes" (lambda () (interactive) (dired paths-dir-notes)))
     ("o" "Google Drive" (lambda () (interactive) (dired paths-dir-google-drive)))
     ("p" "People" (lambda () (interactive) (dired paths-dir-people)))

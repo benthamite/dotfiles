@@ -5087,7 +5087,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   :config
   (add-to-list 'vertico-multiform-commands
                '(consult-mu buffer))
-               
+
   :general
   ("A-M-m" 'consult-mu)
   ((mu4e-main-mode-map mu4e-headers-mode-map mu4e-view-mode-map)
@@ -10986,7 +10986,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
 
   (advice-add 'eww :before
               (lambda (url &optional _new-session)
-		"When browsing a YouTube URL, display transcript and open video in `mpv'."
+                "When browsing a YouTube URL, display transcript and open video in `mpv'."
                 (eww-extras-browse-youtube url)))
   :general
   ("A-w" 'eww)
@@ -11829,7 +11829,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
   (setq empv-audio-dir paths-dir-music-tango)
   (setq empv-invidious-instance "https://invidious.fdn.fr/api/v1")
   (add-to-list 'empv-mpv-args "--ytdl-format=best") ; github.com/isamert/empv.el#viewing-youtube-videos
-  
+
   :bind-keymap
   ("A-p" . empv-map))
 #+end_src

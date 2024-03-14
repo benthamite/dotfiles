@@ -98,9 +98,9 @@ functionality in macOS."
   (interactive)
   (let ((buffer-name (generate-new-buffer "untitled"))
 	(buffer-major-mode major-mode))
-    (cond ((eq derived-mode-p 'shell-mode)
+    (cond ((derived-mode-p 'shell-mode)
 	   (shell))
-	  ((eq derived-mode-p 'eshell-mode)
+	  ((derived-mode-p 'eshell-mode)
 	   (eshell))
 	  (t
 	   ;; Prompt to save on `save-some-buffers' with positive PRED

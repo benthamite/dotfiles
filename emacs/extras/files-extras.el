@@ -27,7 +27,7 @@
 
 ;;; Code:
 
-;; (require 'alert) ; recursive
+(require 'alert) ; recursive
 (require 'cl-seq)
 (require 'dired)
 (require 'dired-extras)

@@ -356,7 +356,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#go][go]]
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
-  - [[#jsonrpc][jsonrpc]]
   - [[#csv-mode][csv-mode]]
   - [[#yaml][yaml]]
   - [[#js2-mode][js2-mode]]
@@ -6837,16 +6836,6 @@ This needs to be configured.
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package json-mode
   :defer 10)
-#+end_src
-
-** jsonrpc
-:PROPERTIES:
-:ID:       0130C01A-AE7F-4A89-96C9-015813F42075
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature jsonrpc
-  :demand)
 #+end_src
 
 ** csv-mode

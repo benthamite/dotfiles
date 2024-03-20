@@ -12289,7 +12289,7 @@ CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 
 ** excluded packages
 :PROPERTIES:
-:ID:       4241A319-CECB-41DC-87DA-C0FD778CD187
+:ID:       A501BF62-4769-4735-A9D8-3CDC92D97773
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)

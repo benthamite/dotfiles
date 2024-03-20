@@ -8,6 +8,7 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+
 ** org-roam-browser-extension
 :PROPERTIES:
 :ID:       5461B907-53F6-4D99-B70C-45E9C3902EB4
@@ -96,22 +97,6 @@ CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
   (org-ai-install-yasnippets)
   (require 'org-ai-talk))
 #+end_src
-
-** jsonrpc
-:PROPERTIES:
-:ID:       ECE3D86D-035D-461C-937F-DF39086E4C5C
-:END:
-
-/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
-
-#+begin_src emacs-lisp
-(use-package jsonrpc
-  ;; :elpaca (jsonrpc
-                   ;; :host github
-                   ;; :repo "emacs-straight/jsonrpc")
-  :demand t)
-#+end_src
-
 
 ** company
 :PROPERTIES:

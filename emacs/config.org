@@ -1858,7 +1858,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package modus-themes
   :elpaca (modus-themes
-           :host sourcehut
+           :host github
            :repo "protesilaos/modus-themes")
   :after faces
   :demand t

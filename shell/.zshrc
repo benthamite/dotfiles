@@ -38,6 +38,10 @@ export PATH="$HOME/source/emms/src:$PATH"
 # mu
 alias muinit="cd ~; mu init --maildir=$HOME/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL --my-address=$WORK_EMAIL; mu index"
 
+# emacs
+alias emacsk="pkill -USR2 Emacs"
+alias emacsK="while true; do pkill -USR2 Emacs; done"
+
 # homebrew
 export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
 

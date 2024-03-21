@@ -108,7 +108,6 @@ poorly-designed websites."
       (global-flycheck-mode -1))
     (when elfeed-extras-update-timer
       (cancel-timer elfeed-extras-update-timer))
-    (elfeed-update)
     (setq elfeed-extras-update-timer
 	  (run-with-idle-timer (* 15 60) t #'elfeed-update))
     (when global-flycheck-mode-enabled-p

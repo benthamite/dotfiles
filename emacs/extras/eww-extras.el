@@ -97,12 +97,12 @@ associated with the PDF."
 			      (user-error "Could not get file"))))))
 
 (defun eww-extras-url-to-html (&optional url callback)
-  "Generate HTML of URL."
+  "Generate HTML of URL, then run CALLBACK function."
   (interactive)
   (eww-extras-url-to-file "html" url callback))
 
 (defun eww-extras-url-to-pdf (&optional url callback)
-  "Generate PDF of URL."
+  "Generate PDF of URL, then run CALLBACK function."
   (interactive)
   (eww-extras-url-to-file "pdf" url callback))
 

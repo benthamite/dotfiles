@@ -86,8 +86,7 @@ ORIG-FUN, URL, ENTRY-FORMAT, and BIBFILE are arguments passed to
 (defun zotra-extras-url-full-capture (&optional url)
   "Add URL to bibfile and generate associated PDF and HTML files."
   (interactive)
-  (require 'eww-extras)
-  (let ((url (simple-extras-get-url url)))
+  (let ((url (or url (read-string "URL: " (current-kill 0) ))))
     (unless ebib--cur-db
       (ebib))
     (zotra-add-entry url)

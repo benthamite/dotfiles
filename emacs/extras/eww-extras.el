@@ -75,7 +75,10 @@ associated with the PDF."
 		       ("html" (prot-eww--sluggify (org-web-tools-extras-org-title-for-url url)))))))
 	 (file-name (file-name-with-extension title type))
 	 (output-file (file-name-concat paths-dir-downloads file-name))
-	 (bibtex-file (buffer-file-name))
+	 (bibtex-file (pcase major-mode
+			('bibtex-mode buffer-file-name)
+			((or 'ebib-entry-mode 'ebib-index-mode)
+			 (ebib-db-get-filename ebib--cur-db))))
 	 (process (make-process
 		   :name (format "url-to-%s" type)
 		   :buffer "*URL-to-File-Process*"

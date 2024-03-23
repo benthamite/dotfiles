@@ -144,11 +144,16 @@
 (setq user-mail-address "fstafforini@gmail.com")
 #+end_src
 
+** claendar-extras
+#+begin_src emacs-lisp
+  (setq calendar-extras-location-name "Buenos Aires")
+  (setq calendar-extras-use-geolocation nil)
+#+end_src
 ** exec-path-from-shell
 :PROPERTIES:
 :ID:       483A1BF8-C5BA-43AA-A502-13EE72419362
 :END:
-#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+#+begin_src emacs-lisp :tangle no
 (use-package exec-path-from-shell
   :demand t
   :config

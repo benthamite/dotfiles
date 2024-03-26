@@ -1553,6 +1553,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   ;; why is this turned on by default!?
   (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
 
+  (add-hook 'forge-issue-mode-hook 'simple-extras-visual-line-mode-enhanced)
+
   :general
   ((magit-mode-map forge-issue-list-mode-map)
    "n" 'forge-dispatch)

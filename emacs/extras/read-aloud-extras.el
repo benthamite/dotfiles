@@ -85,6 +85,7 @@ SIGN is the sign of the change: 1 for increase, -1 for decrease."
 
 ;;;;; Patched functions
 
+;; allow changing the rate at which text is read aloud
 (el-patch-defun read-aloud--args ()
   (plist-get (lax-plist-get (el-patch-swap read-aloud-engines (read-aloud-extras-engines))
 			    read-aloud-engine)

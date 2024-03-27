@@ -43,6 +43,11 @@
   :type 'integer
   :group 'gptel-extras)
 
+(defcustom gptel-extras-dir (file-name-concat paths-dir-notes "gptel/")
+  "The directory where to save the `gptel' buffers."
+  :type 'directory
+  :group 'gptel-extras)
+
 ;;;; Variables
 
 (defconst gptel-extras-ai-models
@@ -145,6 +150,14 @@ called with a prefix argument, configure it globally."
   (apply orig-fun args))
 
 (advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)
+
+(defun gptel-extras-save-buffer (name)
+  "Save the `gptel' buffer NAME to a file in the appropriate directory.
+The `gptel' directory is set by `gptel-extras-dir'."
+  (interactive (list (read-string "Name: ")))
+  (let ((filename (file-name-concat gptel-extras-dir
+				    (file-name-with-extension (tlon-core-slugify name) "org"))))
+    (write-file filename)))
 
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

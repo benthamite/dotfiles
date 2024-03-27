@@ -645,7 +645,7 @@ FORMS are evaluated with point restored to its original position."
 	('eww-mode (eww-current-url))
 	((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "url"))
 	('bibtex-mode (bibtex-extras-get-field "url")))
-      (read-string "URL: ")))
+      (read-string "URL: " (current-kill 0))))
 
 ;;;;; url-parse
 

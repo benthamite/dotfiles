@@ -91,5 +91,23 @@ SIGN is the sign of the change: 1 for increase, -1 for decrease."
 			    read-aloud-engine)
 	     'args))
 
+;; allow reading text in PDFs
+(el-patch-cl-defun read-aloud-this()
+  "Pronounce either the selection or a word under the pointer."
+  (interactive)
+
+  (when read-aloud--c-locked
+    (read-aloud-stop)
+    (cl-return-from read-aloud-selection))
+
+  (if (el-patch-swap (use-region-p) (or (use-region-p) (pdf-view-active-region-p)))
+      (read-aloud--string
+       (el-patch-swap (buffer-substring-no-properties (region-beginning) (region-end))
+		      (if (derived-mode-p 'pdf-view-mode)
+			  (car (pdf-view-active-region-text))
+			(buffer-substring-no-properties (region-beginning) (region-end))))
+       "selection")
+    (read-aloud--current-word)) )
+
 (provide 'read-aloud-extras)
 ;;; read-aloud-extras.el ends here

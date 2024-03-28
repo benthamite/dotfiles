@@ -116,7 +116,7 @@ called with a prefix argument, configure it globally."
 			   (if (<= (length gptel--known-backends) 1)
 			       (caar gptel--known-backends)
 			     (completing-read "Backend name: " (mapcar #'car gptel--known-backends) nil t))))
-	 (backend (alist-get backend-name gptel--known-backends nil nil #'equal))
+	 (backend (alist-get backend-name gptel--known-backends nil nil #'string=))
 	 (backend-models (gptel-backend-models backend))
 	 (models-with-cost (mapcar (lambda (backend)
 				     (cons (format "%-25s $ %5.2f   %-80s"

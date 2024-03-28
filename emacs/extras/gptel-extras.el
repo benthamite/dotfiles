@@ -87,9 +87,9 @@
 	      :tokens 32000
 	      :description "Standard GPT-4 with 32k token window.")
     (:backend "Claude"
-	      :model "Claude Haiku"
+	      :model "claude-3-haiku-20240307"
 	      :cost 0.25
-	      :description "[not available] The least capable Anthropic model")
+	      :description "The least capable Anthropic model")
     (:backend "Claude"
 	      :model "claude-3-sonnet-20240229"
 	      :cost 3

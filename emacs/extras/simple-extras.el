@@ -451,7 +451,7 @@ number."
   (when (derived-mode-p 'org-mode 'org-agenda-mode 'org-msg-mode)
     (when (member 'org-tidy-mode org-mode-hook)
       (org-tidy-mode arg))
-    (org-display-inline-images arg)
+    (org-extras-inline-images arg)
     (when (and (not (derived-mode-p 'org-agenda-mode))
 	       (featurep 'org-modern))
       (org-modern-mode arg)))

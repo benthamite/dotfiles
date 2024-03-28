@@ -279,6 +279,24 @@ use `ox-clip-formatted-copy'."
 	(message "You can toggle inline images with C-c C-x C-v"))
     (user-error "Requires pngpaste in PATH")))
 
+(defun org-extras-inline-images (&optional arg)
+  "Enable or disable the display of inline images.
+If called interactively, toggle the display of inline images. If the prefix
+argument is negative, disable the display of inline images; otherwise, enable
+it.
+
+If called from Lisp, toggle the display of inline images if ARG is `toggle'.
+Enable the display of inline images if ARG is nil, omitted, or is a positive
+number. Disable the mode if ARG is a negative number."
+  (interactive "P")
+  (when (or (and (called-interactively-p 'interactive) (not arg))
+	    (eq arg 'toggle))
+    (setq arg
+	  (if (org--inline-image-overlays) -1 1)))
+  (if (and arg (< arg 0))
+      (org-remove-inline-images)
+    (org-display-inline-images)))
+
 ;; The following functions produce a count of the TODOs added
 ;; or removed from all agenda files in the last day:
 ;; https://200ok.ch/posts/2022-12-06_how_much_did_you_get_done_today.html

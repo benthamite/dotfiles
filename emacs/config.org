@@ -4529,7 +4529,8 @@ The original package is no longer maintained; the fork below adds a few improvem
 (use-feature simple
   :demand t
   :config
-  (dolist (var '(extended-command-history
+  (dolist (var '(command-history
+                 extended-command-history
                  kill-ring
                  mark-ring
                  shell-command-history

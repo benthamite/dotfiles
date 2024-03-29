@@ -11338,15 +11338,14 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine EABlogs
     "https://cse.google.com/cse?cx=013594344773078830993:k3igzr2se6y&q=%s"
     :keybinding "b b")
-  (defengine Bing
-    "https://www.bing.com/search?q=%s&PC=U316&FORM=CHROMN"
-    :keybinding "b i")
-  (defengine Blackwells
-    "http://bookshop.blackwell.co.uk/bookshop/search/?keyword=%s"
-    :keybinding "b l")
   (defengine BookFinder
     "http://www.bookfinder.com/search/?keywords=%s&st=xl&ac=qr&src=opensearch"
     :keybinding "b f")
+  (defengine Bing
+    "https://www.bing.com/search?q=%s&PC=U316&FORM=CHROMN"
+    :keybinding "b i")
+  (defengine UCBerkeleyLibrary    "https://search.library.berkeley.edu/discovery/search?query=any,contains,%s&tab=Default_UCLibrarySearch&search_scope=DN_and_CI&vid=01UCS_BER:UCB&offset=0"
+             :keybinding "b l")
   (defengine MercadoLibre
     "https://listado.mercadolibre.com.ar/%s#D[A:qwer]"
     :keybinding "c c")
@@ -11368,7 +11367,7 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine DuckDuckGo
     "https://duckduckgo.com/?q=%s"
     :keybinding "d d")
-    (defengine Diccionario-Panhispánico-de-Dudas
+  (defengine Diccionario-Panhispánico-de-Dudas
     "https://www.rae.es/dpd/%s"
     :keybinding "d p")
   (defengine EAForum

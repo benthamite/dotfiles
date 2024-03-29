@@ -244,7 +244,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#history][history]]
   - [[#savehist][savehist]]
   - [[#simple][simple]]
-  - [[#chistory][chistory]]
   - [[#saveplace][saveplace]]
   - [[#session][session]]
   - [[#recentf][recentf]]
@@ -4535,17 +4534,6 @@ The original package is no longer maintained; the fork below adds a few improvem
   ((minibuffer-mode-map mu4e-minibuffer-search-query-map)
    "M-k" 'previous-history-element
    "M-l" 'next-history-element))
-#+end_src
-
-** chistory
-:PROPERTIES:
-:ID:       1604256B-74B9-41DC-9F19-7EAED0473FB6
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature chistory
-  :config
-  (push 'command-history savehist-additional-variables))
 #+end_src
 
 ** saveplace

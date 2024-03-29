@@ -667,6 +667,19 @@ language."
       (setq output (shell-command-to-string (format command "pbpaste" non-html))))
     output))
 
+;;;;; slugify
+
+;;;###autoload
+(defun simple-extras-slugify (string)
+  "Convert STRING into slug."
+  (bibtex-extras-asciify-string (prot-eww--sluggify string)))
+
+;;;###autoload
+(defun simple-extras-slugify-clipboard ()
+  "Convert the clipboard or first element in kill ring into a slug."
+  (interactive)
+  (kill-new (simple-extras-slugify (current-kill 0))))
+
 ;;;;; misc
 
 (defun simple-extras-init-disable-funs (seconds funs)

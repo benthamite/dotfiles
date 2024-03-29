@@ -11222,7 +11222,7 @@ These key bindings produce the same behavior in eww.
   :after elfeed
   :demand t
   :config
-  (setq rmh-elfeed-org-files (list paths-file-feeds-pablo paths-file-tlon-feeds))
+  (setq rmh-elfeed-org-files (list paths-file-feeds-pablo))
   (setq rmh-elfeed-org-auto-ignore-invalid-feeds t)
 
   (elfeed-org))

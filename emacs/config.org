@@ -561,7 +561,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 
 - By default, ~elpaca~ makes shallow copies of all the repos it clones. You can specify the repo depth with the [[https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipe-keyword-depth][:depth]] keyword. What if, however, you want to turn a shallow repo into a full repo /after/ it has been cloned? There is a relatively obscure command in Magit that lets you do this: ~magit-remote-unshallow~. (Note that this not only passes the ~--unshallow~ flag but also restores access to all branches in addition to the main one.)
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 ;;; init.el --- Init File -*- lexical-binding: t -*-
 (defvar elpaca-installer-version 0.6)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))

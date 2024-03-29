@@ -710,11 +710,11 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
 
 #+begin_src emacs-lisp
-  (use-package jsonrpc
-    :elpaca (jsonrpc
-                     :host github
-                     :repo "emacs-straight/jsonrpc")
-    :demand t)
+(use-package jsonrpc
+  :elpaca (jsonrpc
+           :host github
+           :repo "emacs-straight/jsonrpc")
+  :demand t)
 #+end_src
 
 ** seq
@@ -2035,17 +2035,16 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :after doom-modeline
   :demand t
   :config
-  ;; we slightly tweak the `main' modeline to (1) display the major mode icon to
-  ;; the left of point position indicators and (2) and a `gptel' element. note
-  ;; that which elements are shown is controlled by the relevant `doom-modeline'
-  ;; user options. to hide the `gptel' element, set `doom-modeline-extras-gptel'
-  ;; to nil.
-  (doom-modeline-def-modeline 'custom
-    '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
-    '(gptel gptel-cost compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
-
   ;; the custom modeline needs to be set after `gptel' loads, to display the associated element
   (with-eval-after-load 'gptel
+    ;; we slightly tweak the `main' modeline to (1) display the major mode icon to
+    ;; the left of point position indicators and (2) and a `gptel' element. note
+    ;; that which elements are shown is controlled by the relevant `doom-modeline'
+    ;; user options. to hide the `gptel' element, set `doom-modeline-extras-gptel'
+    ;; to nil.
+    (doom-modeline-def-modeline 'custom
+      '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
+      '(gptel gptel-cost compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
     (doom-modeline-set-modeline 'custom t))
 
   (doom-modeline-mode))
@@ -5764,7 +5763,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 /[[https://github.com/minad/consult-flycheck][consult-flycheck]] integrates ~flycheck~ with ~consult~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package consult-flycheck
+  (use-package consult-flycheck
   :after consult flyckeck
   :demand t)
 #+end_src

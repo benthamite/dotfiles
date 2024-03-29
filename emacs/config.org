@@ -10983,7 +10983,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
 
   (advice-add 'eww :before
               (lambda (url &optional _new-session)
-                "When browsing a YouTube URL, display transcript and open video in `mpv'."
+                "When browsing a YouTube URL, display the transcript and open the video with `mpv'."
                 (eww-extras-browse-youtube url)))
   :general
   ("A-w" 'eww)

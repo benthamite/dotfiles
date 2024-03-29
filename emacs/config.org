@@ -4239,6 +4239,9 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 :ID:       4F3AEDB7-C357-40BA-B670-DE392FAF8F7A
 :END:
 
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/calendar/calendar.el][calendar]] provides a collection of calendar-related functions./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature calendar
   :defer 10
@@ -4338,7 +4341,7 @@ CLOCK: [2021-07-26 Mon 21:15]--[2021-07-26 Mon 21:29] =>  0:14
 CLOCK: [2021-07-22 Thu 12:23]--[2021-07-22 Thu 12:50] =>  0:27
 CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 :END:
-/[[https://github.com/kidd/org-gcal.el][org-gcal]] integrates org with Google Calendar./
+/[[https://github.com/kidd/org-gcal.el][org-gcal]] integrates ~org-mode~ with Google Calendar./
 
 (That's the actively maintained fork; the [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][official repository]] is no longer maintained.)
 
@@ -4438,6 +4441,8 @@ The original package is no longer maintained; the fork below adds a few improvem
 :ID:       88CCE9CB-8284-4C8B-8264-A1E54E299941
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/time.el#L2][time]] provides facilities to display the current date and time, and a new-mail indicator mode line./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature time
   :demand t
@@ -4482,7 +4487,7 @@ The original package is no longer maintained; the fork below adds a few improvem
 :ID:       E1DB2097-7273-4FAC-BA84-67D46815FC45
 :END:
 
-/[[https://git.sr.ht/~josegpt/display-wttr][display-wttr]] displays weather information in the modeline (or tab-bar)./
+/[[https://git.sr.ht/~josegpt/display-wttr][display-wttr]] displays weather information in the mode line./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package display-wttr
@@ -4504,7 +4509,7 @@ The original package is no longer maintained; the fork below adds a few improvem
 :ID:       D411AA79-C8FE-4E03-B06E-1BED5B7688BC
 :END:
 
-/savehist makes Emacs remember completion history across sessions./
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/savehist.el][savehist]] makes Emacs remember completion history across sessions./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature savehist
@@ -4542,7 +4547,7 @@ The original package is no longer maintained; the fork below adds a few improvem
 :ID:       8DE4A4B7-4B96-445F-BC1F-B10BBF181F53
 :END:
 
-/saveplace makes Emacs remember point position in file across sessions./
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/saveplace.el][saveplace]] makes Emacs remember point position in file across sessions./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature saveplace
@@ -4575,7 +4580,7 @@ The original package is no longer maintained; the fork below adds a few improvem
 :ID:       C22F4A07-A237-498A-999D-F841F3B10074
 :END:
 
-/recentf makes Emacs remember the most recently visited files./
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/recentf.el][recentf]] makes Emacs remember the most recently visited files./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature recentf
@@ -4594,6 +4599,9 @@ The original package is no longer maintained; the fork below adds a few improvem
 :PROPERTIES:
 :ID:       438AD8A8-0F4F-4A1D-9BC9-110906944509
 :END:
+
+
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/textmodes/remember.el][remember]] is a mode for quickly jotting down things to remember./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature remember

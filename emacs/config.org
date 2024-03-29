@@ -1341,6 +1341,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature log-edit
+  :after savehist
   :config
   (push 'log-edit-comment-ring savehist-additional-variables))
 #+end_src

@@ -11202,7 +11202,6 @@ These key bindings produce the same behavior in eww.
   (elfeed-search-mode-map
    "A" 'elfeed-extras-mark-all-as-read
    "e" 'elfeed-extras-toggle-read-entries
-   "q" 'elfeed-extras-toggle-session
    "u" 'elfeed-extras-full-update
    "w" 'elfeed-extras-toggle-wiki-entries)
   (elfeed-show-mode-map

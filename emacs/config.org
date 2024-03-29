@@ -232,7 +232,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#date--time][date & time]]
   - [[#calendar][calendar]]
   - [[#calendar-extras][calendar-extras]]
-  - [[#loaddefs][loaddefs]]
+  - [[#holidays][holidays]]
   - [[#org-gcal][org-gcal]]
   - [[#org-gcal-extras][org-gcal-extras]]
   - [[#calfw][calfw]]
@@ -4292,17 +4292,20 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
    "s-b" 'calendar-extras-calfw-block-agenda))
 #+end_src
 
-** loaddefs
+** holidays
 :PROPERTIES:
 :ID:       08F898A1-71C0-4BF4-B6E8-5D6649DB230C
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/calendar/holidays.el#L98][holidays]] provides holiday functions for ~calendar~./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-  (use-feature loaddefs
-    :demand t
-    :init
-    (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
-                       (holiday-float 5 0 2 "Mother's Day")))
-                     (delete holiday holiday-general-holidays)))
+(use-feature holidays
+  :demand t
+  :init
+  (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
+                     (holiday-float 5 0 2 "Mother's Day")))
+    (delete holiday holiday-general-holidays)))
 #+end_src
 
 ** org-gcal

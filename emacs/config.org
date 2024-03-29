@@ -7548,7 +7548,9 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    "/" 'org-extras-agenda-done-and-next
    "\"" 'org-extras-agenda-postpone-and-next
    "b" 'org-extras-agenda-toggle-anniversaries
-   "SPC" 'org-extras-agenda-goto-and-start-clock))
+   "SPC" 'org-extras-agenda-goto-and-start-clock)
+  ((mu4e-view-mode-map eww-mode-map)
+   "s-c" 'org-extras-eww-copy-for-org-mode))
 #+end_src
 
 ** org-agenda

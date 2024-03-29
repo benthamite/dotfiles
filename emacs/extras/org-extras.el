@@ -721,6 +721,58 @@ SEPARATOR is nil, use ' • '."
 	     strings)
      (or separator " • "))))
 
+;;;;; ol-eww
+
+;; like `org-eww-copy-for-org-mode', but also handle italics, boldface and bullets
+;; TODO: handle headings. The relevant faces are `shr-h1', `shr-h2', etc.
+(defvar shr-bullet)
+(defun org-extras-eww-copy-for-org-mode ()
+  "Copy current buffer content or active region with `org-mode' style links.
+This will encode `link-title' and `link-location' with
+`org-link-make-string' and insert the transformed text into the
+kill ring, so that it can be yanked into an Org mode buffer with
+links working correctly.
+
+Further lines starting with a star get quoted with a comma to
+keep the structure of the Org file."
+  (interactive)
+  (let ((regionp (use-region-p))
+        (transform-start (point-min))
+        (transform-end (point-max))
+        (return-content ""))
+    (when regionp
+      (setq transform-start (region-beginning))
+      (setq transform-end (region-end)))
+    (deactivate-mark)  ; Deactivate region highlighting if it's active.
+    (save-excursion
+      (goto-char transform-start)
+      (while (< (point) transform-end)
+        (let* ((text-face (if (listp (get-text-property (point) 'face))
+                              (get-text-property (point) 'face)
+                            (list (get-text-property (point) 'face))))
+               (link (get-text-property (point) 'shr-url))
+               (text (buffer-substring-no-properties (point)
+                                                     (or (next-single-property-change (point) 'face nil transform-end)
+                                                         (next-single-property-change (point) 'shr-url nil transform-end)
+                                                         transform-end)))
+               (formatted-text (replace-regexp-in-string shr-bullet "- " text)))
+          ;; Apply Org mode formatting for italics and bold where applicable.
+          (when (memq 'italic text-face)
+            (setq formatted-text (concat "/" formatted-text "/")))
+          (when (memq 'bold text-face)
+            (setq formatted-text (concat "*" formatted-text "*")))
+          ;; Format links according to Org mode syntax.
+          (when link
+            (setq formatted-text (concat "[[" link "][" text "]]")))
+          ;; Append the formatted text to the return content.
+          (setq return-content (concat return-content formatted-text))
+          ;; Advance the point.
+          (goto-char (or (next-single-property-change (point) 'face)
+                         (next-single-property-change (point) 'shr-url)
+                         (point-max))))))
+    ;; Copy the whole formatted content to the kill ring.
+    (kill-new return-content)))
+
 ;;;;; ob
 
 (defun org-extras-confirm-babel-evaluate (lang _)

@@ -10979,7 +10979,8 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
     (setq eww-use-browse-url
           (concat eww-use-browse-url "\\|" (car cons))))
 
-  (push 'eww-history savehist-additional-variables)
+  (dolist (var '(eww-history eww-prompt-history))
+    (push var savehist-additional-variables))
 
   (advice-add 'eww :before
               (lambda (url &optional _new-session)

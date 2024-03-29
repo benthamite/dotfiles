@@ -4393,11 +4393,16 @@ Note to self: if the package doesn't work after deploying a new profile, even af
 CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 :END:
 
-/[[https://github.com/kiwanami/emacs-calfw][calf]] is a calendar framework for Emacs./
+/[[https://github.com/haji-ali/emacs-calfw][calf]] is a calendar framework for Emacs./
+
+The original package is no longer maintained; the fork below adds a few improvements.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package calfw
-  :demand t)
+  :elpaca (calfw
+           :host github
+           :repo "haji-ali/emacs-calfw")
+  :demand)
 #+end_src
 
 ** calfw-blocks

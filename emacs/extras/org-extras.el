@@ -408,7 +408,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 (declare-function youtube-dl "youtube-dl")
 (declare-function org-roam-tag-remove "org-roam")
 (declare-function org-roam-tag-add "org-roam")
-(declare-function tlon-core-slugify "tlon-core")
+(declare-function simple-extras-slugify "tlon-core")
 (defun org-extras-capture-before-finalize-hook-function ()
   "Define behavior of `org-capture-before-finalize-hook'."
   (pcase (plist-get org-capture-plist :key)
@@ -457,7 +457,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     ("y"
      (youtube-dl (current-kill 0)
 		 :directory paths-dir-downloads
-		 :destination (tlon-core-slugify
+		 :destination (simple-extras-slugify
 			       (org-extras-web-tools--org-title-for-url))))))
 
 ;;;;; org-clock

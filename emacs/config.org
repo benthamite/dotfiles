@@ -1002,7 +1002,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
   :general
   (markdown-mode-map
-   "s-y" 'tlon-core-slugify-clipboard))
+   "s-y" 'simple-extras-slugify-clipboard))
 #+end_src
 
 ** prot-common

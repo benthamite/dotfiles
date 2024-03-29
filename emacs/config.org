@@ -1864,14 +1864,11 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   :after faces
   :demand t
 
-  :init
-  (setq modus-themes-org-blocks 'gray-background)
-
   :config
   (setq modus-themes-common-palette-overrides
         `((fringe unspecified) ; hide the fringe
-          ;; additional customizations can be added here:
-
+          (bg-prose-block-delimiter bg-inactive)
+          (fg-prose-block-delimiter gray)
           ;; for the rest, use the predefined intense values
           ,@modus-themes-preset-overrides-intense))
 

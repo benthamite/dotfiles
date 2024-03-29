@@ -9,6 +9,20 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** elgrep
+:PROPERTIES:
+:ID:       783E764B-7E5D-4CFB-9DE7-D87C5BF51518
+:END:
+
+/[[https://github.com/TobiasZawada/elgrep][elgrep]] is an Emacs implementation of grep that requires no external dependencies./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package elgrep
+  :demand t
+  :general
+  ("A-C-p" 'elgrep))
+#+end_src
+
 ** org-roam-browser-extension
 :PROPERTIES:
 :ID:       5461B907-53F6-4D99-B70C-45E9C3902EB4

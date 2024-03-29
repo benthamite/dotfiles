@@ -259,7 +259,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#imenu][imenu]]
   - [[#pcre2el][pcre2el]]
   - [[#wgrep][wgrep]]
-  - [[#elgrep][elgrep]]
 - [[#minibuffer-completion][minibuffer completion]]
   - [[#vertico][vertico]]
   - [[#embark][embark]]
@@ -4829,20 +4828,6 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :END:
 
 Some discussion [[https://github.com/mhayashi1120/Emacs-wgrep/issues/36][here]]. Maybe start by trying ~M-x wgrep-save-all-buffers~  next time this happens?
-
-** elgrep
-:PROPERTIES:
-:ID:       783E764B-7E5D-4CFB-9DE7-D87C5BF51518
-:END:
-
-/[[https://github.com/TobiasZawada/elgrep][elgrep]] is an Emacs implementation of grep that requires no external dependencies./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package elgrep
-  :demand t
-  :general
-  ("A-C-p" 'elgrep))
-#+end_src
 
 * minibuffer completion
 :PROPERTIES:

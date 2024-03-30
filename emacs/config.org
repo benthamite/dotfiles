@@ -9980,7 +9980,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (setq zotra-use-curl nil)
   (setq zotra-url-retrieve-timeout 15)
   (setq zotra-default-entry-format "biblatex")
-  (setq zotra-after-add-entry-hook nil)
   (setq zotra-download-attachment-default-directory paths-dir-downloads)
   (setq zotra-backend 'zotra-server)
   (setq zotra-local-server-directory (expand-file-name "~/source/zotra-server/"))

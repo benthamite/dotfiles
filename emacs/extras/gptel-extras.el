@@ -133,10 +133,12 @@ called with a prefix argument, configure it globally."
 				   backend-models))
 	 (model-name (or model-name
 			 (alist-get (completing-read "Model name: " models-with-cost)
-				    models-with-cost nil nil #'string=)))
-	 (setter (if globally #'set-default #'set)))
-    (funcall setter 'gptel-model model-name)
-    (funcall setter 'gptel-backend backend)))
+				    models-with-cost nil nil #'string=))))
+    (if globally
+	(setq gptel-model model-name
+	      gptel-backend backend)
+      (setq-local gptel-model model-name
+		  gptel-backend backend))))
 
 (defun gptel-extras-get-cost ()
   "Get the cost of prompting the current model."

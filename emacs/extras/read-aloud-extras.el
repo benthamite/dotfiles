@@ -94,15 +94,14 @@
 
 ;;;;; Voice
 
-
-(defun read-aloud-extras-voice-select ()
+(defun read-aloud-extras-set-voice ()
   "Select the voice that will read the text aloud."
   (interactive)
   (pcase read-aloud-engine
-    ("say" (setq read-aloud-extras-voice (read-aloud-voice-select-say)))
+    ("say" (setq read-aloud-extras-voice (read-aloud-extras-select-say-voice)))
     (_ (user-error "Currently this function is only available for the 'say' engine. Sorry"))))
 
-(defun read-aloud-voice-select-say ()
+(defun read-aloud-extras-select-say-voice ()
   "Prompt the user to select a `say' voice."
   (let* ((shell-output (shell-command-to-string "say -v \\?"))
          (lines (split-string shell-output "\n" t))

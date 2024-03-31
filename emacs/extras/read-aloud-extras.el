@@ -78,6 +78,7 @@
 
 ;;;;; Rate
 
+;;;###autoload
 (defun read-aloud-extras-set-rate (rate)
   "Set the rate at which to read text aloud to RATE."
   (interactive "nRate: ")
@@ -90,11 +91,13 @@
   (read-aloud-extras-set-rate
    (funcall sign read-aloud-extras-rate read-aloud-extras-rate-change)))
 
+;;;###autoload
 (defun read-aloud-extras-increase-rate ()
   "Increase the rate at which to read text aloud."
   (interactive)
   (read-aloud-extras-change-rate #'+))
 
+;;;###autoload
 (defun read-aloud-extras-decrease-rate ()
   "Decrease the rate at which to read text aloud."
   (interactive)
@@ -102,6 +105,7 @@
 
 ;;;;; Voice
 
+;;;###autoload
 (defun read-aloud-extras-set-voice ()
   "Set the voice that will read the text aloud."
   (interactive)

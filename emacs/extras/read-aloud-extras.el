@@ -57,16 +57,23 @@
 
 ;;;; Functions
 
-(defun read-aloud-extras-engines ()
-  "Set `read-aloud' engines dynamically."
-  `("speech-dispatcher"		; Linux/FreeBSD only
-    (cmd "spd-say" args ("-e" "-w") kill "spd-say -S")
-    "flite"				; Cygwin?
-    (cmd "flite" args nil)
-    "jampal"				; Windows
-    (cmd "cscript" args ("C:\\Program Files\\Jampal\\ptts.vbs" "-r" "5"))
-    "say"				; macOS
-    (cmd "say" args (,(format "-v %s" read-aloud-extras-voice)
+;;;;; Update
+
+(defun read-aloud-extras-update-engine (name parameters)
+  "Update engine NAME with PARAMETERS."
+  (plist-put read-aloud-engines name parameters 'equal))
+
+(defun read-aloud-extras-update-current-engine ()
+  "Update the current engine."
+  (pcase read-aloud-engine
+    ("say" (read-aloud-extras-update-say-engine))
+    (_ (user-error "Currently this function is only available for the `say' engine"))))
+
+(defun read-aloud-extras-update-say-engine ()
+  "Update `say' engine."
+  (read-aloud-extras-update-engine
+   "say"
+   `(cmd "say" args (,(format "-v %s" read-aloud-extras-voice)
 		     ,(format "-r %s" read-aloud-extras-rate)))))
 
 ;;;;; Rate
@@ -75,7 +82,8 @@
   "Set the rate at which to read text aloud to RATE."
   (interactive "nRate: ")
   (message "Rate is now %d"
-	   (setq read-aloud-extras-rate rate)))
+	   (setq read-aloud-extras-rate rate))
+  (read-aloud-extras-update-current-engine))
 
 (defun read-aloud-extras-change-rate (sign)
   "Increase or decrease the rate at which to read text aloud, depending on SIGN."
@@ -95,11 +103,12 @@
 ;;;;; Voice
 
 (defun read-aloud-extras-set-voice ()
-  "Select the voice that will read the text aloud."
+  "Set the voice that will read the text aloud."
   (interactive)
   (pcase read-aloud-engine
     ("say" (setq read-aloud-extras-voice (read-aloud-extras-select-say-voice)))
-    (_ (user-error "Currently this function is only available for the 'say' engine. Sorry"))))
+    (_ (user-error "Currently this function is only available for the 'say' engine")))
+  (read-aloud-extras-update-current-engine))
 
 (defun read-aloud-extras-select-say-voice ()
   "Prompt the user to select a `say' voice."
@@ -117,12 +126,6 @@
     (alist-get selection collection nil nil #'string=)))
 
 ;;;;; Patched functions
-
-;; allow changing the rate at which text is read aloud
-(el-patch-defun read-aloud--args ()
-  (plist-get (lax-plist-get (el-patch-swap read-aloud-engines (read-aloud-extras-engines))
-			    read-aloud-engine)
-	     'args))
 
 ;; allow reading text in PDFs
 (declare-function pdf-view-active-region-p "pdf-view")

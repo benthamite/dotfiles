@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'org)
+(require 'prot-eww)
 (require 'url-parse)
 (require 'url-vars)
 

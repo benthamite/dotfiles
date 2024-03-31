@@ -9246,7 +9246,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (setq bibtex-autokey-year-title-separator "")
   (setq bibtex-autokey-preserve-case t)
   ;; Remove accents
-  (setq bibtex-autokey-before-presentation-function 'bibtex-extras-asciify-string)
+  (setq bibtex-autokey-before-presentation-function 'simple-extras-asciify-string)
   ;; check tweaked version of `bibtex-format-entry' above
   (setq bibtex-entry-format '(opts-or-alts-fields last-comma delimiters page-dashes))
   (setq bibtex-field-indentation 8) ; match ebib value

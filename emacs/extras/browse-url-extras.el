@@ -31,7 +31,7 @@
 (require 'eww)
 (require 'f)
 (require 'ffap)
-(require 'tlon-init)
+(require 'paths)
 (require 's)
 
 ;;;; User options

@@ -66,14 +66,11 @@
     "jampal"				; Windows
     (cmd "cscript" args ("C:\\Program Files\\Jampal\\ptts.vbs" "-r" "5"))
     "say"				; macOS
-    (cmd "say" args (,(format "-v %s" (read-aloud-extras-voice))
-		     ,(format "-r %s" (read-aloud-extras-rate))))))
+    (cmd "say" args (,(format "-v %s" read-aloud-extras-voice)
+		     ,(format "-r %s" read-aloud-extras-rate)))))
 
 ;;;;; Rate
 
-(defun read-aloud-extras-rate ()
-  "Return the rate at which to read text aloud, in words per minute."
-  read-aloud-extras-rate)
 
 (defun read-aloud-extras-change-rate (sign)
   "Increase or decrease the rate at which to read text aloud, depending on SIGN."
@@ -93,9 +90,6 @@
 
 ;;;;; Voice
 
-(defun read-aloud-extras-voice ()
-  "Return the voice that will read the text aloud."
-  read-aloud-extras-voice)
 
 (defun read-aloud-extras-voice-select ()
   "Select the voice that will read the text aloud."

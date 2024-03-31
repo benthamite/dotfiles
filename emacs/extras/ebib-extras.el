@@ -1006,8 +1006,7 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 (defun ebib-extras-check-author-exists ()
   "Check if the author of the given entry exists in the current database."
   (interactive)
-  (let* ((db ebib--cur-db)
-	 (author-to-check (ebib-extras-get-field "author")))
+  (let* ((author-to-check (ebib-extras-get-field "author")))
     (if (member author-to-check ebib-extras-existing-authors)
 	(message "Author found in the database!")
       (message "Warning: Author not found in the database!"))))
@@ -1019,7 +1018,6 @@ If applicable, open external website to set rating there as well."
   (let ((rating (ebib-extras-choose-rating))
 	(supertype (ebib-extras-get-supertype))
 	(title (ebib-extras-get-field "title"))
-	(key (ebib--get-key-at-point))
 	(db ebib--cur-db))
     ;; TODO: open rating websites based on supertype
     (pcase supertype
@@ -1033,9 +1031,7 @@ If applicable, open external website to set rating there as well."
   "Update the entry buffer with the current entry in DB."
   (ebib--update-entry-buffer)
   (set-buffer-modified-p nil)
-  (ebib--set-modified t db t (seq-filter (lambda (dependent)
-					   (ebib-db-has-key key dependent))
-					 (ebib--list-dependents db))))
+  (ebib--set-modified t db t nil))
 
 (defun ebib-extras-choose-rating ()
   "Prompt for a rating from 1 to 10 and return the choice."
@@ -1093,14 +1089,14 @@ Fetching is done using `bib'."
   (let* ((get-field (pcase major-mode
 		      ('ebib-entry-mode #'ebib-extras-get-field)
 		      ('bibtex-mode #' (bibtex-extras-get-field))))
-	 (title (get-field "title"))
-	 (author (get-field "author")))
+	 (title (funcall get-field "title"))
+	 (author (funcall get-field "author")))
     (pcase (ebib-extras-get-supertype)
-      ("book" (bib-search-isbn (format "% %" title author)))
+      ("book" (bib-search-isbn (format "%s %s" title author)))
       ("article" (bib-search-crossref title author))
       ("film" (bib-search-imdb
 	       (bib-translate-title-to-english title)))
-      (_ (get-field "url")))))
+      (_ (funcall get-field "url")))))
 
 (defun ebib-extras-get-or-fetch-id-or-url ()
   "Get the ID or URL of the entry at point, or fetch it if missing."
@@ -1357,11 +1353,10 @@ The FORCE argument is used as in `ebib-save-current-database'."
     (with-temp-buffer
       (ebib--format-database-as-bibtex db)
       (write-region (point-min) (point-max) (ebib-db-get-filename db)))
-    (let ((buf (current-buffer)))
-      (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-      (with-temp-buffer
-	(ebib--format-database-as-bibtex db)
-	(write-region (point-min) (point-max) (ebib-db-get-filename db)))))
+    (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+    (with-temp-buffer
+      (ebib--format-database-as-bibtex db)
+      (write-region (point-min) (point-max) (ebib-db-get-filename db))))
   (ebib--set-modified nil db))
 
 (el-patch-defun ebib-reload-current-database ()

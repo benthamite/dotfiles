@@ -64,24 +64,20 @@
   read-aloud-extras-rate)
 
 (defun read-aloud-extras-change-rate (sign)
-  "Increase or decrease the rate at which to read text aloud.
-SIGN is the sign of the change: 1 for increase, -1 for decrease."
-  (pcase sign
-    (1 (setq read-aloud-extras-rate
-	     (+ read-aloud-extras-rate read-aloud-extras-rate-change)))
-    (-1 (setq read-aloud-extras-rate
-	      (- read-aloud-extras-rate read-aloud-extras-rate-change))))
-  (message "Rate is now %d" read-aloud-extras-rate))
+  "Increase or decrease the rate at which to read text aloud, depending on SIGN."
+  (message "Rate is now %d"
+	   (setq read-aloud-extras-rate
+		 (funcall sign read-aloud-extras-rate read-aloud-extras-rate-change))))
 
 (defun read-aloud-extras-increase-rate ()
   "Increase the rate at which to read text aloud."
   (interactive)
-  (read-aloud-extras-change-rate 1))
+  (read-aloud-extras-change-rate #'+))
 
 (defun read-aloud-extras-decrease-rate ()
   "Decrease the rate at which to read text aloud."
   (interactive)
-  (read-aloud-extras-change-rate -1))
+  (read-aloud-extras-change-rate #'-))
 
 ;;;;; Patched functions
 

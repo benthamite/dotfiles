@@ -88,6 +88,8 @@
 	     'args))
 
 ;; allow reading text in PDFs
+(declare-function pdf-view-active-region-p "pdf-view")
+(declare-function pdf-view-active-region-text "pdf-view")
 (el-patch-cl-defun read-aloud-this()
   "Pronounce either the selection or a word under the pointer."
   (interactive)

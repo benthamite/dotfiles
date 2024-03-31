@@ -1185,19 +1185,6 @@ DIRECTION can be `prev' or `next'."
     (insert (concat field "\n" keywords))
     (org-extras-sort-keywords)))
 
-(defun ebib-extras-create-section-entry (&optional title)
-  "Create a BibTeX entry for the section of the current entry.
-Prompt the user for a title, unless TITLE is non-nil."
-  (interactive)
-  (let* ((fields `(("title" . ,(or title (read-string "Section title: ")))
-		   ("eventtitle" . ,(ebib-extras-get-field "title"))
-		   ("url" . ,(read-string "URL: " (ebib-extras-get-field "url")))
-		   ("crossref" . ,(ebib--get-key-at-point))
-		   ("author" . ,(ebib-extras-get-field "author"))
-		   ("date" . ,(ebib-extras-get-field "")))))
-    (tlon-babel--create-entry-from-current fields)))
-
-
 ;;;;; pdf metadata
 
 (defun ebib-extras-set-pdf-metadata ()

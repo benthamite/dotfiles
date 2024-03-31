@@ -158,7 +158,7 @@ called with a prefix argument, configure it globally."
 The `gptel' directory is set by `gptel-extras-dir'."
   (interactive (list (read-string "Name: ")))
   (let ((filename (file-name-concat gptel-extras-dir
-				    (file-name-with-extension (tlon-core-slugify name) "org"))))
+				    (file-name-with-extension (simple-extras-slugify name) "org"))))
     (write-file filename)))
 
 (provide 'gptel-extras)

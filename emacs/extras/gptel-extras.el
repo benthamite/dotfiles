@@ -88,6 +88,10 @@
 	      :cost 60
 	      :tokens 32000
 	      :description "Standard GPT-4 with 32k token window.")
+    (:backend "ChatGPT"
+	      :model "gpt-4-vision-preview"
+	      :cost 0 ; placeholder
+	      :description "GPT-4 model for sending images.")
     (:backend "Claude"
 	      :model "claude-3-haiku-20240307"
 	      :cost 0.25

@@ -573,20 +573,23 @@ Used by the `ebib-extras-generate-search-commands' macro.")
 
 ;;;;; Search functions
 
-(defmacro ebib-extras-generate-search-commands ()
+(defun ebib-extras-generate-search-commands ()
   "Generate search commands for search engines in `ebib-extras-search-engines'."
-  `(progn
-     ,@(mapcar (lambda (engine)
-		 `(defun ,(intern (concat "ebib-extras-search-" (symbol-name engine))) (&optional query)
-		    ,(let ((name (capitalize (replace-regexp-in-string "-" " " (symbol-name engine)))))
-		       (format "Run a search on %s." name)
-		       `(interactive ,(format "sSearch %s: " name)))
-		    (ebib-extras-search
-		     ,(intern (concat "ebib-extras-" (symbol-name engine)))
-		     query)))
-	       ebib-extras-search-engines)))
+  (mapc
+   (lambda (engine)
+     (let* ((name (capitalize (replace-regexp-in-string "-" " " (symbol-name engine))))
+            (function-name (intern (concat "ebib-extras-search-" (symbol-name engine))))
+            (docstring (format "Run a search on %s." name))
+            (query-prompt `(,(format "sSearch %s: " name)))
+            (search-engine (intern (concat "ebib-extras-" (symbol-name engine)))))
+       (fset function-name
+             `(lambda (&optional query)
+                ,docstring
+                (interactive ,query-prompt)
+                (ebib-extras-search ,search-engine query)))))
+   ebib-extras-search-engines))
 
-;; (ebib-extras-generate-search-commands)
+(ebib-extras-generate-search-commands)
 
 (defun ebib-extras-search (search-engine query)
   "Search for QUERY with SEARCH-ENGINE."

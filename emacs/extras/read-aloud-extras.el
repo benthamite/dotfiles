@@ -71,12 +71,16 @@
 
 ;;;;; Rate
 
+(defun read-aloud-extras-set-rate (rate)
+  "Set the rate at which to read text aloud to RATE."
+  (interactive "nRate: ")
+  (message "Rate is now %d"
+	   (setq read-aloud-extras-rate rate)))
 
 (defun read-aloud-extras-change-rate (sign)
   "Increase or decrease the rate at which to read text aloud, depending on SIGN."
-  (message "Rate is now %d"
-	   (setq read-aloud-extras-rate
-		 (funcall sign read-aloud-extras-rate read-aloud-extras-rate-change))))
+  (read-aloud-extras-set-rate
+   (funcall sign read-aloud-extras-rate read-aloud-extras-rate-change)))
 
 (defun read-aloud-extras-increase-rate ()
   "Increase the rate at which to read text aloud."

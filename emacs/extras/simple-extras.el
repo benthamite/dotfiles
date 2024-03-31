@@ -447,6 +447,7 @@ number."
 
 (declare-function org-tidy-mode "org-tidy")
 (declare-function org-modern-mode "org-modern")
+(declare-function org-extras-inline-images "org-extras")
 (defun simple-extras-visible-mode-enhanced-org (&optional arg)
   "Set associated `org' modes based on ARG."
   (when (derived-mode-p 'org-mode 'org-agenda-mode 'org-msg-mode)

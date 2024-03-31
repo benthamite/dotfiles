@@ -36,6 +36,8 @@
   "Extensions for `read-aloud'."
   :group 'emacs)
 
+;;;;; Rate
+
 (defcustom read-aloud-extras-rate 200
   "The rate at which to read text aloud, in words per minute."
   :type 'integer
@@ -44,6 +46,13 @@
 (defcustom read-aloud-extras-rate-change 10
   "The magnitude of the rate increment or decrement."
   :type 'integer
+  :group 'read-aloud-extras)
+
+;;;;; Voice
+
+(defcustom read-aloud-extras-voice ""
+  "The rate voice that will read the text aloud."
+  :type 'string
   :group 'read-aloud-extras)
 
 ;;;; Functions
@@ -57,7 +66,10 @@
     "jampal"				; Windows
     (cmd "cscript" args ("C:\\Program Files\\Jampal\\ptts.vbs" "-r" "5"))
     "say"				; macOS
-    (cmd "say" args (,(format "-r %s" (read-aloud-extras-rate))))))
+    (cmd "say" args (,(format "-v %s" (read-aloud-extras-voice))
+		     ,(format "-r %s" (read-aloud-extras-rate))))))
+
+;;;;; Rate
 
 (defun read-aloud-extras-rate ()
   "Return the rate at which to read text aloud, in words per minute."
@@ -78,6 +90,34 @@
   "Decrease the rate at which to read text aloud."
   (interactive)
   (read-aloud-extras-change-rate #'-))
+
+;;;;; Voice
+
+(defun read-aloud-extras-voice ()
+  "Return the voice that will read the text aloud."
+  read-aloud-extras-voice)
+
+(defun read-aloud-extras-voice-select ()
+  "Select the voice that will read the text aloud."
+  (interactive)
+  (pcase read-aloud-engine
+    ("say" (setq read-aloud-extras-voice (read-aloud-voice-select-say)))
+    (_ (user-error "Currently this function is only available for the 'say' engine. Sorry"))))
+
+(defun read-aloud-voice-select-say ()
+  "Prompt the user to select a `say' voice."
+  (let* ((shell-output (shell-command-to-string "say -v \\?"))
+         (lines (split-string shell-output "\n" t))
+         (collection (mapcar (lambda (line)
+			       (when (string-match "\\(.*?\\)\\(\\s-+\\)\\([a-z_]*\\)\\(\\s-+\\)#" line)
+				 (let* ((name (match-string 1 line))
+					(lang (match-string 3 line)))
+				   (cons (format "%-36s%s" name lang) name))))
+			     lines))
+         (collection (delq nil collection)) ; remove nil entries
+         (prompt "Pick a voice: ")
+	 (selection (completing-read prompt collection nil t)))
+    (alist-get selection collection nil nil #'string=)))
 
 ;;;;; Patched functions
 

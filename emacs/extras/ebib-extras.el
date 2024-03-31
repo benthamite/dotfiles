@@ -421,23 +421,31 @@ extension."
 
 (defun ebib-extras-ocr-pdf (&optional force)
   "OCR the PDF file in the current entry.
-If FORCE is non-nil, force OCR even if the file is already"
-  (interactive)
+If FORCE is non-nil, or the command is invoked with a prefix argument, force OCR
+even if already present."
+  (interactive "P")
+  (let ((file-name (ebib-extras-get-file "pdf"))
+	(lang (ebib-extras-get-or-set-language)))
+    (files-extras-ocr-pdf nil nil
+			  (format (concat (when force "--force-ocr ") "--deskew -l %s \"%s\" \"%s\"")
+				  (alist-get lang ebib-extras-iso-639-2 nil nil 'string=)
+				  (expand-file-name file-name)
+				  (expand-file-name file-name)))))
+
+(defun ebib-extras-get-or-set-language ()
+  "Return the language of the current entry, prompting the user for one if needed."
   (let* ((get-field (pcase major-mode
 		      ('ebib-entry-mode #'ebib-extras-get-field)
 		      ('bibtex-mode #'bibtex-extras-get-field)))
 	 (set-field (pcase major-mode
 		      ('ebib-entry-mode #'ebib-extras-set-field)
 		      ('bibtex-mode #'bibtex-set-field)))
-	 (lang (or (funcall get-field "langid")
-		   (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english"))))
-    (funcall set-field "langid" lang)
-    (let ((file-name (ebib-extras-get-file "pdf")))
-      (files-extras-ocr-pdf nil nil
-			    (format (concat (when force "--force-ocr ") "--deskew -l %s \"%s\" \"%s\"")
-				    (alist-get lang ebib-extras-iso-639-2 nil nil 'string=)
-				    (expand-file-name file-name)
-				    (expand-file-name file-name))))))
+	 (get-lang (lambda () (funcall get-field "langid")))
+	 (set-lang (lambda (lang) (funcall set-field "langid" lang))))
+    (unless (funcall get-lang)
+      (funcall set-lang
+	       (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english")))
+    (funcall get-lang)))
 
 (defvar ebib-extras-download-use-vpn nil
   "Whether to use a VPN when downloading content.")

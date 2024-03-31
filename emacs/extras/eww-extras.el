@@ -29,11 +29,12 @@
 
 (require 'browse-url-extras)
 (require 'eww)
-(require 'prot-eww)
-(require 'ffap)
 (require 'f)
+(require 'ffap)
+(require 'macos)
 (require 'org-web-tools-extras)
 (require 'paths)
+(require 'prot-eww)
 (require 'simple-extras)
 
 ;;;; User options
@@ -61,6 +62,10 @@
 
 ;;;; Functions
 
+(defvar ebib--cur-db)
+(declare-function bibtex-extras-get-key "bibtex-extras")
+(declare-function ebib-extras-get-field "ebib-extras")
+(declare-function ebib-db-get-filename "ebib-db")
 (defun eww-extras-url-to-file (type &optional url callback)
   "Generate file of TYPE for URL and take ACTION.
 CALLBACK is a function called when the process concludes. The function takes two
@@ -90,7 +95,7 @@ associated with the PDF."
 				   browse-url-chrome-program eww-extras-chrome-data-dir url output-file)))))
     (message "Getting %s file..." type)
     (set-process-sentinel process
-			  (lambda (proc event)
+			  (lambda (_proc event)
 			    (if (string= event "finished\n")
 				(when callback
 				  (funcall callback output-file bibtex-file))

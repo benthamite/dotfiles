@@ -28,9 +28,10 @@
 ;;; Code:
 
 (require 'gptel)
-(require 'gptel-gemini)
 (require 'mullvad)
-(require 'tlon-core)
+(require 'paths)
+(require 'simple-extras)
+(require 'tlon-babel-core)
 
 ;;;; User options
 

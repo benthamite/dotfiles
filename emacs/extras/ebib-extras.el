@@ -26,12 +26,15 @@
 ;; Extensions for `ebib'.
 
 ;;; Code:
+
+(require 'bib)
 (require 'bibtex)
 (require 'el-patch)
 (require 'citar)
 (require 'ebib)
 (require 'filenotify)
 (require 'mullvad)
+(require 'org-extras)
 (require 'paths)
 (require 's)
 (require 'scihub)
@@ -978,7 +981,7 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 	(file-notify-add-watch
 	 db-file
 	 '(change attribute-change)
-	 (lambda (event)
+	 (lambda (_event)
 	   (message "reloading database")
 	   (ebib-extras-reload-database-no-confirm db)))))))
 
@@ -1054,8 +1057,10 @@ If applicable, open external website to set rating there as well."
 			  key db)
     (ebib-extras-update-entry-buffer db)))
 
+(declare-function citar-extras-goto-bibtex-entry "citar-extras")
+(declare-function bibtex-extras-move-entry-to-tlon "bibtex-extras")
 (defun ebib-extras-move-entry-to-tlon ()
-  "Move bibliographic entry associated with the key at point to the Tlön bibliography."
+  "Move entry associated with the key at point to the Tlön bibliography."
   (interactive)
   (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
     (citar-extras-goto-bibtex-entry key)
@@ -1154,6 +1159,7 @@ DIRECTION can be `prev' or `next'."
   (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
   (ebib-extras-update-entry-buffer ebib--cur-db))
 
+(declare-function ebib-extras-fetch-field-value "ebib-extras")
 (defun ebib-extras-fetch-keywords ()
   "Fetch keywords for the entry at point and put them in the associated org file."
   (interactive)

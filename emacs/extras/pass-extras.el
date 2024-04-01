@@ -53,7 +53,6 @@
 (defun pass-extras-git-sync ()
   "Synchronize with remote repository."
   (interactive)
-  ;; (shell-command "pass git config pull.rebase false")
   (shell-command "pass git pull; pass git push"))
 
 (defun pass-extras-insert-generated-no-symbols ()

@@ -30,9 +30,10 @@
 (require 'pdf-annot)
 (require 'pdf-tools)
 
-;;;; User options
+;;;; Variables
 
-;;;; Main variables
+(defvar pdf-tools-extras-selected-pages '()
+  "List of pages selected for extraction.")
 
 ;;;; Functions
 
@@ -61,8 +62,6 @@ If `opentopage' script is available, open to current page."
     (if (file-exists-p (file-name-concat "~/bin" script))
         (shell-command (format "sh %s '%s' %d" script file (pdf-view-current-page)))
       (shell-command (format "open '%s'" file)))))
-
-(defvar pdf-tools-extras-selected-pages '())
 
 (defun pdf-tools-extras-add-or-remove-page ()
   "Add current page number to list of selected pages.

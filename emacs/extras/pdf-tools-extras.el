@@ -37,18 +37,19 @@
 
 ;;;; Functions
 
+(declare-function modus-themes--current-theme "modus-themes")
 (defun pdf-tools-extras-apply-theme ()
   "Activate `pdf-tools' midnight mode if dark theme is active."
-  (require 'modus-themes)
   (if (eq (modus-themes--current-theme) 'modus-vivendi)
       (pdf-view-midnight-minor-mode)
     (pdf-view-midnight-minor-mode -1)))
 
 ;; gist.github.com/politza/3f46785742e6e12ba0d1a849f853d0b9#file-scroll-other-window-el
+(defvar writeroom-width)
+(declare-function writeroom-mode "writeroom-mode")
 (defun pdf-tools-extras-toggle-writeroom ()
   "Toggle `writeroom-mode' on/off."
   (interactive)
-  (require 'writegood-mode)
   (let ((writeroom-width 120))
     (writeroom-mode 'toggle)
     (pdf-view-fit-height-to-window)))

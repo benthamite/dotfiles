@@ -119,16 +119,6 @@ If page number is already listed, remove it from list."
       (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
       (message "Copied all text in PDF to kill ring."))))
 
-(defvar no-query-p)
-;; TODO: this isn’t working; fix it
-(defun pdf-tools-extras-install-no-confirm (orig-fun &rest args)
-  "Don't ask for confirmation when installing `pdf-tools'.
-ORIG-FUN is the original function, ARGS are its arguments."
-  (let ((no-query-p t))
-    (apply orig-fun args)))
-
-(advice-add 'pdf-tools-install :around #'pdf-tools-extras-install-no-confirm)
-
 (defun pdf-tools-extras-delete ()
   "Delete current PDF."
   (interactive)

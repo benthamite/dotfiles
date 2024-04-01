@@ -139,7 +139,18 @@ PROPERTY-ALIST are as in `pdf-annot-add-highlight-markup-annotation'."
     (pdf-view-deactivate-region)
     (kill-new (mapconcat 'identity txt "\n"))))
 
+(declare-function ebib-extras-open-key "ebib-extras")
+(defun pdf-tools-extras-open-in-ebib ()
+  "Open the entry corresponding to the current PDF in `ebib'.
+The function assumes that the PDF is named after the corresponding BibTeX key."
+  (interactive)
+  (unless (derived-mode-p 'pdf-view-mode)
+    (user-error "Not in `pdf-view-mode'"))
+  (let ((key (file-name-base (buffer-file-name))))
+    (ebib-extras-open-key key)))
+
 ;;;;; Word selection with double-click
+
 ;; adapted from emacs.stackexchange.com/a/52463/32089
 ;;
 ;; not currently using this since it double-clicking a word usually selects

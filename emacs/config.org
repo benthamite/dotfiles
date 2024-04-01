@@ -6521,6 +6521,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
    "C" 'pdf-count-extras-words
    "s-c" 'pdf-tools-extras-clear-page-selection
    "D" 'pdf-tools-extras-delete
+   "e" 'pdf-tools-extras-open-in-ebib
    "h" 'pdf-annot-extras-add-highlight-markup-annotation
    "t" 'pdf-tools-extras-toggle-writeroom
    "x" 'pdf-tools-extras-open-externally

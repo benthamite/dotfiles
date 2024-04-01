@@ -27,10 +27,8 @@
 
 ;;; Code:
 
-(require 'modus-themes)
 (require 'pdf-annot)
 (require 'pdf-tools)
-(require 'writeroom-mode)
 
 ;;;; User options
 

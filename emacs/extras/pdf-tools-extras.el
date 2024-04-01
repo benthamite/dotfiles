@@ -48,7 +48,7 @@
 (defvar writeroom-width)
 (declare-function writeroom-mode "writeroom-mode")
 (defun pdf-tools-extras-toggle-writeroom ()
-  "Toggle `writeroom-mode' on/off."
+  "Toggle `writeroom-mode' on and off."
   (interactive)
   (let ((writeroom-width 120))
     (writeroom-mode 'toggle)

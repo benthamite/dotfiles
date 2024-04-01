@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'pass)
-(require 'el-patch)
 
 ;;;; Functions
 

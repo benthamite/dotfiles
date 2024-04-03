@@ -1353,38 +1353,6 @@ error."
       (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
     actual-key))
 
-;; keep focus in current entry when the database is saved or reloaded.
-(el-patch-defun ebib--save-database (db &optional force)
-  "Save the database DB.
-The FORCE argument is used as in `ebib-save-current-database'."
-  ;; See if we need to make a backup.
-  (when (and (ebib-db-backup-p db)
-	     (file-exists-p (ebib-db-get-filename db)))
-    (ebib--make-backup (ebib-db-get-filename db))
-    (ebib-db-set-backup nil db))
-
-  ;; Check if the file has changed on disk.
-  (let ((db-modtime (ebib-db-get-modtime db))
-	(file-modtime (ebib--get-file-modtime (ebib-db-get-filename db))))
-    ;; If the file to be saved has been newly created, both modtimes are nil.
-    (when (and db-modtime file-modtime
-	       (time-less-p db-modtime file-modtime))
-      (unless (or (and (listp force)
-		       (eq 16 (car force)))
-		  (yes-or-no-p (format "File `%s' changed on disk.  Overwrite? " (ebib-db-get-filename db))))
-	(error "[Ebib] File not saved"))))
-
-  ;; Now save the database.
-  (el-patch-swap
-    (with-temp-buffer
-      (ebib--format-database-as-bibtex db)
-      (write-region (point-min) (point-max) (ebib-db-get-filename db)))
-    (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-    (with-temp-buffer
-      (ebib--format-database-as-bibtex db)
-      (write-region (point-min) (point-max) (ebib-db-get-filename db))))
-  (ebib--set-modified nil db))
-
 (el-patch-defun ebib-reload-current-database ()
   "Reload the current database from disk."
   (interactive)
@@ -1419,52 +1387,6 @@ The FORCE argument is used as in `ebib-save-current-database'."
      (ebib--edit-entry-internal))
     (default
      (beep))))
-
-;; ask user before uniquifying key
-(el-patch-defun ebib-db-set-entry (key data db &optional if-exists)
-  "Set KEY to DATA in database DB.
-DATA is an alist of (FIELD . VALUE) pairs.
-
-IF-EXISTS defines what to do when the key already exists in DB.
-If it is `overwrite', replace the existing entry.  If it is `uniquify',
-generate a unique key by appending a letter `b', `c', etc., to it.
-If it is `noerror', a duplicate key is not stored and the function
-returns nil.  If it is nil (or any other value), a duplicate key
-triggers an error.
-
-In order to delete an entry, DATA must be nil and IF-EXISTS must be
-`overwrite'.
-
-If storing/updating/deleting the entry is successful, return its key.
-
-Note that this function should not be used to add an entry to a
-dependent database.  The entry will be added to the main database
-instead.  Use `ebib-db-add-entries-to-dependent' instead."
-  (let ((exists (gethash key (ebib-db-val 'entries db))))
-    (when exists
-      (cond
-       ;;  If so required, make the entry unique:
-       (el-patch-swap
-	 ((eq if-exists 'uniquify)
-	  (setq key (ebib-db-uniquify-key key db))
-	  (setq exists nil))
-	 ((eq if-exists 'uniquify)
-	  (when (y-or-n-p
-		 (format "[Ebib] Key `%s' exists in database `%s'; uniquify? "
-			 key (ebib-db-get-filename db 'shortened)))
-	    (setq key (ebib-db-uniquify-key key db))
-	    (setq exists nil))))
-       ;; If the entry is an update, we simply pretend the key does not exist:
-       ((eq if-exists 'overwrite)
-	(setq exists nil))
-       ;; Otherwise signal an error, if so requested:
-       ((not (eq if-exists 'noerror))
-	(error "[Ebib] Key `%s' exists in database `%s'; cannot overwrite" key (ebib-db-get-filename db 'shortened)))))
-    (unless exists
-      (if data
-	  (puthash key data (ebib-db-val 'entries db))
-	(remhash key (ebib-db-val 'entries db)))
-      key)))
 
 ;; when field contains a file, copy absolute file path
 (el-patch-defun ebib-copy-field-contents (field)

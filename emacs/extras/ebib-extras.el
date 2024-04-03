@@ -38,9 +38,8 @@
 (require 'paths)
 (require 's)
 (require 'scihub)
-(require 'tlon-babel-tex)
 (require 'tlon-babel-tts)
-(require 'zotra)
+(require 'tlon-babel-tex)
 (require 'window-extras)
 
 ;;;; Functions

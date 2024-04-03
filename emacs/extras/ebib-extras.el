@@ -316,6 +316,24 @@ If EXTENSION is non-nil, set its extension to its value."
 	(t
 	 (user-error "Invalid file extension"))))
 
+;;;;; process entries
+
+(defun ebib-extras-process-entry ()
+  "Docstring.
+The function assumes that the fields `type', `author', `date' and `title' are
+correctly set."
+  (interactive)
+  (ebib-generate-autokey)
+  (ebib-extras-get-or-set-language)
+  (ebib-extras-attach-files)
+  (ebib-extras-set-abstract))
+
+;; TODO; create function
+(defun ebib-extras-set-abstract ()
+  "Set abstract for entry at point.
+Try to fetch it with Zotero or ."
+  )
+
 ;;;;; attach downloads
 
 (defun ebib-extras-attach-file (&optional file most-recent open)

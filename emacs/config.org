@@ -5736,14 +5736,15 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (setq flycheck-indication-mode nil)
   (setq flycheck-checker-error-threshold 5000)
 
-  ;; Disable `emacs-lisp-checkdoc' in `org-src' blocks.
-  (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+  (add-hook 'org-src-mode-hook
+            (lambda ()
+              "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
+              (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc))))
 
   (add-hook 'after-change-major-mode-hook
             (lambda ()
-              "Disable flycheck in the *scratch* and `notes' buffers."
-              (when (or (equal (buffer-name) "*scratch*")
-                        (equal (buffer-name) "notes"))
+              "Disable flycheck in selected buffers."
+              (when (member (buffer-name) '("*scratch*" "notes"))
                 (flycheck-mode -1))))
 
   :general

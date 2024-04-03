@@ -180,8 +180,7 @@ losing the `put back' option."
     ("w" "downloads" (lambda () (interactive) (dired paths-dir-downloads)))
     ("x" "Dropbox" (lambda () (interactive) (dired paths-dir-dropbox)))
     ("y" "Library: PDF" (lambda () (interactive) (dired paths-dir-pdf-library)))
-    ("z" "Library: HTML" (lambda () (interactive) (dired paths-dir-html-library)))
-    ]
+    ("z" "Library: HTML" (lambda () (interactive) (dired paths-dir-html-library)))]
    ["Music"
     ("m c" "classical" (lambda () (interactive) (dired paths-dir-music-classical)))
     ("m p" "popular" (lambda () (interactive) (dired paths-dir-music-popular)))
@@ -205,8 +204,7 @@ losing the `put back' option."
     ("t H-t" "Google Drive: tlon" (lambda () (interactive) (dired paths-dir-google-drive-tlon)))
     ("t H-c" "Google Drive: core" (lambda () (interactive) (dired paths-dir-google-drive-tlon-core)))
     ("t H-l" "Google Drive: leo" (lambda () (interactive) (dired paths-dir-google-drive-tlon-leo)))
-    ("t H-f" "Google Drive: fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))
-    ]
+    ("t H-f" "Google Drive: fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))]
    ["Tlön: Dropbox"
     ("t b" "Dropbox: Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
     ("t n" "Dropbox: EAN" (lambda () (interactive) (dired paths-dir-dropbox-tlon-EAN)))
@@ -219,9 +217,7 @@ losing the `put back' option."
     ("t t" "Dropbox: tlon" (lambda () (interactive) (dired paths-dir-dropbox-tlon)))
     ("t c" "Dropbox: core" (lambda () (interactive) (dired paths-dir-dropbox-tlon-core)))
     ("t f" "Dropbox: fede" (lambda () (interactive) (dired paths-dir-dropbox-tlon-fede)))
-    ("t l" "Dropbox: leo" (lambda () (interactive) (dired paths-dir-dropbox-tlon-leo)))
-    ]
-   ])
+    ("t l" "Dropbox: leo" (lambda () (interactive) (dired paths-dir-dropbox-tlon-leo)))]])
 
 (provide 'dired-extras)
 ;;; dired-extras.el ends here

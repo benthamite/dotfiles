@@ -2026,8 +2026,8 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :after doom-modeline
   :demand t
   :config
-  ;; the custom modeline needs to be set after `gptel' loads, to display the associated element
-  (with-eval-after-load 'gptel
+  ;; the custom modeline needs to be set after `gptel-extras' loads, to display the associated element
+  (with-eval-after-load 'gptel-extras
     ;; we slightly tweak the `main' modeline to (1) display the major mode icon to
     ;; the left of point position indicators and (2) and a `gptel' element. note
     ;; that which elements are shown is controlled by the relevant `doom-modeline'

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: engine-mode-add-engine
+# key: emae
+# contributor: Pablo Stafforini
+# --
+engine-mode: add engine

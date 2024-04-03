@@ -3565,8 +3565,6 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 
 /[[https://github.com/rainstormstudio/nerd-icons-dired][nerd-icons-dired]] adds Dired support to nerd-icons./
 
-[2023-05-23 Tue 11:50] Some of the fonts were truncated, so I'm disabling this package for the time being and will continue to use ~all-the-icons~.
-
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package nerd-icons-dired
   :demand t

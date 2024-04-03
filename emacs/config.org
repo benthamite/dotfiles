@@ -3554,7 +3554,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
   :after dired-extras
   :config
   (setq dired-du-size-format 'comma)
-  (add-hook 'dired-hide-details-mode-hook #'dired-extras-enable-dired-do-conditionally))
+  (add-hook 'dired-hide-details-mode-hook #'dired-extras-enable-dired-du-conditionally))
 #+end_src
 
 ** image-dired

@@ -5384,8 +5384,8 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
 (use-feature help-at-pt
   :demand t
   :config
-  (setq help-at-pt-display-when-idle t)
-  (setq help-at-pt-timer-delay 0)       ; show help immediately when enabled
+  (setq help-at-pt-display-when-idle 'never)
+  (setq help-at-pt-timer-delay 1)       ; show help immediately when enabled
   (help-at-pt-set-timer))                ; set timer, thus enabling local help
 #+end_src
 

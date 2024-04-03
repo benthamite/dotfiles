@@ -10023,8 +10023,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
               (add-hook 'zotra-after-get-bibtex-entry-hook #'zotra-after-get-bibtex-entry-hook-function)))
 
   :general
-  ((ebib-index-mode-map ebib-entry-mode-map eww-mode-map)
-   "z" 'zotra-extras-url-full-capture))
    (ebib-index-mode-map
    "a" 'zotra-extras-add-entry))
 #+end_src

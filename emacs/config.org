@@ -10009,7 +10009,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 :ID:       29BBF8F1-FC6D-4AFE-AEE4-6C01BB4AAA5F
 :END:
 
-
 /[[file:extras/zotra-extras.el][zotra-extras]] collects my extensions for ~zotra~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -10020,7 +10019,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   ;; this is the only way I can get this to work
   (add-hook 'elpaca-after-init-hook
             (lambda ()
-              (add-hook 'zotra-after-get-bibtex-entry-hook #'zotra-after-get-bibtex-entry-hook-function)))
+              (add-hook 'zotra-after-get-bibtex-entry-hook #'zotra-extras-after-add-process-bibtex)))
 
   :general
    (ebib-index-mode-map

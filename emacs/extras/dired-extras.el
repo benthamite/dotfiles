@@ -31,6 +31,7 @@
 (require 'el-patch)
 (require 'gnus-dired)
 (require 'paths)
+(require 'shut-up)
 (require 'transient)
 
 ;;;; Variables
@@ -159,7 +160,7 @@ losing the `put back' option."
 (defun dired-extras-enable-dired-do-conditionally ()
   "Enable `dired-du-mode' iff `dired-hide-details-mode' is disabled."
   (let ((toggle (if dired-hide-details-mode -1 1)))
-    (dired-du-mode toggle)))
+    (shut-up (dired-du-mode toggle))))
 
 ;;;;; Dispatcher
 

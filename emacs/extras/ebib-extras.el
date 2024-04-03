@@ -417,6 +417,20 @@ extension."
       (ebib-extras-attach-file file)
       (message "Attached `%s' to %s" file key))))
 
+(defun ebib-extras-attach-files ()
+  "Attach files appropriate for the current entry type.
+- online: generate PDF and html.
+- books: get PDF from Ligben or Archive.
+- papers: get PDF from SciHub."
+  (interactive)
+  (let ((type (downcase (ebib-extras-get-field "=type="))))
+    ;; TODO: handle remaining entry types
+    (pcase type
+      ("online"
+       (ebib-extras-url-to-html-attach)
+       (ebib-extras-url-to-pdf-attach))
+      (_ nil))))
+
 ;;;;; ?
 
 (defvar ebib-extras-iso-639-2

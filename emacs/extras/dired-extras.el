@@ -153,6 +153,14 @@ losing the `put back' option."
 	    (push (buffer-name buffer) buffers))))
       (nreverse buffers))))
 
+;;;;; dired-du
+
+(declare-function dired-du-mode "dired-du")
+(defun dired-extras-enable-dired-do-conditionally ()
+  "Enable `dired-du-mode' iff `dired-hide-details-mode' is disabled."
+  (let ((toggle (if dired-hide-details-mode -1 1)))
+    (dired-du-mode toggle)))
+
 ;;;;; Dispatcher
 
 ;;;###autoload (autoload 'dired-extras-dispatch "dired-extras" nil t)

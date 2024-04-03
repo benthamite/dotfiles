@@ -1328,25 +1328,6 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
   (corfu-terminal-mode))
 #+end_src
 
-** dired-du
-:PROPERTIES:
-:ID:       22FCD9F4-A3EE-4605-BDB0-E90FC8471B21
-:END:
-
-:LOGBOOK:
-CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
-:END:
-/[[https://github.com/calancha/dired-du][dired-du]] displays the recursive size of directories in Dired./
-
-[2023-06-09 Fri 13:09] Moving to graveyard since the package was enabling itself randomly.
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package dired-du
-  :after dired
-  :config
-  (setq dired-du-size-format 'comma))
-#+end_src
-
 ** gptai
 :PROPERTIES:
 :ID:       BEB02F5A-AE8E-40BF-B8A7-93A6A5B7D88A

@@ -202,6 +202,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dired-aux][dired-aux]]
   - [[#dired-extras][dired-extras]]
   - [[#dired-x][dired-x]]
+  - [[#dired-du][dired-du]]
   - [[#image-dired][image-dired]]
   - [[#nerd-icons-dired][nerd-icons-dired]]
   - [[#wdired][wdired]]
@@ -3537,6 +3538,23 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
   :general
   (dired-mode-map
    "–" 'dired-omit-mode))
+#+end_src
+
+** dired-du
+:PROPERTIES:
+:ID:       22FCD9F4-A3EE-4605-BDB0-E90FC8471B21
+:END:
+:LOGBOOK:
+CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
+:END:
+/[[https://github.com/calancha/dired-du][dired-du]] displays the recursive size of directories in Dired./
+
+#+begin_src emacs-lisp :results silent (tlon-init-tangle-conditionally)
+(use-package dired-du
+  :after dired-extras
+  :config
+  (setq dired-du-size-format 'comma)
+  (add-hook 'dired-hide-details-mode-hook #'dired-extras-enable-dired-do-conditionally))
 #+end_src
 
 ** image-dired

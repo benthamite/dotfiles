@@ -11210,8 +11210,8 @@ These key bindings produce the same behavior in eww.
   :after elfeed
   :demand t
   :config
-  (advice-add 'elfeed :after #'elfeed-extras-auto-update)
-  
+  ;; (advice-add 'elfeed :after #'elfeed-extras-auto-update)
+
   :general
   (elfeed-search-mode-map
    "A" 'elfeed-extras-mark-all-as-read

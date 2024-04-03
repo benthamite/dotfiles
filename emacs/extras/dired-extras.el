@@ -157,7 +157,7 @@ losing the `put back' option."
 ;;;;; dired-du
 
 (declare-function dired-du-mode "dired-du")
-(defun dired-extras-enable-dired-do-conditionally ()
+(defun dired-extras-enable-dired-du-conditionally ()
   "Enable `dired-du-mode' iff `dired-hide-details-mode' is disabled."
   (let ((toggle (if dired-hide-details-mode -1 1)))
     (shut-up (dired-du-mode toggle))))

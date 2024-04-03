@@ -92,12 +92,12 @@ poorly-designed websites."
     (elfeed-extras-filter-tags "+unread -wiki"))
   (setq elfeed-extras-toggle-wiki-entries (not elfeed-extras-toggle-wiki-entries)))
 
-(declare-function zotra-extras-url-full-capture "zotra-extras")
-(defun elfeed-extras-url-full-capture ()
+(declare-function zotra-extras-add-entry "zotra-extras")
+(defun elfeed-extras-add-entry ()
   "Add current URL to bibfile and generate associated PDF and HTML files."
   (interactive)
   (when (derived-mode-p 'elfeed-show-mode)
-    (zotra-extras-url-full-capture (elfeed-entry-link elfeed-show-entry))))
+    (zotra-extras-add-entry (elfeed-entry-link elfeed-show-entry))))
 
 (declare-function global-flycheck-mode "flycheck")
 (defun elfeed-extras-auto-update ()

@@ -561,13 +561,13 @@ CLOCK: [2021-05-19 Wed 11:26]--[2021-05-19 Wed 12:23] =>  0:57
     (interactive)
     (global-smudge-remote-mode 1)
     (smudge-my-playlists))
-    
+
   (defun ps/smudge-track-load-more ()
     "Move point to end of playlist buffer and load more tracks."
     (interactive)
     (end-of-buffer)
     (smudge-track-load-more))
-    
+
   :general
   ("A-y" 'ps/smudge)
   (smudge-track-search-mode-map
@@ -872,7 +872,7 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
 (use-package xwwp
   :elpaca (xwwp
            :host github
-	   :repo "kchanqvq/xwwp")
+           :repo "kchanqvq/xwwp")
   :after xwidget
   :demand t
   )
@@ -1358,7 +1358,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 (use-package gptai
   :demand t
   :config
-  (setq gptai-model "gpt-4") 
+  (setq gptai-model "gpt-4")
   (setq gptai-username (auth-source-pass-get "username" "tlon/core/openai.com"))
   (setq gptai-api-key (auth-source-pass-get "key" "tlon/core/openai.com"))
   )
@@ -2844,7 +2844,7 @@ CLOCK: [2021-03-23 Tue 20:26]--[2021-03-23 Tue 21:13] =>  0:47
 :END:
 /[[https://github.com/isamert/orgmdb.el][orgmdb]] is an OMDb API client with some org-mode related convenience functions./
 
-[2023-03-02 Thu 13:07] I'm using ~org-cite~ for films, too, so this is no longer relevant. 
+[2023-03-02 Thu 13:07] I'm using ~org-cite~ for films, too, so this is no longer relevant.
 
 #+begin_src emacs-lisp :results silent
 (use-package orgmdb
@@ -3551,7 +3551,7 @@ interactively, with prefix arg, you can pick one."
 :LOGBOOK:
 CLOCK: [2022-07-16 Sat 15:40]--[2022-07-16 Sat 15:49] =>  0:09
 :END:
-This does the same as [[id:815B8CEA-D36D-4E47-B728-D86FEFB736DF][zotra]]. 
+This does the same as [[id:815B8CEA-D36D-4E47-B728-D86FEFB736DF][zotra]].
 
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package biblio-zotero
@@ -3626,10 +3626,10 @@ CLOCK: [2022-06-25 Sat 11:36]--[2022-06-25 Sat 12:46] =>  1:10
   (require 'consult-org-roam)
   ;; Activate the minor-mode
   (consult-org-roam-mode)
-  
+
   :custom
   (consult-org-roam-grep-func #'consult-ripgrep)
-  
+
   :config
   ;; Eventually suppress previewing for certain functions
   (consult-customize

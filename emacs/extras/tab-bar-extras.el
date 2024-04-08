@@ -29,7 +29,6 @@
 
 (require 'calendar-extras)
 (require 'display-wttr)
-(require 'tlon-init)
 
 ;;;; Variables
 

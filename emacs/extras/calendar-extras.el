@@ -82,6 +82,7 @@ If IP is non-nil, use the local IP address."
 	     (name (alist-get 'en names)))
 	(list :lat lat :lon lon :city name)))))
 
+;;;###autoload
 (defun calendar-extras-set-geolocation ()
   "Set location variables from IP address."
   (interactive)

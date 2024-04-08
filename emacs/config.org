@@ -513,7 +513,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#personal][personal]]
   - [[#keyboard-maestro][keyboard-maestro]]
 - [[#appendices][appendices]]
-  - [[#excluded-packages][excluded packages]]
   - [[#key-bindings][key bindings]]
   - [[#profiling][profiling]]
   - [[#installation][installation]]
@@ -12291,18 +12290,6 @@ CLOCK: [2020-10-04 Sun 11:27]--[2020-10-04 Sun 11:34] =>  0:07
 CLOCK: [2020-10-04 Sun 10:54]--[2020-10-04 Sun 11:22] =>  0:28
 CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
-
-** excluded packages
-:PROPERTIES:
-:ID:       A501BF62-4769-4735-A9D8-3CDC92D97773
-:END:
-
-#+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
-(setq tlon-init-excluded-packages
-      '(
-        ;; breadcrumb
-        ))
-#+end_src
 
 ** key bindings
 :PROPERTIES:

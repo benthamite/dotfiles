@@ -12300,7 +12300,7 @@ CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 #+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
 (setq tlon-init-excluded-packages
       '(
-        breadcrumb
+        ;; breadcrumb
         ))
 #+end_src
 

@@ -11871,7 +11871,8 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 
 /[[https://github.com/gromnitsky/read-aloud.el][read-aloud]] is an Emacs interface to TTS (text-to-speech) engines./
 
-As a side note, to give Emacs access to the microphone on MacOS, clone ~https://github.com/DocSystem/tccutil~ and from the cloned repo, run ~sudo python3 tccutil.py -p /opt/homebrew/Cellar/emacs-mac/emacs-28.1-mac-9.0/Emacs.app --micro -e~ (some discussion [[https://scsynth.org/t/emacs-scsynth-and-microphone-permissions/3253][here]]).
+- To give Emacs access to the microphone on MacOS, clone ~https://github.com/DocSystem/tccutil~ and from the cloned repo, run ~sudo python3 tccutil.py -p /opt/homebrew/Cellar/emacs-mac/emacs-28.1-mac-9.0/Emacs.app --micro -e~ (some discussion [[https://scsynth.org/t/emacs-scsynth-and-microphone-permissions/3253][here]]).
+- To read with macOS directly, ~b-n~. In turn, ~b-h~ starts dictation. (These are system-wide shortcuts defined with Karabiner rather than bindings specific to Emacs.)
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package read-aloud
@@ -11880,7 +11881,7 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
   (setq read-aloud-engine "say")
 
   :general
-  ("C-H-r" 'read-aloud-this)) ; remember that `A-C-d' starts/stops dictation
+  ("C-H-r" 'read-aloud-this))
 #+end_src
 
 ** read-aloud-extras

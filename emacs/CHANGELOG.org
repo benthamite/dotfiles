@@ -103,13 +103,7 @@ These commands should work in all Forge-related buffers.
 - The commands ~isearch-extras-consult-line~ (~C-l~) and ~isearch-extras-project-search~ (~C-p~) have been added.
 - ~avy-isearch~ is now bound to ~M-f~ (~avy~ and ~ace-link~ commands are generally bound to ~M-f~ or—in read-only files—to ~f~).
 
-** org-appear
-:PROPERTIES:
-:ID:       9CEA642C-962A-4281-BABD-B9C623C647BB
-:END:
-- new package: emphasis markers are now displayed with point moves to them.
-  
-** ox-clip
+** org
 :PROPERTIES:
 :ID:       7B0AA24B-3DF5-4B06-8316-57EA58C0CF8A
 :END:

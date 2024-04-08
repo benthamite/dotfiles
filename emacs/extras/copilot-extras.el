@@ -43,8 +43,10 @@
 ;;;; Functions
 
 (defun copilot-extras-enable-conditionally ()
-  "Enable `copilot' except in `copilot-extras-excluded-modes'."
-  (unless (memq major-mode copilot-extras-excluded-modes)
+  "Enable `copilot' except in read-only modes or excluded modes.
+The list of excluded modes is defined in `copilot-extras-excluded-modes'."
+  (unless (or buffer-read-only
+	      (memq major-mode copilot-extras-excluded-modes))
     (copilot-mode)))
 
 (provide 'copilot-extras)

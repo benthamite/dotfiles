@@ -10769,6 +10769,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
    "o" 'telega-extras-chat-org-capture)
   (telega-msg-button-map
    "." 'telega-extras-docs-change-open
+   "b" 'telega-extras-transcribe-audio
    "L" 'telega-extras-chat-org-capture-leo)
   (telega-chat-mode-map
    "M-s-t" 'telega-extras-chatbuf-attach-most-recent-file)

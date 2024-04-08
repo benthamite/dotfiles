@@ -185,6 +185,14 @@ them."
   (setq tab-bar-extras-notifications-enabled
 	(tab-bar-extras-get-state action 'tab-bar-extras-notifications-enabled)))
 
+(defun tab-bar-extras-enable-all-notifications ()
+  "Enable all notifications in the Tab Bar."
+  (tab-bar-extras-toggle-notifications 'enable))
+
+(defun tab-bar-extras-disable-all-notifications ()
+  "Disable all notifications in the Tab Bar."
+  (tab-bar-extras-toggle-notifications 'disable))
+
 (defun tab-bar-extras-toggle-telega-notifications (&optional action)
   "Toggle Telega notifications in the Tab Bar.
 If ACTION is `enable', enable notifications. If ACTION is `disable', disable

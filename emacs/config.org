@@ -2005,7 +2005,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (setq doom-modeline-total-line-number t)
   (setq doom-modeline-position-column-line-format '(" %c %l"))
   (setq doom-modeline-enable-word-count t)
-  (setq doom-modeline-indent-info t)
+  (setq doom-modeline-indent-info nil)
 
   (dolist (cons  '((display-time-mode-hook . doom-modeline-override-time)
                    (display-battery-mode-hook . doom-modeline-override-battery)

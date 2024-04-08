@@ -218,6 +218,31 @@ If PLAYER is nil, default to `mpv'."
 	(macos-open-app player 'background))
       (elfeed-tube-fetch url))))
 
+(defun eww-extras-get-url-in-link (title)
+  "Return the URL of the link whose title is TITLE."
+  (interactive)
+  (let (found-url)
+    (save-excursion
+      (goto-char (point-min))
+      (while (and (not found-url) (not (eobp)))
+        (when-let* ((url (get-text-property (point) 'shr-url))
+                    (link-title (buffer-substring-no-properties
+                                 (point)
+                                 (or (next-single-property-change (point) 'shr-url)
+                                     (point-max)))))
+          (when (string-match-p (regexp-quote title) link-title)
+            (setq found-url url)))
+        (goto-char (or (next-single-property-change (point) 'shr-url)
+                       (point-max)))))
+    found-url))
+
+(defun eww-extras-download-from-annas-archive ()
+  "Download file from the relevant page of Anna’s Archive."
+  (interactive)
+  (let* ((url (eww-extras-get-url-in-link "Download now"))
+	 (file (file-name-nondirectory url)))
+    (url-copy-file url (file-name-concat paths-dir-downloads file) t)))
+
 (provide 'eww-extras)
 
 ;;; eww-extras.el ends here

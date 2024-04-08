@@ -82,7 +82,9 @@
   (when (bound-and-true-p org-modern-mode)
     (set-face-attribute 'org-modern-date-active nil :family faces-extras-fixed-pitch-font :height 0.8)
     (set-face-attribute 'org-modern-date-inactive nil :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-modern-tag nil :family faces-extras-fixed-pitch-font :height 0.9))
+    (set-face-attribute 'org-modern-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
+    (set-face-attribute 'org-modern-label nil :family faces-extras-fixed-pitch-font :height 0.8))
+  
   (set-face-attribute 'shr-text nil :height 0.65)
   (when (bound-and-true-p corfu-mode)
     (set-face-attribute 'corfu-default nil :family faces-extras-fixed-pitch-font :height 1))

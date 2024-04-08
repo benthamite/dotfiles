@@ -56,7 +56,7 @@
   :group 'org-msg-extras)
 
 (defcustom org-msg-extras-work-html-signature
-  "\n#+begin_signature\n--\n*Pablo*\nDirector, Tlön\nhttps://tlon.team\n#+end_signature"
+  "\n#+begin_signature\n--\n*Pablo*\n#+end_signature"
   "Work signature for HTML emails."
   :type 'string
   :group 'org-msg-extras)

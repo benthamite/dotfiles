@@ -278,32 +278,32 @@
 (run-hooks 'tlon-init-post-init-hook)
 #+end_src
 
-* tangle flags
+* excluded packages
 :PROPERTIES:
 :ID:       A4E7C5AD-1E55-4C6F-B0E5-8320D282A886
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-file-tangle-flags)
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
 (
- (:anki-editor . nil)
- (:copilot . nil)
- (:corfu-terminal . nil)
- (:corfu-doc-terminal . nil)
- (:erc . nil)
- (:espotify . nil)
- (:hammy . nil)
- (:keytar . nil)
- (:lsp-grammarly . t)
- (:midnight . nil)
- (:mu4e . nil)
- (:org-gcal . nil)
- (:org-roam . t)
- (:org2blog . nil)
- (:orgmdb . nil)
- (:remember . nil)
- (:slack . nil)
- (:twittering-mode . t)
- (:vulpea . nil)
+ anki-editor
+ copilot
+ corfu-terminal
+ corfu-doc-terminal
+ erc
+ espotify
+ hammy
+ keytar
+ ;; lsp-grammarly
+ midnight
+ mu4e
+ org-gcal
+ org-roam
+ org2blog
+ orgmdb
+ remember
+ slack
+ vulpea
  )
 #+end_src
 

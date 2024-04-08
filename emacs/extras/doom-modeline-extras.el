@@ -30,6 +30,7 @@
 (require 'doom-modeline)
 (require 'el-patch)
 (require 'forge)
+(require 'gptel)
 
 ;;;; User options
 
@@ -42,16 +43,30 @@
   :type 'boolean
   :group 'gptel-extras)
 
+(defcustom doom-modeline-extras-gptel-cost t
+  "Whether to display the `gptel' model cost in the modeline."
+  :type 'boolean
+  :group 'gptel-extras)
+
 ;;;; Functions
 
 ;;;;; Modeline segments
 
-(defvar gptel-model)
 (doom-modeline-def-segment gptel ()
   "Displays the `gptel' model active in the current buffer."
   (when (and doom-modeline-extras-gptel
 	     (bound-and-true-p gptel-model))
     (concat gptel-model (doom-modeline-spc))))
+
+(defvar gptel-extras-ai-models)
+(declare-function gptel-extras-get-cost "gptel-extras")
+(doom-modeline-def-segment gptel-cost ()
+  "Display the cost of prompting the current model."
+  (when (and doom-modeline-extras-gptel-cost
+	     (bound-and-true-p gptel-model)
+	     ;; the `gptel' buffer appears to be named after the default backend
+	     (string= (buffer-name) (format "*%s*" (gptel-backend-name (default-value 'gptel-backend)))))
+    (concat (format "$%.2f" (gptel-extras-get-cost)) (doom-modeline-spc))))
 
 ;;;;; Notification counter Forge sync
 
@@ -60,8 +75,7 @@
 
 (defvar prev-result)
 (defun doom-modeline-extras-trigger-forge-update ()
-  "Pull notifications in Forge when the modeline notification counter is updated.
-Also refresh the the `gh-notify' buffer."
+  "Pull notifications in Forge when the modeline notification counter is updated."
   (unless (eq doom-modeline--github-notification-number
 	      (length doom-modeline-extras-github-notification-last-count))
     (setq prev-result doom-modeline--github-notification-number)

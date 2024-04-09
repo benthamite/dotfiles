@@ -7534,6 +7534,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 
   :general
   ("H-l" 'org-extras-tlon-menu
+   "H-;" 'org-extras-personal-menu)
   (org-mode-map
    "s-<return>" 'org-extras-super-return
    "A-C-s-n" 'org-extras-jump-to-first-heading

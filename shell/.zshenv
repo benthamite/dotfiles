@@ -29,3 +29,7 @@ export VISUAL="$EDITOR"
 
 # gdcv
 export PATH="$PATH:$HOME/source/gdcv"
+
+# pdflatex
+# to allow Emacs to find pdflatex
+export PATH="/Library/TeX/texbin:$PATH"

@@ -29,11 +29,12 @@
 
 (require 'browse-url-extras)
 (require 'eww)
-(require 'prot-eww)
-(require 'ffap)
 (require 'f)
+(require 'ffap)
+(require 'macos)
 (require 'org-web-tools-extras)
 (require 'paths)
+(require 'prot-eww)
 (require 'simple-extras)
 
 ;;;; User options
@@ -61,6 +62,10 @@
 
 ;;;; Functions
 
+(defvar ebib--cur-db)
+(declare-function bibtex-extras-get-key "bibtex-extras")
+(declare-function ebib-extras-get-field "ebib-extras")
+(declare-function ebib-db-get-filename "ebib-db")
 (defun eww-extras-url-to-file (type &optional url callback)
   "Generate file of TYPE for URL and take ACTION.
 CALLBACK is a function called when the process concludes. The function takes two
@@ -75,7 +80,10 @@ associated with the PDF."
 		       ("html" (prot-eww--sluggify (org-web-tools-extras-org-title-for-url url)))))))
 	 (file-name (file-name-with-extension title type))
 	 (output-file (file-name-concat paths-dir-downloads file-name))
-	 (bibtex-file (buffer-file-name))
+	 (bibtex-file (pcase major-mode
+			('bibtex-mode buffer-file-name)
+			((or 'ebib-entry-mode 'ebib-index-mode)
+			 (ebib-db-get-filename ebib--cur-db))))
 	 (process (make-process
 		   :name (format "url-to-%s" type)
 		   :buffer "*URL-to-File-Process*"
@@ -87,19 +95,19 @@ associated with the PDF."
 				   browse-url-chrome-program eww-extras-chrome-data-dir url output-file)))))
     (message "Getting %s file..." type)
     (set-process-sentinel process
-			  (lambda (proc event)
+			  (lambda (_proc event)
 			    (if (string= event "finished\n")
 				(when callback
 				  (funcall callback output-file bibtex-file))
 			      (user-error "Could not get file"))))))
 
 (defun eww-extras-url-to-html (&optional url callback)
-  "Generate HTML of URL."
+  "Generate HTML of URL, then run CALLBACK function."
   (interactive)
   (eww-extras-url-to-file "html" url callback))
 
 (defun eww-extras-url-to-pdf (&optional url callback)
-  "Generate PDF of URL."
+  "Generate PDF of URL, then run CALLBACK function."
   (interactive)
   (eww-extras-url-to-file "pdf" url callback))
 
@@ -200,11 +208,40 @@ With prefix ARG is passed, open in new EWW buffer."
 		   (url-fullness url)))
     (eww-browse-url (url-recreate-url new-url))))
 
-(defun eww-extras-browse-youtube-in-mpv (url)
-  "Browse YouTube URL in MPV."
+(defun eww-extras-browse-youtube (url &optional player)
+  "For YouTube URLs, show its transcript and open video with PLAYER.
+If PLAYER is nil, default to `mpv'."
   (when (string-match "youtube.com" url)
-    (empv-play url)
-    (empv-toggle-video)))
+    (let ((player (or player "mpv")))
+      (kill-buffer)
+      (unless (macos-app-is-open-p player)
+	(macos-open-app player 'background))
+      (elfeed-tube-fetch url))))
+
+(defun eww-extras-get-url-in-link (title)
+  "Return the URL of the link whose title is TITLE."
+  (interactive)
+  (let (found-url)
+    (save-excursion
+      (goto-char (point-min))
+      (while (and (not found-url) (not (eobp)))
+        (when-let* ((url (get-text-property (point) 'shr-url))
+                    (link-title (buffer-substring-no-properties
+                                 (point)
+                                 (or (next-single-property-change (point) 'shr-url)
+                                     (point-max)))))
+          (when (string-match-p (regexp-quote title) link-title)
+            (setq found-url url)))
+        (goto-char (or (next-single-property-change (point) 'shr-url)
+                       (point-max)))))
+    found-url))
+
+(defun eww-extras-download-from-annas-archive ()
+  "Download file from the relevant page of Anna’s Archive."
+  (interactive)
+  (let* ((url (eww-extras-get-url-in-link "Download now"))
+	 (file (file-name-nondirectory url)))
+    (url-copy-file url (file-name-concat paths-dir-downloads file) t)))
 
 (provide 'eww-extras)
 

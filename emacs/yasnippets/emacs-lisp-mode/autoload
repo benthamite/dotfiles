@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: autoload-default
-# key: ;a
+# name: autoload
+# key: al
 # contributor: Pablo Stafforini
 # --
 ;;;###autoload

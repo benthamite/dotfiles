@@ -29,6 +29,7 @@
 
 (require 'calendar)
 (require 'json)
+(require 'auth-source-pass)
 (require 'url-vars)
 
 ;;;; User options
@@ -63,7 +64,7 @@ The value can be set manually. It can also be set via
 (defun calendar-extras-get-geolocation ()
   "Get geolocation from IP address.
 If IP is non-nil, use the local IP address."
-  (let* ((key (auth-source-pass-get 'secret "tlon/core/myprojects.geoapify.com"))
+  (let* ((key (auth-source-pass-get 'secret "tlon/core/api.geoapify.com"))
 	 (url (format "https://api.geoapify.com/v1/ipinfo?&apiKey=%s" key))
 	 (url-request-method "GET")
 	 (url-request-extra-headers '(("Content-Type" . "application/json")))
@@ -81,6 +82,7 @@ If IP is non-nil, use the local IP address."
 	     (name (alist-get 'en names)))
 	(list :lat lat :lon lon :city name)))))
 
+;;;###autoload
 (defun calendar-extras-set-geolocation ()
   "Set location variables from IP address."
   (interactive)

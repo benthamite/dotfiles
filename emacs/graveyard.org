@@ -8,6 +8,53 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+
+** elgrep
+:PROPERTIES:
+:ID:       783E764B-7E5D-4CFB-9DE7-D87C5BF51518
+:END:
+
+/[[https://github.com/TobiasZawada/elgrep][elgrep]] is an Emacs implementation of grep that requires no external dependencies./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package elgrep
+  :demand t
+  :general
+  ("A-C-p" 'elgrep))
+#+end_src
+
+** org-roam-browser-extension
+:PROPERTIES:
+:ID:       5461B907-53F6-4D99-B70C-45E9C3902EB4
+:END:
+
+[[https://github.com/madnificent/org-roam-browser-extension][org-roam-browser-extension]] indicates via a browser icon whether you have ~org-roam~ notes on the web page you are visiting.
+
+Abandoned.
+** org-mime
+:PROPERTIES:
+:ID:       EB437B48-CEB2-4727-8910-627061F4701F
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-04 Tue 17:42]--[2021-05-04 Tue 17:54] =>  0:12
+CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
+:END:
+
+/[[https://github.com/org-mime/org-mime][org-mime]] lets you send HTML email using Org-mode HTML export./
+
+[2024-02-13 Tue] Temporarily disabling to test whether I need this.
+
+[2024-03-10 Sun] Not needed. Moving to graveyard.
+
+#+begin_src emacs-lisp :tangle no
+(use-package org-mime
+  :after org
+  :general
+  (org-mode-map
+   "s-m" 'org-mime-htmlize
+   "s-A-m" 'org-mime-org-subtree-htmlize))
+#+end_src
+
 ** mpv
 :PROPERTIES:
 :ID:       8D75E528-AA79-4512-B4A9-6EB7A56F9026
@@ -64,22 +111,6 @@ This is a place where I move Emacs packages I no longer use.
   (org-ai-install-yasnippets)
   (require 'org-ai-talk))
 #+end_src
-
-** jsonrpc
-:PROPERTIES:
-:ID:       ECE3D86D-035D-461C-937F-DF39086E4C5C
-:END:
-
-/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
-
-#+begin_src emacs-lisp
-(use-package jsonrpc
-  ;; :elpaca (jsonrpc
-                   ;; :host github
-                   ;; :repo "emacs-straight/jsonrpc")
-  :demand t)
-#+end_src
-
 
 ** company
 :PROPERTIES:
@@ -530,13 +561,13 @@ CLOCK: [2021-05-19 Wed 11:26]--[2021-05-19 Wed 12:23] =>  0:57
     (interactive)
     (global-smudge-remote-mode 1)
     (smudge-my-playlists))
-    
+
   (defun ps/smudge-track-load-more ()
     "Move point to end of playlist buffer and load more tracks."
     (interactive)
     (end-of-buffer)
     (smudge-track-load-more))
-    
+
   :general
   ("A-y" 'ps/smudge)
   (smudge-track-search-mode-map
@@ -841,7 +872,7 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
 (use-package xwwp
   :elpaca (xwwp
            :host github
-	   :repo "kchanqvq/xwwp")
+           :repo "kchanqvq/xwwp")
   :after xwidget
   :demand t
   )
@@ -1297,25 +1328,6 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
   (corfu-terminal-mode))
 #+end_src
 
-** dired-du
-:PROPERTIES:
-:ID:       22FCD9F4-A3EE-4605-BDB0-E90FC8471B21
-:END:
-
-:LOGBOOK:
-CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
-:END:
-/[[https://github.com/calancha/dired-du][dired-du]] displays the recursive size of directories in Dired./
-
-[2023-06-09 Fri 13:09] Moving to graveyard since the package was enabling itself randomly.
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package dired-du
-  :after dired
-  :config
-  (setq dired-du-size-format 'comma))
-#+end_src
-
 ** gptai
 :PROPERTIES:
 :ID:       BEB02F5A-AE8E-40BF-B8A7-93A6A5B7D88A
@@ -1327,7 +1339,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 (use-package gptai
   :demand t
   :config
-  (setq gptai-model "gpt-4") 
+  (setq gptai-model "gpt-4")
   (setq gptai-username (auth-source-pass-get "username" "tlon/core/openai.com"))
   (setq gptai-api-key (auth-source-pass-get "key" "tlon/core/openai.com"))
   )
@@ -2813,7 +2825,7 @@ CLOCK: [2021-03-23 Tue 20:26]--[2021-03-23 Tue 21:13] =>  0:47
 :END:
 /[[https://github.com/isamert/orgmdb.el][orgmdb]] is an OMDb API client with some org-mode related convenience functions./
 
-[2023-03-02 Thu 13:07] I'm using ~org-cite~ for films, too, so this is no longer relevant. 
+[2023-03-02 Thu 13:07] I'm using ~org-cite~ for films, too, so this is no longer relevant.
 
 #+begin_src emacs-lisp :results silent
 (use-package orgmdb
@@ -3520,7 +3532,7 @@ interactively, with prefix arg, you can pick one."
 :LOGBOOK:
 CLOCK: [2022-07-16 Sat 15:40]--[2022-07-16 Sat 15:49] =>  0:09
 :END:
-This does the same as [[id:815B8CEA-D36D-4E47-B728-D86FEFB736DF][zotra]]. 
+This does the same as [[id:815B8CEA-D36D-4E47-B728-D86FEFB736DF][zotra]].
 
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package biblio-zotero
@@ -3595,10 +3607,10 @@ CLOCK: [2022-06-25 Sat 11:36]--[2022-06-25 Sat 12:46] =>  1:10
   (require 'consult-org-roam)
   ;; Activate the minor-mode
   (consult-org-roam-mode)
-  
+
   :custom
   (consult-org-roam-grep-func #'consult-ripgrep)
-  
+
   :config
   ;; Eventually suppress previewing for certain functions
   (consult-customize

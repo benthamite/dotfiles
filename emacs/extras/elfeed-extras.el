@@ -30,6 +30,14 @@
 (require 'elfeed)
 (require 'elfeed-show)
 
+;;;; Variables
+
+(defvar elfeed-extras-update-timer nil
+  "Timer for updating elfeed.")
+
+(defvar elfeed-extras-auto-update-in-process nil
+  "Whether elfeed is currently being updated.")
+
 ;;;; Functions
 
 ;; Borrowed from Prot
@@ -50,18 +58,6 @@ poorly-designed websites."
   (interactive)
   (call-interactively 'mark-whole-buffer)
   (elfeed-search-untag-all-unread))
-
-(defun elfeed-extras-full-update ()
-  "*Really* update feeds!"
-  (interactive)
-  (require 'elfeed-org)
-  (let ((elfeed-search-buffer "*elfeed-search*"))
-    (when (and (get-buffer elfeed-search-buffer)
-               (not (equal (buffer-name) elfeed-search-buffer)))
-      (kill-buffer elfeed-search-buffer)))
-  (elfeed-org)
-  (elfeed-unjam)
-  (elfeed-update))
 
 (defun elfeed-extras-kill-link-url-of-entry ()
   "Add link of current entry to kill ring."
@@ -96,47 +92,26 @@ poorly-designed websites."
     (elfeed-extras-filter-tags "+unread -wiki"))
   (setq elfeed-extras-toggle-wiki-entries (not elfeed-extras-toggle-wiki-entries)))
 
-(defun elfeed-extras-toggle-fixed-pitch ()
-  "Toggle between fixed pitch and variable pitch."
-  (interactive)
-  (if shr-use-fonts
-      (setq shr-use-fonts nil)
-    (setq shr-use-fonts t))
-  (elfeed-show-refresh))
-
-;;;###autoload
-(defun elfeed-extras-toggle-session ()
-  "Start or end an `elfeed' session."
-  (interactive)
-  (if (derived-mode-p 'elfeed-search-mode 'elfeed-show-mode)
-      (progn
-        (kill-matching-buffers "^\*elfeed\-*\*" nil t))
-    (elfeed)
-    (when (< elfeed-search-last-update
-             (time-to-seconds (time-subtract (current-time) (seconds-to-time (* 60 60 2)))))
-      (elfeed-update))))
-
-;; This only works in Firefox due to a Chrome limitation
-;; xenodium.com/open-emacs-elfeed-links-in-background/
-(defun elfeed-extras-search-browse-background-url ()
-  "Open current `elfeed' entry (or region entries) in browser without losing focus."
-  (interactive)
-  (let ((entries (elfeed-search-selected)))
-    (mapc (lambda (entry)
-            (cl-assert (memq system-type '(darwin)) t "open command is macOS only")
-            (start-process (concat "open " (elfeed-entry-link entry))
-                           nil "open" "--background" (elfeed-entry-link entry))
-            (elfeed-untag entry 'unread)
-            (elfeed-search-update-entry entry))
-          entries)
-    (unless (or elfeed-search-remain-on-entry (use-region-p))
-      (forward-line))))
-
-(defun elfeed-extras-url-full-capture ()
+(declare-function zotra-extras-add-entry "zotra-extras")
+(defun elfeed-extras-add-entry ()
   "Add current URL to bibfile and generate associated PDF and HTML files."
   (interactive)
   (when (derived-mode-p 'elfeed-show-mode)
-    (zotra-extras-url-full-capture (elfeed-entry-link elfeed-show-entry))))
+    (zotra-extras-add-entry (elfeed-entry-link elfeed-show-entry))))
+
+(declare-function global-flycheck-mode "flycheck")
+(defun elfeed-extras-auto-update ()
+  "Automatically update `elfeed' every 15 minutes of idleness."
+  (let ((elfeed-extras-auto-update-in-process t)
+	(global-flycheck-mode-enabled-p (bound-and-true-p global-flycheck-mode)))
+    (when global-flycheck-mode-enabled-p
+      (global-flycheck-mode -1))
+    (when elfeed-extras-update-timer
+      (cancel-timer elfeed-extras-update-timer))
+    (setq elfeed-extras-update-timer
+	  (run-with-idle-timer (* 15 60) t #'elfeed-update))
+    (when global-flycheck-mode-enabled-p
+      (global-flycheck-mode))))
 
 (provide 'elfeed-extras)
 ;;; elfeed-extras.el ends here

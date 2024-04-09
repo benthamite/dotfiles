@@ -12499,7 +12499,7 @@ Some useful config files:
 :ID:       4FB9C92B-B39E-4C3D-B9AE-A3342A6F1695
 :END:
 # Local Variables:
-# eval: (files-extras-buffer-local-set-key (kbd "H-;") 'org-extras-config-dispatch)
+# eval: (files-extras-buffer-local-set-key (kbd "H-:") 'org-extras-config-dispatch)
 # eval: (files-extras-buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
 # eval: (flycheck-mode -1)

@@ -7059,7 +7059,8 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :config
   (setq copilot-extras-excluded-modes '(dsssl-mode mhtml-mode))
 
-  (add-hook 'prog-mode-hook #'copilot-extras-enable-conditionally))
+  (add-hook 'prog-mode-hook #'copilot-extras-enable-conditionally)
+  (add-hook 'text-mode-hook #'copilot-extras-enable-conditionally))
 #+end_src
 
 ** gptel

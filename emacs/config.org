@@ -7526,7 +7526,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   :demand t
   :config
   (setq org-extras-agenda-switch-to-agenda-current-day-timer
-        (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
+	(run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
 
   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter org-extras-clocktable-sorter))
 

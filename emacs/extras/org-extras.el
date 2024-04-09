@@ -858,7 +858,11 @@ To see a list of Google Docs and their respective IDs, run
     (shell-command
      (format "pandoc -s '%s' -o '%s'" input output))))
 
-;;;;; Dispatchers
+;;;;; Menus
+
+(transient-define-prefix org-extras-personal-menu ()
+  "Menu for personal projects."
+  [[("i" "Anki"              (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))]])
 
 (transient-define-prefix org-extras-tlon-menu ()
   "Menu for Tlön projects."

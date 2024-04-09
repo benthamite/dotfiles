@@ -710,9 +710,6 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 
 #+begin_src emacs-lisp
 (use-package jsonrpc
-  :elpaca (jsonrpc
-           :host github
-           :repo "emacs-straight/jsonrpc")
   :demand t)
 #+end_src
 

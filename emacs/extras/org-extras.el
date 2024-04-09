@@ -860,8 +860,8 @@ To see a list of Google Docs and their respective IDs, run
 
 ;;;;; Dispatchers
 
-(transient-define-prefix org-extras-tlon-dispatch ()
-  "Dispatcher for Tlön projects."
+(transient-define-prefix org-extras-tlon-menu ()
+  "Menu for Tlön projects."
   [["Tlön"
     ("t t" "tlon"              (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))
     ("t e" "tlon-emacs"        (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))

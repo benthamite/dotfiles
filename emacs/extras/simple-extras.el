@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'org)
+(require 'prot-eww)
 (require 'url-parse)
 (require 'url-vars)
 
@@ -446,12 +447,13 @@ number."
 
 (declare-function org-tidy-mode "org-tidy")
 (declare-function org-modern-mode "org-modern")
+(declare-function org-extras-inline-images "org-extras")
 (defun simple-extras-visible-mode-enhanced-org (&optional arg)
   "Set associated `org' modes based on ARG."
   (when (derived-mode-p 'org-mode 'org-agenda-mode 'org-msg-mode)
     (when (member 'org-tidy-mode org-mode-hook)
       (org-tidy-mode arg))
-    (org-display-inline-images arg)
+    (org-extras-inline-images arg)
     (when (and (not (derived-mode-p 'org-agenda-mode))
 	       (featurep 'org-modern))
       (org-modern-mode arg)))
@@ -645,7 +647,7 @@ FORMS are evaluated with point restored to its original position."
 	('eww-mode (eww-current-url))
 	((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "url"))
 	('bibtex-mode (bibtex-extras-get-field "url")))
-      (read-string "URL: ")))
+      (read-string "URL: " (current-kill 0))))
 
 ;;;;; url-parse
 
@@ -653,6 +655,95 @@ FORMS are evaluated with point restored to its original position."
   "Check if STR is a valid URL."
   (let ((url (url-generic-parse-url str)))
     (and (url-type url) (url-host url))))
+
+;;;;; conversion
+
+(defun simple-extras-pandoc-convert (language &optional non-html)
+  "Convert the contents of the system clipboard to target LANGUAGE using Pandoc.
+Convert from HTML if the clipboard contains HTML, and from NON-HTML otherwise.
+Both LANGUAGE and NON-HTML are specified using the Pandoc name for that
+language."
+  (let* ((command (format "%%s | pandoc --wrap=none -f %%s -t %s" language))
+	 (output (shell-command-to-string (format command "pbv public.html" "html"))))
+    (when (string-match-p "Could not access pasteboard contents" output)
+      (setq output (shell-command-to-string (format command "pbpaste" non-html))))
+    output))
+
+;;;;; asciify
+
+;; Adapted from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
+(defun simple-extras-asciify-text (&optional begin end)
+  "Remove accents in some letters. e.g. café → cafe.
+Change European language characters into equivalent ASCII ones.
+When called interactively, work on current line or text selection.
+
+Optionally, remove accents in region from BEGIN to END."
+  (interactive)
+  (let (($charMap
+         [
+          ["ß" "ss"]
+          ["á\\|à\\|â\\|ä\\|ā\\|ǎ\\|ã\\|å\\|ą\\|ă\\|ạ\\|ả\\|ả\\|ấ\\|ầ\\|ẩ\\|ẫ\\|ậ\\|ắ\\|ằ\\|ẳ\\|ặ" "a"]
+          ["æ" "ae"]
+          ["ç\\|č\\|ć" "c"]
+          ["é\\|è\\|ê\\|ë\\|ē\\|ě\\|ę\\|ẹ\\|ẻ\\|ẽ\\|ế\\|ề\\|ể\\|ễ\\|ệ" "e"]
+          ["í\\|ì\\|î\\|ï\\|ī\\|ǐ\\|ỉ\\|ị" "i"]
+          ["ñ\\|ň\\|ń" "n"]
+          ["ó\\|ò\\|ô\\|ö\\|õ\\|ǒ\\|ø\\|ō\\|ồ\\|ơ\\|ọ\\|ỏ\\|ố\\|ổ\\|ỗ\\|ộ\\|ớ\\|ờ\\|ở\\|ợ" "o"]
+          ["ú\\|ù\\|û\\|ü\\|ū\\|ũ\\|ư\\|ụ\\|ủ\\|ứ\\|ừ\\|ử\\|ữ\\|ự"     "u"]
+          ["ý\\|ÿ\\|ỳ\\|ỷ\\|ỹ"     "y"]
+          ["þ" "th"]
+          ["ď\\|ð\\|đ" "d"]
+          ["ĩ" "i"]
+          ["ľ\\|ĺ\\|ł" "l"]
+          ["ř\\|ŕ" "r"]
+          ["š\\|ś" "s"]
+          ["ť" "t"]
+          ["ž\\|ź\\|ż" "z"]
+	  ["­" ""]       ; soft hyphen
+          [" " " "]       ; thin space
+          ["–" "-"]       ; dash
+          ["—\\|一" "--"] ; em dash etc
+	  ["¿" ""]
+	  ["¡" ""]
+	  ["…" ""]
+          ])
+        ($p1 (if begin begin
+               (if (region-active-p)
+                   (region-beginning)
+                 (line-beginning-position))))
+        ($p2 (if end end
+               (if (region-active-p)
+                   (region-end)
+                 (line-end-position)))))
+    (let ((case-fold-search t))
+      (save-restriction
+        (narrow-to-region $p1 $p2)
+        (mapc
+         (lambda ($pair)
+           (goto-char (point-min))
+           (while (re-search-forward (elt $pair 0) (point-max) t)
+             (replace-match (elt $pair 1))))
+         $charMap)))))
+
+(defun simple-extras-asciify-string (string)
+  "Return a new STRING e.g. café → cafe."
+  (with-temp-buffer
+    (insert string)
+    (simple-extras-asciify-text (point-min) (point-max))
+    (buffer-string)))
+
+;;;;; slugify
+
+;;;###autoload
+(defun simple-extras-slugify (string)
+  "Convert STRING into slug."
+  (simple-extras-asciify-string (prot-eww--sluggify string)))
+
+;;;###autoload
+(defun simple-extras-slugify-clipboard ()
+  "Convert the clipboard or first element in kill ring into a slug."
+  (interactive)
+  (kill-new (simple-extras-slugify (current-kill 0))))
 
 ;;;;; misc
 

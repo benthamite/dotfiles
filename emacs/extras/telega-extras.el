@@ -122,6 +122,13 @@ archive buffer."
       (telega-chatbuf-attach-file file)
     (user-error (format "No files found in %s" paths-dir-downloads))))
 
+(defun telega-extras-transcribe-audio (&optional msg)
+  "Transcribe the audio for MSG.
+If MSG is nil, use the message at point."
+  (interactive)
+  (let* ((msg (or msg (telega-msg-at))))
+    (telega--recognizeSpeech (telega-msg-at))))
+
 (provide 'telega-extras)
 ;;; telega-extras.el ends here
 

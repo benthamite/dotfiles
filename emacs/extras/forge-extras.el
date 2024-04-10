@@ -73,13 +73,23 @@ If ISSUE is nil, use the issue at point or in the current buffer."
       ('open (forge--set-topic-state repo issue 'completed))
       ('completed (forge--set-topic-state repo issue 'open)))))
 
-(defun forge-extras-browse-topic-in-background ()
-  "Browse the topic at point, when unread, without shifting focus to the browser."
+(defun forge-extras-sync-read-status ()
+  "Ensure that the read status of the issue at point in Forge matches GitHub’s.
+This does two things: (1) it silently browses the issue in a Firefox tab;
+and (2) after two minutes, it marks the issue as read (again)."
   (let* ((issue (forge-current-topic))
 	 (url (forge-get-url issue)))
     (when (eq (oref issue status) 'unread)
       (shut-up
-	(shell-command (format "open -a Firefox --background %s" url))))))
+	(shell-command (format "open -a Firefox --background %s" url))
+	(run-with-timer 120 nil (lambda () (forge-topic-mark-read issue)))))))
+
+(defun forge-extras-pull-notifications ()
+  "Fetch notifications for all repositories from the current forge.
+Do not update if `elfeed' is in the process of being updated, since this causes
+problems."
+  (unless (bound-and-true-p elfeed-extras-auto-update-in-process)
+    (forge-pull-notifications)))
 
 ;;;;; Menus
 

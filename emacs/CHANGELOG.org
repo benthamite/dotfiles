@@ -1,8 +1,95 @@
-#+title: Change lof of my Emacs configuration
+#+title: Change log of my Emacs configuration
 #+author: Pablo Stafforini
 #+langauge: en
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository.
+
+* Version 6.3.0 on 2024-04-08
+:PROPERTIES:
+:ID:       FA95B3D0-0AA6-4914-95E7-711B38A34FE5
+:END:
+
+** dired-du
+:PROPERTIES:
+:ID:       BEC9F6CB-AB7B-4E25-A0D3-AD3915FB598F
+:END:
+
+New package. It displays the recursive size of directories. The package is configured to hide this information when ~dired-hide-details-mode~ is enabled, which it is by default. This mode is toggled with ~-~.
+
+** doom-modeline
+:PROPERTIES:
+:ID:       C921586A-676B-49D4-9398-C8B66EDE1C53
+:END:
+
+The new segments ~gptel~ and ~gptel-cost~ show the AI model active in the current buffer and the cost in US dollars of making a request at point, respectively. (A request sends the text from the beginning of the buffer to the point, unless some text is selected, in which case it sends the selection.) The latter segment is only active in the dedicated ~gptel~ buffer, for performance reasons. These elements can be disabled via the user options ~doom-modeline-extras-gptel~ and ~doom-modeline-extras-gptel-cost~.
+
+** elgrep
+:PROPERTIES:
+:ID:       5D5EFBF8-620B-4980-AD84-7D14541DE059
+:END:
+
+Removed package. For ripgrep integration, we now use the ~consult~ package exclusively. (The issue whereby batch replacements to a buffer captured via embark (~H-;~) where sometimes not applied seems to have been resolved, so there is no longer need to use another package.)
+
+** emoji
+:PROPERTIES:
+:ID:       0138D806-0F49-4657-B132-A4ADFF9570D2
+:END:
+
+The command ~emoji-insert~ is now bound ~H-E~.
+
+** gptel-extras
+:PROPERTIES:
+:ID:       E48CB6C3-7E23-42D0-9E7D-CD657CF26C06
+:END:
+
+~gptel-extras-model-config~ now displays information about each of the available models.
+
+~gptel~ buffers can now be saved easily via the command ~gptel-extras-save-buffer~, which prompts for a name and saves it to its slugified version. The file is saved in ~gptel-extras-dir~, whose value can be changed by the user. I recommend saving these buffers as you may want to refer to them in the future, and it is trivial to do so.
+
+** org-appear
+:PROPERTIES:
+:ID:       F5AC69BB-07F4-4F67-A3FD-9A65D16B5F91
+:END:
+
+New package. It toggles the visibility of hidden org mode element parts upon entering and leaving those elements.
+
+** org-extras
+:PROPERTIES:
+:ID:       5F5E2F8E-CA8E-4EAA-BB9D-FC93DDF56AFD
+:END:
+
+The command ~org-extras-paste-with-conversion~ has been improved and now works reliably. It converts the contents of the clipboard to ~org-mode~, from HTML if the clipboard contains HTML, and from Markdown otherwise. It is very useful for copying content outside Emacs—e.g. from GitHub—and pasting it in an ~org-mode~ buffer.
+
+The command ~org-extras-eww-copy-for-org-mode~ does something similar with content in an ~eww~ buffer.
+
+** pdf-tools-extras
+:PROPERTIES:
+:ID:       8A5E8900-CF6D-4220-97DB-99FA1C2DD0D1
+:END:
+
+It is now possible to jump straight from a PDF in ~pdf-view-mode~ to the corresponding Ebib entry via the command ~pdf-tools-extras-open-in-ebib~ (~e~) (provided, of course, that the PDF has an associated entry)
+
+** simple
+:PROPERTIES:
+:ID:       3A4DFECA-AE90-4895-AF27-BC14CE3FFADB
+:END:
+
+The command ~shell-command~ is now bound to ~H-e~.
+
+** telega-extras
+:PROPERTIES:
+:ID:       0D9D922F-40EC-4180-B251-3A54885B7A3D
+:END:
+
+To transcribe the audio of the message at point, you can now use ~telega-extras-transcribe-audio~ (~b~).
+
+** zotra-extras
+:PROPERTIES:
+:ID:       2311DCE8-8D87-4EDB-BC26-ED848B4B1198
+:END:
+
+The process for adding new entries in Ebib with ~zotra-extas-add-entry~ (~a~) has changed somewhat, but it is still a work in progress, so it doesn’t seem worth documenting here. If you encounter any issues, please contact me.
+
 
 * Version 6.2.0 on 2024-03-09
 :PROPERTIES:
@@ -103,13 +190,7 @@ These commands should work in all Forge-related buffers.
 - The commands ~isearch-extras-consult-line~ (~C-l~) and ~isearch-extras-project-search~ (~C-p~) have been added.
 - ~avy-isearch~ is now bound to ~M-f~ (~avy~ and ~ace-link~ commands are generally bound to ~M-f~ or—in read-only files—to ~f~).
 
-** org-appear
-:PROPERTIES:
-:ID:       9CEA642C-962A-4281-BABD-B9C623C647BB
-:END:
-- new package: emphasis markers are now displayed with point moves to them.
-  
-** ox-clip
+** org
 :PROPERTIES:
 :ID:       7B0AA24B-3DF5-4B06-8316-57EA58C0CF8A
 :END:

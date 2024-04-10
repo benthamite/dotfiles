@@ -4,6 +4,6 @@
 # contributor: Pablo Stafforini
 # --
 `(format-time-string "%Y-%m-%d")` Cabify
-    Expenses:Core:Transportation            $1 ARS ; taxi $2
+    Expenses:Core:Transportation            $1 ARS ; taxi $2 Fede’s place
     Assets:Brubank
 $0

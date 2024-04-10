@@ -1,10 +1,10 @@
 # -*- mode: snippet -*-
-# name: monzo
-# key: mz
+# name: mercado-pago
+# key: mp
 # contributor: Pablo Stafforini
 # --
 `(format-time-string "%Y-%m-%d")`$6 ${1:recipient}
     Expenses:${5:account}  ${2:amount} ${3:$$(yas-choose-value ledger-prices-currencies)} ; ${4:details}
-    Assets:Monzo  $7
+    Assets:Mercado Pago  $7
 
 $0

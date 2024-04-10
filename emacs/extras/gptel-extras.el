@@ -163,8 +163,12 @@ called with a prefix argument, configure it globally."
   "Save the `gptel' buffer NAME to a file in the appropriate directory.
 The `gptel' directory is set by `gptel-extras-dir'."
   (interactive (list (read-string "Name: ")))
-  (let ((filename (file-name-concat gptel-extras-dir
-				    (file-name-with-extension (simple-extras-slugify name) "org"))))
+  (let* ((extension (pcase major-mode
+		      ('org-mode "org")
+		      ('markdown-mode "md")
+		      (_ (error "Unsupported major mode"))))
+	 (filename (file-name-concat gptel-extras-dir
+				     (file-name-with-extension (simple-extras-slugify name) extension))))
     (write-file filename)))
 
 (provide 'gptel-extras)

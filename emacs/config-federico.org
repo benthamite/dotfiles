@@ -274,6 +274,7 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (gptel-extras-model-config 'globally "ChatGPT" "gpt-4-0125-preview")
 #+end_src
+
 ** cua-base
 :PROPERTIES:
 :ID:       ECA4B30E-DE5C-4ACC-87AA-30975B8398EC
@@ -576,6 +577,8 @@
                                         org-extras-toggle-properties
                                         org-extras-toggle-logbook))
   (cancel-timer org-extras-agenda-switch-to-agenda-current-day-timer)
+  (remove-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
+
   (message "`org-extras' late-init config loaded."))
 #+end_src
 
@@ -590,13 +593,13 @@
   (message "`org-roam' late-init config loaded."))
 #+end_src
 
-** org-tidy-mode
+** org-tidy
 :PROPERTIES:
 :ID:       8F1B85FF-6AC1-4169-8F24-F80B61A298AC
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(with-eval-after-load 'org-tidy-mode
+(with-eval-after-load 'org-tidy
   (remove-hook 'org-mode-hook #'org-tidy-mode)
   (org-tidy-mode -1)
   (message "`org-tidy-mode' late-init config loaded."))
@@ -725,7 +728,7 @@ Disable hl-sentence because I do not like it...
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'faces-extras
-  (setq faces-extras-fixed-pitch-font "Iosevka Nerd Font")
+  (setq faces-extras-fixed-pitch-font "ZedMono Nerd Font Mono")
   (setq faces-extras-fixed-pitch-size 150)
   (setq faces-extras-variable-pitch-size 160)
 
@@ -788,15 +791,18 @@ Disable hl-sentence because I do not like it...
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 ;; Code run on a long timer: aimed at running after all of Pablo's deferred calls
-(run-at-time 60 nil (lambda
-                      ()
-                      (message "Running Fede's after init callback")
-                      (setq display-time-format "%a %e %b %R")
-                      (tab-bar-extras-reset)
-                      (cancel-function-timers 'org-extras-agenda-switch-to-agenda-current-day)
-                      (cancel-function-timers 'citar-extras-update-old-bibliography)
-                      (org-tidy-mode -1)
-                      ))
+(run-at-time
+ 60 nil
+ (lambda ()
+   (message "Running Fede's after init callback")
+   (setq display-time-format "%a %e %b %R")
+   (cancel-function-timers 'org-extras-agenda-switch-to-agenda-current-day)
+   (cancel-function-timers 'citar-extras-update-old-bibliography)
+   (org-tidy-mode -1)
+   (global-flycheck-mode -1)
+   (setq calendar-extras-use-geolocation nil)
+   (tab-bar-extras-reset)
+   ))
 #+end_src
 
 ** post-init-hook
@@ -807,31 +813,21 @@ Disable hl-sentence because I do not like it...
 This should be at the very end of the ~late-init~ file.
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(add-hook 'tlon-init-post-init-hook
-	  (lambda ()
-	    (message "Running Fede's post-init-hook"
-		     (use-package exec-path-from-shell
-		       :demand t
-		       :config
-		       (exec-path-from-shell-initialize)
-		       (exec-path-from-shell-copy-env "TLON_EMAIL")
-		       (setq tlon-core-email-shared (getenv "TLON_EMAIL"))
-		       (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
-		       ;; (gptel-make-anthropic "Claude"
-		       ;;   :stream t
-		       ;;   :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-core-email-shared)))
-
-		       ;; (gptel-make-gemini "Gemini"
-		       ;;   :stream t
-		       ;;   :key (auth-source-pass-get 'secret
-		       ;; 			       (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared)))
-		       (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
-		       (setq gpt-commit-model-name "gpt-4")
-		       (setq bib-isbndb-key
-			     (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
-		       
-		       (message (format "exec-path-from-shell (POST-INIT): TLON_EMAIL=%s" (getenv "TLON_EMAIL")))
-		       ))))
+(add-hook
+ 'tlon-init-post-init-hook
+ (lambda ()
+   (message "Running Fede's post-init-hook")
+   (setq calendar-extras-use-geolocation t)
+   (setq tlon-core-email-shared (getenv "TLON_EMAIL"))
+   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
+   (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
+   (setq gpt-commit-model-name "gpt-4")
+   (setq bib-isbndb-key
+	 (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
+   (global-flycheck-mode -1)
+   (setq calendar-extras-use-geolocation nil)
+   (org-tidy-mode -1)
+   ))
 (run-hooks 'tlon-init-post-init-hook)
 #+end_src
 

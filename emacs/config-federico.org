@@ -6,25 +6,20 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
-(
- aide
- anki-editor
- auto-commit-mode
- bbdb
+(setq tlon-init-excluded-packages
+'(
+ ;; bbdb
  copilot
  corfu-doc-terminal
  corfu-terminal
  ;; display-wttr
  erc
- espotify
- ;; flycheck
- ;; flymake
+ ;; espotify
  ;; frame
  ;; forge
  git-auto-commit-mode
  hammy
  ;; jinx
- keytar
  midnight
  mixed-pitch
  mu4e
@@ -33,21 +28,22 @@
  org-gcal
  ;; org-roam
  org2blog
- orgmdb
  outline
  ;; pdf-tools
  puni
  remember
  server
- slack
- spelling
+ ;; spelling
+ jinx
+ ;; flycheck
+ grammarly
+ lsp-grammarly
  ;; tlon-init
  theme-loaddefs
- twittering-mode
  vulpea
  ;; window
  ;; yasnippet
- )
+ ))
 #+end_src
 
 * paths
@@ -272,6 +268,7 @@
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (gptel-extras-model-config 'globally "ChatGPT" "gpt-4-0125-preview")
+(setq gptel-extras-dir "/Users/fede/Dropbox/obsidian/gpt-4/")
 #+end_src
 
 ** cua-base

@@ -28,9 +28,10 @@
 ;;; Code:
 
 (require 'gptel)
-(require 'gptel-gemini)
 (require 'mullvad)
-(require 'tlon-core)
+(require 'paths)
+(require 'simple-extras)
+(require 'tlon-babel-core)
 
 ;;;; User options
 
@@ -42,6 +43,72 @@
   "The number of minutes to disconnect `mullvad' after starting the Gemini session."
   :type 'integer
   :group 'gptel-extras)
+
+(defcustom gptel-extras-dir (file-name-concat paths-dir-notes "gptel/")
+  "The directory where to save the `gptel' buffers."
+  :type 'directory
+  :group 'gptel-extras)
+
+;;;; Variables
+
+(defconst gptel-extras-ai-models
+  '((:backend "Gemini"
+	      :model "gemini-pro"
+	      :cost 0
+	      :tokens 32000
+	      :description "This model is currently free (included in Pablo’s Google Drive plan).")
+    (:backend "ChatGPT"
+	      :model "gpt-3.5-turbo"
+	      :cost 0.50
+	      :description "Less powerful GPT model.")
+    (:backend "ChatGPT"
+	      :model "gpt-3.5-turbo-16k"
+	      :cost 0.50
+	      :description "Less powerful GPT model.")
+    (:backend "ChatGPT"
+	      :model "gpt-4-turbo-preview"
+	      :cost 10
+	      :description "Currently points to `gpt-4-0125-preview'.") ; cost assumed
+    (:backend "ChatGPT"
+	      :model "gpt-4-1106-preview"
+	      :cost 10
+	      :tokens 128000
+	      :description "GPT-4 Turbo model featuring improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more. Returns a maximum of 4,096 output tokens. Training data up to April 2023.")
+    (:backend "ChatGPT"
+	      :model "gpt-4-0125-preview"
+	      :cost 10
+	      :description "[recommended] The latest GPT-4 model. Returns a maximum of 4,096 output tokens. Training data up to December 2023.")
+    (:backend "ChatGPT"
+	      :model "gpt-4"
+	      :cost 30
+	      :tokens 8000
+	      :description "Standard GPT-4 model.")
+    (:backend "ChatGPT"
+	      :model "gpt-4-32k"
+	      :cost 60
+	      :tokens 32000
+	      :description "Standard GPT-4 with 32k token window.")
+    (:backend "ChatGPT"
+	      :model "gpt-4-vision-preview"
+	      :cost 0 ; placeholder
+	      :description "GPT-4 model for sending images.")
+    (:backend "Claude"
+	      :model "claude-3-haiku-20240307"
+	      :cost 0.25
+	      :description "The least capable Anthropic model")
+    (:backend "Claude"
+	      :model "claude-3-sonnet-20240229"
+	      :cost 3
+	      :description "The intermediate Anthropic model.")
+    (:backend "Claude"
+	      :model "claude-3-opus-20240229"
+	      :cost 15
+	      :description "The most capable Anthropic model."))
+  "Alist of AI models and input cost in US dollars per one million tokens.
+The pricing information has been obtained from the following websites:
+- GPT: <https://openai.com/pricing>
+- Claude: <https://www.anthropic.com/api#pricing>")
+;; https://github.com/psimm/website/blob/master/blog/llm-price-performance/data.csv
 
 ;;;; Functions
 
@@ -55,15 +122,32 @@ called with a prefix argument, configure it globally."
 			   (if (<= (length gptel--known-backends) 1)
 			       (caar gptel--known-backends)
 			     (completing-read "Backend name: " (mapcar #'car gptel--known-backends) nil t))))
-	 (backend (alist-get backend-name gptel--known-backends nil nil #'equal))
+	 (backend (alist-get backend-name gptel--known-backends nil nil #'string=))
 	 (backend-models (gptel-backend-models backend))
+	 (models-with-cost (mapcar (lambda (backend)
+				     (cons (format "%-25s $ %5.2f   %-80s"
+						   backend
+						   (tlon-babel-lookup gptel-extras-ai-models :cost :model backend)
+						   (tlon-babel-lookup gptel-extras-ai-models :description :model backend))
+					   backend))
+				   backend-models))
 	 (model-name (or model-name
-			 (if (= (length backend-models) 1)
-			     (car backend-models)
-			   (completing-read "Model name: " backend-models))))
-	 (setter (if globally #'set-default #'set)))
-    (funcall setter 'gptel-model model-name)
-    (funcall setter 'gptel-backend backend)))
+			 (alist-get (completing-read "Model name: " models-with-cost)
+				    models-with-cost nil nil #'string=))))
+    (if globally
+	(setq gptel-model model-name
+	      gptel-backend backend)
+      (setq-local gptel-model model-name
+		  gptel-backend backend))))
+
+(defun gptel-extras-get-cost ()
+  "Get the cost of prompting the current model."
+  (let* ((cost-per-1m (tlon-babel-lookup gptel-extras-ai-models :cost :model gptel-model))
+	 (words (if (region-active-p)
+		    (count-words (region-beginning) (region-end))
+		  (count-words (point-min) (point))))
+	 (cost (/ (* cost-per-1m words) 1000000.0)))
+    cost))
 
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
   "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS."
@@ -74,6 +158,14 @@ called with a prefix argument, configure it globally."
   (apply orig-fun args))
 
 (advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)
+
+(defun gptel-extras-save-buffer (name)
+  "Save the `gptel' buffer NAME to a file in the appropriate directory.
+The `gptel' directory is set by `gptel-extras-dir'."
+  (interactive (list (read-string "Name: ")))
+  (let ((filename (file-name-concat gptel-extras-dir
+				    (file-name-with-extension (simple-extras-slugify name) "org"))))
+    (write-file filename)))
 
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

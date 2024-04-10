@@ -26,18 +26,20 @@
 ;; Extensions for `ebib'.
 
 ;;; Code:
+
+(require 'bib)
 (require 'bibtex)
 (require 'el-patch)
 (require 'citar)
 (require 'ebib)
 (require 'filenotify)
 (require 'mullvad)
+(require 'org-extras)
 (require 'paths)
 (require 's)
 (require 'scihub)
-(require 'tlon-babel-tex)
 (require 'tlon-babel-tts)
-(require 'zotra)
+(require 'tlon-babel-tex)
 (require 'window-extras)
 
 ;;;; Functions
@@ -314,6 +316,24 @@ If EXTENSION is non-nil, set its extension to its value."
 	(t
 	 (user-error "Invalid file extension"))))
 
+;;;;; process entries
+
+(defun ebib-extras-process-entry ()
+  "Docstring.
+The function assumes that the fields `type', `author', `date' and `title' are
+correctly set."
+  (interactive)
+  (ebib-generate-autokey)
+  (ebib-extras-get-or-set-language)
+  (ebib-extras-attach-files)
+  (ebib-extras-set-abstract))
+
+;; TODO; create function
+(defun ebib-extras-set-abstract ()
+  "Set abstract for entry at point.
+Try to fetch it with Zotero or ."
+  )
+
 ;;;;; attach downloads
 
 (defun ebib-extras-attach-file (&optional file most-recent open)
@@ -397,6 +417,20 @@ extension."
       (ebib-extras-attach-file file)
       (message "Attached `%s' to %s" file key))))
 
+(defun ebib-extras-attach-files ()
+  "Attach files appropriate for the current entry type.
+- online: generate PDF and html.
+- books: get PDF from Ligben or Archive.
+- papers: get PDF from SciHub."
+  (interactive)
+  (let ((type (downcase (ebib-extras-get-field "=type="))))
+    ;; TODO: handle remaining entry types
+    (pcase type
+      ("online"
+       (ebib-extras-url-to-html-attach)
+       (ebib-extras-url-to-pdf-attach))
+      (_ nil))))
+
 ;;;;; ?
 
 (defvar ebib-extras-iso-639-2
@@ -418,23 +452,31 @@ extension."
 
 (defun ebib-extras-ocr-pdf (&optional force)
   "OCR the PDF file in the current entry.
-If FORCE is non-nil, force OCR even if the file is already"
-  (interactive)
+If FORCE is non-nil, or the command is invoked with a prefix argument, force OCR
+even if already present."
+  (interactive "P")
+  (let ((file-name (ebib-extras-get-file "pdf"))
+	(lang (ebib-extras-get-or-set-language)))
+    (files-extras-ocr-pdf nil nil
+			  (format (concat (when force "--force-ocr ") "--deskew -l %s \"%s\" \"%s\"")
+				  (alist-get lang ebib-extras-iso-639-2 nil nil 'string=)
+				  (expand-file-name file-name)
+				  (expand-file-name file-name)))))
+
+(defun ebib-extras-get-or-set-language ()
+  "Return the language of the current entry, prompting the user for one if needed."
   (let* ((get-field (pcase major-mode
 		      ('ebib-entry-mode #'ebib-extras-get-field)
 		      ('bibtex-mode #'bibtex-extras-get-field)))
 	 (set-field (pcase major-mode
 		      ('ebib-entry-mode #'ebib-extras-set-field)
 		      ('bibtex-mode #'bibtex-set-field)))
-	 (lang (or (funcall get-field "langid")
-		   (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english"))))
-    (funcall set-field "langid" lang)
-    (let ((file-name (ebib-extras-get-file "pdf")))
-      (files-extras-ocr-pdf nil nil
-			    (format (concat (when force "--force-ocr ") "--deskew -l %s \"%s\" \"%s\"")
-				    (alist-get lang ebib-extras-iso-639-2 nil nil 'string=)
-				    (expand-file-name file-name)
-				    (expand-file-name file-name))))))
+	 (get-lang (lambda () (funcall get-field "langid")))
+	 (set-lang (lambda (lang) (funcall set-field "langid" lang))))
+    (unless (funcall get-lang)
+      (funcall set-lang
+	       (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english")))
+    (funcall get-lang)))
 
 (defvar ebib-extras-download-use-vpn nil
   "Whether to use a VPN when downloading content.")
@@ -573,20 +615,23 @@ Used by the `ebib-extras-generate-search-commands' macro.")
 
 ;;;;; Search functions
 
-(defmacro ebib-extras-generate-search-commands ()
+(defun ebib-extras-generate-search-commands ()
   "Generate search commands for search engines in `ebib-extras-search-engines'."
-  `(progn
-     ,@(mapcar (lambda (engine)
-		 `(defun ,(intern (concat "ebib-extras-search-" (symbol-name engine))) (&optional query)
-		    ,(let ((name (capitalize (replace-regexp-in-string "-" " " (symbol-name engine)))))
-		       (format "Run a search on %s." name)
-		       `(interactive ,(format "sSearch %s: " name)))
-		    (ebib-extras-search
-		     ,(intern (concat "ebib-extras-" (symbol-name engine)))
-		     query)))
-	       ebib-extras-search-engines)))
+  (mapc
+   (lambda (engine)
+     (let* ((name (capitalize (replace-regexp-in-string "-" " " (symbol-name engine))))
+            (function-name (intern (concat "ebib-extras-search-" (symbol-name engine))))
+            (docstring (format "Run a search on %s." name))
+            (query-prompt `(,(format "sSearch %s: " name)))
+            (search-engine (intern (concat "ebib-extras-" (symbol-name engine)))))
+       (fset function-name
+             `(lambda (&optional query)
+                ,docstring
+                (interactive ,query-prompt)
+                (ebib-extras-search ,search-engine query)))))
+   ebib-extras-search-engines))
 
-;; (ebib-extras-generate-search-commands)
+(ebib-extras-generate-search-commands)
 
 (defun ebib-extras-search (search-engine query)
   "Search for QUERY with SEARCH-ENGINE."
@@ -975,7 +1020,7 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 	(file-notify-add-watch
 	 db-file
 	 '(change attribute-change)
-	 (lambda (event)
+	 (lambda (_event)
 	   (message "reloading database")
 	   (ebib-extras-reload-database-no-confirm db)))))))
 
@@ -1000,8 +1045,7 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 (defun ebib-extras-check-author-exists ()
   "Check if the author of the given entry exists in the current database."
   (interactive)
-  (let* ((db ebib--cur-db)
-	 (author-to-check (ebib-extras-get-field "author")))
+  (let* ((author-to-check (ebib-extras-get-field "author")))
     (if (member author-to-check ebib-extras-existing-authors)
 	(message "Author found in the database!")
       (message "Warning: Author not found in the database!"))))
@@ -1013,7 +1057,6 @@ If applicable, open external website to set rating there as well."
   (let ((rating (ebib-extras-choose-rating))
 	(supertype (ebib-extras-get-supertype))
 	(title (ebib-extras-get-field "title"))
-	(key (ebib--get-key-at-point))
 	(db ebib--cur-db))
     ;; TODO: open rating websites based on supertype
     (pcase supertype
@@ -1027,9 +1070,7 @@ If applicable, open external website to set rating there as well."
   "Update the entry buffer with the current entry in DB."
   (ebib--update-entry-buffer)
   (set-buffer-modified-p nil)
-  (ebib--set-modified t db t (seq-filter (lambda (dependent)
-					   (ebib-db-has-key key dependent))
-					 (ebib--list-dependents db))))
+  (ebib--set-modified t db t nil))
 
 (defun ebib-extras-choose-rating ()
   "Prompt for a rating from 1 to 10 and return the choice."
@@ -1051,8 +1092,10 @@ If applicable, open external website to set rating there as well."
 			  key db)
     (ebib-extras-update-entry-buffer db)))
 
+(declare-function citar-extras-goto-bibtex-entry "citar-extras")
+(declare-function bibtex-extras-move-entry-to-tlon "bibtex-extras")
 (defun ebib-extras-move-entry-to-tlon ()
-  "Move bibliographic entry associated with the key at point to the Tlön bibliography."
+  "Move entry associated with the key at point to the Tlön bibliography."
   (interactive)
   (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
     (citar-extras-goto-bibtex-entry key)
@@ -1085,14 +1128,14 @@ Fetching is done using `bib'."
   (let* ((get-field (pcase major-mode
 		      ('ebib-entry-mode #'ebib-extras-get-field)
 		      ('bibtex-mode #' (bibtex-extras-get-field))))
-	 (title (get-field "title"))
-	 (author (get-field "author")))
+	 (title (funcall get-field "title"))
+	 (author (funcall get-field "author")))
     (pcase (ebib-extras-get-supertype)
-      ("book" (bib-search-isbn (format "% %" title author)))
+      ("book" (bib-search-isbn (format "%s %s" title author)))
       ("article" (bib-search-crossref title author))
       ("film" (bib-search-imdb
 	       (bib-translate-title-to-english title)))
-      (_ (get-field "url")))))
+      (_ (funcall get-field "url")))))
 
 (defun ebib-extras-get-or-fetch-id-or-url ()
   "Get the ID or URL of the entry at point, or fetch it if missing."
@@ -1151,6 +1194,7 @@ DIRECTION can be `prev' or `next'."
   (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
   (ebib-extras-update-entry-buffer ebib--cur-db))
 
+(declare-function ebib-extras-fetch-field-value "ebib-extras")
 (defun ebib-extras-fetch-keywords ()
   "Fetch keywords for the entry at point and put them in the associated org file."
   (interactive)
@@ -1179,19 +1223,6 @@ DIRECTION can be `prev' or `next'."
     (org-extras-insert-subheading)
     (insert (concat field "\n" keywords))
     (org-extras-sort-keywords)))
-
-(defun ebib-extras-create-section-entry (&optional title)
-  "Create a BibTeX entry for the section of the current entry.
-Prompt the user for a title, unless TITLE is non-nil."
-  (interactive)
-  (let* ((fields `(("title" . ,(or title (read-string "Section title: ")))
-		   ("eventtitle" . ,(ebib-extras-get-field "title"))
-		   ("url" . ,(read-string "URL: " (ebib-extras-get-field "url")))
-		   ("crossref" . ,(ebib--get-key-at-point))
-		   ("author" . ,(ebib-extras-get-field "author"))
-		   ("date" . ,(ebib-extras-get-field "")))))
-    (tlon-babel--create-entry-from-current fields)))
-
 
 ;;;;; pdf metadata
 
@@ -1322,39 +1353,6 @@ error."
       (ebib-set-field-value "timestamp" (format-time-string ebib-timestamp-format (el-patch-add nil "GMT")) actual-key db 'overwrite))
     actual-key))
 
-;; keep focus in current entry when the database is saved or reloaded.
-(el-patch-defun ebib--save-database (db &optional force)
-  "Save the database DB.
-The FORCE argument is used as in `ebib-save-current-database'."
-  ;; See if we need to make a backup.
-  (when (and (ebib-db-backup-p db)
-	     (file-exists-p (ebib-db-get-filename db)))
-    (ebib--make-backup (ebib-db-get-filename db))
-    (ebib-db-set-backup nil db))
-
-  ;; Check if the file has changed on disk.
-  (let ((db-modtime (ebib-db-get-modtime db))
-	(file-modtime (ebib--get-file-modtime (ebib-db-get-filename db))))
-    ;; If the file to be saved has been newly created, both modtimes are nil.
-    (when (and db-modtime file-modtime
-	       (time-less-p db-modtime file-modtime))
-      (unless (or (and (listp force)
-		       (eq 16 (car force)))
-		  (yes-or-no-p (format "File `%s' changed on disk.  Overwrite? " (ebib-db-get-filename db))))
-	(error "[Ebib] File not saved"))))
-
-  ;; Now save the database.
-  (el-patch-swap
-    (with-temp-buffer
-      (ebib--format-database-as-bibtex db)
-      (write-region (point-min) (point-max) (ebib-db-get-filename db)))
-    (let ((buf (current-buffer)))
-      (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-      (with-temp-buffer
-	(ebib--format-database-as-bibtex db)
-	(write-region (point-min) (point-max) (ebib-db-get-filename db)))))
-  (ebib--set-modified nil db))
-
 (el-patch-defun ebib-reload-current-database ()
   "Reload the current database from disk."
   (interactive)
@@ -1389,52 +1387,6 @@ The FORCE argument is used as in `ebib-save-current-database'."
      (ebib--edit-entry-internal))
     (default
      (beep))))
-
-;; ask user before uniquifying key
-(el-patch-defun ebib-db-set-entry (key data db &optional if-exists)
-  "Set KEY to DATA in database DB.
-DATA is an alist of (FIELD . VALUE) pairs.
-
-IF-EXISTS defines what to do when the key already exists in DB.
-If it is `overwrite', replace the existing entry.  If it is `uniquify',
-generate a unique key by appending a letter `b', `c', etc., to it.
-If it is `noerror', a duplicate key is not stored and the function
-returns nil.  If it is nil (or any other value), a duplicate key
-triggers an error.
-
-In order to delete an entry, DATA must be nil and IF-EXISTS must be
-`overwrite'.
-
-If storing/updating/deleting the entry is successful, return its key.
-
-Note that this function should not be used to add an entry to a
-dependent database.  The entry will be added to the main database
-instead.  Use `ebib-db-add-entries-to-dependent' instead."
-  (let ((exists (gethash key (ebib-db-val 'entries db))))
-    (when exists
-      (cond
-       ;;  If so required, make the entry unique:
-       (el-patch-swap
-	 ((eq if-exists 'uniquify)
-	  (setq key (ebib-db-uniquify-key key db))
-	  (setq exists nil))
-	 ((eq if-exists 'uniquify)
-	  (when (y-or-n-p
-		 (format "[Ebib] Key `%s' exists in database `%s'; uniquify? "
-			 key (ebib-db-get-filename db 'shortened)))
-	    (setq key (ebib-db-uniquify-key key db))
-	    (setq exists nil))))
-       ;; If the entry is an update, we simply pretend the key does not exist:
-       ((eq if-exists 'overwrite)
-	(setq exists nil))
-       ;; Otherwise signal an error, if so requested:
-       ((not (eq if-exists 'noerror))
-	(error "[Ebib] Key `%s' exists in database `%s'; cannot overwrite" key (ebib-db-get-filename db 'shortened)))))
-    (unless exists
-      (if data
-	  (puthash key data (ebib-db-val 'entries db))
-	(remhash key (ebib-db-val 'entries db)))
-      key)))
 
 ;; when field contains a file, copy absolute file path
 (el-patch-defun ebib-copy-field-contents (field)

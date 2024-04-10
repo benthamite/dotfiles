@@ -27,7 +27,7 @@
 
 ;;; Code:
 
-;; (require 'alert) ; recursive
+(require 'alert) ; recursive
 (require 'cl-seq)
 (require 'dired)
 (require 'dired-extras)
@@ -98,9 +98,9 @@ functionality in macOS."
   (interactive)
   (let ((buffer-name (generate-new-buffer "untitled"))
 	(buffer-major-mode major-mode))
-    (cond ((eq derived-mode-p 'shell-mode)
+    (cond ((derived-mode-p 'shell-mode)
 	   (shell))
-	  ((eq derived-mode-p 'eshell-mode)
+	  ((derived-mode-p 'eshell-mode)
 	   (eshell))
 	  (t
 	   ;; Prompt to save on `save-some-buffers' with positive PRED
@@ -155,6 +155,7 @@ functionality in macOS."
     (other-window 1)
     (files-extras-kill-this-buffer)))
 
+(declare-function window-extras-switch-to-last-window "window-extras")
 (defun files-extras-kill-this-buffer-switch-to-other-window ()
   "Kill the current buffer and switch to the other window."
   (interactive)
@@ -269,6 +270,7 @@ files which do not exist any more or are no longer readable will be killed."
     (define-key newmap key command)
     (use-local-map newmap)))
 
+(declare-function ebib-extras-get-file "ebib-extras")
 (defun files-extras-ocr-pdf (arg &optional filename parameters)
   "OCR the FILENAME.
 If FILENAME is nil, use the PDF file at point or the file visited by the current
@@ -346,7 +348,6 @@ command automates the recovery process in these cases."
       (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
       (files-extras-diff-buffer-with-file))))
 
-
 (defun files-extras-auto-save-alert ()
   "Alert user when auto save data is detected.
 `recover-this-file' notifications are easy to miss. This function triggers a
@@ -365,18 +366,17 @@ more intrusive alert."
 ;; buffers have logged a message related to `recover-this-file'.
 (defun files-extras-auto-save-persist ()
   "Prevent killing buffer when auto save data is detected."
-  ;; FIXME: This doesn't work
-  (alert--log-open-log
-   ;; we check both `*log4e-alert*' and `*Messages*' buffers for
-   ;; extra safety
-   (let ((alert-buffers '(" *log4e-alert*" "*Messages*")))
-     (dolist (buffer alert-buffers)
-       (when (get-buffer buffer)
-	 (set-buffer buffer)
-	 (goto-char (point-min))
-	 (when (search-forward "has auto save data" nil t)
-	   (yes-or-no-p "Buffers with auto save data detected. Check `*log4e-alert*' and `*Messages*' for details. Are you sure you want to proceed? "))
-	 (kill-buffer))))))
+  ;; we check both `*log4e-alert*' and `*Messages*' buffers for
+  ;; extra safety
+  (let ((alert-buffers '(" *log4e-alert*" "*Messages*")))
+    (dolist (buffer alert-buffers)
+      (when (get-buffer buffer)
+	(with-current-buffer buffer
+	  (goto-char (point-min))
+	  (when (search-forward "has auto save data" nil t)
+	    (yes-or-no-p "Buffers with auto save data detected. Check `*log4e-alert*' and `*Messages*' for details. Are you sure you want to proceed? ")
+	    (kill-buffer)))))
+    t))
 
 ;; https://emacs.stackexchange.com/a/3778/32089
 (defun files-extras-diff-buffer-with-file ()
@@ -395,7 +395,7 @@ more intrusive alert."
     (message "Copied `%s'" path)))
 
 (add-hook 'find-file-hook #'files-extras-auto-save-alert)
-;; (add-hook 'kill-buffer-query-functions #'files-extras-auto-save-persist)
+(add-hook 'kill-buffer-query-functions #'files-extras-auto-save-persist)
 
 ;; reddit.com/r/emacs/comments/t07e7e/comment/hy88bum/?utm_source=reddit&utm_medium=web2x&context=3
 (defun files-extras-make-hashed-auto-save-file-name-a (fn)
@@ -511,6 +511,7 @@ current helpful buffer displays, then kill the buffer."
 
 ;;;;; Dispatcher
 
+;;;###autoload (autoload 'files-extras-dispatch "files-extras" nil t)
 (transient-define-prefix files-extras-dispatch ()
   "Dispatcher for files."
   ["Files"
@@ -518,7 +519,6 @@ current helpful buffer displays, then kill the buffer."
    ("," "inbox-desktop"   (lambda () (interactive) (find-file paths-file-inbox-desktop)))
    ("a" "agenda"          org-extras-agenda-switch-to-agenda-current-day)
    ("c" "config"          (lambda () (interactive) (find-file paths-file-config)))
-   ("d" "tlon-docs"       (lambda () (interactive) (find-file paths-file-tlon-docs)))
    ("e" "extras"          (lambda () (interactive) (files-extras-open-extras-package)))
    ("h" "tlon-ledger"     (lambda () (interactive) (find-file paths-file-tlon-ledger)))
    ("i" "anki"            (lambda () (interactive) (find-file paths-file-anki)))
@@ -530,17 +530,15 @@ current helpful buffer displays, then kill the buffer."
    ("r" "calendar"        (lambda () (interactive) (find-file paths-file-calendar)))
    ("s" "scratch"         (lambda () (interactive) (switch-to-buffer "*scratch*")))
    ("v" "films"           (lambda () (interactive) (find-file paths-file-films)))
-   ("w" "work"            (lambda () (interactive) (find-file paths-file-work)))
-   ("z" "variables"       (lambda () (interactive) (find-file paths-file-variables)))
-   ])
+   ("w" "work"            (lambda () (interactive) (find-file paths-file-work)))])
 
+;;;###autoload (autoload 'files-extras-packages-dispatch "files-extras" nil t)
 (transient-define-prefix files-extras-packages-dispatch ()
   "Dispatcher for personal package files."
   [["Tlön"
     ("b" "tlon-babel"       (lambda () (interactive) (files-extras-open-elpaca-package "tlon-babel")))
     ("c" "tlon-core"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-core")))
-    ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))
-    ]
+    ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))]
    ["Personal"
     ("a" "internet-archive" (lambda () (interactive )(files-extras-open-elpaca-package "internet-archive")))
     ("l" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))
@@ -548,8 +546,7 @@ current helpful buffer displays, then kill the buffer."
     ("o" "macos"            (lambda () (interactive )(files-extras-open-elpaca-package "macos")))
     ("m" "mullvad"          (lambda () (interactive )(files-extras-open-elpaca-package "mullvad")))
     ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))
-    ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))
-    ]])
+    ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))]])
 
 (provide 'files-extras)
 ;;; files-extras.el ends here

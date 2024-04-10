@@ -35,64 +35,80 @@
 (require 'tlon-babel-tts)
 (require 'zotra)
 
+;;;; Variables
+
+(defvar zotra-extras-most-recent-bibfile nil
+  "The bibfile of the most recently added entry.")
+
+(defvar zotra-extras-most-recent-bibkey nil
+  "The bibkey of the most recently added entry.")
+
 ;;;; Functions
 
-(defvar zotra-extras-most-recent-bibliography-file nil
-  "The most recent bibliography file to which an entry was added.")
-
-(defun zotra-extras-set-bibfile ()
-  "Prompt the user to select a value for `org-cite-global-bibliography'."
-  (require 'tlon-babel)
-  (completing-read "Bibfile" (list
-                              tlon-babel-refs-file-fluid
-                              paths-file-personal-bibliography-new)))
-
-(defun zotra-extras-add-entry-set-bibfile (orig-fun &optional
-						    url entry-format bibfile)
-  "Advice to set `org-cite-global-bibliography' before Zotra add commands.
-ORIG-FUN, URL, ENTRY-FORMAT, and BIBFILE are arguments passed to
+(defun zotra-extras-add-entry (&optional url-or-search-string entry-format bibfile)
+  "Like `zotra-extras-add-entry', but set BIBFILE and open in Ebib.
+Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry'
+to get the entry.
 `zotra-add-entry'."
-  (let ((bibfile (or bibfile
-		     (setq zotra-extras-most-recent-bibliography-file (zotra-extras-set-bibfile)))))
-    (funcall orig-fun url entry-format bibfile)))
-
-(advice-add 'zotra-add-entry :around #'zotra-extras-add-entry-set-bibfile)
-
-(declare-function org-ref-clean-bibtex-entry "org-ref-bibtex")
-(defun zotra-after-get-bibtex-entry-hook-function ()
-  "Function to trigger with `zotra-after-add-entry-hook'."
-  ;; (revert-buffer nil t)
-  (goto-char (point-max))
-  (bibtex-extras-convert-titleaddon-to-journaltitle)
-  (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
-  ;; (bibtex-extras-kill-field "keywords")
-  (zotra-extras-fix-octal-sequences)
-  (bibtex-clean-entry)
-  (org-ref-clean-bibtex-entry)
-  ;; (save-buffer)
-  (ebib-switch-to-database-nth (ebib-extras-get-db-number zotra-extras-most-recent-bibliography-file))
-  (let ((citekey (bibtex-extras-get-key)))
-    (ebib-extras-open-or-switch)
-    (ebib-extras-reload-database-no-confirm ebib--cur-db)
-    (ebib--update-buffers)
-    (ebib zotra-extras-most-recent-bibliography-file citekey)
-    (ebib--index-sort "Timestamp" 'descend)
-    (goto-char (point-min))
-    (ebib-extras-open-key citekey)
-    ;; we add this so that the latest entry is sorted in the bibtex
-    ;; file, instead of remaining at the end of it
-    (ebib-save-current-database t)))
+  (interactive)
+  (let* ((bibfile (or bibfile
+		      (setq zotra-extras-most-recent-bibfile (zotra-extras-set-bibfile)))))
+    (zotra-add-entry url-or-search-string entry-format bibfile)
+    (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey)))
 
 (defun zotra-extras-url-full-capture (&optional url)
   "Add URL to bibfile and generate associated PDF and HTML files."
   (interactive)
-  (require 'eww-extras)
-  (let ((url (simple-extras-get-url url)))
+  (let ((url (or url
+		 (read-string "Add entry from URL or search identifier: " (current-kill 0)))))
     (unless ebib--cur-db
       (ebib))
     (zotra-add-entry url)
     (eww-extras-url-to-pdf url)
     (eww-extras-url-to-html url)))
+
+;;;;; Bibfile
+
+(defvar tlon-babel-refs-file-fluid)
+(defun zotra-extras-set-bibfile ()
+  "Prompt the user to select a value for `org-cite-global-bibliography'."
+  (completing-read "Bibfile" (list
+                              tlon-babel-refs-file-fluid
+                              paths-file-personal-bibliography-new)))
+
+;;;;; Ebib
+
+(defun zotra-extras-open-in-ebib (bibkey)
+  "Open BIBKEY in Ebib after adding entry via `zotra-add-entry'."
+  (ebib-switch-to-database-nth (ebib-extras-get-db-number zotra-extras-most-recent-bibfile))
+  (ebib-extras-open-or-switch)
+  (ebib-extras-reload-database-no-confirm ebib--cur-db)
+  (ebib--update-buffers)
+  (ebib zotra-extras-most-recent-bibfile bibkey)
+  (ebib--index-sort "Timestamp" 'descend)
+  (goto-char (point-min))
+  (ebib-extras-open-key bibkey)
+  ;; we add this so that the latest entry is sorted in the bibtex
+  ;; file, instead of remaining at the end of it
+  (ebib-save-current-database t)
+  (if (y-or-n-p "Are the `type', `author', `date' and `title' fields correct? ")
+      (ebib-extras-process-entry)
+    (message "Fix the `type', `author', `date' and `title' fields, then run `ebib-extras-process-entry'.")))
+
+;;;;; Cleanup
+
+(declare-function org-ref-clean-bibtex-entry "org-ref-bibtex")
+(defun zotra-extras-after-add-process-bibtex ()
+  "Process newly added bibtex entry."
+  ;; TODO: check that there are no unsaved changes in
+  ;; `zotra-extras-most-recent-bibfile'
+  (goto-char (point-max))
+  (bibtex-extras-convert-titleaddon-to-journaltitle)
+  (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
+  (zotra-extras-fix-octal-sequences)
+  (bibtex-clean-entry)
+  (org-ref-clean-bibtex-entry)
+  (setq zotra-extras-most-recent-bibkey (bibtex-extras-get-key)))
 
 (defun zotra-extras-fix-octal-sequences ()
   "Replace octal sequences with corresponding characters.
@@ -109,6 +125,8 @@ Zotero-imported bibtex entries."
           (goto-char (point-min))
           (while (search-forward octal nil t)
             (replace-match char)))))))
+
+;;;;; Misc
 
 (defun zotra-extras-fetch-field (field url-or-search-string &optional ignore-errors)
   "Get FIELD value in bibliographic entry for URL-OR-SEARCH-STRING.

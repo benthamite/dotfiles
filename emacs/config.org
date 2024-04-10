@@ -65,6 +65,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elpaca-extras][elpaca-extras]]
 - [[#foundational][foundational]]
   - [[#org][org]]
+  - [[#jsonrpc][jsonrpc]]
   - [[#seq][seq]]
   - [[#general][general]]
   - [[#paths][paths]]
@@ -85,7 +86,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#tlon-core][tlon-core]]
   - [[#prot-common][prot-common]]
   - [[#prot-simple][prot-simple]]
-  - [[#misc][misc.]]
+  - [[#misc][misc]]
 - [[#secrets][secrets]]
   - [[#plstore][plstore]]
   - [[#epg-config][epg-config]]
@@ -121,6 +122,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-modern][org-modern]]
   - [[#org-modern-indent][org-modern-indent]]
   - [[#org-tidy][org-tidy]]
+  - [[#org-appear][org-appear]]
   - [[#faces][faces]]
   - [[#faces-extras][faces-extras]]
   - [[#face-remap][face-remap]]
@@ -200,6 +202,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dired-aux][dired-aux]]
   - [[#dired-extras][dired-extras]]
   - [[#dired-x][dired-x]]
+  - [[#dired-du][dired-du]]
   - [[#image-dired][image-dired]]
   - [[#nerd-icons-dired][nerd-icons-dired]]
   - [[#wdired][wdired]]
@@ -230,7 +233,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#date--time][date & time]]
   - [[#calendar][calendar]]
   - [[#calendar-extras][calendar-extras]]
-  - [[#loaddefs][loaddefs]]
+  - [[#holidays][holidays]]
   - [[#org-gcal][org-gcal]]
   - [[#org-gcal-extras][org-gcal-extras]]
   - [[#calfw][calfw]]
@@ -242,7 +245,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#history][history]]
   - [[#savehist][savehist]]
   - [[#simple][simple]]
-  - [[#chistory][chistory]]
   - [[#saveplace][saveplace]]
   - [[#session][session]]
   - [[#recentf][recentf]]
@@ -257,7 +259,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#imenu][imenu]]
   - [[#pcre2el][pcre2el]]
   - [[#wgrep][wgrep]]
-  - [[#elgrep][elgrep]]
 - [[#minibuffer-completion][minibuffer completion]]
   - [[#vertico][vertico]]
   - [[#embark][embark]]
@@ -338,7 +339,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-pdftools][org-pdftools]]
   - [[#nov][nov]]
   - [[#djvu][djvu]]
-- [[#prog-mode][prog-mode]]
+- [[#programing][programing]]
+  - [[#prog-mode][prog-mode]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
   - [[#s][s]]
@@ -353,7 +355,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#go][go]]
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
-  - [[#jsonrpc][jsonrpc]]
   - [[#csv-mode][csv-mode]]
   - [[#yaml][yaml]]
   - [[#js2-mode][js2-mode]]
@@ -404,7 +405,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-habit][org-habit]]
   - [[#org-contrib][org-contrib]]
   - [[#org-checklist][org-checklist]]
-  - [[#org-analyzer][org-analyzer]]
   - [[#org-make-toc][org-make-toc]]
   - [[#org2blog][org2blog]]
   - [[#org2blog-extras][org2blog-extras]]
@@ -412,7 +412,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-contacts][org-contacts]]
   - [[#org-autosort][org-autosort]]
   - [[#ox-clip][ox-clip]]
-  - [[#org-mime][org-mime]]
   - [[#elgantt][elgantt]]
   - [[#org-pomodoro][org-pomodoro]]
   - [[#org-pomodoro-extras][org-pomodoro-extras]]
@@ -421,7 +420,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-roam][org-roam]]
   - [[#org-roam-extras][org-roam-extras]]
   - [[#org-roam-ui][org-roam-ui]]
-  - [[#org-roam-browser-extension][org-roam-browser-extension]]
   - [[#org-transclusion][org-transclusion]]
   - [[#vulpea][vulpea]]
   - [[#vulpea-extras][vulpea-extras]]
@@ -513,7 +511,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#fatebook][fatebook]]
   - [[#tetris][tetris]]
 - [[#personal][personal]]
-  - [[#keyboard-maestro][Keyboard Maestro]]
+  - [[#keyboard-maestro][keyboard-maestro]]
 - [[#appendices][appendices]]
   - [[#key-bindings][key bindings]]
   - [[#profiling][profiling]]
@@ -529,7 +527,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 
 The contents of this code block are tangled to the ~early-init.el~ file.
 
-#+begin_src emacs-lisp :tangle (print tlon-init-file-early-init)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally nil t)
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 
@@ -561,7 +559,9 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
 
 When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshooting][follow these steps]].
 
-#+begin_src emacs-lisp
+- By default, ~elpaca~ makes shallow copies of all the repos it clones. You can specify the repo depth with the [[https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipe-keyword-depth][:depth]] keyword. What if, however, you want to turn a shallow repo into a full repo /after/ it has been cloned? There is a relatively obscure command in Magit that lets you do this: ~magit-remote-unshallow~. (Note that this not only passes the ~--unshallow~ flag but also restores access to all branches in addition to the main one.)
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 ;;; init.el --- Init File -*- lexical-binding: t -*-
 (defvar elpaca-installer-version 0.6)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -621,7 +621,7 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 
 We load ~use-package~ itself with ~elpaca~, then proceed to do the configuration with ~use-package~.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (elpaca elpaca-use-package
   (elpaca-use-package-mode)
   (setq elpaca-use-package-by-default t))
@@ -662,7 +662,7 @@ NAME and ARGS as in `use-package'."
 
 /[[file:extras/use-package-extras.el][use-package-extras]] collects my extensions for ~use-package~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package use-package-extras
   :after use-package
   :demand t)
@@ -677,7 +677,7 @@ NAME and ARGS as in `use-package'."
 
 /[[file:extras/elpaca-extras.el][elpaca-extras]] collects my extensions for ~elpaca~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package elpaca-extras
   :after elpaca use-package-extras
   :demand t)
@@ -694,11 +694,23 @@ NAME and ARGS as in `use-package'."
 
 We load ~org-mode~ early to prevent version conflicts. The package is configured properly later (see =org= section).
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org
   :demand t
   ;; :ensure org-plus-contrib
   )
+#+end_src
+
+** jsonrpc
+:PROPERTIES:
+:ID:       ECE3D86D-035D-461C-937F-DF39086E4C5C
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
+
+#+begin_src emacs-lisp
+(use-package jsonrpc
+  :demand t)
 #+end_src
 
 ** seq
@@ -709,7 +721,7 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/seq.el][seq]] provides sequence-manipulation functions that complement basic functions provided by ~subr.el~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 ;; https://github.com/progfolio/elpaca/issues/216#issuecomment-1868747372
 (defun elpaca-unload-seq (e)
   (and (featurep 'seq) (unload-feature 'seq t))
@@ -733,7 +745,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
 /[[https://github.com/noctuid/general.el][general]] supports more convenient key definitions./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package general
   :demand t
   :config
@@ -752,7 +764,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 :ID:       9D90809B-4CCF-4058-BB8B-396CF12B6E3F
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package paths
   :demand t)
 #+end_src
@@ -764,11 +776,12 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
 /~tlon-init~ is a private package that my team uses to manage their respective config files./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package tlon-init
   :elpaca (tlon-init
            :host github
            :repo "tlon-team/tlon-init"
+           ;; :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :after paths
   :demand t
@@ -785,7 +798,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
 /[[https://github.com/emacscollective/no-littering][no-littering]] keeps ~.emacs.d~ clean./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package no-littering
   :demand t
   :init
@@ -806,7 +819,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 :ID:       3411777E-E554-4EF3-9389-63242D4F3072
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ns-win)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ns-win
   :demand t
   :config
@@ -824,7 +837,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 :ID:       0A62A6C8-D3D8-4960-A809-35B60A479D2B
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature iso-transl
   :demand t
   :config
@@ -850,7 +863,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 /[[https://github.com/raxod502/el-patch][el-patch]] customizes the behavior of Emacs Lisp functions and be notified when a function so customized changes./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package el-patch
   :demand t
   :config
@@ -862,17 +875,17 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       E21AC33E-D108-4860-997C-A4982569005E
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package transient
   :after seq
   :demand t
   :config
   (setq transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
-  
+
   :general
   (transient-base-map
   "M-q" 'transient-quit-one))
-#+end_src 
+#+end_src
 
 ** transient-showcase
 :PROPERTIES:
@@ -880,7 +893,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :END:
 /[[https://github.com/positron-solutions/transient-showcase][transient-showcase]] provides code examples for interactive explanations of ~transient~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package transient-showcase
   :elpaca (transient-showcase
            :host github
@@ -893,7 +906,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       C8FB5BC6-6895-4D63-86A8-E49D6BB3001C
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature warnings
   :demand t
   :config
@@ -908,7 +921,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       191AB5FC-F979-4B71-84A0-D8FC108CEBD3
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature comp
   :defer 60
   :config
@@ -920,7 +933,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       630FB32E-8D10-47C5-98EB-B436C6CF97D9
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature bytecomp
   :demand t
   :config
@@ -932,7 +945,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       853A9EBB-356D-428E-AC94-F14BBDA78FB4
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emacs
   :demand t
   :config
@@ -950,7 +963,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       8514378A-0BA2-4A8E-971F-10C07ED4D38A
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :server)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature server
   :demand t
   :config
@@ -965,7 +978,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 /[[https://github.com/jwiegley/emacs-async][async]] is a simple library for asynchronous processing in Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package async
 :demand t)
 #+end_src
@@ -977,7 +990,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 /[[https://github.com/magit/emacsql][emacsql]] is a high-level Emacs Lisp RDBMS front-end./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package emacsql
   :demand t)
 #+end_src
@@ -987,7 +1000,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package tlon-core
   :elpaca (tlon-core
            :host github
@@ -999,7 +1012,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
   :general
   (markdown-mode-map
-   "s-y" 'tlon-core-slugify-clipboard))
+   "s-y" 'simple-extras-slugify-clipboard))
 #+end_src
 
 ** prot-common
@@ -1015,7 +1028,7 @@ Note Prot's clarification:
 Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
 #+end_quote
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package prot-common
   :elpaca (prot-common
            :host github
@@ -1041,7 +1054,7 @@ Note Prot's clarification:
 Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
 #+end_quote
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package prot-simple
   :elpaca (prot-simple
            :host github
@@ -1061,7 +1074,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
    "A-C-H-j" 'prot-simple-mark-sexp))
 #+end_src
 
-** misc.
+** misc
 :PROPERTIES:
 :ID:       72D2BA33-0E12-4893-B790-B132CE2F9404
 :END:
@@ -1077,7 +1090,7 @@ CLOCK: [2021-04-08 Thu 07:27]--[2021-04-08 Thu 08:13] =>  0:46
 CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emacs
   :config
   (setq default-directory paths-dir-dropbox)
@@ -1107,7 +1120,7 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 :ID:       5257E611-7953-4898-B743-25803EC7D9B4
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature plstore
   :demand t
   :init
@@ -1119,7 +1132,7 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 :ID:       012F15A3-7717-4B09-9F43-74DA6F5F7C1A
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature epg-config
   :demand t
   :config
@@ -1132,7 +1145,7 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 :ID:       FD3455F8-7CD3-4651-8063-304D4131F14E
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature epa-file
   :config
   (epa-file-enable))
@@ -1146,7 +1159,7 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature auth-source
   :demand t
   :preface
@@ -1154,6 +1167,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
     (defvar auth-sources))
   :config
   (setq auth-source-debug nil) ; set to t for debugging
+  (setq auth-source-do-cache nil) ; not sure why set to nil
   (setq auth-sources '(macos-keychain-internet macos-keychain-generic)))
 #+end_src
 
@@ -1164,7 +1178,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 
 /[[https://github.com/telotortium/emacs-oauth2-auto][emacs-oauth2-auto]] supports authentication to an OAuth2 provider from within Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package oauth2-auto
   :elpaca (oauth2-auto
            :host github
@@ -1177,7 +1191,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 :ID:       761A0B71-DA6A-42A1-8137-F4C857F029F0
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package password-store-otp
   :elpaca (password-store-otp :version (lambda (_) "0.1.5"))  ; github.com/progfolio/elpaca/issues/229
   :demand t)
@@ -1188,7 +1202,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 :ID:       80D05BB8-D440-417A-8D94-61F4EB79EA00
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package password-store
   :elpaca (password-store
             :host github
@@ -1217,7 +1231,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 
 /[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://en.wikipedia.org/wiki/Pass_(software)][pass]]./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pass
   :demand t
   :after password-store
@@ -1241,7 +1255,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 
 /[[file:extras/pass-extras.el][pass-extras]] collects my extensions for ~pass~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package pass-extras
   :after pass
   :demand t
@@ -1264,20 +1278,13 @@ CLOCK: [2021-05-29 Sat 13:52]--[2021-05-29 Sat 14:10] =>  0:18
 CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature auth-source-pass
   :demand t
   :after auth-source pass
   :config
-  (setq auth-source-debug t)
-  (setq auth-source-do-cache nil)
   (auth-source-pass-enable)
-  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable)
-  (advice-add 'auth-source-pass-search :around
-              (lambda (orig-fun &rest args)
-                "Make `auth-source-pass' less verbose."
-                (let ((auth-source-debug nil))
-                  (apply orig-fun args)))))
+  (add-hook 'doom-modeline-before-github-fetch-notification-hook #'auth-source-pass-enable))
 #+end_src
 
 Note: to work, entries must conform to the pattern ~auth-sources/host~.
@@ -1297,7 +1304,7 @@ Note: to work, entries must conform to the pattern ~auth-sources/host~.
 CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature vc
   :config
   (setq vc-follow-symlinks t) ; don't ask for confirmation when opening symlinked file
@@ -1312,7 +1319,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 
 /[[file:extras/vc-extras.el][vc-extras]] collects my extensions for ~vc~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package vc-extras
   :after vc
   :demand t)
@@ -1323,8 +1330,9 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       FABAB5ED-7883-4F95-B3A2-3EB8F07DD33F
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature log-edit
+  :after savehist
   :config
   (push 'log-edit-comment-ring savehist-additional-variables))
 #+end_src
@@ -1334,7 +1342,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       33F1D5AA-3DA7-43EC-8ACD-0D8360445459
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature diff-mode
   :demand t
   :general
@@ -1347,7 +1355,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       987C9066-28ED-4B5A-944C-A90681182264
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ediff
   :config
   (setq ediff-window-setup-function 'ediff-setup-windows-plain)
@@ -1365,7 +1373,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 
 /[[file:extras/ediff-extras.el][ediff-extras]] collects my extensions for ~ediff~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ediff-extras
   :after ediff
   :demand t
@@ -1378,7 +1386,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       FE85CC7E-E2A0-4494-8D1E-A64A4C40013E
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature smerge-mode
   :general
   (smerge-mode-map
@@ -1397,7 +1405,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       8FCB87B4-2396-4A9A-8638-AEA8A5818252
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gh
   :elpaca (gh :version (lambda (_) "2.29"))) ; github.com/progfolio/elpaca/issues/229
 #+end_src
@@ -1407,7 +1415,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       917EA2B7-565D-4BC9-94BF-2BE6F1D9B9BC
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package closql
   :elpaca (closql
            :host github
@@ -1429,7 +1437,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
 /[[https://github.com/magit/magit][magit]] is a complete text-based user interface to Git./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package magit
   :demand t
   :config
@@ -1485,7 +1493,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
 Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magit already provides a feature called ~magit-extras~.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package magit-extra
   :after magit
   :demand t
@@ -1503,7 +1511,7 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
 
 /[[https://github.com/magit/ghub][ghub]] provides basic support for using the APIs of various Git forges from Emacs packages./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ghub
   :after auth-source
   :demand t)
@@ -1524,21 +1532,18 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 /[[https://github.com/magit/forge][forge]] let's one work with git forges directly from Magit./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package forge
-
-:after magit ghub emacsql auth-source-pass
+  :after magit ghub emacsql auth-source-pass
   :demand t
   :config
   (setq forge-owned-accounts '(("benthamite")))
   (setq forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
-  (run-with-idle-timer 60 t #'forge-pull-notifications)
 
   ;; why is this turned on by default!?
   (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
 
-  ;; hack: to mark the topic as read, we browse it in the background
-  (advice-add 'forge-visit-this-topic :before #'forge-extras-browse-topic-in-background)
+  (add-hook 'forge-issue-mode-hook 'simple-extras-visual-line-mode-enhanced)
 
   :general
   ((magit-mode-map forge-issue-list-mode-map)
@@ -1564,7 +1569,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 /[[https://github.com/magit/orgit-forge][orgit-forge]] supports ~org-mode~ links to ~forge~ buffers./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package orgit-forge
   :after org forge
   :demand t)
@@ -1577,7 +1582,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 /[[https://github.com/eatse21/forge-search.el/blob/master/forge-search.el][forge-search]] supports searching through issues and pull requests within ~forge~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package forge-search
   :elpaca (forge-search
            :host github
@@ -1593,12 +1598,16 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 /[[file:extras/forge-extras.el][forge-extras]] collects my extensions for ~forge~./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package forge-extras
   :after forge orgit-forge
   :demand t
   :config
   (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link)
+  ;; hack: to mark the topic as read, we browse it in the background
+  (advice-add 'forge-visit-this-topic :before #'forge-extras-sync-read-status)
+
+  (run-with-idle-timer 60 t #'forge-extras-pull-notifications)
 
   :general
   ((forge-topic-mode-map forge-notifications-mode-map magit-status-mode-map)
@@ -1614,7 +1623,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 /[[https://github.com/ryuslash/git-auto-commit-mode][git-auto-commit-mode]] allows for committing and pushing automatically after each save./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :git-auto-commit-mode)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package git-auto-commit-mode
   :config
   (setq-default gac-automatically-push-p nil)
@@ -1635,7 +1644,7 @@ CLOCK: [2021-04-03 Sat 16:26]--[2021-04-03 Sat 17:04] =>  0:38
 CLOCK: [2021-03-28 Sun 19:21]--[2021-03-28 Sun 19:35] =>  0:14
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp
 (setq-default line-spacing 2)
 #+end_src
 
@@ -1650,7 +1659,7 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 
 /[[https://gitlab.com/jabranham/mixed-pitch][mixed-pitch]] allows mixing fixed-pitch and variable-pitch fonts./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mixed-pitch)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package mixed-pitch
   :demand t
   :config
@@ -1669,7 +1678,7 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 :ID:       A0748A82-CE1C-4700-95E1-610B6CA7F8E0
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature fringe
   :demand t
   :init
@@ -1696,7 +1705,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 
 /[[https://github.com/minad/org-modern][org-modern]] prettifies org mode./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-modern
   :demand t
   :after org
@@ -1717,7 +1726,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 
 /[[https://github.com/jdtsmith/org-modern-indent][org-modern-indent]] extends org-modern stylistic improvements to contexts involving indentation./
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-modern-indent
   :elpaca (org-modern-indent
              :host github
@@ -1738,7 +1747,7 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
 
 /[[https://github.com/jxq0/org-tidy][org-tidy]] hides org-mode property drawers./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-tidy
   :after org
   :demand t
@@ -1746,6 +1755,21 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
   (setq org-tidy-properties-inline-symbol "")
   (setq org-tidy-protect-overlay nil) ; github.com/jxq0/org-tidy/issues/11
   (add-hook 'org-mode-hook #'org-tidy-mode))
+#+end_src
+
+** org-appear
+:PROPERTIES:
+:ID:       9F84EE2C-F5E7-4935-912E-5D286B897C19
+:END:
+
+/[[https://github.com/awth13/org-appear][org-appear]] toggles the visibility of hidden org mode element parts upon entering and leaving those elements./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package org-appear
+  :after org
+  :demand t
+  :config
+  (add-hook 'org-mode-hook 'org-appear-mode))
 #+end_src
 
 ** faces
@@ -1763,7 +1787,7 @@ CLOCK: [2021-02-27 Sat 18:27]--[2021-02-27 Sat 18:32] =>  0:05
 CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature faces
   :demand t
   :config
@@ -1781,7 +1805,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 
 /[[file:extras/faces-extras.el][faces-extras]] collects my extensions for ~faces~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package faces-extras
   :after faces
   :demand t
@@ -1799,7 +1823,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/face-remap.el][face-remap]] defines simple operations for face remapping./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature face-remap
   :demand t
   :general
@@ -1823,22 +1847,19 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 
 /[[https://protesilaos.com/emacs/modus-themes][modus-themes]] are a pair of accessible white/dark themes for Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package modus-themes
   :elpaca (modus-themes
-           :host sourcehut
+           :host github
            :repo "protesilaos/modus-themes")
   :after faces
   :demand t
 
-  :init
-  (setq modus-themes-org-blocks 'gray-background)
-
   :config
   (setq modus-themes-common-palette-overrides
         `((fringe unspecified) ; hide the fringe
-          ;; additional customizations can be added here:
-
+          (bg-prose-block-delimiter bg-inactive)
+          (fg-prose-block-delimiter gray)
           ;; for the rest, use the predefined intense values
           ,@modus-themes-preset-overrides-intense))
 
@@ -1857,7 +1878,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 
 /[[file:extras/modus-themes-extras.el][modus-themes-extras]] collects my extensions for ~modus-themes~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package modus-themes-extras
   :after modus-themes
   :demand t
@@ -1880,7 +1901,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 
 /[[https://sr.ht/~tsdh/highlight-parentheses.el/][highlight-parentheses]] dynamically highlights the parentheses surrounding point based on nesting-level using configurable lists of colors, background colors, and other properties./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package highlight-parentheses
   :demand t
   :config
@@ -1897,7 +1918,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 
 /[[https://git.sr.ht/~protesilaos/spacious-padding][spacious-padding]] increases the spacing of frames and windows./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package spacious-padding
   :elpaca (spacious-padding
            :tag "0.3.0") ; using tagged version to avoid error on 2024-02-21
@@ -1912,10 +1933,10 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 :ID:       6B52C1E5-898C-48C6-AB4C-4BFDE8C5A0B5
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emoji
   :general
-  ("H-e" 'emoji-insert))
+  ("H-E" 'emoji-insert))
 #+end_src
 
 ** image
@@ -1923,7 +1944,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 :ID:       E1A616FF-7D93-4AB4-AD44-44FB6550FD2E
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature image
   :defer 10
   :config
@@ -1943,7 +1964,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 :ID:       E39A1AC5-7BF7-4995-B116-BB6323C7605F
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature paren
   :demand t
   :config
@@ -1967,7 +1988,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 
 /[[https://github.com/seagle0128/doom-modeline/][doom-modeline]] is a tidier and more aesthetically pleasing modeline./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package doom-modeline
   :after ghub async
   :demand t
@@ -1980,7 +2001,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (setq doom-modeline-total-line-number t)
   (setq doom-modeline-position-column-line-format '(" %c %l"))
   (setq doom-modeline-enable-word-count t)
-  (setq doom-modeline-indent-info t)
+  (setq doom-modeline-indent-info nil)
 
   (dolist (cons  '((display-time-mode-hook . doom-modeline-override-time)
                    (display-battery-mode-hook . doom-modeline-override-battery)
@@ -1997,19 +2018,22 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 
 /[[file:extras/doom-modeline-extras.el][doom-modeline-extras]] collects my extensions for ~doom-modeline~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package doom-modeline-extras
-  :after doom-modeline gptel
+  :after doom-modeline
   :demand t
   :config
-  ;; we slightly tweak the `main' modeline to (1) display the major mode icon to
-  ;; the left of point position indicators and (2) and a `gptel' element. note
-  ;; that which elements are shown is controlled by the relevant `doom-modeline'
-  ;; user options. to hide the `gptel' element, set `doom-modeline-extras-gptel'
-  ;; to nil.
-  (doom-modeline-def-modeline 'main-pablo
-    '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
-    '(gptel compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
+  ;; the custom modeline needs to be set after `gptel-extras' loads, to display the associated element
+  (with-eval-after-load 'gptel-extras
+    ;; we slightly tweak the `main' modeline to (1) display the major mode icon to
+    ;; the left of point position indicators and (2) and a `gptel' element. note
+    ;; that which elements are shown is controlled by the relevant `doom-modeline'
+    ;; user options. to hide the `gptel' element, set `doom-modeline-extras-gptel'
+    ;; to nil.
+    (doom-modeline-def-modeline 'custom
+      '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
+      '(gptel gptel-cost compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
+    (doom-modeline-set-modeline 'custom t))
 
   (doom-modeline-mode))
 #+end_src
@@ -2022,7 +2046,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tab-bar)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature tab-bar
   :demand t
   :config
@@ -2031,8 +2055,8 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
   (setq auto-resize-tab-bar nil)
 
   (setf mode-line-misc-info
-        ;; When the tab-bar is active, don't show global-mode-string
-        ;; in mode-line-misc-info, because we now show that in the
+        ;; When the tab-bar is active, don't show `global-mode-string'
+        ;; in `mode-line-misc-info', because we now show that in the
         ;; tab-bar using `tab-bar-format-align-right' and
         ;; `tab-bar-format-global'.
         (remove '(global-mode-string ("" global-mode-string))
@@ -2052,7 +2076,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 /[[file:extras/tab-bar-extras.el][tab-bar-extras]] collects my extensions for ~tab-bar~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package tab-bar-extras
   :after tab-bar
   :demand t
@@ -2081,7 +2105,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 /[[https://github.com/joaotavora/breadcrumb/][breadcrumb]] displays project information in the header line./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package breadcrumb
   :demand t
   :config
@@ -2100,7 +2124,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 /[[https://github.com/emacsorphanage/fancy-battery][fancy-battery]] displays battery information in the modeline./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :tab-bar)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package fancy-battery
   :defer 10
   :config
@@ -2122,7 +2146,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 Note that the icons need to be installed via ~nerd-icons-install-fonts~. If you want to install the icons with =brew= on macOS, run ~brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font~.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package nerd-icons
   :demand t)
 #+end_src
@@ -2132,7 +2156,7 @@ Note that the icons need to be installed via ~nerd-icons-install-fonts~. If you 
 :ID:       08F1FCC3-7287-43B6-B455-C2D4377848E7
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature menu-bar
   :demand t
   :config
@@ -2144,7 +2168,7 @@ Note that the icons need to be installed via ~nerd-icons-install-fonts~. If you 
 :ID:       EBE7677A-4C70-4312-816A-E9F8E5999078
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature tool-bar
   :demand t
   :config
@@ -2156,7 +2180,7 @@ Note that the icons need to be installed via ~nerd-icons-install-fonts~. If you 
 :ID:       0AE186DB-0FC3-4B1B-B38E-7597B97A8DBA
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature scroll-bar
   :demand t
   :config
@@ -2168,7 +2192,7 @@ Note that the icons need to be installed via ~nerd-icons-install-fonts~. If you 
 :ID:       6473F2BF-059F-464B-859E-B8DA91B81DE2
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature delsel
   :demand t
   :config
@@ -2180,7 +2204,7 @@ Note that the icons need to be installed via ~nerd-icons-install-fonts~. If you 
 :ID:       EBCFE2FC-27B4-4C30-9D2A-A841B34271F7
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature hl-line
   :demand t
   :config
@@ -2203,7 +2227,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 
 /[[https://protesilaos.com/codelog/2022-09-08-lin-1-0-0/][lin]] is a stylistic enhancement for Emacs’ built-in ~hl-line-mode~. It remaps the ~hl-line~ face (or equivalent) buffer-locally to a style optimal for major modes where line selection is the primary mode of interaction./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package lin
   :demand t
   :config
@@ -2237,7 +2261,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 
 I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specifically, ~org-mode~ and ~markdown-mode~) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the other modes. See the above sections and the ~modus-themes-extras-set-faces~ function from ~modus-themes-extras~.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package hl-sentence
   :elpaca (hl-sentence
            :host github
@@ -2255,7 +2279,7 @@ I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specific
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jit-lock.el][jit-lock]] provides just-in-time fontification./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature jit-lock
   :defer 10
   :config
@@ -2302,7 +2326,7 @@ CLOCK: [2021-04-05 Mon 21:50]--[2021-04-05 Mon 22:15] =>  0:25
 CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature profiler
   :demand t)
 #+end_src
@@ -2315,7 +2339,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 
 /[[file:extras/profiler-extras.el][profiler-extras]] collects my extensions for ~profiler~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package profiler-extras
   :after profiler
   :demand t
@@ -2332,7 +2356,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 
 /[[https://savannah.nongnu.org/projects/so-long][so-long]] optimizes performance with minified code./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature so-long
   :demand t
   :config
@@ -2347,7 +2371,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 
 /[[https://github.com/emacsmirror/gcmh][GCMH]] enforces a sneaky Garbage Collection strategy to minimize GC interference with user activity./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gcmh
   :demand t
   :config
@@ -2361,7 +2385,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 
 Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][Prot]].
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emacs
   :demand t
   :config
@@ -2370,7 +2394,7 @@ Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c
   (setq inhibit-compacting-font-caches t)
   (setq redisplay-skip-fontification-on-input t)
   ;; emacs-lsp.github.io/lsp-mode/page/performance/
-  (setq read-process-output-max (* 1024 1024)) ; 1mb.
+  (setq read-process-output-max (expt 1024 2))
   (setq-default bidi-paragraph-direction 'left-to-right))
 #+end_src
 
@@ -2390,7 +2414,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :ID:       3493B00B-C36E-406F-B681-F145FD1684B2
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature simple
   :demand t
   :general
@@ -2403,7 +2427,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :ID:       73DC1518-87FD-48D7-9EE5-C863126905AD
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature simple
   :demand t
   :general
@@ -2422,7 +2446,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :ID:       9BCDE791-E716-4CFE-AED3-4E4E4874DDDE
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emacs
   :demand t
   :general
@@ -2435,7 +2459,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :ID:       E10CAF75-4C0C-4910-856F-39707E30A565
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emacs
   :demand t
   :general
@@ -2448,7 +2472,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :ID:       DF16B7CC-E0CF-4062-A0C2-93CBE83F619C
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emacs
   :demand t
   :general
@@ -2462,7 +2486,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :ID:       868B32C0-52FC-4131-9191-DD43BEAABCEA
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emacs
   :demand t
   :general
@@ -2475,7 +2499,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :ID:       E71DE3A8-E941-4864-8224-2326C22E3AEB
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature simple
   :demand t
   :general
@@ -2506,7 +2530,7 @@ CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
 :ID:       E2461097-8125-471E-A987-139F0D3EBEAA
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature simple
   :demand t
   :config
@@ -2537,6 +2561,7 @@ CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
    "C-H-M-z" 'crux-kill-line-backwards
    "C-M-<backspace>" nil
    "C-M-k" nil
+   "H-e" 'shell-command
    "H-v" 'yank
    "M-DEL" nil))
 #+end_src
@@ -2571,7 +2596,7 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
 
 /[[file:extras/simple-extras.el][simple-extras]] collects my extensions for ~simple~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package simple-extras
   :demand t
   :general
@@ -2639,7 +2664,7 @@ CLOCK: [2021-06-05 Sat 13:07]--[2021-06-05 Sat 13:10] =>  0:03
 CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emacs
   :demand t
   :config
@@ -2670,7 +2695,7 @@ CLOCK: [2021-07-16 Fri 09:44]--[2021-07-16 Fri 09:45] =>  0:01
 CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org
   :after org
   :general
@@ -2709,7 +2734,7 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature simple
   :demand t
   :config
@@ -2742,7 +2767,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
 :ID:       000730A4-2F70-4842-BD3E-2B843875D6EB
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature repeat
   :demand t
   :general
@@ -2755,7 +2780,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
 :ID:       796E696E-E797-4EDF-B4AC-2436507A1EFC
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature view
   :demand t
   :general
@@ -2767,7 +2792,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
 :ID:       64011AE8-B6DF-413B-A8CD-EF4E133272BD
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature sort
   :demand t
   :config
@@ -2784,7 +2809,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
 
 /[[https://github.com/casouri/vundo][vundo]] displays the undo history as a tree./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package vundo
   :demand t
   :config
@@ -2813,7 +2838,7 @@ CLOCK: [2021-03-27 Sat 18:01]--[2021-03-27 Sat 19:53] =>  1:52
 CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :outline)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature outline
   :demand t
   :config
@@ -2835,7 +2860,7 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 
 /[[file:extras/outline-extras.el][outline-extras]] collects my extensions for ~outline~./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :outline)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package outline-extras
   :after outline
   :demand t)
@@ -2851,7 +2876,7 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
 
 /[[https://github.com/jdtsmith/outli][outli]] is a simple comment-based outliner for Emacs./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package outli
   :elpaca (outli
            :host github
@@ -2894,7 +2919,7 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
 
 /[[https://github.com/purcell/unfill][unfill]] provides functions to do the reverse of ~fill-paragraph~ and ~fill-region~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package unfill)
 #+end_src
 
@@ -2903,7 +2928,7 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
 :ID:       2D69896F-CF17-4D0C-BEFE-E7C473FB1C2B
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature abbrev
   :demand t
   :config
@@ -2945,7 +2970,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 
 /[[https://github.com/joaotavora/yasnippet][yasnippet]] is a template system for Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package yasnippet
   :defer 5
   :config
@@ -2976,7 +3001,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 
 /[[https://github.com/AndreaCrotti/yasnippet-snippets][yasnippet-snippets]] is a public repository of yasnippet snippets./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package yasnippet-snippets
   :after yasnippet
   :demand t)
@@ -2993,7 +3018,7 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
 
 /[[https://github.com/magnars/expand-region.el][expand-region]] incrementally selects regions by semantic units./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package expand-region
   :general
    ("C-H-s-n" 'er/expand-region
@@ -3005,7 +3030,7 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
 :ID:       C079E18F-8A96-4A3E-8024-C0F9E29CD182
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature newcomment
   :general
   ("M-/" 'comment-line))
@@ -3016,7 +3041,7 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
 :ID:       FCF33E87-02CA-4244-9220-D7E6CEE7F7EF
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature skeleton
   :after mode-local
   :demand t
@@ -3055,7 +3080,7 @@ CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:18] =>  0:01
 
 /[[https://github.com/bbatsov/crux][crux]] is a “collection of ridiculously useful extensions”./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package crux
   :general
   ("M-l" 'crux-smart-open-line
@@ -3070,7 +3095,7 @@ CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:18] =>  0:01
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/button.el][button]] defines functions for inserting and manipulating clickable buttons in Emacs buffers./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature button
   :demand t
   :general
@@ -3087,7 +3112,7 @@ CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:18] =>  0:01
 
 /[[https://github.com/rolandwalker/back-button][back-button]] supports navigating the mark ring forward and backward./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package back-button
   :config
   (back-button-mode 1)
@@ -3108,7 +3133,7 @@ CLOCK: [2021-06-25 Fri 21:18]--[2021-06-25 Fri 21:19] =>  0:01
 
 /[[https://github.com/camdez/goto-last-change.el][goto-last-change]] moves point through buffer-undo-list positions./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package goto-last-change
   :general
   ("C-z" 'goto-last-change))
@@ -3121,7 +3146,7 @@ CLOCK: [2021-06-25 Fri 21:18]--[2021-06-25 Fri 21:19] =>  0:01
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/net/goto-addr.el][goto-addr]] activates URLs and e-mail addresses in buffers./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature goto-addr
   :demand t
   :config
@@ -3148,7 +3173,7 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/register.el][register]] saves text, rectangles, positions, and other things for later use./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature register
   :after savehist
   :demand t
@@ -3163,7 +3188,7 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 
 /[[file:extras/register-extras.el][register-extras]] collects my extensions for ~register~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package register-extras
   :after register
   :demand t
@@ -3176,7 +3201,7 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 :ID:       943D5DC0-7F0E-449C-8D21-089E051F1027
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature bookmark
   :demand t
   :config
@@ -3235,7 +3260,7 @@ CLOCK: [2021-07-01 Thu 20:45]--[2021-07-01 Thu 20:55] =>  0:10
 CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature files
   :after savehist
   :demand t
@@ -3295,7 +3320,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 
 /[[file:extras/files-extras.el][files-extras]] collects my extensions for ~files~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package files-extras
   :after alert
   :demand t
@@ -3341,7 +3366,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 
 /[[https://github.com/rejeep/f.el][f]] is a modern API for working with files and directories in Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package f
   :demand t)
 #+end_src
@@ -3351,7 +3376,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 :ID:       A0784673-AFD3-4111-AF83-C018CB12C897
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature locate
   :demand t
   :config
@@ -3363,7 +3388,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 :ID:       B4DE3D43-3085-4FA5-9DA4-1148CF49400C
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature autorevert
   :demand t
   :config
@@ -3406,7 +3431,7 @@ CLOCK: [2021-03-27 Sat 21:30]--[2021-03-27 Sat 21:33] =>  0:03
 CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature dired
   :config
   (setq dired-listing-switches "-AGFhlv --group-directories-first --time-style=long-iso")
@@ -3454,7 +3479,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 :ID:       F41AFC26-002A-4152-9FC7-E9AD92DF5BBA
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature dired-aux
   :after dired
   :demand t
@@ -3470,7 +3495,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 
 /[[file:extras/dired-extras.el][dired-extras]] collects my extensions for ~dired~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package dired-extras
   :after dired
   :demand t
@@ -3494,7 +3519,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature dired-x
   :demand t
   :after dired
@@ -3511,12 +3536,29 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
    "–" 'dired-omit-mode))
 #+end_src
 
+** dired-du
+:PROPERTIES:
+:ID:       22FCD9F4-A3EE-4605-BDB0-E90FC8471B21
+:END:
+:LOGBOOK:
+CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
+:END:
+/[[https://github.com/calancha/dired-du][dired-du]] displays the recursive size of directories in Dired./
+
+#+begin_src emacs-lisp :results silent (tlon-init-tangle-conditionally)
+(use-package dired-du
+  :after dired-extras
+  :config
+  (setq dired-du-size-format 'comma)
+  (add-hook 'dired-hide-details-mode-hook #'dired-extras-enable-dired-du-conditionally))
+#+end_src
+
 ** image-dired
 :PROPERTIES:
 :ID:       E07C1115-1881-4D5F-8B88-613DA4FD38A8
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature image-dired
   :after dired
   :config
@@ -3537,9 +3579,7 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 
 /[[https://github.com/rainstormstudio/nerd-icons-dired][nerd-icons-dired]] adds Dired support to nerd-icons./
 
-[2023-05-23 Tue 11:50] Some of the fonts were truncated, so I'm disabling this package for the time being and will continue to use ~all-the-icons~.
-
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package nerd-icons-dired
   :demand t
   :config
@@ -3551,7 +3591,7 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 :ID:       B892CCBB-FB26-48A6-97BE-EF37CE8FB332
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature wdired
   :demand t
   :config
@@ -3570,7 +3610,7 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 
 The code block below, based on [[https://www.djcbsoftware.nl/code/mu/mu4e/Attaching-files-with-dired.html][this]], enables ~mu4e~ file attachment directly from a Dired buffer.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature gnus-dired
   :demand t
   :after dired
@@ -3598,7 +3638,7 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
 
 /[[https://github.com/Fuco1/dired-hacks][dired-hacks]] is a collection of useful dired additions./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package dired-hacks
   :elpaca (dired-hacks :fetcher github :repo "Fuco1/dired-hacks")
   :after dired
@@ -3625,7 +3665,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 
 /[[https://gitlab.com/xuhdev/dired-quick-sort][dired-quick-sort]] provides persistent quick sorting of Dired buffers in various ways./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package dired-quick-sort
   :after dired
   :general
@@ -3640,7 +3680,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 
 /[[https://github.com/asok/peep-dired][peep-dired]] supports browsing file contents in other window while browsing directory in dired./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package peep-dired
   :after dired
   :general
@@ -3653,7 +3693,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 :ID:       40F49ECD-7225-4AD2-9E07-16C5A5857FFF
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature minibuffer
   :demand t
   :config
@@ -3675,7 +3715,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 :ID:       11E1F107-4D7A-40DE-AA8E-9D995A10A351
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ibuffer
   :demand t
   :general
@@ -3688,7 +3728,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 :ID:       0838A480-2BBF-4AAE-8DC0-FBED8D7E9B9E
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature executable
   :demand t
   :config
@@ -3702,7 +3742,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 :ID:       295BE204-62D9-4003-AFB0-06F6D817AE4C
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature uniquify
   :config
   (setq uniquify-buffer-name-style 'forward))
@@ -3715,7 +3755,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 
 /[[https://github.com/kaz-yos/reveal-in-osx-finder][reveal-in-osx-finder]] lets you open the file at point or the current file-visiting buffer in OS X Finder./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package reveal-in-osx-finder
   :defer 10
   :general
@@ -3735,7 +3775,7 @@ CLOCK: [2022-08-20 Sat 18:11]--[2022-08-20 Sat 18:32] =>  0:21
 
 Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/.emacs.d#tramp][configuration]].
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature tramp
   :config
   ;; Disable version control on tramp buffers to avoid freezes.
@@ -3788,7 +3828,7 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 
 /[[https://github.com/joostkremers/pandoc-mode][pandoc-mode]] is a minor mode for interacting with Pandoc./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pandoc-mode)
 #+end_src
 
@@ -3803,7 +3843,7 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 :END:
 /[[https://github.com/xuchunyang/curl-to-elisp][curl-to-elisp]] converts cURL command to Emacs Lisp code./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package curl-to-elisp)
 #+end_src
 
@@ -3837,7 +3877,7 @@ CLOCK: [2022-09-02 Fri 18:13]--[2022-09-02 Fri 21:20] =>  3:07
 CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :window)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature window
   :demand t
   :after simple-extras
@@ -3883,7 +3923,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 
 /[[file:extras/window-extras.el][window-extras]] collects my extensions for ~window~./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :window)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package window-extras
   :after alert window
   :demand t
@@ -3906,7 +3946,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :ID:       3ADE4889-B4BE-4733-ABE3-BECCD4F9A73D
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :frame)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature frame
   :demand t
   :config
@@ -3932,7 +3972,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 
 /[[file:extras/frame-extras.el][frame-extras]] collects my extensions for ~frame~./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :frame)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package frame-extras
   :after frame
   :demand t
@@ -3953,7 +3993,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 
 /[[https://github.com/deb0ch/emacs-winum][winum-mode]] supports naviation of windows and frames using number./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package winum
   :demand t
   :config
@@ -3983,7 +4023,7 @@ CLOCK: [2021-10-03 Sun 18:45]--[2021-12-30 Thu 12:11] => 2105:26
 
 /[[https://www.gnu.org/software/emacs/manual/html_node/emacs/Window-Convenience.html][winner-mode]] is a global minor mode that records the changes in the window configuration (i.e., how the frames are partitioned into windows), so that you can undo them./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature winner
   :demand t
   :config
@@ -4011,7 +4051,7 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55] =>  0:25
 
 /[[https://github.com/abo-abo/avy][avy]] lets you jump to any visible text using a char-based decision tree./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package avy
   :config
   (setq avy-case-fold-search nil)
@@ -4054,7 +4094,7 @@ Maybe the way to do this is by creating a ~pass-to-avy~ generic function, which 
 
 /[[file:extras/avy-extras.el][avy-extras]] collects my extensions for ~avy~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package avy-extras
   :after avy
   :demand t
@@ -4096,7 +4136,7 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
 
 /[[https://github.com/joostkremers/writeroom-mode][writeroom-mode]] provides distraction-free writing for Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package writeroom-mode
   :config
   (setq writeroom-global-effects '(writeroom-set-fullscreen
@@ -4141,7 +4181,7 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 
 /[[https://github.com/abo-abo/ace-link][ace-link]] lets you quickly follow links in Emacs, Vimium-styce-link]] lets you quickly follow links in Emacs, Vimium-style./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ace-link
   :defer 5
   :general
@@ -4169,7 +4209,7 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 
 /[[file:extras/ace-link-extras.el][ace-link-extras]] collects my extensions for ~ace-link~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ace-link-extras
   :after ace-link
   :demand t
@@ -4202,7 +4242,10 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 :ID:       4F3AEDB7-C357-40BA-B670-DE392FAF8F7A
 :END:
 
-#+begin_src emacs-lisp :results silent
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/calendar/calendar.el][calendar]] provides a collection of calendar-related functions./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature calendar
   :defer 10
   :config
@@ -4242,9 +4285,9 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 :END:
 /[[file:extras/calendar-extras.el][calendar-extras]] collects my extensions for ~calendar~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package calendar-extras
-  :after calendar
+  :after calendar auth-source-pass
   :defer 5
   :config
   (setq calendar-extras-location-name "Buenos Aires")
@@ -4255,17 +4298,20 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
    "s-b" 'calendar-extras-calfw-block-agenda))
 #+end_src
 
-** loaddefs
+** holidays
 :PROPERTIES:
 :ID:       08F898A1-71C0-4BF4-B6E8-5D6649DB230C
 :END:
-#+begin_src emacs-lisp :results silent
-  (use-feature loaddefs
-    :demand t
-    :init
-    (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
-                       (holiday-float 5 0 2 "Mother's Day")))
-                     (delete holiday holiday-general-holidays)))
+
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/calendar/holidays.el#L98][holidays]] provides holiday functions for ~calendar~./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature holidays
+  :demand t
+  :init
+  (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
+                     (holiday-float 5 0 2 "Mother's Day")))
+    (delete holiday holiday-general-holidays)))
 #+end_src
 
 ** org-gcal
@@ -4298,7 +4344,7 @@ CLOCK: [2021-07-26 Mon 21:15]--[2021-07-26 Mon 21:29] =>  0:14
 CLOCK: [2021-07-22 Thu 12:23]--[2021-07-22 Thu 12:50] =>  0:27
 CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 :END:
-/[[https://github.com/kidd/org-gcal.el][org-gcal]] integrates org with Google Calendar./
+/[[https://github.com/kidd/org-gcal.el][org-gcal]] integrates ~org-mode~ with Google Calendar./
 
 (That's the actively maintained fork; the [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][official repository]] is no longer maintained.)
 
@@ -4306,7 +4352,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 Note to self: if the package doesn't work after deploying a new profile, even after following the steps in the solution above, copy the ~oauth2-auto.plist~ file from a working profile.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-gcal)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-gcal
   :elpaca (org-gcal
            :type git
@@ -4336,7 +4382,7 @@ Note to self: if the package doesn't work after deploying a new profile, even af
 :END:
 /[[file:extras/org-gcal-extras.el][org-gcal-extras]] collects my extensions for ~org-gcal~./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-gcal)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-gcal-extras
   :after org-gcal calfw-org
   :demand t
@@ -4353,11 +4399,16 @@ Note to self: if the package doesn't work after deploying a new profile, even af
 CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 :END:
 
-/[[https://github.com/kiwanami/emacs-calfw][calf]] is a calendar framework for Emacs./
+/[[https://github.com/haji-ali/emacs-calfw][calf]] is a calendar framework for Emacs./
 
-#+begin_src emacs-lisp
+The original package is no longer maintained; the fork below adds a few improvements.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package calfw
-  :demand t)
+  :elpaca (calfw
+           :host github
+           :repo "haji-ali/emacs-calfw")
+  :demand)
 #+end_src
 
 ** calfw-blocks
@@ -4367,7 +4418,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 /[[https://github.com/ml729/calfw-blocks][calfw-blocks]] provides visual enhancements for calfw./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package calfw-blocks
   :elpaca (calfw-blocks
              :host github
@@ -4382,7 +4433,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 :END:
 /[[https://github.com/kiwanami/emacs-calfw/blob/master/calfw-org.el][calfw-org]] display org-agenda items in the calfw buffer./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package calfw-org
   :after calfw
   :demand t)
@@ -4393,7 +4444,9 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 :ID:       88CCE9CB-8284-4C8B-8264-A1E54E299941
 :END:
 
-#+begin_src emacs-lisp :results silent
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/time.el#L2][time]] provides facilities to display the current date and time, and a new-mail indicator mode line./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature time
   :demand t
   :after tab-bar
@@ -4421,7 +4474,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 /[[https://protesilaos.com/emacs/tmr][tmr]] set timers using a convenient notation./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package tmr
   :demand t
   :config
@@ -4437,9 +4490,9 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 :ID:       E1DB2097-7273-4FAC-BA84-67D46815FC45
 :END:
 
-/[[https://git.sr.ht/~josegpt/display-wttr][display-wttr]] displays weather information in the modeline (or tab-bar)./
+/[[https://git.sr.ht/~josegpt/display-wttr][display-wttr]] displays weather information in the mode line./
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :display-wttr)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package display-wttr
   :defer 10
   :config
@@ -4459,9 +4512,9 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 :ID:       D411AA79-C8FE-4E03-B06E-1BED5B7688BC
 :END:
 
-/savehist makes Emacs remember completion history across sessions./
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/savehist.el][savehist]] makes Emacs remember completion history across sessions./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature savehist
   :demand t
   :config
@@ -4475,11 +4528,12 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 :ID:       C7BA09A3-635F-4F31-A17A-F94F3B024522
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature simple
   :demand t
   :config
-  (dolist (var '(extended-command-history
+  (dolist (var '(command-history
+                 extended-command-history
                  kill-ring
                  mark-ring
                  shell-command-history
@@ -4492,25 +4546,14 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
    "M-l" 'next-history-element))
 #+end_src
 
-** chistory
-:PROPERTIES:
-:ID:       1604256B-74B9-41DC-9F19-7EAED0473FB6
-:END:
-
-#+begin_src emacs-lisp
-(use-feature chistory
-  :config
-  (push 'command-history savehist-additional-variables))
-#+end_src
-
 ** saveplace
 :PROPERTIES:
 :ID:       8DE4A4B7-4B96-445F-BC1F-B10BBF181F53
 :END:
 
-/saveplace makes Emacs remember point position in file across sessions./
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/saveplace.el][saveplace]] makes Emacs remember point position in file across sessions./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature saveplace
   :demand t
   :config
@@ -4524,7 +4567,7 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 /[[https://github.com/emacsorphanage/session][session]] lets you use variables, registers and buffer places across sessions./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package session
   :demand t
   :config
@@ -4541,9 +4584,9 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 :ID:       C22F4A07-A237-498A-999D-F841F3B10074
 :END:
 
-/recentf makes Emacs remember the most recently visited files./
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/recentf.el][recentf]] makes Emacs remember the most recently visited files./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature recentf
   :after no-littering
   :defer 10
@@ -4561,7 +4604,10 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 :ID:       438AD8A8-0F4F-4A1D-9BC9-110906944509
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :remember)
+
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/textmodes/remember.el][remember]] is a mode for quickly jotting down things to remember./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature remember
   :demand t
   :init
@@ -4591,7 +4637,7 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 :ID:       4B274841-062C-4511-8FF3-C850BAB05905
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature isearch
   :config
   (setq search-default-mode #'char-fold-to-regexp)
@@ -4653,7 +4699,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 /[[file:extras/isearch-extras.el][isearch-extras]] collects my extensions for ~isearch~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package isearch-extras
   :after isearch
   :demand t
@@ -4674,7 +4720,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :ID:       DC08C217-5005-4A65-986B-85EA876ECB6D
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature replace
   :config
   ;; emacs.stackexchange.com/a/12318/32089
@@ -4693,7 +4739,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 /[[https://git.sr.ht/~protesilaos/substitute][substitute]] efficiently replaces targets in the buffer or context./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package substitute
   :elpaca (substitute
            :host sourcehut
@@ -4715,7 +4761,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 /[[https://github.com/benma/visual-regexp.el][visual-regexp]] provides visual feedback to regexp search and replace./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package visual-regexp)
 #+end_src
 
@@ -4726,7 +4772,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 /[[https://github.com/benma/visual-regexp-steroids.el/][visual-regexp-steroids]] extends [[id:0DE5075B-AC82-4AB3-9B0A-3D84DC6CF942][visual-regexp]] to support additional regexp engines./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package visual-regexp-steroids
   :after visual-regexp
   :demand t
@@ -4747,7 +4793,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :ID:       CC1F3F93-2446-4399-A14D-9DCB6753D26B
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature imenu
   :demand t
   :config
@@ -4761,7 +4807,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 /[[https://github.com/joddie/pcre2el][pcre2el]] supports conversion between PCRE, Emacs and rx regexp syntax./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pcre2el)
 #+end_src
 
@@ -4772,8 +4818,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 /[[https://github.com/mhayashi1120/Emacs-wgrep][wgrep]] lets you create a writable grep buffer and apply the changes to files./
 
-
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package wgrep
   :demand t
   :config
@@ -4791,20 +4836,6 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :END:
 
 Some discussion [[https://github.com/mhayashi1120/Emacs-wgrep/issues/36][here]]. Maybe start by trying ~M-x wgrep-save-all-buffers~  next time this happens?
-
-** elgrep
-:PROPERTIES:
-:ID:       783E764B-7E5D-4CFB-9DE7-D87C5BF51518
-:END:
-
-/[[https://github.com/TobiasZawada/elgrep][elgrep]] is an Emacs implementation of grep that requires no external dependencies./
-
-#+begin_src emacs-lisp
-(use-package elgrep
-  :demand t
-  :general
-  ("A-C-p" 'elgrep))
-#+end_src
 
 * minibuffer completion
 :PROPERTIES:
@@ -4834,7 +4865,7 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
 
 /[[https://github.com/minad/vertico][vertico]] is a vertical completion UI based on the default completion system./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package vertico
   :elpaca (vertico :files (:defaults "extensions/*")
                    :includes (vertico-indexed
@@ -4888,7 +4919,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
 
 /[[https://github.com/oantolin/embark][embark]] provides contextually relevant actions in completion menus and in normal buffers./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package embark
   :demand t
   :config
@@ -4922,7 +4953,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 
 /[[https://github.com/minad/consult][consult]] provides practical commands based on the Emacs completion function ~completing-read~./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult
   :demand t
   :config
@@ -4954,7 +4985,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 
 /[[file:extras/consult-extras.el][consult-extras]] collects my extensions for ~consult~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package consult-extras
   :after consult
   :demand t
@@ -4975,7 +5006,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 
 /[[https://github.com/karthink/consult-dir][consult-dir]] enables insertion of paths into the minibuffer prompt./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-dir
   :after consult
   :defer 15
@@ -4994,7 +5025,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 :ID:       BA613BB1-A3CF-4C47-973A-6B54091B3C0E
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-git-log-grep
   :demand t)
 #+end_src
@@ -5009,7 +5040,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 
 /[[https://github.com/armindarvish/consult-gh][consult-gh]] provides an interface to interact with GitHub repositories./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-gh
   :elpaca (consult-gh
            :host github
@@ -5051,7 +5082,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 
 /[[https://github.com/armindarvish/consult-mu][consult-mu]] provides a dynamically updated search interface to mu4e./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-mu
   :elpaca (consult-mu :type git
                       :host github
@@ -5063,6 +5094,10 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
                                  consult-mu-contacts))
   :after consult mu4e
   :demand t
+  :config
+  (add-to-list 'vertico-multiform-commands
+               '(consult-mu buffer))
+
   :general
   ("A-M-m" 'consult-mu)
   ((mu4e-main-mode-map mu4e-headers-mode-map mu4e-view-mode-map)
@@ -5079,7 +5114,7 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
 
 /[[https://github.com/mohkale/consult-yasnippet/tree/cdb256d2c50e4f8473c6052e1009441b65b8f8ab][consult-yasnippet]] provides [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]] functionality to [[id:6405B8E7-6612-4D71-8C2C-A51F8808F4C6][yasnippet]]./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-yasnippet
   :after consult yasnippet
   :demand t
@@ -5104,7 +5139,7 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 
 /[[https://github.com/oantolin/embark/blob/master/embark-consult.el][embark-consult]] provides integration between [[id:19A4F21C-2169-4529-92E4-68E3A584DDAC][embark]] and [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]]./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package embark-consult
   :after embark consult
   :demand t
@@ -5119,7 +5154,7 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 
 /[[https://github.com/minad/marginalia][marginalia]] displays annotations (such as docstrings) next to completion candidates./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package marginalia
   :demand t
   :init
@@ -5133,7 +5168,7 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 
 /[[https://github.com/oantolin/orderless][orderless]] is an completion style that matches multiple regexps in any order./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package orderless
   :demand t
   :config
@@ -5150,7 +5185,7 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 
 /[[file:extras/orderless-extras.el][orderless-extras]] collects my extensions for ~orderless~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package orderless-extras
   :after orderless
   :demand t
@@ -5166,7 +5201,7 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 :ID:       1a127c06-43b5-435b-a4e5-becc61997794
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package nerd-icons-completion
   :demand t
   :after marginalia
@@ -5183,7 +5218,7 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ido
   :config
   (push 'ido-file-history savehist-additional-variables)
@@ -5200,7 +5235,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
 /[[https://github.com/justbur/emacs-which-key][which-key]] displays available keybindings in a popup./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package which-key
   :defer 10
   :init
@@ -5228,7 +5263,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 /[[https://github.com/minad/corfu][corfu]] enhances completion at point with a small completion popup./
 
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package corfu
   :elpaca (corfu :files (:defaults "extensions/*")
                  :includes (corfu-info
@@ -5245,6 +5280,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (setq corfu-count vertico-count)
   (setq corfu-info-documentation nil)
   (setq corfu-auto-prefix 3)
+  (setq corfu-auto-delay 0.5)
 
   (global-corfu-mode)
 
@@ -5270,7 +5306,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
 /[[file:extras/corfu-extras.el][corfu-extras]] collects my extensions for ~corfu~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package corfu-extras
   :after corfu
   :demand t
@@ -5286,7 +5322,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
 /[[https://github.com/minad/cape][cape]] provides completion-at-point extensions/
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package cape
   :demand t
   :after corfu
@@ -5313,7 +5349,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
 /[[https://github.com/xenodium/org-block-capf][org-block-cafp]] adds support for org block completion at point./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-block-capf
   :elpaca (org-block-capf :host github :repo "xenodium/org-block-capf")
   :after org
@@ -5338,7 +5374,7 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
 :ID:       B4F00E3C-2682-486D-B05A-E983ACC82D09
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature help
   :demand t
   :config
@@ -5358,12 +5394,12 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
 :ID:       263F5A59-1B63-47BC-B77B-8165FBBE3E75
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature help-at-pt
   :demand t
   :config
-  (setq help-at-pt-display-when-idle t)
-  (setq help-at-pt-timer-delay 0)       ; show help immediately when enabled
+  (setq help-at-pt-display-when-idle 'never)
+  (setq help-at-pt-timer-delay 1)       ; show help immediately when enabled
   (help-at-pt-set-timer))                ; set timer, thus enabling local help
 #+end_src
 
@@ -5379,7 +5415,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 
 /[[https://github.com/Wilfred/helpful][helpful]] enhances the Emacs help buffer./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package helpful
   :demand t
   :config
@@ -5403,7 +5439,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 :ID:       28966DB8-E893-4AEA-A7BD-8C18B8A97592
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature info
   :demand t
   :config
@@ -5424,7 +5460,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 :ID:       2F034283-E2C2-4F47-BDB6-295A5D5CEAF3
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature man)
 #+end_src
 
@@ -5435,7 +5471,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 
 Emacs 28 has a useful builtin [[https://www.masteringemacs.org/article/emacs-builtin-elisp-cheat-sheet][Elisp cheap sheet]]: shortdoc.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature shortdoc
   :demand t
   :general
@@ -5449,7 +5485,7 @@ Emacs 28 has a useful builtin [[https://www.masteringemacs.org/article/emacs-bui
 
 /[[https://github.com/xuchunyang/elisp-demos][elisp-demos]] displays examples for many Elisp functions./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elisp-demos
   :init
   (advice-add 'helpful-update :after 'elisp-demos-advice-helpful-update))
@@ -5468,7 +5504,7 @@ Emacs 28 has a useful builtin [[https://www.masteringemacs.org/article/emacs-bui
 CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature kmacro
   :defer 20
   :config
@@ -5493,7 +5529,7 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 
 /[[file:extras/kmacro-extras.el][kmacro-extras]] collects my extensions for ~kmacro~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package kmacro-extras
   :after kmacro
   :demand t
@@ -5511,7 +5547,7 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 :ID:       A34DA7F2-47E4-400E-B2C8-167BCAEA73E7
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature simple
   :demand t
   :config
@@ -5526,7 +5562,7 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature shell
   :demand t
   :general
@@ -5551,7 +5587,7 @@ CLOCK: [2021-04-15 Thu 21:10]--[2021-04-15 Thu 21:30] =>  0:20
 CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature eshell
   :config
   (setq eshell-banner-message "")
@@ -5580,7 +5616,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 /[[https://codeberg.org/akib/emacs-eat][emacs-eat]] is a terminal emulator./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package eat
   :elpaca (eat :type git
                :host codeberg
@@ -5597,7 +5633,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :ID:       E8C33B31-BFDD-45BF-ABDB-6F60353653CF
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package macos
   :elpaca (macos
            :host github
@@ -5613,7 +5649,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :ID:       692C4FF8-FD07-4D35-A9B3-A87F0E9A1B53
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature em-hist
   :demand t
   :after eshell
@@ -5629,7 +5665,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 /[[https://github.com/akreisher/eshell-syntax-highlighting][eshell-syntax-highlighting]] provides syntax highlighting for eshell-mode./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package eshell-syntax-highlighting
   :after eshell
   :demand t
@@ -5644,7 +5680,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 /[[https://github.com/xenodium/dwim-shell-command][dwim-shell-command]] supports Emacs shell commands with dwim behaviour./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package dwim-shell-command
   :elpaca (dwim-shell-command
              :host github
@@ -5663,7 +5699,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 /[[https://github.com/minad/jinx][jinx]] is a highly performant spell-checker for Emacs./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :jinx)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package jinx
   :demand t
   :config
@@ -5689,7 +5725,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 /[[file:extras/jinx-extras.el][jinx-extras]] collects my extensions for ~jinx~./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :jinx)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package jinx-extras
   :after jinx
   :demand t)
@@ -5702,7 +5738,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 /[[https://github.com/flycheck/flycheck][flycheck]] is a syntax-checker for Emacs./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :flycheck)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package flycheck
   :demand t
   :init
@@ -5714,14 +5750,15 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (setq flycheck-indication-mode nil)
   (setq flycheck-checker-error-threshold 5000)
 
-  ;; Disable `emacs-lisp-checkdoc' in `org-src' blocks.
-  (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+  (add-hook 'org-src-mode-hook
+            (lambda ()
+              "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
+              (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc))))
 
   (add-hook 'after-change-major-mode-hook
             (lambda ()
-              "Disable flycheck in the *scratch* and `notes' buffers."
-              (when (or (equal (buffer-name) "*scratch*")
-                        (equal (buffer-name) "notes"))
+              "Disable flycheck in selected buffers."
+              (when (member (buffer-name) '("*scratch*" "notes"))
                 (flycheck-mode -1))))
 
   :general
@@ -5735,8 +5772,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 /[[https://github.com/minad/consult-flycheck][consult-flycheck]] integrates ~flycheck~ with ~consult~./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :flycheck)
-(use-package consult-flycheck
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+  (use-package consult-flycheck
   :after consult flyckeck
   :demand t)
 #+end_src
@@ -5748,7 +5785,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 /[[https://github.com/purcell/flycheck-ledger][flycheck-ledger]] provides ~flycheck~ support for ~ledger-mode~./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :flycheck)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package flycheck-ledger
   :after flycheck ledger-mode
   :demand t)
@@ -5761,7 +5798,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 /[[https://github.com/emacs-languagetool/flycheck-languagetool][flycheck-languagetool]] provides ~flycheck~ support for [[https://languagetool.org/][LanguageTool]]./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :flycheck)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package flycheck-languagetool
   :after flycheck
   :demand t
@@ -5804,7 +5841,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 I only use =lsp= with =lsp-grammarly=. (There are versions of Grammarly for =flycheck= and =flyspell=, but they do not support premium plans.)
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package lsp-mode
   :defer 7
   :config
@@ -5829,7 +5866,7 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
 
 /[[https://github.com/emacs-grammarly/grammarly][grammarly]] is an API interface for [[https://www.grammarly.com/][Grammarly]]./
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :spelling)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package grammarly
   :defer 7
   :config
@@ -5851,7 +5888,7 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 
 /[[https://github.com/emacs-grammarly/lsp-grammarly][lsp-grammarly]] provides ~lsp-mode~ support for Grammarly./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :spelling)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package lsp-grammarly
   :after lsp-mode grammarly
   :demand t
@@ -5881,7 +5918,7 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 :ID:       0C671548-8B32-43D6-9F28-88A6B7E3AA06
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature text-mode
   :demand t
   :config
@@ -5893,7 +5930,7 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 :ID:       48431AA9-2ABE-403C-9E91-68066B24CB26
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature with-editor
   :general
   ("s-c" 'with-editor-finish
@@ -5916,7 +5953,7 @@ CLOCK: [2021-02-11 Thu 19:59]--[2021-02-11 Thu 20:02] =>  0:03
 
 I use it in combination with the [[https://ghosttext.fregante.com/][Ghost Text]] browser extension.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package atomic-chrome
   :defer 10
 
@@ -5946,7 +5983,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 
 /[[https://github.com/jrblevin/markdown-mode][markdown-mode]] is a major mode for editing Markdown-formatted text./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package markdown-mode
   :demand t
   :config
@@ -5981,13 +6018,14 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 
 /[[file:extras/markdown-mode-extras.el][markdown-mode-extras]] collects my extensions for ~markdown-mode~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package markdown-mode-extras
   :after markdown-mode
   :general
   ((gfm-mode-map markdown-mode-map)
    "A-C-H-t" 'markdown-mode-extras-copy-section
-   "s-r" 'markdown-mode-extras-remove-url-in-link)
+   "s-r" 'markdown-mode-extras-remove-url-in-link
+   "s-v" 'markdown-mode-extras-paste-with-conversion)
   ((ghm-mode-map markdown-mode-map org-mode-map)
    "H-s-v" 'markdown-mode-extras-org-paste-dwim))
 #+end_src
@@ -5999,7 +6037,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 
 /[[https://github.com/seagle0128/grip-mode][grip-mode]] provides org-mode and Github-flavored Markdown preview using grip./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package grip-mode
   :config
   (setq grip-github-user (auth-source-pass-get "user" "tlon/core/api.github.com/grip-mode"))
@@ -6015,7 +6053,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 :ID:       DA6275F2-F3A2-482E-B7A8-34633775F430
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature xwidget
   :general
   (xwidget-webkit-mode-map
@@ -6034,7 +6072,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 
 This package is required by the ~markdown-mode~ command ~markdown-edit-code-block~.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package edit-indirect)
 #+end_src
 
@@ -6045,7 +6083,7 @@ This package is required by the ~markdown-mode~ command ~markdown-edit-code-bloc
 
 /[[https://github.com/hexmode/mediawiki-el][mediawiki-el]] is an Emacs interface to editing mediawiki sites./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package mediawiki
   :demand t
   :after atomic-chrome)
@@ -6096,7 +6134,7 @@ To populate the database of historical prices:
 - currencies: https://github.com/wakatara/get-FX
   - couldn't make it work, so I just entered the rates manually once and will use those
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ledger-mode
   :defer 30
   :config
@@ -6197,7 +6235,7 @@ https://gitlab.com/chrisberkhout/pricehist
 
 /[[file:extras/ledger-mode-extras.el][ledger-mode-extras]] collects my extensions for ~ledger-mode~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ledger-mode-extras
   :after ledger-mode
   :demand t
@@ -6215,7 +6253,7 @@ https://gitlab.com/chrisberkhout/pricehist
 CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ledger-prices
   :elpaca (ledger-prices
            :host github
@@ -6242,7 +6280,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 
 /[[https://github.com/tlon-team/tlon-babel][tlon-babel]] is a set of Emacs commands that my team uses in various contexts./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package tlon-babel
   :elpaca (tlon-babel
            :host github
@@ -6283,9 +6321,10 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 
 /[[https://github.com/lorniu/go-translate][go-translate]] is an Emacs translator that supports multiple translation engines./
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package go-translate
   :demand t
+  :disabled
   :config
   (setq gts-translate-list '(("en" "es")))
   (setq gts-default-translator
@@ -6336,7 +6375,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 
 /[[https://github.com/SavchenkoValeriy/emacs-powerthesaurus][powerthesaurus]] is an Emacs client for [[https://www.powerthesaurus.org/][power thesaurus]]./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package powerthesaurus
   :general
   ("H-y" 'powerthesaurus-transient))
@@ -6353,7 +6392,7 @@ CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
 
 /[[https://github.com/benthamite/goldendict-ng][goldendict-ng]] integrates [[https://github.com/xiaoyifang/goldendict-ng][GoldenDict]] with Emacs./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package goldendict-ng
   :elpaca (goldendict-ng
            :host github
@@ -6386,7 +6425,7 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
 
 /[[https://github.com/SqrtMinusOne/reverso.el][reverso]] is an Emacs client for [[https://www.reverso.net/][reverso]]./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package reverso
   :elpaca (reverso
            :host github
@@ -6419,7 +6458,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
 /[[https://github.com/vedang/pdf-tools][pdf-tools]] is a support library for PDF files./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :pdf-tools)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pdf-tools
   :defer 10
   :mode ("\\.pdf\\'" . pdf-view-mode)
@@ -6476,7 +6515,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 
 /[[file:extras/pdf-tools-extras.el][pdf-tools-extras]] collects my extensions for ~pdf-tools~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package pdf-tools-extras
   :after pdf-tools
   :demand t
@@ -6489,6 +6528,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
    "C" 'pdf-count-extras-words
    "s-c" 'pdf-tools-extras-clear-page-selection
    "D" 'pdf-tools-extras-delete
+   "e" 'pdf-tools-extras-open-in-ebib
    "h" 'pdf-annot-extras-add-highlight-markup-annotation
    "t" 'pdf-tools-extras-toggle-writeroom
    "x" 'pdf-tools-extras-open-externally
@@ -6503,7 +6543,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 
 /[[https://github.com/benthamite/scroll-other-window][scroll-other-window]] enables scrolling of the other window in ~pdf-tools~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package scroll-other-window
   :elpaca (scroll-other-window
              :host github
@@ -6524,7 +6564,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 
 /[[https://github.com/007kevin/pdf-view-restore][pdf-view-restore]] adds support to saving and reopening last known pdf position./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pdf-view-restore
   :after pdf-tools
   :demand t
@@ -6539,7 +6579,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 
 /[[https://github.com/fuxialexander/org-pdftools][org-pdftools]] adds org link support for [[id:B4272338-4DCA-44FC-9330-804CC88BF189][pdf-tools]]./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-pdftools
   :after org pdf-tools
   :defer 30
@@ -6554,7 +6594,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 
 /[[https://depp.brause.cc/nov.el/][nov]] is a major mode for reading EPUBs in Emacs./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package nov)
 #+end_src
 
@@ -6565,16 +6605,21 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 
 /[[https://elpa.gnu.org/packages/djvu.html][djvu]] is a major mode for viewing and editing Djvu files in Emacs./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package djvu)
 #+end_src
 
-* prog-mode
+* programing
+:PROPERTIES:
+:ID:       35CB9C38-D0FE-458A-9F77-EC6702B2D976
+:END:
+
+** prog-mode
 :PROPERTIES:
 :ID:       A8700D18-574A-4093-938C-5707589DBB41
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature prog-mode
   :demand t
   :config
@@ -6599,7 +6644,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 :ID:       24475DE5-E129-4832-BAE5-C22D846C251E
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature elisp-mode
   :demand t
   :after simple-extras
@@ -6622,7 +6667,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 :ID:       E6608F6D-CC63-4A0B-A6B5-D012D3065801
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature lisp-mode
   :demand t
   :config
@@ -6637,7 +6682,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 
 /[[https://github.com/magnars/s.el][s]] is a string manipulation library./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package s
   :demand t)
 #+end_src
@@ -6647,7 +6692,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 :ID:       AACCFE88-084B-4428-82DB-7C695D9624C4
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature debug
   :demand t)
 #+end_src
@@ -6657,7 +6702,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 :ID:       021794F3-1663-449D-B4B7-41C6F3A72083
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature edebug
   :demand t
   :config
@@ -6676,7 +6721,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 :ID:       B69F718B-9BAE-4EAD-99DE-2C8C1E98CCA3
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature backtrace
   :config
   (setq backtrace-line-length nil))
@@ -6691,7 +6736,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 
 See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:30) for an introduction to this package.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package macrostep)
 #+end_src
 
@@ -6702,7 +6747,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 /[[https://github.com/clojure-emacs/clojure-mode][clojure-mode]] provides support for the Clojure(Script) programming language./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package clojure-mode)
 #+end_src
 
@@ -6711,7 +6756,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :ID:       D00C20E4-925A-41E1-95BD-5BF8BA03637C
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature python
   :config
   (setq python-shell-interpreter "python3")
@@ -6739,7 +6784,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :ID:       1D91CD1E-F1E6-4D69-AA42-83C81DC09D57
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pyenv-mode
   :after python
   :demand t)
@@ -6754,7 +6799,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 This needs to be configured.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ein)
 #+end_src
 
@@ -6765,7 +6810,7 @@ This needs to be configured.
 
 /[[https://github.com/dominikh/go-mode.el][go-mode]] provides support for the Go programming language./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package go-mode)
 #+end_src
 
@@ -6776,7 +6821,7 @@ This needs to be configured.
 
 /[[https://github.com/emacsorphanage/applescript-mode][applescript-mode]] is a major mode for editing AppleScript./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package applescript-mode)
 #+end_src
 
@@ -6785,19 +6830,9 @@ This needs to be configured.
 :ID:       7B4A0E63-4509-4BC0-AE08-08F517911959
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package json-mode
   :defer 10)
-#+end_src
-
-** jsonrpc
-:PROPERTIES:
-:ID:       0130C01A-AE7F-4A89-96C9-015813F42075
-:END:
-
-#+begin_src emacs-lisp
-(use-feature jsonrpc
-  :demand)
 #+end_src
 
 ** csv-mode
@@ -6807,7 +6842,7 @@ This needs to be configured.
 
 /[[https://elpa.gnu.org/packages/csv-mode.html][csv-mode]] is a major mode for editing comma-separated values./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package csv-mode
   :demand t)
 #+end_src
@@ -6818,7 +6853,7 @@ This needs to be configured.
 :END:
 /[[https://github.com/zkry/yaml.el][yaml]] is YAML parser written in Emacs List without any external dependencies./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package yaml
   :elpaca (yaml
            :host github
@@ -6833,7 +6868,7 @@ This needs to be configured.
 
 /[[https://github.com/mooz/js2-mode][js2-mode]] is a Javascript editing mode for Emacs./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package js2-mode
   :demand t)
 #+end_src
@@ -6846,7 +6881,7 @@ This needs to be configured.
 
 /[[https://github.com/cask/shut-up/][shut-up]] provides a macro to silence function calls./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package shut-up
   :demand t)
 #+end_src
@@ -6862,7 +6897,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 
 /[[https://github.com/AmaiKinono/puni][puni]] supports structured editing for many major modes./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package puni
   :general
   (prog-mode-map
@@ -6885,7 +6920,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/project.el][project]] provides various functions for dealing with projects./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature project
   :general
   ((emacs-lisp-mode-map)
@@ -6901,7 +6936,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 
 [2023-03-01 Wed 03:56] I don't remember why I created this hook.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature hideshow
   :demand t
 
@@ -6916,7 +6951,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 
 /[[https://github.com/Malabarba/aggressive-indent-mode][aggressive-indent]] keeps code always indented./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package aggressive-indent
   :defer 5
   :config
@@ -6934,7 +6969,7 @@ CLOCK: [2021-11-01 Mon 12:09]--[2021-11-01 Mon 12:10] =>  0:01
 
 /[[https://github.com/jorgenschaefer/elpy][elpy]] is an Emacs Python development environment./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elpy
   :config
   (setq elpy-rpc-python-command "python3")
@@ -6952,7 +6987,7 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
 
 /[[https://elpa.gnu.org/packages/eldoc.html][eldoc]] show function arglist or variable docstring in echo area./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature eldoc
   :demand t
   :config
@@ -6985,7 +7020,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 
 /[[https://github.com/copilot-emacs/copilot.el][copilot]] is an unofficial Copilot plugin for Emacs./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :copilot)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package copilot
   :elpaca (:host github
                  :repo "copilot-emacs/copilot.el"
@@ -7017,12 +7052,12 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 
 /[[file:extras/copilot-extras.el][copilot-extras]] collects my extensions for ~copilot~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package copilot-extras
   :after copilot
   :demand t
   :config
-  (setq copilot-extras-excluded-modes '(dsssl-mode))
+  (setq copilot-extras-excluded-modes '(dsssl-mode mhtml-mode))
 
   (add-hook 'prog-mode-hook #'copilot-extras-enable-conditionally))
 #+end_src
@@ -7037,8 +7072,12 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 /[[https://github.com/karthink/gptel][gptel]] is a ChatGPT client for Emacs./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gptel
+  :elpaca (gptel
+           :host github
+	   :repo "karthink/gptel"
+	   :branch "feature-vision")
   :after pass
   :defer 10
   :config
@@ -7052,8 +7091,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-make-gemini "Gemini"
     :stream t
     :key (auth-source-pass-get 'secret
-			       (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared)))
-  
+                               (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared)))
+
   :general
   ("M-c" 'gptel-send
    "H-s-a" 'gptel-abort
@@ -7068,18 +7107,19 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 /[[file:extras/gptel-extras.el][gptel-extras]] collects my extensions for ~gptel~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package gptel-extras
   :after gptel
   :demand t
   :config
   (gptel-extras-model-config 'globally "Gemini" "gemini-pro")
-  (add-hook 'prog-mode-hook (lambda () (gptel-extras-model-config nil "ChatGPT" "gpt-4-0125-preview")))
+  ;; for programming modes, we override the default and instead use GPT-4
+  (add-hook 'prog-mode-hook (lambda () (gptel-extras-model-config nil "ChatGPT" "gpt-4")))
 
-  (doom-modeline-set-modeline 'main-pablo t)
-  
   :general
-  ("H-s-c" 'gptel-extras-model-config))
+  ("H-s-c" 'gptel-extras-model-config)
+  (gptel-mode-map
+   "s-s" 'gptel-extras-save-buffer))
 #+end_src
 
 ** gpt-commit
@@ -7089,7 +7129,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 /[[https://github.com/ywkim/gpt-commit][gpt-commit]] generates conventional commit messages using GPT./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gpt-commit
   ;; :defer 5
   :config
@@ -7341,7 +7381,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 
 /[[https://orgmode.org/][org-mode]] is a major mode for keeping notes, authoring documents, computational notebooks, literate programming, maintaining to-do lists, planning projects, and more./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org
   :demand t
   :config
@@ -7479,7 +7519,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 
 /[[file:extras/org-extras.el][org-extras]] collects my extensions for ~org~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-extras
   :after org oc
   :demand t
@@ -7498,7 +7538,6 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    "A-C-s-n" 'org-extras-jump-to-first-heading
    "A-s-b" 'org-extras-set-todo-properties
    "A-s-f" 'org-extras-insert-todo-subheading-after-body
-   "s-v" 'org-extras-paste-html
    "A-s-v" 'org-extras-paste-image
    "A-s-z" 'org-extras-export-to-ea-wiki
    "M-w" 'org-extras-count-words
@@ -7514,12 +7553,16 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    "A-s-w" 'org-extras-refile-goto-latest)
   ((org-mode-map org-msg-edit-mode-map)
    "s-A-l" 'org-extras-url-dwim)
+  ((org-mode-map telega-chat-mode-map)
+   "s-v" 'org-extras-paste-with-conversion)
   (org-agenda-mode-map
    "RET" 'org-extras-agenda-switch-to-dwim
    "/" 'org-extras-agenda-done-and-next
    "\"" 'org-extras-agenda-postpone-and-next
    "b" 'org-extras-agenda-toggle-anniversaries
-   "SPC" 'org-extras-agenda-goto-and-start-clock))
+   "SPC" 'org-extras-agenda-goto-and-start-clock)
+  ((mu4e-view-mode-map eww-mode-map)
+   "s-c" 'org-extras-eww-copy-for-org-mode))
 #+end_src
 
 ** org-agenda
@@ -7567,7 +7610,7 @@ CLOCK: [2021-03-07 Sun 16:07]--[2021-03-07 Sun 16:41] =>  0:34
 CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-agenda
   :after org simple-extras
   :demand t
@@ -7746,7 +7789,7 @@ CLOCK: [2021-02-19 Fri 11:11]--[2021-02-19 Fri 11:21] =>  0:10
 CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-capture
   :after org
   :demand t
@@ -7846,7 +7889,7 @@ CLOCK: [2021-03-29 Mon 20:57]--[2021-03-29 Mon 21:13] =>  0:16
 CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-clock
   :after org
   :defer 20
@@ -7882,7 +7925,7 @@ CLOCK: [2023-03-18 Sat 13:14]--[2023-03-18 Sat 13:27] =>  0:13
 
 /[[https://github.com/dfeich/org-clock-convenience][org-clock-convenience]] provides convenience functions to work with org-mode clocking./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-clock-convenience
   :after org-clock
   :demand t
@@ -7901,7 +7944,7 @@ CLOCK: [2023-03-18 Sat 13:14]--[2023-03-18 Sat 13:27] =>  0:13
 
 I’m using a fork that fixes some functionality that broke when org changed ~org-time-stamp-formats~.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-clock-split
   :elpaca (org-clock-split
            :host github
@@ -7918,7 +7961,7 @@ I’m using a fork that fixes some functionality that broke when org changed ~or
 :ID:       AAB14053-B232-4627-8C1D-635FAE417A98
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-cycle
   :after org
   :demand t
@@ -7936,7 +7979,7 @@ CLOCK: [2021-04-24 Sat 13:10]--[2021-04-24 Sat 13:14] =>  0:04
 CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-archive
   :after org
   :demand t
@@ -7972,7 +8015,7 @@ CLOCK: [2023-02-17 Fri 11:34]--[2023-02-17 Fri 11:47] =>  0:13
 
 I normally archive subtrees with ~org-archive-to-archive-sibling~, but use ~org-archive-hierarchically~ for files in public repositories. ~org-archive-to-archive-sibling~ moves archived tasks to a heading, which is by default collapsed in org, but in Github archived tasks are always fully visible, creating a lot of clutter.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-archive-hierarchically
   :elpaca (org-archive-hierarchically
              :host gitlab
@@ -7988,7 +8031,7 @@ I normally archive subtrees with ~org-archive-to-archive-sibling~, but use ~org-
 CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-fold
   :after org
   :demand t
@@ -8005,7 +8048,7 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 :ID:       1A295AA4-31BD-4B2E-828B-5B3443AD8D35
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-faces
   :after org
   :demand t
@@ -8023,7 +8066,7 @@ CLOCK: [2023-03-09 Thu 20:07]--[2023-03-09 Thu 20:19] =>  0:12
 CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-id
   :after org
   :demand t
@@ -8046,7 +8089,7 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 :ID:       DD345C01-CEAC-4CEC-A8D5-89C16A0182CB
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-list
   :after org
   :demand t
@@ -8074,7 +8117,7 @@ CLOCK: [2021-02-24 Wed 06:47]--[2021-02-24 Wed 07:30] =>  0:43
 
 Much of this was taken from Yiming Chen's [[https://yiming.dev/blog/2018/03/02/my-org-refile-workflow/][My org refile workflow]].
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-refile
   :after org
   :demand t
@@ -8121,7 +8164,7 @@ CLOCK: [2021-03-23 Tue 12:13]--[2021-03-23 Tue 12:21] =>  0:08
 
 Enable speed keys. To trigger a speed key, point must be at the very beginning of an org headline. Type '?' for a list of keys.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-keys
   :after org
   :demand t
@@ -8174,7 +8217,7 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 :ID:       6BA48DB9-1861-40A3-9811-1B5D9F0E350E
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ol
   :after org
   :demand t
@@ -8192,7 +8235,7 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 :ID:       B1A25249-1E67-498D-8A68-0E4BDB3D0A2B
 :END:
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :bbdb)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ol-bbdb
   :after org bbdb
   :after ol
@@ -8212,7 +8255,7 @@ CLOCK: [2022-07-16 Sat 21:15]--[2022-07-17 Sun 10:49] => 13:34
 
 [[https://www.orgroam.com/manual.html#Mac-OS][This section of the org-roam manual]] describes how to set up ~org-protocol~ on macOS. Note that [[https://bitbucket.org/mituharu/emacs-mac/][emacs-mac]] supports ~org-protocol~ out of the box and doesn't require turning on the Emacs server.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-protocol
   :after org
   :defer 15)
@@ -8226,7 +8269,7 @@ CLOCK: [2022-07-16 Sat 21:15]--[2022-07-17 Sun 10:49] => 13:34
 CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ox
   :after org
   :defer 30
@@ -8261,7 +8304,7 @@ CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
 
 https://stackoverflow.com/questions/20089530/color-whole-section-line-in-org-mode-depending-on-tag
 
-#+begin_src emacs-lisp :results silent :tangle no
+#+begin_src emacs-lisp :tangle no
 (font-lock-add-keywords 'org-mode
                         '(("^.*:noexport:.*$" . font-lock-keyword-face)))
 #+end_src
@@ -8280,7 +8323,7 @@ CLOCK: [2022-07-17 Sun 19:17]--[2022-07-17 Sun 21:01] =>  1:44
 
 Hugo should be able to export ~org-cite~ citations.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ox-hugo
   :after ox)
 #+end_src
@@ -8292,7 +8335,7 @@ Hugo should be able to export ~org-cite~ citations.
 
 /[[https://github.com/kawabata/ox-pandoc][ox-pandoc]] is an org-mode exporter that uses Pandoc./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ox-pandoc
   :after org)
 #+end_src
@@ -8304,7 +8347,7 @@ Hugo should be able to export ~org-cite~ citations.
 
 /[[https://github.com/larstvei/ox-gfm][ox-gfm]] is a Github Flavored Markdown org-mode exporter./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ox-gfm
   :after org
   :defer 20)
@@ -8322,7 +8365,7 @@ CLOCK: [2021-04-05 Mon 19:18]--[2021-04-05 Mon 19:50] =>  0:32
 CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ob
   :after org
   :demand t
@@ -8352,7 +8395,7 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 :ID:       5D173B55-ED72-495C-80EE-39063BAB0550
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-src
   :after org
   :defer 5
@@ -8373,7 +8416,7 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 :ID:       6DB39CB9-0939-41CD-B3A4-4FC478F24077
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-table
   :after org
   :demand t
@@ -8397,7 +8440,7 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 
 /[[https://github.com/shankar2k/orgtbl-edit][orgtbl-edit]] allows editing a spreadsheet or text-delimited file as an org table./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package orgtbl-edit
   :elpaca (orgtbl-edit
              :host github
@@ -8416,7 +8459,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 
 /[[https://orgmode.org/manual/Org-Crypt.html][org-crypt]] encrypts the text under all headlines with a designated tag./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-crypt
   :after org
   :demand t
@@ -8433,7 +8476,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 :ID:       79B7B36E-D824-4D67-BBAC-E4E4D8FA628F
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-element
   :after org
   :demand t
@@ -8447,7 +8490,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 :ID:       43E5754F-7EB8-4FB7-8A92-B57D8BA2AF81
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-lint
   :after org)
 #+end_src
@@ -8457,7 +8500,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 :ID:       A4EE67E0-498C-4CE0-BBB2-E7F24DA6AD69
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-habit
   :after org
   :demand t
@@ -8482,7 +8525,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 
 /[[https://git.sr.ht/~bzg/org-contrib][org-contrib]] features add-ons to ~org-mode~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-contrib
   :after org
   :demand t)
@@ -8500,20 +8543,12 @@ CLOCK: [2021-04-20 Tue 23:28]--[2021-04-20 Tue 23:44] =>  0:16
 
 Allows reset of checkboxes in recurring tasks. This works only on headings that have the property ~RESET_CHECK_BOXES~ set to ~t~. You can set the property of a heading by invoking the command ~org-set-property~ with point on that heading or immediately under it.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-checklist
   :after org-contrib
   :demand t)
 #+end_src
 
-** org-analyzer
-:PROPERTIES:
-:ID:       33BBA839-D680-4D74-AF0F-C6225799DD53
-:END:
-
-To try:
-https://github.com/rksm/clj-org-analyzer/
-https://www.reddit.com/r/emacs/comments/cptwh4/org_analyzer_an_app_that_visualizes_orgmode_time/
 ** org-make-toc
 :PROPERTIES:
 :ID:       5BAB49C3-DB85-4CB1-9CF7-5FD72AFB4608
@@ -8524,7 +8559,7 @@ CLOCK: [2023-02-26 Sun 13:15]--[2023-02-26 Sun 13:28] =>  0:13
 
 /[[https://github.com/alphapapa/org-make-toc][org-make-toc]] generates automatic tables of contents for org files./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-make-toc
   :after org
   :defer 10)
@@ -8545,7 +8580,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 /[[https://github.com/org2blog/org2blog][org2blog]] lets you blog from Org mode to WordPress./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org2blog)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org2blog
   :after auth-source-pass
   :config
@@ -8586,7 +8621,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 /[[file:extras/org2blog-extras.el][org2blog-extras]] collects my extensions for ~org2blog~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org2blog-extras
   :after org2blog
   :demand t)
@@ -8599,7 +8634,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 /[[https://github.com/bastibe/org-journal][org-journal]] is an org-mode based journaling mode./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-journal
   :after org
   :config
@@ -8624,7 +8659,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 /[[https://repo.or.cz/org-contacts.git][org-contacts]] is a contacts management system for Org Mode./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-contacts
   :after org
   :defer 10
@@ -8648,7 +8683,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 /[[https://github.com/yantar92/org-autosort][org-autosort]] sorts entries in org files automatically./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-autosort
   :elpaca (org-autosort :type git :host github :repo "yantar92/org-autosort")
   :after org)
@@ -8661,45 +8696,19 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 /[[https://github.com/jkitchin/ox-clip][ox-clip]] copies selected regions in org-mode as formatted text on the clipboard./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ox-clip
   :after org
   :demand t
   :config
-  (defun ox-clip-formatted-copy-advice (r1 r2)
-    (interactive "r")
-    (let* ((collection '(("HTML" . "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
-                         ("Markdown" . "pandoc -f html -t markdown - | grep -v \"^:::\" | sed 's/{#.*}//g' | pbcopy")))
-           (choice (completing-read "Destination: " collection)))
-      (setq ox-clip-osx-cmd (alist-get choice collection nil nil #'string=))))
-
-  (advice-add 'ox-clip-formatted-copy :before #'ox-clip-formatted-copy-advice)
+  ;; github.com/jkitchin/ox-clip/issues/13
+  (setq ox-clip-osx-cmd
+        '(("HTML" . "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
+          ("Markdown" . "pandoc --wrap=none -f html -t markdown - | grep -v \"^:::\" | sed 's/{#.*}//g' | pbcopy")))
 
   :general
   ((org-mode-map)
    "s-c" 'ox-clip-formatted-copy))
-#+end_src
-
-** org-mime
-:PROPERTIES:
-:ID:       EB437B48-CEB2-4727-8910-627061F4701F
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-04 Tue 17:42]--[2021-05-04 Tue 17:54] =>  0:12
-CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
-:END:
-
-/[[https://github.com/org-mime/org-mime][org-mime]] lets you send HTML email using Org-mode HTML export./
-
-[2024-02-13 Tue] Temporarily disabling to test whether I need this.
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package org-mime
-  :after org
-  :general
-  (org-mode-map
-   "s-m" 'org-mime-htmlize
-   "s-A-m" 'org-mime-org-subtree-htmlize))
 #+end_src
 
 ** elgantt
@@ -8709,7 +8718,7 @@ CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
 
 /[[https://github.com/legalnonsense/elgantt/][elgantt]] is a gantt chart for org mode./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elgantt
   :elpaca (elgantt
              :host github
@@ -8733,7 +8742,7 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 
 /[[https://github.com/marcinkoziej/org-pomodoro][org-pomodoro]] provides org-mode support for the Pomodoro technique./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-pomodoro
   :after org
   :defer 10
@@ -8762,7 +8771,7 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 :ID:       6D8C1A4B-3131-4175-AB23-4C3DDA311872
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-pomodoro-extras
   :after org-pomodoro
   :demand t)
@@ -8773,12 +8782,13 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 :ID:       89ED4046-C75A-441C-BEF8-DC4322F0167F
 :END:
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pomodoro-centile
   :elpaca (:host github
                  :repo "benthamite/pomodoro-centile"
                  :depth nil)
   :after org-pomodoro
+  :disabled
   :demand t
   :config
   (setq pomodoro-centile-history-file (file-name-concat paths-dir-dropbox "misc/pomodoro-centile-history"))
@@ -8840,7 +8850,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
 /[[https://github.com/org-roam/org-roam][org-roam]] is a Roam replica with org-mode./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-roam)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-roam
   :after org emacsql
   :demand t
@@ -8946,7 +8956,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
 /[[file:extras/org-roam-extras.el][org-roam-extras]] collects my extensions for ~org-roam~./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :org-roam)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-roam-extras
   :after org-roam
   :defer 5
@@ -8982,7 +8992,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
 
 /[[https://github.com/org-roam/org-roam-ui][org-roam-ui]] is a graphical frontend for exploring org-roam./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-roam-ui
   :elpaca
   (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
@@ -8998,15 +9008,6 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
   (setq org-roam-ui-open-on-start nil))
 #+end_src
 
-** org-roam-browser-extension
-:PROPERTIES:
-:ID:       5461B907-53F6-4D99-B70C-45E9C3902EB4
-:END:
-
-[[https://github.com/madnificent/org-roam-browser-extension][org-roam-browser-extension]] indicates via a browser icon whether you have ~org-roam~ notes on the web page you are visiting.
-
-I should check this out.
-
 ** org-transclusion
 :PROPERTIES:
 :ID:       8D8E5E44-248E-485F-9C74-E1D7A8A19D15
@@ -9014,7 +9015,7 @@ I should check this out.
 
 /[[https://github.com/nobiot/org-transclusion][org-transclusion]] supports [[https://en.wikipedia.org/wiki/Transclusion][transclusion]] with org-mode./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-transclusion
   :after org
   :defer 5
@@ -9059,7 +9060,7 @@ I use this package to define a dynamic agenda, as explained and illustrated [[ht
 2. I then exclude some headings with IDs from the org-roam database. See the variables ~org-roam-file-exclude-regexp~ and ~org-roam-db-node-include-function~  under the ~org-roam~ section of this file.
 3. Finally, I selectively add to ~org-agenda-files~ files that satisfy certain conditions (as defined by ~vulpea-extras-project-p~) and files modified recently (as specified by ~org-roam-extras-recent~), and exclude from ~org-agenda-files~ files listed in ~org-extras-agenda-files-excluded~.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :vulpea)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package vulpea
   :after org org-roam
   :demand t)
@@ -9073,7 +9074,7 @@ I use this package to define a dynamic agenda, as explained and illustrated [[ht
 
 /[[file:extras/vulpea-extras.el][vulpea-extras]] collects my extensions for ~vulpea~./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :vulpea)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package vulpea-extras
   :after vulpea
   :demand t
@@ -9102,7 +9103,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 /[[https://github.com/org-noter/org-noter][org-noter]] is an org-mode document annotator./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-noter
   :elpaca (org-noter
            :host github
@@ -9133,7 +9134,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 /[[file:extras/org-noter-extras.el][org-noter-extras]] collects my extensions for ~org-noter~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-noter-extras
    :after org-noter
    :demand t)
@@ -9156,7 +9157,7 @@ CLOCK: [2021-07-26 Mon 15:14]--[2021-07-26 Mon 15:56] =>  0:42
 CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature oc
   :after org
   :demand t
@@ -9182,7 +9183,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 :ID:       72710244-0369-4C12-8B83-0674EE0E11D5
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature oc-csl
   :after oc
   :demand t)
@@ -9198,7 +9199,7 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
 
 /[[https://github.com/andras-simonyi/citeproc-el][citeproc]] is a CSL 1.0.2 Citation Processor for Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package citeproc
   :demand t)
 #+end_src
@@ -9214,7 +9215,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 
 /bibtex is major mode for editing and validating BibTeX ~.bib~ files./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature bibtex
   :after ebib
   :demand t
@@ -9241,7 +9242,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (setq bibtex-autokey-year-title-separator "")
   (setq bibtex-autokey-preserve-case t)
   ;; Remove accents
-  (setq bibtex-autokey-before-presentation-function 'bibtex-extras-asciify-string)
+  (setq bibtex-autokey-before-presentation-function 'simple-extras-asciify-string)
   ;; check tweaked version of `bibtex-format-entry' above
   (setq bibtex-entry-format '(opts-or-alts-fields last-comma delimiters page-dashes))
   (setq bibtex-field-indentation 8) ; match ebib value
@@ -9356,7 +9357,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 
 /[[file:extras/bibtex-extras.el][bibtex-extras]] collects my extensions for ~bibtex~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package bibtex-extras
   :defer 1
   :config
@@ -9404,7 +9405,7 @@ CLOCK: [2021-07-10 Sat 22:07]--[2021-07-10 Sat 22:07] =>  0:00
 
 The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-bibtex]].
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package bibtex-completion
   :elpaca (bibtex-completion
            :version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
@@ -9427,7 +9428,7 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
 :ID:       E7420E36-9396-48A5-9FD2-6A4CA4610324
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package bibtex-completion-extras
   :after bibtex-completion
   :demand t)
@@ -9449,7 +9450,7 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
 
 /[[https://github.com/org-roam/org-roam-bibtex][org-roam-bibtex]] integrates [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]] and [[id:42191633-D2A1-4EDB-903F-3965ECB61510][bibtex]]./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-roam-bibtex
   :defer 5
   :after bibtex-completion org-roam
@@ -9480,7 +9481,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 
 /[[https://github.com/bdarcus/bibtex-actions][citar]] is a package to quickly find and act on bibliographic references, and edit org, markdown, and latex academic documents./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package citar
   :elpaca (citar :type git
                  :host github
@@ -9551,7 +9552,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
 
 /[[file:extras/citar-extras.el][citar-extras]] collects my extensions for ~citar~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package citar-extras
   :after citar
   :demand t
@@ -9579,7 +9580,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
 
 /[[https://github.com/emacs-citar/citar/blob/main/citar-citeproc.el][citar-citeproc]] provides Citeproc reference support for citar./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature citar-citeproc
   :demand t
   :after citar citeproc citar-extras tlon-babel
@@ -9595,7 +9596,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
 
 /[[https://github.com/emacs-citar/citar/tree/9d7088c1fe82e9cfa508ead7ef7738c732556644#embark][citar-embark]] adds contextual access actions in the minibuffer and at-point via the citar-embark-mode minor mode./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package citar-embark
   :after citar embark
   :demand t
@@ -9610,7 +9611,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
 
 /[[https://github.com/emacs-citar/citar-org-roam][citar-org-roam]] provides integration between [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]] and [[id:2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17][org-roam]]./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package citar-org-roam
   :elpaca (citar-org-roam
            :host github
@@ -9627,7 +9628,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
 
 /[[https://github.com/jkitchin/org-ref][org-ref]] supports citations, cross-references, bibliographies in org-mode and useful bibtex tools./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-ref
   :defer 20
   :config
@@ -9742,7 +9743,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 /[[https://github.com/joostkremers/ebib][ebib]] ([[http://joostkremers.github.io/ebib/][homepage]]) is a BibTeX database manager for Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ebib
   :defer 5
   :init
@@ -9857,7 +9858,7 @@ The macro below generates the commands correctly. But attempting to define key b
 
 /[[file:extras/ebib-extras.el][ebib-extras]] collects my extensions for ~ebib~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ebib-extras
   :after ebib tlon-babel
   :demand t
@@ -9915,7 +9916,7 @@ The macro below generates the commands correctly. But attempting to define key b
 :ID:       D3DE21CB-388A-48A0-A7EB-E79DD48D5E81
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package bib
   :elpaca (bib
            :host github
@@ -9943,7 +9944,7 @@ The macro below generates the commands correctly. But attempting to define key b
 :END:
 /[[https://github.com/cpitclaudel/biblio.el][biblio]] supports browsing and importing bibliographic references from various databases./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package biblio)
 #+end_src
 
@@ -9955,6 +9956,14 @@ The macro below generates the commands correctly. But attempting to define key b
 /[[https://github.com/rougier/persid][persid]] is a persistent identifier library for Emacs./
 
 To check out.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package persid
+  :elpaca (persid
+           :host github
+           :repo "rougier/persid")
+  :disabled)
+#+end_src
 
 ** zotra
 :PROPERTIES:
@@ -9972,7 +9981,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
 /[[https://github.com/mpedramfar/zotra][zotra]] provides functions to get bibliographic information from a URL via [[https://www.zotero.org/support/translators][Zotero translators]], but without relying on the Zotero client./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package zotra
   :elpaca (zotra
            :host github
@@ -9982,16 +9991,13 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (setq zotra-use-curl nil)
   (setq zotra-url-retrieve-timeout 15)
   (setq zotra-default-entry-format "biblatex")
-  (setq zotra-after-add-entry-hook nil)
   (setq zotra-download-attachment-default-directory paths-dir-downloads)
   (setq zotra-backend 'zotra-server)
-  (setq zotra-local-server-directory (expand-file-name "~/source/zotra-server/"))
+  (setq zotra-local-server-directory (file-name-concat paths-dir-external-repos "zotra-server/"))
 
   :general
   ((ebib-index-mode-map ebib-entry-mode-map)
-   "W" 'zotra-download-attachment)
-  (ebib-index-mode-map
-   "a" 'zotra-add-entry))
+   "W" 'zotra-download-attachment))
 #+end_src
 
 ** zotra-extras
@@ -9999,10 +10005,9 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 :ID:       29BBF8F1-FC6D-4AFE-AEE4-6C01BB4AAA5F
 :END:
 
-
 /[[file:extras/zotra-extras.el][zotra-extras]] collects my extensions for ~zotra~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package zotra-extras
   :demand t
   :after zotra
@@ -10010,11 +10015,11 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   ;; this is the only way I can get this to work
   (add-hook 'elpaca-after-init-hook
             (lambda ()
-              (add-hook 'zotra-after-get-bibtex-entry-hook #'zotra-after-get-bibtex-entry-hook-function)))
+              (add-hook 'zotra-after-get-bibtex-entry-hook #'zotra-extras-after-add-process-bibtex)))
 
   :general
-  ((ebib-index-mode-map ebib-entry-mode-map eww-mode-map)
-   "z" 'zotra-extras-url-full-capture))
+   (ebib-index-mode-map
+   "a" 'zotra-extras-add-entry))
 #+end_src
 
 ** internet-archive
@@ -10024,7 +10029,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
 /[[https://github.com/benthamite/internet-archive][internet-archive]] supports the downloading of books from the Internet Archive./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package internet-archive
   :elpaca (internet-archive
            :host github
@@ -10043,7 +10048,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
 /[[https://github.com/benthamite/scihub][scihub]] supports the downloading of files from SciHub./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package scihub
   :elpaca (scihub
            :host github
@@ -10068,7 +10073,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :ID:       509B1DFA-E776-4BF5-8231-4A5984FD0150
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature simple
   :demand t
   :config
@@ -10083,7 +10088,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 
 /[[https://www.gnu.org/software/emacs/manual/html_node/emacs/Mail-Sending.html][sendmail]] is a mode that provides mail-sending facilities from within Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature sendmail
   :config
   (setq send-mail-function 'smtpmail-send-it))
@@ -10094,7 +10099,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :ID:       F05AFA09-978B-441D-B947-0DBEA4DBC7BF
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature smtpmail
   :config
   (setq smtpmail-smtp-user user-mail-address)
@@ -10103,7 +10108,6 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
   (setq smtpmail-smtp-server "smtp.gmail.com")
   (setq smtpmail-smtp-service 587))
 #+end_src
-
 
 ** async-mail-sending
 :PROPERTIES:
@@ -10117,7 +10121,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 
 <2023-12-01 Fri> Failed to send an email when I tested it. So not using for the time being.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package async-email-sending
   :disabled
   :elpaca (async-email-sending
@@ -10135,7 +10139,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 
 /[[https://www.gnu.org/software/emacs/manual/html_mono/message.html][message]] is a message composition mode./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emacs
   :demand t
   :config
@@ -10173,7 +10177,7 @@ https://gist.github.com/loziju/66d3f024e102704ff5222e54a4bfd50e
 
 /[[https://www.gnu.org/software/emacs/manual/html_node/emacs-mime/Composing.html][mml]] is a library that parses a MML (MIME Meta Language) and generates MIME messages./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature mml
   :general
   (message-mode-map
@@ -10262,7 +10266,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
 /[[https://github.com/djcb/mu][mu4e]] is an an Emacs-based e-mail client./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package mu4e
   :elpaca (mu4e :host github
                 :files ("mu4e/*.el" "build/mu4e/mu4e-meta.el" "build/mu4e/mu4e-config.el" "build/mu4e/mu4e.info")
@@ -10394,7 +10398,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 
 /[[file:extras/mu4e-extras.el][mu4e-extras]] collects my extensions for ~mu4e~./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package mu4e-extras
   :after mu4e
   :demand t
@@ -10445,7 +10449,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
 [2023-10-28 Sat] Some updates in ~mu~ v1.11.23 have broken ~org-msg~. To make it work, you can uninstall ~mu~ and then install the stable version via ~brew install mu~. Then use  [[https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipe-keyword-ref][ref]] keyword in the ~mu4e~ elpaca formula to install the commit of that version. As of today, ~brew info mu~ says the stable version of ~mu~ is 1.10.8. In the ~mu~ repo [[https://github.com/djcb/mu/releases][releases]] page, we see that the commit corresponding to this version is ~a8f002b~. So we use ~ref: "a8f002b"~.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-msg
   :after org mu4e
   :demand t
@@ -10564,7 +10568,7 @@ I.e. the message quoted when on replies to, or forwards, an existing email.
 
 /[[file:extras/org-msg-extras.el][org-msg-extras]] collects my extensions for ~org-msg~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-msg-extras
   :after org-msg
   :demand t
@@ -10629,7 +10633,7 @@ CLOCK: [2021-04-06 Tue 18:05]--[2021-04-06 Tue 18:34] =>  0:29
 
 To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a terminal, then ~M-x telega-server-build~.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package telega
   :defer 5
   :init
@@ -10718,7 +10722,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
 /[[https://github.com/zevlg/telega.el/blob/master/contrib/telega-mnz.el][telega-mnz]] displays syntax highlighting in Telega code blocks./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature telega-mnz
   :demand t
   :after telega
@@ -10737,7 +10741,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
 /[[https://github.com/zevlg/telega.el/blob/master/contrib/telega-dired-dwim.el][telega-dired-dwim]] enables Dired file attachments in Telega chat buffers./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature telega-dired-dwim
   :demand t
   :after telega)
@@ -10751,7 +10755,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
 /[[file:extras/telega-extras.el][telega-extras]] collects my extensions for ~telega~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package telega-extras
   :after telega telega-dired-dwim
   :demand t
@@ -10761,9 +10765,9 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
    "o" 'telega-extras-chat-org-capture)
   (telega-msg-button-map
    "." 'telega-extras-docs-change-open
+   "b" 'telega-extras-transcribe-audio
    "L" 'telega-extras-chat-org-capture-leo)
   (telega-chat-mode-map
-   "s-v" 'org-extras-paste-html
    "M-s-t" 'telega-extras-chatbuf-attach-most-recent-file)
   (dired-mode-map
    "M-s-a" 'telega-extras-dired-attach-send)
@@ -10779,7 +10783,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
 /[[https://github.com/zevlg/telega.el/blob/master/contrib/ol-telega.el][ol-telega]] enables Org mode links to Telega chats and messages./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ol-telega
   :demand t
   :after telega)
@@ -10796,7 +10800,7 @@ CLOCK: [2021-06-02 Wed 12:02]--[2021-06-02 Wed 12:39] =>  0:37
 
 /[[https://www.gnu.org/software/emacs/manual/html_mono/erc.html][erc]] is an IRC client for Emacs./
 
-#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :erc)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature erc
   :after auth-source-pass
   :config
@@ -10824,7 +10828,7 @@ CLOCK: [2021-10-07 Thu 14:31]--[2021-10-07 Thu 15:23] =>  0:52
 
 /[[https://github.com/emacs-circe/circe][circe]] is another IRC client for Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package circe)
 #+end_src
 
@@ -10849,7 +10853,7 @@ CLOCK: [2021-05-18 Tue 18:26]--[2021-05-18 Tue 18:54] =>  0:28
 CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature browse-url
   :config
   (setq browse-url-browser-function 'eww-browse-url)
@@ -10871,7 +10875,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 
 /[[file:extras/browse-url-extras.el][browse-url-extras]] collects my extensions for ~browse-url~./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package browse-url-extras
   :after browse-url s f
   :demand t
@@ -10890,7 +10894,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature shr
   :demand t
   :config
@@ -10918,7 +10922,7 @@ CLOCK: [2021-11-19 Fri 12:33]--[2021-11-19 Fri 12:35] =>  0:02
 
 /[[https://github.com/xuchunyang/shr-tag-pre-highlight.el][shr-tag-pre-highlight]] adds syntax highlighting for code blocks in HTML rendered by ~shr~./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package shr-tag-pre-highlight
   :after shr
   :defer 30
@@ -10936,7 +10940,7 @@ CLOCK: [2021-11-19 Fri 12:33]--[2021-11-19 Fri 12:35] =>  0:02
 
 Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm_source=share&utm_medium=web2x&context=3][here]].
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package shr-heading
   :elpaca (shr-heading
              :host github
@@ -10966,7 +10970,7 @@ CLOCK: [2021-04-21 Wed 16:35]--[2021-04-21 Wed 16:40] =>  0:05
 CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature eww
   :after simple-extras
   :config
@@ -10985,8 +10989,13 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
     (setq eww-use-browse-url
           (concat eww-use-browse-url "\\|" (car cons))))
 
-  (push 'eww-history savehist-additional-variables)
+  (dolist (var '(eww-history eww-prompt-history))
+    (push var savehist-additional-variables))
 
+  (advice-add 'eww :before
+              (lambda (url &optional _new-session)
+                "When browsing a YouTube URL, display the transcript and open the video with `mpv'."
+                (eww-extras-browse-youtube url)))
   :general
   ("A-w" 'eww)
   (eww-mode-map
@@ -11030,7 +11039,7 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 
 /[[file:extras/eww-extras.el][eww-extras]] collects my extensions for ~eww~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package eww-extras
   :after eww
   :demand t
@@ -11060,7 +11069,7 @@ Note Prot's clarification:
 Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
 #+end_quote
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package prot-eww
   :elpaca (prot-eww
            :host github
@@ -11089,7 +11098,7 @@ CLOCK: [2021-03-29 Mon 21:25]--[2021-03-29 Mon 21:41] =>  0:16
 
 I only use ~w3m~ to browse HTML email messages with ~mu4e~. For web browsing, I use ~eww~.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package w3m
   :general
   (w3m-minor-mode-map
@@ -11136,19 +11145,16 @@ CLOCK: [2021-04-08 Thu 21:19]--[2021-04-08 Thu 21:50] =>  0:31
 
 If the lines are breaking at the wrong places, set ~shr-width~ to the right value.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elfeed
-  :init
-  (run-with-idle-timer (* 10 60) t #'elfeed-update)
-
   :config
-  (setq-default elfeed-search-filter "+unread -wiki")
+  (setq-default elfeed-search-filter "+unread")
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
   (add-hook 'elfeed-show-mode-hook #'visual-line-mode)
 
-
   :general
+  ("A-f" 'elfeed)
   (eww-mode-map
    "c" 'elfeed-kill-link-url-at-point)
   (elfeed-show-mode-map
@@ -11193,20 +11199,19 @@ These key bindings produce the same behavior in eww.
 :ID:       57DE6F0B-9245-4E39-A747-6C2A6714B02A
 :END:
 
-
 /[[file:extras/elfeed-extras.el][elfeed-extras]] collects my extensions for ~elfeed~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package elfeed-extras
   :after elfeed
   :demand t
+  :config
+  ;; (advice-add 'elfeed :after #'elfeed-extras-auto-update)
+
   :general
-  ("A-f" 'elfeed-extras-toggle-session)
   (elfeed-search-mode-map
    "A" 'elfeed-extras-mark-all-as-read
    "e" 'elfeed-extras-toggle-read-entries
-   "q" 'elfeed-extras-toggle-session
-   "u" 'elfeed-extras-full-update
    "w" 'elfeed-extras-toggle-wiki-entries)
   (elfeed-show-mode-map
    "i" 'elfeed-extras-toggle-fixed-pitch
@@ -11222,12 +11227,13 @@ These key bindings produce the same behavior in eww.
 
 /[[https://github.com/remyhonig/elfeed-org][elfeed-org]] supports defining the feeds used by elfeed in an org-mode file./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elfeed-org
   :after elfeed
   :demand t
   :config
-  (setq rmh-elfeed-org-files (list paths-file-feeds-pablo paths-file-tlon-feeds))
+  (setq rmh-elfeed-org-files (list paths-file-feeds-pablo))
+  (setq rmh-elfeed-org-auto-ignore-invalid-feeds t)
 
   (elfeed-org))
 #+end_src
@@ -11239,12 +11245,13 @@ These key bindings produce the same behavior in eww.
 
 /[[https://github.com/karthink/elfeed-tube][elfeed-tube]] integrates ~elfeed~ with YouTube./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elfeed-tube
   :after elfeed
   :demand t
   :config
   (push '(text . shr-text) elfeed-tube-captions-faces)
+
   (elfeed-tube-setup))
 #+end_src
 
@@ -11255,7 +11262,7 @@ These key bindings produce the same behavior in eww.
 
 /[[https://github.com/karthink/elfeed-tube][elfeed-tube-mpv]] integrates ~elfeed-tube~ with ~mpv~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elfeed-tube-mpv
   :after elfeed-tube
   :demand t
@@ -11275,7 +11282,7 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
 
 /[[https://github.com/hrs/engine-mode][engine-mode]] is a minor mode for defining and querying search engines through Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package engine-mode
   :init
   (engine-mode)
@@ -11330,15 +11337,14 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine EABlogs
     "https://cse.google.com/cse?cx=013594344773078830993:k3igzr2se6y&q=%s"
     :keybinding "b b")
-  (defengine Bing
-    "https://www.bing.com/search?q=%s&PC=U316&FORM=CHROMN"
-    :keybinding "b i")
-  (defengine Blackwells
-    "http://bookshop.blackwell.co.uk/bookshop/search/?keyword=%s"
-    :keybinding "b l")
   (defengine BookFinder
     "http://www.bookfinder.com/search/?keywords=%s&st=xl&ac=qr&src=opensearch"
     :keybinding "b f")
+  (defengine Bing
+    "https://www.bing.com/search?q=%s&PC=U316&FORM=CHROMN"
+    :keybinding "b i")
+  (defengine UCBerkeleyLibrary    "https://search.library.berkeley.edu/discovery/search?query=any,contains,%s&tab=Default_UCLibrarySearch&search_scope=DN_and_CI&vid=01UCS_BER:UCB&offset=0"
+             :keybinding "b l")
   (defengine MercadoLibre
     "https://listado.mercadolibre.com.ar/%s#D[A:qwer]"
     :keybinding "c c")
@@ -11360,7 +11366,7 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine DuckDuckGo
     "https://duckduckgo.com/?q=%s"
     :keybinding "d d")
-    (defengine Diccionario-Panhispánico-de-Dudas
+  (defengine Diccionario-Panhispánico-de-Dudas
     "https://www.rae.es/dpd/%s"
     :keybinding "d p")
   (defengine EAForum
@@ -11544,8 +11550,8 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine PhilPapers
     "http://philpapers.org/s/%s"
     :keybinding "p p")
-  (defengine Reddit
-    "https://www.reddit.com/search?q=%s&utm_source=opensearch"
+  (defengine AnnasArchive
+    "https://annas-archive.org/search?index=&page=1&q=%s&ext=pdf&sort="
     :keybinding "r r")
   (defengine ReducingSuffering
     "http://reducing-suffering.org/?s=%s"
@@ -11636,7 +11642,7 @@ CLOCK: [2021-06-23 Wed 11:43]--[2021-06-23 Wed 11:51] =>  0:08
 
 /[[https://github.com/abo-abo/org-download][org-download]] supports drag and drop images to org-mode./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-download
   :after org
   :general
@@ -11655,7 +11661,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 
 /[[https://github.com/alphapapa/org-web-tools][org-web-tools]] supports viewing, capturing, and archiving web pages in org-mode./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-web-tools
   :defer 10
   :general
@@ -11671,7 +11677,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 
 /[[file:extras/org-web-tools-extras.el][org-web-tools-extras]] collects my extensions for ~org-web-tools~./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-web-tools-extras
   :after org-web-tools-extras
   :demand t)
@@ -11684,7 +11690,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 
 /[[https://github.com/tkf/emacs-request][request]] provides HTTP request for Emacs Lisp./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package request
   :defer 15)
 #+end_src
@@ -11696,7 +11702,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 
 /[[https://github.com/kiwanami/emacs-deferred][deferred]] provides simple asynchronous functions for emacs lisp./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package deferred
   :defer 15)
 #+end_src
@@ -11708,7 +11714,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 
 /[[https://github.com/davazp/graphql-mode][graphql-mode]] is a major mode for GraphQL./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package graphql-mode)
 #+end_src
 
@@ -11724,7 +11730,7 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
 
 /[[https://github.com/benthamite/mullvad][mullvad]] provides a few functions for interfacing with Mullvad, a VPN service./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mullvad)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package mullvad
   :elpaca (mullvad
            :host github
@@ -11776,7 +11782,7 @@ CLOCK: [2021-05-04 Tue 21:41]--[2021-05-04 Tue 21:56] =>  0:15
 
 EMMS is not powerful enough for my use case (tango DJ with a collection of over 70,000 tracks). But I'm exploring whether I can use it for specific purposes, such as batch-tagging.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package emms
   :config
   (require 'emms-setup)
@@ -11817,9 +11823,9 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 :END:
 
 
-/[[https://github.com/isamert/empv.el][empv]] is a media player based on mpv./
+/[[https://github.com/isamert/empv.el][empv]] is a media player based on [[https://mpv.io/][mpv]]./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package empv
   :elpaca (:host github
                  :repo "isamert/empv.el")
@@ -11828,9 +11834,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
   (setq empv-audio-dir paths-dir-music-tango)
   (setq empv-invidious-instance "https://invidious.fdn.fr/api/v1")
   (add-to-list 'empv-mpv-args "--ytdl-format=best") ; github.com/isamert/empv.el#viewing-youtube-videos
-  (advice-add 'eww :before
-              (lambda (url &optional _new-session)
-                (eww-extras-browse-youtube-in-mpv url)))
+
   :bind-keymap
   ("A-p" . empv-map))
 #+end_src
@@ -11847,7 +11851,7 @@ CLOCK: [2023-05-07 Sun 10:53]--[2023-05-07 Sun 11:27] =>  0:34
 
 Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dlp]], a ~youtube-dl~ fork.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ytdl
   :config
   (setq ytdl-command "yt-dlp")
@@ -11863,16 +11867,17 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 
 /[[https://github.com/gromnitsky/read-aloud.el][read-aloud]] is an Emacs interface to TTS (text-to-speech) engines./
 
-As a side note, to give Emacs access to the microphone on MacOS, clone ~https://github.com/DocSystem/tccutil~ and from the cloned repo, run ~sudo python3 tccutil.py -p /opt/homebrew/Cellar/emacs-mac/emacs-28.1-mac-9.0/Emacs.app --micro -e~ (some discussion [[https://scsynth.org/t/emacs-scsynth-and-microphone-permissions/3253][here]]).
+- To give Emacs access to the microphone on MacOS, clone ~https://github.com/DocSystem/tccutil~ and from the cloned repo, run ~sudo python3 tccutil.py -p /opt/homebrew/Cellar/emacs-mac/emacs-28.1-mac-9.0/Emacs.app --micro -e~ (some discussion [[https://scsynth.org/t/emacs-scsynth-and-microphone-permissions/3253][here]]).
+- To read with macOS directly, ~b-n~. In turn, ~b-h~ starts dictation. (These are system-wide shortcuts defined with Karabiner rather than bindings specific to Emacs.)
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package read-aloud
   :defer 20
   :config
   (setq read-aloud-engine "say")
 
   :general
-  ("C-H-r" 'read-aloud-this)) ; remember that `A-C-d' starts/stops dictation
+  ("C-H-r" 'read-aloud-this))
 #+end_src
 
 ** read-aloud-extras
@@ -11880,7 +11885,7 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
 :ID:       AA0F6FA2-2226-47C3-AE3F-7C8A1D542A17
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package read-aloud-extras
   :after read-aloud
   :demand t)
@@ -11896,7 +11901,7 @@ As a side note, to give Emacs access to the microphone on MacOS, clone ~https://
 :ID:       50FAD2F3-E501-408E-A9A2-8358FAA87C1C
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature calc
   :config
   (push 'calc-quick-calc-history savehist-additional-variables)
@@ -11922,7 +11927,7 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 
 /[[https://github.com/jwiegley/alert][alert]] is a Growl-like alerts notifier for Emacs./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package alert
   :demand t
   :config
@@ -11952,7 +11957,7 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 
 /[[https://github.com/alphapapa/unpackaged.el][unpackaged]] is a collection of useful Emacs Lisp code that isn't substantial enough to be packaged./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package unpackaged
   :elpaca (unpackaged
            :host github
@@ -11982,7 +11987,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
 /midnight runs custom processes every night./
 
-#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :midnight)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature midnight
   :defer 600
   :config
@@ -12030,7 +12035,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 [2023-04-09 Sun 02:20] I wasn't able to build it, but I was able to install it with ~M-x package-install~, from which I created a local repo.
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :bbdb)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package bbdb
   :elpaca (bbdb
            :host github
@@ -12066,7 +12071,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 /[[file:extras/bbdb-extras.el][bbdb-extras]] collects my extensions for ~bbdb~./
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :bbdb)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package bbdb-extras
   :after bbdb
   :demand t)
@@ -12079,7 +12084,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 /[[https://github.com/tohojo/bbdb-vcard][bbdb-vcard]] supports import and export for BBDB./
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :bbdb)
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package bbdb-vcard
   :after bbdb
   :config
@@ -12094,7 +12099,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 /[[https://github.com/tarsius/keycast][keycast]] shows the current command and its key in the mode line./
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package keycast
   :config
   ;; support for doom modeline (github.com/tarsius/keycast/issues/7)
@@ -12117,7 +12122,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 /[[https://github.com/pauldub/activity-watch-mode][activity-watch-mode]] is an Emacs watcher for [[https://activitywatch.net/][ActivityWatch]]./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package activity-watch-mode
   :demand t
   :config
@@ -12129,7 +12134,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 :ID:       7C328D33-DCFE-4E47-8B58-7C27E7F7C1DB
 :END:
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature custom
   :demand t
   :config
@@ -12144,7 +12149,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 /[[https://github.com/sonofhypnos/fatebook.el][fatebook]] is an Emacs package to create predictions on Fatebook./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package fatebook
   :elpaca (fatebook :repo "sonofhypnos/fatebook.el"
                     :host github
@@ -12161,7 +12166,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 And finally, the section you've all been waiting for.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature tetris
   :general
   (tetris-mode-map
@@ -12179,14 +12184,14 @@ And finally, the section you've all been waiting for.
 CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 :END:
 
-** Keyboard Maestro
+** keyboard-maestro
 :PROPERTIES:
 :ID:       1776C0C3-CEEC-4DED-B609-4DF0DF83B0C2
 :END:
 
 These bindings allow Keyboard Maestro to trigger various Emacs processes.
 
-#+begin_src emacs-lisp :results silent
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (general-define-key
  "C-H-M-S-c" 'org-extras-copy-heading-contents
  "C-H-M-S-g" 'orgmdb-fill-movie-properties
@@ -12355,6 +12360,15 @@ CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
 :END:
 
 For personal reference, these are the most recent Emacs installations (in reverse chronological order).
+
+[2024-03-18 Mon]:
+
+#+begin_src shell :tangle no
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@29 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+end_src
+
+???:
 
 #+begin_src shell :tangle no
 brew tap d12frosted/emacs-plus

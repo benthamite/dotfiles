@@ -29,6 +29,7 @@
 
 (require 'calendar-extras)
 (require 'display-wttr)
+(require 'tlon-init)
 
 ;;;; Variables
 
@@ -72,7 +73,7 @@
   :group 'tab-bar-extras)
 
 (defcustom tab-bar-extras-chemacs-element
-  `(" " chemacs-profile-name)
+  `(" " tlon-init-chemacs-profile-name)
   "Element to display the Chemacs profile."
   :type 'sexp
   :group 'tab-bar-extras)
@@ -85,10 +86,10 @@
 
 (defcustom tab-bar-extras-telega-element
   `(:eval (when (and
+		 (featurep 'telega)
 		 tab-bar-extras-telega-notifications-enabled
 		 (telega-server-live-p)
-		 (> (plist-get telega--unread-message-count :unread_count) 0)
-		 )
+		 (> (plist-get telega--unread-message-count :unread_count) 0))
 	    (concat " | " telega-mode-line-string)))
   "Element to display Telega notifications."
   :type 'sexp
@@ -183,6 +184,14 @@ them."
     (funcall fun action))
   (setq tab-bar-extras-notifications-enabled
 	(tab-bar-extras-get-state action 'tab-bar-extras-notifications-enabled)))
+
+(defun tab-bar-extras-enable-all-notifications ()
+  "Enable all notifications in the Tab Bar."
+  (tab-bar-extras-toggle-notifications 'enable))
+
+(defun tab-bar-extras-disable-all-notifications ()
+  "Disable all notifications in the Tab Bar."
+  (tab-bar-extras-toggle-notifications 'disable))
 
 (defun tab-bar-extras-toggle-telega-notifications (&optional action)
   "Toggle Telega notifications in the Tab Bar.

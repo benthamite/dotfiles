@@ -231,7 +231,10 @@
 #+begin_src emacs-lisp  :tangle (print tlon-init-file-late-init)
 (run-hooks 'tlon-init-post-init-hook)
 #+end_src
-
+** copilot
+#+begin_src shell
+(setq copilot-node-executable "/Users/cartago/.nvm/versions/node/v18.16.0/bin/node")
+#+end_src
 * excluded packages
 :PROPERTIES:
 :ID:       A4E7C5AD-1E55-4C6F-B0E5-8320D282A886

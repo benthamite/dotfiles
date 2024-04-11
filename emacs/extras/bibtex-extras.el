@@ -188,7 +188,7 @@
     ("oriya" . "or")
     ("persian" . "fa")
     ("polish" . "pl")
-    ("portuges" . "pt")
+    ("portuguese" . "pt")
     ("romanian" . "ro")
     ("russian" . "ru")
     ("sanskrit" . "sa")

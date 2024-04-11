@@ -239,26 +239,19 @@
 
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
-(
- anki-editor
- copilot
- corfu-terminal
- corfu-doc-terminal
- erc
- espotify
- hammy
- keytar
- ;; lsp-grammarly
- midnight
- mu4e
- org-gcal
- org-roam
- org2blog
- orgmdb
- remember
- slack
- vulpea
- )
+(setq tlon-init-excluded-packages
+      (
+       copilot
+       erc
+       ;; lsp-grammarly
+       midnight
+       mu4e
+       org-gcal
+       org-roam
+       org2blog
+       remember
+       vulpea
+       ))
 #+end_src
 
 * paths-override

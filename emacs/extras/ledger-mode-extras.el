@@ -42,37 +42,67 @@
 ;;;; Functions
 
 (defun ledger-extras-import-polymarket (file)
-  "Import Polymarket CSV FILE into the current ledger file."
-  (interactive "f")
+  "Import Polymarket CSV FILE into the current ledger file.
+To download the CSV file, go to <https://polymarket.com/portfolio?tab=history>.
+Remove the first row of the CSV file before importing it."
+  (interactive (list (read-file-name "Polymarket CSV file: " paths-dir-downloads)))
   (let (token-alist)
     (dolist (raw (s-split "\n" (f-read file) t))
       (let* ((clean (split-string (replace-regexp-in-string "\"" "" raw) "," t))
-	     (sign (if (string= (nth 1 clean) "Buy") 1 -1))
-	     (proceeds (float (string-to-number (nth 2 clean))))
+	     (payee "Polymarket")
+	     (date (format-time-string "%Y-%m-%d" (seconds-to-time (string-to-number (nth 5 clean)))))
+	     (account "Assets:Polymarket")
+	     (sign (pcase (nth 1 clean) ("Buy" 1) ("Sell" -1)
+			  (_ (user-error "Unknown transaction type `%s'" (nth 1 clean)))))
 	     (quantity (float (* sign (string-to-number (nth 3 clean)))))
-	     (price (abs (/ proceeds quantity)))
 	     (token-name (string-trim (nth 0 clean)))
 	     (token-symbol
 	      (if-let ((match (alist-get token-name token-alist nil nil #'string=)))
 		  match
 		(read-string (format "Token symbol for `%s': " token-name))))
-	     (date (format-time-string "%Y-%m-%d" (seconds-to-time (string-to-number (nth 5 clean)))))
-	     (payee "Polymarket")
-	     (account "Assets:Polymarket"))
+	     (proceeds (float (string-to-number (nth 2 clean))))
+	     (price (abs (/ proceeds quantity))))
 	(push (cons token-name token-symbol) token-alist)
-	(ledger-mode-extras-insert-transaction (list payee date account quantity token-symbol price))))))
+	(ledger-mode-extras-insert-transaction (list payee date account quantity token-symbol price nil))))))
+
+(defun ledger-extras-import-interactive-brokers (file)
+  "Import Interactive Brokers CSV FILE into the current ledger file.
+To download the CSV file, go to the IBKR site, then select \"performance &
+reports > flex queries > trade history\". Remove the first row of the CSV file
+before importing it."
+  (interactive (list (read-file-name "IBKR CSV file: " paths-dir-downloads)))
+  (dolist (raw (s-split "\n" (f-read file) t))
+    (let* ((clean (split-string (replace-regexp-in-string "\"" "" raw) "," t))
+	   (payee "Interactive Brokers")
+	   (date (ledger-extras-convert-interactive-brokers-date (nth 0 clean)))
+	   (account "Assets:Interactive Brokers")
+	   (quantity (format "%.2f" (string-to-number (nth 2 clean))))
+	   (token-symbol (nth 1 clean))
+	   (price (nth 3 clean))
+	   (fees (float (* -1 (string-to-number (nth 5 clean))))))
+      (ledger-mode-extras-insert-transaction (list payee date account quantity token-symbol price fees)))))
+
+(defun ledger-extras-convert-interactive-brokers-date (string)
+  "Convert an Interactive Brokers date STRING to the YYYY-MM-DD date format."
+  (let ((year (substring string 0 4))
+        (month (substring string 4 6))
+        (day (substring string 6 8)))
+    (concat year "-" month "-" day)))
 
 (defun ledger-mode-extras-insert-transaction (fields &optional file)
   "Insert a new transaction with FIELDS at the end of FILE.
 If FILE is nil, use `paths-file-ledger'."
   (let ((file (or file paths-file-ledger)))
-    (cl-destructuring-bind (payee date account quantity token-symbol price) fields
-      (with-current-buffer (find-file-noselect file)
-	(goto-char (point-max))
-	(insert (format "%s %s\n     %3$s  %s %s @ %s USD\n     %3$s"
-			payee date account quantity token-symbol price))
-	(ledger-mode-extras-align-and-next)
-	(insert "\n\n")))))
+    (cl-destructuring-bind (payee date account quantity token-symbol price fees) fields
+      (let ((first-line (format "%s %s" date payee))
+	    (second-line (format "     %s  %s %s @ %s USD" account quantity token-symbol price))
+	    (third-line (when fees (format "    Expenses:Fees  %s USD" fees)))
+	    (last-line (format "     %s" account)))
+	(with-current-buffer (find-file-noselect file)
+	  (goto-char (point-max))
+	  (insert (mapconcat 'identity (delq nil (list first-line second-line third-line last-line)) "\n"))
+	  (ledger-mode-extras-align-and-next)
+	  (insert "\n\n"))))))
 
 (defun ledger-mode-extras-new-entry-below ()
   "Create new entry below one at point."

@@ -75,14 +75,13 @@ If ISSUE is nil, use the issue at point or in the current buffer."
 
 (defun forge-extras-sync-read-status ()
   "Ensure that the read status of the issue at point in Forge matches GitHub’s.
-This does two things: (1) it silently browses the issue in a Firefox tab;
-and (2) after two minutes, it marks the issue as read (again)."
+The function tries to do does this by silently browsing the issue in a Firefox
+tab."
   (let* ((issue (forge-current-topic))
 	 (url (forge-get-url issue)))
     (when (eq (oref issue status) 'unread)
       (shut-up
-	(shell-command (format "open -a Firefox --background %s" url))
-	(run-with-timer 120 nil (lambda () (forge-topic-mark-read issue)))))))
+	(shell-command (format "open -a Firefox --background %s" url))))))
 
 (defun forge-extras-pull-notifications ()
   "Fetch notifications for all repositories from the current forge.

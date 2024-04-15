@@ -55,9 +55,25 @@
   :group 'eww-extras)
 
 (defcustom eww-extras-chrome-data-dir
-  (expand-file-name "~/Library/Application Support/Google/Chrome/Default")
-  "Directory where Chrome data is stored."
+  (expand-file-name "~/Library/Application Support/Google/Chrome")
+  "The directory where Chrome data is stored."
   :type 'directory
+  :group 'eww-extras)
+
+(defcustom eww-extras-chrome-data-dir-copy
+  (expand-file-name "~/Google Drive/Apps/Chrome")
+  "A copy of the directory where Chrome data is stored.
+A headless Chrome session will fail to authenticate if Chrome is running,
+because the database will be locked. So we make a copy of the relevant
+directory by running `eww-extras-chrome-copy-data-dir'."
+  :type 'directory
+  :group 'eww-extras)
+
+(defcustom eww-extras-rsync-command
+  "rsync -av '%s' '%s'"
+  "The `rsync' command to make a copy of the Chrome data directory.
+The placeholders `%s' are replaced by with the source and destination directories."
+  :type 'string
   :group 'eww-extras)
 
 ;;;; Functions
@@ -90,16 +106,30 @@ associated with the PDF."
 		   :command (list shell-file-name shell-command-switch
 				  (format
 				   (pcase type
-				     ("pdf" "'%s' --user-data-dir='%s' --print-to-pdf --no-pdf-header-footer --headless %s --print-to-pdf='%s'")
-				     ("html" "'%s' --user-data-dir='%s' --headless --dump-dom '%s' > %s"))
-				   browse-url-chrome-program eww-extras-chrome-data-dir url output-file)))))
+				     ("pdf" "'%s' --headless --user-data-dir='%s' --no-pdf-header-footer '%s' --print-to-pdf='%s'")
+				     ("html" "'%s' --headless --user-data-dir='%s' --dump-dom '%s' > %s"))
+				   browse-url-chrome-program eww-extras-chrome-data-dir-copy url output-file)))))
     (message "Getting %s file..." type)
     (set-process-sentinel process
 			  (lambda (_proc event)
 			    (if (string= event "finished\n")
-				(when callback
-				  (funcall callback output-file bibtex-file))
+				(progn
+				  (message "File downloaded.")
+				  (when callback
+				    (funcall callback output-file bibtex-file)))
 			      (user-error "Could not get file"))))))
+
+(defun eww-extras-chrome-copy-data-dir ()
+  "Make a copy of the Chrome data directory.
+This command needs to be run to make an initial copy of the Chrome data
+directory, and then every once in a while to keep the directory updated. The
+initial copy may take a while if the data directory is very big, but subsequent
+updates should be fast."
+  (interactive)
+  (when (y-or-n-p "Make sure you closed all instances of Chrome and ensured that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories. Also, if you are running this command for the first time—i.e. if there is currently no copy of the Chrome data directory in your system—note that Emacs will become unresponsive for a few minutes. Proceed? ")
+    (shell-command (format eww-extras-rsync-command
+			   eww-extras-chrome-data-dir
+			   (file-name-directory eww-extras-chrome-data-dir-copy)))))
 
 (defun eww-extras-url-to-html (&optional url callback)
   "Generate HTML of URL, then run CALLBACK function."

@@ -9880,6 +9880,7 @@ The macro below generates the commands correctly. But attempting to define key b
    "SPC" 'ebib-extras-open-file-dwim
    "/" 'ebib-extras-attach-most-recent-file
    "?" 'ebib-extras-attach-file
+   ";" 'ebib-extras-process-entry
    "a" 'ebib-extras-search-amazon
    "b" 'ebib-extras-get-or-open-entry
    "g" 'ebib-extras-search-library-genesis

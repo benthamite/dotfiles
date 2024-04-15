@@ -419,16 +419,17 @@ extension."
 
 (defun ebib-extras-attach-files ()
   "Attach files appropriate for the current entry type.
-- online: generate PDF and html.
-- books: get PDF from Ligben or Archive.
-- papers: get PDF from SciHub."
+TOOO: 
+- [x] online: generate PDF and html.
+- [ ] books: get PDF from Anna’s Archive.
+- [ ] papers: get PDF from SciHub."
   (interactive)
   (let ((type (downcase (ebib-extras-get-field "=type="))))
-    ;; TODO: handle remaining entry types
     (pcase type
       ("online"
        (ebib-extras-url-to-html-attach)
        (ebib-extras-url-to-pdf-attach))
+      ((or ))
       (_ nil))))
 
 ;;;;; ?

@@ -718,10 +718,10 @@ CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
 #+begin_src clojure
 {:des "b-mode (media controls, window sizing)"
  :rules [:b-mode
-         [:u {:modi :⇧⌘⌥⌃ :key :p}] ; Rectangle, right half
+         [:p {:modi :⇧⌘⌥⌃ :key :p}] ; Rectangle, right half
          [:i {:modi :⇧⌘⌥⌃ :key :i}] ; Rectangle, maximize
          [:o {:modi :⇧⌘⌥⌃ :key :o}] ; Rectangle, center
-         [:p {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
+         [:u {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
          [:l [:km "Play Spotify"]]

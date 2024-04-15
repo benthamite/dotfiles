@@ -75,6 +75,11 @@
   (interactive)
   (dired-copy-filename-as-kill '(0)))
 
+(defun dired-extras-image-copy-filename-as-kill-absolute ()
+  "Copy absolute names of marked (or next ARG) images into the kill ring."
+  (interactive)
+  (image-dired-copy-filename-as-kill '(0)))
+
 (defun dired-extras-copy-to-remote-docs-directory ()
   "Copy marked files to `stafforini.com/docs'.
 If no files are marked, copy file at point instead."

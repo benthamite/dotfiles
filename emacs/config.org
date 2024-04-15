@@ -3562,7 +3562,8 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 (use-feature image-dired
   :after dired
   :config
-  (setq image-dired-main-image-directory "~/Pictures/")
+  (setq image-dired-main-image-directory (expand-file-name "~/Pictures/"))
+  (setq image-dired-external-viewer "open")
 
   :general
   (image-dired-thumbnail-mode-map

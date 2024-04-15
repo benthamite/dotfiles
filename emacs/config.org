@@ -7151,9 +7151,10 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gpt-commit
+  :afet gptel
   :demand t
   :config
-  (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
+  (setq gpt-commit-openai-key gptel-api-key)
   (setq gpt-commit-model-name "gpt-4")
   (add-hook 'git-commit-setup-hook #'gpt-commit-message))
 #+end_src

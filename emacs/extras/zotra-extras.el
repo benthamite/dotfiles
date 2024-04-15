@@ -91,9 +91,9 @@ to get the entry.
   ;; we add this so that the latest entry is sorted in the bibtex
   ;; file, instead of remaining at the end of it
   (ebib-save-current-database t)
-  (if (y-or-n-p "Are the `type', `author', `date' and `title' fields correct? ")
+  (if (y-or-n-p "Are the `type' and `=key=' fields correct? ")
       (ebib-extras-process-entry)
-    (message "Fix the `type', `author', `date' and `title' fields, then run `ebib-extras-process-entry'.")))
+    (message "Fix the relevant fields, then run `ebib-extras-process-entry'.")))
 
 ;;;;; Cleanup
 

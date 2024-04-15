@@ -370,6 +370,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#copilot-extras][copilot-extras]]
   - [[#gptel][gptel]]
   - [[#gptel-extras][gptel-extras]]
+  - [[#chatgpt-shell][chatgpt-shell]]
   - [[#gpt-commit][gpt-commit]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
@@ -7124,6 +7125,21 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   ("H-s-c" 'gptel-extras-model-config)
   (gptel-mode-map
    "s-s" 'gptel-extras-save-buffer))
+#+end_src
+
+** chatgpt-shell
+:PROPERTIES:
+:ID:       6EC52CD8-EBCB-4A26-B1BA-001096C16030
+:END:
+
+#+begin_src emacs-lisp
+(use-package chatgpt-shell
+  :after gptel
+  :demand t
+  :config
+  (setq chatgpt-shell-openai-key gptel-api-key)
+  (setq dall-e-shell-openai-key gptel-api-key)
+  (setq shell-maker-transcript-default-path gptel-extras-dir))
 #+end_src
 
 ** gpt-commit

@@ -28,15 +28,13 @@
 
 ;;; Commentary:
 
-;; $4
+;; $2.
 
 ;;; Code:
 
-;;;; User options
+;;;; Variables
 
-;;;; Main variables
-
-;;;; <individual section continue>
+;;;; Functions
 
 (provide '$1)
 ;;; $1.el ends here

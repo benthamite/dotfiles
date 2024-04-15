@@ -3567,8 +3567,10 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 
   :general
   (image-dired-thumbnail-mode-map
-   "k" 'image-dired-display-previous-thumbnail-original
-   "l" 'image-dired-display-next-thumbnail-original)
+   "c" 'dired-extras-image-copy-filename-as-kill-absolute
+   "e" 'image-dired-thumbnail-display-external
+   "k" 'image-dired-display-previous
+   "l" 'image-dired-display-next)
   (dired-mode-map
    "I" 'dired-extras-image-dired-current-directory))
 #+end_src

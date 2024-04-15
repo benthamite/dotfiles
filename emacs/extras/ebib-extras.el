@@ -319,7 +319,7 @@ If EXTENSION is non-nil, set its extension to its value."
 ;;;;; process entries
 
 (defun ebib-extras-process-entry ()
-  "Docstring.
+  "Process the entry at point, setting its key, language, abstract and files.
 The function assumes that the fields `type', `author', `date' and `title' are
 correctly set."
   (interactive)

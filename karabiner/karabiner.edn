@@ -59,6 +59,7 @@
       :em_dash {:key :!SEhyphen}
 
       ;; diacritics
+      ;; note that many of the mappings below require ABC - Extended as the macOS input source
       :overdot {:key :!Ew}
       :underdot {:key :!Ex}
       :accute_accent {:key :!Ee}

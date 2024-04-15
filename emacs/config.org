@@ -11312,8 +11312,8 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine Amazon-FR
     "https://www.amazon.fr/s?k=%s"
     :keybinding "a f")
-  (defengine Amazon-IT
-    "https://www.amazon.it/s?k=%s"
+  (defengine TheresAnAIForThat
+    "https://theresanaiforthat.com/s/%s/"
     :keybinding "a i")
   (defengine Amazon-MX
     "https://www.amazon.com.mx/s?k=%s"

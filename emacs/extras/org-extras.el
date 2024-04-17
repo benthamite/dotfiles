@@ -82,6 +82,13 @@ Set to nil to disable display of BBDB anniversaries in agenda."
   :type 'string
   :group 'org-extras)
 
+(defcustom org-extras-clock-report-parameters
+  "#+BEGIN: clocktable :scope %s :maxlevel 9 :narrow 500 :fileskip0 t %s \n#+END:"
+  "Parameters for `org-extras-clock-report-insert'.
+The first %s is the scope of the report, and the second %s is the range."
+  :type 'string
+  :group 'org-extras)
+
 ;;;; Functions
 
 ;;;;; org
@@ -510,9 +517,7 @@ SCOPE is the scope of the report, and can be `agenda', `file', or `subtree'."
   (let ((range (if (string= start-date end-date)
 		   ":block today"
 		 (format ":tstart \"%s\" :tend \"%s\"" start-date end-date))))
-    (insert
-     (format "#+BEGIN: clocktable :scope %s :maxlevel 4 :narrow 60! :fileskip0 t %s \n#+END:"
-	     scope range))
+    (insert (format org-extras-clock-report-parameters scope range))
     (org-clock-report)))
 
 (defun org-extras-delete-headings-without-logbook ()

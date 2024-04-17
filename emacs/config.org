@@ -1560,7 +1560,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
    "s-t" 'forge-topic-set-title
    "s-e" 'forge-edit-post
    "s-p" 'forge-create-post
-   "s-r" 'forge-create-post))
+   "s-r" 'forge-create-post
+   "s-o" 'forge-topic-status-set-done))
 #+end_src
 
 ** orgit-forge

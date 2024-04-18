@@ -83,6 +83,10 @@ non-nil, return the file name without its directory."
 	  (file-name-nondirectory file)
 	file))))
 
+(defun magit-extras-get-unstaged-files ()
+  "Get a list of unstaged files in the current Git repository."
+  (magit-git-lines "diff" "--name-only" "--diff-filter=d"))
+
 (transient-define-prefix magit-extras-dispatch ()
   "Invoke a Magit command from a list of available commands."
   :info-manual "(magit)Top"

@@ -117,6 +117,27 @@ If IP is non-nil, use the local IP address."
    (list (cfw:org-create-source "medium purple"))
    :view 'block-day))
 
+(defun calendar-extras-parse-date-string (date-string)
+  "Parse DATE-STRING formatted as \"YYYY-MM-DD\" into a list `(month day year)'."
+  (let ((date-parts (split-string date-string "-")))
+    (list (string-to-number (nth 1 date-parts))
+          (string-to-number (nth 2 date-parts))
+          (string-to-number (nth 0 date-parts)))))
+
+(defun calendar-extras-get-date-range (start-date end-date)
+  "Return list of date strings in 'YYYY-MM-DD' format from START-DATE to END-DATE."
+  (let* ((start-date (calendar-extras-parse-date-string start-date))
+         (end-date (calendar-extras-parse-date-string end-date))
+         (current-date (calendar-gregorian-from-absolute (calendar-absolute-from-gregorian start-date)))
+         (end-date-absolute (calendar-absolute-from-gregorian end-date))
+         result)
+    (while (<= (calendar-absolute-from-gregorian current-date) end-date-absolute)
+      (push (format-time-string "%Y-%m-%d"
+                                (encode-time 0 0 0 (nth 1 current-date) (nth 0 current-date) (nth 2 current-date)))
+            result)
+      (setq current-date (calendar-gregorian-from-absolute (+ 1 (calendar-absolute-from-gregorian current-date)))))
+    (nreverse result)))
+
 (provide 'calendar-extras)
 
 ;;; calendar-extras.el ends here

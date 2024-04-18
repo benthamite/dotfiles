@@ -83,7 +83,7 @@ Set to nil to disable display of BBDB anniversaries in agenda."
   :group 'org-extras)
 
 (defcustom org-extras-clock-report-parameters
-  "#+BEGIN: clocktable :scope %s :maxlevel 9 :narrow 500 :fileskip0 t %s \n#+END:"
+  "#+BEGIN: clocktable :scope %s :maxlevel 9 :narrow 500! :fileskip0 t %s \n#+END:"
   "Parameters for `org-extras-clock-report-insert'.
 The first %s is the scope of the report, and the second %s is the range."
   :type 'string

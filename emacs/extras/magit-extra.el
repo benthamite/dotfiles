@@ -87,6 +87,10 @@ non-nil, return the file name without its directory."
   "Get a list of unstaged files in the current Git repository."
   (magit-git-lines "diff" "--name-only" "--diff-filter=d"))
 
+(defun magit-extras-track-file (file)
+  "Track FILE in the current Git repository."
+  (magit-call-git "add" (expand-file-name file)))
+
 (transient-define-prefix magit-extras-dispatch ()
   "Invoke a Magit command from a list of available commands."
   :info-manual "(magit)Top"

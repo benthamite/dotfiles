@@ -83,7 +83,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#server][server]]
   - [[#async][async]]
   - [[#emacsql][emacsql]]
-  - [[#tlon-core][tlon-core]]
   - [[#prot-common][prot-common]]
   - [[#prot-simple][prot-simple]]
   - [[#misc][misc]]
@@ -995,26 +994,6 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package emacsql
   :demand t)
-#+end_src
-
-** tlon-core
-:PROPERTIES:
-:ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package tlon-core
-  :elpaca (tlon-core
-           :host github
-           :repo "tlon-team/tlon-core"
-           :depth nil) ; clone entire repo, not just last commit
-  :defer 4
-  :config
-  (setq tlon-core-repo-dirs (expand-file-name "~/Library/CloudStorage/Dropbox/repos/"))
-
-  :general
-  (markdown-mode-map
-   "s-y" 'simple-extras-slugify-clipboard))
 #+end_src
 
 ** prot-common

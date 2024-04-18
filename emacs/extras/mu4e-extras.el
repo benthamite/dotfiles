@@ -127,13 +127,12 @@ Do not ask for confirmation."
 ;; github.com/danielfleischer/mu4easy#mu4e
 (setf (alist-get 'trash mu4e-marks)
       '(:char ("d" . "▼")
-	      :prompt "dtrash"
-	      :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
-	      ;; Here's the main difference to the regular trash mark, no +T
-	      ;; before -N so the message is not marked as IMAP-deleted:
-	      :action (lambda (docid msg target)
-			(mu4e~proc-move docid
-					(mu4e~mark-check-target target) "+S-u-N"))))
+              :prompt "dtrash"
+              :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
+              ;; Here's the main difference to the regular trash mark, no +T
+              ;; before -N so the message is not marked as IMAP-deleted:
+              :action (lambda (docid msg target)
+                        (mu4e--server-move docid (mu4e--mark-check-target target) "+S-u-N"))))
 
 (defun mu4e-extras-view-in-gmail ()
   "Open Gmail in a browser and view message at point in it."

@@ -557,6 +557,7 @@
 (with-eval-after-load 'tlon-babel
   (setq tlon-babel-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
   (setq tlon-babel-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
+  (setq tlon-babel-split-repo 'never)
   (tlon-babel-init))
 #+end_src
 

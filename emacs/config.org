@@ -6311,6 +6311,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :demand t
   :config
   (add-hook 'tlon-init-post-init-hook #'tlon-babel-init)
+  (setq tlon-babel-split-repo t)
 
   :general
   ("H-r" 'tlon-babel-dispatch

@@ -5870,8 +5870,8 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
 (use-package grammarly
   :defer 7
   :config
-  (setq grammarly-username tlon-core-email-shared)
-  (setq grammarly-password (auth-source-pass-get 'secret (concat "tlon/core/grammarly.com/" tlon-core-email-shared))))
+  (setq grammarly-username tlon-babel-email-shared)
+  (setq grammarly-password (auth-source-pass-get 'secret (concat "tlon/core/grammarly.com/" tlon-babel-email-shared))))
 #+end_src
 
 ** lsp-grammarly
@@ -6344,7 +6344,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
           ;; (gts-bing-engine)
           ;;(gts-google-engine)
           ;;(gts-google-rpc-engine)
-          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/babel/deepl.com/" tlon-core-email-shared)) :pro nil)
+          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/babel/deepl.com/" tlon-babel-email-shared)) :pro nil)
           ;; (gts-google-engine :parser (gts-google-summary-parser))
           ;;(gts-google-engine :parser (gts-google-parser))
           ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")
@@ -7082,17 +7082,17 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :after pass tlon-babel
   :defer 10
   :config
-  (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
+  (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-babel-email-shared)))
   (setq gptel-default-mode 'org-mode)
 
   (gptel-make-anthropic "Claude"
     :stream t
-    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-core-email-shared)))
+    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-babel-email-shared)))
 
   (gptel-make-gemini "Gemini"
     :stream t
     :key (auth-source-pass-get 'secret
-                               (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared)))
+                               (concat "tlon/core/makersuite.google.com/" tlon-babel-email-shared)))
 
   :general
   ("M-c" 'gptel-send
@@ -9929,7 +9929,7 @@ The macro below generates the commands correctly. But attempting to define key b
   :defer 5
   :config
   (setq bib-isbndb-key
-        (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
+        (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-babel-email-shared)))
   (setq bib-omdb-key
         (auth-source-pass-get 'secret "chrome/omdbapi.com"))
   (setq bib-tmdb-key

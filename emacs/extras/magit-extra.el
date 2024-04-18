@@ -33,16 +33,21 @@
 ;;;; Functions
 
 ;; adapted from Sacha Chua
-(defun magit-extras-stage-commit-and-push (message)
+(defun magit-extras-stage-commit-and-push (message &optional files)
   "Stage all modified files, commit them with MESSAGE and push to remote."
   (interactive
    (list (progn (magit-diff-unstaged) (read-string "Commit Message: "))))
   (when (or
          (magit-anything-staged-p)
          (magit-anything-unstaged-p))
-    (magit-stage-modified t)
-    (magit-commit-create (list "-m" message)))
-  (call-interactively #'magit-push-current-to-pushremote))
+    (let ((fun (if files
+		   (lambda ()
+		     (magit-stage-file files))
+		 (lambda ()
+		   (magit-stage-modified t)))))
+      (funcall fun)
+      (magit-commit-create (list "-m" message)))
+    (call-interactively #'magit-push-current-to-pushremote)))
 
 (defun magit-extras-stage-commit-and-push-all-repos ()
   "Update all active depositories."

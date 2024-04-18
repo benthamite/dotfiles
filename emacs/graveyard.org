@@ -103,7 +103,7 @@ CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
   :after org yasnippet
   :commands org-ai-mode
   :config
-  (setq org-ai-openai-api-token (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
+  (setq org-ai-openai-api-token (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-babel-email-shared)))
   (setq org-ai-default-chat-model "gpt-4")
   (setq org-ai-default-chat-system-prompt "You are a helpful and competent assistant. Please omit any disclaimers")
   (setq org-ai-talk-say-words-per-minute 210)

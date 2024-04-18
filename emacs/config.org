@@ -10325,7 +10325,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-split-view 'single-window)
   (setq mu4e-headers-show-target nil)
   (setq mu4e-get-mail-command "mbsync -a")
-  (setq mu4e-update-interval 180)
+  (setq mu4e-update-interval 60)
   (setq mu4e-drafts-folder "/[Gmail]/Drafts")
   (setq mu4e-sent-folder "/[Gmail]/Sent Mail")
   (setq mu4e-refile-folder "/[Gmail]/All Mail")

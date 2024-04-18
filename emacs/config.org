@@ -131,6 +131,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#highlight-parentheses][highlight-parentheses]]
   - [[#spacious-padding][spacious-padding]]
   - [[#emoji][emoji]]
+  - [[#rainbow-mode][rainbow-mode]]
   - [[#image][image]]
   - [[#paren][paren]]
   - [[#doom-modeline][doom-modeline]]
@@ -1939,6 +1940,21 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 (use-feature emoji
   :general
   ("H-E" 'emoji-insert))
+#+end_src
+
+** rainbow-mode
+:PROPERTIES:
+:ID:       9FCB7FE9-D305-4658-922E-72C4D9F4C4A2
+:END:
+
+/[[https://elpa.gnu.org/packages/rainbow-mode.html][rainbow-mode]] colorizes strings that match color names./
+
+#+begin_src emacs-lisp
+(use-package rainbow-mode
+  :demand t
+  :init
+  (setq rainbow-ansi-colors nil)
+  (setq rainbow-x-colors nil))
 #+end_src
 
 ** image

@@ -515,7 +515,7 @@ SCOPE is the scope of the report, and can be `agenda', `file', or `subtree'."
 	 (org-read-date nil nil nil "End date: ")
 	 (org-completing-read "Scope: " '("agenda" "file" "subtree"))))
   (let ((range (if (string= start-date end-date)
-		   ":block today"
+		   (format ":block \"%s\"" start-date)
 		 (format ":tstart \"%s\" :tend \"%s\"" start-date end-date))))
     (insert (format org-extras-clock-report-parameters scope range))
     (org-clock-report)))

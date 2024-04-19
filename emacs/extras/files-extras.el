@@ -537,7 +537,6 @@ current helpful buffer displays, then kill the buffer."
   "Dispatcher for personal package files."
   [["Tlön"
     ("b" "tlon-babel"       (lambda () (interactive) (files-extras-open-elpaca-package "tlon-babel")))
-    ("c" "tlon-core"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-core")))
     ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))]
    ["Personal"
     ("a" "internet-archive" (lambda () (interactive )(files-extras-open-elpaca-package "internet-archive")))

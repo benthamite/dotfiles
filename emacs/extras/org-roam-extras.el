@@ -31,7 +31,6 @@
 (require 'el-patch)
 (require 'org-extras)
 (require 'org-roam)
-(require 'tlon-core)
 
 ;;;; User options
 

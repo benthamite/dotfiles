@@ -44,6 +44,25 @@
       (color-hsl-to-rgb hue saturation luminance)
     (hexrgb-rgb-to-hex red green blue 2)))
 
+(defun color-extras-hsl-to-string (hsl &optional format)
+  "Convert HSL to a string.
+Optionally, specify a FORMAT string to control the output. If FORMAT is nil,
+default to \"(%0.6f %0.6f %0.6f)\"."
+  (cl-destructuring-bind (hue saturation luminance) hsl
+    (let ((format (or format "(%0.6f %0.6f %0.6f)")))
+      (format format hue saturation luminance))))
+
+(defun color-extras-hsl-string-to-hex (string)
+  "Convert a STRING representation of HSL to HEX."
+  (cl-destructuring-bind (hue saturation luminance)
+      (read string)
+    (color-extras-hsl-to-hex hue saturation luminance)))
+
+(defun color-extras-rgb-to-hex (red green blue)
+  "Convert RGB values to a hexadecimal color string.
+RED, GREEN and BLUE should each be integers between 0 and 255, inclusive."
+  (format "#%02x%02x%02x" red green blue))
+
 (provide 'color-extras)
 ;;; color-extras.el ends here
 

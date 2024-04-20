@@ -6132,14 +6132,22 @@ This package is required by the ~markdown-mode~ command ~markdown-edit-code-bloc
 :ID:       CC5C7599-DFA7-48A8-8BA0-3DABE8A3171E
 :END:
 :LOGBOOK:
+CLOCK: [2024-04-20 Sat 11:11]--[2024-04-20 Sat 11:32] =>  0:21
 CLOCK: [2021-12-07 Tue 17:12]--[2021-12-07 Tue 18:05] =>  0:53
 CLOCK: [2021-12-03 Fri 23:10]--[2021-12-04 Sat 01:01] =>  1:51
 CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
 :END:
-To reinstall:
-- Clone this [[https://github.com/glotlabs/gdrive][repo]].
-- Edit the ~clientId~ and ~clientSecret~ in the file ~handlers_drive.go~ with the values stored in ~pass~ (search for ~gdrive~).
-- Within the locally cloned repo, run ~go install~.
+
+#+begin_src emacs-lisp
+(use-package gdrive
+  :elpaca (gdrive
+           :host github
+	   :repo "benthamite/gdrive"
+           :depth nil)
+  :demand t
+  :config
+  (load-file (file-name-concat paths-dir-dotemacs "etc/gdrive-users.el")))
+#+end_src
 
 *** TODO [#5] Write command to create new Google Doc in chosen folder
 :PROPERTIES:

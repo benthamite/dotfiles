@@ -57,6 +57,11 @@
 	      :cost 0
 	      :tokens 32000
 	      :description "This model is currently free (included in Pablo’s Google Drive plan).")
+    (:backend "Gemini"
+	      :model "gemini-1.5-pro-latest"
+	      :cost 0
+	      :tokens 128000
+	      :description "[recommended] This model is currently free (included in Pablo’s Google Drive plan).")
     (:backend "ChatGPT"
 	      :model "gpt-3.5-turbo"
 	      :cost 0.50

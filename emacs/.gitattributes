@@ -4,3 +4,4 @@ variables-pablo.el filter=git-crypt diff=git-crypt
 variables-fede.el filter=git-crypt diff=git-crypt
 variables-leo.el filter=git-crypt diff=git-crypt
 yasnippets-private/** filter=git-crypt diff=git-crypt
+etc/gdrive-users.el filter=git-crypt diff=git-crypt

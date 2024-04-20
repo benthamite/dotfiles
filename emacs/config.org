@@ -132,6 +132,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#emoji][emoji]]
   - [[#rainbow-mode][rainbow-mode]]
   - [[#color][color]]
+  - [[#color-extras][color-extras]]
   - [[#image][image]]
   - [[#paren][paren]]
   - [[#doom-modeline][doom-modeline]]
@@ -1944,6 +1945,17 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 
 #+begin_src emacs-lisp
 (use-feature color
+  :demand t)
+#+end_src
+
+** color-extras
+:PROPERTIES:
+:ID:       0873C089-B832-4EB2-BAFF-2D3CF0268AE4
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package color-extras
+  :after color
   :demand t)
 #+end_src
 

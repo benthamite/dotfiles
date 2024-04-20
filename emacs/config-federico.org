@@ -6,48 +6,49 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
-(
- aide
- anki-editor
- auto-commit-mode
- bbdb
- copilot
- corfu-doc-terminal
- corfu-terminal
- ;; display-wttr
- erc
- espotify
- ;; flycheck
- ;; flymake
- ;; frame
- ;; forge
- git-auto-commit-mode
- hammy
- ;; jinx
- keytar
- midnight
- mixed-pitch
- mu4e
- ;; mullvad
- ns-win
- org-gcal
- ;; org-roam
- org2blog
- orgmdb
- outline
- ;; pdf-tools
- puni
- remember
- server
- slack
- spelling
- ;; tlon-init
- theme-loaddefs
- twittering-mode
- vulpea
- ;; window
- ;; yasnippet
- )
+(setq tlon-init-excluded-packages
+      '(
+	aide
+	anki-editor
+	auto-commit-mode
+	bbdb
+	copilot
+	corfu-doc-terminal
+	corfu-terminal
+	;; display-wttr
+	erc
+	espotify
+	;; flycheck
+	;; flymake
+	;; frame
+	;; forge
+	git-auto-commit-mode
+	hammy
+	;; jinx
+	keytar
+	midnight
+	mixed-pitch
+	mu4e
+	;; mullvad
+	ns-win
+	org-gcal
+	;; org-roam
+	org2blog
+	orgmdb
+	outline
+	;; pdf-tools
+	puni
+	remember
+	server
+	slack
+	spelling
+	;; tlon-init
+	theme-loaddefs
+	twittering-mode
+	vulpea
+	;; window
+	;; yasnippet
+	))
 #+end_src
 
 * paths

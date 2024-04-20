@@ -296,7 +296,7 @@
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
 (setq tlon-init-excluded-packages
-      (
+      '(
        copilot
        erc
        ;; lsp-grammarly

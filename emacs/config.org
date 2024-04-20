@@ -131,6 +131,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#spacious-padding][spacious-padding]]
   - [[#emoji][emoji]]
   - [[#rainbow-mode][rainbow-mode]]
+  - [[#color][color]]
   - [[#image][image]]
   - [[#paren][paren]]
   - [[#doom-modeline][doom-modeline]]
@@ -1934,6 +1935,16 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   :init
   (setq rainbow-ansi-colors nil)
   (setq rainbow-x-colors nil))
+#+end_src
+
+** color
+:PROPERTIES:
+:ID:       83EC4A72-3E64-403B-9196-339DD0EB202E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature color
+  :demand t)
 #+end_src
 
 ** image

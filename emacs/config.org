@@ -2569,7 +2569,7 @@ CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
 (use-feature simple
   :demand t
   :config
-  (setq kill-ring-max 500)
+  (setq kill-ring-max 99999)
   (setq save-interprogram-paste-before-kill t) ; add system clipboard to kill ring
 
   :general

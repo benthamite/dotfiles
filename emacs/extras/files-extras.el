@@ -361,23 +361,6 @@ more intrusive alert."
 	   :title "Auto save detected"
 	   :severity 'high)))
 
-;; for some reason, `alert' fails to create persistent alerts. so we
-;; trigger a warning if either `*log4e-alert*' or `*Messages*'
-;; buffers have logged a message related to `recover-this-file'.
-(defun files-extras-auto-save-persist ()
-  "Prevent killing buffer when auto save data is detected."
-  ;; we check both `*log4e-alert*' and `*Messages*' buffers for
-  ;; extra safety
-  (let ((alert-buffers '(" *log4e-alert*" "*Messages*")))
-    (dolist (buffer alert-buffers)
-      (when (get-buffer buffer)
-	(with-current-buffer buffer
-	  (goto-char (point-min))
-	  (when (search-forward "has auto save data" nil t)
-	    (yes-or-no-p "Buffers with auto save data detected. Check `*log4e-alert*' and `*Messages*' for details. Are you sure you want to proceed? ")
-	    (kill-buffer)))))
-    t))
-
 ;; https://emacs.stackexchange.com/a/3778/32089
 (defun files-extras-diff-buffer-with-file ()
   "Compare the current modified buffer with the saved version."
@@ -395,12 +378,12 @@ more intrusive alert."
     (message "Copied `%s'" path)))
 
 (add-hook 'find-file-hook #'files-extras-auto-save-alert)
-(add-hook 'kill-buffer-query-functions #'files-extras-auto-save-persist)
 
 ;; reddit.com/r/emacs/comments/t07e7e/comment/hy88bum/?utm_source=reddit&utm_medium=web2x&context=3
 (defun files-extras-make-hashed-auto-save-file-name-a (fn)
   "Compress the `auto-save' file name so paths don't get too long.
 FN is an argument in the adviced function."
+
   (let ((buffer-file-name
 	 (if (or (null buffer-file-name)
 		 (find-file-name-handler buffer-file-name 'make-auto-save-file-name))

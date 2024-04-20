@@ -33,13 +33,17 @@
 ;;;; Functions
 
 (defun color-extras-hex-to-hsl (hex)
-  "Convert a HEX color string to its HSL representation."
+  "Convert a HEX color string to its HSL representation.
+The HSL representation is a list of three numbers each between 0.0 and 1.0,
+inclusive."
   (cl-destructuring-bind (red green blue)
       (hexrgb-hex-to-rgb hex)
     (color-rgb-to-hsl red green blue)))
 
 (defun color-extras-hsl-to-hex (hue saturation luminance)
-  "Convert HUE, SATURATION and LUMINANCE to a hex color string."
+  "Convert HUE, SATURATION and LUMINANCE to a HEX color string.
+HUE, SATURATION and LUMINANCE should each be numbers between 0.0 and 1.0,
+inclusive."
   (cl-destructuring-bind (red green blue)
       (color-hsl-to-rgb hue saturation luminance)
     (hexrgb-rgb-to-hex red green blue 2)))

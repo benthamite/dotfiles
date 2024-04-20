@@ -133,6 +133,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#rainbow-mode][rainbow-mode]]
   - [[#color][color]]
   - [[#color-extras][color-extras]]
+  - [[#hexrgb][hexrgb]]
   - [[#image][image]]
   - [[#paren][paren]]
   - [[#doom-modeline][doom-modeline]]
@@ -1957,6 +1958,20 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 (use-personal-package color-extras
   :after color
   :demand t)
+#+end_src
+
+** hexrgb
+:PROPERTIES:
+:ID:       A9DD66E0-49A5-4A8C-8F45-016DECFF0BF0
+:END:
+
+#+begin_src emacs-lisp
+(use-package hexrgb
+  :elpaca (hexrgb
+           :host github
+           :repo "emacsmirror/hexrgb")
+  :demand t
+  )
 #+end_src
 
 ** image

@@ -6600,8 +6600,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 
   :general
   (sow-mode-map
-   "A-C-s-t" 'sow-scroll-other-window-down
-   "A-C-s-g" 'sow-scroll-other-window))
+   "A-C-s-g" 'sow-scroll-other-window-down
+   "A-C-s-t" 'sow-scroll-other-window))
 #+end_src
 
 ** pdf-view-restore

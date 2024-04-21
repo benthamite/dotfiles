@@ -67,16 +67,21 @@
   "Move point to the start of the buffer."
   (run-at-time 0.3 nil #'(lambda () (goto-char (point-min)))))
 
-(defun magit-extras-get-commit-file (&optional sans-dir)
+;; TODO: check if there is a better way to do this
+(defun magit-extras-get-commit-file (&optional path)
   "Get file to commit.
-If more than one file is being committed, get the first one. If SANS-DIR is
-non-nil, return the file name without its directory."
+If more than one file is being committed, get the first one. By default, the
+path of file returned is relative to the current repository. If PATH is `full',
+return instead the full path; if PATH is `sans-dir', return the filename only."
   (save-excursion
     (re-search-forward "Changes to be committed:\n#.*?:.  \\(.*/?.*\\)$" nil t)
     (let ((file (match-string-no-properties 1)))
-      (if sans-dir
-	  (file-name-nondirectory file)
-	file))))
+      (pcase path
+	('full (let ((repo (file-name-directory (directory-file-name default-directory))))
+		 (file-name-concat repo file)))
+	('sans-dir (file-name-nondirectory file))
+	(_ file)))))
+
 
 (transient-define-prefix magit-extras-dispatch ()
   "Invoke a Magit command from a list of available commands."

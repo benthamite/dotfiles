@@ -6142,11 +6142,21 @@ CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
 (use-package gdrive
   :elpaca (gdrive
            :host github
-	   :repo "benthamite/gdrive"
+           :repo "benthamite/gdrive"
            :depth nil)
   :demand t
   :config
-  (load-file (file-name-concat paths-dir-dotemacs "etc/gdrive-users.el")))
+  (load-file (file-name-concat paths-dir-dotemacs "etc/gdrive-users.el"))
+  (defun gdrive-extras-mark-multiple-and-share (file)
+    "Search for each line in FILE and share the selected results.
+The file should contain one search query per line."
+    (interactive "f")
+    (when (gdrive-mark-clear-prompt)
+      (let ((lines (files-extras-read-lines file)))
+	(dolist (line lines)
+	  (let ((results (gdrive-act-on-selected-search-results line)))
+	    (gdrive-mark-results results))))
+      (gdrive-share-results gdrive-marked-files))))
 #+end_src
 
 *** TODO [#5] Write command to create new Google Doc in chosen folder

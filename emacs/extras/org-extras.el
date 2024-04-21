@@ -32,7 +32,6 @@
 (require 'browse-url)
 ;; (require 'crux) ; Error (use-package): org-extras/:catch: Cannot open load file: No such file or directory, crux
 (require 'el-patch)
-(require 'el-patch)
 (require 'org)
 (require 'org-agenda)
 (require 'org-capture)

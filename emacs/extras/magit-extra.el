@@ -84,6 +84,16 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
 	('sans-dir (file-name-nondirectory file))
 	(_ file)))))
 
+(defun magit-extras-get-commit-heading ()
+  "Get the `org-mode' heading above the code to be committed."
+  (let ((file (magit-extras-get-commit-file 'full)))
+    (save-window-excursion
+      (window-extras-switch-to-last-window)
+      (magit-section-forward-sibling)
+      (magit-diff-visit-file file)
+      (org-entry-get nil "ITEM"))))
+
+;;;;; transient
 
 (transient-define-prefix magit-extras-dispatch ()
   "Invoke a Magit command from a list of available commands."

@@ -2468,7 +2468,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   :general
   ("A-C-s-m" 'move-beginning-of-line
    "A-C-s-/" 'move-end-of-line)
-  ((custom-mode-map ebib-entry-mode-map ebib-index-mode-map elfeed-search-mode-map elfeed-show-mode-map elisp-refs-mode-map eww-mode-map forge-notifications-mode help-mode-map helpful-mode-map Info-mode-map ledger-reconcile-mode-map Man-mode-map mu4e-view-mode-map org-lint--report-mode-map osa-chrome-mode-map pass-mode-map special-mode-map)
+  ((custom-mode-map ebib-entry-mode-map ebib-index-mode-map elfeed-show-mode-map elisp-refs-mode-map eww-mode-map forge-notifications-mode help-mode-map helpful-mode-map Info-mode-map ledger-reconcile-mode-map Man-mode-map mu4e-view-mode-map org-lint--report-mode-map osa-chrome-mode-map pass-mode-map special-mode-map)
    "k" 'previous-line
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)
@@ -11274,18 +11274,20 @@ These key bindings produce the same behavior in eww.
   :after elfeed
   :demand t
   :config
+  (setq elfeed-show-entry-switch #'elfeed-extras-display-buffer)
   ;; (advice-add 'elfeed :after #'elfeed-extras-auto-update)
 
   :general
   (elfeed-search-mode-map
    "A" 'elfeed-extras-mark-all-as-read
    "e" 'elfeed-extras-toggle-read-entries
+   "k" 'elfeed-extras-follow-previous
+   "l" 'elfeed-extras-follow-next
    "w" 'elfeed-extras-toggle-wiki-entries)
   (elfeed-show-mode-map
    "i" 'elfeed-extras-toggle-fixed-pitch
    "v" 'elfeed-extras-show-visit-in-eww
-   "w" 'elfeed-extras-kill-link-url-of-entry
-   "z" 'elfeed-extras-url-full-capture))
+   "w" 'elfeed-extras-kill-link-url-of-entry))
 #+end_src
 
 ** elfeed-org

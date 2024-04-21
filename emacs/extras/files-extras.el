@@ -492,6 +492,12 @@ current helpful buffer displays, then kill the buffer."
     (while (re-search-forward "\\(^\\s-*$\\)\n\\(\\(^\\s-*$\\)\n\\)+" nil t)
       (replace-match "\n"))))
 
+(defun files-extras-read-lines (file)
+  "Return a list of lines of FILE."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (split-string (buffer-string) "\n" t)))
+
 ;;;;; Dispatcher
 
 ;;;###autoload (autoload 'files-extras-dispatch "files-extras" nil t)

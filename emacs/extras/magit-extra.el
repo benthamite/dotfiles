@@ -28,7 +28,9 @@
 ;;; Code:
 
 (require 'magit)
+(require 'org)
 (require 'paths)
+(require 'window-extras)
 
 ;;;; Functions
 

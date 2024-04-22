@@ -325,8 +325,11 @@
          [:comma :volume_increment]
          [:period :volume_decrement]
          [:slash :mute]
-         [:h {:modi :⇧⌘⌃ :key :0}] ; dictation
-         [:n {:modi :⇧⌘⌃ :key :1}] ; narration
+         [:c {:modi :C-M-s- :key :c} :emacs]
+         [:g {:modi :C-M-s- :key :g} :emacs]
+         [:h {:modi :⇧⌘⌥⌃ :key :0}] ; dictation
+         [:n {:modi :⇧⌘⌥⌃ :key :1}] ; narration
+         
          ]}
 
 {:des "f-mode (special chars)"

@@ -61,39 +61,35 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
 
 ;;;;; Face attributes
 
-(defun faces-extras-set-face-attribute (face attribute value)
-  "Set a single FACE ATTRIBUTE to VALUE, evaluating VALUE if it's a quoted expression."
-  ;; Check if value is a quoted expression and evaluate it.
-  (let ((evaluated-value (if (and (listp value) (eq (car value) 'quote))
-                             (eval value)
-                           value)))
-    (set-face-attribute face nil attribute evaluated-value)))
+(defun faces-extras-set-face-attribute (attribute)
+  "Set a single face ATTRIBUTE."
+  (let* ((face (car attribute))
+         (args (cdr attribute))
+         (evaluated-args (mapcar (lambda (arg)
+                                   (if (functionp arg)
+                                       (funcall arg)
+                                     arg))
+                                 args)))
+    (apply 'set-face-attribute face nil evaluated-args)))
 
 (defun faces-extras-set-face-attributes (attributes)
   "Set a list of face ATTRIBUTES."
   (dolist (attribute attributes)
-    (let* ((face (car attribute))
-           (attr-vals (cdr attribute)))
-      (while attr-vals
-        (let ((attr (car attr-vals))
-              (val (cadr attr-vals)))
-          (faces-extras-set-face-attribute face attr val))
-        (setq attr-vals (cddr attr-vals))))))
+    (faces-extras-set-face-attribute attribute)))
 
 (defun faces-extras-set-and-store-face-attributes (attributes)
   "Set list of face ATTRIBUTES and store them.
-The attributes are stored in `faces-extras-custom-face-attributes', with expressions evaluated."
+The attributes are stored as lambdas in `faces-extras-custom-face-attributes'."
   (dolist (attribute attributes)
-    ;; Here we directly call `faces-extras-set-face-attributes' to maintain your original design pattern.
-    (faces-extras-set-face-attributes (list attribute))
-    ;; Store the attributes including evaluated values. This assumes attributes are passed with `quote' for evaluable values.
-    (let ((stored-attr (let* ((face (car attribute))
-                              (vals (cdr attribute))
-                              (evaluated-vals (mapcar (lambda (x) (if (listp x) (eval x) x)) vals)))
-                         (cons face evaluated-vals))))
-      (add-to-list 'faces-extras-custom-face-attributes stored-attr t))))
+    (let ((face (car attribute))
+          (args (mapcar (lambda (arg)
+                          (if (and (listp arg) (not (eq (car arg) 'lambda)))
+                              `(lambda () ,arg)
+                            arg))
+                        (cdr attribute))))
+      (faces-extras-set-face-attribute (cons face args))
+      (add-to-list 'faces-extras-custom-face-attributes (cons face args) t))))
 
-;;;###autoload
 (defun faces-extras-set-custom-face-attributes ()
   "Set custom face attributes stored in `faces-extras-custom-face-attributes'."
   (interactive)

@@ -53,7 +53,34 @@
   :type 'integer
   :group 'faces-extras)
 
+(defvar faces-extras-custom-face-attributes '()
+  "Custom face attributes.
+These attributes can be set with `faces-extras-set-custom-face-attributes'.")
+
 ;;;; Functions
+
+(defun faces-extras-set-face-attribute (attribute)
+  "Set a single face ATTRIBUTE."
+  (let ((face (car attribute))
+        (args (cdr attribute)))
+    (apply 'set-face-attribute face nil args)))
+
+(defun faces-extras-set-face-attributes (attributes)
+  "Set a list of face ATTRIBUTES."
+  (dolist (attribute attributes)
+    (faces-extras-set-face-attribute attribute)))
+
+(defun faces-extras-set-and-store-face-attributes (attributes)
+  "Set list of face ATTRIBUTES and store them.
+The attributes are stored in `faces-extras-custom-face-attributes'."
+  (dolist (attribute attributes)
+    (faces-extras-set-face-attribute attribute)
+    (add-to-list 'faces-extras-custom-face-attributes attribute)))
+
+(defun faces-extras-set-custom-face-attributes ()
+  "Set custom face attributes."
+  (interactive)
+  (faces-extras-set-face-attributes faces-extras-custom-face-attributes))
 
 (defun faces-extras-load-custom-faces ()
   "My custom faces, to be used in conjunction with theme."

@@ -6188,9 +6188,9 @@ The file should contain one search query per line."
     (interactive "f")
     (when (gdrive-mark-clear-prompt)
       (let ((lines (files-extras-read-lines file)))
-	(dolist (line lines)
-	  (let ((results (gdrive-act-on-selected-search-results line)))
-	    (gdrive-mark-results results))))
+        (dolist (line lines)
+          (let ((results (gdrive-act-on-selected-search-results line)))
+            (gdrive-mark-results results))))
       (gdrive-share-results gdrive-marked-files))))
 #+end_src
 
@@ -7169,8 +7169,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 (use-package gptel
   :elpaca (gptel
            :host github
-	   :repo "karthink/gptel"
-	   :branch "feature-vision")
+           :repo "karthink/gptel"
+           :branch "feature-vision")
   :after pass
   :defer 10
   :config
@@ -7634,7 +7634,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   :demand t
   :config
   (setq org-extras-agenda-switch-to-agenda-current-day-timer
-	(run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
+        (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
 
   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter org-extras-clocktable-sorter))
 

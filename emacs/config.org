@@ -5703,7 +5703,11 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :demand t
   :config
   (setq macos-bluetooth-device-list
-  '(("Sonny WH-1000XM5" . "ac-80-0a-37-41-1e"))))
+        '(("Sonny WH-1000XM5" . "ac-80-0a-37-41-1e")))
+
+  :general
+  ("C-M-s-c" 'macos-bluetooth-device-dwim
+   "C-M-s-g" 'macos-set-dication-language))
 #+end_src
 
 ** em-hist

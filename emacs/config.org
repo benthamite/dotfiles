@@ -118,12 +118,12 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#display][display]]
   - [[#mixed-pitch][mixed-pitch]]
   - [[#fringe][fringe]]
+  - [[#faces][faces]]
+  - [[#faces-extras][faces-extras]]
   - [[#org-modern][org-modern]]
   - [[#org-modern-indent][org-modern-indent]]
   - [[#org-tidy][org-tidy]]
   - [[#org-appear][org-appear]]
-  - [[#faces][faces]]
-  - [[#faces-extras][faces-extras]]
   - [[#face-remap][face-remap]]
   - [[#modus-themes][modus-themes]]
   - [[#modus-themes-extras][modus-themes-extras]]
@@ -1680,6 +1680,58 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
                   (unknown . question-mark))))
 #+end_src
 
+** faces
+:PROPERTIES:
+:ID:       168A61B0-4580-443D-B04F-78F08EFA0458
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-04 Wed 10:45]--[2022-05-04 Wed 11:00] =>  0:15
+CLOCK: [2021-11-17 Wed 19:48]--[2021-11-17 Wed 19:57] =>  0:09
+CLOCK: [2021-11-17 Wed 11:27]--[2021-11-17 Wed 11:38] =>  0:11
+CLOCK: [2021-11-16 Tue 16:27]--[2021-11-16 Tue 17:55] =>  1:28
+CLOCK: [2021-08-19 Thu 19:18]--[2021-08-19 Thu 19:31] =>  0:13
+CLOCK: [2021-03-28 Sun 21:05]--[2021-03-28 Sun 21:21] =>  0:16
+CLOCK: [2021-02-27 Sat 18:27]--[2021-02-27 Sat 18:32] =>  0:05
+CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature faces
+  :demand t
+  :config
+  (setq ns-use-thin-smoothing t))
+#+end_src
+
+- [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
+- [[https://zzamboni.org/post/beautifying-org-mode-in-emacs/][- zzamboni.org | Beautifying Org Mode in Emacs]]
+
+** faces-extras
+:PROPERTIES:
+:ID:       9478C42B-7864-4F53-BD17-5EBEC2A55DB8
+:END:
+
+
+/[[file:extras/faces-extras.el][faces-extras]] collects my extensions for ~faces~./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-personal-package faces-extras
+  :after faces
+  :demand t
+  :config
+
+  (add-hook 'tlon-init-post-init-hook #'faces-extras-set-custom-face-attributes)
+  (faces-extras-set-and-store-face-attributes
+   `((default :family ,faces-extras-fixed-pitch-font :height ,faces-extras-fixed-pitch-size)
+     (fixed-pitch :family ,faces-extras-fixed-pitch-font :height 1.1)
+     (variable-pitch :family ,faces-extras-variable-pitch-font :height 1.4)))
+
+  (with-eval-after-load 'modus-themes
+    `((window-divider :foreground ,(face-attribute 'mode-line-inactive :background))))
+
+  :general
+  ("C-h C-f" 'faces-extras-describe-face))
+#+end_src
+
 ** org-modern
 :PROPERTIES:
 :ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
@@ -1693,7 +1745,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-modern
   :demand t
-  :after org
+  :after org faces-extras
   :config
   (setq org-modern-table nil) ; doesn’t work well with variable-pitch: github.com/minad/org-modern/issues/99
   (setq org-modern-statistics nil)
@@ -1701,6 +1753,13 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
   (setq org-modern-list '((42 . "○")
                           (43 . "○")
                           (45 . "○")))
+
+  (faces-extras-set-and-store-face-attributes
+   `((org-modern-date-active :family ,faces-extras-fixed-pitch-font :height 0.8)
+     (org-modern-date-inactive :family ,faces-extras-fixed-pitch-font :height 0.8)
+     (org-modern-tag :family ,faces-extras-fixed-pitch-font :height 0.9)
+     (org-modern-label :family ,faces-extras-fixed-pitch-font :height 0.8)))
+
   (global-org-modern-mode))
 #+end_src
 
@@ -1757,50 +1816,6 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
   (add-hook 'org-mode-hook 'org-appear-mode))
 #+end_src
 
-** faces
-:PROPERTIES:
-:ID:       168A61B0-4580-443D-B04F-78F08EFA0458
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-04 Wed 10:45]--[2022-05-04 Wed 11:00] =>  0:15
-CLOCK: [2021-11-17 Wed 19:48]--[2021-11-17 Wed 19:57] =>  0:09
-CLOCK: [2021-11-17 Wed 11:27]--[2021-11-17 Wed 11:38] =>  0:11
-CLOCK: [2021-11-16 Tue 16:27]--[2021-11-16 Tue 17:55] =>  1:28
-CLOCK: [2021-08-19 Thu 19:18]--[2021-08-19 Thu 19:31] =>  0:13
-CLOCK: [2021-03-28 Sun 21:05]--[2021-03-28 Sun 21:21] =>  0:16
-CLOCK: [2021-02-27 Sat 18:27]--[2021-02-27 Sat 18:32] =>  0:05
-CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature faces
-  :demand t
-  :config
-  (setq ns-use-thin-smoothing t))
-#+end_src
-
-- [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
-- [[https://zzamboni.org/post/beautifying-org-mode-in-emacs/][- zzamboni.org | Beautifying Org Mode in Emacs]]
-
-** faces-extras
-:PROPERTIES:
-:ID:       9478C42B-7864-4F53-BD17-5EBEC2A55DB8
-:END:
-
-
-/[[file:extras/faces-extras.el][faces-extras]] collects my extensions for ~faces~./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-personal-package faces-extras
-  :after faces
-  :demand t
-  :config
-  (add-hook 'tlon-init-post-init-hook #'faces-extras-load-custom-faces)
-
-  :general
-  ("C-h C-f" 'faces-extras-describe-face))
-#+end_src
-
 ** face-remap
 :PROPERTIES:
 :ID:       A999E839-CB99-4BC3-BB40-962B17683EDE
@@ -1848,7 +1863,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
           ;; for the rest, use the predefined intense values
           ,@modus-themes-preset-overrides-intense))
 
-  (add-hook 'modus-themes-after-load-theme-hook #'faces-extras-load-custom-faces)
+  (add-hook 'modus-themes-after-load-theme-hook #'faces-extras-set-custom-face-attributes)
   (add-hook 'modus-themes-after-load-theme-hook #'frame-extras-restore-window-divider)
 
   :general
@@ -2084,6 +2099,7 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature tab-bar
   :demand t
+  :after faces-extras
   :config
   (setq tab-bar-format '(tab-bar-align-right
                          tab-bar-format-global))
@@ -2096,6 +2112,10 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
         ;; `tab-bar-format-global'.
         (remove '(global-mode-string ("" global-mode-string))
                 mode-line-misc-info))
+
+  (faces-extras-set-and-store-face-attributes
+   '((tab-bar :background (face-background 'mode-line)
+              :box `(:line-width 6 :color ,(face-attribute 'mode-line :background) :style nil))))
 
   (tab-bar-mode))
 #+end_src
@@ -5311,6 +5331,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
                             corfu-popupinfo
                             corfu-quick))
   :demand t
+  :after faces-extras
   :config
   (setq corfu-auto t)                 ;; Enable auto completion
   (setq corfu-quit-no-match t)        ;; Automatically quit if there is no match
@@ -5319,6 +5340,9 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (setq corfu-info-documentation nil)
   (setq corfu-auto-prefix 3)
   (setq corfu-auto-delay 0.5)
+
+  (faces-extras-set-and-store-face-attributes
+   `((corfu-default :family ,faces-extras-fixed-pitch-font :height 1)))
 
   (global-corfu-mode)
 
@@ -5740,9 +5764,11 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package jinx
   :demand t
+  :after faces-extras
   :config
   (setq jinx-languages "en")
-  (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
+  (faces-extras-set-and-store-face-attributes
+   `((jinx-misspelled :underline '(:color "#008000" :style wave))))
 
   (add-to-list 'vertico-multiform-categories
                '(jinx grid (vertico-grid-annotate . 20)))
@@ -5779,6 +5805,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package flycheck
   :demand t
+  :after faces-extras
   :init
   (global-flycheck-mode)
 
@@ -5787,6 +5814,10 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (setq flycheck-emacs-lisp-load-path 'inherit)
   (setq flycheck-indication-mode nil)
   (setq flycheck-checker-error-threshold 5000)
+
+  (faces-extras-set-and-store-face-attributes
+   `((flycheck-error :underline '(:color "#ff0000" :style wave))
+     (flycheck-warning :underline '(:color "#0000ff" :style wave))))
 
   (add-hook 'org-src-mode-hook
             (lambda ()
@@ -8125,10 +8156,30 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-faces
-  :after org
+  :after org faces-extras
   :demand t
   :config
-  (setq org-fontify-quote-and-verse-blocks t))
+  (setq org-fontify-quote-and-verse-blocks t)
+
+  (faces-extras-set-and-store-face-attributes
+   `((org-drawer :foreground "LightSkyBlue" :family ,faces-extras-fixed-pitch-font :height 0.8)
+     (org-property-value :family ,faces-extras-fixed-pitch-font :height 0.8)
+     (org-todo :family ,faces-extras-fixed-pitch-font :height 1.0)
+     (org-archived :family ,faces-extras-fixed-pitch-font :height 0.9)
+     (org-document-title :family ,faces-extras-fixed-pitch-font :height 1.0)
+     (org-special-keyword :family ,faces-extras-fixed-pitch-font :height 0.8)
+     (org-tag :family ,faces-extras-fixed-pitch-font :height 0.9)
+     (org-code :family ,faces-extras-fixed-pitch-font :height 1.3)
+     (org-level-1 :family ,faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-2 :family ,faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-3 :family ,faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-4 :family ,faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-5 :family ,faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-6 :family ,faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-7 :family ,faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-8 :family ,faces-extras-fixed-pitch-font :height 0.9)
+     (org-date :family ,faces-extras-fixed-pitch-font :height 0.8)
+     (org-quote :family ,faces-extras-variable-pitch-font :height 1.3))))
 #+end_src
 
 ** org-id
@@ -11004,6 +11055,7 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature shr
+  :after faces-extras
   :demand t
   :config
   (setq shr-bullet "• ")
@@ -11014,6 +11066,9 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
   (setq shr-max-width 100)
   (setq shr-discard-aria-hidden t)
   (setq shr-cookie-policy t)
+
+  (faces-extras-set-and-store-face-attributes
+   `((shr-text :height 0.65)))
 
   :general
   ((js-mode html-mode-map mhtml-mode-map)

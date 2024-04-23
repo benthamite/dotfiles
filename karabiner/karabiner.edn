@@ -320,16 +320,16 @@
          [:u {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
-         [:l [:km "Play Spotify"]]
+         [:l :play_or_pause]
+         [:slash [:km "Spotify play"]]
          [:semicolon :fastforward]
          [:comma :volume_increment]
          [:period :volume_decrement]
-         [:slash :mute]
-         [:c {:modi :C-M-s- :key :c} :emacs]
-         [:g {:modi :C-M-s- :key :g} :emacs]
+         [:m :mute]
+         [:c {:modi :C-M-s- :key :c} :emacs] ; connect to bluetooth device
+         [:g {:modi :C-M-s- :key :g} :emacs] ; toggle langs
          [:h {:modi :⇧⌘⌥⌃ :key :0}] ; dictation
          [:n {:modi :⇧⌘⌥⌃ :key :1}] ; narration
-         
          ]}
 
 {:des "f-mode (special chars)"

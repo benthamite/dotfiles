@@ -6587,17 +6587,6 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
    "A-u" 'pdf-view-midnight-minor-mode))
 #+end_src
 
-*** TODO [#4] Tweak chrome headless command so that chrome authenticates before printing a pdf
-:PROPERTIES:
-:ID:       BDE975FE-56AA-45C3-AF47-C70503051B30
-:Effort:   0:20
-:END:
-:LOGBOOK:
-CLOCK: [2023-11-25 Sat 22:25]--[2023-11-25 Sat 23:33] =>  1:08
-:END:
-https://stackoverflow.com/questions/62602327/headless-chrome-sharing-credentials
-Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
-
 ** pdf-tools-extras
 :PROPERTIES:
 :ID:       C4B53EDC-372F-42B2-924E-FE48647B67AE

@@ -724,11 +724,11 @@ CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
          [:u {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
-         [:l [:km "Play Spotify"]]
+         [:l :play_or_pause]
          [:semicolon :fastforward]
          [:comma :volume_increment]
          [:period :volume_decrement]
-         [:slash :mute]
+         [:m :mute]
          [:c {:modi :C-M-s- :key :c} :emacs] ; connect to bluetooth device
          [:g {:modi :C-M-s- :key :g} :emacs] ; toggle langs
          [:h {:modi :⇧⌘⌥⌃ :key :0}] ; dictation

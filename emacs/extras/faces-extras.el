@@ -27,13 +27,17 @@
 
 ;;; Code:
 
-(require 'faces)
+;; (require 'faces)
 
 ;;;; User options
 
 (defgroup faces-extras ()
   "Extensions for `faces'."
   :group 'faces)
+
+(defvar faces-extras-custom-face-attributes nil
+  "Custom face attributes.
+These attributes can be set with `faces-extras-set-custom-face-attributes'.")
 
 (defcustom faces-extras-variable-pitch-font
   "Source Serif Pro"
@@ -51,10 +55,6 @@
   "Size of the font for fixed-pitch faces."
   :type 'integer
   :group 'faces-extras)
-
-(defvar faces-extras-custom-face-attributes '()
-  "Custom face attributes.
-These attributes can be set with `faces-extras-set-custom-face-attributes'.")
 
 ;;;; Functions
 

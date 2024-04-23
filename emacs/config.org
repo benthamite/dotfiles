@@ -9282,7 +9282,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature oc
-  :after org
+  :after org el-patch
   :demand t
   :config
   (setq org-cite-csl-styles-dir paths-dir-tlon-csl-styles)

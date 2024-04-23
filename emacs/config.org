@@ -6203,6 +6203,7 @@ The file should contain one search query per line."
 :ID:       4D8E953E-44F4-4546-8BF9-08D8983CA699
 :END:
 :LOGBOOK:
+CLOCK: [2024-04-23 Tue 09:54]--[2024-04-23 Tue 10:05] =>  0:11
 CLOCK: [2022-05-19 Thu 20:30]--[2022-05-19 Thu 20:33] =>  0:03
 :END:
 

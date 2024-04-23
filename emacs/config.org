@@ -11460,8 +11460,15 @@ These key bindings produce the same behavior in eww.
   :demand t
   :config
   (push '(text . shr-text) elfeed-tube-captions-faces)
+  (setq elfeed-tube-auto-save-p t)
 
-  (elfeed-tube-setup))
+  (elfeed-tube-setup)
+
+  :general
+  (elfeed-show-mode-map
+  "v" 'elfeed-tube-mpv
+  "F" 'elfeed-tube-mpv-follow-mode
+  "." 'elfeed-tube-mpv-where))
 #+end_src
 
 ** elfeed-tube-mpv

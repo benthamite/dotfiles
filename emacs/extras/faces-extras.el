@@ -79,16 +79,18 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
 
 (defun faces-extras-set-and-store-face-attributes (attributes)
   "Set list of face ATTRIBUTES and store them.
-The attributes are stored as lambdas in `faces-extras-custom-face-attributes'."
+The attributes are stored in `faces-extras-custom-face-attributes'."
   (dolist (attribute attributes)
-    (let ((face (car attribute))
-          (args (mapcar (lambda (arg)
-                          (if (and (listp arg) (not (eq (car arg) 'lambda)))
-                              `(lambda () ,arg)
-                            arg))
-                        (cdr attribute))))
-      (faces-extras-set-face-attribute (cons face args))
-      (add-to-list 'faces-extras-custom-face-attributes (cons face args) t))))
+    (let* ((face (car attribute))
+           (args (mapcar (lambda (arg)
+			   "Wrap ARG in a lambda if it a list of attributes."
+                           (if (and (listp arg) (not (eq (car arg) 'lambda)))
+                               `(lambda () ,arg)
+                             arg))
+                         (cdr attribute)))
+	   (cons (cons face args)))
+      (faces-extras-set-face-attribute cons)
+      (add-to-list 'faces-extras-custom-face-attributes cons t))))
 
 (defun faces-extras-set-custom-face-attributes ()
   "Set custom face attributes stored in `faces-extras-custom-face-attributes'."

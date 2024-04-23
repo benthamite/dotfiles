@@ -75,6 +75,15 @@
   (interactive)
   (dired-copy-filename-as-kill '(0)))
 
+(defun dired-extras-copy-filename-as-kill-dwim ()
+  "Copy names of visible files into the kill ring.
+If `dired-hide-details-mode' is non-nil, copy the file names sans their
+directories; otherwise copy the full paths."
+  (interactive)
+  (let ((files (dired-get-marked-files dired-hide-details-mode nil)))
+    (kill-new (mapconcat #'identity files "\n"))))
+
+(declare-function image-dired-copy-filename-as-kill "image-dired")
 (defun dired-extras-image-copy-filename-as-kill-absolute ()
   "Copy absolute names of marked (or next ARG) images into the kill ring."
   (interactive)

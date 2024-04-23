@@ -3603,6 +3603,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 #+begin_src emacs-lisp :results silent (tlon-init-tangle-conditionally)
 (use-package dired-du
   :after dired-extras
+  :demand t
   :config
   (setq dired-du-size-format 'comma)
   (add-hook 'dired-hide-details-mode-hook #'dired-extras-enable-dired-du-conditionally))

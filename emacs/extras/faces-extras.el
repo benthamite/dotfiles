@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'faces)
-(require 'hl-line)
 
 ;;;; User options
 
@@ -104,6 +103,8 @@ The attributes are stored in `faces-extras-custom-face-attributes'."
   '((t (:inherit bold)))
   "Face for `display-time-string' in `global-mode-string'.")
 
+(defvar hl-line-mode)
+;;;###autoload
 (defun faces-extras-describe-face ()
   "Like `describe-face', but with `hl-line-mode' disabled.
 Always use face at point."

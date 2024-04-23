@@ -3559,6 +3559,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
    "," 'dired-extras-up-directory-reuse
    "H-." 'dired-extras-dotfiles-toggle
    "c" 'dired-extras-copy-filename-as-kill-absolute
+   "w" 'dired-extras-copy-filename-as-kill-dwim
    "W" 'dired-extras-copy-filename-as-kill-sans-extension
    "z" 'dired-extras-mark-screenshots
    "s-d" 'dired-extras-do-delete-fast
@@ -11416,7 +11417,6 @@ These key bindings produce the same behavior in eww.
    "w" 'elfeed-extras-toggle-wiki-entries)
   (elfeed-show-mode-map
    "i" 'elfeed-extras-toggle-fixed-pitch
-   "v" 'elfeed-extras-show-visit-in-eww
    "w" 'elfeed-extras-kill-link-url-of-entry))
 #+end_src
 

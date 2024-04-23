@@ -4423,7 +4423,7 @@ Note to self: if the package doesn't work after deploying a new profile, even af
   (setq org-gcal-client-secret (auth-source-pass-get 'secret "auth-sources/org-gcal"))
 
   :config
-  (setq org-gcal-fetch-file-alist `((,user-mail-address . ,paths-file-calendar)))
+  (setq org-gcal-fetch-file-alist `((,(getenv "PERSONAL_GMAIL") . ,paths-file-calendar)))
   (setq org-gcal-recurring-events-mode 'top-level)
   (setq org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
   (setq org-gcal-notify-p nil)
@@ -8583,7 +8583,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :demand t
   :config
   (setq org-tags-exclude-from-inheritance '("crypt"))
-  (setq org-crypt-key user-mail-address)
+  (setq org-crypt-key (getenv "PERSONAL_GMAIL"))
   (setq org-crypt-disable-auto-save t)
 
   (org-crypt-use-before-save-magic))
@@ -10252,7 +10252,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature smtpmail
   :config
-  (setq smtpmail-smtp-user user-mail-address)
+  (setq smtpmail-smtp-user (getenv "PERSONAL_GMAIL"))
   (setq smtpmail-local-domain "gmail.com")
   (setq smtpmail-default-smtp-server "smtp.gmail.com")
   (setq smtpmail-smtp-server "smtp.gmail.com")
@@ -10606,7 +10606,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
   :config
   (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t")
   (setq org-msg-startup "hidestars indent inlineimages")
-  (setq org-msg-recipient-names `((,user-mail-address . "Pablo")))
+  (setq org-msg-recipient-names `((,(getenv "PERSONAL_GMAIL") . "Pablo")))
   (setq org-msg-greeting-name-limit 3)
   (setq org-msg-default-alternatives '((new		. (text html))
                                        (reply-to-html	. (text html))

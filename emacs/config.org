@@ -1722,12 +1722,10 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 
   (add-hook 'tlon-init-post-init-hook #'faces-extras-set-custom-face-attributes)
   (faces-extras-set-and-store-face-attributes
-   `((default :family ,faces-extras-fixed-pitch-font :height ,faces-extras-fixed-pitch-size)
-     (fixed-pitch :family ,faces-extras-fixed-pitch-font :height 1.1)
-     (variable-pitch :family ,faces-extras-variable-pitch-font :height 1.4)))
-
-  (with-eval-after-load 'modus-themes
-    `((window-divider :foreground ,(face-attribute 'mode-line-inactive :background))))
+   '((default :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
+     (fixed-pitch :family faces-extras-fixed-pitch-font :height 1.1)
+     (variable-pitch :family faces-extras-variable-pitch-font :height 1.4)
+     (window-divider :foreground (face-attribute 'mode-line-inactive :background))))
 
   :general
   ("C-h C-f" 'faces-extras-describe-face))
@@ -1756,10 +1754,10 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
                           (45 . "○")))
 
   (faces-extras-set-and-store-face-attributes
-   `((org-modern-date-active :family ,faces-extras-fixed-pitch-font :height 0.8)
-     (org-modern-date-inactive :family ,faces-extras-fixed-pitch-font :height 0.8)
-     (org-modern-tag :family ,faces-extras-fixed-pitch-font :height 0.9)
-     (org-modern-label :family ,faces-extras-fixed-pitch-font :height 0.8)))
+   '((org-modern-date-active :family faces-extras-fixed-pitch-font :height 0.8)
+     (org-modern-date-inactive :family faces-extras-fixed-pitch-font :height 0.8)
+     (org-modern-tag :family faces-extras-fixed-pitch-font :height 0.9)
+     (org-modern-label :family faces-extras-fixed-pitch-font :height 0.8)))
 
   (global-org-modern-mode))
 #+end_src
@@ -5343,7 +5341,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (setq corfu-auto-delay 0.5)
 
   (faces-extras-set-and-store-face-attributes
-   `((corfu-default :family ,faces-extras-fixed-pitch-font :height 1)))
+   '((corfu-default :family faces-extras-fixed-pitch-font :height 1)))
 
   (global-corfu-mode)
 
@@ -5773,7 +5771,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :config
   (setq jinx-languages "en")
   (faces-extras-set-and-store-face-attributes
-   `((jinx-misspelled :underline '(:color "#008000" :style wave))))
+   '((jinx-misspelled :underline '(:color "#008000" :style wave))))
 
   (add-to-list 'vertico-multiform-categories
                '(jinx grid (vertico-grid-annotate . 20)))
@@ -5821,7 +5819,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (setq flycheck-checker-error-threshold 5000)
 
   (faces-extras-set-and-store-face-attributes
-   `((flycheck-error :underline '(:color "#ff0000" :style wave))
+   '((flycheck-error :underline '(:color "#ff0000" :style wave))
      (flycheck-warning :underline '(:color "#0000ff" :style wave))))
 
   (add-hook 'org-src-mode-hook
@@ -8167,24 +8165,24 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
   (setq org-fontify-quote-and-verse-blocks t)
 
   (faces-extras-set-and-store-face-attributes
-   `((org-drawer :foreground "LightSkyBlue" :family ,faces-extras-fixed-pitch-font :height 0.8)
-     (org-property-value :family ,faces-extras-fixed-pitch-font :height 0.8)
-     (org-todo :family ,faces-extras-fixed-pitch-font :height 1.0)
-     (org-archived :family ,faces-extras-fixed-pitch-font :height 0.9)
-     (org-document-title :family ,faces-extras-fixed-pitch-font :height 1.0)
-     (org-special-keyword :family ,faces-extras-fixed-pitch-font :height 0.8)
-     (org-tag :family ,faces-extras-fixed-pitch-font :height 0.9)
-     (org-code :family ,faces-extras-fixed-pitch-font :height 1.3)
-     (org-level-1 :family ,faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-2 :family ,faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-3 :family ,faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-4 :family ,faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-5 :family ,faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-6 :family ,faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-7 :family ,faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-8 :family ,faces-extras-fixed-pitch-font :height 0.9)
-     (org-date :family ,faces-extras-fixed-pitch-font :height 0.8)
-     (org-quote :family ,faces-extras-variable-pitch-font :height 1.3))))
+   '((org-drawer :foreground "LightSkyBlue" :family faces-extras-fixed-pitch-font :height 0.8)
+     (org-property-value :family faces-extras-fixed-pitch-font :height 0.8)
+     (org-todo :family faces-extras-fixed-pitch-font :height 1.0)
+     (org-archived :family faces-extras-fixed-pitch-font :height 0.9)
+     (org-document-title :family faces-extras-fixed-pitch-font :height 1.0)
+     (org-special-keyword :family faces-extras-fixed-pitch-font :height 0.8)
+     (org-tag :family faces-extras-fixed-pitch-font :height 0.9)
+     (org-code :family faces-extras-fixed-pitch-font :height 1.3)
+     (org-level-1 :family faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-2 :family faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-3 :family faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-4 :family faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-5 :family faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-6 :family faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-7 :family faces-extras-fixed-pitch-font :height 0.9)
+     (org-level-8 :family faces-extras-fixed-pitch-font :height 0.9)
+     (org-date :family faces-extras-fixed-pitch-font :height 0.8)
+     (org-quote :family faces-extras-variable-pitch-font :height 1.3))))
 #+end_src
 
 ** org-id
@@ -11073,7 +11071,7 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
   (setq shr-cookie-policy t)
 
   (faces-extras-set-and-store-face-attributes
-   `((shr-text :height 0.65)))
+   '((shr-text :height 0.65)))
 
   :general
   ((js-mode html-mode-map mhtml-mode-map)

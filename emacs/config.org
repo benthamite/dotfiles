@@ -1799,6 +1799,14 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature face-remap
   :demand t
+  :config
+  (dolist (hook '(elfeed-show-mode-hook
+                  telega-webpage-mode-hook
+                  eww-mode-hook
+                  mu4e-view-mode-hook
+                  outline-mode-hook))
+    (add-hook hook #'variable-pitch-mode))
+
   :general
   (eww-mode-map
    "+" 'text-scale-increase

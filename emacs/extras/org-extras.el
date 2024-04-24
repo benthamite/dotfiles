@@ -29,21 +29,14 @@
 
 ;;; Code:
 
-(require 'browse-url)
-;; (require 'crux) ; Error (use-package): org-extras/:catch: Cannot open load file: No such file or directory, crux
 (require 'el-patch)
 (require 'org)
 (require 'org-agenda)
 (require 'org-capture)
 (require 'org-clock)
 (require 'oc)
-;; (require 'org-roam-extras) ; recursion error
 (require 'paths)
-(require 's)
 (require 'simple-extras)
-(require 'thingatpt)
-(require 'url-util)
-(require 'window-extras)
 
 ;;;; User options
 
@@ -338,6 +331,8 @@ number. Disable the mode if ARG is a negative number."
 (defvar org-extras-agenda-switch-to-agenda-current-day-timer nil
   "Timer to switch to agenda of current day.")
 
+(declare-function window-extras-split-if-unsplit "window-extras")
+(declare-function winum-select-window-1 "winum")
 (defun org-extras-agenda-switch-to-agenda-current-day ()
   "Open agenda in left window, creating it if necessary."
   (interactive)
@@ -407,21 +402,16 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 
 ;;;;; org-capture
 
-(declare-function org-ai-mode "org-ai")
 (declare-function org-web-tools-insert-link-for-url "org-web-tools")
 (declare-function org-extras-web-tools--org-title-for-url "org-web-tools")
 (declare-function youtube-dl "youtube-dl")
 (declare-function org-roam-tag-remove "org-roam")
 (declare-function org-roam-tag-add "org-roam")
+(declare-function files-extras-show-buffer-name "file-extras")
+(declare-function files-extras-switch-to-alternate-buffer "files-extras")
 (defun org-extras-capture-before-finalize-hook-function ()
   "Define behavior of `org-capture-before-finalize-hook'."
   (pcase (plist-get org-capture-plist :key)
-    ((or "gg" "gd" "ge")
-     (org-ai-mode)
-     (org-narrow-to-subtree)
-     (forward-line 2)
-     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai\n")
-     (goto-char (point-max)))
     ("l"
      (org-align-tags)
      (ispell-change-dictionary "english"))
@@ -676,6 +666,7 @@ files, recursively all files in `org-directory', and all files in
 
 ;;;;; ol
 
+(declare-function s-replace "s")
 (defun org-extras-sort-links (separator)
   "Sort list of links in current subtree separated by SEPARATOR."
   (interactive "sEnter separator: ")

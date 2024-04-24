@@ -27,15 +27,10 @@
 
 ;;; Code:
 
-(require 'alert) ; recursive
-(require 'cl-seq)
 (require 'dired)
 (require 'dired-extras)
-;; (require 'ebib-extras) ; recursive
-(require 'elpaca)
 (require 'files)
 (require 'paths)
-;; (require 'window-extras)
 
 ;;;; User options
 
@@ -348,6 +343,7 @@ command automates the recovery process in these cases."
       (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
       (files-extras-diff-buffer-with-file))))
 
+(declare-function alert "alert")
 (defun files-extras-auto-save-alert ()
   "Alert user when auto save data is detected.
 `recover-this-file' notifications are easy to miss. This function triggers a
@@ -452,6 +448,7 @@ OLD-FUN and ARGS are arguments passed to the original function."
     (shell-command (format "convert '%s' '%s.pdf'" file (file-name-sans-extension file)))
     (message "Converted image to PDF.")))
 
+(defvar elpaca-repos-directory)
 (defun files-extras-open-elpaca-package (package)
   "Open the package named PACKAGE in the `repos' elpaca directory."
   (require 'elpaca)

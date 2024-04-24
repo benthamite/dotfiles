@@ -27,11 +27,8 @@
 
 ;;; Code:
 
-(require 'crux)
-(require 'f)
 (require 'ledger-mode)
 (require 'paths)
-(require 's)
 
 ;;;; Variables
 
@@ -41,6 +38,8 @@
 
 ;;;; Functions
 
+(declare-function f-read "f")
+(declare-function s-split "s")
 (defun ledger-extras-import-polymarket (file)
   "Import Polymarket CSV FILE into the current ledger file.
 To download the CSV file, go to <https://polymarket.com/portfolio?tab=history>.
@@ -104,6 +103,7 @@ If FILE is nil, use `paths-file-ledger'."
 	  (ledger-mode-extras-align-and-next)
 	  (insert "\n\n"))))))
 
+(declare-function crux-smart-open-line-above "crux")
 (defun ledger-mode-extras-new-entry-below ()
   "Create new entry below one at point."
   (interactive)

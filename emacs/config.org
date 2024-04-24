@@ -1844,6 +1844,8 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
           ;; for the rest, use the predefined intense values
           ,@modus-themes-preset-overrides-intense))
 
+  (setq modus-themes-mixed-fonts t)
+
   (add-hook 'modus-themes-after-load-theme-hook #'faces-extras-set-custom-face-attributes)
   (add-hook 'modus-themes-after-load-theme-hook #'frame-extras-restore-window-divider)
 

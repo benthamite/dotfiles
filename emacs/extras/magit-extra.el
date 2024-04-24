@@ -28,9 +28,7 @@
 ;;; Code:
 
 (require 'magit)
-(require 'org)
 (require 'paths)
-(require 'window-extras)
 
 ;;;; Functions
 
@@ -84,6 +82,8 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
 	('sans-dir (file-name-nondirectory file))
 	(_ file)))))
 
+(declare-function org-entry-get "org")
+(declare-function window-extras-switch-to-last-window "window-extras")
 (defun magit-extras-get-commit-heading ()
   "Get the `org-mode' heading above the code to be committed."
   (let ((file (magit-extras-get-commit-file 'full)))

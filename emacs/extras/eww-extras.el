@@ -66,7 +66,8 @@ directory by running `eww-extras-chrome-copy-data-dir'."
 (defcustom eww-extras-rsync-command
   "rsync -av '%s' '%s'"
   "The `rsync' command to make a copy of the Chrome data directory.
-The placeholders `%s' are replaced by with the source and destination directories."
+The placeholders `%s' are replaced by with the source and destination
+directories."
   :type 'string
   :group 'eww-extras)
 

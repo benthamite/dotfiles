@@ -163,7 +163,7 @@ domain as the initial prompt input."
 	 (domain (when url (url-domain (url-generic-parse-url url))))
 	 (file eww-extras-readable-exceptions-file)
 	 (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
-    (browse-url-extras--write-url-to-file selection file)
+    (browse-url-extras-write-url-to-file selection file)
     (eww-extras-set-readable-exceptions-from-file)
     (eww-reload)))
 

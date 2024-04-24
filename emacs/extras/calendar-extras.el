@@ -28,9 +28,6 @@
 ;;; Code:
 
 (require 'calendar)
-(require 'json)
-(require 'auth-source-pass)
-(require 'url-vars)
 
 ;;;; User options
 

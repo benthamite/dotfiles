@@ -84,7 +84,7 @@
     (:backend "ChatGPT"
 	      :model "gpt-4-0125-preview"
 	      :cost 10
-	      :description "[recommended] The latest GPT-4 model. Returns a maximum of 4,096 output tokens. Training data up to December 2023.")
+	      :description "Returns a maximum of 4,096 output tokens. Training data up to December 2023.")
     (:backend "ChatGPT"
 	      :model "gpt-4"
 	      :cost 30

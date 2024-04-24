@@ -29,7 +29,7 @@
 
 ;;;; Functions
 
-;;;;; editing
+;;;;; Editing
 
 (defmacro simple-extras-delete-instead-of-kill (&rest body)
   "Replace `kill-region' with `delete-region' in BODY."
@@ -51,7 +51,7 @@
   (when-let ((bounds (bounds-of-thing-at-point thing)))
     (kill-region (car bounds) (cdr bounds))))
 
-;;;;;; words
+;;;;;; Words
 
 (defun simple-extras-delete-word (&optional arg)
   "Like `kill-word', but deletes instead of killing.
@@ -168,7 +168,7 @@ See also `zap-up-to-char'."
   (interactive)
   (transpose-chars -1))
 
-;;;;;; lines
+;;;;;; Lines
 
 (defun simple-extras-delete-line (&optional arg)
   "Like `kill-line', but deletes instead of killing.
@@ -212,7 +212,7 @@ With prefix argument ARG, copy that many lines from point."
   (interactive)
   (transpose-lines -1))
 
-;;;;;; sentences
+;;;;;; Sentences
 
 (defun simple-extras-delete-sentence (&optional arg)
   "Like `kill-sentence', but deletes instead of killing.
@@ -262,7 +262,7 @@ negative ARG -N."
   (interactive)
   (transpose-sentences -1))
 
-;;;;;; paragraphs
+;;;;;; Paragraphs
 
 ;; the functions below are derivatives of functions in `paragraphs.el' so maybe
 ;; they should be moved to another extra package there
@@ -314,7 +314,7 @@ negative ARG -N means copy forward to Nth end of paragraph."
   (interactive)
   (transpose-paragraphs -1))
 
-;;;;;; sexps
+;;;;;; Sexps
 
 ;; ;; the functions below are derivatives of functions in `lisp.el' so maybe
 ;; ;; they should be moved to another extra package there
@@ -366,7 +366,7 @@ Negative arg -N means copy N sexps after point."
   (interactive)
   (transpose-sexps -1))
 
-;;;;;; region
+;;;;;; Region
 
 (defun simple-extras-smart-kill-region ()
   "Kill region if active, else kill line."
@@ -389,7 +389,7 @@ Negative arg -N means copy N sexps after point."
       (call-interactively 'copy-region-as-kill)
     (call-interactively 'simple-extras-copy-whole-line)))
 
-;;;;;; yank
+;;;;;; Yank
 
 (defun simple-extras-yank-and-pop ()
   "Yank, then pop the last kill off the ring."
@@ -443,6 +443,7 @@ number."
 (declare-function org-tidy-mode "org-tidy")
 (declare-function org-modern-mode "org-modern")
 (declare-function org-extras-inline-images "org-extras")
+(defvar org-mode-hook)
 (defun simple-extras-visible-mode-enhanced-org (&optional arg)
   "Set associated `org' modes based on ARG."
   (when (derived-mode-p 'org-mode 'org-agenda-mode 'org-msg-mode)
@@ -520,7 +521,7 @@ The DWIM behaviour of this command is as follows:
          ;; any upstream changes
          (keyboard-quit))))
 
-;;;;; indent
+;;;;; Indent
 
 (defvar org-src-tab-acts-natively)
 (declare-function org-in-src-block-p "org")
@@ -547,7 +548,7 @@ block only, else indent whole buffer."
 	(message "Indented buffer.")))
     (whitespace-cleanup)))
 
-;;;;; strip
+;;;;; Strip
 
 ;; github.com/typester/emacs/blob/master/lisp/url/url-util.el
 (defun simple-extras-get-url-at-point (&optional pt)
@@ -647,14 +648,14 @@ FORMS are evaluated with point restored to its original position."
 	('bibtex-mode (bibtex-extras-get-field "url")))
       (read-string "URL: " (current-kill 0))))
 
-;;;;; url-parse
+;;;;; Url-parse
 
 (defun simple-extras-string-is-url-p (str)
   "Check if STR is a valid URL."
   (let ((url (url-generic-parse-url str)))
     (and (url-type url) (url-host url))))
 
-;;;;; conversion
+;;;;; Conversion
 
 (defun simple-extras-pandoc-convert (language &optional non-html)
   "Convert the contents of the system clipboard to target LANGUAGE using Pandoc.
@@ -667,7 +668,7 @@ language."
       (setq output (shell-command-to-string (format command "pbpaste" non-html))))
     output))
 
-;;;;; asciify
+;;;;; Asciify
 
 ;; Adapted from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
 (defun simple-extras-asciify-text (&optional begin end)
@@ -730,8 +731,9 @@ Optionally, remove accents in region from BEGIN to END."
     (simple-extras-asciify-text (point-min) (point-max))
     (buffer-string)))
 
-;;;;; slugify
+;;;;; Slugify
 
+(declare-function prot-eww--sluggify "prot-eww")
 ;;;###autoload
 (defun simple-extras-slugify (string)
   "Convert STRING into slug."
@@ -743,7 +745,7 @@ Optionally, remove accents in region from BEGIN to END."
   (interactive)
   (kill-new (simple-extras-slugify (current-kill 0))))
 
-;;;;; misc
+;;;;; Misc
 
 (defun simple-extras-init-disable-funs (seconds funs)
   "Disable functions in list FUNS after SECONDS."

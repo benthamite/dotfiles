@@ -7234,7 +7234,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :defer 30
   :config
   (setq gpt-commit-openai-key gptel-api-key)
-  (setq gpt-commit-model-name "gpt-4"))
+  (setq gpt-commit-model-name gptel-model))
 #+end_src
 
 * org-mode

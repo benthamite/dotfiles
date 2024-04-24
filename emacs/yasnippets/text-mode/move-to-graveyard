@@ -3,4 +3,4 @@
 # key: mtg
 # contributor: Pablo Stafforini
 # --
-$1: move to graveyard
+`(magit-extras-get-commit-heading)`: move to graveyard

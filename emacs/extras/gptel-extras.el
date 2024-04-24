@@ -28,10 +28,8 @@
 ;;; Code:
 
 (require 'gptel)
-(require 'mullvad)
 (require 'paths)
 (require 'simple-extras)
-(require 'tlon-babel-core)
 
 ;;;; User options
 
@@ -121,6 +119,8 @@ The pricing information has been obtained from the following websites:
 
 ;;;; Functions
 
+(defvar gptel-extras-ai-models)
+(declare-function tlon-babel-lookup "tlon-babel-core")
 ;; adapted from the `:reader' lambda of `transient-infix-set' in `gptel-transient.el'
 (defun gptel-extras-model-config (globally &optional backend-name model-name)
   "Configure `gptel' for BACKEND-NAME and MODEL-NAME.
@@ -158,6 +158,8 @@ called with a prefix argument, configure it globally."
 	 (cost (/ (* cost-per-1m words) 1000000.0)))
     cost))
 
+(defvar gptel-extras-gemini-mullvad-disconnect-after)
+(declare-function mullvad-connect-to-website "mullvad")
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
   "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS."
   (when (string= gptel-model "gemini-pro")

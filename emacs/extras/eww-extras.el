@@ -88,7 +88,7 @@ associated with the PDF."
 		  ((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "=key="))
 		  (_ (pcase type
 		       ("pdf" (buffer-name))
-		       ("html" (prot-eww--sluggify (org-web-tools-extras-org-title-for-url url)))))))
+		       ("html" (simple-extras-slugify (org-web-tools-extras-org-title-for-url url)))))))
 	 (file-name (file-name-with-extension title type))
 	 (output-file (file-name-concat paths-dir-downloads file-name))
 	 (bibtex-file (pcase major-mode

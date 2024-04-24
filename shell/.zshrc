@@ -43,9 +43,6 @@ alias emacsk="pkill -USR2 Emacs"
 alias emacsK="while true; do pkill -USR2 Emacs; done"
 alias emacsicon="osascript -e 'tell application \"Finder\" to make alias file to posix file \"/opt/homebrew/opt/emacs-plus@29/Emacs.app\" at POSIX file \"/Applications\" with properties {name:\"Emacs.app\"}'"
 
-# homebrew
-export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
-
 # libby
 export LIBBY_OUTPUT_DIR="$HOME/Downloads/"
 

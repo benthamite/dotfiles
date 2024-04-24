@@ -7077,8 +7077,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 (use-package gptel
   :elpaca (gptel
            :host github
-	   :repo "karthink/gptel"
-	   :branch "feature-vision")
+           :repo "karthink/gptel")
   :after pass
   :defer 10
   :config
@@ -7132,10 +7131,11 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gpt-commit
-  ;; :defer 5
+  :demand t
   :config
   (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
-  (setq gpt-commit-model-name "gpt-4"))
+  (setq gpt-commit-model-name "gpt-4")
+  (add-hook 'git-commit-setup-hook #'gpt-commit-message))
 #+end_src
 
 * org-mode
@@ -7526,14 +7526,15 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   :demand t
   :config
   (setq org-extras-agenda-switch-to-agenda-current-day-timer
-        (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
+	(run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
 
   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter org-extras-clocktable-sorter))
 
   (add-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
 
   :general
-  ("H-l" 'org-extras-tlon-dispatch)
+  ("H-l" 'org-extras-tlon-menu
+   "H-;" 'org-extras-personal-menu)
   (org-mode-map
    "s-<return>" 'org-extras-super-return
    "A-C-s-n" 'org-extras-jump-to-first-heading
@@ -12505,7 +12506,7 @@ Some useful config files:
 :ID:       4FB9C92B-B39E-4C3D-B9AE-A3342A6F1695
 :END:
 # Local Variables:
-# eval: (files-extras-buffer-local-set-key (kbd "H-;") 'org-extras-config-dispatch)
+# eval: (files-extras-buffer-local-set-key (kbd "H-:") 'org-extras-config-dispatch)
 # eval: (files-extras-buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
 # eval: (flycheck-mode -1)

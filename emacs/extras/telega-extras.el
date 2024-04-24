@@ -27,7 +27,6 @@
 
 ;;; Code:
 
-(require 'files-extras)
 (require 'paths)
 (require 'telega)
 (require 'telega-dired-dwim)
@@ -115,6 +114,7 @@ archive buffer."
         (dolist (file dired-files)
           (funcall (telega-extras-dired-attach-func file) file))))))
 
+(declare-function files-extras-newest-file "files-extras")
 (defun telega-extras-chatbuf-attach-most-recent-file ()
   "Attach most recently saved file in `downloads' folder."
   (interactive)

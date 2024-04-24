@@ -41,7 +41,7 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
 
 (defcustom faces-extras-variable-pitch-font
   "Source Serif Pro"
-  "Font for fixed-pitch faces."
+  "Font for variable-pitch faces."
   :type 'string
   :group 'faces-extras)
 

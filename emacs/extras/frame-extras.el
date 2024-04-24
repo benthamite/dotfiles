@@ -31,7 +31,6 @@
 
 ;;;; Functions
 
-
 (defun frame-extras-maximize-frame ()
   "Maximize the current frame."
   (interactive)

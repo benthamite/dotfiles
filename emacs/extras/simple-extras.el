@@ -27,11 +27,6 @@
 
 ;;; Code:
 
-(require 'org)
-(require 'prot-eww)
-(require 'url-parse)
-(require 'url-vars)
-
 ;;;; Functions
 
 ;;;;; editing
@@ -527,6 +522,9 @@ The DWIM behaviour of this command is as follows:
 
 ;;;;; indent
 
+(defvar org-src-tab-acts-natively)
+(declare-function org-in-src-block-p "org")
+(declare-function org-narrow-to-block "org")
 ;; Adapted from `spacemacs/indent-region-or-buffer'.
 (defun simple-extras-indent-dwim ()
   "Indent in a smart way, depending on context.

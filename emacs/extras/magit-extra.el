@@ -38,8 +38,8 @@
   (interactive
    (list (progn (magit-diff-unstaged) (read-string "Commit Message: "))))
   (when (or
-         (magit-anything-staged-p)
-         (magit-anything-unstaged-p))
+	 (magit-anything-staged-p)
+	 (magit-anything-unstaged-p))
     (magit-stage-modified t)
     (magit-commit-create (list "-m" message)))
   (call-interactively #'magit-push-current-to-pushremote))
@@ -60,8 +60,8 @@
   (if (string-match "^http" url)
       url
     (replace-regexp-in-string "\\(.*\\)@\\(.*\\):\\(.*\\)\\(\\.git?\\)"
-                              "https://\\2/\\3"
-                              url)))
+			      "https://\\2/\\3"
+			      url)))
 
 (defun magit-extras-move-point-to-start ()
   "Move point to the start of the buffer."

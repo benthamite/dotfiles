@@ -27,14 +27,8 @@
 
 ;;; Code:
 
-(require 'browse-url-extras)
 (require 'eww)
-(require 'f)
-(require 'ffap)
-(require 'macos)
-(require 'org-web-tools-extras)
 (require 'paths)
-(require 'prot-eww)
 (require 'simple-extras)
 
 ;;;; User options
@@ -82,6 +76,7 @@ The placeholders `%s' are replaced by with the source and destination directorie
 (declare-function bibtex-extras-get-key "bibtex-extras")
 (declare-function ebib-extras-get-field "ebib-extras")
 (declare-function ebib-db-get-filename "ebib-db")
+(declare-function org-web-tools-extras-org-title-for-url "org-web-tools-extras")
 (defun eww-extras-url-to-file (type &optional url callback)
   "Generate file of TYPE for URL and take ACTION.
 CALLBACK is a function called when the process concludes. The function takes two
@@ -157,6 +152,8 @@ The exceptions are listed in `eww-extras-readable-exceptions'."
 
 (add-hook 'eww-after-render-hook #'eww-extras-readable-autoview)
 
+(declare-function ffap-url-p "ffap")
+(declare-function browse-url-extras-write-url-to-file "browse-url-extras")
 (defun eww-extras-add-domain-to-readable-exceptions ()
   "Prompt for a URL and add its domain to the list of `eww-readable' exceptions.
 If buffer is visiting a URL or if there is a URL in the kill ring, use its
@@ -203,6 +200,8 @@ With prefix ARG is passed, open in new EWW buffer."
 	(eww (current-kill 0)))
     (eww (current-kill 0))))
 
+(declare-function s-split "s")
+(declare-function s-join "s")
 (defun eww-extras-go-up-url-hierarchy ()
   "Go up the URL hierarchy."
   (interactive)
@@ -240,6 +239,9 @@ With prefix ARG is passed, open in new EWW buffer."
 		   (url-fullness url)))
     (eww-browse-url (url-recreate-url new-url))))
 
+(declare-function elfeed-tube-fetch "elfeed-tube")
+(declare-function macos-open-app "macos")
+(declare-function macos-app-is-open-p "macos")
 (defun eww-extras-browse-youtube (url &optional player)
   "For YouTube URLs, show its transcript and open video with PLAYER.
 If PLAYER is nil, default to `mpv'."

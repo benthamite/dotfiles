@@ -1697,8 +1697,8 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
   (add-hook 'tlon-init-post-init-hook #'faces-extras-set-custom-face-attributes)
   (faces-extras-set-and-store-face-attributes
    '((default :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
-     (fixed-pitch :family faces-extras-fixed-pitch-font :height 1.1)
-     (variable-pitch :family faces-extras-variable-pitch-font :height 1.4)
+     (fixed-pitch :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-height)
+     (variable-pitch :family faces-extras-variable-pitch-font :height faces-extras-variable-pitch-height)
      (window-divider :foreground (face-attribute 'mode-line-inactive :background))))
 
   :general
@@ -1728,9 +1728,9 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
                           (45 . "○")))
 
   (faces-extras-set-and-store-face-attributes
-   '((org-modern-date-active :family faces-extras-fixed-pitch-font :height 0.8)
-     (org-modern-date-inactive :family faces-extras-fixed-pitch-font :height 0.8)
-     (org-modern-tag :family faces-extras-fixed-pitch-font :height 0.9)
+   '((org-modern-date-active :family faces-extras-fixed-pitch-font :height faces-extras-org-date-height)
+     (org-modern-date-inactive :family faces-extras-fixed-pitch-font :height faces-extras-org-date-height)
+     (org-modern-tag :family faces-extras-fixed-pitch-font :height faces-extras-org-tag-height)
      (org-modern-label :family faces-extras-fixed-pitch-font :height 0.8)))
 
   (global-org-modern-mode))
@@ -8131,24 +8131,30 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
   (setq org-fontify-quote-and-verse-blocks t)
 
   (faces-extras-set-and-store-face-attributes
-   '((org-drawer :foreground "LightSkyBlue" :family faces-extras-fixed-pitch-font :height 0.8)
-     (org-property-value :family faces-extras-fixed-pitch-font :height 0.8)
-     (org-todo :family faces-extras-fixed-pitch-font :height 1.0)
-     (org-archived :family faces-extras-fixed-pitch-font :height 0.9)
+   '((org-drawer :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height
+		 :foreground "LightSkyBlue")
+     (org-property-value :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height)
+     (org-special-keyword :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height)
+     (org-meta-line :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height)
+     (org-tag :family faces-extras-fixed-pitch-font :height faces-extras-org-tag-height)
      (org-document-title :family faces-extras-fixed-pitch-font :height 1.0)
-     (org-special-keyword :family faces-extras-fixed-pitch-font :height 0.8)
-     (org-tag :family faces-extras-fixed-pitch-font :height 0.9)
-     (org-code :family faces-extras-fixed-pitch-font :height 1.3)
-     (org-level-1 :family faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-2 :family faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-3 :family faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-4 :family faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-5 :family faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-6 :family faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-7 :family faces-extras-fixed-pitch-font :height 0.9)
-     (org-level-8 :family faces-extras-fixed-pitch-font :height 0.9)
-     (org-date :family faces-extras-fixed-pitch-font :height 0.8)
-     (org-quote :family faces-extras-variable-pitch-font :height 1.3))))
+     (org-code :family faces-extras-fixed-pitch-font :height faces-extras-org-code-height)
+     (org-verbatim :family faces-extras-fixed-pitch-font :height faces-extras-org-code-height)
+     (org-todo :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-archived :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-verbatim :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-1 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-2 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-3 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-4 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-5 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-6 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-7 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-8 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-date :family faces-extras-fixed-pitch-font :height faces-extras-org-date-height)
+     (org-block :family faces-extras-fixed-pitch-font :height faces-extras-org-block-height)
+     (org-block-begin-line :family faces-extras-fixed-pitch-font :height faces-extras-org-block-height)
+     (org-quote :family faces-extras-variable-pitch-font :height faces-extras-variable-pitch-height))))
 #+end_src
 
 ** org-id

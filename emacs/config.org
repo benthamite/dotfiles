@@ -7077,8 +7077,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 (use-package gptel
   :elpaca (gptel
            :host github
-	   :repo "karthink/gptel"
-	   :branch "feature-vision")
+           :repo "karthink/gptel")
   :after pass
   :defer 10
   :config

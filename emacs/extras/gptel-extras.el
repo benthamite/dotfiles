@@ -71,6 +71,10 @@
 	      :cost 0.50
 	      :description "Less powerful GPT model.")
     (:backend "ChatGPT"
+	      :model "gpt-4-turbo"
+	      :cost 10
+	      :description "[recommended] With 128k context, fresher knowledge and the broadest set of capabilities, GPT-4 Turbo is more powerful than GPT-4 and offered at a lower price. Currently points to `gpt-4-turbo-2024-04-09'.")
+    (:backend "ChatGPT"
 	      :model "gpt-4-turbo-preview"
 	      :cost 10
 	      :description "Currently points to `gpt-4-0125-preview'.") ; cost assumed

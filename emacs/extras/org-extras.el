@@ -82,6 +82,13 @@ Set to nil to disable display of BBDB anniversaries in agenda."
   :type 'string
   :group 'org-extras)
 
+(defcustom org-extras-clock-report-parameters
+  "#+BEGIN: clocktable :scope %s :maxlevel 9 :narrow 500 :fileskip0 t %s \n#+END:"
+  "Parameters for `org-extras-clock-report-insert'.
+The first %s is the scope of the report, and the second %s is the range."
+  :type 'string
+  :group 'org-extras)
+
 ;;;; Functions
 
 ;;;;; org
@@ -508,11 +515,9 @@ SCOPE is the scope of the report, and can be `agenda', `file', or `subtree'."
 	 (org-read-date nil nil nil "End date: ")
 	 (org-completing-read "Scope: " '("agenda" "file" "subtree"))))
   (let ((range (if (string= start-date end-date)
-		   ":block today"
+		   (format ":block \"%s\"" start-date)
 		 (format ":tstart \"%s\" :tend \"%s\"" start-date end-date))))
-    (insert
-     (format "#+BEGIN: clocktable :scope %s :maxlevel 4 :narrow 60! :fileskip0 t %s \n#+END:"
-	     scope range))
+    (insert (format org-extras-clock-report-parameters scope range))
     (org-clock-report)))
 
 (defun org-extras-delete-headings-without-logbook ()
@@ -858,10 +863,14 @@ To see a list of Google Docs and their respective IDs, run
     (shell-command
      (format "pandoc -s '%s' -o '%s'" input output))))
 
-;;;;; Dispatchers
+;;;;; Menus
 
-(transient-define-prefix org-extras-tlon-dispatch ()
-  "Dispatcher for Tlön projects."
+(transient-define-prefix org-extras-personal-menu ()
+  "Menu for personal projects."
+  [[("i" "Anki"              (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))]])
+
+(transient-define-prefix org-extras-tlon-menu ()
+  "Menu for Tlön projects."
   [["Tlön"
     ("t t" "tlon"              (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))
     ("t e" "tlon-emacs"        (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))

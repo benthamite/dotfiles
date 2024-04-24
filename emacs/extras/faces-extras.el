@@ -128,7 +128,7 @@ invocation of `faces-extras-set-custom-face-attributes'."
   (dolist (attribute attributes)
     (let* ((face (car attribute))
            (args (mapcar (lambda (arg)
-			   "Wrap ARG in a lambda if it a list of attributes."
+			   "Wrap ARG in a lambda if it is a list of attributes."
                            (if (and (listp arg) (not (eq (car arg) 'lambda)))
                                `(lambda () ,arg)
                              arg))

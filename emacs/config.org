@@ -116,7 +116,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#forge-extras][forge-extras]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#display][display]]
-  - [[#mixed-pitch][mixed-pitch]]
   - [[#fringe][fringe]]
   - [[#faces][faces]]
   - [[#faces-extras][faces-extras]]
@@ -1632,31 +1631,6 @@ CLOCK: [2021-03-28 Sun 19:21]--[2021-03-28 Sun 19:35] =>  0:14
 
 #+begin_src emacs-lisp
 (setq-default line-spacing 2)
-#+end_src
-
-** mixed-pitch
-:PROPERTIES:
-:ID:       A8E80A11-25A4-4034-8A86-F7F6ADFD46C7
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-04 Wed 19:52]--[2022-05-04 Wed 19:54] =>  0:02
-CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
-:END:
-
-/[[https://gitlab.com/jabranham/mixed-pitch][mixed-pitch]] allows mixing fixed-pitch and variable-pitch fonts./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package mixed-pitch
-  :demand t
-  :config
-  (setq mixed-pitch-set-height t)
-
-  (dolist (hook '(elfeed-show-mode-hook
-                  telega-webpage-mode-hook
-                  eww-mode-hook
-                  mu4e-view-mode-hook
-                  outline-mode-hook))
-    (add-hook hook #'mixed-pitch-mode)))
 #+end_src
 
 ** fringe

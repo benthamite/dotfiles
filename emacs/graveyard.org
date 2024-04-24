@@ -9,6 +9,34 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** mixed-pitch
+:PROPERTIES:
+:ID:       A8E80A11-25A4-4034-8A86-F7F6ADFD46C7
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-04 Wed 19:52]--[2022-05-04 Wed 19:54] =>  0:02
+CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
+:END:
+
+/[[https://gitlab.com/jabranham/mixed-pitch][mixed-pitch]] allows mixing fixed-pitch and variable-pitch fonts./
+
+[2024-04-23 Tue] Moving to graveyard because it is not allowing me to control certain faces when active, such as =org-code= and =org-verbatim=. The user option ~modus-themes-mixed-fonts~ seems enough to get a similar experience without the drawbacks.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package mixed-pitch
+  ;; :demand t
+  :disabled
+  :config
+  (setq mixed-pitch-set-height t)
+
+  (dolist (hook '(elfeed-show-mode-hook
+                  telega-webpage-mode-hook
+                  eww-mode-hook
+                  mu4e-view-mode-hook
+                  outline-mode-hook))
+    (add-hook hook #'mixed-pitch-mode)))
+#+end_src
+
 ** tlon-core
 :PROPERTIES:
 :ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A

@@ -56,6 +56,46 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
   :type 'integer
   :group 'faces-extras)
 
+(defcustom faces-extras-fixed-pitch-height 0.9
+  "Height of the font for fixed-pitch faces."
+  :type 'number
+  :group 'faces-extras)
+
+(defcustom faces-extras-variable-pitch-height 1.3
+  "Height of the font for variable-pitch faces."
+  :type 'number
+  :group 'faces-extras)
+
+(defcustom faces-extras-org-level-height 1.0
+  "Height of the font for `org-level' faces."
+  :type 'number
+  :group 'faces-extras)
+
+(defcustom faces-extras-org-block-height 0.8
+  "Height of the font for `org-block' face."
+  :type 'number
+  :group 'faces-extras)
+
+(defcustom faces-extras-org-code-height 1.0
+  "Height of the font for `org-code' face."
+  :type 'number
+  :group 'faces-extras)
+
+(defcustom faces-extras-org-date-height 0.9
+  "Height of the font for `org-date' face."
+  :type 'number
+  :group 'faces-extras)
+
+(defcustom faces-extras-org-tag-height 0.9
+  "Height of the font for `org-tag' face."
+  :type 'number
+  :group 'faces-extras)
+
+(defcustom faces-extras-org-property-value-height 0.8
+  "Height of the font for `org-property-value' face."
+  :type 'number
+  :group 'faces-extras)
+
 ;;;; Functions
 
 ;;;;; Face attributes

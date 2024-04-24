@@ -10291,6 +10291,13 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 
   (add-hook 'message-mode-hook (lambda () (auto-fill-mode -1)))
 
+  (faces-extras-set-and-store-face-attributes
+   '((message-header-name :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
+     (message-header-subject :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
+     (message-header-to :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
+     (message-header-other :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
+     (message-header-cc :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
+
   :general
   ((message-mode-map org-msg-edit-mode-map)
    "s-c" 'message-send-and-exit

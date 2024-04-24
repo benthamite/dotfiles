@@ -31,7 +31,6 @@
 (require 'doi-utils)
 (require 'el-patch)
 (require 'ebib)
-;; (require 'ebib-extras)
 
 ;;;; Variables
 
@@ -266,6 +265,7 @@ field for this information is `journaltitle', so we move it there."
       (goto-char pos)
       (bibtex-kill-field))))
 
+(declare-function ebib-extras-get-file-of-key "ebib-extras")
 (defun bibtex-extras-move-entry (key target)
   "Move entry with KEY to TARGET bibliography file."
   (unless ebib--cur-db
@@ -293,6 +293,8 @@ If DELIMITER is nil, use a semicolon."
 		      (concat current-value delimiter value))))
     (bibtex-extras-add-or-update-field field new-value)))
 
+(declare-function ebib-extras-get-db-number "ebib-extras")
+(declare-function ebib-extras-reload-database-no-confirm "ebib-extras")
 (defun bibtex-extras-open-in-ebib ()
   "Open the current BibTeX entry in Ebib."
   (interactive)
@@ -386,6 +388,7 @@ re-sorted by the other."
 
 ;;;;; attach downloads
 
+(declare-function eww-extras-url-to-file "eww-extras")
 (defun bibtex-extras-url-to-file-attach (type)
   "Generate PDF of file of TYPE."
   (when (bibtex-extras-get-field "url")
@@ -401,6 +404,8 @@ re-sorted by the other."
   (interactive)
   (bibtex-extras-url-to-file-attach "html"))
 
+(declare-function bibtex-search-entry "bibtext")
+(declare-function ebib-extras-attach-file "ebib-extras")
 (defun bibtex-extras-attach-file-to-entry (&optional file bibtex-file)
   "Attach FILE to the relevant entry in BIBTEX-FILE.
 The relevant entry is the entry in BIBTEX-FILE whose key equals the name of FILE

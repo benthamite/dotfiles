@@ -27,12 +27,9 @@
 
 ;;; Code:
 
-(require 'bibtex-extras)
-(require 'doi-utils)
-(require 'ebib-utils)
-(require 'eww-extras)
+(require 'ebib)
+(require 'ebib-extras)
 (require 'paths)
-(require 'tlon-babel-tts)
 (require 'zotra)
 
 ;;;; Variables
@@ -56,6 +53,8 @@ to get the entry.
     (zotra-add-entry url-or-search-string entry-format bibfile)
     (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey)))
 
+(declare-function eww-extras-url-to-pdf "eww-extras")
+(declare-function eww-extras-url-to-html "eww-extras")
 (defun zotra-extras-url-full-capture (&optional url)
   "Add URL to bibfile and generate associated PDF and HTML files."
   (interactive)

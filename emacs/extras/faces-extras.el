@@ -121,7 +121,10 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
 
 (defun faces-extras-set-and-store-face-attributes (attributes)
   "Set list of face ATTRIBUTES and store them.
-The attributes are stored in `faces-extras-custom-face-attributes'."
+This function allows the user to set a list of face attributes immediately,
+while also appending them to a general list face attributes
+\(`faces-extras-custom-face-attributes') all of which can be reset at once by
+invocation of `faces-extras-set-custom-face-attributes'."
   (dolist (attribute attributes)
     (let* ((face (car attribute))
            (args (mapcar (lambda (arg)

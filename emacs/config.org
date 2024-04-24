@@ -7078,7 +7078,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :elpaca (gptel
            :host github
            :repo "karthink/gptel")
-  :after pass
+ ; consider moving the email addresses to `paths'           
+  :after pass tlon-babel
   :defer 10
   :config
   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))

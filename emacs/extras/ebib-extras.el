@@ -27,23 +27,18 @@
 
 ;;; Code:
 
-(require 'bib)
 (require 'bibtex)
 (require 'el-patch)
-(require 'citar)
 (require 'ebib)
 (require 'filenotify)
-(require 'mullvad)
-(require 'org-extras)
 (require 'paths)
-(require 's)
-(require 'scihub)
-(require 'tlon-babel-tts)
-(require 'tlon-babel-tex)
-(require 'window-extras)
+(require 'shut-up)
 
 ;;;; Functions
 
+(defvar window-extras-frame-split-width-threshold)
+(declare-function window-extras-split-if-unsplit "window-extras")
+(declare-function winum-select-window-3 "winum")
 (defun ebib-extras-open-or-switch ()
   "Open ebib in the right window or switch to it if already open."
   (interactive)
@@ -73,6 +68,8 @@
   "Return t if STRING is an ISBN."
   (string-match ebib-extras-isbn-p string))
 
+(declare-function bibtex-extras-get-field "bibex-extras")
+(declare-function s-replace "s")
 (defun ebib-extras-get-isbn ()
   "Return ISBN for the current entry, if it exists."
   (when-let ((get-field (pcase major-mode
@@ -94,6 +91,7 @@
    "https?://\\(www\\.\\)?\\(youtube\\.com/watch\\?v=\\|youtu.be/\\)\\([a-zA-Z0-9_-]+\\)"
    string))
 
+(declare-function bibtex-extras-append-to-field "bibex-extras")
 (defun ebib-extras--update-file-field-contents (key file-name)
   "Update contents of FILE-NAME in field `file' for entry KEY."
   (let* ((get-field (pcase major-mode
@@ -336,6 +334,8 @@ Try to fetch it with Zotero or ."
 
 ;;;;; attach downloads
 
+(declare-function files-extras-newest-file "files-extras")
+(declare-function bibtex-extras-get-key "bibex-extras")
 (defun ebib-extras-attach-file (&optional file most-recent open)
   "Attach FILE to the current entry.
 If FILE is nil, prompt the user for one. If MOST-RECENT is non-nil, attach the
@@ -392,6 +392,7 @@ open FILE."
   (interactive)
   (ebib-extras-attach-file nil 'most-recent))
 
+(declare-function eww-extras-url-to-file "eww-extras")
 (defun ebib-extras-url-to-file-attach (type)
   "Generate PDF of file of TYPE."
   (when (ebib-extras-get-field "url")
@@ -419,7 +420,7 @@ extension."
 
 (defun ebib-extras-attach-files ()
   "Attach files appropriate for the current entry type.
-TOOO: 
+TOOO:
 - [x] online: generate PDF and html.
 - [ ] books: get PDF from Anna’s Archive.
 - [ ] papers: get PDF from SciHub."
@@ -451,6 +452,7 @@ TOOO:
     ("greek" . "ell"))
   "Alist of languages and their ISO 639-2 codes.")
 
+(declare-function files-extras-ocr-pdf "files-extras")
 (defun ebib-extras-ocr-pdf (&optional force)
   "OCR the PDF file in the current entry.
 If FORCE is non-nil, or the command is invoked with a prefix argument, force OCR
@@ -464,6 +466,7 @@ even if already present."
 				  (expand-file-name file-name)
 				  (expand-file-name file-name)))))
 
+(declare-function bibtex-set-field "bibex")
 (defun ebib-extras-get-or-set-language ()
   "Return the language of the current entry, prompting the user for one if needed."
   (let* ((get-field (pcase major-mode
@@ -641,6 +644,7 @@ Used by the `ebib-extras-generate-search-commands' macro.")
 	 (query (url-hexify-string query)))
     (browse-url (concat prefix query suffix))))
 
+(declare-function mullvad-connect-to-website "mullvad")
 (defun ebib-extras--search-multi (query functions)
   "Search for QUERY with each function in FUNCTIONS."
   (dolist (fun functions)
@@ -759,6 +763,7 @@ The list of film search functions is specified by
     (default
      (beep))))
 
+(declare-function scihub-is-doi-p "scihub")
 (defun ebib-extras-search-by-identifier ()
   "Search for a book or article by the ISBN or DOI of the entry at point."
   (interactive)
@@ -827,6 +832,8 @@ The list of article download functions is specified by
     (default
      (beep))))
 
+(declare-function scihub-download "scihub")
+(declare-function eww-extras-url-to-pdf "eww-extras")
 (defun ebib-extras-download-pdf ()
   "Download and attach a PDF of the work at point based on its DOI, URL or ISBN."
   (interactive)
@@ -862,6 +869,8 @@ The list of article download functions is specified by
     (default
      (beep))))
 
+(declare-function s-downcase "s")
+(declare-function s-capitalize "s")
 (defun ebib-extras-sentence-case ()
   "Convert the current field to sentence case."
   (interactive)
@@ -890,6 +899,7 @@ The list of article download functions is specified by
     (default
      (beep))))
 
+(declare-function bibtex-extras-get-entry-as-string "bibtex-extras")
 (defun ebib-extras-get-or-open-entry ()
   "Get or open the BibTeX entry, depending on how the function was called.
 If called interactively, open the entry. Otherwise, return it as a string."
@@ -979,6 +989,7 @@ If called interactively, open the entry. Otherwise, return it as a string."
     (default
      (beep))))
 
+(declare-function citar-open-notes "citar")
 (defun ebib-extras-citar-open-notes ()
   "Open note for the entry at point using `citar-open-notes'.
 This command replaces the native `ebib-popup-note'. The
@@ -993,6 +1004,7 @@ is created following the same schema as notes created with
     (default
      (beep))))
 
+(defvar tlon-babel-refs-file-fluid)
 (defvar ebib-extras-auto-save-files
   `(,paths-file-personal-bibliography-new
     ,tlon-babel-refs-file-fluid)
@@ -1025,6 +1037,7 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 	   (message "reloading database")
 	   (ebib-extras-reload-database-no-confirm db)))))))
 
+(defvar tlon-babel-refs-file-stable)
 (defvar ebib-extras-db-numbers
   `((,paths-file-personal-bibliography-new . 1)
     (,paths-file-personal-bibliography-old . 2)
@@ -1123,6 +1136,10 @@ sensible defaults and remove line breaks and empty spaces."
 				(throw 'found value))))))
       id-or-url)))
 
+(declare-function bib-search-isbn "bib")
+(declare-function bib-search-crossref "bib")
+(declare-function bib-search-imdb "bib")
+(declare-function bib-translate-title-to-english "bib")
 (defun ebib-extras-fetch-id-or-url ()
   "Fetch the ID or URL of the entry at point.
 Fetching is done using `bib'."
@@ -1201,6 +1218,9 @@ DIRECTION can be `prev' or `next'."
   (interactive)
   (ebib-extras-fetch-field-value "keywords"))
 
+(declare-function org-extras-sort-keywords "org-extras")
+(declare-function org-extras-insert-subheading "org-extras")
+(declare-function org-extras-linkify-elements "org-extras")
 (defun ebib-extras-export-keywords ()
   "Export keywords in entry at point to its associated note file."
   (interactive)

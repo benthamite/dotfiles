@@ -27,7 +27,7 @@
 
 ;;; Code:
 
-;; (require 'faces)
+(require 'faces)
 
 ;;;; User options
 

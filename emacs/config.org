@@ -7134,7 +7134,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 (use-package gpt-commit
   :demand t
   :config
-  (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
+  (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-babel-email-shared)))
   (setq gpt-commit-model-name "gpt-4")
   (add-hook 'git-commit-setup-hook #'gpt-commit-message))
 #+end_src

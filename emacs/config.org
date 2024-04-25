@@ -10283,13 +10283,18 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 /[[https://www.gnu.org/software/emacs/manual/html_mono/message.html][message]] is a message composition mode./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature emacs
+(use-feature message
   :demand t
+  :after faces-extras
   :config
   (setq message-kill-buffer-on-exit t) ; make `message-send-and-exit' kill buffer, not bury it
   (setq message-send-mail-function 'smtpmail-send-it)
-
-  (add-hook 'message-mode-hook (lambda () (auto-fill-mode -1)))
+  (setq message-elide-ellipsis "\n> [... %l lines elided]\n")
+  (setq message-citation-line-function 'message-insert-formatted-citation-line)
+  (setq message-citation-line-format (concat "> From: %f\n"
+                                             "> Date: %a, %e %b %Y %T %z\n"
+                                             ">")
+        message-ignored-cited-headers "")
 
   (faces-extras-set-and-store-face-attributes
    '((message-header-name :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)

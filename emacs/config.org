@@ -10603,6 +10603,8 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
 /[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
+I use this package to compose messages and to reply to messages composed in HTML For plain-text messages, I use ~message~ (of which see above).
+
 [2023-10-28 Sat] Some updates in ~mu~ v1.11.23 have broken ~org-msg~. To make it work, you can uninstall ~mu~ and then install the stable version via ~brew install mu~. Then use  [[https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipe-keyword-ref][ref]] keyword in the ~mu4e~ elpaca formula to install the commit of that version. As of today, ~brew info mu~ says the stable version of ~mu~ is 1.10.8. In the ~mu~ repo [[https://github.com/djcb/mu/releases][releases]] page, we see that the commit corresponding to this version is ~a8f002b~. So we use ~ref: "a8f002b"~.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -10615,8 +10617,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
   (setq org-msg-recipient-names `((,(getenv "PERSONAL_GMAIL") . "Pablo")))
   (setq org-msg-greeting-name-limit 3)
   (setq org-msg-default-alternatives '((new		. (text html))
-                                       (reply-to-html	. (text html))
-                                       (reply-to-text	. (text))))
+                                       (reply-to-html	. (text html))))
   (setq org-msg-convert-citation t)
   (setq org-msg-enforce-css '((del nil
                                    ((font-family . "\"Georgia\"")

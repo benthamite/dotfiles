@@ -56,17 +56,17 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
   :type 'integer
   :group 'faces-extras)
 
-(defcustom faces-extras-fixed-pitch-height 0.9
-  "Height of the font for fixed-pitch faces."
+(defcustom faces-extras-fixed-pitch-height 0.8
+  "Height of the font for fixed pitch faces."
   :type 'number
   :group 'faces-extras)
 
-(defcustom faces-extras-variable-pitch-height 1.3
-  "Height of the font for variable-pitch faces."
+(defcustom faces-extras-variable-pitch-height 1.4
+  "Height of the font for variable pitch faces."
   :type 'number
   :group 'faces-extras)
 
-(defcustom faces-extras-org-level-height 1.0
+(defcustom faces-extras-org-level-height 0.9
   "Height of the font for `org-level' faces."
   :type 'number
   :group 'faces-extras)

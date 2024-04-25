@@ -525,13 +525,14 @@ current helpful buffer displays, then kill the buffer."
     ("b" "tlon-babel"       (lambda () (interactive) (files-extras-open-elpaca-package "tlon-babel")))
     ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))]
    ["Personal"
-    ("a" "internet-archive" (lambda () (interactive )(files-extras-open-elpaca-package "internet-archive")))
     ("l" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))
-    ("g" "glondendict-ng"   (lambda () (interactive )(files-extras-open-elpaca-package "goldendict-ng")))
+    ("d" "gdrive"           (lambda () (interactive )(files-extras-open-elpaca-package "gdrive")))
+    ("g" "goldendict-ng"   (lambda () (interactive )(files-extras-open-elpaca-package "goldendict-ng")))
+    ("a" "internet-archive" (lambda () (interactive )(files-extras-open-elpaca-package "internet-archive")))
     ("o" "macos"            (lambda () (interactive )(files-extras-open-elpaca-package "macos")))
     ("m" "mullvad"          (lambda () (interactive )(files-extras-open-elpaca-package "mullvad")))
-    ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))
-    ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))]])
+    ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))
+    ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))]])
 
 (provide 'files-extras)
 ;;; files-extras.el ends here

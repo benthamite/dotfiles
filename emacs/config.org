@@ -341,7 +341,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-pdftools][org-pdftools]]
   - [[#nov][nov]]
   - [[#djvu][djvu]]
-- [[#programing][programing]]
+- [[#programming][programming]]
   - [[#prog-mode][prog-mode]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
@@ -6678,7 +6678,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 (use-package djvu)
 #+end_src
 
-* programing
+* programming
 :PROPERTIES:
 :ID:       35CB9C38-D0FE-458A-9F77-EC6702B2D976
 :END:

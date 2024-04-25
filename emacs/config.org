@@ -10477,6 +10477,10 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
   (push 'mu4e--search-hist savehist-additional-variables)
 
+  (faces-extras-set-and-store-face-attributes
+   '((mu4e-compose-separator-face :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
+  
+  
   (mu4e t)
 
   :general

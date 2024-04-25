@@ -12236,7 +12236,8 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            el-patch-validate-all
                            tlon-babel-forge-update-all-repos
                            org-extras-agenda-switch-to-agenda-current-day
-                           org-gcal-sync)))
+                           org-gcal-sync
+			   elfeed-update)))
     (add-hook 'midnight-hook fun)))
 #+end_src
 

@@ -12078,6 +12078,8 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 (use-package ytdl
   :config
   (setq ytdl-command "yt-dlp")
+  (setq ytdl-video-folder paths-dir-downloads)
+  (setq ytdl-video-extra-args '("--write-sub" "--write-auto-sub" "--sub-lang" "en,es,it,fr,pt"))
 
   :general
   ("A-M-y" 'ytdl-download))

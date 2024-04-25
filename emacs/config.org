@@ -10696,6 +10696,7 @@ I use this package to compose messages and to reply to messages composed in HTML
                                     (font-size . "11pt")
                                     (line-height . "11pt")))))
 
+  (add-hook 'org-msg-mode-hook (lambda () (auto-fill-mode -1)))
   (org-msg-mode)
 
   :general

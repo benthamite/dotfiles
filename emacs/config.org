@@ -7147,7 +7147,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :elpaca (gptel
            :host github
            :repo "karthink/gptel")
- ; consider moving the email addresses to `paths'           
+ ; consider moving the email addresses to `paths'
   :after pass tlon-babel
   :defer 10
   :config
@@ -8142,7 +8142,7 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 
   (faces-extras-set-and-store-face-attributes
    '((org-drawer :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height
-		 :foreground "LightSkyBlue")
+                 :foreground "LightSkyBlue")
      (org-property-value :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height)
      (org-special-keyword :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height)
      (org-meta-line :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height)

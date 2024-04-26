@@ -278,6 +278,12 @@ If PLAYER is nil, default to `mpv'."
 	 (file (file-name-nondirectory url)))
     (url-copy-file url (file-name-concat paths-dir-downloads file) t)))
 
+(defun eww-extras-add-entry ()
+  "Add current URL to bibfile and generate associated PDF and HTML files."
+  (interactive)
+  (when (derived-mode-p 'eww-mode)
+    (zotra-extras-add-entry (plist-get eww-data :url))))
+
 (provide 'eww-extras)
 
 ;;; eww-extras.el ends here

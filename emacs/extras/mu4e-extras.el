@@ -250,6 +250,15 @@ Do not ask for confirmation."
   (or (mu4e-message-contact-field-matches msg :to (getenv "WORK_EMAIL"))
       (mu4e-message-contact-field-matches msg :reply-to "tlon-team@googlegroups.com")))
 
+(defun mu4e-extras-check-all-mail ()
+  "Check all Gmail channels.
+It takes `mbsync'a while to check all channels, so I run this function less
+frequently than `mu4e-update-mail-and-index', which excludes my archive and
+takes just a couple of seconds."
+  (interactive)
+  (let ((mu4e-get-mail-command "mbsync gmail-all"))
+    (mu4e-update-mail-and-index t)))
+
 ;;;;; Patches
 
 ;; do not prompt for an URL number when there is only one URL

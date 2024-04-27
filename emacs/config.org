@@ -322,7 +322,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#grip-mode][grip-mode]]
   - [[#xwidget][xwidget]]
   - [[#edit-indirect][edit-indirect]]
-  - [[#mediawiki-el][mediawiki-el]]
+  - [[#mediawiki][mediawiki]]
   - [[#gdrive][gdrive]]
   - [[#ledger-mode][ledger-mode]]
   - [[#ledger-mode-extras][ledger-mode-extras]]
@@ -6136,12 +6136,12 @@ This package is required by the ~markdown-mode~ command ~markdown-edit-code-bloc
 (use-package edit-indirect)
 #+end_src
 
-** mediawiki-el
+** mediawiki
 :PROPERTIES:
 :ID:       721F42DA-7E97-4C9A-9DBF-8A841DDE99A9
 :END:
 
-/[[https://github.com/hexmode/mediawiki-el][mediawiki-el]] is an Emacs interface to editing mediawiki sites./
+/[[https://github.com/hexmode/mediawiki-el][mediawiki]] is an Emacs interface to editing mediawiki sites./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package mediawiki

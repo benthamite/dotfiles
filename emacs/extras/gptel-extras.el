@@ -63,38 +63,51 @@
     (:backend "ChatGPT"
 	      :model "gpt-3.5-turbo"
 	      :cost 0.50
-	      :description "Less powerful GPT model.")
+	      :tokens 16385
+	      :last-update "2021-09-01"
+	      :description "Less powerful GPT model. Currently points to `gpt-3.5-turbo-0125'.")
     (:backend "ChatGPT"
 	      :model "gpt-3.5-turbo-16k"
 	      :cost 0.50
-	      :description "Less powerful GPT model.")
+	      :tokens 16385
+	      :last-update "2021-09-01"
+	      :description "Less powerful GPT model. Currently points to `gpt-3.5-turbo-16k-0613'.")
     (:backend "ChatGPT"
 	      :model "gpt-4"
+	      :cost 30
+	      :tokens 8192
+	      :last-update "2021-09-01"
+	      :description "Currently points to `gpt-4-0613'. ")
+    (:backend "ChatGPT"
+	      :model "gpt-4-32k"
+	      :cost 60
+	      :tokens 32768
+	      :last-update "2021-09-01"
+	      :description "Currently points to gpt-4-32k-0613. See continuous model upgrades. This model was never rolled out widely in favor of GPT-4 Turbo.")
+    (:backend "ChatGPT"
+	      :model "gpt-4-turbo"
 	      :cost 10
-	      :description "[recommended] With 128k context, fresher knowledge and the broadest set of capabilities, GPT-4 Turbo is more powerful than GPT-4 and offered at a lower price. Currently points to `gpt-4-turbo-2024-04-09'.")
+	      :tokens 128000
+	      :last-update "2023-12-01"
+	      :description "[Recommended] The latest GPT-4 Turbo model with vision capabilities. Vision requests can now use JSON mode and function calling. Currently points to gpt-4-turbo-2024-04-09.")
     (:backend "ChatGPT"
 	      :model "gpt-4-turbo-preview"
 	      :cost 10
-	      :description "Currently points to `gpt-4-0125-preview'.") ; cost assumed
+	      :tokens 128000
+	      :last-update "2023-12-01"
+	      :description "GPT-4 Turbo preview model. Currently points to `gpt-4-0125-preview'.")
     (:backend "ChatGPT"
 	      :model "gpt-4-1106-preview"
 	      :cost 10
 	      :tokens 128000
-	      :description "GPT-4 Turbo model featuring improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more. Returns a maximum of 4,096 output tokens. Training data up to April 2023.")
+	      :last-update "2023-04-01"
+	      :description "GPT-4 Turbo preview model featuring improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more. Returns a maximum of 4,096 output tokens. This is a preview model.")
     (:backend "ChatGPT"
 	      :model "gpt-4-0125-preview"
 	      :cost 10
-	      :description "Returns a maximum of 4,096 output tokens. Training data up to December 2023.")
-    (:backend "ChatGPT"
-	      :model "gpt-4"
-	      :cost 30
-	      :tokens 8000
-	      :description "Standard GPT-4 model.")
-    (:backend "ChatGPT"
-	      :model "gpt-4-32k"
-	      :cost 60
-	      :tokens 32000
-	      :description "Standard GPT-4 with 32k token window.")
+	      :tokens 128000
+	      :last-update "2023-12-01"
+	      :description "GPT-4 Turbo preview model intended to reduce cases of “laziness” where the model doesn’t complete a task. Returns a maximum of 4,096 output tokens.")
     (:backend "ChatGPT"
 	      :model "gpt-4-vision-preview"
 	      :cost 0 ; placeholder
@@ -111,11 +124,13 @@
 	      :model "claude-3-opus-20240229"
 	      :cost 15
 	      :description "The most capable Anthropic model."))
-  "Alist of AI models and input cost in US dollars per one million tokens.
-The pricing information has been obtained from the following websites:
-- GPT: <https://openai.com/pricing>
-- Claude: <https://www.anthropic.com/api#pricing>")
-;; https://github.com/psimm/website/blob/master/blog/llm-price-performance/data.csv
+  "Alist of AI models and associated properties.
+The relevant information has been obtained from the following websites:
+
+- GPT: <https://openai.com/pricing> and
+<https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4>.
+
+- Claude:<https://www.anthropic.com/api#pricing>.")
 
 ;;;; Functions
 
@@ -134,9 +149,11 @@ called with a prefix argument, configure it globally."
 	 (backend (alist-get backend-name gptel--known-backends nil nil #'string=))
 	 (backend-models (gptel-backend-models backend))
 	 (models-with-cost (mapcar (lambda (backend)
-				     (cons (format "%-25s $ %5.2f   %-80s"
+				     (cons (format "%-20s  $ %5.2f  %8s  %6s  %-80s"
 						   backend
 						   (tlon-babel-lookup gptel-extras-ai-models :cost :model backend)
+						   (tlon-babel-lookup gptel-extras-ai-models :last-update :model backend)
+						   (tlon-babel-lookup gptel-extras-ai-models :tokens :model backend)
 						   (tlon-babel-lookup gptel-extras-ai-models :description :model backend))
 					   backend))
 				   backend-models))

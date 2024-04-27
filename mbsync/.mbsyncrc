@@ -24,7 +24,6 @@ CopyArrivalDate yes
 Create Both
 Expunge Both
 SyncState *
-MaxMessages 100
 
 Channel gmail-daily
 Far :gmail-remote:"Daily"
@@ -33,7 +32,6 @@ CopyArrivalDate yes
 Create Both
 Expunge Both
 SyncState *
-MaxMessages 100
 
 Channel gmail-starred
 Far :gmail-remote:"[Gmail]/Starred"
@@ -42,7 +40,6 @@ CopyArrivalDate yes
 Create Both
 Expunge Both
 SyncState *
-MaxMessages 100
 
 Channel gmail-sent
 Far :gmail-remote:"[Gmail]/Sent Mail"
@@ -51,7 +48,6 @@ CopyArrivalDate yes
 Create Both
 Expunge Both
 SyncState *
-MaxMessages 100
 
 Channel gmail-trash
 Far :gmail-remote:"[Gmail]/Trash"
@@ -60,7 +56,6 @@ CopyArrivalDate yes
 Create Both
 Expunge Both
 SyncState *
-MaxMessages 100
 
 Channel gmail-all
 Far :gmail-remote:"[Gmail]/All Mail"
@@ -69,7 +64,6 @@ CopyArrivalDate yes
 Create Both
 Expunge Both
 SyncState *
-MaxMessages 100
 
 Group gmail
 Channel gmail-inbox

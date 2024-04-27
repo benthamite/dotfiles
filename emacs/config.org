@@ -6146,7 +6146,10 @@ This package is required by the ~markdown-mode~ command ~markdown-edit-code-bloc
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package mediawiki
   :demand t
-  :after atomic-chrome)
+  :after atomic-chrome
+  :general
+  (mediawiki-mode-map
+  "s-k" 'mediawiki-insert-link))
 #+end_src
 
 ** gdrive

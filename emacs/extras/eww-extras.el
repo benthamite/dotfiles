@@ -283,6 +283,7 @@ If PLAYER is nil, default to `mpv'."
 		   "Copy URL to the Downloads folder asynchronously."
 		   (url-copy-file url (file-name-concat paths-dir-downloads file) t)))))
 
+(declare-function zotra-extras-add-entry "zotra-extras")
 (defun eww-extras-add-entry ()
   "Add current URL to bibfile and generate associated PDF and HTML files."
   (interactive)

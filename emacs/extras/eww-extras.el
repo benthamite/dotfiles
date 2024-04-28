@@ -275,8 +275,13 @@ If PLAYER is nil, default to `mpv'."
   "Download file from the relevant page of Anna’s Archive."
   (interactive)
   (let* ((url (eww-extras-get-url-in-link "Download now"))
-	 (file (file-name-nondirectory url)))
-    (url-copy-file url (file-name-concat paths-dir-downloads file) t)))
+	 (raw-file (file-name-nondirectory url))
+	 (sans-extension (file-name-sans-extension raw-file))
+	 (extension (file-name-extension raw-file))
+	 (file (file-name-with-extension (substring sans-extension 0 100) extension)))
+    (make-thread (lambda ()
+		   "Copy URL to the Downloads folder asynchronously."
+		   (url-copy-file url (file-name-concat paths-dir-downloads file) t)))))
 
 (defun eww-extras-add-entry ()
   "Add current URL to bibfile and generate associated PDF and HTML files."

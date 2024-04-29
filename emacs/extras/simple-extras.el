@@ -27,6 +27,25 @@
 
 ;;; Code:
 
+(require 'paths)
+
+;;;; Variables
+
+(defgroup simple-extras ()
+  "Extensions for `simple'."
+  :group 'simple-extras)
+
+(defcustom simple-extras-new-buffer-auto-save-dir
+  (file-name-concat no-littering-var-directory "auto-save/new-buffers/")
+  "Directory in which to store auto-save files for new, non-file-visiting buffers."
+  :type 'directory
+  :group 'simple-extras
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         ;; Ensure the directory exists when the user option is set
+         (unless (file-directory-p value)
+	   (make-directory value t))))
+
 ;;;; Functions
 
 ;;;;; Editing
@@ -744,6 +763,31 @@ Optionally, remove accents in region from BEGIN to END."
   "Convert the clipboard or first element in kill ring into a slug."
   (interactive)
   (kill-new (simple-extras-slugify (current-kill 0))))
+
+;;;;; auto-save-mode
+
+(defun simple-extras-is-new-buffer-p ()
+  "Return t iff the current buffer is a new, non-file-visiting buffer."
+  (and (not buffer-file-name)
+       (string-match "^untitled" (buffer-name))))
+
+(defun simple-extras-new-buffer-enable-auto-save ()
+  "Enable auto-save for new, non-file-visiting buffers."
+  (when (simple-extras-is-new-buffer-p)
+    (auto-save-mode 1)))
+
+(add-hook 'buffer-list-update-hook #'simple-extras-new-buffer-enable-auto-save)
+
+(defun simple-extras-new-buffer-auto-save-dir (orig-func &rest args)
+  "Use a standard location for auto-save files for non-file-visiting buffers.
+ORIG-FUNC is the original function being advised. ARGS are the arguments passed
+to it."
+  (if (simple-extras-is-new-buffer-p)
+      (let ((default-directory simple-extras-new-buffer-auto-save-dir))
+	(apply orig-func args))
+    (apply orig-func args)))
+
+(advice-add 'auto-save-mode :around #'simple-extras-new-buffer-auto-save-dir)
 
 ;;;;; Misc
 

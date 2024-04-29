@@ -46,20 +46,6 @@
   (interactive)
   (kill-new (file-name-sans-extension (dired-copy-filename-as-kill))))
 
-;; from emacswiki.org/emacs/DiredOmitMode
-(defun dired-extras-dotfiles-toggle ()
-  "Show/hide dot-files."
-  (interactive)
-  (when (derived-mode-p 'dired-mode)
-    (if dired-extras-show-dotfiles-p
-	(progn
-	  (setq dired-extras-show-dotfiles-p nil)
-	  (message "h")
-	  (dired-mark-files-regexp "^\\\.")
-	  (dired-do-kill-lines))
-      (progn (revert-buffer) ; otherwise just revert to re-show
-	     (set (make-local-variable 'dired-dotfiles-show-p) t)))))
-
 (defun dired-extras-mark-screenshots ()
   "Mark all screenshot files."
   (interactive)

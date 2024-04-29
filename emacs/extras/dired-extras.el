@@ -168,6 +168,13 @@ losing the `put back' option."
 	    (push (buffer-name buffer) buffers))))
       (nreverse buffers))))
 
+;;;;; dired-x
+
+(defun dired-extras-enable-dired-omit-mode-conditionally ()
+  "Enable `dired-omit-mode' iff `dired-hide-details-mode' is enabled."
+  (let ((toggle (if dired-hide-details-mode 1 -1)))
+    (shut-up (dired-omit-mode toggle))))
+
 ;;;;; dired-du
 
 (declare-function dired-du-mode "dired-du")

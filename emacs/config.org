@@ -215,6 +215,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#minibuffer][minibuffer]]
   - [[#ibuffer][ibuffer]]
   - [[#prot-scratch][prot-scratch]]
+  - [[#persistent-scratch][persistent-scratch]]
   - [[#executable][executable]]
   - [[#uniquify][uniquify]]
   - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
@@ -3788,6 +3789,28 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 
   :general
   ("C-n" 'prot-scratch-buffer))
+#+end_src
+
+** persistent-scratch
+:PROPERTIES:
+:ID:       ACB8DF75-3FC0-4780-A587-B173E4366F62
+:END:
+
+/[[https://github.com/Fanael/persistent-scratch][persistent-scratch]] preserves the scratch buffer across Emacs sessions./
+
+I use this package in combination with =prot-scratch== (see above) to persist scratch buffers in different modes. This way, I am able to open a scratch buffer in /any/ mode for temporary notes, without running the risk of losing them.
+
+#+begin_src emacs-lisp
+(use-package persistent-scratch
+  :demand t
+  :config
+  (setq persistent-scratch-autosave-interval 10)
+  (setq persistent-scratch-backup-directory
+        (file-name-concat no-littering-var-directory "auto-save/scratch-buffers/"))
+  (defun persistent-scratch-default-scratch-buffer-p ()
+    "Return t if BUFFER is the scratch buffer."
+    (string-match ".*?scratch\\*$" (buffer-name)))
+  (persistent-scratch-setup-default))
 #+end_src
 
 ** executable

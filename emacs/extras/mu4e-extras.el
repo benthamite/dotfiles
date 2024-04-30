@@ -280,40 +280,5 @@ string."
 	(read-string (mu4e-format "%s (default %s): " prompt def)
 		     nil nil def)))))
 
-;; do not prompt for reply to address when there is only one candidate
-(el-patch-defun mu4e~draft-reply-construct-recipients-list (origmsg)
-  "Determine the to/cc recipients for a reply message to a
-mailing-list."
-  (let* ( ;; reply-to-self implies reply-all
-	 (list-post (plist-get origmsg :list-post))
-	 (return-to (or (plist-get origmsg :reply-to) (plist-get origmsg :from)))
-	 (recipnum
-	  (+ (length (mu4e~draft-create-to-lst origmsg))
-	     (length (mu4e~draft-create-cc-lst origmsg t t))))
-	 (sender (mu4e-contact-full (car return-to)))
-	 (reply-type
-	  (el-patch-swap
-	    (mu4e-read-option
-	     "Reply to mailing-list "
-	     `( (,(format "all %d recipient(s)" recipnum)    . all)
-		(,(format "list-only (%s)" (cdar list-post)) . list-only)
-		(,(format "sender-only (%s)" sender)         . sender-only)))
-	    (if (= recipnum 1)
-		'list-only
-	      (mu4e-read-option
-	       "Reply to mailing-list "
-	       `( (,(format "all %d recipient(s)" recipnum)    . all)
-		  (,(format "list-only (%s)" (cdar list-post)) . list-only)
-		  (,(format "sender-only (%s)" sender)         . sender-only)))))))
-    (cl-case reply-type
-      (all
-       (concat
-	(mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
-	(mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg t t))))
-      (list-only
-       (mu4e~draft-header "To" list-post))
-      (sender-only
-       (mu4e~draft-header "To" return-to)))))
-
 (provide 'mu4e-extras)
 ;;; mu4e-extras.el ends here

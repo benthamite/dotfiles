@@ -10465,7 +10465,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-index-update-error-warning nil) ; set to `t' when debugging
   (setq mu4e-split-view 'single-window)
   (setq mu4e-headers-show-target nil)
-  (setq mu4e-get-mail-command "mbsync -a")
+  (setq mu4e-get-mail-command "mbsync gmail")
   (setq mu4e-update-interval 60)
   (setq mu4e-drafts-folder "/[Gmail]/Drafts")
   (setq mu4e-sent-folder "/[Gmail]/Sent Mail")
@@ -10598,6 +10598,8 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-set-face-locally)
+
+  (run-with-timer (* 10 60) t #'mu4e-extras-check-all-mail)
 
   :general
   ((mu4e-headers-mode-map mu4e-view-mode-map)

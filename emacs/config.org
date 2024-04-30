@@ -3495,7 +3495,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
   (dired-mode-map
    "<tab>" 'dired-extras-subtree-toggle
    ";" 'dired-do-rename
-   "-" 'dired-hide-details-mode
+   "-" 'dired-hide-details-mode ; this also triggers `dired-omit-mode' and `dired-du'; see below
    "." 'dired-find-alternate-file
    "'" 'dired-du-mode
    "C" 'dired-do-copy
@@ -3562,18 +3562,14 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature dired-x
   :demand t
-  :after dired
+  :after dired dired-extras
   :config
-  (setq dired-omit-verbose nil)    ; shut up
+  (setq dired-omit-verbose nil) ; shut up
   (setq dired-omit-files
         (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
   (setq dired-omit-size-limit nil) ; always omit, regardless of directory size
 
-  (add-hook 'dired-mode-hook #'dired-omit-mode)
-
-  :general
-  (dired-mode-map
-   "–" 'dired-omit-mode))
+  (add-hook 'dired-hide-details-mode-hook #'dired-extras-enable-dired-omit-mode-conditionally))
 #+end_src
 
 ** dired-du

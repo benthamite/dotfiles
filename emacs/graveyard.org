@@ -9,6 +9,28 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** remember
+:PROPERTIES:
+:ID:       438AD8A8-0F4F-4A1D-9BC9-110906944509
+:END:
+
+
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/textmodes/remember.el][remember]] is a mode for quickly jotting down things to remember./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature remember
+  :demand t
+  :init
+  (setq remember-data-file "~/.config/emacs-profiles/var/remember/notes")
+
+  :config
+  (setq remember-notes-auto-save-visited-file-name t)
+  (setq remember-notes-buffer-name "*scratch*")
+  (setq initial-buffer-choice
+        (lambda () (kill-buffer remember-notes-buffer-name)
+          (remember-notes))))
+#+end_src
+
 ** mixed-pitch
 :PROPERTIES:
 :ID:       A8E80A11-25A4-4034-8A86-F7F6ADFD46C7

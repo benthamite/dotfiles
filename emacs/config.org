@@ -214,6 +214,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#peep-dired][peep-dired]]
   - [[#minibuffer][minibuffer]]
   - [[#ibuffer][ibuffer]]
+  - [[#prot-scratch][prot-scratch]]
   - [[#executable][executable]]
   - [[#uniquify][uniquify]]
   - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
@@ -3763,6 +3764,30 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
   :general
   (ibuffer-mode-map
    "k" 'ibuffer-do-delete))
+#+end_src
+
+** prot-scratch
+:PROPERTIES:
+:ID:       FF8B73D7-0A56-44FE-8F66-DDD18C9D5CE1
+:END:
+
+/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-scratch.el][prot-scratch]] supports scratch buffers for an editable major mode of choice./
+
+#+begin_src emacs-lisp
+(use-package prot-scratch
+  :elpaca (prot-scratch
+           :host github
+           :repo "protesilaos/dotfiles"
+           :local-repo "prot-scratch"
+           :main "emacs/.emacs.d/prot-lisp/prot-scratch.el"
+           :build (:not elpaca--check-version)
+           :files ("emacs/.emacs.d/prot-lisp/prot-scratch.el"))
+  :demand t
+  :config
+  (setq prot-scratch-default-mode 'org-mode)
+
+  :general
+  ("C-n" 'prot-scratch-buffer))
 #+end_src
 
 ** executable

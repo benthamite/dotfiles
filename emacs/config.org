@@ -362,6 +362,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#yaml][yaml]]
   - [[#js2-mode][js2-mode]]
   - [[#auctex][auctex]]
+  - [[#org-auctex][org-auctex]]
   - [[#shut-up][shut-up]]
   - [[#puni][puni]]
   - [[#project][project]]
@@ -7037,6 +7038,20 @@ This needs to be configured.
 
         TeX-view-program-selection '((output-pdf "PDF Tools"))
         ))
+#+end_src
+
+** org-auctex
+:PROPERTIES:
+:ID:       F2B7F20E-244D-4582-80E9-DA54964E2B73
+:END:
+
+#+begin_src emacs-lisp
+(use-package org-auctex
+  :elpaca (org-auctex
+           :host github
+           :repo "karthink/org-auctex")
+  :after org auctex
+  :demand t)
 #+end_src
 
 ** shut-up

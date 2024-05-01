@@ -10528,8 +10528,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    "<" 'mu4e-headers-split-view-shrink
    ">" 'mu4e-headers-split-view-grow
    "s-f" 'mu4e-compose-forward
-   "i" 'mu4e-select-other-view
-   "r" 'mu4e-compose-reply)
+   "i" 'mu4e-select-other-view)
   (mu4e-main-mode-map
    "h" 'mu4e-display-manual
    "j" 'mu4e-search-maildir
@@ -10605,6 +10604,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   :config
   (setq mu4e-extras-inbox-folder "/Inbox")
   (setq mu4e-extras-daily-folder "/Daily")
+  (setq mu4e-extras-wide-reply t)
 
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-set-face-locally)
@@ -10614,6 +10614,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   :general
   ((mu4e-headers-mode-map mu4e-view-mode-map)
    "o" 'mu4e-extras-view-org-capture
+   "r" 'mu4e-extras-compose-reply
    "$" 'mu4e-extras-copy-sum)
   (mu4e-main-mode-map
    "g" 'mu4e-extras-compose-new-externally

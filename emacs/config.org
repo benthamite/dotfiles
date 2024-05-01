@@ -3647,7 +3647,10 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 :ID:       8AD56019-FF0A-407F-B610-F9F2F4DE1B90
 :END:
 
-The code block below, based on [[https://www.djcbsoftware.nl/code/mu/mu4e/Attaching-files-with-dired.html][this]], enables ~mu4e~ file attachment directly from a Dired buffer.
+
+/gnus-dired provides utility functions for intersections of =gnus= and =dired=./
+
+I use =mu4e= (see below) rather than =gnus= to handle email. However, a specific functionality in this feature also works with =mu4e=, allowing me to attach a file to an email directly from a Dired buffer.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature gnus-dired

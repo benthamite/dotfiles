@@ -9088,13 +9088,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
         (concat "${title:*} "
                 (propertize "${tags:10}" 'face 'org-tag)))
 
-  (setq org-roam-capture-templates
-        `(("r" "bibliography reference" plain
-           (file ,paths-file-orb-noter-template)
-           :if-new
-           (file ,paths-file-orb-capture-template)
-           :unnarrowed t :immediate-finish t :jump-to-captured t)))
-
   ;; adapted from
   ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#showing-node-hierarchy
   (cl-defmethod org-roam-node-hierarchy ((node org-roam-node))
@@ -9713,6 +9706,14 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
   (setq orb-insert-interface 'citar-open-notes)
   (setq orb-note-actions-interface 'default)
   (setq orb-attached-file-extensions '("pdf"))
+  (add-to-list 'org-roam-capture-templates
+             `("r" "bibliography reference" plain
+               (file ,paths-file-orb-noter-template)
+               :if-new
+               (file ,paths-file-orb-capture-template)
+               :unnarrowed t :immediate-finish t :jump-to-captured t)
+             t)
+
   (dolist (keyword '("year" "title" "url" "keywords"))
     (add-to-list 'orb-preformat-keywords keyword))
   (org-roam-bibtex-mode))

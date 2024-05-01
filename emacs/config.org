@@ -3496,7 +3496,6 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
   (dired-mode-map
    "<tab>" 'dired-extras-subtree-toggle
    ";" 'dired-do-rename
-   "-" 'dired-hide-details-mode ; this also triggers `dired-omit-mode' and `dired-du'; see below
    "." 'dired-find-alternate-file
    "'" 'dired-du-mode
    "C" 'dired-do-copy
@@ -3532,7 +3531,6 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 :ID:       DDF9A650-13A5-4C47-B2C5-6B376B75998D
 :END:
 
-
 /[[file:extras/dired-extras.el][dired-extras]] collects my extensions for ~dired~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -3543,6 +3541,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
   ("H-d" 'dired-extras-dispatch)
   (dired-mode-map
    "," 'dired-extras-up-directory-reuse
+   "-" 'dired-extras-hide-details-mode-enhanced
    "H-." 'dired-extras-dotfiles-toggle
    "c" 'dired-extras-copy-filename-as-kill-absolute
    "w" 'dired-extras-copy-filename-as-kill-dwim
@@ -3563,14 +3562,12 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature dired-x
   :demand t
-  :after dired dired-extras
+  :after dired
   :config
   (setq dired-omit-verbose nil) ; shut up
   (setq dired-omit-files
         (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
-  (setq dired-omit-size-limit nil) ; always omit, regardless of directory size
-
-  (add-hook 'dired-hide-details-mode-hook #'dired-extras-enable-dired-omit-mode-conditionally))
+  (setq dired-omit-size-limit nil)) ; always omit, regardless of directory size
 #+end_src
 
 ** dired-du
@@ -3584,11 +3581,10 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 
 #+begin_src emacs-lisp :results silent (tlon-init-tangle-conditionally)
 (use-package dired-du
-  :after dired-extras
+  :after dired
   :demand t
   :config
-  (setq dired-du-size-format 'comma)
-  (add-hook 'dired-hide-details-mode-hook #'dired-extras-enable-dired-du-conditionally))
+  (setq dired-du-size-format 'comma))
 #+end_src
 
 ** image-dired

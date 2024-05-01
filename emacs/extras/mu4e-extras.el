@@ -47,6 +47,14 @@
   :type 'string
   :group 'mu4e-extras)
 
+(defcustom mu4e-extras-wide-reply 'prompt
+  "Whether the reply to messages should be \"wide\" (a.k.a. \"reply-to-all\").
+If `prompt', ask the user. If t, always reply to all. If nil, always reply to
+the sender only."
+  :type '(choice (const :tag "Prompt" prompt)
+		 (const :tag "Yes" t)
+		 (const :tag "No" nil)))
+
 ;;;; Functions
 
 (defun mu4e-extras-gmail-fix-flags (mark msg)
@@ -258,6 +266,19 @@ takes just a couple of seconds."
   (interactive)
   (let ((mu4e-get-mail-command "mbsync gmail-all"))
     (mu4e-update-mail-and-index t)))
+
+(defun mu4e-extras-compose-reply (&optional wide)
+  "Reply to the message at point.
+
+If WIDE is non-nil, make it a \"wide\" reply (a.k.a. \"reply-to-all\"). Else,
+prompt the user for the reply type if `mu4e-extras-wide-reply' is `prompt', make
+it a narrow reply if `mu4e-extras-wide-reply' is nil, and make it a wide reply
+otherwise.."
+  (interactive)
+  (let* ((wide (or wide (pcase mu4e-extras-wide-reply
+			  ('prompt (y-or-n-p "Reply to all? "))
+			  (_ mu4e-extras-wide-reply)))))
+    (mu4e-compose-reply wide)))
 
 ;;;;; Patches
 

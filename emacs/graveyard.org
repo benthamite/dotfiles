@@ -9,6 +9,92 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** org-auctex
+:PROPERTIES:
+:ID:       F2B7F20E-244D-4582-80E9-DA54964E2B73
+:END:
+
+
+/[[https://github.com/karthink/org-auctex][org-auctex]] provides better latex previews for =org-mode==./
+
+#+begin_src emacs-lisp
+(use-package org-auctex
+  :elpaca (org-auctex
+           :host github
+           :repo "karthink/org-auctex"
+           :build (:not elpaca--check-version)) ; thinks current version < 13.1
+  :after org auctex
+  :demand t)
+#+end_src
+
+** auctex
+:PROPERTIES:
+:ID:       2D596638-0091-48AD-B171-8109E6CE945C
+:END:
+
+/[[https://elpa.gnu.org/packages/auctex.html][auctex]] is an integrated environment for TeX./
+
+#+begin_src emacs-lisp
+;; adapted from github.com/radian-software/straight.el/issues/836#issuecomment-927098560
+(use-package auctex
+  :elpaca (:type git
+                 :host nil
+                 :repo "https://git.savannah.gnu.org/git/auctex.git"
+                 :pre-build (("./autogen.sh")
+                             ("./configure" "--without-texmf-dir" "--with-lispdir=.")
+                             ("make")))
+  :mode
+  ("\\.tex\\'" . latex-mode) ; Must first activate the inferior Emacs latex mode
+  :hook
+  (LaTeX-mode . TeX-PDF-mode)
+  (LaTeX-mode . flycheck-mode)
+  (LaTeX-mode . LaTeX-math-mode)
+  (LaTeX-mode . turn-on-cdlatex)
+  :init
+  (load "auctex.el" nil t t)
+  (load "preview-latex.el" nil t t)
+  (require 'reftex)
+
+  (setq-default TeX-master 'dwim)
+
+  (setq TeX-data-directory (expand-file-name "auctex" elpaca-repos-directory)
+        TeX-lisp-directory TeX-data-directory
+
+                                        ; Or custom-set-variables as follows.
+                                        ; M-x describe-variable RET preview-TeX-style-dir RET
+                                        ;`(preview-TeX-style-dir ,(concat ".:" (straight--repos-dir "auctex") "latex:"))
+        preview-TeX-style-dir (concat ".:" (expand-file-name "auctex" elpaca-repos-directory) "latex:")
+
+        TeX-parse-self t ; parse on load
+        TeX-auto-save t  ; parse on save
+        TeX-auto-untabify t ; Automatically remove all tabs from a file before saving it.
+
+                                        ;Type of TeX engine to use.
+                                        ;It should be one of the following symbols:
+                                        ;* ‘default’
+                                        ;* ‘luatex’
+                                        ;* ‘omega’
+                                        ;* ‘xetex’
+        TeX-engine 'xetex
+        TeX-auto-local ".auctex-auto" ; Directory containing automatically generated TeX information.
+        TeX-style-local ".auctex-style" ; Directory containing hand generated TeX information.
+
+        ;; ##### Enable synctex correlation.
+        ;; ##### From Okular just press `Shift + Left click' to go to the good line.
+        ;; ##### From Evince just press `Ctrl + Left click' to go to the good line.
+        TeX-source-correlate-mode t
+        TeX-source-correlate-method 'synctex
+        TeX-source-correlate-start-server t
+
+        ;; automatically insert braces after sub/superscript in math mode
+        TeX-electric-sub-and-superscript t
+        ;; If non-nil, then query the user before saving each file with TeX-save-document.
+        TeX-save-query nil
+
+        TeX-view-program-selection '((output-pdf "PDF Tools"))
+        ))
+#+end_src
+
 ** remember
 :PROPERTIES:
 :ID:       438AD8A8-0F4F-4A1D-9BC9-110906944509

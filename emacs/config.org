@@ -3568,7 +3568,8 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
   (setq dired-omit-verbose nil) ; shut up
   (setq dired-omit-files
         (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
-  (setq dired-omit-size-limit nil)) ; always omit, regardless of directory size
+  (setq dired-omit-size-limit nil)  ; always omit, regardless of directory size
+  (add-hook 'dired-mode-hook #'dired-omit-mode))
 #+end_src
 
 ** dired-du

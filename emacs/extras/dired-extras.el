@@ -154,20 +154,22 @@ losing the `put back' option."
 	    (push (buffer-name buffer) buffers))))
       (nreverse buffers))))
 
-;;;;; dired-x
-
-(defun dired-extras-enable-dired-omit-mode-conditionally ()
-  "Enable `dired-omit-mode' iff `dired-hide-details-mode' is enabled."
-  (let ((toggle (if dired-hide-details-mode 1 -1)))
-    (shut-up (dired-omit-mode toggle))))
-
-;;;;; dired-du
+;;;;; hide-details-mode
 
 (declare-function dired-du-mode "dired-du")
-(defun dired-extras-enable-dired-du-conditionally ()
-  "Enable `dired-du-mode' iff `dired-hide-details-mode' is disabled."
-  (let ((toggle (if dired-hide-details-mode -1 1)))
-    (shut-up (dired-du-mode toggle))))
+(defun dired-extras-hide-details-mode-enhanced (&optional arg)
+  "Set `dired-hide-details-mode' and associated modes.
+Toggle the mode if ARG is `toggle' or called interactively. Enable the mode if
+ARG is nil, omitted, or a positive number. Disable the mode if ARG is a negative
+number."
+  (interactive "P")
+  (let ((arg (if (or (eq arg 'toggle)
+		     (and (null arg) (called-interactively-p 'any)))
+		 (if dired-hide-details-mode 1 -1)
+	       (or arg 1))))
+    (dired-hide-details-mode (* arg -1))
+    (dired-omit-mode (* arg -1))
+    (dired-du-mode arg)))
 
 ;;;;; Dispatcher
 

@@ -403,6 +403,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-src][org-src]]
   - [[#org-table][org-table]]
   - [[#orgtbl-edit][orgtbl-edit]]
+  - [[#orgtbl-join][orgtbl-join]]
   - [[#org-crypt][org-crypt]]
   - [[#org-element][org-element]]
   - [[#org-lint][org-lint]]
@@ -8580,6 +8581,17 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
   :elpaca (orgtbl-edit
              :host github
              :repo "shankar2k/orgtbl-edit"))
+#+end_src
+
+** orgtbl-join
+:PROPERTIES:
+:ID:       91A9FFF0-BEB8-4C0D-9D78-B2F190C5AA8F
+:END:
+
+#+begin_src emacs-lisp
+(use-package orgtbl-join
+  :after org-table
+  :demand t)
 #+end_src
 
 ** org-crypt

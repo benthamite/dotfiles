@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: extras-section
+# key: es
+# contributor: Pablo Stafforini
+# --
+`(file-name-sans-extension (magit-extras-get-commit-file 'sans-dir))`: $0

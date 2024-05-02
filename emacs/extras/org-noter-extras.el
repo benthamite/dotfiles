@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'org-noter)
-(require 'unfill)
 
 ;;;; Variables
 
@@ -68,6 +67,7 @@ heading in a quote."
       (org-next-visible-heading 1)
       (org-fold-show-subtree))))
 
+(declare-function unfill-region "unfill")
 (defun org-noter-get-annotation-contents ()
   "Return cleaned-up annotation contents in subtree."
   (let ((initial-heading (org-get-heading t t t t)))

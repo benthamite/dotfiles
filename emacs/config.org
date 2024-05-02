@@ -83,7 +83,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#server][server]]
   - [[#async][async]]
   - [[#emacsql][emacsql]]
-  - [[#tlon-core][tlon-core]]
   - [[#prot-common][prot-common]]
   - [[#prot-simple][prot-simple]]
   - [[#misc][misc]]
@@ -117,20 +116,23 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#forge-extras][forge-extras]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
 - [[#display][display]]
-  - [[#mixed-pitch][mixed-pitch]]
   - [[#fringe][fringe]]
+  - [[#faces][faces]]
+  - [[#faces-extras][faces-extras]]
   - [[#org-modern][org-modern]]
   - [[#org-modern-indent][org-modern-indent]]
   - [[#org-tidy][org-tidy]]
   - [[#org-appear][org-appear]]
-  - [[#faces][faces]]
-  - [[#faces-extras][faces-extras]]
   - [[#face-remap][face-remap]]
   - [[#modus-themes][modus-themes]]
   - [[#modus-themes-extras][modus-themes-extras]]
   - [[#highlight-parentheses][highlight-parentheses]]
   - [[#spacious-padding][spacious-padding]]
   - [[#emoji][emoji]]
+  - [[#rainbow-mode][rainbow-mode]]
+  - [[#color][color]]
+  - [[#color-extras][color-extras]]
+  - [[#hexrgb][hexrgb]]
   - [[#image][image]]
   - [[#paren][paren]]
   - [[#doom-modeline][doom-modeline]]
@@ -212,6 +214,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#peep-dired][peep-dired]]
   - [[#minibuffer][minibuffer]]
   - [[#ibuffer][ibuffer]]
+  - [[#prot-scratch][prot-scratch]]
+  - [[#persistent-scratch][persistent-scratch]]
   - [[#executable][executable]]
   - [[#uniquify][uniquify]]
   - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
@@ -248,7 +252,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#saveplace][saveplace]]
   - [[#session][session]]
   - [[#recentf][recentf]]
-  - [[#remember][remember]]
 - [[#search--replace][search & replace]]
   - [[#isearch][isearch]]
   - [[#isearch-extras][isearch-extras]]
@@ -320,7 +323,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#grip-mode][grip-mode]]
   - [[#xwidget][xwidget]]
   - [[#edit-indirect][edit-indirect]]
-  - [[#mediawiki-el][mediawiki-el]]
+  - [[#mediawiki][mediawiki]]
   - [[#gdrive][gdrive]]
   - [[#ledger-mode][ledger-mode]]
   - [[#ledger-mode-extras][ledger-mode-extras]]
@@ -339,7 +342,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-pdftools][org-pdftools]]
   - [[#nov][nov]]
   - [[#djvu][djvu]]
-- [[#programing][programing]]
+- [[#programming][programming]]
   - [[#prog-mode][prog-mode]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
@@ -370,6 +373,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#copilot-extras][copilot-extras]]
   - [[#gptel][gptel]]
   - [[#gptel-extras][gptel-extras]]
+  - [[#chatgpt-shell][chatgpt-shell]]
   - [[#gpt-commit][gpt-commit]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
@@ -399,6 +403,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-src][org-src]]
   - [[#org-table][org-table]]
   - [[#orgtbl-edit][orgtbl-edit]]
+  - [[#orgtbl-join][orgtbl-join]]
   - [[#org-crypt][org-crypt]]
   - [[#org-element][org-element]]
   - [[#org-lint][org-lint]]
@@ -477,6 +482,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#eww][eww]]
   - [[#eww-extras][eww-extras]]
   - [[#prot-eww][prot-eww]]
+  - [[#consult-web][consult-web]]
   - [[#w3m][w3m]]
   - [[#elfeed][elfeed]]
   - [[#elfeed-extras][elfeed-extras]]
@@ -644,7 +650,7 @@ NAME and ARGS as in `use-package'."
      :elpaca (,name
               :host github
               :repo "benthamite/dotfiles"
-              ;; :branch "dev"
+              :branch "dev"
               :files ,(list (file-name-concat
                              "emacs/extras"
                              (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
@@ -993,26 +999,6 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package emacsql
   :demand t)
-#+end_src
-
-** tlon-core
-:PROPERTIES:
-:ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package tlon-core
-  :elpaca (tlon-core
-           :host github
-           :repo "tlon-team/tlon-core"
-           :depth nil) ; clone entire repo, not just last commit
-  :defer 4
-  :config
-  (setq tlon-core-repo-dirs (expand-file-name "~/Library/CloudStorage/Dropbox/repos/"))
-
-  :general
-  (markdown-mode-map
-   "s-y" 'simple-extras-slugify-clipboard))
 #+end_src
 
 ** prot-common
@@ -1461,7 +1447,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   (magit-mode-map
    "p" 'magit-pull
    "." 'magit-push)
-  ((magit-status-mode-map magit-revision-mode-map)
+  ((magit-diff-mode-map magit-status-mode-map magit-revision-mode-map)
    "A-C-s-r" 'magit-section-backward-sibling
    "A-C-s-f" 'magit-section-forward-sibling)
   ((magit-status-mode-map magit-hunk-section-mode-map magit-hunk-section-smerge-map)
@@ -1553,13 +1539,15 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   ((forge-issue-mode-map forge-notifications-mode-map forge-topic-mode-map magit-status-mode-map)
    "s-a" 'forge-topic-set-assignees
    "s-d" 'forge-delete-comment
-   "s-l" 'forge-topic-set-labels
+   "s-e" 'forge-edit-post
    "s-i" 'forge-browse-issue
    "s-I" 'forge-browse-issues
-   "s-t" 'forge-topic-set-title
-   "s-e" 'forge-edit-post
+   "s-l" 'forge-topic-set-labels
+   "s-o" 'forge-topic-status-set-done
    "s-p" 'forge-create-post
-   "s-r" 'forge-create-post))
+   "s-r" 'forge-create-post
+   "s-s" 'forge-list-assigned-issues
+   "s-t" 'forge-topic-set-title))
 #+end_src
 
 ** orgit-forge
@@ -1648,31 +1636,6 @@ CLOCK: [2021-03-28 Sun 19:21]--[2021-03-28 Sun 19:35] =>  0:14
 (setq-default line-spacing 2)
 #+end_src
 
-** mixed-pitch
-:PROPERTIES:
-:ID:       A8E80A11-25A4-4034-8A86-F7F6ADFD46C7
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-04 Wed 19:52]--[2022-05-04 Wed 19:54] =>  0:02
-CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
-:END:
-
-/[[https://gitlab.com/jabranham/mixed-pitch][mixed-pitch]] allows mixing fixed-pitch and variable-pitch fonts./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package mixed-pitch
-  :demand t
-  :config
-  (setq mixed-pitch-set-height t)
-
-  (dolist (hook '(elfeed-show-mode-hook
-                  telega-webpage-mode-hook
-                  eww-mode-hook
-                  mu4e-view-mode-hook
-                  outline-mode-hook))
-    (add-hook hook #'mixed-pitch-mode)))
-#+end_src
-
 ** fringe
 :PROPERTIES:
 :ID:       A0748A82-CE1C-4700-95E1-610B6CA7F8E0
@@ -1695,6 +1658,56 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
                   (unknown . question-mark))))
 #+end_src
 
+** faces
+:PROPERTIES:
+:ID:       168A61B0-4580-443D-B04F-78F08EFA0458
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-04 Wed 10:45]--[2022-05-04 Wed 11:00] =>  0:15
+CLOCK: [2021-11-17 Wed 19:48]--[2021-11-17 Wed 19:57] =>  0:09
+CLOCK: [2021-11-17 Wed 11:27]--[2021-11-17 Wed 11:38] =>  0:11
+CLOCK: [2021-11-16 Tue 16:27]--[2021-11-16 Tue 17:55] =>  1:28
+CLOCK: [2021-08-19 Thu 19:18]--[2021-08-19 Thu 19:31] =>  0:13
+CLOCK: [2021-03-28 Sun 21:05]--[2021-03-28 Sun 21:21] =>  0:16
+CLOCK: [2021-02-27 Sat 18:27]--[2021-02-27 Sat 18:32] =>  0:05
+CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature faces
+  :demand t
+  :config
+  (setq ns-use-thin-smoothing t))
+#+end_src
+
+- [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
+- [[https://zzamboni.org/post/beautifying-org-mode-in-emacs/][- zzamboni.org | Beautifying Org Mode in Emacs]]
+
+** faces-extras
+:PROPERTIES:
+:ID:       9478C42B-7864-4F53-BD17-5EBEC2A55DB8
+:END:
+
+
+/[[file:extras/faces-extras.el][faces-extras]] collects my extensions for ~faces~./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-personal-package faces-extras
+  :after faces
+  :demand t
+  :config
+
+  (add-hook 'tlon-init-post-init-hook #'faces-extras-set-custom-face-attributes)
+  (faces-extras-set-and-store-face-attributes
+   '((default :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
+     (fixed-pitch :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-height)
+     (variable-pitch :family faces-extras-variable-pitch-font :height faces-extras-variable-pitch-height)
+     (window-divider :foreground (face-attribute 'mode-line-inactive :background))))
+
+  :general
+  ("C-h C-f" 'faces-extras-describe-face))
+#+end_src
+
 ** org-modern
 :PROPERTIES:
 :ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
@@ -1708,7 +1721,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-modern
   :demand t
-  :after org
+  :after org faces-extras
   :config
   (setq org-modern-table nil) ; doesn’t work well with variable-pitch: github.com/minad/org-modern/issues/99
   (setq org-modern-statistics nil)
@@ -1716,6 +1729,13 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
   (setq org-modern-list '((42 . "○")
                           (43 . "○")
                           (45 . "○")))
+
+  (faces-extras-set-and-store-face-attributes
+   '((org-modern-date-active :family faces-extras-fixed-pitch-font :height faces-extras-org-date-height)
+     (org-modern-date-inactive :family faces-extras-fixed-pitch-font :height faces-extras-org-date-height)
+     (org-modern-tag :family faces-extras-fixed-pitch-font :height faces-extras-org-tag-height)
+     (org-modern-label :family faces-extras-fixed-pitch-font :height 0.8)))
+
   (global-org-modern-mode))
 #+end_src
 
@@ -1772,50 +1792,6 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
   (add-hook 'org-mode-hook 'org-appear-mode))
 #+end_src
 
-** faces
-:PROPERTIES:
-:ID:       168A61B0-4580-443D-B04F-78F08EFA0458
-:END:
-:LOGBOOK:
-CLOCK: [2022-05-04 Wed 10:45]--[2022-05-04 Wed 11:00] =>  0:15
-CLOCK: [2021-11-17 Wed 19:48]--[2021-11-17 Wed 19:57] =>  0:09
-CLOCK: [2021-11-17 Wed 11:27]--[2021-11-17 Wed 11:38] =>  0:11
-CLOCK: [2021-11-16 Tue 16:27]--[2021-11-16 Tue 17:55] =>  1:28
-CLOCK: [2021-08-19 Thu 19:18]--[2021-08-19 Thu 19:31] =>  0:13
-CLOCK: [2021-03-28 Sun 21:05]--[2021-03-28 Sun 21:21] =>  0:16
-CLOCK: [2021-02-27 Sat 18:27]--[2021-02-27 Sat 18:32] =>  0:05
-CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature faces
-  :demand t
-  :config
-  (setq ns-use-thin-smoothing t))
-#+end_src
-
-- [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
-- [[https://zzamboni.org/post/beautifying-org-mode-in-emacs/][- zzamboni.org | Beautifying Org Mode in Emacs]]
-
-** faces-extras
-:PROPERTIES:
-:ID:       9478C42B-7864-4F53-BD17-5EBEC2A55DB8
-:END:
-
-
-/[[file:extras/faces-extras.el][faces-extras]] collects my extensions for ~faces~./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-personal-package faces-extras
-  :after faces
-  :demand t
-  :config
-  (add-hook 'tlon-init-post-init-hook #'faces-extras-load-custom-faces)
-
-  :general
-  ("C-h C-f" 'faces-extras-describe-face))
-#+end_src
-
 ** face-remap
 :PROPERTIES:
 :ID:       A999E839-CB99-4BC3-BB40-962B17683EDE
@@ -1826,6 +1802,14 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature face-remap
   :demand t
+  :config
+  (dolist (hook '(elfeed-show-mode-hook
+                  telega-webpage-mode-hook
+                  eww-mode-hook
+                  mu4e-view-mode-hook
+                  outline-mode-hook))
+    (add-hook hook #'variable-pitch-mode))
+
   :general
   (eww-mode-map
    "+" 'text-scale-increase
@@ -1852,7 +1836,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   :elpaca (modus-themes
            :host github
            :repo "protesilaos/modus-themes")
-  :after faces
+  :after faces faces-extras
   :demand t
 
   :config
@@ -1863,7 +1847,9 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
           ;; for the rest, use the predefined intense values
           ,@modus-themes-preset-overrides-intense))
 
-  (add-hook 'modus-themes-after-load-theme-hook #'faces-extras-load-custom-faces)
+  (setq modus-themes-mixed-fonts t)
+
+  (add-hook 'modus-themes-after-load-theme-hook #'faces-extras-set-custom-face-attributes)
   (add-hook 'modus-themes-after-load-theme-hook #'frame-extras-restore-window-divider)
 
   :general
@@ -1937,6 +1923,56 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 (use-feature emoji
   :general
   ("H-E" 'emoji-insert))
+#+end_src
+
+** rainbow-mode
+:PROPERTIES:
+:ID:       9FCB7FE9-D305-4658-922E-72C4D9F4C4A2
+:END:
+
+/[[https://elpa.gnu.org/packages/rainbow-mode.html][rainbow-mode]] colorizes strings that match color names./
+
+#+begin_src emacs-lisp
+(use-package rainbow-mode
+  :demand t
+  :init
+  (setq rainbow-ansi-colors nil)
+  (setq rainbow-x-colors nil))
+#+end_src
+
+** color
+:PROPERTIES:
+:ID:       83EC4A72-3E64-403B-9196-339DD0EB202E
+:END:
+
+#+begin_src emacs-lisp
+(use-feature color
+  :demand t)
+#+end_src
+
+** color-extras
+:PROPERTIES:
+:ID:       0873C089-B832-4EB2-BAFF-2D3CF0268AE4
+:END:
+
+#+begin_src emacs-lisp
+(use-personal-package color-extras
+  :after color
+  :demand t)
+#+end_src
+
+** hexrgb
+:PROPERTIES:
+:ID:       A9DD66E0-49A5-4A8C-8F45-016DECFF0BF0
+:END:
+
+#+begin_src emacs-lisp
+(use-package hexrgb
+  :elpaca (hexrgb
+           :host github
+           :repo "emacsmirror/hexrgb")
+  :demand t
+  )
 #+end_src
 
 ** image
@@ -2049,6 +2085,7 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature tab-bar
   :demand t
+  :after faces-extras
   :config
   (setq tab-bar-format '(tab-bar-align-right
                          tab-bar-format-global))
@@ -2061,6 +2098,10 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
         ;; `tab-bar-format-global'.
         (remove '(global-mode-string ("" global-mode-string))
                 mode-line-misc-info))
+
+  (faces-extras-set-and-store-face-attributes
+   '((tab-bar :background (face-background 'mode-line)
+              :box `(:line-width 6 :color ,(face-attribute 'mode-line :background) :style nil))))
 
   (tab-bar-mode))
 #+end_src
@@ -2433,7 +2474,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   :general
   ("A-C-s-m" 'move-beginning-of-line
    "A-C-s-/" 'move-end-of-line)
-  ((custom-mode-map ebib-entry-mode-map ebib-index-mode-map elfeed-search-mode-map elfeed-show-mode-map elisp-refs-mode-map eww-mode-map forge-notifications-mode help-mode-map helpful-mode-map Info-mode-map ledger-reconcile-mode-map Man-mode-map mu4e-view-mode-map org-lint--report-mode-map osa-chrome-mode-map pass-mode-map special-mode-map)
+  ((custom-mode-map ebib-entry-mode-map ebib-index-mode-map elfeed-show-mode-map elisp-refs-mode-map eww-mode-map forge-notifications-mode help-mode-map helpful-mode-map Info-mode-map ledger-reconcile-mode-map Man-mode-map mu4e-view-mode-map org-lint--report-mode-map osa-chrome-mode-map pass-mode-map special-mode-map)
    "k" 'previous-line
    "l" 'next-line)
   ((eshell-hist-mode-map w3m-minor-mode-map)
@@ -2534,8 +2575,9 @@ CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
 (use-feature simple
   :demand t
   :config
-  (setq kill-ring-max 500)
+  (setq kill-ring-max 99999)
   (setq save-interprogram-paste-before-kill t) ; add system clipboard to kill ring
+  (setq auto-save-interval 5)
 
   :general
   ("A-H-M-d" 'transpose-chars
@@ -3456,7 +3498,6 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
   (dired-mode-map
    "<tab>" 'dired-extras-subtree-toggle
    ";" 'dired-do-rename
-   "-" 'dired-hide-details-mode
    "." 'dired-find-alternate-file
    "'" 'dired-du-mode
    "C" 'dired-do-copy
@@ -3492,7 +3533,6 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 :ID:       DDF9A650-13A5-4C47-B2C5-6B376B75998D
 :END:
 
-
 /[[file:extras/dired-extras.el][dired-extras]] collects my extensions for ~dired~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -3503,8 +3543,10 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
   ("H-d" 'dired-extras-dispatch)
   (dired-mode-map
    "," 'dired-extras-up-directory-reuse
+   "-" 'dired-extras-hide-details-mode-enhanced
    "H-." 'dired-extras-dotfiles-toggle
    "c" 'dired-extras-copy-filename-as-kill-absolute
+   "w" 'dired-extras-copy-filename-as-kill-dwim
    "W" 'dired-extras-copy-filename-as-kill-sans-extension
    "z" 'dired-extras-mark-screenshots
    "s-d" 'dired-extras-do-delete-fast
@@ -3524,16 +3566,11 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
   :demand t
   :after dired
   :config
-  (setq dired-omit-verbose nil)    ; shut up
+  (setq dired-omit-verbose nil) ; shut up
   (setq dired-omit-files
         (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
-  (setq dired-omit-size-limit nil) ; always omit, regardless of directory size
-
-  (add-hook 'dired-mode-hook #'dired-omit-mode)
-
-  :general
-  (dired-mode-map
-   "–" 'dired-omit-mode))
+  (setq dired-omit-size-limit nil)  ; always omit, regardless of directory size
+  (add-hook 'dired-mode-hook #'dired-omit-mode))
 #+end_src
 
 ** dired-du
@@ -3547,10 +3584,10 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 
 #+begin_src emacs-lisp :results silent (tlon-init-tangle-conditionally)
 (use-package dired-du
-  :after dired-extras
+  :after dired
+  :demand t
   :config
-  (setq dired-du-size-format 'comma)
-  (add-hook 'dired-hide-details-mode-hook #'dired-extras-enable-dired-du-conditionally))
+  (setq dired-du-size-format 'comma))
 #+end_src
 
 ** image-dired
@@ -3562,12 +3599,15 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 (use-feature image-dired
   :after dired
   :config
-  (setq image-dired-main-image-directory "~/Pictures/")
+  (setq image-dired-main-image-directory (expand-file-name "~/Pictures/"))
+  (setq image-dired-external-viewer "open")
 
   :general
   (image-dired-thumbnail-mode-map
-   "k" 'image-dired-display-previous-thumbnail-original
-   "l" 'image-dired-display-next-thumbnail-original)
+   "c" 'dired-extras-image-copy-filename-as-kill-absolute
+   "e" 'image-dired-thumbnail-display-external
+   "k" 'image-dired-display-previous
+   "l" 'image-dired-display-next)
   (dired-mode-map
    "I" 'dired-extras-image-dired-current-directory))
 #+end_src
@@ -3608,7 +3648,10 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 :ID:       8AD56019-FF0A-407F-B610-F9F2F4DE1B90
 :END:
 
-The code block below, based on [[https://www.djcbsoftware.nl/code/mu/mu4e/Attaching-files-with-dired.html][this]], enables ~mu4e~ file attachment directly from a Dired buffer.
+
+/gnus-dired provides utility functions for intersections of =gnus= and =dired=./
+
+I use =mu4e= (see below) rather than =gnus= to handle email. However, a specific functionality in this feature also works with =mu4e=, allowing me to attach a file to an email directly from a Dired buffer.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature gnus-dired
@@ -3721,6 +3764,52 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
   :general
   (ibuffer-mode-map
    "k" 'ibuffer-do-delete))
+#+end_src
+
+** prot-scratch
+:PROPERTIES:
+:ID:       FF8B73D7-0A56-44FE-8F66-DDD18C9D5CE1
+:END:
+
+/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-scratch.el][prot-scratch]] supports scratch buffers for an editable major mode of choice./
+
+#+begin_src emacs-lisp
+(use-package prot-scratch
+  :elpaca (prot-scratch
+           :host github
+           :repo "protesilaos/dotfiles"
+           :local-repo "prot-scratch"
+           :main "emacs/.emacs.d/prot-lisp/prot-scratch.el"
+           :build (:not elpaca--check-version)
+           :files ("emacs/.emacs.d/prot-lisp/prot-scratch.el"))
+  :demand t
+  :config
+  (setq prot-scratch-default-mode 'org-mode)
+
+  :general
+  ("C-n" 'prot-scratch-buffer))
+#+end_src
+
+** persistent-scratch
+:PROPERTIES:
+:ID:       ACB8DF75-3FC0-4780-A587-B173E4366F62
+:END:
+
+/[[https://github.com/Fanael/persistent-scratch][persistent-scratch]] preserves the scratch buffer across Emacs sessions./
+
+I use this package in combination with =prot-scratch== (see above) to persist scratch buffers in different modes. This way, I am able to open a scratch buffer in /any/ mode for temporary notes, without running the risk of losing them.
+
+#+begin_src emacs-lisp
+(use-package persistent-scratch
+  :demand t
+  :config
+  (setq persistent-scratch-autosave-interval 10)
+  (setq persistent-scratch-backup-directory
+        (file-name-concat no-littering-var-directory "auto-save/scratch-buffers/"))
+  (defun persistent-scratch-default-scratch-buffer-p ()
+    "Return t if BUFFER is the scratch buffer."
+    (string-match ".*?scratch\\*$" (buffer-name)))
+  (persistent-scratch-setup-default))
 #+end_src
 
 ** executable
@@ -4366,7 +4455,7 @@ Note to self: if the package doesn't work after deploying a new profile, even af
   (setq org-gcal-client-secret (auth-source-pass-get 'secret "auth-sources/org-gcal"))
 
   :config
-  (setq org-gcal-fetch-file-alist `((,user-mail-address . ,paths-file-calendar)))
+  (setq org-gcal-fetch-file-alist `((,(getenv "PERSONAL_GMAIL") . ,paths-file-calendar)))
   (setq org-gcal-recurring-events-mode 'top-level)
   (setq org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
   (setq org-gcal-notify-p nil)
@@ -4597,28 +4686,6 @@ The original package is no longer maintained; the fork below adds a few improvem
   (add-to-list 'recentf-exclude no-littering-var-directory)
   (add-to-list 'recentf-exclude no-littering-etc-directory)
   (recentf-mode))
-#+end_src
-
-** remember
-:PROPERTIES:
-:ID:       438AD8A8-0F4F-4A1D-9BC9-110906944509
-:END:
-
-
-/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/textmodes/remember.el][remember]] is a mode for quickly jotting down things to remember./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature remember
-  :demand t
-  :init
-  (setq remember-data-file "~/.config/emacs-profiles/var/remember/notes")
-
-  :config
-  (setq remember-notes-auto-save-visited-file-name t)
-  (setq remember-notes-buffer-name "*scratch*")
-  (setq initial-buffer-choice
-        (lambda () (kill-buffer remember-notes-buffer-name)
-          (remember-notes))))
 #+end_src
 
 * search & replace
@@ -5273,6 +5340,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
                             corfu-popupinfo
                             corfu-quick))
   :demand t
+  :after faces-extras
   :config
   (setq corfu-auto t)                 ;; Enable auto completion
   (setq corfu-quit-no-match t)        ;; Automatically quit if there is no match
@@ -5281,6 +5349,9 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (setq corfu-info-documentation nil)
   (setq corfu-auto-prefix 3)
   (setq corfu-auto-delay 0.5)
+
+  (faces-extras-set-and-store-face-attributes
+   '((corfu-default :family faces-extras-fixed-pitch-font :height 1)))
 
   (global-corfu-mode)
 
@@ -5641,7 +5712,11 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :demand t
   :config
   (setq macos-bluetooth-device-list
-  '(("Sonny WH-1000XM5" . "ac-80-0a-37-41-1e"))))
+        '(("Sonny WH-1000XM5" . "ac-80-0a-37-41-1e")))
+
+  :general
+  ("C-M-s-c" 'macos-bluetooth-device-dwim
+   "C-M-s-g" 'macos-set-dication-language))
 #+end_src
 
 ** em-hist
@@ -5702,9 +5777,11 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package jinx
   :demand t
+  :after faces-extras
   :config
   (setq jinx-languages "en")
-  (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
+  (faces-extras-set-and-store-face-attributes
+   '((jinx-misspelled :underline '(:color "#008000" :style wave))))
 
   (add-to-list 'vertico-multiform-categories
                '(jinx grid (vertico-grid-annotate . 20)))
@@ -5741,6 +5818,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package flycheck
   :demand t
+  :after faces-extras
   :init
   (global-flycheck-mode)
 
@@ -5749,6 +5827,10 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (setq flycheck-emacs-lisp-load-path 'inherit)
   (setq flycheck-indication-mode nil)
   (setq flycheck-checker-error-threshold 5000)
+
+  (faces-extras-set-and-store-face-attributes
+   '((flycheck-error :underline '(:color "#ff0000" :style wave))
+     (flycheck-warning :underline '(:color "#0000ff" :style wave))))
 
   (add-hook 'org-src-mode-hook
             (lambda ()
@@ -6076,17 +6158,20 @@ This package is required by the ~markdown-mode~ command ~markdown-edit-code-bloc
 (use-package edit-indirect)
 #+end_src
 
-** mediawiki-el
+** mediawiki
 :PROPERTIES:
 :ID:       721F42DA-7E97-4C9A-9DBF-8A841DDE99A9
 :END:
 
-/[[https://github.com/hexmode/mediawiki-el][mediawiki-el]] is an Emacs interface to editing mediawiki sites./
+/[[https://github.com/hexmode/mediawiki-el][mediawiki]] is an Emacs interface to editing mediawiki sites./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package mediawiki
   :demand t
-  :after atomic-chrome)
+  :after atomic-chrome
+  :general
+  (mediawiki-mode-map
+  "s-k" 'mediawiki-insert-link))
 #+end_src
 
 ** gdrive
@@ -6094,14 +6179,32 @@ This package is required by the ~markdown-mode~ command ~markdown-edit-code-bloc
 :ID:       CC5C7599-DFA7-48A8-8BA0-3DABE8A3171E
 :END:
 :LOGBOOK:
+CLOCK: [2024-04-20 Sat 11:11]--[2024-04-20 Sat 11:32] =>  0:21
 CLOCK: [2021-12-07 Tue 17:12]--[2021-12-07 Tue 18:05] =>  0:53
 CLOCK: [2021-12-03 Fri 23:10]--[2021-12-04 Sat 01:01] =>  1:51
 CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
 :END:
-To reinstall:
-- Clone this [[https://github.com/glotlabs/gdrive][repo]].
-- Edit the ~clientId~ and ~clientSecret~ in the file ~handlers_drive.go~ with the values stored in ~pass~ (search for ~gdrive~).
-- Within the locally cloned repo, run ~go install~.
+
+#+begin_src emacs-lisp
+(use-package gdrive
+  :elpaca (gdrive
+           :host github
+           :repo "benthamite/gdrive"
+           :depth nil)
+  :demand t
+  :config
+  (load-file (file-name-concat paths-dir-dotemacs "etc/gdrive-users.el"))
+  (defun gdrive-extras-mark-multiple-and-share (file)
+    "Search for each line in FILE and share the selected results.
+The file should contain one search query per line."
+    (interactive "f")
+    (when (gdrive-mark-clear-prompt)
+      (let ((lines (files-extras-read-lines file)))
+        (dolist (line lines)
+          (let ((results (gdrive-act-on-selected-search-results line)))
+            (gdrive-mark-results results))))
+      (gdrive-share-results gdrive-marked-files))))
+#+end_src
 
 *** TODO [#5] Write command to create new Google Doc in chosen folder
 :PROPERTIES:
@@ -6109,6 +6212,7 @@ To reinstall:
 :ID:       4D8E953E-44F4-4546-8BF9-08D8983CA699
 :END:
 :LOGBOOK:
+CLOCK: [2024-04-23 Tue 09:54]--[2024-04-23 Tue 10:05] =>  0:11
 CLOCK: [2022-05-19 Thu 20:30]--[2022-05-19 Thu 20:33] =>  0:03
 :END:
 
@@ -6285,11 +6389,12 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :elpaca (tlon-babel
            :host github
            :repo "tlon-team/tlon-babel"
-           ;; :branch "dev"
+           :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
   (add-hook 'tlon-init-post-init-hook #'tlon-babel-init)
+  (setq tlon-babel-split-repo t)
 
   :general
   ("H-r" 'tlon-babel-dispatch
@@ -6496,17 +6601,6 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
    "A-u" 'pdf-view-midnight-minor-mode))
 #+end_src
 
-*** TODO [#4] Tweak chrome headless command so that chrome authenticates before printing a pdf
-:PROPERTIES:
-:ID:       BDE975FE-56AA-45C3-AF47-C70503051B30
-:Effort:   0:20
-:END:
-:LOGBOOK:
-CLOCK: [2023-11-25 Sat 22:25]--[2023-11-25 Sat 23:33] =>  1:08
-:END:
-https://stackoverflow.com/questions/62602327/headless-chrome-sharing-credentials
-Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
-
 ** pdf-tools-extras
 :PROPERTIES:
 :ID:       C4B53EDC-372F-42B2-924E-FE48647B67AE
@@ -6553,8 +6647,8 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 
   :general
   (sow-mode-map
-   "A-C-s-t" 'sow-scroll-other-window-down
-   "A-C-s-g" 'sow-scroll-other-window))
+   "A-C-s-g" 'sow-scroll-other-window-down
+   "A-C-s-t" 'sow-scroll-other-window))
 #+end_src
 
 ** pdf-view-restore
@@ -6609,7 +6703,7 @@ Modify the Keyboard Maestro script called ~Chrome: save webpage as PDF (v)~
 (use-package djvu)
 #+end_src
 
-* programing
+* programming
 :PROPERTIES:
 :ID:       35CB9C38-D0FE-458A-9F77-EC6702B2D976
 :END:
@@ -7078,7 +7172,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :elpaca (gptel
            :host github
            :repo "karthink/gptel")
- ; consider moving the email addresses to `paths'           
+ ; consider moving the email addresses to `paths'
   :after pass tlon-babel
   :defer 10
   :config
@@ -7121,6 +7215,24 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    "s-s" 'gptel-extras-save-buffer))
 #+end_src
 
+** chatgpt-shell
+:PROPERTIES:
+:ID:       6EC52CD8-EBCB-4A26-B1BA-001096C16030
+:END:
+
+
+/[[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]] comint-shell based interaction with ChatGPT./
+
+#+begin_src emacs-lisp
+(use-package chatgpt-shell
+  :after gptel
+  :demand t
+  :config
+  (setq chatgpt-shell-openai-key gptel-api-key)
+  (setq dall-e-shell-openai-key gptel-api-key)
+  (setq shell-maker-transcript-default-path gptel-extras-dir))
+#+end_src
+
 ** gpt-commit
 :PROPERTIES:
 :ID:       735CC302-C86D-4886-A78B-8EF89171086C
@@ -7130,11 +7242,11 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gpt-commit
-  :demand t
+  :after gptel
+  :defer 30
   :config
-  (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-babel-email-shared)))
-  (setq gpt-commit-model-name "gpt-4")
-  (add-hook 'git-commit-setup-hook #'gpt-commit-message))
+  (setq gpt-commit-openai-key gptel-api-key)
+  (setq gpt-commit-model-name gptel-model))
 #+end_src
 
 * org-mode
@@ -7525,7 +7637,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   :demand t
   :config
   (setq org-extras-agenda-switch-to-agenda-current-day-timer
-	(run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
+        (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
 
   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter org-extras-clocktable-sorter))
 
@@ -8051,10 +8163,36 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-faces
-  :after org
+  :after org faces-extras
   :demand t
   :config
-  (setq org-fontify-quote-and-verse-blocks t))
+  (setq org-fontify-quote-and-verse-blocks t)
+
+  (faces-extras-set-and-store-face-attributes
+   '((org-drawer :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height
+                 :foreground "LightSkyBlue")
+     (org-property-value :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height)
+     (org-special-keyword :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height)
+     (org-meta-line :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height)
+     (org-tag :family faces-extras-fixed-pitch-font :height faces-extras-org-tag-height)
+     (org-document-title :family faces-extras-fixed-pitch-font :height 1.0)
+     (org-code :family faces-extras-fixed-pitch-font :height faces-extras-org-code-height)
+     (org-verbatim :family faces-extras-fixed-pitch-font :height faces-extras-org-code-height)
+     (org-todo :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-archived :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-verbatim :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-1 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-2 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-3 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-4 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-5 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-6 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-7 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-level-8 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (org-date :family faces-extras-fixed-pitch-font :height faces-extras-org-date-height)
+     (org-block :family faces-extras-fixed-pitch-font :height faces-extras-org-block-height)
+     (org-block-begin-line :family faces-extras-fixed-pitch-font :height faces-extras-org-block-height)
+     (org-quote :family faces-extras-variable-pitch-font :height faces-extras-variable-pitch-height))))
 #+end_src
 
 ** org-id
@@ -8448,6 +8586,17 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
              :repo "shankar2k/orgtbl-edit"))
 #+end_src
 
+** orgtbl-join
+:PROPERTIES:
+:ID:       91A9FFF0-BEB8-4C0D-9D78-B2F190C5AA8F
+:END:
+
+#+begin_src emacs-lisp
+(use-package orgtbl-join
+  :after org-table
+  :demand t)
+#+end_src
+
 ** org-crypt
 :PROPERTIES:
 :ID:       3C8E083B-55A1-4B55-A30A-BD9C4BE1D1D0
@@ -8466,7 +8615,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :demand t
   :config
   (setq org-tags-exclude-from-inheritance '("crypt"))
-  (setq org-crypt-key user-mail-address)
+  (setq org-crypt-key (getenv "PERSONAL_GMAIL"))
   (setq org-crypt-disable-auto-save t)
 
   (org-crypt-use-before-save-magic))
@@ -8866,13 +9015,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
         (concat "${title:*} "
                 (propertize "${tags:10}" 'face 'org-tag)))
 
-  (setq org-roam-capture-templates
-        `(("r" "bibliography reference" plain
-           (file ,paths-file-orb-noter-template)
-           :if-new
-           (file ,paths-file-orb-capture-template)
-           :unnarrowed t :immediate-finish t :jump-to-captured t)))
-
   ;; adapted from
   ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#showing-node-hierarchy
   (cl-defmethod org-roam-node-hierarchy ((node org-roam-node))
@@ -9160,7 +9302,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature oc
-  :after org
+  :after org el-patch
   :demand t
   :config
   (setq org-cite-csl-styles-dir paths-dir-tlon-csl-styles)
@@ -9168,7 +9310,38 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (setq org-cite-activate-processor 'citar) ;
   (setq org-cite-export-processors
-        '((t . (csl "long.csl")))))
+        '((t . (csl "long.csl"))))
+
+  ;; Comment out `org-cite--allowed-p' condition to allow invocation
+  ;; in any mode. Even if inserting a citation is not allowed, one may
+  ;; want to invoke the command to trigger contextual actions via
+  ;; `embark'.
+  (el-patch-defun org-cite-insert (arg)
+    "Insert a citation at point.
+Insertion is done according to the processor set in `org-cite-insert-processor'.
+ARG is the prefix argument received when calling interactively the function."
+    (interactive "P")
+    (unless org-cite-insert-processor
+      (user-error "No processor set to insert citations"))
+    (org-cite-try-load-processor org-cite-insert-processor)
+    (let ((name org-cite-insert-processor))
+      (cond
+       ((not (org-cite-get-processor name))
+        (user-error "Unknown processor %S" name))
+       ((not (org-cite-processor-has-capability-p name 'insert))
+        (user-error "Processor %S cannot insert citations" name))
+       (t
+        (let ((context (org-element-context))
+              (insert (org-cite-processor-insert (org-cite-get-processor name))))
+          (cond
+           ((org-element-type-p context '(citation citation-reference))
+            (funcall insert context arg))
+           (el-patch-remove
+             ((org-cite--allowed-p context)
+              (funcall insert nil arg)))
+           (t
+            (el-patch-swap (user-error "Cannot insert a citation here")
+                           (funcall insert nil arg))))))))))
 #+end_src
 
 *** Resources
@@ -9460,6 +9633,14 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
   (setq orb-insert-interface 'citar-open-notes)
   (setq orb-note-actions-interface 'default)
   (setq orb-attached-file-extensions '("pdf"))
+  (add-to-list 'org-roam-capture-templates
+             `("r" "bibliography reference" plain
+               (file ,paths-file-orb-noter-template)
+               :if-new
+               (file ,paths-file-orb-capture-template)
+               :unnarrowed t :immediate-finish t :jump-to-captured t)
+             t)
+
   (dolist (keyword '("year" "title" "url" "keywords"))
     (add-to-list 'orb-preformat-keywords keyword))
   (org-roam-bibtex-mode))
@@ -9877,6 +10058,7 @@ The macro below generates the commands correctly. But attempting to define key b
    "SPC" 'ebib-extras-open-file-dwim
    "/" 'ebib-extras-attach-most-recent-file
    "?" 'ebib-extras-attach-file
+   ";" 'ebib-extras-process-entry
    "a" 'ebib-extras-search-amazon
    "b" 'ebib-extras-get-or-open-entry
    "g" 'ebib-extras-search-library-genesis
@@ -9923,7 +10105,6 @@ The macro below generates the commands correctly. But attempting to define key b
            :host github
            :repo "benthamite/bib"
            :depth nil) ; clone entire repo, not just last commit
-  :after tlon-core
   :defer 5
   :config
   (setq bib-isbndb-key
@@ -10103,7 +10284,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature smtpmail
   :config
-  (setq smtpmail-smtp-user user-mail-address)
+  (setq smtpmail-smtp-user (getenv "PERSONAL_GMAIL"))
   (setq smtpmail-local-domain "gmail.com")
   (setq smtpmail-default-smtp-server "smtp.gmail.com")
   (setq smtpmail-smtp-server "smtp.gmail.com")
@@ -10141,13 +10322,25 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 /[[https://www.gnu.org/software/emacs/manual/html_mono/message.html][message]] is a message composition mode./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature emacs
+(use-feature message
   :demand t
+  :after faces-extras
   :config
   (setq message-kill-buffer-on-exit t) ; make `message-send-and-exit' kill buffer, not bury it
   (setq message-send-mail-function 'smtpmail-send-it)
+  (setq message-elide-ellipsis "\n> [... %l lines omitted]\n")
+  (setq message-citation-line-function 'message-insert-formatted-citation-line)
+  (setq message-citation-line-format (concat "> From: %f\n"
+                                             "> Date: %a, %e %b %Y %T %z\n"
+                                             ">")
+        message-ignored-cited-headers "")
 
-  (add-hook 'message-mode-hook (lambda () (auto-fill-mode -1)))
+  (faces-extras-set-and-store-face-attributes
+   '((message-header-name :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
+     (message-header-subject :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
+     (message-header-to :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
+     (message-header-other :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
+     (message-header-cc :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
 
   :general
   ((message-mode-map org-msg-edit-mode-map)
@@ -10275,7 +10468,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                 :main "mu4e/mu4e.el"
                 :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
                 :build (:not elpaca--compile-info)
-                :ref "a8f002b"
+                :ref "ac2515e" ; v1.12.4
                 :depth nil)
   :demand t
   :config
@@ -10284,8 +10477,8 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-index-update-error-warning nil) ; set to `t' when debugging
   (setq mu4e-split-view 'single-window)
   (setq mu4e-headers-show-target nil)
-  (setq mu4e-get-mail-command "mbsync -a")
-  (setq mu4e-update-interval 180)
+  (setq mu4e-get-mail-command "mbsync gmail")
+  (setq mu4e-update-interval 60)
   (setq mu4e-drafts-folder "/[Gmail]/Drafts")
   (setq mu4e-sent-folder "/[Gmail]/Sent Mail")
   (setq mu4e-refile-folder "/[Gmail]/All Mail")
@@ -10322,6 +10515,10 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
   (push 'mu4e--search-hist savehist-additional-variables)
 
+  (faces-extras-set-and-store-face-attributes
+   '((mu4e-compose-separator-face :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
+
+
   (mu4e t)
 
   :general
@@ -10333,8 +10530,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    "<" 'mu4e-headers-split-view-shrink
    ">" 'mu4e-headers-split-view-grow
    "s-f" 'mu4e-compose-forward
-   "i" 'mu4e-select-other-view
-   "r" 'mu4e-compose-reply)
+   "i" 'mu4e-select-other-view)
   (mu4e-main-mode-map
    "h" 'mu4e-display-manual
    "j" 'mu4e-search-maildir
@@ -10410,13 +10606,17 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   :config
   (setq mu4e-extras-inbox-folder "/Inbox")
   (setq mu4e-extras-daily-folder "/Daily")
+  (setq mu4e-extras-wide-reply t)
 
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-set-face-locally)
 
+  (run-with-timer (* 10 60) t #'mu4e-extras-check-all-mail)
+
   :general
   ((mu4e-headers-mode-map mu4e-view-mode-map)
    "o" 'mu4e-extras-view-org-capture
+   "r" 'mu4e-extras-compose-reply
    "$" 'mu4e-extras-copy-sum)
   (mu4e-main-mode-map
    "g" 'mu4e-extras-compose-new-externally
@@ -10448,20 +10648,23 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
 
 /[[https://github.com/jeremy-compostella/org-msg][org-msg]] is a global minor mode mixing up Org mode and Message mode to compose and reply to emails in a HTML-friendly style./
 
-[2023-10-28 Sat] Some updates in ~mu~ v1.11.23 have broken ~org-msg~. To make it work, you can uninstall ~mu~ and then install the stable version via ~brew install mu~. Then use  [[https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipe-keyword-ref][ref]] keyword in the ~mu4e~ elpaca formula to install the commit of that version. As of today, ~brew info mu~ says the stable version of ~mu~ is 1.10.8. In the ~mu~ repo [[https://github.com/djcb/mu/releases][releases]] page, we see that the commit corresponding to this version is ~a8f002b~. So we use ~ref: "a8f002b"~.
+I use this package to compose messages and to reply to messages composed in HTML For plain-text messages, I use ~message~ (of which see above).
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-msg
+  :elpaca (org-msg
+           :host github
+           :repo "danielfleischer/org-msg"
+           :branch "1.12")
   :after org mu4e
   :demand t
   :config
   (setq org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t")
   (setq org-msg-startup "hidestars indent inlineimages")
-  (setq org-msg-recipient-names `((,user-mail-address . "Pablo")))
+  (setq org-msg-recipient-names `((,(getenv "PERSONAL_GMAIL") . "Pablo")))
   (setq org-msg-greeting-name-limit 3)
   (setq org-msg-default-alternatives '((new		. (text html))
-                                       (reply-to-html	. (text html))
-                                       (reply-to-text	. (text))))
+                                       (reply-to-html	. (text html))))
   (setq org-msg-convert-citation t)
   (setq org-msg-enforce-css '((del nil
                                    ((font-family . "\"Georgia\"")
@@ -10540,6 +10743,7 @@ CLOCK: [2021-08-05 Thu 12:49]--[2021-08-05 Thu 13:03] =>  0:14
                                     (font-size . "11pt")
                                     (line-height . "11pt")))))
 
+  (add-hook 'org-msg-mode-hook (lambda () (auto-fill-mode -1)))
   (org-msg-mode)
 
   :general
@@ -10665,6 +10869,10 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
   (telega-mode-line-mode)
 
+  (faces-extras-set-and-store-face-attributes
+   '((telega-entity-type-code :family faces-extras-fixed-pitch-font :height
+			      (face-attribute 'default :height))))
+
   (add-hook 'telega-chat-mode-hook (lambda () (setq default-directory paths-dir-downloads)))
 
   :general
@@ -10699,8 +10907,9 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
    "<return>" (lambda! (push-button))
    "," 'telega-chatbuf-goto-pinned-message
    "a" (lambda! (end-of-buffer) (files-extras-kill-this-buffer))
-   "F" 'telega-msg-forward-marked-or-at-point
    "C" 'telega-msg-copy-link
+   "D" 'telega-msg-delete-marked-or-at-point
+   "F" 'telega-msg-forward-marked-or-at-point
    "s" 'telega-chatbuf-filter-search
    "w" 'telega-browse-url
    "W" 'telega-chatbuf-filter-cancel)
@@ -10753,7 +10962,6 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 :ID:       C7D90E9B-3503-4BFA-A736-89803A9DA664
 :END:
 
-
 /[[file:extras/telega-extras.el][telega-extras]] collects my extensions for ~telega~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -10767,6 +10975,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
   (telega-msg-button-map
    "." 'telega-extras-docs-change-open
    "b" 'telega-extras-transcribe-audio
+   "d" 'telega-extras-download-file
    "L" 'telega-extras-chat-org-capture-leo)
   (telega-chat-mode-map
    "M-s-t" 'telega-extras-chatbuf-attach-most-recent-file)
@@ -10897,6 +11106,7 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature shr
+  :after faces-extras
   :demand t
   :config
   (setq shr-bullet "• ")
@@ -10907,6 +11117,12 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
   (setq shr-max-width 100)
   (setq shr-discard-aria-hidden t)
   (setq shr-cookie-policy t)
+
+  (faces-extras-set-and-store-face-attributes
+   '((shr-text :height 0.65)
+     ;; doesn’t seem to be working?
+     (shr-h1 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
+     (shr-h2 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)))
 
   :general
   ((js-mode html-mode-map mhtml-mode-map)
@@ -10999,6 +11215,9 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
                 (eww-extras-browse-youtube url)))
   :general
   ("A-w" 'eww)
+  ((eww-mode-map elfeed-show-mode-map)
+   "<return>" 'eww-follow-link
+   "S-<return>" 'eww-follow-link)
   (eww-mode-map
    "[" 'eww-previous-url
    "]" 'eww-next-url
@@ -11087,6 +11306,47 @@ Remember that every piece of Elisp that I write is for my own educational and re
    "A-M-f" 'prot-eww-jump-to-url-on-page))
 #+end_src
 
+** consult-web
+:PROPERTIES:
+:ID:       899872DF-AFE2-4F35-853A-24CD7935B703
+:END:
+
+/[[https://www.github.com/armindarvish/consult-web][consult-web]] is browses search results from one or several custom sources (such web search engines, AI assistants, elfeed database, and org notes) directly in the Emacs minibuffer./
+
+#+begin_src emacs-lisp
+(use-package consult-web
+  :elpaca (consult-web
+           :host github
+           :repo "armindarvish/consult-web"
+           :files (:defaults "sources/*.el"))
+  :defer 10
+  :after consult gptel
+  :config
+  (setq consult-web-group-by nil)
+  (require 'consult-web-embark)
+  ;; not working
+  (require 'consult-web-bing)
+  (setq consult-web-bing-api-key (auth-source-pass-get
+                                  "consult-mu" (concat "tlon/core/azure.com/" tlon-babel-email-shared)))
+  (require 'consult-web-brave)
+  (setq consult-web-brave-autosuggest-api-.key (auth-source-pass-get
+                                               "consult-mu"
+                                               (concat "chrome/brave.com/" (getenv "PERSONAL_EMAIL"))))
+  (require 'consult-web-google)
+  (require 'consult-web-google-autosuggest)
+  (setq consult-web-google-customsearch-key (auth-source-pass-get
+                                             "consult-mu"
+                                             (concat "chrome/developers.google.com/" (getenv "PERSONAL_GMAIL"))))
+  (setq consult-web-google-customsearch-cx "726594e5b929f4a80")
+  (require 'consult-web-gptel)
+  (require 'consult-web-wikipedia)
+  (setq consult-web-dynamic-sources '("gptel" "Google" "Wikipedia"))
+  (setq consult-web-omni-sources consult-web-dynamic-sources)
+  (setq consult-web-openai-api-key gptel-api-key)
+  (setq consult-web-default-autosuggest-command #'consult-web-dynamic-google-autosuggest)
+  (setq consult-web-alternate-browse-function 'browse-url-chrome-program))
+#+end_src
+
 ** w3m
 :PROPERTIES:
 :ID:       986E4522-7EE1-477A-89EB-08855BCBECEE
@@ -11166,8 +11426,6 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
    "U" 'elfeed-search-tag-all-unread
    "o" 'elfeed-org)
   (elfeed-show-mode-map
-   "S-<return>" 'eww-follow-link
-   "<return>" 'eww-follow-link
    "<tab>" (lambda! (elfeed-show-next-link) (recenter))
    "b" nil
    "q" 'elfeed
@@ -11207,18 +11465,19 @@ These key bindings produce the same behavior in eww.
   :after elfeed
   :demand t
   :config
+  (setq elfeed-show-entry-switch #'elfeed-extras-display-buffer)
   ;; (advice-add 'elfeed :after #'elfeed-extras-auto-update)
 
   :general
   (elfeed-search-mode-map
    "A" 'elfeed-extras-mark-all-as-read
    "e" 'elfeed-extras-toggle-read-entries
+   "k" 'elfeed-extras-follow-previous
+   "l" 'elfeed-extras-follow-next
    "w" 'elfeed-extras-toggle-wiki-entries)
   (elfeed-show-mode-map
    "i" 'elfeed-extras-toggle-fixed-pitch
-   "v" 'elfeed-extras-show-visit-in-eww
-   "w" 'elfeed-extras-kill-link-url-of-entry
-   "z" 'elfeed-extras-url-full-capture))
+   "w" 'elfeed-extras-kill-link-url-of-entry))
 #+end_src
 
 ** elfeed-org
@@ -11252,8 +11511,15 @@ These key bindings produce the same behavior in eww.
   :demand t
   :config
   (push '(text . shr-text) elfeed-tube-captions-faces)
+  (setq elfeed-tube-auto-save-p t)
 
-  (elfeed-tube-setup))
+  (elfeed-tube-setup)
+
+  :general
+  (elfeed-show-mode-map
+  "v" 'elfeed-tube-mpv
+  "F" 'elfeed-tube-mpv-follow-mode
+  "." 'elfeed-tube-mpv-where))
 #+end_src
 
 ** elfeed-tube-mpv
@@ -11309,8 +11575,8 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine Amazon-FR
     "https://www.amazon.fr/s?k=%s"
     :keybinding "a f")
-  (defengine Amazon-IT
-    "https://www.amazon.it/s?k=%s"
+  (defengine TheresAnAIForThat
+    "https://theresanaiforthat.com/s/%s/"
     :keybinding "a i")
   (defengine Amazon-MX
     "https://www.amazon.com.mx/s?k=%s"
@@ -11741,11 +12007,11 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
   (setq mullvad-durations '(1 5 10 30 60 120))
 
   (setq mullvad-cities-and-servers
-        '(("London" . "gb-lon-wg-001")
+        '(("London" . "gb-lon-wg-002")
           ("Madrid" . "es-mad-wg-101")
           ("Malmö" . "se-sto-wg-001")
           ("Frankfurt" . "de-fra-wg-001")
-          ("New York" . "us-nyc-wg-601")
+          ("New York" . "us-nyc-wg-301")
           ("San José" . "us-sjc-wg-001")
           ("São Paulo" . "br-sao-wg-001")))
 
@@ -11856,6 +12122,8 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 (use-package ytdl
   :config
   (setq ytdl-command "yt-dlp")
+  (setq ytdl-video-folder paths-dir-downloads)
+  (setq ytdl-video-extra-args '("--write-sub" "--write-auto-sub" "--sub-lang" "en,es,it,fr,pt"))
 
   :general
   ("A-M-y" 'ytdl-download))
@@ -12001,7 +12269,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (setq clean-buffer-list-delay-general 2) ; kill buffers unused for more than three days
 
   (midnight-mode)
-  (midnight-delay-set 'midnight-delay "4:00am")
+  (midnight-delay-set 'midnight-delay "5:00am")
 
   (dolist (fun (nreverse '(files-extras-save-all-buffers
                            clean-buffer-list
@@ -12014,7 +12282,8 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            el-patch-validate-all
                            tlon-babel-forge-update-all-repos
                            org-extras-agenda-switch-to-agenda-current-day
-                           org-gcal-sync)))
+                           org-gcal-sync
+                           elfeed-update)))
     (add-hook 'midnight-hook fun)))
 #+end_src
 

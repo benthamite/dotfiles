@@ -2,7 +2,138 @@
 #+author: Pablo Stafforini
 #+langauge: en
 
-This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository.
+This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
+
+* Version 6.4.0 on 2024-05-02
+:PROPERTIES:
+:ID:       4BD749D6-DF24-4DC2-B559-FFEA595AB054
+:END:
+
+** chatgpt-shell
+:PROPERTIES:
+:ID:       108D23A9-102C-439D-B114-DC5130FCE313
+:END:
+
+- This new package complements ~gptel~, as it provides support for DALL-E.
+
+** color-extras
+:PROPERTIES:
+:ID:       438C5591-4EAF-4E51-8CB2-DA2E693AC4AE
+:END:
+
+- Added a few functions to convert between color formats (not tested).
+  
+** consult-web
+:PROPERTIES:
+:ID:       DC2FF7F9-536F-468D-AF5A-3C00777D359E
+:END:
+
+- Added new package.Note that it requires extensive configuration, and many search engines won’t work unless you set up your own API keys.
+  
+** copilot
+:PROPERTIES:
+:ID:       93D5BF58-F34E-4C1D-98D7-4B9143A3C6D1
+:END:
+
+- ~copilot~ is now enabled in both programming modes and text modes (previously it was only enabled in the former). To disable them in text modes, ~(remove-hook 'text-mode-hook #'copilot-extras-enable-conditionally)~.
+
+** dired
+:PROPERTIES:
+:ID:       EDAF4880-07A9-4BB4-A5B2-F37EF1C83785
+:END:
+
+- ~dired-extras-hide-details-mode-enhanced~ (~-~) replaces ~dired-hide-details-mode~. This command toggles ~dired-hide-details-mode~, ~dired-omit-mode~ and ~dired-du-mode~. Intuitively, the idea is that dired displays either a minimalist view (the default) or a detailed view, which shows (1) details such as file ownership and permissions, (2) hidden files as well as various other files—such as backup files—that are otherwise not shown (configurable via ~dired-omit-files~), and (3) the recursive size of directories.
+
+** ebib-extras
+:PROPERTIES:
+:ID:       4D1F66D7-2A3D-4545-9840-10259AAA27CC
+:END:
+
+- Upon adding a new entry, the user will now be prompted to indicate whether the relevant bibliographic details are correct, so that the relevant ~ebib-extras~ command —~ebib-extras-process-entry~— can be run. This command then performs additional processing, including downloading and attaching HTML and PDF files of the entry for BibTeX entries of type ~online~. In the future, it will be configured to also download PDFs for BibTeX entries of type ~article~, search for books for BibTeX entries of type ~book~, and so on.
+  
+** elfeed-extras
+:PROPERTIES:
+:ID:       8ACFA70B-CB9C-4726-B281-51FF4B72FE30
+:END:
+
+- added “follow mode” (analogous to ~org-agenda-follow-mode~): as point is moved through the ~elfeed~ search buffer with ~k~ and ~l~, the corresponding entry is shown in the other windows.
+
+** eww-extras
+:PROPERTIES:
+:ID:       6926685E-9698-4F4F-96FF-AB788A66E383
+:END:
+- Revised the code in various ways to support authentication from Chrome headless sessions (and thus generate PDFs without the annoying cookie messages). See the user option ~eww-extras-chrome-data-dir-copy~.
+  
+** faces
+:PROPERTIES:
+:ID:       75A37A0A-731B-4FB7-BEFA-B70677374EF4
+:END:
+
+- The way of setting faces has been thoroughly revised. Instead of having a single function with the hard-coded values for all the faces, as we used to have, we configure the individual faces under the relevant packages. To configure the faces, we use the function ~faces-extras-set-and-store-face-attributes~, which takes a list of lists, each of which consists of a face name followed by one or more attrbitutes (a property-value pair). The function sets the face attributes, so that they become active at the time of evaluation, and stores them in a list, so that all faces previously set can be reset at once by invocation of the command ~faces-extras-set-custom-face-attributes~. This is useful when the face is set in reference to a variable whose value later changes, or varies across users.
+
+** forge
+:PROPERTIES:
+:ID:       BC9B25B2-2514-499E-9A02-9B0EEC8A0DEC
+:END:
+
+- The command ~forge-list-assigned-issues~ is now bound to ~s-s~ (“s” as in “self”).
+  
+** gptel-extras
+:PROPERTIES:
+:ID:       5C25DB0E-EA61-41EA-ABE1-A1623900CF19
+:END:
+
+- The list of models now shows additional information such as number of tokens and date of last update.
+- The default model for all buffers is now ~"gpt-4-turbo"~—the most advanced OpenAI model as of this writing.
+
+** image-dired 
+:PROPERTIES:
+:ID:       9D67F17B-BE96-4A8E-B17D-913909256A7E
+:END:
+- The usual keys ~k~ and ~l~ now also work in this mode.
+- Images can now be opened externally with ~e~ (the same key binding to open external files elsewhere in ~dired~).
+
+** mu4e-extras
+:PROPERTIES:
+:ID:       77DFA8CA-DF97-4A1D-916B-726786411DB5
+:END:
+- Replaced the native ~mu4e-compose-reply~ with ~mu4e-extras-compose-reply~, which decides how to respond to messages with multiple recipients based on the value of the user option ~mu4e-extras-wide-reply~.
+  
+** org-extras
+:PROPERTIES:
+:ID:       92A6939F-2636-4363-B36B-245D88A7C997
+:END:
+
+- Added the user option ~org-extras-clock-report-parameters~, for customizing clock reports.
+  
+** rainbow-mode
+:PROPERTIES:
+:ID:       B69D6B21-CE1B-483E-BB05-D9A5048FD4C4
+:END:
+
+- Added package, for color testing.
+
+** scratch buffers
+:PROPERTIES:
+:ID:       187391C9-EA10-45A1-B5DE-CD5ABF761F0E
+:END:
+
+- The combination of the new packages ~prot-scratch~ and ~persistent-scratch~ now allows for the creation of persistent scratch buffers in any major mode (~C-n~). That is, these buffers will persist across Emacs sessions, avoiding the risk of accidentally losing their contents.
+
+** simple-extras
+:PROPERTIES:
+:ID:       1361776C-E2E7-4E1C-B0D9-F9F3D477CCB5
+:END:
+
+- A common annoyance with Emacs is that the contents of new buffers, which do not yet visit a file, are forever lost if the buffer is killed. This situation is now addressed via a set of hooks and advices that make ~auto-save-mode~ automatically save the contents of any non-file-visiting buffers to the folder specified in ~simple-extras-new-buffer-auto-save-dir~. Note that the behavior of ~auto-save-mode~ in other buffers is not affected (e.g. if it is disabled, it will continue to be).
+
+** tlon-core
+:PROPERTIES:
+:ID:       84AB17D8-DFF3-4DB5-862C-5963286C784C
+:END:
+
+- This package is now retired. All its functionality has been moved to ~tlon-babel~. The plan for the future, to reduce confusion, is to always release Tlön-related functions as part of this package, except for ~tlon-init~, which remains.
+
 
 * Version 6.3.0 on 2024-04-08
 :PROPERTIES:
@@ -89,7 +220,6 @@ To transcribe the audio of the message at point, you can now use ~telega-extras-
 :END:
 
 The process for adding new entries in Ebib with ~zotra-extas-add-entry~ (~a~) has changed somewhat, but it is still a work in progress, so it doesn’t seem worth documenting here. If you encounter any issues, please contact me.
-
 
 * Version 6.2.0 on 2024-03-09
 :PROPERTIES:

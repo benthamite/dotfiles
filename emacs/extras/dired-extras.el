@@ -46,20 +46,6 @@
   (interactive)
   (kill-new (file-name-sans-extension (dired-copy-filename-as-kill))))
 
-;; from emacswiki.org/emacs/DiredOmitMode
-(defun dired-extras-dotfiles-toggle ()
-  "Show/hide dot-files."
-  (interactive)
-  (when (derived-mode-p 'dired-mode)
-    (if dired-extras-show-dotfiles-p
-	(progn
-	  (setq dired-extras-show-dotfiles-p nil)
-	  (message "h")
-	  (dired-mark-files-regexp "^\\\.")
-	  (dired-do-kill-lines))
-      (progn (revert-buffer) ; otherwise just revert to re-show
-	     (set (make-local-variable 'dired-dotfiles-show-p) t)))))
-
 (defun dired-extras-mark-screenshots ()
   "Mark all screenshot files."
   (interactive)
@@ -74,6 +60,20 @@
   "Copy absolute names of marked (or next ARG) files into the kill ring."
   (interactive)
   (dired-copy-filename-as-kill '(0)))
+
+(defun dired-extras-copy-filename-as-kill-dwim ()
+  "Copy names of visible files into the kill ring.
+If `dired-hide-details-mode' is non-nil, copy the file names sans their
+directories; otherwise copy the full paths."
+  (interactive)
+  (let ((files (dired-get-marked-files dired-hide-details-mode nil)))
+    (kill-new (mapconcat #'identity files "\n"))))
+
+(declare-function image-dired-copy-filename-as-kill "image-dired")
+(defun dired-extras-image-copy-filename-as-kill-absolute ()
+  "Copy absolute names of marked (or next ARG) images into the kill ring."
+  (interactive)
+  (image-dired-copy-filename-as-kill '(0)))
 
 (defun dired-extras-copy-to-remote-docs-directory ()
   "Copy marked files to `stafforini.com/docs'.
@@ -154,13 +154,22 @@ losing the `put back' option."
 	    (push (buffer-name buffer) buffers))))
       (nreverse buffers))))
 
-;;;;; dired-du
+;;;;; hide-details-mode
 
 (declare-function dired-du-mode "dired-du")
-(defun dired-extras-enable-dired-du-conditionally ()
-  "Enable `dired-du-mode' iff `dired-hide-details-mode' is disabled."
-  (let ((toggle (if dired-hide-details-mode -1 1)))
-    (shut-up (dired-du-mode toggle))))
+(defun dired-extras-hide-details-mode-enhanced (&optional arg)
+  "Set `dired-hide-details-mode' and associated modes.
+Toggle the mode if ARG is `toggle' or called interactively. Enable the mode if
+ARG is nil, omitted, or a positive number. Disable the mode if ARG is a negative
+number."
+  (interactive "P")
+  (let ((arg (if (or (eq arg 'toggle)
+		     (and (null arg) (called-interactively-p 'any)))
+		 (if dired-hide-details-mode 1 -1)
+	       (or arg 1))))
+    (dired-hide-details-mode (* arg -1))
+    (dired-omit-mode (* arg -1))
+    (dired-du-mode arg)))
 
 ;;;;; Dispatcher
 

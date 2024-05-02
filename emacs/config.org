@@ -10328,7 +10328,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
   :config
   (setq message-kill-buffer-on-exit t) ; make `message-send-and-exit' kill buffer, not bury it
   (setq message-send-mail-function 'smtpmail-send-it)
-  (setq message-elide-ellipsis "\n> [... %l lines elided]\n")
+  (setq message-elide-ellipsis "\n> [... %l lines omitted]\n")
   (setq message-citation-line-function 'message-insert-formatted-citation-line)
   (setq message-citation-line-format (concat "> From: %f\n"
                                              "> Date: %a, %e %b %Y %T %z\n"

@@ -10273,8 +10273,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature sendmail
   :config
-  (setq send-mail-function 'smtpmail-send-it)
-  (setq mail-header-separator "--text follows this line--"))
+  (setq send-mail-function 'smtpmail-send-it))
 #+end_src
 
 ** smtpmail

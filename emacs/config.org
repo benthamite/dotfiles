@@ -10838,9 +10838,6 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package telega
-  :elpaca (telega
-           :host github
-	   :repo "HyperSuperMetaCtrl/telega.el") ; fork that fixes `transient' error
   :defer 5
   :init
   (setq telega-server-libs-prefix "/opt/homebrew")

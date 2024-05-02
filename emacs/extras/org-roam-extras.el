@@ -27,11 +27,9 @@
 
 ;;; Code:
 
-(require 'consult)
 (require 'el-patch)
 (require 'org-extras)
 (require 'org-roam)
-(require 'tlon-core)
 
 ;;;; User options
 
@@ -161,6 +159,7 @@ If DIR is nil, use `paths-dir-notes'."
   (org-roam-node-find)
   (recenter 1))
 
+(declare-function consult--read "consult")
 (defun org-roam-extras-node-find-special (&optional arg)
   "Return a list of selected headings sorted by priority.
 The selection includes all headings with a priority and either no todo status or

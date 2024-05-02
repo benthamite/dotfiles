@@ -65,8 +65,8 @@
 ;;;; Functions
 
 ;;;###autoload
-(defun vc-extras-create-and-clone-repo ()
-  "Create a new GitHub repository and clone it in DIR."
+(defun vc-extras-create-repo ()
+  "Create a new GitHub repository."
   (interactive)
   (let* ((name (read-string "Name: "))
          (description (read-string "Description: "))
@@ -81,8 +81,9 @@
     (vc-extras-check-dir-exists)
     (vc-extras-check-dir-git)
     (vc-extras-gh-create-repo name description account private)
-    (vc-git-clone (vc-extras-get-github-remote "tlon-team" "bisagra-dev")
-		  default-directory nil)))
+    (when (y-or-n-p "Clone repository? ")
+      (vc-git-clone (vc-extras-get-github-remote account name)
+		    default-directory nil))))
 
 (defun vc-extras-get-github-remote (account name)
   "Return the GitHub remote of ACCOUNT and repo NAME."

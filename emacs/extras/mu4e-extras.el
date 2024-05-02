@@ -275,10 +275,18 @@ prompt the user for the reply type if `mu4e-extras-wide-reply' is `prompt', make
 it a narrow reply if `mu4e-extras-wide-reply' is nil, and make it a wide reply
 otherwise.."
   (interactive)
-  (let* ((wide (or wide (pcase mu4e-extras-wide-reply
-			  ('prompt (y-or-n-p "Reply to all? "))
-			  (_ mu4e-extras-wide-reply)))))
-    (mu4e-compose-reply wide)))
+  (if (mu4e-message-contact-field-matches-me (mu4e-message-at-point) :from)
+      (mu4e-compose-supersede)
+    (let ((recipients 0))
+      (dolist (field '(:to :cc) recipients)
+	(setq recipients
+	      (+ recipients (length (mu4e-message-field-at-point field)))))
+      (if (> recipients 1)
+	  (let* ((wide (or wide (pcase mu4e-extras-wide-reply
+				  ('prompt (y-or-n-p "Reply to all? "))
+				  (_ mu4e-extras-wide-reply)))))
+	    (mu4e-compose-reply wide))
+	(mu4e-compose-reply)))))
 
 ;;;;; Patches
 

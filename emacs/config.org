@@ -7220,6 +7220,9 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 :ID:       6EC52CD8-EBCB-4A26-B1BA-001096C16030
 :END:
 
+
+/[[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]] comint-shell based interaction with ChatGPT./
+
 #+begin_src emacs-lisp
 (use-package chatgpt-shell
   :after gptel

@@ -9,14 +9,14 @@
 (setq tlon-init-excluded-packages
 '(
  ;; bbdb
+ citar
+ bibtex-completion-extras
  copilot
  corfu-doc-terminal
  corfu-terminal
  ;; display-wttr
  erc
- ;; espotify
- ;; frame
- ;; forge
+ gdrive
  git-auto-commit-mode
  hammy
  ;; jinx
@@ -27,6 +27,7 @@
  ns-win
  org-gcal
  ;; org-roam
+ org-roam-bibtex
  org2blog
  outline
  ;; pdf-tools
@@ -38,8 +39,7 @@
  ;; flycheck
  grammarly
  lsp-grammarly
- ;; tlon-init
- theme-loaddefs
+ ;; theme-loaddefs
  vulpea
  ;; window
  ;; yasnippet
@@ -141,8 +141,9 @@
 
 ** claendar-extras
 #+begin_src emacs-lisp
+(with-eval-after-load 'calendar-extras
   (setq calendar-extras-location-name "Buenos Aires")
-  (setq calendar-extras-use-geolocation nil)
+  (setq calendar-extras-use-geolocation nil))
 #+end_src
 
 ** exec-path-from-shell
@@ -164,20 +165,22 @@
   ;; (gptel-make-gemini "Gemini"
   ;;   :stream t
   ;;   :key (auth-source-pass-get 'secret
-  ;; 			       (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared)))
+  ;;                           (concat "tlon/core/makersuite.google.com/" tlon-core-email-shared)))
   (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
   (setq gpt-commit-model-name "gpt-4")
   (setq bib-isbndb-key
-	(auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
-  
+        (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
+
   (message (format "exec-path-from-shell: TLON_EMAIL=%s" (getenv "TLON_EMAIL")))
   )
 #+end_src
 
 ** browse-url
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(setq browse-url-browser-function 'browse-url-chrome)
+(with-eval-after-load 'browse-url
+  (setq browse-url-browser-function 'browse-url-chrome))
 #+end_src
+
 ** window
 :PROPERTIES:
 :ID:       8EF5C4DE-C641-4770-83F1-638DD324238B
@@ -185,8 +188,19 @@
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'window
-  (setq split-width-threshold 160)
+  (setq split-width-threshold 200)
+  (setq split-height-threshold nil)
   (message "`window' late-init config loaded."))
+#+end_src
+
+** window-extras
+:PROPERTIES:
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'window-extras
+  (setq window-extras-frame-split-width-threshold 600)
+  (message "`window-extras' late-init config loaded."))
 #+end_src
 
 ** nginx-mode
@@ -264,7 +278,8 @@
 :ID:       66628F76-29A9-42EF-BEDC-FDC33D6E78D8
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(setq gptel-default-mode 'markdown-mode)
+(with-eval-after-load 'gptel
+  (setq gptel-default-mode 'markdown-mode))
 #+end_src
 
 ** gptel-extras
@@ -272,8 +287,9 @@
 :ID:       3B1E43B8-BE9C-4FA1-B2CA-6BD8E9ED746F
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(gptel-extras-model-config 'globally "ChatGPT" "gpt-4-0125-preview")
-(setq gptel-extras-dir "/Users/fede/Dropbox/obsidian/gpt-4/")
+(with-eval-after-load 'gptel-extras
+  (gptel-extras-model-config 'globally "ChatGPT" "gpt-4-0125-preview")
+  (setq gptel-extras-dir "/Users/fede/Dropbox/obsidian/gpt-4/"))
 #+end_src
 
 ** cua-base
@@ -362,7 +378,8 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(setq forge-owned-accounts `(("fstafforini")))
+(with-eval-after-load 'forge
+  (setq forge-owned-accounts `(("fstafforini"))))
 #+end_src
 
 ** key bindings
@@ -413,10 +430,10 @@
 (general-unbind "C--")
 (keymap-unset minibuffer-mode-map "s-i")
 
-;; (general-define-key
-;; :keymap 'yas-minor-mode-map
-;; "TAB" nil
-;; "s-TAB" 'yas-expand)
+ (general-define-key
+ :keymaps '(outline-mode-map emacs-lisp-mode-map)
+ "<M-left>" 'backward-word
+  "<M-right>" 'forward-word)
 
 #+end_src
 
@@ -638,7 +655,7 @@
   (setq tlon-babel-when-status-is-invalid 'change)
   (setq tlon-babel-when-assignee-is-nil 'change)
   (setq tlon-babel-when-assignee-is-someone-else 'no-capture)
-  (setq tlon-babel-split-repo 'never)
+  (setq tlon-babel-split-repo nil)
   (tlon-babel-init)
   (message "`tlon-babel' late-init config loaded."))
 #+end_src
@@ -708,8 +725,10 @@ Disable hl-sentence because I do not like it...
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-;; (setq telega-server-libs-prefix "/opt/homebrew/Cellar/tdlib/HEAD-ec788c7/")
-  #+end_src
+(with-eval-after-load 'telega
+  ;; (setq telega-server-libs-prefix "/opt/homebrew/Cellar/tdlib/HEAD-ec788c7/")
+  )
+#+end_src
 
 ** yasnippet
 :PROPERTIES:
@@ -723,15 +742,24 @@ Disable hl-sentence because I do not like it...
   (message "`yasnippet' late-init config loaded."))
 #+end_src
 
+
 ** faces-extras
 :PROPERTIES:
 :ID:       555F14B7-A0D0-4B7A-980F-E157C1B87EFB
 :END:
-
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'faces-extras
-  (setq faces-extras-fixed-pitch-font "Iosevka Nerd Font")
-  (setq faces-extras-fixed-pitch-size 150))
+  (setq faces-extras-fixed-pitch-font "IosevkaTermSlab Nerd Font")
+  (setq faces-extras-fixed-pitch-size 150)
+  (setq faces-extras-fixed-pitch-height 1.0)
+  (setq faces-extras-variable-pitch-height 1.1)
+  (setq faces-extras-org-level-height 0.9)
+  (setq faces-extras-org-block-height 1.0)
+  (setq faces-extras-org-code-height 0.9)
+  (setq faces-extras-org-date-height 0.8)
+  (setq faces-extras-org-tag-height 0.8)
+  (setq faces-extras-org-property-value-height 0.7)
+  )
 #+end_src
 
 ** tareas
@@ -739,7 +767,7 @@ Disable hl-sentence because I do not like it...
 :ID:       B891DE59-5914-4452-B1F0-F856C1DA8F6E
 :END:
 
-  #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (find-file paths-file-tlon-tareas-fede)
 (org-tidy-mode -1)
 #+end_src
@@ -782,7 +810,7 @@ This should be at the very end of the ~late-init~ file.
    (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
    (setq gpt-commit-model-name "gpt-4")
    (setq bib-isbndb-key
-	 (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
+         (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
    (global-flycheck-mode -1)
    (setq calendar-extras-use-geolocation nil)
    (org-tidy-mode -1)

@@ -118,15 +118,21 @@
 	      :description "GPT-4 model for sending images.")
     (:backend "Claude"
 	      :model "claude-3-haiku-20240307"
+	      :tokens 200000
 	      :cost 0.25
+	      :last-update "2023-08-01"
 	      :description "The least capable Anthropic model")
     (:backend "Claude"
 	      :model "claude-3-sonnet-20240229"
+	      :tokens 200000
 	      :cost 3
+	      :last-update "2023-08-01"
 	      :description "The intermediate Anthropic model.")
     (:backend "Claude"
 	      :model "claude-3-opus-20240229"
+	      :tokens 200000
 	      :cost 15
+	      :last-update "2023-08-01"
 	      :description "The most capable Anthropic model."))
   "Alist of AI models and associated properties.
 The relevant information has been obtained from the following websites:
@@ -153,7 +159,7 @@ called with a prefix argument, configure it globally."
 	 (backend (alist-get backend-name gptel--known-backends nil nil #'string=))
 	 (backend-models (gptel-backend-models backend))
 	 (models-with-cost (mapcar (lambda (backend)
-				     (cons (format "%-20s  $ %5.2f  %8s  %6s  %-80s"
+				     (cons (format "%-25s  $ %5.2f  %8s  %6s  %-80s"
 						   backend
 						   (tlon-babel-lookup gptel-extras-ai-models :cost :model backend)
 						   (tlon-babel-lookup gptel-extras-ai-models :last-update :model backend)

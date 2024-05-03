@@ -27,8 +27,6 @@
 
 ;;; Code:
 
-(require 'org-agenda)
-;; (require 'org-roam-extras)
 (require 'paths)
 (require 'vulpea)
 
@@ -120,6 +118,8 @@ tasks."
                   (seq-difference original-tags tags))
           (apply #'vulpea-buffer-tags-set tags))))))
 
+(defvar org-extras-agenda-files-excluded)
+(declare-function org-roam-extras-recent "org-roam")
 (defun vulpea-extras-agenda-files-update (&rest _)
   "Update the value of `org-agenda-files'."
   (require 'org-extras)
@@ -127,11 +127,11 @@ tasks."
   (setq org-agenda-files
         (seq-difference
          (delete-dups (append
-                       (org-agenda-files)
-                       (vulpea-extras-project-files)
-                       ;; include files modified in past three days,
-                       ;; provided number of such files less than 1000
-                       (org-roam-extras-recent 2 500)))
+		       (org-agenda-files)
+		       (vulpea-extras-project-files)
+		       ;; include files modified in past three days,
+		       ;; provided number of such files less than 1000
+		       (org-roam-extras-recent 2 500)))
          org-extras-agenda-files-excluded)))
 
 (advice-add 'org-agenda :before #'vulpea-extras-agenda-files-update)

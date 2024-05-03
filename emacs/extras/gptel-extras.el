@@ -28,10 +28,8 @@
 ;;; Code:
 
 (require 'gptel)
-(require 'mullvad)
 (require 'paths)
 (require 'simple-extras)
-(require 'tlon-babel-core)
 
 ;;;; User options
 
@@ -57,61 +55,97 @@
 	      :cost 0
 	      :tokens 32000
 	      :description "This model is currently free (included in Pablo’s Google Drive plan).")
+    (:backend "Gemini"
+	      :model "gemini-1.5-pro-latest"
+	      :cost 0
+	      :tokens 128000
+	      :description "[recommended] This model is currently free (included in Pablo’s Google Drive plan).")
     (:backend "ChatGPT"
 	      :model "gpt-3.5-turbo"
 	      :cost 0.50
-	      :description "Less powerful GPT model.")
+	      :tokens 16385
+	      :last-update "2021-09-01"
+	      :description "Less powerful GPT model. Currently points to `gpt-3.5-turbo-0125'.")
     (:backend "ChatGPT"
 	      :model "gpt-3.5-turbo-16k"
 	      :cost 0.50
-	      :description "Less powerful GPT model.")
+	      :tokens 16385
+	      :last-update "2021-09-01"
+	      :description "Less powerful GPT model. Currently points to `gpt-3.5-turbo-16k-0613'.")
+    (:backend "ChatGPT"
+	      :model "gpt-4"
+	      :cost 30
+	      :tokens 8192
+	      :last-update "2021-09-01"
+	      :description "Currently points to `gpt-4-0613'. ")
+    (:backend "ChatGPT"
+	      :model "gpt-4-32k"
+	      :cost 60
+	      :tokens 32768
+	      :last-update "2021-09-01"
+	      :description "Currently points to gpt-4-32k-0613. See continuous model upgrades. This model was never rolled out widely in favor of GPT-4 Turbo.")
+    (:backend "ChatGPT"
+	      :model "gpt-4-turbo"
+	      :cost 10
+	      :tokens 128000
+	      :last-update "2023-12-01"
+	      :description "[Recommended] The latest GPT-4 Turbo model with vision capabilities. Vision requests can now use JSON mode and function calling. Currently points to gpt-4-turbo-2024-04-09.")
+    (:backend "ChatGPT"
+	      :model "gpt-4-turbo"
+	      :cost 10
+	      :description "[recommended] With 128k context, fresher knowledge and the broadest set of capabilities, GPT-4 Turbo is more powerful than GPT-4 and offered at a lower price. Currently points to `gpt-4-turbo-2024-04-09'.")
     (:backend "ChatGPT"
 	      :model "gpt-4-turbo-preview"
 	      :cost 10
-	      :description "Currently points to `gpt-4-0125-preview'.") ; cost assumed
+	      :tokens 128000
+	      :last-update "2023-12-01"
+	      :description "GPT-4 Turbo preview model. Currently points to `gpt-4-0125-preview'.")
     (:backend "ChatGPT"
 	      :model "gpt-4-1106-preview"
 	      :cost 10
 	      :tokens 128000
-	      :description "GPT-4 Turbo model featuring improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more. Returns a maximum of 4,096 output tokens. Training data up to April 2023.")
+	      :last-update "2023-04-01"
+	      :description "GPT-4 Turbo preview model featuring improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more. Returns a maximum of 4,096 output tokens. This is a preview model.")
     (:backend "ChatGPT"
 	      :model "gpt-4-0125-preview"
 	      :cost 10
-	      :description "[recommended] The latest GPT-4 model. Returns a maximum of 4,096 output tokens. Training data up to December 2023.")
-    (:backend "ChatGPT"
-	      :model "gpt-4"
-	      :cost 30
-	      :tokens 8000
-	      :description "Standard GPT-4 model.")
-    (:backend "ChatGPT"
-	      :model "gpt-4-32k"
-	      :cost 60
-	      :tokens 32000
-	      :description "Standard GPT-4 with 32k token window.")
+	      :tokens 128000
+	      :last-update "2023-12-01"
+	      :description "GPT-4 Turbo preview model intended to reduce cases of “laziness” where the model doesn’t complete a task. Returns a maximum of 4,096 output tokens.")
     (:backend "ChatGPT"
 	      :model "gpt-4-vision-preview"
 	      :cost 0 ; placeholder
 	      :description "GPT-4 model for sending images.")
     (:backend "Claude"
 	      :model "claude-3-haiku-20240307"
+	      :tokens 200000
 	      :cost 0.25
+	      :last-update "2023-08-01"
 	      :description "The least capable Anthropic model")
     (:backend "Claude"
 	      :model "claude-3-sonnet-20240229"
+	      :tokens 200000
 	      :cost 3
+	      :last-update "2023-08-01"
 	      :description "The intermediate Anthropic model.")
     (:backend "Claude"
 	      :model "claude-3-opus-20240229"
+	      :tokens 200000
 	      :cost 15
+	      :last-update "2023-08-01"
 	      :description "The most capable Anthropic model."))
-  "Alist of AI models and input cost in US dollars per one million tokens.
-The pricing information has been obtained from the following websites:
-- GPT: <https://openai.com/pricing>
-- Claude: <https://www.anthropic.com/api#pricing>")
-;; https://github.com/psimm/website/blob/master/blog/llm-price-performance/data.csv
+  "Alist of AI models and associated properties.
+The relevant information has been obtained from the following websites:
+
+- GPT: <https://openai.com/pricing> and
+<https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4>.
+
+- Claude:<https://www.anthropic.com/api#pricing>.")
 
 ;;;; Functions
 
+(defvar gptel-extras-ai-models)
+(declare-function tlon-babel-lookup "tlon-babel-core")
 ;; adapted from the `:reader' lambda of `transient-infix-set' in `gptel-transient.el'
 (defun gptel-extras-model-config (globally &optional backend-name model-name)
   "Configure `gptel' for BACKEND-NAME and MODEL-NAME.
@@ -125,9 +159,11 @@ called with a prefix argument, configure it globally."
 	 (backend (alist-get backend-name gptel--known-backends nil nil #'string=))
 	 (backend-models (gptel-backend-models backend))
 	 (models-with-cost (mapcar (lambda (backend)
-				     (cons (format "%-25s $ %5.2f   %-80s"
+				     (cons (format "%-25s  $ %5.2f  %8s  %6s  %-80s"
 						   backend
 						   (tlon-babel-lookup gptel-extras-ai-models :cost :model backend)
+						   (tlon-babel-lookup gptel-extras-ai-models :last-update :model backend)
+						   (tlon-babel-lookup gptel-extras-ai-models :tokens :model backend)
 						   (tlon-babel-lookup gptel-extras-ai-models :description :model backend))
 					   backend))
 				   backend-models))
@@ -149,6 +185,8 @@ called with a prefix argument, configure it globally."
 	 (cost (/ (* cost-per-1m words) 1000000.0)))
     cost))
 
+(defvar gptel-extras-gemini-mullvad-disconnect-after)
+(declare-function mullvad-connect-to-website "mullvad")
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
   "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS."
   (when (string= gptel-model "gemini-pro")
@@ -163,8 +201,12 @@ called with a prefix argument, configure it globally."
   "Save the `gptel' buffer NAME to a file in the appropriate directory.
 The `gptel' directory is set by `gptel-extras-dir'."
   (interactive (list (read-string "Name: ")))
-  (let ((filename (file-name-concat gptel-extras-dir
-				    (file-name-with-extension (simple-extras-slugify name) "org"))))
+  (let* ((extension (pcase major-mode
+		      ('org-mode "org")
+		      ('markdown-mode "md")
+		      (_ (error "Unsupported major mode"))))
+	 (filename (file-name-concat gptel-extras-dir
+				     (file-name-with-extension (simple-extras-slugify name) extension))))
     (write-file filename)))
 
 (provide 'gptel-extras)

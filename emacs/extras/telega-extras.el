@@ -27,7 +27,6 @@
 
 ;;; Code:
 
-(require 'files-extras)
 (require 'paths)
 (require 'telega)
 (require 'telega-dired-dwim)
@@ -115,6 +114,7 @@ archive buffer."
         (dolist (file dired-files)
           (funcall (telega-extras-dired-attach-func file) file))))))
 
+(declare-function files-extras-newest-file "files-extras")
 (defun telega-extras-chatbuf-attach-most-recent-file ()
   "Attach most recently saved file in `downloads' folder."
   (interactive)
@@ -122,12 +122,28 @@ archive buffer."
       (telega-chatbuf-attach-file file)
     (user-error (format "No files found in %s" paths-dir-downloads))))
 
-(defun telega-extras-transcribe-audio (&optional msg)
-  "Transcribe the audio for MSG.
-If MSG is nil, use the message at point."
+;;;;; Message actions
+
+(defun telega-extras-act-on-message (action message)
+  "Perform ACTION on MESSAGE."
+  (let* ((fun (pcase action
+		('download #'telega-msg-save)
+		('transcribe #'telega--recognizeSpeech))))
+    (funcall fun message)))
+
+(defun telega-extras-transcribe-audio (&optional message)
+  "Transcribe the audio for MESSAGE.
+If MESSAGE is nil, use the message at point."
   (interactive)
-  (let* ((msg (or msg (telega-msg-at))))
-    (telega--recognizeSpeech (telega-msg-at))))
+  (let* ((message (or message (telega-msg-at))))
+    (telega-extras-act-on-message 'transcribe message)))
+
+(defun telega-extras-download-file (&optional message)
+  "Download the file for MESSAGE.
+If MESSAGE is nil, use the message at point."
+  (interactive)
+  (let* ((message (or message (telega-msg-at))))
+    (telega-extras-act-on-message 'download message)))
 
 (provide 'telega-extras)
 ;;; telega-extras.el ends here

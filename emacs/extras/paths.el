@@ -315,12 +315,6 @@ value."
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-clock-reports
-  (file-name-concat paths-dir-tlon-repos "clock-reports/")
-  "Path to the `clock-reports' directory."
-  :type 'directory
-  :group 'paths)
-
 (defcustom paths-dir-tlon-docs
   (file-name-concat paths-dir-tlon-repos "tlon-docs/")
   "Path to the `tlon-docs' repo directory."

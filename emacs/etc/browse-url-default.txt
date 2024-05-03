@@ -83,10 +83,12 @@ myheritage.es
 openai.com
 paxful.com
 perplexity.ai
+pref.docusign.com
 qualtrics.com
 quora.com
 rescuetime.com
 savvycal.com
+shademap.app
 skyscanner.com
 skyscanner.net
 slack.com

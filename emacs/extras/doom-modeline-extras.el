@@ -29,8 +29,6 @@
 
 (require 'doom-modeline)
 (require 'el-patch)
-(require 'forge)
-(require 'gptel)
 
 ;;;; User options
 
@@ -52,6 +50,7 @@
 
 ;;;;; Modeline segments
 
+(defvar gptel-model)
 (doom-modeline-def-segment gptel ()
   "Displays the `gptel' model active in the current buffer."
   (when (and doom-modeline-extras-gptel
@@ -59,6 +58,7 @@
     (concat gptel-model (doom-modeline-spc))))
 
 (defvar gptel-extras-ai-models)
+(declare-function gptel-backend-name "gptel")
 (declare-function gptel-extras-get-cost "gptel-extras")
 (doom-modeline-def-segment gptel-cost ()
   "Display the cost of prompting the current model."
@@ -74,6 +74,7 @@
   "Notification count when the modeline notification counter was last updated.")
 
 (defvar prev-result)
+(declare-function forge-pull-notifications "forge")
 (defun doom-modeline-extras-trigger-forge-update ()
   "Pull notifications in Forge when the modeline notification counter is updated."
   (unless (eq doom-modeline--github-notification-number

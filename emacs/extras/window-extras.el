@@ -27,9 +27,6 @@
 
 ;;; Code:
 
-(require 'files-extras)
-(require 'winum)
-
 ;;;; User options
 
 (defgroup window-extras ()
@@ -95,6 +92,7 @@ If there is only one window, create a second one."
    (window-buffer)
    (window-buffer (window-extras-get-last-window))))
 
+(declare-function files-extras-get-alternate-buffer "files-extras")
 (defun window-extras-buffer-move (target-window)
   "Move the current buffer to the TARGET-WINDOW.
 If there is only one window, create a second one."
@@ -102,6 +100,8 @@ If there is only one window, create a second one."
   (window-extras--move-or-swap
    (window-buffer) (files-extras-get-alternate-buffer) target-window))
 
+(declare-function winum-get-window-by-number "winum")
+(declare-function winum-get-number "winum")
 (defun window-extras-buffer-move-right ()
   "Move the current buffer to the right window."
   (interactive)

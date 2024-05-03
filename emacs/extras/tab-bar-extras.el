@@ -27,21 +27,6 @@
 
 ;;; Code:
 
-(require 'calendar-extras)
-(require 'display-wttr)
-(require 'tlon-init)
-
-;;;; Variables
-
-(defvar tab-bar-extras-notifications-enabled t
-  "Whether notifications are enabled in the Tab Bar.")
-
-(defvar tab-bar-extras-telega-notifications-enabled t
-  "Whether the Telega element actually displays notifications in the Tab Bar.")
-
-(defvar tab-bar-extras-github-notifications-enabled t
-  "Whether the GitHub element actually displays notifications in the Tab Bar.")
-
 ;;;; User options
 
 (defgroup tab-bar-extras ()
@@ -58,44 +43,45 @@
   :type 'boolean
   :group 'tab-bar-extras)
 
+;;;; Variables
+
+(defvar tab-bar-extras-notifications-enabled t
+  "Whether notifications are enabled in the Tab Bar.")
+
+(defvar tab-bar-extras-telega-notifications-enabled t
+  "Whether the Telega element actually displays notifications in the Tab Bar.")
+
+(defvar tab-bar-extras-github-notifications-enabled t
+  "Whether the GitHub element actually displays notifications in the Tab Bar.")
+
 ;;;;; elements
 
-(defcustom tab-bar-extras-prefix-element
+(defconst tab-bar-extras-prefix-element
   " "
-  "Element to display at the beginning of the Tab Bar."
-  :type 'sexp
-  :group 'tab-bar-extras)
+  "Element to display at the beginning of the Tab Bar.")
 
-(defcustom tab-bar-extras-date-element
+(defconst tab-bar-extras-date-element
   `(:eval (propertize display-time-string 'face 'faces-extras-display-time))
-  "Element to display the date."
-  :type 'sexp
-  :group 'tab-bar-extras)
+  "Element to display the date.")
 
-(defcustom tab-bar-extras-chemacs-element
+(defconst tab-bar-extras-chemacs-element
   `(" " tlon-init-chemacs-profile-name)
-  "Element to display the Chemacs profile."
-  :type 'sexp
-  :group 'tab-bar-extras)
+  "Element to display the Chemacs profile.")
 
-(defcustom tab-bar-extras-battery-element
+(defconst tab-bar-extras-battery-element
   `("" fancy-battery-mode-line)
-  "Element to display the battery."
-  :type 'sexp
-  :group 'tab-bar-extras)
+  "Element to display the battery.")
 
-(defcustom tab-bar-extras-telega-element
+(defconst tab-bar-extras-telega-element
   `(:eval (when (and
 		 (featurep 'telega)
 		 tab-bar-extras-telega-notifications-enabled
 		 (telega-server-live-p)
 		 (> (plist-get telega--unread-message-count :unread_count) 0))
 	    (concat " | " telega-mode-line-string)))
-  "Element to display Telega notifications."
-  :type 'sexp
-  :group 'tab-bar-extras)
+  "Element to display Telega notifications.")
 
-(defcustom tab-bar-extras-github-element
+(defconst tab-bar-extras-github-element
   `(:eval (when (and tab-bar-extras-github-notifications-enabled
 		     (forge-extras-get-unread-notifications))
 	    (concat
@@ -109,36 +95,33 @@
 	       (t (number-to-string (forge-extras-get-unread-notifications))))
 	      'face '(:inherit
 		      (doom-modeline-unread-number doom-modeline-notification))))))
-  "Element to display Forge notification count."
-  :type 'sexp
-  :group 'tab-bar-extras)
+  "Element to display Forge notification count.")
 
-(defcustom tab-bar-extras-pomodoro-element
+(defconst tab-bar-extras-pomodoro-element
   `(:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
 	    (setq global-mode-string (append global-mode-string
 					     '(org-pomodoro-mode-line)))))
-  "Element to display Pomodoro information."
-  :type 'sexp
-  :group 'tab-bar-extras)
+  "Element to display Pomodoro information.")
 
-(defcustom tab-bar-extras-notification-status-element
+(defconst tab-bar-extras-notification-status-element
   `(:eval (unless tab-bar-extras-notifications-enabled
 	    (concat (propertize "🔕" 'face '(:height 0.8)) tab-bar-extras-separator-element)))
-  "Element to display when the notifications are disabled."
-  :type 'sexp
-  :group 'tab-bar-extras)
+  "Element to display when the notifications are disabled.")
 
-(defcustom tab-bar-extras-separator-element
+(defconst tab-bar-extras-separator-element
   " | "
   "Element to separate the Tab Bar elements.
 Note that elements that the separator is already part of elements that do not
 always show (like Github or Telega notifications), because otherwise the
-separator would remain even when the elements are absent."
-  :type 'sexp
-  :group 'tab-bar-extras)
+separator would remain even when the elements are absent.")
 
 ;;;; Functions
 
+(defvar calendar-extras-use-geolocation)
+(defvar display-wttr-locations)
+(defvar calendar-extras-location-name)
+(declare-function calendar-extras-set-geolocation "calendar-extras")
+(declare-function display-wttr "display-wttr")
 (defun tab-bar-extras-reset (&optional quick)
   "Reset the tab bar.
 This resets the clock, refreshes the Tab Bar and its color, and updates the

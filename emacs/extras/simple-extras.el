@@ -27,14 +27,29 @@
 
 ;;; Code:
 
-(require 'org)
-(require 'prot-eww)
-(require 'url-parse)
-(require 'url-vars)
+(require 'paths)
+
+;;;; Variables
+
+(defgroup simple-extras ()
+  "Extensions for `simple'."
+  :group 'simple-extras)
+
+(defvar no-littering-var-directory)
+(defcustom simple-extras-new-buffer-auto-save-dir
+  (file-name-concat no-littering-var-directory "auto-save/new-buffers/")
+  "Directory in which to store auto-save files for new, non-file-visiting buffers."
+  :type 'directory
+  :group 'simple-extras
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         ;; Ensure the directory exists when the user option is set
+         (unless (file-directory-p value)
+	   (make-directory value t))))
 
 ;;;; Functions
 
-;;;;; editing
+;;;;; Editing
 
 (defmacro simple-extras-delete-instead-of-kill (&rest body)
   "Replace `kill-region' with `delete-region' in BODY."
@@ -56,7 +71,7 @@
   (when-let ((bounds (bounds-of-thing-at-point thing)))
     (kill-region (car bounds) (cdr bounds))))
 
-;;;;;; words
+;;;;;; Words
 
 (defun simple-extras-delete-word (&optional arg)
   "Like `kill-word', but deletes instead of killing.
@@ -173,7 +188,7 @@ See also `zap-up-to-char'."
   (interactive)
   (transpose-chars -1))
 
-;;;;;; lines
+;;;;;; Lines
 
 (defun simple-extras-delete-line (&optional arg)
   "Like `kill-line', but deletes instead of killing.
@@ -217,7 +232,7 @@ With prefix argument ARG, copy that many lines from point."
   (interactive)
   (transpose-lines -1))
 
-;;;;;; sentences
+;;;;;; Sentences
 
 (defun simple-extras-delete-sentence (&optional arg)
   "Like `kill-sentence', but deletes instead of killing.
@@ -267,7 +282,7 @@ negative ARG -N."
   (interactive)
   (transpose-sentences -1))
 
-;;;;;; paragraphs
+;;;;;; Paragraphs
 
 ;; the functions below are derivatives of functions in `paragraphs.el' so maybe
 ;; they should be moved to another extra package there
@@ -319,7 +334,7 @@ negative ARG -N means copy forward to Nth end of paragraph."
   (interactive)
   (transpose-paragraphs -1))
 
-;;;;;; sexps
+;;;;;; Sexps
 
 ;; ;; the functions below are derivatives of functions in `lisp.el' so maybe
 ;; ;; they should be moved to another extra package there
@@ -371,7 +386,7 @@ Negative arg -N means copy N sexps after point."
   (interactive)
   (transpose-sexps -1))
 
-;;;;;; region
+;;;;;; Region
 
 (defun simple-extras-smart-kill-region ()
   "Kill region if active, else kill line."
@@ -394,7 +409,7 @@ Negative arg -N means copy N sexps after point."
       (call-interactively 'copy-region-as-kill)
     (call-interactively 'simple-extras-copy-whole-line)))
 
-;;;;;; yank
+;;;;;; Yank
 
 (defun simple-extras-yank-and-pop ()
   "Yank, then pop the last kill off the ring."
@@ -448,6 +463,7 @@ number."
 (declare-function org-tidy-mode "org-tidy")
 (declare-function org-modern-mode "org-modern")
 (declare-function org-extras-inline-images "org-extras")
+(defvar org-mode-hook)
 (defun simple-extras-visible-mode-enhanced-org (&optional arg)
   "Set associated `org' modes based on ARG."
   (when (derived-mode-p 'org-mode 'org-agenda-mode 'org-msg-mode)
@@ -525,8 +541,11 @@ The DWIM behaviour of this command is as follows:
          ;; any upstream changes
          (keyboard-quit))))
 
-;;;;; indent
+;;;;; Indent
 
+(defvar org-src-tab-acts-natively)
+(declare-function org-in-src-block-p "org")
+(declare-function org-narrow-to-block "org")
 ;; Adapted from `spacemacs/indent-region-or-buffer'.
 (defun simple-extras-indent-dwim ()
   "Indent in a smart way, depending on context.
@@ -549,7 +568,7 @@ block only, else indent whole buffer."
 	(message "Indented buffer.")))
     (whitespace-cleanup)))
 
-;;;;; strip
+;;;;; Strip
 
 ;; github.com/typester/emacs/blob/master/lisp/url/url-util.el
 (defun simple-extras-get-url-at-point (&optional pt)
@@ -649,14 +668,14 @@ FORMS are evaluated with point restored to its original position."
 	('bibtex-mode (bibtex-extras-get-field "url")))
       (read-string "URL: " (current-kill 0))))
 
-;;;;; url-parse
+;;;;; Url-parse
 
 (defun simple-extras-string-is-url-p (str)
   "Check if STR is a valid URL."
   (let ((url (url-generic-parse-url str)))
     (and (url-type url) (url-host url))))
 
-;;;;; conversion
+;;;;; Conversion
 
 (defun simple-extras-pandoc-convert (language &optional non-html)
   "Convert the contents of the system clipboard to target LANGUAGE using Pandoc.
@@ -669,7 +688,7 @@ language."
       (setq output (shell-command-to-string (format command "pbpaste" non-html))))
     output))
 
-;;;;; asciify
+;;;;; Asciify
 
 ;; Adapted from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
 (defun simple-extras-asciify-text (&optional begin end)
@@ -732,8 +751,9 @@ Optionally, remove accents in region from BEGIN to END."
     (simple-extras-asciify-text (point-min) (point-max))
     (buffer-string)))
 
-;;;;; slugify
+;;;;; Slugify
 
+(declare-function prot-eww--sluggify "prot-eww")
 ;;;###autoload
 (defun simple-extras-slugify (string)
   "Convert STRING into slug."
@@ -745,7 +765,32 @@ Optionally, remove accents in region from BEGIN to END."
   (interactive)
   (kill-new (simple-extras-slugify (current-kill 0))))
 
-;;;;; misc
+;;;;; auto-save-mode
+
+(defun simple-extras-is-new-buffer-p ()
+  "Return t iff the current buffer is a new, non-file-visiting buffer."
+  (and (not buffer-file-name)
+       (string-match "^untitled" (buffer-name))))
+
+(defun simple-extras-new-buffer-enable-auto-save ()
+  "Enable auto-save for new, non-file-visiting buffers."
+  (when (simple-extras-is-new-buffer-p)
+    (auto-save-mode 1)))
+
+(add-hook 'buffer-list-update-hook #'simple-extras-new-buffer-enable-auto-save)
+
+(defun simple-extras-new-buffer-auto-save-dir (orig-func &rest args)
+  "Use a standard location for auto-save files for non-file-visiting buffers.
+ORIG-FUNC is the original function being advised. ARGS are the arguments passed
+to it."
+  (if (simple-extras-is-new-buffer-p)
+      (let ((default-directory simple-extras-new-buffer-auto-save-dir))
+	(apply orig-func args))
+    (apply orig-func args)))
+
+(advice-add 'auto-save-mode :around #'simple-extras-new-buffer-auto-save-dir)
+
+;;;;; Misc
 
 (defun simple-extras-init-disable-funs (seconds funs)
   "Disable functions in list FUNS after SECONDS."

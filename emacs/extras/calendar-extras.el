@@ -28,9 +28,6 @@
 ;;; Code:
 
 (require 'calendar)
-(require 'json)
-(require 'auth-source-pass)
-(require 'url-vars)
 
 ;;;; User options
 
@@ -116,6 +113,17 @@ If IP is non-nil, use the local IP address."
    :contents-sources
    (list (cfw:org-create-source "medium purple"))
    :view 'block-day))
+
+(defun calendar-extras-get-dates-in-range (start-date end-date)
+  "Return a list of date strings from START-DATE to END-DATE inclusive."
+  (let ((current (date-to-time start-date))
+        (end (date-to-time end-date))
+        result)
+    (while (time-less-p current end)
+      (push (format-time-string "%Y-%m-%d" current) result)
+      (setq current (time-add current (days-to-time 1))))
+    (push end-date result)  ; Include the end-date in the result
+    (nreverse result)))
 
 (provide 'calendar-extras)
 

@@ -29,23 +29,14 @@
 
 ;;; Code:
 
-(require 'browse-url)
-;; (require 'crux) ; Error (use-package): org-extras/:catch: Cannot open load file: No such file or directory, crux
-(require 'el-patch)
 (require 'el-patch)
 (require 'org)
 (require 'org-agenda)
 (require 'org-capture)
 (require 'org-clock)
 (require 'oc)
-;; (require 'org-roam-extras) ; recursion error
 (require 'paths)
-(require 's)
 (require 'simple-extras)
-(require 'thingatpt)
-;; (require 'tlon-core) ; recursion error
-(require 'url-util)
-(require 'window-extras)
 
 ;;;; User options
 
@@ -79,6 +70,13 @@ the function `vulpea-agenda-files-update')."
   "2A37A3CC-2A11-4933-861B-48B129B9EA2D"
   "Heading in `calendar.org' that contains the BBDB anniversaries.
 Set to nil to disable display of BBDB anniversaries in agenda."
+  :type 'string
+  :group 'org-extras)
+
+(defcustom org-extras-clock-report-parameters
+  "#+BEGIN: clocktable :scope %s :maxlevel 9 :narrow 500! :fileskip0 t %s \n#+END:"
+  "Parameters for `org-extras-clock-report-insert'.
+The first %s is the scope of the report, and the second %s is the range."
   :type 'string
   :group 'org-extras)
 
@@ -333,6 +331,8 @@ number. Disable the mode if ARG is a negative number."
 (defvar org-extras-agenda-switch-to-agenda-current-day-timer nil
   "Timer to switch to agenda of current day.")
 
+(declare-function window-extras-split-if-unsplit "window-extras")
+(declare-function winum-select-window-1 "winum")
 (defun org-extras-agenda-switch-to-agenda-current-day ()
   "Open agenda in left window, creating it if necessary."
   (interactive)
@@ -402,22 +402,16 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 
 ;;;;; org-capture
 
-(declare-function org-ai-mode "org-ai")
 (declare-function org-web-tools-insert-link-for-url "org-web-tools")
 (declare-function org-extras-web-tools--org-title-for-url "org-web-tools")
 (declare-function youtube-dl "youtube-dl")
 (declare-function org-roam-tag-remove "org-roam")
 (declare-function org-roam-tag-add "org-roam")
-(declare-function simple-extras-slugify "tlon-core")
+(declare-function files-extras-show-buffer-name "file-extras")
+(declare-function files-extras-switch-to-alternate-buffer "files-extras")
 (defun org-extras-capture-before-finalize-hook-function ()
   "Define behavior of `org-capture-before-finalize-hook'."
   (pcase (plist-get org-capture-plist :key)
-    ((or "gg" "gd" "ge")
-     (org-ai-mode)
-     (org-narrow-to-subtree)
-     (forward-line 2)
-     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai\n")
-     (goto-char (point-max)))
     ("l"
      (org-align-tags)
      (ispell-change-dictionary "english"))
@@ -508,11 +502,9 @@ SCOPE is the scope of the report, and can be `agenda', `file', or `subtree'."
 	 (org-read-date nil nil nil "End date: ")
 	 (org-completing-read "Scope: " '("agenda" "file" "subtree"))))
   (let ((range (if (string= start-date end-date)
-		   ":block today"
+		   (format ":block \"%s\"" start-date)
 		 (format ":tstart \"%s\" :tend \"%s\"" start-date end-date))))
-    (insert
-     (format "#+BEGIN: clocktable :scope %s :maxlevel 4 :narrow 60! :fileskip0 t %s \n#+END:"
-	     scope range))
+    (insert (format org-extras-clock-report-parameters scope range))
     (org-clock-report)))
 
 (defun org-extras-delete-headings-without-logbook ()
@@ -674,6 +666,7 @@ files, recursively all files in `org-directory', and all files in
 
 ;;;;; ol
 
+(declare-function s-replace "s")
 (defun org-extras-sort-links (separator)
   "Sort list of links in current subtree separated by SEPARATOR."
   (interactive "sEnter separator: ")
@@ -858,10 +851,15 @@ To see a list of Google Docs and their respective IDs, run
     (shell-command
      (format "pandoc -s '%s' -o '%s'" input output))))
 
-;;;;; Dispatchers
+;;;;; Menus
 
-(transient-define-prefix org-extras-tlon-dispatch ()
-  "Dispatcher for Tlön projects."
+(transient-define-prefix org-extras-personal-menu ()
+  "Menu for personal projects."
+  [[("f" "finance"           (lambda () (interactive) (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C")))
+    ("i" "Anki"              (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))]])
+
+(transient-define-prefix org-extras-tlon-menu ()
+  "Menu for Tlön projects."
   [["Tlön"
     ("t t" "tlon"              (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))
     ("t e" "tlon-emacs"        (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))
@@ -982,37 +980,6 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
     (unless (file-exists-p file)
       (org-remove-file file)
       (throw 'nextfile t))))
-
-;; Comment out `org-cite--allowed-p' condition to allow invocation
-;; in any mode. Even if inserting a citation is not allowed, one may
-;; want to invoke the command to trigger contextual actions via
-;; `embark'.
-(el-patch-defun org-cite-insert (arg)
-  "Insert a citation at point.
-Insertion is done according to the processor set in `org-cite-insert-processor'.
-ARG is the prefix argument received when calling interactively the function."
-  (interactive "P")
-  (unless org-cite-insert-processor
-    (user-error "No processor set to insert citations"))
-  (org-cite-try-load-processor org-cite-insert-processor)
-  (let ((name org-cite-insert-processor))
-    (cond
-     ((not (org-cite-get-processor name))
-      (user-error "Unknown processor %S" name))
-     ((not (org-cite-processor-has-capability-p name 'insert))
-      (user-error "Processor %S cannot insert citations" name))
-     (t
-      (let ((context (org-element-context))
-	    (insert (org-cite-processor-insert (org-cite-get-processor name))))
-	(cond
-	 ((org-element-type-p context '(citation citation-reference))
-	  (funcall insert context arg))
-	 (el-patch-remove
-	   ((org-cite--allowed-p context)
-	    (funcall insert nil arg)))
-	 (t
-	  (el-patch-swap (user-error "Cannot insert a citation here")
-			 (funcall insert nil arg)))))))))
 
 ;;;; Footer
 

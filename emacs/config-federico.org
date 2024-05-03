@@ -144,6 +144,7 @@
   (setq calendar-extras-location-name "Buenos Aires")
   (setq calendar-extras-use-geolocation nil)
 #+end_src
+
 ** exec-path-from-shell
 :PROPERTIES:
 :ID:       483A1BF8-C5BA-43AA-A502-13EE72419362
@@ -173,6 +174,10 @@
   )
 #+end_src
 
+** browse-url
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(setq browse-url-browser-function 'browse-url-chrome)
+#+end_src
 ** window
 :PROPERTIES:
 :ID:       8EF5C4DE-C641-4770-83F1-638DD324238B
@@ -724,7 +729,7 @@ Disable hl-sentence because I do not like it...
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'faces-extras
-  (setq faces-extras-fixed-pitch-font "ZedMono Nerd Font Mono")
+  (setq faces-extras-fixed-pitch-font "IosevkaTermSlab Nerd Font")
   (setq faces-extras-fixed-pitch-size 150)
   (setq faces-extras-variable-pitch-size 160)
 
@@ -758,9 +763,9 @@ Disable hl-sentence because I do not like it...
     (set-face-attribute 'org-modern-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
     (set-face-attribute 'org-quote nil :family faces-extras-variable-pitch-font :height  faces-extras-variable-pitch-size)
     (set-face-attribute 'corfu-default nil :family faces-extras-fixed-pitch-font :height 1)
-    (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
-    (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
-    (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
+ ;;   (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
+;;    (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
+;;    (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
     (set-face-attribute 'window-divider nil :foreground (face-attribute 'mode-line-inactive :background))
     (set-face-attribute 'tab-bar nil
                         ;; slightly increase the width of the tab-bar

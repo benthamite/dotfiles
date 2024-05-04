@@ -143,6 +143,9 @@ archive buffer."
 
 (defun telega-extras-transcribe-audio (&optional message)
   "Transcribe the audio for MESSAGE.
+Additionally, share the audio transcript if
+`telega-extras-auto-share-audio-transcript' is non-nil.
+
 If MESSAGE is nil, use the message at point."
   (interactive)
   (let* ((message (or message (telega-msg-at))))

@@ -122,28 +122,29 @@ archive buffer."
       (telega-chatbuf-attach-file file)
     (user-error (format "No files found in %s" paths-dir-downloads))))
 
-;;;;; Message actions
-
-(defun telega-extras-act-on-message (action message)
-  "Perform ACTION on MESSAGE."
-  (let* ((fun (pcase action
-		('download #'telega-msg-save)
-		('transcribe #'telega--recognizeSpeech))))
-    (funcall fun message)))
+;;;;; Transcribe audio
 
 (defun telega-extras-transcribe-audio (&optional message)
   "Transcribe the audio for MESSAGE.
 If MESSAGE is nil, use the message at point."
   (interactive)
   (let* ((message (or message (telega-msg-at))))
-    (telega-extras-act-on-message 'transcribe message)))
+    (when (telega-extras-message-has-audio-p message)
+      (telega--recognizeSpeech message))))
+
+(defun telega-extras-message-has-audio-p (message)
+  "Return t iff MESSAGE is an audio file."
+  (let ((content (plist-get message :content)))
+    (eq (telega--tl-type content) 'messageVoiceNote)))
+
+;;;;; Download file
 
 (defun telega-extras-download-file (&optional message)
   "Download the file for MESSAGE.
 If MESSAGE is nil, use the message at point."
   (interactive)
   (let* ((message (or message (telega-msg-at))))
-    (telega-extras-act-on-message 'download message)))
+    (telega-msg-save message)))
 
 (provide 'telega-extras)
 ;;; telega-extras.el ends here

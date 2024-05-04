@@ -33,7 +33,7 @@
  ;; pdf-tools
  puni
  remember
- server
+ ;; server
  ;; spelling
  jinx
  ;; flycheck
@@ -129,7 +129,6 @@
 :ID:       3FB5128E-FBBA-4C4B-BFC9-8186878DDB4E
 :END:
 
-
 ** startup
 :PROPERTIES:
 :ID:       5E67511F-C40D-4BFC-84AA-353DA60585DE
@@ -137,6 +136,9 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq user-full-name "Federico Stafforini")
 (setq user-mail-address "fstafforini@gmail.com")
+;; (add-hook 'server-after-make-frame-hook (lambda () (select-frame-set-input-focus (selected-frame))))
+(raise-frame)
+(select-frame-set-input-focus (selected-frame))
 #+end_src
 
 ** claendar-extras
@@ -742,6 +744,17 @@ Disable hl-sentence because I do not like it...
   (message "`yasnippet' late-init config loaded."))
 #+end_src
 
+** face-remap (disable variable-pitch-mode)
+:PROPERTIES:
+:END:
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(dolist (hook '(elfeed-show-mode-hook
+                telega-webpage-mode-hook
+                eww-mode-hook
+                mu4e-view-mode-hook
+                outline-mode-hook))
+  (remove-hook hook #'variable-pitch-mode))
+#+end_src
 
 ** faces-extras
 :PROPERTIES:
@@ -753,12 +766,13 @@ Disable hl-sentence because I do not like it...
   (setq faces-extras-fixed-pitch-size 150)
   (setq faces-extras-fixed-pitch-height 1.0)
   (setq faces-extras-variable-pitch-height 1.1)
-  (setq faces-extras-org-level-height 0.9)
+  (setq faces-extras-org-level-height 1.0)
   (setq faces-extras-org-block-height 1.0)
-  (setq faces-extras-org-code-height 0.9)
-  (setq faces-extras-org-date-height 0.8)
-  (setq faces-extras-org-tag-height 0.8)
-  (setq faces-extras-org-property-value-height 0.7)
+  (setq faces-extras-org-code-height 1.0)
+  (setq faces-extras-org-date-height 0.9)
+  (setq faces-extras-org-tag-height 0.9)
+  (setq faces-extras-org-property-value-height 0.8)
+  (faces-extras-set-custom-face-attributes)
   )
 #+end_src
 

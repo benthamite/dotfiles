@@ -172,27 +172,29 @@ functionality in macOS."
   (bury-buffer)
   (window-extras-switch-to-last-window))
 
+;; 2024-05-03: taken down; in the meantime, use
+;; <https://archive.softwareheritage.org/browse/origin/directory/?origin_url=https://gitlab.com/magnolia1234/bypass-paywalls-chrome-clean.git>
+;; https://github.com/bpc-clone/bypass-paywalls-chrome-clean
+;; https://github.com/bpc-clone/bypass-paywalls-firefox-clean
+(declare-function macos-open-in-finder "macos")
+(declare-function macos-run-keyboard-maestro-script "macos")
 (defun files-extras-download-bypass-paywalls-chrome ()
   "Download and install `Bypass Paywalls Chrome Clean'.
 After running the command, both the Chrome extensions page and
 the `bypass-paywalls-chrome-clean-master' folder will open.
 To install the extension, drag the latter onto the former."
   (interactive)
-  (let* ((file (file-name-concat paths-dir-downloads "bypass-paywalls.zip"))
-	 (dir (file-name-concat paths-dir-downloads "bypass-paywalls-chrome-clean-master"))
-	 (reveal-in-osx
-	  (concat
-	   "set thePath to POSIX file \"" dir "\"\n"
-	   "tell application \"Finder\"\n"
-	   " set frontmost to true\n"
-	   " reveal thePath \n"
-	   "end tell\n")))
-    (url-copy-file "https://gitlab.com/magnolia1234/bypass-paywalls-chrome-clean/-/archive/master/bypass-paywalls-chrome-clean-master.zip" file)
+  (let* ((url "https://github.com/bpc-clone/bpc_updates/releases/download/latest/bypass-paywalls-chrome-clean-master.zip")
+	 (file (file-name-concat paths-dir-downloads "bypass-paywalls.zip"))
+	 (dir (file-name-concat paths-dir-downloads "bypass-paywalls-chrome-clean-master")))
+    (unless (url-file-exists-p url)
+      (user-error "URL `%s' does not exist" url))
+    (url-copy-file url file)
     (shell-command (format "unzip %s -d %s" file paths-dir-downloads))
     (delete-file file)
     ;; open Chrome extensions page
-    (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"89243CDA-4876-45C8-9AF2-3666664A0EAA\"'")
-    (start-process "osascript-getinfo" nil "osascript" "-e" reveal-in-osx)))
+    (macos-run-keyboard-maestro-script "89243CDA-4876-45C8-9AF2-3666664A0EAA")
+    (macos-open-in-finder dir)))
 
 ;; Copied from emacs.stackexchange.com/a/24461/32089
 (defun files-extras-revert-all-file-buffers ()

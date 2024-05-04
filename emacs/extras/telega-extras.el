@@ -141,6 +141,7 @@ archive buffer."
 
 ;;;;; Transcribe audio
 
+;;;###autoload
 (defun telega-extras-transcribe-audio (&optional message)
   "Transcribe the audio for MESSAGE.
 Additionally, share the audio transcript if

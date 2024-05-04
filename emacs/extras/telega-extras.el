@@ -31,6 +31,23 @@
 (require 'telega)
 (require 'telega-dired-dwim)
 
+;;;; Variables
+
+(defgroup telega-extras ()
+  "Extensions for `telega'."
+  :group 'telega-extras)
+
+(defcustom telega-extras-auto-share-audio-transcript nil
+  "Whether to automatically share transcript after transcribing message."
+  :type 'boolean
+  :group 'telega-extras)
+
+(defvar telega-extras-audio-transcript-timer nil
+  "Timer to check for audio transcript availability.")
+
+(defvar telega-extras-audio-transcript-timeout-timer nil
+  "Timer to handle timeout of waiting for the transcript.")
+
 ;;;; Functions
 
 (defun telega-extras-switch-to ()
@@ -130,12 +147,55 @@ If MESSAGE is nil, use the message at point."
   (interactive)
   (let* ((message (or message (telega-msg-at))))
     (when (telega-extras-message-has-audio-p message)
-      (telega--recognizeSpeech message))))
+      (telega--recognizeSpeech message)
+      (telega-extras-maybe-share-audio-transcript message))))
 
 (defun telega-extras-message-has-audio-p (message)
   "Return t iff MESSAGE is an audio file."
-  (let ((content (plist-get message :content)))
-    (eq (telega--tl-type content) 'messageVoiceNote)))
+  (telega-msg-match-p message '(type VoiceNote)))
+
+(defun telega-extras-maybe-share-audio-transcript (message)
+  "Conditionally share audio transcript for MESSAGE."
+  (when (and telega-extras-auto-share-audio-transcript
+	     (telega-msg-by-me-p message))
+    (setq telega-extras-audio-transcript-timer
+	  (run-with-timer 0 5 #'telega-extras-maybe-get-audio-transcript message)
+	  telega-extras-audio-transcript-timeout-timer
+	  (run-with-timer 60 nil #'telega-extras-cancel-audio-timers))))
+
+(defun telega-extras-get-audio-transcript (message)
+  "Return the transcript of the audio file in MESSAGE."
+  (when (telega-extras-message-has-audio-p message)
+    (telega-tl-str
+     (telega--tl-get (plist-get message :content)
+		     :voice_note :speech_recognition_result)
+     :text)))
+
+(defun telega-extras-maybe-get-audio-transcript (message)
+  "Check if the transcript for audio in MESSAGE is ready, and process it if so."
+  (when-let ((transcript (telega-extras-get-audio-transcript message)))
+    (telega-extras-cancel-audio-timers)
+    (telega-extras-post-audio-transcript transcript message)))
+
+(defun telega-extras-post-audio-transcript (transcript message)
+  "Post TRANSCRIPT of audio MESSAGE as a reply to it."
+  (telega-msg-reply message)
+  (insert (format "Audio transcript:\n\n \"%s\"" transcript))
+  (telega-chatbuf-input-send t))
+
+;;;;;; Timer management
+
+(defun telega-extras-cancel-timer-when-active (timer-name)
+  "Cancel TIMER-NAME when active."
+  (let ((timer (symbol-value timer-name)))
+    (when timer
+      (cancel-timer timer)
+      (set timer-name nil))))
+
+(defun telega-extras-cancel-audio-timers ()
+  "Cancel the audio transcript and timeout timers."
+  (telega-extras-cancel-timer-when-active 'telega-extras-audio-transcript-timer)
+  (telega-extras-cancel-timer-when-active 'telega-extras-audio-transcript-timeout-timer))
 
 ;;;;; Download file
 

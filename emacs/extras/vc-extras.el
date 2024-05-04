@@ -118,7 +118,7 @@ If PRIVATE is non-nil, make it a private repository."
 (defun vc-extras-gh-list-repos (account)
   "List all repos in GitHub ACCOUNT."
   (let* ((repos
-	  (shell-command-to-string (format "%s repo list %s | awk '{print $1}'"
+	  (shell-command-to-string (format "%s repo list %s --limit 9999 | awk '{print $1}'"
 					   vc-extras-gh-executable account))))
     (split-string (replace-regexp-in-string (format "%s/" account) "" repos))))
 

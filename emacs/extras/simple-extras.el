@@ -611,6 +611,18 @@ If PT is non-nil, start at that position instead of `point'."
 	  (setq url nil))
       url)))
 
+(defun simple-extras-remove-trailing-slash (string)
+  "Remove trailing slashes from STRING if present."
+  (if (string-suffix-p "/" string)
+      (substring string 0 -1)
+    string))
+
+(defun simple-extras-simplify-url (url)
+  "Strip down a URL by removing the \"https\", \"www\", and trailing slashes."
+  (simple-extras-remove-trailing-slash
+   (replace-regexp-in-string "\\`\\(https?://\\)?\\(www\\.\\)?" "" url)))
+
+;; TODO: cleanup this
 (defun simple-extras-strip-url ()
   "Strip URL of unnecessary elements."
   (interactive)

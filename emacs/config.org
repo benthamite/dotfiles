@@ -9018,6 +9018,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
     (setq org-roam-database-connector 'sqlite-builtin))
 
   :config
+  (setq org-roam-capture-templates nil)
   (setq org-roam-directory paths-dir-org-roam)
   (setq org-roam-node-display-template
         (concat "${title:*} "

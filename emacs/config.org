@@ -10881,7 +10881,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
   (faces-extras-set-and-store-face-attributes
    '((telega-entity-type-code :family faces-extras-fixed-pitch-font :height
-			      (face-attribute 'default :height))))
+                              (face-attribute 'default :height))))
 
   (add-hook 'telega-chat-mode-hook (lambda () (setq default-directory paths-dir-downloads)))
 

@@ -272,7 +272,9 @@ If PLAYER is nil, default to `mpv'."
     found-url))
 
 (defun eww-extras-download-from-annas-archive ()
-  "Download file from the relevant page of Anna’s Archive."
+  "Download file from the relevant page of Anna’s Archive.
+This command should be run after following one of the \"Fast Parner Server\"
+links. It requires a paid subscription."
   (interactive)
   (let* ((url (eww-extras-get-url-in-link "Download now"))
 	 (raw-file (file-name-nondirectory url))

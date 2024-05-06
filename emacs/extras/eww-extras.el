@@ -282,7 +282,8 @@ If PLAYER is nil, default to `mpv'."
 
 (defun eww-extras-annas-archive-download (&optional string)
   "Search Anna’s Archive for STRING and download the selected item.
-Requires a paid subscription."
+Requires a paid subscription and authentication. (Yes, you can authenticate with
+eww!)"
   (interactive)
   (let ((string (or string (read-string "Search string: ")))
 	(url (format "https://annas-archive.org/search?index=&page=1&q=%s&ext=pdf&sort=" string)))

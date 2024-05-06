@@ -1725,10 +1725,18 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
   :config
   (setq org-modern-table nil) ; doesn’t work well with variable-pitch: github.com/minad/org-modern/issues/99
   (setq org-modern-statistics nil)
-  (setq org-modern-star '("◉" "◉" "◉" "◉" "◉"))
-  (setq org-modern-list '((42 . "○")
-                          (43 . "○")
-                          (45 . "○")))
+  (setq org-modern-star 'fold)
+  (setq org-modern-fold-stars
+        '(("▸" . "▾")
+          ("▸" . "▾")
+          ("▸" . "▾")
+          ("▸" . "▾")
+          ("▸" . "▾")))
+  (setq org-modern-replace-stars '("◉" "◉" "◉" "◉" "◉"))
+  (setq org-modern-list
+        '((42 . "○")
+          (43 . "○")
+          (45 . "○")))
 
   (faces-extras-set-and-store-face-attributes
    '((org-modern-date-active :family faces-extras-fixed-pitch-font :height faces-extras-org-date-height)

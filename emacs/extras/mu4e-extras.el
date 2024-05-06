@@ -198,6 +198,36 @@ Do not ask for confirmation."
   (when (derived-mode-p 'mu4e-view-mode)
     (face-remap-add-relative 'shr-text :height 0.9)))
 
+(defun mu4e-extras-check-all-mail ()
+  "Check all Gmail channels.
+It takes `mbsync'a while to check all channels, so I run this function less
+frequently than `mu4e-update-mail-and-index', which excludes my archive and
+takes just a couple of seconds."
+  (interactive)
+  (let ((mu4e-get-mail-command "mbsync gmail-all"))
+    (mu4e-update-mail-and-index t)))
+
+(defun mu4e-extras-compose-reply (&optional wide)
+  "Reply to the message at point.
+
+If WIDE is non-nil, make it a \"wide\" reply (a.k.a. \"reply-to-all\"). Else,
+prompt the user for the reply type if `mu4e-extras-wide-reply' is `prompt', make
+it a narrow reply if `mu4e-extras-wide-reply' is nil, and make it a wide reply
+otherwise.."
+  (interactive)
+  (if (mu4e-message-contact-field-matches-me (mu4e-message-at-point) :from)
+      (mu4e-compose-supersede)
+    (let ((recipients 0))
+      (dolist (field '(:to :cc) recipients)
+	(setq recipients
+	      (+ recipients (length (mu4e-message-field-at-point field)))))
+      (if (> recipients 1)
+	  (let* ((wide (or wide (pcase mu4e-extras-wide-reply
+				  ('prompt (y-or-n-p "Reply to all? "))
+				  (_ mu4e-extras-wide-reply)))))
+	    (mu4e-compose-reply wide))
+	(mu4e-compose-reply)))))
+
 ;;;;; Contexts
 
 (defun mu4e-extras-set-contexts ()
@@ -257,36 +287,6 @@ Do not ask for confirmation."
   "Return t iff MSG is a work message."
   (or (mu4e-message-contact-field-matches msg :to (getenv "WORK_EMAIL"))
       (mu4e-message-contact-field-matches msg :reply-to "tlon-team@googlegroups.com")))
-
-(defun mu4e-extras-check-all-mail ()
-  "Check all Gmail channels.
-It takes `mbsync'a while to check all channels, so I run this function less
-frequently than `mu4e-update-mail-and-index', which excludes my archive and
-takes just a couple of seconds."
-  (interactive)
-  (let ((mu4e-get-mail-command "mbsync gmail-all"))
-    (mu4e-update-mail-and-index t)))
-
-(defun mu4e-extras-compose-reply (&optional wide)
-  "Reply to the message at point.
-
-If WIDE is non-nil, make it a \"wide\" reply (a.k.a. \"reply-to-all\"). Else,
-prompt the user for the reply type if `mu4e-extras-wide-reply' is `prompt', make
-it a narrow reply if `mu4e-extras-wide-reply' is nil, and make it a wide reply
-otherwise.."
-  (interactive)
-  (if (mu4e-message-contact-field-matches-me (mu4e-message-at-point) :from)
-      (mu4e-compose-supersede)
-    (let ((recipients 0))
-      (dolist (field '(:to :cc) recipients)
-	(setq recipients
-	      (+ recipients (length (mu4e-message-field-at-point field)))))
-      (if (> recipients 1)
-	  (let* ((wide (or wide (pcase mu4e-extras-wide-reply
-				  ('prompt (y-or-n-p "Reply to all? "))
-				  (_ mu4e-extras-wide-reply)))))
-	    (mu4e-compose-reply wide))
-	(mu4e-compose-reply)))))
 
 ;;;;; Patches
 

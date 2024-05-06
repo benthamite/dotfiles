@@ -6193,7 +6193,7 @@ CLOCK: [2021-12-03 Fri 23:10]--[2021-12-04 Sat 01:01] =>  1:51
 CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gdrive
   :elpaca (gdrive
            :host github

@@ -38,6 +38,10 @@
 (defvar zotra-extras-most-recent-bibkey nil
   "The bibkey of the most recently added entry.")
 
+(defconst zotra-extras-add-multiple-urls-filename
+  (file-name-concat paths-dir-downloads "zotra-add-multiple-urls.txt")
+  "Default file for `zotra-extras-add-multiple-urls'.")
+
 ;;;; Functions
 
 (defvar ebib--cur-db)
@@ -160,6 +164,20 @@ gracefully."
           (if (string-empty-p value)
               nil
             value))))))
+
+(declare-function ebib-save-all-databases "ebib")
+(declare-function ebib-extras-sort "ebib-extras")
+(declare-function files-extras-lines-to-list "files-extras")
+(defun zotra-extras-add-multiple-urls (file)
+  "Prompt the user to select a FILE with a list of URLs and add them."
+  (interactive (list (read-file-name "fFile with URLs (one URL per line): " paths-dir-downloads
+				     zotra-extras-add-multiple-urls-filename nil nil)))
+  (let ((urls (files-extras-lines-to-list file)))
+    (ebib-save-all-databases)
+    (dolist (url urls)
+      (zotra-add-entry url nil tlon-babel-refs-file-fluid))
+    (ebib tlon-babel-refs-file-fluid)
+    (ebib-extras-sort 'Timestamp)))
 
 (provide 'zotra-extras)
 ;;; zotra-extras.el ends here

@@ -843,5 +843,13 @@ is already narrowed."
          (ledger-mode-extras-narrow-to-xact))
         (t (narrow-to-defun))))
 
+(defun simple-extras-get-next-element (element list)
+  "Get the next element in LIST after ELEMENT.
+If ELEMENT is the last element, return the first element."
+  (let ((index (1+ (cl-position element list :test #'equal))))
+    (if (eq index (length list))
+	(car list)
+      (nth index list))))
+
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

@@ -29,10 +29,7 @@
 
 (require 'browse-url)
 (require 'eww)
-(require 'f)
-(require 'ffap)
 (require 'paths)
-(require 's)
 
 ;;;; User options
 
@@ -54,6 +51,8 @@
 
 ;;;; Functions
 
+(declare-function f-read "f")
+(declare-function s-split "s")
 (defun browse-url-extras-set-handler (urls-file handler)
   "Set the URL HANDLER from a URLS-FILE."
   (dolist (url (s-split "\n" (f-read urls-file) t))
@@ -76,6 +75,7 @@ respectively."
   (let ((browse-url-browser-function 'browse-url-default-browser))
     (browse-url-of-dired-file)))
 
+(declare-function ffap-url-p "f")
 (defun browse-url-extras-add-domain-to-open-externally (arg)
   "Prompt for a URL and add its domain to the list of URLs to open externally.
 If buffer is visiting a URL or if there is a URL in the kill ring,
@@ -91,11 +91,11 @@ of URLs to open in Firefox instead."
                    browse-url-extras-browse-url-firefox-file
                  browse-url-extras-browse-url-default-file))
          (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
-    (browse-url-extras--write-url-to-file selection file)
+    (browse-url-extras-write-url-to-file selection file)
     (browse-url-extras-set-domains-to-open-externally)
     (browse-url url)))
 
-(defun browse-url-extras--write-url-to-file (url file)
+(defun browse-url-extras-write-url-to-file (url file)
   "Write URL to FILE containing list of URLs to open externally."
   (with-current-buffer (find-file-noselect file)
     (goto-char (point-max))

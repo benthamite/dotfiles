@@ -3,4 +3,4 @@
 # key: cs
 # contributor: Pablo Stafforini
 # --
-`(file-name-sans-extension (file-name-nondirectory (magit-extras-get-commit-file)))`: $0
+`(magit-extras-get-commit-heading)`: $0

@@ -68,6 +68,14 @@ SyncState *
 Group gmail
 Channel gmail-inbox
 Channel gmail-daily
+Channel gmail-sent
 Channel gmail-trash
-Channel gmail-all
 Channel gmail-starred
+
+Group gmail-all
+Channel gmail-inbox
+Channel gmail-daily
+Channel gmail-sent
+Channel gmail-trash
+Channel gmail-starred
+Channel gmail-all

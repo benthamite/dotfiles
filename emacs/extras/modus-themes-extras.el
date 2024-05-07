@@ -28,9 +28,11 @@
 ;;; Code:
 
 (require 'modus-themes)
-(require 'cl-lib)
-(require 'highlight-parentheses)
 
+;;;; Functions
+
+(defvar highlight-parentheses-colors)
+(defvar highlight-parentheses-background-colors)
 (defun modus-themes-extras-highlight-parentheses ()
   "Highlight parentheses in the current buffer."
   (modus-themes-with-colors

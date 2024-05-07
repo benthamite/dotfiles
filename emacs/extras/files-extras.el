@@ -27,15 +27,10 @@
 
 ;;; Code:
 
-(require 'alert) ; recursive
-(require 'cl-seq)
 (require 'dired)
 (require 'dired-extras)
-;; (require 'ebib-extras) ; recursive
-(require 'elpaca)
 (require 'files)
 (require 'paths)
-;; (require 'window-extras)
 
 ;;;; User options
 
@@ -348,6 +343,7 @@ command automates the recovery process in these cases."
       (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
       (files-extras-diff-buffer-with-file))))
 
+(declare-function alert "alert")
 (defun files-extras-auto-save-alert ()
   "Alert user when auto save data is detected.
 `recover-this-file' notifications are easy to miss. This function triggers a
@@ -360,23 +356,6 @@ more intrusive alert."
 		   (file-name-nondirectory buffer-file-name))
 	   :title "Auto save detected"
 	   :severity 'high)))
-
-;; for some reason, `alert' fails to create persistent alerts. so we
-;; trigger a warning if either `*log4e-alert*' or `*Messages*'
-;; buffers have logged a message related to `recover-this-file'.
-(defun files-extras-auto-save-persist ()
-  "Prevent killing buffer when auto save data is detected."
-  ;; we check both `*log4e-alert*' and `*Messages*' buffers for
-  ;; extra safety
-  (let ((alert-buffers '(" *log4e-alert*" "*Messages*")))
-    (dolist (buffer alert-buffers)
-      (when (get-buffer buffer)
-	(with-current-buffer buffer
-	  (goto-char (point-min))
-	  (when (search-forward "has auto save data" nil t)
-	    (yes-or-no-p "Buffers with auto save data detected. Check `*log4e-alert*' and `*Messages*' for details. Are you sure you want to proceed? ")
-	    (kill-buffer)))))
-    t))
 
 ;; https://emacs.stackexchange.com/a/3778/32089
 (defun files-extras-diff-buffer-with-file ()
@@ -395,12 +374,12 @@ more intrusive alert."
     (message "Copied `%s'" path)))
 
 (add-hook 'find-file-hook #'files-extras-auto-save-alert)
-(add-hook 'kill-buffer-query-functions #'files-extras-auto-save-persist)
 
 ;; reddit.com/r/emacs/comments/t07e7e/comment/hy88bum/?utm_source=reddit&utm_medium=web2x&context=3
 (defun files-extras-make-hashed-auto-save-file-name-a (fn)
   "Compress the `auto-save' file name so paths don't get too long.
 FN is an argument in the adviced function."
+
   (let ((buffer-file-name
 	 (if (or (null buffer-file-name)
 		 (find-file-name-handler buffer-file-name 'make-auto-save-file-name))
@@ -469,6 +448,7 @@ OLD-FUN and ARGS are arguments passed to the original function."
     (shell-command (format "convert '%s' '%s.pdf'" file (file-name-sans-extension file)))
     (message "Converted image to PDF.")))
 
+(defvar elpaca-repos-directory)
 (defun files-extras-open-elpaca-package (package)
   "Open the package named PACKAGE in the `repos' elpaca directory."
   (require 'elpaca)
@@ -509,6 +489,12 @@ current helpful buffer displays, then kill the buffer."
     (while (re-search-forward "\\(^\\s-*$\\)\n\\(\\(^\\s-*$\\)\n\\)+" nil t)
       (replace-match "\n"))))
 
+(defun files-extras-read-lines (file)
+  "Return a list of lines of FILE."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (split-string (buffer-string) "\n" t)))
+
 ;;;;; Dispatcher
 
 ;;;###autoload (autoload 'files-extras-dispatch "files-extras" nil t)
@@ -537,16 +523,16 @@ current helpful buffer displays, then kill the buffer."
   "Dispatcher for personal package files."
   [["Tlön"
     ("b" "tlon-babel"       (lambda () (interactive) (files-extras-open-elpaca-package "tlon-babel")))
-    ("c" "tlon-core"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-core")))
     ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))]
    ["Personal"
-    ("a" "internet-archive" (lambda () (interactive )(files-extras-open-elpaca-package "internet-archive")))
     ("l" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))
-    ("g" "glondendict-ng"   (lambda () (interactive )(files-extras-open-elpaca-package "goldendict-ng")))
+    ("d" "gdrive"           (lambda () (interactive )(files-extras-open-elpaca-package "gdrive")))
+    ("g" "goldendict-ng"   (lambda () (interactive )(files-extras-open-elpaca-package "goldendict-ng")))
+    ("a" "internet-archive" (lambda () (interactive )(files-extras-open-elpaca-package "internet-archive")))
     ("o" "macos"            (lambda () (interactive )(files-extras-open-elpaca-package "macos")))
     ("m" "mullvad"          (lambda () (interactive )(files-extras-open-elpaca-package "mullvad")))
-    ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))
-    ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))]])
+    ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))
+    ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))]])
 
 (provide 'files-extras)
 ;;; files-extras.el ends here

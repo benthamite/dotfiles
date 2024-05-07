@@ -113,6 +113,33 @@ poorly-designed websites."
     (when global-flycheck-mode-enabled-p
       (global-flycheck-mode))))
 
+;;;;; elfeed ‘follow mode’
+
+;; this implements an analogy of `org-agenda-follow-mode': as point is moved
+;; through the `elfeed' search buffer, the corresponding entry is show in the
+;; other window
+(defun elfeed-extras-display-buffer (buffer)
+  "Display BUFFER in the other window, without focusing on it."
+  (pop-to-buffer buffer 'window-extras-switch-to-last-window))
+
+(defun elfeed-extras-follow-entry (lines)
+  "Move LINES down and display the corresponding entry in the other window."
+  (forward-line lines)
+  (recenter)
+  (call-interactively #'elfeed-search-show-entry)
+  (select-window (previous-window))
+  (unless elfeed-search-remain-on-entry (forward-line -1)))
+
+(defun elfeed-extras-follow-next ()
+  "Move point to the next entry and display it in the other window."
+  (interactive)
+  (elfeed-extras-follow-entry 1))
+
+(defun elfeed-extras-follow-previous ()
+  "Move point to the previous entry and display it in the other window."
+  (interactive)
+  (elfeed-extras-follow-entry -1))
+
 (provide 'elfeed-extras)
 ;;; elfeed-extras.el ends here
 

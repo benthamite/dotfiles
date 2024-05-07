@@ -29,11 +29,10 @@
 
 (require 'ace-link)
 (require 'el-patch)
-(require 'mm-decode)
-(require 'org-roam-mode)
 
 ;;;; Functions
 
+(defvar mm-text-html-renderer)
 (defun ace-link-extras-mu4e ()
   "Open a visible link in an `mu4e-view-mode' buffer.
 Unlike `ace-link-mu4e', this function is sensitive to the value of
@@ -81,6 +80,7 @@ specified by `browse-url-handlers')."
                (avy--style-fn avy-style)))))
     (ace-link-extras--org-roam-action pt)))
 
+(declare-function org-roam-preview-visit "org-roam-mode")
 (defun ace-link-extras--org-roam-action (pt)
   "Visit the link at PT in an `org-roam-mode' buffer."
   (when (numberp pt)

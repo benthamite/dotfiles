@@ -59,6 +59,7 @@
       :em_dash {:key :!SEhyphen}
 
       ;; diacritics
+      ;; note that many of the mappings below require ABC - Extended as the macOS input source
       :overdot {:key :!Ew}
       :underdot {:key :!Ex}
       :accute_accent {:key :!Ee}
@@ -313,19 +314,22 @@
 
 {:des "b-mode (media controls, window sizing)"
  :rules [:b-mode
-         [:u {:modi :⇧⌘⌥⌃ :key :p}] ; Rectangle, right half
+         [:p {:modi :⇧⌘⌥⌃ :key :p}] ; Rectangle, right half
          [:i {:modi :⇧⌘⌥⌃ :key :i}] ; Rectangle, maximize
          [:o {:modi :⇧⌘⌥⌃ :key :o}] ; Rectangle, center
-         [:p {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
+         [:u {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
-         [:l [:km "Play Spotify"]]
+         [:l :play_or_pause]
+         [:slash [:km "Spotify play"]]
          [:semicolon :fastforward]
          [:comma :volume_increment]
          [:period :volume_decrement]
-         [:slash :mute]
-         [:h {:modi :⇧⌘⌃ :key :0}] ; dictation
-         [:n {:modi :⇧⌘⌃ :key :1}] ; narration
+         [:m :mute]
+         [:c {:modi :C-M-s- :key :c} :emacs] ; connect to bluetooth device
+         [:g {:modi :C-M-s- :key :g} :emacs] ; toggle langs
+         [:h {:modi :⇧⌘⌥⌃ :key :0}] ; dictation
+         [:n {:modi :⇧⌘⌥⌃ :key :1}] ; narration
          ]}
 
 {:des "f-mode (special chars)"

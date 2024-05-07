@@ -26,6 +26,16 @@
 (setq user-mail-address "leonardodecartago@gmail.com")
 #+end_src
 
+** tlon-babel
+:PROPERTIES:
+:ID:       AD2AE5D5-6230-4FF1-83F5-33F1F2995A5A
+:END:
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'tlon-babel
+  (setq tlon-babel-split-repo t))
+#+end_src
+
 ** key bindings
 :PROPERTIES:
 :ID:       7B2B4853-D7B7-4C8A-B597-232E13605E1B

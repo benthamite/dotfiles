@@ -27,9 +27,6 @@
 
 ;;; Code:
 
-(require 'calendar-extras)
-(require 'display-wttr)
-
 ;;;; User options
 
 (defgroup tab-bar-extras ()
@@ -120,6 +117,11 @@ separator would remain even when the elements are absent.")
 
 ;;;; Functions
 
+(defvar calendar-extras-use-geolocation)
+(defvar display-wttr-locations)
+(defvar calendar-extras-location-name)
+(declare-function calendar-extras-set-geolocation "calendar-extras")
+(declare-function display-wttr "display-wttr")
 (defun tab-bar-extras-reset (&optional quick)
   "Reset the tab bar.
 This resets the clock, refreshes the Tab Bar and its color, and updates the

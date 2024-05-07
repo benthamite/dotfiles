@@ -10096,7 +10096,7 @@ The macro below generates the commands correctly. But attempting to define key b
    "s-r" 'ebib-extras-rename-files)
   (ebib-index-mode-map
    "A-C-s-<tab>" 'ebib-extras-end-of-index-buffer
-   "s" 'ebib-extras-sort-toggle
+   "s" 'ebib-extras-sort
    "s-t" 'ebib-extras-move-entry-to-tlon)
   ((bibtex-mode-map ebib-entry-mode-map)
    "s-f" 'ebib-extras-open-file-dwim)

@@ -875,8 +875,6 @@ To see a list of Google Docs and their respective IDs, run
     ("u n" "utilitarianism-en" (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))]
    ["Longtermism"
     ("l s" "longtermism-es"    (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))]
-   ["Essays on Longtermism"
-    ("e e" "essays-es"         (lambda () (interactive) (org-roam-extras-id-goto "96C4B5CC-0E85-4AEC-A5C2-95996A09DCEB")))]
    ["Radio Altruismo Eficaz"
     ("rae" "rae"               (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
    ["Misc"

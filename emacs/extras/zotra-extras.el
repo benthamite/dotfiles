@@ -93,7 +93,7 @@ to get the entry.
   (ebib-extras-reload-database-no-confirm ebib--cur-db)
   (ebib--update-buffers)
   (ebib zotra-extras-most-recent-bibfile bibkey)
-  (ebib--index-sort "Timestamp" 'descend)
+  (ebib-extras-sort 'Timestamp)
   (goto-char (point-min))
   (ebib-extras-open-key bibkey)
   ;; we add this so that the latest entry is sorted in the bibtex

@@ -939,7 +939,7 @@ If called interactively, open the entry. Otherwise, return it as a string."
     (ebib file key)
     (ebib-edit-entry)))
 
-(defun ebib-extras-sort-toggle (&optional state)
+(defun ebib-extras-sort (&optional state)
   "Sort Ebib index buffer by STATE.
 If STATE is nil, toggle between the relevant states."
   (interactive)

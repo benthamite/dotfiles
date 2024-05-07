@@ -27,12 +27,9 @@
 
 ;;; Code:
 
-(require 'bibtex-extras)
-(require 'doi-utils)
-(require 'ebib-utils)
-(require 'eww-extras)
+(require 'ebib)
+(require 'ebib-extras)
 (require 'paths)
-(require 'tlon-babel-tts)
 (require 'zotra)
 
 ;;;; Variables
@@ -56,6 +53,8 @@ to get the entry.
     (zotra-add-entry url-or-search-string entry-format bibfile)
     (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey)))
 
+(declare-function eww-extras-url-to-pdf "eww-extras")
+(declare-function eww-extras-url-to-html "eww-extras")
 (defun zotra-extras-url-full-capture (&optional url)
   "Add URL to bibfile and generate associated PDF and HTML files."
   (interactive)
@@ -91,9 +90,9 @@ to get the entry.
   ;; we add this so that the latest entry is sorted in the bibtex
   ;; file, instead of remaining at the end of it
   (ebib-save-current-database t)
-  (if (y-or-n-p "Are the `type', `author', `date' and `title' fields correct? ")
+  (if (y-or-n-p "Are the `type' and `=key=' fields correct? ")
       (ebib-extras-process-entry)
-    (message "Fix the `type', `author', `date' and `title' fields, then run `ebib-extras-process-entry'.")))
+    (message "Fix the relevant fields, then run `ebib-extras-process-entry'.")))
 
 ;;;;; Cleanup
 

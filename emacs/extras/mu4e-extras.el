@@ -47,6 +47,14 @@
   :type 'string
   :group 'mu4e-extras)
 
+(defcustom mu4e-extras-wide-reply 'prompt
+  "Whether the reply to messages should be \"wide\" (a.k.a. \"reply-to-all\").
+If `prompt', ask the user. If t, always reply to all. If nil, always reply to
+the sender only."
+  :type '(choice (const :tag "Prompt" prompt)
+		 (const :tag "Yes" t)
+		 (const :tag "No" nil)))
+
 ;;;; Functions
 
 (defun mu4e-extras-gmail-fix-flags (mark msg)
@@ -127,13 +135,12 @@ Do not ask for confirmation."
 ;; github.com/danielfleischer/mu4easy#mu4e
 (setf (alist-get 'trash mu4e-marks)
       '(:char ("d" . "▼")
-	      :prompt "dtrash"
-	      :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
-	      ;; Here's the main difference to the regular trash mark, no +T
-	      ;; before -N so the message is not marked as IMAP-deleted:
-	      :action (lambda (docid msg target)
-			(mu4e~proc-move docid
-					(mu4e~mark-check-target target) "+S-u-N"))))
+              :prompt "dtrash"
+              :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
+              ;; Here's the main difference to the regular trash mark, no +T
+              ;; before -N so the message is not marked as IMAP-deleted:
+              :action (lambda (docid msg target)
+                        (mu4e--server-move docid (mu4e--mark-check-target target) "+S-u-N"))))
 
 (defun mu4e-extras-view-in-gmail ()
   "Open Gmail in a browser and view message at point in it."
@@ -190,6 +197,36 @@ Do not ask for confirmation."
   "Set `shr-text' face locally in `mu4ew-view-mode' buffers."
   (when (derived-mode-p 'mu4e-view-mode)
     (face-remap-add-relative 'shr-text :height 0.9)))
+
+(defun mu4e-extras-check-all-mail ()
+  "Check all Gmail channels.
+It takes `mbsync'a while to check all channels, so I run this function less
+frequently than `mu4e-update-mail-and-index', which excludes my archive and
+takes just a couple of seconds."
+  (interactive)
+  (let ((mu4e-get-mail-command "mbsync gmail-all"))
+    (mu4e-update-mail-and-index t)))
+
+(defun mu4e-extras-compose-reply (&optional wide)
+  "Reply to the message at point.
+
+If WIDE is non-nil, make it a \"wide\" reply (a.k.a. \"reply-to-all\"). Else,
+prompt the user for the reply type if `mu4e-extras-wide-reply' is `prompt', make
+it a narrow reply if `mu4e-extras-wide-reply' is nil, and make it a wide reply
+otherwise.."
+  (interactive)
+  (if (mu4e-message-contact-field-matches-me (mu4e-message-at-point) :from)
+      (mu4e-compose-supersede)
+    (let ((recipients 0))
+      (dolist (field '(:to :cc) recipients)
+	(setq recipients
+	      (+ recipients (length (mu4e-message-field-at-point field)))))
+      (if (> recipients 1)
+	  (let* ((wide (or wide (pcase mu4e-extras-wide-reply
+				  ('prompt (y-or-n-p "Reply to all? "))
+				  (_ mu4e-extras-wide-reply)))))
+	    (mu4e-compose-reply wide))
+	(mu4e-compose-reply)))))
 
 ;;;;; Contexts
 
@@ -271,41 +308,6 @@ string."
 	(setq def (if (= count 1) "1" (format "1-%d" count)))
 	(read-string (mu4e-format "%s (default %s): " prompt def)
 		     nil nil def)))))
-
-;; do not prompt for reply to address when there is only one candidate
-(el-patch-defun mu4e~draft-reply-construct-recipients-list (origmsg)
-  "Determine the to/cc recipients for a reply message to a
-mailing-list."
-  (let* ( ;; reply-to-self implies reply-all
-	 (list-post (plist-get origmsg :list-post))
-	 (return-to (or (plist-get origmsg :reply-to) (plist-get origmsg :from)))
-	 (recipnum
-	  (+ (length (mu4e~draft-create-to-lst origmsg))
-	     (length (mu4e~draft-create-cc-lst origmsg t t))))
-	 (sender (mu4e-contact-full (car return-to)))
-	 (reply-type
-	  (el-patch-swap
-	    (mu4e-read-option
-	     "Reply to mailing-list "
-	     `( (,(format "all %d recipient(s)" recipnum)    . all)
-		(,(format "list-only (%s)" (cdar list-post)) . list-only)
-		(,(format "sender-only (%s)" sender)         . sender-only)))
-	    (if (= recipnum 1)
-		'list-only
-	      (mu4e-read-option
-	       "Reply to mailing-list "
-	       `( (,(format "all %d recipient(s)" recipnum)    . all)
-		  (,(format "list-only (%s)" (cdar list-post)) . list-only)
-		  (,(format "sender-only (%s)" sender)         . sender-only)))))))
-    (cl-case reply-type
-      (all
-       (concat
-	(mu4e~draft-header "To" (mu4e~draft-recipients-construct :to origmsg))
-	(mu4e~draft-header "Cc" (mu4e~draft-recipients-construct :cc origmsg t t))))
-      (list-only
-       (mu4e~draft-header "To" list-post))
-      (sender-only
-       (mu4e~draft-header "To" return-to)))))
 
 (provide 'mu4e-extras)
 ;;; mu4e-extras.el ends here

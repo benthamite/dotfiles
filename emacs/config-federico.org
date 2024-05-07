@@ -6,48 +6,49 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
-(
- aide
- anki-editor
- auto-commit-mode
- bbdb
- copilot
- corfu-doc-terminal
- corfu-terminal
- ;; display-wttr
- erc
- espotify
- ;; flycheck
- ;; flymake
- ;; frame
- ;; forge
- git-auto-commit-mode
- hammy
- ;; jinx
- keytar
- midnight
- mixed-pitch
- mu4e
- ;; mullvad
- ns-win
- org-gcal
- ;; org-roam
- org2blog
- orgmdb
- outline
- ;; pdf-tools
- puni
- remember
- server
- slack
- spelling
- ;; tlon-init
- theme-loaddefs
- twittering-mode
- vulpea
- ;; window
- ;; yasnippet
- )
+(setq tlon-init-excluded-packages
+      '(
+        aide
+        anki-editor
+        auto-commit-mode
+        bbdb
+        copilot
+        corfu-doc-terminal
+        corfu-terminal
+        ;; display-wttr
+        erc
+        espotify
+        ;; flycheck
+        ;; flymake
+        ;; frame
+        ;; forge
+        git-auto-commit-mode
+        hammy
+        ;; jinx
+        keytar
+        midnight
+        mixed-pitch
+        mu4e
+        ;; mullvad
+        ns-win
+        org-gcal
+        ;; org-roam
+        org2blog
+        orgmdb
+        outline
+        ;; pdf-tools
+        puni
+        remember
+        server
+        slack
+        spelling
+        ;; tlon-init
+        theme-loaddefs
+        twittering-mode
+        vulpea
+        ;; window
+        ;; yasnippet
+        ))
 #+end_src
 
 * paths
@@ -557,6 +558,7 @@
 (with-eval-after-load 'tlon-babel
   (setq tlon-babel-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
   (setq tlon-babel-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
+  (setq tlon-babel-split-repo 'never)
   (tlon-babel-init))
 #+end_src
 
@@ -580,7 +582,7 @@
 (with-eval-after-load 'doom-modeline
   ;; buffer names are currently shown via the `breadcrumbs' package
   ;; to display them in the modeline, uncomment the line below and disable the `bradcrumbs' package
-  ;; (setq doom-modeline-buffer-name t) ; 
+  ;; (setq doom-modeline-buffer-name t) ;
   (setq doom-modeline-buffer-file-name-style 'truncate-nil)) ; FEDE ==> Full filenames, please!
 #+end_src
 
@@ -647,52 +649,7 @@ Disable hl-sentence because I do not like it...
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'faces-extras
   (setq faces-extras-fixed-pitch-font "Iosevka Nerd Font")
-  (setq faces-extras-fixed-pitch-size 150)
-  (setq faces-extras-variable-pitch-size 160)
-
-  (remove-hook 'org-mode-hook #'faces-extras-load-custom-faces)
-
-  (defun faces-extras-load-custom-faces ()
-    "My custom faces, to be used in conjunction with theme."
-    (interactive)
-    (set-face-attribute 'default nil :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
-    (set-face-attribute 'fixed-pitch nil :family faces-extras-fixed-pitch-font :height 1.0)
-    (set-face-attribute 'variable-pitch nil :family faces-extras-variable-pitch-font :height faces-extras-variable-pitch-size)
-    (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-property-value nil :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-todo nil :family faces-extras-fixed-pitch-font :height 1.0)
-    (set-face-attribute 'org-archived nil :family faces-extras-fixed-pitch-font :height 0.9)
-    (set-face-attribute 'org-document-title nil :family faces-extras-fixed-pitch-font :height 1.0)
-    (set-face-attribute 'org-special-keyword nil :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
-    (set-face-attribute 'org-code nil :family faces-extras-fixed-pitch-font :height 1.0)
-    (set-face-attribute 'org-level-1 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-2 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-3 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-4 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-5 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-6 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-7 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-8 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-date nil :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-modern-date-active nil :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-modern-date-inactive nil :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-modern-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
-    (set-face-attribute 'org-quote nil :family faces-extras-variable-pitch-font :height  faces-extras-variable-pitch-size)
-    (set-face-attribute 'corfu-default nil :family faces-extras-fixed-pitch-font :height 1)
-    (set-face-attribute 'gh-notify-notification-repo-face nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'gh-notify-notification-unread-face nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal :foreground "#00a6c9")
-    (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
-    (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
-    (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
-    (set-face-attribute 'window-divider nil :foreground (face-attribute 'mode-line-inactive :background))
-    (set-face-attribute 'tab-bar nil
-                        ;; slightly increase the width of the tab-bar
-                        :box `(:line-width 4 :color ,(face-attribute 'mode-line :background) :style nil)
-                        :background (face-background 'mode-line)))
-
-  (add-hook 'org-mode-hook #'faces-extras-load-custom-faces)
-  (faces-extras-load-custom-faces))
+  (setq faces-extras-fixed-pitch-size 150))
 #+end_src
 
 ** tareas

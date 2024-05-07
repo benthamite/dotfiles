@@ -28,11 +28,9 @@
 ;;; Code:
 
 (require 'avy)
-(require 'dired)
-(require 'ebib)
 (require 'el-patch)
-(require 'mu4e-headers)
 (require 'simple-extras)
+(require 'use-package-extras)
 
 ;;;; Functions
 
@@ -76,6 +74,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (call-interactively (lambda! (avy-goto-line-below offset bottom-up)))
   (end-of-line))
 
+(declare-function dired-find-alternate-file "dired")
 (defun avy-extras-dired-find-file ()
   "In Dired, visit the file or directory in selected line."
   (interactive)
@@ -83,6 +82,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (avy-goto-line)
   (dired-find-alternate-file))
 
+(declare-function ebib-edit-entry "ebib")
 (defun avy-extras-ebib-view-entry ()
   "In Ebib, view the entry in selected line."
   (interactive)
@@ -90,6 +90,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (avy-goto-line)
   (ebib-edit-entry))
 
+(declare-function mu4e-headers-view-message "mu4e-headers")
 (defun avy-extras-headers-view-message ()
   "In mu4e, view the message in selected line."
   (interactive)

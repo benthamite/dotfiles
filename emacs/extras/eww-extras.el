@@ -27,14 +27,8 @@
 
 ;;; Code:
 
-(require 'browse-url-extras)
 (require 'eww)
-(require 'f)
-(require 'ffap)
-(require 'macos)
-(require 'org-web-tools-extras)
 (require 'paths)
-(require 'prot-eww)
 (require 'simple-extras)
 
 ;;;; User options
@@ -55,9 +49,26 @@
   :group 'eww-extras)
 
 (defcustom eww-extras-chrome-data-dir
-  (expand-file-name "~/Library/Application Support/Google/Chrome/Default")
-  "Directory where Chrome data is stored."
+  (expand-file-name "~/Library/Application Support/Google/Chrome")
+  "The directory where Chrome data is stored."
   :type 'directory
+  :group 'eww-extras)
+
+(defcustom eww-extras-chrome-data-dir-copy
+  (expand-file-name "~/Google Drive/Apps/Chrome")
+  "A copy of the directory where Chrome data is stored.
+A headless Chrome session will fail to authenticate if Chrome is running,
+because the database will be locked. So we make a copy of the relevant
+directory by running `eww-extras-chrome-copy-data-dir'."
+  :type 'directory
+  :group 'eww-extras)
+
+(defcustom eww-extras-rsync-command
+  "rsync -av '%s' '%s'"
+  "The `rsync' command to make a copy of the Chrome data directory.
+The placeholders `%s' are replaced by with the source and destination
+directories."
+  :type 'string
   :group 'eww-extras)
 
 ;;;; Functions
@@ -66,6 +77,7 @@
 (declare-function bibtex-extras-get-key "bibtex-extras")
 (declare-function ebib-extras-get-field "ebib-extras")
 (declare-function ebib-db-get-filename "ebib-db")
+(declare-function org-web-tools-extras-org-title-for-url "org-web-tools-extras")
 (defun eww-extras-url-to-file (type &optional url callback)
   "Generate file of TYPE for URL and take ACTION.
 CALLBACK is a function called when the process concludes. The function takes two
@@ -77,7 +89,7 @@ associated with the PDF."
 		  ((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "=key="))
 		  (_ (pcase type
 		       ("pdf" (buffer-name))
-		       ("html" (prot-eww--sluggify (org-web-tools-extras-org-title-for-url url)))))))
+		       ("html" (simple-extras-slugify (org-web-tools-extras-org-title-for-url url)))))))
 	 (file-name (file-name-with-extension title type))
 	 (output-file (file-name-concat paths-dir-downloads file-name))
 	 (bibtex-file (pcase major-mode
@@ -90,16 +102,30 @@ associated with the PDF."
 		   :command (list shell-file-name shell-command-switch
 				  (format
 				   (pcase type
-				     ("pdf" "'%s' --user-data-dir='%s' --print-to-pdf --no-pdf-header-footer --headless %s --print-to-pdf='%s'")
-				     ("html" "'%s' --user-data-dir='%s' --headless --dump-dom '%s' > %s"))
-				   browse-url-chrome-program eww-extras-chrome-data-dir url output-file)))))
+				     ("pdf" "'%s' --headless --user-data-dir='%s' --no-pdf-header-footer '%s' --print-to-pdf='%s'")
+				     ("html" "'%s' --headless --user-data-dir='%s' --dump-dom '%s' > %s"))
+				   browse-url-chrome-program eww-extras-chrome-data-dir-copy url output-file)))))
     (message "Getting %s file..." type)
     (set-process-sentinel process
 			  (lambda (_proc event)
 			    (if (string= event "finished\n")
-				(when callback
-				  (funcall callback output-file bibtex-file))
+				(progn
+				  (message "File downloaded.")
+				  (when callback
+				    (funcall callback output-file bibtex-file)))
 			      (user-error "Could not get file"))))))
+
+(defun eww-extras-chrome-copy-data-dir ()
+  "Make a copy of the Chrome data directory.
+This command needs to be run to make an initial copy of the Chrome data
+directory, and then every once in a while to keep the directory updated. The
+initial copy may take a while if the data directory is very big, but subsequent
+updates should be fast."
+  (interactive)
+  (when (y-or-n-p "Make sure you closed all instances of Chrome and ensured that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories. Also, if you are running this command for the first time—i.e. if there is currently no copy of the Chrome data directory in your system—note that Emacs will become unresponsive for a few minutes. Proceed? ")
+    (shell-command (format eww-extras-rsync-command
+			   eww-extras-chrome-data-dir
+			   (file-name-directory eww-extras-chrome-data-dir-copy)))))
 
 (defun eww-extras-url-to-html (&optional url callback)
   "Generate HTML of URL, then run CALLBACK function."
@@ -120,11 +146,15 @@ The exceptions are listed in `eww-extras-readable-exceptions'."
 	    (dolist (url eww-extras-readable-exceptions)
 	      (when (string-match-p url current-url)
 		(throw 'exception t))))))
-    (unless exception
+    (unless (or exception
+		;; if `:source' is nil, `eww-readable' will throw an error
+		(not (plist-get eww-data :source)))
       (eww-readable))))
 
 (add-hook 'eww-after-render-hook #'eww-extras-readable-autoview)
 
+(declare-function ffap-url-p "ffap")
+(declare-function browse-url-extras-write-url-to-file "browse-url-extras")
 (defun eww-extras-add-domain-to-readable-exceptions ()
   "Prompt for a URL and add its domain to the list of `eww-readable' exceptions.
 If buffer is visiting a URL or if there is a URL in the kill ring, use its
@@ -134,7 +164,7 @@ domain as the initial prompt input."
 	 (domain (when url (url-domain (url-generic-parse-url url))))
 	 (file eww-extras-readable-exceptions-file)
 	 (selection (read-string (format "Add to `%s': " (file-name-nondirectory file)) domain)))
-    (browse-url-extras--write-url-to-file selection file)
+    (browse-url-extras-write-url-to-file selection file)
     (eww-extras-set-readable-exceptions-from-file)
     (eww-reload)))
 
@@ -171,6 +201,8 @@ With prefix ARG is passed, open in new EWW buffer."
 	(eww (current-kill 0)))
     (eww (current-kill 0))))
 
+(declare-function s-split "s")
+(declare-function s-join "s")
 (defun eww-extras-go-up-url-hierarchy ()
   "Go up the URL hierarchy."
   (interactive)
@@ -208,6 +240,9 @@ With prefix ARG is passed, open in new EWW buffer."
 		   (url-fullness url)))
     (eww-browse-url (url-recreate-url new-url))))
 
+(declare-function elfeed-tube-fetch "elfeed-tube")
+(declare-function macos-open-app "macos")
+(declare-function macos-app-is-open-p "macos")
 (defun eww-extras-browse-youtube (url &optional player)
   "For YouTube URLs, show its transcript and open video with PLAYER.
 If PLAYER is nil, default to `mpv'."
@@ -240,8 +275,20 @@ If PLAYER is nil, default to `mpv'."
   "Download file from the relevant page of Anna’s Archive."
   (interactive)
   (let* ((url (eww-extras-get-url-in-link "Download now"))
-	 (file (file-name-nondirectory url)))
-    (url-copy-file url (file-name-concat paths-dir-downloads file) t)))
+	 (raw-file (file-name-nondirectory url))
+	 (sans-extension (file-name-sans-extension raw-file))
+	 (extension (file-name-extension raw-file))
+	 (file (file-name-with-extension (substring sans-extension 0 100) extension)))
+    (make-thread (lambda ()
+		   "Copy URL to the Downloads folder asynchronously."
+		   (url-copy-file url (file-name-concat paths-dir-downloads file) t)))))
+
+(declare-function zotra-extras-add-entry "zotra-extras")
+(defun eww-extras-add-entry ()
+  "Add current URL to bibfile and generate associated PDF and HTML files."
+  (interactive)
+  (when (derived-mode-p 'eww-mode)
+    (zotra-extras-add-entry (plist-get eww-data :url))))
 
 (provide 'eww-extras)
 

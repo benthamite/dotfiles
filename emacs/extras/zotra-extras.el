@@ -27,8 +27,6 @@
 
 ;;; Code:
 
-(require 'ebib)
-(require 'ebib-extras)
 (require 'paths)
 (require 'zotra)
 
@@ -42,6 +40,8 @@
 
 ;;;; Functions
 
+(defvar ebib--cur-db)
+(declare-function ebib "ebib")
 (defun zotra-extras-add-entry (&optional url-or-search-string entry-format bibfile)
   "Like `zotra-extras-add-entry', but set BIBFILE and open in Ebib.
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry'
@@ -77,6 +77,15 @@ to get the entry.
 
 ;;;;; Ebib
 
+(declare-function ebib-switch-to-database-nth "ebib")
+(declare-function ebib-save-current-database "ebib")
+(declare-function ebib--update-buffers "ebib")
+(declare-function ebib-extras-open-or-switch "ebib-extras")
+(declare-function ebib-extras-get-db-number "ebib-extras")
+(declare-function ebib-extras-reload-database-no-confirm "ebib-extras")
+(declare-function ebib-extras-sort "ebib-extras")
+(declare-function ebib-extras-open-key "ebib-extras")
+(declare-function ebib-extras-process-entry "ebib-extras")
 (defun zotra-extras-open-in-ebib (bibkey)
   "Open BIBKEY in Ebib after adding entry via `zotra-add-entry'."
   (ebib-switch-to-database-nth (ebib-extras-get-db-number zotra-extras-most-recent-bibfile))
@@ -96,7 +105,11 @@ to get the entry.
 
 ;;;;; Cleanup
 
+(defvar ebib-timestamp-format)
 (declare-function org-ref-clean-bibtex-entry "org-ref-bibtex")
+(declare-function bibtex-set-field "doi-utils")
+(declare-function bibtex-extras-convert-titleaddon-to-journaltitle "bibtex-extras")
+(declare-function bibtex-extras-get-key "bibtex-extras")
 (defun zotra-extras-after-add-process-bibtex ()
   "Process newly added bibtex entry."
   ;; TODO: check that there are no unsaved changes in

@@ -32,7 +32,18 @@
 (require 'ebib)
 (require 'filenotify)
 (require 'paths)
+(require 'simple-extras)
 (require 'shut-up)
+
+;;;; Variables
+
+(defvar ebib-extras-sort-states
+  '(Timestamp Author Title)
+  "List of states for sorting the Ebib index buffer.")
+
+(defvar ebib-extras-sort-state
+  (car ebib-extras-sort-states)
+  "State for sorting the Ebib index buffer.")
 
 ;;;; Functions
 
@@ -928,25 +939,21 @@ If called interactively, open the entry. Otherwise, return it as a string."
     (ebib file key)
     (ebib-edit-entry)))
 
-(defvar ebib-extras-sort-toggle 'Title)
-
-(defun ebib-extras-sort-toggle ()
-  "Toggle between sorting by timestamp, author, and title."
+(defun ebib-extras-sort-toggle (&optional state)
+  "Sort Ebib index buffer by STATE.
+If STATE is nil, toggle between the relevant states."
   (interactive)
   (ebib--execute-when
     (entries
-     (let ((order 'ascend))
-       (pcase ebib-extras-sort-toggle
-	 ('Timestamp
-	  (setq ebib-extras-sort-toggle 'Author))
-	 ('Author
-	  (setq ebib-extras-sort-toggle 'Title))
-	 ('Title
-	  (setq ebib-extras-sort-toggle 'Timestamp)
-	  (setq order 'descend)))
-       (ebib--index-sort (symbol-name ebib-extras-sort-toggle) order)
+     (let* ((order 'ascend)
+	    (state (or state ebib-extras-sort-state))
+	    (next (simple-extras-get-next-element state ebib-extras-sort-states)))
+       (when (string= state "Timestamp")
+	 (setq order 'descend))
+       (ebib--index-sort (symbol-name state) order)
        (goto-char (point-min))
-       (message (format "Sorting by %s" ebib-extras-sort-toggle))))
+       (message (format "Sorting by %s" state))
+       (setq ebib-extras-sort-state next)))
     (default
      (beep))))
 

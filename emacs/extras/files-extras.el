@@ -499,6 +499,13 @@ current helpful buffer displays, then kill the buffer."
     (insert-file-contents file)
     (split-string (buffer-string) "\n" t)))
 
+(defun files-extras-list-to-lines (list file)
+  "Write LIST to FILE, one element per line."
+  (with-temp-buffer
+    (dolist (element list)
+      (insert (format "%s\n" element)))
+    (write-file file)))
+
 ;;;;; Dispatcher
 
 ;;;###autoload (autoload 'files-extras-dispatch "files-extras" nil t)

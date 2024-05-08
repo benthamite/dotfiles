@@ -7234,13 +7234,14 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp
 (use-package chatgpt-shell
+  :elpaca (chatgpt-shell :files ("*.el"))
   :after gptel
   :demand t
   :config
-  (require 'dall-e-shell)
   (setq chatgpt-shell-openai-key gptel-api-key)
   (setq dall-e-shell-openai-key gptel-api-key)
-  (setq shell-maker-transcript-default-path gptel-extras-dir))
+  (setq shell-maker-transcript-default-path gptel-extras-dir)
+  (require 'dall-e-shell))
 #+end_src
 
 ** gpt-commit

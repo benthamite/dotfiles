@@ -4,7 +4,7 @@
 # contributor: Pablo Stafforini
 # --
 `(format-time-string "%Y-%m-%d")`$6 ${1:recipient}
-    Expenses:${5:account}  ${2:amount} ${3:$$(yas-completing-read "Currency: " ledger-prices-currencies)} ; ${4:details}
+    Expenses:${5:account}  ${2:amount} ${3:$$(yas-completing-read "Currency: " ledger-mode-extras-currencies)} ; ${4:details}
     Liabilities:Mom:Ciudad
 
 $0

@@ -6253,6 +6253,7 @@ To populate the database of historical prices:
   :config
   (setq ledger-default-date-format ledger-iso-date-format)
   (setq ledger-reconcile-default-commodity "ARS")
+  (setq ledger-mode-extras-currencies '("USD" "EUR" "GBP" "MXN" "ARS"))
   (setq ledger-schedule-file paths-file-tlon-ledger-schedule-file)
   (setq ledger-schedule-look-forward 0)
   (setq ledger-schedule-look-backward 30)
@@ -6376,9 +6377,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :config
   (setq ledger-prices-api-key-finnhub (auth-source-pass-get 'secret "chrome/api.finnhub.io"))
   (setq ledger-prices-api-key-exchangerates (auth-source-pass-get 'secret "chrome/api.exchangeratesapi.io"))
-  (setq ledger-prices-pricedb-file paths-file-ledger-db)
-  (setq ledger-prices-stocks '("NVDA" "TSLA"))
-  (setq ledger-prices-currencies '("USD" "EUR" "GBP" "MXN" "ARS")))
+  (setq ledger-prices-pricedb-file paths-file-ledger-db))
 #+end_src
 
 * translation
@@ -11427,6 +11426,8 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 (use-package elfeed
   :config
   (setq-default elfeed-search-filter "+unread")
+  (setq elfeed-curl-timeout 5)
+  (setq elfeed-curl-max-connections 4)
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
   (add-hook 'elfeed-show-mode-hook #'visual-line-mode)

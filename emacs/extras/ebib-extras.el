@@ -1011,10 +1011,10 @@ is created following the same schema as notes created with
     (default
      (beep))))
 
-(defvar tlon-babel-refs-file-fluid)
+(defvar tlon-refs-file-fluid)
 (defvar ebib-extras-auto-save-files
   `(,paths-file-personal-bibliography-new
-    ,tlon-babel-refs-file-fluid)
+    ,tlon-refs-file-fluid)
   "List of database files that should be auto-saved.
 The big files containing the `old' bibliographic entries are excluded.")
 
@@ -1044,12 +1044,12 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 	   (message "reloading database")
 	   (ebib-extras-reload-database-no-confirm db)))))))
 
-(defvar tlon-babel-refs-file-stable)
+(defvar tlon-refs-file-stable)
 (defvar ebib-extras-db-numbers
   `((,paths-file-personal-bibliography-new . 1)
     (,paths-file-personal-bibliography-old . 2)
-    (,tlon-babel-refs-file-fluid . 3)
-    (,tlon-babel-refs-file-stable . 4))
+    (,tlon-refs-file-fluid . 3)
+    (,tlon-refs-file-stable . 4))
   "Association list of database files and their numbers.")
 
 (defun ebib-extras-get-db-number (file)
@@ -1121,7 +1121,7 @@ If applicable, open external website to set rating there as well."
   (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
     (citar-extras-goto-bibtex-entry key)
     (bibtex-extras-move-entry-to-tlon)
-    (ebib tlon-babel-refs-file-fluid key)
+    (ebib tlon-refs-file-fluid key)
     (ebib-extras-open-key key)))
 
 (defun ebib-extras-get-field (field)

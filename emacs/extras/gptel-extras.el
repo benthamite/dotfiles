@@ -145,7 +145,7 @@ The relevant information has been obtained from the following websites:
 ;;;; Functions
 
 (defvar gptel-extras-ai-models)
-(declare-function tlon-babel-lookup "tlon-babel-core")
+(declare-function tlon-lookup "tlon-core")
 ;; adapted from the `:reader' lambda of `transient-infix-set' in `gptel-transient.el'
 (defun gptel-extras-model-config (globally &optional backend-name model-name)
   "Configure `gptel' for BACKEND-NAME and MODEL-NAME.
@@ -161,10 +161,10 @@ called with a prefix argument, configure it globally."
 	 (models-with-cost (mapcar (lambda (backend)
 				     (cons (format "%-25s  $ %5.2f  %8s  %6s  %-80s"
 						   backend
-						   (tlon-babel-lookup gptel-extras-ai-models :cost :model backend)
-						   (tlon-babel-lookup gptel-extras-ai-models :last-update :model backend)
-						   (tlon-babel-lookup gptel-extras-ai-models :tokens :model backend)
-						   (tlon-babel-lookup gptel-extras-ai-models :description :model backend))
+						   (tlon-lookup gptel-extras-ai-models :cost :model backend)
+						   (tlon-lookup gptel-extras-ai-models :last-update :model backend)
+						   (tlon-lookup gptel-extras-ai-models :tokens :model backend)
+						   (tlon-lookup gptel-extras-ai-models :description :model backend))
 					   backend))
 				   backend-models))
 	 (model-name (or model-name
@@ -178,7 +178,7 @@ called with a prefix argument, configure it globally."
 
 (defun gptel-extras-get-cost ()
   "Get the cost of prompting the current model."
-  (let* ((cost-per-1m (tlon-babel-lookup gptel-extras-ai-models :cost :model gptel-model))
+  (let* ((cost-per-1m (tlon-lookup gptel-extras-ai-models :cost :model gptel-model))
 	 (words (if (region-active-p)
 		    (count-words (region-beginning) (region-end))
 		  (count-words (point-min) (point))))

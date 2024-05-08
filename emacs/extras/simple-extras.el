@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(require 'no-littering)
 (require 'paths)
 
 ;;;; Variables
@@ -35,7 +36,6 @@
   "Extensions for `simple'."
   :group 'simple-extras)
 
-(defvar no-littering-var-directory)
 (defcustom simple-extras-new-buffer-auto-save-dir
   (file-name-concat no-littering-var-directory "auto-save/new-buffers/")
   "Directory in which to store auto-save files for new, non-file-visiting buffers."

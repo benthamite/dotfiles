@@ -10484,7 +10484,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   :demand t
   :config
   (require 'mu4e-contrib)
-  ;; (mu4e-debug t) ; uncomment when debugging
+  ;; (setq mu4e-debug t) ; uncomment when debugging
   (setq mu4e-index-update-error-warning nil) ; set to `t' when debugging
   (setq mu4e-split-view 'single-window)
   (setq mu4e-headers-show-target nil)
@@ -10514,7 +10514,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   ;; performance improvements (but with downsides)
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
-  (setq mu4e-index-cleanup t) ; nil improves performance
+  (setq mu4e-index-cleanup nil) ; nil improves performance
   (setq mu4e-index-lazy-check nil) ; t improves performance
 
   (setq mu4e-compose-context-policy 'ask)
@@ -10528,7 +10528,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
   (faces-extras-set-and-store-face-attributes
    '((mu4e-compose-separator-face :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
-
 
   (mu4e t)
 

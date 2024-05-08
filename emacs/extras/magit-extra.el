@@ -77,7 +77,7 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
     (re-search-forward "Changes to be committed:\n#.*?:.  \\(.*/?.*\\)$" nil t)
     (let ((file (match-string-no-properties 1)))
       (pcase path
-	('full (let ((repo (file-name-directory (directory-file-name default-directory))))
+	('full (let ((repo (file-name-directory (directory-file-name (files-extras-buffer-file-name)))))
 		 (file-name-concat repo file)))
 	('sans-dir (file-name-nondirectory file))
 	(_ file)))))

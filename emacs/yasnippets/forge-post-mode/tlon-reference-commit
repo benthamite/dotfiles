@@ -3,4 +3,4 @@
 # key: trc
 # contributor: Pablo Stafforini
 # --
-`(format "tlon-team/%s" (completing-read "repo: " (tlon-babel-repo-lookup-all :name)))`@$1
+`(format "tlon-team/%s" (completing-read "repo: " (tlon-repo-lookup-all :name)))`@$1

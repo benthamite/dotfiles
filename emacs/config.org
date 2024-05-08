@@ -329,7 +329,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ledger-mode-extras][ledger-mode-extras]]
   - [[#ledger-prices][ledger-prices]]
 - [[#translation][translation]]
-  - [[#tlon-babel][tlon-babel]]
+  - [[#tlon][tlon]]
   - [[#go-translate][go-translate]]
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict-ng][goldendict-ng]]
@@ -5960,8 +5960,8 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
 (use-package grammarly
   :defer 7
   :config
-  (setq grammarly-username tlon-babel-email-shared)
-  (setq grammarly-password (auth-source-pass-get 'secret (concat "tlon/core/grammarly.com/" tlon-babel-email-shared))))
+  (setq grammarly-username tlon-email-shared)
+  (setq grammarly-password (auth-source-pass-get 'secret (concat "tlon/core/grammarly.com/" tlon-email-shared))))
 #+end_src
 
 ** lsp-grammarly
@@ -6385,46 +6385,46 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 :ID:       1A1D70D3-DBB4-4EEC-A83E-15FD4348ED94
 :END:
 
-** tlon-babel
+** tlon
 :PROPERTIES:
 :ID:       5EDD6F28-3299-4D90-83E1-C7476176277D
 :END:
 
-/[[https://github.com/tlon-team/tlon-babel][tlon-babel]] is a set of Emacs commands that my team uses in various contexts./
+/[[https://github.com/tlon-team/tlon][tlon]] is a set of Emacs commands that my team uses in various contexts./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package tlon-babel
-  :elpaca (tlon-babel
+(use-package tlon
+  :elpaca (tlon
            :host github
-           :repo "tlon-team/tlon-babel"
+           :repo "tlon-team/tlon"
            :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :config
-  (add-hook 'tlon-init-post-init-hook #'tlon-babel-init)
-  (setq tlon-babel-split-repo t)
+  (add-hook 'tlon-init-post-init-hook #'tlon-init)
+  (setq tlon-split-repo t)
 
   :general
-  ("H-r" 'tlon-babel-dispatch
-   "H-?" 'tlon-babel-md-insert-mdx-cite)
+  ("H-r" 'tlon-dispatch
+   "H-?" 'tlon-md-insert-mdx-cite)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
     magit-status-mode-map)
-   "," 'tlon-babel-visit-counterpart-or-capture)
+   "," 'tlon-visit-counterpart-or-capture)
   (magit-status-mode-map
-   "s-r" 'tlon-babel-commit-when-slug-at-point)
+   "s-r" 'tlon-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
-   "'" 'tlon-babel-open-forge-file)
-  ;; revise; consider using `tlon-babel-md-menu'
+   "'" 'tlon-open-forge-file)
+  ;; revise; consider using `tlon-md-menu'
   ((gfm-mode-map markdown-mode-map)
-   "H-;" 'tlon-babel-md-menu
-   "A-s-e" 'tlon-babel-yaml-edit-field
-   "s-c" 'tlon-babel-copy-dwim
-   "s-l" 'tlon-babel-md-insert-locator
-   "s-u" 'tlon-babel-md-insert-entity
-   "A-C-s-SPC" 'tlon-babel-md-beginning-of-buffer-dwim
-   "A-C-s-<tab>" 'tlon-babel-md-end-of-buffer-dwim))
+   "H-;" 'tlon-md-menu
+   "A-s-e" 'tlon-yaml-edit-field
+   "s-c" 'tlon-copy-dwim
+   "s-l" 'tlon-md-insert-locator
+   "s-u" 'tlon-md-insert-entity
+   "A-C-s-SPC" 'tlon-md-beginning-of-buffer-dwim
+   "A-C-s-<tab>" 'tlon-md-end-of-buffer-dwim))
 #+end_src
 
 ** go-translate
@@ -6457,7 +6457,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
           ;; (gts-bing-engine)
           ;;(gts-google-engine)
           ;;(gts-google-rpc-engine)
-          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/babel/deepl.com/" tlon-babel-email-shared)) :pro nil)
+          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/babel/deepl.com/" tlon-email-shared)) :pro nil)
           ;; (gts-google-engine :parser (gts-google-summary-parser))
           ;;(gts-google-engine :parser (gts-google-parser))
           ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")
@@ -6594,6 +6594,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
           (strike-out
            (color . "red"))))
 
+  (pdf-cache-prefetch-minor-mode -1)
   (pdf-tools-install t)
 
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
@@ -7181,20 +7182,20 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
            :host github
            :repo "karthink/gptel")
  ; consider moving the email addresses to `paths'
-  :after pass tlon-babel
+  :after pass tlon
   :defer 10
   :config
-  (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-babel-email-shared)))
+  (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
   (setq gptel-default-mode 'org-mode)
 
   (gptel-make-anthropic "Claude"
     :stream t
-    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-babel-email-shared)))
+    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared)))
 
   (gptel-make-gemini "Gemini"
     :stream t
     :key (auth-source-pass-get 'secret
-                               (concat "tlon/core/makersuite.google.com/" tlon-babel-email-shared)))
+                               (concat "tlon/core/makersuite.google.com/" tlon-email-shared)))
 
   :general
   ("M-c" 'gptel-send
@@ -9404,7 +9405,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   :after ebib
   :demand t
   :init
-  (add-hook 'tlon-babel-post-init-hook
+  (add-hook 'tlon-post-init-hook
             (lambda ()
               "Set `bibtex-files after `paths-files-bibliography-all' is set."
               (setq bibtex-files paths-files-bibliography-all)))
@@ -9595,7 +9596,7 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
            :version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
   :defer 5
   :init
-  (add-hook 'tlon-babel-post-init-hook
+  (add-hook 'tlon-post-init-hook
             (lambda ()
               "Set `bibtex-completion-bibliography' after `paths-files-bibliography-all' is set."
               (setq bibtex-completion-bibliography paths-files-bibliography-all)))
@@ -9682,7 +9683,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   :after oc vertico embark marginalia
   :demand t
   :init
-  (add-hook 'tlon-babel-post-init-hook
+  (add-hook 'tlon-post-init-hook
             (lambda ()
               "Set `citar-bibliography' after `paths-files-bibliography-all' is set."
               (setq citar-bibliography paths-files-bibliography-all)))
@@ -9775,7 +9776,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature citar-citeproc
   :demand t
-  :after citar citeproc citar-extras tlon-babel
+  :after citar citeproc citar-extras tlon
   :config
   (setq citar-citeproc-csl-styles-dir paths-dir-tlon-csl-styles)
   (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir))
@@ -9939,7 +9940,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 (use-package ebib
   :defer 5
   :init
-  (add-hook 'tlon-babel-post-init-hook
+  (add-hook 'tlon-post-init-hook
             (lambda ()
               "Set `ebib-preload-bib-files' after `paths-files-bibliography-all' is set."
               (setq ebib-preload-bib-files paths-files-bibliography-all)))
@@ -10052,7 +10053,7 @@ The macro below generates the commands correctly. But attempting to define key b
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ebib-extras
-  :after ebib tlon-babel
+  :after ebib tlon
   :demand t
   :config
   (advice-add 'ebib-init :after #'ebib-extras-auto-reload-databases)
@@ -10118,7 +10119,7 @@ The macro below generates the commands correctly. But attempting to define key b
   :defer 5
   :config
   (setq bib-isbndb-key
-        (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-babel-email-shared)))
+        (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-email-shared)))
   (setq bib-omdb-key
         (auth-source-pass-get 'secret "chrome/omdbapi.com"))
   (setq bib-tmdb-key
@@ -11341,7 +11342,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
   ;; not working
   (require 'consult-web-bing)
   (setq consult-web-bing-api-key (auth-source-pass-get
-                                  "consult-mu" (concat "tlon/core/azure.com/" tlon-babel-email-shared)))
+                                  "consult-mu" (concat "tlon/core/azure.com/" tlon-email-shared)))
   (require 'consult-web-brave)
   (setq consult-web-brave-autosuggest-api-.key (auth-source-pass-get
                                                "consult-mu"
@@ -11546,6 +11547,7 @@ These key bindings produce the same behavior in eww.
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elfeed-tube-mpv
   :after elfeed-tube
+  :disabled
   :demand t
   :config
   (setq elfeed-tube-save-indicator t))
@@ -12294,7 +12296,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            org-roam-db-sync
                            org-extras-id-update-id-locations
                            el-patch-validate-all
-                           tlon-babel-forge-update-all-repos
+                           tlon-forge-update-all-repos
                            org-extras-agenda-switch-to-agenda-current-day
                            org-gcal-sync
                            elfeed-update)))

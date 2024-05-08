@@ -533,7 +533,7 @@ current helpful buffer displays, then kill the buffer."
 (transient-define-prefix files-extras-packages-dispatch ()
   "Dispatcher for personal package files."
   [["Tlön"
-    ("b" "tlon-babel"       (lambda () (interactive) (files-extras-open-elpaca-package "tlon-babel")))
+    ("b" "tlon"       (lambda () (interactive) (files-extras-open-elpaca-package "tlon")))
     ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))]
    ["Personal"
     ("l" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))

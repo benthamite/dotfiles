@@ -72,11 +72,11 @@ to get the entry.
 
 ;;;;; Bibfile
 
-(defvar tlon-babel-refs-file-fluid)
+(defvar tlon-refs-file-fluid)
 (defun zotra-extras-set-bibfile ()
   "Prompt the user to select a value for `org-cite-global-bibliography'."
   (completing-read "Bibfile" (list
-                              tlon-babel-refs-file-fluid
+                              tlon-refs-file-fluid
                               paths-file-personal-bibliography-new)))
 
 ;;;;; Ebib

@@ -491,6 +491,20 @@ current helpful buffer displays, then kill the buffer."
     (while (re-search-forward "\\(^\\s-*$\\)\n\\(\\(^\\s-*$\\)\n\\)+" nil t)
       (replace-match "\n"))))
 
+(defun files-extras-buffer-file-name ()
+  "Return name of file BUFFER is visiting, handling `git-dirs' path."
+  (when-let ((file (buffer-file-name))
+	     (filename (file-name-nondirectory file))
+	     (dir (catch 'found
+		    (dolist (dir (list paths-dir-tlon-repos paths-dir-dropbox))
+		      (let* ((file-adjusted (replace-regexp-in-string "git-dirs/"
+								      (file-relative-name dir "~/")
+								      file))
+			     (dir-adjusted (file-name-directory file-adjusted)))
+			(when (f-dir-p dir-adjusted)
+			  (throw 'found dir-adjusted)))))))
+    (replace-regexp-in-string ".git" "" (file-name-concat dir filename))))
+
 ;;;;; List <> lines
 
 (defun files-extras-lines-to-list (file)

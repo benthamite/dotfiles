@@ -72,11 +72,11 @@ to get the entry.
 
 ;;;;; Bibfile
 
-(defvar tlon-refs-file-fluid)
+(defvar tlon-file-fluid)
 (defun zotra-extras-set-bibfile ()
   "Prompt the user to select a value for `org-cite-global-bibliography'."
   (completing-read "Bibfile" (list
-                              tlon-refs-file-fluid
+                              tlon-file-fluid
                               paths-file-personal-bibliography-new)))
 
 ;;;;; Ebib
@@ -175,8 +175,8 @@ gracefully."
   (let ((urls (files-extras-lines-to-list file)))
     (ebib-save-all-databases)
     (dolist (url urls)
-      (zotra-add-entry url nil tlon-babel-refs-file-fluid))
-    (ebib tlon-babel-refs-file-fluid)
+      (zotra-add-entry url nil tlon-file-fluid))
+    (ebib tlon-file-fluid)
     (ebib-extras-sort 'Timestamp)))
 
 (provide 'zotra-extras)

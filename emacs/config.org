@@ -5034,6 +5034,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   :demand t
   :config
   (setq consult-locate-args "mdfind")
+  (setq consult-ripgrep-args (concat consult-ripgrep-args " --hidden")) ; include hidden files
   (setq consult-narrow-key "<")
   (setq consult-widen-key ">")
 

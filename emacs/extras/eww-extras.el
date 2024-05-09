@@ -260,28 +260,16 @@ If PLAYER is nil, default to `mpv'."
     (save-excursion
       (goto-char (point-min))
       (while (and (not found-url) (not (eobp)))
-        (when-let* ((url (get-text-property (point) 'shr-url))
-                    (link-title (buffer-substring-no-properties
-                                 (point)
-                                 (or (next-single-property-change (point) 'shr-url)
-                                     (point-max)))))
-          (when (string-match-p (regexp-quote title) link-title)
-            (setq found-url url)))
-        (goto-char (or (next-single-property-change (point) 'shr-url)
-                       (point-max)))))
+	(when-let* ((url (get-text-property (point) 'shr-url))
+		    (link-title (buffer-substring-no-properties
+				 (point)
+				 (or (next-single-property-change (point) 'shr-url)
+				     (point-max)))))
+	  (when (string-match-p (regexp-quote title) link-title)
+	    (setq found-url url)))
+	(goto-char (or (next-single-property-change (point) 'shr-url)
+		       (point-max)))))
     found-url))
-
-(defun eww-extras-download-from-annas-archive ()
-  "Download file from the relevant page of Anna’s Archive."
-  (interactive)
-  (let* ((url (eww-extras-get-url-in-link "Download now"))
-	 (raw-file (file-name-nondirectory url))
-	 (sans-extension (file-name-sans-extension raw-file))
-	 (extension (file-name-extension raw-file))
-	 (file (file-name-with-extension (substring sans-extension 0 100) extension)))
-    (make-thread (lambda ()
-		   "Copy URL to the Downloads folder asynchronously."
-		   (url-copy-file url (file-name-concat paths-dir-downloads file) t)))))
 
 (declare-function zotra-extras-add-entry "zotra-extras")
 (defun eww-extras-add-entry ()
@@ -289,6 +277,48 @@ If PLAYER is nil, default to `mpv'."
   (interactive)
   (when (derived-mode-p 'eww-mode)
     (zotra-extras-add-entry (plist-get eww-data :url))))
+
+;;;;;; Anna's Archive
+
+(defun eww-extras-annas-archive-download (&optional string)
+  "Search Anna’s Archive for STRING and download the selected item.
+Requires a paid subscription and authentication. (Yes, you can authenticate with
+eww!)"
+  (interactive)
+  (let ((string (or string (read-string "Search string: ")))
+	(url (format "https://annas-archive.org/search?index=&page=1&q=%s&ext=pdf&sort=" string)))
+    (advice-add 'eww-follow-link :around #'eww-extras-annas-archive-continue-from-selection)
+    (eww url)))
+
+;; TODO: see if the results can be collected via some regex pattern and
+;; presented as minibuffer completion candidates, then the user can make the
+;; selection without having to leave the current buffer
+(defun eww-extras-annas-archive-continue-from-selection (orig-func &rest args)
+  "Advice for `eww-follow-link'.
+ORIG-FUNC is the original function being advised. ARGS are the arguments passed
+to it."
+  (advice-remove 'eww-follow-link #'eww-extras-annas-archive-continue-from-selection)
+  (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
+  (apply orig-func args))
+
+(defun eww-extras-annas-archive-proceed-to-download-page ()
+  "Proceed to the Annas Archive download page."
+  (let ((url (eww-extras-get-url-in-link "Fast Partner Server")))
+    (remove-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
+    (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-download-file)
+    (eww url)))
+
+(defun eww-extras-annas-archive-download-file ()
+  "Handle the download operation after the EWW page has rendered."
+  (let* ((url (eww-extras-get-url-in-link "Download now"))
+	 (raw-file (file-name-nondirectory url))
+	 (sans-extension (file-name-sans-extension raw-file))
+	 (extension (file-name-extension raw-file))
+	 (file (file-name-with-extension (substring sans-extension 0 100) extension)))
+    (remove-hook 'eww-after-render-hook 'eww-extras-annas-archive-download-file)
+    (make-thread (lambda ()
+		   (url-copy-file url (file-name-concat paths-dir-downloads file) t)))
+    (message "Downloading `%s'..." file)))
 
 (provide 'eww-extras)
 

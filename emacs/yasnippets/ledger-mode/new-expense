@@ -3,5 +3,5 @@
 # key: ne
 # contributor: Pablo Stafforini
 # --
-Expenses:${5:account}  ${2:amount} ${3:$$(yas-completing-read "Currency: " ledger-prices-currencies)} ; ${4:details}
+Expenses:${5:account}  ${2:amount} ${3:$$(yas-completing-read "Currency: " ledger-mode-extras-currencies)} ; ${4:details}
     $0

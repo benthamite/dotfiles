@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(require 'no-littering)
 (require 'paths)
 
 ;;;; Variables
@@ -35,7 +36,6 @@
   "Extensions for `simple'."
   :group 'simple-extras)
 
-(defvar no-littering-var-directory)
 (defcustom simple-extras-new-buffer-auto-save-dir
   (file-name-concat no-littering-var-directory "auto-save/new-buffers/")
   "Directory in which to store auto-save files for new, non-file-visiting buffers."
@@ -611,6 +611,18 @@ If PT is non-nil, start at that position instead of `point'."
 	  (setq url nil))
       url)))
 
+(defun simple-extras-remove-trailing-slash (string)
+  "Remove trailing slashes from STRING if present."
+  (if (string-suffix-p "/" string)
+      (substring string 0 -1)
+    string))
+
+(defun simple-extras-simplify-url (url)
+  "Strip down a URL by removing the \"https\", \"www\", and trailing slashes."
+  (simple-extras-remove-trailing-slash
+   (replace-regexp-in-string "\\`\\(https?://\\)?\\(www\\.\\)?" "" url)))
+
+;; TODO: cleanup this
 (defun simple-extras-strip-url ()
   "Strip URL of unnecessary elements."
   (interactive)
@@ -830,6 +842,14 @@ is already narrowed."
         ((derived-mode-p 'ledger-mode)
          (ledger-mode-extras-narrow-to-xact))
         (t (narrow-to-defun))))
+
+(defun simple-extras-get-next-element (element list)
+  "Get the next element in LIST after ELEMENT.
+If ELEMENT is the last element, return the first element."
+  (let ((index (1+ (cl-position element list :test #'equal))))
+    (if (eq index (length list))
+	(car list)
+      (nth index list))))
 
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

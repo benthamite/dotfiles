@@ -32,9 +32,14 @@
 
 ;;;; Variables
 
-(defgroup ledger-extras ()
-  "Extensions for `ledger'."
-  :group 'ledger-extras)
+(defgroup ledger-mode-extras ()
+  "Extensions for `ledger-mode'."
+  :group 'ledger-mode)
+
+(defcustom ledger-mode-extras-currencies '()
+  "List of currencies to get prices for."
+  :group 'ledger-mode-extras
+  :type 'list)
 
 ;;;; Functions
 

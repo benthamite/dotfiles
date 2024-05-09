@@ -329,7 +329,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ledger-mode-extras][ledger-mode-extras]]
   - [[#ledger-prices][ledger-prices]]
 - [[#translation][translation]]
-  - [[#tlon-babel][tlon-babel]]
+  - [[#tlon][tlon]]
   - [[#go-translate][go-translate]]
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict-ng][goldendict-ng]]
@@ -787,7 +787,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :elpaca (tlon-init
            :host github
            :repo "tlon-team/tlon-init"
-           ;; :branch "dev"
+           :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :after paths
   :demand t
@@ -1725,10 +1725,18 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
   :config
   (setq org-modern-table nil) ; doesn’t work well with variable-pitch: github.com/minad/org-modern/issues/99
   (setq org-modern-statistics nil)
-  (setq org-modern-star '("◉" "◉" "◉" "◉" "◉"))
-  (setq org-modern-list '((42 . "○")
-                          (43 . "○")
-                          (45 . "○")))
+  (setq org-modern-star 'fold)
+  (setq org-modern-fold-stars
+        '(("▸" . "▾")
+          ("▸" . "▾")
+          ("▸" . "▾")
+          ("▸" . "▾")
+          ("▸" . "▾")))
+  (setq org-modern-replace-stars '("◉" "◉" "◉" "◉" "◉"))
+  (setq org-modern-list
+        '((42 . "○")
+          (43 . "○")
+          (45 . "○")))
 
   (faces-extras-set-and-store-face-attributes
    '((org-modern-date-active :family faces-extras-fixed-pitch-font :height faces-extras-org-date-height)
@@ -2032,6 +2040,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   (setq doom-modeline-time nil) ; we display time (and date) in the tab bar
   (setq doom-modeline-buffer-name t)
   (setq doom-modeline-buffer-file-name-style 'file-name) ; we display the full path in the header line
+  (setq doom-modeline-check-simple-format t)
   (setq doom-modeline-irc t)
   (setq doom-modeline-irc-buffers t)
   (setq doom-modeline-total-line-number t)
@@ -5025,6 +5034,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   :demand t
   :config
   (setq consult-locate-args "mdfind")
+  (setq consult-ripgrep-args (concat consult-ripgrep-args " --hidden")) ; include hidden files
   (setq consult-narrow-key "<")
   (setq consult-widen-key ">")
 
@@ -5952,8 +5962,8 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
 (use-package grammarly
   :defer 7
   :config
-  (setq grammarly-username tlon-babel-email-shared)
-  (setq grammarly-password (auth-source-pass-get 'secret (concat "tlon/core/grammarly.com/" tlon-babel-email-shared))))
+  (setq grammarly-username tlon-email-shared)
+  (setq grammarly-password (auth-source-pass-get 'secret (concat "tlon/core/grammarly.com/" tlon-email-shared))))
 #+end_src
 
 ** lsp-grammarly
@@ -6185,7 +6195,7 @@ CLOCK: [2021-12-03 Fri 23:10]--[2021-12-04 Sat 01:01] =>  1:51
 CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gdrive
   :elpaca (gdrive
            :host github
@@ -6244,6 +6254,7 @@ To populate the database of historical prices:
   :config
   (setq ledger-default-date-format ledger-iso-date-format)
   (setq ledger-reconcile-default-commodity "ARS")
+  (setq ledger-mode-extras-currencies '("USD" "EUR" "GBP" "MXN" "ARS"))
   (setq ledger-schedule-file paths-file-tlon-ledger-schedule-file)
   (setq ledger-schedule-look-forward 0)
   (setq ledger-schedule-look-backward 30)
@@ -6367,9 +6378,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :config
   (setq ledger-prices-api-key-finnhub (auth-source-pass-get 'secret "chrome/api.finnhub.io"))
   (setq ledger-prices-api-key-exchangerates (auth-source-pass-get 'secret "chrome/api.exchangeratesapi.io"))
-  (setq ledger-prices-pricedb-file paths-file-ledger-db)
-  (setq ledger-prices-stocks '("NVDA" "TSLA"))
-  (setq ledger-prices-currencies '("USD" "EUR" "GBP" "MXN" "ARS")))
+  (setq ledger-prices-pricedb-file paths-file-ledger-db))
 #+end_src
 
 * translation
@@ -6377,46 +6386,47 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 :ID:       1A1D70D3-DBB4-4EEC-A83E-15FD4348ED94
 :END:
 
-** tlon-babel
+** tlon
 :PROPERTIES:
 :ID:       5EDD6F28-3299-4D90-83E1-C7476176277D
 :END:
 
-/[[https://github.com/tlon-team/tlon-babel][tlon-babel]] is a set of Emacs commands that my team uses in various contexts./
+/[[https://github.com/tlon-team/tlon][tlon]] is a set of Emacs commands that my team uses in various contexts./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package tlon-babel
-  :elpaca (tlon-babel
+(use-package tlon
+  :elpaca (tlon
            :host github
            :repo "tlon-team/tlon-babel"
            ;; :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
+  :after paths
   :config
-  (add-hook 'tlon-init-post-init-hook #'tlon-babel-init)
-  (setq tlon-babel-split-repo t)
+  (add-hook 'tlon-init-post-init-hook #'tlon-init)
+  (setq tlon-split-repo t)
 
   :general
-  ("H-r" 'tlon-babel-dispatch
-   "H-?" 'tlon-babel-md-insert-mdx-cite)
+  ("H-r" 'tlon-dispatch
+   "H-?" 'tlon-md-insert-mdx-cite)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
     magit-status-mode-map)
-   "," 'tlon-babel-visit-counterpart-or-capture)
+   "," 'tlon-visit-counterpart-or-capture)
   (magit-status-mode-map
-   "s-r" 'tlon-babel-commit-when-slug-at-point)
+   "s-r" 'tlon-commit-when-slug-at-point)
   ((forge-topic-mode-map magit-status-mode-map)
-   "'" 'tlon-babel-open-forge-file)
-  ;; revise; consider using `tlon-babel-md-menu'
+   "'" 'tlon-open-forge-file)
+  ;; revise; consider using `tlon-md-menu'
   ((gfm-mode-map markdown-mode-map)
-   "H-;" 'tlon-babel-md-menu
-   "A-s-e" 'tlon-babel-yaml-edit-field
-   "s-c" 'tlon-babel-copy-dwim
-   "s-l" 'tlon-babel-md-insert-locator
-   "s-u" 'tlon-babel-md-insert-entity
-   "A-C-s-SPC" 'tlon-babel-md-beginning-of-buffer-dwim
-   "A-C-s-<tab>" 'tlon-babel-md-end-of-buffer-dwim))
+   "H-;" 'tlon-md-menu
+   "A-s-e" 'tlon-yaml-edit-field
+   "s-c" 'tlon-copy-dwim
+   "s-l" 'tlon-md-insert-locator
+   "s-u" 'tlon-md-insert-entity
+   "A-C-s-SPC" 'tlon-md-beginning-of-buffer-dwim
+   "A-C-s-<tab>" 'tlon-md-end-of-buffer-dwim))
 #+end_src
 
 ** go-translate
@@ -6449,7 +6459,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
           ;; (gts-bing-engine)
           ;;(gts-google-engine)
           ;;(gts-google-rpc-engine)
-          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/babel/deepl.com/" tlon-babel-email-shared)) :pro nil)
+          (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/babel/deepl.com/" tlon-email-shared)) :pro nil)
           ;; (gts-google-engine :parser (gts-google-summary-parser))
           ;;(gts-google-engine :parser (gts-google-parser))
           ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")
@@ -6586,6 +6596,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
           (strike-out
            (color . "red"))))
 
+  (pdf-cache-prefetch-minor-mode -1)
   (pdf-tools-install t)
 
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
@@ -7173,20 +7184,20 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
            :host github
            :repo "karthink/gptel")
  ; consider moving the email addresses to `paths'
-  :after pass tlon-babel
+  :after pass tlon
   :defer 10
   :config
-  (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-babel-email-shared)))
+  (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
   (setq gptel-default-mode 'org-mode)
 
   (gptel-make-anthropic "Claude"
     :stream t
-    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-babel-email-shared)))
+    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared)))
 
   (gptel-make-gemini "Gemini"
     :stream t
     :key (auth-source-pass-get 'secret
-                               (concat "tlon/core/makersuite.google.com/" tlon-babel-email-shared)))
+                               (concat "tlon/core/makersuite.google.com/" tlon-email-shared)))
 
   :general
   ("M-c" 'gptel-send
@@ -7225,12 +7236,14 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp
 (use-package chatgpt-shell
+  :elpaca (chatgpt-shell :files ("*.el"))
   :after gptel
   :demand t
   :config
   (setq chatgpt-shell-openai-key gptel-api-key)
   (setq dall-e-shell-openai-key gptel-api-key)
-  (setq shell-maker-transcript-default-path gptel-extras-dir))
+  (setq shell-maker-transcript-default-path gptel-extras-dir)
+  (require 'dall-e-shell))
 #+end_src
 
 ** gpt-commit
@@ -9010,6 +9023,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
     (setq org-roam-database-connector 'sqlite-builtin))
 
   :config
+  (setq org-roam-capture-templates nil)
   (setq org-roam-directory paths-dir-org-roam)
   (setq org-roam-node-display-template
         (concat "${title:*} "
@@ -9394,7 +9408,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   :after ebib
   :demand t
   :init
-  (add-hook 'tlon-babel-post-init-hook
+  (add-hook 'tlon-post-init-hook
             (lambda ()
               "Set `bibtex-files after `paths-files-bibliography-all' is set."
               (setq bibtex-files paths-files-bibliography-all)))
@@ -9585,7 +9599,7 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
            :version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
   :defer 5
   :init
-  (add-hook 'tlon-babel-post-init-hook
+  (add-hook 'tlon-post-init-hook
             (lambda ()
               "Set `bibtex-completion-bibliography' after `paths-files-bibliography-all' is set."
               (setq bibtex-completion-bibliography paths-files-bibliography-all)))
@@ -9672,7 +9686,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   :after oc vertico embark marginalia
   :demand t
   :init
-  (add-hook 'tlon-babel-post-init-hook
+  (add-hook 'tlon-post-init-hook
             (lambda ()
               "Set `citar-bibliography' after `paths-files-bibliography-all' is set."
               (setq citar-bibliography paths-files-bibliography-all)))
@@ -9765,7 +9779,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature citar-citeproc
   :demand t
-  :after citar citeproc citar-extras tlon-babel
+  :after citar citeproc citar-extras tlon
   :config
   (setq citar-citeproc-csl-styles-dir paths-dir-tlon-csl-styles)
   (setq citar-citeproc-csl-locales-dir org-cite-csl-locales-dir))
@@ -9929,7 +9943,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 (use-package ebib
   :defer 5
   :init
-  (add-hook 'tlon-babel-post-init-hook
+  (add-hook 'tlon-post-init-hook
             (lambda ()
               "Set `ebib-preload-bib-files' after `paths-files-bibliography-all' is set."
               (setq ebib-preload-bib-files paths-files-bibliography-all)))
@@ -10042,7 +10056,7 @@ The macro below generates the commands correctly. But attempting to define key b
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ebib-extras
-  :after ebib tlon-babel
+  :after ebib tlon
   :demand t
   :config
   (advice-add 'ebib-init :after #'ebib-extras-auto-reload-databases)
@@ -10086,7 +10100,7 @@ The macro below generates the commands correctly. But attempting to define key b
    "s-r" 'ebib-extras-rename-files)
   (ebib-index-mode-map
    "A-C-s-<tab>" 'ebib-extras-end-of-index-buffer
-   "s" 'ebib-extras-sort-toggle
+   "s" 'ebib-extras-sort
    "s-t" 'ebib-extras-move-entry-to-tlon)
   ((bibtex-mode-map ebib-entry-mode-map)
    "s-f" 'ebib-extras-open-file-dwim)
@@ -10108,7 +10122,7 @@ The macro below generates the commands correctly. But attempting to define key b
   :defer 5
   :config
   (setq bib-isbndb-key
-        (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-babel-email-shared)))
+        (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-email-shared)))
   (setq bib-omdb-key
         (auth-source-pass-get 'secret "chrome/omdbapi.com"))
   (setq bib-tmdb-key
@@ -10473,7 +10487,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   :demand t
   :config
   (require 'mu4e-contrib)
-  ;; (mu4e-debug t) ; uncomment when debugging
+  ;; (setq mu4e-debug t) ; uncomment when debugging
   (setq mu4e-index-update-error-warning nil) ; set to `t' when debugging
   (setq mu4e-split-view 'single-window)
   (setq mu4e-headers-show-target nil)
@@ -10503,7 +10517,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   ;; performance improvements (but with downsides)
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
-  (setq mu4e-index-cleanup t) ; nil improves performance
+  (setq mu4e-index-cleanup nil) ; nil improves performance
   (setq mu4e-index-lazy-check nil) ; t improves performance
 
   (setq mu4e-compose-context-policy 'ask)
@@ -10517,7 +10531,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
   (faces-extras-set-and-store-face-attributes
    '((mu4e-compose-separator-face :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
-
 
   (mu4e t)
 
@@ -10871,7 +10884,7 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 
   (faces-extras-set-and-store-face-attributes
    '((telega-entity-type-code :family faces-extras-fixed-pitch-font :height
-			      (face-attribute 'default :height))))
+                              (face-attribute 'default :height))))
 
   (add-hook 'telega-chat-mode-hook (lambda () (setq default-directory paths-dir-downloads)))
 
@@ -10968,6 +10981,10 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 (use-personal-package telega-extras
   :after telega telega-dired-dwim
   :demand t
+  :config
+  (setq telega-extras-auto-share-audio-transcript t)
+  (add-hook 'telega-chat-post-message-hook #'telega-extras-transcribe-audio)
+
   :general
   ("A-l" 'telega-extras-switch-to)
   ((telega-msg-button-map telega-root-mode-map)
@@ -11327,7 +11344,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
   ;; not working
   (require 'consult-web-bing)
   (setq consult-web-bing-api-key (auth-source-pass-get
-                                  "consult-mu" (concat "tlon/core/azure.com/" tlon-babel-email-shared)))
+                                  "consult-mu" (concat "tlon/core/azure.com/" tlon-email-shared)))
   (require 'consult-web-brave)
   (setq consult-web-brave-autosuggest-api-.key (auth-source-pass-get
                                                "consult-mu"
@@ -11410,6 +11427,8 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 (use-package elfeed
   :config
   (setq-default elfeed-search-filter "+unread")
+  (setq elfeed-curl-timeout 5)
+  (setq elfeed-curl-max-connections 4)
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
   (add-hook 'elfeed-show-mode-hook #'visual-line-mode)
@@ -11532,6 +11551,7 @@ These key bindings produce the same behavior in eww.
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elfeed-tube-mpv
   :after elfeed-tube
+  :disabled
   :demand t
   :config
   (setq elfeed-tube-save-indicator t))
@@ -12280,7 +12300,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            org-roam-db-sync
                            org-extras-id-update-id-locations
                            el-patch-validate-all
-                           tlon-babel-forge-update-all-repos
+                           tlon-forge-update-all-repos
                            org-extras-agenda-switch-to-agenda-current-day
                            org-gcal-sync
                            elfeed-update)))

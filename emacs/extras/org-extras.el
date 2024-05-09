@@ -855,8 +855,10 @@ To see a list of Google Docs and their respective IDs, run
 
 (transient-define-prefix org-extras-personal-menu ()
   "Menu for personal projects."
-  [[("f" "finance"           (lambda () (interactive) (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C")))
-    ("i" "Anki"              (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))]])
+  [[("e" "email"             (lambda () (interactive) (org-roam-extras-id-goto "96BBA849-B4CF-41C0-ABA3-A5D901BCDB18")))
+    ("f" "finance"           (lambda () (interactive) (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C")))
+    ("i" "Anki"              (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))
+    ("y" "YouTube"           (lambda () (interactive) (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E")))]])
 
 (transient-define-prefix org-extras-tlon-menu ()
   "Menu for Tlön projects."
@@ -875,8 +877,6 @@ To see a list of Google Docs and their respective IDs, run
     ("u n" "utilitarianism-en" (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))]
    ["Longtermism"
     ("l s" "longtermism-es"    (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))]
-   ["Essays on Longtermism"
-    ("e e" "essays-es"         (lambda () (interactive) (org-roam-extras-id-goto "96C4B5CC-0E85-4AEC-A5C2-95996A09DCEB")))]
    ["Radio Altruismo Eficaz"
     ("rae" "rae"               (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
    ["Misc"
@@ -891,8 +891,9 @@ To see a list of Google Docs and their respective IDs, run
     "GWWC"
     ("g" "gwwc"              (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
    ["Meetings"
-    ("m f" "fede"              (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
-    ("m l" "leo"               (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))]])
+    ("m f" "fede"            (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
+    ("m l" "leo"             (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))
+    ("m g" "group"           (lambda () (interactive) (org-roam-extras-id-goto "BE68100E-753D-408B-9B31-2D58A457A70B")))]])
 
 ;;;###autoload (autoload 'org-extras-config-dispatch "org-extras" nil t)
 (transient-define-prefix org-extras-config-dispatch ()

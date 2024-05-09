@@ -4,7 +4,7 @@
 # contributor: Pablo Stafforini
 # --
 `(format-time-string "%Y-%m-%d")` Cabify
-    Expenses:Transportation:Taxi  $1 ${$2:$$(yas-choose-value ledger-prices-currencies)} ; $3
+    Expenses:Transportation:Taxi  $1 ${$2:$$(yas-choose-value ledger-mode-extras-currencies)} ; $3
     Liabilities:$4  $5
 
 $0

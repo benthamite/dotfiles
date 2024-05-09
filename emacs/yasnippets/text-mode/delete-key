@@ -3,4 +3,4 @@
 # key: ll
 # contributor: Pablo Stafforini
 # --
-Delete `(tlon-babel-get-commit-key)`
+Delete `(tlon-get-commit-key)`

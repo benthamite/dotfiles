@@ -4,7 +4,7 @@
 # contributor: Pablo Stafforini
 # --
 `(format-time-string "%Y-%m-%d")` Conversion
-    Assets:Revolut                               -${1:source amount} ${2:$$(yas-completing-read "Currency: " ledger-prices-currencies)} @ ${3:conversion rate} ${4:$$(yas-completing-read "Currency: " ledger-prices-currencies)}
+    Assets:Revolut                               -${1:source amount} ${2:$$(yas-completing-read "Currency: " ledger-mode-extras-currencies)} @ ${3:conversion rate} ${4:$$(yas-completing-read "Currency: " ledger-mode-extras-currencies)}
     Expenses:Fees                               $5 $4
     Assets:Revolut                             
 

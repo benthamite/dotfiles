@@ -345,7 +345,7 @@ value."
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-google-drive-tlon-babel
+(defcustom paths-dir-google-drive-tlon
   (file-name-concat paths-dir-google-drive-tlon "babel/")
   "Path to the Babel Google Drive directory."
   :type 'directory
@@ -453,7 +453,7 @@ value."
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-dropbox-tlon-babel
+(defcustom paths-dir-dropbox-tlon
   (file-name-concat paths-dir-dropbox-tlon "babel/")
   "Path to the Babel Dropbox directory."
   :type 'directory
@@ -663,7 +663,7 @@ This should be the path you set `org-roam-directory' to."
 
 (defcustom paths-files-bibliography-all '()
   "List of all bibliography files.
-This includes personal files and `tlon-babel' files."
+This includes personal files and `tlon' files."
   :type '(repeat file)
   :group 'paths)
 
@@ -775,7 +775,7 @@ This includes personal files and `tlon-babel' files."
   :type 'file
   :group 'paths)
 
-(defcustom paths-file-tlon-babel
+(defcustom paths-file-tlon
   (file-name-concat paths-dir-notes "babel.org")
   "Path to the Babel project file."
   :type 'file
@@ -801,14 +801,14 @@ This includes personal files and `tlon-babel' files."
 
 ;;;;; Other
 
-(defcustom paths-tlon-babel-todos-generic-id
+(defcustom paths-tlon-todos-generic-id
   "4388B4D0-3830-48E0-A118-C3195B62F0D1"
   "ID of the user-specific `org-mode' heading where generic TODOs are stored.
 \"Generic\" TODOs are all TODOs except those related to a translation job."
   :type 'string
   :group 'paths)
 
-(defcustom paths-tlon-babel-todos-jobs-id
+(defcustom paths-tlon-todos-jobs-id
   "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB"
   "ID of the user-specific `org-mode' heading where job TODOs are stored.
 A job TODO is a TODO for a translation job."

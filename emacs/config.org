@@ -787,7 +787,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :elpaca (tlon-init
            :host github
            :repo "tlon-team/tlon-init"
-           :branch "dev"
+           ;; :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :after paths
   :demand t

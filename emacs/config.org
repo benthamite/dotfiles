@@ -6201,7 +6201,6 @@ CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
            :host github
            :repo "benthamite/gdrive"
            :depth nil)
-  :demand t
   :config
   (load-file (file-name-concat paths-dir-dotemacs "etc/gdrive-users.el"))
   (defun gdrive-extras-mark-multiple-and-share (file)

@@ -202,7 +202,7 @@ number."
     (";" "Current buffer" dired-jump)
     ("H-;" "Current buffer in other window" dired-jump-other-window)]
    ["Tlön: Google Drive"
-    ("t H-b" "Google Drive: Babel" (lambda () (interactive) (dired paths-dir-google-drive-tlon-babel)))
+    ("t H-b" "Google Drive: Babel" (lambda () (interactive) (dired paths-dir-google-drive-tlon)))
     ("t H-n" "Google Drive: EAN" (lambda () (interactive) (dired paths-dir-google-drive-tlon-EAN)))
     ("t H-m" "Google Drive: FM" (lambda () (interactive) (dired paths-dir-google-drive-tlon-FM)))
     ("t H-g" "Google Drive: GPE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-GPE)))
@@ -215,7 +215,7 @@ number."
     ("t H-l" "Google Drive: leo" (lambda () (interactive) (dired paths-dir-google-drive-tlon-leo)))
     ("t H-f" "Google Drive: fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))]
    ["Tlön: Dropbox"
-    ("t b" "Dropbox: Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
+    ("t b" "Dropbox: Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon)))
     ("t n" "Dropbox: EAN" (lambda () (interactive) (dired paths-dir-dropbox-tlon-EAN)))
     ("t m" "Dropbox: FM" (lambda () (interactive) (dired paths-dir-dropbox-tlon-FM)))
     ("t g" "Dropbox: GPE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-GPE)))

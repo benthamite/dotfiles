@@ -110,7 +110,6 @@
 (defun vc-extras-gh-create-repo (name description account &optional private)
   "Create a new GitHub repository in ACCOUNT with NAME and DESCRIPTION.
 If PRIVATE is non-nil, make it a private repository."
-  (vc-extras-check-gh-exists)
   (shell-command-to-string
    (format
     "%s repo create %s/%s %s --description \"%s\""
@@ -118,16 +117,24 @@ If PRIVATE is non-nil, make it a private repository."
 
 (defun vc-extras-gh-list-repos (account)
   "List all repos in GitHub ACCOUNT."
-  (vc-extras-check-gh-exists)
   (let* ((repos
-	  (shell-command-to-string (format "%s repo list %s | awk '{print $1}'"
+	  (shell-command-to-string (format "%s repo list %s --limit 9999 | awk '{print $1}'"
 					   vc-extras-gh-executable account))))
     (split-string (replace-regexp-in-string (format "%s/" account) "" repos))))
 
-(defun vc-extras-check-gh-exists ()
+(defun vc-extras-ensure-gh-exists ()
   "Check that `gh' exists, else signal an error."
   (unless vc-extras-gh-executable
     (user-error "`gh' not found; please install it (`brew install gh')")))
+
+(defun vc-extras-ensure-gh-authenticated ()
+  "Ensure that `gh' is authenticated."
+  (vc-extras-ensure-gh-exists)
+  (unless (string-match "Logged in to github\\.com account"
+			(shell-command-to-string "gh auth status"))
+    (user-error "`gh' not authenticated; please authenticate (`gh auth login')")))
+
+(vc-extras-ensure-gh-authenticated)
 
 (provide 'vc-extras)
 ;;; vc-extras.el ends here

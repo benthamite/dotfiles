@@ -4,6 +4,13 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 6.4.1 on 2024-05-09
+:PROPERTIES:
+:ID:       76C94897-E71F-4099-9D0C-7F4C3BF00555
+:END:
+
+This is a minor release primarily focused on updating the names of all the functions and variables in the ~tlon~ (formerly ~tlon-babel~) package.
+
 * Version 6.4.0 on 2024-05-02
 :PROPERTIES:
 :ID:       4BD749D6-DF24-4DC2-B559-FFEA595AB054
@@ -132,8 +139,7 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 :ID:       84AB17D8-DFF3-4DB5-862C-5963286C784C
 :END:
 
-- This package is now retired. All its functionality has been moved to ~tlon-babel~. The plan for the future, to reduce confusion, is to always release Tlön-related functions as part of this package, except for ~tlon-init~, which remains.
-
+- This package is now retired. All its functionality has been moved to ~tlon~. The plan for the future, to reduce confusion, is to always release Tlön-related functions as part of this package, except for ~tlon-init~, which remains.
 
 * Version 6.3.0 on 2024-04-08
 :PROPERTIES:

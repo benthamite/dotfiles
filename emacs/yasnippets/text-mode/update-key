@@ -3,4 +3,4 @@
 # key: uu
 # contributor: Pablo Stafforini
 # --
-Update `(tlon-babel-get-commit-key)`
+Update `(tlon-get-commit-key)`

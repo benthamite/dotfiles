@@ -6145,6 +6145,8 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 :ID:       DA6275F2-F3A2-482E-B7A8-34633775F430
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/xwidget.el][xwidget]] provides API functions for xwidgets./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature xwidget
   :general

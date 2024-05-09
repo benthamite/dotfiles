@@ -32,7 +32,18 @@
 (require 'ebib)
 (require 'filenotify)
 (require 'paths)
+(require 'simple-extras)
 (require 'shut-up)
+
+;;;; Variables
+
+(defvar ebib-extras-sort-states
+  '(Timestamp Author Title)
+  "List of states for sorting the Ebib index buffer.")
+
+(defvar ebib-extras-sort-state
+  (car ebib-extras-sort-states)
+  "State for sorting the Ebib index buffer.")
 
 ;;;; Functions
 
@@ -928,25 +939,21 @@ If called interactively, open the entry. Otherwise, return it as a string."
     (ebib file key)
     (ebib-edit-entry)))
 
-(defvar ebib-extras-sort-toggle 'Title)
-
-(defun ebib-extras-sort-toggle ()
-  "Toggle between sorting by timestamp, author, and title."
+(defun ebib-extras-sort (&optional state)
+  "Sort Ebib index buffer by STATE.
+If STATE is nil, toggle between the relevant states."
   (interactive)
   (ebib--execute-when
     (entries
-     (let ((order 'ascend))
-       (pcase ebib-extras-sort-toggle
-	 ('Timestamp
-	  (setq ebib-extras-sort-toggle 'Author))
-	 ('Author
-	  (setq ebib-extras-sort-toggle 'Title))
-	 ('Title
-	  (setq ebib-extras-sort-toggle 'Timestamp)
-	  (setq order 'descend)))
-       (ebib--index-sort (symbol-name ebib-extras-sort-toggle) order)
+     (let* ((order 'ascend)
+	    (state (or state ebib-extras-sort-state))
+	    (next (simple-extras-get-next-element state ebib-extras-sort-states)))
+       (when (string= state "Timestamp")
+	 (setq order 'descend))
+       (ebib--index-sort (symbol-name state) order)
        (goto-char (point-min))
-       (message (format "Sorting by %s" ebib-extras-sort-toggle))))
+       (message (format "Sorting by %s" state))
+       (setq ebib-extras-sort-state next)))
     (default
      (beep))))
 
@@ -1004,10 +1011,10 @@ is created following the same schema as notes created with
     (default
      (beep))))
 
-(defvar tlon-babel-refs-file-fluid)
+(defvar tlon-file-fluid)
 (defvar ebib-extras-auto-save-files
   `(,paths-file-personal-bibliography-new
-    ,tlon-babel-refs-file-fluid)
+    ,tlon-file-fluid)
   "List of database files that should be auto-saved.
 The big files containing the `old' bibliographic entries are excluded.")
 
@@ -1037,12 +1044,12 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 	   (message "reloading database")
 	   (ebib-extras-reload-database-no-confirm db)))))))
 
-(defvar tlon-babel-refs-file-stable)
+(defvar tlon-file-stable)
 (defvar ebib-extras-db-numbers
   `((,paths-file-personal-bibliography-new . 1)
     (,paths-file-personal-bibliography-old . 2)
-    (,tlon-babel-refs-file-fluid . 3)
-    (,tlon-babel-refs-file-stable . 4))
+    (,tlon-file-fluid . 3)
+    (,tlon-file-stable . 4))
   "Association list of database files and their numbers.")
 
 (defun ebib-extras-get-db-number (file)
@@ -1114,7 +1121,7 @@ If applicable, open external website to set rating there as well."
   (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
     (citar-extras-goto-bibtex-entry key)
     (bibtex-extras-move-entry-to-tlon)
-    (ebib tlon-babel-refs-file-fluid key)
+    (ebib tlon-file-fluid key)
     (ebib-extras-open-key key)))
 
 (defun ebib-extras-get-field (field)

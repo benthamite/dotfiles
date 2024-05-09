@@ -3,4 +3,4 @@
 # key: aa
 # contributor: Pablo Stafforini
 # --
-Add `(tlon-babel-get-commit-key)`
+Add `(tlon-get-commit-key)`

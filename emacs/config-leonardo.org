@@ -26,14 +26,14 @@
 (setq user-mail-address "leonardodecartago@gmail.com")
 #+end_src
 
-** tlon-babel
+** tlon
 :PROPERTIES:
 :ID:       AD2AE5D5-6230-4FF1-83F5-33F1F2995A5A
 :END:
 
 #+begin_src emacs-lisp
-(with-eval-after-load 'tlon-babel
-  (setq tlon-babel-split-repo t))
+(with-eval-after-load 'tlon
+  (setq tlon-split-repo t))
 #+end_src
 
 ** key bindings
@@ -152,10 +152,10 @@
                        (id "C5C5EF82-E7FC-461E-B7BE-FE921CEE9158")
                        "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
                       ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
-                       (id ,paths-tlon-babel-todos-jobs-id)
+                       (id ,paths-tlon-todos-jobs-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
                       ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
-                       (id ,paths-tlon-babel-todos-generic-id)
+                       (id ,paths-tlon-todos-generic-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
     (push template org-capture-templates))
 
@@ -438,13 +438,13 @@
  (paths-file-tlon-docs-bae . (file-name-concat paths-dir-tlon-docs "bae.org"))
  (paths-file-tlon-docs-core . (file-name-concat paths-dir-tlon-docs "core.org"))
  (paths-file-tlon-ledger . (file-name-concat paths-dir-dropbox-tlon-ledger "tlon.ledger"))
- (paths-file-tlon-babel . paths-file-tlon-tareas-leo)
+ (paths-file-tlon . paths-file-tlon-tareas-leo)
  (paths-file-personal-bibliography-old . (file-name-concat paths-dir-personal-bibliography "old.bib"))
  (paths-file-personal-bibliography-new . (file-name-concat paths-dir-personal-bibliography "new.bib"))
  (paths-files-bibliography-personal . `(,paths-file-personal-bibliography-new
                                         ,paths-file-personal-bibliography-old))
- (paths-tlon-babel-todos-jobs-id . "19FDA2D4-C33C-48DB-8C48-546816F095EB")
- (paths-tlon-babel-todos-generic-id . "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29"))
+ (paths-tlon-todos-jobs-id . "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+ (paths-tlon-todos-generic-id . "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29"))
 #+end_src
 
 * local variables

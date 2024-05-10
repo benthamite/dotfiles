@@ -187,7 +187,11 @@
 #+end_src
 
 ** simple-extras
-#+begin_src
+:PROPERTIES:
+:ID:       F7A103D9-6B04-48DD-8F09-77E1490FFD31
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq simple-extras-new-buffer-auto-save-dir (file-name-concat (expand-file-name "~") no-littering-var-directory "auto-save/new-buffers/"))
 #+end_src
 
@@ -284,6 +288,9 @@
 (run-hooks 'tlon-init-post-init-hook)
 #+end_src
 ** copilot
+:PROPERTIES:
+:ID:       21BE752D-3D09-48DC-BECA-725933AE717E
+:END:
 #+begin_src shell
 (setq copilot-node-executable "/Users/cartago/.nvm/versions/node/v18.16.0/bin/node")
 #+end_src

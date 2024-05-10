@@ -186,6 +186,11 @@
 (setq files-extras-new-empty-buffer-major-mode 'org-mode)
 #+end_src
 
+** simple-extras
+#+begin_src
+(setq simple-extras-new-buffer-auto-save-dir (file-name-concat (expand-file-name "~") no-littering-var-directory "auto-save/new-buffers/"))
+#+end_src
+
 ** window-extras
 :PROPERTIES:
 :ID:       FF959105-FAE3-4D6C-B320-20B9F67DE6B1

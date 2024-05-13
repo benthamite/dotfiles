@@ -109,6 +109,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#closql][closql]]
   - [[#magit][magit]]
   - [[#magit-extra][magit-extra]]
+  - [[#magit-todos][magit-todos]]
   - [[#ghub][ghub]]
   - [[#forge][forge]]
   - [[#orgit-forge][orgit-forge]]
@@ -1488,6 +1489,25 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
 
   :general
   ("s-p" 'magit-extras-with-editor-finish-and-push))
+#+end_src
+
+** magit-todos
+:PROPERTIES:
+:ID:       63750AFE-71E9-4BFA-A127-F3FAA5BD5954
+:END:
+
+/[[https://github.com/alphapapa/magit-todos][magit-todos]] displays TODOs present in project files in the Magit status buffer./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package magit-todos
+  :elpaca (magit-todos
+           :host github
+           :repo "alphapapa/magit-todos"
+           :build (:not elpaca--check-version))
+  :after magit hl-todo
+  :demand t
+  :config
+  (magit-todos-mode))
 #+end_src
 
 ** ghub

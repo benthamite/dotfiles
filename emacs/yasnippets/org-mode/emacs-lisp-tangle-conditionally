@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: emacs-lisp-tangle-conditionally
+# key: eltc
+# contributor: Pablo Stafforini
+# --
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+$1
+#+end_src

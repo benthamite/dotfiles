@@ -57,19 +57,6 @@ to get the entry.
     (zotra-add-entry url-or-search-string entry-format bibfile)
     (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey)))
 
-(declare-function eww-extras-url-to-pdf "eww-extras")
-(declare-function eww-extras-url-to-html "eww-extras")
-(defun zotra-extras-url-full-capture (&optional url)
-  "Add URL to bibfile and generate associated PDF and HTML files."
-  (interactive)
-  (let ((url (or url
-		 (read-string "Add entry from URL or search identifier: " (current-kill 0)))))
-    (unless ebib--cur-db
-      (ebib))
-    (zotra-add-entry url)
-    (eww-extras-url-to-pdf url)
-    (eww-extras-url-to-html url)))
-
 ;;;;; Bibfile
 
 (defvar tlon-file-fluid)

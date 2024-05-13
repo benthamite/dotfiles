@@ -72,7 +72,7 @@ Channel gmail-sent
 Channel gmail-trash
 Channel gmail-starred
 
-Group gmail-all
+Group gmail-full
 Channel gmail-inbox
 Channel gmail-daily
 Channel gmail-sent

@@ -10502,11 +10502,13 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-trash-folder "/[Gmail]/Trash")
   (setq mu4e-attachment-dir paths-dir-downloads)
   (setq mu4e-change-filenames-when-moving t)
+  ;; see also `mu4e-extras-set-shortcuts'
   (setq mu4e-maildir-shortcuts
-        `((,mu4e-drafts-folder  . ?d)
-          (,mu4e-sent-folder    . ?t)
-          (,mu4e-trash-folder   . ?x)
-          (,mu4e-refile-folder  . ?a))) ; required for correct Gmail refiling
+        `((:maildir ,mu4e-drafts-folder :key ?d)
+	  (:maildir ,mu4e-drafts-folder :key ?d)
+          (:maildir ,mu4e-sent-folder :key ?t)
+          (:maildir ,mu4e-refile-folder :key ?a)
+          (:maildir ,mu4e-trash-folder :key ?x)))
   (setq mu4e-compose-dont-reply-to-self t)
   (setq mu4e-compose-format-flowed t)
   (setq mu4e-confirm-quit nil)

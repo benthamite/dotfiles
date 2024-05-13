@@ -716,7 +716,7 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package jsonrpc
   :demand t)
 #+end_src
@@ -1653,7 +1653,7 @@ CLOCK: [2021-04-03 Sat 16:26]--[2021-04-03 Sat 17:04] =>  0:38
 CLOCK: [2021-03-28 Sun 19:21]--[2021-03-28 Sun 19:35] =>  0:14
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (setq-default line-spacing 2)
 #+end_src
 
@@ -1961,7 +1961,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 
 /[[https://elpa.gnu.org/packages/rainbow-mode.html][rainbow-mode]] colorizes strings that match color names./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package rainbow-mode
   :demand t
   :init
@@ -1974,7 +1974,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 :ID:       83EC4A72-3E64-403B-9196-339DD0EB202E
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature color
   :demand t)
 #+end_src
@@ -1984,7 +1984,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 :ID:       0873C089-B832-4EB2-BAFF-2D3CF0268AE4
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package color-extras
   :after color
   :demand t)
@@ -1995,7 +1995,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 :ID:       A9DD66E0-49A5-4A8C-8F45-016DECFF0BF0
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package hexrgb
   :elpaca (hexrgb
            :host github
@@ -3803,7 +3803,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 
 /[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-scratch.el][prot-scratch]] supports scratch buffers for an editable major mode of choice./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package prot-scratch
   :elpaca (prot-scratch
            :host github
@@ -3829,7 +3829,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 
 I use this package in combination with =prot-scratch== (see above) to persist scratch buffers in different modes. This way, I am able to open a scratch buffer in /any/ mode for temporary notes, without running the risk of losing them.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package persistent-scratch
   :demand t
   :config
@@ -7274,7 +7274,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 /[[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]] comint-shell based interaction with ChatGPT./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package chatgpt-shell
   :elpaca (chatgpt-shell :files ("*.el"))
   :after gptel
@@ -8644,7 +8644,7 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 :ID:       91A9FFF0-BEB8-4C0D-9D78-B2F190C5AA8F
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package orgtbl-join
   :after org-table
   :demand t)
@@ -11372,7 +11372,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
 /[[https://www.github.com/armindarvish/consult-web][consult-web]] is browses search results from one or several custom sources (such web search engines, AI assistants, elfeed database, and org notes) directly in the Emacs minibuffer./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-web
   :elpaca (consult-web
            :host github

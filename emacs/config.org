@@ -7083,8 +7083,6 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 
 /hideshow is a minor mode for block hiding and showing./
 
-[2023-03-01 Wed 03:56] I don't remember why I created this hook.
-
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature hideshow
   :demand t

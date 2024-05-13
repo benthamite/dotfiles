@@ -6624,7 +6624,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
           (strike-out
            (color . "red"))))
 
-  (pdf-cache-prefetch-minor-mode -1)
+  (pdf-cache-prefetch-minor-mode -1) ; https://github.com/vedang/pdf-tools/issues/278#issuecomment-2096894629
   (pdf-tools-install t)
 
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)

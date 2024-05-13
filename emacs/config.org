@@ -364,6 +364,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#js2-mode][js2-mode]]
   - [[#shut-up][shut-up]]
   - [[#puni][puni]]
+  - [[#hl-todo][hl-todo]]
   - [[#project][project]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent][aggressive-indent]]
@@ -7039,6 +7040,22 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
    "A-C-s-f" 'puni-end-of-sexp
    "A-C-H-j" 'puni-mark-sexp-at-point
    "A-C-H-k" 'puni-mark-sexp-around-point))
+#+end_src
+
+** hl-todo
+:PROPERTIES:
+:ID:       2AE50002-CF55-4BF1-AC96-967F128A6718
+:END:
+
+/[[https://github.com/tarsius/hl-todo][hl-todo]] highlights TODO and similar keywords in comments and strings./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package hl-todo
+  :elpaca (hl-todo
+           :build (:not elpaca--check-version))
+  :demand t
+  :config
+  (global-hl-todo-mode))
 #+end_src
 
 ** project

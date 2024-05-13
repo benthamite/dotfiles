@@ -54,6 +54,9 @@ to get the entry.
   (interactive)
   (let* ((bibfile (or bibfile
 		      (setq zotra-extras-most-recent-bibfile (zotra-extras-set-bibfile)))))
+    (pcase major-mode
+      ('elfeed-show-mode (elfeed-extras-kill-link-url-of-entry))
+      ('eww-mode (eww-copy-page-url)))
     (zotra-add-entry url-or-search-string entry-format bibfile)
     (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey)))
 

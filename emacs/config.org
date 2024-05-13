@@ -4200,7 +4200,9 @@ Maybe the way to do this is by creating a ~pass-to-avy~ generic function, which 
   ("C-H-s-u" 'avy-extras-goto-word-in-line-behind
    "C-H-s-p" 'avy-extras-goto-word-in-line-ahead
    "C-H-s-," 'avy-extras-goto-end-of-line-above
-   "C-H-s-/" 'avy-extras-goto-end-of-line-below)
+   "C-H-s-/" 'avy-extras-goto-end-of-line-below
+   "C-H-s-j" 'avy-extras-goto-char-backward
+   "C-H-s-;" 'avy-extras-goto-char-forward)
   (dired-mode-map
    "f" 'avy-extras-dired-find-file)
   (ebib-index-mode-map

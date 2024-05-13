@@ -11476,6 +11476,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
   (add-hook 'elfeed-show-mode-hook #'visual-line-mode)
+  (run-with-idle-timer (* 30 60) t #'elfeed-update)
 
   :general
   ("A-f" 'elfeed)

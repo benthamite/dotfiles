@@ -46,6 +46,8 @@
 
 (defvar ebib--cur-db)
 (declare-function ebib "ebib")
+(declare-function elfeed-extras-kill-link-url-of-entry "elfeed-extras")
+(declare-function eww-copy-page-url "eww")
 (defun zotra-extras-add-entry (&optional url-or-search-string entry-format bibfile)
   "Like `zotra-extras-add-entry', but set BIBFILE and open in Ebib.
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry'

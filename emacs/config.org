@@ -10670,8 +10670,6 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-set-face-locally)
 
-  (run-with-timer (* 10 60) t #'mu4e-extras-check-all-mail)
-
   :general
   ((mu4e-headers-mode-map mu4e-view-mode-map)
    "o" 'mu4e-extras-view-org-capture

@@ -12069,13 +12069,13 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
   (setq mullvad-durations '(1 5 10 30 60 120))
 
   (setq mullvad-cities-and-servers
-        '(("London" . "gb-lon-wg-005")
-          ("Madrid" . "es-mad-wg-105")
+        '(("London" . "gb-lon-ovpn-005")
+          ("Madrid" . "es-mad-ovpn-202")
           ("Malmö" . "se-sto-wg-005")
           ("Frankfurt" . "de-fra-wg-005")
-          ("New York" . "us-nyc-wg-305")
-          ("San José" . "us-sjc-wg-005")
-          ("São Paulo" . "br-sao-wg-005")))
+          ("New York" . "us-nyc-ovpn-501")
+          ("San José" . "us-sjc-wg-101")
+          ("São Paulo" . "br-sao-wg-202")))
 
   (setq mullvad-websites-and-cities
         '(("Betfair" . "London")

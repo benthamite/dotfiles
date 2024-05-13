@@ -189,8 +189,8 @@ Do not ask for confirmation."
 
 (defun mu4e-extras-set-shortcuts ()
   "Set `mu4e-maildir-shortcuts'."
-  (dolist (shortcut `((,mu4e-extras-inbox-folder . ?i)
-		      (,mu4e-extras-daily-folder . ?y)))
+  (dolist (shortcut `((:maildir ,mu4e-extras-inbox-folder :key ?i)
+		      (:maildir ,mu4e-extras-daily-folder :key ?y)))
     (add-to-list 'mu4e-maildir-shortcuts shortcut)))
 
 (defun mu4e-extras-set-face-locally ()

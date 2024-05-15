@@ -109,6 +109,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#closql][closql]]
   - [[#magit][magit]]
   - [[#magit-extra][magit-extra]]
+  - [[#magit-todos][magit-todos]]
   - [[#ghub][ghub]]
   - [[#forge][forge]]
   - [[#orgit-forge][orgit-forge]]
@@ -363,6 +364,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#js2-mode][js2-mode]]
   - [[#shut-up][shut-up]]
   - [[#puni][puni]]
+  - [[#hl-todo][hl-todo]]
   - [[#project][project]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent][aggressive-indent]]
@@ -471,6 +473,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#telega-dired-dwim][telega-dired-dwim]]
   - [[#telega-extras][telega-extras]]
   - [[#ol-telega][ol-telega]]
+  - [[#ement][ement]]
   - [[#erc][erc]]
   - [[#circe][circe]]
 - [[#web][web]]
@@ -565,7 +568,7 @@ CLOCK: [2023-04-05 Wed 22:53]--[2023-04-06 Thu 00:04] =>  1:11
 
 When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshooting][follow these steps]].
 
-- By default, ~elpaca~ makes shallow copies of all the repos it clones. You can specify the repo depth with the [[https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipe-keyword-depth][:depth]] keyword. What if, however, you want to turn a shallow repo into a full repo /after/ it has been cloned? There is a relatively obscure command in Magit that lets you do this: ~magit-remote-unshallow~. (Note that this not only passes the ~--unshallow~ flag but also restores access to all branches in addition to the main one.)
+- By default, ~elpaca~ makes shallow copies of all the repos it clones. You can specify the repo depth with the [[https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipe-keyword-depth][:depth]] keyword. What if, however, you want to turn a shallow repo into a full repo /after/ it has been cloned? There is a relatively obscure command in Magit that lets you do this: =magit-remote-unshallow=. (Note that this not only passes the ~--unshallow~ flag but also restores access to all branches in addition to the main one.)
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 ;;; init.el --- Init File -*- lexical-binding: t -*-
@@ -714,7 +717,7 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package jsonrpc
   :demand t)
 #+end_src
@@ -1490,6 +1493,25 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
   ("s-p" 'magit-extras-with-editor-finish-and-push))
 #+end_src
 
+** magit-todos
+:PROPERTIES:
+:ID:       63750AFE-71E9-4BFA-A127-F3FAA5BD5954
+:END:
+
+/[[https://github.com/alphapapa/magit-todos][magit-todos]] displays TODOs present in project files in the Magit status buffer./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package magit-todos
+  :elpaca (magit-todos
+           :host github
+           :repo "alphapapa/magit-todos"
+           :build (:not elpaca--check-version))
+  :after magit hl-todo
+  :demand t
+  :config
+  (magit-todos-mode))
+#+end_src
+
 ** ghub
 :PROPERTIES:
 :ID:       C557A862-9EC7-406C-98E1-C248F7D579F5
@@ -1632,7 +1654,7 @@ CLOCK: [2021-04-03 Sat 16:26]--[2021-04-03 Sat 17:04] =>  0:38
 CLOCK: [2021-03-28 Sun 19:21]--[2021-03-28 Sun 19:35] =>  0:14
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (setq-default line-spacing 2)
 #+end_src
 
@@ -1940,7 +1962,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 
 /[[https://elpa.gnu.org/packages/rainbow-mode.html][rainbow-mode]] colorizes strings that match color names./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package rainbow-mode
   :demand t
   :init
@@ -1953,7 +1975,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 :ID:       83EC4A72-3E64-403B-9196-339DD0EB202E
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature color
   :demand t)
 #+end_src
@@ -1963,7 +1985,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 :ID:       0873C089-B832-4EB2-BAFF-2D3CF0268AE4
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package color-extras
   :after color
   :demand t)
@@ -1974,7 +1996,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 :ID:       A9DD66E0-49A5-4A8C-8F45-016DECFF0BF0
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package hexrgb
   :elpaca (hexrgb
            :host github
@@ -2194,7 +2216,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 /[[https://github.com/rainstormstudio/nerd-icons.el][nerd-icons]] is a library for [[https://github.com/ryanoasis/nerd-fonts][Nerd Font]] icons inside Emacs./
 
-Note that the icons need to be installed via ~nerd-icons-install-fonts~. If you want to install the icons with =brew= on macOS, run ~brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font~.
+Note that the icons need to be installed via =nerd-icons-install-fonts=. If you want to install the icons with ~brew~ on macOS, run =brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font=.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package nerd-icons
@@ -2275,7 +2297,7 @@ Note that the icons need to be installed via ~nerd-icons-install-fonts~. If you 
 CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 :END:
 
-/[[https://protesilaos.com/codelog/2022-09-08-lin-1-0-0/][lin]] is a stylistic enhancement for Emacs’ built-in ~hl-line-mode~. It remaps the ~hl-line~ face (or equivalent) buffer-locally to a style optimal for major modes where line selection is the primary mode of interaction./
+/[[https://protesilaos.com/codelog/2022-09-08-lin-1-0-0/][lin]] is a stylistic enhancement for Emacs’ built-in =hl-line-mode=. It remaps the =hl-line= face (or equivalent) buffer-locally to a style optimal for major modes where line selection is the primary mode of interaction./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package lin
@@ -2309,7 +2331,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 
 /[[https://github.com/milkypostman/hl-sentence][hl-sentence]] highlights sentences rather than lines./
 
-I use ~hl-line~ by default, but replace it with ~hl-sentence~ in modes (specifically, ~org-mode~ and ~markdown-mode~) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the other modes. See the above sections and the ~modus-themes-extras-set-faces~ function from ~modus-themes-extras~.
+I use =hl-line= by default, but replace it with =hl-sentence= in modes (specifically, =org-mode= and =markdown-mode=) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the other modes. See the above sections and the =modus-themes-extras-set-faces= function from ~modus-themes-extras~.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package hl-sentence
@@ -2968,7 +2990,7 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
 :ID:       DF5137EA-79B3-4A5F-8D6C-7222CD8D4F4A
 :END:
 
-/[[https://github.com/purcell/unfill][unfill]] provides functions to do the reverse of ~fill-paragraph~ and ~fill-region~./
+/[[https://github.com/purcell/unfill][unfill]] provides functions to do the reverse of =fill-paragraph= and =fill-region=./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package unfill)
@@ -3782,7 +3804,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 
 /[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-scratch.el][prot-scratch]] supports scratch buffers for an editable major mode of choice./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package prot-scratch
   :elpaca (prot-scratch
            :host github
@@ -3808,7 +3830,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 
 I use this package in combination with =prot-scratch== (see above) to persist scratch buffers in different modes. This way, I am able to open a scratch buffer in /any/ mode for temporary notes, without running the risk of losing them.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package persistent-scratch
   :demand t
   :config
@@ -4180,7 +4202,7 @@ CLOCK: [2021-11-25 Thu 19:05]--[2021-11-25 Thu 19:21] =>  0:16
 :END:
 https://karthinks.com/software/avy-can-do-anything/
 
-Maybe the way to do this is by creating a ~pass-to-avy~ generic function, which itself allows the user to select a command via its key bindings and passes it the word selected via avy.
+Maybe the way to do this is by creating a =pass-to-avy= generic function, which itself allows the user to select a command via its key bindings and passes it the word selected via avy.
 
 [2021-11-29 Mon 23:37] Should create commands to delete/copy/kill words/sentences/paragraphs/sexp/lines/region
 
@@ -4200,7 +4222,9 @@ Maybe the way to do this is by creating a ~pass-to-avy~ generic function, which 
   ("C-H-s-u" 'avy-extras-goto-word-in-line-behind
    "C-H-s-p" 'avy-extras-goto-word-in-line-ahead
    "C-H-s-," 'avy-extras-goto-end-of-line-above
-   "C-H-s-/" 'avy-extras-goto-end-of-line-below)
+   "C-H-s-/" 'avy-extras-goto-end-of-line-below
+   "C-H-s-j" 'avy-extras-goto-char-backward
+   "C-H-s-;" 'avy-extras-goto-char-forward)
   (dired-mode-map
    "f" 'avy-extras-dired-find-file)
   (ebib-index-mode-map
@@ -4911,7 +4935,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :ID:       861C92F2-F0CF-4407-925C-A7ECBBAE0BEC
 :END:
 
-Some discussion [[https://github.com/mhayashi1120/Emacs-wgrep/issues/36][here]]. Maybe start by trying ~M-x wgrep-save-all-buffers~  next time this happens?
+Some discussion [[https://github.com/mhayashi1120/Emacs-wgrep/issues/36][here]]. Maybe start by trying =M-x wgrep-save-all-buffers=  next time this happens?
 
 * minibuffer completion
 :PROPERTIES:
@@ -5027,7 +5051,7 @@ CLOCK: [2022-06-21 Tue 21:48]--[2022-06-21 Tue 23:04] =>  1:16
 CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 :END:
 
-/[[https://github.com/minad/consult][consult]] provides practical commands based on the Emacs completion function ~completing-read~./
+/[[https://github.com/minad/consult][consult]] provides practical commands based on the Emacs completion function =completing-read=./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult
@@ -5786,6 +5810,10 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package jinx
+  :elpaca (jinx
+           :host github
+           :repo "minad/jinx"
+           :branch "lockup") ; https://github.com/minad/jinx/discussions/156#discussioncomment-9240241
   :demand t
   :after faces-extras
   :config
@@ -6145,6 +6173,8 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 :ID:       DA6275F2-F3A2-482E-B7A8-34633775F430
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/xwidget.el][xwidget]] provides API functions for xwidgets./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature xwidget
   :general
@@ -6162,7 +6192,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 
 /[[https://github.com/Fanael/edit-indirect][edit-indirect]] supports editing regions in separate buffers./
 
-This package is required by the ~markdown-mode~ command ~markdown-edit-code-block~.
+This package is required by the ~markdown-mode~ command =markdown-edit-code-block=.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package edit-indirect)
@@ -6201,7 +6231,6 @@ CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
            :host github
            :repo "benthamite/gdrive"
            :depth nil)
-  :demand t
   :config
   (load-file (file-name-concat paths-dir-dotemacs "etc/gdrive-users.el"))
   (defun gdrive-extras-mark-multiple-and-share (file)
@@ -6397,8 +6426,8 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 (use-package tlon
   :elpaca (tlon
            :host github
-           :repo "tlon-team/tlon-babel"
-           :branch "dev"
+           :repo "tlon-team/tlon"
+           ;; :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :after paths
@@ -6596,7 +6625,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
           (strike-out
            (color . "red"))))
 
-  (pdf-cache-prefetch-minor-mode -1)
+  (pdf-cache-prefetch-minor-mode -1) ; https://github.com/vedang/pdf-tools/issues/278#issuecomment-2096894629
   (pdf-tools-install t)
 
   (add-hook 'pdf-tools-enabled-hook #'pdf-view-fit-page-to-window)
@@ -7018,6 +7047,22 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
    "A-C-H-k" 'puni-mark-sexp-around-point))
 #+end_src
 
+** hl-todo
+:PROPERTIES:
+:ID:       2AE50002-CF55-4BF1-AC96-967F128A6718
+:END:
+
+/[[https://github.com/tarsius/hl-todo][hl-todo]] highlights TODO and similar keywords in comments and strings./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package hl-todo
+  :elpaca (hl-todo
+           :build (:not elpaca--check-version))
+  :demand t
+  :config
+  (global-hl-todo-mode))
+#+end_src
+
 ** project
 :PROPERTIES:
 :ID:       A8E52422-BB0D-410B-A497-64BB2AC5576D
@@ -7038,8 +7083,6 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 :END:
 
 /hideshow is a minor mode for block hiding and showing./
-
-[2023-03-01 Wed 03:56] I don't remember why I created this hook.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature hideshow
@@ -7234,7 +7277,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 /[[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]] comint-shell based interaction with ChatGPT./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package chatgpt-shell
   :elpaca (chatgpt-shell :files ("*.el"))
   :after gptel
@@ -8040,7 +8083,7 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
 :PROPERTIES:
 :ID:       91C2D236-79B7-470A-B667-D200CCA92A9D
 :END:
-Examine ~org-clock-update-mode-line~.
+Examine =org-clock-update-mode-line=.
 ** org-clock-convenience
 :PROPERTIES:
 :ID:       1DB11C80-DE47-42EA-851A-4D35398C1005
@@ -8068,7 +8111,7 @@ CLOCK: [2023-03-18 Sat 13:14]--[2023-03-18 Sat 13:27] =>  0:13
 
 /[[https://github.com/0robustus1/org-clock-split][org-clock-split]] allows splitting of one clock entry into two contiguous entries./
 
-I’m using a fork that fixes some functionality that broke when org changed ~org-time-stamp-formats~.
+I’m using a fork that fixes some functionality that broke when org changed =org-time-stamp-formats=.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-clock-split
@@ -8139,7 +8182,7 @@ CLOCK: [2023-02-17 Fri 11:34]--[2023-02-17 Fri 11:47] =>  0:13
 
 /[[https://gitlab.com/andersjohansson/org-archive-hierarchically][org-archive-hierarchically]] archives org subtrees in a way that preserves the original heading structure./
 
-I normally archive subtrees with ~org-archive-to-archive-sibling~, but use ~org-archive-hierarchically~ for files in public repositories. ~org-archive-to-archive-sibling~ moves archived tasks to a heading, which is by default collapsed in org, but in Github archived tasks are always fully visible, creating a lot of clutter.
+I normally archive subtrees with =org-archive-to-archive-sibling=, but use =org-archive-hierarchically= for files in public repositories. =org-archive-to-archive-sibling= moves archived tasks to a heading, which is by default collapsed in org, but in Github archived tasks are always fully visible, creating a lot of clutter.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-archive-hierarchically
@@ -8362,7 +8405,7 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
 
 Set custom speed commands.
 
-I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), so I can't hit ~C-TAB~, to which ~org-force-cycle-archived~ is bound. Since this is a command I very rarely execute, I don't want to waste a key chord by rebinding the function to it. Instead, I set a custom speed command that lets me call that function with ~c~ (which replaces the default speed key binding for ~org-cycle~).
+I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), so I can't hit ~C-TAB~, to which =org-force-cycle-archived= is bound. Since this is a command I very rarely execute, I don't want to waste a key chord by rebinding the function to it. Instead, I set a custom speed command that lets me call that function with ~c~ (which replaces the default speed key binding for =org-cycle=).
 
 ** ol
 :PROPERTIES:
@@ -8604,7 +8647,7 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 :ID:       91A9FFF0-BEB8-4C0D-9D78-B2F190C5AA8F
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package orgtbl-join
   :after org-table
   :demand t)
@@ -8704,7 +8747,7 @@ CLOCK: [2021-06-22 Tue 21:39]--[2021-06-23 Wed 00:21] =>  2:42
 CLOCK: [2021-04-20 Tue 23:28]--[2021-04-20 Tue 23:44] =>  0:16
 :END:
 
-Allows reset of checkboxes in recurring tasks. This works only on headings that have the property ~RESET_CHECK_BOXES~ set to ~t~. You can set the property of a heading by invoking the command ~org-set-property~ with point on that heading or immediately under it.
+Allows reset of checkboxes in recurring tasks. This works only on headings that have the property ~RESET_CHECK_BOXES~ set to ~t~. You can set the property of a heading by invoking the command =org-set-property= with point on that heading or immediately under it.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-checklist
@@ -8837,7 +8880,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 - [ ] Cleanup ~bbdb~ so that only contacts worth having a dedicated file remain.
 - [ ] Export ~bbdb~ contacts as ~org~ properties.
 - [ ] Add each property to the relevant contact file, creating one if necessary.
-- [ ] Set ~org-contacts-files~ to ~(directory-files paths-dir-people t "^[^.][^/]*$")~.
+- [ ] Set =org-contacts-files= to =(directory-files paths-dir-people t "^[^.][^/]*$")=.
 
 ** org-autosort
 :PROPERTIES:
@@ -9220,9 +9263,9 @@ CLOCK: [2021-12-14 Tue 19:46]--[2021-12-14 Tue 20:06] =>  0:20
 /[[https://github.com/d12frosted/vulpea][vulpea]] is a collection of functions for note taking based on ~org~ and ~org-roam~./
 
 I use this package to define a dynamic agenda, as explained and illustrated [[https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html][here]]. I've made some changes to the system in that link, specifically to exclude files and directories at various stages:
-1. At the broadest level, I exclude files and directories from the function (~org-extras-id-auto-add-ids-to-headings-in-file~) that otherwise automatically adds an ID to every org heading in a file-visiting buffer. Headings so excluded are not indexed by org-roam, because a heading requires an ID to be indexed. See the variables ~org-extras-id-auto-add-excluded-files~ and ~org-extras-id-auto-add-excluded-directories~ under the ~org-id~ section of this file.
-2. I then exclude some headings with IDs from the org-roam database. See the variables ~org-roam-file-exclude-regexp~ and ~org-roam-db-node-include-function~  under the ~org-roam~ section of this file.
-3. Finally, I selectively add to ~org-agenda-files~ files that satisfy certain conditions (as defined by ~vulpea-extras-project-p~) and files modified recently (as specified by ~org-roam-extras-recent~), and exclude from ~org-agenda-files~ files listed in ~org-extras-agenda-files-excluded~.
+1. At the broadest level, I exclude files and directories from the function (=org-extras-id-auto-add-ids-to-headings-in-file=) that otherwise automatically adds an ID to every org heading in a file-visiting buffer. Headings so excluded are not indexed by org-roam, because a heading requires an ID to be indexed. See the variables =org-extras-id-auto-add-excluded-files= and =org-extras-id-auto-add-excluded-directories= under the ~org-id~ section of this file.
+2. I then exclude some headings with IDs from the org-roam database. See the variables =org-roam-file-exclude-regexp= and =org-roam-db-node-include-function=  under the ~org-roam~ section of this file.
+3. Finally, I selectively add to =org-agenda-files= files that satisfy certain conditions (as defined by =vulpea-extras-project-p=) and files modified recently (as specified by =org-roam-extras-recent=), and exclude from =org-agenda-files= files listed in =org-extras-agenda-files-excluded=.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package vulpea
@@ -9897,7 +9940,7 @@ in the file. Data comes from www.ebook.de."
   (delete fun org-ref-clean-bibtex-entry-hook)))
 #+end_src
 
-*** TODO Define ~isbn-to-bibtex~ via elpatch
+*** TODO Define =isbn-to-bibtex= via elpatch
 :PROPERTIES:
 :ID:       A3B5FC74-45C6-475C-8D31-B8355F12747C
 :END:
@@ -10221,7 +10264,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
               (add-hook 'zotra-after-get-bibtex-entry-hook #'zotra-extras-after-add-process-bibtex)))
 
   :general
-   (ebib-index-mode-map
+   ((ebib-index-mode-map elfeed-show-mode-map eww-mode-map)
    "a" 'zotra-extras-add-entry))
 #+end_src
 
@@ -10376,7 +10419,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
    "s-b" 'message-goto-body))
 #+end_src
 
-*** TODO [#4] Configure ~message-send-mail-function~ so that messages are sent asynchronously
+*** TODO [#4] Configure =message-send-mail-function= so that messages are sent asynchronously
 :PROPERTIES:
 :ID:       6A48B9FE-3FC9-4D41-B124-F9D7D3898CB4
 :Effort:   0:45
@@ -10498,19 +10541,20 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-index-update-error-warning nil) ; set to `t' when debugging
   (setq mu4e-split-view 'single-window)
   (setq mu4e-headers-show-target nil)
-  (setq mu4e-get-mail-command "mbsync gmail")
+  (setq mu4e-get-mail-command "sh $HOME/bin/mbsync-parallel")
   (setq mu4e-update-interval 60)
-  (setq mu4e-drafts-folder "/[Gmail]/Drafts")
-  (setq mu4e-sent-folder "/[Gmail]/Sent Mail")
-  (setq mu4e-refile-folder "/[Gmail]/All Mail")
-  (setq mu4e-trash-folder "/[Gmail]/Trash")
+  (setq mu4e-drafts-folder "/Drafts")
+  (setq mu4e-sent-folder "/Sent")
+  (setq mu4e-refile-folder "/Refiled")
+  (setq mu4e-trash-folder "/Trash")
   (setq mu4e-attachment-dir paths-dir-downloads)
   (setq mu4e-change-filenames-when-moving t)
+  ;; see also `mu4e-extras-set-shortcuts'
   (setq mu4e-maildir-shortcuts
-        `((,mu4e-drafts-folder  . ?d)
-          (,mu4e-sent-folder    . ?t)
-          (,mu4e-trash-folder   . ?x)
-          (,mu4e-refile-folder  . ?a))) ; required for correct Gmail refiling
+        `((:maildir ,mu4e-drafts-folder :key ?d)
+          (:maildir ,mu4e-sent-folder :key ?t)
+          (:maildir ,mu4e-refile-folder :key ?r)
+          (:maildir ,mu4e-trash-folder :key ?x)))
   (setq mu4e-compose-dont-reply-to-self t)
   (setq mu4e-compose-format-flowed t)
   (setq mu4e-confirm-quit nil)
@@ -10524,7 +10568,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   ;; performance improvements (but with downsides)
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
-  (setq mu4e-index-cleanup nil) ; nil improves performance
+  (setq mu4e-index-cleanup t) ; nil improves performance
   (setq mu4e-index-lazy-check nil) ; t improves performance
 
   (setq mu4e-compose-context-policy 'ask)
@@ -10534,6 +10578,15 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                               (:from . 30)
                               (:subject)))
 
+  (setf (alist-get 'trash mu4e-marks)
+	'(:char ("d" . "▼")
+		:prompt "dtrash"
+		:dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
+		;; Here's the main difference to the regular trash mark, no +T
+		;; before -N so the message is not marked as IMAP-deleted:
+		:action (lambda (docid msg target)
+                          (mu4e--server-move docid (mu4e--mark-check-target target) "+S-u-N"))))
+                          
   (push 'mu4e--search-hist savehist-additional-variables)
 
   (faces-extras-set-and-store-face-attributes
@@ -10575,6 +10628,16 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    "A-C-s-p" nil))
 #+end_src
 
+*** TODO Debug why emails sent by me are not marked as read in Gmail
+:PROPERTIES:
+:ID:       2534A378-53D8-4FCF-A710-817A883CF2B5
+:END:
+:LOGBOOK:
+CLOCK: [2024-05-14 Tue 16:19]--[2024-05-14 Tue 17:15] =>  0:56
+:END:
+
+I think this is because Gmail keeps a copy of the sent emails and mu4e deletes the local copy. So presumably the Gmail copy is never marked as read, because I never end up reading it.
+
 *** resources
 :PROPERTIES:
 :ID:       A7472C4E-FF72-4CBE-A9E2-E3C3F0AB0B38
@@ -10598,11 +10661,11 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
   https://emacs.readthedocs.io/en/latest/mu4e__email_client.html
 
-To re-index the database without restarting Emacs, run ~pkill -2 -u $UID mu~ or ~then ~mu index~ from the terminal. Or try [[https://github.com/djcb/mu/issues/8#issuecomment-396649525][this script]].
+To re-index the database without restarting Emacs, run =pkill -2 -u $UID mu= or ~then =mu index== from the terminal. Or try [[https://github.com/djcb/mu/issues/8#issuecomment-396649525][this script]].
 
-If you get a ~pinentry~ problem, try running this on the termnal ~gpgconf --kill gpg-agent~.
+If you get a ~pinentry~ problem, try running this on the termnal =gpgconf --kill gpg-agent=.
 
-To debug "Update process returned with non-zero exit code", ~(start-process-shell-command "test-mu4e" "test-mu4e" mu4e-get-mail-command)~
+To debug "Update process returned with non-zero exit code", =(start-process-shell-command "test-mu4e" "test-mu4e" mu4e-get-mail-command)=
 https://mu-discuss.narkive.com/mxM4AVIW/how-to-debug-non-zero-exit-code
 
 If you encounter problems with mu and Straight, see [[https://github.com/raxod502/straight.el/issues/491#issuecomment-760150634][this thread]].
@@ -10627,11 +10690,10 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   (setq mu4e-extras-inbox-folder "/Inbox")
   (setq mu4e-extras-daily-folder "/Daily")
   (setq mu4e-extras-wide-reply t)
-
+  (setq mu4e-sent-func #'mu4e-extras-mark-sent-as-read)
+  
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-set-face-locally)
-
-  (run-with-timer (* 10 60) t #'mu4e-extras-check-all-mail)
 
   :general
   ((mu4e-headers-mode-map mu4e-view-mode-map)
@@ -10643,8 +10705,8 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
    "r" 'mu4e-extras-reindex-db)
   (mu4e-headers-mode-map
    "D" 'mu4e-extras-headers-trash
-   "e" 'mu4e-extras-headers-archive
-   "E" 'mu4e-extras-headers-mark-read-and-archive
+   "e" 'mu4e-extras-headers-refile
+   "E" 'mu4e-extras-headers-mark-read-and-refile
    "v" 'mu4e-extras-headers-move
    "x" 'mu4e-extras-mark-execute-all-no-confirm)
   (mu4e-view-mode-map
@@ -10856,7 +10918,7 @@ CLOCK: [2021-04-06 Tue 18:05]--[2021-04-06 Tue 18:34] =>  0:29
 
 /[[https://github.com/zevlg/telega.el][telega]] is an unofficial Emacs Telegram client./
 
-To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a terminal, then ~M-x telega-server-build~.
+To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a terminal, then =M-x telega-server-build=.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package telega
@@ -11021,6 +11083,16 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 (use-feature ol-telega
   :demand t
   :after telega)
+#+end_src
+
+** ement
+:PROPERTIES:
+:ID:       AF0C2ADB-E9C0-4C37-8C3D-5674351ED170
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package ement
+  :demand t)
 #+end_src
 
 ** erc
@@ -11337,7 +11409,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
 /[[https://www.github.com/armindarvish/consult-web][consult-web]] is browses search results from one or several custom sources (such web search engines, AI assistants, elfeed database, and org notes) directly in the Emacs minibuffer./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-web
   :elpaca (consult-web
            :host github
@@ -11439,6 +11511,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
   (add-hook 'elfeed-show-mode-hook #'visual-line-mode)
+  (run-with-idle-timer (* 30 60) t #'elfeed-update)
 
   :general
   ("A-f" 'elfeed)
@@ -11468,14 +11541,14 @@ This is what I have, but no longer reflects my workflow:
 
 | key   | command                              | behavior                      |
 |-------+--------------------------------------+-------------------------------|
-| RET   | ~eww-follow-link '(4)~                 | open link at point in Chrome  |
-| S-RET | ~eww-follow-link~                      | open link at point in eww     |
-| x     | ~elfeed-show-visit~                    | open link of buffer in Chrome |
-| v     | ~elfeed-extras-show-visit-in-eww~      | open link of buffer in eww    |
-| c     | ~elfeed-kill-link-url-at-point~        | copy link at point            |
-| w     | ~elfeed-extras-kill-link-url-of-entry~ | copy link of buffer           |
-| f     | ~ace-link-eww '(4)~                    | open link selected in Chrome  |
-| F     | ~ace-link-eww~                         | open link selected in eww     |
+| RET   | =eww-follow-link '(4)=                 | open link at point in Chrome  |
+| S-RET | =eww-follow-link=                      | open link at point in eww     |
+| x     | =elfeed-show-visit=                    | open link of buffer in Chrome |
+| v     | =elfeed-extras-show-visit-in-eww=      | open link of buffer in eww    |
+| c     | =elfeed-kill-link-url-at-point=        | copy link at point            |
+| w     | =elfeed-extras-kill-link-url-of-entry= | copy link of buffer           |
+| f     | =ace-link-eww '(4)=                    | open link selected in Chrome  |
+| F     | =ace-link-eww=                         | open link selected in eww     |
 
 These key bindings produce the same behavior in eww.
 
@@ -11558,7 +11631,6 @@ These key bindings produce the same behavior in eww.
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elfeed-tube-mpv
   :after elfeed-tube
-  :disabled
   :demand t
   :config
   (setq elfeed-tube-save-indicator t))
@@ -12034,13 +12106,13 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
   (setq mullvad-durations '(1 5 10 30 60 120))
 
   (setq mullvad-cities-and-servers
-        '(("London" . "gb-lon-wg-005")
-          ("Madrid" . "es-mad-wg-105")
+        '(("London" . "gb-lon-ovpn-005")
+          ("Madrid" . "es-mad-ovpn-202")
           ("Malmö" . "se-sto-wg-005")
           ("Frankfurt" . "de-fra-wg-005")
-          ("New York" . "us-nyc-wg-305")
-          ("San José" . "us-sjc-wg-005")
-          ("São Paulo" . "br-sao-wg-005")))
+          ("New York" . "us-nyc-ovpn-501")
+          ("San José" . "us-sjc-wg-101")
+          ("São Paulo" . "br-sao-wg-202")))
 
   (setq mullvad-websites-and-cities
         '(("Betfair" . "London")
@@ -12163,7 +12235,7 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 
 /[[https://github.com/gromnitsky/read-aloud.el][read-aloud]] is an Emacs interface to TTS (text-to-speech) engines./
 
-- To give Emacs access to the microphone on MacOS, clone ~https://github.com/DocSystem/tccutil~ and from the cloned repo, run ~sudo python3 tccutil.py -p /opt/homebrew/Cellar/emacs-mac/emacs-28.1-mac-9.0/Emacs.app --micro -e~ (some discussion [[https://scsynth.org/t/emacs-scsynth-and-microphone-permissions/3253][here]]).
+- To give Emacs access to the microphone on MacOS, clone ~https://github.com/DocSystem/tccutil~ and from the cloned repo, run =sudo python3 tccutil.py -p /opt/homebrew/Cellar/emacs-mac/emacs-28.1-mac-9.0/Emacs.app --micro -e= (some discussion [[https://scsynth.org/t/emacs-scsynth-and-microphone-permissions/3253][here]]).
 - To read with macOS directly, ~b-n~. In turn, ~b-h~ starts dictation. (These are system-wide shortcuts defined with Karabiner rather than bindings specific to Emacs.)
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -12307,11 +12379,10 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            org-roam-db-sync
                            org-extras-id-update-id-locations
                            el-patch-validate-all
-                           tlon-forge-update-all-repos
                            org-extras-agenda-switch-to-agenda-current-day
                            org-gcal-sync
                            elfeed-update)))
-    (add-hook 'midnight-hook fun)))
+    (add-hook 'midnight-hook (lambda () (simple-extras-call-verbosely fun "Midnight hook now calling `%s'...")))))
 #+end_src
 
 ** bbdb
@@ -12330,7 +12401,7 @@ CLOCK: [2023-03-28 Tue 22:32]--[2023-03-28 Tue 22:47] =>  0:15
 
 A tutorial for this undocumented package may be found [[https://github.com/andycowl/bbdb3-manual/blob/master/tutorial.rst][here]].
 
-[2023-04-09 Sun 02:20] I wasn't able to build it, but I was able to install it with ~M-x package-install~, from which I created a local repo.
+[2023-04-09 Sun 02:20] I wasn't able to build it, but I was able to install it with =M-x package-install=, from which I created a local repo.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package bbdb
@@ -12602,19 +12673,19 @@ So when you see a monstrous key binding such as ~C-H-M-s-d~, remember that every
 :LOGBOOK:
 CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 :END:
-- Run ~bug-hunter-init-file~ (from the [[id:0C19171B-8DFA-4E06-9E17-45C1F9158C28][elisp-bug-hunter]] package) and select "automatic error detection" (~e~).
-- Run ~emacs -q~ or ~emacs --debug-init~.
-- Cut suspected sections of the org file (~org-cut-subtree~), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections, while leaving the literal org file intact.
-- Use ~magit-log-buffer-file~ or ~git-timemachine~ to explore previous versions of your config file.
-- Set ~debug-on-error~ to ~t~ to see a backtrace of an error. Or call ~toggle-debug-on-error~ interactively.
-  - To determine what function is changing the value of a variable, use ~debug-on-variable-change~.
-  - To determine what function is generating a particular message, use ~debug-on-message~.
+- Run =bug-hunter-init-file= (from the [[id:0C19171B-8DFA-4E06-9E17-45C1F9158C28][elisp-bug-hunter]] package) and select "automatic error detection" (~e~).
+- Run =emacs -q= or =emacs --debug-init=.
+- Cut suspected sections of the org file (=org-cut-subtree=), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections, while leaving the literal org file intact.
+- Use =magit-log-buffer-file= or =git-timemachine= to explore previous versions of your config file.
+- Set =debug-on-error= to ~t~ to see a backtrace of an error. Or call =toggle-debug-on-error= interactively.
+  - To determine what function is changing the value of a variable, use =debug-on-variable-change=.
+  - To determine what function is generating a particular message, use =debug-on-message=.
 - Bisect the init file until you locate the culprit.
-  - Run ~bug-hunter-init-file~ and select "bisect interactively" (~i~).
-- If Emacs becomes unresponsive, run ~pkill -USR2 Emacs~ in a terminal. Emacs will likely trigger a backtrace, which you can inspect to diagnose the issue.
+  - Run =bug-hunter-init-file= and select "bisect interactively" (~i~).
+- If Emacs becomes unresponsive, run =pkill -USR2 Emacs= in a terminal. Emacs will likely trigger a backtrace, which you can inspect to diagnose the issue.
 - You may want to periodically save a stable init file so that you can temporarily use Emacs with all your customizations while debugging your current init file (instead of having to use an external editor or a non-customized Emacs). Say you call this stable file ~stable.el~. Then you can tell Emacs to load this file on startup file with ~emacs -q -l ~/stable.el~.
-- Use ~edebug-defun~. See [[https://org-roam.discourse.group/t/need-help-getting-noter-pdfs-and-org-roam-bibtex-to-work/794/45?u=pablo][this discussion]].
-- For org-related issues (e.g. tangling the config file), use ~org-lint~, which checks the current buffer for syntax mistakes.
+- Use =edebug-defun=. See [[https://org-roam.discourse.group/t/need-help-getting-noter-pdfs-and-org-roam-bibtex-to-work/794/45?u=pablo][this discussion]].
+- For org-related issues (e.g. tangling the config file), use =org-lint=, which checks the current buffer for syntax mistakes.
 - For more ideas, see:
   - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
   - [[https://whatacold.io/blog/2022-07-17-emacs-elisp-debug/][Emacs Debugging Basics - whatacold's space]]
@@ -12625,7 +12696,7 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 :PROPERTIES:
 :ID:       60B7A58C-A79A-4EEF-A91D-EECC85CFA173
 :END:
-- If you use ~use-package~, the command ~use-package-report~ displays a table showing the impact of each package on load times.
+- If you use ~use-package~, the command =use-package-report= displays a table showing the impact of each package on load times.
 - You may also want to try [[https://www.emacswiki.org/emacs/ProfileDotEmacs][profile-dotemacs]].
 
 ** installation
@@ -12681,7 +12752,7 @@ brew install emacs-plus@28 --with-dbus --with-no-titlebar --with-native-comp --w
 
 - Very slow.
 - Theme broke for some reason.
-- Some functions (e.g. ~keymap-unset~) not available).
+- Some functions (e.g. =keymap-unset=) not available).
 - Telega doesn't show profile pics
 
 [2023-02-14 Tue 20:07]:

@@ -113,7 +113,5 @@ wise.com
 worldcat.org
 yahoo.com
 yaml-online-parser.appspot.com
-youtu.be
-youtube.com
 zonaprop.com.ar
 zoom.us

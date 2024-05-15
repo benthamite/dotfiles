@@ -1,4 +1,3 @@
-#+filetags: :project:
 * consult-spotify
 :PROPERTIES:
 :ID:       1605F697-9968-474A-9691-941723977EEC
@@ -95,10 +94,16 @@ Since I can't make [[id:5879A8B7-0889-4FCD-A16A-77D0BCEE4804][espotify]] work, I
          ]}
 #+end_src
 
-**** TODO [#5] Use two-key chord for this
+**** Archive                                                        :ARCHIVE:
+:PROPERTIES:
+:ID:       5C0A08B6-7B1B-4441-8F4F-7CA2D3297478
+:END:
+***** CANCELLED [#5] Use two-key chord for this
+CLOSED: [2024-05-14 Tue 23:13]
 :PROPERTIES:
 :Effort:   0:20
 :ID:       441944E1-33ED-43E2-A1BB-D6F8A601677E
+:ARCHIVE_TIME: 2024-05-14 Tue 23:13
 :END:
 
 *** ?-mode

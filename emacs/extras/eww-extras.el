@@ -285,8 +285,8 @@ If PLAYER is nil, default to `mpv'."
 Requires a paid subscription and authentication. (Yes, you can authenticate with
 eww!)"
   (interactive)
-  (let ((string (or string (read-string "Search string: ")))
-	(url (format "https://annas-archive.org/search?index=&page=1&q=%s&ext=pdf&sort=" string)))
+  (let* ((string (or string (read-string "Search string: ")))
+	 (url (format "https://annas-archive.org/search?index=&page=1&q=%s&ext=pdf&sort=" string)))
     (advice-add 'eww-follow-link :around #'eww-extras-annas-archive-continue-from-selection)
     (eww url)))
 

@@ -10571,6 +10571,15 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                               (:from . 30)
                               (:subject)))
 
+  (setf (alist-get 'trash mu4e-marks)
+	'(:char ("d" . "▼")
+		:prompt "dtrash"
+		:dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
+		;; Here's the main difference to the regular trash mark, no +T
+		;; before -N so the message is not marked as IMAP-deleted:
+		:action (lambda (docid msg target)
+                          (mu4e--server-move docid (mu4e--mark-check-target target) "+S-u-N"))))
+                          
   (push 'mu4e--search-hist savehist-additional-variables)
 
   (faces-extras-set-and-store-face-attributes

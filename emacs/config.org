@@ -473,6 +473,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#telega-dired-dwim][telega-dired-dwim]]
   - [[#telega-extras][telega-extras]]
   - [[#ol-telega][ol-telega]]
+  - [[#ement][ement]]
   - [[#erc][erc]]
   - [[#circe][circe]]
 - [[#web][web]]
@@ -11055,6 +11056,16 @@ To upgrade TDLib with homebrew, run ~brew upgrade tdlib --fetch-HEAD~ in a termi
 (use-feature ol-telega
   :demand t
   :after telega)
+#+end_src
+
+** ement
+:PROPERTIES:
+:ID:       AF0C2ADB-E9C0-4C37-8C3D-5674351ED170
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package ement
+  :demand t)
 #+end_src
 
 ** erc

@@ -10612,6 +10612,16 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    "A-C-s-p" nil))
 #+end_src
 
+*** TODO Debug why emails sent by me are not marked as read in Gmail
+:PROPERTIES:
+:ID:       2534A378-53D8-4FCF-A710-817A883CF2B5
+:END:
+:LOGBOOK:
+CLOCK: [2024-05-14 Tue 16:19]--[2024-05-14 Tue 17:15] =>  0:56
+:END:
+
+I think this is because Gmail keeps a copy of the sent emails and mu4e deletes the local copy. So presumably the Gmail copy is never marked as read, because I never end up reading it.
+
 *** resources
 :PROPERTIES:
 :ID:       A7472C4E-FF72-4CBE-A9E2-E3C3F0AB0B38

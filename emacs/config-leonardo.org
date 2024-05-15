@@ -307,6 +307,7 @@
        ;; lsp-grammarly
        midnight
        mu4e
+       persistent-scratch
        org-gcal
        org-roam
        org2blog

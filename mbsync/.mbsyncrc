@@ -6,7 +6,6 @@ SSLType IMAPS
 SSLVersions TLSv1.3
 AuthMechs LOGIN
 CertificateFile /opt/homebrew/etc/openssl@1.1/cert.pem
-# PipelineDepth 50 ; only for initial full download, not sure if needed even then
 
 MaildirStore gmail-local
 Subfolders Verbatim

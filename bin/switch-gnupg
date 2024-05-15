@@ -62,7 +62,7 @@ brew unpin gnupg
 # Switching versions requires a full delete/uninstall or the brew install command
 # will skip over download/install and just say to brew link instead, which doesn't
 # have the desired result of switching to a totally different binary.
-# TODO: Find a combination of unlink, link, etc. that will avoid re-downloading.
+# Find a combination of unlink, link, etc. that will avoid re-downloading.
 brew uninstall --ignore-dependencies gnupg
 
 git checkout -b gnupg-$1 $COMMIT_ID_FOR_VERSION

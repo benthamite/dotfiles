@@ -851,5 +851,13 @@ If ELEMENT is the last element, return the first element."
 	(car list)
       (nth index list))))
 
+(defun simple-extras-call-verbosely (fun &optional format-string)
+  "Call FUN and display a message with its name.
+Optionally, use FORMAT-STRING as the message format string. The string should
+take a single argument, the name of the function being called."
+  (let ((format-string (or format-string "Calling `%s'...")))
+    (message format-string (symbol-name fun))
+    (funcall fun)))
+
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

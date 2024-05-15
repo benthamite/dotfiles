@@ -38,12 +38,12 @@
   :group 'mu4e)
 
 (defcustom mu4e-extras-inbox-folder ""
-  "Name of the inbox folder."
+  "Name of the `inbox' folder."
   :type 'string
   :group 'mu4e-extras)
 
 (defcustom mu4e-extras-daily-folder ""
-  "Name of the daily folder."
+  "Name of the `daily' folder."
   :type 'string
   :group 'mu4e-extras)
 
@@ -60,32 +60,42 @@ the sender only."
 (defun mu4e-extras-gmail-fix-flags (mark msg)
   "Fix Gmail flags for each MARK and MSG pair."
   (cond ((eq mark 'trash)  (mu4e-action-retag-message msg "-\\Inbox,+\\Trash,-\\Draft"))
-	((eq mark 'refile) (mu4e-action-retag-message msg "-\\Inbox"))
+	((eq mark 'refile) (mu4e-action-retag-message msg "-\\Inbox,+\\Refiled"))
 	((eq mark 'flag)   (mu4e-action-retag-message msg "+\\Starred"))
 	((eq mark 'unflag) (mu4e-action-retag-message msg "-\\Starred"))))
 
-(defun mu4e-extras-headers-archive ()
-  "In headers mode, archive message at point.
+(defun mu4e-extras-mark-sent-as-read (docid _draft-path)
+  "Mark the sent message identified by DOCID as read.
+When mu4e sends an email with Gmail, Gmail automatically saves a copy in the
+\"Sent\" folder, so the local copy is deleted (as specified by
+`mu4e-sent-messages-behavior'). However, the saved copy is treated as a new,
+unread message when synchronized back to the local client. To handle this
+annoyance, this function marks the saved copy as read. It should be set as the
+value of `mu4e-sent-func'."
+  (mu4e--server-move docid nil "+S-u-N"))
+
+(defun mu4e-extras-headers-refile ()
+  "In headers mode, refile message at point.
 Do not ask for confirmation."
   (interactive)
   (mu4e-headers-mark-for-refile)
   (mu4e-mark-execute-all t))
 
-(defun mu4e-extras-view-archive ()
-  "In view mode, archive message at point.
+(defun mu4e-extras-view-refile ()
+  "In view mode, refile message at point.
 Do not ask for confirmation."
   (interactive)
   (mu4e-view-mark-for-refile)
   (mu4e-mark-execute-all t))
 
 (defun mu4e-extras-view-org-capture (&optional arg)
-  "In view mode, `org-capture' message at point and archive it.
+  "In view mode, `org-capture' message at point and refile it.
 If invoked with prefix argument, capture without archiving it.
 
 If the message body contains with '[org-capture : KEY]',
 interpret KEY as the `org-capture' template key.
 
-If ARG is non-nil, do not archive the message after capturing it."
+If ARG is non-nil, do not refile the message after capturing it."
   (interactive "P")
   (if (or (derived-mode-p 'mu4e-view-mode)
 	  (derived-mode-p 'mu4e-headers-mode))
@@ -101,7 +111,7 @@ If ARG is non-nil, do not archive the message after capturing it."
 		    "e")))
 	(org-capture nil key)
 	(unless arg
-	  (mu4e-extras-view-archive)))
+	  (mu4e-extras-view-refile)))
     (user-error "Not in mu4e-view-mode")))
 
 (defun mu4e-extras-headers-trash ()
@@ -131,16 +141,6 @@ Do not ask for confirmation."
   (interactive)
   (mu4e-view-mark-for-move)
   (mu4e-mark-execute-all t))
-
-;; github.com/danielfleischer/mu4easy#mu4e
-(setf (alist-get 'trash mu4e-marks)
-      '(:char ("d" . "▼")
-              :prompt "dtrash"
-              :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
-              ;; Here's the main difference to the regular trash mark, no +T
-              ;; before -N so the message is not marked as IMAP-deleted:
-              :action (lambda (docid msg target)
-                        (mu4e--server-move docid (mu4e--mark-check-target target) "+S-u-N"))))
 
 (defun mu4e-extras-view-in-gmail ()
   "Open Gmail in a browser and view message at point in it."
@@ -178,19 +178,19 @@ Do not ask for user confirmation."
   (interactive)
   (mu4e-mark-execute-all))
 
-(defun mu4e-extras-headers-mark-read-and-archive ()
-  "In headers mode, mark message at point and read and archive it.
+(defun mu4e-extras-headers-mark-read-and-refile ()
+  "In headers mode, mark message at point and read and refile it.
 Do not ask for confirmation."
   (interactive)
   (mu4e-headers-mark-for-read)
   (mu4e-mark-execute-all t)
   (forward-line -1)
-  (mu4e-extras-headers-archive))
+  (mu4e-extras-headers-refile))
 
 (defun mu4e-extras-set-shortcuts ()
   "Set `mu4e-maildir-shortcuts'."
-  (dolist (shortcut `((,mu4e-extras-inbox-folder . ?i)
-		      (,mu4e-extras-daily-folder . ?y)))
+  (dolist (shortcut `((:maildir ,mu4e-extras-inbox-folder :key ?i)
+		      (:maildir ,mu4e-extras-daily-folder :key ?y)))
     (add-to-list 'mu4e-maildir-shortcuts shortcut)))
 
 (defun mu4e-extras-set-face-locally ()
@@ -234,23 +234,27 @@ otherwise.."
   "Set `mu4e-contexts'."
   (setq mu4e-contexts
 	`(,(make-mu4e-context
-            :name "Personal HTML"
+            :name "1 Personal HTML"
             :match-func #'mu4e-extras-msg-is-personal-and-html-p
             :vars `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
 		    (org-msg-signature . ,org-msg-extras-personal-html-signature)))
 	  ,(make-mu4e-context
-            :name "Personal plain text"
+            :name "2 Personal plain text"
             :match-func #'mu4e-extras-msg-is-personal-and-plain-text-p
+	    :enter-func (lambda () (org-msg-mode -1))
+	    :leave-func #'org-msg-mode
             :vars `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
 		    (org-msg-signature . ,org-msg-extras-personal-plain-text-signature)))
 	  ,(make-mu4e-context
-            :name "Work HTML"
+            :name "3 Work HTML"
             :match-func #'mu4e-extras-msg-is-work-and-html-p
             :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
 		    (org-msg-signature . ,org-msg-extras-work-html-signature)))
 	  ,(make-mu4e-context
-            :name "Work plain text"
+            :name "4 Work plain text"
             :match-func #'mu4e-extras-msg-is-work-and-plain-text-p
+	    :enter-func (lambda () (org-msg-mode -1))
+	    :leave-func #'org-msg-mode
             :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
 		    (org-msg-signature . ,org-msg-extras-work-plain-text-signature))))))
 

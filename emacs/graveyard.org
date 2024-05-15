@@ -2101,11 +2101,6 @@ Of possible interest:
    "M-DEL"    'puni-backward-kill-word))
 #+end_src
 
-*** TODO [#5] Define ~puni~ key bindings
-:PROPERTIES:
-:ID:       BEF1B425-C23E-4C1C-A468-92F7AD54FA18
-:END:
-
 ** emacs-native-shell-complete
 :PROPERTIES:
 :ID:       878E8350-28A3-4C00-94ED-D3C29EFF68D7
@@ -2393,7 +2388,8 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    "s-m" 'slack-message-embed-mention))
 #+end_src
 
-*** TODO [#6] Disable ~emacs-slack~ notifications
+*** CANCELLED [#6] Disable ~emacs-slack~ notifications
+CLOSED: [2024-05-14 Tue 23:14]
 :PROPERTIES:
 :ID:       6CF836CF-74C0-4D80-98D8-0F3CA29182DE
 :Effort:   1:00
@@ -2613,7 +2609,8 @@ I like the idea but Anki provides too many features I need for a migration to be
   (add-to-list 'org-modules 'org-drill))
 #+end_src
 
-*** TODO [#7] Check org drill for manage music listening
+*** CANCELLED [#7] Check org drill for manage music listening
+CLOSED: [2024-05-14 Tue 23:14]
 :PROPERTIES:
 :Effort:   1:00
 :ID:       AA10D76D-6ACC-4A58-BCFF-4253DC7B55F0
@@ -3500,7 +3497,8 @@ The `slug' generated from that STR follows these rules:
   (org-ctrl-c-ctrl-c))
 #+end_src
 
-*** TODO [#4] Modify new person command so that it removes accents from file name
+*** DONE [#4] Modify new person command so that it removes accents from file name
+CLOSED: [2024-05-14 Tue 23:15]
 :PROPERTIES:
 :ID:       7D683836-56EF-4B49-B577-FB73FF3C658B
 :Effort:   0:40
@@ -4027,7 +4025,8 @@ CLOCK: [2021-04-27 Tue 11:13]--[2021-04-27 Tue 11:27] =>  0:14
 
 - [[https://github.com/hlissner/doom-emacs/blob/develop/modules/completion/company/config.el][Doom Emacs Company module]]. Might be useful for ideas.
 
-*** TODO [#6] See if ~company-mode~ can be configured to change face when there's only one completion candidate when writing prose
+*** CANCELLED [#6] See if ~company-mode~ can be configured to change face when there's only one completion candidate when writing prose
+CLOSED: [2024-05-14 Tue 23:15]
 :PROPERTIES:
 :Effort:   1:00
 :ID:       696A4EF9-EFF1-4C12-B90A-0BFCE7434A4B

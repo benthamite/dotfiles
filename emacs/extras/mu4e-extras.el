@@ -38,12 +38,12 @@
   :group 'mu4e)
 
 (defcustom mu4e-extras-inbox-folder ""
-  "Name of the inbox folder."
+  "Name of the `inbox' folder."
   :type 'string
   :group 'mu4e-extras)
 
 (defcustom mu4e-extras-daily-folder ""
-  "Name of the daily folder."
+  "Name of the `daily' folder."
   :type 'string
   :group 'mu4e-extras)
 

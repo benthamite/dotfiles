@@ -60,32 +60,42 @@ the sender only."
 (defun mu4e-extras-gmail-fix-flags (mark msg)
   "Fix Gmail flags for each MARK and MSG pair."
   (cond ((eq mark 'trash)  (mu4e-action-retag-message msg "-\\Inbox,+\\Trash,-\\Draft"))
-	((eq mark 'refile) (mu4e-action-retag-message msg "-\\Inbox"))
+	((eq mark 'refile) (mu4e-action-retag-message msg "-\\Inbox,+\\Refiled"))
 	((eq mark 'flag)   (mu4e-action-retag-message msg "+\\Starred"))
 	((eq mark 'unflag) (mu4e-action-retag-message msg "-\\Starred"))))
 
-(defun mu4e-extras-headers-archive ()
-  "In headers mode, archive message at point.
+(defun mu4e-extras-mark-sent-as-read (docid _draft-path)
+  "Mark the sent message identified by DOCID as read.
+When mu4e sends an email with Gmail, Gmail automatically saves a copy in the
+\"Sent\" folder, so the local copy is deleted (as specified by
+`mu4e-sent-messages-behavior'). However, the saved copy is treated as a new,
+unread message when synchronized back to the local client. To handle this
+annoyance, this function marks the saved copy as read. It should be set as the
+value of `mu4e-sent-func'."
+  (mu4e--server-move docid nil "+S-u-N"))
+
+(defun mu4e-extras-headers-refile ()
+  "In headers mode, refile message at point.
 Do not ask for confirmation."
   (interactive)
   (mu4e-headers-mark-for-refile)
   (mu4e-mark-execute-all t))
 
-(defun mu4e-extras-view-archive ()
-  "In view mode, archive message at point.
+(defun mu4e-extras-view-refile ()
+  "In view mode, refile message at point.
 Do not ask for confirmation."
   (interactive)
   (mu4e-view-mark-for-refile)
   (mu4e-mark-execute-all t))
 
 (defun mu4e-extras-view-org-capture (&optional arg)
-  "In view mode, `org-capture' message at point and archive it.
+  "In view mode, `org-capture' message at point and refile it.
 If invoked with prefix argument, capture without archiving it.
 
 If the message body contains with '[org-capture : KEY]',
 interpret KEY as the `org-capture' template key.
 
-If ARG is non-nil, do not archive the message after capturing it."
+If ARG is non-nil, do not refile the message after capturing it."
   (interactive "P")
   (if (or (derived-mode-p 'mu4e-view-mode)
 	  (derived-mode-p 'mu4e-headers-mode))
@@ -101,7 +111,7 @@ If ARG is non-nil, do not archive the message after capturing it."
 		    "e")))
 	(org-capture nil key)
 	(unless arg
-	  (mu4e-extras-view-archive)))
+	  (mu4e-extras-view-refile)))
     (user-error "Not in mu4e-view-mode")))
 
 (defun mu4e-extras-headers-trash ()
@@ -178,14 +188,14 @@ Do not ask for user confirmation."
   (interactive)
   (mu4e-mark-execute-all))
 
-(defun mu4e-extras-headers-mark-read-and-archive ()
-  "In headers mode, mark message at point and read and archive it.
+(defun mu4e-extras-headers-mark-read-and-refile ()
+  "In headers mode, mark message at point and read and refile it.
 Do not ask for confirmation."
   (interactive)
   (mu4e-headers-mark-for-read)
   (mu4e-mark-execute-all t)
   (forward-line -1)
-  (mu4e-extras-headers-archive))
+  (mu4e-extras-headers-refile))
 
 (defun mu4e-extras-set-shortcuts ()
   "Set `mu4e-maildir-shortcuts'."

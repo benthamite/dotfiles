@@ -1,7 +1,7 @@
 IMAPAccount gmail
 Host imap.gmail.com
-UserCmd "pass auth-sources/mbsync/user"
-PassCmd "pass auth-sources/mbsync/password"
+UserCmd "echo $PERSONAL_GMAIL"
+PassCmd "echo $MBSYNC_PASSWORD"
 SSLType IMAPS
 SSLVersions TLSv1.3
 AuthMechs LOGIN

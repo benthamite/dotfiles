@@ -1216,8 +1216,10 @@ DIRECTION can be `prev' or `next'."
 
 (defun ebib-extras-set-field (field value)
   "Set the value of FIELD to VALUE for the entry at point."
-  (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
-  (ebib-extras-update-entry-buffer ebib--cur-db))
+  (let* ((key (ebib--get-key-at-point))
+	 (init-contents (ebib-get-field-value field key ebib--cur-db 'noerror)))
+    (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite (ebib-unbraced-p init-contents))
+    (ebib-extras-update-entry-buffer ebib--cur-db)))
 
 (declare-function ebib-extras-fetch-field-value "ebib-extras")
 (defun ebib-extras-fetch-keywords ()

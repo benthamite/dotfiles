@@ -11614,7 +11614,6 @@ These key bindings produce the same behavior in eww.
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elfeed-tube-mpv
   :after elfeed-tube
-  :disabled
   :demand t
   :config
   (setq elfeed-tube-save-indicator t))

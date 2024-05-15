@@ -234,23 +234,27 @@ otherwise.."
   "Set `mu4e-contexts'."
   (setq mu4e-contexts
 	`(,(make-mu4e-context
-            :name "Personal HTML"
+            :name "1 Personal HTML"
             :match-func #'mu4e-extras-msg-is-personal-and-html-p
             :vars `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
 		    (org-msg-signature . ,org-msg-extras-personal-html-signature)))
 	  ,(make-mu4e-context
-            :name "Personal plain text"
+            :name "2 Personal plain text"
             :match-func #'mu4e-extras-msg-is-personal-and-plain-text-p
+	    :enter-func (lambda () (org-msg-mode -1))
+	    :leave-func #'org-msg-mode
             :vars `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
 		    (org-msg-signature . ,org-msg-extras-personal-plain-text-signature)))
 	  ,(make-mu4e-context
-            :name "Work HTML"
+            :name "3 Work HTML"
             :match-func #'mu4e-extras-msg-is-work-and-html-p
             :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
 		    (org-msg-signature . ,org-msg-extras-work-html-signature)))
 	  ,(make-mu4e-context
-            :name "Work plain text"
+            :name "4 Work plain text"
             :match-func #'mu4e-extras-msg-is-work-and-plain-text-p
+	    :enter-func (lambda () (org-msg-mode -1))
+	    :leave-func #'org-msg-mode
             :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
 		    (org-msg-signature . ,org-msg-extras-work-plain-text-signature))))))
 

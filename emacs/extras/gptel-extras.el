@@ -206,7 +206,7 @@ The `gptel' directory is set by `gptel-extras-dir'."
   (let* ((extension (pcase major-mode
 		      ('org-mode "org")
 		      ('markdown-mode "md")
-		      (_ (error "Unsupported major mode"))))
+		      (_ (user-error "Unsupported major mode"))))
 	 (filename (file-name-concat gptel-extras-dir
 				     (file-name-with-extension (simple-extras-slugify name) extension))))
     (write-file filename)))

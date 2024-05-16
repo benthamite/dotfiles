@@ -159,13 +159,16 @@ Do not ask for confirmation."
     (shell-command "sleep 1")
     (shell-command "mu index")))
 
-(defun mu4e-extras-copy-sum ()
+(defun mu4e-extras-copy-number-in-title ()
   "Copy amount in subject line."
   (interactive)
-  (when (derived-mode-p 'mu4e-headers-mode)
-    (save-excursion
-      (re-search-forward "\\(\\$\\)\\([[:digit:]]+.[[:digit:]]+\\)")
-      (kill-new (match-string 2)))))
+  (let ((subject (mu4e-message-field (mu4e-message-at-point) :subject)))
+    (when (derived-mode-p 'mu4e-headers-mode)
+      (string-match
+       "\\(\\(?:[[:digit:]]\\{1,3\\}[,.]\\)*\\(?:[[:digit:]]\\{1,3\\}\\)\\(?:[,.][[:digit:]]\\{0,2\\}\\)*\\)"
+       subject)
+      (let ((number (match-string 1 subject)))
+	(message "Copied \"%s\"" number)))))
 
 (defun mu4e-extras-compose-new-externally ()
   "Start writing a new message in Gmail."

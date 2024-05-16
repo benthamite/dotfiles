@@ -57,6 +57,8 @@ the sender only."
 
 ;;;; Functions
 
+;;;;; Post-processing
+
 (defun mu4e-extras-gmail-fix-flags (mark msg)
   "Fix Gmail flags for each MARK and MSG pair."
   (cond ((eq mark 'trash)  (mu4e-action-retag-message msg "-\\Inbox,+\\Trash,-\\Draft"))
@@ -64,6 +66,7 @@ the sender only."
 	((eq mark 'flag)   (mu4e-action-retag-message msg "+\\Starred"))
 	((eq mark 'unflag) (mu4e-action-retag-message msg "-\\Starred"))))
 
+;; TODO: also add the `refiled' label
 (defun mu4e-extras-mark-sent-as-read (docid _draft-path)
   "Mark the sent message identified by DOCID as read.
 When mu4e sends an email with Gmail, Gmail automatically saves a copy in the
@@ -74,6 +77,24 @@ annoyance, this function marks the saved copy as read. It should be set as the
 value of `mu4e-sent-func'."
   (mu4e--server-move docid nil "+S-u-N"))
 
+;;;;; Setup
+
+(defun mu4e-extras-set-shortcuts ()
+  "Set `mu4e-maildir-shortcuts'."
+  (dolist (shortcut `((:maildir ,mu4e-extras-inbox-folder :key ?i)
+		      (:maildir ,mu4e-extras-daily-folder :key ?y)))
+    (add-to-list 'mu4e-maildir-shortcuts shortcut)))
+
+(defun mu4e-extras-set-face-locally ()
+  "Set `shr-text' face locally in `mu4ew-view-mode' buffers."
+  (when (derived-mode-p 'mu4e-view-mode)
+    (face-remap-add-relative 'shr-text :height 0.9)))
+
+;;;;; Commands
+
+;;;;;; Refile
+
+;;;###autoload
 (defun mu4e-extras-headers-refile ()
   "In headers mode, refile message at point.
 Do not ask for confirmation."
@@ -81,6 +102,18 @@ Do not ask for confirmation."
   (mu4e-headers-mark-for-refile)
   (mu4e-mark-execute-all t))
 
+;;;###autoload
+(defun mu4e-extras-headers-mark-read-and-refile ()
+  "In headers mode, mark message at point and read and refile it.
+Do not ask for confirmation."
+  (interactive)
+  (mu4e-headers-mark-for-read)
+  (mu4e-mark-execute-all t)
+  (sleep-for 0.1)
+  (forward-line -1)
+  (mu4e-extras-headers-refile))
+
+;;;###autoload
 (defun mu4e-extras-view-refile ()
   "In view mode, refile message at point.
 Do not ask for confirmation."
@@ -88,6 +121,73 @@ Do not ask for confirmation."
   (mu4e-view-mark-for-refile)
   (mu4e-mark-execute-all t))
 
+;;;;;; Trash
+
+;;;###autoload
+(defun mu4e-extras-headers-trash ()
+  "In headers mode, trash message at point.
+Do not ask for confirmation."
+  (interactive)
+  (mu4e-headers-mark-for-trash)
+  (mu4e-mark-execute-all t))
+
+;;;###autoload
+(defun mu4e-extras-view-trash ()
+  "In view mode, trash message at point.
+Do not ask for confirmation."
+  (interactive)
+  (mu4e-view-mark-for-trash)
+  (mu4e-mark-execute-all t))
+
+;;;;;; Move
+
+;;;###autoload
+(defun mu4e-extras-headers-move ()
+  "In headers mode, move and execute message at point.
+Do not ask for confirmation."
+  (interactive)
+  (mu4e-headers-mark-for-move)
+  (mu4e-mark-execute-all t))
+
+;;;###autoload
+(defun mu4e-extras-view-move ()
+  "In view mode, move and execute message at.
+Do not ask for confirmation."
+  (interactive)
+  (mu4e-view-mark-for-move)
+  (mu4e-mark-execute-all t))
+
+;;;;;; Compose
+
+(defun mu4e-extras-compose-reply (&optional wide)
+  "Reply to the message at point.
+
+If WIDE is non-nil, make it a \"wide\" reply (a.k.a. \"reply-to-all\"). Else,
+prompt the user for the reply type if `mu4e-extras-wide-reply' is `prompt', make
+it a narrow reply if `mu4e-extras-wide-reply' is nil, and make it a wide reply
+otherwise.."
+  (interactive)
+  (if (mu4e-message-contact-field-matches-me (mu4e-message-at-point) :from)
+      (mu4e-compose-supersede)
+    (let ((recipients 0))
+      (dolist (field '(:to :cc) recipients)
+	(setq recipients
+	      (+ recipients (length (mu4e-message-field-at-point field)))))
+      (if (> recipients 1)
+	  (let* ((wide (or wide (pcase mu4e-extras-wide-reply
+				  ('prompt (y-or-n-p "Reply to all? "))
+				  (_ mu4e-extras-wide-reply)))))
+	    (mu4e-compose-reply wide))
+	(mu4e-compose-reply)))))
+
+(defun mu4e-extras-compose-new-externally ()
+  "Start writing a new message in Gmail."
+  (interactive)
+  (browse-url "https://mail.google.com/mail/u/0/#inbox?compose=new"))
+
+;;;;;; Misc
+
+;;;###autoload
 (defun mu4e-extras-view-org-capture (&optional arg)
   "In view mode, `org-capture' message at point and refile it.
 If invoked with prefix argument, capture without archiving it.
@@ -114,34 +214,6 @@ If ARG is non-nil, do not refile the message after capturing it."
 	  (mu4e-extras-view-refile)))
     (user-error "Not in mu4e-view-mode")))
 
-(defun mu4e-extras-headers-trash ()
-  "In headers mode, trash message at point.
-Do not ask for confirmation."
-  (interactive)
-  (mu4e-headers-mark-for-trash)
-  (mu4e-mark-execute-all t))
-
-(defun mu4e-extras-view-trash ()
-  "In view mode, trash message at point.
-Do not ask for confirmation."
-  (interactive)
-  (mu4e-view-mark-for-trash)
-  (mu4e-mark-execute-all t))
-
-(defun mu4e-extras-headers-move ()
-  "In headers mode, move and execute message at point.
-Do not ask for confirmation."
-  (interactive)
-  (mu4e-headers-mark-for-move)
-  (mu4e-mark-execute-all t))
-
-(defun mu4e-extras-view-move ()
-  "In view mode, move and execute message at.
-Do not ask for confirmation."
-  (interactive)
-  (mu4e-view-mark-for-move)
-  (mu4e-mark-execute-all t))
-
 (defun mu4e-extras-view-in-gmail ()
   "Open Gmail in a browser and view message at point in it."
   (interactive)
@@ -159,44 +231,22 @@ Do not ask for confirmation."
     (shell-command "sleep 1")
     (shell-command "mu index")))
 
-(defun mu4e-extras-copy-sum ()
+(defun mu4e-extras-copy-number-in-title ()
   "Copy amount in subject line."
   (interactive)
-  (when (derived-mode-p 'mu4e-headers-mode)
-    (save-excursion
-      (re-search-forward "\\(\\$\\)\\([[:digit:]]+.[[:digit:]]+\\)")
-      (kill-new (match-string 2)))))
-
-(defun mu4e-extras-compose-new-externally ()
-  "Start writing a new message in Gmail."
-  (interactive)
-  (browse-url "https://mail.google.com/mail/u/0/#inbox?compose=new"))
+  (let ((subject (mu4e-message-field (mu4e-message-at-point) :subject)))
+    (when (derived-mode-p 'mu4e-headers-mode)
+      (string-match
+       "\\(\\(?:[[:digit:]]\\{1,3\\}[,.]\\)*\\(?:[[:digit:]]\\{1,3\\}\\)\\(?:[,.][[:digit:]]\\{0,2\\}\\)*\\)"
+       subject)
+      (let ((number (match-string 1 subject)))
+	(message "Copied \"%s\"" number)))))
 
 (defun mu4e-extras-mark-execute-all-no-confirm ()
   "Execute the actions for all marked messages in this buffer.
 Do not ask for user confirmation."
   (interactive)
   (mu4e-mark-execute-all))
-
-(defun mu4e-extras-headers-mark-read-and-refile ()
-  "In headers mode, mark message at point and read and refile it.
-Do not ask for confirmation."
-  (interactive)
-  (mu4e-headers-mark-for-read)
-  (mu4e-mark-execute-all t)
-  (forward-line -1)
-  (mu4e-extras-headers-refile))
-
-(defun mu4e-extras-set-shortcuts ()
-  "Set `mu4e-maildir-shortcuts'."
-  (dolist (shortcut `((:maildir ,mu4e-extras-inbox-folder :key ?i)
-		      (:maildir ,mu4e-extras-daily-folder :key ?y)))
-    (add-to-list 'mu4e-maildir-shortcuts shortcut)))
-
-(defun mu4e-extras-set-face-locally ()
-  "Set `shr-text' face locally in `mu4ew-view-mode' buffers."
-  (when (derived-mode-p 'mu4e-view-mode)
-    (face-remap-add-relative 'shr-text :height 0.9)))
 
 (defun mu4e-extras-check-all-mail ()
   "Check all Gmail channels.
@@ -206,27 +256,6 @@ takes just a couple of seconds."
   (interactive)
   (let ((mu4e-get-mail-command "mbsync gmail-all"))
     (mu4e-update-mail-and-index t)))
-
-(defun mu4e-extras-compose-reply (&optional wide)
-  "Reply to the message at point.
-
-If WIDE is non-nil, make it a \"wide\" reply (a.k.a. \"reply-to-all\"). Else,
-prompt the user for the reply type if `mu4e-extras-wide-reply' is `prompt', make
-it a narrow reply if `mu4e-extras-wide-reply' is nil, and make it a wide reply
-otherwise.."
-  (interactive)
-  (if (mu4e-message-contact-field-matches-me (mu4e-message-at-point) :from)
-      (mu4e-compose-supersede)
-    (let ((recipients 0))
-      (dolist (field '(:to :cc) recipients)
-	(setq recipients
-	      (+ recipients (length (mu4e-message-field-at-point field)))))
-      (if (> recipients 1)
-	  (let* ((wide (or wide (pcase mu4e-extras-wide-reply
-				  ('prompt (y-or-n-p "Reply to all? "))
-				  (_ mu4e-extras-wide-reply)))))
-	    (mu4e-compose-reply wide))
-	(mu4e-compose-reply)))))
 
 ;;;;; Contexts
 

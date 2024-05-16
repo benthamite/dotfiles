@@ -10579,7 +10579,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 		;; before -N so the message is not marked as IMAP-deleted:
 		:action (lambda (docid msg target)
                           (mu4e--server-move docid (mu4e--mark-check-target target) "+S-u-N"))))
-                          
+  
   (push 'mu4e--search-hist savehist-additional-variables)
 
   (faces-extras-set-and-store-face-attributes
@@ -10618,7 +10618,9 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    "m" 'mu4e-view-mark-for-something
    "w" 'mu4e-copy-message-path
    "A-C-s-u" nil
-   "A-C-s-p" nil))
+   "A-C-s-p" nil)
+  (mu4e-compose-minor-mode-map
+   "E" nil))
 #+end_src
 
 *** TODO Debug why emails sent by me are not marked as read in Gmail

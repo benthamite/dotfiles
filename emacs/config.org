@@ -10706,7 +10706,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
    "x" 'mu4e-extras-mark-execute-all-no-confirm)
   (mu4e-view-mode-map
    "D" 'mu4e-extras-view-trash
-   "e" 'mu4e-extras-view-archive
+   "e" 'mu4e-extras-view-refile
    "x" 'mu4e-extras-view-in-gmail
    "v" 'mu4e-extras-view-move))
 #+end_src

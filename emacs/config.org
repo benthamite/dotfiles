@@ -10541,7 +10541,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                 :build (:not elpaca--compile-info)
                 :ref "ac2515e" ; v1.12.4
                 :depth nil)
-  :demand t
+  :defer 5
   :config
   (require 'mu4e-contrib)
   ;; (setq mu4e-debug t) ; uncomment when debugging

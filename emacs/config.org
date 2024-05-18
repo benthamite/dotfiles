@@ -1881,7 +1881,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   :elpaca (modus-themes
            :host github
            :repo "protesilaos/modus-themes")
-  :after faces faces-extras
+  :after faces faces-extras simple-extras
   :demand t
 
   :config

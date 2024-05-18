@@ -10177,7 +10177,6 @@ The macro below generates the commands correctly. But attempting to define key b
            :host github
            :repo "benthamite/bib"
            :depth nil) ; clone entire repo, not just last commit
-  :defer 5
   :config
   (setq bib-isbndb-key
         (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-email-shared)))

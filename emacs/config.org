@@ -2182,7 +2182,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
           ,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
           ))
 
-  (add-hook 'tlon-init-post-init-hook #'tab-bar-extras-reset))
+  (add-hook 'tlon-init-post-init-hook (lambda () (tab-bar-extras-reset 'quick))))
 #+end_src
 
 ** breadcrumb

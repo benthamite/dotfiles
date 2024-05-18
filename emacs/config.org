@@ -537,6 +537,21 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 The contents of this code block are tangled to the ~early-init.el~ file.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally nil t)
+(defun macos-get-system-appearance ()
+  "Return the current macOS system appearance."
+  (intern (downcase (string-trim (shell-command-to-string
+				  "defaults read -g AppleInterfaceStyle 2>/dev/null || echo 'Light'")))))
+
+(defun early-init-blacken-screen ()
+  "Blacken screen as soon as Emacs starts, if the system theme is `dark'.
+New frames are instructed to call `prot-emacs-re-enable-frame-theme'."
+  (when (eq (macos-get-system-appearance) 'dark)
+    (setq mode-line-format nil)
+    (set-face-attribute 'default nil :background "#000000" :foreground "#ffffff")
+    (set-face-attribute 'mode-line nil :background "#000000" :foreground "#ffffff" :box 'unspecified)))
+
+(early-init-blacken-screen)
+
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 

@@ -49,6 +49,7 @@
 
 (defvar window-extras-frame-split-width-threshold)
 (declare-function window-extras-split-if-unsplit "window-extras")
+(declare-function winum-select-window-2 "winum")
 (declare-function winum-select-window-3 "winum")
 (defun ebib-extras-open-or-switch ()
   "Open ebib in the right window or switch to it if already open."

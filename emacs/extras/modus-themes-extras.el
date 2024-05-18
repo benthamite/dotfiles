@@ -23,7 +23,7 @@
 
 ;;; Commentary:
 
-;; Extra functionality for modus-themes.
+;; Extensions for `modus-themes'.
 
 ;;; Code:
 

@@ -4631,6 +4631,7 @@ The original package is no longer maintained; the fork below adds a few improvem
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package display-wttr
+  :requires calendar-extras
   :defer 10
   :config
   (setq display-wttr-interval (* 15 60))

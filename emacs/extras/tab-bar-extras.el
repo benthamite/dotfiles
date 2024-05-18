@@ -129,10 +129,11 @@ reset functions."
   (interactive)
   (tab-bar-extras-set-global-mode-string)
   (unless quick
-    (when (bound-and-true-p calendar-extras-use-geolocation)
-      (calendar-extras-set-geolocation))
-    (setq display-wttr-locations `(,calendar-extras-location-name)))
-  (when tab-bar-extras-reset-wttr
+    (when (featurep 'calendar-extras)
+      (when calendar-extras-use-geolocation
+	(calendar-extras-set-geolocation))
+      (setq display-wttr-locations `(,calendar-extras-location-name))))
+  (when (and tab-bar-extras-reset-wttr (featurep 'display-wttr))
     (display-wttr)))
 
 (defun tab-bar-extras-quick-reset ()

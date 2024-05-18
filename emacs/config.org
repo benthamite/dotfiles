@@ -540,7 +540,7 @@ The contents of this code block are tangled to the ~early-init.el~ file.
 (defun macos-get-system-appearance ()
   "Return the current macOS system appearance."
   (intern (downcase (string-trim (shell-command-to-string
-				  "defaults read -g AppleInterfaceStyle 2>/dev/null || echo 'Light'")))))
+                                  "defaults read -g AppleInterfaceStyle 2>/dev/null || echo 'Light'")))))
 
 (defun early-init-blacken-screen ()
   "Blacken screen as soon as Emacs starts, if the system theme is `dark'.
@@ -10586,14 +10586,14 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                               (:subject)))
 
   (setf (alist-get 'trash mu4e-marks)
-	'(:char ("d" . "▼")
-		:prompt "dtrash"
-		:dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
-		;; Here's the main difference to the regular trash mark, no +T
-		;; before -N so the message is not marked as IMAP-deleted:
-		:action (lambda (docid msg target)
+        '(:char ("d" . "▼")
+                :prompt "dtrash"
+                :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
+                ;; Here's the main difference to the regular trash mark, no +T
+                ;; before -N so the message is not marked as IMAP-deleted:
+                :action (lambda (docid msg target)
                           (mu4e--server-move docid (mu4e--mark-check-target target) "+S-u-N"))))
-  
+
   (push 'mu4e--search-hist savehist-additional-variables)
 
   (faces-extras-set-and-store-face-attributes

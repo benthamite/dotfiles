@@ -859,5 +859,10 @@ take a single argument, the name of the function being called."
     (message format-string (symbol-name fun))
     (funcall fun)))
 
+(defun simple-extras-get-emacs-distro ()
+  "Return the Emacs distribution."
+  (cond ((boundp 'mac-effective-appearance-change-hook) 'emacs-mac)
+	((boundp 'ns-system-appearance-change-functions) 'emacs-plus)))
+
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

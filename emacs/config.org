@@ -10699,8 +10699,9 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   (setq mu4e-extras-inbox-folder "/Inbox")
   (setq mu4e-extras-daily-folder "/Daily")
   (setq mu4e-extras-wide-reply t)
-  (setq mu4e-sent-func #'mu4e-extras-mark-sent-as-read)
-  
+
+  ;; not working; see the definition of `mu4e-extras-mark-sent-as-read'
+  ;; (add-hook 'message-sent-hook #'mu4e-extras-mark-sent-as-read)
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-set-face-locally)
 

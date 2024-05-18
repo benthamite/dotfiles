@@ -4425,7 +4425,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package calendar-extras
   :after calendar auth-source-pass
-  :defer 5
+  :demand t
   :config
   (setq calendar-extras-location-name "Buenos Aires")
   (setq calendar-extras-use-geolocation t)

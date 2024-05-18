@@ -2165,7 +2165,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package tab-bar-extras
-  :after tab-bar
+  :after tab-bar telega
   :demand t
   :config
   (setq tab-bar-extras-global-mode-string

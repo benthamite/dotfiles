@@ -706,7 +706,7 @@
           ,tab-bar-extras-telega-element
           ;;,tab-bar-extras-github-element
           ;;,tab-bar-extras-pomodoro-element
-          ,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
+          ;;,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
           ))
 
 (setq tab-bar-extras-reset-wttr nil)

@@ -79,11 +79,11 @@
 	      :last-update "2021-09-01"
 	      :description "Currently points to `gpt-4-0613'. ")
     (:backend "ChatGPT"
-	      :model "gpt-4-32k"
-	      :cost 60
-	      :tokens 32768
-	      :last-update "2021-09-01"
-	      :description "Currently points to gpt-4-32k-0613. See continuous model upgrades. This model was never rolled out widely in favor of GPT-4 Turbo.")
+	      :model "gpt-4o"
+	      :cost 5
+	      :tokens 128000
+	      :last-update "2023-10-01"
+	      :description "[Recommended] The most advanced multimodal model that’s faster and cheaper than GPT-4 Turbo with stronger vision capabilities.")
     (:backend "ChatGPT"
 	      :model "gpt-4-turbo"
 	      :cost 10
@@ -91,15 +91,17 @@
 	      :last-update "2023-12-01"
 	      :description "[Recommended] The latest GPT-4 Turbo model with vision capabilities. Vision requests can now use JSON mode and function calling. Currently points to gpt-4-turbo-2024-04-09.")
     (:backend "ChatGPT"
-	      :model "gpt-4-turbo"
-	      :cost 10
-	      :description "[recommended] With 128k context, fresher knowledge and the broadest set of capabilities, GPT-4 Turbo is more powerful than GPT-4 and offered at a lower price. Currently points to `gpt-4-turbo-2024-04-09'.")
-    (:backend "ChatGPT"
 	      :model "gpt-4-turbo-preview"
 	      :cost 10
 	      :tokens 128000
 	      :last-update "2023-12-01"
 	      :description "GPT-4 Turbo preview model. Currently points to `gpt-4-0125-preview'.")
+    (:backend "ChatGPT"
+	      :model "gpt-4-32k"
+	      :cost 60
+	      :tokens 32768
+	      :last-update "2021-09-01"
+	      :description "Currently points to gpt-4-32k-0613. See continuous model upgrades. This model was never rolled out widely in favor of GPT-4 Turbo.")
     (:backend "ChatGPT"
 	      :model "gpt-4-1106-preview"
 	      :cost 10
@@ -112,10 +114,10 @@
 	      :tokens 128000
 	      :last-update "2023-12-01"
 	      :description "GPT-4 Turbo preview model intended to reduce cases of “laziness” where the model doesn’t complete a task. Returns a maximum of 4,096 output tokens.")
-    (:backend "ChatGPT"
-	      :model "gpt-4-vision-preview"
-	      :cost 0 ; placeholder
-	      :description "GPT-4 model for sending images.")
+    ;; (:backend "ChatGPT"
+    ;; :model "gpt-4-vision-preview"
+    ;; :cost 0 ; placeholder
+    ;; :description "GPT-4 model for sending images.")
     (:backend "Claude"
 	      :model "claude-3-haiku-20240307"
 	      :tokens 200000
@@ -145,7 +147,7 @@ The relevant information has been obtained from the following websites:
 ;;;; Functions
 
 (defvar gptel-extras-ai-models)
-(declare-function tlon-babel-lookup "tlon-babel-core")
+(declare-function tlon-lookup "tlon-core")
 ;; adapted from the `:reader' lambda of `transient-infix-set' in `gptel-transient.el'
 (defun gptel-extras-model-config (globally &optional backend-name model-name)
   "Configure `gptel' for BACKEND-NAME and MODEL-NAME.
@@ -161,10 +163,10 @@ called with a prefix argument, configure it globally."
 	 (models-with-cost (mapcar (lambda (backend)
 				     (cons (format "%-25s  $ %5.2f  %8s  %6s  %-80s"
 						   backend
-						   (tlon-babel-lookup gptel-extras-ai-models :cost :model backend)
-						   (tlon-babel-lookup gptel-extras-ai-models :last-update :model backend)
-						   (tlon-babel-lookup gptel-extras-ai-models :tokens :model backend)
-						   (tlon-babel-lookup gptel-extras-ai-models :description :model backend))
+						   (tlon-lookup gptel-extras-ai-models :cost :model backend)
+						   (tlon-lookup gptel-extras-ai-models :last-update :model backend)
+						   (tlon-lookup gptel-extras-ai-models :tokens :model backend)
+						   (tlon-lookup gptel-extras-ai-models :description :model backend))
 					   backend))
 				   backend-models))
 	 (model-name (or model-name
@@ -178,7 +180,7 @@ called with a prefix argument, configure it globally."
 
 (defun gptel-extras-get-cost ()
   "Get the cost of prompting the current model."
-  (let* ((cost-per-1m (tlon-babel-lookup gptel-extras-ai-models :cost :model gptel-model))
+  (let* ((cost-per-1m (tlon-lookup gptel-extras-ai-models :cost :model gptel-model))
 	 (words (if (region-active-p)
 		    (count-words (region-beginning) (region-end))
 		  (count-words (point-min) (point))))
@@ -204,7 +206,7 @@ The `gptel' directory is set by `gptel-extras-dir'."
   (let* ((extension (pcase major-mode
 		      ('org-mode "org")
 		      ('markdown-mode "md")
-		      (_ (error "Unsupported major mode"))))
+		      (_ (user-error "Unsupported major mode"))))
 	 (filename (file-name-concat gptel-extras-dir
 				     (file-name-with-extension (simple-extras-slugify name) extension))))
     (write-file filename)))

@@ -116,7 +116,7 @@ poorly-designed websites."
 ;;;;; elfeed ‘follow mode’
 
 ;; this implements an analogy of `org-agenda-follow-mode': as point is moved
-;; through the `elfeed' search buffer, the corresponding entry is show in the
+;; across the `elfeed' search buffer, the corresponding entry is shown in the
 ;; other window
 (defun elfeed-extras-display-buffer (buffer)
   "Display BUFFER in the other window, without focusing on it."

@@ -27,8 +27,6 @@
 
 ;;; Code:
 
-(require 'ebib)
-(require 'ebib-extras)
 (require 'paths)
 (require 'zotra)
 
@@ -40,8 +38,16 @@
 (defvar zotra-extras-most-recent-bibkey nil
   "The bibkey of the most recently added entry.")
 
+(defconst zotra-extras-add-multiple-urls-filename
+  (file-name-concat paths-dir-downloads "zotra-add-multiple-urls.txt")
+  "Default file for `zotra-extras-add-multiple-urls'.")
+
 ;;;; Functions
 
+(defvar ebib--cur-db)
+(declare-function ebib "ebib")
+(declare-function elfeed-extras-kill-link-url-of-entry "elfeed-extras")
+(declare-function eww-copy-page-url "eww")
 (defun zotra-extras-add-entry (&optional url-or-search-string entry-format bibfile)
   "Like `zotra-extras-add-entry', but set BIBFILE and open in Ebib.
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry'
@@ -50,33 +56,32 @@ to get the entry.
   (interactive)
   (let* ((bibfile (or bibfile
 		      (setq zotra-extras-most-recent-bibfile (zotra-extras-set-bibfile)))))
+    (pcase major-mode
+      ('elfeed-show-mode (elfeed-extras-kill-link-url-of-entry))
+      ('eww-mode (eww-copy-page-url)))
     (zotra-add-entry url-or-search-string entry-format bibfile)
     (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey)))
 
-(declare-function eww-extras-url-to-pdf "eww-extras")
-(declare-function eww-extras-url-to-html "eww-extras")
-(defun zotra-extras-url-full-capture (&optional url)
-  "Add URL to bibfile and generate associated PDF and HTML files."
-  (interactive)
-  (let ((url (or url
-		 (read-string "Add entry from URL or search identifier: " (current-kill 0)))))
-    (unless ebib--cur-db
-      (ebib))
-    (zotra-add-entry url)
-    (eww-extras-url-to-pdf url)
-    (eww-extras-url-to-html url)))
-
 ;;;;; Bibfile
 
-(defvar tlon-babel-refs-file-fluid)
+(defvar tlon-file-fluid)
 (defun zotra-extras-set-bibfile ()
   "Prompt the user to select a value for `org-cite-global-bibliography'."
   (completing-read "Bibfile" (list
-                              tlon-babel-refs-file-fluid
+                              tlon-file-fluid
                               paths-file-personal-bibliography-new)))
 
 ;;;;; Ebib
 
+(declare-function ebib-switch-to-database-nth "ebib")
+(declare-function ebib-save-current-database "ebib")
+(declare-function ebib--update-buffers "ebib")
+(declare-function ebib-extras-open-or-switch "ebib-extras")
+(declare-function ebib-extras-get-db-number "ebib-extras")
+(declare-function ebib-extras-reload-database-no-confirm "ebib-extras")
+(declare-function ebib-extras-sort "ebib-extras")
+(declare-function ebib-extras-open-key "ebib-extras")
+(declare-function ebib-extras-process-entry "ebib-extras")
 (defun zotra-extras-open-in-ebib (bibkey)
   "Open BIBKEY in Ebib after adding entry via `zotra-add-entry'."
   (ebib-switch-to-database-nth (ebib-extras-get-db-number zotra-extras-most-recent-bibfile))
@@ -84,7 +89,7 @@ to get the entry.
   (ebib-extras-reload-database-no-confirm ebib--cur-db)
   (ebib--update-buffers)
   (ebib zotra-extras-most-recent-bibfile bibkey)
-  (ebib--index-sort "Timestamp" 'descend)
+  (ebib-extras-sort 'Timestamp)
   (goto-char (point-min))
   (ebib-extras-open-key bibkey)
   ;; we add this so that the latest entry is sorted in the bibtex
@@ -96,7 +101,11 @@ to get the entry.
 
 ;;;;; Cleanup
 
+(defvar ebib-timestamp-format)
 (declare-function org-ref-clean-bibtex-entry "org-ref-bibtex")
+(declare-function bibtex-set-field "doi-utils")
+(declare-function bibtex-extras-convert-titleaddon-to-journaltitle "bibtex-extras")
+(declare-function bibtex-extras-get-key "bibtex-extras")
 (defun zotra-extras-after-add-process-bibtex ()
   "Process newly added bibtex entry."
   ;; TODO: check that there are no unsaved changes in
@@ -147,6 +156,20 @@ gracefully."
           (if (string-empty-p value)
               nil
             value))))))
+
+(declare-function ebib-save-all-databases "ebib")
+(declare-function ebib-extras-sort "ebib-extras")
+(declare-function files-extras-lines-to-list "files-extras")
+(defun zotra-extras-add-multiple-urls (file)
+  "Prompt the user to select a FILE with a list of URLs and add them."
+  (interactive (list (read-file-name "fFile with URLs (one URL per line): " paths-dir-downloads
+				     zotra-extras-add-multiple-urls-filename nil nil)))
+  (let ((urls (files-extras-lines-to-list file)))
+    (ebib-save-all-databases)
+    (dolist (url urls)
+      (zotra-add-entry url nil tlon-file-fluid))
+    (ebib tlon-file-fluid)
+    (ebib-extras-sort 'Timestamp)))
 
 (provide 'zotra-extras)
 ;;; zotra-extras.el ends here

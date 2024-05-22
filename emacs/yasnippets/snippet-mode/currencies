@@ -3,5 +3,5 @@
 # key: cur
 # contributor: Pablo Stafforinil
 # --
-\\${$1:$$(yas-choose-value ledger-prices-currencies)}
+\\${$1:$$(yas-choose-value ledger-mode-extras-currencies)}
 

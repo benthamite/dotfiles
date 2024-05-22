@@ -22,12 +22,15 @@
  ;; jinx
  midnight
  mixed-pitch
+ consult-mu
  mu4e
+ mu4e-extras
  ;; mullvad
  ns-win
  org-gcal
  ;; org-roam
- org-roam-bibtex
+ org-roam-BibTeX
+ org-contacts
  org2blog
  outline
  ;; pdf-tools
@@ -217,6 +220,11 @@
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (use-package nginx-mode :demand t)
+#+end_src
+
+** docker
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(use-package docker :demand t)
 #+end_src
 
 ** ns-win

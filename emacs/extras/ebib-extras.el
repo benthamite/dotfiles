@@ -406,7 +406,8 @@ open FILE."
 
 (declare-function eww-extras-url-to-file "eww-extras")
 (defun ebib-extras-url-to-file-attach (type)
-  "Generate PDF of file of TYPE."
+  "Generate a file  of TYPE for the URL of the entry at point and attach it.
+TYPE can be \"pdf\" or \"html\"."
   (when (ebib-extras-get-field "url")
     (eww-extras-url-to-file type nil #'ebib-extras-attach-file-to-entry)))
 

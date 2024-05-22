@@ -66,16 +66,21 @@ the sender only."
 	((eq mark 'flag)   (mu4e-action-retag-message msg "+\\Starred"))
 	((eq mark 'unflag) (mu4e-action-retag-message msg "-\\Starred"))))
 
-;; TODO: also add the `refiled' label
-(defun mu4e-extras-mark-sent-as-read (docid _draft-path)
+;; FIXME: this is not working
+;; I just can't figure out how to get the plist of the sent message
+(defun mu4e-extras-mark-sent-as-read ()
   "Mark the sent message identified by DOCID as read.
 When mu4e sends an email with Gmail, Gmail automatically saves a copy in the
 \"Sent\" folder, so the local copy is deleted (as specified by
 `mu4e-sent-messages-behavior'). However, the saved copy is treated as a new,
 unread message when synchronized back to the local client. To handle this
-annoyance, this function marks the saved copy as read. It should be set as the
-value of `mu4e-sent-func'."
-  (mu4e--server-move docid nil "+S-u-N"))
+annoyance, this function marks the saved copy as read."
+  (let* ((msgid (message-fetch-field "Message-ID"))
+	 (msg (save-excursion
+		(mu4e-headers-goto-message-id msgid)
+		(mu4e-message-at-point))))
+    (mu4e-action-retag-message msg "+\\Refiled")
+    (mu4e--server-move msgid nil "+S-u-N")))
 
 ;;;;; Setup
 
@@ -240,6 +245,7 @@ If ARG is non-nil, do not refile the message after capturing it."
        "\\(\\(?:[[:digit:]]\\{1,3\\}[,.]\\)*\\(?:[[:digit:]]\\{1,3\\}\\)\\(?:[,.][[:digit:]]\\{0,2\\}\\)*\\)"
        subject)
       (let ((number (match-string 1 subject)))
+	(kill-new number)
 	(message "Copied \"%s\"" number)))))
 
 (defun mu4e-extras-mark-execute-all-no-confirm ()

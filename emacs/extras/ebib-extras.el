@@ -49,6 +49,7 @@
 
 (defvar window-extras-frame-split-width-threshold)
 (declare-function window-extras-split-if-unsplit "window-extras")
+(declare-function winum-select-window-2 "winum")
 (declare-function winum-select-window-3 "winum")
 (defun ebib-extras-open-or-switch ()
   "Open ebib in the right window or switch to it if already open."
@@ -405,7 +406,8 @@ open FILE."
 
 (declare-function eww-extras-url-to-file "eww-extras")
 (defun ebib-extras-url-to-file-attach (type)
-  "Generate PDF of file of TYPE."
+  "Generate a file  of TYPE for the URL of the entry at point and attach it.
+TYPE can be \"pdf\" or \"html\"."
   (when (ebib-extras-get-field "url")
     (eww-extras-url-to-file type nil #'ebib-extras-attach-file-to-entry)))
 
@@ -419,30 +421,44 @@ open FILE."
   (interactive)
   (ebib-extras-url-to-file-attach "html"))
 
-(defun ebib-extras-attach-file-to-entry (&optional file _)
-  "Attach FILE to the relevant entry.
-The relevant entry is the entry whose key equals the name of FILE sans its
-extension."
-  (let ((key (file-name-nondirectory (file-name-sans-extension file))))
-    (save-excursion
-      (ebib-extras-open-key key)
-      (ebib-extras-attach-file file)
-      (message "Attached `%s' to %s" file key))))
-
-(defun ebib-extras-attach-files ()
-  "Attach files appropriate for the current entry type.
-TOOO:
-- [x] online: generate PDF and html.
-- [ ] books: get PDF from Anna’s Archive.
-- [ ] papers: get PDF from SciHub."
+(defvar eww-extras-annas-archive-callback)
+(defvar eww-extras-annas-archive-bibtex-key)
+(defun ebib-extras-isbn-attach ()
+  "Get a PDF of the ISBN of the entry at point and attach it."
   (interactive)
-  (let ((type (downcase (ebib-extras-get-field "=type="))))
-    (pcase type
-      ("online"
-       (ebib-extras-url-to-html-attach)
-       (ebib-extras-url-to-pdf-attach))
-      ((or ))
-      (_ nil))))
+  (when-let ((isbn (ebib-extras-get-isbn)))
+    (setq eww-extras-annas-archive-callback #'ebib-extras-attach-file)
+    (setq eww-extras-annas-archive-bibtex-key
+	  (pcase major-mode
+	    ('bibtex-mode (bibtex-extras-get-key))
+	    ((or 'ebib-entry-mode 'ebib-index-mode)
+	     (ebib-extras-get-field "=key="))))
+    (eww-extras-annas-archive-download isbn)))
+
+(defun ebib-extras-doi-attach ()
+  "Get a PDF of the DOI of the entry at point and attach it."
+  (interactive)
+  (when-let ((doi (ebib-extras-get-field "doi")))
+    (scihub-download doi #'ebib-extras-attach-file)))
+
+(defun ebib-extras-attach-file-to-entry (&optional file key)
+  "Attach FILE to the BibTeX entry with KEY."
+  (save-excursion
+    (ebib-extras-open-key key)
+    (ebib-extras-attach-file file)
+    (message "Attached `%s' to %s" file key)))
+
+(declare-function eww-extras-annas-archive-download "eww-extras")
+(defun ebib-extras-attach-files ()
+  "Attach files appropriate for the current entry type."
+  (interactive)
+  (let ((doi (ebib-extras-get-field "doi"))
+	(url (ebib-extras-get-field "url"))
+	(isbn (ebib-extras-get-field "isbn")))
+    (cond (doi (ebib-extras-doi-attach))
+	  (isbn (ebib-extras-isbn-attach))
+	  (url (ebib-extras-url-to-pdf-attach)
+	       (ebib-extras-url-to-html-attach)))))
 
 ;;;;; ?
 
@@ -1112,17 +1128,6 @@ If applicable, open external website to set rating there as well."
 			  (format "No translation found on %s." (format-time-string "%Y-%m-%d"))
 			  key db)
     (ebib-extras-update-entry-buffer db)))
-
-(declare-function citar-extras-goto-bibtex-entry "citar-extras")
-(declare-function bibtex-extras-move-entry-to-tlon "bibtex-extras")
-(defun ebib-extras-move-entry-to-tlon ()
-  "Move entry associated with the key at point to the Tlön bibliography."
-  (interactive)
-  (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
-    (citar-extras-goto-bibtex-entry key)
-    (bibtex-extras-move-entry-to-tlon)
-    (ebib tlon-file-fluid key)
-    (ebib-extras-open-key key)))
 
 (defun ebib-extras-get-field (field)
   "Get the value of FIELD for the entry at point.

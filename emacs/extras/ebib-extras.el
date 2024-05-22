@@ -421,30 +421,44 @@ TYPE can be \"pdf\" or \"html\"."
   (interactive)
   (ebib-extras-url-to-file-attach "html"))
 
-(defun ebib-extras-attach-file-to-entry (&optional file _)
-  "Attach FILE to the relevant entry.
-The relevant entry is the entry whose key equals the name of FILE sans its
-extension."
-  (let ((key (file-name-nondirectory (file-name-sans-extension file))))
-    (save-excursion
-      (ebib-extras-open-key key)
-      (ebib-extras-attach-file file)
-      (message "Attached `%s' to %s" file key))))
-
-(defun ebib-extras-attach-files ()
-  "Attach files appropriate for the current entry type.
-TOOO:
-- [x] online: generate PDF and html.
-- [ ] books: get PDF from Anna’s Archive.
-- [ ] papers: get PDF from SciHub."
+(defvar eww-extras-annas-archive-callback)
+(defvar eww-extras-annas-archive-bibtex-key)
+(defun ebib-extras-isbn-attach ()
+  "Get a PDF of the ISBN of the entry at point and attach it."
   (interactive)
-  (let ((type (downcase (ebib-extras-get-field "=type="))))
-    (pcase type
-      ("online"
-       (ebib-extras-url-to-html-attach)
-       (ebib-extras-url-to-pdf-attach))
-      ((or ))
-      (_ nil))))
+  (when-let ((isbn (ebib-extras-get-isbn)))
+    (setq eww-extras-annas-archive-callback #'ebib-extras-attach-file)
+    (setq eww-extras-annas-archive-bibtex-key
+	  (pcase major-mode
+	    ('bibtex-mode (bibtex-extras-get-key))
+	    ((or 'ebib-entry-mode 'ebib-index-mode)
+	     (ebib-extras-get-field "=key="))))
+    (eww-extras-annas-archive-download isbn)))
+
+(defun ebib-extras-doi-attach ()
+  "Get a PDF of the DOI of the entry at point and attach it."
+  (interactive)
+  (when-let ((doi (ebib-extras-get-field "doi")))
+    (scihub-download doi #'ebib-extras-attach-file)))
+
+(defun ebib-extras-attach-file-to-entry (&optional file key)
+  "Attach FILE to the BibTeX entry with KEY."
+  (save-excursion
+    (ebib-extras-open-key key)
+    (ebib-extras-attach-file file)
+    (message "Attached `%s' to %s" file key)))
+
+(declare-function eww-extras-annas-archive-download "eww-extras")
+(defun ebib-extras-attach-files ()
+  "Attach files appropriate for the current entry type."
+  (interactive)
+  (let ((doi (ebib-extras-get-field "doi"))
+	(url (ebib-extras-get-field "url"))
+	(isbn (ebib-extras-get-field "isbn")))
+    (cond (doi (ebib-extras-doi-attach))
+	  (isbn (ebib-extras-isbn-attach))
+	  (url (ebib-extras-url-to-pdf-attach)
+	       (ebib-extras-url-to-html-attach)))))
 
 ;;;;; ?
 

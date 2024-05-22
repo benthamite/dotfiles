@@ -4,7 +4,7 @@
 # contributor: Pablo Stafforini
 # --
 `(format-time-string "%Y-%m-%d")` ${1:recipient}
-    Expenses:${5:account}  ${2:amount, inc. decimal} ${3:$$(yas-choose-value ledger-prices-currencies)} ; ${4:details}
+    Expenses:${5:account}  ${2:amount, inc. decimal} ${3:$$(yas-choose-value ledger-mode-extras-currencies)} ; ${4:details}
     Assets:Brubank
 
 $0

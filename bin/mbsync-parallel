@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Define the function to sync mail using mbsync
+sync_channel() {
+    channel="$1"
+    echo "Starting sync for $channel"
+    mbsync -q "$channel"
+    echo "Finished sync for $channel"
+}
+
+export -f sync_channel
+
+# Generate a list of channels to sync, excluding 'gmail-all'
+channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | grep -v '^gmail-all$' | sort -u)
+
+# Use GNU parallel to run the sync in parallel
+echo "$channels" | parallel --will-cite sync_channel

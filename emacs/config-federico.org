@@ -203,7 +203,10 @@
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'window-extras
-  (setq window-extras-frame-split-width-threshold 600)
+  (setq split-width-threshold 200)
+  (setq split-height-threshold nil)
+  (setq split-window-preferred-function 'split-window-sensibly)
+  
   (message "`window-extras' late-init config loaded."))
 #+end_src
 

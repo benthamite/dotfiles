@@ -31,6 +31,30 @@
 (require 'paths)
 (require 'simple-extras)
 
+;;;; Variables
+
+;;;;; Chrome headless
+
+(defconst eww-extras-convert-to-pdf
+  "'%s' --headless --user-data-dir='%s' --no-pdf-header-footer '%s' --print-to-pdf='%s'"
+  "Command to convert a URL to a PDF file.
+The placeholders `%s' are replaced by the Chrome program, the Chrome cookie data
+directory, the URL, and the output file.")
+
+(defconst eww-extras-convert-to-html
+  "'%s' --headless --user-data-dir='%s' --dump-dom '%s' > %s"
+  "Command to convert a URL to an HTML file.
+The placeholders `%s' are replaced by the Chrome program, the Chrome cookie data
+directory, the URL, and the output file.")
+
+;;;;; Annas Archive
+
+(defvar eww-extras-annas-archive-callback nil
+  "Callback function to run by `eww-extras-annas-archive-download-file'.")
+
+(defvar eww-extras-annas-archive-bibtex-key nil
+  "BibTeX key of the book being downloaded.")
+
 ;;;; User options
 
 (defgroup eww-extras ()
@@ -79,31 +103,28 @@ directories."
 (declare-function ebib-db-get-filename "ebib-db")
 (declare-function org-web-tools-extras-org-title-for-url "org-web-tools-extras")
 (defun eww-extras-url-to-file (type &optional url callback)
-  "Generate file of TYPE for URL and take ACTION.
+  "Generate file of TYPE for URL and run CALLBACK function.
 CALLBACK is a function called when the process concludes. The function takes two
-arguments: the file of the converted PDF and the file of the BibTeX entry
-associated with the PDF."
+arguments: the file to attach and the BibTeX key of the entry from which this
+function was called, if any."
   (let* ((url (simple-extras-get-url url))
+	 (bibtex-key (pcase major-mode
+		       ('bibtex-mode (bibtex-extras-get-key))
+		       ((or 'ebib-entry-mode 'ebib-index-mode)
+			(ebib-extras-get-field "=key="))))
 	 (title (pcase major-mode
-		  ('bibtex-mode (bibtex-extras-get-key))
-		  ((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "=key="))
+		  ((or 'bibtex-mode 'ebib-entry-mode 'ebib-index-mode) bibtex-key)
 		  (_ (pcase type
 		       ("pdf" (buffer-name))
 		       ("html" (simple-extras-slugify (org-web-tools-extras-org-title-for-url url)))))))
 	 (file-name (file-name-with-extension title type))
 	 (output-file (file-name-concat paths-dir-downloads file-name))
-	 (bibtex-file (pcase major-mode
-			('bibtex-mode buffer-file-name)
-			((or 'ebib-entry-mode 'ebib-index-mode)
-			 (ebib-db-get-filename ebib--cur-db))))
 	 (process (make-process
 		   :name (format "url-to-%s" type)
 		   :buffer "*URL-to-File-Process*"
 		   :command (list shell-file-name shell-command-switch
 				  (format
-				   (pcase type
-				     ("pdf" "'%s' --headless --user-data-dir='%s' --no-pdf-header-footer '%s' --print-to-pdf='%s'")
-				     ("html" "'%s' --headless --user-data-dir='%s' --dump-dom '%s' > %s"))
+				   (pcase type ("pdf" eww-extras-convert-to-pdf) ("html" eww-extras-convert-to-html))
 				   browse-url-chrome-program eww-extras-chrome-data-dir-copy url output-file)))))
     (message "Getting %s file..." type)
     (set-process-sentinel process
@@ -111,9 +132,14 @@ associated with the PDF."
 			    (if (string= event "finished\n")
 				(progn
 				  (message "File downloaded.")
-				  (when callback
-				    (funcall callback output-file bibtex-file)))
+				  (eww-extras-run-callback callback output-file bibtex-key))
 			      (user-error "Could not get file"))))))
+
+(defun eww-extras-run-callback (callback file key)
+  "When CALLBACK is non-nil, run it with FILE and KEY as arguments.
+FILE is the file to attach and KEY is the BibTeX key of the associated entry."
+  (when callback
+    (funcall callback file key)))
 
 (defun eww-extras-chrome-copy-data-dir ()
   "Make a copy of the Chrome data directory.
@@ -278,6 +304,7 @@ If PLAYER is nil, default to `mpv'."
   (when (derived-mode-p 'eww-mode)
     (zotra-extras-add-entry (plist-get eww-data :url))))
 
+;; TODO: move the section below to separate package, like I did with `scihub'
 ;;;;;; Anna's Archive
 
 (defun eww-extras-annas-archive-download (&optional string)
@@ -308,17 +335,33 @@ to it."
     (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-download-file)
     (eww url)))
 
-(defun eww-extras-annas-archive-download-file ()
-  "Handle the download operation after the EWW page has rendered."
-  (let* ((url (eww-extras-get-url-in-link "Download now"))
-	 (raw-file (file-name-nondirectory url))
-	 (sans-extension (file-name-sans-extension raw-file))
-	 (extension (file-name-extension raw-file))
-	 (file (file-name-with-extension (substring sans-extension 0 100) extension)))
+(defun eww-extras-annas-archive-download-file (&optional callback)
+  "Handle the download operation after the EWW page has rendered.
+CALLBACK is a function called when the process concludes. The function takes two
+arguments: the file to attach and the BibTeX key of the entry from which this
+function was called, if any."
+  (let* ((bibtex-key eww-extras-annas-archive-bibtex-key)
+	 (url (eww-extras-get-url-in-link "Download now"))
+         (raw-file (file-name-nondirectory url))
+         (sans-extension (file-name-sans-extension raw-file))
+         (extension (file-name-extension raw-file))
+         (filename (file-name-with-extension (substring sans-extension 0 100) extension))
+         (final-path (file-name-concat paths-dir-downloads filename))
+         (temp-path (file-name-with-extension final-path ".tmp"))
+	 (callback (or callback eww-extras-annas-archive-callback)))
     (remove-hook 'eww-after-render-hook 'eww-extras-annas-archive-download-file)
-    (make-thread (lambda ()
-		   (url-copy-file url (file-name-concat paths-dir-downloads file) t)))
-    (message "Downloading `%s'..." file)))
+    (setq eww-extras-annas-archive-callback nil)
+    (setq eww-extras-annas-archive-bibtex-key nil)
+    (let ((process (start-process "download-file" "*download-output*" "curl" "-o" temp-path "-L" url)))
+      (set-process-sentinel process
+			    (lambda (_proc event)
+			      (if (string= event "finished\n")
+				  (progn
+				    (rename-file temp-path final-path 'ok-if-already-exists)
+				    (message "Downloaded `%s' to `%s`" filename final-path)
+				    (eww-extras-run-callback callback final-path bibtex-key)))
+			      (user-error "Failed to download `%s`" filename))))
+    (message "Downloading `%s'..." filename)))
 
 (provide 'eww-extras)
 

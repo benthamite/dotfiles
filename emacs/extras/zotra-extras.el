@@ -162,7 +162,7 @@ gracefully."
 (declare-function files-extras-lines-to-list "files-extras")
 (defun zotra-extras-add-multiple-urls (file)
   "Prompt the user to select a FILE with a list of URLs and add them."
-  (interactive (list (read-file-name "fFile with URLs (one URL per line): " paths-dir-downloads
+  (interactive (list (read-file-name "File with URLs (one URL per line): " paths-dir-downloads
 				     zotra-extras-add-multiple-urls-filename nil nil)))
   (let ((urls (files-extras-lines-to-list file)))
     (ebib-save-all-databases)

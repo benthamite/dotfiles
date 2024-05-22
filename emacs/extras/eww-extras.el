@@ -47,6 +47,14 @@ directory, the URL, and the output file.")
 The placeholders `%s' are replaced by the Chrome program, the Chrome cookie data
 directory, the URL, and the output file.")
 
+;;;;; Annas Archive
+
+(defvar eww-extras-annas-archive-callback nil
+  "Callback function to run by `eww-extras-annas-archive-download-file'.")
+
+(defvar eww-extras-annas-archive-bibtex-key nil
+  "BibTeX key of the book being downloaded.")
+
 ;;;; User options
 
 (defgroup eww-extras ()
@@ -322,17 +330,33 @@ to it."
     (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-download-file)
     (eww url)))
 
-(defun eww-extras-annas-archive-download-file ()
-  "Handle the download operation after the EWW page has rendered."
-  (let* ((url (eww-extras-get-url-in-link "Download now"))
-	 (raw-file (file-name-nondirectory url))
-	 (sans-extension (file-name-sans-extension raw-file))
-	 (extension (file-name-extension raw-file))
-	 (file (file-name-with-extension (substring sans-extension 0 100) extension)))
+(defun eww-extras-annas-archive-download-file (&optional callback)
+  "Handle the download operation after the EWW page has rendered.
+CALLBACK is a function called when the process concludes. The function takes two
+arguments: the file to attach and the BibTeX key of the entry from which this
+function was called, if any."
+  (let* ((bibtex-key eww-extras-annas-archive-bibtex-key)
+	 (url (eww-extras-get-url-in-link "Download now"))
+         (raw-file (file-name-nondirectory url))
+         (sans-extension (file-name-sans-extension raw-file))
+         (extension (file-name-extension raw-file))
+         (filename (file-name-with-extension (substring sans-extension 0 100) extension))
+         (final-path (file-name-concat paths-dir-downloads filename))
+         (temp-path (file-name-with-extension final-path ".tmp"))
+	 (callback (or callback eww-extras-annas-archive-callback)))
     (remove-hook 'eww-after-render-hook 'eww-extras-annas-archive-download-file)
-    (make-thread (lambda ()
-		   (url-copy-file url (file-name-concat paths-dir-downloads file) t)))
-    (message "Downloading `%s'..." file)))
+    (setq eww-extras-annas-archive-callback nil)
+    (setq eww-extras-annas-archive-bibtex-key nil)
+    (let ((process (start-process "download-file" "*download-output*" "curl" "-o" temp-path "-L" url)))
+      (set-process-sentinel process
+			    (lambda (_proc event)
+			      (if (string= event "finished\n")
+				  (progn
+				    (rename-file temp-path final-path 'ok-if-already-exists)
+				    (message "Downloaded `%s' to `%s`" filename final-path)
+				    (eww-extras-run-callback callback final-path bibtex-key)))
+			      (user-error "Failed to download `%s`" filename))))
+    (message "Downloading `%s'..." filename)))
 
 (provide 'eww-extras)
 

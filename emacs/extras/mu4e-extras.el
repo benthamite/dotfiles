@@ -245,6 +245,7 @@ If ARG is non-nil, do not refile the message after capturing it."
        "\\(\\(?:[[:digit:]]\\{1,3\\}[,.]\\)*\\(?:[[:digit:]]\\{1,3\\}\\)\\(?:[,.][[:digit:]]\\{0,2\\}\\)*\\)"
        subject)
       (let ((number (match-string 1 subject)))
+	(kill-new number)
 	(message "Copied \"%s\"" number)))))
 
 (defun mu4e-extras-mark-execute-all-no-confirm ()

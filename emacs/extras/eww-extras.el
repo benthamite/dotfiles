@@ -103,23 +103,22 @@ directories."
 (declare-function ebib-db-get-filename "ebib-db")
 (declare-function org-web-tools-extras-org-title-for-url "org-web-tools-extras")
 (defun eww-extras-url-to-file (type &optional url callback)
-  "Generate file of TYPE for URL and take ACTION.
+  "Generate file of TYPE for URL and run CALLBACK function.
 CALLBACK is a function called when the process concludes. The function takes two
-arguments: the file of the converted PDF and the file of the BibTeX entry
-associated with the PDF."
+arguments: the file to attach and the BibTeX key of the entry from which this
+function was called, if any."
   (let* ((url (simple-extras-get-url url))
+	 (bibtex-key (pcase major-mode
+		       ('bibtex-mode (bibtex-extras-get-key))
+		       ((or 'ebib-entry-mode 'ebib-index-mode)
+			(ebib-extras-get-field "=key="))))
 	 (title (pcase major-mode
-		  ('bibtex-mode (bibtex-extras-get-key))
-		  ((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "=key="))
+		  ((or 'bibtex-mode 'ebib-entry-mode 'ebib-index-mode) bibtex-key)
 		  (_ (pcase type
 		       ("pdf" (buffer-name))
 		       ("html" (simple-extras-slugify (org-web-tools-extras-org-title-for-url url)))))))
 	 (file-name (file-name-with-extension title type))
 	 (output-file (file-name-concat paths-dir-downloads file-name))
-	 (bibtex-file (pcase major-mode
-			('bibtex-mode buffer-file-name)
-			((or 'ebib-entry-mode 'ebib-index-mode)
-			 (ebib-db-get-filename ebib--cur-db))))
 	 (process (make-process
 		   :name (format "url-to-%s" type)
 		   :buffer "*URL-to-File-Process*"
@@ -133,9 +132,14 @@ associated with the PDF."
 			    (if (string= event "finished\n")
 				(progn
 				  (message "File downloaded.")
-				  (when callback
-				    (funcall callback output-file bibtex-file)))
+				  (eww-extras-run-callback callback output-file bibtex-key))
 			      (user-error "Could not get file"))))))
+
+(defun eww-extras-run-callback (callback file key)
+  "When CALLBACK is non-nil, run it with FILE and KEY as arguments.
+FILE is the file to attach and KEY is the BibTeX key of the associated entry."
+  (when callback
+    (funcall callback file key)))
 
 (defun eww-extras-chrome-copy-data-dir ()
   "Make a copy of the Chrome data directory.
@@ -300,6 +304,7 @@ If PLAYER is nil, default to `mpv'."
   (when (derived-mode-p 'eww-mode)
     (zotra-extras-add-entry (plist-get eww-data :url))))
 
+;; TODO: move the section below to separate package, like I did with `scihub'
 ;;;;;; Anna's Archive
 
 (defun eww-extras-annas-archive-download (&optional string)

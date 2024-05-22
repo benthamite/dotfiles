@@ -1129,17 +1129,6 @@ If applicable, open external website to set rating there as well."
 			  key db)
     (ebib-extras-update-entry-buffer db)))
 
-(declare-function citar-extras-goto-bibtex-entry "citar-extras")
-(declare-function bibtex-extras-move-entry-to-tlon "bibtex-extras")
-(defun ebib-extras-move-entry-to-tlon ()
-  "Move entry associated with the key at point to the Tlön bibliography."
-  (interactive)
-  (let ((key (ebib--db-get-current-entry-key ebib--cur-db)))
-    (citar-extras-goto-bibtex-entry key)
-    (bibtex-extras-move-entry-to-tlon)
-    (ebib tlon-file-fluid key)
-    (ebib-extras-open-key key)))
-
 (defun ebib-extras-get-field (field)
   "Get the value of FIELD for the entry at point.
 Convenience function that calls `ebib-get-field-value' with

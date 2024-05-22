@@ -31,6 +31,22 @@
 (require 'paths)
 (require 'simple-extras)
 
+;;;; Variables
+
+;;;;; Chrome headless
+
+(defconst eww-extras-convert-to-pdf
+  "'%s' --headless --user-data-dir='%s' --no-pdf-header-footer '%s' --print-to-pdf='%s'"
+  "Command to convert a URL to a PDF file.
+The placeholders `%s' are replaced by the Chrome program, the Chrome cookie data
+directory, the URL, and the output file.")
+
+(defconst eww-extras-convert-to-html
+  "'%s' --headless --user-data-dir='%s' --dump-dom '%s' > %s"
+  "Command to convert a URL to an HTML file.
+The placeholders `%s' are replaced by the Chrome program, the Chrome cookie data
+directory, the URL, and the output file.")
+
 ;;;; User options
 
 (defgroup eww-extras ()
@@ -101,9 +117,7 @@ associated with the PDF."
 		   :buffer "*URL-to-File-Process*"
 		   :command (list shell-file-name shell-command-switch
 				  (format
-				   (pcase type
-				     ("pdf" "'%s' --headless --user-data-dir='%s' --no-pdf-header-footer '%s' --print-to-pdf='%s'")
-				     ("html" "'%s' --headless --user-data-dir='%s' --dump-dom '%s' > %s"))
+				   (pcase type ("pdf" eww-extras-convert-to-pdf) ("html" eww-extras-convert-to-html))
 				   browse-url-chrome-program eww-extras-chrome-data-dir-copy url output-file)))))
     (message "Getting %s file..." type)
     (set-process-sentinel process

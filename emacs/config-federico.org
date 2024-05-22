@@ -209,7 +209,7 @@
   (setq split-width-threshold 200)
   (setq split-height-threshold nil)
   (setq split-window-preferred-function 'split-window-sensibly)
-  
+
   (message "`window-extras' late-init config loaded."))
 #+end_src
 
@@ -667,11 +667,12 @@
 (with-eval-after-load 'tlon
   (setq tlon-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
   (setq tlon-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
+
   (setq tlon-when-status-is-invalid 'change)
   (setq tlon-when-assignee-is-nil 'change)
   (setq tlon-when-assignee-is-someone-else 'no-capture)
-  (setq tlon-split-repo nil)
-  (tlon-init)
+  (setq tlon-split-repo 'never)
+  (tlon-initialize)
   (message "`tlon' late-init config loaded."))
 #+end_src
 

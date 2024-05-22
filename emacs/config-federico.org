@@ -88,8 +88,8 @@
  (paths-file-cookies . "")
  (paths-file-work . "")
  (paths-file-tlon-tareas-fede . (file-name-concat paths-dir-dropbox-tlon-fede "tareas.org"))
- (paths-tlon-babel-todos-jobs-id . "")
- (paths-tlon-babel-todos-generic-id . "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
+ (paths-tlon-todos-jobs-id . "")
+ (paths-tlon-todos-generic-id . "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
  (paths-dir-babel-refs . (file-name-concat paths-dir-external-repos "babel-refs"))
  )
 #+end_src
@@ -656,15 +656,15 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(with-eval-after-load 'tlon-babel
-  (setq tlon-babel-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
-  (setq tlon-babel-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
-  (setq tlon-babel-when-status-is-invalid 'change)
-  (setq tlon-babel-when-assignee-is-nil 'change)
-  (setq tlon-babel-when-assignee-is-someone-else 'no-capture)
-  (setq tlon-babel-split-repo nil)
-  (tlon-babel-init)
-  (message "`tlon-babel' late-init config loaded."))
+(with-eval-after-load 'tlon
+  (setq tlon-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
+  (setq tlon-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
+  (setq tlon-when-status-is-invalid 'change)
+  (setq tlon-when-assignee-is-nil 'change)
+  (setq tlon-when-assignee-is-someone-else 'no-capture)
+  (setq tlon-split-repo nil)
+  (tlon-init)
+  (message "`tlon' late-init config loaded."))
 #+end_src
 
 ** jinx

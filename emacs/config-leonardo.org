@@ -309,6 +309,7 @@
        mu4e
        persistent-scratch
        org-gcal
+       consult-mu
        org-roam
        org2blog
        remember

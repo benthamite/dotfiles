@@ -55,6 +55,10 @@ directory, the URL, and the output file.")
 (defvar eww-extras-annas-archive-bibtex-key nil
   "BibTeX key of the book being downloaded.")
 
+(defconst eww-extras-annas-archive-auth-url
+  "https://annas-archive.org/account/"
+  "URL to authenticate with Anna’s Archive.")
+
 ;;;; User options
 
 (defgroup eww-extras ()
@@ -405,6 +409,29 @@ eww!)"
 				    (t
 				     (message "Unexpected process event: %s" event))))))
     (message "Downloading `%s'..." filename)))
+
+;;;;;;; Authentication
+
+(defun eww-extras-annas-archive-authenticate ()
+  "Authenticate with Anna’s Archive."
+  (interactive)
+  (save-window-excursion
+    (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-get-authentication-details)
+    (eww eww-extras-annas-archive-auth-url)))
+
+(defun eww-extras-annas-archive-get-authentication-details ()
+  "Return user authentication details from Anna’s Archive."
+  (remove-hook 'eww-after-render-hook #'eww-extras-annas-archive-get-authentication-details)
+  (let (id key)
+    (goto-char (point-min))
+    (re-search-forward "Account ID: \\(.*\\)" nil t)
+    (setq id (match-string 1))
+    (re-search-forward "Secret key (don’t share!): show\\(.*\\)" nil t)
+    (setq key (match-string 1))
+    (if (and id key)
+	(message "You are authenticated.\nAccount ID: %s\nSecret key: %s" id key)
+      (eww eww-extras-annas-archive-auth-url)
+      (message "You don't seem to be authenticated. Please enter your key in the `eww' buffer."))))
 
 (provide 'eww-extras)
 

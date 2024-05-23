@@ -89,7 +89,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#secrets][secrets]]
   - [[#plstore][plstore]]
   - [[#epg-config][epg-config]]
-  - [[#epa-file][epa-file]]
   - [[#auth-source][auth-source]]
   - [[#oauth2-auto][oauth2-auto]]
   - [[#password-store-otp][password-store-otp]]
@@ -1142,17 +1141,6 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
   :config
   (setq epg-pinentry-mode 'loopback) ; use minibuffer for password entry
   (setq epg-gpg-program "/opt/homebrew/bin/gpg"))
-#+end_src
-
-** epa-file
-:PROPERTIES:
-:ID:       FD3455F8-7CD3-4651-8063-304D4131F14E
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature epa-file
-  :config
-  (epa-file-enable))
 #+end_src
 
 ** auth-source

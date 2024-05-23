@@ -23,13 +23,39 @@
 
 ;;; Commentary:
 
-;; Extra functionality for modus-themes.
+;; Extensions for `modus-themes'.
 
 ;;; Code:
 
 (require 'modus-themes)
 
 ;;;; Functions
+
+;;;;; Conditional theme loading
+
+(declare-function simple-extras-get-emacs-distro "simple-extras")
+(defun modus-themes-extras-load-theme-conditionally ()
+  "Load themes conditional on the Emacs distribution installed."
+  (pcase (simple-extras-get-emacs-distro)
+    ('emacs-mac (modus-themes-extras-load-theme-emacs-mac))
+    ('emacs-plus (add-hook 'ns-system-appearance-change-functions
+			   #'modus-themes-extras-load-theme-emacs-plus))))
+
+(declare-function mac-application-state nil)
+(defun modus-themes-extras-load-theme-emacs-mac ()
+  "Load `modus' theme that matches system appearance."
+  (interactive)
+  (pcase (plist-get (mac-application-state) :appearance)
+    ("NSAppearanceNameAqua" (modus-themes-load-theme 'modus-operand))
+    ("NSAppearanceNameDarkAqua" (modus-themes-load-theme 'modus-vivendi))))
+
+(defun modus-themes-extras-load-theme-emacs-plus (appearance)
+  "Load `modus' theme that matches system APPEARANCE."
+  (pcase appearance
+    ('light (modus-themes-load-theme 'modus-operandi))
+    ('dark (modus-themes-load-theme 'modus-vivendi))))
+
+;;;;; Theme configuration
 
 (defvar highlight-parentheses-colors)
 (defvar highlight-parentheses-background-colors)
@@ -44,31 +70,6 @@
                                              magenta
                                              green
                                              yellow))))
-
-(declare-function mac-application-state nil)
-(defun modus-themes-extras-load-theme-emacs-mac ()
-  "Load modus theme that matches system."
-  (interactive)
-  (if (string= (plist-get (mac-application-state) :appearance) "NSAppearanceNameDarkAqua")
-      (modus-themes-load-theme 'modus-operandi)
-    (modus-themes-load-theme 'modus-vivendi)))
-
-(defun modus-themes-extras-load-theme-emacs-plus (appearance)
-"Load theme, taking current system APPEARANCE into consideration."
-(mapc #'disable-theme custom-enabled-themes)
-(pcase appearance
-  ('light (modus-themes-load-theme 'modus-operandi))
-  ('dark (modus-themes-load-theme 'modus-vivendi))))
-
-(defun modus-themes-extras-load-theme-conditionally ()
-  "Load themes conditional on which distribution of Emacs is installed."
-  (cond ((boundp 'mac-effective-appearance-change-hook)
-         ;; `emacs-mac'
-         (modus-themes-extras-load-theme-emacs-mac))
-        ;; `emacs-plus'
-        ((boundp 'ns-system-appearance-change-functions)
-         (add-hook 'ns-system-appearance-change-functions
-                   #'modus-themes-extras-load-theme-emacs-plus))))
 
 (defun modus-themes-extras-set-faces ()
   "Set extra faces for the `modus' themes."

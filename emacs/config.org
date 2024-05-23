@@ -537,6 +537,21 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 The contents of this code block are tangled to the ~early-init.el~ file.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally nil t)
+(defun macos-get-system-appearance ()
+  "Return the current macOS system appearance."
+  (intern (downcase (string-trim (shell-command-to-string
+                                  "defaults read -g AppleInterfaceStyle 2>/dev/null || echo 'Light'")))))
+
+(defun early-init-blacken-screen ()
+  "Blacken screen as soon as Emacs starts, if the system theme is `dark'.
+New frames are instructed to call `prot-emacs-re-enable-frame-theme'."
+  (when (eq (macos-get-system-appearance) 'dark)
+    (setq mode-line-format nil)
+    (set-face-attribute 'default nil :background "#000000" :foreground "#ffffff")
+    (set-face-attribute 'mode-line nil :background "#000000" :foreground "#ffffff" :box 'unspecified)))
+
+(early-init-blacken-screen)
+
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 
@@ -1866,7 +1881,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   :elpaca (modus-themes
            :host github
            :repo "protesilaos/modus-themes")
-  :after faces faces-extras
+  :after faces faces-extras simple-extras
   :demand t
 
   :config
@@ -2150,7 +2165,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package tab-bar-extras
-  :after tab-bar
+  :after tab-bar telega
   :demand t
   :config
   (setq tab-bar-extras-global-mode-string
@@ -2167,7 +2182,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
           ,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
           ))
 
-  (add-hook 'tlon-init-post-init-hook #'tab-bar-extras-reset))
+  (add-hook 'tlon-init-post-init-hook (lambda () (tab-bar-extras-reset 'quick))))
 #+end_src
 
 ** breadcrumb
@@ -4410,7 +4425,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package calendar-extras
   :after calendar auth-source-pass
-  :defer 5
+  :demand t
   :config
   (setq calendar-extras-location-name "Buenos Aires")
   (setq calendar-extras-use-geolocation t)
@@ -4616,6 +4631,7 @@ The original package is no longer maintained; the fork below adds a few improvem
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package display-wttr
+  :requires calendar-extras
   :defer 10
   :config
   (setq display-wttr-interval (* 15 60))
@@ -6432,7 +6448,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :demand t
   :after paths
   :config
-  (add-hook 'tlon-init-post-init-hook #'tlon-init)
+  (add-hook 'tlon-init-post-init-hook #'tlon-initialize)
   (setq tlon-split-repo t)
 
   :general
@@ -8867,7 +8883,9 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-contacts
-  :after org
+  :elpaca (org-contacts
+           :build (:not elpaca--check-version))
+  :after org tlon
   :defer 10
   :config
   (setq org-contacts-files `(,(file-name-concat paths-dir-tlon-repos "babel-core/contacts.org"))))
@@ -9460,7 +9478,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   :init
   (add-hook 'tlon-post-init-hook
             (lambda ()
-              "Set `bibtex-files after `paths-files-bibliography-all' is set."
+              "Set `bibtex-files' after `paths-files-bibliography-all' is set."
               (setq bibtex-files paths-files-bibliography-all)))
 
   :config
@@ -10169,7 +10187,6 @@ The macro below generates the commands correctly. But attempting to define key b
            :host github
            :repo "benthamite/bib"
            :depth nil) ; clone entire repo, not just last commit
-  :defer 5
   :config
   (setq bib-isbndb-key
         (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-email-shared)))
@@ -10579,14 +10596,14 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                               (:subject)))
 
   (setf (alist-get 'trash mu4e-marks)
-	'(:char ("d" . "▼")
-		:prompt "dtrash"
-		:dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
-		;; Here's the main difference to the regular trash mark, no +T
-		;; before -N so the message is not marked as IMAP-deleted:
-		:action (lambda (docid msg target)
+        '(:char ("d" . "▼")
+                :prompt "dtrash"
+                :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
+                ;; Here's the main difference to the regular trash mark, no +T
+                ;; before -N so the message is not marked as IMAP-deleted:
+                :action (lambda (docid msg target)
                           (mu4e--server-move docid (mu4e--mark-check-target target) "+S-u-N"))))
-                          
+
   (push 'mu4e--search-hist savehist-additional-variables)
 
   (faces-extras-set-and-store-face-attributes
@@ -10625,7 +10642,9 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    "m" 'mu4e-view-mark-for-something
    "w" 'mu4e-copy-message-path
    "A-C-s-u" nil
-   "A-C-s-p" nil))
+   "A-C-s-p" nil)
+  (mu4e-compose-minor-mode-map
+   "E" nil))
 #+end_src
 
 *** TODO Debug why emails sent by me are not marked as read in Gmail
@@ -10690,8 +10709,9 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   (setq mu4e-extras-inbox-folder "/Inbox")
   (setq mu4e-extras-daily-folder "/Daily")
   (setq mu4e-extras-wide-reply t)
-  (setq mu4e-sent-func #'mu4e-extras-mark-sent-as-read)
-  
+
+  ;; not working; see the definition of `mu4e-extras-mark-sent-as-read'
+  ;; (add-hook 'message-sent-hook #'mu4e-extras-mark-sent-as-read)
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-set-face-locally)
 
@@ -10711,7 +10731,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
    "x" 'mu4e-extras-mark-execute-all-no-confirm)
   (mu4e-view-mode-map
    "D" 'mu4e-extras-view-trash
-   "e" 'mu4e-extras-view-archive
+   "e" 'mu4e-extras-view-refile
    "x" 'mu4e-extras-view-in-gmail
    "v" 'mu4e-extras-view-move))
 #+end_src
@@ -11511,7 +11531,6 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
   (add-hook 'elfeed-show-mode-hook #'shr-heading-setup-imenu)
   (add-hook 'elfeed-show-mode-hook #'visual-line-mode)
-  (run-with-idle-timer (* 30 60) t #'elfeed-update)
 
   :general
   ("A-f" 'elfeed)

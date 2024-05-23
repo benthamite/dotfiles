@@ -305,62 +305,105 @@ If PLAYER is nil, default to `mpv'."
     (zotra-extras-add-entry (plist-get eww-data :url))))
 
 ;; TODO: move the section below to separate package, like I did with `scihub'
+;;;;;; Get buffer elements
+
+(defun eww-extras-collect-links-in-buffer ()
+  "Get an alist of link titles and URLs for all links in the current `eww' buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (let (beg end candidates)
+      (setq end
+	    (if (get-text-property (point) 'shr-url)
+		(point)
+	      (text-property-any (point) (point-max) 'shr-url nil)))
+      (while (setq beg (text-property-not-all end (point-max) 'shr-url nil))
+	(goto-char beg)
+	;; Skip newlines which might precede the link text
+	(skip-chars-forward "\n")
+	(setq beg (point))
+	(if (get-text-property (point) 'shr-url)
+	    (progn
+	      (setq end (next-single-property-change (point) 'shr-url nil (point-max)))
+	      ;; Handle when link is at the end of the buffer
+	      (if (eq end nil)
+		  (setq end (point-max)))
+	      (push (cons (buffer-substring-no-properties beg end) (get-text-property beg 'shr-url))
+		    candidates))
+	  (setq end (next-single-property-change (point) 'shr-url)))
+	(goto-char (max end (1+ (point)))))  ;; ensure progress by moving at least one character forward
+      (nreverse candidates))))
+
 ;;;;;; Anna's Archive
 
-(defun eww-extras-annas-archive-download (&optional string)
+(defun eww-extras-annas-archive-download (&optional string confirm callback)
   "Search Anna’s Archive for STRING and download the selected item.
+If STRING is nil, prompt for a search string. If both STRING and CONFIRM are
+non-nil, prompt the user for confirmation to use STRING as the search string.
+
+CALLBACK is a function called when the process concludes. The function takes two
+arguments: the file to attach and the BibTeX key of the entry from which this
+function was called, if any.
+
 Requires a paid subscription and authentication. (Yes, you can authenticate with
 eww!)"
   (interactive)
-  (let* ((string (or string (read-string "Search string: ")))
-	 (url (format "https://annas-archive.org/search?index=&page=1&q=%s&ext=pdf&sort=" string)))
-    (advice-add 'eww-follow-link :around #'eww-extras-annas-archive-continue-from-selection)
-    (eww url)))
+  (save-window-excursion
+    (let* ((string (cond ((and string confirm)
+			  (read-string "Search string: " string))
+			 (string string)
+			 (t (read-string "Search string: "))))
+	   (url (format "https://annas-archive.org/search?index=&page=1&q=%s&ext=pdf&sort=" string)))
+      (when callback (setq eww-extras-annas-archive-callback callback))
+      (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-select-and-open-url)
+      (eww url))))
 
-;; TODO: see if the results can be collected via some regex pattern and
-;; presented as minibuffer completion candidates, then the user can make the
-;; selection without having to leave the current buffer
-(defun eww-extras-annas-archive-continue-from-selection (orig-func &rest args)
-  "Advice for `eww-follow-link'.
-ORIG-FUNC is the original function being advised. ARGS are the arguments passed
-to it."
-  (advice-remove 'eww-follow-link #'eww-extras-annas-archive-continue-from-selection)
-  (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
-  (apply orig-func args))
+(defun eww-extras-annas-archive-select-and-open-url ()
+  "Get the download URLs from the Annas Archive search results buffer."
+  (remove-hook 'eww-after-render-hook #'eww-extras-annas-archive-select-and-open-url)
+  (save-window-excursion
+    (let (links)
+      (dolist (cons (eww-extras-collect-links-in-buffer))
+	(when (string-match-p "\\.pdf" (car cons))
+	  (push cons links)))
+      (let* ((selection (completing-read "Select a link: " links nil t))
+	     (url (alist-get selection links nil nil 'string=)))
+	(add-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
+	(eww url)))))
 
 (defun eww-extras-annas-archive-proceed-to-download-page ()
   "Proceed to the Annas Archive download page."
-  (let ((url (eww-extras-get-url-in-link "Fast Partner Server")))
-    (remove-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
-    (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-download-file)
-    (eww url)))
+  (remove-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
+  (save-window-excursion
+    (let ((url (eww-extras-get-url-in-link "Fast Partner Server")))
+      (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-download-file)
+      (eww url))))
 
-(defun eww-extras-annas-archive-download-file (&optional callback)
-  "Handle the download operation after the EWW page has rendered.
-CALLBACK is a function called when the process concludes. The function takes two
-arguments: the file to attach and the BibTeX key of the entry from which this
-function was called, if any."
+(defun eww-extras-annas-archive-download-file ()
+  "Download the file from the Annas Archive download page."
+  (remove-hook 'eww-after-render-hook 'eww-extras-annas-archive-download-file)
   (let* ((bibtex-key eww-extras-annas-archive-bibtex-key)
 	 (url (eww-extras-get-url-in-link "Download now"))
-         (raw-file (file-name-nondirectory url))
-         (sans-extension (file-name-sans-extension raw-file))
-         (extension (file-name-extension raw-file))
-         (filename (file-name-with-extension (substring sans-extension 0 100) extension))
-         (final-path (file-name-concat paths-dir-downloads filename))
-         (temp-path (file-name-with-extension final-path ".tmp"))
-	 (callback (or callback eww-extras-annas-archive-callback)))
-    (remove-hook 'eww-after-render-hook 'eww-extras-annas-archive-download-file)
+	 (raw-file (file-name-nondirectory url))
+	 (sans-extension (file-name-sans-extension raw-file))
+	 (extension (file-name-extension raw-file))
+	 (filename (file-name-with-extension (substring sans-extension 0 100) extension))
+	 (final-path (file-name-concat paths-dir-downloads filename))
+	 (temp-path (file-name-with-extension final-path ".tmp"))
+	 (callback eww-extras-annas-archive-callback))
     (setq eww-extras-annas-archive-callback nil)
-    (setq eww-extras-annas-archive-bibtex-key nil)
     (let ((process (start-process "download-file" "*download-output*" "curl" "-o" temp-path "-L" url)))
       (set-process-sentinel process
 			    (lambda (_proc event)
-			      (if (string= event "finished\n")
-				  (progn
-				    (rename-file temp-path final-path 'ok-if-already-exists)
-				    (message "Downloaded `%s' to `%s`" filename final-path)
-				    (eww-extras-run-callback callback final-path bibtex-key)))
-			      (user-error "Failed to download `%s`" filename))))
+			      (cond ((string= event "finished\n")
+				     (rename-file temp-path final-path 'ok-if-already-exists)
+				     (message "Downloaded `%s' to `%s`" filename final-path)
+				     (eww-extras-run-callback callback final-path bibtex-key))
+				    ((string-prefix-p "exited abnormally" event)
+				     (let ((error-code (string-match "code \\([0-9]+\\)" event)))
+				       (message "Download failed with error code %s for `%s`"
+						(match-string 1 event) filename)))
+				    (t
+				     (message "Unexpected process event: %s" event))))))
     (message "Downloading `%s'..." filename)))
 
 (provide 'eww-extras)

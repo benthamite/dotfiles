@@ -45,6 +45,9 @@
   (car ebib-extras-sort-states)
   "State for sorting the Ebib index buffer.")
 
+(defvar ebib-extras-attach-file-key nil
+  "BibTeX of the entry to which `ebib-extras-attach-file` should attach a file.")
+
 ;;;; Functions
 
 (defvar window-extras-frame-split-width-threshold)
@@ -348,41 +351,44 @@ Try to fetch it with Zotero or ."
 
 (declare-function files-extras-newest-file "files-extras")
 (declare-function bibtex-extras-get-key "bibex-extras")
-(defun ebib-extras-attach-file (&optional file most-recent open)
-  "Attach FILE to the current entry.
-If FILE is nil, prompt the user for one. If MOST-RECENT is non-nil, attach the
-most recent file in the `paths-dir-downloads' directory. If OPEN is non-nil,
-open FILE."
+(defun ebib-extras-attach-file (&optional file key open)
+  "Attach a file to the entry with KEY.
+If FILE is a string, attach it. If FILE is a symbol, attach the most recent
+file. Otherwise, prompt the user for one. If KEY is nil, use the key of the
+current entry or, if not available, the key stored in
+`ebib-extras-attach-file-key'. If OPEN is non-nil, open the file."
   (interactive)
-  (let* ((get-key (pcase major-mode
-		    ('ebib-entry-mode #'ebib--get-key-at-point)
-		    ('bibtex-mode #'bibtex-extras-get-key)))
-	 (key (funcall get-key)))
+  (let ((key (or key
+		 (funcall (pcase major-mode
+			    ('ebib-entry-mode #'ebib--get-key-at-point)
+			    ('bibtex-mode #'bibtex-extras-get-key)))
+		 ebib-extras-attach-file-key)))
+    (setq ebib-extras-attach-file-key nil)
     (ebib-extras-check-valid-key key)
     (let* ((file-to-attach
-	    (or
-	     (when most-recent
-	       (files-extras-newest-file paths-dir-downloads))
-	     file
-	     (let ((initial-folder
-		    (completing-read "Select folder: "
-				     (list
-				      paths-dir-downloads
-				      paths-dir-pdf-library
-				      paths-dir-html-library
-				      paths-dir-media-library))))
-	       (read-file-name
-		"File to attach: "
-		;; Use key as default selection if key-based file exists
-		;; else default to `initial-folder'
-		(if (catch 'found
-		      (dolist (extension ebib-extras-valid-file-extensions)
-			(when (file-regular-p (file-name-concat
-					       initial-folder
-					       (file-name-with-extension key extension)))
-			  (throw 'found extension))))
-		    (file-name-concat initial-folder key)
-		  initial-folder)))))
+	    (cond ((not file)
+		   (let ((initial-folder
+			  (completing-read "Select folder: "
+					   (list
+					    paths-dir-downloads
+					    paths-dir-pdf-library
+					    paths-dir-html-library
+					    paths-dir-media-library))))
+		     (read-file-name
+		      "File to attach: "
+		      ;; Use key as default selection if key-based file exists
+		      ;; else default to `initial-folder'
+		      (if (catch 'found
+			    (dolist (extension ebib-extras-valid-file-extensions)
+			      (when (file-regular-p (file-name-concat
+						     initial-folder
+						     (file-name-with-extension key extension)))
+				(throw 'found extension))))
+			  (file-name-concat initial-folder key)
+			initial-folder))))
+		  ((and file (symbolp file))
+		   (files-extras-newest-file paths-dir-downloads))
+		  (t file)))
 	   (extension (file-name-extension file-to-attach))
 	   (destination-folder (ebib-extras--extension-directories extension))
 	   (file-name (ebib-extras--rename-and-abbreviate-file
@@ -402,7 +408,7 @@ open FILE."
 (defun ebib-extras-attach-most-recent-file ()
   "Attach the most recent file in `paths-dir-downloads' to the current entry."
   (interactive)
-  (ebib-extras-attach-file nil 'most-recent))
+  (ebib-extras-attach-file 'most-recent))
 
 (declare-function eww-extras-url-to-file "eww-extras")
 (defun ebib-extras-url-to-file-attach (type)
@@ -423,17 +429,18 @@ TYPE can be \"pdf\" or \"html\"."
 
 (defvar eww-extras-annas-archive-callback)
 (defvar eww-extras-annas-archive-bibtex-key)
-(defun ebib-extras-isbn-attach ()
-  "Get a PDF of the ISBN of the entry at point and attach it."
+(defun ebib-extras-book-attach ()
+  "Get a PDF of the book-type entry at point and attach it to it."
   (interactive)
-  (when-let ((isbn (ebib-extras-get-isbn)))
-    (setq eww-extras-annas-archive-callback #'ebib-extras-attach-file)
-    (setq eww-extras-annas-archive-bibtex-key
+  (when-let ((id (or (ebib-extras-get-isbn)
+		     (and (member (ebib-extras-get-field "=type=") ebib-extras-book-like-entry-types)
+			  (ebib-extras-get-field "title")))))
+    (setq ebib-extras-attach-file-key
 	  (pcase major-mode
 	    ('bibtex-mode (bibtex-extras-get-key))
 	    ((or 'ebib-entry-mode 'ebib-index-mode)
 	     (ebib-extras-get-field "=key="))))
-    (eww-extras-annas-archive-download isbn)))
+    (eww-extras-annas-archive-download id 'confirm #'ebib-extras-attach-file)))
 
 (defun ebib-extras-doi-attach ()
   "Get a PDF of the DOI of the entry at point and attach it."
@@ -454,9 +461,11 @@ TYPE can be \"pdf\" or \"html\"."
   (interactive)
   (let ((doi (ebib-extras-get-field "doi"))
 	(url (ebib-extras-get-field "url"))
-	(isbn (ebib-extras-get-field "isbn")))
+	(isbn (ebib-extras-get-field "isbn"))
+	(type (ebib-extras-get-field "=type=")))
     (cond (doi (ebib-extras-doi-attach))
-	  (isbn (ebib-extras-isbn-attach))
+	  ((or isbn (member type ebib-extras-book-like-entry-types))
+	   (ebib-extras-book-attach))
 	  (url (ebib-extras-url-to-pdf-attach)
 	       (ebib-extras-url-to-html-attach)))))
 
@@ -651,15 +660,15 @@ Used by the `ebib-extras-generate-search-commands' macro.")
   (mapc
    (lambda (engine)
      (let* ((name (capitalize (replace-regexp-in-string "-" " " (symbol-name engine))))
-            (function-name (intern (concat "ebib-extras-search-" (symbol-name engine))))
-            (docstring (format "Run a search on %s." name))
-            (query-prompt `(,(format "sSearch %s: " name)))
-            (search-engine (intern (concat "ebib-extras-" (symbol-name engine)))))
+	    (function-name (intern (concat "ebib-extras-search-" (symbol-name engine))))
+	    (docstring (format "Run a search on %s." name))
+	    (query-prompt `(,(format "sSearch %s: " name)))
+	    (search-engine (intern (concat "ebib-extras-" (symbol-name engine)))))
        (fset function-name
-             `(lambda (&optional query)
-                ,docstring
-                (interactive ,query-prompt)
-                (ebib-extras-search ,search-engine query)))))
+	     `(lambda (&optional query)
+		,docstring
+		(interactive ,query-prompt)
+		(ebib-extras-search ,search-engine query)))))
    ebib-extras-search-engines))
 
 (ebib-extras-generate-search-commands)

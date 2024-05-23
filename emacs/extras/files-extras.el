@@ -503,7 +503,7 @@ current helpful buffer displays, then kill the buffer."
 			     (dir-adjusted (file-name-directory file-adjusted)))
 			(when (f-dir-p dir-adjusted)
 			  (throw 'found dir-adjusted)))))))
-    (replace-regexp-in-string ".git" "" (file-name-concat dir filename))))
+    (replace-regexp-in-string ".git/" "" (file-name-concat dir filename))))
 
 ;;;;; List <> lines
 

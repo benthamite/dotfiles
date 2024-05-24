@@ -429,7 +429,6 @@ TYPE can be \"pdf\" or \"html\"."
   (ebib-extras-url-to-file-attach "html"))
 
 (defvar eww-extras-annas-archive-callback)
-(defvar eww-extras-annas-archive-bibtex-key)
 (defun ebib-extras-book-attach ()
   "Get a PDF of the book-type entry at point and attach it to it."
   (interactive)

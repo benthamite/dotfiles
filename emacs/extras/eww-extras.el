@@ -389,7 +389,7 @@ eww!)"
   "Download the file from the Annas Archive download page."
   (remove-hook 'eww-after-render-hook 'eww-extras-annas-archive-download-file)
   (let* ((bibtex-key ebib-extras-attach-file-key)
-	 (url (eww-extras-get-url-in-link "Download now"))
+	 (url (eww-extras-annas-archive-get-download-url))
 	 (raw-file (file-name-nondirectory url))
 	 (sans-extension (file-name-sans-extension raw-file))
 	 (extension (file-name-extension raw-file))
@@ -412,6 +412,16 @@ eww!)"
 				    (t
 				     (message "Unexpected process event: %s" event))))))
     (message "Downloading `%s'..." filename)))
+
+(defun eww-extras-annas-archive-get-download-url ()
+  "Get the download URL from the Annas Archive download page."
+  (or (eww-extras-get-url-in-link "Download now")
+      (let ((generic-error "Could not find download link")
+	    (quota-exceeded "You’ve run out of fast downloads today"))
+	(goto-char (point-min))
+	(user-error (cond ((re-search-forward quota-exceeded nil t)
+			   quota-exceeded)
+			  (t generic-error))))))
 
 ;;;;;;; Authentication
 

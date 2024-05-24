@@ -369,10 +369,12 @@ eww!)"
       (dolist (cons (eww-extras-collect-links-in-buffer))
 	(when (string-match-p "\\.pdf" (car cons))
 	  (push cons links)))
-      (let* ((selection (completing-read "Select a link: " links nil t))
-	     (url (alist-get selection links nil nil 'string=)))
-	(add-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
-	(eww url)))))
+      (if links
+	  (let* ((selection (completing-read "Select a link: " links nil t))
+		 (url (alist-get selection links nil nil 'string=)))
+	    (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
+	    (eww url))
+	(message "No results found.")))))
 
 (defun eww-extras-annas-archive-proceed-to-download-page ()
   "Proceed to the Annas Archive download page."

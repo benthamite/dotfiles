@@ -109,6 +109,12 @@
 (declare-function bibtex-extras-append-to-field "bibex-extras")
 (defun ebib-extras--update-file-field-contents (key file-name)
   "Update contents of FILE-NAME in field `file' for entry KEY."
+  (unless (derived-mode-p 'ebib-entry-mode 'bibtex-mode)
+    (ebib-extras-open-key key))
+  ;; FIXME: this is not the right condition: the user may be viewing *another*
+  ;; entry, in which case the file will be attached to the wrong entry. So may
+  ;; we should always call `(ebib-extras-open-key key)' unless `key' matches the
+  ;; current entry’s?
   (let* ((get-field (pcase major-mode
 		      ('ebib-entry-mode #'ebib-extras-get-field)
 		      ('bibtex-mode #'bibtex-extras-get-field)))

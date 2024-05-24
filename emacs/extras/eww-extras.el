@@ -384,10 +384,11 @@ eww!)"
       (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-download-file)
       (eww url))))
 
+(defvar ebib-extras-attach-file-key)
 (defun eww-extras-annas-archive-download-file ()
   "Download the file from the Annas Archive download page."
   (remove-hook 'eww-after-render-hook 'eww-extras-annas-archive-download-file)
-  (let* ((bibtex-key eww-extras-annas-archive-bibtex-key)
+  (let* ((bibtex-key ebib-extras-attach-file-key)
 	 (url (eww-extras-get-url-in-link "Download now"))
 	 (raw-file (file-name-nondirectory url))
 	 (sans-extension (file-name-sans-extension raw-file))

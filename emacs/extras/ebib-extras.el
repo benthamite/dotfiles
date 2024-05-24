@@ -953,6 +953,8 @@ If called interactively, open the entry. Otherwise, return it as a string."
       (bibtex-search-entry key)
       (unless (called-interactively-p 'any) (bibtex-extras-get-entry-as-string)))))
 
+;; FIXME: this is not returning some existing keys (e.g.
+;; "Butchvarov1989SkepticismEthics", "Bundy1990DangerAndSurvival")
 (defun ebib-extras-get-file-of-key (key)
   "Return the bibliographic file in which the entry with KEY is found."
   (unless ebib--databases

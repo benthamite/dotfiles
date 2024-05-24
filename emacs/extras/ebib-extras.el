@@ -359,9 +359,10 @@ current entry or, if not available, the key stored in
 `ebib-extras-attach-file-key'. If OPEN is non-nil, open the file."
   (interactive)
   (let ((key (or key
-		 (funcall (pcase major-mode
-			    ('ebib-entry-mode #'ebib--get-key-at-point)
-			    ('bibtex-mode #'bibtex-extras-get-key)))
+		 (when-let ((fun (pcase major-mode
+				   ('ebib-entry-mode #'ebib--get-key-at-point)
+				   ('bibtex-mode #'bibtex-extras-get-key))))
+		   (funcall fun))
 		 ebib-extras-attach-file-key)))
     (setq ebib-extras-attach-file-key nil)
     (ebib-extras-check-valid-key key)

@@ -179,7 +179,8 @@ called with a prefix argument, configure it globally."
 		  gptel-backend backend))))
 
 (defun gptel-extras-get-cost ()
-  "Get the cost of prompting the current model."
+  "Get the cost of prompting the current model.
+This is used to display the relevant information in the modeline (see `doom-modeline-extras')."
   (let* ((cost-per-1m (tlon-lookup gptel-extras-ai-models :cost :model gptel-model))
 	 (words (if (region-active-p)
 		    (count-words (region-beginning) (region-end))

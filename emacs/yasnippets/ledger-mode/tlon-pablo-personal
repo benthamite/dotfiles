@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: tlon-pablo-personal
+# key: tpp
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` $1
+    Liabilities:Pablo Stafforini  $2 $3 ; Pablo’s personal expense
+    Assets:Wise         
+
+`(format-time-string "%Y-%m-%d")` $1
+    Expenses:${5:account}         $2 $3 ; $4
+    Liabilities:Tlon
+
+$0

@@ -210,6 +210,11 @@ exists."
   (interactive)
   (ebib-extras-open-file "md"))
 
+(defun ebib-extras-open-srt-file ()
+  "Open `srt' file in entry at point, if it (uniquely) exists."
+  (interactive)
+  (ebib-extras-open-file "srt"))
+
 (defun ebib-extras-open-pdf-file-externally ()
   "Open `pdf' file in entry at point externally, if it (uniquely) exists."
   (interactive)
@@ -241,7 +246,7 @@ exists."
   (ebib-extras-open-file-externally "html"))
 
 (defvar ebib-extras-valid-file-extensions
-  '("pdf" "html" "webm" "flac" "mp3" "md")
+  '("pdf" "html" "webm" "flac" "mp3" "md" "srt")
   "List of valid file extensions for `ebib-extras-open-file-dwim'.")
 
 (defun ebib-extras-open-file-dwim ()
@@ -330,7 +335,8 @@ If EXTENSION is non-nil, set its extension to its value."
 	 paths-dir-html-library)
 	((or (string= extension "webm")
 	     (string= extension "mp3")
-	     (string= extension "flac"))
+	     (string= extension "flac")
+	     (string= extension "srt"))
 	 paths-dir-media-library)
 	(t
 	 (user-error "Invalid file extension"))))

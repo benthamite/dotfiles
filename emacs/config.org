@@ -1512,6 +1512,7 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
   :after magit hl-todo
   :demand t
   :config
+  (setq magit-todos-branch-list nil)
   (magit-todos-mode))
 #+end_src
 

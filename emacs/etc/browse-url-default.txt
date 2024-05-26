@@ -86,6 +86,7 @@ perplexity.ai
 pref.docusign.com
 qualtrics.com
 quora.com
+reddit.com
 rescuetime.com
 savvycal.com
 shademap.app

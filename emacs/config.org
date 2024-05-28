@@ -253,6 +253,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#session][session]]
   - [[#recentf][recentf]]
 - [[#search--replace][search & replace]]
+  - [[#elgrep][elgrep]]
   - [[#isearch][isearch]]
   - [[#isearch-extras][isearch-extras]]
   - [[#replace][replace]]
@@ -4736,6 +4737,23 @@ CLOCK: [2021-05-22 Sat 22:23]--[2021-05-22 Sat 22:46] =>  0:23
 CLOCK: [2021-04-04 Sun 19:29]--[2021-04-04 Sun 19:40] =>  0:11
 CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 :END:
+
+** elgrep
+:PROPERTIES:
+:ID:       783E764B-7E5D-4CFB-9DE7-D87C5BF51518
+:END:
+
+/[[https://github.com/TobiasZawada/elgrep][elgrep]] is an Emacs implementation of grep that requires no external dependencies./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package elgrep
+  :demand t
+  :general
+  ("A-C-p" 'elgrep)
+  (elgrep-mode-map
+   "r" 'elgrep-edit-mode
+   "s-c" 'elgrep-save))
+#+end_src
 
 ** isearch
 :PROPERTIES:

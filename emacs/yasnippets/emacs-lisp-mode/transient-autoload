@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: transient-autoload
+# key: ta
+# contributor: Pablo Stafforini
+# --
+;;;###autoload (autoload '$1 "$2" nil t)

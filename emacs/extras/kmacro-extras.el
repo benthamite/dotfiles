@@ -29,10 +29,6 @@
 
 (require 'kmacro)
 
-;;;; User options
-
-;;;; Main variables
-
 ;;;; Functions
 
 (defun kmacro-extras-counter-toggle-alpha-number ()

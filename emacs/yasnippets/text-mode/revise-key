@@ -3,4 +3,4 @@
 # key: rr
 # contributor: Pablo Stafforini
 # --
-Revise `(tlon-babel-get-commit-key)`
+Revise `(tlon-get-commit-key)`

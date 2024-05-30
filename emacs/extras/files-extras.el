@@ -27,15 +27,10 @@
 
 ;;; Code:
 
-;; (require 'alert) ; recursive
-(require 'cl-seq)
 (require 'dired)
 (require 'dired-extras)
-;; (require 'ebib-extras) ; recursive
-(require 'elpaca)
 (require 'files)
 (require 'paths)
-;; (require 'window-extras)
 
 ;;;; User options
 
@@ -98,9 +93,9 @@ functionality in macOS."
   (interactive)
   (let ((buffer-name (generate-new-buffer "untitled"))
 	(buffer-major-mode major-mode))
-    (cond ((eq derived-mode-p 'shell-mode)
+    (cond ((derived-mode-p 'shell-mode)
 	   (shell))
-	  ((eq derived-mode-p 'eshell-mode)
+	  ((derived-mode-p 'eshell-mode)
 	   (eshell))
 	  (t
 	   ;; Prompt to save on `save-some-buffers' with positive PRED
@@ -155,6 +150,7 @@ functionality in macOS."
     (other-window 1)
     (files-extras-kill-this-buffer)))
 
+(declare-function window-extras-switch-to-last-window "window-extras")
 (defun files-extras-kill-this-buffer-switch-to-other-window ()
   "Kill the current buffer and switch to the other window."
   (interactive)
@@ -176,27 +172,29 @@ functionality in macOS."
   (bury-buffer)
   (window-extras-switch-to-last-window))
 
+;; 2024-05-03: taken down; in the meantime, use
+;; <https://archive.softwareheritage.org/browse/origin/directory/?origin_url=https://gitlab.com/magnolia1234/bypass-paywalls-chrome-clean.git>
+;; https://github.com/bpc-clone/bypass-paywalls-chrome-clean
+;; https://github.com/bpc-clone/bypass-paywalls-firefox-clean
+(declare-function macos-open-in-finder "macos")
+(declare-function macos-run-keyboard-maestro-script "macos")
 (defun files-extras-download-bypass-paywalls-chrome ()
   "Download and install `Bypass Paywalls Chrome Clean'.
 After running the command, both the Chrome extensions page and
 the `bypass-paywalls-chrome-clean-master' folder will open.
 To install the extension, drag the latter onto the former."
   (interactive)
-  (let* ((file (file-name-concat paths-dir-downloads "bypass-paywalls.zip"))
-	 (dir (file-name-concat paths-dir-downloads "bypass-paywalls-chrome-clean-master"))
-	 (reveal-in-osx
-	  (concat
-	   "set thePath to POSIX file \"" dir "\"\n"
-	   "tell application \"Finder\"\n"
-	   " set frontmost to true\n"
-	   " reveal thePath \n"
-	   "end tell\n")))
-    (url-copy-file "https://gitlab.com/magnolia1234/bypass-paywalls-chrome-clean/-/archive/master/bypass-paywalls-chrome-clean-master.zip" file)
+  (let* ((url "https://github.com/bpc-clone/bpc_updates/releases/download/latest/bypass-paywalls-chrome-clean-master.zip")
+	 (file (file-name-concat paths-dir-downloads "bypass-paywalls.zip"))
+	 (dir (file-name-concat paths-dir-downloads "bypass-paywalls-chrome-clean-master")))
+    (unless (url-file-exists-p url)
+      (user-error "URL `%s' does not exist" url))
+    (url-copy-file url file)
     (shell-command (format "unzip %s -d %s" file paths-dir-downloads))
     (delete-file file)
     ;; open Chrome extensions page
-    (shell-command "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"89243CDA-4876-45C8-9AF2-3666664A0EAA\"'")
-    (start-process "osascript-getinfo" nil "osascript" "-e" reveal-in-osx)))
+    (macos-run-keyboard-maestro-script "89243CDA-4876-45C8-9AF2-3666664A0EAA")
+    (macos-open-in-finder dir)))
 
 ;; Copied from emacs.stackexchange.com/a/24461/32089
 (defun files-extras-revert-all-file-buffers ()
@@ -269,6 +267,7 @@ files which do not exist any more or are no longer readable will be killed."
     (define-key newmap key command)
     (use-local-map newmap)))
 
+(declare-function ebib-extras-get-file "ebib-extras")
 (defun files-extras-ocr-pdf (arg &optional filename parameters)
   "OCR the FILENAME.
 If FILENAME is nil, use the PDF file at point or the file visited by the current
@@ -346,7 +345,7 @@ command automates the recovery process in these cases."
       (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
       (files-extras-diff-buffer-with-file))))
 
-
+(declare-function alert "alert")
 (defun files-extras-auto-save-alert ()
   "Alert user when auto save data is detected.
 `recover-this-file' notifications are easy to miss. This function triggers a
@@ -359,24 +358,6 @@ more intrusive alert."
 		   (file-name-nondirectory buffer-file-name))
 	   :title "Auto save detected"
 	   :severity 'high)))
-
-;; for some reason, `alert' fails to create persistent alerts. so we
-;; trigger a warning if either `*log4e-alert*' or `*Messages*'
-;; buffers have logged a message related to `recover-this-file'.
-(defun files-extras-auto-save-persist ()
-  "Prevent killing buffer when auto save data is detected."
-  ;; FIXME: This doesn't work
-  (alert--log-open-log
-   ;; we check both `*log4e-alert*' and `*Messages*' buffers for
-   ;; extra safety
-   (let ((alert-buffers '(" *log4e-alert*" "*Messages*")))
-     (dolist (buffer alert-buffers)
-       (when (get-buffer buffer)
-	 (set-buffer buffer)
-	 (goto-char (point-min))
-	 (when (search-forward "has auto save data" nil t)
-	   (yes-or-no-p "Buffers with auto save data detected. Check `*log4e-alert*' and `*Messages*' for details. Are you sure you want to proceed? "))
-	 (kill-buffer))))))
 
 ;; https://emacs.stackexchange.com/a/3778/32089
 (defun files-extras-diff-buffer-with-file ()
@@ -395,12 +376,12 @@ more intrusive alert."
     (message "Copied `%s'" path)))
 
 (add-hook 'find-file-hook #'files-extras-auto-save-alert)
-;; (add-hook 'kill-buffer-query-functions #'files-extras-auto-save-persist)
 
 ;; reddit.com/r/emacs/comments/t07e7e/comment/hy88bum/?utm_source=reddit&utm_medium=web2x&context=3
 (defun files-extras-make-hashed-auto-save-file-name-a (fn)
   "Compress the `auto-save' file name so paths don't get too long.
 FN is an argument in the adviced function."
+
   (let ((buffer-file-name
 	 (if (or (null buffer-file-name)
 		 (find-file-name-handler buffer-file-name 'make-auto-save-file-name))
@@ -469,6 +450,7 @@ OLD-FUN and ARGS are arguments passed to the original function."
     (shell-command (format "convert '%s' '%s.pdf'" file (file-name-sans-extension file)))
     (message "Converted image to PDF.")))
 
+(defvar elpaca-repos-directory)
 (defun files-extras-open-elpaca-package (package)
   "Open the package named PACKAGE in the `repos' elpaca directory."
   (require 'elpaca)
@@ -509,8 +491,38 @@ current helpful buffer displays, then kill the buffer."
     (while (re-search-forward "\\(^\\s-*$\\)\n\\(\\(^\\s-*$\\)\n\\)+" nil t)
       (replace-match "\n"))))
 
+(defun files-extras-buffer-file-name ()
+  "Return name of file BUFFER is visiting, handling `git-dirs' path."
+  (when-let ((file (buffer-file-name))
+	     (filename (file-name-nondirectory file))
+	     (dir (catch 'found
+		    (dolist (dir (list paths-dir-tlon-repos paths-dir-dropbox))
+		      (let* ((file-adjusted (replace-regexp-in-string "git-dirs/"
+								      (file-relative-name dir "~/")
+								      file))
+			     (dir-adjusted (file-name-directory file-adjusted)))
+			(when (f-dir-p dir-adjusted)
+			  (throw 'found dir-adjusted)))))))
+    (replace-regexp-in-string ".git/" "" (file-name-concat dir filename))))
+
+;;;;; List <> lines
+
+(defun files-extras-lines-to-list (file)
+  "Return a list of lines of FILE."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (split-string (buffer-string) "\n" t)))
+
+(defun files-extras-list-to-lines (list file)
+  "Write LIST to FILE, one element per line."
+  (with-temp-buffer
+    (dolist (element list)
+      (insert (format "%s\n" element)))
+    (write-file file)))
+
 ;;;;; Dispatcher
 
+;;;###autoload (autoload 'files-extras-dispatch "files-extras" nil t)
 (transient-define-prefix files-extras-dispatch ()
   "Dispatcher for files."
   ["Files"
@@ -518,7 +530,6 @@ current helpful buffer displays, then kill the buffer."
    ("," "inbox-desktop"   (lambda () (interactive) (find-file paths-file-inbox-desktop)))
    ("a" "agenda"          org-extras-agenda-switch-to-agenda-current-day)
    ("c" "config"          (lambda () (interactive) (find-file paths-file-config)))
-   ("d" "tlon-docs"       (lambda () (interactive) (find-file paths-file-tlon-docs)))
    ("e" "extras"          (lambda () (interactive) (files-extras-open-extras-package)))
    ("h" "tlon-ledger"     (lambda () (interactive) (find-file paths-file-tlon-ledger)))
    ("i" "anki"            (lambda () (interactive) (find-file paths-file-anki)))
@@ -530,26 +541,23 @@ current helpful buffer displays, then kill the buffer."
    ("r" "calendar"        (lambda () (interactive) (find-file paths-file-calendar)))
    ("s" "scratch"         (lambda () (interactive) (switch-to-buffer "*scratch*")))
    ("v" "films"           (lambda () (interactive) (find-file paths-file-films)))
-   ("w" "work"            (lambda () (interactive) (find-file paths-file-work)))
-   ("z" "variables"       (lambda () (interactive) (find-file paths-file-variables)))
-   ])
+   ("w" "work"            (lambda () (interactive) (find-file paths-file-work)))])
 
+;;;###autoload (autoload 'files-extras-packages-dispatch "files-extras" nil t)
 (transient-define-prefix files-extras-packages-dispatch ()
   "Dispatcher for personal package files."
   [["Tlön"
-    ("b" "tlon-babel"       (lambda () (interactive) (files-extras-open-elpaca-package "tlon-babel")))
-    ("c" "tlon-core"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-core")))
-    ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))
-    ]
+    ("b" "tlon"       (lambda () (interactive) (files-extras-open-elpaca-package "tlon")))
+    ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))]
    ["Personal"
-    ("a" "internet-archive" (lambda () (interactive )(files-extras-open-elpaca-package "internet-archive")))
     ("l" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))
-    ("g" "glondendict-ng"   (lambda () (interactive )(files-extras-open-elpaca-package "goldendict-ng")))
+    ("d" "gdrive"           (lambda () (interactive )(files-extras-open-elpaca-package "gdrive")))
+    ("g" "goldendict-ng"   (lambda () (interactive )(files-extras-open-elpaca-package "goldendict-ng")))
+    ("a" "internet-archive" (lambda () (interactive )(files-extras-open-elpaca-package "internet-archive")))
     ("o" "macos"            (lambda () (interactive )(files-extras-open-elpaca-package "macos")))
     ("m" "mullvad"          (lambda () (interactive )(files-extras-open-elpaca-package "mullvad")))
-    ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))
     ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))
-    ]])
+    ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))]])
 
 (provide 'files-extras)
 ;;; files-extras.el ends here

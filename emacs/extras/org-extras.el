@@ -29,23 +29,14 @@
 
 ;;; Code:
 
-(require 'browse-url)
-;; (require 'crux) ; Error (use-package): org-extras/:catch: Cannot open load file: No such file or directory, crux
-(require 'el-patch)
 (require 'el-patch)
 (require 'org)
 (require 'org-agenda)
 (require 'org-capture)
 (require 'org-clock)
 (require 'oc)
-;; (require 'org-roam-extras) ; recursion error
 (require 'paths)
-(require 's)
 (require 'simple-extras)
-(require 'thingatpt)
-;; (require 'tlon-core) ; recursion error
-(require 'url-util)
-(require 'window-extras)
 
 ;;;; User options
 
@@ -54,32 +45,38 @@
   :group 'org)
 
 (defcustom org-extras-agenda-files-excluded
-  (list
-   paths-file-tlon-tareas-leo
-   paths-file-tlon-tareas-fede)
+  (list paths-file-tlon-tareas-leo
+	paths-file-tlon-tareas-fede)
   "Files to exclude from `org-agenda'.
 I have to exclude these files because otherwise extraneous information shows up
 in my agenda, such as TODOs and time logs. These files lack the `property' tag
 but the may still otherwise be included if they have been modified recently (see
 the function `vulpea-agenda-files-update')."
-  :type 'list
+  :type '(repeat file)
   :group 'org-extras)
 
 (defcustom org-extras-id-auto-add-excluded-directories nil
   "Directories to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'."
-  :type 'list
+  :type '(repeat file)
   :group 'org-extras)
 
 (defcustom org-extras-id-auto-add-excluded-files
   (list paths-file-orb-noter-template)
   "Files to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'."
-  :type 'list
+  :type '(repeat file)
   :group 'org-extras)
 
 (defcustom org-extras-bbdb-anniversaries-heading
   "2A37A3CC-2A11-4933-861B-48B129B9EA2D"
   "Heading in `calendar.org' that contains the BBDB anniversaries.
 Set to nil to disable display of BBDB anniversaries in agenda."
+  :type 'string
+  :group 'org-extras)
+
+(defcustom org-extras-clock-report-parameters
+  "#+BEGIN: clocktable :scope %s :maxlevel 9 :narrow 500! :fileskip0 t %s \n#+END:"
+  "Parameters for `org-extras-clock-report-insert'.
+The first %s is the scope of the report, and the second %s is the range."
   :type 'string
   :group 'org-extras)
 
@@ -225,29 +222,36 @@ Excludes the heading itself and any child subtrees."
   (goto-char (point-min))
   (org-next-visible-heading 1))
 
+;; TODO: revise this
 (defun org-extras-super-return ()
-  "When `org-return-follows-link' is non-nil and point is on a
-link, call `org-open-at-point' and set
-`browse-url-browser-function' to `eww-browse-url'"
-  (interactive "P")
+  "Call a special form of RET.
+When `org-return-follows-link' is non-nil and point is on a link, call
+`org-open-at-point' and set `browse-url-browser-function' to `eww-browse-url'"
+  (interactive)
   (let ((browse-url-browser-function 'eww-browse-url)
 	(browse-url-handlers nil))
     (org-open-at-point)))
 
-(defun org-extras-paste-html ()
-  "Convert the contents of the system clipboard to `org-mode' using `pandoc'."
+(declare-function simple-extras-pandoc-convert "simple-extras")
+(defun org-extras-paste-with-conversion ()
+  "Convert the contents of the system clipboard to Org Mode using Pandoc.
+This command will convert from HTML if the clipboard contains HTML, and from
+Markdown otherwise.
+
+See also `markdown-mode-extras-paste-with-conversion'. For the reverse process,
+use `ox-clip-formatted-copy'."
   (interactive)
-  (let* ((clipboard (if (eq system-type 'darwin)
-			"pbv public.html"
-		      "xclip -out -selection 'clipboard' -t text/html"))
-	 (pandoc (concat "pandoc --wrap=none -f html -t org"))
-	 (cmd (concat clipboard " | " pandoc))
-	 (output (shell-command-to-string cmd))
-	 ;; Not sure why Pandoc adds these double slashes; we remove them
-	 (output (replace-regexp-in-string "^\\\\\\\\$" "" output))
-	 (text (replace-regexp-in-string "= " "= " output)))
-    (kill-new text)
-    (yank)))
+  (let ((output (simple-extras-pandoc-convert "org" "markdown")))
+    (insert
+     (with-temp-buffer
+       (insert output)
+       (dolist (regexp '(("^\\\\\\\\" . "")
+			 ("\\\\\\\\$" . "")
+			 (" " . " ")))
+	 (goto-char (point-min))
+	 (while (re-search-forward (car regexp) nil t)
+	   (replace-match (cdr regexp) nil nil)))
+       (buffer-string)))))
 
 (defun org-extras-paste-image ()
   "Take the contents of the system clipboard and paste it as an image."
@@ -272,6 +276,24 @@ link, call `org-open-at-point' and set
 	(org-display-inline-images)
 	(message "You can toggle inline images with C-c C-x C-v"))
     (user-error "Requires pngpaste in PATH")))
+
+(defun org-extras-inline-images (&optional arg)
+  "Enable or disable the display of inline images.
+If called interactively, toggle the display of inline images. If the prefix
+argument is negative, disable the display of inline images; otherwise, enable
+it.
+
+If called from Lisp, toggle the display of inline images if ARG is `toggle'.
+Enable the display of inline images if ARG is nil, omitted, or is a positive
+number. Disable the mode if ARG is a negative number."
+  (interactive "P")
+  (when (or (and (called-interactively-p 'interactive) (not arg))
+	    (eq arg 'toggle))
+    (setq arg
+	  (if (org--inline-image-overlays) -1 1)))
+  (if (and arg (< arg 0))
+      (org-remove-inline-images)
+    (org-display-inline-images)))
 
 ;; The following functions produce a count of the TODOs added
 ;; or removed from all agenda files in the last day:
@@ -309,6 +331,8 @@ link, call `org-open-at-point' and set
 (defvar org-extras-agenda-switch-to-agenda-current-day-timer nil
   "Timer to switch to agenda of current day.")
 
+(declare-function window-extras-split-if-unsplit "window-extras")
+(declare-function winum-select-window-1 "winum")
 (defun org-extras-agenda-switch-to-agenda-current-day ()
   "Open agenda in left window, creating it if necessary."
   (interactive)
@@ -358,6 +382,7 @@ corresponding file. Else, open the file."
 ;; in `calendar.org', which is the only way I found to hide
 ;; anniversaries temporarily from the agenda
 ;; for context, see https://orgmode.org/manual/Weekly_002fdaily-agenda.html
+(declare-function org-roam-extras-id-goto "org-roam-extras")
 (defun org-extras-agenda-toggle-anniversaries (&optional just-enable)
   "Toggle display of BBDB birthdays in the agenda.
 If JUST-ENABLE is non-nil, always enable the display of birthdays."
@@ -377,19 +402,16 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 
 ;;;;; org-capture
 
-(declare-function org-ai-mode "org-ai")
 (declare-function org-web-tools-insert-link-for-url "org-web-tools")
 (declare-function org-extras-web-tools--org-title-for-url "org-web-tools")
 (declare-function youtube-dl "youtube-dl")
+(declare-function org-roam-tag-remove "org-roam")
+(declare-function org-roam-tag-add "org-roam")
+(declare-function files-extras-show-buffer-name "file-extras")
+(declare-function files-extras-switch-to-alternate-buffer "files-extras")
 (defun org-extras-capture-before-finalize-hook-function ()
   "Define behavior of `org-capture-before-finalize-hook'."
   (pcase (plist-get org-capture-plist :key)
-    ((or "gg" "gd" "ge")
-     (org-ai-mode)
-     (org-narrow-to-subtree)
-     (forward-line 2)
-     (insert "#+begin_ai\n[SYS]: You are a helpful assistant.\n\n[ME]:\n#+end_ai\n")
-     (goto-char (point-max)))
     ("l"
      (org-align-tags)
      (ispell-change-dictionary "english"))
@@ -429,11 +451,12 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     ("y"
      (youtube-dl (current-kill 0)
 		 :directory paths-dir-downloads
-		 :destination (tlon-core-slugify
+		 :destination (simple-extras-slugify
 			       (org-extras-web-tools--org-title-for-url))))))
 
 ;;;;; org-clock
 
+(declare-function crux-smart-open-line-above "crux")
 (defun org-extras-new-clock-entry-today (begin end)
   "Insert a new clock entry with today's date, prompting for BEGIN and END times."
   (interactive "sTime begins: \nsTime ends: ")
@@ -479,11 +502,9 @@ SCOPE is the scope of the report, and can be `agenda', `file', or `subtree'."
 	 (org-read-date nil nil nil "End date: ")
 	 (org-completing-read "Scope: " '("agenda" "file" "subtree"))))
   (let ((range (if (string= start-date end-date)
-		   ":block today"
+		   (format ":block \"%s\"" start-date)
 		 (format ":tstart \"%s\" :tend \"%s\"" start-date end-date))))
-    (insert
-     (format "#+BEGIN: clocktable :scope %s :maxlevel 4 :narrow 60! :fileskip0 t %s \n#+END:"
-	     scope range))
+    (insert (format org-extras-clock-report-parameters scope range))
     (org-clock-report)))
 
 (defun org-extras-delete-headings-without-logbook ()
@@ -645,6 +666,7 @@ files, recursively all files in `org-directory', and all files in
 
 ;;;;; ol
 
+(declare-function s-replace "s")
 (defun org-extras-sort-links (separator)
   "Sort list of links in current subtree separated by SEPARATOR."
   (interactive "sEnter separator: ")
@@ -672,6 +694,9 @@ files, recursively all files in `org-directory', and all files in
   (interactive)
   (org-extras-sort-links " • "))
 
+(declare-function org-roam-node-list "org-roam")
+(declare-function org-roam-node-title "org-roam")
+(declare-function org-roam-node-id "org-roam")
 (defun org-extras-linkify-elements (strings &optional separator)
   "For all STRINGS, return its link if node is found, else the string itself.
 The elements are returned as a string separated by SEPARATOR. If
@@ -688,6 +713,58 @@ SEPARATOR is nil, use ' • '."
 		   x)))
 	     strings)
      (or separator " • "))))
+
+;;;;; ol-eww
+
+;; like `org-eww-copy-for-org-mode', but also handle italics, boldface and bullets
+;; TODO: handle headings. The relevant faces are `shr-h1', `shr-h2', etc.
+(defvar shr-bullet)
+(defun org-extras-eww-copy-for-org-mode ()
+  "Copy current buffer content or active region with `org-mode' style links.
+This will encode `link-title' and `link-location' with
+`org-link-make-string' and insert the transformed text into the
+kill ring, so that it can be yanked into an Org mode buffer with
+links working correctly.
+
+Further lines starting with a star get quoted with a comma to
+keep the structure of the Org file."
+  (interactive)
+  (let ((regionp (use-region-p))
+        (transform-start (point-min))
+        (transform-end (point-max))
+        (return-content ""))
+    (when regionp
+      (setq transform-start (region-beginning))
+      (setq transform-end (region-end)))
+    (deactivate-mark)  ; Deactivate region highlighting if it's active.
+    (save-excursion
+      (goto-char transform-start)
+      (while (< (point) transform-end)
+        (let* ((text-face (if (listp (get-text-property (point) 'face))
+                              (get-text-property (point) 'face)
+                            (list (get-text-property (point) 'face))))
+               (link (get-text-property (point) 'shr-url))
+               (text (buffer-substring-no-properties (point)
+                                                     (or (next-single-property-change (point) 'face nil transform-end)
+                                                         (next-single-property-change (point) 'shr-url nil transform-end)
+                                                         transform-end)))
+               (formatted-text (replace-regexp-in-string shr-bullet "- " text)))
+          ;; Apply Org mode formatting for italics and bold where applicable.
+          (when (memq 'italic text-face)
+            (setq formatted-text (concat "/" formatted-text "/")))
+          (when (memq 'bold text-face)
+            (setq formatted-text (concat "*" formatted-text "*")))
+          ;; Format links according to Org mode syntax.
+          (when link
+            (setq formatted-text (concat "[[" link "][" text "]]")))
+          ;; Append the formatted text to the return content.
+          (setq return-content (concat return-content formatted-text))
+          ;; Advance the point.
+          (goto-char (or (next-single-property-change (point) 'face)
+                         (next-single-property-change (point) 'shr-url)
+                         (point-max))))))
+    ;; Copy the whole formatted content to the kill ring.
+    (kill-new return-content)))
 
 ;;;;; ob
 
@@ -774,113 +851,51 @@ To see a list of Google Docs and their respective IDs, run
     (shell-command
      (format "pandoc -s '%s' -o '%s'" input output))))
 
-;;;;; Dispatchers
+;;;;; Menus
 
-(transient-define-prefix org-extras-tlon-dispatch ()
-  "Dispatcher for Tlön projects."
+(transient-define-prefix org-extras-personal-menu ()
+  "Menu for personal projects."
+  [[("e" "email"             (lambda () (interactive) (org-roam-extras-id-goto "96BBA849-B4CF-41C0-ABA3-A5D901BCDB18")))
+    ("f" "finance"           (lambda () (interactive) (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C")))
+    ("i" "Anki"              (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))
+    ("y" "YouTube"           (lambda () (interactive) (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E")))]])
+
+(transient-define-prefix org-extras-tlon-menu ()
+  "Menu for Tlön projects."
   [["Tlön"
     ("t t" "tlon"              (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))
-    ("t i" "tlon inbox"        (lambda () (interactive) (org-roam-extras-id-goto "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")))
-    ]
+    ("t e" "tlon-emacs"        (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))
+    ("t i" "tlon inbox"        (lambda () (interactive) (org-roam-extras-id-goto "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")))]
    ["Babel"
     ("b c" "babel"             (lambda () (interactive) (org-roam-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24")))
-    ("b e" "babel-emacs"       (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))
-    ("b r" "babel-refs"        (lambda () (interactive) (org-roam-extras-id-goto "06C5E072-99F2-4A1F-A87E-0E05E330E111")))
-    ]
+    ("b s" "babel-es"          (lambda () (interactive) (org-roam-extras-id-goto "A2347582-CF81-497E-81C9-CF82E56D8312")))
+    ("b r" "babel-refs"        (lambda () (interactive) (org-roam-extras-id-goto "06C5E072-99F2-4A1F-A87E-0E05E330E111")))]
    ["Uqbar"
     ("q i" "uqbar-issues"      (lambda () (interactive) (org-roam-extras-id-goto "1844F672-62B5-49CF-8BD8-A55F8FCAAFE9")))
-    ("q s" "uqbar-es"          (lambda () (interactive) (org-roam-extras-id-goto "EF190A03-0037-430A-B8A1-414738AEAEA4")))
-    ]
+    ("q s" "uqbar-es"          (lambda () (interactive) (org-roam-extras-id-goto "EF190A03-0037-430A-B8A1-414738AEAEA4")))]
    ["utilitarianism"
-    ("u n" "utilitarianism-en" (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))
-    ]
+    ("u n" "utilitarianism-en" (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))]
    ["Longtermism"
-    ("l s" "longtermism-es"    (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))
-    ]
-   ["Essays on Longtermism"
-    ("e e" "essays-es"         (lambda () (interactive) (org-roam-extras-id-goto "96C4B5CC-0E85-4AEC-A5C2-95996A09DCEB")))
-    ]
-   ["EA News"
-    ("n i" "ean-issues"        (lambda () (interactive) (org-roam-extras-id-goto "A2710AA8-BEEB-412D-9FE0-8AF856E4464C")))
-    ]
-   ["La Bisagra"
-    ("s s" "bisagra"           (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))
-    ]
-   ["Boletín"
-    ("a a" "boletin"           (lambda () (interactive) (org-roam-extras-id-goto "989E6696-2672-47FE-855B-00DA806B7A56")))
-    ]
-   ["GWWC"
-    ("g g" "gwwc"              (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))
-    ]
+    ("l s" "longtermism-es"    (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))]
    ["Radio Altruismo Eficaz"
-    ("rae" "rae"               (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))
-    ]
+    ("rae" "rae"               (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
+   ["Misc"
+    "EA International"
+    ("i" "ea.international"  (lambda () (interactive) (org-roam-extras-id-goto "AF3FEF60-7624-4C3C-9A48-1FB531D1D635")))
+    "EA News"
+    ("n" "ean-issues"        (lambda () (interactive) (org-roam-extras-id-goto "A2710AA8-BEEB-412D-9FE0-8AF856E4464C")))
+    "La Bisagra"
+    ("s" "bisagra"           (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))
+    "Boletín"
+    ("a" "boletin"           (lambda () (interactive) (org-roam-extras-id-goto "989E6696-2672-47FE-855B-00DA806B7A56")))
+    "GWWC"
+    ("g" "gwwc"              (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
    ["Meetings"
-    ("m f" "fede"              (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
-    ("m l" "leo"               (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))
-    ]
-   ]
-  )
+    ("m f" "fede"            (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
+    ("m l" "leo"             (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))
+    ("m g" "group"           (lambda () (interactive) (org-roam-extras-id-goto "BE68100E-753D-408B-9B31-2D58A457A70B")))]])
 
-;; semi-obsolete
-(transient-define-prefix org-extras-work-dispatch ()
-  "Dispatcher for work projects."
-  ["Projects dashboard"
-   ["""Tlön"
-    ("b" "BAB" (lambda () (interactive) (org-roam-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24")))
-    ("r" "RAE" (lambda () (interactive) (org-roam-extras-id-goto "15A1803F-EAA7-4FB9-BA77-74154EB8CA5D")))
-    ("n" "EAN" (lambda () (interactive) (org-roam-extras-id-goto "B4B9E95A-ABE1-4121-AE0B-E920E6917CBC")))
-    ("d" "LBDLHD" (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))]
-   ["""Other"
-    ("w" "PW" (lambda () (interactive) (org-roam-extras-id-goto "72EE8B25-D847-49F5-B6D9-E3B67BEB071A")))
-    ("v" "Samotsvety" (lambda () (interactive) (org-roam-extras-id-goto "7333FEC5-90A7-423D-9C45-2D5333593F87")))
-    ("x" "Misc" (lambda () (interactive) (org-roam-extras-id-goto "E13198C9-8F3F-46D8-B052-6F6ADF6B4D99")))]
-   ["""Someday"
-    ("c" "EA Archive" (lambda () (interactive) (org-roam-extras-id-goto "830A5DA5-AB9A-483A-B8AC-C5CCBD3A02FD")))
-    ("a" "EA Nomad" (lambda () (interactive) (org-roam-extras-id-goto "177F4865-3B25-41C0-999B-B9B67DFAC110")))
-    """On hold"
-    ("h" "HEAR" (lambda () (interactive) (org-roam-extras-id-goto "1BBBA5F1-11FA-4C7B-8D08-5DC84233B8E2")))]
-   ["""Done"
-    ("" "FM" (lambda () (interactive) (org-roam-extras-id-goto "9066D77E-7F2B-4176-9533-243060F11276")))
-    ("" "GPE" (lambda () (interactive) (org-roam-extras-id-goto "DA0B3751-6B25-4F53-AE27-7B6CBC29B6C1")))
-    ("" "LP" (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))
-    ("" "RCGs" (lambda () (interactive) (org-roam-extras-id-goto "470C263E-40F8-4567-83BC-85DE6E5F8D5A")))
-    ("" "Regranting" (lambda () (interactive) (org-roam-extras-id-goto "AE8F5AD4-B85A-4EE2-8A94-AA7B2AFF3E7F")))]
-   ["""Comms"
-    ("e" "email" (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
-    ("s" "slack" (lambda () (interactive) (org-roam-extras-id-goto "A45FEDFB-1928-4571-97F3-03D20A78883C")))
-    ("t" "telegram" (lambda () (interactive) (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D")))]
-   ["""Meetings"
-    ("f" "fede" (lambda () (interactive) (org-roam-extras-id-goto "AED9330C-1673-4669-A367-4B87614965F6")))
-    ;; ("F" "fede: meeting" tlon-core-meeting-with-fede)
-    ("H-f" "fede: tareas" (lambda () (interactive) (org-roam-extras-id-goto "EB5FC062-E46F-4C1F-930F-F2CC710F852D")))
-    ("l" "leo" (lambda () (interactive) (org-roam-extras-id-goto "4EF48AB3-44B4-4791-BDFC-537F3B636FDA")))
-    ;; ("L" "leo: meeting" tlon-core-meeting-with-leo)
-    ("H-l" "leo: tareas" (lambda () (interactive) (org-roam-extras-id-goto "E5777AB0-DC81-40CB-8D03-77D6F111AA2E")))]
-   [""""
-    ("RET" "Home" (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))]
-   ])
-
-;; TODO: create this
-
-(defun define-extras-work-dispatch (lines)
-  "docstring."
-  (eval `(transient-define-prefix org-extras-work-dispatch ()
-	   "Dispatcher for work projects."
-	   ["Projects dashboard"
-	    ,@lines])))
-
-
-;; (setq lines )
-;; (dolist (repo tlon-babel-core-repos)
-;; (let ((name (plist-get :name repo))
-;; (key (plist-get :key repo))
-;; (id (plist-get :id-pablo repo)))
-;; (push `(,name ,key (lambda () (interactive) (org-roam-extras-id-goto ,id))))
-;; ))
-
-;; (define-extras-work-dispatch lines)
-
+;;;###autoload (autoload 'org-extras-config-dispatch "org-extras" nil t)
 (transient-define-prefix org-extras-config-dispatch ()
   "Jump to a section in `config.org'."
   [["Org headings: config.org"
@@ -966,45 +981,6 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
     (unless (file-exists-p file)
       (org-remove-file file)
       (throw 'nextfile t))))
-
-;; Comment out `org-cite--allowed-p' condition to allow invocation
-;; in any mode. Even if inserting a citation is not allowed, one may
-;; want to invoke the command to trigger contextual actions via
-;; `embark'.
-(el-patch-defun org-cite-insert (arg)
-  "Insert a citation at point.
-Insertion is done according to the processor set in `org-cite-insert-processor'.
-ARG is the prefix argument received when calling interactively the function."
-  (interactive "P")
-  (unless org-cite-insert-processor
-    (user-error "No processor set to insert citations"))
-  (org-cite-try-load-processor org-cite-insert-processor)
-  (let ((name org-cite-insert-processor))
-    (cond
-     ((not (org-cite-get-processor name))
-      (user-error "Unknown processor %S" name))
-     ((not (org-cite-processor-has-capability-p name 'insert))
-      (user-error "Processor %S cannot insert citations" name))
-     (t
-      (let ((context (org-element-context))
-	    (insert (org-cite-processor-insert (org-cite-get-processor name))))
-	(cond
-	 ((org-element-type-p context '(citation citation-reference))
-	  (funcall insert context arg))
-	 (el-patch-remove
-	   ((org-cite--allowed-p context)
-	    (funcall insert nil arg)))
-	 (t
-	  (el-patch-swap (user-error "Cannot insert a citation here")
-			 (funcall insert nil arg)))))))))
-
-;; name buffers more cleanly
-(el-patch-defun org-src--construct-edit-buffer-name (org-buffer-name lang)
-  "Construct the buffer name for a source editing buffer.
-Format is \"*Org Src ORG-BUFFER-NAME[ LANG ]*\"."
-  (el-patch-swap
-    (concat "*Org Src " org-buffer-name "[ " lang " ]*")
-    (concat org-buffer-name " (org src)")))
 
 ;;;; Footer
 

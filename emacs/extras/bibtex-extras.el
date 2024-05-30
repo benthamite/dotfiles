@@ -28,97 +28,103 @@
 ;;; Code:
 
 (require 'bibtex)
+(require 'doi-utils)
 (require 'el-patch)
 (require 'ebib)
-;; (require 'ebib-extras)
 
 ;;;; Variables
 
-(defconst bibtex-extras-valid-languages
-  '(("albanian" . "sq")
-    ("american" . "en-US")
-    ("amharic" . "am")
-    ("arabic" . "ar")
-    ("argentinian" . "es-AR")
-    ("armenian" . "hy")
-    ("assamese" . "as")
-    ("asturian" . "ast")
-    ("austrian" . "de-AT")
-    ("australian" . "en-AU")
-    ("basque" . "eu")
-    ("belarusian" . "be")
-    ("bengali" . "bn")
-    ("bosnian" . "bs")
-    ("breton" . "br")
-    ("british" . "en-GB")
-    ("bulgarian" . "bg")
-    ("canadian" . "en-CA")
-    ("catalan" . "ca")
-    ("chinese" . "zh")
-    ("coptic" . "cop")
-    ("croatian" . "hr")
-    ("czech" . "cs")
-    ("danish" . "da")
-    ("dutch" . "nl")
-    ("english" . "en")
-    ("esperanto" . "eo")
-    ("estonian" . "et")
-    ("finnish" . "fi")
-    ("french" . "fr")
-    ("galician" . "gl")
-    ("georgian" . "ka")
-    ("german" . "de")
-    ("greek" . "el")
-    ("hebrew" . "he")
-    ("hindi" . "hi")
-    ("hungarian" . "hu")
-    ("icelandic" . "is")
-    ("interlingua" . "ia")
-    ("irish" . "ga")
-    ("italian" . "it")
-    ("japanese" . "ja")
-    ("kannada" . "kn")
-    ("korean" . "ko")
-    ("lao" . "lo")
-    ("latin" . "la")
-    ("latvian" . "lv")
-    ("lithuanian" . "lt")
-    ("macedonian" . "mk")
-    ("malayalam" . "ml")
-    ("marathi" . "mr")
-    ("mexican" . "es-MX")
-    ("mongolian" . "mn")
-    ("naustrian" . "de-AT")
-    ("newzealand" . "en-NZ")
-    ("ngerman" . "de-DE")
-    ("nko" . "nqo")
-    ("norwegian" . "no")
-    ("oriya" . "or")
-    ("persian" . "fa")
-    ("polish" . "pl")
-    ("portuges" . "pt")
-    ("romanian" . "ro")
-    ("russian" . "ru")
-    ("sanskrit" . "sa")
-    ("serbian" . "sr")
-    ("slovak" . "sk")
-    ("slovenian" . "sl")
-    ("spanish" . "es")
-    ("spanish" . "es")
-    ("swedish" . "sv")
-    ("swissgerman" . "de-CH")
-    ("tamil" . "ta")
-    ("telugu" . "te")
-    ("thai" . "th")
-    ("turkish" . "tr")
-    ("turkmen" . "tk")
-    ("ukenglish" . "en-GB")
-    ("ukrainian" . "uk")
-    ("urdu" . "ur")
-    ("vietnamese" . "vi")
-    ("welsh" . "cy")
-    ("afrikaans" . "af"))
-  "Alist of languages and ISO 639-1 codes for the `landid' field in BibTeX entries.")
+(defconst bibtex-extras-biblatex-fields
+  '("author"
+    "editor"
+    "title"
+    "booktitle"
+    "date"
+    "journaltitle"
+    "volume"
+    "number"
+    "issue"
+    "edition"
+    "series"
+    "pages"
+    "isbn"
+    "issn"
+    "doi"
+    "url"
+    "urldate"
+    "publisher"
+    "location"
+    "chapter"
+    "note"
+    "addendum"
+    "pubstate"
+    "eprint"
+    "eprinttype"
+    "eprintclass"
+    "file"
+    "abstract"
+    "keywords"
+    "language"
+    "langid"
+    "translator"
+    "annotator"
+    "commentator"
+    "introduction"
+    "foreword"
+    "afterword"
+    "venue"
+    "eventtitle"
+    "eventdate"
+    "venue"
+    "organization"
+    "institution"
+    "school"
+    "library"
+    "archive"
+    "index"
+    "part"
+    "version"
+    "crossref"
+    "related"
+    "relatedtype"
+    "entrysubtype"
+    "nameaddon"
+    "type"
+    "maintitle"
+    "mainsubtitle"
+    "maintitleaddon"
+    "booksubtitle"
+    "booktitleaddon"
+    "journaltitleaddon"
+    "journalsubtitle"
+    "issuetitle"
+    "issuesubtitle"
+    "issuetitleaddon"
+    "editora"
+    "editorb"
+    "editorc"
+    "translator"
+    "commentator"
+    "annotator"
+    "introduction"
+    "foreword"
+    "afterword"
+    "subtitle"
+    "titleaddon"
+    "editoratype"
+    "editorbtype"
+    "editorctype"
+    "label"
+    "options"
+    "shorthand"
+    "shorthandintro"
+    "xref"
+    "entryset"
+    "execute"
+    "howpublished"
+    "sortkey")
+  "A list of valid BibLaTeX fields.")
+
 ;;;; Functions
 
 (defun bibtex-extras-replace-element-by-name (list target-name new-element)
@@ -130,67 +136,6 @@
       (setq current (cdr current))))
   list)
 
-;; Adapted from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
-(defun bibtex-extras-asciify-text (&optional begin end)
-  "Remove accents in some letters. e.g. café → cafe.
-Change European language characters into equivalent ASCII ones.
-When called interactively, work on current line or text selection.
-
-Optionally, remove accents in region from BEGIN to END."
-  (interactive)
-  (let (($charMap
-         [
-          ["ß" "ss"]
-          ["á\\|à\\|â\\|ä\\|ā\\|ǎ\\|ã\\|å\\|ą\\|ă\\|ạ\\|ả\\|ả\\|ấ\\|ầ\\|ẩ\\|ẫ\\|ậ\\|ắ\\|ằ\\|ẳ\\|ặ" "a"]
-          ["æ" "ae"]
-          ["ç\\|č\\|ć" "c"]
-          ["é\\|è\\|ê\\|ë\\|ē\\|ě\\|ę\\|ẹ\\|ẻ\\|ẽ\\|ế\\|ề\\|ể\\|ễ\\|ệ" "e"]
-          ["í\\|ì\\|î\\|ï\\|ī\\|ǐ\\|ỉ\\|ị" "i"]
-          ["ñ\\|ň\\|ń" "n"]
-          ["ó\\|ò\\|ô\\|ö\\|õ\\|ǒ\\|ø\\|ō\\|ồ\\|ơ\\|ọ\\|ỏ\\|ố\\|ổ\\|ỗ\\|ộ\\|ớ\\|ờ\\|ở\\|ợ" "o"]
-          ["ú\\|ù\\|û\\|ü\\|ū\\|ũ\\|ư\\|ụ\\|ủ\\|ứ\\|ừ\\|ử\\|ữ\\|ự"     "u"]
-          ["ý\\|ÿ\\|ỳ\\|ỷ\\|ỹ"     "y"]
-          ["þ" "th"]
-          ["ď\\|ð\\|đ" "d"]
-          ["ĩ" "i"]
-          ["ľ\\|ĺ\\|ł" "l"]
-          ["ř\\|ŕ" "r"]
-          ["š\\|ś" "s"]
-          ["ť" "t"]
-          ["ž\\|ź\\|ż" "z"]
-	  ["­" ""]       ; soft hyphen
-          [" " " "]       ; thin space
-          ["–" "-"]       ; dash
-          ["—\\|一" "--"] ; em dash etc
-	  ["¿" ""]
-	  ["¡" ""]
-	  ["…" ""]
-          ])
-        ($p1 (if begin begin
-               (if (region-active-p)
-                   (region-beginning)
-                 (line-beginning-position))))
-        ($p2 (if end end
-               (if (region-active-p)
-                   (region-end)
-                 (line-end-position)))))
-    (let ((case-fold-search t))
-      (save-restriction
-        (narrow-to-region $p1 $p2)
-        (mapc
-         (lambda ($pair)
-           (goto-char (point-min))
-           (while (re-search-forward (elt $pair 0) (point-max) t)
-             (replace-match (elt $pair 1))))
-         $charMap)))))
-
-(defun bibtex-extras-asciify-string (string)
-  "Return a new STRING e.g. café → cafe."
-  (with-temp-buffer
-    (insert string)
-    (bibtex-extras-asciify-text (point-min) (point-max))
-    (buffer-string)))
-
 (defun bibtex-extras-get-key ()
   "Return the key of the current BibTeX entry."
   (save-excursion
@@ -201,12 +146,16 @@ Optionally, remove accents in region from BEGIN to END."
           (match-string-no-properties 1)
         (user-error "Not on a BibTeX entry")))))
 
-(defun bibtex-extras-validate-language (language)
-  "If LANGUAGE is a valid language, return it.
-The validation is case-insensitive, but the returned language is in lowercase."
-  (let ((language (downcase language)))
-    (when (member language (mapcar #'car bibtex-extras-valid-languages))
-      language)))
+(defun bibtex-extras-add-or-update-field (field value)
+  "Add or update FIELD with VALUE in the current BibTeX entry."
+  (bibtex-beginning-of-entry)
+  ;; Check if FIELD exists
+  (unless (bibtex-search-forward-field field)
+    (bibtex-beginning-of-entry)
+    (bibtex-make-field field t t))
+  ;; Update the value of FIELD
+  (when (bibtex-autokey-get-field field)
+    (bibtex-set-field field value)))
 
 (defun bibtex-extras-convert-titleaddon-to-journaltitle ()
   "Convert field `titleaddon' to `journaltitle' in entry at point.
@@ -230,6 +179,7 @@ field for this information is `journaltitle', so we move it there."
       (goto-char pos)
       (bibtex-kill-field))))
 
+(declare-function ebib-extras-get-file-of-key "ebib-extras")
 (defun bibtex-extras-move-entry (key target)
   "Move entry with KEY to TARGET bibliography file."
   (unless ebib--cur-db
@@ -257,6 +207,8 @@ If DELIMITER is nil, use a semicolon."
 		      (concat current-value delimiter value))))
     (bibtex-extras-add-or-update-field field new-value)))
 
+(declare-function ebib-extras-get-db-number "ebib-extras")
+(declare-function ebib-extras-reload-database-no-confirm "ebib-extras")
 (defun bibtex-extras-open-in-ebib ()
   "Open the current BibTeX entry in Ebib."
   (interactive)
@@ -271,61 +223,7 @@ If DELIMITER is nil, use a semicolon."
     (ebib file key)
     (ebib--pop-to-buffer (ebib--buffer 'entry))))
 
-(defun bibtex-extras-add-or-update-field (field value)
-  "Add or update FIELD with VALUE in the current BibTeX entry."
-  (bibtex-beginning-of-entry)
-  ;; Check if FIELD exists
-  (unless (bibtex-search-forward-field field)
-    (bibtex-beginning-of-entry)
-    (bibtex-make-field field t t))
-  ;; Update the value of FIELD
-  (when (bibtex-autokey-get-field field)
-    (bibtex-set-field field value)))
-
-(defun bibtex-extras-add-or-update-tlon-field ()
-  "Add or update \"database\" field with \"Tlön\" value in the current BibTeX entry."
-  (bibtex-extras-add-or-update-field "database" "Tlön"))
-
-(defun bibtex-extras-add-or-update-tlon-field ()
-  "Add or update \"database\" field with \"Tlön\" value in the current BibTeX entry."
-  (bibtex-extras-add-or-update-field "database" "Tlön"))
-
-(defun bibtex-extras-add-database-field (file)
-  "Iterate over each entry in FILE and add/update the `database' field.
-Adds the field `database' to every entry if it doesn't have it
-and sets the value of the field for all entries to `Tlön'."
-  (interactive "fBibTeX file: ")
-  (with-current-buffer (find-file-noselect file)
-    (save-excursion
-      (bibtex-map-entries
-       (lambda (_key start _end)
-         (save-excursion
-           (goto-char start)
-           (bibtex-extras-add-or-update-tlon-field)))))
-    ;; Save the updated entries to the file
-    (save-buffer)))
-
-(defun bibtex-extras-auto-add-database-field ()
-  "Run `bibtex-extras-add-database-field' every time `new.bib' is saved."
-  (let ((file tlon-babel-refs-file-fluid))
-    (when (string= (buffer-file-name) file)
-      (bibtex-extras-add-database-field file))))
-
-(defun bibtex-extras-auto-clean-entry ()
-  "Clean up bibtex entry at point upon saving."
-  (let ((after-save-hook nil))
-    (bibtex-extras-add-or-update-tlon-field)
-    (tlon-babel-refs-add-lang-id-to-entry)
-    (bibtex-extras-remove-empty-spaces)
-    (bibtex-clean-entry)
-    (save-buffer)))
-
-(defun bibtex-extras-remove-empty-spaces ()
-  "Remove empty spaces at the end of field."
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward " \\}" nil t)
-      (replace-match "}" t t))))
+;;;;; getters
 
 (defun bibtex-extras-get-entry-as-string ()
   "Return the bibtex entry at point as a string."
@@ -340,21 +238,98 @@ and sets the value of the field for all entries to `Tlön'."
     (save-restriction
       (bibtex-narrow-to-entry)
       (bibtex-beginning-of-entry)
-      (let ((value (bibtex-autokey-get-field field)))
+      (let* ((bibtex-autokey-use-crossref nil)
+	     (value (bibtex-autokey-get-field field)))
 	(unless (string-empty-p value)
 	  (replace-regexp-in-string "[\n\t ]+" " " value))))))
 
+(defun bibtex-extras-get-field-name ()
+  "Return the name of the field at point."
+  (save-excursion
+    (let* ((case-fold-search t)
+           (bounds (bibtex-enclosing-field))
+           (end (bibtex-end-of-field bounds)))
+      (goto-char end)
+      (bibtex-name-in-field bounds))))
+
 (defun bibtex-extras-get-field-in-string (string field)
   "Return the value of FIELD in STRING."
-  (with-temp-buffer
-    (insert string)
-    (bibtex-extras-get-field field)))
+  (save-window-excursion
+    (with-temp-buffer
+      (insert string)
+      (bibtex-extras-get-field field))))
 
-(defun bibtex-extras-get-two-letter-code (language)
-  "Return the two-letter code for LANGUAGE."
-  (when-let* ((downcased (downcase language))
-	      (code-raw (alist-get downcased bibtex-extras-valid-languages nil nil #'string=)))
-    (string-limit code-raw 2)))
+;;;;; setters
+
+(defun bibtex-extras-set-field ()
+  "Set FIELD to VALUE, creating it if necessary."
+  (interactive)
+  (let* ((field (completing-read "Field: " bibtex-extras-biblatex-fields))
+	 (value (read-string "Value: " (bibtex-extras-get-field field))))
+    (bibtex-set-field field (substring-no-properties value))))
+
+;;;;; sorting of bibtex buffer
+
+;; the two functions below are used to sort the bibtex files, via the user
+;; option `bibtex-maintain-sorted-entries'
+(defun bibtex-extras-entry-sorter ()
+  "Return a list of the bibtex key and the `crossref' field of the entry at point."
+  (list (bibtex-extras-get-key)
+	(not (string-empty-p (bibtex-autokey-get-field "crossref")))
+	nil))
+
+(defun bibtex-extras-lessp (index1 index2)
+  "Predicate for sorting BibTeX entries with indices INDEX1 and INDEX2.
+Entries will be first be sorted as follows. Those with a `crossref' field will
+be placed above the rest, and will be sorted in reverse alphabetical order. The
+rest will be sorted alphabetically.
+
+This sorting criterion replicates the Ebib criterion. That the entries with a
+`crossref' field are sorted in reverse alphabetical order rather than
+alphabetically appears to be a bug. But we replicate it for consistency’s sake:
+this way when either Ebib or `bibtex' sorts the buffer, it won't be later
+re-sorted by the other."
+  (let ((key1 (nth 0 index1))
+	(key2 (nth 0 index2))
+	(crossref1 (nth 1 index1))
+	(crossref2 (nth 1 index2)))
+    (cond ((xor crossref1 crossref2)
+	   crossref1)
+	  ((and crossref1 crossref2)
+	   (string< key2 key1))
+	  (t
+	   (string< key1 key2)))))
+
+;;;;; attach downloads
+
+(declare-function eww-extras-url-to-file "eww-extras")
+(defun bibtex-extras-url-to-file-attach (type)
+  "Generate PDF of file of TYPE."
+  (when (bibtex-extras-get-field "url")
+    (eww-extras-url-to-file type nil #'bibtex-extras-attach-file-to-entry)))
+
+(defun bibtex-extras-url-to-pdf-attach ()
+  "Generate PDF of URL."
+  (interactive)
+  (bibtex-extras-url-to-file-attach "pdf"))
+
+(defun bibtex-extras-url-to-html-attach ()
+  "Generate HTML of URL."
+  (interactive)
+  (bibtex-extras-url-to-file-attach "html"))
+
+(declare-function bibtex-search-entry "bibtext")
+(declare-function ebib-extras-attach-file "ebib-extras")
+(defun bibtex-extras-attach-file-to-entry (&optional file bibtex-file)
+  "Attach FILE to the relevant entry in BIBTEX-FILE.
+The relevant entry is the entry in BIBTEX-FILE whose key equals the name of FILE
+sans its extension."
+  (let ((key (file-name-nondirectory (file-name-sans-extension file))))
+    (save-excursion
+      (with-current-buffer (find-file-noselect bibtex-file)
+	(bibtex-search-entry key)
+	(ebib-extras-attach-file file)
+	(message "Attached `%s' to %s" file key)))))
 
 ;;;;; Patches
 

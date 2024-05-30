@@ -53,6 +53,46 @@
      string
      (mapconcat 'isearch-text-char-description string ""))))
 
+;; adapted from reddit.com/r/emacs/comments/2amn1v/isearch_selected_text/cixq7zx/
+(defun isearch-extras-use-selection (orig-fun &rest args)
+  "Use the current selection as the initial input for an incremental search.
+ORIG-FUN is the original function being advised, and ARGS are its arguments."
+  (if (region-active-p)
+      (progn
+        (isearch-update-ring (buffer-substring-no-properties (mark) (point)))
+        (deactivate-mark)
+        (apply orig-fun args)
+        (if (not (car args))
+            (isearch-repeat-backward)
+          (goto-char (mark))
+          (isearch-repeat-forward)))
+    (apply orig-fun args)))
+
+;; blog.chmouel.com/posts/emacs-isearch/#use-consult-to-jump-onto-the-search-occurrence
+(declare-function consult-line "consult")
+(defun isearch-extras-consult-line ()
+  "Invoke `consult-line' from an interactive search."
+  (interactive)
+  (let ((query (if isearch-regexp
+		   isearch-string
+		 (regexp-quote isearch-string))))
+    (isearch-update-ring isearch-string isearch-regexp)
+    (let (search-nonincremental-instead)
+      (ignore-errors (isearch-done t t)))
+    (consult-line query)))
+
+;; blog.chmouel.com/posts/emacs-isearch/#do-a-project-search-from-a-search-term
+(defun isearch-extras-project-search ()
+  "Invoke `project-find-regexp' from an interactive search."
+  (interactive)
+  (let ((query (if isearch-regexp
+		   isearch-string
+		 (regexp-quote isearch-string))))
+    (isearch-update-ring isearch-string isearch-regexp)
+    (let (search-nonincremental-instead)
+      (ignore-errors (isearch-done t t)))
+    (project-find-regexp query)))
+
 (provide 'isearch-extras)
 ;;; isearch-extras.el ends here
 

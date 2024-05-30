@@ -27,13 +27,29 @@
 
 ;;; Code:
 
-(require 'org)
-(require 'url-parse)
-(require 'url-vars)
+(require 'no-littering)
+(require 'paths)
+
+;;;; Variables
+
+(defgroup simple-extras ()
+  "Extensions for `simple'."
+  :group 'simple-extras)
+
+(defcustom simple-extras-new-buffer-auto-save-dir
+  (file-name-concat no-littering-var-directory "auto-save/new-buffers/")
+  "Directory in which to store auto-save files for new, non-file-visiting buffers."
+  :type 'directory
+  :group 'simple-extras
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         ;; Ensure the directory exists when the user option is set
+         (unless (file-directory-p value)
+	   (make-directory value t))))
 
 ;;;; Functions
 
-;;;;; editing
+;;;;; Editing
 
 (defmacro simple-extras-delete-instead-of-kill (&rest body)
   "Replace `kill-region' with `delete-region' in BODY."
@@ -55,7 +71,7 @@
   (when-let ((bounds (bounds-of-thing-at-point thing)))
     (kill-region (car bounds) (cdr bounds))))
 
-;;;;;; words
+;;;;;; Words
 
 (defun simple-extras-delete-word (&optional arg)
   "Like `kill-word', but deletes instead of killing.
@@ -172,7 +188,7 @@ See also `zap-up-to-char'."
   (interactive)
   (transpose-chars -1))
 
-;;;;;; lines
+;;;;;; Lines
 
 (defun simple-extras-delete-line (&optional arg)
   "Like `kill-line', but deletes instead of killing.
@@ -216,7 +232,7 @@ With prefix argument ARG, copy that many lines from point."
   (interactive)
   (transpose-lines -1))
 
-;;;;;; sentences
+;;;;;; Sentences
 
 (defun simple-extras-delete-sentence (&optional arg)
   "Like `kill-sentence', but deletes instead of killing.
@@ -266,7 +282,7 @@ negative ARG -N."
   (interactive)
   (transpose-sentences -1))
 
-;;;;;; paragraphs
+;;;;;; Paragraphs
 
 ;; the functions below are derivatives of functions in `paragraphs.el' so maybe
 ;; they should be moved to another extra package there
@@ -318,7 +334,7 @@ negative ARG -N means copy forward to Nth end of paragraph."
   (interactive)
   (transpose-paragraphs -1))
 
-;;;;;; sexps
+;;;;;; Sexps
 
 ;; ;; the functions below are derivatives of functions in `lisp.el' so maybe
 ;; ;; they should be moved to another extra package there
@@ -370,7 +386,7 @@ Negative arg -N means copy N sexps after point."
   (interactive)
   (transpose-sexps -1))
 
-;;;;;; region
+;;;;;; Region
 
 (defun simple-extras-smart-kill-region ()
   "Kill region if active, else kill line."
@@ -393,7 +409,7 @@ Negative arg -N means copy N sexps after point."
       (call-interactively 'copy-region-as-kill)
     (call-interactively 'simple-extras-copy-whole-line)))
 
-;;;;;; yank
+;;;;;; Yank
 
 (defun simple-extras-yank-and-pop ()
   "Yank, then pop the last kill off the ring."
@@ -446,12 +462,14 @@ number."
 
 (declare-function org-tidy-mode "org-tidy")
 (declare-function org-modern-mode "org-modern")
+(declare-function org-extras-inline-images "org-extras")
+(defvar org-mode-hook)
 (defun simple-extras-visible-mode-enhanced-org (&optional arg)
   "Set associated `org' modes based on ARG."
   (when (derived-mode-p 'org-mode 'org-agenda-mode 'org-msg-mode)
     (when (member 'org-tidy-mode org-mode-hook)
       (org-tidy-mode arg))
-    (org-display-inline-images arg)
+    (org-extras-inline-images arg)
     (when (and (not (derived-mode-p 'org-agenda-mode))
 	       (featurep 'org-modern))
       (org-modern-mode arg)))
@@ -482,8 +500,52 @@ Either way, save count to kill ring."
     (visual-line-mode)
     (setq truncate-lines nil)))
 
-;;;;; indent
+;; inspired by
+;; web.archive.org/web/20220527155813/with-emacs.com/posts/tips/quit-current-context/
+;; protesilaos.com/emacs/dotemacs#h:5f78e837-0d27-4390-bd9a-6d0bca57fa50
+(defun simple-extras-keyboard-quit-dwim ()
+  "Do-What-I-Mean behaviour for a general `keyboard-quit'.
 
+The DWIM behaviour of this command is as follows:
+
+- When the region is active, disable it.
+- When the Completions buffer is selected, close it.
+- When the minibuffer is active, close it.
+- When defining a keyboard macro, do nothing.
+- When a prefix argument is given, do nothing.
+- Otherwise, call `keyboard-quit'."
+  (interactive)
+  (cond ((region-active-p)
+         ;; Avoid adding the region to the window selection.
+         (setq saved-region-selection nil)
+         (let (select-active-regions)
+           (deactivate-mark)))
+	((derived-mode-p 'completion-list-mode)
+	 (delete-completion-window))
+        ((eq last-command 'mode-exited) nil)
+        (current-prefix-arg
+         nil)
+        (defining-kbd-macro
+         (message
+          (substitute-command-keys
+           "Quit is ignored during macro defintion, use \\[kmacro-end-macro] if you want to stop macro definition"))
+         (cancel-kbd-macro-events))
+        ((active-minibuffer-window)
+         (when (get-buffer-window "*Completions*")
+           ;; hide completions first so point stays in active window when
+           ;; outside the minibuffer
+           (minibuffer-hide-completions))
+         (abort-recursive-edit))
+        (t
+         ;; if we got this far just use the default so we don't miss
+         ;; any upstream changes
+         (keyboard-quit))))
+
+;;;;; Indent
+
+(defvar org-src-tab-acts-natively)
+(declare-function org-in-src-block-p "org")
+(declare-function org-narrow-to-block "org")
 ;; Adapted from `spacemacs/indent-region-or-buffer'.
 (defun simple-extras-indent-dwim ()
   "Indent in a smart way, depending on context.
@@ -506,7 +568,7 @@ block only, else indent whole buffer."
 	(message "Indented buffer.")))
     (whitespace-cleanup)))
 
-;;;;; strip
+;;;;; Strip
 
 ;; github.com/typester/emacs/blob/master/lisp/url/url-util.el
 (defun simple-extras-get-url-at-point (&optional pt)
@@ -549,6 +611,18 @@ If PT is non-nil, start at that position instead of `point'."
 	  (setq url nil))
       url)))
 
+(defun simple-extras-remove-trailing-slash (string)
+  "Remove trailing slashes from STRING if present."
+  (if (string-suffix-p "/" string)
+      (substring string 0 -1)
+    string))
+
+(defun simple-extras-simplify-url (url)
+  "Strip down a URL by removing the \"https\", \"www\", and trailing slashes."
+  (simple-extras-remove-trailing-slash
+   (replace-regexp-in-string "\\`\\(https?://\\)?\\(www\\.\\)?" "" url)))
+
+;; TODO: cleanup this
 (defun simple-extras-strip-url ()
   "Strip URL of unnecessary elements."
   (interactive)
@@ -597,23 +671,138 @@ FORMS are evaluated with point restored to its original position."
 (declare-function eww-current-url "eww")
 (declare-function ebib-extras-get-field "ebib-extras")
 (declare-function bibtex-extras-get-field "bibtex-extras")
-(defun simple-extras-get-url (url)
+(defun simple-extras-get-url (&optional url)
   "Get URL from URL, current buffer, or prompt user for it."
   (or url
       (pcase major-mode
 	('eww-mode (eww-current-url))
 	((or 'ebib-entry-mode 'ebib-index-mode) (ebib-extras-get-field "url"))
 	('bibtex-mode (bibtex-extras-get-field "url")))
-      (read-string "URL: ")))
+      (read-string "URL: " (current-kill 0))))
 
-;;;;; url-parse
+;;;;; Url-parse
 
 (defun simple-extras-string-is-url-p (str)
   "Check if STR is a valid URL."
   (let ((url (url-generic-parse-url str)))
     (and (url-type url) (url-host url))))
 
-;;;;; misc
+;;;;; Conversion
+
+(defun simple-extras-pandoc-convert (language &optional non-html)
+  "Convert the contents of the system clipboard to target LANGUAGE using Pandoc.
+Convert from HTML if the clipboard contains HTML, and from NON-HTML otherwise.
+Both LANGUAGE and NON-HTML are specified using the Pandoc name for that
+language."
+  (let* ((command (format "%%s | pandoc --wrap=none -f %%s -t %s" language))
+	 (output (shell-command-to-string (format command "pbv public.html" "html"))))
+    (when (string-match-p "Could not access pasteboard contents" output)
+      (setq output (shell-command-to-string (format command "pbpaste" non-html))))
+    output))
+
+;;;;; Asciify
+
+;; Adapted from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
+(defun simple-extras-asciify-text (&optional begin end)
+  "Remove accents in some letters. e.g. café → cafe.
+Change European language characters into equivalent ASCII ones.
+When called interactively, work on current line or text selection.
+
+Optionally, remove accents in region from BEGIN to END."
+  (interactive)
+  (let (($charMap
+         [
+          ["ß" "ss"]
+          ["á\\|à\\|â\\|ä\\|ā\\|ǎ\\|ã\\|å\\|ą\\|ă\\|ạ\\|ả\\|ả\\|ấ\\|ầ\\|ẩ\\|ẫ\\|ậ\\|ắ\\|ằ\\|ẳ\\|ặ" "a"]
+          ["æ" "ae"]
+          ["ç\\|č\\|ć" "c"]
+          ["é\\|è\\|ê\\|ë\\|ē\\|ě\\|ę\\|ẹ\\|ẻ\\|ẽ\\|ế\\|ề\\|ể\\|ễ\\|ệ" "e"]
+          ["í\\|ì\\|î\\|ï\\|ī\\|ǐ\\|ỉ\\|ị" "i"]
+          ["ñ\\|ň\\|ń" "n"]
+          ["ó\\|ò\\|ô\\|ö\\|õ\\|ǒ\\|ø\\|ō\\|ồ\\|ơ\\|ọ\\|ỏ\\|ố\\|ổ\\|ỗ\\|ộ\\|ớ\\|ờ\\|ở\\|ợ" "o"]
+          ["ú\\|ù\\|û\\|ü\\|ū\\|ũ\\|ư\\|ụ\\|ủ\\|ứ\\|ừ\\|ử\\|ữ\\|ự"     "u"]
+          ["ý\\|ÿ\\|ỳ\\|ỷ\\|ỹ"     "y"]
+          ["þ" "th"]
+          ["ď\\|ð\\|đ" "d"]
+          ["ĩ" "i"]
+          ["ľ\\|ĺ\\|ł" "l"]
+          ["ř\\|ŕ" "r"]
+          ["š\\|ś" "s"]
+          ["ť" "t"]
+          ["ž\\|ź\\|ż" "z"]
+	  ["­" ""]       ; soft hyphen
+          [" " " "]       ; thin space
+          ["–" "-"]       ; dash
+          ["—\\|一" "--"] ; em dash etc
+	  ["¿" ""]
+	  ["¡" ""]
+	  ["…" ""]
+          ])
+        ($p1 (if begin begin
+               (if (region-active-p)
+                   (region-beginning)
+                 (line-beginning-position))))
+        ($p2 (if end end
+               (if (region-active-p)
+                   (region-end)
+                 (line-end-position)))))
+    (let ((case-fold-search t))
+      (save-restriction
+        (narrow-to-region $p1 $p2)
+        (mapc
+         (lambda ($pair)
+           (goto-char (point-min))
+           (while (re-search-forward (elt $pair 0) (point-max) t)
+             (replace-match (elt $pair 1))))
+         $charMap)))))
+
+(defun simple-extras-asciify-string (string)
+  "Return a new STRING e.g. café → cafe."
+  (with-temp-buffer
+    (insert string)
+    (simple-extras-asciify-text (point-min) (point-max))
+    (buffer-string)))
+
+;;;;; Slugify
+
+(declare-function prot-eww--sluggify "prot-eww")
+;;;###autoload
+(defun simple-extras-slugify (string)
+  "Convert STRING into slug."
+  (simple-extras-asciify-string (prot-eww--sluggify string)))
+
+;;;###autoload
+(defun simple-extras-slugify-clipboard ()
+  "Convert the clipboard or first element in kill ring into a slug."
+  (interactive)
+  (kill-new (simple-extras-slugify (current-kill 0))))
+
+;;;;; auto-save-mode
+
+(defun simple-extras-is-new-buffer-p ()
+  "Return t iff the current buffer is a new, non-file-visiting buffer."
+  (and (not buffer-file-name)
+       (string-match "^untitled" (buffer-name))))
+
+(defun simple-extras-new-buffer-enable-auto-save ()
+  "Enable auto-save for new, non-file-visiting buffers."
+  (when (simple-extras-is-new-buffer-p)
+    (auto-save-mode 1)))
+
+(add-hook 'buffer-list-update-hook #'simple-extras-new-buffer-enable-auto-save)
+
+(defun simple-extras-new-buffer-auto-save-dir (orig-func &rest args)
+  "Use a standard location for auto-save files for non-file-visiting buffers.
+ORIG-FUNC is the original function being advised. ARGS are the arguments passed
+to it."
+  (if (simple-extras-is-new-buffer-p)
+      (let ((default-directory simple-extras-new-buffer-auto-save-dir))
+	(apply orig-func args))
+    (apply orig-func args)))
+
+(advice-add 'auto-save-mode :around #'simple-extras-new-buffer-auto-save-dir)
+
+;;;;; Misc
 
 (defun simple-extras-init-disable-funs (seconds funs)
   "Disable functions in list FUNS after SECONDS."
@@ -653,6 +842,27 @@ is already narrowed."
         ((derived-mode-p 'ledger-mode)
          (ledger-mode-extras-narrow-to-xact))
         (t (narrow-to-defun))))
+
+(defun simple-extras-get-next-element (element list)
+  "Get the next element in LIST after ELEMENT.
+If ELEMENT is the last element, return the first element."
+  (let ((index (1+ (cl-position element list :test #'equal))))
+    (if (eq index (length list))
+	(car list)
+      (nth index list))))
+
+(defun simple-extras-call-verbosely (fun &optional format-string)
+  "Call FUN and display a message with its name.
+Optionally, use FORMAT-STRING as the message format string. The string should
+take a single argument, the name of the function being called."
+  (let ((format-string (or format-string "Calling `%s'...")))
+    (message format-string (symbol-name fun))
+    (funcall fun)))
+
+(defun simple-extras-get-emacs-distro ()
+  "Return the Emacs distribution."
+  (cond ((boundp 'mac-effective-appearance-change-hook) 'emacs-mac)
+	((boundp 'ns-system-appearance-change-functions) 'emacs-plus)))
 
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

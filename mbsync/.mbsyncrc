@@ -1,12 +1,11 @@
 IMAPAccount gmail
 Host imap.gmail.com
-UserCmd "pass auth-sources/mbsync/user"
-PassCmd "pass auth-sources/mbsync/password"
+UserCmd "echo $PERSONAL_GMAIL"
+PassCmd "echo $MBSYNC_PASSWORD"
 SSLType IMAPS
 SSLVersions TLSv1.3
 AuthMechs LOGIN
 CertificateFile /opt/homebrew/etc/openssl@1.1/cert.pem
-# PipelineDepth 50 ; only for initial full download, not sure if needed even then
 
 MaildirStore gmail-local
 Subfolders Verbatim
@@ -33,9 +32,17 @@ Create Both
 Expunge Both
 SyncState *
 
+Channel gmail-refiled
+Far :gmail-remote:"Refiled"
+Near :gmail-local:"Refiled"
+CopyArrivalDate yes
+Create Both
+Expunge Both
+SyncState *
+
 Channel gmail-starred
 Far :gmail-remote:"[Gmail]/Starred"
-Near :gmail-local:"[Gmail]/Starred"
+Near :gmail-local:"Starred"
 CopyArrivalDate yes
 Create Both
 Expunge Both
@@ -43,7 +50,7 @@ SyncState *
 
 Channel gmail-sent
 Far :gmail-remote:"[Gmail]/Sent Mail"
-Near :gmail-local:"[Gmail]/Sent Mail"
+Near :gmail-local:"Sent"
 CopyArrivalDate yes
 Create Both
 Expunge Both
@@ -51,7 +58,7 @@ SyncState *
 
 Channel gmail-trash
 Far :gmail-remote:"[Gmail]/Trash"
-Near :gmail-local:"[Gmail]/Trash"
+Near :gmail-local:"Trash"
 CopyArrivalDate yes
 Create Both
 Expunge Both
@@ -59,7 +66,7 @@ SyncState *
 
 Channel gmail-all
 Far :gmail-remote:"[Gmail]/All Mail"
-Near :gmail-local:"[Gmail]/All Mail"
+Near :gmail-local:"All"
 CopyArrivalDate yes
 Create Both
 Expunge Both
@@ -68,6 +75,15 @@ SyncState *
 Group gmail
 Channel gmail-inbox
 Channel gmail-daily
+Channel gmail-refiled
+Channel gmail-sent
 Channel gmail-trash
-Channel gmail-all
 Channel gmail-starred
+
+Group gmail-all
+Channel gmail-inbox
+Channel gmail-daily
+Channel gmail-sent
+Channel gmail-trash
+Channel gmail-starred
+Channel gmail-all

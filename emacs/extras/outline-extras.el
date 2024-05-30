@@ -29,10 +29,6 @@
 
 (require 'outline)
 
-;;;; User options
-
-;;;; Main variables
-
 ;;;; Functions
 
 (defun outline-extras-promote-heading ()

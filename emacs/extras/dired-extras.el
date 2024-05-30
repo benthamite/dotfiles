@@ -31,6 +31,8 @@
 (require 'el-patch)
 (require 'gnus-dired)
 (require 'paths)
+(require 'shut-up)
+(require 'transient)
 
 ;;;; Variables
 
@@ -43,20 +45,6 @@
   "Copy name of file at point excluding its extension."
   (interactive)
   (kill-new (file-name-sans-extension (dired-copy-filename-as-kill))))
-
-;; from emacswiki.org/emacs/DiredOmitMode
-(defun dired-extras-dotfiles-toggle ()
-  "Show/hide dot-files."
-  (interactive)
-  (when (derived-mode-p 'dired-mode)
-    (if dired-extras-show-dotfiles-p
-	(progn
-	  (setq dired-extras-show-dotfiles-p nil)
-	  (message "h")
-	  (dired-mark-files-regexp "^\\\.")
-	  (dired-do-kill-lines))
-      (progn (revert-buffer) ; otherwise just revert to re-show
-	     (set (make-local-variable 'dired-dotfiles-show-p) t)))))
 
 (defun dired-extras-mark-screenshots ()
   "Mark all screenshot files."
@@ -72,6 +60,20 @@
   "Copy absolute names of marked (or next ARG) files into the kill ring."
   (interactive)
   (dired-copy-filename-as-kill '(0)))
+
+(defun dired-extras-copy-filename-as-kill-dwim ()
+  "Copy names of visible files into the kill ring.
+If `dired-hide-details-mode' is non-nil, copy the file names sans their
+directories; otherwise copy the full paths."
+  (interactive)
+  (let ((files (dired-get-marked-files dired-hide-details-mode nil)))
+    (kill-new (mapconcat #'identity files "\n"))))
+
+(declare-function image-dired-copy-filename-as-kill "image-dired")
+(defun dired-extras-image-copy-filename-as-kill-absolute ()
+  "Copy absolute names of marked (or next ARG) images into the kill ring."
+  (interactive)
+  (image-dired-copy-filename-as-kill '(0)))
 
 (defun dired-extras-copy-to-remote-docs-directory ()
   "Copy marked files to `stafforini.com/docs'.
@@ -152,8 +154,26 @@ losing the `put back' option."
 	    (push (buffer-name buffer) buffers))))
       (nreverse buffers))))
 
+;;;;; hide-details-mode
+
+(declare-function dired-du-mode "dired-du")
+(defun dired-extras-hide-details-mode-enhanced (&optional arg)
+  "Set `dired-hide-details-mode' and associated modes.
+Toggle the mode if ARG is `toggle' or called interactively. Enable the mode if
+ARG is nil, omitted, or a positive number. Disable the mode if ARG is a negative
+number."
+  (interactive "P")
+  (let ((arg (if (or (eq arg 'toggle)
+		     (and (null arg) (called-interactively-p 'any)))
+		 (if dired-hide-details-mode 1 -1)
+	       (or arg 1))))
+    (dired-hide-details-mode (* arg -1))
+    (dired-omit-mode (* arg -1))
+    (dired-du-mode arg)))
+
 ;;;;; Dispatcher
 
+;;;###autoload (autoload 'dired-extras-dispatch "dired-extras" nil t)
 (transient-define-prefix dired-extras-dispatch ()
   "Dispatcher for Dired."
   ["Dired folders"
@@ -161,7 +181,6 @@ losing the `put back' option."
     ("d" "dotfiles" (lambda () (interactive) (dired paths-dir-dotfiles)))
     ("e" "Emacs" (lambda () (interactive) (dired paths-dir-emacs)))
     ("i" "Anki" (lambda () (interactive) (dired paths-dir-anki)))
-    ("j" "Health" (lambda () (interactive) (dired paths-dir-health)))
     ("n" "Notes" (lambda () (interactive) (dired paths-dir-notes)))
     ("o" "Google Drive" (lambda () (interactive) (dired paths-dir-google-drive)))
     ("p" "People" (lambda () (interactive) (dired paths-dir-people)))
@@ -170,8 +189,7 @@ losing the `put back' option."
     ("w" "downloads" (lambda () (interactive) (dired paths-dir-downloads)))
     ("x" "Dropbox" (lambda () (interactive) (dired paths-dir-dropbox)))
     ("y" "Library: PDF" (lambda () (interactive) (dired paths-dir-pdf-library)))
-    ("z" "Library: HTML" (lambda () (interactive) (dired paths-dir-html-library)))
-    ]
+    ("z" "Library: HTML" (lambda () (interactive) (dired paths-dir-html-library)))]
    ["Music"
     ("m c" "classical" (lambda () (interactive) (dired paths-dir-music-classical)))
     ("m p" "popular" (lambda () (interactive) (dired paths-dir-music-popular)))
@@ -184,7 +202,7 @@ losing the `put back' option."
     (";" "Current buffer" dired-jump)
     ("H-;" "Current buffer in other window" dired-jump-other-window)]
    ["Tlön: Google Drive"
-    ("t H-b" "Google Drive: Babel" (lambda () (interactive) (dired paths-dir-google-drive-tlon-babel)))
+    ("t H-b" "Google Drive: Babel" (lambda () (interactive) (dired paths-dir-google-drive-tlon)))
     ("t H-n" "Google Drive: EAN" (lambda () (interactive) (dired paths-dir-google-drive-tlon-EAN)))
     ("t H-m" "Google Drive: FM" (lambda () (interactive) (dired paths-dir-google-drive-tlon-FM)))
     ("t H-g" "Google Drive: GPE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-GPE)))
@@ -195,10 +213,9 @@ losing the `put back' option."
     ("t H-t" "Google Drive: tlon" (lambda () (interactive) (dired paths-dir-google-drive-tlon)))
     ("t H-c" "Google Drive: core" (lambda () (interactive) (dired paths-dir-google-drive-tlon-core)))
     ("t H-l" "Google Drive: leo" (lambda () (interactive) (dired paths-dir-google-drive-tlon-leo)))
-    ("t H-f" "Google Drive: fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))
-    ]
+    ("t H-f" "Google Drive: fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))]
    ["Tlön: Dropbox"
-    ("t b" "Dropbox: Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
+    ("t b" "Dropbox: Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon)))
     ("t n" "Dropbox: EAN" (lambda () (interactive) (dired paths-dir-dropbox-tlon-EAN)))
     ("t m" "Dropbox: FM" (lambda () (interactive) (dired paths-dir-dropbox-tlon-FM)))
     ("t g" "Dropbox: GPE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-GPE)))
@@ -209,9 +226,7 @@ losing the `put back' option."
     ("t t" "Dropbox: tlon" (lambda () (interactive) (dired paths-dir-dropbox-tlon)))
     ("t c" "Dropbox: core" (lambda () (interactive) (dired paths-dir-dropbox-tlon-core)))
     ("t f" "Dropbox: fede" (lambda () (interactive) (dired paths-dir-dropbox-tlon-fede)))
-    ("t l" "Dropbox: leo" (lambda () (interactive) (dired paths-dir-dropbox-tlon-leo)))
-    ]
-   ])
+    ("t l" "Dropbox: leo" (lambda () (interactive) (dired paths-dir-dropbox-tlon-leo)))]])
 
 (provide 'dired-extras)
 ;;; dired-extras.el ends here

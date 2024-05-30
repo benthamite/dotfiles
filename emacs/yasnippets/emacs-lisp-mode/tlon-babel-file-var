@@ -1,8 +1,8 @@
 # -*- mode: snippet -*-
-# name: tlon-babel-file-var
+# name: tlon-file-var
 # key: tbfv
 # contributor: Pablo Stafforini
 # --
-(defvar tlon-babel-file-$1
+(defvar tlon-file-$1
   (file-name-concat  "$2")
   "$3")

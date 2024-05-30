@@ -26,6 +26,16 @@
 (setq user-mail-address "leonardodecartago@gmail.com")
 #+end_src
 
+** tlon
+:PROPERTIES:
+:ID:       AD2AE5D5-6230-4FF1-83F5-33F1F2995A5A
+:END:
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'tlon
+  (setq tlon-split-repo t))
+#+end_src
+
 ** key bindings
 :PROPERTIES:
 :ID:       7B2B4853-D7B7-4C8A-B597-232E13605E1B
@@ -101,9 +111,46 @@
                       ("t" "Tlön: Core: Project t" entry
                        (id "12645897-A06F-44DD-876D-0FFC47D0E742")
                        "** TODO %?\n" :empty-lines 1 :prepend t)
-                      (id "C5C5EF82-E7FC-461E-B7BE-FE921CEE9158")
-                      "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t))
-    (push template org-capture-templates)))
+                      ("tb" "tlon: bae")
+                      ("tbP" "Tlön: BAE: Process topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbC" "Tlön: BAE: Check topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbU" "Tlön: BAE: Publish topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbV" "Tlön: BAE: Review topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbR" "Tlön: BAE: Revise topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbW" "Tlön: BAE: Rewrite topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbT" "Tlön: BAE: Translate topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbI" "Tlön: BAE: Import topic (via org-capture)" entry
+                       (id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbM" "Tlön: BAE: Misc [via org-capture] Misc" entry
+                       (id "7CCD6226-DB0A-4742-9277-955FCB276137")
+                       "** TODO [#5] %a\n" :empty-lines 1 :prepend t  :immediate-finish t)
+                      ("p" "GPT-4" entry
+                       (id "C5C5EF82-E7FC-461E-B7BE-FE921CEE9158")
+                       "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
+                      ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
+                       (id ,paths-tlon-todos-jobs-id)
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
+                      ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
+                       (id ,paths-tlon-todos-generic-id)
+                       "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
+    (push template org-capture-templates))
+
+  )
 #+end_src
 
 ** org-extras
@@ -232,33 +279,26 @@
 (run-hooks 'tlon-init-post-init-hook)
 #+end_src
 
-* tangle flags
+* excluded packages
 :PROPERTIES:
 :ID:       A4E7C5AD-1E55-4C6F-B0E5-8320D282A886
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-file-tangle-flags)
-(
- (:anki-editor . nil)
- (:copilot . nil)
- (:corfu-terminal . nil)
- (:corfu-doc-terminal . nil)
- (:erc . nil)
- (:espotify . nil)
- (:hammy . nil)
- (:keytar . nil)
- (:lsp-grammarly . t)
- (:midnight . nil)
- (:mu4e . nil)
- (:org-gcal . nil)
- (:org-roam . nil)
- (:org2blog . nil)
- (:orgmdb . nil)
- (:remember . nil)
- (:slack . nil)
- (:twittering-mode . t)
- (:vulpea . nil)
- )
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
+(setq tlon-init-excluded-packages
+      '(
+       copilot
+       erc
+       ;; lsp-grammarly
+       midnight
+       mu4e
+       org-gcal
+       org-roam
+       org2blog
+       remember
+       vulpea
+       ))
 #+end_src
 
 * paths-override
@@ -389,13 +429,13 @@
  (paths-file-tlon-docs-bae . (file-name-concat paths-dir-tlon-docs "bae.org"))
  (paths-file-tlon-docs-core . (file-name-concat paths-dir-tlon-docs "core.org"))
  (paths-file-tlon-ledger . (file-name-concat paths-dir-dropbox-tlon-ledger "tlon.ledger"))
- (paths-file-tlon-babel . paths-file-tlon-tareas-leo)
+ (paths-file-tlon . paths-file-tlon-tareas-leo)
  (paths-file-personal-bibliography-old . (file-name-concat paths-dir-personal-bibliography "old.bib"))
  (paths-file-personal-bibliography-new . (file-name-concat paths-dir-personal-bibliography "new.bib"))
  (paths-files-bibliography-personal . `(,paths-file-personal-bibliography-new
                                         ,paths-file-personal-bibliography-old))
- (paths-tlon-babel-todos-jobs-id . "19FDA2D4-C33C-48DB-8C48-546816F095EB")
- (paths-tlon-babel-todos-generic-id . "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29"))
+ (paths-tlon-todos-jobs-id . "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+ (paths-tlon-todos-generic-id . "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29"))
 #+end_src
 
 * local variables

@@ -45,7 +45,7 @@
 				   (replace-regexp-in-string "/" " " id))))))
   (user-error "No id found"))
 
-(transient-define-prefix org-gcal-extras-dispatch ()
+(transient-define-prefix org-gcal-extras-menu ()
   "Dispatch an `org-gcal' command."
   [["Fetch"
     ("f" "fetch all" org-gcal-fetch)
@@ -55,8 +55,8 @@
     ("S" "sync buffer" org-gcal-sync-buffer)]
    ["Act"
     ("p" "post at point" org-gcal-post-at-point)
-    ("o" "open at point" org-gcal-delete-at-point)
-    ("d" "delete at point" org-gcal-extras-open-at-point)]
+    ("o" "open at point" org-gcal-extras-open-at-point)
+    ("d" "delete at point" org-gcal-delete-at-point)]
    ["Setup"
     ("u" "unlock sync" org-gcal--sync-unlock)
     ("c" "clear token" org-gcal-sync-tokens-clear)

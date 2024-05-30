@@ -27,11 +27,9 @@
 
 ;;; Code:
 
-(require 'consult)
 (require 'el-patch)
 (require 'org-extras)
 (require 'org-roam)
-(require 'tlon-core)
 
 ;;;; User options
 
@@ -115,7 +113,7 @@ Optionally, return such list only if its length is less than LIMIT."
   "Create a file named after NOTE-NAME.
 If DIR is nil, use `paths-dir-notes'."
   (require 'prot-eww)
-  (let* ((slug (tlon-core-slugify note-name))
+  (let* ((slug (simple-extras-slugify note-name))
 	 (filename (file-name-with-extension slug "org")))
     (when (file-exists-p filename)
       (user-error (format "File `%s' already exists" filename)))
@@ -161,6 +159,7 @@ If DIR is nil, use `paths-dir-notes'."
   (org-roam-node-find)
   (recenter 1))
 
+(declare-function consult--read "consult")
 (defun org-roam-extras-node-find-special (&optional arg)
   "Return a list of selected headings sorted by priority.
 The selection includes all headings with a priority and either no todo status or

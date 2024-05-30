@@ -8,21 +8,265 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
-** jsonrpc
+
+** org-auctex
 :PROPERTIES:
-:ID:       ECE3D86D-035D-461C-937F-DF39086E4C5C
+:ID:       F2B7F20E-244D-4582-80E9-DA54964E2B73
 :END:
 
-/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
+
+/[[https://github.com/karthink/org-auctex][org-auctex]] provides better latex previews for =org-mode==./
 
 #+begin_src emacs-lisp
-(use-package jsonrpc
-  ;; :elpaca (jsonrpc
-                   ;; :host github
-                   ;; :repo "emacs-straight/jsonrpc")
+(use-package org-auctex
+  :elpaca (org-auctex
+           :host github
+           :repo "karthink/org-auctex"
+           :build (:not elpaca--check-version)) ; thinks current version < 13.1
+  :after org auctex
   :demand t)
 #+end_src
 
+** auctex
+:PROPERTIES:
+:ID:       2D596638-0091-48AD-B171-8109E6CE945C
+:END:
+
+/[[https://elpa.gnu.org/packages/auctex.html][auctex]] is an integrated environment for TeX./
+
+#+begin_src emacs-lisp
+;; adapted from github.com/radian-software/straight.el/issues/836#issuecomment-927098560
+(use-package auctex
+  :elpaca (:type git
+                 :host nil
+                 :repo "https://git.savannah.gnu.org/git/auctex.git"
+                 :pre-build (("./autogen.sh")
+                             ("./configure" "--without-texmf-dir" "--with-lispdir=.")
+                             ("make")))
+  :mode
+  ("\\.tex\\'" . latex-mode) ; Must first activate the inferior Emacs latex mode
+  :hook
+  (LaTeX-mode . TeX-PDF-mode)
+  (LaTeX-mode . flycheck-mode)
+  (LaTeX-mode . LaTeX-math-mode)
+  (LaTeX-mode . turn-on-cdlatex)
+  :init
+  (load "auctex.el" nil t t)
+  (load "preview-latex.el" nil t t)
+  (require 'reftex)
+
+  (setq-default TeX-master 'dwim)
+
+  (setq TeX-data-directory (expand-file-name "auctex" elpaca-repos-directory)
+        TeX-lisp-directory TeX-data-directory
+
+                                        ; Or custom-set-variables as follows.
+                                        ; M-x describe-variable RET preview-TeX-style-dir RET
+                                        ;`(preview-TeX-style-dir ,(concat ".:" (straight--repos-dir "auctex") "latex:"))
+        preview-TeX-style-dir (concat ".:" (expand-file-name "auctex" elpaca-repos-directory) "latex:")
+
+        TeX-parse-self t ; parse on load
+        TeX-auto-save t  ; parse on save
+        TeX-auto-untabify t ; Automatically remove all tabs from a file before saving it.
+
+                                        ;Type of TeX engine to use.
+                                        ;It should be one of the following symbols:
+                                        ;* ‘default’
+                                        ;* ‘luatex’
+                                        ;* ‘omega’
+                                        ;* ‘xetex’
+        TeX-engine 'xetex
+        TeX-auto-local ".auctex-auto" ; Directory containing automatically generated TeX information.
+        TeX-style-local ".auctex-style" ; Directory containing hand generated TeX information.
+
+        ;; ##### Enable synctex correlation.
+        ;; ##### From Okular just press `Shift + Left click' to go to the good line.
+        ;; ##### From Evince just press `Ctrl + Left click' to go to the good line.
+        TeX-source-correlate-mode t
+        TeX-source-correlate-method 'synctex
+        TeX-source-correlate-start-server t
+
+        ;; automatically insert braces after sub/superscript in math mode
+        TeX-electric-sub-and-superscript t
+        ;; If non-nil, then query the user before saving each file with TeX-save-document.
+        TeX-save-query nil
+
+        TeX-view-program-selection '((output-pdf "PDF Tools"))
+        ))
+#+end_src
+
+** remember
+:PROPERTIES:
+:ID:       438AD8A8-0F4F-4A1D-9BC9-110906944509
+:END:
+
+
+/[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/textmodes/remember.el][remember]] is a mode for quickly jotting down things to remember./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature remember
+  :demand t
+  :init
+  (setq remember-data-file "~/.config/emacs-profiles/var/remember/notes")
+
+  :config
+  (setq remember-notes-auto-save-visited-file-name t)
+  (setq remember-notes-buffer-name "*scratch*")
+  (setq initial-buffer-choice
+        (lambda () (kill-buffer remember-notes-buffer-name)
+          (remember-notes))))
+#+end_src
+
+** mixed-pitch
+:PROPERTIES:
+:ID:       A8E80A11-25A4-4034-8A86-F7F6ADFD46C7
+:END:
+:LOGBOOK:
+CLOCK: [2022-05-04 Wed 19:52]--[2022-05-04 Wed 19:54] =>  0:02
+CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
+:END:
+
+/[[https://gitlab.com/jabranham/mixed-pitch][mixed-pitch]] allows mixing fixed-pitch and variable-pitch fonts./
+
+[2024-04-23 Tue] Moving to graveyard because it is not allowing me to control certain faces when active, such as =org-code= and =org-verbatim=. The user option ~modus-themes-mixed-fonts~ seems enough to get a similar experience without the drawbacks.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package mixed-pitch
+  ;; :demand t
+  :disabled
+  :config
+  (setq mixed-pitch-set-height t)
+
+  (dolist (hook '(elfeed-show-mode-hook
+                  telega-webpage-mode-hook
+                  eww-mode-hook
+                  mu4e-view-mode-hook
+                  outline-mode-hook))
+    (add-hook hook #'mixed-pitch-mode)))
+#+end_src
+
+** tlon-core
+:PROPERTIES:
+:ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package tlon-core
+  :elpaca (tlon-core
+           :host github
+           :repo "tlon-team/tlon-core"
+           :depth nil) ; clone entire repo, not just last commit
+  :defer 4
+  :config
+  (setq tlon-core-repo-dirs (expand-file-name "~/Library/CloudStorage/Dropbox/repos/"))
+
+  :general
+  (markdown-mode-map
+   "s-y" 'simple-extras-slugify-clipboard))
+#+end_src
+
+** elgrep
+:PROPERTIES:
+:ID:       783E764B-7E5D-4CFB-9DE7-D87C5BF51518
+:END:
+
+/[[https://github.com/TobiasZawada/elgrep][elgrep]] is an Emacs implementation of grep that requires no external dependencies./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package elgrep
+  :demand t
+  :general
+  ("A-C-p" 'elgrep))
+#+end_src
+
+** org-roam-browser-extension
+:PROPERTIES:
+:ID:       5461B907-53F6-4D99-B70C-45E9C3902EB4
+:END:
+
+[[https://github.com/madnificent/org-roam-browser-extension][org-roam-browser-extension]] indicates via a browser icon whether you have ~org-roam~ notes on the web page you are visiting.
+
+Abandoned.
+** org-mime
+:PROPERTIES:
+:ID:       EB437B48-CEB2-4727-8910-627061F4701F
+:END:
+:LOGBOOK:
+CLOCK: [2021-05-04 Tue 17:42]--[2021-05-04 Tue 17:54] =>  0:12
+CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
+:END:
+
+/[[https://github.com/org-mime/org-mime][org-mime]] lets you send HTML email using Org-mode HTML export./
+
+[2024-02-13 Tue] Temporarily disabling to test whether I need this.
+
+[2024-03-10 Sun] Not needed. Moving to graveyard.
+
+#+begin_src emacs-lisp :tangle no
+(use-package org-mime
+  :after org
+  :general
+  (org-mode-map
+   "s-m" 'org-mime-htmlize
+   "s-A-m" 'org-mime-org-subtree-htmlize))
+#+end_src
+
+** mpv
+:PROPERTIES:
+:ID:       8D75E528-AA79-4512-B4A9-6EB7A56F9026
+:END:
+
+/[[https://github.com/kljohann/mpv.el][mpv]] provides various functions to control [[https://en.wikipedia.org/wiki/Mpv_(media_player)][mpv]]./
+
+[2024-02-28 Wed] Replaced with ~empv~.
+
+#+begin_src emacs-lisp :results silent
+(use-package mpv)
+#+end_src
+
+** whisper
+:PROPERTIES:
+:ID:       19FF2502-D4A0-41CC-8F72-E1CF1D960304
+:END:
+
+/[[https://github.com/natrys/whisper.el][whisper]] is a speech-to-Text interface for Emacs using OpenAI's whisper model and whisper.cpp as inference engine./
+
+#+begin_src emacs-lisp
+(use-package whisper
+  :elpaca (whisper.el
+           :host github
+           :repo "natrys/whisper.el"
+           :protocol ssh)
+  :config
+  (setq whisper-install-directory no-littering-var-directory)
+  (setq whisper--ffmpeg-input-device ":0"))
+#+end_src
+
+** org-ai
+:PROPERTIES:
+:ID:       DE0368E4-FFE7-42D8-8557-2D5DD4DA5BF5
+:END:
+
+/[[https://github.com/rksm/org-ai][org-ai]] turns Emacs into your personal AI assistant using ChatGPT, DALL-E, and Whisper./
+
+[2024-02-26 Mon] Superseded by ~gptel~.
+
+#+begin_src emacs-lisp
+(use-package org-ai
+  :elpaca  (org-ai :type git :host github :repo "rksm/org-ai"
+                   :local-repo "org-ai"
+                   :files ("*.el" "README.md" "snippets"))
+  :after org yasnippet
+  :commands org-ai-mode
+  :config
+  (setq org-ai-openai-api-token (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
+  (setq org-ai-default-chat-model "gpt-4")
+  (setq org-ai-default-chat-system-prompt "You are a helpful and competent assistant. Please omit any disclaimers")
+  (setq org-ai-talk-say-words-per-minute 210)
+  (setq org-ai-image-directory paths-dir-org-images)
+  (org-ai-install-yasnippets)
+  (require 'org-ai-talk))
+#+end_src
 
 ** company
 :PROPERTIES:
@@ -473,13 +717,13 @@ CLOCK: [2021-05-19 Wed 11:26]--[2021-05-19 Wed 12:23] =>  0:57
     (interactive)
     (global-smudge-remote-mode 1)
     (smudge-my-playlists))
-    
+
   (defun ps/smudge-track-load-more ()
     "Move point to end of playlist buffer and load more tracks."
     (interactive)
     (end-of-buffer)
     (smudge-track-load-more))
-    
+
   :general
   ("A-y" 'ps/smudge)
   (smudge-track-search-mode-map
@@ -784,7 +1028,7 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
 (use-package xwwp
   :elpaca (xwwp
            :host github
-	   :repo "kchanqvq/xwwp")
+           :repo "kchanqvq/xwwp")
   :after xwidget
   :demand t
   )
@@ -1240,25 +1484,6 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
   (corfu-terminal-mode))
 #+end_src
 
-** dired-du
-:PROPERTIES:
-:ID:       22FCD9F4-A3EE-4605-BDB0-E90FC8471B21
-:END:
-
-:LOGBOOK:
-CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
-:END:
-/[[https://github.com/calancha/dired-du][dired-du]] displays the recursive size of directories in Dired./
-
-[2023-06-09 Fri 13:09] Moving to graveyard since the package was enabling itself randomly.
-
-#+begin_src emacs-lisp :results silent :tangle no
-(use-package dired-du
-  :after dired
-  :config
-  (setq dired-du-size-format 'comma))
-#+end_src
-
 ** gptai
 :PROPERTIES:
 :ID:       BEB02F5A-AE8E-40BF-B8A7-93A6A5B7D88A
@@ -1270,7 +1495,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 (use-package gptai
   :demand t
   :config
-  (setq gptai-model "gpt-4") 
+  (setq gptai-model "gpt-4")
   (setq gptai-username (auth-source-pass-get "username" "tlon/core/openai.com"))
   (setq gptai-api-key (auth-source-pass-get "key" "tlon/core/openai.com"))
   )
@@ -1876,11 +2101,6 @@ Of possible interest:
    "M-DEL"    'puni-backward-kill-word))
 #+end_src
 
-*** TODO [#5] Define ~puni~ key bindings
-:PROPERTIES:
-:ID:       BEF1B425-C23E-4C1C-A468-92F7AD54FA18
-:END:
-
 ** emacs-native-shell-complete
 :PROPERTIES:
 :ID:       878E8350-28A3-4C00-94ED-D3C29EFF68D7
@@ -2168,7 +2388,8 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    "s-m" 'slack-message-embed-mention))
 #+end_src
 
-*** TODO [#6] Disable ~emacs-slack~ notifications
+*** CANCELLED [#6] Disable ~emacs-slack~ notifications
+CLOSED: [2024-05-14 Tue 23:14]
 :PROPERTIES:
 :ID:       6CF836CF-74C0-4D80-98D8-0F3CA29182DE
 :Effort:   1:00
@@ -2388,7 +2609,8 @@ I like the idea but Anki provides too many features I need for a migration to be
   (add-to-list 'org-modules 'org-drill))
 #+end_src
 
-*** TODO [#7] Check org drill for manage music listening
+*** CANCELLED [#7] Check org drill for manage music listening
+CLOSED: [2024-05-14 Tue 23:14]
 :PROPERTIES:
 :Effort:   1:00
 :ID:       AA10D76D-6ACC-4A58-BCFF-4253DC7B55F0
@@ -2756,7 +2978,7 @@ CLOCK: [2021-03-23 Tue 20:26]--[2021-03-23 Tue 21:13] =>  0:47
 :END:
 /[[https://github.com/isamert/orgmdb.el][orgmdb]] is an OMDb API client with some org-mode related convenience functions./
 
-[2023-03-02 Thu 13:07] I'm using ~org-cite~ for films, too, so this is no longer relevant. 
+[2023-03-02 Thu 13:07] I'm using ~org-cite~ for films, too, so this is no longer relevant.
 
 #+begin_src emacs-lisp :results silent
 (use-package orgmdb
@@ -3275,7 +3497,8 @@ The `slug' generated from that STR follows these rules:
   (org-ctrl-c-ctrl-c))
 #+end_src
 
-*** TODO [#4] Modify new person command so that it removes accents from file name
+*** DONE [#4] Modify new person command so that it removes accents from file name
+CLOSED: [2024-05-14 Tue 23:15]
 :PROPERTIES:
 :ID:       7D683836-56EF-4B49-B577-FB73FF3C658B
 :Effort:   0:40
@@ -3463,7 +3686,7 @@ interactively, with prefix arg, you can pick one."
 :LOGBOOK:
 CLOCK: [2022-07-16 Sat 15:40]--[2022-07-16 Sat 15:49] =>  0:09
 :END:
-This does the same as [[id:815B8CEA-D36D-4E47-B728-D86FEFB736DF][zotra]]. 
+This does the same as [[id:815B8CEA-D36D-4E47-B728-D86FEFB736DF][zotra]].
 
 #+begin_src emacs-lisp :results silent :tangle no
 (use-package biblio-zotero
@@ -3538,10 +3761,10 @@ CLOCK: [2022-06-25 Sat 11:36]--[2022-06-25 Sat 12:46] =>  1:10
   (require 'consult-org-roam)
   ;; Activate the minor-mode
   (consult-org-roam-mode)
-  
+
   :custom
   (consult-org-roam-grep-func #'consult-ripgrep)
-  
+
   :config
   ;; Eventually suppress previewing for certain functions
   (consult-customize
@@ -3802,7 +4025,8 @@ CLOCK: [2021-04-27 Tue 11:13]--[2021-04-27 Tue 11:27] =>  0:14
 
 - [[https://github.com/hlissner/doom-emacs/blob/develop/modules/completion/company/config.el][Doom Emacs Company module]]. Might be useful for ideas.
 
-*** TODO [#6] See if ~company-mode~ can be configured to change face when there's only one completion candidate when writing prose
+*** CANCELLED [#6] See if ~company-mode~ can be configured to change face when there's only one completion candidate when writing prose
+CLOSED: [2024-05-14 Tue 23:15]
 :PROPERTIES:
 :Effort:   1:00
 :ID:       696A4EF9-EFF1-4C12-B90A-0BFCE7434A4B

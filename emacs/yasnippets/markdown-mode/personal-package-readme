@@ -1,0 +1,45 @@
+# -*- mode: snippet -*-
+# name: personal-package-readme
+# key: ppr
+# contributor: Pablo Stafforini
+# --
+# $1
+
+## Introduction
+
+\`$1\` $2.
+
+## Installation
+
+### Manual installation
+
+Clone this repository and add this to your \`init.el\` file:
+
+\`\`\`emacs-lisp
+(add-to-list 'load-path "path/to/internet-archive")
+\`\`\`
+
+where \`"path/to/internet-archive"\` is the path to the local repository you just cloned.
+
+### Elpaca/Straight
+
+If you use the [elpaca](https://github.com/progfolio/elpaca) package manager, you just need to add this your \`init.el\` file:
+
+\`\`\`emacs-lisp
+(use-package $1
+  :elpaca (mullvad
+           :host github
+	   :repo "benthamite/$1")
+  :demand t)
+\`\`\`
+
+If you use [straight](https://github.com/radian-software/straight.el), just replace \`:elpaca\` with \`:straight\` in the formula above.
+
+## Configuration
+
+## Usage
+
+
+## Troubleshooting
+
+The package has not been extensively tested. If you encounter any problems, feel free to open an issue.

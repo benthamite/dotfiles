@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: currencies
+# key: cur
+# contributor: Pablo Stafforinil
+# --
+\\${$1:$$(yas-choose-value ledger-mode-extras-currencies)}
+

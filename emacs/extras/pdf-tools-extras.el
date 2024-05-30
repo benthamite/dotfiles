@@ -27,29 +27,29 @@
 
 ;;; Code:
 
-(require 'modus-themes)
 (require 'pdf-annot)
 (require 'pdf-tools)
-(require 'writeroom-mode)
 
-;;;; User options
+;;;; Variables
 
-;;;; Main variables
+(defvar pdf-tools-extras-selected-pages '()
+  "List of pages selected for extraction.")
 
 ;;;; Functions
 
+(declare-function modus-themes--current-theme "modus-themes")
 (defun pdf-tools-extras-apply-theme ()
   "Activate `pdf-tools' midnight mode if dark theme is active."
-  (require 'modus-themes)
   (if (eq (modus-themes--current-theme) 'modus-vivendi)
       (pdf-view-midnight-minor-mode)
     (pdf-view-midnight-minor-mode -1)))
 
 ;; gist.github.com/politza/3f46785742e6e12ba0d1a849f853d0b9#file-scroll-other-window-el
+(defvar writeroom-width)
+(declare-function writeroom-mode "writeroom-mode")
 (defun pdf-tools-extras-toggle-writeroom ()
-  "Toggle `writeroom-mode' on/off."
+  "Toggle `writeroom-mode' on and off."
   (interactive)
-  (require 'writegood-mode)
   (let ((writeroom-width 120))
     (writeroom-mode 'toggle)
     (pdf-view-fit-height-to-window)))
@@ -63,8 +63,6 @@ If `opentopage' script is available, open to current page."
     (if (file-exists-p (file-name-concat "~/bin" script))
         (shell-command (format "sh %s '%s' %d" script file (pdf-view-current-page)))
       (shell-command (format "open '%s'" file)))))
-
-(defvar pdf-tools-extras-selected-pages '())
 
 (defun pdf-tools-extras-add-or-remove-page ()
   "Add current page number to list of selected pages.
@@ -102,7 +100,7 @@ If page number is already listed, remove it from list."
                            output)))
   (pdf-tools-extras-clear-page-selection))
 
-(defun pdf-count-extras-words ()
+(defun pdf-extras-count-words ()
   "Count words in current PDF."
   (interactive)
   (kill-new
@@ -120,16 +118,6 @@ If page number is already listed, remove it from list."
                                 (format "pdftotext '%s' -" (buffer-file-name))))))
       (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
       (message "Copied all text in PDF to kill ring."))))
-
-(defvar no-query-p)
-;; TODO: this isn’t working; fix it
-(defun pdf-tools-extras-install-no-confirm (orig-fun &rest args)
-  "Don't ask for confirmation when installing `pdf-tools'.
-ORIG-FUN is the original function, ARGS are its arguments."
-  (let ((no-query-p t))
-    (apply orig-fun args)))
-
-(advice-add 'pdf-tools-install :around #'pdf-tools-extras-install-no-confirm)
 
 (defun pdf-tools-extras-delete ()
   "Delete current PDF."
@@ -151,7 +139,18 @@ PROPERTY-ALIST are as in `pdf-annot-add-highlight-markup-annotation'."
     (pdf-view-deactivate-region)
     (kill-new (mapconcat 'identity txt "\n"))))
 
+(declare-function ebib-extras-open-key "ebib-extras")
+(defun pdf-tools-extras-open-in-ebib ()
+  "Open the entry corresponding to the current PDF in `ebib'.
+The function assumes that the PDF is named after the corresponding BibTeX key."
+  (interactive)
+  (unless (derived-mode-p 'pdf-view-mode)
+    (user-error "Not in `pdf-view-mode'"))
+  (let ((key (file-name-base (buffer-file-name))))
+    (ebib-extras-open-key key)))
+
 ;;;;; Word selection with double-click
+
 ;; adapted from emacs.stackexchange.com/a/52463/32089
 ;;
 ;; not currently using this since it double-clicking a word usually selects

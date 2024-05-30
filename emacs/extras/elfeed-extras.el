@@ -30,6 +30,14 @@
 (require 'elfeed)
 (require 'elfeed-show)
 
+;;;; Variables
+
+(defvar elfeed-extras-update-timer nil
+  "Timer for updating elfeed.")
+
+(defvar elfeed-extras-auto-update-in-process nil
+  "Whether elfeed is currently being updated.")
+
 ;;;; Functions
 
 ;; Borrowed from Prot
@@ -50,18 +58,6 @@ poorly-designed websites."
   (interactive)
   (call-interactively 'mark-whole-buffer)
   (elfeed-search-untag-all-unread))
-
-(defun elfeed-extras-full-update ()
-  "*Really* update feeds!"
-  (interactive)
-  (require 'elfeed-org)
-  (let ((elfeed-search-buffer "*elfeed-search*"))
-    (when (and (get-buffer elfeed-search-buffer)
-               (not (equal (buffer-name) elfeed-search-buffer)))
-      (kill-buffer elfeed-search-buffer)))
-  (elfeed-org)
-  (elfeed-unjam)
-  (elfeed-update))
 
 (defun elfeed-extras-kill-link-url-of-entry ()
   "Add link of current entry to kill ring."
@@ -96,105 +92,53 @@ poorly-designed websites."
     (elfeed-extras-filter-tags "+unread -wiki"))
   (setq elfeed-extras-toggle-wiki-entries (not elfeed-extras-toggle-wiki-entries)))
 
-(defun elfeed-extras-toggle-fixed-pitch ()
-  "Toggle between fixed pitch and variable pitch."
-  (interactive)
-  (if shr-use-fonts
-      (setq shr-use-fonts nil)
-    (setq shr-use-fonts t))
-  (elfeed-show-refresh))
-
-;;;###autoload
-(defun elfeed-extras-toggle-session ()
-  "Start or end an `elfeed' session."
-  (interactive)
-  (if (derived-mode-p 'elfeed-search-mode 'elfeed-show-mode)
-      (progn
-        (kill-matching-buffers "^\*elfeed\-*\*" nil t))
-    (elfeed)
-    (when (< elfeed-search-last-update
-             (time-to-seconds (time-subtract (current-time) (seconds-to-time (* 60 60 2)))))
-      (elfeed-update))))
-
-;; This only works in Firefox due to a Chrome limitation
-;; xenodium.com/open-emacs-elfeed-links-in-background/
-(defun elfeed-extras-search-browse-background-url ()
-  "Open current `elfeed' entry (or region entries) in browser without losing focus."
-  (interactive)
-  (let ((entries (elfeed-search-selected)))
-    (mapc (lambda (entry)
-            (cl-assert (memq system-type '(darwin)) t "open command is macOS only")
-            (start-process (concat "open " (elfeed-entry-link entry))
-                           nil "open" "--background" (elfeed-entry-link entry))
-            (elfeed-untag entry 'unread)
-            (elfeed-search-update-entry entry))
-          entries)
-    (unless (or elfeed-search-remain-on-entry (use-region-p))
-      (forward-line))))
-
-(defun elfeed-extras-url-full-capture ()
+(declare-function zotra-extras-add-entry "zotra-extras")
+(defun elfeed-extras-add-entry ()
   "Add current URL to bibfile and generate associated PDF and HTML files."
   (interactive)
   (when (derived-mode-p 'elfeed-show-mode)
-    (zotra-extras-url-full-capture (elfeed-entry-link elfeed-show-entry))))
+    (zotra-extras-add-entry (elfeed-entry-link elfeed-show-entry))))
 
-;;;;; Performance improvemenets
+(declare-function global-flycheck-mode "flycheck")
+(defun elfeed-extras-auto-update ()
+  "Automatically update `elfeed' every 15 minutes of idleness."
+  (let ((elfeed-extras-auto-update-in-process t)
+	(global-flycheck-mode-enabled-p (bound-and-true-p global-flycheck-mode)))
+    (when global-flycheck-mode-enabled-p
+      (global-flycheck-mode -1))
+    (when elfeed-extras-update-timer
+      (cancel-timer elfeed-extras-update-timer))
+    (setq elfeed-extras-update-timer
+	  (run-with-idle-timer (* 15 60) t #'elfeed-update))
+    (when global-flycheck-mode-enabled-p
+      (global-flycheck-mode))))
 
-;; Everything in this section copied verbatim from github.com/skeeto/elfeed/issues/293
+;;;;; elfeed ‘follow mode’
 
-(defvar elfeed-extras-update-complete-hook nil
-  "Functions called with no arguments when `elfeed-update' is finished.")
+;; this implements an analogy of `org-agenda-follow-mode': as point is moved
+;; across the `elfeed' search buffer, the corresponding entry is shown in the
+;; other window
+(defun elfeed-extras-display-buffer (buffer)
+  "Display BUFFER in the other window, without focusing on it."
+  (pop-to-buffer buffer 'window-extras-switch-to-last-window))
 
-(defvar elfeed-extras-updates-in-progress 0
-  "Number of feed updates in-progress.")
+(defun elfeed-extras-follow-entry (lines)
+  "Move LINES down and display the corresponding entry in the other window."
+  (forward-line lines)
+  (recenter)
+  (call-interactively #'elfeed-search-show-entry)
+  (select-window (previous-window))
+  (unless elfeed-search-remain-on-entry (forward-line -1)))
 
-(defvar elfeed-extras-search-update-filter nil
-  "The filter when `elfeed-update' is called.")
+(defun elfeed-extras-follow-next ()
+  "Move point to the next entry and display it in the other window."
+  (interactive)
+  (elfeed-extras-follow-entry 1))
 
-(defun elfeed-extras-update-complete-hook (&rest ignore)
-  "When update queue is empty, run `elfeed-extras-update-complete-hook' functions."
-  (when (= 0 elfeed-extras-updates-in-progress)
-    (run-hooks 'elfeed-extras-update-complete-hook)))
-
-;; (add-hook 'elfeed-update-hooks #'elfeed-extras-update-complete-hook)
-
-(defun elfeed-extras-update-message-completed (&rest _ignore)
-  "Display a message when `elfeed-update' is finished."
-  (message "Feeds updated"))
-
-;; (add-hook 'elfeed-extras-update-complete-hook #'elfeed-extras-update-message-completed)
-
-(defun elfeed-extras-search-update-restore-filter (&rest ignore)
-  "Restore filter after feeds update."
-  (when elfeed-extras-search-update-filter
-    (elfeed-search-set-filter elfeed-extras-search-update-filter)
-    (setq elfeed-extras-search-update-filter nil)))
-
-;; (add-hook 'elfeed-extras-update-complete-hook #'elfeed-extras-search-update-restore-filter)
-
-(defun elfeed-extras-search-update-save-filter (&rest ignore)
-  "Save and change the filter while updating."
-  (setq elfeed-extras-search-update-filter elfeed-search-filter)
-  (setq elfeed-search-filter "#0"))
-
-;; NOTE: It would be better if this hook were run before starting the feed updates, but in
-;; `elfeed-update', it happens afterward.
-(add-hook 'elfeed-update-init-hooks #'elfeed-extras-search-update-save-filter)
-
-(defun elfeed-extras-update-counter-inc (&rest ignore)
-  "Increment `elfeed-extras-updates-in-progress'."
-  (cl-incf elfeed-extras-updates-in-progress))
-
-;; (advice-add #'elfeed-update-feed :before #'elfeed-extras-update-counter-inc)
-
-(defun elfeed-extras-update-counter-dec (&rest ignore)
-  "Decrement `elfeed-extras-updates-in-progress'."
-  (cl-decf elfeed-extras-updates-in-progress)
-  (when (< elfeed-extras-updates-in-progress 0)
-    ;; Just in case
-    (setq elfeed-extras-updates-in-progress 0)))
-
-;; (add-hook 'elfeed-update-hooks #'elfeed-extras-update-counter-dec)
+(defun elfeed-extras-follow-previous ()
+  "Move point to the previous entry and display it in the other window."
+  (interactive)
+  (elfeed-extras-follow-entry -1))
 
 (provide 'elfeed-extras)
 ;;; elfeed-extras.el ends here

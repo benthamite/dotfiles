@@ -29,6 +29,7 @@
 
 (require 'paths)
 (require 'vc)
+(require 'vc-git)
 
 ;;;; User options
 
@@ -36,8 +37,8 @@
   "Extensions for `vc'."
   :group 'vc)
 
-(defcustom vc-extras-hub-executable "/opt/homebrew/bin/hub"
-  "The `hub' executable."
+(defcustom vc-extras-gh-executable (executable-find "gh")
+  "The `gh' executable (https://cli.github.com/)."
   :type 'file
   :group 'vc-extras)
 
@@ -79,33 +80,61 @@
 			     nil nil name)))
     (vc-extras-check-dir-exists)
     (vc-extras-check-dir-git)
-    (vc-extras-hub-create-repo name description account private)))
+    (vc-extras-gh-create-repo name description account private)
+    (when (y-or-n-p "Clone repository? ")
+      (vc-git-clone (vc-extras-get-github-remote account name)
+		    default-directory nil))))
+
+(defun vc-extras-get-github-remote (account name)
+  "Return the GitHub remote of ACCOUNT and repo NAME."
+  (format "https://github.com/%s/%s.git" account name))
 
 (defun vc-extras-is-git-dir-p (dir)
   "Return non-nil if DIR is a Git repository."
   (eq (vc-responsible-backend dir t) 'Git))
 
 (defun vc-extras-check-dir-exists ()
-  "Check if DIR exists, and prompt for its creation if it doesn't."
+  "Check if default directory exists; if not, ask user to create it."
   (when (and (not (file-exists-p default-directory))
              (y-or-n-p (format "Directory `%s' does not exist. Create it?" default-directory)))
     (make-directory default-directory)))
 
 (defun vc-extras-check-dir-git ()
-  "Check if DIR is a Git repository, and prompt for its initialization if it isn't."
+  "Check if default directory is a Git repo; if not, ask user to initialize it."
   (when (and (not (vc-extras-is-git-dir-p default-directory))
 	     (y-or-n-p (format "Directory `%s' is not a Git repository. Initialize it?" default-directory)))
     (vc-create-repo 'Git)))
 
-(defun vc-extras-hub-create-repo (name description account &optional private)
+;;;;; gh
+
+(defun vc-extras-gh-create-repo (name description account &optional private)
   "Create a new GitHub repository in ACCOUNT with NAME and DESCRIPTION.
 If PRIVATE is non-nil, make it a private repository."
-  (shell-command
+  (shell-command-to-string
    (format
-    "%s create -d \"%s\" %s %s/%s"
-    vc-extras-hub-executable description (if private "--private" "") account name))
-  (when (y-or-n-p (format "Repository %s/%s created. Open in Dired? " account name))
-    (dired default-directory)))
+    "%s repo create %s/%s %s --description \"%s\""
+    vc-extras-gh-executable account name (if private "--private" "--public") description)))
+
+(defun vc-extras-gh-list-repos (account)
+  "List all repos in GitHub ACCOUNT."
+  (let* ((repos
+	  (shell-command-to-string (format "%s repo list %s --limit 9999 | awk '{print $1}'"
+					   vc-extras-gh-executable account))))
+    (split-string (replace-regexp-in-string (format "%s/" account) "" repos))))
+
+(defun vc-extras-ensure-gh-exists ()
+  "Check that `gh' exists, else signal an error."
+  (unless vc-extras-gh-executable
+    (user-error "`gh' not found; please install it (`brew install gh')")))
+
+(defun vc-extras-ensure-gh-authenticated ()
+  "Ensure that `gh' is authenticated."
+  (vc-extras-ensure-gh-exists)
+  (unless (string-match "Logged in to github\\.com account"
+			(shell-command-to-string "gh auth status"))
+    (user-error "`gh' not authenticated; please authenticate (`gh auth login')")))
+
+(vc-extras-ensure-gh-authenticated)
 
 (provide 'vc-extras)
 ;;; vc-extras.el ends here

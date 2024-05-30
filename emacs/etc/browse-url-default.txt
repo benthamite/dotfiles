@@ -1,4 +1,5 @@
 accounts.google.com
+airbnb.co.uk
 airbnb.com
 airserbia.com
 airtable.com
@@ -29,6 +30,7 @@ dhl.
 disqus.com
 docs.google.com
 doi.org
+domains.google.com
 drive.google.com
 dropbox.com
 easy.jet
@@ -41,8 +43,10 @@ gitguardian.com
 github.com
 gmail.com
 goodreads.com
+google.com
 grammarly.com
 hathitrust.org
+heinonline.org
 holafly.com
 igmchicago.org
 imdb.com
@@ -66,6 +70,7 @@ mail.google.com
 mailerlite.com
 mailist-manage.eu
 maps.
+maps.google.com
 mediacore.app
 mercadolibre.com
 mercadopago.com
@@ -78,10 +83,12 @@ myheritage.es
 openai.com
 paxful.com
 perplexity.ai
+pref.docusign.com
 qualtrics.com
 quora.com
 rescuetime.com
 savvycal.com
+shademap.app
 skyscanner.com
 skyscanner.net
 slack.com
@@ -101,11 +108,10 @@ utoronto.ca
 vueling.com
 we.tl
 wetransfer.com
+wiley.com
 wise.com
 worldcat.org
 yahoo.com
 yaml-online-parser.appspot.com
-youtu.be
-youtube.com
 zonaprop.com.ar
 zoom.us

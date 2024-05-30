@@ -50,13 +50,13 @@
   :group 'org-msg-extras)
 
 (defcustom org-msg-extras-work-plain-text-signature
-  "\n--\nPablo\nDirector, Tlön\nhttps://tlon.team\n"
+  org-msg-extras-personal-plain-text-signature
   "Work signature for HTML emails."
   :type 'string
   :group 'org-msg-extras)
 
 (defcustom org-msg-extras-work-html-signature
-  "\n#+begin_signature\n--\n*Pablo*\nDirector, Tlön\nhttps://tlon.team\n#+end_signature"
+  org-msg-extras-personal-html-signature
   "Work signature for HTML emails."
   :type 'string
   :group 'org-msg-extras)

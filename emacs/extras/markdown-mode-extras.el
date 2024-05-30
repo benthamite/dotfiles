@@ -27,9 +27,9 @@
 
 ;;; Code:
 
-(require 'citar-markdown)
 (require 'markdown-mode)
 (require 'el-patch)
+(require 'simple-extras)
 
 ;;;; Functions
 
@@ -84,6 +84,16 @@ With ARG prefix argument, prompt for the URL to use."
 	(if arg
 	    (insert (format "[%s](%s)" name (read-string "URL: ")))
 	  (insert name))))))
+
+(defun markdown-mode-extras-paste-with-conversion ()
+  "Convert the contents of the system clipboard to target Markdown using Pandoc.
+This command will convert from HTML if the clipboard contains HTML, and from Org
+Mode otherwise.
+
+See also `org-extras-paste-with-conversion'. For the reverse process, use
+`ox-clip-formatted-copy'."
+  (interactive)
+  (insert (simple-extras-pandoc-convert "gfm-raw_html" "org")))
 
 ;;;;; Patched functions
 

@@ -27,9 +27,6 @@
 
 ;;; Code:
 
-(require 'files-extras)
-(require 'winum)
-
 ;;;; User options
 
 (defgroup window-extras ()
@@ -44,18 +41,18 @@
 ;;;; Functions
 
 (defun window-extras-get-last-window ()
-  "Get to previously selected ordinary or minibuffer window."
+  "Return the most recently selected window in the current frame.
+The most recently selected window may include the minibuffer window."
   (interactive)
   (if (and (active-minibuffer-window) (not (minibufferp)))
       (select-window (active-minibuffer-window))
-    (get-mru-window 'visible t t)))
+    (get-mru-window (selected-frame) t t)))
 
 (defun window-extras-switch-to-last-window ()
-  "Switch to previously selected ordinary or minibuffer window."
+  "Switch to the most recently selected window in the current frame.
+The most recently selected window may include the minibuffer window."
   (interactive)
-  (let ((last-window (window-extras-get-last-window)))
-    (select-frame-set-input-focus (window-frame last-window))
-    (select-window last-window)))
+  (select-window (window-extras-get-last-window)))
 
 (defun window-extras-split-if-unsplit ()
   "Split windows when frame is unsplit.
@@ -95,6 +92,7 @@ If there is only one window, create a second one."
    (window-buffer)
    (window-buffer (window-extras-get-last-window))))
 
+(declare-function files-extras-get-alternate-buffer "files-extras")
 (defun window-extras-buffer-move (target-window)
   "Move the current buffer to the TARGET-WINDOW.
 If there is only one window, create a second one."
@@ -102,6 +100,8 @@ If there is only one window, create a second one."
   (window-extras--move-or-swap
    (window-buffer) (files-extras-get-alternate-buffer) target-window))
 
+(declare-function winum-get-window-by-number "winum")
+(declare-function winum-get-number "winum")
 (defun window-extras-buffer-move-right ()
   "Move the current buffer to the right window."
   (interactive)

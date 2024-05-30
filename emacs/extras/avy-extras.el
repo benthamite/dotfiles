@@ -28,11 +28,25 @@
 ;;; Code:
 
 (require 'avy)
-(require 'dired)
-(require 'ebib)
 (require 'el-patch)
-(require 'mu4e-headers)
 (require 'simple-extras)
+(require 'use-package-extras)
+
+;;;; Variables
+
+(defgroup avy-extras ()
+  "Extensions for `avy'."
+  :group 'avy-extras)
+
+(defcustom avy-extras-goto-char-timeout 1
+  "Timeout for `avy-extras-goto-char' commands.
+If the same key is not pressed within this number of seconds, pressing that key
+will no longer jump to its next occurrence."
+  :type 'number
+  :group 'avy-extras)
+
+(defvar avy-extras-last-char nil
+  "The last character used in `avy-extras-goto-char' commands.")
 
 ;;;; Functions
 
@@ -76,6 +90,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (call-interactively (lambda! (avy-goto-line-below offset bottom-up)))
   (end-of-line))
 
+(declare-function dired-find-alternate-file "dired")
 (defun avy-extras-dired-find-file ()
   "In Dired, visit the file or directory in selected line."
   (interactive)
@@ -83,6 +98,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (avy-goto-line)
   (dired-find-alternate-file))
 
+(declare-function ebib-edit-entry "ebib")
 (defun avy-extras-ebib-view-entry ()
   "In Ebib, view the entry in selected line."
   (interactive)
@@ -90,6 +106,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (avy-goto-line)
   (ebib-edit-entry))
 
+(declare-function mu4e-headers-view-message "mu4e-headers")
 (defun avy-extras-headers-view-message ()
   "In mu4e, view the message in selected line."
   (interactive)
@@ -114,6 +131,47 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   "Mark the region from point to PT."
   (activate-mark)
   (goto-char pt))
+
+;;;;; Jump to first occurrence of character
+
+(defun avy-extras-goto-char (char direction)
+  "Jump to the first occurrence of CHAR in the specified DIRECTION."
+  (interactive)
+  (setq avy-extras-last-char char)
+  (let ((search-fn (if (eq direction 'forward) 'search-forward 'search-backward)))
+    (if (funcall search-fn (char-to-string char) nil t 1)
+        (avy-extras-repeat-search char direction)
+      (message "Character '%c' not found" char))))
+
+(defun avy-extras-repeat-search (char direction)
+  "Keep searching for the next occurrence of CHAR in the specified DIRECTION.
+Exit when different key is pressed or after a `avy-extras-goto-char-timeout'
+seconds."
+  (let ((cont t))
+    (while cont
+      (let ((key (unless (sit-for avy-extras-goto-char-timeout) (read-key))))
+        (if (and (characterp key) (char-equal key char))
+            (let ((search-fn (pcase direction
+			       ('forward 'search-forward)
+			       ('backward 'search-backward)
+			       (_ (user-error "Invalid value of `direction': `%s'" direction)))))
+              (unless (funcall search-fn (char-to-string char) nil t 1)
+		(setq cont nil)
+		(message "No more occurrences.")))
+          (setq cont nil)
+          (when key (setq unread-command-events (cons key unread-command-events))))))))
+
+(defun avy-extras-goto-char-forward (char)
+  "Jump to the first forward occurrence of character CHAR.
+Repeat the search by pressing the same key."
+  (interactive "cJump to char (forward): ")
+  (avy-extras-goto-char char 'forward))
+
+(defun avy-extras-goto-char-backward (char)
+  "Jump to the first backward occurrence of character CHAR.
+Repeat the search by pressing the same key."
+  (interactive "cJump to char (backward): ")
+  (avy-extras-goto-char char 'backward))
 
 ;;;; Patched functions
 

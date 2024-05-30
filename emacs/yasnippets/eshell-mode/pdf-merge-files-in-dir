@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: pdf-merge-files-in-dir
+# key: pmf
+# contributor: Pablo Stafforini
+# --
+mutool merge -o merged.pdf (directory-files "$1" t directory-files-no-dot-files-regexp)

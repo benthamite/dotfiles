@@ -1,8 +1,351 @@
-#+title: Change lof of my Emacs configuration
+#+title: Change log of my Emacs configuration
 #+author: Pablo Stafforini
 #+langauge: en
 
-This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository.
+This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
+
+* Version 6.4.1 on 2024-05-09
+:PROPERTIES:
+:ID:       76C94897-E71F-4099-9D0C-7F4C3BF00555
+:END:
+
+This is a minor release primarily focused on updating the names of all the functions and variables in the ~tlon~ (formerly ~tlon-babel~) package.
+
+* Version 6.4.0 on 2024-05-02
+:PROPERTIES:
+:ID:       4BD749D6-DF24-4DC2-B559-FFEA595AB054
+:END:
+
+** chatgpt-shell
+:PROPERTIES:
+:ID:       108D23A9-102C-439D-B114-DC5130FCE313
+:END:
+
+- This new package complements ~gptel~, as it provides support for DALL-E.
+
+** color-extras
+:PROPERTIES:
+:ID:       438C5591-4EAF-4E51-8CB2-DA2E693AC4AE
+:END:
+
+- Added a few functions to convert between color formats (not tested).
+  
+** consult-web
+:PROPERTIES:
+:ID:       DC2FF7F9-536F-468D-AF5A-3C00777D359E
+:END:
+
+- Added new package.Note that it requires extensive configuration, and many search engines won’t work unless you set up your own API keys.
+  
+** copilot
+:PROPERTIES:
+:ID:       93D5BF58-F34E-4C1D-98D7-4B9143A3C6D1
+:END:
+
+- ~copilot~ is now enabled in both programming modes and text modes (previously it was only enabled in the former). To disable them in text modes, ~(remove-hook 'text-mode-hook #'copilot-extras-enable-conditionally)~.
+
+** dired
+:PROPERTIES:
+:ID:       EDAF4880-07A9-4BB4-A5B2-F37EF1C83785
+:END:
+
+- ~dired-extras-hide-details-mode-enhanced~ (~-~) replaces ~dired-hide-details-mode~. This command toggles ~dired-hide-details-mode~, ~dired-omit-mode~ and ~dired-du-mode~. Intuitively, the idea is that dired displays either a minimalist view (the default) or a detailed view, which shows (1) details such as file ownership and permissions, (2) hidden files as well as various other files—such as backup files—that are otherwise not shown (configurable via ~dired-omit-files~), and (3) the recursive size of directories.
+
+** ebib-extras
+:PROPERTIES:
+:ID:       4D1F66D7-2A3D-4545-9840-10259AAA27CC
+:END:
+
+- Upon adding a new entry, the user will now be prompted to indicate whether the relevant bibliographic details are correct, so that the relevant ~ebib-extras~ command —~ebib-extras-process-entry~— can be run. This command then performs additional processing, including downloading and attaching HTML and PDF files of the entry for BibTeX entries of type ~online~. In the future, it will be configured to also download PDFs for BibTeX entries of type ~article~, search for books for BibTeX entries of type ~book~, and so on.
+  
+** elfeed-extras
+:PROPERTIES:
+:ID:       8ACFA70B-CB9C-4726-B281-51FF4B72FE30
+:END:
+
+- added “follow mode” (analogous to ~org-agenda-follow-mode~): as point is moved through the ~elfeed~ search buffer with ~k~ and ~l~, the corresponding entry is shown in the other windows.
+
+** eww-extras
+:PROPERTIES:
+:ID:       6926685E-9698-4F4F-96FF-AB788A66E383
+:END:
+- Revised the code in various ways to support authentication from Chrome headless sessions (and thus generate PDFs without the annoying cookie messages). See the user option ~eww-extras-chrome-data-dir-copy~.
+  
+** faces
+:PROPERTIES:
+:ID:       75A37A0A-731B-4FB7-BEFA-B70677374EF4
+:END:
+
+- The way of setting faces has been thoroughly revised. Instead of having a single function with the hard-coded values for all the faces, as we used to have, we configure the individual faces under the relevant packages. To configure the faces, we use the function ~faces-extras-set-and-store-face-attributes~, which takes a list of lists, each of which consists of a face name followed by one or more attrbitutes (a property-value pair). The function sets the face attributes, so that they become active at the time of evaluation, and stores them in a list, so that all faces previously set can be reset at once by invocation of the command ~faces-extras-set-custom-face-attributes~. This is useful when the face is set in reference to a variable whose value later changes, or varies across users.
+
+** forge
+:PROPERTIES:
+:ID:       BC9B25B2-2514-499E-9A02-9B0EEC8A0DEC
+:END:
+
+- The command ~forge-list-assigned-issues~ is now bound to ~s-s~ (“s” as in “self”).
+  
+** gptel-extras
+:PROPERTIES:
+:ID:       5C25DB0E-EA61-41EA-ABE1-A1623900CF19
+:END:
+
+- The list of models now shows additional information such as number of tokens and date of last update.
+- The default model for all buffers is now ~"gpt-4-turbo"~—the most advanced OpenAI model as of this writing.
+
+** image-dired 
+:PROPERTIES:
+:ID:       9D67F17B-BE96-4A8E-B17D-913909256A7E
+:END:
+- The usual keys ~k~ and ~l~ now also work in this mode.
+- Images can now be opened externally with ~e~ (the same key binding to open external files elsewhere in ~dired~).
+
+** mu4e-extras
+:PROPERTIES:
+:ID:       77DFA8CA-DF97-4A1D-916B-726786411DB5
+:END:
+- Replaced the native ~mu4e-compose-reply~ with ~mu4e-extras-compose-reply~, which decides how to respond to messages with multiple recipients based on the value of the user option ~mu4e-extras-wide-reply~.
+  
+** org-extras
+:PROPERTIES:
+:ID:       92A6939F-2636-4363-B36B-245D88A7C997
+:END:
+
+- Added the user option ~org-extras-clock-report-parameters~, for customizing clock reports.
+  
+** rainbow-mode
+:PROPERTIES:
+:ID:       B69D6B21-CE1B-483E-BB05-D9A5048FD4C4
+:END:
+
+- Added package, for color testing.
+
+** scratch buffers
+:PROPERTIES:
+:ID:       187391C9-EA10-45A1-B5DE-CD5ABF761F0E
+:END:
+
+- The combination of the new packages ~prot-scratch~ and ~persistent-scratch~ now allows for the creation of persistent scratch buffers in any major mode (~C-n~). That is, these buffers will persist across Emacs sessions, avoiding the risk of accidentally losing their contents.
+
+** simple-extras
+:PROPERTIES:
+:ID:       1361776C-E2E7-4E1C-B0D9-F9F3D477CCB5
+:END:
+
+- A common annoyance with Emacs is that the contents of new buffers, which do not yet visit a file, are forever lost if the buffer is killed. This situation is now addressed via a set of hooks and advices that make ~auto-save-mode~ automatically save the contents of any non-file-visiting buffers to the folder specified in ~simple-extras-new-buffer-auto-save-dir~. Note that the behavior of ~auto-save-mode~ in other buffers is not affected (e.g. if it is disabled, it will continue to be).
+
+** tlon-core
+:PROPERTIES:
+:ID:       84AB17D8-DFF3-4DB5-862C-5963286C784C
+:END:
+
+- This package is now retired. All its functionality has been moved to ~tlon~. The plan for the future, to reduce confusion, is to always release Tlön-related functions as part of this package, except for ~tlon-init~, which remains.
+
+* Version 6.3.0 on 2024-04-08
+:PROPERTIES:
+:ID:       FA95B3D0-0AA6-4914-95E7-711B38A34FE5
+:END:
+
+** dired-du
+:PROPERTIES:
+:ID:       BEC9F6CB-AB7B-4E25-A0D3-AD3915FB598F
+:END:
+
+New package. It displays the recursive size of directories. The package is configured to hide this information when ~dired-hide-details-mode~ is enabled, which it is by default. This mode is toggled with ~-~.
+
+** doom-modeline
+:PROPERTIES:
+:ID:       C921586A-676B-49D4-9398-C8B66EDE1C53
+:END:
+
+The new segments ~gptel~ and ~gptel-cost~ show the AI model active in the current buffer and the cost in US dollars of making a request at point, respectively. (A request sends the text from the beginning of the buffer to the point, unless some text is selected, in which case it sends the selection.) The latter segment is only active in the dedicated ~gptel~ buffer, for performance reasons. These elements can be disabled via the user options ~doom-modeline-extras-gptel~ and ~doom-modeline-extras-gptel-cost~.
+
+** elgrep
+:PROPERTIES:
+:ID:       5D5EFBF8-620B-4980-AD84-7D14541DE059
+:END:
+
+Removed package. For ripgrep integration, we now use the ~consult~ package exclusively. (The issue whereby batch replacements to a buffer captured via embark (~H-;~) where sometimes not applied seems to have been resolved, so there is no longer need to use another package.)
+
+** emoji
+:PROPERTIES:
+:ID:       0138D806-0F49-4657-B132-A4ADFF9570D2
+:END:
+
+The command ~emoji-insert~ is now bound ~H-E~.
+
+** gptel-extras
+:PROPERTIES:
+:ID:       E48CB6C3-7E23-42D0-9E7D-CD657CF26C06
+:END:
+
+~gptel-extras-model-config~ now displays information about each of the available models.
+
+~gptel~ buffers can now be saved easily via the command ~gptel-extras-save-buffer~, which prompts for a name and saves it to its slugified version. The file is saved in ~gptel-extras-dir~, whose value can be changed by the user. I recommend saving these buffers as you may want to refer to them in the future, and it is trivial to do so.
+
+** org-appear
+:PROPERTIES:
+:ID:       F5AC69BB-07F4-4F67-A3FD-9A65D16B5F91
+:END:
+
+New package. It toggles the visibility of hidden org mode element parts upon entering and leaving those elements.
+
+** org-extras
+:PROPERTIES:
+:ID:       5F5E2F8E-CA8E-4EAA-BB9D-FC93DDF56AFD
+:END:
+
+The command ~org-extras-paste-with-conversion~ has been improved and now works reliably. It converts the contents of the clipboard to ~org-mode~, from HTML if the clipboard contains HTML, and from Markdown otherwise. It is very useful for copying content outside Emacs—e.g. from GitHub—and pasting it in an ~org-mode~ buffer.
+
+The command ~org-extras-eww-copy-for-org-mode~ does something similar with content in an ~eww~ buffer.
+
+** pdf-tools-extras
+:PROPERTIES:
+:ID:       8A5E8900-CF6D-4220-97DB-99FA1C2DD0D1
+:END:
+
+It is now possible to jump straight from a PDF in ~pdf-view-mode~ to the corresponding Ebib entry via the command ~pdf-tools-extras-open-in-ebib~ (~e~) (provided, of course, that the PDF has an associated entry)
+
+** simple
+:PROPERTIES:
+:ID:       3A4DFECA-AE90-4895-AF27-BC14CE3FFADB
+:END:
+
+The command ~shell-command~ is now bound to ~H-e~.
+
+** telega-extras
+:PROPERTIES:
+:ID:       0D9D922F-40EC-4180-B251-3A54885B7A3D
+:END:
+
+To transcribe the audio of the message at point, you can now use ~telega-extras-transcribe-audio~ (~b~).
+
+** zotra-extras
+:PROPERTIES:
+:ID:       2311DCE8-8D87-4EDB-BC26-ED848B4B1198
+:END:
+
+The process for adding new entries in Ebib with ~zotra-extas-add-entry~ (~a~) has changed somewhat, but it is still a work in progress, so it doesn’t seem worth documenting here. If you encounter any issues, please contact me.
+
+* Version 6.2.0 on 2024-03-09
+:PROPERTIES:
+:ID:       59A209FE-181E-4D74-B9C7-DC176E56CCCA
+:END:
+
+** bibtex
+:PROPERTIES:
+:ID:       266E695B-65A3-419F-9F72-A65DD1A7F58F
+:END:
+
+- The ~fluid.bib~ and ~stable.bib~ files are now auto-sorted with the same sorting criterion used by Ebib. This solves the problem whereby changes to one entry (such as adding an abstract) were diffed as being part of another entry, because the file was re-sorted before the changes were committed.
+- Relevant commands:
+
+#+begin_src emacs-lisp
+"s-a" 'bibtex-extras-set-field
+"s-h" 'bibtex-extras-url-to-html-attach
+"s-i" 'bibtex-extras-open-in-ebib
+"s-p" 'bibtex-extras-url-to-pdf-attach
+"s-t" 'bibtex-extras-move-entry-to-tlon)
+#+end_src
+
+** breadcrumb
+:PROPERTIES:
+:ID:       F98F0790-972E-447B-B57F-869B9D6A05C7
+:END:
+- Added this package that displays a narrow bar below the tab bar with context-specific information about the buffer. In file-visiting buffers, it will show the file path, sometimes followed by additional details, such as the heading(s) in org-mode or Markdown files. Since this information is now shown here, the modeline only shows the name of the buffer, since it would be redundant to show the full path there as well. This leaves more room to show other potentially relevant information, such as the encoding system and, as noted below, the name of the active AI model.
+
+** consult-gh
+:PROPERTIES:
+:ID:       15A8B42B-8B6B-4B2F-98C9-83F4FC22711A
+:END:
+
+- A new package, ~consult-gh~ provides an interface to interact with GitHub repositories. The relevant commands may all be accessed from the “dispatcher”, via ~H-G~.
+** doom-modeline
+:PROPERTIES:
+:ID:       9AC16375-24B8-4010-81F7-BF22C2A3858B
+:END:
+- The modeline now shows the AI language model active in the buffer. Since ~gptel~ can be invoked from any buffer, I think it’s useful to know which model will be used. If you don’t want to see this information, just set ~doom-modeline-extras-gptel~ to ~nil~.
+
+** ebib
+:PROPERTIES:
+:ID:       FB1EA3B2-7BF0-4E00-A2B4-631AC9CEC3D3
+:END:
+- The commands to generate PDF (~s-p~) or HTML (~s-h~) files now directly attach the generated file to the appropriate entry, bypassing the need to do this manually. Note that these commands also work from bibtex and from eww, and have the same key bindings.
+
+** eww
+:PROPERTIES:
+:ID:       EF99C3D0-4423-4700-9D05-751AB5DA2DF9
+:END:
+- The shell command to create PDF files now incorporates an extra authentication argument that should prevent the messages to approve cookies from showing up in the document.
+- Following a YouTube will now open it in ~mpv~, if installed. This integration makes use of the package ~empv~, which also supports controlling the playback directly from Emacs (~A-p~ to see a list of commands).
+
+** forge
+:PROPERTIES:
+:ID:       8988FD8C-7D84-4E12-A0E3-23224DD873B5
+:END:
+- When visiting an unread issue, the associated GitHub page will open silently in a Firefox browser. This should happen without any visual or performance effects. Recently Forge made a major update to its notifications functionality, and they now work out of the box. However, because of limitations of the GitHub API, two-way sync is not possible: although viewing an issue in GitHub will show it as read in Forge, the reverse is not the case.g I don't mind this much since I ignore the GitHub visited status, but the Firefox hack ensures that the two counts remain fully in sync. To disable this behavior, remove this advice:
+
+#+begin_src emacs-lisp
+(advice-add 'forge-visit-this-topic :before #'forge-extras-browse-topic-in-background)
+#+end_src
+
+- The key bindings had become quite chaotic, so I switched to the following convention: we retain all the native key bindings, and use the Super modifier for all our custom bindings:
+
+#+begin_src emacs-lisp
+"s-a" 'forge-topic-set-assignees
+"s-d" 'forge-delete-comment
+"s-l" 'forge-topic-set-labels
+"s-i" 'forge-browse-issue
+"s-I" 'forge-browse-issues
+"s-t" 'forge-topic-set-title
+"s-e" 'forge-edit-post
+"s-p" 'forge-create-post
+"s-r" 'forge-create-post ; (= reply)
+"s-x" 'forge-extras-state-set-dwim ; close/reopen issue
+#+end_src
+
+These commands should work in all Forge-related buffers.
+
+** gptel
+:PROPERTIES:
+:ID:       FBC48717-0EFE-4C41-A2B3-4C04A5629F50
+:END:
+
+- I have configured this package to activate the Gemini backend in text-related modes (including ~bibtex-mode~) and the GPT-4 backend in programming-related modes. GPT-4 is much better for answering programming questions (at least questions about Emacs Lisp), but Gemini has a much higher token limit and is free. So we use it for tasks like generating summaries (and the quality for these taks is comparable to that of GPT-4).
+- I have also added a third backend, Claude (from Anthropic), though I haven’t yet experimented with it.
+- The command ~gptel-extras-model-config~, bound to ~H-s-c~, can be used to switch to a different backend. This command will also prompt the user to select among a variety of "models" within a given backend. Note that some backends are much more expensive than others (as in ~10x more expensive). See these pages for details:
+    - [[https://www.anthropic.com/api#pricing][Claude]]
+    - [[https://openai.com/pricing][GPT-4]]
+- The main other relevant commands are ~gptel~ (~H-s-g~), ~gptel~ (~H-s-g~), ~gptel-abort~ (~H-s-a~) and ~gptel-send~ (~M-c~). See [[https://www.youtube.com/watch?v=bsRnh_brggM][this great video]] for details. 
+
+** isearch
+:PROPERTIES:
+:ID:       3AA348DB-68C1-46E1-AFD1-46EF647A11E3
+:END:
+
+- The commands ~isearch-extras-consult-line~ (~C-l~) and ~isearch-extras-project-search~ (~C-p~) have been added.
+- ~avy-isearch~ is now bound to ~M-f~ (~avy~ and ~ace-link~ commands are generally bound to ~M-f~ or—in read-only files—to ~f~).
+
+** org
+:PROPERTIES:
+:ID:       7B0AA24B-3DF5-4B06-8316-57EA58C0CF8A
+:END:
+
+- ~ox-clip-formatted-copy~ (~s-c~) had stopped working, but is now fixed. With this command, you can copy text in ~org-mode~ and paste it as Markdown (e.g. on GitHub) or as rendered HTML (e.g. on Slack).
+
+** tab-bar
+:PROPERTIES:
+:ID:       43814A67-7E2F-4C7C-AEA9-4C60019C6D6E
+:END:
+
+- A command now exists to hide (and unhide) GitHub and Telega notifications: ~tab-bar-extras-toggle-notifications~. Notifications are now also automatically hidden and unhidden when a Pomodoro session starts and ends.
+
+** vertico
+:PROPERTIES:
+:ID:       12991722-05E3-4B14-AAF8-5C6FF387F4F3
+:END:
+
+- The commands ~vertico-previous-group~ and ~vertico-next-group~ are bound to ~C-k~ and ~C-l~.
 
 * Version 6.1.0 on 2024-02-19
 :PROPERTIES:
@@ -30,7 +373,7 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 
 - Added functionality to validate languages in =landid= field.
 - Added various functions to get BibTeX fields, entries as strings.
-    
+
 ** consult
 :PROPERTIES:
 :ID:       3F6C96B6-3282-425C-8AF0-F161EFEEAA2F
@@ -53,7 +396,7 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 - Added ~ebib-extras-previous-entry~ and ~ebib-extras-next-entry~, bound to =,= and =.=, respectively.
 - Revised or refactor various functions.
 - Significantly revised ~ebib-extras-fetch-and-set-abstract~ , and created the associated ~ebib-extracts-abstract-cleanup~.
-  
+
 ** edebug
 :PROPERTIES:
 :ID:       5E8D7A90-6768-4F7F-A064-3D930772AB27
@@ -67,7 +410,7 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 :END:
 
 - Set a timer to update the database after 30 minutes of idleness. Feel free to disable it.
-  
+
 ** forge
 :PROPERTIES:
 :ID:       05A1E517-5009-4E6B-BFFE-7965ED93B9F6
@@ -92,7 +435,7 @@ See also the packages listed in the ‘icons’ section below.
 :ID:       A0C11FB6-A835-44AB-BB75-20BF53A6796B
 :END:
 
-- Unset custom ~C-k~ key binding, bound to ~helpful-key~. The command is now bound to the default binding for ~help-key~, ~C-h k~. 
+- Unset custom ~C-k~ key binding, bound to ~helpful-key~. The command is now bound to the default binding for ~help-key~, ~C-h k~.
 
 ** icons
 :PROPERTIES:
@@ -121,7 +464,7 @@ Because =nerd-icons= do not impose additional performance costs, they are now al
 :END:
 
 - Changed the ~org-extras-tlon-dispatch~ binding from =H-;= to =H-l=.
-  
+
 ** org-roam
 :PROPERTIES:
 :ID:       E4E18C04-A5A5-46B7-B96F-C8BC56755198
@@ -142,4 +485,3 @@ The keys =M-k= and =M-l= are now bound to ~vertico-previous-group~ and ~vertico-
 :END:
 
 - Created snippets to reference a commit (=tlon-reference-commit=) and an issue (=tlon-reference-issue=) from a Forge buffer. These snippets are expanded with =trc= and =tri=,  respectively.
-  

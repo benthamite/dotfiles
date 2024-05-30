@@ -1,54 +1,54 @@
 #+title: Fede's config
 
-* tangle flags
+* excluded packages
 :PROPERTIES:
 :ID:       4241A319-CECB-41DC-87DA-C0FD778CD187
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-file-tangle-flags)
-(
- (:aide . nil)
- (:anki-editor . nil)
- (:auto-commit-mode . nil)
- (:bbdb . nil)
- (:copilot . nil)
- (:corfu-doc-terminal . nil)
- (:corfu-terminal . nil)
- (:display-wttr . t)
- (:erc . nil)
- (:espotify . nil)
- (:flycheck . t)
- (:flymake . t)
- (:frame . t)
- (:forge . t)
- (:git-auto-commit-mode . nil)
- (:hammy . nil)
- (:jinx . t)
- (:keytar . nil)
- (:midnight . nil)
- (:mixed-pitch . nil)
- (:mu4e . nil)
- (:mullvad . t)
- (:ns-win . nil)
- (:org-gcal . nil)
- (:org-roam . t)
- (:org2blog . nil)
- (:orgmdb . nil)
- (:outline . nil)
- (:pdf-tools . t)
- (:puni . nil)
- (:remember . nil)
- (:server . nil)
- (:slack . nil)
- (:spelling . nil)
- (:tlon . t)
- (:tlon-init . t)
- (:theme-loaddefs . nil)
- (:twittering-mode . nil)
- (:vulpea . nil)
- (:window . t)
- (:yasnippet . t)
- )
+#+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
+(setq tlon-init-excluded-packages
+      '(
+        aide
+        anki-editor
+        auto-commit-mode
+        bbdb
+        copilot
+        corfu-doc-terminal
+        corfu-terminal
+        ;; display-wttr
+        erc
+        espotify
+        ;; flycheck
+        ;; flymake
+        ;; frame
+        ;; forge
+        git-auto-commit-mode
+        hammy
+        ;; jinx
+        keytar
+        midnight
+        mixed-pitch
+        mu4e
+        ;; mullvad
+        ns-win
+        org-gcal
+        ;; org-roam
+        org2blog
+        orgmdb
+        outline
+        ;; pdf-tools
+        puni
+        remember
+        server
+        slack
+        spelling
+        ;; tlon-init
+        theme-loaddefs
+        twittering-mode
+        vulpea
+        ;; window
+        ;; yasnippet
+        ))
 #+end_src
 
 * paths
@@ -93,8 +93,8 @@
  (paths-file-cookies . "")
  (paths-file-work . "")
  (paths-file-tlon-tareas-fede . (file-name-concat paths-dir-dropbox-tlon-fede "tareas.org"))
- (paths-tlon-babel-todos-jobs-id . "")
- (paths-tlon-babel-todos-generic-id . "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
+ (paths-tlon-todos-jobs-id . "")
+ (paths-tlon-todos-generic-id . "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
  )
 #+end_src
 
@@ -112,33 +112,6 @@
  ;; (:frame-extras-maximize-frame . ((ignore)))
  ;; (:org-fold . ((ignore)))
  )
-#+end_src
-
-Doom modeline
-#+begin_src emacs-lisp :tangle no
- (:doom-modeline
-  . ((setq doom-modeline-mu4e nil) ; avoid distractions
-     (setq doom-modeline-time nil) ; we display time (and date) in the tab-bar
-     (setq doom-modeline-buffer-encoding t) ; FEDE ==> I want to show encoding
-     (setq doom-modeline-irc t)
-     (setq doom-modeline-irc-buffers t)
-     (setq doom-modeline--flycheck-icon nil)
-     (setq doom-modeline-github t)
-     (setq doom-modeline-github-interval (* 10 60))
-     (setq doom-modeline-buffer-file-name-style 'truncate-nil) ; FEDE ==> Full filenames, please!
-     (setq doom-modeline-enable-word-count t)
-
-     (doom-modeline-def-modeline 'main
-       '(bar workspace-name window-number modals matches follow remote-host buffer-position word-count parrot selection-info buffer-info)
-       '(compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker time))
-
-     (add-hook 'magit-status-mode-hook 'doom-modeline--github-fetch-notifications)
-
-     (dolist (cons  '((display-time-mode-hook . doom-modeline-override-display-time-modeline)
-                      (display-battery-mode-hook . doom-modeline-override-battery-modeline)
-                      (doom-modeline-mode-hook . doom-modeline-override-display-time-modeline)
-                      (doom-modeline-mode-hook . doom-modeline-override-battery-modeline)))
-       (remove-hook (car cons) (cdr cons)))))
 #+end_src
 
 * fede's early-init
@@ -295,7 +268,7 @@ Doom modeline
       ("H" "/home/fede" (lambda () (interactive) (dired "/ssh:fede@tlon.team:/home/fede")))]
 
      ["Tlön: Google Drive"
-      ("t H-b" "Google Drive: Babel" (lambda () (interactive) (dired paths-dir-google-drive-tlon-babel)))
+      ("t H-b" "Google Drive: Babel" (lambda () (interactive) (dired paths-dir-google-drive-tlon)))
       ("t H-n" "Google Drive: EAN" (lambda () (interactive) (dired paths-dir-google-drive-tlon-EAN)))
       ("t H-m" "Google Drive: FM" (lambda () (interactive) (dired paths-dir-google-drive-tlon-FM)))
       ("t H-g" "Google Drive: GPE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-GPE)))
@@ -309,7 +282,7 @@ Doom modeline
       ("t H-f" "Google Drive: fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))
       ]
      ["Tlön: Dropbox"
-      ("t b" "Dropbox: Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
+      ("t b" "Dropbox: Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon)))
       ("t n" "Dropbox: EAN" (lambda () (interactive) (dired paths-dir-dropbox-tlon-EAN)))
       ("t m" "Dropbox: FM" (lambda () (interactive) (dired paths-dir-dropbox-tlon-FM)))
       ("t g" "Dropbox: GPE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-GPE)))
@@ -576,16 +549,17 @@ Doom modeline
   (setq consult-preview-key nil))
 #+end_src
 
-** tlon-babel
+** tlon
 :PROPERTIES:
 :ID:       27C0F2A5-14EC-4456-90B0-3E16AD8EF35B
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(with-eval-after-load 'tlon-babel
-  (setq tlon-babel-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
-  (setq tlon-babel-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
-  (tlon-babel-init))
+(with-eval-after-load 'tlon
+  (setq tlon-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
+  (setq tlon-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
+  (setq tlon-split-repo 'never)
+  (tlon-initialize))
 #+end_src
 
 ** jinx
@@ -599,6 +573,19 @@ Doom modeline
     (remove-hook hook #'jinx-mode)))
 #+end_src
 
+** doom-modeline
+:PROPERTIES:
+:ID:       611B2410-F87D-4733-86E8-4442AB3D3D32
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'doom-modeline
+  ;; buffer names are currently shown via the `breadcrumbs' package
+  ;; to display them in the modeline, uncomment the line below and disable the `bradcrumbs' package
+  ;; (setq doom-modeline-buffer-name t) ;
+  (setq doom-modeline-buffer-file-name-style 'truncate-nil)) ; FEDE ==> Full filenames, please!
+#+end_src
+
 ** tab-bar-extras
 :PROPERTIES:
 :ID:       6AC832A6-0F9D-450E-BFA2-0271AF4F2FB6
@@ -607,9 +594,6 @@ Doom modeline
 (with-eval-after-load 'tab-bar-extras
   (setq tab-bar-extras-reset-wttr nil)
 
-  ;; (remove-hook 'modus-themes-after-load-theme-hook #'tab-bar-extras-reset)
-
-  ;; Rewrite Pablo's tab-bar-extras-global-mode-string -- remove fancy battery
   (setq tab-bar-extras-global-mode-string
         `(,tab-bar-extras-prefix-element
           ;; ,tab-bar-extras-date-element
@@ -665,52 +649,7 @@ Disable hl-sentence because I do not like it...
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'faces-extras
   (setq faces-extras-fixed-pitch-font "Iosevka Nerd Font")
-  (setq faces-extras-fixed-pitch-size 150)
-  (setq faces-extras-variable-pitch-size 160)
-
-  (remove-hook 'org-mode-hook #'faces-extras-load-custom-faces)
-
-  (defun faces-extras-load-custom-faces ()
-    "My custom faces, to be used in conjunction with theme."
-    (interactive)
-    (set-face-attribute 'default nil :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
-    (set-face-attribute 'fixed-pitch nil :family faces-extras-fixed-pitch-font :height 1.0)
-    (set-face-attribute 'variable-pitch nil :family faces-extras-variable-pitch-font :height faces-extras-variable-pitch-size)
-    (set-face-attribute 'org-drawer nil :foreground "LightSkyBlue" :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-property-value nil :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-todo nil :family faces-extras-fixed-pitch-font :height 1.0)
-    (set-face-attribute 'org-archived nil :family faces-extras-fixed-pitch-font :height 0.9)
-    (set-face-attribute 'org-document-title nil :family faces-extras-fixed-pitch-font :height 1.0)
-    (set-face-attribute 'org-special-keyword nil :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
-    (set-face-attribute 'org-code nil :family faces-extras-fixed-pitch-font :height 1.0)
-    (set-face-attribute 'org-level-1 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-2 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-3 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-4 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-5 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-6 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-7 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-level-8 nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'org-date nil :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-modern-date-active nil :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-modern-date-inactive nil :family faces-extras-fixed-pitch-font :height 0.8)
-    (set-face-attribute 'org-modern-tag nil :family faces-extras-fixed-pitch-font :height 0.9)
-    (set-face-attribute 'org-quote nil :family faces-extras-variable-pitch-font :height  faces-extras-variable-pitch-size)
-    (set-face-attribute 'corfu-default nil :family faces-extras-fixed-pitch-font :height 1)
-    (set-face-attribute 'gh-notify-notification-repo-face nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal)
-    (set-face-attribute 'gh-notify-notification-unread-face nil :family faces-extras-fixed-pitch-font :height 1.0 :weight 'normal :foreground "#00a6c9")
-    (set-face-attribute 'flycheck-error nil :underline '(:color "#ff0000" :style wave))
-    (set-face-attribute 'flycheck-warning nil :underline '(:color "#0000ff" :style wave))
-    (set-face-attribute 'jinx-misspelled nil :underline '(:color "#008000" :style wave))
-    (set-face-attribute 'window-divider nil :foreground (face-attribute 'mode-line-inactive :background))
-    (set-face-attribute 'tab-bar nil
-                        ;; slightly increase the width of the tab-bar
-                        :box `(:line-width 4 :color ,(face-attribute 'mode-line :background) :style nil)
-                        :background (face-background 'mode-line)))
-
-  (add-hook 'org-mode-hook #'faces-extras-load-custom-faces)
-  (faces-extras-load-custom-faces))
+  (setq faces-extras-fixed-pitch-size 150))
 #+end_src
 
 ** tareas

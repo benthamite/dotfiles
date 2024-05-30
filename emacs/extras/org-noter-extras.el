@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'org-noter)
-(require 'unfill)
 
 ;;;; Variables
 
@@ -36,7 +35,7 @@
   "Extensions for `org-noter'."
   :group 'org-noter-extras)
 
-(defvar org-noter-extras-dehyphenate-hyphen "-"
+(defconst org-noter-extras-dehyphenate-hyphens '("-" "¬")
   "Hyphen to be removed by `org-noter-extras-dehyphenate'.")
 
 (defconst org-noter-highlight-heading-regexp "Highlight on page \\(.*\\)"
@@ -68,6 +67,7 @@ heading in a quote."
       (org-next-visible-heading 1)
       (org-fold-show-subtree))))
 
+(declare-function unfill-region "unfill")
 (defun org-noter-get-annotation-contents ()
   "Return cleaned-up annotation contents in subtree."
   (let ((initial-heading (org-get-heading t t t t)))
@@ -107,12 +107,12 @@ Operate on the current paragraph, or the region if active."
 	(end (if (use-region-p)
 		 (region-end)
 	       (save-excursion (forward-paragraph) (point))))
-	(regexp (format "\\([[:alpha:]]\\)%s \\([[:alpha:]]\\)"
-			org-noter-extras-dehyphenate-hyphen)))
+	(pattern "\\([[:alpha:]]\\)%s \\([[:alpha:]]\\)"))
     (save-excursion
-      (goto-char start)
-      (while (re-search-forward regexp end t)
-	(replace-match "\\1\\2")))))
+      (dolist (hyphen org-noter-extras-dehyphenate-hyphens)
+	(goto-char start)
+	(while (re-search-forward (format pattern hyphen) end t)
+	  (replace-match "\\1\\2"))))))
 
 ;; TODO: find `org-noter' hook to run this automatically
 (defun org-noter-extras-highlight-offset (offset)
@@ -134,9 +134,9 @@ tends to be higher than the book page number."
   "Set hyphen character for de-hyphenation."
   (interactive)
   (let ((hyphen (completing-read (format "Hyphen character (currently `%s'): "
-					 org-noter-extras-dehyphenate-hyphen)
+					 org-noter-extras-dehyphenate-hyphens)
 				 '("-" "­"))))
-    (setq org-noter-extras-dehyphenate-hyphen hyphen)))
+    (setq org-noter-extras-dehyphenate-hyphens hyphen)))
 
 (provide 'org-noter-extras)
 ;;; org-noter-extras.el ends here

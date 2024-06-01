@@ -164,6 +164,10 @@ The entry types are included in both lowercase and sentence case.")
   "Entry types for articles and article-like entities.
 The entry types are included in both lowercase and sentence case.")
 
+(defconst ebib-extras-video-websites
+  '("youtube\\.com" "youtu\\.be")
+  "List of video websites.")
+
 (defconst ebib-extras-film-like-entry-types
   (let ((lowercase '("movie" "video" "tvepisode")))
     (append lowercase (mapcar (lambda (entry)
@@ -438,7 +442,7 @@ current entry or, if not available, the key stored in
 (declare-function eww-extras-url-to-file "eww-extras")
 (defun ebib-extras-url-to-file-attach (type)
   "Generate a file  of TYPE for the URL of the entry at point and attach it.
-TYPE can be \"pdf\" or \"html\"."
+TYPE can be \"pdf\", \"html\" or \"srt\"."
   (when (ebib-extras-get-field "url")
     (eww-extras-url-to-file type nil #'ebib-extras-attach-file-to-entry)))
 
@@ -452,7 +456,17 @@ TYPE can be \"pdf\" or \"html\"."
   (interactive)
   (ebib-extras-url-to-file-attach "html"))
 
-(defvar eww-extras-annas-archive-callback)
+(defvar eww-extras-download-subtitles)
+(defun ebib-extras-url-to-srt-attach ()
+  "Generate SRT of URL and attach it to the entry at point."
+  (interactive)
+  (when-let ((url (ebib-extras-get-field "url"))
+	     (title (ebib-extras-get-field "title"))
+	     (file (file-name-concat paths-dir-downloads (simple-extras-slugify title))))
+    (message "Downloading subtitles for `%s'..." url)
+    (shell-command-to-string (format eww-extras-download-subtitles url file))
+    (ebib-extras-attach-file 'most-recent)))
+
 (defun ebib-extras-book-attach ()
   "Get a PDF of the book-type entry at point and attach it to it."
   (interactive)
@@ -490,8 +504,13 @@ TYPE can be \"pdf\" or \"html\"."
     (cond (doi (ebib-extras-doi-attach))
 	  ((or isbn (member type ebib-extras-book-like-entry-types))
 	   (ebib-extras-book-attach))
-	  (url (ebib-extras-url-to-pdf-attach)
-	       (ebib-extras-url-to-html-attach)))))
+	  ((and url (cl-some (lambda (regexp)
+			       (string-match regexp url))
+			     ebib-extras-video-websites))
+	   (ebib-extras-url-to-srt-attach))
+	  ((and url (not (member type ebib-extras-film-like-entry-types)))
+	   (ebib-extras-url-to-pdf-attach)
+	   (ebib-extras-url-to-html-attach)))))
 
 ;;;;; ?
 

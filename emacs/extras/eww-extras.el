@@ -59,6 +59,13 @@ directory, the URL, and the output file.")
   "https://annas-archive.org/account/"
   "URL to authenticate with Anna’s Archive.")
 
+;;;;; Subtitles
+
+(defconst eww-extras-download-subtitles
+  "yt-dlp --skip-download --write-subs '%s' -o '%s'"
+  "Command to download subtitles from a URL in `srt' format.
+The placeholders are replaced by the URL and the output file.")
+
 ;;;; User options
 
 (defgroup eww-extras ()

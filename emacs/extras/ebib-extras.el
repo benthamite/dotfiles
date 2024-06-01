@@ -226,6 +226,11 @@ exists."
   (interactive)
   (ebib-extras-open-file "srt"))
 
+(defun ebib-extras-open-vtt-file ()
+  "Open `vtt' file in entry at point, if it (uniquely) exists."
+  (interactive)
+  (ebib-extras-open-file "vtt"))
+
 (defun ebib-extras-open-pdf-file-externally ()
   "Open `pdf' file in entry at point externally, if it (uniquely) exists."
   (interactive)
@@ -256,8 +261,8 @@ exists."
   (interactive)
   (ebib-extras-open-file-externally "html"))
 
-  '("pdf" "html" "webm" "flac" "mp3" "md" "srt")
 (defconst ebib-extras-valid-file-extensions
+  '("pdf" "html" "webm" "flac" "mp3" "md" "srt" "vtt")
   "List of valid file extensions for `ebib-extras-open-file-dwim'.")
 
 (defun ebib-extras-open-file-dwim ()

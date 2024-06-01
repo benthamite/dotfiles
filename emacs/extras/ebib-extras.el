@@ -344,10 +344,7 @@ If EXTENSION is non-nil, set its extension to its value."
 	 paths-dir-pdf-library)
 	((string= extension "html")
 	 paths-dir-html-library)
-	((or (string= extension "webm")
-	     (string= extension "mp3")
-	     (string= extension "flac")
-	     (string= extension "srt"))
+	((member extension ebib-extras-valid-file-extensions)
 	 paths-dir-media-library)
 	(t
 	 (user-error "Invalid file extension"))))

@@ -421,7 +421,6 @@ current entry or, if not available, the key stored in
 	(ebib-extras--update-file-field-contents key file-name))
       (when (string= (file-name-extension file-name) "pdf")
 	(ebib-extras-set-pdf-metadata)
-	;; open the pdf to make sure it displays the web page correctly
 	(ebib-extras-ocr-pdf)
 	(when open
 	  (ebib-extras-open-pdf-file))))))

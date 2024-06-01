@@ -48,7 +48,7 @@
 
 ;;;; Variables
 
-(defvar ebib-extras-sort-states
+(defconst ebib-extras-sort-states
   '(Timestamp Author Title)
   "List of states for sorting the Ebib index buffer.")
 
@@ -87,7 +87,7 @@
     (default
      (beep))))
 
-(defvar ebib-extras-isbn-p
+(defconst ebib-extras-isbn-p
   "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
 
 (defun ebib-extras-isbn-p (string)
@@ -146,7 +146,7 @@
 	(ebib--redisplay-index-item field)
 	(ebib-save-current-database t)))))
 
-(defvar ebib-extras-book-like-entry-types
+(defconst ebib-extras-book-like-entry-types
   (let ((lowercase '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook")))
     (append lowercase (mapcar (lambda (entry)
 				(concat (upcase (substring entry 0 1))
@@ -155,7 +155,7 @@
   "Entry types for books and book-like entities.
 The entry types are included in both lowercase and sentence case.")
 
-(defvar ebib-extras-article-like-entry-types
+(defconst ebib-extras-article-like-entry-types
   (let ((lowercase '("article")))
     (append lowercase (mapcar (lambda (entry)
 				(concat (upcase (substring entry 0 1))
@@ -164,7 +164,7 @@ The entry types are included in both lowercase and sentence case.")
   "Entry types for articles and article-like entities.
 The entry types are included in both lowercase and sentence case.")
 
-(defvar ebib-extras-film-like-entry-types
+(defconst ebib-extras-film-like-entry-types
   (let ((lowercase '("movie" "video" "tvepisode")))
     (append lowercase (mapcar (lambda (entry)
 				(concat (upcase (substring entry 0 1))
@@ -256,8 +256,8 @@ exists."
   (interactive)
   (ebib-extras-open-file-externally "html"))
 
-(defvar ebib-extras-valid-file-extensions
   '("pdf" "html" "webm" "flac" "mp3" "md" "srt")
+(defconst ebib-extras-valid-file-extensions
   "List of valid file extensions for `ebib-extras-open-file-dwim'.")
 
 (defun ebib-extras-open-file-dwim ()
@@ -494,7 +494,7 @@ TYPE can be \"pdf\" or \"html\"."
 
 ;;;;; ?
 
-(defvar ebib-extras-iso-639-2
+(defconst ebib-extras-iso-639-2
   '(("english" . "eng")
     ("american" . "eng")
     ("french" . "fra")
@@ -541,86 +541,86 @@ even if already present."
 	       (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english")))
     (funcall get-lang)))
 
-(defvar ebib-extras-library-genesis
+(defconst ebib-extras-library-genesis
   '("Library Genesis"
     "https://libgen.li/index.php?req=%s" "&columns%5B%5D=t&columns%5B%5D=a&columns%5B%5D=s&columns%5B%5D=y&columns%5B%5D=p&columns%5B%5D=i&objects%5B%5D=f&objects%5B%5D=e&objects%5B%5D=s&objects%5B%5D=a&objects%5B%5D=p&objects%5B%5D=w&topics%5B%5D=l&res=25&filesuns=all"))
 
-(defvar ebib-extras-amazon
+(defconst ebib-extras-amazon
   '("Amazon"
     "https://smile.amazon.com/s?k="
     "&i=stripbooks"))
 
-(defvar ebib-extras-worldcat
+(defconst ebib-extras-worldcat
   '("Worldcat"
     "https://www.worldcat.org/search?q="
     "&itemType=book&limit=50&offset=1"))
 
-(defvar ebib-extras-internet-archive
+(defconst ebib-extras-internet-archive
   '("Internet Archive"
     "https://archive.org/search.php?query="
     ""))
 
-(defvar ebib-extras-university-of-toronto
+(defconst ebib-extras-university-of-toronto
   '("University of Toronto"
     "https://librarysearch.library.utoronto.ca/discovery/search?query=any,contains,"
     "&tab=Everything&search_scope=UTL_AND_CI&vid=01UTORONTO_INST:UTORONTO&offset=0"))
 
-(defvar ebib-extras-university-of-california-berkeley
+(defconst ebib-extras-university-of-california-berkeley
   '("University of California, Berkeley"
     "https://search.library.berkeley.edu/discovery/search?query=any,contains,"
     "&tab=Default_UCLibrarySearch&search_scope=DN_and_CI&vid=01UCS_BER:UCB&offset=0"))
 
-(defvar ebib-extras-hathitrust
+(defconst ebib-extras-hathitrust
   '("HathiTrust"
     "https://babel.hathitrust.org/cgi/ls?q1="
     "&field1=ocr;a=srchls;lmt=ft;sz=100"))
 
-(defvar ebib-extras-connected-papers
+(defconst ebib-extras-connected-papers
   '("Connected Papers"
     "https://www.connectedpapers.com/search?q="
     ""))
 
-(defvar ebib-extras-google-scholar
+(defconst ebib-extras-google-scholar
   '("Google Scholar"
     "https://scholar.google.com/scholar?q="
     ""))
 
-(defvar ebib-extras-wikipedia
+(defconst ebib-extras-wikipedia
   '("Google Scholar"
     "http://en.wikipedia.org/w/index.php?title=Special%3ASearch&profile=default&search="
     "&fulltext=Search"))
 
-(defvar ebib-extras-goodreads
+(defconst ebib-extras-goodreads
   '("Goodreads"
     "https://www.goodreads.com/search?q="
     ""))
 
-(defvar ebib-extras-audible
+(defconst ebib-extras-audible
   '("Audible"
     "https://www.audible.com/search?keywords="
     ""))
 
-(defvar ebib-extras-audiobookbay
+(defconst ebib-extras-audiobookbay
   '("Audiobook Bay"
     "https://theaudiobookbay.se/?s="
     "&tt=1"))
 
-(defvar ebib-extras-imdb
+(defconst ebib-extras-imdb
   '("IMDB"
     "https://www.imdb.com/find/?q="
     ""))
 
-(defvar ebib-extras-letterboxd
+(defconst ebib-extras-letterboxd
   '("Letterboxd"
     "https://letterboxd.com/search/films/"
     ""))
 
-(defvar ebib-extras-metacritic
+(defconst ebib-extras-metacritic
   '("Metacritic"
     "https://www.metacritic.com/search/all/"
     "/results"))
 
-(defvar ebib-extras-search-book-functions
+(defconst ebib-extras-search-book-functions
   '(ebib-extras-search-goodreads
     ebib-extras-search-hathitrust
     ebib-extras-search-university-of-california-berkeley
@@ -629,7 +629,7 @@ even if already present."
     ebib-extras-search-amazon)
   "List of functions that search for books.")
 
-(defvar ebib-extras-download-book-functions
+(defconst ebib-extras-download-book-functions
   '(ebib-extras-search-goodreads
     ebib-extras-search-hathitrust
     ebib-extras-search-university-of-california-berkeley
@@ -641,26 +641,26 @@ even if already present."
     )
   "List of functions that download books.")
 
-(defvar ebib-extras-search-article-functions
+(defconst ebib-extras-search-article-functions
   '(ebib-extras-search-connected-papers
     ebib-extras-search-google-scholar)
   "List of functions that search for articles.")
 
-(defvar ebib-extras-download-article-functions
+(defconst ebib-extras-download-article-functions
   '(ebib-extras-search-article-functions)
   "List of functions that download articles.")
 
-(defvar ebib-extras-search-film-functions
+(defconst ebib-extras-search-film-functions
   '(ebib-extras-search-imdb
     ebib-extras-search-letterboxd
     ebib-extras-search-metacritic)
   "List of functions that search for films.")
 
-(defvar ebib-extras-download-film-functions
+(defconst ebib-extras-download-film-functions
   ebib-extras-search-film-functions
   "List of functions that search for films.")
 
-(defvar ebib-extras-search-engines '()
+(defconst ebib-extras-search-engines '()
   "List of search engine symbols.
 Used by the `ebib-extras-generate-search-commands' macro.")
 
@@ -1059,7 +1059,7 @@ is created following the same schema as notes created with
      (beep))))
 
 (defvar tlon-file-fluid)
-(defvar ebib-extras-auto-save-files
+(defconst ebib-extras-auto-save-files
   `(,paths-file-personal-bibliography-new
     ,tlon-file-fluid)
   "List of database files that should be auto-saved.
@@ -1092,7 +1092,7 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 	   (ebib-extras-reload-database-no-confirm db)))))))
 
 (defvar tlon-file-stable)
-(defvar ebib-extras-db-numbers
+(defconst ebib-extras-db-numbers
   `((,paths-file-personal-bibliography-new . 1)
     (,paths-file-personal-bibliography-old . 2)
     (,tlon-file-fluid . 3)

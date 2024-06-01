@@ -35,6 +35,17 @@
 (require 'simple-extras)
 (require 'shut-up)
 
+;;;; User options
+
+(defgroup ebib-extras ()
+  "Extensions for `ebib'."
+  :group 'ebib-extras)
+
+(defcustom ebib-extras-download-use-vpn nil
+  "Whether to use a VPN when downloading content."
+  :type 'boolean
+  :group 'ebib-extras)
+
 ;;;; Variables
 
 (defvar ebib-extras-sort-states
@@ -529,9 +540,6 @@ even if already present."
       (funcall set-lang
 	       (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english")))
     (funcall get-lang)))
-
-(defvar ebib-extras-download-use-vpn nil
-  "Whether to use a VPN when downloading content.")
 
 (defvar ebib-extras-library-genesis
   '("Library Genesis"

@@ -443,12 +443,12 @@ TYPE can be \"pdf\" or \"html\"."
     (eww-extras-url-to-file type nil #'ebib-extras-attach-file-to-entry)))
 
 (defun ebib-extras-url-to-pdf-attach ()
-  "Generate PDF of URL."
+  "Generate PDF of URL and attach it to the entry at point."
   (interactive)
   (ebib-extras-url-to-file-attach "pdf"))
 
 (defun ebib-extras-url-to-html-attach ()
-  "Generate HTML of URL."
+  "Generate HTML of URL and attach it to the entry at point."
   (interactive)
   (ebib-extras-url-to-file-attach "html"))
 

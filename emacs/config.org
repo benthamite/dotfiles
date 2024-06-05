@@ -6147,7 +6147,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
   (setq markdown-fontify-code-blocks-natively t)
   (setq markdown-command "pandoc --from markdown --to html")
   (setq markdown-disable-tooltip-prompt t)
-  (setq markdown-italic-underscore nil)
+  (setq markdown-italic-underscore t)
 
   :general
   ((gfm-mode-map markdown-mode-map)

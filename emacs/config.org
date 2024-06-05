@@ -2359,8 +2359,7 @@ I use =hl-line= by default, but replace it with =hl-sentence= in modes (specific
            :host github
            :repo "milkypostman/hl-sentence")
   :demand t
-  :config
-  (add-hook 'markdown-mode-hook #'hl-sentence-mode))
+  :config)
 #+end_src
 
 ** jit-lock

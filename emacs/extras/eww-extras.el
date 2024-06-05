@@ -84,13 +84,13 @@ The placeholders are replaced by the URL and the output file.")
   :group 'eww-extras)
 
 (defcustom eww-extras-chrome-data-dir
-  (expand-file-name "~/Library/Application Support/Google/Chrome")
+  (expand-file-name "~/Library/Application Support/Google/Chrome/")
   "The directory where Chrome data is stored."
   :type 'directory
   :group 'eww-extras)
 
 (defcustom eww-extras-chrome-data-dir-copy
-  (expand-file-name "~/Google Drive/Apps/Chrome")
+  (expand-file-name "~/.chrome-data/")
   "A copy of the directory where Chrome data is stored.
 A headless Chrome session will fail to authenticate if Chrome is running,
 because the database will be locked. So we make a copy of the relevant
@@ -162,7 +162,7 @@ updates should be fast."
   (when (y-or-n-p "Make sure you closed all instances of Chrome and ensured that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories. Also, if you are running this command for the first time—i.e. if there is currently no copy of the Chrome data directory in your system—note that Emacs will become unresponsive for a few minutes. Proceed? ")
     (shell-command (format eww-extras-rsync-command
 			   eww-extras-chrome-data-dir
-			   (file-name-directory eww-extras-chrome-data-dir-copy)))))
+			   eww-extras-chrome-data-dir-copy))))
 
 (defun eww-extras-url-to-html (&optional url callback)
   "Generate HTML of URL, then run CALLBACK function."

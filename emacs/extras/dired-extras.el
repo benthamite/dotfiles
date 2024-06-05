@@ -168,8 +168,7 @@ number."
 		 (if dired-hide-details-mode 1 -1)
 	       (or arg 1))))
     (dired-hide-details-mode (* arg -1))
-    (dired-omit-mode (* arg -1))
-    (dired-du-mode arg)))
+    (dired-omit-mode (* arg -1))))
 
 ;;;;; Dispatcher
 

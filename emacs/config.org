@@ -145,6 +145,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#menu-bar][menu-bar]]
   - [[#tool-bar][tool-bar]]
   - [[#scroll-bar][scroll-bar]]
+  - [[#pixel-scroll][pixel-scroll]]
   - [[#delsel][delsel]]
   - [[#hl-line][hl-line]]
   - [[#lin][lin]]
@@ -2262,6 +2263,20 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
   :demand t
   :config
   (scroll-bar-mode -1))
+#+end_src
+
+** pixel-scroll
+:PROPERTIES:
+:ID:       167D3771-8128-4601-A9FE-F22B4D62CDA5
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/pixel-scroll.el][pixel-scroll]] supports smooth scrolling./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature pixel-scroll
+  :demand t
+  :config
+  (pixel-scroll-precision-mode))
 #+end_src
 
 ** delsel

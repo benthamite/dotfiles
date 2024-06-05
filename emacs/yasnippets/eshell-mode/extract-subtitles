@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: extract-subtitles
+# key: es
+# contributor: Pablo Stafforini
+# --
+ffmpeg -i '`(current-kill 0)`' -map 0:s:0 '`(file-name-concat (file-name-directory (current-kill 0)) (file-name-with-extension (file-name-base (current-kill 0)) "srt")))`'

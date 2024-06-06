@@ -77,6 +77,18 @@
       (set-face-attribute 'hl-sentence nil :background "#bfefff")
     (set-face-attribute 'hl-sentence nil :background "#004065")))
 
+;;;;; Contrast
+
+(defun modus-themes-extras-contrast (color)
+  (interactive "sColor (hex or comma-separated hsl): ")
+  "Measure WCAG contrast ratio between COLOR and either black or white."
+  (let* ((color (pcase (length list)
+		  (1 ((progn (string-match  "#" color) color (concat "#" color)))
+		     (3 (apply #'color-extras-hsl-to-hex (append (mapcar #'string-to-number list) '(percent))))
+		     (_ (error "Invalid color"))))
+		(white (modus-themes-contrast color "#ffffff"))
+		(black (modus-themes-contrast color "#000000")))
+	 (message "White: %2f, Black: %.2f" white black))))
+
 (provide 'modus-themes-extras)
 ;;; modus-themes-extras.el ends here
-

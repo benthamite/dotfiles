@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: tlon-translations
+# key: tt
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` ${1:translator’s name}
+    Expenses:Babel:Translations:${4:lang}               $2 EUR ; $1's translation services
+    Assets:Wise                              -$3 USD
+
+$0

@@ -29,7 +29,7 @@
  ns-win
  org-gcal
  ;; org-roam
- org-roam-BibTeX
+ org-roam-bibtex
  org-contacts
  org2blog
  outline
@@ -707,21 +707,22 @@
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'tab-bar-extras
-  (setq tab-bar-extras-global-mode-string
-        `(;;,tab-bar-extras-prefix-element
-          ;;,tab-bar-extras-notification-status-element
-          ;;,tab-bar-extras-date-element
-          ;;,tab-bar-extras-separator-element
-          ,tab-bar-extras-chemacs-element
-          ,tab-bar-extras-separator-element
-          ;;,tab-bar-extras-battery-element
-          ,tab-bar-extras-telega-element
-          ;;,tab-bar-extras-github-element
-          ;;,tab-bar-extras-pomodoro-element
-          ;;,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
-          ))
+    (prin1-to-string tab-bar-extras-global-mode-string)
+    (setq tab-bar-extras-global-mode-string
+          `(;;,tab-bar-extras-prefix-element
+            ;;,tab-bar-extras-notification-status-element
+            ;;,tab-bar-extras-date-element
+            ;;,tab-bar-extras-separator-element
+            ,tab-bar-extras-chemacs-element
+            ,tab-bar-extras-separator-element
+            ;;,tab-bar-extras-battery-element
+            ,tab-bar-extras-telega-element
+            ,tab-bar-extras-github-element
+            ;;,tab-bar-extras-pomodoro-element
+            ;;,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
+            ))
 
-(setq tab-bar-extras-reset-wttr nil)
+  (setq tab-bar-extras-reset-wttr nil)
   (message "`tab-bar-extras' late-init config loaded."))
 #+end_src
 
@@ -817,9 +818,24 @@ Disable hl-sentence because I do not like it...
    (org-tidy-mode -1)
    (global-flycheck-mode -1)
    (setq calendar-extras-use-geolocation nil)
-   ;; (tab-bar-extras-reset)
+       (setq tab-bar-extras-global-mode-string
+          `(;;,tab-bar-extras-prefix-element
+            ;;,tab-bar-extras-notification-status-element
+            ;;,tab-bar-extras-date-element
+            ;;,tab-bar-extras-separator-element
+            ,tab-bar-extras-chemacs-element
+            ,tab-bar-extras-separator-element
+            ;;,tab-bar-extras-battery-element
+            ,tab-bar-extras-telega-element
+            ,tab-bar-extras-github-element
+            ;;,tab-bar-extras-pomodoro-element
+            ;;,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
+            ))
+  (setq tab-bar-extras-reset-wttr nil)
+   (tab-bar-extras-reset)
    (raise-frame)
    (select-frame-set-input-focus (selected-frame))
+   
    ))
 #+end_src
 

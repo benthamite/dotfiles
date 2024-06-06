@@ -127,6 +127,20 @@ If there is only one window, create a second one."
     (select-frame-set-input-focus (window-frame (active-minibuffer-window)))
     (select-window (active-minibuffer-window))))
 
+(defun window-extras-select-side-window (side)
+  "Select the window in SIDE of of the current frame.
+SIDE is either \"left\" or \"right\"."
+  (interactive "sSide (left/right): ")
+  (unless (member side '("left" "right"))
+    (error "Direction must be either 'left' or 'right'"))
+  (let* ((compare-func (if (string= side "left") '< '>))
+         (extreme-window (car (sort (window-list nil 'no-minibuffer)
+                                    (lambda (w1 w2)
+                                      (funcall compare-func
+                                               (window-left-column w1)
+                                               (window-left-column w2)))))))
+    (select-window extreme-window)))
+
 (provide 'window-extras)
 ;;; window-extras.el ends here
 

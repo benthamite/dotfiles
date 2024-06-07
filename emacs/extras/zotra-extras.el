@@ -134,6 +134,25 @@ Zotero-imported bibtex entries."
           (while (search-forward octal nil t)
             (replace-match char)))))))
 
+;;;;; Protocol
+
+;; Just like `zotra-protocol' but with a call to `zotra-extras-add-entry' rather
+;; than `zotra-add-entry'
+(defun zotra-extras-protocol (info)
+  (let ((url (plist-get info :url))
+	(bibfile (plist-get info :bibfile))
+	(entry-format (plist-get info :format))
+	(zotra-multiple-item-strategy zotra-protocol-multiple-item-strategy))
+    (message "Zotra received: `%s' to be saved in `%s'"
+             url (or bibfile "zotra-default-bibliography"))
+    (zotra-extras-add-entry url entry-format bibfile)
+    nil))
+
+(add-to-list 'org-protocol-protocol-alist
+	     '("zotra-protocol"
+	       :protocol "zotra"
+	       :function zotra-extras-protocol))
+
 ;;;;; Misc
 
 (defun zotra-extras-fetch-field (field url-or-search-string &optional ignore-errors)

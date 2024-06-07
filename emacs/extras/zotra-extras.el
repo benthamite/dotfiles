@@ -84,6 +84,7 @@ to get the entry.
 (declare-function ebib-extras-process-entry "ebib-extras")
 (defun zotra-extras-open-in-ebib (bibkey)
   "Open BIBKEY in Ebib after adding entry via `zotra-add-entry'."
+  (ebib)
   (ebib-switch-to-database-nth (ebib-extras-get-db-number zotra-extras-most-recent-bibfile))
   (ebib-extras-open-or-switch)
   (ebib-extras-reload-database-no-confirm ebib--cur-db)

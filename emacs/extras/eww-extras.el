@@ -315,6 +315,19 @@ If PLAYER is nil, default to `mpv'."
   (when (derived-mode-p 'eww-mode)
     (zotra-extras-add-entry (plist-get eww-data :url))))
 
+(defun eww-extras-browse-file (&optional file)
+  "Browse File in `eww'.
+If FILE is nil, use the file at point, the file visited by the current buffer,
+or prompt the user for a file."
+  (interactive)
+  (let ((file (or file
+		  (thing-at-point 'filename)
+		  (buffer-file-name)
+		  (read-file-name "File: " nil nil t))))
+    (if (file-exists-p file)
+	(eww-open-file file)
+      (user-error "No file found at point"))))
+
 ;; TODO: move the section below to separate package, like I did with `scihub'
 ;;;;;; Get buffer elements
 

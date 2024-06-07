@@ -188,6 +188,23 @@ the red, green, and blue components."
                     (string-to-number (substring hex 9 13) 16))))
      (t (error "Invalid hexadecimal color notation: %S" hex)))))
 
+;;;;; Contrast
+
+(declare-function ct-contrast-ratio "ct")
+(defun color-extras-contrast (color)
+  "Measure WCAG contrast ratio between COLOR and either black or white."
+  (interactive "sColor (hex or comma-separated hsl): ")
+  (let* ((parsed (color-extras-parse-color color))
+	 (color (cond
+		 ((listp parsed)
+		  (apply #'color-extras-hsl-to-hex (append (mapcar #'string-to-number list) '(percent))))
+		 ((stringp parsed)
+		  (if (string-match  "#" color) color (concat "#" color)))
+		 (t (user-error "Invalid color"))))
+	 (white (ct-contrast-ratio color "#ffffff"))
+	 (black (ct-contrast-ratio color "#000000")))
+    (message "White: %2f, Black: %.2f" white black)))
+
 ;;;;; Embark integration
 
 (declare-function simple-extras-string-at-point "simple-extras")

@@ -1447,11 +1447,11 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
   (add-to-list 'magit-no-confirm 'stage-all-changes)
   (dolist (hook '(magit-status-mode-hook
-                    magit-diff-mode-hook))
+                  magit-diff-mode-hook))
     (add-hook hook
-                (lambda ()
-                  "Disable line truncation in Magit buffers."
-                  (setq truncate-lines nil))))
+              (lambda ()
+                "Disable line truncation in Magit buffers."
+                (setq truncate-lines nil))))
 
   :general
   ("A-g" 'magit

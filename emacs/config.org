@@ -6910,7 +6910,10 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 (use-feature edebug
   :demand t
   :config
-  ;; do not truncate print results in Edebug
+  ;; do not truncate print results
+  (setq print-level nil)
+  (setq print-length nil)
+  (setq print-circle nil)
   (setq edebug-print-level nil)
   (setq edebug-print-length nil)
   (setq edebug-print-circle nil) ; disable confusing #N= and #N# print syntax

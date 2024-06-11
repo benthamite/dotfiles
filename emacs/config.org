@@ -211,6 +211,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#wdired][wdired]]
   - [[#gnus-dired][gnus-dired]]
   - [[#dired-hacks][dired-hacks]]
+  - [[#dired-open-with][dired-open-with]]
   - [[#dired-quick-sort][dired-quick-sort]]
   - [[#peep-dired][peep-dired]]
   - [[#minibuffer][minibuffer]]
@@ -3751,6 +3752,23 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
    "C-w" 'dired-narrow-regexp
    "<tab>" 'dired-subtree-toggle
    "<backtab>" 'dired-subtree-cycle))
+#+end_src
+
+** dired-open-with
+:PROPERTIES:
+:ID:       554C33D0-2B10-4B14-8717-91176B144313
+:END:
+
+
+
+/[[https://github.com/FrostyX/dired-open-with][dired-open-with]] is an 'open with' dialog for opening files in external applications from Dired./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package dired-open-with
+  :disabled
+  :general
+  (dired-mode-map
+   "E" 'dired-open-with))
 #+end_src
 
 ** dired-quick-sort

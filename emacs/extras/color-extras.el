@@ -32,7 +32,7 @@
 ;;;; Variables
 
 (defconst color-extras-hex-pattern
-  "#?\\([[:xdigit:]]\\{6\\}\\)"
+  "\\(?1:#?\\(?:[[:xdigit:]]\\{6\\}\\)\\)"
   "Regular expression matching a hexadecimal RGB color string.
 Do not include the \"#\" in the match data.")
 

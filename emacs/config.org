@@ -4368,7 +4368,7 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
    "f" 'ace-link-org-agenda)
   ((org-mode-map telega-chat-mode-map)
    "M-f" 'ace-link-org)
-  ((org-roam-mode-map slack-message-buffer-mode-map telega-msg-button-map twittering-mode-map)
+  ((org-roam-mode-map slack-message-buffer-mode-map telega-msg-button-map)
    "f" 'ace-link-org))
 #+end_src
 

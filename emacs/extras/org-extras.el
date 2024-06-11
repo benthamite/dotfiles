@@ -851,6 +851,18 @@ To see a list of Google Docs and their respective IDs, run
     (shell-command
      (format "pandoc -s '%s' -o '%s'" input output))))
 
+(defun org-extras-remove-trailing-heading ()
+  "Remove empty heading at the end of current buffer.
+This function is called automatically via a directory-local variable in the
+directory that stores the `gptel' notes. It is used to avoid the creation of
+empty headings, which trigger an `org-roam' warning."
+  (interactive)
+  (save-excursion
+    (goto-char (point-max))
+    (org-previous-visible-heading 1)
+    (when (string-empty-p (org-get-heading))
+      (delete-region (point) (point-max)))))
+
 ;;;;; Menus
 
 (transient-define-prefix org-extras-personal-menu ()

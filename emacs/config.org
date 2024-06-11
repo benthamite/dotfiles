@@ -6307,7 +6307,7 @@ CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
 The file should contain one search query per line."
     (interactive "f")
     (when (gdrive-mark-clear-prompt)
-      (let ((lines (files-extras-read-lines file)))
+      (let ((lines (files-extras-lines-to-list file)))
         (dolist (line lines)
           (let ((results (gdrive-act-on-selected-search-results line)))
             (gdrive-mark-results results))))

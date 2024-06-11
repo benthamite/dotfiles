@@ -355,6 +355,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#edebug][edebug]]
   - [[#backtrace][backtrace]]
   - [[#macrostep][macrostep]]
+  - [[#js][js]]
   - [[#clojure][clojure]]
   - [[#haskell-mode][haskell-mode]]
   - [[#python][python]]
@@ -6943,6 +6944,19 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package macrostep)
+#+end_src
+
+** js
+:PROPERTIES:
+:ID:       E41E357F-B912-4CC2-9279-1DE400A1BDB4
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/js.el][js]] is a major mode for editing JavaScript./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature js
+  :config
+  (setq js-indent-level 2))
 #+end_src
 
 ** clojure

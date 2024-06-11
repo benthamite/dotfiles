@@ -354,6 +354,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#backtrace][backtrace]]
   - [[#macrostep][macrostep]]
   - [[#clojure][clojure]]
+  - [[#haskell-mode][haskell-mode]]
   - [[#python][python]]
   - [[#pyenv-mode][pyenv-mode]]
   - [[#emacs-ipython-notebook][emacs-ipython-notebook]]
@@ -6923,6 +6924,16 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package clojure-mode)
+#+end_src
+
+** haskell-mode
+:PROPERTIES:
+:ID:       44EB7072-5108-416F-8567-5D6BE7AD23D0
+:END:
+/[[https://github.com/haskell/haskell-mode][haskell-mode]] is a major mode for Haskell./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package haskell-mode)
 #+end_src
 
 ** python

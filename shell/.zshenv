@@ -33,3 +33,6 @@ export PATH="$PATH:$HOME/source/gdcv"
 # pdflatex
 # to allow Emacs to find pdflatex
 export PATH="/Library/TeX/texbin:$PATH"
+
+# make node use local certs
+export NODE_EXTRA_CA_CERTS="$HOME/Library/Application Support/mkcert/rootCA.pem"

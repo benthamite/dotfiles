@@ -12650,12 +12650,11 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 
 These bindings allow Keyboard Maestro to trigger various Emacs processes.
 
+Note to self: The pattern for KM shortcuts is =C-H-<capital-letter>=. This corresponds to =⇧⌘⌃<letter>= in macOS.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (general-define-key
- "C-H-M-S-c" 'org-extras-copy-heading-contents
- "C-H-M-S-g" 'orgmdb-fill-movie-properties
- ;; "C-H-M-S-i" 'org-extras-switch-to-id ; delete
- "C-H-M-S-w" 'eww)
+"C-H-Z" 'zotra-extras-add-entry)
 #+end_src
 
 * appendices

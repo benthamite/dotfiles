@@ -9746,7 +9746,8 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
   (setq bibtex-completion-pdf-open-function 'find-file)
   (setq bibtex-completion-notes-path paths-dir-bibliographic-notes)
   (setq bibtex-completion-pdf-field "file")
-  (setq bibtex-dialect 'biblatex))
+  (setq bibtex-dialect 'biblatex)
+  (setq bibtex-completion-library-path paths-dir-pdf-library))
 #+end_src
 
 ** bibtex-completion-extras
@@ -9967,7 +9968,6 @@ Having headings tagged with the type of work they are notes of allows me to quer
   :defer 20
   :config
   (setq org-ref-bibtex-pdf-download-dir paths-dir-downloads)
-  (setq bibtex-completion-library-path paths-dir-pdf-library)
 
   ;; Tweak function to remove redundant and conflicting `Year' field
   (defun isbn-to-bibtex (isbn bibfile)

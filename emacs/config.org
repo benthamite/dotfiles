@@ -132,6 +132,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#rainbow-mode][rainbow-mode]]
   - [[#color][color]]
   - [[#color-extras][color-extras]]
+  - [[#ct][ct]]
   - [[#image][image]]
   - [[#paren][paren]]
   - [[#doom-modeline][doom-modeline]]
@@ -1996,7 +1997,19 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   :demand t)
 #+end_src
 
+** ct
 :PROPERTIES:
+:ID:       7C288815-B02D-4386-888B-0FC350E90C1E
+:END:
+
+
+/[[https://github.com/neeasade/ct.el][ct]] is color library meant for making changes to individual colors in various color spaces./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package ct
+  :demand t)
+#+end_src
+
 :END:
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)

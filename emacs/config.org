@@ -9978,11 +9978,59 @@ I use this package only to run the cleanup function ~org-ref-clean-bibtex-entry~
         (lambda ()
           (org-cite-insert nil)))
 
-  ;; Tweak function to remove redundant and conflicting `Year' field
   (dolist (fun '(org-ref-replace-nonascii
                  orcb-check-journal
                  orcb-download-pdf))
     (delete fun org-ref-clean-bibtex-entry-hook))
+
+  ;; Comment out call `bibtex-fill-entry'
+  (defun org-ref-sort-bibtex-entry ()
+    "Sort fields of entry in standard order."
+    (interactive)
+    (bibtex-beginning-of-entry)
+    (let* ((entry (bibtex-parse-entry))
+           (entry-fields)
+           (other-fields)
+           (type (cdr (assoc "=type=" entry)))
+           (key (cdr (assoc "=key=" entry)))
+           (field-order (cdr (assoc (if type (downcase type))
+                                    org-ref-bibtex-sort-order))))
+
+      ;; these are the fields we want to order that are in this entry
+      (setq entry-fields (mapcar (lambda (x) (car x)) entry))
+      ;; we do not want to reenter these fields
+      (setq entry-fields (remove "=key=" entry-fields))
+      (setq entry-fields (remove "=type=" entry-fields))
+
+      ;;these are the other fields in the entry, and we sort them alphabetically.
+      (setq other-fields
+            (sort (-remove (lambda(x) (member x field-order)) entry-fields)
+                  'string<))
+
+      (save-restriction
+        (bibtex-kill-entry)
+        (insert
+         (concat "@" type "{" key ",\n"
+                 (mapconcat
+                  (lambda (field)
+                    (when (member field entry-fields)
+                      (format "%s = %s,"
+                              field
+                              (cdr (assoc field entry)))))
+                  field-order "\n")
+                 ;; now add the other fields
+                 (mapconcat
+                  (lambda (field)
+                    (cl-loop for (f . v) in entry concat
+                             (when (string= f field)
+                               (format "%s = %s,\n" f v))))
+                  (-uniq other-fields) "\n")
+                 "\n}"))
+        (bibtex-search-entry key)
+        ;; (bibtex-fill-entry)
+        (bibtex-clean-entry))))
+
+  ;; Remove redundant and conflicting `Year' field
   (defun isbn-to-bibtex (isbn bibfile)
     "Get bibtex entry for ISBN and insert it into BIBFILE.
 Nothing happens if an entry with the generated key already exists

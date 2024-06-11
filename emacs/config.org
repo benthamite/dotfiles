@@ -9968,6 +9968,9 @@ Having headings tagged with the type of work they are notes of allows me to quer
   :defer 20
   :config
   (setq org-ref-bibtex-pdf-download-dir paths-dir-downloads)
+  (setq org-ref-insert-cite-function
+        (lambda ()
+          (org-cite-insert nil)))
 
   ;; Tweak function to remove redundant and conflicting `Year' field
   (defun isbn-to-bibtex (isbn bibfile)

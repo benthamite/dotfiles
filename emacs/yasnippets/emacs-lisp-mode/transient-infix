@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: transient-infix
+# key: ti
+# contributor: Pablo Stafforini
+# --
+(transient-define-infix $1-infix ()
+  :class 'transient-lisp-variable
+  :variable '$1
+  :reader (lambda (_ _ _) (read-string ": " )))

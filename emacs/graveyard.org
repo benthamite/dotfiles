@@ -9,6 +9,20 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** hexrgb
+:PROPERTIES:
+:ID:       A9DD66E0-49A5-4A8C-8F45-016DECFF0BF0
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package hexrgb
+  :elpaca (hexrgb
+           :host github
+           :repo "emacsmirror/hexrgb")
+  :demand t
+  )
+#+end_src
+
 ** org-auctex
 :PROPERTIES:
 :ID:       F2B7F20E-244D-4582-80E9-DA54964E2B73

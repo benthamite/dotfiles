@@ -5124,7 +5124,10 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 (use-package consult
   :demand t
   :config
-  (setq consult-locate-args "mdfind")
+  ;; we call this wrapper to silence the annoying two lines of debug info that
+  ;; `mdfind' outputs, which show briefly in the echo area and pollute the
+  ;; `consult' search field. the file is in the `bin' directory of this repo.
+  (setq consult-locate-args "mdfind-wrapper")
   (setq consult-ripgrep-args (concat consult-ripgrep-args " --hidden")) ; include hidden files
   (setq consult-narrow-key "<")
   (setq consult-widen-key ">")

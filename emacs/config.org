@@ -1454,6 +1454,9 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :general
   ("A-g" 'magit
    "A-M-g" 'magit-clone)
+  (magit-log-mode-map
+   "k" 'magit-section-backward-sibling
+   "l" 'magit-section-forward-sibling)
   (magit-mode-map
    "p" 'magit-pull
    "." 'magit-push)

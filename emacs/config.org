@@ -9963,6 +9963,8 @@ Having headings tagged with the type of work they are notes of allows me to quer
 
 /[[https://github.com/jkitchin/org-ref][org-ref]] supports citations, cross-references, bibliographies in org-mode and useful bibtex tools./
 
+I use this package only to run the cleanup function ~org-ref-clean-bibtex-entry~ after adding new entries to my bibliography and to occasionally call a few miscellaneous commands. I do not use any of its citation-related functionality, since I use ~org-cite~ for that.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-ref
   :after ebib

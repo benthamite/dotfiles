@@ -9965,7 +9965,8 @@ Having headings tagged with the type of work they are notes of allows me to quer
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-ref
-  :defer 20
+  :after ebib
+  :demand t
   :config
   (setq org-ref-bibtex-pdf-download-dir paths-dir-downloads)
   (setq org-ref-insert-cite-function

@@ -9979,6 +9979,10 @@ I use this package only to run the cleanup function ~org-ref-clean-bibtex-entry~
           (org-cite-insert nil)))
 
   ;; Tweak function to remove redundant and conflicting `Year' field
+  (dolist (fun '(org-ref-replace-nonascii
+                 orcb-check-journal
+                 orcb-download-pdf))
+    (delete fun org-ref-clean-bibtex-entry-hook))
   (defun isbn-to-bibtex (isbn bibfile)
     "Get bibtex entry for ISBN and insert it into BIBFILE.
 Nothing happens if an entry with the generated key already exists
@@ -10029,12 +10033,7 @@ in the file. Data comes from www.ebook.de."
                   ;; (org-ref-clean-bibtex-entry)
                   (bibtex-fill-entry)
                   (s-trim (buffer-string))))
-        (save-buffer))))
-
-  (dolist (fun '(org-ref-replace-nonascii
-                 orcb-check-journal
-                 orcb-download-pdf))
-  (delete fun org-ref-clean-bibtex-entry-hook)))
+        (save-buffer)))))
 #+end_src
 
 *** TODO Define =isbn-to-bibtex= via elpatch

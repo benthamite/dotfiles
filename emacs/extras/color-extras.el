@@ -37,7 +37,7 @@
 Do not include the \"#\" in the match data.")
 
 (defconst color-extras-hsl-scaled-pattern
-  "\\(?1:[[:digit:]]\\{1,3\\}\\), ?\\(?2:[[:digit:]]\\{1,3\\}\\), ?\\(?3:[[:digit:]]\\{1,3\\}\\)"
+  "\\(?1:[[:digit:]]\\{1,3\\}\\), ?\\(?2:[[:digit:]]\\{1,3\\}\\)%?, ?\\(?3:[[:digit:]]\\{1,3\\}\\)%?"
   "Regular expression matching a scaled HSL color string.
 The expression matches three numbers separated by commas, corresponding to
 hue, saturation and luminance, respectively. Hue is a number between 0 and 360,

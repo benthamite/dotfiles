@@ -52,7 +52,7 @@ If color is HSL, return it as a list of three numbers, unless STRING is non-nil.
    ((string-match color-extras-hex-pattern color)
     (match-string-no-properties 1 color))
    ((string-match color-extras-hsl-scaled-pattern color)
-    (let ((list (color-extras-hsl-split color)))
+    (let ((list (color-extras-hsl-split)))
       (color-extras-format-hsl list string)))
    (t (error "Invalid color: %s" color))))
 
@@ -61,7 +61,6 @@ If color is HSL, return it as a list of three numbers, unless STRING is non-nil.
 (declare-function thing-at-point-looking-at "thingatpt")
 (defun color-extras-looking-at-rgb ()
   "Return the RGB color at point, if any."
-  (interactive)
   (when (thing-at-point-looking-at color-extras-hex-pattern)
     (match-string-no-properties 1)))
 
@@ -69,36 +68,75 @@ If color is HSL, return it as a list of three numbers, unless STRING is non-nil.
   "Return the HSL color at point, if any.
 If STRING is non-nil, return the HSL color as a string. Otherwise, return the
 HSL color as a list of three numbers."
-  (interactive)
   (when (thing-at-point-looking-at color-extras-hsl-scaled-pattern)
-    (let ((list (color-extras-hsl-split (match-string-no-properties 0))))
-      (color-extras-format-hsl list string))))
+    (let ((hsl-list (color-extras-hsl-split)))
+      (color-extras-format-hsl hsl-list string))))
+
+(defun color-extras-looking-at-color ()
+  "Return the color at point, if any."
+  (or (color-extras-looking-at-rgb) (color-extras-looking-at-hsl-scaled)))
 
 ;;;;; Conversion
 
-;; TODO: develop
-(defun color-extras-convert (color)
-  "Convert an HSL or HEX COLOR to the other format.
-If there is a color at point, use it as the default value.")
+(defun color-extras-convert (&optional color)
+  "Convert the HSL or HEX COLOR to the other format.
+If COLOR is nil, use the color at point."
+  (interactive)
+  (let* ((color (or color (color-extras-looking-at-color)))
+         converted-color)
+    (cond
+     ((stringp color)
+      (progn
+	(string-match color-extras-hex-pattern color)
+	(setq converted-color (color-extras-hsl-to-string
+			       (color-extras-hex-to-hsl (match-string-no-properties 1 color) t)))))
+     ((listp color)
+      (setq converted-color (apply #'color-extras-hsl-to-hex (append color '(t)))))
+     (t (message "No recognizable color format at point.")))
+    (kill-new converted-color)
+    (message "Saved color `%s' to the kill ring." converted-color)))
+
+(defun color-extras-convert-all (format &optional file)
+  "Convert all colors in FILE in HEX or HSL FORMAT to the other format.
+FORMAT is either \"hex\" or \"hsl\". If FILE is nil, use the buffer visited by
+the current file."
+  (interactive (list (completing-read
+		      (format "Convert all color values in `%s' to this format: "
+			      (file-name-nondirectory (buffer-file-name)))
+		      '("hex" "hsl"))))
+  (let ((file (or file (buffer-file-name)))
+	(pattern (pcase format
+		   ("hex" color-extras-hsl-scaled-pattern)
+		   ("hsl" color-extras-hex-pattern))))
+    (save-excursion
+      (with-current-buffer (find-file-noselect file))
+      (goto-char (point-min))
+      (while (re-search-forward pattern nil t)
+	(replace-match
+	 (pcase format
+	   ("hex" (apply #'color-extras-hsl-to-hex (append (color-extras-hsl-split) '(t))))
+	   ("hsl" (color-extras-hsl-to-string
+		   (color-extras-hex-to-hsl (match-string-no-properties 1) t)))))))))
 
 ;;;;;; HSL internal conversion
 
-(defun color-extras-hsl-split (string)
-  "Split HSL values from a STRING matching an HSL pattern into a list of numbers."
-  (let ((hue (string-to-number (match-string-no-properties 1 string)))
-	(saturation (string-to-number (match-string-no-properties 2 string)))
-	(luminance (string-to-number (match-string-no-properties 3 string))))
+(defun color-extras-hsl-split ()
+  "Split HSL values from the current match into a list of numbers."
+  (let ((hue (string-to-number (match-string-no-properties 1)))
+        (saturation (string-to-number (match-string-no-properties 2)))
+        (luminance (string-to-number (match-string-no-properties 3))))
     (list hue saturation luminance)))
 
 (defun color-extras-hsl-to-string (hsl)
-  "Convert HSL values from a list of numbers to a string."
-  (format "%d, %d, %d" (nth 0 hsl) (nth 1 hsl) (nth 2 hsl)))
+  "Convert HSL values to a string.
+Specifically, convert from list of numbers to a string rounded to the nearest
+integer."
+  (format "%d, %d%%, %d%%"
+	  (round (nth 0 hsl)) (round (nth 1 hsl)) (round (nth 2 hsl))))
 
 (defun color-extras-format-hsl (hsl &optional string)
-  "Format HSL values as a string or a list."
-  (if string
-      (color-extras-hsl-to-string hsl)
-    hsl))
+  "Format HSL values as a string if STRING is non-nil, else as a list."
+  (if string (color-extras-hsl-to-string hsl) hsl))
 
 ;;;;;; HSL <> HEX
 
@@ -191,19 +229,27 @@ the red, green, and blue components."
 ;;;;; Contrast
 
 (declare-function ct-contrast-ratio "ct")
-(defun color-extras-contrast (color)
-  "Measure WCAG contrast ratio between COLOR and either black or white."
-  (interactive "sColor (hex or comma-separated hsl): ")
-  (let* ((parsed (color-extras-parse-color color))
-	 (color (cond
-		 ((listp parsed)
-		  (apply #'color-extras-hsl-to-hex (append (mapcar #'string-to-number list) '(percent))))
-		 ((stringp parsed)
-		  (if (string-match  "#" color) color (concat "#" color)))
-		 (t (user-error "Invalid color"))))
-	 (white (ct-contrast-ratio color "#ffffff"))
-	 (black (ct-contrast-ratio color "#000000")))
-    (message "White: %2f, Black: %.2f" white black)))
+(defun color-extras-contrast (&optional color1 color2)
+  "Measure WCAG contrast ratio between COLOR1 and COLOR2."
+  (interactive)
+  (let* ((color1 (or color1 (color-extras-looking-at-color)
+		     (read-string  "sColor (hex or comma-separated hsl): ")))
+	 (color2 (or color2 (read-string "[optional] Other color (hex or comma-separated hsl): ")))
+	 (parsed (color-extras-parse-color color1))
+	 (color1-valid (cond
+			((listp parsed)
+			 (apply #'color-extras-hsl-to-hex (append (mapcar #'string-to-number list) '(percent))))
+			((stringp parsed)
+			 (if (string-match  "#" color1) color1 (concat "#" color1)))
+			(t (user-error "Invalid color"))))
+	 (white-contrast (ct-contrast-ratio color1-valid "#ffffff"))
+	 (black-contrast (ct-contrast-ratio color1-valid "#000000"))
+	 (color2-contrast (unless (string-empty-p color2)
+			    (ct-contrast-ratio color1 color2)))
+	 (message (format "White: %2f. Black: %2f." white-contrast black-contrast)))
+    (message (if (string-empty-p color2)
+		 message
+	       (concat message (format " Chosen color: %2f" color2-contrast))))))
 
 ;;;;; Embark integration
 
@@ -211,10 +257,10 @@ the red, green, and blue components."
 (defun color-extras-embark-color-finder ()
   "Return the HEX or HSL color value at point."
   (when-let* ((string (simple-extras-string-at-point))
-   	   (patterns (list color-extras-hex-pattern
-   			   color-extras-hsl-scaled-pattern)))
+   	      (patterns (list color-extras-hex-pattern
+   			      color-extras-hsl-scaled-pattern)))
     (when (string-match (mapconcat #'identity patterns "\\|") string)
-      (cons 'color string))))
+      (cons 'color (match-string-no-properties 0 string)))))
 
 (defvar embark-general-map)
 (declare-function embark-copy-as-kill "embark")

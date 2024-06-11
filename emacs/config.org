@@ -133,6 +133,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#color][color]]
   - [[#color-extras][color-extras]]
   - [[#ct][ct]]
+  - [[#hsluv][hsluv]]
   - [[#image][image]]
   - [[#paren][paren]]
   - [[#doom-modeline][doom-modeline]]
@@ -2015,9 +2016,17 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   :demand t)
 #+end_src
 
+** hsluv
+:PROPERTIES:
+:ID:       F35ACEE0-5AB8-4643-A3E2-A2E9ED7B9CB9
 :END:
 
+
+/[[https://github.com/hsluv/hsluv-emacs][hsluv]] is a HSLuv implementation for Emacs Lisp./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package hsluv
+  :demand t)
 #+end_src
 
 ** image

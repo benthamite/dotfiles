@@ -491,6 +491,12 @@ current helpful buffer displays, then kill the buffer."
 			  (throw 'found dir-adjusted)))))))
     (replace-regexp-in-string ".git/" "" (file-name-concat dir filename))))
 
+(defun files-extras-get-nth-directory (path &optional n)
+  "Get the Nth directory in the PATH.
+If N is nil, default to 0 (the first directory)."
+  (let* ((path-components (split-string (directory-file-name path) "/")))
+    (file-name-as-directory (nth (or n 0) path-components))))
+
 ;;;;; Bypass paywalls
 
 (defvar macos-keyboard-maestro-open-chrome-extensions)

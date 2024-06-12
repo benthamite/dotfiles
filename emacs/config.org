@@ -11299,8 +11299,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ement
-  :disabled
-  :demand t)
+  :disabled)
 #+end_src
 
 ** erc

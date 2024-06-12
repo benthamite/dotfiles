@@ -42,64 +42,30 @@
     (setq consult-ripgrep-args new-value)))
 
 (defun consult-extras-locate-current ()
-  "Search with `consult-locate' in current directory."
+  "Search with `consult-locate' in the current directory."
   (interactive)
-  (let ((consult-locate-args (format "mdfind -onlyin '%s'" default-directory)))
-    (consult-locate)))
-
-(defun consult-extras-locate-home ()
-  "Search with `consult-locate' in home directory."
-  (interactive)
-  (let ((consult-locate-args (format "mdfind -onlyin '%s'" (expand-file-name "~"))))
-    (consult-locate)))
-
-(defun consult-extras-locate-anywhere ()
-  "Search with `consult-locate' anywhere in the hard drive."
-  (interactive)
-  (let ((consult-locate-args (concat "mdfind ")))
+  (let ((consult-locate-args (list "mdfind-wrapper" (format "-onlyin %s" default-directory))))
     (consult-locate)))
 
 (defun consult-extras-locate-file-current ()
-  "Search with `consult-locate' in current directory for matching file names only."
+  "Search with `consult-locate' in the current directory, matching file names only."
   (interactive)
-  (let ((consult-locate-args (format "mdfind -onlyin \"%s\" -name " default-directory)))
-    (consult-locate)))
-
-(defun consult-extras-locate-file-home ()
-  "Search with `consult-locate' in home directory for matching file names only."
-  (interactive)
-  (let ((consult-locate-args (concat "mdfind -name -onlyin " (expand-file-name "~"))))
-    (consult-locate)))
-
-(defun consult-extras-locate-file-anywhere ()
-  "Search with `consult-locate' in hard drive for matching file names only."
-  (interactive)
-  (let ((consult-locate-args "mdfind -name "))
+  (let ((consult-locate-args (list "mdfind-wrapper" (format "-onlyin %s" default-directory) "-name")))
     (consult-locate)))
 
 (defun consult-extras-ripgrep-current ()
-  "Search with `rg' for files with matching regexp in the current directory."
+  "Search with `rg' in the current directory."
   (interactive)
   (consult-ripgrep default-directory))
 
-(defun consult-extras-ripgrep-home ()
-  "Search with `rg' for files with matching regexp in home directory."
-  (interactive)
-  (consult-ripgrep (expand-file-name "~")))
-
-(defun consult-extras-ripgrep-anywhere ()
-  "Search with `rg' for files with matching regexp anywhere in hard drive."
-  (interactive)
-  (consult-ripgrep paths-dir-root))
-
+(declare-function org-extras-fold-show-all-headings "org-extras")
+(declare-function consult-org-heading "consult-org")
 (defun consult-extras-org-heading (&optional match scope)
   "Jump to an Org heading.
 MATCH and SCOPE are as in org-map-entries and determine which
 entries are offered.  By default, all entries of the current
 buffer are offered."
   (interactive)
-  (require 'org-extras)
-  (require 'consult-org)
   (widen)
   (org-extras-fold-show-all-headings)
   (consult-org-heading match scope)

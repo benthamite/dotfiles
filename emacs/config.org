@@ -8070,39 +8070,6 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "z" 'org-agenda-undo))
 #+end_src
 
-*** TODO Make org-agenda birthdays visible via midnight
-:PROPERTIES:
-:ID:       F42FBE14-DFB3-45D0-BE2F-13D6A57F071F
-:END:
-
-*** TODO [#6] align tags
-:PROPERTIES:
-:ID:       8F2D8B6E-2B3E-434E-9D60-5A1E23F8E4C1
-:END:
-
-*** TODO [#4] Find way to represent day agenda visually as a series of 30-minute blocks
-:PROPERTIES:
-:Effort:   0:40
-:ID:       48717679-CF3D-475E-BCB6-87CAD939941F
-:END:
-
-Similar to Google Calendar.
-
-*** SOMEDAY [#4] Show agenda task in different color if it recurs
-:PROPERTIES:
-:Effort:   0:45
-:ID:       8ED37C79-AA82-4C08-BD01-335408F06DB7
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-16 Wed 17:37]--[2021-06-16 Wed 17:55] =>  0:18
-:END:
-
-To discover how to do this, use the ~customize~ command.
-
-Posted a question to [[https://emacs.stackexchange.com/questions/66343/in-org-agenda-show-repeating-tasks-in-a-different-color][Stack Exchange]].
-
-[2021-06-25 Fri 23:00] Since no one replied by now, it's unlikely anyone will reply anytime soon. Marking as SOMEDAY and removing scheduling.
-
 ** org-capture
 :PROPERTIES:
 :ID:       14F93A83-0BE7-42E3-891E-F6806192296B

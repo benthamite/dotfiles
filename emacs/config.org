@@ -7858,12 +7858,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    ;; bindings with matching commands in Fundamental mode
    "H-v" 'org-yank)
   (org-agenda-mode-map
-   "s-s" 'org-save-all-org-buffers)
-  ;; (telega-chat-mode-map
-   ;; "s-b" (lambda! (org-emphasize ?*))
-   ;; "s-i" (lambda! (org-emphasize ?/))
-   ;; "s-e" (lambda! (org-emphasize ?~)))
-   )
+   "s-s" 'org-save-all-org-buffers))
 #+end_src
 
 *** TODO [#4] Create function to compute the total number of TODOs and hours in effort estimates

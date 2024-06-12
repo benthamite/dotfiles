@@ -4792,6 +4792,101 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elgrep
   :demand t
+  :config
+  ;; we patch the function to omit all context
+  (el-patch-defun elgrep-occur-search (re &rest options)
+    "Collect lines matching RE in the records of the current buffer.
+
+The following set of OPTIONS is described in the help of `elgrep':
+:c-op
+:c-beg
+:c-beg-only
+:c-end
+:c-end-only
+:case-fold-search
+:r-beg
+:r-end
+:search-fun
+
+The return value is a list of matches.
+Each match is a cons `(,(current-buffer) . MATCHDATA).
+The structure of MATCHDATA is described in the doc string of `elgrep-search'."
+    (let* ((c-op (or (plist-get options :c-op) 'buffer-substring-no-properties))
+	   (c-beg (or (plist-get options :c-beg) 0))
+	   (c-beg-only (plist-get options :c-beg-only))
+	   (c-end (or (plist-get options :c-end) 0))
+	   (c-end-only (plist-get options :c-end-only))
+	   (case-fold-search (plist-get options :case-fold-search))
+	   (r-beg (or (plist-get options :r-beg) #'point-min))
+	   (r-end (or (plist-get options :r-end) #'point-max))
+	   (search-fun (or (plist-get options :search-fun) #'re-search-forward))
+	   matches
+	   (last-pos (point-min))
+	   (last-line-number 1))
+      (when (and (consp r-beg)
+		 (eq (car r-beg) t))
+	(setq r-beg (cdr r-beg)
+	      r-end t))
+      (elgrep-with-records r-beg r-end
+	(let (match
+	      (required-matches (cdr-safe re))
+	      (re-str (or (car-safe re)
+			  re))
+	      (point-prev 0)
+	      pos-found)
+	  (when (elgrep-required-matches search-fun required-matches)
+	    (while (or (and
+			(setq pos-found (funcall search-fun re-str nil 'noError))
+			(or (< point-prev (setq point-prev (point)))
+			    (progn
+			      (setq pos-found nil)
+			      (and (null (eobp))
+				   (goto-char (1+ point-prev))))))
+		       (null (or (eq point-prev (setq point-prev (point)))
+				 (eobp))))
+	      (thread-yield)
+	      (when-let* (pos-found
+			  (n (/ (length (match-data)) 2))
+			  (el-patch-swap (context-beginning
+					  (elgrep-line-position
+					   c-beg
+					   (match-beginning 0)
+					   (match-beginning 0)
+					   c-beg-only
+					   line-beginning-position
+					   re-search-backward))
+					 (context-beginning (match-beginning 0)))
+			  (el-patch-swap (context-end
+					  (elgrep-line-position
+					   c-end
+					   (match-end 0)
+					   context-beginning
+					   c-end-only
+					   line-end-position
+					   re-search-forward))
+					 (context-end (match-end 0)))
+			  (matchdata (and
+				      (<= (match-end 0) context-end)
+				      (cl-loop
+				       for i from 0 below n
+				       collect
+				       (list :match (match-string-no-properties i)
+					     :context (funcall c-op context-beginning context-end)
+					     :line (elgrep-with-wide-buffer
+						    (setq last-line-number
+							  (+ last-line-number
+							     (count-lines last-pos (line-beginning-position))))
+						    (setq last-pos (line-beginning-position))
+						    last-line-number)
+					     :context-beg context-beginning
+					     :context-end context-end
+					     :beg (match-beginning i)
+					     :end (match-end i))))))
+		(setq match (cons matchdata match)))))
+	  (when match
+	    (setq matches (cons (cons (current-buffer) (nreverse match)) matches)))))
+      (nreverse matches)))
+  
   :general
   ("A-C-p" 'elgrep)
   (elgrep-mode-map

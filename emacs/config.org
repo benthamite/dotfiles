@@ -89,7 +89,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#secrets][secrets]]
   - [[#plstore][plstore]]
   - [[#epg-config][epg-config]]
-  - [[#epa-file][epa-file]]
   - [[#auth-source][auth-source]]
   - [[#oauth2-auto][oauth2-auto]]
   - [[#password-store-otp][password-store-otp]]
@@ -133,7 +132,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#rainbow-mode][rainbow-mode]]
   - [[#color][color]]
   - [[#color-extras][color-extras]]
-  - [[#hexrgb][hexrgb]]
+  - [[#ct][ct]]
+  - [[#hsluv][hsluv]]
   - [[#image][image]]
   - [[#paren][paren]]
   - [[#doom-modeline][doom-modeline]]
@@ -146,6 +146,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#menu-bar][menu-bar]]
   - [[#tool-bar][tool-bar]]
   - [[#scroll-bar][scroll-bar]]
+  - [[#pixel-scroll][pixel-scroll]]
   - [[#delsel][delsel]]
   - [[#hl-line][hl-line]]
   - [[#lin][lin]]
@@ -211,6 +212,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#wdired][wdired]]
   - [[#gnus-dired][gnus-dired]]
   - [[#dired-hacks][dired-hacks]]
+  - [[#dired-open-with][dired-open-with]]
   - [[#dired-quick-sort][dired-quick-sort]]
   - [[#peep-dired][peep-dired]]
   - [[#minibuffer][minibuffer]]
@@ -353,7 +355,9 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#edebug][edebug]]
   - [[#backtrace][backtrace]]
   - [[#macrostep][macrostep]]
+  - [[#js][js]]
   - [[#clojure][clojure]]
+  - [[#haskell-mode][haskell-mode]]
   - [[#python][python]]
   - [[#pyenv-mode][pyenv-mode]]
   - [[#emacs-ipython-notebook][emacs-ipython-notebook]]
@@ -1145,17 +1149,6 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
   (setq epg-gpg-program "/opt/homebrew/bin/gpg"))
 #+end_src
 
-** epa-file
-:PROPERTIES:
-:ID:       FD3455F8-7CD3-4651-8063-304D4131F14E
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature epa-file
-  :config
-  (epa-file-enable))
-#+end_src
-
 ** auth-source
 :PROPERTIES:
 :ID:       291F9998-9940-4249-A048-92B5F2A2895E
@@ -1454,15 +1447,18 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 
   (add-to-list 'magit-no-confirm 'stage-all-changes)
   (dolist (hook '(magit-status-mode-hook
-                    magit-diff-mode-hook))
+                  magit-diff-mode-hook))
     (add-hook hook
-                (lambda ()
-                  "Disable line truncation in Magit buffers."
-                  (setq truncate-lines nil))))
+              (lambda ()
+                "Disable line truncation in Magit buffers."
+                (setq truncate-lines nil))))
 
   :general
   ("A-g" 'magit
    "A-M-g" 'magit-clone)
+  (magit-log-mode-map
+   "k" 'magit-section-backward-sibling
+   "l" 'magit-section-forward-sibling)
   (magit-mode-map
    "p" 'magit-pull
    "." 'magit-push)
@@ -1522,9 +1518,11 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
            :host github
            :repo "alphapapa/magit-todos"
            :build (:not elpaca--check-version))
+  :disabled           
   :after magit hl-todo
   :demand t
   :config
+  (setq magit-todos-branch-list nil)
   (magit-todos-mode))
 #+end_src
 
@@ -1633,7 +1631,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   ;; hack: to mark the topic as read, we browse it in the background
   (advice-add 'forge-visit-this-topic :before #'forge-extras-sync-read-status)
 
-  (run-with-idle-timer 60 t #'forge-extras-pull-notifications)
+  (run-with-idle-timer 30 t #'forge-extras-pull-notifications)
 
   :general
   ((forge-topic-mode-map forge-notifications-mode-map magit-status-mode-map)
@@ -2007,18 +2005,30 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   :demand t)
 #+end_src
 
-** hexrgb
+** ct
 :PROPERTIES:
-:ID:       A9DD66E0-49A5-4A8C-8F45-016DECFF0BF0
+:ID:       7C288815-B02D-4386-888B-0FC350E90C1E
 :END:
 
+
+/[[https://github.com/neeasade/ct.el][ct]] is color library meant for making changes to individual colors in various color spaces./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package hexrgb
-  :elpaca (hexrgb
-           :host github
-           :repo "emacsmirror/hexrgb")
-  :demand t
-  )
+(use-package ct
+  :demand t)
+#+end_src
+
+** hsluv
+:PROPERTIES:
+:ID:       F35ACEE0-5AB8-4643-A3E2-A2E9ED7B9CB9
+:END:
+
+
+/[[https://github.com/hsluv/hsluv-emacs][hsluv]] is a HSLuv implementation for Emacs Lisp./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package hsluv
+  :demand t)
 #+end_src
 
 ** image
@@ -2275,6 +2285,20 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
   (scroll-bar-mode -1))
 #+end_src
 
+** pixel-scroll
+:PROPERTIES:
+:ID:       167D3771-8128-4601-A9FE-F22B4D62CDA5
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/pixel-scroll.el][pixel-scroll]] supports smooth scrolling./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature pixel-scroll
+  :demand t
+  :config
+  (pixel-scroll-precision-mode))
+#+end_src
+
 ** delsel
 :PROPERTIES:
 :ID:       6473F2BF-059F-464B-859E-B8DA91B81DE2
@@ -2296,13 +2320,7 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
 (use-feature hl-line
   :demand t
   :config
-  (global-hl-line-mode)
-
-  (dolist (hook '(markdown-mode-hook)) ; add other modes as needed
-    (add-hook hook
-              (lambda ()
-                "Disable `hl-line-mode'."
-                (set (make-local-variable 'global-hl-line-mode) nil)))))
+  (add-hook 'dired-mode-hook #'hl-line-mode))
 #+end_src
 
 ** lin
@@ -2355,8 +2373,7 @@ I use =hl-line= by default, but replace it with =hl-sentence= in modes (specific
            :host github
            :repo "milkypostman/hl-sentence")
   :demand t
-  :config
-  (add-hook 'markdown-mode-hook #'hl-sentence-mode))
+  :config)
 #+end_src
 
 ** jit-lock
@@ -3745,6 +3762,23 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
    "<backtab>" 'dired-subtree-cycle))
 #+end_src
 
+** dired-open-with
+:PROPERTIES:
+:ID:       554C33D0-2B10-4B14-8717-91176B144313
+:END:
+
+
+
+/[[https://github.com/FrostyX/dired-open-with][dired-open-with]] is an 'open with' dialog for opening files in external applications from Dired./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package dired-open-with
+  :disabled
+  :general
+  (dired-mode-map
+   "E" 'dired-open-with))
+#+end_src
+
 ** dired-quick-sort
 :PROPERTIES:
 :ID:       9BF30679-50B1-4F78-BD6A-0DEF565D22A4
@@ -3954,7 +3988,11 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
               :around (lambda ()
                         "Ignore remote files."
                         (unless (file-remote-p default-directory 'no-identification)
-                          (apply orig-fun args)))))
+                          (apply orig-fun args))))
+
+  (add-to-list 'tramp-connection-properties
+               (list (regexp-quote "/ssh:fede@tlon.team:")
+                     "direct-async-process" t)))
 #+end_src
 
 ** pandoc-mode
@@ -4335,7 +4373,7 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
    "f" 'ace-link-org-agenda)
   ((org-mode-map telega-chat-mode-map)
    "M-f" 'ace-link-org)
-  ((org-roam-mode-map slack-message-buffer-mode-map telega-msg-button-map twittering-mode-map)
+  ((org-roam-mode-map slack-message-buffer-mode-map telega-msg-button-map)
    "f" 'ace-link-org))
 #+end_src
 
@@ -4759,6 +4797,101 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elgrep
   :demand t
+  :config
+  ;; we patch the function to omit all context
+  (el-patch-defun elgrep-occur-search (re &rest options)
+    "Collect lines matching RE in the records of the current buffer.
+
+The following set of OPTIONS is described in the help of `elgrep':
+:c-op
+:c-beg
+:c-beg-only
+:c-end
+:c-end-only
+:case-fold-search
+:r-beg
+:r-end
+:search-fun
+
+The return value is a list of matches.
+Each match is a cons `(,(current-buffer) . MATCHDATA).
+The structure of MATCHDATA is described in the doc string of `elgrep-search'."
+    (let* ((c-op (or (plist-get options :c-op) 'buffer-substring-no-properties))
+	   (c-beg (or (plist-get options :c-beg) 0))
+	   (c-beg-only (plist-get options :c-beg-only))
+	   (c-end (or (plist-get options :c-end) 0))
+	   (c-end-only (plist-get options :c-end-only))
+	   (case-fold-search (plist-get options :case-fold-search))
+	   (r-beg (or (plist-get options :r-beg) #'point-min))
+	   (r-end (or (plist-get options :r-end) #'point-max))
+	   (search-fun (or (plist-get options :search-fun) #'re-search-forward))
+	   matches
+	   (last-pos (point-min))
+	   (last-line-number 1))
+      (when (and (consp r-beg)
+		 (eq (car r-beg) t))
+	(setq r-beg (cdr r-beg)
+	      r-end t))
+      (elgrep-with-records r-beg r-end
+	(let (match
+	      (required-matches (cdr-safe re))
+	      (re-str (or (car-safe re)
+			  re))
+	      (point-prev 0)
+	      pos-found)
+	  (when (elgrep-required-matches search-fun required-matches)
+	    (while (or (and
+			(setq pos-found (funcall search-fun re-str nil 'noError))
+			(or (< point-prev (setq point-prev (point)))
+			    (progn
+			      (setq pos-found nil)
+			      (and (null (eobp))
+				   (goto-char (1+ point-prev))))))
+		       (null (or (eq point-prev (setq point-prev (point)))
+				 (eobp))))
+	      (thread-yield)
+	      (when-let* (pos-found
+			  (n (/ (length (match-data)) 2))
+			  (el-patch-swap (context-beginning
+					  (elgrep-line-position
+					   c-beg
+					   (match-beginning 0)
+					   (match-beginning 0)
+					   c-beg-only
+					   line-beginning-position
+					   re-search-backward))
+					 (context-beginning (match-beginning 0)))
+			  (el-patch-swap (context-end
+					  (elgrep-line-position
+					   c-end
+					   (match-end 0)
+					   context-beginning
+					   c-end-only
+					   line-end-position
+					   re-search-forward))
+					 (context-end (match-end 0)))
+			  (matchdata (and
+				      (<= (match-end 0) context-end)
+				      (cl-loop
+				       for i from 0 below n
+				       collect
+				       (list :match (match-string-no-properties i)
+					     :context (funcall c-op context-beginning context-end)
+					     :line (elgrep-with-wide-buffer
+						    (setq last-line-number
+							  (+ last-line-number
+							     (count-lines last-pos (line-beginning-position))))
+						    (setq last-pos (line-beginning-position))
+						    last-line-number)
+					     :context-beg context-beginning
+					     :context-end context-end
+					     :beg (match-beginning i)
+					     :end (match-end i))))))
+		(setq match (cons matchdata match)))))
+	  (when match
+	    (setq matches (cons (cons (current-buffer) (nreverse match)) matches)))))
+      (nreverse matches)))
+  
   :general
   ("A-C-p" 'elgrep)
   (elgrep-mode-map
@@ -5091,7 +5224,10 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 (use-package consult
   :demand t
   :config
-  (setq consult-locate-args "mdfind")
+  ;; we call this wrapper to silence the annoying two lines of debug info that
+  ;; `mdfind' outputs, which show briefly in the echo area and pollute the
+  ;; `consult' search field. the file is in the `bin' directory of this repo.
+  (setq consult-locate-args "mdfind-wrapper")
   (setq consult-ripgrep-args (concat consult-ripgrep-args " --hidden")) ; include hidden files
   (setq consult-narrow-key "<")
   (setq consult-widen-key ">")
@@ -5104,7 +5240,6 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
    "C-f" 'consult-find
    "s-j" 'consult-imenu
    "H-b" 'consult-buffer
-   "H-k" 'consult-locate
    "A-H-i" 'consult-info
    "H-R" 'consult-history
    "H-V" 'consult-yank-pop)
@@ -5127,9 +5262,8 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   :general
    ("H-F" 'consult-extras-locate-file-home
    "A-H-f" 'consult-extras-locate-file-anywhere
-   "H-p" 'consult-extras-ripgrep-current
-   "H-P" 'consult-extras-ripgrep-home
-   "A-H-p" 'consult-extras-ripgrep-anywhere)
+   "H-k" 'consult-extras-locate-current
+   "H-p" 'consult-extras-ripgrep-current)
   (org-mode-map
    "s-j" 'consult-extras-org-heading))
 #+end_src
@@ -6144,7 +6278,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
   (setq markdown-fontify-code-blocks-natively t)
   (setq markdown-command "pandoc --from markdown --to html")
   (setq markdown-disable-tooltip-prompt t)
-  (setq markdown-italic-underscore nil)
+  (setq markdown-italic-underscore t)
 
   :general
   ((gfm-mode-map markdown-mode-map)
@@ -6157,9 +6291,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
    "s-f" 'markdown-insert-footnote
    "s-i" 'markdown-insert-italic
    "s-k" 'markdown-insert-link
-   "s-l" 'markdown-mode-extras-insert-locator
-   "s-p" 'markdown-preview
-   "s-r" 'markdown-mode-extras-remove-url-in-link)
+   "s-p" 'markdown-preview)
   (gfm-mode-map
    "s-a" 'markdown-insert-gfm-code-block
    "s-z" 'markdown-edit-code-block))
@@ -6178,6 +6310,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
   :general
   ((gfm-mode-map markdown-mode-map)
    "A-C-H-t" 'markdown-mode-extras-copy-section
+   "s-l" 'markdown-mode-extras-insert-locator
    "s-r" 'markdown-mode-extras-remove-url-in-link
    "s-v" 'markdown-mode-extras-paste-with-conversion)
   ((ghm-mode-map markdown-mode-map org-mode-map)
@@ -6272,7 +6405,7 @@ CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
 The file should contain one search query per line."
     (interactive "f")
     (when (gdrive-mark-clear-prompt)
-      (let ((lines (files-extras-read-lines file)))
+      (let ((lines (files-extras-lines-to-list file)))
         (dolist (line lines)
           (let ((results (gdrive-act-on-selected-search-results line)))
             (gdrive-mark-results results))))
@@ -6467,6 +6600,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :after paths
   :config
   (add-hook 'tlon-init-post-init-hook #'tlon-initialize)
+  (run-with-idle-timer (* 30 60) t #'tlon-pull-issues-in-all-repos)
   (setq tlon-split-repo t)
 
   :general
@@ -6874,7 +7008,11 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 (use-feature edebug
   :demand t
   :config
-  ;; do not truncate print results in Edebug
+  (setq edebug-sit-on-break nil)
+  ;; do not truncate print results
+  (setq print-level nil)
+  (setq print-length nil)
+  (setq print-circle nil)
   (setq edebug-print-level nil)
   (setq edebug-print-length nil)
   (setq edebug-print-circle nil) ; disable confusing #N= and #N# print syntax
@@ -6908,6 +7046,19 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 (use-package macrostep)
 #+end_src
 
+** js
+:PROPERTIES:
+:ID:       E41E357F-B912-4CC2-9279-1DE400A1BDB4
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/js.el][js]] is a major mode for editing JavaScript./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature js
+  :config
+  (setq js-indent-level 2))
+#+end_src
+
 ** clojure
 :PROPERTIES:
 :ID:       A9508F41-E82B-4E6C-9304-53981A8F0C27
@@ -6917,6 +7068,16 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package clojure-mode)
+#+end_src
+
+** haskell-mode
+:PROPERTIES:
+:ID:       44EB7072-5108-416F-8567-5D6BE7AD23D0
+:END:
+/[[https://github.com/haskell/haskell-mode][haskell-mode]] is a major mode for Haskell./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package haskell-mode)
 #+end_src
 
 ** python
@@ -7700,12 +7861,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    ;; bindings with matching commands in Fundamental mode
    "H-v" 'org-yank)
   (org-agenda-mode-map
-   "s-s" 'org-save-all-org-buffers)
-  ;; (telega-chat-mode-map
-   ;; "s-b" (lambda! (org-emphasize ?*))
-   ;; "s-i" (lambda! (org-emphasize ?/))
-   ;; "s-e" (lambda! (org-emphasize ?~)))
-   )
+   "s-s" 'org-save-all-org-buffers))
 #+end_src
 
 *** TODO [#4] Create function to compute the total number of TODOs and hours in effort estimates
@@ -7916,39 +8072,6 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    "y" 'org-agenda-day-view
    "z" 'org-agenda-undo))
 #+end_src
-
-*** TODO Make org-agenda birthdays visible via midnight
-:PROPERTIES:
-:ID:       F42FBE14-DFB3-45D0-BE2F-13D6A57F071F
-:END:
-
-*** TODO [#6] align tags
-:PROPERTIES:
-:ID:       8F2D8B6E-2B3E-434E-9D60-5A1E23F8E4C1
-:END:
-
-*** TODO [#4] Find way to represent day agenda visually as a series of 30-minute blocks
-:PROPERTIES:
-:Effort:   0:40
-:ID:       48717679-CF3D-475E-BCB6-87CAD939941F
-:END:
-
-Similar to Google Calendar.
-
-*** SOMEDAY [#4] Show agenda task in different color if it recurs
-:PROPERTIES:
-:Effort:   0:45
-:ID:       8ED37C79-AA82-4C08-BD01-335408F06DB7
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-16 Wed 17:37]--[2021-06-16 Wed 17:55] =>  0:18
-:END:
-
-To discover how to do this, use the ~customize~ command.
-
-Posted a question to [[https://emacs.stackexchange.com/questions/66343/in-org-agenda-show-repeating-tasks-in-a-different-color][Stack Exchange]].
-
-[2021-06-25 Fri 23:00] Since no one replied by now, it's unlikely anyone will reply anytime soon. Marking as SOMEDAY and removing scheduling.
 
 ** org-capture
 :PROPERTIES:
@@ -9687,7 +9810,8 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
   (setq bibtex-completion-pdf-open-function 'find-file)
   (setq bibtex-completion-notes-path paths-dir-bibliographic-notes)
   (setq bibtex-completion-pdf-field "file")
-  (setq bibtex-dialect 'biblatex))
+  (setq bibtex-dialect 'biblatex)
+  (setq bibtex-completion-library-path paths-dir-pdf-library))
 #+end_src
 
 ** bibtex-completion-extras
@@ -9903,14 +10027,71 @@ Having headings tagged with the type of work they are notes of allows me to quer
 
 /[[https://github.com/jkitchin/org-ref][org-ref]] supports citations, cross-references, bibliographies in org-mode and useful bibtex tools./
 
+I use this package only to run the cleanup function ~org-ref-clean-bibtex-entry~ after adding new entries to my bibliography and to occasionally call a few miscellaneous commands. I do not use any of its citation-related functionality, since I use ~org-cite~ for that.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-ref
-  :defer 20
+  :after ebib
+  :demand t
   :config
   (setq org-ref-bibtex-pdf-download-dir paths-dir-downloads)
-  (setq bibtex-completion-library-path paths-dir-pdf-library)
+  (setq org-ref-insert-cite-function
+        (lambda ()
+          (org-cite-insert nil)))
 
-  ;; Tweak function to remove redundant and conflicting `Year' field
+  (dolist (fun '(org-ref-replace-nonascii
+                 orcb-check-journal
+                 orcb-download-pdf))
+    (delete fun org-ref-clean-bibtex-entry-hook))
+
+  ;; Comment out call `bibtex-fill-entry'
+  (defun org-ref-sort-bibtex-entry ()
+    "Sort fields of entry in standard order."
+    (interactive)
+    (bibtex-beginning-of-entry)
+    (let* ((entry (bibtex-parse-entry))
+           (entry-fields)
+           (other-fields)
+           (type (cdr (assoc "=type=" entry)))
+           (key (cdr (assoc "=key=" entry)))
+           (field-order (cdr (assoc (if type (downcase type))
+                                    org-ref-bibtex-sort-order))))
+
+      ;; these are the fields we want to order that are in this entry
+      (setq entry-fields (mapcar (lambda (x) (car x)) entry))
+      ;; we do not want to reenter these fields
+      (setq entry-fields (remove "=key=" entry-fields))
+      (setq entry-fields (remove "=type=" entry-fields))
+
+      ;;these are the other fields in the entry, and we sort them alphabetically.
+      (setq other-fields
+            (sort (-remove (lambda(x) (member x field-order)) entry-fields)
+                  'string<))
+
+      (save-restriction
+        (bibtex-kill-entry)
+        (insert
+         (concat "@" type "{" key ",\n"
+                 (mapconcat
+                  (lambda (field)
+                    (when (member field entry-fields)
+                      (format "%s = %s,"
+                              field
+                              (cdr (assoc field entry)))))
+                  field-order "\n")
+                 ;; now add the other fields
+                 (mapconcat
+                  (lambda (field)
+                    (cl-loop for (f . v) in entry concat
+                             (when (string= f field)
+                               (format "%s = %s,\n" f v))))
+                  (-uniq other-fields) "\n")
+                 "\n}"))
+        (bibtex-search-entry key)
+        ;; (bibtex-fill-entry)
+        (bibtex-clean-entry))))
+
+  ;; Remove redundant and conflicting `Year' field
   (defun isbn-to-bibtex (isbn bibfile)
     "Get bibtex entry for ISBN and insert it into BIBFILE.
 Nothing happens if an entry with the generated key already exists
@@ -9961,12 +10142,7 @@ in the file. Data comes from www.ebook.de."
                   ;; (org-ref-clean-bibtex-entry)
                   (bibtex-fill-entry)
                   (s-trim (buffer-string))))
-        (save-buffer))))
-
-  (dolist (fun '(org-ref-replace-nonascii
-                 orcb-check-journal
-                 orcb-download-pdf))
-  (delete fun org-ref-clean-bibtex-entry-hook)))
+        (save-buffer)))))
 #+end_src
 
 *** TODO Define =isbn-to-bibtex= via elpatch
@@ -11123,6 +11299,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ement
+  :disabled
   :demand t)
 #+end_src
 
@@ -11249,11 +11426,7 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
    '((shr-text :height 0.65)
      ;; doesn’t seem to be working?
      (shr-h1 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
-     (shr-h2 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)))
-
-  :general
-  ((js-mode html-mode-map mhtml-mode-map)
-   "s-w" 'shr-render-buffer))
+     (shr-h2 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height))))
 #+end_src
 
 ** shr-tag-pre-highlight
@@ -11398,6 +11571,8 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
    ;; "p" 'eww-extras-open-with-recent-kill-ring
    "h" 'eww-extras-url-to-html
    "p" 'eww-extras-url-to-pdf)
+  ((js-mode html-mode-map mhtml-mode-map)
+   "s-w" 'eww-extras-browse-file)
   ((eww-mode-map ebib-entry-mode-map ebib-index-mode-map)
    "s-h" 'eww-extras-url-to-html
    "s-p" 'eww-extras-url-to-pdf))
@@ -12589,12 +12764,11 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 
 These bindings allow Keyboard Maestro to trigger various Emacs processes.
 
+Note to self: The pattern for KM shortcuts is =C-H-<capital-letter>=. This corresponds to =⇧⌘⌃<letter>= in macOS.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (general-define-key
- "C-H-M-S-c" 'org-extras-copy-heading-contents
- "C-H-M-S-g" 'orgmdb-fill-movie-properties
- ;; "C-H-M-S-i" 'org-extras-switch-to-id ; delete
- "C-H-M-S-w" 'eww)
+"C-H-Z" 'zotra-extras-add-entry)
 #+end_src
 
 * appendices

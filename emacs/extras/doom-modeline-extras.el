@@ -64,8 +64,7 @@
   "Display the cost of prompting the current model."
   (when (and doom-modeline-extras-gptel-cost
 	     (bound-and-true-p gptel-model)
-	     ;; the `gptel' buffer appears to be named after the default backend
-	     (string= (buffer-name) (format "*%s*" (gptel-backend-name (default-value 'gptel-backend)))))
+	     gptel-mode)
     (concat (format "$%.2f" (gptel-extras-get-cost)) (doom-modeline-spc))))
 
 ;;;;; Notification counter Forge sync

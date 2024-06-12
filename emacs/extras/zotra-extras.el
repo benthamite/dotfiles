@@ -84,6 +84,7 @@ to get the entry.
 (declare-function ebib-extras-process-entry "ebib-extras")
 (defun zotra-extras-open-in-ebib (bibkey)
   "Open BIBKEY in Ebib after adding entry via `zotra-add-entry'."
+  (ebib)
   (ebib-switch-to-database-nth (ebib-extras-get-db-number zotra-extras-most-recent-bibfile))
   (ebib-extras-open-or-switch)
   (ebib-extras-reload-database-no-confirm ebib--cur-db)
@@ -133,6 +134,25 @@ Zotero-imported bibtex entries."
           (goto-char (point-min))
           (while (search-forward octal nil t)
             (replace-match char)))))))
+
+;;;;; Protocol
+
+;; Just like `zotra-protocol' but with a call to `zotra-extras-add-entry' rather
+;; than `zotra-add-entry'
+(defun zotra-extras-protocol (info)
+  (let ((url (plist-get info :url))
+	(bibfile (plist-get info :bibfile))
+	(entry-format (plist-get info :format))
+	(zotra-multiple-item-strategy zotra-protocol-multiple-item-strategy))
+    (message "Zotra received: `%s' to be saved in `%s'"
+             url (or bibfile "zotra-default-bibliography"))
+    (zotra-extras-add-entry url entry-format bibfile)
+    nil))
+
+(add-to-list 'org-protocol-protocol-alist
+	     '("zotra-protocol"
+	       :protocol "zotra"
+	       :function zotra-extras-protocol))
 
 ;;;;; Misc
 

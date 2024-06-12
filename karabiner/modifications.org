@@ -732,7 +732,7 @@ CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
          [:c {:modi :C-M-s- :key :c} :emacs] ; connect to bluetooth device
          [:g {:modi :C-M-s- :key :g} :emacs] ; toggle langs
          [:h {:modi :⇧⌘⌥⌃ :key :0}] ; dictation
-         [:n {:modi :⇧⌘⌥⌃ :key :1}] ; narration
+         [:n {:modi :⇧⌘⌥⌃ :key :1}] ; narration (Settings > Accessibility > Spoken content > Speak selection)
          ]}
 #+end_src
 

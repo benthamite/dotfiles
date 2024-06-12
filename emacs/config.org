@@ -1518,6 +1518,7 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
            :host github
            :repo "alphapapa/magit-todos"
            :build (:not elpaca--check-version))
+  :disabled           
   :after magit hl-todo
   :demand t
   :config

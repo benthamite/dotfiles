@@ -184,29 +184,13 @@
   (setq browse-url-browser-function 'browse-url-chrome))
 #+end_src
 
-** window
-:PROPERTIES:
-:ID:       8EF5C4DE-C641-4770-83F1-638DD324238B
-:END:
-
-#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(with-eval-after-load 'window
-  ;; Prefer horizontal splits over vertical splits
-  (setq split-window-preferred-function 'split-window-sensibly
-        split-height-threshold nil
-        split-width-threshold 180)
-  ;; (setq split-width-threshold 200)
-  ;; (setq split-height-threshold nil)
-  (message "`window' late-init config loaded."))
-#+end_src
-
 ** window-extras
 :PROPERTIES:
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'window-extras
-  (setq split-width-threshold 200)
+  (setq split-width-threshold 160)
   (setq split-height-threshold nil)
   (setq split-window-preferred-function 'split-window-sensibly)
 

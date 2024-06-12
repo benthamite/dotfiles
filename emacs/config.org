@@ -1630,7 +1630,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   ;; hack: to mark the topic as read, we browse it in the background
   (advice-add 'forge-visit-this-topic :before #'forge-extras-sync-read-status)
 
-  (run-with-idle-timer 60 t #'forge-extras-pull-notifications)
+  (run-with-idle-timer 30 t #'forge-extras-pull-notifications)
 
   :general
   ((forge-topic-mode-map forge-notifications-mode-map magit-status-mode-map)

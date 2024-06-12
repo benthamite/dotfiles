@@ -5262,9 +5262,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
    ("H-F" 'consult-extras-locate-file-home
    "A-H-f" 'consult-extras-locate-file-anywhere
    "H-k" 'consult-extras-locate-current
-   "H-p" 'consult-extras-ripgrep-current
-   "H-P" 'consult-extras-ripgrep-home
-   "A-H-p" 'consult-extras-ripgrep-anywhere)
+   "H-p" 'consult-extras-ripgrep-current)
   (org-mode-map
    "s-j" 'consult-extras-org-heading))
 #+end_src

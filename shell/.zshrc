@@ -53,5 +53,5 @@ export GEM_HOME="$HOME/.gem"
 # mdfind
 # silence debugging output
 function mdfind() {
-    { /usr/bin/mdfind "$@" 2> >(grep --invert-match ' \[UserQueryParser\] ' >&2); } 2>/dev/null
+    /usr/bin/mdfind "$@" 2>&1 | grep -v '\[UserQueryParser\]'
 }

@@ -3,4 +3,4 @@
 # key: tri
 # contributor: Pablo Stafforini
 # --
-`(format "tlon-team/%s#" (completing-read "repo: " (tlon-repo-lookup-all :name)) nil nil nil nil (tlon-repo-lookup :name :dir (tlon-get-repo)))`
+`(format "tlon-team/%s#" (completing-read "repo: " (tlon-repo-lookup-all :name) nil nil nil nil (file-name-nondirectory (directory-file-name (tlon-get-repo-from-dir default-directory)))))`

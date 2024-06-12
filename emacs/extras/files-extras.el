@@ -32,6 +32,16 @@
 (require 'files)
 (require 'paths)
 
+;;;; Variables
+
+(defconst file-extras-bypass-paywalls-chrome-repo
+  "https://github.com/bpc-clone/bpc_updates/releases/latest/download/bypass-paywalls-chrome-clean-master.zip"
+  "URL for the Bypass Paywalls Chrome Clean repository.")
+
+(defconst file-extras-bypass-paywalls-firefox-xpi
+  "https://github.com/bpc-clone/bpc_updates/releases/download/latest/bypass_paywalls_clean-latest.xpi"
+  "URL for the Bypass Paywalls Firefox Clean `xpi' file.")
+
 ;;;; User options
 
 (defgroup files-extras ()
@@ -171,30 +181,6 @@ functionality in macOS."
   (interactive)
   (bury-buffer)
   (window-extras-switch-to-last-window))
-
-;; 2024-05-03: taken down; in the meantime, use
-;; <https://archive.softwareheritage.org/browse/origin/directory/?origin_url=https://gitlab.com/magnolia1234/bypass-paywalls-chrome-clean.git>
-;; https://github.com/bpc-clone/bypass-paywalls-chrome-clean
-;; https://github.com/bpc-clone/bypass-paywalls-firefox-clean
-(declare-function macos-open-in-finder "macos")
-(declare-function macos-run-keyboard-maestro-script "macos")
-(defun files-extras-download-bypass-paywalls-chrome ()
-  "Download and install `Bypass Paywalls Chrome Clean'.
-After running the command, both the Chrome extensions page and
-the `bypass-paywalls-chrome-clean-master' folder will open.
-To install the extension, drag the latter onto the former."
-  (interactive)
-  (let* ((url "https://github.com/bpc-clone/bpc_updates/releases/download/latest/bypass-paywalls-chrome-clean-master.zip")
-	 (file (file-name-concat paths-dir-downloads "bypass-paywalls.zip"))
-	 (dir (file-name-concat paths-dir-downloads "bypass-paywalls-chrome-clean-master")))
-    (unless (url-file-exists-p url)
-      (user-error "URL `%s' does not exist" url))
-    (url-copy-file url file)
-    (shell-command (format "unzip %s -d %s" file paths-dir-downloads))
-    (delete-file file)
-    ;; open Chrome extensions page
-    (macos-run-keyboard-maestro-script "89243CDA-4876-45C8-9AF2-3666664A0EAA")
-    (macos-open-in-finder dir)))
 
 ;; Copied from emacs.stackexchange.com/a/24461/32089
 (defun files-extras-revert-all-file-buffers ()
@@ -503,7 +489,52 @@ current helpful buffer displays, then kill the buffer."
 			     (dir-adjusted (file-name-directory file-adjusted)))
 			(when (f-dir-p dir-adjusted)
 			  (throw 'found dir-adjusted)))))))
-    (replace-regexp-in-string ".git" "" (file-name-concat dir filename))))
+    (replace-regexp-in-string ".git/" "" (file-name-concat dir filename))))
+
+(defun files-extras-get-nth-directory (path &optional n)
+  "Get the Nth directory in the PATH.
+If N is nil, default to 0 (the first directory)."
+  (let* ((path-components (split-string (directory-file-name path) "/")))
+    (file-name-as-directory (nth (or n 0) path-components))))
+
+;;;;; Bypass paywalls
+
+(defvar macos-keyboard-maestro-open-chrome-extensions)
+(defvar macos-keyboard-maestro-open-firefox-extensions)
+(declare-function macos-open-in-finder "macos")
+(declare-function macos-run-keyboard-maestro-script "macos")
+(defun files-extras-download-bypass-paywalls-chrome ()
+  "Download and install Bypass Paywalls Chrome Clean.
+After running the command, both the extensions page and the local folder will
+open. To install the extension, drag the latter onto the former."
+  (interactive)
+  (let* ((url file-extras-bypass-paywalls-chrome-repo)
+	 (filename (file-name-nondirectory url))
+	 (base (file-name-base filename))
+	 (file (file-name-concat paths-dir-downloads filename))
+	 (dir (file-name-concat paths-dir-downloads base))
+	 (dir-in-dir (file-name-concat dir (file-name-as-directory base))))
+    (unless (url-file-exists-p url)
+      (user-error "URL `%s' does not exist" url))
+    (url-copy-file url file)
+    (dired-compress-file file)
+    (delete-file file)
+    (macos-run-keyboard-maestro-script macos-keyboard-maestro-open-chrome-extensions)
+    (macos-open-in-finder dir-in-dir)))
+
+(defun files-extras-download-bypass-paywalls-firefox ()
+  "Download and install Bypass Paywalls Firefox Clean.
+After running the command, both the Firefox extensions page and
+the `bypass-paywalls-firefox-clean-master' folder will open.
+To install the extension, drag the latter onto the former."
+  (interactive)
+  (let* ((url file-extras-bypass-paywalls-firefox-xpi)
+	 (file (file-name-concat paths-dir-downloads (file-name-nondirectory url))))
+    (unless (url-file-exists-p url)
+      (user-error "URL `%s' does not exist" url))
+    (url-copy-file url file)
+    (macos-run-keyboard-maestro-script macos-keyboard-maestro-open-firefox-extensions)
+    (macos-open-in-finder file)))
 
 ;;;;; List <> lines
 

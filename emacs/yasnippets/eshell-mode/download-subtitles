@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: download-subtitles
+# key: dw
+# contributor: Pablo Stafforini
+# --
+yt-dlp --skip-download --write-auto-subs $1

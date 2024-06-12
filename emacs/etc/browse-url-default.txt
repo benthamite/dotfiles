@@ -19,6 +19,7 @@ calendar.google.com
 calendly.com
 cheerfy.com
 cleverlayover.com
+colorizer.org
 connectedpapers.com
 correos.es
 correosaduanas.es
@@ -48,6 +49,7 @@ grammarly.com
 hathitrust.org
 heinonline.org
 holafly.com
+hsluv.org
 igmchicago.org
 imdb.com
 imgur.com
@@ -86,6 +88,7 @@ perplexity.ai
 pref.docusign.com
 qualtrics.com
 quora.com
+reddit.com
 rescuetime.com
 savvycal.com
 shademap.app
@@ -93,6 +96,7 @@ skyscanner.com
 skyscanner.net
 slack.com
 soundcloud.com
+spopessentials1.com
 squarespace.com
 stafforini.com
 stripe.com

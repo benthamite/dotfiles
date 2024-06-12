@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: tlon-tag-attribute
+# key: tta
+# contributor: Pablo Stafforini
+# --
+(:name "$1" :required $2 :valued $3 :group $4 :prompt "$5: ")

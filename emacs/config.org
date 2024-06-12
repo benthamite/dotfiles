@@ -7005,6 +7005,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 (use-feature edebug
   :demand t
   :config
+  (setq edebug-sit-on-break nil)
   ;; do not truncate print results
   (setq print-level nil)
   (setq print-length nil)

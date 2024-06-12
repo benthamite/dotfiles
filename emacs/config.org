@@ -3987,7 +3987,11 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
               :around (lambda ()
                         "Ignore remote files."
                         (unless (file-remote-p default-directory 'no-identification)
-                          (apply orig-fun args)))))
+                          (apply orig-fun args))))
+
+  (add-to-list 'tramp-connection-properties
+               (list (regexp-quote "/ssh:fede@tlon.team:")
+                     "direct-async-process" t)))
 #+end_src
 
 ** pandoc-mode

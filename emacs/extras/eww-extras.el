@@ -55,6 +55,17 @@ directory, the URL, and the output file.")
 (defvar eww-extras-annas-archive-bibtex-key nil
   "BibTeX key of the book being downloaded.")
 
+(defconst eww-extras-annas-archive-auth-url
+  "https://annas-archive.org/account/"
+  "URL to authenticate with Anna’s Archive.")
+
+;;;;; Subtitles
+
+(defconst eww-extras-download-subtitles
+  "yt-dlp --skip-download --write-subs '%s' -o '%s'"
+  "Command to download subtitles from a URL in `srt' format.
+The placeholders are replaced by the URL and the output file.")
+
 ;;;; User options
 
 (defgroup eww-extras ()
@@ -73,13 +84,13 @@ directory, the URL, and the output file.")
   :group 'eww-extras)
 
 (defcustom eww-extras-chrome-data-dir
-  (expand-file-name "~/Library/Application Support/Google/Chrome")
+  (expand-file-name "~/Library/Application Support/Google/Chrome/")
   "The directory where Chrome data is stored."
   :type 'directory
   :group 'eww-extras)
 
 (defcustom eww-extras-chrome-data-dir-copy
-  (expand-file-name "~/Google Drive/Apps/Chrome")
+  (expand-file-name "~/.chrome-data/")
   "A copy of the directory where Chrome data is stored.
 A headless Chrome session will fail to authenticate if Chrome is running,
 because the database will be locked. So we make a copy of the relevant
@@ -151,7 +162,7 @@ updates should be fast."
   (when (y-or-n-p "Make sure you closed all instances of Chrome and ensured that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories. Also, if you are running this command for the first time—i.e. if there is currently no copy of the Chrome data directory in your system—note that Emacs will become unresponsive for a few minutes. Proceed? ")
     (shell-command (format eww-extras-rsync-command
 			   eww-extras-chrome-data-dir
-			   (file-name-directory eww-extras-chrome-data-dir-copy)))))
+			   eww-extras-chrome-data-dir-copy))))
 
 (defun eww-extras-url-to-html (&optional url callback)
   "Generate HTML of URL, then run CALLBACK function."
@@ -304,6 +315,19 @@ If PLAYER is nil, default to `mpv'."
   (when (derived-mode-p 'eww-mode)
     (zotra-extras-add-entry (plist-get eww-data :url))))
 
+(defun eww-extras-browse-file (&optional file)
+  "Browse File in `eww'.
+If FILE is nil, use the file at point, the file visited by the current buffer,
+or prompt the user for a file."
+  (interactive)
+  (let ((file (or file
+		  (thing-at-point 'filename)
+		  (buffer-file-name)
+		  (read-file-name "File: " nil nil t))))
+    (if (file-exists-p file)
+	(eww-open-file file)
+      (user-error "No file found at point"))))
+
 ;; TODO: move the section below to separate package, like I did with `scihub'
 ;;;;;; Get buffer elements
 
@@ -365,10 +389,12 @@ eww!)"
       (dolist (cons (eww-extras-collect-links-in-buffer))
 	(when (string-match-p "\\.pdf" (car cons))
 	  (push cons links)))
-      (let* ((selection (completing-read "Select a link: " links nil t))
-	     (url (alist-get selection links nil nil 'string=)))
-	(add-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
-	(eww url)))))
+      (if links
+	  (let* ((selection (completing-read "Select a link: " links nil t))
+		 (url (alist-get selection links nil nil 'string=)))
+	    (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
+	    (eww url))
+	(message "No results found.")))))
 
 (defun eww-extras-annas-archive-proceed-to-download-page ()
   "Proceed to the Annas Archive download page."
@@ -378,11 +404,12 @@ eww!)"
       (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-download-file)
       (eww url))))
 
+(defvar ebib-extras-attach-file-key)
 (defun eww-extras-annas-archive-download-file ()
   "Download the file from the Annas Archive download page."
   (remove-hook 'eww-after-render-hook 'eww-extras-annas-archive-download-file)
-  (let* ((bibtex-key eww-extras-annas-archive-bibtex-key)
-	 (url (eww-extras-get-url-in-link "Download now"))
+  (let* ((bibtex-key ebib-extras-attach-file-key)
+	 (url (eww-extras-annas-archive-get-download-url))
 	 (raw-file (file-name-nondirectory url))
 	 (sans-extension (file-name-sans-extension raw-file))
 	 (extension (file-name-extension raw-file))
@@ -405,6 +432,39 @@ eww!)"
 				    (t
 				     (message "Unexpected process event: %s" event))))))
     (message "Downloading `%s'..." filename)))
+
+(defun eww-extras-annas-archive-get-download-url ()
+  "Get the download URL from the Annas Archive download page."
+  (or (eww-extras-get-url-in-link "Download now")
+      (let ((generic-error "Could not find download link")
+	    (quota-exceeded "You’ve run out of fast downloads today"))
+	(goto-char (point-min))
+	(user-error (cond ((re-search-forward quota-exceeded nil t)
+			   quota-exceeded)
+			  (t generic-error))))))
+
+;;;;;;; Authentication
+
+(defun eww-extras-annas-archive-authenticate ()
+  "Authenticate with Anna’s Archive."
+  (interactive)
+  (save-window-excursion
+    (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-get-authentication-details)
+    (eww eww-extras-annas-archive-auth-url)))
+
+(defun eww-extras-annas-archive-get-authentication-details ()
+  "Return user authentication details from Anna’s Archive."
+  (remove-hook 'eww-after-render-hook #'eww-extras-annas-archive-get-authentication-details)
+  (let (id key)
+    (goto-char (point-min))
+    (re-search-forward "Account ID: \\(.*\\)" nil t)
+    (setq id (match-string 1))
+    (re-search-forward "Secret key (don’t share!): show\\(.*\\)" nil t)
+    (setq key (match-string 1))
+    (if (and id key)
+	(message "You are authenticated.\nAccount ID: %s\nSecret key: %s" id key)
+      (eww eww-extras-annas-archive-auth-url)
+      (message "You don't seem to be authenticated. Please enter your key in the `eww' buffer."))))
 
 (provide 'eww-extras)
 

@@ -63,13 +63,13 @@
   "Highlight parentheses in the current buffer."
   (modus-themes-with-colors
     (setq highlight-parentheses-background-colors (list bg-cyan-intense
-                                                        bg-magenta-intense
-                                                        bg-green-intense
-                                                        bg-yellow-intense)
-          highlight-parentheses-colors (list cyan
-                                             magenta
-                                             green
-                                             yellow))))
+							bg-magenta-intense
+							bg-green-intense
+							bg-yellow-intense)
+	  highlight-parentheses-colors (list cyan
+					     magenta
+					     green
+					     yellow))))
 
 (defun modus-themes-extras-set-faces ()
   "Set extra faces for the `modus' themes."
@@ -79,4 +79,3 @@
 
 (provide 'modus-themes-extras)
 ;;; modus-themes-extras.el ends here
-

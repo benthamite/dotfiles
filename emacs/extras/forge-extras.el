@@ -88,7 +88,8 @@ tab."
 Do not update if `elfeed' is in the process of being updated, since this causes
 problems."
   (unless (bound-and-true-p elfeed-extras-auto-update-in-process)
-    (forge-pull-notifications)))
+    (shut-up
+      (forge-pull-notifications))))
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

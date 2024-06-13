@@ -864,5 +864,14 @@ take a single argument, the name of the function being called."
   (cond ((boundp 'mac-effective-appearance-change-hook) 'emacs-mac)
 	((boundp 'ns-system-appearance-change-functions) 'emacs-plus)))
 
+(defun simple-extras-string-at-point ()
+  "Return the quote-delimited string at point."
+  (save-excursion
+    (let ((beg (progn (skip-syntax-backward "^\"" (line-beginning-position))
+                      (point)))
+          (end (progn (skip-syntax-forward "^\"" (line-end-position))
+                      (point))))
+      (buffer-substring-no-properties beg end))))
+
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: tlon-tag-spec
+# key: tts
+# contributor: Pablo Stafforini
+# --
+(:tag "$1"
+	  :type mdx
+	  :self-closing nil
+	  :pattern ,tlon-mdx-$2-pattern
+	  :doc "$3")

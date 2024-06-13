@@ -153,6 +153,11 @@
   )
 #+end_src
 
+** org-agenda
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(setq org-agenda-files (list paths-file-tlon-tareas-leo))
+#+end_src
+
 ** org-extras
 :PROPERTIES:
 :ID:       A33C8C23-C628-4BBC-858F-EBCCE5FB9AC8

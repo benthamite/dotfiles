@@ -179,7 +179,8 @@ called with a prefix argument, configure it globally."
 		  gptel-backend backend))))
 
 (defun gptel-extras-get-cost ()
-  "Get the cost of prompting the current model."
+  "Get the cost of prompting the current model.
+This is used to display the relevant information in the modeline (see `doom-modeline-extras')."
   (let* ((cost-per-1m (tlon-lookup gptel-extras-ai-models :cost :model gptel-model))
 	 (words (if (region-active-p)
 		    (count-words (region-beginning) (region-end))
@@ -199,17 +200,25 @@ called with a prefix argument, configure it globally."
 
 (advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)
 
-(defun gptel-extras-save-buffer (name)
-  "Save the `gptel' buffer NAME to a file in the appropriate directory.
-The `gptel' directory is set by `gptel-extras-dir'."
-  (interactive (list (read-string "Name: ")))
+(defun gptel-extras-save-buffer (name _ _ _)
+  "Save the `gptel' buffer with NAME right after it is created.
+The buffer is save to a file in `gptel-extras-dir'.
+
+This function is meant to be an `:after' advice to `gptel-extras-save-buffer'."
+  (switch-to-buffer name)
   (let* ((extension (pcase major-mode
 		      ('org-mode "org")
 		      ('markdown-mode "md")
 		      (_ (user-error "Unsupported major mode"))))
 	 (filename (file-name-concat gptel-extras-dir
 				     (file-name-with-extension (simple-extras-slugify name) extension))))
-    (write-file filename)))
+    ;; we temporarily remove the hook because `gptel--save-state' throws an
+    ;; error if called at this early stage
+    (remove-hook 'before-save-hook #'gptel--save-state t)
+    (write-file filename 'confirm)
+    (add-hook 'before-save-hook #'gptel--save-state nil t)))
+
+(advice-add 'gptel :after #'gptel-extras-save-buffer)
 
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

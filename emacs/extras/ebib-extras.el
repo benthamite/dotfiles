@@ -35,9 +35,20 @@
 (require 'simple-extras)
 (require 'shut-up)
 
+;;;; User options
+
+(defgroup ebib-extras ()
+  "Extensions for `ebib'."
+  :group 'ebib-extras)
+
+(defcustom ebib-extras-download-use-vpn nil
+  "Whether to use a VPN when downloading content."
+  :type 'boolean
+  :group 'ebib-extras)
+
 ;;;; Variables
 
-(defvar ebib-extras-sort-states
+(defconst ebib-extras-sort-states
   '(Timestamp Author Title)
   "List of states for sorting the Ebib index buffer.")
 
@@ -76,7 +87,7 @@
     (default
      (beep))))
 
-(defvar ebib-extras-isbn-p
+(defconst ebib-extras-isbn-p
   "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)")
 
 (defun ebib-extras-isbn-p (string)
@@ -109,6 +120,12 @@
 (declare-function bibtex-extras-append-to-field "bibex-extras")
 (defun ebib-extras--update-file-field-contents (key file-name)
   "Update contents of FILE-NAME in field `file' for entry KEY."
+  (unless (derived-mode-p 'ebib-entry-mode 'bibtex-mode)
+    (ebib-extras-open-key key))
+  ;; FIXME: this is not the right condition: the user may be viewing *another*
+  ;; entry, in which case the file will be attached to the wrong entry. So may
+  ;; we should always call `(ebib-extras-open-key key)' unless `key' matches the
+  ;; current entry’s?
   (let* ((get-field (pcase major-mode
 		      ('ebib-entry-mode #'ebib-extras-get-field)
 		      ('bibtex-mode #'bibtex-extras-get-field)))
@@ -129,7 +146,7 @@
 	(ebib--redisplay-index-item field)
 	(ebib-save-current-database t)))))
 
-(defvar ebib-extras-book-like-entry-types
+(defconst ebib-extras-book-like-entry-types
   (let ((lowercase '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook")))
     (append lowercase (mapcar (lambda (entry)
 				(concat (upcase (substring entry 0 1))
@@ -138,7 +155,7 @@
   "Entry types for books and book-like entities.
 The entry types are included in both lowercase and sentence case.")
 
-(defvar ebib-extras-article-like-entry-types
+(defconst ebib-extras-article-like-entry-types
   (let ((lowercase '("article")))
     (append lowercase (mapcar (lambda (entry)
 				(concat (upcase (substring entry 0 1))
@@ -147,7 +164,11 @@ The entry types are included in both lowercase and sentence case.")
   "Entry types for articles and article-like entities.
 The entry types are included in both lowercase and sentence case.")
 
-(defvar ebib-extras-film-like-entry-types
+(defconst ebib-extras-video-websites
+  '("youtube\\.com" "youtu\\.be")
+  "List of video websites.")
+
+(defconst ebib-extras-film-like-entry-types
   (let ((lowercase '("movie" "video" "tvepisode")))
     (append lowercase (mapcar (lambda (entry)
 				(concat (upcase (substring entry 0 1))
@@ -204,6 +225,16 @@ exists."
   (interactive)
   (ebib-extras-open-file "md"))
 
+(defun ebib-extras-open-srt-file ()
+  "Open `srt' file in entry at point, if it (uniquely) exists."
+  (interactive)
+  (ebib-extras-open-file "srt"))
+
+(defun ebib-extras-open-vtt-file ()
+  "Open `vtt' file in entry at point, if it (uniquely) exists."
+  (interactive)
+  (ebib-extras-open-file "vtt"))
+
 (defun ebib-extras-open-pdf-file-externally ()
   "Open `pdf' file in entry at point externally, if it (uniquely) exists."
   (interactive)
@@ -234,8 +265,8 @@ exists."
   (interactive)
   (ebib-extras-open-file-externally "html"))
 
-(defvar ebib-extras-valid-file-extensions
-  '("pdf" "html" "webm" "flac" "mp3" "md")
+(defconst ebib-extras-valid-file-extensions
+  '("pdf" "html" "webm" "flac" "mp3" "md" "srt" "vtt")
   "List of valid file extensions for `ebib-extras-open-file-dwim'.")
 
 (defun ebib-extras-open-file-dwim ()
@@ -322,9 +353,7 @@ If EXTENSION is non-nil, set its extension to its value."
 	 paths-dir-pdf-library)
 	((string= extension "html")
 	 paths-dir-html-library)
-	((or (string= extension "webm")
-	     (string= extension "mp3")
-	     (string= extension "flac"))
+	((member extension ebib-extras-valid-file-extensions)
 	 paths-dir-media-library)
 	(t
 	 (user-error "Invalid file extension"))))
@@ -359,9 +388,10 @@ current entry or, if not available, the key stored in
 `ebib-extras-attach-file-key'. If OPEN is non-nil, open the file."
   (interactive)
   (let ((key (or key
-		 (funcall (pcase major-mode
-			    ('ebib-entry-mode #'ebib--get-key-at-point)
-			    ('bibtex-mode #'bibtex-extras-get-key)))
+		 (when-let ((fun (pcase major-mode
+				   ('ebib-entry-mode #'ebib--get-key-at-point)
+				   ('bibtex-mode #'bibtex-extras-get-key))))
+		   (funcall fun))
 		 ebib-extras-attach-file-key)))
     (setq ebib-extras-attach-file-key nil)
     (ebib-extras-check-valid-key key)
@@ -400,7 +430,6 @@ current entry or, if not available, the key stored in
 	(ebib-extras--update-file-field-contents key file-name))
       (when (string= (file-name-extension file-name) "pdf")
 	(ebib-extras-set-pdf-metadata)
-	;; open the pdf to make sure it displays the web page correctly
 	(ebib-extras-ocr-pdf)
 	(when open
 	  (ebib-extras-open-pdf-file))))))
@@ -413,22 +442,31 @@ current entry or, if not available, the key stored in
 (declare-function eww-extras-url-to-file "eww-extras")
 (defun ebib-extras-url-to-file-attach (type)
   "Generate a file  of TYPE for the URL of the entry at point and attach it.
-TYPE can be \"pdf\" or \"html\"."
+TYPE can be \"pdf\", \"html\" or \"srt\"."
   (when (ebib-extras-get-field "url")
     (eww-extras-url-to-file type nil #'ebib-extras-attach-file-to-entry)))
 
 (defun ebib-extras-url-to-pdf-attach ()
-  "Generate PDF of URL."
+  "Generate PDF of URL and attach it to the entry at point."
   (interactive)
   (ebib-extras-url-to-file-attach "pdf"))
 
 (defun ebib-extras-url-to-html-attach ()
-  "Generate HTML of URL."
+  "Generate HTML of URL and attach it to the entry at point."
   (interactive)
   (ebib-extras-url-to-file-attach "html"))
 
-(defvar eww-extras-annas-archive-callback)
-(defvar eww-extras-annas-archive-bibtex-key)
+(defvar eww-extras-download-subtitles)
+(defun ebib-extras-url-to-srt-attach ()
+  "Generate SRT of URL and attach it to the entry at point."
+  (interactive)
+  (when-let ((url (ebib-extras-get-field "url"))
+	     (title (ebib-extras-get-field "title"))
+	     (file (file-name-concat paths-dir-downloads (simple-extras-slugify title))))
+    (message "Downloading subtitles for `%s'..." url)
+    (shell-command-to-string (format eww-extras-download-subtitles url file))
+    (ebib-extras-attach-file 'most-recent)))
+
 (defun ebib-extras-book-attach ()
   "Get a PDF of the book-type entry at point and attach it to it."
   (interactive)
@@ -466,12 +504,17 @@ TYPE can be \"pdf\" or \"html\"."
     (cond (doi (ebib-extras-doi-attach))
 	  ((or isbn (member type ebib-extras-book-like-entry-types))
 	   (ebib-extras-book-attach))
-	  (url (ebib-extras-url-to-pdf-attach)
-	       (ebib-extras-url-to-html-attach)))))
+	  ((and url (cl-some (lambda (regexp)
+			       (string-match regexp url))
+			     ebib-extras-video-websites))
+	   (ebib-extras-url-to-srt-attach))
+	  ((and url (not (member type ebib-extras-film-like-entry-types)))
+	   (ebib-extras-url-to-pdf-attach)
+	   (ebib-extras-url-to-html-attach)))))
 
 ;;;;; ?
 
-(defvar ebib-extras-iso-639-2
+(defconst ebib-extras-iso-639-2
   '(("english" . "eng")
     ("american" . "eng")
     ("french" . "fra")
@@ -518,89 +561,86 @@ even if already present."
 	       (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english")))
     (funcall get-lang)))
 
-(defvar ebib-extras-download-use-vpn nil
-  "Whether to use a VPN when downloading content.")
-
-(defvar ebib-extras-library-genesis
+(defconst ebib-extras-library-genesis
   '("Library Genesis"
     "https://libgen.li/index.php?req=%s" "&columns%5B%5D=t&columns%5B%5D=a&columns%5B%5D=s&columns%5B%5D=y&columns%5B%5D=p&columns%5B%5D=i&objects%5B%5D=f&objects%5B%5D=e&objects%5B%5D=s&objects%5B%5D=a&objects%5B%5D=p&objects%5B%5D=w&topics%5B%5D=l&res=25&filesuns=all"))
 
-(defvar ebib-extras-amazon
+(defconst ebib-extras-amazon
   '("Amazon"
     "https://smile.amazon.com/s?k="
     "&i=stripbooks"))
 
-(defvar ebib-extras-worldcat
+(defconst ebib-extras-worldcat
   '("Worldcat"
     "https://www.worldcat.org/search?q="
     "&itemType=book&limit=50&offset=1"))
 
-(defvar ebib-extras-internet-archive
+(defconst ebib-extras-internet-archive
   '("Internet Archive"
     "https://archive.org/search.php?query="
     ""))
 
-(defvar ebib-extras-university-of-toronto
+(defconst ebib-extras-university-of-toronto
   '("University of Toronto"
     "https://librarysearch.library.utoronto.ca/discovery/search?query=any,contains,"
     "&tab=Everything&search_scope=UTL_AND_CI&vid=01UTORONTO_INST:UTORONTO&offset=0"))
 
-(defvar ebib-extras-university-of-california-berkeley
+(defconst ebib-extras-university-of-california-berkeley
   '("University of California, Berkeley"
     "https://search.library.berkeley.edu/discovery/search?query=any,contains,"
     "&tab=Default_UCLibrarySearch&search_scope=DN_and_CI&vid=01UCS_BER:UCB&offset=0"))
 
-(defvar ebib-extras-hathitrust
+(defconst ebib-extras-hathitrust
   '("HathiTrust"
     "https://babel.hathitrust.org/cgi/ls?q1="
     "&field1=ocr;a=srchls;lmt=ft;sz=100"))
 
-(defvar ebib-extras-connected-papers
+(defconst ebib-extras-connected-papers
   '("Connected Papers"
     "https://www.connectedpapers.com/search?q="
     ""))
 
-(defvar ebib-extras-google-scholar
+(defconst ebib-extras-google-scholar
   '("Google Scholar"
     "https://scholar.google.com/scholar?q="
     ""))
 
-(defvar ebib-extras-wikipedia
+(defconst ebib-extras-wikipedia
   '("Google Scholar"
     "http://en.wikipedia.org/w/index.php?title=Special%3ASearch&profile=default&search="
     "&fulltext=Search"))
 
-(defvar ebib-extras-goodreads
+(defconst ebib-extras-goodreads
   '("Goodreads"
     "https://www.goodreads.com/search?q="
     ""))
 
-(defvar ebib-extras-audible
+(defconst ebib-extras-audible
   '("Audible"
     "https://www.audible.com/search?keywords="
     ""))
 
-(defvar ebib-extras-audiobookbay
+(defconst ebib-extras-audiobookbay
   '("Audiobook Bay"
     "https://theaudiobookbay.se/?s="
     "&tt=1"))
 
-(defvar ebib-extras-imdb
+(defconst ebib-extras-imdb
   '("IMDB"
     "https://www.imdb.com/find/?q="
     ""))
 
-(defvar ebib-extras-letterboxd
+(defconst ebib-extras-letterboxd
   '("Letterboxd"
     "https://letterboxd.com/search/films/"
     ""))
 
-(defvar ebib-extras-metacritic
+(defconst ebib-extras-metacritic
   '("Metacritic"
     "https://www.metacritic.com/search/all/"
     "/results"))
 
-(defvar ebib-extras-search-book-functions
+(defconst ebib-extras-search-book-functions
   '(ebib-extras-search-goodreads
     ebib-extras-search-hathitrust
     ebib-extras-search-university-of-california-berkeley
@@ -609,7 +649,7 @@ even if already present."
     ebib-extras-search-amazon)
   "List of functions that search for books.")
 
-(defvar ebib-extras-download-book-functions
+(defconst ebib-extras-download-book-functions
   '(ebib-extras-search-goodreads
     ebib-extras-search-hathitrust
     ebib-extras-search-university-of-california-berkeley
@@ -621,26 +661,26 @@ even if already present."
     )
   "List of functions that download books.")
 
-(defvar ebib-extras-search-article-functions
+(defconst ebib-extras-search-article-functions
   '(ebib-extras-search-connected-papers
     ebib-extras-search-google-scholar)
   "List of functions that search for articles.")
 
-(defvar ebib-extras-download-article-functions
+(defconst ebib-extras-download-article-functions
   '(ebib-extras-search-article-functions)
   "List of functions that download articles.")
 
-(defvar ebib-extras-search-film-functions
+(defconst ebib-extras-search-film-functions
   '(ebib-extras-search-imdb
     ebib-extras-search-letterboxd
     ebib-extras-search-metacritic)
   "List of functions that search for films.")
 
-(defvar ebib-extras-download-film-functions
+(defconst ebib-extras-download-film-functions
   ebib-extras-search-film-functions
   "List of functions that search for films.")
 
-(defvar ebib-extras-search-engines '()
+(defconst ebib-extras-search-engines '()
   "List of search engine symbols.
 Used by the `ebib-extras-generate-search-commands' macro.")
 
@@ -947,6 +987,9 @@ If called interactively, open the entry. Otherwise, return it as a string."
       (bibtex-search-entry key)
       (unless (called-interactively-p 'any) (bibtex-extras-get-entry-as-string)))))
 
+;; FIXME: this is not returning some existing keys (e.g.
+;; "Butchvarov1989SkepticismEthics", "Bundy1990DangerAndSurvival")
+;; maybe use `ebib-extras-get-or-open-entry' instead
 (defun ebib-extras-get-file-of-key (key)
   "Return the bibliographic file in which the entry with KEY is found."
   (unless ebib--databases
@@ -1037,7 +1080,7 @@ is created following the same schema as notes created with
      (beep))))
 
 (defvar tlon-file-fluid)
-(defvar ebib-extras-auto-save-files
+(defconst ebib-extras-auto-save-files
   `(,paths-file-personal-bibliography-new
     ,tlon-file-fluid)
   "List of database files that should be auto-saved.
@@ -1070,7 +1113,7 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 	   (ebib-extras-reload-database-no-confirm db)))))))
 
 (defvar tlon-file-stable)
-(defvar ebib-extras-db-numbers
+(defconst ebib-extras-db-numbers
   `((,paths-file-personal-bibliography-new . 1)
     (,paths-file-personal-bibliography-old . 2)
     (,tlon-file-fluid . 3)

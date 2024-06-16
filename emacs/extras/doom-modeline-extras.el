@@ -32,19 +32,20 @@
 
 ;;;; User options
 
-(defgroup gptel-extras ()
-  "Extensions for `gptel'."
-  :group 'gptel)
+(defgroup doom-modeline-extras ()
+  "Extensions for `doom-modeline'."
+  :group 'doom-modeline)
 
 (defcustom doom-modeline-extras-gptel t
   "Whether to display the `gptel' model in the modeline."
   :type 'boolean
-  :group 'gptel-extras)
+  :group 'doom-modeline)
 
 (defcustom doom-modeline-extras-gptel-cost t
   "Whether to display the `gptel' model cost in the modeline."
   :type 'boolean
-  :group 'gptel-extras)
+  :group 'doom-modeline)
+
 
 ;;;; Functions
 

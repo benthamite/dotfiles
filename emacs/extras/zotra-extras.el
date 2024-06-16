@@ -117,6 +117,7 @@ to get the entry.
   (zotra-extras-fix-octal-sequences)
   (bibtex-clean-entry)
   (org-ref-clean-bibtex-entry)
+  (tlon-cleanup-eaf-replace-urls)
   (setq zotra-extras-most-recent-bibkey (bibtex-extras-get-key)))
 
 (defun zotra-extras-fix-octal-sequences ()

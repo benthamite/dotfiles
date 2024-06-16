@@ -2128,7 +2128,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
     ;; to nil.
     (doom-modeline-def-modeline 'custom
       '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
-      '(gptel gptel-cost compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
+      '(tlon-split gptel gptel-cost compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
     (doom-modeline-set-modeline 'custom t))
 
   (doom-modeline-mode))

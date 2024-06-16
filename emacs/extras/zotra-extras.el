@@ -107,6 +107,7 @@ to get the entry.
 (declare-function bibtex-set-field "doi-utils")
 (declare-function bibtex-extras-convert-titleaddon-to-journaltitle "bibtex-extras")
 (declare-function bibtex-extras-get-key "bibtex-extras")
+(declare-function tlon-cleanup-eaf-replace-urls "tlon-cleanup")
 (defun zotra-extras-after-add-process-bibtex ()
   "Process newly added bibtex entry."
   ;; TODO: check that there are no unsaved changes in

@@ -361,8 +361,11 @@ If EXTENSION is non-nil, set its extension to its value."
 ;;;;; process entries
 
 (defun ebib-extras-process-entry ()
-  "Process the entry at point, setting its key, language, abstract and files.
-The function assumes that the fields `type', `author', `date' and `title' are
+  "Process the entry at point.
+Set the entry’s key and language; download and attach the relevant files; and
+generate an abstract if needed.
+
+The function requires the fields `type', `author', `date' and `title' to be
 correctly set."
   (interactive)
   (ebib-generate-autokey)

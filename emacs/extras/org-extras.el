@@ -994,6 +994,37 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
       (org-remove-file file)
       (throw 'nextfile t))))
 
+;; Comment out `org-cite--allowed-p' condition to allow invocation
+;; in any mode. Even if inserting a citation is not allowed, one may
+;; want to invoke the command to trigger contextual actions via
+;; `embark'.
+(el-patch-defun org-cite-insert (arg)
+  "Insert a citation at point.
+Insertion is done according to the processor set in `org-cite-insert-processor'.
+ARG is the prefix argument received when calling interactively the function."
+  (interactive "P")
+  (unless org-cite-insert-processor
+    (user-error "No processor set to insert citations"))
+  (org-cite-try-load-processor org-cite-insert-processor)
+  (let ((name org-cite-insert-processor))
+    (cond
+     ((not (org-cite-get-processor name))
+      (user-error "Unknown processor %S" name))
+     ((not (org-cite-processor-has-capability-p name 'insert))
+      (user-error "Processor %S cannot insert citations" name))
+     (t
+      (let ((context (org-element-context))
+            (insert (org-cite-processor-insert (org-cite-get-processor name))))
+        (cond
+         ((org-element-type-p context '(citation citation-reference))
+          (funcall insert context arg))
+         (el-patch-remove
+           ((org-cite--allowed-p context)
+            (funcall insert nil arg)))
+         (t
+          (el-patch-swap (user-error "Cannot insert a citation here")
+                         (funcall insert nil arg)))))))))
+
 ;;;; Footer
 
 (provide 'org-extras)

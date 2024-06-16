@@ -629,7 +629,7 @@ If PT is non-nil, start at that position instead of `point'."
   (unless (simple-extras-get-url-at-point)
     (user-error "No URL at point"))
   (let* ((url-original (simple-extras-get-url-at-point))
-	 (url-stripped (replace-regexp-in-string "\\(?:https?://\\)?\\(?:www.\\)?" "" url-original)))
+	 (url-stripped (simple-extras-simplify-url url-original)))
     (search-backward " ")
     (while (search-forward url-original nil t)
       (replace-match url-stripped nil t))

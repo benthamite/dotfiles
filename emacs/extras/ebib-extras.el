@@ -859,17 +859,6 @@ The list of film search functions is specified by
 ;; no film identifier; we just search for it
 (defalias 'ebib-extras-search-film-by-identifier 'ebib-extras-search-film-by-title)
 
-  ;;; download functions
-(defun ebib-extras-download-dwim ()
-  "Try to download the current entry based on the field at point.
-If field at point is `title', run a search with its value, else
-use identifier.
-
-The list of websites for the search query is defined by the
-variable `ebib-extras-download-book'"
-  (interactive)
-  (ebib-extras--search-or-download 'download))
-
 (defun ebib-extras-download-book (query)
   "Search for QUERY with the relevant book download functions.
 The list of book download functions is specified by

@@ -1521,7 +1521,7 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
            :host github
            :repo "alphapapa/magit-todos"
            :build (:not elpaca--check-version))
-  :disabled           
+  :disabled
   :after magit hl-todo
   :demand t
   :config
@@ -9631,7 +9631,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   :defer 1
   :config
   (setq bibtex-maintain-sorted-entries
-      '(bibtex-extras-entry-sorter bibtex-extras-lessp))
+        '(bibtex-extras-entry-sorter bibtex-extras-lessp))
 
   ;; Replace 'online' entry type
   (bibtex-extras-replace-element-by-name

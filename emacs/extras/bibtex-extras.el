@@ -328,7 +328,7 @@ sans its extension."
     (save-excursion
       (with-current-buffer (find-file-noselect bibtex-file)
 	(bibtex-search-entry key)
-	(ebib-extras-attach-file file)
+	(ebib-extras-attach-file file key)
 	(message "Attached `%s' to %s" file key)))))
 
 ;;;;; Patches

@@ -9769,10 +9769,10 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
                ("eprinttype" nil nil 5) ("archiveprefix" nil nil -5) ("urldate"))))
   :general
   (bibtex-mode-map
-  "s-a" 'bibtex-extras-set-field
-  "s-h" 'bibtex-extras-url-to-html-attach
+   "s-a" 'bibtex-extras-set-field
+   "s-d" 'bibtex-extras-url-to-pdf-attach
+   "s-h" 'bibtex-extras-url-to-html-attach
    "s-i" 'bibtex-extras-open-in-ebib
-   "s-p" 'bibtex-extras-url-to-pdf-attach
    "s-t" 'bibtex-extras-move-entry-to-tlon))
 #+end_src
 
@@ -10231,9 +10231,9 @@ The macro below generates the commands correctly. But attempting to define key b
    "z" 'ebib-extras-search-google-scholar
    "1" (lambda! (ebib-view-file-in-field 1))
    "2" (lambda! (ebib-view-file-in-field 2))
+   "s-d" 'ebib-extras-url-to-pdf-attach
    "s-k" 'ebib-extras-fetch-keywords
    "s-h" 'ebib-extras-url-to-html-attach
-   "s-p" 'ebib-extras-url-to-pdf-attach
    "s-r" 'ebib-extras-rename-files)
   (ebib-index-mode-map
    "A-C-s-<tab>" 'ebib-extras-end-of-index-buffer
@@ -11455,8 +11455,8 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
   ((js-mode html-mode-map mhtml-mode-map)
    "s-w" 'eww-extras-browse-file)
   ((eww-mode-map ebib-entry-mode-map ebib-index-mode-map)
-   "s-h" 'eww-extras-url-to-html
-   "s-p" 'eww-extras-url-to-pdf))
+   "s-d" 'eww-extras-url-to-pdf
+   "s-h" 'eww-extras-url-to-html))
 #+end_src
 
 ** prot-eww

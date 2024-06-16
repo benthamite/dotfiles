@@ -99,9 +99,10 @@ functionality in macOS."
 
 (defun files-extras-read-file (&optional file)
   "Read FILE, using various sources as initial input."
-  (read-file-name "File: " (or file
-			       (when (derived-mode-p 'dired-mode) (dired-get-filename))
-			       (buffer-file-name))))
+  (expand-file-name
+   (read-file-name "File: " (or file
+				(when (derived-mode-p 'dired-mode) (dired-get-filename))
+				(buffer-file-name)))))
 
 (defun files-extras-new-buffer-in-current-mode ()
   "Create a new buffer in the same major mode as the current buffer."

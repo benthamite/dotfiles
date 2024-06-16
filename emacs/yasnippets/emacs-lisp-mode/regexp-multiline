@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: regexp-multiline
+# key: 
+# contributor: Pablo Stafforini
+# --
+\\(?$$1:\\(.\\|\n\\)*?\\)

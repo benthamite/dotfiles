@@ -187,6 +187,7 @@ gracefully."
   (let ((urls (files-extras-lines-to-list file)))
     (ebib-save-all-databases)
     (dolist (url urls)
+      (message "Adding entry for %s..." url)
       (zotra-add-entry url nil tlon-file-fluid))
     (ebib tlon-file-fluid)
     (ebib-extras-sort 'Timestamp)))

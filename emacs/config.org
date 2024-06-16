@@ -10171,31 +10171,6 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
-*** TODO Tweak ebib film command so that it directly opens Letterboxd page with IMDb ID
-:PROPERTIES:
-:ID:       C1D156F5-A78E-4588-9888-1816044CAC05
-:END:
-
-*** TODO Ebib: make 'title' field single-line
-:PROPERTIES:
-:ID:       24813D4B-598A-4BCB-8488-281D16D7C56A
-:END:
-
-*** TODO Ebib: Add new websites to 'journal' field
-:PROPERTIES:
-:ID:       3CF3C58F-4EF5-42EF-92DA-5AA33C726DFA
-:END:
-
-*** TODO Decide how ebib should deal with multi-volume works
-:PROPERTIES:
-:ID:       33D8549E-7DD8-4E4B-A690-0E6D29A8CA60
-:END:
-
-*** TODO Decide exhaustive list of work types
-:PROPERTIES:
-:ID:       9837CC84-AE98-4749-A16B-86EF995D4531
-:END:
-
 *** TODO Modify my custom ebib formulas so that they use native uniquify
 :PROPERTIES:
 :ID:       BA7B5845-B148-43B6-BE50-C1CBF89478BB

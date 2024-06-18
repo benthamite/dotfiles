@@ -288,7 +288,9 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'gptel-extras
   (gptel-extras-model-config 'globally "ChatGPT" "gpt-4-0125-preview")
-  (setq gptel-extras-dir "/Users/fede/Dropbox/obsidian/gpt-4/"))
+  (setq gptel-extras-dir "/Users/fede/Dropbox/obsidian/gpt-4/")
+  ;; Remove auto save file when opening gptel
+  (advice-remove 'gptel #'gptel-extras-save-buffer))
 #+end_src
 
 ** cua-base

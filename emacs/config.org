@@ -1204,6 +1204,9 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 :ID:       80D05BB8-D440-417A-8D94-61F4EB79EA00
 :END:
 
+
+/[[https://github.com/zx2c4/password-store][password-store]] provides functions for working with pass, the standard Unix password manager./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package password-store
   :elpaca (password-store
@@ -1231,7 +1234,7 @@ CLOCK: [2021-04-11 Sun 12:14]--[2021-04-11 Sun 12:28] =>  0:14
 CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 :END:
 
-/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://en.wikipedia.org/wiki/Pass_(software)][pass]]./
+/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://en.wikipedia.org/wiki/Pass_(software)][pass]], the standard Unix password manager/
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pass

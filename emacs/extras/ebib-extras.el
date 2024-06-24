@@ -491,7 +491,7 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
 	  (pcase major-mode
 	    ('bibtex-mode (bibtex-extras-get-key))
 	    ((or 'ebib-entry-mode 'ebib-index-mode)
-	     (ebib-extras-get-field "=key="))))
+	     (ebib--get-key-at-point))))
     (eww-extras-annas-archive-download id 'confirm #'ebib-extras-attach-file)))
 
 (defun ebib-extras-doi-attach ()

@@ -62,9 +62,9 @@ directory, the URL, and the output file.")
 ;;;;; Subtitles
 
 (defconst eww-extras-download-subtitles
-  "yt-dlp --skip-download --write-subs '%s' -o '%s'"
+  "yt-dlp --skip-download --write-auto-subs '%s'"
   "Command to download subtitles from a URL in `srt' format.
-The placeholders are replaced by the URL and the output file.")
+The placeholders are replaced by the URL.")
 
 ;;;; User options
 

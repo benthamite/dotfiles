@@ -5112,7 +5112,9 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
    "d" 'consult-yasnippet-visit-snippet-file)
   ("C-;" 'embark-act
    "C-H-;" 'embark-act-all
-   "C-h B" 'embark-bindings))
+   "C-h B" 'embark-bindings)
+   (embark-general-map
+   "I" 'embark-insert))
 #+end_src
 
 ** consult

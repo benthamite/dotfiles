@@ -7378,7 +7378,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-make-gemini "Gemini"
     :stream t
     :key (auth-source-pass-get 'secret
-                               (concat "tlon/core/makersuite.google.com/" tlon-email-shared)))
+                               (concat "tlon/core/aistudio.google.com/" tlon-email-shared))
+    :models '("gemini-1.0-pro" "gemini-1.5-pro" "gemini-1.5-flash"))
 
   :general
   ("M-c" 'gptel-send

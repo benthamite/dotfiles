@@ -9881,10 +9881,11 @@ Having headings tagged with the type of work they are notes of allows me to quer
   :general
   ((citar-map citar-citation-map)
    "d" 'ebib-extras-download-dwim
-   "i" 'citar-extras-open-in-ebib
    "s" 'ebib-extras-search-dwim
    "t" 'citar-extras-move-entry-to-tlon
-   "b" 'citar-extras-goto-bibtex-entry))
+   "b" 'citar-extras-goto-bibtex-entry)
+  ((citar-map citar-citation-map embark-identifier-map)
+   "i" 'citar-extras-open-in-ebib))
 #+end_src
 
 ** citar-citeproc

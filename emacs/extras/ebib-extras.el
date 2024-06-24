@@ -199,6 +199,13 @@ A file will be returned if it uniquely exists."
 	 (ebib--split-files files))
 	nil))))
 
+(defun ebib-extras-get-text-file ()
+  "Return the first text file with a valid extension in the entry at point."
+  (catch 'tag
+    (dolist (extension ebib-extras-valid-text-file-extensions)
+      (when-let ((file (ebib-extras-get-file extension)))
+	(throw 'tag file)))))
+
 (defun ebib-extras-open-file (extension)
   "Open file with EXTENSION in entry at point.
 A file will be opened if it uniquely exists."
@@ -268,6 +275,10 @@ exists."
 (defconst ebib-extras-valid-file-extensions
   '("pdf" "html" "webm" "flac" "mp3" "md" "srt" "vtt")
   "List of valid file extensions for `ebib-extras-open-file-dwim'.")
+
+(defconst ebib-extras-valid-text-file-extensions
+  '("html" "pdf" "srt" "vtt")
+  "List of valid text file extensions.")
 
 (defun ebib-extras-open-file-dwim ()
   "Open file in entry at point.

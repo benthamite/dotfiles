@@ -2738,6 +2738,7 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
    "A-H-M-w" 'simple-extras-transpose-sentences-backward
    "A-H-M-z" 'simple-extras-transpose-lines-backward
    "A-M-f" 'simple-extras-fill-or-unfill-paragraph
+   "C-g" 'simple-extras-keyboard-quit-dwim
    "C-H-M-a" 'simple-extras-backward-zap-to-char
    "C-H-M-b" 'simple-extras-strip-thing-at-point
    "C-H-M-s-A-a" 'simple-extras-backward-copy-sexp
@@ -2750,6 +2751,8 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
    "C-H-M-s-A-v" 'simple-extras-copy-line
    "C-H-M-s-A-w" 'simple-extras-backward-copy-sentence
    "C-H-M-s-A-z" 'simple-extras-backward-copy-line
+   "C-v" 'simple-extras-paste-no-properties
+   "C-w" 'simple-extras-narrow-or-widen-dwim
    "H-A-v" 'simple-extras-yank-and-pop
    "H-c" 'simple-extras-smart-copy-region
    "H-M"  'simple-extras-exchange-point-and-mark
@@ -2757,10 +2760,8 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
    "H-x" 'simple-extras-smart-kill-region
    "M-A-i" 'simple-extras-visual-line-mode-enhanced
    "M-i" 'simple-extras-indent-dwim
-   "M-v" 'simple-extras-visible-mode-enhanced
-   "C-g" 'simple-extras-keyboard-quit-dwim
    "M-q" 'simple-extras-keyboard-quit-dwim
-   "C-w" 'simple-extras-narrow-or-widen-dwim)
+   "M-v" 'simple-extras-visible-mode-enhanced)
   (isearch-mode-map
    "C-w" 'simple-extras-narrow-or-widen-dwim))
 #+end_src

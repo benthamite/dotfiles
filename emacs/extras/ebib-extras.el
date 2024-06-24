@@ -512,22 +512,25 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
 
 (declare-function eww-extras-annas-archive-download "eww-extras")
 (defun ebib-extras-attach-files ()
-  "Attach files appropriate for the current entry type."
+  "Attach files appropriate for the current entry type.
+If file is already attached, set the abstract."
   (interactive)
   (let ((doi (ebib-extras-get-field "doi"))
 	(url (ebib-extras-get-field "url"))
 	(isbn (ebib-extras-get-field "isbn"))
 	(type (ebib-extras-get-field "=type=")))
-    (cond (doi (ebib-extras-doi-attach))
-	  ((or isbn (member type ebib-extras-book-like-entry-types))
-	   (ebib-extras-book-attach))
-	  ((and url (cl-some (lambda (regexp)
-			       (string-match regexp url))
-			     ebib-extras-video-websites))
-	   (ebib-extras-url-to-srt-attach))
-	  ((and url (not (member type ebib-extras-film-like-entry-types)))
-	   (ebib-extras-url-to-pdf-attach)
-	   (ebib-extras-url-to-html-attach)))))
+    (if (ebib-extras-get-field "file")
+	(ebib-extras-set-abstract)
+      (cond (doi (ebib-extras-doi-attach))
+	    ((or isbn (member type ebib-extras-book-like-entry-types))
+	     (ebib-extras-book-attach))
+	    ((and url (cl-some (lambda (regexp)
+				 (string-match regexp url))
+			       ebib-extras-video-websites))
+	     (ebib-extras-url-to-srt-attach))
+	    ((and url (string-match "online" type))
+	     (ebib-extras-url-to-pdf-attach)
+	     (ebib-extras-url-to-html-attach))))))
 
 ;;;;; ?
 

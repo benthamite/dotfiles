@@ -12046,7 +12046,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-web-tools-extras
-  :after org-web-tools-extras
+  :after org-web-tools
   :demand t)
 #+end_src
 

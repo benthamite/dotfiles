@@ -443,6 +443,7 @@ current entry or, if not available, the key stored in
 	(rename-file file-to-attach file-name t))
       (shut-up
 	(ebib-extras--update-file-field-contents key file-name))
+      (ebib-extras-set-abstract)
       (when (string= (file-name-extension file-name) "pdf")
 	(ebib-extras-set-pdf-metadata)
 	(ebib-extras-ocr-pdf)

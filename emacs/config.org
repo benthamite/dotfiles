@@ -6379,47 +6379,47 @@ To populate the database of historical prices:
              ;; I need to understand how the `--basis' flag works
              ("cost basis"
               "%(binary) -f %(ledger-file) --basis bal %(account) --strict")
-              ("account (unrounded)" "%(binary) --unround  -f %(ledger-file) reg %(account)")))
+             ("account (unrounded)" "%(binary) --unround  -f %(ledger-file) reg %(account)")))
     (add-to-list 'ledger-reports report))
 
   :general
   (ledger-mode-map
-   "M-p" nil
+   "A-C-s-f" 'ledger-navigate-next-xact-or-directive
+   "A-C-s-r" 'ledger-navigate-prev-xact-or-directive
+   "A-s-a" 'ledger-mode-extras-report-account
+   "A-s-b" 'ledger-mode-extras-decrease-date-by-one-day
+   "A-s-c" 'ledger-mode-extras-copy-transaction-at-point
+   "A-s-e" 'ledger-toggle-current-transaction
+   "A-s-f" 'ledger-mode-extras-increase-date-by-one-day
+   "A-s-p" 'mode-mode-extras-extras-report-net-worth-USD
+   "A-s-t" 'ledger-mode-extras-sort-region-or-buffer-reversed
+   "A-s-u" 'ledger-mode-extras-report-net-worth-USD
+   "A-s-w" 'ledger-mode-extras-report-net-worth
    "M-n" nil
-   "s-SPC" 'ledger-mode-extras-new-entry-below
+   "M-p" nil
    "s-=" 'ledger-reconcile
    "s-a" 'ledger-add-transaction
-   "M-s-a" 'ledger-mode-extras-report-account
    "s-b" 'ledger-post-edit-amount
-   "M-s-b" 'ledger-mode-extras-decrease-date-by-one-day
    "s-c" 'ledger-mode-extras-align-and-next
-   "M-s-c" 'ledger-mode-extras-copy-transaction-at-point
    "s-d" 'ledger-delete-current-transaction
    "s-e" 'mode-mode-extras-extras-sort-region-or-buffer-reversed
-   "M-s-e" 'ledger-toggle-current-transaction
    "s-f" 'ledger-occur
-   "M-s-f" 'ledger-mode-extras-increase-date-by-one-day
    "s-g" 'ledger-report-goto
    "s-i" 'ledger-insert-effective-date
-   "s-y" 'ledger-copy-transaction-at-point
    "s-k" 'ledger-report-quit
    "s-l" 'ledger-display-ledger-stats
    "s-o" 'ledger-report-edit-report
    "s-p" 'ledger-display-balance-at-point
-   "M-s-p" 'mode-mode-extras-extras-report-net-worth-USD
    "s-q" 'ledger-post-align-dwim
    "s-r" 'ledger-report
    "s-s" 'ledger-report-save
+   "s-SPC" 'ledger-mode-extras-new-entry-below
    "s-t" 'ledger-mode-extras-sort-region-or-buffer
-   "M-s-t" 'ledger-mode-extras-sort-region-or-buffer-reversed
    "s-u" 'ledger-schedule-upcoming
-   "M-s-u" 'ledger-mode-extras-report-net-worth-USD
    "s-v" 'ledger-copy-transaction-at-point
-   "M-s-w" 'ledger-mode-extras-report-net-worth
    "s-x" 'ledger-fully-complete-xact
-   "s-z" 'ledger-report-redo
-   "A-C-s-r" 'ledger-navigate-prev-xact-or-directive
-   "A-C-s-f" 'ledger-navigate-next-xact-or-directive)
+   "s-y" 'ledger-copy-transaction-at-point
+   "s-z" 'ledger-report-redo)
   (ledger-reconcile-mode-map
    "q" 'ledger-reconcile-quit))
 #+end_src

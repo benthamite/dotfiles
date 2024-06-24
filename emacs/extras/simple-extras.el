@@ -575,7 +575,6 @@ Has a preference for looking backward when not directly on a symbol.
 
 If PT is non-nil, start at that position instead of `point'."
   ;; Not at all perfect - point must be right in the name.
-  (require 'url-vars)
   (save-excursion
     (if pt (goto-char pt))
     (let (start url)

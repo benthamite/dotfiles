@@ -338,6 +338,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict-ng][goldendict-ng]]
   - [[#reverso][reverso]]
+  - [[#dictionary][dictionary]]
 - [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
@@ -6657,6 +6658,28 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
   :general
   ("H-Y" 'reverso))
 #+end_src
+
+** dictionary
+:PROPERTIES:
+:ID:       9D2123AF-FA64-465A-B7C1-6FCBFB786F02
+:END:
+
+/dictionary is a client for rfc2229 dictionary servers./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature dictionary
+  :config
+  (setq dictionary-server "dict.org")
+  (setq dictionary-use-single-buffer t))
+#+end_src
+
+
+*** TODO Set local server
+:PROPERTIES:
+:ID:       3C3B9F22-E8AF-4F94-8A7E-A613A47A765B
+:END:
+
+See ~dictionary-in-emacs.org~ in ~gptel~ notes directory.
 
 * docs
 :PROPERTIES:

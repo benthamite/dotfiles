@@ -1185,7 +1185,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
            :repo "telotortium/emacs-oauth2-auto"
            :protocol ssh)
   :config
-  (setq oauth2-auto-plstore-file (file-name-concat no-littering-var-directory "oauth2.plstore")))
+  (setq oauth2-auto-plstore (file-name-concat no-littering-var-directory "oauth2-auto.plist")))
 #+end_src
 
 ** password-store-otp

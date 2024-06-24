@@ -7364,7 +7364,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :elpaca (gptel
            :host github
            :repo "karthink/gptel")
- ; consider moving the email addresses to `paths'
+                                        ; consider moving the email addresses to `paths'
   :after pass tlon
   :defer 10
   :config

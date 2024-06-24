@@ -525,7 +525,7 @@ open. To install the extension, drag the latter onto the former."
     (url-copy-file url file)
     (dired-compress-file file)
     (delete-file file)
-    (macos-run-keyboard-maestro-script macos-keyboard-maestro-open-chrome-extensions)
+    (macos-run-keyboard-maestro-script "89243CDA-4876-45C8-9AF2-3666664A0EAA")
     (macos-open-in-finder dir-in-dir)))
 
 (defun files-extras-download-bypass-paywalls-firefox ()
@@ -539,7 +539,7 @@ To install the extension, drag the latter onto the former."
     (unless (url-file-exists-p url)
       (user-error "URL `%s' does not exist" url))
     (url-copy-file url file)
-    (macos-run-keyboard-maestro-script macos-keyboard-maestro-open-firefox-extensions)
+    (macos-run-keyboard-maestro-script "67A6BCE5-AB24-4696-AFCF-C135193158D7")
     (macos-open-in-finder file)))
 
 ;;;;; List <> lines

@@ -381,19 +381,20 @@ correctly set."
   (interactive)
   (ebib-generate-autokey)
   (ebib-extras-get-or-set-language)
-  (ebib-extras-attach-files)
-  (ebib-extras-set-abstract))
+  (ebib-extras-attach-files))
 
-;; TODO; create function
 (defun ebib-extras-set-abstract ()
   "Set abstract for entry at point.
 Try to fetch it with Zotero or ."
-  )
+  (interactive)
+  (unless (ebib-extras-get-field "abstract")
+    (tlon-get-abstract-with-or-without-ai)))
 
 ;;;;; attach downloads
 
 (declare-function files-extras-newest-file "files-extras")
 (declare-function bibtex-extras-get-key "bibex-extras")
+(declare-function tlon-get-abstract-with-or-without-ai "tlon-ai")
 (defun ebib-extras-attach-file (&optional file key open)
   "Attach a file to the entry with KEY.
 If FILE is a string, attach it. If FILE is a symbol, attach the most recent

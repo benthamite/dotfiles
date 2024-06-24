@@ -436,8 +436,6 @@ Transient Mark mode is on but the region is inactive."
        (not arg)
      arg)))
 
-(visible-mode 'toggle)
-
 (defun simple-extras-visible-mode-enhanced (&optional arg)
   "Set `visible-mode' and associated modes.
 Toggle the mode if ARG is `toggle' or called interactively. Enable the mode if

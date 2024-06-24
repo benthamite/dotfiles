@@ -214,9 +214,9 @@
          [:##left_control :M- [:!steam :emacs] {:alone {:modi :C- :key :g}}]
          ]}
 
-{:des "Outside Emacs: left_control → escape (alone) | 🌐 (held)"
+{:des "Outside Emacs: left_control → escape (alone) | ⌥ (held)"
  :rules [
-         [:##left_control :🌐 [:!steam :!emacs] {:alone :escape}]
+         [:##left_control :⌥ [:!steam :!emacs] {:alone :escape}]
          ]}
 
 {:des "Emacs: left_option → toggle tabs/windows (alone) | S- (held)"

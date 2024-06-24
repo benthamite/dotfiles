@@ -421,6 +421,12 @@ Negative arg -N means copy N sexps after point."
     (setq kill-ring-yank-pointer kill-ring))
   (message "Last kill popped off kill-ring."))
 
+(defun simple-extras-paste-no-properties ()
+  "Paste the last kill without properties."
+  (interactive)
+  (let ((begin (point)))
+    (yank)
+    (set-text-properties begin (point) nil)))
 
 ;;;;; Other
 

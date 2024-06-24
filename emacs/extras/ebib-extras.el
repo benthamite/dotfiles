@@ -477,12 +477,9 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
   (interactive)
   (when-let ((url (ebib-extras-get-field "url"))
 	     (title (ebib-extras-get-field "title"))
-	     (file (file-name-concat paths-dir-downloads (simple-extras-slugify title))))
-    (message "Downloading subtitles for `%s'..." url)
-    (let ((output (shell-command (format eww-extras-download-subtitles url file))))
-      (if (eq output 0)
-	  (ebib-extras-attach-file 'most-recent)
-	(user-error "Download failed with exit status %s" output)))))
+	     (default-directory paths-dir-downloads))
+    (message "Downloading subtitles for `%s'.... You need to attach it manually when ready." url)
+    (shell-command (format eww-extras-download-subtitles url))))
 
 (defun ebib-extras-book-attach ()
   "Get a PDF of the book-type entry at point and attach it to it."

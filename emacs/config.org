@@ -7400,7 +7400,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :after gptel
   :demand t
   :config
-  (gptel-extras-model-config 'globally "ChatGPT" "gpt-4-turbo")
+  (gptel-extras-model-config 'globally "ChatGPT" "gpt-4o")
 
   :general
   ("H-s-c" 'gptel-extras-model-config)

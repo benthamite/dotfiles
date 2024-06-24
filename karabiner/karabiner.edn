@@ -321,7 +321,6 @@
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
          [:l :play_or_pause]
-         [:slash [:km "Spotify play"]]
          [:semicolon :fastforward]
          [:comma :volume_increment]
          [:period :volume_decrement]

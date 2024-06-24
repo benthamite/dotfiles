@@ -6518,7 +6518,8 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 
   :general
   ("H-r" 'tlon-dispatch
-   "H-?" 'tlon-md-insert-mdx-cite)
+   "H-?" 'tlon-md-insert-mdx-cite
+   "A-C-p" 'tlon-grep)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map

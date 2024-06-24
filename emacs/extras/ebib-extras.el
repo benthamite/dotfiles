@@ -993,19 +993,19 @@ If called interactively, open the entry. Otherwise, return it as a string."
       (bibtex-search-entry key)
       (unless (called-interactively-p 'any) (bibtex-extras-get-entry-as-string)))))
 
-;; FIXME: this is not returning some existing keys (e.g.
-;; "Butchvarov1989SkepticismEthics", "Bundy1990DangerAndSurvival")
-;; maybe use `ebib-extras-get-or-open-entry' instead
 (defun ebib-extras-get-file-of-key (key)
   "Return the bibliographic file in which the entry with KEY is found."
   (unless ebib--databases
     (user-error "Please launch Ebib first"))
-  (let ((file (catch 'found
-		(dotimes (i (length ebib--databases))
-		  (when (member key (ebib-db-list-keys (nth i ebib--databases)))
-		    (throw 'found
-			   (ebib-db-get-filename (nth i ebib--databases))))))))
-    (message file)))
+  (let ((result (catch 'found
+		  ;; taken from `ebib--find-and-set-key'
+		  (mapc (lambda (file)
+			  (let ((db (ebib--get-db-from-filename file)))
+			    (if (and db (member key (ebib-db-list-keys db)))
+				(throw 'found db))))
+			paths-files-bibliography-all)
+		  nil)))
+    (alist-get 'filename result)))
 
 (defun ebib-extras-open-key (key)
   "Open the entry for KEY in Ebib."

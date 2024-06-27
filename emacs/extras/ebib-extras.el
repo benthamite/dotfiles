@@ -59,6 +59,10 @@
 (defvar ebib-extras-attach-file-key nil
   "BibTeX of the entry to which `ebib-extras-attach-file` should attach a file.")
 
+(defconst ebib-extras-valid-key-regexp
+  "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
+  "Regular expression for valid BibTeX keys.")
+
 ;;;; Functions
 
 (defvar window-extras-frame-split-width-threshold)
@@ -350,13 +354,16 @@ If EXTENSION is non-nil, set its extension to its value."
        (file-name-with-extension key extension)
      key)))
 
+(defun ebib-extras-key-is-valid-p (&optional key)
+  "Return t if KEY is a valid BibTeX key."
+  (let ((key (or key (ebib--get-key-at-point))))
+    (string-match ebib-extras-valid-key-regexp key)))
+
 (defun ebib-extras-check-valid-key (&optional key)
   "Check that KEY is a valid entry key; if not, throw an error."
-  (setq key (or key (ebib--get-key-at-point)))
-  (unless (string-match
-	   "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
-	   key)
-    (user-error "Ebib entry has an invalid key; please regenerate it")))
+  (let ((key (or key (ebib--get-key-at-point))))
+    (unless (ebib-extras-key-is-valid-p key)
+      (user-error "Ebib entry has an invalid key; please regenerate it"))))
 
 (defun ebib-extras--extension-directories (extension)
   "Return directory associated with EXTENSION."
@@ -379,8 +386,11 @@ generate an abstract if needed.
 The function requires the fields `type', `author', `date' and `title' to be
 correctly set."
   (interactive)
-  (ebib-generate-autokey)
+  (when (or (not (ebib-extras-key-is-valid-p))
+	    (y-or-n-p "Regenerate key? "))
+    (ebib-generate-autokey))
   (ebib-extras-get-or-set-language)
+  (tlon-tex-translate-abstract-when-modified)
   (ebib-extras-attach-files))
 
 (defun ebib-extras-set-abstract ()

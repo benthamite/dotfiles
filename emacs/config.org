@@ -6202,6 +6202,8 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
    "A-C-s-r" 'markdown-outline-previous
    "A-C-s-f" 'markdown-outline-next
    "M-p" nil
+   "A-s-f" 'markdown-footnote-goto-text
+   "A-s-r" 'markdown-footnote-return
    "s-b" 'markdown-insert-bold
    "s-e" 'markdown-insert-code
    "s-f" 'markdown-insert-footnote

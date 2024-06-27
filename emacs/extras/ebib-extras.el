@@ -378,6 +378,7 @@ If EXTENSION is non-nil, set its extension to its value."
 
 ;;;;; process entries
 
+(declare-function tlon-tex-translate-abstract-when-modified "tlon-tex")
 (defun ebib-extras-process-entry ()
   "Process the entry at point.
 Set the entry’s key and language; download and attach the relevant files; and

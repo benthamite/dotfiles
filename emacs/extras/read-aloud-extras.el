@@ -129,6 +129,28 @@
 	 (selection (completing-read prompt collection nil t)))
     (alist-get selection collection nil nil #'string=)))
 
+;;;;; Read file
+
+(declare-function unfill-region "unfill")
+(declare-function tlon-convert-pdf "tlon-import")
+(defun read-aloud-extras-read-file (&optional file)
+  "Read the contents of FILE aloud.
+If FILE is nil, read the file visited by the current buffer."
+  (interactive)
+  (let* ((file (or file (buffer-file-name)))
+	 (extension (file-name-extension file))
+	 (contents (pcase extension
+		     ("pdf" (tlon-convert-pdf file))
+		     (_ (buffer-string)))))
+    (with-current-buffer (get-buffer-create "*read-aloud*")
+      (erase-buffer)
+      (insert contents)
+      (unfill-region (point-min) (point-max))
+      (goto-char (point-min))
+      (read-aloud-buf)
+      ;; make buffer current
+      (pop-to-buffer (current-buffer)))))
+
 ;;;;; Patched functions
 
 ;; allow reading text in PDFs

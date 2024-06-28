@@ -512,9 +512,9 @@ CLOCK: [2021-03-23 Tue 19:30]--[2021-03-23 Tue 19:38] =>  0:08
 #+end_src
 
 #+begin_src clojure
-{:des "Outside Emacs: left_control → escape (alone) | 🌐 (held)"
+{:des "Outside Emacs: left_control → escape (alone) | ⌥ (held)"
  :rules [
-         [:##left_control :🌐 [:!steam :!emacs] {:alone :escape}]
+         [:##left_control :⌥ [:!steam :!emacs] {:alone :escape}]
          ]}
 #+end_src
 

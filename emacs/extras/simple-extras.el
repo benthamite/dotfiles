@@ -421,6 +421,12 @@ Negative arg -N means copy N sexps after point."
     (setq kill-ring-yank-pointer kill-ring))
   (message "Last kill popped off kill-ring."))
 
+(defun simple-extras-paste-no-properties ()
+  "Paste the last kill without properties."
+  (interactive)
+  (let ((begin (point)))
+    (yank)
+    (set-text-properties begin (point) nil)))
 
 ;;;;; Other
 
@@ -435,8 +441,6 @@ Transient Mark mode is on but the region is inactive."
    (if (and transient-mark-mode (not mark-active))
        (not arg)
      arg)))
-
-(visible-mode 'toggle)
 
 (defun simple-extras-visible-mode-enhanced (&optional arg)
   "Set `visible-mode' and associated modes.
@@ -577,7 +581,6 @@ Has a preference for looking backward when not directly on a symbol.
 
 If PT is non-nil, start at that position instead of `point'."
   ;; Not at all perfect - point must be right in the name.
-  (require 'url-vars)
   (save-excursion
     (if pt (goto-char pt))
     (let (start url)
@@ -629,7 +632,7 @@ If PT is non-nil, start at that position instead of `point'."
   (unless (simple-extras-get-url-at-point)
     (user-error "No URL at point"))
   (let* ((url-original (simple-extras-get-url-at-point))
-	 (url-stripped (replace-regexp-in-string "\\(?:https?://\\)?\\(?:www.\\)?" "" url-original)))
+	 (url-stripped (simple-extras-simplify-url url-original)))
     (search-backward " ")
     (while (search-forward url-original nil t)
       (replace-match url-stripped nil t))

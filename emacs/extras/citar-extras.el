@@ -32,6 +32,7 @@
 
 ;;;; Main variables
 
+(declare-function nerd-icons-faicon "nerd-icons")
 (defvar citar-extras-indicator-files-icons
   (citar-indicator-create
    :symbol (nerd-icons-faicon
@@ -52,6 +53,7 @@
    :padding "  "
    :tag "has:links"))
 
+(declare-function nerd-icons-codicon "nerd-icons")
 (defvar citar-extras-indicator-notes-icons
   (citar-indicator-create
    :symbol (nerd-icons-codicon
@@ -73,15 +75,16 @@
 
 ;;;; Functions
 
+(declare-function ebib "ebibu")
+(declare-function ebib-extras-open-key "ebib-extras")
 (defun citar-extras-open-in-ebib (citekey)
   "Open bibliographic entry associated with the CITEKEY in Ebib."
   (interactive (list (citar-select-ref)))
-  (require 'ebib)
-  (require 'ebib-extras)
   (unless (get-buffer "*ebib*")
     (ebib))
   (ebib-extras-open-key citekey))
 
+(declare-function bibtex-extras-move-entry-to-tlon "bibtex-extras")
 (defun citar-extras-move-entry-to-tlon (citekey)
   "Move bibliographic entry associated with the CITEKEY to the Tlön bibliography."
   (interactive (list (citar-select-ref)))
@@ -90,6 +93,7 @@
     (citar-extras-goto-bibtex-entry citekey)
     (bibtex-extras-move-entry-to-tlon)))
 
+(declare-function ebib-extras-get-file-of-key "bibtex-extras")
 (defun citar-extras-goto-bibtex-entry (citekey)
   "Goto the bibliographic entry associated with the CITEKEY in the bibtex file."
   (interactive (list (citar-select-ref)))
@@ -102,8 +106,9 @@
         (re-search-forward (format "@.*?{%s" citekey)))
     (user-error "No entry found for %s" citekey)))
 
+(declare-function files-extras-get-stem-of-current-buffer "files-extras")
 (defun citar-extras-open-file-at-point ()
-  "Launch citar with citekey associated with file at point."
+  "Launch `citar' with citekey associated with file at point."
   (interactive)
   (require 'files-extras)
   (citar-open `(,(files-extras-get-stem-of-current-buffer))))

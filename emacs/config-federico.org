@@ -287,10 +287,37 @@
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'gptel-extras
-  (gptel-extras-model-config 'globally "ChatGPT" "gpt-4-0125-preview")
-  (setq gptel-extras-dir "/Users/fede/Dropbox/obsidian/gpt-4/")
+  ;; gptel config
+  (gptel-extras-model-config 'globally "ChatGPT" "gpt-4o")
+  (setq gptel-model "gpt-4o"
+        gptel-backend "gpt-4o"
+        gptel-extras-dir "/Users/fede/Dropbox/obsidian/gpt-4/")
+
   ;; Remove auto save file when opening gptel
-  (advice-remove 'gptel #'gptel-extras-save-buffer))
+  (advice-remove 'gptel #'gptel-extras-save-buffer)
+
+  ;; Add a new advice for my preferred bahavior
+  (defun gptel-extras-name-buffer (name _ _ _)
+    "Give the `gptel' buffer a unique NAME right after it is created."
+    (switch-to-buffer name)
+    (rename-buffer "*gptel*" 'unique))
+
+  (advice-add 'gptel :after #'gptel-extras-name-buffer)
+
+  ;; redefine save function
+  (defun gptel-extras-save-buffer ()
+    "Save the `gptel' buffer on demand, in `gptel-extras-dir'."
+    (interactive)
+    (let* ((name (read-string "Enter buffer name: "))
+           (extension (pcase major-mode
+                        ('org-mode "org")
+                        ('markdown-mode "md")
+                        (_ (user-error "Unsupported major mode"))))
+           (filename (file-name-concat gptel-extras-dir
+                                       (file-name-with-extension (simple-extras-slugify name) extension))))
+      (write-file filename 'confirm)))
+
+  (message "`frame-extras' late-init config loaded."))
 #+end_src
 
 ** cua-base
@@ -821,7 +848,7 @@ Disable hl-sentence because I do not like it...
    (tab-bar-extras-reset)
    (raise-frame)
    (select-frame-set-input-focus (selected-frame))
-   
+
    ))
 #+end_src
 

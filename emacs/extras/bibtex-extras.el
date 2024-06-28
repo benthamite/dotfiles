@@ -687,4 +687,3 @@ Formats current entry according to variable `bibtex-entry-format'."
 
 (provide 'bibtex-extras)
 ;;; bibtex-extras.el ends here
-

@@ -5894,10 +5894,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package jinx
-  :elpaca (jinx
-           :host github
-           :repo "minad/jinx"
-           :branch "lockup") ; https://github.com/minad/jinx/discussions/156#discussioncomment-9240241
   :demand t
   :after faces-extras
   :config

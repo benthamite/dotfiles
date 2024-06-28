@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: uber-mercado-pago
+# key: ump
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Uber
+    Expenses:Transportation:Taxi            $1 ARS ; taxi to $2
+    Liabilities:Mom:Extension  
+

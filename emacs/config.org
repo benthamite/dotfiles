@@ -338,6 +338,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#powerthesaurus][powerthesaurus]]
   - [[#goldendict-ng][goldendict-ng]]
   - [[#reverso][reverso]]
+  - [[#dictionary][dictionary]]
 - [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
@@ -452,6 +453,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#citar-embark][citar-embark]]
   - [[#citar-org-roam][citar-org-roam]]
   - [[#org-ref][org-ref]]
+  - [[#org-ref-extras][org-ref-extras]]
   - [[#ebib][ebib]]
   - [[#ebib-extras][ebib-extras]]
   - [[#bib][bib]]
@@ -803,7 +805,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 :ID:       BCE74006-DDB4-4AF5-AAFA-D44BC6AF55A7
 :END:
 
-/~tlon-init~ is a private package that my team uses to manage their respective config files./
+/[[https://github.com/tlon-team/tlon-init][tlon-init]] is a private package that my team uses to manage their respective config files./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package tlon-init
@@ -1181,7 +1183,9 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
   :elpaca (oauth2-auto
            :host github
            :repo "telotortium/emacs-oauth2-auto"
-           :protocol ssh))
+           :protocol ssh)
+  :config
+  (setq oauth2-auto-plstore (file-name-concat no-littering-var-directory "oauth2-auto.plist")))
 #+end_src
 
 ** password-store-otp
@@ -1199,6 +1203,9 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 :PROPERTIES:
 :ID:       80D05BB8-D440-417A-8D94-61F4EB79EA00
 :END:
+
+
+/[[https://github.com/zx2c4/password-store][password-store]] provides functions for working with pass, the standard Unix password manager./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package password-store
@@ -1227,7 +1234,7 @@ CLOCK: [2021-04-11 Sun 12:14]--[2021-04-11 Sun 12:28] =>  0:14
 CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 :END:
 
-/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://en.wikipedia.org/wiki/Pass_(software)][pass]]./
+/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://en.wikipedia.org/wiki/Pass_(software)][pass]], the standard Unix password manager/
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pass
@@ -1518,7 +1525,7 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
            :host github
            :repo "alphapapa/magit-todos"
            :build (:not elpaca--check-version))
-  :disabled           
+  :disabled
   :after magit hl-todo
   :demand t
   :config
@@ -1610,7 +1617,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 (use-package forge-search
   :elpaca (forge-search
            :host github
-           :repo "eatse21/forge-search.el")
+           :repo "benthamite/forge-search.el"
+           :branch "fix/forge-get-repository")
   :after forge
   :demand t)
 #+end_src
@@ -1966,7 +1974,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emoji
   :general
-  ("H-E" 'emoji-insert))
+  ("H-E" 'emoji-search))
 #+end_src
 
 ** rainbow-mode
@@ -2125,7 +2133,7 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
     ;; to nil.
     (doom-modeline-def-modeline 'custom
       '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
-      '(gptel gptel-cost compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
+      '(tlon-split gptel gptel-cost compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
     (doom-modeline-set-modeline 'custom t))
 
   (doom-modeline-mode))
@@ -2734,6 +2742,7 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
    "A-H-M-w" 'simple-extras-transpose-sentences-backward
    "A-H-M-z" 'simple-extras-transpose-lines-backward
    "A-M-f" 'simple-extras-fill-or-unfill-paragraph
+   "C-g" 'simple-extras-keyboard-quit-dwim
    "C-H-M-a" 'simple-extras-backward-zap-to-char
    "C-H-M-b" 'simple-extras-strip-thing-at-point
    "C-H-M-s-A-a" 'simple-extras-backward-copy-sexp
@@ -2746,6 +2755,8 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
    "C-H-M-s-A-v" 'simple-extras-copy-line
    "C-H-M-s-A-w" 'simple-extras-backward-copy-sentence
    "C-H-M-s-A-z" 'simple-extras-backward-copy-line
+   "C-v" 'simple-extras-paste-no-properties
+   "C-w" 'simple-extras-narrow-or-widen-dwim
    "H-A-v" 'simple-extras-yank-and-pop
    "H-c" 'simple-extras-smart-copy-region
    "H-M"  'simple-extras-exchange-point-and-mark
@@ -2753,10 +2764,8 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
    "H-x" 'simple-extras-smart-kill-region
    "M-A-i" 'simple-extras-visual-line-mode-enhanced
    "M-i" 'simple-extras-indent-dwim
-   "M-v" 'simple-extras-visible-mode-enhanced
-   "C-g" 'simple-extras-keyboard-quit-dwim
    "M-q" 'simple-extras-keyboard-quit-dwim
-   "C-w" 'simple-extras-narrow-or-widen-dwim)
+   "M-v" 'simple-extras-visible-mode-enhanced)
   (isearch-mode-map
    "C-w" 'simple-extras-narrow-or-widen-dwim))
 #+end_src
@@ -3948,6 +3957,7 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature tramp
   :config
+  (setq tramp-auto-save-directory no-littering-var-directory)
   ;; Disable version control on tramp buffers to avoid freezes.
   (setq vc-ignore-dir-regexp
         (format "\\(%s\\)\\|\\(%s\\)"
@@ -4797,103 +4807,8 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elgrep
   :demand t
-  :config
-  ;; we patch the function to omit all context
-  (el-patch-defun elgrep-occur-search (re &rest options)
-    "Collect lines matching RE in the records of the current buffer.
 
-The following set of OPTIONS is described in the help of `elgrep':
-:c-op
-:c-beg
-:c-beg-only
-:c-end
-:c-end-only
-:case-fold-search
-:r-beg
-:r-end
-:search-fun
-
-The return value is a list of matches.
-Each match is a cons `(,(current-buffer) . MATCHDATA).
-The structure of MATCHDATA is described in the doc string of `elgrep-search'."
-    (let* ((c-op (or (plist-get options :c-op) 'buffer-substring-no-properties))
-	   (c-beg (or (plist-get options :c-beg) 0))
-	   (c-beg-only (plist-get options :c-beg-only))
-	   (c-end (or (plist-get options :c-end) 0))
-	   (c-end-only (plist-get options :c-end-only))
-	   (case-fold-search (plist-get options :case-fold-search))
-	   (r-beg (or (plist-get options :r-beg) #'point-min))
-	   (r-end (or (plist-get options :r-end) #'point-max))
-	   (search-fun (or (plist-get options :search-fun) #'re-search-forward))
-	   matches
-	   (last-pos (point-min))
-	   (last-line-number 1))
-      (when (and (consp r-beg)
-		 (eq (car r-beg) t))
-	(setq r-beg (cdr r-beg)
-	      r-end t))
-      (elgrep-with-records r-beg r-end
-	(let (match
-	      (required-matches (cdr-safe re))
-	      (re-str (or (car-safe re)
-			  re))
-	      (point-prev 0)
-	      pos-found)
-	  (when (elgrep-required-matches search-fun required-matches)
-	    (while (or (and
-			(setq pos-found (funcall search-fun re-str nil 'noError))
-			(or (< point-prev (setq point-prev (point)))
-			    (progn
-			      (setq pos-found nil)
-			      (and (null (eobp))
-				   (goto-char (1+ point-prev))))))
-		       (null (or (eq point-prev (setq point-prev (point)))
-				 (eobp))))
-	      (thread-yield)
-	      (when-let* (pos-found
-			  (n (/ (length (match-data)) 2))
-			  (el-patch-swap (context-beginning
-					  (elgrep-line-position
-					   c-beg
-					   (match-beginning 0)
-					   (match-beginning 0)
-					   c-beg-only
-					   line-beginning-position
-					   re-search-backward))
-					 (context-beginning (match-beginning 0)))
-			  (el-patch-swap (context-end
-					  (elgrep-line-position
-					   c-end
-					   (match-end 0)
-					   context-beginning
-					   c-end-only
-					   line-end-position
-					   re-search-forward))
-					 (context-end (match-end 0)))
-			  (matchdata (and
-				      (<= (match-end 0) context-end)
-				      (cl-loop
-				       for i from 0 below n
-				       collect
-				       (list :match (match-string-no-properties i)
-					     :context (funcall c-op context-beginning context-end)
-					     :line (elgrep-with-wide-buffer
-						    (setq last-line-number
-							  (+ last-line-number
-							     (count-lines last-pos (line-beginning-position))))
-						    (setq last-pos (line-beginning-position))
-						    last-line-number)
-					     :context-beg context-beginning
-					     :context-end context-end
-					     :beg (match-beginning i)
-					     :end (match-end i))))))
-		(setq match (cons matchdata match)))))
-	  (when match
-	    (setq matches (cons (cons (current-buffer) (nreverse match)) matches)))))
-      (nreverse matches)))
-  
   :general
-  ("A-C-p" 'elgrep)
   (elgrep-mode-map
    "r" 'elgrep-edit-mode
    "s-c" 'elgrep-save))
@@ -5201,7 +5116,9 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
    "d" 'consult-yasnippet-visit-snippet-file)
   ("C-;" 'embark-act
    "C-H-;" 'embark-act-all
-   "C-h B" 'embark-bindings))
+   "C-h B" 'embark-bindings)
+   (embark-general-map
+   "I" 'embark-insert))
 #+end_src
 
 ** consult
@@ -5978,10 +5895,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package jinx
-  :elpaca (jinx
-           :host github
-           :repo "minad/jinx"
-           :branch "lockup") ; https://github.com/minad/jinx/discussions/156#discussioncomment-9240241
   :demand t
   :after faces-extras
   :config
@@ -6286,6 +6199,8 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
    "A-C-s-r" 'markdown-outline-previous
    "A-C-s-f" 'markdown-outline-next
    "M-p" nil
+   "A-s-f" 'markdown-footnote-goto-text
+   "A-s-r" 'markdown-footnote-return
    "s-b" 'markdown-insert-bold
    "s-e" 'markdown-insert-code
    "s-f" 'markdown-insert-footnote
@@ -6466,47 +6381,47 @@ To populate the database of historical prices:
              ;; I need to understand how the `--basis' flag works
              ("cost basis"
               "%(binary) -f %(ledger-file) --basis bal %(account) --strict")
-              ("account (unrounded)" "%(binary) --unround  -f %(ledger-file) reg %(account)")))
+             ("account (unrounded)" "%(binary) --unround  -f %(ledger-file) reg %(account)")))
     (add-to-list 'ledger-reports report))
 
   :general
   (ledger-mode-map
-   "M-p" nil
+   "A-C-s-f" 'ledger-navigate-next-xact-or-directive
+   "A-C-s-r" 'ledger-navigate-prev-xact-or-directive
+   "A-s-a" 'ledger-mode-extras-report-account
+   "A-s-b" 'ledger-mode-extras-decrease-date-by-one-day
+   "A-s-c" 'ledger-mode-extras-copy-transaction-at-point
+   "A-s-e" 'ledger-toggle-current-transaction
+   "A-s-f" 'ledger-mode-extras-increase-date-by-one-day
+   "A-s-p" 'mode-mode-extras-extras-report-net-worth-USD
+   "A-s-t" 'ledger-mode-extras-sort-region-or-buffer-reversed
+   "A-s-u" 'ledger-mode-extras-report-net-worth-USD
+   "A-s-w" 'ledger-mode-extras-report-net-worth
    "M-n" nil
-   "s-SPC" 'ledger-mode-extras-new-entry-below
+   "M-p" nil
    "s-=" 'ledger-reconcile
    "s-a" 'ledger-add-transaction
-   "M-s-a" 'ledger-mode-extras-report-account
    "s-b" 'ledger-post-edit-amount
-   "M-s-b" 'ledger-mode-extras-decrease-date-by-one-day
    "s-c" 'ledger-mode-extras-align-and-next
-   "M-s-c" 'ledger-mode-extras-copy-transaction-at-point
    "s-d" 'ledger-delete-current-transaction
    "s-e" 'mode-mode-extras-extras-sort-region-or-buffer-reversed
-   "M-s-e" 'ledger-toggle-current-transaction
    "s-f" 'ledger-occur
-   "M-s-f" 'ledger-mode-extras-increase-date-by-one-day
    "s-g" 'ledger-report-goto
    "s-i" 'ledger-insert-effective-date
-   "s-y" 'ledger-copy-transaction-at-point
    "s-k" 'ledger-report-quit
    "s-l" 'ledger-display-ledger-stats
    "s-o" 'ledger-report-edit-report
    "s-p" 'ledger-display-balance-at-point
-   "M-s-p" 'mode-mode-extras-extras-report-net-worth-USD
    "s-q" 'ledger-post-align-dwim
    "s-r" 'ledger-report
    "s-s" 'ledger-report-save
+   "s-SPC" 'ledger-mode-extras-new-entry-below
    "s-t" 'ledger-mode-extras-sort-region-or-buffer
-   "M-s-t" 'ledger-mode-extras-sort-region-or-buffer-reversed
    "s-u" 'ledger-schedule-upcoming
-   "M-s-u" 'ledger-mode-extras-report-net-worth-USD
    "s-v" 'ledger-copy-transaction-at-point
-   "M-s-w" 'ledger-mode-extras-report-net-worth
    "s-x" 'ledger-fully-complete-xact
-   "s-z" 'ledger-report-redo
-   "A-C-s-r" 'ledger-navigate-prev-xact-or-directive
-   "A-C-s-f" 'ledger-navigate-next-xact-or-directive)
+   "s-y" 'ledger-copy-transaction-at-point
+   "s-z" 'ledger-report-redo)
   (ledger-reconcile-mode-map
    "q" 'ledger-reconcile-quit))
 #+end_src
@@ -6593,7 +6508,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 (use-package tlon
   :elpaca (tlon
            :host github
-           :repo "tlon-team/tlon"
+           :repo "tlon-team/tlon.el"
            ;; :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
@@ -6605,7 +6520,8 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 
   :general
   ("H-r" 'tlon-dispatch
-   "H-?" 'tlon-md-insert-mdx-cite)
+   "H-?" 'tlon-md-insert-mdx-cite
+   "A-C-p" 'tlon-grep)
   ((forge-topic-mode-map
     forge-issue-list-mode-map
     forge-pullreq-list-mode-map
@@ -6748,6 +6664,28 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
   :general
   ("H-Y" 'reverso))
 #+end_src
+
+** dictionary
+:PROPERTIES:
+:ID:       9D2123AF-FA64-465A-B7C1-6FCBFB786F02
+:END:
+
+/dictionary is a client for rfc2229 dictionary servers./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature dictionary
+  :config
+  (setq dictionary-server "dict.org")
+  (setq dictionary-use-single-buffer t))
+#+end_src
+
+
+*** TODO Set local server
+:PROPERTIES:
+:ID:       3C3B9F22-E8AF-4F94-8A7E-A613A47A765B
+:END:
+
+See ~dictionary-in-emacs.org~ in ~gptel~ notes directory.
 
 * docs
 :PROPERTIES:
@@ -7378,6 +7316,13 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   (unless (copilot-installed-version)
     (copilot-install-server))
 
+  (run-with-idle-timer 60 t (lambda ()
+                              "Hack: ‘restart’ copilot periodically."
+                              (when copilot-mode
+                                (copilot-mode -1)
+                                (sleep-for 0 50)
+                                (copilot-mode +1))))
+
   :general
   (copilot-completion-map
    "C-s-g" 'copilot-clear-overlay
@@ -7400,7 +7345,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :after copilot
   :demand t
   :config
-  (setq copilot-extras-excluded-modes '(dsssl-mode mhtml-mode))
+  (setq copilot-extras-excluded-modes '(dsssl-mode mhtml-mode json-mode))
 
   (add-hook 'prog-mode-hook #'copilot-extras-enable-conditionally)
   (add-hook 'text-mode-hook #'copilot-extras-enable-conditionally))
@@ -7421,7 +7366,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :elpaca (gptel
            :host github
            :repo "karthink/gptel")
- ; consider moving the email addresses to `paths'
+                                        ; consider moving the email addresses to `paths'
   :after pass tlon
   :defer 10
   :config
@@ -7435,7 +7380,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-make-gemini "Gemini"
     :stream t
     :key (auth-source-pass-get 'secret
-                               (concat "tlon/core/makersuite.google.com/" tlon-email-shared)))
+                               (concat "tlon/core/aistudio.google.com/" tlon-email-shared))
+    :models '("gemini-1.0-pro" "gemini-1.5-pro" "gemini-1.5-flash"))
 
   :general
   ("M-c" 'gptel-send
@@ -7456,7 +7402,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :after gptel
   :demand t
   :config
-  (gptel-extras-model-config 'globally "ChatGPT" "gpt-4-turbo")
+  (gptel-extras-model-config 'globally "ChatGPT" "gpt-4o")
 
   :general
   ("H-s-c" 'gptel-extras-model-config)
@@ -7478,6 +7424,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :after gptel
   :demand t
   :config
+  (setq chatgpt-shell-root-path no-littering-var-directory)
   (setq chatgpt-shell-openai-key gptel-api-key)
   (setq dall-e-shell-openai-key gptel-api-key)
   (setq shell-maker-transcript-default-path gptel-extras-dir)
@@ -8539,7 +8486,8 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
           ("e" . (org-shiftmetadown))
           ("w" . (org-shiftmetaup))
           ("r" . (org-shiftmetaright))
-          ("Outline visibility")
+          ("Archiving")
+          ("A" . (org-archive-to-archive-sibling))
           ("'" . (org-force-cycle-archived))
           ("Meta data editing")
           ("t" . (org-todo))
@@ -9526,38 +9474,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
   (setq org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (setq org-cite-activate-processor 'citar) ;
   (setq org-cite-export-processors
-        '((t . (csl "long.csl"))))
-
-  ;; Comment out `org-cite--allowed-p' condition to allow invocation
-  ;; in any mode. Even if inserting a citation is not allowed, one may
-  ;; want to invoke the command to trigger contextual actions via
-  ;; `embark'.
-  (el-patch-defun org-cite-insert (arg)
-    "Insert a citation at point.
-Insertion is done according to the processor set in `org-cite-insert-processor'.
-ARG is the prefix argument received when calling interactively the function."
-    (interactive "P")
-    (unless org-cite-insert-processor
-      (user-error "No processor set to insert citations"))
-    (org-cite-try-load-processor org-cite-insert-processor)
-    (let ((name org-cite-insert-processor))
-      (cond
-       ((not (org-cite-get-processor name))
-        (user-error "Unknown processor %S" name))
-       ((not (org-cite-processor-has-capability-p name 'insert))
-        (user-error "Processor %S cannot insert citations" name))
-       (t
-        (let ((context (org-element-context))
-              (insert (org-cite-processor-insert (org-cite-get-processor name))))
-          (cond
-           ((org-element-type-p context '(citation citation-reference))
-            (funcall insert context arg))
-           (el-patch-remove
-             ((org-cite--allowed-p context)
-              (funcall insert nil arg)))
-           (t
-            (el-patch-swap (user-error "Cannot insert a citation here")
-                           (funcall insert nil arg))))))))))
+        '((t . (csl "long.csl")))))
 #+end_src
 
 *** Resources
@@ -9637,78 +9554,30 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (setq bibtex-entry-format '(opts-or-alts-fields last-comma delimiters page-dashes))
   (setq bibtex-field-indentation 8) ; match ebib value
 
-  ;; Add custom 'Video' entry type
-  (push '("Video" "Video file"
-          (("author" nil nil 0)
-           ("title")
-           ("date" nil nil 1)
-           ("year" nil nil -1)
-           ("url" nil nil 2))
-          nil
-          (("subtitle")
-           ("language")
-           ("version")
-           ("note")
-           ("organization")
-           ("month")
-           ("addendum")
-           ("pubstate")
-           ("eprintclass" nil nil 4)
-           ("primaryclass" nil nil -4)
-           ("eprinttype" nil nil 5)
-           ("archiveprefix" nil nil -5)
-           ("urldate")))
-        bibtex-biblatex-entry-alist)
-
-  ;; Add custom 'Movie' entry type
-  (push '("Movie" "Film"
-          (("author" nil nil 0)
-           ("title")
-           ("date" nil nil 1)
-           ("year" nil nil -1)
-           ("url" nil nil 2))
-          nil
-          (("abstract")
-           ("keywords")
-           ("language")
-           ("version")
-           ("rating")
-           ("note")
-           ("organization")
-           ("month")
-           ("addendum")
-           ("pubstate")
-           ("eprintclass" nil nil 4)
-           ("primaryclass" nil nil -4)
-           ("eprinttype" nil nil 5)
-           ("archiveprefix" nil nil -5)
-           ("urldate")))
-        bibtex-biblatex-entry-alist)
-
-  ;; Add custom 'TVepisode' entry type
-  (push '("tvepisode" "tvepisode"
-          (("author" nil nil 0)
-           ("title")
-           ("date" nil nil 1)
-           ("year" nil nil -1)
-           ("url" nil nil 2))
-          nil
-          (("abstract")
-           ("keywords")
-           ("language")
-           ("version")
-           ("rating")
-           ("note")
-           ("organization")
-           ("month")
-           ("addendum")
-           ("pubstate")
-           ("eprintclass" nil nil 4)
-           ("primaryclass" nil nil -4)
-           ("eprinttype" nil nil 5)
-           ("archiveprefix" nil nil -5)
-           ("urldate")))
-        bibtex-biblatex-entry-alist)
+  ;; add extra entry types
+  (dolist (entry '(("Video" . "Video file")
+		   ("Movie" . "Film")
+		   ("tvepisode" . "TV episode")))
+    (push `(,(car entry) ,(cdr entry)
+            (("author" nil nil 0)
+             ("title")
+             ("date" nil nil 1)
+             ("year" nil nil -1)
+             ("url" nil nil 2))
+            nil
+            (("abstract")
+             ("keywords")
+             ("language")
+             ("version")
+             ("rating")
+             ("note")
+             ("organization")
+             ("eprintclass" nil nil 4)
+             ("primaryclass" nil nil -4)
+             ("eprinttype" nil nil 5)
+             ("archiveprefix" nil nil -5)
+             ("urldate")))
+	  bibtex-biblatex-entry-alist))
 
   :general
   (bibtex-mode-map
@@ -9752,7 +9621,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   :defer 1
   :config
   (setq bibtex-maintain-sorted-entries
-      '(bibtex-extras-entry-sorter bibtex-extras-lessp))
+        '(bibtex-extras-entry-sorter bibtex-extras-lessp))
 
   ;; Replace 'online' entry type
   (bibtex-extras-replace-element-by-name
@@ -9768,10 +9637,10 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
                ("eprinttype" nil nil 5) ("archiveprefix" nil nil -5) ("urldate"))))
   :general
   (bibtex-mode-map
-  "s-a" 'bibtex-extras-set-field
-  "s-h" 'bibtex-extras-url-to-html-attach
+   "s-a" 'bibtex-extras-set-field
+   "s-d" 'bibtex-extras-url-to-pdf-attach
+   "s-h" 'bibtex-extras-url-to-html-attach
    "s-i" 'bibtex-extras-open-in-ebib
-   "s-p" 'bibtex-extras-url-to-pdf-attach
    "s-t" 'bibtex-extras-move-entry-to-tlon))
 #+end_src
 
@@ -9966,10 +9835,11 @@ Having headings tagged with the type of work they are notes of allows me to quer
   :general
   ((citar-map citar-citation-map)
    "d" 'ebib-extras-download-dwim
-   "i" 'citar-extras-open-in-ebib
    "s" 'ebib-extras-search-dwim
    "t" 'citar-extras-move-entry-to-tlon
-   "b" 'citar-extras-goto-bibtex-entry))
+   "b" 'citar-extras-goto-bibtex-entry)
+  ((citar-map citar-citation-map embark-identifier-map)
+   "i" 'citar-extras-open-in-ebib))
 #+end_src
 
 ** citar-citeproc
@@ -10042,113 +9912,19 @@ I use this package only to run the cleanup function ~org-ref-clean-bibtex-entry~
   (dolist (fun '(org-ref-replace-nonascii
                  orcb-check-journal
                  orcb-download-pdf))
-    (delete fun org-ref-clean-bibtex-entry-hook))
-
-  ;; Comment out call `bibtex-fill-entry'
-  (defun org-ref-sort-bibtex-entry ()
-    "Sort fields of entry in standard order."
-    (interactive)
-    (bibtex-beginning-of-entry)
-    (let* ((entry (bibtex-parse-entry))
-           (entry-fields)
-           (other-fields)
-           (type (cdr (assoc "=type=" entry)))
-           (key (cdr (assoc "=key=" entry)))
-           (field-order (cdr (assoc (if type (downcase type))
-                                    org-ref-bibtex-sort-order))))
-
-      ;; these are the fields we want to order that are in this entry
-      (setq entry-fields (mapcar (lambda (x) (car x)) entry))
-      ;; we do not want to reenter these fields
-      (setq entry-fields (remove "=key=" entry-fields))
-      (setq entry-fields (remove "=type=" entry-fields))
-
-      ;;these are the other fields in the entry, and we sort them alphabetically.
-      (setq other-fields
-            (sort (-remove (lambda(x) (member x field-order)) entry-fields)
-                  'string<))
-
-      (save-restriction
-        (bibtex-kill-entry)
-        (insert
-         (concat "@" type "{" key ",\n"
-                 (mapconcat
-                  (lambda (field)
-                    (when (member field entry-fields)
-                      (format "%s = %s,"
-                              field
-                              (cdr (assoc field entry)))))
-                  field-order "\n")
-                 ;; now add the other fields
-                 (mapconcat
-                  (lambda (field)
-                    (cl-loop for (f . v) in entry concat
-                             (when (string= f field)
-                               (format "%s = %s,\n" f v))))
-                  (-uniq other-fields) "\n")
-                 "\n}"))
-        (bibtex-search-entry key)
-        ;; (bibtex-fill-entry)
-        (bibtex-clean-entry))))
-
-  ;; Remove redundant and conflicting `Year' field
-  (defun isbn-to-bibtex (isbn bibfile)
-    "Get bibtex entry for ISBN and insert it into BIBFILE.
-Nothing happens if an entry with the generated key already exists
-in the file. Data comes from www.ebook.de."
-    (interactive
-     (list
-      (read-string
-       "ISBN: "
-       ;; now set initial input
-       (cond
-        ;; If region is active and it starts with a number, we use it
-        ((and  (region-active-p)
-               (s-match "^[0-9]" (buffer-substring (region-beginning) (region-end))))
-         (buffer-substring (region-beginning) (region-end)))
-        ;; if first entry in kill ring starts with a number assume it is an isbn
-        ;; and use it as the guess
-        ((stringp (car kill-ring))
-         (when (s-match "^[0-9]" (car kill-ring))
-           (car kill-ring)))
-        ;; type or paste it in
-        (t
-         nil)))
-      (completing-read "Bibfile: " (org-ref-possible-bibfiles))))
-
-    (let* ((url (format "https://www.ebook.de/de/tools/isbn2bibtex?isbn=%s" isbn))
-           (entry))
-      (with-current-buffer (url-retrieve-synchronously url t t)
-        (goto-char (point-min))
-        (when (re-search-forward "@[a-zA-Z]+{.+\\(\n\s+[^\n]+\\)+}$" nil t)
-          (setq entry (match-string 0))
-          ;; FIXME: This isn't working
-          (s-replace-regexp "^  Year =.*" "" entry)))
-
-      (if (not entry)
-          (message "Nothing found.")
-        (find-file bibfile)
-        (goto-char (point-max))
-        (insert (with-temp-buffer
-                  (insert (concat entry "\n}"))
-                  (goto-char (point-min))
-                  ;; [2020-06-06 Sat] I got a report that ottobib returns entries
-                  ;; with ,, in the first line. here if we find one, I eliminate
-                  ;; one of them.
-                  (when (re-search-forward ",," nil t)
-                    (delete-char -1))
-                  (org-ref-isbn-clean-bibtex-entry)
-                  ;; TODO: Uncomment the line below when you fix the FIXME issue above
-                  ;; (org-ref-clean-bibtex-entry)
-                  (bibtex-fill-entry)
-                  (s-trim (buffer-string))))
-        (save-buffer)))))
+    (delete fun org-ref-clean-bibtex-entry-hook)))
 #+end_src
 
-*** TODO Define =isbn-to-bibtex= via elpatch
+** org-ref-extras
 :PROPERTIES:
-:ID:       A3B5FC74-45C6-475C-8D31-B8355F12747C
+:ID:       D4CF6E94-9BE5-4121-88F0-C8D3251B9EFE
 :END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-personal-package org-ref-extras
+  :after org-ref
+  :demand t)
+#+end_src
 
 ** ebib
 :PROPERTIES:
@@ -10264,31 +10040,6 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
-*** TODO Tweak ebib film command so that it directly opens Letterboxd page with IMDb ID
-:PROPERTIES:
-:ID:       C1D156F5-A78E-4588-9888-1816044CAC05
-:END:
-
-*** TODO Ebib: make 'title' field single-line
-:PROPERTIES:
-:ID:       24813D4B-598A-4BCB-8488-281D16D7C56A
-:END:
-
-*** TODO Ebib: Add new websites to 'journal' field
-:PROPERTIES:
-:ID:       3CF3C58F-4EF5-42EF-92DA-5AA33C726DFA
-:END:
-
-*** TODO Decide how ebib should deal with multi-volume works
-:PROPERTIES:
-:ID:       33D8549E-7DD8-4E4B-A690-0E6D29A8CA60
-:END:
-
-*** TODO Decide exhaustive list of work types
-:PROPERTIES:
-:ID:       9837CC84-AE98-4749-A16B-86EF995D4531
-:END:
-
 *** TODO Modify my custom ebib formulas so that they use native uniquify
 :PROPERTIES:
 :ID:       BA7B5845-B148-43B6-BE50-C1CBF89478BB
@@ -10349,9 +10100,9 @@ The macro below generates the commands correctly. But attempting to define key b
    "z" 'ebib-extras-search-google-scholar
    "1" (lambda! (ebib-view-file-in-field 1))
    "2" (lambda! (ebib-view-file-in-field 2))
+   "s-d" 'ebib-extras-url-to-pdf-attach
    "s-k" 'ebib-extras-fetch-keywords
    "s-h" 'ebib-extras-url-to-html-attach
-   "s-p" 'ebib-extras-url-to-pdf-attach
    "s-r" 'ebib-extras-rename-files)
   (ebib-index-mode-map
    "A-C-s-<tab>" 'ebib-extras-end-of-index-buffer
@@ -11573,8 +11324,8 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
   ((js-mode html-mode-map mhtml-mode-map)
    "s-w" 'eww-extras-browse-file)
   ((eww-mode-map ebib-entry-mode-map ebib-index-mode-map)
-   "s-h" 'eww-extras-url-to-html
-   "s-p" 'eww-extras-url-to-pdf))
+   "s-d" 'eww-extras-url-to-pdf
+   "s-h" 'eww-extras-url-to-html))
 #+end_src
 
 ** prot-eww
@@ -12249,7 +12000,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-web-tools-extras
-  :after org-web-tools-extras
+  :after org-web-tools
   :demand t)
 #+end_src
 
@@ -12425,7 +12176,9 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 (use-package ytdl
   :config
   (setq ytdl-command "yt-dlp")
-  (setq ytdl-video-folder paths-dir-downloads)
+  (setq ytdl-video-folder paths-dir-downloads
+        ytdl-music-folder paths-dir-downloads
+        ytdl-download-folder paths-dir-downloads)
   (setq ytdl-video-extra-args '("--write-sub" "--write-auto-sub" "--sub-lang" "en,es,it,fr,pt"))
 
   :general

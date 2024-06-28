@@ -1617,7 +1617,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 (use-package forge-search
   :elpaca (forge-search
            :host github
-           :repo "benthamite/forge-search.el")
+           :repo "benthamite/forge-search.el"
+           :branch "fix/forge-get-repository")
   :after forge
   :demand t)
 #+end_src

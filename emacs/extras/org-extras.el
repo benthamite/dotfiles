@@ -870,7 +870,8 @@ empty headings, which trigger an `org-roam' warning."
   [[("e" "email"             (lambda () (interactive) (org-roam-extras-id-goto "96BBA849-B4CF-41C0-ABA3-A5D901BCDB18")))
     ("f" "finance"           (lambda () (interactive) (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C")))
     ("i" "Anki"              (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))
-    ("y" "YouTube"           (lambda () (interactive) (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E")))]])
+    ("y" "YouTube"           (lambda () (interactive) (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E")))
+    ("k" "current book"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))]])
 
 (transient-define-prefix org-extras-tlon-menu ()
   "Menu for Tlön projects."
@@ -883,8 +884,10 @@ empty headings, which trigger an `org-roam' warning."
     ("b s" "babel-es"          (lambda () (interactive) (org-roam-extras-id-goto "A2347582-CF81-497E-81C9-CF82E56D8312")))
     ("b r" "babel-refs"        (lambda () (interactive) (org-roam-extras-id-goto "06C5E072-99F2-4A1F-A87E-0E05E330E111")))]
    ["Uqbar"
-    ("q i" "uqbar-issues"      (lambda () (interactive) (org-roam-extras-id-goto "1844F672-62B5-49CF-8BD8-A55F8FCAAFE9")))
-    ("q s" "uqbar-es"          (lambda () (interactive) (org-roam-extras-id-goto "EF190A03-0037-430A-B8A1-414738AEAEA4")))]
+    ("q q" "uqbar-common"      (lambda () (interactive) (org-roam-extras-id-goto "1844F672-62B5-49CF-8BD8-A55F8FCAAFE9")))
+    ("q s" "uqbar-es"          (lambda () (interactive) (org-roam-extras-id-goto "EF190A03-0037-430A-B8A1-414738AEAEA4")))
+    ("q t" "uqbar-it"          (lambda () (interactive) (org-roam-extras-id-goto "124B8358-88C8-49CC-9C4D-6B6919BF64BE")))
+    ("q r" "uqbar-fr"          (lambda () (interactive) (org-roam-extras-id-goto "8FDA9155-C270-4FB0-AA2A-DA87BED19BE0")))]
    ["utilitarianism"
     ("u n" "utilitarianism-en" (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))]
    ["Longtermism"
@@ -902,10 +905,16 @@ empty headings, which trigger an `org-roam' warning."
     ("a" "boletin"           (lambda () (interactive) (org-roam-extras-id-goto "989E6696-2672-47FE-855B-00DA806B7A56")))
     "GWWC"
     ("g" "gwwc"              (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
-   ["Meetings"
+   [""
+    "Meetings"
     ("m f" "fede"            (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
     ("m l" "leo"             (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))
-    ("m g" "group"           (lambda () (interactive) (org-roam-extras-id-goto "BE68100E-753D-408B-9B31-2D58A457A70B")))]])
+    ("m g" "group"           (lambda () (interactive) (org-roam-extras-id-goto "BE68100E-753D-408B-9B31-2D58A457A70B")))
+    ""
+    "Comms"
+    ("c i" "Check issues"    (lambda () (interactive) (org-roam-extras-id-goto "03B164B5-89FC-4611-A2B9-6E5D3AE7C1B1")))
+    ("c e" "Check email"     (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
+    ("c t" "Check telegram"  (lambda () (interactive) (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D")))]])
 
 ;;;###autoload (autoload 'org-extras-config-dispatch "org-extras" nil t)
 (transient-define-prefix org-extras-config-dispatch ()
@@ -993,6 +1002,37 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
     (unless (file-exists-p file)
       (org-remove-file file)
       (throw 'nextfile t))))
+
+;; Comment out `org-cite--allowed-p' condition to allow invocation
+;; in any mode. Even if inserting a citation is not allowed, one may
+;; want to invoke the command to trigger contextual actions via
+;; `embark'.
+(el-patch-defun org-cite-insert (arg)
+  "Insert a citation at point.
+Insertion is done according to the processor set in `org-cite-insert-processor'.
+ARG is the prefix argument received when calling interactively the function."
+  (interactive "P")
+  (unless org-cite-insert-processor
+    (user-error "No processor set to insert citations"))
+  (org-cite-try-load-processor org-cite-insert-processor)
+  (let ((name org-cite-insert-processor))
+    (cond
+     ((not (org-cite-get-processor name))
+      (user-error "Unknown processor %S" name))
+     ((not (org-cite-processor-has-capability-p name 'insert))
+      (user-error "Processor %S cannot insert citations" name))
+     (t
+      (let ((context (org-element-context))
+            (insert (org-cite-processor-insert (org-cite-get-processor name))))
+        (cond
+         ((org-element-type-p context '(citation citation-reference))
+          (funcall insert context arg))
+         (el-patch-remove
+           ((org-cite--allowed-p context)
+            (funcall insert nil arg)))
+         (t
+          (el-patch-swap (user-error "Cannot insert a citation here")
+                         (funcall insert nil arg)))))))))
 
 ;;;; Footer
 

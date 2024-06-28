@@ -214,9 +214,9 @@
          [:##left_control :M- [:!steam :emacs] {:alone {:modi :C- :key :g}}]
          ]}
 
-{:des "Outside Emacs: left_control → escape (alone) | 🌐 (held)"
+{:des "Outside Emacs: left_control → escape (alone) | ⌥ (held)"
  :rules [
-         [:##left_control :🌐 [:!steam :!emacs] {:alone :escape}]
+         [:##left_control :⌥ [:!steam :!emacs] {:alone :escape}]
          ]}
 
 {:des "Emacs: left_option → toggle tabs/windows (alone) | S- (held)"
@@ -321,7 +321,6 @@
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
          [:l :play_or_pause]
-         [:slash [:km "Spotify play"]]
          [:semicolon :fastforward]
          [:comma :volume_increment]
          [:period :volume_decrement]
@@ -329,7 +328,7 @@
          [:c {:modi :C-M-s- :key :c} :emacs] ; connect to bluetooth device
          [:g {:modi :C-M-s- :key :g} :emacs] ; toggle langs
          [:h {:modi :⇧⌘⌥⌃ :key :0}] ; dictation
-         [:n {:modi :⇧⌘⌥⌃ :key :1}] ; narration
+         [:n {:modi :⇧⌘⌥⌃ :key :1}] ; narration (Settings > Accessibility > Spoken content > Speak selection)
          ]}
 
 {:des "f-mode (special chars)"

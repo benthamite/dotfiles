@@ -805,7 +805,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 :ID:       BCE74006-DDB4-4AF5-AAFA-D44BC6AF55A7
 :END:
 
-/~tlon-init~ is a private package that my team uses to manage their respective config files./
+/[[https://github.com/tlon-team/tlon-init][tlon-init]] is a private package that my team uses to manage their respective config files./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package tlon-init

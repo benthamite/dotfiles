@@ -584,11 +584,11 @@ even if already present."
 		      ('ebib-entry-mode #'ebib-extras-set-field)
 		      ('bibtex-mode #'bibtex-set-field)))
 	 (get-lang (lambda () (funcall get-field "langid")))
-	 (set-lang (lambda (lang) (funcall set-field "langid" lang))))
-    (unless (funcall get-lang)
-      (funcall set-lang
-	       (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english")))
-    (funcall get-lang)))
+	 (set-lang (lambda (lang) (funcall set-field "langid" lang)))
+	 (lang (funcall get-lang)))
+    (or lang
+	(funcall set-lang
+		 (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english")))))
 
 (defconst ebib-extras-library-genesis
   '("Library Genesis"

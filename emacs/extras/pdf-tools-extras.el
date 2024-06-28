@@ -109,13 +109,13 @@ If page number is already listed, remove it from list."
      (format "pdftotext '%s' - | wc -w" (buffer-file-name)))))
   (message (format "This PDF has %s words." (current-kill 0))))
 
+(declare-function tlon-convert-pdf "tlon-import")
 (defun pdf-tools-extras-copy-dwim ()
-  "Copy PDF to kill ring, or region if selected."
+  "Copy PDF contents to kill ring, or region if selected."
   (interactive)
   (if (region-active-p)
       (pdf-view-kill-ring-save)
-    (let ((string (string-trim (shell-command-to-string
-                                (format "pdftotext '%s' -" (buffer-file-name))))))
+    (let ((string (string-trim (tlon-convert-pdf (buffer-file-name)))))
       (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
       (message "Copied all text in PDF to kill ring."))))
 

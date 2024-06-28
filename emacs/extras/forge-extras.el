@@ -73,7 +73,7 @@ If ISSUE is nil, use the issue at point or in the current buffer."
       ('open (forge--set-topic-state repo issue 'completed))
       ('completed (forge--set-topic-state repo issue 'open)))))
 
-(defun forge-extras-sync-read-status ()
+(defun forge-extras-sync-read-status (&optional _)
   "Ensure that the read status of the issue at point in Forge matches GitHub’s.
 The function tries to do does this by silently browsing the issue in a Firefox
 tab."

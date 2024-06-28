@@ -51,15 +51,20 @@
 
 (defconst gptel-extras-ai-models
   '((:backend "Gemini"
-	      :model "gemini-pro"
-	      :cost 0
+	      :model "gemini-1.0-pro"
+	      :cost 0.50
 	      :tokens 32000
-	      :description "This model is currently free (included in Pablo’s Google Drive plan).")
+	      :description "Gemini’s first-generation model offering only text and image reasoning. Generally available for production use.")
     (:backend "Gemini"
-	      :model "gemini-1.5-pro-latest"
-	      :cost 0
+	      :model "gemini-1.5-pro"
+	      :cost 3.50
 	      :tokens 128000
-	      :description "[recommended] This model is currently free (included in Pablo’s Google Drive plan).")
+	      :description "Gemini’s next-generation model with a breakthrough 1 million context window. Now generally available for production use.")
+    (:backend "Gemini"
+	      :model "gemini-1.5-flash"
+	      :cost 0.35
+	      :tokens 1000000
+	      :description "Gemini’s fastest multimodal model with great performance for diverse, repetitive tasks and a 1 million context window. Now generally available for production use. For requests about 128k tokens, the price is $0.70 per 1 million tokens.")
     (:backend "ChatGPT"
 	      :model "gpt-3.5-turbo"
 	      :cost 0.50
@@ -114,10 +119,6 @@
 	      :tokens 128000
 	      :last-update "2023-12-01"
 	      :description "GPT-4 Turbo preview model intended to reduce cases of “laziness” where the model doesn’t complete a task. Returns a maximum of 4,096 output tokens.")
-    ;; (:backend "ChatGPT"
-    ;; :model "gpt-4-vision-preview"
-    ;; :cost 0 ; placeholder
-    ;; :description "GPT-4 model for sending images.")
     (:backend "Claude"
 	      :model "claude-3-haiku-20240307"
 	      :tokens 200000
@@ -137,12 +138,18 @@
 	      :last-update "2023-08-01"
 	      :description "The most capable Anthropic model."))
   "Alist of AI models and associated properties.
+- `:tokens': the context window size in tokens.
+
+- `:cost': the cost per 1 million tokens in US dollars.
+
 The relevant information has been obtained from the following websites:
 
 - GPT: <https://openai.com/pricing> and
 <https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4>.
 
-- Claude:<https://www.anthropic.com/api#pricing>.")
+- Claude: <https://www.anthropic.com/api#pricing>.
+
+- Gemini: <https://ai.google.dev/pricing>")
 
 ;;;; Functions
 

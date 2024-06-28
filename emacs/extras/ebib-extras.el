@@ -59,6 +59,10 @@
 (defvar ebib-extras-attach-file-key nil
   "BibTeX of the entry to which `ebib-extras-attach-file` should attach a file.")
 
+(defconst ebib-extras-valid-key-regexp
+  "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
+  "Regular expression for valid BibTeX keys.")
+
 ;;;; Functions
 
 (defvar window-extras-frame-split-width-threshold)
@@ -199,6 +203,13 @@ A file will be returned if it uniquely exists."
 	 (ebib--split-files files))
 	nil))))
 
+(defun ebib-extras-get-text-file ()
+  "Return the first text file with a valid extension in the entry at point."
+  (catch 'tag
+    (dolist (extension ebib-extras-valid-text-file-extensions)
+      (when-let ((file (ebib-extras-get-file extension)))
+	(throw 'tag file)))))
+
 (defun ebib-extras-open-file (extension)
   "Open file with EXTENSION in entry at point.
 A file will be opened if it uniquely exists."
@@ -268,6 +279,10 @@ exists."
 (defconst ebib-extras-valid-file-extensions
   '("pdf" "html" "webm" "flac" "mp3" "md" "srt" "vtt")
   "List of valid file extensions for `ebib-extras-open-file-dwim'.")
+
+(defconst ebib-extras-valid-text-file-extensions
+  '("html" "pdf" "srt" "vtt")
+  "List of valid text file extensions.")
 
 (defun ebib-extras-open-file-dwim ()
   "Open file in entry at point.
@@ -339,13 +354,16 @@ If EXTENSION is non-nil, set its extension to its value."
        (file-name-with-extension key extension)
      key)))
 
+(defun ebib-extras-key-is-valid-p (&optional key)
+  "Return t if KEY is a valid BibTeX key."
+  (let ((key (or key (ebib--get-key-at-point))))
+    (string-match ebib-extras-valid-key-regexp key)))
+
 (defun ebib-extras-check-valid-key (&optional key)
   "Check that KEY is a valid entry key; if not, throw an error."
-  (setq key (or key (ebib--get-key-at-point)))
-  (unless (string-match
-	   "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
-	   key)
-    (user-error "Ebib entry has an invalid key; please regenerate it")))
+  (let ((key (or key (ebib--get-key-at-point))))
+    (unless (ebib-extras-key-is-valid-p key)
+      (user-error "Ebib entry has an invalid key; please regenerate it"))))
 
 (defun ebib-extras--extension-directories (extension)
   "Return directory associated with EXTENSION."
@@ -360,26 +378,34 @@ If EXTENSION is non-nil, set its extension to its value."
 
 ;;;;; process entries
 
+(declare-function tlon-tex-translate-abstract-when-modified "tlon-tex")
 (defun ebib-extras-process-entry ()
-  "Process the entry at point, setting its key, language, abstract and files.
-The function assumes that the fields `type', `author', `date' and `title' are
+  "Process the entry at point.
+Set the entry’s key and language; download and attach the relevant files; and
+generate an abstract if needed.
+
+The function requires the fields `type', `author', `date' and `title' to be
 correctly set."
   (interactive)
-  (ebib-generate-autokey)
+  (when (or (not (ebib-extras-key-is-valid-p))
+	    (y-or-n-p "Regenerate key? "))
+    (ebib-generate-autokey))
   (ebib-extras-get-or-set-language)
-  (ebib-extras-attach-files)
-  (ebib-extras-set-abstract))
+  (tlon-tex-translate-abstract-when-modified)
+  (ebib-extras-attach-files))
 
-;; TODO; create function
 (defun ebib-extras-set-abstract ()
   "Set abstract for entry at point.
 Try to fetch it with Zotero or ."
-  )
+  (interactive)
+  (unless (ebib-extras-get-field "abstract")
+    (tlon-get-abstract-with-or-without-ai)))
 
 ;;;;; attach downloads
 
 (declare-function files-extras-newest-file "files-extras")
 (declare-function bibtex-extras-get-key "bibex-extras")
+(declare-function tlon-get-abstract-with-or-without-ai "tlon-ai")
 (defun ebib-extras-attach-file (&optional file key open)
   "Attach a file to the entry with KEY.
 If FILE is a string, attach it. If FILE is a symbol, attach the most recent
@@ -428,6 +454,7 @@ current entry or, if not available, the key stored in
 	(rename-file file-to-attach file-name t))
       (shut-up
 	(ebib-extras--update-file-field-contents key file-name))
+      (ebib-extras-set-abstract)
       (when (string= (file-name-extension file-name) "pdf")
 	(ebib-extras-set-pdf-metadata)
 	(ebib-extras-ocr-pdf)
@@ -462,10 +489,9 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
   (interactive)
   (when-let ((url (ebib-extras-get-field "url"))
 	     (title (ebib-extras-get-field "title"))
-	     (file (file-name-concat paths-dir-downloads (simple-extras-slugify title))))
-    (message "Downloading subtitles for `%s'..." url)
-    (shell-command-to-string (format eww-extras-download-subtitles url file))
-    (ebib-extras-attach-file 'most-recent)))
+	     (default-directory paths-dir-downloads))
+    (message "Downloading subtitles for `%s'.... You need to attach it manually when ready." url)
+    (shell-command (format eww-extras-download-subtitles url))))
 
 (defun ebib-extras-book-attach ()
   "Get a PDF of the book-type entry at point and attach it to it."
@@ -477,7 +503,7 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
 	  (pcase major-mode
 	    ('bibtex-mode (bibtex-extras-get-key))
 	    ((or 'ebib-entry-mode 'ebib-index-mode)
-	     (ebib-extras-get-field "=key="))))
+	     (ebib--get-key-at-point))))
     (eww-extras-annas-archive-download id 'confirm #'ebib-extras-attach-file)))
 
 (defun ebib-extras-doi-attach ()
@@ -495,22 +521,25 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
 
 (declare-function eww-extras-annas-archive-download "eww-extras")
 (defun ebib-extras-attach-files ()
-  "Attach files appropriate for the current entry type."
+  "Attach files appropriate for the current entry type.
+If file is already attached, set the abstract."
   (interactive)
   (let ((doi (ebib-extras-get-field "doi"))
 	(url (ebib-extras-get-field "url"))
 	(isbn (ebib-extras-get-field "isbn"))
 	(type (ebib-extras-get-field "=type=")))
-    (cond (doi (ebib-extras-doi-attach))
-	  ((or isbn (member type ebib-extras-book-like-entry-types))
-	   (ebib-extras-book-attach))
-	  ((and url (cl-some (lambda (regexp)
-			       (string-match regexp url))
-			     ebib-extras-video-websites))
-	   (ebib-extras-url-to-srt-attach))
-	  ((and url (not (member type ebib-extras-film-like-entry-types)))
-	   (ebib-extras-url-to-pdf-attach)
-	   (ebib-extras-url-to-html-attach)))))
+    (if (ebib-extras-get-field "file")
+	(ebib-extras-set-abstract)
+      (cond (doi (ebib-extras-doi-attach))
+	    ((or isbn (member type ebib-extras-book-like-entry-types))
+	     (ebib-extras-book-attach))
+	    ((and url (cl-some (lambda (regexp)
+				 (string-match regexp url))
+			       ebib-extras-video-websites))
+	     (ebib-extras-url-to-srt-attach))
+	    ((and url (string-match "online" type))
+	     (ebib-extras-url-to-pdf-attach)
+	     (ebib-extras-url-to-html-attach))))))
 
 ;;;;; ?
 
@@ -555,11 +584,11 @@ even if already present."
 		      ('ebib-entry-mode #'ebib-extras-set-field)
 		      ('bibtex-mode #'bibtex-set-field)))
 	 (get-lang (lambda () (funcall get-field "langid")))
-	 (set-lang (lambda (lang) (funcall set-field "langid" lang))))
-    (unless (funcall get-lang)
-      (funcall set-lang
-	       (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english")))
-    (funcall get-lang)))
+	 (set-lang (lambda (lang) (funcall set-field "langid" lang)))
+	 (lang (funcall get-lang)))
+    (or lang
+	(funcall set-lang
+		 (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english")))))
 
 (defconst ebib-extras-library-genesis
   '("Library Genesis"
@@ -859,17 +888,6 @@ The list of film search functions is specified by
 ;; no film identifier; we just search for it
 (defalias 'ebib-extras-search-film-by-identifier 'ebib-extras-search-film-by-title)
 
-  ;;; download functions
-(defun ebib-extras-download-dwim ()
-  "Try to download the current entry based on the field at point.
-If field at point is `title', run a search with its value, else
-use identifier.
-
-The list of websites for the search query is defined by the
-variable `ebib-extras-download-book'"
-  (interactive)
-  (ebib-extras--search-or-download 'download))
-
 (defun ebib-extras-download-book (query)
   "Search for QUERY with the relevant book download functions.
 The list of book download functions is specified by
@@ -987,19 +1005,19 @@ If called interactively, open the entry. Otherwise, return it as a string."
       (bibtex-search-entry key)
       (unless (called-interactively-p 'any) (bibtex-extras-get-entry-as-string)))))
 
-;; FIXME: this is not returning some existing keys (e.g.
-;; "Butchvarov1989SkepticismEthics", "Bundy1990DangerAndSurvival")
-;; maybe use `ebib-extras-get-or-open-entry' instead
 (defun ebib-extras-get-file-of-key (key)
   "Return the bibliographic file in which the entry with KEY is found."
   (unless ebib--databases
     (user-error "Please launch Ebib first"))
-  (let ((file (catch 'found
-		(dotimes (i (length ebib--databases))
-		  (when (member key (ebib-db-list-keys (nth i ebib--databases)))
-		    (throw 'found
-			   (ebib-db-get-filename (nth i ebib--databases))))))))
-    (message file)))
+  (let ((result (catch 'found
+		  ;; taken from `ebib--find-and-set-key'
+		  (mapc (lambda (file)
+			  (let ((db (ebib--get-db-from-filename file)))
+			    (if (and db (member key (ebib-db-list-keys db)))
+				(throw 'found db))))
+			paths-files-bibliography-all)
+		  nil)))
+    (alist-get 'filename result)))
 
 (defun ebib-extras-open-key (key)
   "Open the entry for KEY in Ebib."

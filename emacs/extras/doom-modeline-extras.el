@@ -32,19 +32,24 @@
 
 ;;;; User options
 
-(defgroup gptel-extras ()
-  "Extensions for `gptel'."
-  :group 'gptel)
+(defgroup doom-modeline-extras ()
+  "Extensions for `doom-modeline'."
+  :group 'doom-modeline)
 
 (defcustom doom-modeline-extras-gptel t
   "Whether to display the `gptel' model in the modeline."
   :type 'boolean
-  :group 'gptel-extras)
+  :group 'doom-modeline)
 
 (defcustom doom-modeline-extras-gptel-cost t
   "Whether to display the `gptel' model cost in the modeline."
   :type 'boolean
-  :group 'gptel-extras)
+  :group 'doom-modeline)
+
+(defcustom doom-modeline-extras-tlon-split t
+  "Whether to display if `tlon-split-mode' is active."
+  :type 'boolean
+  :group 'doom-modeline)
 
 ;;;; Functions
 
@@ -52,7 +57,7 @@
 
 (defvar gptel-model)
 (doom-modeline-def-segment gptel ()
-  "Displays the `gptel' model active in the current buffer."
+  "Display the `gptel' model active in the current buffer."
   (when (and doom-modeline-extras-gptel
 	     (bound-and-true-p gptel-model))
     (concat gptel-model (doom-modeline-spc))))
@@ -66,6 +71,12 @@
 	     (bound-and-true-p gptel-model)
 	     gptel-mode)
     (concat (format "$%.2f" (gptel-extras-get-cost)) (doom-modeline-spc))))
+
+(defvar tlon-split-mode)
+(doom-modeline-def-segment tlon-split ()
+  "Display \"split\" in the modeline when `tlon-split-mode' is enabled."
+  (when (bound-and-true-p tlon-split-mode)
+    (concat "split" (doom-modeline-spc))))
 
 ;;;;; Notification counter Forge sync
 

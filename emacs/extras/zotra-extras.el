@@ -107,6 +107,7 @@ to get the entry.
 (declare-function bibtex-set-field "doi-utils")
 (declare-function bibtex-extras-convert-titleaddon-to-journaltitle "bibtex-extras")
 (declare-function bibtex-extras-get-key "bibtex-extras")
+(declare-function tlon-cleanup-eaf-replace-urls "tlon-cleanup")
 (defun zotra-extras-after-add-process-bibtex ()
   "Process newly added bibtex entry."
   ;; TODO: check that there are no unsaved changes in
@@ -117,6 +118,7 @@ to get the entry.
   (zotra-extras-fix-octal-sequences)
   (bibtex-clean-entry)
   (org-ref-clean-bibtex-entry)
+  (tlon-cleanup-eaf-replace-urls)
   (setq zotra-extras-most-recent-bibkey (bibtex-extras-get-key)))
 
 (defun zotra-extras-fix-octal-sequences ()
@@ -187,6 +189,7 @@ gracefully."
   (let ((urls (files-extras-lines-to-list file)))
     (ebib-save-all-databases)
     (dolist (url urls)
+      (message "Adding entry for %s..." url)
       (zotra-add-entry url nil tlon-file-fluid))
     (ebib tlon-file-fluid)
     (ebib-extras-sort 'Timestamp)))

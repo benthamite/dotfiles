@@ -55,6 +55,11 @@ the sender only."
 		 (const :tag "Yes" t)
 		 (const :tag "No" nil)))
 
+;;;; Variables
+
+(defvar mu4e-extras-read-and-refile-tracker '()
+  "List of `:message-id' of messages to be re-marked as read after synchronization.")
+
 ;;;; Functions
 
 ;;;;; Post-processing
@@ -262,6 +267,43 @@ takes just a couple of seconds."
   (interactive)
   (let ((mu4e-get-mail-command "mbsync gmail-all"))
     (mu4e-update-mail-and-index t)))
+
+;;;;; Read & refile
+
+;; Messages that are both refiled and marked as read are re-marked as unread
+;; after synchronization with the Gmail server. To fix this, we keep track of
+;; the `message-id' property of every message that is refiled and marked as
+;; read, re-mark them as read after synchronization.
+
+(defun mu4e-extras-headers-mark-for-read-then-refile ()
+  "Mark the message at point as read then refile, adding it to the re-mark list."
+  (interactive)
+  (let ((msg (mu4e-message-at-point)))
+    (mu4e-extras-mark-read-then-refile msg)))
+
+(defun mu4e-extras-mark-read-then-refile (msg)
+  "Mark MSG as read then refile, adding MSG to the re-mark list after sync."
+  (let ((message-id (mu4e-message-field msg :message-id))
+        (target (mu4e-get-refile-folder msg)))
+    (add-to-list 'mu4e-extras-read-and-refile-tracker message-id)
+    ;; Move the message to the refile folder, removing the `new' flag first
+    (mu4e--server-move (mu4e-message-field msg :docid) target "+S-u-N"))
+  (mu4e-mark-execute-all t))
+
+(defun mu4e-extras-reapply-read-status ()
+  "Reapply `read' status to all tracked messages.
+The list of tracked messages is stored in `mu4e-extras-read-and-refile-tracker'."
+  (dolist (message-id mu4e-extras-read-and-refile-tracker)
+    ;; Mark the message as read
+    (mu4e--server-move message-id nil "+S"))  ;; '+S' means mark as read (seen)
+  ;; Reset the tracker list
+  (setq mu4e-extras-read-and-refile-tracker '()))
+
+(defun mu4e-extras-reapply-read-status-set-timer ()
+  "Set a timer to reapply `read' status to all tracked messages."
+  (run-with-timer 30 nil #'mu4e-extras-reapply-read-status))
+
+(add-hook 'mu4e-update-pre-hook #'mu4e-extras-reapply-read-status-set-timer)
 
 ;;;;; Contexts
 

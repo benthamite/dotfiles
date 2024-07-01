@@ -376,7 +376,7 @@ eww!)"
 			  (read-string "Search string: " string))
 			 (string string)
 			 (t (read-string "Search string: "))))
-	   (url (format "https://annas-archive.org/search?index=&page=1&q=%s&ext=pdf&sort=" string)))
+	   (url (format "https://annas-archive.gs/search?index=&page=1&q=%s&ext=pdf&sort=" string)))
       (when callback (setq eww-extras-annas-archive-callback callback))
       (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-select-and-open-url)
       (eww url))))

@@ -55,8 +55,12 @@ directory, the URL, and the output file.")
 (defvar eww-extras-annas-archive-bibtex-key nil
   "BibTeX key of the book being downloaded.")
 
+(defconst eww-extras-annas-archive-home-url
+  "https://annas-archive.gs/"
+  "URL to Anna’s Archive.")
+
 (defconst eww-extras-annas-archive-auth-url
-  "https://annas-archive.org/account/"
+  (concat eww-extras-annas-archive-home-url "account/")
   "URL to authenticate with Anna’s Archive.")
 
 ;;;;; Subtitles
@@ -376,7 +380,8 @@ eww!)"
 			  (read-string "Search string: " string))
 			 (string string)
 			 (t (read-string "Search string: "))))
-	   (url (format "https://annas-archive.gs/search?index=&page=1&q=%s&ext=pdf&sort=" string)))
+	   (url (format "%ssearch?index=&page=1&q=%s&ext=pdf&sort="
+			eww-extras-annas-archive-home-url string)))
       (when callback (setq eww-extras-annas-archive-callback callback))
       (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-select-and-open-url)
       (eww url))))

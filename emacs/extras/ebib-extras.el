@@ -378,7 +378,7 @@ If EXTENSION is non-nil, set its extension to its value."
 
 ;;;;; process entries
 
-(declare-function tlon-tex-translate-abstract-when-modified "tlon-tex")
+(declare-function tlon-deepl-translate-abstract "tlon-deepl")
 (defun ebib-extras-process-entry ()
   "Process the entry at point.
 Set the entry’s key and language; download and attach the relevant files; and
@@ -391,7 +391,7 @@ correctly set."
 	    (y-or-n-p "Regenerate key? "))
     (ebib-generate-autokey))
   (ebib-extras-get-or-set-language)
-  (tlon-tex-translate-abstract-when-modified)
+  (tlon-deepl-translate-abstract)
   (ebib-extras-attach-files))
 
 (defun ebib-extras-set-abstract ()

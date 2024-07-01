@@ -1022,7 +1022,9 @@ If called interactively, open the entry. Otherwise, return it as a string."
   "Open the entry for KEY in Ebib."
   (when-let ((file (ebib-extras-get-file-of-key key)))
     (ebib file key)
-    (ebib-edit-entry)))
+    (sleep-for 0.01)
+    (ebib-edit-entry)
+    ))
 
 (defun ebib-extras-sort (&optional state)
   "Sort Ebib index buffer by STATE.

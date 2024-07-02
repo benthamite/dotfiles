@@ -33,3 +33,28 @@ leiterreports.typepad.com###advertise_on_lr
 ! 2023-10-14 https://www.youtube.com
 www.youtube.com##tp-yt-paper-dialog.ytd-popup-container.style-scope
 
+! 2024-02-03 https://www.imdb.com
+www.imdb.com##.right-rail-more-to-explore.ipc-page-section--base.ipc-page-section
+
+! 2024-02-16 https://www.google.com
+www.google.com##.fAThCb > c-wiz > section
+
+! 2024-02-16 https://www.theguardian.com
+www.theguardian.com##.dcr-vxrady
+
+! 2024-02-16 https://www.vox.com
+www.vox.com##.c-article-footer-cta.c-article-footer
+
+! 2024-02-20 https://www.youtube.com
+www.youtube.com###scroll-container
+www.youtube.com##.ytd-menu-renderer.style-scope > yt-button-shape > .yt-spec-button-shape-next--size-m.yt-spec-button-shape-next--call-to-action.yt-spec-button-shape-next--text.yt-spec-button-shape-next > yt-touch-feedback-shape > .yt-spec-touch-feedback-shape--touch-response.yt-spec-touch-feedback-shape > .yt-spec-touch-feedback-shape__fill
+
+! 2024-02-28 https://www.imdb.com
+www.imdb.com##.right-rail-more-to-explore.dtyDyd.sc-978e9339-2
+
+! 2024-05-08 https://dailynous.com
+dailynous.com##.sidebar2.sidebar--main.sidebar > div.daily-widget.widget--sidebar-blog.widget
+
+! Jul 2, 2024 https://www.vox.com
+www.vox.com##._1agbrixs._1tzd3in0
+

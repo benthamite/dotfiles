@@ -11030,7 +11030,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
   :after telega telega-dired-dwim
   :demand t
   :config
-  (setq telega-extras-auto-share-audio-transcript t)
+  (setq telega-extras-auto-share-audio-transcript nil)
   (add-hook 'telega-chat-post-message-hook #'telega-extras-transcribe-audio)
 
   :general

@@ -9577,8 +9577,8 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 
   ;; add extra entry types
   (dolist (entry '(("Video" . "Video file")
-		   ("Movie" . "Film")
-		   ("tvepisode" . "TV episode")))
+                   ("Movie" . "Film")
+                   ("tvepisode" . "TV episode")))
     (push `(,(car entry) ,(cdr entry)
             (("author" nil nil 0)
              ("title")
@@ -9598,7 +9598,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
              ("eprinttype" nil nil 5)
              ("archiveprefix" nil nil -5)
              ("urldate")))
-	  bibtex-biblatex-entry-alist))
+          bibtex-biblatex-entry-alist))
 
   :general
   (bibtex-mode-map

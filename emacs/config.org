@@ -344,6 +344,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#pdf-tools-extras][pdf-tools-extras]]
   - [[#scroll-other-window][scroll-other-window]]
   - [[#pdf-view-restore][pdf-view-restore]]
+  - [[#moon-reader][moon-reader]]
   - [[#org-pdftools][org-pdftools]]
   - [[#nov][nov]]
   - [[#djvu][djvu]]
@@ -6810,6 +6811,25 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   :demand t
   :config
   (add-hook 'pdf-view-mode-hook #'pdf-view-restore-mode))
+#+end_src
+
+** moon-reader
+:PROPERTIES:
+:ID:       CA54B97C-0948-4E28-AB29-392052D306AC
+:END:
+
+/[[https://github.com/benthamite/moon-reader][moon-reader]] synchronizes page position between pdf-tools and Moon+ Reader./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package moon-reader
+  :elpaca (moon-reader
+           :host github
+           :repo "benthamite/moon-reader")
+  :disabled
+  :after pdf-view-restore
+  :demand t
+  :config
+  (setq moon-reader-cache-directory (file-name-concat paths-dir-google-drive "Apps/Books/.Moon+/Cache/")))
 #+end_src
 
 ** org-pdftools

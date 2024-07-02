@@ -12356,6 +12356,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            org-extras-id-update-id-locations
                            el-patch-validate-all
                            org-extras-agenda-switch-to-agenda-current-day
+                           mu4e-extras-update-all-mail-and-index
                            org-gcal-sync
                            elfeed-update)))
     (add-hook 'midnight-hook (lambda () (simple-extras-call-verbosely fun "Midnight hook now calling `%s'...")))))

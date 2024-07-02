@@ -318,7 +318,7 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-paths-override)
 (
  (paths-file-cookies . (file-name-concat paths-dir-downloads "cookies.txt"))
- (paths-dir-chemacs-profiles . ".config/emacs-profiles/")
+ (paths-dir-chemacs-profiles . (expand-file-name "~/.config/emacs-profiles/"))
  (paths-dir-root . (file-name-as-directory (expand-file-name "/")))
  (paths-dir-system-apps . (file-name-concat paths-dir-root "Applications/"))
  (paths-dir-dropbox . (file-name-concat (expand-file-name "~") "Library/CloudStorage/Dropbox/"))

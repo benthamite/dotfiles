@@ -11891,7 +11891,7 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     "http://philpapers.org/s/%s"
     :keybinding "p p")
   (defengine AnnasArchive
-    "https://annas-archive.org/search?index=&page=1&q=%s&ext=pdf&sort="
+    "https://annas-archive.gs/search?index=&page=1&q=%s&ext=pdf&sort="
     :keybinding "r r")
   (defengine ReducingSuffering
     "http://reducing-suffering.org/?s=%s"

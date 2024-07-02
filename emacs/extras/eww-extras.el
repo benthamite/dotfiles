@@ -353,8 +353,8 @@ or prompt the user for a file."
 	    (progn
 	      (setq end (next-single-property-change (point) 'shr-url nil (point-max)))
 	      ;; Handle when link is at the end of the buffer
-	      (if (eq end nil)
-		  (setq end (point-max)))
+	      (unless end
+		(setq end (point-max)))
 	      (push (cons (buffer-substring-no-properties beg end) (get-text-property beg 'shr-url))
 		    candidates))
 	  (setq end (next-single-property-change (point) 'shr-url)))

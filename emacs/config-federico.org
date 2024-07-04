@@ -14,12 +14,11 @@
  copilot
  corfu-doc-terminal
  corfu-terminal
- ;; display-wttr
+ display-wttr
  erc
  gdrive
  git-auto-commit-mode
  hammy
- ;; jinx
  midnight
  mixed-pitch
  consult-mu
@@ -39,7 +38,7 @@
  ;; server
  ;; spelling
  jinx
- ;; flycheck
+ flycheck
  grammarly
  lsp-grammarly
  persistent-scratch
@@ -289,8 +288,7 @@
 (with-eval-after-load 'gptel-extras
   ;; gptel config
   (gptel-extras-model-config 'globally "ChatGPT" "gpt-4o")
-  (setq gptel-model "gpt-4o"
-        gptel-backend "gpt-4o"
+  (setq gptel-default-mode 'markdown-mode
         gptel-extras-dir "/Users/fede/Dropbox/obsidian/gpt-4/")
 
   ;; Remove auto save file when opening gptel
@@ -758,6 +756,14 @@ Disable hl-sentence because I do not like it...
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'telega
   ;; (setq telega-server-libs-prefix "/opt/homebrew/Cellar/tdlib/HEAD-ec788c7/")
+  )
+#+end_src
+
+** telega-extras
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'telega-extras  
+  (setq telega-extras-auto-share-audio-transcript nil)
   )
 #+end_src
 

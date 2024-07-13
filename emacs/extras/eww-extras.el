@@ -56,7 +56,7 @@ directory, the URL, and the output file.")
   "BibTeX key of the book being downloaded.")
 
 (defconst eww-extras-annas-archive-home-url
-  "https://annas-archive.gs/"
+  "https://annas-archive.se/"
   "URL to Anna’s Archive.")
 
 (defconst eww-extras-annas-archive-auth-url

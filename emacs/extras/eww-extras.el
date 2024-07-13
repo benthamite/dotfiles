@@ -110,6 +110,24 @@ directories."
   :type 'string
   :group 'eww-extras)
 
+(defcustom eww-extras-annas-archive-use-eww nil
+  "Whether to use `eww' for downloading files.
+If t, files will be downloaded directly with `eww'.
+
+It used to be the case that one could authenticate a session with `eww', but as
+of 2024-07-13 this does not appear to be possible anymore. Non-authenticated
+sessions require the user to click on a captcha screen visible only to browsers
+that support Javascript. Thus, this user option should be set to nil for the
+time being."
+  :type 'boolean
+  :group 'eww-extras)
+
+(defcustom eww-extras-annas-archive-use-fast-download-links t
+  "Whether to use fast download links from Anna’s Archive.
+If t, use fast download links available to paying members."
+  :type 'boolean
+  :group 'eww-extras)
+
 ;;;; Functions
 
 (defvar ebib--cur-db)
@@ -370,10 +388,7 @@ non-nil, prompt the user for confirmation to use STRING as the search string.
 
 CALLBACK is a function called when the process concludes. The function takes two
 arguments: the file to attach and the BibTeX key of the entry from which this
-function was called, if any.
-
-Requires a paid subscription and authentication. (Yes, you can authenticate with
-eww!)"
+function was called, if any."
   (interactive)
   (save-window-excursion
     (let* ((string (cond ((and string confirm)
@@ -405,9 +420,12 @@ eww!)"
   "Proceed to the Annas Archive download page."
   (remove-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
   (save-window-excursion
-    (let ((url (eww-extras-get-url-in-link "Fast Partner Server")))
+    (let* ((speed (if eww-extras-annas-archive-use-fast-download-links "Fast" "Slow"))
+	   (url (eww-extras-get-url-in-link (concat speed " Partner Server"))))
       (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-download-file)
-      (eww url))))
+      (if eww-extras-annas-archive-use-eww
+	  (eww url)
+	(browse-url-default-browser url)))))
 
 (defvar ebib-extras-attach-file-key)
 (defun eww-extras-annas-archive-download-file ()

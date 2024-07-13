@@ -45,10 +45,13 @@
 
 (declare-function f-read "f")
 (declare-function s-split "s")
+;; TODO: remove first line and "rewards" lines
 (defun ledger-extras-import-polymarket (file)
   "Import Polymarket CSV FILE into the current ledger file.
-To download the CSV file, go to <https://polymarket.com/portfolio?tab=history>.
-Remove the first row of the CSV file before importing it."
+To download the CSV file, go to <https://polymarket.com/portfolio?tab=history>,
+click on \"Filter\", set a range from one day after the most recent Polymarket
+transaction on Ledger to today. Remove the first row of the CSV file before
+importing it."
   (interactive (list (read-file-name "Polymarket CSV file: " paths-dir-downloads)))
   (let (token-alist)
     (dolist (raw (s-split "\n" (f-read file) t))
@@ -71,9 +74,9 @@ Remove the first row of the CSV file before importing it."
 
 (defun ledger-extras-import-interactive-brokers (file)
   "Import Interactive Brokers CSV FILE into the current ledger file.
-To download the CSV file, go to the IBKR site, then select \"performance &
-reports > flex queries > trade history\". Remove the first row of the CSV file
-before importing it."
+To download the CSV file, go to the IBKR site, click on \"performance & reports
+> flex queries > trade history > run >\", then select your desired period and
+\"csv\" as format. Remove the first row of the CSV file before importing it."
   (interactive (list (read-file-name "IBKR CSV file: " paths-dir-downloads)))
   (dolist (raw (s-split "\n" (f-read file) t))
     (let* ((clean (split-string (replace-regexp-in-string "\"" "" raw) "," t))

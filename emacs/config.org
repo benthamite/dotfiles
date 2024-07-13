@@ -1248,7 +1248,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
   ("A-H-o" 'pass)
   (pass-mode-map
    "c" 'pass-copy
-   "d" 'pass-kill)
+   "D" 'pass-kill)
   (pass-view-mode-map
    "s-c" 'pass-view-toggle-password
    "s-s" 'server-edit))

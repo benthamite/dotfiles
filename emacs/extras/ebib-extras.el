@@ -543,24 +543,9 @@ If file is already attached, set the abstract."
 
 ;;;;; ?
 
-(defconst ebib-extras-iso-639-2
-  '(("english" . "eng")
-    ("american" . "eng")
-    ("french" . "fra")
-    ("german" . "deu")
-    ("italian" . "ita")
-    ("spanish" . "spa")
-    ("portuguese" . "por")
-    ("russian" . "rus")
-    ("chinese" . "zho")
-    ("japanese" . "jpn")
-    ("korean" . "kor")
-    ("arabic" . "ara")
-    ("latin" . "lat")
-    ("greek" . "ell"))
-  "Alist of languages and their ISO 639-2 codes.")
-
 (declare-function files-extras-ocr-pdf "files-extras")
+(declare-function tlon-lookup-all "tlon-core")
+(defvar tlon-languages-properties)
 (defun ebib-extras-ocr-pdf (&optional force)
   "OCR the PDF file in the current entry.
 If FORCE is non-nil, or the command is invoked with a prefix argument, force OCR
@@ -570,7 +555,8 @@ even if already present."
 	(lang (ebib-extras-get-or-set-language)))
     (files-extras-ocr-pdf nil file-name
 			  (format (concat (when force "--force-ocr ") "--deskew -l %s \"%2$s\" \"%2$s\"")
-				  (alist-get lang ebib-extras-iso-639-2 nil nil 'string=)
+				  (alist-get lang (tlon-lookup-all tlon-languages-properties :iso-639-2)
+					     nil nil 'string=)
 				  file-name))))
 
 (declare-function bibtex-set-field "bibex")
@@ -584,10 +570,12 @@ even if already present."
 		      ('bibtex-mode #'bibtex-set-field)))
 	 (get-lang (lambda () (funcall get-field "langid")))
 	 (set-lang (lambda (lang) (funcall set-field "langid" lang)))
-	 (lang (funcall get-lang)))
-    (or lang
+	 (lang (funcall get-lang))
+	 (valid-lang (tlon-lookup tlon-languages-properties :standard :name lang)))
+    (or valid-lang
 	(funcall set-lang
-		 (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english")))))
+		 (completing-read "Select language: " (tlon-lookup-all tlon-languages-properties :standard)
+				  nil t "english")))))
 
 (defconst ebib-extras-library-genesis
   '("Library Genesis"

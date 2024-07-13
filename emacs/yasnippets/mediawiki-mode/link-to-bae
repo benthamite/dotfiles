@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: link-to-bae
+# key: ltb
+# contributor: Pablo Stafforini
+# --
+* [$1 $2]. Introducción al concepto y lecturas adicionales en español.$0
+`(kill-new "Agregar link externo")`

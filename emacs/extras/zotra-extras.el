@@ -116,7 +116,6 @@ to get the entry.
   (bibtex-extras-convert-titleaddon-to-journaltitle)
   (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
   (zotra-extras-fix-octal-sequences)
-  (bibtex-clean-entry)
   (org-ref-clean-bibtex-entry)
   (tlon-cleanup-eaf-replace-urls)
   (setq zotra-extras-most-recent-bibkey (bibtex-extras-get-key)))

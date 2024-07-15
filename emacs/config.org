@@ -344,6 +344,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#pdf-tools-extras][pdf-tools-extras]]
   - [[#scroll-other-window][scroll-other-window]]
   - [[#pdf-view-restore][pdf-view-restore]]
+  - [[#moon-reader][moon-reader]]
   - [[#org-pdftools][org-pdftools]]
   - [[#nov][nov]]
   - [[#djvu][djvu]]
@@ -675,7 +676,7 @@ NAME and ARGS as in `use-package'."
      :elpaca (,name
               :host github
               :repo "benthamite/dotfiles"
-              ;; :branch "dev"
+              :branch "dev"
               :files ,(list (file-name-concat
                              "emacs/extras"
                              (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
@@ -812,7 +813,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :elpaca (tlon-init
            :host github
            :repo "tlon-team/tlon-init"
-           ;; :branch "dev"
+           :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :after paths
   :demand t
@@ -1247,7 +1248,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
   ("A-H-o" 'pass)
   (pass-mode-map
    "c" 'pass-copy
-   "d" 'pass-kill)
+   "D" 'pass-kill)
   (pass-view-mode-map
    "s-c" 'pass-view-toggle-password
    "s-s" 'server-edit))
@@ -6313,6 +6314,7 @@ CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
            :host github
            :repo "benthamite/gdrive"
            :depth nil)
+  :defer 20
   :config
   (load-file (file-name-concat paths-dir-dotemacs "etc/gdrive-users.el"))
   (defun gdrive-extras-mark-multiple-and-share (file)
@@ -6509,7 +6511,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :elpaca (tlon
            :host github
            :repo "tlon-team/tlon.el"
-           ;; :branch "dev"
+           :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :after paths
@@ -6810,6 +6812,25 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   :demand t
   :config
   (add-hook 'pdf-view-mode-hook #'pdf-view-restore-mode))
+#+end_src
+
+** moon-reader
+:PROPERTIES:
+:ID:       CA54B97C-0948-4E28-AB29-392052D306AC
+:END:
+
+/[[https://github.com/benthamite/moon-reader][moon-reader]] synchronizes page position between pdf-tools and Moon+ Reader./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package moon-reader
+  :elpaca (moon-reader
+           :host github
+           :repo "benthamite/moon-reader")
+  :disabled
+  :after pdf-view-restore
+  :demand t
+  :config
+  (setq moon-reader-cache-directory (file-name-concat paths-dir-google-drive "Apps/Books/.Moon+/Cache/")))
 #+end_src
 
 ** org-pdftools
@@ -9556,8 +9577,8 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 
   ;; add extra entry types
   (dolist (entry '(("Video" . "Video file")
-		   ("Movie" . "Film")
-		   ("tvepisode" . "TV episode")))
+                   ("Movie" . "Film")
+                   ("tvepisode" . "TV episode")))
     (push `(,(car entry) ,(cdr entry)
             (("author" nil nil 0)
              ("title")
@@ -9577,7 +9598,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
              ("eprinttype" nil nil 5)
              ("archiveprefix" nil nil -5)
              ("urldate")))
-	  bibtex-biblatex-entry-alist))
+          bibtex-biblatex-entry-alist))
 
   :general
   (bibtex-mode-map
@@ -10497,7 +10518,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (setq mu4e-split-view 'single-window)
   (setq mu4e-headers-show-target nil)
   (setq mu4e-get-mail-command "sh $HOME/bin/mbsync-parallel")
-  (setq mu4e-update-interval 60)
+  (setq mu4e-update-interval (* 5 60))
   (setq mu4e-drafts-folder "/Drafts")
   (setq mu4e-sent-folder "/Sent")
   (setq mu4e-refile-folder "/Refiled")
@@ -10523,7 +10544,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   ;; performance improvements (but with downsides)
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
-  (setq mu4e-index-cleanup t) ; nil improves performance
+  (setq mu4e-index-cleanup t) ; nil improves performance; do not sell to nil: refiled messages won’t show up
   (setq mu4e-index-lazy-check nil) ; t improves performance
 
   (setq mu4e-compose-context-policy 'ask)
@@ -10648,8 +10669,6 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   (setq mu4e-extras-daily-folder "/Daily")
   (setq mu4e-extras-wide-reply t)
 
-  ;; not working; see the definition of `mu4e-extras-mark-sent-as-read'
-  ;; (add-hook 'message-sent-hook #'mu4e-extras-mark-sent-as-read)
   (add-hook 'mu4e-mark-execute-pre-hook #'mu4e-extras-gmail-fix-flags)
   (add-hook 'mu4e-view-mode-hook #'mu4e-extras-set-face-locally)
 
@@ -11009,7 +11028,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
   :after telega telega-dired-dwim
   :demand t
   :config
-  (setq telega-extras-auto-share-audio-transcript t)
+  (setq telega-extras-auto-share-audio-transcript nil)
   (add-hook 'telega-chat-post-message-hook #'telega-extras-transcribe-audio)
 
   :general
@@ -11872,7 +11891,7 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     "http://philpapers.org/s/%s"
     :keybinding "p p")
   (defengine AnnasArchive
-    "https://annas-archive.org/search?index=&page=1&q=%s&ext=pdf&sort="
+    "https://annas-archive.gs/search?index=&page=1&q=%s&ext=pdf&sort="
     :keybinding "r r")
   (defengine ReducingSuffering
     "http://reducing-suffering.org/?s=%s"
@@ -12337,6 +12356,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            org-extras-id-update-id-locations
                            el-patch-validate-all
                            org-extras-agenda-switch-to-agenda-current-day
+                           mu4e-extras-update-all-mail-and-index
                            org-gcal-sync
                            elfeed-update)))
     (add-hook 'midnight-hook (lambda () (simple-extras-call-verbosely fun "Midnight hook now calling `%s'...")))))

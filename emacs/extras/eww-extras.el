@@ -469,7 +469,8 @@ function was called, if any."
 ;;;;;;; Authentication
 
 (defun eww-extras-annas-archive-authenticate ()
-  "Authenticate with Anna’s Archive."
+  "Authenticate with Anna’s Archive.
+Note that as of 2024-07-13 this does not appear to be working."
   (interactive)
   (save-window-excursion
     (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-get-authentication-details)

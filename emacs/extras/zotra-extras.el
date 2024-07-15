@@ -116,7 +116,6 @@ to get the entry.
   (bibtex-extras-convert-titleaddon-to-journaltitle)
   (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
   (zotra-extras-fix-octal-sequences)
-  (bibtex-clean-entry)
   (org-ref-clean-bibtex-entry)
   (tlon-cleanup-eaf-replace-urls)
   (setq zotra-extras-most-recent-bibkey (bibtex-extras-get-key)))
@@ -139,9 +138,13 @@ Zotero-imported bibtex entries."
 
 ;;;;; Protocol
 
-;; Just like `zotra-protocol' but with a call to `zotra-extras-add-entry' rather
-;; than `zotra-add-entry'
 (defun zotra-extras-protocol (info)
+  "Like `zotra-protocol' but with a call to `zotra-extras-add-entry'.
+INFO is a plist with the following keys:
+- `:url': URL of the page to be saved.
+- `:bibfile': Bibfile where the entry should be saved.
+- `:format': Format of the entry.
+- `:title': Title of the page."
   (let ((url (plist-get info :url))
 	(bibfile (plist-get info :bibfile))
 	(entry-format (plist-get info :format))

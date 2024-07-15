@@ -138,9 +138,13 @@ Zotero-imported bibtex entries."
 
 ;;;;; Protocol
 
-;; Just like `zotra-protocol' but with a call to `zotra-extras-add-entry' rather
-;; than `zotra-add-entry'
 (defun zotra-extras-protocol (info)
+  "Like `zotra-protocol' but with a call to `zotra-extras-add-entry'.
+INFO is a plist with the following keys:
+- `:url': URL of the page to be saved.
+- `:bibfile': Bibfile where the entry should be saved.
+- `:format': Format of the entry.
+- `:title': Title of the page."
   (let ((url (plist-get info :url))
 	(bibfile (plist-get info :bibfile))
 	(entry-format (plist-get info :format))

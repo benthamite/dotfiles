@@ -11339,12 +11339,11 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
    "g U" 'eww-extras-go-to-root-url-hierarchy
    ;; "p" 'eww-extras-open-with-recent-kill-ring
    "h" 'eww-extras-url-to-html
-   "p" 'eww-extras-url-to-pdf)
-  ((js-mode html-mode-map mhtml-mode-map)
-   "s-w" 'eww-extras-browse-file)
-  ((eww-mode-map ebib-entry-mode-map ebib-index-mode-map)
+   "p" 'eww-extras-url-to-pdf
    "s-d" 'eww-extras-url-to-pdf
-   "s-h" 'eww-extras-url-to-html))
+   "s-h" 'eww-extras-url-to-html)
+  ((js-mode html-mode-map mhtml-mode-map)
+   "s-w" 'eww-extras-browse-file))
 #+end_src
 
 ** prot-eww

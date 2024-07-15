@@ -378,7 +378,7 @@ If EXTENSION is non-nil, set its extension to its value."
 
 ;;;;; process entries
 
-(declare-function tlon-tex-translate-abstract-when-modified "tlon-tex")
+(declare-function tlon-deepl-translate-abstract "tlon-deepl")
 (defun ebib-extras-process-entry ()
   "Process the entry at point.
 Set the entry’s key and language; download and attach the relevant files; and
@@ -391,7 +391,7 @@ correctly set."
 	    (y-or-n-p "Regenerate key? "))
     (ebib-generate-autokey))
   (ebib-extras-get-or-set-language)
-  (tlon-tex-translate-abstract-when-modified)
+  (tlon-deepl-translate-abstract)
   (ebib-extras-attach-files))
 
 (defun ebib-extras-set-abstract ()
@@ -543,36 +543,21 @@ If file is already attached, set the abstract."
 
 ;;;;; ?
 
-(defconst ebib-extras-iso-639-2
-  '(("english" . "eng")
-    ("american" . "eng")
-    ("french" . "fra")
-    ("german" . "deu")
-    ("italian" . "ita")
-    ("spanish" . "spa")
-    ("portuguese" . "por")
-    ("russian" . "rus")
-    ("chinese" . "zho")
-    ("japanese" . "jpn")
-    ("korean" . "kor")
-    ("arabic" . "ara")
-    ("latin" . "lat")
-    ("greek" . "ell"))
-  "Alist of languages and their ISO 639-2 codes.")
-
 (declare-function files-extras-ocr-pdf "files-extras")
+(declare-function tlon-lookup-all "tlon-core")
+(defvar tlon-languages-properties)
 (defun ebib-extras-ocr-pdf (&optional force)
   "OCR the PDF file in the current entry.
 If FORCE is non-nil, or the command is invoked with a prefix argument, force OCR
 even if already present."
   (interactive "P")
-  (let ((file-name (ebib-extras-get-file "pdf"))
+  (let ((file-name (expand-file-name (ebib-extras-get-file "pdf")))
 	(lang (ebib-extras-get-or-set-language)))
-    (files-extras-ocr-pdf nil nil
-			  (format (concat (when force "--force-ocr ") "--deskew -l %s \"%s\" \"%s\"")
-				  (alist-get lang ebib-extras-iso-639-2 nil nil 'string=)
-				  (expand-file-name file-name)
-				  (expand-file-name file-name)))))
+    (files-extras-ocr-pdf nil file-name
+			  (format (concat (when force "--force-ocr ") "--deskew -l %s \"%2$s\" \"%2$s\"")
+				  (alist-get lang (tlon-lookup-all tlon-languages-properties :iso-639-2)
+					     nil nil 'string=)
+				  file-name))))
 
 (declare-function bibtex-set-field "bibex")
 (defun ebib-extras-get-or-set-language ()
@@ -585,10 +570,12 @@ even if already present."
 		      ('bibtex-mode #'bibtex-set-field)))
 	 (get-lang (lambda () (funcall get-field "langid")))
 	 (set-lang (lambda (lang) (funcall set-field "langid" lang)))
-	 (lang (funcall get-lang)))
-    (or lang
+	 (lang (funcall get-lang))
+	 (valid-lang (tlon-lookup tlon-languages-properties :standard :name lang)))
+    (or valid-lang
 	(funcall set-lang
-		 (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english")))))
+		 (completing-read "Select language: " (tlon-lookup-all tlon-languages-properties :standard)
+				  nil t "english")))))
 
 (defconst ebib-extras-library-genesis
   '("Library Genesis"
@@ -1023,7 +1010,9 @@ If called interactively, open the entry. Otherwise, return it as a string."
   "Open the entry for KEY in Ebib."
   (when-let ((file (ebib-extras-get-file-of-key key)))
     (ebib file key)
-    (ebib-edit-entry)))
+    (sleep-for 0.01)
+    (ebib-edit-entry)
+    ))
 
 (defun ebib-extras-sort (&optional state)
   "Sort Ebib index buffer by STATE.

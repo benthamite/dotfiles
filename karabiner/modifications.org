@@ -951,7 +951,7 @@ CLOCK: [2023-04-30 Sun 11:59]--[2023-04-30 Sun 12:07] =>  0:08
          [:l [:open "/Applications/DeepL.app"]]
          [:m [:open "/Applications/Media Center 29.app"]]
          [:o [:open "/Applications/zoom.us.app"]]
-         [:p [:open "/Applications/Signal.app"]]
+         [:p [:open "/Applications/Beeper.app"]]
          [:r [:open "/Applications/Karabiner-Elements.app"]]
          [:s [:open "/Applications/Slack.app"]]
          [:t [:open "/System/Applications/Utilities/Terminal.app"]]

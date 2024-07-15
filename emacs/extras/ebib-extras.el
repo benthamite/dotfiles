@@ -545,6 +545,7 @@ If file is already attached, set the abstract."
 
 (declare-function files-extras-ocr-pdf "files-extras")
 (declare-function tlon-lookup-all "tlon-core")
+(declare-function tlon-lookup "tlon-core")
 (defvar tlon-languages-properties)
 (defun ebib-extras-ocr-pdf (&optional force)
   "OCR the PDF file in the current entry.
@@ -555,8 +556,7 @@ even if already present."
 	(lang (ebib-extras-get-or-set-language)))
     (files-extras-ocr-pdf nil file-name
 			  (format (concat (when force "--force-ocr ") "--deskew -l %s \"%2$s\" \"%2$s\"")
-				  (alist-get lang (tlon-lookup-all tlon-languages-properties :iso-639-2)
-					     nil nil 'string=)
+				  (tlon-lookup tlon-languages-properties :iso-639-2 :name lang)
 				  file-name))))
 
 (declare-function bibtex-set-field "bibex")

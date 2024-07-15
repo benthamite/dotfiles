@@ -456,7 +456,8 @@
  (paths-files-bibliography-personal . `(,paths-file-personal-bibliography-new
                                         ,paths-file-personal-bibliography-old))
  (paths-tlon-todos-jobs-id . "19FDA2D4-C33C-48DB-8C48-546816F095EB")
- (paths-tlon-todos-generic-id . "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29"))
+ (paths-tlon-todos-generic-id . "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29")
+ (paths-dir-notes . (file-name-concat paths-dir-dropbox-tlon-leo "GPT/")))
 #+end_src
 
 * local variables

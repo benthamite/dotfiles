@@ -691,7 +691,6 @@ NAME and ARGS as in `use-package'."
 :ID:       A1D2F9BE-0983-4CE8-89C2-6727149F3268
 :END:
 
-
 /[[file:extras/use-package-extras.el][use-package-extras]] collects my extensions for ~use-package~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -705,7 +704,6 @@ NAME and ARGS as in `use-package'."
 :PROPERTIES:
 :ID:       9A6A90C2-ACB6-4899-B38C-1C483A4FFE06
 :END:
-
 
 /[[file:extras/elpaca-extras.el][elpaca-extras]] collects my extensions for ~elpaca~./
 

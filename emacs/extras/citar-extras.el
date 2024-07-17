@@ -84,13 +84,13 @@
     (ebib))
   (ebib-extras-open-key citekey))
 
-(declare-function bibtex-extras-move-entry-to-tlon "bibtex-extras")
+(declare-function tlon-move-entry-to-fluid "tlon-tex")
 (defun citar-extras-move-entry-to-tlon (citekey)
   "Move bibliographic entry associated with the CITEKEY to the Tlön bibliography."
   (interactive (list (citar-select-ref)))
   (save-window-excursion
     (citar-extras-goto-bibtex-entry citekey)
-    (bibtex-extras-move-entry-to-tlon)))
+    (tlon-move-entry-to-fluid)))
 
 (declare-function ebib-extras-get-file-of-key "bibtex-extras")
 (defun citar-extras-goto-bibtex-entry (citekey)

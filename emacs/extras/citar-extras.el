@@ -84,20 +84,18 @@
     (ebib))
   (ebib-extras-open-key citekey))
 
-(declare-function bibtex-extras-move-entry-to-tlon "bibtex-extras")
+(declare-function tlon-move-entry-to-fluid "tlon-tex")
 (defun citar-extras-move-entry-to-tlon (citekey)
   "Move bibliographic entry associated with the CITEKEY to the Tlön bibliography."
   (interactive (list (citar-select-ref)))
-  (require 'bibtex-extras)
   (save-window-excursion
     (citar-extras-goto-bibtex-entry citekey)
-    (bibtex-extras-move-entry-to-tlon)))
+    (tlon-move-entry-to-fluid)))
 
 (declare-function ebib-extras-get-file-of-key "bibtex-extras")
 (defun citar-extras-goto-bibtex-entry (citekey)
   "Goto the bibliographic entry associated with the CITEKEY in the bibtex file."
   (interactive (list (citar-select-ref)))
-  (require 'ebib-extras)
   (if-let ((file (ebib-extras-get-file-of-key citekey)))
       (progn
         (find-file file)
@@ -110,7 +108,6 @@
 (defun citar-extras-open-file-at-point ()
   "Launch `citar' with citekey associated with file at point."
   (interactive)
-  (require 'files-extras)
   (citar-open `(,(files-extras-get-stem-of-current-buffer))))
 
 (defun citar-extras-update-old-bibliography ()

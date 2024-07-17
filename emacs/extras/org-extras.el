@@ -893,28 +893,28 @@ empty headings, which trigger an `org-roam' warning."
    ["Longtermism"
     ("l s" "longtermism-es"    (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))]
    ["Radio Altruismo Eficaz"
-    ("rae" "rae"               (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
+    ("r" "rae"                 (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
    ["Misc"
     "EA International"
-    ("i" "ea.international"  (lambda () (interactive) (org-roam-extras-id-goto "AF3FEF60-7624-4C3C-9A48-1FB531D1D635")))
+    ("i" "ea.international"    (lambda () (interactive) (org-roam-extras-id-goto "AF3FEF60-7624-4C3C-9A48-1FB531D1D635")))
     "EA News"
-    ("n" "ean-issues"        (lambda () (interactive) (org-roam-extras-id-goto "A2710AA8-BEEB-412D-9FE0-8AF856E4464C")))
+    ("n" "ean-issues"          (lambda () (interactive) (org-roam-extras-id-goto "A2710AA8-BEEB-412D-9FE0-8AF856E4464C")))
     "La Bisagra"
-    ("s" "bisagra"           (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))
+    ("s" "bisagra"             (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))
     "Boletín"
-    ("a" "boletin"           (lambda () (interactive) (org-roam-extras-id-goto "989E6696-2672-47FE-855B-00DA806B7A56")))
+    ("a" "boletin"             (lambda () (interactive) (org-roam-extras-id-goto "989E6696-2672-47FE-855B-00DA806B7A56")))
     "GWWC"
-    ("g" "gwwc"              (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
+    ("g" "gwwc"                (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
    [""
     "Meetings"
-    ("m f" "fede"            (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
-    ("m l" "leo"             (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))
-    ("m g" "group"           (lambda () (interactive) (org-roam-extras-id-goto "BE68100E-753D-408B-9B31-2D58A457A70B")))
+    ("m f" "fede"              (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
+    ("m l" "leo"               (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))
+    ("m g" "group"             (lambda () (interactive) (org-roam-extras-id-goto "BE68100E-753D-408B-9B31-2D58A457A70B")))
     ""
     "Comms"
-    ("c i" "Check issues"    (lambda () (interactive) (org-roam-extras-id-goto "03B164B5-89FC-4611-A2B9-6E5D3AE7C1B1")))
-    ("c e" "Check email"     (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
-    ("c t" "Check telegram"  (lambda () (interactive) (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D")))]])
+    ("c i" "Check issues"      (lambda () (interactive) (org-roam-extras-id-goto "03B164B5-89FC-4611-A2B9-6E5D3AE7C1B1")))
+    ("c e" "Check email"       (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
+    ("c t" "Check telegram"    (lambda () (interactive) (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D")))]])
 
 ;;;###autoload (autoload 'org-extras-config-dispatch "org-extras" nil t)
 (transient-define-prefix org-extras-config-dispatch ()

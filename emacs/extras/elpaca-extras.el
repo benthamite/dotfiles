@@ -76,6 +76,16 @@ using this command."
     (when package-features
       (message "Reloaded: %s" (mapconcat #'symbol-name package-features " ")))))
 
+;;;###autoload
+(defun elpaca-extras-update-and-reload (&optional package)
+  "Update PACKAGE and reload its features.
+If PACKAGE is nil, prompt for it."
+  (interactive)
+  (list (let ((elpaca-overriding-prompt "Update and reload package: ")
+	      (package (or package (elpaca--read-queued))))
+	  (elpaca-update package)
+	  (elpaca-extras-reload package))))
+
 (provide 'elpaca-extras)
 ;;; elpaca-extras.el ends here
 

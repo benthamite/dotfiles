@@ -88,6 +88,12 @@
 	      :cost 5
 	      :tokens 128000
 	      :last-update "2023-10-01"
+	    :description "[Recommended] The most advanced multimodal model that’s faster and cheaper than GPT-4 Turbo with stronger vision capabilities.")
+	   (:backend "ChatGPT"
+	      :model "gpt-4o-mini"
+	      :cost 0.15
+	      :tokens 128000
+	      :last-update "2023-10-01"
 	      :description "[Recommended] The most advanced multimodal model that’s faster and cheaper than GPT-4 Turbo with stronger vision capabilities.")
     (:backend "ChatGPT"
 	      :model "gpt-4-turbo"

@@ -912,6 +912,7 @@ empty headings, which trigger an `org-roam' warning."
     ("m g" "group"             (lambda () (interactive) (org-roam-extras-id-goto "BE68100E-753D-408B-9B31-2D58A457A70B")))
     ""
     "Comms"
+    ("c x" "Check inbox"       (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
     ("c i" "Check issues"      (lambda () (interactive) (org-roam-extras-id-goto "03B164B5-89FC-4611-A2B9-6E5D3AE7C1B1")))
     ("c e" "Check email"       (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
     ("c t" "Check telegram"    (lambda () (interactive) (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D")))]])

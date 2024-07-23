@@ -3621,7 +3621,9 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
    "W" 'dired-extras-copy-filename-as-kill-sans-extension
    "z" 'dired-extras-mark-screenshots
    "s-d" 'dired-extras-do-delete-fast
-   "s-r" 'dired-extras-copy-to-remote-docs-directory))
+   "s-r" 'dired-extras-copy-to-remote-docs-directory)
+   (image-mode-map
+   "c" 'dired-extras-copy-image))
 #+end_src
 
 ** dired-x

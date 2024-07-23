@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: monero
+# key: xmr
+# contributor: Pablo Stafforini
+# --
+monero-wallet-cli --daemon-address node.xmr.to:18081 --trusted-daemon

@@ -51,6 +51,7 @@ using this command."
    (list (let ((elpaca-overriding-prompt "Reload package: "))
            (elpaca--read-queued))
          current-prefix-arg))
+  (message "Reloading: %s" package)
   ;; This finds features in the currently installed version of PACKAGE, so if
   ;; it provided other features in an older version, those are not unloaded.
   (let* ((package-name (symbol-name package))

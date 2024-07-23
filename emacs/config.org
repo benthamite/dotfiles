@@ -2932,6 +2932,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
   (setq undo-outer-limit undo-limit)
 
   :general
+  ("A-z" 'vundo)
   (vundo-mode-map
    "j" 'vundo-backward
    ";" 'vundo-forward

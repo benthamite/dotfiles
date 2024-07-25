@@ -7120,7 +7120,10 @@ This needs to be configured.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package json-mode
-  :defer 10)
+  :defer 10
+  :general
+  (json-mode-map
+   "RET" nil))
 #+end_src
 
 ** csv-mode

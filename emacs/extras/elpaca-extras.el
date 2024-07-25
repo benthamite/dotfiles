@@ -85,6 +85,7 @@ If PACKAGE is nil, prompt for it."
   (list (let ((elpaca-overriding-prompt "Update and reload package: ")
 	      (package (or package (elpaca--read-queued))))
 	  (elpaca-update package)
+	  (sleep-for 2) ; hack; not sure it’s even needed
 	  (elpaca-extras-reload package))))
 
 (provide 'elpaca-extras)

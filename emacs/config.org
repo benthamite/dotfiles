@@ -7782,7 +7782,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
           ("ss" . "src shell")
           ("v" . "verse")
           ("w" . "WP")))
-
+  (plist-put org-format-latex-options :html-scale 2) ; make LaTeX images larger in HTML export
   (dolist (module '(org-habit org-tempo))
     (add-to-list 'org-modules module))
 

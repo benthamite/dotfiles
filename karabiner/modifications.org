@@ -390,14 +390,17 @@ CLOCK: [2021-03-20 Sat 21:48]--[2021-03-20 Sat 21:56] =>  0:08
 
 * Simlayers
 :PROPERTIES:
-:ID:       41B05E5F-6567-4616-9AD9-0398AA66F55A
+:ID:       49B0C87D-BCC7-4142-8E3E-759FD9C6C075
 :END:
 
 #+begin_src clojure
 :simlayers {
             :b-mode {:key :b}
-            :f-mode {:key :f}
+            ;; :f-mode {:key :f}
             :j-mode {:key :j}
+#+end_src
+
+#+begin_src clojure            
             :k-mode {:key :k}
             :m-mode {:key :m}
             :p-mode {:key :p}
@@ -750,6 +753,8 @@ end using terms from
 :PROPERTIES:
 :ID:       9C5F6E97-A593-4959-95DE-167BBCD86ABD
 :END:
+
+[2024-07-27 Sat] Disabling because the costs of interference outweigh the benefits.
 
 #+begin_src clojure
 {:des "f-mode (special chars)"
@@ -1823,7 +1828,7 @@ Source: [[https://en.wikipedia.org/wiki/Letter_frequency][Wikipedia]]
 | U      | 0.02800 |  4.6428571 |      |
 | M      | 0.02400 |  5.4166667 |      |
 | W      | 0.02400 |  5.4166667 |      |
-| F      | 0.02200 |  5.9090909 |  t   |
+| F      | 0.02200 |  5.9090909 |      |
 | G      | 0.02000 |        6.5 |      |
 | Y      | 0.02000 |        6.5 |      |
 | [[id:8C32B75E-1455-444F-B5F6-83DC8263D558][P]]      | 0.01900 |  6.8421053 | t    |

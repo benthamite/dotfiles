@@ -260,13 +260,17 @@ files which do not exist any more or are no longer readable will be killed."
     (use-local-map newmap)))
 
 (declare-function ebib-extras-get-file "ebib-extras")
-(defun files-extras-ocr-pdf (arg &optional filename parameters)
+(declare-function ebib-extras-get-or-set-language "ebib-extras")
+(declare-function tlon-select-language "tlon-core")
+(declare-function tlon-lookup "tlon-core")
+(defvar tlon-languages-properties)
+(defun files-extras-ocr-pdf (force &optional filename parameters)
   "OCR the FILENAME.
 If FILENAME is nil, use the PDF file at point or the file visited by the current
-buffer. With prefix argument ARG, force OCR even if it has already been
-performed on the file.
+buffer. If FORCE is non-nil or called with a prefix argument argument, force OCR
+even if it has already been performed on the file.
 
-Optionally, pass PARAMETERS to `ocrmypdf'. If so, ARG and FILENAME
+Optionally, pass PARAMETERS to `ocrmypdf'. If so, FORCE and FILENAME
 have no effect."
   (interactive "P")
   (unless (executable-find "ocrmypdf")
@@ -279,9 +283,14 @@ have no effect."
 			 (_ (user-error "Could not determine file to OCR"))))))
     (unless (string= (file-name-extension filename) "pdf")
       (user-error "File is not a PDF"))
-    (let* ((parameters
+    (let* ((language (pcase major-mode
+		       ('ebib-entry-mode (ebib-extras-get-or-set-language))
+		       (_ (tlon-select-language))))
+	   (lang (tlon-lookup tlon-languages-properties :iso-639-2 :name language))
+	   (parameters
 	    (or parameters
-		(format (concat (when arg "--force-ocr ") "--deskew '%s' '%s'") filename filename)))
+		(format (concat (when force "--force-ocr ") "--deskew -l %s \"%2$s\" \"%2$s\"")
+			lang filename)))
 	   (process (start-process-shell-command
 		     "ocrmypdf" "*ocr-pdf*"
 		     (concat "ocrmypdf " parameters))))
@@ -292,6 +301,7 @@ have no effect."
 This function gets STRING when PROCESS produces output."
   (when (buffer-live-p (process-buffer process))
     (with-current-buffer (process-buffer process)
+      (message "OCR in progress...")
       (cond ((string-match-p "PriorOcrFoundError: page already has text" string)
 	     (message "OCR already performed on this file."))
 	    ;; when invoked with `--force-ocr'

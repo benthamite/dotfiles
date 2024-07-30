@@ -871,7 +871,9 @@ empty headings, which trigger an `org-roam' warning."
     ("f" "finance"           (lambda () (interactive) (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C")))
     ("i" "Anki"              (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))
     ("y" "YouTube"           (lambda () (interactive) (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E")))
-    ("k" "current book"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))]])
+    ("k k" "current book"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))
+    ("k g" "Pimsleur German"      (lambda () (interactive) (org-roam-extras-id-goto "B2928AE7-FA6B-45FE-9EFC-AF5E1E79B386")))
+    ("k f" "Pimsleur French"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))]])
 
 (transient-define-prefix org-extras-tlon-menu ()
   "Menu for Tlön projects."
@@ -912,7 +914,7 @@ empty headings, which trigger an `org-roam' warning."
     ("m g" "group"             (lambda () (interactive) (org-roam-extras-id-goto "BE68100E-753D-408B-9B31-2D58A457A70B")))
     ""
     "Comms"
-    ("c x" "Check inbox"       (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
+    ("c x" "Check inbox"       (lambda () (interactive) (org-roam-extras-id-goto "A2555D4E-AC86-4986-AF7E-778D6E78D47E")))
     ("c i" "Check issues"      (lambda () (interactive) (org-roam-extras-id-goto "03B164B5-89FC-4611-A2B9-6E5D3AE7C1B1")))
     ("c e" "Check email"       (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
     ("c t" "Check telegram"    (lambda () (interactive) (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D")))]])

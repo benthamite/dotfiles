@@ -178,22 +178,21 @@
 
 :simlayers {
             :b-mode {:key :b}
-            ;; :f-mode {:key :f}
+            :f-mode {:key :f}
             :j-mode {:key :j}
-
-:k-mode {:key :k}
-:m-mode {:key :m}
-:p-mode {:key :p}
-:q-mode {:key :q}
-:v-mode {:key :v}
-:x-mode {:key :x :condi :emacs}
-:y-mode {:key :y}
-:z-mode {:key :z}
-:comma-mode {:key :comma :condi :emacs}
-:period-mode {:key :period}
-:semicolon-mode {:key :semicolon}
-:slash-mode {:key :slash}
-}
+            :k-mode {:key :k}
+            :m-mode {:key :m}
+            :p-mode {:key :p}
+            :q-mode {:key :q}
+            :v-mode {:key :v}
+            :x-mode {:key :x :condi :emacs}
+            :y-mode {:key :y}
+            :z-mode {:key :z}
+            :comma-mode {:key :comma :condi :emacs}
+            :period-mode {:key :period}
+            :semicolon-mode {:key :semicolon}
+            :slash-mode {:key :slash}
+            }
 
 :templates {:alfred "osascript -e 'tell application \"Alfred 4\" to run trigger \"%s\" in workflow \"%s\" with argument \"%s\"'"
             :km "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"%s\"'"

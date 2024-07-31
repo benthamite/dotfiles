@@ -6749,6 +6749,14 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
    "A-u" 'pdf-view-midnight-minor-mode))
 #+end_src
 
+*** TODO Sync PDF page position across devices
+:PROPERTIES:
+:ID:       E8789D51-DF91-4EC3-9D07-6B948C980A85
+:END:
+:LOGBOOK:
+CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
+:END:
+
 ** pdf-tools-extras
 :PROPERTIES:
 :ID:       C4B53EDC-372F-42B2-924E-FE48647B67AE

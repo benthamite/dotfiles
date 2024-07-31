@@ -9458,8 +9458,10 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   :general
   (pdf-annot-minor-mode-map
    "s-s" 'org-noter-create-skeleton)
-   (org-mode-map
-   "s-n" 'org-noter-sync-current-note))
+  (org-noter-notes-mode-map
+   "s-n" 'org-noter-sync-current-note
+   "s-k" 'org-noter-sync-prev-note
+   "s-l" 'org-noter-sync-next-note))
 #+end_src
 
 - To check: https://org-roam.discourse.group/t/org-roam-bibtex-in-a-sub-directory/649/5

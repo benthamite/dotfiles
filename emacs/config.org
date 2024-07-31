@@ -11406,6 +11406,8 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
 /[[https://www.github.com/armindarvish/consult-web][consult-web]] is browses search results from one or several custom sources (such web search engines, AI assistants, elfeed database, and org notes) directly in the Emacs minibuffer./
 
+[2024-07-27 Sat] This has now become [[https://github.com/armindarvish/consult-omni][consult-omni]].
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-web
   :elpaca (consult-web

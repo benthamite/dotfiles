@@ -5,6 +5,7 @@
 :TOC:      ignore
 :ARCH:      ignore
 :END:
+#+filetags: :project:
 
 * Introduction
 :PROPERTIES:
@@ -901,6 +902,14 @@ CLOCK: [2021-12-01 Wed 17:12]--[2021-12-01 Wed 17:27] =>  0:15
          [:period :≥]
          ]}
 #+end_src
+
+**** TODO Fix ~m-mode~ problems
+:PROPERTIES:
+:ID:       81AD27AD-32CF-4455-A13D-D6B2A42B4F00
+:END:
+
+
+E.g. "me" sometimes inserts =
 
 *** p-mode
 :PROPERTIES:

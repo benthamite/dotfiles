@@ -5,6 +5,7 @@
 :TOC:      ignore
 :ARCH:      ignore
 :END:
+#+filetags: :project:
 
 * Introduction
 :PROPERTIES:
@@ -896,6 +897,14 @@ CLOCK: [2021-12-01 Wed 17:12]--[2021-12-01 Wed 17:27] =>  0:15
          [:period :≥]
          ]}
 #+end_src
+
+**** TODO Fix ~m-mode~ problems
+:PROPERTIES:
+:ID:       81AD27AD-32CF-4455-A13D-D6B2A42B4F00
+:END:
+
+
+E.g. "me" sometimes inserts =
 
 *** p-mode
 :PROPERTIES:
@@ -1827,13 +1836,13 @@ Source: [[https://en.wikipedia.org/wiki/Letter_frequency][Wikipedia]]
 | G      | 0.02000 |        6.5 |      |
 | Y      | 0.02000 |        6.5 |      |
 | [[id:8C32B75E-1455-444F-B5F6-83DC8263D558][P]]      | 0.01900 |  6.8421053 | t    |
-| B      | 0.01500 |  8.6666667 | t    |
-| V      | 0.00980 |  13.265306 | t    |
-| K      | 0.00770 |  16.883117 | t    |
+| [[id:8C32B75E-1455-444F-B5F6-83DC8263D558][B]]      | 0.01500 |  8.6666667 | t    |
+| [[id:A9B31157-4AC5-4F7A-9181-0AE8B8539B5F][V]]      | 0.00980 |  13.265306 | t    |
+| [[id:FBF02867-9942-47E7-B201-DE86156E82F9][K]]      | 0.00770 |  16.883117 | t    |
 | [[id:0901DE3D-511F-4547-ACCD-3AAD9703DAAD][J]]      | 0.00150 |  86.666667 | t    |
 | [[id:A670C98B-FCD0-4B4C-A3D9-C0DB143209AE][X]]      | 0.00150 |  86.666667 | t    |
-| Q      | 0.00095 |  136.84211 | t    |
-| Z      | 0.00074 |  175.67568 | t    |
+| [[id:B3028ED3-0E12-4CA5-AC14-B89DECB5C7D8][Q]]      | 0.00095 |  136.84211 | t    |
+| [[id:303127EC-3362-408C-9A3B-45C2A108D994][Z]]      | 0.00074 |  175.67568 | t    |
 #+TBLFM: $3=@2$2/$2
 
 * Local variables

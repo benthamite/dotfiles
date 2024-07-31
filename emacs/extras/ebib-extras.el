@@ -552,12 +552,7 @@ If file is already attached, set the abstract."
 If FORCE is non-nil, or the command is invoked with a prefix argument, force OCR
 even if already present."
   (interactive "P")
-  (let ((file-name (expand-file-name (ebib-extras-get-file "pdf")))
-	(lang (ebib-extras-get-or-set-language)))
-    (files-extras-ocr-pdf nil file-name
-			  (format (concat (when force "--force-ocr ") "--deskew -l %s \"%2$s\" \"%2$s\"")
-				  (tlon-lookup tlon-languages-properties :iso-639-2 :name lang)
-				  file-name))))
+  (files-extras-ocr-pdf force))
 
 (declare-function bibtex-set-field "bibex")
 (defun ebib-extras-get-or-set-language ()

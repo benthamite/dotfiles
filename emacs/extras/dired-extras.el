@@ -126,6 +126,15 @@ losing the `put back' option."
   (require 'image-dired)
   (image-dired-show-all-from-dir (dired-current-directory)))
 
+(declare-function files-extras-read-file "files-extras")
+(defun dired-extras-copy-image ()
+  "Copy image FILE to the kill ring."
+  (interactive)
+  (if (derived-mode-p 'image-mode)
+      (do-applescript
+       (format "set the clipboard to POSIX file \"%s\"" buffer-file-name))
+    (user-error "Not in an image buffer")))
+
 ;;;;; gnus-dired
 
 ;; replaces `gnus-dired-mail-buffers' function so it works on

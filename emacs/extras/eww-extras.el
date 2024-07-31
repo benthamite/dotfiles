@@ -47,7 +47,7 @@ directory, the URL, and the output file.")
 The placeholders `%s' are replaced by the Chrome program, the Chrome cookie data
 directory, the URL, and the output file.")
 
-;;;;; Annas Archive
+;;;;; Anna’s Archive
 
 (defvar eww-extras-annas-archive-callback nil
   "Callback function to run by `eww-extras-annas-archive-download-file'.")
@@ -402,7 +402,7 @@ function was called, if any."
       (eww url))))
 
 (defun eww-extras-annas-archive-select-and-open-url ()
-  "Get the download URLs from the Annas Archive search results buffer."
+  "Get the download URLs from the Anna’s Archive search results buffer."
   (remove-hook 'eww-after-render-hook #'eww-extras-annas-archive-select-and-open-url)
   (save-window-excursion
     (let (links)
@@ -417,7 +417,7 @@ function was called, if any."
 	(message "No results found.")))))
 
 (defun eww-extras-annas-archive-proceed-to-download-page ()
-  "Proceed to the Annas Archive download page."
+  "Proceed to the Anna’s Archive download page."
   (remove-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
   (save-window-excursion
     (let* ((speed (if eww-extras-annas-archive-use-fast-download-links "Fast" "Slow"))
@@ -429,7 +429,7 @@ function was called, if any."
 
 (defvar ebib-extras-attach-file-key)
 (defun eww-extras-annas-archive-download-file ()
-  "Download the file from the Annas Archive download page."
+  "Download the file from the Anna’s Archive download page."
   (remove-hook 'eww-after-render-hook 'eww-extras-annas-archive-download-file)
   (let* ((bibtex-key ebib-extras-attach-file-key)
 	 (url (eww-extras-annas-archive-get-download-url))
@@ -457,7 +457,7 @@ function was called, if any."
     (message "Downloading `%s'..." filename)))
 
 (defun eww-extras-annas-archive-get-download-url ()
-  "Get the download URL from the Annas Archive download page."
+  "Get the download URL from the Anna’s Archive download page."
   (or (eww-extras-get-url-in-link "Download now")
       (let ((generic-error "Could not find download link")
 	    (quota-exceeded "You’ve run out of fast downloads today"))
@@ -469,7 +469,8 @@ function was called, if any."
 ;;;;;;; Authentication
 
 (defun eww-extras-annas-archive-authenticate ()
-  "Authenticate with Anna’s Archive."
+  "Authenticate with Anna’s Archive.
+Note that as of 2024-07-13 this does not appear to be working."
   (interactive)
   (save-window-excursion
     (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-get-authentication-details)

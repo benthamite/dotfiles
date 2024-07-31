@@ -691,7 +691,6 @@ NAME and ARGS as in `use-package'."
 :ID:       A1D2F9BE-0983-4CE8-89C2-6727149F3268
 :END:
 
-
 /[[file:extras/use-package-extras.el][use-package-extras]] collects my extensions for ~use-package~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -705,7 +704,6 @@ NAME and ARGS as in `use-package'."
 :PROPERTIES:
 :ID:       9A6A90C2-ACB6-4899-B38C-1C483A4FFE06
 :END:
-
 
 /[[file:extras/elpaca-extras.el][elpaca-extras]] collects my extensions for ~elpaca~./
 
@@ -2934,6 +2932,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
   (setq undo-outer-limit undo-limit)
 
   :general
+  ("A-z" 'vundo)
   (vundo-mode-map
    "j" 'vundo-backward
    ";" 'vundo-forward
@@ -3177,8 +3176,7 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
    "«" 'skeleton-pair-insert-maybe)
   ((org-mode-map telega-chat-mode-map)
    "~" 'skeleton-pair-insert-maybe
-   "=" 'skeleton-pair-insert-maybe
-   "*" 'skeleton-pair-insert-maybe)
+   "=" 'skeleton-pair-insert-maybe)
   ((emacs-lisp-mode-map emacs-lisp-interaction-mode-map markdown-mode-map forge-post-mode-map)
    "`" 'skeleton-pair-insert-maybe)
   ((markdown-mode-map forge-post-mode-map)
@@ -3624,7 +3622,9 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
    "W" 'dired-extras-copy-filename-as-kill-sans-extension
    "z" 'dired-extras-mark-screenshots
    "s-d" 'dired-extras-do-delete-fast
-   "s-r" 'dired-extras-copy-to-remote-docs-directory))
+   "s-r" 'dired-extras-copy-to-remote-docs-directory)
+   (image-mode-map
+   "c" 'dired-extras-copy-image))
 #+end_src
 
 ** dired-x
@@ -6749,6 +6749,14 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
    "A-u" 'pdf-view-midnight-minor-mode))
 #+end_src
 
+*** TODO Sync PDF page position across devices
+:PROPERTIES:
+:ID:       E8789D51-DF91-4EC3-9D07-6B948C980A85
+:END:
+:LOGBOOK:
+CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
+:END:
+
 ** pdf-tools-extras
 :PROPERTIES:
 :ID:       C4B53EDC-372F-42B2-924E-FE48647B67AE
@@ -7120,7 +7128,10 @@ This needs to be configured.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package json-mode
-  :defer 10)
+  :defer 10
+  :general
+  (json-mode-map
+   "RET" nil))
 #+end_src
 
 ** csv-mode
@@ -7779,7 +7790,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
           ("ss" . "src shell")
           ("v" . "verse")
           ("w" . "WP")))
-
+  (plist-put org-format-latex-options :html-scale 2) ; make LaTeX images larger in HTML export
   (dolist (module '(org-habit org-tempo))
     (add-to-list 'org-modules module))
 
@@ -9454,8 +9465,10 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   :general
   (pdf-annot-minor-mode-map
    "s-s" 'org-noter-create-skeleton)
-   (org-mode-map
-   "s-n" 'org-noter-sync-current-note))
+  (org-noter-notes-mode-map
+   "s-n" 'org-noter-sync-current-note
+   "s-k" 'org-noter-sync-prev-note
+   "s-l" 'org-noter-sync-next-note))
 #+end_src
 
 - To check: https://org-roam.discourse.group/t/org-roam-bibtex-in-a-sub-directory/649/5
@@ -9471,8 +9484,13 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-noter-extras
-   :after org-noter
-   :demand t)
+  :after org-noter
+  :demand t
+  :general
+  (org-noter-notes-mode-map
+   "s-a" 'org-noter-extras-cleanup-annotation
+   "s-d" 'org-noter-extras-dehyphenate
+   "s-o" 'org-noter-extras-highlight-offset))
 #+end_src
 
 * reference & citation
@@ -10360,6 +10378,11 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
   ;; needs to be set via `customize'
   :custom (async-email-sending-use-async-send-mail t))
 #+end_src
+
+*** TODO Open issue
+:PROPERTIES:
+:ID:       C1790096-C90A-4C28-9257-34223AC4341C
+:END:
 
 ** message
 :PROPERTIES:
@@ -11346,12 +11369,11 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
    "g U" 'eww-extras-go-to-root-url-hierarchy
    ;; "p" 'eww-extras-open-with-recent-kill-ring
    "h" 'eww-extras-url-to-html
-   "p" 'eww-extras-url-to-pdf)
-  ((js-mode html-mode-map mhtml-mode-map)
-   "s-w" 'eww-extras-browse-file)
-  ((eww-mode-map ebib-entry-mode-map ebib-index-mode-map)
+   "p" 'eww-extras-url-to-pdf
    "s-d" 'eww-extras-url-to-pdf
-   "s-h" 'eww-extras-url-to-html))
+   "s-h" 'eww-extras-url-to-html)
+  ((js-mode html-mode-map mhtml-mode-map)
+   "s-w" 'eww-extras-browse-file))
 #+end_src
 
 ** prot-eww
@@ -11390,6 +11412,8 @@ Remember that every piece of Elisp that I write is for my own educational and re
 :END:
 
 /[[https://www.github.com/armindarvish/consult-web][consult-web]] is browses search results from one or several custom sources (such web search engines, AI assistants, elfeed database, and org notes) directly in the Emacs minibuffer./
+
+[2024-07-27 Sat] This has now become [[https://github.com/armindarvish/consult-omni][consult-omni]].
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-web

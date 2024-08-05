@@ -873,7 +873,7 @@ empty headings, which trigger an `org-roam' warning."
     ("y" "YouTube"           (lambda () (interactive) (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E")))
     ("k k" "current book"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))
     ("k g" "Pimsleur German"      (lambda () (interactive) (org-roam-extras-id-goto "B2928AE7-FA6B-45FE-9EFC-AF5E1E79B386")))
-    ("k f" "Pimsleur French"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))]])
+    ("k f" "Pimsleur French"      (lambda () (interactive) (org-roam-extras-id-goto "A7ED81D0-8C13-44CE-9D63-7316FAFC2E7D")))]])
 
 (transient-define-prefix org-extras-tlon-menu ()
   "Menu for Tlön projects."

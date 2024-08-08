@@ -315,14 +315,13 @@ ordering defined in `ebib-extras-valid-file-extensions'."
 	 (dolist (filename file-list)
 	   (let ((stem (file-name-base filename))
 		 (extension (file-name-extension filename)))
-	     (unless (equal stem key)
-	       (let ((new-filename
-		      (ebib-extras--rename-and-abbreviate-file
-		       (ebib-extras--extension-directories extension)
-		       key
-		       extension)))
-		 (rename-file filename new-filename)
-		 (setq filename new-filename)))
+	     (let ((new-filename
+		    (ebib-extras--rename-and-abbreviate-file
+		     (ebib-extras--extension-directories extension)
+		     key
+		     extension)))
+	       (rename-file filename new-filename)
+	       (setq filename new-filename))
 	     (ebib-set-field-value field filename key ebib--cur-db ";")))
 	 (ebib--redisplay-field field)
 	 (ebib--redisplay-index-item field))))

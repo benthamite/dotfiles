@@ -56,7 +56,7 @@ directory, the URL, and the output file.")
   "BibTeX key of the book being downloaded.")
 
 (defconst eww-extras-annas-archive-home-url
-  "https://annas-archive.se/"
+  "https://annas-archive.org/"
   "URL to Anna’s Archive.")
 
 (defconst eww-extras-annas-archive-auth-url
@@ -396,7 +396,7 @@ function was called, if any."
 			 (string string)
 			 (t (read-string "Search string: "))))
 	   (url (format "%ssearch?index=&page=1&q=%s&ext=pdf&sort="
-			eww-extras-annas-archive-home-url string)))
+			eww-extras-annas-archive-home-url (url-encode-url string))))
       (when callback (setq eww-extras-annas-archive-callback callback))
       (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-select-and-open-url)
       (eww url))))

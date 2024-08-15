@@ -137,7 +137,7 @@ If DIR is nil, use `paths-dir-notes'."
        (setq dir (file-name-concat paths-dir-dropbox note-type))))
     (list dir tags)))
 
-(defun org-roam-extras-turn-heading-to-note ()
+(defun org-roam-extras-convert-heading-to-note ()
   "Convert the heading at point into a note in a separate file."
   (interactive)
   (let ((note-name (read-string "Note name: " (org-get-heading t t t t))))

@@ -5013,13 +5013,6 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
    "s-c" 'wgrep-finish-edit))
 #+end_src
 
-*** TODO Debug why changes are sometimes not applied
-:PROPERTIES:
-:ID:       861C92F2-F0CF-4407-925C-A7ECBBAE0BEC
-:END:
-
-Some discussion [[https://github.com/mhayashi1120/Emacs-wgrep/issues/36][here]]. Maybe start by trying =M-x wgrep-save-all-buffers=  next time this happens?
-
 * minibuffer completion
 :PROPERTIES:
 :ID:       E83EC00B-0C94-44CD-9EC0-355992C99234
@@ -6427,11 +6420,6 @@ To populate the database of historical prices:
   (ledger-reconcile-mode-map
    "q" 'ledger-reconcile-quit))
 #+end_src
-
-*** TODO Run python scripts via LaunchAgent
-:PROPERTIES:
-:ID:       E235F4DC-677D-4143-A679-66FCBC310101
-:END:
 
 *** resources
 :PROPERTIES:
@@ -8296,11 +8284,6 @@ CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
   (org-mode-map
    "s-a" 'org-archive-to-archive-sibling))
 #+end_src
-
-*** TODO Align org-archive tags
-:PROPERTIES:
-:ID:       568D63EF-8C13-41CE-939A-AE996F6D13F9
-:END:
 
 *** TODO [#6] Process archives ~org/archive~
 :PROPERTIES:
@@ -12426,11 +12409,6 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
    "M-d" nil
    "D" 'bbdb-extras-bbdb-delete-field-or-record-no-confirm))
 #+end_src
-
-*** TODO Diagnose why elpaca can't load this
-:PROPERTIES:
-:ID:       88C73B04-2EBA-40A6-B5F4-23C92E3306B5
-:END:
 
 ** bbdb-extras
 :PROPERTIES:

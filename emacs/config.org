@@ -6670,7 +6670,7 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
 #+end_src
 
 
-*** TODO Set local server
+*** TODO [#6] Set local server
 :PROPERTIES:
 :ID:       3C3B9F22-E8AF-4F94-8A7E-A613A47A765B
 :END:
@@ -6737,7 +6737,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
    "A-u" 'pdf-view-midnight-minor-mode))
 #+end_src
 
-*** TODO Sync PDF page position across devices
+*** TODO [#5] Sync PDF page position across devices
 :PROPERTIES:
 :ID:       E8789D51-DF91-4EC3-9D07-6B948C980A85
 :END:
@@ -8203,7 +8203,7 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
    "H-o" 'org-clock-out))
 #+end_src
 
-*** TODO Find a way to restore the org-clock when refreshing the tab bar
+*** TODO [#6] Find a way to restore the org-clock when refreshing the tab bar
 :PROPERTIES:
 :ID:       91C2D236-79B7-470A-B667-D200CCA92A9D
 :END:
@@ -8995,7 +8995,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   (setq org-contacts-files `(,(file-name-concat paths-dir-tlon-repos "babel-core/contacts.org"))))
 #+end_src
 
-*** TODO Migrate from ~bbdb~
+*** MAYBE [#6] Migrate from ~bbdb~
 :PROPERTIES:
 :ID:       7762DE20-118C-49AF-9D47-CDDFDF846BD8
 :END:
@@ -9615,12 +9615,12 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
    "A-C-s-f" 'bibtex-next-entry))
 #+end_src
 
-*** TODO Move ratings from org headings to bibtex
+*** TODO [#5] Move ratings from org headings to bibtex
 :PROPERTIES:
 :ID:       18A96B99-EAD2-4C1E-94C2-619903A52898
 :END:
 
-*** TODO Why bibtex generates a key starting with 'Boer' when the last name is deBoer?
+*** TODO [#6] Why bibtex generates a key starting with 'Boer' when the last name is deBoer?
 :PROPERTIES:
 :ID:       2FB7CCAA-E1FE-4B93-B441-DB9E8437233F
 :END:
@@ -9821,7 +9821,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
       "u" 'citar-open-links))))
 #+end_src
 
-*** TODO Tweak note creation function so that it adds a tag with the work type
+*** TODO [#6] Tweak note creation function so that it adds a tag with the work type
 :PROPERTIES:
 :ID:       FB459DDE-BFDD-4740-9FFA-7AFFB74A38D1
 :END:
@@ -10062,7 +10062,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
 
-*** TODO Modify my custom ebib formulas so that they use native uniquify
+*** TODO [#6] Modify my custom ebib formulas so that they use native uniquify
 :PROPERTIES:
 :ID:       BA7B5845-B148-43B6-BE50-C1CBF89478BB
 :END:
@@ -10355,7 +10355,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
   :custom (async-email-sending-use-async-send-mail t))
 #+end_src
 
-*** TODO Open issue
+*** TODO [#5] Open issue
 :PROPERTIES:
 :ID:       C1790096-C90A-4C28-9257-34223AC4341C
 :END:
@@ -10612,7 +10612,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    "E" nil))
 #+end_src
 
-*** TODO Debug why emails sent by me are not marked as read in Gmail
+*** TODO [#3] Debug why emails sent by me are not marked as read in Gmail
 :PROPERTIES:
 :ID:       2534A378-53D8-4FCF-A710-817A883CF2B5
 :END:
@@ -11514,7 +11514,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
    "x" 'elfeed-show-visit))
 #+end_src
 
-*** TODO Revise key bindings
+*** TODO [#6] Revise key bindings
 :PROPERTIES:
 :ID:       2CDFD8A4-5D9B-4300-A5B2-D621146F8B3F
 :END:

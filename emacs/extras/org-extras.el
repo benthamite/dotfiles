@@ -871,9 +871,10 @@ empty headings, which trigger an `org-roam' warning."
     ("f" "finance"           (lambda () (interactive) (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C")))
     ("i" "Anki"              (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))
     ("y" "YouTube"           (lambda () (interactive) (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E")))
-    ("k k" "current book"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))
-    ("k g" "Pimsleur German"      (lambda () (interactive) (org-roam-extras-id-goto "B2928AE7-FA6B-45FE-9EFC-AF5E1E79B386")))
-    ("k f" "Pimsleur French"      (lambda () (interactive) (org-roam-extras-id-goto "A7ED81D0-8C13-44CE-9D63-7316FAFC2E7D")))]])
+    ("k c" "cat sense"      (lambda () (interactive) (org-roam-extras-id-goto "ED18E2B5-BDEA-4FC0-9D1C-F31338471814")))
+    ("k h" "Hitler bio"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))
+    ("k g" "Pimsleur German"      (lambda () (interactive) (org-roam-extras-id-goto "3B9725E0-79C2-44FA-B0FA-41D43EC4F4A8")))
+    ("k f" "Pimsleur French"      (lambda () (interactive) (org-roam-extras-id-goto "60232ADC-60B8-4617-AEFB-F6F73A099709")))]])
 
 (transient-define-prefix org-extras-tlon-menu ()
   "Menu for Tlön projects."

@@ -145,5 +145,17 @@ tends to be higher than the book page number."
 				 '("-" "­"))))
     (setq org-noter-extras-dehyphenate-hyphens hyphen)))
 
+(defun org-noter-extras-sync-next-note ()
+  "Like `org-noter-sync-next-note', but do not switch focus to the PDF buffer."
+  (interactive)
+  (org-noter-sync-next-note)
+  (other-window 1))
+
+(defun org-noter-extras-sync-prev-note ()
+  "Like `org-noter-sync-prev-note', but do not switch focus to the PDF buffer."
+  (interactive)
+  (org-noter-sync-prev-note)
+  (other-window 1))
+
 (provide 'org-noter-extras)
 ;;; org-noter-extras.el ends here

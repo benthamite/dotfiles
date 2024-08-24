@@ -257,25 +257,23 @@ use `ox-clip-formatted-copy'."
   "Take the contents of the system clipboard and paste it as an image."
   (interactive)
   (if (executable-find "pngpaste")
-      (let* ((counter 1)
-	     (image-file (concat
-			  paths-dir-org-images
-			  (org-id-get nil 'create)
-			  (format "-%d.png" counter))))
-	(while (file-exists-p image-file)
-	  (setq counter (1+ counter))
-	  (setq image-file (concat
-			    paths-dir-org-images
-			    (org-id-get nil 'create)
-			    (format "-%d.png" counter))))
-	(call-process-shell-command (format "pngpaste '%s'" image-file))
-	(let ((caption (read-string "Caption: ")))
-	  (unless (string= caption "")
-	    (insert (format "#+CAPTION: %s \n" caption))))
-	(insert (format "[[file:%s]]" image-file))
-	(org-display-inline-images)
-	(message "You can toggle inline images with C-c C-x C-v"))
-    (user-error "Requires pngpaste in PATH")))
+      (let* ((counter 1))
+	(while (file-exists-p (org-extras-make-image-filename counter))
+	  (setq counter (1+ counter)))
+	(let ((filename (org-extras-make-image-filename counter)))
+	  (call-process-shell-command (format "pngpaste '%s'" filename))
+	  (let ((caption (read-string "Caption: ")))
+	    (unless (string-empty-p caption)
+	      (insert (format "#+CAPTION: %s \n" caption))))
+	  (insert (format "[[file:%s]]" filename))
+	  (org-display-inline-images)))
+    (user-error "`pngpaste' not found; please install it (e.g. `brew install pngpaste')")))
+
+(defun org-extras-make-image-filename (count)
+  "Make a unique filename for an image based on COUNT."
+  (concat paths-dir-org-images
+	  (org-id-get nil 'create)
+	  (format "-%03d.png" count)))
 
 (defun org-extras-inline-images (&optional arg)
   "Enable or disable the display of inline images.

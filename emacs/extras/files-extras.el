@@ -302,8 +302,8 @@ This function gets STRING when PROCESS produces output."
   (when (buffer-live-p (process-buffer process))
     (with-current-buffer (process-buffer process)
       (message "OCR in progress...")
-      (cond ((string-match-p "PriorOcrFoundError: page already has text" string)
-	     (message "OCR already performed on this file."))
+      (cond ((string-match-p "page already has text! - aborting" string)
+	     (message "OCR already performed on this file; to perform OCR any way, run with a prefix argument."))
 	    ;; when invoked with `--force-ocr'
 	    ((or (string-match-p "page already has text" string)
 		 (string-match-p "common.py:261" string))

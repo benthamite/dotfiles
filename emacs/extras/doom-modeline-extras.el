@@ -62,8 +62,7 @@
 	     (bound-and-true-p gptel-model))
     (concat gptel-model (doom-modeline-spc))))
 
-(defvar gptel-extras-ai-models)
-(declare-function gptel-backend-name "gptel")
+(defvar gptel-mode)
 (declare-function gptel-extras-get-cost "gptel-extras")
 (doom-modeline-def-segment gptel-cost ()
   "Display the cost of prompting the current model."

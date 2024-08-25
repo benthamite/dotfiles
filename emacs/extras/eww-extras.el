@@ -422,9 +422,10 @@ function was called, if any."
   (save-window-excursion
     (let* ((speed (if eww-extras-annas-archive-use-fast-download-links "Fast" "Slow"))
 	   (url (eww-extras-get-url-in-link (concat speed " Partner Server"))))
-      (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-download-file)
       (if eww-extras-annas-archive-use-eww
-	  (eww url)
+	  (progn
+	    (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-download-file)
+	    (eww url))
 	(browse-url-default-browser url)))))
 
 (defvar ebib-extras-attach-file-key)

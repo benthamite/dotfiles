@@ -47,7 +47,7 @@
   :group 'doom-modeline)
 
 (defcustom doom-modeline-extras-tlon-split t
-  "Whether to display if `tlon-split-mode' is active."
+  "Whether to display if `tlon-split-mode' is active in the modeline."
   :type 'boolean
   :group 'doom-modeline)
 

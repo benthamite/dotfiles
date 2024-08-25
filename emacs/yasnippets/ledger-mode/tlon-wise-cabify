@@ -1,9 +1,0 @@
-# -*- mode: snippet -*-
-# name: tlon-wise-cabify
-# key: twc
-# contributor: Pablo Stafforini
-# --
-`(format-time-string "%Y-%m-%d")` Cabify
-    Expenses:Core:Transportation            $1 USD ; taxi $2
-    Assets:Wise
-$0

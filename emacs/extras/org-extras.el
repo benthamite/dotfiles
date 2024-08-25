@@ -37,6 +37,7 @@
 (require 'oc)
 (require 'paths)
 (require 'simple-extras)
+(require 'transient)
 
 ;;;; User options
 

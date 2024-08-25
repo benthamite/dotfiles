@@ -2125,13 +2125,13 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
   :config
   ;; the custom modeline needs to be set after `gptel-extras' loads, to display the associated element
   (with-eval-after-load 'gptel-extras
-    ;; we slightly tweak the `main' modeline to (1) display the major mode icon to
-    ;; the left of point position indicators and (2) and a `gptel' element. note
-    ;; that which elements are shown is controlled by the relevant `doom-modeline'
-    ;; user options. to hide the `gptel' element, set `doom-modeline-extras-gptel'
-    ;; to nil.
+    ;; we slightly tweak the `main' modeline to (1) display the major mode icon
+    ;; to the left of point position indicators and (2) and `gptel' and
+    ;; `org-roam' elements. note that which elements are shown is controlled by
+    ;; the relevant `doom-modeline' user options. to hide any of the elements,
+    ;; set the relevant `doom-modeline-extras' user options to nil.
     (doom-modeline-def-modeline 'custom
-      '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info)
+      '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info org-roam-backlinks)
       '(tlon-split gptel gptel-cost compilation objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
     (doom-modeline-set-modeline 'custom t))
 

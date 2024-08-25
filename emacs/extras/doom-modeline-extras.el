@@ -46,6 +46,11 @@
   :type 'boolean
   :group 'doom-modeline)
 
+(defcustom doom-modeline-extras-org-roam t
+  "Whether to display the `org-roam' backlink count in the modeline."
+  :type 'boolean
+  :group 'doom-modeline)
+
 (defcustom doom-modeline-extras-tlon-split t
   "Whether to display if `tlon-split-mode' is active in the modeline."
   :type 'boolean
@@ -77,6 +82,12 @@
   (when (and doom-modeline-extras-tlon-split
 	     (bound-and-true-p tlon-split-mode))
     (concat "split" (doom-modeline-spc))))
+
+(defvar org-roam-extras-current-backlink-count)
+(doom-modeline-def-segment org-roam-backlinks
+  (when (and (derived-mode-p 'org-mode)
+             org-roam-extras-current-backlink-count)
+    (concat (doom-modeline-spc) (format "%dB" org-roam-extras-current-backlink-count))))
 
 ;;;;; Notification counter Forge sync
 

@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: wise
+# key: wi
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` ${1:recipient}
+    Expenses:${5:account}  ${2:amount, inc. decimal} ${3:$$(yas-choose-value '("USD" "EUR" "GBP"))} ; ${4:details}
+    Assets:Wise
+
+$0

@@ -75,7 +75,8 @@
 (defvar tlon-split-mode)
 (doom-modeline-def-segment tlon-split ()
   "Display \"split\" in the modeline when `tlon-split-mode' is enabled."
-  (when (bound-and-true-p tlon-split-mode)
+  (when (and doom-modeline-extras-tlon-split
+	     (bound-and-true-p tlon-split-mode))
     (concat "split" (doom-modeline-spc))))
 
 ;;;;; Notification counter Forge sync

@@ -62,6 +62,8 @@
 
 ;;;; Main variables
 
+(defvar org-roam-extras-current-backlink-count nil)
+
 ;;;; Functions
 
 (defun org-roam-extras-recent (days &optional limit)
@@ -243,6 +245,31 @@ list of tags and further restrict the selection to headings with that tag."
   (org-roam-id-open id nil)
   (widen)
   (org-roam-id-open id nil))
+
+;;;;; Backlinks
+
+(defun org-roam-extras-backlink-count ()
+  "Return the number of org-roam backlinks for the current buffer."
+  (when (derived-mode-p 'org-mode)
+    (when-let* ((node-id (org-roam-id-at-point))
+		(backlinks (org-roam-db-query
+			    [:select [source] :from links :where (= dest $s1)]
+			    node-id)))
+      (length backlinks))))
+
+(defun org-roam-extras-update-backlink-count ()
+  "Update the number of backlinks for the current buffer."
+  (setq org-roam-extras-current-backlink-count
+        (org-roam-extras-backlink-count)))
+
+(declare-function doom-modeline-update-buffer-file-name "doom-modeline-segments")
+(defun org-roam-extras-update-modeline ()
+  "Update the modeline with the number of backlinks for the current buffer."
+  (when (derived-mode-p 'org-mode)
+    (org-roam-extras-update-backlink-count)
+    (doom-modeline-update-buffer-file-name)))
+
+(add-hook 'post-command-hook #'org-roam-extras-update-modeline)
 
 ;;;;; Patched functions
 

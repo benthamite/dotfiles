@@ -276,7 +276,7 @@ list of tags and further restrict the selection to headings with that tag."
 (el-patch-defun org-roam-db-query (sql &rest args)
   "Run SQL query on Org-roam database with ARGS.
 SQL can be either the emacsql vector representation, or a string."
-  (el-patch-add (sleep-for 0 1))
+  (el-patch-add (sleep-for 0.01))
   (apply #'emacsql (org-roam-db) sql args))
 
 (provide 'org-roam-extras)

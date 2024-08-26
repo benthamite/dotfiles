@@ -1010,8 +1010,9 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
 ;; in any mode. Even if inserting a citation is not allowed, one may
 ;; want to invoke the command to trigger contextual actions via
 ;; `embark'.
-(el-patch-defun org-cite-insert (arg)
-  "Insert a citation at point.
+(with-eval-after-load 'oc
+  (el-patch-defun org-cite-insert (arg)
+    "Insert a citation at point.
 Insertion is done according to the processor set in `org-cite-insert-processor'.
 ARG is the prefix argument received when calling interactively the function."
     (interactive "P")

@@ -639,7 +639,7 @@ Formats current entry according to variable `bibtex-entry-format'."
 			   (setq error-field-name
 				 (car (last (aref alt-fields idx))))
 			   (user-error "Alternative mandatory fields `%s' are missing"
-				       (mapconcat 'identity
+				       (mapconcat #'identity
 						  (reverse
 						   (aref alt-expect idx))
 						  ", ")))
@@ -647,7 +647,7 @@ Formats current entry according to variable `bibtex-entry-format'."
 			   (setq error-field-name
 				 (car (last (aref alt-fields idx))))
 			   (user-error "Fields `%s' are alternatives"
-				       (mapconcat 'identity
+				       (mapconcat #'identity
 						  (reverse
 						   (aref alt-fields idx))
 						  ", ")))))))

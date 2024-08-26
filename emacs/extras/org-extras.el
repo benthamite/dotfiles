@@ -729,9 +729,9 @@ Further lines starting with a star get quoted with a comma to
 keep the structure of the Org file."
   (interactive)
   (let ((regionp (use-region-p))
-        (transform-start (point-min))
-        (transform-end (point-max))
-        (return-content ""))
+	(transform-start (point-min))
+	(transform-end (point-max))
+	(return-content ""))
     (when regionp
       (setq transform-start (region-beginning))
       (setq transform-end (region-end)))
@@ -739,29 +739,29 @@ keep the structure of the Org file."
     (save-excursion
       (goto-char transform-start)
       (while (< (point) transform-end)
-        (let* ((text-face (if (listp (get-text-property (point) 'face))
-                              (get-text-property (point) 'face)
-                            (list (get-text-property (point) 'face))))
-               (link (get-text-property (point) 'shr-url))
-               (text (buffer-substring-no-properties (point)
-                                                     (or (next-single-property-change (point) 'face nil transform-end)
-                                                         (next-single-property-change (point) 'shr-url nil transform-end)
-                                                         transform-end)))
-               (formatted-text (replace-regexp-in-string shr-bullet "- " text)))
-          ;; Apply Org mode formatting for italics and bold where applicable.
-          (when (memq 'italic text-face)
-            (setq formatted-text (concat "/" formatted-text "/")))
-          (when (memq 'bold text-face)
-            (setq formatted-text (concat "*" formatted-text "*")))
-          ;; Format links according to Org mode syntax.
-          (when link
-            (setq formatted-text (concat "[[" link "][" text "]]")))
-          ;; Append the formatted text to the return content.
-          (setq return-content (concat return-content formatted-text))
-          ;; Advance the point.
-          (goto-char (or (next-single-property-change (point) 'face)
-                         (next-single-property-change (point) 'shr-url)
-                         (point-max))))))
+	(let* ((text-face (if (listp (get-text-property (point) 'face))
+			      (get-text-property (point) 'face)
+			    (list (get-text-property (point) 'face))))
+	       (link (get-text-property (point) 'shr-url))
+	       (text (buffer-substring-no-properties (point)
+						     (or (next-single-property-change (point) 'face nil transform-end)
+							 (next-single-property-change (point) 'shr-url nil transform-end)
+							 transform-end)))
+	       (formatted-text (replace-regexp-in-string shr-bullet "- " text)))
+	  ;; Apply Org mode formatting for italics and bold where applicable.
+	  (when (memq 'italic text-face)
+	    (setq formatted-text (concat "/" formatted-text "/")))
+	  (when (memq 'bold text-face)
+	    (setq formatted-text (concat "*" formatted-text "*")))
+	  ;; Format links according to Org mode syntax.
+	  (when link
+	    (setq formatted-text (concat "[[" link "][" text "]]")))
+	  ;; Append the formatted text to the return content.
+	  (setq return-content (concat return-content formatted-text))
+	  ;; Advance the point.
+	  (goto-char (or (next-single-property-change (point) 'face)
+			 (next-single-property-change (point) 'shr-url)
+			 (point-max))))))
     ;; Copy the whole formatted content to the kill ring.
     (kill-new return-content)))
 
@@ -1014,28 +1014,28 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
   "Insert a citation at point.
 Insertion is done according to the processor set in `org-cite-insert-processor'.
 ARG is the prefix argument received when calling interactively the function."
-  (interactive "P")
-  (unless org-cite-insert-processor
-    (user-error "No processor set to insert citations"))
-  (org-cite-try-load-processor org-cite-insert-processor)
-  (let ((name org-cite-insert-processor))
-    (cond
-     ((not (org-cite-get-processor name))
-      (user-error "Unknown processor %S" name))
-     ((not (org-cite-processor-has-capability-p name 'insert))
-      (user-error "Processor %S cannot insert citations" name))
-     (t
-      (let ((context (org-element-context))
-            (insert (org-cite-processor-insert (org-cite-get-processor name))))
-        (cond
-         ((org-element-type-p context '(citation citation-reference))
-          (funcall insert context arg))
-         (el-patch-remove
-           ((org-cite--allowed-p context)
-            (funcall insert nil arg)))
-         (t
-          (el-patch-swap (user-error "Cannot insert a citation here")
-                         (funcall insert nil arg)))))))))
+    (interactive "P")
+    (unless org-cite-insert-processor
+      (user-error "No processor set to insert citations"))
+    (org-cite-try-load-processor org-cite-insert-processor)
+    (let ((name org-cite-insert-processor))
+      (cond
+       ((not (org-cite-get-processor name))
+	(user-error "Unknown processor %S" name))
+       ((not (org-cite-processor-has-capability-p name 'insert))
+	(user-error "Processor %S cannot insert citations" name))
+       (t
+	(let ((context (org-element-context))
+	      (insert (org-cite-processor-insert (org-cite-get-processor name))))
+	  (cond
+	   ((org-element-type-p context '(citation citation-reference))
+	    (funcall insert context arg))
+	   (el-patch-remove
+	     ((org-cite--allowed-p context)
+	      (funcall insert nil arg)))
+	   (t
+	    (el-patch-swap (user-error "Cannot insert a citation here")
+			   (funcall insert nil arg))))))))))
 
 ;;;; Footer
 

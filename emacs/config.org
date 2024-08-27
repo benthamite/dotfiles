@@ -4153,6 +4153,10 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :PROPERTIES:
 :ID:       488EF2B1-CCAC-4B91-A927-F89F71BCDAD3
 :END:
+:LOGBOOK:
+CLOCK: [2024-08-27 Tue 11:34]--[2024-08-27 Tue 12:10] =>  0:36
+CLOCK: [2024-08-26 Mon 21:09]--[2024-08-26 Mon 21:29] =>  0:20
+:END:
 
 
 /[[file:extras/frame-extras.el][frame-extras]] collects my extensions for ~frame~./
@@ -4168,7 +4172,10 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
      (add-hook 'spacious-padding-mode-hook #'frame-extras-restore-window-divider)))
 
   :general
-  ("C-H-I" 'frame-extras-maximize-frame)) ; triggered via b-mode in Karabiner
+  ;; the key bindings below are triggered via Karabiner
+  ("C-H-I" 'frame-extras-maximize-frame
+   "C-H-U" 'frame-extras-left-half
+   "C-H-P" 'frame-extras-right-half))
 #+end_src
 
 ** winum

@@ -4164,8 +4164,11 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   :config
   (tlon-init-override-code
    :frame-extras-maximize-frame
-   '((add-hook 'elpaca-after-init-hook #'frame-extras-maximize-frame)))
-     (add-hook 'spacious-padding-mode-hook #'frame-extras-restore-window-divider))
+   '((add-hook 'elpaca-after-init-hook #'frame-extras-maximize-frame)
+     (add-hook 'spacious-padding-mode-hook #'frame-extras-restore-window-divider)))
+
+  :general
+  ("C-H-I" 'frame-extras-maximize-frame)) ; triggered via b-mode in Karabiner
 #+end_src
 
 ** winum

@@ -720,6 +720,7 @@ CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
 {:des "b-mode (media controls, window sizing)"
  :rules [:b-mode
          [:p {:modi :⇧⌘⌥⌃ :key :p}] ; Rectangle, right half
+         [:i {:modi :C-H- :key :i} :emacs]
          [:i {:modi :⇧⌘⌥⌃ :key :i}] ; Rectangle, maximize
          [:o {:modi :⇧⌘⌥⌃ :key :o}] ; Rectangle, center
          [:u {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half

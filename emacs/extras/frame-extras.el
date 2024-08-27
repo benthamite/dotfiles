@@ -34,6 +34,7 @@
 (defun frame-extras-maximize-frame ()
   "Maximize the current frame."
   (interactive)
+  (set-frame-parameter nil 'fullscreen nil)
   (set-frame-parameter nil 'fullscreen 'maximized))
 
 (defun frame-extras-restore-window-divider ()

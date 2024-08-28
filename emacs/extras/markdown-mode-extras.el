@@ -121,7 +121,7 @@ character of the text, after the footnote's identifier.  If no
 footnote text is found, NIL is returned."
   (save-excursion
     (goto-char (point-min))
-    (when (re-search-forward (concat "^\\[" id "\\]:") nil t)
+    (when (re-search-forward (concat "^ \\{0,3\\}\\[" id "\\]:") nil t)
       (skip-chars-forward (el-patch-swap "[ \t]" "[:space:]"))
       (point))))
 

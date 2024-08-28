@@ -133,7 +133,7 @@ reset functions."
       (when calendar-extras-use-geolocation
 	(calendar-extras-set-geolocation))
       (setq display-wttr-locations `(,calendar-extras-location-name))))
-  (when (and tab-bar-extras-reset-wttr (featurep 'display-wttr))
+  (when (and tab-bar-extras-reset-wttr (bound-and-true-p display-wttr-mode))
     (display-wttr)))
 
 (defun tab-bar-extras-quick-reset ()

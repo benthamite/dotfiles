@@ -5230,7 +5230,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 :END:
 
 
-/[[file:extras/consult-extras.el][consult-extras]] collects my extensions for ~consult~./
+/[[file:extras/consult-extras.el][consult-extras]] collects my extensions for =consult=./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package consult-extras
@@ -5271,7 +5271,6 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 :ID:       BA613BB1-A3CF-4C47-973A-6B54091B3C0E
 :END:
 
-
 /[[https://github.com/ghosty141/consult-git-log-grep][consult-git-log-grep]] provides an interactive way to search the git log using =consult=./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -5293,7 +5292,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
 :END:
 
-/[[https://github.com/mohkale/consult-yasnippet/tree/cdb256d2c50e4f8473c6052e1009441b65b8f8ab][consult-yasnippet]] provides [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]] functionality to [[id:6405B8E7-6612-4D71-8C2C-A51F8808F4C6][yasnippet]]./
+/[[https://github.com/mohkale/consult-yasnippet/tree/cdb256d2c50e4f8473c6052e1009441b65b8f8ab][consult-yasnippet]] provides =consult= functionality to =yasnippet=./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-yasnippet
@@ -5318,7 +5317,7 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
 CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 :END:
 
-/[[https://github.com/oantolin/embark/blob/master/embark-consult.el][embark-consult]] provides integration between [[id:19A4F21C-2169-4529-92E4-68E3A584DDAC][embark]] and [[id:C6144D48-2E3C-4033-AD6E-5D7EE175D9E1][consult]]./
+/[[https://github.com/oantolin/embark/blob/master/embark-consult.el][embark-consult]] provides integration between =embark= and =consult=./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package embark-consult
@@ -5364,7 +5363,7 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 :END:
 
 
-/[[file:extras/orderless-extras.el][orderless-extras]] collects my extensions for ~orderless~./
+/[[file:extras/orderless-extras.el][orderless-extras]] collects my extensions for =orderless=./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package orderless-extras
@@ -5381,6 +5380,8 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 :PROPERTIES:
 :ID:       1a127c06-43b5-435b-a4e5-becc61997794
 :END:
+
+/[[nerd-icons-completion][nerd-icons-completion]] displays nerd icons in completion candidates./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package nerd-icons-completion
@@ -5399,6 +5400,8 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/ido.el][ido]] is a completion package for Emacs./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ido
   :config
@@ -5415,6 +5418,8 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 :END:
 
 /[[https://github.com/justbur/emacs-which-key][which-key]] displays available keybindings in a popup./
+
+[2024-08-28 Wed] Note that =which-key= is included in Emacs 30, so I should update the formula at some point.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package which-key

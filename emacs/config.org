@@ -659,7 +659,7 @@ We load ~use-package~ itself with ~elpaca~, then proceed to do the configuration
   (setq elpaca-use-package-by-default t))
 
 (use-package use-package
-   :demand t
+  :demand t
   :config
   (setq use-package-verbose t)
   (setq use-package-compute-statistics t)

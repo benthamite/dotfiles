@@ -245,8 +245,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org-gcal][org-gcal]]
   - [[#org-gcal-extras][org-gcal-extras]]
   - [[#calfw][calfw]]
-  - [[#calfw-blocks][calfw-blocks]]
   - [[#calfw-org][calfw-org]]
+  - [[#calfw-blocks][calfw-blocks]]
   - [[#time][time]]
   - [[#tmr][tmr]]
   - [[#display-wttr][display-wttr]]
@@ -4639,14 +4639,26 @@ CLOCK: [2023-11-17 Fri 20:11]--[2023-11-17 Fri 20:41] =>  0:30
 
 /[[https://github.com/haji-ali/emacs-calfw][calf]] is a calendar framework for Emacs./
 
-The original package is no longer maintained; the fork below adds a few improvements.
+The original package is no longer maintained. A [[https://github.com/haji-ali/emacs-calfw][fork]] by Abdul-Lateef Haji-Ali below added a few improvements. But that fork itself ceased to be maintained so I am now using my own fork.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package calfw
-  :elpaca (calfw
+  :ensure (calfw
            :host github
-           :repo "haji-ali/emacs-calfw")
-  :demand)
+           :repo "benthamite/emacs-calfw")
+  :demand t)
+#+end_src
+
+** calfw-org
+:PROPERTIES:
+:ID:       67CD7ECA-260B-4E09-B56B-6A39BAB78D5A
+:END:
+/[[https://github.com/benthamite/emacs-calfw/blob/master/calfw-org.el][calfw-org]] display org-agenda items in the calfw buffer./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package calfw-org
+  :after calfw
+  :demand t)
 #+end_src
 
 ** calfw-blocks
@@ -4656,23 +4668,13 @@ The original package is no longer maintained; the fork below adds a few improvem
 
 /[[https://github.com/ml729/calfw-blocks][calfw-blocks]] provides visual enhancements for calfw./
 
+The original package appears to no longer be maintained, so I have created my own fork.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package calfw-blocks
-  :elpaca (calfw-blocks
+  :ensure (calfw-blocks
              :host github
-             :repo "ml729/calfw-blocks")
-  :after calfw
-  :demand t)
-#+end_src
-
-** calfw-org
-:PROPERTIES:
-:ID:       67CD7ECA-260B-4E09-B56B-6A39BAB78D5A
-:END:
-/[[https://github.com/kiwanami/emacs-calfw/blob/master/calfw-org.el][calfw-org]] display org-agenda items in the calfw buffer./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package calfw-org
+             :repo "benthamite/calfw-blocks")
   :after calfw
   :demand t)
 #+end_src

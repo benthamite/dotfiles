@@ -287,7 +287,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#corfu][corfu]]
   - [[#corfu-extras][corfu-extras]]
   - [[#cape][cape]]
-  - [[#org-block-cafp][org-block-cafp]]
+  - [[#corg][corg]]
 - [[#help][help]]
   - [[#help][help]]
   - [[#help-at-pt][help-at-pt]]
@@ -5270,10 +5270,6 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 :ID:       BA613BB1-A3CF-4C47-973A-6B54091B3C0E
 :END:
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package consult-git-log-grep
-  :demand t)
-#+end_src
 
 /[[https://github.com/ghosty141/consult-git-log-grep][consult-git-log-grep]] provides an interactive way to search the git log using =consult=./
 
@@ -5530,20 +5526,19 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (setq cape-dabbrev-min-length 4))
 #+end_src
 
-** org-block-cafp
+
+** corg
 :PROPERTIES:
-:ID:       5D18297C-CB85-47D0-9637-D38F3BD01332
+:ID:       4E7EF83E-6E4B-4F17-B0F6-B018C8BA8A08
 :END:
 
-/[[https://github.com/xenodium/org-block-capf][org-block-cafp]] adds support for org block completion at point./
+/[[https://github.com/isamert/corg.el][corg]] provides provides completion-at-point for org-mode source block and dynamic block headers./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package org-block-capf
-  :elpaca (org-block-capf :host github :repo "xenodium/org-block-capf")
-  :after org
-  :demand t
+(use-package corg
+  :ensure (:host github :repo "isamert/corg.el")
   :config
-  (add-hook 'org-mode-hook #'org-block-capf-add-to-completion-at-point-functions))
+  (add-hook 'org-mode-hook #'corg-setup))
 #+end_src
 
 * help

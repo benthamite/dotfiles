@@ -54,6 +54,33 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
   ("H-G" 'consult-gh))
 #+end_src
 
+** consult-mu
+:PROPERTIES:
+:ID:       834A9797-AD26-44B5-BE4E-1CE52184E265
+:END:
+
+/[[https://github.com/armindarvish/consult-mu][consult-mu]] provides a dynamically updated search interface to mu4e./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package consult-mu
+  :elpaca (consult-mu :type git
+                      :host github
+                      :repo "armindarvish/consult-mu"
+                      :branch "develop"
+                      :files (:defaults "extras/*")
+                      :includes (consult-mu-compose
+                                 consult-mu-contacts-embark
+                                 consult-mu-contacts))
+  :after consult mu4e
+  :demand t
+  :config
+  (setq consult-git-log-grep-open-function #'magit-show-commit)
+
+  :general
+  ((magit-status-mode-map magit-log-mode-map)
+   "s-l" 'consult-git-log-grep))
+#+end_src
+
 ** org-block-cafp
 :PROPERTIES:
 :ID:       5D18297C-CB85-47D0-9637-D38F3BD01332

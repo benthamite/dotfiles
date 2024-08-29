@@ -268,6 +268,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#pcre2el][pcre2el]]
   - [[#wgrep][wgrep]]
 - [[#minibuffer-completion][minibuffer completion]]
+  - [[#bindings][bindings]]
   - [[#vertico][vertico]]
   - [[#embark][embark]]
   - [[#consult][consult]]
@@ -5083,6 +5084,19 @@ CLOCK: [2021-06-10 Thu 12:43]--[2021-06-10 Thu 12:49] =>  0:06
 | [[id:19A4F21C-2169-4529-92E4-68E3A584DDAC][embark]]     | minibuffer completion actions     |
 
 For an introduction to minibuffer completion, I recommend [[https://www.youtube.com/watch?v=d3aaxOqwHhI][this video]] by Protesilaos Stavrou. For a comprehensive overview of both minibuffer completion and completion at point, I recommend [[https://www.youtube.com/watch?v=fnE0lXoe7Y0][this video]] by Andrew Tropin.
+
+** bindings
+:PROPERTIES:
+:ID:       7591FA5E-C016-47FF-9389-C833AB2F1A14
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/bindings.el][bindings]] defines standard key bindings and some variables./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature bindings
+  :general
+  ("<C-i>" 'complete-symbol))
+#+end_src
 
 ** vertico
 :PROPERTIES:

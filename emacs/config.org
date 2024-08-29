@@ -7841,7 +7841,8 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    "H-s-o" 'org-open-at-point
    "s-d" 'org-deadline
    "s-e" 'org-set-effort
-   "s-f" 'org-insert-todo-subheading
+   "s-f" 'org-footnote-action
+   "s-h" 'org-insert-todo-subheading
    "s-p" 'org-time-stamp-inactive
    "s-A-p" 'org-time-stamp
    "s-q" 'org-set-tags-command

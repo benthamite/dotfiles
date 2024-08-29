@@ -5169,12 +5169,15 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
     :parent embark-general-map)
 
   :general
-  (embark-yasnippet-completion-actions
+  (embark-general-map
+   "DEL" nil
+   "D" 'delete-region)
+  (embark-yasnippet-comletion-actions
    "d" 'consult-yasnippet-visit-snippet-file)
   ("C-;" 'embark-act
    "C-H-;" 'embark-act-all
    "C-h B" 'embark-bindings)
-   (embark-general-map
+  (embark-general-map
    "I" 'embark-insert))
 #+end_src
 

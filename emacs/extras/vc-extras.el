@@ -127,14 +127,13 @@ If PRIVATE is non-nil, make it a private repository."
   (unless vc-extras-gh-executable
     (user-error "`gh' not found; please install it (`brew install gh')")))
 
-(defun vc-extras-ensure-gh-authenticated ()
+(defun vc-extras-check-gh-authenticated ()
   "Ensure that `gh' is authenticated."
+  (interactive)
   (vc-extras-ensure-gh-exists)
   (unless (string-match "Logged in to github\\.com account"
 			(shell-command-to-string "gh auth status"))
     (user-error "`gh' not authenticated; please authenticate (`gh auth login')")))
-
-(vc-extras-ensure-gh-authenticated)
 
 (provide 'vc-extras)
 ;;; vc-extras.el ends here

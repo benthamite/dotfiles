@@ -10048,7 +10048,7 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
                              ("Year" 4 t)
                              ("Title" 50 t)))
   (setq ebib-extra-fields
-        '((biblatex "abstract" "keywords" "origdate" "langid" "translation" "narrator" "file" "timestamp" "rating" "crossref" "=key=")
+        '((biblatex "abstract" "keywords" "origdate" "langid" "translation" "narrator" "file" "timestamp" "wordcount" "rating" "crossref" "=key=")
           (bibtex "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
 
   (setq ebib-hidden-fields ; unhide some fields

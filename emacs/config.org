@@ -9084,8 +9084,6 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
              :repo "legalnonsense/elgantt")
   :after org
   :defer 20
-  :config
-  (setq elgantt-agenda-files (file-name-concat paths-dir-emacs "elpaca/repos/elgantt/test.org")))
 #+end_src
 
 ** org-pomodoro

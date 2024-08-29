@@ -9,6 +9,23 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** org-block-cafp
+:PROPERTIES:
+:ID:       5D18297C-CB85-47D0-9637-D38F3BD01332
+:END:
+
+/[[https://github.com/xenodium/org-block-capf][org-block-cafp]] adds support for org block completion at point./
+
+[2024-08-28 Wed] Replaced with [[https://github.com/isamert/corg.el][corg]].
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package org-block-capf
+  :elpaca (org-block-capf :host github :repo "xenodium/org-block-capf")
+  :after org
+  :demand t
+  :config
+  (add-hook 'org-mode-hook #'org-block-capf-add-to-completion-at-point-functions))
+#+end_src
+
 ** hexrgb
 :PROPERTIES:
 :ID:       A9DD66E0-49A5-4A8C-8F45-016DECFF0BF0

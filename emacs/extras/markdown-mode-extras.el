@@ -111,19 +111,5 @@ insert italic delimiters and place the point in between them."
 		       ((eq markdown-italic-underscore 'double) "__")))))
     (markdown--insert-common delim delim markdown-regex-italic 1 3 'markdown-italic-face t)))
 
-;; revert commit 4ba59fd; this returns the wrong text in footnotes starting with
-;; an open bracket (e.g. a link)
-;; opened an issue: github.com/jrblevin/markdown-mode/issues/837
-(el-patch-defun markdown-footnote-find-text (id)
-  "Find the location of the text of footnote ID.
-The actual buffer position returned is the position of the first
-character of the text, after the footnote's identifier.  If no
-footnote text is found, NIL is returned."
-  (save-excursion
-    (goto-char (point-min))
-    (when (re-search-forward (concat "^ \\{0,3\\}\\[" id "\\]:") nil t)
-      (skip-chars-forward (el-patch-swap "[ \t]" "[:space:]"))
-      (point))))
-
 (provide 'markdown-mode-extras)
 ;;; markdown-mode-extras.el ends here

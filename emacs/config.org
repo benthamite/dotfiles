@@ -11108,6 +11108,8 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
   :disabled)
 #+end_src
 
+I installed ~ement~ in the hopes that I would be able to send Signal and WhatsApp messages from Emacs. I tried the [[https://github.com/alphapapa/ement.el/blob/6412c8aaae29ee79ccfb44582001c12d147cd5a6/e2ee.org#two-way-verification][two way verification]] method but calling ~panctl~ results in a ~dbus~-related error, and I was unable to make ~dubs~ work. Some discussion [[https://www.reddit.com/r/emacs/comments/1crerbh/comment/l40aszc/][here]] (see also [[https://www.reddit.com/r/emacs/comments/1crerbh/comment/l40prh2/][this comment]]).
+
 ** erc
 :PROPERTIES:
 :ID:       4FB5ECDA-2DB5-40F5-8BBE-6B0D4B51524D

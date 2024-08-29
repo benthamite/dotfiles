@@ -7881,6 +7881,9 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (setq org-extras-agenda-switch-to-agenda-current-day-timer
         (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
 
+  (setq org-extras-id-auto-add-excluded-directories `(,paths-dir-dropbox-tlon-fede
+                                                      ,(file-name-concat paths-dir-dropbox-tlon-fede "archive/")))
+
   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter org-extras-clocktable-sorter))
 
   (add-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)

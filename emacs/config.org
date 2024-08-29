@@ -4291,7 +4291,7 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55] =>  0:25
   (setq avy-case-fold-search nil)
   (setq avy-timeout-seconds 0.2)
   (setq avy-all-windows nil)
-  (setq avy-keys '(97 115 100 102 106 107 108 13 32 113 119 101 114 117 105 111 112 122 120 99 118 109 44 46 47))
+  (setq avy-keys (append '(?k) popper-echo-dispatch-keys))
   (setf (alist-get ?r avy-dispatch-alist) 'avy-extras-action-mark-to-char)
 
   :general

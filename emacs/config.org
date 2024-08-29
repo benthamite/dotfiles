@@ -6716,7 +6716,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   :config
   (setq pdf-view-use-scaling t)
   (setq pdf-view-use-imagemagick nil)
-  (setq pdf-view-resize-factor 1.1)
+  (setq pdf-view-resize-factor 1.01)
   (setq pdf-annot-default-annotation-properties
         '((t
            (label . user-full-name))

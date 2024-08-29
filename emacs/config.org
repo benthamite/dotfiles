@@ -232,6 +232,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#frame-extras][frame-extras]]
   - [[#winum][winum]]
   - [[#winner][winner]]
+  - [[#popper][popper]]
   - [[#avy][avy]]
   - [[#avy-extras][avy-extras]]
   - [[#writeroom-mode][writeroom-mode]]
@@ -4227,6 +4228,44 @@ CLOCK: [2021-10-03 Sun 18:45]--[2021-12-30 Thu 12:11] => 2105:26
 
   :general
   ("H-W" 'winner-undo))
+#+end_src
+
+** popper
+:PROPERTIES:
+:ID:       4DAF7C68-4A91-4E42-967C-F721148C95CA
+:END:
+:LOGBOOK:
+CLOCK: [2024-08-28 Wed 09:31]--[2024-08-28 Wed 11:38] =>  2:07
+:END:
+
+/[[https://github.com/karthink/popper][popper]] is a minor-mode to summon and dismiss buffers easily./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package popper
+  :demand t
+  :init
+  (setq popper-reference-buffers
+        '("\\*Warnings\\*"
+          "Output\\*$"
+          help-mode
+          helpful-mode
+          compilation-mode))
+  (popper-mode)
+  (popper-echo-mode)
+
+  :config
+  (setq popper-display-control 'user) ; assumes buffer-specific behavior customized via `display-buffer-alist'
+  (setq popper-echo-dispatch-keys '(?a ?s ?d ?f ?j ?l ?r ?q ?w ?e ?r ?u ?i ?o ?p ?z ?x ?c ?v ?m ?, ?. ?/ ? ))
+  (setq popper-window-height (lambda (window)
+                               "Set WINDOW to a size up to 33% of the frame height."
+                               (fit-window-to-buffer
+                                window
+                                (floor (frame-height) 3))))
+
+  :general
+  ("C-o" 'popper-toggle
+   "A-C-o" 'popper-toggle-type
+   "C-H-o" 'popper-cycle))
 #+end_src
 
 ** avy

@@ -5821,6 +5821,12 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :PROPERTIES:
 :ID:       E8C33B31-BFDD-45BF-ABDB-6F60353653CF
 :END:
+:LOGBOOK:
+CLOCK: [2024-08-27 Tue 13:30]--[2024-08-27 Tue 13:44] =>  0:14
+CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
+:END:
+
+/[[https://github.com/benthamite/macos][macos]] is a simple package I developed that provides a few macOS-specific functions./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package macos

@@ -4421,6 +4421,8 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 (use-package ace-link
   :defer 5
   :general
+  (custom-mode-map
+   "f" 'ace-link-custom)
   ((eww-mode-map elfeed-show-mode-map)
    "f" 'ace-link-eww)
   ((help-mode-map helpful-mode-map elisp-refs-mode-map)

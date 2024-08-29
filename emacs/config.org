@@ -7414,6 +7414,20 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
                                (concat "tlon/core/aistudio.google.com/" tlon-email-shared))
     :models '("gemini-1.0-pro" "gemini-1.5-pro" "gemini-1.5-flash"))
 
+  (gptel-make-openai "Perplexity"
+    :host "api.perplexity.ai"
+    :key (auth-source-pass-get "key" (concat "tlon/core/perplexity.ai/" tlon-email-shared))
+    :endpoint "/chat/completions"
+    :stream t
+    :models '(;; <https://docs.perplexity.ai/docs/model-cards>
+              "llama-3.1-sonar-huge-128k-online"
+              "llama-3.1-sonar-large-128k-online"
+              "llama-3.1-sonar-small-128k-online"
+              "llama-3.1-sonar-small-128k-chat"
+              "llama-3.1-sonar-large-128k-chat"
+              "llama-3.1-8b-instruct"
+              "llama-3.1-70b-instruct"))
+
   :general
   ("M-c" 'gptel-send
    "H-s-a" 'gptel-abort

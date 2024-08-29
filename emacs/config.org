@@ -595,12 +595,12 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 ;;; init.el --- Init File -*- lexical-binding: t -*-
-(defvar elpaca-installer-version 0.6)
+(defvar elpaca-installer-version 0.7)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref "f19f4db"
+                              :ref nil :depth 1
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                               :build (:not elpaca--activate-package)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
@@ -613,8 +613,10 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
     (when (< emacs-major-version 28) (require 'subr-x))
     (condition-case-unless-debug err
         (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                 ((zerop (call-process "git" nil buffer t "clone"
-                                       (plist-get order :repo) repo)))
+                 ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                 ,@(when-let ((depth (plist-get order :depth)))
+                                                     (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                 ,(plist-get order :repo) ,repo))))
                  ((zerop (call-process "git" nil buffer t "checkout"
                                        (or (plist-get order :ref) "--"))))
                  (emacs (concat invocation-directory invocation-name))
@@ -673,10 +675,10 @@ We load ~use-package~ itself with ~elpaca~, then proceed to do the configuration
 NAME and ARGS as in `use-package'."
   (declare (indent defun))
   `(use-package ,name
-     :elpaca (,name
+     :ensure (,name
               :host github
               :repo "benthamite/dotfiles"
-              ;; :branch "dev"
+              :branch "dev"
               :files ,(list (file-name-concat
                              "emacs/extras"
                              (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
@@ -762,7 +764,7 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
                        elpaca--pre-built-steps elpaca-build-steps))
           (list 'elpaca-unload-seq 'elpaca--activate-package)))
 
-(use-package seq :elpaca `(seq :build ,(elpaca-seq-build-steps)))
+(use-package seq :ensure `(seq :build ,(elpaca-seq-build-steps)))
 #+end_src
 
 ** general
@@ -808,10 +810,10 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package tlon-init
-  :elpaca (tlon-init
+  :ensure (tlon-init
            :host github
            :repo "tlon-team/tlon-init"
-           ;; :branch "dev"
+           :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :after paths
   :demand t
@@ -925,7 +927,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package transient-showcase
-  :elpaca (transient-showcase
+  :ensure (transient-showcase
            :host github
            :repo "positron-solutions/transient-showcase")
   :after transient)
@@ -1040,7 +1042,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package prot-common
-  :elpaca (prot-common
+  :ensure (prot-common
            :host github
            :repo "protesilaos/dotfiles"
            :local-repo "prot-common"
@@ -1066,7 +1068,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package prot-simple
-  :elpaca (prot-simple
+  :ensure (prot-simple
            :host github
            :repo "protesilaos/dotfiles"
            :local-repo "prot-simple"
@@ -1179,7 +1181,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package oauth2-auto
-  :elpaca (oauth2-auto
+  :ensure (oauth2-auto
            :host github
            :repo "telotortium/emacs-oauth2-auto"
            :protocol ssh)
@@ -1194,7 +1196,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package password-store-otp
-  :elpaca (password-store-otp :version (lambda (_) "0.1.5"))  ; github.com/progfolio/elpaca/issues/229
+  :ensure (password-store-otp :version (lambda (_) "0.1.5"))  ; github.com/progfolio/elpaca/issues/229
   :demand t)
 #+end_src
 
@@ -1208,7 +1210,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package password-store
-  :elpaca (password-store
+  :ensure (password-store
             :host github
             :repo "zx2c4/password-store"
             :files ("contrib/emacs/*.el"))
@@ -1411,7 +1413,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gh
-  :elpaca (gh :version (lambda (_) "2.29"))) ; github.com/progfolio/elpaca/issues/229
+  :ensure (gh :version (lambda (_) "2.29"))) ; github.com/progfolio/elpaca/issues/229
 #+end_src
 
 ** closql
@@ -1421,7 +1423,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package closql
-  :elpaca (closql
+  :ensure (closql
            :host github
            :repo "magit/closql")
   :demand t)
@@ -1520,7 +1522,7 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package magit-todos
-  :elpaca (magit-todos
+  :ensure (magit-todos
            :host github
            :repo "alphapapa/magit-todos"
            :build (:not elpaca--check-version))
@@ -1614,7 +1616,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package forge-search
-  :elpaca (forge-search
+  :ensure (forge-search
            :host github
            :repo "benthamite/forge-search.el"
            :branch "fix/forge-get-repository")
@@ -1799,7 +1801,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-modern-indent
-  :elpaca (org-modern-indent
+  :ensure (org-modern-indent
              :host github
              :repo "jdtsmith/org-modern-indent")
   :after org-modern org-indent
@@ -1884,7 +1886,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package modus-themes
-  :elpaca (modus-themes
+  :ensure (modus-themes
            :host github
            :repo "protesilaos/modus-themes")
   :after faces faces-extras simple-extras
@@ -1957,7 +1959,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package spacious-padding
-  :elpaca (spacious-padding
+  :ensure (spacious-padding
            :tag "0.3.0") ; using tagged version to avoid error on 2024-02-21
   :demand t
   :config
@@ -2376,7 +2378,7 @@ I use =hl-line= by default, but replace it with =hl-sentence= in modes (specific
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package hl-sentence
-  :elpaca (hl-sentence
+  :ensure (hl-sentence
            :host github
            :repo "milkypostman/hl-sentence")
   :demand t
@@ -2993,7 +2995,7 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package outli
-  :elpaca (outli
+  :ensure (outli
            :host github
            :repo "jdtsmith/outli")
   :after outline
@@ -3757,7 +3759,7 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package dired-hacks
-  :elpaca (dired-hacks :fetcher github :repo "Fuco1/dired-hacks")
+  :ensure (dired-hacks :fetcher github :repo "Fuco1/dired-hacks")
   :after dired
   :defer 10
 
@@ -3866,7 +3868,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package prot-scratch
-  :elpaca (prot-scratch
+  :ensure (prot-scratch
            :host github
            :repo "protesilaos/dotfiles"
            :local-repo "prot-scratch"
@@ -4589,7 +4591,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-gcal
-  :elpaca (org-gcal
+  :ensure (org-gcal
            :type git
            :host github
            :repo "kidd/org-gcal.el")
@@ -4974,7 +4976,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package substitute
-  :elpaca (substitute
+  :ensure (substitute
            :host sourcehut
            :repo "protesilaos/substitute")
   :demand t
@@ -5106,7 +5108,7 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package vertico
-  :elpaca (vertico :files (:defaults "extensions/*")
+  :ensure (vertico :files (:defaults "extensions/*")
                    :includes (vertico-indexed
                               vertico-flat
                               vertico-grid
@@ -5451,7 +5453,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package corfu
-  :elpaca (corfu :files (:defaults "extensions/*")
+  :ensure (corfu :files (:defaults "extensions/*")
                  :includes (corfu-info
                             corfu-echo
                             corfu-history
@@ -5807,7 +5809,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package eat
-  :elpaca (eat :type git
+  :ensure (eat :type git
                :host codeberg
                :repo "akib/emacs-eat"
                :files ("*.el" ("term" "term/*.el") "*.texi"
@@ -5830,7 +5832,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package macos
-  :elpaca (macos
+  :ensure (macos
            :host github
            :repo "benthamite/macos")
   :demand t
@@ -5881,7 +5883,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package dwim-shell-command
-  :elpaca (dwim-shell-command
+  :ensure (dwim-shell-command
              :host github
                    :repo "xenodium/dwim-shell-command"))
 #+end_src
@@ -6314,7 +6316,7 @@ CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gdrive
-  :elpaca (gdrive
+  :ensure (gdrive
            :host github
            :repo "benthamite/gdrive"
            :depth nil)
@@ -6482,7 +6484,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ledger-prices
-  :elpaca (ledger-prices
+  :ensure (ledger-prices
            :host github
            :repo "benthamite/ledger-prices")
   :defer 5
@@ -6507,10 +6509,10 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package tlon
-  :elpaca (tlon
+  :ensure (tlon
            :host github
            :repo "tlon-team/tlon.el"
-           ;; :branch "dev"
+           :branch "dev"
            :depth nil) ; clone entire repo, not just last commit
   :demand t
   :after paths
@@ -6623,7 +6625,7 @@ CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package goldendict-ng
-  :elpaca (goldendict-ng
+  :ensure (goldendict-ng
            :host github
            :repo "benthamite/goldendict-ng")
   :demand t
@@ -6656,7 +6658,7 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package reverso
-  :elpaca (reverso
+  :ensure (reverso
            :host github
            :repo "SqrtMinusOne/reverso.el")
   :config
@@ -6794,7 +6796,7 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package scroll-other-window
-  :elpaca (scroll-other-window
+  :ensure (scroll-other-window
              :host github
              :repo "benthamite/scroll-other-window")
   :after pdf-tools
@@ -6830,7 +6832,7 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package moon-reader
-  :elpaca (moon-reader
+  :ensure (moon-reader
            :host github
            :repo "benthamite/moon-reader")
   :disabled
@@ -7153,7 +7155,7 @@ This needs to be configured.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package yaml
-  :elpaca (yaml
+  :ensure (yaml
            :host github
            :repo "zkry/yaml.el")
   :demand t)
@@ -7220,7 +7222,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package hl-todo
-  :elpaca (hl-todo
+  :ensure (hl-todo
            :build (:not elpaca--check-version))
   :demand t
   :config
@@ -7334,7 +7336,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package copilot
-  :elpaca (:host github
+  :ensure (:host github
                  :repo "copilot-emacs/copilot.el"
                  :files ("dist" "*.el"))
   :after jsonrpc
@@ -7394,7 +7396,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gptel
-  :elpaca (gptel
+  :ensure (gptel
            :host github
            :repo "karthink/gptel")
   :after pass tlon
@@ -7465,7 +7467,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package chatgpt-shell
-  :elpaca (chatgpt-shell :files ("*.el"))
+  :ensure (chatgpt-shell :files ("*.el"))
   :after gptel
   :demand t
   :config
@@ -8271,7 +8273,7 @@ I’m using a fork that fixes some functionality that broke when org changed =or
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-clock-split
-  :elpaca (org-clock-split
+  :ensure (org-clock-split
            :host github
            :repo "0robustus1/org-clock-split"
            :branch "support-emacs-29.1")
@@ -8337,7 +8339,7 @@ I normally archive subtrees with =org-archive-to-archive-sibling=, but use =org-
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-archive-hierarchically
-  :elpaca (org-archive-hierarchically
+  :ensure (org-archive-hierarchically
              :host gitlab
              :repo "andersjohansson/org-archive-hierarchically")
   :defer 20)
@@ -8788,7 +8790,7 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package orgtbl-edit
-  :elpaca (orgtbl-edit
+  :ensure (orgtbl-edit
              :host github
              :repo "shankar2k/orgtbl-edit"))
 #+end_src
@@ -9018,7 +9020,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-contacts
-  :elpaca (org-contacts
+  :ensure (org-contacts
            :build (:not elpaca--check-version))
   :after org tlon
   :defer 10
@@ -9044,7 +9046,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-autosort
-  :elpaca (org-autosort :type git :host github :repo "yantar92/org-autosort")
+  :ensure (org-autosort :type git :host github :repo "yantar92/org-autosort")
   :after org)
 #+end_src
 
@@ -9079,11 +9081,11 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elgantt
-  :elpaca (elgantt
-             :host github
-             :repo "legalnonsense/elgantt")
+  :ensure (elgantt
+           :host github
+           :repo "legalnonsense/elgantt")
   :after org
-  :defer 20
+  :defer 20)
 #+end_src
 
 ** org-pomodoro
@@ -9141,7 +9143,7 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pomodoro-centile
-  :elpaca (:host github
+  :ensure (:host github
                  :repo "benthamite/pomodoro-centile"
                  :depth nil)
   :after org-pomodoro
@@ -9345,7 +9347,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-roam-ui
-  :elpaca
+  :ensure
   (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
   :after org-roam
   ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
@@ -9456,7 +9458,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-noter
-  :elpaca (org-noter
+  :ensure (org-noter
            :host github
            :repo "org-noter/org-noter")
   :after org
@@ -9718,7 +9720,7 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package bibtex-completion
-  :elpaca (bibtex-completion
+  :ensure (bibtex-completion
            :version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
   :defer 5
   :init
@@ -9803,7 +9805,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package citar
-  :elpaca (citar :type git
+  :ensure (citar :type git
                  :host github
                  :repo "emacs-citar/citar"
                  :includes (citar-org))
@@ -9934,7 +9936,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package citar-org-roam
-  :elpaca (citar-org-roam
+  :ensure (citar-org-roam
            :host github
            :repo "emacs-citar/citar-org-roam")
   :after citar org-roam
@@ -10173,7 +10175,7 @@ The macro below generates the commands correctly. But attempting to define key b
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package bib
-  :elpaca (bib
+  :ensure (bib
            :host github
            :repo "benthamite/bib"
            :depth nil) ; clone entire repo, not just last commit
@@ -10212,7 +10214,7 @@ To check out.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package persid
-  :elpaca (persid
+  :ensure (persid
            :host github
            :repo "rougier/persid")
   :disabled)
@@ -10236,7 +10238,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package zotra
-  :elpaca (zotra
+  :ensure (zotra
            :host github
            :repo "mpedramfar/zotra")
   :demand t
@@ -10284,7 +10286,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package internet-archive
-  :elpaca (internet-archive
+  :ensure (internet-archive
            :host github
            :repo "benthamite/internet-archive"
            :depth nil)
@@ -10303,7 +10305,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package scihub
-  :elpaca (scihub
+  :ensure (scihub
            :host github
            :repo "benthamite/scihub")
   :demand t)
@@ -10377,7 +10379,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package async-email-sending
   :disabled
-  :elpaca (async-email-sending
+  :ensure (async-email-sending
            :host github
            :repo "lordpretzel/async-email-sending")
   :demand t
@@ -10538,7 +10540,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package mu4e
-  :elpaca (mu4e :host github
+  :ensure (mu4e :host github
                 :files ("mu4e/*.el" "build/mu4e/mu4e-meta.el" "build/mu4e/mu4e-config.el" "build/mu4e/mu4e.info")
                 :repo "djcb/mu"
                 :main "mu4e/mu4e.el"
@@ -10747,7 +10749,7 @@ I use this package to compose messages and to reply to messages composed in HTML
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-msg
-  :elpaca (org-msg
+  :ensure (org-msg
            :host github
            :repo "danielfleischer/org-msg"
            :branch "1.12")
@@ -11266,7 +11268,7 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package shr-heading
-  :elpaca (shr-heading
+  :ensure (shr-heading
              :host github
              :repo "oantolin/emacs-config"
              :files ("my-lisp/shr-heading.el"))
@@ -11399,7 +11401,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package prot-eww
-  :elpaca (prot-eww
+  :ensure (prot-eww
            :host github
            :repo "protesilaos/dotfiles"
            :local-repo "prot-eww"
@@ -11425,7 +11427,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-web
-  :elpaca (consult-web
+  :ensure (consult-web
            :host github
            :repo "armindarvish/consult-web"
            :files (:defaults "sources/*.el"))
@@ -12112,7 +12114,7 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package mullvad
-  :elpaca (mullvad
+  :ensure (mullvad
            :host github
            :repo "benthamite/mullvad")
   :demand t
@@ -12207,7 +12209,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package empv
-  :elpaca (:host github
+  :ensure (:host github
                  :repo "isamert/empv.el")
   :demand t
   :config
@@ -12346,7 +12348,7 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package unpackaged
-  :elpaca (unpackaged
+  :ensure (unpackaged
            :host github
            :repo "alphapapa/unpackaged.el")
   :commands (unpackaged/org-forward-to-entry-content))
@@ -12401,7 +12403,8 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            org-extras-agenda-switch-to-agenda-current-day
                            mu4e-extras-update-all-mail-and-index
                            org-gcal-sync
-                           elfeed-update)))
+                           elfeed-update
+                           )))
     (add-hook 'midnight-hook (lambda () (simple-extras-call-verbosely fun "Midnight hook now calling `%s'...")))))
 #+end_src
 
@@ -12425,7 +12428,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package bbdb
-  :elpaca (bbdb
+  :ensure (bbdb
            :host github
            :repo "tlon-team/bbdb")
 
@@ -12534,7 +12537,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package fatebook
-  :elpaca (fatebook :repo "sonofhypnos/fatebook.el"
+  :ensure (fatebook :repo "sonofhypnos/fatebook.el"
                     :host github
                     :files ("fatebook.el"))
   :commands fatebook-create-question

@@ -7784,6 +7784,8 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
                         ("\\.x?html?\\'" . default)
                         ("\\.pdf\\'" . emacs)))
   (setq org-use-tag-inheritance t)
+  (setq org-yank-dnd-method 'attach)
+  (setq org-yank-image-save-method paths-dir-org-images)
   (setq org-structure-template-alist
         '(("a" . "export ascii")
           ("c" . "center")

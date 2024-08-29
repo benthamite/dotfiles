@@ -275,7 +275,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#consult-extras][consult-extras]]
   - [[#consult-dir][consult-dir]]
   - [[#consult-git-log-grep][consult-git-log-grep]]
-  - [[#consult-mu][consult-mu]]
   - [[#consult-yasnippet][consult-yasnippet]]
   - [[#embark-consult][embark-consult]]
   - [[#marginalia][marginalia]]
@@ -5276,33 +5275,17 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   :demand t)
 #+end_src
 
-** consult-mu
-:PROPERTIES:
-:ID:       834A9797-AD26-44B5-BE4E-1CE52184E265
-:END:
-
-/[[https://github.com/armindarvish/consult-mu][consult-mu]] provides a dynamically updated search interface to mu4e./
+/[[https://github.com/ghosty141/consult-git-log-grep][consult-git-log-grep]] provides an interactive way to search the git log using =consult=./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package consult-mu
-  :elpaca (consult-mu :type git
-                      :host github
-                      :repo "armindarvish/consult-mu"
-                      :branch "develop"
-                      :files (:defaults "extras/*")
-                      :includes (consult-mu-compose
-                                 consult-mu-contacts-embark
-                                 consult-mu-contacts))
-  :after consult mu4e
+(use-package consult-git-log-grep
   :demand t
   :config
-  (add-to-list 'vertico-multiform-commands
-               '(consult-mu buffer))
+  (setq consult-git-log-grep-open-function #'magit-show-commit)
 
   :general
-  ("A-M-m" 'consult-mu)
-  ((mu4e-main-mode-map mu4e-headers-mode-map mu4e-view-mode-map)
-   "s" 'consult-mu))
+  ((magit-status-mode-map magit-log-mode-map)
+   "s-l" 'consult-git-log-grep))
 #+end_src
 
 ** consult-yasnippet

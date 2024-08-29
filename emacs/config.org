@@ -7895,7 +7895,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    "s-<return>" 'org-extras-super-return
    "A-C-s-n" 'org-extras-jump-to-first-heading
    "A-s-b" 'org-extras-set-todo-properties
-   "A-s-f" 'org-extras-insert-todo-subheading-after-body
+   "A-s-h" 'org-extras-insert-todo-subheading-after-body
    "A-s-v" 'org-extras-paste-image
    "A-s-z" 'org-extras-export-to-ea-wiki
    "M-w" 'org-extras-count-words

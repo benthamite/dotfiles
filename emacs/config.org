@@ -7397,12 +7397,12 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :elpaca (gptel
            :host github
            :repo "karthink/gptel")
-                                        ; consider moving the email addresses to `paths'
   :after pass tlon
   :defer 10
   :config
-  (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
   (setq gptel-default-mode 'org-mode)
+  (setq gptel-post-response-functions (lambda (_ _) (org-latex-preview)))
+  (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   (gptel-make-anthropic "Claude"
     :stream t

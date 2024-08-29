@@ -9494,6 +9494,8 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   (org-noter-notes-mode-map
    "s-a" 'org-noter-extras-cleanup-annotation
    "s-d" 'org-noter-extras-dehyphenate
+   "s-k" 'org-noter-extras-sync-prev-note
+   "s-l" 'org-noter-extras-sync-next-note
    "s-o" 'org-noter-extras-highlight-offset))
 #+end_src
 

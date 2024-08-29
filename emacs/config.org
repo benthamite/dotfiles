@@ -8584,8 +8584,7 @@ I use the same key for ~CONTROL~ and ~TAB~ (thanks to the magic of Karabiner), s
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ol-bbdb
-  :after org bbdb
-  :after ol
+  :after org bbdb ol
   :demand t
   :config
    (setq org-bbdb-anniversary-field 'birthday))

@@ -9,6 +9,51 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** consult-gh
+:PROPERTIES:
+:ID:       117CEC74-9092-4EE7-BFD3-F34D71F1313C
+:END:
+:LOGBOOK:
+CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
+:END:
+
+/[[https://github.com/armindarvish/consult-gh][consult-gh]] provides an interface to interact with GitHub repositories./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package consult-gh
+  :ensure (consult-gh
+           :host github
+           :repo "armindarvish/consult-gh")
+  :after consult embark transient vertico forge
+  :demand t
+  :config
+  (require 'consult-gh-embark)
+  (require 'consult-gh-forge)
+  (require 'consult-gh-transient)
+  (setq consult-gh-default-clone-directory "~/source")
+  (setq consult-gh-repo-maxnum 30)
+  (setq consult-gh-issues-maxnum 100)
+  (setq consult-gh-show-preview nil)
+  (setq consult-gh-preview-key "M-o")
+  (setq consult-gh-preview-buffer-mode 'org-mode)
+  (setq consult-gh-repo-action #'consult-gh--repo-browse-files-action)
+  (setq consult-gh-issue-action #'consult-gh-forge--issue-view-action)
+  (setq consult-gh-pr-action #'consult-gh-forge--pr-view-action)
+  (setq consult-gh-code-action #'consult-gh--code-view-action)
+  (setq consult-gh-file-action #'consult-gh--files-view-action)
+  (setq consult-gh-issues-state-to-show "all")
+
+  (dolist (org '("tlon-team" "benthamite"))
+    (push org consult-gh-default-orgs-list))
+
+  (dolist (var '(consult-gh--known-orgs-list
+                 consult-gh--known-repos-list))
+    (push var savehist-additional-variables))
+
+  :general
+  ("H-G" 'consult-gh))
+#+end_src
+
 ** org-block-cafp
 :PROPERTIES:
 :ID:       5D18297C-CB85-47D0-9637-D38F3BD01332

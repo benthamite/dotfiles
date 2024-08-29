@@ -12241,7 +12241,10 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
   (setq ytdl-video-extra-args '("--write-sub" "--write-auto-sub" "--sub-lang" "en,es,it,fr,pt"))
 
   :general
-  ("A-M-y" 'ytdl-download))
+  ("A-M-y" 'ytdl-download)
+  (ytdl-mode-map
+  "RET" 'ytdl--open-item-at-point
+   "D" 'ytdl--delete-item-at-point))
 #+end_src
 
 ** read-aloud

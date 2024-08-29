@@ -314,11 +314,13 @@
 
 {:des "b-mode (media controls, window sizing)"
  :rules [:b-mode
+         [:u {:modi :C-H- :key :u} :emacs] ; frame-extras-left-half
+         [:u {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
+         [:p {:modi :C-H- :key :p} :emacs] ; frame-extras-right-half
          [:p {:modi :⇧⌘⌥⌃ :key :p}] ; Rectangle, right half
-         [:i {:modi :C-H- :key :i} :emacs]
+         [:i {:modi :C-H- :key :i} :emacs] ; frame-extras-maximize-frame
          [:i {:modi :⇧⌘⌥⌃ :key :i}] ; Rectangle, maximize
          [:o {:modi :⇧⌘⌥⌃ :key :o}] ; Rectangle, center
-         [:u {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
          [:l :play_or_pause]

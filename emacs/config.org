@@ -275,7 +275,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#consult-extras][consult-extras]]
   - [[#consult-dir][consult-dir]]
   - [[#consult-git-log-grep][consult-git-log-grep]]
-  - [[#consult-gh][consult-gh]]
   - [[#consult-mu][consult-mu]]
   - [[#consult-yasnippet][consult-yasnippet]]
   - [[#embark-consult][embark-consult]]
@@ -5280,51 +5279,6 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-git-log-grep
   :demand t)
-#+end_src
-
-** consult-gh
-:PROPERTIES:
-:ID:       117CEC74-9092-4EE7-BFD3-F34D71F1313C
-:END:
-:LOGBOOK:
-CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
-:END:
-
-/[[https://github.com/armindarvish/consult-gh][consult-gh]] provides an interface to interact with GitHub repositories./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package consult-gh
-  :elpaca (consult-gh
-           :host github
-           :repo "armindarvish/consult-gh")
-  :after consult embark transient vertico forge
-  :demand t
-  :config
-  (require 'consult-gh-embark)
-  (require 'consult-gh-forge)
-  (require 'consult-gh-transient)
-  (setq consult-gh-default-clone-directory "~/source")
-  (setq consult-gh-repo-maxnum 30)
-  (setq consult-gh-issues-maxnum 100)
-  (setq consult-gh-show-preview nil)
-  (setq consult-gh-preview-key "M-o")
-  (setq consult-gh-preview-buffer-mode 'org-mode)
-  (setq consult-gh-repo-action #'consult-gh--repo-browse-files-action)
-  (setq consult-gh-issue-action #'consult-gh-forge--issue-view-action)
-  (setq consult-gh-pr-action #'consult-gh-forge--pr-view-action)
-  (setq consult-gh-code-action #'consult-gh--code-view-action)
-  (setq consult-gh-file-action #'consult-gh--files-view-action)
-  (setq consult-gh-issues-state-to-show "all")
-
-  (dolist (org '("tlon-team" "benthamite"))
-    (push org consult-gh-default-orgs-list))
-
-  (dolist (var '(consult-gh--known-orgs-list
-                 consult-gh--known-repos-list))
-    (push var savehist-additional-variables))
-
-  :general
-  ("H-G" 'consult-gh))
 #+end_src
 
 ** consult-mu

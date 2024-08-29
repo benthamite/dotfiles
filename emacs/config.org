@@ -5789,7 +5789,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   ("A-e" 'eshell)
   (eshell-mode-map
    "C-H-M-z" 'eshell-kill-input
-   "A-C-s-m" 'eshell-bol
+   "A-C-s-m" 'beginning-of-line
    "M-k" 'eshell-previous-matching-input-from-input
    "M-l" 'eshell-next-matching-input-from-input
    "s-l" 'eshell/clear

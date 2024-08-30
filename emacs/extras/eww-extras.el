@@ -152,20 +152,15 @@ function was called, if any."
                        ("html" (simple-extras-slugify (org-web-tools-extras-org-title-for-url url)))))))
          (file-name (file-name-with-extension title type))
          (output-file (file-name-concat paths-dir-downloads file-name))
-	 (data-dir (file-name-concat (expand-file-name "~") (format ".chrome-data-%s" (make-temp-name ""))))
-	 (data-dir-param (format "--user-data-dir='%s'" data-dir))
 	 (process (make-process
 		   :name (format "url-to-%s" type)
 		   :buffer "*URL-to-File-Process*"
 		   :command (list shell-file-name shell-command-switch
 				  (format
 				   (pcase type
-                                     ("pdf" "'%s' --headless %s --no-pdf-header-footer %s --print-to-pdf=%s")
-                                     ("html" "'%s' --headless %s %s --dump-dom > %s"))
-				   browse-url-chrome-program
-				   data-dir-param
-				   url
-				   output-file)))))
+                                     ("pdf" "'%s' --headless --no-pdf-header-footer %s --print-to-pdf=%s")
+                                     ("html" "'%s' --headless %s --dump-dom > %s"))
+				   browse-url-chrome-program url output-file)))))
     (message "Getting %s file..." type)
     (set-process-sentinel process
 			  (lambda (_proc event)

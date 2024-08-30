@@ -1,4 +1,3 @@
-#+filetags: :project:
 * Pablo's Emacs package graveyard
 :PROPERTIES:
 :ID:       AACAE0F4-0B25-475B-831B-3F1E91E6349D
@@ -2189,7 +2188,6 @@ Of possible interest:
    "M-)" 'puni-syntactic-forward-punct
    "M-DEL"    'puni-backward-kill-word))
 #+end_src
-
 ** emacs-native-shell-complete
 :PROPERTIES:
 :ID:       878E8350-28A3-4C00-94ED-D3C29EFF68D7

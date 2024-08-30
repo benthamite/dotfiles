@@ -612,11 +612,6 @@ files, recursively all files in `org-directory', and all files in
   (org-id-update-id-locations
    (directory-files-recursively org-directory ".org$\\|.org.gpg$")))
 
-(defun org-extras-id-notes-with-clock (key)
-  "Clock in to the org note with ID KEY."
-  (funcall (intern (concat "hydra-org-notes/lambda-" key "-and-exit")))
-  (org-clock-in))
-
 ;;;;; org-list
 
 (defun org-extras-mark-checkbox-complete-and-move-to-next-item ()
@@ -822,12 +817,6 @@ That is, move point after the stars, and the TODO and priority if present."
     ;; handle special case when heading consists of a TODO status followed by a single space
     (when (looking-at "^\\*+ [A-Z]+ $")
       (goto-char (match-end 0)))))
-
-(defun org-extras-id-notes-only-clock (key)
-  "Clock in to a heading with KEY."
-  (simple-extras-save-excursion
-   (funcall (intern (concat "hydra-org-notes/lambda-" key "-and-exit")))
-   (org-clock-in)))
 
 ;; Moved here temporarily, but should probably be intergrated into a proper `gdrive' package.
 (defun org-extras-import-from-google-drive ()

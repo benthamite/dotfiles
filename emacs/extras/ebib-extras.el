@@ -1380,6 +1380,11 @@ remove braces from the field value."
      field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
     (ebib-extras-update-entry-buffer ebib--cur-db)))
 
+(defun ebib-extras-unbrace (string)
+  "Remove braces from STRING.
+Unlike `ebib-unbrace', this function removes all braces, not just the outermost."
+  (replace-regexp-in-string "[{}]" "" string))
+
 ;;;;; Patched functions
 
 ;; prevent unnecessary vertical window splits

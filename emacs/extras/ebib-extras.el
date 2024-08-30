@@ -1329,8 +1329,9 @@ DIRECTION can be `prev' or `next'."
 			 (funcall get-field "editor"))))
     (let* ((file-absolute (expand-file-name file))
 	   (author-list (ebib-extras-get-authors-list author))
-	   (author-string (ebib-extras-format-authors author-list ", " most-positive-fixnum))
-	   (title (funcall get-field  "title"))
+	   (author-string (ebib-extras-unbrace
+			   (ebib-extras-format-authors author-list ", " most-positive-fixnum)))
+	   (title (ebib-extras-unbrace (funcall get-field  "title")))
 	   (author-arg (format "-Author='%s' " author-string))
 	   (title-arg (format "-Title='%s' " title)))
       (when (or author-arg title-arg)

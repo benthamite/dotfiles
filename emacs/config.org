@@ -653,7 +653,7 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 
 /[[https://github.com/jwiegley/use-package][use-package]] is a package organizer./
 
-We load ~use-package~ itself with ~elpaca~, then proceed to do the configuration with ~use-package~.
+We load ~use-package~ with ~elpaca~, then proceed to configure the package itself with ~use-package~.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (elpaca elpaca-use-package

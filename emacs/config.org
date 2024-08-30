@@ -4605,7 +4605,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   :ensure (org-gcal
            :type git
            :host github
-           :repo "kidd/org-gcal.el")
+           :repo "kidd/org-gcal.el"
+           :build (:not elpaca--check-version)) ; to prevent elnode version error
   :after auth-source-pass org
   :defer 10
 

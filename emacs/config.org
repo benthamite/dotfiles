@@ -696,9 +696,9 @@ NAME and ARGS as in `use-package'."
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package use-package-extras
+  :ensure (use-package-extras :wait t)
   :after use-package
   :demand t)
-(elpaca-wait)
 #+end_src
 
 ** elpaca-extras
@@ -778,6 +778,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package general
+  :ensure (general :wait t)
   :demand t
   :config
   (setq general-describe-priority-keymaps '(local global org-mode-map))
@@ -787,7 +788,6 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
   :bind
   ("C-A-b" . 'general-describe-keybindings))
-(elpaca-wait)
 #+end_src
 
 ** paths
@@ -813,13 +813,13 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
            :host github
            :repo "tlon-team/tlon-init"
            :branch "dev"
-           :depth nil) ; clone entire repo, not just last commit
+           :depth nil
+           :wait t) ; clone entire repo, not just last commit
   :after paths
   :demand t
   :config
   (tlon-init-startup)
   (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook))
-(elpaca-wait)
 #+end_src
 
 ** no-littering

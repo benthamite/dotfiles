@@ -7482,11 +7482,10 @@ I use =gptel= for text-based AI interaction, but for other modalities (such as i
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gpt-commit
-  :after gptel
   :defer 30
   :config
-  (setq gpt-commit-openai-key gptel-api-key)
-  (setq gpt-commit-model-name gptel-model))
+  (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
+  (setq gpt-commit-model-name "gpt-4o"))
 #+end_src
 
 * org-mode

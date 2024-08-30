@@ -4607,7 +4607,6 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (setq org-gcal-recurring-events-mode 'top-level)
   (setq org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
   (setq org-gcal-notify-p nil)
-  (setq org-gcal-auto-archive nil)
   (setq org-gcal-up-days 1)
   (setq org-gcal-down-days 7)
   (setq org-gcal-org-timestamp-property :deadline))

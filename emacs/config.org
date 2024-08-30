@@ -657,15 +657,14 @@ We load ~use-package~ with ~elpaca~, then proceed to configure the package itsel
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (elpaca elpaca-use-package
-  (elpaca-use-package-mode)
-  (setq elpaca-use-package-by-default t))
+  (elpaca-use-package-mode))
 
 (use-package use-package
   :demand t
   :config
+  (setq use-package-always-ensure t)
   (setq use-package-verbose t)
   (setq use-package-compute-statistics t)
-  (setq use-package-always-ensure nil)
   (setq use-package-always-defer t)
   (setq use-package-hook-name-suffix nil) ; use real name for hooks, i.e. do not omit the `-hook' bit
   (setq use-package-minimum-reported-time 0.1))

@@ -749,7 +749,6 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 :ID:       FD3A9A18-BDB8-4D52-9F5C-8E040FA042A2
 :END:
 
-
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/seq.el][seq]] provides sequence-manipulation functions that complement basic functions provided by ~subr.el~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)

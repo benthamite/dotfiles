@@ -7458,6 +7458,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 /[[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]] comint-shell based interaction with ChatGPT./
 
+I use =gptel= for text-based AI interaction, but for other modalities (such as images) I use =chatgpt-shell=.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package chatgpt-shell
   :ensure (chatgpt-shell :files ("*.el"))

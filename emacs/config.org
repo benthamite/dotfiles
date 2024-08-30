@@ -5185,7 +5185,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
   (embark-general-map
    "DEL" nil
    "D" 'delete-region)
-  (embark-yasnippet-comletion-actions
+  (embark-yasnippet-completion-actions
    "d" 'consult-yasnippet-visit-snippet-file)
   ("C-;" 'embark-act
    "C-H-;" 'embark-act-all

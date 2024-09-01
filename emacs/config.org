@@ -1444,9 +1444,9 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package magit
 :ensure (magit
-	   :host github
-	   :repo "magit/magit"
-	   :branch "main")
+           :host github
+           :repo "magit/magit"
+           :branch "main")
   :demand t
   :config
   (setq magit-commit-ask-to-stage 'stage)
@@ -1546,9 +1546,9 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ghub
 :ensure (ghub
-	   :host github
-	   :repo "magit/ghub"
-	   :branch "main")
+           :host github
+           :repo "magit/ghub"
+           :branch "main")
   :after auth-source
   :demand t)
 #+end_src
@@ -1571,9 +1571,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package forge
   :ensure (forge
-	   :host github
-	   :repo "magit/forge"
-	   :branch "main") ; github.com/progfolio/elpaca/issues/342
+           :host github
+           :repo "magit/forge"
+           :branch "main") ; github.com/progfolio/elpaca/issues/342
   :after magit ghub emacsql auth-source-pass
   :demand t
   :config
@@ -5453,7 +5453,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 :END:
 
 /[[https://github.com/minad/corfu][corfu]] enhances completion at point with a small completion popup./
-
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package corfu

@@ -6137,7 +6137,11 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 (use-feature text-mode
   :demand t
   :config
-  (add-hook 'text-mode-hook #'simple-extras-visual-line-mode-enhanced))
+  (add-hook 'text-mode-hook #'simple-extras-visual-line-mode-enhanced)
+  (add-hook 'text-mode-hook
+            (lambda ()
+              "Disable ispell completion in text mode."
+              (remove-hook 'completion-at-point-functions #'ispell-completion-at-point t))))
 #+end_src
 
 ** with-editor

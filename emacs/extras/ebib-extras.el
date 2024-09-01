@@ -1332,8 +1332,8 @@ DIRECTION can be `prev' or `next'."
 	   (author-string (ebib-extras-unbrace
 			   (ebib-extras-format-authors author-list ", " most-positive-fixnum)))
 	   (title (ebib-extras-unbrace (funcall get-field  "title")))
-	   (author-arg (format "-Author='%s' " author-string))
-	   (title-arg (format "-Title='%s' " title)))
+	   (author-arg (format "-Author=\"%s\" " author-string))
+	   (title-arg (format "-Title=\"%s\" " title)))
       (when (or author-arg title-arg)
 	(shell-command (concat "exiftool -overwrite_original "
 			       (when author-arg author-arg)

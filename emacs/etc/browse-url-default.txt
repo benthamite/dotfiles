@@ -92,6 +92,7 @@ qualtrics.com
 quora.com
 reddit.com
 rescuetime.com
+revolut.com
 savvycal.com
 shademap.app
 skyscanner.com

@@ -1,6 +1,6 @@
 ;;; jinx-extras.el --- Extensions for jinx -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/jinx-extras.el

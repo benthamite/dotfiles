@@ -6020,6 +6020,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
   (setq flycheck-emacs-lisp-load-path 'inherit)
   (setq flycheck-indication-mode nil)
   (setq flycheck-checker-error-threshold 5000)
+  (setq flycheck-display-errors-delay 0.5)
 
   (faces-extras-set-and-store-face-attributes
    '((flycheck-error :underline '(:color "#ff0000" :style wave))

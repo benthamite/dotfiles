@@ -10676,6 +10676,8 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
   (push 'mu4e--search-hist savehist-additional-variables)
 
+  ;; do not override native `mu4e' completion with `org-contacts' completion
+  (remove-hook 'mu4e-compose-mode-hook 'org-contacts-setup-completion-at-point)
   (faces-extras-set-and-store-face-attributes
    '((mu4e-compose-separator-face :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
 

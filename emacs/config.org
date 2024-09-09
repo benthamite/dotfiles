@@ -3635,7 +3635,8 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
    "A-C-s-r" 'dired-prev-dirline
    "A-C-s-f" 'dired-next-dirline
    "A-C-s-," 'dired-prev-marked-file
-   "A-C-s-." 'dired-next-marked-file)
+   "A-C-s-." 'dired-next-marked-file
+   "C-o" nil)
   (pdf-annot-minor-mode-map
    "x" 'dired-jump))
 #+end_src

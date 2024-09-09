@@ -1,6 +1,6 @@
 ;;; outline-extras.el --- Extensions for outline -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/outline-extras.el

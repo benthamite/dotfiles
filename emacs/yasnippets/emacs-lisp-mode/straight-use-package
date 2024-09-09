@@ -4,7 +4,7 @@
 # contributor: Pablo Stafforini
 # --
 (use-package $1
-  :elpaca ($1
+  :ensure ($1
              :host github
              :repo "$2")
 $0

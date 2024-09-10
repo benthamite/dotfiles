@@ -1688,31 +1688,34 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 (use-package emgs-blame
   :ensure (emgs-blame
            :host github
-	   :repo "ISouthRain/emsg-blame")
+           :repo "ISouthRain/emsg-blame")
   :demand t
   :config
   (setq emsg-blame-display #'emsg-blame-display-message)
   (setq emsg-blame-idle-time 0.5)
 
+  ;; this is now merged upstream: github.com/ISouthRain/emsg-blame/pull/1
   (defun emsg-blame-display-message ()
     "Display git blame message, right-aligned with Magit-style faces.
 If another message is already being displayed, display both messages unless they
 do not both fit in the echo area."
     (let* ((cur-msg (current-message))
            (blm-msg (format "%s %s %s "
-			    emsg-blame--commit-summary
-			    (propertize emsg-blame--commit-author 'face 'magit-log-author)
-			    (propertize emsg-blame--commit-date 'face 'magit-log-date)))
-	   (blm-msg-fits-p (lambda () (> available-width (length blm-msg))))
+                            emsg-blame--commit-summary
+                            (propertize emsg-blame--commit-author 'face 'magit-log-author)
+                            (propertize emsg-blame--commit-date 'face 'magit-log-date)))
+           (blm-msg-fits-p (lambda () (> available-width (length blm-msg))))
            (available-width (- (frame-width) (length cur-msg) 1))
-           (padding (if (funcall blm-msg-fits-p)
-			(- available-width (length blm-msg))
-		      (- (frame-width) (length blm-msg))))
-	   (pad-blm-msg (concat (make-string padding ?\s) blm-msg)))
+           (rev-blm-msg (if (< (length blm-msg) (frame-width))
+                            (let ((padding (if (funcall blm-msg-fits-p)
+                                               (- available-width (length blm-msg))
+                                             (- (frame-width) (length blm-msg)))))
+                              (concat (make-string padding ?\s) blm-msg))
+                          blm-msg)))
       (if (funcall blm-msg-fits-p)
-	  (message (concat cur-msg pad-blm-msg)))
-      (message pad-blm-msg)))
-  
+          (message (concat cur-msg rev-blm-msg))
+        (message rev-blm-msg))))
+
   (global-emsg-blame-mode t))
 #+end_src
 

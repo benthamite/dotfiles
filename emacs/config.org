@@ -115,7 +115,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#forge-search][forge-search]]
   - [[#forge-extras][forge-extras]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
-  - [[#emgs-blame][emgs-blame]]
+  - [[#emsg-blame][emsg-blame]]
 - [[#display][display]]
   - [[#fringe][fringe]]
   - [[#faces][faces]]
@@ -1677,46 +1677,49 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq-default gac-automatically-add-new-files-p t))
 #+end_src
 
-** emgs-blame
+** emsg-blame
 :PROPERTIES:
 :ID:       CF62CF9F-66EC-4E1D-81C4-ECCB85AD5BCE
 :END:
 
-/[[https://github.com/ISouthRain/emsg-blame][emgs-blame]] displays git blame information in the echo area./
+/[[https://github.com/ISouthRain/emsg-blame][emsg-blame]] displays git blame information in the echo area./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package emgs-blame
-  :ensure (emgs-blame
-           :host github
-           :repo "ISouthRain/emsg-blame")
+(use-package emsg-blame
+  :ensure (emsg-blame
+	   :host github
+	   :repo "ISouthRain/emsg-blame")
   :demand t
   :config
   (setq emsg-blame-display #'emsg-blame-display-message)
   (setq emsg-blame-idle-time 0.5)
+  (setq emsg-blame-no-commit-message "")
 
   ;; this is now merged upstream: github.com/ISouthRain/emsg-blame/pull/1
   (defun emsg-blame-display-message ()
     "Display git blame message, right-aligned with Magit-style faces.
 If another message is already being displayed, display both messages unless they
 do not both fit in the echo area."
-    (let* ((cur-msg (current-message))
-           (blm-msg (format "%s %s %s "
-                            emsg-blame--commit-summary
-                            (propertize emsg-blame--commit-author 'face 'magit-log-author)
-                            (propertize emsg-blame--commit-date 'face 'magit-log-date)))
-           (blm-msg-fits-p (lambda () (> available-width (length blm-msg))))
-           (available-width (- (frame-width) (length cur-msg) 1))
-           (rev-blm-msg (if (< (length blm-msg) (frame-width))
-                            (let ((padding (if (funcall blm-msg-fits-p)
-                                               (- available-width (length blm-msg))
-                                             (- (frame-width) (length blm-msg)))))
-                              (concat (make-string padding ?\s) blm-msg))
-                          blm-msg)))
+    (let* ((message-log-max nil)
+	   (cur-msg (current-message))
+	   (blm-msg (format "%s %s %s "
+			    emsg-blame--commit-summary
+			    (propertize emsg-blame--commit-author 'face 'magit-log-author)
+			    (propertize emsg-blame--commit-date 'face 'magit-log-date)))
+	   (available-width (- (frame-width) (length cur-msg) 1))
+	   (blm-msg-fits-p (lambda () (> available-width (length blm-msg))))
+	   (rev-blm-msg (if (< (length blm-msg) (frame-width))
+			    (let ((padding (if (funcall blm-msg-fits-p)
+					       (- available-width (length blm-msg))
+					     (- (frame-width) (length blm-msg)))))
+			      (concat (make-string padding ?\s) blm-msg))
+			  blm-msg)))
       (if (funcall blm-msg-fits-p)
-          (message (concat cur-msg rev-blm-msg))
-        (message rev-blm-msg))))
+	  (message (concat cur-msg rev-blm-msg))
+	(message rev-blm-msg))))
 
-  (global-emsg-blame-mode t))
+  (add-hook 'prog-mode-hook #'emsg-blame-mode)
+  (add-hook 'text-mode-hook #'emsg-blame-mode))
 #+end_src
 
 * display

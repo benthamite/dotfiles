@@ -728,7 +728,7 @@ CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
          [:o {:modi :⇧⌘⌥⌃ :key :o}] ; Rectangle, center
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
-         [:l :play_or_pause]
+         [:k :play_or_pause]
          [:semicolon :fastforward]
          [:comma :volume_increment]
          [:period :volume_decrement]

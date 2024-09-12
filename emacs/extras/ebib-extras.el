@@ -1329,10 +1329,11 @@ DIRECTION can be `prev' or `next'."
 			 (funcall get-field "editor"))))
     (let* ((file-absolute (expand-file-name file))
 	   (author-list (ebib-extras-get-authors-list author))
-	   (author-string (ebib-extras-format-authors author-list))
-	   (title (funcall get-field  "title"))
-	   (author-arg (format "-Author='%s' " author-string))
-	   (title-arg (format "-Title='%s' " title)))
+	   (author-string (ebib-extras-unbrace
+			   (ebib-extras-format-authors author-list ", " most-positive-fixnum)))
+	   (title (ebib-extras-unbrace (funcall get-field  "title")))
+	   (author-arg (format "-Author=\"%s\" " author-string))
+	   (title-arg (format "-Title=\"%s\" " title)))
       (when (or author-arg title-arg)
 	(shell-command (concat "exiftool -overwrite_original "
 			       (when author-arg author-arg)
@@ -1379,6 +1380,11 @@ remove braces from the field value."
     (ebib-set-field-value
      field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
     (ebib-extras-update-entry-buffer ebib--cur-db)))
+
+(defun ebib-extras-unbrace (string)
+  "Remove braces from STRING.
+Unlike `ebib-unbrace', this function removes all braces, not just the outermost."
+  (replace-regexp-in-string "[{}]" "" string))
 
 ;;;;; Patched functions
 

@@ -115,6 +115,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#forge-search][forge-search]]
   - [[#forge-extras][forge-extras]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
+  - [[#emsg-blame][emsg-blame]]
 - [[#display][display]]
   - [[#fringe][fringe]]
   - [[#faces][faces]]
@@ -206,6 +207,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dired-aux][dired-aux]]
   - [[#dired-extras][dired-extras]]
   - [[#dired-x][dired-x]]
+  - [[#dired-git-info][dired-git-info]]
   - [[#dired-du][dired-du]]
   - [[#image-dired][image-dired]]
   - [[#nerd-icons-dired][nerd-icons-dired]]
@@ -698,7 +700,6 @@ NAME and ARGS as in `use-package'."
 (use-personal-package use-package-extras
   :after use-package
   :demand t)
-(elpaca-wait)
 #+end_src
 
 ** elpaca-extras
@@ -712,6 +713,7 @@ NAME and ARGS as in `use-package'."
 (use-personal-package elpaca-extras
   :after elpaca use-package-extras
   :demand t)
+(elpaca-wait)
 #+end_src
 
 * foundational
@@ -777,6 +779,7 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package general
+  :ensure (general :wait t)
   :demand t
   :config
   (setq general-describe-priority-keymaps '(local global org-mode-map))
@@ -786,7 +789,6 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
 
   :bind
   ("C-A-b" . 'general-describe-keybindings))
-(elpaca-wait)
 #+end_src
 
 ** paths
@@ -811,14 +813,14 @@ CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
   :ensure (tlon-init
            :host github
            :repo "tlon-team/tlon-init"
-           ;; :branch "dev"
-           :depth nil) ; clone entire repo, not just last commit
+           :branch "dev"
+           :depth nil
+           :wait t) ; clone entire repo, not just last commit
   :after paths
   :demand t
   :config
   (tlon-init-startup)
   (add-hook 'elpaca-after-init-hook #'tlon-init-run-post-init-hook))
-(elpaca-wait)
 #+end_src
 
 ** no-littering
@@ -1444,9 +1446,9 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package magit
 :ensure (magit
-	   :host github
-	   :repo "magit/magit"
-	   :branch "main")
+           :host github
+           :repo "magit/magit"
+           :branch "main")
   :demand t
   :config
   (setq magit-commit-ask-to-stage 'stage)
@@ -1546,9 +1548,9 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ghub
 :ensure (ghub
-	   :host github
-	   :repo "magit/ghub"
-	   :branch "main")
+           :host github
+           :repo "magit/ghub"
+           :branch "main")
   :after auth-source
   :demand t)
 #+end_src
@@ -1571,9 +1573,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package forge
   :ensure (forge
-	   :host github
-	   :repo "magit/forge"
-	   :branch "main") ; github.com/progfolio/elpaca/issues/342
+           :host github
+           :repo "magit/forge"
+           :branch "main") ; github.com/progfolio/elpaca/issues/342
   :after magit ghub emacsql auth-source-pass
   :demand t
   :config
@@ -1673,6 +1675,51 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (setq-default gac-debounce-interval 30)
   (setq-default gac-silent-message-p t)
   (setq-default gac-automatically-add-new-files-p t))
+#+end_src
+
+** emsg-blame
+:PROPERTIES:
+:ID:       CF62CF9F-66EC-4E1D-81C4-ECCB85AD5BCE
+:END:
+
+/[[https://github.com/ISouthRain/emsg-blame][emsg-blame]] displays git blame information in the echo area./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package emsg-blame
+  :ensure (emsg-blame
+           :host github
+           :repo "ISouthRain/emsg-blame")
+  :demand t
+  :config
+  (setq emsg-blame-display #'emsg-blame-display-message)
+  (setq emsg-blame-idle-time 0.5)
+  (setq emsg-blame-no-commit-message "")
+
+  ;; this is now merged upstream: github.com/ISouthRain/emsg-blame/pull/1
+  (defun emsg-blame-display-message ()
+    "Display git blame message, right-aligned with Magit-style faces.
+If another message is already being displayed, display both messages unless they
+do not both fit in the echo area."
+    (let* ((message-log-max nil)
+           (cur-msg (current-message))
+           (blm-msg (format "%s %s %s "
+                            emsg-blame--commit-summary
+                            (propertize emsg-blame--commit-author 'face 'magit-log-author)
+                            (propertize emsg-blame--commit-date 'face 'magit-log-date)))
+           (available-width (- (frame-width) (length cur-msg) 1))
+           (blm-msg-fits-p (lambda () (> available-width (length blm-msg))))
+           (rev-blm-msg (if (< (length blm-msg) (frame-width))
+                            (let ((padding (if (funcall blm-msg-fits-p)
+                                               (- available-width (length blm-msg))
+                                             (- (frame-width) (length blm-msg)))))
+                              (concat (make-string padding ?\s) blm-msg))
+                          blm-msg)))
+      (if (funcall blm-msg-fits-p)
+          (message (concat cur-msg rev-blm-msg))
+        (message rev-blm-msg))))
+
+  (add-hook 'prog-mode-hook #'emsg-blame-mode)
+  (add-hook 'text-mode-hook #'emsg-blame-mode))
 #+end_src
 
 * display
@@ -1836,8 +1883,21 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
   :demand t
   :config
   (setq org-tidy-properties-inline-symbol "")
-  (setq org-tidy-protect-overlay nil) ; github.com/jxq0/org-tidy/issues/11
-  (add-hook 'org-mode-hook #'org-tidy-mode))
+  (add-hook 'org-mode-hook #'org-tidy-mode)
+
+  :config
+  ;; github.com/jxq0/org-tidy/issues/11#issuecomment-1950301932
+  (el-patch-defun org-tidy-make-protect-ov (backspace-beg backspace-end del-beg del-end)
+    "Make two read-only overlay: (BACKSPACE-BEG, BACKSPACE-END) (DEL-BEG, DEL-END)."
+    (let* ((backspace-ov (make-overlay backspace-beg backspace-end nil t t))
+           (del-ov (make-overlay del-beg del-end nil t nil)))
+      (overlay-put backspace-ov
+                   (el-patch-swap 'keymap 'local-map) org-tidy-properties-backspace-map)
+      (overlay-put del-ov
+                   (el-patch-swap 'keymap 'local-map) org-tidy-properties-delete-map)
+
+      (push (list :type 'protect :ov backspace-ov) org-tidy-overlays)
+      (push (list :type 'protect :ov del-ov) org-tidy-overlays))))
 #+end_src
 
 ** org-appear
@@ -3594,7 +3654,8 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
    "A-C-s-r" 'dired-prev-dirline
    "A-C-s-f" 'dired-next-dirline
    "A-C-s-," 'dired-prev-marked-file
-   "A-C-s-." 'dired-next-marked-file)
+   "A-C-s-." 'dired-next-marked-file
+   "C-o" nil)
   (pdf-annot-minor-mode-map
    "x" 'dired-jump))
 #+end_src
@@ -3657,6 +3718,22 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
         (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
   (setq dired-omit-size-limit nil)  ; always omit, regardless of directory size
   (add-hook 'dired-mode-hook #'dired-omit-mode))
+#+end_src
+
+** dired-git-info
+:PROPERTIES:
+:ID:       0A10074E-2431-4088-A3BB-8DF74A9FEEE5
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package dired-git-info
+  :after dired
+  :demand t
+  :config
+  (setq dgi-commit-message-format "%s	%cr	%an")
+  :general
+  (dired-mode-map
+   "b" 'dired-git-info-mode))
 #+end_src
 
 ** dired-du
@@ -5454,7 +5531,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
 /[[https://github.com/minad/corfu][corfu]] enhances completion at point with a small completion popup./
 
-
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package corfu
   :ensure (corfu :files (:defaults "extensions/*")
@@ -5828,6 +5904,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :ID:       E8C33B31-BFDD-45BF-ABDB-6F60353653CF
 :END:
 :LOGBOOK:
+CLOCK: [2024-09-01 Sun 18:51]--[2024-09-01 Sun 19:39] =>  0:48
 CLOCK: [2024-08-27 Tue 13:30]--[2024-08-27 Tue 13:44] =>  0:14
 CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 :END:
@@ -5841,6 +5918,11 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
            :repo "benthamite/macos")
   :demand t
   :config
+  (setq macos-homebrew-excluded-casks
+        '("keyboard-maestro" ; we keep the KM version for which we have a license
+          "backblaze" ; backblaze requires a manual update
+          ))
+
   (setq macos-bluetooth-device-list
         '(("Sonny WH-1000XM5" . "ac-80-0a-37-41-1e")))
 
@@ -5957,6 +6039,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
   (setq flycheck-emacs-lisp-load-path 'inherit)
   (setq flycheck-indication-mode nil)
   (setq flycheck-checker-error-threshold 5000)
+  (setq flycheck-display-errors-delay 0.5)
 
   (faces-extras-set-and-store-face-attributes
    '((flycheck-error :underline '(:color "#ff0000" :style wave))
@@ -6134,7 +6217,11 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
 (use-feature text-mode
   :demand t
   :config
-  (add-hook 'text-mode-hook #'simple-extras-visual-line-mode-enhanced))
+  (add-hook 'text-mode-hook #'simple-extras-visual-line-mode-enhanced)
+  (add-hook 'text-mode-hook
+            (lambda ()
+              "Disable ispell completion in text mode."
+              (remove-hook 'completion-at-point-functions #'ispell-completion-at-point t))))
 #+end_src
 
 ** with-editor
@@ -10608,6 +10695,8 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
   (push 'mu4e--search-hist savehist-additional-variables)
 
+  ;; do not override native `mu4e' completion with `org-contacts' completion
+  (remove-hook 'mu4e-compose-mode-hook 'org-contacts-setup-completion-at-point)
   (faces-extras-set-and-store-face-attributes
    '((mu4e-compose-separator-face :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
 
@@ -10985,6 +11074,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
    "M-p" nil
    "S-<return>" 'newline
    "A-C-s-r" 'telega-chatbuf-beginning-of-thing
+   "A-s-r" 'telega-chatbuf-next-unread-reaction
    "<return>" 'telega-chatbuf-input-send
    ;; if point is on a URL, `telega-msg-button-map' ceases to be
    ;; active and `<return>' triggers `newline' rather than

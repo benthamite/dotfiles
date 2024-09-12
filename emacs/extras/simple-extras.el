@@ -1,6 +1,6 @@
 ;;; simple-extras.el --- Extra functionality for the simple feature -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/simle-extras.el

@@ -1,6 +1,6 @@
 ;;; eww-extras.el --- Extensions for eww -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/eww-extras.el
@@ -141,24 +141,26 @@ CALLBACK is a function called when the process concludes. The function takes two
 arguments: the file to attach and the BibTeX key of the entry from which this
 function was called, if any."
   (let* ((url (simple-extras-get-url url))
-	 (bibtex-key (pcase major-mode
-		       ('bibtex-mode (bibtex-extras-get-key))
-		       ((or 'ebib-entry-mode 'ebib-index-mode)
-			(ebib-extras-get-field "=key="))))
-	 (title (pcase major-mode
-		  ((or 'bibtex-mode 'ebib-entry-mode 'ebib-index-mode) bibtex-key)
-		  (_ (pcase type
-		       ("pdf" (buffer-name))
-		       ("html" (simple-extras-slugify (org-web-tools-extras-org-title-for-url url)))))))
-	 (file-name (file-name-with-extension title type))
-	 (output-file (file-name-concat paths-dir-downloads file-name))
+         (bibtex-key (pcase major-mode
+                       ('bibtex-mode (bibtex-extras-get-key))
+                       ((or 'ebib-entry-mode 'ebib-index-mode)
+                        (ebib-extras-get-field "=key="))))
+         (title (pcase major-mode
+                  ((or 'bibtex-mode 'ebib-entry-mode 'ebib-index-mode) bibtex-key)
+                  (_ (pcase type
+                       ("pdf" (buffer-name))
+                       ("html" (simple-extras-slugify (org-web-tools-extras-org-title-for-url url)))))))
+         (file-name (file-name-with-extension title type))
+         (output-file (file-name-concat paths-dir-downloads file-name))
 	 (process (make-process
 		   :name (format "url-to-%s" type)
 		   :buffer "*URL-to-File-Process*"
 		   :command (list shell-file-name shell-command-switch
 				  (format
-				   (pcase type ("pdf" eww-extras-convert-to-pdf) ("html" eww-extras-convert-to-html))
-				   browse-url-chrome-program eww-extras-chrome-data-dir-copy url output-file)))))
+				   (pcase type
+                                     ("pdf" "'%s' --headless --no-pdf-header-footer %s --print-to-pdf=%s")
+                                     ("html" "'%s' --headless %s --dump-dom > %s"))
+				   browse-url-chrome-program url output-file)))))
     (message "Getting %s file..." type)
     (set-process-sentinel process
 			  (lambda (_proc event)

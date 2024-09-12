@@ -1,6 +1,6 @@
 ;;; markdown-mode-extras.el --- Extensions for markdown-mode -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/markdown-mode-extras.el

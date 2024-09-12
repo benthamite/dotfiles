@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: tlon-brubank
-# key: tbr
+# name: brubank
+# key: br
 # contributor: Pablo Stafforini
 # --
 `(format-time-string "%Y-%m-%d")` ${1:recipient}

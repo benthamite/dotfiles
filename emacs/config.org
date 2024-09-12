@@ -698,7 +698,6 @@ NAME and ARGS as in `use-package'."
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package use-package-extras
-  :ensure (use-package-extras :wait t)
   :after use-package
   :demand t)
 #+end_src
@@ -714,6 +713,7 @@ NAME and ARGS as in `use-package'."
 (use-personal-package elpaca-extras
   :after elpaca use-package-extras
   :demand t)
+(elpaca-wait)
 #+end_src
 
 * foundational

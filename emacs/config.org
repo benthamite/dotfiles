@@ -3739,6 +3739,12 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
    "b" 'dired-git-info-mode))
 #+end_src
 
+*** TODO Make it truncate commit message if it exceeds available width
+:PROPERTIES:
+:ID:       B53D2B09-A4F4-480E-85D0-22A1AA05DB4A
+:END:
+Submit as pull request.
+
 ** dired-du
 :PROPERTIES:
 :ID:       22FCD9F4-A3EE-4605-BDB0-E90FC8471B21

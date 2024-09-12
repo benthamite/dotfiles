@@ -1885,9 +1885,9 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
   (setq org-tidy-properties-inline-symbol "")
   (add-hook 'org-mode-hook #'org-tidy-mode)
 
-  :config/el-patch
+  :config
   ;; github.com/jxq0/org-tidy/issues/11#issuecomment-1950301932
-  (defun org-tidy-make-protect-ov (backspace-beg backspace-end del-beg del-end)
+  (el-patch-defun org-tidy-make-protect-ov (backspace-beg backspace-end del-beg del-end)
     "Make two read-only overlay: (BACKSPACE-BEG, BACKSPACE-END) (DEL-BEG, DEL-END)."
     (let* ((backspace-ov (make-overlay backspace-beg backspace-end nil t t))
            (del-ov (make-overlay del-beg del-end nil t nil)))

@@ -1,6 +1,6 @@
 ;;; org-noter-extras.el --- Extensions for org-noter -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-noter-extras.el

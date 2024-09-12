@@ -1883,21 +1883,8 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
   :demand t
   :config
   (setq org-tidy-properties-inline-symbol "")
-  (add-hook 'org-mode-hook #'org-tidy-mode)
-
-  :config
-  ;; github.com/jxq0/org-tidy/issues/11#issuecomment-1950301932
-  (el-patch-defun org-tidy-make-protect-ov (backspace-beg backspace-end del-beg del-end)
-    "Make two read-only overlay: (BACKSPACE-BEG, BACKSPACE-END) (DEL-BEG, DEL-END)."
-    (let* ((backspace-ov (make-overlay backspace-beg backspace-end nil t t))
-           (del-ov (make-overlay del-beg del-end nil t nil)))
-      (overlay-put backspace-ov
-                   (el-patch-swap 'keymap 'local-map) org-tidy-properties-backspace-map)
-      (overlay-put del-ov
-                   (el-patch-swap 'keymap 'local-map) org-tidy-properties-delete-map)
-
-      (push (list :type 'protect :ov backspace-ov) org-tidy-overlays)
-      (push (list :type 'protect :ov del-ov) org-tidy-overlays))))
+  (setq org-tidy-protect-overlay nil) ; github.com/jxq0/org-tidy/issues/11
+  (add-hook 'org-mode-hook #'org-tidy-mode))
 #+end_src
 
 ** org-appear

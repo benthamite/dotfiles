@@ -7490,7 +7490,6 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :defer 10
   :config
   (setq gptel-default-mode 'org-mode)
-  (setq gptel-post-response-functions (lambda (_ _) (org-latex-preview)))
   (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   (gptel-make-anthropic "Claude"
@@ -7537,6 +7536,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :demand t
   :config
   (gptel-extras-model-config 'globally "Claude" "claude-3-5-sonnet-20240620")
+  (setq gptel-post-response-functions #'gptel-extras-generate-latex-previews)
 
   :general
   ("H-s-c" 'gptel-extras-model-config)

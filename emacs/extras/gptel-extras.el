@@ -290,5 +290,11 @@ This function is meant to be an `:after' advice to `gptel-extras-save-buffer'."
 
 (advice-add 'gptel :after #'gptel-extras-save-buffer)
 
+(declare-function org-latex-preview "org")
+(defun gptel-extras-generate-latex-previews (_ _)
+  "Generate LaTeX previews in the current `gptel' buffer."
+  (when (string= default-directory gptel-extras-dir)
+    (org-latex-preview)))
+
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

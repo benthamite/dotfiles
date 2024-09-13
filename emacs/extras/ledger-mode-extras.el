@@ -76,9 +76,8 @@ expiration, you must set its resolution value manually."
 (defun ledger-extras-import-interactive-brokers (file)
   "Import Interactive Brokers CSV FILE into the current ledger file.
 To download the CSV file, go to the IBKR site, click on \"performance & reports
-> flex queries > trade history > run >\", then select your desired period and
-\"csv\" as format. Remove the first row of the CSV file before importing it. In
-addition, IB sometimes adds an extra line with the total amount of a transaction
+> flex queries > trade history > run >\", then select your desired period. Note
+that IBKR sometimes adds an extra line with the total amount of a transaction
 broken down into multiple trades. You must remove these lines manually."
   (interactive (list (read-file-name "IBKR CSV file: " paths-dir-downloads)))
   (dolist (raw (s-split "\n" (f-read file) t))

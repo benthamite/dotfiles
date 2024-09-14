@@ -464,7 +464,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#persid][persid]]
   - [[#zotra][zotra]]
   - [[#zotra-extras][zotra-extras]]
-  - [[#internet-archive][internet-archive]]
   - [[#scihub][scihub]]
 - [[#email][email]]
   - [[#simple][simple]]
@@ -10365,23 +10364,12 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
    "a" 'zotra-extras-add-entry))
 #+end_src
 
-** internet-archive
 :PROPERTIES:
-:ID:       89CD61F5-D883-4A4F-9210-EA238235AD34
 :END:
 
-/[[https://github.com/benthamite/internet-archive][internet-archive]] supports the downloading of books from the Internet Archive./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package internet-archive
-  :ensure (internet-archive
            :host github
-           :repo "benthamite/internet-archive"
-           :depth nil)
-  :defer 10
-  :config
-  (setq internet-archive-ade-close-when-done t)
-  (add-hook 'internet-archive-protocol-hook #'frame-extras-restore-focus))
 #+end_src
 
 ** scihub

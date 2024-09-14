@@ -502,7 +502,7 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
 	    ('bibtex-mode (bibtex-extras-get-key))
 	    ((or 'ebib-entry-mode 'ebib-index-mode)
 	     (ebib--get-key-at-point))))
-    (eww-extras-annas-archive-download id 'confirm #'ebib-extras-attach-file)))
+    (annas-archive-download id 'confirm #'ebib-extras-attach-file)))
 
 (defun ebib-extras-doi-attach ()
   "Get a PDF of the DOI of the entry at point and attach it."
@@ -517,7 +517,7 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
     (ebib-extras-attach-file file)
     (message "Attached `%s' to %s" file key)))
 
-(declare-function eww-extras-annas-archive-download "eww-extras")
+(declare-function annas-archive-download "eww-extras")
 (defun ebib-extras-attach-files ()
   "Attach files appropriate for the current entry type.
 If file is already attached, set the abstract."

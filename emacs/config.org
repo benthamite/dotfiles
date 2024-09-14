@@ -9737,11 +9737,6 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 :ID:       18A96B99-EAD2-4C1E-94C2-619903A52898
 :END:
 
-*** TODO [#6] Why bibtex generates a key starting with 'Boer' when the last name is deBoer?
-:PROPERTIES:
-:ID:       2FB7CCAA-E1FE-4B93-B441-DB9E8437233F
-:END:
-
 *** TODO [#6] Standardize author names in bibtex file
 :PROPERTIES:
 :ID:       8B243BA8-8CA1-4E6F-82CA-5CD950D8C498

@@ -313,8 +313,7 @@ ordering defined in `ebib-extras-valid-file-extensions'."
        (when file-list
 	 (ebib-delete-field-contents field t)
 	 (dolist (filename file-list)
-	   (let ((stem (file-name-base filename))
-		 (extension (file-name-extension filename)))
+	   (let ((extension (file-name-extension filename)))
 	     (let ((new-filename
 		    (ebib-extras--rename-and-abbreviate-file
 		     (ebib-extras--extension-directories extension)

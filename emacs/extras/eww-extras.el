@@ -308,4 +308,6 @@ If PLAYER is nil, default to `mpv'."
   (when (derived-mode-p 'eww-mode)
     (zotra-extras-add-entry (plist-get eww-data :url))))
 
+(provide 'eww-extras)
+
 ;;; eww-extras.el ends here

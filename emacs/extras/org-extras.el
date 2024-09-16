@@ -1,6 +1,6 @@
 ;;; org-extras.el --- Extensions for org-mode -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023 Pablo Stafforini
+;; Copyright (C) 2024 Pablo Stafforini
 
 ;; Author: Pablo Stafforini
 ;; Maintainer: Pablo Stafforini
@@ -37,6 +37,7 @@
 (require 'oc)
 (require 'paths)
 (require 'simple-extras)
+(require 'transient)
 
 ;;;; User options
 
@@ -257,25 +258,23 @@ use `ox-clip-formatted-copy'."
   "Take the contents of the system clipboard and paste it as an image."
   (interactive)
   (if (executable-find "pngpaste")
-      (let* ((counter 1)
-	     (image-file (concat
-			  paths-dir-org-images
-			  (org-id-get nil 'create)
-			  (format "-%d.png" counter))))
-	(while (file-exists-p image-file)
-	  (setq counter (1+ counter))
-	  (setq image-file (concat
-			    paths-dir-org-images
-			    (org-id-get nil 'create)
-			    (format "-%d.png" counter))))
-	(call-process-shell-command (format "pngpaste '%s'" image-file))
-	(let ((caption (read-string "Caption: ")))
-	  (unless (string= caption "")
-	    (insert (format "#+CAPTION: %s \n" caption))))
-	(insert (format "[[file:%s]]" image-file))
-	(org-display-inline-images)
-	(message "You can toggle inline images with C-c C-x C-v"))
-    (user-error "Requires pngpaste in PATH")))
+      (let* ((counter 1))
+	(while (file-exists-p (org-extras-make-image-filename counter))
+	  (setq counter (1+ counter)))
+	(let ((filename (org-extras-make-image-filename counter)))
+	  (call-process-shell-command (format "pngpaste '%s'" filename))
+	  (let ((caption (read-string "Caption: ")))
+	    (unless (string-empty-p caption)
+	      (insert (format "#+CAPTION: %s \n" caption))))
+	  (insert (format "[[file:%s]]" filename))
+	  (org-display-inline-images)))
+    (user-error "`pngpaste' not found; please install it (e.g. `brew install pngpaste')")))
+
+(defun org-extras-make-image-filename (count)
+  "Make a unique filename for an image based on COUNT."
+  (concat paths-dir-org-images
+	  (org-id-get nil 'create)
+	  (format "-%03d.png" count)))
 
 (defun org-extras-inline-images (&optional arg)
   "Enable or disable the display of inline images.
@@ -613,11 +612,6 @@ files, recursively all files in `org-directory', and all files in
   (org-id-update-id-locations
    (directory-files-recursively org-directory ".org$\\|.org.gpg$")))
 
-(defun org-extras-id-notes-with-clock (key)
-  "Clock in to the org note with ID KEY."
-  (funcall (intern (concat "hydra-org-notes/lambda-" key "-and-exit")))
-  (org-clock-in))
-
 ;;;;; org-list
 
 (defun org-extras-mark-checkbox-complete-and-move-to-next-item ()
@@ -730,9 +724,9 @@ Further lines starting with a star get quoted with a comma to
 keep the structure of the Org file."
   (interactive)
   (let ((regionp (use-region-p))
-        (transform-start (point-min))
-        (transform-end (point-max))
-        (return-content ""))
+	(transform-start (point-min))
+	(transform-end (point-max))
+	(return-content ""))
     (when regionp
       (setq transform-start (region-beginning))
       (setq transform-end (region-end)))
@@ -740,29 +734,29 @@ keep the structure of the Org file."
     (save-excursion
       (goto-char transform-start)
       (while (< (point) transform-end)
-        (let* ((text-face (if (listp (get-text-property (point) 'face))
-                              (get-text-property (point) 'face)
-                            (list (get-text-property (point) 'face))))
-               (link (get-text-property (point) 'shr-url))
-               (text (buffer-substring-no-properties (point)
-                                                     (or (next-single-property-change (point) 'face nil transform-end)
-                                                         (next-single-property-change (point) 'shr-url nil transform-end)
-                                                         transform-end)))
-               (formatted-text (replace-regexp-in-string shr-bullet "- " text)))
-          ;; Apply Org mode formatting for italics and bold where applicable.
-          (when (memq 'italic text-face)
-            (setq formatted-text (concat "/" formatted-text "/")))
-          (when (memq 'bold text-face)
-            (setq formatted-text (concat "*" formatted-text "*")))
-          ;; Format links according to Org mode syntax.
-          (when link
-            (setq formatted-text (concat "[[" link "][" text "]]")))
-          ;; Append the formatted text to the return content.
-          (setq return-content (concat return-content formatted-text))
-          ;; Advance the point.
-          (goto-char (or (next-single-property-change (point) 'face)
-                         (next-single-property-change (point) 'shr-url)
-                         (point-max))))))
+	(let* ((text-face (if (listp (get-text-property (point) 'face))
+			      (get-text-property (point) 'face)
+			    (list (get-text-property (point) 'face))))
+	       (link (get-text-property (point) 'shr-url))
+	       (text (buffer-substring-no-properties (point)
+						     (or (next-single-property-change (point) 'face nil transform-end)
+							 (next-single-property-change (point) 'shr-url nil transform-end)
+							 transform-end)))
+	       (formatted-text (replace-regexp-in-string shr-bullet "- " text)))
+	  ;; Apply Org mode formatting for italics and bold where applicable.
+	  (when (memq 'italic text-face)
+	    (setq formatted-text (concat "/" formatted-text "/")))
+	  (when (memq 'bold text-face)
+	    (setq formatted-text (concat "*" formatted-text "*")))
+	  ;; Format links according to Org mode syntax.
+	  (when link
+	    (setq formatted-text (concat "[[" link "][" text "]]")))
+	  ;; Append the formatted text to the return content.
+	  (setq return-content (concat return-content formatted-text))
+	  ;; Advance the point.
+	  (goto-char (or (next-single-property-change (point) 'face)
+			 (next-single-property-change (point) 'shr-url)
+			 (point-max))))))
     ;; Copy the whole formatted content to the kill ring.
     (kill-new return-content)))
 
@@ -824,12 +818,6 @@ That is, move point after the stars, and the TODO and priority if present."
     (when (looking-at "^\\*+ [A-Z]+ $")
       (goto-char (match-end 0)))))
 
-(defun org-extras-id-notes-only-clock (key)
-  "Clock in to a heading with KEY."
-  (simple-extras-save-excursion
-   (funcall (intern (concat "hydra-org-notes/lambda-" key "-and-exit")))
-   (org-clock-in)))
-
 ;; Moved here temporarily, but should probably be intergrated into a proper `gdrive' package.
 (defun org-extras-import-from-google-drive ()
   "Import Google Doc file with DOC-ID and convert it to `org-mode'.
@@ -871,9 +859,10 @@ empty headings, which trigger an `org-roam' warning."
     ("f" "finance"           (lambda () (interactive) (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C")))
     ("i" "Anki"              (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))
     ("y" "YouTube"           (lambda () (interactive) (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E")))
-    ("k k" "current book"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))
-    ("k g" "Pimsleur German"      (lambda () (interactive) (org-roam-extras-id-goto "B2928AE7-FA6B-45FE-9EFC-AF5E1E79B386")))
-    ("k f" "Pimsleur French"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))]])
+    ("k c" "cat sense"      (lambda () (interactive) (org-roam-extras-id-goto "ED18E2B5-BDEA-4FC0-9D1C-F31338471814")))
+    ("k h" "Hitler bio"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))
+    ("k g" "Pimsleur German"      (lambda () (interactive) (org-roam-extras-id-goto "3B9725E0-79C2-44FA-B0FA-41D43EC4F4A8")))
+    ("k f" "Pimsleur French"      (lambda () (interactive) (org-roam-extras-id-goto "60232ADC-60B8-4617-AEFB-F6F73A099709")))]])
 
 (transient-define-prefix org-extras-tlon-menu ()
   "Menu for Tlön projects."
@@ -1010,32 +999,33 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
 ;; in any mode. Even if inserting a citation is not allowed, one may
 ;; want to invoke the command to trigger contextual actions via
 ;; `embark'.
-(el-patch-defun org-cite-insert (arg)
-  "Insert a citation at point.
+(with-eval-after-load 'oc
+  (el-patch-defun org-cite-insert (arg)
+    "Insert a citation at point.
 Insertion is done according to the processor set in `org-cite-insert-processor'.
 ARG is the prefix argument received when calling interactively the function."
-  (interactive "P")
-  (unless org-cite-insert-processor
-    (user-error "No processor set to insert citations"))
-  (org-cite-try-load-processor org-cite-insert-processor)
-  (let ((name org-cite-insert-processor))
-    (cond
-     ((not (org-cite-get-processor name))
-      (user-error "Unknown processor %S" name))
-     ((not (org-cite-processor-has-capability-p name 'insert))
-      (user-error "Processor %S cannot insert citations" name))
-     (t
-      (let ((context (org-element-context))
-            (insert (org-cite-processor-insert (org-cite-get-processor name))))
-        (cond
-         ((org-element-type-p context '(citation citation-reference))
-          (funcall insert context arg))
-         (el-patch-remove
-           ((org-cite--allowed-p context)
-            (funcall insert nil arg)))
-         (t
-          (el-patch-swap (user-error "Cannot insert a citation here")
-                         (funcall insert nil arg)))))))))
+    (interactive "P")
+    (unless org-cite-insert-processor
+      (user-error "No processor set to insert citations"))
+    (org-cite-try-load-processor org-cite-insert-processor)
+    (let ((name org-cite-insert-processor))
+      (cond
+       ((not (org-cite-get-processor name))
+	(user-error "Unknown processor %S" name))
+       ((not (org-cite-processor-has-capability-p name 'insert))
+	(user-error "Processor %S cannot insert citations" name))
+       (t
+	(let ((context (org-element-context))
+	      (insert (org-cite-processor-insert (org-cite-get-processor name))))
+	  (cond
+	   ((org-element-type-p context '(citation citation-reference))
+	    (funcall insert context arg))
+	   (el-patch-remove
+	     ((org-cite--allowed-p context)
+	      (funcall insert nil arg)))
+	   (t
+	    (el-patch-swap (user-error "Cannot insert a citation here")
+			   (funcall insert nil arg))))))))))
 
 ;;;; Footer
 

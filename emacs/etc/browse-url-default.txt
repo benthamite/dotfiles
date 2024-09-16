@@ -86,12 +86,14 @@ myheritage.es
 openai.com
 paxful.com
 perplexity.ai
+polymarket-tracker.com
 polymarket.com
 pref.docusign.com
 qualtrics.com
 quora.com
 reddit.com
 rescuetime.com
+revolut.com
 savvycal.com
 shademap.app
 skyscanner.com
@@ -113,6 +115,7 @@ twitter.com
 utoronto.ca
 vueling.com
 we.tl
+weatherspark.com
 wetransfer.com
 wiley.com
 wise.com

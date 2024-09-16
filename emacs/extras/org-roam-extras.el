@@ -1,6 +1,6 @@
 ;;; org-roam-extras.el --- Extensions for org-roam -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-roam-extras.el
@@ -61,6 +61,8 @@
   :group 'org-roam-extras)
 
 ;;;; Main variables
+
+(defvar org-roam-extras-current-backlink-count nil)
 
 ;;;; Functions
 
@@ -137,7 +139,7 @@ If DIR is nil, use `paths-dir-notes'."
        (setq dir (file-name-concat paths-dir-dropbox note-type))))
     (list dir tags)))
 
-(defun org-roam-extras-turn-heading-to-note ()
+(defun org-roam-extras-convert-heading-to-note ()
   "Convert the heading at point into a note in a separate file."
   (interactive)
   (let ((note-name (read-string "Note name: " (org-get-heading t t t t))))
@@ -244,12 +246,37 @@ list of tags and further restrict the selection to headings with that tag."
   (widen)
   (org-roam-id-open id nil))
 
+;;;;; Backlinks
+
+(defun org-roam-extras-backlink-count ()
+  "Return the number of org-roam backlinks for the current buffer."
+  (when (derived-mode-p 'org-mode)
+    (when-let* ((node-id (org-roam-id-at-point))
+		(backlinks (org-roam-db-query
+			    [:select [source] :from links :where (= dest $s1)]
+			    node-id)))
+      (length backlinks))))
+
+(defun org-roam-extras-update-backlink-count ()
+  "Update the number of backlinks for the current buffer."
+  (setq org-roam-extras-current-backlink-count
+        (org-roam-extras-backlink-count)))
+
+(declare-function doom-modeline-update-buffer-file-name "doom-modeline-segments")
+(defun org-roam-extras-update-modeline ()
+  "Update the modeline with the number of backlinks for the current buffer."
+  (when (derived-mode-p 'org-mode)
+    (org-roam-extras-update-backlink-count)
+    (doom-modeline-update-buffer-file-name)))
+
+(add-hook 'post-command-hook #'org-roam-extras-update-modeline)
+
 ;;;;; Patched functions
 
 (el-patch-defun org-roam-db-query (sql &rest args)
   "Run SQL query on Org-roam database with ARGS.
 SQL can be either the emacsql vector representation, or a string."
-  (el-patch-add (sleep-for 0 1))
+  (el-patch-add (sleep-for 0.01))
   (apply #'emacsql (org-roam-db) sql args))
 
 (provide 'org-roam-extras)

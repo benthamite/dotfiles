@@ -1,6 +1,6 @@
 ;;; org-noter-extras.el --- Extensions for org-noter -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-noter-extras.el
@@ -61,11 +61,16 @@ heading in a quote."
 	  (let* ((highlight-heading (org-get-heading t t t t))
 		 (page (progn
 			 (string-match org-noter-highlight-heading-regexp highlight-heading)
-			 (match-string 1 highlight-heading))))
-	    (org-edit-headline (format "%s, p. %s" title page)))
-	  (org-narrow-to-subtree)
-	  (goto-char (point-max))
-	  (insert (concat "\n#+begin_quote\n" content "#+end_quote\n")))
+			 (match-string 1 highlight-heading)))
+		 (quote-begin "\n#+begin_quote\n")
+		 (quote-end "\n#+end_quote\n"))
+	    (org-edit-headline (format "%s, p. %s" title page))
+	    (org-narrow-to-subtree)
+	    (goto-char (point-max))
+	    (insert (concat quote-begin content quote-end))
+	    (goto-char (point-min))
+	    (re-search-forward (concat "\n" (regexp-quote quote-end)))
+	    (replace-match quote-end)))
 	(org-next-visible-heading 1)
 	(org-fold-show-subtree)))))
 
@@ -139,6 +144,18 @@ tends to be higher than the book page number."
 					 org-noter-extras-dehyphenate-hyphens)
 				 '("-" "­"))))
     (setq org-noter-extras-dehyphenate-hyphens hyphen)))
+
+(defun org-noter-extras-sync-next-note ()
+  "Like `org-noter-sync-next-note', but do not switch focus to the PDF buffer."
+  (interactive)
+  (org-noter-sync-next-note)
+  (other-window 1))
+
+(defun org-noter-extras-sync-prev-note ()
+  "Like `org-noter-sync-prev-note', but do not switch focus to the PDF buffer."
+  (interactive)
+  (org-noter-sync-prev-note)
+  (other-window 1))
 
 (provide 'org-noter-extras)
 ;;; org-noter-extras.el ends here

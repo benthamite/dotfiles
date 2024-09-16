@@ -1,6 +1,6 @@
 ;;; frame-extras.el --- Extensions for frame -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/frame-extras.el
@@ -29,12 +29,36 @@
 
 (require 'frame)
 
+;;;; Variables
+
+(defvar frame-extras-maximized-frame-width 244
+  "Width of the maximized frame.")
+
 ;;;; Functions
+
+;;;;; Frame size & position
 
 (defun frame-extras-maximize-frame ()
   "Maximize the current frame."
   (interactive)
-  (set-frame-parameter nil 'fullscreen 'maximized))
+  (set-frame-parameter nil 'fullscreen nil)
+  (set-frame-parameter nil 'fullscreen 'maximized)
+  (sleep-for 0.01) ; otherwise `frame-width' returns a slightly higher value
+  (setq frame-extras-maximized-frame-width (frame-width)))
+
+(defun frame-extras-left-half ()
+  "Resize the current frame to the left half of the screen."
+  (interactive)
+  (frame-extras-maximize-frame)
+  (set-frame-width nil (/ frame-extras-maximized-frame-width 2)))
+
+(defun frame-extras-right-half ()
+  "Resize the current frame to the right half of the screen."
+  (interactive)
+  (frame-extras-left-half)
+  (set-frame-position nil (frame-pixel-width) 0))
+
+;;;;; Misc
 
 (defun frame-extras-restore-window-divider ()
   "Restore visibility of window divider."
@@ -50,4 +74,3 @@
 
 (provide 'frame-extras)
 ;;; frame-extras.el ends here
-

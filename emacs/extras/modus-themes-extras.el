@@ -1,6 +1,6 @@
 ;;; modus-themes-extras.el --- Extra functionality for modus-themes -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/modus-themes-extras.el

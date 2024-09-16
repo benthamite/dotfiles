@@ -37,7 +37,7 @@
 NAME and ARGS as in `use-package'."
   (declare (indent defun))
   `(use-package ,name
-     :elpaca nil
+     :ensure nil
      ,@args))
 
 ;; From Gonçalo Santos (github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org#helpers)

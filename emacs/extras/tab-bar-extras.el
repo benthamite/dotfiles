@@ -1,6 +1,6 @@
 ;;; tab-bar-extras.el --- Extra functionality for the tab bar -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/tab-bar-extras.el
@@ -133,7 +133,7 @@ reset functions."
       (when calendar-extras-use-geolocation
 	(calendar-extras-set-geolocation))
       (setq display-wttr-locations `(,calendar-extras-location-name))))
-  (when (and tab-bar-extras-reset-wttr (featurep 'display-wttr))
+  (when (and tab-bar-extras-reset-wttr (bound-and-true-p display-wttr-mode))
     (display-wttr)))
 
 (defun tab-bar-extras-quick-reset ()

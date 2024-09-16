@@ -8,6 +8,24 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** pomodoro-centile
+:PROPERTIES:
+:ID:       89ED4046-C75A-441C-BEF8-DC4322F0167F
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package pomodoro-centile
+  :ensure (:host github
+                 :repo "benthamite/pomodoro-centile"
+                 :depth nil)
+  :after org-pomodoro
+  :disabled
+  :demand t
+  :config
+  (setq pomodoro-centile-history-file (file-name-concat paths-dir-dropbox "misc/pomodoro-centile-history"))
+  (setq pomodoro-centile-day-offset 4))
+#+end_src
+
 ** internet-archive
 :PROPERTIES:
 :ID:       89CD61F5-D883-4A4F-9210-EA238235AD34

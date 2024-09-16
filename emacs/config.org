@@ -431,7 +431,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elgantt][elgantt]]
   - [[#org-pomodoro][org-pomodoro]]
   - [[#org-pomodoro-extras][org-pomodoro-extras]]
-  - [[#pomodoro-centile][pomodoro-centile]]
 - [[#note-taking][note-taking]]
   - [[#org-roam][org-roam]]
   - [[#org-roam-extras][org-roam-extras]]
@@ -9218,24 +9217,6 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 (use-personal-package org-pomodoro-extras
   :after org-pomodoro
   :demand t)
-#+end_src
-
-** pomodoro-centile
-:PROPERTIES:
-:ID:       89ED4046-C75A-441C-BEF8-DC4322F0167F
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package pomodoro-centile
-  :ensure (:host github
-                 :repo "benthamite/pomodoro-centile"
-                 :depth nil)
-  :after org-pomodoro
-  :disabled
-  :demand t
-  :config
-  (setq pomodoro-centile-history-file (file-name-concat paths-dir-dropbox "misc/pomodoro-centile-history"))
-  (setq pomodoro-centile-day-offset 4))
 #+end_src
 
 * note-taking

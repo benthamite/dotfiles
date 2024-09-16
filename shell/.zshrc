@@ -39,8 +39,8 @@ export PATH="$HOME/source/emms/src:$PATH"
 alias muinit="cd ~; mu init --maildir=$HOME/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL --my-address=$WORK_EMAIL --my-address=$UNI_EMAIL; mu index"
 
 # emacs
-alias emacsk="pkill -USR2 Emacs"
-alias emacsK="while true; do pkill -USR2 Emacs; done"
+alias emacsk="pkill -SIGUSR2 Emacs"
+alias emacsK="while true; do pkill -SIGUSR2 Emacs; done"
 alias emacsicon="osascript -e 'tell application \"Finder\" to make alias file to posix file \"/opt/homebrew/opt/emacs-plus@29/Emacs.app\" at POSIX file \"/Applications\" with properties {name:\"Emacs.app\"}'"
 
 # libby

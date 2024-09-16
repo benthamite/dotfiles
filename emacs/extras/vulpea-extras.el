@@ -1,6 +1,6 @@
 ;;; vulpea-extras.el --- Extensions for vulpea -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/vulpea-extras.el
@@ -58,24 +58,28 @@ TODO entries marked as done are ignored, meaning the this
 function returns nil if current buffer contains only completed
 tasks."
   (when (and (derived-mode-p 'org-mode)
-
              ;; exclude dirs
              (not (member (file-name-directory (buffer-file-name))
                           vulpea-extras-excluded-directories))
-
              ;; exclude files
              (not (member (buffer-file-name) vulpea-extras-excluded-files)))
-
     (org-element-map
-        (org-element-parse-buffer 'headline)
-        'headline
+	(org-element-parse-buffer 'headline)
+	'headline
       (lambda (headline)
-
-        (or
-         (eq (org-element-property :todo-type headline)
-             'todo)
-         (org-element-property :scheduled headline)
-         (org-element-property :deadline headline)))
+	(let* ((org-use-tag-inheritance t)
+	       (tags (org-get-tags (org-element-property :begin headline))))
+	  (and
+	   ;; exclude archived TODOs
+	   (not (member "ARCHIVE" tags))
+	   (or
+	    ;; either it is a todo...
+	    (eq (org-element-property :todo-type headline) 'todo)
+	    ;; ...or it has a schedule or a deadline and is not done
+	    (and
+	     (not (eq (org-element-property :todo-type headline) 'done))
+	     (or (org-element-property :scheduled headline)
+		 (org-element-property :deadline headline)))))))
       nil
       'first-match)))
 

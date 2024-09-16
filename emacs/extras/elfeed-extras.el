@@ -1,6 +1,6 @@
 ;;; elfeed-extras.el --- Extensions for elfeed -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/elfeed-extras.el

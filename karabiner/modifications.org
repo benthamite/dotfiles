@@ -709,7 +709,7 @@ My Logitech MX Anywhere 3S mouse does not have a [[https://computer.howstuffwork
 CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
 :END:
 
-- The right-hand top row keys control window placement, via [[https://github.com/rxhanson/Rectangle][Rectangle]].
+- The right-hand top row keys control window placement, via Emacs Lisp commands in Emacs, or via [[https://github.com/rxhanson/Rectangle][Rectangle]] otherwise.
 - The right-hand home row keys control playback.
     - ~l~ triggers a Keyboard Maestro script that runs the AppleScript included below.
 - The right-hand bottom row keys control volume.
@@ -719,13 +719,16 @@ CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
 #+begin_src clojure
 {:des "b-mode (media controls, window sizing)"
  :rules [:b-mode
+         [:u {:modi :C-H- :key :u} :emacs] ; frame-extras-left-half
+         [:u {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
+         [:p {:modi :C-H- :key :p} :emacs] ; frame-extras-right-half
          [:p {:modi :⇧⌘⌥⌃ :key :p}] ; Rectangle, right half
+         [:i {:modi :C-H- :key :i} :emacs] ; frame-extras-maximize-frame
          [:i {:modi :⇧⌘⌥⌃ :key :i}] ; Rectangle, maximize
          [:o {:modi :⇧⌘⌥⌃ :key :o}] ; Rectangle, center
-         [:u {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
-         [:l :play_or_pause]
+         [:k :play_or_pause]
          [:semicolon :fastforward]
          [:comma :volume_increment]
          [:period :volume_decrement]
@@ -898,7 +901,7 @@ CLOCK: [2021-12-01 Wed 17:12]--[2021-12-01 Wed 17:27] =>  0:15
          ]}
 #+end_src
 
-**** TODO Fix ~m-mode~ problems
+**** TODO [#4] Fix ~m-mode~ problems
 :PROPERTIES:
 :ID:       81AD27AD-32CF-4455-A13D-D6B2A42B4F00
 :END:

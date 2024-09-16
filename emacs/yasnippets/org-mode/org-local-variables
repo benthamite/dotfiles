@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: org-local-variables
+# key: olv
+# contributor: Pablo Stafforini
+# --
+* local variables
+# Local Variables:
+$0
+# End:

@@ -1,6 +1,6 @@
 ;;; doom-modeline-extras.el --- Extensions for doom-modeline -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/doom-modeline-extras.el
@@ -46,8 +46,13 @@
   :type 'boolean
   :group 'doom-modeline)
 
+(defcustom doom-modeline-extras-org-roam t
+  "Whether to display the `org-roam' backlink count in the modeline."
+  :type 'boolean
+  :group 'doom-modeline)
+
 (defcustom doom-modeline-extras-tlon-split t
-  "Whether to display if `tlon-split-mode' is active."
+  "Whether to display if `tlon-split-mode' is active in the modeline."
   :type 'boolean
   :group 'doom-modeline)
 
@@ -62,8 +67,7 @@
 	     (bound-and-true-p gptel-model))
     (concat gptel-model (doom-modeline-spc))))
 
-(defvar gptel-extras-ai-models)
-(declare-function gptel-backend-name "gptel")
+(defvar gptel-mode)
 (declare-function gptel-extras-get-cost "gptel-extras")
 (doom-modeline-def-segment gptel-cost ()
   "Display the cost of prompting the current model."
@@ -75,8 +79,15 @@
 (defvar tlon-split-mode)
 (doom-modeline-def-segment tlon-split ()
   "Display \"split\" in the modeline when `tlon-split-mode' is enabled."
-  (when (bound-and-true-p tlon-split-mode)
+  (when (and doom-modeline-extras-tlon-split
+	     (bound-and-true-p tlon-split-mode))
     (concat "split" (doom-modeline-spc))))
+
+(defvar org-roam-extras-current-backlink-count)
+(doom-modeline-def-segment org-roam-backlinks
+  (when (and (derived-mode-p 'org-mode)
+             org-roam-extras-current-backlink-count)
+    (concat (doom-modeline-spc) (format "%dB" org-roam-extras-current-backlink-count))))
 
 ;;;;; Notification counter Forge sync
 

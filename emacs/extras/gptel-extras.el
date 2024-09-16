@@ -1,6 +1,6 @@
 ;;; gptel-extras.el --- Extensions for gptel -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/gptel-extras.el
@@ -88,8 +88,8 @@
 	      :cost 5
 	      :tokens 128000
 	      :last-update "2023-10-01"
-	    :description "[Recommended] The most advanced multimodal model that’s faster and cheaper than GPT-4 Turbo with stronger vision capabilities.")
-	   (:backend "ChatGPT"
+	      :description "[Recommended] The most advanced multimodal model that’s faster and cheaper than GPT-4 Turbo with stronger vision capabilities.")
+    (:backend "ChatGPT"
 	      :model "gpt-4o-mini"
 	      :cost 0.15
 	      :tokens 128000
@@ -148,7 +148,49 @@
 	      :tokens 200000
 	      :cost 3
 	      :last-update "2023-08-01"
-	      :description "[recommended] The most capable Anthropic model."))
+	      :description "[recommended] The most capable Anthropic model.")
+    (:backend "Perplexity"
+	      :model "llama-3.1-sonar-small-128k-online"
+	      :tokens 127072
+	      :cost 0.2
+	      :last-update ""
+	      :description "")
+    (:backend "Perplexity"
+	      :model "llama-3.1-sonar-large-128k-online"
+	      :tokens 127072
+	      :cost 1
+	      :last-update ""
+	      :description "")
+    (:backend "Perplexity"
+	      :model "llama-3.1-sonar-huge-128k-online"
+	      :tokens 127072
+	      :cost 5
+	      :last-update ""
+	      :description "[recommended]")
+    (:backend "Perplexity"
+	      :model "llama-3.1-sonar-small-128k-chat"
+	      :tokens 131072
+	      :cost 0.2
+	      :last-update ""
+	      :description "")
+    (:backend "Perplexity"
+	      :model "llama-3.1-sonar-large-128k-chat"
+	      :tokens 131072
+	      :cost 1
+	      :last-update ""
+	      :description "")
+    (:backend "Perplexity"
+	      :model "llama-3.1-8b-instruct"
+	      :tokens 131072
+	      :cost 0.2
+	      :last-update ""
+	      :description "")
+    (:backend "Perplexity"
+	      :model "llama-3.1-70b-instruct"
+	      :tokens 131072
+	      :cost 1
+	      :last-update ""
+	      :description ""))
   "Alist of AI models and associated properties.
 - `:tokens': the context window size in tokens.
 
@@ -180,7 +222,7 @@ called with a prefix argument, configure it globally."
 	 (backend (alist-get backend-name gptel--known-backends nil nil #'string=))
 	 (backend-models (gptel-backend-models backend))
 	 (models-with-cost (mapcar (lambda (backend)
-				     (cons (format "%-30s  $ %5.2f  %8s  %6s  %-80s"
+				     (cons (format "%-40s  $ %5.2f  %8s  %6s  %-80s"
 						   backend
 						   (tlon-lookup gptel-extras-ai-models :cost :model backend)
 						   (tlon-lookup gptel-extras-ai-models :last-update :model backend)

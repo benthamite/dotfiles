@@ -8,6 +8,45 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** pomodoro-centile
+:PROPERTIES:
+:ID:       89ED4046-C75A-441C-BEF8-DC4322F0167F
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package pomodoro-centile
+  :ensure (:host github
+                 :repo "benthamite/pomodoro-centile"
+                 :depth nil)
+  :after org-pomodoro
+  :disabled
+  :demand t
+  :config
+  (setq pomodoro-centile-history-file (file-name-concat paths-dir-dropbox "misc/pomodoro-centile-history"))
+  (setq pomodoro-centile-day-offset 4))
+#+end_src
+
+** internet-archive
+:PROPERTIES:
+:ID:       89CD61F5-D883-4A4F-9210-EA238235AD34
+:END:
+
+/[[https://github.com/benthamite/internet-archive][internet-archive]] supports the downloading of books from the Internet Archive./
+
+[2024-09-14 Sat] Superseded by the the =annas-archive= functions in =eww-extras=.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package internet-archive
+  :ensure (internet-archive
+           :host github
+           :repo "benthamite/internet-archive"
+           :depth nil)
+  :defer 10
+  :config
+  (setq internet-archive-ade-close-when-done t)
+  (add-hook 'internet-archive-protocol-hook #'frame-extras-restore-focus))
+#+end_src
+
 ** consult-gh
 :PROPERTIES:
 :ID:       117CEC74-9092-4EE7-BFD3-F34D71F1313C

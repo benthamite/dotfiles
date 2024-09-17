@@ -11773,7 +11773,7 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     "https://www.audible.com/search/ref=a_hp_tseft?advsearchKeywords=%s&filterby=field-keywords&x=13&y=11"
     :keybinding "a u")
   (defengine AudioBookBay
-    "https://audiobookbay.se/?s=%s"
+    "https://audiobookbay.lu/?s=%s&tt=1"
     :keybinding "a b")
   (defengine EABlogs
     "https://cse.google.com/cse?cx=013594344773078830993:k3igzr2se6y&q=%s"

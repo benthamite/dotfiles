@@ -6937,6 +6937,8 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-pdftools
+  :ensure (org-pdftools
+	   :build (:not elpaca--check-version))
   :after org pdf-tools
   :defer 30
   :config

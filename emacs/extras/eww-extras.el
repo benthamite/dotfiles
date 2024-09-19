@@ -136,12 +136,7 @@ function was called, if any."
 	 (process (make-process
 		   :name (format "url-to-%s" type)
 		   :buffer "*URL-to-File-Process*"
-		   :command (list shell-file-name shell-command-switch
-				  (format
-				   (pcase type
-                                     ("pdf" "'%s' --headless --no-pdf-header-footer %s --print-to-pdf=%s")
-                                     ("html" "'%s' --headless %s --dump-dom > %s"))
-				   browse-url-chrome-program url output-file)))))
+		   :command (eww-extras-url-to-file-make-command url output-file type))))
     (message "Getting %s file..." type)
     (set-process-sentinel process
 			  (lambda (_proc event)
@@ -149,7 +144,19 @@ function was called, if any."
 				(progn
 				  (message "File downloaded.")
 				  (eww-extras-run-callback callback output-file bibtex-key))
-			      (user-error "Could not get file"))))))
+			      (user-error "Could not get file. Error:\n\n%s" event))))))
+
+(defun eww-extras-url-to-file-make-command (url output-file type)
+  "Make command to generate OUTPUT-FILE of TYPE from URL."
+  (let* ((common (format "'%s' --headless --user-data-dir=\"%s\" "
+			 browse-url-chrome-program eww-extras-chrome-data-dir-copy))
+	 (flags "--disable-gpu --disable-extensions --disable-software-rasterizer ")
+	 (specific-format-string
+	  (pcase type
+	    ("pdf" "--no-pdf-header-footer %s --disable-gpu --print-to-pdf=%s")
+	    ("html" "%s --dump-dom > %s")))
+	 (specific (format specific-format-string url output-file)))
+    (list shell-file-name shell-command-switch (concat common flags specific))))
 
 (defun eww-extras-run-callback (callback file key)
   "When CALLBACK is non-nil, run it with FILE and KEY as arguments.

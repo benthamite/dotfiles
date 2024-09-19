@@ -8805,6 +8805,9 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
   :config
   (setq org-confirm-babel-evaluate 'org-extras-confirm-babel-evaluate)
 
+  ;; enable lexical binding in code blocks
+  (setcdr (assq :lexical org-babel-default-header-args:emacs-lisp) "no")
+
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((emacs-lisp . t)

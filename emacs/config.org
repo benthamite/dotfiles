@@ -671,7 +671,7 @@ We load ~use-package~ with ~elpaca~, then proceed to configure the package itsel
   (setq use-package-minimum-reported-time 0.1))
 
 (defmacro use-personal-package (name &rest args)
-  "Like `use-package' but accounting for personal packages.
+  "Like `use-package' but to load personal packages.
 NAME and ARGS as in `use-package'."
   (declare (indent defun))
   `(use-package ,name

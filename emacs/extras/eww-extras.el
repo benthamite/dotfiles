@@ -153,7 +153,7 @@ function was called, if any."
 	 (flags "--disable-gpu --disable-extensions --disable-software-rasterizer ")
 	 (specific-format-string
 	  (pcase type
-	    ("pdf" "--no-pdf-header-footer %s --disable-gpu --print-to-pdf=%s")
+	    ("pdf" "--no-pdf-header-footer %s --print-to-pdf=\"%s\"")
 	    ("html" "%s --dump-dom > %s")))
 	 (specific (format specific-format-string url output-file)))
     (list shell-file-name shell-command-switch (concat common flags specific))))

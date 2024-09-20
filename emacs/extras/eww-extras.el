@@ -171,7 +171,7 @@ directory, and then every once in a while to keep the directory updated. The
 initial copy may take a while if the data directory is very big, but subsequent
 updates should be fast."
   (interactive)
-  (when (y-or-n-p "Make sure you closed all instances of Chrome and ensured that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories. Also, if you are running this command for the first time—i.e. if there is currently no copy of the Chrome data directory in your system—note that Emacs will become unresponsive for a few minutes. Proceed? ")
+  (when (y-or-n-p "Make sure you have closed all instances of Chrome, and that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories. If you are running this command for the first time—i.e. if there is currently no copy of the Chrome data directory in your system—note that Emacs will become unresponsive for a few minutes. Proceed? ")
     (shell-command (format eww-extras-rsync-command
 			   eww-extras-chrome-data-dir
 			   eww-extras-chrome-data-dir-copy))))

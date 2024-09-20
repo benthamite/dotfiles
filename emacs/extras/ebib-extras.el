@@ -389,7 +389,8 @@ correctly set."
 	    (y-or-n-p "Regenerate key? "))
     (ebib-generate-autokey))
   (ebib-extras-get-or-set-language)
-  (tlon-deepl-translate-abstract)
+  (when (y-or-n-p "Translate abstract? ")
+    (tlon-deepl-translate-abstract))
   (ebib-extras-attach-files))
 
 (defun ebib-extras-set-abstract ()

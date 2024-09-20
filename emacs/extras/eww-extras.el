@@ -148,7 +148,7 @@ function was called, if any."
 
 (defun eww-extras-url-to-file-make-command (url output-file type)
   "Make command to generate OUTPUT-FILE of TYPE from URL."
-  (let* ((common (format "'%s' --headless --user-data-dir=\"%s\" "
+  (let* ((common (format "timeout 60s '%s' --headless --user-data-dir=\"%s\" "
 			 browse-url-chrome-program eww-extras-chrome-data-dir-copy))
 	 (flags "--disable-gpu --disable-extensions --disable-software-rasterizer ")
 	 (specific-format-string

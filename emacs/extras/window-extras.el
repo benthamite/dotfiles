@@ -54,6 +54,7 @@ The most recently selected window may include the minibuffer window."
   (interactive)
   (select-window (window-extras-get-last-window)))
 
+;;;###autoload
 (defun window-extras-split-if-unsplit ()
   "Split windows when frame is unsplit.
 Split in three windows if `frame-width' is greater than

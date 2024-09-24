@@ -269,7 +269,7 @@ This is used to display the relevant information in the modeline (see
   "Save the `gptel' buffer with NAME right after it is created.
 The buffer is save to a file in `gptel-extras-dir'.
 
-This function is meant to be an `:after' advice to `gptel-extras-save-buffer'."
+This function is meant to be an `:after' advice to `gptel'."
   (switch-to-buffer name)
   (let* ((extension (pcase major-mode
 		      ('org-mode "org")

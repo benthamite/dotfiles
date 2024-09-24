@@ -86,7 +86,7 @@
 (defvar org-roam-extras-current-backlink-count)
 (doom-modeline-def-segment org-roam-backlinks
   (when (and (derived-mode-p 'org-mode)
-             org-roam-extras-current-backlink-count)
+             (bound-and-true-p org-roam-extras-current-backlink-count))
     (concat (doom-modeline-spc) (format "%dB" org-roam-extras-current-backlink-count))))
 
 ;;;;; Notification counter Forge sync

@@ -399,6 +399,11 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     (unless just-enable
       (org-agenda-redo))))
 
+(defun org-extras-agenda-toggle-log-mode ()
+  "Toggle `org-agenda-log-mode' and `org-agenda-log-mode-items'."
+  (interactive)
+  (org-agenda-log-mode 'clockcheck))
+
 ;;;;; org-capture
 
 (declare-function org-web-tools-insert-link-for-url "org-web-tools")

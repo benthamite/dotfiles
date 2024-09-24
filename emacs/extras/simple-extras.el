@@ -768,11 +768,26 @@ Optionally, remove accents in region from BEGIN to END."
 
 ;;;;; Slugify
 
-(declare-function prot-eww--sluggify "prot-eww")
+;; mostly borrowed from Prot
+(defun simple-extras-slug-no-punct (str)
+  "Convert STR to a file name slug."
+  (replace-regexp-in-string "[][{}!@#$%^&*()_=+'\"?,.\|;:~`‘’“”]*" "" str))
+
+(defun simple-extras-slug-hyphenate (str)
+  "Replace spaces with hyphens in STR.
+Also replace multiple hyphens with a single one and remove any
+trailing hyphen."
+  (replace-regexp-in-string
+   "-$" ""
+   (replace-regexp-in-string
+    "-\\{2,\\}" "-"
+    (replace-regexp-in-string "--+\\|\s+" "-" str))))
+
 ;;;###autoload
 (defun simple-extras-slugify (string)
   "Convert STRING into slug."
-  (simple-extras-asciify-string (prot-eww--sluggify string)))
+  (simple-extras-asciify-string
+   (downcase (simple-extras-slug-hyphenate (simple-extras-slug-no-punct string)))))
 
 ;;;###autoload
 (defun simple-extras-slugify-clipboard ()

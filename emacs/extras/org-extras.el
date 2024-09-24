@@ -547,6 +547,7 @@ all headlines up to that level."
   (org-cycle-hide-archived-subtrees 'all))
 
 ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
+;; TODO: consider deleting; I don’t think this is being used
 (defun org-extras-hide-properties ()
   "Hide all `org-mode' headline property drawers in buffer.
 Could be slow if it has a lot of overlays."
@@ -560,6 +561,7 @@ Could be slow if it has a lot of overlays."
 	(overlay-put ov_this 'hidden-prop-drawer t))))
   (put 'org-toggle-properties-hide-state 'state 'hidden))
 
+;; TODO: consider deleting; I don’t think this is being used
 (defun org-extras-hide-logbook ()
   "Hide all `org-mode' headline logbook drawers in buffer.
 Could be slow if it has a lot of overlays."

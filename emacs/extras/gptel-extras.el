@@ -210,6 +210,7 @@ The relevant information has been obtained from the following websites:
 (defvar gptel-extras-ai-models)
 (declare-function tlon-lookup "tlon-core")
 ;; adapted from the `:reader' lambda of `transient-infix-set' in `gptel-transient.el'
+;;;###autoload
 (defun gptel-extras-model-config (globally &optional backend-name model-name)
   "Configure `gptel' for BACKEND-NAME and MODEL-NAME.
 By default, configure it for the current buffer. If GLOBALLY is non-nil, or

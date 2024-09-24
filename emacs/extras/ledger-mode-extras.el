@@ -122,6 +122,7 @@ If FILE is nil, use `paths-file-ledger'."
   (ledger-navigate-next-xact-or-directive)
   (crux-smart-open-line-above))
 
+;;;###autoload
 (defun ledger-mode-extras-align-and-next ()
   "Align transaction at point and move point to next entry."
   (interactive)

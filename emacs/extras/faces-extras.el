@@ -100,6 +100,7 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
 
 ;;;;; Face attributes
 
+;;;###autoload
 (defun faces-extras-set-face-attribute (attribute)
   "Set a single face ATTRIBUTE."
   (let* ((face (car attribute))

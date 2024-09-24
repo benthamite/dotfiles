@@ -332,6 +332,7 @@ number. Disable the mode if ARG is a negative number."
 
 (declare-function window-extras-split-if-unsplit "window-extras")
 (declare-function winum-select-window-1 "winum")
+;;;###autoload
 (defun org-extras-agenda-switch-to-agenda-current-day ()
   "Open agenda in left window, creating it if necessary."
   (interactive)

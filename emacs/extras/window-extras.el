@@ -103,12 +103,14 @@ If there is only one window, create a second one."
 
 (declare-function winum-get-window-by-number "winum")
 (declare-function winum-get-number "winum")
+;;;###autoload
 (defun window-extras-buffer-move-right ()
   "Move the current buffer to the right window."
   (interactive)
   (window-extras-buffer-move
    (winum-get-window-by-number (1+ (mod (winum-get-number) (count-windows))))))
 
+;;;###autoload
 (defun window-extras-buffer-move-left ()
   "Move the current buffer to the left window."
   (interactive)

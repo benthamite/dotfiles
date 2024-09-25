@@ -139,6 +139,18 @@ archive buffer."
       (telega-chatbuf-attach-file file)
     (user-error (format "No files found in %s" paths-dir-downloads))))
 
+(defun telega-extras-smart-enter ()
+  "Take the appropriate action for the thing at point.
+If the point is on a URL, open it in the browser. If the point is on a
+button, push it. Otherwise, send the message at point."
+  (interactive)
+  (cond ((thing-at-point 'url)
+	 (browse-url-at-point))
+	((button-at (point))
+	 (push-button))
+	(t
+	 (telega-chatbuf-input-send nil))))
+
 ;;;;; Transcribe audio
 
 ;;;###autoload

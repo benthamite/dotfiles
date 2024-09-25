@@ -113,6 +113,12 @@ poorly-designed websites."
     (when global-flycheck-mode-enabled-p
       (global-flycheck-mode))))
 
+(defun elfeed-extras-jump-to-next-link ()
+  "Jump to next link after point in the current entry."
+  (interactive)
+  (elfeed-show-next-link)
+  (recenter))
+
 ;;;;; elfeed ‘follow mode’
 
 ;; this implements an analogy of `org-agenda-follow-mode': as point is moved

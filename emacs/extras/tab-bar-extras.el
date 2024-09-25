@@ -75,7 +75,7 @@
 (defconst tab-bar-extras-telega-element
   `(:eval (when (and
 		 (bound-and-true-p tab-bar-extras-telega-notifications-enabled)
-		 (telega-server-live-p)
+		 (and (fboundp 'telega-server-live-p) (telega-server-live-p))
 		 (> (plist-get telega--unread-message-count :unread_count) 0))
 	    (concat " | " telega-mode-line-string)))
   "Element to display Telega notifications.")

@@ -58,6 +58,7 @@ The value can be set manually. It can also be set via
   :group 'calendar-extras)
 
 ;;;; Functions
+;;;;; Geolocation
 
 (defun calendar-extras-get-geolocation ()
   "Get geolocation from IP address.
@@ -87,6 +88,8 @@ If IP is non-nil, use the local IP address."
   (setq calendar-extras-personal-geolocation (calendar-extras-get-geolocation))
   (setq calendar-extras-location-name (plist-get calendar-extras-personal-geolocation :city))
   (message "Variables set: %s" calendar-extras-personal-geolocation))
+
+;;;;; Misc
 
 (defun calendar-extras-time-last-day-of-last-month ()
   "Insert the last day of the most recent month."

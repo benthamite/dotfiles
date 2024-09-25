@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'calendar)
+(require 'auth-source-pass)
 
 ;;;; User options
 

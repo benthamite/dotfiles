@@ -1140,6 +1140,9 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 	(message "Author found in the database!")
       (message "Warning: Author not found in the database!"))))
 
+(declare-function ebib-extras-search-goodreads "ebib-extras")
+(declare-function ebib-extras-search-imdb "ebib-extras")
+(declare-function ebib-extras-search-letterboxd "ebib-extras")
 (defun ebib-extras-set-rating ()
   "Set rating of current entry.
 If applicable, open external website to set rating there as well."
@@ -1388,6 +1391,7 @@ Unlike `ebib-unbrace', this function removes all braces, not just the outermost.
 
 ;;;;; Patched functions
 
+(defvar index-window)
 ;; prevent unnecessary vertical window splits
 (el-patch-defun ebib--setup-windows ()
   "Create Ebib's window configuration.
@@ -1482,6 +1486,7 @@ error."
     (default
      (beep))))
 
+(declare-function f-file-p "f.c")
 ;; when field contains a file, copy absolute file path
 (el-patch-defun ebib-copy-field-contents (field)
   "Copy the contents of FIELD to the kill ring.

@@ -33,7 +33,7 @@
 
 (defgroup org-noter-extras ()
   "Extensions for `org-noter'."
-  :group 'org-noter-extras)
+  :group 'org-noter)
 
 (defconst org-noter-extras-dehyphenate-hyphens '("-" "¬")
   "Hyphen to be removed by `org-noter-extras-dehyphenate'.")

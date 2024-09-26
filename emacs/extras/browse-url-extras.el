@@ -35,7 +35,7 @@
 
 (defgroup browse-url-extras ()
   "Extensions for `browse-url'."
-  :group 'browse-url-extras)
+  :group 'browse-url)
 
 (defcustom browse-url-extras-browse-url-default-file
   (file-name-concat paths-dir-dotemacs "etc/browse-url-default.txt")

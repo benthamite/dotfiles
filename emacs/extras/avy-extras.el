@@ -36,7 +36,7 @@
 
 (defgroup avy-extras ()
   "Extensions for `avy'."
-  :group 'avy-extras)
+  :group 'avy)
 
 (defcustom avy-extras-goto-char-timeout 1
   "Timeout for `avy-extras-goto-char' commands.

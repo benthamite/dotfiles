@@ -35,7 +35,7 @@
 
 (defgroup telega-extras ()
   "Extensions for `telega'."
-  :group 'telega-extras)
+  :group 'telega)
 
 (defcustom telega-extras-auto-share-audio-transcript nil
   "Whether to automatically share transcript after transcribing message."

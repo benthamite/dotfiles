@@ -64,6 +64,14 @@
   "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
   "Regular expression for valid BibTeX keys.")
 
+(defconst ebib-extras-valid-file-extensions
+  '("pdf" "html" "webm" "flac" "mp3" "md" "srt" "vtt")
+  "List of valid file extensions for `ebib-extras-open-file-dwim'.")
+
+(defconst ebib-extras-valid-text-file-extensions
+  '("html" "pdf" "srt" "vtt")
+  "List of valid text file extensions.")
+
 ;;;; Functions
 
 (defvar window-extras-frame-split-width-threshold)
@@ -276,14 +284,6 @@ exists."
   "Open `html' file in entry at point externally, if it (uniquely) exists."
   (interactive)
   (ebib-extras-open-file-externally "html"))
-
-(defconst ebib-extras-valid-file-extensions
-  '("pdf" "html" "webm" "flac" "mp3" "md" "srt" "vtt")
-  "List of valid file extensions for `ebib-extras-open-file-dwim'.")
-
-(defconst ebib-extras-valid-text-file-extensions
-  '("html" "pdf" "srt" "vtt")
-  "List of valid text file extensions.")
 
 (defun ebib-extras-open-file-dwim ()
   "Open file in entry at point.

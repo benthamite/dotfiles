@@ -34,7 +34,7 @@
 
 (defgroup simple-extras ()
   "Extensions for `simple'."
-  :group 'simple-extras)
+  :group 'simple)
 
 (defcustom simple-extras-new-buffer-auto-save-dir
   (file-name-concat no-littering-var-directory "auto-save/new-buffers/")

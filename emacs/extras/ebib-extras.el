@@ -39,7 +39,7 @@
 
 (defgroup ebib-extras ()
   "Extensions for `ebib'."
-  :group 'ebib-extras)
+  :group 'ebib)
 
 (defcustom ebib-extras-download-use-vpn nil
   "Whether to use a VPN when downloading content."

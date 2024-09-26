@@ -34,6 +34,7 @@
 (require 'paths)
 (require 'simple-extras)
 (require 'shut-up)
+(require 'tlon)
 
 ;;;; User options
 

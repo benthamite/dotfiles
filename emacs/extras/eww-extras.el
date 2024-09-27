@@ -77,22 +77,31 @@ The placeholders are replaced by the URL.")
   :type 'directory
   :group 'eww-extras)
 
-(defcustom eww-extras-chrome-data-dir-copy
-  (expand-file-name "~/.chrome-data/")
+;;;; Variables
+
+(defconst eww-extras-chrome-data-dir-base
+  (expand-file-name "~/.chrome-data-")
+  "The base directory where Chrome data is stored.")
+
+(defconst eww-extras-chrome-data-dir-copy-pdf
+  (concat eww-extras-chrome-data-dir-base "pdf/")
   "A copy of the directory where Chrome data is stored.
 A headless Chrome session will fail to authenticate if Chrome is running,
 because the database will be locked. So we make a copy of the relevant
-directory by running `eww-extras-chrome-copy-data-dir'."
-  :type 'directory
-  :group 'eww-extras)
+directory by running `eww-extras-chrome-copy-data-dirs'.")
 
-(defcustom eww-extras-rsync-command
+(defconst eww-extras-chrome-data-dir-copy-html
+  (concat eww-extras-chrome-data-dir-base "html/")
+  "A copy of the directory where Chrome data is stored.
+This is an identical copy of `eww-extras-chrome-data-dir-copy-pdf'. It
+is needed so that we can run two headless Chrome sessions
+simultaneously.")
+
+(defconst eww-extras-rsync-command
   "rsync -av '%s' '%s'"
   "The `rsync' command to make a copy of the Chrome data directory.
 The placeholders `%s' are replaced by with the source and destination
-directories."
-  :type 'string
-  :group 'eww-extras)
+directories.")
 
 ;;;; Functions
 
@@ -148,14 +157,17 @@ function was called, if any."
 
 (defun eww-extras-url-to-file-make-command (url output-file type)
   "Make command to generate OUTPUT-FILE of TYPE from URL."
-  (let* ((common (format "timeout 60s '%s' --headless --user-data-dir=\"%s\" "
-			 browse-url-chrome-program eww-extras-chrome-data-dir-copy))
+  (let* ((data-dir (pcase type
+		     ("pdf" eww-extras-chrome-data-dir-copy-pdf)
+		     ("html" eww-extras-chrome-data-dir-copy-html)
+		     (_ (user-error "Invalid type: %s" type))))
+	 (common (format "timeout 60s '%s' --headless --user-data-dir=\"%s\" "
+			 browse-url-chrome-program data-dir))
 	 (flags "--disable-gpu --disable-extensions --disable-software-rasterizer ")
-	 (specific-format-string
-	  (pcase type
-	    ("pdf" "--no-pdf-header-footer %s --print-to-pdf=\"%s\"")
-	    ("html" "%s --dump-dom > %s")))
-	 (specific (format specific-format-string url output-file)))
+	 (format-string (pcase type
+			  ("pdf" "--no-pdf-header-footer %s --print-to-pdf=\"%s\"")
+			  ("html" "%s --dump-dom > %s")))
+	 (specific (format format-string url output-file)))
     (list shell-file-name shell-command-switch (concat common flags specific))))
 
 (defun eww-extras-run-callback (callback file key)
@@ -164,17 +176,40 @@ FILE is the file to attach and KEY is the BibTeX key of the associated entry."
   (when callback
     (funcall callback file key)))
 
-(defun eww-extras-chrome-copy-data-dir ()
-  "Make a copy of the Chrome data directory.
-This command needs to be run to make an initial copy of the Chrome data
-directory, and then every once in a while to keep the directory updated. The
-initial copy may take a while if the data directory is very big, but subsequent
-updates should be fast."
+;;;###autoload
+(defun eww-extras-chrome-copy-data-dirs ()
+  "Make copies of the Chrome data directory.
+This command needs to be run to make two copies of the Chrome data directory,
+and then every once in a while to keep those copies updated. The initial copy
+may take a while if the data directory is very big, but subsequent updates
+should be fast."
   (interactive)
   (when (y-or-n-p "Make sure you have closed all instances of Chrome, and that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories. If you are running this command for the first time—i.e. if there is currently no copy of the Chrome data directory in your system—note that Emacs will become unresponsive for a few minutes. Proceed? ")
+    (unless (string-empty-p (shell-command-to-string "pgrep -l \"Google Chrome\""))
+      (user-error "Chrome is running. Close all instances of Chrome and try again"))
+    (message "Copying Chrome data directory to `%s'..." eww-extras-chrome-data-dir-copy-pdf)
     (shell-command (format eww-extras-rsync-command
 			   eww-extras-chrome-data-dir
-			   eww-extras-chrome-data-dir-copy))))
+			   eww-extras-chrome-data-dir-copy-pdf))
+    (eww-extras-chrome-delete-data-dir "html")
+    (message "Copying Chrome data directory to `%s'..." eww-extras-chrome-data-dir-copy-html)
+    (copy-directory eww-extras-chrome-data-dir-copy-pdf eww-extras-chrome-data-dir-copy-html nil t t)
+    (message "Done.")))
+
+(defun eww-extras-chrome-delete-data-dirs ()
+  "Delete the copy of the Chrome data directory."
+  (interactive)
+  (when (y-or-n-p "Are you sure you want to delete the copies of the Chrome data directory? ")
+    (dolist (dir (list "pdf" "html"))
+      (eww-extras-chrome-delete-data-dir dir))))
+
+(defun eww-extras-chrome-delete-data-dir (type)
+  "Delete copy of Chrome data directory of TYPE."
+  (let ((dir (pcase type
+	       ("pdf" eww-extras-chrome-data-dir-copy-pdf)
+	       ("html" eww-extras-chrome-data-dir-copy-html))))
+    (message "Deleting `%s'..." dir)
+    (delete-directory dir t)))
 
 (defun eww-extras-url-to-html (&optional url callback)
   "Generate HTML of URL, then run CALLBACK function."

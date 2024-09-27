@@ -267,7 +267,7 @@ This is used to display the relevant information in the modeline (see
 (declare-function org-next-visible-heading "org")
 (defun gptel-extras-save-buffer (name _ _ _)
   "Save the `gptel' buffer with NAME right after it is created.
-The buffer is save to a file in `gptel-extras-dir'.
+The buffer is saved to a file in `gptel-extras-dir'.
 
 This function is meant to be an `:after' advice to `gptel'."
   (switch-to-buffer name)

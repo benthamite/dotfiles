@@ -465,6 +465,8 @@ current entry or, if not available, the key stored in
   (interactive)
   (ebib-extras-attach-file 'most-recent))
 
+;;;;; File attachment
+
 (declare-function eww-extras-url-to-file "eww-extras")
 (defun ebib-extras-url-to-file-attach (type)
   "Generate a file  of TYPE for the URL of the entry at point and attach it.

@@ -83,7 +83,7 @@ To change how the time is displayed, customize `display-time-format'.")
 
 (defconst tab-bar-extras-github-element
   `(:eval (when (and tab-bar-extras-github-notifications-enabled
-		     (forge-extras-get-unread-notifications))
+		     (> doom-modeline--github-notification-number 0))
 	    (concat
 	     " | "
 	     (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
@@ -91,11 +91,12 @@ To change how the time is displayed, customize `display-time-format'.")
 	     (doom-modeline-vspc)
 	     (propertize
 	      (cond
-	       ((> (forge-extras-get-unread-notifications) 99) "99+")
-	       (t (number-to-string (forge-extras-get-unread-notifications))))
+	       ((> doom-modeline--github-notification-number 99) "99+")
+	       (t (number-to-string doom-modeline--github-notification-number)))
 	      'face '(:inherit
 		      (doom-modeline-unread-number doom-modeline-notification))))))
-  "Element to display Forge notification count.")
+  "Element to display Forge notification count.
+Note: for this element to work, `doom-modeline-github' must be non-nil.")
 
 (defconst tab-bar-extras-pomodoro-element
   `(:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)

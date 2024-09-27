@@ -35,6 +35,7 @@
 (require 'simple-extras)
 (require 'shut-up)
 (require 'tlon)
+(require 'eww-extras)
 
 ;;;; User options
 

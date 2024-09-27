@@ -596,7 +596,7 @@
 
   (setq tab-bar-extras-global-mode-string
         `(,tab-bar-extras-prefix-element
-          ;; ,tab-bar-extras-date-element
+          ;; ,tab-bar-extras-time-element
           ;; ,tab-bar-extras-separator-element
           ,tab-bar-extras-chemacs-element
           ;; ,tab-bar-extras-separator-element

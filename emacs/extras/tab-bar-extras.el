@@ -60,9 +60,10 @@
   " "
   "Element to display at the beginning of the Tab Bar.")
 
-(defconst tab-bar-extras-date-element
+(defconst tab-bar-extras-time-element
   `(:eval (propertize display-time-string 'face 'faces-extras-display-time))
-  "Element to display the date.")
+  "Element to display the time.
+To change how the time is displayed, customize `display-time-format'.")
 
 (defconst tab-bar-extras-chemacs-element
   `(" " tlon-init-chemacs-profile-name)

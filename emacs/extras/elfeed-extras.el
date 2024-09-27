@@ -99,6 +99,12 @@ poorly-designed websites."
   (when (derived-mode-p 'elfeed-show-mode)
     (zotra-extras-add-entry (elfeed-entry-link elfeed-show-entry))))
 
+(defun elfeed-extras-jump-to-next-link ()
+  "Jump to next link after point in the current entry."
+  (interactive)
+  (elfeed-show-next-link)
+  (recenter))
+
 (declare-function global-flycheck-mode "flycheck")
 (defun elfeed-extras-auto-update ()
   "Automatically update `elfeed' every 15 minutes of idleness."
@@ -113,11 +119,6 @@ poorly-designed websites."
     (when global-flycheck-mode-enabled-p
       (global-flycheck-mode))))
 
-(defun elfeed-extras-jump-to-next-link ()
-  "Jump to next link after point in the current entry."
-  (interactive)
-  (elfeed-show-next-link)
-  (recenter))
 (defun elfeed-extras-disable-undo ()
   "Disable undo in the *elfeed-search* buffer."
   (when (eq major-mode 'elfeed-search-mode)

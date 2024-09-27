@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: uala
+# key: ua
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` ${1:recipient}
+    Expenses:${5:account}  ${2:amount}.00 ARS ; ${4:details}
+    Assets:Ualá
+
+$0

@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: emacs-lisp-normal
-# key: eln
-# contributor: Pablo Stafforini
-# --
-#+begin_src emacs-lisp :results silent

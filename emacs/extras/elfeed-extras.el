@@ -118,6 +118,10 @@ poorly-designed websites."
   (interactive)
   (elfeed-show-next-link)
   (recenter))
+(defun elfeed-extras-disable-undo ()
+  "Disable undo in the *elfeed-search* buffer."
+  (when (eq major-mode 'elfeed-search-mode)
+    (setq-local buffer-undo-list nil)))
 
 ;;;;; elfeed ‘follow mode’
 

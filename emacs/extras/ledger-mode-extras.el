@@ -39,7 +39,7 @@
 (defcustom ledger-mode-extras-currencies '()
   "List of currencies to get prices for."
   :group 'ledger-mode-extras
-  :type 'list)
+  :type '(repeat string))
 
 ;;;; Functions
 

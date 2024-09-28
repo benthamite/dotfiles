@@ -178,8 +178,7 @@ If FILE is nil, use `paths-file-ledger'."
 
 (defun ledger-mode-extras-sort-region-reversed (beg end)
   "Sort the region from BEG to END in reverse chronological order."
-  (interactive "r") ;; load beg and end from point and mark
-  ;; automagically
+  (interactive "r")
   (let* ((new-beg beg)
 	 (new-end end)
 	 (bounds (ledger-navigate-find-xact-extents (point)))
@@ -202,14 +201,12 @@ If FILE is nil, use `paths-file-ledger'."
 	(setq new-end (point))
 	(narrow-to-region new-beg new-end)
 	(goto-char new-beg)
-
 	(let ((inhibit-field-text-motion t))
 	  (sort-subr
 	   t
 	   'ledger-navigate-next-xact
 	   'ledger-navigate-end-of-xact
 	   'ledger-sort-startkey))))
-
     (goto-char (point-min))
     (re-search-forward (regexp-quote target-xact))
     (goto-char (+ (match-beginning 0) point-delta))))

@@ -20,7 +20,7 @@
         espotify
         ;; flycheck
         ;; flymake
-        ;; frame
+        frame
         ;; forge
         git-auto-commit-mode
         hammy

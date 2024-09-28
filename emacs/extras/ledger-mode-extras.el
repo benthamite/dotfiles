@@ -270,9 +270,9 @@ If FILE is nil, use `paths-file-ledger'."
 	(xact-ends (ledger-navigate-end-of-xact)))
     (narrow-to-region xact-begins xact-ends)))
 
-(defun ledger-mode-extras--increase-date (days)
 ;;;;; Change date
 
+(defun ledger-mode-extras-increase-date (days)
   "Increase the date of transaction at point by DAYS.
 DAYS can be positive or negative."
   (save-excursion
@@ -288,12 +288,12 @@ DAYS can be positive or negative."
 (defun ledger-mode-extras-increase-date-by-one-day ()
   "Increase the date of transaction at point by one day."
   (interactive)
-  (ledger-mode-extras--increase-date 1))
+  (ledger-mode-extras-increase-date 1))
 
 (defun ledger-mode-extras-decrease-date-by-one-day ()
   "Decrease the date of transaction at point by one day."
   (interactive)
-  (ledger-mode-extras--increase-date -1))
+  (ledger-mode-extras-increase-date -1))
 
 (provide 'ledger-mode-extras)
 ;;; ledger-mode-extras.el ends here

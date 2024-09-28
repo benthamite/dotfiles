@@ -43,6 +43,8 @@
 
 ;;;; Functions
 
+;;;;; Import
+
 (declare-function f-read "f")
 (declare-function s-split "s")
 ;; TODO: remove first line and "rewards" lines
@@ -113,6 +115,8 @@ If FILE is nil, use `paths-file-ledger'."
 	  (ledger-mode-extras-align-and-next)
 	  (insert "\n\n"))))))
 
+;;;;; Navigation
+
 (declare-function crux-smart-open-line-above "crux")
 (defun ledger-mode-extras-new-entry-below ()
   "Create new entry below one at point."
@@ -128,6 +132,8 @@ If FILE is nil, use `paths-file-ledger'."
   (interactive)
   (ledger-post-align-xact (point))
   (ledger-navigate-next-xact-or-directive))
+
+;;;;; Report
 
 (defun ledger-mode-extras-report-account ()
   "Run an `account' report from `ledger-reports'."
@@ -149,6 +155,8 @@ If FILE is nil, use `paths-file-ledger'."
   (interactive)
   (ledger-report "payee" nil))
 
+;;;;; Fetch prices
+
 (defun ledger-mode-extras-update-commodities ()
   "Update `commodities.py'."
   (interactive)
@@ -163,6 +171,8 @@ If FILE is nil, use `paths-file-ledger'."
    (format "python3 %s >> %s"
 	   (file-name-concat paths-dir-ledger "coinprices/coinprices.py")
 	   paths-file-ledger-db)))
+
+;;;;; Sort
 
 (defun ledger-mode-extras-sort-region-reversed (beg end)
   "Sort the region from BEG to END in reverse chronological order."
@@ -228,6 +238,8 @@ If FILE is nil, use `paths-file-ledger'."
       (call-interactively #'ledger-mode-extras-sort-region-reversed)
     (ledger-mode-extras-sort-buffer-reversed)))
 
+;;;;; Kill
+
 (defun ledger-mode-extras-copy-or-kill-transaction-at-point (action)
   "Copy or kill transaction at point, depending on ACTION."
   (save-excursion
@@ -257,6 +269,8 @@ If FILE is nil, use `paths-file-ledger'."
     (narrow-to-region xact-begins xact-ends)))
 
 (defun ledger-mode-extras--increase-date (days)
+;;;;; Change date
+
   "Increase the date of transaction at point by DAYS.
 DAYS can be positive or negative."
   (save-excursion

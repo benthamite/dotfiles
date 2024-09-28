@@ -671,14 +671,13 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 NAME and ARGS as in `use-package'."
     (declare (indent defun))
     `(use-package ,name
-       :ensure (,name
-                :host github
-                :repo "benthamite/dotfiles"
-                :branch "dev"
-                :files ,(list (file-name-concat
-                               "emacs/extras"
-                               (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
-                :depth nil)
+       :ensure (:host github
+		      :repo "benthamite/dotfiles"
+		      :branch "dev"
+		      :files ,(list (file-name-concat
+				     "emacs/extras"
+				     (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
+		      :depth nil)
        ,@args)))
 
 (elpaca-wait)

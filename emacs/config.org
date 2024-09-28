@@ -3621,6 +3621,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
         ("C" . dired-do-copy)
         ("C-s" . dired-isearch-filenames)
         ("J" . dired-jump-other-window)
+        ("e" . browse-url-extras-of-dired-file-externally)
         ("f" . avy-extras-dired-find-file)
         ("k" . dired-previous-line)
         ("l" . dired-next-line)
@@ -11121,12 +11122,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package browse-url-extras
   :after browse-url
-  :defer 3
-  :bind
-  (:map eww-mode-map
-        ("e" . browse-url-extras-add-domain-to-open-externally)
-        :map dired-mode-map
-        ("e" . browse-url-extras-of-dired-file-externally)))
+  :defer 3)
 #+end_src
 
 ** shr
@@ -11259,6 +11255,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
    ("]" . eww-next-url)
    ("j" . eww-back-url)
    (";" . eww-forward-url)
+   ("e" . browse-url-extras-add-domain-to-open-externally)
    ("g" . nil)
    ("o" . eww-toggle-fonts)
    ("r" . eww-reload)

@@ -74,7 +74,6 @@ heading in a quote."
 	(org-next-visible-heading 1)
 	(org-fold-show-subtree)))))
 
-(declare-function unfill-region "unfill")
 (defun org-noter-get-annotation-contents ()
   "Return cleaned-up annotation contents in subtree."
   (let ((initial-heading (org-get-heading t t t t)))
@@ -89,7 +88,8 @@ heading in a quote."
     (org-narrow-to-subtree)
     (org-end-of-meta-data t)
     (narrow-to-region (point) (point-max))
-    (unfill-region (point) (point-max))
+    (let ((fill-column (point-max)))
+      (fill-region (point) (point-max)))
     (org-noter-extras-dehyphenate)
     (buffer-substring-no-properties (point) (point-max))))
 

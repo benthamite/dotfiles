@@ -157,6 +157,7 @@ If FILE is nil, use `paths-file-ledger'."
 
 ;;;;; Fetch prices
 
+;;;###autoload
 (defun ledger-mode-extras-update-commodities ()
   "Update `commodities.py'."
   (interactive)
@@ -164,6 +165,7 @@ If FILE is nil, use `paths-file-ledger'."
    (format "python3 %s"
 	   (file-name-concat paths-dir-ledger "commodities.py"))))
 
+;;;###autoload
 (defun ledger-mode-extras-update-coin-prices ()
   "Update `coinprices.py'."
   (interactive)

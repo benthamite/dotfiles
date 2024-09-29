@@ -45,9 +45,7 @@
   "Extensions for `org'."
   :group 'org)
 
-(defcustom org-extras-agenda-files-excluded
-  (list paths-file-tlon-tareas-leo
-	paths-file-tlon-tareas-fede)
+(defcustom org-extras-agenda-files-excluded nil
   "Files to exclude from `org-agenda'.
 I have to exclude these files because otherwise extraneous information shows up
 in my agenda, such as TODOs and time logs. These files lack the `property' tag

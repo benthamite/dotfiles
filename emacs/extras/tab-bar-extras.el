@@ -114,6 +114,21 @@ Note: for this element to work, `doom-modeline-github' must be non-nil.")
 	    (concat (propertize "🔕" 'face '(:height 0.8)) tab-bar-extras-separator-element)))
   "Element to display when the notifications are disabled.")
 
+(defconst tab-bar-extras-debug-element
+  `(:eval (when (doom-modeline--segment-visible 'debug)
+	    (let* ((dap doom-modeline--debug-dap)
+		   (edebug (doom-modeline--debug-edebug))
+		   (on-error (doom-modeline--debug-on-error))
+		   (on-quit (doom-modeline--debug-on-quit))
+		   (vsep (doom-modeline-vspc))
+		   (sep (and (or dap edebug on-error on-quit) (doom-modeline-spc))))
+	      (concat (when (or debug-on-error debug-on-quit)
+			tab-bar-extras-separator-element)
+		      (and dap (concat dap (and (or edebug on-error on-quit) vsep)))
+		      (and edebug (concat edebug (and (or on-error on-quit) vsep)))
+		      (and on-error (concat on-error (and on-quit vsep)))
+		      on-quit)))))
+
 (defconst tab-bar-extras-separator-element
   " | "
   "Element to separate the Tab Bar elements.

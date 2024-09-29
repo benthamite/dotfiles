@@ -2152,6 +2152,11 @@ CLOCK: [2021-04-03 Sat 17:09]--[2021-04-03 Sat 17:25] =>  0:16
 
 /[[https://github.com/seagle0128/doom-modeline/][doom-modeline]] is a tidier and more aesthetically pleasing modeline./
 
+I combine the modeline with the tab bar to display various types of information. Specifically, I use the modeline to display buffer-local information (such as the buffer major mode, line number, or word count), and the tab bar to display global information (such as the time and date, the weather, the computer’s battery status, and various notifications). This functionality is provided by a combination of the ==doom-modeline= package, the =tab-bar= feature, and my corresponding extensions (=doom-modeline-extras= and =tab-bar-extras=). In short, I move to the tab bar some of the elements that would normally be displayed in the modeline by (1) /enabling/ those elements via the relevant =doom-modeline= user options, (2) /hiding/ those elements via the =doom-modeline-def-modeline= macro, and (3) /adding/ equivalent elements to the tab bar via the =tab-bar-format= user option.
+
+Here’s a screenshot illustrating the modeline and tab bar in action (click to enlarge):
+
+[[file:etc/screenshot-config.png]]
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package doom-modeline
   :demand t

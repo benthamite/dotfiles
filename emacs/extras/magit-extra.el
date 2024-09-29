@@ -69,6 +69,7 @@
   (run-at-time 0.3 nil #'(lambda () (goto-char (point-min)))))
 
 ;; TODO: check if there is a better way to do this
+(declare-function files-extras-buffer-file-name "files-extras")
 (defun magit-extras-get-commit-file (&optional path)
   "Get file to commit.
 If more than one file is being committed, get the first one. By default, the

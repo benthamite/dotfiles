@@ -98,6 +98,7 @@ If there is only one window, create a second one."
   "Move the current buffer to the TARGET-WINDOW.
 If there is only one window, create a second one."
   (interactive)
+  (require 'files-extras)
   (window-extras--move-or-swap
    (window-buffer) (files-extras-get-alternate-buffer) target-window))
 

@@ -388,6 +388,7 @@ corresponding file. Else, open the file."
 If JUST-ENABLE is non-nil, always enable the display of birthdays."
   (interactive)
   (when org-extras-bbdb-anniversaries-heading
+    (require 'org-roam-extras)
     (save-window-excursion
       (org-roam-extras-id-goto org-extras-bbdb-anniversaries-heading)
       (org-narrow-to-subtree)

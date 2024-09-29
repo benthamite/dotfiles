@@ -33,6 +33,7 @@
 ;;;; Functions
 
 ;; adapted from Sacha Chua
+;;;###autoload
 (defun magit-extras-stage-commit-and-push (message)
   "Stage all modified files, commit them with MESSAGE and push to remote."
   (interactive

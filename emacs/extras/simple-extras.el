@@ -286,6 +286,7 @@ negative ARG -N."
 
 ;; the functions below are derivatives of functions in `paragraphs.el' so maybe
 ;; they should be moved to another extra package there
+;;;###autoload
 (defun simple-extras-delete-paragraph (&optional arg)
   "Like `kill-paragraph', but deletes instead of killing.
 With ARG N, delete forward to Nth end of paragraph;
@@ -293,6 +294,7 @@ negative ARG -N means delete backward to Nth start of paragraph."
   (interactive "p")
   (simple-extras-delete-instead-of-kill (kill-paragraph arg)))
 
+;;;###autoload
 (defun simple-extras-backward-delete-paragraph (&optional arg)
   "Like `backward-kill-paragraph', but deletes instead of killing.
 With ARG N, delete back to Nth start of paragraph;
@@ -300,6 +302,7 @@ negative ARG -N means delete forward to Nth end of paragraph."
   (interactive "p")
   (simple-extras-delete-instead-of-kill (backward-kill-paragraph arg)))
 
+;;;###autoload
 (defun simple-extras-copy-paragraph (&optional arg)
   "Like `kill-paragraph', but copies instead of killing.
 With ARG N, copy forward to Nth end of paragraph;
@@ -307,6 +310,7 @@ negative ARG -N means copy backward to Nth start of paragraph."
   (interactive "P")
   (simple-extras-copy-instead-of-kill (kill-paragraph arg)))
 
+;;;###autoload
 (defun simple-extras-backward-copy-paragraph (&optional arg)
   "Like `backward-kill-paragraph', but copies instead of killing.
 With ARG N, copy back to Nth start of paragraph;
@@ -314,21 +318,25 @@ negative ARG -N means copy forward to Nth end of paragraph."
   (interactive "P")
   (simple-extras-copy-instead-of-kill (backward-kill-paragraph arg)))
 
+;;;###autoload
 (defun simple-extras-kill-whole-paragraph ()
   "Kill the paragraph at point."
   (interactive)
   (simple-extras-kill-whole-thing 'paragraph))
 
+;;;###autoload
 (defun simple-extras-delete-whole-paragraph ()
   "Like `kill-whole-paragraph', but deletes instead of killing."
   (interactive)
   (simple-extras-delete-instead-of-kill (simple-extras-kill-whole-paragraph)))
 
+;;;###autoload
 (defun simple-extras-copy-whole-paragraph ()
   "Like `kill-whole-paragraph', but copies instead of killing."
   (interactive)
   (simple-extras-copy-instead-of-kill (simple-extras-kill-whole-paragraph)))
 
+;;;###autoload
 (defun simple-extras-transpose-paragraphs-backward ()
   "Interchange the current paragraph with the previous one."
   (interactive)

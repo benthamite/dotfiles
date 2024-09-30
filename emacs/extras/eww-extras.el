@@ -107,6 +107,7 @@ directories.")
 
 ;;;;; Core
 
+;;;###autoload
 (defun eww-extras-browse-file (&optional file)
   "Browse File in `eww'.
 If FILE is nil, use the file at point, the file visited by the current buffer,

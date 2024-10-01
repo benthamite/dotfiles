@@ -1,3 +1,4 @@
+#+filetags: :project:
 * Pablo's Emacs package graveyard
 :PROPERTIES:
 :ID:       AACAE0F4-0B25-475B-831B-3F1E91E6349D
@@ -7,6 +8,106 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+
+** general
+:PROPERTIES:
+:ID:       70C622E0-FAC7-4AB1-841F-36437858218C
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
+:END:
+
+/[[https://github.com/noctuid/general.el][general]] supports more convenient key definitions./
+
+I only use this package to define key bindings for multiple keymaps at once. Currently, ~use-package~ does not support such concise definitions, though there is an [[https://github.com/jwiegley/use-package/pull/1051][open pull request]] to add this feature.
+
+[2024-09-30 Mon 21:02] No longer using.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package general
+  :ensure (:wait t)
+  :demand t
+  :custom
+  (general-describe-priority-keymaps '(local global org-mode-map))
+  (general-describe-keybinding-sort-function #'general-sort-by-car)
+
+  :config
+  (general-override-mode)
+  (general-auto-unbind-keys))
+#+end_src
+
+** async-mail-sending
+:PROPERTIES:
+:ID:       BEF562DB-61D5-4AB5-8B8A-44DD866FE285
+:END:
+:LOGBOOK:
+CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
+:END:
+
+/[[https://github.com/lordpretzel/async-email-sending][async-email-sending]] enables asynchronous sending of emails in Emacs using the new built-in sqlite support in Emacs 29./
+
+<2023-12-01 Fri> Failed to send an email when I tested it. So not using for the time being.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package async-email-sending
+  :disabled
+  :ensure (async-email-sending
+           :host github
+           :repo "lordpretzel/async-email-sending")
+  ;; needs to be set via `customize'
+  :custom (async-email-sending-use-async-send-mail t))
+#+end_src
+
+*** TODO [#5] Open issue
+:PROPERTIES:
+:ID:       C1790096-C90A-4C28-9257-34223AC4341C
+:END:
+
+** fancy-battery
+:PROPERTIES:
+:ID:       DDFE34BA-7C23-459E-B4E2-2957D2535700
+:END:
+
+/[[https://github.com/emacsorphanage/fancy-battery][fancy-battery]] displays battery information in the modeline./
+
+[2024-09-29 Sun] Superseded by =battery=.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package fancy-battery
+  :custom
+  (fancy-battery-show-percentage t)
+
+  :config
+  (fancy-battery-mode))
+#+end_src
+
+** password-store
+:PROPERTIES:
+:ID:       80D05BB8-D440-417A-8D94-61F4EB79EA00
+:END:
+
+/[[https://github.com/zx2c4/password-store][password-store]] provides functions for working with pass, the standard Unix password manager./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package password-store
+  :ensure (:host github
+            :repo "zx2c4/password-store"
+            :files ("contrib/emacs/*.el"))
+  :after password-store-otp
+  :disabled)
+#+end_src
+
+** unfill
+:PROPERTIES:
+:ID:       DF5137EA-79B3-4A5F-8D6C-7222CD8D4F4A
+:END:
+
+ /[[https://github.com/purcell/unfill][unfill]] provides functions to do the reverse of =fill-paragraph= and =fill-region=./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package unfill
+  :defer 10)
+#+end_src
 
 ** persid
 :PROPERTIES:

@@ -67,7 +67,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#org][org]]
   - [[#jsonrpc][jsonrpc]]
   - [[#seq][seq]]
-  - [[#general][general]]
   - [[#paths][paths]]
   - [[#tlon-init][tlon-init]]
   - [[#no-littering][no-littering]]
@@ -89,12 +88,10 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#epg-config][epg-config]]
   - [[#auth-source][auth-source]]
   - [[#oauth2-auto][oauth2-auto]]
-  - [[#password-store-otp][password-store-otp]]
-  - [[#password-store][password-store]]
   - [[#pass][pass]]
   - [[#pass-extras][pass-extras]]
+  - [[#password-store-otp][password-store-otp]]
   - [[#auth-source-pass][auth-source-pass]]
-  - [[#epa][epa]]
 - [[#version-control][version control]]
   - [[#vc][vc]]
   - [[#vc-extras][vc-extras]]
@@ -108,6 +105,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#magit][magit]]
   - [[#magit-extra][magit-extra]]
   - [[#magit-todos][magit-todos]]
+  - [[#with-editor][with-editor]]
   - [[#ghub][ghub]]
   - [[#forge][forge]]
   - [[#orgit-forge][orgit-forge]]
@@ -142,7 +140,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#tab-bar][tab-bar]]
   - [[#tab-bar-extras][tab-bar-extras]]
   - [[#breadcrumb][breadcrumb]]
-  - [[#fancy-battery][fancy-battery]]
+  - [[#battery][battery]]
   - [[#nerd-icons][nerd-icons]]
   - [[#menu-bar][menu-bar]]
   - [[#tool-bar][tool-bar]]
@@ -170,7 +168,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#simple][simple]]
   - [[#simple-extras][simple-extras]]
   - [[#paragraphs][paragraphs]]
-  - [[#headings][headings]]
 - [[#editing][editing]]
   - [[#simple][simple]]
   - [[#repeat][repeat]]
@@ -180,7 +177,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#outline][outline]]
   - [[#outline-extras][outline-extras]]
   - [[#outli][outli]]
-  - [[#unfill][unfill]]
   - [[#abbrev][abbrev]]
   - [[#yasnippet][yasnippet]]
   - [[#yasnippet-snippets][yasnippet-snippets]]
@@ -202,9 +198,9 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#locate][locate]]
   - [[#autorevert][autorevert]]
   - [[#dired][dired]]
-  - [[#dired-aux][dired-aux]]
-  - [[#dired-extras][dired-extras]]
   - [[#dired-x][dired-x]]
+  - [[#dired-extras][dired-extras]]
+  - [[#dired-aux][dired-aux]]
   - [[#dired-git-info][dired-git-info]]
   - [[#dired-du][dired-du]]
   - [[#image-dired][image-dired]]
@@ -290,8 +286,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#help-at-pt][help-at-pt]]
   - [[#helpful][helpful]]
   - [[#info][info]]
+  - [[#man][man]]
+  - [[#woman][woman]]
   - [[#shortdoc][shortdoc]]
   - [[#find-func][find-func]]
+  - [[#elisp-refs][elisp-refs]]
   - [[#elisp-demos][elisp-demos]]
 - [[#keyboard-macros][keyboard macros]]
   - [[#kmacro][kmacro]]
@@ -315,7 +314,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#lsp-grammarly][lsp-grammarly]]
 - [[#prose][prose]]
   - [[#text-mode][text-mode]]
-  - [[#with-editor][with-editor]]
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown-mode][markdown-mode]]
   - [[#markdown-mode-extras][markdown-mode-extras]]
@@ -408,6 +406,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ox-pandoc][ox-pandoc]]
   - [[#ox-gfm][ox-gfm]]
   - [[#ob][ob]]
+  - [[#org-tempo][org-tempo]]
   - [[#org-src][org-src]]
   - [[#org-table][org-table]]
   - [[#orgtbl-edit][orgtbl-edit]]
@@ -465,7 +464,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#simple][simple]]
   - [[#sendmail][sendmail]]
   - [[#smtpmail][smtpmail]]
-  - [[#async-mail-sending][async-mail-sending]]
   - [[#message][message]]
   - [[#mml][mml]]
   - [[#mu4e][mu4e]]
@@ -485,6 +483,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#browse-url][browse-url]]
   - [[#browse-url-extras][browse-url-extras]]
   - [[#shr][shr]]
+  - [[#html][html]]
   - [[#mhtml][mhtml]]
   - [[#shr-tag-pre-highlight][shr-tag-pre-highlight]]
   - [[#shr-heading][shr-heading]]
@@ -515,6 +514,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#read-aloud-extras][read-aloud-extras]]
 - [[#misc][misc]]
   - [[#calc][calc]]
+  - [[#calc-ext][calc-ext]]
   - [[#alert][alert]]
   - [[#unpackaged][unpackaged]]
   - [[#midnight][midnight]]
@@ -672,12 +672,12 @@ NAME and ARGS as in `use-package'."
     (declare (indent defun))
     `(use-package ,name
        :ensure (:host github
-		      :repo "benthamite/dotfiles"
-		      :branch "dev"
-		      :files ,(list (file-name-concat
-				     "emacs/extras"
-				     (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
-		      :depth nil)
+                      :repo "benthamite/dotfiles"
+                      :branch "dev"
+                      :files ,(list (file-name-concat
+                                     "emacs/extras"
+                                     (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
+                      :depth nil)
        ,@args)))
 
 (elpaca-wait)
@@ -720,7 +720,7 @@ NAME and ARGS as in `use-package'."
 We load ~org-mode~ early to prevent version conflicts. The package is configured properly later (see =org= section).
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package org)
+;; (use-package org)
 #+end_src
 
 ** jsonrpc
@@ -756,35 +756,12 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
   :ensure `(seq :build ,(elpaca-seq-build-steps)))
 #+end_src
 
-** general
-:PROPERTIES:
-:ID:       70C622E0-FAC7-4AB1-841F-36437858218C
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
-:END:
-
-/[[https://github.com/noctuid/general.el][general]] supports more convenient key definitions./
-
-I only use this package to define key bindings for multiple keymaps at once. Currently, ~use-package~ does not support such concise definitions, though there is an [[https://github.com/jwiegley/use-package/pull/1051][open pull request]] to add this feature.
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package general
-  :ensure (:wait t)
-  :demand t
-  :custom
-  (general-describe-priority-keymaps '(local global org-mode-map))
-  (general-describe-keybinding-sort-function #'general-sort-by-car)
-
-  :config
-  (general-override-mode)
-  (general-auto-unbind-keys))
-#+end_src
-
 ** paths
 :PROPERTIES:
 :ID:       9D90809B-4CCF-4058-BB8B-396CF12B6E3F
 :END:
+
+/[[file:extras/paths.el][paths]] defines various paths used in this configuration./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package paths)
@@ -810,11 +787,7 @@ I only use this package to define key bindings for multiple keymaps at once. Cur
   (tlon-init-startup)
 
   :hook
-  (elpaca-after-init-hook . tlon-init-run-post-init-hook)
-
-  :bind
-  (:map org-mode-map
-        ("s-b" . tlon-init-build)))
+  (elpaca-after-init-hook . tlon-init-run-post-init-hook))
 #+end_src
 
 ** no-littering
@@ -847,6 +820,8 @@ I only use this package to define key bindings for multiple keymaps at once. Cur
 :ID:       3411777E-E554-4EF3-9389-63242D4F3072
 :END:
 
+/ns-win provides various Nexstep convenience functions./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ns-win
   :custom
@@ -863,6 +838,8 @@ I only use this package to define key bindings for multiple keymaps at once. Cur
 :PROPERTIES:
 :ID:       0A62A6C8-D3D8-4960-A809-35B60A479D2B
 :END:
+
+/iso-transl defines ways of entering the non-ASCII printable characters with codes above 127./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature iso-transl
@@ -900,6 +877,8 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       E21AC33E-D108-4860-997C-A4982569005E
 :END:
 
+/transient is a library for creating keyboard-driven menus./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package transient
   :after seq
@@ -916,19 +895,26 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       C8FB5BC6-6895-4D63-86A8-E49D6BB3001C
 :END:
 
+/warnings provides support for logging and displaying warnings./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature warnings
   :init
   (dolist (element '((yasnippet backquote-change)
                      (org-element-cache)
-                     (cons)))
-    (add-to-list 'warning-suppress-types element)))
+                     (org-roam)
+                     (cons)
+                     (flycheck syntax-checker)))
+    (add-to-list 'warning-suppress-types element))
+    (add-to-list 'warning-suppress-log-types '(copilot copilot-exceeds-max-char)))
 #+end_src
 
 ** comp
 :PROPERTIES:
 :ID:       191AB5FC-F979-4B71-84A0-D8FC108CEBD3
 :END:
+
+/comp compiles Lisp code into native code./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature comp
@@ -940,6 +926,8 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :PROPERTIES:
 :ID:       630FB32E-8D10-47C5-98EB-B436C6CF97D9
 :END:
+
+/bytecomp compiles Lisp code into byte code./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature bytecomp
@@ -968,6 +956,8 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :PROPERTIES:
 :ID:       8514378A-0BA2-4A8E-971F-10C07ED4D38A
 :END:
+
+/server starts a server for external clients to connect to./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature server
@@ -1093,8 +1083,12 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 :ID:       5257E611-7953-4898-B743-25803EC7D9B4
 :END:
 
+/plstore is a plist based data store providing search and partial encryption./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature plstore
+  :disabled
+  ;; to test whether I need it
   :init
   (setq-default plstore-cache-passphrase-for-symmetric-encryption t))
 #+end_src
@@ -1103,6 +1097,8 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 :PROPERTIES:
 :ID:       012F15A3-7717-4B09-9F43-74DA6F5F7C1A
 :END:
+
+/epg-config provides configuration for the Easy Privacy Guard library./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature epg-config
@@ -1118,6 +1114,8 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 :LOGBOOK:
 CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 :END:
+
+/auth-source supports authentication sources for Gnus and Emacs./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature auth-source
@@ -1148,36 +1146,6 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
   (oauth2-auto-plstore (no-littering-expand-var-file-name "oauth2-auto.plist")))
 #+end_src
 
-** password-store-otp
-:PROPERTIES:
-:ID:       761A0B71-DA6A-42A1-8137-F4C857F029F0
-:END:
-
-
-/[[https://github.com/volrath/password-store-otp.el][password-store-otp]] provides integration with the pass-otp extension for pass./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package password-store-otp
-  :ensure (:version (lambda (_) "0.1.5"))  ; github.com/progfolio/elpaca/issues/229
-  :defer 5)
-#+end_src
-
-** password-store
-:PROPERTIES:
-:ID:       80D05BB8-D440-417A-8D94-61F4EB79EA00
-:END:
-
-/[[https://github.com/zx2c4/password-store][password-store]] provides functions for working with pass, the standard Unix password manager./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package password-store
-  :ensure (:host github
-            :repo "zx2c4/password-store"
-            :files ("contrib/emacs/*.el"))
-  :after password-store-otp
-  :disabled)
-#+end_src
-
 ** pass
 :PROPERTIES:
 :ID:       518D3C1F-AFD6-4B72-8980-CAD10BBAEDDE
@@ -1199,8 +1167,6 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pass
-  :demand t
-  :after password-store
   :custom
   (pass-suppress-confirmations t)
 
@@ -1234,6 +1200,19 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
         ("y" . pass-extras-git-sync)))
 #+end_src
 
+** password-store-otp
+:PROPERTIES:
+:ID:       761A0B71-DA6A-42A1-8137-F4C857F029F0
+:END:
+
+/[[https://github.com/volrath/password-store-otp.el][password-store-otp]] provides integration with the pass-otp extension for pass./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package password-store-otp
+  :ensure (:version (lambda (_) "0.1.5"))  ; github.com/progfolio/elpaca/issues/229
+  :after pass)
+#+end_src
+
 ** auth-source-pass
 :PROPERTIES:
 :ID:       00772E1B-A97C-46B5-8DE9-77462AAE0189
@@ -1244,6 +1223,8 @@ CLOCK: [2021-05-29 Sat 13:52]--[2021-05-29 Sat 14:10] =>  0:18
 CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 :END:
 
+/auth-source-pass integrates auth-source with password-store./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature auth-source-pass
   :demand t
@@ -1253,19 +1234,6 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 
   :hook
   (doom-modeline-before-github-fetch-notification-hook . auth-source-pass-enable))
-#+end_src
-
-** epa
-:PROPERTIES:
-:ID:       0DC848ED-0AD0-4E33-BFFE-D15CD20C6EAC
-:END:
-
-/epa is the EasyPG Assistant./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature epa
-  :custom
-  (epa-keys-select-method 'minibuffer))
 #+end_src
 
 * version control
@@ -1283,6 +1251,8 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :END:
 
+/vc provides support for various version control systems./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature vc
   :defer t
@@ -1297,7 +1267,6 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       A7254905-0FBE-4F8F-8D93-1A5D1FA95BB9
 :END:
 
-
 /[[file:extras/vc-extras.el][vc-extras]] collects my extensions for ~vc~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -1309,6 +1278,8 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :PROPERTIES:
 :ID:       FABAB5ED-7883-4F95-B3A2-3EB8F07DD33F
 :END:
+
+/log-edit is a major mode for editing CVS commit messages./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature log-edit
@@ -1322,6 +1293,8 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :PROPERTIES:
 :ID:       33F1D5AA-3DA7-43EC-8ACD-0D8360445459
 :END:
+
+/diff-mode is a mode for viewing and editing context diffs./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature diff-mode
@@ -1349,7 +1322,6 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :PROPERTIES:
 :ID:       BFD82441-5547-45C5-AD36-E5DE9FDD4898
 :END:
-
 
 /[[file:extras/ediff-extras.el][ediff-extras]] collects my extensions for ~ediff~./
 
@@ -1447,19 +1419,45 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
    ("n" . forge-dispatch)
    ("p" . magit-pull)
    ("." . magit-push)
+   :map magit-diff-mode-map
+   ("A-C-s-r" . magit-section-backward-sibling)
+   ("A-C-s-f" . magit-section-forward-sibling)
+   :map magit-hunk-section-map
+   ("s-l" . magit-smerge-keep-lower)
+   ("s-k" . magit-smerge-keep-upper)
+   ("s-a" . magit-smerge-keep-all)
+   ("s-b" . magit-smerge-keep-base)
+   ("s-c" . magit-smerge-keep-current)
+   :map magit-hunk-section-smerge-map
+   ("s-l" . magit-smerge-keep-lower)
+   ("s-k" . magit-smerge-keep-upper)
+   ("s-a" . magit-smerge-keep-all)
+   ("s-b" . magit-smerge-keep-base)
+   ("s-c" . magit-smerge-keep-current)
    :map magit-status-mode-map
-   ("s-r" . tlon-commit-when-slug-at-point))
-
-  :general
-  ((magit-diff-mode-map magit-status-mode-map magit-revision-mode-map)
-   "A-C-s-r" 'magit-section-backward-sibling
-   "A-C-s-f" 'magit-section-forward-sibling)
-  ((magit-status-mode-map magit-hunk-section-mode-map magit-hunk-section-smerge-map)
-   "s-l" 'magit-smerge-keep-lower
-   "s-k" 'magit-smerge-keep-upper
-   "s-a" 'magit-smerge-keep-all
-   "s-b" 'magit-smerge-keep-base
-   "s-c" 'magit-smerge-keep-current))
+   ("s-l" . magit-smerge-keep-lower)
+   ("s-k" . magit-smerge-keep-upper)
+   ("s-a" . magit-smerge-keep-all)
+   ("s-b" . magit-smerge-keep-base)
+   ("s-c" . magit-smerge-keep-current)
+   ("s-r" . tlon-commit-when-slug-at-point)
+   ("s-a" . forge-topic-set-assignees)
+   ("s-d" . forge-delete-comment)
+   ("s-e" . forge-edit-post)
+   ("s-i" . forge-browse-issue)
+   ("s-I" . forge-browse-issues)
+   ("s-l" . forge-topic-set-labels)
+   ("s-o" . forge-topic-status-set-done)
+   ("s-p" . forge-create-post)
+   ("s-r" . forge-create-post)
+   ("s-s" . forge-list-assigned-issues)
+   ("s-t" . forge-topic-set-title)
+   ("A-C-s-r" . magit-section-backward-sibling)
+   ("A-C-s-f" . magit-section-forward-sibling)
+   ("s-x" . forge-extras-state-set-dwim)
+   :map magit-revision-mode-map
+   ("A-C-s-r" . magit-section-backward-sibling)
+   ("A-C-s-f" . magit-section-forward-sibling)))
 #+end_src
 
 - [[https://emacspeak.blogspot.com/2020/05/github-standard-fork-and-pull-request.html][EMACSPEAK The Complete Audio Desktop: GitHub Standard Fork And Pull-Request Workflow From Emacs]]
@@ -1513,12 +1511,26 @@ Running with --debug will show why files are being skipped.
                  :build (:not elpaca--check-version))
   :disabled
   :after magit hl-todo
-  :defer 10
   :custom
   (magit-todos-branch-list nil)
 
   :config
   (magit-todos-mode))
+#+end_src
+
+** with-editor
+:PROPERTIES:
+:ID:       48431AA9-2ABE-403C-9E91-68066B24CB26
+:END:
+
+/[[https://github.com/magit/with-editor][with-editor]] allows the use of Emacsclient as the $EDITOR for external programs./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package with-editor
+  :bind
+  (("s-c" . with-editor-finish)
+   ("s-k" . with-editor-cancel)
+   ("C-c C-c" . with-editor-finish)))
 #+end_src
 
 ** ghub
@@ -1533,8 +1545,9 @@ Running with --debug will show why files are being skipped.
   :ensure (:host github
                  :repo "magit/ghub"
                  :branch "main")
-  :after auth-source
-  :defer t)
+  :defer t
+  :config
+  (require 'pass))
 #+end_src
 
 ** forge
@@ -1574,21 +1587,45 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
         ("s-c" . forge-post-submit)
         ;; :map forge-issue-list-mode-map
         ;; ("n" . forge-dispatch)
-        )
-
-  :general
-  ((forge-issue-mode-map forge-notifications-mode-map forge-topic-mode-map magit-status-mode-map)
-   "s-a" 'forge-topic-set-assignees
-   "s-d" 'forge-delete-comment
-   "s-e" 'forge-edit-post
-   "s-i" 'forge-browse-issue
-   "s-I" 'forge-browse-issues
-   "s-l" 'forge-topic-set-labels
-   "s-o" 'forge-topic-status-set-done
-   "s-p" 'forge-create-post
-   "s-r" 'forge-create-post
-   "s-s" 'forge-list-assigned-issues
-   "s-t" 'forge-topic-set-title))
+        :map forge-issue-mode-map
+        ("s-a" . forge-topic-set-assignees)
+        ("s-d" . forge-delete-comment)
+        ("s-e" . forge-edit-post)
+        ("s-i" . forge-browse-issue)
+        ("s-I" . forge-browse-issues)
+        ("s-l" . forge-topic-set-labels)
+        ("s-o" . forge-topic-status-set-done)
+        ("s-p" . forge-create-post)
+        ("s-r" . forge-create-post)
+        ("s-s" . forge-list-assigned-issues)
+        ("s-t" . forge-topic-set-title)
+        :map forge-notifications-mode-map
+        ("s-a" . forge-topic-set-assignees)
+        ("s-d" . forge-delete-comment)
+        ("s-e" . forge-edit-post)
+        ("s-i" . forge-browse-issue)
+        ("s-I" . forge-browse-issues)
+        ("s-l" . forge-topic-set-labels)
+        ("s-o" . forge-topic-status-set-done)
+        ("s-p" . forge-create-post)
+        ("s-r" . forge-create-post)
+        ("s-s" . forge-list-assigned-issues)
+        ("s-t" . forge-topic-set-title)
+        ("s-x" . forge-extras-state-set-dwim)
+        ("x" . forge-extras-browse-github-inbox)
+        :map forge-topic-mode-map
+        ("s-a" . forge-topic-set-assignees)
+        ("s-d" . forge-delete-comment)
+        ("s-e" . forge-edit-post)
+        ("s-i" . forge-browse-issue)
+        ("s-I" . forge-browse-issues)
+        ("s-l" . forge-topic-set-labels)
+        ("s-o" . forge-topic-status-set-done)
+        ("s-p" . forge-create-post)
+        ("s-r" . forge-create-post)
+        ("s-s" . forge-list-assigned-issues)
+        ("s-t" . forge-topic-set-title)
+        ("s-x" . forge-extras-state-set-dwim)))
 #+end_src
 
 ** orgit-forge
@@ -1600,8 +1637,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package orgit-forge
-  :after org forge
-  :defer 10)
+  :after org forge)
 #+end_src
 
 ** forge-search
@@ -1616,8 +1652,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :ensure (:host github
            :repo "benthamite/forge-search.el"
            :branch "fix/forge-get-repository")
-  :after forge
-  :defer 7)
+  :after forge)
 #+end_src
 
 ** forge-extras
@@ -1629,21 +1664,14 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package forge-extras
-  ;; :after orgit-forge
+  :after forge
+  :demand t
   :config
   (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link)
   ;; hack: to mark the topic as read, we browse it in the background
   (advice-add 'forge-visit-this-topic :before #'forge-extras-sync-read-status)
 
-  (run-with-idle-timer 30 t #'forge-extras-pull-notifications)
-
-  :bind
-  (:map forge-notifications-mode-map
-        ("x" . forge-extras-browse-github-inbox))
-
-  :general
-  ((forge-topic-mode-map forge-notifications-mode-map magit-status-mode-map)
-   "s-x" 'forge-extras-state-set-dwim))
+  (run-with-idle-timer 30 t #'forge-extras-pull-notifications))
 #+end_src
 
 ** git-auto-commit-mode
@@ -1655,6 +1683,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package git-auto-commit-mode
+  :after recentf
   :config
   (setq-default gac-automatically-push-p nil)
   (setq-default gac-debounce-interval 30)
@@ -1673,7 +1702,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 (use-package emsg-blame
   :ensure (:host github
                  :repo "ISouthRain/emsg-blame")
-                 :disabled
   :custom
   (emsg-blame-display #'emsg-blame-display-message)
   (emsg-blame-idle-time 0.5)
@@ -1830,7 +1858,8 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
      (org-modern-tag :family faces-extras-fixed-pitch-font :height faces-extras-org-tag-height)
      (org-modern-label :family faces-extras-fixed-pitch-font :height 0.8)))
 
-  (global-org-modern-mode))
+     :hook
+  (org-mode-hook . global-org-modern-mode))
 #+end_src
 
 ** org-modern-indent
@@ -2157,16 +2186,15 @@ I combine the modeline with the tab bar to display various types of information.
 Here’s a screenshot illustrating the modeline and tab bar in action (click to enlarge):
 
 [[file:etc/screenshot-config.png]]
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package doom-modeline
   :demand t
   :custom
   (doom-modeline-time nil) ; we display time (and date) in the tab bar
   (doom-modeline-buffer-name t)
-  (doom-modeline-buffer-file-name-style 'file-name) ; we display the full path in the header line
+  (doom-modeline-buffer-file-name-style 'file-name) ; we display the full path in the header line via `breadcrumb'
   (doom-modeline-check-simple-format t)
-  (doom-modeline-irc t)
-  (doom-modeline-irc-buffers t)
   (doom-modeline-total-line-number t)
   (doom-modeline-position-column-line-format '(" %c %l"))
   (doom-modeline-enable-word-count t)
@@ -2176,9 +2204,7 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
 
   :config
   (dolist (cons  '((display-time-mode-hook . doom-modeline-override-time)
-                   (display-battery-mode-hook . doom-modeline-override-battery)
-                   (doom-modeline-mode-hook . doom-modeline-override-time)
-                   (doom-modeline-mode-hook . doom-modeline-override-battery)))
+                   (doom-modeline-mode-hook . doom-modeline-override-time)))
     (remove-hook (car cons) (cdr cons))))
 #+end_src
 
@@ -2187,7 +2213,6 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
 :ID:       AA94A6D8-DD39-415C-9E34-5793F44B9FF9
 :END:
 
-
 /[[file:extras/doom-modeline-extras.el][doom-modeline-extras]] collects my extensions for ~doom-modeline~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -2195,25 +2220,21 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
   :after doom-modeline
   :demand t
   :config
-  ;; We redefine the modelines that include `github', to remove that element.
-  ;; This is because we display the GitHub notification count in the tab bar, so
-  ;; we do not want to also display it in the modeline. See the "tab-bar-extras"
-  ;; section below for details.
   (doom-modeline-def-modeline 'main
     '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info org-roam-backlinks)
-    '(tlon-split gptel gptel-cost compilation objed-state misc-info persp-name battery grip irc mu4e gnus debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
+    '(tlon-split gptel gptel-cost compilation objed-state misc-info persp-name grip irc mu4e gnus lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
 
   (doom-modeline-def-modeline 'vcs
     '(bar window-number modals matches buffer-info remote-host buffer-position parrot selection-info)
-    '(compilation misc-info battery irc mu4e gnus debug minor-modes buffer-encoding major-mode process time))
+    '(compilation misc-info irc mu4e gnus minor-modes buffer-encoding major-mode process time))
 
   (doom-modeline-def-modeline 'dashboard
     '(bar window-number modals buffer-default-directory-simple remote-host)
-    '(compilation misc-info battery irc mu4e gnus debug minor-modes input-method major-mode process time))
+    '(compilation misc-info irc mu4e gnus minor-modes input-method major-mode process time))
 
   (doom-modeline-def-modeline 'project
     '(bar window-number modals buffer-default-directory remote-host buffer-position)
-    '(compilation misc-info battery irc mu4e gnus github debug minor-modes input-method major-mode process time))
+    '(compilation misc-info irc mu4e gnus github minor-modes input-method major-mode process time))
 
   (doom-modeline-mode))
 #+end_src
@@ -2225,6 +2246,8 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
 :LOGBOOK:
 CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 :END:
+
+/tab-bar displays a tab bar at the top of the frame, just below the tool bar./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature tab-bar
@@ -2278,6 +2301,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
           ,tab-bar-extras-telega-element
           ,tab-bar-extras-github-element
           ,tab-bar-extras-pomodoro-element
+          ,tab-bar-extras-debug-element
           ,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
           ))
 
@@ -2308,20 +2332,19 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   (breadcrumb-mode))
 #+end_src
 
-** fancy-battery
+** battery
 :PROPERTIES:
-:ID:       DDFE34BA-7C23-459E-B4E2-2957D2535700
+:ID:       6507FA19-D87D-41B9-AC04-598E87370416
 :END:
 
-/[[https://github.com/emacsorphanage/fancy-battery][fancy-battery]] displays battery information in the modeline./
-
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package fancy-battery
-  :custom
-  (fancy-battery-show-percentage t)
+(use-feature battery
+  ;; :custom
+  ;; (battery-mode-line-format )
+  ;; (battery-status-function )
 
   :config
-  (fancy-battery-mode))
+  (display-battery-mode))
 #+end_src
 
 ** nerd-icons
@@ -2419,7 +2442,6 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package lin
-  :defer 7
   :custom
   (lin-face 'lin-blue)
   (lin-mode-hooks
@@ -2439,8 +2461,8 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
      proced-mode-hook
      tabulated-list-mode-hook))
 
-     :config
-  (lin-global-mode))
+  :hook
+  (tlon-init-run-post-init-hook . lin-global-mode))
 #+end_src
 
 ** jit-lock
@@ -2451,12 +2473,14 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jit-lock.el][jit-lock]] provides just-in-time fontification./
 
+I have [[https://emacs.stackexchange.com/questions/72417/face-properties-fail-to-apply-to-parts-of-org-mode-buffer/72439#72439][noticed]] that Emacs will sometimes fail to fontify parts of a buffer. This problem is solved, in my experience, by increasing the value of the user option ~jit-lock-chunk-size~. Its docstring says that “The optimum value is a little over the typical number of buffer characters which fit in a typical window”, so we set its value dynamically by multiplying the number of lines per window by the number of characters per line, doubling that for safety.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature jit-lock
   :defer 10
   :custom
   (jit-lock-chunk-size
-        (* (window-max-chars-per-line) (window-body-height) 10))) ; emacs.stackexchange.com/a/72439/32089
+        (* (window-max-chars-per-line) (window-body-height) 2)))
 #+end_src
 
 * performance
@@ -2527,12 +2551,11 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature so-long
-  :defer 7
   :custom
   (so-long-threshold 500000)
 
-  :config
-  (global-so-long-mode))
+  :hook
+  (find-file-hook . global-so-long-mode))
 #+end_src
 
 ** gcmh
@@ -2597,19 +2620,83 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature simple
-  :demand t
+  :commands next-line previous-line
+  :init
+  (with-eval-after-load 'em-hist
+    (bind-keys :map eshell-hist-mode-map
+               ("<up>" . previous-line)
+               ("<down>" . next-line)))
+  (with-eval-after-load 'cus-edit
+    (bind-keys :map custom-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'ebib
+    (bind-keys :map ebib-entry-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line))
+    (bind-keys :map ebib-index-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'elfeed
+    (bind-keys :map elfeed-show-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'elisp-refs
+    (bind-keys :map elisp-refs-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'eww
+    (bind-keys :map eww-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'forge-notify
+    (bind-keys :map forge-notifications-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'help
+    (bind-keys :map help-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'helpful
+    (bind-keys :map helpful-mode-map
+	       ("k" . previous-line)
+	       ("l" .)))
+  (with-eval-after-load 'info
+    (bind-keys :map Info-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'ledger-reconcile
+    (bind-keys :map ledger-reconcile-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'Man
+    (bind-keys :map Man-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'mu4e
+    (bind-keys :map mu4e-view-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'org-lint
+    (bind-keys :map org-lint--report-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'osa-chrome
+    (bind-keys :map osa-chrome-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
+  (with-eval-after-load 'pass
+    (bind-keys :map pass-mode-map
+	       ("k" . previous-line)
+	       ("l" . next)))
+  (with-eval-after-load 'simple
+    (bind-keys :map special-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
 
   :bind
   (("A-C-s-m" . move-beginning-of-line)
-   ("A-C-s-/" . move-end-of-line))
-
-  :general
-  ((custom-mode-map ebib-entry-mode-map ebib-index-mode-map elfeed-show-mode-map elisp-refs-mode-map eww-mode-map forge-notifications-mode help-mode-map helpful-mode-map Info-mode-map ledger-reconcile-mode-map Man-mode-map mu4e-view-mode-map org-lint--report-mode-map osa-chrome-mode-map pass-mode-map special-mode-map)
-   "k" 'previous-line
-   "l" 'next-line)
-  ((eshell-hist-mode-map w3m-minor-mode-map)
-   "<up>" 'previous-line
-   "<down>" 'next-line))
+   ("A-C-s-/" . move-end-of-line)))
 #+end_src
 
 ** sentences
@@ -2834,62 +2921,63 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature emacs
   :demand t
+  :commands kill-paragraph transpose-paragraphs backward-kill-paragraph
   :custom
   (sentence-end-double-space nil)
 
-  :bind
-  ("M-k" . nil)
-
-  :general
-  ((text-mode-map org-mode-map outline-mode-map telega-chat-mode-map)
-   "C-H-M-c" 'kill-paragraph
-   "C-H-M-x" 'backward-kill-paragraph
-   "A-C-H-M-S-s-c" 'simple-extras-delete-paragraph
-   "A-C-H-M-S-s-x" 'simple-extras-backward-delete-paragraph
-   "C-H-M-s-A-c" 'simple-extras-copy-paragraph
-   "C-H-M-s-A-x" 'simple-extras-backward-copy-paragraph
-   "A-H-C-c" 'simple-extras-delete-whole-paragraph
-   "A-H-C-x" 'simple-extras-copy-whole-paragraph
-   "A-H-C-," 'simple-extras-kill-whole-paragraph
-   "A-H-M-c" 'transpose-paragraphs
-   "A-H-M-x" 'simple-extras-transpose-paragraphs-backward))
-#+end_src
-
-** headings
-:PROPERTIES:
-:ID:       77FA2148-0D0D-459B-8F5F-D63B2E8BEB28
-:END:
-:LOGBOOK:
-CLOCK: [2021-07-16 Fri 09:44]--[2021-07-16 Fri 09:45] =>  0:01
-CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature org
-  :after org
-  :bind
-  (:map org-mode-map
-        ("C-H-M-s-z" . org-shiftleft)
-        ("C-H-M-s-x" . org-shiftup)
-        ("C-H-M-s-c" . org-shiftdown)
-        ("C-H-M-s-v" . org-shiftright)
-        ("C-H-M-s-a" . org-metaleft)
-        ("C-H-M-s-s" . org-metaup)
-        ("C-H-M-s-d" . org-metadown)
-        ("C-H-M-s-f" . org-metaright)
-        ("C-H-M-s-q" . org-shiftmetaleft)
-        ("C-H-M-s-w" . org-shiftmetaup)
-        ("C-H-M-s-e" . org-shiftmetadown)
-        ("C-H-M-s-r" . org-shiftmetaright))
-
-  :general
-  ((outline-mode-map outline-minor-mode-map)
-   "C-H-M-s-a" 'outline-extras-promote-heading
-   "C-H-M-s-s" 'outline-move-subtree-up
-   "C-H-M-s-d" 'outline-move-subtree-down
-   "C-H-M-s-f" 'outline-extras-demote-heading
-   "C-H-M-s-q" 'outline-promote
-   "C-H-M-s-r" 'outline-demote))
+  :init
+  (with-eval-after-load 'text-mode
+    (bind-keys :map text-mode-map
+               ("C-H-M-c" . kill-paragraph)
+               ("C-H-M-x" . backward-kill-paragraph)
+               ("A-C-H-M-S-s-c" . simple-extras-delete-paragraph)
+               ("A-C-H-M-S-s-x" . simple-extras-backward-delete-paragraph)
+               ("C-H-M-s-A-c" . simple-extras-copy-paragraph)
+               ("C-H-M-s-A-x" . simple-extras-backward-copy-paragraph)
+               ("A-H-C-c" . simple-extras-delete-whole-paragraph)
+               ("A-H-C-x" . simple-extras-copy-whole-paragraph)
+               ("A-H-C-," . simple-extras-kill-whole-paragraph)
+               ("A-H-M-c" . transpose-paragraphs)
+               ("A-H-M-x" . simple-extras-transpose-paragraphs-backward)))
+  (with-eval-after-load 'org
+    (bind-keys :map org-mode-map
+               ("C-H-M-c" . kill-paragraph)
+               ("C-H-M-x" . backward-kill-paragraph)
+               ("A-C-H-M-S-s-c" . simple-extras-delete-paragraph)
+               ("A-C-H-M-S-s-x" . simple-extras-backward-delete-paragraph)
+               ("C-H-M-s-A-c" . simple-extras-copy-paragraph)
+               ("C-H-M-s-A-x" . simple-extras-backward-copy-paragraph)
+               ("A-H-C-c" . simple-extras-delete-whole-paragraph)
+               ("A-H-C-x" . simple-extras-copy-whole-paragraph)
+               ("A-H-C-," . simple-extras-kill-whole-paragraph)
+               ("A-H-M-c" . transpose-paragraphs)
+               ("A-H-M-x" . simple-extras-transpose-paragraphs-backward)))
+  (with-eval-after-load 'outline
+    (bind-keys :map outline-mode-map
+               ("C-H-M-c" . kill-paragraph)
+               ("C-H-M-x" . backward-kill-paragraph)
+               ("A-C-H-M-S-s-c" . simple-extras-delete-paragraph)
+               ("A-C-H-M-S-s-x" . simple-extras-backward-delete-paragraph)
+               ("C-H-M-s-A-c" . simple-extras-copy-paragraph)
+               ("C-H-M-s-A-x" . simple-extras-backward-copy-paragraph)
+               ("A-H-C-c" . simple-extras-delete-whole-paragraph)
+               ("A-H-C-x" . simple-extras-copy-whole-paragraph)
+               ("A-H-C-," . simple-extras-kill-whole-paragraph)
+               ("A-H-M-c" . transpose-paragraphs)
+               ("A-H-M-x" . simple-extras-transpose-paragraphs-backward)))
+  (with-eval-after-load 'telega
+    (bind-keys :map telega-chat-mode-map
+               ("C-H-M-c" . kill-paragraph)
+               ("C-H-M-x" . backward-kill-paragraph)
+               ("A-C-H-M-S-s-c" . simple-extras-delete-paragraph)
+               ("A-C-H-M-S-s-x" . simple-extras-backward-delete-paragraph)
+               ("C-H-M-s-A-c" . simple-extras-copy-paragraph)
+               ("C-H-M-s-A-x" . simple-extras-backward-copy-paragraph)
+               ("A-H-C-c" . simple-extras-delete-whole-paragraph)
+               ("A-H-C-x" . simple-extras-copy-whole-paragraph)
+               ("A-H-C-," . simple-extras-kill-whole-paragraph)
+               ("A-H-M-c" . transpose-paragraphs)
+               ("A-H-M-x" . simple-extras-transpose-paragraphs-backward))))
 #+end_src
 
 * editing
@@ -3014,12 +3102,29 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
   :hook
   (prog-mode-hook . outline-minor-mode)
 
-  :general
-  ((outline-mode-map outline-minor-mode-map)
-   "TAB" 'outline-cycle
-   "<backtab>" 'outline-cycle-buffer
-   "A-C-s-r" 'outline-previous-heading
-   "A-C-s-f" 'outline-next-heading))
+  :bind
+  (:map outline-mode-map
+        ("TAB" . outline-cycle)
+        ("<backtab>" . outline-cycle-buffer)
+        ("A-C-s-r" . outline-previous-heading)
+        ("A-C-s-f" . outline-next-heading)
+        ("C-H-M-s-a" . outline-extras-promote-heading)
+        ("C-H-M-s-s" . outline-move-subtree-up)
+        ("C-H-M-s-d" . outline-move-subtree-down)
+        ("C-H-M-s-f" . outline-extras-demote-heading)
+        ("C-H-M-s-q" . outline-promote)
+        ("C-H-M-s-r" . outline-demote)
+        :map outline-minor-mode-map
+        ("TAB" . outline-cycle)
+        ("<backtab>" . outline-cycle-buffer)
+        ("A-C-s-r" . outline-previous-heading)
+        ("A-C-s-f" . outline-next-heading)
+        ("C-H-M-s-a" . outline-extras-promote-heading)
+        ("C-H-M-s-s" . outline-move-subtree-up)
+        ("C-H-M-s-d" . outline-move-subtree-down)
+        ("C-H-M-s-f" . outline-extras-demote-heading)
+        ("C-H-M-s-q" . outline-promote)
+        ("C-H-M-s-r" . outline-demote)))
 #+end_src
 
 ** outline-extras
@@ -3078,18 +3183,6 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
 
   :hook
   (emacs-lisp-mode-hook . outli-mode))
-#+end_src
-
-** unfill
-:PROPERTIES:
-:ID:       DF5137EA-79B3-4A5F-8D6C-7222CD8D4F4A
-:END:
-
-/[[https://github.com/purcell/unfill][unfill]] provides functions to do the reverse of =fill-paragraph= and =fill-region=./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package unfill
-  :defer 10)
 #+end_src
 
 ** abbrev
@@ -3157,9 +3250,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   (minibuffer-setup-hook . yas-minor-mode)
 
   :bind
-  (("C-y" . yas-new-snippet)
-   :map minibuffer-mode-map
-   ("TAB" . yas-maybe-expand)))
+  ("C-y" . yas-new-snippet))
 #+end_src
 
 ** yasnippet-snippets
@@ -3211,12 +3302,24 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
 
 /skeleton provides a concise language extension for writing structured statement skeleton insertion commands for programming modes./
 
-The code block below specifies how certain characters should be paired in various modes.
+The code block below specifies how certain characters should be paired either globally or in specific modes.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature skeleton
   :init
   (setq skeleton-pair t)
+  (with-eval-after-load 'telega
+    (bind-keys :map telega-chat-mode-map
+               ("~" . skeleton-pair-insert-maybe)
+               ("=" . skeleton-pair-insert-maybe)))
+  (with-eval-after-load 'markdown-mode
+    (bind-keys :map markdown-mode-map
+               ("*" . skeleton-pair-insert-maybe)
+               ("`" . skeleton-pair-insert-maybe)))
+  (with-eval-after-load 'forge
+    (bind-keys  :map forge-post-mode-map
+                ("*" . skeleton-pair-insert-maybe)
+                ("`" . skeleton-pair-insert-maybe)))
 
   :hook
   ((markdown-mode-hook forge-post-mode-hook) .
@@ -3229,16 +3332,14 @@ The code block below specifies how certain characters should be paired in variou
    ("{" . skeleton-pair-insert-maybe)
    ("(" . skeleton-pair-insert-maybe)
    ("\"" . skeleton-pair-insert-maybe)
-   ("«" . skeleton-pair-insert-maybe))
-
-  :general
-  ((org-mode-map telega-chat-mode-map)
-   "~" 'skeleton-pair-insert-maybe
-   "=" 'skeleton-pair-insert-maybe)
-  ((emacs-lisp-mode-map emacs-lisp-interaction-mode-map markdown-mode-map forge-post-mode-map)
-   "`" 'skeleton-pair-insert-maybe)
-  ((markdown-mode-map forge-post-mode-map)
-   "*" 'skeleton-pair-insert-maybe))
+   ("«" . skeleton-pair-insert-maybe)
+   :map org-mode-map
+   ("~" . skeleton-pair-insert-maybe)
+   ("=" . skeleton-pair-insert-maybe)
+   :map emacs-lisp-mode-map
+   ("`" . skeleton-pair-insert-maybe)
+   :map lisp-interaction-mode-map
+   ("`" . skeleton-pair-insert-maybe)))
 #+end_src
 
 ** crux
@@ -3439,6 +3540,17 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature files
   :after savehist
+  :init
+  (with-eval-after-load 'ebib
+    (dolist (map (list ebib-index-mode-map ebib-entry-mode-map))
+      (bind-keys :map map
+                 ("H-q" . bury-buffer))))
+  (with-eval-after-load 'messages
+    (bind-keys :map messages-buffer-mode-map
+               ("H-q" . bury-buffer)))
+  (with-eval-after-load 'telega
+    (bind-keys :map 'telega-root-mode-map))
+
   :custom
   (confirm-kill-processes nil) ; do not prompt to kill running processes when quitting Emacs
   (delete-by-moving-to-trash t)
@@ -3484,11 +3596,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
    ("C-b" . clone-indirect-buffer-other-window)
    ("H-C-g" . abort-recursive-edit)
    ("H-C-S-g" . top-level)
-   ("H-C-A-g" . keyboard-escape-quit)) ; ESC ESC ESC
-
-  :general
-  ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
-   "H-q" 'bury-buffer))
+   ("H-C-A-g" . keyboard-escape-quit))) ; ESC ESC ESC
 #+end_src
 
 ** files-extras
@@ -3515,23 +3623,85 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
    ("A-H-M-s-SPC" . files-extras-switch-to-alternate-buffer)
    ("A-H-v" . files-extras-internet-archive-dwim))
 
-  :general
-  ((dired-mode-map pdf-view-mode-map)
-   "s-o" 'files-extras-ocr-pdf)
-  ((ebib-entry-mode-map ebib-index-mode-map messages-buffer-mode-map telega-root-mode-map)
-   "q" 'files-extras-bury-buffer-switch-to-other-window)
-  (ebib-entry-mode-map
-   "v" 'files-extras-internet-archive-dwim)
-  ((apropos-mode-map calendar-mode-map chatgpt-mode-map completion-list-mode-map dired-mode-map Info-mode-map finder-mode-map ledger-reconcile-mode-map mu4e-headers-mode-map pass-mode-map slack-message-buffer-mode-map slack-thread-message-buffer-mode-map special-mode-map telega-msg-button-map tetris-mode-map view-mode-map w3m-mode-map)
-   "q" 'files-extras-kill-this-buffer)
+  :init
+  (with-eval-after-load 'dired
+    (bind-keys :map dired-mode-map
+	       ("s-o" . files-extras-ocr-pdf)))
+  (with-eval-after-load 'pdf-view
+    (bind-keys :map pdf-view-mode-map
+	       ("s-o" . files-extras-ocr-pdf)))
+  (with-eval-after-load 'ebib
+    (bind-keys :map ebib-entry-mode-map
+	       ("v" . files-extras-internet-archive-dwim)
+	       ("q" . files-extras-bury-buffer-switch-to-other-window)
+	       :map ebib-index-mode-map
+	       ("q" . files-extras-bury-buffer-switch-to-other-window)))
+  (with-eval-after-load 'simple
+    (bind-keys :map messages-buffer-mode-map
+	       ("q" . files-extras-bury-buffer-switch-to-other-window)))
+  (with-eval-after-load 'telega
+    (bind-keys :map telega-root-mode-map
+	       ("q" . files-extras-bury-buffer-switch-to-other-window)))
+  (with-eval-after-load 'apropos
+    (bind-keys :map apropos-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'calendar
+    (bind-keys :map calendar-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'completion-list
+    (bind-keys :map completion-list-mode-map
+               ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'dired
+    (bind-keys :map dired-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'Info
+    (bind-keys :map Info-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'finder
+    (bind-keys :map finder-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'ledger-reconcile
+    (bind-keys :map ledger-reconcile-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'mu4e
+    (bind-keys :map mu4e-headers-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'pass
+    (bind-keys :map pass-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'slack
+    (bind-keys :map slack-message-buffer-mode-map
+	       ("q" . files-extras-kill-this-buffer))
+    (bind-keys :map slack-thread-message-buffer-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'special
+    (bind-keys :map special-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'telega
+    (bind-keys :map telega-msg-button-map
+	       ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'tetris
+    (bind-keys :map tetris-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'view
+    (bind-keys :map view-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
   ;; We typically enter these modes to lookup some information and
   ;; then return to the previous buffer, so we set `q' to switch to
   ;; the other window, and reserve `Q' for the normal behavior
-  ((help-mode-map helpful-mode-map osx-dictionary-mode-map)
-   "Q" 'files-extras-kill-this-buffer
-   "q" 'files-extras-kill-this-buffer-switch-to-other-window)
-  ((gfm-mode-map markdown-mode-map)
-   "s-g" 'file-extras-grammarly-open-in-external-editor))
+  (with-eval-after-load 'help
+    (bind-keys :map help-mode-map
+	       ("Q" . files-extras-kill-this-buffer)
+	       ("q" . files-extras-kill-this-buffer-switch-to-other-window)))
+  (with-eval-after-load 'helpful
+    (bind-keys :map helpful-mode-map
+	       ("Q" . files-extras-kill-this-buffer)
+	       ("q" . files-extras-kill-this-buffer-switch-to-other-window)))
+  (with-eval-after-load 'markdown-mode
+    (bind-keys :map markdown-mode-map
+	       ("s-g" . file-extras-grammarly-open-in-external-editor)
+	       :map gfm-mode-map
+	       ("s-g" . file-extras-grammarly-open-in-external-editor))))
 #+end_src
 
 ** locate
@@ -3551,13 +3721,15 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 :ID:       B4DE3D43-3085-4FA5-9DA4-1148CF49400C
 :END:
 
+/autorevert automatically reverts buffers when their files change on disk./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature autorevert
   :custom
   (auto-revert-use-notify nil) ; reddit.com/r/emacs/comments/mq2znn/comment/gugo0n4/
 
-  :config
-  (global-auto-revert-mode 1))
+  :hook
+  (find-file-hook . global-auto-revert-mode))
 #+end_src
 
 ** dired
@@ -3595,8 +3767,16 @@ CLOCK: [2021-03-27 Sat 21:30]--[2021-03-27 Sat 21:33] =>  0:03
 CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 :END:
 
+
+/dired is the Emacs directory editor./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature dired
+  :init
+  (with-eval-after-load 'pdf-tools
+    :map pdf-annot-minor-mode-map
+    ("x" . dired-jump))
+
   :custom
   (dired-listing-switches "-AGFhlv --group-directories-first --time-style=long-iso")
   (dired-auto-revert-buffer t)
@@ -3638,16 +3818,27 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
         ("C-o" . nil)))
 #+end_src
 
-** dired-aux
+** dired-x
 :PROPERTIES:
-:ID:       F41AFC26-002A-4152-9FC7-E9AD92DF5BBA
+:ID:       43A42081-7B3A-460D-A47D-52EE95202050
+:END:
+:LOGBOOK:
+CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 :END:
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature dired-aux
-  :after dired-extras
+(use-feature dired-x
   :config
-  (push '("\\.rar\\'" "" "unar") dired-compress-file-suffixes)) ; with `unar' installed, `Z' uncompresses `rar' files
+  (setq dired-omit-files
+   (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
+
+  :custom
+  (dired-omit-verbose nil) ; shut up
+
+  (dired-omit-size-limit nil)  ; always omit, regardless of directory size
+
+  :hook
+  (dired-mode-hook . dired-omit-mode))
 #+end_src
 
 ** dired-extras
@@ -3659,6 +3850,9 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package dired-extras
+  :hook
+  (dired-mode-hook . (lambda () (require 'dired-extras)))
+
   :bind
   (("H-d" . dired-extras-dispatch)
    :map  dired-mode-map
@@ -3673,28 +3867,16 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
    ("s-r" . dired-extras-copy-to-remote-docs-directory)))
 #+end_src
 
-** dired-x
+** dired-aux
 :PROPERTIES:
-:ID:       43A42081-7B3A-460D-A47D-52EE95202050
-:END:
-:LOGBOOK:
-CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
+:ID:       F41AFC26-002A-4152-9FC7-E9AD92DF5BBA
 :END:
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature dired-x
-  :after dired-extras
+(use-feature dired-aux
+  :after dired-x
   :config
-  (setq dired-omit-files
-   (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
-
-  :custom
-  (dired-omit-verbose nil) ; shut up
-
-  (dired-omit-size-limit nil)  ; always omit, regardless of directory size
-
-  :hook
-  (dired-mode-hook . dired-omit-mode))
+  (push '("\\.rar\\'" "" "unar") dired-compress-file-suffixes)) ; with `unar' installed, `Z' uncompresses `rar' files
 #+end_src
 
 ** dired-git-info
@@ -3898,8 +4080,13 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 
   :bind
   (:map minibuffer-mode-map
-   ("M-n" . nil)
-   ("M-p" . nil)))
+        ("M-k" . previous-history-element)
+        ("M-l" . next-history-element)
+        ("C-e" . search-query-replace)
+        ("TAB" . yas-maybe-expand)
+        ("s-i" . org-roam-node-insert)
+        ("M-n" . nil)
+        ("M-p" . nil)))
 #+end_src
 
 ** ibuffer
@@ -3953,10 +4140,7 @@ I use this package in combination with =prot-scratch= (see above) to persist scr
    (no-littering-expand-var-file-name "auto-save/scratch-buffers/"))
 
   :config
-  (persistent-scratch-setup-default)
-  (defun persistent-scratch-default-scratch-buffer-p ()
-    "Return t if BUFFER is the scratch buffer."
-    (string-match ".*?scratch\\*$" (buffer-name))))
+  (persistent-scratch-setup-default))
 #+end_src
 
 ** executable
@@ -3997,8 +4181,7 @@ I use this package in combination with =prot-scratch= (see above) to persist scr
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package reveal-in-osx-finder
-  :bind
-  (:map dired-mode-map
+  :bind (:map dired-mode-map
         ("/" . reveal-in-osx-finder)))
 #+end_src
 
@@ -4016,7 +4199,7 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature tramp
-  :defer 10
+  :after dired-x
   :custom
   (tramp-auto-save-directory no-littering-var-directory)
   ;; Disable version control on tramp buffers to avoid freezes.
@@ -4114,6 +4297,23 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature window
   :after simple-extras
+  :init
+  (with-eval-after-load 'elfeed
+    (bind-keys :map elfeed-show-mode-map
+               ("y" . scroll-down-command)
+               ("h" . scroll-up-command)))
+  (with-eval-after-load 'helpful
+    (bind-keys :map helpful-mode-map
+               ("y" . scroll-down-command)
+               ("h" . scroll-up-command)))
+  (with-eval-after-load 'mu4e
+    (bind-keys :map mu4e-view-mode-map
+               ("y" . scroll-down-command)
+               ("h" . scroll-up-command)))
+  (with-eval-after-load 'telega
+    (bind-keys :map telega-msg-button-map
+               ("y" . scroll-down-command)
+               ("h" . scroll-up-command)))
 
   :custom
   (split-height-threshold nil)
@@ -4139,12 +4339,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
    ("A-C-s-y" . scroll-down-command)
    ("A-C-s-h" . scroll-up-command)
    ("A-C-s-g" . scroll-other-window)
-   ("A-C-s-t" . scroll-other-window-down))
-
-  :general
-  ((elfeed-show-mode-map eww-mode-map helpful-mode-map mu4e-view-mode-map telega-msg-button-map)
-   "y" 'scroll-down-command
-   "h" 'scroll-up-command))
+   ("A-C-s-t" . scroll-other-window-down)))
 #+end_src
 
 ** window-extras
@@ -4229,7 +4424,6 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package winum
-  :defer 10
   :custom
   (winum-scope 'frame-local)
 
@@ -4239,14 +4433,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   :bind
   (("C-," . winum-select-window-1)
    ("C-." . winum-select-window-2)
-   ("C-/" . winum-select-window-3)
-   ("H-4" . winum-select-window-4)
-   ("H-5" . winum-select-window-5)
-   ("H-6" . winum-select-window-6)
-   ("H-7" . winum-select-window-7)
-   ("H-8" . winum-select-window-8)
-   ("H-9" . winum-select-window-9)
-   ("H-0" . winum-select-window-10)))
+   ("C-/" . winum-select-window-3)))
 #+end_src
 
 ** winner
@@ -4265,8 +4452,8 @@ CLOCK: [2021-10-03 Sun 18:45]--[2021-12-30 Thu 12:11] => 2105:26
   (remove-hook 'minibuffer-setup-hook 'winner-save-unconditionally)
   (winner-mode)
 
-  :general
-  ("H-W" 'winner-undo))
+  :bind
+  ("H-W" . winner-undo))
 #+end_src
 
 ** popper
@@ -4325,7 +4512,14 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55] =>  0:25
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package avy
-  :after ebib isearch
+  :init
+  (with-eval-after-load 'ebib
+    (bind-keys :map ebib-entry-mode-map
+	       ("f" . avy-goto-line)))
+  (with-eval-after-load 'isearch
+    (bind-keys :map isearch-mode-map
+	       ("M-f" . avy-isearch)))
+  
   :custom
   (avy-case-fold-search nil)
   (avy-timeout-seconds 0.2)
@@ -4339,11 +4533,7 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55] =>  0:25
   (("C-H-s-m" . avy-goto-line-above)
    ("C-H-s-." . avy-goto-line-below)
    ("C-H-s-k" . avy-goto-word-1-above)
-   ("C-H-s-l" . avy-goto-word-1-below)
-   :map ebib-entry-mode-map
-   ("f" . avy-goto-line)
-   :map isearch-mode-map
-   ("M-f" . avy-isearch)))
+   ("C-H-s-l" . avy-goto-word-1-below)))
 #+end_src
 
 *** TODO [#5] See if I can implement my idea of passing avy any Emacs command
@@ -4449,19 +4639,7 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ace-link
-  :defer t
-  :after org-agenda
-  :general
-  ((eww-mode-map elfeed-show-mode-map)
-   "f" 'ace-link-eww)
-  ((help-mode-map helpful-mode-map elisp-refs-mode-map)
-   "f" 'ace-link-help)
-  ((Man-mode-map woman-mode-map)
-   "f" 'ace-link-woman)
-  ((org-mode-map telega-chat-mode-map)
-   "M-f" 'ace-link-org)
-  ((org-roam-mode-map slack-message-buffer-mode-map telega-msg-button-map)
-   "f" 'ace-link-org))
+  :defer t)
 #+end_src
 
 ** ace-link-extras
@@ -4474,16 +4652,7 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ace-link-extras
-  :bind
-  (:map mu4e-view-mode-map
-        ("f" . ace-link-extras-mu4e)
-        :map org-agenda-mode-map
-        ("s-f" . ace-link-extras-org-agenda-clock-in))
-
-  :general
-  ((eww-mode-map elfeed-show-mode-map)
-   "F" 'ace-link-extras-eww-new-buffer
-   "s-f" 'ace-link-extras-eww-externally))
+  :after ace-link)
 #+end_src
 
 * date & time
@@ -4550,14 +4719,9 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package calendar-extras
   :after org-agenda
-  :demand t
   :custom
   (calendar-extras-location-name "Buenos Aires")
-  (calendar-extras-use-geolocation t)
-
-  :bind
-  (:map org-agenda-mode-map
-        ("s-b" . calendar-extras-calfw-block-agenda)))
+  (calendar-extras-use-geolocation t))
 #+end_src
 
 ** holidays
@@ -4569,6 +4733,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature holidays
+  :after org-agenda
   :config
   (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
                      (holiday-float 5 0 2 "Mother's Day")))
@@ -4616,8 +4781,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   :ensure (:host github
            :repo "kidd/org-gcal.el"
            :build (:not elpaca--check-version)) ; to prevent elnode version error
-  :after auth-source-pass org
-  :defer 60
+  :after auth-source-pass org-agenda
   :custom
   (org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
   (org-gcal-client-secret (auth-source-pass-get 'secret "auth-sources/org-gcal"))
@@ -4639,10 +4803,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-gcal-extras
   :after org-gcal
-  :demand t
-  :general
-  ((org-mode-map org-agenda-mode-map)
-   "s-g" 'org-gcal-extras-menu))
+  :demand t)
 #+end_src
 
 ** calfw
@@ -4661,7 +4822,7 @@ The original package is no longer maintained. A [[https://github.com/haji-ali/em
 (use-package calfw
   :ensure (:host github
                  :repo "benthamite/emacs-calfw")
-  :defer 10)
+  :after org-agenda)
 #+end_src
 
 ** calfw-org
@@ -4790,6 +4951,7 @@ The original package appears to no longer be maintained, so I have created my ow
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature simple
+  :defer t
   :config
   (with-eval-after-load 'savehist
     (dolist (var '(command-history
@@ -4798,12 +4960,7 @@ The original package appears to no longer be maintained, so I have created my ow
                    mark-ring
                    shell-command-history
                    read-expression-history))
-      (add-to-list 'savehist-additional-variables var)))
-
-  :general
-  ((minibuffer-mode-map mu4e-minibuffer-search-query-map)
-   "M-k" 'previous-history-element
-   "M-l" 'next-history-element))
+      (add-to-list 'savehist-additional-variables var))))
 #+end_src
 
 ** saveplace
@@ -4847,7 +5004,6 @@ The original package appears to no longer be maintained, so I have created my ow
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature recentf
-  :defer 5
   :custom
   (recentf-max-saved-items 100)
 
@@ -4855,7 +5011,9 @@ The original package appears to no longer be maintained, so I have created my ow
   ;; github.com/emacscollective/no-littering#suggested-settings
   (add-to-list 'recentf-exclude no-littering-var-directory)
   (add-to-list 'recentf-exclude no-littering-etc-directory)
-  (recentf-mode))
+
+  :hook
+  (find-file-hook . recentf-mode))
 #+end_src
 
 * search & replace
@@ -4933,11 +5091,8 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
         ("C-v" . isearch-yank-kill)
         ("C-y" . isearch-forward-symbol-at-point)
         ("M-k" . isearch-ring-retreat)
-        ("M-l" . isearch-ring-advance))
-
-  :general
-  ((isearch-mode-map minibuffer-mode-map)
-   "C-e" 'isearch-query-replace))
+        ("M-l" . isearch-ring-advance)
+        ("C-e" . isearch-query-replace)))
 #+end_src
 
 To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridging Islands in Emacs: re-builder and query-replace-regexp | Karthinks]]
@@ -5178,7 +5333,9 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
    :map embark-yasnippet-completion-actions
    ("d" . consult-yasnippet-visit-snippet-file)
    :map embark-general-map
-   ("I" . embark-insert)))
+   ("I" . embark-insert)
+   :map embark-identifier-map
+   ("i" . citar-extras-open-in-ebib)))
 #+end_src
 
 ** consult
@@ -5199,6 +5356,20 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult
+  :init
+  (with-eval-after-load 'helpful
+    (bind-keys :map helpful-mode-map
+               ("s-j" . consult-outline)))
+  (with-eval-after-load 'markdown-mode
+    (bind-keys :map markdown-mode-map
+               ("s-j" . consult-outline)))
+  (with-eval-after-load 'gfm-mode
+    (bind-keys :map gfm-mode-map
+               ("s-j" . consult-outline)))
+  (with-eval-after-load 'outline
+    (bind-keys :map outline-mode-map
+               ("s-j" . consult-outline)))
+
   :custom
   ;; we call this wrapper to silence the annoying two lines of debug info that
   ;; `mdfind' outputs, which show briefly in the echo area and pollute the
@@ -5219,11 +5390,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
    ("H-b" . consult-buffer)
    ("A-H-i" . consult-info)
    ("H-R" . consult-history)
-   ("H-V" . consult-yank-pop))
-
-  :general
-  ((help-mode-map helpful-mode-map markdown-mode-map gfm-mode-map outline-mode-map)
-   "s-j" 'consult-outline))
+   ("H-V" . consult-yank-pop)))
 #+end_src
 
 ** consult-extras
@@ -5240,9 +5407,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   (("H-F" . consult-extras-locate-file-home)
    ("A-H-f" . consult-extras-locate-file-anywhere)
    ("H-k" . consult-extras-locate-current)
-   ("H-p" . consult-extras-ripgrep-current)
-   :map org-mode-map
-   ("s-j" . consult-extras-org-heading)))
+   ("H-p" . consult-extras-ripgrep-current)))
 #+end_src
 
 ** consult-dir
@@ -5287,7 +5452,6 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package consult-yasnippet
-  :after consult yasnippet
   :config
   ;; we delay previews to avoid accidentally triggering snippets that execute elisp code
   (consult-customize consult-yasnippet :preview-key nil)
@@ -5410,11 +5574,12 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature which-key
-  :init
-  (which-key-mode)
-
+  :defer 5
   :custom
-  (which-key-idle-delay 0))
+  (which-key-idle-delay 0)
+
+  :config
+  (which-key-mode))
 #+end_src
 
 * completion at point
@@ -5562,6 +5727,8 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
   :bind
   (("C-h C-k" . describe-keymap)
    ("C-h C-." . display-local-help)
+   :map help-mode-map
+   ("f" . ace-link-help)
    :map input-decode-map
    ([?\C-m] . [C-m])
    ([?\C-i] . [C-i])))
@@ -5601,6 +5768,9 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
   ;; (e.g. `transient')
   (advice-add 'describe-function :override #'helpful-function)
 
+  :hook
+  (minibuffer-setup-hook . (lambda () (require 'helpful)))
+
   :bind
   (("C-h k" . helpful-key)
    ("C-h f" . helpful-function)
@@ -5609,6 +5779,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
    ("C-h v" . helpful-variable)
    ("C-h ." . helpful-at-point)
    :map helpful-mode-map
+   ("f" . ace-link-help)
    ("w" . file-extras-copy-as-kill-dwim)))
 #+end_src
 
@@ -5632,6 +5803,30 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
         ("j" . Info-backward-node)
         (";" . Info-forward-node)
         ("s-j" . Info-menu)))
+#+end_src
+
+** man
+:PROPERTIES:
+:ID:       5621ACF8-E2E1-41DE-8994-F26DF80C5246
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature man
+  :bind
+  (:map Man-mode-map
+        ("f" . ace-link-man)))
+#+end_src
+
+** woman
+:PROPERTIES:
+:ID:       421D3C11-CDD5-44B7-9262-10FD172F1094
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature woman
+  :bind
+  (:map woman-mode-map
+        ("f" . ace-link-woman)))
 #+end_src
 
 ** shortdoc
@@ -5660,6 +5855,17 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
   ("M-L" . find-library))
 #+end_src
 
+** elisp-refs
+:PROPERTIES:
+:ID:       238DF78B-035A-48B1-8F8F-E9E7F1D4BC67
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature elisp-refs
+  :bind (:map elisp-refs-mode-map
+              ("f" . ace-link-help)))
+#+end_src
+
 ** elisp-demos
 :PROPERTIES:
 :ID:       DCEBBA6C-04D4-4168-9FCB-772876C36E37
@@ -5669,6 +5875,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package elisp-demos
+  :after helpful
   :init
   (advice-add 'helpful-update :after 'elisp-demos-advice-helpful-update))
 #+end_src
@@ -5767,13 +5974,16 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature eshell
-  :after esh-mode
+  :after simple
   :custom
   (eshell-banner-message "")
   (eshell-save-history-on-exit t)
   (eshell-hist-ignoredups t)
   (eshell-history-size 100000)
   (eshell-last-dir-ring-size 1000)
+
+  :config
+  (require 'esh-mode)
 
   :bind
   (("A-e" . eshell)
@@ -5795,7 +6005,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature em-hist
-  :after eshell
+  :defer t
   :custom
   (eshell-hist-ignoredups t)
   (eshell-save-history-on-exit t))
@@ -5886,14 +6096,10 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package flycheck
   :after faces-extras
-  :init
-  (global-flycheck-mode)
-
   :custom
   (flycheck-temp-prefix ".flycheck") ; hide flycheck temp files
   (flycheck-emacs-lisp-load-path 'inherit)
   (flycheck-indication-mode nil)
-  (flycheck-checker-error-threshold 5000)
   (flycheck-display-errors-delay 0.5)
 
   :config
@@ -5902,6 +6108,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
      (flycheck-warning :underline '(:color "#0000ff" :style wave))))
 
   :hook
+  (find-file-hook . global-flycheck-mode)
   (org-src-mode-hook . (lambda ()
                          "Disable `emacs-lisp-checkdoc' in `org-src' blocks."
                          (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc))))
@@ -6017,7 +6224,7 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package grammarly
   :after tlon
-  :defer 7
+  :defer t
   :custom
   (grammarly-username tlon-email-shared)
   (grammarly-password (auth-source-pass-get 'secret (concat "tlon/core/grammarly.com/" tlon-email-shared))))
@@ -6074,19 +6281,6 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
                       (remove-hook 'completion-at-point-functions #'ispell-completion-at-point t))))
 #+end_src
 
-** with-editor
-:PROPERTIES:
-:ID:       48431AA9-2ABE-403C-9E91-68066B24CB26
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature with-editor
-  :bind
-  (("s-c" . with-editor-finish)
-   ("s-k" . with-editor-abort)
-   ("C-c C-c" . with-editor-finish)))
-#+end_src
-
 ** atomic-chrome
 :PROPERTIES:
 :ID:       D7CE2507-FDB5-44E9-A129-C18E17590476
@@ -6141,23 +6335,33 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 
   :bind
   (:map gfm-mode-map
-   ("s-a" . markdown-insert-gfm-code-block)
-   ("s-z" . markdown-edit-code-block))
-
-  :general
-  ((gfm-mode-map markdown-mode-map)
-   "A-C-H-t" 'markdown-mode-extras-copy-section
-   "A-C-s-r" 'markdown-outline-previous
-   "A-C-s-f" 'markdown-outline-next
-   "M-p" nil
-   "A-s-f" 'markdown-footnote-goto-text
-   "A-s-r" 'markdown-footnote-return
-   "s-b" 'markdown-insert-bold
-   "s-e" 'markdown-insert-code
-   "s-f" 'markdown-insert-footnote
-   "s-i" 'markdown-insert-italic
-   "s-k" 'markdown-insert-link
-   "s-p" 'markdown-preview))
+        ("s-a" . markdown-insert-gfm-code-block)
+        ("s-z" . markdown-edit-code-block)
+        ("A-C-H-t" . markdown-mode-extras-copy-section)
+        ("A-C-s-r" . markdown-outline-previous)
+        ("A-C-s-f" . markdown-outline-next)
+        ("M-p" . nil)
+        ("A-s-f" . markdown-footnote-goto-text)
+        ("A-s-r" . markdown-footnote-return)
+        ("s-b" . markdown-insert-bold)
+        ("s-e" . markdown-insert-code)
+        ("s-f" . markdown-insert-footnote)
+        ("s-i" . markdown-insert-italic)
+        ("s-k" . markdown-insert-link)
+        ("s-p" . markdown-preview)
+        :map markdown-mode-map
+        ("A-C-H-t" . markdown-mode-extras-copy-section)
+        ("A-C-s-r" . markdown-outline-previous)
+        ("A-C-s-f" . markdown-outline-next)
+        ("M-p" . nil)
+        ("A-s-f" . markdown-footnote-goto-text)
+        ("A-s-r" . markdown-footnote-return)
+        ("s-b" . markdown-insert-bold)
+        ("s-e" . markdown-insert-code)
+        ("s-f" . markdown-insert-footnote)
+        ("s-i" . markdown-insert-italic)
+        ("s-k" . markdown-insert-link)
+        ("s-p" . markdown-preview)))
 #+end_src
 
 ** markdown-mode-extras
@@ -6169,15 +6373,21 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package markdown-mode-extras
-  :after markdown-mode
-  :general
-  ((gfm-mode-map markdown-mode-map)
-   "A-C-H-t" 'markdown-mode-extras-copy-section
-   "s-l" 'markdown-mode-extras-insert-locator
-   "s-r" 'markdown-mode-extras-remove-url-in-link
-   "s-v" 'markdown-mode-extras-paste-with-conversion)
-  ((ghm-mode-map markdown-mode-map org-mode-map)
-   "H-s-v" 'markdown-mode-extras-org-paste-dwim))
+  :bind
+  (:map gfm-mode-map
+        ("A-C-H-t" . markdown-mode-extras-copy-section)
+        ("s-l" . markdown-mode-extras-insert-locator)
+        ("s-r" . markdown-mode-extras-remove-url-in-link)
+        ("s-v" . markdown-mode-extras-paste-with-conversion)
+        ("H-s-v" . markdown-mode-extras-org-paste-dwim)
+        :map markdown-mode-map
+        ("A-C-H-t" . markdown-mode-extras-copy-section)
+        ("s-l" . markdown-mode-extras-insert-locator)
+        ("s-r" . markdown-mode-extras-remove-url-in-link)
+        ("s-v" . markdown-mode-extras-paste-with-conversion)
+        ("H-s-v" . markdown-mode-extras-org-paste-dwim)
+        :map org-mode-map
+        ("H-s-v" . markdown-mode-extras-org-paste-dwim)))
 #+end_src
 
 ** grip-mode
@@ -6309,7 +6519,6 @@ To populate the database of historical prices:
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ledger-mode
-  :defer 30
   :custom
   (ledger-default-date-format ledger-iso-date-format)
   (ledger-reconcile-default-commodity "ARS")
@@ -6431,6 +6640,33 @@ https://gitlab.com/chrisberkhout/pricehist
                  :branch "dev"
                  :depth nil) ; clone entire repo, not just last commit
   :after paths
+  :init
+  (with-eval-after-load 'forge
+    (bind-keys :map forge-topic-mode-map
+               ("," . tlon-visit-counterpart-or-capture)
+               ("'" . tlon-open-forge-file)))
+  (with-eval-after-load 'magit
+    (bind-keys :map magit-status-mode-map
+               ("," . tlon-visit-counterpart-or-capture)
+               ("'" . tlon-open-forge-file)))
+  (with-eval-after-load 'markdown-mode
+    (bind-keys :map markdown-mode-map
+               ("H-;" . tlon-md-menu)
+               ("A-s-e" . tlon-yaml-edit-field)
+               ("s-c" . tlon-copy-dwim)
+               ("s-l" . tlon-md-insert-locator)
+               ("s-u" . tlon-md-insert-entity)
+               ("A-C-s-SPC" . tlon-md-beginning-of-buffer-dwim)
+               ("A-C-s-<tab>" . tlon-md-end-of-buffer-dwim)
+               :map gfm-mode-map
+               ("H-;" . tlon-md-menu)
+               ("A-s-e" . tlon-yaml-edit-field)
+               ("s-c" . tlon-copy-dwim)
+               ("s-l" . tlon-md-insert-locator)
+               ("s-u" . tlon-md-insert-entity)
+               ("A-C-s-SPC" . tlon-md-beginning-of-buffer-dwim)
+               ("A-C-s-<tab>" . tlon-md-end-of-buffer-dwim)))
+
   :custom
   (tlon-split-repo t)
 
@@ -6443,25 +6679,7 @@ https://gitlab.com/chrisberkhout/pricehist
   :bind
   (("H-r" . tlon-dispatch)
    ("H-?" . tlon-md-insert-mdx-cite)
-   ("A-C-p" . tlon-grep))
-
-  :general
-  ((forge-topic-mode-map
-    forge-issue-list-mode-map
-    forge-pullreq-list-mode-map
-    magit-status-mode-map)
-   "," 'tlon-visit-counterpart-or-capture)
-  ((forge-topic-mode-map magit-status-mode-map)
-   "'" 'tlon-open-forge-file)
-  ;; revise; consider using `tlon-md-menu'
-  ((gfm-mode-map markdown-mode-map)
-   "H-;" 'tlon-md-menu
-   "A-s-e" 'tlon-yaml-edit-field
-   "s-c" 'tlon-copy-dwim
-   "s-l" 'tlon-md-insert-locator
-   "s-u" 'tlon-md-insert-entity
-   "A-C-s-SPC" 'tlon-md-beginning-of-buffer-dwim
-   "A-C-s-<tab>" 'tlon-md-end-of-buffer-dwim))
+   ("A-C-p" . tlon-grep)))
 #+end_src
 
 ** go-translate
@@ -6658,17 +6876,26 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   :bind
   (:map pdf-view-mode-map
         ("s" . save-buffer)
+        ("e" . pdf-annot-add-highlight-markup-annotation)
+        ("j" . pdf-view-goto-page)
+        ("k" . pdf-view-previous-line-or-previous-page)
+        ("l" . pdf-view-next-line-or-next-page)
+        ("H-c" . pdf-view-kill-ring-save)
+        ("A-u" . pdf-view-midnight-minor-mode)
         :map pdf-annot-minor-mode-map
-        ("x" . dired-jump))
-
-  :general
-  ((pdf-view-mode-map pdf-annot-minor-mode-map pdf-history-minor-mode-map)
-   "e" 'pdf-annot-add-highlight-markup-annotation
-   "j" 'pdf-view-goto-page
-   "k" 'pdf-view-previous-line-or-previous-page
-   "l" 'pdf-view-next-line-or-next-page
-   "H-c" 'pdf-view-kill-ring-save
-   "A-u" 'pdf-view-midnight-minor-mode))
+        ("e" . pdf-annot-add-highlight-markup-annotation)
+        ("j" . pdf-view-goto-page)
+        ("k" . pdf-view-previous-line-or-previous-page)
+        ("l" . pdf-view-next-line-or-next-page)
+        ("H-c" . pdf-view-kill-ring-save)
+        ("A-u" . pdf-view-midnight-minor-mode)
+        :map pdf-history-minor-mode-map
+        ("e" . pdf-annot-add-highlight-markup-annotation)
+        ("j" . pdf-view-goto-page)
+        ("k" . pdf-view-previous-line-or-previous-page)
+        ("l" . pdf-view-next-line-or-next-page)
+        ("H-c" . pdf-view-kill-ring-save)
+        ("A-u" . pdf-view-midnight-minor-mode)))
 #+end_src
 
 *** TODO [#5] Sync PDF page position across devices
@@ -6692,18 +6919,39 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
   :hook
   (pdf-tools-enabled-hook . pdf-tools-extras-apply-theme)
 
-  :general
-  ((pdf-view-mode-map pdf-annot-minor-mode-map pdf-history-minor-mode-map)
-   "c" 'pdf-tools-extras-copy-dwim
-   "C" 'pdf-count-extras-words
-   "s-c" 'pdf-tools-extras-clear-page-selection
-   "D" 'pdf-tools-extras-delete
-   "e" 'pdf-tools-extras-open-in-ebib
-   "h" 'pdf-annot-extras-add-highlight-markup-annotation
-   "t" 'pdf-tools-extras-toggle-writeroom
-   "x" 'pdf-tools-extras-open-externally
-   "S" 'pdf-tools-extras-add-or-remove-page
-   "X" 'pdf-tools-extras-extract-pages))
+  :bind (:map pdf-view-mode-map
+              ("c" . pdf-tools-extras-copy-dwim)
+              ("C" . pdf-count-extras-words)
+              ("s-c" . pdf-tools-extras-clear-page-selection)
+              ("D" . pdf-tools-extras-delete)
+              ("e" . pdf-tools-extras-open-in-ebib)
+              ("h" . pdf-annot-extras-add-highlight-markup-annotation)
+              ("t" . pdf-tools-extras-toggle-writeroom)
+              ("x" . pdf-tools-extras-open-externally)
+              ("S" . pdf-tools-extras-add-or-remove-page)
+              ("X" . pdf-tools-extras-extract-pages)
+              :map pdf-annot-minor-mode-map
+              ("c" . pdf-tools-extras-copy-dwim)
+              ("C" . pdf-count-extras-words)
+              ("s-c" . pdf-tools-extras-clear-page-selection)
+              ("D" . pdf-tools-extras-delete)
+              ("e" . pdf-tools-extras-open-in-ebib)
+              ("h" . pdf-annot-extras-add-highlight-markup-annotation)
+              ("t" . pdf-tools-extras-toggle-writeroom)
+              ("x" . pdf-tools-extras-open-externally)
+              ("S" . pdf-tools-extras-add-or-remove-page)
+              ("X" . pdf-tools-extras-extract-pages)
+              :map pdf-history-minor-mode-map
+              ("c" . pdf-tools-extras-copy-dwim)
+              ("C" . pdf-count-extras-words)
+              ("s-c" . pdf-tools-extras-clear-page-selection)
+              ("D" . pdf-tools-extras-delete)
+              ("e" . pdf-tools-extras-open-in-ebib)
+              ("h" . pdf-annot-extras-add-highlight-markup-annotation)
+              ("t" . pdf-tools-extras-toggle-writeroom)
+              ("x" . pdf-tools-extras-open-externally)
+              ("S" . pdf-tools-extras-add-or-remove-page)
+              ("X" . pdf-tools-extras-extract-pages)))
 #+end_src
 
 ** scroll-other-window
@@ -6809,6 +7057,11 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature prog-mode
+  :init
+  (with-eval-after-load 'shell
+    (bind-keys :map shell-mode-map
+	       ("s-c" . exit-recursive-edit)))
+  
   :config
   (global-prettify-symbols-mode)
 
@@ -6821,11 +7074,9 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
    ("s-e" . xref-find-definitions)
    ("s-f" . consult-flycheck)
    ("M-q" . nil)
-   ("s-q" . prog-fill-reindent-defun))
-
-  :general
-  ((emacs-lisp-mode-map shell-mode-map)
-   "s-c" 'exit-recursive-edit))
+   ("s-q" . prog-fill-reindent-defun)
+   :map emacs-lisp-mode-map
+   ("s-c" . exit-recursive-edit)))
 #+end_src
 
 ** elisp-mode
@@ -6835,12 +7086,19 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature elisp-mode
-  :after simple-extras
-  :general
-  ((emacs-lisp-mode-map lisp-interaction-mode-map)
-   "s-b" 'eval-buffer
-   "s-d" 'eval-defun
-   "s-i" (lambda! (eval-defun t)))) ; instrument defun
+  :init
+  (defun instrument-defun ()
+    "Instrument the current defun."
+    (lambda! (eval-defun t)))
+
+  :bind (:map emacs-lisp-mode-map
+              ("s-b" . eval-buffer)
+              ("s-d" . eval-defun)
+              ("s-i" . instrument-defun)
+              :map lisp-interaction-mode-map
+              ("s-b" . eval-buffer)
+              ("s-d" . eval-defun)
+              ("s-i" . instrument-defun)))
 #+end_src
 
 *** TODO [#6] Learn to use all relevant sexp commands
@@ -6962,12 +7220,12 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature js
-  :defer t
   :custom
   (js-indent-level 2)
 
   :bind
   (:map js-mode-map
+        ("s-w" . eww-extras-browse-file)
         ("M-," . window-extras-buffer-move-left)
         ("M-." . window-extras-buffer-move-right)))
 #+end_src
@@ -7014,8 +7272,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature python
-  :defer t
-  :disabled
   :custom
   (python-shell-interpreter "python3")
   (org-babel-python-command "python3")
@@ -7028,15 +7284,22 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
   (remove-hook 'python-mode-hook #'yasnippet-snippets--fixed-indent) ; some package (`elpy'?) is adding this
 
-  :general
-  ((python-mode-map python-ts-mode-map)
-   "C-c p" 'run-python
-   "s-l" 'python-shell-send-file
-   "s-d" 'python-shell-send-defun
-   "s-c" 'python-shell-send-buffer
-   "s-s" 'python-shell-send-string
-   "s-r" 'python-shell-send-region
-   "s-e" 'python-shell-send-statement))
+  :bind (:map python-mode-map
+              ("C-c p" . run-python)
+              ("s-l" . python-shell-send-file)
+              ("s-d" . python-shell-send-defun)
+              ("s-c" . python-shell-send-buffer)
+              ("s-s" . python-shell-send-string)
+              ("s-r" . python-shell-send-region)
+              ("s-e" . python-shell-send-statement)
+              :map python-ts-mode-map
+              ("C-c p" . run-python)
+              ("s-l" . python-shell-send-file)
+              ("s-d" . python-shell-send-defun)
+              ("s-c" . python-shell-send-buffer)
+              ("s-s" . python-shell-send-string)
+              ("s-r" . python-shell-send-region)
+              ("s-e" . python-shell-send-statement)))
 #+end_src
 
 ** pyenv-mode
@@ -7060,7 +7323,8 @@ This needs to be configured.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ein
-  :after python)
+  :after python
+  :defer t)
 #+end_src
 
 ** go
@@ -7174,8 +7438,8 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package hl-todo
   :ensure (:build (:not elpaca--check-version))
-  :config
-  (global-hl-todo-mode))
+  :hook
+  (find-file-mode . global-hl-todo-mode))
 #+end_src
 
 ** project
@@ -7685,6 +7949,8 @@ CLOCK: [2021-11-20 Sat 21:32]--[2021-11-20 Sat 21:41] =>  0:09
 CLOCK: [2021-10-14 Thu 19:07]--[2021-10-14 Thu 19:39] =>  0:32
 CLOCK: [2021-10-05 Tue 13:18]--[2021-10-05 Tue 13:34] =>  0:16
 CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
+CLOCK: [2021-07-16 Fri 09:44]--[2021-07-16 Fri 09:45] =>  0:01
+CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 :END:
 
 ** org
@@ -7784,6 +8050,26 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
 
   :bind
   (:map org-mode-map
+        ("C-H-M-s-z" . org-shiftleft)
+        ("C-H-M-s-x" . org-shiftup)
+        ("C-H-M-s-c" . org-shiftdown)
+        ("C-H-M-s-v" . org-shiftright)
+        ("C-H-M-s-a" . org-metaleft)
+        ("C-H-M-s-s" . org-metaup)
+        ("C-H-M-s-d" . org-metadown)
+        ("C-H-M-s-f" . org-metaright)
+        ("C-H-M-s-q" . org-shiftmetaleft)
+        ("C-H-M-s-w" . org-shiftmetaup)
+        ("C-H-M-s-e" . org-shiftmetadown)
+        ("C-H-M-s-r" . org-shiftmetaright)
+        ("s-j" . consult-extras-org-heading)
+        ("s-b" . tlon-init-build)
+        ("s-A-k" . org-web-tools-insert-link-for-url)
+        ("s-l" . org-transclusion-add-all)
+        ("s-c" . ox-clip-formatted-copy)
+        ("s-w" . org-refile)
+        ("s-A-i" . org-id-copy)
+        ("s-a" . org-archive-to-archive-sibling)
         ("<S-left>" . nil)
         ("<S-right>" . nil)
         ("<S-up>" . nil)
@@ -7809,6 +8095,8 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
         ("A-C-s-M-m" . org-previous-block)
         ("A-C-s-M-/" . org-next-block)
         ("A-C-H-t" . org-extras-copy-dwim)
+        ("A-C-M-s-j" . org-previous-link)
+        ("A-C-M-s-;" . org-next-link)
         ("A-H-M-t" . org-transpose-element)
         ("H-s-o" . org-open-at-point)
         ("s-d" . org-deadline)
@@ -7817,19 +8105,23 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
         ("s-h" . org-insert-todo-subheading)
         ("s-p" . org-time-stamp-inactive)
         ("s-A-p" . org-time-stamp)
+        ("s-g" . org-gcal-extras-menu)
+        ("s-k" . org-insert-link)
         ("s-q" . org-set-tags-command)
+        ("s-r" . org-roam-buffer-toggle)
         ("s-s" . org-schedule)
         ("s-t" . org-todo)
         ("s-A-t" . org-sort)
+        ("s-u" . org-clock-split)
         ("s-y" . org-evaluate-time-range)
         ("s-z" . org-edit-special)
         ("s-," . org-priority)
+        ("s-A-e" . org-export-dispatch)
         ("A-<return>" . "C-u M-<return>")
         ("A-M-<return>" . org-insert-todo-heading)
         ;; bindings with matching commands in Fundamental mode
         ("H-v" . org-yank)
-        :map org-agenda-mode-map
-        ("s-s" . org-save-all-org-buffers)))
+        ("M-f" . ace-link-org)))
 #+end_src
 
 *** TODO [#4] Create function to compute the total number of TODOs and hours in effort estimates
@@ -7854,7 +8146,16 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
   (org-extras-id-auto-add-excluded-directories `(,paths-dir-dropbox-tlon-fede
                                                  ,(file-name-concat paths-dir-dropbox-tlon-fede "archive/")))
 
+  (org-extras-agenda-files-excluded (list paths-file-tlon-tareas-leo
+                                          paths-file-tlon-tareas-fede))
+
   :config
+  (setq org-extras-agenda-files-excluded
+        (append org-extras-agenda-files-excluded
+                ;; files in `paths-dir-inactive' sans ., .., hidden files and subdirectories
+                (seq-filter (lambda (f) (not (file-directory-p f)))
+                            (directory-files paths-dir-inactive t "^[^.][^/]*$"))))
+
   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter org-extras-clocktable-sorter))
 
   :hook
@@ -7865,6 +8166,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    ("H-;" . org-extras-personal-menu)
    :map org-mode-map
    ("s-<return>" . org-extras-super-return)
+   ("s-v" . org-extras-paste-with-conversion)
    ("A-C-s-n" . org-extras-jump-to-first-heading)
    ("A-s-b" . org-extras-set-todo-properties)
    ("A-s-h" . org-extras-insert-todo-subheading-after-body)
@@ -7881,21 +8183,7 @@ CLOCK: [2021-04-02 Fri 22:44]--[2021-04-02 Fri 23:10] =>  0:26
    ("A-s-o" . org-extras-reset-checkbox-state-subtree)
    ("H-s-w" . org-extras-refile-and-archive)
    ("A-s-w" . org-extras-refile-goto-latest)
-   :map org-agenda-mode-map
-   ("RET" . org-extras-agenda-switch-to-dwim)
-   ("/" . org-extras-agenda-done-and-next)
-   ("\"" . org-extras-agenda-postpone-and-next)
-   ("b" . org-extras-agenda-toggle-anniversaries)
-   ("SPC" . org-extras-agenda-goto-and-start-clock)
-   ("x" . org-extras-agenda-toggle-log-mode))
-
-  :general
-  ((org-mode-map org-msg-edit-mode-map)
-   "s-A-l" 'org-extras-url-dwim)
-  ((org-mode-map telega-chat-mode-map)
-   "s-v" 'org-extras-paste-with-conversion)
-  ((mu4e-view-mode-map eww-mode-map)
-   "s-c" 'org-extras-eww-copy-for-org-mode))
+   ("s-A-l" . org-extras-url-dwim)))
 #+end_src
 
 ** org-agenda
@@ -8020,6 +8308,13 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
   :bind
   (("C-<escape>" . org-agenda)
    :map org-agenda-mode-map
+   ("s-g" . org-gcal-extras-menu)
+   ("s-s" . org-save-all-org-buffers)
+   ("I" . org-pomodoro)
+   ("h" . org-habit-toggle-display-in-agenda)
+   ("M-k" . org-clock-convenience-timestamp-up)
+   ("M-l" . org-clock-convenience-timestamp-down)
+   ("s-b" . calendar-extras-calfw-block-agenda)
    ("f" . ace-link-org-agenda)
    ("?" . org-agenda-filter)
    (";" . org-agenda-later)
@@ -8029,6 +8324,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    ("M-t" . nil)
    ("H-n" . nil)
    ("s-k" . nil)
+   ("s-f" . ace-link-extras-org-agenda-clock-in)
    ("i" . org-agenda-clock-in)
    ("I" . org-agenda-diary-entry)
    ("j" . org-agenda-earlier)
@@ -8039,6 +8335,12 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
    ("o" . org-agenda-open-link)
    ("p" . org-agenda-date-earlier)
    ("q" . org-agenda-kill-all-agenda-buffers)
+   ("RET" . org-extras-agenda-switch-to-dwim)
+   ("/" . org-extras-agenda-done-and-next)
+   ("\"" . org-extras-agenda-postpone-and-next)
+   ("b" . org-extras-agenda-toggle-anniversaries)
+   ("SPC" . org-extras-agenda-goto-and-start-clock)
+   ("x" . org-extras-agenda-toggle-log-mode)
    ("s" . org-agenda-schedule)
    ("W" . org-agenda-refile)
    ("X" . org-agenda-exit)
@@ -8229,10 +8531,7 @@ CLOCK: [2023-03-18 Sat 13:14]--[2023-03-18 Sat 13:27] =>  0:13
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-clock-convenience
   :after org-clock org-agenda
-  :bind
-  (:map org-agenda-mode-map
-   ("M-k" . org-clock-convenience-timestamp-up)
-   ("M-l" . org-clock-convenience-timestamp-down)))
+  :defer t)
 #+end_src
 
 ** org-clock-split
@@ -8247,11 +8546,9 @@ I’m using a fork that fixes some functionality that broke when org changed =or
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-clock-split
   :ensure (:host github
-           :repo "0robustus1/org-clock-split"
-           :branch "support-emacs-29.1")
-  :bind
-  (:map org-mode-map
-   ("s-u" . org-clock-split)))
+                 :repo "0robustus1/org-clock-split"
+                 :branch "support-emacs-29.1")
+  :defer t)
 #+end_src
 
 ** org-cycle
@@ -8279,13 +8576,10 @@ CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-archive
   :after org
+  :defer t
   :custom
   (org-archive-default-command 'org-archive-to-archive-sibling)
-  (org-archive-location (expand-file-name "%s_archive.org::" paths-dir-archive))
-
-  :bind
-  (:map org-mode-map
-   ("s-a" . org-archive-to-archive-sibling)))
+  (org-archive-location (expand-file-name "%s_archive.org::" paths-dir-archive)))
 #+end_src
 
 *** TODO [#6] Process archives ~org/archive~
@@ -8380,6 +8674,7 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-id
   :after org
+  :defer t
   :custom
   (org-id-link-to-org-use-id t)
   ;; I want these files to be searched for IDs, so that I can use
@@ -8387,11 +8682,7 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
   ;; of org-agenda or org-roam.
   (org-id-extra-files (list
                        paths-file-tlon-tareas-leo
-                       paths-file-tlon-tareas-fede))
-
-  :bind
-  (:map org-mode-map
-        ("s-A-i" . org-id-copy)))
+                       paths-file-tlon-tareas-fede)))
 #+end_src
 
 ** org-list
@@ -8430,6 +8721,7 @@ CLOCK: [2021-02-24 Wed 06:47]--[2021-02-24 Wed 07:30] =>  0:43
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-refile
   :after org
+  :defer t
   :custom
   (org-refile-use-outline-path 'level3)
   (org-outline-path-complete-in-steps nil)
@@ -8440,11 +8732,7 @@ CLOCK: [2021-02-24 Wed 06:47]--[2021-02-24 Wed 07:30] =>  0:43
   ;; Regenerate cache every half hour
   (run-with-idle-timer (* 60 30) t (lambda ()
                                      (org-refile-cache-clear)
-                                     (org-refile-get-targets)))
-
-  :bind
-  (:map org-mode-map
-   ("s-w" . org-refile)))
+                                     (org-refile-get-targets))))
 #+end_src
 
 ** org-keys
@@ -8528,14 +8816,7 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
   (org-ellipsis " ")
 
   :bind
-  (("H-L" . org-store-link)
-  :map org-mode-map
-   ("A-C-M-s-j" . org-previous-link)
-   ("A-C-M-s-;" . org-next-link))
-
-   :general
-  ((org-mode-map org-msg-edit-mode-map telega-chat-mode-map)
-   "s-k" 'org-insert-link))
+  ("H-L" . org-store-link))
 #+end_src
 
 ** ol-bbdb
@@ -8577,6 +8858,7 @@ CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ox
   :after org
+  :defer t
   :custom
   (org-export-exclude-tags '("noexport" "ARCHIVE"))
   (org-export-with-broken-links 'mark) ; allow export with broken links
@@ -8588,11 +8870,7 @@ CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
   ;; (org-export-with-author nil "do not include author")
   ;; (org-export-with-date nil "do not include export date")
   ;; (org-html-validation-link nil "do not include validation link")
-  (org-export-show-temporary-export-buffer nil) ; bury temporary export buffers generated by `org-msg'
-
-  :general
-  (org-mode-map
-   "s-A-e" 'org-export-dispatch))
+  (org-export-show-temporary-export-buffer nil)) ; bury temporary export buffers generated by `org-msg'
 #+end_src
 
 *** TODO [#6] Change face of content under headline tagged ~unpublished~ or ~noexport~
@@ -8698,7 +8976,7 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ob
   :after org
-  :defer 10
+  :defer t
   :custom
   (org-confirm-babel-evaluate 'org-extras-confirm-babel-evaluate)
 
@@ -8718,6 +8996,19 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
                       (cons "n" 'org-babel-insert-header-arg)
                       (cons "p" 'org-babel-remove-result-one-or-many)))
     (add-to-list 'org-babel-key-bindings cons)))
+#+end_src
+
+** org-tempo
+:PROPERTIES:
+:ID:       E60D2631-F68D-4510-B857-B5880232D384
+:END:
+
+/org-tempo provides completion templates for org-mode./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature org-tempo
+  :after org
+  :defer 5)
 #+end_src
 
 ** org-src
@@ -8851,11 +9142,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   (org-habit-following-days 1)
   (org-habit-graph-column 85)
   (org-habit-show-habits nil)
-  (org-habit-show-habits-only-for-today nil)
-
-  :bind
-  (:map org-agenda-mode-map
-   ("h" . org-habit-toggle-display-in-agenda)))
+  (org-habit-show-habits-only-for-today nil))
 #+end_src
 
 ** org-contrib
@@ -9027,7 +9314,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   :ensure (:host github
                  :repo "yantar92/org-autosort")
   :after org
-  :defer 5)
+  :defer 7)
 #+end_src
 
 ** ox-clip
@@ -9040,15 +9327,12 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ox-clip
   :after org
+  :defer t
   :custom
   ;; github.com/jkitchin/ox-clip/issues/13
   (ox-clip-osx-cmd
         '(("HTML" . "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
-          ("Markdown" . "pandoc --wrap=none -f html -t markdown - | grep -v \"^:::\" | sed 's/{#.*}//g' | pbcopy")))
-
-  :bind
-  (:map org-mode-map
-   ("s-c" . ox-clip-formatted-copy)))
+          ("Markdown" . "pandoc --wrap=none -f html -t markdown - | grep -v \"^:::\" | sed 's/{#.*}//g' | pbcopy"))))
 #+end_src
 
 ** elgantt
@@ -9097,9 +9381,7 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 
   :bind
   (("H-I" . org-pomodoro)
-   ("M-s-e" . org-pomodoro-extend-last-clock)
-   :map org-agenda-mode-map
-   ("I" . org-pomodoro)))
+   ("M-s-e" . org-pomodoro-extend-last-clock)))
 #+end_src
 
 - check: https://gist.github.com/bravosierrasierra/1d98a89a7bcb618ef70c6c4a92af1a96#file-org-pomodoro-plus
@@ -9251,12 +9533,8 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
   (org-roam-capture-new-node-hook . org-roam-capture--insert-captured-ref-h)
 
   :bind
-  (:map org-mode-map
-        ("s-r" . org-roam-buffer-toggle))
-
-  :general
-  ((org-mode-map minibuffer-mode-map)
-   "s-i" 'org-roam-node-insert))
+  (:map org-roam-mode-map
+        ("f" . ace-link-org)))
 #+end_src
 
 ** org-roam-extras
@@ -9327,6 +9605,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-transclusion
   :after org
+  :defer t
   :config
   (dolist (element '(headline drawer property-drawer))
     (push element org-transclusion-exclude-elements))
@@ -9342,11 +9621,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
                     :foreground "black")
                    (t
                     :foreground "white"))
-                 'face-override-spec)
-
-  :bind
-  (:map org-mode-map
-  ("s-l" . org-transclusion-add-all)))
+                 'face-override-spec))
 #+end_src
 
 ** vulpea
@@ -9585,6 +9860,8 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 
   :bind
   (:map bibtex-mode-map
+        ("s-f" . ebib-extras-open-file-dwim)
+        ("s-/" . ebib-extras-attach-most-recent-file)
         ("s-a" . bibtex-set-field)
         ("s-c" . bibtex-copy-entry-as-kill)
         ("s-v" . bibtex-yank)
@@ -9782,12 +10059,23 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
                            (setq citar-bibliography paths-files-bibliography-all)))
 
   :bind
-  ("H-/" . citar-insert-citation)
-
-  :general
-  ((citar-map citar-citation-map)
-   "c" 'embark-copy-as-kill
-   "u" 'citar-open-links))
+  (("H-/" . citar-insert-citation)
+   :map citar-map
+   ("c" . embark-copy-as-kill)
+   ("u" . citar-open-links)
+   ("d" . ebib-extras-download-dwim)
+   ("s" . ebib-extras-search-dwim)
+   ("t" . citar-extras-move-entry-to-tlon)
+   ("b" . citar-extras-goto-bibtex-entry)
+   ("i" . citar-extras-open-in-ebib)
+   :map citar-citation-map
+   ("c" . embark-copy-as-kill)
+   ("u" . citar-open-links)
+   ("d" . ebib-extras-download-dwim)
+   ("s" . ebib-extras-search-dwim)
+   ("t" . citar-extras-move-entry-to-tlon)
+   ("b" . citar-extras-goto-bibtex-entry)
+   ("i" . citar-extras-open-in-ebib)))
 #+end_src
 
 *** TODO [#6] Tweak note creation function so that it adds a tag with the work type
@@ -9824,16 +10112,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
          citar-extras-indicator-cited-icons))
 
   :bind
-  ("A-H-M-s-?" . citar-extras-open-file-at-point) ; i.e. H-S-/
-
-  :general
-  ((citar-map citar-citation-map)
-   "d" 'ebib-extras-download-dwim
-   "s" 'ebib-extras-search-dwim
-   "t" 'citar-extras-move-entry-to-tlon
-   "b" 'citar-extras-goto-bibtex-entry)
-  ((citar-map citar-citation-map embark-identifier-map)
-   "i" 'citar-extras-open-in-ebib))
+  ("A-H-M-s-?" . citar-extras-open-file-at-point)) ; i.e. H-S-/
 #+end_src
 
 ** citar-citeproc
@@ -9992,35 +10271,73 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
   :bind
   (:map ebib-multiline-mode-map
-        ("c" . ebib-quit-multiline-buffer-and-save)
+        ("s-c" . ebib-quit-multiline-buffer-and-save)
         :map ebib-index-mode-map
+        ("," . ebib-extras-prev-entry)
+        ("." . ebib-extras-next-entry)
+        ("d" . ebib-extras-duplicate-entry)
+        ("n" . ebib-extras-citar-open-notes)
+        ("A-C-s-<tab>" . ebib-extras-end-of-index-buffer)
+        ("s" . ebib-extras-sort)
+        ("s-t" . ebib-extras-move-entry-to-tlon)
         ("<return>" . ebib-edit-entry)
         ("A" . ebib-add-entry)
         ("D" . ebib-delete-entry)
         ("f" . avy-extras-ebib-view-entry)
         ("k" . ebib-prev-entry)
-        ("l" . ebib-next-entry))
-
-  :general
-  ((ebib-entry-mode-map ebib-index-mode-map)
-   "H-s" 'ebib-save-current-database
-   "K" 'ebib-copy-key-as-kill
-   "Q" 'ebib-quit
-   "W" 'zotra-download-attachment)
-  (ebib-entry-mode-map
-   "TAB" 'ebib-goto-next-set
-   "<backtab>" 'ebib-goto-prev-set
-   "H-s" 'ebib-save-current-database
-   "H-S" 'ebib-save-all-databases
-   "!" 'ebib-generate-autokey
-   "/" (lambda! (ebib-extras-attach-file t))
-   "A" 'ebib-add-field
-   "c" 'ebib-copy-current-field-contents
-   "D" 'ebib-delete-current-field-contents
-   "E" 'ebib-edit-keyname
-   "u" 'ebib-browse-url
-   "1" (lambda! (ebib-view-file-in-field 1))
-   "2" (lambda! (ebib-view-file-in-field 2))))
+        ("l" . ebib-next-entry)
+        ("H-s" . ebib-save-current-database)
+        ("K" . ebib-copy-key-as-kill)
+        ("Q" . ebib-quit)
+        ("W" . zotra-download-attachment)
+        :map ebib-entry-mode-map
+        ("s-f" . ebib-extras-open-file-dwim)
+        ("," . ebib-extras-prev-entry)
+        ("." . ebib-extras-next-entry)
+        ("d" . ebib-extras-duplicate-entry)
+        ("n" . ebib-extras-citar-open-notes)
+        ("SPC" . ebib-extras-open-file-dwim)
+        ("/" . ebib-extras-attach-most-recent-file)
+        ("?" . ebib-extras-attach-file)
+        (";" . ebib-extras-process-entry)
+        ("a" . ebib-extras-search-amazon)
+        ("b" . ebib-extras-get-or-open-entry)
+        ("g" . ebib-extras-search-library-genesis)
+        ("G" . ebib-extras-search-goodreads)
+        ("h" . ebib-extras-open-html-file)
+        ("H" . ebib-extras-open-html-file-externally)
+        ("i" . ebib-extras-download-by-identifier)
+        ("I" . ebib-extras-set-id)
+        ("o" . ebib-extras-search-connected-papers)
+        ("p" . ebib-extras-open-pdf-file)
+        ("P" . ebib-extras-open-pdf-file-externally)
+        ("R" . ebib-extras-set-rating)
+        ("s" . ebib-extras-search-dwim)
+        ("T" . ebib-extras-no-translation-found)
+        ("V" . ebib-extras-search-internet-archive)
+        ("w" . ebib-extras-download-dwim)
+        ("x" . ebib-extras-search-university-of-toronto)
+        ("y" . ebib-extras-search-hathitrust)
+        ("z" . ebib-extras-search-google-scholar)
+        ("s-d" . ebib-extras-url-to-pdf-attach)
+        ("s-k" . ebib-extras-fetch-keywords)
+        ("s-h" . ebib-extras-url-to-html-attach)
+        ("s-r" . ebib-extras-rename-files)
+        ("TAB" . ebib-goto-next-set)
+        ("<backtab>" . ebib-goto-prev-set)
+        ("H-s" . ebib-save-current-database)
+        ("H-S" . ebib-save-all-databases)
+        ("!" . ebib-generate-autokey)
+        ;; "/" (lambda! (ebib-extras-attach-file t))
+        ("A" . ebib-add-field)
+        ("c" . ebib-copy-current-field-contents)
+        ("D" . ebib-delete-current-field-contents)
+        ("E" . ebib-edit-keyname)
+        ("u" . ebib-browse-url)
+        ("H-s" . ebib-save-current-database)
+        ("K" . ebib-copy-key-as-kill)
+        ("Q" . ebib-quit)
+        ("W" . zotra-download-attachment)))
 #+end_src
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
@@ -10067,59 +10384,14 @@ The macro below generates the commands correctly. But attempting to define key b
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ebib-extras
-  :after ebib
-  :demand t
-  :config
+  :init
   (advice-add 'ebib-init :after #'ebib-extras-auto-reload-databases)
 
-  :hook
-  (ebib-add-entry . ebib-extras-create-list-of-existing-authors)
-
   :bind
-  (("A-i" . ebib-extras-open-or-switch)
-   :map ebib-entry-mode-map
-   ("SPC" . ebib-extras-open-file-dwim)
-   ("/" . ebib-extras-attach-most-recent-file)
-   ("?" . ebib-extras-attach-file)
-   (";" . ebib-extras-process-entry)
-   ("a" . ebib-extras-search-amazon)
-   ("b" . ebib-extras-get-or-open-entry)
-   ("g" . ebib-extras-search-library-genesis)
-   ("G" . ebib-extras-search-goodreads)
-   ("h" . ebib-extras-open-html-file)
-   ("H" . ebib-extras-open-html-file-externally)
-   ("i" . ebib-extras-download-by-identifier)
-   ("I" . ebib-extras-set-id)
-   ("o" . ebib-extras-search-connected-papers)
-   ("p" . ebib-extras-open-pdf-file)
-   ("P" . ebib-extras-open-pdf-file-externally)
-   ("R" . ebib-extras-set-rating)
-   ("s" . ebib-extras-search-dwim)
-   ("T" . ebib-extras-no-translation-found)
-   ("V" . ebib-extras-search-internet-archive)
-   ("w" . ebib-extras-download-dwim)
-   ("x" . ebib-extras-search-university-of-toronto)
-   ("y" . ebib-extras-search-hathitrust)
-   ("z" . ebib-extras-search-google-scholar)
-   ("s-d" . ebib-extras-url-to-pdf-attach)
-   ("s-k" . ebib-extras-fetch-keywords)
-   ("s-h" . ebib-extras-url-to-html-attach)
-   ("s-r" . ebib-extras-rename-files)
-   :map ebib-index-mode-map
-   ("A-C-s-<tab>" . ebib-extras-end-of-index-buffer)
-   ("s" . ebib-extras-sort)
-   ("s-t" . ebib-extras-move-entry-to-tlon)
-   :map bibtex-mode-map
-   ("s-/" . ebib-extras-attach-most-recent-file))
+  ("A-i" . ebib-extras-open-or-switch)
 
-  :general
-  ((ebib-entry-mode-map ebib-index-mode-map)
-   "," 'ebib-extras-prev-entry
-   "." 'ebib-extras-next-entry
-   "d" 'ebib-extras-duplicate-entry
-   "n" 'ebib-extras-citar-open-notes)
-  ((bibtex-mode-map ebib-entry-mode-map)
-   "s-f" 'ebib-extras-open-file-dwim))
+  :hook
+  (ebib-add-entry . ebib-extras-create-list-of-existing-authors))
 #+end_src
 
 ** bib
@@ -10273,7 +10545,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature smtpmail
-  :after sendmail
+  :after (:any mu4e org-msg)
   :custom
   (smtpmail-smtp-user (getenv "PERSONAL_GMAIL"))
   (smtpmail-local-domain "gmail.com")
@@ -10281,33 +10553,6 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
   (smtpmail-smtp-server "smtp.gmail.com")
   (smtpmail-smtp-service 587))
 #+end_src
-
-** async-mail-sending
-:PROPERTIES:
-:ID:       BEF562DB-61D5-4AB5-8B8A-44DD866FE285
-:END:
-:LOGBOOK:
-CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
-:END:
-
-/[[https://github.com/lordpretzel/async-email-sending][async-email-sending]] enables asynchronous sending of emails in Emacs using the new built-in sqlite support in Emacs 29./
-
-<2023-12-01 Fri> Failed to send an email when I tested it. So not using for the time being.
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package async-email-sending
-  :disabled
-  :ensure (async-email-sending
-           :host github
-           :repo "lordpretzel/async-email-sending")
-  ;; needs to be set via `customize'
-  :custom (async-email-sending-use-async-send-mail t))
-#+end_src
-
-*** TODO [#5] Open issue
-:PROPERTIES:
-:ID:       C1790096-C90A-4C28-9257-34223AC4341C
-:END:
 
 ** message
 :PROPERTIES:
@@ -10318,7 +10563,8 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature message
-  :after faces-extras
+  :after (:any mu4e org-msg)
+  :demand t
   :custom
   (message-kill-buffer-on-exit t) ; make `message-send-and-exit' kill buffer, not bury it
   (message-send-mail-function 'smtpmail-send-it)
@@ -10339,6 +10585,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 
   :bind
   (:map message-mode-map
+        ("s-a" . ml-attach-file)
         ("s-b" . message-goto-body)
         ("s-c" . message-send-and-exit)
         ("s-f" . message-goto-from)
@@ -10367,9 +10614,7 @@ https://gist.github.com/loziju/66d3f024e102704ff5222e54a4bfd50e
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature mml
-  :general
-  (message-mode-map
-   "s-a" 'mml-attach-file))
+  :defer t)
 #+end_src
 
 ** mu4e
@@ -10528,10 +10773,17 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   :bind
   (("A-m" . mu4e)
    :map mu4e-main-mode-map
+   ("c" . mu4e-compose-new)
    ("h" . mu4e-display-manual)
    ("j" . mu4e-search-maildir)
    ("u" . mu4e-update-mail-and-index)
    :map mu4e-headers-mode-map
+   ("," . mu4e-copy-message-path)
+   ("<" . mu4e-headers-split-view-shrink)
+   (">" . mu4e-headers-split-view-grow)
+   ("s-f" . mu4e-compose-forward)
+   ("i" . mu4e-select-other-view)
+   ("c" . mu4e-compose-new)
    ("*" . mu4e-headers-mark-all)
    ("A" . mu4e-headers-mark-all-unread-read)
    ("d" . mu4e-headers-mark-for-delete)
@@ -10542,26 +10794,29 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    ("R" . mu4e-headers-mark-for-refile)
    ("V" . mu4e-headers-mark-for-move)
    :map mu4e-view-mode-map
+   ("A-C-s-r" . shr-heading-previous)
+   ("A-C-s-f" . shr-heading-next)
+   ("," . mu4e-copy-message-path)
+   ("<" . mu4e-headers-split-view-shrink)
+   (">" . mu4e-headers-split-view-grow)
+   ("s-f" . mu4e-compose-forward)
+   ("i" . mu4e-select-other-view)
+   ("c" . mu4e-compose-new)
    ("," . mu4e-view-headers-next)
    ("." . mu4e-view-headers-prev)
    ("d" . mu4e-view-mark-for-delete)
+   ("f" . ace-link-extras-mu4e)
    ("L" . mu4e-view-save-attachments)
    ("m" . mu4e-view-mark-for-something)
    ("w" . mu4e-copy-message-path)
    ("A-C-s-u" . nil)
    ("A-C-s-p" . nil)
+   ("s-c" . org-extras-eww-copy-for-org-mode)
    :map mu4e-compose-minor-mode-map
-   ("E" . nil))
-
-  :general
-  ((mu4e-main-mode-map mu4e-headers-mode-map mu4e-view-mode-map)
-   "c" 'mu4e-compose-new)
-  ((mu4e-headers-mode-map mu4e-view-mode-map)
-   "," 'mu4e-copy-message-path
-   "<" 'mu4e-headers-split-view-shrink
-   ">" 'mu4e-headers-split-view-grow
-   "s-f" 'mu4e-compose-forward
-   "i" 'mu4e-select-other-view))
+   ("E" . nil)
+   :map mu4e-minibuffer-search-query-map
+   ("M-k" . previous-history-element)
+   ("M-l" . next-history-element)))
 #+end_src
 
 *** TODO [#3] Debug why emails sent by me are not marked as read in Gmail
@@ -10636,22 +10891,22 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
         ("g" . mu4e-extras-compose-new-externally)
         ("r" . mu4e-extras-reindex-db)
         :map mu4e-headers-mode-map
+        ("o" . mu4e-extras-view-org-capture)
+        ("r" . mu4e-extras-compose-reply)
+        ("$" . mu4e-extras-copy-sum)
         ("D" . mu4e-extras-headers-trash)
         ("e" . mu4e-extras-headers-refile)
         ("E" . mu4e-extras-headers-mark-read-and-refile)
         ("v" . mu4e-extras-headers-move)
         ("x" . mu4e-extras-mark-execute-all-no-confirm)
         :map mu4e-view-mode-map
+        ("o" . mu4e-extras-view-org-capture)
+        ("r" . mu4e-extras-compose-reply)
+        ("$" . mu4e-extras-copy-sum)
         ("D" . mu4e-extras-view-trash)
         ("e" . mu4e-extras-view-refile)
         ("x" . mu4e-extras-view-in-gmail)
-        ("v" . mu4e-extras-view-move))
-
-  :general
-  ((mu4e-headers-mode-map mu4e-view-mode-map)
-   "o" 'mu4e-extras-view-org-capture
-   "r" 'mu4e-extras-compose-reply
-   "$" 'mu4e-extras-copy-sum))
+        ("v" . mu4e-extras-view-move)))
 #+end_src
 
 ** org-msg
@@ -10769,8 +11024,17 @@ I use this package to compose messages and to reply to messages composed in HTML
 
   :bind
   (:map org-msg-edit-mode-map
+        ("s-A-b" . message-goto-bcc)
+        ("s-A-c" . message-goto-cc)
+        ("s-A-s" . message-send)
         ("s-a" . org-msg-attach)
-        ("s-b" . org-msg-extras-begin-compose)))
+        ("s-b" . org-msg-extras-begin-compose)
+        ("s-c" . message-send-and-exit)
+        ("s-f" . message-goto-from)
+        ("s-k" . org-insert-link)
+        ("s-s" . message-goto-subject)
+        ("s-t" . message-goto-to)
+        ("s-A-l" . org-extras-url-dwim)))
 #+end_src
 
 *** TODO [#5] Figure out how to make ~org-msg~ preserve formatting of quoted emails
@@ -10916,20 +11180,26 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
         ("s-c" . telega-mnz-chatbuf-attach-code)
         ("s-d" . telega-chatbuf-goto-date)
         ("s-f" . telega-chatbuf-filter)
+        ("s-k" . org-insert-link)
         ("s-m" . telega-chatbuf-attach-media)
         ("s-r" . telega-msg-add-reaction)
         ("s-s" . telega-chatbuf-filter-search)
         ("s-t" . telega-sticker-choose-favorite-or-recent)
+        ("s-v" . org-extras-paste-with-conversion)
         ("M-s-v" . telega-chatbuf-attach-clipboard)
         ("s-z" . telega-mnz-chatbuf-attach-code)
         ("M-s-e" . telega-chatbuf-edit-prev)
         ("M-s-v" . telega-chatbuf-attach-clipboard)
+        ("M-f" . ace-link-org)
         :map telega-msg-button-map
+        ("k" . telega-button-backward)
+        ("l" . telega-button-forward)
         ("<return>" . telega-extras-smart-enter)
         ("," . telega-chatbuf-goto-pinned-message)
         ("C" . telega-msg-copy-link)
         ("D" . telega-msg-delete-marked-or-at-point)
         ("F" . telega-msg-forward-marked-or-at-point)
+        ("f" . ace-link-org)
         ("s" . telega-chatbuf-filter-search)
         ("w" . telega-browse-url)
         ("W" . telega-chatbuf-filter-cancel)
@@ -10937,18 +11207,15 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
         ("a" . nil)
         ("o" . nil)
         :map telega-root-mode-map
+        ("k" . telega-button-backward)
+        ("l" . telega-button-forward)
         ("SPC" . telega-root-next-unread)
         ("." . telega-chat-with)
         ("a" . telega-chat-toggle-archive)
         ("f" . avy-extras-telega-view-message)
         ("m" . telega-chat-toggle-muted)
         :map telega-webpage-mode-map
-        ("x" . telega-webpage-browse-url))
-
-  :general
-  ((telega-msg-button-map telega-root-mode-map)
-   "k" 'telega-button-backward
-   "l" 'telega-button-forward))
+        ("x" . telega-webpage-browse-url)))
 #+end_src
 
 ** telega-mnz
@@ -10989,6 +11256,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package telega-extras
+  :after dired
   :custom
   (telega-extras-auto-share-audio-transcript nil)
 
@@ -10998,6 +11266,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
   :bind
   (("A-l" . telega-extras-switch-to)
    :map telega-msg-button-map
+   ("o" . telega-extras-chat-org-capture)
    ("." . telega-extras-docs-change-open)
    ("b" . telega-extras-transcribe-audio)
    ("d" . telega-extras-download-file)
@@ -11008,11 +11277,9 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
    ("M-s-a" . telega-extras-dired-attach-send)
    :map telega-root-view-map
    ("a" . telega-extras-view-archive)
-   ("m" . telega-extras-view-main))
-
-  :general
-  ((telega-msg-button-map telega-root-mode-map)
-   "o" 'telega-extras-chat-org-capture))
+   ("m" . telega-extras-view-main)
+   :map telega-root-mode-map
+   ("o" . telega-extras-chat-org-capture)))
 #+end_src
 
 ** ol-telega
@@ -11106,6 +11373,8 @@ CLOCK: [2021-05-18 Tue 18:26]--[2021-05-18 Tue 18:54] =>  0:28
 CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :END:
 
+/browse-url provides functions for browsing URLs./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature browse-url
   :defer 3
@@ -11120,13 +11389,11 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :ID:       15B6192C-652C-47FC-8477-0B701129E89F
 :END:
 
-
 /[[file:extras/browse-url-extras.el][browse-url-extras]] collects my extensions for ~browse-url~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package browse-url-extras
-  :after browse-url
-  :defer 3)
+  :after browse-url)
 #+end_src
 
 ** shr
@@ -11136,6 +11403,8 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :LOGBOOK:
 CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
 :END:
+
+/shr is a simple HTML renderer./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature shr
@@ -11159,16 +11428,30 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
      (shr-h2 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height))))
 #+end_src
 
+** html
+:PROPERTIES:
+:ID:       A3D835EE-B96F-4FAE-B372-DA8687A26B2A
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature html
+  :bind (:map html-mode-map
+              ("s-w" . eww-extras-browse-file)))
+#+end_src
+
 ** mhtml
 :PROPERTIES:
 :ID:       ED6F68F1-BE77-47CF-B2E7-1A5E1910E491
 :END:
 
+/mhtml is an editing mode that handles CSS and JavaScript./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature mhtml
   :bind
   (:map mhtml-mode
-        ("s-x" . browse-url-of-buffer)))
+        ("s-x" . browse-url-of-buffer)
+        ("s-w" . eww-extras-browse-file)))
 #+end_src
 
 ** shr-tag-pre-highlight
@@ -11183,7 +11466,7 @@ CLOCK: [2021-11-19 Fri 12:33]--[2021-11-19 Fri 12:35] =>  0:02
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package shr-tag-pre-highlight
-  :after shr
+  :after (:any eww elfeed)
   :config
   (add-to-list 'shr-external-rendering-functions
                '(pre . shr-tag-pre-highlight)))
@@ -11205,12 +11488,7 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
              :files ("my-lisp/shr-heading.el"))
   :after shr
   :hook
-  (eww-mode-hook . shr-heading-setup-imenu)
-
-  :general
-  ((elfeed-show-mode-map eww-mode-map mu4e-view-mode-map)
-   "A-C-s-r" 'shr-heading-previous
-   "A-C-s-f" 'shr-heading-next))
+  (eww-mode-hook . shr-heading-setup-imenu))
 #+end_src
 
 ** eww
@@ -11227,6 +11505,8 @@ CLOCK: [2021-04-21 Wed 16:35]--[2021-04-21 Wed 16:40] =>  0:05
 CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
 :END:
 
+/eww is a text-based web browser./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature eww
   :after simple-extras
@@ -11236,6 +11516,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
   (eww-desktop-remove-duplicates t)
   (eww-header-line-format nil)
   (eww-download-directory paths-dir-downloads)
+  (eww-auto-rename-buffer 'title)
   (eww-suggest-uris
    '(eww-links-at-point
      thing-at-point-url-at-point))
@@ -11255,21 +11536,24 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
   :bind
   (("A-w" . eww)
    :map eww-mode-map
+   ("<return>" . eww-follow-link)
+   ("S-<return>" . eww-follow-link)
+   ("A-C-s-r" . shr-heading-previous)
+   ("A-C-s-f" . shr-heading-next)
    ("[" . eww-previous-url)
    ("]" . eww-next-url)
    ("j" . eww-back-url)
    (";" . eww-forward-url)
    ("e" . browse-url-extras-add-domain-to-open-externally)
+   ("f" . ace-link-eww)
+   ("F" . ace-link-extras-eww-new-buffer)
+   ("s-f" . ace-link-extras-eww-externally)
    ("g" . nil)
    ("o" . eww-toggle-fonts)
    ("r" . eww-reload)
    ;; ":" (lambda! (eww-follow-link '(4)))
-   ("x" . eww-browse-with-external-browser))
-
-  :general
-  ((eww-mode-map elfeed-show-mode-map)
-   "<return>" 'eww-follow-link
-   "S-<return>" 'eww-follow-link))
+   ("x" . eww-browse-with-external-browser)
+   ("s-c" . org-extras-eww-copy-for-org-mode)))
 #+end_src
 
 *** TODO [#5] Integrate eww Chrome, Firefox history
@@ -11298,7 +11582,6 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 :ID:       69B35912-79CB-4611-8E43-7C8A5BC82B55
 :END:
 
-
 /[[file:extras/eww-extras.el][eww-extras]] collects my extensions for ~eww~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -11318,11 +11601,7 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
         ("h" . eww-extras-url-to-html)
         ("p" . eww-extras-url-to-pdf)
         ("s-d" . eww-extras-url-to-pdf)
-        ("s-h" . eww-extras-url-to-html))
-
-  :general
-  ((js-mode html-mode-map mhtml-mode-map)
-   "s-w" 'eww-extras-browse-file))
+        ("s-h" . eww-extras-url-to-html)))
 #+end_src
 
 ** prot-eww
@@ -11410,11 +11689,13 @@ I only use ~w3m~ to browse HTML email messages with ~mu4e~. For web browsing, I 
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package w3m
-  :after mu4e
+  :after simple mu4e
   :bind
   (:map w3m-minor-mode-map
         ("<left>" . left-char)
         ("<right>" . right-char)
+        ("<up>" . previous-line)
+        ("<down>" . next-line)
         :map w3m-mode-map
         ("s-<return>" . w3m-view-url-with-browse-url)
         :map mu4e-view-mode-map
@@ -11472,8 +11753,6 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
   (("A-f" . elfeed)
    :map eww-mode-map
    ("c" . elfeed-kill-link-url-at-point)
-   :map elfeed-show-mode-map
-   ("q" . nil)
    :map elfeed-search-mode-map
    ("d" . elfeed-update)
    ("f" . avy-extras-elfeed-search-show-entry)
@@ -11481,8 +11760,16 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
    ("U" . elfeed-search-tag-all-unread)
    ("o" . elfeed-org)
    :map elfeed-show-mode-map
+   ("<return>" . eww-follow-link)
+   ("S-<return>" . eww-follow-link)
+   ("A-C-s-r" . shr-heading-previous)
+   ("A-C-s-f" . shr-heading-next)
+   ("q" . nil)
    ("a" . zotra-extras-add)
    ("b" . nil)
+   ("f" . ace-link-eww)
+   ("F" . ace-link-extras-eww-new-buffer)
+   ("s-f" . ace-link-extras-eww-externally)
    ("q" . files-extras-kill-this-buffer)
    ("j" . elfeed-show-prev)
    (";" . elfeed-show-next)
@@ -11611,14 +11898,12 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package engine-mode
-  :defer 10
-
+  :defer t
   :custom
   (engine/browser-function browse-url-browser-function)
 
   :config
-  (engine-mode)
-
+  (engine/set-keymap-prefix (kbd "H-g"))
   (defengine AllMusic
     "http://www.allmusic.com/search/all/%s"
     :keybinding "a m")
@@ -11958,7 +12243,8 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     "https://www.youtube.com/results?lclk=long&filters=hd%2Clong&search_query=%s"
     :keybinding "y m")
 
-  (engine/set-keymap-prefix (kbd "H-g")))
+  :hook
+  (minibuffer-setup-hook . engine-mode))
 #+end_src
 
 ** org-download
@@ -11992,9 +12278,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-web-tools
-  :bind
-  (:map org-mode-map
-  ("s-A-k" . org-web-tools-insert-link-for-url)))
+  :defer t)
 #+end_src
 
 ** org-web-tools-extras
@@ -12264,6 +12548,8 @@ Requires configuration. Disabled for the time being.
 :ID:       50FAD2F3-E501-408E-A9A2-8358FAA87C1C
 :END:
 
+/calc is the Emacs calculator./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature calc
   :config
@@ -12272,11 +12558,23 @@ Requires configuration. Disabled for the time being.
 
   :bind
   (("A-c" . calc)
-   ("A-M-c" . quick-calc))
+   ("A-M-c" . quick-calc)
+   :map calc-mode-map
+   ("C-k" . nil)))
+#+end_src
 
-  :general
-  ((calc-mode-map calc-alg-map)
-   "C-k" nil))
+** calc-ext
+:PROPERTIES:
+:ID:       34F23DCB-0B05-4CFB-95F3-F5CC392B538D
+:END:
+
+/calc-ext provides various extension functions for calc./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature calc-ext
+  :after cal
+  :bind (:map calc-alg-map
+              ("C-k" . nil)))
 #+end_src
 
 ** alert
@@ -12417,7 +12715,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
   :bind
   (("A-b" . bbdb)
-  :map bbdb-mode-map
+   :map bbdb-mode-map
    ("A-C-s-r" . bbdb-prev-record)
    ("A-C-s-f" . bbdb-next-record)
    ("n" . bbdb-extras-bbdb-create-quick)
@@ -12591,8 +12889,7 @@ These bindings allow Keyboard Maestro to trigger various Emacs processes.
 Note to self: The pattern for KM shortcuts is =C-H-<capital-letter>=. This corresponds to =⇧⌘⌃<letter>= in macOS.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(general-define-key
-"C-H-Z" 'zotra-extras-add-entry)
+(global-set-key (kbd "C-H-Z") 'zotra-extras-add-entry)
 #+end_src
 
 * appendices
@@ -12693,6 +12990,14 @@ Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emac
 [[file:etc/moonlander-emacs.png]]
 
 So when you see a monstrous key binding such as ~C-H-M-s-d~, remember that everything that precedes the final key (in this case, ~d~) represents a single key press (in this case, ~l~). For details, see my [[../karabiner/modifications.org][Karabiner config file]], specifically the "Key associations" section.
+
+I set key bindings in the following ways:
+- With the =:bind= keyword of =use-package=.
+    - For commands provided by the package or feature being loaded in that block.
+    - For commands provided by other packages or features, when these are being set in a keymap provided by the feature being loaded in that block. This approach is appropriate when one wants to bind a key to a command in a keymap and wants this binding to be active even before the feature providing the command is loaded. Example:
+- With =bind-keys= within the =:init= section of =use-package=.
+    - For commands provided by the feature being loaded in that block that are bound in a keymap provided by another feature. This is appropriate when the feature providing the keymap may load after the feature providing the command. In these cases, using =:bind= is not possible since Emacs will throw an error. Example: binding the command =scroll-down-command=, which is provided by =window=, to the key =y= in =elfeed-show-mode-map=, which is provided by =elfeed=. Note that if the command is not natively autoloaded, an autoload must be set, e.g. =(autoload #'=scroll-down-command "window" nil t)=. [confirm that this is so: it’s possible =bind-keys= automatically creates autoloads, just like the =:bind= keyword does]
+    - For commands provided by the feature being loaded in that block that are bound globally and should be available even before the feature is configured. (Note that I distinguish between the loading of a feature and its configuration. A key binding specified via the =:bind= keyword of =use-package= will be available before the package is loaded but only after it is configured. If, for example, the block includes the =:after= keyword, the package will only be configured after that condition is satisfied.) Example: =ebib-extras-open-or-switch=, which is provided by =ebib-extras= and will be configured after =ebib= is loaded, yet we want it to be available even before =ebib= is loaded.
 
 ** debugging                                                       :noexport:
 :PROPERTIES:
@@ -12893,9 +13198,9 @@ Some useful config files:
 :ID:       4FB9C92B-B39E-4C3D-B9AE-A3342A6F1695
 :END:
 # Local Variables:
+# eval: (run-with-timer 0.1 nil (lambda () (flycheck-mode -1)))
 # eval: (files-extras-buffer-local-set-key (kbd "H-:") 'org-extras-config-dispatch)
 # eval: (files-extras-buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
-# eval: (flycheck-mode -1)
 # doom-modeline-enable-word-count: nil
 # End:

@@ -39,9 +39,11 @@
 (defcustom ledger-mode-extras-currencies '()
   "List of currencies to get prices for."
   :group 'ledger-mode-extras
-  :type 'list)
+  :type '(repeat string))
 
 ;;;; Functions
+
+;;;;; Import
 
 (declare-function f-read "f")
 (declare-function s-split "s")
@@ -113,6 +115,8 @@ If FILE is nil, use `paths-file-ledger'."
 	  (ledger-mode-extras-align-and-next)
 	  (insert "\n\n"))))))
 
+;;;;; Navigation
+
 (declare-function crux-smart-open-line-above "crux")
 (defun ledger-mode-extras-new-entry-below ()
   "Create new entry below one at point."
@@ -122,11 +126,14 @@ If FILE is nil, use `paths-file-ledger'."
   (ledger-navigate-next-xact-or-directive)
   (crux-smart-open-line-above))
 
+;;;###autoload
 (defun ledger-mode-extras-align-and-next ()
   "Align transaction at point and move point to next entry."
   (interactive)
   (ledger-post-align-xact (point))
   (ledger-navigate-next-xact-or-directive))
+
+;;;;; Report
 
 (defun ledger-mode-extras-report-account ()
   "Run an `account' report from `ledger-reports'."
@@ -148,6 +155,9 @@ If FILE is nil, use `paths-file-ledger'."
   (interactive)
   (ledger-report "payee" nil))
 
+;;;;; Fetch prices
+
+;;;###autoload
 (defun ledger-mode-extras-update-commodities ()
   "Update `commodities.py'."
   (interactive)
@@ -155,6 +165,7 @@ If FILE is nil, use `paths-file-ledger'."
    (format "python3 %s"
 	   (file-name-concat paths-dir-ledger "commodities.py"))))
 
+;;;###autoload
 (defun ledger-mode-extras-update-coin-prices ()
   "Update `coinprices.py'."
   (interactive)
@@ -163,10 +174,11 @@ If FILE is nil, use `paths-file-ledger'."
 	   (file-name-concat paths-dir-ledger "coinprices/coinprices.py")
 	   paths-file-ledger-db)))
 
+;;;;; Sort
+
 (defun ledger-mode-extras-sort-region-reversed (beg end)
   "Sort the region from BEG to END in reverse chronological order."
-  (interactive "r") ;; load beg and end from point and mark
-  ;; automagically
+  (interactive "r")
   (let* ((new-beg beg)
 	 (new-end end)
 	 (bounds (ledger-navigate-find-xact-extents (point)))
@@ -189,14 +201,12 @@ If FILE is nil, use `paths-file-ledger'."
 	(setq new-end (point))
 	(narrow-to-region new-beg new-end)
 	(goto-char new-beg)
-
 	(let ((inhibit-field-text-motion t))
 	  (sort-subr
 	   t
 	   'ledger-navigate-next-xact
 	   'ledger-navigate-end-of-xact
 	   'ledger-sort-startkey))))
-
     (goto-char (point-min))
     (re-search-forward (regexp-quote target-xact))
     (goto-char (+ (match-beginning 0) point-delta))))
@@ -227,6 +237,8 @@ If FILE is nil, use `paths-file-ledger'."
       (call-interactively #'ledger-mode-extras-sort-region-reversed)
     (ledger-mode-extras-sort-buffer-reversed)))
 
+;;;;; Kill
+
 (defun ledger-mode-extras-copy-or-kill-transaction-at-point (action)
   "Copy or kill transaction at point, depending on ACTION."
   (save-excursion
@@ -255,7 +267,9 @@ If FILE is nil, use `paths-file-ledger'."
 	(xact-ends (ledger-navigate-end-of-xact)))
     (narrow-to-region xact-begins xact-ends)))
 
-(defun ledger-mode-extras--increase-date (days)
+;;;;; Change date
+
+(defun ledger-mode-extras-increase-date (days)
   "Increase the date of transaction at point by DAYS.
 DAYS can be positive or negative."
   (save-excursion
@@ -271,12 +285,12 @@ DAYS can be positive or negative."
 (defun ledger-mode-extras-increase-date-by-one-day ()
   "Increase the date of transaction at point by one day."
   (interactive)
-  (ledger-mode-extras--increase-date 1))
+  (ledger-mode-extras-increase-date 1))
 
 (defun ledger-mode-extras-decrease-date-by-one-day ()
   "Decrease the date of transaction at point by one day."
   (interactive)
-  (ledger-mode-extras--increase-date -1))
+  (ledger-mode-extras-increase-date -1))
 
 (provide 'ledger-mode-extras)
 ;;; ledger-mode-extras.el ends here

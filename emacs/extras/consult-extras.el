@@ -60,6 +60,7 @@
 
 (declare-function org-extras-fold-show-all-headings "org-extras")
 (declare-function consult-org-heading "consult-org")
+;;;###autoload
 (defun consult-extras-org-heading (&optional match scope)
   "Jump to an Org heading.
 MATCH and SCOPE are as in org-map-entries and determine which

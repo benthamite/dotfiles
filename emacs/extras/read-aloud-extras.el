@@ -131,7 +131,6 @@
 
 ;;;;; Read file
 
-(declare-function unfill-region "unfill")
 (declare-function tlon-convert-pdf "tlon-import")
 (defun read-aloud-extras-read-file (&optional file)
   "Read the contents of FILE aloud.
@@ -145,7 +144,8 @@ If FILE is nil, read the file visited by the current buffer."
     (with-current-buffer (get-buffer-create "*read-aloud*")
       (erase-buffer)
       (insert contents)
-      (unfill-region (point-min) (point-max))
+      (let ((fill-column (point-max)))
+	(fill-region (point) (point-max)))
       (goto-char (point-min))
       (read-aloud-buf)
       ;; make buffer current

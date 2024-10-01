@@ -32,6 +32,7 @@
 
 ;;;; Functions
 
+;;;###autoload
 (defun register-extras-kill-to-register (text register)
   "Copy TEXT from the kill ring to REGISTER."
   (interactive (list (read-from-kill-ring "Kill to store: ")

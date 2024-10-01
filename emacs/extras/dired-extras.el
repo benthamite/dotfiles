@@ -127,6 +127,7 @@ losing the `put back' option."
   (image-dired-show-all-from-dir (dired-current-directory)))
 
 (declare-function files-extras-read-file "files-extras")
+;;;###autoload
 (defun dired-extras-copy-image ()
   "Copy image FILE to the kill ring."
   (interactive)

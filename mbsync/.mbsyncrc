@@ -16,6 +16,9 @@ IMAPStore gmail-remote
 Account gmail
 
 # https://github.com/danielfleischer/mu4easy
+# 
+# See also bin/mbsync-parallel (in this repo) for a bash script to check the
+# different email channels in parallel (thereby speeding up the process)
 Channel gmail-inbox
 Far :gmail-remote:"INBOX"
 Near :gmail-local:"INBOX"

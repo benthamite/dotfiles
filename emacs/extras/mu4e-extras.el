@@ -132,6 +132,7 @@ function marks the saved copy as read."
 
 ;;;;; Commands
 
+;;;###autoload
 (defun mu4e-extras-update-all-mail-and-index (&optional run-in-background)
   "Like `mu4e-update-mail-and-index', but include the \"all mail\" folder.
 If RUN-IN-BACKGROUND is non-nil (or called with prefix-argument), run in the

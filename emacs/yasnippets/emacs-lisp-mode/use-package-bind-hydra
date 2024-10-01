@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: use-package-bind-hydra
-# key: upbh
-# contributor: Pablo Stafforini
-# --
-("$1" . 'hydra$2/body)

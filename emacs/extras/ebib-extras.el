@@ -79,6 +79,7 @@
 (declare-function window-extras-split-if-unsplit "window-extras")
 (declare-function winum-select-window-2 "winum")
 (declare-function winum-select-window-3 "winum")
+;;;###autoload
 (defun ebib-extras-open-or-switch ()
   "Open ebib in the right window or switch to it if already open."
   (interactive)
@@ -1046,7 +1047,9 @@ If STATE is nil, toggle between the relevant states."
 	    (new-key (if ebib-uniquify-keys
 			 (ebib-db-uniquify-key (ebib--get-key-at-point) ebib--cur-db)
 		       key))
-	    (file (zotra-extras-set-bibfile))
+	    (file (progn
+		    (require 'zotra-extras)
+		    (zotra-extras-set-bibfile)))
 	    entry)
        (with-temp-buffer
 	 (ebib--format-entry key ebib--cur-db)
@@ -1382,7 +1385,8 @@ remove braces from the field value."
   (interactive)
   (when-let* ((id-or-url (ebib-extras-get-id-or-url))
 	      (field (or field (ebib--current-field)))
-	      (value (zotra-extras-get-field field id-or-url keep-braces)))
+	      (value (progn (require 'zotra-extras)
+			    (zotra-extras-get-field field id-or-url keep-braces))))
     (ebib-set-field-value
      field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
     (ebib-extras-update-entry-buffer ebib--cur-db)))

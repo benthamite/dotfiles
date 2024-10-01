@@ -33,6 +33,7 @@
 ;;;; Functions
 
 (defvar mm-text-html-renderer)
+;;;###autoload
 (defun ace-link-extras-mu4e ()
   "Open a visible link in an `mu4e-view-mode' buffer.
 Unlike `ace-link-mu4e', this function is sensitive to the value of
@@ -60,16 +61,19 @@ specified by `browse-url-handlers')."
     (when pt
       (get-text-property (point) 'w3m-href-anchor))))
 
+;;;###autoload
 (defun ace-link-extras-eww-externally ()
   "Browse URL using `browse-url-secondary-browser-function'."
   (interactive)
   (ace-link-eww '(4)))
 
+;;;###autoload
 (defun ace-link-extras-eww-new-buffer ()
   "Browse URL in new buffer."
   (interactive)
   (ace-link-eww '(16)))
 
+;;;###autoload
 (defun ace-link-extras-org-roam ()
   "Open a visible link in an `org-roam-mode' buffer."
   (interactive)

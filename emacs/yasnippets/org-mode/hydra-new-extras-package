@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: hydra-new-extras-package
-# key: hnep
-# contributor: Pablo Stafforini
-# --
-("$1" (files-extras-get-extras-package-dir "$2") "$2")$0

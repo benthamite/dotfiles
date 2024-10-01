@@ -33,11 +33,6 @@
 
 ;;;; Functions
 
-(defun forge-extras-get-unread-notifications ()
-  "Return the number of unread notifications."
-  (when-let ((unread-notifications (forge--ls-notifications '(unread))))
-    (length unread-notifications)))
-
 (defun forge-extras-orgit-store-link (_arg)
   "Like `org-store-link' but store links to all selected commits, if any."
   (interactive "P")

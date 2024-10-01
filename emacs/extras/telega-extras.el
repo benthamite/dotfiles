@@ -35,7 +35,7 @@
 
 (defgroup telega-extras ()
   "Extensions for `telega'."
-  :group 'telega-extras)
+  :group 'telega)
 
 (defcustom telega-extras-auto-share-audio-transcript nil
   "Whether to automatically share transcript after transcribing message."
@@ -138,6 +138,18 @@ archive buffer."
   (if-let ((file (files-extras-newest-file paths-dir-downloads)))
       (telega-chatbuf-attach-file file)
     (user-error (format "No files found in %s" paths-dir-downloads))))
+
+(defun telega-extras-smart-enter ()
+  "Take the appropriate action for the thing at point.
+If the point is on a URL, open it in the browser. If the point is on a
+button, push it. Otherwise, send the message at point."
+  (interactive)
+  (cond ((thing-at-point 'url)
+	 (browse-url-at-point))
+	((button-at (point))
+	 (push-button))
+	(t
+	 (telega-chatbuf-input-send nil))))
 
 ;;;;; Transcribe audio
 

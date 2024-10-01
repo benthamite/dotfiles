@@ -1,3 +1,4 @@
+#+filetags: :project:
 * Pablo's Emacs package graveyard
 :PROPERTIES:
 :ID:       AACAE0F4-0B25-475B-831B-3F1E91E6349D
@@ -7,6 +8,241 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 :END:
 
 This is a place where I move Emacs packages I no longer use.
+
+** general
+:PROPERTIES:
+:ID:       70C622E0-FAC7-4AB1-841F-36437858218C
+:END:
+:LOGBOOK:
+CLOCK: [2021-07-25 Sun 18:46]--[2021-07-25 Sun 18:56] =>  0:10
+:END:
+
+/[[https://github.com/noctuid/general.el][general]] supports more convenient key definitions./
+
+I only use this package to define key bindings for multiple keymaps at once. Currently, ~use-package~ does not support such concise definitions, though there is an [[https://github.com/jwiegley/use-package/pull/1051][open pull request]] to add this feature.
+
+[2024-09-30 Mon 21:02] No longer using.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package general
+  :ensure (:wait t)
+  :demand t
+  :custom
+  (general-describe-priority-keymaps '(local global org-mode-map))
+  (general-describe-keybinding-sort-function #'general-sort-by-car)
+
+  :config
+  (general-override-mode)
+  (general-auto-unbind-keys))
+#+end_src
+
+** async-mail-sending
+:PROPERTIES:
+:ID:       BEF562DB-61D5-4AB5-8B8A-44DD866FE285
+:END:
+:LOGBOOK:
+CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
+:END:
+
+/[[https://github.com/lordpretzel/async-email-sending][async-email-sending]] enables asynchronous sending of emails in Emacs using the new built-in sqlite support in Emacs 29./
+
+<2023-12-01 Fri> Failed to send an email when I tested it. So not using for the time being.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package async-email-sending
+  :disabled
+  :ensure (async-email-sending
+           :host github
+           :repo "lordpretzel/async-email-sending")
+  ;; needs to be set via `customize'
+  :custom (async-email-sending-use-async-send-mail t))
+#+end_src
+
+*** TODO [#5] Open issue
+:PROPERTIES:
+:ID:       C1790096-C90A-4C28-9257-34223AC4341C
+:END:
+
+** fancy-battery
+:PROPERTIES:
+:ID:       DDFE34BA-7C23-459E-B4E2-2957D2535700
+:END:
+
+/[[https://github.com/emacsorphanage/fancy-battery][fancy-battery]] displays battery information in the modeline./
+
+[2024-09-29 Sun] Superseded by =battery=.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package fancy-battery
+  :custom
+  (fancy-battery-show-percentage t)
+
+  :config
+  (fancy-battery-mode))
+#+end_src
+
+** password-store
+:PROPERTIES:
+:ID:       80D05BB8-D440-417A-8D94-61F4EB79EA00
+:END:
+
+/[[https://github.com/zx2c4/password-store][password-store]] provides functions for working with pass, the standard Unix password manager./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package password-store
+  :ensure (:host github
+            :repo "zx2c4/password-store"
+            :files ("contrib/emacs/*.el"))
+  :after password-store-otp
+  :disabled)
+#+end_src
+
+** unfill
+:PROPERTIES:
+:ID:       DF5137EA-79B3-4A5F-8D6C-7222CD8D4F4A
+:END:
+
+ /[[https://github.com/purcell/unfill][unfill]] provides functions to do the reverse of =fill-paragraph= and =fill-region=./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package unfill
+  :defer 10)
+#+end_src
+
+** persid
+:PROPERTIES:
+:ID:       57366A1C-A55A-47F8-8B62-E3412D674879
+:END:
+
+/[[https://github.com/rougier/persid][persid]] is a persistent identifier library for Emacs./
+
+[2024-09-24 Tue] I think this adds nothing given that I’m already using zotra.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package persid
+  :ensure (persid
+           :host github
+           :repo "rougier/persid")
+  :disabled)
+#+end_src
+
+** biblio
+:PROPERTIES:
+:ID:       63D8DE23-E17B-43B9-B623-95F404D134A0
+:END:
+/[[https://github.com/cpitclaudel/biblio.el][biblio]] supports browsing and importing bibliographic references from various databases./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package biblio)
+#+end_src
+
+** ledger-prices
+:PROPERTIES:
+:ID:       1A1A2A24-6FE4-462D-A6A3-E5E22521558D
+:END:
+:LOGBOOK:
+CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package ledger-prices
+  :ensure (ledger-prices
+           :host github
+           :repo "benthamite/ledger-prices")
+  :defer 5
+  :after ledger-mode
+  :config
+  (setq ledger-prices-api-key-finnhub (auth-source-pass-get 'secret "chrome/api.finnhub.io"))
+  (setq ledger-prices-api-key-exchangerates (auth-source-pass-get 'secret "chrome/api.exchangeratesapi.io"))
+  (setq ledger-prices-pricedb-file paths-file-ledger-db))
+#+end_src
+
+** emacs-eat
+:PROPERTIES:
+:ID:       94971F2F-FF78-4088-BBDB-A95ADEDECE9B
+:END:
+
+/[[https://codeberg.org/akib/emacs-eat][emacs-eat]] is a terminal emulator./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package eat
+  :ensure (:host codeberg
+                 :repo "akib/emacs-eat"
+                 :files ("*.el" ("term" "term/*.el") "*.texi"
+                         "*.ti" ("terminfo/e" "terminfo/e/*")
+                         ("terminfo/65" "terminfo/65/*")
+                         ("integration" "integration/*")
+                         (:exclude ".dir-locals.el" "*-tests.el"))))
+#+end_src
+
+** visual-regexp-steroids
+:PROPERTIES:
+:ID:       375D8037-D6A0-4519-A3B2-32E88810DA6D
+:END:
+
+/[[https://github.com/benma/visual-regexp-steroids.el/][visual-regexp-steroids]] extends visual-regexp to support additional regexp engines./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package visual-regexp-steroids
+  ;; :after visual-regexp
+  :custom
+  (vr/engine 'python)
+  (vr/command-python
+        (concat "python3 "
+                (file-name-concat user-emacs-directory "elpacs/builds/visual-regexp-steroids/regexp.py")))
+
+  :bind
+  (:map isearch-mode-map
+   ("C-H-s" . vr/isearch-forward)
+   ("C-H-r" . vr/isearch-backward)))
+#+end_src
+
+** transient-showcase
+:PROPERTIES:
+:ID:       72949AB3-4ACF-4E55-AACB-8AAA0D7058B6
+:END:
+/[[https://github.com/positron-solutions/transient-showcase][transient-showcase]] provides code examples for interactive explanations of ~transient~./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package transient-showcase
+  :disabled t
+  :ensure (:host github
+                 :repo "positron-solutions/transient-showcase")
+  :after transient)
+#+end_src
+
+** hl-sentence
+:PROPERTIES:
+:ID:       1E12C3EF-BBB1-45CD-845D-3E1AEEB4EE30
+:END:
+
+/[[https://github.com/milkypostman/hl-sentence][hl-sentence]] highlights sentences rather than lines./
+
+I use =hl-line= by default, but replace it with =hl-sentence= in modes (specifically, =org-mode= and =markdown-mode=) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the other modes. See the above sections and the =modus-themes-extras-set-faces= function from ~modus-themes-extras~.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package hl-sentence
+  :ensure (:host github
+		 :repo "milkypostman/hl-sentence")
+  :defer 7)
+#+end_src
+
+** dired-open-with
+:PROPERTIES:
+:ID:       554C33D0-2B10-4B14-8717-91176B144313
+:END:
+
+
+
+/[[https://github.com/FrostyX/dired-open-with][dired-open-with]] is an 'open with' dialog for opening files in external applications from Dired./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package dired-open-with
+  :disabled
+  :general
+  (dired-mode-map
+   "E" 'dired-open-with))
+#+end_src
 
 ** pomodoro-centile
 :PROPERTIES:

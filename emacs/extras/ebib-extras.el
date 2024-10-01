@@ -34,12 +34,14 @@
 (require 'paths)
 (require 'simple-extras)
 (require 'shut-up)
+(require 'tlon)
+(require 'eww-extras)
 
 ;;;; User options
 
 (defgroup ebib-extras ()
   "Extensions for `ebib'."
-  :group 'ebib-extras)
+  :group 'ebib)
 
 (defcustom ebib-extras-download-use-vpn nil
   "Whether to use a VPN when downloading content."
@@ -63,12 +65,21 @@
   "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
   "Regular expression for valid BibTeX keys.")
 
+(defconst ebib-extras-valid-file-extensions
+  '("pdf" "html" "webm" "flac" "mp3" "md" "srt" "vtt")
+  "List of valid file extensions for `ebib-extras-open-file-dwim'.")
+
+(defconst ebib-extras-valid-text-file-extensions
+  '("html" "pdf" "srt" "vtt")
+  "List of valid text file extensions.")
+
 ;;;; Functions
 
 (defvar window-extras-frame-split-width-threshold)
 (declare-function window-extras-split-if-unsplit "window-extras")
 (declare-function winum-select-window-2 "winum")
 (declare-function winum-select-window-3 "winum")
+;;;###autoload
 (defun ebib-extras-open-or-switch ()
   "Open ebib in the right window or switch to it if already open."
   (interactive)
@@ -276,14 +287,6 @@ exists."
   (interactive)
   (ebib-extras-open-file-externally "html"))
 
-(defconst ebib-extras-valid-file-extensions
-  '("pdf" "html" "webm" "flac" "mp3" "md" "srt" "vtt")
-  "List of valid file extensions for `ebib-extras-open-file-dwim'.")
-
-(defconst ebib-extras-valid-text-file-extensions
-  '("html" "pdf" "srt" "vtt")
-  "List of valid text file extensions.")
-
 (defun ebib-extras-open-file-dwim ()
   "Open file in entry at point.
 If the entry contains more than one file, use the preference
@@ -463,6 +466,8 @@ current entry or, if not available, the key stored in
   "Attach the most recent file in `paths-dir-downloads' to the current entry."
   (interactive)
   (ebib-extras-attach-file 'most-recent))
+
+;;;;; File attachment
 
 (declare-function eww-extras-url-to-file "eww-extras")
 (defun ebib-extras-url-to-file-attach (type)
@@ -1042,7 +1047,9 @@ If STATE is nil, toggle between the relevant states."
 	    (new-key (if ebib-uniquify-keys
 			 (ebib-db-uniquify-key (ebib--get-key-at-point) ebib--cur-db)
 		       key))
-	    (file (zotra-extras-set-bibfile))
+	    (file (progn
+		    (require 'zotra-extras)
+		    (zotra-extras-set-bibfile)))
 	    entry)
        (with-temp-buffer
 	 (ebib--format-entry key ebib--cur-db)
@@ -1139,6 +1146,9 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 	(message "Author found in the database!")
       (message "Warning: Author not found in the database!"))))
 
+(declare-function ebib-extras-search-goodreads "ebib-extras")
+(declare-function ebib-extras-search-imdb "ebib-extras")
+(declare-function ebib-extras-search-letterboxd "ebib-extras")
 (defun ebib-extras-set-rating ()
   "Set rating of current entry.
 If applicable, open external website to set rating there as well."
@@ -1375,7 +1385,8 @@ remove braces from the field value."
   (interactive)
   (when-let* ((id-or-url (ebib-extras-get-id-or-url))
 	      (field (or field (ebib--current-field)))
-	      (value (zotra-extras-get-field field id-or-url keep-braces)))
+	      (value (progn (require 'zotra-extras)
+			    (zotra-extras-get-field field id-or-url keep-braces))))
     (ebib-set-field-value
      field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
     (ebib-extras-update-entry-buffer ebib--cur-db)))
@@ -1387,6 +1398,7 @@ Unlike `ebib-unbrace', this function removes all braces, not just the outermost.
 
 ;;;;; Patched functions
 
+(defvar index-window)
 ;; prevent unnecessary vertical window splits
 (el-patch-defun ebib--setup-windows ()
   "Create Ebib's window configuration.
@@ -1481,6 +1493,7 @@ error."
     (default
      (beep))))
 
+(declare-function f-file-p "f.c")
 ;; when field contains a file, copy absolute file path
 (el-patch-defun ebib-copy-field-contents (field)
   "Copy the contents of FIELD to the kill ring.

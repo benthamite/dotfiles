@@ -35,7 +35,7 @@
 
 (defgroup browse-url-extras ()
   "Extensions for `browse-url'."
-  :group 'browse-url-extras)
+  :group 'browse-url)
 
 (defcustom browse-url-extras-browse-url-default-file
   (file-name-concat paths-dir-dotemacs "etc/browse-url-default.txt")
@@ -69,6 +69,7 @@ respectively."
   (browse-url-extras-set-handler browse-url-extras-browse-url-default-file 'browse-url-default-browser)
   (browse-url-extras-set-handler browse-url-extras-browse-url-firefox-file 'browse-url-firefox))
 
+;;;###autoload
 (defun browse-url-extras-of-dired-file-externally ()
   "In Dired, open the file at point in an external browser."
   (interactive)

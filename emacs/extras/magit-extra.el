@@ -45,6 +45,7 @@
     (magit-commit-create (list "-m" message)))
   (call-interactively #'magit-push-current-to-pushremote))
 
+;;;###autoload
 (defun magit-extras-stage-commit-and-push-all-repos ()
   "Update all active depositories."
   (dolist (directory paths-dir-all-repos)

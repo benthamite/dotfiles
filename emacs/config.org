@@ -7607,6 +7607,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 (use-package gptel
   :ensure (:host github
                  :repo "karthink/gptel")
+  :after tlon
   :defer 5
   :custom
   (gptel-default-mode 'org-mode)
@@ -10404,7 +10405,7 @@ The macro below generates the commands correctly. But attempting to define key b
   :ensure (:host github
                  :repo "benthamite/bib"
                  :depth nil) ; clone entire repo, not just last commit
-  :after ebib
+  :after ebib tlon
   :defer t
   :custom
   (bib-isbndb-key
@@ -11648,7 +11649,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
            :repo "armindarvish/consult-web"
            :files (:defaults "sources/*.el"))
   :disabled
-  :after consult gptel
+  :after consult gptel tlon
   :config
   (setq consult-web-group-by nil)
   (require 'consult-web-embark)

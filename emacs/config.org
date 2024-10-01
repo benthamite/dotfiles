@@ -673,7 +673,7 @@ NAME and ARGS as in `use-package'."
     `(use-package ,name
        :ensure (:host github
                       :repo "benthamite/dotfiles"
-                      :branch "dev"
+                      ;; :branch "dev"
                       :files ,(list (file-name-concat
                                      "emacs/extras"
                                      (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))

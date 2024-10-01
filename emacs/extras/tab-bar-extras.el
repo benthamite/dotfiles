@@ -69,8 +69,13 @@ To change how the time is displayed, customize `display-time-format'.")
   `(" " tlon-init-chemacs-profile-name)
   "Element to display the Chemacs profile.")
 
+(defvar doom-modeline--battery-status)
 (defconst tab-bar-extras-battery-element
-  `("" fancy-battery-mode-line)
+  `(:eval ,(format "%s %s"
+		   ;; icon
+		   (car doom-modeline--battery-status)
+		   ;;  percentage
+		   (cdr doom-modeline--battery-status)))
   "Element to display the battery.")
 
 (defconst tab-bar-extras-telega-element
@@ -108,6 +113,21 @@ Note: for this element to work, `doom-modeline-github' must be non-nil.")
   `(:eval (unless tab-bar-extras-notifications-enabled
 	    (concat (propertize "🔕" 'face '(:height 0.8)) tab-bar-extras-separator-element)))
   "Element to display when the notifications are disabled.")
+
+(defconst tab-bar-extras-debug-element
+  `(:eval (when (doom-modeline--segment-visible 'debug)
+	    (let* ((dap doom-modeline--debug-dap)
+		   (edebug (doom-modeline--debug-edebug))
+		   (on-error (doom-modeline--debug-on-error))
+		   (on-quit (doom-modeline--debug-on-quit))
+		   (vsep (doom-modeline-vspc))
+		   (sep (and (or dap edebug on-error on-quit) (doom-modeline-spc))))
+	      (concat (when (or debug-on-error debug-on-quit)
+			tab-bar-extras-separator-element)
+		      (and dap (concat dap (and (or edebug on-error on-quit) vsep)))
+		      (and edebug (concat edebug (and (or on-error on-quit) vsep)))
+		      (and on-error (concat on-error (and on-quit vsep)))
+		      on-quit)))))
 
 (defconst tab-bar-extras-separator-element
   " | "

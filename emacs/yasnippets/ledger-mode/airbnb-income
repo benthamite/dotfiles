@@ -5,6 +5,6 @@
 # --
 `(format-time-string "%Y-%m-%d")` Airbnb
     Income:Rent                                 -$1 USD
-    Assets:Revolut
+    Assets:Wise
 
 $2

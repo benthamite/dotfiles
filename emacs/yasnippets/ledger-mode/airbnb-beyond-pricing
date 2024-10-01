@@ -5,6 +5,6 @@
 # --
 `(format-time-string "%Y-%m")`-22 Beyond Pricing
     Expenses:Tucumán ${2:10 if even; 11 if odd}                  $3 USD
-    Assets:Revolut
+    Assets:Wise
 
 $0

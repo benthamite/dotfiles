@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: bind-multiple-keymaps
+# key: bmk
+# contributor: Pablo Stafforini
+# --
+(dolist (map (list $1))
+(bind-keys :map map
+$2
+))

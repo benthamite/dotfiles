@@ -2628,71 +2628,71 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
                ("<down>" . next-line)))
   (with-eval-after-load 'cus-edit
     (bind-keys :map custom-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'ebib
     (bind-keys :map ebib-entry-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line))
+               ("k" . previous-line)
+               ("l" . next-line))
     (bind-keys :map ebib-index-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'elfeed
     (bind-keys :map elfeed-show-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'elisp-refs
     (bind-keys :map elisp-refs-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'eww
     (bind-keys :map eww-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'forge-notify
     (bind-keys :map forge-notifications-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'help
     (bind-keys :map help-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'helpful
     (bind-keys :map helpful-mode-map
-	       ("k" . previous-line)
-	       ("l" .)))
+               ("k" . previous-line)
+               ("l" .)))
   (with-eval-after-load 'info
     (bind-keys :map Info-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'ledger-reconcile
     (bind-keys :map ledger-reconcile-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'Man
     (bind-keys :map Man-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'mu4e
     (bind-keys :map mu4e-view-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'org-lint
     (bind-keys :map org-lint--report-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'osa-chrome
     (bind-keys :map osa-chrome-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'pass
     (bind-keys :map pass-mode-map
-	       ("k" . previous-line)
-	       ("l" . next)))
+               ("k" . previous-line)
+               ("l" . next)))
   (with-eval-after-load 'simple
     (bind-keys :map special-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
 
   :bind
   (("A-C-s-m" . move-beginning-of-line)
@@ -3626,82 +3626,82 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   :init
   (with-eval-after-load 'dired
     (bind-keys :map dired-mode-map
-	       ("s-o" . files-extras-ocr-pdf)))
+               ("s-o" . files-extras-ocr-pdf)))
   (with-eval-after-load 'pdf-view
     (bind-keys :map pdf-view-mode-map
-	       ("s-o" . files-extras-ocr-pdf)))
+               ("s-o" . files-extras-ocr-pdf)))
   (with-eval-after-load 'ebib
     (bind-keys :map ebib-entry-mode-map
-	       ("v" . files-extras-internet-archive-dwim)
-	       ("q" . files-extras-bury-buffer-switch-to-other-window)
-	       :map ebib-index-mode-map
-	       ("q" . files-extras-bury-buffer-switch-to-other-window)))
+               ("v" . files-extras-internet-archive-dwim)
+               ("q" . files-extras-bury-buffer-switch-to-other-window)
+               :map ebib-index-mode-map
+               ("q" . files-extras-bury-buffer-switch-to-other-window)))
   (with-eval-after-load 'simple
     (bind-keys :map messages-buffer-mode-map
-	       ("q" . files-extras-bury-buffer-switch-to-other-window)))
+               ("q" . files-extras-bury-buffer-switch-to-other-window)))
   (with-eval-after-load 'telega
     (bind-keys :map telega-root-mode-map
-	       ("q" . files-extras-bury-buffer-switch-to-other-window)))
+               ("q" . files-extras-bury-buffer-switch-to-other-window)))
   (with-eval-after-load 'apropos
     (bind-keys :map apropos-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'calendar
     (bind-keys :map calendar-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'completion-list
     (bind-keys :map completion-list-mode-map
                ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'dired
     (bind-keys :map dired-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'Info
     (bind-keys :map Info-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'finder
     (bind-keys :map finder-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'ledger-reconcile
     (bind-keys :map ledger-reconcile-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'mu4e
     (bind-keys :map mu4e-headers-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'pass
     (bind-keys :map pass-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'slack
     (bind-keys :map slack-message-buffer-mode-map
-	       ("q" . files-extras-kill-this-buffer))
+               ("q" . files-extras-kill-this-buffer))
     (bind-keys :map slack-thread-message-buffer-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'special
     (bind-keys :map special-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'telega
     (bind-keys :map telega-msg-button-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'tetris
     (bind-keys :map tetris-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'view
     (bind-keys :map view-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   ;; We typically enter these modes to lookup some information and
   ;; then return to the previous buffer, so we set `q' to switch to
   ;; the other window, and reserve `Q' for the normal behavior
   (with-eval-after-load 'help
     (bind-keys :map help-mode-map
-	       ("Q" . files-extras-kill-this-buffer)
-	       ("q" . files-extras-kill-this-buffer-switch-to-other-window)))
+               ("Q" . files-extras-kill-this-buffer)
+               ("q" . files-extras-kill-this-buffer-switch-to-other-window)))
   (with-eval-after-load 'helpful
     (bind-keys :map helpful-mode-map
-	       ("Q" . files-extras-kill-this-buffer)
-	       ("q" . files-extras-kill-this-buffer-switch-to-other-window)))
+               ("Q" . files-extras-kill-this-buffer)
+               ("q" . files-extras-kill-this-buffer-switch-to-other-window)))
   (with-eval-after-load 'markdown-mode
     (bind-keys :map markdown-mode-map
-	       ("s-g" . file-extras-grammarly-open-in-external-editor)
-	       :map gfm-mode-map
-	       ("s-g" . file-extras-grammarly-open-in-external-editor))))
+               ("s-g" . file-extras-grammarly-open-in-external-editor)
+               :map gfm-mode-map
+               ("s-g" . file-extras-grammarly-open-in-external-editor))))
 #+end_src
 
 ** locate
@@ -4515,11 +4515,11 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55] =>  0:25
   :init
   (with-eval-after-load 'ebib
     (bind-keys :map ebib-entry-mode-map
-	       ("f" . avy-goto-line)))
+               ("f" . avy-goto-line)))
   (with-eval-after-load 'isearch
     (bind-keys :map isearch-mode-map
-	       ("M-f" . avy-isearch)))
-  
+               ("M-f" . avy-isearch)))
+
   :custom
   (avy-case-fold-search nil)
   (avy-timeout-seconds 0.2)
@@ -7060,8 +7060,8 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
   :init
   (with-eval-after-load 'shell
     (bind-keys :map shell-mode-map
-	       ("s-c" . exit-recursive-edit)))
-  
+               ("s-c" . exit-recursive-edit)))
+
   :config
   (global-prettify-symbols-mode)
 

@@ -65,7 +65,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elpaca-extras][elpaca-extras]]
 - [[#foundational][foundational]]
   - [[#org][org]]
-  - [[#jsonrpc][jsonrpc]]
   - [[#seq][seq]]
   - [[#paths][paths]]
   - [[#tlon-init][tlon-init]]
@@ -333,6 +332,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dictionary][dictionary]]
 - [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
+  - [[#pdf-annot][pdf-annot]]
+  - [[#pdf-history][pdf-history]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
   - [[#scroll-other-window][scroll-other-window]]
   - [[#pdf-view-restore][pdf-view-restore]]
@@ -515,6 +516,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#misc][misc]]
   - [[#calc][calc]]
   - [[#calc-ext][calc-ext]]
+  - [[#casual-calc][casual-calc]]
   - [[#alert][alert]]
   - [[#unpackaged][unpackaged]]
   - [[#midnight][midnight]]
@@ -723,17 +725,6 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 ;; (use-package org)
 #+end_src
 
-** jsonrpc
-:PROPERTIES:
-:ID:       ECE3D86D-035D-461C-937F-DF39086E4C5C
-:END:
-
-/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package jsonrpc)
-#+end_src
-
 ** seq
 :PROPERTIES:
 :ID:       FD3A9A18-BDB8-4D52-9F5C-8E040FA042A2
@@ -904,9 +895,9 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
                      (org-element-cache)
                      (org-roam)
                      (cons)
-                     (flycheck syntax-checker)))
-    (add-to-list 'warning-suppress-types element))
-    (add-to-list 'warning-suppress-log-types '(copilot copilot-exceeds-max-char)))
+                     (flycheck syntax-checker)
+                     (copilot copilot-exceeds-max-char)))
+    (add-to-list 'warning-suppress-types element)))
 #+end_src
 
 ** comp
@@ -6881,20 +6872,6 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
         ("k" . pdf-view-previous-line-or-previous-page)
         ("l" . pdf-view-next-line-or-next-page)
         ("H-c" . pdf-view-kill-ring-save)
-        ("A-u" . pdf-view-midnight-minor-mode)
-        :map pdf-annot-minor-mode-map
-        ("e" . pdf-annot-add-highlight-markup-annotation)
-        ("j" . pdf-view-goto-page)
-        ("k" . pdf-view-previous-line-or-previous-page)
-        ("l" . pdf-view-next-line-or-next-page)
-        ("H-c" . pdf-view-kill-ring-save)
-        ("A-u" . pdf-view-midnight-minor-mode)
-        :map pdf-history-minor-mode-map
-        ("e" . pdf-annot-add-highlight-markup-annotation)
-        ("j" . pdf-view-goto-page)
-        ("k" . pdf-view-previous-line-or-previous-page)
-        ("l" . pdf-view-next-line-or-next-page)
-        ("H-c" . pdf-view-kill-ring-save)
         ("A-u" . pdf-view-midnight-minor-mode)))
 #+end_src
 
@@ -6905,6 +6882,41 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :LOGBOOK:
 CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 :END:
+
+** pdf-annot
+:PROPERTIES:
+:ID:       346932F7-8CE8-4DAD-B9FE-2DD9B19EDD69
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature pdf-annot
+  :after pdf-tools
+  :bind
+  (:map pdf-annot-minor-mode-map
+        ("e" . pdf-annot-add-highlight-markup-annotation)
+        ("j" . pdf-view-goto-page)
+        ("k" . pdf-view-previous-line-or-previous-page)
+        ("l" . pdf-view-next-line-or-next-page)
+        ("H-c" . pdf-view-kill-ring-save)
+        ("A-u" . pdf-view-midnight-minor-mode)))
+#+end_src
+
+** pdf-history
+:PROPERTIES:
+:ID:       BE8596D9-9DFE-4FB9-BCF4-59E87F948959
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature pdf-history
+  :after pdf-tools
+  :bind (:map pdf-history-minor-mode-map
+              ("e" . pdf-annot-add-highlight-markup-annotation)
+              ("j" . pdf-view-goto-page)
+              ("k" . pdf-view-previous-line-or-previous-page)
+              ("l" . pdf-view-next-line-or-next-page)
+              ("H-c" . pdf-view-kill-ring-save)
+              ("A-u" . pdf-view-midnight-minor-mode)))
+#+end_src
 
 ** pdf-tools-extras
 :PROPERTIES:
@@ -9536,7 +9548,9 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
   (org-roam-capture-new-node-hook . org-roam-capture--insert-captured-ref-h)
 
   :bind
-  (:map org-roam-mode-map
+  (:map org-mode-map
+        ("s-i" . org-roam-node-insert)
+        :map org-roam-mode-map
         ("f" . ace-link-org)))
 #+end_src
 
@@ -11751,6 +11765,9 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
   :hook
   (elfeed-show-mode-hook . visual-line-mode)
+  (elfeed-search-mode-hook . (lambda ()
+                               "Disable undo in ‘*elfeed-search*’ buffer to avoid warnings."
+                               (buffer-disable-undo)))
 
   :bind
   (("A-f" . elfeed)
@@ -12578,6 +12595,22 @@ Requires configuration. Disabled for the time being.
   :after cal
   :bind (:map calc-alg-map
               ("C-k" . nil)))
+#+end_src
+
+** casual-calc
+:PROPERTIES:
+:ID:       53C5FB12-8D49-44D6-84B2-9D43F9201761
+:END:
+
+/[[https://github.com/kickingvegas/casual-calc][casual-calc]] adds transient menus to calc./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package casual-calc
+  :after calc
+  :bind (:map calc-mode-map
+	      ("C-o" . casual-calc-tmenu)
+	      :map calc-alg-map
+	      ("C-o" . casual-calc-tmenu)))
 #+end_src
 
 ** alert

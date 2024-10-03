@@ -516,6 +516,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#misc][misc]]
   - [[#calc][calc]]
   - [[#calc-ext][calc-ext]]
+  - [[#casual-calc][casual-calc]]
   - [[#alert][alert]]
   - [[#unpackaged][unpackaged]]
   - [[#midnight][midnight]]
@@ -12590,6 +12591,22 @@ Requires configuration. Disabled for the time being.
   :after cal
   :bind (:map calc-alg-map
               ("C-k" . nil)))
+#+end_src
+
+** casual-calc
+:PROPERTIES:
+:ID:       53C5FB12-8D49-44D6-84B2-9D43F9201761
+:END:
+
+/[[https://github.com/kickingvegas/casual-calc][casual-calc]] adds transient menus to calc./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package casual-calc
+  :after calc
+  :bind (:map calc-mode-map
+	      ("C-o" . casual-calc-tmenu)
+	      :map calc-alg-map
+	      ("C-o" . casual-calc-tmenu)))
 #+end_src
 
 ** alert

@@ -9546,7 +9546,9 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
   (org-roam-capture-new-node-hook . org-roam-capture--insert-captured-ref-h)
 
   :bind
-  (:map org-roam-mode-map
+  (:map org-mode-map
+        ("s-i" . org-roam-node-insert)
+        :map org-roam-mode-map
         ("f" . ace-link-org)))
 #+end_src
 

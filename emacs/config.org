@@ -65,7 +65,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elpaca-extras][elpaca-extras]]
 - [[#foundational][foundational]]
   - [[#org][org]]
-  - [[#jsonrpc][jsonrpc]]
   - [[#seq][seq]]
   - [[#paths][paths]]
   - [[#tlon-init][tlon-init]]
@@ -721,17 +720,6 @@ We load ~org-mode~ early to prevent version conflicts. The package is configured
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 ;; (use-package org)
-#+end_src
-
-** jsonrpc
-:PROPERTIES:
-:ID:       ECE3D86D-035D-461C-937F-DF39086E4C5C
-:END:
-
-/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/jsonrpc.el][jsonprpc]] implements the JSONRPC 2.0 specification./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package jsonrpc)
 #+end_src
 
 ** seq

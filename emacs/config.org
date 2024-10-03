@@ -332,6 +332,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dictionary][dictionary]]
 - [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
+  - [[#pdf-annot][pdf-annot]]
+  - [[#pdf-history][pdf-history]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
   - [[#scroll-other-window][scroll-other-window]]
   - [[#pdf-view-restore][pdf-view-restore]]
@@ -6869,20 +6871,6 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
         ("k" . pdf-view-previous-line-or-previous-page)
         ("l" . pdf-view-next-line-or-next-page)
         ("H-c" . pdf-view-kill-ring-save)
-        ("A-u" . pdf-view-midnight-minor-mode)
-        :map pdf-annot-minor-mode-map
-        ("e" . pdf-annot-add-highlight-markup-annotation)
-        ("j" . pdf-view-goto-page)
-        ("k" . pdf-view-previous-line-or-previous-page)
-        ("l" . pdf-view-next-line-or-next-page)
-        ("H-c" . pdf-view-kill-ring-save)
-        ("A-u" . pdf-view-midnight-minor-mode)
-        :map pdf-history-minor-mode-map
-        ("e" . pdf-annot-add-highlight-markup-annotation)
-        ("j" . pdf-view-goto-page)
-        ("k" . pdf-view-previous-line-or-previous-page)
-        ("l" . pdf-view-next-line-or-next-page)
-        ("H-c" . pdf-view-kill-ring-save)
         ("A-u" . pdf-view-midnight-minor-mode)))
 #+end_src
 
@@ -6893,6 +6881,41 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :LOGBOOK:
 CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 :END:
+
+** pdf-annot
+:PROPERTIES:
+:ID:       346932F7-8CE8-4DAD-B9FE-2DD9B19EDD69
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature pdf-annot
+  :after pdf-tools
+  :bind
+  (:map pdf-annot-minor-mode-map
+        ("e" . pdf-annot-add-highlight-markup-annotation)
+        ("j" . pdf-view-goto-page)
+        ("k" . pdf-view-previous-line-or-previous-page)
+        ("l" . pdf-view-next-line-or-next-page)
+        ("H-c" . pdf-view-kill-ring-save)
+        ("A-u" . pdf-view-midnight-minor-mode)))
+#+end_src
+
+** pdf-history
+:PROPERTIES:
+:ID:       BE8596D9-9DFE-4FB9-BCF4-59E87F948959
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature pdf-history
+  :after pdf-tools
+  :bind (:map pdf-history-minor-mode-map
+              ("e" . pdf-annot-add-highlight-markup-annotation)
+              ("j" . pdf-view-goto-page)
+              ("k" . pdf-view-previous-line-or-previous-page)
+              ("l" . pdf-view-next-line-or-next-page)
+              ("H-c" . pdf-view-kill-ring-save)
+              ("A-u" . pdf-view-midnight-minor-mode)))
+#+end_src
 
 ** pdf-tools-extras
 :PROPERTIES:

@@ -894,9 +894,9 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
                      (org-element-cache)
                      (org-roam)
                      (cons)
-                     (flycheck syntax-checker)))
-    (add-to-list 'warning-suppress-types element))
-    (add-to-list 'warning-suppress-log-types '(copilot copilot-exceeds-max-char)))
+                     (flycheck syntax-checker)
+                     (copilot copilot-exceeds-max-char)))
+    (add-to-list 'warning-suppress-types element)))
 #+end_src
 
 ** comp

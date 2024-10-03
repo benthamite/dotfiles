@@ -11760,6 +11760,9 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
   :hook
   (elfeed-show-mode-hook . visual-line-mode)
+  (elfeed-search-mode-hook . (lambda ()
+                               "Disable undo in ‘*elfeed-search*’ buffer to avoid warnings."
+                               (buffer-disable-undo)))
 
   :bind
   (("A-f" . elfeed)

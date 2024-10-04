@@ -7117,7 +7117,8 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
   :init
   (defun instrument-defun ()
     "Instrument the current defun."
-    (lambda! (eval-defun t)))
+    (interactive)
+    (eval-defun t)))
 
   :bind (:map emacs-lisp-mode-map
               ("s-b" . eval-buffer)

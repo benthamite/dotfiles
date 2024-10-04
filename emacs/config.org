@@ -6873,7 +6873,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   (pdf-tools-install t)
 
   :hook
-  (pdf-tools-enabled-hook . pdf-view-fit-page-to-window)
+  (pdf-view-mode-hook . pdf-view-fit-page-to-window)
 
   :bind
   (:map pdf-view-mode-map

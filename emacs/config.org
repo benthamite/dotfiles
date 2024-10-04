@@ -2652,7 +2652,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   (with-eval-after-load 'helpful
     (bind-keys :map helpful-mode-map
                ("k" . previous-line)
-               ("l" .)))
+               ("l" . next-line)))
   (with-eval-after-load 'info
     (bind-keys :map Info-mode-map
                ("k" . previous-line)
@@ -2680,7 +2680,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   (with-eval-after-load 'pass
     (bind-keys :map pass-mode-map
                ("k" . previous-line)
-               ("l" . next)))
+               ("l" . next-line)))
   (with-eval-after-load 'simple
     (bind-keys :map special-mode-map
                ("k" . previous-line)

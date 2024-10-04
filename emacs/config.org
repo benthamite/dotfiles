@@ -6293,6 +6293,7 @@ I use it in combination with the [[https://ghosttext.fregante.com/][Ghost Text]]
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package atomic-chrome
+  :defer 10
   :custom
   (atomic-chrome-default-major-mode 'markdown-mode)
   (atomic-chrome-url-major-mode-alist

@@ -4174,8 +4174,10 @@ I use this package in combination with =prot-scratch= (see above) to persist scr
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package reveal-in-osx-finder
+  :after dired
+  :demand t
   :bind (:map dired-mode-map
-        ("/" . reveal-in-osx-finder)))
+              ("/" . reveal-in-osx-finder)))
 #+end_src
 
 ** tramp

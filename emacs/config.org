@@ -4789,6 +4789,10 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (org-gcal-auto-archive nil)
   (org-gcal-org-timestamp-property :deadline)
 
+  :config
+  ;; see the relevant section in this config file for more details on how to set
+  ;; up `org-gcal' with asymmetric encryption
+  (require 'plstore))
 #+end_src
 
 ** org-gcal-extras

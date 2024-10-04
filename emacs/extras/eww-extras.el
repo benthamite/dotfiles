@@ -145,16 +145,29 @@ function was called, if any."
          (output-file (file-name-concat paths-dir-downloads file-name))
 	 (process (make-process
 		   :name (format "url-to-%s" type)
-		   :buffer "*URL-to-File-Process*"
+		   :buffer "*eww-extras download file process*"
 		   :command (eww-extras-url-to-file-make-command url output-file type))))
-    (message "Getting %s file..." type)
+    (message "Getting %s file…. (See `*eww-extras download file process*' buffer for details.)" type)
     (set-process-sentinel process
-			  (lambda (_proc event)
-			    (if (string= event "finished\n")
-				(progn
-				  (message "File downloaded.")
-				  (eww-extras-run-callback callback output-file bibtex-key))
-			      (user-error "Could not get file. Error:\n\n%s" event))))))
+			  (eww-extras-url-to-file-sentinel callback output-file bibtex-key))))
+
+(defun eww-extras-url-to-file-sentinel (callback output-file bibtex-key)
+  "Create a process sentinel for URL-to-file operations.
+
+This function returns a lambda function suitable for use as a process sentinel.
+The returned sentinel will handle the completion of the URL-to-file process.
+
+CALLBACK is a function to be called upon successful file download.
+OUTPUT-FILE is the path of the file being downloaded.
+BIBTEX-KEY is the BibTeX key associated with the download, if any.
+
+The returned sentinel function takes two arguments: _PROC: the process
+object (which is ignored in this implementation) and EVENT, a string describing
+the process status change."
+  (lambda (_proc event)
+    (if (string= event "finished\n")
+	(eww-extras-run-callback callback output-file bibtex-key)
+      (user-error "Could not get file. Error:\n\n%s" event))))
 
 (defun eww-extras-url-to-file-make-command (url output-file type)
   "Make command to generate OUTPUT-FILE of TYPE from URL."

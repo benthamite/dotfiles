@@ -3765,9 +3765,10 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature dired
   :init
-  (with-eval-after-load 'pdf-tools
-    :map pdf-annot-minor-mode-map
-    ("x" . dired-jump))
+  (with-eval-after-load 'pdf-annot
+    (bind-keys
+     :map pdf-annot-minor-mode-map
+     ("x" . dired-jump)))
 
   :custom
   (dired-listing-switches "-AGFhlv --group-directories-first --time-style=long-iso")
@@ -6929,32 +6930,37 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package pdf-tools-extras
+  :init
+  (with-eval-after-load 'pdf-annot
+    (bind-keys :map pdf-annot-minor-mode-map
+               ("c" . pdf-tools-extras-copy-dwim)
+               ("C" . pdf-count-extras-words)
+               ("s-c" . pdf-tools-extras-clear-page-selection)
+               ("D" . pdf-tools-extras-delete)
+               ("e" . pdf-tools-extras-open-in-ebib)
+               ("h" . pdf-annot-extras-add-highlight-markup-annotation)
+               ("t" . pdf-tools-extras-toggle-writeroom)
+               ("x" . pdf-tools-extras-open-externally)
+               ("S" . pdf-tools-extras-add-or-remove-page)
+               ("X" . pdf-tools-extras-extract-pages)))
+  (with-eval-after-load 'pdf-annot
+    (bind-keys
+     :map pdf-history-minor-mode-map
+     ("c" . pdf-tools-extras-copy-dwim)
+     ("C" . pdf-count-extras-words)
+     ("s-c" . pdf-tools-extras-clear-page-selection)
+     ("D" . pdf-tools-extras-delete)
+     ("e" . pdf-tools-extras-open-in-ebib)
+     ("h" . pdf-annot-extras-add-highlight-markup-annotation)
+     ("t" . pdf-tools-extras-toggle-writeroom)
+     ("x" . pdf-tools-extras-open-externally)
+     ("S" . pdf-tools-extras-add-or-remove-page)
+     ("X" . pdf-tools-extras-extract-pages)))
+
   :hook
   (pdf-tools-enabled-hook . pdf-tools-extras-apply-theme)
 
   :bind (:map pdf-view-mode-map
-              ("c" . pdf-tools-extras-copy-dwim)
-              ("C" . pdf-count-extras-words)
-              ("s-c" . pdf-tools-extras-clear-page-selection)
-              ("D" . pdf-tools-extras-delete)
-              ("e" . pdf-tools-extras-open-in-ebib)
-              ("h" . pdf-annot-extras-add-highlight-markup-annotation)
-              ("t" . pdf-tools-extras-toggle-writeroom)
-              ("x" . pdf-tools-extras-open-externally)
-              ("S" . pdf-tools-extras-add-or-remove-page)
-              ("X" . pdf-tools-extras-extract-pages)
-              :map pdf-annot-minor-mode-map
-              ("c" . pdf-tools-extras-copy-dwim)
-              ("C" . pdf-count-extras-words)
-              ("s-c" . pdf-tools-extras-clear-page-selection)
-              ("D" . pdf-tools-extras-delete)
-              ("e" . pdf-tools-extras-open-in-ebib)
-              ("h" . pdf-annot-extras-add-highlight-markup-annotation)
-              ("t" . pdf-tools-extras-toggle-writeroom)
-              ("x" . pdf-tools-extras-open-externally)
-              ("S" . pdf-tools-extras-add-or-remove-page)
-              ("X" . pdf-tools-extras-extract-pages)
-              :map pdf-history-minor-mode-map
               ("c" . pdf-tools-extras-copy-dwim)
               ("C" . pdf-count-extras-words)
               ("s-c" . pdf-tools-extras-clear-page-selection)

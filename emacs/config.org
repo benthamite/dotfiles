@@ -4774,8 +4774,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-gcal
   :ensure (:host github
-           :repo "kidd/org-gcal.el"
-           :build (:not elpaca--check-version)) ; to prevent elnode version error
+                 :repo "kidd/org-gcal.el"
+                 :build (:not elpaca--check-version)) ; to prevent elnode version error
   :after auth-source-pass org-agenda
   :custom
   (org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))

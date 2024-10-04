@@ -4786,7 +4786,9 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (org-gcal-notify-p nil)
   (org-gcal-up-days 1)
   (org-gcal-down-days 7)
-  (org-gcal-org-timestamp-property :deadline))
+  (org-gcal-auto-archive nil)
+  (org-gcal-org-timestamp-property :deadline)
+
 #+end_src
 
 ** org-gcal-extras

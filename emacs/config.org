@@ -1076,12 +1076,13 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 
 /plstore is a plist based data store providing search and partial encryption./
 
+This feature is required by =org-gcal=. We create a new GPG key to use with =org-gcal= and add its public ID to =plstore-encrypt-to= , following [[https://github.com/kidd/org-gcal.el#note][these instructions]]. (This method is superior to using symmetric encryption because it does not prompt the user for authentication with every new Emacs session.)
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature plstore
-  :disabled
-  ;; to test whether I need it
-  :init
-  (setq-default plstore-cache-passphrase-for-symmetric-encryption t))
+  :after pass
+  :config
+  (add-to-list 'plstore-encrypt-to "A7C6A908CD1254A8B4051D3DCDBBB523C9627A26"))
 #+end_src
 
 ** epg-config

@@ -8422,7 +8422,6 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-capture
-  :after org
   :custom
   (org-default-notes-file paths-file-inbox-desktop)
   (org-capture-templates

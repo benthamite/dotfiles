@@ -12622,9 +12622,9 @@ Requires configuration. Disabled for the time being.
 (use-package casual-calc
   :after calc
   :bind (:map calc-mode-map
-	      ("C-o" . casual-calc-tmenu)
-	      :map calc-alg-map
-	      ("C-o" . casual-calc-tmenu)))
+              ("C-o" . casual-calc-tmenu)
+              :map calc-alg-map
+              ("C-o" . casual-calc-tmenu)))
 #+end_src
 
 ** alert

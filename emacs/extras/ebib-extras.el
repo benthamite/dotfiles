@@ -377,6 +377,59 @@ If EXTENSION is non-nil, set its extension to its value."
 	(t
 	 (user-error "Invalid file extension"))))
 
+;;;;; process invalid files
+;; These functions are meant to be run sporadically, to clean up the library.
+;; First call `ebib-extras-list-invalid-files', wait for a few minutes for the
+;; function to finish, then call `ebib-extras-rename-next-invalid-file' to
+;; rename the next invalid file in line. You may have to do some manual
+;; processing. Repeat until all files are renamed.
+
+(defvar ebib-extras-invalid-files nil
+  "List of invalid files.")
+
+(declare-function tlon-bibliography-lookup "tlon-tex")
+(defun ebib-extras-file-is-valid-p (file)
+  "Check if FILE has a valid slug."
+  (let ((slug (file-name-base file)))
+    (require 'tlon-tex)
+    (stringp (tlon-bibliography-lookup "=key=" slug))))
+
+(defun ebib-extras-list-invalid-files (&optional dirs)
+  "Return a list of all files with invalid names in DIRS.
+If DIRS is nil, search in all library dirs."
+  (interactive)
+  (let* ((dirs (or dirs (list
+			 ;; paths-dir-html-library
+			 paths-dir-pdf-library
+			 ;; paths-dir-media-library
+			 )))
+	 (invalid-files (seq-filter
+			 (lambda (file)
+			   (not (ebib-extras-file-is-valid-p file))
+			   (message "Processing %s" file))
+			 (apply #'append
+				(mapcar
+				 (lambda (dir)
+				   (directory-files dir t directory-files-no-dot-files-regexp))
+				 dirs)))))
+    (setq ebib-extras-invalid-files invalid-files)))
+
+(defun ebib-extras-rename-invalid-file (file)
+  "Rename FILE with invalid name."
+  (setq ebib-extras-invalid-files (delete file ebib-extras-invalid-files))
+  (when-let* ((key (tlon-bibliography-lookup "file" (file-name-nondirectory file) "=key=" t))
+	      (bibfile (ebib-extras-get-file-of-key key)))
+    (ebib bibfile key)
+    (ebib-edit-entry)
+    (unless (ebib-extras-get-field "crossref")
+      (ebib-extras-rename-files))))
+
+(defun ebib-extras-rename-next-invalid-file ()
+  "Rename next invalid file in the list of invalid files."
+  (interactive)
+  (dolist (file ebib-extras-invalid-files)
+    (ebib-extras-rename-invalid-file file)))
+
 ;;;;; process entries
 
 (declare-function tlon-deepl-translate-abstract "tlon-deepl")

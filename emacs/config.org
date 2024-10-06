@@ -64,7 +64,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#use-package-extras][use-package-extras]]
   - [[#elpaca-extras][elpaca-extras]]
 - [[#foundational][foundational]]
-  - [[#org][org]]
+  - [[#gcmh][gcmh]]
   - [[#seq][seq]]
   - [[#paths][paths]]
   - [[#tlon-init][tlon-init]]
@@ -82,6 +82,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#prot-common][prot-common]]
   - [[#prot-simple][prot-simple]]
   - [[#misc][misc]]
+- [[#performance][performance]]
+  - [[#profiler][profiler]]
+  - [[#profiler-extras][profiler-extras]]
+  - [[#so-long][so-long]]
+  - [[#misc][misc.]]
 - [[#secrets][secrets]]
   - [[#plstore][plstore]]
   - [[#epg-config][epg-config]]
@@ -149,12 +154,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#hl-line][hl-line]]
   - [[#lin][lin]]
   - [[#jit-lock][jit-lock]]
-- [[#performance][performance]]
-  - [[#profiler][profiler]]
-  - [[#profiler-extras][profiler-extras]]
-  - [[#so-long][so-long]]
-  - [[#gcmh][gcmh]]
-  - [[#misc][misc.]]
 - [[#text-movement][text movement]]
   - [[#words][words]]
   - [[#lines][lines]]
@@ -694,7 +693,9 @@ NAME and ARGS as in `use-package'."
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package use-package-extras
-  :after use-package)
+  :demand t
+  :hook
+  (tlon-init-post-init-hook . use-package-extras-display-startup-time))
 #+end_src
 
 ** elpaca-extras
@@ -714,15 +715,17 @@ NAME and ARGS as in `use-package'."
 :PROPERTIES:
 :ID:       B2CADEA2-F8B7-4E8E-8FB0-D6B59658933D
 :END:
-** org
+** gcmh
 :PROPERTIES:
-:ID:       C73C4B08-960E-4EA6-B92F-A7657B56FA1C
+:ID:       A8BBF291-D5CE-4FF2-B80C-B69570AD129D
 :END:
 
-We load ~org-mode~ early to prevent version conflicts. The package is configured properly later (see =org= section).
+/[[https://github.com/emacsmirror/gcmh][GCMH]] enforces a sneaky Garbage Collection strategy to minimize GC interference with user activity./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-;; (use-package org)
+(use-package gcmh
+  :config
+  (gcmh-mode))
 #+end_src
 
 ** seq
@@ -1062,6 +1065,99 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
         ("M-8" . "•")))
 #+end_src
 
+* performance
+:PROPERTIES:
+:ID:       EF047473-EE10-41A2-852A-8CCD803469CD
+:END:
+:LOGBOOK:
+CLOCK: [2021-10-15 Fri 12:34]--[2021-10-15 Fri 12:40] =>  0:06
+CLOCK: [2021-03-20 Sat 22:11]--[2021-03-20 Sat 22:18] =>  0:07
+CLOCK: [2021-02-28 Sun 11:18]--[2021-02-28 Sun 11:26] =>  0:08
+CLOCK: [2021-02-28 Sun 10:30]--[2021-02-28 Sun 10:57] =>  0:27
+CLOCK: [2021-02-26 Fri 18:00]--[2021-02-26 Fri 18:12] =>  0:12
+CLOCK: [2021-02-26 Fri 09:51]--[2021-02-26 Fri 10:02] =>  0:11
+CLOCK: [2021-02-25 Thu 15:32]--[2021-02-25 Thu 15:59] =>  0:27
+CLOCK: [2021-02-21 Sun 10:01]--[2021-02-21 Sun 10:34] =>  0:33
+CLOCK: [2021-02-12 Fri 08:47]--[2021-02-12 Fri 08:55] =>  0:08
+CLOCK: [2021-02-07 Sun 12:15]--[2021-02-07 Sun 12:49] =>  0:34
+CLOCK: [2021-08-06 Fri 15:28]--[2021-08-06 Fri 15:32] =>  0:04
+CLOCK: [2021-07-13 Tue 20:44]--[2021-07-13 Tue 21:07] =>  0:23
+CLOCK: [2021-07-13 Tue 19:51]--[2021-07-13 Tue 20:02] =>  0:11
+CLOCK: [2021-06-15 Tue 21:28]--[2021-06-15 Tue 21:35] =>  0:07
+CLOCK: [2021-06-08 Tue 20:45]--[2021-06-08 Tue 21:15] =>  0:30
+CLOCK: [2021-03-25 Thu 20:06]--[2021-03-25 Thu 20:11] =>  0:05
+CLOCK: [2021-03-25 Thu 15:25]--[2021-03-25 Thu 16:57] =>  1:32
+CLOCK: [2021-03-25 Thu 08:56]--[2021-03-25 Thu 09:30] =>  0:34
+CLOCK: [2021-03-21 Sun 09:13]--[2021-03-21 Sun 10:13] =>  1:00
+CLOCK: [2021-03-17 Wed 09:19]--[2021-03-17 Wed 10:04] =>  0:45
+CLOCK: [2021-03-04 Thu 09:50]--[2021-03-04 Thu 10:01] =>  0:11
+CLOCK: [2021-02-08 Mon 11:45]--[2021-02-08 Mon 12:07] =>  0:22
+CLOCK: [2021-10-03 Sun 18:50]--[2021-10-03 Sun 19:05] =>  0:15
+CLOCK: [2021-04-05 Mon 21:50]--[2021-04-05 Mon 22:15] =>  0:25
+:END:
+
+** profiler
+:PROPERTIES:
+:ID:       82CFBDD5-12E8-46EC-ADF8-2769E59B5DD8
+:END:
+:LOGBOOK:
+CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature profiler)
+#+end_src
+
+** profiler-extras
+:PROPERTIES:
+:ID:       21CE8D7E-377F-49AD-A864-D7926F462D4E
+:END:
+
+/[[file:extras/profiler-extras.el][profiler-extras]] collects my extensions for ~profiler~./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-personal-package profiler-extras
+  :bind
+  (("C-H-p" . profiler-extras-profiler-toggle)
+   :map profiler-report-mode-map
+   ("<backtab>" . profiler-extras-profiler-report-toggle-entry-global)))
+#+end_src
+
+** so-long
+:PROPERTIES:
+:ID:       F738DFB0-AA9C-47B5-9D3B-DC22EF83D357
+:END:
+
+/[[https://savannah.nongnu.org/projects/so-long][so-long]] optimizes performance with minified code./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature so-long
+  :custom
+  (so-long-threshold 500000)
+
+  :hook
+  (find-file-hook . global-so-long-mode))
+#+end_src
+
+** misc.
+:PROPERTIES:
+:ID:       1EA302FA-D0A2-470C-82C2-47FCA4E04FAF
+:END:
+
+Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][Prot]].
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature emacs
+  :custom
+  (bidi-display-reordering nil)
+  (bidi-inhibit-bpa t)
+  (inhibit-compacting-font-caches t)
+  (redisplay-skip-fontification-on-input t)
+  ;; emacs-lsp.github.io/lsp-mode/page/performance/
+  (read-process-output-max (expt 1024 2))
+  (default bidi-paragraph-direction 'left-to-right))
+#+end_src
+
 * secrets
 :PROPERTIES:
 :ID:       D412C998-40EE-4638-959A-C2530EC9F247
@@ -1181,8 +1277,6 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package pass-extras
-  :after pass
-  :demand t
   :bind
   (:map pass-mode-map
         ("<return>" . pass-extras-edit)
@@ -2473,113 +2567,6 @@ I have [[https://emacs.stackexchange.com/questions/72417/face-properties-fail-to
   :custom
   (jit-lock-chunk-size
         (* (window-max-chars-per-line) (window-body-height) 2)))
-#+end_src
-
-* performance
-:PROPERTIES:
-:ID:       EF047473-EE10-41A2-852A-8CCD803469CD
-:END:
-:LOGBOOK:
-CLOCK: [2021-10-15 Fri 12:34]--[2021-10-15 Fri 12:40] =>  0:06
-CLOCK: [2021-03-20 Sat 22:11]--[2021-03-20 Sat 22:18] =>  0:07
-CLOCK: [2021-02-28 Sun 11:18]--[2021-02-28 Sun 11:26] =>  0:08
-CLOCK: [2021-02-28 Sun 10:30]--[2021-02-28 Sun 10:57] =>  0:27
-CLOCK: [2021-02-26 Fri 18:00]--[2021-02-26 Fri 18:12] =>  0:12
-CLOCK: [2021-02-26 Fri 09:51]--[2021-02-26 Fri 10:02] =>  0:11
-CLOCK: [2021-02-25 Thu 15:32]--[2021-02-25 Thu 15:59] =>  0:27
-CLOCK: [2021-02-21 Sun 10:01]--[2021-02-21 Sun 10:34] =>  0:33
-CLOCK: [2021-02-12 Fri 08:47]--[2021-02-12 Fri 08:55] =>  0:08
-CLOCK: [2021-02-07 Sun 12:15]--[2021-02-07 Sun 12:49] =>  0:34
-CLOCK: [2021-08-06 Fri 15:28]--[2021-08-06 Fri 15:32] =>  0:04
-CLOCK: [2021-07-13 Tue 20:44]--[2021-07-13 Tue 21:07] =>  0:23
-CLOCK: [2021-07-13 Tue 19:51]--[2021-07-13 Tue 20:02] =>  0:11
-CLOCK: [2021-06-15 Tue 21:28]--[2021-06-15 Tue 21:35] =>  0:07
-CLOCK: [2021-06-08 Tue 20:45]--[2021-06-08 Tue 21:15] =>  0:30
-CLOCK: [2021-03-25 Thu 20:06]--[2021-03-25 Thu 20:11] =>  0:05
-CLOCK: [2021-03-25 Thu 15:25]--[2021-03-25 Thu 16:57] =>  1:32
-CLOCK: [2021-03-25 Thu 08:56]--[2021-03-25 Thu 09:30] =>  0:34
-CLOCK: [2021-03-21 Sun 09:13]--[2021-03-21 Sun 10:13] =>  1:00
-CLOCK: [2021-03-17 Wed 09:19]--[2021-03-17 Wed 10:04] =>  0:45
-CLOCK: [2021-03-04 Thu 09:50]--[2021-03-04 Thu 10:01] =>  0:11
-CLOCK: [2021-02-08 Mon 11:45]--[2021-02-08 Mon 12:07] =>  0:22
-CLOCK: [2021-10-03 Sun 18:50]--[2021-10-03 Sun 19:05] =>  0:15
-CLOCK: [2021-04-05 Mon 21:50]--[2021-04-05 Mon 22:15] =>  0:25
-:END:
-
-** profiler
-:PROPERTIES:
-:ID:       82CFBDD5-12E8-46EC-ADF8-2769E59B5DD8
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature profiler)
-#+end_src
-
-** profiler-extras
-:PROPERTIES:
-:ID:       21CE8D7E-377F-49AD-A864-D7926F462D4E
-:END:
-
-
-/[[file:extras/profiler-extras.el][profiler-extras]] collects my extensions for ~profiler~./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-personal-package profiler-extras
-  :bind
-  (("C-H-p" . profiler-extras-profiler-toggle)
-   :map profiler-report-mode-map
-   ("<backtab>" . profiler-extras-profiler-report-toggle-entry-global)))
-#+end_src
-
-** so-long
-:PROPERTIES:
-:ID:       F738DFB0-AA9C-47B5-9D3B-DC22EF83D357
-:END:
-
-/[[https://savannah.nongnu.org/projects/so-long][so-long]] optimizes performance with minified code./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature so-long
-  :custom
-  (so-long-threshold 500000)
-
-  :hook
-  (find-file-hook . global-so-long-mode))
-#+end_src
-
-** gcmh
-:PROPERTIES:
-:ID:       A8BBF291-D5CE-4FF2-B80C-B69570AD129D
-:END:
-
-/[[https://github.com/emacsmirror/gcmh][GCMH]] enforces a sneaky Garbage Collection strategy to minimize GC interference with user activity./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package gcmh
-  :config
-  (gcmh-mode))
-#+end_src
-
-** misc.
-:PROPERTIES:
-:ID:       1EA302FA-D0A2-470C-82C2-47FCA4E04FAF
-:END:
-
-Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][Prot]].
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature emacs
-  :custom
-  (bidi-display-reordering nil)
-  (bidi-inhibit-bpa t)
-  (inhibit-compacting-font-caches t)
-  (redisplay-skip-fontification-on-input t)
-  ;; emacs-lsp.github.io/lsp-mode/page/performance/
-  (read-process-output-max (expt 1024 2))
-  (default bidi-paragraph-direction 'left-to-right))
 #+end_src
 
 * text movement

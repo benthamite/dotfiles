@@ -861,9 +861,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 /[[https://github.com/raxod502/el-patch][el-patch]] customizes the behavior of Emacs Lisp functions and notifies the user when a function so customized changes./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package el-patch
-  :custom
-  (el-patch-enable-use-package-integration t))
+(use-package el-patch)
 #+end_src
 
 ** transient

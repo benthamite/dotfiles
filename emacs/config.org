@@ -5303,10 +5303,11 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
   (embark-confirm-act-all nil)
 
   :config
-  (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
-
   (defvar-keymap embark-yasnippet-completion-actions
-    :parent embark-general-map)
+    :doc "Keymap for actions on yasnippet completions."
+    :parent embark-general-map
+    "d" #'consult-yasnippet-visit-snippet-file)
+  (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
 
   :bind
   (("C-;" . embark-act)

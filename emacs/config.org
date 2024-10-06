@@ -858,7 +858,7 @@ CLOCK: [2021-10-05 Tue 12:20]--[2021-10-05 Tue 13:11] =>  0:51
 CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :END:
 
-/[[https://github.com/raxod502/el-patch][el-patch]] customizes the behavior of Emacs Lisp functions and be notified when a function so customized changes./
+/[[https://github.com/raxod502/el-patch][el-patch]] customizes the behavior of Emacs Lisp functions and notifies the user when a function so customized changes./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package el-patch

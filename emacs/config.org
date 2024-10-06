@@ -11203,6 +11203,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
         ("s-f" . telega-chatbuf-filter)
         ("s-k" . org-insert-link)
         ("s-m" . telega-chatbuf-attach-media)
+        ("s-o" . telega-chatbuf-filter-by-topic)
         ("s-r" . telega-msg-add-reaction)
         ("s-s" . telega-chatbuf-filter-search)
         ("s-t" . telega-sticker-choose-favorite-or-recent)

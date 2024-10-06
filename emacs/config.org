@@ -8291,6 +8291,9 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
       ((org-agenda-files (list paths-dir-bibliographic-notes))))
      ("g" "All TODOs"
       todo "TODO")
+     ("G" "All Tlön TODOs"
+      todo "TODO"
+      ((org-agenda-files (list (file-name-concat paths-dir-dropbox "tlon-private/")))))
      ("," "All tasks with no priority"
       tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")))
   (org-agenda-files (list paths-file-calendar))
@@ -8323,9 +8326,9 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
                             (toggle-truncate-lines)))
 
   :bind
-  (("C-<escape>" . org-agenda)
+  (("s-g" . org-agenda)
    :map org-agenda-mode-map
-   ("s-g" . org-gcal-extras-menu)
+   ("A-s-g" . org-gcal-extras-menu)
    ("s-s" . org-save-all-org-buffers)
    ("I" . org-pomodoro)
    ("h" . org-habit-toggle-display-in-agenda)

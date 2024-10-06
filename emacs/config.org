@@ -5317,8 +5317,8 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
    ("DEL" . nil)
    ("D" . delete-region)
    ("f" . helpful-symbol)
-   :map embark-yasnippet-completion-actions
-   ("d" . consult-yasnippet-visit-snippet-file)
+   :map embark-file-map
+   ("D" . delete-region)
    :map embark-general-map
    ("I" . embark-insert)
    :map embark-identifier-map

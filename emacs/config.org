@@ -891,14 +891,12 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature warnings
-  :init
-  (dolist (element '((yasnippet backquote-change)
-                     (org-element-cache)
-                     (org-roam)
-                     (cons)
-                     (flycheck syntax-checker)
-                     (copilot copilot-exceeds-max-char)))
-    (add-to-list 'warning-suppress-types element)))
+  :custom
+  (warning-suppress-types '((copilot copilot-exceeds-max-char)
+			    (flycheck syntax-checker)
+			    (org-roam)
+			    (org-element-cache)
+			    (yasnippet backquote-change))))
 #+end_src
 
 ** comp

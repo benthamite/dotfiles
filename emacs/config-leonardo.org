@@ -275,6 +275,11 @@
 (setq telega-server-libs-prefix "/Users/cartago/source/td/tdlib")
 #+end_src
 
+** GPTEL
+#+begin_src emacs-lisp
+(setq gptel-extras-dir "/Users/cartago/Library/CloudStorage/Dropbox/tlon/leo/GPT")
+#+end_src
+
 ** citar
 :PROPERTIES:
 :ID:       54D18706-0226-479A-A482-FD3E5AADFA47

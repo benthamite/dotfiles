@@ -69,6 +69,7 @@ LinkedIn.com
 list-manage.com
 loc.gov
 loops.so
+magic.link
 mail.google.com
 mailerlite.com
 mailist-manage.eu

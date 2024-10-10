@@ -80,6 +80,7 @@
 (defun citar-extras-open-in-ebib (citekey)
   "Open bibliographic entry associated with the CITEKEY in Ebib."
   (interactive (list (citar-select-ref)))
+  (require 'ebib-extras)
   (unless (get-buffer "*ebib*")
     (ebib))
   (ebib-extras-open-key citekey))

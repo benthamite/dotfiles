@@ -64,7 +64,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#use-package-extras][use-package-extras]]
   - [[#elpaca-extras][elpaca-extras]]
 - [[#foundational][foundational]]
-  - [[#org][org]]
+  - [[#gcmh][gcmh]]
   - [[#seq][seq]]
   - [[#paths][paths]]
   - [[#tlon-init][tlon-init]]
@@ -82,6 +82,11 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#prot-common][prot-common]]
   - [[#prot-simple][prot-simple]]
   - [[#misc][misc]]
+- [[#performance][performance]]
+  - [[#profiler][profiler]]
+  - [[#profiler-extras][profiler-extras]]
+  - [[#so-long][so-long]]
+  - [[#misc][misc.]]
 - [[#secrets][secrets]]
   - [[#plstore][plstore]]
   - [[#epg-config][epg-config]]
@@ -149,12 +154,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#hl-line][hl-line]]
   - [[#lin][lin]]
   - [[#jit-lock][jit-lock]]
-- [[#performance][performance]]
-  - [[#profiler][profiler]]
-  - [[#profiler-extras][profiler-extras]]
-  - [[#so-long][so-long]]
-  - [[#gcmh][gcmh]]
-  - [[#misc][misc.]]
 - [[#text-movement][text movement]]
   - [[#words][words]]
   - [[#lines][lines]]
@@ -332,8 +331,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dictionary][dictionary]]
 - [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
-  - [[#pdf-annot][pdf-annot]]
-  - [[#pdf-history][pdf-history]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
   - [[#scroll-other-window][scroll-other-window]]
   - [[#pdf-view-restore][pdf-view-restore]]
@@ -636,7 +633,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (elpaca `(,@elpaca-order))
 (elpaca-wait)
 
-(toggle-debug-on-error) ; uncomment when debugging
+;; (toggle-debug-on-error) ; uncomment when debugging
 #+end_src
 
 ** use-package
@@ -694,7 +691,9 @@ NAME and ARGS as in `use-package'."
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package use-package-extras
-  :after use-package)
+  :demand t
+  :hook
+  (tlon-init-post-init-hook . use-package-extras-display-startup-time))
 #+end_src
 
 ** elpaca-extras
@@ -714,15 +713,17 @@ NAME and ARGS as in `use-package'."
 :PROPERTIES:
 :ID:       B2CADEA2-F8B7-4E8E-8FB0-D6B59658933D
 :END:
-** org
+** gcmh
 :PROPERTIES:
-:ID:       C73C4B08-960E-4EA6-B92F-A7657B56FA1C
+:ID:       A8BBF291-D5CE-4FF2-B80C-B69570AD129D
 :END:
 
-We load ~org-mode~ early to prevent version conflicts. The package is configured properly later (see =org= section).
+/[[https://github.com/emacsmirror/gcmh][GCMH]] enforces a sneaky Garbage Collection strategy to minimize GC interference with user activity./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-;; (use-package org)
+(use-package gcmh
+  :config
+  (gcmh-mode))
 #+end_src
 
 ** seq
@@ -855,12 +856,10 @@ CLOCK: [2021-10-05 Tue 12:20]--[2021-10-05 Tue 13:11] =>  0:51
 CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :END:
 
-/[[https://github.com/raxod502/el-patch][el-patch]] customizes the behavior of Emacs Lisp functions and be notified when a function so customized changes./
+/[[https://github.com/raxod502/el-patch][el-patch]] customizes the behavior of Emacs Lisp functions and notifies the user when a function so customized changes./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package el-patch
-  :custom
-  (el-patch-enable-use-package-integration t))
+(use-package el-patch)
 #+end_src
 
 ** transient
@@ -890,14 +889,12 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature warnings
-  :init
-  (dolist (element '((yasnippet backquote-change)
-                     (org-element-cache)
-                     (org-roam)
-                     (cons)
-                     (flycheck syntax-checker)
-                     (copilot copilot-exceeds-max-char)))
-    (add-to-list 'warning-suppress-types element)))
+  :custom
+  (warning-suppress-types '((copilot copilot-exceeds-max-char)
+                            (flycheck syntax-checker)
+                            (org-roam)
+                            (org-element-cache)
+                            (yasnippet backquote-change))))
 #+end_src
 
 ** comp
@@ -1062,6 +1059,99 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
         ("M-8" . "•")))
 #+end_src
 
+* performance
+:PROPERTIES:
+:ID:       EF047473-EE10-41A2-852A-8CCD803469CD
+:END:
+:LOGBOOK:
+CLOCK: [2021-10-15 Fri 12:34]--[2021-10-15 Fri 12:40] =>  0:06
+CLOCK: [2021-03-20 Sat 22:11]--[2021-03-20 Sat 22:18] =>  0:07
+CLOCK: [2021-02-28 Sun 11:18]--[2021-02-28 Sun 11:26] =>  0:08
+CLOCK: [2021-02-28 Sun 10:30]--[2021-02-28 Sun 10:57] =>  0:27
+CLOCK: [2021-02-26 Fri 18:00]--[2021-02-26 Fri 18:12] =>  0:12
+CLOCK: [2021-02-26 Fri 09:51]--[2021-02-26 Fri 10:02] =>  0:11
+CLOCK: [2021-02-25 Thu 15:32]--[2021-02-25 Thu 15:59] =>  0:27
+CLOCK: [2021-02-21 Sun 10:01]--[2021-02-21 Sun 10:34] =>  0:33
+CLOCK: [2021-02-12 Fri 08:47]--[2021-02-12 Fri 08:55] =>  0:08
+CLOCK: [2021-02-07 Sun 12:15]--[2021-02-07 Sun 12:49] =>  0:34
+CLOCK: [2021-08-06 Fri 15:28]--[2021-08-06 Fri 15:32] =>  0:04
+CLOCK: [2021-07-13 Tue 20:44]--[2021-07-13 Tue 21:07] =>  0:23
+CLOCK: [2021-07-13 Tue 19:51]--[2021-07-13 Tue 20:02] =>  0:11
+CLOCK: [2021-06-15 Tue 21:28]--[2021-06-15 Tue 21:35] =>  0:07
+CLOCK: [2021-06-08 Tue 20:45]--[2021-06-08 Tue 21:15] =>  0:30
+CLOCK: [2021-03-25 Thu 20:06]--[2021-03-25 Thu 20:11] =>  0:05
+CLOCK: [2021-03-25 Thu 15:25]--[2021-03-25 Thu 16:57] =>  1:32
+CLOCK: [2021-03-25 Thu 08:56]--[2021-03-25 Thu 09:30] =>  0:34
+CLOCK: [2021-03-21 Sun 09:13]--[2021-03-21 Sun 10:13] =>  1:00
+CLOCK: [2021-03-17 Wed 09:19]--[2021-03-17 Wed 10:04] =>  0:45
+CLOCK: [2021-03-04 Thu 09:50]--[2021-03-04 Thu 10:01] =>  0:11
+CLOCK: [2021-02-08 Mon 11:45]--[2021-02-08 Mon 12:07] =>  0:22
+CLOCK: [2021-10-03 Sun 18:50]--[2021-10-03 Sun 19:05] =>  0:15
+CLOCK: [2021-04-05 Mon 21:50]--[2021-04-05 Mon 22:15] =>  0:25
+:END:
+
+** profiler
+:PROPERTIES:
+:ID:       82CFBDD5-12E8-46EC-ADF8-2769E59B5DD8
+:END:
+:LOGBOOK:
+CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature profiler)
+#+end_src
+
+** profiler-extras
+:PROPERTIES:
+:ID:       21CE8D7E-377F-49AD-A864-D7926F462D4E
+:END:
+
+/[[file:extras/profiler-extras.el][profiler-extras]] collects my extensions for ~profiler~./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-personal-package profiler-extras
+  :bind
+  (("C-H-p" . profiler-extras-profiler-toggle)
+   :map profiler-report-mode-map
+   ("<backtab>" . profiler-extras-profiler-report-toggle-entry-global)))
+#+end_src
+
+** so-long
+:PROPERTIES:
+:ID:       F738DFB0-AA9C-47B5-9D3B-DC22EF83D357
+:END:
+
+/[[https://savannah.nongnu.org/projects/so-long][so-long]] optimizes performance with minified code./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature so-long
+  :custom
+  (so-long-threshold 500000)
+
+  :hook
+  (find-file-hook . global-so-long-mode))
+#+end_src
+
+** misc.
+:PROPERTIES:
+:ID:       1EA302FA-D0A2-470C-82C2-47FCA4E04FAF
+:END:
+
+Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][Prot]].
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature emacs
+  :custom
+  (bidi-display-reordering nil)
+  (bidi-inhibit-bpa t)
+  (inhibit-compacting-font-caches t)
+  (redisplay-skip-fontification-on-input t)
+  ;; emacs-lsp.github.io/lsp-mode/page/performance/
+  (read-process-output-max (expt 1024 2))
+  (default bidi-paragraph-direction 'left-to-right))
+#+end_src
+
 * secrets
 :PROPERTIES:
 :ID:       D412C998-40EE-4638-959A-C2530EC9F247
@@ -1076,12 +1166,13 @@ CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 
 /plstore is a plist based data store providing search and partial encryption./
 
+This feature is required by =org-gcal=. We create a new GPG key to use with =org-gcal= and add its public ID to =plstore-encrypt-to= , following [[https://github.com/kidd/org-gcal.el#note][these instructions]]. (This method is superior to using symmetric encryption because it does not prompt the user for authentication with every new Emacs session.)
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature plstore
-  :disabled
-  ;; to test whether I need it
-  :init
-  (setq-default plstore-cache-passphrase-for-symmetric-encryption t))
+  :after pass
+  :config
+  (add-to-list 'plstore-encrypt-to "A7C6A908CD1254A8B4051D3DCDBBB523C9627A26"))
 #+end_src
 
 ** epg-config
@@ -1180,8 +1271,6 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package pass-extras
-  :after pass
-  :demand t
   :bind
   (:map pass-mode-map
         ("<return>" . pass-extras-edit)
@@ -2474,113 +2563,6 @@ I have [[https://emacs.stackexchange.com/questions/72417/face-properties-fail-to
         (* (window-max-chars-per-line) (window-body-height) 2)))
 #+end_src
 
-* performance
-:PROPERTIES:
-:ID:       EF047473-EE10-41A2-852A-8CCD803469CD
-:END:
-:LOGBOOK:
-CLOCK: [2021-10-15 Fri 12:34]--[2021-10-15 Fri 12:40] =>  0:06
-CLOCK: [2021-03-20 Sat 22:11]--[2021-03-20 Sat 22:18] =>  0:07
-CLOCK: [2021-02-28 Sun 11:18]--[2021-02-28 Sun 11:26] =>  0:08
-CLOCK: [2021-02-28 Sun 10:30]--[2021-02-28 Sun 10:57] =>  0:27
-CLOCK: [2021-02-26 Fri 18:00]--[2021-02-26 Fri 18:12] =>  0:12
-CLOCK: [2021-02-26 Fri 09:51]--[2021-02-26 Fri 10:02] =>  0:11
-CLOCK: [2021-02-25 Thu 15:32]--[2021-02-25 Thu 15:59] =>  0:27
-CLOCK: [2021-02-21 Sun 10:01]--[2021-02-21 Sun 10:34] =>  0:33
-CLOCK: [2021-02-12 Fri 08:47]--[2021-02-12 Fri 08:55] =>  0:08
-CLOCK: [2021-02-07 Sun 12:15]--[2021-02-07 Sun 12:49] =>  0:34
-CLOCK: [2021-08-06 Fri 15:28]--[2021-08-06 Fri 15:32] =>  0:04
-CLOCK: [2021-07-13 Tue 20:44]--[2021-07-13 Tue 21:07] =>  0:23
-CLOCK: [2021-07-13 Tue 19:51]--[2021-07-13 Tue 20:02] =>  0:11
-CLOCK: [2021-06-15 Tue 21:28]--[2021-06-15 Tue 21:35] =>  0:07
-CLOCK: [2021-06-08 Tue 20:45]--[2021-06-08 Tue 21:15] =>  0:30
-CLOCK: [2021-03-25 Thu 20:06]--[2021-03-25 Thu 20:11] =>  0:05
-CLOCK: [2021-03-25 Thu 15:25]--[2021-03-25 Thu 16:57] =>  1:32
-CLOCK: [2021-03-25 Thu 08:56]--[2021-03-25 Thu 09:30] =>  0:34
-CLOCK: [2021-03-21 Sun 09:13]--[2021-03-21 Sun 10:13] =>  1:00
-CLOCK: [2021-03-17 Wed 09:19]--[2021-03-17 Wed 10:04] =>  0:45
-CLOCK: [2021-03-04 Thu 09:50]--[2021-03-04 Thu 10:01] =>  0:11
-CLOCK: [2021-02-08 Mon 11:45]--[2021-02-08 Mon 12:07] =>  0:22
-CLOCK: [2021-10-03 Sun 18:50]--[2021-10-03 Sun 19:05] =>  0:15
-CLOCK: [2021-04-05 Mon 21:50]--[2021-04-05 Mon 22:15] =>  0:25
-:END:
-
-** profiler
-:PROPERTIES:
-:ID:       82CFBDD5-12E8-46EC-ADF8-2769E59B5DD8
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature profiler)
-#+end_src
-
-** profiler-extras
-:PROPERTIES:
-:ID:       21CE8D7E-377F-49AD-A864-D7926F462D4E
-:END:
-
-
-/[[file:extras/profiler-extras.el][profiler-extras]] collects my extensions for ~profiler~./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-personal-package profiler-extras
-  :bind
-  (("C-H-p" . profiler-extras-profiler-toggle)
-   :map profiler-report-mode-map
-   ("<backtab>" . profiler-extras-profiler-report-toggle-entry-global)))
-#+end_src
-
-** so-long
-:PROPERTIES:
-:ID:       F738DFB0-AA9C-47B5-9D3B-DC22EF83D357
-:END:
-
-/[[https://savannah.nongnu.org/projects/so-long][so-long]] optimizes performance with minified code./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature so-long
-  :custom
-  (so-long-threshold 500000)
-
-  :hook
-  (find-file-hook . global-so-long-mode))
-#+end_src
-
-** gcmh
-:PROPERTIES:
-:ID:       A8BBF291-D5CE-4FF2-B80C-B69570AD129D
-:END:
-
-/[[https://github.com/emacsmirror/gcmh][GCMH]] enforces a sneaky Garbage Collection strategy to minimize GC interference with user activity./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package gcmh
-  :config
-  (gcmh-mode))
-#+end_src
-
-** misc.
-:PROPERTIES:
-:ID:       1EA302FA-D0A2-470C-82C2-47FCA4E04FAF
-:END:
-
-Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][Prot]].
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature emacs
-  :custom
-  (bidi-display-reordering nil)
-  (bidi-inhibit-bpa t)
-  (inhibit-compacting-font-caches t)
-  (redisplay-skip-fontification-on-input t)
-  ;; emacs-lsp.github.io/lsp-mode/page/performance/
-  (read-process-output-max (expt 1024 2))
-  (default bidi-paragraph-direction 'left-to-right))
-#+end_src
-
 * text movement
 :PROPERTIES:
 :ID:       1E8F4417-5D5F-4406-BB70-AA272F714EF2
@@ -2651,7 +2633,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   (with-eval-after-load 'helpful
     (bind-keys :map helpful-mode-map
                ("k" . previous-line)
-               ("l" .)))
+               ("l" . next-line)))
   (with-eval-after-load 'info
     (bind-keys :map Info-mode-map
                ("k" . previous-line)
@@ -2679,7 +2661,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
   (with-eval-after-load 'pass
     (bind-keys :map pass-mode-map
                ("k" . previous-line)
-               ("l" . next)))
+               ("l" . next-line)))
   (with-eval-after-load 'simple
     (bind-keys :map special-mode-map
                ("k" . previous-line)
@@ -3764,9 +3746,10 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature dired
   :init
-  (with-eval-after-load 'pdf-tools
-    :map pdf-annot-minor-mode-map
-    ("x" . dired-jump))
+  (with-eval-after-load 'pdf-annot
+    (bind-keys
+     :map pdf-annot-minor-mode-map
+     ("x" . dired-jump)))
 
   :custom
   (dired-listing-switches "-AGFhlv --group-directories-first --time-style=long-iso")
@@ -4172,8 +4155,10 @@ I use this package in combination with =prot-scratch= (see above) to persist scr
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package reveal-in-osx-finder
+  :after dired
+  :demand t
   :bind (:map dired-mode-map
-        ("/" . reveal-in-osx-finder)))
+              ("/" . reveal-in-osx-finder)))
 #+end_src
 
 ** tramp
@@ -4770,8 +4755,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-gcal
   :ensure (:host github
-           :repo "kidd/org-gcal.el"
-           :build (:not elpaca--check-version)) ; to prevent elnode version error
+                 :repo "kidd/org-gcal.el"
+                 :build (:not elpaca--check-version)) ; to prevent elnode version error
   :after auth-source-pass org-agenda
   :custom
   (org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
@@ -4782,7 +4767,13 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (org-gcal-notify-p nil)
   (org-gcal-up-days 1)
   (org-gcal-down-days 7)
-  (org-gcal-org-timestamp-property :deadline))
+  (org-gcal-auto-archive nil)
+  (org-gcal-org-timestamp-property :deadline)
+
+  :config
+  ;; see the relevant section in this config file for more details on how to set
+  ;; up `org-gcal' with asymmetric encryption
+  (require 'plstore))
 #+end_src
 
 ** org-gcal-extras
@@ -5308,10 +5299,11 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
   (embark-confirm-act-all nil)
 
   :config
-  (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
-
   (defvar-keymap embark-yasnippet-completion-actions
-    :parent embark-general-map)
+    :doc "Keymap for actions on yasnippet completions."
+    :parent embark-general-map
+    "d" #'consult-yasnippet-visit-snippet-file)
+  (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
 
   :bind
   (("C-;" . embark-act)
@@ -5321,8 +5313,8 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
    ("DEL" . nil)
    ("D" . delete-region)
    ("f" . helpful-symbol)
-   :map embark-yasnippet-completion-actions
-   ("d" . consult-yasnippet-visit-snippet-file)
+   :map embark-file-map
+   ("D" . delete-region)
    :map embark-general-map
    ("I" . embark-insert)
    :map embark-identifier-map
@@ -6289,6 +6281,7 @@ I use it in combination with the [[https://ghosttext.fregante.com/][Ghost Text]]
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package atomic-chrome
+  :defer 10
   :custom
   (atomic-chrome-default-major-mode 'markdown-mode)
   (atomic-chrome-url-major-mode-alist
@@ -6536,23 +6529,13 @@ To populate the database of historical prices:
   (:map ledger-mode-map
         ("A-C-s-f" . ledger-navigate-next-xact-or-directive)
         ("A-C-s-r" . ledger-navigate-prev-xact-or-directive)
-        ("A-s-a" . ledger-mode-extras-report-account)
-        ("A-s-b" . ledger-mode-extras-decrease-date-by-one-day)
-        ("A-s-c" . ledger-mode-extras-copy-transaction-at-point)
         ("A-s-e" . ledger-toggle-current-transaction)
-        ("A-s-f" . ledger-mode-extras-increase-date-by-one-day)
-        ("A-s-p" . mode-mode-extras-extras-report-net-worth-USD)
-        ("A-s-t" . ledger-mode-extras-sort-region-or-buffer-reversed)
-        ("A-s-u" . ledger-mode-extras-report-net-worth-USD)
-        ("A-s-w" . ledger-mode-extras-report-net-worth)
         ("M-n" . nil)
         ("M-p" . nil)
         ("s-=" . ledger-reconcile)
         ("s-a" . ledger-add-transaction)
         ("s-b" . ledger-post-edit-amount)
-        ("s-c" . ledger-mode-extras-align-and-next)
         ("s-d" . ledger-delete-current-transaction)
-        ("s-e" . mode-mode-extras-extras-sort-region-or-buffer-reversed)
         ("s-f" . ledger-occur)
         ("s-g" . ledger-report-goto)
         ("s-i" . ledger-insert-effective-date)
@@ -6563,8 +6546,6 @@ To populate the database of historical prices:
         ("s-q" . ledger-post-align-dwim)
         ("s-r" . ledger-report)
         ("s-s" . ledger-report-save)
-        ("s-SPC" . ledger-mode-extras-new-entry-below)
-        ("s-t" . ledger-mode-extras-sort-region-or-buffer)
         ("s-u" . ledger-schedule-upcoming)
         ("s-v" . ledger-copy-transaction-at-point)
         ("s-x" . ledger-fully-complete-xact)
@@ -6608,6 +6589,18 @@ https://gitlab.com/chrisberkhout/pricehist
 (use-personal-package ledger-mode-extras
   :bind
   (:map ledger-mode-map
+        ("s-SPC" . ledger-mode-extras-new-entry-below)
+        ("s-t" . ledger-mode-extras-sort-region-or-buffer)
+        ("s-e" . ledger-mode-extras-extras-sort-region-or-buffer-reversed)
+        ("A-s-a" . ledger-mode-extras-report-account)
+        ("A-s-b" . ledger-mode-extras-decrease-date-by-one-day)
+        ("A-s-c" . ledger-mode-extras-copy-transaction-at-point)
+        ("A-s-f" . ledger-mode-extras-increase-date-by-one-day)
+        ("A-s-p" . mode-mode-extras-extras-report-net-worth-USD)
+        ("A-s-t" . ledger-mode-extras-sort-region-or-buffer-reversed)
+        ("A-s-u" . ledger-mode-extras-report-net-worth-USD)
+        ("A-s-w" . ledger-mode-extras-report-net-worth)
+        ("s-c" . ledger-mode-extras-align-and-next)
         ("A-s-c" . ledger-mode-extras-copy-transaction-at-point)
         ("s-x" . ledger-mode-extras-kill-transaction-at-point)))
 #+end_src
@@ -6838,6 +6831,25 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pdf-tools
   :mode ("\\.pdf\\'" . pdf-view-mode)
+  :init
+  (with-eval-after-load 'pdf-annot
+    (bind-keys :map pdf-annot-minor-mode-map
+               ("e" . pdf-annot-add-highlight-markup-annotation)
+               ("j" . pdf-view-goto-page)
+               ("k" . pdf-view-previous-line-or-previous-page)
+               ("l" . pdf-view-next-line-or-next-page)
+               ("H-c" . pdf-view-kill-ring-save)
+               ("A-u" . pdf-view-midnight-minor-mode)))
+
+  (with-eval-after-load 'pdf-history
+    (bind-keys :map pdf-history-minor-mode-map
+               ("e" . pdf-annot-add-highlight-markup-annotation)
+               ("j" . pdf-view-goto-page)
+               ("k" . pdf-view-previous-line-or-previous-page)
+               ("l" . pdf-view-next-line-or-next-page)
+               ("H-c" . pdf-view-kill-ring-save)
+               ("A-u" . pdf-view-midnight-minor-mode)))
+
   :custom
   (pdf-view-use-scaling t)
   (pdf-view-use-imagemagick nil)
@@ -6862,7 +6874,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   (pdf-tools-install t)
 
   :hook
-  (pdf-tools-enabled-hook . pdf-view-fit-page-to-window)
+  (pdf-view-mode-hook . pdf-view-fit-page-to-window)
 
   :bind
   (:map pdf-view-mode-map
@@ -6883,41 +6895,6 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 :END:
 
-** pdf-annot
-:PROPERTIES:
-:ID:       346932F7-8CE8-4DAD-B9FE-2DD9B19EDD69
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature pdf-annot
-  :after pdf-tools
-  :bind
-  (:map pdf-annot-minor-mode-map
-        ("e" . pdf-annot-add-highlight-markup-annotation)
-        ("j" . pdf-view-goto-page)
-        ("k" . pdf-view-previous-line-or-previous-page)
-        ("l" . pdf-view-next-line-or-next-page)
-        ("H-c" . pdf-view-kill-ring-save)
-        ("A-u" . pdf-view-midnight-minor-mode)))
-#+end_src
-
-** pdf-history
-:PROPERTIES:
-:ID:       BE8596D9-9DFE-4FB9-BCF4-59E87F948959
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature pdf-history
-  :after pdf-tools
-  :bind (:map pdf-history-minor-mode-map
-              ("e" . pdf-annot-add-highlight-markup-annotation)
-              ("j" . pdf-view-goto-page)
-              ("k" . pdf-view-previous-line-or-previous-page)
-              ("l" . pdf-view-next-line-or-next-page)
-              ("H-c" . pdf-view-kill-ring-save)
-              ("A-u" . pdf-view-midnight-minor-mode)))
-#+end_src
-
 ** pdf-tools-extras
 :PROPERTIES:
 :ID:       C4B53EDC-372F-42B2-924E-FE48647B67AE
@@ -6928,32 +6905,37 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package pdf-tools-extras
+  :init
+  (with-eval-after-load 'pdf-annot
+    (bind-keys :map pdf-annot-minor-mode-map
+               ("c" . pdf-tools-extras-copy-dwim)
+               ("C" . pdf-count-extras-words)
+               ("s-c" . pdf-tools-extras-clear-page-selection)
+               ("D" . pdf-tools-extras-delete)
+               ("e" . pdf-tools-extras-open-in-ebib)
+               ("h" . pdf-annot-extras-add-highlight-markup-annotation)
+               ("t" . pdf-tools-extras-toggle-writeroom)
+               ("x" . pdf-tools-extras-open-externally)
+               ("S" . pdf-tools-extras-add-or-remove-page)
+               ("X" . pdf-tools-extras-extract-pages)))
+  (with-eval-after-load 'pdf-history
+    (bind-keys
+     :map pdf-history-minor-mode-map
+     ("c" . pdf-tools-extras-copy-dwim)
+     ("C" . pdf-count-extras-words)
+     ("s-c" . pdf-tools-extras-clear-page-selection)
+     ("D" . pdf-tools-extras-delete)
+     ("e" . pdf-tools-extras-open-in-ebib)
+     ("h" . pdf-annot-extras-add-highlight-markup-annotation)
+     ("t" . pdf-tools-extras-toggle-writeroom)
+     ("x" . pdf-tools-extras-open-externally)
+     ("S" . pdf-tools-extras-add-or-remove-page)
+     ("X" . pdf-tools-extras-extract-pages)))
+
   :hook
   (pdf-tools-enabled-hook . pdf-tools-extras-apply-theme)
 
   :bind (:map pdf-view-mode-map
-              ("c" . pdf-tools-extras-copy-dwim)
-              ("C" . pdf-count-extras-words)
-              ("s-c" . pdf-tools-extras-clear-page-selection)
-              ("D" . pdf-tools-extras-delete)
-              ("e" . pdf-tools-extras-open-in-ebib)
-              ("h" . pdf-annot-extras-add-highlight-markup-annotation)
-              ("t" . pdf-tools-extras-toggle-writeroom)
-              ("x" . pdf-tools-extras-open-externally)
-              ("S" . pdf-tools-extras-add-or-remove-page)
-              ("X" . pdf-tools-extras-extract-pages)
-              :map pdf-annot-minor-mode-map
-              ("c" . pdf-tools-extras-copy-dwim)
-              ("C" . pdf-count-extras-words)
-              ("s-c" . pdf-tools-extras-clear-page-selection)
-              ("D" . pdf-tools-extras-delete)
-              ("e" . pdf-tools-extras-open-in-ebib)
-              ("h" . pdf-annot-extras-add-highlight-markup-annotation)
-              ("t" . pdf-tools-extras-toggle-writeroom)
-              ("x" . pdf-tools-extras-open-externally)
-              ("S" . pdf-tools-extras-add-or-remove-page)
-              ("X" . pdf-tools-extras-extract-pages)
-              :map pdf-history-minor-mode-map
               ("c" . pdf-tools-extras-copy-dwim)
               ("C" . pdf-count-extras-words)
               ("s-c" . pdf-tools-extras-clear-page-selection)
@@ -7101,7 +7083,8 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
   :init
   (defun instrument-defun ()
     "Instrument the current defun."
-    (lambda! (eval-defun t)))
+    (interactive)
+    (eval-defun t))
 
   :bind (:map emacs-lisp-mode-map
               ("s-b" . eval-buffer)
@@ -7719,11 +7702,16 @@ I use =gptel= for text-based AI interaction, but for other modalities (such as i
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gpt-commit
-  :after tlon
-  :defer t
+  :after tlon log-edit
+  :demand t
   :custom
-  (gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
-  (gpt-commit-model-name "gpt-4o"))
+  (gpt-commit-model-name "gpt-4o")
+
+  :config
+  (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
+
+  :bind (:map git-commit-mode-map
+              ("s-g" . gpt-commit-message)))
 #+end_src
 
 * org-mode
@@ -8117,7 +8105,8 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
         ("s-h" . org-insert-todo-subheading)
         ("s-p" . org-time-stamp-inactive)
         ("s-A-p" . org-time-stamp)
-        ("s-g" . org-gcal-extras-menu)
+        ("s-g" . org-agenda)
+        ("A-s-g" . org-gcal-extras-menu)
         ("s-k" . org-insert-link)
         ("s-q" . org-set-tags-command)
         ("s-r" . org-roam-buffer-toggle)
@@ -8248,7 +8237,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-agenda
-  :after org simple-extras
+  :after org
   :init
   (setq org-agenda-hide-tags-regexp "project")
 
@@ -8289,6 +8278,9 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
       ((org-agenda-files (list paths-dir-bibliographic-notes))))
      ("g" "All TODOs"
       todo "TODO")
+     ("G" "All Tlön TODOs"
+      todo "TODO"
+      ((org-agenda-files (list (file-name-concat paths-dir-dropbox "tlon-private/")))))
      ("," "All tasks with no priority"
       tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")))
   (org-agenda-files (list paths-file-calendar))
@@ -8321,9 +8313,9 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
                             (toggle-truncate-lines)))
 
   :bind
-  (("C-<escape>" . org-agenda)
+  (("s-g" . org-agenda)
    :map org-agenda-mode-map
-   ("s-g" . org-gcal-extras-menu)
+   ("A-s-g" . org-gcal-extras-menu)
    ("s-s" . org-save-all-org-buffers)
    ("I" . org-pomodoro)
    ("h" . org-habit-toggle-display-in-agenda)
@@ -8407,7 +8399,6 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-capture
-  :after org
   :custom
   (org-default-notes-file paths-file-inbox-desktop)
   (org-capture-templates
@@ -9704,7 +9695,12 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 (use-package org-noter
   :ensure (:host github
                  :repo "org-noter/org-noter")
-  :after org
+  :after org-extras
+  :init
+  (with-eval-after-load 'pdf-annot
+    (bind-keys :map pdf-annot-minor-mode-map
+               ("s-s" . org-noter-create-skeleton)))
+
   :custom
   (org-noter-notes-search-path `(,paths-dir-bibliographic-notes))
   (org-noter-auto-save-last-location t)
@@ -9716,9 +9712,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   (push paths-file-orb-noter-template org-extras-id-auto-add-excluded-files)
 
   :bind
-  (:map pdf-annot-minor-mode-map
-        ("s-s" . org-noter-create-skeleton)
-        :map org-noter-notes-mode-map
+  (:map org-noter-notes-mode-map
         ("s-n" . org-noter-sync-current-note)))
 #+end_src
 
@@ -11199,6 +11193,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
         ("s-f" . telega-chatbuf-filter)
         ("s-k" . org-insert-link)
         ("s-m" . telega-chatbuf-attach-media)
+        ("s-o" . telega-chatbuf-filter-by-topic)
         ("s-r" . telega-msg-add-reaction)
         ("s-s" . telega-chatbuf-filter-search)
         ("s-t" . telega-sticker-choose-favorite-or-recent)
@@ -11276,6 +11271,21 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
   :after dired
   :custom
   (telega-extras-auto-share-audio-transcript nil)
+  (telega-extras-chats '((:name "Tlön" :id -1001867927081
+                                :topics ((:name "Emacs" :id 1641021440)
+                                         (:name "Social" :id 1642070016)
+                                         (:name "Meta" :id 1643118592)
+                                         (:name "General" :id 1661992960)))))
+
+  :config
+  (transient-define-prefix telega-extras-menu ()
+  "`telega-extras' menu."
+  [["Tlön"
+    ("l" "All" (lambda () (interactive) (telega-extras-open-chat "Tlön")))
+    ("g" "General" (lambda () (interactive) (telega-extras-open-chat "Tlön" "General")))
+    ("s" "Social" (lambda () (interactive) (telega-extras-open-chat "Tlön" "Social")))
+    ("e" "Emacs" (lambda () (interactive) (telega-extras-open-chat "Tlön" "Emacs")))
+    ("m" "Meta" (lambda () (interactive) (telega-extras-open-chat "Tlön" "Meta")))]])
 
   :hook
   (telega-chat-post-message-hook . telega-extras-transcribe-audio)
@@ -12608,9 +12618,9 @@ Requires configuration. Disabled for the time being.
 (use-package casual-calc
   :after calc
   :bind (:map calc-mode-map
-	      ("C-o" . casual-calc-tmenu)
-	      :map calc-alg-map
-	      ("C-o" . casual-calc-tmenu)))
+              ("C-o" . casual-calc-tmenu)
+              :map calc-alg-map
+              ("C-o" . casual-calc-tmenu)))
 #+end_src
 
 ** alert

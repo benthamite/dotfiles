@@ -160,6 +160,11 @@ to get the entry.
   ;; TODO: check that there are no unsaved changes in
   ;; `zotra-extras-most-recent-bibfile'
   (goto-char (point-max))
+  (require 'bibtex)
+  (require 'bibtex-extras)
+  (require 'doi-utils)
+  (require 'org-ref-bibtex)
+  (require 'tlon-cleanup)
   (bibtex-extras-convert-titleaddon-to-journaltitle)
   (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
   (zotra-extras-fix-octal-sequences)

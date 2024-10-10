@@ -482,7 +482,7 @@
  :rules [:q-mode
          [:b [:open "/Applications/qBitTorrent.app"]]
          [:d [:open "/System/Library/CoreServices/Finder.app"]]
-         [:e [:open "/Applications/Emacs.app"]]
+         [:e [:km "Activate: Emacs (e)"]]
          [:f [:open "/Applications/Firefox.app"]]
          [:g [:open "/Applications/Goldendict.app"]]
          [:h [:open "/Applications/Google Chrome.app"]]

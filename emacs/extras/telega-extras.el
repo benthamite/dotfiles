@@ -29,7 +29,7 @@
 
 (require 'paths)
 (require 'telega)
-(require 'telega-dired-dwim)
+(require 'tlon-core)
 
 ;;;; Variables
 
@@ -40,6 +40,18 @@
 (defcustom telega-extras-auto-share-audio-transcript nil
   "Whether to automatically share transcript after transcribing message."
   :type 'boolean
+  :group 'telega-extras)
+
+(defcustom telega-extras-chats nil
+  "Information about Tlön groups."
+  ;; describe customization type correctly, based on the keywords defined in the elisp manual
+  :type '(plist :tag "Chats"
+		(string :tag "Name")
+		(integer :tag "ID")
+		(plist :tag "Topics"
+		       (entry :tag "Topic"
+			      (string :tag "Name")
+			      (integer :tag "ID"))))
   :group 'telega-extras)
 
 (defvar telega-extras-audio-transcript-timer nil
@@ -221,6 +233,48 @@ If MESSAGE is nil, use the message at point."
   (interactive)
   (let* ((message (or message (telega-msg-at))))
     (telega-msg-save message)))
+
+;;;;; Open chats & topics
+
+(defun telega-extras-open-chat (chat &optional topic)
+  "Open CHAT.
+If TOPIC is non-nil, restrict the view to that topic.
+
+Both CHAT and TOPIC are strings, describing the name of the chat and topic,
+respectively, as defined in `telega-extras-chats'."
+  (telega)
+  (let ((id (telega-extras-get-id chat topic)))
+    (if (consp id)
+	(telega-msg-open-thread-or-topic
+	 (telega-extras-get-last-topic-message (car id) (cdr id)))
+      (telega-chat-with (telega-chat-get id))
+      (telega-chatbuf-filter-cancel t))
+    (sleep-for 0.2) ; hack to ensure the buffer is loaded
+    (telega-chatbuf-input-insert "")))
+
+(defun telega-extras-get-id (chat &optional topic)
+  "Return the ID of CHAT.
+If TOPIC is non-nil, return the associated topic ID"
+  (let* ((chat-id (tlon-lookup telega-extras-chats :id :name chat))
+	 (topic-id (when topic
+		     (let ((chat-topics (tlon-lookup telega-extras-chats :topics :name chat)))
+		       (tlon-lookup chat-topics :id :name topic)))))
+    (if topic-id (cons chat-id topic-id) chat-id)))
+
+(defun telega-extras-get-last-topic-message (chat-id topic-id)
+  "Get the last message in a topic thread for the given CHAT-ID and TOPIC-ID."
+  (let* ((chat (telega-chat-get chat-id))
+	 (topic (telega-topic-get chat topic-id)))
+    (plist-get topic :last_message)))
+
+(transient-define-prefix telega-extras-menu ()
+  "`telega-extras' menu."
+  [["Tlön"
+    ("t" "All" (lambda () (interactive) (telega-extras-open-chat "Tlön")))
+    ("g" "General" (lambda () (interactive) (telega-extras-open-chat "Tlön" "General")))
+    ("s" "Social" (lambda () (interactive) (telega-extras-open-chat "Tlön" "Social")))
+    ("e" "Emacs" (lambda () (interactive) (telega-extras-open-chat "Tlön" "Emacs")))
+    ("m" "Meta" (lambda () (interactive) (telega-extras-open-chat "Tlön" "Meta")))]])
 
 (provide 'telega-extras)
 ;;; telega-extras.el ends here

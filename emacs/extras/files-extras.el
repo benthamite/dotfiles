@@ -598,7 +598,6 @@ To install the extension, drag the latter onto the former."
    ("q" "quotes"            (lambda () (interactive) (find-file paths-file-quotes)))
    ("r" "calendar"          (lambda () (interactive) (find-file paths-file-calendar)))
    ("s" "scratch"           (lambda () (interactive) (switch-to-buffer "*scratch*")))
-   ("v" "films"             (lambda () (interactive) (find-file paths-file-films)))
    ("w" "work"              (lambda () (interactive) (find-file paths-file-work)))])
 
 ;;;###autoload (autoload 'files-extras-packages-dispatch "files-extras" nil t)

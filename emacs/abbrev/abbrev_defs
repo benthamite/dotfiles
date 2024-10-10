@@ -10,6 +10,11 @@
     ("¿¡" "⸘" nil :count 0)
    ))
 
+(define-abbrev-table 'org-journal-mode-abbrev-table
+  '(
+    ("esr" "evaluate the state of my relationships" nil :count 0)
+   ))
+
 (define-abbrev-table 'text-mode-abbrev-table
   '(
     ("Bolschevism" "Bolshevism" nil :count 0)

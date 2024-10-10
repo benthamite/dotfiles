@@ -282,11 +282,13 @@ DAYS can be positive or negative."
       (replace-match date-minus-days)
       (widen))))
 
+;;;###autoload
 (defun ledger-mode-extras-increase-date-by-one-day ()
   "Increase the date of transaction at point by one day."
   (interactive)
   (ledger-mode-extras-increase-date 1))
 
+;;;###autoload
 (defun ledger-mode-extras-decrease-date-by-one-day ()
   "Decrease the date of transaction at point by one day."
   (interactive)

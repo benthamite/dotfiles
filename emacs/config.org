@@ -633,7 +633,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (elpaca `(,@elpaca-order))
 (elpaca-wait)
 
-(toggle-debug-on-error) ; uncomment when debugging
+;; (toggle-debug-on-error) ; uncomment when debugging
 #+end_src
 
 ** use-package

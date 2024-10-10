@@ -893,10 +893,10 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 (use-feature warnings
   :custom
   (warning-suppress-types '((copilot copilot-exceeds-max-char)
-			    (flycheck syntax-checker)
-			    (org-roam)
-			    (org-element-cache)
-			    (yasnippet backquote-change))))
+                            (flycheck syntax-checker)
+                            (org-roam)
+                            (org-element-cache)
+                            (yasnippet backquote-change))))
 #+end_src
 
 ** comp
@@ -6591,20 +6591,20 @@ https://gitlab.com/chrisberkhout/pricehist
 (use-personal-package ledger-mode-extras
   :bind
   (:map ledger-mode-map
-	("s-SPC" . ledger-mode-extras-new-entry-below)
-	("s-t" . ledger-mode-extras-sort-region-or-buffer)
-	("s-e" . ledger-mode-extras-extras-sort-region-or-buffer-reversed)
-	("A-s-a" . ledger-mode-extras-report-account)
-	("A-s-b" . ledger-mode-extras-decrease-date-by-one-day)
-	("A-s-c" . ledger-mode-extras-copy-transaction-at-point)
-	("A-s-f" . ledger-mode-extras-increase-date-by-one-day)
-	("A-s-p" . mode-mode-extras-extras-report-net-worth-USD)
-	("A-s-t" . ledger-mode-extras-sort-region-or-buffer-reversed)
-	("A-s-u" . ledger-mode-extras-report-net-worth-USD)
-	("A-s-w" . ledger-mode-extras-report-net-worth)
-	("s-c" . ledger-mode-extras-align-and-next)
-	("A-s-c" . ledger-mode-extras-copy-transaction-at-point)
-	("s-x" . ledger-mode-extras-kill-transaction-at-point)))
+        ("s-SPC" . ledger-mode-extras-new-entry-below)
+        ("s-t" . ledger-mode-extras-sort-region-or-buffer)
+        ("s-e" . ledger-mode-extras-extras-sort-region-or-buffer-reversed)
+        ("A-s-a" . ledger-mode-extras-report-account)
+        ("A-s-b" . ledger-mode-extras-decrease-date-by-one-day)
+        ("A-s-c" . ledger-mode-extras-copy-transaction-at-point)
+        ("A-s-f" . ledger-mode-extras-increase-date-by-one-day)
+        ("A-s-p" . mode-mode-extras-extras-report-net-worth-USD)
+        ("A-s-t" . ledger-mode-extras-sort-region-or-buffer-reversed)
+        ("A-s-u" . ledger-mode-extras-report-net-worth-USD)
+        ("A-s-w" . ledger-mode-extras-report-net-worth)
+        ("s-c" . ledger-mode-extras-align-and-next)
+        ("A-s-c" . ledger-mode-extras-copy-transaction-at-point)
+        ("s-x" . ledger-mode-extras-kill-transaction-at-point)))
 #+end_src
 
 * translation

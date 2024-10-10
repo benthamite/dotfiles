@@ -11279,6 +11279,21 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
   :after dired
   :custom
   (telega-extras-auto-share-audio-transcript nil)
+  (telega-extras-chats '((:name "Tlön" :id -1001867927081
+                                :topics ((:name "Emacs" :id 1641021440)
+                                         (:name "Social" :id 1642070016)
+                                         (:name "Meta" :id 1643118592)
+                                         (:name "General" :id 1661992960)))))
+
+  :config
+  (transient-define-prefix telega-extras-menu ()
+  "`telega-extras' menu."
+  [["Tlön"
+    ("l" "All" (lambda () (interactive) (telega-extras-open-chat "Tlön")))
+    ("g" "General" (lambda () (interactive) (telega-extras-open-chat "Tlön" "General")))
+    ("s" "Social" (lambda () (interactive) (telega-extras-open-chat "Tlön" "Social")))
+    ("e" "Emacs" (lambda () (interactive) (telega-extras-open-chat "Tlön" "Emacs")))
+    ("m" "Meta" (lambda () (interactive) (telega-extras-open-chat "Tlön" "Meta")))]])
 
   :hook
   (telega-chat-post-message-hook . telega-extras-transcribe-audio)

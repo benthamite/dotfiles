@@ -323,7 +323,7 @@
        org-roam
        org2blog
        remember
-       vulpea
+       ;; vulpea
        ))
 #+end_src
 

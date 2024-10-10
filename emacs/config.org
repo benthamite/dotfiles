@@ -331,8 +331,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#dictionary][dictionary]]
 - [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
-  - [[#pdf-annot][pdf-annot]]
-  - [[#pdf-history][pdf-history]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
   - [[#scroll-other-window][scroll-other-window]]
   - [[#pdf-view-restore][pdf-view-restore]]
@@ -6833,6 +6831,25 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pdf-tools
   :mode ("\\.pdf\\'" . pdf-view-mode)
+  :init
+  (with-eval-after-load 'pdf-annot
+    (bind-keys :map pdf-annot-minor-mode-map
+               ("e" . pdf-annot-add-highlight-markup-annotation)
+               ("j" . pdf-view-goto-page)
+               ("k" . pdf-view-previous-line-or-previous-page)
+               ("l" . pdf-view-next-line-or-next-page)
+               ("H-c" . pdf-view-kill-ring-save)
+               ("A-u" . pdf-view-midnight-minor-mode)))
+
+  (with-eval-after-load 'pdf-history
+    (bind-keys :map pdf-history-minor-mode-map
+               ("e" . pdf-annot-add-highlight-markup-annotation)
+               ("j" . pdf-view-goto-page)
+               ("k" . pdf-view-previous-line-or-previous-page)
+               ("l" . pdf-view-next-line-or-next-page)
+               ("H-c" . pdf-view-kill-ring-save)
+               ("A-u" . pdf-view-midnight-minor-mode)))
+
   :custom
   (pdf-view-use-scaling t)
   (pdf-view-use-imagemagick nil)
@@ -6878,41 +6895,6 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 :END:
 
-** pdf-annot
-:PROPERTIES:
-:ID:       346932F7-8CE8-4DAD-B9FE-2DD9B19EDD69
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature pdf-annot
-  :after pdf-tools
-  :bind
-  (:map pdf-annot-minor-mode-map
-        ("e" . pdf-annot-add-highlight-markup-annotation)
-        ("j" . pdf-view-goto-page)
-        ("k" . pdf-view-previous-line-or-previous-page)
-        ("l" . pdf-view-next-line-or-next-page)
-        ("H-c" . pdf-view-kill-ring-save)
-        ("A-u" . pdf-view-midnight-minor-mode)))
-#+end_src
-
-** pdf-history
-:PROPERTIES:
-:ID:       BE8596D9-9DFE-4FB9-BCF4-59E87F948959
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature pdf-history
-  :after pdf-tools
-  :bind (:map pdf-history-minor-mode-map
-              ("e" . pdf-annot-add-highlight-markup-annotation)
-              ("j" . pdf-view-goto-page)
-              ("k" . pdf-view-previous-line-or-previous-page)
-              ("l" . pdf-view-next-line-or-next-page)
-              ("H-c" . pdf-view-kill-ring-save)
-              ("A-u" . pdf-view-midnight-minor-mode)))
-#+end_src
-
 ** pdf-tools-extras
 :PROPERTIES:
 :ID:       C4B53EDC-372F-42B2-924E-FE48647B67AE
@@ -6936,7 +6918,7 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
                ("x" . pdf-tools-extras-open-externally)
                ("S" . pdf-tools-extras-add-or-remove-page)
                ("X" . pdf-tools-extras-extract-pages)))
-  (with-eval-after-load 'pdf-annot
+  (with-eval-after-load 'pdf-history
     (bind-keys
      :map pdf-history-minor-mode-map
      ("c" . pdf-tools-extras-copy-dwim)
@@ -9706,7 +9688,12 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 (use-package org-noter
   :ensure (:host github
                  :repo "org-noter/org-noter")
-  :after org
+  :after org-extras
+  :init
+  (with-eval-after-load 'pdf-annot
+    (bind-keys :map pdf-annot-minor-mode-map
+               ("s-s" . org-noter-create-skeleton)))
+
   :custom
   (org-noter-notes-search-path `(,paths-dir-bibliographic-notes))
   (org-noter-auto-save-last-location t)
@@ -9718,9 +9705,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   (push paths-file-orb-noter-template org-extras-id-auto-add-excluded-files)
 
   :bind
-  (:map pdf-annot-minor-mode-map
-        ("s-s" . org-noter-create-skeleton)
-        :map org-noter-notes-mode-map
+  (:map org-noter-notes-mode-map
         ("s-n" . org-noter-sync-current-note)))
 #+end_src
 

@@ -320,7 +320,7 @@ ordering defined in `ebib-extras-valid-file-extensions'."
 		     (ebib-extras--extension-directories extension)
 		     key extension)))
 	       (cond ((file-exists-p filename)
-		      (rename-file filename new-filename))
+		      (rename-file filename new-filename 'ok-if-already-exists))
 		     ((file-exists-p new-filename))
 		     (t (user-error "File `%s' does not exist" filename)))
 	       (setq filename new-filename))

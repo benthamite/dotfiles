@@ -380,7 +380,7 @@ If EXTENSION is non-nil, set its extension to its value."
 ;;;;; process invalid files
 ;; These functions are meant to be run sporadically, to clean up the library.
 ;; First call `ebib-extras-list-invalid-files', wait for a few minutes for the
-;; function to finish, then call `ebib-extras-rename-next-invalid-file' to
+;; processing to finish, then call `ebib-extras-rename-next-invalid-file' to
 ;; rename the next invalid file in line. You may have to do some manual
 ;; processing. Repeat until all files are renamed.
 
@@ -405,8 +405,8 @@ If DIRS is nil, search in all library dirs."
 			 )))
 	 (invalid-files (seq-filter
 			 (lambda (file)
-			   (not (ebib-extras-file-is-valid-p file))
-			   (message "Processing %s" file))
+			   (message "Processing %s" file)
+			   (null (ebib-extras-file-is-valid-p file)))
 			 (apply #'append
 				(mapcar
 				 (lambda (dir)

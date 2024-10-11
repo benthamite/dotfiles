@@ -309,9 +309,7 @@ ordering defined in `ebib-extras-valid-file-extensions'."
     (entries
      (let* ((field "file")
 	    (key (ebib--get-key-at-point))
-	    (file-list (split-string
-			(ebib-extras-get-field field)
-			";")))
+	    (file-list (split-string (ebib-extras-get-field field) ";")))
        (ebib-extras-check-valid-key key)
        (when file-list
 	 (ebib-delete-field-contents field t)
@@ -320,14 +318,15 @@ ordering defined in `ebib-extras-valid-file-extensions'."
 	     (let ((new-filename
 		    (ebib-extras--rename-and-abbreviate-file
 		     (ebib-extras--extension-directories extension)
-		     key
-		     extension)))
-	       (rename-file filename new-filename)
+		     key extension)))
+	       (cond ((file-exists-p filename)
+		      (rename-file filename new-filename))
+		     ((file-exists-p new-filename))
+		     (t (user-error "File `%s' does not exist" filename)))
 	       (setq filename new-filename))
 	     (ebib-set-field-value field filename key ebib--cur-db ";")))
 	 (ebib--redisplay-field field)
 	 (ebib--redisplay-index-item field))))
-    ;; (ebib-save-current-database nil))))
     (default
      (beep))))
 

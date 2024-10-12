@@ -51,142 +51,142 @@
 
 (defconst gptel-extras-ai-models
   '((:backend "Gemini"
-	      :model "gemini-1.0-pro"
+	      :model gemini-1.0-pro
 	      :cost 0.50
 	      :tokens 32000
 	      :description "Gemini’s first-generation model offering only text and image reasoning. Generally available for production use.")
     (:backend "Gemini"
-	      :model "gemini-1.5-pro"
+	      :model gemini-1.5-pro
 	      :cost 3.50
 	      :tokens 128000
 	      :description "Gemini’s next-generation model with a breakthrough 1 million context window. Now generally available for production use.")
     (:backend "Gemini"
-	      :model "gemini-1.5-flash"
+	      :model gemini-1.5-flash
 	      :cost 0.35
 	      :tokens 1000000
 	      :description "Gemini’s fastest multimodal model with great performance for diverse, repetitive tasks and a 1 million context window. Now generally available for production use. For requests about 128k tokens, the price is $0.70 per 1 million tokens.")
     (:backend "ChatGPT"
-	      :model "gpt-3.5-turbo"
+	      :model gpt-3.5-turbo
 	      :cost 0.50
 	      :tokens 16385
 	      :last-update "2021-09-01"
 	      :description "Less powerful GPT model. Currently points to `gpt-3.5-turbo-0125'.")
     (:backend "ChatGPT"
-	      :model "gpt-3.5-turbo-16k"
+	      :model gpt-3.5-turbo-16k
 	      :cost 0.50
 	      :tokens 16385
 	      :last-update "2021-09-01"
 	      :description "Less powerful GPT model. Currently points to `gpt-3.5-turbo-16k-0613'.")
     (:backend "ChatGPT"
-	      :model "gpt-4"
+	      :model gpt-4
 	      :cost 30
 	      :tokens 8192
 	      :last-update "2021-09-01"
 	      :description "Currently points to `gpt-4-0613'. ")
     (:backend "ChatGPT"
-	      :model "gpt-4o"
+	      :model gpt-4o
 	      :cost 5
 	      :tokens 128000
 	      :last-update "2023-10-01"
 	      :description "[Recommended] The most advanced multimodal model that’s faster and cheaper than GPT-4 Turbo with stronger vision capabilities.")
     (:backend "ChatGPT"
-	      :model "gpt-4o-mini"
+	      :model gpt-4o-mini
 	      :cost 0.15
 	      :tokens 128000
 	      :last-update "2023-10-01"
 	      :description "Affordable and intelligent small model for fast, lightweight tasks.")
     (:backend "ChatGPT"
-	      :model "gpt-4-turbo"
+	      :model gpt-4-turbo
 	      :cost 10
 	      :tokens 128000
 	      :last-update "2023-12-01"
 	      :description "[Recommended] The latest GPT-4 Turbo model with vision capabilities. Vision requests can now use JSON mode and function calling. Currently points to gpt-4-turbo-2024-04-09.")
     (:backend "ChatGPT"
-	      :model "gpt-4-turbo-preview"
+	      :model gpt-4-turbo-preview
 	      :cost 10
 	      :tokens 128000
 	      :last-update "2023-12-01"
 	      :description "GPT-4 Turbo preview model. Currently points to `gpt-4-0125-preview'.")
     (:backend "ChatGPT"
-	      :model "gpt-4-32k"
+	      :model gpt-4-32k
 	      :cost 60
 	      :tokens 32768
 	      :last-update "2021-09-01"
 	      :description "Currently points to gpt-4-32k-0613. See continuous model upgrades. This model was never rolled out widely in favor of GPT-4 Turbo.")
     (:backend "ChatGPT"
-	      :model "gpt-4-1106-preview"
+	      :model gpt-4-1106-preview
 	      :cost 10
 	      :tokens 128000
 	      :last-update "2023-04-01"
 	      :description "GPT-4 Turbo preview model featuring improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more. Returns a maximum of 4,096 output tokens. This is a preview model.")
     (:backend "ChatGPT"
-	      :model "gpt-4-0125-preview"
+	      :model gpt-4-0125-preview
 	      :cost 10
 	      :tokens 128000
 	      :last-update "2023-12-01"
 	      :description "GPT-4 Turbo preview model intended to reduce cases of “laziness” where the model doesn’t complete a task. Returns a maximum of 4,096 output tokens.")
     (:backend "Claude"
-	      :model "claude-3-haiku-20240307"
+	      :model claude-3-haiku-20240307
 	      :tokens 200000
 	      :cost 0.25
 	      :last-update "2023-08-01"
 	      :description "Fastest, most cost-effective model.")
     (:backend "Claude"
-	      :model "claude-3-sonnet-20240229"
+	      :model claude-3-sonnet-20240229
 	      :tokens 200000
 	      :cost 3
 	      :last-update "2023-08-01"
 	      :description "Legacy model.")
     (:backend "Claude"
-	      :model "claude-3-opus-20240229"
+	      :model claude-3-opus-20240229
 	      :tokens 200000
 	      :cost 15
 	      :last-update "2023-08-01"
 	      :description "Powerful model for complex tasks.")
     (:backend "Claude"
-	      :model "claude-3-5-sonnet-20240620"
+	      :model claude-3-5-sonnet-20240620
 	      :tokens 200000
 	      :cost 3
 	      :last-update "2023-08-01"
 	      :description "[recommended] The most capable Anthropic model.")
     (:backend "Perplexity"
-	      :model "llama-3.1-sonar-small-128k-online"
+	      :model llama-3.1-sonar-small-128k-online
 	      :tokens 127072
 	      :cost 0.2
 	      :last-update ""
 	      :description "")
     (:backend "Perplexity"
-	      :model "llama-3.1-sonar-large-128k-online"
+	      :model llama-3.1-sonar-large-128k-online
 	      :tokens 127072
 	      :cost 1
 	      :last-update ""
 	      :description "")
     (:backend "Perplexity"
-	      :model "llama-3.1-sonar-huge-128k-online"
+	      :model llama-3.1-sonar-huge-128k-online
 	      :tokens 127072
 	      :cost 5
 	      :last-update ""
 	      :description "[recommended]")
     (:backend "Perplexity"
-	      :model "llama-3.1-sonar-small-128k-chat"
+	      :model llama-3.1-sonar-small-128k-chat
 	      :tokens 131072
 	      :cost 0.2
 	      :last-update ""
 	      :description "")
     (:backend "Perplexity"
-	      :model "llama-3.1-sonar-large-128k-chat"
+	      :model llama-3.1-sonar-large-128k-chat
 	      :tokens 131072
 	      :cost 1
 	      :last-update ""
 	      :description "")
     (:backend "Perplexity"
-	      :model "llama-3.1-8b-instruct"
+	      :model llama-3.1-8b-instruct
 	      :tokens 131072
 	      :cost 0.2
 	      :last-update ""
 	      :description "")
     (:backend "Perplexity"
-	      :model "llama-3.1-70b-instruct"
+	      :model llama-3.1-70b-instruct
 	      :tokens 131072
 	      :cost 1
 	      :last-update ""
@@ -255,7 +255,7 @@ This is used to display the relevant information in the modeline (see
 (declare-function mullvad-connect-to-website "mullvad")
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
   "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS."
-  (when (string= gptel-model "gemini-pro")
+  (when (eq gptel-model 'gemini-pro)
     (mullvad-connect-to-website "Gemini"
 				gptel-extras-gemini-mullvad-disconnect-after
 				'silently))

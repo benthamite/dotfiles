@@ -1285,6 +1285,15 @@ Fetching is done using `bib'."
   (or (ebib-extras-get-id-or-url)
       (ebib-extras-fetch-id-or-url)))
 
+(defun ebib-extras-browse-url-or-doi ()
+  "Browse the URL or DOI of the entry at point."
+  (interactive)
+  (when-let ((type (cond ((ebib-extras-get-field "url") 'url)
+			 ((ebib-extras-get-field "doi") 'doi))))
+    (pcase type
+      ('url (ebib-browse-url))
+      ('doi (ebib-browse-doi)))))
+
 (defun ebib-extras-set-id (&optional id)
   "Add an ID to the current entry, if missing."
   (interactive)

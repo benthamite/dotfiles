@@ -65,7 +65,7 @@
   "Display the `gptel' model active in the current buffer."
   (when (and doom-modeline-extras-gptel
 	     (bound-and-true-p gptel-model))
-    (concat gptel-model (doom-modeline-spc))))
+    (concat (symbol-name gptel-model) (doom-modeline-spc))))
 
 (defvar gptel-mode)
 (declare-function gptel-extras-get-cost "gptel-extras")

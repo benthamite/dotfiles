@@ -7279,9 +7279,9 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature python
   :custom
-  (python-shell-interpreter "python3")
-  (org-babel-python-command "python3")
-  (flycheck-python-pycompile-executable "python3")
+  (python-shell-interpreter "/Users/pablostafforini/.pyenv/shims/python3")
+  (org-babel-python-command "/Users/pablostafforini/.pyenv/shims/python3")
+  (flycheck-python-pycompile-executable "/Users/pablostafforini/.pyenv/shims/python3")
 
   :config
   (org-babel-do-load-languages

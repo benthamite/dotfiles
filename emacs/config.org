@@ -1533,6 +1533,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
    ("s-r" . forge-create-post)
    ("s-s" . forge-list-assigned-issues)
    ("s-t" . forge-topic-set-title)
+   ("s-u" . magit-remote-unshallow)
    ("A-C-s-r" . magit-section-backward-sibling)
    ("A-C-s-f" . magit-section-forward-sibling)
    ("s-x" . forge-extras-state-set-dwim)

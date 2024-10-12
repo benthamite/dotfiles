@@ -260,6 +260,7 @@ files which do not exist any more or are no longer readable will be killed."
 	(print "not found")))))
 
 ;; stackoverflow.com/questions/21486934/file-specific-key-binding-in-emacs/21493693#21493693
+;;;###autoload
 (defun files-extras-buffer-local-set-key (key command)
   "Bind KEY to COMMAND in current buffer only."
   (interactive "KSet key buffer-locally: \nCSet key %s buffer-locally to command: ")

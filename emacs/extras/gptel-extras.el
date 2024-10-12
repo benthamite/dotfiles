@@ -289,8 +289,6 @@ This function is meant to be an `:after' advice to `gptel'."
     (write-file filename 'confirm)
     (add-hook 'before-save-hook #'gptel--save-state nil t)))
 
-(advice-add 'gptel :after #'gptel-extras-save-buffer)
-
 (declare-function org-latex-preview "org")
 (defun gptel-extras-generate-latex-previews (_ _)
   "Generate LaTeX previews in the current `gptel' buffer."

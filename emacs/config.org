@@ -7671,6 +7671,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   :bind
   ("H-s-c" . gptel-extras-model-config))
+  (advice-add 'gptel :after #'gptel-extras-save-buffer))
 #+end_src
 
 ** chatgpt-shell

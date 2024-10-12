@@ -168,6 +168,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#paragraphs][paragraphs]]
 - [[#editing][editing]]
   - [[#simple][simple]]
+  - [[#rect][rect]]
   - [[#repeat][repeat]]
   - [[#view][view]]
   - [[#sort][sort]]
@@ -2995,6 +2996,16 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
    ("A-M-u" . upcase-dwim)
    ("M-w" . count-words-region)
    ("H-z" . undo-only)))
+#+end_src
+
+** rect
+:PROPERTIES:
+:ID:       CAA53E10-D4A2-41F4-8B5F-77649D125E54
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature rect
+  :bind ("C-x r w" . copy-rectangle-as-kill))
 #+end_src
 
 ** repeat

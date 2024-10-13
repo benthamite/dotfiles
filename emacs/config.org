@@ -6151,6 +6151,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package flycheck-languagetool
   :after flycheck
+  :disabled
   :init
   (setq flycheck-languagetool-server-jar
         (expand-file-name (file-name-concat paths-dir-external-repos "LanguageTool/languagetool-server.jar")))
@@ -7614,22 +7615,21 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 (use-package gptel
   :ensure (:host github
                  :repo "karthink/gptel")
-  :defer 5
   :custom
   (gptel-default-mode 'org-mode)
   (gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   :config
   (require 'tlon-core)
-  (gptel-make-anthropic "Claude"
-    :stream t
-    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared)))
+  (setq gptel-model 'claude-3-5-sonnet-20240620
+        gptel-backend (gptel-make-anthropic "Claude"
+                        :stream t
+                        :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
 
   (gptel-make-gemini "Gemini"
     :stream t
     :key (auth-source-pass-get 'secret
-                               (concat "tlon/core/aistudio.google.com/" tlon-email-shared))
-    :models '("gemini-1.0-pro" "gemini-1.5-pro" "gemini-1.5-flash"))
+                               (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
 
   (gptel-make-openai "Perplexity"
     :host "api.perplexity.ai"
@@ -7637,13 +7637,13 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :endpoint "/chat/completions"
     :stream t
     :models '(;; <https://docs.perplexity.ai/docs/model-cards>
-              "llama-3.1-sonar-huge-128k-online"
-              "llama-3.1-sonar-large-128k-online"
-              "llama-3.1-sonar-small-128k-online"
-              "llama-3.1-sonar-small-128k-chat"
-              "llama-3.1-sonar-large-128k-chat"
-              "llama-3.1-8b-instruct"
-              "llama-3.1-70b-instruct"))
+              llama-3.1-sonar-huge-128k-online
+              llama-3.1-sonar-large-128k-online
+              llama-3.1-sonar-small-128k-online
+              llama-3.1-sonar-small-128k-chat
+              llama-3.1-sonar-large-128k-chat
+              llama-3.1-8b-instruct
+              llama-3.1-70b-instruct))
 
   :bind
   (("M-c" . gptel-send)
@@ -7667,10 +7667,6 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-post-response-functions #'gptel-extras-generate-latex-previews)
 
   :config
-  (gptel-extras-model-config 'globally "Claude" "claude-3-5-sonnet-20240620")
-
-  :bind
-  ("H-s-c" . gptel-extras-model-config))
   (advice-add 'gptel :after #'gptel-extras-save-buffer))
 #+end_src
 
@@ -10076,6 +10072,13 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
                            :create #'orb-citar-edit-note
                            :annotate #'citar-org-roam--annotate))
 
+  ;; allow invocation of `citar-insert-citation' in any buffer. Although it is
+  ;; not possible to insert citations in some modes, it is still useful to be
+  ;; able to run this command because of the `embark' integration
+  (setf (alist-get 't citar-major-mode-functions)
+        (cons '(insert-citation . citar-org-insert-citation)
+              (alist-get 't citar-major-mode-functions)))
+
   :hook
   (tlon-post-init-hook . (lambda ()
                            "Set `citar-bibliography' after `paths-files-bibliography-all' is set."
@@ -10293,74 +10296,35 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
   (ebib-entry-mode-hook . visual-line-mode)
 
   :bind
-  (:map ebib-multiline-mode-map
-        ("s-c" . ebib-quit-multiline-buffer-and-save)
-        :map ebib-index-mode-map
-        ("," . ebib-extras-prev-entry)
-        ("." . ebib-extras-next-entry)
-        ("d" . ebib-extras-duplicate-entry)
-        ("n" . ebib-extras-citar-open-notes)
-        ("A-C-s-<tab>" . ebib-extras-end-of-index-buffer)
-        ("s" . ebib-extras-sort)
-        ("s-t" . ebib-extras-move-entry-to-tlon)
-        ("<return>" . ebib-edit-entry)
-        ("A" . ebib-add-entry)
-        ("D" . ebib-delete-entry)
-        ("f" . avy-extras-ebib-view-entry)
-        ("k" . ebib-prev-entry)
-        ("l" . ebib-next-entry)
-        ("H-s" . ebib-save-current-database)
-        ("K" . ebib-copy-key-as-kill)
-        ("Q" . ebib-quit)
-        ("W" . zotra-download-attachment)
-        :map ebib-entry-mode-map
-        ("s-f" . ebib-extras-open-file-dwim)
-        ("," . ebib-extras-prev-entry)
-        ("." . ebib-extras-next-entry)
-        ("d" . ebib-extras-duplicate-entry)
-        ("n" . ebib-extras-citar-open-notes)
-        ("SPC" . ebib-extras-open-file-dwim)
-        ("/" . ebib-extras-attach-most-recent-file)
-        ("?" . ebib-extras-attach-file)
-        (";" . ebib-extras-process-entry)
-        ("a" . ebib-extras-search-amazon)
-        ("b" . ebib-extras-get-or-open-entry)
-        ("g" . ebib-extras-search-library-genesis)
-        ("G" . ebib-extras-search-goodreads)
-        ("h" . ebib-extras-open-html-file)
-        ("H" . ebib-extras-open-html-file-externally)
-        ("i" . ebib-extras-download-by-identifier)
-        ("I" . ebib-extras-set-id)
-        ("o" . ebib-extras-search-connected-papers)
-        ("p" . ebib-extras-open-pdf-file)
-        ("P" . ebib-extras-open-pdf-file-externally)
-        ("R" . ebib-extras-set-rating)
-        ("s" . ebib-extras-search-dwim)
-        ("T" . ebib-extras-no-translation-found)
-        ("V" . ebib-extras-search-internet-archive)
-        ("w" . ebib-extras-download-dwim)
-        ("x" . ebib-extras-search-university-of-toronto)
-        ("y" . ebib-extras-search-hathitrust)
-        ("z" . ebib-extras-search-google-scholar)
-        ("s-d" . ebib-extras-url-to-pdf-attach)
-        ("s-k" . ebib-extras-fetch-keywords)
-        ("s-h" . ebib-extras-url-to-html-attach)
-        ("s-r" . ebib-extras-rename-files)
-        ("TAB" . ebib-goto-next-set)
-        ("<backtab>" . ebib-goto-prev-set)
-        ("H-s" . ebib-save-current-database)
-        ("H-S" . ebib-save-all-databases)
-        ("!" . ebib-generate-autokey)
-        ;; "/" (lambda! (ebib-extras-attach-file t))
-        ("A" . ebib-add-field)
-        ("c" . ebib-copy-current-field-contents)
-        ("D" . ebib-delete-current-field-contents)
-        ("E" . ebib-edit-keyname)
-        ("u" . ebib-browse-url)
-        ("H-s" . ebib-save-current-database)
-        ("K" . ebib-copy-key-as-kill)
-        ("Q" . ebib-quit)
-        ("W" . zotra-download-attachment)))
+  (
+   :map ebib-multiline-mode-map
+   ("s-c" . ebib-quit-multiline-buffer-and-save)
+   :map ebib-index-mode-map
+   ("<return>" . ebib-edit-entry)
+   ("A" . ebib-add-entry)
+   ("D" . ebib-delete-entry)
+   ("f" . avy-extras-ebib-view-entry)
+   ("k" . ebib-prev-entry)
+   ("l" . ebib-next-entry)
+   ("H-s" . ebib-save-current-database)
+   ("K" . ebib-copy-key-as-kill)
+   ("Q" . ebib-quit)
+   ("W" . zotra-download-attachment)
+   :map ebib-entry-mode-map
+   ("TAB" . ebib-goto-next-set)
+   ("<backtab>" . ebib-goto-prev-set)
+   ("H-s" . ebib-save-current-database)
+   ("H-S" . ebib-save-all-databases)
+   ("!" . ebib-generate-autokey)
+   ;; "/" (lambda! (ebib-extras-attach-file t))
+   ("A" . ebib-add-field)
+   ("c" . ebib-copy-current-field-contents)
+   ("D" . ebib-delete-current-field-contents)
+   ("E" . ebib-edit-keyname)
+   ("H-s" . ebib-save-current-database)
+   ("K" . ebib-copy-key-as-kill)
+   ("Q" . ebib-quit)
+   ("W" . zotra-download-attachment)))
 #+end_src
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
@@ -10410,11 +10374,53 @@ The macro below generates the commands correctly. But attempting to define key b
   :init
   (advice-add 'ebib-init :after #'ebib-extras-auto-reload-databases)
 
-  :bind
-  ("A-i" . ebib-extras-open-or-switch)
-
   :hook
-  (ebib-add-entry . ebib-extras-create-list-of-existing-authors))
+  (ebib-add-entry . ebib-extras-create-list-of-existing-authors)
+
+  :bind
+  (("A-i" . ebib-extras-open-or-switch)
+   :map ebib-index-mode-map
+   ("," . ebib-extras-prev-entry)
+   ("." . ebib-extras-next-entry)
+   ("d" . ebib-extras-duplicate-entry)
+   ("n" . ebib-extras-citar-open-notes)
+   ("A-C-s-<tab>" . ebib-extras-end-of-index-buffer)
+   ("s" . ebib-extras-sort)
+   ("s-t" . ebib-extras-move-entry-to-tlon)
+   :map ebib-entry-mode-map
+   ("s-f" . ebib-extras-open-file-dwim)
+   ("," . ebib-extras-prev-entry)
+   ("." . ebib-extras-next-entry)
+   ("d" . ebib-extras-duplicate-entry)
+   ("n" . ebib-extras-citar-open-notes)
+   ("SPC" . ebib-extras-open-file-dwim)
+   ("/" . ebib-extras-attach-most-recent-file)
+   ("?" . ebib-extras-attach-file)
+   (";" . ebib-extras-process-entry)
+   ("a" . ebib-extras-search-amazon)
+   ("b" . ebib-extras-get-or-open-entry)
+   ("g" . ebib-extras-search-library-genesis)
+   ("G" . ebib-extras-search-goodreads)
+   ("h" . ebib-extras-open-html-file)
+   ("H" . ebib-extras-open-html-file-externally)
+   ("i" . ebib-extras-download-by-identifier)
+   ("I" . ebib-extras-set-id)
+   ("o" . ebib-extras-search-connected-papers)
+   ("p" . ebib-extras-open-pdf-file)
+   ("P" . ebib-extras-open-pdf-file-externally)
+   ("R" . ebib-extras-set-rating)
+   ("s" . ebib-extras-search-dwim)
+   ("T" . ebib-extras-no-translation-found)
+   ("u" . ebib-extras-browse-url-or-doi)
+   ("V" . ebib-extras-search-internet-archive)
+   ("w" . ebib-extras-download-dwim)
+   ("x" . ebib-extras-search-university-of-toronto)
+   ("y" . ebib-extras-search-hathitrust)
+   ("z" . ebib-extras-search-google-scholar)
+   ("s-d" . ebib-extras-url-to-pdf-attach)
+   ("s-k" . ebib-extras-fetch-keywords)
+   ("s-h" . ebib-extras-url-to-html-attach)
+   ("s-r" . ebib-extras-rename-files)))
 #+end_src
 
 ** bib
@@ -11945,6 +11951,7 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (engine/browser-function browse-url-browser-function)
 
   :config
+  (require 'annas-archive)
   (engine/set-keymap-prefix (kbd "H-g"))
   (defengine AllMusic
     "http://www.allmusic.com/search/all/%s"
@@ -12207,7 +12214,7 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     "http://philpapers.org/s/%s"
     :keybinding "p p")
   (defengine AnnasArchive
-    "https://annas-archive.gs/search?index=&page=1&q=%s&ext=pdf&sort="
+    (concat annas-archive-home-url "search?index=&page=1&q=%s&ext=pdf&sort=")
     :keybinding "r r")
   (defengine ReducingSuffering
     "http://reducing-suffering.org/?s=%s"

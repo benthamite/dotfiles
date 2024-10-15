@@ -375,7 +375,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#copilot-extras][copilot-extras]]
   - [[#gptel][gptel]]
   - [[#gptel-extras][gptel-extras]]
-  - [[#dall-e-shell][dall-e-shell]]
   - [[#gpt-commit][gpt-commit]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
@@ -7667,16 +7666,6 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   :config
   (advice-add 'gptel :after #'gptel-extras-save-buffer))
-#+end_src
-
-** dall-e-shell
-:PROPERTIES:
-:ID:       A7D68397-66E3-4085-AF8C-7A17935654E7
-:END:
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package dall-e-shell
-  :after chatgpt-shell)
 #+end_src
 
 ** gpt-commit

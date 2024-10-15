@@ -9,6 +9,16 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** dall-e-shell
+:PROPERTIES:
+:ID:       A7D68397-66E3-4085-AF8C-7A17935654E7
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package dall-e-shell
+  :after chatgpt-shell)
+#+end_src
+
 ** chatgpt-shell
 :PROPERTIES:
 :ID:       6EC52CD8-EBCB-4A26-B1BA-001096C16030

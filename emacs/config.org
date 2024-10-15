@@ -7674,7 +7674,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (("M-c" . gptel-send)
    ("H-s-g" . gptel)
    ("H-s-a" . gptel-abort)
-   ("H-s-m" . gptel-menu)))
+   ("H-s-m" . gptel-menu)
+   ("H-s-t" . gptel-add)))
 #+end_src
 
 ** gptel-extras

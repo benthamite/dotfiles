@@ -70,11 +70,12 @@ PROPERTY should be a keyword symbol like `:input-cost' or `:context-window'."
   "Get the cost of prompting the current model.
 This is used to display the relevant information in the modeline (see
 `doom-modeline-extras')."
-  (let* ((cost-per-1m (tlon-lookup gptel-extras-ai-models :cost :model gptel-model))
+  (let* ((cost-per-1m-tokens (gptel-extras-get-model-property :input-cost))
 	 (words (if (region-active-p)
 		    (count-words (region-beginning) (region-end))
 		  (count-words (point-min) (point))))
-	 (cost (/ (* cost-per-1m words) 1000000.0)))
+	 (tokens-per-word 1.4) ; rough approximation
+	 (cost (/ (* cost-per-1m-tokens tokens-per-word words) 1000000.0)))
     cost))
 
 (defvar gptel-extras-gemini-mullvad-disconnect-after)

@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: elpaca-test
+# key: et
+# contributor: Pablo Stafforini
+# --
+(elpaca-test
+:interactive t
+:init
+;; Code to test here
+$1
+)

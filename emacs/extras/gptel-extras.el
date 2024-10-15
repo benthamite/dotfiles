@@ -49,23 +49,6 @@
 
 ;;;; Functions
 
-(defun gptel-extras-get-model-property (property)
-  "Get the value of PROPERTY for the current `gptel' model.
-PROPERTY should be a keyword symbol like `:input-cost' or `:context-window'."
-  (let* ((backend gptel-backend)
-         (model-name (gptel--model-name gptel-model))
-         (model-sym (intern model-name))
-         (backend-type (type-of backend))
-         (models-var (cond
-                      ((eq backend-type 'gptel-anthropic) 'gptel--anthropic-models)
-                      ((eq backend-type 'gptel-openai) 'gptel--openai-models)
-                      ((eq backend-type 'gptel-gemini) 'gptel--gemini-models)
-                      (t (intern (concat "gptel--" (symbol-name backend-type) "-models"))))))
-    (when (boundp models-var)
-      (let ((model-info (assq model-sym (symbol-value models-var))))
-        (when model-info
-          (plist-get (cdr model-info) property))))))
-
 (defun gptel-extras-get-cost ()
   "Get the rough cost of prompting the current model.
 This is used to display the relevant information in the modeline (see
@@ -75,7 +58,7 @@ Note that the cost is an approximation based on the number of words in the
 buffer or selection. The function uses a 1.4 token/word conversion factor, but
 the actual cost may vary. Also note that files or buffers added to the context
 window are not included in the calculation."
-  (let* ((cost-per-1m-tokens (gptel-extras-get-model-property :input-cost))
+  (let* ((cost-per-1m-tokens (get gptel-model :input-cost))
 	 (words (if (region-active-p)
 		    (count-words (region-beginning) (region-end))
 		  (count-words (point-min) (point))))

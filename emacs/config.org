@@ -11252,6 +11252,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature telega-mnz
   :after telega
+  :demand t
   :custom
   (telega-mnz-use-language-detection nil)
 

@@ -5396,8 +5396,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package consult-extras
   :bind
-  (("H-F" . consult-extras-locate-file-home)
-   ("A-H-f" . consult-extras-locate-file-anywhere)
+  (("H-F" . consult-extras-locate-file-current)
    ("H-k" . consult-extras-locate-current)
    ("H-p" . consult-extras-ripgrep-current)))
 #+end_src

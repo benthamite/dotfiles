@@ -1938,8 +1938,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
      (org-modern-tag :family faces-extras-fixed-pitch-font :height faces-extras-org-tag-height)
      (org-modern-label :family faces-extras-fixed-pitch-font :height 0.8)))
 
-     :hook
-  (org-mode-hook . global-org-modern-mode))
+  (global-org-modern-mode))
 #+end_src
 
 ** org-modern-indent

@@ -47,6 +47,9 @@
   :type 'directory
   :group 'gptel-extras)
 
+(defvar gptel-extras-gemini-mullvad-disconnect-after
+  "The number of minutes to disconnect `mullvad' after starting the Gemini session.")
+
 ;;;; Functions
 
 (defun gptel-extras-get-cost ()
@@ -66,7 +69,6 @@ added to the context window are not included in the calculation."
 	 (cost (/ (* cost-per-1m-tokens tokens-per-word words) 1000000.0)))
     cost))
 
-(defvar gptel-extras-gemini-mullvad-disconnect-after)
 (declare-function mullvad-connect-to-website "mullvad")
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
   "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS."

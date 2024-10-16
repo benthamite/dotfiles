@@ -71,8 +71,10 @@ added to the context window are not included in the calculation."
 
 (declare-function mullvad-connect-to-website "mullvad")
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
-  "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS."
+  "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS.
+Use to circumvent Gemini’s location restrictions."
   (when (eq gptel-model 'gemini-pro)
+    (require 'mullvad)
     (mullvad-connect-to-website "Gemini"
 				gptel-extras-gemini-mullvad-disconnect-after
 				'silently))

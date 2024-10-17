@@ -47,9 +47,6 @@
   :type 'directory
   :group 'gptel-extras)
 
-(defvar gptel-extras-gemini-mullvad-disconnect-after
-  "The number of minutes to disconnect `mullvad' after starting the Gemini session.")
-
 ;;;; Functions
 
 (defun gptel-extras-get-cost ()

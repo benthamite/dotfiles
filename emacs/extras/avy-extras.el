@@ -50,30 +50,34 @@ will no longer jump to its next occurrence."
 
 ;;;; Functions
 
+;;;###autoload
 (defun avy-extras-goto-word-in-line ()
   "Jump to a word start between start and end of visual line."
   (interactive)
   (avy-with avy-goto-word-0
-    (avy-goto-word-0 nil
-                     (save-excursion (beginning-of-visual-line))
-                     (save-excursion (end-of-visual-line) (point)))))
+	    (avy-goto-word-0 nil
+			     (save-excursion (beginning-of-visual-line))
+			     (save-excursion (end-of-visual-line) (point)))))
 
+;;;###autoload
 (defun avy-extras-goto-word-in-line-behind ()
   "Jump to a word start between start of visual line and point."
   (interactive)
   (avy-with avy-goto-word-0
-    (avy-goto-word-0 nil
-                     (save-excursion (beginning-of-visual-line))
-                     (point))))
+	    (avy-goto-word-0 nil
+			     (save-excursion (beginning-of-visual-line))
+			     (point))))
 
+;;;###autoload
 (defun avy-extras-goto-word-in-line-ahead ()
   "Jump to a word start between point and end of visual line."
   (interactive)
   (avy-with avy-goto-word-0
-    (avy-goto-word-0 nil
-                     (point)
-                     (save-excursion (end-of-visual-line) (point)))))
+	    (avy-goto-word-0 nil
+			     (point)
+			     (save-excursion (end-of-visual-line) (point)))))
 
+;;;###autoload
 (defun avy-extras-goto-end-of-line-above (&optional offset bottom-up)
   "Goto visible end of line above the cursor.
 OFFSET changes the distance between the closest key to the cursor and the
@@ -82,6 +86,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (call-interactively (lambda! (avy-goto-line-above offset bottom-up)))
   (end-of-line))
 
+;;;###autoload
 (defun avy-extras-goto-end-of-line-below (&optional offset bottom-up)
   "Goto visible end of line below the cursor.
 OFFSET changes the distance between the closest key to the cursor and the
@@ -91,6 +96,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (end-of-line))
 
 (declare-function dired-find-alternate-file "dired")
+;;;###autoload
 (defun avy-extras-dired-find-file ()
   "In Dired, visit the file or directory in selected line."
   (interactive)

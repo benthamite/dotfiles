@@ -47,6 +47,9 @@
   :type 'directory
   :group 'gptel-extras)
 
+(defvar gptel-extras-gemini-mullvad-disconnect-after
+  "The number of minutes to disconnect `mullvad' after starting the Gemini session.")
+
 ;;;; Functions
 
 (defun gptel-extras-get-cost ()
@@ -56,21 +59,22 @@ This is used to display the relevant information in the modeline (see
 
 Note that the cost is an approximation based on the number of words in the
 buffer or selection. The function uses a 1.4 token/word conversion factor, but
-the actual cost may vary. Also note that files or buffers added to the context
-window are not included in the calculation."
+the actual cost may deviate from this estimate. Also note that files or buffers
+added to the context window are not included in the calculation."
   (let* ((cost-per-1m-tokens (get gptel-model :input-cost))
 	 (words (if (region-active-p)
 		    (count-words (region-beginning) (region-end))
 		  (count-words (point-min) (point))))
-	 (tokens-per-word 1.4) ; rough approximation
+	 (tokens-per-word 1.4)
 	 (cost (/ (* cost-per-1m-tokens tokens-per-word words) 1000000.0)))
     cost))
 
-(defvar gptel-extras-gemini-mullvad-disconnect-after)
 (declare-function mullvad-connect-to-website "mullvad")
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
-  "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS."
+  "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS.
+Use to circumvent Gemini’s location restrictions."
   (when (eq gptel-model 'gemini-pro)
+    (require 'mullvad)
     (mullvad-connect-to-website "Gemini"
 				gptel-extras-gemini-mullvad-disconnect-after
 				'silently))

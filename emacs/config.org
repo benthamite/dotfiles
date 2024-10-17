@@ -1938,8 +1938,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
      (org-modern-tag :family faces-extras-fixed-pitch-font :height faces-extras-org-tag-height)
      (org-modern-label :family faces-extras-fixed-pitch-font :height 0.8)))
 
-     :hook
-  (org-mode-hook . global-org-modern-mode))
+  (global-org-modern-mode))
 #+end_src
 
 ** org-modern-indent
@@ -5397,8 +5396,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package consult-extras
   :bind
-  (("H-F" . consult-extras-locate-file-home)
-   ("A-H-f" . consult-extras-locate-file-anywhere)
+  (("H-F" . consult-extras-locate-file-current)
    ("H-k" . consult-extras-locate-current)
    ("H-p" . consult-extras-ripgrep-current)))
 #+end_src
@@ -6345,6 +6343,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
         ("s-k" . markdown-insert-link)
         ("s-p" . markdown-preview)
         :map markdown-mode-map
+        ("s-z" . markdown-edit-code-block)
         ("A-C-H-t" . markdown-mode-extras-copy-section)
         ("A-C-s-r" . markdown-outline-previous)
         ("A-C-s-f" . markdown-outline-next)
@@ -6431,7 +6430,9 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package edit-indirect
-  :after markdown-mode)
+  :after markdown-mode
+  :bind (:map edit-indirect-mode-map
+              ("s-z" . edit-indirect-commit)))
 #+end_src
 
 ** mediawiki
@@ -7615,6 +7616,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
                  :repo "karthink/gptel")
   :custom
   (gptel-default-mode 'org-mode)
+  (gptel-expert-commands t)
   (gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   :config
@@ -7635,40 +7637,40 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :stream t
     :models '(;; <https://docs.perplexity.ai/docs/model-cards>
               (llama-3.1-sonar-huge-128k-online
-	       :context-window 127.072
-	       :input-cost 5
-	       :last-update ""
-	       :description "[recommended]")
+               :context-window 127.072
+               :input-cost 5
+               :last-update ""
+               :description "[recommended]")
               (llama-3.1-sonar-large-128k-online
-	       :context-window 127.072
-	       :input-cost 1
-	       :last-update ""
-	       :description "")
+               :context-window 127.072
+               :input-cost 1
+               :last-update ""
+               :description "")
               (llama-3.1-sonar-small-128k-online
-	       :context-window 127.072
-	       :input-cost 0.2
-	       :last-update ""
-	       :description "")
+               :context-window 127.072
+               :input-cost 0.2
+               :last-update ""
+               :description "")
               (llama-3.1-sonar-small-128k-chat
-	       :context-window 131.072
-	       :input-cost 0.2
-	       :last-update ""
-	       :description "")
+               :context-window 131.072
+               :input-cost 0.2
+               :last-update ""
+               :description "")
               (llama-3.1-sonar-large-128k-chat
-	       :context-window 131.072
-	       :input-cost 1
-	       :last-update ""
-	       :description "")
+               :context-window 131.072
+               :input-cost 1
+               :last-update ""
+               :description "")
               (llama-3.1-8b-instruct
-	       :context-window 131.072
-	       :input-cost 0.2
-	       :last-update ""
-	       :description "")
+               :context-window 131.072
+               :input-cost 0.2
+               :last-update ""
+               :description "")
               (llama-3.1-70b-instruct
-	       :context-window 131.072
-	       :input-cost 1
-	       :last-update ""
-	       :description "")))
+               :context-window 131.072
+               :input-cost 1
+               :last-update ""
+               :description "")))
 
   :bind
   (("M-c" . gptel-send)

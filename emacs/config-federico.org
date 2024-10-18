@@ -12,7 +12,7 @@
         anki-editor
         auto-commit-mode
         ;; bbdb
-        copilot
+        ;; copilot
         corfu-doc-terminal
         corfu-terminal
         ;; display-wttr
@@ -22,6 +22,7 @@
         ;; flymake
         frame
         ;; forge
+        gdrive
         git-auto-commit-mode
         hammy
         ;; jinx
@@ -45,7 +46,7 @@
         ;; tlon-init
         theme-loaddefs
         twittering-mode
-        vulpea
+        ;; vulpea
         ;; window
         ;; yasnippet
         ))
@@ -95,6 +96,7 @@
  (paths-tlon-todos-jobs-id . "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
  (paths-tlon-todos-generic-id . "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
  (paths-dir-babel-refs . (file-name-concat paths-dir-external-repos "babel-refs"))
+ (paths-dir-inactive . "")
  )
 #+end_src
 
@@ -210,10 +212,7 @@
 ** docker
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (use-package docker
-  :demand t
-  :general
-  ("H-D" 'docker)
-  )
+  :demand t)
 #+end_src
 
 ** ns-win
@@ -342,7 +341,7 @@
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'dired
-  (general-define-key
+  ;; (general-define-key
    :keymaps 'dired-mode-map
    "n" 'find-file)
 
@@ -420,7 +419,7 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(general-define-key
+;; (general-define-key
  "<kp-delete>" 'delete-char
  "<home>" 'beginning-of-line
  "<end>" 'end-of-line
@@ -459,10 +458,10 @@
  "<C-S-down>" nil)
 
 (global-unset-key (kbd "C--"))
-(general-unbind "C--")
+;; (general-unbind "C--")
 (keymap-unset minibuffer-mode-map "s-i")
 
- (general-define-key
+ ;; (general-define-key
  :keymaps '(outline-mode-map emacs-lisp-mode-map)
  "<M-left>" 'backward-word
   "<M-right>" 'forward-word)
@@ -501,7 +500,7 @@
   (setq-default org-support-shift-select 'always
                 org-replace-disputed-keys t)
 
-  (general-define-key
+  ;; (general-define-key
    :keymap 'org-mode-map
    "s-i" 'org-clock-in
    "s-o" 'org-clock-out

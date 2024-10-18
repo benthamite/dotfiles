@@ -302,7 +302,6 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'gptel-extras
   ;; gptel config
-  ;; (gptel-extras-model-config 'globally "ChatGPT" "gpt-4o")
   (setq gptel-default-mode 'markdown-mode
         gptel-extras-dir "/Users/fede/Dropbox/obsidian/gpt-4/")
 
@@ -330,7 +329,9 @@
                                        (file-name-with-extension (simple-extras-slugify name) extension))))
       (write-file filename 'confirm)))
 
-  (message "`frame-extras' late-init config loaded."))
+  (message "`gptel-extras' late-init config loaded."))
+#+end_src
+
 #+end_src
 
 ** cua-base

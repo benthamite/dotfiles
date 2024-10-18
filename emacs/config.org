@@ -3522,17 +3522,6 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature files
   :after savehist
-  :init
-  (with-eval-after-load 'ebib
-    (dolist (map (list ebib-index-mode-map ebib-entry-mode-map))
-      (bind-keys :map map
-                 ("H-q" . bury-buffer))))
-  (with-eval-after-load 'messages
-    (bind-keys :map messages-buffer-mode-map
-               ("H-q" . bury-buffer)))
-  (with-eval-after-load 'telega
-    (bind-keys :map 'telega-root-mode-map))
-
   :custom
   (confirm-kill-processes nil) ; do not prompt to kill running processes when quitting Emacs
   (delete-by-moving-to-trash t)
@@ -4283,6 +4272,17 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 (use-feature window
   :after simple-extras
   :init
+  (with-eval-after-load 'ebib
+    (bind-keys :map ebib-index-mode-map
+               ("H-q" . bury-buffer)
+               :map ebib-entry-mode-map
+               ("H-q" . bury-buffer)))
+  (with-eval-after-load 'simple
+    (bind-keys :map messages-buffer-mode-map
+               ("H-q" . bury-buffer)))
+  (with-eval-after-load 'telega
+    (bind-keys :map 'telega-root-mode-map
+               ("H-q" . bury-buffer)))
   (with-eval-after-load 'elfeed
     (bind-keys :map elfeed-show-mode-map
                ("y" . scroll-down-command)

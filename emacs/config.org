@@ -7563,13 +7563,6 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   (unless (copilot-installed-version)
     (copilot-install-server))
 
-  (run-with-idle-timer 60 t (lambda ()
-                              "Hack: ‘restart’ copilot periodically."
-                              (when copilot-mode
-                                (copilot-mode -1)
-                                (sleep-for 0 50)
-                                (copilot-mode +1))))
-
   :bind
   (:map copilot-completion-map
         ("C-s-g" . copilot-clear-overlay)
@@ -7592,6 +7585,9 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :custom
   (copilot-extras-excluded-modes '(dsssl-mode mhtml-mode json-mode))
 
+  :config
+  (run-with-idle-timer 60 t #'copilot-extras-restart-copilot)
+                                
   :hook
   ((prog-mode-hook text-mode-hook) . copilot-extras-enable-conditionally))
 #+end_src

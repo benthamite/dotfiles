@@ -440,53 +440,50 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-;; (bind-general-define-key
-;;  "<kp-delete>" 'delete-char
-;;  "<home>" 'beginning-of-line
-;;  "<end>" 'end-of-line
-;;  "H-q" 'delete-window
-;;  "H-w" 'files-extras-kill-this-buffer
-;;  "H-k" 'org-extras-work-dispatch
-;;  "H-o" 'find-file
-;;  "H-d" 'dired-fedes-dispatch
-;;  "H-/" 'comment-line
-;;  "H-\\" 'window-extras-split-if-unsplit
-;;  "H-;" 'org-extras-work-dispatch
-;;  "H-g" nil
-;;  "H-h" 'other-window
-;;  "H-H" 'window-extras-buffer-move-dwim
-;;  "s-i" 'org-clock-in
-;;  "s-o" 'org-clock-out
-;;  "A-s-j" 'org-clock-goto
-;;  "A-s-x" 'org-clock-cancel
-;;  "<M-right>" 'forward-word
-;;  "<M-left>" 'backward-word
-;;  "<M-H-SPC>" 'execute-extended-command
-;;  "H-:" 'eval-expression
-;;  "<M-backspace>" 'backward-kill-word
-;;  "<M-delete>" 'kill-word
-;;  "C--" 'back-button-global-backward
-;;  "C-_" 'back-button-global-forward
-;;  "H-i" nil
-;;  "<C-delete>" nil
-;;  "<C-left>" nil
-;;  "<C-S-left>" nil
-;;  "<C-right>" nil
-;;  "<C-S-right>" nil
-;;  "<C-up>" nil
-;;  "<C-S-up>" nil
-;;  "<C-down>" nil
-;;  "<C-S-down>" nil)
+(global-set-key (kbd "<kp-delete>") 'delete-char)
+(global-set-key (kbd "<home>") 'beginning-of-line)
+(global-set-key (kbd "<end>") 'end-of-line)
+(global-set-key (kbd "H-q") 'delete-window)
+(global-set-key (kbd "H-w") 'files-extras-kill-this-buffer)
+(global-set-key (kbd "H-k") 'org-extras-work-dispatch)
+(global-set-key (kbd "H-o") 'find-file)
+(global-set-key (kbd "H-d") 'dired-fedes-dispatch)
+(global-set-key (kbd "H-/") 'comment-line)
+(global-set-key (kbd "H-\\") 'window-extras-split-if-unsplit)
+(global-set-key (kbd "H-;") 'org-extras-work-dispatch)
+(global-set-key (kbd "H-g") nil)
+(global-set-key (kbd "H-h") 'other-window)
+(global-set-key (kbd "H-H") 'window-extras-buffer-move-dwim)
+(global-set-key (kbd "s-i") 'org-clock-in)
+(global-set-key (kbd "s-o") 'org-clock-out)
+(global-set-key (kbd "A-s-j") 'org-clock-goto)
+(global-set-key (kbd "A-s-x") 'org-clock-cancel)
+(global-set-key (kbd "<M-right>") 'forward-word)
+(global-set-key (kbd "<M-left>") 'backward-word)
+(global-set-key (kbd "<M-H-SPC>") 'execute-extended-command)
+(global-set-key (kbd "H-:") 'eval-expression)
+(global-set-key (kbd "<M-backspace>") 'backward-kill-word)
+(global-set-key (kbd "<M-delete>") 'kill-word)
+(global-set-key (kbd "C--") 'back-button-global-backward)
+(global-set-key (kbd "C-_") 'back-button-global-forward)
+(global-set-key (kbd "H-i") nil)
+
+(global-unset-key (kbd "<C-delete>"))
+(global-unset-key (kbd "<C-left>"))
+(global-unset-key (kbd "<C-S-left>"))
+(global-unset-key (kbd "<C-right>"))
+(global-unset-key (kbd "<C-S-right>"))
+(global-unset-key (kbd "<C-up>"))
+(global-unset-key (kbd "<C-S-up>"))
+(global-unset-key (kbd "<C-down>"))
+(global-unset-key (kbd "<C-S-down>"))
 
 (global-unset-key (kbd "C--"))
-;; (general-unbind "C--")
-(keymap-unset minibuffer-mode-map "s-i")
+(define-key minibuffer-mode-map (kbd "s-i") nil)
 
- ;; (general-define-key
- ;; :keymaps '(outline-mode-map emacs-lisp-mode-map)
- ;; "<M-left>" 'backward-word
- ;;  "<M-right>" 'forward-word)
-
+(dolist (map (list outline-mode-map emacs-lisp-mode-map))
+  (define-key map (kbd "<M-left>") 'backward-word)
+  (define-key map (kbd "<M-right>") 'forward-word))
 #+end_src
 
 ** org
@@ -639,13 +636,13 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'org-extras
   (setq org-extras-bbdb-anniversaries-heading nil)
-  (simple-extras-init-disable-funs 90 '(org-extras-fold-show-all-headings
-                                        org-extras-hide-properties
-                                        org-extras-hide-logbook
-                                        org-extras-show-properties
-                                        org-extras-show-logbook
-                                        org-extras-toggle-properties
-                                        org-extras-toggle-logbook))
+  ;; (simple-extras-init-disable-funs 90 '(org-extras-fold-show-all-headings
+  ;;                                       org-extras-hide-properties
+  ;;                                       org-extras-hide-logbook
+  ;;                                       org-extras-show-properties
+  ;;                                       org-extras-show-logbook
+  ;;                                       org-extras-toggle-properties
+  ;;                                       org-extras-toggle-logbook))
   (cancel-timer org-extras-agenda-switch-to-agenda-current-day-timer)
   (remove-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
 

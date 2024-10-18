@@ -49,5 +49,12 @@ The list of excluded modes is defined in `copilot-extras-excluded-modes'."
 	      (memq major-mode copilot-extras-excluded-modes))
     (copilot-mode)))
 
+(defun copilot-extras-restart-copilot ()
+  "Hack: ‘restart’ copilot periodically."
+  (when copilot-mode
+    (copilot-mode -1)
+    (sleep-for 0.001)
+    (copilot-mode +1)))
+
 (provide 'copilot-extras)
 ;;; copilot-extras.el ends here

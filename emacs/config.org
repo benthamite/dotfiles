@@ -11284,7 +11284,6 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package telega-extras
-  :after dired
   :custom
   (telega-extras-auto-share-audio-transcript nil)
   (telega-extras-chats '((:name "Tlön" :id -1001867927081

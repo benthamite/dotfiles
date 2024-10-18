@@ -362,8 +362,8 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'dired
   ;; (general-define-key
-   :keymaps 'dired-mode-map
-   "n" 'find-file)
+   ;; :keymaps 'dired-mode-map
+   ;; "n" 'find-file)
 
   (transient-define-prefix dired-fedes-dispatch ()
     "Fede's version of Pablo's dispatcher."
@@ -439,52 +439,52 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-;; (general-define-key
- "<kp-delete>" 'delete-char
- "<home>" 'beginning-of-line
- "<end>" 'end-of-line
- "H-q" 'delete-window
- "H-w" 'files-extras-kill-this-buffer
- "H-k" 'org-extras-work-dispatch
- "H-o" 'find-file
- "H-d" 'dired-fedes-dispatch
- "H-/" 'comment-line
- "H-\\" 'window-extras-split-if-unsplit
- "H-;" 'org-extras-work-dispatch
- "H-g" nil
- "H-h" 'other-window
- "H-H" 'window-extras-buffer-move-dwim
- "s-i" 'org-clock-in
- "s-o" 'org-clock-out
- "A-s-j" 'org-clock-goto
- "A-s-x" 'org-clock-cancel
- "<M-right>" 'forward-word
- "<M-left>" 'backward-word
- "<M-H-SPC>" 'execute-extended-command
- "H-:" 'eval-expression
- "<M-backspace>" 'backward-kill-word
- "<M-delete>" 'kill-word
- "C--" 'back-button-global-backward
- "C-_" 'back-button-global-forward
- "H-i" nil
- "<C-delete>" nil
- "<C-left>" nil
- "<C-S-left>" nil
- "<C-right>" nil
- "<C-S-right>" nil
- "<C-up>" nil
- "<C-S-up>" nil
- "<C-down>" nil
- "<C-S-down>" nil)
+;; (bind-general-define-key
+;;  "<kp-delete>" 'delete-char
+;;  "<home>" 'beginning-of-line
+;;  "<end>" 'end-of-line
+;;  "H-q" 'delete-window
+;;  "H-w" 'files-extras-kill-this-buffer
+;;  "H-k" 'org-extras-work-dispatch
+;;  "H-o" 'find-file
+;;  "H-d" 'dired-fedes-dispatch
+;;  "H-/" 'comment-line
+;;  "H-\\" 'window-extras-split-if-unsplit
+;;  "H-;" 'org-extras-work-dispatch
+;;  "H-g" nil
+;;  "H-h" 'other-window
+;;  "H-H" 'window-extras-buffer-move-dwim
+;;  "s-i" 'org-clock-in
+;;  "s-o" 'org-clock-out
+;;  "A-s-j" 'org-clock-goto
+;;  "A-s-x" 'org-clock-cancel
+;;  "<M-right>" 'forward-word
+;;  "<M-left>" 'backward-word
+;;  "<M-H-SPC>" 'execute-extended-command
+;;  "H-:" 'eval-expression
+;;  "<M-backspace>" 'backward-kill-word
+;;  "<M-delete>" 'kill-word
+;;  "C--" 'back-button-global-backward
+;;  "C-_" 'back-button-global-forward
+;;  "H-i" nil
+;;  "<C-delete>" nil
+;;  "<C-left>" nil
+;;  "<C-S-left>" nil
+;;  "<C-right>" nil
+;;  "<C-S-right>" nil
+;;  "<C-up>" nil
+;;  "<C-S-up>" nil
+;;  "<C-down>" nil
+;;  "<C-S-down>" nil)
 
 (global-unset-key (kbd "C--"))
 ;; (general-unbind "C--")
 (keymap-unset minibuffer-mode-map "s-i")
 
  ;; (general-define-key
- :keymaps '(outline-mode-map emacs-lisp-mode-map)
- "<M-left>" 'backward-word
-  "<M-right>" 'forward-word)
+ ;; :keymaps '(outline-mode-map emacs-lisp-mode-map)
+ ;; "<M-left>" 'backward-word
+ ;;  "<M-right>" 'forward-word)
 
 #+end_src
 
@@ -521,23 +521,23 @@
                 org-replace-disputed-keys t)
 
   ;; (general-define-key
-   :keymap 'org-mode-map
-   "s-i" 'org-clock-in
-   "s-o" 'org-clock-out
-   "M-<right>" nil
-   "M-<left>" nil
-   "M-<up>" nil
-   "M-<down>" nil
-   "M-S-<right>" nil
-   "M-S-<left>" nil
-   "M-S-<up>" nil
-   "M-S-<down>" nil
-   "H-<right>" 'org-metaright
-   "H-<left>" 'org-metaleft
-   "H-<up>" 'org-metaup
-   "H-<down>" 'org-metadown
-   "M-<right>" 'forward-word
-   "M-<left>" 'backward-word)
+   ;; :keymap 'org-mode-map
+   ;; "s-i" 'org-clock-in
+   ;; "s-o" 'org-clock-out
+   ;; "M-<right>" nil
+   ;; "M-<left>" nil
+   ;; "M-<up>" nil
+   ;; "M-<down>" nil
+   ;; "M-S-<right>" nil
+   ;; "M-S-<left>" nil
+   ;; "M-S-<up>" nil
+   ;; "M-S-<down>" nil
+   ;; "H-<right>" 'org-metaright
+   ;; "H-<left>" 'org-metaleft
+   ;; "H-<up>" 'org-metaup
+   ;; "H-<down>" 'org-metadown
+   ;; "M-<right>" 'forward-word
+   ;; "M-<left>" 'backward-word)
 
   ;; remove unwanted keybindings from Pablo
   (keymap-unset org-mode-map "s-i"

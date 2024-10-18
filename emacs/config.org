@@ -6598,6 +6598,7 @@ https://gitlab.com/chrisberkhout/pricehist
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ledger-mode-extras
+  :after ledger-mode
   :bind
   (:map ledger-mode-map
         ("s-SPC" . ledger-mode-extras-new-entry-below)

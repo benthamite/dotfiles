@@ -146,6 +146,9 @@
 #+end_src
 
 ** claendar-extras
+:PROPERTIES:
+:ID:       09286FD9-FE88-445D-BAC4-236A04211800
+:END:
 #+begin_src emacs-lisp
 (with-eval-after-load 'calendar-extras
   (setq calendar-extras-location-name "Buenos Aires")
@@ -182,6 +185,9 @@
 #+end_src
 
 ** browse-url
+:PROPERTIES:
+:ID:       D2C8E7EB-0088-4E60-9F7F-49B4E1B40479
+:END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'browse-url
   (setq browse-url-browser-function 'browse-url-chrome))
@@ -189,6 +195,7 @@
 
 ** window-extras
 :PROPERTIES:
+:ID:       47C50936-8F8E-4900-BED0-B64AE8DFE7F9
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
@@ -210,6 +217,9 @@
 #+end_src
 
 ** docker
+:PROPERTIES:
+:ID:       A024A856-47CE-4B85-9C42-9DD756D1CD8B
+:END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (use-package docker
   :demand t)
@@ -776,6 +786,9 @@ Disable hl-sentence because I do not like it...
 #+end_src
 
 ** telega-extras
+:PROPERTIES:
+:ID:       22B6AE58-5D79-4CFA-8851-1787F9B94428
+:END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'telega-extras
@@ -797,6 +810,7 @@ Disable hl-sentence because I do not like it...
 
 ** face-remap (disable variable-pitch-mode)
 :PROPERTIES:
+:ID:       B3773C4A-C682-416C-8D2B-F4EE280BCCCE
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (dolist (hook '(elfeed-show-mode-hook

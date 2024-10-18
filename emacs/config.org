@@ -1272,7 +1272,6 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 (use-personal-package pass-extras
   :bind
   (:map pass-mode-map
-        ("<return>" . pass-extras-edit)
         ("SPC" . pass-extras-open-at-point)
         ("e" . pass-extras-edit)
         ("I" . pass-extras-insert-generated-no-symbols)

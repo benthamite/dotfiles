@@ -39,9 +39,9 @@
         ;; pdf-tools
         puni
         remember
-        server
+        ;; server
         slack
-        spelling
+        ;; spelling
         ;; tlon-init
         theme-loaddefs
         twittering-mode

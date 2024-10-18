@@ -3648,9 +3648,6 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (with-eval-after-load 'special
     (bind-keys :map special-mode-map
                ("q" . files-extras-kill-this-buffer)))
-  (with-eval-after-load 'telega
-    (bind-keys :map telega-msg-button-map
-               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'tetris
     (bind-keys :map tetris-mode-map
                ("q" . files-extras-kill-this-buffer)))

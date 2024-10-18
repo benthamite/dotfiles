@@ -90,7 +90,7 @@
  (paths-file-cookies . "")
  (paths-file-work . "")
  (paths-file-tlon-tareas-fede . (file-name-concat paths-dir-dropbox-tlon-fede "tareas.org"))
- (paths-tlon-todos-jobs-id . "")
+ (paths-tlon-todos-jobs-id . "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
  (paths-tlon-todos-generic-id . "F7EEAF78-A82B-4F8D-88FE-E6FBF9034BBA")
  (paths-dir-babel-refs . (file-name-concat paths-dir-external-repos "babel-refs"))
  )
@@ -207,7 +207,11 @@
 
 ** docker
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(use-package docker :demand t)
+(use-package docker
+  :demand t
+  :general
+  ("H-D" 'docker)
+  )
 #+end_src
 
 ** ns-win
@@ -361,7 +365,7 @@
 
      ["System config"
       ("n" "Local ningx config" (lambda () (interactive) (dired "/opt/homebrew/etc/nginx/sites-available/")))
-      ("w" "nginx home" (lambda () (interactive) (dired (file-name-concat (getenv "HOME") "www"))))]
+      ("g" "nginx home" (lambda () (interactive) (dired (file-name-concat (getenv "HOME") "www"))))]
 
      ["DigitalOcean"
       ("N" "/config/nginx/sites-available" (lambda () (interactive) (dired "/ssh:root@tlon.team:/etc/nginx/sites-available/")))
@@ -572,20 +576,20 @@
   (setq org-agenda-custom-commands
         '(("j" "Agenda + TODOs"
            (
-            (tags-todo "+fede"
-                       (;; (tags "fede")
-                        (org-agenda-sorting-strategy '(priority-down todo-state-down))
-                        (org-agenda-overriding-header "Mensajes para Fede")))
-            (tags-todo "+pablo"
-                       (;; (tags "fede")
-                        (org-agenda-sorting-strategy '(priority-down todo-state-down))
-                        (org-agenda-overriding-header "Mensajes para Pablo")))
-            (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Library/CloudStorage/Dropbox/tlon/fede/tareas.org\""
-                       ((org-agenda-max-entries 10)
-                        (org-agenda-sorting-strategy '(priority-down todo-state-down))
-                        (org-agenda-overriding-header "TODO - Trabajo")))
+            ;; (tags-todo "+fede"
+            ;;            (;; (tags "fede")
+            ;;             (org-agenda-sorting-strategy '(priority-down todo-state-down))
+            ;;             (org-agenda-overriding-header "Mensajes para Fede")))
+            ;; (tags-todo "+pablo"
+            ;;            (;; (tags "fede")
+            ;;             (org-agenda-sorting-strategy '(priority-down todo-state-down))
+            ;;             (org-agenda-overriding-header "Mensajes para Pablo")))
+            ;; (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Library/CloudStorage/Dropbox/tlon/fede/tareas.org\""
+            ;;            ((org-agenda-max-entries 10)
+            ;;             (org-agenda-sorting-strategy '(priority-down todo-state-down))
+            ;;             (org-agenda-overriding-header "TODO - Trabajo")))
             (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Library/CloudStorage/Dropbox/org/todo.org\""
-                       ((org-agenda-max-entries 10)
+                       ((org-agenda-max-entries 20)
                         (org-agenda-sorting-strategy '(priority-down todo-state-down))
                         (org-agenda-overriding-header "TODO - Personal")))
             (tags-todo "+SCHEDULED<=\"<today>\""
@@ -597,9 +601,9 @@
             (agenda "" ((org-agenda-span 14)))
             (todo "WAITING"
                   ((org-agenda-overriding-header "WAITING")))
-            (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Dropbox/tlon/fede/tareas.org\""
-                       ((org-agenda-sorting-strategy '(priority-down todo-state-down))
-                        (org-agenda-overriding-header "TODO - Trabajo - Todos")))
+            ;; (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Dropbox/tlon/fede/tareas.org\""
+            ;;            ((org-agenda-sorting-strategy '(priority-down todo-state-down))
+            ;;             (org-agenda-overriding-header "TODO - Trabajo - Todos")))
             (tags-todo "TODO=\"TODO\"+FILE=\"/Users/fede/Dropbox/org/todo.org\""
                        ((org-agenda-sorting-strategy '(priority-down todo-state-down))
                         (org-agenda-overriding-header "TODO - Personal - Todos")))))))
@@ -762,7 +766,7 @@ Disable hl-sentence because I do not like it...
 ** telega-extras
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(with-eval-after-load 'telega-extras  
+(with-eval-after-load 'telega-extras
   (setq telega-extras-auto-share-audio-transcript nil)
   )
 #+end_src

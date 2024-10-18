@@ -1607,10 +1607,10 @@ Running with --debug will show why files are being skipped.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package with-editor
-  :bind
-  (("s-c" . with-editor-finish)
-   ("s-k" . with-editor-cancel)
-   ("C-c C-c" . with-editor-finish)))
+  :bind (:map with-editor-mode-map
+              ("s-c" . with-editor-finish)
+              ("s-k" . with-editor-cancel)
+              ("C-c C-c" . with-editor-finish)))
 #+end_src
 
 ** ghub

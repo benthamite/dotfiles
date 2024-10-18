@@ -4270,7 +4270,6 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature window
-  :after simple-extras
   :init
   (with-eval-after-load 'ebib
     (bind-keys :map ebib-index-mode-map

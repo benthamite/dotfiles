@@ -332,6 +332,15 @@
   (message "`gptel-extras' late-init config loaded."))
 #+end_src
 
+** copilot
+:PROPERTIES:
+:ID:       46B3BF04-8E5A-427A-BBDA-5F0FCACB4C72
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'copilot-extras
+  (remove-hook 'prog-mode-hook #'copilot-extras-enable-conditionally)
+  (remove-hook 'text-mode-hook #'copilot-extras-enable-conditionally))
 #+end_src
 
 ** cua-base

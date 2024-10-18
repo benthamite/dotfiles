@@ -34,12 +34,14 @@
 (require 'paths)
 (require 'simple-extras)
 (require 'shut-up)
+(require 'tlon)
+(require 'eww-extras)
 
 ;;;; User options
 
 (defgroup ebib-extras ()
   "Extensions for `ebib'."
-  :group 'ebib-extras)
+  :group 'ebib)
 
 (defcustom ebib-extras-download-use-vpn nil
   "Whether to use a VPN when downloading content."
@@ -63,12 +65,21 @@
   "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
   "Regular expression for valid BibTeX keys.")
 
+(defconst ebib-extras-valid-file-extensions
+  '("pdf" "html" "webm" "flac" "mp3" "md" "srt" "vtt")
+  "List of valid file extensions for `ebib-extras-open-file-dwim'.")
+
+(defconst ebib-extras-valid-text-file-extensions
+  '("html" "pdf" "srt" "vtt")
+  "List of valid text file extensions.")
+
 ;;;; Functions
 
 (defvar window-extras-frame-split-width-threshold)
 (declare-function window-extras-split-if-unsplit "window-extras")
 (declare-function winum-select-window-2 "winum")
 (declare-function winum-select-window-3 "winum")
+;;;###autoload
 (defun ebib-extras-open-or-switch ()
   "Open ebib in the right window or switch to it if already open."
   (interactive)
@@ -276,14 +287,6 @@ exists."
   (interactive)
   (ebib-extras-open-file-externally "html"))
 
-(defconst ebib-extras-valid-file-extensions
-  '("pdf" "html" "webm" "flac" "mp3" "md" "srt" "vtt")
-  "List of valid file extensions for `ebib-extras-open-file-dwim'.")
-
-(defconst ebib-extras-valid-text-file-extensions
-  '("html" "pdf" "srt" "vtt")
-  "List of valid text file extensions.")
-
 (defun ebib-extras-open-file-dwim ()
   "Open file in entry at point.
 If the entry contains more than one file, use the preference
@@ -306,27 +309,24 @@ ordering defined in `ebib-extras-valid-file-extensions'."
     (entries
      (let* ((field "file")
 	    (key (ebib--get-key-at-point))
-	    (file-list (split-string
-			(ebib-extras-get-field field)
-			";")))
+	    (file-list (split-string (ebib-extras-get-field field) ";")))
        (ebib-extras-check-valid-key key)
        (when file-list
 	 (ebib-delete-field-contents field t)
 	 (dolist (filename file-list)
-	   (let ((stem (file-name-base filename))
-		 (extension (file-name-extension filename)))
-	     (unless (equal stem key)
-	       (let ((new-filename
-		      (ebib-extras--rename-and-abbreviate-file
-		       (ebib-extras--extension-directories extension)
-		       key
-		       extension)))
-		 (rename-file filename new-filename)
-		 (setq filename new-filename)))
+	   (let ((extension (file-name-extension filename)))
+	     (let ((new-filename
+		    (ebib-extras--rename-and-abbreviate-file
+		     (ebib-extras--extension-directories extension)
+		     key extension)))
+	       (cond ((file-exists-p filename)
+		      (rename-file filename new-filename 'ok-if-already-exists))
+		     ((file-exists-p new-filename))
+		     (t (user-error "File `%s' does not exist" filename)))
+	       (setq filename new-filename))
 	     (ebib-set-field-value field filename key ebib--cur-db ";")))
 	 (ebib--redisplay-field field)
 	 (ebib--redisplay-index-item field))))
-    ;; (ebib-save-current-database nil))))
     (default
      (beep))))
 
@@ -376,9 +376,62 @@ If EXTENSION is non-nil, set its extension to its value."
 	(t
 	 (user-error "Invalid file extension"))))
 
+;;;;; process invalid files
+;; These functions are meant to be run sporadically, to clean up the library.
+;; First call `ebib-extras-list-invalid-files', wait for a few minutes for the
+;; processing to finish, then call `ebib-extras-rename-next-invalid-file' to
+;; rename the next invalid file in line. You may have to do some manual
+;; processing. Repeat until all files are renamed.
+
+(defvar ebib-extras-invalid-files nil
+  "List of invalid files.")
+
+(declare-function tlon-bibliography-lookup "tlon-tex")
+(defun ebib-extras-file-is-valid-p (file)
+  "Check if FILE has a valid slug."
+  (let ((slug (file-name-base file)))
+    (require 'tlon-tex)
+    (stringp (tlon-bibliography-lookup "=key=" slug))))
+
+(defun ebib-extras-list-invalid-files (&optional dirs)
+  "Return a list of all files with invalid names in DIRS.
+If DIRS is nil, search in all library dirs."
+  (interactive)
+  (let* ((dirs (or dirs (list
+			 ;; paths-dir-html-library
+			 paths-dir-pdf-library
+			 ;; paths-dir-media-library
+			 )))
+	 (invalid-files (seq-filter
+			 (lambda (file)
+			   (message "Processing %s" file)
+			   (null (ebib-extras-file-is-valid-p file)))
+			 (apply #'append
+				(mapcar
+				 (lambda (dir)
+				   (directory-files dir t directory-files-no-dot-files-regexp))
+				 dirs)))))
+    (setq ebib-extras-invalid-files invalid-files)))
+
+(defun ebib-extras-rename-invalid-file (file)
+  "Rename FILE with invalid name."
+  (setq ebib-extras-invalid-files (delete file ebib-extras-invalid-files))
+  (when-let* ((key (tlon-bibliography-lookup "file" (file-name-nondirectory file) "=key=" t))
+	      (bibfile (ebib-extras-get-file-of-key key)))
+    (ebib bibfile key)
+    (ebib-edit-entry)
+    (unless (ebib-extras-get-field "crossref")
+      (ebib-extras-rename-files))))
+
+(defun ebib-extras-rename-next-invalid-file ()
+  "Rename next invalid file in the list of invalid files."
+  (interactive)
+  (dolist (file ebib-extras-invalid-files)
+    (ebib-extras-rename-invalid-file file)))
+
 ;;;;; process entries
 
-(declare-function tlon-tex-translate-abstract-when-modified "tlon-tex")
+(declare-function tlon-deepl-translate-abstract "tlon-deepl")
 (defun ebib-extras-process-entry ()
   "Process the entry at point.
 Set the entry’s key and language; download and attach the relevant files; and
@@ -391,7 +444,7 @@ correctly set."
 	    (y-or-n-p "Regenerate key? "))
     (ebib-generate-autokey))
   (ebib-extras-get-or-set-language)
-  (tlon-tex-translate-abstract-when-modified)
+  (tlon-deepl-translate-abstract)
   (ebib-extras-attach-files))
 
 (defun ebib-extras-set-abstract ()
@@ -466,6 +519,8 @@ current entry or, if not available, the key stored in
   (interactive)
   (ebib-extras-attach-file 'most-recent))
 
+;;;;; File attachment
+
 (declare-function eww-extras-url-to-file "eww-extras")
 (defun ebib-extras-url-to-file-attach (type)
   "Generate a file  of TYPE for the URL of the entry at point and attach it.
@@ -504,7 +559,7 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
 	    ('bibtex-mode (bibtex-extras-get-key))
 	    ((or 'ebib-entry-mode 'ebib-index-mode)
 	     (ebib--get-key-at-point))))
-    (eww-extras-annas-archive-download id 'confirm #'ebib-extras-attach-file)))
+    (annas-archive-download id 'confirm #'ebib-extras-attach-file)))
 
 (defun ebib-extras-doi-attach ()
   "Get a PDF of the DOI of the entry at point and attach it."
@@ -519,7 +574,7 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
     (ebib-extras-attach-file file)
     (message "Attached `%s' to %s" file key)))
 
-(declare-function eww-extras-annas-archive-download "eww-extras")
+(declare-function annas-archive-download "eww-extras")
 (defun ebib-extras-attach-files ()
   "Attach files appropriate for the current entry type.
 If file is already attached, set the abstract."
@@ -543,36 +598,16 @@ If file is already attached, set the abstract."
 
 ;;;;; ?
 
-(defconst ebib-extras-iso-639-2
-  '(("english" . "eng")
-    ("american" . "eng")
-    ("french" . "fra")
-    ("german" . "deu")
-    ("italian" . "ita")
-    ("spanish" . "spa")
-    ("portuguese" . "por")
-    ("russian" . "rus")
-    ("chinese" . "zho")
-    ("japanese" . "jpn")
-    ("korean" . "kor")
-    ("arabic" . "ara")
-    ("latin" . "lat")
-    ("greek" . "ell"))
-  "Alist of languages and their ISO 639-2 codes.")
-
 (declare-function files-extras-ocr-pdf "files-extras")
+(declare-function tlon-lookup-all "tlon-core")
+(declare-function tlon-lookup "tlon-core")
+(defvar tlon-languages-properties)
 (defun ebib-extras-ocr-pdf (&optional force)
   "OCR the PDF file in the current entry.
 If FORCE is non-nil, or the command is invoked with a prefix argument, force OCR
 even if already present."
   (interactive "P")
-  (let ((file-name (ebib-extras-get-file "pdf"))
-	(lang (ebib-extras-get-or-set-language)))
-    (files-extras-ocr-pdf nil nil
-			  (format (concat (when force "--force-ocr ") "--deskew -l %s \"%s\" \"%s\"")
-				  (alist-get lang ebib-extras-iso-639-2 nil nil 'string=)
-				  (expand-file-name file-name)
-				  (expand-file-name file-name)))))
+  (files-extras-ocr-pdf force))
 
 (declare-function bibtex-set-field "bibex")
 (defun ebib-extras-get-or-set-language ()
@@ -585,10 +620,12 @@ even if already present."
 		      ('bibtex-mode #'bibtex-set-field)))
 	 (get-lang (lambda () (funcall get-field "langid")))
 	 (set-lang (lambda (lang) (funcall set-field "langid" lang)))
-	 (lang (funcall get-lang)))
-    (or lang
+	 (lang (funcall get-lang))
+	 (valid-lang (tlon-lookup tlon-languages-properties :standard :name lang)))
+    (or valid-lang
 	(funcall set-lang
-		 (completing-read "Select language: " ebib-extras-iso-639-2 nil t "english")))))
+		 (completing-read "Select language: " (tlon-lookup-all tlon-languages-properties :standard)
+				  nil t "english")))))
 
 (defconst ebib-extras-library-genesis
   '("Library Genesis"
@@ -1023,6 +1060,7 @@ If called interactively, open the entry. Otherwise, return it as a string."
   "Open the entry for KEY in Ebib."
   (when-let ((file (ebib-extras-get-file-of-key key)))
     (ebib file key)
+    (sleep-for 0.01)
     (ebib-edit-entry)))
 
 (defun ebib-extras-sort (&optional state)
@@ -1060,7 +1098,9 @@ If STATE is nil, toggle between the relevant states."
 	    (new-key (if ebib-uniquify-keys
 			 (ebib-db-uniquify-key (ebib--get-key-at-point) ebib--cur-db)
 		       key))
-	    (file (zotra-extras-set-bibfile))
+	    (file (progn
+		    (require 'zotra-extras)
+		    (zotra-extras-set-bibfile)))
 	    entry)
        (with-temp-buffer
 	 (ebib--format-entry key ebib--cur-db)
@@ -1157,6 +1197,9 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 	(message "Author found in the database!")
       (message "Warning: Author not found in the database!"))))
 
+(declare-function ebib-extras-search-goodreads "ebib-extras")
+(declare-function ebib-extras-search-imdb "ebib-extras")
+(declare-function ebib-extras-search-letterboxd "ebib-extras")
 (defun ebib-extras-set-rating ()
   "Set rating of current entry.
 If applicable, open external website to set rating there as well."
@@ -1241,6 +1284,15 @@ Fetching is done using `bib'."
   "Get the ID or URL of the entry at point, or fetch it if missing."
   (or (ebib-extras-get-id-or-url)
       (ebib-extras-fetch-id-or-url)))
+
+(defun ebib-extras-browse-url-or-doi ()
+  "Browse the URL or DOI of the entry at point."
+  (interactive)
+  (when-let ((type (cond ((ebib-extras-get-field "url") 'url)
+			 ((ebib-extras-get-field "doi") 'doi))))
+    (pcase type
+      ('url (ebib-browse-url))
+      ('doi (ebib-browse-doi)))))
 
 (defun ebib-extras-set-id (&optional id)
   "Add an ID to the current entry, if missing."
@@ -1346,10 +1398,11 @@ DIRECTION can be `prev' or `next'."
 			 (funcall get-field "editor"))))
     (let* ((file-absolute (expand-file-name file))
 	   (author-list (ebib-extras-get-authors-list author))
-	   (author-string (ebib-extras-format-authors author-list))
-	   (title (funcall get-field  "title"))
-	   (author-arg (format "-Author='%s' " author-string))
-	   (title-arg (format "-Title='%s' " title)))
+	   (author-string (ebib-extras-unbrace
+			   (ebib-extras-format-authors author-list ", " most-positive-fixnum)))
+	   (title (ebib-extras-unbrace (funcall get-field  "title")))
+	   (author-arg (format "-Author=\"%s\" " author-string))
+	   (title-arg (format "-Title=\"%s\" " title)))
       (when (or author-arg title-arg)
 	(shell-command (concat "exiftool -overwrite_original "
 			       (when author-arg author-arg)
@@ -1392,13 +1445,20 @@ remove braces from the field value."
   (interactive)
   (when-let* ((id-or-url (ebib-extras-get-id-or-url))
 	      (field (or field (ebib--current-field)))
-	      (value (zotra-extras-get-field field id-or-url keep-braces)))
+	      (value (progn (require 'zotra-extras)
+			    (zotra-extras-get-field field id-or-url keep-braces))))
     (ebib-set-field-value
      field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
     (ebib-extras-update-entry-buffer ebib--cur-db)))
 
+(defun ebib-extras-unbrace (string)
+  "Remove braces from STRING.
+Unlike `ebib-unbrace', this function removes all braces, not just the outermost."
+  (replace-regexp-in-string "[{}]" "" string))
+
 ;;;;; Patched functions
 
+(defvar index-window)
 ;; prevent unnecessary vertical window splits
 (el-patch-defun ebib--setup-windows ()
   "Create Ebib's window configuration.
@@ -1493,6 +1553,7 @@ error."
     (default
      (beep))))
 
+(declare-function f-file-p "f.c")
 ;; when field contains a file, copy absolute file path
 (el-patch-defun ebib-copy-field-contents (field)
   "Copy the contents of FIELD to the kill ring.

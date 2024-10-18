@@ -1,6 +1,6 @@
 ;;; tab-bar-extras.el --- Extra functionality for the tab bar -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/tab-bar-extras.el
@@ -60,29 +60,35 @@
   " "
   "Element to display at the beginning of the Tab Bar.")
 
-(defconst tab-bar-extras-date-element
+(defconst tab-bar-extras-time-element
   `(:eval (propertize display-time-string 'face 'faces-extras-display-time))
-  "Element to display the date.")
+  "Element to display the time.
+To change how the time is displayed, customize `display-time-format'.")
 
 (defconst tab-bar-extras-chemacs-element
   `(" " tlon-init-chemacs-profile-name)
   "Element to display the Chemacs profile.")
 
+(defvar doom-modeline--battery-status)
 (defconst tab-bar-extras-battery-element
-  `("" fancy-battery-mode-line)
+  `(:eval ,(format "%s %s"
+		   ;; icon
+		   (car doom-modeline--battery-status)
+		   ;;  percentage
+		   (cdr doom-modeline--battery-status)))
   "Element to display the battery.")
 
 (defconst tab-bar-extras-telega-element
   `(:eval (when (and
 		 (bound-and-true-p tab-bar-extras-telega-notifications-enabled)
-		 (telega-server-live-p)
+		 (and (fboundp 'telega-server-live-p) (telega-server-live-p))
 		 (> (plist-get telega--unread-message-count :unread_count) 0))
 	    (concat " | " telega-mode-line-string)))
   "Element to display Telega notifications.")
 
 (defconst tab-bar-extras-github-element
   `(:eval (when (and tab-bar-extras-github-notifications-enabled
-		     (forge-extras-get-unread-notifications))
+		     (> doom-modeline--github-notification-number 0))
 	    (concat
 	     " | "
 	     (doom-modeline-icon 'octicon "nf-oct-mark_github" "🔔" "&"
@@ -90,11 +96,12 @@
 	     (doom-modeline-vspc)
 	     (propertize
 	      (cond
-	       ((> (forge-extras-get-unread-notifications) 99) "99+")
-	       (t (number-to-string (forge-extras-get-unread-notifications))))
+	       ((> doom-modeline--github-notification-number 99) "99+")
+	       (t (number-to-string doom-modeline--github-notification-number)))
 	      'face '(:inherit
 		      (doom-modeline-unread-number doom-modeline-notification))))))
-  "Element to display Forge notification count.")
+  "Element to display Forge notification count.
+Note: for this element to work, `doom-modeline-github' must be non-nil.")
 
 (defconst tab-bar-extras-pomodoro-element
   `(:eval (unless (memq 'org-pomodoro-mode-line global-mode-string)
@@ -106,6 +113,21 @@
   `(:eval (unless tab-bar-extras-notifications-enabled
 	    (concat (propertize "🔕" 'face '(:height 0.8)) tab-bar-extras-separator-element)))
   "Element to display when the notifications are disabled.")
+
+(defconst tab-bar-extras-debug-element
+  `(:eval (when (doom-modeline--segment-visible 'debug)
+	    (let* ((dap doom-modeline--debug-dap)
+		   (edebug (doom-modeline--debug-edebug))
+		   (on-error (doom-modeline--debug-on-error))
+		   (on-quit (doom-modeline--debug-on-quit))
+		   (vsep (doom-modeline-vspc))
+		   (sep (and (or dap edebug on-error on-quit) (doom-modeline-spc))))
+	      (concat (when (or debug-on-error debug-on-quit)
+			tab-bar-extras-separator-element)
+		      (and dap (concat dap (and (or edebug on-error on-quit) vsep)))
+		      (and edebug (concat edebug (and (or on-error on-quit) vsep)))
+		      (and on-error (concat on-error (and on-quit vsep)))
+		      on-quit)))))
 
 (defconst tab-bar-extras-separator-element
   " | "
@@ -133,7 +155,7 @@ reset functions."
       (when calendar-extras-use-geolocation
 	(calendar-extras-set-geolocation))
       (setq display-wttr-locations `(,calendar-extras-location-name))))
-  (when (and tab-bar-extras-reset-wttr (featurep 'display-wttr))
+  (when (and tab-bar-extras-reset-wttr (bound-and-true-p display-wttr-mode))
     (display-wttr)))
 
 (defun tab-bar-extras-quick-reset ()

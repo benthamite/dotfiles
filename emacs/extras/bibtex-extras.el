@@ -1,6 +1,6 @@
 ;;; bibtex-extras.el --- Extensions for bibtex -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/bibtex-extras.el
@@ -189,7 +189,8 @@ field for this information is `journaltitle', so we move it there."
       (user-error "`%s' is already in `%s'!" key target))
     (with-current-buffer (find-file-noselect source)
       (bibtex-search-entry key)
-      (bibtex-kill-entry))
+      (bibtex-kill-entry)
+      (save-buffer))
     (with-current-buffer (find-file-noselect target)
       (widen)
       (goto-char (point-max))
@@ -638,7 +639,7 @@ Formats current entry according to variable `bibtex-entry-format'."
 			   (setq error-field-name
 				 (car (last (aref alt-fields idx))))
 			   (user-error "Alternative mandatory fields `%s' are missing"
-				       (mapconcat 'identity
+				       (mapconcat #'identity
 						  (reverse
 						   (aref alt-expect idx))
 						  ", ")))
@@ -646,7 +647,7 @@ Formats current entry according to variable `bibtex-entry-format'."
 			   (setq error-field-name
 				 (car (last (aref alt-fields idx))))
 			   (user-error "Fields `%s' are alternatives"
-				       (mapconcat 'identity
+				       (mapconcat #'identity
 						  (reverse
 						   (aref alt-fields idx))
 						  ", ")))))))

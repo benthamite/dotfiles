@@ -1,6 +1,6 @@
 ;;; faces-extras.el --- Extensions for faces -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/faces-extras.el
@@ -100,6 +100,7 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
 
 ;;;;; Face attributes
 
+;;;###autoload
 (defun faces-extras-set-face-attribute (attribute)
   "Set a single face ATTRIBUTE."
   (let* ((face (car attribute))
@@ -119,6 +120,7 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
   (dolist (attribute attributes)
     (faces-extras-set-face-attribute attribute)))
 
+;;;###autoload
 (defun faces-extras-set-and-store-face-attributes (attributes)
   "Set list of face ATTRIBUTES and store them.
 This function allows the user to set a list of face attributes immediately,

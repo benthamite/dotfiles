@@ -1,6 +1,6 @@
 ;;; eww-extras.el --- Extensions for eww -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/eww-extras.el
@@ -47,18 +47,6 @@ directory, the URL, and the output file.")
 The placeholders `%s' are replaced by the Chrome program, the Chrome cookie data
 directory, the URL, and the output file.")
 
-;;;;; Annas Archive
-
-(defvar eww-extras-annas-archive-callback nil
-  "Callback function to run by `eww-extras-annas-archive-download-file'.")
-
-(defvar eww-extras-annas-archive-bibtex-key nil
-  "BibTeX key of the book being downloaded.")
-
-(defconst eww-extras-annas-archive-auth-url
-  "https://annas-archive.org/account/"
-  "URL to authenticate with Anna’s Archive.")
-
 ;;;;; Subtitles
 
 (defconst eww-extras-download-subtitles
@@ -89,24 +77,49 @@ The placeholders are replaced by the URL.")
   :type 'directory
   :group 'eww-extras)
 
-(defcustom eww-extras-chrome-data-dir-copy
-  (expand-file-name "~/.chrome-data/")
+;;;; Variables
+
+(defconst eww-extras-chrome-data-dir-base
+  (expand-file-name "~/.chrome-data-")
+  "The base directory where Chrome data is stored.")
+
+(defconst eww-extras-chrome-data-dir-copy-pdf
+  (concat eww-extras-chrome-data-dir-base "pdf/")
   "A copy of the directory where Chrome data is stored.
 A headless Chrome session will fail to authenticate if Chrome is running,
 because the database will be locked. So we make a copy of the relevant
-directory by running `eww-extras-chrome-copy-data-dir'."
-  :type 'directory
-  :group 'eww-extras)
+directory by running `eww-extras-chrome-copy-data-dirs'.")
 
-(defcustom eww-extras-rsync-command
+(defconst eww-extras-chrome-data-dir-copy-html
+  (concat eww-extras-chrome-data-dir-base "html/")
+  "A copy of the directory where Chrome data is stored.
+This is an identical copy of `eww-extras-chrome-data-dir-copy-pdf'. It
+is needed so that we can run two headless Chrome sessions
+simultaneously.")
+
+(defconst eww-extras-rsync-command
   "rsync -av '%s' '%s'"
   "The `rsync' command to make a copy of the Chrome data directory.
 The placeholders `%s' are replaced by with the source and destination
-directories."
-  :type 'string
-  :group 'eww-extras)
+directories.")
 
 ;;;; Functions
+
+;;;;; Core
+
+;;;###autoload
+(defun eww-extras-browse-file (&optional file)
+  "Browse File in `eww'.
+If FILE is nil, use the file at point, the file visited by the current buffer,
+or prompt the user for a file."
+  (interactive)
+  (let ((file (or file
+		  (thing-at-point 'filename)
+		  (buffer-file-name)
+		  (read-file-name "File: " nil nil t))))
+    (if (file-exists-p file)
+	(eww-open-file file)
+      (user-error "No file found at point"))))
 
 (defvar ebib--cur-db)
 (declare-function bibtex-extras-get-key "bibtex-extras")
@@ -119,32 +132,57 @@ CALLBACK is a function called when the process concludes. The function takes two
 arguments: the file to attach and the BibTeX key of the entry from which this
 function was called, if any."
   (let* ((url (simple-extras-get-url url))
-	 (bibtex-key (pcase major-mode
-		       ('bibtex-mode (bibtex-extras-get-key))
-		       ((or 'ebib-entry-mode 'ebib-index-mode)
-			(ebib-extras-get-field "=key="))))
-	 (title (pcase major-mode
-		  ((or 'bibtex-mode 'ebib-entry-mode 'ebib-index-mode) bibtex-key)
-		  (_ (pcase type
-		       ("pdf" (buffer-name))
-		       ("html" (simple-extras-slugify (org-web-tools-extras-org-title-for-url url)))))))
-	 (file-name (file-name-with-extension title type))
-	 (output-file (file-name-concat paths-dir-downloads file-name))
+         (bibtex-key (pcase major-mode
+                       ('bibtex-mode (bibtex-extras-get-key))
+                       ((or 'ebib-entry-mode 'ebib-index-mode)
+                        (ebib-extras-get-field "=key="))))
+         (title (pcase major-mode
+                  ((or 'bibtex-mode 'ebib-entry-mode 'ebib-index-mode) bibtex-key)
+                  (_ (pcase type
+                       ("pdf" (buffer-name))
+                       ("html" (simple-extras-slugify (org-web-tools-extras-org-title-for-url url)))))))
+         (file-name (file-name-with-extension title type))
+         (output-file (file-name-concat paths-dir-downloads file-name))
 	 (process (make-process
 		   :name (format "url-to-%s" type)
-		   :buffer "*URL-to-File-Process*"
-		   :command (list shell-file-name shell-command-switch
-				  (format
-				   (pcase type ("pdf" eww-extras-convert-to-pdf) ("html" eww-extras-convert-to-html))
-				   browse-url-chrome-program eww-extras-chrome-data-dir-copy url output-file)))))
-    (message "Getting %s file..." type)
+		   :buffer "*eww-extras download file process*"
+		   :command (eww-extras-url-to-file-make-command url output-file type))))
+    (message "Getting %s file…. (See `*eww-extras download file process*' buffer for details.)" type)
     (set-process-sentinel process
-			  (lambda (_proc event)
-			    (if (string= event "finished\n")
-				(progn
-				  (message "File downloaded.")
-				  (eww-extras-run-callback callback output-file bibtex-key))
-			      (user-error "Could not get file"))))))
+			  (eww-extras-url-to-file-sentinel callback output-file bibtex-key))))
+
+(defun eww-extras-url-to-file-sentinel (callback output-file bibtex-key)
+  "Create a process sentinel for URL-to-file operations.
+
+This function returns a lambda function suitable for use as a process sentinel.
+The returned sentinel will handle the completion of the URL-to-file process.
+
+CALLBACK is a function to be called upon successful file download.
+OUTPUT-FILE is the path of the file being downloaded.
+BIBTEX-KEY is the BibTeX key associated with the download, if any.
+
+The returned sentinel function takes two arguments: _PROC: the process
+object (which is ignored in this implementation) and EVENT, a string describing
+the process status change."
+  (lambda (_proc event)
+    (if (string= event "finished\n")
+	(eww-extras-run-callback callback output-file bibtex-key)
+      (user-error "Could not get file. Error:\n\n%s" event))))
+
+(defun eww-extras-url-to-file-make-command (url output-file type)
+  "Make command to generate OUTPUT-FILE of TYPE from URL."
+  (let* ((data-dir (pcase type
+		     ("pdf" eww-extras-chrome-data-dir-copy-pdf)
+		     ("html" eww-extras-chrome-data-dir-copy-html)
+		     (_ (user-error "Invalid type: %s" type))))
+	 (common (format "timeout 60s '%s' --headless --user-data-dir=\"%s\" "
+			 browse-url-chrome-program data-dir))
+	 (flags "--disable-gpu --disable-extensions --disable-software-rasterizer ")
+	 (format-string (pcase type
+			  ("pdf" "--no-pdf-header-footer %s --print-to-pdf=\"%s\"")
+			  ("html" "%s --dump-dom > %s")))
+	 (specific (format format-string url output-file)))
+    (list shell-file-name shell-command-switch (concat common flags specific))))
 
 (defun eww-extras-run-callback (callback file key)
   "When CALLBACK is non-nil, run it with FILE and KEY as arguments.
@@ -152,17 +190,40 @@ FILE is the file to attach and KEY is the BibTeX key of the associated entry."
   (when callback
     (funcall callback file key)))
 
-(defun eww-extras-chrome-copy-data-dir ()
-  "Make a copy of the Chrome data directory.
-This command needs to be run to make an initial copy of the Chrome data
-directory, and then every once in a while to keep the directory updated. The
-initial copy may take a while if the data directory is very big, but subsequent
-updates should be fast."
+;;;###autoload
+(defun eww-extras-chrome-copy-data-dirs ()
+  "Make copies of the Chrome data directory.
+This command needs to be run to make two copies of the Chrome data directory,
+and then every once in a while to keep those copies updated. The initial copy
+may take a while if the data directory is very big, but subsequent updates
+should be fast."
   (interactive)
-  (when (y-or-n-p "Make sure you closed all instances of Chrome and ensured that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories. Also, if you are running this command for the first time—i.e. if there is currently no copy of the Chrome data directory in your system—note that Emacs will become unresponsive for a few minutes. Proceed? ")
+  (when (y-or-n-p "Make sure you have closed all instances of Chrome, and that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories. If you are running this command for the first time—i.e. if there is currently no copy of the Chrome data directory in your system—note that Emacs will become unresponsive for a few minutes. Proceed? ")
+    (unless (string-empty-p (shell-command-to-string "pgrep -l \"Google Chrome\""))
+      (user-error "Chrome is running. Close all instances of Chrome and try again"))
+    (message "Copying Chrome data directory to `%s'..." eww-extras-chrome-data-dir-copy-pdf)
     (shell-command (format eww-extras-rsync-command
 			   eww-extras-chrome-data-dir
-			   eww-extras-chrome-data-dir-copy))))
+			   eww-extras-chrome-data-dir-copy-pdf))
+    (eww-extras-chrome-delete-data-dir "html")
+    (message "Copying Chrome data directory to `%s'..." eww-extras-chrome-data-dir-copy-html)
+    (copy-directory eww-extras-chrome-data-dir-copy-pdf eww-extras-chrome-data-dir-copy-html nil t t)
+    (message "Done.")))
+
+(defun eww-extras-chrome-delete-data-dirs ()
+  "Delete the copy of the Chrome data directory."
+  (interactive)
+  (when (y-or-n-p "Are you sure you want to delete the copies of the Chrome data directory? ")
+    (dolist (dir (list "pdf" "html"))
+      (eww-extras-chrome-delete-data-dir dir))))
+
+(defun eww-extras-chrome-delete-data-dir (type)
+  "Delete copy of Chrome data directory of TYPE."
+  (let ((dir (pcase type
+	       ("pdf" eww-extras-chrome-data-dir-copy-pdf)
+	       ("html" eww-extras-chrome-data-dir-copy-html))))
+    (message "Deleting `%s'..." dir)
+    (delete-directory dir t)))
 
 (defun eww-extras-url-to-html (&optional url callback)
   "Generate HTML of URL, then run CALLBACK function."
@@ -173,6 +234,8 @@ updates should be fast."
   "Generate PDF of URL, then run CALLBACK function."
   (interactive)
   (eww-extras-url-to-file "pdf" url callback))
+
+;;;;; readable
 
 (defun eww-extras-readable-autoview ()
   "Display the \"readable\" parts of the current web page by default.
@@ -213,6 +276,8 @@ domain as the initial prompt input."
       (setq eww-extras-readable-exceptions (split-string (regexp-quote (buffer-string)) "\n" t)))))
 
 (eww-extras-set-readable-exceptions-from-file)
+
+;;;;; Vimium-like navigation
 
 ;; The following four commands copied from
 ;; github.com/gopar/.emacs.d#eww
@@ -277,6 +342,8 @@ With prefix ARG is passed, open in new EWW buffer."
 		   (url-fullness url)))
     (eww-browse-url (url-recreate-url new-url))))
 
+;;;;; Misc
+
 (declare-function elfeed-tube-fetch "elfeed-tube")
 (declare-function macos-open-app "macos")
 (declare-function macos-app-is-open-p "macos")
@@ -290,181 +357,12 @@ If PLAYER is nil, default to `mpv'."
 	(macos-open-app player 'background))
       (elfeed-tube-fetch url))))
 
-(defun eww-extras-get-url-in-link (title)
-  "Return the URL of the link whose title is TITLE."
-  (interactive)
-  (let (found-url)
-    (save-excursion
-      (goto-char (point-min))
-      (while (and (not found-url) (not (eobp)))
-	(when-let* ((url (get-text-property (point) 'shr-url))
-		    (link-title (buffer-substring-no-properties
-				 (point)
-				 (or (next-single-property-change (point) 'shr-url)
-				     (point-max)))))
-	  (when (string-match-p (regexp-quote title) link-title)
-	    (setq found-url url)))
-	(goto-char (or (next-single-property-change (point) 'shr-url)
-		       (point-max)))))
-    found-url))
-
 (declare-function zotra-extras-add-entry "zotra-extras")
 (defun eww-extras-add-entry ()
   "Add current URL to bibfile and generate associated PDF and HTML files."
   (interactive)
   (when (derived-mode-p 'eww-mode)
     (zotra-extras-add-entry (plist-get eww-data :url))))
-
-(defun eww-extras-browse-file (&optional file)
-  "Browse File in `eww'.
-If FILE is nil, use the file at point, the file visited by the current buffer,
-or prompt the user for a file."
-  (interactive)
-  (let ((file (or file
-		  (thing-at-point 'filename)
-		  (buffer-file-name)
-		  (read-file-name "File: " nil nil t))))
-    (if (file-exists-p file)
-	(eww-open-file file)
-      (user-error "No file found at point"))))
-
-;; TODO: move the section below to separate package, like I did with `scihub'
-;;;;;; Get buffer elements
-
-(defun eww-extras-collect-links-in-buffer ()
-  "Get an alist of link titles and URLs for all links in the current `eww' buffer."
-  (save-excursion
-    (goto-char (point-min))
-    (let (beg end candidates)
-      (setq end
-	    (if (get-text-property (point) 'shr-url)
-		(point)
-	      (text-property-any (point) (point-max) 'shr-url nil)))
-      (while (setq beg (text-property-not-all end (point-max) 'shr-url nil))
-	(goto-char beg)
-	;; Skip newlines which might precede the link text
-	(skip-chars-forward "\n")
-	(setq beg (point))
-	(if (get-text-property (point) 'shr-url)
-	    (progn
-	      (setq end (next-single-property-change (point) 'shr-url nil (point-max)))
-	      ;; Handle when link is at the end of the buffer
-	      (if (eq end nil)
-		  (setq end (point-max)))
-	      (push (cons (buffer-substring-no-properties beg end) (get-text-property beg 'shr-url))
-		    candidates))
-	  (setq end (next-single-property-change (point) 'shr-url)))
-	(goto-char (max end (1+ (point)))))  ;; ensure progress by moving at least one character forward
-      (nreverse candidates))))
-
-;;;;;; Anna's Archive
-
-(defun eww-extras-annas-archive-download (&optional string confirm callback)
-  "Search Anna’s Archive for STRING and download the selected item.
-If STRING is nil, prompt for a search string. If both STRING and CONFIRM are
-non-nil, prompt the user for confirmation to use STRING as the search string.
-
-CALLBACK is a function called when the process concludes. The function takes two
-arguments: the file to attach and the BibTeX key of the entry from which this
-function was called, if any.
-
-Requires a paid subscription and authentication. (Yes, you can authenticate with
-eww!)"
-  (interactive)
-  (save-window-excursion
-    (let* ((string (cond ((and string confirm)
-			  (read-string "Search string: " string))
-			 (string string)
-			 (t (read-string "Search string: "))))
-	   (url (format "https://annas-archive.org/search?index=&page=1&q=%s&ext=pdf&sort=" string)))
-      (when callback (setq eww-extras-annas-archive-callback callback))
-      (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-select-and-open-url)
-      (eww url))))
-
-(defun eww-extras-annas-archive-select-and-open-url ()
-  "Get the download URLs from the Annas Archive search results buffer."
-  (remove-hook 'eww-after-render-hook #'eww-extras-annas-archive-select-and-open-url)
-  (save-window-excursion
-    (let (links)
-      (dolist (cons (eww-extras-collect-links-in-buffer))
-	(when (string-match-p "\\.pdf" (car cons))
-	  (push cons links)))
-      (if links
-	  (let* ((selection (completing-read "Select a link: " links nil t))
-		 (url (alist-get selection links nil nil 'string=)))
-	    (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
-	    (eww url))
-	(message "No results found.")))))
-
-(defun eww-extras-annas-archive-proceed-to-download-page ()
-  "Proceed to the Annas Archive download page."
-  (remove-hook 'eww-after-render-hook #'eww-extras-annas-archive-proceed-to-download-page)
-  (save-window-excursion
-    (let ((url (eww-extras-get-url-in-link "Fast Partner Server")))
-      (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-download-file)
-      (eww url))))
-
-(defvar ebib-extras-attach-file-key)
-(defun eww-extras-annas-archive-download-file ()
-  "Download the file from the Annas Archive download page."
-  (remove-hook 'eww-after-render-hook 'eww-extras-annas-archive-download-file)
-  (let* ((bibtex-key ebib-extras-attach-file-key)
-	 (url (eww-extras-annas-archive-get-download-url))
-	 (raw-file (file-name-nondirectory url))
-	 (sans-extension (file-name-sans-extension raw-file))
-	 (extension (file-name-extension raw-file))
-	 (filename (file-name-with-extension (substring sans-extension 0 100) extension))
-	 (final-path (file-name-concat paths-dir-downloads filename))
-	 (temp-path (file-name-with-extension final-path ".tmp"))
-	 (callback eww-extras-annas-archive-callback))
-    (setq eww-extras-annas-archive-callback nil)
-    (let ((process (start-process "download-file" "*download-output*" "curl" "-o" temp-path "-L" url)))
-      (set-process-sentinel process
-			    (lambda (_proc event)
-			      (cond ((string= event "finished\n")
-				     (rename-file temp-path final-path 'ok-if-already-exists)
-				     (message "Downloaded `%s' to `%s`" filename final-path)
-				     (eww-extras-run-callback callback final-path bibtex-key))
-				    ((string-prefix-p "exited abnormally" event)
-				     (let ((error-code (string-match "code \\([0-9]+\\)" event)))
-				       (message "Download failed with error code %s for `%s`"
-						(match-string 1 event) filename)))
-				    (t
-				     (message "Unexpected process event: %s" event))))))
-    (message "Downloading `%s'..." filename)))
-
-(defun eww-extras-annas-archive-get-download-url ()
-  "Get the download URL from the Annas Archive download page."
-  (or (eww-extras-get-url-in-link "Download now")
-      (let ((generic-error "Could not find download link")
-	    (quota-exceeded "You’ve run out of fast downloads today"))
-	(goto-char (point-min))
-	(user-error (cond ((re-search-forward quota-exceeded nil t)
-			   quota-exceeded)
-			  (t generic-error))))))
-
-;;;;;;; Authentication
-
-(defun eww-extras-annas-archive-authenticate ()
-  "Authenticate with Anna’s Archive."
-  (interactive)
-  (save-window-excursion
-    (add-hook 'eww-after-render-hook #'eww-extras-annas-archive-get-authentication-details)
-    (eww eww-extras-annas-archive-auth-url)))
-
-(defun eww-extras-annas-archive-get-authentication-details ()
-  "Return user authentication details from Anna’s Archive."
-  (remove-hook 'eww-after-render-hook #'eww-extras-annas-archive-get-authentication-details)
-  (let (id key)
-    (goto-char (point-min))
-    (re-search-forward "Account ID: \\(.*\\)" nil t)
-    (setq id (match-string 1))
-    (re-search-forward "Secret key (don’t share!): show\\(.*\\)" nil t)
-    (setq key (match-string 1))
-    (if (and id key)
-	(message "You are authenticated.\nAccount ID: %s\nSecret key: %s" id key)
-      (eww eww-extras-annas-archive-auth-url)
-      (message "You don't seem to be authenticated. Please enter your key in the `eww' buffer."))))
 
 (provide 'eww-extras)
 

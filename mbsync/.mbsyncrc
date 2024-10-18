@@ -2,8 +2,8 @@ IMAPAccount gmail
 Host imap.gmail.com
 UserCmd "echo $PERSONAL_GMAIL"
 PassCmd "echo $MBSYNC_PASSWORD"
-SSLType IMAPS
-SSLVersions TLSv1.3
+TLSType IMAPS
+TLSVersions +1.3
 AuthMechs LOGIN
 CertificateFile /opt/homebrew/etc/openssl@1.1/cert.pem
 
@@ -16,6 +16,9 @@ IMAPStore gmail-remote
 Account gmail
 
 # https://github.com/danielfleischer/mu4easy
+# 
+# See also bin/mbsync-parallel (in this repo) for a bash script to check the
+# different email channels in parallel (thereby speeding up the process)
 Channel gmail-inbox
 Far :gmail-remote:"INBOX"
 Near :gmail-local:"INBOX"

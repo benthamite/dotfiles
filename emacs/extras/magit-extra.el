@@ -1,6 +1,6 @@
 ;;; magit-extra.el --- Extensions for magit -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/magit-extras.el
@@ -33,7 +33,8 @@
 ;;;; Functions
 
 ;; adapted from Sacha Chua
-(defun magit-extras-stage-commit-and-push (message &optional files)
+;;;###autoload
+(defun magit-extras-stage-commit-and-push (message)
   "Stage all modified files, commit them with MESSAGE and push to remote."
   (interactive
    (list (progn (magit-diff-unstaged) (read-string "Commit Message: "))))
@@ -44,6 +45,7 @@
     (magit-commit-create (list "-m" message)))
   (call-interactively #'magit-push-current-to-pushremote))
 
+;;;###autoload
 (defun magit-extras-stage-commit-and-push-all-repos ()
   "Update all active depositories."
   (dolist (directory paths-dir-all-repos)
@@ -68,6 +70,7 @@
   (run-at-time 0.3 nil #'(lambda () (goto-char (point-min)))))
 
 ;; TODO: check if there is a better way to do this
+(declare-function files-extras-buffer-file-name "files-extras")
 (defun magit-extras-get-commit-file (&optional path)
   "Get file to commit.
 If more than one file is being committed, get the first one. By default, the

@@ -1,6 +1,6 @@
 ;;; consult-extras.el --- Extensions for consult -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/consult-extras.el
@@ -60,6 +60,7 @@
 
 (declare-function org-extras-fold-show-all-headings "org-extras")
 (declare-function consult-org-heading "consult-org")
+;;;###autoload
 (defun consult-extras-org-heading (&optional match scope)
   "Jump to an Org heading.
 MATCH and SCOPE are as in org-map-entries and determine which

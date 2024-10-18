@@ -7,46 +7,48 @@
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
 (setq tlon-init-excluded-packages
-'(
- ;; bbdb
- citar
- bibtex-completion-extras
- copilot
- corfu-doc-terminal
- corfu-terminal
- display-wttr
- erc
- gdrive
- git-auto-commit-mode
- hammy
- midnight
- mixed-pitch
- consult-mu
- mu4e
- mu4e-extras
- ;; mullvad
- ns-win
- org-gcal
- ;; org-roam
- org-roam-bibtex
- org-contacts
- org2blog
- outline
- ;; pdf-tools
- puni
- remember
- ;; server
- ;; spelling
- jinx
- flycheck
- grammarly
- lsp-grammarly
- persistent-scratch
- ;; theme-loaddefs
- vulpea
- ;; window
- ;; yasnippet
- ))
+      '(
+        aide
+        anki-editor
+        auto-commit-mode
+        ;; bbdb
+        copilot
+        corfu-doc-terminal
+        corfu-terminal
+        ;; display-wttr
+        erc
+        espotify
+        ;; flycheck
+        ;; flymake
+        frame
+        ;; forge
+        git-auto-commit-mode
+        hammy
+        ;; jinx
+        keytar
+        midnight
+        mixed-pitch
+        mu4e
+        ;; mullvad
+        ns-win
+        org-gcal
+        ;; org-roam
+        org2blog
+        orgmdb
+        outline
+        ;; pdf-tools
+        puni
+        remember
+        server
+        slack
+        spelling
+        ;; tlon-init
+        theme-loaddefs
+        twittering-mode
+        vulpea
+        ;; window
+        ;; yasnippet
+        ))
 #+end_src
 
 * paths
@@ -682,13 +684,8 @@
 (with-eval-after-load 'tlon
   (setq tlon-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
   (setq tlon-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
-
-  (setq tlon-when-status-is-invalid 'change)
-  (setq tlon-when-assignee-is-nil 'change)
-  (setq tlon-when-assignee-is-someone-else 'no-capture)
-  (setq tlon-split-repo 'never)
-  (tlon-initialize)
-  (message "`tlon' late-init config loaded."))
+  (setq tlon-split-repo nil)
+  (tlon-initialize))
 #+end_src
 
 ** jinx
@@ -737,8 +734,24 @@
             ;;,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
             ))
 
+  (setq global-mode-string tab-bar-extras-global-mode-string)
   (setq tab-bar-extras-reset-wttr nil)
-  (message "`tab-bar-extras' late-init config loaded."))
+
+  ;; (setq tab-bar-extras-global-mode-string
+  ;;       `(,tab-bar-extras-prefix-element
+  ;;         ;; ,tab-bar-extras-time-element
+  ;;         ;; ,tab-bar-extras-separator-element
+  ;;         ,tab-bar-extras-chemacs-element
+  ;;         ;; ,tab-bar-extras-separator-element
+  ;;         ;; ,tab-bar-extras-battery-element
+  ;;         ,tab-bar-extras-telega-element
+  ;;         ,tab-bar-extras-github-element
+  ;;         ;; ,tab-bar-extras-pomodoro-element
+  ;;         ;; ,tab-bar-extras-suffix-element
+  ;;         ))
+
+  ;; (setq tab-bar-extras-reset-wttr nil)
+  )
 #+end_src
 
 ** hl-sentence

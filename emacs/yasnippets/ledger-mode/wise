@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: tlon-wise
-# key: twi
+# name: wise
+# key: wi
 # contributor: Pablo Stafforini
 # --
 `(format-time-string "%Y-%m-%d")` ${1:recipient}

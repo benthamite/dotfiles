@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: tlon-relay
+# key: tr
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` $1
+    ${2:expense}            ${3:amount} ${4:$$(yas-choose-value ledger-mode-extras-currencies)} ; $5
+    Assets:Relay
+$0

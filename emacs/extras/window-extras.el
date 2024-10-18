@@ -1,6 +1,6 @@
 ;;; window-extras.el --- Extensions for window.el -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/window-extras.el
@@ -54,6 +54,7 @@ The most recently selected window may include the minibuffer window."
   (interactive)
   (select-window (window-extras-get-last-window)))
 
+;;;###autoload
 (defun window-extras-split-if-unsplit ()
   "Split windows when frame is unsplit.
 Split in three windows if `frame-width' is greater than
@@ -97,17 +98,20 @@ If there is only one window, create a second one."
   "Move the current buffer to the TARGET-WINDOW.
 If there is only one window, create a second one."
   (interactive)
+  (require 'files-extras)
   (window-extras--move-or-swap
    (window-buffer) (files-extras-get-alternate-buffer) target-window))
 
 (declare-function winum-get-window-by-number "winum")
 (declare-function winum-get-number "winum")
+;;;###autoload
 (defun window-extras-buffer-move-right ()
   "Move the current buffer to the right window."
   (interactive)
   (window-extras-buffer-move
    (winum-get-window-by-number (1+ (mod (winum-get-number) (count-windows))))))
 
+;;;###autoload
 (defun window-extras-buffer-move-left ()
   "Move the current buffer to the left window."
   (interactive)

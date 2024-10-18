@@ -51,6 +51,7 @@ using this command."
    (list (let ((elpaca-overriding-prompt "Reload package: "))
            (elpaca--read-queued))
          current-prefix-arg))
+  (message "Reloading: %s" package)
   ;; This finds features in the currently installed version of PACKAGE, so if
   ;; it provided other features in an older version, those are not unloaded.
   (let* ((package-name (symbol-name package))
@@ -75,6 +76,17 @@ using this command."
       (require feature))
     (when package-features
       (message "Reloaded: %s" (mapconcat #'symbol-name package-features " ")))))
+
+;;;###autoload
+(defun elpaca-extras-update-and-reload (&optional package)
+  "Update PACKAGE and reload its features.
+If PACKAGE is nil, prompt for it."
+  (interactive)
+  (list (let ((elpaca-overriding-prompt "Update and reload package: ")
+	      (package (or package (elpaca--read-queued))))
+	  (elpaca-update package t)
+	  (sleep-for 2) ; hack; not sure it’s even needed
+	  (elpaca-extras-reload package))))
 
 (provide 'elpaca-extras)
 ;;; elpaca-extras.el ends here

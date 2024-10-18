@@ -340,7 +340,8 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'copilot-extras
   (remove-hook 'prog-mode-hook #'copilot-extras-enable-conditionally)
-  (remove-hook 'text-mode-hook #'copilot-extras-enable-conditionally))
+  (remove-hook 'text-mode-hook #'copilot-extras-enable-conditionally)
+  (cancel-function-timers 'copilot-extras-restart-copilot))
 #+end_src
 
 ** cua-base

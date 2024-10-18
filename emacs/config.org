@@ -1258,6 +1258,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
    ("D" . pass-kill)
    :map pass-view-mode-map
    ("s-c" . pass-view-toggle-password)
+   ("H-q" . pass-quit)
    ("s-s" . server-edit)))
 #+end_src
 
@@ -1272,7 +1273,6 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 (use-personal-package pass-extras
   :bind
   (:map pass-mode-map
-        ("<return>" . pass-extras-edit)
         ("SPC" . pass-extras-open-at-point)
         ("e" . pass-extras-edit)
         ("I" . pass-extras-insert-generated-no-symbols)
@@ -1362,7 +1362,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature log-edit
-  :defer t
+  :after magit
   :config
   (with-eval-after-load 'savehist
     (add-to-list 'savehist-additional-variables 'log-edit-comment-ring)))
@@ -1607,10 +1607,9 @@ Running with --debug will show why files are being skipped.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package with-editor
-  :bind
-  (("s-c" . with-editor-finish)
-   ("s-k" . with-editor-cancel)
-   ("C-c C-c" . with-editor-finish)))
+  :bind (("s-c" . with-editor-finish)
+         ("s-k" . with-editor-cancel)
+         ("C-c C-c" . with-editor-finish)))
 #+end_src
 
 ** ghub
@@ -3522,17 +3521,6 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature files
   :after savehist
-  :init
-  (with-eval-after-load 'ebib
-    (dolist (map (list ebib-index-mode-map ebib-entry-mode-map))
-      (bind-keys :map map
-                 ("H-q" . bury-buffer))))
-  (with-eval-after-load 'messages
-    (bind-keys :map messages-buffer-mode-map
-               ("H-q" . bury-buffer)))
-  (with-eval-after-load 'telega
-    (bind-keys :map 'telega-root-mode-map))
-
   :custom
   (confirm-kill-processes nil) ; do not prompt to kill running processes when quitting Emacs
   (delete-by-moving-to-trash t)
@@ -3658,9 +3646,6 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
                ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'special
     (bind-keys :map special-mode-map
-               ("q" . files-extras-kill-this-buffer)))
-  (with-eval-after-load 'telega
-    (bind-keys :map telega-msg-button-map
                ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'tetris
     (bind-keys :map tetris-mode-map
@@ -4281,8 +4266,18 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature window
-  :after simple-extras
   :init
+  (with-eval-after-load 'ebib
+    (bind-keys :map ebib-index-mode-map
+               ("H-q" . bury-buffer)
+               :map ebib-entry-mode-map
+               ("H-q" . bury-buffer)))
+  (with-eval-after-load 'simple
+    (bind-keys :map messages-buffer-mode-map
+               ("H-q" . bury-buffer)))
+  (with-eval-after-load 'telega
+    (bind-keys :map 'telega-root-mode-map
+               ("H-q" . bury-buffer)))
   (with-eval-after-load 'elfeed
     (bind-keys :map elfeed-show-mode-map
                ("y" . scroll-down-command)
@@ -6599,6 +6594,7 @@ https://gitlab.com/chrisberkhout/pricehist
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ledger-mode-extras
+  :after ledger-mode
   :bind
   (:map ledger-mode-map
         ("s-SPC" . ledger-mode-extras-new-entry-below)
@@ -7567,13 +7563,6 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   (unless (copilot-installed-version)
     (copilot-install-server))
 
-  (run-with-idle-timer 60 t (lambda ()
-                              "Hack: ‘restart’ copilot periodically."
-                              (when copilot-mode
-                                (copilot-mode -1)
-                                (sleep-for 0 50)
-                                (copilot-mode +1))))
-
   :bind
   (:map copilot-completion-map
         ("C-s-g" . copilot-clear-overlay)
@@ -7596,6 +7585,9 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :custom
   (copilot-extras-excluded-modes '(dsssl-mode mhtml-mode json-mode))
 
+  :config
+  (run-with-idle-timer 60 t #'copilot-extras-restart-copilot)
+                                
   :hook
   ((prog-mode-hook text-mode-hook) . copilot-extras-enable-conditionally))
 #+end_src
@@ -10510,7 +10502,8 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 (use-package annas-archive
   :ensure (:host github
                  :repo "benthamite/annas-archive")
-  :defer t)
+  :bind (:map ebib-entry-mode-map
+              ("s-a" . annas-archive-download)))
 #+end_src
 
 ** scihub
@@ -10734,7 +10727,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                  :main "mu4e/mu4e.el"
                  :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
                  :build (:not elpaca--compile-info)
-                 :ref "ac2515e" ; v1.12.4
+                 :ref "ac2515e" ; v1.12.4, matches brew formula commit 7050b85
                  :depth nil)
   :custom
   ;; (mu4e-debug t) ; uncomment when debugging
@@ -11285,7 +11278,6 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package telega-extras
-  :after dired
   :custom
   (telega-extras-auto-share-audio-transcript nil)
   (telega-extras-chats '((:name "Tlön" :id -1001867927081
@@ -12717,7 +12709,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature midnight
-  :defer 600
+  :defer (* 30 60)
   :custom
   (clean-buffer-list-kill-never-buffer-names
         '("*mu4e-headers*"
@@ -12846,6 +12838,14 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
   (("C-M-s-c" . macos-bluetooth-device-dwim)
    ("C-M-s-g" . macos-set-dication-language)))
 #+end_src
+
+*** TODO Fix announce the time issues
+:PROPERTIES:
+:ID:       CE5F7C57-97EA-4E69-B929-BAA3C21F4FF0
+:END:
+:LOGBOOK:
+CLOCK: [2024-10-17 Thu 11:58]--[2024-10-17 Thu 12:20] =>  0:22
+:END:
 
 ** keycast
 :PROPERTIES:

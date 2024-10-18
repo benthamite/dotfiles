@@ -292,7 +292,7 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'gptel-extras
   ;; gptel config
-  (gptel-extras-model-config 'globally "ChatGPT" "gpt-4o")
+  ;; (gptel-extras-model-config 'globally "ChatGPT" "gpt-4o")
   (setq gptel-default-mode 'markdown-mode
         gptel-extras-dir "/Users/fede/Dropbox/obsidian/gpt-4/")
 

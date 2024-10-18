@@ -10730,7 +10730,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                  :main "mu4e/mu4e.el"
                  :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
                  :build (:not elpaca--compile-info)
-                 :ref "ac2515e" ; v1.12.4
+                 :ref "ac2515e" ; v1.12.4, matches brew formula commit 7050b85
                  :depth nil)
   :custom
   ;; (mu4e-debug t) ; uncomment when debugging

@@ -44,12 +44,6 @@
           (user-error "Field `%s' not in  %s" field entry))
         (browse-url (password-store-get-field entry field))))))
 
-(defun pass-extras-edit ()
-  "Edit the entry at point, without confirmation."
-  (interactive)
-  (pass--with-closest-entry entry
-    (password-store-edit entry)))
-
 (defun pass-extras-git-sync ()
   "Synchronize with remote repository."
   (interactive)

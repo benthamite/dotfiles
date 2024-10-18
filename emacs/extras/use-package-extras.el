@@ -37,7 +37,7 @@
 NAME and ARGS as in `use-package'."
   (declare (indent defun))
   `(use-package ,name
-     :elpaca nil
+     :ensure nil
      ,@args))
 
 ;; From Gonçalo Santos (github.com/weirdNox/dotfiles/blob/master/config/.config/emacs/config.org#helpers)
@@ -45,6 +45,15 @@ NAME and ARGS as in `use-package'."
   "Return a lambda function with BODY."
   (declare (doc-string 1))
   `(lambda () (interactive) ,@body))
+
+;; systemcrafters.net/emacs-from-scratch/cut-start-up-time-in-half/#letrsquos-find-out-how-long-itrsquos-taking
+(defun use-package-extras-display-startup-time ()
+  "Display the time it took to load Emacs and the number of garbage collections."
+  (message "Emacs loaded in %s with %d garbage collections."
+           (format "%.2f seconds"
+                   (float-time
+                    (time-subtract after-init-time before-init-time)))
+           gcs-done))
 
 (provide 'use-package-extras)
 ;;; use-package-extras.el ends here

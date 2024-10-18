@@ -1,6 +1,6 @@
 ;;; dired-extras.el --- Extensions for dired -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/dired-extras.el
@@ -125,6 +125,16 @@ losing the `put back' option."
   (interactive)
   (require 'image-dired)
   (image-dired-show-all-from-dir (dired-current-directory)))
+
+(declare-function files-extras-read-file "files-extras")
+;;;###autoload
+(defun dired-extras-copy-image ()
+  "Copy image FILE to the kill ring."
+  (interactive)
+  (if (derived-mode-p 'image-mode)
+      (do-applescript
+       (format "set the clipboard to POSIX file \"%s\"" buffer-file-name))
+    (user-error "Not in an image buffer")))
 
 ;;;;; gnus-dired
 

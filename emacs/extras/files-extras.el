@@ -1,6 +1,6 @@
 ;;; files-extras.el --- Extensions for files.el -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/files-extras.el
@@ -34,12 +34,23 @@
 
 ;;;; Variables
 
-(defconst file-extras-bypass-paywalls-chrome-repo
-  "https://github.com/bpc-clone/bpc_updates/releases/latest/download/bypass-paywalls-chrome-clean-master.zip"
-  "URL for the Bypass Paywalls Chrome Clean repository.")
+(defconst file-extras-bypass-paywalls-chrome-zip-file
+  "bypass-paywalls-chrome-clean-master.zip"
+  "Name of the Bypass Paywalls Chrome Clean `zip' file.")
 
-(defconst file-extras-bypass-paywalls-firefox-xpi
-  "https://github.com/bpc-clone/bpc_updates/releases/download/latest/bypass_paywalls_clean-latest.xpi"
+(defconst file-extras-bypass-paywalls-chrome-zip-url
+  (format
+   "https://gitflic.ru/project/magnolia1234/bpc_uploads/blob/raw?file=%s"
+   file-extras-bypass-paywalls-chrome-zip-file)
+  "URL for the Bypass Paywalls Chrome Clean `zip' file.")
+
+(defconst file-extras-bypass-paywalls-firefox-xpi-file
+  "bypass_paywalls_clean-latest.xpi"
+  "Name of the Bypass Paywalls Firefox Clean `xpi' file.")
+
+(defconst file-extras-bypass-paywalls-firefox-xpi-url
+  (format "https://gitflic.ru/project/magnolia1234/bpc_uploads/blob/raw?file=%s"
+	  file-extras-bypass-paywalls-firefox-xpi-file)
   "URL for the Bypass Paywalls Firefox Clean `xpi' file.")
 
 ;;;; User options
@@ -249,6 +260,7 @@ files which do not exist any more or are no longer readable will be killed."
 	(print "not found")))))
 
 ;; stackoverflow.com/questions/21486934/file-specific-key-binding-in-emacs/21493693#21493693
+;;;###autoload
 (defun files-extras-buffer-local-set-key (key command)
   "Bind KEY to COMMAND in current buffer only."
   (interactive "KSet key buffer-locally: \nCSet key %s buffer-locally to command: ")
@@ -260,13 +272,17 @@ files which do not exist any more or are no longer readable will be killed."
     (use-local-map newmap)))
 
 (declare-function ebib-extras-get-file "ebib-extras")
-(defun files-extras-ocr-pdf (arg &optional filename parameters)
+(declare-function ebib-extras-get-or-set-language "ebib-extras")
+(declare-function tlon-select-language "tlon-core")
+(declare-function tlon-lookup "tlon-core")
+(defvar tlon-languages-properties)
+(defun files-extras-ocr-pdf (force &optional filename parameters)
   "OCR the FILENAME.
 If FILENAME is nil, use the PDF file at point or the file visited by the current
-buffer. With prefix argument ARG, force OCR even if it has already been
-performed on the file.
+buffer. If FORCE is non-nil or called with a prefix argument argument, force OCR
+even if it has already been performed on the file.
 
-Optionally, pass PARAMETERS to `ocrmypdf'. If so, ARG and FILENAME
+Optionally, pass PARAMETERS to `ocrmypdf'. If so, FORCE and FILENAME
 have no effect."
   (interactive "P")
   (unless (executable-find "ocrmypdf")
@@ -279,9 +295,14 @@ have no effect."
 			 (_ (user-error "Could not determine file to OCR"))))))
     (unless (string= (file-name-extension filename) "pdf")
       (user-error "File is not a PDF"))
-    (let* ((parameters
+    (let* ((language (pcase major-mode
+		       ('ebib-entry-mode (ebib-extras-get-or-set-language))
+		       (_ (tlon-select-language))))
+	   (lang (tlon-lookup tlon-languages-properties :iso-639-2 :name language))
+	   (parameters
 	    (or parameters
-		(format (concat (when arg "--force-ocr ") "--deskew '%s' '%s'") filename filename)))
+		(format (concat (when force "--force-ocr ") "--deskew -l %s \"%2$s\" \"%2$s\"")
+			lang filename)))
 	   (process (start-process-shell-command
 		     "ocrmypdf" "*ocr-pdf*"
 		     (concat "ocrmypdf " parameters))))
@@ -292,8 +313,9 @@ have no effect."
 This function gets STRING when PROCESS produces output."
   (when (buffer-live-p (process-buffer process))
     (with-current-buffer (process-buffer process)
-      (cond ((string-match-p "PriorOcrFoundError: page already has text" string)
-	     (message "OCR already performed on this file."))
+      (message "OCR in progress...")
+      (cond ((string-match-p "page already has text! - aborting" string)
+	     (message "OCR already performed on this file; to perform OCR any way, run with a prefix argument."))
 	    ;; when invoked with `--force-ocr'
 	    ((or (string-match-p "page already has text" string)
 		 (string-match-p "common.py:261" string))
@@ -493,7 +515,7 @@ current helpful buffer displays, then kill the buffer."
 								      (file-relative-name dir "~/")
 								      file))
 			     (dir-adjusted (file-name-directory file-adjusted)))
-			(when (f-dir-p dir-adjusted)
+			(when (file-directory-p dir-adjusted)
 			  (throw 'found dir-adjusted)))))))
     (replace-regexp-in-string ".git/" "" (file-name-concat dir filename))))
 
@@ -514,10 +536,9 @@ If N is nil, default to 0 (the first directory)."
 After running the command, both the extensions page and the local folder will
 open. To install the extension, drag the latter onto the former."
   (interactive)
-  (let* ((url file-extras-bypass-paywalls-chrome-repo)
-	 (filename (file-name-nondirectory url))
-	 (base (file-name-base filename))
-	 (file (file-name-concat paths-dir-downloads filename))
+  (let* ((url file-extras-bypass-paywalls-chrome-zip-url)
+	 (file (file-name-concat paths-dir-downloads file-extras-bypass-paywalls-chrome-zip-file))
+	 (base (file-name-base file-extras-bypass-paywalls-chrome-zip-file))
 	 (dir (file-name-concat paths-dir-downloads base))
 	 (dir-in-dir (file-name-concat dir (file-name-as-directory base))))
     (unless (url-file-exists-p url)
@@ -525,7 +546,7 @@ open. To install the extension, drag the latter onto the former."
     (url-copy-file url file)
     (dired-compress-file file)
     (delete-file file)
-    (macos-run-keyboard-maestro-script "89243CDA-4876-45C8-9AF2-3666664A0EAA")
+    (macos-run-keyboard-maestro-script "89243CDA-4876-45C8-9AF2-3666664A0EAA" "Open Chrome extensions")
     (macos-open-in-finder dir-in-dir)))
 
 (defun files-extras-download-bypass-paywalls-firefox ()
@@ -534,13 +555,13 @@ After running the command, both the Firefox extensions page and
 the `bypass-paywalls-firefox-clean-master' folder will open.
 To install the extension, drag the latter onto the former."
   (interactive)
-  (let* ((url file-extras-bypass-paywalls-firefox-xpi)
-	 (file (file-name-concat paths-dir-downloads (file-name-nondirectory url))))
-    (unless (url-file-exists-p url)
-      (user-error "URL `%s' does not exist" url))
-    (url-copy-file url file)
-    (macos-run-keyboard-maestro-script "67A6BCE5-AB24-4696-AFCF-C135193158D7")
-    (macos-open-in-finder file)))
+  (unless (url-file-exists-p file-extras-bypass-paywalls-firefox-xpi-url)
+    (user-error "URL `%s' does not exist" file-extras-bypass-paywalls-firefox-xpi-url))
+  (let ((default-directory paths-dir-downloads))
+    (url-copy-file file-extras-bypass-paywalls-firefox-xpi-url
+		   file-extras-bypass-paywalls-firefox-xpi-file)
+    (macos-run-keyboard-maestro-script "67A6BCE5-AB24-4696-AFCF-C135193158D7" "Open Firefox extensions")
+    (macos-open-in-finder file-extras-bypass-paywalls-firefox-xpi-file)))
 
 ;;;;; List <> lines
 
@@ -563,34 +584,34 @@ To install the extension, drag the latter onto the former."
 (transient-define-prefix files-extras-dispatch ()
   "Dispatcher for files."
   ["Files"
-   ("." "inbox-mobile"    (lambda () (interactive) (find-file paths-file-inbox-mobile)))
-   ("," "inbox-desktop"   (lambda () (interactive) (find-file paths-file-inbox-desktop)))
-   ("a" "agenda"          org-extras-agenda-switch-to-agenda-current-day)
-   ("c" "config"          (lambda () (interactive) (find-file paths-file-config)))
-   ("e" "extras"          (lambda () (interactive) (files-extras-open-extras-package)))
-   ("h" "tlon-ledger"     (lambda () (interactive) (find-file paths-file-tlon-ledger)))
-   ("i" "anki"            (lambda () (interactive) (find-file paths-file-anki)))
-   ("j" "ledger"          (lambda () (interactive) (find-file paths-file-ledger)))
-   ("k" "karabiner"       (lambda () (interactive) (find-file paths-file-karabiner)))
-   ("o" "notes"           (lambda () (interactive) (switch-to-buffer "*notes*")))
-   ("p" "packages"        files-extras-packages-dispatch)
-   ("q" "quotes"          (lambda () (interactive) (find-file paths-file-quotes)))
-   ("r" "calendar"        (lambda () (interactive) (find-file paths-file-calendar)))
-   ("s" "scratch"         (lambda () (interactive) (switch-to-buffer "*scratch*")))
-   ("v" "films"           (lambda () (interactive) (find-file paths-file-films)))
-   ("w" "work"            (lambda () (interactive) (find-file paths-file-work)))])
+   ("." "inbox-mobile"      (lambda () (interactive) (find-file paths-file-inbox-mobile)))
+   ("," "inbox-desktop"     (lambda () (interactive) (find-file paths-file-inbox-desktop)))
+   ("a" "agenda"            org-extras-agenda-switch-to-agenda-current-day)
+   ("c" "config"            (lambda () (interactive) (find-file paths-file-config)))
+   ("e" "extras"            (lambda () (interactive) (files-extras-open-extras-package)))
+   ("f" "feeds"             (lambda () (interactive) (find-file paths-file-feeds-pablo)))
+   ("h" "tlon-ledger"       (lambda () (interactive) (find-file paths-file-tlon-ledger)))
+   ("i" "anki"              (lambda () (interactive) (find-file paths-file-anki)))
+   ("j" "ledger"            (lambda () (interactive) (find-file paths-file-ledger)))
+   ("k" "karabiner"         (lambda () (interactive) (find-file paths-file-karabiner)))
+   ("o" "notes"             (lambda () (interactive) (switch-to-buffer "*notes*")))
+   ("p" "packages"          files-extras-packages-dispatch)
+   ("q" "quotes"            (lambda () (interactive) (find-file paths-file-quotes)))
+   ("r" "calendar"          (lambda () (interactive) (find-file paths-file-calendar)))
+   ("s" "scratch"           (lambda () (interactive) (switch-to-buffer "*scratch*")))
+   ("w" "work"              (lambda () (interactive) (find-file paths-file-work)))])
 
 ;;;###autoload (autoload 'files-extras-packages-dispatch "files-extras" nil t)
 (transient-define-prefix files-extras-packages-dispatch ()
   "Dispatcher for personal package files."
   [["Tlön"
-    ("b" "tlon"       (lambda () (interactive) (files-extras-open-elpaca-package "tlon")))
+    ("t" "tlon"             (lambda () (interactive) (files-extras-open-elpaca-package "tlon")))
     ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))]
    ["Personal"
-    ("l" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))
+    ("a" "annas-archive"    (lambda () (interactive )(files-extras-open-elpaca-package "annas-archive")))
+    ("b" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))
     ("d" "gdrive"           (lambda () (interactive )(files-extras-open-elpaca-package "gdrive")))
-    ("g" "goldendict-ng"   (lambda () (interactive )(files-extras-open-elpaca-package "goldendict-ng")))
-    ("a" "internet-archive" (lambda () (interactive )(files-extras-open-elpaca-package "internet-archive")))
+    ("g" "goldendict-ng"    (lambda () (interactive )(files-extras-open-elpaca-package "goldendict-ng")))
     ("o" "macos"            (lambda () (interactive )(files-extras-open-elpaca-package "macos")))
     ("m" "mullvad"          (lambda () (interactive )(files-extras-open-elpaca-package "mullvad")))
     ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))

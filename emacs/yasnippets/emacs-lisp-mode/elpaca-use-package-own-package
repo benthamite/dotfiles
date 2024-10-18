@@ -4,7 +4,7 @@
 # contributor: Pablo Stafforini
 # --
 (use-package $1
-  :elpaca nil
+  :ensure nil
   :load-path "/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/emacs/lisp/"
   :after $2
   :demand t$3

@@ -29,6 +29,7 @@
 
 (require 'el-patch)
 (require 'org-ref)
+(require 'org-ref-isbn)
 
 ;;;; Functions
 

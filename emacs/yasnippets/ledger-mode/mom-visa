@@ -2,9 +2,8 @@
 # name: mom-visa
 # key: visa
 # contributor: Pablo Stafforini
-# `(format-time-string "%Y-%m-%d")` $1
-`(calendar-extras-time-last-day-of-last-month)`
-2022-12-31 $1
-    Expenses:$2  $3.00 ARS
+# --
+`(calendar-extras-time-last-day-of-last-month)` $1
+    Expenses:${2:account}          ${3:amount}.00 ARS ; $4
     Liabilities:Mom:Visa
-$4
+$5

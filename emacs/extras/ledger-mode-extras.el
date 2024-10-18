@@ -1,6 +1,6 @@
 ;;; ledger-mode-extras.el --- Extensions for ledger-mode -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/ledger-mode-extras.el
@@ -39,16 +39,22 @@
 (defcustom ledger-mode-extras-currencies '()
   "List of currencies to get prices for."
   :group 'ledger-mode-extras
-  :type 'list)
+  :type '(repeat string))
 
 ;;;; Functions
 
+;;;;; Import
+
 (declare-function f-read "f")
 (declare-function s-split "s")
+;; TODO: remove first line and "rewards" lines
 (defun ledger-extras-import-polymarket (file)
   "Import Polymarket CSV FILE into the current ledger file.
-To download the CSV file, go to <https://polymarket.com/portfolio?tab=history>.
-Remove the first row of the CSV file before importing it."
+To download the CSV file, go to <https://polymarket.com/portfolio?tab=history>,
+click on \"Filter\", set a range from one day after the most recent Polymarket
+transaction on Ledger to today. Remove the first row of the CSV file and the
+‘Reward’ lines before importing it. Note that if you held a contract until
+expiration, you must set its resolution value manually."
   (interactive (list (read-file-name "Polymarket CSV file: " paths-dir-downloads)))
   (let (token-alist)
     (dolist (raw (s-split "\n" (f-read file) t))
@@ -71,9 +77,10 @@ Remove the first row of the CSV file before importing it."
 
 (defun ledger-extras-import-interactive-brokers (file)
   "Import Interactive Brokers CSV FILE into the current ledger file.
-To download the CSV file, go to the IBKR site, then select \"performance &
-reports > flex queries > trade history\". Remove the first row of the CSV file
-before importing it."
+To download the CSV file, go to the IBKR site, click on \"performance & reports
+> flex queries > trade history > run >\", then select your desired period. Note
+that IBKR sometimes adds an extra line with the total amount of a transaction
+broken down into multiple trades. You must remove these lines manually."
   (interactive (list (read-file-name "IBKR CSV file: " paths-dir-downloads)))
   (dolist (raw (s-split "\n" (f-read file) t))
     (let* ((clean (split-string (replace-regexp-in-string "\"" "" raw) "," t))
@@ -108,6 +115,8 @@ If FILE is nil, use `paths-file-ledger'."
 	  (ledger-mode-extras-align-and-next)
 	  (insert "\n\n"))))))
 
+;;;;; Navigation
+
 (declare-function crux-smart-open-line-above "crux")
 (defun ledger-mode-extras-new-entry-below ()
   "Create new entry below one at point."
@@ -117,11 +126,14 @@ If FILE is nil, use `paths-file-ledger'."
   (ledger-navigate-next-xact-or-directive)
   (crux-smart-open-line-above))
 
+;;;###autoload
 (defun ledger-mode-extras-align-and-next ()
   "Align transaction at point and move point to next entry."
   (interactive)
   (ledger-post-align-xact (point))
   (ledger-navigate-next-xact-or-directive))
+
+;;;;; Report
 
 (defun ledger-mode-extras-report-account ()
   "Run an `account' report from `ledger-reports'."
@@ -143,6 +155,9 @@ If FILE is nil, use `paths-file-ledger'."
   (interactive)
   (ledger-report "payee" nil))
 
+;;;;; Fetch prices
+
+;;;###autoload
 (defun ledger-mode-extras-update-commodities ()
   "Update `commodities.py'."
   (interactive)
@@ -150,6 +165,7 @@ If FILE is nil, use `paths-file-ledger'."
    (format "python3 %s"
 	   (file-name-concat paths-dir-ledger "commodities.py"))))
 
+;;;###autoload
 (defun ledger-mode-extras-update-coin-prices ()
   "Update `coinprices.py'."
   (interactive)
@@ -158,10 +174,11 @@ If FILE is nil, use `paths-file-ledger'."
 	   (file-name-concat paths-dir-ledger "coinprices/coinprices.py")
 	   paths-file-ledger-db)))
 
+;;;;; Sort
+
 (defun ledger-mode-extras-sort-region-reversed (beg end)
   "Sort the region from BEG to END in reverse chronological order."
-  (interactive "r") ;; load beg and end from point and mark
-  ;; automagically
+  (interactive "r")
   (let* ((new-beg beg)
 	 (new-end end)
 	 (bounds (ledger-navigate-find-xact-extents (point)))
@@ -184,14 +201,12 @@ If FILE is nil, use `paths-file-ledger'."
 	(setq new-end (point))
 	(narrow-to-region new-beg new-end)
 	(goto-char new-beg)
-
 	(let ((inhibit-field-text-motion t))
 	  (sort-subr
 	   t
 	   'ledger-navigate-next-xact
 	   'ledger-navigate-end-of-xact
 	   'ledger-sort-startkey))))
-
     (goto-char (point-min))
     (re-search-forward (regexp-quote target-xact))
     (goto-char (+ (match-beginning 0) point-delta))))
@@ -222,6 +237,8 @@ If FILE is nil, use `paths-file-ledger'."
       (call-interactively #'ledger-mode-extras-sort-region-reversed)
     (ledger-mode-extras-sort-buffer-reversed)))
 
+;;;;; Kill
+
 (defun ledger-mode-extras-copy-or-kill-transaction-at-point (action)
   "Copy or kill transaction at point, depending on ACTION."
   (save-excursion
@@ -250,7 +267,9 @@ If FILE is nil, use `paths-file-ledger'."
 	(xact-ends (ledger-navigate-end-of-xact)))
     (narrow-to-region xact-begins xact-ends)))
 
-(defun ledger-mode-extras--increase-date (days)
+;;;;; Change date
+
+(defun ledger-mode-extras-increase-date (days)
   "Increase the date of transaction at point by DAYS.
 DAYS can be positive or negative."
   (save-excursion
@@ -263,15 +282,17 @@ DAYS can be positive or negative."
       (replace-match date-minus-days)
       (widen))))
 
+;;;###autoload
 (defun ledger-mode-extras-increase-date-by-one-day ()
   "Increase the date of transaction at point by one day."
   (interactive)
-  (ledger-mode-extras--increase-date 1))
+  (ledger-mode-extras-increase-date 1))
 
+;;;###autoload
 (defun ledger-mode-extras-decrease-date-by-one-day ()
   "Decrease the date of transaction at point by one day."
   (interactive)
-  (ledger-mode-extras--increase-date -1))
+  (ledger-mode-extras-increase-date -1))
 
 (provide 'ledger-mode-extras)
 ;;; ledger-mode-extras.el ends here

@@ -32,6 +32,7 @@
 
 ;;;; Functions
 
+;;;###autoload
 (defun register-extras-kill-to-register (text register)
   "Copy TEXT from the kill ring to REGISTER."
   (interactive (list (read-from-kill-ring "Kill to store: ")
@@ -51,7 +52,8 @@
    ["kill ring"
     ("k" "store" register-extras-kill-to-register)]
    ["kmacro"
-    ("m" "store" kmacro-to-register)]
+    ("m" "store" kmacro-to-register)
+    ("j" "execute" jump-to-register)]
    ["rectangle"
     ("r" "copy" copy-rectangle-to-register)]
    ["window/frame config"

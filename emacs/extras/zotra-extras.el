@@ -1,6 +1,6 @@
 ;;; zotra-extras.el --- Extensions for zotra -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/zotra-extras.el
@@ -32,6 +32,49 @@
 
 ;;;; Variables
 
+(defgroup zotra-extras ()
+  "Extensions for `zotra'."
+  :group 'zotra)
+
+(defcustom zotra-extras-use-mullvad-p nil
+  "If non-nil, connect to this city temporarily to fetch film data from IMDb.
+The Internet Movie Database fetches data in the language of the country where
+the user is located. If you want to fetch data in a different language, set this
+user option to a city where this language is spoken.
+
+This option requires the `mullvad' package, and the user options
+`mullvad-websites-and-cities' and `mullvad-cities-and-servers' to be set
+accordingly. Specifically, `mullvad-websites-and-cities' must include a cons
+cell whose car is `\"IMDb\"' and whose cdr is the city you want `mullvad' to
+connect to (e.g. `(\"IMDb\" . \"New York\")'), and `mullvad-cities-and-servers'
+must include a cons cell whose car is this city and whose cdr is a Mullvad
+server for this city (e.g. `(\"New York\" . \"us-nyc-wg-601\")'). Here is a
+sample configuration:
+
+\(setq mullvad-cities-and-servers
+      \\='((\"London\" . \"gb-lon-wg-001\")
+	(\"Madrid\" . \"es-mad-wg-101\")
+	(\"Malmö\" . \"se-sto-wg-001\")
+	(\"Frankfurt\" . \"de-fra-wg-001\")
+	(\"New York\" . \"us-nyc-wg-601\")
+	(\"San José\" . \"us-sjc-wg-001\")
+	(\"São Paulo\" . \"br-sao-wg-001\")))
+
+\(setq mullvad-websites-and-cities
+      \\='((\"Betfair\" . \"London\")
+	 (\"Criterion Channel\" . \"New York\")
+	 (\"Gemini\" . \"New York\")
+	 (\"HathiTrust\" . \"San José\")
+	 (\"IMDb\" . \"New York\")
+	 (\"Library Genesis\" . \"Malmö\")
+	 (\"Pirate Bay\" . \"Malmö\")
+	 (\"UC Berkeley\" . \"San José\")
+	 (\"Wise\" . \"Madrid\")))
+
+Refer to the `mullvad' package documentation for details."
+  :type 'boolean
+  :group 'zotra-extras)
+
 (defvar zotra-extras-most-recent-bibfile nil
   "The bibfile of the most recently added entry.")
 
@@ -48,6 +91,7 @@
 (declare-function ebib "ebib")
 (declare-function elfeed-extras-kill-link-url-of-entry "elfeed-extras")
 (declare-function eww-copy-page-url "eww")
+(declare-function mullvad-connect-to-website "mullvad")
 (defun zotra-extras-add-entry (&optional url-or-search-string entry-format bibfile)
   "Like `zotra-extras-add-entry', but set BIBFILE and open in Ebib.
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry'
@@ -59,6 +103,9 @@ to get the entry.
     (pcase major-mode
       ('elfeed-show-mode (elfeed-extras-kill-link-url-of-entry))
       ('eww-mode (eww-copy-page-url)))
+    (when zotra-extras-use-mullvad-p
+      (require 'mullvad)
+      (mullvad-connect-to-website "IMDb" 1 'silently))
     (zotra-add-entry url-or-search-string entry-format bibfile)
     (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey)))
 
@@ -113,10 +160,14 @@ to get the entry.
   ;; TODO: check that there are no unsaved changes in
   ;; `zotra-extras-most-recent-bibfile'
   (goto-char (point-max))
+  (require 'bibtex)
+  (require 'bibtex-extras)
+  (require 'doi-utils)
+  (require 'org-ref-bibtex)
+  (require 'tlon-cleanup)
   (bibtex-extras-convert-titleaddon-to-journaltitle)
   (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
   (zotra-extras-fix-octal-sequences)
-  (bibtex-clean-entry)
   (org-ref-clean-bibtex-entry)
   (tlon-cleanup-eaf-replace-urls)
   (setq zotra-extras-most-recent-bibkey (bibtex-extras-get-key)))
@@ -139,9 +190,13 @@ Zotero-imported bibtex entries."
 
 ;;;;; Protocol
 
-;; Just like `zotra-protocol' but with a call to `zotra-extras-add-entry' rather
-;; than `zotra-add-entry'
 (defun zotra-extras-protocol (info)
+  "Like `zotra-protocol' but with a call to `zotra-extras-add-entry'.
+INFO is a plist with the following keys:
+- `:url': URL of the page to be saved.
+- `:bibfile': Bibfile where the entry should be saved.
+- `:format': Format of the entry.
+- `:title': Title of the page."
   (let ((url (plist-get info :url))
 	(bibfile (plist-get info :bibfile))
 	(entry-format (plist-get info :format))

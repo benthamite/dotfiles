@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: directory-files-sans-subdirectories
+# key: dfsd
+# contributor: Pablo Stafforini
+# --
+(seq-filter (lambda (f) (not (file-directory-p f)))
+(directory-files paths-dir-inactive))

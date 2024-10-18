@@ -1,6 +1,6 @@
 ;;; forge-extras.el --- Extensions for forge -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/forge-extras.el
@@ -32,11 +32,6 @@
 (require 'shut-up)
 
 ;;;; Functions
-
-(defun forge-extras-get-unread-notifications ()
-  "Return the number of unread notifications."
-  (when-let ((unread-notifications (forge--ls-notifications '(unread))))
-    (length unread-notifications)))
 
 (defun forge-extras-orgit-store-link (_arg)
   "Like `org-store-link' but store links to all selected commits, if any."

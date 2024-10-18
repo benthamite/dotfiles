@@ -1,6 +1,6 @@
 ;;; mu4e-extras.el --- Extensions for mu4e -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/mu4e-extras.el
@@ -55,9 +55,16 @@ the sender only."
 		 (const :tag "Yes" t)
 		 (const :tag "No" nil)))
 
+;;;; Variables
+
+(defvar mu4e-extras-mark-as-read-queue '()
+  "List of `:message-id' of messages to be marked as read after synchronization.")
+
 ;;;; Functions
 
 ;;;;; Post-processing
+
+;;;;;; Fix flags
 
 (defun mu4e-extras-gmail-fix-flags (mark msg)
   "Fix Gmail flags for each MARK and MSG pair."
@@ -66,21 +73,49 @@ the sender only."
 	((eq mark 'flag)   (mu4e-action-retag-message msg "+\\Starred"))
 	((eq mark 'unflag) (mu4e-action-retag-message msg "-\\Starred"))))
 
-;; FIXME: this is not working
-;; I just can't figure out how to get the plist of the sent message
-(defun mu4e-extras-mark-sent-as-read ()
-  "Mark the sent message identified by DOCID as read.
-When mu4e sends an email with Gmail, Gmail automatically saves a copy in the
+;;;;;; Mark as read
+
+(defun mu4e-extras-reapply-read-status ()
+  "Reapply `read' status to all messages in queue.
+The list of queued messages is stored in `mu4e-extras-mark-as-read-queue'."
+  (dolist (message-id mu4e-extras-mark-as-read-queue)
+    (mu4e--server-move message-id nil "+S"))  ;; `+S' = seen
+  (setq mu4e-extras-mark-as-read-queue '()))
+
+(defun mu4e-extras-reapply-read-status-set-timer ()
+  "Set a timer to reapply `read' status to all tracked messages."
+  (when mu4e-extras-mark-as-read-queue
+    (run-with-timer 30 nil #'mu4e-extras-reapply-read-status)))
+
+(add-hook 'mu4e-update-pre-hook #'mu4e-extras-reapply-read-status-set-timer)
+
+;;;;;;; Refiled
+
+(defun mu4e-extras-add-refiled-to-mark-as-read-queue (msg)
+  "Add MSG to the queue of messages to mark as read upon resync.
+Messages that are both refiled and marked as read are re-marked as unread after
+synchronization with the Gmail server. To fix this, we keep track of the
+`message-id' property of every message that is refiled and marked as read,
+and re-mark them as read after synchronization."
+  (let ((message-id (mu4e-message-field msg :message-id)))
+    (add-to-list 'mu4e-extras-mark-as-read-queue message-id)
+    (mu4e-headers-mark-for-refile)
+    (mu4e-mark-execute-all t)))
+
+;;;;;;; Sent
+
+(defun mu4e-extras-add-sent-to-mark-as-read-queue ()
+  "At the sent message to the queue of messages to mark as read upon resync.
+When `mu4e' sends an email with Gmail, Gmail automatically saves a copy in the
 \"Sent\" folder, so the local copy is deleted (as specified by
 `mu4e-sent-messages-behavior'). However, the saved copy is treated as a new,
-unread message when synchronized back to the local client. To handle this
-annoyance, this function marks the saved copy as read."
-  (let* ((msgid (message-fetch-field "Message-ID"))
-	 (msg (save-excursion
-		(mu4e-headers-goto-message-id msgid)
-		(mu4e-message-at-point))))
-    (mu4e-action-retag-message msg "+\\Refiled")
-    (mu4e--server-move msgid nil "+S-u-N")))
+unread message when synchronized back to the local client. To fix this, this
+function marks the saved copy as read."
+  (when-let ((message-id (message-fetch-field "Message-ID")))
+    (add-to-list 'mu4e-extras-mark-as-read-queue message-id)))
+
+;; TODO: this doesn’t seem to be working properly; investigate
+;; (add-hook 'message-sent-hook #'mu4e-extras-add-sent-to-mark-as-read-queue)
 
 ;;;;; Setup
 
@@ -97,6 +132,15 @@ annoyance, this function marks the saved copy as read."
 
 ;;;;; Commands
 
+;;;###autoload
+(defun mu4e-extras-update-all-mail-and-index (&optional run-in-background)
+  "Like `mu4e-update-mail-and-index', but include the \"all mail\" folder.
+If RUN-IN-BACKGROUND is non-nil (or called with prefix-argument), run in the
+background; otherwise, pop up a window."
+  (interactive "P")
+  (let ((mu4e-get-mail-command "mbsync gmail-all"))
+    (mu4e-update-mail-and-index run-in-background)))
+
 ;;;;;; Refile
 
 ;;;###autoload
@@ -109,14 +153,9 @@ Do not ask for confirmation."
 
 ;;;###autoload
 (defun mu4e-extras-headers-mark-read-and-refile ()
-  "In headers mode, mark message at point and read and refile it.
-Do not ask for confirmation."
+  "Mark the message at point as read then refile, adding it to the re-mark list."
   (interactive)
-  (mu4e-headers-mark-for-read)
-  (mu4e-mark-execute-all t)
-  (sleep-for 0.1)
-  (forward-line -1)
-  (mu4e-extras-headers-refile))
+  (mu4e-extras-add-refiled-to-mark-as-read-queue (mu4e-message-at-point)))
 
 ;;;###autoload
 (defun mu4e-extras-view-refile ()

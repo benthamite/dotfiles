@@ -1,6 +1,6 @@
 ;;; org-extras.el --- Extensions for org-mode -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023 Pablo Stafforini
+;; Copyright (C) 2024 Pablo Stafforini
 
 ;; Author: Pablo Stafforini
 ;; Maintainer: Pablo Stafforini
@@ -37,6 +37,7 @@
 (require 'oc)
 (require 'paths)
 (require 'simple-extras)
+(require 'transient)
 
 ;;;; User options
 
@@ -44,9 +45,7 @@
   "Extensions for `org'."
   :group 'org)
 
-(defcustom org-extras-agenda-files-excluded
-  (list paths-file-tlon-tareas-leo
-	paths-file-tlon-tareas-fede)
+(defcustom org-extras-agenda-files-excluded nil
   "Files to exclude from `org-agenda'.
 I have to exclude these files because otherwise extraneous information shows up
 in my agenda, such as TODOs and time logs. These files lack the `property' tag
@@ -257,25 +256,23 @@ use `ox-clip-formatted-copy'."
   "Take the contents of the system clipboard and paste it as an image."
   (interactive)
   (if (executable-find "pngpaste")
-      (let* ((counter 1)
-	     (image-file (concat
-			  paths-dir-org-images
-			  (org-id-get nil 'create)
-			  (format "-%d.png" counter))))
-	(while (file-exists-p image-file)
-	  (setq counter (1+ counter))
-	  (setq image-file (concat
-			    paths-dir-org-images
-			    (org-id-get nil 'create)
-			    (format "-%d.png" counter))))
-	(call-process-shell-command (format "pngpaste '%s'" image-file))
-	(let ((caption (read-string "Caption: ")))
-	  (unless (string= caption "")
-	    (insert (format "#+CAPTION: %s \n" caption))))
-	(insert (format "[[file:%s]]" image-file))
-	(org-display-inline-images)
-	(message "You can toggle inline images with C-c C-x C-v"))
-    (user-error "Requires pngpaste in PATH")))
+      (let* ((counter 1))
+	(while (file-exists-p (org-extras-make-image-filename counter))
+	  (setq counter (1+ counter)))
+	(let ((filename (org-extras-make-image-filename counter)))
+	  (call-process-shell-command (format "pngpaste '%s'" filename))
+	  (let ((caption (read-string "Caption: ")))
+	    (unless (string-empty-p caption)
+	      (insert (format "#+CAPTION: %s \n" caption))))
+	  (insert (format "[[file:%s]]" filename))
+	  (org-display-inline-images)))
+    (user-error "`pngpaste' not found; please install it (e.g. `brew install pngpaste')")))
+
+(defun org-extras-make-image-filename (count)
+  "Make a unique filename for an image based on COUNT."
+  (concat paths-dir-org-images
+	  (org-id-get nil 'create)
+	  (format "-%03d.png" count)))
 
 (defun org-extras-inline-images (&optional arg)
   "Enable or disable the display of inline images.
@@ -333,6 +330,7 @@ number. Disable the mode if ARG is a negative number."
 
 (declare-function window-extras-split-if-unsplit "window-extras")
 (declare-function winum-select-window-1 "winum")
+;;;###autoload
 (defun org-extras-agenda-switch-to-agenda-current-day ()
   "Open agenda in left window, creating it if necessary."
   (interactive)
@@ -388,6 +386,7 @@ corresponding file. Else, open the file."
 If JUST-ENABLE is non-nil, always enable the display of birthdays."
   (interactive)
   (when org-extras-bbdb-anniversaries-heading
+    (require 'org-roam-extras)
     (save-window-excursion
       (org-roam-extras-id-goto org-extras-bbdb-anniversaries-heading)
       (org-narrow-to-subtree)
@@ -399,6 +398,11 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 	(insert "%%(org-bbdb-anniversaries-future 1)\n")))
     (unless just-enable
       (org-agenda-redo))))
+
+(defun org-extras-agenda-toggle-log-mode ()
+  "Toggle `org-agenda-log-mode' and `org-agenda-log-mode-items'."
+  (interactive)
+  (org-agenda-log-mode 'clockcheck))
 
 ;;;;; org-capture
 
@@ -543,6 +547,7 @@ all headlines up to that level."
   (org-cycle-hide-archived-subtrees 'all))
 
 ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
+;; TODO: consider deleting; I don’t think this is being used
 (defun org-extras-hide-properties ()
   "Hide all `org-mode' headline property drawers in buffer.
 Could be slow if it has a lot of overlays."
@@ -556,6 +561,7 @@ Could be slow if it has a lot of overlays."
 	(overlay-put ov_this 'hidden-prop-drawer t))))
   (put 'org-toggle-properties-hide-state 'state 'hidden))
 
+;; TODO: consider deleting; I don’t think this is being used
 (defun org-extras-hide-logbook ()
   "Hide all `org-mode' headline logbook drawers in buffer.
 Could be slow if it has a lot of overlays."
@@ -612,11 +618,6 @@ files, recursively all files in `org-directory', and all files in
   (interactive)
   (org-id-update-id-locations
    (directory-files-recursively org-directory ".org$\\|.org.gpg$")))
-
-(defun org-extras-id-notes-with-clock (key)
-  "Clock in to the org note with ID KEY."
-  (funcall (intern (concat "hydra-org-notes/lambda-" key "-and-exit")))
-  (org-clock-in))
 
 ;;;;; org-list
 
@@ -730,9 +731,9 @@ Further lines starting with a star get quoted with a comma to
 keep the structure of the Org file."
   (interactive)
   (let ((regionp (use-region-p))
-        (transform-start (point-min))
-        (transform-end (point-max))
-        (return-content ""))
+	(transform-start (point-min))
+	(transform-end (point-max))
+	(return-content ""))
     (when regionp
       (setq transform-start (region-beginning))
       (setq transform-end (region-end)))
@@ -740,29 +741,29 @@ keep the structure of the Org file."
     (save-excursion
       (goto-char transform-start)
       (while (< (point) transform-end)
-        (let* ((text-face (if (listp (get-text-property (point) 'face))
-                              (get-text-property (point) 'face)
-                            (list (get-text-property (point) 'face))))
-               (link (get-text-property (point) 'shr-url))
-               (text (buffer-substring-no-properties (point)
-                                                     (or (next-single-property-change (point) 'face nil transform-end)
-                                                         (next-single-property-change (point) 'shr-url nil transform-end)
-                                                         transform-end)))
-               (formatted-text (replace-regexp-in-string shr-bullet "- " text)))
-          ;; Apply Org mode formatting for italics and bold where applicable.
-          (when (memq 'italic text-face)
-            (setq formatted-text (concat "/" formatted-text "/")))
-          (when (memq 'bold text-face)
-            (setq formatted-text (concat "*" formatted-text "*")))
-          ;; Format links according to Org mode syntax.
-          (when link
-            (setq formatted-text (concat "[[" link "][" text "]]")))
-          ;; Append the formatted text to the return content.
-          (setq return-content (concat return-content formatted-text))
-          ;; Advance the point.
-          (goto-char (or (next-single-property-change (point) 'face)
-                         (next-single-property-change (point) 'shr-url)
-                         (point-max))))))
+	(let* ((text-face (if (listp (get-text-property (point) 'face))
+			      (get-text-property (point) 'face)
+			    (list (get-text-property (point) 'face))))
+	       (link (get-text-property (point) 'shr-url))
+	       (text (buffer-substring-no-properties (point)
+						     (or (next-single-property-change (point) 'face nil transform-end)
+							 (next-single-property-change (point) 'shr-url nil transform-end)
+							 transform-end)))
+	       (formatted-text (replace-regexp-in-string shr-bullet "- " text)))
+	  ;; Apply Org mode formatting for italics and bold where applicable.
+	  (when (memq 'italic text-face)
+	    (setq formatted-text (concat "/" formatted-text "/")))
+	  (when (memq 'bold text-face)
+	    (setq formatted-text (concat "*" formatted-text "*")))
+	  ;; Format links according to Org mode syntax.
+	  (when link
+	    (setq formatted-text (concat "[[" link "][" text "]]")))
+	  ;; Append the formatted text to the return content.
+	  (setq return-content (concat return-content formatted-text))
+	  ;; Advance the point.
+	  (goto-char (or (next-single-property-change (point) 'face)
+			 (next-single-property-change (point) 'shr-url)
+			 (point-max))))))
     ;; Copy the whole formatted content to the kill ring.
     (kill-new return-content)))
 
@@ -824,12 +825,6 @@ That is, move point after the stars, and the TODO and priority if present."
     (when (looking-at "^\\*+ [A-Z]+ $")
       (goto-char (match-end 0)))))
 
-(defun org-extras-id-notes-only-clock (key)
-  "Clock in to a heading with KEY."
-  (simple-extras-save-excursion
-   (funcall (intern (concat "hydra-org-notes/lambda-" key "-and-exit")))
-   (org-clock-in)))
-
 ;; Moved here temporarily, but should probably be intergrated into a proper `gdrive' package.
 (defun org-extras-import-from-google-drive ()
   "Import Google Doc file with DOC-ID and convert it to `org-mode'.
@@ -871,7 +866,9 @@ empty headings, which trigger an `org-roam' warning."
     ("f" "finance"           (lambda () (interactive) (org-roam-extras-id-goto "EB812B59-BBFB-4E06-865A-ACF5A4DE5A5C")))
     ("i" "Anki"              (lambda () (interactive) (org-roam-extras-id-goto "50BAC203-6A4D-459B-A6F6-461E6908EDB1")))
     ("y" "YouTube"           (lambda () (interactive) (org-roam-extras-id-goto "14915C82-8FF3-460D-83B3-148BB2CA7B7E")))
-    ("k" "current book"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))]])
+    ("k h" "Hitler bio"      (lambda () (interactive) (org-roam-extras-id-goto "7DA83AB7-BCF4-4218-ADCF-91C8C5B991F1")))
+    ("k g" "Pimsleur German"      (lambda () (interactive) (org-roam-extras-id-goto "A8CA289D-AE1B-48A8-A93B-824DF2A13F4C")))
+    ("k f" "Pimsleur French"      (lambda () (interactive) (org-roam-extras-id-goto "68167050-004A-4A58-9637-F2B1AB1518CB")))]])
 
 (transient-define-prefix org-extras-tlon-menu ()
   "Menu for Tlön projects."
@@ -893,28 +890,29 @@ empty headings, which trigger an `org-roam' warning."
    ["Longtermism"
     ("l s" "longtermism-es"    (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))]
    ["Radio Altruismo Eficaz"
-    ("rae" "rae"               (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
+    ("r" "rae"                 (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
    ["Misc"
     "EA International"
-    ("i" "ea.international"  (lambda () (interactive) (org-roam-extras-id-goto "AF3FEF60-7624-4C3C-9A48-1FB531D1D635")))
+    ("i" "ea.international"    (lambda () (interactive) (org-roam-extras-id-goto "AF3FEF60-7624-4C3C-9A48-1FB531D1D635")))
     "EA News"
-    ("n" "ean-issues"        (lambda () (interactive) (org-roam-extras-id-goto "A2710AA8-BEEB-412D-9FE0-8AF856E4464C")))
+    ("n" "ean-issues"          (lambda () (interactive) (org-roam-extras-id-goto "A2710AA8-BEEB-412D-9FE0-8AF856E4464C")))
     "La Bisagra"
-    ("s" "bisagra"           (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))
+    ("s" "bisagra"             (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))
     "Boletín"
-    ("a" "boletin"           (lambda () (interactive) (org-roam-extras-id-goto "989E6696-2672-47FE-855B-00DA806B7A56")))
+    ("a" "boletin"             (lambda () (interactive) (org-roam-extras-id-goto "989E6696-2672-47FE-855B-00DA806B7A56")))
     "GWWC"
-    ("g" "gwwc"              (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
+    ("g" "gwwc"                (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
    [""
     "Meetings"
-    ("m f" "fede"            (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
-    ("m l" "leo"             (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))
-    ("m g" "group"           (lambda () (interactive) (org-roam-extras-id-goto "BE68100E-753D-408B-9B31-2D58A457A70B")))
+    ("m f" "fede"              (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
+    ("m l" "leo"               (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))
+    ("m g" "group"             (lambda () (interactive) (org-roam-extras-id-goto "BE68100E-753D-408B-9B31-2D58A457A70B")))
     ""
     "Comms"
-    ("c i" "Check issues"    (lambda () (interactive) (org-roam-extras-id-goto "03B164B5-89FC-4611-A2B9-6E5D3AE7C1B1")))
-    ("c e" "Check email"     (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
-    ("c t" "Check telegram"  (lambda () (interactive) (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D")))]])
+    ("c x" "Check inbox"       (lambda () (interactive) (org-roam-extras-id-goto "A2555D4E-AC86-4986-AF7E-778D6E78D47E")))
+    ("c i" "Check issues"      (lambda () (interactive) (org-roam-extras-id-goto "03B164B5-89FC-4611-A2B9-6E5D3AE7C1B1")))
+    ("c e" "Check email"       (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
+    ("c t" "Check telegram"    (lambda () (interactive) (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D")))]])
 
 ;;;###autoload (autoload 'org-extras-config-dispatch "org-extras" nil t)
 (transient-define-prefix org-extras-config-dispatch ()
@@ -1007,32 +1005,33 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
 ;; in any mode. Even if inserting a citation is not allowed, one may
 ;; want to invoke the command to trigger contextual actions via
 ;; `embark'.
-(el-patch-defun org-cite-insert (arg)
-  "Insert a citation at point.
+(with-eval-after-load 'oc
+  (el-patch-defun org-cite-insert (arg)
+    "Insert a citation at point.
 Insertion is done according to the processor set in `org-cite-insert-processor'.
 ARG is the prefix argument received when calling interactively the function."
-  (interactive "P")
-  (unless org-cite-insert-processor
-    (user-error "No processor set to insert citations"))
-  (org-cite-try-load-processor org-cite-insert-processor)
-  (let ((name org-cite-insert-processor))
-    (cond
-     ((not (org-cite-get-processor name))
-      (user-error "Unknown processor %S" name))
-     ((not (org-cite-processor-has-capability-p name 'insert))
-      (user-error "Processor %S cannot insert citations" name))
-     (t
-      (let ((context (org-element-context))
-            (insert (org-cite-processor-insert (org-cite-get-processor name))))
-        (cond
-         ((org-element-type-p context '(citation citation-reference))
-          (funcall insert context arg))
-         (el-patch-remove
-           ((org-cite--allowed-p context)
-            (funcall insert nil arg)))
-         (t
-          (el-patch-swap (user-error "Cannot insert a citation here")
-                         (funcall insert nil arg)))))))))
+    (interactive "P")
+    (unless org-cite-insert-processor
+      (user-error "No processor set to insert citations"))
+    (org-cite-try-load-processor org-cite-insert-processor)
+    (let ((name org-cite-insert-processor))
+      (cond
+       ((not (org-cite-get-processor name))
+	(user-error "Unknown processor %S" name))
+       ((not (org-cite-processor-has-capability-p name 'insert))
+	(user-error "Processor %S cannot insert citations" name))
+       (t
+	(let ((context (org-element-context))
+	      (insert (org-cite-processor-insert (org-cite-get-processor name))))
+	  (cond
+	   ((org-element-type-p context '(citation citation-reference))
+	    (funcall insert context arg))
+	   (el-patch-remove
+	     ((org-cite--allowed-p context)
+	      (funcall insert nil arg)))
+	   (t
+	    (el-patch-swap (user-error "Cannot insert a citation here")
+			   (funcall insert nil arg))))))))))
 
 ;;;; Footer
 

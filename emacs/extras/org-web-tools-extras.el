@@ -1,6 +1,6 @@
 ;;; org-web-tools-extras.el --- Extensions for org-web-tools -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-web-tools-extras.el

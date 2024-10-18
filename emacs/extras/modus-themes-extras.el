@@ -1,6 +1,6 @@
 ;;; modus-themes-extras.el --- Extra functionality for modus-themes -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/modus-themes-extras.el
@@ -72,10 +72,12 @@
 					     yellow))))
 
 (defun modus-themes-extras-set-faces ()
-  "Set extra faces for the `modus' themes."
-  (if (eq 'modus-operandi (car custom-enabled-themes))
-      (set-face-attribute 'hl-sentence nil :background "#bfefff")
-    (set-face-attribute 'hl-sentence nil :background "#004065")))
+  "Set extra faces for the `modus' themes.
+You can set any additional faces like this:
+
+(if (eq 'modus-operandi (car custom-enabled-themes))
+      (set-face-attribute 'hl-sentence nil :background \"#bfefff\")
+    (set-face-attribute 'hl-sentence nil :background \"#004065\"))")
 
 (provide 'modus-themes-extras)
 ;;; modus-themes-extras.el ends here

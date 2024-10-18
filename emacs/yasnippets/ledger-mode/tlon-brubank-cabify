@@ -1,9 +1,9 @@
 # -*- mode: snippet -*-
-# name: tlon-brubank-cabify
+# name: brubank-cabify
 # key: tbc
 # contributor: Pablo Stafforini
 # --
 `(format-time-string "%Y-%m-%d")` Cabify
-    Expenses:Core:Transportation            $1 ARS ; taxi $2 Fede’s place
+    Expenses:Transportation:Taxi            $1 ARS ; taxi $2 Fede’s place
     Assets:Brubank
 $0

@@ -1,6 +1,6 @@
 ;;; avy-extras.el --- Extensions for avy -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023
+;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/avy-extras.el
@@ -36,7 +36,7 @@
 
 (defgroup avy-extras ()
   "Extensions for `avy'."
-  :group 'avy-extras)
+  :group 'avy)
 
 (defcustom avy-extras-goto-char-timeout 1
   "Timeout for `avy-extras-goto-char' commands.
@@ -99,6 +99,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (dired-find-alternate-file))
 
 (declare-function ebib-edit-entry "ebib")
+;;;###autoload
 (defun avy-extras-ebib-view-entry ()
   "In Ebib, view the entry in selected line."
   (interactive)
@@ -107,6 +108,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (ebib-edit-entry))
 
 (declare-function mu4e-headers-view-message "mu4e-headers")
+;;;###autoload
 (defun avy-extras-headers-view-message ()
   "In mu4e, view the message in selected line."
   (interactive)
@@ -114,12 +116,14 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (avy-goto-line)
   (mu4e-headers-view-message))
 
+;;;###autoload
 (defun avy-extras-telega-view-message ()
   "In Telega, view the message in selected line."
   (interactive)
   (avy-goto-line)
   (push-button)) ; not sure what the actual command to open a chat is
 
+;;;###autoload
 (defun avy-extras-elfeed-search-show-entry ()
   "In Elfeed, display the item in selected line."
   (interactive)

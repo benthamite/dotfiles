@@ -314,13 +314,16 @@
 
 {:des "b-mode (media controls, window sizing)"
  :rules [:b-mode
+         [:u {:modi :C-H- :key :u} :emacs] ; frame-extras-left-half
+         [:u {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
+         [:p {:modi :C-H- :key :p} :emacs] ; frame-extras-right-half
          [:p {:modi :⇧⌘⌥⌃ :key :p}] ; Rectangle, right half
+         [:i {:modi :C-H- :key :i} :emacs] ; frame-extras-maximize-frame
          [:i {:modi :⇧⌘⌥⌃ :key :i}] ; Rectangle, maximize
          [:o {:modi :⇧⌘⌥⌃ :key :o}] ; Rectangle, center
-         [:u {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
-         [:l :play_or_pause]
+         [:k :play_or_pause]
          [:semicolon :fastforward]
          [:comma :volume_increment]
          [:period :volume_decrement]
@@ -479,7 +482,7 @@
  :rules [:q-mode
          [:b [:open "/Applications/qBitTorrent.app"]]
          [:d [:open "/System/Library/CoreServices/Finder.app"]]
-         [:e [:open "/Applications/Emacs.app"]]
+         [:e [:km "Activate: Emacs (e)"]]
          [:f [:open "/Applications/Firefox.app"]]
          [:g [:open "/Applications/Goldendict.app"]]
          [:h [:open "/Applications/Google Chrome.app"]]
@@ -489,7 +492,7 @@
          [:l [:open "/Applications/DeepL.app"]]
          [:m [:open "/Applications/Media Center 29.app"]]
          [:o [:open "/Applications/zoom.us.app"]]
-         [:p [:open "/Applications/Signal.app"]]
+         [:p [:open "/Applications/Beeper.app"]]
          [:r [:open "/Applications/Karabiner-Elements.app"]]
          [:s [:open "/Applications/Slack.app"]]
          [:t [:open "/System/Applications/Utilities/Terminal.app"]]

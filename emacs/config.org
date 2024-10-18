@@ -1362,7 +1362,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature log-edit
-  :defer t
+  :after magit
   :config
   (with-eval-after-load 'savehist
     (add-to-list 'savehist-additional-variables 'log-edit-comment-ring)))

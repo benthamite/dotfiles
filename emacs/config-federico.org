@@ -837,18 +837,27 @@ Disable hl-sentence because I do not like it...
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'faces-extras
-  (setq faces-extras-fixed-pitch-font "IosevkaTermSlab Nerd Font")
+  (setq faces-extras-fixed-pitch-font "Iosevka Nerd Font")
   (setq faces-extras-fixed-pitch-size 150)
-  (setq faces-extras-fixed-pitch-height 1.0)
-  (setq faces-extras-variable-pitch-height 1.1)
-  (setq faces-extras-org-level-height 1.0)
-  (setq faces-extras-org-block-height 1.0)
-  (setq faces-extras-org-code-height 1.0)
-  (setq faces-extras-org-date-height 0.9)
-  (setq faces-extras-org-tag-height 0.9)
-  (setq faces-extras-org-property-value-height 0.8)
-  (faces-extras-set-custom-face-attributes)
-  )
+  (faces-extras-set-and-store-face-attributes
+   '((default :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
+     (fixed-pitch :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-height)))
+  (message "`%s' set to `%s'" (symbol-name 'faces-extras-fixed-pitch-font) faces-extras-fixed-pitch-font)
+  (debug-on-variable-change 'faces-extras-fixed-pitch-font))
+
+;; (with-eval-after-load 'faces-extras
+;;   (setq faces-extras-fixed-pitch-font "IosevkaTermSlab Nerd Font")
+;;   (setq faces-extras-fixed-pitch-size 150)
+;;   (setq faces-extras-fixed-pitch-height 1.0)
+;;   (setq faces-extras-variable-pitch-height 1.1)
+;;   (setq faces-extras-org-level-height 1.0)
+;;   (setq faces-extras-org-block-height 1.0)
+;;   (setq faces-extras-org-code-height 1.0)
+;;   (setq faces-extras-org-date-height 0.9)
+;;   (setq faces-extras-org-tag-height 0.9)
+;;   (setq faces-extras-org-property-value-height 0.8)
+;;   (faces-extras-set-custom-face-attributes)
+;;   )
 #+end_src
 
 ** tareas

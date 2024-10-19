@@ -253,7 +253,15 @@
   (message "`fancy-battery-mode' late-init config loaded."))
 #+end_src
 
-#+RESULTS:
+** emacs-lisp-mode
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'emacs-lisp-mode
+  (keymap-unset emacs-lisp-mode-map "M-<left>")
+  (keymap-unset emacs-lisp-mode-map "M-<right>")
+  (define-key emacs-lisp-mode-map (kbd "<M-left>") 'backward-word)
+  (define-key emacs-lisp-mode-map (kbd "<M-right>") 'forward-word))
+#+end_src
+
 
 ** frame-extras
 :PROPERTIES:
@@ -442,7 +450,6 @@
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (message "Setting late-init keybindings...")
-
 (global-set-key (kbd "<kp-delete>") 'delete-char)
 (global-set-key (kbd "<home>") 'beginning-of-line)
 (global-set-key (kbd "<end>") 'end-of-line)
@@ -481,12 +488,8 @@
 (global-unset-key (kbd "<C-down>"))
 (global-unset-key (kbd "<C-S-down>"))
 (global-unset-key (kbd "C--"))
-(define-key minibuffer-mode-map (kbd "s-i") nil)
 
-(dolist (map (list outline-mode-map emacs-lisp-mode-map))
-  (define-key map (kbd "<M-left>") 'backward-word)
-  (define-key map (kbd "<M-right>") 'forward-word))
-
+(keymap-unset minibuffer-mode-map "s-i")
 (message "late-init keybindings set.")
 #+end_src
 
@@ -684,7 +687,8 @@
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'outline
-(keymap-unset emacs-lisp-mode-map "M-<right>")
+  (define-key outline-mode-map (kbd "<M-left>") 'backward-word)
+  (define-key outline-mode-map (kbd "<M-right>") 'forward-word)
   (message "`outline' late-init config loaded."))
 #+end_src
 
@@ -821,12 +825,12 @@
 :ID:       B3773C4A-C682-416C-8D2B-F4EE280BCCCE
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(dolist (hook '(elfeed-show-mode-hook
+(with-eval-after-load 'face-remap (dolist (hook '(elfeed-show-mode-hook
                 telega-webpage-mode-hook
                 eww-mode-hook
                 mu4e-view-mode-hook
                 outline-mode-hook))
-  (remove-hook hook #'variable-pitch-mode))
+  (remove-hook hook #'variable-pitch-mode)))
 #+end_src
 
 ** faces-extras
@@ -835,7 +839,7 @@
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'faces-extras
-  (setq faces-extras-fixed-pitch-font "Iosevka Nerd Font")
+  (setq faces-extras-fixed-pitch-font "IosevkaTermSlab Nerd Font")
   (setq faces-extras-fixed-pitch-size 150)
   (faces-extras-set-and-store-face-attributes
    '((default :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)

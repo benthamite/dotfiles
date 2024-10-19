@@ -873,7 +873,7 @@
 :PROPERTIES:
 :ID:       712F1BEF-5B9F-42E3-96B7-4482FC9FADFF
 :END:
-#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+#+begin_src emacs-lisp :tangle no
 ;; Code run on a long timer: aimed at running after all of Pablo's deferred calls
 (run-at-time
  60 nil
@@ -922,7 +922,6 @@ This should be at the very end of the ~late-init~ file.
    (setq tlon-core-email-shared (getenv "TLON_EMAIL"))
    (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
    (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
-   (setq gpt-commit-model-name "gpt-4")
    (setq bib-isbndb-key
          (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
    (global-flycheck-mode -1)

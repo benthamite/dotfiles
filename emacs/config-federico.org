@@ -149,7 +149,7 @@
 :PROPERTIES:
 :ID:       09286FD9-FE88-445D-BAC4-236A04211800
 :END:
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'calendar-extras
   (setq calendar-extras-location-name "Buenos Aires")
   (setq calendar-extras-use-geolocation nil))

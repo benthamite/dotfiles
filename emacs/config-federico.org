@@ -880,7 +880,7 @@
 #+begin_src emacs-lisp :tangle no
 ;; Code run on a long timer: aimed at running after all of Pablo's deferred calls
 (run-at-time
- 60 nil
+ 10 nil
  (lambda ()
    (message "Running Fede's after init callback")
    (setq display-time-format "%a %e %b %R")
@@ -888,24 +888,26 @@
    (cancel-function-timers 'citar-extras-update-old-bibliography)
    (org-tidy-mode -1)
    (global-flycheck-mode -1)
-   (setq calendar-extras-use-geolocation nil)
-       (setq tab-bar-extras-global-mode-string
-          `(;;,tab-bar-extras-prefix-element
-            ;;,tab-bar-extras-notification-status-element
-            ;;,tab-bar-extras-date-element
-            ;;,tab-bar-extras-separator-element
-            ,tab-bar-extras-chemacs-element
-            ,tab-bar-extras-separator-element
-            ;;,tab-bar-extras-battery-element
-            ,tab-bar-extras-telega-element
-            ,tab-bar-extras-github-element
-            ;;,tab-bar-extras-pomodoro-element
-            ;;,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
-            ))
-  (setq tab-bar-extras-reset-wttr nil)
-   (tab-bar-extras-reset)
-   (raise-frame)
-   (select-frame-set-input-focus (selected-frame))
+   (find-file paths-file-tlon-tareas-fede)
+   (org-tidy-mode -1)
+   ;;  (setq calendar-extras-use-geolocation nil)
+   ;;      (setq tab-bar-extras-global-mode-string
+   ;;         `(;;,tab-bar-extras-prefix-element
+   ;;           ;;,tab-bar-extras-notification-status-element
+   ;;           ;;,tab-bar-extras-date-element
+   ;;           ;;,tab-bar-extras-separator-element
+   ;;           ,tab-bar-extras-chemacs-element
+   ;;           ,tab-bar-extras-separator-element
+   ;;           ;;,tab-bar-extras-battery-element
+   ;;           ,tab-bar-extras-telega-element
+   ;;           ,tab-bar-extras-github-element
+   ;;           ;;,tab-bar-extras-pomodoro-element
+   ;;           ;;,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
+   ;;           ))
+   ;; (setq tab-bar-extras-reset-wttr nil)
+   ;;  (tab-bar-extras-reset)
+   ;;  (raise-frame)
+   ;;  (select-frame-set-input-focus (selected-frame))
 
    ))
 #+end_src
@@ -932,6 +934,7 @@ This should be at the very end of the ~late-init~ file.
    (setq calendar-extras-use-geolocation nil)
    (org-tidy-mode -1)
    ))
+   (recentf-mode)
 (run-hooks 'tlon-init-post-init-hook)
 (message "Fede's late-init.el config finished.")
 #+end_src

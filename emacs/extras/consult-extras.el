@@ -68,6 +68,7 @@ entries are offered.  By default, all entries of the current
 buffer are offered."
   (interactive)
   (widen)
+  (require 'org-extras)
   (org-extras-fold-show-all-headings)
   (consult-org-heading match scope)
   (recenter 1))

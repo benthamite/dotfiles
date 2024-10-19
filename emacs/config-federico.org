@@ -929,6 +929,7 @@ This should be at the very end of the ~late-init~ file.
    (org-tidy-mode -1)
    ))
 (run-hooks 'tlon-init-post-init-hook)
+(message "Fede's late-init.el config finished.")
 #+end_src
 
 * local variables

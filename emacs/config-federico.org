@@ -362,11 +362,7 @@
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'dired
-  ;; (general-define-key
-   ;; :keymaps 'dired-mode-map
-   ;; "n" 'find-file)
-
-  (transient-define-prefix dired-fedes-dispatch ()
+    (transient-define-prefix dired-fedes-dispatch ()
     "Fede's version of Pablo's dispatcher."
     ["Dired folders"
      [("d" "dotfiles" (lambda () (interactive) (dired paths-dir-dotfiles)))
@@ -497,6 +493,7 @@
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'org
+  (message "`org' late-init config starts...")
   (setq org-structure-template-alist
         '(("a" . "export ascii")
           ("c" . "center")

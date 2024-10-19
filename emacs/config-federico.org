@@ -780,17 +780,6 @@
   )
 #+end_src
 
-** hl-sentence
-:PROPERTIES:
-:ID:       48D3B0B5-5626-4B9C-803E-5D156E3A1036
-:END:
-Disable hl-sentence because I do not like it...
-#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(with-eval-after-load 'hl-sentence
-  (remove-hook 'markdown-mode-hook #'hl-sentence-mode)
-  (message "`hl-sentence' late-init config loaded."))
-#+end_src
-
 ** telega
 :PROPERTIES:
 :ID:       3CD1A0F0-BF55-47FE-9E81-9FEAC9A9AE6B

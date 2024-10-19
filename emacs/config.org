@@ -4335,8 +4335,6 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   :bind
   (("C-H-0" . window-extras-switch-to-last-window)
    ("A-C-H-0" . window-extras-switch-to-minibuffer-window)
-   ("M-–" . window-extras-buffer-move-dwim) ; `emacs-mac'
-   ("M--" . window-extras-buffer-move-dwim) ; `emacs-plus'
    ("M-," . window-extras-buffer-move-left)
    ("M-." . window-extras-buffer-move-right)
    ("A-M--" . window-extras-buffer-swap) ; `emacs-mac'

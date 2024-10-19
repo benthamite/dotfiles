@@ -440,6 +440,8 @@
 :END:
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(message "Setting late-init keybindings...")
+
 (global-set-key (kbd "<kp-delete>") 'delete-char)
 (global-set-key (kbd "<home>") 'beginning-of-line)
 (global-set-key (kbd "<end>") 'end-of-line)
@@ -451,7 +453,6 @@
 (global-set-key (kbd "H-/") 'comment-line)
 (global-set-key (kbd "H-\\") 'window-extras-split-if-unsplit)
 (global-set-key (kbd "H-;") 'org-extras-work-dispatch)
-(global-set-key (kbd "H-g") nil)
 (global-set-key (kbd "H-h") 'other-window)
 (global-set-key (kbd "H-H") 'window-extras-buffer-move-dwim)
 (global-set-key (kbd "s-i") 'org-clock-in)
@@ -466,8 +467,9 @@
 (global-set-key (kbd "<M-delete>") 'kill-word)
 (global-set-key (kbd "C--") 'back-button-global-backward)
 (global-set-key (kbd "C-_") 'back-button-global-forward)
-(global-set-key (kbd "H-i") nil)
 
+(global-unset-key (kbd "H-g"))
+(global-unset-key (kbd "H-i"))
 (global-unset-key (kbd "<C-delete>"))
 (global-unset-key (kbd "<C-left>"))
 (global-unset-key (kbd "<C-S-left>"))
@@ -477,13 +479,14 @@
 (global-unset-key (kbd "<C-S-up>"))
 (global-unset-key (kbd "<C-down>"))
 (global-unset-key (kbd "<C-S-down>"))
-
 (global-unset-key (kbd "C--"))
 (define-key minibuffer-mode-map (kbd "s-i") nil)
 
 (dolist (map (list outline-mode-map emacs-lisp-mode-map))
   (define-key map (kbd "<M-left>") 'backward-word)
   (define-key map (kbd "<M-right>") 'forward-word))
+
+(message "late-init keybindings set.")
 #+end_src
 
 ** org
@@ -518,28 +521,29 @@
   (setq-default org-support-shift-select 'always
                 org-replace-disputed-keys t)
 
-  ;; (general-define-key
-   ;; :keymap 'org-mode-map
-   ;; "s-i" 'org-clock-in
-   ;; "s-o" 'org-clock-out
-   ;; "M-<right>" nil
-   ;; "M-<left>" nil
-   ;; "M-<up>" nil
-   ;; "M-<down>" nil
-   ;; "M-S-<right>" nil
-   ;; "M-S-<left>" nil
-   ;; "M-S-<up>" nil
-   ;; "M-S-<down>" nil
-   ;; "H-<right>" 'org-metaright
-   ;; "H-<left>" 'org-metaleft
-   ;; "H-<up>" 'org-metaup
-   ;; "H-<down>" 'org-metadown
-   ;; "M-<right>" 'forward-word
-   ;; "M-<left>" 'backward-word)
-
   ;; remove unwanted keybindings from Pablo
-  (keymap-unset org-mode-map "s-i"
-                (message "`org' late-init config loaded.")))
+  (keymap-unset org-mode-map "s-i")  
+  (keymap-unset org-mode-map "M-<right>")
+  (keymap-unset org-mode-map "M-<left>")
+  (keymap-unset org-mode-map "M-<up>")
+  (keymap-unset org-mode-map "M-<down>")
+  (keymap-unset org-mode-map "M-S-<right>")
+  (keymap-unset org-mode-map "M-S-<left>")
+  (keymap-unset org-mode-map "M-S-<up>")
+  (keymap-unset org-mode-map "M-S-<down>")
+
+  ;; add Fede's org keybindings
+  (define-key org-mode-map (kbd "s-i") 'org-clock-in)
+  (define-key org-mode-map (kbd "s-o") 'org-clock-out)
+  (define-key org-mode-map (kbd "H-<right>") 'org-metaright)
+  (define-key org-mode-map (kbd "H-<left>") 'org-metaleft)
+  (define-key org-mode-map (kbd "H-<up>") 'org-metaup)
+  (define-key org-mode-map (kbd "H-<down>") 'org-metadown)
+  (define-key org-mode-map (kbd "M-<right>") 'forward-word)
+  (define-key org-mode-map (kbd "M-<left>") 'backward-word)
+
+
+  (message "`org' late-init config loaded."))
 #+end_src
 
 ** org-capture

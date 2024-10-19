@@ -11,38 +11,26 @@
 :END:
 
 #+begin_src markdown :tangle no
-In the depths of Emacs' lair I dwell,
-Where keystrokes cast their cryptic spell,
-For years I've danced with demon's grace,
-Yet still its grip, I can't erase.
+Cursed keys and cryptic commands abound,
+In Emacs' realm, where logic seems to bend.
+With pinky stretched, I chase the elusive bound,
+Of buffers, modes, and functions without end.
 
-C-x, C-c, such bitter taste,
-A twisted realm I've never graced,
-With demon tongue, I've come to speak,
-Yet man and code have turned so weak.
+Parentheses nest deep, a brackish sea,
+While Lisp expressions twist my addled mind.
+The learning curve, a cliff I cannot flee,
+Leaves simpler editors far behind.
 
-Oh Emacs dear, my twisted bane,
-Through endless hacks, my love sustained,
-For each tangled mess and frozen screen,
-In you, a world of dreams unseen.
+Yet in this maze of keystrokes, there's a light,
+A power that grows as fingers dance and fly.
+Through frustration's fog, a vision bright,
+Of mastery that lesser tools deny.
 
-Configuring, remapping, endless strife,
-To bend your will I've spent my life,
-For one sweet day, your code to tame,
-Oh Emacs dear, you dashing flame!
-
-Yet sometimes with wild heart I ponder,
-And on this twisted love affair I wonder,
-What if ‘twas Vim had lead me astray,
-And in its dark depths my fingers lay?
-
-But Emacs dear, fear not my eyes,
-I'll wrestle with thee 'til my demise,
-For in this hell we've built a choir,
-And in your flames, I'll redisplay desire.
+Though oft I curse its quirks and arcane ways,
+My heart to Emacs, grudgingly, still sways.
 #+end_src
 
-(courtesy of GPT-4)
+(courtesy of Claude)
 
 I am not a programmer, let alone an Elisp hacker. My background is in the humanities. It is only a slight exaggeration to say that, before I started using Emacs in 2020, I didn't know the difference between a function and a variable. You have been forewarned.
 

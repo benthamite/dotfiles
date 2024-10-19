@@ -431,7 +431,8 @@
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'forge
-  (setq forge-owned-accounts `(("fstafforini"))))
+  (setq forge-owned-accounts `(("fstafforini")))
+  (message "`forge' late-init config loaded."))
 #+end_src
 
 ** key bindings

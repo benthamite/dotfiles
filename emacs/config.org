@@ -1242,6 +1242,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
   :bind
   (("A-H-o" . pass)
    :map pass-mode-map
+   ("RET" . pass-edit)
    ("c" . pass-copy)
    ("D" . pass-kill)
    :map pass-view-mode-map

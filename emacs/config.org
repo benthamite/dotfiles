@@ -1245,7 +1245,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
    ("c" . pass-copy)
    ("D" . pass-kill)
    :map pass-view-mode-map
-   ("s-c" . pass-view-toggle-password)
+   ("s-p" . pass-view-toggle-password)
    ("H-q" . pass-quit)
    ("s-s" . server-edit)))
 #+end_src

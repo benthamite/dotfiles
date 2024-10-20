@@ -11927,7 +11927,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (engine/browser-function browse-url-browser-function)
 
   :config
-  ;; (require 'annas-archive)
   (engine/set-keymap-prefix (kbd "H-g"))
   (defengine AllMusic
     "http://www.allmusic.com/search/all/%s"
@@ -12190,7 +12189,9 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     "http://philpapers.org/s/%s"
     :keybinding "p p")
   (defengine AnnasArchive
-    (concat annas-archive-home-url "search?index=&page=1&q=%s&ext=pdf&sort=")
+    (progn
+      (require 'annas-archive)
+      (concat annas-archive-home-url "search?index=&page=1&q=%s&ext=pdf&sort="))
     :keybinding "r r")
   (defengine ReducingSuffering
     "http://reducing-suffering.org/?s=%s"

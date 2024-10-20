@@ -11066,10 +11066,12 @@ I.e. the message quoted when on replies to, or forwards, an existing email.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-msg-extras
+  :after org-msg
+  :demand t
   :bind
   (:map org-msg-edit-mode-map
-   ("s-g" . org-msg-extras-open-in-grammarly)
-   ("s-x" . org-msg-extras-kill-message)))
+        ("s-g" . org-msg-extras-open-in-grammarly)
+        ("s-x" . org-msg-extras-kill-message)))
 #+end_src
 
 * messaging

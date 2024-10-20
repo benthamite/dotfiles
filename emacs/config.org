@@ -10934,7 +10934,8 @@ I use this package to compose messages and to reply to messages composed in HTML
 (use-package org-msg
   :ensure (:host github
                  :repo "danielfleischer/org-msg")
-  :after org mu4e
+  :after mu4e-extras
+  :demand t
   :custom
   (org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t")
   (org-msg-startup "hidestars indent inlineimages")

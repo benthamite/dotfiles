@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: wayback-machine
+# key: wb
+# contributor: Pablo Stafforini
+# --
+{{Wayback|url=$1 |date=$2}}

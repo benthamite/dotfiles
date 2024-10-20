@@ -98,12 +98,6 @@ This is a slightly tweaked version of `org-msg-goto-body'."
     (newline)
     (simple-extras-visible-mode-enhanced -1)))
 
-(defun org-msg-extras-msg-is-html-p ()
-  "Return t iff the current message is an HTML message."
-  (not (null (condition-case nil
-		 (org-msg-mua-call 'article-htmlp)
-	       (error nil)))))
-
 (provide 'org-msg-extras)
 ;;; org-msg-extras.el ends here
 

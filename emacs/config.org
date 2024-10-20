@@ -11021,6 +11021,7 @@ I use this package to compose messages and to reply to messages composed in HTML
 
   :config
   (org-msg-mode)
+  (require 'pass)
 
   :hook
   (org-msg-mode-hook . (lambda () (auto-fill-mode -1)))

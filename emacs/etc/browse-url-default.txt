@@ -32,6 +32,7 @@ deepl.com
 deporweb.net
 descript.com
 dhl.
+digitalconcerthall.com
 disqus.com
 docs.google.com
 doi.org
@@ -105,6 +106,7 @@ skyscanner.net
 slack.com
 soundcloud.com
 spopessentials1.com
+spotify.com
 squarespace.com
 stafforini.com
 stripe.com

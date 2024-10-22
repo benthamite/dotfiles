@@ -8748,9 +8748,7 @@ CLOCK: [2021-02-24 Wed 06:47]--[2021-02-24 Wed 07:30] =>  0:43
 
   :config
   ;; Regenerate cache every half hour
-  (run-with-idle-timer (* 60 30) t (lambda ()
-                                     (org-refile-cache-clear)
-                                     (org-refile-get-targets))))
+  (run-with-idle-timer (* 60 30) t #'org-extras-refile-regenerate-cache))
 #+end_src
 
 ** org-keys

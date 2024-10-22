@@ -364,6 +364,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#copilot-extras][copilot-extras]]
   - [[#gptel][gptel]]
   - [[#gptel-extras][gptel-extras]]
+  - [[#gptel-quick][gptel-quick]]
   - [[#gpt-commit][gpt-commit]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
@@ -7684,10 +7685,24 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :demand t
   :after gptel
   :custom
-  (gptel-post-response-functions #'gptel-extras-generate-latex-previews)
+  (gptel-post-Revise sponse-functions #'gptel-extras-generate-latex-previewsesponse-functions #'gptel-extras-generate-latex-previews)
 
   :config
   (advice-add 'gptel :after #'gptel-extras-save-buffer))
+#+end_src
+
+** gptel-quick
+:PROPERTIES:
+:ID:       A3F028E6-A888-4F50-88DE-64897689B6D3
+:END:
+
+/[[https://github.com/karthink/gptel-quick][gptel-quick]] supports fast AI lookups./ 
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package gptel-quick
+  :ensure (:host github :repo "karthink/gptel-quick")
+  :bind
+  ("H-s-u" . gptel-quick))
 #+end_src
 
 ** gpt-commit

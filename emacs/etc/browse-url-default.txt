@@ -7,6 +7,8 @@ airwander.com
 algolia.com
 alignmentforum.com
 amazon.
+annas-archive.gs
+annas-archive.li
 audible.com
 audiobookbay
 awstrack.me
@@ -18,6 +20,7 @@ box.com
 calendar.google.com
 calendly.com
 cheerfy.com
+cinemarkhoyts.com.ar
 cleverlayover.com
 colorizer.org
 connectedpapers.com
@@ -29,6 +32,7 @@ deepl.com
 deporweb.net
 descript.com
 dhl.
+digitalconcerthall.com
 disqus.com
 docs.google.com
 doi.org
@@ -102,9 +106,11 @@ skyscanner.net
 slack.com
 soundcloud.com
 spopessentials1.com
+spotify.com
 squarespace.com
 stafforini.com
 stripe.com
+supermemo.guru
 swapcard.com
 tangotimetravel.be
 tangotunes.com

@@ -335,25 +335,25 @@ takes just a couple of seconds."
 (defun mu4e-extras-msg-is-personal-and-html-p (msg)
   "Return t iff MSG is a personal HTML message."
   (when msg
-    (and (org-msg-extras-msg-is-html-p)
+    (and (mu4e-extras-msg-is-html-p msg)
 	 (mu4e-extras-msg-is-personal-p msg))))
 
 (defun mu4e-extras-msg-is-personal-and-plain-text-p (msg)
   "Return t iff MSG is a personal plain text message."
   (when msg
-    (and (not (org-msg-extras-msg-is-html-p))
+    (and (not (mu4e-extras-msg-is-html-p msg))
 	 (mu4e-extras-msg-is-personal-p msg))))
 
 (defun mu4e-extras-msg-is-work-and-html-p (msg)
   "Return t iff MSG is a work HTML message."
   (when msg
-    (and (org-msg-extras-msg-is-html-p)
+    (and (mu4e-extras-msg-is-html-p msg)
 	 (mu4e-extras-msg-is-work-p msg))))
 
 (defun mu4e-extras-msg-is-work-and-plain-text-p (msg)
   "Return t iff MSG is a work plain text message."
   (when msg
-    (and (not (org-msg-extras-msg-is-html-p))
+    (and (not (mu4e-extras-msg-is-html-p msg))
 	 (mu4e-extras-msg-is-work-p msg))))
 
 (defun mu4e-extras-msg-is-personal-p (msg)
@@ -365,6 +365,16 @@ takes just a couple of seconds."
   "Return t iff MSG is a work message."
   (or (mu4e-message-contact-field-matches msg :to (getenv "WORK_EMAIL"))
       (mu4e-message-contact-field-matches msg :reply-to "tlon-team@googlegroups.com")))
+
+;; based on `org-msg-article-htmlp-mu4e'
+(defun mu4e-extras-msg-is-html-p (msg)
+  "Return t iff MSG is an HTML message."
+  (with-temp-buffer
+    (insert-file-contents-literally
+     (mu4e-message-readable-path msg) nil nil nil t)
+    (when-let ((parts (mm-dissect-buffer t t)))
+      (mm-destroy-parts parts)
+      (stringp (cl-find "text/html" (flatten-tree parts) :test 'equal)))))
 
 ;;;;; Patches
 

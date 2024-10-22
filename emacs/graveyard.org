@@ -9,6 +9,40 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** dall-e-shell
+:PROPERTIES:
+:ID:       A7D68397-66E3-4085-AF8C-7A17935654E7
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package dall-e-shell
+  :after chatgpt-shell)
+#+end_src
+
+** chatgpt-shell
+:PROPERTIES:
+:ID:       6EC52CD8-EBCB-4A26-B1BA-001096C16030
+:END:
+
+
+/[[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]] comint-shell based interaction with ChatGPT./
+
+I use =gptel= for text-based AI interaction, but for other modalities (such as images) I use =chatgpt-shell=.
+
+[2024-10-13 Sun]=gptel= now supports multi-modal models, so I’m moving this to the graveyard.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package chatgpt-shell
+  :ensure (:files ("*.el"))
+  :after gptel-extras
+  :defer t
+  :custom
+  (chatgpt-shell-root-path no-littering-var-directory)
+  (chatgpt-shell-openai-key gptel-api-key)
+  (dall-e-shell-openai-key gptel-api-key)
+  (shell-maker-transcript-default-path gptel-extras-dir))
+#+end_src
+
 ** general
 :PROPERTIES:
 :ID:       70C622E0-FAC7-4AB1-841F-36437858218C

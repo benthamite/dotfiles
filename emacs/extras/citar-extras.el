@@ -119,30 +119,6 @@
 
 (run-with-idle-timer (* 15 60) nil #'citar-extras-update-old-bibliography)
 
-;;;;; Patched functions
-
-;; Remove conditional to allow invocation
-;; in any mode. Even if inserting a citation is not allowed, one may
-;; want to invoke the command to trigger contextual actions via
-;; `embark'.
-(el-patch-defun citar-insert-citation (citekeys &optional arg)
-  "Insert citation for the CITEKEYS.
-
-Prefix ARG is passed to the mode-specific insertion function. It
-should invert the default behaviour for that mode with respect to
-citation styles. See specific functions for more detail."
-  (interactive
-   (el-patch-swap
-     (if (citar--get-major-mode-function 'insert-citation)
-	 (list (citar-select-refs) current-prefix-arg)
-       (error "Citation insertion is not supported for %s" major-mode))
-     (list (citar-select-refs) current-prefix-arg)))
-  (citar--major-mode-function
-   'insert-citation
-   #'ignore
-   citekeys
-   arg))
-
 (provide 'citar-extras)
 ;;; citar-extras.el ends here
 

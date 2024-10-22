@@ -211,6 +211,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#window-extras][window-extras]]
   - [[#frame][frame]]
   - [[#frame-extras][frame-extras]]
+  - [[#posframe][posframe]]
   - [[#winum][winum]]
   - [[#winner][winner]]
   - [[#popper][popper]]
@@ -4377,6 +4378,17 @@ CLOCK: [2024-08-26 Mon 21:09]--[2024-08-26 Mon 21:29] =>  0:20
   (("C-H-I" . frame-extras-maximize-frame)
    ("C-H-U" . frame-extras-left-half)
    ("C-H-P" . frame-extras-right-half)))
+#+end_src
+
+** posframe
+:PROPERTIES:
+:ID:       8D0FB41B-09C9-4F31-AB8B-3481B151C03E
+:END:
+
+/[[https://github.com/tumashu/posframe][posframe]] supports displaying small popup frames./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package posframe)
 #+end_src
 
 ** winum

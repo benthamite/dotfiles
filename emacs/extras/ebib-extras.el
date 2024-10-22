@@ -309,9 +309,7 @@ ordering defined in `ebib-extras-valid-file-extensions'."
     (entries
      (let* ((field "file")
 	    (key (ebib--get-key-at-point))
-	    (file-list (split-string
-			(ebib-extras-get-field field)
-			";")))
+	    (file-list (split-string (ebib-extras-get-field field) ";")))
        (ebib-extras-check-valid-key key)
        (when file-list
 	 (ebib-delete-field-contents field t)
@@ -320,14 +318,15 @@ ordering defined in `ebib-extras-valid-file-extensions'."
 	     (let ((new-filename
 		    (ebib-extras--rename-and-abbreviate-file
 		     (ebib-extras--extension-directories extension)
-		     key
-		     extension)))
-	       (rename-file filename new-filename)
+		     key extension)))
+	       (cond ((file-exists-p filename)
+		      (rename-file filename new-filename 'ok-if-already-exists))
+		     ((file-exists-p new-filename))
+		     (t (user-error "File `%s' does not exist" filename)))
 	       (setq filename new-filename))
 	     (ebib-set-field-value field filename key ebib--cur-db ";")))
 	 (ebib--redisplay-field field)
 	 (ebib--redisplay-index-item field))))
-    ;; (ebib-save-current-database nil))))
     (default
      (beep))))
 
@@ -380,7 +379,7 @@ If EXTENSION is non-nil, set its extension to its value."
 ;;;;; process invalid files
 ;; These functions are meant to be run sporadically, to clean up the library.
 ;; First call `ebib-extras-list-invalid-files', wait for a few minutes for the
-;; function to finish, then call `ebib-extras-rename-next-invalid-file' to
+;; processing to finish, then call `ebib-extras-rename-next-invalid-file' to
 ;; rename the next invalid file in line. You may have to do some manual
 ;; processing. Repeat until all files are renamed.
 
@@ -405,8 +404,8 @@ If DIRS is nil, search in all library dirs."
 			 )))
 	 (invalid-files (seq-filter
 			 (lambda (file)
-			   (not (ebib-extras-file-is-valid-p file))
-			   (message "Processing %s" file))
+			   (message "Processing %s" file)
+			   (null (ebib-extras-file-is-valid-p file)))
 			 (apply #'append
 				(mapcar
 				 (lambda (dir)
@@ -1285,6 +1284,15 @@ Fetching is done using `bib'."
   "Get the ID or URL of the entry at point, or fetch it if missing."
   (or (ebib-extras-get-id-or-url)
       (ebib-extras-fetch-id-or-url)))
+
+(defun ebib-extras-browse-url-or-doi ()
+  "Browse the URL or DOI of the entry at point."
+  (interactive)
+  (when-let ((type (cond ((ebib-extras-get-field "url") 'url)
+			 ((ebib-extras-get-field "doi") 'doi))))
+    (pcase type
+      ('url (ebib-browse-url))
+      ('doi (ebib-browse-doi)))))
 
 (defun ebib-extras-set-id (&optional id)
   "Add an ID to the current entry, if missing."

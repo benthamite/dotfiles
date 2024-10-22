@@ -10961,8 +10961,6 @@ I use this package to compose messages and to reply to messages composed in HTML
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-msg
-  :ensure (:host github
-                 :repo "danielfleischer/org-msg")
   :after mu4e-extras
   :demand t
   :custom

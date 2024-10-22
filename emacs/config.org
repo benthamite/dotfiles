@@ -10848,7 +10848,9 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    ("E" . nil)
    :map mu4e-minibuffer-search-query-map
    ("M-k" . previous-history-element)
-   ("M-l" . next-history-element)))
+   ("M-l" . next-history-element)
+   :map mu4e-search-minor-mode-map
+   ("c" . nil)))
 #+end_src
 
 *** TODO [#3] Debug why emails sent by me are not marked as read in Gmail

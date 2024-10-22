@@ -155,7 +155,14 @@
 
 ** org-agenda
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(setq org-agenda-files (list paths-file-tlon-tareas-leo))
+(with-eval-after-load 'org-agenda
+  (setq org-agenda-files (list paths-dir-dropbox-tlon-leo)))
+#+end_src
+
+** mu4e
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'mu4e
+  (setq mu4e-update-interval nil))
 #+end_src
 
 ** org-extras
@@ -304,6 +311,46 @@
 #+begin_src shell
 (setq copilot-node-executable "/Users/cartago/.nvm/versions/node/v18.16.0/bin/node")
 #+end_src
+** smtpmail 
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'smtpmail
+  (setq smtpmail-smtp-user "leonardodecartago@gmail.com"))
+#+end_src
+
+** mu4e-extras
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'mu4e-extras
+  (setq org-msg-extras-personal-plain-text-signature "\n--\nLeo\n")
+  (setq org-msg-extras-personal-html-signature "\n#+begin_signature\n--\n*Leo*\n#+end_signature")
+  (setq org-msg-extras-work-plain-text-signature org-msg-extras-personal-plain-text-signature)
+  (setq org-msg-extras-work-html-signature org-msg-extras-personal-html-signature)
+  (setq mu4e-contexts
+        `(,(make-mu4e-context
+            :name "1 Personal HTML"
+            :match-func #'mu4e-extras-msg-is-personal-and-html-p
+            :vars `((user-mail-address . "leonardodecartago@gmail.com")
+                    (org-msg-signature . ,org-msg-extras-personal-html-signature)))
+          ,(make-mu4e-context
+            :name "2 Personal plain text"
+            :match-func #'mu4e-extras-msg-is-personal-and-plain-text-p
+            :enter-func (lambda () (org-msg-mode -1))
+            :leave-func #'org-msg-mode
+            :vars `((user-mail-address . "leonardodecartago@gmail.com")
+                    (org-msg-signature . ,org-msg-extras-personal-plain-text-signature)))
+          ,(make-mu4e-context
+            :name "3 Work HTML"
+            :match-func #'mu4e-extras-msg-is-work-and-html-p
+            :vars `((user-mail-address . "leo@tlon.team")
+                    (org-msg-signature . ,org-msg-extras-work-html-signature)))
+          ,(make-mu4e-context
+            :name "4 Work plain text"
+            :match-func #'mu4e-extras-msg-is-work-and-plain-text-p
+            :enter-func (lambda () (org-msg-mode -1))
+            :leave-func #'org-msg-mode
+            :vars `((user-mail-address . "leo@tlon.team")
+                    (org-msg-signature . ,org-msg-extras-work-plain-text-signature))))))
+#+end_src
+
 * excluded packages
 :PROPERTIES:
 :ID:       A4E7C5AD-1E55-4C6F-B0E5-8320D282A886
@@ -316,13 +363,14 @@
        erc
        ;; lsp-grammarly
        midnight
-       mu4e
+       ;; mu4e
        persistent-scratch
        org-gcal
        consult-mu
        org-roam
        org2blog
        remember
+       org-journal
        ;; vulpea
        ))
 #+end_src

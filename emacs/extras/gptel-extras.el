@@ -49,23 +49,34 @@
 
 ;;;; Functions
 
+;;;;; Estimate cost
+
 (defun gptel-extras-get-cost ()
-  "Get the rough cost of prompting the current model.
+  "Get the rough input cost of prompting the current model.
 This is used to display the relevant information in the modeline (see
 `doom-modeline-extras').
 
 Note that the cost is an approximation based on the number of words in the
 buffer or selection. The function uses a 1.4 token/word conversion factor, but
-the actual cost may deviate from this estimate. Also note that files or buffers
-added to the context window are not included in the calculation."
+the actual cost may deviate from this estimate."
   (let* ((cost-per-1m-tokens (get gptel-model :input-cost))
-	 (words (if (region-active-p)
-		    (count-words (region-beginning) (region-end))
-		  (count-words (point-min) (point))))
+	 (words-main (if (region-active-p)
+			 (count-words (region-beginning) (region-end))
+		       (count-words (point-min) (point))))
+	 (words-context (gptel-extras-count-words-in-context))
+	 (total-words (+ words-main words-context))
 	 (tokens-per-word 1.4)
-	 (cost (/ (* cost-per-1m-tokens tokens-per-word words) 1000000.0)))
+	 (cost (/ (* cost-per-1m-tokens tokens-per-word total-words) 1000000.0)))
     cost))
 
+(defun gptel-extras-count-words-in-context ()
+  "Iterate over the files in context and sum the number of words in each file."
+  (cl-reduce (lambda (acc file)
+	       (let ((words (with-current-buffer (find-file-noselect (car file))
+			      (count-words (point-min) (point-max)))))
+		 (+ acc words)))
+	     gptel-context--alist
+	     :initial-value 0))
 (declare-function mullvad-connect-to-website "mullvad")
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
   "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS.

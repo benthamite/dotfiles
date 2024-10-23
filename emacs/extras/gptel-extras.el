@@ -77,6 +77,9 @@ the actual cost may deviate from this estimate."
 		 (+ acc words)))
 	     gptel-context--alist
 	     :initial-value 0))
+
+;;;;; Activate Mullvad
+
 (declare-function mullvad-connect-to-website "mullvad")
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
   "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS.
@@ -89,6 +92,8 @@ Use to circumvent Gemini’s location restrictions."
   (apply orig-fun args))
 
 (advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)
+
+;;;;; Save buffer
 
 (declare-function org-insert-heading "org")
 (declare-function org-next-visible-heading "org")
@@ -115,6 +120,8 @@ This function is meant to be an `:after' advice to `gptel'."
     (remove-hook 'before-save-hook #'gptel--save-state t)
     (write-file filename 'confirm)
     (add-hook 'before-save-hook #'gptel--save-state nil t)))
+
+;;;;; Generate LaTeX previews
 
 (declare-function org-latex-preview "org")
 (defun gptel-extras-generate-latex-previews (_ _)

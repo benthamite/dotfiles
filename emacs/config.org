@@ -12540,9 +12540,9 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 
   :bind
   (("A-M-y" . ytdl-download)
-   :map ytdl-mode-map
+   :map ytdl--dl-list-mode-map
    ("RET" . ytdl--open-item-at-point)
-   ("D" . ytdl--delete-item-at-point)))
+   ("D" . ytdl--delete-item-at-point))) 
 #+end_src
 
 ** emacs-speech-input

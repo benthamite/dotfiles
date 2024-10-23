@@ -74,7 +74,11 @@
   (when (and doom-modeline-extras-gptel-cost
 	     (bound-and-true-p gptel-model)
 	     gptel-mode)
-    (concat (format "$%.2f" (gptel-extras-get-cost)) (doom-modeline-spc))))
+    (concat (format "$%.2f" (gptel-extras-get-cost))
+	    (let ((filenum (length gptel-context--alist)))
+	      (unless (zerop filenum)
+		(format " (%d)" filenum)))
+	    (doom-modeline-spc))))
 
 (defvar tlon-split-mode)
 (doom-modeline-def-segment tlon-split ()

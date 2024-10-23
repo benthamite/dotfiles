@@ -7612,7 +7612,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     (bind-keys
      :map dired-mode-map
      ("s-l" . gptel-add)))
-  
+
   :custom
   (gptel-default-mode 'org-mode)
   (gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
@@ -9006,13 +9006,13 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
   ;; enable lexical binding in code blocks
   (setcdr (assq :lexical org-babel-default-header-args:emacs-lisp) "no")
   (setq org-babel-default-header-args:python
-	'((:exports . "both")
-	  (:results . "replace output")
-	  (:session . "none")
-	  (:cache . "no")
-	  (:noweb . "no")
-	  (:hlines . "no")
-	  (:tangle . "no")))
+        '((:exports . "both")
+          (:results . "replace output")
+          (:session . "none")
+          (:cache . "no")
+          (:noweb . "no")
+          (:hlines . "no")
+          (:tangle . "no")))
 
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -9022,9 +9022,9 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
      (R . t)))
 
   (dolist (cons (list (cons "j" 'org-babel-next-src-block)
-		      (cons "k" 'org-babel-previous-src-block)
-		      (cons "n" 'org-babel-insert-header-arg)
-		      (cons "p" 'org-babel-remove-result-one-or-many)))
+                      (cons "k" 'org-babel-previous-src-block)
+                      (cons "n" 'org-babel-insert-header-arg)
+                      (cons "p" 'org-babel-remove-result-one-or-many)))
     (add-to-list 'org-babel-key-bindings cons)))
 #+end_src
 
@@ -12548,7 +12548,7 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
   (("A-M-y" . ytdl-download)
    :map ytdl--dl-list-mode-map
    ("RET" . ytdl--open-item-at-point)
-   ("D" . ytdl--delete-item-at-point))) 
+   ("D" . ytdl--delete-item-at-point)))
 #+end_src
 
 ** emacs-speech-input

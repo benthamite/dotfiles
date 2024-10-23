@@ -7696,7 +7696,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 :ID:       A3F028E6-A888-4F50-88DE-64897689B6D3
 :END:
 
-/[[https://github.com/karthink/gptel-quick][gptel-quick]] supports fast AI lookups./ 
+/[[https://github.com/karthink/gptel-quick][gptel-quick]] supports fast AI lookups./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gptel-quick
@@ -9016,9 +9016,9 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
      (R . t)))
 
   (dolist (cons (list (cons "j" 'org-babel-next-src-block)
-                      (cons "k" 'org-babel-previous-src-block)
-                      (cons "n" 'org-babel-insert-header-arg)
-                      (cons "p" 'org-babel-remove-result-one-or-many)))
+		      (cons "k" 'org-babel-previous-src-block)
+		      (cons "n" 'org-babel-insert-header-arg)
+		      (cons "p" 'org-babel-remove-result-one-or-many)))
     (add-to-list 'org-babel-key-bindings cons)))
 #+end_src
 

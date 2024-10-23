@@ -302,19 +302,8 @@
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'gptel
-  (setq gptel-default-mode 'markdown-mode)
-  (message "`gptel' late-init config loaded."))
-#+end_src
-
-** gptel-extras
-:PROPERTIES:
-:ID:       3B1E43B8-BE9C-4FA1-B2CA-6BD8E9ED746F
-:END:
-#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(with-eval-after-load 'gptel-extras
   ;; gptel config
-  (setq gptel-default-mode 'markdown-mode
-        gptel-extras-dir "/Users/fede/Dropbox/obsidian/gpt-4/")
+  (setq gptel-extras-dir "/Users/fede/Dropbox/org/gptel/")
 
   ;; Remove auto save file when opening gptel
   (advice-remove 'gptel #'gptel-extras-save-buffer)
@@ -326,22 +315,9 @@
     (rename-buffer "*gptel*" 'unique))
 
   (advice-add 'gptel :after #'gptel-extras-name-buffer)
-
-  ;; redefine save function
-  (defun gptel-extras-save-buffer ()
-    "Save the `gptel' buffer on demand, in `gptel-extras-dir'."
-    (interactive)
-    (let* ((name (read-string "Enter buffer name: "))
-           (extension (pcase major-mode
-                        ('org-mode "org")
-                        ('markdown-mode "md")
-                        (_ (user-error "Unsupported major mode"))))
-           (filename (file-name-concat gptel-extras-dir
-                                       (file-name-with-extension (simple-extras-slugify name) extension))))
-      (write-file filename 'confirm)))
-
-  (message "`gptel-extras' late-init config loaded."))
+  (message "`gptel' late-init config loaded."))
 #+end_src
+
 
 ** copilot
 :PROPERTIES:
@@ -841,26 +817,20 @@
 (with-eval-after-load 'faces-extras
   (setq faces-extras-fixed-pitch-font "IosevkaTermSlab Nerd Font")
   (setq faces-extras-fixed-pitch-size 150)
+  (setq faces-extras-fixed-pitch-height 1.0)
+  (setq faces-extras-variable-pitch-height 1.1)
+  (setq faces-extras-org-level-height 1.0)
+  (setq faces-extras-org-block-height 1.0)
+  (setq faces-extras-org-code-height 1.0)
+  (setq faces-extras-org-date-height 0.9)
+  (setq faces-extras-org-tag-height 0.9)
+  (setq faces-extras-org-property-value-height 0.8)
   (faces-extras-set-and-store-face-attributes
    '((default :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
      (fixed-pitch :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-height)))
   (message "`%s' set to `%s'" (symbol-name 'faces-extras-fixed-pitch-font) faces-extras-fixed-pitch-font)
-  (debug-on-variable-change 'faces-extras-fixed-pitch-font)
+  ;; (debug-on-variable-change 'faces-extras-fixed-pitch-font)
   (message "`faces-extras' late-init config loaded."))
-
-;; (with-eval-after-load 'faces-extras
-;;   (setq faces-extras-fixed-pitch-font "IosevkaTermSlab Nerd Font")
-;;   (setq faces-extras-fixed-pitch-size 150)
-;;   (setq faces-extras-fixed-pitch-height 1.0)
-;;   (setq faces-extras-variable-pitch-height 1.1)
-;;   (setq faces-extras-org-level-height 1.0)
-;;   (setq faces-extras-org-block-height 1.0)
-;;   (setq faces-extras-org-code-height 1.0)
-;;   (setq faces-extras-org-date-height 0.9)
-;;   (setq faces-extras-org-tag-height 0.9)
-;;   (setq faces-extras-org-property-value-height 0.8)
-;;   (faces-extras-set-custom-face-attributes)
-;;   )
 #+end_src
 
 ** tareas
@@ -868,7 +838,7 @@
 :ID:       B891DE59-5914-4452-B1F0-F856C1DA8F6E
 :END:
 
-#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+#+begin_src emacs-lisp :tangle no
 (find-file paths-file-tlon-tareas-fede)
 (org-tidy-mode -1)
 #+end_src
@@ -932,9 +902,11 @@ This should be at the very end of the ~late-init~ file.
          (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
    (global-flycheck-mode -1)
    (setq calendar-extras-use-geolocation nil)
-   (org-tidy-mode -1)
-   ))
    (recentf-mode)
+   (find-file paths-file-tlon-tareas-fede)
+   (org-tidy-mode -1)
+   (message "Fede's post-init-hook finished.")
+   ))
 (run-hooks 'tlon-init-post-init-hook)
 (message "Fede's late-init.el config finished.")
 #+end_src

@@ -68,6 +68,7 @@
     (concat (symbol-name gptel-model) (doom-modeline-spc))))
 
 (defvar gptel-mode)
+(defvar gptel-context--alist)
 (declare-function gptel-extras-get-cost "gptel-extras")
 (doom-modeline-def-segment gptel-cost ()
   "Display the cost of prompting the current model."

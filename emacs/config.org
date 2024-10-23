@@ -1778,7 +1778,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (emsg-blame-no-commit-message "")
 
   :config
-  ;; this is now merged upstream: github.com/ISouthRain/emsg-blame/pull/1
+  ;; this is now included in the readme: github.com/ISouthRain/emsg-blame/pull/1
   (defun emsg-blame-display-message ()
     "Display git blame message, right-aligned with Magit-style faces.
 If another message is already being displayed, display both messages unless they

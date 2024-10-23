@@ -7614,7 +7614,6 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   :config
   (require 'tlon-core)
-  (setq gptel-model 'claude-3-5-sonnet-20240620
         gptel-backend (gptel-make-anthropic "Claude"
                         :stream t
                         :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
@@ -7671,6 +7670,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    ("H-s-a" . gptel-abort)
    ("H-s-m" . gptel-menu)
    ("H-s-t" . gptel-add)))
+    (setq gptel-model 'claude-3-5-sonnet-20241022
 #+end_src
 
 ** gptel-extras

@@ -73,8 +73,7 @@
 (doom-modeline-def-segment gptel-cost ()
   "Display the cost of prompting the current model."
   (when (and doom-modeline-extras-gptel-cost
-	     (bound-and-true-p gptel-model)
-	     gptel-mode)
+	     (bound-and-true-p gptel-model))
     (concat (format "$%.2f" (gptel-extras-get-cost))
 	    (let ((filenum (length gptel-context--alist)))
 	      (unless (zerop filenum)

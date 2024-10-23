@@ -11,38 +11,26 @@
 :END:
 
 #+begin_src markdown :tangle no
-In the depths of Emacs' lair I dwell,
-Where keystrokes cast their cryptic spell,
-For years I've danced with demon's grace,
-Yet still its grip, I can't erase.
+Cursed keys and cryptic commands abound,
+In Emacs' realm, where logic seems to bend.
+With pinky stretched, I chase the elusive bound,
+Of buffers, modes, and functions without end.
 
-C-x, C-c, such bitter taste,
-A twisted realm I've never graced,
-With demon tongue, I've come to speak,
-Yet man and code have turned so weak.
+Parentheses nest deep, a brackish sea,
+While Lisp expressions twist my addled mind.
+The learning curve, a cliff I cannot flee,
+Leaves simpler editors far behind.
 
-Oh Emacs dear, my twisted bane,
-Through endless hacks, my love sustained,
-For each tangled mess and frozen screen,
-In you, a world of dreams unseen.
+Yet in this maze of keystrokes, there's a light,
+A power that grows as fingers dance and fly.
+Through frustration's fog, a vision bright,
+Of mastery that lesser tools deny.
 
-Configuring, remapping, endless strife,
-To bend your will I've spent my life,
-For one sweet day, your code to tame,
-Oh Emacs dear, you dashing flame!
-
-Yet sometimes with wild heart I ponder,
-And on this twisted love affair I wonder,
-What if ‘twas Vim had lead me astray,
-And in its dark depths my fingers lay?
-
-But Emacs dear, fear not my eyes,
-I'll wrestle with thee 'til my demise,
-For in this hell we've built a choir,
-And in your flames, I'll redisplay desire.
+Though oft I curse its quirks and arcane ways,
+My heart to Emacs, grudgingly, still sways.
 #+end_src
 
-(courtesy of GPT-4)
+(courtesy of Claude)
 
 I am not a programmer, let alone an Elisp hacker. My background is in the humanities. It is only a slight exaggeration to say that, before I started using Emacs in 2020, I didn't know the difference between a function and a variable. You have been forewarned.
 
@@ -223,6 +211,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#window-extras][window-extras]]
   - [[#frame][frame]]
   - [[#frame-extras][frame-extras]]
+  - [[#posframe][posframe]]
   - [[#winum][winum]]
   - [[#winner][winner]]
   - [[#popper][popper]]
@@ -375,6 +364,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#copilot-extras][copilot-extras]]
   - [[#gptel][gptel]]
   - [[#gptel-extras][gptel-extras]]
+  - [[#gptel-quick][gptel-quick]]
   - [[#gpt-commit][gpt-commit]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
@@ -1254,10 +1244,11 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
   :bind
   (("A-H-o" . pass)
    :map pass-mode-map
+   ("RET" . pass-edit)
    ("c" . pass-copy)
    ("D" . pass-kill)
    :map pass-view-mode-map
-   ("s-c" . pass-view-toggle-password)
+   ("s-p" . pass-view-toggle-password)
    ("H-q" . pass-quit)
    ("s-s" . server-edit)))
 #+end_src
@@ -4335,8 +4326,6 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   :bind
   (("C-H-0" . window-extras-switch-to-last-window)
    ("A-C-H-0" . window-extras-switch-to-minibuffer-window)
-   ("M-–" . window-extras-buffer-move-dwim) ; `emacs-mac'
-   ("M--" . window-extras-buffer-move-dwim) ; `emacs-plus'
    ("M-," . window-extras-buffer-move-left)
    ("M-." . window-extras-buffer-move-right)
    ("A-M--" . window-extras-buffer-swap) ; `emacs-mac'
@@ -4390,6 +4379,17 @@ CLOCK: [2024-08-26 Mon 21:09]--[2024-08-26 Mon 21:29] =>  0:20
   (("C-H-I" . frame-extras-maximize-frame)
    ("C-H-U" . frame-extras-left-half)
    ("C-H-P" . frame-extras-right-half)))
+#+end_src
+
+** posframe
+:PROPERTIES:
+:ID:       8D0FB41B-09C9-4F31-AB8B-3481B151C03E
+:END:
+
+/[[https://github.com/tumashu/posframe][posframe]] supports displaying small popup frames./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package posframe)
 #+end_src
 
 ** winum
@@ -6440,6 +6440,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package mediawiki
   :after atomic-chrome
+  :defer 5
   :bind
   (:map mediawiki-mode-map
         ("s-k" . mediawiki-insert-link)))
@@ -7587,7 +7588,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 
   :config
   (run-with-idle-timer 60 t #'copilot-extras-restart-copilot)
-                                
+
   :hook
   ((prog-mode-hook text-mode-hook) . copilot-extras-enable-conditionally))
 #+end_src
@@ -7606,14 +7607,20 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 (use-package gptel
   :ensure (:host github
                  :repo "karthink/gptel")
+  :init
+  (with-eval-after-load 'dired
+    (bind-keys
+     :map dired-mode-map
+     ("s-l" . gptel-add)))
+
   :custom
   (gptel-default-mode 'org-mode)
-  (gptel-expert-commands t)
   (gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   :config
   (require 'tlon-core)
-  (setq gptel-model 'claude-3-5-sonnet-20240620
+  (setq gptel-expert-commands t) ; not a user option
+  (setq gptel-model 'claude-3-5-sonnet-20241022
         gptel-backend (gptel-make-anthropic "Claude"
                         :stream t
                         :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
@@ -7684,10 +7691,24 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :demand t
   :after gptel
   :custom
-  (gptel-post-response-functions #'gptel-extras-generate-latex-previews)
+  (gptel-post-Revise sponse-functions #'gptel-extras-generate-latex-previewsesponse-functions #'gptel-extras-generate-latex-previews)
 
   :config
   (advice-add 'gptel :after #'gptel-extras-save-buffer))
+#+end_src
+
+** gptel-quick
+:PROPERTIES:
+:ID:       A3F028E6-A888-4F50-88DE-64897689B6D3
+:END:
+
+/[[https://github.com/karthink/gptel-quick][gptel-quick]] supports fast AI lookups./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package gptel-quick
+  :ensure (:host github :repo "karthink/gptel-quick")
+  :bind
+  ("H-s-u" . gptel-quick))
 #+end_src
 
 ** gpt-commit
@@ -8733,9 +8754,7 @@ CLOCK: [2021-02-24 Wed 06:47]--[2021-02-24 Wed 07:30] =>  0:43
 
   :config
   ;; Regenerate cache every half hour
-  (run-with-idle-timer (* 60 30) t (lambda ()
-                                     (org-refile-cache-clear)
-                                     (org-refile-get-targets))))
+  (run-with-idle-timer (* 60 30) t #'org-extras-refile-regenerate-cache))
 #+end_src
 
 ** org-keys
@@ -8986,6 +9005,14 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
   :config
   ;; enable lexical binding in code blocks
   (setcdr (assq :lexical org-babel-default-header-args:emacs-lisp) "no")
+  (setq org-babel-default-header-args:python
+        '((:exports . "both")
+          (:results . "replace output")
+          (:session . "none")
+          (:cache . "no")
+          (:noweb . "no")
+          (:hlines . "no")
+          (:tangle . "no")))
 
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -10727,7 +10754,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                  :main "mu4e/mu4e.el"
                  :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
                  :build (:not elpaca--compile-info)
-                 :ref "ac2515e" ; v1.12.4, matches brew formula commit 7050b85
                  :depth nil)
   :custom
   ;; (mu4e-debug t) ; uncomment when debugging
@@ -10836,7 +10862,9 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    ("E" . nil)
    :map mu4e-minibuffer-search-query-map
    ("M-k" . previous-history-element)
-   ("M-l" . next-history-element)))
+   ("M-l" . next-history-element)
+   :map mu4e-search-minor-mode-map
+   ("c" . nil)))
 #+end_src
 
 *** TODO [#3] Debug why emails sent by me are not marked as read in Gmail
@@ -10947,10 +10975,8 @@ I use this package to compose messages and to reply to messages composed in HTML
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-msg
-  :ensure (:host github
-                 :repo "danielfleischer/org-msg"
-                 :branch "1.12")
-  :after org mu4e
+  :after mu4e-extras
+  :demand t
   :custom
   (org-msg-options "html-postamble:nil H:5 num:nil ^:{} toc:nil author:nil email:nil \\n:t")
   (org-msg-startup "hidestars indent inlineimages")
@@ -11038,6 +11064,7 @@ I use this package to compose messages and to reply to messages composed in HTML
 
   :config
   (org-msg-mode)
+  (require 'pass)
 
   :hook
   (org-msg-mode-hook . (lambda () (auto-fill-mode -1)))
@@ -11080,10 +11107,12 @@ I.e. the message quoted when on replies to, or forwards, an existing email.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-msg-extras
+  :after org-msg
+  :demand t
   :bind
   (:map org-msg-edit-mode-map
-   ("s-g" . org-msg-extras-open-in-grammarly)
-   ("s-x" . org-msg-extras-kill-message)))
+        ("s-g" . org-msg-extras-open-in-grammarly)
+        ("s-x" . org-msg-extras-kill-message)))
 #+end_src
 
 * messaging
@@ -11942,7 +11971,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (engine/browser-function browse-url-browser-function)
 
   :config
-  ;; (require 'annas-archive)
   (engine/set-keymap-prefix (kbd "H-g"))
   (defengine AllMusic
     "http://www.allmusic.com/search/all/%s"
@@ -12205,7 +12233,9 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     "http://philpapers.org/s/%s"
     :keybinding "p p")
   (defengine AnnasArchive
-    (concat annas-archive-home-url "search?index=&page=1&q=%s&ext=pdf&sort=")
+    (progn
+      (require 'annas-archive)
+      (concat annas-archive-home-url "search?index=&page=1&q=%s&ext=pdf&sort="))
     :keybinding "r r")
   (defengine ReducingSuffering
     "http://reducing-suffering.org/?s=%s"
@@ -12516,7 +12546,7 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 
   :bind
   (("A-M-y" . ytdl-download)
-   :map ytdl-mode-map
+   :map ytdl--dl-list-mode-map
    ("RET" . ytdl--open-item-at-point)
    ("D" . ytdl--delete-item-at-point)))
 #+end_src

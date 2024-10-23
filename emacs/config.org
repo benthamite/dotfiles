@@ -7604,73 +7604,79 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 /[[https://github.com/karthink/gptel][gptel]] is a ChatGPT client for Emacs./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-  (use-package gptel
-    :ensure (:host github
-                   :repo "karthink/gptel")
-    :custom
-    (gptel-default-mode 'org-mode)
-    (gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
+(use-package gptel
+  :ensure (:host github
+                 :repo "karthink/gptel")
+  :init
+  (with-eval-after-load 'dired
+    (bind-keys
+     :map dired-mode-map
+     ("s-l" . gptel-add)))
+  
+  :custom
+  (gptel-default-mode 'org-mode)
+  (gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
-    :config
-    (require 'tlon-core)
-    (setq gptel-expert-commands t) ; not a user option
-    (setq gptel-model 'claude-3-5-sonnet-20241022
-          gptel-backend (gptel-make-anthropic "Claude"
-                          :stream t
-                          :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
+  :config
+  (require 'tlon-core)
+  (setq gptel-expert-commands t) ; not a user option
+  (setq gptel-model 'claude-3-5-sonnet-20241022
+        gptel-backend (gptel-make-anthropic "Claude"
+                        :stream t
+                        :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
 
-    (gptel-make-gemini "Gemini"
-      :stream t
-      :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
+  (gptel-make-gemini "Gemini"
+    :stream t
+    :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
 
-    (gptel-make-openai "Perplexity"
-      :host "api.perplexity.ai"
-      :key (auth-source-pass-get "key" (concat "tlon/core/perplexity.ai/" tlon-email-shared))
-      :endpoint "/chat/completions"
-      :stream t
-      :models '(;; <https://docs.perplexity.ai/docs/model-cards>
-                (llama-3.1-sonar-huge-128k-online
-                 :context-window 127.072
-                 :input-cost 5
-                 :last-update ""
-                 :description "[recommended]")
-                (llama-3.1-sonar-large-128k-online
-                 :context-window 127.072
-                 :input-cost 1
-                 :last-update ""
-                 :description "")
-                (llama-3.1-sonar-small-128k-online
-                 :context-window 127.072
-                 :input-cost 0.2
-                 :last-update ""
-                 :description "")
-                (llama-3.1-sonar-small-128k-chat
-                 :context-window 131.072
-                 :input-cost 0.2
-                 :last-update ""
-                 :description "")
-                (llama-3.1-sonar-large-128k-chat
-                 :context-window 131.072
-                 :input-cost 1
-                 :last-update ""
-                 :description "")
-                (llama-3.1-8b-instruct
-                 :context-window 131.072
-                 :input-cost 0.2
-                 :last-update ""
-                 :description "")
-                (llama-3.1-70b-instruct
-                 :context-window 131.072
-                 :input-cost 1
-                 :last-update ""
-                 :description "")))
+  (gptel-make-openai "Perplexity"
+    :host "api.perplexity.ai"
+    :key (auth-source-pass-get "key" (concat "tlon/core/perplexity.ai/" tlon-email-shared))
+    :endpoint "/chat/completions"
+    :stream t
+    :models '(;; <https://docs.perplexity.ai/docs/model-cards>
+              (llama-3.1-sonar-huge-128k-online
+               :context-window 127.072
+               :input-cost 5
+               :last-update ""
+               :description "[recommended]")
+              (llama-3.1-sonar-large-128k-online
+               :context-window 127.072
+               :input-cost 1
+               :last-update ""
+               :description "")
+              (llama-3.1-sonar-small-128k-online
+               :context-window 127.072
+               :input-cost 0.2
+               :last-update ""
+               :description "")
+              (llama-3.1-sonar-small-128k-chat
+               :context-window 131.072
+               :input-cost 0.2
+               :last-update ""
+               :description "")
+              (llama-3.1-sonar-large-128k-chat
+               :context-window 131.072
+               :input-cost 1
+               :last-update ""
+               :description "")
+              (llama-3.1-8b-instruct
+               :context-window 131.072
+               :input-cost 0.2
+               :last-update ""
+               :description "")
+              (llama-3.1-70b-instruct
+               :context-window 131.072
+               :input-cost 1
+               :last-update ""
+               :description "")))
 
-    :bind
-    (("M-c" . gptel-send)
-     ("H-s-g" . gptel)
-     ("H-s-a" . gptel-abort)
-     ("H-s-m" . gptel-menu)
-     ("H-s-t" . gptel-add)))
+  :bind
+  (("M-c" . gptel-send)
+   ("H-s-g" . gptel)
+   ("H-s-a" . gptel-abort)
+   ("H-s-m" . gptel-menu)
+   ("H-s-t" . gptel-add)))
 #+end_src
 
 ** gptel-extras

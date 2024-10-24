@@ -62,65 +62,178 @@
   :type 'directory
   :group 'vc-extras)
 
+(defcustom vc-extras-profiles
+  `((:name personal
+	   :account ,vc-extras-github-account-personal
+	   :dir ,paths-dir-personal-repos)
+    (:name work
+	   :account ,vc-extras-github-account-work
+	   :dir ,paths-dir-tlon-repos))
+  "A list of GitHub profiles and their corresponding directories."
+  ;; TODO: define type correctly
+  :type '(alist :key-type symbol :value-type (alist :key-type symbol :value-type string))
+  :group 'vc-extras)
+
+(defcustom vc-extras-split-repo 'prompt
+  "Whether to split the `.git' directory in a separate directory.
+If nil, never split the `.git' directory. If `prompt', ask the user whether to
+split the `.git' directory. If t or any other non-nil value, always split the
+`.git' directory."
+  :type '(choice (const :tag "Never" nil)
+		 (const :tag "Prompt" prompt)
+		 (boolean :tag "Always" t))
+  :group 'tlon-repos)
+
 ;;;; Functions
 
-;;;###autoload
-(defun vc-extras-create-repo ()
-  "Create a new GitHub repository."
-  (interactive)
-  (let* ((name (read-string "Name: "))
-         (description (read-string "Description: "))
-         (private (y-or-n-p "Private? "))
-         (work (y-or-n-p "Work? "))
-	 (account (if work vc-extras-github-account-work vc-extras-github-account-personal))
-	 (default-directory (read-directory-name
-			     "Directory: " (if (vc-extras-is-git-dir-p default-directory)
-					       default-directory
-					     (if work vc-extras-work-repo-dir vc-extras-personal-repo-dir))
-			     nil nil name)))
-    (vc-extras-check-dir-exists)
-    (vc-extras-check-dir-git)
-    (vc-extras-gh-create-repo name description account private)
-    (when (y-or-n-p "Clone repository? ")
-      (vc-git-clone (vc-extras-get-github-remote account name)
-		    default-directory nil))))
-
-(defun vc-extras-get-github-remote (account name)
-  "Return the GitHub remote of ACCOUNT and repo NAME."
-  (format "https://github.com/%s/%s.git" account name))
+;;;;; General
 
 (defun vc-extras-is-git-dir-p (dir)
   "Return non-nil if DIR is a Git repository."
   (eq (vc-responsible-backend dir t) 'Git))
 
-(defun vc-extras-check-dir-exists ()
-  "Check if default directory exists; if not, ask user to create it."
-  (when (and (not (file-exists-p default-directory))
-             (y-or-n-p (format "Directory `%s' does not exist. Create it?" default-directory)))
-    (make-directory default-directory)))
+(defun vc-extras-get-account-prop (account prop)
+  "Return the value of PROP for ACCOUNT in `vc-extras-profiles'."
+  (plist-get (seq-find (lambda (plist)
+			 (equal (plist-get plist :account) account))
+		       vc-extras-profiles)
+	     prop))
 
-(defun vc-extras-check-dir-git ()
-  "Check if default directory is a Git repo; if not, ask user to initialize it."
-  (when (and (not (vc-extras-is-git-dir-p default-directory))
-	     (y-or-n-p (format "Directory `%s' is not a Git repository. Initialize it?" default-directory)))
-    (vc-create-repo 'Git)))
+;;;;; Create
+
+;;;###autoload
+(defun vc-extras-create-repo (&optional name account)
+  "Create a new GitHub repository named NAME in ACCOUNT.
+If NAME is nil, prompt for one. If ACCOUNT is nil, select one."
+  (interactive)
+  (let* ((name (or name (read-string "Name: ")))
+         (account (or account (completing-read "Account: "
+					       (mapcar (lambda (profile)
+							 (plist-get profile :account))
+						       vc-extras-profiles))))
+         (description (read-string "Description: "))
+         (private (y-or-n-p "Private? "))
+	 (default-directory (vc-extras-get-account-prop account :dir)))
+    (vc-extras-gh-create-repo name account description private)
+    (when (y-or-n-p "Clone repository? ")
+      (vc-extras-clone-repo name account))))
+
+;;;;; Clone
+
+(declare-function forge-get-repository "forge-core")
+(declare-function forge-extras-track-repository "forge-extras")
+;;;###autoload
+(defun vc-extras-clone-repo (&optional name account no-forge)
+  "Clone an existing repo.
+ACCOUNT is the name of the GitHub account. If NAME is nil, prompt the user for a
+repo name. If NO-FORGE is non-nil, do not prompt the user to add the repo to the
+Forge database."
+  (interactive)
+  (let* ((repos nil)
+	 (name (or name
+		   (completing-read "Repo: " (setq repos (vc-extras-gh-list-repos account)))))
+	 (account (or account (alist-get name repos nil nil #'string=)))
+	 (remote (vc-extras-get-github-remote name account))
+	 (dir (file-name-concat (vc-extras-get-account-prop account :dir) name)))
+    (when (file-exists-p dir)
+      (user-error "Directory `%s' already exists" dir))
+    (vc-clone remote 'Git dir)
+    (pcase vc-extras-split-repo
+      ('nil)
+      ('prompt (if (y-or-n-p "Move `.git' directory to separate directory?")
+		   (vc-extras-split-repo dir)
+		 (message "You can customize the `vc-extras-split-repo' user option to avoid this prompt.")))
+      (_ (vc-extras-split-repo dir)))
+    (let ((default-directory dir))
+      (require 'forge-core)
+      (require 'forge-extras)
+      (if (and (not no-forge)
+	       (not (forge-get-repository :tracked?))
+	       (y-or-n-p "Add to Forge? "))
+	  (forge-extras-track-repository dir)
+	(dired dir)))))
+
+(defun vc-extras-get-github-remote (name &optional account)
+  "Return the GitHub remote named NAME in ACCOUNT.
+If ACCOUNT is nil, search in all accounts listed in `vc-extras-profiles'."
+  (when-let ((account (or account (vc-extras-get-account-of-name name))))
+    (format "https://github.com/%s/%s.git" account name)))
+
+(defun vc-extras-get-account-of-name (name)
+  "Return the GitHub account that owns the repo named NAME."
+  (catch 'account
+    (dolist (profile vc-extras-profiles)
+      (let ((account (plist-get profile :account)))
+	(when (member name (vc-extras-gh-list-repos account))
+	  (throw 'account account))))))
+
+(defun vc-extras-get-repo-dir (name account &optional git)
+  "Return the directory of the repo named NAME in ACCOUNT.
+If GIT is `git', return
+the repo’s `.git' directory. If GIT is `split-git', return the repo’s split
+`.git' directory. Otherwise, return the repo directory."
+  (let* ((account-dir (vc-extras-get-account-prop account :dir))
+	 (dir (pcase git
+		('split-git paths-dir-split-git)
+		(_ account-dir)))
+	 (git-dir (pcase git
+		    ('git ".git"))))
+    (file-name-as-directory (file-name-concat dir name git-dir))))
+
+;;;;; Split
+
+(defun vc-extras-split-repo (dir)
+  "Move the `.git' dir in DIR to a split dir and set the `.git' file accordingly.
+Normally, this command is run for repos managed by Dropbox, to protect the Git
+files from possible corruption."
+  (interactive "D")
+  (let* ((name (file-name-nondirectory (directory-file-name dir)))
+	 (source (file-name-concat dir ".git/"))
+	 (target (file-name-concat paths-dir-split-git name))
+	 (git-file (directory-file-name source)))
+    (when (file-exists-p target)
+      (user-error "Directory `%s' already exists" target))
+    (rename-file source target t)
+    (with-temp-file git-file
+      (insert (format "gitdir: %s" target))
+      (write-file git-file))))
+
+;;;;; Delete
+
+;;;###autoload
+(defun vc-extras-delete-repo (&optional name account)
+  "Delete the repo named NAME in ACCOUNT.
+If NAME is nil, prompt the user for a repo name. If ACCOUNT is nil, infer it
+from NAME."
+  (interactive)
+  (let* ((repos nil)
+	 (name (or name
+		   (completing-read "Repo: " (setq repos (vc-extras-gh-list-repos account)))))
+	 (account (or account (if repos
+				  (alist-get name repos nil nil #'string=)
+				(user-error "If you provide a repo name, you must also provide its account"))))
+	 (dir (vc-extras-get-repo-dir name account))
+	 (split-git (vc-extras-get-repo-dir name account 'split-git))
+	 deleted)
+    (when (file-exists-p dir)
+      (delete-directory dir t)
+      (push dir deleted))
+    (when (file-exists-p split-git)
+      (delete-directory split-git t)
+      (push split-git deleted))
+    (if deleted
+	(message "Deleted repos: %s" (string-join deleted ", "))
+      (message "Repo `%s' not found locally" name))))
 
 ;;;;; gh
 
-(defun vc-extras-gh-create-repo (name description account &optional private)
+(defun vc-extras-gh-create-repo (name account description &optional private)
   "Create a new GitHub repository in ACCOUNT with NAME and DESCRIPTION.
 If PRIVATE is non-nil, make it a private repository."
   (shell-command-to-string
    (format
     "%s repo create %s/%s %s --description \"%s\""
     vc-extras-gh-executable account name (if private "--private" "--public") description)))
-
-(defun vc-extras-gh-list-repos (account)
-  "List all repos in GitHub ACCOUNT."
-  (let* ((repos
-	  (shell-command-to-string (format "%s repo list %s --limit 9999 | awk '{print $1}'"
-					   vc-extras-gh-executable account))))
-    (split-string (replace-regexp-in-string (format "%s/" account) "" repos))))
 
 (defun vc-extras-ensure-gh-exists ()
   "Check that `gh' exists, else signal an error."
@@ -134,6 +247,34 @@ If PRIVATE is non-nil, make it a private repository."
   (unless (string-match "Logged in to github\\.com account"
 			(shell-command-to-string "gh auth status"))
     (user-error "`gh' not authenticated; please authenticate (`gh auth login')")))
+
+;;;;;; List repos
+
+(defun vc-extras-gh-list-repos (&optional account)
+  "List all repos in GitHub ACCOUNT.
+If ACCOUNT is nil, list all repos in all accounts."
+  (if account
+      (vc-extras-gh-list-repos-in-account account)
+    (vc-extras-gh-list-repos-in-all-accounts)))
+
+;; TODO: make it more efficient; currently it takes a couple of seconds
+(defun vc-extras-gh-list-repos-in-account (account)
+  "List all repos in GitHub ACCOUNT.
+Return the result as a list of cons cells, where the car is the repo name and
+the cdr is ACCOUNT."
+  (let* ((repos
+	  (shell-command-to-string (format "%s repo list %s --limit 9999 | awk '{print $1}'"
+					   vc-extras-gh-executable account))))
+    (mapcar (lambda (line)
+	      (let ((name (cadr (split-string line "/"))))
+		(cons name account)))
+	    (split-string repos "\n" t))))
+
+(defun vc-extras-gh-list-repos-in-all-accounts ()
+  "List all repos in all GitHub accounts."
+  (mapcan (lambda (profile)
+	    (vc-extras-gh-list-repos-in-account (plist-get profile :account)))
+	  vc-extras-profiles))
 
 (provide 'vc-extras)
 ;;; vc-extras.el ends here

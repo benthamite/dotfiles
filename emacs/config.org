@@ -6661,7 +6661,7 @@ https://gitlab.com/chrisberkhout/pricehist
                ("A-C-s-<tab>" . tlon-md-end-of-buffer-dwim)))
 
   :custom
-  (tlon-split-repo t)
+  (vc-extras-split-repo t)
 
   :config
   (run-with-idle-timer (* 30 60) t #'tlon-pull-issues-in-all-repos)

@@ -211,6 +211,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#window-extras][window-extras]]
   - [[#frame][frame]]
   - [[#frame-extras][frame-extras]]
+  - [[#posframe][posframe]]
   - [[#winum][winum]]
   - [[#winner][winner]]
   - [[#popper][popper]]
@@ -363,6 +364,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#copilot-extras][copilot-extras]]
   - [[#gptel][gptel]]
   - [[#gptel-extras][gptel-extras]]
+  - [[#gptel-quick][gptel-quick]]
   - [[#gpt-commit][gpt-commit]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
@@ -4379,6 +4381,17 @@ CLOCK: [2024-08-26 Mon 21:09]--[2024-08-26 Mon 21:29] =>  0:20
    ("C-H-P" . frame-extras-right-half)))
 #+end_src
 
+** posframe
+:PROPERTIES:
+:ID:       8D0FB41B-09C9-4F31-AB8B-3481B151C03E
+:END:
+
+/[[https://github.com/tumashu/posframe][posframe]] supports displaying small popup frames./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package posframe)
+#+end_src
+
 ** winum
 :PROPERTIES:
 :ID:       90677099-6D75-4BA3-B490-0C325A17A55F
@@ -7594,14 +7607,20 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 (use-package gptel
   :ensure (:host github
                  :repo "karthink/gptel")
+  :init
+  (with-eval-after-load 'dired
+    (bind-keys
+     :map dired-mode-map
+     ("s-l" . gptel-add)))
+
   :custom
   (gptel-default-mode 'org-mode)
-  (gptel-expert-commands t)
   (gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   :config
   (require 'tlon-core)
-  (setq gptel-model 'claude-3-5-sonnet-20240620
+  (setq gptel-expert-commands t) ; not a user option
+  (setq gptel-model 'claude-3-5-sonnet-20241022
         gptel-backend (gptel-make-anthropic "Claude"
                         :stream t
                         :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
@@ -7672,10 +7691,24 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :demand t
   :after gptel
   :custom
-  (gptel-post-response-functions #'gptel-extras-generate-latex-previews)
+  (gptel-post-Revise sponse-functions #'gptel-extras-generate-latex-previewsesponse-functions #'gptel-extras-generate-latex-previews)
 
   :config
   (advice-add 'gptel :after #'gptel-extras-save-buffer))
+#+end_src
+
+** gptel-quick
+:PROPERTIES:
+:ID:       A3F028E6-A888-4F50-88DE-64897689B6D3
+:END:
+
+/[[https://github.com/karthink/gptel-quick][gptel-quick]] supports fast AI lookups./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package gptel-quick
+  :ensure (:host github :repo "karthink/gptel-quick")
+  :bind
+  ("H-s-u" . gptel-quick))
 #+end_src
 
 ** gpt-commit
@@ -8721,9 +8754,7 @@ CLOCK: [2021-02-24 Wed 06:47]--[2021-02-24 Wed 07:30] =>  0:43
 
   :config
   ;; Regenerate cache every half hour
-  (run-with-idle-timer (* 60 30) t (lambda ()
-                                     (org-refile-cache-clear)
-                                     (org-refile-get-targets))))
+  (run-with-idle-timer (* 60 30) t #'org-extras-refile-regenerate-cache))
 #+end_src
 
 ** org-keys
@@ -8974,6 +9005,14 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
   :config
   ;; enable lexical binding in code blocks
   (setcdr (assq :lexical org-babel-default-header-args:emacs-lisp) "no")
+  (setq org-babel-default-header-args:python
+        '((:exports . "both")
+          (:results . "replace output")
+          (:session . "none")
+          (:cache . "no")
+          (:noweb . "no")
+          (:hlines . "no")
+          (:tangle . "no")))
 
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -10830,7 +10869,9 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    ("E" . nil)
    :map mu4e-minibuffer-search-query-map
    ("M-k" . previous-history-element)
-   ("M-l" . next-history-element)))
+   ("M-l" . next-history-element)
+   :map mu4e-search-minor-mode-map
+   ("c" . nil)))
 #+end_src
 
 *** TODO [#3] Debug why emails sent by me are not marked as read in Gmail
@@ -10941,8 +10982,6 @@ I use this package to compose messages and to reply to messages composed in HTML
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-msg
-  :ensure (:host github
-                 :repo "danielfleischer/org-msg")
   :after mu4e-extras
   :demand t
   :custom
@@ -12514,7 +12553,7 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 
   :bind
   (("A-M-y" . ytdl-download)
-   :map ytdl-mode-map
+   :map ytdl--dl-list-mode-map
    ("RET" . ytdl--open-item-at-point)
    ("D" . ytdl--delete-item-at-point)))
 #+end_src

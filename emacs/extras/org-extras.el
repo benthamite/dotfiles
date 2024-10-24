@@ -665,6 +665,17 @@ files, recursively all files in `org-directory', and all files in
 	       (org-find-exact-headline-in-buffer heading))))
     (org-refile nil nil (list heading file nil pos))))
 
+;;;###autoload
+(defun org-extras-refile-regenerate-cache ()
+  "Regenerate the `org-refile' cache."
+  (interactive)
+  (org-refile-cache-clear)
+  (with-temp-buffer
+    (org-mode)
+    (message "Regenerating cache...")
+    (org-refile-get-targets)
+    (message "Cache regenerated.")))
+
 ;;;;; ol
 
 (declare-function s-replace "s")

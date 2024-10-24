@@ -193,6 +193,7 @@ number."
     ("n" "Notes" (lambda () (interactive) (dired paths-dir-notes)))
     ("o" "Google Drive" (lambda () (interactive) (dired paths-dir-google-drive)))
     ("p" "People" (lambda () (interactive) (dired paths-dir-people)))
+    ("r" "Repos" (lambda () (interactive) (dired paths-dir-personal-repos)))
     ("U" "Audiobooks" (lambda () (interactive) (dired paths-dir-audiobooks)))
     ("v" "movies" (lambda () (interactive) (dired paths-dir-movies)))
     ("w" "downloads" (lambda () (interactive) (dired paths-dir-downloads)))

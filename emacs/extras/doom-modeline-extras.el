@@ -60,6 +60,8 @@
 
 ;;;;; Modeline segments
 
+;;;;;; gptel
+
 (defvar gptel-mode)
 (defvar gptel-model)
 (doom-modeline-def-segment gptel ()
@@ -83,12 +85,16 @@
 		(format " (%d)" filenum)))
 	    (doom-modeline-spc))))
 
+;;;;;; tlon
+
 (defvar tlon-split-mode)
 (doom-modeline-def-segment tlon-split ()
   "Display \"split\" in the modeline when `tlon-split-mode' is enabled."
   (when (and doom-modeline-extras-tlon-split
 	     (bound-and-true-p tlon-split-mode))
     (concat "split" (doom-modeline-spc))))
+
+;;;;;; org-roam
 
 (defvar org-roam-extras-current-backlink-count)
 (doom-modeline-def-segment org-roam-backlinks

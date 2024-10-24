@@ -121,13 +121,22 @@ This function is meant to be an `:after' advice to `gptel'."
     (write-file filename 'confirm)
     (add-hook 'before-save-hook #'gptel--save-state nil t)))
 
-;;;;; Generate LaTeX previews
+;;;;; post-response
 
 (declare-function org-latex-preview "org")
 (defun gptel-extras-generate-latex-previews (_ _)
   "Generate LaTeX previews in the current `gptel' buffer."
   (when (string= default-directory gptel-extras-dir)
     (org-latex-preview)))
+
+;; hack
+(declare-function files-extras-kill-this-buffer "files-extras")
+(defun gptel-extras-kill-buffer-then-reopen-file (_ _)
+  "Kill the current buffer then reopen the file it was visiting."
+  (when-let ((file (buffer-file-name)))
+    (save-buffer)
+    (files-extras-kill-this-buffer)
+    (find-file file)))
 
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

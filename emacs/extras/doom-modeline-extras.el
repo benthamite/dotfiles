@@ -62,24 +62,21 @@
 
 ;;;;;; gptel
 
-(defvar gptel-mode)
 (defvar gptel-model)
+(defvar gptel-context--alist)
+(declare-function gptel-extras-get-cost "gptel-extras")
 (doom-modeline-def-segment gptel ()
   "Display the `gptel' model active in the current buffer."
   (when (doom-modeline-extras-display-gptel-segment-t)
-    (concat (symbol-name gptel-model) (doom-modeline-spc))))
-
-(defvar gptel-context--alist)
-(declare-function gptel-extras-get-cost "gptel-extras")
-(doom-modeline-def-segment gptel-cost ()
-  "Display the cost of prompting the current model."
-  (when (doom-modeline-extras-display-gptel-segment-t)
-    (concat (format "$%.2f" (gptel-extras-get-cost))
+    (concat (symbol-name gptel-model)
+	    (doom-modeline-spc)
+	    (format "$%.2f" (gptel-extras-get-cost))
 	    (let ((filenum (length gptel-context--alist)))
 	      (unless (zerop filenum)
 		(format " (%d)" filenum)))
 	    (doom-modeline-spc))))
 
+(defvar gptel-mode)
 (defun doom-modeline-extras-display-gptel-segment-t ()
   "Whether to display the `gptel' segment in the modeline."
   (and doom-modeline-extras-gptel

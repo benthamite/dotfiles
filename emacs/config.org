@@ -1341,7 +1341,9 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package vc-extras
-  :after vc)
+  :after vc
+  :custom
+  (vc-extras-split-repo t))
 #+end_src
 
 ** log-edit
@@ -6659,9 +6661,6 @@ https://gitlab.com/chrisberkhout/pricehist
                ("s-u" . tlon-md-insert-entity)
                ("A-C-s-SPC" . tlon-md-beginning-of-buffer-dwim)
                ("A-C-s-<tab>" . tlon-md-end-of-buffer-dwim)))
-
-  :custom
-  (vc-extras-split-repo t)
 
   :config
   (run-with-idle-timer (* 30 60) t #'tlon-pull-issues-in-all-repos)

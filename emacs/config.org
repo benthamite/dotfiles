@@ -7637,37 +7637,37 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
               (llama-3.1-sonar-huge-128k-online
                :context-window 127.072
                :input-cost 5
-               :last-update ""
-               :description "[recommended]")
+               :cutoff-date ""
+               :description "[recommended]" )
               (llama-3.1-sonar-large-128k-online
                :context-window 127.072
                :input-cost 1
-               :last-update ""
+               :cutoff-date ""
                :description "")
               (llama-3.1-sonar-small-128k-online
                :context-window 127.072
                :input-cost 0.2
-               :last-update ""
+               :cutoff-date ""
                :description "")
               (llama-3.1-sonar-small-128k-chat
                :context-window 131.072
                :input-cost 0.2
-               :last-update ""
+               :cutoff-date ""
                :description "")
               (llama-3.1-sonar-large-128k-chat
                :context-window 131.072
                :input-cost 1
-               :last-update ""
+               :cutoff-date ""
                :description "")
               (llama-3.1-8b-instruct
                :context-window 131.072
                :input-cost 0.2
-               :last-update ""
+               :cutoff-date ""
                :description "")
               (llama-3.1-70b-instruct
                :context-window 131.072
                :input-cost 1
-               :last-update ""
+               :cutoff-date ""
                :description "")))
 
   :bind

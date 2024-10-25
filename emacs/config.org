@@ -2294,7 +2294,7 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
   :config
   (doom-modeline-def-modeline 'main
     '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info org-roam-backlinks)
-    '(tlon-split gptel gptel-cost compilation objed-state misc-info persp-name grip irc mu4e gnus lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
+    '(tlon-split gptel compilation objed-state misc-info persp-name grip irc mu4e gnus lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
 
   (doom-modeline-def-modeline 'vcs
     '(bar window-number modals matches buffer-info remote-host buffer-position parrot selection-info)

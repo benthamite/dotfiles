@@ -1556,6 +1556,7 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package magit-extra
+  :after magit
   :demand t
   :hook
   (git-commit-setup-hook . magit-extras-move-point-to-start)

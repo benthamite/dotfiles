@@ -78,6 +78,112 @@ the actual cost may deviate from this estimate."
 	     gptel-context--alist
 	     :initial-value 0))
 
+(define-minor-mode gptel-mode
+  "Minor mode for interacting with LLMs.
+This is just the original `gptel-mode' definition with a modification
+to add an additional cost field in the header line."
+  :lighter " GPT"
+  :keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c RET") #'gptel-send)
+    map)
+  (if gptel-mode
+      (progn
+        (unless (or (derived-mode-p 'org-mode 'markdown-mode)
+                    (eq major-mode 'text-mode))
+          (gptel-mode -1)
+          (user-error (format "`gptel-mode' is not supported in `%s'." major-mode)))
+        (add-hook 'before-save-hook #'gptel--save-state nil t)
+        (gptel--restore-state)
+        (if gptel-use-header-line
+            (setq gptel--old-header-line header-line-format
+		  header-line-format
+		  (list '(:eval (concat (propertize " " 'display '(space :align-to 0))
+					(format "%s" (gptel-backend-name gptel-backend))))
+			(propertize " Ready" 'face 'success)
+			'(:eval
+			  (let* ((model (gptel--model-name gptel-model))
+				 (system
+				  (propertize
+				   (buttonize
+				    (format "[Prompt: %s]"
+					    (or (car-safe (rassoc gptel--system-message gptel-directives))
+						(truncate-string-to-width gptel--system-message 15 nil nil t)))
+				    (lambda (&rest _) (gptel-system-prompt)))
+				   'mouse-face 'highlight
+				   'help-echo "System message for session"))
+				 (cost
+				  (propertize
+				   (buttonize (format "[Cost: $%.2f]" (gptel-extras-get-cost))
+					      (lambda (&rest _) (gptel-menu)))
+				   'mouse-face 'highlight
+				   'help-echo "Cost of the current prompt"))
+				 (context
+				  (and gptel-context--alist
+				       (cl-loop for entry in gptel-context--alist
+						if (bufferp (car entry)) count it into bufs
+						else count (stringp (car entry)) into files
+						finally return
+						(propertize
+						 (buttonize
+						  (concat "[Context: "
+							  (and (> bufs 0) (format "%d buf" bufs))
+							  (and (> bufs 1) "s")
+							  (and (> bufs 0) (> files 0) ", ")
+							  (and (> files 0) (format "%d file" files))
+							  (and (> files 1) "s")
+							  "]")
+						  (lambda (&rest _)
+						    (require 'gptel-context)
+						    (gptel-context--buffer-setup)))
+						 'mouse-face 'highlight
+						 'help-echo "Active gptel context"))))
+				 (toggle-track-media
+				  (lambda (&rest _)
+				    (setq-local gptel-track-media
+						(not gptel-track-media))
+				    (if gptel-track-media
+					(message
+					 (concat
+					  "Sending media from included links.  To include media, create "
+					  "a \"standalone\" link in a paragraph by itself, separated from surrounding text."))
+				      (message "Ignoring image links.  Only link text will be sent."))
+				    (run-at-time 0 nil #'force-mode-line-update)))
+				 (track-media
+				  (and (gptel--model-capable-p 'media)
+				       (if gptel-track-media
+					   (propertize
+					    (buttonize "[Sending media]" toggle-track-media)
+					    'mouse-face 'highlight
+					    'help-echo
+					    "Sending media from standalone links/urls when supported.\nClick to toggle")
+					 (propertize
+					  (buttonize "[Ignoring media]" toggle-track-media)
+					  'mouse-face 'highlight
+					  'help-echo
+					  "Ignoring images from standalone links/urls.\nClick to toggle")))))
+			    (concat
+			     (propertize
+			      " " 'display
+			      `(space :align-to (- right ,(+ 5 (length model) (length system)
+							     (length track-media) (length context) (length cost)))))
+			     track-media (and context " ") context " " cost
+			     " " system " "
+			     (propertize
+			      (buttonize (concat "[" model "]")
+					 (lambda (&rest _) (gptel-menu)))
+			      'mouse-face 'highlight
+			      'help-echo "GPT model in use"))))))
+          (setq mode-line-process
+                '(:eval (concat " "
+				(buttonize (gptel--model-name gptel-model)
+					   (lambda (&rest _) (gptel-menu))))))))
+    (remove-hook 'before-save-hook #'gptel--save-state t)
+    (if gptel-use-header-line
+        (setq header-line-format gptel--old-header-line
+              gptel--old-header-line nil)
+      (setq mode-line-process nil))))
+
 ;;;;; Activate Mullvad
 
 (declare-function mullvad-connect-to-website "mullvad")

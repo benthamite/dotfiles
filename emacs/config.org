@@ -2412,10 +2412,6 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature battery
-  ;; :custom
-  ;; (battery-mode-line-format )
-  ;; (battery-status-function )
-
   :config
   (display-battery-mode))
 #+end_src

@@ -137,6 +137,28 @@ This function is meant to be an `:after' advice to `gptel'."
     (save-buffer)
     (files-extras-kill-this-buffer)
     (find-file file)))
+;;;;; Misc
+
+(declare-function breadcrumb-mode "breadcrumb")
+(declare-function org-entry-get "org")
+(defun gptel-extras-enable-gptel ()
+  "Enable `gptel-mode' in `org-mode' files with `gptel' data."
+  (when (and (derived-mode-p 'org-mode)
+	     (cl-some (lambda (prop)
+			(org-entry-get (point-min) prop))
+		      ;; taken from `gptel-org--entry-properties'
+                      '("GPTEL_SYSTEM" "GPTEL_BACKEND" "GPTEL_MODEL"
+			"GPTEL_TEMPERATURE" "GPTEL_MAX_TOKENS"
+			"GPTEL_NUM_MESSAGES_TO_SEND")))
+    (let ((buffer-modified-p (buffer-modified-p)))
+      (gptel-mode)
+      ;; `breadcrumb-mode' interferes with the `gptel' header line
+      (when (bound-and-true-p breadcrumb-mode)
+	(breadcrumb-mode -1))
+      ;; we don’t want the buffer to become modified merely because `gptel-mode'
+      ;; is enabled, which it would otherwise
+      (unless buffer-modified-p
+	(save-buffer)))))
 
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

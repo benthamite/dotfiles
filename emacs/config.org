@@ -7694,7 +7694,10 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-post-response-functions #'gptel-extras-generate-latex-previews)
 
   :config
-  (advice-add 'gptel :after #'gptel-extras-save-buffer))
+  (advice-add 'gptel :after #'gptel-extras-save-buffer)
+
+  :hook
+  (org-mode-hook . gptel-extras-enable-gptel))
 #+end_src
 
 ** gptel-quick

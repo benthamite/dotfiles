@@ -129,14 +129,23 @@ This function is meant to be an `:after' advice to `gptel'."
   (when (string= default-directory gptel-extras-dir)
     (org-latex-preview)))
 
-;; hack
 (declare-function files-extras-kill-this-buffer "files-extras")
-(defun gptel-extras-kill-buffer-then-reopen-file (_ _)
-  "Kill the current buffer then reopen the file it was visiting."
+(declare-function org-fold-show-all "org-fold")
+;;;###autoload
+(defun gptel-extras-kill-buffer-then-reopen-file (&optional _ _)
+  "Kill the current buffer then reopen the file it was visiting.
+This hack command is meant to be added to `gptel-post-response-functions', if
+necessary, or called manually, whenever `gptel' starts refusing to process the
+request (mysteriously, just killing the buffer and reopening the visited file is
+often enough to fix this)."
+  (interactive)
   (when-let ((file (buffer-file-name)))
     (save-buffer)
+    (save-buffer)
     (files-extras-kill-this-buffer)
-    (find-file file)))
+    (find-file file)
+    (org-fold-show-all)))
+
 ;;;;; Misc
 
 (declare-function breadcrumb-mode "breadcrumb")

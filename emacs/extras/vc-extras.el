@@ -132,7 +132,9 @@ Forge database."
   (let* ((repos nil)
 	 (name (or name
 		   (completing-read "Repo: " (setq repos (vc-extras-gh-list-repos account)))))
-	 (account (or account (alist-get name repos nil nil #'string=)))
+	 (account (or account (if repos
+				  (alist-get name repos nil nil #'string=)
+				(user-error "If you provide a repo name, you must also provide its account"))))
 	 (remote (vc-extras-get-github-remote name account))
 	 (dir (file-name-concat (vc-extras-get-account-prop account :dir) name)))
     (when (file-exists-p dir)

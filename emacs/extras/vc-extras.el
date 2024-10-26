@@ -141,9 +141,9 @@ Forge database."
     (pcase vc-extras-split-repo
       ('nil)
       ('prompt (if (y-or-n-p "Move `.git' directory to separate directory?")
-		   (vc-extras-split-repo dir)
+		   (vc-extras-split-local-repo dir)
 		 (message "You can customize the `vc-extras-split-repo' user option to avoid this prompt.")))
-      (_ (vc-extras-split-repo dir)))
+      (_ (vc-extras-split-local-repo dir)))
     (let ((default-directory dir))
       (require 'forge-core)
       (require 'forge-extras)
@@ -182,7 +182,7 @@ the repo’s `.git' directory. If GIT is `split-git', return the repo’s split
 
 ;;;;; Split
 
-(defun vc-extras-split-repo (dir)
+(defun vc-extras-split-local-repo (dir)
   "Move the `.git' dir in DIR to a split dir and set the `.git' file accordingly.
 Normally, this command is run for repos managed by Dropbox, to protect the Git
 files from possible corruption."
@@ -201,19 +201,29 @@ files from possible corruption."
 ;;;;; Delete
 
 ;;;###autoload
-(defun vc-extras-delete-repo (&optional name account)
+(defun vc-extras-delete-local-repo (&optional name account)
   "Delete the repo named NAME in ACCOUNT.
 If NAME is nil, prompt the user for a repo name. If ACCOUNT is nil, infer it
 from NAME."
   (interactive)
-  (let* ((repos nil)
+  (let* ((names-and-dirs)
 	 (name (or name
-		   (completing-read "Repo: " (setq repos (vc-extras-gh-list-repos account)))))
-	 (account (or account (if repos
-				  (alist-get name repos nil nil #'string=)
-				(user-error "If you provide a repo name, you must also provide its account"))))
-	 (dir (vc-extras-get-repo-dir name account))
-	 (split-git (vc-extras-get-repo-dir name account 'split-git))
+		   (let* ((repo-dirs (if account
+					 (list (vc-extras-get-account-prop account :dir))
+				       (delete-dups
+					(mapcar (lambda (profile)
+						  (vc-extras-get-account-prop (plist-get profile :account) :dir))
+						vc-extras-profiles))))
+			  (dirs (mapcan (lambda (dir)
+					  (directory-files dir t "^[^.][^/]*$"))
+					repo-dirs)))
+		     (setq names-and-dirs (mapcar (lambda (dir)
+						    (let ((name (file-name-nondirectory dir)))
+						      (cons name dir)))
+						  dirs))
+		     (completing-read "Dir: " names-and-dirs))))
+	 (dir (alist-get name names-and-dirs nil nil #'string=))
+	 (split-git (file-name-concat paths-dir-split-git name))
 	 deleted)
     (when (file-exists-p dir)
       (delete-directory dir t)

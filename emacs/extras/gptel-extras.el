@@ -187,6 +187,59 @@ to add an additional cost field in the header line."
 	      gptel--old-header-line nil)
       (setq mode-line-process nil))))
 
+;;;;; Summarize commit diffs
+
+(declare-function magit-commit-at-point "magit-git")
+(declare-function magit-git-insert "magit-git")
+(defun gptel-extras-summarize-commit-diffs (beg end &optional include-stats)
+  "Summarize the diffs of commits in the selected region using an LLM.
+BEG and END mark the region of commits to summarize. When INCLUDE-STATS is
+non-nil (with prefix arg), include diffstats in the prompt."
+  (interactive "r\nP")
+  (unless (derived-mode-p 'magit-log-mode)
+    (user-error "This function is meant to be called from the Magit log (`M-x magit RET ll')"))
+  (save-excursion
+    (let* ((commits (save-restriction
+                      (narrow-to-region beg end)
+                      (goto-char (point-min))
+                      ;; Get list of selected commit hashes
+                      (cl-loop while (not (eobp))
+                               collect (magit-commit-at-point)
+                               do (forward-line))))
+           ;; Get diffs of all commits
+           (commit-diffs
+            (with-temp-buffer
+              (magit-git-insert "show" "--patch"
+				(and (not include-stats) "--unified=3")
+				commits)
+              (buffer-string)))
+           ;; Create appropriate prompt
+           (prompt (format
+                    "Here are several git commit diffs:\n\n%s\n\nPlease analyze these commits and provide a concise summary of the main changes. Include any significant patterns you notice. When writing the summary, focus on making it useful for someone who is already familiar with the code and wants to learn about the changes made in these commits, so that they can quickly determine if they need to handle any breaking changes or if they want to start using any of the new functionality. As a model, consider the following example:\n\n%s"
+		    commit-diffs
+                    (let ((file (file-name-concat paths-dir-dotemacs "extras/gptel-extras-changelog.org")))
+		      (with-temp-buffer (insert-file-contents file) (buffer-string)))))
+           (gptel-stream t))
+      ;; Display summary in new buffer
+      (with-current-buffer (get-buffer-create "*Commit Summary*")
+        (let ((inhibit-read-only t))
+          (erase-buffer)
+          (insert "Commit Summary:\n"
+                  "==============\n\n"
+                  (format "Selected commits: %s\n\n"
+                          (mapconcat #'identity commits ", ")))
+          (gptel-request
+              prompt
+            :buffer (current-buffer)
+            :position (point)
+            :in-place t
+            :system
+            "You are a software developer's assistant focused on git commit analysis. \
+Be concise but thorough when analyzing changes. Group related changes together if \
+you notice patterns. If commit messages are included, use them to inform your analysis.")
+          (pop-to-buffer (current-buffer))
+          (view-mode 1))))))
+
 ;;;;; Activate Mullvad
 
 (declare-function mullvad-connect-to-website "mullvad")

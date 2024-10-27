@@ -275,5 +275,11 @@ often enough to fix this)."
       (unless buffer-modified-p
 	(save-buffer)))))
 
+(defun gptel-extras-goto-end-and-send ()
+  "Go to the end of the buffer and send the prompt."
+  (interactive)
+  (goto-char (point-max))
+  (gptel-send))
+
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

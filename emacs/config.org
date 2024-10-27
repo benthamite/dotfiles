@@ -7697,7 +7697,10 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (advice-add 'gptel :after #'gptel-extras-save-buffer)
 
   :hook
-  (org-mode-hook . gptel-extras-enable-gptel))
+  (org-mode-hook . gptel-extras-enable-gptel)
+
+  :bind
+  ("H-s-c" . gptel-extras-goto-end-and-send))
 #+end_src
 
 ** gptel-quick

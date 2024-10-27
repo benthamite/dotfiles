@@ -43,7 +43,10 @@
   :group 'gptel-extras)
 
 (defcustom gptel-extras-dir (file-name-concat paths-dir-notes "gptel/")
-  "The directory where to save the `gptel' buffers."
+  "The directory where to save the `gptel' buffers.
+In Dired, this directory is sorted chronologically rather than alphabetically,
+since the typical use case is to look for a recently modified `gptel' file. This
+directory-local sorting is set via a the `.dir-locals.el' file in the directory."
   :type 'directory
   :group 'gptel-extras)
 

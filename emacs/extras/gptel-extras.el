@@ -89,14 +89,14 @@ to add an additional cost field in the header line."
     map)
   (if gptel-mode
       (progn
-        (unless (or (derived-mode-p 'org-mode 'markdown-mode)
-                    (eq major-mode 'text-mode))
-          (gptel-mode -1)
-          (user-error (format "`gptel-mode' is not supported in `%s'." major-mode)))
-        (add-hook 'before-save-hook #'gptel--save-state nil t)
-        (gptel--restore-state)
-        (if gptel-use-header-line
-            (setq gptel--old-header-line header-line-format
+	(unless (or (derived-mode-p 'org-mode 'markdown-mode)
+		    (eq major-mode 'text-mode))
+	  (gptel-mode -1)
+	  (user-error (format "`gptel-mode' is not supported in `%s'." major-mode)))
+	(add-hook 'before-save-hook #'gptel--save-state nil t)
+	(gptel--restore-state)
+	(if gptel-use-header-line
+	    (setq gptel--old-header-line header-line-format
 		  header-line-format
 		  (list '(:eval (concat (propertize " " 'display '(space :align-to 0))
 					(format "%s" (gptel-backend-name gptel-backend))))
@@ -174,14 +174,14 @@ to add an additional cost field in the header line."
 					 (lambda (&rest _) (gptel-menu)))
 			      'mouse-face 'highlight
 			      'help-echo "GPT model in use"))))))
-          (setq mode-line-process
-                '(:eval (concat " "
+	  (setq mode-line-process
+		'(:eval (concat " "
 				(buttonize (gptel--model-name gptel-model)
 					   (lambda (&rest _) (gptel-menu))))))))
     (remove-hook 'before-save-hook #'gptel--save-state t)
     (if gptel-use-header-line
-        (setq header-line-format gptel--old-header-line
-              gptel--old-header-line nil)
+	(setq header-line-format gptel--old-header-line
+	      gptel--old-header-line nil)
       (setq mode-line-process nil))))
 
 ;;;;; Activate Mullvad
@@ -262,7 +262,7 @@ often enough to fix this)."
 	     (cl-some (lambda (prop)
 			(org-entry-get (point-min) prop))
 		      ;; taken from `gptel-org--entry-properties'
-                      '("GPTEL_SYSTEM" "GPTEL_BACKEND" "GPTEL_MODEL"
+		      '("GPTEL_SYSTEM" "GPTEL_BACKEND" "GPTEL_MODEL"
 			"GPTEL_TEMPERATURE" "GPTEL_MAX_TOKENS"
 			"GPTEL_NUM_MESSAGES_TO_SEND")))
     (let ((buffer-modified-p (buffer-modified-p)))

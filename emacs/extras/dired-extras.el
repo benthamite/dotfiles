@@ -182,6 +182,7 @@ number."
 
 ;;;;; Dispatcher
 
+(defvar gptel-extras-dir)
 ;;;###autoload (autoload 'dired-extras-dispatch "dired-extras" nil t)
 (transient-define-prefix dired-extras-dispatch ()
   "Dispatcher for Dired."
@@ -189,6 +190,7 @@ number."
    [("b" "bibliography" (lambda () (interactive) (dired paths-dir-personal-bibliography)))
     ("d" "dotfiles" (lambda () (interactive) (dired paths-dir-dotfiles)))
     ("e" "Emacs" (lambda () (interactive) (dired paths-dir-emacs)))
+    ("g" "Gptel" (lambda () (interactive) (progn (require 'gptel-extras) (dired gptel-extras-dir))))
     ("i" "Anki" (lambda () (interactive) (dired paths-dir-anki)))
     ("n" "Notes" (lambda () (interactive) (dired paths-dir-notes)))
     ("o" "Google Drive" (lambda () (interactive) (dired paths-dir-google-drive)))

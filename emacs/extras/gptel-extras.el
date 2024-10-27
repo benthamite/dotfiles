@@ -211,24 +211,26 @@ Use to circumvent Gemini’s location restrictions."
 The buffer is saved to a file in `gptel-extras-dir'.
 
 This function is meant to be an `:after' advice to `gptel'."
-  (switch-to-buffer name)
-  (let* ((extension (pcase major-mode
-		      ('org-mode "org")
-		      ('markdown-mode "md")
-		      (_ (user-error "Unsupported major mode"))))
-	 (filename (file-name-concat gptel-extras-dir
-				     (file-name-with-extension (simple-extras-slugify name) extension))))
-    (when (derived-mode-p 'org-mode)
-      (goto-char (point-min))
-      (org-insert-heading nil nil 1)
-      (insert name)
-      (org-next-visible-heading 1)
-      (end-of-line))
-    ;; we temporarily remove the hook because `gptel--save-state' throws an
-    ;; error if called at this early stage
-    (remove-hook 'before-save-hook #'gptel--save-state t)
-    (write-file filename 'confirm)
-    (add-hook 'before-save-hook #'gptel--save-state nil t)))
+  (when (and (get-buffer name)
+	     (not (file-exists-p (buffer-file-name (get-buffer name)))))
+    (switch-to-buffer name)
+    (let* ((extension (pcase major-mode
+			('org-mode "org")
+			('markdown-mode "md")
+			(_ (user-error "Unsupported major mode"))))
+	   (filename (file-name-concat gptel-extras-dir
+				       (file-name-with-extension (simple-extras-slugify name) extension))))
+      (when (derived-mode-p 'org-mode)
+	(goto-char (point-min))
+	(org-insert-heading nil nil 1)
+	(insert name)
+	(org-next-visible-heading 1)
+	(end-of-line))
+      ;; we temporarily remove the hook because `gptel--save-state' throws an
+      ;; error if called at this early stage
+      (remove-hook 'before-save-hook #'gptel--save-state t)
+      (write-file filename 'confirm)
+      (add-hook 'before-save-hook #'gptel--save-state nil t))))
 
 ;;;;; post-response
 

@@ -270,8 +270,8 @@ often enough to fix this)."
       ;; `breadcrumb-mode' interferes with the `gptel' header line
       (when (bound-and-true-p breadcrumb-mode)
 	(breadcrumb-mode -1))
-      ;; we don’t want the buffer to become modified merely because `gptel-mode'
-      ;; is enabled, which it would otherwise
+      ;; prevent the buffer from becoming modified merely because `gptel-mode'
+      ;; is enabled
       (unless buffer-modified-p
 	(save-buffer)))))
 

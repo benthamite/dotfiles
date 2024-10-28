@@ -558,7 +558,7 @@
 (with-eval-after-load 'tlon
   (setq tlon-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
   (setq tlon-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
-  (setq tlon-split-repo nil)
+  (setq vc-extras-split-repo nil)
   (tlon-initialize))
 #+end_src
 

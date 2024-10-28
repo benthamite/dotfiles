@@ -60,21 +60,7 @@
 
 ;;;;; Modeline segments
 
-(defvar gptel-model)
-(doom-modeline-def-segment gptel ()
-  "Display the `gptel' model active in the current buffer."
-  (when (and doom-modeline-extras-gptel
-	     (bound-and-true-p gptel-model))
-    (concat (symbol-name gptel-model) (doom-modeline-spc))))
-
-(defvar gptel-mode)
-(declare-function gptel-extras-get-cost "gptel-extras")
-(doom-modeline-def-segment gptel-cost ()
-  "Display the cost of prompting the current model."
-  (when (and doom-modeline-extras-gptel-cost
-	     (bound-and-true-p gptel-model)
-	     gptel-mode)
-    (concat (format "$%.2f" (gptel-extras-get-cost)) (doom-modeline-spc))))
+;;;;;; tlon
 
 (defvar tlon-split-mode)
 (doom-modeline-def-segment tlon-split ()
@@ -82,6 +68,8 @@
   (when (and doom-modeline-extras-tlon-split
 	     (bound-and-true-p tlon-split-mode))
     (concat "split" (doom-modeline-spc))))
+
+;;;;;; org-roam
 
 (defvar org-roam-extras-current-backlink-count)
 (doom-modeline-def-segment org-roam-backlinks

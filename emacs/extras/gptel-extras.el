@@ -215,7 +215,7 @@ non-nil (with prefix arg), include diffstats in the prompt."
               (buffer-string)))
            ;; Create appropriate prompt
            (prompt (format
-                    "Here are several git commit diffs:\n\n%s\n\nPlease analyze these commits and provide a concise summary of the main changes. Include any significant patterns you notice. When writing the summary, focus on making it useful for someone who is already familiar with the code and wants to learn about the changes made in these commits, so that they can quickly determine if they need to handle any breaking changes or if they want to start using any of the new functionality. As a model, consider the following example:\n\n%s"
+                    "Here are several git commit diffs:\n\n%s\n\nPlease analyze these commits and provide a concise summary of the main changes. Include any significant patterns you notice. Write the summary using org-mode syntax. When writing the summary, focus on making it useful for someone who is already familiar with the code and wants to learn about the changes made in these commits, so that they can quickly determine if they need to handle any breaking changes or if they want to start using any of the new functionality. Organize the summary into sections, one for each package or feature, following this model:\n\n%s"
 		    commit-diffs
                     (let ((file (file-name-concat paths-dir-dotemacs "extras/gptel-extras-changelog.org")))
 		      (with-temp-buffer (insert-file-contents file) (buffer-string)))))

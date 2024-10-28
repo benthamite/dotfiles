@@ -61,6 +61,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
   - [[#transient][transient]]
+  - [[#casual][casual]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
   - [[#bytecomp][bytecomp]]
@@ -504,7 +505,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#misc][misc]]
   - [[#calc][calc]]
   - [[#calc-ext][calc-ext]]
-  - [[#casual-calc][casual-calc]]
   - [[#alert][alert]]
   - [[#unpackaged][unpackaged]]
   - [[#midnight][midnight]]
@@ -869,6 +869,23 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :bind
   (:map transient-base-map
         ("M-q" . transient-quit-one)))
+#+end_src
+
+** casual
+:PROPERTIES:
+:ID:       53C5FB12-8D49-44D6-84B2-9D43F9201761
+:END:
+
+/[[https://github.com/kickingvegas/casual][casual]] is a collection of Transient menus for various Emacs modes./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package casual
+  :init
+  (with-eval-after-load 'calc-mode
+    (bind-keys :map calc-mode-map
+               ("C-o" . casual-calc-tmenu)
+               :map calc-alg-map
+               ("C-o" . casual-calc-tmenu))))
 #+end_src
 
 ** warnings
@@ -12695,22 +12712,6 @@ Requires configuration. Disabled for the time being.
   :after cal
   :bind (:map calc-alg-map
               ("C-k" . nil)))
-#+end_src
-
-** casual-calc
-:PROPERTIES:
-:ID:       53C5FB12-8D49-44D6-84B2-9D43F9201761
-:END:
-
-/[[https://github.com/kickingvegas/casual-calc][casual-calc]] adds transient menus to calc./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package casual-calc
-  :after calc
-  :bind (:map calc-mode-map
-              ("C-o" . casual-calc-tmenu)
-              :map calc-alg-map
-              ("C-o" . casual-calc-tmenu)))
 #+end_src
 
 ** alert

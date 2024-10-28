@@ -264,8 +264,9 @@ Use to circumvent Gemini’s location restrictions."
 The buffer is saved to a file in `gptel-extras-dir'.
 
 This function is meant to be an `:after' advice to `gptel'."
-  (when (and (get-buffer name)
-	     (not (file-exists-p (buffer-file-name (get-buffer name)))))
+  ;; do not run if the buffer is visiting a file, because that means the user
+  ;; selected an existing buffer
+  (unless (buffer-file-name (get-buffer name))
     (switch-to-buffer name)
     (let* ((extension (pcase major-mode
 			('org-mode "org")

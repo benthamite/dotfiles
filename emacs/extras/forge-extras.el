@@ -86,5 +86,44 @@ problems."
     (shut-up
       (forge-pull-notifications))))
 
+;;;;; Track repos
+
+(declare-function magit-status "magit-status")
+(declare-function vc-extras-is-git-dir-p "vc-extras")
+;;;###autoload
+(defun forge-extras-track-repository (&optional dir)
+  "Add DIR to the Forge database.
+If DIR is nil, use the current directory."
+  (interactive)
+  (let ((default-directory (or dir default-directory)))
+    (require 'vc-extras)
+    (if (vc-extras-is-git-dir-p default-directory)
+	(let ((url (and-let*
+		       ((repo (forge-get-repository :stub))
+			(remote (oref repo remote)))
+		     (magit-git-string "remote" "get-url" remote))))
+	  (forge-extras-track-repo-all-topics url)
+	  (magit-status-setup-buffer dir))
+      (user-error "`%s' is not a Git repository" default-directory))))
+
+(defun forge-extras-track-repo-all-topics (&optional url-or-path)
+  "Add a repository to the forge database, pulling all topics.
+If URL-OR-PATH is provided, add that repository. Otherwise, add the current
+repo."
+  (let* ((default-directory (if (and url-or-path (file-directory-p url-or-path))
+				(expand-file-name url-or-path)
+			      (or (locate-dominating-file default-directory ".git")
+				  default-directory)))
+	 (remote (forge--get-remote))
+	 (repo-url (cond
+		    ((and url-or-path (string-match-p "^\\(https?\\|git@\\)" url-or-path))
+		     url-or-path)
+		    (remote
+		     (magit-git-string "remote" "get-url" remote))
+		    (t
+		     (user-error "No suitable repository found"))))
+	 (repo (forge-get-repository repo-url nil :insert!)))
+    (forge--pull repo nil nil)))
+
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

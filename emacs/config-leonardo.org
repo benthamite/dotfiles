@@ -162,13 +162,25 @@
   (setq org-agenda-files (list paths-dir-dropbox-tlon-leo)))
 #+end_src
 
-** mu4e
+** org-msg
 :PROPERTIES:
-:ID:       5A2F0508-C819-4BF0-B14E-2AED2D397F14
+:ID:       FE94555E-95B3-4E0C-B48C-2F5E9C0C58E9
 :END:
+
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(with-eval-after-load 'mu4e
-  (setq mu4e-update-interval nil))
+(with-eval-after-load 'org-msg
+  (setq org-msg-recipient-names `(("leonardodecartago@gmail.com" . "Leo"))))
+#+end_src
+
+** smtpmail
+:PROPERTIES:
+:ID:       8AA1992C-6477-4BD1-A6AE-44363EA0367F
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'smtpmail
+  (setq user-mail-address "leonardodecartago@gmail.com")
+  (setq smtpmail-smtp-user "leonardodecartago@gmail.com"))
 #+end_src
 
 ** org-extras
@@ -312,7 +324,7 @@
 #+begin_src shell
 (setq copilot-node-executable "/Users/cartago/.nvm/versions/node/v18.16.0/bin/node")
 #+end_src
-** smtpmail 
+** smtpmail
 :PROPERTIES:
 :ID:       2BD81ACC-8BC5-4FB7-91DA-AB8E660C6627
 :END:

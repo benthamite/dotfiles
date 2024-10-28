@@ -394,6 +394,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ox-pandoc][ox-pandoc]]
   - [[#ox-gfm][ox-gfm]]
   - [[#ob][ob]]
+  - [[#ob-typescript][ob-typescript]]
   - [[#org-tempo][org-tempo]]
   - [[#org-src][org-src]]
   - [[#org-table][org-table]]
@@ -9054,6 +9055,19 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
                       (cons "n" 'org-babel-insert-header-arg)
                       (cons "p" 'org-babel-remove-result-one-or-many)))
     (add-to-list 'org-babel-key-bindings cons)))
+#+end_src
+
+** ob-typescript
+:PROPERTIES:
+:ID:       7025014B-468D-4BDA-93B3-65980E6EC324
+:END:
+
+
+/[[https://github.com/lurdan/ob-typescript][ob-typescript]] enables the execution of typescript code blocks./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package ob-typescript
+  :after ob)
 #+end_src
 
 ** org-tempo

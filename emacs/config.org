@@ -330,6 +330,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#djvu][djvu]]
 - [[#programming][programming]]
   - [[#prog-mode][prog-mode]]
+  - [[#treesit][treesit]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
   - [[#curl-to-elisp][curl-to-elisp]]
@@ -7077,6 +7078,27 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
    ("s-q" . prog-fill-reindent-defun)
    :map emacs-lisp-mode-map
    ("s-c" . exit-recursive-edit)))
+#+end_src
+
+** treesit
+:PROPERTIES:
+:ID:       804E391D-E9FC-4135-824B-EA31B3D00705
+:END:
+
+/treesit provides Tree-sitter-based syntax highlighting in Emacs./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature treesit
+  :config
+  (setq treesit-language-source-alist
+        '((typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")))
+
+  (unless (treesit-language-available-p 'typescript)
+    (treesit-install-language-grammar 'typescript))
+
+  (unless (treesit-language-available-p 'tsx)
+    (treesit-install-language-grammar 'tsx)))
 #+end_src
 
 ** elisp-mode

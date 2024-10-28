@@ -9024,6 +9024,8 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 
 /ob provides support for code blocks in org-mode./
 
+Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-special~ triggers an error; see the gptel conversation named ~typescript-syntax-highlighting~.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ob
   :after org
@@ -9043,12 +9045,19 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
           (:hlines . "no")
           (:tangle . "no")))
 
+  (setq org-babel-default-header-args:typescript
+        '((:mode . typescript-ts-mode)))
+
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((emacs-lisp . t)
      (shell . t)
      (python . t)
-     (R . t)))
+     (R . t)
+     (typescript . t)))
+
+  (add-to-list 'major-mode-remap-alist '(typescript-mode . typescript-ts-mode))
+  (defalias 'typescript-mode 'typescript-ts-mode)
 
   (dolist (cons (list (cons "j" 'org-babel-next-src-block)
                       (cons "k" 'org-babel-previous-src-block)

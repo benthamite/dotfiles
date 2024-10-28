@@ -154,12 +154,18 @@
 #+end_src
 
 ** org-agenda
+:PROPERTIES:
+:ID:       0E9714FF-E2BC-4D91-A0DD-2EC4FC3CD1CD
+:END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'org-agenda
   (setq org-agenda-files (list paths-dir-dropbox-tlon-leo)))
 #+end_src
 
 ** mu4e
+:PROPERTIES:
+:ID:       5A2F0508-C819-4BF0-B14E-2AED2D397F14
+:END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'mu4e
   (setq mu4e-update-interval nil))
@@ -283,6 +289,9 @@
 #+end_src
 
 ** GPTEL
+:PROPERTIES:
+:ID:       8CECA615-ADC3-4EF6-B88F-8D4E936106B8
+:END:
 #+begin_src emacs-lisp
 (setq gptel-extras-dir "/Users/cartago/Library/CloudStorage/Dropbox/tlon/leo/GPT")
 #+end_src
@@ -296,14 +305,6 @@
 (setq citar-citeproc-csl-styles-dir paths-dir-tlon-csl-styles)
 #+end_src
 
-** tlon-init
-:PROPERTIES:
-:ID:       A38AB01A-19E7-4F42-BF0C-20207882BB67
-:END:
-
-#+begin_src emacs-lisp  :tangle (print tlon-init-file-late-init)
-(run-hooks 'tlon-init-post-init-hook)
-#+end_src
 ** copilot
 :PROPERTIES:
 :ID:       21BE752D-3D09-48DC-BECA-725933AE717E
@@ -312,12 +313,18 @@
 (setq copilot-node-executable "/Users/cartago/.nvm/versions/node/v18.16.0/bin/node")
 #+end_src
 ** smtpmail 
+:PROPERTIES:
+:ID:       2BD81ACC-8BC5-4FB7-91DA-AB8E660C6627
+:END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'smtpmail
   (setq smtpmail-smtp-user "leonardodecartago@gmail.com"))
 #+end_src
 
 ** mu4e-extras
+:PROPERTIES:
+:ID:       D915C3F8-78F0-44E3-8D76-45A5D0F2FBB1
+:END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'mu4e-extras
   (setq org-msg-extras-personal-plain-text-signature "\n--\nLeo\n")
@@ -349,6 +356,16 @@
             :leave-func #'org-msg-mode
             :vars `((user-mail-address . "leo@tlon.team")
                     (org-msg-signature . ,org-msg-extras-work-plain-text-signature))))))
+#+end_src
+** tlon-init
+:PROPERTIES:
+:ID:       A38AB01A-19E7-4F42-BF0C-20207882BB67
+:END:
+
+*Este bloque de código tiene que estar al final del archivo.*
+
+#+begin_src emacs-lisp  :tangle (print tlon-init-file-late-init)
+(run-hooks 'tlon-init-post-init-hook)
 #+end_src
 
 * excluded packages

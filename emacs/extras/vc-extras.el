@@ -224,10 +224,14 @@ from NAME."
 						      (cons name dir)))
 						  dirs))
 		     (completing-read "Dir: " names-and-dirs))))
-	 (dir (alist-get name names-and-dirs nil nil #'string=))
+	 (dir (if account
+		  (file-name-concat (vc-extras-get-account-prop account :dir) name)
+		(alist-get name names-and-dirs nil nil #'string=)))
 	 (split-git (file-name-concat paths-dir-split-git name))
 	 deleted)
-    (when (file-exists-p dir)
+    (when (and (file-exists-p dir)
+	       ;; check that it is a repo, to prevent accidental deletion
+	       (locate-dominating-file dir ".git"))
       (delete-directory dir t)
       (push dir deleted))
     (when (file-exists-p split-git)

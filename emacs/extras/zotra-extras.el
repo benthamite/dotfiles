@@ -237,6 +237,7 @@ gracefully."
 (declare-function ebib-save-all-databases "ebib")
 (declare-function ebib-extras-sort "ebib-extras")
 (declare-function files-extras-lines-to-list "files-extras")
+;;;###autoload
 (defun zotra-extras-add-multiple-urls (file)
   "Prompt the user to select a FILE with a list of URLs and add them."
   (interactive (list (read-file-name "File with URLs (one URL per line): " paths-dir-downloads

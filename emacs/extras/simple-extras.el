@@ -899,5 +899,15 @@ take a single argument, the name of the function being called."
                       (point))))
       (buffer-substring-no-properties beg end))))
 
+;;;###autoload
+(defun simple-extras-local-set-key (key command)
+  "Set KEY to COMMAND in the current buffer only."
+  (let ((oldmap (current-local-map))
+        (newmap (make-sparse-keymap)))
+    (when oldmap
+      (set-keymap-parent newmap oldmap))
+    (define-key newmap key command)
+    (use-local-map newmap)))
+
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

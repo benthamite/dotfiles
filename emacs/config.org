@@ -663,7 +663,7 @@ NAME and ARGS as in `use-package'."
     `(use-package ,name
        :ensure (:host github
                       :repo "benthamite/dotfiles"
-                      :branch "dev"
+                      ;; :branch "dev"
                       :files ,(list (file-name-concat
                                      "emacs/extras"
                                      (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
@@ -761,7 +761,7 @@ NAME and ARGS as in `use-package'."
 (use-package tlon-init
   :ensure (:host github
                  :repo "tlon-team/tlon-init"
-                 :branch "dev"
+                 ;; :branch "dev"
                  :depth nil ; clone entire repo, not just last commit
                  :wait t)
   :after paths
@@ -6649,7 +6649,7 @@ https://gitlab.com/chrisberkhout/pricehist
 (use-package tlon
   :ensure (:host github
                  :repo "tlon-team/tlon.el"
-                 :branch "dev"
+                 ;; :branch "dev"
                  :depth nil) ; clone entire repo, not just last commit
   :after paths
   :init

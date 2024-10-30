@@ -409,7 +409,7 @@
 #+end_src
 
 ** display-wttr
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'display-wttr
   (display-wttr-mode -1))
 #+end_src

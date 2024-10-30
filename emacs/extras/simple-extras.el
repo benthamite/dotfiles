@@ -481,6 +481,7 @@ number."
   (when (derived-mode-p 'org-mode 'org-agenda-mode 'org-msg-mode)
     (when (member 'org-tidy-mode org-mode-hook)
       (org-tidy-mode arg))
+    (require 'org-extras)
     (org-extras-inline-images arg)
     (when (and (not (derived-mode-p 'org-agenda-mode))
 	       (featurep 'org-modern))
@@ -898,6 +899,16 @@ take a single argument, the name of the function being called."
           (end (progn (skip-syntax-forward "^\"" (line-end-position))
                       (point))))
       (buffer-substring-no-properties beg end))))
+
+;;;###autoload
+(defun simple-extras-local-set-key (key command)
+  "Set KEY to COMMAND in the current buffer only."
+  (let ((oldmap (current-local-map))
+        (newmap (make-sparse-keymap)))
+    (when oldmap
+      (set-keymap-parent newmap oldmap))
+    (define-key newmap key command)
+    (use-local-map newmap)))
 
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

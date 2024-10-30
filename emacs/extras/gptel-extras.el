@@ -56,8 +56,7 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
 
 (defun gptel-extras-get-cost ()
   "Get the rough input cost of prompting the current model.
-This is used to display the relevant information in the modeline (see
-`doom-modeline-extras').
+This is used to display the relevant information in the `gptel' headerline.
 
 Note that the cost is an approximation based on the number of words in the
 buffer or selection. The function uses a 1.4 token/word conversion factor, but

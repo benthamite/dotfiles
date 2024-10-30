@@ -7717,7 +7717,9 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    ("H-s-g" . gptel)
    ("H-s-a" . gptel-abort)
    ("H-s-m" . gptel-menu)
-   ("H-s-t" . gptel-add)))
+   ("H-s-t" . gptel-add)
+   :map gptel-context-buffer-mode-map
+   ("s-c" . gptel-context-confirm)))
 #+end_src
 
 ** gptel-extras

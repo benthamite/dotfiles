@@ -61,6 +61,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
   - [[#transient][transient]]
+  - [[#casual][casual]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
   - [[#bytecomp][bytecomp]]
@@ -330,6 +331,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#djvu][djvu]]
 - [[#programming][programming]]
   - [[#prog-mode][prog-mode]]
+  - [[#treesit][treesit]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
   - [[#curl-to-elisp][curl-to-elisp]]
@@ -393,6 +395,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ox-pandoc][ox-pandoc]]
   - [[#ox-gfm][ox-gfm]]
   - [[#ob][ob]]
+  - [[#ob-typescript][ob-typescript]]
   - [[#org-tempo][org-tempo]]
   - [[#org-src][org-src]]
   - [[#org-table][org-table]]
@@ -502,7 +505,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#misc][misc]]
   - [[#calc][calc]]
   - [[#calc-ext][calc-ext]]
-  - [[#casual-calc][casual-calc]]
   - [[#alert][alert]]
   - [[#unpackaged][unpackaged]]
   - [[#midnight][midnight]]
@@ -867,6 +869,23 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :bind
   (:map transient-base-map
         ("M-q" . transient-quit-one)))
+#+end_src
+
+** casual
+:PROPERTIES:
+:ID:       53C5FB12-8D49-44D6-84B2-9D43F9201761
+:END:
+
+/[[https://github.com/kickingvegas/casual][casual]] is a collection of Transient menus for various Emacs modes./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package casual
+  :init
+  (with-eval-after-load 'calc-mode
+    (bind-keys :map calc-mode-map
+               ("C-o" . casual-calc-tmenu)
+               :map calc-alg-map
+               ("C-o" . casual-calc-tmenu))))
 #+end_src
 
 ** warnings
@@ -1341,7 +1360,9 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package vc-extras
-  :after vc)
+  :after vc
+  :custom
+  (vc-extras-split-repo t))
 #+end_src
 
 ** log-edit
@@ -1554,6 +1575,8 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package magit-extra
+  :after magit
+  :demand t
   :hook
   (git-commit-setup-hook . magit-extras-move-point-to-start)
 
@@ -1778,7 +1801,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (emsg-blame-no-commit-message "")
 
   :config
-  ;; this is now merged upstream: github.com/ISouthRain/emsg-blame/pull/1
+  ;; this is now included in the readme: github.com/ISouthRain/emsg-blame/pull/1
   (defun emsg-blame-display-message ()
     "Display git blame message, right-aligned with Magit-style faces.
 If another message is already being displayed, display both messages unless they
@@ -2291,7 +2314,7 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
   :config
   (doom-modeline-def-modeline 'main
     '(bar workspace-name parrot buffer-info modals matches follow remote-host buffer-position word-count selection-info org-roam-backlinks)
-    '(tlon-split gptel gptel-cost compilation objed-state misc-info persp-name grip irc mu4e gnus lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
+    '(tlon-split compilation objed-state misc-info persp-name grip irc mu4e gnus lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs check time))
 
   (doom-modeline-def-modeline 'vcs
     '(bar window-number modals matches buffer-info remote-host buffer-position parrot selection-info)
@@ -2408,10 +2431,6 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature battery
-  ;; :custom
-  ;; (battery-mode-line-format )
-  ;; (battery-status-function )
-
   :config
   (display-battery-mode))
 #+end_src
@@ -6660,9 +6679,6 @@ https://gitlab.com/chrisberkhout/pricehist
                ("A-C-s-SPC" . tlon-md-beginning-of-buffer-dwim)
                ("A-C-s-<tab>" . tlon-md-end-of-buffer-dwim)))
 
-  :custom
-  (tlon-split-repo t)
-
   :config
   (run-with-idle-timer (* 30 60) t #'tlon-pull-issues-in-all-repos)
 
@@ -7080,6 +7096,27 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
    ("s-q" . prog-fill-reindent-defun)
    :map emacs-lisp-mode-map
    ("s-c" . exit-recursive-edit)))
+#+end_src
+
+** treesit
+:PROPERTIES:
+:ID:       804E391D-E9FC-4135-824B-EA31B3D00705
+:END:
+
+/treesit provides Tree-sitter-based syntax highlighting in Emacs./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature treesit
+  :config
+  (setq treesit-language-source-alist
+        '((typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")))
+
+  (unless (treesit-language-available-p 'typescript)
+    (treesit-install-language-grammar 'typescript))
+
+  (unless (treesit-language-available-p 'tsx)
+    (treesit-install-language-grammar 'tsx)))
 #+end_src
 
 ** elisp-mode
@@ -7615,16 +7652,19 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   :custom
   (gptel-default-mode 'org-mode)
+  (gptel-track-media t)
   (gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   :config
-  (require 'tlon-core)
   (setq gptel-expert-commands t) ; not a user option
+
+  ;; default model
   (setq gptel-model 'claude-3-5-sonnet-20241022
         gptel-backend (gptel-make-anthropic "Claude"
                         :stream t
                         :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
 
+  ;; other models
   (gptel-make-gemini "Gemini"
     :stream t
     :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
@@ -7638,37 +7678,37 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
               (llama-3.1-sonar-huge-128k-online
                :context-window 127.072
                :input-cost 5
-               :last-update ""
-               :description "[recommended]")
+               :cutoff-date ""
+               :description "[recommended]" )
               (llama-3.1-sonar-large-128k-online
                :context-window 127.072
                :input-cost 1
-               :last-update ""
+               :cutoff-date ""
                :description "")
               (llama-3.1-sonar-small-128k-online
                :context-window 127.072
                :input-cost 0.2
-               :last-update ""
+               :cutoff-date ""
                :description "")
               (llama-3.1-sonar-small-128k-chat
                :context-window 131.072
                :input-cost 0.2
-               :last-update ""
+               :cutoff-date ""
                :description "")
               (llama-3.1-sonar-large-128k-chat
                :context-window 131.072
                :input-cost 1
-               :last-update ""
+               :cutoff-date ""
                :description "")
               (llama-3.1-8b-instruct
                :context-window 131.072
                :input-cost 0.2
-               :last-update ""
+               :cutoff-date ""
                :description "")
               (llama-3.1-70b-instruct
                :context-window 131.072
                :input-cost 1
-               :last-update ""
+               :cutoff-date ""
                :description "")))
 
   :bind
@@ -7688,13 +7728,18 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package gptel-extras
-  :demand t
-  :after gptel
   :custom
-  (gptel-post-Revise sponse-functions #'gptel-extras-generate-latex-previewsesponse-functions #'gptel-extras-generate-latex-previews)
+  (gptel-post-response-functions '(gptel-extras-generate-latex-previews
+                                   gptel-extras-kill-buffer-then-reopen-file))
 
-  :config
-  (advice-add 'gptel :after #'gptel-extras-save-buffer))
+  :init
+  (advice-add 'gptel :after #'gptel-extras-save-buffer)
+
+  :hook
+  (org-mode-hook . gptel-extras-enable-gptel)
+
+  :bind
+  ("H-s-c" . gptel-extras-goto-end-and-send))
 #+end_src
 
 ** gptel-quick
@@ -8425,7 +8470,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
       "** TODO %?\n" :empty-lines 1)
      ("c" "Calendar" entry
       (file ,paths-file-calendar)
-      "* TODO %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t)
+      "* TODO %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t :prepend t)
      ;; djcbsoftware.nl/code/mu/mu4e/Org_002dmode-links.html
      ("e" "Email" entry
       (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
@@ -8995,6 +9040,8 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
 
 /ob provides support for code blocks in org-mode./
 
+Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-special~ triggers an error; see the gptel conversation named ~typescript-syntax-highlighting~.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature ob
   :after org
@@ -9014,18 +9061,38 @@ CLOCK: [2021-02-25 Thu 15:00]--[2021-02-25 Thu 15:32] =>  0:32
           (:hlines . "no")
           (:tangle . "no")))
 
+  (setq org-babel-default-header-args:typescript
+        '((:mode . typescript-ts-mode)))
+
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((emacs-lisp . t)
      (shell . t)
      (python . t)
-     (R . t)))
+     (R . t)
+     (typescript . t)))
+
+  (add-to-list 'major-mode-remap-alist '(typescript-mode . typescript-ts-mode))
+  (defalias 'typescript-mode 'typescript-ts-mode)
 
   (dolist (cons (list (cons "j" 'org-babel-next-src-block)
                       (cons "k" 'org-babel-previous-src-block)
                       (cons "n" 'org-babel-insert-header-arg)
                       (cons "p" 'org-babel-remove-result-one-or-many)))
     (add-to-list 'org-babel-key-bindings cons)))
+#+end_src
+
+** ob-typescript
+:PROPERTIES:
+:ID:       7025014B-468D-4BDA-93B3-65980E6EC324
+:END:
+
+
+/[[https://github.com/lurdan/ob-typescript][ob-typescript]] enables the execution of typescript code blocks./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package ob-typescript
+  :after ob)
 #+end_src
 
 ** org-tempo
@@ -12645,22 +12712,6 @@ Requires configuration. Disabled for the time being.
   :after cal
   :bind (:map calc-alg-map
               ("C-k" . nil)))
-#+end_src
-
-** casual-calc
-:PROPERTIES:
-:ID:       53C5FB12-8D49-44D6-84B2-9D43F9201761
-:END:
-
-/[[https://github.com/kickingvegas/casual-calc][casual-calc]] adds transient menus to calc./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package casual-calc
-  :after calc
-  :bind (:map calc-mode-map
-              ("C-o" . casual-calc-tmenu)
-              :map calc-alg-map
-              ("C-o" . casual-calc-tmenu)))
 #+end_src
 
 ** alert

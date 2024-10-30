@@ -1,16 +1,16 @@
 # Number of CPUs to be allocated to the virtual machine.
 # Default: 2
-cpu: 8
+cpu: 2
 
 # Size of the disk in GiB to be allocated to the virtual machine.
 # NOTE: value can only be increased after virtual machine has been created.
 #
 # Default: 60
-disk: 256
+disk: 60
 
 # Size of the memory in GiB to be allocated to the virtual machine.
 # Default: 2
-memory: 16
+memory: 2
 
 # Architecture of the virtual machine (x86_64, aarch64, host).
 #
@@ -33,12 +33,12 @@ hostname: colima
 kubernetes:
   # Enable kubernetes.
   # Default: false
-  enabled: true
+  enabled: false
   
   # Kubernetes version to use.
   # This needs to exactly match a k3s version https://github.com/k3s-io/k3s/releases
   # Default: latest stable release
-  version: v1.31.2+k3s1
+  version: v1.30.0+k3s1
   
   # Additional args to pass to k3s https://docs.k3s.io/cli/server
   # Default: traefik is disabled
@@ -110,9 +110,7 @@ forwardAgent: false
 #
 # Colima default behaviour: buildkit enabled
 # Default: {}
-docker:
-  features:
-    buildkit: true
+docker: {}
 
 # Virtual Machine type (qemu, vz)
 # NOTE: this is macOS 13 only. For Linux and macOS <13.0, qemu is always used.

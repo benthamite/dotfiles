@@ -408,6 +408,12 @@
   (message "`dired' late-init config loaded."))
 #+end_src
 
+** display-wttr
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(with-eval-after-load 'display-wttr
+  (display-wttr-mode -1))
+#+end_src
+
 ** forge
 :PROPERTIES:
 :ID:       4540F42A-BE3F-4D98-A0E7-3E65DA0C2CA2
@@ -621,16 +627,9 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'org-extras
   (setq org-extras-bbdb-anniversaries-heading nil)
-  ;; (simple-extras-init-disable-funs 90 '(org-extras-fold-show-all-headings
-  ;;                                       org-extras-hide-properties
-  ;;                                       org-extras-hide-logbook
-  ;;                                       org-extras-show-properties
-  ;;                                       org-extras-show-logbook
-  ;;                                       org-extras-toggle-properties
-  ;;                                       org-extras-toggle-logbook))
+  ;; (cancel-function-timers 'org-extras-agenda-switch-to-agenda-current-day)
   (cancel-timer org-extras-agenda-switch-to-agenda-current-day-timer)
   (remove-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
-
   (message "`org-extras' late-init config loaded."))
 #+end_src
 
@@ -870,6 +869,13 @@
 This should be at the very end of the ~late-init~ file.
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(defun kill-buffer-then-reopen-file ()
+  "Kill the current buffer then reopen the file it was visiting."
+  (when-let ((file (buffer-file-name)))
+    (save-buffer)
+    (files-extras-kill-this-buffer)
+    (find-file file)))
+    
 (add-hook
  'tlon-init-post-init-hook
  (lambda ()
@@ -884,6 +890,9 @@ This should be at the very end of the ~late-init~ file.
    (global-flycheck-mode -1)
    (setq calendar-extras-use-geolocation nil)
    (recentf-mode)
+   (find-file paths-file-tlon-tareas-fede)
+   (org-tidy-mode -1)
+   (kill-buffer-then-reopen-file)
    (message "Fede's post-init-hook finished.")
    ))
 (run-hooks 'tlon-init-post-init-hook)

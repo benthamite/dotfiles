@@ -79,6 +79,11 @@ The first %s is the scope of the report, and the second %s is the range."
   :type 'string
   :group 'org-extras)
 
+;;;; Variables
+
+(defvar-local org-extras-id-auto-add-exclude-file nil
+  "Do not add IDs to headings in the current buffer.")
+
 ;;;; Functions
 
 ;;;;; org
@@ -590,9 +595,14 @@ Could be slow if it has a lot of overlays."
 ;;;;; org-id
 
 (defun org-extras-id-auto-add-ids-to-headings-in-file ()
-  "Add IDs to all headings in the current file missing them."
+  "Add IDs to all headings in the current file missing them.
+To exclude directories or files, customize
+`org-extras-id-auto-add-excluded-files' or
+`org-extras-id-auto-add-excluded-directories', or set the value of the
+file-local variable `org-extras-id-auto-add-exclude-file' to t."
   (when-let ((file (buffer-file-name)))
-    (when (and (derived-mode-p 'org-mode)
+    (when (and (not org-extras-id-auto-add-exclude-file)
+	       (derived-mode-p 'org-mode)
 	       (string-match paths-dir-org file)
 	       (eq buffer-read-only nil))
       (unless

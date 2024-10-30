@@ -2996,6 +2996,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
   :bind
   (("C-A-e" . eval-expression)
    ("C-e" . eval-last-sexp)
+   ("H-C" . kill-ring-save)
    ("H-m" . set-mark-command)
    ("H-Z" . undo-redo)
    ("M-o" . downcase-dwim)
@@ -7656,6 +7657,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   :config
+  (require 'tlon-core)
   (setq gptel-expert-commands t) ; not a user option
 
   ;; default model

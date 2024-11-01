@@ -216,7 +216,7 @@ non-nil (with prefix arg), include diffstats in the prompt."
 	   (prompt (format
 		    "Here are several git commit diffs:\n\n%s\n\nPlease analyze these commits and
 provide a concise summary of the main changes. Include any significant patterns \
-you notice. Write the summary using org-mode syntax. When writing the summary, \
+you notice. Write the summary using org-mode syntax, NOT Markdown. When writing the summary, \
 focus on making it useful for someone who is already familiar with the code and \
 wants to learn about the changes made in these commits, so that they can quickly \
 determine if they need to handle any breaking changes or if they want to start \

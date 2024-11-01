@@ -10218,10 +10218,12 @@ Having headings tagged with the type of work they are notes of allows me to quer
   :config
   ;; https://github.com/emacs-citar/citar/wiki/Indicators
   (setq citar-indicators
-   (list citar-extras-indicator-links-icons
-         citar-extras-indicator-files-icons
-         citar-extras-indicator-notes-icons
-         citar-extras-indicator-cited-icons))
+        (list citar-extras-indicator-links-icons
+              citar-extras-indicator-files-icons
+              citar-extras-indicator-notes-icons
+              citar-extras-indicator-cited-icons))
+
+  (run-with-idle-timer (* 15 60) nil #'citar-extras-update-old-bibliography)
 
   :bind
   ("A-H-M-s-?" . citar-extras-open-file-at-point)) ; i.e. H-S-/

@@ -50,6 +50,12 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
   :type 'directory
   :group 'gptel-extras)
 
+;;;; Variables
+
+(defconst gptel-extras-local-variables
+  '(gptel-mode gptel-model gptel--backend-name gptel--bounds)
+  "A list of relevant `gptel' file-local variables.")
+
 ;;;; Functions
 
 ;;;;; Estimate cost
@@ -299,7 +305,8 @@ This function is meant to be an `:after' advice to `gptel'."
 (declare-function org-latex-preview "org")
 (defun gptel-extras-generate-latex-previews (_ _)
   "Generate LaTeX previews in the current `gptel' buffer."
-  (when (string= default-directory gptel-extras-dir)
+  (when (and (derived-mode-p 'org-mode)
+	     (string= default-directory gptel-extras-dir))
     (org-latex-preview)))
 
 (declare-function files-extras-kill-this-buffer "files-extras")
@@ -317,30 +324,53 @@ often enough to fix this)."
     (save-buffer)
     (files-extras-kill-this-buffer)
     (find-file file)
-    (org-fold-show-all)))
+    (when (derived-mode-p 'org-mode)
+      (org-fold-show-all))))
+
+;;;;; Enable gptel
+
+(declare-function breadcrumb-mode "breadcrumb")
+(defun gptel-extras-enable-gptel-in-org ()
+  "Enable `gptel-mode' in `org-mode' files with `gptel' data."
+  (when (gptel-extras-file-has-gptel-local-variable-p)
+    (gptel-extras-enable-gptel-common)))
+
+(defun gptel-extras-enable-gptel-in-markdown ()
+  "Enable `gptel-mode' in `markdown-mode' files with `gptel' data."
+  (when (gptel-extras-file-has-gptel-local-variable-p)
+    (gptel-extras-enable-gptel-common)))
+
+(defun gptel-extras-enable-gptel-common ()
+  "Enable `gptel-mode' and in any buffer with `gptel' data."
+  (gptel-mode)
+  ;; `breadcrumb-mode' interferes with the `gptel' header line
+  (when (bound-and-true-p breadcrumb-mode)
+    (breadcrumb-mode -1))
+  (let ((buffer-modified-p (buffer-modified-p)))
+    ;; prevent the buffer from becoming modified merely because `gptel-mode'
+    ;; is enabled
+    (unless buffer-modified-p
+      (save-buffer))))
+
+(defun gptel-extras-file-has-gptel-local-variable-p ()
+  "Return t iff the current buffer has a `gptel' local variable."
+  (cl-some (lambda (var)
+             (local-variable-p var))
+           gptel-extras-local-variables))
 
 ;;;;; Misc
 
-(declare-function breadcrumb-mode "breadcrumb")
-(declare-function org-entry-get "org")
-(defun gptel-extras-enable-gptel ()  "Enable `gptel-mode' in `org-mode' files with `gptel' data."
-       (when (and (derived-mode-p 'org-mode)
-		  (cl-some (lambda (prop)
-			     (org-entry-get (point-min) prop))
-			   ;; taken from `gptel-org--entry-properties'
-			   '("GPTEL_SYSTEM" "GPTEL_BACKEND" "GPTEL_MODEL"
-			     "GPTEL_TEMPERATURE" "GPTEL_MAX_TOKENS"
-			     "GPTEL_NUM_MESSAGES_TO_SEND")))
-	 (let ((buffer-modified-p (buffer-modified-p)))
-	   (gptel-mode)
-	   ;; `breadcrumb-mode' interferes with the `gptel' header line
-	   (when (bound-and-true-p breadcrumb-mode)
-	     (breadcrumb-mode -1))
-	   ;; prevent the buffer from becoming modified merely because `gptel-mode'
-	   ;; is enabled
-	   (unless buffer-modified-p
-	     (save-buffer)))))
+;;;###autoload
+(defun gptel-extras-toggle-major-mode ()
+  "Toggle between `markdown-mode' and `org-mode'."
+  (interactive)
+  (setq gptel-default-mode
+	(pcase gptel-default-mode
+	  ('markdown-mode 'org-mode)
+	  ('org-mode 'markdown-mode)))
+  (message "Switched to %s." gptel-default-mode))
 
+;;;###autoload
 (defun gptel-extras-goto-end-and-send ()
   "Go to the end of the buffer and send the prompt."
   (interactive)

@@ -332,6 +332,18 @@
   (message "`copilot' late-init config loaded."))
 #+end_src
 
+
+
+** citar-extras
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'citar-extras
+  (cancel-function-timers 'citar-extras-update-old-bibliography)
+  (message "`citar-extras' late-init config loaded."))
+#+end_src
+
+
+
 ** cua-base
 :PROPERTIES:
 :ID:       ECA4B30E-DE5C-4ACC-87AA-30975B8398EC

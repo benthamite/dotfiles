@@ -7263,7 +7263,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature js
   :custom
-  (js-indent-level 2)
+  (js-indent-level 4)
 
   :bind
   (:map js-mode-map

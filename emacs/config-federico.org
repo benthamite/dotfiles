@@ -686,8 +686,6 @@
 (with-eval-after-load 'tlon
   (setq tlon-todos-jobs-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
   (setq tlon-todos-generic-id "CE0C7638-97F1-4509-8212-5B77F4A4AF29")
-  (setq tlon-split-repo nil)
-  (setq vc-extras-split-repo nil)
   (tlon-initialize)
   (message "`tlon' late-init config loaded."))
 #+end_src
@@ -833,6 +831,15 @@
   ;; (debug-on-variable-change 'faces-extras-fixed-pitch-font)
   (message "`faces-extras' late-init config loaded."))
 #+end_src
+
+** vc-extras
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'vc-extras
+  (setq vc-extras-split-repo nil)
+  (message "`vc-extra' late-init config loaded."))
+#+end_src
+
 
 ** tareas
 :PROPERTIES:

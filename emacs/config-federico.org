@@ -15,7 +15,7 @@
         ;; copilot
         corfu-doc-terminal
         corfu-terminal
-        ;; display-wttr
+        display-wttr
         erc
         espotify
         ;; flycheck

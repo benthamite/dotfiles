@@ -342,11 +342,11 @@ often enough to fix this)."
 
 (defun gptel-extras-enable-gptel-common ()
   "Enable `gptel-mode' and in any buffer with `gptel' data."
-  (gptel-mode)
-  ;; `breadcrumb-mode' interferes with the `gptel' header line
-  (when (bound-and-true-p breadcrumb-mode)
-    (breadcrumb-mode -1))
   (let ((buffer-modified-p (buffer-modified-p)))
+    (gptel-mode)
+    ;; `breadcrumb-mode' interferes with the `gptel' header line
+    (when (bound-and-true-p breadcrumb-mode)
+      (breadcrumb-mode -1))
     ;; prevent the buffer from becoming modified merely because `gptel-mode'
     ;; is enabled
     (unless buffer-modified-p

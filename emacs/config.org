@@ -865,7 +865,8 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :after seq
   :custom
   (transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
-
+  (transient-save-history nil) ; the history file was throwing an error on startup
+  
   :bind
   (:map transient-base-map
         ("M-q" . transient-quit-one)))

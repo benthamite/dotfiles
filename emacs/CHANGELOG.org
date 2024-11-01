@@ -4,6 +4,41 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 6.7.11 on 2024-11-01
+
+** Configuration Changes
+*** GPTel Enhancements
+- Added support for both Markdown and Org modes by introducing separate enable functions
+- Enhanced conditional enable logic with ~gptel-extras-enable-gptel-common~
+- New command ~gptel-extras-toggle-major-mode~ to switch between Markdown and Org mode
+- Made ~gptel-extras-save-buffer~ conditional on interactive calls only
+
+*** Key Binding Updates
+- Mapped "H-s-o" to ~gptel-extras-toggle-major-mode~
+
+*** Performance & System Changes
+- Transient: Disabled history saving due to startup errors
+- JavaScript: Changed indentation level from 2 to 4 spaces
+
+*** Package Improvements
+**** mu4e-extras
+- Commented out problematic timer hook that was causing indexing errors
+
+**** citar-extras
+- Moved timer configuration to main config file for better organization
+
+**** simple-extras
+- Added explicit org-extras requirement in function
+
+*** Code Organization
+- Various code formatting improvements
+- Minor refactoring for better maintainability
+- Several functions made more conditional and robust
+
+** Impact Assessment
+- No major breaking changes identified
+- GPTel users should note the new Markdown/Org mode toggle functionality
+- JavaScript developers will notice the indentation change
 * Version 6.7.9 on 2024-10-28
 ** dired-extras
 - Added gptel directory to the dired menu for quick access
@@ -352,5 +387,5 @@ The keys =M-k= and =M-l= are now bound to ~vertico-previous-group~ and ~vertico-
 
   
 # Local Variables:
-# org-extras-id-auto-add-excluded-files: t
+# org-extras-id-auto-add-exclude-file: t
 # End:

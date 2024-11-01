@@ -87,7 +87,9 @@ The list of queued messages is stored in `mu4e-extras-mark-as-read-queue'."
   (when mu4e-extras-mark-as-read-queue
     (run-with-timer 30 nil #'mu4e-extras-reapply-read-status)))
 
-(add-hook 'mu4e-update-pre-hook #'mu4e-extras-reapply-read-status-set-timer)
+;; this is throwing an error:
+;; Error running timer ‘mu4e-extras-reapply-read-status’: (user-error #("[mu4e] Cannot handle command while indexing, please retry later."
+;; (add-hook 'mu4e-update-pre-hook #'mu4e-extras-reapply-read-status-set-timer)
 
 ;;;;;;; Refiled
 

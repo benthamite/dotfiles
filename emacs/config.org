@@ -7741,7 +7741,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (org-mode-hook . gptel-extras-enable-gptel)
 
   :bind
-  ("H-s-c" . gptel-extras-goto-end-and-send))
+  ("H-s-c" . gptel-extras-goto-end-and-send)
+  ("H-s-o" . gptel-extras-toggle-major-mode))
 #+end_src
 
 ** gptel-quick
@@ -8163,7 +8164,6 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
         ("A-C-M-s-j" . org-previous-link)
         ("A-C-M-s-;" . org-next-link)
         ("A-H-M-t" . org-transpose-element)
-        ("H-s-o" . org-open-at-point)
         ("s-d" . org-deadline)
         ("s-e" . org-set-effort)
         ("s-f" . org-footnote-action)

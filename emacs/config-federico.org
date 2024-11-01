@@ -625,10 +625,9 @@
 :ID:       E0CFFE8C-FDC1-4D7D-B484-A8E7BC87CB98
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(cancel-timer org-extras-agenda-switch-to-agenda-current-day-timer) ;; this is run in pablo's init so it must be outside eval-after-load
 (with-eval-after-load 'org-extras
-  (setq org-extras-bbdb-anniversaries-heading nil)
-  ;; (cancel-function-timers 'org-extras-agenda-switch-to-agenda-current-day)
-  (cancel-timer org-extras-agenda-switch-to-agenda-current-day-timer)
+  (setq org-extras-bbdb-anniversaries-heading nil)  
   (remove-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
   (message "`org-extras' late-init config loaded."))
 #+end_src

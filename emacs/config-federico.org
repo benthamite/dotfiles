@@ -733,37 +733,23 @@
 (with-eval-after-load 'tab-bar-extras
   (prin1-to-string tab-bar-extras-global-mode-string)
   (setq tab-bar-extras-global-mode-string
-        `(;;,tab-bar-extras-prefix-element
-          ;;,tab-bar-extras-notification-status-element
+        `(,tab-bar-extras-prefix-element
+          ,tab-bar-extras-notification-status-element
           ;;,tab-bar-extras-date-element
-          ;;,tab-bar-extras-separator-element
+          ,tab-bar-extras-separator-element
           ,tab-bar-extras-chemacs-element
           ,tab-bar-extras-separator-element
           ;;,tab-bar-extras-battery-element
           ,tab-bar-extras-telega-element
           ,tab-bar-extras-github-element
-          ;;,tab-bar-extras-pomodoro-element
-          ;;,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
+          ,tab-bar-extras-pomodoro-element
+	  ,tab-bar-extras-debug-element
+	  ,tab-bar-extras-separator-element
           ))
 
   (setq global-mode-string tab-bar-extras-global-mode-string)
   (setq tab-bar-extras-reset-wttr nil)
   (message "`tab-bar-extras' late-init config loaded.")
-
-  ;; (setq tab-bar-extras-global-mode-string
-  ;;       `(,tab-bar-extras-prefix-element
-  ;;         ;; ,tab-bar-extras-time-element
-  ;;         ;; ,tab-bar-extras-separator-element
-  ;;         ,tab-bar-extras-chemacs-element
-  ;;         ;; ,tab-bar-extras-separator-element
-  ;;         ;; ,tab-bar-extras-battery-element
-  ;;         ,tab-bar-extras-telega-element
-  ;;         ,tab-bar-extras-github-element
-  ;;         ;; ,tab-bar-extras-pomodoro-element
-  ;;         ;; ,tab-bar-extras-suffix-element
-  ;;         ))
-
-  ;; (setq tab-bar-extras-reset-wttr nil)
   )
 #+end_src
 

@@ -689,6 +689,15 @@
   (message "`tlon' late-init config loaded."))
 #+end_src
 
+** tlon-forg
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'tlon-forg
+  (setq tlon-when-asignee-is-nil 'no-capture)
+  (setq tlon-when-asignee-is-someone-else 'no-capture)
+  (message "`tlon-forg' late-init config loaded."))
+#+end_src
+
 
 ** jinx
 :PROPERTIES:

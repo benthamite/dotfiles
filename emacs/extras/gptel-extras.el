@@ -50,6 +50,12 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
   :type 'directory
   :group 'gptel-extras)
 
+;;;; Variables
+
+(defconst gptel-extras-local-variables
+  '(gptel-mode gptel-model gptel--backend-name gptel--bounds)
+  "A list of relevant `gptel' file-local variables.")
+
 ;;;; Functions
 
 ;;;;; Estimate cost
@@ -199,45 +205,52 @@ non-nil (with prefix arg), include diffstats in the prompt."
     (user-error "This function is meant to be called from the Magit log (`M-x magit RET ll')"))
   (save-excursion
     (let* ((commits (save-restriction
-                      (narrow-to-region beg end)
-                      (goto-char (point-min))
-                      ;; Get list of selected commit hashes
-                      (cl-loop while (not (eobp))
-                               collect (magit-commit-at-point)
-                               do (forward-line))))
-           ;; Get diffs of all commits
-           (commit-diffs
-            (with-temp-buffer
-              (magit-git-insert "show" "--patch"
+		      (narrow-to-region beg end)
+		      (goto-char (point-min))
+		      ;; Get list of selected commit hashes
+		      (cl-loop while (not (eobp))
+			       collect (magit-commit-at-point)
+			       do (forward-line))))
+	   ;; Get diffs of all commits
+	   (commit-diffs
+	    (with-temp-buffer
+	      (magit-git-insert "show" "--patch"
 				(and (not include-stats) "--unified=3")
 				commits)
-              (buffer-string)))
-           ;; Create appropriate prompt
-           (prompt (format
-                    "Here are several git commit diffs:\n\n%s\n\nPlease analyze these commits and provide a concise summary of the main changes. Include any significant patterns you notice. Write the summary using org-mode syntax. When writing the summary, focus on making it useful for someone who is already familiar with the code and wants to learn about the changes made in these commits, so that they can quickly determine if they need to handle any breaking changes or if they want to start using any of the new functionality. Organize the summary into sections, one for each package or feature, following this model:\n\n%s"
+	      (buffer-string)))
+	   ;; Create appropriate prompt
+	   (prompt (format
+		    "Here are several git commit diffs:\n\n%s\n\nPlease analyze these commits and
+provide a concise summary of the main changes. Include any significant patterns \
+you notice. Write the summary using org-mode syntax, NOT Markdown. When writing the summary, \
+focus on making it useful for someone who is already familiar with the code and \
+wants to learn about the changes made in these commits, so that they can quickly \
+determine if they need to handle any breaking changes or if they want to start \
+using any of the new functionality. Organize the summary into sections, one for \
+each package or feature, following this model:\n\n%s"
 		    commit-diffs
-                    (let ((file (file-name-concat paths-dir-dotemacs "extras/gptel-extras-changelog.org")))
+		    (let ((file (file-name-concat paths-dir-dotemacs "extras/gptel-extras-changelog.org")))
 		      (with-temp-buffer (insert-file-contents file) (buffer-string)))))
-           (gptel-stream t))
+	   (gptel-stream t))
       ;; Display summary in new buffer
       (with-current-buffer (get-buffer-create "*Commit Summary*")
-        (let ((inhibit-read-only t))
-          (erase-buffer)
-          (insert "Commit Summary:\n"
-                  "==============\n\n"
-                  (format "Selected commits: %s\n\n"
-                          (mapconcat #'identity commits ", ")))
-          (gptel-request
-              prompt
-            :buffer (current-buffer)
-            :position (point)
-            :in-place t
-            :system
-            "You are a software developer's assistant focused on git commit analysis. \
+	(let ((inhibit-read-only t))
+	  (erase-buffer)
+	  (insert "Commit Summary:\n"
+		  "==============\n\n"
+		  (format "Selected commits: %s\n\n"
+			  (mapconcat #'identity commits ", ")))
+	  (gptel-request
+	      prompt
+	    :buffer (current-buffer)
+	    :position (point)
+	    :in-place t
+	    :system
+	    "You are a software developer's assistant focused on git commit analysis. \
 Be concise but thorough when analyzing changes. Group related changes together if \
 you notice patterns. If commit messages are included, use them to inform your analysis.")
-          (pop-to-buffer (current-buffer))
-          (view-mode 1))))))
+	  (pop-to-buffer (current-buffer))
+	  (view-mode 1))))))
 
 ;;;;; Activate Mullvad
 
@@ -258,39 +271,42 @@ Use to circumvent Gemini’s location restrictions."
 
 (declare-function org-insert-heading "org")
 (declare-function org-next-visible-heading "org")
-(defun gptel-extras-save-buffer (name _ _ _)
+(defun gptel-extras-save-buffer (name _ _ interactivep)
   "Save the `gptel' buffer with NAME right after it is created.
-The buffer is saved to a file in `gptel-extras-dir'.
+The buffer is saved to a file in `gptel-extras-dir'. INTERACTIVEP is t when
+gptel is called interactively.
 
 This function is meant to be an `:after' advice to `gptel'."
   ;; do not run if the buffer is visiting a file, because that means the user
   ;; selected an existing buffer
-  (unless (buffer-file-name (get-buffer name))
-    (switch-to-buffer name)
-    (let* ((extension (pcase major-mode
-			('org-mode "org")
-			('markdown-mode "md")
-			(_ (user-error "Unsupported major mode"))))
-	   (filename (file-name-concat gptel-extras-dir
-				       (file-name-with-extension (simple-extras-slugify name) extension))))
-      (when (derived-mode-p 'org-mode)
-	(goto-char (point-min))
-	(org-insert-heading nil nil 1)
-	(insert name)
-	(org-next-visible-heading 1)
-	(end-of-line))
-      ;; we temporarily remove the hook because `gptel--save-state' throws an
-      ;; error if called at this early stage
-      (remove-hook 'before-save-hook #'gptel--save-state t)
-      (write-file filename 'confirm)
-      (add-hook 'before-save-hook #'gptel--save-state nil t))))
+  (when interactivep
+    (unless (buffer-file-name (get-buffer name))
+      (switch-to-buffer name)
+      (let* ((extension (pcase major-mode
+			  ('org-mode "org")
+			  ('markdown-mode "md")
+			  (_ (user-error "Unsupported major mode"))))
+	     (filename (file-name-concat gptel-extras-dir
+					 (file-name-with-extension (simple-extras-slugify name) extension))))
+	(when (derived-mode-p 'org-mode)
+	  (goto-char (point-min))
+	  (org-insert-heading nil nil 1)
+	  (insert name)
+	  (org-next-visible-heading 1)
+	  (end-of-line))
+	;; we temporarily remove the hook because `gptel--save-state' throws an
+	;; error if called at this early stage
+	(remove-hook 'before-save-hook #'gptel--save-state t)
+	(write-file filename 'confirm)
+	(add-hook 'before-save-hook #'gptel--save-state nil t)))))
 
 ;;;;; post-response
 
 (declare-function org-latex-preview "org")
 (defun gptel-extras-generate-latex-previews (_ _)
   "Generate LaTeX previews in the current `gptel' buffer."
-  (when (string= default-directory gptel-extras-dir)
+  (when (and (derived-mode-p 'org-mode)
+	     (string= default-directory gptel-extras-dir))
     (org-latex-preview)))
 
 (declare-function files-extras-kill-this-buffer "files-extras")
@@ -308,31 +324,53 @@ often enough to fix this)."
     (save-buffer)
     (files-extras-kill-this-buffer)
     (find-file file)
-    (org-fold-show-all)))
+    (when (derived-mode-p 'org-mode)
+      (org-fold-show-all))))
+
+;;;;; Enable gptel
+
+(declare-function breadcrumb-mode "breadcrumb")
+(defun gptel-extras-enable-gptel-in-org ()
+  "Enable `gptel-mode' in `org-mode' files with `gptel' data."
+  (when (gptel-extras-file-has-gptel-local-variable-p)
+    (gptel-extras-enable-gptel-common)))
+
+(defun gptel-extras-enable-gptel-in-markdown ()
+  "Enable `gptel-mode' in `markdown-mode' files with `gptel' data."
+  (when (gptel-extras-file-has-gptel-local-variable-p)
+    (gptel-extras-enable-gptel-common)))
+
+(defun gptel-extras-enable-gptel-common ()
+  "Enable `gptel-mode' and in any buffer with `gptel' data."
+  (let ((buffer-modified-p (buffer-modified-p)))
+    (gptel-mode)
+    ;; `breadcrumb-mode' interferes with the `gptel' header line
+    (when (bound-and-true-p breadcrumb-mode)
+      (breadcrumb-mode -1))
+    ;; prevent the buffer from becoming modified merely because `gptel-mode'
+    ;; is enabled
+    (unless buffer-modified-p
+      (save-buffer))))
+
+(defun gptel-extras-file-has-gptel-local-variable-p ()
+  "Return t iff the current buffer has a `gptel' local variable."
+  (cl-some (lambda (var)
+             (local-variable-p var))
+           gptel-extras-local-variables))
 
 ;;;;; Misc
 
-(declare-function breadcrumb-mode "breadcrumb")
-(declare-function org-entry-get "org")
-(defun gptel-extras-enable-gptel ()
-  "Enable `gptel-mode' in `org-mode' files with `gptel' data."
-  (when (and (derived-mode-p 'org-mode)
-	     (cl-some (lambda (prop)
-			(org-entry-get (point-min) prop))
-		      ;; taken from `gptel-org--entry-properties'
-		      '("GPTEL_SYSTEM" "GPTEL_BACKEND" "GPTEL_MODEL"
-			"GPTEL_TEMPERATURE" "GPTEL_MAX_TOKENS"
-			"GPTEL_NUM_MESSAGES_TO_SEND")))
-    (let ((buffer-modified-p (buffer-modified-p)))
-      (gptel-mode)
-      ;; `breadcrumb-mode' interferes with the `gptel' header line
-      (when (bound-and-true-p breadcrumb-mode)
-	(breadcrumb-mode -1))
-      ;; prevent the buffer from becoming modified merely because `gptel-mode'
-      ;; is enabled
-      (unless buffer-modified-p
-	(save-buffer)))))
+;;;###autoload
+(defun gptel-extras-toggle-major-mode ()
+  "Toggle between `markdown-mode' and `org-mode'."
+  (interactive)
+  (setq gptel-default-mode
+	(pcase gptel-default-mode
+	  ('markdown-mode 'org-mode)
+	  ('org-mode 'markdown-mode)))
+  (message "Switched to %s." gptel-default-mode))
 
+;;;###autoload
 (defun gptel-extras-goto-end-and-send ()
   "Go to the end of the buffer and send the prompt."
   (interactive)

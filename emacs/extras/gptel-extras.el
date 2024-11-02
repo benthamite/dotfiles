@@ -50,23 +50,10 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
   :type 'directory
   :group 'gptel-extras)
 
-(defcustom gptel-extras-context-persist-file
-  (file-name-concat no-littering-var-directory "gptel/gptel-contexts.el")
-  "File to save gptel context lists."
-  :type 'file
-  :group 'gptel)
-
-(defcustom gptel-extras-auto-restore-context nil
-  "Whether to automatically restore a saved context when opening a `gptel' buffer.
-When non-nil, if the base of the visited file matches the name of a saved
-context, that context will be restored."
-  :type 'boolean
-  :group 'gptel)
-
 ;;;; Variables
 
-(defvar gptel-extras-saved-contexts nil
-  "Alist of saved file lists, where each element is (ID . FILES).")
+(defvar-local gptel-context nil
+  "The context for the current buffer.")
 
 (defconst gptel-extras-local-variables
   '(gptel-mode gptel-model gptel--backend-name gptel--bounds)
@@ -372,9 +359,7 @@ often enough to fix this)."
     ;; prevent the buffer from becoming modified merely because `gptel-mode'
     ;; is enabled
     (unless buffer-modified-p
-      (save-buffer))
-    (when gptel-extras-auto-restore-context
-      (gptel-extras-restore-context (file-name-base (buffer-file-name))))))
+      (save-buffer))))
 
 (defun gptel-extras-file-has-gptel-local-variable-p ()
   "Return t iff the current buffer has a `gptel' local variable."
@@ -391,56 +376,32 @@ often enough to fix this)."
 
 ;;;;; Save & restore file context
 
+(declare-function org-set-property "org")
 (defun gptel-extras-save-context ()
-  "Save the current `gptel' file context."
+  "Save the current `gptel' context in the file.
+In Org files, saves as a file property. In Markdown, as a file-local variable."
   (interactive)
-  (let ((name (read-string "Enter a name for the context: " (gptel-extras-default-context-name))))
-    (push (cons name gptel-context--alist) gptel-extras-saved-contexts)
-    (make-directory (file-name-directory gptel-extras-context-persist-file) t)
-    (with-temp-file gptel-extras-context-persist-file
-      (print gptel-extras-saved-contexts (current-buffer)))
-    (message "Saved `gptel' context: %s" name)))
+  (let ((context (pcase major-mode
+		   ('org-mode
+		    (save-excursion
+		      (goto-char (point-min))
+		      (org-set-property "GPTEL_CONTEXT" (prin1-to-string gptel-context--alist))))
+		   ('markdown-mode
+		    (add-file-local-variable 'gptel-context gptel-context--alist)
+		    (setq gptel-context gptel-context--alist))
+		   (_ (user-error "Not in and Org or Markdown buffer")))))
+    (message "Saved `gptel' context: %s" context)))
 
-(defun gptel-extras-restore-context (&optional name)
-  "Restore the previously saved context named NAME.
-If NAME is nil, prompt the user to select a context to restore."
+(defun gptel-extras-restore-context ()
+  "Restore the saved context from the file."
   (interactive)
-  (gptel-extras-read-contexts-from-file)
-  (when-let* ((context (if name
-			   (gptel-extras-get-existent-name name)
-			 (gptel-extras-select-context)))
-	      (files (cdr (assoc context gptel-extras-saved-contexts))))
-    (setq gptel-context--alist files)
-    (message "Restored `gptel' context: %s" context)))
-
-(defun gptel-extras-select-context ()
-  "Select a context to restore."
-  (when (null gptel-extras-saved-contexts)
-    (user-error "No saved contexts available"))
-  (let ((choices (mapcar (lambda (entry)
-			   (cons (car entry) entry))
-			 gptel-extras-saved-contexts)))
-    (completing-read "Select context to restore: " choices nil t
-		     (gptel-extras-get-existent-name (gptel-extras-default-context-name)))))
-
-(defun gptel-extras-read-contexts-from-file ()
-  "Read contexts from persist file."
-  (when (file-exists-p gptel-extras-context-persist-file)
-    (setq gptel-extras-saved-contexts
-	  (with-temp-buffer
-	    (insert-file-contents gptel-extras-context-persist-file)
-	    (read (current-buffer))))))
-
-(defun gptel-extras-default-context-name ()
-  "Return the default name for the current buffer."
-  (if-let ((file-name (buffer-file-name)))
-      (file-name-base file-name)
-    (buffer-name)))
-
-(defun gptel-extras-get-existent-name (name)
-  "If NAME names a context, return it; else return nil."
-  (when (assoc name gptel-extras-saved-contexts)
-    name))
+  (when-let ((context (pcase major-mode
+			('org-mode
+			 (when-let ((gptel-context-prop (org-entry-get (point-min) "GPTEL_CONTEXT")))
+			   (read gptel-context-prop)))
+			('markdown-mode gptel-context)
+			(_ (user-error "Not in and Org or Markdown buffer")))))
+    (message "Restored `gptel' context: %s" (setq gptel-context--alist context))))
 
 (defun gptel-extras-clear-context ()
   "Clear the current `gptel' file context."

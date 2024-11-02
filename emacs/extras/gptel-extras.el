@@ -56,6 +56,12 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
   '(gptel-mode gptel-model gptel--backend-name gptel--bounds)
   "A list of relevant `gptel' file-local variables.")
 
+(defconst gptel-extras-org-properties
+  '("GPTEL_SYSTEM" "GPTEL_BACKEND" "GPTEL_MODEL"
+    "GPTEL_TEMPERATURE" "GPTEL_MAX_TOKENS"
+    "GPTEL_NUM_MESSAGES_TO_SEND")
+  "A list of relevant `gptel' Org properties.")
+
 ;;;; Functions
 
 ;;;;; Estimate cost
@@ -332,7 +338,7 @@ often enough to fix this)."
 (declare-function breadcrumb-mode "breadcrumb")
 (defun gptel-extras-enable-gptel-in-org ()
   "Enable `gptel-mode' in `org-mode' files with `gptel' data."
-  (when (gptel-extras-file-has-gptel-local-variable-p)
+  (when (gptel-extras-file-has-gptel-org-property-p)
     (gptel-extras-enable-gptel-common)))
 
 (defun gptel-extras-enable-gptel-in-markdown ()
@@ -357,6 +363,12 @@ often enough to fix this)."
   (cl-some (lambda (var)
              (local-variable-p var))
            gptel-extras-local-variables))
+
+(defun gptel-extras-file-has-gptel-org-property-p ()
+  "Return t iff the current buffer has a `gptel' Org property."
+  (cl-some (lambda (prop)
+             (org-entry-get (point-min) prop))
+           gptel-extras-org-properties))
 
 ;;;;; Misc
 

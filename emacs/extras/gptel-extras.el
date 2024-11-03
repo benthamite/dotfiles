@@ -383,8 +383,8 @@ often enough to fix this)."
 ;;;;;; Save
 
 (declare-function org-set-property "org")
-(defun gptel-extras-save-context ()
-  "Save the current `gptel' context in the file.
+(defun gptel-extras-save-file-context ()
+  "Save the current `gptel' file context in file visited by the current buffer.
 In Org files, saves as a file property. In Markdown, as a file-local variable."
   (interactive)
   (let ((context (pcase major-mode
@@ -402,6 +402,8 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
   "Restore the saved context from the file."
 ;;;;;; Restore
 
+(defun gptel-extras-restore-file-context ()
+  "Restore the saved file context from the file visited by the current buffer."
   (interactive)
   (when-let ((context (pcase major-mode
 			('org-mode
@@ -411,8 +413,9 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
 			(_ (user-error "Not in and Org or Markdown buffer")))))
     (message "Restored `gptel' context: %s" (setq gptel-context--alist context))))
 
-(defun gptel-extras-clear-context ()
 ;;;;;; Clear
+
+(defun gptel-extras-clear-file-context ()
   "Clear the current `gptel' file context."
   (interactive)
   (setq gptel-context--alist nil)

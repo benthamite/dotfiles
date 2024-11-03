@@ -392,14 +392,28 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
 		    (save-excursion
 		      (goto-char (point-min))
 		      (org-set-property "GPTEL_CONTEXT" (prin1-to-string gptel-context--alist))))
-		   ('markdown-mode
-		    (add-file-local-variable 'gptel-context gptel-context--alist)
-		    (setq gptel-context gptel-context--alist))
+		   ('markdown-mode (gptel-extras-save-file-context-in-markdown))
 		   (_ (user-error "Not in and Org or Markdown buffer")))))
     (message "Saved `gptel' context: %s" context)))
 
-(defun gptel-extras-restore-context ()
-  "Restore the saved context from the file."
+(defun gptel-extras-save-file-context-in-markdown ()
+  "Save the current `gptel' file context in file visited by the current MD buffer."
+  (interactive)
+  (gptel-extras-remove-local-variables-section)
+  (let ((context (format "%S" gptel-context--alist)))
+    (add-file-local-variable 'gptel-context context)
+    (message "Saved `gptel' context: %s" context)))
+
+(defun gptel-extras-remove-local-variables-section ()
+  "Remove the existing Local Variables section from the current buffer."
+  (save-excursion
+    (goto-char (point-max))
+    (when (re-search-backward "^<!-- Local Variables: -->" nil t)
+      (let ((start (point)))
+        (when (re-search-forward "^<!-- End: -->" nil t)
+          (delete-region start (point))
+          (delete-blank-lines))))))
+
 ;;;;;; Restore
 
 (defun gptel-extras-restore-file-context ()

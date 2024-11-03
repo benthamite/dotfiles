@@ -240,6 +240,7 @@ list of tags and further restrict the selection to headings with that tag."
     (message "Selected tag: %s" selected-tag)
     selected-tag))
 
+;;;###autoload
 (defun org-roam-extras-id-goto (id)
   "Open ID even if narrowed."
   (widen)

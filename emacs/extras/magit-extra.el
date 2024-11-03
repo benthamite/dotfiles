@@ -106,6 +106,14 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
   "Track FILE in the current Git repository."
   (magit-call-git "add" (expand-file-name file)))
 
+(transient-define-suffix magit-extras-update-all-submodules (args)
+  "Update all submodules in the current Git repository."
+  :class 'magit--git-submodule-suffix
+  :description "Update all modules    git submodule update --init [--recursive]"
+  (interactive (list (magit-submodule-arguments "--recursive")))
+  (magit-with-toplevel
+    (magit-run-git-async "submodule" "update" "--init" args)))
+
 (transient-define-prefix magit-extras-dispatch ()
   "Invoke a Magit command from a list of available commands."
   :info-manual "(magit)Top"

@@ -117,8 +117,6 @@
   (citar-cache--update-bibliography
    (citar-cache--get-bibliography (cadr citar-bibliography))))
 
-(run-with-idle-timer (* 15 60) nil #'citar-extras-update-old-bibliography)
-
 (provide 'citar-extras)
 ;;; citar-extras.el ends here
 

@@ -65,6 +65,10 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
     "GPTEL_NUM_MESSAGES_TO_SEND")
   "A list of relevant `gptel' Org properties.")
 
+(defconst gptel-extras-changelog-file
+  (file-name-concat paths-dir-dotemacs "extras/gptel-extras-changelog-template.org")
+  "The file with the changelog template for `gptel-extras-summarize-commit-diffs'.")
+
 ;;;; Functions
 
 ;;;;; Estimate cost
@@ -238,7 +242,7 @@ determine if they need to handle any breaking changes or if they want to start \
 using any of the new functionality. Organize the summary into sections, one for \
 each package or feature, following this model:\n\n%s"
 		    commit-diffs
-		    (let ((file (file-name-concat paths-dir-dotemacs "extras/gptel-extras-changelog.org")))
+		    (let ((file gptel-extras-changelog-file))
 		      (with-temp-buffer (insert-file-contents file) (buffer-string)))))
 	   (gptel-stream t))
       ;; Display summary in new buffer

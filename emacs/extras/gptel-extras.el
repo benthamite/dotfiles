@@ -290,9 +290,9 @@ The buffer is saved to a file in `gptel-extras-dir'. INTERACTIVEP is t when
 gptel is called interactively.
 
 This function is meant to be an `:after' advice to `gptel'."
-  ;; do not run if the buffer is visiting a file, because that means the user
-  ;; selected an existing buffer
   (when interactivep
+    ;; do not run if the buffer is visiting a file, because that means the user
+    ;; selected an existing buffer
     (unless (buffer-file-name (get-buffer name))
       (switch-to-buffer name)
       (let* ((extension (pcase major-mode

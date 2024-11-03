@@ -378,7 +378,9 @@ often enough to fix this)."
 	     (org-entry-get (point-min) prop))
 	   gptel-extras-org-properties))
 
-;;;;; Save & restore file context
+;;;;; Save, restore & clear file context
+
+;;;;;; Save
 
 (declare-function org-set-property "org")
 (defun gptel-extras-save-context ()
@@ -398,6 +400,8 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
 
 (defun gptel-extras-restore-context ()
   "Restore the saved context from the file."
+;;;;;; Restore
+
   (interactive)
   (when-let ((context (pcase major-mode
 			('org-mode
@@ -408,6 +412,7 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
     (message "Restored `gptel' context: %s" (setq gptel-context--alist context))))
 
 (defun gptel-extras-clear-context ()
+;;;;;; Clear
   "Clear the current `gptel' file context."
   (interactive)
   (setq gptel-context--alist nil)

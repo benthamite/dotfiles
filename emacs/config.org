@@ -6342,6 +6342,12 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
   (markdown-disable-tooltip-prompt t)
   (markdown-italic-underscore t)
 
+  :config
+  ;; pop code block indirect buffers in the same window, mirroring the org behavior
+  (add-to-list 'display-buffer-alist
+             '("\\*edit-indirect.*\\*"
+               (display-buffer-same-window)))
+
   :bind
   (:map gfm-mode-map
         ("s-a" . markdown-insert-gfm-code-block)

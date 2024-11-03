@@ -624,7 +624,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (elpaca `(,@elpaca-order))
 (elpaca-wait)
 
-;; (toggle-debug-on-error) ; uncomment when debugging
+(toggle-debug-on-error) ; uncomment when debugging
 #+end_src
 
 ** use-package
@@ -663,7 +663,7 @@ NAME and ARGS as in `use-package'."
     `(use-package ,name
        :ensure (:host github
                       :repo "benthamite/dotfiles"
-                      :branch "dev"
+                      ;; :branch "dev"
                       :files ,(list (file-name-concat
                                      "emacs/extras"
                                      (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
@@ -761,7 +761,7 @@ NAME and ARGS as in `use-package'."
 (use-package tlon-init
   :ensure (:host github
                  :repo "tlon-team/tlon-init"
-                 :branch "dev"
+                 ;; :branch "dev"
                  :depth nil ; clone entire repo, not just last commit
                  :wait t)
   :after paths
@@ -865,7 +865,8 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :after seq
   :custom
   (transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
-
+  (transient-save-history nil) ; the history file was throwing an error on startup
+  
   :bind
   (:map transient-base-map
         ("M-q" . transient-quit-one)))
@@ -2996,6 +2997,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
   :bind
   (("C-A-e" . eval-expression)
    ("C-e" . eval-last-sexp)
+   ("H-C" . kill-ring-save)
    ("H-m" . set-mark-command)
    ("H-Z" . undo-redo)
    ("M-o" . downcase-dwim)
@@ -6649,7 +6651,7 @@ https://gitlab.com/chrisberkhout/pricehist
 (use-package tlon
   :ensure (:host github
                  :repo "tlon-team/tlon.el"
-                 :branch "dev"
+                 ;; :branch "dev"
                  :depth nil) ; clone entire repo, not just last commit
   :after paths
   :init
@@ -7262,7 +7264,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature js
   :custom
-  (js-indent-level 2)
+  (js-indent-level 4)
 
   :bind
   (:map js-mode-map
@@ -7656,6 +7658,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   :config
+  (require 'tlon-core)
   (setq gptel-expert-commands t) ; not a user option
 
   ;; default model
@@ -7736,10 +7739,12 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (advice-add 'gptel :after #'gptel-extras-save-buffer)
 
   :hook
-  (org-mode-hook . gptel-extras-enable-gptel)
+  (org-mode-hook . gptel-extras-enable-gptel-in-org)
+  (markdown-mode-hook . gptel-extras-enable-gptel-in-markdown)
 
   :bind
-  ("H-s-c" . gptel-extras-goto-end-and-send))
+  ("H-s-c" . gptel-extras-goto-end-and-send)
+  ("H-s-o" . gptel-extras-toggle-major-mode))
 #+end_src
 
 ** gptel-quick
@@ -8161,7 +8166,6 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
         ("A-C-M-s-j" . org-previous-link)
         ("A-C-M-s-;" . org-next-link)
         ("A-H-M-t" . org-transpose-element)
-        ("H-s-o" . org-open-at-point)
         ("s-d" . org-deadline)
         ("s-e" . org-set-effort)
         ("s-f" . org-footnote-action)
@@ -10223,10 +10227,12 @@ Having headings tagged with the type of work they are notes of allows me to quer
   :config
   ;; https://github.com/emacs-citar/citar/wiki/Indicators
   (setq citar-indicators
-   (list citar-extras-indicator-links-icons
-         citar-extras-indicator-files-icons
-         citar-extras-indicator-notes-icons
-         citar-extras-indicator-cited-icons))
+        (list citar-extras-indicator-links-icons
+              citar-extras-indicator-files-icons
+              citar-extras-indicator-notes-icons
+              citar-extras-indicator-cited-icons))
+
+  (run-with-idle-timer (* 15 60) nil #'citar-extras-update-old-bibliography)
 
   :bind
   ("A-H-M-s-?" . citar-extras-open-file-at-point)) ; i.e. H-S-/

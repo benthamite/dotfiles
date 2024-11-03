@@ -6936,7 +6936,7 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
   (with-eval-after-load 'pdf-annot
     (bind-keys :map pdf-annot-minor-mode-map
                ("c" . pdf-tools-extras-copy-dwim)
-               ("C" . pdf-count-extras-words)
+               ("C" . pdf-tools-extras-count-words)
                ("s-c" . pdf-tools-extras-clear-page-selection)
                ("D" . pdf-tools-extras-delete)
                ("e" . pdf-tools-extras-open-in-ebib)
@@ -6949,7 +6949,7 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
     (bind-keys
      :map pdf-history-minor-mode-map
      ("c" . pdf-tools-extras-copy-dwim)
-     ("C" . pdf-count-extras-words)
+     ("C" . pdf-tools-extras-count-words)
      ("s-c" . pdf-tools-extras-clear-page-selection)
      ("D" . pdf-tools-extras-delete)
      ("e" . pdf-tools-extras-open-in-ebib)
@@ -6964,7 +6964,7 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 
   :bind (:map pdf-view-mode-map
               ("c" . pdf-tools-extras-copy-dwim)
-              ("C" . pdf-count-extras-words)
+              ("C" . pdf-tools-extras-count-words)
               ("s-c" . pdf-tools-extras-clear-page-selection)
               ("D" . pdf-tools-extras-delete)
               ("e" . pdf-tools-extras-open-in-ebib)

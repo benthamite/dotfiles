@@ -324,7 +324,7 @@
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
          [:k :play_or_pause]
-         [:semicolon :fastforward]
+         [:semicolon :fast_forward]
          [:comma :volume_increment]
          [:period :volume_decrement]
          [:m :mute]

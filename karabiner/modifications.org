@@ -729,7 +729,7 @@ CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
          [:k :play_or_pause]
-         [:semicolon :fastforward]
+         [:semicolon :fast_forward]
          [:comma :volume_increment]
          [:period :volume_decrement]
          [:m :mute]

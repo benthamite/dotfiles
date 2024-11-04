@@ -333,17 +333,6 @@
 #+end_src
 
 
-
-** citar-extras
-
-#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(with-eval-after-load 'citar-extras
-  (cancel-function-timers 'citar-extras-update-old-bibliography)
-  (message "`citar-extras' late-init config loaded."))
-#+end_src
-
-
-
 ** cua-base
 :PROPERTIES:
 :ID:       ECA4B30E-DE5C-4ACC-87AA-30975B8398EC
@@ -744,24 +733,23 @@
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'tab-bar-extras
-  (prin1-to-string tab-bar-extras-global-mode-string)
+  (setq global-mode-string `())
+  (setq tab-bar-extras-global-mode-string `())
   (setq tab-bar-extras-global-mode-string
-        `(,tab-bar-extras-prefix-element
-          ,tab-bar-extras-notification-status-element
-          ;;,tab-bar-extras-date-element
-          ,tab-bar-extras-separator-element
+        `(
+          ;;,tab-bar-extras-prefix-element
           ,tab-bar-extras-chemacs-element
-          ,tab-bar-extras-separator-element
-          ;;,tab-bar-extras-battery-element
-          ,tab-bar-extras-telega-element
+          ,tab-bar-extras-debug-element
           ,tab-bar-extras-github-element
-          ,tab-bar-extras-pomodoro-element
-	  ,tab-bar-extras-debug-element
-	  ,tab-bar-extras-separator-element
+	  ,tab-bar-extras-telega-element
+          ;;,tab-bar-extras-notification-status-element
+          ;;,tab-bar-extras-date-element
+          ;;,tab-bar-extras-separator-element
+          ;;,tab-bar-extras-battery-element
+          ;;,tab-bar-extras-pomodoro-element
+	  ;;,tab-bar-extras-separator-element
           ))
-
   (setq global-mode-string tab-bar-extras-global-mode-string)
-  (setq tab-bar-extras-reset-wttr nil)
   (message "`tab-bar-extras' late-init config loaded.")
   )
 #+end_src
@@ -906,6 +894,7 @@ This should be at the very end of the ~late-init~ file.
    (global-flycheck-mode -1)
    (setq calendar-extras-use-geolocation nil)
    (recentf-mode)
+   (telega)
    (find-file paths-file-tlon-tareas-fede)
    (org-tidy-mode -1)
    (kill-buffer-then-reopen-file)

@@ -13219,6 +13219,15 @@ CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
 
 For personal reference, these are the most recent Emacs installations (in reverse chronological order).
 
+(After installing, you may need to create a symlink to the ~Emacs.app~ folder in  ~/opt/homebrew/Cellar/~)
+
+[2024-10-09 Wed]:
+
+#+begin_src shell :tangle no
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+end_src
+
 [2024-03-18 Mon]:
 
 #+begin_src shell :tangle no

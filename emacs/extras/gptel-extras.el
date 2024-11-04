@@ -398,7 +398,6 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
 
 (defun gptel-extras-save-file-context-in-markdown ()
   "Save the current `gptel' file context in file visited by the current MD buffer."
-  (interactive)
   (gptel-extras-remove-local-variables-section)
   (let ((context (format "%S" gptel-context--alist)))
     (add-file-local-variable 'gptel-context context)

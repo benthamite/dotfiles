@@ -9828,6 +9828,8 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-noter-extras
+  :after org-noter
+  :demand t
   :bind
   (:map org-noter-notes-mode-map
    ("s-a" . org-noter-extras-cleanup-annotation)

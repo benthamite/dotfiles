@@ -65,6 +65,14 @@ the function `vulpea-agenda-files-update')."
   :type '(repeat file)
   :group 'org-extras)
 
+(defcustom org-extras-id-auto-add-excluded-headings
+  '("Local variables"
+    "COMMENT Local variables"
+    "TODO Local variables")
+  "Headings to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'."
+  :type '(repeat string)
+  :group 'org-extras)
+
 (defcustom org-extras-bbdb-anniversaries-heading
   "2A37A3CC-2A11-4933-861B-48B129B9EA2D"
   "Heading in `calendar.org' that contains the BBDB anniversaries.
@@ -594,30 +602,29 @@ Could be slow if it has a lot of overlays."
 
 ;;;;; org-id
 
+(defvar gptel-extras-dir)
 (defun org-extras-id-auto-add-ids-to-headings-in-file ()
   "Add IDs to all headings in the current file missing them.
-To exclude directories or files, customize
-`org-extras-id-auto-add-excluded-files' or
-`org-extras-id-auto-add-excluded-directories', or set the value of the
-file-local variable `org-extras-id-auto-add-exclude-file' to t."
-  (when-let ((file (buffer-file-name)))
-    (when (and (not org-extras-id-auto-add-exclude-file)
-	       (derived-mode-p 'org-mode)
+To exclude directories, files or headings, customize
+`org-extras-id-auto-add-excluded-directories',
+`org-extras-id-auto-add-excluded-files',
+`org-extras-id-auto-add-excluded-headings'. You can also exclude individual
+files by setting the value of the file-local variable
+`org-extras-id-auto-add-exclude-file' to t."
+  (when-let* ((file (buffer-file-name))
+              (dir (file-name-directory file)))
+    (when (and (derived-mode-p 'org-mode)
 	       (string-match paths-dir-org file)
-	       (eq buffer-read-only nil))
-      (unless
-	  (or
-	   ;; exclude directories
-	   (member (file-name-directory (buffer-file-name))
-		   org-extras-id-auto-add-excluded-directories)
-	   ;; exclude files
-	   (member (buffer-file-name)
-		   org-extras-id-auto-add-excluded-files)
-	   (member (org-get-heading)
-		   '("Local variables"
-		     "COMMENT Local variables"
-		     "TODO Local variables")))
-	(org-map-entries 'org-id-get-create)))))
+	       (not buffer-read-only)
+	       (not org-extras-id-auto-add-exclude-file)
+	       (not (member dir org-extras-id-auto-add-excluded-directories))
+	       (not (member file org-extras-id-auto-add-excluded-files))
+	       (not (member (org-get-heading) org-extras-id-auto-add-excluded-headings)))
+      (require 'gptel-extras)
+      (org-map-entries #'org-id-get-create
+		       ;; parametrize this
+		       (when (member dir `(,gptel-extras-dir))
+			 "LEVEL=1")))))
 
 (defun org-extras-id-update-id-locations ()
   "Scan relevant files for IDs.

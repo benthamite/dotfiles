@@ -100,7 +100,7 @@ If page number is already listed, remove it from list."
                            output)))
   (pdf-tools-extras-clear-page-selection))
 
-(defun pdf-extras-count-words ()
+(defun pdf-tools-extras-count-words ()
   "Count words in current PDF."
   (interactive)
   (kill-new

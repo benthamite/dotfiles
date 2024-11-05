@@ -4,6 +4,32 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 6.7.12 on 2024-11-05
+
+** Elpaca
+- Updated to version 0.8
+
+** GPTel and Context Management
+- Significantly revised context saving/restoring functionality for gptel
+- Context now stored in org properties or file-local variables instead of separate persistence file
+- Made ~gptel-extras-save-file-context-in-markdown~ non-interactive
+- Removed old context saving/restoration system and associated customization variables
+
+** Org
+- Fixed ~org-noter-extras~ loading by requiring after ~org-noter~
+- Removed redundant line in ~org-extras~ related to agenda timer
+- Refactored ~org-extras-id-auto-add-ids-to-headings-in-file~:
+  - Added new customization option ~org-extras-id-auto-add-excluded-headings~
+  - Improved exclusion logic for directories, files and headings
+  - Added special handling for gptel directories
+
+** UI/Configuration
+- Added note about potentially needing to create symlink after Emacs installation
+- Added new markdown snippet for truncated code responses
+- Modified code block indirect buffer display to use same window in markdown mode
+- Fixed function name in pdf-tools-extras (~pdf-count-extras-words~ -> ~pdf-tools-extras-count-words~)
+
+The most significant changes appear to be around GPTel's context management system and the org-id handling functionality. These could require attention if you were using the old context saving/restoration features or had custom org-id configuration.
 * Version 6.7.11 on 2024-11-01
 
 ** Configuration Changes

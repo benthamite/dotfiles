@@ -8225,8 +8225,6 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
                                           paths-file-tlon-tareas-fede))
 
   :config
-  (setq org-extras-agenda-switch-to-agenda-current-day-timer
-        (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
   (setq org-extras-agenda-files-excluded
         (append org-extras-agenda-files-excluded
                 ;; files in `paths-dir-inactive' sans ., .., hidden files and subdirectories

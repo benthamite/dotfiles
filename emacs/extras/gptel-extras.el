@@ -52,9 +52,22 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
 
 ;;;; Variables
 
+(defvar-local gptel-context nil
+  "The context for the current buffer.")
+
 (defconst gptel-extras-local-variables
   '(gptel-mode gptel-model gptel--backend-name gptel--bounds)
   "A list of relevant `gptel' file-local variables.")
+
+(defconst gptel-extras-org-properties
+  '("GPTEL_SYSTEM" "GPTEL_BACKEND" "GPTEL_MODEL"
+    "GPTEL_TEMPERATURE" "GPTEL_MAX_TOKENS"
+    "GPTEL_NUM_MESSAGES_TO_SEND")
+  "A list of relevant `gptel' Org properties.")
+
+(defconst gptel-extras-changelog-file
+  (file-name-concat paths-dir-dotemacs "extras/gptel-extras-changelog-template.org")
+  "The file with the changelog template for `gptel-extras-summarize-commit-diffs'.")
 
 ;;;; Functions
 
@@ -229,7 +242,7 @@ determine if they need to handle any breaking changes or if they want to start \
 using any of the new functionality. Organize the summary into sections, one for \
 each package or feature, following this model:\n\n%s"
 		    commit-diffs
-		    (let ((file (file-name-concat paths-dir-dotemacs "extras/gptel-extras-changelog.org")))
+		    (let ((file gptel-extras-changelog-file))
 		      (with-temp-buffer (insert-file-contents file) (buffer-string)))))
 	   (gptel-stream t))
       ;; Display summary in new buffer
@@ -277,9 +290,9 @@ The buffer is saved to a file in `gptel-extras-dir'. INTERACTIVEP is t when
 gptel is called interactively.
 
 This function is meant to be an `:after' advice to `gptel'."
-  ;; do not run if the buffer is visiting a file, because that means the user
-  ;; selected an existing buffer
   (when interactivep
+    ;; do not run if the buffer is visiting a file, because that means the user
+    ;; selected an existing buffer
     (unless (buffer-file-name (get-buffer name))
       (switch-to-buffer name)
       (let* ((extension (pcase major-mode
@@ -332,7 +345,7 @@ often enough to fix this)."
 (declare-function breadcrumb-mode "breadcrumb")
 (defun gptel-extras-enable-gptel-in-org ()
   "Enable `gptel-mode' in `org-mode' files with `gptel' data."
-  (when (gptel-extras-file-has-gptel-local-variable-p)
+  (when (gptel-extras-file-has-gptel-org-property-p)
     (gptel-extras-enable-gptel-common)))
 
 (defun gptel-extras-enable-gptel-in-markdown ()
@@ -355,8 +368,71 @@ often enough to fix this)."
 (defun gptel-extras-file-has-gptel-local-variable-p ()
   "Return t iff the current buffer has a `gptel' local variable."
   (cl-some (lambda (var)
-             (local-variable-p var))
-           gptel-extras-local-variables))
+	     (local-variable-p var))
+	   gptel-extras-local-variables))
+
+(declare-function org-entry-get "org")
+(defun gptel-extras-file-has-gptel-org-property-p ()
+  "Return t iff the current buffer has a `gptel' Org property."
+  (cl-some (lambda (prop)
+	     (org-entry-get (point-min) prop))
+	   gptel-extras-org-properties))
+
+;;;;; Save, restore & clear file context
+
+;;;;;; Save
+
+(declare-function org-set-property "org")
+(defun gptel-extras-save-file-context ()
+  "Save the current `gptel' file context in file visited by the current buffer.
+In Org files, saves as a file property. In Markdown, as a file-local variable."
+  (interactive)
+  (let ((context (pcase major-mode
+		   ('org-mode
+		    (save-excursion
+		      (goto-char (point-min))
+		      (org-set-property "GPTEL_CONTEXT" (prin1-to-string gptel-context--alist))))
+		   ('markdown-mode (gptel-extras-save-file-context-in-markdown))
+		   (_ (user-error "Not in and Org or Markdown buffer")))))
+    (message "Saved `gptel' context: %s" context)))
+
+(defun gptel-extras-save-file-context-in-markdown ()
+  "Save the current `gptel' file context in file visited by the current MD buffer."
+  (gptel-extras-remove-local-variables-section)
+  (let ((context (format "%S" gptel-context--alist)))
+    (add-file-local-variable 'gptel-context context)
+    (message "Saved `gptel' context: %s" context)))
+
+(defun gptel-extras-remove-local-variables-section ()
+  "Remove the existing Local Variables section from the current buffer."
+  (save-excursion
+    (goto-char (point-max))
+    (when (re-search-backward "^<!-- Local Variables: -->" nil t)
+      (let ((start (point)))
+        (when (re-search-forward "^<!-- End: -->" nil t)
+          (delete-region start (point))
+          (delete-blank-lines))))))
+
+;;;;;; Restore
+
+(defun gptel-extras-restore-file-context ()
+  "Restore the saved file context from the file visited by the current buffer."
+  (interactive)
+  (when-let ((context (pcase major-mode
+			('org-mode
+			 (when-let ((gptel-context-prop (org-entry-get (point-min) "GPTEL_CONTEXT")))
+			   (read gptel-context-prop)))
+			('markdown-mode gptel-context)
+			(_ (user-error "Not in and Org or Markdown buffer")))))
+    (message "Restored `gptel' context: %s" (setq gptel-context--alist context))))
+
+;;;;;; Clear
+
+(defun gptel-extras-clear-file-context ()
+  "Clear the current `gptel' file context."
+  (interactive)
+  (setq gptel-context--alist nil)
+  (message "Cleared `gptel' context."))
 
 ;;;;; Misc
 

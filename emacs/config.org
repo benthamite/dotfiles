@@ -584,7 +584,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 ;;; init.el --- Init File -*- lexical-binding: t -*-
-(defvar elpaca-installer-version 0.7)
+(defvar elpaca-installer-version 0.8)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -6342,6 +6342,12 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
   (markdown-disable-tooltip-prompt t)
   (markdown-italic-underscore t)
 
+  :config
+  ;; pop code block indirect buffers in the same window, mirroring the org behavior
+  (add-to-list 'display-buffer-alist
+             '("\\*edit-indirect.*\\*"
+               (display-buffer-same-window)))
+
   :bind
   (:map gfm-mode-map
         ("s-a" . markdown-insert-gfm-code-block)
@@ -6936,7 +6942,7 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
   (with-eval-after-load 'pdf-annot
     (bind-keys :map pdf-annot-minor-mode-map
                ("c" . pdf-tools-extras-copy-dwim)
-               ("C" . pdf-count-extras-words)
+               ("C" . pdf-tools-extras-count-words)
                ("s-c" . pdf-tools-extras-clear-page-selection)
                ("D" . pdf-tools-extras-delete)
                ("e" . pdf-tools-extras-open-in-ebib)
@@ -6949,7 +6955,7 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
     (bind-keys
      :map pdf-history-minor-mode-map
      ("c" . pdf-tools-extras-copy-dwim)
-     ("C" . pdf-count-extras-words)
+     ("C" . pdf-tools-extras-count-words)
      ("s-c" . pdf-tools-extras-clear-page-selection)
      ("D" . pdf-tools-extras-delete)
      ("e" . pdf-tools-extras-open-in-ebib)
@@ -6964,7 +6970,7 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 
   :bind (:map pdf-view-mode-map
               ("c" . pdf-tools-extras-copy-dwim)
-              ("C" . pdf-count-extras-words)
+              ("C" . pdf-tools-extras-count-words)
               ("s-c" . pdf-tools-extras-clear-page-selection)
               ("D" . pdf-tools-extras-delete)
               ("e" . pdf-tools-extras-open-in-ebib)
@@ -8219,8 +8225,6 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
                                           paths-file-tlon-tareas-fede))
 
   :config
-  (setq org-extras-agenda-switch-to-agenda-current-day-timer
-        (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
   (setq org-extras-agenda-files-excluded
         (append org-extras-agenda-files-excluded
                 ;; files in `paths-dir-inactive' sans ., .., hidden files and subdirectories
@@ -9831,6 +9835,8 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-noter-extras
+  :after org-noter
+  :demand t
   :bind
   (:map org-noter-notes-mode-map
    ("s-a" . org-noter-extras-cleanup-annotation)
@@ -10231,8 +10237,6 @@ Having headings tagged with the type of work they are notes of allows me to quer
               citar-extras-indicator-files-icons
               citar-extras-indicator-notes-icons
               citar-extras-indicator-cited-icons))
-
-  (run-with-idle-timer (* 15 60) nil #'citar-extras-update-old-bibliography)
 
   :bind
   ("A-H-M-s-?" . citar-extras-open-file-at-point)) ; i.e. H-S-/
@@ -13219,6 +13223,15 @@ CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
 :END:
 
 For personal reference, these are the most recent Emacs installations (in reverse chronological order).
+
+(After installing, you may need to create a symlink to the ~Emacs.app~ folder in  ~/opt/homebrew/Cellar/~)
+
+[2024-10-09 Wed]:
+
+#+begin_src shell :tangle no
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@30 --with-dbus --with-debug --with-native-comp --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+end_src
 
 [2024-03-18 Mon]:
 

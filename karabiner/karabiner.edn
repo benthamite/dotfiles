@@ -324,7 +324,7 @@
          [:j :rewind]
          [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
          [:k :play_or_pause]
-         [:semicolon :fastforward]
+         [:semicolon :fast_forward]
          [:comma :volume_increment]
          [:period :volume_decrement]
          [:m :mute]
@@ -482,7 +482,7 @@
  :rules [:q-mode
          [:b [:open "/Applications/qBitTorrent.app"]]
          [:d [:open "/System/Library/CoreServices/Finder.app"]]
-         [:e [:km "Activate: Emacs (e)"]]
+         [:e [:open "/Applications/Emacs.app"]]
          [:f [:open "/Applications/Firefox.app"]]
          [:g [:open "/Applications/Goldendict.app"]]
          [:h [:open "/Applications/Google Chrome.app"]]
@@ -622,21 +622,22 @@
          [:x {:modi :A-C-s- :key :x}]
          [:y {:modi :A-C-s- :key :y} :emacs]
          [:##y :page_up]
-         [:##return_or_enter :home]
+         [:spacebar {:modi :A-C-s- :key :spacebar} :emacs]
+         [:spacebar {:modi :⌘ :key :up_arrow} :chrome] ; in Chrome, move to top
+         [:spacebar :home]
          [:comma {:modi :A-C-s- :key :comma} :emacs]
          [:##comma {:modi :⌘ :key :up_arrow}]
          [:period {:modi :A-C-s- :key :period} :emacs]
          [:##period {:modi :⌘ :key :down_arrow}]
          [:right_command {:modi :A-C-s- :key :tab} :emacs]
-         [:##right_command :end]
+         [:right_command {:modi :⌘ :key :down_arrow} :chrome] ; in Chrome, move to bottom
+         [:right_command :end]
          [:semicolon :right_arrow]
          [:##semicolon :right_arrow]
          [:slash {:modi :A-C-s- :key :slash} :emacs]
          [:##slash {:modi :⌘ :key :right_arrow}]
-         [:spacebar {:modi :A-C-s- :key :spacebar} :emacs]
-         [:##spacebar :home]
          [:tab {:modi :A-C-s- :key :tab} :emacs]
-         [:##tab :home]
+         ;; [:##tab :home]
          ]}
 
 {:des "comma-mode (transposition)"

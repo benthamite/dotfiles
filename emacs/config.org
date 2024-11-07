@@ -6864,7 +6864,10 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pdf-tools
   :mode ("\\.pdf\\'" . pdf-view-mode)
+  :after (:any dired ebib)
   :init
+  (pdf-tools-install t)
+
   (with-eval-after-load 'pdf-annot
     (bind-keys :map pdf-annot-minor-mode-map
                ("e" . pdf-annot-add-highlight-markup-annotation)
@@ -6904,7 +6907,6 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
   :config
   (pdf-cache-prefetch-minor-mode -1) ; https://github.com/vedang/pdf-tools/issues/278#issuecomment-2096894629
-  (pdf-tools-install t)
 
   :hook
   (pdf-view-mode-hook . pdf-view-fit-page-to-window)

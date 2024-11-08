@@ -1604,6 +1604,7 @@
     ("excells" "excels" nil :count 1)
     ("excempts" "exempts" nil :count 0)
     ("excercise" "exercise" nil :count 1)
+    ("exchage" "exchange" nil :count 0)
     ("exchanching" "exchanging" nil :count 1)
     ("excisted" "existed" nil :count 1)
     ("exculsivly" "exclusively" nil :count 1)

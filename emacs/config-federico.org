@@ -899,6 +899,7 @@ This should be at the very end of the ~late-init~ file.
    (find-file paths-file-tlon-tareas-fede)
    (org-tidy-mode -1)
    (kill-buffer-then-reopen-file)
+   (global-auto-revert-mode 1)
    (message "Fede's post-init-hook finished.")
    ))
 (run-hooks 'tlon-init-post-init-hook)

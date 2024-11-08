@@ -303,7 +303,8 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'gptel
   ;; gptel config
-  (setq gptel-extras-dir "/Users/fede/Dropbox/org/gptel/")
+  (setq gptel-extras-dir "/Users/fede/Dropbox/obsidian/gptel/")
+  (setq gptel-default-mode 'markdown-mode)
 
   ;; Remove auto save file when opening gptel
   (advice-remove 'gptel #'gptel-extras-save-buffer)

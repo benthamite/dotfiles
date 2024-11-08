@@ -9116,8 +9116,7 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-tempo
-  :after org
-  :defer 5)
+  :after org)
 #+end_src
 
 ** org-src

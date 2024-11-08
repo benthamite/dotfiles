@@ -6496,6 +6496,7 @@ CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
     "Search for each line in FILE and share the selected results.
 The file should contain one search query per line."
     (interactive "f")
+    (require 'gdrive)
     (when (gdrive-mark-clear-prompt)
       (let ((lines (files-extras-lines-to-list file)))
         (dolist (line lines)

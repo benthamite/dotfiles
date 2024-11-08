@@ -881,6 +881,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package casual
+  :defer t
   :init
   (with-eval-after-load 'calc-mode
     (bind-keys :map calc-mode-map

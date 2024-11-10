@@ -245,7 +245,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#isearch-extras][isearch-extras]]
   - [[#replace][replace]]
   - [[#substitute][substitute]]
-  - [[#visual-regexp][visual-regexp]]
   - [[#imenu][imenu]]
   - [[#pcre2el][pcre2el]]
   - [[#wgrep][wgrep]]
@@ -5168,18 +5167,6 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   (("A-H-b" . substitute-target-in-buffer)
    :map prog-mode-map
    ("A-H-d" . substitute-target-in-defun)))
-#+end_src
-
-** visual-regexp
-:PROPERTIES:
-:ID:       0DE5075B-AC82-4AB3-9B0A-3D84DC6CF942
-:END:
-
-/[[https://github.com/benma/visual-regexp.el][visual-regexp]] provides visual feedback to regexp search and replace./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package visual-regexp
-  :after isearch)
 #+end_src
 
 ** imenu
@@ -10393,35 +10380,33 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
   (ebib-entry-mode-hook . visual-line-mode)
 
   :bind
-  (
-   :map ebib-multiline-mode-map
-   ("s-c" . ebib-quit-multiline-buffer-and-save)
-   :map ebib-index-mode-map
-   ("<return>" . ebib-edit-entry)
-   ("A" . ebib-add-entry)
-   ("D" . ebib-delete-entry)
-   ("f" . avy-extras-ebib-view-entry)
-   ("k" . ebib-prev-entry)
-   ("l" . ebib-next-entry)
-   ("H-s" . ebib-save-current-database)
-   ("K" . ebib-copy-key-as-kill)
-   ("Q" . ebib-quit)
-   ("W" . zotra-download-attachment)
-   :map ebib-entry-mode-map
-   ("TAB" . ebib-goto-next-set)
-   ("<backtab>" . ebib-goto-prev-set)
-   ("H-s" . ebib-save-current-database)
-   ("H-S" . ebib-save-all-databases)
-   ("!" . ebib-generate-autokey)
-   ;; "/" (lambda! (ebib-extras-attach-file t))
-   ("A" . ebib-add-field)
-   ("c" . ebib-copy-current-field-contents)
-   ("D" . ebib-delete-current-field-contents)
-   ("E" . ebib-edit-keyname)
-   ("H-s" . ebib-save-current-database)
-   ("K" . ebib-copy-key-as-kill)
-   ("Q" . ebib-quit)
-   ("W" . zotra-download-attachment)))
+  (:map ebib-multiline-mode-map
+        ("s-c" . ebib-quit-multiline-buffer-and-save)
+        :map ebib-index-mode-map
+        ("<return>" . ebib-edit-entry)
+        ("A" . ebib-add-entry)
+        ("D" . ebib-delete-entry)
+        ("f" . avy-extras-ebib-view-entry)
+        ("k" . ebib-prev-entry)
+        ("l" . ebib-next-entry)
+        ("H-s" . ebib-save-current-database)
+        ("K" . ebib-copy-key-as-kill)
+        ("Q" . ebib-quit)
+        ("W" . zotra-download-attachment)
+        :map ebib-entry-mode-map
+        ("TAB" . ebib-goto-next-set)
+        ("<backtab>" . ebib-goto-prev-set)
+        ("H-s" . ebib-save-current-database)
+        ("H-S" . ebib-save-all-databases)
+        ("!" . ebib-generate-autokey)
+        ("A" . ebib-add-field)
+        ("c" . ebib-copy-current-field-contents)
+        ("D" . ebib-delete-current-field-contents)
+        ("E" . ebib-edit-keyname)
+        ("H-s" . ebib-save-current-database)
+        ("K" . ebib-copy-key-as-kill)
+        ("Q" . ebib-quit)
+        ("W" . zotra-download-attachment)))
 #+end_src
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.

@@ -7777,7 +7777,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gpt-commit
-  :after tlon log-edit
+  :after log-edit
   :demand t
   :custom
   (gpt-commit-model-name "gpt-4o")

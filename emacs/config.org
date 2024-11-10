@@ -5185,8 +5185,11 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :ID:       CC1F3F93-2446-4399-A14D-9DCB6753D26B
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/imenu.el][imenu]] is a framework for mode-specific buffer indexes./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature imenu
+  :defer t
   :custom
   (org-imenu-depth 3))
 #+end_src

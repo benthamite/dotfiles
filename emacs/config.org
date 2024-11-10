@@ -6863,7 +6863,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pdf-tools
   :mode ("\\.pdf\\'" . pdf-view-mode)
-  :after (:any dired ebib)
+  :after (:any dired-extras ebib)
   :init
   (pdf-tools-install t)
 

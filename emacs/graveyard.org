@@ -9,6 +9,20 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** visual-regexp
+:PROPERTIES:
+:ID:       0DE5075B-AC82-4AB3-9B0A-3D84DC6CF942
+:END:
+
+/[[https://github.com/benma/visual-regexp.el][visual-regexp]] provides visual feedback to regexp search and replace./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package visual-regexp
+  :disabled
+  :hook
+  (isearch-mode-hook . (lambda () (require 'visual-regexp))))
+#+end_src
+
 ** dall-e-shell
 :PROPERTIES:
 :ID:       A7D68397-66E3-4085-AF8C-7A17935654E7

@@ -558,7 +558,16 @@ The contents of this code block are tangled to the ~early-init.el~ file.
 (when (fboundp 'startup-redirect-eln-cache)
   (startup-redirect-eln-cache
    (file-name-concat (getenv "HOME")
-                     ".config/emacs-profiles/var/eln-cache/")))
+		     ".config/emacs-profiles/var/eln-cache/")))
+
+;; for debugging                     
+(defun early-init-trace-feature-load (feature)
+  "Print a backtrace immediately after FEATURE is loaded."
+  (eval-after-load feature
+    `(message "Feature '%s' loaded by:\n%s"
+              ',feature
+              (with-output-to-string
+                (backtrace)))))
 #+end_src
 
 * package management

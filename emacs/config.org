@@ -2168,8 +2168,9 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 :ID:       0873C089-B832-4EB2-BAFF-2D3CF0268AE4
 :END:
 
-
 /[[file:extras/color-extras.el][color-extras]] collects my extensions for ~color~./
+
+Note that the loading of ~color~ cannot be deferred, since it is required by ~pulse~. So we defer-load this package.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package color-extras

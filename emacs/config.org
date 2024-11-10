@@ -2513,6 +2513,8 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
 :ID:       6473F2BF-059F-464B-859E-B8DA91B81DE2
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/delsel.el][delsel]] deletes the selection when the user start typing./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature delsel
   :config

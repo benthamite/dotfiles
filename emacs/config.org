@@ -1117,7 +1117,8 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 :END:
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature profiler)
+(use-feature profiler
+  :defer t)
 #+end_src
 
 ** profiler-extras

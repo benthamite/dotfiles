@@ -503,6 +503,7 @@ Either way, save count to kill ring."
 	(let ((clipboard-count (kill-new (format "%d" (count-words-region (point-min) (point-max))))))
 	  (message clipboard-count))))))
 
+;;;###autoload
 (defun simple-extras-visual-line-mode-enhanced ()
   "Toggle `visual-line-mode' handling `truncate-lines'."
   (interactive)

@@ -7745,8 +7745,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package gptel-extras
   :custom
-  (gptel-post-response-functions '(gptel-extras-generate-latex-previews
-                                   gptel-extras-kill-buffer-then-reopen-file))
+  (gptel-post-response-functions '(gptel-extras-generate-latex-previews))
 
   :init
   (advice-add 'gptel :after #'gptel-extras-save-buffer)

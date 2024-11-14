@@ -70,13 +70,18 @@ If ISSUE is nil, use the issue at point or in the current buffer."
 
 (defun forge-extras-sync-read-status (&optional _)
   "Ensure that the read status of the issue at point in Forge matches GitHub’s.
-The function tries to do does this by silently browsing the issue in a Firefox
-tab."
+Additionally, if `doom-modeline-github' is non-nil, update the GitHub
+notification counter.
+
+The function marks the issue as read by silently browsing it in a Firefox tab."
   (let* ((issue (forge-current-topic))
 	 (url (forge-get-url issue)))
     (when (eq (oref issue status) 'unread)
       (shut-up
-	(shell-command (format "open -a Firefox --background %s" url))))))
+	(shell-command (format "open -a Firefox --background %s" url)))
+      (when (bound-and-true-p doom-modeline-github)
+	;; we give it a few seconds to load the page and mark it as read
+	(run-with-timer 5 nil 'doom-modeline--github-fetch-notifications)))))
 
 (defun forge-extras-pull-notifications ()
   "Fetch notifications for all repositories from the current forge.

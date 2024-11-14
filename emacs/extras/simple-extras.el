@@ -879,6 +879,7 @@ If ELEMENT is the last element, return the first element."
 	(car list)
       (nth index list))))
 
+;;;###autoload
 (defun simple-extras-call-verbosely (fun &optional format-string)
   "Call FUN and display a message with its name.
 Optionally, use FORMAT-STRING as the message format string. The string should

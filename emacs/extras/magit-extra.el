@@ -96,6 +96,22 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
       (magit-diff-visit-file file)
       (org-entry-get nil "ITEM"))))
 
+;;;###autoload
+(defun magit-extras-checkout-tag-with-submodules ()
+  "Prompt for a tag and check it out in main repo and all submodules."
+  (interactive)
+  (let* ((tags (magit-list-tags))
+         (choices (append '("main") tags))
+         (selection (completing-read "Checkout tag or main: " choices nil t)))
+    (magit-run-git "checkout" "-f" selection)  ; force checkout of main repo
+    (if (string= selection "main")
+        (progn
+          (magit-run-git "submodule" "foreach" "--recursive" "git" "checkout" "main")
+          (magit-run-git "submodule" "foreach" "--recursive" "git" "pull"))
+      (progn
+        (magit-run-git "submodule" "foreach" "--recursive" "git" "reset" "--hard")
+        (magit-run-git "submodule" "update" "--recursive" "--init" "--force")))))
+
 ;;;;; transient
 
 (defun magit-extras-get-unstaged-files ()

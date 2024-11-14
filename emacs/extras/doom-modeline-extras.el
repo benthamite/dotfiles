@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'doom-modeline)
-(require 'el-patch)
 
 ;;;; User options
 

@@ -71,11 +71,12 @@ To change how the time is displayed, customize `display-time-format'.")
 
 (defvar doom-modeline--battery-status)
 (defconst tab-bar-extras-battery-element
-  `(:eval ,(format "%s %s"
-		   ;; icon
-		   (car doom-modeline--battery-status)
-		   ;;  percentage
-		   (cdr doom-modeline--battery-status)))
+  '(:eval (when battery-status-function
+            (let ((data (funcall battery-status-function)))
+              (format "%s %s"
+                      (or (and (string= (cdr (assq ?b data)) "+") "🔌")
+                          "🔋")
+                      (cdr (assq ?p data))))))
   "Element to display the battery.")
 
 (defconst tab-bar-extras-telega-element

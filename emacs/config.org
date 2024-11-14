@@ -12807,7 +12807,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature midnight
-  :defer (* 30 60)
+  :defer 3600
   :custom
   (clean-buffer-list-kill-never-buffer-names
         '("*mu4e-headers*"

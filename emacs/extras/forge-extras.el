@@ -76,21 +76,57 @@ problems."
     (shut-up
       (forge-pull-notifications))))
 
+;;;;; sync read status
+
+(declare-function doom-modeline--github-fetch-notifications "doom-modeline-segments")
 (defun forge-extras-sync-read-status (&optional _)
-  "Ensure that the read status of the issue at point in Forge matches GitHub’s.
+  "Ensure that the read status of the issue at point in Forge matches GitHub's.
 Additionally, if `doom-modeline-github' is non-nil, update the GitHub
 notification counter.
 
-The function marks the issue as read by silently browsing it in a Firefox tab."
+The function marks the issue as read by silently browsing it in a Safari tab. It
+then closes the tab."
   (let* ((issue (forge-current-topic))
-	 (url (forge-get-url issue)))
+         (url (forge-get-url issue)))
     (when (eq (oref issue status) 'unread)
       (shut-up
-	(shell-command (format "open -a Firefox --background %s" url)))
+        (let ((output (shell-command-to-string
+		       (format "osascript -e 'tell application \"Safari\"
+                   tell window 1
+                     set beforeCount to count of tabs
+                     make new tab with properties {URL:\"%s\"}
+                     delay 5
+                     try
+                       set loadState to do JavaScript \"document.readyState\" in tab (beforeCount + 1)
+                       if loadState is \"complete\" then
+                         close tab (beforeCount + 1)
+                         return \"Tab loaded and closed\"
+                       end if
+                     on error errMsg
+                       return \"Error: \" & errMsg
+                     end try
+                   end tell
+                 end tell'" url))))
+	  (forge-extras-safari-ensure-javascript-enabled output)))
       (when (bound-and-true-p doom-modeline-github)
-	;; we give it a few seconds to load the page and mark it as read
-	(run-with-timer 5 nil 'doom-modeline--github-fetch-notifications)))))
+        (doom-modeline--github-fetch-notifications)))))
 
+(defun forge-extras-safari-github-logged-in-p ()
+  "Check if user is logged in to GitHub in Safari."
+  (let ((output (shell-command-to-string
+		 "osascript -e 'tell application \"Safari\" to get name of document 1'")))
+    (forge-extras-safari-ensure-javascript-enabled output)
+    ;; we search for a word that only shows up if the user is logged in
+    (numberp (string-match-p "issue" output))))
+
+(defun forge-extras-safari-ensure-javascript-enabled (output)
+  "Ensure that JavaScript is enabled in Safari."
+  (when (string-match-p "allow javascript from apple events" output)
+    (error "For this function to work, JavaScript from Apple Events must be enabled in
+Safari. This can be done by going to Safari > Preferences > Advanced, ticking
+the box labelled \"Show features for web developers\", and then going to Safari
+> Preferences > Developer and ticking the box labeled \"Allow JavaScript from
+Apple Events\"")))
 
 ;;;;; Track repos
 

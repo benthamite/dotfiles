@@ -31,6 +31,27 @@
 (require 'orgit-forge)
 (require 'shut-up)
 
+;;;; Variables
+
+(defconst forge-extras-safari-script-format-string
+  "osascript -e 'tell application \"Safari\"
+                 tell window 1
+                   set beforeCount to count of tabs
+                   make new tab with properties {URL:\"%s\"}
+                   delay 5
+                   try
+                     set loadState to do JavaScript \"document.readyState\" in tab (beforeCount + 1)
+                     if loadState is \"complete\" then
+                       close tab (beforeCount + 1)
+                       return \"Tab loaded and closed\"
+                     end if
+                   on error errMsg
+                     return \"Error: \" & errMsg
+                   end try
+                 end tell
+               end tell'"
+  "The AppleScript to open a new tab in Safari and run JavaScript.")
+
 ;;;; Functions
 
 (defun forge-extras-orgit-store-link (_arg)
@@ -80,36 +101,35 @@ problems."
 
 (declare-function doom-modeline--github-fetch-notifications "doom-modeline-segments")
 (defun forge-extras-sync-read-status (&optional _)
-  "Ensure that the read status of the issue at point in Forge matches GitHub's.
-Additionally, if `doom-modeline-github' is non-nil, update the GitHub
-notification counter.
-
-The function marks the issue as read by silently browsing it in a Safari tab. It
-then closes the tab."
+  "Ensure that the read status of the issue at point in Forge matches GitHub's."
   (let* ((issue (forge-current-topic))
          (url (forge-get-url issue)))
     (when (eq (oref issue status) 'unread)
-      (shut-up
-        (let ((output (shell-command-to-string
-		       (format "osascript -e 'tell application \"Safari\"
-                   tell window 1
-                     set beforeCount to count of tabs
-                     make new tab with properties {URL:\"%s\"}
-                     delay 5
-                     try
-                       set loadState to do JavaScript \"document.readyState\" in tab (beforeCount + 1)
-                       if loadState is \"complete\" then
-                         close tab (beforeCount + 1)
-                         return \"Tab loaded and closed\"
-                       end if
-                     on error errMsg
-                       return \"Error: \" & errMsg
-                     end try
-                   end tell
-                 end tell'" url))))
-	  (forge-extras-safari-ensure-javascript-enabled output)))
-      (when (bound-and-true-p doom-modeline-github)
-        (doom-modeline--github-fetch-notifications)))))
+      (forge-extras-async-shell-command-to-string
+       (format forge-extras-safari-script-format-string url)
+       #'forge-extras-update-github-counter))))
+
+(defun forge-extras-update-github-counter (output)
+  "Update the GitHub notification counter after the Safari page is loaded.
+OUTPUT is the output of the AppleScript script; it is used to check whether
+JavaScript is enabled in Safari, which is needed for the command to run
+successfully."
+  (forge-extras-safari-ensure-javascript-enabled output)
+  (when (bound-and-true-p doom-modeline-github)
+    (doom-modeline--github-fetch-notifications)))
+
+(defun forge-extras-async-shell-command-to-string (command callback)
+  "Execute shell command COMMAND asynchronously in the background.
+Call CALLBACK with the resulting output when done."
+  (let ((output-buffer (generate-new-buffer "*Async Shell Command*")))
+    (set-process-sentinel
+     (start-process "Shell" output-buffer shell-file-name shell-command-switch command)
+     (lambda (process _signal)
+       (when (memq (process-status process) '(exit signal))
+         (let ((output (with-current-buffer output-buffer
+                         (buffer-string))))
+           (funcall callback output)
+           (kill-buffer output-buffer)))))))
 
 (defun forge-extras-safari-github-logged-in-p ()
   "Check if user is logged in to GitHub in Safari."
@@ -120,7 +140,8 @@ then closes the tab."
     (numberp (string-match-p "issue" output))))
 
 (defun forge-extras-safari-ensure-javascript-enabled (output)
-  "Ensure that JavaScript is enabled in Safari."
+  "Ensure that JavaScript is enabled in Safari.
+OUTPUT is the output of the shell command that calls the AppleScript."
   (when (string-match-p "allow javascript from apple events" output)
     (error "For this function to work, JavaScript from Apple Events must be enabled in
 Safari. This can be done by going to Safari > Preferences > Advanced, ticking

@@ -559,9 +559,9 @@ The contents of this code block are tangled to the ~early-init.el~ file.
 (when (fboundp 'startup-redirect-eln-cache)
   (startup-redirect-eln-cache
    (file-name-concat (getenv "HOME")
-		     ".config/emacs-profiles/var/eln-cache/")))
+                     ".config/emacs-profiles/var/eln-cache/")))
 
-;; for debugging                     
+;; for debugging
 (defun early-init-trace-feature-load (feature)
   "Print a backtrace immediately after FEATURE is loaded."
   (eval-after-load feature
@@ -875,7 +875,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :custom
   (transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
   (transient-save-history nil) ; the history file was throwing an error on startup
-  
+
   :bind
   (:map transient-base-map
         ("M-q" . transient-quit-one)))
@@ -1775,7 +1775,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link)
   ;; hack: to mark the topic as read, we browse it in the background
   (advice-add 'forge-visit-this-topic :before #'forge-extras-sync-read-status)
-
+  
   (run-with-idle-timer 30 t #'forge-extras-pull-notifications))
 #+end_src
 
@@ -10625,7 +10625,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 (use-package annas-archive
   :ensure (:host github
                  :repo "benthamite/annas-archive")
-  :defer t                 
+  :defer t
   :init
   (with-eval-after-load 'ebib
     (bind-keys :map ebib-entry-mode-map
@@ -10854,7 +10854,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                  :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
                  :build (:not elpaca--compile-info)
                  :depth nil)
-  :defer 10                 
+  :defer 10
   :custom
   ;; (mu4e-debug t) ; uncomment when debugging
   (mu4e-index-update-error-warning nil) ; set to `t' when debugging

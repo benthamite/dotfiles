@@ -68,6 +68,14 @@ If ISSUE is nil, use the issue at point or in the current buffer."
       ('open (forge--set-topic-state repo issue 'completed))
       ('completed (forge--set-topic-state repo issue 'open)))))
 
+(defun forge-extras-pull-notifications ()
+  "Fetch notifications for all repositories from the current forge.
+Do not update if `elfeed' is in the process of being updated, since this causes
+problems."
+  (unless (bound-and-true-p elfeed-extras-auto-update-in-process)
+    (shut-up
+      (forge-pull-notifications))))
+
 (defun forge-extras-sync-read-status (&optional _)
   "Ensure that the read status of the issue at point in Forge matches GitHub’s.
 Additionally, if `doom-modeline-github' is non-nil, update the GitHub
@@ -83,13 +91,6 @@ The function marks the issue as read by silently browsing it in a Firefox tab."
 	;; we give it a few seconds to load the page and mark it as read
 	(run-with-timer 5 nil 'doom-modeline--github-fetch-notifications)))))
 
-(defun forge-extras-pull-notifications ()
-  "Fetch notifications for all repositories from the current forge.
-Do not update if `elfeed' is in the process of being updated, since this causes
-problems."
-  (unless (bound-and-true-p elfeed-extras-auto-update-in-process)
-    (shut-up
-      (forge-pull-notifications))))
 
 ;;;;; Track repos
 

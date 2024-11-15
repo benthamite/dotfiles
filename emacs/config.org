@@ -367,6 +367,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#gptel-extras][gptel-extras]]
   - [[#gptel-quick][gptel-quick]]
   - [[#gpt-commit][gpt-commit]]
+  - [[#dall-e-shell][dall-e-shell]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
   - [[#org-extras][org-extras]]
@@ -7792,6 +7793,21 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   :bind (:map git-commit-mode-map
               ("s-g" . gpt-commit-message)))
+#+end_src
+
+** dall-e-shell
+:PROPERTIES:
+:ID:       635C8C3D-5614-433C-B3A3-81384F13273D
+:END:
+
+/[[https://github.com/xenodium/dall-e-shell][dall-e-shell]] provides an Emacs shell for OpenAI’s DALL-E./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package dall-e-shell
+  :disabled
+  :demand t
+  :custom
+  (dall-e-shell-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared))))
 #+end_src
 
 * org-mode

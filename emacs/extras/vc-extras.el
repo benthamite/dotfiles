@@ -210,8 +210,7 @@ the repo’s `.git' directory. If GIT is `split-git', return the repo’s split
 
 (defun vc-extras-split-local-repo (dir)
   "Move the `.git' dir in DIR to a split dir and set the `.git' file accordingly.
-Normally, this command is run for repos managed by Dropbox, to protect the Git
-files from possible corruption."
+If the repository has submodules, move their `.git' directories, too."
   (interactive "D")
   (let* ((name (file-name-nondirectory (directory-file-name dir)))
 	 (source (file-name-concat dir ".git/"))
@@ -222,7 +221,24 @@ files from possible corruption."
     (rename-file source target t)
     (with-temp-file git-file
       (insert (format "gitdir: %s" target))
-      (write-file git-file))))
+      (write-file git-file))
+    (when (vc-extras-has-submodules-p dir)
+      (let ((default-directory dir))
+        ;; Update submodule configurations
+        (call-process "git" nil nil nil "submodule" "sync")
+        ;; For each submodule
+        (dolist (submodule (directory-files-recursively dir "^\\.git$" t))
+          (let* ((submodule-dir (file-name-directory submodule))
+                 (submodule-name (file-name-nondirectory (directory-file-name submodule-dir)))
+                 (submodule-target (file-name-concat target "modules" submodule-name)))
+            ;; Move submodule .git directory
+            (when (file-exists-p submodule)
+              (make-directory (file-name-directory submodule-target) t)
+              (rename-file submodule submodule-target t)
+              (with-temp-file submodule
+                (insert (format "gitdir: %s" submodule-target))))))
+        ;; Reinitialize submodules with new paths
+        (call-process "git" nil nil nil "submodule" "update" "--init" "--recursive")))))
 
 ;;;;; Delete
 

@@ -354,7 +354,7 @@ One normally uses `recover-session' for this, but when Emacs crashes a session
 may fail to be created and then each file has to be recovered separately. This
 command automates the recovery process in these cases."
   (interactive)
-  (dolist (file (directory-files (file-name-concat paths-dir-chemacs-profiles "var/auto-save")))
+  (dolist (file (directory-files (file-name-concat paths-dir-emacs-profiles "var/auto-save")))
     (when-let ((file-to-recover (string-replace "#" "" file)))
       (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
       (files-extras-diff-buffer-with-file))))

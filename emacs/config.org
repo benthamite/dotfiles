@@ -797,8 +797,8 @@ NAME and ARGS as in `use-package'."
   ;; these directories should be shared across profiles, so there should
   ;; be only one `var' and one `etc' directory in `emacs-profiles'
   ;; rather than a pair of such directories for each profile
-  (setq no-littering-etc-directory (file-name-concat paths-dir-chemacs-profiles "etc/"))
-  (setq no-littering-var-directory (file-name-concat paths-dir-chemacs-profiles "var/"))
+  (setq no-littering-etc-directory (file-name-concat paths-dir-emacs-profiles "etc/"))
+  (setq no-littering-var-directory (file-name-concat paths-dir-emacs-profiles "var/"))
 
   :config
   ;; github.com/emacscollective/no-littering#auto-save-settings
@@ -2400,7 +2400,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
           ,tab-bar-extras-notification-status-element
           ,tab-bar-extras-time-element
           ,tab-bar-extras-separator-element
-          ,tab-bar-extras-chemacs-element
+          ,tab-bar-extras-emacs-profile-element
           ,tab-bar-extras-separator-element
           ,tab-bar-extras-battery-element
           ,tab-bar-extras-telega-element

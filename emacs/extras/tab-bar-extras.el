@@ -65,9 +65,9 @@
   "Element to display the time.
 To change how the time is displayed, customize `display-time-format'.")
 
-(defconst tab-bar-extras-chemacs-element
-  `(" " tlon-init-chemacs-profile-name)
-  "Element to display the Chemacs profile.")
+(defconst tab-bar-extras-emacs-profile-element
+  `(" " ,(file-name-nondirectory (directory-file-name user-emacs-directory)))
+  "Element to display the active Emacs profile.")
 
 (defvar doom-modeline--battery-status)
 (defconst tab-bar-extras-battery-element

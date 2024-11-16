@@ -313,7 +313,6 @@ If ACCOUNT is nil, list all repos in all accounts."
       (vc-extras-gh-list-repos-in-account account)
     (vc-extras-gh-list-repos-in-all-accounts)))
 
-;; TODO: make it more efficient; currently it takes a couple of seconds
 (defun vc-extras-gh-list-repos-in-account (account)
   "List all repos in GitHub ACCOUNT.
 Return the result as a list of cons cells, where the car is the repo name and
